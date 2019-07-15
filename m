@@ -7,49 +7,48 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E1C7C76195
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 15:15:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12648C7618F
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 15:15:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 072A62054F
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 15:15:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D5DF22054F
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 15:15:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1563203753;
-	bh=26J0cNgRs2gDrMoGxYgt4ejtXtTwNyGDi1cQ8KooqFk=;
+	s=default; t=1563203756;
+	bh=jtIGX7QQt3juwRiIEJhbVV6v+rMt/kTvO0hy90dvnaE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=M2DmWrVTGqyVFpvwwioJJ/zuItimTiDH2QO9QdV8TD9jtrgOlKdOZIZCm6MJYvqN6
-	 VDN5OUqyVA8X+m13jDWFfJ7KDm7ICCazhinf8S7673WVbSMK2TreD3TO08eyqz9Fw+
-	 mynzMJndM9gxbwNf9za8wuZDke1zULsqhBkLokeo=
+	b=njtA8HhkMOlb11LckEbFZWrfXjGFSDWzfAYSe6hjI0z1PvdSKVRkI8QWetIUkwMFR
+	 QeSaUAnYqdmG6qmPD4r+ytl55vk7cl0HV5lziSD4UlmKgnD5/zkTg7NfqN+u5hMYFz
+	 s5FB9z9NNvF68BUMWD2BWPQkfuIIivyxM+Zza1Do=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730669AbfGONrL (ORCPT
+        id S1730550AbfGONrI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 15 Jul 2019 09:47:11 -0400
-Received: from mail.kernel.org ([198.145.29.99]:55354 "EHLO mail.kernel.org"
+        Mon, 15 Jul 2019 09:47:08 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55128 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730012AbfGONrK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jul 2019 09:47:10 -0400
+        id S1730012AbfGONrH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 15 Jul 2019 09:47:07 -0400
 Received: from sasha-vm.mshome.net (unknown [73.61.17.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 488852067C;
-        Mon, 15 Jul 2019 13:47:07 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 6E8E72080A;
+        Mon, 15 Jul 2019 13:47:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1563198429;
-        bh=26J0cNgRs2gDrMoGxYgt4ejtXtTwNyGDi1cQ8KooqFk=;
+        s=default; t=1563198426;
+        bh=jtIGX7QQt3juwRiIEJhbVV6v+rMt/kTvO0hy90dvnaE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=kZDwaVrmVc4bFUEGT4txqw0kLmD7x5RqbUWrR37BdypYD43jyu6BzrkG95F1K6yR8
-         +LnuuGhjJNPdHma5fhwohlGU49BqH1F6TECFCEwlc2jr3j0o+uLJ/5F2tUgwJiw83P
-         6EXzComnQPhhar5N0EAwgRV1EF/5GYbA1UDHwGYk=
+        b=c6w0AgC71knJGZcFOZD/VXQtBYuOAECSjfw7SM7XFudazasMFTBqw18jycl2rrp+8
+         HDuygwjMbq9sRwN5JhmXOHM/fOC62JoDsAek8+AfU1MHdNERk0Gp1hCayqig76EnWM
+         sSTov3eAACHnF6/DOUKcIDPiwssjAHggTmxCnqms=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Pradeep kumar Chitrapu <pradeepc@codeaurora.org>,
-        Zhi Chen <zhichen@codeaurora.org>,
-        Sven Eckelmann <sven@narfation.org>,
+Cc:     Alagu Sankar <alagusankar@silex-india.com>,
+        Wen Gong <wgong@codeaurora.org>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.2 003/249] ath10k: fix incorrect multicast/broadcast rate setting
-Date:   Mon, 15 Jul 2019 09:42:48 -0400
-Message-Id: <20190715134655.4076-3-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.2 002/249] ath10k: htt: don't use txdone_fifo with SDIO
+Date:   Mon, 15 Jul 2019 09:42:47 -0400
+Message-Id: <20190715134655.4076-2-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190715134655.4076-1-sashal@kernel.org>
 References: <20190715134655.4076-1-sashal@kernel.org>
@@ -62,58 +61,42 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Pradeep kumar Chitrapu <pradeepc@codeaurora.org>
+From: Alagu Sankar <alagusankar@silex-india.com>
 
-[ Upstream commit 93ee3d108fc77e19efeac3ec5aa7d5886711bfef ]
+[ Upstream commit e2a6b711282a371c5153239e0468a48254f17ca6 ]
 
-Invalid rate code is sent to firmware when multicast rate value of 0 is
-sent to driver indicating disabled case, causing broken mesh path.
-so fix that.
+HTT High Latency (ATH10K_DEV_TYPE_HL) does not use txdone_fifo at all, we don't
+even initialise it by skipping ath10k_htt_tx_alloc_buf() in
+ath10k_htt_tx_start(). Because of this using QCA6174 SDIO
+ath10k_htt_rx_tx_compl_ind() will crash when it accesses unitialised
+txdone_fifo. So skip txdone_fifo when using High Latency mode.
 
-Tested on QCA9984 with firmware 10.4-3.6.1-00827
+Tested with QCA6174 SDIO with firmware WLAN.RMH.4.4.1-00007-QCARMSWP-1.
 
-Sven tested on IPQ4019 with 10.4-3.5.3-00057 and QCA9888 with 10.4-3.5.3-00053
-(ath10k-firmware) and 10.4-3.6-00140 (linux-firmware 2018-12-16-211de167).
-
-Fixes: cd93b83ad92 ("ath10k: support for multicast rate control")
-Co-developed-by: Zhi Chen <zhichen@codeaurora.org>
-Signed-off-by: Zhi Chen <zhichen@codeaurora.org>
-Signed-off-by: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-Tested-by: Sven Eckelmann <sven@narfation.org>
+Co-developed-by: Wen Gong <wgong@codeaurora.org>
+Signed-off-by: Alagu Sankar <alagusankar@silex-india.com>
+Signed-off-by: Wen Gong <wgong@codeaurora.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 9c703d287333..e8997e22ceec 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -5588,8 +5588,8 @@ static void ath10k_bss_info_changed(struct ieee80211_hw *hw,
- 	struct cfg80211_chan_def def;
- 	u32 vdev_param, pdev_param, slottime, preamble;
- 	u16 bitrate, hw_value;
--	u8 rate, basic_rate_idx;
--	int rateidx, ret = 0, hw_rate_code;
-+	u8 rate, basic_rate_idx, rateidx;
-+	int ret = 0, hw_rate_code, mcast_rate;
- 	enum nl80211_band band;
- 	const struct ieee80211_supported_band *sband;
- 
-@@ -5776,7 +5776,11 @@ static void ath10k_bss_info_changed(struct ieee80211_hw *hw,
- 	if (changed & BSS_CHANGED_MCAST_RATE &&
- 	    !ath10k_mac_vif_chan(arvif->vif, &def)) {
- 		band = def.chan->band;
--		rateidx = vif->bss_conf.mcast_rate[band] - 1;
-+		mcast_rate = vif->bss_conf.mcast_rate[band];
-+		if (mcast_rate > 0)
-+			rateidx = mcast_rate - 1;
-+		else
-+			rateidx = ffs(vif->bss_conf.basic_rates) - 1;
- 
- 		if (ar->phy_capability & WHAL_WLAN_11A_CAPABILITY)
- 			rateidx += ATH10K_MAC_FIRST_OFDM_RATE_IDX;
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 1acc622d2183..f22840bbc389 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -2277,7 +2277,9 @@ static void ath10k_htt_rx_tx_compl_ind(struct ath10k *ar,
+ 		 *  Note that with only one concurrent reader and one concurrent
+ 		 *  writer, you don't need extra locking to use these macro.
+ 		 */
+-		if (!kfifo_put(&htt->txdone_fifo, tx_done)) {
++		if (ar->bus_param.dev_type == ATH10K_DEV_TYPE_HL) {
++			ath10k_txrx_tx_unref(htt, &tx_done);
++		} else if (!kfifo_put(&htt->txdone_fifo, tx_done)) {
+ 			ath10k_warn(ar, "txdone fifo overrun, msdu_id %d status %d\n",
+ 				    tx_done.msdu_id, tx_done.status);
+ 			ath10k_txrx_tx_unref(htt, &tx_done);
 -- 
 2.20.1
 
