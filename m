@@ -2,163 +2,102 @@ Return-Path: <SRS0=nAss=VM=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_ADSP_CUSTOM_MED,
-	DKIM_INVALID,DKIM_SIGNED,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BF1AC76188
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 03:19:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B315AC7618F
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 08:49:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 44CFF20644
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 03:19:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8AC0820868
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 08:49:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="rUrV/W2c"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="H3IuQ/2V";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="H3IuQ/2V"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729150AbfGODTv (ORCPT
+        id S1729376AbfGOItA (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 14 Jul 2019 23:19:51 -0400
-Received: from mail-pl1-f196.google.com ([209.85.214.196]:43007 "EHLO
-        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729088AbfGODTu (ORCPT
+        Mon, 15 Jul 2019 04:49:00 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:51108 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729245AbfGOIs7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 14 Jul 2019 23:19:50 -0400
-Received: by mail-pl1-f196.google.com with SMTP id ay6so7547370plb.9;
-        Sun, 14 Jul 2019 20:19:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=+B0jx+4muj+M4b7c2kQfV0uSbE8FiTxBXwM9XgPCIac=;
-        b=rUrV/W2cFJNaa8vePeI9kEWvofvtQd3wBD4YW63KnfV+rcI+vl/TeWgDn1ZWBbJF+d
-         4PhGeWEFU9VVCds7ZsnsSapiOLg8VcaUaz2PBh9LPeEOu3GXL+cnPGQ406XBCMZ1nvqm
-         9jfFFnT0DMHGLUz1+sz+FOYuvQ19Nfwvpr822BFWOzV5thNTCtV/hf2qW+3//T6uwDIk
-         cyEDHmxDdFtBrIgVGR4P7jiVcksY5TCWKSd2pyYTj0lNNQMyfveZ508iYGk8ICDqmP6Q
-         M7690uJe75Qu3fgoe3g2UZefqxultpC2Pncsj/IwKbWZ1ED4qPc2sIwvzbw+TCEF8x9L
-         vtJg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=+B0jx+4muj+M4b7c2kQfV0uSbE8FiTxBXwM9XgPCIac=;
-        b=V5IQ2fhJFjap+UxAWrmgmSZI8hkILL8SlSj92Os9dNHQwA75JKwQ9KKAqMwDZ5b+jx
-         cqcrNzxMR0IQRbldov1MitbLyEtDmhKmLAipEWpBUiyYGyXuKWQ2EL3o06LulPNGFRPi
-         yOaqZw9s0xm2VtPiUdb70Y4r4U4vkQ1XadIlIkOZ4tPPg/ZmUKD+ApuqhbzWJJCcrjhH
-         E2CuKECCz/43K/qAX7XY74eaPCnW0fucZYwr5ZXAtN8cp7YN+8fdxZ113cZfni57wYS/
-         6dhlUBv3DdaE2C0I5nfB4echMD+DX0ZuGFCjfF09y2ZvI5TGew/oWUmF9xaj4jU+XAn2
-         45og==
-X-Gm-Message-State: APjAAAWxt9VQXF7Bd6BoVEKuOtSMLF9BGSVPXW5SAEq/eK3HAN1ukuLU
-        wlOtaz0QJoB1N5kjjmH2hbI=
-X-Google-Smtp-Source: APXvYqwQR7EYn7nM9TgFm/nKnIR49M8lFOUn+x0miZZg3gxoz/XgR4qWm5y30xqPSsvlAzLYNlmvmQ==
-X-Received: by 2002:a17:902:a612:: with SMTP id u18mr25087040plq.181.1563160789988;
-        Sun, 14 Jul 2019 20:19:49 -0700 (PDT)
-Received: from hfq-skylake.ipads-lab.se.sjtu.edu.cn ([202.120.40.82])
-        by smtp.googlemail.com with ESMTPSA id 2sm21006045pgm.39.2019.07.14.20.19.45
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Sun, 14 Jul 2019 20:19:49 -0700 (PDT)
-From:   Fuqian Huang <huangfq.daxian@gmail.com>
-Cc:     Kalle Valo <kvalo@codeaurora.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        Igor Mitsyanko <imitsyanko@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Sergey Matyukevich <smatyukevich@quantenna.com>,
-        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        Fuqian Huang <huangfq.daxian@gmail.com>
-Subject: [PATCH v3 20/24] wireless: Remove call to memset after dma_alloc_coherent
-Date:   Mon, 15 Jul 2019 11:19:41 +0800
-Message-Id: <20190715031941.7120-1-huangfq.daxian@gmail.com>
-X-Mailer: git-send-email 2.11.0
-To:     unlisted-recipients:; (no To-header on input)
+        Mon, 15 Jul 2019 04:48:59 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id B144460F3C; Mon, 15 Jul 2019 08:48:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1563180538;
+        bh=d7xrxXALrd9BNvgNlJglyBGbGqVhhDzSP34RGwbKv5A=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=H3IuQ/2ViEExOHGMu68nOUzqqX1GviZeVC/wOEoSDYxi+QXfGHlQ0QQ4hrpVPN0q+
+         S7R6IYCerWTlYTKO3PXg5Wqxcp0bAklITa0dtFFpmFVEAbSBF3erTo/ZTmrgyX6kgK
+         biHTogVojFjn23YP6Ar3cRI8HuqvYafvFEuxVjcM=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 2D70A60DB6;
+        Mon, 15 Jul 2019 08:48:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1563180538;
+        bh=d7xrxXALrd9BNvgNlJglyBGbGqVhhDzSP34RGwbKv5A=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=H3IuQ/2ViEExOHGMu68nOUzqqX1GviZeVC/wOEoSDYxi+QXfGHlQ0QQ4hrpVPN0q+
+         S7R6IYCerWTlYTKO3PXg5Wqxcp0bAklITa0dtFFpmFVEAbSBF3erTo/ZTmrgyX6kgK
+         biHTogVojFjn23YP6Ar3cRI8HuqvYafvFEuxVjcM=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 2D70A60DB6
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Soeren Moch <smoch@web.de>
+Cc:     Stanislaw Gruszka <sgruszka@redhat.com>, stable@vger.kernel.org,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 1/2] rt2x00usb: fix rx queue hang
+References: <20190701105314.9707-1-smoch@web.de>
+Date:   Mon, 15 Jul 2019 11:48:52 +0300
+In-Reply-To: <20190701105314.9707-1-smoch@web.de> (Soeren Moch's message of
+        "Mon, 1 Jul 2019 12:53:13 +0200")
+Message-ID: <874l3nadjf.fsf@kamboji.qca.qualcomm.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-In commit 518a2f1925c3
-("dma-mapping: zero memory returned from dma_alloc_*"),
-dma_alloc_coherent has already zeroed the memory.
-So memset is not needed.
+Soeren Moch <smoch@web.de> writes:
 
-Signed-off-by: Fuqian Huang <huangfq.daxian@gmail.com>
----
-Changes in v3:
-  - Use actual commit rather than the merge commit in the commit message
+> Since commit ed194d136769 ("usb: core: remove local_irq_save() around
+>  ->complete() handler") the handler rt2x00usb_interrupt_rxdone() is
+> not running with interrupts disabled anymore. So this completion handler
+> is not guaranteed to run completely before workqueue processing starts
+> for the same queue entry.
+> Be sure to set all other flags in the entry correctly before marking
+> this entry ready for workqueue processing. This way we cannot miss error
+> conditions that need to be signalled from the completion handler to the
+> worker thread.
+> Note that rt2x00usb_work_rxdone() processes all available entries, not
+> only such for which queue_work() was called.
+>
+> This patch is similar to what commit df71c9cfceea ("rt2x00: fix order
+> of entry flags modification") did for TX processing.
+>
+> This fixes a regression on a RT5370 based wifi stick in AP mode, which
+> suddenly stopped data transmission after some period of heavy load. Also
+> stopping the hanging hostapd resulted in the error message "ieee80211
+> phy0: rt2x00queue_flush_queue: Warning - Queue 14 failed to flush".
+> Other operation modes are probably affected as well, this just was
+> the used testcase.
+>
+> Fixes: ed194d136769 ("usb: core: remove local_irq_save() around ->complete() handler")
+> Cc: stable@vger.kernel.org # 4.20+
+> Signed-off-by: Soeren Moch <smoch@web.de>
 
- drivers/net/wireless/ath/ath10k/ce.c                     | 5 -----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c  | 2 --
- drivers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie.c | 2 --
- drivers/net/wireless/quantenna/qtnfmac/pcie/topaz_pcie.c | 2 --
- 4 files changed, 11 deletions(-)
+I'll queue this for v5.3.
 
-diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
-index eca87f7c5b6c..294fbc1e89ab 100644
---- a/drivers/net/wireless/ath/ath10k/ce.c
-+++ b/drivers/net/wireless/ath/ath10k/ce.c
-@@ -1704,9 +1704,6 @@ ath10k_ce_alloc_dest_ring_64(struct ath10k *ar, unsigned int ce_id,
- 	/* Correctly initialize memory to 0 to prevent garbage
- 	 * data crashing system when download firmware
- 	 */
--	memset(dest_ring->base_addr_owner_space_unaligned, 0,
--	       nentries * sizeof(struct ce_desc_64) + CE_DESC_RING_ALIGN);
--
- 	dest_ring->base_addr_owner_space =
- 			PTR_ALIGN(dest_ring->base_addr_owner_space_unaligned,
- 				  CE_DESC_RING_ALIGN);
-@@ -2019,8 +2016,6 @@ void ath10k_ce_alloc_rri(struct ath10k *ar)
- 		value |= ar->hw_ce_regs->upd->mask;
- 		ath10k_ce_write32(ar, ce_base_addr + ctrl1_regs, value);
- 	}
--
--	memset(ce->vaddr_rri, 0, CE_COUNT * sizeof(u32));
- }
- EXPORT_SYMBOL(ath10k_ce_alloc_rri);
- 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-index 4ea5401c4d6b..5f0437a3fd82 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-@@ -1023,8 +1023,6 @@ brcmf_pcie_init_dmabuffer_for_device(struct brcmf_pciedev_info *devinfo,
- 			       address & 0xffffffff);
- 	brcmf_pcie_write_tcm32(devinfo, tcm_dma_phys_addr + 4, address >> 32);
- 
--	memset(ring, 0, size);
--
- 	return (ring);
- }
- 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie.c b/drivers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie.c
-index 3aa3714d4dfd..5ec1c9bc1612 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie.c
-@@ -244,8 +244,6 @@ static int pearl_alloc_bd_table(struct qtnf_pcie_pearl_state *ps)
- 
- 	/* tx bd */
- 
--	memset(vaddr, 0, len);
--
- 	ps->bd_table_vaddr = vaddr;
- 	ps->bd_table_paddr = paddr;
- 	ps->bd_table_len = len;
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/pcie/topaz_pcie.c b/drivers/net/wireless/quantenna/qtnfmac/pcie/topaz_pcie.c
-index 9a4380ed7f1b..1f91088e3dff 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/pcie/topaz_pcie.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/pcie/topaz_pcie.c
-@@ -199,8 +199,6 @@ static int topaz_alloc_bd_table(struct qtnf_pcie_topaz_state *ts,
- 	if (!vaddr)
- 		return -ENOMEM;
- 
--	memset(vaddr, 0, len);
--
- 	/* tx bd */
- 
- 	ts->tx_bd_vbase = vaddr;
 -- 
-2.11.0
-
+Kalle Valo
