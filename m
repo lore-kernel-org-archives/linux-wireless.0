@@ -7,48 +7,52 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48F76C7618F
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 15:07:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D74D1C7618F
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 15:08:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 137212054F
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 15:07:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AFAE12054F
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 15:08:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1563203241;
-	bh=NZraKEDuaB6vwvz8xVUkIR+7IQqLDfLfw8tb08+gex4=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=1cCbOgr91qtELFwa2iXWdA0BiO3by28AeSTBkLaVfSKuC/pKm+ovPE+n2eUrmZDWF
-	 nphX7amvSxmjyJ4ZSMlCGvCjcQDpupz7Ur3mTlaGuuDW4nJLuXWHuC4QGSKSJUN6Dk
-	 WPC9NwwBKujwvIRkQ5HQfOvQyYpfLvmHS3R3RNwU=
+	s=default; t=1563203305;
+	bh=97Q3CfjQC/RAT6mrkOvfJELQhlqT+olkTSGEkR8ZWk0=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=hxZjYmuuFU2ghO7vD4bYpZZvA06Q75sOWZbG5ZD8xTk9ZClcKDpRN6wa3EauGlIKL
+	 7jZFy/0gPbq6lDwXerzy55z8YupAqf3qGQlAcUqpjwBuZUtMWbm73dANslkEeIQHFz
+	 YKgnPXPzGOSzFJW8ZvZB60q+Gb+/Odw/RndGDCpo=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387782AbfGOODt (ORCPT
+        id S1733086AbfGON6K (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 15 Jul 2019 10:03:49 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49300 "EHLO mail.kernel.org"
+        Mon, 15 Jul 2019 09:58:10 -0400
+Received: from mail.kernel.org ([198.145.29.99]:37252 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387600AbfGOODs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jul 2019 10:03:48 -0400
+        id S1731422AbfGON6J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 15 Jul 2019 09:58:09 -0400
 Received: from sasha-vm.mshome.net (unknown [73.61.17.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 6C8FA2081C;
-        Mon, 15 Jul 2019 14:03:44 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 9931C212F5;
+        Mon, 15 Jul 2019 13:58:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1563199427;
-        bh=NZraKEDuaB6vwvz8xVUkIR+7IQqLDfLfw8tb08+gex4=;
-        h=From:To:Cc:Subject:Date:From;
-        b=crLtqMU/SPWApDjDQGlAEY27a2D8ztc7CXDkqzOCao4i8MEWIiKRkn9pOdqToArXt
-         6P8EyvyiYnZCnNqi9bwk1poWVpXNNRM11oueXI42H/d7596hCMoUAQ13rZAfUXZC/r
-         1k5Gcb5gGlhiXH+XlHHfu2eUMbAKj0sp2+CA/PBY=
+        s=default; t=1563199088;
+        bh=97Q3CfjQC/RAT6mrkOvfJELQhlqT+olkTSGEkR8ZWk0=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=y7PT3UMCDnkt2xiK7SqLkmKwGGcSk+NifPMb/cjBSqyViBNB7iAMDIuphz3cT792N
+         nfBcG1dDaUl+Qe+5YeXWehlLbafaFu2MZpURQRf6YCPeyoyvH6uIXgHjQe7B9zAk8p
+         JI4haIY18o6AAwAV9dJtTgM5RoVfnVlx/vpxTP3k=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Yingying Tang <yintang@codeaurora.org>,
+Cc:     Ahmad Masri <amasri@codeaurora.org>,
+        Maya Erez <merez@codeaurora.org>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.1 001/219] ath10k: Check tx_stats before use it
-Date:   Mon, 15 Jul 2019 10:00:02 -0400
-Message-Id: <20190715140341.6443-1-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
+        netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.2 187/249] wil6210: drop old event after wmi_call timeout
+Date:   Mon, 15 Jul 2019 09:45:52 -0400
+Message-Id: <20190715134655.4076-187-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20190715134655.4076-1-sashal@kernel.org>
+References: <20190715134655.4076-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -58,40 +62,56 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Yingying Tang <yintang@codeaurora.org>
+From: Ahmad Masri <amasri@codeaurora.org>
 
-[ Upstream commit 9e7251fa38978b85108c44743e1436d48e8d0d76 ]
+[ Upstream commit 1a276003111c0404f6bfeffe924c5a21f482428b ]
 
-tx_stats will be freed and set to NULL before debugfs_sta node is
-removed in station disconnetion process. So if read the debugfs_sta
-node there may be NULL pointer error. Add check for tx_stats before
-use it to resove this issue.
+This change fixes a rare race condition of handling WMI events after
+wmi_call expires.
 
-Signed-off-by: Yingying Tang <yintang@codeaurora.org>
+wmi_recv_cmd immediately handles an event when reply_buf is defined and
+a wmi_call is waiting for the event.
+However, in case the wmi_call has already timed-out, there will be no
+waiting/running wmi_call and the event will be queued in WMI queue and
+will be handled later in wmi_event_handle.
+Meanwhile, a new similar wmi_call for the same command and event may
+be issued. In this case, when handling the queued event we got WARN_ON
+printed.
+
+Fixing this case as a valid timeout and drop the unexpected event.
+
+Signed-off-by: Ahmad Masri <amasri@codeaurora.org>
+Signed-off-by: Maya Erez <merez@codeaurora.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath10k/debugfs_sta.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/net/wireless/ath/wil6210/wmi.c | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/debugfs_sta.c b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-index c704ae371c4d..42931a669b02 100644
---- a/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-+++ b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-@@ -663,6 +663,13 @@ static ssize_t ath10k_dbg_sta_dump_tx_stats(struct file *file,
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index d89cd41e78ac..89a75ff29410 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -3220,7 +3220,18 @@ static void wmi_event_handle(struct wil6210_priv *wil,
+ 		/* check if someone waits for this event */
+ 		if (wil->reply_id && wil->reply_id == id &&
+ 		    wil->reply_mid == mid) {
+-			WARN_ON(wil->reply_buf);
++			if (wil->reply_buf) {
++				/* event received while wmi_call is waiting
++				 * with a buffer. Such event should be handled
++				 * in wmi_recv_cmd function. Handling the event
++				 * here means a previous wmi_call was timeout.
++				 * Drop the event and do not handle it.
++				 */
++				wil_err(wil,
++					"Old event (%d, %s) while wmi_call is waiting. Drop it and Continue waiting\n",
++					id, eventid2name(id));
++				return;
++			}
  
- 	mutex_lock(&ar->conf_mutex);
- 
-+	if (!arsta->tx_stats) {
-+		ath10k_warn(ar, "failed to get tx stats");
-+		mutex_unlock(&ar->conf_mutex);
-+		kfree(buf);
-+		return 0;
-+	}
-+
- 	spin_lock_bh(&ar->data_lock);
- 	for (k = 0; k < ATH10K_STATS_TYPE_MAX; k++) {
- 		for (j = 0; j < ATH10K_COUNTER_TYPE_MAX; j++) {
+ 			wmi_evt_call_handler(vif, id, evt_data,
+ 					     len - sizeof(*wmi));
 -- 
 2.20.1
 
