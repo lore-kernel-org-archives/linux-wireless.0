@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A874C7618F
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 15:06:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1EF8C76191
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 15:06:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D7436206B8
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 15:06:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7D3C42067C
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 15:06:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1563203210;
-	bh=+tfDLiCMFVeiznMrly76v6ecB2cjl4qeybA1V5HmG8U=;
+	s=default; t=1563203217;
+	bh=1G7KjC91RtjcBKsDM3By3WOUgi19PQ09IvvPLlwt2kk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=X8Do7A4iAHSe/HX+8R82OD1cxAEJFkPOc1pG0RW3rHeSidzt8voPmvGh3K8FROkTo
-	 xqDtvQFrC9VwlYl60S8ZJhHLblkmRP+KuTQfinu2nSHuZ3Ym0XZTittfFNFYWJoP9T
-	 1tikn1/ZjkSDNlSivn3dDWmlPJBBVsz+2eXOIZ+I=
+	b=tf4uDCdpBvDiN3+gruC6LfR2lM7q3O9iLaF1W0mbUVNbndKaYSoldcjrFyCh6WIp0
+	 iMBw2/ejlGc4NZo+uUhnuks3gu9xufbXIoCnC5KeprGOQiuzHa/GHsJKHgqRqFX2pV
+	 tWs8xwmoPNU1iQCU0zXHbYZM7LkJDggtxFabmBdI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387733AbfGOOEY (ORCPT
+        id S2387888AbfGOOEQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 15 Jul 2019 10:04:24 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50186 "EHLO mail.kernel.org"
+        Mon, 15 Jul 2019 10:04:16 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50000 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387904AbfGOOEX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jul 2019 10:04:23 -0400
+        id S1733269AbfGOOEP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 15 Jul 2019 10:04:15 -0400
 Received: from sasha-vm.mshome.net (unknown [73.61.17.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 75CE3217D8;
-        Mon, 15 Jul 2019 14:04:17 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 65AA72081C;
+        Mon, 15 Jul 2019 14:04:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1563199462;
-        bh=+tfDLiCMFVeiznMrly76v6ecB2cjl4qeybA1V5HmG8U=;
+        s=default; t=1563199454;
+        bh=1G7KjC91RtjcBKsDM3By3WOUgi19PQ09IvvPLlwt2kk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=zshhal8Gh+1u9yMpApl/yWCAaf153ceelbCZADcshsQtGTL59txMbiKtu65ppfdNk
-         WXwbG4BhExKXcGWDAKkzjic+knt+dyOZVzr1/wN0tRaHr4Mdlq4f5e4+uOxqdBlE/a
-         KVs/lXXxHWPc6Rpjp16kbYO2yRDlddUDqv7yAxJU=
+        b=eempptlpa+iRpUpELg6P2luwVUg8sDDhiyiCJmQH2nwr+JHJb1sW7TypF+XUwaIVI
+         6Tsd50jdesBoTgRt7r9gGAeuHHcrJNM0ZFxcoqmout4XWBnOv4pucvAph0AErzJ38T
+         ZH+m7u9g+k/+oyruv8Ed57IR5/JC8iqxC0prSPcY=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
+Cc:     Surabhi Vishnoi <svishnoi@codeaurora.org>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>,
+        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.1 011/219] ath6kl: add some bounds checking
-Date:   Mon, 15 Jul 2019 10:00:12 -0400
-Message-Id: <20190715140341.6443-11-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.1 009/219] ath10k: Fix the wrong value of enums for wmi tlv stats id
+Date:   Mon, 15 Jul 2019 10:00:10 -0400
+Message-Id: <20190715140341.6443-9-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190715140341.6443-1-sashal@kernel.org>
 References: <20190715140341.6443-1-sashal@kernel.org>
@@ -60,62 +60,46 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Dan Carpenter <dan.carpenter@oracle.com>
+From: Surabhi Vishnoi <svishnoi@codeaurora.org>
 
-[ Upstream commit 5d6751eaff672ea77642e74e92e6c0ac7f9709ab ]
+[ Upstream commit 9280f4fc06f44d0b4dc9e831f72d97b3d7cd35d3 ]
 
-The "ev->traffic_class" and "reply->ac" variables come from the network
-and they're used as an offset into the wmi->stream_exist_for_ac[] array.
-Those variables are u8 so they can be 0-255 but the stream_exist_for_ac[]
-array only has WMM_NUM_AC (4) elements.  We need to add a couple bounds
-checks to prevent array overflows.
+The enum value for WMI_TLV_STAT_PDEV, WMI_TLV_STAT_VDEV
+and WMI_TLV_STAT_PEER is wrong, due to which the vdev stats
+are not received from firmware in wmi_update_stats event.
 
-I also modified one existing check from "if (traffic_class > 3) {" to
-"if (traffic_class >= WMM_NUM_AC) {" just to make them all consistent.
+Fix the enum values for above stats to receive all stats
+from firmware in WMI_TLV_UPDATE_STATS_EVENTID.
 
-Fixes: bdcd81707973 (" Add ath6kl cleaned up driver")
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Tested HW: WCN3990
+Tested FW: WLAN.HL.3.1-00784-QCAHLSWMTPLZ-1
+
+Fixes: f40a307eb92c ("ath10k: Fill rx duration for each peer in fw_stats for WCN3990)
+Signed-off-by: Surabhi Vishnoi <svishnoi@codeaurora.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath6kl/wmi.c | 10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/wmi.h | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-index 68854c45d0a4..9ab6aa9ded5c 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.c
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-@@ -1176,6 +1176,10 @@ static int ath6kl_wmi_pstream_timeout_event_rx(struct wmi *wmi, u8 *datap,
- 		return -EINVAL;
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index e1c40bb69932..12f57f9adbba 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -4535,9 +4535,10 @@ enum wmi_10_4_stats_id {
+ };
  
- 	ev = (struct wmi_pstream_timeout_event *) datap;
-+	if (ev->traffic_class >= WMM_NUM_AC) {
-+		ath6kl_err("invalid traffic class: %d\n", ev->traffic_class);
-+		return -EINVAL;
-+	}
+ enum wmi_tlv_stats_id {
+-	WMI_TLV_STAT_PDEV	= BIT(0),
+-	WMI_TLV_STAT_VDEV	= BIT(1),
+-	WMI_TLV_STAT_PEER	= BIT(2),
++	WMI_TLV_STAT_PEER	= BIT(0),
++	WMI_TLV_STAT_AP		= BIT(1),
++	WMI_TLV_STAT_PDEV	= BIT(2),
++	WMI_TLV_STAT_VDEV	= BIT(3),
+ 	WMI_TLV_STAT_PEER_EXTD  = BIT(10),
+ };
  
- 	/*
- 	 * When the pstream (fat pipe == AC) timesout, it means there were
-@@ -1517,6 +1521,10 @@ static int ath6kl_wmi_cac_event_rx(struct wmi *wmi, u8 *datap, int len,
- 		return -EINVAL;
- 
- 	reply = (struct wmi_cac_event *) datap;
-+	if (reply->ac >= WMM_NUM_AC) {
-+		ath6kl_err("invalid AC: %d\n", reply->ac);
-+		return -EINVAL;
-+	}
- 
- 	if ((reply->cac_indication == CAC_INDICATION_ADMISSION_RESP) &&
- 	    (reply->status_code != IEEE80211_TSPEC_STATUS_ADMISS_ACCEPTED)) {
-@@ -2633,7 +2641,7 @@ int ath6kl_wmi_delete_pstream_cmd(struct wmi *wmi, u8 if_idx, u8 traffic_class,
- 	u16 active_tsids = 0;
- 	int ret;
- 
--	if (traffic_class > 3) {
-+	if (traffic_class >= WMM_NUM_AC) {
- 		ath6kl_err("invalid traffic class: %d\n", traffic_class);
- 		return -EINVAL;
- 	}
 -- 
 2.20.1
 
