@@ -7,50 +7,50 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71FF2C76195
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 15:00:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 442A2C7618F
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 15:00:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4BBC42054F
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 15:00:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1D8DE2054F
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 15:00:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1563202830;
-	bh=XaAjnu12IndW/tEV9TQigJdi6gSZY5u27R/Bpm9PgKs=;
+	s=default; t=1563202853;
+	bh=3tm0O9vKFq6xQLQTTQHLCmlCsbnPPandPuISTbA4hW8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=SD4QRgP/QVIacGarFdB4CQp5zOTjo8NUkpI77uJScPXSxrSh1qAgIpL+Ny/bGOyUg
-	 KESBC3ZsBSW0C/qILngjq/hj10+zVeFheqD8F/jTcD1TGMZ3v7m1NU9eHfq/4jTgOZ
-	 xELsApQserh3OfyGfQub+ob6PNe2PQXhZ0zOp3mY=
+	b=pW/tkOzk56eMDzFXr1o4up0MwBmhJh7bk97KVoU+8bNc+qaqj1oOiJMcr+NEQCGi7
+	 k+4eEZUpk/SITssO22cRZRoxjDRJn/robNBOHDL34beKD8AlR8JzYx76n4rExhp3Ux
+	 AopEPUnnMjjmNvt0vohJG0pL5FP7eGJNUe3q0ug4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389851AbfGOOSR (ORCPT
+        id S2389545AbfGOOPI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 15 Jul 2019 10:18:17 -0400
-Received: from mail.kernel.org ([198.145.29.99]:38142 "EHLO mail.kernel.org"
+        Mon, 15 Jul 2019 10:15:08 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58792 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2389710AbfGOOSQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jul 2019 10:18:16 -0400
+        id S1732233AbfGOOPF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 15 Jul 2019 10:15:05 -0400
 Received: from sasha-vm.mshome.net (unknown [73.61.17.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id F1DDB206B8;
-        Mon, 15 Jul 2019 14:18:13 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 850E1206B8;
+        Mon, 15 Jul 2019 14:15:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1563200295;
-        bh=XaAjnu12IndW/tEV9TQigJdi6gSZY5u27R/Bpm9PgKs=;
+        s=default; t=1563200104;
+        bh=3tm0O9vKFq6xQLQTTQHLCmlCsbnPPandPuISTbA4hW8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=RRWeAnOXWvWkueP8KNBwZ2EWDG+UFNqKFPJB3QV1JpAK3sBaY9J+2OjyLDwJzlIDp
-         12Y7/g7RYkA+21sQhU6djJBLhz6NP7UxjFd5i7KL1IxYVIqtHvDMKoa94c32ZuWEJK
-         YkevGEKvnjjwmimq1Mi+LeuHEtqmaNqFmhdGekUg=
+        b=MHMTSSdYpSDVQl+fxg4Cz0K+PJ1y93DoKo14Lh6cBEAngbCKUKtmaA4hb1xrvmR0X
+         RADpWYSC9DBmpSFxhTHhMapWocWxibNUxJb57NNraxXOUEQpCu49R9P93SnXYOkHAK
+         8hdFS8Ulp5yN+jbRjRrlYaCJ7mRiz7i2xBWSGlWg=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Surabhi Vishnoi <svishnoi@codeaurora.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
+Cc:     Shahar S Matityahu <shahar.s.matityahu@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 002/158] ath10k: Do not send probe response template for mesh
-Date:   Mon, 15 Jul 2019 10:15:33 -0400
-Message-Id: <20190715141809.8445-2-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.1 184/219] iwlwifi: dbg: fix debug monitor stop and restart delays
+Date:   Mon, 15 Jul 2019 10:03:05 -0400
+Message-Id: <20190715140341.6443-184-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190715141809.8445-1-sashal@kernel.org>
-References: <20190715141809.8445-1-sashal@kernel.org>
+In-Reply-To: <20190715140341.6443-1-sashal@kernel.org>
+References: <20190715140341.6443-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -60,43 +60,67 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Surabhi Vishnoi <svishnoi@codeaurora.org>
+From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 
-[ Upstream commit 97354f2c432788e3163134df6bb144f4b6289d87 ]
+[ Upstream commit fc838c775f35e272e5cc7ef43853f0b55babbe37 ]
 
-Currently mac80211 do not support probe response template for
-mesh point. When WMI_SERVICE_BEACON_OFFLOAD is enabled, host
-driver tries to configure probe response template for mesh, but
-it fails because the interface type is not NL80211_IFTYPE_AP but
-NL80211_IFTYPE_MESH_POINT.
+The driver should delay only in recording stop flow between writing to
+DBGC_IN_SAMPLE register and DBGC_OUT_CTRL register. Any other delay is
+not needed.
 
-To avoid this failure, skip sending probe response template to
-firmware for mesh point.
+Change the following:
+1. Remove any unnecessary delays in the flow
+2. Increase the delay in the stop recording flow since 100 micro is
+   not enough
+3. Use usleep_range instead of delay since the driver is allowed to
+   sleep in this flow.
 
-Tested HW: WCN3990/QCA6174/QCA9984
-
-Signed-off-by: Surabhi Vishnoi <svishnoi@codeaurora.org>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
+Fixes: 5cfe79c8d92a ("iwlwifi: fw: stop and start debugging using host command")
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c | 2 --
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.h | 6 ++++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index f3b1cfacfe9d..1419f9d1505f 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -1624,6 +1624,10 @@ static int ath10k_mac_setup_prb_tmpl(struct ath10k_vif *arvif)
- 	if (arvif->vdev_type != WMI_VDEV_TYPE_AP)
- 		return 0;
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+index d7380016f1c0..c30f626b1602 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+@@ -2146,8 +2146,6 @@ void iwl_fw_dbg_collect_sync(struct iwl_fw_runtime *fwrt)
+ 	/* start recording again if the firmware is not crashed */
+ 	if (!test_bit(STATUS_FW_ERROR, &fwrt->trans->status) &&
+ 	    fwrt->fw->dbg.dest_tlv) {
+-		/* wait before we collect the data till the DBGC stop */
+-		udelay(500);
+ 		iwl_fw_dbg_restart_recording(fwrt, &params);
+ 	}
+ }
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
+index a199056234d3..97fcd57e17d8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
+@@ -297,7 +297,10 @@ _iwl_fw_dbg_stop_recording(struct iwl_trans *trans,
+ 	}
  
-+	 /* For mesh, probe response and beacon share the same template */
-+	if (ieee80211_vif_is_mesh(vif))
-+		return 0;
-+
- 	prb = ieee80211_proberesp_get(hw, vif);
- 	if (!prb) {
- 		ath10k_warn(ar, "failed to get probe resp template from mac80211\n");
+ 	iwl_write_umac_prph(trans, DBGC_IN_SAMPLE, 0);
+-	udelay(100);
++	/* wait for the DBGC to finish writing the internal buffer to DRAM to
++	 * avoid halting the HW while writing
++	 */
++	usleep_range(700, 1000);
+ 	iwl_write_umac_prph(trans, DBGC_OUT_CTRL, 0);
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
+ 	trans->dbg_rec_on = false;
+@@ -327,7 +330,6 @@ _iwl_fw_dbg_restart_recording(struct iwl_trans *trans,
+ 		iwl_set_bits_prph(trans, MON_BUFF_SAMPLE_CTL, 0x1);
+ 	} else {
+ 		iwl_write_umac_prph(trans, DBGC_IN_SAMPLE, params->in_sample);
+-		udelay(100);
+ 		iwl_write_umac_prph(trans, DBGC_OUT_CTRL, params->out_ctrl);
+ 	}
+ }
 -- 
 2.20.1
 
