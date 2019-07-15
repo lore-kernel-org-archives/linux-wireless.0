@@ -4,49 +4,51 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29AE9C76191
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 14:04:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DB36C76191
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 14:12:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 042AA206B8
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 14:04:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F197121530
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 14:12:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1563199474;
-	bh=v1PQWlyIIUKb7uwAvPPpO/t5SdRgQrA1dwadJe0wwAk=;
+	s=default; t=1563199938;
+	bh=cbO4zdkqTuesiWPcuAY52CFiZWqXBjRRSrQvxkDaGn8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=0q3L3xevueLpdlRvgkPOvZlHMZc2mjaphYhV3S5NHOLBDVcw/a1L3bryQjRcEHKYB
-	 GbNcfT+SfPd4QXNlz+5LrGj+M/5n0j68TDfGGVAjdkpQ5eGoW1aHbbX4bMOCyvyYAn
-	 Obap9Rj1t//L1PoTQLEQm1zNNAqRYe0cBuVEYy7o=
+	b=WzrwdxbpacmcRU2jWfTHKmXkcqbz3OdGggNthWtRofB+cy94UnnuaAxxopS6yjpv4
+	 Yj0MiFaWd3qsfPP1+OR48ROaXn32I/TmgJz3n6FbP5rOqLJ9LATv/vu6XEdfDv54Is
+	 DmnXgCxs3V84matZHu8FuxuOJY8gypymhjNDN0/Y=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387928AbfGOOEa (ORCPT
+        id S2389043AbfGOOMQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 15 Jul 2019 10:04:30 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50280 "EHLO mail.kernel.org"
+        Mon, 15 Jul 2019 10:12:16 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50488 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387498AbfGOOE2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jul 2019 10:04:28 -0400
+        id S2388986AbfGOOMQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 15 Jul 2019 10:12:16 -0400
 Received: from sasha-vm.mshome.net (unknown [73.61.17.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id D3408206B8;
-        Mon, 15 Jul 2019 14:04:22 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 376A320868;
+        Mon, 15 Jul 2019 14:12:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1563199467;
-        bh=v1PQWlyIIUKb7uwAvPPpO/t5SdRgQrA1dwadJe0wwAk=;
+        s=default; t=1563199935;
+        bh=cbO4zdkqTuesiWPcuAY52CFiZWqXBjRRSrQvxkDaGn8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=tlizvpuWDQeY/iUNMb+G1ZCjs5K+1i8ibJl1A02yY1O3mKttHF++1PM/qZOXwmUw0
-         ZKhnYajk2A/jGrWALfzQPRA7yBvSA2ZAo8jmKVuIy2lwZpFmZcvPmHPWR/4zBeFo1S
-         9UlU5pIn2rY9SMsxtZpwIlIvhXCCDPtDPvtwH6rM=
+        b=FtVYyS5jJ/Ru4mxAa1TiCiVHPrJVr+A5kEuSDDQl7hJg/Z0oKBWldmqj+vW+h0NAk
+         gCjru3Qsnx/JvaDBGjS81M+QI++yoU4nqhQkrgJ1rGGPIzPq+43JD/2EK8Un8WS1ZF
+         piLcOnFNt6YrfSaYqRvmea7QLBqQfXEf7qUu/8uE=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Wen Gong <wgong@codeaurora.org>, Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
+Cc:     Lorenzo Bianconi <lorenzo@kernel.org>,
+        Jakub Kicinski <kubakici@wp.pl>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.1 012/219] ath10k: add peer id check in ath10k_peer_find_by_id
-Date:   Mon, 15 Jul 2019 10:00:13 -0400
-Message-Id: <20190715140341.6443-12-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.1 142/219] mt7601u: fix possible memory leak when the device is disconnected
+Date:   Mon, 15 Jul 2019 10:02:23 -0400
+Message-Id: <20190715140341.6443-142-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190715140341.6443-1-sashal@kernel.org>
 References: <20190715140341.6443-1-sashal@kernel.org>
@@ -59,67 +61,125 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Wen Gong <wgong@codeaurora.org>
+From: Lorenzo Bianconi <lorenzo@kernel.org>
 
-[ Upstream commit 49ed34b835e231aa941257394716bc689bc98d9f ]
+[ Upstream commit 23377c200b2eb48a60d0f228b2a2e75ed6ee6060 ]
 
-For some SDIO chip, the peer id is 65535 for MPDU with error status,
-then test_bit will trigger buffer overflow for peer's memory, if kasan
-enabled, it will report error.
+When the device is disconnected while passing traffic it is possible
+to receive out of order urbs causing a memory leak since the skb linked
+to the current tx urb is not removed. Fix the issue deallocating the skb
+cleaning up the tx ring. Moreover this patch fixes the following kernel
+warning
 
-Reason is when station is in disconnecting status, firmware do not delete
-the peer info since it not disconnected completely, meanwhile some AP will
-still send data packet to station, then hardware will receive the packet
-and send to firmware, firmware's logic will report peer id of 65535 for
-MPDU with error status.
+[   57.480771] usb 1-1: USB disconnect, device number 2
+[   57.483451] ------------[ cut here ]------------
+[   57.483462] TX urb mismatch
+[   57.483481] WARNING: CPU: 1 PID: 32 at drivers/net/wireless/mediatek/mt7601u/dma.c:245 mt7601u_complete_tx+0x165/00
+[   57.483483] Modules linked in:
+[   57.483496] CPU: 1 PID: 32 Comm: kworker/1:1 Not tainted 5.2.0-rc1+ #72
+[   57.483498] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.12.0-2.fc30 04/01/2014
+[   57.483502] Workqueue: usb_hub_wq hub_event
+[   57.483507] RIP: 0010:mt7601u_complete_tx+0x165/0x1e0
+[   57.483510] Code: 8b b5 10 04 00 00 8b 8d 14 04 00 00 eb 8b 80 3d b1 cb e1 00 00 75 9e 48 c7 c7 a4 ea 05 82 c6 05 f
+[   57.483513] RSP: 0000:ffffc900000a0d28 EFLAGS: 00010092
+[   57.483516] RAX: 000000000000000f RBX: ffff88802c0a62c0 RCX: ffffc900000a0c2c
+[   57.483518] RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffffffff810a8371
+[   57.483520] RBP: ffff88803ced6858 R08: 0000000000000000 R09: 0000000000000001
+[   57.483540] R10: 0000000000000002 R11: 0000000000000000 R12: 0000000000000046
+[   57.483542] R13: ffff88802c0a6c88 R14: ffff88803baab540 R15: ffff88803a0cc078
+[   57.483548] FS:  0000000000000000(0000) GS:ffff88803eb00000(0000) knlGS:0000000000000000
+[   57.483550] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   57.483552] CR2: 000055e7f6780100 CR3: 0000000028c86000 CR4: 00000000000006a0
+[   57.483554] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[   57.483556] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[   57.483559] Call Trace:
+[   57.483561]  <IRQ>
+[   57.483565]  __usb_hcd_giveback_urb+0x77/0xe0
+[   57.483570]  xhci_giveback_urb_in_irq.isra.0+0x8b/0x140
+[   57.483574]  handle_cmd_completion+0xf5b/0x12c0
+[   57.483577]  xhci_irq+0x1f6/0x1810
+[   57.483581]  ? lockdep_hardirqs_on+0x9e/0x180
+[   57.483584]  ? _raw_spin_unlock_irq+0x24/0x30
+[   57.483588]  __handle_irq_event_percpu+0x3a/0x260
+[   57.483592]  handle_irq_event_percpu+0x1c/0x60
+[   57.483595]  handle_irq_event+0x2f/0x4c
+[   57.483599]  handle_edge_irq+0x7e/0x1a0
+[   57.483603]  handle_irq+0x17/0x20
+[   57.483607]  do_IRQ+0x54/0x110
+[   57.483610]  common_interrupt+0xf/0xf
+[   57.483612]  </IRQ>
 
-Add check for overflow the size of peer's peer_ids will avoid the buffer
-overflow access.
-
-Call trace of kasan:
-dump_backtrace+0x0/0x2ec
-show_stack+0x20/0x2c
-__dump_stack+0x20/0x28
-dump_stack+0xc8/0xec
-print_address_description+0x74/0x240
-kasan_report+0x250/0x26c
-__asan_report_load8_noabort+0x20/0x2c
-ath10k_peer_find_by_id+0x180/0x1e4 [ath10k_core]
-ath10k_htt_t2h_msg_handler+0x100c/0x2fd4 [ath10k_core]
-ath10k_htt_htc_t2h_msg_handler+0x20/0x34 [ath10k_core]
-ath10k_sdio_irq_handler+0xcc8/0x1678 [ath10k_sdio]
-process_sdio_pending_irqs+0xec/0x370
-sdio_run_irqs+0x68/0xe4
-sdio_irq_work+0x1c/0x28
-process_one_work+0x3d8/0x8b0
-worker_thread+0x508/0x7cc
-kthread+0x24c/0x264
-ret_from_fork+0x10/0x18
-
-Tested with QCA6174 SDIO with firmware
-WLAN.RMH.4.4.1-00007-QCARMSWP-1.
-
-Signed-off-by: Wen Gong <wgong@codeaurora.org>
+Acked-by: Jakub Kicinski <kubakici@wp.pl>
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath10k/txrx.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/net/wireless/mediatek/mt7601u/dma.c | 21 ++++++++++++++++-----
+ drivers/net/wireless/mediatek/mt7601u/tx.c  |  4 ++--
+ 2 files changed, 18 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
-index c5818d28f55a..4102df016931 100644
---- a/drivers/net/wireless/ath/ath10k/txrx.c
-+++ b/drivers/net/wireless/ath/ath10k/txrx.c
-@@ -150,6 +150,9 @@ struct ath10k_peer *ath10k_peer_find_by_id(struct ath10k *ar, int peer_id)
+diff --git a/drivers/net/wireless/mediatek/mt7601u/dma.c b/drivers/net/wireless/mediatek/mt7601u/dma.c
+index 134f8a5bb5d4..401444f36402 100644
+--- a/drivers/net/wireless/mediatek/mt7601u/dma.c
++++ b/drivers/net/wireless/mediatek/mt7601u/dma.c
+@@ -241,14 +241,25 @@ static void mt7601u_complete_tx(struct urb *urb)
+ 	struct sk_buff *skb;
+ 	unsigned long flags;
+ 
+-	spin_lock_irqsave(&dev->tx_lock, flags);
++	switch (urb->status) {
++	case -ECONNRESET:
++	case -ESHUTDOWN:
++	case -ENOENT:
++		return;
++	default:
++		dev_err_ratelimited(dev->dev, "tx urb failed: %d\n",
++				    urb->status);
++		/* fall through */
++	case 0:
++		break;
++	}
+ 
+-	if (mt7601u_urb_has_error(urb))
+-		dev_err(dev->dev, "Error: TX urb failed:%d\n", urb->status);
++	spin_lock_irqsave(&dev->tx_lock, flags);
+ 	if (WARN_ONCE(q->e[q->start].urb != urb, "TX urb mismatch"))
+ 		goto out;
+ 
+ 	skb = q->e[q->start].skb;
++	q->e[q->start].skb = NULL;
+ 	trace_mt_tx_dma_done(dev, skb);
+ 
+ 	__skb_queue_tail(&dev->tx_skb_done, skb);
+@@ -448,10 +459,10 @@ static void mt7601u_free_tx_queue(struct mt7601u_tx_queue *q)
  {
- 	struct ath10k_peer *peer;
+ 	int i;
  
-+	if (peer_id >= BITS_PER_TYPE(peer->peer_ids))
-+		return NULL;
-+
- 	lockdep_assert_held(&ar->data_lock);
+-	WARN_ON(q->used);
+-
+ 	for (i = 0; i < q->entries; i++)  {
+ 		usb_poison_urb(q->e[i].urb);
++		if (q->e[i].skb)
++			mt7601u_tx_status(q->dev, q->e[i].skb);
+ 		usb_free_urb(q->e[i].urb);
+ 	}
+ }
+diff --git a/drivers/net/wireless/mediatek/mt7601u/tx.c b/drivers/net/wireless/mediatek/mt7601u/tx.c
+index 3600e911a63e..4d81c45722fb 100644
+--- a/drivers/net/wireless/mediatek/mt7601u/tx.c
++++ b/drivers/net/wireless/mediatek/mt7601u/tx.c
+@@ -117,9 +117,9 @@ void mt7601u_tx_status(struct mt7601u_dev *dev, struct sk_buff *skb)
+ 	info->status.rates[0].idx = -1;
+ 	info->flags |= IEEE80211_TX_STAT_ACK;
  
- 	list_for_each_entry(peer, &ar->peers, list)
+-	spin_lock(&dev->mac_lock);
++	spin_lock_bh(&dev->mac_lock);
+ 	ieee80211_tx_status(dev->hw, skb);
+-	spin_unlock(&dev->mac_lock);
++	spin_unlock_bh(&dev->mac_lock);
+ }
+ 
+ static int mt7601u_skb_rooms(struct mt7601u_dev *dev, struct sk_buff *skb)
 -- 
 2.20.1
 
