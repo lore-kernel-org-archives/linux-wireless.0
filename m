@@ -7,49 +7,48 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15845C7618F
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 14:55:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 997BAC76195
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 15:00:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DEC50205ED
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 14:55:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 730B12054F
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 15:00:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1563202549;
-	bh=ljjfcC5wq4RNJfSh5r/tp0HFdF8ZZPl3HrfpeUJxU58=;
+	s=default; t=1563202809;
+	bh=Amwpqgnf93a0rJcavWw4hRlUB2lPym+RocOUdQVB50o=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=03Ac0Ri7GJpBkwe+s3m623xWPe4VBDwhMXMfcwsfSk1HQrsrMqKEcDfVKRCGZlJXI
-	 l7TyM7RHxJEG2x+Sp9bxuF/0hHm77DzEfDyXK48nfvvuFe55kcp+XdXgBqSFN7R27E
-	 NWwpYxIs2xffRTk89PYKRUA66Wr8o2Lro7/EQQac=
+	b=YDIaxVO4c5jWpj2JerMdwQzdqYuJcJFhrGSDqCxbliZddZAV0sSoLgn1iwCyjHvxC
+	 tCMJdEpXKbKQBeKOQ6eyxBjfF4UbNnwotA2UkYkqEji9OiekNbDvqIOKyce2TP4NAB
+	 VbemX/+AQPr1Cq0zGL6npGITNEo3RP+79MdwFmlU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391392AbfGOOzo (ORCPT
+        id S2389938AbfGOOSc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 15 Jul 2019 10:55:44 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57260 "EHLO mail.kernel.org"
+        Mon, 15 Jul 2019 10:18:32 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38592 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731566AbfGOOYL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jul 2019 10:24:11 -0400
+        id S2389921AbfGOOSc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 15 Jul 2019 10:18:32 -0400
 Received: from sasha-vm.mshome.net (unknown [73.61.17.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 6142E217F4;
-        Mon, 15 Jul 2019 14:24:08 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id BAB762081C;
+        Mon, 15 Jul 2019 14:18:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1563200650;
-        bh=ljjfcC5wq4RNJfSh5r/tp0HFdF8ZZPl3HrfpeUJxU58=;
+        s=default; t=1563200311;
+        bh=Amwpqgnf93a0rJcavWw4hRlUB2lPym+RocOUdQVB50o=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=h3xifsKKd4Q6p508IxkBxH/i7dcQjv5gJ6EK5b9+DTz4kUl+nh7xkTXFGbDiQZTwx
-         ObTsKgKTVJsWoM4uKmdsTC9cEg243QjnNQXm8Jcb0V+/kDIG0+aMtn16TyMbUQUsyo
-         Ny9TkePx7uxpYhonHwCrz30zpDsvyfoRsBJfNY9U=
+        b=WoRn6l1mRMcIAk9aLn3BuIVIvwN4cdLynSjcFHy4obB86Zqtw8G+1AtyW774vHI8I
+         gClD7fM8xUMTUVEqZHaINA6n2rfey+kh7siQHhAygrrAdFEy/4bNF1zBwTXUeJ7fgn
+         gwCRSqWwHq3hiiY/0p3lpSMLSR5YPhc3BXEJQVKI=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Ping-Ke Shih <pkshih@realtek.com>,
-        syzbot+1fcc5ef45175fc774231@syzkaller.appspotmail.com,
-        Larry Finger <Larry.Finger@lwfinger.net>,
+Cc:     Maya Erez <merez@codeaurora.org>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 103/158] rtlwifi: rtl8192cu: fix error handle when usb probe failed
-Date:   Mon, 15 Jul 2019 10:17:14 -0400
-Message-Id: <20190715141809.8445-103-sashal@kernel.org>
+        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
+        netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 007/158] wil6210: fix spurious interrupts in 3-msi
+Date:   Mon, 15 Jul 2019 10:15:38 -0400
+Message-Id: <20190715141809.8445-7-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190715141809.8445-1-sashal@kernel.org>
 References: <20190715141809.8445-1-sashal@kernel.org>
@@ -62,104 +61,180 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+From: Maya Erez <merez@codeaurora.org>
 
-[ Upstream commit 6c0ed66f1a5b84e2a812c7c2d6571a5621bf3396 ]
+[ Upstream commit e10b0eddd5235aa5aef4e40b970e34e735611a80 ]
 
-rtl_usb_probe() must do error handle rtl_deinit_core() only if
-rtl_init_core() is done, otherwise goto error_out2.
+Interrupt is set in ICM (ICR & ~IMV) rising trigger.
+As the driver masks the IRQ after clearing it, there can
+be a race where an additional spurious interrupt is triggered
+when the driver unmask the IRQ.
+This can happen in case HW triggers an interrupt after the clear
+and before the mask.
 
-| usb 1-1: New USB device strings: Mfr=0, Product=0, SerialNumber=0
-| rtl_usb: reg 0xf0, usbctrl_vendorreq TimeOut! status:0xffffffb9 value=0x0
-| rtl8192cu: Chip version 0x10
-| rtl_usb: reg 0xa, usbctrl_vendorreq TimeOut! status:0xffffffb9 value=0x0
-| rtl_usb: Too few input end points found
-| INFO: trying to register non-static key.
-| the code is fine but needs lockdep annotation.
-| turning off the locking correctness validator.
-| CPU: 0 PID: 12 Comm: kworker/0:1 Not tainted 5.1.0-rc4-319354-g9a33b36 #3
-| Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS
-| Google 01/01/2011
-| Workqueue: usb_hub_wq hub_event
-| Call Trace:
-|   __dump_stack lib/dump_stack.c:77 [inline]
-|   dump_stack+0xe8/0x16e lib/dump_stack.c:113
-|   assign_lock_key kernel/locking/lockdep.c:786 [inline]
-|   register_lock_class+0x11b8/0x1250 kernel/locking/lockdep.c:1095
-|   __lock_acquire+0xfb/0x37c0 kernel/locking/lockdep.c:3582
-|   lock_acquire+0x10d/0x2f0 kernel/locking/lockdep.c:4211
-|   __raw_spin_lock_irqsave include/linux/spinlock_api_smp.h:110 [inline]
-|   _raw_spin_lock_irqsave+0x44/0x60 kernel/locking/spinlock.c:152
-|   rtl_c2hcmd_launcher+0xd1/0x390
-| drivers/net/wireless/realtek/rtlwifi/base.c:2344
-|   rtl_deinit_core+0x25/0x2d0 drivers/net/wireless/realtek/rtlwifi/base.c:574
-|   rtl_usb_probe.cold+0x861/0xa70
-| drivers/net/wireless/realtek/rtlwifi/usb.c:1093
-|   usb_probe_interface+0x31d/0x820 drivers/usb/core/driver.c:361
-|   really_probe+0x2da/0xb10 drivers/base/dd.c:509
-|   driver_probe_device+0x21d/0x350 drivers/base/dd.c:671
-|   __device_attach_driver+0x1d8/0x290 drivers/base/dd.c:778
-|   bus_for_each_drv+0x163/0x1e0 drivers/base/bus.c:454
-|   __device_attach+0x223/0x3a0 drivers/base/dd.c:844
-|   bus_probe_device+0x1f1/0x2a0 drivers/base/bus.c:514
-|   device_add+0xad2/0x16e0 drivers/base/core.c:2106
-|   usb_set_configuration+0xdf7/0x1740 drivers/usb/core/message.c:2021
-|   generic_probe+0xa2/0xda drivers/usb/core/generic.c:210
-|   usb_probe_device+0xc0/0x150 drivers/usb/core/driver.c:266
-|   really_probe+0x2da/0xb10 drivers/base/dd.c:509
-|   driver_probe_device+0x21d/0x350 drivers/base/dd.c:671
-|   __device_attach_driver+0x1d8/0x290 drivers/base/dd.c:778
-|   bus_for_each_drv+0x163/0x1e0 drivers/base/bus.c:454
-|   __device_attach+0x223/0x3a0 drivers/base/dd.c:844
-|   bus_probe_device+0x1f1/0x2a0 drivers/base/bus.c:514
-|   device_add+0xad2/0x16e0 drivers/base/core.c:2106
-|   usb_new_device.cold+0x537/0xccf drivers/usb/core/hub.c:2534
-|   hub_port_connect drivers/usb/core/hub.c:5089 [inline]
-|   hub_port_connect_change drivers/usb/core/hub.c:5204 [inline]
-|   port_event drivers/usb/core/hub.c:5350 [inline]
-|   hub_event+0x138e/0x3b00 drivers/usb/core/hub.c:5432
-|   process_one_work+0x90f/0x1580 kernel/workqueue.c:2269
-|   worker_thread+0x9b/0xe20 kernel/workqueue.c:2415
-|   kthread+0x313/0x420 kernel/kthread.c:253
-|   ret_from_fork+0x3a/0x50 arch/x86/entry/entry_64.S:352
+To prevent the second spurious interrupt the driver needs to mask the
+IRQ before reading and clearing it.
 
-Reported-by: syzbot+1fcc5ef45175fc774231@syzkaller.appspotmail.com
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Maya Erez <merez@codeaurora.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/realtek/rtlwifi/usb.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/wil6210/interrupt.c | 65 ++++++++++++--------
+ 1 file changed, 40 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/usb.c b/drivers/net/wireless/realtek/rtlwifi/usb.c
-index 2ac5004d7a40..5adb939afee8 100644
---- a/drivers/net/wireless/realtek/rtlwifi/usb.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/usb.c
-@@ -1081,13 +1081,13 @@ int rtl_usb_probe(struct usb_interface *intf,
- 	rtlpriv->cfg->ops->read_eeprom_info(hw);
- 	err = _rtl_usb_init(hw);
- 	if (err)
--		goto error_out;
-+		goto error_out2;
- 	rtl_usb_init_sw(hw);
- 	/* Init mac80211 sw */
- 	err = rtl_init_core(hw);
- 	if (err) {
- 		pr_err("Can't allocate sw for mac80211\n");
--		goto error_out;
-+		goto error_out2;
- 	}
- 	if (rtlpriv->cfg->ops->init_sw_vars(hw)) {
- 		pr_err("Can't init_sw_vars\n");
-@@ -1108,6 +1108,7 @@ int rtl_usb_probe(struct usb_interface *intf,
+diff --git a/drivers/net/wireless/ath/wil6210/interrupt.c b/drivers/net/wireless/ath/wil6210/interrupt.c
+index 5d287a8e1b45..0655cd884514 100644
+--- a/drivers/net/wireless/ath/wil6210/interrupt.c
++++ b/drivers/net/wireless/ath/wil6210/interrupt.c
+@@ -296,21 +296,24 @@ void wil_configure_interrupt_moderation(struct wil6210_priv *wil)
+ static irqreturn_t wil6210_irq_rx(int irq, void *cookie)
+ {
+ 	struct wil6210_priv *wil = cookie;
+-	u32 isr = wil_ioread32_and_clear(wil->csr +
+-					 HOSTADDR(RGF_DMA_EP_RX_ICR) +
+-					 offsetof(struct RGF_ICR, ICR));
++	u32 isr;
+ 	bool need_unmask = true;
  
- error_out:
- 	rtl_deinit_core(hw);
-+error_out2:
- 	_rtl_usb_io_handler_release(hw);
- 	usb_put_dev(udev);
- 	complete(&rtlpriv->firmware_loading_complete);
++	wil6210_mask_irq_rx(wil);
++
++	isr = wil_ioread32_and_clear(wil->csr +
++				     HOSTADDR(RGF_DMA_EP_RX_ICR) +
++				     offsetof(struct RGF_ICR, ICR));
++
+ 	trace_wil6210_irq_rx(isr);
+ 	wil_dbg_irq(wil, "ISR RX 0x%08x\n", isr);
+ 
+ 	if (unlikely(!isr)) {
+ 		wil_err_ratelimited(wil, "spurious IRQ: RX\n");
++		wil6210_unmask_irq_rx(wil);
+ 		return IRQ_NONE;
+ 	}
+ 
+-	wil6210_mask_irq_rx(wil);
+-
+ 	/* RX_DONE and RX_HTRSH interrupts are the same if interrupt
+ 	 * moderation is not used. Interrupt moderation may cause RX
+ 	 * buffer overflow while RX_DONE is delayed. The required
+@@ -355,21 +358,24 @@ static irqreturn_t wil6210_irq_rx(int irq, void *cookie)
+ static irqreturn_t wil6210_irq_rx_edma(int irq, void *cookie)
+ {
+ 	struct wil6210_priv *wil = cookie;
+-	u32 isr = wil_ioread32_and_clear(wil->csr +
+-					 HOSTADDR(RGF_INT_GEN_RX_ICR) +
+-					 offsetof(struct RGF_ICR, ICR));
++	u32 isr;
+ 	bool need_unmask = true;
+ 
++	wil6210_mask_irq_rx_edma(wil);
++
++	isr = wil_ioread32_and_clear(wil->csr +
++				     HOSTADDR(RGF_INT_GEN_RX_ICR) +
++				     offsetof(struct RGF_ICR, ICR));
++
+ 	trace_wil6210_irq_rx(isr);
+ 	wil_dbg_irq(wil, "ISR RX 0x%08x\n", isr);
+ 
+ 	if (unlikely(!isr)) {
+ 		wil_err(wil, "spurious IRQ: RX\n");
++		wil6210_unmask_irq_rx_edma(wil);
+ 		return IRQ_NONE;
+ 	}
+ 
+-	wil6210_mask_irq_rx_edma(wil);
+-
+ 	if (likely(isr & BIT_RX_STATUS_IRQ)) {
+ 		wil_dbg_irq(wil, "RX status ring\n");
+ 		isr &= ~BIT_RX_STATUS_IRQ;
+@@ -403,21 +409,24 @@ static irqreturn_t wil6210_irq_rx_edma(int irq, void *cookie)
+ static irqreturn_t wil6210_irq_tx_edma(int irq, void *cookie)
+ {
+ 	struct wil6210_priv *wil = cookie;
+-	u32 isr = wil_ioread32_and_clear(wil->csr +
+-					 HOSTADDR(RGF_INT_GEN_TX_ICR) +
+-					 offsetof(struct RGF_ICR, ICR));
++	u32 isr;
+ 	bool need_unmask = true;
+ 
++	wil6210_mask_irq_tx_edma(wil);
++
++	isr = wil_ioread32_and_clear(wil->csr +
++				     HOSTADDR(RGF_INT_GEN_TX_ICR) +
++				     offsetof(struct RGF_ICR, ICR));
++
+ 	trace_wil6210_irq_tx(isr);
+ 	wil_dbg_irq(wil, "ISR TX 0x%08x\n", isr);
+ 
+ 	if (unlikely(!isr)) {
+ 		wil_err(wil, "spurious IRQ: TX\n");
++		wil6210_unmask_irq_tx_edma(wil);
+ 		return IRQ_NONE;
+ 	}
+ 
+-	wil6210_mask_irq_tx_edma(wil);
+-
+ 	if (likely(isr & BIT_TX_STATUS_IRQ)) {
+ 		wil_dbg_irq(wil, "TX status ring\n");
+ 		isr &= ~BIT_TX_STATUS_IRQ;
+@@ -446,21 +455,24 @@ static irqreturn_t wil6210_irq_tx_edma(int irq, void *cookie)
+ static irqreturn_t wil6210_irq_tx(int irq, void *cookie)
+ {
+ 	struct wil6210_priv *wil = cookie;
+-	u32 isr = wil_ioread32_and_clear(wil->csr +
+-					 HOSTADDR(RGF_DMA_EP_TX_ICR) +
+-					 offsetof(struct RGF_ICR, ICR));
++	u32 isr;
+ 	bool need_unmask = true;
+ 
++	wil6210_mask_irq_tx(wil);
++
++	isr = wil_ioread32_and_clear(wil->csr +
++				     HOSTADDR(RGF_DMA_EP_TX_ICR) +
++				     offsetof(struct RGF_ICR, ICR));
++
+ 	trace_wil6210_irq_tx(isr);
+ 	wil_dbg_irq(wil, "ISR TX 0x%08x\n", isr);
+ 
+ 	if (unlikely(!isr)) {
+ 		wil_err_ratelimited(wil, "spurious IRQ: TX\n");
++		wil6210_unmask_irq_tx(wil);
+ 		return IRQ_NONE;
+ 	}
+ 
+-	wil6210_mask_irq_tx(wil);
+-
+ 	if (likely(isr & BIT_DMA_EP_TX_ICR_TX_DONE)) {
+ 		wil_dbg_irq(wil, "TX done\n");
+ 		isr &= ~BIT_DMA_EP_TX_ICR_TX_DONE;
+@@ -532,20 +544,23 @@ static bool wil_validate_mbox_regs(struct wil6210_priv *wil)
+ static irqreturn_t wil6210_irq_misc(int irq, void *cookie)
+ {
+ 	struct wil6210_priv *wil = cookie;
+-	u32 isr = wil_ioread32_and_clear(wil->csr +
+-					 HOSTADDR(RGF_DMA_EP_MISC_ICR) +
+-					 offsetof(struct RGF_ICR, ICR));
++	u32 isr;
++
++	wil6210_mask_irq_misc(wil, false);
++
++	isr = wil_ioread32_and_clear(wil->csr +
++				     HOSTADDR(RGF_DMA_EP_MISC_ICR) +
++				     offsetof(struct RGF_ICR, ICR));
+ 
+ 	trace_wil6210_irq_misc(isr);
+ 	wil_dbg_irq(wil, "ISR MISC 0x%08x\n", isr);
+ 
+ 	if (!isr) {
+ 		wil_err(wil, "spurious IRQ: MISC\n");
++		wil6210_unmask_irq_misc(wil, false);
+ 		return IRQ_NONE;
+ 	}
+ 
+-	wil6210_mask_irq_misc(wil, false);
+-
+ 	if (isr & ISR_MISC_FW_ERROR) {
+ 		u32 fw_assert_code = wil_r(wil, wil->rgf_fw_assert_code_addr);
+ 		u32 ucode_assert_code =
 -- 
 2.20.1
 
