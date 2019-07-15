@@ -4,56 +4,55 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64AA9C76191
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 14:04:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16DF2C76191
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 14:04:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3E4B9206B8
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 14:04:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E1D9C2081C
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 14:04:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1563199444;
-	bh=KCYLOsGoG359+oREF2v3J7YYuSkQnjbjlMV7bKPIiJQ=;
+	s=default; t=1563199463;
+	bh=tAtuICIV1U+7yLjSH6QQHcFpIEFMJc06cGhrtThDr/g=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=VYRvCEgN8Yyn0EIkAmTiKaiJQ5zh4dWPUT4Ch49lMjOQAoXdmqZTyVvEaUqC9yuLF
-	 K7Kco62Jw1BaEq9jRyOrizErK/9TcUedThiqYU9wV4v6ryOLegJ6Ma6Ul52z5h3A09
-	 zGP9ancHHGytcCORB4msQg2PsTU6+1cMHoqbpSkw=
+	b=tqQXh6J56IBm7xZ71vRyZLSEp1BtLPSFAtIxEKAiyquAAOpafzVJDUzj7MeXCizK2
+	 4OR3zQECDJlCWA2yZJA7tPoFvGJPNs/vM8bapvGsQteADkaeX+HzQYTlaSZi+/LEKy
+	 SN30eNA69PUNHYmIG6gydS2PqZJdft4A6HpAueT8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387823AbfGOOEA (ORCPT
+        id S2387902AbfGOOEV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 15 Jul 2019 10:04:00 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49690 "EHLO mail.kernel.org"
+        Mon, 15 Jul 2019 10:04:21 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50054 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730743AbfGOOD7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jul 2019 10:03:59 -0400
+        id S2387865AbfGOOER (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 15 Jul 2019 10:04:17 -0400
 Received: from sasha-vm.mshome.net (unknown [73.61.17.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 5FC3C2081C;
-        Mon, 15 Jul 2019 14:03:57 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id D33FF206B8;
+        Mon, 15 Jul 2019 14:04:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1563199438;
-        bh=KCYLOsGoG359+oREF2v3J7YYuSkQnjbjlMV7bKPIiJQ=;
+        s=default; t=1563199456;
+        bh=tAtuICIV1U+7yLjSH6QQHcFpIEFMJc06cGhrtThDr/g=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=XXbUPT4RMXtLOqmkxagzp1fWEb7uJq86oRipFCSOdcyMJIZoN1UprZSEHIAkuZEMu
-         GwoXm/g516LSZylGnZ/+Z+fET7QkXR7/tXTKj3FgB9Bxwq6xD4YMwiJnxqZ459Fzm6
-         BV5cG3s0+7vFfGuqcfcr1s8IgPTV5IJH9Q4Ij5Vo=
+        b=EXBrSoZYdnq9NNLdGdofLndSvzyqs+y6Qia4rBakFIa5sx3TBZ099CT1nwSi+bKwW
+         aO7tqCsu/y4BgMIwl99cyYnd1WCuRsS0tXaZz40IasjYRiJGSpdUvDKFNc9UST6mGA
+         hW/uIBmMhtH6W2i0X2rroW5mNT97wPkf7DlkdGqk=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>,
-        Miguel Catalan Cid <miguel.catalan@i2cat.net>,
+Cc:     Maya Erez <merez@codeaurora.org>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.1 004/219] ath9k: Don't trust TX status TID number when reporting airtime
-Date:   Mon, 15 Jul 2019 10:00:05 -0400
-Message-Id: <20190715140341.6443-4-sashal@kernel.org>
+        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
+        netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.1 010/219] wil6210: fix missed MISC mbox interrupt
+Date:   Mon, 15 Jul 2019 10:00:11 -0400
+Message-Id: <20190715140341.6443-10-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190715140341.6443-1-sashal@kernel.org>
 References: <20190715140341.6443-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
@@ -62,58 +61,42 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Toke Høiland-Jørgensen <toke@redhat.com>
+From: Maya Erez <merez@codeaurora.org>
 
-[ Upstream commit 389b72e58259336c2d56d58b660b79cf4b9e0dcb ]
+[ Upstream commit 7441be71ba7e07791fd4fa2b07c932dff14ff4d9 ]
 
-As already noted a comment in ath_tx_complete_aggr(), the hardware will
-occasionally send a TX status with the wrong tid number. If we trust the
-value, airtime usage will be reported to the wrong AC, which can cause the
-deficit on that AC to become very low, blocking subsequent attempts to
-transmit.
+When MISC interrupt is triggered due to HALP bit, in parallel
+to mbox events handling by the MISC threaded IRQ, new mbox
+interrupt can be missed in the following scenario:
+1. MISC ICR is read in the IRQ handler
+2. Threaded IRQ is completed and all MISC interrupts are unmasked
+3. mbox interrupt is set by FW
+4. HALP is masked
+The mbox interrupt in step 3 can be missed due to constant high level
+of ICM.
+Masking all MISC IRQs instead of masking only HALP bit in step 4
+will guarantee that ICM will drop to 0 and interrupt will be triggered
+once MISC interrupts will be unmasked.
 
-To fix this, account airtime usage to the TID number from the original skb,
-instead of the one in the hardware TX status report.
-
-Reported-by: Miguel Catalan Cid <miguel.catalan@i2cat.net>
-Signed-off-by: Toke Høiland-Jørgensen <toke@redhat.com>
+Signed-off-by: Maya Erez <merez@codeaurora.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath9k/xmit.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/wil6210/interrupt.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index b17e1ca40995..3be0aeedb9b5 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -668,7 +668,8 @@ static bool bf_is_ampdu_not_probing(struct ath_buf *bf)
- static void ath_tx_count_airtime(struct ath_softc *sc,
- 				 struct ieee80211_sta *sta,
- 				 struct ath_buf *bf,
--				 struct ath_tx_status *ts)
-+				 struct ath_tx_status *ts,
-+				 u8 tid)
- {
- 	u32 airtime = 0;
- 	int i;
-@@ -679,7 +680,7 @@ static void ath_tx_count_airtime(struct ath_softc *sc,
- 		airtime += rate_dur * bf->rates[i].count;
- 	}
- 
--	ieee80211_sta_register_airtime(sta, ts->tid, airtime, 0);
-+	ieee80211_sta_register_airtime(sta, tid, airtime, 0);
- }
- 
- static void ath_tx_process_buffer(struct ath_softc *sc, struct ath_txq *txq,
-@@ -709,7 +710,7 @@ static void ath_tx_process_buffer(struct ath_softc *sc, struct ath_txq *txq,
- 	if (sta) {
- 		struct ath_node *an = (struct ath_node *)sta->drv_priv;
- 		tid = ath_get_skb_tid(sc, an, bf->bf_mpdu);
--		ath_tx_count_airtime(sc, sta, bf, ts);
-+		ath_tx_count_airtime(sc, sta, bf, ts, tid->tidno);
- 		if (ts->ts_status & (ATH9K_TXERR_FILT | ATH9K_TXERR_XRETRY))
- 			tid->clear_ps_filter = true;
+diff --git a/drivers/net/wireless/ath/wil6210/interrupt.c b/drivers/net/wireless/ath/wil6210/interrupt.c
+index 3f5bd177d55f..e41ba24011d8 100644
+--- a/drivers/net/wireless/ath/wil6210/interrupt.c
++++ b/drivers/net/wireless/ath/wil6210/interrupt.c
+@@ -580,7 +580,7 @@ static irqreturn_t wil6210_irq_misc(int irq, void *cookie)
+ 			/* no need to handle HALP ICRs until next vote */
+ 			wil->halp.handle_icr = false;
+ 			wil_dbg_irq(wil, "irq_misc: HALP IRQ invoked\n");
+-			wil6210_mask_halp(wil);
++			wil6210_mask_irq_misc(wil, true);
+ 			complete(&wil->halp.comp);
+ 		}
  	}
 -- 
 2.20.1
