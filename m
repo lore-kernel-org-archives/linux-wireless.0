@@ -4,50 +4,50 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01989C7618F
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 13:59:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59482C76191
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 14:02:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C384820C01
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 13:59:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 32703212F5
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 14:02:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1563199190;
-	bh=9DlUVL7BiJn9Yics0/xXX3gpC0iVA/PUk9BWm+XnRF0=;
+	s=default; t=1563199326;
+	bh=jfDF6V7sa3nAxjig1AZWLSaeAPzexvArYSwSba5R5Gg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=DYg8/ToapRy33XHta/xCCNuk+La5dZgqxr+EmvnXIazYTp3ZG7N2vt7f5zLBImzse
-	 ZT6Diobo6oPxpMs8ebKy5CGr47AgpIB9FuaOvvBjHkyEjgWhktnrvTOHDmHpcGQUu/
-	 EC0m1fdfR23yfOnQNffZnXdN8xocONPXNnFEPAhY=
+	b=s2TJ/G7kdrtuTT0OhjQSQCIJdMyoJTo7wTFGi092Z5yNPRxtbObTRY+6hGkceHcCY
+	 5tu20frYhxPvcYyTA4i8kjXu2PYxn163aOOcRF1wi/XNXn56+fTkZw54d0jLIf5b+u
+	 9XpWUQNPtuAOqssjpFCa7IbvmmtGSRyf6Rgl2zSI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733271AbfGON7h (ORCPT
+        id S1732568AbfGOOAG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 15 Jul 2019 09:59:37 -0400
-Received: from mail.kernel.org ([198.145.29.99]:40146 "EHLO mail.kernel.org"
+        Mon, 15 Jul 2019 10:00:06 -0400
+Received: from mail.kernel.org ([198.145.29.99]:40960 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732859AbfGON7g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jul 2019 09:59:36 -0400
+        id S1733302AbfGON7z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 15 Jul 2019 09:59:55 -0400
 Received: from sasha-vm.mshome.net (unknown [73.61.17.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E42AB2083D;
-        Mon, 15 Jul 2019 13:59:33 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id A44FC20C01;
+        Mon, 15 Jul 2019 13:59:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1563199175;
-        bh=9DlUVL7BiJn9Yics0/xXX3gpC0iVA/PUk9BWm+XnRF0=;
+        s=default; t=1563199194;
+        bh=jfDF6V7sa3nAxjig1AZWLSaeAPzexvArYSwSba5R5Gg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=EFgFcmjHxKaVzJEnc70ZC6LCbVaccAi3otORjLGSc+7n1jk6LYeC/eG9VtWMLSItH
-         coQ6/2PbGW0VvhnCqAbWOXdTTwFVQCdDIGe9iQYbreLWjYWSYmda0fdOLHiMEaCxdb
-         H9vVBp7cG9kN7MYHoRdeY/THlLDY2WAJCBuqAgLY=
+        b=Ntscr2COhhBGy5yK1ppI0nHdGSlPwUCgukIvnBrnFywkEvIq5fr2Q4k35bEbhtoJh
+         AWFoPBjJVwiN91RlcrL8tN7boctk2KRMxAcao8eNtoxmTXkOCRPdBLcBC8iHjl+2WQ
+         3/BMBc69vtzc1incqLU/9wg3p3byfYYbNnDHP7Po=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
+Cc:     Shahar S Matityahu <shahar.s.matityahu@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.2 208/249] iwlwifi: mvm: Drop large non sta frames
-Date:   Mon, 15 Jul 2019 09:46:13 -0400
-Message-Id: <20190715134655.4076-208-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.2 211/249] iwlwifi: dbg: fix debug monitor stop and restart delays
+Date:   Mon, 15 Jul 2019 09:46:16 -0400
+Message-Id: <20190715134655.4076-211-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190715134655.4076-1-sashal@kernel.org>
 References: <20190715134655.4076-1-sashal@kernel.org>
@@ -60,39 +60,67 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 
-[ Upstream commit ac70499ee97231a418dc1a4d6c9dc102e8f64631 ]
+[ Upstream commit fc838c775f35e272e5cc7ef43853f0b55babbe37 ]
 
-In some buggy scenarios we could possible attempt to transmit frames larger
-than maximum MSDU size. Since our devices don't know how to handle this,
-it may result in asserts, hangs etc.
-This can happen, for example, when we receive a large multicast frame
-and try to transmit it back to the air in AP mode.
-Since in a legal scenario this should never happen, drop such frames and
-warn about it.
+The driver should delay only in recording stop flow between writing to
+DBGC_IN_SAMPLE register and DBGC_OUT_CTRL register. Any other delay is
+not needed.
 
-Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Change the following:
+1. Remove any unnecessary delays in the flow
+2. Increase the delay in the stop recording flow since 100 micro is
+   not enough
+3. Use usleep_range instead of delay since the driver is allowed to
+   sleep in this flow.
+
+Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
+Fixes: 5cfe79c8d92a ("iwlwifi: fw: stop and start debugging using host command")
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c | 2 --
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.h | 6 ++++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index 0c2aabc842f9..96f8d38ea321 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -726,6 +726,9 @@ int iwl_mvm_tx_skb_non_sta(struct iwl_mvm *mvm, struct sk_buff *skb)
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+index 33d7bc5500db..c875e173771c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+@@ -2303,8 +2303,6 @@ void iwl_fw_dbg_collect_sync(struct iwl_fw_runtime *fwrt)
+ 	/* start recording again if the firmware is not crashed */
+ 	if (!test_bit(STATUS_FW_ERROR, &fwrt->trans->status) &&
+ 	    fwrt->fw->dbg.dest_tlv) {
+-		/* wait before we collect the data till the DBGC stop */
+-		udelay(500);
+ 		iwl_fw_dbg_restart_recording(fwrt, &params);
+ 	}
+ }
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
+index fd0ad220e961..c5c015a66106 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
+@@ -294,7 +294,10 @@ _iwl_fw_dbg_stop_recording(struct iwl_trans *trans,
+ 	}
  
- 	memcpy(&info, skb->cb, sizeof(info));
- 
-+	if (WARN_ON_ONCE(skb->len > IEEE80211_MAX_DATA_LEN + hdrlen))
-+		return -1;
-+
- 	if (WARN_ON_ONCE(info.flags & IEEE80211_TX_CTL_AMPDU))
- 		return -1;
- 
+ 	iwl_write_umac_prph(trans, DBGC_IN_SAMPLE, 0);
+-	udelay(100);
++	/* wait for the DBGC to finish writing the internal buffer to DRAM to
++	 * avoid halting the HW while writing
++	 */
++	usleep_range(700, 1000);
+ 	iwl_write_umac_prph(trans, DBGC_OUT_CTRL, 0);
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
+ 	trans->dbg_rec_on = false;
+@@ -324,7 +327,6 @@ _iwl_fw_dbg_restart_recording(struct iwl_trans *trans,
+ 		iwl_set_bits_prph(trans, MON_BUFF_SAMPLE_CTL, 0x1);
+ 	} else {
+ 		iwl_write_umac_prph(trans, DBGC_IN_SAMPLE, params->in_sample);
+-		udelay(100);
+ 		iwl_write_umac_prph(trans, DBGC_OUT_CTRL, params->out_ctrl);
+ 	}
+ }
 -- 
 2.20.1
 
