@@ -4,51 +4,52 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78710C7618F
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 14:12:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22E26C7618F
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 14:13:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 43D0B20868
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 14:12:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EBB5520651
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 14:13:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1563199966;
-	bh=AVIWfeOq2+QctxhGn7Gs9o0z2ngpeZllDmYpTK7i0iA=;
+	s=default; t=1563200038;
+	bh=x2Er936Y2eo46gNBxhq3TyLdC50Ova4UQoXs3qMjwSY=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=CggdlEo/4R+dHTnFxdYplJvG774SCCJcKoFVI2n4vUkhsNKKY8BwmreEOGygnaTSf
-	 78XtdLBTwfu0BuvOheCWcLLJuVzHeEByHtWeTkN9gSE8MFIXUo1VPvr5rkWfOKrjC1
-	 3pqeQlQfWcK40nmmiKOSQz/80H44ofzjzQIRRxGU=
+	b=mX1pS9atpDQtyp5UlzHXUF3atgXyNh5RYvio6KwvapDcOB059hp3s2/iJCDgyXcNN
+	 fIy95QbS+Na4uXVmVfv+ysYRcMMu0TGLI1fTaf3wUo22Cz7BnDKu11DF+tJ5/fCPse
+	 4pOYBOZrQqy3JYNKpCqVAFxq7BAeJuFOHpfQrkpY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389072AbfGOOMX (ORCPT
+        id S2389251AbfGOON4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 15 Jul 2019 10:12:23 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50932 "EHLO mail.kernel.org"
+        Mon, 15 Jul 2019 10:13:56 -0400
+Received: from mail.kernel.org ([198.145.29.99]:54714 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388903AbfGOOMW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jul 2019 10:12:22 -0400
+        id S2389047AbfGOONz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 15 Jul 2019 10:13:55 -0400
 Received: from sasha-vm.mshome.net (unknown [73.61.17.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 196BA20868;
-        Mon, 15 Jul 2019 14:12:19 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 8566520651;
+        Mon, 15 Jul 2019 14:13:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1563199941;
-        bh=AVIWfeOq2+QctxhGn7Gs9o0z2ngpeZllDmYpTK7i0iA=;
+        s=default; t=1563200034;
+        bh=x2Er936Y2eo46gNBxhq3TyLdC50Ova4UQoXs3qMjwSY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=AEXsDYO6I388pMYf5tHGlaRdKGvsXwyoch49dgHcaQ8mU+rjNL6WOVWI1B5SlwKo0
-         MDdQuTsivlx63AkDMrqCo68Rbt+AYG2jGjbKPiu25KKoQdP5vk2A5kIRrBU49ma2Yd
-         WCQfl52sQlXEEz3MxxdIjrj7wnYGNpPVvmpbcHE0=
+        b=WAhxFEpnBeJTHCbhLdfL9bYCQQp4LnujFB8vieNvc3E/rwuQdnEppWMYZvGijAcsK
+         aE6nYZRNCRBdbEOu/+USAU7lFj5ei8vnzU+pp8ZAM7YeK888+k0DhXGsQ+EeG29p94
+         4QZDG8r5ltVVkwFqQzi6oraVw/H3te4geUnN4JUE=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Claire Chang <tientzu@chromium.org>,
-        Brian Norris <briannorris@chromium.org>,
+Cc:     Ahmad Masri <amasri@codeaurora.org>,
+        Maya Erez <merez@codeaurora.org>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.1 144/219] ath10k: add missing error handling
-Date:   Mon, 15 Jul 2019 10:02:25 -0400
-Message-Id: <20190715140341.6443-144-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
+        netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.1 165/219] wil6210: drop old event after wmi_call timeout
+Date:   Mon, 15 Jul 2019 10:02:46 -0400
+Message-Id: <20190715140341.6443-165-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190715140341.6443-1-sashal@kernel.org>
 References: <20190715140341.6443-1-sashal@kernel.org>
@@ -61,46 +62,56 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Claire Chang <tientzu@chromium.org>
+From: Ahmad Masri <amasri@codeaurora.org>
 
-[ Upstream commit 4b553f3ca4cbde67399aa3a756c37eb92145b8a1 ]
+[ Upstream commit 1a276003111c0404f6bfeffe924c5a21f482428b ]
 
-In function ath10k_sdio_mbox_rx_alloc() [sdio.c],
-ath10k_sdio_mbox_alloc_rx_pkt() is called without handling the error cases.
-This will make the driver think the allocation for skb is successful and
-try to access the skb. If we enable failslab, system will easily crash with
-NULL pointer dereferencing.
+This change fixes a rare race condition of handling WMI events after
+wmi_call expires.
 
-Call trace of CONFIG_FAILSLAB:
-ath10k_sdio_irq_handler+0x570/0xa88 [ath10k_sdio]
-process_sdio_pending_irqs+0x4c/0x174
-sdio_run_irqs+0x3c/0x64
-sdio_irq_work+0x1c/0x28
+wmi_recv_cmd immediately handles an event when reply_buf is defined and
+a wmi_call is waiting for the event.
+However, in case the wmi_call has already timed-out, there will be no
+waiting/running wmi_call and the event will be queued in WMI queue and
+will be handled later in wmi_event_handle.
+Meanwhile, a new similar wmi_call for the same command and event may
+be issued. In this case, when handling the queued event we got WARN_ON
+printed.
 
-Fixes: d96db25d2025 ("ath10k: add initial SDIO support")
-Signed-off-by: Claire Chang <tientzu@chromium.org>
-Reviewed-by: Brian Norris <briannorris@chromium.org>
+Fixing this case as a valid timeout and drop the unexpected event.
+
+Signed-off-by: Ahmad Masri <amasri@codeaurora.org>
+Signed-off-by: Maya Erez <merez@codeaurora.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath10k/sdio.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/net/wireless/ath/wil6210/wmi.c | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
-index fae56c67766f..73ef3e75d199 100644
---- a/drivers/net/wireless/ath/ath10k/sdio.c
-+++ b/drivers/net/wireless/ath/ath10k/sdio.c
-@@ -602,6 +602,10 @@ static int ath10k_sdio_mbox_rx_alloc(struct ath10k *ar,
- 						    full_len,
- 						    last_in_bundle,
- 						    last_in_bundle);
-+		if (ret) {
-+			ath10k_warn(ar, "alloc_rx_pkt error %d\n", ret);
-+			goto err;
-+		}
- 	}
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index 63116f4b62c7..de52e532c105 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -3211,7 +3211,18 @@ static void wmi_event_handle(struct wil6210_priv *wil,
+ 		/* check if someone waits for this event */
+ 		if (wil->reply_id && wil->reply_id == id &&
+ 		    wil->reply_mid == mid) {
+-			WARN_ON(wil->reply_buf);
++			if (wil->reply_buf) {
++				/* event received while wmi_call is waiting
++				 * with a buffer. Such event should be handled
++				 * in wmi_recv_cmd function. Handling the event
++				 * here means a previous wmi_call was timeout.
++				 * Drop the event and do not handle it.
++				 */
++				wil_err(wil,
++					"Old event (%d, %s) while wmi_call is waiting. Drop it and Continue waiting\n",
++					id, eventid2name(id));
++				return;
++			}
  
- 	ar_sdio->n_rx_pkts = i;
+ 			wmi_evt_call_handler(vif, id, evt_data,
+ 					     len - sizeof(*wmi));
 -- 
 2.20.1
 
