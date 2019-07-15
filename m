@@ -7,48 +7,51 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 254F1C76191
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 14:51:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C770C76195
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 14:54:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E616C21530
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 14:51:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 15F8220868
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 14:54:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1563202295;
-	bh=Ye6y2k07ohqpMfkv2gPc4/NQDp7dZIEQ3bvaamJwXdE=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=TqdnxyLpNd9EdZaHmbQZLYjaSwAxPwdAmhcBnVhNj430mTmcwxB0isXxrCXVQfwpE
-	 sjUXEvGSNwg/O04a5dlu+mDpFIshZClVVioDkto43F/BAcsPHFjBQmHodNX/6mOI23
-	 ljOhUwdZOJwEYPJc5e6zdRkosH3+GcGTtCThM7SQ=
+	s=default; t=1563202445;
+	bh=FE4buOuM9E+w3Kznym8jQnHPs+FEQlUnJAhidHgfQ9c=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=Ni62laEbUrLBeAGq7wQ1lD09iIelCfcXblMeQ+fHPzMFZkbXkuK8c9RRojJupOQ0t
+	 YT9MoDikXGndmCuTtDq1OahD9U79/71BlF65TNqTskF4Y/2fGlzBO59en3XDbuggY5
+	 ESap+sIl9LPd1c+BkXyRLyh0H44TjI0yAlrpGB8I=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390559AbfGOOgh (ORCPT
+        id S2391515AbfGOO3G (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 15 Jul 2019 10:36:37 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57026 "EHLO mail.kernel.org"
+        Mon, 15 Jul 2019 10:29:06 -0400
+Received: from mail.kernel.org ([198.145.29.99]:39872 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731009AbfGOOgf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jul 2019 10:36:35 -0400
+        id S2391510AbfGOO3D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 15 Jul 2019 10:29:03 -0400
 Received: from sasha-vm.mshome.net (unknown [73.61.17.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id B215F217D8;
-        Mon, 15 Jul 2019 14:36:32 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id EA11E20868;
+        Mon, 15 Jul 2019 14:29:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1563201395;
-        bh=Ye6y2k07ohqpMfkv2gPc4/NQDp7dZIEQ3bvaamJwXdE=;
-        h=From:To:Cc:Subject:Date:From;
-        b=wEulihC1b7izoPyd6N5CZp2S4xHqTYxbDJIsQ+Aalj9zSf2K3QcjhfVzPd9NKWSSr
-         bAFontdj0azjOBE4ut8euO35H1e1o/xCvoJYjdN55T+kbX68XPKjfaY6M4sCCm6WE2
-         z/S/X+Es6qVoGLIhzNS15BSVTR2fA85m4W0D/p74=
+        s=default; t=1563200942;
+        bh=FE4buOuM9E+w3Kznym8jQnHPs+FEQlUnJAhidHgfQ9c=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=vEZ+/srdPnIfNu6ZlPLCXQ1aN4kdyH26CqnPv3qaS6amV9kYUii6MhzfF5zCD08qz
+         0bHxO8byNJjvbexlpVAbuwOkA9M1CydbRI3+YaJrmAvo/kERrNA6nKHNcsGI5/agDo
+         S9Q8NJji4MUVlJvmOJgLykc+TttrD/q0MK9m+mXg=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Surabhi Vishnoi <svishnoi@codeaurora.org>,
+Cc:     Anilkumar Kolli <akolli@codeaurora.org>,
+        Tamizh chelvam <tamizhr@codeaurora.org>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
+        Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 01/73] ath10k: Do not send probe response template for mesh
-Date:   Mon, 15 Jul 2019 10:35:17 -0400
-Message-Id: <20190715143629.10893-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 006/105] ath: DFS JP domain W56 fixed pulse type 3 RADAR detection
+Date:   Mon, 15 Jul 2019 10:27:00 -0400
+Message-Id: <20190715142839.9896-6-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20190715142839.9896-1-sashal@kernel.org>
+References: <20190715142839.9896-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -58,43 +61,44 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Surabhi Vishnoi <svishnoi@codeaurora.org>
+From: Anilkumar Kolli <akolli@codeaurora.org>
 
-[ Upstream commit 97354f2c432788e3163134df6bb144f4b6289d87 ]
+[ Upstream commit d8792393a783158cbb2c39939cb897dc5e5299b6 ]
 
-Currently mac80211 do not support probe response template for
-mesh point. When WMI_SERVICE_BEACON_OFFLOAD is enabled, host
-driver tries to configure probe response template for mesh, but
-it fails because the interface type is not NL80211_IFTYPE_AP but
-NL80211_IFTYPE_MESH_POINT.
+Increase pulse width range from 1-2usec to 0-4usec.
+During data traffic HW occasionally fails detecting radar pulses,
+so that SW cannot get enough radar reports to achieve the success rate.
 
-To avoid this failure, skip sending probe response template to
-firmware for mesh point.
+Tested ath10k hw and fw:
+	* QCA9888(10.4-3.5.1-00052)
+	* QCA4019(10.4-3.2.1.1-00017)
+	* QCA9984(10.4-3.6-00104)
+	* QCA988X(10.2.4-1.0-00041)
 
-Tested HW: WCN3990/QCA6174/QCA9984
+Tested ath9k hw: AR9300
 
-Signed-off-by: Surabhi Vishnoi <svishnoi@codeaurora.org>
+Tested-by: Tamizh chelvam <tamizhr@codeaurora.org>
+Signed-off-by: Tamizh chelvam <tamizhr@codeaurora.org>
+Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/net/wireless/ath/dfs_pattern_detector.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index fb632a454fc2..1588fe8110d0 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -1596,6 +1596,10 @@ static int ath10k_mac_setup_prb_tmpl(struct ath10k_vif *arvif)
- 	if (arvif->vdev_type != WMI_VDEV_TYPE_AP)
- 		return 0;
- 
-+	 /* For mesh, probe response and beacon share the same template */
-+	if (ieee80211_vif_is_mesh(vif))
-+		return 0;
-+
- 	prb = ieee80211_proberesp_get(hw, vif);
- 	if (!prb) {
- 		ath10k_warn(ar, "failed to get probe resp template from mac80211\n");
+diff --git a/drivers/net/wireless/ath/dfs_pattern_detector.c b/drivers/net/wireless/ath/dfs_pattern_detector.c
+index 4100ffd42a43..78146607f16e 100644
+--- a/drivers/net/wireless/ath/dfs_pattern_detector.c
++++ b/drivers/net/wireless/ath/dfs_pattern_detector.c
+@@ -111,7 +111,7 @@ static const struct radar_detector_specs jp_radar_ref_types[] = {
+ 	JP_PATTERN(0, 0, 1, 1428, 1428, 1, 18, 29, false),
+ 	JP_PATTERN(1, 2, 3, 3846, 3846, 1, 18, 29, false),
+ 	JP_PATTERN(2, 0, 1, 1388, 1388, 1, 18, 50, false),
+-	JP_PATTERN(3, 1, 2, 4000, 4000, 1, 18, 50, false),
++	JP_PATTERN(3, 0, 4, 4000, 4000, 1, 18, 50, false),
+ 	JP_PATTERN(4, 0, 5, 150, 230, 1, 23, 50, false),
+ 	JP_PATTERN(5, 6, 10, 200, 500, 1, 16, 50, false),
+ 	JP_PATTERN(6, 11, 20, 200, 500, 1, 12, 50, false),
 -- 
 2.20.1
 
