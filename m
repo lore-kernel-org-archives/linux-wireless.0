@@ -7,48 +7,49 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DEF00C76191
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 14:36:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4F9CC76196
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 14:36:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AE827204FD
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 14:36:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BE557204FD
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 14:36:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1563201377;
-	bh=VXkbgD2jyBKHydxvZ96jdAVoihbkNIj8betqnk9IiPc=;
+	s=default; t=1563201382;
+	bh=Q9OziMW4MpQFGfOhqKSAru5QzGan+A/hH+ADWkAvAvM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=LN8JRSmnuQU9B46XYcmabOI4cYzZhEvBuHeASo4zy1Ay+OCrPtMoPReNEZorNPEPs
-	 8NJlHk5wC23Y1rVl9qTbqapaLxkf1pZ/SZcGjz94ox85rbuc3k2hxqlt2QS0ealk/+
-	 tEtCbVSnInkRM7RveeuRlGCJTH1RR7KseaKIYmEc=
+	b=rVEN9vKYsVQyPpUKua/sadS2/luURU2hoGiBwYedUDxp43Zj1j8brLnGy+Cjo1VJs
+	 EzUHzdBsckDgpvsamkArNDqHI5y89tHUnrJ9SSqpz6M8SGjicNZ4UxO20qMH3/YMqQ
+	 kmCKLvQy5lxUqh7OSDyyacBB0nT26Bg4qEyVd84k=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391936AbfGOOdM (ORCPT
+        id S2404012AbfGOOdC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 15 Jul 2019 10:33:12 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49014 "EHLO mail.kernel.org"
+        Mon, 15 Jul 2019 10:33:02 -0400
+Received: from mail.kernel.org ([198.145.29.99]:48746 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2389557AbfGOOdK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jul 2019 10:33:10 -0400
+        id S2404006AbfGOOdB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 15 Jul 2019 10:33:01 -0400
 Received: from sasha-vm.mshome.net (unknown [73.61.17.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id C75EF2067C;
-        Mon, 15 Jul 2019 14:33:07 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id B7C3F206B8;
+        Mon, 15 Jul 2019 14:32:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1563201189;
-        bh=VXkbgD2jyBKHydxvZ96jdAVoihbkNIj8betqnk9IiPc=;
+        s=default; t=1563201179;
+        bh=Q9OziMW4MpQFGfOhqKSAru5QzGan+A/hH+ADWkAvAvM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=I5GDXUCB0osmw5R/pgdtXYTAp043eU1juEUsBqS9VPcBc/8o2aLonaGojgRJZwWaf
-         e8+9Trwu8CEuYY85xvJKg9EBHTwczbi98n99T1arKqgT0NtiqURz7JBny51MMc+C9c
-         xkxs3wfxa8fmaxGZ7Kd3pTOgd/XLtLvQu+AdQ6SY=
+        b=pvmC6L8vAQ0sDePWWoZpW8Sqt0l0xDuxs3L/DOvpuGiI/BwECWYvrY+r2XU9NxtQe
+         zP+/PWHFQ3qmu9Q09Spa/M7Mo1u9mJwHhS4oKccRQOoSQzDScvSM8EdFJgEtIMEM91
+         qRLNZ5a80ekw+9H4/4+ErOJL5ihN27argU21GJog=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Lorenzo Bianconi <lorenzo@kernel.org>,
-        Jakub Kicinski <kubakici@wp.pl>,
+Cc:     Ping-Ke Shih <pkshih@realtek.com>,
+        syzbot+1fcc5ef45175fc774231@syzkaller.appspotmail.com,
+        Larry Finger <Larry.Finger@lwfinger.net>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 074/105] mt7601u: fix possible memory leak when the device is disconnected
-Date:   Mon, 15 Jul 2019 10:28:08 -0400
-Message-Id: <20190715142839.9896-74-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 071/105] rtlwifi: rtl8192cu: fix error handle when usb probe failed
+Date:   Mon, 15 Jul 2019 10:28:05 -0400
+Message-Id: <20190715142839.9896-71-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190715142839.9896-1-sashal@kernel.org>
 References: <20190715142839.9896-1-sashal@kernel.org>
@@ -61,125 +62,104 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Lorenzo Bianconi <lorenzo@kernel.org>
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-[ Upstream commit 23377c200b2eb48a60d0f228b2a2e75ed6ee6060 ]
+[ Upstream commit 6c0ed66f1a5b84e2a812c7c2d6571a5621bf3396 ]
 
-When the device is disconnected while passing traffic it is possible
-to receive out of order urbs causing a memory leak since the skb linked
-to the current tx urb is not removed. Fix the issue deallocating the skb
-cleaning up the tx ring. Moreover this patch fixes the following kernel
-warning
+rtl_usb_probe() must do error handle rtl_deinit_core() only if
+rtl_init_core() is done, otherwise goto error_out2.
 
-[   57.480771] usb 1-1: USB disconnect, device number 2
-[   57.483451] ------------[ cut here ]------------
-[   57.483462] TX urb mismatch
-[   57.483481] WARNING: CPU: 1 PID: 32 at drivers/net/wireless/mediatek/mt7601u/dma.c:245 mt7601u_complete_tx+0x165/00
-[   57.483483] Modules linked in:
-[   57.483496] CPU: 1 PID: 32 Comm: kworker/1:1 Not tainted 5.2.0-rc1+ #72
-[   57.483498] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.12.0-2.fc30 04/01/2014
-[   57.483502] Workqueue: usb_hub_wq hub_event
-[   57.483507] RIP: 0010:mt7601u_complete_tx+0x165/0x1e0
-[   57.483510] Code: 8b b5 10 04 00 00 8b 8d 14 04 00 00 eb 8b 80 3d b1 cb e1 00 00 75 9e 48 c7 c7 a4 ea 05 82 c6 05 f
-[   57.483513] RSP: 0000:ffffc900000a0d28 EFLAGS: 00010092
-[   57.483516] RAX: 000000000000000f RBX: ffff88802c0a62c0 RCX: ffffc900000a0c2c
-[   57.483518] RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffffffff810a8371
-[   57.483520] RBP: ffff88803ced6858 R08: 0000000000000000 R09: 0000000000000001
-[   57.483540] R10: 0000000000000002 R11: 0000000000000000 R12: 0000000000000046
-[   57.483542] R13: ffff88802c0a6c88 R14: ffff88803baab540 R15: ffff88803a0cc078
-[   57.483548] FS:  0000000000000000(0000) GS:ffff88803eb00000(0000) knlGS:0000000000000000
-[   57.483550] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[   57.483552] CR2: 000055e7f6780100 CR3: 0000000028c86000 CR4: 00000000000006a0
-[   57.483554] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-[   57.483556] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-[   57.483559] Call Trace:
-[   57.483561]  <IRQ>
-[   57.483565]  __usb_hcd_giveback_urb+0x77/0xe0
-[   57.483570]  xhci_giveback_urb_in_irq.isra.0+0x8b/0x140
-[   57.483574]  handle_cmd_completion+0xf5b/0x12c0
-[   57.483577]  xhci_irq+0x1f6/0x1810
-[   57.483581]  ? lockdep_hardirqs_on+0x9e/0x180
-[   57.483584]  ? _raw_spin_unlock_irq+0x24/0x30
-[   57.483588]  __handle_irq_event_percpu+0x3a/0x260
-[   57.483592]  handle_irq_event_percpu+0x1c/0x60
-[   57.483595]  handle_irq_event+0x2f/0x4c
-[   57.483599]  handle_edge_irq+0x7e/0x1a0
-[   57.483603]  handle_irq+0x17/0x20
-[   57.483607]  do_IRQ+0x54/0x110
-[   57.483610]  common_interrupt+0xf/0xf
-[   57.483612]  </IRQ>
+| usb 1-1: New USB device strings: Mfr=0, Product=0, SerialNumber=0
+| rtl_usb: reg 0xf0, usbctrl_vendorreq TimeOut! status:0xffffffb9 value=0x0
+| rtl8192cu: Chip version 0x10
+| rtl_usb: reg 0xa, usbctrl_vendorreq TimeOut! status:0xffffffb9 value=0x0
+| rtl_usb: Too few input end points found
+| INFO: trying to register non-static key.
+| the code is fine but needs lockdep annotation.
+| turning off the locking correctness validator.
+| CPU: 0 PID: 12 Comm: kworker/0:1 Not tainted 5.1.0-rc4-319354-g9a33b36 #3
+| Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS
+| Google 01/01/2011
+| Workqueue: usb_hub_wq hub_event
+| Call Trace:
+|   __dump_stack lib/dump_stack.c:77 [inline]
+|   dump_stack+0xe8/0x16e lib/dump_stack.c:113
+|   assign_lock_key kernel/locking/lockdep.c:786 [inline]
+|   register_lock_class+0x11b8/0x1250 kernel/locking/lockdep.c:1095
+|   __lock_acquire+0xfb/0x37c0 kernel/locking/lockdep.c:3582
+|   lock_acquire+0x10d/0x2f0 kernel/locking/lockdep.c:4211
+|   __raw_spin_lock_irqsave include/linux/spinlock_api_smp.h:110 [inline]
+|   _raw_spin_lock_irqsave+0x44/0x60 kernel/locking/spinlock.c:152
+|   rtl_c2hcmd_launcher+0xd1/0x390
+| drivers/net/wireless/realtek/rtlwifi/base.c:2344
+|   rtl_deinit_core+0x25/0x2d0 drivers/net/wireless/realtek/rtlwifi/base.c:574
+|   rtl_usb_probe.cold+0x861/0xa70
+| drivers/net/wireless/realtek/rtlwifi/usb.c:1093
+|   usb_probe_interface+0x31d/0x820 drivers/usb/core/driver.c:361
+|   really_probe+0x2da/0xb10 drivers/base/dd.c:509
+|   driver_probe_device+0x21d/0x350 drivers/base/dd.c:671
+|   __device_attach_driver+0x1d8/0x290 drivers/base/dd.c:778
+|   bus_for_each_drv+0x163/0x1e0 drivers/base/bus.c:454
+|   __device_attach+0x223/0x3a0 drivers/base/dd.c:844
+|   bus_probe_device+0x1f1/0x2a0 drivers/base/bus.c:514
+|   device_add+0xad2/0x16e0 drivers/base/core.c:2106
+|   usb_set_configuration+0xdf7/0x1740 drivers/usb/core/message.c:2021
+|   generic_probe+0xa2/0xda drivers/usb/core/generic.c:210
+|   usb_probe_device+0xc0/0x150 drivers/usb/core/driver.c:266
+|   really_probe+0x2da/0xb10 drivers/base/dd.c:509
+|   driver_probe_device+0x21d/0x350 drivers/base/dd.c:671
+|   __device_attach_driver+0x1d8/0x290 drivers/base/dd.c:778
+|   bus_for_each_drv+0x163/0x1e0 drivers/base/bus.c:454
+|   __device_attach+0x223/0x3a0 drivers/base/dd.c:844
+|   bus_probe_device+0x1f1/0x2a0 drivers/base/bus.c:514
+|   device_add+0xad2/0x16e0 drivers/base/core.c:2106
+|   usb_new_device.cold+0x537/0xccf drivers/usb/core/hub.c:2534
+|   hub_port_connect drivers/usb/core/hub.c:5089 [inline]
+|   hub_port_connect_change drivers/usb/core/hub.c:5204 [inline]
+|   port_event drivers/usb/core/hub.c:5350 [inline]
+|   hub_event+0x138e/0x3b00 drivers/usb/core/hub.c:5432
+|   process_one_work+0x90f/0x1580 kernel/workqueue.c:2269
+|   worker_thread+0x9b/0xe20 kernel/workqueue.c:2415
+|   kthread+0x313/0x420 kernel/kthread.c:253
+|   ret_from_fork+0x3a/0x50 arch/x86/entry/entry_64.S:352
 
-Acked-by: Jakub Kicinski <kubakici@wp.pl>
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+Reported-by: syzbot+1fcc5ef45175fc774231@syzkaller.appspotmail.com
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt7601u/dma.c | 21 ++++++++++++++++-----
- drivers/net/wireless/mediatek/mt7601u/tx.c  |  4 ++--
- 2 files changed, 18 insertions(+), 7 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/usb.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt7601u/dma.c b/drivers/net/wireless/mediatek/mt7601u/dma.c
-index bc36712cfffc..47cebb2ec05c 100644
---- a/drivers/net/wireless/mediatek/mt7601u/dma.c
-+++ b/drivers/net/wireless/mediatek/mt7601u/dma.c
-@@ -241,14 +241,25 @@ static void mt7601u_complete_tx(struct urb *urb)
- 	struct sk_buff *skb;
- 	unsigned long flags;
- 
--	spin_lock_irqsave(&dev->tx_lock, flags);
-+	switch (urb->status) {
-+	case -ECONNRESET:
-+	case -ESHUTDOWN:
-+	case -ENOENT:
-+		return;
-+	default:
-+		dev_err_ratelimited(dev->dev, "tx urb failed: %d\n",
-+				    urb->status);
-+		/* fall through */
-+	case 0:
-+		break;
-+	}
- 
--	if (mt7601u_urb_has_error(urb))
--		dev_err(dev->dev, "Error: TX urb failed:%d\n", urb->status);
-+	spin_lock_irqsave(&dev->tx_lock, flags);
- 	if (WARN_ONCE(q->e[q->start].urb != urb, "TX urb mismatch"))
- 		goto out;
- 
- 	skb = q->e[q->start].skb;
-+	q->e[q->start].skb = NULL;
- 	trace_mt_tx_dma_done(dev, skb);
- 
- 	__skb_queue_tail(&dev->tx_skb_done, skb);
-@@ -448,10 +459,10 @@ static void mt7601u_free_tx_queue(struct mt7601u_tx_queue *q)
- {
- 	int i;
- 
--	WARN_ON(q->used);
--
- 	for (i = 0; i < q->entries; i++)  {
- 		usb_poison_urb(q->e[i].urb);
-+		if (q->e[i].skb)
-+			mt7601u_tx_status(q->dev, q->e[i].skb);
- 		usb_free_urb(q->e[i].urb);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/usb.c b/drivers/net/wireless/realtek/rtlwifi/usb.c
+index 820c42ff5384..2401c8bdb211 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/usb.c
++++ b/drivers/net/wireless/realtek/rtlwifi/usb.c
+@@ -1099,13 +1099,13 @@ int rtl_usb_probe(struct usb_interface *intf,
+ 	rtlpriv->cfg->ops->read_eeprom_info(hw);
+ 	err = _rtl_usb_init(hw);
+ 	if (err)
+-		goto error_out;
++		goto error_out2;
+ 	rtl_usb_init_sw(hw);
+ 	/* Init mac80211 sw */
+ 	err = rtl_init_core(hw);
+ 	if (err) {
+ 		pr_err("Can't allocate sw for mac80211\n");
+-		goto error_out;
++		goto error_out2;
  	}
- }
-diff --git a/drivers/net/wireless/mediatek/mt7601u/tx.c b/drivers/net/wireless/mediatek/mt7601u/tx.c
-index 3600e911a63e..4d81c45722fb 100644
---- a/drivers/net/wireless/mediatek/mt7601u/tx.c
-+++ b/drivers/net/wireless/mediatek/mt7601u/tx.c
-@@ -117,9 +117,9 @@ void mt7601u_tx_status(struct mt7601u_dev *dev, struct sk_buff *skb)
- 	info->status.rates[0].idx = -1;
- 	info->flags |= IEEE80211_TX_STAT_ACK;
+ 	if (rtlpriv->cfg->ops->init_sw_vars(hw)) {
+ 		pr_err("Can't init_sw_vars\n");
+@@ -1126,6 +1126,7 @@ int rtl_usb_probe(struct usb_interface *intf,
  
--	spin_lock(&dev->mac_lock);
-+	spin_lock_bh(&dev->mac_lock);
- 	ieee80211_tx_status(dev->hw, skb);
--	spin_unlock(&dev->mac_lock);
-+	spin_unlock_bh(&dev->mac_lock);
- }
- 
- static int mt7601u_skb_rooms(struct mt7601u_dev *dev, struct sk_buff *skb)
+ error_out:
+ 	rtl_deinit_core(hw);
++error_out2:
+ 	_rtl_usb_io_handler_release(hw);
+ 	usb_put_dev(udev);
+ 	complete(&rtlpriv->firmware_loading_complete);
 -- 
 2.20.1
 
