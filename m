@@ -7,49 +7,49 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4D07C76192
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 13:38:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF72DC76191
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 13:39:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8737021530
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 13:38:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A615121530
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 13:39:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1563197928;
-	bh=v1PQWlyIIUKb7uwAvPPpO/t5SdRgQrA1dwadJe0wwAk=;
+	s=default; t=1563197983;
+	bh=PjotlXJDX9u0DWYVZV9CvhTezXZPphkRfNwjbqDKScA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=srRdRg8GCzXFvUP5f9C7cfCBhk/Vxd9P6d8Jja8fGLTwGghSyma8JoeqT6eIsdeF2
-	 gQuMpDYt+gHB9S588/+jvMy7oW6uRndR9C9TqUm7zSl2KN+/ceCffBxnsBNaI/Uk51
-	 X5kT6scLsYaHeqhuM8LnWTXvz2V8LBplc/oKPYKg=
+	b=1jiKQ70fuXP7MjbwfKdLZaHJzgj9ZpKilbePm5fj+zJLNmKZtlZC26LPkhAOiVK/Z
+	 M+et4B4UnxKh4ccIruv0dX+1svtuYgF3F+Q/3BcHIKaLhddG0gI3z3+8zMDmT0ynFT
+	 lD6AeEnFMRNgQUKZY5qzeR0joPnNiYcFs3rstbz8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731036AbfGONim (ORCPT
+        id S1730688AbfGONji (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 15 Jul 2019 09:38:42 -0400
-Received: from mail.kernel.org ([198.145.29.99]:39236 "EHLO mail.kernel.org"
+        Mon, 15 Jul 2019 09:39:38 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41008 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731026AbfGONil (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jul 2019 09:38:41 -0400
+        id S1731248AbfGONjg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 15 Jul 2019 09:39:36 -0400
 Received: from sasha-vm.mshome.net (unknown [73.61.17.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id EB3FD2086C;
-        Mon, 15 Jul 2019 13:38:39 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id C00872086C;
+        Mon, 15 Jul 2019 13:39:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1563197921;
-        bh=v1PQWlyIIUKb7uwAvPPpO/t5SdRgQrA1dwadJe0wwAk=;
+        s=default; t=1563197975;
+        bh=PjotlXJDX9u0DWYVZV9CvhTezXZPphkRfNwjbqDKScA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ntaay8tIm7WPQIyN1JPeO5AAtS0FdTRn+RGi3YWqayMYUwqCGskek3hwAG5o2EFey
-         MvgZpPPRA9RAKmrl5/9SPLiLfLNw/3glsLU+lwiLnuptaioCDJR5ZalViAD1fP4X2B
-         JfOpe9UPeDeNUprjB2eMe+x6AmAkOYt28hytCLNE=
+        b=WyrAzBahfeg+P2g/qFfpye3C4gEIdAW4NWJXH9b1fdqJ8UMvBSV5G84qHspGg65T4
+         xd2ICcPNl4ahxwkyDUa+mb4+UI/JIgorTwUG6nq8g1alJx/M1e68VYktQ7vUkaihXk
+         MCEHp8pGPHGC4Wva6HFgUSDPr/oNOsdXEZw7t/xA=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Wen Gong <wgong@codeaurora.org>, Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.1 012/219] ath10k: add peer id check in ath10k_peer_find_by_id
-Date:   Mon, 15 Jul 2019 09:34:44 -0400
-Message-Id: <20190715133811.2441-12-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 005/158] ath10k: add peer id check in ath10k_peer_find_by_id
+Date:   Mon, 15 Jul 2019 09:36:50 -0400
+Message-Id: <20190715133923.2890-5-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190715133811.2441-1-sashal@kernel.org>
-References: <20190715133811.2441-1-sashal@kernel.org>
+In-Reply-To: <20190715133923.2890-1-sashal@kernel.org>
+References: <20190715133923.2890-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -107,10 +107,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 3 insertions(+)
 
 diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
-index c5818d28f55a..4102df016931 100644
+index cda164f6e9f6..6f62ddc0494c 100644
 --- a/drivers/net/wireless/ath/ath10k/txrx.c
 +++ b/drivers/net/wireless/ath/ath10k/txrx.c
-@@ -150,6 +150,9 @@ struct ath10k_peer *ath10k_peer_find_by_id(struct ath10k *ar, int peer_id)
+@@ -156,6 +156,9 @@ struct ath10k_peer *ath10k_peer_find_by_id(struct ath10k *ar, int peer_id)
  {
  	struct ath10k_peer *peer;
  
