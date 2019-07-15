@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 599E7C76191
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 14:54:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4C3DC76195
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 14:54:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3375C205ED
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 14:54:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 752892067C
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 14:54:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1563202453;
-	bh=NGn3o6+tbHpNnY8ubVR15rDwQBSUyshmddAT7zU/3HA=;
+	s=default; t=1563202459;
+	bh=8MFIeyxHNO4CRPVVo0iFOLtHIhxgcEGt+NoS7XE7A2k=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=ui2A9zckAv7x8zSXvr+Lq/l8hO/1dBmlwV1EulkMSzBwcS9GTO41+JOTFeqW8eJWM
-	 keN5JwSgCCOUMrRt8FGzbAch+T2x/sAkPVEpQBCTAV5mQFSVckchUGez+CFiI+lK48
-	 3UreRhZut4qekJBfseDJnznaOsnCrm5+RJbuF12M=
+	b=dbc7JZagY7ZBRv5Is6u3DlcETkFP1tvZbaLjEPfKESwKRLbsqIdFA+dpT3X5c+4LP
+	 7U3bOTOF67oVlySNwXdiibl0Wghjk1+jRccXGPbTulnDJ1Yk/ln7ATh9cgcd/WdmiH
+	 /Aptf7X2hreRcONDmNZmlgPJmDreTEURC2jlhTRk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391308AbfGOO2y (ORCPT
+        id S2390971AbfGOO2w (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 15 Jul 2019 10:28:54 -0400
-Received: from mail.kernel.org ([198.145.29.99]:39452 "EHLO mail.kernel.org"
+        Mon, 15 Jul 2019 10:28:52 -0400
+Received: from mail.kernel.org ([198.145.29.99]:39296 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2391245AbfGOO2x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jul 2019 10:28:53 -0400
+        id S2390220AbfGOO2t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 15 Jul 2019 10:28:49 -0400
 Received: from sasha-vm.mshome.net (unknown [73.61.17.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 5A8DA205ED;
-        Mon, 15 Jul 2019 14:28:49 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 1190420868;
+        Mon, 15 Jul 2019 14:28:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1563200932;
-        bh=NGn3o6+tbHpNnY8ubVR15rDwQBSUyshmddAT7zU/3HA=;
+        s=default; t=1563200929;
+        bh=8MFIeyxHNO4CRPVVo0iFOLtHIhxgcEGt+NoS7XE7A2k=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=rlU+TGFc2DypgyFANHdfLhwk4wCkC94syZXEo33jpVanGpnrTQT3ZZvabJhWxLFbs
-         LV/HJm0+8drJd7oYghyCaYaMXAcGTZo1LLyaeJeu0trEBa/DVkN0otD5zFYroaLLzY
-         kW/Quiuok5nbFZ7Ahspx/n11/3dMWI1/kE0YCPLE=
+        b=MCE2tF6qomxwX9HwQtgDA0cT2ZYYE9KO9nYrV7BN/17qgkG4PGzQOs3Ru1dm45obk
+         gpbqacXNBX31Q1UJRPHNwAlL212FyOsJdqtbNjVggVHwBWnIklirc+FVACXoS/5p6l
+         GmjeS+DGW0uxb+tOboWxOsMMv8LmVTlwv2mxHxSU=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Tim Schumacher <timschumi@gmx.de>,
+Cc:     Surabhi Vishnoi <svishnoi@codeaurora.org>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>,
+        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 003/105] ath9k: Check for errors when reading SREV register
-Date:   Mon, 15 Jul 2019 10:26:57 -0400
-Message-Id: <20190715142839.9896-3-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 002/105] ath10k: Do not send probe response template for mesh
+Date:   Mon, 15 Jul 2019 10:26:56 -0400
+Message-Id: <20190715142839.9896-2-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190715142839.9896-1-sashal@kernel.org>
 References: <20190715142839.9896-1-sashal@kernel.org>
@@ -60,121 +60,43 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Tim Schumacher <timschumi@gmx.de>
+From: Surabhi Vishnoi <svishnoi@codeaurora.org>
 
-[ Upstream commit 2f90c7e5d09437a4d8d5546feaae9f1cf48cfbe1 ]
+[ Upstream commit 97354f2c432788e3163134df6bb144f4b6289d87 ]
 
-Right now, if an error is encountered during the SREV register
-read (i.e. an EIO in ath9k_regread()), that error code gets
-passed all the way to __ath9k_hw_init(), where it is visible
-during the "Chip rev not supported" message.
+Currently mac80211 do not support probe response template for
+mesh point. When WMI_SERVICE_BEACON_OFFLOAD is enabled, host
+driver tries to configure probe response template for mesh, but
+it fails because the interface type is not NL80211_IFTYPE_AP but
+NL80211_IFTYPE_MESH_POINT.
 
-    ath9k_htc 1-1.4:1.0: ath9k_htc: HTC initialized with 33 credits
-    ath: phy2: Mac Chip Rev 0x0f.3 is not supported by this driver
-    ath: phy2: Unable to initialize hardware; initialization status: -95
-    ath: phy2: Unable to initialize hardware; initialization status: -95
-    ath9k_htc: Failed to initialize the device
+To avoid this failure, skip sending probe response template to
+firmware for mesh point.
 
-Check for -EIO explicitly in ath9k_hw_read_revisions() and return
-a boolean based on the success of the operation. Check for that in
-__ath9k_hw_init() and abort with a more debugging-friendly message
-if reading the revisions wasn't successful.
+Tested HW: WCN3990/QCA6174/QCA9984
 
-    ath9k_htc 1-1.4:1.0: ath9k_htc: HTC initialized with 33 credits
-    ath: phy2: Failed to read SREV register
-    ath: phy2: Could not read hardware revision
-    ath: phy2: Unable to initialize hardware; initialization status: -95
-    ath: phy2: Unable to initialize hardware; initialization status: -95
-    ath9k_htc: Failed to initialize the device
-
-This helps when debugging by directly showing the first point of
-failure and it could prevent possible errors if a 0x0f.3 revision
-is ever supported.
-
-Signed-off-by: Tim Schumacher <timschumi@gmx.de>
+Signed-off-by: Surabhi Vishnoi <svishnoi@codeaurora.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath9k/hw.c | 32 +++++++++++++++++++++--------
- 1 file changed, 23 insertions(+), 9 deletions(-)
+ drivers/net/wireless/ath/ath10k/mac.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index a7f506eb7b36..406b52f114f0 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -250,8 +250,9 @@ void ath9k_hw_get_channel_centers(struct ath_hw *ah,
- /* Chip Revisions */
- /******************/
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index cdcfb175ad9b..58a3c42c4aed 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -1611,6 +1611,10 @@ static int ath10k_mac_setup_prb_tmpl(struct ath10k_vif *arvif)
+ 	if (arvif->vdev_type != WMI_VDEV_TYPE_AP)
+ 		return 0;
  
--static void ath9k_hw_read_revisions(struct ath_hw *ah)
-+static bool ath9k_hw_read_revisions(struct ath_hw *ah)
- {
-+	u32 srev;
- 	u32 val;
- 
- 	if (ah->get_mac_revision)
-@@ -267,25 +268,33 @@ static void ath9k_hw_read_revisions(struct ath_hw *ah)
- 			val = REG_READ(ah, AR_SREV);
- 			ah->hw_version.macRev = MS(val, AR_SREV_REVISION2);
- 		}
--		return;
-+		return true;
- 	case AR9300_DEVID_AR9340:
- 		ah->hw_version.macVersion = AR_SREV_VERSION_9340;
--		return;
-+		return true;
- 	case AR9300_DEVID_QCA955X:
- 		ah->hw_version.macVersion = AR_SREV_VERSION_9550;
--		return;
-+		return true;
- 	case AR9300_DEVID_AR953X:
- 		ah->hw_version.macVersion = AR_SREV_VERSION_9531;
--		return;
-+		return true;
- 	case AR9300_DEVID_QCA956X:
- 		ah->hw_version.macVersion = AR_SREV_VERSION_9561;
--		return;
-+		return true;
- 	}
- 
--	val = REG_READ(ah, AR_SREV) & AR_SREV_ID;
-+	srev = REG_READ(ah, AR_SREV);
++	 /* For mesh, probe response and beacon share the same template */
++	if (ieee80211_vif_is_mesh(vif))
++		return 0;
 +
-+	if (srev == -EIO) {
-+		ath_err(ath9k_hw_common(ah),
-+			"Failed to read SREV register");
-+		return false;
-+	}
-+
-+	val = srev & AR_SREV_ID;
- 
- 	if (val == 0xFF) {
--		val = REG_READ(ah, AR_SREV);
-+		val = srev;
- 		ah->hw_version.macVersion =
- 			(val & AR_SREV_VERSION2) >> AR_SREV_TYPE2_S;
- 		ah->hw_version.macRev = MS(val, AR_SREV_REVISION2);
-@@ -304,6 +313,8 @@ static void ath9k_hw_read_revisions(struct ath_hw *ah)
- 		if (ah->hw_version.macVersion == AR_SREV_VERSION_5416_PCIE)
- 			ah->is_pciexpress = true;
- 	}
-+
-+	return true;
- }
- 
- /************************************/
-@@ -557,7 +568,10 @@ static int __ath9k_hw_init(struct ath_hw *ah)
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	int r = 0;
- 
--	ath9k_hw_read_revisions(ah);
-+	if (!ath9k_hw_read_revisions(ah)) {
-+		ath_err(common, "Could not read hardware revisions");
-+		return -EOPNOTSUPP;
-+	}
- 
- 	switch (ah->hw_version.macVersion) {
- 	case AR_SREV_VERSION_5416_PCI:
+ 	prb = ieee80211_proberesp_get(hw, vif);
+ 	if (!prb) {
+ 		ath10k_warn(ar, "failed to get probe resp template from mac80211\n");
 -- 
 2.20.1
 
