@@ -2,101 +2,107 @@ Return-Path: <SRS0=nAss=VM=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12648C7618F
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 15:15:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89F7CC7618F
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 15:38:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D5DF22054F
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 15:15:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1563203756;
-	bh=jtIGX7QQt3juwRiIEJhbVV6v+rMt/kTvO0hy90dvnaE=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=njtA8HhkMOlb11LckEbFZWrfXjGFSDWzfAYSe6hjI0z1PvdSKVRkI8QWetIUkwMFR
-	 QeSaUAnYqdmG6qmPD4r+ytl55vk7cl0HV5lziSD4UlmKgnD5/zkTg7NfqN+u5hMYFz
-	 s5FB9z9NNvF68BUMWD2BWPQkfuIIivyxM+Zza1Do=
+	by mail.kernel.org (Postfix) with ESMTP id 5F4AE20651
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 15:38:27 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="S0mdgQlG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730550AbfGONrI (ORCPT
+        id S1730637AbfGOPi0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 15 Jul 2019 09:47:08 -0400
-Received: from mail.kernel.org ([198.145.29.99]:55128 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730012AbfGONrH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jul 2019 09:47:07 -0400
-Received: from sasha-vm.mshome.net (unknown [73.61.17.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 6E8E72080A;
-        Mon, 15 Jul 2019 13:47:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1563198426;
-        bh=jtIGX7QQt3juwRiIEJhbVV6v+rMt/kTvO0hy90dvnaE=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=c6w0AgC71knJGZcFOZD/VXQtBYuOAECSjfw7SM7XFudazasMFTBqw18jycl2rrp+8
-         HDuygwjMbq9sRwN5JhmXOHM/fOC62JoDsAek8+AfU1MHdNERk0Gp1hCayqig76EnWM
-         sSTov3eAACHnF6/DOUKcIDPiwssjAHggTmxCnqms=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Alagu Sankar <alagusankar@silex-india.com>,
-        Wen Gong <wgong@codeaurora.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.2 002/249] ath10k: htt: don't use txdone_fifo with SDIO
-Date:   Mon, 15 Jul 2019 09:42:47 -0400
-Message-Id: <20190715134655.4076-2-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190715134655.4076-1-sashal@kernel.org>
-References: <20190715134655.4076-1-sashal@kernel.org>
+        Mon, 15 Jul 2019 11:38:26 -0400
+Received: from mail-wr1-f66.google.com ([209.85.221.66]:33438 "EHLO
+        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730333AbfGOPi0 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 15 Jul 2019 11:38:26 -0400
+Received: by mail-wr1-f66.google.com with SMTP id n9so17676347wru.0
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Jul 2019 08:38:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=m8HqpA0lzy0qcdZrdNO9EMUvHzgXiTx53AeUWo7xYTs=;
+        b=S0mdgQlGmXX169HzlWd9URsL/auA2CdJjzZ0k1Zk9hQFwK5h5RtIffcCkpoHqATRLu
+         O517wkcWVJU+R+Yg32Mzsfqnoof8aW2CJLnt2UpjDi6XHL8RgVWdtmORHuXvtSv7KF7U
+         i04Mal1nKwQjx8P+4HGCegZ1GTazzgZHoIatPLqpG1xSC3fp7RRhqFBGtlP8ue96U5he
+         pX/PfVvjbROGTvzHAdFV55oaZafO/P3VF3EZUA2oS/8XiOkFJqqMlUEVKMj1gcx9twn8
+         tF88QBdnU5/lJ1c4pNw13QuFW/xFmwZ5wt35uOacJ6zHBKlNV/rVl386jdEhK/9QED31
+         wIqA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=m8HqpA0lzy0qcdZrdNO9EMUvHzgXiTx53AeUWo7xYTs=;
+        b=EVkAg4UyjN0YfoK86gAip03ULfbaa65SjffsvaSYcgGJ8MGdS4IYZDC/SnhRySCpPp
+         PN+aSU7UOjItXCexr3NpHjwJi0mfPblVL/U1zx/MDWxr3Alj4vg3Zgu4oBj2OCnvRclC
+         U93l1akGB5nLdMGuSTcAQ5EI5T+b3GM3gRHm7bNnuAIK55FFjbBroJU2mdxCubpS32mb
+         6Aw6SxBzdYAaabDoQJbFEVZ3cy2ggi4c2L+M2d4UTF8EyH14Q8s4i5MM9m1B9VWqRO1V
+         FmkMwPW3D6+9qcocE0aF2VdiwOLZA2dWLv+Svbod4c/EXHnIMyKrJZqsb/YxP5U5aaMB
+         xtSw==
+X-Gm-Message-State: APjAAAWTYgTK+EErDeitBIr9XVtLDMUBSBlP1551nzvaqzg/YisegPFD
+        4K2qn/6JdWb47OUcOnDJTpKeHIo5JNtxpXGNWPU=
+X-Google-Smtp-Source: APXvYqz+8gUXLrXFmdh7H2AXjY/xudElCxHcyKS55yBLpOdvgRz78YrUyvjBUGamfSB7eedP4XPo+ouKJ412OYeseCM=
+X-Received: by 2002:a5d:498a:: with SMTP id r10mr30014693wrq.28.1563205103949;
+ Mon, 15 Jul 2019 08:38:23 -0700 (PDT)
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+References: <dfb97adb52811bed530449c22a172724ed992771.1562353065.git.lorenzo@kernel.org>
+In-Reply-To: <dfb97adb52811bed530449c22a172724ed992771.1562353065.git.lorenzo@kernel.org>
+From:   Sid Hayn <sidhayn@gmail.com>
+Date:   Mon, 15 Jul 2019 11:38:01 -0400
+Message-ID: <CAM0KTbBU7-BTTR_R9b7VNQuqRpd=rMk8nAQANQ7shns+XGahdw@mail.gmail.com>
+Subject: Re: [PATCH] mt76: mt76x0u: add support to TP-Link T2UHP
+To:     Lorenzo Bianconi <lorenzo@kernel.org>
+Cc:     Felix Fietkau <nbd@nbd.name>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Stanislaw Gruszka <sgruszka@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Alagu Sankar <alagusankar@silex-india.com>
+Felix,
 
-[ Upstream commit e2a6b711282a371c5153239e0468a48254f17ca6 ]
+I saw you accept this patch, thanks.  Any chance of pushing this
+simple fix in 5.1.x and 5.2.x?  I've tested and confirmed this
+hardware works fine.
 
-HTT High Latency (ATH10K_DEV_TYPE_HL) does not use txdone_fifo at all, we don't
-even initialise it by skipping ath10k_htt_tx_alloc_buf() in
-ath10k_htt_tx_start(). Because of this using QCA6174 SDIO
-ath10k_htt_rx_tx_compl_ind() will crash when it accesses unitialised
-txdone_fifo. So skip txdone_fifo when using High Latency mode.
+Thanks,
+Zero
 
-Tested with QCA6174 SDIO with firmware WLAN.RMH.4.4.1-00007-QCARMSWP-1.
-
-Co-developed-by: Wen Gong <wgong@codeaurora.org>
-Signed-off-by: Alagu Sankar <alagusankar@silex-india.com>
-Signed-off-by: Wen Gong <wgong@codeaurora.org>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/net/wireless/ath/ath10k/htt_rx.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 1acc622d2183..f22840bbc389 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -2277,7 +2277,9 @@ static void ath10k_htt_rx_tx_compl_ind(struct ath10k *ar,
- 		 *  Note that with only one concurrent reader and one concurrent
- 		 *  writer, you don't need extra locking to use these macro.
- 		 */
--		if (!kfifo_put(&htt->txdone_fifo, tx_done)) {
-+		if (ar->bus_param.dev_type == ATH10K_DEV_TYPE_HL) {
-+			ath10k_txrx_tx_unref(htt, &tx_done);
-+		} else if (!kfifo_put(&htt->txdone_fifo, tx_done)) {
- 			ath10k_warn(ar, "txdone fifo overrun, msdu_id %d status %d\n",
- 				    tx_done.msdu_id, tx_done.status);
- 			ath10k_txrx_tx_unref(htt, &tx_done);
--- 
-2.20.1
-
+On Fri, Jul 5, 2019 at 3:01 PM Lorenzo Bianconi <lorenzo@kernel.org> wrote:
+>
+> Introduce support to TP-Link T2UHP
+> https://wikidevi.com/wiki/TP-LINK_Archer_T2UHP
+>
+> Tested-by: Sid Hayn <sidhayn@gmail.com>
+> Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+> ---
+>  drivers/net/wireless/mediatek/mt76/mt76x0/usb.c | 1 +
+>  1 file changed, 1 insertion(+)
+>
+> diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
+> index 627ed1fc7b15..b007bcd2e999 100644
+> --- a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
+> +++ b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
+> @@ -32,6 +32,7 @@ static struct usb_device_id mt76x0_device_table[] = {
+>         { USB_DEVICE(0x20f4, 0x806b) }, /* TRENDnet TEW-806UBH  */
+>         { USB_DEVICE(0x7392, 0xc711) }, /* Devolo Wifi ac Stick */
+>         { USB_DEVICE(0x0df6, 0x0079) }, /* Sitecom Europe B.V. ac  Stick */
+> +       { USB_DEVICE(0x2357, 0x0123) }, /* TP-LINK T2UHP */
+>         { USB_DEVICE(0x2357, 0x0105),
+>           .driver_info = 1,          }, /* TP-LINK Archer T1U */
+>         { USB_DEVICE_AND_INTERFACE_INFO(0x0E8D, 0x7630, 0xff, 0x2, 0xff)}, /* MT7630U */
+> --
+> 2.21.0
+>
