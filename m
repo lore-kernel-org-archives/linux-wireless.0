@@ -7,47 +7,48 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3540AC76191
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 15:09:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7470DC7618F
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 15:09:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 01927205ED
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 15:09:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3D4652054F
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 15:09:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1563203364;
-	bh=1vuppLEe4c9McwgEoTdwhfd5u9V66r5gDa7g32TfWCE=;
+	s=default; t=1563203369;
+	bh=AVIWfeOq2+QctxhGn7Gs9o0z2ngpeZllDmYpTK7i0iA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=yoL1w80XuzqaJcfQ7hZz5gw3fr+x78Vm6P3EC1BCYu8fQ1Cfmw4IpixLDD+JrwaSP
-	 J9rmd9KQz9CX5sVlvlVXghFwbLzuZZRwkULlQpZo2+p5r8LotlQvKgUxJymBUiHbLT
-	 elSIzOSqse+sJYNTY2Kbvq9c84Q6B6xVcHulb+hQ=
+	b=HneHoXt6eNhc8rkLZzPuqunjrHkvh/ue1oLmDZL1BWL6CucLjLMn4OnY6HdbJTEi/
+	 PI48+l0pvunrQdVcso0EV28nopgQf/Pc7FOrIwZDQ/lrfCYo4280wh0cQ5KLsAj1AC
+	 ceVIIkpmYsIYjtWG/3r/cLN1XoHAbkJXwwvlfOaQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732917AbfGON4x (ORCPT
+        id S1732897AbfGON4u (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 15 Jul 2019 09:56:53 -0400
-Received: from mail.kernel.org ([198.145.29.99]:33776 "EHLO mail.kernel.org"
+        Mon, 15 Jul 2019 09:56:50 -0400
+Received: from mail.kernel.org ([198.145.29.99]:33706 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732907AbfGON4w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jul 2019 09:56:52 -0400
+        id S1732891AbfGON4s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 15 Jul 2019 09:56:48 -0400
 Received: from sasha-vm.mshome.net (unknown [73.61.17.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 361BE21537;
-        Mon, 15 Jul 2019 13:56:49 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 683A621530;
+        Mon, 15 Jul 2019 13:56:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1563199011;
-        bh=1vuppLEe4c9McwgEoTdwhfd5u9V66r5gDa7g32TfWCE=;
+        s=default; t=1563199007;
+        bh=AVIWfeOq2+QctxhGn7Gs9o0z2ngpeZllDmYpTK7i0iA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=vv8AZDLC9q0TetpVLxvqPvQDbGHdrQPcevi7rAuXd+hxt8H6CWWHqlt6sX0Hwsjjb
-         uiAizeHOvZ7C2z2+TuwylQ3RXn38i3oTImXugfWuW0Vrx7+kfW5F1pnPazKpkibwAX
-         VkYvECmZRZ7u3pcKGx0aV6gzm9q4SWFMfIQX7vHI=
+        b=qUwVTtI8jKa+Q50vb6N+p8Ows8X9dJJ3AwHGhOAGaivLdWAsHXHeAMMQTxb2tspub
+         9LGsnhQIlYb0wfk2gaX4mNlCo587sxPEeG/2nv5D/Odl+BeW+0UYXglTCs6NY/oO4y
+         oYhsrOb+WUV3z3wrhXKoRK0O0+UO1LaB7lGSumMk=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Miaoqing Pan <miaoqing@codeaurora.org>,
+Cc:     Claire Chang <tientzu@chromium.org>,
+        Brian Norris <briannorris@chromium.org>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.2 165/249] ath10k: fix PCIE device wake up failed
-Date:   Mon, 15 Jul 2019 09:45:30 -0400
-Message-Id: <20190715134655.4076-165-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.2 163/249] ath10k: add missing error handling
+Date:   Mon, 15 Jul 2019 09:45:28 -0400
+Message-Id: <20190715134655.4076-163-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190715134655.4076-1-sashal@kernel.org>
 References: <20190715134655.4076-1-sashal@kernel.org>
@@ -60,49 +61,46 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Miaoqing Pan <miaoqing@codeaurora.org>
+From: Claire Chang <tientzu@chromium.org>
 
-[ Upstream commit 011d4111c8c602ea829fa4917af1818eb0500a90 ]
+[ Upstream commit 4b553f3ca4cbde67399aa3a756c37eb92145b8a1 ]
 
-Observed PCIE device wake up failed after ~120 iterations of
-soft-reboot test. The error message is
-"ath10k_pci 0000:01:00.0: failed to wake up device : -110"
+In function ath10k_sdio_mbox_rx_alloc() [sdio.c],
+ath10k_sdio_mbox_alloc_rx_pkt() is called without handling the error cases.
+This will make the driver think the allocation for skb is successful and
+try to access the skb. If we enable failslab, system will easily crash with
+NULL pointer dereferencing.
 
-The call trace as below:
-ath10k_pci_probe -> ath10k_pci_force_wake -> ath10k_pci_wake_wait ->
-ath10k_pci_is_awake
+Call trace of CONFIG_FAILSLAB:
+ath10k_sdio_irq_handler+0x570/0xa88 [ath10k_sdio]
+process_sdio_pending_irqs+0x4c/0x174
+sdio_run_irqs+0x3c/0x64
+sdio_irq_work+0x1c/0x28
 
-Once trigger the device to wake up, we will continuously check the RTC
-state until it returns RTC_STATE_V_ON or timeout.
-
-But for QCA99x0 chips, we use wrong value for RTC_STATE_V_ON.
-Occasionally, we get 0x7 on the fist read, we thought as a failure
-case, but actually is the right value, also verified with the spec.
-So fix the issue by changing RTC_STATE_V_ON from 0x5 to 0x7, passed
-~2000 iterations.
-
-Tested HW: QCA9984
-
-Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
+Fixes: d96db25d2025 ("ath10k: add initial SDIO support")
+Signed-off-by: Claire Chang <tientzu@chromium.org>
+Reviewed-by: Brian Norris <briannorris@chromium.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath10k/hw.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/sdio.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/hw.c b/drivers/net/wireless/ath/ath10k/hw.c
-index ad082b7d7643..b242085c3c16 100644
---- a/drivers/net/wireless/ath/ath10k/hw.c
-+++ b/drivers/net/wireless/ath/ath10k/hw.c
-@@ -158,7 +158,7 @@ const struct ath10k_hw_values qca6174_values = {
- };
+diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
+index fae56c67766f..73ef3e75d199 100644
+--- a/drivers/net/wireless/ath/ath10k/sdio.c
++++ b/drivers/net/wireless/ath/ath10k/sdio.c
+@@ -602,6 +602,10 @@ static int ath10k_sdio_mbox_rx_alloc(struct ath10k *ar,
+ 						    full_len,
+ 						    last_in_bundle,
+ 						    last_in_bundle);
++		if (ret) {
++			ath10k_warn(ar, "alloc_rx_pkt error %d\n", ret);
++			goto err;
++		}
+ 	}
  
- const struct ath10k_hw_values qca99x0_values = {
--	.rtc_state_val_on		= 5,
-+	.rtc_state_val_on		= 7,
- 	.ce_count			= 12,
- 	.msi_assign_ce_max		= 12,
- 	.num_target_ce_config_wlan	= 10,
+ 	ar_sdio->n_rx_pkts = i;
 -- 
 2.20.1
 
