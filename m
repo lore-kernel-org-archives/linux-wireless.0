@@ -4,54 +4,52 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0216DC76191
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 14:36:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C061C76195
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 14:37:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BB685217F4
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 14:36:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6C9E3217D8
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 14:37:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1563201408;
-	bh=FE4buOuM9E+w3Kznym8jQnHPs+FEQlUnJAhidHgfQ9c=;
+	s=default; t=1563201421;
+	bh=g6FeDpZMbvqQEdTPMB47Po8DSAzxTD5qheByBCtU7LE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=NwDiB/lJV40uqefCT16KN60cOmmss2xwAGq1aoXbeT5t/I+lJTwjq/YTN9gVcfX1z
-	 YUsQifHyfaHngsyQmtDFKRk4D9TJN65wBTNhdVDK5bVM+9it0vvWydCTqpoZN+7pL5
-	 gXZOGpqdsTFrPkjyFGDQhMGaGYIMnWYnyXFCSW3s=
+	b=CbCzfrvqea75OIjAme2XB4dgFwOULpFUfawHMCNzFCSMrTCpqXWo7zl7Op3c9F4O5
+	 MC9ukoeFIrEmlkJWiqeKYHgVqzDHKer3x7BNdeRV69cRoh1MIzpimQNTGF947tJyEP
+	 koJtOvcBYS8jz6XI5ZqlWTKU/wqctQ2ABRsYxNVk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2403979AbfGOOgs (ORCPT
+        id S2403831AbfGOOeV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 15 Jul 2019 10:36:48 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57330 "EHLO mail.kernel.org"
+        Mon, 15 Jul 2019 10:34:21 -0400
+Received: from mail.kernel.org ([198.145.29.99]:51258 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730727AbfGOOgp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jul 2019 10:36:45 -0400
+        id S2391815AbfGOOeS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 15 Jul 2019 10:34:18 -0400
 Received: from sasha-vm.mshome.net (unknown [73.61.17.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3CC2521848;
-        Mon, 15 Jul 2019 14:36:41 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 03FC9204FD;
+        Mon, 15 Jul 2019 14:34:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1563201404;
-        bh=FE4buOuM9E+w3Kznym8jQnHPs+FEQlUnJAhidHgfQ9c=;
+        s=default; t=1563201258;
+        bh=g6FeDpZMbvqQEdTPMB47Po8DSAzxTD5qheByBCtU7LE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=g765PxSMQZMusgP3mObSInVW13qMzGN/KZV2eBIf6LIrqX354tGNH/cHzti7ORhtW
-         UjJ+JiCf4EHdozIE/eZfiCwRDUk+l+SLyOODUHyRkiDVfFzAXFHF/QXVLyFqxZPB51
-         C8HGCTZ0V81qlu5sl+Ek++xR8frn32IAl7h6PE04=
+        b=zwIaSa69CwnhGgInY+Ncp5zU+c37/TD6N6EQWTKbRWoFgH0uuZ441fJz5WeOjVX86
+         S6wwdetQ3m7ObPoLXMz7YcS8O0LSy6iDhIpZpNmaMAjctMQDLSZ6i2UixhOGQdC+lX
+         PDPMyMY30aF+D2+doDGdzbebOB32tE0bqSjYoViw=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Anilkumar Kolli <akolli@codeaurora.org>,
-        Tamizh chelvam <tamizhr@codeaurora.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>,
+Cc:     Wen Gong <wgong@codeaurora.org>, Kalle Valo <kvalo@codeaurora.org>,
+        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 04/73] ath: DFS JP domain W56 fixed pulse type 3 RADAR detection
-Date:   Mon, 15 Jul 2019 10:35:20 -0400
-Message-Id: <20190715143629.10893-4-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 091/105] ath10k: destroy sdio workqueue while remove sdio module
+Date:   Mon, 15 Jul 2019 10:28:25 -0400
+Message-Id: <20190715142839.9896-91-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190715143629.10893-1-sashal@kernel.org>
-References: <20190715143629.10893-1-sashal@kernel.org>
+In-Reply-To: <20190715142839.9896-1-sashal@kernel.org>
+References: <20190715142839.9896-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -61,44 +59,38 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Anilkumar Kolli <akolli@codeaurora.org>
+From: Wen Gong <wgong@codeaurora.org>
 
-[ Upstream commit d8792393a783158cbb2c39939cb897dc5e5299b6 ]
+[ Upstream commit 3ed39f8e747a7aafeec07bb244f2c3a1bdca5730 ]
 
-Increase pulse width range from 1-2usec to 0-4usec.
-During data traffic HW occasionally fails detecting radar pulses,
-so that SW cannot get enough radar reports to achieve the success rate.
+The workqueue need to flush and destory while remove sdio module,
+otherwise it will have thread which is not destory after remove
+sdio modules.
 
-Tested ath10k hw and fw:
-	* QCA9888(10.4-3.5.1-00052)
-	* QCA4019(10.4-3.2.1.1-00017)
-	* QCA9984(10.4-3.6-00104)
-	* QCA988X(10.2.4-1.0-00041)
+Tested with QCA6174 SDIO with firmware
+WLAN.RMH.4.4.1-00007-QCARMSWP-1.
 
-Tested ath9k hw: AR9300
-
-Tested-by: Tamizh chelvam <tamizhr@codeaurora.org>
-Signed-off-by: Tamizh chelvam <tamizhr@codeaurora.org>
-Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
+Signed-off-by: Wen Gong <wgong@codeaurora.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/dfs_pattern_detector.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/sdio.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/dfs_pattern_detector.c b/drivers/net/wireless/ath/dfs_pattern_detector.c
-index 4100ffd42a43..78146607f16e 100644
---- a/drivers/net/wireless/ath/dfs_pattern_detector.c
-+++ b/drivers/net/wireless/ath/dfs_pattern_detector.c
-@@ -111,7 +111,7 @@ static const struct radar_detector_specs jp_radar_ref_types[] = {
- 	JP_PATTERN(0, 0, 1, 1428, 1428, 1, 18, 29, false),
- 	JP_PATTERN(1, 2, 3, 3846, 3846, 1, 18, 29, false),
- 	JP_PATTERN(2, 0, 1, 1388, 1388, 1, 18, 50, false),
--	JP_PATTERN(3, 1, 2, 4000, 4000, 1, 18, 50, false),
-+	JP_PATTERN(3, 0, 4, 4000, 4000, 1, 18, 50, false),
- 	JP_PATTERN(4, 0, 5, 150, 230, 1, 23, 50, false),
- 	JP_PATTERN(5, 6, 10, 200, 500, 1, 16, 50, false),
- 	JP_PATTERN(6, 11, 20, 200, 500, 1, 12, 50, false),
+diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
+index c6440d28ab48..0a1248ebccf5 100644
+--- a/drivers/net/wireless/ath/ath10k/sdio.c
++++ b/drivers/net/wireless/ath/ath10k/sdio.c
+@@ -2076,6 +2076,9 @@ static void ath10k_sdio_remove(struct sdio_func *func)
+ 	cancel_work_sync(&ar_sdio->wr_async_work);
+ 	ath10k_core_unregister(ar);
+ 	ath10k_core_destroy(ar);
++
++	flush_workqueue(ar_sdio->workqueue);
++	destroy_workqueue(ar_sdio->workqueue);
+ }
+ 
+ static const struct sdio_device_id ath10k_sdio_devices[] = {
 -- 
 2.20.1
 
