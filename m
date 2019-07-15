@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3257C7618F
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 15:06:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A874C7618F
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 15:06:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BB49C20651
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 15:06:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D7436206B8
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 15:06:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1563203197;
-	bh=FMLCJaIguW6YWjuMGHKMm+W18reEkOZbzo2vwzvBfvM=;
+	s=default; t=1563203210;
+	bh=+tfDLiCMFVeiznMrly76v6ecB2cjl4qeybA1V5HmG8U=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=rBs0mdfhrX1fPrRQwBn3F7v7U7jWhtdVXF4Q+SHOd8ZhqehoiFPsBT+zYD7cEFkU5
-	 KlWHmh5TxFpdGfvL4Aovbp9JwkMz/h1Y2NPT4N0oyHxQ3Aj6DTbGz56j42OVsx9hip
-	 YmEo0wbWQwUqFsTdmduGJKw8XxX6zbj3cbEd4tOU=
+	b=X8Do7A4iAHSe/HX+8R82OD1cxAEJFkPOc1pG0RW3rHeSidzt8voPmvGh3K8FROkTo
+	 xqDtvQFrC9VwlYl60S8ZJhHLblkmRP+KuTQfinu2nSHuZ3Ym0XZTittfFNFYWJoP9T
+	 1tikn1/ZjkSDNlSivn3dDWmlPJBBVsz+2eXOIZ+I=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389358AbfGOPG2 (ORCPT
+        id S2387733AbfGOOEY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 15 Jul 2019 11:06:28 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50554 "EHLO mail.kernel.org"
+        Mon, 15 Jul 2019 10:04:24 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50186 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387958AbfGOOEl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jul 2019 10:04:41 -0400
+        id S2387904AbfGOOEX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 15 Jul 2019 10:04:23 -0400
 Received: from sasha-vm.mshome.net (unknown [73.61.17.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 5A6DE21842;
-        Mon, 15 Jul 2019 14:04:38 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 75CE3217D8;
+        Mon, 15 Jul 2019 14:04:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1563199480;
-        bh=FMLCJaIguW6YWjuMGHKMm+W18reEkOZbzo2vwzvBfvM=;
+        s=default; t=1563199462;
+        bh=+tfDLiCMFVeiznMrly76v6ecB2cjl4qeybA1V5HmG8U=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=uG9OSQCRsFiXy9YOPQBXOezyQVvKZZEs4mVgeNrItxy05g5gaf6LTGHN3wnMlFkDZ
-         AneCgBM2OV50eyPKqxSZW4Dd8XEDfLtNx8jy8i2PVrJcu5tEHDdyirrWeiNl+HNrNW
-         6Jm4as3uln6e/cv95rkniZ69vSTYHwttNLk/wHx8=
+        b=zshhal8Gh+1u9yMpApl/yWCAaf153ceelbCZADcshsQtGTL59txMbiKtu65ppfdNk
+         WXwbG4BhExKXcGWDAKkzjic+knt+dyOZVzr1/wN0tRaHr4Mdlq4f5e4+uOxqdBlE/a
+         KVs/lXXxHWPc6Rpjp16kbYO2yRDlddUDqv7yAxJU=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Rakesh Pillai <pillair@codeaurora.org>,
+Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
+        Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.1 016/219] ath10k: Fix encoding for protected management frames
-Date:   Mon, 15 Jul 2019 10:00:17 -0400
-Message-Id: <20190715140341.6443-16-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.1 011/219] ath6kl: add some bounds checking
+Date:   Mon, 15 Jul 2019 10:00:12 -0400
+Message-Id: <20190715140341.6443-11-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190715140341.6443-1-sashal@kernel.org>
 References: <20190715140341.6443-1-sashal@kernel.org>
@@ -60,46 +60,62 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Rakesh Pillai <pillair@codeaurora.org>
+From: Dan Carpenter <dan.carpenter@oracle.com>
 
-[ Upstream commit 42f1bc43e6a97b9ddbe976eba9bd05306c990c75 ]
+[ Upstream commit 5d6751eaff672ea77642e74e92e6c0ac7f9709ab ]
 
-Currently the protected management frames are
-not appended with the MIC_LEN which results in
-the protected management frames being encoded
-incorrectly.
+The "ev->traffic_class" and "reply->ac" variables come from the network
+and they're used as an offset into the wmi->stream_exist_for_ac[] array.
+Those variables are u8 so they can be 0-255 but the stream_exist_for_ac[]
+array only has WMM_NUM_AC (4) elements.  We need to add a couple bounds
+checks to prevent array overflows.
 
-Add the extra space at the end of the protected
-management frames to fix this encoding error for
-the protected management frames.
+I also modified one existing check from "if (traffic_class > 3) {" to
+"if (traffic_class >= WMM_NUM_AC) {" just to make them all consistent.
 
-Tested HW: WCN3990
-Tested FW: WLAN.HL.3.1-00784-QCAHLSWMTPLZ-1
-
-Fixes: 1807da49733e ("ath10k: wmi: add management tx by reference support over wmi")
-Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
+Fixes: bdcd81707973 (" Add ath6kl cleaned up driver")
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath10k/wmi-tlv.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath6kl/wmi.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index 582fb11f648a..02709fc99034 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -2840,8 +2840,10 @@ ath10k_wmi_tlv_op_gen_mgmt_tx_send(struct ath10k *ar, struct sk_buff *msdu,
- 	if ((ieee80211_is_action(hdr->frame_control) ||
- 	     ieee80211_is_deauth(hdr->frame_control) ||
- 	     ieee80211_is_disassoc(hdr->frame_control)) &&
--	     ieee80211_has_protected(hdr->frame_control))
-+	     ieee80211_has_protected(hdr->frame_control)) {
-+		skb_put(msdu, IEEE80211_CCMP_MIC_LEN);
- 		buf_len += IEEE80211_CCMP_MIC_LEN;
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index 68854c45d0a4..9ab6aa9ded5c 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -1176,6 +1176,10 @@ static int ath6kl_wmi_pstream_timeout_event_rx(struct wmi *wmi, u8 *datap,
+ 		return -EINVAL;
+ 
+ 	ev = (struct wmi_pstream_timeout_event *) datap;
++	if (ev->traffic_class >= WMM_NUM_AC) {
++		ath6kl_err("invalid traffic class: %d\n", ev->traffic_class);
++		return -EINVAL;
 +	}
  
- 	buf_len = min_t(u32, buf_len, WMI_TLV_MGMT_TX_FRAME_MAX_LEN);
- 	buf_len = round_up(buf_len, 4);
+ 	/*
+ 	 * When the pstream (fat pipe == AC) timesout, it means there were
+@@ -1517,6 +1521,10 @@ static int ath6kl_wmi_cac_event_rx(struct wmi *wmi, u8 *datap, int len,
+ 		return -EINVAL;
+ 
+ 	reply = (struct wmi_cac_event *) datap;
++	if (reply->ac >= WMM_NUM_AC) {
++		ath6kl_err("invalid AC: %d\n", reply->ac);
++		return -EINVAL;
++	}
+ 
+ 	if ((reply->cac_indication == CAC_INDICATION_ADMISSION_RESP) &&
+ 	    (reply->status_code != IEEE80211_TSPEC_STATUS_ADMISS_ACCEPTED)) {
+@@ -2633,7 +2641,7 @@ int ath6kl_wmi_delete_pstream_cmd(struct wmi *wmi, u8 if_idx, u8 traffic_class,
+ 	u16 active_tsids = 0;
+ 	int ret;
+ 
+-	if (traffic_class > 3) {
++	if (traffic_class >= WMM_NUM_AC) {
+ 		ath6kl_err("invalid traffic class: %d\n", traffic_class);
+ 		return -EINVAL;
+ 	}
 -- 
 2.20.1
 
