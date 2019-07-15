@@ -4,51 +4,50 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42BB7C76192
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 13:40:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92005C76191
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 13:41:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1CA6E2086C
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 13:40:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 688862086C
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 13:41:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1563198058;
-	bh=Amwpqgnf93a0rJcavWw4hRlUB2lPym+RocOUdQVB50o=;
+	s=default; t=1563198064;
+	bh=BpLbiFJmhWX7EEHeCpBV5nqlV3YJ8uX8UyP+7CTuPpo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=hEnrvCRfzYsBrMBzJBvJrO9L/erSazOxbLqQJWK+uq9sRk4S0Wm5aNIGQNnphLUsX
-	 j0B5456ZyJ+KVrbfNRQjMkwfuz7+A8DaCgNS8ODvw8tdzGEkihiItlazDfCY076wI0
-	 8kDVRTRg5RskgfTdQmvgz56wryo3Y9hXCMvBzqCU=
+	b=2Ih+gQ7JQrnjlbm8sAekZyNujeeK2S1q7s6VYJNYK6sVZzU0IN6RDlhcZymoWv1k3
+	 HTV2S3t8+ETKM8GnHEDuv/Vwo+iqJi6p/Te/s8KRmdxkHO3VMecOjGSgD/QyrDbqF8
+	 uO4Cq2jpAhAT4nGPrdy88sP/aMYOqQiGt4IKI6r4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731281AbfGONjp (ORCPT
+        id S1731209AbfGONjf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 15 Jul 2019 09:39:45 -0400
-Received: from mail.kernel.org ([198.145.29.99]:41244 "EHLO mail.kernel.org"
+        Mon, 15 Jul 2019 09:39:35 -0400
+Received: from mail.kernel.org ([198.145.29.99]:40950 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730711AbfGONjo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jul 2019 09:39:44 -0400
+        id S1731230AbfGONje (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 15 Jul 2019 09:39:34 -0400
 Received: from sasha-vm.mshome.net (unknown [73.61.17.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 9280E2080A;
-        Mon, 15 Jul 2019 13:39:41 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id CF1B820C01;
+        Mon, 15 Jul 2019 13:39:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1563197983;
-        bh=Amwpqgnf93a0rJcavWw4hRlUB2lPym+RocOUdQVB50o=;
+        s=default; t=1563197973;
+        bh=BpLbiFJmhWX7EEHeCpBV5nqlV3YJ8uX8UyP+7CTuPpo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=fFQqJPKxsqyP2NPDR2GbgWSCf9dt3o9i6pQtPIDig/u5zhpVxYUpJxPcwAZJCMjrf
-         h48tMswdwK1gjtn4SbOwscdfXAHCEmcVsOfxPiLmviZnMlS1LmUbBcxUfUlmFCpoGq
-         D4TE1ihfw3vTgA1c+6JfNJNdg7+i1FBZvztsyMPc=
+        b=KACmrRHHszLDrTA+j0O79NXOZb04y/U3/6fzgBeEbbHTLAoiaYKcnju4AAtsoA321
+         An61I/bCfxg/Epy0CA8JdQd+OSIKARcY9fxTZRE9lLU3QyloxsVzxgpN3HX37sLN39
+         h3bynTgDwSjydFan/rvyngw4eDCIDxspZFa5oDac=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Maya Erez <merez@codeaurora.org>,
+Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
-        netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 007/158] wil6210: fix spurious interrupts in 3-msi
-Date:   Mon, 15 Jul 2019 09:36:52 -0400
-Message-Id: <20190715133923.2890-7-sashal@kernel.org>
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 004/158] ath6kl: add some bounds checking
+Date:   Mon, 15 Jul 2019 09:36:49 -0400
+Message-Id: <20190715133923.2890-4-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190715133923.2890-1-sashal@kernel.org>
 References: <20190715133923.2890-1-sashal@kernel.org>
@@ -61,180 +60,62 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Maya Erez <merez@codeaurora.org>
+From: Dan Carpenter <dan.carpenter@oracle.com>
 
-[ Upstream commit e10b0eddd5235aa5aef4e40b970e34e735611a80 ]
+[ Upstream commit 5d6751eaff672ea77642e74e92e6c0ac7f9709ab ]
 
-Interrupt is set in ICM (ICR & ~IMV) rising trigger.
-As the driver masks the IRQ after clearing it, there can
-be a race where an additional spurious interrupt is triggered
-when the driver unmask the IRQ.
-This can happen in case HW triggers an interrupt after the clear
-and before the mask.
+The "ev->traffic_class" and "reply->ac" variables come from the network
+and they're used as an offset into the wmi->stream_exist_for_ac[] array.
+Those variables are u8 so they can be 0-255 but the stream_exist_for_ac[]
+array only has WMM_NUM_AC (4) elements.  We need to add a couple bounds
+checks to prevent array overflows.
 
-To prevent the second spurious interrupt the driver needs to mask the
-IRQ before reading and clearing it.
+I also modified one existing check from "if (traffic_class > 3) {" to
+"if (traffic_class >= WMM_NUM_AC) {" just to make them all consistent.
 
-Signed-off-by: Maya Erez <merez@codeaurora.org>
+Fixes: bdcd81707973 (" Add ath6kl cleaned up driver")
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/wil6210/interrupt.c | 65 ++++++++++++--------
- 1 file changed, 40 insertions(+), 25 deletions(-)
+ drivers/net/wireless/ath/ath6kl/wmi.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/interrupt.c b/drivers/net/wireless/ath/wil6210/interrupt.c
-index 5d287a8e1b45..0655cd884514 100644
---- a/drivers/net/wireless/ath/wil6210/interrupt.c
-+++ b/drivers/net/wireless/ath/wil6210/interrupt.c
-@@ -296,21 +296,24 @@ void wil_configure_interrupt_moderation(struct wil6210_priv *wil)
- static irqreturn_t wil6210_irq_rx(int irq, void *cookie)
- {
- 	struct wil6210_priv *wil = cookie;
--	u32 isr = wil_ioread32_and_clear(wil->csr +
--					 HOSTADDR(RGF_DMA_EP_RX_ICR) +
--					 offsetof(struct RGF_ICR, ICR));
-+	u32 isr;
- 	bool need_unmask = true;
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index 777acc564ac9..bc7916f2add0 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -1178,6 +1178,10 @@ static int ath6kl_wmi_pstream_timeout_event_rx(struct wmi *wmi, u8 *datap,
+ 		return -EINVAL;
  
-+	wil6210_mask_irq_rx(wil);
-+
-+	isr = wil_ioread32_and_clear(wil->csr +
-+				     HOSTADDR(RGF_DMA_EP_RX_ICR) +
-+				     offsetof(struct RGF_ICR, ICR));
-+
- 	trace_wil6210_irq_rx(isr);
- 	wil_dbg_irq(wil, "ISR RX 0x%08x\n", isr);
+ 	ev = (struct wmi_pstream_timeout_event *) datap;
++	if (ev->traffic_class >= WMM_NUM_AC) {
++		ath6kl_err("invalid traffic class: %d\n", ev->traffic_class);
++		return -EINVAL;
++	}
  
- 	if (unlikely(!isr)) {
- 		wil_err_ratelimited(wil, "spurious IRQ: RX\n");
-+		wil6210_unmask_irq_rx(wil);
- 		return IRQ_NONE;
+ 	/*
+ 	 * When the pstream (fat pipe == AC) timesout, it means there were
+@@ -1519,6 +1523,10 @@ static int ath6kl_wmi_cac_event_rx(struct wmi *wmi, u8 *datap, int len,
+ 		return -EINVAL;
+ 
+ 	reply = (struct wmi_cac_event *) datap;
++	if (reply->ac >= WMM_NUM_AC) {
++		ath6kl_err("invalid AC: %d\n", reply->ac);
++		return -EINVAL;
++	}
+ 
+ 	if ((reply->cac_indication == CAC_INDICATION_ADMISSION_RESP) &&
+ 	    (reply->status_code != IEEE80211_TSPEC_STATUS_ADMISS_ACCEPTED)) {
+@@ -2635,7 +2643,7 @@ int ath6kl_wmi_delete_pstream_cmd(struct wmi *wmi, u8 if_idx, u8 traffic_class,
+ 	u16 active_tsids = 0;
+ 	int ret;
+ 
+-	if (traffic_class > 3) {
++	if (traffic_class >= WMM_NUM_AC) {
+ 		ath6kl_err("invalid traffic class: %d\n", traffic_class);
+ 		return -EINVAL;
  	}
- 
--	wil6210_mask_irq_rx(wil);
--
- 	/* RX_DONE and RX_HTRSH interrupts are the same if interrupt
- 	 * moderation is not used. Interrupt moderation may cause RX
- 	 * buffer overflow while RX_DONE is delayed. The required
-@@ -355,21 +358,24 @@ static irqreturn_t wil6210_irq_rx(int irq, void *cookie)
- static irqreturn_t wil6210_irq_rx_edma(int irq, void *cookie)
- {
- 	struct wil6210_priv *wil = cookie;
--	u32 isr = wil_ioread32_and_clear(wil->csr +
--					 HOSTADDR(RGF_INT_GEN_RX_ICR) +
--					 offsetof(struct RGF_ICR, ICR));
-+	u32 isr;
- 	bool need_unmask = true;
- 
-+	wil6210_mask_irq_rx_edma(wil);
-+
-+	isr = wil_ioread32_and_clear(wil->csr +
-+				     HOSTADDR(RGF_INT_GEN_RX_ICR) +
-+				     offsetof(struct RGF_ICR, ICR));
-+
- 	trace_wil6210_irq_rx(isr);
- 	wil_dbg_irq(wil, "ISR RX 0x%08x\n", isr);
- 
- 	if (unlikely(!isr)) {
- 		wil_err(wil, "spurious IRQ: RX\n");
-+		wil6210_unmask_irq_rx_edma(wil);
- 		return IRQ_NONE;
- 	}
- 
--	wil6210_mask_irq_rx_edma(wil);
--
- 	if (likely(isr & BIT_RX_STATUS_IRQ)) {
- 		wil_dbg_irq(wil, "RX status ring\n");
- 		isr &= ~BIT_RX_STATUS_IRQ;
-@@ -403,21 +409,24 @@ static irqreturn_t wil6210_irq_rx_edma(int irq, void *cookie)
- static irqreturn_t wil6210_irq_tx_edma(int irq, void *cookie)
- {
- 	struct wil6210_priv *wil = cookie;
--	u32 isr = wil_ioread32_and_clear(wil->csr +
--					 HOSTADDR(RGF_INT_GEN_TX_ICR) +
--					 offsetof(struct RGF_ICR, ICR));
-+	u32 isr;
- 	bool need_unmask = true;
- 
-+	wil6210_mask_irq_tx_edma(wil);
-+
-+	isr = wil_ioread32_and_clear(wil->csr +
-+				     HOSTADDR(RGF_INT_GEN_TX_ICR) +
-+				     offsetof(struct RGF_ICR, ICR));
-+
- 	trace_wil6210_irq_tx(isr);
- 	wil_dbg_irq(wil, "ISR TX 0x%08x\n", isr);
- 
- 	if (unlikely(!isr)) {
- 		wil_err(wil, "spurious IRQ: TX\n");
-+		wil6210_unmask_irq_tx_edma(wil);
- 		return IRQ_NONE;
- 	}
- 
--	wil6210_mask_irq_tx_edma(wil);
--
- 	if (likely(isr & BIT_TX_STATUS_IRQ)) {
- 		wil_dbg_irq(wil, "TX status ring\n");
- 		isr &= ~BIT_TX_STATUS_IRQ;
-@@ -446,21 +455,24 @@ static irqreturn_t wil6210_irq_tx_edma(int irq, void *cookie)
- static irqreturn_t wil6210_irq_tx(int irq, void *cookie)
- {
- 	struct wil6210_priv *wil = cookie;
--	u32 isr = wil_ioread32_and_clear(wil->csr +
--					 HOSTADDR(RGF_DMA_EP_TX_ICR) +
--					 offsetof(struct RGF_ICR, ICR));
-+	u32 isr;
- 	bool need_unmask = true;
- 
-+	wil6210_mask_irq_tx(wil);
-+
-+	isr = wil_ioread32_and_clear(wil->csr +
-+				     HOSTADDR(RGF_DMA_EP_TX_ICR) +
-+				     offsetof(struct RGF_ICR, ICR));
-+
- 	trace_wil6210_irq_tx(isr);
- 	wil_dbg_irq(wil, "ISR TX 0x%08x\n", isr);
- 
- 	if (unlikely(!isr)) {
- 		wil_err_ratelimited(wil, "spurious IRQ: TX\n");
-+		wil6210_unmask_irq_tx(wil);
- 		return IRQ_NONE;
- 	}
- 
--	wil6210_mask_irq_tx(wil);
--
- 	if (likely(isr & BIT_DMA_EP_TX_ICR_TX_DONE)) {
- 		wil_dbg_irq(wil, "TX done\n");
- 		isr &= ~BIT_DMA_EP_TX_ICR_TX_DONE;
-@@ -532,20 +544,23 @@ static bool wil_validate_mbox_regs(struct wil6210_priv *wil)
- static irqreturn_t wil6210_irq_misc(int irq, void *cookie)
- {
- 	struct wil6210_priv *wil = cookie;
--	u32 isr = wil_ioread32_and_clear(wil->csr +
--					 HOSTADDR(RGF_DMA_EP_MISC_ICR) +
--					 offsetof(struct RGF_ICR, ICR));
-+	u32 isr;
-+
-+	wil6210_mask_irq_misc(wil, false);
-+
-+	isr = wil_ioread32_and_clear(wil->csr +
-+				     HOSTADDR(RGF_DMA_EP_MISC_ICR) +
-+				     offsetof(struct RGF_ICR, ICR));
- 
- 	trace_wil6210_irq_misc(isr);
- 	wil_dbg_irq(wil, "ISR MISC 0x%08x\n", isr);
- 
- 	if (!isr) {
- 		wil_err(wil, "spurious IRQ: MISC\n");
-+		wil6210_unmask_irq_misc(wil, false);
- 		return IRQ_NONE;
- 	}
- 
--	wil6210_mask_irq_misc(wil, false);
--
- 	if (isr & ISR_MISC_FW_ERROR) {
- 		u32 fw_assert_code = wil_r(wil, wil->rgf_fw_assert_code_addr);
- 		u32 ucode_assert_code =
 -- 
 2.20.1
 
