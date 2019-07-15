@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C448C76191
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 13:36:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4B0BC76192
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 13:36:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3578A20C01
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 13:36:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9E78A20C01
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 13:36:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1563197783;
-	bh=+TbeRleRiYI/iZNhsm+Vdwe8yO9jdTKqHKF8Pgo0Zgc=;
+	s=default; t=1563197792;
+	bh=+tfDLiCMFVeiznMrly76v6ecB2cjl4qeybA1V5HmG8U=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=HGwadIaoT2t31R+8n0B2A755Yo0K5/wABVqK2LaY5UryvdHU0F5ThHboT5SIXhX/S
-	 1CvU2hK56Rm9p/ItAE1Vgo1tRQG4EHA+CVv7P5rji7Cef+c3xeLkbW3Ge0sj09W/lO
-	 KyCLtEGcKkO1+769zUmdbzIWjbs+hKkuLeR/QNi0=
+	b=wL1y8zlSUxXYdp5MYgS3ZYFY3c053n8w/4hQhlosZTg5kiV1VLTrkqYKpzV0exs7n
+	 vRjmNMvd0Vcev7ecfk/zkX0U/IMIlM74RoONWuyrXMow5imsUQaevm6g2YF63pwpiK
+	 RcsF4eawA/2lRcEuNmzFmFoII7G/twDkZNfIuZJk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730572AbfGONgL (ORCPT
+        id S1730672AbfGONgb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 15 Jul 2019 09:36:11 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60234 "EHLO mail.kernel.org"
+        Mon, 15 Jul 2019 09:36:31 -0400
+Received: from mail.kernel.org ([198.145.29.99]:33028 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730547AbfGONgK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jul 2019 09:36:10 -0400
+        id S1730656AbfGONga (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 15 Jul 2019 09:36:30 -0400
 Received: from sasha-vm.mshome.net (unknown [73.61.17.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 62FD721537;
-        Mon, 15 Jul 2019 13:36:07 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id C58662083D;
+        Mon, 15 Jul 2019 13:36:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1563197768;
-        bh=+TbeRleRiYI/iZNhsm+Vdwe8yO9jdTKqHKF8Pgo0Zgc=;
+        s=default; t=1563197790;
+        bh=+tfDLiCMFVeiznMrly76v6ecB2cjl4qeybA1V5HmG8U=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=YuFRoKSBPoLz3KjLI4D573kN9o9Z8gnKnorXtm/ZkRXdyWzkxR6/+EeSdd8dm5r17
-         XFF3w6tUXZClkUPivD7PJ1egL1Oj7/MoIH/HqV3GLSK9cOpX4pnD72+GgNBI8Cj/Mx
-         rLZCPz6ud9yPR9DUzoDmLa58RoN5Z0s8DJLAVTek=
+        b=jwfLFRpHDV16oGwj/kJPUqLr2IseP1duJcExs6Zw9A2P53UmUIBVgI6pqvA9KFbk7
+         UJBobMhMQBlmTqJN2Osby1M0zVVeDHYwi6sUkjzAfwkOL0JlCvz8QIFOoNZGItUBlA
+         QSgxxwCWI5tFQklzET7MLDWEJKDYXZpfzLzUFSo0=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Tim Schumacher <timschumi@gmx.de>,
+Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.2 008/249] ath9k: Check for errors when reading SREV register
-Date:   Mon, 15 Jul 2019 09:31:49 -0400
-Message-Id: <20190715133550.1772-8-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.2 011/249] ath6kl: add some bounds checking
+Date:   Mon, 15 Jul 2019 09:31:52 -0400
+Message-Id: <20190715133550.1772-11-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190715133550.1772-1-sashal@kernel.org>
 References: <20190715133550.1772-1-sashal@kernel.org>
@@ -60,121 +60,62 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Tim Schumacher <timschumi@gmx.de>
+From: Dan Carpenter <dan.carpenter@oracle.com>
 
-[ Upstream commit 2f90c7e5d09437a4d8d5546feaae9f1cf48cfbe1 ]
+[ Upstream commit 5d6751eaff672ea77642e74e92e6c0ac7f9709ab ]
 
-Right now, if an error is encountered during the SREV register
-read (i.e. an EIO in ath9k_regread()), that error code gets
-passed all the way to __ath9k_hw_init(), where it is visible
-during the "Chip rev not supported" message.
+The "ev->traffic_class" and "reply->ac" variables come from the network
+and they're used as an offset into the wmi->stream_exist_for_ac[] array.
+Those variables are u8 so they can be 0-255 but the stream_exist_for_ac[]
+array only has WMM_NUM_AC (4) elements.  We need to add a couple bounds
+checks to prevent array overflows.
 
-    ath9k_htc 1-1.4:1.0: ath9k_htc: HTC initialized with 33 credits
-    ath: phy2: Mac Chip Rev 0x0f.3 is not supported by this driver
-    ath: phy2: Unable to initialize hardware; initialization status: -95
-    ath: phy2: Unable to initialize hardware; initialization status: -95
-    ath9k_htc: Failed to initialize the device
+I also modified one existing check from "if (traffic_class > 3) {" to
+"if (traffic_class >= WMM_NUM_AC) {" just to make them all consistent.
 
-Check for -EIO explicitly in ath9k_hw_read_revisions() and return
-a boolean based on the success of the operation. Check for that in
-__ath9k_hw_init() and abort with a more debugging-friendly message
-if reading the revisions wasn't successful.
-
-    ath9k_htc 1-1.4:1.0: ath9k_htc: HTC initialized with 33 credits
-    ath: phy2: Failed to read SREV register
-    ath: phy2: Could not read hardware revision
-    ath: phy2: Unable to initialize hardware; initialization status: -95
-    ath: phy2: Unable to initialize hardware; initialization status: -95
-    ath9k_htc: Failed to initialize the device
-
-This helps when debugging by directly showing the first point of
-failure and it could prevent possible errors if a 0x0f.3 revision
-is ever supported.
-
-Signed-off-by: Tim Schumacher <timschumi@gmx.de>
+Fixes: bdcd81707973 (" Add ath6kl cleaned up driver")
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath9k/hw.c | 32 +++++++++++++++++++++--------
- 1 file changed, 23 insertions(+), 9 deletions(-)
+ drivers/net/wireless/ath/ath6kl/wmi.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 8581d917635a..b6773d613f0c 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -252,8 +252,9 @@ void ath9k_hw_get_channel_centers(struct ath_hw *ah,
- /* Chip Revisions */
- /******************/
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index 68854c45d0a4..9ab6aa9ded5c 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -1176,6 +1176,10 @@ static int ath6kl_wmi_pstream_timeout_event_rx(struct wmi *wmi, u8 *datap,
+ 		return -EINVAL;
  
--static void ath9k_hw_read_revisions(struct ath_hw *ah)
-+static bool ath9k_hw_read_revisions(struct ath_hw *ah)
- {
-+	u32 srev;
- 	u32 val;
- 
- 	if (ah->get_mac_revision)
-@@ -269,25 +270,33 @@ static void ath9k_hw_read_revisions(struct ath_hw *ah)
- 			val = REG_READ(ah, AR_SREV);
- 			ah->hw_version.macRev = MS(val, AR_SREV_REVISION2);
- 		}
--		return;
-+		return true;
- 	case AR9300_DEVID_AR9340:
- 		ah->hw_version.macVersion = AR_SREV_VERSION_9340;
--		return;
-+		return true;
- 	case AR9300_DEVID_QCA955X:
- 		ah->hw_version.macVersion = AR_SREV_VERSION_9550;
--		return;
-+		return true;
- 	case AR9300_DEVID_AR953X:
- 		ah->hw_version.macVersion = AR_SREV_VERSION_9531;
--		return;
-+		return true;
- 	case AR9300_DEVID_QCA956X:
- 		ah->hw_version.macVersion = AR_SREV_VERSION_9561;
--		return;
-+		return true;
- 	}
- 
--	val = REG_READ(ah, AR_SREV) & AR_SREV_ID;
-+	srev = REG_READ(ah, AR_SREV);
-+
-+	if (srev == -EIO) {
-+		ath_err(ath9k_hw_common(ah),
-+			"Failed to read SREV register");
-+		return false;
-+	}
-+
-+	val = srev & AR_SREV_ID;
- 
- 	if (val == 0xFF) {
--		val = REG_READ(ah, AR_SREV);
-+		val = srev;
- 		ah->hw_version.macVersion =
- 			(val & AR_SREV_VERSION2) >> AR_SREV_TYPE2_S;
- 		ah->hw_version.macRev = MS(val, AR_SREV_REVISION2);
-@@ -306,6 +315,8 @@ static void ath9k_hw_read_revisions(struct ath_hw *ah)
- 		if (ah->hw_version.macVersion == AR_SREV_VERSION_5416_PCIE)
- 			ah->is_pciexpress = true;
- 	}
-+
-+	return true;
- }
- 
- /************************************/
-@@ -559,7 +570,10 @@ static int __ath9k_hw_init(struct ath_hw *ah)
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	int r = 0;
- 
--	ath9k_hw_read_revisions(ah);
-+	if (!ath9k_hw_read_revisions(ah)) {
-+		ath_err(common, "Could not read hardware revisions");
-+		return -EOPNOTSUPP;
+ 	ev = (struct wmi_pstream_timeout_event *) datap;
++	if (ev->traffic_class >= WMM_NUM_AC) {
++		ath6kl_err("invalid traffic class: %d\n", ev->traffic_class);
++		return -EINVAL;
 +	}
  
- 	switch (ah->hw_version.macVersion) {
- 	case AR_SREV_VERSION_5416_PCI:
+ 	/*
+ 	 * When the pstream (fat pipe == AC) timesout, it means there were
+@@ -1517,6 +1521,10 @@ static int ath6kl_wmi_cac_event_rx(struct wmi *wmi, u8 *datap, int len,
+ 		return -EINVAL;
+ 
+ 	reply = (struct wmi_cac_event *) datap;
++	if (reply->ac >= WMM_NUM_AC) {
++		ath6kl_err("invalid AC: %d\n", reply->ac);
++		return -EINVAL;
++	}
+ 
+ 	if ((reply->cac_indication == CAC_INDICATION_ADMISSION_RESP) &&
+ 	    (reply->status_code != IEEE80211_TSPEC_STATUS_ADMISS_ACCEPTED)) {
+@@ -2633,7 +2641,7 @@ int ath6kl_wmi_delete_pstream_cmd(struct wmi *wmi, u8 if_idx, u8 traffic_class,
+ 	u16 active_tsids = 0;
+ 	int ret;
+ 
+-	if (traffic_class > 3) {
++	if (traffic_class >= WMM_NUM_AC) {
+ 		ath6kl_err("invalid traffic class: %d\n", traffic_class);
+ 		return -EINVAL;
+ 	}
 -- 
 2.20.1
 
