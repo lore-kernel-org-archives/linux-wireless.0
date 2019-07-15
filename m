@@ -7,46 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57F83C7618F
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 14:26:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5D39C7618F
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 14:26:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 23B3921537
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 14:26:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8B2C12184E
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 14:26:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1563200797;
-	bh=mV7qOEqfmtTOWnFtb7liH+ebw0SxAuMZgbmjcDjrX9c=;
+	s=default; t=1563200816;
+	bh=eTxaiPJ2V7mLz098iL+PplFZ9p4p5zA06lx/3J+qEaw=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=s3LtXGVZEw9nWERMC3C7zCFqDmV2NYrna3+30M2Zas4N69/+R/wHFhVWJOYD6irC/
-	 sjUVXRzdlbtyShxC7+2ZaWdW26P7P/qX4t21vnJueerOIgesZXDzEfKA+jBvRTATzX
-	 zpfSS/52QaB3DsDbQliXSdJcV7jMsOdfWPWnB2x8=
+	b=ZD5DpUOYZJ4ERIxSrSm3nz6ZE9XU9AUa258QiRpQAwwkNzZ19f1Auv3efUj6mycin
+	 Zf1qQ8kufoomu4qJJe+V30o/zCfUgwmG3//UBwGBAC98hiOK8xUNlxA9vRS3Z6DDHm
+	 zM947nfLF3+4P5y7Heow/pPxeFRrUz8GvXtEanY0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391241AbfGOO0b (ORCPT
+        id S2390918AbfGOOYd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 15 Jul 2019 10:26:31 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34464 "EHLO mail.kernel.org"
+        Mon, 15 Jul 2019 10:24:33 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58252 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2390664AbfGOO0b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jul 2019 10:26:31 -0400
+        id S1731319AbfGOOYc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 15 Jul 2019 10:24:32 -0400
 Received: from sasha-vm.mshome.net (unknown [73.61.17.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 8ED5F21537;
-        Mon, 15 Jul 2019 14:26:27 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 08848206B8;
+        Mon, 15 Jul 2019 14:24:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1563200790;
-        bh=mV7qOEqfmtTOWnFtb7liH+ebw0SxAuMZgbmjcDjrX9c=;
+        s=default; t=1563200671;
+        bh=eTxaiPJ2V7mLz098iL+PplFZ9p4p5zA06lx/3J+qEaw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Tmn6csqgagNb9C2OuJDt9IckfdyAfZa/x91QVoJrGuFu07GQRUPZwmltbYpzLHN+h
-         FlnXu5PY1+/2hxGOmamYZf+Q6whfHFYmV8z9RNiuBlYN0rt9S3pN/ZwEN2vqhpDLvZ
-         VENQA78R5T9a5XqyCNyCq32QR8U+sa+zvLe1GTCQ=
+        b=mAIuqKEtC4ch8UBXRik9ksvdoh0z87KQI6N0jG3qBT4hygBPQehkixg7R1RXhZk3q
+         M2pQdvTxyb7xDlPe3xmzPhWD4JLvoic8t7UzSkhsI4sLxooqLjcL0RqkrbOKMjquF6
+         Ym3QrugoACh4SV4h8/TENlkpGcMXDS5xOBnJSPqc=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Wen Gong <wgong@codeaurora.org>, Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Miaoqing Pan <miaoqing@codeaurora.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 131/158] ath10k: destroy sdio workqueue while remove sdio module
-Date:   Mon, 15 Jul 2019 10:17:42 -0400
-Message-Id: <20190715141809.8445-131-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 109/158] ath10k: fix PCIE device wake up failed
+Date:   Mon, 15 Jul 2019 10:17:20 -0400
+Message-Id: <20190715141809.8445-109-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190715141809.8445-1-sashal@kernel.org>
 References: <20190715141809.8445-1-sashal@kernel.org>
@@ -59,38 +60,49 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Wen Gong <wgong@codeaurora.org>
+From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-[ Upstream commit 3ed39f8e747a7aafeec07bb244f2c3a1bdca5730 ]
+[ Upstream commit 011d4111c8c602ea829fa4917af1818eb0500a90 ]
 
-The workqueue need to flush and destory while remove sdio module,
-otherwise it will have thread which is not destory after remove
-sdio modules.
+Observed PCIE device wake up failed after ~120 iterations of
+soft-reboot test. The error message is
+"ath10k_pci 0000:01:00.0: failed to wake up device : -110"
 
-Tested with QCA6174 SDIO with firmware
-WLAN.RMH.4.4.1-00007-QCARMSWP-1.
+The call trace as below:
+ath10k_pci_probe -> ath10k_pci_force_wake -> ath10k_pci_wake_wait ->
+ath10k_pci_is_awake
 
-Signed-off-by: Wen Gong <wgong@codeaurora.org>
+Once trigger the device to wake up, we will continuously check the RTC
+state until it returns RTC_STATE_V_ON or timeout.
+
+But for QCA99x0 chips, we use wrong value for RTC_STATE_V_ON.
+Occasionally, we get 0x7 on the fist read, we thought as a failure
+case, but actually is the right value, also verified with the spec.
+So fix the issue by changing RTC_STATE_V_ON from 0x5 to 0x7, passed
+~2000 iterations.
+
+Tested HW: QCA9984
+
+Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath10k/sdio.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/net/wireless/ath/ath10k/hw.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
-index cb527a21f1ac..686759b5613f 100644
---- a/drivers/net/wireless/ath/ath10k/sdio.c
-+++ b/drivers/net/wireless/ath/ath10k/sdio.c
-@@ -2073,6 +2073,9 @@ static void ath10k_sdio_remove(struct sdio_func *func)
- 	cancel_work_sync(&ar_sdio->wr_async_work);
- 	ath10k_core_unregister(ar);
- 	ath10k_core_destroy(ar);
-+
-+	flush_workqueue(ar_sdio->workqueue);
-+	destroy_workqueue(ar_sdio->workqueue);
- }
+diff --git a/drivers/net/wireless/ath/ath10k/hw.c b/drivers/net/wireless/ath/ath10k/hw.c
+index 677535b3d207..476e0535f06f 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.c
++++ b/drivers/net/wireless/ath/ath10k/hw.c
+@@ -168,7 +168,7 @@ const struct ath10k_hw_values qca6174_values = {
+ };
  
- static const struct sdio_device_id ath10k_sdio_devices[] = {
+ const struct ath10k_hw_values qca99x0_values = {
+-	.rtc_state_val_on		= 5,
++	.rtc_state_val_on		= 7,
+ 	.ce_count			= 12,
+ 	.msi_assign_ce_max		= 12,
+ 	.num_target_ce_config_wlan	= 10,
 -- 
 2.20.1
 
