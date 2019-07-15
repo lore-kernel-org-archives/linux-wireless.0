@@ -7,49 +7,50 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF72DC76191
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 13:39:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 484DBC7618F
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 13:40:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A615121530
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 13:39:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 21218212F5
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 13:40:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1563197983;
-	bh=PjotlXJDX9u0DWYVZV9CvhTezXZPphkRfNwjbqDKScA=;
+	s=default; t=1563198026;
+	bh=8MFIeyxHNO4CRPVVo0iFOLtHIhxgcEGt+NoS7XE7A2k=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=1jiKQ70fuXP7MjbwfKdLZaHJzgj9ZpKilbePm5fj+zJLNmKZtlZC26LPkhAOiVK/Z
-	 M+et4B4UnxKh4ccIruv0dX+1svtuYgF3F+Q/3BcHIKaLhddG0gI3z3+8zMDmT0ynFT
-	 lD6AeEnFMRNgQUKZY5qzeR0joPnNiYcFs3rstbz8=
+	b=pb0GdpQxxzbJhxRUdGeJ6rbssYD2A98goP4ZpeXqu8vVn32KIxtR6JVbEcnJc4oct
+	 o1zTQ5mBzTTDK33PL4Eau09v17JqjaG3iYbuVxYGQKbBa05uGgH+5sT1IrR1rCwBy5
+	 eSQksOaEtpCJQ7tf8qTlFjce514in90BxCsjkduk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730688AbfGONji (ORCPT
+        id S1730868AbfGONkV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 15 Jul 2019 09:39:38 -0400
-Received: from mail.kernel.org ([198.145.29.99]:41008 "EHLO mail.kernel.org"
+        Mon, 15 Jul 2019 09:40:21 -0400
+Received: from mail.kernel.org ([198.145.29.99]:42156 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731248AbfGONjg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jul 2019 09:39:36 -0400
+        id S1731401AbfGONkT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 15 Jul 2019 09:40:19 -0400
 Received: from sasha-vm.mshome.net (unknown [73.61.17.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id C00872086C;
-        Mon, 15 Jul 2019 13:39:33 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 876AF2086C;
+        Mon, 15 Jul 2019 13:40:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1563197975;
-        bh=PjotlXJDX9u0DWYVZV9CvhTezXZPphkRfNwjbqDKScA=;
+        s=default; t=1563198018;
+        bh=8MFIeyxHNO4CRPVVo0iFOLtHIhxgcEGt+NoS7XE7A2k=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=WyrAzBahfeg+P2g/qFfpye3C4gEIdAW4NWJXH9b1fdqJ8UMvBSV5G84qHspGg65T4
-         xd2ICcPNl4ahxwkyDUa+mb4+UI/JIgorTwUG6nq8g1alJx/M1e68VYktQ7vUkaihXk
-         MCEHp8pGPHGC4Wva6HFgUSDPr/oNOsdXEZw7t/xA=
+        b=wChblI5+6Rl3NFmdHu8kPoz3voYXHA+MMrzeB+HcQ6iMlEFUwCA6KzVxdfvO+tJ0s
+         IN4dHQQDt9bCQchNxUNh/7s93sjuaLbHzLgoXePqo2DCPRg5kf62rYsGa7eXIrgLrF
+         0MOrbHbB3r23DKA9IFtFK5XXngpWboXEfycpicYE=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Wen Gong <wgong@codeaurora.org>, Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Surabhi Vishnoi <svishnoi@codeaurora.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 005/158] ath10k: add peer id check in ath10k_peer_find_by_id
-Date:   Mon, 15 Jul 2019 09:36:50 -0400
-Message-Id: <20190715133923.2890-5-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 002/105] ath10k: Do not send probe response template for mesh
+Date:   Mon, 15 Jul 2019 09:38:28 -0400
+Message-Id: <20190715134012.3226-2-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190715133923.2890-1-sashal@kernel.org>
-References: <20190715133923.2890-1-sashal@kernel.org>
+In-Reply-To: <20190715134012.3226-1-sashal@kernel.org>
+References: <20190715134012.3226-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -59,67 +60,43 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Wen Gong <wgong@codeaurora.org>
+From: Surabhi Vishnoi <svishnoi@codeaurora.org>
 
-[ Upstream commit 49ed34b835e231aa941257394716bc689bc98d9f ]
+[ Upstream commit 97354f2c432788e3163134df6bb144f4b6289d87 ]
 
-For some SDIO chip, the peer id is 65535 for MPDU with error status,
-then test_bit will trigger buffer overflow for peer's memory, if kasan
-enabled, it will report error.
+Currently mac80211 do not support probe response template for
+mesh point. When WMI_SERVICE_BEACON_OFFLOAD is enabled, host
+driver tries to configure probe response template for mesh, but
+it fails because the interface type is not NL80211_IFTYPE_AP but
+NL80211_IFTYPE_MESH_POINT.
 
-Reason is when station is in disconnecting status, firmware do not delete
-the peer info since it not disconnected completely, meanwhile some AP will
-still send data packet to station, then hardware will receive the packet
-and send to firmware, firmware's logic will report peer id of 65535 for
-MPDU with error status.
+To avoid this failure, skip sending probe response template to
+firmware for mesh point.
 
-Add check for overflow the size of peer's peer_ids will avoid the buffer
-overflow access.
+Tested HW: WCN3990/QCA6174/QCA9984
 
-Call trace of kasan:
-dump_backtrace+0x0/0x2ec
-show_stack+0x20/0x2c
-__dump_stack+0x20/0x28
-dump_stack+0xc8/0xec
-print_address_description+0x74/0x240
-kasan_report+0x250/0x26c
-__asan_report_load8_noabort+0x20/0x2c
-ath10k_peer_find_by_id+0x180/0x1e4 [ath10k_core]
-ath10k_htt_t2h_msg_handler+0x100c/0x2fd4 [ath10k_core]
-ath10k_htt_htc_t2h_msg_handler+0x20/0x34 [ath10k_core]
-ath10k_sdio_irq_handler+0xcc8/0x1678 [ath10k_sdio]
-process_sdio_pending_irqs+0xec/0x370
-sdio_run_irqs+0x68/0xe4
-sdio_irq_work+0x1c/0x28
-process_one_work+0x3d8/0x8b0
-worker_thread+0x508/0x7cc
-kthread+0x24c/0x264
-ret_from_fork+0x10/0x18
-
-Tested with QCA6174 SDIO with firmware
-WLAN.RMH.4.4.1-00007-QCARMSWP-1.
-
-Signed-off-by: Wen Gong <wgong@codeaurora.org>
+Signed-off-by: Surabhi Vishnoi <svishnoi@codeaurora.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath10k/txrx.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/net/wireless/ath/ath10k/mac.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
-index cda164f6e9f6..6f62ddc0494c 100644
---- a/drivers/net/wireless/ath/ath10k/txrx.c
-+++ b/drivers/net/wireless/ath/ath10k/txrx.c
-@@ -156,6 +156,9 @@ struct ath10k_peer *ath10k_peer_find_by_id(struct ath10k *ar, int peer_id)
- {
- 	struct ath10k_peer *peer;
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index cdcfb175ad9b..58a3c42c4aed 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -1611,6 +1611,10 @@ static int ath10k_mac_setup_prb_tmpl(struct ath10k_vif *arvif)
+ 	if (arvif->vdev_type != WMI_VDEV_TYPE_AP)
+ 		return 0;
  
-+	if (peer_id >= BITS_PER_TYPE(peer->peer_ids))
-+		return NULL;
++	 /* For mesh, probe response and beacon share the same template */
++	if (ieee80211_vif_is_mesh(vif))
++		return 0;
 +
- 	lockdep_assert_held(&ar->data_lock);
- 
- 	list_for_each_entry(peer, &ar->peers, list)
+ 	prb = ieee80211_proberesp_get(hw, vif);
+ 	if (!prb) {
+ 		ath10k_warn(ar, "failed to get probe resp template from mac80211\n");
 -- 
 2.20.1
 
