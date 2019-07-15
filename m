@@ -7,46 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EAF0FC7618F
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 15:01:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42061C7618F
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 15:01:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C37A02054F
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 15:01:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 168E12054F
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 15:01:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1563202884;
-	bh=zCIDhSB8tQwfVsTJsHL/cCYz/niRuZtwHbRkO4YI1aQ=;
+	s=default; t=1563202889;
+	bh=JTd+nvtYMDH2bpBgUYGzSZ3B/HMdCsAQwzi9WqHURoo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=FYtxPUhSQlBXQlRhOScvMnTTq3z6rRqLEY9Ac6lMfXq1w3m/SSPtsRLyTmTA5vsdQ
-	 XmGuTz5lbyMa4v50AEGoV+ZEC8OTul4YX6ZKH4X2MB2NIHlzw3vZ3iXkyWGbwZ/wOf
-	 sFItXF+C3w3OiZKAVADl4i/Ce3thAEVs1eP694pI=
+	b=VQZSfNZGUmCRvxqNH3FtACQbskZikln0hureph/YfMxF6b6QgnvZvXnzvqAo9aI7F
+	 uvSBAZqrTL3cTJ8R82HnnKu0RVIBsajEgPAs8PJyyiCjy+M8gOQUzrA5JoU8bZ0MOK
+	 BZ4YPHzYUCHylSnSS0Uj/xiu2uStBY07DOzjEqgs=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389365AbfGOOOa (ORCPT
+        id S2389355AbfGOOOa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Mon, 15 Jul 2019 10:14:30 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56118 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:56058 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388726AbfGOOO2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jul 2019 10:14:28 -0400
+        id S2389338AbfGOOOZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 15 Jul 2019 10:14:25 -0400
 Received: from sasha-vm.mshome.net (unknown [73.61.17.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id DDDA32081C;
-        Mon, 15 Jul 2019 14:14:25 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id C8163206B8;
+        Mon, 15 Jul 2019 14:14:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1563200067;
-        bh=zCIDhSB8tQwfVsTJsHL/cCYz/niRuZtwHbRkO4YI1aQ=;
+        s=default; t=1563200065;
+        bh=JTd+nvtYMDH2bpBgUYGzSZ3B/HMdCsAQwzi9WqHURoo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=wVTD6Ys7KAvMLUVdjIzmAYpFajdNsXuVYV1r7jRvjHE+iwLD/rx3sp/3J8LSPSupR
-         tdxSCdVPUTHNpvDTYSIJmUHdhNBsHcFEu5ROQc6T9ZmHeqf0S67PpUmZE7VE3+BZmt
-         dSFn7hN41TTbOpm9F75L4aa1osg5f6J0rUU9jeaA=
+        b=cnbJNYqqaqh6PsOz/ak85W1bT6mfkaVpetkBD/yrZETvv9pvVxcpxvHdeTh59sSfY
+         Pvi/C7F54VUY8u6pn/6/0S/HrvOVTPRvv9tBOo8iWEIvRfsh4Aqvayw6qwgHfTU29F
+         +qa7qB9Nh6O4/AMbO1tzFUvY4zSSzdD3PwYjUKTo=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Wen Gong <wgong@codeaurora.org>, Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Dundi Raviteja <dundi@codeaurora.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.1 176/219] ath10k: destroy sdio workqueue while remove sdio module
-Date:   Mon, 15 Jul 2019 10:02:57 -0400
-Message-Id: <20190715140341.6443-176-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.1 175/219] ath10k: Fix memory leak in qmi
+Date:   Mon, 15 Jul 2019 10:02:56 -0400
+Message-Id: <20190715140341.6443-175-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190715140341.6443-1-sashal@kernel.org>
 References: <20190715140341.6443-1-sashal@kernel.org>
@@ -59,38 +60,39 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Wen Gong <wgong@codeaurora.org>
+From: Dundi Raviteja <dundi@codeaurora.org>
 
-[ Upstream commit 3ed39f8e747a7aafeec07bb244f2c3a1bdca5730 ]
+[ Upstream commit c709df58832c5f575f0255bea4b09ad477fc62ea ]
 
-The workqueue need to flush and destory while remove sdio module,
-otherwise it will have thread which is not destory after remove
-sdio modules.
+Currently the memory allocated for qmi handle is
+not being freed during de-init which leads to memory leak.
 
-Tested with QCA6174 SDIO with firmware
-WLAN.RMH.4.4.1-00007-QCARMSWP-1.
+Free the allocated qmi memory in qmi deinit
+to avoid memory leak.
 
-Signed-off-by: Wen Gong <wgong@codeaurora.org>
+Tested HW: WCN3990
+Tested FW: WLAN.HL.3.1-01040-QCAHLSWMTPLZ-1
+
+Fixes: fda6fee0001e ("ath10k: add QMI message handshake for wcn3990 client")
+Signed-off-by: Dundi Raviteja <dundi@codeaurora.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath10k/sdio.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/net/wireless/ath/ath10k/qmi.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
-index 73ef3e75d199..28bdf0212538 100644
---- a/drivers/net/wireless/ath/ath10k/sdio.c
-+++ b/drivers/net/wireless/ath/ath10k/sdio.c
-@@ -2081,6 +2081,9 @@ static void ath10k_sdio_remove(struct sdio_func *func)
- 	cancel_work_sync(&ar_sdio->wr_async_work);
- 	ath10k_core_unregister(ar);
- 	ath10k_core_destroy(ar);
-+
-+	flush_workqueue(ar_sdio->workqueue);
-+	destroy_workqueue(ar_sdio->workqueue);
- }
+diff --git a/drivers/net/wireless/ath/ath10k/qmi.c b/drivers/net/wireless/ath/ath10k/qmi.c
+index a7bc2c70d076..8f8f717a23ee 100644
+--- a/drivers/net/wireless/ath/ath10k/qmi.c
++++ b/drivers/net/wireless/ath/ath10k/qmi.c
+@@ -1002,6 +1002,7 @@ int ath10k_qmi_deinit(struct ath10k *ar)
+ 	qmi_handle_release(&qmi->qmi_hdl);
+ 	cancel_work_sync(&qmi->event_work);
+ 	destroy_workqueue(qmi->event_wq);
++	kfree(qmi);
+ 	ar_snoc->qmi = NULL;
  
- static const struct sdio_device_id ath10k_sdio_devices[] = {
+ 	return 0;
 -- 
 2.20.1
 
