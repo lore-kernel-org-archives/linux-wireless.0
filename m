@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42061C7618F
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 15:01:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A63EC76191
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 15:01:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 168E12054F
-	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 15:01:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6A6B4205ED
+	for <linux-wireless@archiver.kernel.org>; Mon, 15 Jul 2019 15:01:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1563202889;
-	bh=JTd+nvtYMDH2bpBgUYGzSZ3B/HMdCsAQwzi9WqHURoo=;
+	s=default; t=1563202918;
+	bh=oiFz2NTIZMbWcBgnnWQwMU4e1+RSkgJOnzytLtRJPzo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=VQZSfNZGUmCRvxqNH3FtACQbskZikln0hureph/YfMxF6b6QgnvZvXnzvqAo9aI7F
-	 uvSBAZqrTL3cTJ8R82HnnKu0RVIBsajEgPAs8PJyyiCjy+M8gOQUzrA5JoU8bZ0MOK
-	 BZ4YPHzYUCHylSnSS0Uj/xiu2uStBY07DOzjEqgs=
+	b=d50Zz/2JZxyoh4jV5fbn3QdivUoHgMLyabcKieZaf2y1w6EGhvgwjNZlzEkbXPk01
+	 PwHmfjZg1tGYcyzU/RT8IMOV8wiOFTzYX0h9pi3cuND40KaMfgJ3JEzn1EjyAMQSUv
+	 tyY0Eu5WnFQ58GB8jbw06Zxeccrk2tVqyP4ylGf0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389355AbfGOOOa (ORCPT
+        id S2389266AbfGOOOB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 15 Jul 2019 10:14:30 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56058 "EHLO mail.kernel.org"
+        Mon, 15 Jul 2019 10:14:01 -0400
+Received: from mail.kernel.org ([198.145.29.99]:54644 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2389338AbfGOOOZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 15 Jul 2019 10:14:25 -0400
+        id S1731356AbfGOONw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 15 Jul 2019 10:13:52 -0400
 Received: from sasha-vm.mshome.net (unknown [73.61.17.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id C8163206B8;
-        Mon, 15 Jul 2019 14:14:22 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id B8449206B8;
+        Mon, 15 Jul 2019 14:13:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1563200065;
-        bh=JTd+nvtYMDH2bpBgUYGzSZ3B/HMdCsAQwzi9WqHURoo=;
+        s=default; t=1563200031;
+        bh=oiFz2NTIZMbWcBgnnWQwMU4e1+RSkgJOnzytLtRJPzo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=cnbJNYqqaqh6PsOz/ak85W1bT6mfkaVpetkBD/yrZETvv9pvVxcpxvHdeTh59sSfY
-         Pvi/C7F54VUY8u6pn/6/0S/HrvOVTPRvv9tBOo8iWEIvRfsh4Aqvayw6qwgHfTU29F
-         +qa7qB9Nh6O4/AMbO1tzFUvY4zSSzdD3PwYjUKTo=
+        b=eFu21eClbnjr2A/mWVk2SRxGxEkb1n1ciDJ73hH+/3RGmdOQZE2jXN1bwlyUj9NqG
+         NzbCnKCcjXIWHmD8gQVUjph6INezPhbptreXkPOd+upcJhcLZcf+78m4qyq2NQQEy4
+         gVoZZJ3q/BQZJpMx3D8W5ed26+vVUQzR85a13jfM=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Dundi Raviteja <dundi@codeaurora.org>,
+Cc:     Zefir Kurtisi <zefir.kurtisi@neratec.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
+        Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.1 175/219] ath10k: Fix memory leak in qmi
-Date:   Mon, 15 Jul 2019 10:02:56 -0400
-Message-Id: <20190715140341.6443-175-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.1 164/219] ath9k: correctly handle short radar pulses
+Date:   Mon, 15 Jul 2019 10:02:45 -0400
+Message-Id: <20190715140341.6443-164-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190715140341.6443-1-sashal@kernel.org>
 References: <20190715140341.6443-1-sashal@kernel.org>
@@ -60,39 +60,58 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Dundi Raviteja <dundi@codeaurora.org>
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
 
-[ Upstream commit c709df58832c5f575f0255bea4b09ad477fc62ea ]
+[ Upstream commit df5c4150501ee7e86383be88f6490d970adcf157 ]
 
-Currently the memory allocated for qmi handle is
-not being freed during de-init which leads to memory leak.
+In commit 3c0efb745a17 ("ath9k: discard undersized packets")
+the lower bound of RX packets was set to 10 (min ACK size) to
+filter those that would otherwise be treated as invalid at
+mac80211.
 
-Free the allocated qmi memory in qmi deinit
-to avoid memory leak.
+Alas, short radar pulses are reported as PHY_ERROR frames
+with length set to 3. Therefore their detection stopped
+working after that commit.
 
-Tested HW: WCN3990
-Tested FW: WLAN.HL.3.1-01040-QCAHLSWMTPLZ-1
+NOTE: ath9k drivers built thereafter will not pass DFS
+certification.
 
-Fixes: fda6fee0001e ("ath10k: add QMI message handshake for wcn3990 client")
-Signed-off-by: Dundi Raviteja <dundi@codeaurora.org>
+This extends the criteria for short packets to explicitly
+handle PHY_ERROR frames.
+
+Fixes: 3c0efb745a17 ("ath9k: discard undersized packets")
+Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath10k/qmi.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/ath/ath9k/recv.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/qmi.c b/drivers/net/wireless/ath/ath10k/qmi.c
-index a7bc2c70d076..8f8f717a23ee 100644
---- a/drivers/net/wireless/ath/ath10k/qmi.c
-+++ b/drivers/net/wireless/ath/ath10k/qmi.c
-@@ -1002,6 +1002,7 @@ int ath10k_qmi_deinit(struct ath10k *ar)
- 	qmi_handle_release(&qmi->qmi_hdl);
- 	cancel_work_sync(&qmi->event_work);
- 	destroy_workqueue(qmi->event_wq);
-+	kfree(qmi);
- 	ar_snoc->qmi = NULL;
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 4e97f7f3b2a3..06e660858766 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -815,6 +815,7 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ieee80211_hdr *hdr;
+ 	bool discard_current = sc->rx.discard_next;
++	bool is_phyerr;
  
- 	return 0;
+ 	/*
+ 	 * Discard corrupt descriptors which are marked in
+@@ -827,8 +828,11 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
+ 
+ 	/*
+ 	 * Discard zero-length packets and packets smaller than an ACK
++	 * which are not PHY_ERROR (short radar pulses have a length of 3)
+ 	 */
+-	if (rx_stats->rs_datalen < 10) {
++	is_phyerr = rx_stats->rs_status & ATH9K_RXERR_PHY;
++	if (!rx_stats->rs_datalen ||
++	    (rx_stats->rs_datalen < 10 && !is_phyerr)) {
+ 		RX_STAT_INC(sc, rx_len_err);
+ 		goto corrupt;
+ 	}
 -- 
 2.20.1
 
