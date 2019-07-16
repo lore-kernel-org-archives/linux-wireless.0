@@ -2,117 +2,74 @@ Return-Path: <SRS0=+CNY=VN=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B24EC76188
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Jul 2019 12:46:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E827C76188
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Jul 2019 13:27:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2085020693
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Jul 2019 12:46:44 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="d5R9P81I";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="d5R9P81I"
+	by mail.kernel.org (Postfix) with ESMTP id 2289C20693
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Jul 2019 13:27:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728137AbfGPMpD (ORCPT
+        id S2387452AbfGPN1q (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 16 Jul 2019 08:45:03 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:56664 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726997AbfGPMpD (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 Jul 2019 08:45:03 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 59324616BA; Tue, 16 Jul 2019 12:45:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1563281102;
-        bh=ZFDxLiE7flxwVInXlYnWMV/JhA3Zu9BKOaI5v2XT+0E=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=d5R9P81IPOG1dlJsBtXGJZv+lHXMF8gY5gjunsjs8O6IPGFqRUVrWUftoAmB9+DYO
-         l0rR8dvX5Lv8kMk9S+uO7v7XEOp2A/AqwVuX5OHF5s7cHNEJVuE/rNz6x0HwW3ypnl
-         ScIhswiK+/F5oWrLpDkCZ7YE7qZk+cJLJ34H/4nk=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 348AB6074F;
-        Tue, 16 Jul 2019 12:45:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1563281102;
-        bh=ZFDxLiE7flxwVInXlYnWMV/JhA3Zu9BKOaI5v2XT+0E=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=d5R9P81IPOG1dlJsBtXGJZv+lHXMF8gY5gjunsjs8O6IPGFqRUVrWUftoAmB9+DYO
-         l0rR8dvX5Lv8kMk9S+uO7v7XEOp2A/AqwVuX5OHF5s7cHNEJVuE/rNz6x0HwW3ypnl
-         ScIhswiK+/F5oWrLpDkCZ7YE7qZk+cJLJ34H/4nk=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 348AB6074F
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Fuqian Huang <huangfq.daxian@gmail.com>
-Cc:     linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v3 20/24] wireless: Remove call to memset after dma_alloc_coherent
-References: <20190715031941.7120-1-huangfq.daxian@gmail.com>
-        <87zhlf8y4s.fsf@kamboji.qca.qualcomm.com>
-        <CABXRUiR0XAB8x9MkF=UH1KTojWDovEy9hGaUEuZnAhbfCAcD3w@mail.gmail.com>
-Date:   Tue, 16 Jul 2019 15:44:58 +0300
-In-Reply-To: <CABXRUiR0XAB8x9MkF=UH1KTojWDovEy9hGaUEuZnAhbfCAcD3w@mail.gmail.com>
-        (Fuqian Huang's message of "Mon, 15 Jul 2019 17:56:50 +0800")
-Message-ID: <87o91u5et1.fsf@kamboji.qca.qualcomm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Tue, 16 Jul 2019 09:27:46 -0400
+Received: from szxga07-in.huawei.com ([45.249.212.35]:50448 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726039AbfGPN1q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 16 Jul 2019 09:27:46 -0400
+Received: from DGGEMS404-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id 80D0A4E3CE456736428B;
+        Tue, 16 Jul 2019 21:27:43 +0800 (CST)
+Received: from localhost (10.133.213.239) by DGGEMS404-HUB.china.huawei.com
+ (10.3.19.204) with Microsoft SMTP Server id 14.3.439.0; Tue, 16 Jul 2019
+ 21:27:36 +0800
+From:   YueHaibing <yuehaibing@huawei.com>
+To:     <kvalo@codeaurora.org>, <davem@davemloft.net>, <lkundrak@v3.sk>,
+        <derosier@cal-sierra.com>
+CC:     <linux-kernel@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <linux-wireless@vger.kernel.org>,
+        YueHaibing <yuehaibing@huawei.com>
+Subject: [PATCH] libertas_tf: Use correct channel range in lbtf_geo_init
+Date:   Tue, 16 Jul 2019 21:25:34 +0800
+Message-ID: <20190716132534.11256-1-yuehaibing@huawei.com>
+X-Mailer: git-send-email 2.10.2.windows.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
+X-Originating-IP: [10.133.213.239]
+X-CFilter-Loop: Reflected
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-(adding back linux-wireless, please don't drop CC)
+It seems we should use 'range' instead of 'priv->range'
+in lbtf_geo_init(), because 'range' is the corret one
+related to current regioncode.
 
-> Kalle Valo <kvalo@codeaurora.org> =E6=96=BC 2019=E5=B9=B47=E6=9C=8815=E6=
-=97=A5=E9=80=B1=E4=B8=80 =E4=B8=8B=E5=8D=885:07=E5=AF=AB=E9=81=93=EF=BC=9A
->>
->> Fuqian Huang <huangfq.daxian@gmail.com> writes:
->>
->> > In commit 518a2f1925c3
->> > ("dma-mapping: zero memory returned from dma_alloc_*"),
->> > dma_alloc_coherent has already zeroed the memory.
->> > So memset is not needed.
->> >
->> > Signed-off-by: Fuqian Huang <huangfq.daxian@gmail.com>
->> > ---
->> > Changes in v3:
->> >   - Use actual commit rather than the merge commit in the commit messa=
-ge
->> >
->> >  drivers/net/wireless/ath/ath10k/ce.c                     | 5 -----
->> >  drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c  | 2 --
->> >  drivers/net/wireless/quantenna/qtnfmac/pcie/pearl_pcie.c | 2 --
->> >  drivers/net/wireless/quantenna/qtnfmac/pcie/topaz_pcie.c | 2 --
->> >  4 files changed, 11 deletions(-)
->>
->> Via which tree is this supposed to go? Can I take this to
->> wireless-drivers-next?
->
-> I think the wireless-drivers-next is fine.
+Reported-by: Hulk Robot <hulkci@huawei.com>
+Fixes: 691cdb49388b ("libertas_tf: command helper functions for libertas_tf")
+Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+---
+ drivers/net/wireless/marvell/libertas_tf/cmd.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Good, I'll then take these to my queue.
+diff --git a/drivers/net/wireless/marvell/libertas_tf/cmd.c b/drivers/net/wireless/marvell/libertas_tf/cmd.c
+index 1eacca0..a333172 100644
+--- a/drivers/net/wireless/marvell/libertas_tf/cmd.c
++++ b/drivers/net/wireless/marvell/libertas_tf/cmd.c
+@@ -65,7 +65,7 @@ static void lbtf_geo_init(struct lbtf_private *priv)
+ 			break;
+ 		}
+ 
+-	for (ch = priv->range.start; ch < priv->range.end; ch++)
++	for (ch = range.start; ch < range.end; ch++)
+ 		priv->channels[CHAN_TO_IDX(ch)].flags = 0;
+ }
+ 
+-- 
+2.7.4
 
-> The four file have similar changes. And they are both under wireless
-> subsystem. How should i indicate which tree the patch should go to?
-> Should I mark them in [patch v3 wireless] or after the Changes in v3?
-> I should avoid this mistake next time.
 
-As there's no dependency between patches to me the easiest is that you
-send the wireless patches separately, that way I can take them directly
-without asking anything, and not worry about dependencies or if someone
-else is going to apply them. For example Colin King does that his
-cleanup patches and I like it a lot.
-
-But if I see patch 20/24 (and only that, no cover letter or over
-patches) I have no clue what the plan is and need extra effort to
-understand what I should do.
-
---=20
-Kalle Valo
