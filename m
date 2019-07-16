@@ -2,75 +2,137 @@ Return-Path: <SRS0=+CNY=VN=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A592EC7618F
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Jul 2019 14:42:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7809CC76192
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Jul 2019 16:42:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 890652173C
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Jul 2019 14:42:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4F0D82064B
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Jul 2019 16:42:54 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="irjFbOPz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728608AbfGPOmu (ORCPT
+        id S2387977AbfGPQmr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 16 Jul 2019 10:42:50 -0400
-Received: from szxga05-in.huawei.com ([45.249.212.191]:2272 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726997AbfGPOmu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 Jul 2019 10:42:50 -0400
-Received: from DGGEMS410-HUB.china.huawei.com (unknown [172.30.72.60])
-        by Forcepoint Email with ESMTP id 4F6B45DA6E3F00D60366;
-        Tue, 16 Jul 2019 22:42:47 +0800 (CST)
-Received: from localhost (10.133.213.239) by DGGEMS410-HUB.china.huawei.com
- (10.3.19.210) with Microsoft SMTP Server id 14.3.439.0; Tue, 16 Jul 2019
- 22:42:37 +0800
-From:   YueHaibing <yuehaibing@huawei.com>
-To:     <kvalo@codeaurora.org>, <davem@davemloft.net>, <lkundrak@v3.sk>,
-        <derosier@cal-sierra.com>
-CC:     <linux-kernel@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <linux-wireless@vger.kernel.org>,
-        YueHaibing <yuehaibing@huawei.com>
-Subject: [PATCH v2] libertas_tf: Use correct channel range in lbtf_geo_init
-Date:   Tue, 16 Jul 2019 22:42:18 +0800
-Message-ID: <20190716144218.20608-1-yuehaibing@huawei.com>
-X-Mailer: git-send-email 2.10.2.windows.1
+        Tue, 16 Jul 2019 12:42:47 -0400
+Received: from mail-pf1-f194.google.com ([209.85.210.194]:42407 "EHLO
+        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388105AbfGPQmr (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 16 Jul 2019 12:42:47 -0400
+Received: by mail-pf1-f194.google.com with SMTP id q10so9372928pff.9
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2019 09:42:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=G0ynwreDQx55Cdn2k1+KVcd1p88/D0r6svcv1QlBO3o=;
+        b=irjFbOPzoCsmoIZq13YOds5hccWx9OiE071z79slMWaKwUnr0Gw8NqkCvXGuxofvkE
+         b2DbVQ8khrwbZ1fgtJzGUdLN3xC5o1VqML1rE0tFczdIs5fX+WoRn0m64ZSj09uLaKp8
+         W4JTJ5GuZwoocTLDXiTmbxT27wq8MYbdfM4/8=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=G0ynwreDQx55Cdn2k1+KVcd1p88/D0r6svcv1QlBO3o=;
+        b=M9IqtOKUGKPxXofn6CtT6mbdvw6UHrIFh2qJhnfMmWNOjPgjCoug7p562G98p26rAG
+         EUED4p2G3psh5FJoZe4Ji5ZDFLzN3OkIAaaPH7jEzJejkXRLBoLWfFbpTqAuKfWmlYhT
+         pYQCL/+niuq/P+lN3ykknXaGA9lWfDK82EKtjwusXU+QIJwAuH9wzWKtBu/xeFoS1yeR
+         oCqY0USZHLnoZBq5+tofjt3axzdGKqt53DFF/6Ko+BPVoIC/eyb6chBKBaTLrk3SXE7l
+         ZYP1WWPkApcLOfm2cdCf7mM6TldTuJa5d8Kx/DMUhNxHm0Q2BDid7j4sRZdFEVxDQe7c
+         PKFg==
+X-Gm-Message-State: APjAAAXq19O5PSCLPiUg17HHAXh/0MkalH4WWGBm0yZhTD4yUGvES85v
+        Jz5XNtTVcpGofqKWfMydUJAuCw==
+X-Google-Smtp-Source: APXvYqxTvrAricfH4zSCJjfNseyILhC1mVPFZVt33bDXH1vSrEY0L19EpCl6w3rTFJO8Jdf66uAxVQ==
+X-Received: by 2002:a17:90a:cf8f:: with SMTP id i15mr36366127pju.110.1563295366371;
+        Tue, 16 Jul 2019 09:42:46 -0700 (PDT)
+Received: from tictac2.mtv.corp.google.com ([2620:15c:202:1:24fa:e766:52c9:e3b2])
+        by smtp.gmail.com with ESMTPSA id r1sm25456468pfq.100.2019.07.16.09.42.45
+        (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
+        Tue, 16 Jul 2019 09:42:45 -0700 (PDT)
+From:   Douglas Anderson <dianders@chromium.org>
+To:     Ulf Hansson <ulf.hansson@linaro.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Adrian Hunter <adrian.hunter@intel.com>
+Cc:     Ganapathi Bhat <gbhat@marvell.com>, linux-wireless@vger.kernel.org,
+        Brian Norris <briannorris@chromium.org>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        linux-rockchip@lists.infradead.org,
+        Wolfram Sang <wsa+renesas@sang-engineering.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        netdev@vger.kernel.org, Avri Altman <avri.altman@wdc.com>,
+        linux-mmc@vger.kernel.org, davem@davemloft.net,
+        Xinming Hu <huxinming820@gmail.com>,
+        Douglas Anderson <dianders@chromium.org>,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 2/2] mwifiex: Make use of the new sdio_trigger_replug() API to reset
+Date:   Tue, 16 Jul 2019 09:42:09 -0700
+Message-Id: <20190716164209.62320-3-dianders@chromium.org>
+X-Mailer: git-send-email 2.22.0.510.g264f2c817a-goog
+In-Reply-To: <20190716164209.62320-1-dianders@chromium.org>
+References: <20190716164209.62320-1-dianders@chromium.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.133.213.239]
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-It seems we should use 'range' instead of 'priv->range'
-in lbtf_geo_init(), because 'range' is the corret one
-related to current regioncode.
+As described in the patch ("mmc: core: Add sdio_trigger_replug()
+API"), the current mwifiex_sdio_card_reset() is broken in the cases
+where we're running Bluetooth on a second SDIO func on the same card
+as WiFi.  The problem goes away if we just use the
+sdio_trigger_replug() API call.
 
-Reported-by: Hulk Robot <hulkci@huawei.com>
-Fixes: 691cdb49388b ("libertas_tf: command helper functions for libertas_tf")
-Signed-off-by: YueHaibing <yuehaibing@huawei.com>
----
-v2: fix compile error
----
- drivers/net/wireless/marvell/libertas_tf/cmd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+NOTE: Even though with this new solution there is less of a reason to
+do our work from a workqueue (the unplug / plug mechanism we're using
+is possible for a human to perform at any time so the stack is
+supposed to handle it without it needing to be called from a special
+context), we still need a workqueue because the Marvell reset function
+could called from a context where sleeping is invalid and thus we
+can't claim the host.  One example is Marvell's wakeup_timer_fn().
 
-diff --git a/drivers/net/wireless/marvell/libertas_tf/cmd.c b/drivers/net/wireless/marvell/libertas_tf/cmd.c
-index 1eacca0..a333172 100644
---- a/drivers/net/wireless/marvell/libertas_tf/cmd.c
-+++ b/drivers/net/wireless/marvell/libertas_tf/cmd.c
-@@ -65,7 +65,7 @@ static void lbtf_geo_init(struct lbtf_private *priv)
- 			break;
- 		}
+Signed-off-by: Douglas Anderson <dianders@chromium.org>
+---
+
+ drivers/net/wireless/marvell/mwifiex/sdio.c | 14 +++-----------
+ 1 file changed, 3 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+index 24c041dad9f6..f77ad2615f08 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sdio.c
++++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+@@ -2218,14 +2218,6 @@ static void mwifiex_sdio_card_reset_work(struct mwifiex_adapter *adapter)
+ {
+ 	struct sdio_mmc_card *card = adapter->card;
+ 	struct sdio_func *func = card->func;
+-	int ret;
+-
+-	mwifiex_shutdown_sw(adapter);
+-
+-	/* power cycle the adapter */
+-	sdio_claim_host(func);
+-	mmc_hw_reset(func->card->host);
+-	sdio_release_host(func);
  
--	for (ch = priv->range.start; ch < priv->range.end; ch++)
-+	for (ch = range->start; ch < range->end; ch++)
- 		priv->channels[CHAN_TO_IDX(ch)].flags = 0;
+ 	/* Previous save_adapter won't be valid after this. We will cancel
+ 	 * pending work requests.
+@@ -2233,9 +2225,9 @@ static void mwifiex_sdio_card_reset_work(struct mwifiex_adapter *adapter)
+ 	clear_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP, &card->work_flags);
+ 	clear_bit(MWIFIEX_IFACE_WORK_CARD_RESET, &card->work_flags);
+ 
+-	ret = mwifiex_reinit_sw(adapter);
+-	if (ret)
+-		dev_err(&func->dev, "reinit failed: %d\n", ret);
++	sdio_claim_host(func);
++	sdio_trigger_replug(func);
++	sdio_release_host(func);
  }
  
+ /* This function read/write firmware */
 -- 
-2.7.4
-
+2.22.0.510.g264f2c817a-goog
 
