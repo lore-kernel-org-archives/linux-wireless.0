@@ -2,160 +2,195 @@ Return-Path: <SRS0=+CNY=VN=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-19.4 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C565C7618F
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Jul 2019 16:43:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2CB6C76192
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Jul 2019 17:28:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 024932064B
-	for <linux-wireless@archiver.kernel.org>; Tue, 16 Jul 2019 16:43:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 93F4C2064B
+	for <linux-wireless@archiver.kernel.org>; Tue, 16 Jul 2019 17:28:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="DyI11kWo"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="h1+V62UQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388073AbfGPQmo (ORCPT
+        id S2388036AbfGPR2w (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 16 Jul 2019 12:42:44 -0400
-Received: from mail-pf1-f196.google.com ([209.85.210.196]:47035 "EHLO
-        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728695AbfGPQmo (ORCPT
+        Tue, 16 Jul 2019 13:28:52 -0400
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:39170 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728575AbfGPR2v (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 16 Jul 2019 12:42:44 -0400
-Received: by mail-pf1-f196.google.com with SMTP id c73so9369948pfb.13
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2019 09:42:44 -0700 (PDT)
+        Tue, 16 Jul 2019 13:28:51 -0400
+Received: by mail-pg1-f195.google.com with SMTP id u17so9775118pgi.6
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Jul 2019 10:28:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=rFrcYB/60blHV4ScsnDSvK5cMMWLsotfbMwia5Gcc8k=;
-        b=DyI11kWox6JsLKIlcyqdfrru7WLeAjEZfzWOOlYwSwRvRrrtxNQXcagDcScn3b/zkJ
-         6qeb5qOMbH0HpGabX1URiV16BzvdQtfnKnWBsSiNLegrfq6WivZAh203sdQN0iTrUsH2
-         I3kIxfLxmMyZYPNx7SdrAVkXTHsw5DE1NM4Es=
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=FdipyjVpCY6f56Xd4OimbS+PX/++xiAeJwdsr6JXrj4=;
+        b=h1+V62UQ9GlP5V7C0IVqWNdDBKsnlQlECKOfmge8wZcQCKZdqLaxGAP+GFTdv6GM43
+         rsyjKA7SqGqU56sdSzRhGCyQ9fEcpRAkOuZoc/fykRCryb/mK1IJFA6rYJu74nY6zCXP
+         plvbFxEctwJ92ks0XB0cx3o3ptKwXdPR56Xp2M9jEdbyBmQvREnzRwijT5bcJQK8ciS0
+         CHmrSsEx2FL+yOvxYn8aj8xeJzpN/yDZlr/uPRH9K1OnIT57lKWkYZZLe5JLY+tHpxoF
+         vPlE1PtJIoTbnhydJ88RkCm1pYqsKye8E1Ee6wJUbVNzG7CCcGHdGc3tWJTq9mhurxUV
+         nPuw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=rFrcYB/60blHV4ScsnDSvK5cMMWLsotfbMwia5Gcc8k=;
-        b=n99X+vuI9ANxIzZ+8+y+dviR1CGL9RLo17xVeb2TkCE++yZLnaKuJJ1ZhGqty+or+3
-         KireTNWwHwQfAz3Z3NqQfMdC0pVkp1jMQvM+DIPE6rYTK5+MzMseJ7KaDocc57QeF9OU
-         ymH21KXqiijASee2O0yrkou3zVCnqgdwUeRydHQTbNmPhSrLifFvpW33Du1DUEuXmjHn
-         bXl7YqgYgnh4m/hg5e8dOuUYL9hAbTfYaCTX6ISoqvH/0LzdaxwlmUcg9cjYl16sXzOZ
-         ET9WVV5ifnHQk7QHAmrHpMJGFyXR7mFDQIx2XN3+IaOuYNm+nw1TXNS5n5JSsVuL55BQ
-         IaXA==
-X-Gm-Message-State: APjAAAVDeo8oz+YglaPGb5spkkVV8Cyp/dcavWxQ7Ap6hftKCl78jux0
-        1Xy6bS05/chg1gT/PtJXrlGuzA==
-X-Google-Smtp-Source: APXvYqyotogvaupNvsmdlWCgKksQmr27uYysrL39mM8+jMRkbsXyPl5BHWP6AbsslubGKoB/gfDKKA==
-X-Received: by 2002:a63:db45:: with SMTP id x5mr23385800pgi.293.1563295363884;
-        Tue, 16 Jul 2019 09:42:43 -0700 (PDT)
-Received: from tictac2.mtv.corp.google.com ([2620:15c:202:1:24fa:e766:52c9:e3b2])
-        by smtp.gmail.com with ESMTPSA id r1sm25456468pfq.100.2019.07.16.09.42.42
-        (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
-        Tue, 16 Jul 2019 09:42:43 -0700 (PDT)
-From:   Douglas Anderson <dianders@chromium.org>
-To:     Ulf Hansson <ulf.hansson@linaro.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Adrian Hunter <adrian.hunter@intel.com>
-Cc:     Ganapathi Bhat <gbhat@marvell.com>, linux-wireless@vger.kernel.org,
-        Brian Norris <briannorris@chromium.org>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        linux-rockchip@lists.infradead.org,
-        Wolfram Sang <wsa+renesas@sang-engineering.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        netdev@vger.kernel.org, Avri Altman <avri.altman@wdc.com>,
-        linux-mmc@vger.kernel.org, davem@davemloft.net,
-        Xinming Hu <huxinming820@gmail.com>,
-        Douglas Anderson <dianders@chromium.org>,
-        Jiong Wu <lohengrin1024@gmail.com>,
-        Ritesh Harjani <riteshh@codeaurora.org>,
-        linux-kernel@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        =?UTF-8?q?Niklas=20S=C3=B6derlund?= 
-        <niklas.soderlund+renesas@ragnatech.se>
-Subject: [PATCH 0/2] mmc: core: Fix Marvell WiFi reset by adding SDIO API to replug card
-Date:   Tue, 16 Jul 2019 09:42:07 -0700
-Message-Id: <20190716164209.62320-1-dianders@chromium.org>
-X-Mailer: git-send-email 2.22.0.510.g264f2c817a-goog
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=FdipyjVpCY6f56Xd4OimbS+PX/++xiAeJwdsr6JXrj4=;
+        b=K/6AkXjvfmpeinkmN4xEZX0DhHWPQL9xozTxYjorGsTShYVXmMnsZW4etDzrgy1GVm
+         jL7EMmx10xruB5vi4Xt7qlrb7cGfY8vHei8KakpKB95FMSJJ61sWfNbdS9BS0ykIV9l9
+         dcOVMLhtMg6ViH6C5hbys2qz2tOy3cXGlq2/MQ1fhU5iJHimTWwIQEIn+hhyEtZFMh7Z
+         YidvpV7waymMX2geqUdPkYxi3123T/BeXOWHfYUPJcjLKuyB3+9GgCM7IqB+GxKoGYhu
+         qDyNt0wJrGjEmBfRLwoieXSPyrvTrL9n+42CFDxfMIs3ZuuwC+SG3FEVM0/JhMzQH8Iv
+         Atuw==
+X-Gm-Message-State: APjAAAX0X3QjEqc9jAepgvUKoLZ+Qppxx+Oiy0V5rMBFr6NFLfor+Mxb
+        8rjUt5P5bgrMCLh2RpPLm8GXPx+BvcYGhy3N011FMw==
+X-Google-Smtp-Source: APXvYqxRntwkNQJL/5FuY0S5lwsDvHNyTqDiq6hab1isYlxCWGc+m+UWftjkrghbfqa2HIoXg2UjyyrTCTM77O102is=
+X-Received: by 2002:a65:5687:: with SMTP id v7mr36183069pgs.263.1563298130577;
+ Tue, 16 Jul 2019 10:28:50 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20190712001708.170259-1-ndesaulniers@google.com> <b219cf41933b2f965572af515cf9d3119293bfba.camel@perches.com>
+In-Reply-To: <b219cf41933b2f965572af515cf9d3119293bfba.camel@perches.com>
+From:   Nick Desaulniers <ndesaulniers@google.com>
+Date:   Tue, 16 Jul 2019 10:28:39 -0700
+Message-ID: <CAKwvOdkD_r2YBqRDy-uTGMG1YeRF8KokxjikR0XLkXLsdJca0g@mail.gmail.com>
+Subject: Re: [PATCH -next] iwlwifi: dbg: work around clang bug by marking
+ debug strings static
+To:     Joe Perches <joe@perches.com>, Kalle Valo <kvalo@codeaurora.org>
+Cc:     Arnd Bergmann <arnd@arndb.de>,
+        Nathan Chancellor <natechancellor@gmail.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
+        Sara Sharon <sara.sharon@intel.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        LKML <linux-kernel@vger.kernel.org>,
+        clang-built-linux <clang-built-linux@googlegroups.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-As talked about in the thread at:
+On Thu, Jul 11, 2019 at 7:15 PM Joe Perches <joe@perches.com> wrote:
+>
+> On Thu, 2019-07-11 at 17:17 -0700, Nick Desaulniers wrote:
+> > Commit r353569 in prerelease Clang-9 is producing a linkage failure:
+> >
+> > ld: drivers/net/wireless/intel/iwlwifi/fw/dbg.o:
+> > in function `_iwl_fw_dbg_apply_point':
+> > dbg.c:(.text+0x827a): undefined reference to `__compiletime_assert_2387'
+> >
+> > when the following configs are enabled:
+> > - CONFIG_IWLWIFI
+> > - CONFIG_IWLMVM
+> > - CONFIG_KASAN
+> >
+> > Work around the issue for now by marking the debug strings as `static`,
+> > which they probably should be any ways.
+> >
+> > Link: https://bugs.llvm.org/show_bug.cgi?id=42580
+> > Link: https://github.com/ClangBuiltLinux/linux/issues/580
+> > Reported-by: Arnd Bergmann <arnd@arndb.de>
+> > Reported-by: Nathan Chancellor <natechancellor@gmail.com>
+> > Signed-off-by: Nick Desaulniers <ndesaulniers@google.com>
+> > ---
+> >  drivers/net/wireless/intel/iwlwifi/fw/dbg.c | 4 ++--
+> >  1 file changed, 2 insertions(+), 2 deletions(-)
+> >
+> > diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+> > index e411ac98290d..f8c90ea4e9b4 100644
+> > --- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+> > +++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+> > @@ -2438,7 +2438,7 @@ static void iwl_fw_dbg_info_apply(struct iwl_fw_runtime *fwrt,
+> >  {
+> >       u32 img_name_len = le32_to_cpu(dbg_info->img_name_len);
+> >       u32 dbg_cfg_name_len = le32_to_cpu(dbg_info->dbg_cfg_name_len);
+> > -     const char err_str[] =
+> > +     static const char err_str[] =
+> >               "WRT: ext=%d. Invalid %s name length %d, expected %d\n";
+>
+> Better still would be to use the format string directly
+> in both locations instead of trying to deduplicate it
+> via storing it into a separate pointer.
+>
+> Let the compiler/linker consolidate the format.
+> It's smaller object code, allows format/argument verification,
+> and is simpler for humans to understand.
 
-http://lkml.kernel.org/r/CAD=FV=X7P2F1k_zwHc0mbtfk55-rucTz_GoDH=PL6zWqKYcpuw@mail.gmail.com
+Whichever Kalle prefers, I just want my CI green again.
 
-...when the Marvell WiFi card tries to reset itself it kills
-Bluetooth.  It was observed that we could re-init the card properly by
-unbinding / rebinding the host controller.  It was also observed that
-in the downstream Chrome OS codebase the solution used was
-mmc_remove_host() / mmc_add_host(), which is similar to the solution
-in this series.
+>
+> ---
+> diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+> index e411ac98290d..25e6712932b8 100644
+> --- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+> +++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+> @@ -2438,17 +2438,17 @@ static void iwl_fw_dbg_info_apply(struct iwl_fw_runtime *fwrt,
+>  {
+>         u32 img_name_len = le32_to_cpu(dbg_info->img_name_len);
+>         u32 dbg_cfg_name_len = le32_to_cpu(dbg_info->dbg_cfg_name_len);
+> -       const char err_str[] =
+> -               "WRT: ext=%d. Invalid %s name length %d, expected %d\n";
+>
+>         if (img_name_len != IWL_FW_INI_MAX_IMG_NAME_LEN) {
+> -               IWL_WARN(fwrt, err_str, ext, "image", img_name_len,
+> +               IWL_WARN(fwrt, "WRT: ext=%d. Invalid %s name length %d, expected %d\n",
+> +                        ext, "image", img_name_len,
+>                          IWL_FW_INI_MAX_IMG_NAME_LEN);
+>                 return;
+>         }
+>
+>         if (dbg_cfg_name_len != IWL_FW_INI_MAX_DBG_CFG_NAME_LEN) {
+> -               IWL_WARN(fwrt, err_str, ext, "debug cfg", dbg_cfg_name_len,
+> +               IWL_WARN(fwrt, "WRT: ext=%d. Invalid %s name length %d, expected %d\n",
+> +                        ext, "debug cfg", dbg_cfg_name_len,
+>                          IWL_FW_INI_MAX_DBG_CFG_NAME_LEN);
+>                 return;
+>         }
+> @@ -2775,8 +2775,6 @@ static void _iwl_fw_dbg_apply_point(struct iwl_fw_runtime *fwrt,
+>                 struct iwl_ucode_tlv *tlv = iter;
+>                 void *ini_tlv = (void *)tlv->data;
+>                 u32 type = le32_to_cpu(tlv->type);
+> -               const char invalid_ap_str[] =
+> -                       "WRT: ext=%d. Invalid apply point %d for %s\n";
+>
+>                 switch (type) {
+>                 case IWL_UCODE_TLV_TYPE_DEBUG_INFO:
+> @@ -2786,8 +2784,8 @@ static void _iwl_fw_dbg_apply_point(struct iwl_fw_runtime *fwrt,
+>                         struct iwl_fw_ini_allocation_data *buf_alloc = ini_tlv;
+>
+>                         if (pnt != IWL_FW_INI_APPLY_EARLY) {
+> -                               IWL_ERR(fwrt, invalid_ap_str, ext, pnt,
+> -                                       "buffer allocation");
+> +                               IWL_ERR(fwrt, "WRT: ext=%d. Invalid apply point %d for %s\n",
+> +                                       ext, pnt, "buffer allocation");
+>                                 goto next;
+>                         }
+>
+> @@ -2797,8 +2795,8 @@ static void _iwl_fw_dbg_apply_point(struct iwl_fw_runtime *fwrt,
+>                 }
+>                 case IWL_UCODE_TLV_TYPE_HCMD:
+>                         if (pnt < IWL_FW_INI_APPLY_AFTER_ALIVE) {
+> -                               IWL_ERR(fwrt, invalid_ap_str, ext, pnt,
+> -                                       "host command");
+> +                               IWL_ERR(fwrt, "WRT: ext=%d. Invalid apply point %d for %s\n",
+> +                                       ext, pnt, "host command");
+>                                 goto next;
+>                         }
+>                         iwl_fw_dbg_send_hcmd(fwrt, tlv, ext);
+>
+>
 
-So far I've only done testing of this series using the reset test
-source that can be simulated via sysfs.  Specifically I ran this test:
-
-for i in $(seq 1000); do
-  echo "LOOP $i --------"
-  echo 1 > /sys/kernel/debug/mwifiex/mlan0/reset
-
-  while true; do
-    if ! ping -w15 -c1 "${GW}" >/dev/null 2>&1; then
-      fail=$(( fail + 1 ))
-      echo "Fail WiFi ${fail}"
-      if [[ ${fail} == 3 ]]; then
-        exit 1
-      fi
-    else
-      fail=0
-      break
-    fi
-  done
-
-  hciconfig hci0 down
-  sleep 1
-  if ! hciconfig hci0 up; then
-    echo "Fail BT"
-    exit 1
-  fi
-done
-
-I ran this several times and got several hundred iterations each
-before a failure.  When I saw failures:
-
-* Once I saw a "Fail BT"; manually resetting the card again fixed it.
-  I didn't give it time to see if it would have detected this
-  automatically.
-* Once I saw the ping fail because (for some reason) my device only
-  got an IPv6 address from my router and the IPv4 ping failed.  I
-  changed my script to use 'ping6' to see if that would help.
-* Once I saw the ping fail because the higher level network stack
-  ("shill" in my case) seemed to crash.  A few minutes later the
-  system recovered itself automatically.  https://crbug.com/984593 if
-  you want more details.
-* Sometimes while I was testing I saw "Fail WiFi 1" indicating a
-  transitory failure.  Usually this was an association failure, but in
-  one case I saw the device do "Firmware wakeup failed" after I
-  triggered the reset.  This caused the driver to trigger a re-reset
-  of itself which eventually recovered things.  This was good because
-  it was an actual test of the normal reset flow (not the one
-  triggered via sysfs).
-
-
-Douglas Anderson (2):
-  mmc: core: Add sdio_trigger_replug() API
-  mwifiex: Make use of the new sdio_trigger_replug() API to reset
-
- drivers/mmc/core/core.c                     | 28 +++++++++++++++++++--
- drivers/mmc/core/sdio_io.c                  | 20 +++++++++++++++
- drivers/net/wireless/marvell/mwifiex/sdio.c | 14 +++--------
- include/linux/mmc/host.h                    | 15 ++++++++++-
- include/linux/mmc/sdio_func.h               |  2 ++
- 5 files changed, 65 insertions(+), 14 deletions(-)
 
 -- 
-2.22.0.510.g264f2c817a-goog
-
+Thanks,
+~Nick Desaulniers
