@@ -6,133 +6,137 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C408C76188
-	for <linux-wireless@archiver.kernel.org>; Sat, 20 Jul 2019 10:26:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1E30C76188
+	for <linux-wireless@archiver.kernel.org>; Sat, 20 Jul 2019 10:27:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 500E12084D
-	for <linux-wireless@archiver.kernel.org>; Sat, 20 Jul 2019 10:26:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9F0D02084D
+	for <linux-wireless@archiver.kernel.org>; Sat, 20 Jul 2019 10:27:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727895AbfGTK0Q (ORCPT
+        id S1727865AbfGTK1M (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 20 Jul 2019 06:26:16 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:59506 "EHLO
+        Sat, 20 Jul 2019 06:27:12 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:59542 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727830AbfGTK0Q (ORCPT
+        with ESMTP id S1727851AbfGTK1M (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 20 Jul 2019 06:26:16 -0400
+        Sat, 20 Jul 2019 06:27:12 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1homZB-0000Hj-5H; Sat, 20 Jul 2019 13:26:14 +0300
+        id 1homZM-0000Hj-S1; Sat, 20 Jul 2019 13:26:28 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
+        Gregory Greenman <gregory.greenman@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date:   Sat, 20 Jul 2019 13:25:38 +0300
-Message-Id: <20190720102545.5952-10-luca@coelho.fi>
+Date:   Sat, 20 Jul 2019 13:25:43 +0300
+Message-Id: <20190720102545.5952-15-luca@coelho.fi>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190720102545.5952-1-luca@coelho.fi>
 References: <20190720102545.5952-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 09/16] iwlwifi: fix locking in delayed GTK setting
+Subject: [PATCH 14/16] iwlwifi: mvm: fix possible out-of-bounds read when accessing lq_info
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Gregory Greenman <gregory.greenman@intel.com>
 
-This code clearly never could have worked, since it locks
-while already locked. Add an unlocked __iwl_mvm_mac_set_key()
-variant that doesn't do locking to fix that.
+lq_info is an arary of size 2, active_tbl index is u8.
+When accessing lq_info[1 - active_tbl], theoretically it's possible
+that the access will be made to a negative index value.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../net/wireless/intel/iwlwifi/mvm/mac80211.c | 39 ++++++++++++-------
- 1 file changed, 26 insertions(+), 13 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c | 28 +++++++++++++++------
+ 1 file changed, 20 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 982682ec74fd..1c904b5226aa 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -207,11 +207,11 @@ static const struct cfg80211_pmsr_capabilities iwl_mvm_pmsr_capa = {
- 	},
- };
- 
--static int iwl_mvm_mac_set_key(struct ieee80211_hw *hw,
--			       enum set_key_cmd cmd,
--			       struct ieee80211_vif *vif,
--			       struct ieee80211_sta *sta,
--			       struct ieee80211_key_conf *key);
-+static int __iwl_mvm_mac_set_key(struct ieee80211_hw *hw,
-+				 enum set_key_cmd cmd,
-+				 struct ieee80211_vif *vif,
-+				 struct ieee80211_sta *sta,
-+				 struct ieee80211_key_conf *key);
- 
- void iwl_mvm_ref(struct iwl_mvm *mvm, enum iwl_mvm_ref_type ref_type)
- {
-@@ -2738,7 +2738,7 @@ static int iwl_mvm_start_ap_ibss(struct ieee80211_hw *hw,
- 
- 		mvmvif->ap_early_keys[i] = NULL;
- 
--		ret = iwl_mvm_mac_set_key(hw, SET_KEY, vif, NULL, key);
-+		ret = __iwl_mvm_mac_set_key(hw, SET_KEY, vif, NULL, key);
- 		if (ret)
- 			goto out_quota_failed;
- 	}
-@@ -3506,11 +3506,11 @@ static int iwl_mvm_mac_sched_scan_stop(struct ieee80211_hw *hw,
- 	return ret;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+index 3fa50b1955bb..d3f04acfbacb 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+@@ -1352,6 +1352,18 @@ static void rs_set_expected_tpt_table(struct iwl_lq_sta *lq_sta,
+ 	tbl->expected_tpt = rs_get_expected_tpt_table(lq_sta, column, rate->bw);
  }
  
--static int iwl_mvm_mac_set_key(struct ieee80211_hw *hw,
--			       enum set_key_cmd cmd,
--			       struct ieee80211_vif *vif,
--			       struct ieee80211_sta *sta,
--			       struct ieee80211_key_conf *key)
-+static int __iwl_mvm_mac_set_key(struct ieee80211_hw *hw,
-+				 enum set_key_cmd cmd,
-+				 struct ieee80211_vif *vif,
-+				 struct ieee80211_sta *sta,
-+				 struct ieee80211_key_conf *key)
- {
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
- 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
-@@ -3565,8 +3565,6 @@ static int iwl_mvm_mac_set_key(struct ieee80211_hw *hw,
- 			return -EOPNOTSUPP;
- 	}
- 
--	mutex_lock(&mvm->mutex);
--
- 	switch (cmd) {
- 	case SET_KEY:
- 		if ((vif->type == NL80211_IFTYPE_ADHOC ||
-@@ -3712,7 +3710,22 @@ static int iwl_mvm_mac_set_key(struct ieee80211_hw *hw,
- 		ret = -EINVAL;
- 	}
- 
-+	return ret;
++/* rs uses two tables, one is active and the second is for searching better
++ * configuration. This function, according to the index of the currently
++ * active table returns the search table, which is located at the
++ * index complementary to 1 according to the active table (active = 1,
++ * search = 0 or active = 0, search = 1).
++ * Since lq_info is an arary of size 2, make sure index cannot be out of bounds.
++ */
++static inline u8 rs_search_tbl(u8 active_tbl)
++{
++	return (active_tbl ^ 1) & 1;
 +}
 +
-+static int iwl_mvm_mac_set_key(struct ieee80211_hw *hw,
-+			       enum set_key_cmd cmd,
-+			       struct ieee80211_vif *vif,
-+			       struct ieee80211_sta *sta,
-+			       struct ieee80211_key_conf *key)
-+{
-+	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
-+	int ret;
-+
-+	mutex_lock(&mvm->mutex);
-+	ret = __iwl_mvm_mac_set_key(hw, cmd, vif, sta, key);
- 	mutex_unlock(&mvm->mutex);
-+
- 	return ret;
- }
+ static s32 rs_get_best_rate(struct iwl_mvm *mvm,
+ 			    struct iwl_lq_sta *lq_sta,
+ 			    struct iwl_scale_tbl_info *tbl,	/* "search" */
+@@ -1699,9 +1711,9 @@ static int rs_switch_to_column(struct iwl_mvm *mvm,
+ 			       struct ieee80211_sta *sta,
+ 			       enum rs_column col_id)
+ {
+-	struct iwl_scale_tbl_info *tbl = &(lq_sta->lq_info[lq_sta->active_tbl]);
++	struct iwl_scale_tbl_info *tbl = &lq_sta->lq_info[lq_sta->active_tbl];
+ 	struct iwl_scale_tbl_info *search_tbl =
+-				&(lq_sta->lq_info[(1 - lq_sta->active_tbl)]);
++		&lq_sta->lq_info[rs_search_tbl(lq_sta->active_tbl)];
+ 	struct rs_rate *rate = &search_tbl->rate;
+ 	const struct rs_tx_column *column = &rs_tx_columns[col_id];
+ 	const struct rs_tx_column *curr_column = &rs_tx_columns[tbl->column];
+@@ -2109,7 +2121,7 @@ static void rs_rate_scale_perform(struct iwl_mvm *mvm,
+ 	if (!lq_sta->search_better_tbl)
+ 		active_tbl = lq_sta->active_tbl;
+ 	else
+-		active_tbl = 1 - lq_sta->active_tbl;
++		active_tbl = rs_search_tbl(lq_sta->active_tbl);
+ 
+ 	tbl = &(lq_sta->lq_info[active_tbl]);
+ 	rate = &tbl->rate;
+@@ -2333,7 +2345,7 @@ static void rs_rate_scale_perform(struct iwl_mvm *mvm,
+ 		/* If new "search" mode was selected, set up in uCode table */
+ 		if (lq_sta->search_better_tbl) {
+ 			/* Access the "search" table, clear its history. */
+-			tbl = &(lq_sta->lq_info[(1 - lq_sta->active_tbl)]);
++			tbl = &lq_sta->lq_info[rs_search_tbl(lq_sta->active_tbl)];
+ 			rs_rate_scale_clear_tbl_windows(mvm, tbl);
+ 
+ 			/* Use new "search" start rate */
+@@ -2676,7 +2688,7 @@ static void rs_initialize_lq(struct iwl_mvm *mvm,
+ 	if (!lq_sta->search_better_tbl)
+ 		active_tbl = lq_sta->active_tbl;
+ 	else
+-		active_tbl = 1 - lq_sta->active_tbl;
++		active_tbl = rs_search_tbl(lq_sta->active_tbl);
+ 
+ 	tbl = &(lq_sta->lq_info[active_tbl]);
+ 	rate = &tbl->rate;
+@@ -3172,9 +3184,9 @@ static void __iwl_mvm_rs_tx_status(struct iwl_mvm *mvm,
+ 
+ 	if (!lq_sta->search_better_tbl) {
+ 		curr_tbl = &lq_sta->lq_info[lq_sta->active_tbl];
+-		other_tbl = &lq_sta->lq_info[1 - lq_sta->active_tbl];
++		other_tbl = &lq_sta->lq_info[rs_search_tbl(lq_sta->active_tbl)];
+ 	} else {
+-		curr_tbl = &lq_sta->lq_info[1 - lq_sta->active_tbl];
++		curr_tbl = &lq_sta->lq_info[rs_search_tbl(lq_sta->active_tbl)];
+ 		other_tbl = &lq_sta->lq_info[lq_sta->active_tbl];
+ 	}
+ 
+@@ -3183,7 +3195,7 @@ static void __iwl_mvm_rs_tx_status(struct iwl_mvm *mvm,
+ 			       "Neither active nor search matches tx rate\n");
+ 		tmp_tbl = &lq_sta->lq_info[lq_sta->active_tbl];
+ 		rs_dump_rate(mvm, &tmp_tbl->rate, "ACTIVE");
+-		tmp_tbl = &lq_sta->lq_info[1 - lq_sta->active_tbl];
++		tmp_tbl = &lq_sta->lq_info[rs_search_tbl(lq_sta->active_tbl)];
+ 		rs_dump_rate(mvm, &tmp_tbl->rate, "SEARCH");
+ 		rs_dump_rate(mvm, &lq_rate, "ACTUAL");
  
 -- 
 2.20.1
