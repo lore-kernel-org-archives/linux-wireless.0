@@ -2,214 +2,130 @@ Return-Path: <SRS0=56nJ=VR=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79EBCC76195
-	for <linux-wireless@archiver.kernel.org>; Sat, 20 Jul 2019 10:27:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0795CC76186
+	for <linux-wireless@archiver.kernel.org>; Sat, 20 Jul 2019 17:47:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5A7D12084D
-	for <linux-wireless@archiver.kernel.org>; Sat, 20 Jul 2019 10:27:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D37792084D
+	for <linux-wireless@archiver.kernel.org>; Sat, 20 Jul 2019 17:47:20 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Km81yo78"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727909AbfGTK1f (ORCPT
+        id S1726779AbfGTRqz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 20 Jul 2019 06:27:35 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:59592 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727851AbfGTK1f (ORCPT
+        Sat, 20 Jul 2019 13:46:55 -0400
+Received: from mail-pl1-f193.google.com ([209.85.214.193]:42195 "EHLO
+        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726200AbfGTRqy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 20 Jul 2019 06:27:35 -0400
-Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
-        by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.92)
-        (envelope-from <luca@coelho.fi>)
-        id 1homZK-0000Hj-Of; Sat, 20 Jul 2019 13:26:24 +0300
-From:   Luca Coelho <luca@coelho.fi>
-To:     kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date:   Sat, 20 Jul 2019 13:25:42 +0300
-Message-Id: <20190720102545.5952-14-luca@coelho.fi>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190720102545.5952-1-luca@coelho.fi>
-References: <20190720102545.5952-1-luca@coelho.fi>
+        Sat, 20 Jul 2019 13:46:54 -0400
+Received: by mail-pl1-f193.google.com with SMTP id ay6so17164093plb.9;
+        Sat, 20 Jul 2019 10:46:54 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:subject:message-id:mime-version:content-disposition
+         :user-agent;
+        bh=L2J81KFMB9+2i2dCr/hG5bzUaIW4OMdMzoZ/0Z/JXXY=;
+        b=Km81yo78w+rlAwT/gwFYfbv28Jgs5BCE1MgsQFEdhlhCgQmjldFaKcy3u0HTBYiloX
+         L8XYW/LnaW6ORsZjO8+44qrXVhFzdUCUkEV8eURKJ+SkqB0At6u+qSYVIBIwiXjpTM/x
+         7gmIG7cv4tJFKGtaNpt1pbUjJsWKyfSX04XSoIMkikNZ7T4JXBDCPK5lP7tR6KgYGew9
+         X2ynm2oIHwy3DHRFm78hJguuTFf+gae7qCd2Iwx4GwZQb3lVfmvgExXMNB9Qz8KkCBgW
+         /aqS1YpNQwnrsMTPeWPnYC+ymVRJtmHwMME+8W+cIYYvsvRg4aiq+MCJa1SC2V0Ng/By
+         V0ng==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:subject:message-id:mime-version
+         :content-disposition:user-agent;
+        bh=L2J81KFMB9+2i2dCr/hG5bzUaIW4OMdMzoZ/0Z/JXXY=;
+        b=otzGIJpzqIu0XDfNr0siqTNPXlKSN1j9qofRdRDoAKVjxosqKqXFJ+Ni9uMVqG7H/x
+         SU3JP9tf5CKBI/ttjN/hBpmBFgSk5G9jYsfCc0lzMsOsJg7Lf9O+ByTGaWf9P6f3MEhf
+         NA7HpfTNViy4SBzxJp+9a6qHpjo64gnxFc8p4Ns1bOtll8UVA6pmJgNQwBA1kopzWQxu
+         DTZZhmoptwOHMFQLkee+GC5hUWZnq09o3YG1Imrt6CgLnSiSVBJGbC62G/NVnjzISRUs
+         prgmibjWu8q7vyM4+ck3rMxbfkab2YAM91+u6I6Eo38m/SvhX+M9XpzsFLGPj4VdQ68P
+         aRaQ==
+X-Gm-Message-State: APjAAAURb5M1oEYKTNxDvzMVsJMbERywJGx0lWByVisXNN1ciqiYNQQh
+        N/JU3y71qFQsTkSjfr11A5A=
+X-Google-Smtp-Source: APXvYqxlbLhnEFRhjszPBPUjtGhEt/AVHw3r7MRkvZSxpV9s5/OYqIpRYH0BMPO001+CgtH0WTAmNQ==
+X-Received: by 2002:a17:902:1e6:: with SMTP id b93mr63580645plb.295.1563644814133;
+        Sat, 20 Jul 2019 10:46:54 -0700 (PDT)
+Received: from hari-Inspiron-1545 ([183.83.86.126])
+        by smtp.gmail.com with ESMTPSA id q69sm49590614pjb.0.2019.07.20.10.46.51
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Sat, 20 Jul 2019 10:46:53 -0700 (PDT)
+Date:   Sat, 20 Jul 2019 23:16:47 +0530
+From:   Hariprasad Kelam <hariprasad.kelam@gmail.com>
+To:     Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] rat_cs: Remove duplicate code
+Message-ID: <20190720174613.GA31062@hari-Inspiron-1545>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: [PATCH 13/16] iwlwifi: mvm: fix frame drop from the reordering buffer
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Code is same if translate is true/false in case invalid packet is
+received.So remove else part.
 
-An earlier patch made sure that the queues are not lagging
-too far behind. This means that iwl_mvm_release_frames
-should not be called with a head_sn too far behind NSSN.
+Issue identified with coccicheck
 
-Don't take the risk to change completely the entry
-condition to iwl_mvm_release_frames, but don't update
-the head_sn is the NSSN is more than 2048 packets ahead
-of us. Since this just cannot be right. This means that
-the scenario described here happened. We are queue 0.
-
-	Q:0				Q:1
-	head_sn: 0    -> 2047
-					head_sn: 2048
-
-	Lots of packets arrive:
-	head_sn: 2047 -> 2150
-
-					send NSSN_SYNC notification
-
-	Handle notification
-	from the firmware and
-	do NOT move the head_sn
-	back to 2048
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Hariprasad Kelam <hariprasad.kelam@gmail.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 44 ++++++++++++++-----
- 1 file changed, 33 insertions(+), 11 deletions(-)
+ drivers/net/wireless/ray_cs.c | 29 ++++++++---------------------
+ 1 file changed, 8 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index 4f4fdaf49eef..854edd7d7103 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -518,12 +518,17 @@ static void iwl_mvm_sync_nssn(struct iwl_mvm *mvm, u8 baid, u16 nssn)
+diff --git a/drivers/net/wireless/ray_cs.c b/drivers/net/wireless/ray_cs.c
+index cf37268..a51bbe7 100644
+--- a/drivers/net/wireless/ray_cs.c
++++ b/drivers/net/wireless/ray_cs.c
+@@ -2108,29 +2108,16 @@ static void rx_data(struct net_device *dev, struct rcs __iomem *prcs,
+ #endif
  
- #define RX_REORDER_BUF_TIMEOUT_MQ (HZ / 10)
- 
-+enum iwl_mvm_release_flags {
-+	IWL_MVM_RELEASE_SEND_RSS_SYNC = BIT(0),
-+	IWL_MVM_RELEASE_FROM_RSS_SYNC = BIT(1),
-+};
-+
- static void iwl_mvm_release_frames(struct iwl_mvm *mvm,
- 				   struct ieee80211_sta *sta,
- 				   struct napi_struct *napi,
- 				   struct iwl_mvm_baid_data *baid_data,
- 				   struct iwl_mvm_reorder_buffer *reorder_buf,
--				   u16 nssn, bool sync_rss)
-+				   u16 nssn, u32 flags)
- {
- 	struct iwl_mvm_reorder_buf_entry *entries =
- 		&baid_data->entries[reorder_buf->queue *
-@@ -532,6 +537,18 @@ static void iwl_mvm_release_frames(struct iwl_mvm *mvm,
- 
- 	lockdep_assert_held(&reorder_buf->lock);
- 
-+	/*
-+	 * We keep the NSSN not too far behind, if we are sync'ing it and it
-+	 * is more than 2048 ahead of us, it must be behind us. Discard it.
-+	 * This can happen if the queue that hit the 0 / 2048 seqno was lagging
-+	 * behind and this queue already processed packets. The next if
-+	 * would have caught cases where this queue would have processed less
-+	 * than 64 packets, but it may have processed more than 64 packets.
-+	 */
-+	if ((flags & IWL_MVM_RELEASE_FROM_RSS_SYNC) &&
-+	    ieee80211_sn_less(nssn, ssn))
-+		goto set_timer;
-+
- 	/* ignore nssn smaller than head sn - this can happen due to timeout */
- 	if (iwl_mvm_is_sn_less(nssn, ssn, reorder_buf->buf_size))
- 		goto set_timer;
-@@ -542,7 +559,8 @@ static void iwl_mvm_release_frames(struct iwl_mvm *mvm,
- 		struct sk_buff *skb;
- 
- 		ssn = ieee80211_sn_inc(ssn);
--		if (sync_rss && (ssn == 2048 || ssn == 0))
-+		if ((flags & IWL_MVM_RELEASE_SEND_RSS_SYNC) &&
-+		    (ssn == 2048 || ssn == 0))
- 			iwl_mvm_sync_nssn(mvm, baid_data->baid, ssn);
- 
- 		/*
-@@ -631,7 +649,7 @@ void iwl_mvm_reorder_timer_expired(struct timer_list *t)
- 		iwl_mvm_event_frame_timeout_callback(buf->mvm, mvmsta->vif,
- 						     sta, baid_data->tid);
- 		iwl_mvm_release_frames(buf->mvm, sta, NULL, baid_data,
--				       buf, sn, true);
-+				       buf, sn, IWL_MVM_RELEASE_SEND_RSS_SYNC);
- 		rcu_read_unlock();
- 	} else {
- 		/*
-@@ -674,7 +692,7 @@ static void iwl_mvm_del_ba(struct iwl_mvm *mvm, int queue,
- 	iwl_mvm_release_frames(mvm, sta, NULL, ba_data, reorder_buf,
- 			       ieee80211_sn_add(reorder_buf->head_sn,
- 						reorder_buf->buf_size),
--			       false);
-+			       0);
- 	spin_unlock_bh(&reorder_buf->lock);
- 	del_timer_sync(&reorder_buf->reorder_timer);
- 
-@@ -684,7 +702,8 @@ static void iwl_mvm_del_ba(struct iwl_mvm *mvm, int queue,
- 
- static void iwl_mvm_release_frames_from_notif(struct iwl_mvm *mvm,
- 					      struct napi_struct *napi,
--					      u8 baid, u16 nssn, int queue)
-+					      u8 baid, u16 nssn, int queue,
-+					      u32 flags)
- {
- 	struct ieee80211_sta *sta;
- 	struct iwl_mvm_reorder_buffer *reorder_buf;
-@@ -711,7 +730,7 @@ static void iwl_mvm_release_frames_from_notif(struct iwl_mvm *mvm,
- 
- 	spin_lock_bh(&reorder_buf->lock);
- 	iwl_mvm_release_frames(mvm, sta, napi, ba_data,
--			       reorder_buf, nssn, false);
-+			       reorder_buf, nssn, flags);
- 	spin_unlock_bh(&reorder_buf->lock);
- 
- out:
-@@ -723,7 +742,8 @@ static void iwl_mvm_nssn_sync(struct iwl_mvm *mvm,
- 			      const struct iwl_mvm_nssn_sync_data *data)
- {
- 	iwl_mvm_release_frames_from_notif(mvm, napi, data->baid,
--					  data->nssn, queue);
-+					  data->nssn, queue,
-+					  IWL_MVM_RELEASE_FROM_RSS_SYNC);
- }
- 
- void iwl_mvm_rx_queue_notif(struct iwl_mvm *mvm, struct napi_struct *napi,
-@@ -851,7 +871,7 @@ static bool iwl_mvm_reorder(struct iwl_mvm *mvm,
- 
- 	if (ieee80211_is_back_req(hdr->frame_control)) {
- 		iwl_mvm_release_frames(mvm, sta, napi, baid_data,
--				       buffer, nssn, false);
-+				       buffer, nssn, 0);
- 		goto drop;
+ 	if (!sniffer) {
+-		if (translate) {
+ /* TBD length needs fixing for translated header */
+-			if (rx_len < (ETH_HLEN + RX_MAC_HEADER_LENGTH) ||
+-			    rx_len >
+-			    (dev->mtu + RX_MAC_HEADER_LENGTH + ETH_HLEN +
+-			     FCS_LEN)) {
+-				pr_debug(
+-				      "ray_cs invalid packet length %d received\n",
+-				      rx_len);
+-				return;
+-			}
+-		} else { /* encapsulated ethernet */
+-
+-			if (rx_len < (ETH_HLEN + RX_MAC_HEADER_LENGTH) ||
+-			    rx_len >
+-			    (dev->mtu + RX_MAC_HEADER_LENGTH + ETH_HLEN +
+-			     FCS_LEN)) {
+-				pr_debug(
+-				      "ray_cs invalid packet length %d received\n",
+-				      rx_len);
+-				return;
++		if (rx_len < (ETH_HLEN + RX_MAC_HEADER_LENGTH) ||
++		    rx_len >
++		    (dev->mtu + RX_MAC_HEADER_LENGTH + ETH_HLEN +
++		     FCS_LEN)) {
++			pr_debug(
++			      "ray_cs invalid packet length %d received\n",
++			      rx_len);
++			return;
+ 			}
+-		}
  	}
- 
-@@ -871,7 +891,7 @@ static bool iwl_mvm_reorder(struct iwl_mvm *mvm,
- 		u16 min_sn = ieee80211_sn_less(sn, nssn) ? sn : nssn;
- 
- 		iwl_mvm_release_frames(mvm, sta, napi, baid_data, buffer,
--				       min_sn, true);
-+				       min_sn, IWL_MVM_RELEASE_SEND_RSS_SYNC);
- 	}
- 
- 	/* drop any oudated packets */
-@@ -963,7 +983,8 @@ static bool iwl_mvm_reorder(struct iwl_mvm *mvm,
- 	 */
- 	if (!amsdu || last_subframe)
- 		iwl_mvm_release_frames(mvm, sta, napi, baid_data,
--				       buffer, nssn, true);
-+				       buffer, nssn,
-+				       IWL_MVM_RELEASE_SEND_RSS_SYNC);
- 
- 	spin_unlock_bh(&buffer->lock);
- 	return true;
-@@ -1936,5 +1957,6 @@ void iwl_mvm_rx_frame_release(struct iwl_mvm *mvm, struct napi_struct *napi,
- 	struct iwl_frame_release *release = (void *)pkt->data;
- 
- 	iwl_mvm_release_frames_from_notif(mvm, napi, release->baid,
--					  le16_to_cpu(release->nssn), queue);
-+					  le16_to_cpu(release->nssn),
-+					  queue, 0);
- }
+ 	pr_debug("ray_cs rx_data packet\n");
+ 	/* If fragmented packet, verify sizes of fragments add up */
 -- 
-2.20.1
+2.7.4
 
