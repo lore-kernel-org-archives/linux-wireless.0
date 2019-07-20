@@ -2,110 +2,260 @@ Return-Path: <SRS0=56nJ=VR=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1267C76195
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1960C76196
 	for <linux-wireless@archiver.kernel.org>; Sat, 20 Jul 2019 10:26:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A1CB32084D
+	by mail.kernel.org (Postfix) with ESMTP id C5182217F5
 	for <linux-wireless@archiver.kernel.org>; Sat, 20 Jul 2019 10:26:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727858AbfGTK0D (ORCPT
+        id S1727865AbfGTK0F (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 20 Jul 2019 06:26:03 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:59440 "EHLO
+        Sat, 20 Jul 2019 06:26:05 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:59446 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727852AbfGTK0C (ORCPT
+        with ESMTP id S1727830AbfGTK0F (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 20 Jul 2019 06:26:02 -0400
+        Sat, 20 Jul 2019 06:26:05 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1homYu-0000Hj-EK; Sat, 20 Jul 2019 13:25:59 +0300
+        id 1homYz-0000Hj-Q2; Sat, 20 Jul 2019 13:26:03 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>, stable@vger.kernel.org
-Date:   Sat, 20 Jul 2019 13:25:30 +0300
-Message-Id: <20190720102545.5952-2-luca@coelho.fi>
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date:   Sat, 20 Jul 2019 13:25:32 +0300
+Message-Id: <20190720102545.5952-4-luca@coelho.fi>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190720102545.5952-1-luca@coelho.fi>
 References: <20190720102545.5952-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 01/16] iwlwifi: mvm: don't send GEO_TX_POWER_LIMIT on version < 41
+Subject: [PATCH 03/16] iwlwifi: mvm: add a new RSS sync notification for NSSN sync
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Firmware versions before 41 don't support the GEO_TX_POWER_LIMIT
-command, and sending it to the firmware will cause a firmware crash.
-We allow this via debugfs, so we need to return an error value in case
-it's not supported.
+We will soon be using a new notification that will be
+initiated by the driver, sent to the firmware and sent
+back to all the RSS queues by the firmware. This new
+notification will be useful to synchronize the NSSN across
+all the queues.
 
-This had already been fixed during init, when we send the command if
-the ACPI WGDS table is present.  Fix it also for the other,
-userspace-triggered case.
+For now, don't send the notification, just add the code to
+handle it. Later patch will add the code to actually send
+it.
 
-Cc: stable@vger.kernel.org
+While at it, validate the baid coming from the firmware to
+avoid accessing an array with a bad index in the driver.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 22 ++++++++++++++-------
- 1 file changed, 15 insertions(+), 7 deletions(-)
+ .../net/wireless/intel/iwlwifi/fw/api/rx.h    |  2 +
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |  4 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c  |  4 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 84 ++++++++++++-------
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.h  |  6 ++
+ 5 files changed, 64 insertions(+), 36 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index 1d608e9e9101..a837cf40afde 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -880,6 +880,17 @@ int iwl_mvm_sar_select_profile(struct iwl_mvm *mvm, int prof_a, int prof_b)
- 	return iwl_mvm_send_cmd_pdu(mvm, REDUCE_TX_POWER_CMD, 0, len, &cmd);
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h b/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h
+index d55312ef58c9..ed69eec4fcd9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h
+@@ -812,10 +812,12 @@ struct iwl_rxq_sync_notification {
+  *
+  * @IWL_MVM_RXQ_EMPTY: empty sync notification
+  * @IWL_MVM_RXQ_NOTIF_DEL_BA: notify RSS queues of delBA
++ * @IWL_MVM_RXQ_NSSN_SYNC: notify all the RSS queues with the new NSSN
+  */
+ enum iwl_mvm_rxq_notif_type {
+ 	IWL_MVM_RXQ_EMPTY,
+ 	IWL_MVM_RXQ_NOTIF_DEL_BA,
++	IWL_MVM_RXQ_NSSN_SYNC,
+ };
+ 
+ /**
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 48c77af54e99..c1e8b4766b0c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -1665,8 +1665,8 @@ void iwl_mvm_rx_frame_release(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 			      struct iwl_rx_cmd_buffer *rxb, int queue);
+ int iwl_mvm_notify_rx_queue(struct iwl_mvm *mvm, u32 rxq_mask,
+ 			    const u8 *data, u32 count);
+-void iwl_mvm_rx_queue_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb,
+-			    int queue);
++void iwl_mvm_rx_queue_notif(struct iwl_mvm *mvm, struct napi_struct *napi,
++			    struct iwl_rx_cmd_buffer *rxb, int queue);
+ void iwl_mvm_rx_tx_cmd(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb);
+ void iwl_mvm_mfu_assert_dump_notif(struct iwl_mvm *mvm,
+ 				   struct iwl_rx_cmd_buffer *rxb);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index d7d6f3398f86..4888054dc3d8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -1088,7 +1088,7 @@ static void iwl_mvm_rx_mq(struct iwl_op_mode *op_mode,
+ 		iwl_mvm_rx_mpdu_mq(mvm, napi, rxb, 0);
+ 	else if (unlikely(cmd == WIDE_ID(DATA_PATH_GROUP,
+ 					 RX_QUEUES_NOTIFICATION)))
+-		iwl_mvm_rx_queue_notif(mvm, rxb, 0);
++		iwl_mvm_rx_queue_notif(mvm, napi, rxb, 0);
+ 	else if (cmd == WIDE_ID(LEGACY_GROUP, FRAME_RELEASE))
+ 		iwl_mvm_rx_frame_release(mvm, napi, rxb, 0);
+ 	else if (cmd == WIDE_ID(DATA_PATH_GROUP, RX_NO_DATA_NOTIF))
+@@ -1812,7 +1812,7 @@ static void iwl_mvm_rx_mq_rss(struct iwl_op_mode *op_mode,
+ 		iwl_mvm_rx_frame_release(mvm, napi, rxb, queue);
+ 	else if (unlikely(cmd == WIDE_ID(DATA_PATH_GROUP,
+ 					 RX_QUEUES_NOTIFICATION)))
+-		iwl_mvm_rx_queue_notif(mvm, rxb, queue);
++		iwl_mvm_rx_queue_notif(mvm, napi, rxb, queue);
+ 	else if (likely(cmd == WIDE_ID(LEGACY_GROUP, REPLY_RX_MPDU_CMD)))
+ 		iwl_mvm_rx_mpdu_mq(mvm, napi, rxb, queue);
+ }
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index 64f950501287..bf097329efa2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -665,8 +665,51 @@ static void iwl_mvm_del_ba(struct iwl_mvm *mvm, int queue,
+ 	rcu_read_unlock();
  }
  
-+static bool iwl_mvm_sar_geo_support(struct iwl_mvm *mvm)
+-void iwl_mvm_rx_queue_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb,
+-			    int queue)
++static void iwl_mvm_release_frames_from_notif(struct iwl_mvm *mvm,
++					      struct napi_struct *napi,
++					      u8 baid, u16 nssn, int queue)
 +{
-+	/*
-+	 * The GEO_TX_POWER_LIMIT command is not supported on earlier
-+	 * firmware versions.  Unfortunately, we don't have a TLV API
-+	 * flag to rely on, so rely on the major version which is in
-+	 * the first byte of ucode_ver.
-+	 */
-+	return IWL_UCODE_SERIAL(mvm->fw->ucode_ver) >= 41;
++	struct ieee80211_sta *sta;
++	struct iwl_mvm_reorder_buffer *reorder_buf;
++	struct iwl_mvm_baid_data *ba_data;
++
++	IWL_DEBUG_HT(mvm, "Frame release notification for BAID %u, NSSN %d\n",
++		     baid, nssn);
++
++	if (WARN_ON_ONCE(baid == IWL_RX_REORDER_DATA_INVALID_BAID ||
++			 baid >= ARRAY_SIZE(mvm->baid_map)))
++		return;
++
++	rcu_read_lock();
++
++	ba_data = rcu_dereference(mvm->baid_map[baid]);
++	if (WARN_ON_ONCE(!ba_data))
++		goto out;
++
++	sta = rcu_dereference(mvm->fw_id_to_mac_id[ba_data->sta_id]);
++	if (WARN_ON_ONCE(IS_ERR_OR_NULL(sta)))
++		goto out;
++
++	reorder_buf = &ba_data->reorder_buf[queue];
++
++	spin_lock_bh(&reorder_buf->lock);
++	iwl_mvm_release_frames(mvm, sta, napi, ba_data, reorder_buf, nssn);
++	spin_unlock_bh(&reorder_buf->lock);
++
++out:
++	rcu_read_unlock();
 +}
 +
- int iwl_mvm_get_sar_geo_profile(struct iwl_mvm *mvm)
- {
- 	struct iwl_geo_tx_power_profiles_resp *resp;
-@@ -909,6 +920,9 @@ int iwl_mvm_get_sar_geo_profile(struct iwl_mvm *mvm)
- 		.data = { data },
- 	};
- 
-+	if (!iwl_mvm_sar_geo_support(mvm))
-+		return -EOPNOTSUPP;
++static void iwl_mvm_nssn_sync(struct iwl_mvm *mvm,
++			      struct napi_struct *napi, int queue,
++			      const struct iwl_mvm_nssn_sync_data *data)
++{
++	iwl_mvm_release_frames_from_notif(mvm, napi, data->baid,
++					  data->nssn, queue);
++}
 +
- 	ret = iwl_mvm_send_cmd(mvm, &cmd);
- 	if (ret) {
- 		IWL_ERR(mvm, "Failed to get geographic profile info %d\n", ret);
-@@ -934,13 +948,7 @@ static int iwl_mvm_sar_geo_init(struct iwl_mvm *mvm)
- 	int ret, i, j;
- 	u16 cmd_wide_id =  WIDE_ID(PHY_OPS_GROUP, GEO_TX_POWER_LIMIT);
++void iwl_mvm_rx_queue_notif(struct iwl_mvm *mvm, struct napi_struct *napi,
++			    struct iwl_rx_cmd_buffer *rxb, int queue)
+ {
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+ 	struct iwl_rxq_sync_notification *notif;
+@@ -687,6 +730,10 @@ void iwl_mvm_rx_queue_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb,
+ 	case IWL_MVM_RXQ_NOTIF_DEL_BA:
+ 		iwl_mvm_del_ba(mvm, queue, (void *)internal_notif->data);
+ 		break;
++	case IWL_MVM_RXQ_NSSN_SYNC:
++		iwl_mvm_nssn_sync(mvm, napi, queue,
++				  (void *)internal_notif->data);
++		break;
+ 	default:
+ 		WARN_ONCE(1, "Invalid identifier %d", internal_notif->type);
+ 	}
+@@ -1840,40 +1887,13 @@ void iwl_mvm_rx_monitor_no_data(struct iwl_mvm *mvm, struct napi_struct *napi,
+ out:
+ 	rcu_read_unlock();
+ }
++
+ void iwl_mvm_rx_frame_release(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 			      struct iwl_rx_cmd_buffer *rxb, int queue)
+ {
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+ 	struct iwl_frame_release *release = (void *)pkt->data;
+-	struct ieee80211_sta *sta;
+-	struct iwl_mvm_reorder_buffer *reorder_buf;
+-	struct iwl_mvm_baid_data *ba_data;
+-
+-	int baid = release->baid;
  
--	/*
--	 * This command is not supported on earlier firmware versions.
--	 * Unfortunately, we don't have a TLV API flag to rely on, so
--	 * rely on the major version which is in the first byte of
--	 * ucode_ver.
--	 */
--	if (IWL_UCODE_SERIAL(mvm->fw->ucode_ver) < 41)
-+	if (!iwl_mvm_sar_geo_support(mvm))
- 		return 0;
+-	IWL_DEBUG_HT(mvm, "Frame release notification for BAID %u, NSSN %d\n",
+-		     release->baid, le16_to_cpu(release->nssn));
+-
+-	if (WARN_ON_ONCE(baid == IWL_RX_REORDER_DATA_INVALID_BAID))
+-		return;
+-
+-	rcu_read_lock();
+-
+-	ba_data = rcu_dereference(mvm->baid_map[baid]);
+-	if (WARN_ON_ONCE(!ba_data))
+-		goto out;
+-
+-	sta = rcu_dereference(mvm->fw_id_to_mac_id[ba_data->sta_id]);
+-	if (WARN_ON_ONCE(IS_ERR_OR_NULL(sta)))
+-		goto out;
+-
+-	reorder_buf = &ba_data->reorder_buf[queue];
+-
+-	spin_lock_bh(&reorder_buf->lock);
+-	iwl_mvm_release_frames(mvm, sta, napi, ba_data, reorder_buf,
+-			       le16_to_cpu(release->nssn));
+-	spin_unlock_bh(&reorder_buf->lock);
+-
+-out:
+-	rcu_read_unlock();
++	iwl_mvm_release_frames_from_notif(mvm, napi, release->baid,
++					  le16_to_cpu(release->nssn), queue);
+ }
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
+index 79d655b3fce0..4823c06e6909 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
+@@ -343,10 +343,16 @@ struct iwl_mvm_delba_data {
+ 	u32 baid;
+ } __packed;
  
- 	ret = iwl_mvm_sar_get_wgds_table(mvm);
++struct iwl_mvm_nssn_sync_data {
++	u32 baid;
++	u32 nssn;
++} __packed;
++
+ struct iwl_mvm_rss_sync_notif {
+ 	struct iwl_mvm_internal_rxq_notif metadata;
+ 	union {
+ 		struct iwl_mvm_delba_data delba;
++		struct iwl_mvm_nssn_sync_data nssn_sync;
+ 	};
+ } __packed;
+ 
 -- 
 2.20.1
 
