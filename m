@@ -6,137 +6,69 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1E30C76188
-	for <linux-wireless@archiver.kernel.org>; Sat, 20 Jul 2019 10:27:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81F64C76195
+	for <linux-wireless@archiver.kernel.org>; Sat, 20 Jul 2019 10:27:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9F0D02084D
-	for <linux-wireless@archiver.kernel.org>; Sat, 20 Jul 2019 10:27:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5BDF52084D
+	for <linux-wireless@archiver.kernel.org>; Sat, 20 Jul 2019 10:27:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727865AbfGTK1M (ORCPT
+        id S1727882AbfGTK1Q (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 20 Jul 2019 06:27:12 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:59542 "EHLO
+        Sat, 20 Jul 2019 06:27:16 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:59550 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727851AbfGTK1M (ORCPT
+        with ESMTP id S1727851AbfGTK1Q (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 20 Jul 2019 06:27:12 -0400
+        Sat, 20 Jul 2019 06:27:16 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1homZM-0000Hj-S1; Sat, 20 Jul 2019 13:26:28 +0300
+        id 1homZD-0000Hj-2O; Sat, 20 Jul 2019 13:26:16 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org,
-        Gregory Greenman <gregory.greenman@intel.com>,
+        Colin Ian King <colin.king@canonical.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date:   Sat, 20 Jul 2019 13:25:43 +0300
-Message-Id: <20190720102545.5952-15-luca@coelho.fi>
+Date:   Sat, 20 Jul 2019 13:25:39 +0300
+Message-Id: <20190720102545.5952-11-luca@coelho.fi>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190720102545.5952-1-luca@coelho.fi>
 References: <20190720102545.5952-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 14/16] iwlwifi: mvm: fix possible out-of-bounds read when accessing lq_info
+Subject: [PATCH 10/16] iwlwifi: mvm: fix comparison of u32 variable with less than zero
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Gregory Greenman <gregory.greenman@intel.com>
+From: Colin Ian King <colin.king@canonical.com>
 
-lq_info is an arary of size 2, active_tbl index is u8.
-When accessing lq_info[1 - active_tbl], theoretically it's possible
-that the access will be made to a negative index value.
+The comparison of the u32 variable wgds_tbl_idx with less than zero is
+always going to be false because it is unsigned.  Fix this by making
+wgds_tbl_idx a plain signed int.
 
-Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+Addresses-Coverity: ("Unsigned compared against 0")
+Fixes: 4fd445a2c855 ("iwlwifi: mvm: Add log information about SAR status")
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c | 28 +++++++++++++++------
- 1 file changed, 20 insertions(+), 8 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/nvm.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-index 3fa50b1955bb..d3f04acfbacb 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-@@ -1352,6 +1352,18 @@ static void rs_set_expected_tpt_table(struct iwl_lq_sta *lq_sta,
- 	tbl->expected_tpt = rs_get_expected_tpt_table(lq_sta, column, rate->bw);
- }
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
+index 719f793b3487..a9bb43a2f27b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
+@@ -620,7 +620,7 @@ void iwl_mvm_rx_chub_update_mcc(struct iwl_mvm *mvm,
+ 	enum iwl_mcc_source src;
+ 	char mcc[3];
+ 	struct ieee80211_regdomain *regd;
+-	u32 wgds_tbl_idx;
++	int wgds_tbl_idx;
  
-+/* rs uses two tables, one is active and the second is for searching better
-+ * configuration. This function, according to the index of the currently
-+ * active table returns the search table, which is located at the
-+ * index complementary to 1 according to the active table (active = 1,
-+ * search = 0 or active = 0, search = 1).
-+ * Since lq_info is an arary of size 2, make sure index cannot be out of bounds.
-+ */
-+static inline u8 rs_search_tbl(u8 active_tbl)
-+{
-+	return (active_tbl ^ 1) & 1;
-+}
-+
- static s32 rs_get_best_rate(struct iwl_mvm *mvm,
- 			    struct iwl_lq_sta *lq_sta,
- 			    struct iwl_scale_tbl_info *tbl,	/* "search" */
-@@ -1699,9 +1711,9 @@ static int rs_switch_to_column(struct iwl_mvm *mvm,
- 			       struct ieee80211_sta *sta,
- 			       enum rs_column col_id)
- {
--	struct iwl_scale_tbl_info *tbl = &(lq_sta->lq_info[lq_sta->active_tbl]);
-+	struct iwl_scale_tbl_info *tbl = &lq_sta->lq_info[lq_sta->active_tbl];
- 	struct iwl_scale_tbl_info *search_tbl =
--				&(lq_sta->lq_info[(1 - lq_sta->active_tbl)]);
-+		&lq_sta->lq_info[rs_search_tbl(lq_sta->active_tbl)];
- 	struct rs_rate *rate = &search_tbl->rate;
- 	const struct rs_tx_column *column = &rs_tx_columns[col_id];
- 	const struct rs_tx_column *curr_column = &rs_tx_columns[tbl->column];
-@@ -2109,7 +2121,7 @@ static void rs_rate_scale_perform(struct iwl_mvm *mvm,
- 	if (!lq_sta->search_better_tbl)
- 		active_tbl = lq_sta->active_tbl;
- 	else
--		active_tbl = 1 - lq_sta->active_tbl;
-+		active_tbl = rs_search_tbl(lq_sta->active_tbl);
- 
- 	tbl = &(lq_sta->lq_info[active_tbl]);
- 	rate = &tbl->rate;
-@@ -2333,7 +2345,7 @@ static void rs_rate_scale_perform(struct iwl_mvm *mvm,
- 		/* If new "search" mode was selected, set up in uCode table */
- 		if (lq_sta->search_better_tbl) {
- 			/* Access the "search" table, clear its history. */
--			tbl = &(lq_sta->lq_info[(1 - lq_sta->active_tbl)]);
-+			tbl = &lq_sta->lq_info[rs_search_tbl(lq_sta->active_tbl)];
- 			rs_rate_scale_clear_tbl_windows(mvm, tbl);
- 
- 			/* Use new "search" start rate */
-@@ -2676,7 +2688,7 @@ static void rs_initialize_lq(struct iwl_mvm *mvm,
- 	if (!lq_sta->search_better_tbl)
- 		active_tbl = lq_sta->active_tbl;
- 	else
--		active_tbl = 1 - lq_sta->active_tbl;
-+		active_tbl = rs_search_tbl(lq_sta->active_tbl);
- 
- 	tbl = &(lq_sta->lq_info[active_tbl]);
- 	rate = &tbl->rate;
-@@ -3172,9 +3184,9 @@ static void __iwl_mvm_rs_tx_status(struct iwl_mvm *mvm,
- 
- 	if (!lq_sta->search_better_tbl) {
- 		curr_tbl = &lq_sta->lq_info[lq_sta->active_tbl];
--		other_tbl = &lq_sta->lq_info[1 - lq_sta->active_tbl];
-+		other_tbl = &lq_sta->lq_info[rs_search_tbl(lq_sta->active_tbl)];
- 	} else {
--		curr_tbl = &lq_sta->lq_info[1 - lq_sta->active_tbl];
-+		curr_tbl = &lq_sta->lq_info[rs_search_tbl(lq_sta->active_tbl)];
- 		other_tbl = &lq_sta->lq_info[lq_sta->active_tbl];
- 	}
- 
-@@ -3183,7 +3195,7 @@ static void __iwl_mvm_rs_tx_status(struct iwl_mvm *mvm,
- 			       "Neither active nor search matches tx rate\n");
- 		tmp_tbl = &lq_sta->lq_info[lq_sta->active_tbl];
- 		rs_dump_rate(mvm, &tmp_tbl->rate, "ACTIVE");
--		tmp_tbl = &lq_sta->lq_info[1 - lq_sta->active_tbl];
-+		tmp_tbl = &lq_sta->lq_info[rs_search_tbl(lq_sta->active_tbl)];
- 		rs_dump_rate(mvm, &tmp_tbl->rate, "SEARCH");
- 		rs_dump_rate(mvm, &lq_rate, "ACTUAL");
+ 	lockdep_assert_held(&mvm->mutex);
  
 -- 
 2.20.1
