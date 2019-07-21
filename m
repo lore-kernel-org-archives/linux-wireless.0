@@ -2,85 +2,90 @@ Return-Path: <SRS0=HArj=VS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F071C76188
-	for <linux-wireless@archiver.kernel.org>; Sun, 21 Jul 2019 13:52:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F121AC76191
+	for <linux-wireless@archiver.kernel.org>; Sun, 21 Jul 2019 16:43:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 25CFB20828
-	for <linux-wireless@archiver.kernel.org>; Sun, 21 Jul 2019 13:52:46 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="qiIEbAZj"
+	by mail.kernel.org (Postfix) with ESMTP id CB7952083B
+	for <linux-wireless@archiver.kernel.org>; Sun, 21 Jul 2019 16:43:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726405AbfGUNwp (ORCPT
+        id S1726754AbfGUQnv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 21 Jul 2019 09:52:45 -0400
-Received: from mail-io1-f44.google.com ([209.85.166.44]:46720 "EHLO
-        mail-io1-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726290AbfGUNwp (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 21 Jul 2019 09:52:45 -0400
-Received: by mail-io1-f44.google.com with SMTP id i10so68152079iol.13
-        for <linux-wireless@vger.kernel.org>; Sun, 21 Jul 2019 06:52:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to;
-        bh=oSsPXjU4E+7kroOz7eAl9Yi09u3qPnsCN+/HkaUoSjw=;
-        b=qiIEbAZjaOV1bi9IT0zKmkblfdtTZmf6nPW9cb0sXklWiKCJYZIm6vT92Hp0wqlqXC
-         mWk0qGU+zxxFrSfmYC/VqF+7RgVP7Tf3CJVLCMB/HR1GXMHHH0i4s8x1zz1T2BnmfGUs
-         TgD+PgX21S2SyBGHXoLPA8khJGqtmZvWIhdM3T5+I07lcBx+q7tAceEfA3t7oJRmJv1i
-         khgJhA8iFDXitJ87lCC7ZJV1P24FYBwGCRoBV5xcNUhkb7eYyJ8yd1vd2eENujoegkpe
-         UzP+qk5a5LSzdHzSrCql+/ebhSBgj6Mc77D6Gf13kQ0d0wnmy3yoWvdedV9B3RZdLbxE
-         4Zrw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to;
-        bh=oSsPXjU4E+7kroOz7eAl9Yi09u3qPnsCN+/HkaUoSjw=;
-        b=tMGu2CoG2XBhdzGKo1l0julEL+uZCSv5u/QnYPIcOgFr3VK7FdRX0mPvnhgrKaP7e/
-         jdkg3Nr4m23yWf49fHDkZLJfCJpCw+z/zxMMxPpySDzpHxQwjtn7JvwmFGSFGlLVKZhw
-         kTZgtHmVSic/M5wotLtlXcrrODTi9ujvTG6C0VAGI/MJ3s5vZ+Jlmsuw+qmFSa5AMzoG
-         yB1N0cTfX/09gYZSgWgdU7wDSg/nk5O8bjC5e5vwwGWCcJ6EFetWBmPBaDTmUkQ+mPLY
-         mOw90XzFObm4+gNtIX+P+dd7CQ90O76JnDz0OTPU+N1+tDQk9KQbRdWS4BSWr1HoUhWy
-         yRqA==
-X-Gm-Message-State: APjAAAVkilfcIj/sko6PeMvzy3speYFAG6sTMIy/8UcQ0HvODazB0zj0
-        dYkKmp4rtz7NxLtPzBKdondLKETRgMeILzg+DM+e5ghM
-X-Google-Smtp-Source: APXvYqxoRTl8GNFUL2ib9UazTIaszPrP98sFwAysjOeVMyHokqrf4Kztwxrnb00sByS0DOa+EeIapU2VKVuOGkL4kCo=
-X-Received: by 2002:a6b:c38b:: with SMTP id t133mr32390574iof.162.1563717163970;
- Sun, 21 Jul 2019 06:52:43 -0700 (PDT)
-MIME-Version: 1.0
-References: <CAKfDRXhVQvJYAiacyMx0sGqrh6L7KR606FaBdh4nhznsKY0TMg@mail.gmail.com>
-In-Reply-To: <CAKfDRXhVQvJYAiacyMx0sGqrh6L7KR606FaBdh4nhznsKY0TMg@mail.gmail.com>
-From:   Kristian Evensen <kristian.evensen@gmail.com>
-Date:   Sun, 21 Jul 2019 15:52:32 +0200
-Message-ID: <CAKfDRXhTEAaEjyqMe3qzjJi41SK_N_MDsaDt=hRH+CzChJss=A@mail.gmail.com>
-Subject: Re: Problems loading ath9k (ar93xx) calibration data
-To:     linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+        Sun, 21 Jul 2019 12:43:51 -0400
+Received: from mx2.suse.de ([195.135.220.15]:35914 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726323AbfGUQnv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 21 Jul 2019 12:43:51 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx1.suse.de (Postfix) with ESMTP id E66ADAD8A;
+        Sun, 21 Jul 2019 16:43:49 +0000 (UTC)
+Date:   Sun, 21 Jul 2019 18:43:49 +0200
+Message-ID: <s5hmuh7xrqy.wl-tiwai@suse.de>
+From:   Takashi Iwai <tiwai@suse.de>
+To:     Luca Coelho <luca@coelho.fi>
+Cc:     dor.shaish@intel.com, Josh Boyer <jwboyer@kernel.org>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: Regression with the latest iwlwifi-9260-*-46.ucode
+In-Reply-To: <b225d043d8581e0fec68cb63f7433161868293f3.camel@coelho.fi>
+References: <s5hr26m9gvc.wl-tiwai@suse.de>
+        <280dad08ba9864755c3c45ed3ce26d602fe18a49.camel@intel.com>
+        <s5ho91pzyml.wl-tiwai@suse.de>
+        <s5hwogcxwt4.wl-tiwai@suse.de>
+        <b225d043d8581e0fec68cb63f7433161868293f3.camel@coelho.fi>
+User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI/1.14.6 (Maruoka)
+ FLIM/1.14.9 (=?UTF-8?B?R29qxY0=?=) APEL/10.8 Emacs/25.3
+ (x86_64-suse-linux-gnu) MULE/6.0 (HANACHIRUSATO)
+MIME-Version: 1.0 (generated by SEMI 1.14.6 - "Maruoka")
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello again,
+On Sat, 20 Jul 2019 22:49:33 +0200,
+Luca Coelho wrote:
+> 
+> On Sat, 2019-07-20 at 22:42 +0200, Takashi Iwai wrote:
+> > On Fri, 19 Jul 2019 20:07:46 +0200,
+> > Takashi Iwai wrote:
+> > > On Fri, 19 Jul 2019 18:36:53 +0200,
+> > > Luciano Coelho wrote:
+> > > > Adding Dor.
+> > > > 
+> > > > Hi Takashi,
+> > > > 
+> > > > Do you have full logs of the crash? We can't see much from the log
+> > > > snippet pasted in the bug report.
+> > > 
+> > > OK, I'll ask reporters.  If you have a SUSE/openSUSE bugzilla account,
+> > > feel free to join there.
+> > 
+> > FYI, the dmesg's have been uploaded to the same bugzilla entry:
+> >   https://bugzilla.opensuse.org/show_bug.cgi?id=1142128
+> > 
+> 
+> Thanks!
+> 
+> BTW, I pushed new firmwares to our firmware tree in git.kernel.org
+> today.  This is the patch:
+> 
+> https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/linux-firmware.git/commit/?id=b5f09bb4f816abace0227d0f4e749859364cef6b
+> 
+> It would be great if you can try it out and let us know whether the problem is gone or not.
 
-On Sun, Jul 21, 2019 at 3:10 PM Kristian Evensen
-<kristian.evensen@gmail.com> wrote:
-> Considering that the next byte has the value 0x1, I suspect the issue
-> might be related to endianess. However, I haven't found a way to
-> trigger an endianess-conversion when the calibration data is read for
-> file. Is there something I am missing or is this not supported?
->
-> Could endianess be an explanation for the error I am seeing, or are
-> there other things in the calibration data the looks like it could
-> cause problems as well?
+I created a test package and asked for testing.
+The test result seems negative, showing the same error,
+unfortunately.
 
-I took a second look at the ath9k-driver and see that 0x1 is the value
-of AR5416_OPFLAGS_11A, which sets the CAP_5GHz flag. My card is only
-2.4 GHz, so then I guess the endianess-theory was wrong.
+The dmesg was uploaded on the bugzilla entry.
 
-BR,
-Kristian
+
+HTH,
+
+Takashi
