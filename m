@@ -2,262 +2,163 @@ Return-Path: <SRS0=rhGe=VT=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CED5C76190
-	for <linux-wireless@archiver.kernel.org>; Mon, 22 Jul 2019 19:41:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EFEEC7618F
+	for <linux-wireless@archiver.kernel.org>; Mon, 22 Jul 2019 21:39:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D1D79216F4
-	for <linux-wireless@archiver.kernel.org>; Mon, 22 Jul 2019 19:41:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3261921951
+	for <linux-wireless@archiver.kernel.org>; Mon, 22 Jul 2019 21:39:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="AfWp26av"
+	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="qKRMh7Gw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732300AbfGVTlu (ORCPT
+        id S1729624AbfGVVjB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 22 Jul 2019 15:41:50 -0400
-Received: from mail-pf1-f196.google.com ([209.85.210.196]:36672 "EHLO
-        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732243AbfGVTlb (ORCPT
+        Mon, 22 Jul 2019 17:39:01 -0400
+Received: from esa1.microchip.iphmx.com ([68.232.147.91]:60740 "EHLO
+        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729004AbfGVVjB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Jul 2019 15:41:31 -0400
-Received: by mail-pf1-f196.google.com with SMTP id r7so17866441pfl.3
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Jul 2019 12:41:30 -0700 (PDT)
+        Mon, 22 Jul 2019 17:39:01 -0400
+Received-SPF: Pass (esa1.microchip.iphmx.com: domain of
+  Adham.Abozaeid@microchip.com designates 198.175.253.82 as
+  permitted sender) identity=mailfrom;
+  client-ip=198.175.253.82; receiver=esa1.microchip.iphmx.com;
+  envelope-from="Adham.Abozaeid@microchip.com";
+  x-sender="Adham.Abozaeid@microchip.com";
+  x-conformance=spf_only; x-record-type="v=spf1";
+  x-record-text="v=spf1 mx a:ushub1.microchip.com
+  a:smtpout.microchip.com a:mx1.microchip.iphmx.com
+  a:mx2.microchip.iphmx.com include:servers.mcsv.net
+  include:mktomail.com include:spf.protection.outlook.com ~all"
+Received-SPF: None (esa1.microchip.iphmx.com: no sender
+  authenticity information available from domain of
+  postmaster@email.microchip.com) identity=helo;
+  client-ip=198.175.253.82; receiver=esa1.microchip.iphmx.com;
+  envelope-from="Adham.Abozaeid@microchip.com";
+  x-sender="postmaster@email.microchip.com";
+  x-conformance=spf_only
+Authentication-Results: esa1.microchip.iphmx.com; spf=Pass smtp.mailfrom=Adham.Abozaeid@microchip.com; spf=None smtp.helo=postmaster@email.microchip.com; dkim=pass (signature verified) header.i=@microchiptechnology.onmicrosoft.com; dmarc=pass (p=none dis=none) d=microchip.com
+IronPort-SDR: AshNzRQt9xbsmqL/iZfbVVMS1PjZ81/7ep2DFIrPx98EriHaKFV7Hf6B3mMVPE073PHvjj201C
+ uWS11gu4ph3vgKhgkAvSoOsTTpMINJ0CnLvvs9I0pPm/CgSVkT7ajqVS1Pxlt8nz1E1YWnZAIG
+ kSMg62LnNF6G7stONkmdG+tIpmnLMdbhQ/2nva7imjh3TPqekSRy1yfnrgQUpnzuqp5H0rxcCb
+ tMC9EgFEpJoh65h5ZMXIVuevL+KDkIFju2mxurRZzkbX3urGyTPD35mdraNTq/EJ0YCzzFFIWs
+ pos=
+X-IronPort-AV: E=Sophos;i="5.64,296,1559545200"; 
+   d="scan'208";a="43731034"
+Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
+  by esa1.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 22 Jul 2019 14:38:45 -0700
+Received: from chn-vm-ex03.mchp-main.com (10.10.87.152) by
+ chn-vm-ex04.mchp-main.com (10.10.87.151) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1713.5; Mon, 22 Jul 2019 14:38:45 -0700
+Received: from NAM01-BY2-obe.outbound.protection.outlook.com (10.10.215.89) by
+ email.microchip.com (10.10.87.152) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id 15.1.1713.5
+ via Frontend Transport; Mon, 22 Jul 2019 14:38:45 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=PSIIpdu14AEhkUz/we+mMzepx8PC6OT74YisJArPPJFnjCdAcONMewCS2a095MNrCW75F27dGZSTXxHKyMtGSw4yiaJs6QSkoVsW/yEHYe7Thnh6knbvjsTBc0QWu5sB+pySMIiUxJIxKmrcaIBwdQSWReowRpoAWwryyLMj3fnhQQlStlE+vd9EF0HHuFeM6tTcLw284/575GZwnBnHDw+A2xSlgKjCOtQOjkqgl8tNhAsa5a/6viS3gmiAajnQZAEpWgo/zsWBRi3QqABT+vCQVsocow9FmjVhcKPTKp0yONaZtzgIiinTNT3+MNakbRIWmqhVSHAXJSE2UXf9iA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=d1tUO7npM/ngqJDkVdiDx4exPQWtxTz4vaRPlYfwADQ=;
+ b=JcpRATy4PDzQ95wEmOJ9xqynFF1QAnZEY4cBG9Ea155zGU/6Amo0cES1KULMosqiWJe8XU7nLqC6EloMSMQYO+bK/oNoYjXeZcac9u37xvlOPqZr+rkElh3e7E/DsxbsU8GLmrYdflG7ThQLUcxKr94I+JVSDKHOcgInvNlAVj/JSieOLSdomo28B67ic9addCISvUzuibM74sJ0Oc+DtSBds14codgInFZXsEoFg/meezsNBZ52TmokMKwJh/spKyuae+Akp42OQFLDu9Ew/6K4O7gt+2q9zShKbpgyQYg4znChv0UYCyTe/u5nf1M3iRwRGbDAoaG2PMwM48SIgQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1;spf=pass
+ smtp.mailfrom=microchip.com;dmarc=pass action=none
+ header.from=microchip.com;dkim=pass header.d=microchip.com;arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=i2ydHyx146Gpo6F/4Mk5APlIfYtwAqU9vRc87LHJBOg=;
-        b=AfWp26av7d1R0GVQBZqmVDo36nl/ONdvumK8cBMcUztafl3YzMOQbj4/Ut6lsbwQYy
-         2IDNfw3efcHERFPIOzf68rMcvJlkJCPORgBDyZvs+wnOumbE/nmtn788576/X8Nxv7Ms
-         Q04HPAwn45lcvNsj0GEKx81i8tmNcG+fCQ1vI=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=i2ydHyx146Gpo6F/4Mk5APlIfYtwAqU9vRc87LHJBOg=;
-        b=j2Dv7s3RUZmISeW/bhKS24JwPMcvpfcRy3ZuMotdAB11N9FhueqDWMg7aMfXV+b7Nf
-         9oorLuOncRNsiUY+3fzU/xGCuwbPT/EgEIvHmlbGfSr+rwCxXKckvhujyDvQNOgCitB+
-         VIaKkazryTtcGoJfKjJsIgz/M+tax7y5wLCb867YCBPj+b3ktyoxyclG5gZpzBGf40OT
-         I4U8uAe2gpw6dhUJnG2wrLFZOHCv4/JIu0v+glKac++rDFFUx/xBFI32CpO+tvsMH/Un
-         xgdJZp7EfsZEGZBBI2lZluxx+0pezNFQJJoCnWm3XrpsPbD+wxqKEuZPpaLhlpOUMja4
-         35Ug==
-X-Gm-Message-State: APjAAAW0FcBocDAbIJ1NlCwVxN0nK6NuHjt3f03wqDTPoacKdWkEMGwC
-        FoieQqBGBEJRc53zZx3b3dSygg==
-X-Google-Smtp-Source: APXvYqxRbyCKEUMoA0Ph44+At0UA78EhAjWJ+Hp3Q5G6AQTNXv8xUqU98puubWwzR/JltKnz8oH/pQ==
-X-Received: by 2002:a63:1020:: with SMTP id f32mr43080141pgl.203.1563824490156;
-        Mon, 22 Jul 2019 12:41:30 -0700 (PDT)
-Received: from tictac2.mtv.corp.google.com ([2620:15c:202:1:24fa:e766:52c9:e3b2])
-        by smtp.gmail.com with ESMTPSA id z4sm29838803pgp.80.2019.07.22.12.41.29
-        (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
-        Mon, 22 Jul 2019 12:41:29 -0700 (PDT)
-From:   Douglas Anderson <dianders@chromium.org>
-To:     Ulf Hansson <ulf.hansson@linaro.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Adrian Hunter <adrian.hunter@intel.com>
-Cc:     Ganapathi Bhat <gbhat@marvell.com>, linux-wireless@vger.kernel.org,
-        Andreas Fenkart <afenkart@gmail.com>,
-        Brian Norris <briannorris@chromium.org>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        linux-rockchip@lists.infradead.org,
-        Wolfram Sang <wsa+renesas@sang-engineering.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        netdev@vger.kernel.org, Avri Altman <avri.altman@wdc.com>,
-        linux-mmc@vger.kernel.org, davem@davemloft.net,
-        Xinming Hu <huxinming820@gmail.com>,
-        Douglas Anderson <dianders@chromium.org>,
-        Matthias Kaehlcke <mka@chromium.org>,
-        linux-kernel@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-        Kate Stewart <kstewart@linuxfoundation.org>
-Subject: [PATCH v2 1/2] mmc: core: Add sdio_trigger_replug() API
-Date:   Mon, 22 Jul 2019 12:39:38 -0700
-Message-Id: <20190722193939.125578-2-dianders@chromium.org>
-X-Mailer: git-send-email 2.22.0.657.g960e92d24f-goog
-In-Reply-To: <20190722193939.125578-1-dianders@chromium.org>
-References: <20190722193939.125578-1-dianders@chromium.org>
+ d=microchiptechnology.onmicrosoft.com;
+ s=selector1-microchiptechnology-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=d1tUO7npM/ngqJDkVdiDx4exPQWtxTz4vaRPlYfwADQ=;
+ b=qKRMh7Gw3UA9uTzrVR8UgJuzPAZlgp1TdCZErEY/QrbgFxwlJtTINyBVuGvMNmtXDRMhOYnjVcokJfOk5OxravTgBfFuPF3nYOUwucPR3Hv38dBRc2OAf/luxgDxFhZDTWHoWmWijYg/JNICvVu9HaWaRQKcL2me91E3AXq9QWw=
+Received: from MWHPR11MB1373.namprd11.prod.outlook.com (10.169.234.141) by
+ MWHPR11MB1343.namprd11.prod.outlook.com (10.169.232.18) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2094.16; Mon, 22 Jul 2019 21:38:44 +0000
+Received: from MWHPR11MB1373.namprd11.prod.outlook.com
+ ([fe80::1912:9972:700:c536]) by MWHPR11MB1373.namprd11.prod.outlook.com
+ ([fe80::1912:9972:700:c536%3]) with mapi id 15.20.2094.013; Mon, 22 Jul 2019
+ 21:38:44 +0000
+From:   <Adham.Abozaeid@microchip.com>
+To:     <linux-wireless@vger.kernel.org>
+CC:     <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <johannes@sipsolutions.net>, <Ajay.Kathat@microchip.com>,
+        <Adham.Abozaeid@microchip.com>
+Subject: [PATCH v2] staging: wilc1000: flush the workqueue before deinit the
+ host
+Thread-Topic: [PATCH v2] staging: wilc1000: flush the workqueue before deinit
+ the host
+Thread-Index: AQHVQNXWR2TSOk1vvESnIFJvm2nxUg==
+Date:   Mon, 22 Jul 2019 21:38:44 +0000
+Message-ID: <20190722213837.21952-1-adham.abozaeid@microchip.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [198.175.253.81]
+x-clientproxiedby: BY5PR17CA0016.namprd17.prod.outlook.com
+ (2603:10b6:a03:1b8::29) To MWHPR11MB1373.namprd11.prod.outlook.com
+ (2603:10b6:300:25::13)
+x-ms-exchange-messagesentrepresentingtype: 1
+x-mailer: git-send-email 2.17.1
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 883c8593-cf41-46c6-eb2d-08d70eecf862
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600148)(711020)(4605104)(1401327)(2017052603328)(7193020);SRVR:MWHPR11MB1343;
+x-ms-traffictypediagnostic: MWHPR11MB1343:
+x-microsoft-antispam-prvs: <MWHPR11MB13439FE075363EC3C620A56C8DC40@MWHPR11MB1343.namprd11.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:1002;
+x-forefront-prvs: 01068D0A20
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(396003)(346002)(39860400002)(366004)(136003)(376002)(199004)(189003)(5640700003)(256004)(1076003)(6436002)(2501003)(476003)(2616005)(316002)(54906003)(4744005)(3846002)(386003)(14444005)(6116002)(52116002)(2906002)(6506007)(2351001)(5660300002)(25786009)(7736002)(6486002)(305945005)(68736007)(4326008)(50226002)(66066001)(53936002)(26005)(81156014)(81166006)(478600001)(107886003)(186003)(8936002)(6916009)(14454004)(102836004)(64756008)(66556008)(36756003)(486006)(66946007)(66446008)(66476007)(71190400001)(71200400001)(8676002)(99286004)(6512007)(86362001);DIR:OUT;SFP:1101;SCL:1;SRVR:MWHPR11MB1343;H:MWHPR11MB1373.namprd11.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+received-spf: None (protection.outlook.com: microchip.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam-message-info: MNXVBvJUS4TeT2V/XkZCZagDRs2Q3VN3FVJ7qfYNoUrqKWougxlXKGz+65TbrxRmEm5Gy7UkrK810qgeqlq758k/zjX4OjiRHWR8GP7lWtxjySR0d6gPPV8gJp8K/EeNDDAkaeMd+6/9Fcr3henW3hMUBGs3o4qyvXFsyZk0YO/n1FFcGXRjVv1qQHMeVWo0yw50rhqC9OXMD2P8phsxc0tKr7/1nglxmURZNGFCuFidERUplPGZeGSm0A1IO0GfHqbvsc0dBeeeoU3rldbnBBFAu/sb+ZSaQZcqoUCvPRy60dnksQ/lvFMzuOjtpqDvK8JNzKabmXVuCSIPrgvhVubYI28Dz+5gngJiuToRCu3xrYiQv0tlcyrYfz+WPjW+p6bBbXxzli5cNB7AWl0m8Yrv8+3uC3mW5rK2cbZI7qs=
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-MS-Exchange-CrossTenant-Network-Message-Id: 883c8593-cf41-46c6-eb2d-08d70eecf862
+X-MS-Exchange-CrossTenant-originalarrivaltime: 22 Jul 2019 21:38:44.0739
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: adham.abozaeid@microchip.com
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR11MB1343
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-When using Marvell WiFi SDIO cards, it is not uncommon for Linux WiFi
-driver to fully lose the communication channel to the firmware running
-on the card.  Presumably the firmware on the card has a bug or two in
-it and occasionally crashes.
+From: Adham Abozaeid <adham.abozaeid@microchip.com>
 
-The Marvell WiFi driver attempts to recover from this problem.
-Specifically the driver has the function mwifiex_sdio_card_reset()
-which is called when communcation problems are found.  That function
-attempts to reset the state of things by utilizing the mmc_hw_reset()
-function.
+Before deinitializing the host interface, the workqueue should be flushed
+to handle any pending deferred work
 
-The current solution is a bit complex because the Marvell WiFi driver
-needs to manually deinit and reinit the WiFi driver around the reset
-call.  This means it's going through a bunch of code paths that aren't
-normally tested.  However, complexity isn't our only problem.  The
-other (bigger) problem is that Marvell WiFi cards are often combo
-WiFi/Bluetooth cards and Bluetooth runs on a second SDIO func.  While
-the WiFi driver knows that it should re-init its own state around the
-mmc_hw_reset() call there is no good way to inform the Bluetooth
-driver.  That means that in Linux today when you reset the Marvell
-WiFi driver you lose all Bluetooth communication.  Doh!
-
-One way to fix the above problems is to leverage a more standard way
-to reset the Marvell WiFi card where we go through the same code paths
-as card unplug and the card plug.  In this patch we introduce a new
-API call for doing just that: sdio_trigger_replug().  This API call
-will trigger an unplug of the SDIO card followed by a plug of the
-card.  As part of this the card will be nicely reset.
-
-Signed-off-by: Douglas Anderson <dianders@chromium.org>
-Reviewed-by: Matthias Kaehlcke <mka@chromium.org>
+Signed-off-by: Adham Abozaeid <adham.abozaeid@microchip.com>
 ---
+changes in v2:
+ - Regenerated patch from branch's head
 
-Changes in v2:
-- s/routnine/routine (Brian Norris, Matthias Kaehlcke).
-- s/contining/containing (Matthias Kaehlcke).
-- Add Matthias Reviewed-by tag.
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 1 +
+ 1 file changed, 1 insertion(+)
 
- drivers/mmc/core/core.c       | 28 ++++++++++++++++++++++++++--
- drivers/mmc/core/sdio_io.c    | 20 ++++++++++++++++++++
- include/linux/mmc/host.h      | 15 ++++++++++++++-
- include/linux/mmc/sdio_func.h |  2 ++
- 4 files changed, 62 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/mmc/core/core.c b/drivers/mmc/core/core.c
-index 221127324709..5da365b1fdb4 100644
---- a/drivers/mmc/core/core.c
-+++ b/drivers/mmc/core/core.c
-@@ -2161,6 +2161,12 @@ int mmc_sw_reset(struct mmc_host *host)
- }
- EXPORT_SYMBOL(mmc_sw_reset);
- 
-+void mmc_trigger_replug(struct mmc_host *host)
-+{
-+	host->trigger_replug_state = MMC_REPLUG_STATE_UNPLUG;
-+	_mmc_detect_change(host, 0, false);
-+}
-+
- static int mmc_rescan_try_freq(struct mmc_host *host, unsigned freq)
- {
- 	host->f_init = freq;
-@@ -2214,6 +2220,11 @@ int _mmc_detect_card_removed(struct mmc_host *host)
- 	if (!host->card || mmc_card_removed(host->card))
- 		return 1;
- 
-+	if (host->trigger_replug_state == MMC_REPLUG_STATE_UNPLUG) {
-+		mmc_card_set_removed(host->card);
-+		return 1;
-+	}
-+
- 	ret = host->bus_ops->alive(host);
- 
- 	/*
-@@ -2326,8 +2337,21 @@ void mmc_rescan(struct work_struct *work)
- 	mmc_bus_put(host);
- 
- 	mmc_claim_host(host);
--	if (mmc_card_is_removable(host) && host->ops->get_cd &&
--			host->ops->get_cd(host) == 0) {
-+
-+	/*
-+	 * Move through the state machine if we're triggering an unplug
-+	 * followed by a re-plug.
-+	 */
-+	if (host->trigger_replug_state == MMC_REPLUG_STATE_UNPLUG) {
-+		host->trigger_replug_state = MMC_REPLUG_STATE_PLUG;
-+		_mmc_detect_change(host, 0, false);
-+	} else if (host->trigger_replug_state == MMC_REPLUG_STATE_PLUG) {
-+		host->trigger_replug_state = MMC_REPLUG_STATE_NONE;
-+	}
-+
-+	if (host->trigger_replug_state == MMC_REPLUG_STATE_PLUG ||
-+	    (mmc_card_is_removable(host) && host->ops->get_cd &&
-+			host->ops->get_cd(host) == 0)) {
- 		mmc_power_off(host);
- 		mmc_release_host(host);
- 		goto out;
-diff --git a/drivers/mmc/core/sdio_io.c b/drivers/mmc/core/sdio_io.c
-index 2ba00acf64e6..9b96267ac855 100644
---- a/drivers/mmc/core/sdio_io.c
-+++ b/drivers/mmc/core/sdio_io.c
-@@ -811,3 +811,23 @@ void sdio_retune_release(struct sdio_func *func)
- 	mmc_retune_release(func->card->host);
- }
- EXPORT_SYMBOL_GPL(sdio_retune_release);
-+
-+/**
-+ *	sdio_trigger_replug - trigger an "unplug" + "plug" of the card
-+ *	@func: SDIO function attached to host
-+ *
-+ *	When you call this function we will schedule events that will
-+ *	make it look like the card containing the given SDIO func was
-+ *	unplugged and then re-plugged-in.  This is as close as possible
-+ *	to a full reset of the card that can be achieved.
-+ *
-+ *	NOTE: routine will temporarily make the card look as if it is
-+ *	removable even if it is marked non-removable.
-+ *
-+ *	This function should be called while the host is claimed.
-+ */
-+void sdio_trigger_replug(struct sdio_func *func)
-+{
-+	mmc_trigger_replug(func->card->host);
-+}
-+EXPORT_SYMBOL(sdio_trigger_replug);
-diff --git a/include/linux/mmc/host.h b/include/linux/mmc/host.h
-index 4a351cb7f20f..40f21b3e6aaf 100644
---- a/include/linux/mmc/host.h
-+++ b/include/linux/mmc/host.h
-@@ -407,6 +407,12 @@ struct mmc_host {
- 
- 	bool			trigger_card_event; /* card_event necessary */
- 
-+	/* state machine for triggering unplug/replug */
-+#define MMC_REPLUG_STATE_NONE	0		/* not doing unplug/replug */
-+#define MMC_REPLUG_STATE_UNPLUG	1		/* do unplug next */
-+#define MMC_REPLUG_STATE_PLUG	2		/* do plug next */
-+	u8			trigger_replug_state;
-+
- 	struct mmc_card		*card;		/* device attached to this host */
- 
- 	wait_queue_head_t	wq;
-@@ -527,7 +533,12 @@ int mmc_regulator_get_supply(struct mmc_host *mmc);
- 
- static inline int mmc_card_is_removable(struct mmc_host *host)
- {
--	return !(host->caps & MMC_CAP_NONREMOVABLE);
-+	/*
-+	 * A non-removable card briefly looks removable if code has forced
-+	 * a re-plug of the card.
-+	 */
-+	return host->trigger_replug_state != MMC_REPLUG_STATE_NONE ||
-+		!(host->caps & MMC_CAP_NONREMOVABLE);
- }
- 
- static inline int mmc_card_keep_power(struct mmc_host *host)
-@@ -580,4 +591,6 @@ static inline enum dma_data_direction mmc_get_dma_dir(struct mmc_data *data)
- int mmc_send_tuning(struct mmc_host *host, u32 opcode, int *cmd_error);
- int mmc_abort_tuning(struct mmc_host *host, u32 opcode);
- 
-+void mmc_trigger_replug(struct mmc_host *host);
-+
- #endif /* LINUX_MMC_HOST_H */
-diff --git a/include/linux/mmc/sdio_func.h b/include/linux/mmc/sdio_func.h
-index 5a177f7a83c3..0d6c73768ae3 100644
---- a/include/linux/mmc/sdio_func.h
-+++ b/include/linux/mmc/sdio_func.h
-@@ -173,4 +173,6 @@ extern void sdio_retune_crc_enable(struct sdio_func *func);
- extern void sdio_retune_hold_now(struct sdio_func *func);
- extern void sdio_retune_release(struct sdio_func *func);
- 
-+extern void sdio_trigger_replug(struct sdio_func *func);
-+
- #endif /* LINUX_MMC_SDIO_FUNC_H */
--- 
-2.22.0.657.g960e92d24f-goog
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/st=
+aging/wilc1000/wilc_wfi_cfgoperations.c
+index b0daa1136663..b0a3e7b04f61 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1795,6 +1795,7 @@ void wilc_deinit_host_int(struct net_device *net)
+=20
+ 	priv->p2p_listen_state =3D false;
+=20
++	flush_workqueue(vif->wilc->hif_workqueue);
+ 	mutex_destroy(&priv->scan_req_lock);
+ 	ret =3D wilc_deinit(vif);
+=20
+--=20
+2.17.1
 
