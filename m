@@ -2,749 +2,230 @@ Return-Path: <SRS0=rhGe=VT=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95363C76196
-	for <linux-wireless@archiver.kernel.org>; Mon, 22 Jul 2019 05:31:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70963C76188
+	for <linux-wireless@archiver.kernel.org>; Mon, 22 Jul 2019 07:15:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 670772229A
-	for <linux-wireless@archiver.kernel.org>; Mon, 22 Jul 2019 05:31:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3D1C422305
+	for <linux-wireless@archiver.kernel.org>; Mon, 22 Jul 2019 07:15:03 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="QGIhqHyf";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="b9jZaUdQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727401AbfGVFbz (ORCPT
+        id S1727093AbfGVHPC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 22 Jul 2019 01:31:55 -0400
-Received: from mailgw02.mediatek.com ([210.61.82.184]:57949 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727237AbfGVFbz (ORCPT
+        Mon, 22 Jul 2019 03:15:02 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:43748 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725773AbfGVHPC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Jul 2019 01:31:55 -0400
-X-UUID: ef9c4800ea0040609c309f274ea46eb1-20190722
-X-UUID: ef9c4800ea0040609c309f274ea46eb1-20190722
-Received: from mtkcas09.mediatek.inc [(172.21.101.178)] by mailgw02.mediatek.com
-        (envelope-from <ryder.lee@mediatek.com>)
-        (mhqrelay.mediatek.com ESMTP with TLS)
-        with ESMTP id 722400565; Mon, 22 Jul 2019 13:31:25 +0800
-Received: from mtkcas08.mediatek.inc (172.21.101.126) by
- mtkmbs08n2.mediatek.inc (172.21.101.56) with Microsoft SMTP Server (TLS) id
- 15.0.1395.4; Mon, 22 Jul 2019 13:31:19 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas08.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Mon, 22 Jul 2019 13:31:19 +0800
-From:   Ryder Lee <ryder.lee@mediatek.com>
-To:     Felix Fietkau <nbd@nbd.name>,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-CC:     Roy Luo <royluo@google.com>, YF Luo <yf.luo@mediatek.com>,
-        Yiwei Chung <yiwei.chung@mediatek.com>,
-        Sean Wang <sean.wang@mediatek.com>,
-        <linux-wireless@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>,
-        Ryder Lee <ryder.lee@mediatek.com>
-Subject: [PATCH 4/5] mt76: mt76x02: fix some checkpatch warnings
-Date:   Mon, 22 Jul 2019 13:31:14 +0800
-Message-ID: <43e7130b3da3cd4aed1c46df8b5564822c8bea68.1563772403.git.ryder.lee@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-In-Reply-To: <cover.1563772403.git.ryder.lee@mediatek.com>
-References: <cover.1563772403.git.ryder.lee@mediatek.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-X-TM-SNTS-SMTP: 364E517CC44E7BFE10874A6C17D61FDC403084EEBF70E28CCCC54AF1E64D6A3A2000:8
-X-MTK:  N
+        Mon, 22 Jul 2019 03:15:02 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 5497861836; Mon, 22 Jul 2019 07:15:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1563779701;
+        bh=rXOdUU9KwFgURfRh7k6IsX4UFobBslPtavuIn9XQzFw=;
+        h=From:To:Cc:Subject:Date:From;
+        b=QGIhqHyfdkIzPaEx6hnGngusZgo/Co/1ypTLOVEWg3GfC73VsfCG/yQkjDPsGoCHx
+         Aojvul4ThU0Af9P8Fts+6o2MnnksNx/TMy6y8ZNjQ+P0koGY3bkCV5Gbjq108JSs3/
+         bLhWgGdJNs3DQ28cvKFo7plhhsgw+/Fu30krna50=
+Received: from vnaralas-linux.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: mpubbise@codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 5672A61795;
+        Mon, 22 Jul 2019 07:14:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1563779699;
+        bh=rXOdUU9KwFgURfRh7k6IsX4UFobBslPtavuIn9XQzFw=;
+        h=From:To:Cc:Subject:Date:From;
+        b=b9jZaUdQQFqVeUo+51tIpFiWssHA7Of5324VPLnlwcJ3AdFPcStG7hwlqZEZVhYMn
+         zNG4sa4AG4ZIwxcr++7+UByQER66gszPI8LFRLzx5nhYjcMfY4Ebe+kRtsep479Fqu
+         4Rur9oJ/sOhNp6LCZ185zvNUmjSWbFEj3YG89QOo=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 5672A61795
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=mpubbise@codeaurora.org
+From:   Manikanta Pubbisetty <mpubbise@codeaurora.org>
+To:     johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org,
+        Manikanta Pubbisetty <mpubbise@codeaurora.org>
+Subject: [PATCH] {nl,mac}80211: fix interface combinations on crypto controlled devices
+Date:   Mon, 22 Jul 2019 12:44:50 +0530
+Message-Id: <1563779690-9716-1-git-send-email-mpubbise@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This fixes the following checkpatch.pl warning:
-ERROR: code indent should use tabs where possible
-CHECK: Alignment should match open parenthesis
-CHECK: No space is necessary after a cast
-CHECK: Please don't use multiple blank lines
-CHECK: Avoid precedence issues in macro
-WARNING: Statements should start on a tabstop
-WARNING: Unnecessary space before function pointer arguments
+Commit 33d915d9e8ce ("{nl,mac}80211: allow 4addr AP operation on
+crypto controlled devices") has introduced a change which allows
+4addr operation on crypto controlled devices (ex: ath10k). This
+change has inadvertently impacted the interface combinations logic
+on such devices.
 
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+General rule is that software interfaces like AP/VLAN should not be
+listed under supported interface combinations and should not be
+considered during validation of these combinations; because of the
+aforementioned change, AP/VLAN interfaces(if present) will be checked
+against interfaces supported by the device and blocks valid interface
+combinations.
+
+Consider a case where an AP and AP/VLAN are up and running; when a
+second AP device is brought up on the same physical device, this AP
+will be checked against the AP/VLAN interface (which will not be
+part of supported interface combinations of the device) and blocks
+second AP to come up.
+
+Adding a new API cfg80211_iftype_allowed() to fix the problem, this
+API works for all devices with/without SW crypto control.
+
+Signed-off-by: Manikanta Pubbisetty <mpubbise@codeaurora.org>
+Fixes: 33d915d9e8ce ("{nl,mac}80211: allow 4addr AP operation on crypto controlled devices")
 ---
- .../wireless/mediatek/mt76/mt76x0/mt76x0.h    |  2 +-
- .../net/wireless/mediatek/mt76/mt76x0/phy.c   | 23 ++++++++-------
- .../net/wireless/mediatek/mt76/mt76x0/phy.h   | 10 +++----
- .../net/wireless/mediatek/mt76/mt76x0/usb.c   |  6 ++--
- drivers/net/wireless/mediatek/mt76/mt76x02.h  | 25 +++++++++--------
- .../wireless/mediatek/mt76/mt76x02_beacon.c   |  4 +--
- .../net/wireless/mediatek/mt76/mt76x02_mac.c  | 16 +++++------
- .../net/wireless/mediatek/mt76/mt76x02_mcu.c  | 13 +++++----
- .../net/wireless/mediatek/mt76/mt76x02_mmio.c | 11 ++++----
- .../net/wireless/mediatek/mt76/mt76x02_phy.c  |  3 +-
- .../net/wireless/mediatek/mt76/mt76x02_regs.h | 28 +++++++++----------
- .../wireless/mediatek/mt76/mt76x02_trace.h    |  3 +-
- .../wireless/mediatek/mt76/mt76x02_usb_core.c |  2 +-
- .../net/wireless/mediatek/mt76/mt76x02_util.c | 20 ++++++-------
- .../wireless/mediatek/mt76/mt76x2/eeprom.c    | 10 ++++---
- .../net/wireless/mediatek/mt76/mt76x2/mcu.h   |  3 +-
- .../wireless/mediatek/mt76/mt76x2/pci_init.c  |  1 -
- .../wireless/mediatek/mt76/mt76x2/pci_mcu.c   |  4 +--
- .../net/wireless/mediatek/mt76/mt76x2/phy.c   |  3 +-
- 19 files changed, 99 insertions(+), 88 deletions(-)
+ include/net/cfg80211.h | 15 +++++++++++++++
+ net/mac80211/util.c    |  7 +++----
+ net/wireless/core.c    |  6 ++----
+ net/wireless/nl80211.c |  4 +---
+ net/wireless/util.c    | 27 +++++++++++++++++++++++++--
+ 5 files changed, 46 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h b/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
-index 97e47cd2d744..caa87f0c3cb8 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/mt76x0.h
-@@ -55,7 +55,7 @@ int mt76x0_config(struct ieee80211_hw *hw, u32 changed);
- void mt76x0_phy_init(struct mt76x02_dev *dev);
- int mt76x0_phy_wait_bbp_ready(struct mt76x02_dev *dev);
- int mt76x0_phy_set_channel(struct mt76x02_dev *dev,
--			    struct cfg80211_chan_def *chandef);
-+			   struct cfg80211_chan_def *chandef);
- void mt76x0_phy_set_txpower(struct mt76x02_dev *dev);
- void mt76x0_phy_calibrate(struct mt76x02_dev *dev, bool power_on);
- #endif
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
-index 1ecfc334ae79..bfcef33cd4c1 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
-@@ -109,7 +109,7 @@ mt76x0_rf_wr(struct mt76x02_dev *dev, u32 offset, u8 val)
- 		};
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 21c3e34..f312c2b 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -7320,6 +7320,21 @@ void cfg80211_pmsr_complete(struct wireless_dev *wdev,
+ 			    struct cfg80211_pmsr_request *req,
+ 			    gfp_t gfp);
  
- 		WARN_ON_ONCE(!test_bit(MT76_STATE_MCU_RUNNING,
--			     &dev->mt76.state));
-+				       &dev->mt76.state));
- 		return mt76_wr_rp(dev, MT_MCU_MEMMAP_RF, &pair, 1);
- 	} else {
- 		return mt76x0_rf_csr_wr(dev, offset, val);
-@@ -127,7 +127,7 @@ static int mt76x0_rf_rr(struct mt76x02_dev *dev, u32 offset)
- 		};
++/**
++ * cfg80211_iftype_allowed - check whether the interface can be allowed
++ * @wiphy: the wiphy
++ * @iftype: interface type
++ * @is_4addr: use_4addr flag, must be '0' when check_swif is '1'
++ * @check_swif: check iftype against software interfaces
++ *
++ * Check whether the interface is allowed to operate; additionally, this API
++ * can be used to check iftype against the software interfaces when
++ * check_swif is '1'.
++ */
++bool cfg80211_iftype_allowed(struct wiphy *wiphy, enum nl80211_iftype iftype,
++			     bool is_4addr, u8 check_swif);
++
++
+ /* Logging, debugging and troubleshooting/diagnostic helpers. */
  
- 		WARN_ON_ONCE(!test_bit(MT76_STATE_MCU_RUNNING,
--			     &dev->mt76.state));
-+				       &dev->mt76.state));
- 		ret = mt76_rd_rp(dev, MT_MCU_MEMMAP_RF, &pair, 1);
- 		val = pair.value;
- 	} else {
-@@ -230,7 +230,8 @@ mt76x0_phy_set_band(struct mt76x02_dev *dev, enum nl80211_band band)
- }
- 
- static void
--mt76x0_phy_set_chan_rf_params(struct mt76x02_dev *dev, u8 channel, u16 rf_bw_band)
-+mt76x0_phy_set_chan_rf_params(struct mt76x02_dev *dev, u8 channel,
-+			      u16 rf_bw_band)
- {
- 	const struct mt76x0_freq_item *freq_item;
- 	u16 rf_band = rf_bw_band & 0xff00;
-@@ -252,9 +253,9 @@ mt76x0_phy_set_chan_rf_params(struct mt76x02_dev *dev, u8 channel, u16 rf_bw_ban
- 			rf_band = mt76x0_frequency_plan[i].band;
- 
- 			if (b_sdm)
--				freq_item = &(mt76x0_sdm_frequency_plan[i]);
-+				freq_item = &mt76x0_sdm_frequency_plan[i];
- 			else
--				freq_item = &(mt76x0_frequency_plan[i]);
-+				freq_item = &mt76x0_frequency_plan[i];
- 
- 			mt76x0_rf_wr(dev, MT_RF(0, 37), freq_item->pllR37);
- 			mt76x0_rf_wr(dev, MT_RF(0, 36), freq_item->pllR36);
-@@ -360,10 +361,12 @@ mt76x0_phy_set_chan_rf_params(struct mt76x02_dev *dev, u8 channel, u16 rf_bw_ban
- 	band = (rf_band & RF_G_BAND) ? NL80211_BAND_2GHZ : NL80211_BAND_5GHZ;
- 	if (mt76x02_ext_pa_enabled(dev, band)) {
- 		/*
--			MT_RF_MISC (offset: 0x0518)
--			[2]1'b1: enable external A band PA, 1'b0: disable external A band PA
--			[3]1'b1: enable external G band PA, 1'b0: disable external G band PA
--		*/
-+		 * MT_RF_MISC (offset: 0x0518)
-+		 * [2]1'b1: enable external A band PA,
-+		 *    1'b0: disable external A band PA
-+		 * [3]1'b1: enable external G band PA,
-+		 *    1'b0: disable external G band PA
-+		 */
- 		if (rf_band & RF_A_BAND)
- 			mt76_set(dev, MT_RF_MISC, BIT(2));
- 		else
-@@ -490,7 +493,7 @@ mt76x0_phy_bbp_set_bw(struct mt76x02_dev *dev, enum nl80211_chan_width width)
- 	case NL80211_CHAN_WIDTH_160:
- 	case NL80211_CHAN_WIDTH_5:
- 		/* TODO error */
--		return ;
-+		return;
+ /* wiphy_printk helpers, similar to dev_printk */
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 1b224fa..ad1e581 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -3796,9 +3796,7 @@ int ieee80211_check_combinations(struct ieee80211_sub_if_data *sdata,
  	}
  
- 	mt76x02_mcu_function_select(dev, BW_SETTING, bw);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.h b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.h
-index b4b2ca747699..441d6559d4fd 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.h
-@@ -6,8 +6,8 @@
- #ifndef _MT76X0_PHY_H_
- #define _MT76X0_PHY_H_
+ 	/* Always allow software iftypes */
+-	if (local->hw.wiphy->software_iftypes & BIT(iftype) ||
+-	    (iftype == NL80211_IFTYPE_AP_VLAN &&
+-	     local->hw.wiphy->flags & WIPHY_FLAG_4ADDR_AP)) {
++	if (cfg80211_iftype_allowed(local->hw.wiphy, iftype, 0, 1)) {
+ 		if (radar_detect)
+ 			return -EINVAL;
+ 		return 0;
+@@ -3833,7 +3831,8 @@ int ieee80211_check_combinations(struct ieee80211_sub_if_data *sdata,
  
--#define RF_G_BAND 	0x0100
--#define RF_A_BAND 	0x0200
-+#define RF_G_BAND	0x0100
-+#define RF_A_BAND	0x0200
- #define RF_A_BAND_LB	0x0400
- #define RF_A_BAND_MB	0x0800
- #define RF_A_BAND_HB	0x1000
-@@ -18,9 +18,9 @@
- #define RF_BW_10        4
- #define RF_BW_80        8
+ 		if (sdata_iter == sdata ||
+ 		    !ieee80211_sdata_running(sdata_iter) ||
+-		    local->hw.wiphy->software_iftypes & BIT(wdev_iter->iftype))
++		    cfg80211_iftype_allowed(local->hw.wiphy,
++					    wdev_iter->iftype, 0, 1))
+ 			continue;
  
--#define MT_RF(bank, reg) ((bank) << 16 | (reg))
--#define MT_RF_BANK(offset) (offset >> 16)
--#define MT_RF_REG(offset) (offset & 0xff)
-+#define MT_RF(bank, reg)		((bank) << 16 | (reg))
-+#define MT_RF_BANK(offset)		((offset) >> 16)
-+#define MT_RF_REG(offset)		((offset) & 0xff)
+ 		params.iftype_num[wdev_iter->iftype]++;
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 45d9afc..32b3c71 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -1410,10 +1410,8 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 		}
+ 		break;
+ 	case NETDEV_PRE_UP:
+-		if (!(wdev->wiphy->interface_modes & BIT(wdev->iftype)) &&
+-		    !(wdev->iftype == NL80211_IFTYPE_AP_VLAN &&
+-		      rdev->wiphy.flags & WIPHY_FLAG_4ADDR_AP &&
+-		      wdev->use_4addr))
++		if (!cfg80211_iftype_allowed(wdev->wiphy, wdev->iftype,
++					     wdev->use_4addr, 0))
+ 			return notifier_from_errno(-EOPNOTSUPP);
  
- #define MT_RF_VCO_BP_CLOSE_LOOP		BIT(3)
- #define MT_RF_VCO_BP_CLOSE_LOOP_MASK	GENMASK(3, 0)
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-index b007bcd2e999..f010df4fad37 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/usb.c
-@@ -237,7 +237,7 @@ static int mt76x0u_probe(struct usb_interface *usb_intf,
- 	if (ret)
- 		goto err;
- 
--	/* Disable the HW, otherwise MCU fail to initalize on hot reboot */
-+	/* Disable the HW, otherwise MCU fail to initialize on hot reboot */
- 	mt76x0_chip_onoff(dev, false, false);
- 
- 	if (!mt76x02_wait_for_mac(mdev)) {
-@@ -275,9 +275,9 @@ static int mt76x0u_probe(struct usb_interface *usb_intf,
- static void mt76x0_disconnect(struct usb_interface *usb_intf)
- {
- 	struct mt76x02_dev *dev = usb_get_intfdata(usb_intf);
--	bool initalized = test_bit(MT76_STATE_INITIALIZED, &dev->mt76.state);
-+	bool initialized = test_bit(MT76_STATE_INITIALIZED, &dev->mt76.state);
- 
--	if (!initalized)
-+	if (!initialized)
- 		return;
- 
- 	ieee80211_unregister_hw(dev->mt76.hw);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02.h b/drivers/net/wireless/mediatek/mt76/mt76x02.h
-index f7fd53a1738a..7fa0c9eab164 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02.h
-@@ -71,8 +71,8 @@ struct mt76x02_calibration {
- struct mt76x02_beacon_ops {
- 	unsigned int nslots;
- 	unsigned int slot_size;
--	void (*pre_tbtt_enable) (struct mt76x02_dev *, bool);
--	void (*beacon_enable) (struct mt76x02_dev *, bool);
-+	void (*pre_tbtt_enable)(struct mt76x02_dev *dev, bool en);
-+	void (*beacon_enable)(struct mt76x02_dev *dev, bool en);
- };
- 
- struct mt76x02_dev {
-@@ -137,8 +137,8 @@ extern struct ieee80211_rate mt76x02_rates[12];
- 
- void mt76x02_init_device(struct mt76x02_dev *dev);
- void mt76x02_configure_filter(struct ieee80211_hw *hw,
--			     unsigned int changed_flags,
--			     unsigned int *total_flags, u64 multicast);
-+			      unsigned int changed_flags,
-+			      unsigned int *total_flags, u64 multicast);
- int mt76x02_sta_add(struct mt76_dev *mdev, struct ieee80211_vif *vif,
- 		    struct ieee80211_sta *sta);
- void mt76x02_sta_remove(struct mt76_dev *mdev, struct ieee80211_vif *vif,
-@@ -147,20 +147,20 @@ void mt76x02_sta_remove(struct mt76_dev *mdev, struct ieee80211_vif *vif,
- void mt76x02_config_mac_addr_list(struct mt76x02_dev *dev);
- 
- int mt76x02_add_interface(struct ieee80211_hw *hw,
--			 struct ieee80211_vif *vif);
-+			  struct ieee80211_vif *vif);
- void mt76x02_remove_interface(struct ieee80211_hw *hw,
--			     struct ieee80211_vif *vif);
-+			      struct ieee80211_vif *vif);
- 
- int mt76x02_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
--			struct ieee80211_ampdu_params *params);
-+			 struct ieee80211_ampdu_params *params);
- int mt76x02_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
--		   struct ieee80211_vif *vif, struct ieee80211_sta *sta,
--		   struct ieee80211_key_conf *key);
-+		    struct ieee80211_vif *vif, struct ieee80211_sta *sta,
-+		    struct ieee80211_key_conf *key);
- int mt76x02_conf_tx(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
--		   u16 queue, const struct ieee80211_tx_queue_params *params);
-+		    u16 queue, const struct ieee80211_tx_queue_params *params);
- void mt76x02_sta_rate_tbl_update(struct ieee80211_hw *hw,
--				struct ieee80211_vif *vif,
--				struct ieee80211_sta *sta);
-+				 struct ieee80211_vif *vif,
-+				 struct ieee80211_sta *sta);
- s8 mt76x02_tx_get_max_txpwr_adj(struct mt76x02_dev *dev,
- 				const struct ieee80211_tx_rate *rate);
- s8 mt76x02_tx_get_txpwr_adj(struct mt76x02_dev *dev, s8 txpwr,
-@@ -197,6 +197,7 @@ struct beacon_bc_data {
- 	struct sk_buff_head q;
- 	struct sk_buff *tail[8];
- };
-+
- void mt76x02_init_beacon_config(struct mt76x02_dev *dev);
- void mt76x02e_init_beacon_config(struct mt76x02_dev *dev);
- void mt76x02_resync_beacon_timer(struct mt76x02_dev *dev);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_beacon.c b/drivers/net/wireless/mediatek/mt76/mt76x02_beacon.c
-index d61c686e08de..f8847fbd0ade 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_beacon.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_beacon.c
-@@ -237,7 +237,8 @@ mt76x02_add_buffered_bc(void *priv, u8 *mac, struct ieee80211_vif *vif)
- }
- 
- void
--mt76x02_enqueue_buffered_bc(struct mt76x02_dev *dev, struct beacon_bc_data *data,
-+mt76x02_enqueue_buffered_bc(struct mt76x02_dev *dev,
-+			    struct beacon_bc_data *data,
- 			    int max_nframes)
- {
- 	int i, nframes;
-@@ -281,4 +282,3 @@ void mt76x02_init_beacon_config(struct mt76x02_dev *dev)
- }
- EXPORT_SYMBOL_GPL(mt76x02_init_beacon_config);
- 
--
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-index 82bafb5ac326..a3917d0a5120 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-@@ -92,7 +92,6 @@ void mt76x02_mac_wcid_sync_pn(struct mt76x02_dev *dev, u8 idx,
- 	atomic64_set(&key->tx_pn, pn);
- }
- 
--
- int mt76x02_mac_wcid_set_key(struct mt76x02_dev *dev, u8 idx,
- 			     struct ieee80211_key_conf *key)
- {
-@@ -267,7 +266,7 @@ bool mt76x02_mac_load_tx_status(struct mt76x02_dev *dev,
- 
- static int
- mt76x02_mac_process_tx_rate(struct ieee80211_tx_rate *txrate, u16 rate,
--			   enum nl80211_band band)
-+			    enum nl80211_band band)
- {
- 	u8 idx = FIELD_GET(MT_RXWI_RATE_INDEX, rate);
- 
-@@ -343,7 +342,7 @@ void mt76x02_mac_write_txwi(struct mt76x02_dev *dev, struct mt76x02_txwi *txwi,
- 	    ieee80211_has_protected(hdr->frame_control)) {
- 		wcid = NULL;
- 		ieee80211_get_tx_rates(info->control.vif, sta, skb,
--		                       info->control.rates, 1);
-+				       info->control.rates, 1);
+ 		if (rfkill_blocked(rdev->rfkill))
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index fc83dd1..fd05ae1 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3484,9 +3484,7 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
+ 			return err;
  	}
  
- 	if (wcid)
-@@ -353,6 +352,7 @@ void mt76x02_mac_write_txwi(struct mt76x02_dev *dev, struct mt76x02_txwi *txwi,
- 
- 	if (wcid && wcid->sw_iv && key) {
- 		u64 pn = atomic64_inc_return(&key->tx_pn);
-+
- 		ccmp_pn[0] = pn;
- 		ccmp_pn[1] = pn >> 8;
- 		ccmp_pn[2] = 0;
-@@ -445,8 +445,8 @@ mt76x02_tx_rate_fallback(struct ieee80211_tx_rate *rates, int idx, int phy)
- 	case MT_PHY_TYPE_HT:
- 		/* MCS 8 falls back to MCS 0 */
- 		if (rates[0].idx == 8) {
--		    rates[1].idx = 0;
--		    break;
-+			rates[1].idx = 0;
-+			break;
- 		}
- 		/* fall through */
- 	default:
-@@ -568,9 +568,9 @@ void mt76x02_send_tx_status(struct mt76x02_dev *dev,
- 		u32 stat_val, stat_cache;
- 
- 		stat_val = stat->rate;
--		stat_val |= ((u32) stat->retry) << 16;
-+		stat_val |= ((u32)stat->retry) << 16;
- 		stat_cache = msta->status.rate;
--		stat_cache |= ((u32) msta->status.retry) << 16;
-+		stat_cache |= ((u32)msta->status.retry) << 16;
- 
- 		if (*update == 0 && stat_val == stat_cache &&
- 		    stat->wcid == msta->status.wcid && msta->n_frames < 32) {
-@@ -718,7 +718,7 @@ mt76x02_mac_get_rssi(struct mt76x02_dev *dev, s8 rssi, int chain)
- int mt76x02_mac_process_rx(struct mt76x02_dev *dev, struct sk_buff *skb,
- 			   void *rxi)
- {
--	struct mt76_rx_status *status = (struct mt76_rx_status *) skb->cb;
-+	struct mt76_rx_status *status = (struct mt76_rx_status *)skb->cb;
- 	struct mt76x02_rxwi *rxwi = rxi;
- 	struct mt76x02_sta *sta;
- 	u32 rxinfo = le32_to_cpu(rxwi->rxinfo);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76x02_mcu.c
-index 6501b853b65c..c1fd28dc9244 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mcu.c
-@@ -65,7 +65,7 @@ int mt76x02_mcu_msg_send(struct mt76_dev *mdev, int cmd, const void *data,
- 			break;
- 		}
- 
--		rxfce = (u32 *) skb->cb;
-+		rxfce = (u32 *)skb->cb;
- 
- 		if (seq == FIELD_GET(MT_RX_FCE_INFO_CMD_SEQ, *rxfce))
- 			check_seq = true;
-@@ -86,11 +86,11 @@ int mt76x02_mcu_function_select(struct mt76x02_dev *dev, enum mcu_function func,
- 				u32 val)
- {
- 	struct {
--	    __le32 id;
--	    __le32 value;
-+		__le32 id;
-+		__le32 value;
- 	} __packed __aligned(4) msg = {
--	    .id = cpu_to_le32(func),
--	    .value = cpu_to_le32(val),
-+		.id = cpu_to_le32(func),
-+		.value = cpu_to_le32(val),
- 	};
- 	bool wait = false;
- 
-@@ -111,7 +111,8 @@ int mt76x02_mcu_set_radio_state(struct mt76x02_dev *dev, bool on)
- 		.level = cpu_to_le32(0),
- 	};
- 
--	return mt76_mcu_send_msg(dev, CMD_POWER_SAVING_OP, &msg, sizeof(msg), false);
-+	return mt76_mcu_send_msg(dev, CMD_POWER_SAVING_OP, &msg, sizeof(msg),
-+				 false);
- }
- EXPORT_SYMBOL_GPL(mt76x02_mcu_set_radio_state);
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c b/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
-index 467b28379870..8bf93684febf 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
-@@ -97,7 +97,8 @@ void mt76x02e_init_beacon_config(struct mt76x02_dev *dev)
- 	dev->beacon_ops = &beacon_ops;
- 
- 	/* Fire a pre-TBTT interrupt 8 ms before TBTT */
--	mt76_rmw_field(dev, MT_INT_TIMER_CFG, MT_INT_TIMER_CFG_PRE_TBTT, 8 << 4);
-+	mt76_rmw_field(dev, MT_INT_TIMER_CFG, MT_INT_TIMER_CFG_PRE_TBTT,
-+		       8 << 4);
- 	mt76_rmw_field(dev, MT_INT_TIMER_CFG, MT_INT_TIMER_CFG_GP_TIMER,
- 		       MT_DFS_GP_INTERVAL);
- 	mt76_wr(dev, MT_INT_TIMER_EN, 0);
-@@ -201,7 +202,7 @@ int mt76x02_dma_init(struct mt76x02_dev *dev)
- 		return -ENOMEM;
- 
- 	tasklet_init(&dev->mt76.tx_tasklet, mt76x02_tx_tasklet,
--		     (unsigned long) dev);
-+		     (unsigned long)dev);
- 	tasklet_init(&dev->mt76.pre_tbtt_tasklet, mt76x02_pre_tbtt_tasklet,
- 		     (unsigned long)dev);
- 
-@@ -395,12 +396,12 @@ static void mt76x02_key_sync(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	struct mt76_wcid *wcid;
- 
- 	if (!sta)
--	    return;
-+		return;
- 
--	wcid = (struct mt76_wcid *) sta->drv_priv;
-+	wcid = (struct mt76_wcid *)sta->drv_priv;
- 
- 	if (wcid->hw_key_idx != key->keyidx || wcid->sw_iv)
--	    return;
-+		return;
- 
- 	mt76x02_mac_wcid_sync_pn(dev, wcid->idx, key);
- }
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_phy.c b/drivers/net/wireless/mediatek/mt76/mt76x02_phy.c
-index a54b63a96eae..b86a33b2a16d 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_phy.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_phy.c
-@@ -183,7 +183,8 @@ bool mt76x02_phy_adjust_vga_gain(struct mt76x02_dev *dev)
- 	bool ret = false;
- 	u32 false_cca;
- 
--	false_cca = FIELD_GET(MT_RX_STAT_1_CCA_ERRORS, mt76_rr(dev, MT_RX_STAT_1));
-+	false_cca = FIELD_GET(MT_RX_STAT_1_CCA_ERRORS,
-+			      mt76_rr(dev, MT_RX_STAT_1));
- 	dev->cal.false_cca = false_cca;
- 	if (false_cca > 800 && dev->cal.agc_gain_adjust < limit) {
- 		dev->cal.agc_gain_adjust += 2;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_regs.h b/drivers/net/wireless/mediatek/mt76/mt76x02_regs.h
-index ea7833964ec0..b2868ae79290 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_regs.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_regs.h
-@@ -19,8 +19,8 @@
- 
- #define MT_ASIC_VERSION			0x0000
- 
--#define MT76XX_REV_E3		0x22
--#define MT76XX_REV_E4		0x33
-+#define MT76XX_REV_E3			0x22
-+#define MT76XX_REV_E4			0x33
- 
- #define MT_CMB_CTRL			0x0020
- #define MT_CMB_CTRL_XTAL_RDY		BIT(22)
-@@ -120,7 +120,7 @@
- #define MT_INT_RX_DONE(_n)		BIT(_n)
- #define MT_INT_RX_DONE_ALL		GENMASK(1, 0)
- #define MT_INT_TX_DONE_ALL		GENMASK(13, 4)
--#define MT_INT_TX_DONE(_n)		BIT(_n + 4)
-+#define MT_INT_TX_DONE(_n)		BIT((_n) + 4)
- #define MT_INT_RX_COHERENT		BIT(16)
- #define MT_INT_TX_COHERENT		BIT(17)
- #define MT_INT_ANY_COHERENT		BIT(18)
-@@ -149,21 +149,21 @@
- 
- #define MT_WPDMA_DELAY_INT_CFG		0x0210
- 
--#define MT_WMM_AIFSN		0x0214
-+#define MT_WMM_AIFSN			0x0214
- #define MT_WMM_AIFSN_MASK		GENMASK(3, 0)
- #define MT_WMM_AIFSN_SHIFT(_n)		((_n) * 4)
- 
--#define MT_WMM_CWMIN		0x0218
-+#define MT_WMM_CWMIN			0x0218
- #define MT_WMM_CWMIN_MASK		GENMASK(3, 0)
- #define MT_WMM_CWMIN_SHIFT(_n)		((_n) * 4)
- 
--#define MT_WMM_CWMAX		0x021c
-+#define MT_WMM_CWMAX			0x021c
- #define MT_WMM_CWMAX_MASK		GENMASK(3, 0)
- #define MT_WMM_CWMAX_SHIFT(_n)		((_n) * 4)
- 
- #define MT_WMM_TXOP_BASE		0x0220
- #define MT_WMM_TXOP(_n)			(MT_WMM_TXOP_BASE + (((_n) / 2) << 2))
--#define MT_WMM_TXOP_SHIFT(_n)		((_n & 1) * 16)
-+#define MT_WMM_TXOP_SHIFT(_n)		(((_n) & 1) * 16)
- #define MT_WMM_TXOP_MASK		GENMASK(15, 0)
- 
- #define MT_WMM_CTRL			0x0230 /* MT76x0 */
-@@ -607,7 +607,7 @@
- 
- #define MT_TX_AGG_CNT(_id)		((_id) < 8 ?			\
- 					 MT_TX_AGG_CNT_BASE0 + ((_id) << 2) : \
--					 MT_TX_AGG_CNT_BASE1 + ((_id - 8) << 2))
-+					 MT_TX_AGG_CNT_BASE1 + (((_id) - 8) << 2))
- 
- #define MT_TX_STAT_FIFO_EXT		0x1798
- #define MT_TX_STAT_FIFO_EXT_RETRY	GENMASK(7, 0)
-@@ -680,17 +680,17 @@
- 
- #define MT_SKEY_BASE_0			0xac00
- #define MT_SKEY_BASE_1			0xb400
--#define MT_SKEY_0(_bss, _idx)		(MT_SKEY_BASE_0 + (4 * (_bss) + _idx) * 32)
--#define MT_SKEY_1(_bss, _idx)		(MT_SKEY_BASE_1 + (4 * ((_bss) & 7) + _idx) * 32)
--#define MT_SKEY(_bss, _idx)		((_bss & 8) ? MT_SKEY_1(_bss, _idx) : MT_SKEY_0(_bss, _idx))
-+#define MT_SKEY_0(_bss, _idx)		(MT_SKEY_BASE_0 + (4 * (_bss) + (_idx)) * 32)
-+#define MT_SKEY_1(_bss, _idx)		(MT_SKEY_BASE_1 + (4 * ((_bss) & 7) + (_idx)) * 32)
-+#define MT_SKEY(_bss, _idx)		(((_bss) & 8) ? MT_SKEY_1(_bss, _idx) : MT_SKEY_0(_bss, _idx))
- 
- #define MT_SKEY_MODE_BASE_0		0xb000
- #define MT_SKEY_MODE_BASE_1		0xb3f0
--#define MT_SKEY_MODE_0(_bss)		(MT_SKEY_MODE_BASE_0 + ((_bss / 2) << 2))
-+#define MT_SKEY_MODE_0(_bss)		(MT_SKEY_MODE_BASE_0 + (((_bss) / 2) << 2))
- #define MT_SKEY_MODE_1(_bss)		(MT_SKEY_MODE_BASE_1 + ((((_bss) & 7) / 2) << 2))
--#define MT_SKEY_MODE(_bss)		((_bss & 8) ? MT_SKEY_MODE_1(_bss) : MT_SKEY_MODE_0(_bss))
-+#define MT_SKEY_MODE(_bss)		(((_bss) & 8) ? MT_SKEY_MODE_1(_bss) : MT_SKEY_MODE_0(_bss))
- #define MT_SKEY_MODE_MASK		GENMASK(3, 0)
--#define MT_SKEY_MODE_SHIFT(_bss, _idx)	(4 * ((_idx) + 4 * (_bss & 1)))
-+#define MT_SKEY_MODE_SHIFT(_bss, _idx)	(4 * ((_idx) + 4 * ((_bss) & 1)))
- 
- #define MT_BEACON_BASE			0xc000
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_trace.h b/drivers/net/wireless/mediatek/mt76/mt76x02_trace.h
-index 713f12d3c8de..ae884f539f3f 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_trace.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_trace.h
-@@ -25,7 +25,8 @@
- 
- #define MAXNAME		32
- #define DEV_ENTRY	__array(char, wiphy_name, 32)
--#define DEV_ASSIGN	strlcpy(__entry->wiphy_name, wiphy_name(mt76_hw(dev)->wiphy), MAXNAME)
-+#define DEV_ASSIGN	strlcpy(__entry->wiphy_name,	\
-+				wiphy_name(mt76_hw(dev)->wiphy), MAXNAME)
- #define DEV_PR_FMT	"%s"
- #define DEV_PR_ARG	__entry->wiphy_name
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c b/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c
-index 5e4f3a8c5784..e4332d5a5757 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c
-@@ -53,7 +53,7 @@ int mt76x02u_skb_dma_info(struct sk_buff *skb, int port, u32 flags)
- 	pad = round_up(skb->len, 4) + 4 - skb->len;
- 
- 	/* First packet of a A-MSDU burst keeps track of the whole burst
--	 * length, need to update lenght of it and the last packet.
-+	 * length, need to update length of it and the last packet.
- 	 */
- 	skb_walk_frags(skb, iter) {
- 		last = iter;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-index fa45ed280ab1..e84006cd6f9a 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-@@ -21,14 +21,14 @@
- #define CCK_RATE(_idx, _rate) {					\
- 	.bitrate = _rate,					\
- 	.flags = IEEE80211_RATE_SHORT_PREAMBLE,			\
--	.hw_value = (MT_PHY_TYPE_CCK << 8) | _idx,		\
--	.hw_value_short = (MT_PHY_TYPE_CCK << 8) | (8 + _idx),	\
-+	.hw_value = (MT_PHY_TYPE_CCK << 8) | (_idx),		\
-+	.hw_value_short = (MT_PHY_TYPE_CCK << 8) | (8 + (_idx)),	\
- }
- 
- #define OFDM_RATE(_idx, _rate) {				\
- 	.bitrate = _rate,					\
--	.hw_value = (MT_PHY_TYPE_OFDM << 8) | _idx,		\
--	.hw_value_short = (MT_PHY_TYPE_OFDM << 8) | _idx,	\
-+	.hw_value = (MT_PHY_TYPE_OFDM << 8) | (_idx),		\
-+	.hw_value_short = (MT_PHY_TYPE_OFDM << 8) | (_idx),	\
- }
- 
- struct ieee80211_rate mt76x02_rates[] = {
-@@ -281,7 +281,7 @@ mt76x02_vif_init(struct mt76x02_dev *dev, struct ieee80211_vif *vif,
- 	mvif->idx = idx;
- 	mvif->group_wcid.idx = MT_VIF_WCID(idx);
- 	mvif->group_wcid.hw_key_idx = -1;
--	mtxq = (struct mt76_txq *) vif->txq->drv_priv;
-+	mtxq = (struct mt76_txq *)vif->txq->drv_priv;
- 	mtxq->wcid = &mvif->group_wcid;
- 
- 	mt76_txq_init(&dev->mt76, vif->txq);
-@@ -345,7 +345,7 @@ int mt76x02_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	enum ieee80211_ampdu_mlme_action action = params->action;
- 	struct ieee80211_sta *sta = params->sta;
- 	struct mt76x02_dev *dev = hw->priv;
--	struct mt76x02_sta *msta = (struct mt76x02_sta *) sta->drv_priv;
-+	struct mt76x02_sta *msta = (struct mt76x02_sta *)sta->drv_priv;
- 	struct ieee80211_txq *txq = sta->txq[params->tid];
- 	u16 tid = params->tid;
- 	u16 ssn = params->ssn;
-@@ -434,7 +434,7 @@ int mt76x02_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 	    !(key->flags & IEEE80211_KEY_FLAG_PAIRWISE))
+-	if (!(rdev->wiphy.interface_modes & (1 << type)) &&
+-	    !(type == NL80211_IFTYPE_AP_VLAN && params.use_4addr &&
+-	      rdev->wiphy.flags & WIPHY_FLAG_4ADDR_AP))
++	if (!cfg80211_iftype_allowed(&rdev->wiphy, type, params.use_4addr, 0))
  		return -EOPNOTSUPP;
  
--	msta = sta ? (struct mt76x02_sta *) sta->drv_priv : NULL;
-+	msta = sta ? (struct mt76x02_sta *)sta->drv_priv : NULL;
- 	wcid = msta ? &msta->wcid : &mvif->group_wcid;
+ 	err = nl80211_parse_mon_options(rdev, type, info, &params);
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 1c39d6a..d0e35b7 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -1697,7 +1697,7 @@ int cfg80211_iter_combinations(struct wiphy *wiphy,
+ 	for (iftype = 0; iftype < NUM_NL80211_IFTYPES; iftype++) {
+ 		num_interfaces += params->iftype_num[iftype];
+ 		if (params->iftype_num[iftype] > 0 &&
+-		    !(wiphy->software_iftypes & BIT(iftype)))
++		    !cfg80211_iftype_allowed(wiphy, iftype, 0, 1))
+ 			used_iftypes |= BIT(iftype);
+ 	}
  
- 	if (cmd == SET_KEY) {
-@@ -558,11 +558,11 @@ int mt76x02_set_rts_threshold(struct ieee80211_hw *hw, u32 val)
- EXPORT_SYMBOL_GPL(mt76x02_set_rts_threshold);
+@@ -1719,7 +1719,7 @@ int cfg80211_iter_combinations(struct wiphy *wiphy,
+ 			return -ENOMEM;
  
- void mt76x02_sta_rate_tbl_update(struct ieee80211_hw *hw,
--				struct ieee80211_vif *vif,
--				struct ieee80211_sta *sta)
-+				 struct ieee80211_vif *vif,
-+				 struct ieee80211_sta *sta)
- {
- 	struct mt76x02_dev *dev = hw->priv;
--	struct mt76x02_sta *msta = (struct mt76x02_sta *) sta->drv_priv;
-+	struct mt76x02_sta *msta = (struct mt76x02_sta *)sta->drv_priv;
- 	struct ieee80211_sta_rates *rates = rcu_dereference(sta->rates);
- 	struct ieee80211_tx_rate rate = {};
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt76x2/eeprom.c
-index 6f6998561d9d..f17058346ff1 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/eeprom.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2/eeprom.c
-@@ -33,7 +33,7 @@ mt76x2_eeprom_get_macaddr(struct mt76x02_dev *dev)
- static bool
- mt76x2_has_cal_free_data(struct mt76x02_dev *dev, u8 *efuse)
- {
--	u16 *efuse_w = (u16 *) efuse;
-+	u16 *efuse_w = (u16 *)efuse;
- 
- 	if (efuse_w[MT_EE_NIC_CONF_0] != 0)
- 		return false;
-@@ -372,7 +372,8 @@ mt76x2_get_power_info_2g(struct mt76x02_dev *dev,
- 	t->chain[chain].tssi_slope = data[0];
- 	t->chain[chain].tssi_offset = data[1];
- 	t->chain[chain].target_power = data[2];
--	t->chain[chain].delta = mt76x02_sign_extend_optional(data[delta_idx], 7);
-+	t->chain[chain].delta =
-+		mt76x02_sign_extend_optional(data[delta_idx], 7);
- 
- 	val = mt76x02_eeprom_get(dev, MT_EE_RF_2G_TSSI_OFF_TXPOWER);
- 	t->target_power = val >> 8;
-@@ -381,7 +382,7 @@ mt76x2_get_power_info_2g(struct mt76x02_dev *dev,
- static void
- mt76x2_get_power_info_5g(struct mt76x02_dev *dev,
- 			 struct mt76x2_tx_power_info *t,
--		         struct ieee80211_channel *chan,
-+			 struct ieee80211_channel *chan,
- 			 int chain, int offset)
- {
- 	int channel = chan->hw_value;
-@@ -423,7 +424,8 @@ mt76x2_get_power_info_5g(struct mt76x02_dev *dev,
- 	t->chain[chain].tssi_slope = data[0];
- 	t->chain[chain].tssi_offset = data[1];
- 	t->chain[chain].target_power = data[2];
--	t->chain[chain].delta = mt76x02_sign_extend_optional(data[delta_idx], 7);
-+	t->chain[chain].delta =
-+		mt76x02_sign_extend_optional(data[delta_idx], 7);
- 
- 	val = mt76x02_eeprom_get(dev, MT_EE_RF_2G_RX_HIGH_GAIN);
- 	t->target_power = val & 0xff;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/mcu.h b/drivers/net/wireless/mediatek/mt76/mt76x2/mcu.h
-index 40ef43926c06..75f1b2acb141 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2/mcu.h
-@@ -71,7 +71,8 @@ struct mt76x2_tssi_comp {
- 	u8 offset1;
- } __packed __aligned(4);
- 
--int mt76x2_mcu_tssi_comp(struct mt76x02_dev *dev, struct mt76x2_tssi_comp *tssi_data);
-+int mt76x2_mcu_tssi_comp(struct mt76x02_dev *dev,
-+			 struct mt76x2_tssi_comp *tssi_data);
- int mt76x2_mcu_init_gain(struct mt76x02_dev *dev, u8 channel, u32 gain,
- 			 bool force);
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c
-index 71aea2832644..b8f657517f37 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_init.c
-@@ -336,4 +336,3 @@ int mt76x2_register_device(struct mt76x02_dev *dev)
- 	return ret;
+ 		for (iftype = 0; iftype < NUM_NL80211_IFTYPES; iftype++) {
+-			if (wiphy->software_iftypes & BIT(iftype))
++			if (cfg80211_iftype_allowed(wiphy, iftype, 0, 1))
+ 				continue;
+ 			for (j = 0; j < c->n_limits; j++) {
+ 				all_iftypes |= limits[j].types;
+@@ -2072,3 +2072,26 @@ int ieee80211_get_vht_max_nss(struct ieee80211_vht_cap *cap,
+ 	return max_vht_nss;
  }
- 
--
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_mcu.c b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_mcu.c
-index 605dc66ae83b..e38715c1bcad 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_mcu.c
-@@ -66,7 +66,7 @@ mt76pci_load_rom_patch(struct mt76x02_dev *dev)
- 
- 	mt76_wr(dev, MT_MCU_PCIE_REMAP_BASE4, MT_MCU_ROM_PATCH_OFFSET);
- 
--	cur = (__le32 *) (fw->data + sizeof(*hdr));
-+	cur = (__le32 *)(fw->data + sizeof(*hdr));
- 	len = fw->size - sizeof(*hdr);
- 	mt76_wr_copy(dev, MT_MCU_ROM_PATCH_ADDR, cur, len);
- 
-@@ -121,7 +121,7 @@ mt76pci_load_firmware(struct mt76x02_dev *dev)
- 	dev_info(dev->mt76.dev, "Build: %x\n", val);
- 	dev_info(dev->mt76.dev, "Build Time: %.16s\n", hdr->build_time);
- 
--	cur = (__le32 *) (fw->data + sizeof(*hdr));
-+	cur = (__le32 *)(fw->data + sizeof(*hdr));
- 	len = le32_to_cpu(hdr->ilm_len);
- 
- 	mt76_wr(dev, MT_MCU_PCIE_REMAP_BASE4, MT_MCU_ILM_OFFSET);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/phy.c b/drivers/net/wireless/mediatek/mt76/mt76x2/phy.c
-index cdedf95ca4f5..57212b049ee2 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/phy.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2/phy.c
-@@ -25,7 +25,8 @@ mt76x2_adjust_high_lna_gain(struct mt76x02_dev *dev, int reg, s8 offset)
- {
- 	s8 gain;
- 
--	gain = FIELD_GET(MT_BBP_AGC_LNA_HIGH_GAIN, mt76_rr(dev, MT_BBP(AGC, reg)));
-+	gain = FIELD_GET(MT_BBP_AGC_LNA_HIGH_GAIN,
-+			 mt76_rr(dev, MT_BBP(AGC, reg)));
- 	gain -= offset / 2;
- 	mt76_rmw_field(dev, MT_BBP(AGC, reg), MT_BBP_AGC_LNA_HIGH_GAIN, gain);
- }
+ EXPORT_SYMBOL(ieee80211_get_vht_max_nss);
++
++bool cfg80211_iftype_allowed(struct wiphy *wiphy, enum nl80211_iftype iftype,
++			     bool is_4addr, u8 check_swif)
++
++{
++	bool is_vlan = iftype == NL80211_IFTYPE_AP_VLAN;
++
++	switch (check_swif) {
++	case 0:
++		if (is_vlan && is_4addr)
++			return wiphy->flags & WIPHY_FLAG_4ADDR_AP;
++		return wiphy->interface_modes & BIT(iftype);
++	case 1:
++		if (!(wiphy->software_iftypes & BIT(iftype)) && is_vlan)
++			return wiphy->flags & WIPHY_FLAG_4ADDR_AP;
++		return wiphy->software_iftypes & BIT(iftype);
++	default:
++		break;
++	}
++
++	return false;
++}
++EXPORT_SYMBOL(cfg80211_iftype_allowed);
 -- 
-2.18.0
+2.7.4
 
