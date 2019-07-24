@@ -2,41 +2,43 @@ Return-Path: <SRS0=rB3s=VV=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 879F9C7618B
-	for <linux-wireless@archiver.kernel.org>; Wed, 24 Jul 2019 06:05:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 614BCC7618F
+	for <linux-wireless@archiver.kernel.org>; Wed, 24 Jul 2019 06:05:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6A43D21738
-	for <linux-wireless@archiver.kernel.org>; Wed, 24 Jul 2019 06:05:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 39F3221738
+	for <linux-wireless@archiver.kernel.org>; Wed, 24 Jul 2019 06:05:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726347AbfGXGFC (ORCPT
+        id S1726333AbfGXGFC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Wed, 24 Jul 2019 02:05:02 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:49311 "EHLO
+Received: from rtits2.realtek.com ([211.75.126.72]:49309 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725990AbfGXGFC (ORCPT
+        with ESMTP id S1725870AbfGXGFC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 24 Jul 2019 02:05:02 -0400
 Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x6O64o4O011105, This message is accepted by code: ctloc85258
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x6O64qCN011113, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (RTITCASV01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x6O64o4O011105
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x6O64qCN011113
         (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
-        Wed, 24 Jul 2019 14:04:50 +0800
+        Wed, 24 Jul 2019 14:04:52 +0800
 Received: from localhost.localdomain (172.21.68.126) by
  RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
- 14.3.439.0; Wed, 24 Jul 2019 14:04:50 +0800
+ 14.3.439.0; Wed, 24 Jul 2019 14:04:51 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>, <sgruszka@redhat.com>,
         <briannorris@chromium.org>
-Subject: [PATCH 0/5] rtw88: add support for BT co-existence mechanism
-Date:   Wed, 24 Jul 2019 14:04:28 +0800
-Message-ID: <1563948273-17910-1-git-send-email-yhchuang@realtek.com>
+Subject: [PATCH 2/5] rtw88: check efuse for BT FT S1
+Date:   Wed, 24 Jul 2019 14:04:30 +0800
+Message-ID: <1563948273-17910-3-git-send-email-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1563948273-17910-1-git-send-email-yhchuang@realtek.com>
+References: <1563948273-17910-1-git-send-email-yhchuang@realtek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [172.21.68.126]
@@ -47,64 +49,66 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-This patch set mainly adds a BT co-existence mechanism, which
-helps WiFi device to work with BT device concurrently without
-interfering each other. For Realtek's WiFi/BT combo devices,
-the co-existence mechanism is on the WiFi side.
+Some modules might not have full programed efuse.
+Driver should check the BT FT S1 type to know that
+if BT has been programed. If BT is not programed,
+throw a warning to notify that this module is not
+capable of working with WiFi + BT concurrently.
 
-The first two patches "rtw88: switch specified efuse bank" and
-"rtw88: check efuse for BT FT S1" aim to check if the device
-is able to run with WiFi + BT, because some of the earlier
-devices manufactured are in development for testing. These
-device hence did not program the efuse for BT. Without being
-programed, some of the hardware parameters are incorrect.
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw88/efuse.c | 24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
 
-The rest of the patches add BTcoex support. BTcoex needs to
-wake up events that is waiting for some C2H reported in IRQ
-context, so these C2H skbs do not required to be queued into
-workqueues to be processed. What we need to do is to simply
-wake it uin IRQ context.
-
-And actually C2H workqueue context should be protected by
-rtwdev->mutex lock to perform some hardware operations
-against mac80211 callbacks.
-
-The final patch contains the most of the BTcoex logic.
-It is not that complicated, just to gather information and
-make decision on WiFi driver side. What makes the code so
-much is that the mechanism needs to take care of a lot of
-WiFi/BT combinations. Such as if WiFi is at 2G or is having
-a lot of traffic or is connecting to AP. And BT has many
-profiles such as A2DP/HID/PAN or it is slave or not.
-
-
-
-
-Yan-Hsuan Chuang (5):
-  rtw88: switch specified efuse bank
-  rtw88: check efuse for BT FT S1
-  rtw88: allow c2h operation in irq context
-  rtw88: enclose c2h cmd handle with mutex
-  rtw88: add BT co-existence support
-
- drivers/net/wireless/realtek/rtw88/Makefile   |    1 +
- drivers/net/wireless/realtek/rtw88/coex.c     | 2462 +++++++++++++++++++++++++
- drivers/net/wireless/realtek/rtw88/coex.h     |  363 ++++
- drivers/net/wireless/realtek/rtw88/efuse.c    |   30 +-
- drivers/net/wireless/realtek/rtw88/fw.c       |  135 +-
- drivers/net/wireless/realtek/rtw88/fw.h       |   73 +
- drivers/net/wireless/realtek/rtw88/mac80211.c |   19 +
- drivers/net/wireless/realtek/rtw88/main.c     |   45 +-
- drivers/net/wireless/realtek/rtw88/main.h     |  233 +++
- drivers/net/wireless/realtek/rtw88/pci.c      |    6 +-
- drivers/net/wireless/realtek/rtw88/ps.c       |    9 +
- drivers/net/wireless/realtek/rtw88/reg.h      |   62 +
- drivers/net/wireless/realtek/rtw88/rtw8822b.c |  460 ++++-
- drivers/net/wireless/realtek/rtw88/rtw8822c.c |  355 +++-
- 14 files changed, 4216 insertions(+), 37 deletions(-)
- create mode 100644 drivers/net/wireless/realtek/rtw88/coex.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/coex.h
-
+diff --git a/drivers/net/wireless/realtek/rtw88/efuse.c b/drivers/net/wireless/realtek/rtw88/efuse.c
+index 66e56f3..82aa26a 100644
+--- a/drivers/net/wireless/realtek/rtw88/efuse.c
++++ b/drivers/net/wireless/realtek/rtw88/efuse.c
+@@ -8,6 +8,11 @@
+ #include "debug.h"
+ 
+ #define RTW_EFUSE_BANK_WIFI		0x0
++#define RTW_EFUSE_BANK_BT		0x1
++
++#define EFUSE_BT_S1_ADDR		0x4a
++#define EFUSE_BT_S1_TYPE1		0xff
++#define EFUSE_BT_S1_TYPE2		0x00
+ 
+ static void switch_efuse_bank(struct rtw_dev *rtwdev, u8 efuse_bank)
+ {
+@@ -89,6 +94,7 @@ static int rtw_dump_physical_efuse_map(struct rtw_dev *rtwdev, u8 *map)
+ 	u32 efuse_ctl;
+ 	u32 addr;
+ 	u32 cnt;
++	u8 ft_ver;
+ 
+ 	switch_efuse_bank(rtwdev, RTW_EFUSE_BANK_WIFI);
+ 
+@@ -113,6 +119,24 @@ static int rtw_dump_physical_efuse_map(struct rtw_dev *rtwdev, u8 *map)
+ 		*(map + addr) = (u8)(efuse_ctl & BIT_MASK_EF_DATA);
+ 	}
+ 
++	/* verify BT FT S1 efuse type */
++	switch_efuse_bank(rtwdev, RTW_EFUSE_BANK_BT);
++
++	efuse_ctl = rtw_read32(rtwdev, REG_EFUSE_CTRL);
++	efuse_ctl &= ~(BIT_MASK_EF_DATA | BITS_EF_ADDR);
++	efuse_ctl |= (EFUSE_BT_S1_ADDR & BIT_MASK_EF_ADDR) << BIT_SHIFT_EF_ADDR;
++	rtw_write32(rtwdev, REG_EFUSE_CTRL, efuse_ctl & (~BIT_EF_FLAG));
++
++	if (!check_hw_ready(rtwdev, REG_EFUSE_CTRL, BIT_EF_FLAG, 0x1)) {
++		rtw_err(rtwdev, "failed to read BT efuse\n");
++		return -EBUSY;
++	}
++
++	efuse_ctl = rtw_read32(rtwdev, REG_EFUSE_CTRL);
++	ft_ver = (u8)(efuse_ctl & BIT_MASK_EF_DATA);
++	if (ft_ver == EFUSE_BT_S1_TYPE1 || ft_ver == EFUSE_BT_S1_TYPE2)
++		rtw_warn(rtwdev, "BT S1 not calibrated, not recommended to verify BT for this module\n");
++
+ 	return 0;
+ }
+ 
 -- 
 2.7.4
 
