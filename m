@@ -2,127 +2,99 @@ Return-Path: <SRS0=rB3s=VV=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24E68C7618F
-	for <linux-wireless@archiver.kernel.org>; Wed, 24 Jul 2019 20:23:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CF47C76186
+	for <linux-wireless@archiver.kernel.org>; Wed, 24 Jul 2019 23:55:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E8C30216F4
-	for <linux-wireless@archiver.kernel.org>; Wed, 24 Jul 2019 20:23:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 63CDE20657
+	for <linux-wireless@archiver.kernel.org>; Wed, 24 Jul 2019 23:55:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="o6HuK98L"
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="IPxmEQrp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390474AbfGXTnE (ORCPT
+        id S2388927AbfGXXzk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 24 Jul 2019 15:43:04 -0400
-Received: from mail-ot1-f66.google.com ([209.85.210.66]:34091 "EHLO
-        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390462AbfGXTnD (ORCPT
+        Wed, 24 Jul 2019 19:55:40 -0400
+Received: from mail-lf1-f68.google.com ([209.85.167.68]:38629 "EHLO
+        mail-lf1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388437AbfGXXzk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 Jul 2019 15:43:03 -0400
-Received: by mail-ot1-f66.google.com with SMTP id n5so49149379otk.1;
-        Wed, 24 Jul 2019 12:43:02 -0700 (PDT)
+        Wed, 24 Jul 2019 19:55:40 -0400
+Received: by mail-lf1-f68.google.com with SMTP id h28so33121420lfj.5
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Jul 2019 16:55:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
+        d=chromium.org; s=google;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=QjSdWDTJogyq8S7mZs7e3CcybE/Qyo4+rR9MEOHtmug=;
-        b=o6HuK98LM2PourpLrfOXA9tnYn/CKdQI2hdLQrkUfzkb1jy6E00k50kTtogJtwlvv2
-         57+lXOamDe30b8BogWXuiJtzUKWcGaJV6sEulXuVmyujuwypbLlkUWQeztRy/gZ05fri
-         rpYo12797NrIwUuayvg+Z4ES91GZ8cBBa8IbQ1jTT3Bg7RFxYzNSIl7vwRhqeYbhq+0M
-         H9F6O+Ekj4pVyD82SnQrijpG1v/GYtQkU3UidTzWXAJFkpesh8y/WJ2Jqfnu2rgDzLum
-         E4VD/T+1+B1OLCrWBhROAXd8QBVFbq5XAdTD6CPrapWuSOZSBBM9dWVUdOTJhNGQozY8
-         mffg==
+        bh=9Wfk8aesSMyq3EkvW+x9kZOwpatIbXz/F4YcugXGab8=;
+        b=IPxmEQrpl/0qpoqC7qmeMap6Fvz9YIN4VbKKC1BPYScJFeIL/U8QfqtmRyAwNAmD+g
+         XrIR7V0uvThOd4W6Ok9nCAZjyUFbXQuWExw4MP6WZl5uAXIc52l3nlCqCiqHkq7hytJk
+         /ilWkqayZ/K5vMKJrw+fu3F0KBJvFu8q5s29A=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=QjSdWDTJogyq8S7mZs7e3CcybE/Qyo4+rR9MEOHtmug=;
-        b=PAePG3mA3YcwPyRksNB4gvjWUw7dxPbUukvPp2v3A9EUO3mKaIXCfzchVPXSzEqWRO
-         Ge8McQGvO8KuznCnJsh6+6STswtAE8/zkvwUkboeq6o0VOcLf35qTXIgNH2jenpXhMXg
-         PlcUFu5P6oRZThiZJCzDCb0cx210KG7gPFCGoti0Du3Dx/eC5JnuyRca+RInp/t31ERi
-         Iao3KxojsuGZZ2gyBhOxCuoaRPuI0++lQFODSwQYDTXYCopIRL/vfWfGISqxVW3Kprl/
-         Is0r41BgZgBQpFFSq0ZEqihEaRDzJO8roa/uKGudaAE5Lp8HLqcXNnIToa2iwllOVDeE
-         UC/w==
-X-Gm-Message-State: APjAAAWXgW/e7Vdig8dLRt4jJUZBMCX7+RoRX/My5L+LFluThzbS8lAd
-        mNR7FQv/ZMt+Eci5M9QgS2h9o86M0+kJHsPYjmw=
-X-Google-Smtp-Source: APXvYqwGZraz9ZuMPAHtLv4av8XeMxMtRcV2ny/mkglBe9Iigbt3FbbIW4gbqH1rL+ysvtoWDs7Yddme7mzuJsK+3f4=
-X-Received: by 2002:a9d:590d:: with SMTP id t13mr2409952oth.281.1563997381856;
- Wed, 24 Jul 2019 12:43:01 -0700 (PDT)
+        bh=9Wfk8aesSMyq3EkvW+x9kZOwpatIbXz/F4YcugXGab8=;
+        b=K5a+W4JmhAwfMD17z9TmF8G8AfArM/SSZvSsVAHumcKS4IZL0uTvpHGjz5mgbs/bUM
+         P/67u45FB/gx7pYeF7FA5k7W2bPaxnK47yIFOR+CkRM+nTQqptWiJ/VMB/cv0NDRlgKo
+         jj6RFXgtIKvhgmGPXbFYqLz/ylRXnxb+ptdTAYZG2SAc9qi5agot5zVyuzssPR0xebQ9
+         TLNCG1I3QNUnklBDsmIaY1suzr1xfOZo+jIljfSKbAY7FDFET8E4uynrHMvXErIcU0t6
+         wuuGAt6rLPWf+udQ7DL4wFjznvkPRvEO2NXTK+S2OXsazPHWCy0Cehnfu1TblvGKZw6S
+         HZLA==
+X-Gm-Message-State: APjAAAWipDFXVzldmsQ+1Qmb3ds9O/0H7rtE1ehV26YVpIjDbsKnrUdc
+        +SrvwPLQc37OuCj69hcLU4Zf1gLeKEs=
+X-Google-Smtp-Source: APXvYqyDiw3tBvvgozyfJ/wwn3z32gVUKCQABsx95JuFu5ETOqaoOLFUrWcsaP/dRrlJXL2WUSMoOQ==
+X-Received: by 2002:a19:7509:: with SMTP id y9mr39567890lfe.117.1564012537929;
+        Wed, 24 Jul 2019 16:55:37 -0700 (PDT)
+Received: from mail-lj1-f171.google.com (mail-lj1-f171.google.com. [209.85.208.171])
+        by smtp.gmail.com with ESMTPSA id o17sm8837440ljg.71.2019.07.24.16.55.36
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_3 cipher=AEAD-AES128-GCM-SHA256 bits=128/128);
+        Wed, 24 Jul 2019 16:55:36 -0700 (PDT)
+Received: by mail-lj1-f171.google.com with SMTP id k18so46160045ljc.11
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Jul 2019 16:55:36 -0700 (PDT)
+X-Received: by 2002:a2e:824f:: with SMTP id j15mr45258506ljh.117.1564012536432;
+ Wed, 24 Jul 2019 16:55:36 -0700 (PDT)
 MIME-Version: 1.0
-References: <20190724015411.66525-1-yuehaibing@huawei.com>
-In-Reply-To: <20190724015411.66525-1-yuehaibing@huawei.com>
-From:   Christian Lamparter <chunkeey@gmail.com>
-Date:   Wed, 24 Jul 2019 21:42:48 +0200
-Message-ID: <CAAd0S9BvTfRyUVkQzcczyNkU_oeU5hNdK3KVQzLsU21b4JGNTQ@mail.gmail.com>
-Subject: Re: [PATCH] carl9170: remove set but not used variable 'udev'
-To:     YueHaibing <yuehaibing@huawei.com>
-Cc:     Kalle Valo <kvalo@codeaurora.org>,
+References: <20190703081049.28831-1-luca@coelho.fi> <1d7609a45e38725d57c2f78b5e437b83b7e49197.camel@coelho.fi>
+ <87d0irqr2l.fsf@codeaurora.org>
+In-Reply-To: <87d0irqr2l.fsf@codeaurora.org>
+From:   Brian Norris <briannorris@chromium.org>
+Date:   Wed, 24 Jul 2019 16:55:25 -0700
+X-Gmail-Original-Message-ID: <CA+ASDXPjLW+Zrf-uruCLMFGGDaJd=xYWt4tb=T_0HKP=ZnHbTQ@mail.gmail.com>
+Message-ID: <CA+ASDXPjLW+Zrf-uruCLMFGGDaJd=xYWt4tb=T_0HKP=ZnHbTQ@mail.gmail.com>
+Subject: Re: [PATCH for v5.2] iwlwifi: mvm: disable TX-AMSDU on older NICs
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     Luca Coelho <luca@coelho.fi>,
+        "David S. Miller" <davem@davemloft.net>,
         linux-wireless <linux-wireless@vger.kernel.org>,
-        Netdev <netdev@vger.kernel.org>, kernel-janitors@vger.kernel.org,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        Hulk Robot <hulkci@huawei.com>
+        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+        johannes.hirte@datenkhaos.de, steven@uplinklabs.net,
+        Johannes Berg <johannes.berg@intel.com>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, Jul 24, 2019 at 3:48 AM YueHaibing <yuehaibing@huawei.com> wrote:
+On Wed, Jul 3, 2019 at 4:46 AM Kalle Valo <kvalo@codeaurora.org> wrote:
+> Luca Coelho <luca@coelho.fi> writes:
+> > Hi Dave,
+> >
+> > This is an important fix for a bug that has been reported by several
+> > users in bugzilla (and elsewhere).  It fixes FW crashes that disrupt
+> > throughput and connectivity in general in very popular devices (Intel's
+> > WiFi 7000 and 8000 series).
+> >
+> > I know it's a bit late for v5.2, but if possible, it would be great to
+> > take this.  Kalle is on vacation, so we agreed that I would send it
+> > directly to you.
 >
-> Fixes gcc '-Wunused-but-set-variable' warning:
->
-> drivers/net/wireless/ath/carl9170/usb.c: In function 'carl9170_usb_disconnect':
-> drivers/net/wireless/ath/carl9170/usb.c:1110:21: warning:
->  variable 'udev' set but not used [-Wunused-but-set-variable]
->
-> It is not used, so can be removed.
->
-> Reported-by: Hulk Robot <hulkci@huawei.com>
-> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
-> ---
-Isn't this the same patch you sent earlier:
+> Acked-by: Kalle Valo <kvalo@codeaurora.org>
 
-https://patchwork.kernel.org/patch/11027909/
+5.2 has come and gone, and I believe Kalle has awoken from vacation.
+Can we get this for 5.3?
 
-From what I can tell, it's the same but with an extra [-next], I
-remember that I've acked that one
-but your patch now does not have it? Is this an oversight, because I'm
-the maintainer for this
-driver. So, in my opinion at least the "ack" should have some value
-and shouldn't be "ignored".
-
-Look, from what I know, Kalle is not ignoring you, It's just that
-carl9170 is no longer top priority.
-So please be patient. As long as its queued in the patchwork it will
-get considered.
-
-Cheers,
-Christian
-
->  drivers/net/wireless/ath/carl9170/usb.c | 2 --
->  1 file changed, 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/carl9170/usb.c b/drivers/net/wireless/ath/carl9170/usb.c
-> index 99f1897a775d..486957a04bd1 100644
-> --- a/drivers/net/wireless/ath/carl9170/usb.c
-> +++ b/drivers/net/wireless/ath/carl9170/usb.c
-> @@ -1107,12 +1107,10 @@ static int carl9170_usb_probe(struct usb_interface *intf,
->  static void carl9170_usb_disconnect(struct usb_interface *intf)
->  {
->         struct ar9170 *ar = usb_get_intfdata(intf);
-> -       struct usb_device *udev;
->
->         if (WARN_ON(!ar))
->                 return;
->
-> -       udev = ar->udev;
->         wait_for_completion(&ar->fw_load_wait);
->
->         if (IS_INITIALIZED(ar)) {
->
->
->
+Brian
