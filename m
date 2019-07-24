@@ -2,128 +2,127 @@ Return-Path: <SRS0=rB3s=VV=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7D02C76186
-	for <linux-wireless@archiver.kernel.org>; Wed, 24 Jul 2019 20:22:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24E68C7618F
+	for <linux-wireless@archiver.kernel.org>; Wed, 24 Jul 2019 20:23:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BA2872081B
-	for <linux-wireless@archiver.kernel.org>; Wed, 24 Jul 2019 20:22:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E8C30216F4
+	for <linux-wireless@archiver.kernel.org>; Wed, 24 Jul 2019 20:23:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="emPr0+o1"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="o6HuK98L"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391386AbfGXUWi (ORCPT
+        id S2390474AbfGXTnE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 24 Jul 2019 16:22:38 -0400
-Received: from mail-io1-f66.google.com ([209.85.166.66]:45992 "EHLO
-        mail-io1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390815AbfGXUWh (ORCPT
+        Wed, 24 Jul 2019 15:43:04 -0400
+Received: from mail-ot1-f66.google.com ([209.85.210.66]:34091 "EHLO
+        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2390462AbfGXTnD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 Jul 2019 16:22:37 -0400
-Received: by mail-io1-f66.google.com with SMTP id g20so92342299ioc.12
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Jul 2019 13:22:36 -0700 (PDT)
+        Wed, 24 Jul 2019 15:43:03 -0400
+Received: by mail-ot1-f66.google.com with SMTP id n5so49149379otk.1;
+        Wed, 24 Jul 2019 12:43:02 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
+        d=gmail.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=W7b98j1DYhcpfb7OdCLFp27JFdB3a34V6jagTpBUbfA=;
-        b=emPr0+o12gzDRDVdDGCZkDSc1awT8Sv7j4Y3PHnjX6+BEM8Ev916Ml6Ya5Ixn59rnj
-         bYHRVD4vJpGgnK8uA8ZfT2527Pza1HUFVITP04fOwvVSTVtDbOhp0XyRD+J1U8RCZ7+q
-         cQkjHaLlnu1CLlhPM31Ij364/ILIXnU5UveYQ=
+        bh=QjSdWDTJogyq8S7mZs7e3CcybE/Qyo4+rR9MEOHtmug=;
+        b=o6HuK98LM2PourpLrfOXA9tnYn/CKdQI2hdLQrkUfzkb1jy6E00k50kTtogJtwlvv2
+         57+lXOamDe30b8BogWXuiJtzUKWcGaJV6sEulXuVmyujuwypbLlkUWQeztRy/gZ05fri
+         rpYo12797NrIwUuayvg+Z4ES91GZ8cBBa8IbQ1jTT3Bg7RFxYzNSIl7vwRhqeYbhq+0M
+         H9F6O+Ekj4pVyD82SnQrijpG1v/GYtQkU3UidTzWXAJFkpesh8y/WJ2Jqfnu2rgDzLum
+         E4VD/T+1+B1OLCrWBhROAXd8QBVFbq5XAdTD6CPrapWuSOZSBBM9dWVUdOTJhNGQozY8
+         mffg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=W7b98j1DYhcpfb7OdCLFp27JFdB3a34V6jagTpBUbfA=;
-        b=Gx1q1HT6h8FrB0KUc8C/9iBRbwLg2jsONsSiB5NdVoY/fwIBZGtmUHCs5tFnoMiq9E
-         WEeHPhiAS5AGqG01erqatgpFLWGo4ZPedC8vsytWQ/6G1QyFr/2oNiYq9ysO3KFn42bV
-         yDtcJJHgGQ53MkBKv0/cRW3umv4QEMGQ3tf3GMeRBVUTDhc8k33fOOdzB5TIthD2WvdD
-         8TQPVN+Qf7xJ5yhCyBNhrqfhEfozOxBgpbFxTc+umv5srj6zWU8I+KOLpjaMit1ZlROE
-         MDWRSaO++0XByhV0eAptf19bssEFscHqRsirUoR0hvWIECg+Z4o0/W50mwbO56ZJLWh3
-         XSig==
-X-Gm-Message-State: APjAAAWcZJTis+MuSn9A/Ct8qmZKHD7BfYiO2Zl8Lbz4GzMKvh6iQbPe
-        wgyvLZTnul4hcJIhk9Nj4hHD9owCLYk=
-X-Google-Smtp-Source: APXvYqyGOa9rY/7GFMBmJ2C20MjRX4avKay4XQCGiE1p98KUI726X/Ey3zs6VN/swEleXvrw5wffeQ==
-X-Received: by 2002:a6b:7606:: with SMTP id g6mr23710188iom.288.1563999755964;
-        Wed, 24 Jul 2019 13:22:35 -0700 (PDT)
-Received: from mail-io1-f46.google.com (mail-io1-f46.google.com. [209.85.166.46])
-        by smtp.gmail.com with ESMTPSA id z19sm58366418ioh.12.2019.07.24.13.22.34
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_3 cipher=AEAD-AES128-GCM-SHA256 bits=128/128);
-        Wed, 24 Jul 2019 13:22:35 -0700 (PDT)
-Received: by mail-io1-f46.google.com with SMTP id i10so92298289iol.13
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Jul 2019 13:22:34 -0700 (PDT)
-X-Received: by 2002:a5d:8ccc:: with SMTP id k12mr78564964iot.141.1563999754524;
- Wed, 24 Jul 2019 13:22:34 -0700 (PDT)
+        bh=QjSdWDTJogyq8S7mZs7e3CcybE/Qyo4+rR9MEOHtmug=;
+        b=PAePG3mA3YcwPyRksNB4gvjWUw7dxPbUukvPp2v3A9EUO3mKaIXCfzchVPXSzEqWRO
+         Ge8McQGvO8KuznCnJsh6+6STswtAE8/zkvwUkboeq6o0VOcLf35qTXIgNH2jenpXhMXg
+         PlcUFu5P6oRZThiZJCzDCb0cx210KG7gPFCGoti0Du3Dx/eC5JnuyRca+RInp/t31ERi
+         Iao3KxojsuGZZ2gyBhOxCuoaRPuI0++lQFODSwQYDTXYCopIRL/vfWfGISqxVW3Kprl/
+         Is0r41BgZgBQpFFSq0ZEqihEaRDzJO8roa/uKGudaAE5Lp8HLqcXNnIToa2iwllOVDeE
+         UC/w==
+X-Gm-Message-State: APjAAAWXgW/e7Vdig8dLRt4jJUZBMCX7+RoRX/My5L+LFluThzbS8lAd
+        mNR7FQv/ZMt+Eci5M9QgS2h9o86M0+kJHsPYjmw=
+X-Google-Smtp-Source: APXvYqwGZraz9ZuMPAHtLv4av8XeMxMtRcV2ny/mkglBe9Iigbt3FbbIW4gbqH1rL+ysvtoWDs7Yddme7mzuJsK+3f4=
+X-Received: by 2002:a9d:590d:: with SMTP id t13mr2409952oth.281.1563997381856;
+ Wed, 24 Jul 2019 12:43:01 -0700 (PDT)
 MIME-Version: 1.0
-References: <20190722193939.125578-3-dianders@chromium.org> <20190724113508.47A356021C@smtp.codeaurora.org>
-In-Reply-To: <20190724113508.47A356021C@smtp.codeaurora.org>
-From:   Doug Anderson <dianders@chromium.org>
-Date:   Wed, 24 Jul 2019 13:22:22 -0700
-X-Gmail-Original-Message-ID: <CAD=FV=WAsrBV9PzUz1qPzQru+AkOYZ5hsaWdhNYRTNqUfDeOmQ@mail.gmail.com>
-Message-ID: <CAD=FV=WAsrBV9PzUz1qPzQru+AkOYZ5hsaWdhNYRTNqUfDeOmQ@mail.gmail.com>
-Subject: Re: [PATCH v2 2/2] mwifiex: Make use of the new sdio_trigger_replug()
- API to reset
-To:     Kalle Valo <kvalo@codeaurora.org>,
-        Ulf Hansson <ulf.hansson@linaro.org>
-Cc:     Adrian Hunter <adrian.hunter@intel.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
+References: <20190724015411.66525-1-yuehaibing@huawei.com>
+In-Reply-To: <20190724015411.66525-1-yuehaibing@huawei.com>
+From:   Christian Lamparter <chunkeey@gmail.com>
+Date:   Wed, 24 Jul 2019 21:42:48 +0200
+Message-ID: <CAAd0S9BvTfRyUVkQzcczyNkU_oeU5hNdK3KVQzLsU21b4JGNTQ@mail.gmail.com>
+Subject: Re: [PATCH] carl9170: remove set but not used variable 'udev'
+To:     YueHaibing <yuehaibing@huawei.com>
+Cc:     Kalle Valo <kvalo@codeaurora.org>,
         linux-wireless <linux-wireless@vger.kernel.org>,
-        Andreas Fenkart <afenkart@gmail.com>,
-        Brian Norris <briannorris@chromium.org>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        "open list:ARM/Rockchip SoC..." <linux-rockchip@lists.infradead.org>,
-        Wolfram Sang <wsa+renesas@sang-engineering.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        netdev <netdev@vger.kernel.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        Linux MMC List <linux-mmc@vger.kernel.org>,
-        David Miller <davem@davemloft.net>,
-        Xinming Hu <huxinming820@gmail.com>,
-        LKML <linux-kernel@vger.kernel.org>
+        Netdev <netdev@vger.kernel.org>, kernel-janitors@vger.kernel.org,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        Hulk Robot <hulkci@huawei.com>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
+On Wed, Jul 24, 2019 at 3:48 AM YueHaibing <yuehaibing@huawei.com> wrote:
+>
+> Fixes gcc '-Wunused-but-set-variable' warning:
+>
+> drivers/net/wireless/ath/carl9170/usb.c: In function 'carl9170_usb_disconnect':
+> drivers/net/wireless/ath/carl9170/usb.c:1110:21: warning:
+>  variable 'udev' set but not used [-Wunused-but-set-variable]
+>
+> It is not used, so can be removed.
+>
+> Reported-by: Hulk Robot <hulkci@huawei.com>
+> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+> ---
+Isn't this the same patch you sent earlier:
 
-On Wed, Jul 24, 2019 at 4:35 AM Kalle Valo <kvalo@codeaurora.org> wrote:
->
-> Douglas Anderson <dianders@chromium.org> wrote:
->
-> > As described in the patch ("mmc: core: Add sdio_trigger_replug()
-> > API"), the current mwifiex_sdio_card_reset() is broken in the cases
-> > where we're running Bluetooth on a second SDIO func on the same card
-> > as WiFi.  The problem goes away if we just use the
-> > sdio_trigger_replug() API call.
-> >
-> > NOTE: Even though with this new solution there is less of a reason to
-> > do our work from a workqueue (the unplug / plug mechanism we're using
-> > is possible for a human to perform at any time so the stack is
-> > supposed to handle it without it needing to be called from a special
-> > context), we still need a workqueue because the Marvell reset function
-> > could called from a context where sleeping is invalid and thus we
-> > can't claim the host.  One example is Marvell's wakeup_timer_fn().
-> >
-> > Cc: Andreas Fenkart <afenkart@gmail.com>
-> > Cc: Brian Norris <briannorris@chromium.org>
-> > Fixes: b4336a282db8 ("mwifiex: sdio: reset adapter using mmc_hw_reset")
-> > Signed-off-by: Douglas Anderson <dianders@chromium.org>
-> > Reviewed-by: Brian Norris <briannorris@chromium.org>
->
-> I assume this is going via some other tree so I'm dropping this from my
-> queue. If I should apply this please resend once the dependency is in
-> wireless-drivers-next.
->
-> Patch set to Not Applicable.
+https://patchwork.kernel.org/patch/11027909/
 
-Thanks.  For now I'll assume that Ulf will pick it up if/when he is
-happy with patch #1 in this series.  Would you be willing to provide
-your Ack on this patch to make it clear to Ulf you're OK with that?
+From what I can tell, it's the same but with an extra [-next], I
+remember that I've acked that one
+but your patch now does not have it? Is this an oversight, because I'm
+the maintainer for this
+driver. So, in my opinion at least the "ack" should have some value
+and shouldn't be "ignored".
 
--Doug
+Look, from what I know, Kalle is not ignoring you, It's just that
+carl9170 is no longer top priority.
+So please be patient. As long as its queued in the patchwork it will
+get considered.
+
+Cheers,
+Christian
+
+>  drivers/net/wireless/ath/carl9170/usb.c | 2 --
+>  1 file changed, 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/carl9170/usb.c b/drivers/net/wireless/ath/carl9170/usb.c
+> index 99f1897a775d..486957a04bd1 100644
+> --- a/drivers/net/wireless/ath/carl9170/usb.c
+> +++ b/drivers/net/wireless/ath/carl9170/usb.c
+> @@ -1107,12 +1107,10 @@ static int carl9170_usb_probe(struct usb_interface *intf,
+>  static void carl9170_usb_disconnect(struct usb_interface *intf)
+>  {
+>         struct ar9170 *ar = usb_get_intfdata(intf);
+> -       struct usb_device *udev;
+>
+>         if (WARN_ON(!ar))
+>                 return;
+>
+> -       udev = ar->udev;
+>         wait_for_completion(&ar->fw_load_wait);
+>
+>         if (IS_INITIALIZED(ar)) {
+>
+>
+>
