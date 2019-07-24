@@ -2,67 +2,64 @@ Return-Path: <SRS0=rB3s=VV=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87CD5C76194
-	for <linux-wireless@archiver.kernel.org>; Wed, 24 Jul 2019 05:39:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87852C7618B
+	for <linux-wireless@archiver.kernel.org>; Wed, 24 Jul 2019 05:42:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 55385227BF
-	for <linux-wireless@archiver.kernel.org>; Wed, 24 Jul 2019 05:39:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 524FD218DA
+	for <linux-wireless@archiver.kernel.org>; Wed, 24 Jul 2019 05:42:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="nb4y6vBn";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="D4xHNZx0"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="S6tdKK/H";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Ujzks8hq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726193AbfGXFjy (ORCPT
+        id S1726166AbfGXFms (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 24 Jul 2019 01:39:54 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:34300 "EHLO
+        Wed, 24 Jul 2019 01:42:48 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:35404 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725882AbfGXFjx (ORCPT
+        with ESMTP id S1725917AbfGXFms (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 Jul 2019 01:39:53 -0400
+        Wed, 24 Jul 2019 01:42:48 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 5C0C160CED; Wed, 24 Jul 2019 05:39:53 +0000 (UTC)
+        id 30C2B60FEE; Wed, 24 Jul 2019 05:42:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1563946793;
-        bh=MMhai2COm8cnkYrv/dvMLvXqAKcjY56ENAXvop82H7U=;
+        s=default; t=1563946967;
+        bh=PYmMgHLnn+uS7jujuUNMhQgsfBPjg7Apw2qRKsODwtw=;
         h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=nb4y6vBnz9vkLD+pOIry/36Icm3pzibY3vWq8Hw/MKQk82eZN5Xu6Okz/p+xD/O/y
-         ptqssP+qM/GHEx2FfIlUYfZ691DgfRilOS8wG7jEGNl++sl3BwFuKqoiVbclW4Z5Fw
-         5JADz9BIvRZB2Z5DxpSR28lazd8EYRCy8omMlSmw=
+        b=S6tdKK/HAbePn7PBt6q3TLMXoswhLLKUnN//11XPgPJOZ4CL7e8jnvJSf4xk1qnAh
+         RGJ9HK1xekEvolSBrIXQe3zFk28oDkYEDff5NdPpUd2B/6ryl56I/Gdu85FPeGAtob
+         LGoQdCRT8/SVdayf0QPy14/8L84KMn6lK+SJziCw=
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id D2C8760CED;
-        Wed, 24 Jul 2019 05:39:49 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 2A850601B4;
+        Wed, 24 Jul 2019 05:42:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1563946792;
-        bh=MMhai2COm8cnkYrv/dvMLvXqAKcjY56ENAXvop82H7U=;
+        s=default; t=1563946965;
+        bh=PYmMgHLnn+uS7jujuUNMhQgsfBPjg7Apw2qRKsODwtw=;
         h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=D4xHNZx0wfHaVp+2Zls4zbfCKV0fk4Pci1I4X0elSeXXAysqDci8QeoH8tvJsPoCn
-         mRLFfiOzGaCcEshfsMkjJN1XN0KolGQb7SAuADNhT5iPtkHzpShOCeIimSYsxOnUgu
-         gXinv+XQvHWvapDGY0gjfSm7yP3ERjLIBR0LVE5Y=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org D2C8760CED
+        b=Ujzks8hqcut3npyNE+zk6Ir34P/fblLHXvBzASjtwSIfl4bFHzH4Dk/YUsZpmEUkM
+         RiUeL67mlVfrRnC9HrQ3cKXulAXdZE6LfZHOvHroGo8YqlSS+9h85J7mFyLIw23uLP
+         L+VIKQAx8HqkBLvRMPb1ZP8OjwflzakJ35aoE8J4=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 2A850601B4
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Navid Emamdoost <navid.emamdoost@gmail.com>
-Cc:     emamd001@umn.edu, kjlu@umn.edu, smccaman@umn.edu,
-        secalert@redhat.com, Jakub Kicinski <kubakici@wp.pl>,
-        "David S. Miller" <davem@davemloft.net>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] mt76_init_sband_2g: null check the allocation
-References: <20190723221954.9233-1-navid.emamdoost@gmail.com>
-Date:   Wed, 24 Jul 2019 08:39:46 +0300
-In-Reply-To: <20190723221954.9233-1-navid.emamdoost@gmail.com> (Navid
-        Emamdoost's message of "Tue, 23 Jul 2019 17:19:54 -0500")
-Message-ID: <87d0i00z4t.fsf@kamboji.qca.qualcomm.com>
+To:     maowenan <maowenan@huawei.com>
+Cc:     <amitkarwar@gmail.com>, <nishants@marvell.com>,
+        <gbhat@marvell.com>, <huxinming820@gmail.com>,
+        <linux-wireless@vger.kernel.org>, <kernel-janitors@vger.kernel.org>
+Subject: Re: [net-next] mwifiex: use eth_broadcast_addr() to assign broadcast address
+References: <20190710072524.65953-1-maowenan@huawei.com>
+        <609fa4ae-7210-7758-c8ff-1b06492356e1@huawei.com>
+Date:   Wed, 24 Jul 2019 08:42:42 +0300
+In-Reply-To: <609fa4ae-7210-7758-c8ff-1b06492356e1@huawei.com>
+        (maowenan@huawei.com's message of "Wed, 24 Jul 2019 09:32:13 +0800")
+Message-ID: <878sso0yzx.fsf@kamboji.qca.qualcomm.com>
 User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
 Content-Type: text/plain
@@ -71,18 +68,13 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Navid Emamdoost <navid.emamdoost@gmail.com> writes:
+maowenan <maowenan@huawei.com> writes:
 
-> devm_kzalloc may fail and return NULL. So the null check is needed.
->
-> Signed-off-by: Navid Emamdoost <navid.emamdoost@gmail.com>
-> ---
->  drivers/net/wireless/mediatek/mt7601u/init.c | 3 +++
->  1 file changed, 3 insertions(+)
+> gentle ping...
 
-The prefix in the title should be "mt7601u:".
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#commit_title_is_wrong
+I don't apply patches during the merge window, so you just have to wait
+untill I'll open wireless-drivers-next. And this for
+wireless-drivers-next, not net-next.
 
 -- 
 Kalle Valo
