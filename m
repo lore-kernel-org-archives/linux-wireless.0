@@ -2,73 +2,73 @@ Return-Path: <SRS0=rB3s=VV=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=DKIM_ADSP_CUSTOM_MED,
+X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_ADSP_CUSTOM_MED,
 	DKIM_INVALID,DKIM_SIGNED,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FE8FC7618B
-	for <linux-wireless@archiver.kernel.org>; Wed, 24 Jul 2019 11:27:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57D49C7618B
+	for <linux-wireless@archiver.kernel.org>; Wed, 24 Jul 2019 11:27:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 274F42190F
-	for <linux-wireless@archiver.kernel.org>; Wed, 24 Jul 2019 11:27:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2CF2D2190F
+	for <linux-wireless@archiver.kernel.org>; Wed, 24 Jul 2019 11:27:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WYT46Etc"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="at5NcK2s"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727650AbfGXL1p (ORCPT
+        id S1727692AbfGXL1x (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 24 Jul 2019 07:27:45 -0400
-Received: from mail-pg1-f194.google.com ([209.85.215.194]:44837 "EHLO
-        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727368AbfGXL1p (ORCPT
+        Wed, 24 Jul 2019 07:27:53 -0400
+Received: from mail-pf1-f196.google.com ([209.85.210.196]:43694 "EHLO
+        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727378AbfGXL1w (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 Jul 2019 07:27:45 -0400
-Received: by mail-pg1-f194.google.com with SMTP id i18so21089079pgl.11;
-        Wed, 24 Jul 2019 04:27:44 -0700 (PDT)
+        Wed, 24 Jul 2019 07:27:52 -0400
+Received: by mail-pf1-f196.google.com with SMTP id i189so20808151pfg.10;
+        Wed, 24 Jul 2019 04:27:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=7IR+uM+j5koIPBW7Xm8FY732aVxv1FIX3BlElSJL8Ys=;
-        b=WYT46Etclh2BRTLLlTCKaJz2sGvVnXzruG+odXhQVXIP3TB/nCW4zE4muSr1Ooypxw
-         VkfEtU3W2UqgH5se/CJ4OsknHNDvrtuJxSwgYdOinDJytVvuMgLJiMJTJtNklC8DWQ2s
-         eomxXn/7JAVADbtY4+KdUmRcJLcQrgQOxvrNYyobdEFddBO9I6jCrmH2T1eS/3pcBN6W
-         taK5i//Ks7WA1vjzmLT3ep1VJc28sPR6CYvMchwkqeC3cQehnCUqRlCG+yzikuUNlEko
-         pCQxAJ1TN8hUZBLF3CBNeYfqitid28xNF6o2gpKtOSB44RsakGKvM85XU53l1lIS7bfz
-         ahyA==
+        bh=Iund/UB9gNsEMyB6ZwMB2lOVuWc9Eufb+ac0l5cR60E=;
+        b=at5NcK2seyInJhe4u9iZiFKeIfzZQWhTWl+QhvVQcV7D9M//dLJUrKYzGFxjC0HXTi
+         k4nZxcMQbMrdMEsuDie5/nVQhir0mPkiPOCqm+KYVPmhAVw2z0arLEZJBUR8lTgmlXbc
+         kY2cjErIl28ZGU+CcVLQpH0ATIvHRoAuw8dkdemCUpCdN1cwmaojPUsw5/NISm761tzb
+         a5rGOa8w3lqNtW12CHlo0YkMWwEQBRGcFHLTMQP3PAfZKwpI6PksHQ1b3fqBqPf1mg00
+         7flTBtzDR9yjiXPEziOMiwgECAzhLpJRLU85M2jLM9DrweIx8LS/8MqdS2b2Mnsu9aFZ
+         AuEg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=7IR+uM+j5koIPBW7Xm8FY732aVxv1FIX3BlElSJL8Ys=;
-        b=FB0Ji0A46OOGX0kzASb+K0Y65UltBGYtwOfDfPtuSQoK23xMr+fgU2jFHvhB8djKTA
-         X05Pk3x+Z8fri0vBxZrxY9bmn2JKFb3d98ruTHEPGTrbT6sRhPvzATr48NZc0wTF9pim
-         MqBSYqkT5uXvksLBWEQyMnIfxK8TDYd2cqJvSwKIs1B8Y8Ow7i9hYWchugwzgdvGRlbq
-         UV3KaWzMTnrHs9HzM9JadOtGm8WzrU2nOaxLWicSLqFBYzLZU4PwmEan2ceu1H6pPQqU
-         Vcr2nqXM8gLe4XGWmecduvD8lcUFaURFjg3iJarp1OGggrQlFXh+aLJIZRRr51KiU+5E
-         cexA==
-X-Gm-Message-State: APjAAAUbx7w0uKPdQRN0BVx2fvR7ceJe8WX8xR43KYwU1R7+taW3QS6x
-        a72+sKCDztN8GvbF4G90VDM=
-X-Google-Smtp-Source: APXvYqz6sN2JwpXp26sb8CBgIE5le7DadChkZCVYYMfhfmyDHN/y5tSMhuPY4RW4VWNSDY6xfLPZAQ==
-X-Received: by 2002:a63:2744:: with SMTP id n65mr67926788pgn.277.1563967664643;
-        Wed, 24 Jul 2019 04:27:44 -0700 (PDT)
+        bh=Iund/UB9gNsEMyB6ZwMB2lOVuWc9Eufb+ac0l5cR60E=;
+        b=rPRmI7LLWGAirx8v8+QMjVJ2BTl0OMV9P6TZrIuaMVM9YU6dwInd8Y00DgIalF24ki
+         R/zgs/21KLDBdAfY2kONuSkWz0lJh9o+Y7nxAqtQkx22+qjy1uUff4heTNvbKBOxeWsb
+         55CDq6KZ8pT3WewTFZVmlR+nCLTfAsg8hWTZqT/jUiVpSJETUwYs6tNoAlW6eNVHl3x4
+         bt4YXUriDvjpJdPgtR5uyUswaJAiZ2Pjjnr0xyJwOcLryap8Yiyx51+FFbwgjcgAE9uA
+         +AQcWnv/bmOQLVZdqbeUK6GUmj/yi+GLdCTQWIm9W8lmZoPQTnlUbvl0uOaBK7L3i0Ia
+         rvOA==
+X-Gm-Message-State: APjAAAUkYgIKBSC1AfOxLsUjblsdccbXhBlEFRGLxYUUbxDIdo+a9kGL
+        Oo63n2LTIi7iHXF2RumO3rA=
+X-Google-Smtp-Source: APXvYqzw5Y+tX9XJPPEn3RACN7m9XmWz0i+yjVNwBS+UWPXJPSUIz0iS40yEgEuMqNKxHJVvO23Wmw==
+X-Received: by 2002:a17:90a:8c92:: with SMTP id b18mr85600256pjo.97.1563967672272;
+        Wed, 24 Jul 2019 04:27:52 -0700 (PDT)
 Received: from suzukaze.ipads-lab.se.sjtu.edu.cn ([89.31.126.54])
-        by smtp.gmail.com with ESMTPSA id v185sm52804086pfb.14.2019.07.24.04.27.41
+        by smtp.gmail.com with ESMTPSA id x9sm54902521pfn.177.2019.07.24.04.27.48
         (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
-        Wed, 24 Jul 2019 04:27:44 -0700 (PDT)
+        Wed, 24 Jul 2019 04:27:51 -0700 (PDT)
 From:   Chuhong Yuan <hslester96@gmail.com>
-Cc:     Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
+Cc:     Amitkumar Karwar <amitkarwar@gmail.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Xinming Hu <huxinming820@gmail.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         "David S . Miller" <davem@davemloft.net>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org, Chuhong Yuan <hslester96@gmail.com>
-Subject: [PATCH net-next 07/10] iwlwifi: Use dev_get_drvdata where possible
-Date:   Wed, 24 Jul 2019 19:27:38 +0800
-Message-Id: <20190724112738.13457-1-hslester96@gmail.com>
+Subject: [PATCH net-next 08/10] mwifiex: pcie: Use dev_get_drvdata
+Date:   Wed, 24 Jul 2019 19:27:45 +0800
+Message-Id: <20190724112745.13511-1-hslester96@gmail.com>
 X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -83,53 +83,37 @@ use dev_get_drvdata to make code simpler.
 
 Signed-off-by: Chuhong Yuan <hslester96@gmail.com>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 12 ++++--------
- 1 file changed, 4 insertions(+), 8 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index ea2a03d4bf55..fe76e1540d39 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -1248,8 +1248,7 @@ int iwl_pci_fw_exit_d0i3(struct iwl_trans *trans)
- #ifdef CONFIG_IWLWIFI_PCIE_RTPM
- static int iwl_pci_runtime_suspend(struct device *device)
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index b54f73e3d508..eff06d59e9df 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -150,10 +150,8 @@ static bool mwifiex_pcie_ok_to_access_hw(struct mwifiex_adapter *adapter)
+ static int mwifiex_pcie_suspend(struct device *dev)
  {
--	struct pci_dev *pdev = to_pci_dev(device);
--	struct iwl_trans *trans = pci_get_drvdata(pdev);
-+	struct iwl_trans *trans = dev_get_drvdata(device);
- 	int ret;
+ 	struct mwifiex_adapter *adapter;
+-	struct pcie_service_card *card;
+-	struct pci_dev *pdev = to_pci_dev(dev);
++	struct pcie_service_card *card = dev_get_drvdata(dev);
  
- 	IWL_DEBUG_RPM(trans, "entering runtime suspend\n");
-@@ -1269,8 +1268,7 @@ static int iwl_pci_runtime_suspend(struct device *device)
+-	card = pci_get_drvdata(pdev);
  
- static int iwl_pci_runtime_resume(struct device *device)
+ 	/* Might still be loading firmware */
+ 	wait_for_completion(&card->fw_done);
+@@ -195,10 +193,8 @@ static int mwifiex_pcie_suspend(struct device *dev)
+ static int mwifiex_pcie_resume(struct device *dev)
  {
--	struct pci_dev *pdev = to_pci_dev(device);
--	struct iwl_trans *trans = pci_get_drvdata(pdev);
-+	struct iwl_trans *trans = dev_get_drvdata(device);
- 	enum iwl_d3_status d3_status;
+ 	struct mwifiex_adapter *adapter;
+-	struct pcie_service_card *card;
+-	struct pci_dev *pdev = to_pci_dev(dev);
++	struct pcie_service_card *card = dev_get_drvdata(dev);
  
- 	IWL_DEBUG_RPM(trans, "exiting runtime suspend (resume)\n");
-@@ -1285,8 +1283,7 @@ static int iwl_pci_runtime_resume(struct device *device)
+-	card = pci_get_drvdata(pdev);
  
- static int iwl_pci_system_prepare(struct device *device)
- {
--	struct pci_dev *pdev = to_pci_dev(device);
--	struct iwl_trans *trans = pci_get_drvdata(pdev);
-+	struct iwl_trans *trans = dev_get_drvdata(device);
- 
- 	IWL_DEBUG_RPM(trans, "preparing for system suspend\n");
- 
-@@ -1308,8 +1305,7 @@ static int iwl_pci_system_prepare(struct device *device)
- 
- static void iwl_pci_system_complete(struct device *device)
- {
--	struct pci_dev *pdev = to_pci_dev(device);
--	struct iwl_trans *trans = pci_get_drvdata(pdev);
-+	struct iwl_trans *trans = dev_get_drvdata(device);
- 
- 	IWL_DEBUG_RPM(trans, "completing system suspend\n");
- 
+ 	if (!card->adapter) {
+ 		dev_err(dev, "adapter structure is not valid\n");
 -- 
 2.20.1
 
