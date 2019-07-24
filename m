@@ -6,35 +6,35 @@ X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CE9AC7618B
-	for <linux-wireless@archiver.kernel.org>; Wed, 24 Jul 2019 12:39:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5804CC7618B
+	for <linux-wireless@archiver.kernel.org>; Wed, 24 Jul 2019 12:40:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F3B7A229FA
-	for <linux-wireless@archiver.kernel.org>; Wed, 24 Jul 2019 12:39:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3B973229ED
+	for <linux-wireless@archiver.kernel.org>; Wed, 24 Jul 2019 12:40:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728423AbfGXMjX (ORCPT
+        id S1726470AbfGXMkl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 24 Jul 2019 08:39:23 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:52908 "EHLO
+        Wed, 24 Jul 2019 08:40:41 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:52926 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725776AbfGXMjX (ORCPT
+        with ESMTP id S1725776AbfGXMkk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 Jul 2019 08:39:23 -0400
+        Wed, 24 Jul 2019 08:40:40 -0400
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1hqGYC-0005nl-5P; Wed, 24 Jul 2019 14:39:20 +0200
-Message-ID: <91f918911b7a33c84d7a620e75a1d8155a239237.camel@sipsolutions.net>
-Subject: Re: [PATCH 2/2] net: mac80211: Fix possible null-pointer
- dereferences in ieee80211_xmit_fast_finish()
+        id 1hqGZO-0005pu-SF; Wed, 24 Jul 2019 14:40:34 +0200
+Message-ID: <127c411cc06e04b61220a571f5332b9155c69f77.camel@sipsolutions.net>
+Subject: Re: [PATCH 1/2] net: mac80211: Fix possible null-pointer
+ dereferences in ieee80211_setup_sdata()
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     Jia-Ju Bai <baijiaju1990@gmail.com>, davem@davemloft.net
 Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Date:   Wed, 24 Jul 2019 14:39:16 +0200
-In-Reply-To: <20190724123633.10145-1-baijiaju1990@gmail.com> (sfid-20190724_143645_528233_F6E5B778)
-References: <20190724123633.10145-1-baijiaju1990@gmail.com>
-         (sfid-20190724_143645_528233_F6E5B778)
+Date:   Wed, 24 Jul 2019 14:40:33 +0200
+In-Reply-To: <20190724123623.10093-1-baijiaju1990@gmail.com> (sfid-20190724_143632_658051_4FE62E07)
+References: <20190724123623.10093-1-baijiaju1990@gmail.com>
+         (sfid-20190724_143632_658051_4FE62E07)
 Content-Type: text/plain; charset="UTF-8"
 User-Agent: Evolution 3.30.5 (3.30.5-1.fc29) 
 MIME-Version: 1.0
@@ -45,22 +45,18 @@ List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 On Wed, 2019-07-24 at 20:36 +0800, Jia-Ju Bai wrote:
-> In ieee80211_xmit_fast_finish(), there is an if statement on line 3356
-> to check whether key is NULL:
->     if (key)
+> In ieee80211_setup_sdata(), there is an if statement on line 1410 to
+> check whether sdata->dev is NULL:
+>     if (sdata->dev)
 > 
-> When key is NULL, it is used on line 3388:
->     switch (key->conf.cipher)
-> and line 3393:
->     pn = atomic64_inc_return(&key->conf.tx_pn);
-> and line 3396:
->     crypto_hdr[3] = 0x20 | (key->conf.keyidx << 6);
+> When sdata->dev is NULL, it is used on lines 1458 and 1459:
+>     sdata->dev->type = ARPHRD_IEEE80211_RADIOTAP;
+>     sdata->dev->netdev_ops = &ieee80211_monitorif_ops;
 > 
 > Thus, possible null-pointer dereferences may occur.
 
-No, this cannot happen, because pn_offs can only be non-zero when there
-is a key. Maybe we should pass the fast_tx pointer instead of the
-pn_offs/key from it, but the two are coupled.
+No, this cannot happen, monitor interfaces (NL80211_IFTYPE_MONITOR) must
+have a valid ->dev, only P2P device and NAN might not.
 
 johannes
 
