@@ -2,149 +2,90 @@ Return-Path: <SRS0=wvrd=VW=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_ADSP_CUSTOM_MED,
-	DKIM_INVALID,DKIM_SIGNED,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 272D2C7618F
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Jul 2019 02:52:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AAD37C76186
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Jul 2019 02:54:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0120721901
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Jul 2019 02:52:15 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="my3er5fJ"
+	by mail.kernel.org (Postfix) with ESMTP id 7C87B21901
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Jul 2019 02:54:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389399AbfGYCwK (ORCPT
+        id S2389438AbfGYCyc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 24 Jul 2019 22:52:10 -0400
-Received: from mail-pl1-f193.google.com ([209.85.214.193]:40898 "EHLO
-        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388165AbfGYCwK (ORCPT
+        Wed, 24 Jul 2019 22:54:32 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:60786 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387562AbfGYCyc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 Jul 2019 22:52:10 -0400
-Received: by mail-pl1-f193.google.com with SMTP id a93so22732107pla.7;
-        Wed, 24 Jul 2019 19:52:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=m7uFTn+wdUyY6FftVjNKnXfk6vSQHgFo0Xy22iR7DoA=;
-        b=my3er5fJAwtBvMUkVZV+AWlRF3hSSlzyMPmRDPSBe4xkSXH28IHLlhXMwODJAWVKqd
-         A9u3ZVhULFzLu7Q+7Vi1TI/AlWes2deS6zaTOPf+A+YQQegUddfE8RbvmXzA3tiO7bLS
-         Zv+J8ea9u7pbGVOi8oqHvSpwWzRTsL2eByOqxxbhRPn5UwnBJqP98eBrg496MRa3DNTr
-         gni8hyzZmLmZBoygCAdlPZKSeWgUEHmnpaNYye/4oou5enGlHh1Ko84piaS+1gBIp5R8
-         q/Lxx26+4ihmrt6w4De3X7dw42ek++Htl5KCuEksCzS0lM2RGGm1eLLZYRbDmPkpt5xy
-         QKFQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=m7uFTn+wdUyY6FftVjNKnXfk6vSQHgFo0Xy22iR7DoA=;
-        b=K+8+K9XUuhr4yPds2xkHZO5wKu1SyUjYPGWlroz3+C3vazcrfqbOZNX1LPTFlmMZU1
-         ncLaji4hwcodzAYnbjXhy5HHpHjVdWGjGsXGNvBYVnUA3cc6TSvoaHBZtDXjhKc5/wX+
-         nVbvZE8VyhHFyP/nFrvnQEclCn4gILavDfN7nogCP0rlGnsZffRW5GEBqBypzY9l4lhL
-         1KL5bTFfMwb1rE19K9+5Dvv6jTZy2GFhOYMdcLZ7tAFZMhYnbMTLM1eAqYqIH8y3gMF+
-         kXtLHj+R6lgu3kQBuOYTUAzbRVo3ofpm8gasXZCVydc79sko5AAmLqripDrvHM+0XayA
-         uKUw==
-X-Gm-Message-State: APjAAAV+104sAqRO2bGyKIpSF0FzJB/fVQfqaZtOBicpezF6gIEyVQDj
-        M9heEvC1eEIku++yMe8i368=
-X-Google-Smtp-Source: APXvYqyrUO7NZ2PJ3hkWF7aJ8vDZzi9nuamErbVVvaw17u++wG3U88xnYdPJeVfQ+mpCWuJn0aSu0Q==
-X-Received: by 2002:a17:902:549:: with SMTP id 67mr88439874plf.86.1564023129477;
-        Wed, 24 Jul 2019 19:52:09 -0700 (PDT)
-Received: from suzukaze.ipads-lab.se.sjtu.edu.cn ([89.31.126.54])
-        by smtp.gmail.com with ESMTPSA id k64sm29362195pge.65.2019.07.24.19.52.06
-        (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
-        Wed, 24 Jul 2019 19:52:08 -0700 (PDT)
-From:   Chuhong Yuan <hslester96@gmail.com>
-Cc:     Adham Abozaeid <adham.abozaeid@microchip.com>,
-        Ajay Singh <ajay.kathat@microchip.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        linux-kernel@vger.kernel.org, Chuhong Yuan <hslester96@gmail.com>
-Subject: [PATCH v2] staging: wilc1000: Merge memcpy + le32_to_cpus to get_unaligned_le32
-Date:   Thu, 25 Jul 2019 10:52:03 +0800
-Message-Id: <20190725025203.8772-1-hslester96@gmail.com>
-X-Mailer: git-send-email 2.20.1
+        Wed, 24 Jul 2019 22:54:32 -0400
+Authenticated-By: 
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x6P2sNG3010420, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (RTITCASV01.realtek.com.tw[172.21.6.18])
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x6P2sNG3010420
+        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
+        Thu, 25 Jul 2019 10:54:23 +0800
+Received: from localhost.localdomain (172.21.68.126) by
+ RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
+ 14.3.439.0; Thu, 25 Jul 2019 10:54:22 +0800
+From:   <yhchuang@realtek.com>
+To:     <kvalo@codeaurora.org>
+CC:     <linux-wireless@vger.kernel.org>, <sgruszka@redhat.com>,
+        <briannorris@chromium.org>
+Subject: [PATCH v2 1/5] rtw88: switch specified efuse bank
+Date:   Thu, 25 Jul 2019 10:53:27 +0800
+Message-ID: <1564023211-3138-2-git-send-email-yhchuang@realtek.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1564023211-3138-1-git-send-email-yhchuang@realtek.com>
+References: <1564023211-3138-1-git-send-email-yhchuang@realtek.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-To:     unlisted-recipients:; (no To-header on input)
+Content-Type: text/plain
+X-Originating-IP: [172.21.68.126]
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Merge the combo use of memcpy and le32_to_cpus.
-Use get_unaligned_le32 instead.
-This simplifies the code.
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-Signed-off-by: Chuhong Yuan <hslester96@gmail.com>
+Allows to switch different type of efuse bank by passing
+the bank type to swtich to.
+
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
-Changes in v2:
-  - Merge the previous two patches which
-    have the same subject line.
+v1 -> v2
+    no change
 
- drivers/staging/wilc1000/wilc_mon.c               | 3 +--
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 3 +--
- drivers/staging/wilc1000/wilc_wlan.c              | 9 +++------
- 3 files changed, 5 insertions(+), 10 deletions(-)
+ drivers/net/wireless/realtek/rtw88/efuse.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_mon.c b/drivers/staging/wilc1000/wilc_mon.c
-index 7d7933d40924..d6f14f69ad64 100644
---- a/drivers/staging/wilc1000/wilc_mon.c
-+++ b/drivers/staging/wilc1000/wilc_mon.c
-@@ -35,8 +35,7 @@ void wilc_wfi_monitor_rx(struct net_device *mon_dev, u8 *buff, u32 size)
- 		return;
+diff --git a/drivers/net/wireless/realtek/rtw88/efuse.c b/drivers/net/wireless/realtek/rtw88/efuse.c
+index 212c837..66e56f3 100644
+--- a/drivers/net/wireless/realtek/rtw88/efuse.c
++++ b/drivers/net/wireless/realtek/rtw88/efuse.c
+@@ -9,10 +9,10 @@
  
- 	/* Get WILC header */
--	memcpy(&header, (buff - HOST_HDR_OFFSET), HOST_HDR_OFFSET);
--	le32_to_cpus(&header);
-+	header = get_unaligned_le32(buff - HOST_HDR_OFFSET);
- 	/*
- 	 * The packet offset field contain info about what type of management
- 	 * the frame we are dealing with and ack status
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index d72fdd333050..12fb4add05ec 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -1038,8 +1038,7 @@ void wilc_wfi_p2p_rx(struct wilc_vif *vif, u8 *buff, u32 size)
- 	s32 freq;
- 	__le16 fc;
+ #define RTW_EFUSE_BANK_WIFI		0x0
  
--	memcpy(&header, (buff - HOST_HDR_OFFSET), HOST_HDR_OFFSET);
--	le32_to_cpus(&header);
-+	header = get_unaligned_le32(buff - HOST_HDR_OFFSET);
- 	pkt_offset = GET_PKT_OFFSET(header);
+-static void switch_efuse_bank(struct rtw_dev *rtwdev)
++static void switch_efuse_bank(struct rtw_dev *rtwdev, u8 efuse_bank)
+ {
+ 	rtw_write32_mask(rtwdev, REG_LDO_EFUSE_CTRL, BIT_MASK_EFUSE_BANK_SEL,
+-			 RTW_EFUSE_BANK_WIFI);
++			 efuse_bank);
+ }
  
- 	if (pkt_offset & IS_MANAGMEMENT_CALLBACK) {
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index d46876edcfeb..7d438ae90c3e 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -703,8 +703,7 @@ static void wilc_wlan_handle_rx_buff(struct wilc *wilc, u8 *buffer, int size)
+ #define invalid_efuse_header(hdr1, hdr2) \
+@@ -90,7 +90,7 @@ static int rtw_dump_physical_efuse_map(struct rtw_dev *rtwdev, u8 *map)
+ 	u32 addr;
+ 	u32 cnt;
  
- 	do {
- 		buff_ptr = buffer + offset;
--		memcpy(&header, buff_ptr, 4);
--		le32_to_cpus(&header);
-+		header = get_unaligned_le32(buff_ptr);
+-	switch_efuse_bank(rtwdev);
++	switch_efuse_bank(rtwdev, RTW_EFUSE_BANK_WIFI);
  
- 		is_cfg_packet = (header >> 31) & 0x1;
- 		pkt_offset = (header >> 22) & 0x1ff;
-@@ -874,10 +873,8 @@ int wilc_wlan_firmware_download(struct wilc *wilc, const u8 *buffer,
- 
- 	offset = 0;
- 	do {
--		memcpy(&addr, &buffer[offset], 4);
--		memcpy(&size, &buffer[offset + 4], 4);
--		le32_to_cpus(&addr);
--		le32_to_cpus(&size);
-+		addr = get_unaligned_le32(&buffer[offset]);
-+		size = get_unaligned_le32(&buffer[offset + 4]);
- 		acquire_bus(wilc, WILC_BUS_ACQUIRE_ONLY);
- 		offset += 8;
- 		while (((int)size) && (offset < buffer_size)) {
+ 	/* disable 2.5V LDO */
+ 	chip->ops->cfg_ldo25(rtwdev, false);
 -- 
-2.20.1
+2.7.4
 
