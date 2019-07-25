@@ -2,185 +2,292 @@ Return-Path: <SRS0=wvrd=VW=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 350D2C7618B
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Jul 2019 13:28:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6795C76191
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Jul 2019 17:48:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0A5422190F
-	for <linux-wireless@archiver.kernel.org>; Thu, 25 Jul 2019 13:28:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 79A2420659
+	for <linux-wireless@archiver.kernel.org>; Thu, 25 Jul 2019 17:48:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="f/uQQYPH"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="s/bw04vk"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728915AbfGYN2t (ORCPT
+        id S2403959AbfGYRsG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 25 Jul 2019 09:28:49 -0400
-Received: from mail-vs1-f67.google.com ([209.85.217.67]:40101 "EHLO
-        mail-vs1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726519AbfGYN2t (ORCPT
+        Thu, 25 Jul 2019 13:48:06 -0400
+Received: from mail-pf1-f196.google.com ([209.85.210.196]:44096 "EHLO
+        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2403925AbfGYRsE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 Jul 2019 09:28:49 -0400
-Received: by mail-vs1-f67.google.com with SMTP id a186so32069334vsd.7
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Jul 2019 06:28:48 -0700 (PDT)
+        Thu, 25 Jul 2019 13:48:04 -0400
+Received: by mail-pf1-f196.google.com with SMTP id t16so23091556pfe.11
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Jul 2019 10:48:03 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=vXKNB/T35UEJpgjy5bQMa/g2p0OKD2QzsqlMlAa6XPw=;
-        b=f/uQQYPHA8g4EJYLPYLuJ1y5iqC+JXr+y3ZExBNQFRTKMBE0ptdYkfXtsOwg8bWulp
-         zZ8vUXVHZTtT4veYqE6FY3J9yFjAWOKah4KLs0giuYjbw9oX80NdYOLQLeEpMoPXSM6F
-         LNu9DnmAgcDf2vlgWEuiZiTg9pVoHA9Kkn6k5l9MtGEZO/630B/DkxncJQpZvT08FtmE
-         ifzxx8MnhDevDnFLTEhcuytmqcQSWHjXXKaWyxOrUa4+IMAdtbxkxnY+4AzTBJuCCibf
-         ZN5FXJyrsuZFnYPkovS2Im/Jo42DNXFxP9f+RaIyJMosOPS+ykDNufilHeZ0jIjlcLVL
-         uwmA==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=GovT0wzh5qxyqV9OneNnQImH0OsXKl2tN6pFF75ONIw=;
+        b=s/bw04vkMYnY+EKtQQO95I+PcZHokjnqpIQJmgnjVt0v3kddjrHkXiNVmJ49oyKvG7
+         3mVtuJBY+seXVwEwQOWcnPe8OKRqBcoduh3YytdhvYO5doi0ioq3ZhQMMmZl6OpEvcd1
+         LyGCE91q6aFZDepZVSpp4Sv6KqnXlvP9366iKr7WrqSAkZnkIo7EkKruobECtB9Bzlob
+         Lb7UGj25ZI2ojkvJtcFJASgDwM6cmgHdJt2QqgDBL+j9YG9mp2lqVL3nPjGpVWnlnCA/
+         BzqSwm7A6+9TfAk9Lu6j64hFiGrUYMk92Dj1Kz7Gwxvid1m57ct78IYzuvria/LNcO6w
+         /5yg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=vXKNB/T35UEJpgjy5bQMa/g2p0OKD2QzsqlMlAa6XPw=;
-        b=CfHUUzSU1TFQTIEY55njqLTqPn3jOhixtHRiHCwmYk4oOCITiheUPcwdW7653wip+l
-         Q3OJiV54qZdUMLNMgUD3LIJEcutZ1AVxB8oCTQiMJq/lFeONeU5nJpdfGsVuZs/+a0Md
-         B+v1NFy6odVLtyp0c3Z2VgQYb64jCbzu7aNuRzXpEXtheU2twiCKx/Yshii9vuLbqx67
-         Z8ZbLggFjIqjhwgWvvHiuo8UwBOJ4dHVsJW699Yyai9LKx1EV3ZD73dEdSTLQiBvBJd0
-         pXis1c1H4Zo6tDMuRsu09Hs6lL/PyOt9cvfFw3gEV5DNaIvzCjDi0wJZzfyZrGyxzgSu
-         CLSg==
-X-Gm-Message-State: APjAAAV3cdr1IVxESOEb8L2R3/1CAtkkhj/S3FBI80U7KJIA+Ydavapo
-        K2ii8Xfj05q0GraV1R/d9NWXxZzK2WBVE4KszB1L8g==
-X-Google-Smtp-Source: APXvYqxQVUGQaO08z8JvqC/8hjWZk0eU15RGOsp4tEzLJQFfOVWtNAiPhhBmEDA9IIpQqprtF6qepXrstTHdGFfN0SU=
-X-Received: by 2002:a67:61c7:: with SMTP id v190mr4507235vsb.165.1564061327635;
- Thu, 25 Jul 2019 06:28:47 -0700 (PDT)
-MIME-Version: 1.0
-References: <20190722193939.125578-1-dianders@chromium.org>
-In-Reply-To: <20190722193939.125578-1-dianders@chromium.org>
-From:   Ulf Hansson <ulf.hansson@linaro.org>
-Date:   Thu, 25 Jul 2019 15:28:11 +0200
-Message-ID: <CAPDyKFoND5Kaam72zxO4wChO0z_1XL2KWX6oNjVcMUGA7G8RFg@mail.gmail.com>
-Subject: Re: [PATCH v2 0/2] mmc: core: Fix Marvell WiFi reset by adding SDIO
- API to replug card
-To:     Douglas Anderson <dianders@chromium.org>
-Cc:     Kalle Valo <kvalo@codeaurora.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Andreas Fenkart <afenkart@gmail.com>,
-        Brian Norris <briannorris@chromium.org>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        "open list:ARM/Rockchip SoC..." <linux-rockchip@lists.infradead.org>,
-        Wolfram Sang <wsa+renesas@sang-engineering.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        netdev <netdev@vger.kernel.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Xinming Hu <huxinming820@gmail.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Kate Stewart <kstewart@linuxfoundation.org>
-Content-Type: text/plain; charset="UTF-8"
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=GovT0wzh5qxyqV9OneNnQImH0OsXKl2tN6pFF75ONIw=;
+        b=hTbclYONBUgebpQDsqFyJoHU3KP/Grh0IVutTQWLJA+tMTXQt/R3uHdDTtc/UPfMaX
+         6YKatfUyDYi/+U/N0pHd29Nn8S5xDXcLUUD3A/9kWOwNolqSRC1vtK9Fr5vjTPA82/4K
+         ASFOhj7ZZO6sWokPp3DZTuVaSSB0Snw4W4VCDLPMijoMLYjCCFg+/cKtQ/WyDqU076zm
+         r1bI4t0XfKv9SywzZbII9EH9om3RrpKu3/eBfSzBAkqeQAGsgFU5DhpfhzMBK8lYDNBR
+         umK6oiLozqSc5HDqe6r2HPaIq+lWiIROWlCFfMdDQU1M5UL6mQpREOJlRPMMh8zZ1Zwb
+         Ls0g==
+X-Gm-Message-State: APjAAAUeW8JNkSslKdQyBnNF/55QI0nPjd6bKmCuy306xUBRL39upTB7
+        a60PAJUqb4o+kdCV/eOE/9+yBg==
+X-Google-Smtp-Source: APXvYqzPS2oBXex2AyU84xtOTnQkkSqQOJSpkxMxiuqCZBz7N5HtlPIK62mIcgu6+zmZeEvsY5Cqmw==
+X-Received: by 2002:a17:90b:28f:: with SMTP id az15mr92664666pjb.18.1564076883064;
+        Thu, 25 Jul 2019 10:48:03 -0700 (PDT)
+Received: from localhost.localdomain (104-188-17-28.lightspeed.sndgca.sbcglobal.net. [104.188.17.28])
+        by smtp.gmail.com with ESMTPSA id r2sm68103389pfl.67.2019.07.25.10.48.01
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 25 Jul 2019 10:48:02 -0700 (PDT)
+From:   Bjorn Andersson <bjorn.andersson@linaro.org>
+To:     Kalle Valo <kvalo@codeaurora.org>,
+        Govind Singh <govinds@codeaurora.org>
+Cc:     "David S. Miller" <davem@davemloft.net>,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org
+Subject: [PATCH 3/3] ath10k: Use standard bulk clock API in snoc
+Date:   Thu, 25 Jul 2019 10:47:55 -0700
+Message-Id: <20190725174755.23432-4-bjorn.andersson@linaro.org>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <20190725174755.23432-1-bjorn.andersson@linaro.org>
+References: <20190725174755.23432-1-bjorn.andersson@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, 22 Jul 2019 at 21:41, Douglas Anderson <dianders@chromium.org> wrote:
->
-> As talked about in the thread at:
->
-> http://lkml.kernel.org/r/CAD=FV=X7P2F1k_zwHc0mbtfk55-rucTz_GoDH=PL6zWqKYcpuw@mail.gmail.com
->
-> ...when the Marvell WiFi card tries to reset itself it kills
-> Bluetooth.  It was observed that we could re-init the card properly by
-> unbinding / rebinding the host controller.  It was also observed that
-> in the downstream Chrome OS codebase the solution used was
-> mmc_remove_host() / mmc_add_host(), which is similar to the solution
-> in this series.
->
-> So far I've only done testing of this series using the reset test
-> source that can be simulated via sysfs.  Specifically I ran this test:
->
-> for i in $(seq 1000); do
->   echo "LOOP $i --------"
->   echo 1 > /sys/kernel/debug/mwifiex/mlan0/reset
->
->   while true; do
->     if ! ping -w15 -c1 "${GW}" >/dev/null 2>&1; then
->       fail=$(( fail + 1 ))
->       echo "Fail WiFi ${fail}"
->       if [[ ${fail} == 3 ]]; then
->         exit 1
->       fi
->     else
->       fail=0
->       break
->     fi
->   done
->
->   hciconfig hci0 down
->   sleep 1
->   if ! hciconfig hci0 up; then
->     echo "Fail BT"
->     exit 1
->   fi
-> done
->
-> I ran this several times and got several hundred iterations each
-> before a failure.  When I saw failures:
->
-> * Once I saw a "Fail BT"; manually resetting the card again fixed it.
->   I didn't give it time to see if it would have detected this
->   automatically.
-> * Once I saw the ping fail because (for some reason) my device only
->   got an IPv6 address from my router and the IPv4 ping failed.  I
->   changed my script to use 'ping6' to see if that would help.
-> * Once I saw the ping fail because the higher level network stack
->   ("shill" in my case) seemed to crash.  A few minutes later the
->   system recovered itself automatically.  https://crbug.com/984593 if
->   you want more details.
-> * Sometimes while I was testing I saw "Fail WiFi 1" indicating a
->   transitory failure.  Usually this was an association failure, but in
->   one case I saw the device do "Firmware wakeup failed" after I
->   triggered the reset.  This caused the driver to trigger a re-reset
->   of itself which eventually recovered things.  This was good because
->   it was an actual test of the normal reset flow (not the one
->   triggered via sysfs).
->
-> Changes in v2:
-> - s/routnine/routine (Brian Norris, Matthias Kaehlcke).
-> - s/contining/containing (Matthias Kaehlcke).
-> - Add Matthias Reviewed-by tag.
-> - Removed clear_bit() calls and old comment (Brian Norris).
-> - Explicit CC of Andreas Fenkart.
-> - Explicit CC of Brian Norris.
-> - Add "Fixes" pointing at the commit Brian talked about.
-> - Add Brian's Reviewed-by tag.
->
-> Douglas Anderson (2):
->   mmc: core: Add sdio_trigger_replug() API
->   mwifiex: Make use of the new sdio_trigger_replug() API to reset
->
->  drivers/mmc/core/core.c                     | 28 +++++++++++++++++++--
->  drivers/mmc/core/sdio_io.c                  | 20 +++++++++++++++
->  drivers/net/wireless/marvell/mwifiex/sdio.c | 16 +-----------
->  include/linux/mmc/host.h                    | 15 ++++++++++-
->  include/linux/mmc/sdio_func.h               |  2 ++
->  5 files changed, 63 insertions(+), 18 deletions(-)
->
+No frequency is currently specified for the single clock defined in the
+snoc driver, so the clock wrappers reimplements the standard bulk API
+provided by the clock framework. Change to this.
 
-Doug, thanks for sending this!
+The single clock defined is marked as optional so this version of the
+get API is used, but might need to be reconsidered in the future.
 
-As you know, I have been working on additional changes for SDIO
-suspend/resume (still WIP and not ready for sharing) and this series
-is related.
+Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+---
+ drivers/net/wireless/ath/ath10k/snoc.c | 125 ++++---------------------
+ drivers/net/wireless/ath/ath10k/snoc.h |  11 +--
+ 2 files changed, 21 insertions(+), 115 deletions(-)
 
-The thing is, that even during system suspend/resume, synchronizations
-are needed between the different layers (mmc host, mmc core and
-sdio-funcs), which is common to the problem you want to solve.
+diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
+index 1c9ff7e53e2f..80ce68c0f75e 100644
+--- a/drivers/net/wireless/ath/ath10k/snoc.c
++++ b/drivers/net/wireless/ath/ath10k/snoc.c
+@@ -43,8 +43,8 @@ static const char * const ath10k_regulators[] = {
+ 	"vdd-3.3-ch0",
+ };
+ 
+-static struct ath10k_clk_info clk_cfg[] = {
+-	{NULL, "cxo_ref_clk_pin", 0, false},
++static const char * const ath10k_clocks[] = {
++	"cxo_ref_clk_pin",
+ };
+ 
+ static void ath10k_snoc_htc_tx_cb(struct ath10k_ce_pipe *ce_state);
+@@ -1346,104 +1346,6 @@ static void ath10k_snoc_release_resource(struct ath10k *ar)
+ 		ath10k_ce_free_pipe(ar, i);
+ }
+ 
+-static int ath10k_get_clk_info(struct ath10k *ar, struct device *dev,
+-			       struct ath10k_clk_info *clk_info)
+-{
+-	struct clk *handle;
+-	int ret = 0;
+-
+-	handle = devm_clk_get(dev, clk_info->name);
+-	if (IS_ERR(handle)) {
+-		ret = PTR_ERR(handle);
+-		if (clk_info->required) {
+-			ath10k_err(ar, "snoc clock %s isn't available: %d\n",
+-				   clk_info->name, ret);
+-			return ret;
+-		}
+-		ath10k_dbg(ar, ATH10K_DBG_SNOC, "snoc ignoring clock %s: %d\n",
+-			   clk_info->name,
+-			   ret);
+-		return 0;
+-	}
+-
+-	ath10k_dbg(ar, ATH10K_DBG_SNOC, "snoc clock %s freq %u\n",
+-		   clk_info->name, clk_info->freq);
+-
+-	clk_info->handle = handle;
+-
+-	return ret;
+-}
+-
+-static int ath10k_snoc_clk_init(struct ath10k *ar)
+-{
+-	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
+-	struct ath10k_clk_info *clk_info;
+-	int ret = 0;
+-	int i;
+-
+-	for (i = 0; i < ARRAY_SIZE(clk_cfg); i++) {
+-		clk_info = &ar_snoc->clk[i];
+-
+-		if (!clk_info->handle)
+-			continue;
+-
+-		ath10k_dbg(ar, ATH10K_DBG_SNOC, "snoc clock %s being enabled\n",
+-			   clk_info->name);
+-
+-		if (clk_info->freq) {
+-			ret = clk_set_rate(clk_info->handle, clk_info->freq);
+-
+-			if (ret) {
+-				ath10k_err(ar, "failed to set clock %s freq %u\n",
+-					   clk_info->name, clk_info->freq);
+-				goto err_clock_config;
+-			}
+-		}
+-
+-		ret = clk_prepare_enable(clk_info->handle);
+-		if (ret) {
+-			ath10k_err(ar, "failed to enable clock %s\n",
+-				   clk_info->name);
+-			goto err_clock_config;
+-		}
+-	}
+-
+-	return 0;
+-
+-err_clock_config:
+-	for (i = i - 1; i >= 0; i--) {
+-		clk_info = &ar_snoc->clk[i];
+-
+-		if (!clk_info->handle)
+-			continue;
+-
+-		clk_disable_unprepare(clk_info->handle);
+-	}
+-
+-	return ret;
+-}
+-
+-static int ath10k_snoc_clk_deinit(struct ath10k *ar)
+-{
+-	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
+-	struct ath10k_clk_info *clk_info;
+-	int i;
+-
+-	for (i = 0; i < ARRAY_SIZE(clk_cfg); i++) {
+-		clk_info = &ar_snoc->clk[i];
+-
+-		if (!clk_info->handle)
+-			continue;
+-
+-		ath10k_dbg(ar, ATH10K_DBG_SNOC, "snoc clock %s being disabled\n",
+-			   clk_info->name);
+-
+-		clk_disable_unprepare(clk_info->handle);
+-	}
+-
+-	return 0;
+-}
+-
+ static int ath10k_hw_power_on(struct ath10k *ar)
+ {
+ 	struct ath10k_snoc *ar_snoc = ath10k_snoc_priv(ar);
+@@ -1455,7 +1357,7 @@ static int ath10k_hw_power_on(struct ath10k *ar)
+ 	if (ret)
+ 		return ret;
+ 
+-	ret = ath10k_snoc_clk_init(ar);
++	ret = clk_bulk_prepare_enable(ar_snoc->num_clks, ar_snoc->clks);
+ 	if (ret)
+ 		goto vreg_off;
+ 
+@@ -1472,7 +1374,7 @@ static int ath10k_hw_power_off(struct ath10k *ar)
+ 
+ 	ath10k_dbg(ar, ATH10K_DBG_SNOC, "soc power off\n");
+ 
+-	ath10k_snoc_clk_deinit(ar);
++	clk_bulk_disable_unprepare(ar_snoc->num_clks, ar_snoc->clks);
+ 
+ 	return regulator_bulk_disable(ar_snoc->num_vregs, ar_snoc->vregs);
+ }
+@@ -1560,13 +1462,22 @@ static int ath10k_snoc_probe(struct platform_device *pdev)
+ 	if (ret < 0)
+ 		goto err_free_irq;
+ 
+-	ar_snoc->clk = clk_cfg;
+-	for (i = 0; i < ARRAY_SIZE(clk_cfg); i++) {
+-		ret = ath10k_get_clk_info(ar, dev, &ar_snoc->clk[i]);
+-		if (ret)
+-			goto err_free_irq;
++	ar_snoc->num_clks = ARRAY_SIZE(ath10k_clocks);
++	ar_snoc->clks = devm_kcalloc(&pdev->dev, ar_snoc->num_clks,
++				     sizeof(*ar_snoc->clks), GFP_KERNEL);
++	if (!ar_snoc->clks) {
++		ret = -ENOMEM;
++		goto err_free_irq;
+ 	}
+ 
++	for (i = 0; i < ar_snoc->num_clks; i++)
++		ar_snoc->clks[i].id = ath10k_clocks[i];
++
++	ret = devm_clk_bulk_get_optional(&pdev->dev, ar_snoc->num_clks,
++					 ar_snoc->clks);
++	if (ret)
++		goto err_free_irq;
++
+ 	ret = ath10k_hw_power_on(ar);
+ 	if (ret) {
+ 		ath10k_err(ar, "failed to power on device: %d\n", ret);
+diff --git a/drivers/net/wireless/ath/ath10k/snoc.h b/drivers/net/wireless/ath/ath10k/snoc.h
+index 3965ddf66d74..d2449a3b4a8f 100644
+--- a/drivers/net/wireless/ath/ath10k/snoc.h
++++ b/drivers/net/wireless/ath/ath10k/snoc.h
+@@ -42,13 +42,6 @@ struct ath10k_snoc_ce_irq {
+ 	u32 irq_line;
+ };
+ 
+-struct ath10k_clk_info {
+-	struct clk *handle;
+-	const char *name;
+-	u32 freq;
+-	bool required;
+-};
+-
+ enum ath10k_snoc_flags {
+ 	ATH10K_SNOC_FLAG_REGISTERED,
+ 	ATH10K_SNOC_FLAG_UNREGISTERING,
+@@ -56,6 +49,7 @@ enum ath10k_snoc_flags {
+ 	ATH10K_SNOC_FLAG_8BIT_HOST_CAP_QUIRK,
+ };
+ 
++struct clk_bulk_data;
+ struct regulator_bulk_data;
+ 
+ struct ath10k_snoc {
+@@ -71,7 +65,8 @@ struct ath10k_snoc {
+ 	struct timer_list rx_post_retry;
+ 	struct regulator_bulk_data *vregs;
+ 	size_t num_vregs;
+-	struct ath10k_clk_info *clk;
++	struct clk_bulk_data *clks;
++	size_t num_clks;
+ 	struct ath10k_qmi *qmi;
+ 	unsigned long flags;
+ };
+-- 
+2.18.0
 
-That said, I need to scratch my head a bit more before I can provide
-you some feedback on $subject series. Moreover, it's vacation period
-at my side so things are moving a bit slower. Please be patient.
-
-Kind regards
-Uffe
