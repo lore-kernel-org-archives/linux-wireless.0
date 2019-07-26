@@ -2,90 +2,62 @@ Return-Path: <SRS0=cxAL=VX=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 005B1C7618B
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Jul 2019 06:52:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0381C7618B
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Jul 2019 07:02:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D47A421734
-	for <linux-wireless@archiver.kernel.org>; Fri, 26 Jul 2019 06:52:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 815F12189F
+	for <linux-wireless@archiver.kernel.org>; Fri, 26 Jul 2019 07:02:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726215AbfGZGwf (ORCPT
+        id S1726217AbfGZHCI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 26 Jul 2019 02:52:35 -0400
-Received: from mail.sig21.net ([80.244.240.74]:54646 "EHLO mail.sig21.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725864AbfGZGwe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Jul 2019 02:52:34 -0400
-Received: from p5b206fb8.dip0.t-ipconnect.de ([91.32.111.184] helo=abc.local)
-        by mail.sig21.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.84_2)
-        (envelope-from <js@sig21.net>)
-        id 1hqu5R-0003WC-BN; Fri, 26 Jul 2019 08:52:22 +0200
-Received: from js by abc.local with local (Exim 4.92)
-        (envelope-from <js@sig21.net>)
-        id 1hqu5N-0001hu-KI; Fri, 26 Jul 2019 08:52:13 +0200
-Date:   Fri, 26 Jul 2019 08:52:13 +0200
-From:   Johannes Stezenbach <js@sig21.net>
-To:     Stanislaw Gruszka <sgruszka@redhat.com>
-Cc:     Lorenzo Bianconi <lorenzo@kernel.org>,
-        Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
-Subject: Re: mt76x0u blocks resume from suspend
-Message-ID: <20190726065213.GA6539@sig21.net>
-References: <20190722164020.GA5850@sig21.net>
- <20190723071806.GA2892@redhat.com>
+        Fri, 26 Jul 2019 03:02:08 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:44004 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725836AbfGZHCI (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 26 Jul 2019 03:02:08 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1hquEn-0006Qb-C1; Fri, 26 Jul 2019 09:01:57 +0200
+Message-ID: <6d8000cbcaa5d1f87293f3a1c344fafc7489c7ec.camel@sipsolutions.net>
+Subject: Re: [PATCH v2 1/3] Bluetooth: btintel: Add firmware lock function
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Marcel Holtmann <marcel@holtmann.org>
+Cc:     Luciano Coelho <luciano.coelho@intel.com>,
+        Johan Hedberg <johan.hedberg@gmail.com>, linuxwifi@intel.com,
+        linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
+Date:   Fri, 26 Jul 2019 09:01:56 +0200
+In-Reply-To: <B50A91CA-7379-42F9-8335-8FE4A51BE66F@canonical.com> (sfid-20190717_160853_553608_F848C9E8)
+References: <20190717074920.21624-1-kai.heng.feng@canonical.com>
+         <7CE1949F-76D2-4D27-82B6-02124E62DF5C@holtmann.org>
+         <B50A91CA-7379-42F9-8335-8FE4A51BE66F@canonical.com>
+         (sfid-20190717_160853_553608_F848C9E8)
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.30.5 (3.30.5-1.fc29) 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190723071806.GA2892@redhat.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Stanislaw,
+[trimming CCs a bit]
 
-On Tue, Jul 23, 2019 at 09:18:07AM +0200, Stanislaw Gruszka wrote:
-> On Mon, Jul 22, 2019 at 06:40:20PM +0200, Johannes Stezenbach wrote:
-> > I met failure to resume from suspend to RAM with v5.1.19
-> > and TP-Link Archer T2UH connected to my PC (Asus P8H77-V).
-> > I tried about a dozen times while trying to figure out the reason,
-> > the issue happened every time.
-> > Eventually I connected a serial console and captured this:
-> > 
-> > [   87.803576][ T4640] mt76x0u 2-1.6:1.0: vendor request req:06 off:ac80 failed:-110
-> > [   91.030328][ T4640] mt76x0u 2-1.6:1.0: vendor request req:07 off:b000 failed:-110
-> > [   94.256950][ T4640] mt76x0u 2-1.6:1.0: vendor request req:06 off:b000 failed:-110
-> > [   97.483579][ T4640] mt76x0u 2-1.6:1.0: vendor request req:06 off:aca0 failed:-110
-> > (repeats)
-> > [  107.492106][    C0] Call Trace:
-> > [  107.495293][    C0]  ? __schedule+0x381/0xa30
-> > [  107.499706][    C0]  schedule+0x36/0x90
-> > [  107.503575][    C0]  schedule_timeout+0x1e8/0x4c0
-> > [  107.508310][    C0]  ? collect_expired_timers+0xb0/0xb0
-> > [  107.513593][    C0]  wait_for_common+0x15f/0x190
-> > [  107.518249][    C0]  ? wake_up_q+0x80/0x80
-> > [  107.522412][    C0]  usb_start_wait_urb+0x82/0x160
-> > [  107.527222][    C0]  ? wait_for_common+0x38/0x190
-> > [  107.531961][    C0]  usb_control_msg+0xdc/0x140
-> > [  107.536542][    C0]  __mt76u_vendor_request+0xc4/0x100 [mt76_usb]
-> > [  107.542687][    C0]  mt76u_copy+0x8b/0xb0 [mt76_usb]
-> > [  107.547721][    C0]  mt76x02_mac_shared_key_setup+0xdf/0x130 [mt76x02_lib]
-> <snip>
-> > The whole machine is hanging at this point. without serial console
-> > my only choice was to press the reset button.  At least mt76x0u should
-> > bail out with an error and not block the resume completely.
-> > Unplugging the hardware also didn't cause it to bail.
+> > so I am not in favor of this solution. The hardware guys should start  
+> > looking into fixing the firmware loading and provide proper firmware that  
+> > can be loaded at the same time.
 > 
-> I recently sent fix for that
-> https://lore.kernel.org/linux-wireless/1563446290-2813-1-git-send-email-sgruszka@redhat.com/raw
+> Of course it’s much better to fix from hardware side.
 
-Although the error message you quote in your patch is
-different than what I got, your patch works for me, too.
+I tried to ask around a bit, and am told that a firmware fix (to just
+retry the relevant hardware block access) was made. I'll try to figure
+out where/how it was (or wasn't?) released.
 
+johannes
 
-Thanks,
-Johannes
