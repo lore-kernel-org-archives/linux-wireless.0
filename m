@@ -2,50 +2,53 @@ Return-Path: <SRS0=e+Sd=VZ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AAC9C433FF
-	for <linux-wireless@archiver.kernel.org>; Sun, 28 Jul 2019 19:03:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7235CC433FF
+	for <linux-wireless@archiver.kernel.org>; Sun, 28 Jul 2019 19:03:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E03512075C
-	for <linux-wireless@archiver.kernel.org>; Sun, 28 Jul 2019 19:03:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4D4C8214C6
+	for <linux-wireless@archiver.kernel.org>; Sun, 28 Jul 2019 19:03:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1564340610;
-	bh=7AnHIZ2osYDpMp8j9Xs2dM8DizB6AdRDdHxwAMPjiSs=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=e4wdQsawtrxCJIAeLEdumnos9HPHEvPvfcA10x6M9wjRC8NSEHk8LRriGW2rxVM/6
-	 CP5FunSXP4vkQu9asCKizg++ckHcgo6Igx1u27A8yYDxF9SBgn5UZ86t6ocjglgMbX
-	 0FPQkonLKOXOOtYU0gB1943FVOp6KhvLVs2I18Uo=
+	s=default; t=1564340617;
+	bh=AW6EFXQRY6fWpKO0SVFpFyi035a3N4g9CuRCBGyzGqg=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=YLo4hUzFDJf1TtBZ63xcFzxFNdgHPOt109SVTW3V8S0RJtgPWcpQ4qoDGrOnZoEJK
+	 Xnudqu0KDJBprn6RxxbQV+AJCtxF/wlKIdPXskP6V0yM0nLDi4dHQuFgKmNq36iGaP
+	 sjMQ/K7Pfa6ey9H9niAJdgil2gLcg5agwKz2ZGzI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726151AbfG1TD3 (ORCPT
+        id S1726211AbfG1TDg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 28 Jul 2019 15:03:29 -0400
-Received: from mail.kernel.org ([198.145.29.99]:51804 "EHLO mail.kernel.org"
+        Sun, 28 Jul 2019 15:03:36 -0400
+Received: from mail.kernel.org ([198.145.29.99]:51918 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726105AbfG1TD2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 28 Jul 2019 15:03:28 -0400
+        id S1726098AbfG1TDg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 28 Jul 2019 15:03:36 -0400
 Received: from lore-desk-wlan.lan (unknown [151.66.36.246])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id D33092075B;
-        Sun, 28 Jul 2019 19:03:26 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 25BFA2075C;
+        Sun, 28 Jul 2019 19:03:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1564340608;
-        bh=7AnHIZ2osYDpMp8j9Xs2dM8DizB6AdRDdHxwAMPjiSs=;
-        h=From:To:Cc:Subject:Date:From;
-        b=pEETWCI3Sgh38ushMHjvzhOTwzgxBy9aGY446AKRPm93r3Z8N2G8UYuCkwgK+Ijw5
-         S1Vaa5hfr2IwkC5FSE0z5gB6jY8vLpqJFNJCgIwq9B27PUdgoR1LkKRgefuCQGSdXd
-         KQHGUgr2P7wu5waW7wIsARATP0PqmMmgxmzimgAM=
+        s=default; t=1564340615;
+        bh=AW6EFXQRY6fWpKO0SVFpFyi035a3N4g9CuRCBGyzGqg=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=hY+jzDR9RefAdN50oElNmM318DmEqYb9rG79DmUXcRe7Pn7nNbol0q5RHU3pQ1XHu
+         gji12x8TMNvA9P81VYuF9TG9GyB+20iU4GW21d2wqjIcAIpnANWOG3mbFai0FIyf5a
+         /xg0Yhsqwr7ZLhZYdLzqwOy5iH7Kday5U78lj8qM=
 From:   Lorenzo Bianconi <lorenzo@kernel.org>
 To:     nbd@nbd.name
 Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org,
         ryder.lee@mediatek.com, royluo@google.com
-Subject: [PATCH 0/2] mt7615: add Smart Carrier Sense support
-Date:   Sun, 28 Jul 2019 21:03:16 +0200
-Message-Id: <cover.1564340063.git.lorenzo@kernel.org>
+Subject: [PATCH 1/2] mt76: mt7615: rework locking scheme for mt7615_set_channel
+Date:   Sun, 28 Jul 2019 21:03:17 +0200
+Message-Id: <42bc4988d7233568c0b9a9e90eef3683a72b7ab8.1564340063.git.lorenzo@kernel.org>
 X-Mailer: git-send-email 2.21.0
+In-Reply-To: <cover.1564340063.git.lorenzo@kernel.org>
+References: <cover.1564340063.git.lorenzo@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -53,24 +56,68 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add Smart Carrier Sense (SCS) algorithm in order to tune device
-sensitivity to track long-range clients and cut-off possible
-interferences using RTS error rate and False CCA reported by the
-radio
+As already done for mt7603 driver, move mt76.mutex lock inside
+mt7615_set_channel since we need to grab mt76.mutex in mt7615_mac_work.
+This is a preliminary patch to add Smart Carrier Sense (SCS) support
 
-Lorenzo Bianconi (2):
-  mt76: mt7615: rework locking scheme for mt7615_set_channel
-  mt76: mt7615: add Smart Carrier Sense support
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+---
+ drivers/net/wireless/mediatek/mt76/mt7615/main.c | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
 
- drivers/net/wireless/mediatek/mt76/mt76.h     |   9 +-
- .../wireless/mediatek/mt76/mt7615/debugfs.c   |  39 ++++
- .../net/wireless/mediatek/mt76/mt7615/init.c  |   1 +
- .../net/wireless/mediatek/mt76/mt7615/mac.c   | 176 ++++++++++++++++++
- .../net/wireless/mediatek/mt76/mt7615/main.c  |  15 +-
- .../wireless/mediatek/mt76/mt7615/mt7615.h    |  14 ++
- .../net/wireless/mediatek/mt76/mt7615/regs.h  |  36 ++++
- 7 files changed, 281 insertions(+), 9 deletions(-)
-
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/main.c b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
+index 900253e85db9..9138153f4686 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
+@@ -135,6 +135,8 @@ static int mt7615_set_channel(struct mt7615_dev *dev)
+ 	int ret;
+ 
+ 	cancel_delayed_work_sync(&dev->mt76.mac_work);
++
++	mutex_lock(&dev->mt76.mutex);
+ 	set_bit(MT76_RESET, &dev->mt76.state);
+ 
+ 	mt7615_dfs_check_channel(dev);
+@@ -143,18 +145,18 @@ static int mt7615_set_channel(struct mt7615_dev *dev)
+ 
+ 	ret = mt7615_mcu_set_channel(dev);
+ 	if (ret)
+-		return ret;
++		goto out;
+ 
+ 	ret = mt7615_dfs_init_radar_detector(dev);
+-	if (ret < 0)
+-		return ret;
+ 
++out:
+ 	clear_bit(MT76_RESET, &dev->mt76.state);
++	mutex_unlock(&dev->mt76.mutex);
+ 
+ 	mt76_txq_schedule_all(&dev->mt76);
+ 	ieee80211_queue_delayed_work(mt76_hw(dev), &dev->mt76.mac_work,
+ 				     MT7615_WATCHDOG_TIME);
+-	return 0;
++	return ret;
+ }
+ 
+ static int mt7615_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+@@ -213,14 +215,14 @@ static int mt7615_config(struct ieee80211_hw *hw, u32 changed)
+ 	struct mt7615_dev *dev = hw->priv;
+ 	int ret = 0;
+ 
+-	mutex_lock(&dev->mt76.mutex);
+-
+ 	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
+ 		ieee80211_stop_queues(hw);
+ 		ret = mt7615_set_channel(dev);
+ 		ieee80211_wake_queues(hw);
+ 	}
+ 
++	mutex_lock(&dev->mt76.mutex);
++
+ 	if (changed & IEEE80211_CONF_CHANGE_POWER)
+ 		ret = mt7615_mcu_set_tx_power(dev);
+ 
 -- 
 2.21.0
 
