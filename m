@@ -2,99 +2,98 @@ Return-Path: <SRS0=VbuY=V3=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48DB4C433FF
-	for <linux-wireless@archiver.kernel.org>; Tue, 30 Jul 2019 09:36:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 108C8C433FF
+	for <linux-wireless@archiver.kernel.org>; Tue, 30 Jul 2019 09:48:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 200C8208E4
-	for <linux-wireless@archiver.kernel.org>; Tue, 30 Jul 2019 09:36:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E5E9220651
+	for <linux-wireless@archiver.kernel.org>; Tue, 30 Jul 2019 09:48:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731050AbfG3JgG (ORCPT
+        id S1732087AbfG3Jsp convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 30 Jul 2019 05:36:06 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:43680 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731501AbfG3JgF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 Jul 2019 05:36:05 -0400
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 469ECC028353;
-        Tue, 30 Jul 2019 09:36:05 +0000 (UTC)
-Received: from localhost (unknown [10.43.2.114])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id D12DC60856;
-        Tue, 30 Jul 2019 09:36:04 +0000 (UTC)
-Date:   Tue, 30 Jul 2019 11:35:33 +0200
-From:   Stanislaw Gruszka <sgruszka@redhat.com>
-To:     Jian-Hong Pan <jian-hong@endlessm.com>
-Cc:     Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Tue, 30 Jul 2019 05:48:45 -0400
+Received: from eu-smtp-delivery-151.mimecast.com ([207.82.80.151]:20485 "EHLO
+        eu-smtp-delivery-151.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1730243AbfG3Jsp (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 30 Jul 2019 05:48:45 -0400
+Received: from AcuMS.aculab.com (156.67.243.126 [156.67.243.126]) (Using
+ TLS) by relay.mimecast.com with ESMTP id
+ uk-mta-174-SV6Xl8A9OrKA0tVNQBwUCg-1; Tue, 30 Jul 2019 10:48:38 +0100
+Received: from AcuMS.Aculab.com (fd9f:af1c:a25b::d117) by AcuMS.aculab.com
+ (fd9f:af1c:a25b::d117) with Microsoft SMTP Server (TLS) id 15.0.1347.2; Tue,
+ 30 Jul 2019 10:48:38 +0100
+Received: from AcuMS.Aculab.com ([fe80::43c:695e:880f:8750]) by
+ AcuMS.aculab.com ([fe80::43c:695e:880f:8750%12]) with mapi id 15.00.1347.000;
+ Tue, 30 Jul 2019 10:48:38 +0100
+From:   David Laight <David.Laight@ACULAB.COM>
+To:     'Stanislaw Gruszka' <sgruszka@redhat.com>,
+        Jian-Hong Pan <jian-hong@endlessm.com>
+CC:     Yan-Hsuan Chuang <yhchuang@realtek.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         "David S . Miller" <davem@davemloft.net>,
-        David Laight <David.Laight@aculab.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux@endlessm.com,
-        stable@vger.kernel.org
-Subject: Re: [PATCH] rtw88: pci: Use general byte arrays as the elements of
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux@endlessm.com" <linux@endlessm.com>,
+        "stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: RE: [PATCH] rtw88: pci: Use general byte arrays as the elements of RX
+ ring
+Thread-Topic: [PATCH] rtw88: pci: Use general byte arrays as the elements of
  RX ring
-Message-ID: <20190730093533.GC3174@redhat.com>
+Thread-Index: AQHVRro3Kaj7ufhACkSCuQV9Pmu/hqbi59sQ
+Date:   Tue, 30 Jul 2019 09:48:38 +0000
+Message-ID: <962a8a8e735946d6b3944b7d0e228309@AcuMS.aculab.com>
 References: <20190725080925.6575-1-jian-hong@endlessm.com>
+ <20190730093533.GC3174@redhat.com>
+In-Reply-To: <20190730093533.GC3174@redhat.com>
+Accept-Language: en-GB, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-ms-exchange-transport-fromentityheader: Hosted
+x-originating-ip: [10.202.205.107]
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190725080925.6575-1-jian-hong@endlessm.com>
-User-Agent: Mutt/1.5.20 (2009-12-10)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.31]); Tue, 30 Jul 2019 09:36:05 +0000 (UTC)
+X-MC-Unique: SV6Xl8A9OrKA0tVNQBwUCg-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, Jul 25, 2019 at 04:09:26PM +0800, Jian-Hong Pan wrote:
-> Each skb as the element in RX ring was expected with sized buffer 8216
-> (RTK_PCI_RX_BUF_SIZE) bytes. However, the skb buffer's true size is
-> 16640 bytes for alignment after allocated, x86_64 for example. And, the
-
-rtw88 advertise IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_11454, so maximum AMSDU
-packet can be approximately 12kB. This might be accidental, but having
-16kB skb's allow to handle such big AMSDUs. If you shrink buf size,
-you can probably override memory after buffer end.
-
-> difference will be enlarged 512 times (RTK_MAX_RX_DESC_NUM).
-> To prevent that much wasted memory, this patch follows David's
-> suggestion [1] and uses general buffer arrays, instead of skbs as the
-> elements in RX ring.
+From: Stanislaw Gruszka
+> Sent: 30 July 2019 10:36
+...
+> > +		len = pkt_stat.pkt_len + pkt_offset;
+> > +		skb = dev_alloc_skb(len);
+> > +		if (WARN_ONCE(!skb, "rx routine starvation\n"))
+> >  			goto next_rp;
+> >
+> >  		/* put the DMA data including rx_desc from phy to new skb */
+> > -		skb_put_data(new, skb->data, new_len);
+> > +		skb_put_data(skb, rx_desc, len);
 > 
-> [1] https://www.spinics.net/lists/linux-wireless/msg187870.html
-> 
-> Signed-off-by: Jian-Hong Pan <jian-hong@endlessm.com>
-> Cc: <stable@vger.kernel.org>
+> Coping big packets it quite inefficient. What drivers usually do is
+> copy only for small packets and for big ones allocate new rx buf
+> (drop packet alloc if fail) and pas old buf to network stack via
+> skb_add_rx_frag(). See iwlmvm as example.
 
-This does not fix any serious problem, it actually most likely 
-introduce memory corruption problem described above. Should not
-be targeted to stable anyway.
+If you have to do iommu setup/teardown then the breakeven point
+for (not) copying may be surprisingly large.
+You do need to do the measurements on a range of hardware.
+Coping is also likely to affect the L1 cache - unless you can
+copy quickly without polluting the cache.
 
-> -			dev_kfree_skb_any(skb);
-> +			devm_kfree(rtwdev->dev, buf);
+It is all 'swings and roundabouts'.
 
-For what this is needed? devm_ allocations are used exactly to avoid
-manual freeing.
+	David
 
-> +		len = pkt_stat.pkt_len + pkt_offset;
-> +		skb = dev_alloc_skb(len);
-> +		if (WARN_ONCE(!skb, "rx routine starvation\n"))
->  			goto next_rp;
->  
->  		/* put the DMA data including rx_desc from phy to new skb */
-> -		skb_put_data(new, skb->data, new_len);
-> +		skb_put_data(skb, rx_desc, len);
+-
+Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1PT, UK
+Registration No: 1397386 (Wales)
 
-Coping big packets it quite inefficient. What drivers usually do is 
-copy only for small packets and for big ones allocate new rx buf
-(drop packet alloc if fail) and pas old buf to network stack via
-skb_add_rx_frag(). See iwlmvm as example.
-
-Stanislaw
