@@ -2,220 +2,127 @@ Return-Path: <SRS0=VbuY=V3=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32E2DC0650F
-	for <linux-wireless@archiver.kernel.org>; Tue, 30 Jul 2019 16:37:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA96DC0650F
+	for <linux-wireless@archiver.kernel.org>; Tue, 30 Jul 2019 16:59:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 14DCB20693
-	for <linux-wireless@archiver.kernel.org>; Tue, 30 Jul 2019 16:37:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 92EFB208E4
+	for <linux-wireless@archiver.kernel.org>; Tue, 30 Jul 2019 16:59:59 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="QDZk/EFU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728895AbfG3QhZ (ORCPT
+        id S1725929AbfG3Q76 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 30 Jul 2019 12:37:25 -0400
-Received: from nbd.name ([46.4.11.11]:51042 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730362AbfG3QhO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 Jul 2019 12:37:14 -0400
-Received: from pd95fd7d7.dip0.t-ipconnect.de ([217.95.215.215] helo=bertha.fritz.box)
-        by ds12 with esmtpa (Exim 4.89)
-        (envelope-from <john@phrozen.org>)
-        id 1hsV7f-0002JK-6F; Tue, 30 Jul 2019 18:37:11 +0200
-From:   John Crispin <john@phrozen.org>
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless@vger.kernel.org, John Crispin <john@phrozen.org>
-Subject: [PATCH V3 1/2] cfg80211: add support for parsing OBBS_PD attributes
-Date:   Tue, 30 Jul 2019 18:37:00 +0200
-Message-Id: <20190730163701.18836-2-john@phrozen.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190730163701.18836-1-john@phrozen.org>
-References: <20190730163701.18836-1-john@phrozen.org>
+        Tue, 30 Jul 2019 12:59:58 -0400
+Received: from mail-io1-f66.google.com ([209.85.166.66]:40595 "EHLO
+        mail-io1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725934AbfG3Q75 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 30 Jul 2019 12:59:57 -0400
+Received: by mail-io1-f66.google.com with SMTP id h6so4563325iom.7
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Jul 2019 09:59:57 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=thfSVMX6+HwxM/ty44YHwCabreMvWV/+Gb4a/AYAosM=;
+        b=QDZk/EFUsh6U0OHs8YqCvTgja17nbMT2Y0sFIVcZgyTwIhEIGARc0EvYjU0bNaUDDw
+         DhykaLBu959pAPwvEWt43vHt5h7OAeSRBBZov+gZsctSFuksXsHKukwZRmShoDWKA+8I
+         wItHBj4PVtGEm32bkk7ccUJxqF53Ib3OaAdy0=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=thfSVMX6+HwxM/ty44YHwCabreMvWV/+Gb4a/AYAosM=;
+        b=MyVyUl2s1IpSDsWza50jWyIOK23TJ33BuNU3J2UNbGhJ2q7BneCQQ8Lm5gvA5WWqzC
+         1waLFVjXPUas5ZOIbof7oAo5PDbIzFenJOzLVYHoqsdHXdZ44+eKlhJ8ylJPLzG8UXLL
+         I09MNfQEDSRsT95297v/FdFjk/sAz8fIosgaFRcglqkgfxu1gQ0ItU+PFEHoX5pStVDO
+         x4bM7gIXE4+gcHYYBf0NK7wa1VuCW6b4d/QBWpT3HOrwJmuXG/AHzeZzqw0vQVXGaikF
+         92GtCe66qHTXc3cJF57TxJDxSw9L492D5ueDN6OxPnqW4s3Y5yOjjv20Dj+Zt99L/hkF
+         6P3Q==
+X-Gm-Message-State: APjAAAUMzbMp1PK+uqIV7PiFTm6JmWZkzDbrxZ6wb0MY/7d5MgehhaYu
+        A05PsUOcXY5v03WvGaWudx9GC2LSZww=
+X-Google-Smtp-Source: APXvYqxduRmuyKmgwklxWHyRdGCYtyX0w56RX24hevjE1+eG7ikC9W+ji1thB+XGlBcs3Q9sdtU1fw==
+X-Received: by 2002:a05:6638:627:: with SMTP id h7mr90992883jar.33.1564505996932;
+        Tue, 30 Jul 2019 09:59:56 -0700 (PDT)
+Received: from mail-io1-f54.google.com (mail-io1-f54.google.com. [209.85.166.54])
+        by smtp.gmail.com with ESMTPSA id e22sm49744692iob.66.2019.07.30.09.59.55
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_3 cipher=AEAD-AES128-GCM-SHA256 bits=128/128);
+        Tue, 30 Jul 2019 09:59:55 -0700 (PDT)
+Received: by mail-io1-f54.google.com with SMTP id e20so99340948iob.9
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Jul 2019 09:59:55 -0700 (PDT)
+X-Received: by 2002:a02:5b05:: with SMTP id g5mr116310299jab.114.1564505994931;
+ Tue, 30 Jul 2019 09:59:54 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20190722193939.125578-1-dianders@chromium.org> <CALtMJEB871Redpzx1u6G5GVEXz-kAP=vT6Wt98=X=xm4SEMeAQ@mail.gmail.com>
+In-Reply-To: <CALtMJEB871Redpzx1u6G5GVEXz-kAP=vT6Wt98=X=xm4SEMeAQ@mail.gmail.com>
+From:   Doug Anderson <dianders@chromium.org>
+Date:   Tue, 30 Jul 2019 09:59:42 -0700
+X-Gmail-Original-Message-ID: <CAD=FV=VfabHB=ALxvAZ_grg_V6Nkv1UkhHjHjp-_Fs=Bx94WAA@mail.gmail.com>
+Message-ID: <CAD=FV=VfabHB=ALxvAZ_grg_V6Nkv1UkhHjHjp-_Fs=Bx94WAA@mail.gmail.com>
+Subject: Re: [PATCH v2 0/2] mmc: core: Fix Marvell WiFi reset by adding SDIO
+ API to replug card
+To:     Andreas Fenkart <afenkart@gmail.com>
+Cc:     Ulf Hansson <ulf.hansson@linaro.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Brian Norris <briannorris@chromium.org>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        "open list:ARM/Rockchip SoC..." <linux-rockchip@lists.infradead.org>,
+        Wolfram Sang <wsa+renesas@sang-engineering.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        netdev <netdev@vger.kernel.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        linux-mmc <linux-mmc@vger.kernel.org>,
+        David Miller <davem@davemloft.net>,
+        Xinming Hu <huxinming820@gmail.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Kate Stewart <kstewart@linuxfoundation.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add the data structure, policy and parsing code allowing userland to send
-the OBSS PD information into the kernel.
+Hi,
 
-Signed-off-by: John Crispin <john@phrozen.org>
----
- include/net/cfg80211.h       | 15 ++++++++++++
- include/uapi/linux/nl80211.h | 27 ++++++++++++++++++++++
- net/wireless/nl80211.c       | 45 ++++++++++++++++++++++++++++++++++++
- 3 files changed, 87 insertions(+)
+On Tue, Jul 30, 2019 at 1:47 AM Andreas Fenkart <afenkart@gmail.com> wrote:
+>
+> > * Sometimes while I was testing I saw "Fail WiFi 1" indicating a
+> >   transitory failure.  Usually this was an association failure, but in
+> >   one case I saw the device do "Firmware wakeup failed" after I
+> >   triggered the reset.  This caused the driver to trigger a re-reset
+> >   of itself which eventually recovered things.  This was good because
+> >   it was an actual test of the normal reset flow (not the one
+> >   triggered via sysfs).
+>
+> This error triggers something. I remember that when I was working on
+> suspend-to-ram feature, we had problems to wake up the firmware
+> reliable. I found this patch in one of my old 3.13 tree
+>
+>     the missing bit -- ugly hack to force cmd52 before cmd53.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 45850a8391d9..35ec1f0a2bf9 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -246,6 +246,19 @@ struct ieee80211_rate {
- 	u16 hw_value, hw_value_short;
- };
- 
-+/**
-+ * struct ieee80211_he_obss_pd - AP settings for spatial reuse
-+ *
-+ * @enable: is the feature enabled.
-+ * @min_offset: minimal tx power offset an associated station shall use
-+ * @max_offset: maximum tx power offset an associated station shall use
-+ */
-+struct ieee80211_he_obss_pd {
-+	bool enable;
-+	u8 min_offset;
-+	u8 max_offset;
-+};
-+
- /**
-  * struct ieee80211_sta_ht_cap - STA's HT capabilities
-  *
-@@ -896,6 +909,7 @@ enum cfg80211_ap_settings_flags {
-  * @vht_required: stations must support VHT
-  * @twt_responder: Enable Target Wait Time
-  * @flags: flags, as defined in enum cfg80211_ap_settings_flags
-+ * @he_obss_pd: OBSS Packet Detection settings
-  */
- struct cfg80211_ap_settings {
- 	struct cfg80211_chan_def chandef;
-@@ -923,6 +937,7 @@ struct cfg80211_ap_settings {
- 	bool ht_required, vht_required;
- 	bool twt_responder;
- 	u32 flags;
-+	struct ieee80211_he_obss_pd he_obss_pd;
- };
- 
- /**
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index c45587c2cf44..822851d369ab 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2358,6 +2358,9 @@ enum nl80211_commands {
-  *
-  * @NL80211_ATTR_TWT_RESPONDER: Enable target wait time responder support.
-  *
-+ * @NL80211_ATTR_HE_OBSS_PD: nested attribute for OBSS Packet Detection
-+ *	functionality.
-+ *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -2815,6 +2818,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_TWT_RESPONDER,
- 
-+	NL80211_ATTR_HE_OBSS_PD,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -6490,4 +6495,26 @@ enum nl80211_peer_measurement_ftm_resp {
- 	NL80211_PMSR_FTM_RESP_ATTR_MAX = NUM_NL80211_PMSR_FTM_RESP_ATTR - 1
- };
- 
-+/**
-+ * enum nl80211_obss_pd_attributes - OBSS packet detection attributes
-+ * @__NL80211_HE_OBSS_PD_ATTR_INVALID: Invalid
-+ *
-+ * @NL80211_HE_OBSS_PD_ATTR_MIN_OFFSET: the OBSS PD minimum tx power offset.
-+ * @NL80211_HE_OBSS_PD_ATTR_MAX_OFFSET: the OBSS PD maximum tx power offset.
-+ *
-+ * @__NL80211_HE_OBSS_PD_ATTR_LAST: Internal
-+ * @NL80211_HE_OBSS_PD_ATTR_MAX: highest OBSS PD attribute.
-+ */
-+enum nl80211_obss_pd_attributes {
-+	__NL80211_HE_OBSS_PD_ATTR_INVALID,
-+
-+	NL80211_HE_OBSS_PD_ATTR_MIN_OFFSET,
-+	NL80211_HE_OBSS_PD_ATTR_MAX_OFFSET,
-+
-+	/* keep last */
-+	__NL80211_HE_OBSS_PD_ATTR_LAST,
-+	NL80211_HE_OBSS_PD_ATTR_MAX = __NL80211_HE_OBSS_PD_ATTR_LAST - 1,
-+};
-+
-+
- #endif /* __LINUX_NL80211_H */
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 08a66c1bcb83..488d89c773d7 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -281,6 +281,14 @@ nl80211_pmsr_attr_policy[NL80211_PMSR_ATTR_MAX + 1] = {
- 		NLA_POLICY_NESTED_ARRAY(nl80211_psmr_peer_attr_policy),
- };
- 
-+static const struct nla_policy
-+he_obss_pd_policy[NL80211_HE_OBSS_PD_ATTR_MAX + 1] = {
-+	[NL80211_HE_OBSS_PD_ATTR_MIN_OFFSET] =
-+		NLA_POLICY_RANGE(NLA_U8, 1, 20),
-+	[NL80211_HE_OBSS_PD_ATTR_MAX_OFFSET] =
-+		NLA_POLICY_RANGE(NLA_U8, 1, 20),
-+};
-+
- const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
- 	[NL80211_ATTR_WIPHY] = { .type = NLA_U32 },
- 	[NL80211_ATTR_WIPHY_NAME] = { .type = NLA_NUL_STRING,
-@@ -574,6 +582,7 @@ const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
- 	[NL80211_ATTR_SAE_PASSWORD] = { .type = NLA_BINARY,
- 					.len = SAE_PASSWORD_MAX_LEN },
- 	[NL80211_ATTR_TWT_RESPONDER] = { .type = NLA_FLAG },
-+	[NL80211_ATTR_HE_OBSS_PD] = NLA_POLICY_NESTED(he_obss_pd_policy),
- };
- 
- /* policy for the key attributes */
-@@ -4385,6 +4394,34 @@ static int nl80211_parse_beacon(struct cfg80211_registered_device *rdev,
- 	return 0;
- }
- 
-+static int nl80211_parse_he_obss_pd(struct nlattr *attrs,
-+				    struct ieee80211_he_obss_pd *he_obss_pd)
-+{
-+	struct nlattr *tb[NL80211_HE_OBSS_PD_ATTR_MAX + 1];
-+	int err;
-+
-+	err = nla_parse_nested(tb, NL80211_HE_OBSS_PD_ATTR_MAX, attrs,
-+			       he_obss_pd_policy, NULL);
-+	if (err)
-+		return err;
-+
-+	if (!tb[NL80211_HE_OBSS_PD_ATTR_MIN_OFFSET] ||
-+	    !tb[NL80211_HE_OBSS_PD_ATTR_MAX_OFFSET])
-+		return -EINVAL;
-+
-+	he_obss_pd->min_offset =
-+		nla_get_u32(tb[NL80211_HE_OBSS_PD_ATTR_MIN_OFFSET]);
-+	he_obss_pd->max_offset =
-+		nla_get_u32(tb[NL80211_HE_OBSS_PD_ATTR_MAX_OFFSET]);
-+
-+	if (he_obss_pd->min_offset >= he_obss_pd->max_offset)
-+		return -EINVAL;
-+
-+	he_obss_pd->enable = true;
-+
-+	return 0;
-+}
-+
- static void nl80211_check_ap_rate_selectors(struct cfg80211_ap_settings *params,
- 					    const u8 *rates)
- {
-@@ -4669,6 +4706,14 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
- 	params.twt_responder =
- 		    nla_get_flag(info->attrs[NL80211_ATTR_TWT_RESPONDER]);
- 
-+	if (info->attrs[NL80211_ATTR_HE_OBSS_PD]) {
-+		err = nl80211_parse_he_obss_pd(
-+					info->attrs[NL80211_ATTR_HE_OBSS_PD],
-+					&params.he_obss_pd);
-+		if (err)
-+			return err;
-+	}
-+
- 	nl80211_calculate_ap_params(&params);
- 
- 	if (info->attrs[NL80211_ATTR_EXTERNAL_AUTH_SUPPORT])
--- 
-2.20.1
+Thanks for the reference!  At the moment I'm not terribly worried
+about this particular failure case (compared to other failure modes)
+because it's rare and it self-heals.
 
+...my best guess, though, is that the problem isn't exactly the same.
+The "Firmware wakeup failed" is a pretty generic error message, kind
+of like "something went wrong" and not all instances of this message
+will have the same root cause.
+
+I actually dealt with a few suspend/resume issues around mwifiex
+recently though.  If you ever uprev, you might be interested in:
+
+b82d6c1f8f82 mwifiex: Make resume actually do something useful again
+on SDIO cards
+83293386bc95 mmc: core: Prevent processing SDIO IRQs when the card is suspended
+
+-Doug
