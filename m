@@ -2,93 +2,91 @@ Return-Path: <SRS0=Y9Fe=V4=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A87EDC41514
-	for <linux-wireless@archiver.kernel.org>; Wed, 31 Jul 2019 12:07:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9334AC433FF
+	for <linux-wireless@archiver.kernel.org>; Wed, 31 Jul 2019 12:23:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7F4C1206A2
-	for <linux-wireless@archiver.kernel.org>; Wed, 31 Jul 2019 12:07:14 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="aHryC/ht";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="aHryC/ht"
+	by mail.kernel.org (Postfix) with ESMTP id 67A4C20693
+	for <linux-wireless@archiver.kernel.org>; Wed, 31 Jul 2019 12:23:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728533AbfGaMHN (ORCPT
+        id S1727593AbfGaMXH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 31 Jul 2019 08:07:13 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:35026 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726514AbfGaMHN (ORCPT
+        Wed, 31 Jul 2019 08:23:07 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:36783 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726561AbfGaMXH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 Jul 2019 08:07:13 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 87FCF60256; Wed, 31 Jul 2019 12:07:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1564574832;
-        bh=rVH9V3it4LEiKudkuZmS2VzM+fb6oDu0Rom01crhfjs=;
-        h=From:To:Cc:Subject:Date:From;
-        b=aHryC/htmsQ1cZvVBJU8qHnrHRif6DN/gPTC1mgzBh81Wwfq1p2qIrky35siO1h3G
-         s6OjR9ZTn5qY1Y67OpQbJ2OejeazLS5mUVp7p8lJHQTpoBDYhBWwQaqDJEgVxLdJaY
-         OG9juiLhStUgu6nHze9ve/5FyoOd8QNwkrJDInCU=
-Received: from govinds-linux.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: govinds@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 3C7276047C;
-        Wed, 31 Jul 2019 12:07:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1564574832;
-        bh=rVH9V3it4LEiKudkuZmS2VzM+fb6oDu0Rom01crhfjs=;
-        h=From:To:Cc:Subject:Date:From;
-        b=aHryC/htmsQ1cZvVBJU8qHnrHRif6DN/gPTC1mgzBh81Wwfq1p2qIrky35siO1h3G
-         s6OjR9ZTn5qY1Y67OpQbJ2OejeazLS5mUVp7p8lJHQTpoBDYhBWwQaqDJEgVxLdJaY
-         OG9juiLhStUgu6nHze9ve/5FyoOd8QNwkrJDInCU=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 3C7276047C
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=govinds@codeaurora.org
-From:   Govind Singh <govinds@codeaurora.org>
-To:     bjorn.andersson@linaro.org, linux-arm-msm@vger.kernel.org,
-        devicetree@vger.kernel.org, ath10k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org,
-        Govind Singh <govinds@codeaurora.org>
-Subject: [PATCH v2] arm64: dts: qcom: qcs404: Add wifi rails in QCS404 dt node for proxy votes
-Date:   Wed, 31 Jul 2019 17:37:04 +0530
-Message-Id: <20190731120704.7039-1-govinds@codeaurora.org>
-X-Mailer: git-send-email 2.21.0
+        Wed, 31 Jul 2019 08:23:07 -0400
+Authenticated-By: 
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x6VCMtjF007670, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (RTITCASV01.realtek.com.tw[172.21.6.18])
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x6VCMtjF007670
+        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
+        Wed, 31 Jul 2019 20:22:55 +0800
+Received: from localhost.localdomain (172.21.68.126) by
+ RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
+ 14.3.439.0; Wed, 31 Jul 2019 20:22:54 +0800
+From:   <yhchuang@realtek.com>
+To:     <kvalo@codeaurora.org>
+CC:     <linux-wireless@vger.kernel.org>, <briannorris@chromium.org>,
+        <sgruszka@redhat.com>
+Subject: [PATCH v3 2/3] rtw88: enclose c2h cmd handle with mutex
+Date:   Wed, 31 Jul 2019 20:22:46 +0800
+Message-ID: <1564575767-27557-3-git-send-email-yhchuang@realtek.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1564575767-27557-1-git-send-email-yhchuang@realtek.com>
+References: <1564575767-27557-1-git-send-email-yhchuang@realtek.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [172.21.68.126]
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add wifi regulators in qcs404 dt node for proxy vote. Proxy votes are
-required for handling driver recovery scenarios to prevent
-un-clocked register access during driver recovery.
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-Signed-off-by: Govind Singh <govinds@codeaurora.org>
+C2H commands that cannot be handled in IRQ context should
+be protected by rtwdev->mutex. Because they might have a
+sequece of hardware operations that does not want to be
+interfered.
+
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- arch/arm64/boot/dts/qcom/qcs404-evb.dtsi | 3 +++
- 1 file changed, 3 insertions(+)
+v1 -> v2
+    no change
 
-diff --git a/arch/arm64/boot/dts/qcom/qcs404-evb.dtsi b/arch/arm64/boot/dts/qcom/qcs404-evb.dtsi
-index 11c0a7137823..2289b01ee9f0 100644
---- a/arch/arm64/boot/dts/qcom/qcs404-evb.dtsi
-+++ b/arch/arm64/boot/dts/qcom/qcs404-evb.dtsi
-@@ -270,6 +270,9 @@
+v2 -> v3
+    no change
+
+ drivers/net/wireless/realtek/rtw88/fw.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wireless/realtek/rtw88/fw.c
+index 3c4dcb7..3b06f71 100644
+--- a/drivers/net/wireless/realtek/rtw88/fw.c
++++ b/drivers/net/wireless/realtek/rtw88/fw.c
+@@ -36,6 +36,8 @@ void rtw_fw_c2h_cmd_handle(struct rtw_dev *rtwdev, struct sk_buff *skb)
+ 	c2h = (struct rtw_c2h_cmd *)(skb->data + pkt_offset);
+ 	len = skb->len - pkt_offset - 2;
  
- &wifi {
- 	status = "okay";
-+	vdd-0.8-cx-mx-supply = <&vreg_l2_1p275>;
-+	vdd-1.8-xo-supply = <&vreg_l5_1p8>;
-+	vdd-1.3-rfa-supply = <&vreg_l1_1p3>;
- };
++	mutex_lock(&rtwdev->mutex);
++
+ 	switch (c2h->id) {
+ 	case C2H_HALMAC:
+ 		rtw_fw_c2h_cmd_handle_ext(rtwdev, skb);
+@@ -43,6 +45,8 @@ void rtw_fw_c2h_cmd_handle(struct rtw_dev *rtwdev, struct sk_buff *skb)
+ 	default:
+ 		break;
+ 	}
++
++	mutex_unlock(&rtwdev->mutex);
+ }
  
- /* PINCTRL - additions to nodes defined in qcs404.dtsi */
+ void rtw_fw_c2h_cmd_rx_irqsafe(struct rtw_dev *rtwdev, u32 pkt_offset,
 -- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+2.7.4
 
