@@ -6,34 +6,34 @@ X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0006C433FF
-	for <linux-wireless@archiver.kernel.org>; Wed, 31 Jul 2019 09:25:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EEE30C433FF
+	for <linux-wireless@archiver.kernel.org>; Wed, 31 Jul 2019 09:28:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8F5F420693
-	for <linux-wireless@archiver.kernel.org>; Wed, 31 Jul 2019 09:25:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CFD6820449
+	for <linux-wireless@archiver.kernel.org>; Wed, 31 Jul 2019 09:28:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728585AbfGaJZz (ORCPT
+        id S1728170AbfGaJ2N (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 31 Jul 2019 05:25:55 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:55442 "EHLO
+        Wed, 31 Jul 2019 05:28:13 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:55498 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725209AbfGaJZz (ORCPT
+        with ESMTP id S1727209AbfGaJ2N (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 Jul 2019 05:25:55 -0400
+        Wed, 31 Jul 2019 05:28:13 -0400
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1hskro-0004c1-8X; Wed, 31 Jul 2019 11:25:52 +0200
-Message-ID: <ea1f9969b52fed2da8b0e88ed8b06527bfc272aa.camel@sipsolutions.net>
-Subject: Re: [PATCHv6 1/9] nl80211: New netlink command for TID specific
- configuration
+        id 1hsku1-0004eq-4J; Wed, 31 Jul 2019 11:28:09 +0200
+Message-ID: <1077c62701b31cfcb4436e6b13be64ade6b1ae1b.camel@sipsolutions.net>
+Subject: Re: [PATCHv6 3/9] nl80211: Add netlink attribute for AMPDU
+ aggregation enable/disable
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     Tamizh chelvam <tamizhr@codeaurora.org>, ath10k@lists.infradead.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Wed, 31 Jul 2019 11:25:51 +0200
-In-Reply-To: <1560835632-17405-2-git-send-email-tamizhr@codeaurora.org>
+Date:   Wed, 31 Jul 2019 11:28:08 +0200
+In-Reply-To: <1560835632-17405-4-git-send-email-tamizhr@codeaurora.org>
 References: <1560835632-17405-1-git-send-email-tamizhr@codeaurora.org>
-         <1560835632-17405-2-git-send-email-tamizhr@codeaurora.org>
+         <1560835632-17405-4-git-send-email-tamizhr@codeaurora.org>
 Content-Type: text/plain; charset="UTF-8"
 User-Agent: Evolution 3.30.5 (3.30.5-1.fc29) 
 MIME-Version: 1.0
@@ -45,22 +45,33 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 On Tue, 2019-06-18 at 10:57 +0530, Tamizh chelvam wrote:
 > 
->  /**
-> + * enum nl80211_tid_config - TID config state
-> + * @NL80211_TID_CONFIG_DEFAULT: Default config for the TID
-> + * @NL80211_TID_CONFIG_ENABLE: Enable config for the TID
-> + * NL80211_TID_CONFIG_DISABLE: Disable config for the TID
-> + */
-> +enum nl80211_tid_config {
-> +	NL80211_TID_CONFIG_DEFAULT,
-> +	NL80211_TID_CONFIG_ENABLE,
-> +	NL80211_TID_CONFIG_DISABLE,
-> +};
+> +		if (!wiphy_ext_feature_isset(&rdev->wiphy,
+> +				NL80211_EXT_FEATURE_PER_TID_AMPDU_CTRL)) {
+> +			NL_SET_ERR_MSG_ATTR(extack,
+> +					    attrs[NL80211_TID_ATTR_CONFIG_AMPDU_CTRL],
+> +					    "TID specific configuration not "
+> +					    "supported");
+> +			return -ENOTSUPP;
+> +		}
+> +
+> +		if (peer && !wiphy_ext_feature_isset(&rdev->wiphy,
+> +				NL80211_EXT_FEATURE_PER_STA_AMPDU_CTRL)) {
+> +			NL_SET_ERR_MSG_ATTR(extack,
+> +					    attrs[NL80211_TID_ATTR_CONFIG_AMPDU_CTRL],
+> +					    "peer specfic TID configuration not "
+> +					    "supported");
+> +			return -ENOTSUPP;
+> +		}
 
-Hmm. Looking at this in more detail in patch 3, I don't understand.
+I think you should probably make this be a function to which you pass
+the attribute pointer and feature flags.
 
-How is DEFAULT different from "attribute not present", i.e. "no
-changes"?
+err = nl80211_check_tid_config_supported(extack,
+					 attrs[NL80211_TID_ATTR_CONFIG_AMPDU_CTRL],
+					 NL80211_EXT_FEATURE_PER_TID_AMPDU_CTRL,
+					 NL80211_EXT_FEATURE_PER_STA_AMPDU_CTRL);
+
+since you have this code a lot?
 
 johannes
 
