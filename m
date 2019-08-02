@@ -7,45 +7,45 @@ X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A582C32753
-	for <linux-wireless@archiver.kernel.org>; Fri,  2 Aug 2019 11:31:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B2DE5C32750
+	for <linux-wireless@archiver.kernel.org>; Fri,  2 Aug 2019 11:31:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3798220449
-	for <linux-wireless@archiver.kernel.org>; Fri,  2 Aug 2019 11:31:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 810DD20449
+	for <linux-wireless@archiver.kernel.org>; Fri,  2 Aug 2019 11:31:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="maWyqhyw"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="JY7vVTX2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392374AbfHBLbY (ORCPT
+        id S2392376AbfHBLbZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 2 Aug 2019 07:31:24 -0400
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:49810 "EHLO
+        Fri, 2 Aug 2019 07:31:25 -0400
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:49822 "EHLO
         rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1732764AbfHBLbX (ORCPT
+        by vger.kernel.org with ESMTP id S2392094AbfHBLbY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Aug 2019 07:31:23 -0400
+        Fri, 2 Aug 2019 07:31:24 -0400
 Received: from mail-irv-17.broadcom.com (mail-irv-17.lvn.broadcom.net [10.75.224.233])
-        by rnd-relay.smtp.broadcom.com (Postfix) with ESMTP id 5945730C00F;
+        by rnd-relay.smtp.broadcom.com (Postfix) with ESMTP id 8439D30C039;
         Fri,  2 Aug 2019 04:31:22 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.10.3 rnd-relay.smtp.broadcom.com 5945730C00F
+DKIM-Filter: OpenDKIM Filter v2.10.3 rnd-relay.smtp.broadcom.com 8439D30C039
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
         s=dkimrelay; t=1564745482;
-        bh=rTdnG2aRFOO0KC/KI61mstGyLoXkrAjLGr26vfgYNcg=;
+        bh=wQW1g9afgWHv3wlMgELh7kRgNcwwtNlfiR3bhHlhj34=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=maWyqhywR53TG/w/TUCb7/Lo6wugMFs8V+u4GLL23okby/UiDzoRkx7pI2VPl6+W8
-         MkN3Ks2AvU4OefNcQvYumZwzj6EdbVOZWQDhZu+65ZIvGsvcqYZr3+bd+PxDY+nzCo
-         N8GbkXjn//EGNDYbZXPj3PM/bF8Mlm6hzlDMrJCk=
+        b=JY7vVTX2b6dzPQGHJTIGeVLuVvEKkY4UeOZ99tL+WCYw4ELwZDDBqkApLLAUe9Lnv
+         ISOOVZfVZXTxkflLIeRvzXpqV6tYJtlHAERa0A0aQPUjNK7vUTyIxkboyJ5vh5bnk6
+         qtnbUTQbKdF64/E0DMYpOXmpywSTe6Ix3shDa+TA=
 Received: from bld-bun-01.bun.broadcom.com (bld-bun-01.bun.broadcom.com [10.176.128.83])
-        by mail-irv-17.broadcom.com (Postfix) with ESMTP id 2063660985;
+        by mail-irv-17.broadcom.com (Postfix) with ESMTP id AAFC660DA7;
         Fri,  2 Aug 2019 04:31:22 -0700 (PDT)
 Received: by bld-bun-01.bun.broadcom.com (Postfix, from userid 25152)
-        id 4DA54B02A43; Fri,  2 Aug 2019 13:31:19 +0200 (CEST)
+        id 4EB5FB02EF6; Fri,  2 Aug 2019 13:31:19 +0200 (CEST)
 From:   Arend van Spriel <arend.vanspriel@broadcom.com>
 To:     Johannes Berg <johannes@sipsolutions.net>
 Cc:     linux-wireless@vger.kernel.org,
         Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH V3 7/8] cfg80211: ibss: use 11a mandatory rates for 6GHz band operation
-Date:   Fri,  2 Aug 2019 13:31:04 +0200
-Message-Id: <1564745465-21234-8-git-send-email-arend.vanspriel@broadcom.com>
+Subject: [PATCH V3 4/8] cfg80211: extend ieee80211_operating_class_to_band() for 6GHz
+Date:   Fri,  2 Aug 2019 13:31:01 +0200
+Message-Id: <1564745465-21234-5-git-send-email-arend.vanspriel@broadcom.com>
 X-Mailer: git-send-email 1.9.1
 In-Reply-To: <1564745465-21234-1-git-send-email-arend.vanspriel@broadcom.com>
 References: <1564745465-21234-1-git-send-email-arend.vanspriel@broadcom.com>
@@ -54,45 +54,29 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The default mandatory rates, ie. when not specified by user-space, is
-determined by the band. Select 11a rateset for 6GHz band.
+Add 6GHz operating class range as defined in 802.11ax D4.1 Annex E.
 
 Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
 Reviewed-by: Leon Zegers <leon.zegers@broadcom.com>
 Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- net/wireless/ibss.c | 16 +++++++++++-----
- 1 file changed, 11 insertions(+), 5 deletions(-)
+ net/wireless/util.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/net/wireless/ibss.c b/net/wireless/ibss.c
-index d1743e6..ae8fe66 100644
---- a/net/wireless/ibss.c
-+++ b/net/wireless/ibss.c
-@@ -104,13 +104,19 @@ int __cfg80211_join_ibss(struct cfg80211_registered_device *rdev,
- 		* use the mandatory rate set for 11b or
- 		* 11a for maximum compatibility.
- 		*/
--		struct ieee80211_supported_band *sband =
--			rdev->wiphy.bands[params->chandef.chan->band];
-+		struct ieee80211_supported_band *sband;
-+		enum nl80211_band band;
-+		u32 flag;
- 		int j;
--		u32 flag = params->chandef.chan->band == NL80211_BAND_5GHZ ?
--			IEEE80211_RATE_MANDATORY_A :
--			IEEE80211_RATE_MANDATORY_B;
- 
-+		band = params->chandef.chan->band;
-+		if (band == NL80211_BAND_5GHZ ||
-+		    band == NL80211_BAND_6GHZ)
-+			flag = IEEE80211_RATE_MANDATORY_A;
-+		else
-+			flag = IEEE80211_RATE_MANDATORY_B;
-+
-+		sband = rdev->wiphy.bands[band];
- 		for (j = 0; j < sband->n_bitrates; j++) {
- 			if (sband->bitrates[j].flags & flag)
- 				params->basic_rates |= BIT(j);
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 4e633d4..4462837 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -1474,6 +1474,9 @@ bool ieee80211_operating_class_to_band(u8 operating_class,
+ 	case 128 ... 130:
+ 		*band = NL80211_BAND_5GHZ;
+ 		return true;
++	case 131 ... 135:
++		*band = NL80211_BAND_6GHZ;
++		return true;
+ 	case 81:
+ 	case 82:
+ 	case 83:
 -- 
 1.9.1
 
