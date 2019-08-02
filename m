@@ -4,52 +4,53 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6194C433FF
-	for <linux-wireless@archiver.kernel.org>; Fri,  2 Aug 2019 13:23:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8C6AC32753
+	for <linux-wireless@archiver.kernel.org>; Fri,  2 Aug 2019 13:27:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B49162186A
-	for <linux-wireless@archiver.kernel.org>; Fri,  2 Aug 2019 13:23:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A7708217D4
+	for <linux-wireless@archiver.kernel.org>; Fri,  2 Aug 2019 13:27:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1564752220;
-	bh=zPLz72vRdQQ+nd03SVM/WPAEGpHOT1B5O8fp02BVKSA=;
+	s=default; t=1564752477;
+	bh=hWwEHFuevGp1O7an+MVFFfzJVMbNQ41keR2NXr10SIc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=q7aukyDCLaot+/3zQXMfsFGiINhYkGH2B7fT8nKx/TAfqfAwwKxD0NvaAYTau0yY+
-	 A1Jphg+TT+XbPnaT1n2hgL4visQ8I1i79jP3F2LAFb6NXKjXPqiTGHOPfE9kMJbB8b
-	 37SiJmrtmiozuXfOLkVIKbzurEj7Ff1DNm7zq774=
+	b=X4opr5bbkWcYY23OSlLvR0AzRkZu02K0vqto5QxmGggB9p/saxRg7N6FHJ8boyP7p
+	 JehCxLn9c2E772v7mTG+Q6tJzCRPNh6m/lgIYMqaC8MUdvdaAY5JvuPAsAxG10brjs
+	 z3nQS5MCNnULlFnBwW3adf31yj+FVeZuxUJXnP7Q=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732392AbfHBNXj (ORCPT
+        id S2394636AbfHBN0s (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 2 Aug 2019 09:23:39 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34162 "EHLO mail.kernel.org"
+        Fri, 2 Aug 2019 09:26:48 -0400
+Received: from mail.kernel.org ([198.145.29.99]:37558 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2393993AbfHBNXi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Aug 2019 09:23:38 -0400
+        id S2391370AbfHBN0q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 2 Aug 2019 09:26:46 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 07C4B2182B;
-        Fri,  2 Aug 2019 13:23:36 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 9FA29217D6;
+        Fri,  2 Aug 2019 13:26:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1564752217;
-        bh=zPLz72vRdQQ+nd03SVM/WPAEGpHOT1B5O8fp02BVKSA=;
+        s=default; t=1564752405;
+        bh=hWwEHFuevGp1O7an+MVFFfzJVMbNQ41keR2NXr10SIc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Iv+0n2c51kMksIzOn94Xnwh+73wTGjNz1HDuEYaAjTRwNTEEfD2PYPyQL44VaFDh4
-         kJ+nwo+0zbvjLE9CEpPMMIpAiR5aeXlpc0VTBcd8MNmFgQ71FisEkMgHE1UDY8lCqu
-         EXS/wyfWPrUNJA0mZ0raNlHyKkMPm+KZN/ROZ5jQ=
+        b=c+QoTHzTbh5++AE5jbpS11QysDfenol8cqkBR0DhgAlcDR9ZveA/6Vgd4OL/yerOj
+         IVr04VnHAw6BjCyrnyaSz09zh52OAqJQ7JjWVpGpXDBrpKxtXvVVyUcyREdzHUN3fM
+         AjUVpnSuABsGnzyuMtSO6iJkwAAE785PzztW9mDM=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     John Crispin <john@phrozen.org>,
+Cc:     Brian Norris <briannorris@chromium.org>,
         Johannes Berg <johannes.berg@intel.com>,
-        Sasha Levin <sashal@kernel.org>, linux-wireless@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 13/42] nl80211: fix NL80211_HE_MAX_CAPABILITY_LEN
-Date:   Fri,  2 Aug 2019 09:22:33 -0400
-Message-Id: <20190802132302.13537-13-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.4 03/17] mac80211: don't warn about CW params when not using them
+Date:   Fri,  2 Aug 2019 09:26:20 -0400
+Message-Id: <20190802132635.14885-3-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190802132302.13537-1-sashal@kernel.org>
-References: <20190802132302.13537-1-sashal@kernel.org>
+In-Reply-To: <20190802132635.14885-1-sashal@kernel.org>
+References: <20190802132635.14885-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -59,34 +60,52 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: John Crispin <john@phrozen.org>
+From: Brian Norris <briannorris@chromium.org>
 
-[ Upstream commit 5edaac063bbf1267260ad2a5b9bb803399343e58 ]
+[ Upstream commit d2b3fe42bc629c2d4002f652b3abdfb2e72991c7 ]
 
-NL80211_HE_MAX_CAPABILITY_LEN has changed between D2.0 and D4.0. It is now
-MAC (6) + PHY (11) + MCS (12) + PPE (25) = 54.
+ieee80211_set_wmm_default() normally sets up the initial CW min/max for
+each queue, except that it skips doing this if the driver doesn't
+support ->conf_tx. We still end up calling drv_conf_tx() in some cases
+(e.g., ieee80211_reconfig()), which also still won't do anything
+useful...except it complains here about the invalid CW parameters.
 
-Signed-off-by: John Crispin <john@phrozen.org>
-Link: https://lore.kernel.org/r/20190627095832.19445-1-john@phrozen.org
+Let's just skip the WARN if we weren't going to do anything useful with
+the parameters.
+
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+Link: https://lore.kernel.org/r/20190718015712.197499-1-briannorris@chromium.org
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- include/uapi/linux/nl80211.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/mac80211/driver-ops.c | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 7acc16f349427..fa43dd5a7b3dc 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2732,7 +2732,7 @@ enum nl80211_attrs {
- #define NL80211_HT_CAPABILITY_LEN		26
- #define NL80211_VHT_CAPABILITY_LEN		12
- #define NL80211_HE_MIN_CAPABILITY_LEN           16
--#define NL80211_HE_MAX_CAPABILITY_LEN           51
-+#define NL80211_HE_MAX_CAPABILITY_LEN           54
- #define NL80211_MAX_NR_CIPHER_SUITES		5
- #define NL80211_MAX_NR_AKM_SUITES		2
+diff --git a/net/mac80211/driver-ops.c b/net/mac80211/driver-ops.c
+index c258f1041d330..df2e4e3112177 100644
+--- a/net/mac80211/driver-ops.c
++++ b/net/mac80211/driver-ops.c
+@@ -169,11 +169,16 @@ int drv_conf_tx(struct ieee80211_local *local,
+ 	if (!check_sdata_in_driver(sdata))
+ 		return -EIO;
  
+-	if (WARN_ONCE(params->cw_min == 0 ||
+-		      params->cw_min > params->cw_max,
+-		      "%s: invalid CW_min/CW_max: %d/%d\n",
+-		      sdata->name, params->cw_min, params->cw_max))
++	if (params->cw_min == 0 || params->cw_min > params->cw_max) {
++		/*
++		 * If we can't configure hardware anyway, don't warn. We may
++		 * never have initialized the CW parameters.
++		 */
++		WARN_ONCE(local->ops->conf_tx,
++			  "%s: invalid CW_min/CW_max: %d/%d\n",
++			  sdata->name, params->cw_min, params->cw_max);
+ 		return -EINVAL;
++	}
+ 
+ 	trace_drv_conf_tx(local, sdata, ac, params);
+ 	if (local->ops->conf_tx)
 -- 
 2.20.1
 
