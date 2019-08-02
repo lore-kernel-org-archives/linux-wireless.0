@@ -2,61 +2,91 @@ Return-Path: <SRS0=iUGz=V6=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DC2FC433FF
-	for <linux-wireless@archiver.kernel.org>; Fri,  2 Aug 2019 12:04:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC377C433FF
+	for <linux-wireless@archiver.kernel.org>; Fri,  2 Aug 2019 13:20:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7FDF3217D6
-	for <linux-wireless@archiver.kernel.org>; Fri,  2 Aug 2019 12:04:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 953112173E
+	for <linux-wireless@archiver.kernel.org>; Fri,  2 Aug 2019 13:20:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1564752035;
+	bh=zkDQirxJFxpqvEs8k1jAjBm21u2uSL67RoEEcJdLsJs=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=zOGiXZcTyTuc0zdwLI7Z1iMS40qVRkisLoBdFMjtzabdNIp5zTWGXCVKZdX2Prrkv
+	 qCFQaBu9p09Tgmb7DrgYIVOBxLqKTaesnhWB74My8I7fkd/NNLt//ASTS9SQV1otMm
+	 pm25GJTBSyrfrxMDF1QXw+VW4+RRJWXiZxzQNuP8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392497AbfHBMEg (ORCPT
+        id S2393399AbfHBNUf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 2 Aug 2019 08:04:36 -0400
-Received: from ozlabs.org ([203.11.71.1]:47707 "EHLO ozlabs.org"
+        Fri, 2 Aug 2019 09:20:35 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58984 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2392489AbfHBMEg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Aug 2019 08:04:36 -0400
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        id S2393392AbfHBNUd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 2 Aug 2019 09:20:33 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.ozlabs.org (Postfix) with ESMTPSA id 460QnX1zNsz9s7T;
-        Fri,  2 Aug 2019 22:04:31 +1000 (AEST)
-From:   Michael Ellerman <mpe@ellerman.id.au>
-To:     Johannes Berg <johannes@sipsolutions.net>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        kvalo@codeaurora.org, Luca Coelho <luciano.coelho@intel.com>
-Cc:     Arnd Bergmann <arnd@arndb.de>,
-        Nathan Chancellor <natechancellor@gmail.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
-        Sara Sharon <sara.sharon@intel.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, clang-built-linux@googlegroups.com
-Subject: Re: [PATCH -next] iwlwifi: dbg: work around clang bug by marking debug strings static
-In-Reply-To: <3a2b6d4f9356d54ab8e83fbf25ba9c5f50181f0d.camel@sipsolutions.net>
-References: <20190712001708.170259-1-ndesaulniers@google.com> <874l31r88y.fsf@concordia.ellerman.id.au> <3a2b6d4f9356d54ab8e83fbf25ba9c5f50181f0d.camel@sipsolutions.net>
-Date:   Fri, 02 Aug 2019 22:04:31 +1000
-Message-ID: <871ry3lqnk.fsf@concordia.ellerman.id.au>
+        by mail.kernel.org (Postfix) with ESMTPSA id 4CC8F2173E;
+        Fri,  2 Aug 2019 13:20:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1564752033;
+        bh=zkDQirxJFxpqvEs8k1jAjBm21u2uSL67RoEEcJdLsJs=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=B7Gq2NPzSYSf7IYzzfS0ZHs5e3pl52VYPrQROMGP2oVJfMsDqZ95JXXaRrA5dujyE
+         1Ux+YWGQPQCPrjB3xGCWnkc+CzD3v72BnV0RZpgYeVXPDCwHxibt17Uk2ou8oDbVh9
+         gc2+K9WSQl1K+g/bCe4YPFL3cHSja8b2AZOwYoDs=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     John Crispin <john@phrozen.org>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Sasha Levin <sashal@kernel.org>, linux-wireless@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.2 27/76] nl80211: fix NL80211_HE_MAX_CAPABILITY_LEN
+Date:   Fri,  2 Aug 2019 09:19:01 -0400
+Message-Id: <20190802131951.11600-27-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20190802131951.11600-1-sashal@kernel.org>
+References: <20190802131951.11600-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Johannes Berg <johannes@sipsolutions.net> writes:
->> Luca, you said this was already fixed in your internal tree, and the fix
->> would appear soon in next, but I don't see anything in linux-next?
->
-> Luca is still on vacation, but I just sent out a version of the patch we
-> had applied internally.
+From: John Crispin <john@phrozen.org>
 
-Awesome, thanks.
+[ Upstream commit 5edaac063bbf1267260ad2a5b9bb803399343e58 ]
 
-cheers
+NL80211_HE_MAX_CAPABILITY_LEN has changed between D2.0 and D4.0. It is now
+MAC (6) + PHY (11) + MCS (12) + PPE (25) = 54.
+
+Signed-off-by: John Crispin <john@phrozen.org>
+Link: https://lore.kernel.org/r/20190627095832.19445-1-john@phrozen.org
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ include/uapi/linux/nl80211.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 6f09d1500960d..70da1c6cdd073 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2844,7 +2844,7 @@ enum nl80211_attrs {
+ #define NL80211_HT_CAPABILITY_LEN		26
+ #define NL80211_VHT_CAPABILITY_LEN		12
+ #define NL80211_HE_MIN_CAPABILITY_LEN           16
+-#define NL80211_HE_MAX_CAPABILITY_LEN           51
++#define NL80211_HE_MAX_CAPABILITY_LEN           54
+ #define NL80211_MAX_NR_CIPHER_SUITES		5
+ #define NL80211_MAX_NR_AKM_SUITES		2
+ 
+-- 
+2.20.1
+
