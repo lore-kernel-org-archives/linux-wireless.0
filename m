@@ -2,77 +2,114 @@ Return-Path: <SRS0=5ylD=WD=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.4 required=3.0 tests=FROM_LOCAL_HEX,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9624AC32754
-	for <linux-wireless@archiver.kernel.org>; Wed,  7 Aug 2019 14:58:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2724BC32751
+	for <linux-wireless@archiver.kernel.org>; Wed,  7 Aug 2019 16:20:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 69DBE21BE6
-	for <linux-wireless@archiver.kernel.org>; Wed,  7 Aug 2019 14:58:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EE004222FC
+	for <linux-wireless@archiver.kernel.org>; Wed,  7 Aug 2019 16:20:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1565194858;
+	bh=oPAKNVBLvVOYekNlp4K5LNtM6tv5QzJcTPrxkrhmPD4=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
+	b=Tqh/6QBp9zy89+HFUCniF9WKApXB90QxQ+S+QIg8enX8Lt4glavZTmMq5cVvfOVl9
+	 vB65YJkSMdnVCGIO8RF0xoJDQx7kLvLW+RpjjI37dG7o2vFzgTCMXAw6/QXlSdYgBd
+	 poUb80E0KOJJPyDBFBbat7xFecLDQcjzRxHTgwnA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388370AbfHGO6H (ORCPT
+        id S2388743AbfHGQU5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 7 Aug 2019 10:58:07 -0400
-Received: from mail-ot1-f71.google.com ([209.85.210.71]:33181 "EHLO
-        mail-ot1-f71.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388291AbfHGO6B (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Aug 2019 10:58:01 -0400
-Received: by mail-ot1-f71.google.com with SMTP id w5so55221972otg.0
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Aug 2019 07:58:01 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:date:in-reply-to:message-id:subject
-         :from:to;
-        bh=WeWUyZi7VCNLtsnaaTiz91GIAA++Rddp6QtWItBqJfk=;
-        b=HqEii16ZpUYkwbwoI2TfpD6iVo/nwQOmsjW96a19oIGgO3izlMxwgU81CDccZMVBZl
-         MeoS7AE2JHdO3j5oqAIaDzLrDHfBFx9L6xCKh7kUFzYvUAR9fcS4U6lVu82w97TsGzqW
-         rfAyqDvUvBQDQivP14tysmlWU33JOFbVjwZa9DQp1whiEDiikRc1RdX/wOFqNYUerN24
-         OQOCzvMG98Tu53t4sJLW/46+eDnJGbhZYKez3VtEVAAFzfNLG8XFO1iGtbZyzSTd6Y2I
-         a/s4A7GlAOxk+JJaFcYW7Qwu/bfvl9mHW23Fi9BZaaBNj7GrdZAKQI59z1n08FwFC8ow
-         fXkA==
-X-Gm-Message-State: APjAAAWFsT23nI0bYm9m1L6SpRtF+mwuYj8E+I32vZ8jnm9xZuiIf1tg
-        1+ThNGKoFTcIF1p3pyfA6ss+YD7IWtaVyAIiXO9baXCAAxfP
-X-Google-Smtp-Source: APXvYqw99ZvGdJtrUfS8mJEwMciCjDs8w83xYn0jXYpAXZuw/cI0KvMd7vubohbBpqBJpfJV+utLREol6sQoZxVKwDY/RnvUoBr+
+        Wed, 7 Aug 2019 12:20:57 -0400
+Received: from mail.kernel.org ([198.145.29.99]:56524 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2387922AbfHGQU5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 7 Aug 2019 12:20:57 -0400
+Received: from mail-qk1-f180.google.com (mail-qk1-f180.google.com [209.85.222.180])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 1A7C9222FC
+        for <linux-wireless@vger.kernel.org>; Wed,  7 Aug 2019 16:20:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1565194856;
+        bh=oPAKNVBLvVOYekNlp4K5LNtM6tv5QzJcTPrxkrhmPD4=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=o1e8Va+8G7trBYQXukc5n+bkxLZitYguotrp97cC4/buFp7Vgc/9+LXwkqpL1P5CF
+         +qyMz0yoynVzyAMGjG4dWqcF5ZXfpOm+n789jlmVD2up2dHVsSe7vUxZhUnKoEq+sA
+         LJ+wXX887D2r2W1cHELg5oB26OgHPJzEkAOfBlDY=
+Received: by mail-qk1-f180.google.com with SMTP id r6so66306004qkc.0
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Aug 2019 09:20:56 -0700 (PDT)
+X-Gm-Message-State: APjAAAXhc1SrovIXlfT5cYLulRl6/fwXqlNDKMlZMPgA3i5WFR0O7g6w
+        PYSLCMiC2oWYRuCrpYF1gNxKcVBSVUscLZvcweU=
+X-Google-Smtp-Source: APXvYqxkZ27nH0xwKhynE7bN28PwJV+Ig3Ceu7Va6OEhiPsdT5UOm4k7OtxRbo+cTe9+siSLV20QjRXz2l5Wkjbbcko=
+X-Received: by 2002:a05:620a:1329:: with SMTP id p9mr9187371qkj.224.1565194855263;
+ Wed, 07 Aug 2019 09:20:55 -0700 (PDT)
 MIME-Version: 1.0
-X-Received: by 2002:a5d:994b:: with SMTP id v11mr9744404ios.165.1565189881077;
- Wed, 07 Aug 2019 07:58:01 -0700 (PDT)
-Date:   Wed, 07 Aug 2019 07:58:01 -0700
-In-Reply-To: <1565187539.15973.6.camel@suse.com>
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <000000000000de260b058f882ae7@google.com>
-Subject: Re: WARNING in zd_mac_clear
-From:   syzbot <syzbot+74c65761783d66a9c97c@syzkaller.appspotmail.com>
-To:     andreyknvl@google.com, davem@davemloft.net, dsd@gentoo.org,
-        kune@deine-taler.de, kvalo@codeaurora.org,
-        linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        oneukum@suse.com, stern@rowland.harvard.edu,
-        syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"; format=flowed; delsp=yes
+References: <1565167700-22501-1-git-send-email-yhchuang@realtek.com>
+ <1565167700-22501-2-git-send-email-yhchuang@realtek.com> <3307e4b7-c92d-e1d2-b896-26e45fb69a9b@broadcom.com>
+ <F7CD281DE3E379468C6D07993EA72F84D188A068@RTITMBSVM04.realtek.com.tw> <7bbbe3be-1f6f-8f38-45f3-54f25a5b2f38@broadcom.com>
+In-Reply-To: <7bbbe3be-1f6f-8f38-45f3-54f25a5b2f38@broadcom.com>
+From:   Josh Boyer <jwboyer@kernel.org>
+Date:   Wed, 7 Aug 2019 12:20:44 -0400
+X-Gmail-Original-Message-ID: <CA+5PVA4LDjCtPW8HAve79inmihT_6BDp899HGx_7P-4U3H7NaA@mail.gmail.com>
+Message-ID: <CA+5PVA4LDjCtPW8HAve79inmihT_6BDp899HGx_7P-4U3H7NaA@mail.gmail.com>
+Subject: Re: [PATCH v2 2/2] rtw88: RTL8822C: add WoW firmware v7.3
+To:     Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc:     Tony Chuang <yhchuang@realtek.com>,
+        "linux-firmware@kernel.org" <linux-firmware@kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
+        "briannorris@chromium.org" <briannorris@chromium.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello,
+On Wed, Aug 7, 2019 at 6:15 AM Arend Van Spriel
+<arend.vanspriel@broadcom.com> wrote:
+>
+>
+>
+> On 8/7/2019 11:53 AM, Tony Chuang wrote:
+> >> From: Arend Van Spriel [mailto:arend.vanspriel@broadcom.com]
+> >>
+> >> On 8/7/2019 10:48 AM, yhchuang@realtek.com wrote:
+> >>> From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+> >>>
+> >>> Add WoW firmware to support entering Wake on WirelessLAN mode
+> >>>
+> >>> Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+> >>> ---
+> >>>
+> >>> v1 -> v2
+> >>>      * update WHENCE file for new added firmware
+> >>>
+> >>>    WHENCE                    |   1 +
+> >>>    rtw88/rtw8822c_wow_fw.bin | Bin 0 -> 138720 bytes
+> >>>    2 files changed, 1 insertion(+)
+> >>>    create mode 100755 rtw88/rtw8822c_wow_fw.bin
+> >>
+> >> Just wondering: Is this a good approach? What firmware should distros
+> >> pick? Is there a trade-off affecting other wifi functionality when using
+> >> WoW firmware?
+> >>
+> >
+> > If distros want to use WOW, they should pick both.
+> >
+> > For Realtek devices such as RTL8822CE, it needs to "change/re-download"
+> > the wow firmware to suspend with WOW functionalities. When resume,
+> > switch back to normal firmware to run "normally".
+> >
+> > I think the reason is the firmware size restriction. For newer devices,
+> > maybe there is a larger space for firmware, and we don't need to swap
+> > the FW like this :)
+>
+> Interesting approach and I would mention this in the commit message or
+> add a README in rtw88 folder explaining it. Not sure whether distros
+> look at commit messages.
 
-syzbot has tested the proposed patch and the reproducer did not trigger  
-crash:
+A README would indeed be nice.  Can you do a v3 with that included?
 
-Reported-and-tested-by:  
-syzbot+74c65761783d66a9c97c@syzkaller.appspotmail.com
-
-Tested on:
-
-commit:         9a33b369 usb-fuzzer: main usb gadget fuzzer driver
-git tree:       https://github.com/google/kasan.git
-kernel config:  https://syzkaller.appspot.com/x/.config?x=23e37f59d94ddd15
-compiler:       gcc (GCC) 9.0.0 20181231 (experimental)
-patch:          https://syzkaller.appspot.com/x/patch.diff?x=10d8c03c600000
-
-Note: testing is done by a robot and is best-effort only.
+josh
