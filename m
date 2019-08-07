@@ -2,67 +2,41 @@ Return-Path: <SRS0=5ylD=WD=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02656C19759
-	for <linux-wireless@archiver.kernel.org>; Wed,  7 Aug 2019 05:15:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08565C433FF
+	for <linux-wireless@archiver.kernel.org>; Wed,  7 Aug 2019 05:24:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CB1EB2089E
-	for <linux-wireless@archiver.kernel.org>; Wed,  7 Aug 2019 05:15:33 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="U7TmMloS"
+	by mail.kernel.org (Postfix) with ESMTP id DDA4021871
+	for <linux-wireless@archiver.kernel.org>; Wed,  7 Aug 2019 05:24:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726538AbfHGFPV (ORCPT
+        id S1726264AbfHGFYM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 7 Aug 2019 01:15:21 -0400
-Received: from mail-wm1-f65.google.com ([209.85.128.65]:33387 "EHLO
-        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725792AbfHGFPV (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Aug 2019 01:15:21 -0400
-Received: by mail-wm1-f65.google.com with SMTP id p77so771392wme.0;
-        Tue, 06 Aug 2019 22:15:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=pp4YWyx3LNt4h77TMcJoBYvXi28SNsEqSfN2aO+q+7I=;
-        b=U7TmMloS6ZPgrtO0DNdyfUQhdDzDaveQh/wpy21Vso8pbhGU7nmfLxkFPFDEDP+8gY
-         /T0owknmPaAZaAHpKRL1oTw4iAJRsWWOja5bpjI1BakkWjuPBUsjdc9Qtk+gXyZFpEMP
-         f5ckbMlGxl7aasMX0uDdBfqxGdSqSGZtBi6+cz838lDHldApX5+diNrbfqzBcbp4ghgA
-         uK+d0ps/rGU5LXmSWmAzfst0J/hjvZXoaJhCtWUSgj49BLkBgSs8xwOLeMGkihK6klbC
-         JtJb4r40Vrb7WhIIeCjeOLDfRhrbPKQf4tjsY0E9+LO5cO2rPZYF+vzM66N04st7X4Gx
-         IWZg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=pp4YWyx3LNt4h77TMcJoBYvXi28SNsEqSfN2aO+q+7I=;
-        b=giD7atKj8itwwgXPtOlwLQ0XLuD0VWKklVxAFlfvZ93I/qS05IatSH1ljYAANT3UUQ
-         AvX5DRFHKzKW6fU5g84BXlt1J6APkuj/mMDeFI/UQlkGm4xdOX/cIqRHR5817Fch/5bs
-         5kI/DqU08VQ32yenyZm1saLAEw8z+1ofxk9puOtmIXY0LFYYThW1+03ZjL6XVSITd7sK
-         5dIjz48aAeigtqo36YG+Octw5mfaNsJApmRSriBy9YiKwNSuxg2HuXATfLFuNEAESezY
-         IGZDudh0pb4zoSl0PmfdbslAH1PSyCP9B+rmi8IP15kHOUG4o7lIHKSqddKIux3mOgzK
-         KtXw==
-X-Gm-Message-State: APjAAAWyXcl/m8nxeRCt2rAZQORKSgMdzE4dLGaj6UicRqYJXq1SNJ02
-        emFmqTgWReFUV2f6tVvHX1c7NDA1N0+FHA==
-X-Google-Smtp-Source: APXvYqxaBNq7pO+QBEcGdRr/ERy2r5cTPmGpqT6hMJjV0hoAq9A1x3d1yFv8C77BiTXAWV286KbTpQ==
-X-Received: by 2002:a1c:5453:: with SMTP id p19mr7686773wmi.148.1565154919396;
-        Tue, 06 Aug 2019 22:15:19 -0700 (PDT)
-Received: from archlinux-threadripper ([2a01:4f8:222:2f1b::2])
-        by smtp.gmail.com with ESMTPSA id q18sm111889375wrw.36.2019.08.06.22.15.18
-        (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
-        Tue, 06 Aug 2019 22:15:18 -0700 (PDT)
-Date:   Tue, 6 Aug 2019 22:15:16 -0700
-From:   Nathan Chancellor <natechancellor@gmail.com>
-To:     Nick Desaulniers <ndesaulniers@google.com>
+        Wed, 7 Aug 2019 01:24:12 -0400
+Received: from mga04.intel.com ([192.55.52.120]:14267 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725834AbfHGFYM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 7 Aug 2019 01:24:12 -0400
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 06 Aug 2019 22:24:11 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.64,356,1559545200"; 
+   d="scan'208";a="176853760"
+Received: from kerdanow-mobl.ger.corp.intel.com ([10.252.3.167])
+  by orsmga003.jf.intel.com with ESMTP; 06 Aug 2019 22:24:07 -0700
+Message-ID: <a32af5800af19779eb5be8d7b2552de18bfac194.camel@intel.com>
+Subject: Re: [PATCH -next] iwlwifi: dbg: work around clang bug by marking
+ debug strings static
+From:   Luciano Coelho <luciano.coelho@intel.com>
+To:     Nathan Chancellor <natechancellor@gmail.com>,
+        Nick Desaulniers <ndesaulniers@google.com>
 Cc:     Johannes Berg <johannes@sipsolutions.net>,
         Michael Ellerman <mpe@ellerman.id.au>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Luca Coelho <luciano.coelho@intel.com>,
         Arnd Bergmann <arnd@arndb.de>,
         Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
         Intel Linux Wireless <linuxwifi@intel.com>,
@@ -72,45 +46,50 @@ Cc:     Johannes Berg <johannes@sipsolutions.net>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         LKML <linux-kernel@vger.kernel.org>,
         clang-built-linux <clang-built-linux@googlegroups.com>
-Subject: Re: [PATCH -next] iwlwifi: dbg: work around clang bug by marking
- debug strings static
-Message-ID: <20190807051516.GA117639@archlinux-threadripper>
+Date:   Wed, 07 Aug 2019 08:24:06 +0300
+In-Reply-To: <20190807051516.GA117639@archlinux-threadripper>
 References: <20190712001708.170259-1-ndesaulniers@google.com>
- <874l31r88y.fsf@concordia.ellerman.id.au>
- <3a2b6d4f9356d54ab8e83fbf25ba9c5f50181f0d.camel@sipsolutions.net>
- <CAKwvOdmBeB1BezsGh=cK=U9m8goKzZnngDRzNM7B1voZfh8yWg@mail.gmail.com>
+         <874l31r88y.fsf@concordia.ellerman.id.au>
+         <3a2b6d4f9356d54ab8e83fbf25ba9c5f50181f0d.camel@sipsolutions.net>
+         <CAKwvOdmBeB1BezsGh=cK=U9m8goKzZnngDRzNM7B1voZfh8yWg@mail.gmail.com>
+         <20190807051516.GA117639@archlinux-threadripper>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.30.5-1.1 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAKwvOdmBeB1BezsGh=cK=U9m8goKzZnngDRzNM7B1voZfh8yWg@mail.gmail.com>
-User-Agent: Mutt/1.12.1 (2019-06-15)
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, Aug 06, 2019 at 03:37:42PM -0700, Nick Desaulniers wrote:
-> On Thu, Aug 1, 2019 at 12:11 AM Johannes Berg <johannes@sipsolutions.net> wrote:
-> >
-> >
-> > > Luca, you said this was already fixed in your internal tree, and the fix
-> > > would appear soon in next, but I don't see anything in linux-next?
-> >
-> > Luca is still on vacation, but I just sent out a version of the patch we
-> > had applied internally.
-> >
-> > Also turns out it wasn't actually _fixed_, just _moved_, so those
-> > internal patches wouldn't have helped anyway.
+On Tue, 2019-08-06 at 22:15 -0700, Nathan Chancellor wrote:
+> On Tue, Aug 06, 2019 at 03:37:42PM -0700, Nick Desaulniers wrote:
+> > On Thu, Aug 1, 2019 at 12:11 AM Johannes Berg <johannes@sipsolutions.net> wrote:
+> > > 
+> > > > Luca, you said this was already fixed in your internal tree, and the fix
+> > > > would appear soon in next, but I don't see anything in linux-next?
+> > > 
+> > > Luca is still on vacation, but I just sent out a version of the patch we
+> > > had applied internally.
+> > > 
+> > > Also turns out it wasn't actually _fixed_, just _moved_, so those
+> > > internal patches wouldn't have helped anyway.
+> > 
+> > Thanks for the report. Do you have a link?
+> > I'll rebase my patch then.
+> > -- 
+> > Thanks,
+> > ~Nick Desaulniers
 > 
-> Thanks for the report. Do you have a link?
-> I'll rebase my patch then.
-> -- 
-> Thanks,
-> ~Nick Desaulniers
+> Just for everyone else (since I commented on our issue tracker), this is
+> now fixed in Linus's tree as of commit  1f6607250331 ("iwlwifi: dbg_ini:
+> fix compile time assert build errors").
 
-Just for everyone else (since I commented on our issue tracker), this is
-now fixed in Linus's tree as of commit  1f6607250331 ("iwlwifi: dbg_ini:
-fix compile time assert build errors").
+Yes, thanks Nathan! I was just digging for this patch to reply to you,
+I'm still catching up with what happened during my vacations.
 
+--
 Cheers,
-Nathan
+Luca.
+
