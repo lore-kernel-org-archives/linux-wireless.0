@@ -6,36 +6,36 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6D25C32756
-	for <linux-wireless@archiver.kernel.org>; Wed,  7 Aug 2019 10:40:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D0D9C32756
+	for <linux-wireless@archiver.kernel.org>; Wed,  7 Aug 2019 10:40:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BF1FD21E6A
-	for <linux-wireless@archiver.kernel.org>; Wed,  7 Aug 2019 10:40:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1E1DA21E6E
+	for <linux-wireless@archiver.kernel.org>; Wed,  7 Aug 2019 10:40:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727637AbfHGKkZ (ORCPT
+        id S1729575AbfHGKkd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 7 Aug 2019 06:40:25 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:56213 "EHLO
+        Wed, 7 Aug 2019 06:40:33 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:56216 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726893AbfHGKkZ (ORCPT
+        with ESMTP id S1727464AbfHGKkZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 7 Aug 2019 06:40:25 -0400
 Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x77AeFI0010049, This message is accepted by code: ctloc85258
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x77AeEbU010037, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (RTITCASV01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x77AeFI0010049
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x77AeEbU010037
         (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
-        Wed, 7 Aug 2019 18:40:15 +0800
+        Wed, 7 Aug 2019 18:40:14 +0800
 Received: from localhost.localdomain (172.21.68.126) by
  RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
- 14.3.439.0; Wed, 7 Aug 2019 18:40:15 +0800
+ 14.3.439.0; Wed, 7 Aug 2019 18:40:13 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>, <briannorris@chromium.org>,
         <sgruszka@redhat.com>
-Subject: [PATCH 4/8] rtw88: 8822c: add FW IQK support
-Date:   Wed, 7 Aug 2019 18:40:01 +0800
-Message-ID: <1565174405-2689-5-git-send-email-yhchuang@realtek.com>
+Subject: [PATCH 2/8] rtw88: 8822c: update pwr_seq to v13
+Date:   Wed, 7 Aug 2019 18:39:59 +0800
+Message-ID: <1565174405-2689-3-git-send-email-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1565174405-2689-1-git-send-email-yhchuang@realtek.com>
 References: <1565174405-2689-1-git-send-email-yhchuang@realtek.com>
@@ -47,63 +47,38 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+From: Chin-Yen Lee <timlee@realtek.com>
 
-Add support for doing IQK in firmware
+update sequence to v13 to reduce power consumption
+when MAC power off
 
+Signed-off-by: Chin-Yen Lee <timlee@realtek.com>
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/rtw8822c.c | 16 ++++++++++++++++
- drivers/net/wireless/realtek/rtw88/rtw8822c.h |  2 ++
- 2 files changed, 18 insertions(+)
+ drivers/net/wireless/realtek/rtw88/rtw8822c.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
 diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-index e11bbc3..176ca5f 100644
+index 207f64c..b072d43 100644
 --- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
 +++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-@@ -1876,6 +1876,22 @@ static void rtw8822c_false_alarm_statistics(struct rtw_dev *rtwdev)
- 
- static void rtw8822c_do_iqk(struct rtw_dev *rtwdev)
- {
-+	struct rtw_iqk_para para = {0};
-+	u8 iqk_chk;
-+	int counter;
-+
-+	para.clear = 1;
-+	rtw_fw_do_iqk(rtwdev, &para);
-+
-+	for (counter = 0; counter < 300; counter++) {
-+		iqk_chk = rtw_read8(rtwdev, REG_RPT_CIP);
-+		if (iqk_chk == 0xaa)
-+			break;
-+		msleep(20);
-+	}
-+	rtw_write8(rtwdev, REG_IQKSTAT, 0x0);
-+
-+	rtw_dbg(rtwdev, RTW_DBG_RFK, "iqk counter=%d\n", counter);
- }
- 
- /* for coex */
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.h b/drivers/net/wireless/realtek/rtw88/rtw8822c.h
-index 5ee1de4..14a8894 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8822c.h
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.h
-@@ -176,6 +176,7 @@ struct rtw8822c_efuse {
- #define REG_TXF7	0x1ab0
- #define REG_CCK_SOURCE	0x1abc
- #define BIT_NBI_EN		BIT(30)
-+#define REG_IQKSTAT	0x1b10
- #define REG_TXANT	0x1c28
- #define REG_ENCCK	0x1c3c
- #define BIT_CCK_BLK_EN		BIT(1)
-@@ -197,6 +198,7 @@ struct rtw8822c_efuse {
- #define REG_OFDM_FACNT3	0x2d0c
- #define REG_OFDM_FACNT4	0x2d10
- #define REG_OFDM_FACNT5	0x2d20
-+#define REG_RPT_CIP	0x2d9c
- #define REG_OFDM_TXCNT	0x2de0
- #define REG_ORITXCODE2	0x4100
- #define REG_3WIRE2	0x410c
+@@ -2275,6 +2275,16 @@ static struct rtw_pwr_seq_cmd trans_cardemu_to_carddis_8822c[] = {
+ 	 RTW_PWR_INTF_ALL_MSK,
+ 	 RTW_PWR_ADDR_MAC,
+ 	 RTW_PWR_CMD_WRITE, BIT(1), 0},
++	{0x0092,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_PCI_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, 0xFF, 0x20},
++	{0x0093,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_PCI_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, 0xFF, 0x04},
+ 	{0x0005,
+ 	 RTW_PWR_CUT_ALL_MSK,
+ 	 RTW_PWR_INTF_USB_MSK | RTW_PWR_INTF_SDIO_MSK,
 -- 
 2.7.4
 
