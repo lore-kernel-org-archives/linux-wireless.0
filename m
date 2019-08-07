@@ -6,36 +6,36 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7C2DC32754
-	for <linux-wireless@archiver.kernel.org>; Wed,  7 Aug 2019 10:40:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 828C2C433FF
+	for <linux-wireless@archiver.kernel.org>; Wed,  7 Aug 2019 10:40:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7F48121E6A
-	for <linux-wireless@archiver.kernel.org>; Wed,  7 Aug 2019 10:40:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 62E8E21E6A
+	for <linux-wireless@archiver.kernel.org>; Wed,  7 Aug 2019 10:40:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728592AbfHGKk0 (ORCPT
+        id S1729331AbfHGKk1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 7 Aug 2019 06:40:26 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:56215 "EHLO
+        Wed, 7 Aug 2019 06:40:27 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:56218 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727498AbfHGKk0 (ORCPT
+        with ESMTP id S1727031AbfHGKk0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 7 Aug 2019 06:40:26 -0400
 Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x77AeEF1010041, This message is accepted by code: ctloc85258
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x77AeGfv010061, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (RTITCASV01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x77AeEF1010041
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x77AeGfv010061
         (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
-        Wed, 7 Aug 2019 18:40:15 +0800
+        Wed, 7 Aug 2019 18:40:17 +0800
 Received: from localhost.localdomain (172.21.68.126) by
  RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
- 14.3.439.0; Wed, 7 Aug 2019 18:40:14 +0800
+ 14.3.439.0; Wed, 7 Aug 2019 18:40:16 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>, <briannorris@chromium.org>,
         <sgruszka@redhat.com>
-Subject: [PATCH 3/8] rtw88: 8822c: Enable interrupt migration
-Date:   Wed, 7 Aug 2019 18:40:00 +0800
-Message-ID: <1565174405-2689-4-git-send-email-yhchuang@realtek.com>
+Subject: [PATCH 6/8] rtw88: move IQK/DPK into phy_calibration
+Date:   Wed, 7 Aug 2019 18:40:03 +0800
+Message-ID: <1565174405-2689-7-git-send-email-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1565174405-2689-1-git-send-email-yhchuang@realtek.com>
 References: <1565174405-2689-1-git-send-email-yhchuang@realtek.com>
@@ -47,55 +47,104 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Tsang-Shian Lin <thlin@realtek.com>
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-Enable 8822C Tx/Rx interrupt migration.
-In some platforms, performance test may cause heavy cpu loading and get
-bad results. Interrupt migration can decrease the amount of interrupts,
-and lower cpu loading.
+Since 8822c requires to do not only IQK, but also DPK.
+Move these calibrations that need to be done once the channel
+is determined, into phy_calibration.
 
-Signed-off-by: Tsang-Shian Lin <thlin@realtek.com>
+And note that the order of the calibrations matters, 8822c
+should do IQK first, then DPK.
+
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/reg.h      | 2 ++
- drivers/net/wireless/realtek/rtw88/rtw8822c.c | 4 ++++
- 2 files changed, 6 insertions(+)
+ drivers/net/wireless/realtek/rtw88/mac80211.c | 2 +-
+ drivers/net/wireless/realtek/rtw88/main.h     | 3 +--
+ drivers/net/wireless/realtek/rtw88/rtw8822b.c | 6 +++---
+ drivers/net/wireless/realtek/rtw88/rtw8822c.c | 9 +++++++--
+ 4 files changed, 12 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/reg.h b/drivers/net/wireless/realtek/rtw88/reg.h
-index 0bd0717..78ad053 100644
---- a/drivers/net/wireless/realtek/rtw88/reg.h
-+++ b/drivers/net/wireless/realtek/rtw88/reg.h
-@@ -193,6 +193,8 @@
- #define REG_H2C_READ_ADDR	0x024C
- #define REG_H2C_INFO		0x0254
+diff --git a/drivers/net/wireless/realtek/rtw88/mac80211.c b/drivers/net/wireless/realtek/rtw88/mac80211.c
+index fedea28..e5e3605 100644
+--- a/drivers/net/wireless/realtek/rtw88/mac80211.c
++++ b/drivers/net/wireless/realtek/rtw88/mac80211.c
+@@ -256,7 +256,7 @@ static void rtw_ops_bss_info_changed(struct ieee80211_hw *hw,
+ 		if (conf->assoc) {
+ 			rtw_coex_connect_notify(rtwdev, COEX_ASSOCIATE_FINISH);
+ 			net_type = RTW_NET_MGD_LINKED;
+-			chip->ops->do_iqk(rtwdev);
++			chip->ops->phy_calibration(rtwdev);
  
-+#define REG_INT_MIG		0x0304
-+
- #define REG_FWHW_TXQ_CTRL	0x0420
- #define BIT_EN_BCNQ_DL		BIT(22)
- #define BIT_EN_WR_FREE_TAIL	BIT(20)
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-index b072d43..e11bbc3 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-@@ -1114,6 +1114,7 @@ static void rtw8822c_phy_set_param(struct rtw_dev *rtwdev)
- #define WLAN_MAC_OPT_NORM_FUNC1		0x98
- #define WLAN_MAC_OPT_LB_FUNC1		0x80
- #define WLAN_MAC_OPT_FUNC2		0x30810041
-+#define WLAN_MAC_INT_MIG_CFG		0x33330000
+ 			rtwvif->aid = conf->aid;
+ 			rtw_add_rsvd_page(rtwdev, RSVD_PS_POLL, true);
+diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
+index 1ed7eb0..76d9253 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.h
++++ b/drivers/net/wireless/realtek/rtw88/main.h
+@@ -640,9 +640,8 @@ struct rtw_chip_ops {
+ 			    u8 antenna_rx);
+ 	void (*cfg_ldo25)(struct rtw_dev *rtwdev, bool enable);
+ 	void (*false_alarm_statistics)(struct rtw_dev *rtwdev);
+-	void (*do_iqk)(struct rtw_dev *rtwdev);
++	void (*phy_calibration)(struct rtw_dev *rtwdev);
+ 	void (*dpk_track)(struct rtw_dev *rtwdev);
+-	void (*do_dpk)(struct rtw_dev *rtwdev);
  
- #define WLAN_SIFS_CFG	(WLAN_SIFS_CCK_CONT_TX | \
- 			(WLAN_SIFS_OFDM_CONT_TX << BIT_SHIFT_SIFS_OFDM_CTX) | \
-@@ -1251,6 +1252,9 @@ static int rtw8822c_mac_init(struct rtw_dev *rtwdev)
- 	value16 = BIT_SET_RXPSF_ERRTHR(value16, 0x07);
- 	rtw_write16(rtwdev, REG_RXPSF_CTRL, value16);
- 
-+	/* Interrupt migration configuration */
-+	rtw_write32(rtwdev, REG_INT_MIG, WLAN_MAC_INT_MIG_CFG);
-+
- 	return 0;
+ 	/* for coex */
+ 	void (*coex_set_init)(struct rtw_dev *rtwdev);
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822b.c b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
+index 3679505..7056ea3 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822b.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
+@@ -1001,8 +1001,9 @@ static void rtw8822b_do_iqk(struct rtw_dev *rtwdev)
+ 		counter, reload, ++do_iqk_cnt, iqk_fail_mask);
  }
  
+-static void rtw8822b_do_dpk(struct rtw_dev *rtwdev)
++static void rtw8822b_phy_calibration(struct rtw_dev *rtwdev)
+ {
++	rtw8822b_do_iqk(rtwdev);
+ }
+ 
+ static void rtw8822b_coex_cfg_init(struct rtw_dev *rtwdev)
+@@ -1798,8 +1799,7 @@ static struct rtw_chip_ops rtw8822b_ops = {
+ 	.set_antenna		= rtw8822b_set_antenna,
+ 	.cfg_ldo25		= rtw8822b_cfg_ldo25,
+ 	.false_alarm_statistics	= rtw8822b_false_alarm_statistics,
+-	.do_iqk			= rtw8822b_do_iqk,
+-	.do_dpk			= rtw8822b_do_dpk,
++	.phy_calibration	= rtw8822b_phy_calibration,
+ 
+ 	.coex_set_init		= rtw8822b_coex_cfg_init,
+ 	.coex_set_ant_switch	= rtw8822b_coex_cfg_ant_switch,
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+index cee12b1..5a428e0 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+@@ -3078,6 +3078,12 @@ static void rtw8822c_do_dpk(struct rtw_dev *rtwdev)
+ 	rtw8822c_dpk_restore_registers(rtwdev, DPK_BB_REG_NUM, bckp);
+ }
+ 
++static void rtw8822c_phy_calibration(struct rtw_dev *rtwdev)
++{
++	rtw8822c_do_iqk(rtwdev);
++	rtw8822c_do_dpk(rtwdev);
++}
++
+ void rtw8822c_dpk_track(struct rtw_dev *rtwdev)
+ {
+ 	struct rtw_dpk_info *dpk_info = &rtwdev->dm_info.dpk_info;
+@@ -3487,9 +3493,8 @@ static struct rtw_chip_ops rtw8822c_ops = {
+ 	.set_tx_power_index	= rtw8822c_set_tx_power_index,
+ 	.cfg_ldo25		= rtw8822c_cfg_ldo25,
+ 	.false_alarm_statistics	= rtw8822c_false_alarm_statistics,
+-	.do_iqk			= rtw8822c_do_iqk,
+-	.do_dpk			= rtw8822c_do_dpk,
+ 	.dpk_track		= rtw8822c_dpk_track,
++	.phy_calibration	= rtw8822c_phy_calibration,
+ 
+ 	.coex_set_init		= rtw8822c_coex_cfg_init,
+ 	.coex_set_ant_switch	= NULL,
 -- 
 2.7.4
 
