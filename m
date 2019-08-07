@@ -2,41 +2,43 @@ Return-Path: <SRS0=5ylD=WD=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81D63C32751
-	for <linux-wireless@archiver.kernel.org>; Wed,  7 Aug 2019 10:40:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7C2DC32754
+	for <linux-wireless@archiver.kernel.org>; Wed,  7 Aug 2019 10:40:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 417D421E6E
-	for <linux-wireless@archiver.kernel.org>; Wed,  7 Aug 2019 10:40:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7F48121E6A
+	for <linux-wireless@archiver.kernel.org>; Wed,  7 Aug 2019 10:40:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727901AbfHGKkZ (ORCPT
+        id S1728592AbfHGKk0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 7 Aug 2019 06:40:25 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:56214 "EHLO
+        Wed, 7 Aug 2019 06:40:26 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:56215 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727031AbfHGKkZ (ORCPT
+        with ESMTP id S1727498AbfHGKk0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Aug 2019 06:40:25 -0400
+        Wed, 7 Aug 2019 06:40:26 -0400
 Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x77AeCau010011, This message is accepted by code: ctloc85258
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x77AeEF1010041, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (RTITCASV01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x77AeCau010011
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x77AeEF1010041
         (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
-        Wed, 7 Aug 2019 18:40:12 +0800
+        Wed, 7 Aug 2019 18:40:15 +0800
 Received: from localhost.localdomain (172.21.68.126) by
  RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
- 14.3.439.0; Wed, 7 Aug 2019 18:40:11 +0800
+ 14.3.439.0; Wed, 7 Aug 2019 18:40:14 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>, <briannorris@chromium.org>,
         <sgruszka@redhat.com>
-Subject: [PATCH 0/8] rtw88: enhance and stabilize T-Put performance
-Date:   Wed, 7 Aug 2019 18:39:57 +0800
-Message-ID: <1565174405-2689-1-git-send-email-yhchuang@realtek.com>
+Subject: [PATCH 3/8] rtw88: 8822c: Enable interrupt migration
+Date:   Wed, 7 Aug 2019 18:40:00 +0800
+Message-ID: <1565174405-2689-4-git-send-email-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1565174405-2689-1-git-send-email-yhchuang@realtek.com>
+References: <1565174405-2689-1-git-send-email-yhchuang@realtek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [172.21.68.126]
@@ -45,56 +47,55 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+From: Tsang-Shian Lin <thlin@realtek.com>
 
-This patch set could enhance and stabilize the throughput
-performance for rtw88, especially for RTL8822CE.
+Enable 8822C Tx/Rx interrupt migration.
+In some platforms, performance test may cause heavy cpu loading and get
+bad results. Interrupt migration can decrease the amount of interrupts,
+and lower cpu loading.
 
-The RFKs, such as IQK and DPK, can make sure the radio
-components works more reliable. They reduce the distortion
-and nonlinearity that the components inherently have.
+Signed-off-by: Tsang-Shian Lin <thlin@realtek.com>
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw88/reg.h      | 2 ++
+ drivers/net/wireless/realtek/rtw88/rtw8822c.c | 4 ++++
+ 2 files changed, 6 insertions(+)
 
-The parameter update is a result that is fine-tuned to
-optimize the hardware utilization.
-
-And CCK PD can help to adjust CCK signal threshold to
-reduce FAs, and get a better TRX performance in 2.4G.
-
-Interrupt migration helps some slower platforms not to
-over utilize the host CPU, reduce its loading.
-
-
-Chin-Yen Lee (1):
-  rtw88: 8822c: update pwr_seq to v13
-
-Tsang-Shian Lin (1):
-  rtw88: 8822c: Enable interrupt migration
-
-Tzu-En Huang (2):
-  rtw88: 8822c: add SW DPK support
-  rtw88: add dynamic cck pd mechanism
-
-Yan-Hsuan Chuang (4):
-  rtw88: 8822c: update PHY parameter to v38
-  rtw88: 8822c: add FW IQK support
-  rtw88: move IQK/DPK into phy_calibration
-  rtw88: allows to receive AMSDU in AMPDU
-
- drivers/net/wireless/realtek/rtw88/coex.c          |    2 +-
- drivers/net/wireless/realtek/rtw88/coex.h          |    1 +
- drivers/net/wireless/realtek/rtw88/mac80211.c      |    2 +-
- drivers/net/wireless/realtek/rtw88/main.c          |    1 +
- drivers/net/wireless/realtek/rtw88/main.h          |   56 +-
- drivers/net/wireless/realtek/rtw88/phy.c           |  143 +
- drivers/net/wireless/realtek/rtw88/phy.h           |    2 +
- drivers/net/wireless/realtek/rtw88/reg.h           |   17 +
- drivers/net/wireless/realtek/rtw88/rtw8822b.c      |    7 +-
- drivers/net/wireless/realtek/rtw88/rtw8822c.c      | 1178 +++-
- drivers/net/wireless/realtek/rtw88/rtw8822c.h      |   86 +
- .../net/wireless/realtek/rtw88/rtw8822c_table.c    | 6930 ++++++++++++++------
- .../net/wireless/realtek/rtw88/rtw8822c_table.h    |    3 +
- 13 files changed, 6323 insertions(+), 2105 deletions(-)
-
+diff --git a/drivers/net/wireless/realtek/rtw88/reg.h b/drivers/net/wireless/realtek/rtw88/reg.h
+index 0bd0717..78ad053 100644
+--- a/drivers/net/wireless/realtek/rtw88/reg.h
++++ b/drivers/net/wireless/realtek/rtw88/reg.h
+@@ -193,6 +193,8 @@
+ #define REG_H2C_READ_ADDR	0x024C
+ #define REG_H2C_INFO		0x0254
+ 
++#define REG_INT_MIG		0x0304
++
+ #define REG_FWHW_TXQ_CTRL	0x0420
+ #define BIT_EN_BCNQ_DL		BIT(22)
+ #define BIT_EN_WR_FREE_TAIL	BIT(20)
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+index b072d43..e11bbc3 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+@@ -1114,6 +1114,7 @@ static void rtw8822c_phy_set_param(struct rtw_dev *rtwdev)
+ #define WLAN_MAC_OPT_NORM_FUNC1		0x98
+ #define WLAN_MAC_OPT_LB_FUNC1		0x80
+ #define WLAN_MAC_OPT_FUNC2		0x30810041
++#define WLAN_MAC_INT_MIG_CFG		0x33330000
+ 
+ #define WLAN_SIFS_CFG	(WLAN_SIFS_CCK_CONT_TX | \
+ 			(WLAN_SIFS_OFDM_CONT_TX << BIT_SHIFT_SIFS_OFDM_CTX) | \
+@@ -1251,6 +1252,9 @@ static int rtw8822c_mac_init(struct rtw_dev *rtwdev)
+ 	value16 = BIT_SET_RXPSF_ERRTHR(value16, 0x07);
+ 	rtw_write16(rtwdev, REG_RXPSF_CTRL, value16);
+ 
++	/* Interrupt migration configuration */
++	rtw_write32(rtwdev, REG_INT_MIG, WLAN_MAC_INT_MIG_CFG);
++
+ 	return 0;
+ }
+ 
 -- 
 2.7.4
 
