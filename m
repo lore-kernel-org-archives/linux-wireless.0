@@ -2,61 +2,95 @@ Return-Path: <SRS0=GiMs=WG=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0588C32751
-	for <linux-wireless@archiver.kernel.org>; Sat, 10 Aug 2019 08:50:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 734BEC433FF
+	for <linux-wireless@archiver.kernel.org>; Sat, 10 Aug 2019 10:13:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 76BC2208C4
-	for <linux-wireless@archiver.kernel.org>; Sat, 10 Aug 2019 08:50:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 460FB20B7C
+	for <linux-wireless@archiver.kernel.org>; Sat, 10 Aug 2019 10:13:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1565432010;
+	bh=xxIhXdXrNYgZy+a1g/JRW7MbrkKrZsW0bGELVlqKFBw=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=t59BSsNtGMGKFPbY4wXJDp5FbHej/ufetYKDXrnHi/C+5YMHq9Zh4P/tQ2sB5Ma1w
+	 PEyCwKaLV5fjtxpTmWTsmS3qSKZ/FvEWihpgfc1Gv/qt5hMcD3G542JNSGxJthkwO+
+	 ONnfhtAqnr/xD2a/YDnuMNsHIiSDyM1ifIqeTTEM=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725863AbfHJIuX convert rfc822-to-8bit (ORCPT
+        id S1726216AbfHJKNU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 10 Aug 2019 04:50:23 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:59536 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725763AbfHJIuX (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 10 Aug 2019 04:50:23 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.92)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1hwN4v-0000Tr-Ft; Sat, 10 Aug 2019 10:50:21 +0200
-Date:   Sat, 10 Aug 2019 10:50:18 +0200
-In-Reply-To: <CAJSNYx0k7k8RyRT6siC1xv_0xqf3ggKSwNp7sp9c7y-kOgSeAg@mail.gmail.com> (sfid-20190810_061249_170256_0906C3BF)
-References: <CAJSNYx0k7k8RyRT6siC1xv_0xqf3ggKSwNp7sp9c7y-kOgSeAg@mail.gmail.com> (sfid-20190810_061249_170256_0906C3BF)
+        Sat, 10 Aug 2019 06:13:20 -0400
+Received: from mail.kernel.org ([198.145.29.99]:57162 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725468AbfHJKNU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 10 Aug 2019 06:13:20 -0400
+Received: from localhost (83-86-89-107.cable.dynamic.v4.ziggo.nl [83.86.89.107])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id B843F20B7C;
+        Sat, 10 Aug 2019 10:13:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1565431999;
+        bh=xxIhXdXrNYgZy+a1g/JRW7MbrkKrZsW0bGELVlqKFBw=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=ctNhXmpSiavk41/UgdlWjh3DR1JDGpe5VWInUhTHszrusWwCkZaAmxC6jIUdY2FHV
+         WOR9mLzjaFF7r1+VZHaHZ09n8gH+N129bspBw9zh8UeR3rEg+hamoROySGQMbpy+uU
+         TY6AqrvLV+JiYnGsRTGCsiaRfmDNOW2q7ucmvdHo=
+Date:   Sat, 10 Aug 2019 12:13:16 +0200
+From:   Greg KH <gregkh@linuxfoundation.org>
+To:     Hui Peng <benquike@gmail.com>
+Cc:     kvalo@codeaurora.org, davem@davemloft.net,
+        Mathias Payer <mathias.payer@nebelwelt.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/2] Fix a NULL-ptr-deref bug in
+ ath6kl_usb_alloc_urb_from_pipe
+Message-ID: <20190810101316.GA25650@kroah.com>
+References: <20190804002905.11292-1-benquike@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
-Content-Transfer-Encoding: 8BIT
-Subject: Re: Unaligned Memory Access on mesh_*.c files
-To:     Guo Wei Lim <limguowei@gmail.com>, linux-wireless@vger.kernel.org
-From:   Johannes Berg <johannes@sipsolutions.net>
-Message-ID: <64EA957F-B24A-4B1C-AAC0-B51790F47E9E@sipsolutions.net>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190804002905.11292-1-benquike@gmail.com>
+User-Agent: Mutt/1.12.1 (2019-06-15)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+On Sat, Aug 03, 2019 at 08:29:04PM -0400, Hui Peng wrote:
+> The `ar_usb` field of `ath6kl_usb_pipe_usb_pipe` objects
+> are initialized to point to the containing `ath6kl_usb` object
+> according to endpoint descriptors read from the device side, as shown
+> below in `ath6kl_usb_setup_pipe_resources`:
+> 
+> for (i = 0; i < iface_desc->desc.bNumEndpoints; ++i) {
+> 	endpoint = &iface_desc->endpoint[i].desc;
+> 
+> 	// get the address from endpoint descriptor
+> 	pipe_num = ath6kl_usb_get_logical_pipe_num(ar_usb,
+> 						endpoint->bEndpointAddress,
+> 						&urbcount);
+> 	......
+> 	// select the pipe object
+> 	pipe = &ar_usb->pipes[pipe_num];
+> 
+> 	// initialize the ar_usb field
+> 	pipe->ar_usb = ar_usb;
+> }
+> 
+> The driver assumes that the addresses reported in endpoint
+> descriptors from device side  to be complete. If a device is
+> malicious and does not report complete addresses, it may trigger
+> NULL-ptr-deref `ath6kl_usb_alloc_urb_from_pipe` and
+> `ath6kl_usb_free_urb_to_pipe`.
+> 
+> This patch fixes the bug by preventing potential NULL-ptr-deref.
+> 
+> Signed-off-by: Hui Peng <benquike@gmail.com>
+> Reported-by: Hui Peng <benquike@gmail.com>
+> Reported-by: Mathias Payer <mathias.payer@nebelwelt.net>
 
-
-On August 10, 2019 6:07:15 AM GMT+02:00, Guo Wei Lim <limguowei@gmail.com> wrote:
->I have traced a large number of unaligned memory access on mips cpu
->due to ether_addr_equal(), is_multicast_ether_addr(),
->is_broadcast_ether_addr() being called on odd addresses.
->
->Even though the values are u8, the inlines in etherdevice.h converts
->them to u16 causing the issue.
->
->I can replace ether_addr_equal() with ether_addr_equal_unaligned() but
->it doesn't seem like a proper fix. Anyone has better ideas?
-
-Can you say which places cause this,and which driver you're using? Also, I guess the type of frame and what address format it has would be good to know. 
-
-If you aren't also hitting the warning in rx.c about alignment though, it might be that we do in fact need to use code not expecting alignment.
-
-johannes
--- 
-Sent from my phone. 
+Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
