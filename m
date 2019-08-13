@@ -2,178 +2,100 @@ Return-Path: <SRS0=uvJa=WJ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.4 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_IN_DEF_DKIM_WL
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7841C32750
-	for <linux-wireless@archiver.kernel.org>; Tue, 13 Aug 2019 13:28:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44071C433FF
+	for <linux-wireless@archiver.kernel.org>; Tue, 13 Aug 2019 13:36:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8D8B920844
-	for <linux-wireless@archiver.kernel.org>; Tue, 13 Aug 2019 13:28:12 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="nWLJmN3X"
+	by mail.kernel.org (Postfix) with ESMTP id 198A820844
+	for <linux-wireless@archiver.kernel.org>; Tue, 13 Aug 2019 13:36:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728984AbfHMN2L (ORCPT
+        id S1729117AbfHMNgs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 13 Aug 2019 09:28:11 -0400
-Received: from mail-pf1-f196.google.com ([209.85.210.196]:41832 "EHLO
-        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728095AbfHMN2I (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Aug 2019 09:28:08 -0400
-Received: by mail-pf1-f196.google.com with SMTP id 196so4448875pfz.8
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Aug 2019 06:28:07 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:cc;
-        bh=OUnI5qShYtHQYww3X1RCBrfCURbBQ7wCunEPYxXRUns=;
-        b=nWLJmN3XZAPFpmXl7Lv98vYL2f5xide0ABgIuYQFZZy15vy2ONsAm/1UZ1JzukTcw8
-         BDL9RltV2YBhTQzX/UahXxHNWCr/8Keym9JDfL3ahYwsNuC4giB2KQKu7++6dUgM8TFE
-         P6qh+xMHedLkv8UeXIvk2EEtNRkgXTxPRyLvS0BFcTiKCe5pEJJKl2C9mC/eGEO3YITH
-         DhjzZKGkp2ZpBHONUrIyNRZT3nllrg8L7eJ5iJLoOJ0IzAtMZO7BcMylAdEVx6QlokCn
-         a0MZnqnB0LTfx2UOYhlbfsLSiPNmhvVBO8Kverf0iE+bOYedAXdiln/RagrrcmBCM8QZ
-         QwwA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:cc;
-        bh=OUnI5qShYtHQYww3X1RCBrfCURbBQ7wCunEPYxXRUns=;
-        b=gSg7fvWR9ivn6YMrwuRKS0qvbHSS1ihI/7LJ71OBXAsax71ij034vPHcaJpg+f0pDh
-         5nj12GT4GFzTkgjee3AnbOw3arHXAUkJHeo7PGbcqPFkZUSHZChV7JtaXCYQOuQMNo8u
-         +BvSM1ZWIcKiUX7AevHrLtVQy+yo/36PiYnv6SZEzC7TPjzIXR2msZoZB+2nSV6htdd5
-         qlSN6x46JDLx7eoInB+IulcTqSObVtPXNLYBDV7ZJFU/Gw6sq8RvaPv6BpOC6IrfgCNj
-         PG6xzSt8rFdmKLWgp4V4dYTUuJn+aU0vAHaIGzMWRgfWIR8TOXl+GjpHRwpOSi+LDmvF
-         Vmgw==
-X-Gm-Message-State: APjAAAVpDcdkvoBvBO8CZfxL8L7ieSdfZjhpUlrn+Z8Eo9NUyjy8GucR
-        GBJuxf2tag+YKsogtetZ3h5C7ZiwFHw7VC+B0+de1g==
-X-Received: by 2002:a17:90a:a116:: with SMTP id s22mt2038035pjp.47.1565702886660;
- Tue, 13 Aug 2019 06:28:06 -0700 (PDT)
-MIME-Version: 1.0
-References: <000000000000f00cf1058bb7fb56@google.com> <Pine.LNX.4.44L0.1906201544001.1346-100000@iolanthe.rowland.org>
-In-Reply-To: <Pine.LNX.4.44L0.1906201544001.1346-100000@iolanthe.rowland.org>
-From:   Andrey Konovalov <andreyknvl@google.com>
-Date:   Tue, 13 Aug 2019 15:27:55 +0200
-Message-ID: <CAAeHK+zV84yDuXRL6TAiC9LW_kQQ0c1hgynNFw5aY+ofHAE85g@mail.gmail.com>
-Subject: Re: KASAN: slab-out-of-bounds Read in p54u_load_firmware_cb
-Cc:     syzbot <syzbot+6d237e74cdc13f036473@syzkaller.appspotmail.com>,
-        Christian Lamparter <chunkeey@googlemail.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Kernel development list <linux-kernel@vger.kernel.org>,
-        USB list <linux-usb@vger.kernel.org>,
-        linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
-        syzkaller-bugs <syzkaller-bugs@googlegroups.com>,
-        Alan Stern <stern@rowland.harvard.edu>
-Content-Type: text/plain; charset="UTF-8"
-To:     unlisted-recipients:; (no To-header on input)
+        Tue, 13 Aug 2019 09:36:48 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:48924 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729088AbfHMNgp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 13 Aug 2019 09:36:45 -0400
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 272418E58C;
+        Tue, 13 Aug 2019 13:36:45 +0000 (UTC)
+Received: from localhost (unknown [10.43.2.236])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 702C26E6F0;
+        Tue, 13 Aug 2019 13:36:42 +0000 (UTC)
+From:   Stanislaw Gruszka <sgruszka@redhat.com>
+To:     linux-wireless@vger.kernel.org
+Cc:     Felix Fietkau <nbd@nbd.name>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Ryder Lee <ryder.lee@mediatek.com>, Roy Luo <royluo@google.com>
+Subject: [PATCH 5.3] mt76: mt76x0e: don't use hw encryption for MT7630E
+Date:   Tue, 13 Aug 2019 15:36:40 +0200
+Message-Id: <1565703400-10623-1-git-send-email-sgruszka@redhat.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.28]); Tue, 13 Aug 2019 13:36:45 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, Jun 20, 2019 at 9:46 PM Alan Stern <stern@rowland.harvard.edu> wrote:
->
-> On Wed, 19 Jun 2019, syzbot wrote:
->
-> > syzbot has found a reproducer for the following crash on:
-> >
-> > HEAD commit:    9939f56e usb-fuzzer: main usb gadget fuzzer driver
-> > git tree:       https://github.com/google/kasan.git usb-fuzzer
-> > console output: https://syzkaller.appspot.com/x/log.txt?x=135e29faa00000
-> > kernel config:  https://syzkaller.appspot.com/x/.config?x=df134eda130bb43a
-> > dashboard link: https://syzkaller.appspot.com/bug?extid=6d237e74cdc13f036473
-> > compiler:       gcc (GCC) 9.0.0 20181231 (experimental)
-> > syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=175d946ea00000
-> >
-> > IMPORTANT: if you fix the bug, please add the following tag to the commit:
-> > Reported-by: syzbot+6d237e74cdc13f036473@syzkaller.appspotmail.com
-> >
-> > usb 3-1: Direct firmware load for isl3887usb failed with error -2
-> > usb 3-1: Firmware not found.
-> > ==================================================================
-> > BUG: KASAN: slab-out-of-bounds in p54u_load_firmware_cb.cold+0x97/0x13d
-> > drivers/net/wireless/intersil/p54/p54usb.c:936
-> > Read of size 8 at addr ffff8881c9cf7588 by task kworker/1:5/2759
-> >
-> > CPU: 1 PID: 2759 Comm: kworker/1:5 Not tainted 5.2.0-rc5+ #11
-> > Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS
-> > Google 01/01/2011
-> > Workqueue: events request_firmware_work_func
-> > Call Trace:
-> >   __dump_stack lib/dump_stack.c:77 [inline]
-> >   dump_stack+0xca/0x13e lib/dump_stack.c:113
-> >   print_address_description+0x67/0x231 mm/kasan/report.c:188
-> >   __kasan_report.cold+0x1a/0x32 mm/kasan/report.c:317
-> >   kasan_report+0xe/0x20 mm/kasan/common.c:614
-> >   p54u_load_firmware_cb.cold+0x97/0x13d
-> > drivers/net/wireless/intersil/p54/p54usb.c:936
-> >   request_firmware_work_func+0x126/0x242
-> > drivers/base/firmware_loader/main.c:785
-> >   process_one_work+0x905/0x1570 kernel/workqueue.c:2269
-> >   worker_thread+0x96/0xe20 kernel/workqueue.c:2415
-> >   kthread+0x30b/0x410 kernel/kthread.c:255
-> >   ret_from_fork+0x24/0x30 arch/x86/entry/entry_64.S:352
-> >
-> > Allocated by task 1612:
-> >   save_stack+0x1b/0x80 mm/kasan/common.c:71
-> >   set_track mm/kasan/common.c:79 [inline]
-> >   __kasan_kmalloc mm/kasan/common.c:489 [inline]
-> >   __kasan_kmalloc.constprop.0+0xbf/0xd0 mm/kasan/common.c:462
-> >   kmalloc include/linux/slab.h:547 [inline]
-> >   syslog_print kernel/printk/printk.c:1346 [inline]
-> >   do_syslog kernel/printk/printk.c:1519 [inline]
-> >   do_syslog+0x4f4/0x12e0 kernel/printk/printk.c:1493
-> >   kmsg_read+0x8a/0xb0 fs/proc/kmsg.c:40
-> >   proc_reg_read+0x1c1/0x280 fs/proc/inode.c:221
-> >   __vfs_read+0x76/0x100 fs/read_write.c:425
-> >   vfs_read+0x18e/0x3d0 fs/read_write.c:461
-> >   ksys_read+0x127/0x250 fs/read_write.c:587
-> >   do_syscall_64+0xb7/0x560 arch/x86/entry/common.c:301
-> >   entry_SYSCALL_64_after_hwframe+0x49/0xbe
-> >
-> > Freed by task 1612:
-> >   save_stack+0x1b/0x80 mm/kasan/common.c:71
-> >   set_track mm/kasan/common.c:79 [inline]
-> >   __kasan_slab_free+0x130/0x180 mm/kasan/common.c:451
-> >   slab_free_hook mm/slub.c:1421 [inline]
-> >   slab_free_freelist_hook mm/slub.c:1448 [inline]
-> >   slab_free mm/slub.c:2994 [inline]
-> >   kfree+0xd7/0x280 mm/slub.c:3949
-> >   syslog_print kernel/printk/printk.c:1405 [inline]
-> >   do_syslog kernel/printk/printk.c:1519 [inline]
-> >   do_syslog+0xff3/0x12e0 kernel/printk/printk.c:1493
-> >   kmsg_read+0x8a/0xb0 fs/proc/kmsg.c:40
-> >   proc_reg_read+0x1c1/0x280 fs/proc/inode.c:221
-> >   __vfs_read+0x76/0x100 fs/read_write.c:425
-> >   vfs_read+0x18e/0x3d0 fs/read_write.c:461
-> >   ksys_read+0x127/0x250 fs/read_write.c:587
-> >   do_syscall_64+0xb7/0x560 arch/x86/entry/common.c:301
-> >   entry_SYSCALL_64_after_hwframe+0x49/0xbe
-> >
-> > The buggy address belongs to the object at ffff8881c9cf7180
-> >   which belongs to the cache kmalloc-1k of size 1024
-> > The buggy address is located 8 bytes to the right of
-> >   1024-byte region [ffff8881c9cf7180, ffff8881c9cf7580)
-> > The buggy address belongs to the page:
-> > page:ffffea0007273d00 refcount:1 mapcount:0 mapping:ffff8881dac02a00
-> > index:0x0 compound_mapcount: 0
-> > flags: 0x200000000010200(slab|head)
-> > raw: 0200000000010200 dead000000000100 dead000000000200 ffff8881dac02a00
-> > raw: 0000000000000000 00000000000e000e 00000001ffffffff 0000000000000000
-> > page dumped because: kasan: bad access detected
-> >
-> > Memory state around the buggy address:
-> >   ffff8881c9cf7480: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
-> >   ffff8881c9cf7500: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
-> > > ffff8881c9cf7580: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
-> >                        ^
-> >   ffff8881c9cf7600: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
-> >   ffff8881c9cf7680: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
-> > ==================================================================
->
-> Isn't this the same as syzkaller bug 200d4bb11b23d929335f ?  Doesn't
-> the same patch fix it?
+Since 41634aa8d6db ("mt76: only schedule txqs from the tx tasklet")
+I can observe firmware hangs on MT7630E on station mode: tx stop
+functioning after minor activity (rx keep working) and on module
+unload device fail to stop with messages:
 
-#syz dup: KASAN: use-after-free Read in p54u_load_firmware_cb
+[ 5446.141413] mt76x0e 0000:06:00.0: TX DMA did not stop
+[ 5449.176764] mt76x0e 0000:06:00.0: TX DMA did not stop
+
+Loading module again results in failure to associate with AP.
+Only machine power off / power on cycle can make device work again.
+
+It's unclear why commit 41634aa8d6db causes the problem, but it is
+related to HW encryption. Since issue is a firmware hang, that is super
+hard to debug, just disable HW encryption as fix for the issue.
+
+Fixes: 41634aa8d6db ("mt76: only schedule txqs from the tx tasklet")
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt76x0/pci.c | 15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c b/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
+index 4585e1b756c2..6117e6ca08cb 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
+@@ -62,6 +62,19 @@ static void mt76x0e_stop(struct ieee80211_hw *hw)
+ 	mt76x0e_stop_hw(dev);
+ }
+ 
++static int
++mt76x0e_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
++		struct ieee80211_vif *vif, struct ieee80211_sta *sta,
++		struct ieee80211_key_conf *key)
++{
++	struct mt76x02_dev *dev = hw->priv;
++
++	if (is_mt7630(dev))
++		return -EOPNOTSUPP;
++
++	return mt76x02_set_key(hw, cmd, vif, sta, key);
++}
++
+ static void
+ mt76x0e_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 	      u32 queues, bool drop)
+@@ -78,7 +91,7 @@ static void mt76x0e_stop(struct ieee80211_hw *hw)
+ 	.configure_filter = mt76x02_configure_filter,
+ 	.bss_info_changed = mt76x02_bss_info_changed,
+ 	.sta_state = mt76_sta_state,
+-	.set_key = mt76x02_set_key,
++	.set_key = mt76x0e_set_key,
+ 	.conf_tx = mt76x02_conf_tx,
+ 	.sw_scan_start = mt76x02_sw_scan,
+ 	.sw_scan_complete = mt76x02_sw_scan_complete,
+-- 
+1.9.3
+
