@@ -4,50 +4,51 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD774C433FF
-	for <linux-wireless@archiver.kernel.org>; Wed, 14 Aug 2019 02:12:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D923EC433FF
+	for <linux-wireless@archiver.kernel.org>; Wed, 14 Aug 2019 02:13:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id ABB1C2133F
-	for <linux-wireless@archiver.kernel.org>; Wed, 14 Aug 2019 02:12:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B1A2320843
+	for <linux-wireless@archiver.kernel.org>; Wed, 14 Aug 2019 02:13:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1565748763;
-	bh=rL229EiVdHJ9uYzZvBHPwLKzwBdqrgjYJeNuBTGV+qM=;
+	s=default; t=1565748788;
+	bh=m9sBYGnmv53rPv9LLP7lEr4T1EH5recboZhvcMtI5ig=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=JR5LcZFgznTiNiMUOX9/lt+szw1gWa132Uw69mL61SQcabBg2JwWrWOPz8orPW+nZ
-	 PiKIEJG7WOmK3ZzaLLeG0rMBSbUfKM7NFR/O3zs1ufZhzh/l1aabXt2D6MitVUvbzd
-	 M/pezZKgVNYfSUWli5CTuKOEpgAn1vt+vMWh7R5I=
+	b=FPh5idV/WRi8WCQEe7proVMDUFauNik3ckMX6z99M9EdzUwOYFCMTEWLgyORQ37nf
+	 9AfSxUo3ky832AkHYmsj92Nq0SSCzeEDheqwHxJ/ogZhXPF4zsmxux2HMxdi3M8xYh
+	 exB4Jgo6OW7kkSoWDxpgiNc40V1XXKGaGRFvzgE0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727991AbfHNCMn (ORCPT
+        id S1728166AbfHNCNH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 13 Aug 2019 22:12:43 -0400
-Received: from mail.kernel.org ([198.145.29.99]:44808 "EHLO mail.kernel.org"
+        Tue, 13 Aug 2019 22:13:07 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45134 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727979AbfHNCMl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Aug 2019 22:12:41 -0400
+        id S1728125AbfHNCNE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 13 Aug 2019 22:13:04 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 4A9EE20842;
-        Wed, 14 Aug 2019 02:12:39 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 9652120842;
+        Wed, 14 Aug 2019 02:13:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1565748760;
-        bh=rL229EiVdHJ9uYzZvBHPwLKzwBdqrgjYJeNuBTGV+qM=;
+        s=default; t=1565748783;
+        bh=m9sBYGnmv53rPv9LLP7lEr4T1EH5recboZhvcMtI5ig=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Koda1McQTgvN4XPgkgczWZXqKlzx1fddw9Z6rvnnw3wJmdIu/v9gJdj1Rzg73QxE+
-         H7GmJ0iKdcKYJknIfo+Qq4pyf39LL7YyhJa6ZiZTNsZY6bzGYUdos7KukRlbPY+SJ8
-         rw7vgH284iYN+1aibSS71ruwTnnZIdGpb0xLaEvI=
+        b=K2wC9ZTqk7yBn8uTOxJyrdwDSi2DgB9VnWM6zDz4RvvCHFkYjtkTWwv7LGjmoOB5u
+         ueaFUVQLd7ti5uPUb/qnQj4qLBPm01PBGEIXkhyTBBPVKVqxCd7+v//NFouD2zLZXK
+         GUCXOMlSgNjXia2DuycjZrmerHiLYho/XZ2jolzg=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Jia-Ju Bai <baijiaju1990@gmail.com>,
+Cc:     Mordechay Goodstein <mordechay.goodstein@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
         Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.2 053/123] mac80211_hwsim: Fix possible null-pointer dereferences in hwsim_dump_radio_nl()
-Date:   Tue, 13 Aug 2019 22:09:37 -0400
-Message-Id: <20190814021047.14828-53-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.2 062/123] iwlwifi: mvm: avoid races in rate init and rate perform
+Date:   Tue, 13 Aug 2019 22:09:46 -0400
+Message-Id: <20190814021047.14828-62-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190814021047.14828-1-sashal@kernel.org>
 References: <20190814021047.14828-1-sashal@kernel.org>
@@ -60,50 +61,181 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Jia-Ju Bai <baijiaju1990@gmail.com>
+From: Mordechay Goodstein <mordechay.goodstein@intel.com>
 
-[ Upstream commit b55f3b841099e641bdb2701d361a4c304e2dbd6f ]
+[ Upstream commit 0f8084cdc1f9d4a6693ef4168167febb0918c6f6 ]
 
-In hwsim_dump_radio_nl(), when genlmsg_put() on line 3617 fails, hdr is
-assigned to NULL. Then hdr is used on lines 3622 and 3623:
-    genl_dump_check_consistent(cb, hdr);
-    genlmsg_end(skb, hdr);
+Rate perform uses the lq_sta table to calculate the next rate to scale
+while rate init resets the same table,
 
-Thus, possible null-pointer dereferences may occur.
+Rate perform is done in soft irq context in parallel to rate init
+that can be called in case we are doing changes like AP changes BW
+or moving state for auth to assoc.
 
-To fix these bugs, hdr is used here when it is not NULL.
-
-This bug is found by a static analysis tool STCheck written by us.
-
-Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
-Link: https://lore.kernel.org/r/20190729082332.28895-1-baijiaju1990@gmail.com
-[put braces on all branches]
+Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/mac80211_hwsim.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c  | 42 ++++++++++++++++++--
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.h  |  7 +++-
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c |  6 +++
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.h |  1 +
+ 4 files changed, 51 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 1c699a9fa8661..faec05ab42754 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -3615,10 +3615,12 @@ static int hwsim_dump_radio_nl(struct sk_buff *skb,
- 		hdr = genlmsg_put(skb, NETLINK_CB(cb->skb).portid,
- 				  cb->nlh->nlmsg_seq, &hwsim_genl_family,
- 				  NLM_F_MULTI, HWSIM_CMD_GET_RADIO);
--		if (!hdr)
-+		if (hdr) {
-+			genl_dump_check_consistent(cb, hdr);
-+			genlmsg_end(skb, hdr);
-+		} else {
- 			res = -EMSGSIZE;
--		genl_dump_check_consistent(cb, hdr);
--		genlmsg_end(skb, hdr);
-+		}
- 	}
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+index 63fdb4e68e9d7..836541caa3167 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+@@ -1197,6 +1197,27 @@ static u8 rs_get_tid(struct ieee80211_hdr *hdr)
+ 	return tid;
+ }
  
- done:
++void iwl_mvm_rs_init_wk(struct work_struct *wk)
++{
++	struct iwl_mvm_sta *mvmsta = container_of(wk, struct iwl_mvm_sta,
++						  rs_init_wk);
++	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(mvmsta->vif);
++	struct ieee80211_sta *sta;
++
++	rcu_read_lock();
++
++	sta = rcu_dereference(mvmvif->mvm->fw_id_to_mac_id[mvmsta->sta_id]);
++	if (WARN_ON_ONCE(IS_ERR_OR_NULL(sta))) {
++		rcu_read_unlock();
++		return;
++	}
++
++	iwl_mvm_rs_rate_init(mvmvif->mvm, sta, mvmvif->phy_ctxt->channel->band,
++			     true);
++
++	rcu_read_unlock();
++}
++
+ void iwl_mvm_rs_tx_status(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ 			  int tid, struct ieee80211_tx_info *info, bool ndp)
+ {
+@@ -1269,7 +1290,7 @@ void iwl_mvm_rs_tx_status(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ 		       (unsigned long)(lq_sta->last_tx +
+ 				       (IWL_MVM_RS_IDLE_TIMEOUT * HZ)))) {
+ 		IWL_DEBUG_RATE(mvm, "Tx idle for too long. reinit rs\n");
+-		iwl_mvm_rs_rate_init(mvm, sta, info->band, true);
++		schedule_work(&mvmsta->rs_init_wk);
+ 		return;
+ 	}
+ 	lq_sta->last_tx = jiffies;
+@@ -1442,16 +1463,24 @@ static void rs_drv_mac80211_tx_status(void *mvm_r,
+ 	struct iwl_op_mode *op_mode = mvm_r;
+ 	struct iwl_mvm *mvm = IWL_OP_MODE_GET_MVM(op_mode);
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
+ 
+-	if (!iwl_mvm_sta_from_mac80211(sta)->vif)
++	if (!mvmsta->vif)
+ 		return;
+ 
+ 	if (!ieee80211_is_data(hdr->frame_control) ||
+ 	    info->flags & IEEE80211_TX_CTL_NO_ACK)
+ 		return;
+ 
++	/* If it's locked we are in middle of init flow
++	 * just wait for next tx status to update the lq_sta data
++	 */
++	if (!mutex_trylock(&mvmsta->lq_sta.rs_drv.mutex))
++		return;
++
+ 	iwl_mvm_rs_tx_status(mvm, sta, rs_get_tid(hdr), info,
+ 			     ieee80211_is_qos_nullfunc(hdr->frame_control));
++	mutex_unlock(&mvmsta->lq_sta.rs_drv.mutex);
+ }
+ 
+ /*
+@@ -4136,10 +4165,15 @@ static const struct rate_control_ops rs_mvm_ops_drv = {
+ void iwl_mvm_rs_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ 			  enum nl80211_band band, bool update)
+ {
+-	if (iwl_mvm_has_tlc_offload(mvm))
++	if (iwl_mvm_has_tlc_offload(mvm)) {
+ 		rs_fw_rate_init(mvm, sta, band, update);
+-	else
++	} else {
++		struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
++
++		mutex_lock(&mvmsta->lq_sta.rs_drv.mutex);
+ 		rs_drv_rate_init(mvm, sta, band, update);
++		mutex_unlock(&mvmsta->lq_sta.rs_drv.mutex);
++	}
+ }
+ 
+ int iwl_mvm_rate_control_register(void)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.h b/drivers/net/wireless/intel/iwlwifi/mvm/rs.h
+index f7eb60dbaf202..086f47e2a4f0c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.h
+@@ -4,7 +4,7 @@
+  * Copyright(c) 2003 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2017 Intel Deutschland GmbH
+- * Copyright(c) 2018 Intel Corporation
++ * Copyright(c) 2018 - 2019 Intel Corporation
+  *
+  * Contact Information:
+  *  Intel Linux Wireless <linuxwifi@intel.com>
+@@ -376,6 +376,9 @@ struct iwl_lq_sta {
+ 	/* tx power reduce for this sta */
+ 	int tpc_reduce;
+ 
++	/* avoid races of reinit and update table from rx_tx */
++	struct mutex mutex;
++
+ 	/* persistent fields - initialized only once - keep last! */
+ 	struct lq_sta_pers {
+ #ifdef CONFIG_MAC80211_DEBUGFS
+@@ -440,6 +443,8 @@ struct iwl_mvm_sta;
+ int iwl_mvm_tx_protection(struct iwl_mvm *mvm, struct iwl_mvm_sta *mvmsta,
+ 			  bool enable);
+ 
++void iwl_mvm_rs_init_wk(struct work_struct *wk);
++
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
+ void iwl_mvm_reset_frame_stats(struct iwl_mvm *mvm);
+ #endif
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index f545a737a92df..ac9bc65c4d156 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -1684,6 +1684,10 @@ int iwl_mvm_add_sta(struct iwl_mvm *mvm,
+ 	 */
+ 	if (iwl_mvm_has_tlc_offload(mvm))
+ 		iwl_mvm_rs_add_sta(mvm, mvm_sta);
++	else
++		mutex_init(&mvm_sta->lq_sta.rs_drv.mutex);
++
++	INIT_WORK(&mvm_sta->rs_init_wk, iwl_mvm_rs_init_wk);
+ 
+ 	iwl_mvm_toggle_tx_ant(mvm, &mvm_sta->tx_ant);
+ 
+@@ -1846,6 +1850,8 @@ int iwl_mvm_rm_sta(struct iwl_mvm *mvm,
+ 	if (ret)
+ 		return ret;
+ 
++	cancel_work_sync(&mvm_sta->rs_init_wk);
++
+ 	/* flush its queues here since we are freeing mvm_sta */
+ 	ret = iwl_mvm_flush_sta(mvm, mvm_sta, false, 0);
+ 	if (ret)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
+index b4d4071b865db..6e93c30492b78 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
+@@ -421,6 +421,7 @@ struct iwl_mvm_sta {
+ 		struct iwl_lq_sta_rs_fw rs_fw;
+ 		struct iwl_lq_sta rs_drv;
+ 	} lq_sta;
++	struct work_struct rs_init_wk;
+ 	struct ieee80211_vif *vif;
+ 	struct iwl_mvm_key_pn __rcu *ptk_pn[4];
+ 	struct iwl_mvm_rxq_dup_data *dup_data;
 -- 
 2.20.1
 
