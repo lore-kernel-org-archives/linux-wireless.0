@@ -1,100 +1,109 @@
-Return-Path: <SRS0=uvJa=WJ=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=g4Hq=WK=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01F0EC433FF
-	for <linux-wireless@archiver.kernel.org>; Tue, 13 Aug 2019 13:58:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD774C433FF
+	for <linux-wireless@archiver.kernel.org>; Wed, 14 Aug 2019 02:12:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C4E7D206C2
-	for <linux-wireless@archiver.kernel.org>; Tue, 13 Aug 2019 13:58:53 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="UnYXjBso";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="IaI8Q6n2"
+	by mail.kernel.org (Postfix) with ESMTP id ABB1C2133F
+	for <linux-wireless@archiver.kernel.org>; Wed, 14 Aug 2019 02:12:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1565748763;
+	bh=rL229EiVdHJ9uYzZvBHPwLKzwBdqrgjYJeNuBTGV+qM=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=JR5LcZFgznTiNiMUOX9/lt+szw1gWa132Uw69mL61SQcabBg2JwWrWOPz8orPW+nZ
+	 PiKIEJG7WOmK3ZzaLLeG0rMBSbUfKM7NFR/O3zs1ufZhzh/l1aabXt2D6MitVUvbzd
+	 M/pezZKgVNYfSUWli5CTuKOEpgAn1vt+vMWh7R5I=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729337AbfHMN6o (ORCPT
+        id S1727991AbfHNCMn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 13 Aug 2019 09:58:44 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:52166 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727407AbfHMN6o (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Aug 2019 09:58:44 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 7880F608FF; Tue, 13 Aug 2019 13:58:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1565704723;
-        bh=M8oAe1f6maG+IxzSwYrxoIVVdKazq93Sv32mx1kHDTk=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=UnYXjBsohipGcIhOiU7MbVsbLEx9berNqc16y6AT7dc/+7gM6zxDlknkaGartFwBs
-         wTmVznRdzrY7vbtfaxJW34Ni3lRNUiHaW/8eEfkCugzi5yqEM6ZWHdysjhRjB3oQgt
-         VkLtVzoHaMUKupIMsrs2eneH48+uRPOHZlasrHwI=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        Tue, 13 Aug 2019 22:12:43 -0400
+Received: from mail.kernel.org ([198.145.29.99]:44808 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727979AbfHNCMl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 13 Aug 2019 22:12:41 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id AA5A560734;
-        Tue, 13 Aug 2019 13:58:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1565704722;
-        bh=M8oAe1f6maG+IxzSwYrxoIVVdKazq93Sv32mx1kHDTk=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=IaI8Q6n2wPeQJAHwk4P9fPwbfo0nHJdPoiRlNZit9WBgBvAj3zU2/5X/WCuv732RX
-         vZFSpNsdsZs39QlwnnytW2C2fIDI61aQ+3GkJUV7EJzbTGFvac0y/PwRTQQFfQ5+Jl
-         a0EinvMjNaLJuO2Kne/S5kgkz5Rrrf8sqfsWTFiY=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org AA5A560734
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Andrey Konovalov <andreyknvl@google.com>
-Cc:     Ganapathi Bhat <gbhat@marvell.com>,
-        Dmitry Vyukov <dvyukov@google.com>,
-        syzbot <syzbot+dc4127f950da51639216@syzkaller.appspotmail.com>,
-        "amitkarwar\@gmail.com" <amitkarwar@gmail.com>,
-        "davem\@davemloft.net" <davem@davemloft.net>,
-        "huxinming820\@gmail.com" <huxinming820@gmail.com>,
-        "linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-usb\@vger.kernel.org" <linux-usb@vger.kernel.org>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev\@vger.kernel.org" <netdev@vger.kernel.org>,
-        "nishants\@marvell.com" <nishants@marvell.com>,
-        "syzkaller-bugs\@googlegroups.com" <syzkaller-bugs@googlegroups.com>
-Subject: Re: [EXT] INFO: trying to register non-static key in del_timer_sync (2)
-References: <000000000000927a7b0586561537@google.com>
-        <MN2PR18MB263783F52CAD4A335FD8BB34A01A0@MN2PR18MB2637.namprd18.prod.outlook.com>
-        <CACT4Y+aQzBkAq86Hx4jNFnAUzjXnq8cS2NZKfeCaFrZa__g-cg@mail.gmail.com>
-        <MN2PR18MB26372D98386D79736A7947EEA0140@MN2PR18MB2637.namprd18.prod.outlook.com>
-        <MN2PR18MB263710E8F1F8FFA06B2EDB3CA0EC0@MN2PR18MB2637.namprd18.prod.outlook.com>
-        <CAAeHK+z8MBNikw_x50Crf8ZhOhcF=uvPHakvBx44K77xHRUNfg@mail.gmail.com>
-Date:   Tue, 13 Aug 2019 16:58:36 +0300
-In-Reply-To: <CAAeHK+z8MBNikw_x50Crf8ZhOhcF=uvPHakvBx44K77xHRUNfg@mail.gmail.com>
-        (Andrey Konovalov's message of "Tue, 13 Aug 2019 15:36:33 +0200")
-Message-ID: <87k1bhb20j.fsf@kamboji.qca.qualcomm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        by mail.kernel.org (Postfix) with ESMTPSA id 4A9EE20842;
+        Wed, 14 Aug 2019 02:12:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1565748760;
+        bh=rL229EiVdHJ9uYzZvBHPwLKzwBdqrgjYJeNuBTGV+qM=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=Koda1McQTgvN4XPgkgczWZXqKlzx1fddw9Z6rvnnw3wJmdIu/v9gJdj1Rzg73QxE+
+         H7GmJ0iKdcKYJknIfo+Qq4pyf39LL7YyhJa6ZiZTNsZY6bzGYUdos7KukRlbPY+SJ8
+         rw7vgH284iYN+1aibSS71ruwTnnZIdGpb0xLaEvI=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Jia-Ju Bai <baijiaju1990@gmail.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.2 053/123] mac80211_hwsim: Fix possible null-pointer dereferences in hwsim_dump_radio_nl()
+Date:   Tue, 13 Aug 2019 22:09:37 -0400
+Message-Id: <20190814021047.14828-53-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20190814021047.14828-1-sashal@kernel.org>
+References: <20190814021047.14828-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Andrey Konovalov <andreyknvl@google.com> writes:
+From: Jia-Ju Bai <baijiaju1990@gmail.com>
 
-> On Wed, Jun 12, 2019 at 6:03 PM Ganapathi Bhat <gbhat@marvell.com> wrote:
->>
->> Hi Dmitry,
->>
->> We have a patch to fix this: https://patchwork.kernel.org/patch/10990275/
->
-> Hi Ganapathi,
->
-> Has this patch been accepted anywhere? This bug is still open on syzbot.
+[ Upstream commit b55f3b841099e641bdb2701d361a4c304e2dbd6f ]
 
-The patch is in "Changes Requested" state which means that the author is
-supposed to send a new version based on the review comments.
+In hwsim_dump_radio_nl(), when genlmsg_put() on line 3617 fails, hdr is
+assigned to NULL. Then hdr is used on lines 3622 and 3623:
+    genl_dump_check_consistent(cb, hdr);
+    genlmsg_end(skb, hdr);
 
+Thus, possible null-pointer dereferences may occur.
+
+To fix these bugs, hdr is used here when it is not NULL.
+
+This bug is found by a static analysis tool STCheck written by us.
+
+Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
+Link: https://lore.kernel.org/r/20190729082332.28895-1-baijiaju1990@gmail.com
+[put braces on all branches]
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/net/wireless/mac80211_hwsim.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 1c699a9fa8661..faec05ab42754 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -3615,10 +3615,12 @@ static int hwsim_dump_radio_nl(struct sk_buff *skb,
+ 		hdr = genlmsg_put(skb, NETLINK_CB(cb->skb).portid,
+ 				  cb->nlh->nlmsg_seq, &hwsim_genl_family,
+ 				  NLM_F_MULTI, HWSIM_CMD_GET_RADIO);
+-		if (!hdr)
++		if (hdr) {
++			genl_dump_check_consistent(cb, hdr);
++			genlmsg_end(skb, hdr);
++		} else {
+ 			res = -EMSGSIZE;
+-		genl_dump_check_consistent(cb, hdr);
+-		genlmsg_end(skb, hdr);
++		}
+ 	}
+ 
+ done:
 -- 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.20.1
+
