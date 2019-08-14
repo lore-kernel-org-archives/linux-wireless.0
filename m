@@ -7,50 +7,50 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DBD6C32750
-	for <linux-wireless@archiver.kernel.org>; Wed, 14 Aug 2019 02:13:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 90FE8C433FF
+	for <linux-wireless@archiver.kernel.org>; Wed, 14 Aug 2019 02:31:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 02E2F20842
-	for <linux-wireless@archiver.kernel.org>; Wed, 14 Aug 2019 02:13:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5C28E205F4
+	for <linux-wireless@archiver.kernel.org>; Wed, 14 Aug 2019 02:31:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1565748801;
-	bh=WQN/2CG7EqwekK1fcgDFFFV37yfP91JJmvNcjKYLxrA=;
+	s=default; t=1565749903;
+	bh=Z0iMMtFHe2A9hRTgv11UFMxnhmvJT9XmKwh+/FvW8LI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=xsD7KP+Yg0Zr1ppWikwRW/kYsgJdgAFq11b8gxo222j1ncuwwcW09/CVTI0UjJvRi
-	 E4Cutf19aEfO/INoXjZt28nBZEppf/bEXzZQMINN6EU1M9rG0TZKU6XYvzyTbOc75x
-	 QmgG5MKX4rQ1M2OuddhI3OP26eDOm/fUn90NAWyA=
+	b=kL/uYO86SQRO7mBZmhCqmR4bUY7AZMedsc9iWuqC7cGc9cilxLLUvETS2xTOqfiw+
+	 S/f7g6wEu6wCemxia4If6dx/n/+FIBB53rKg3OVd4nF9wL7QxTPlbTtd9mGB9PbVgX
+	 ZI4OUtb2/V6Q8W4DNGB63iPxQHKaU4OamfJ38D8Y=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728207AbfHNCNM (ORCPT
+        id S1729102AbfHNCQe (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 13 Aug 2019 22:13:12 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45204 "EHLO mail.kernel.org"
+        Tue, 13 Aug 2019 22:16:34 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47976 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728177AbfHNCNK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Aug 2019 22:13:10 -0400
+        id S1729082AbfHNCQb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 13 Aug 2019 22:16:31 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id B15E020842;
-        Wed, 14 Aug 2019 02:13:07 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id DE6C3216F4;
+        Wed, 14 Aug 2019 02:16:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1565748788;
-        bh=WQN/2CG7EqwekK1fcgDFFFV37yfP91JJmvNcjKYLxrA=;
+        s=default; t=1565748990;
+        bh=Z0iMMtFHe2A9hRTgv11UFMxnhmvJT9XmKwh+/FvW8LI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=o6L7SEAot05d9kGRJFMCckW3C85p0JrWwpWbuNWRDrUUwRUcwJbasbSwKfc8I/x+S
-         45YfhuhuVR0QTOHx+6SY2zdMQvHexPKRETIKylIRiOMlXqEXMjlgnVT9geqH6EMtRZ
-         lV7arqPruRw4zkW8NYEQHdF2PJ8Xgfbbk/SmGSXA=
+        b=w6Dk/G8kANoLUyNxocEfK9S3Adq2jyV9+d1Vds8UP3hByB3FVVx739/jkVwtZBYB8
+         pAarpM7Vkn0gDIySwo21ZmbdO7qbyKkWxbW+nglJtv8wtIjyHP0OrA7Up+ewfUF+Y3
+         XK/9T2OUJTnd4L7GYZXgcenOqRTHDrcx1eELvDGY=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
+Cc:     Jia-Ju Bai <baijiaju1990@gmail.com>,
+        Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.2 065/123] iwlwifi: fix locking in delayed GTK setting
-Date:   Tue, 13 Aug 2019 22:09:49 -0400
-Message-Id: <20190814021047.14828-65-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 24/68] mac80211_hwsim: Fix possible null-pointer dereferences in hwsim_dump_radio_nl()
+Date:   Tue, 13 Aug 2019 22:15:02 -0400
+Message-Id: <20190814021548.16001-24-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190814021047.14828-1-sashal@kernel.org>
-References: <20190814021047.14828-1-sashal@kernel.org>
+In-Reply-To: <20190814021548.16001-1-sashal@kernel.org>
+References: <20190814021548.16001-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -60,101 +60,50 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Jia-Ju Bai <baijiaju1990@gmail.com>
 
-[ Upstream commit 6569e7d36773956298ec1d5f4e6a2487913d2752 ]
+[ Upstream commit b55f3b841099e641bdb2701d361a4c304e2dbd6f ]
 
-This code clearly never could have worked, since it locks
-while already locked. Add an unlocked __iwl_mvm_mac_set_key()
-variant that doesn't do locking to fix that.
+In hwsim_dump_radio_nl(), when genlmsg_put() on line 3617 fails, hdr is
+assigned to NULL. Then hdr is used on lines 3622 and 3623:
+    genl_dump_check_consistent(cb, hdr);
+    genlmsg_end(skb, hdr);
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Thus, possible null-pointer dereferences may occur.
+
+To fix these bugs, hdr is used here when it is not NULL.
+
+This bug is found by a static analysis tool STCheck written by us.
+
+Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
+Link: https://lore.kernel.org/r/20190729082332.28895-1-baijiaju1990@gmail.com
+[put braces on all branches]
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- .../net/wireless/intel/iwlwifi/mvm/mac80211.c | 39 ++++++++++++-------
- 1 file changed, 26 insertions(+), 13 deletions(-)
+ drivers/net/wireless/mac80211_hwsim.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 964c7baabede3..edffae3741e00 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -207,11 +207,11 @@ static const struct cfg80211_pmsr_capabilities iwl_mvm_pmsr_capa = {
- 	},
- };
- 
--static int iwl_mvm_mac_set_key(struct ieee80211_hw *hw,
--			       enum set_key_cmd cmd,
--			       struct ieee80211_vif *vif,
--			       struct ieee80211_sta *sta,
--			       struct ieee80211_key_conf *key);
-+static int __iwl_mvm_mac_set_key(struct ieee80211_hw *hw,
-+				 enum set_key_cmd cmd,
-+				 struct ieee80211_vif *vif,
-+				 struct ieee80211_sta *sta,
-+				 struct ieee80211_key_conf *key);
- 
- void iwl_mvm_ref(struct iwl_mvm *mvm, enum iwl_mvm_ref_type ref_type)
- {
-@@ -2725,7 +2725,7 @@ static int iwl_mvm_start_ap_ibss(struct ieee80211_hw *hw,
- 
- 		mvmvif->ap_early_keys[i] = NULL;
- 
--		ret = iwl_mvm_mac_set_key(hw, SET_KEY, vif, NULL, key);
-+		ret = __iwl_mvm_mac_set_key(hw, SET_KEY, vif, NULL, key);
- 		if (ret)
- 			goto out_quota_failed;
- 	}
-@@ -3493,11 +3493,11 @@ static int iwl_mvm_mac_sched_scan_stop(struct ieee80211_hw *hw,
- 	return ret;
- }
- 
--static int iwl_mvm_mac_set_key(struct ieee80211_hw *hw,
--			       enum set_key_cmd cmd,
--			       struct ieee80211_vif *vif,
--			       struct ieee80211_sta *sta,
--			       struct ieee80211_key_conf *key)
-+static int __iwl_mvm_mac_set_key(struct ieee80211_hw *hw,
-+				 enum set_key_cmd cmd,
-+				 struct ieee80211_vif *vif,
-+				 struct ieee80211_sta *sta,
-+				 struct ieee80211_key_conf *key)
- {
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
- 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
-@@ -3552,8 +3552,6 @@ static int iwl_mvm_mac_set_key(struct ieee80211_hw *hw,
- 			return -EOPNOTSUPP;
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 7cd428c0af433..ce2dd06af62e8 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -3502,10 +3502,12 @@ static int hwsim_dump_radio_nl(struct sk_buff *skb,
+ 		hdr = genlmsg_put(skb, NETLINK_CB(cb->skb).portid,
+ 				  cb->nlh->nlmsg_seq, &hwsim_genl_family,
+ 				  NLM_F_MULTI, HWSIM_CMD_GET_RADIO);
+-		if (!hdr)
++		if (hdr) {
++			genl_dump_check_consistent(cb, hdr);
++			genlmsg_end(skb, hdr);
++		} else {
+ 			res = -EMSGSIZE;
+-		genl_dump_check_consistent(cb, hdr);
+-		genlmsg_end(skb, hdr);
++		}
  	}
  
--	mutex_lock(&mvm->mutex);
--
- 	switch (cmd) {
- 	case SET_KEY:
- 		if ((vif->type == NL80211_IFTYPE_ADHOC ||
-@@ -3699,7 +3697,22 @@ static int iwl_mvm_mac_set_key(struct ieee80211_hw *hw,
- 		ret = -EINVAL;
- 	}
- 
-+	return ret;
-+}
-+
-+static int iwl_mvm_mac_set_key(struct ieee80211_hw *hw,
-+			       enum set_key_cmd cmd,
-+			       struct ieee80211_vif *vif,
-+			       struct ieee80211_sta *sta,
-+			       struct ieee80211_key_conf *key)
-+{
-+	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
-+	int ret;
-+
-+	mutex_lock(&mvm->mutex);
-+	ret = __iwl_mvm_mac_set_key(hw, cmd, vif, sta, key);
- 	mutex_unlock(&mvm->mutex);
-+
- 	return ret;
- }
- 
+ done:
 -- 
 2.20.1
 
