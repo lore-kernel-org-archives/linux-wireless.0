@@ -1,157 +1,128 @@
-Return-Path: <SRS0=g4Hq=WK=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=Tazh=WL=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4794DC32753
-	for <linux-wireless@archiver.kernel.org>; Wed, 14 Aug 2019 14:09:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22039C433FF
+	for <linux-wireless@archiver.kernel.org>; Thu, 15 Aug 2019 10:09:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1DC2F2084F
-	for <linux-wireless@archiver.kernel.org>; Wed, 14 Aug 2019 14:09:04 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="C2cnealN";
-	dkim=pass (1024-bit key) header.d=marvell.onmicrosoft.com header.i=@marvell.onmicrosoft.com header.b="mCuqxkOn"
+	by mail.kernel.org (Postfix) with ESMTP id F1D9321744
+	for <linux-wireless@archiver.kernel.org>; Thu, 15 Aug 2019 10:09:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727651AbfHNOJA (ORCPT
+        id S1731327AbfHOKJm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 14 Aug 2019 10:09:00 -0400
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:43286 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1725800AbfHNOI7 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Aug 2019 10:08:59 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id x7EE4lco009562;
-        Wed, 14 Aug 2019 07:08:49 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : references : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=pfpt0818;
- bh=DFLvRbMYt9xKcralRx3f5rXZkxOkjSzhXMkjcPOHXU4=;
- b=C2cnealNm/L4Ev2GYgNv+1rF9zdnSNj6MYUa1DhzC+hLRME3pdBI3nUcmPsuCLOElkj9
- HFwG5U6JkLR/EgNE7BNXGNaLyO2TMrXujEllRyoLchFXyfszKAvoKuchCjRshseh7tNu
- yL1NQ5ajfVFmGdgSE6fGZKY7GD4XX6FBK5HStUT4WL/ZV0vYDZz2n/5Z5WOy+5CvFaP4
- ALnHLOcOOqaZxcGMER3i+uNpg8jkjq6zDGfAOR4MueHNh027Zg5lDdX1reWgWZOHKK0C
- YTr/3Nw/LqWep8wIsC1uicGm+rYbE44zT49KqjWQP1+fcuqz3Kk5BJYeO/JDGEJ5QVsJ RA== 
-Received: from sc-exch01.marvell.com ([199.233.58.181])
-        by mx0a-0016f401.pphosted.com with ESMTP id 2ubfacytef-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Wed, 14 Aug 2019 07:08:49 -0700
-Received: from SC-EXCH02.marvell.com (10.93.176.82) by SC-EXCH01.marvell.com
- (10.93.176.81) with Microsoft SMTP Server (TLS) id 15.0.1367.3; Wed, 14 Aug
- 2019 07:08:48 -0700
-Received: from NAM04-SN1-obe.outbound.protection.outlook.com (104.47.44.52) by
- SC-EXCH02.marvell.com (10.93.176.82) with Microsoft SMTP Server (TLS) id
- 15.0.1367.3 via Frontend Transport; Wed, 14 Aug 2019 07:08:48 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=flJKwRFv910hdcZZE/gCVDLtjy14/P4+Y0jbzXJj8GxTUhFn72NJEjXHCH6LM9fk3K+nTVKVKcAyHxtB/EUTX68piGJ9eUjFAA4WMlvuXrv9BSDfowRF5aqtIK17j7A8dh45Ab3/lAXjJu/4vxHwwfxrwAQwlUqfEb3EyAyENHE41Ud/0I2gLfGl+lSkWm3s10Nx+vibS0/G4uuZos7jXRSXuqz8XTiD4F44tGybJSIhqUGeck9YwFSXy95dvnAAXz9JUk38ogvNnk3MatNmd3hcE9YIi8ZyUPmWtpLKjl3cnCLAtQaWprLYTCnIn45bvJW9BdBxGNoGq32wydI1lg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=DFLvRbMYt9xKcralRx3f5rXZkxOkjSzhXMkjcPOHXU4=;
- b=HWjX6/2/WP+Ye53pCYKxGiPGE/+dC4tjZWbJ/47SXDdWNbWhCRC2awwJQQbYrBcTt68uY64riFAzZipNorMRsj1bZGFrjY1+0JSYTaGT6PnEzMPpohQCSJTmZ799SAScgsU3v0DBKM7vDlrTP7TTeXtAc5jpFU1eKEvKQDht/V2sRO6NRdbokRAFWfAZhNVX/UhlMVilrKEB/+p0uaJcGXcA1SWLArbmES22Nx/2aeE6REEiwo1SjboYWOpwF7uqNlOJLuB1f9gl2TBZxOkX3exe6tsUXR25MV12Od6DyoA/9h96EOgLhmFUnmvXfYtLl/bEMMuPmKI9gp+I3eRlpw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=marvell.com; dmarc=pass action=none header.from=marvell.com;
- dkim=pass header.d=marvell.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=marvell.onmicrosoft.com; s=selector2-marvell-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=DFLvRbMYt9xKcralRx3f5rXZkxOkjSzhXMkjcPOHXU4=;
- b=mCuqxkOn+rJ3W5S181tHrtPC2vFw/NQwoi5xc9pTP8LPrwHSmiN1e4c67bvi5XkEmZgj8/kST5q7aLucy5mHQvxt8mep5At0cwtkQPNrJVg3GqQufSAWBQDDfIrc9qreg1X3zRFOWRHsoC+uNIiC2mYlmiXOOOviqrKtrVrn1gE=
-Received: from MN2PR18MB2637.namprd18.prod.outlook.com (20.179.80.147) by
- MN2PR18MB2863.namprd18.prod.outlook.com (20.179.21.210) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2157.18; Wed, 14 Aug 2019 14:08:42 +0000
-Received: from MN2PR18MB2637.namprd18.prod.outlook.com
- ([fe80::dba:2353:86d5:ff20]) by MN2PR18MB2637.namprd18.prod.outlook.com
- ([fe80::dba:2353:86d5:ff20%3]) with mapi id 15.20.2157.022; Wed, 14 Aug 2019
- 14:08:42 +0000
-From:   Ganapathi Bhat <gbhat@marvell.com>
-To:     Kalle Valo <kvalo@codeaurora.org>,
-        Andrey Konovalov <andreyknvl@google.com>
-CC:     Dmitry Vyukov <dvyukov@google.com>,
-        syzbot <syzbot+dc4127f950da51639216@syzkaller.appspotmail.com>,
-        "amitkarwar@gmail.com" <amitkarwar@gmail.com>,
-        "davem@davemloft.net" <davem@davemloft.net>,
-        "huxinming820@gmail.com" <huxinming820@gmail.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "nishants@marvell.com" <nishants@marvell.com>,
-        "syzkaller-bugs@googlegroups.com" <syzkaller-bugs@googlegroups.com>
-Subject: RE: [EXT] INFO: trying to register non-static key in del_timer_sync
- (2)
-Thread-Topic: [EXT] INFO: trying to register non-static key in del_timer_sync
- (2)
-Thread-Index: AQHU8UKXrSaZj3qnvU6hFZ7GfmsosaaHYqxQgAJS84CAADevwIAOoBJwgGFIWICAAAY3D4ABlLnw
-Date:   Wed, 14 Aug 2019 14:08:42 +0000
-Message-ID: <MN2PR18MB263724E4791927DF1AE009B1A0AD0@MN2PR18MB2637.namprd18.prod.outlook.com>
-References: <000000000000927a7b0586561537@google.com>
-        <MN2PR18MB263783F52CAD4A335FD8BB34A01A0@MN2PR18MB2637.namprd18.prod.outlook.com>
-        <CACT4Y+aQzBkAq86Hx4jNFnAUzjXnq8cS2NZKfeCaFrZa__g-cg@mail.gmail.com>
-        <MN2PR18MB26372D98386D79736A7947EEA0140@MN2PR18MB2637.namprd18.prod.outlook.com>
-        <MN2PR18MB263710E8F1F8FFA06B2EDB3CA0EC0@MN2PR18MB2637.namprd18.prod.outlook.com>
-        <CAAeHK+z8MBNikw_x50Crf8ZhOhcF=uvPHakvBx44K77xHRUNfg@mail.gmail.com>
- <87k1bhb20j.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87k1bhb20j.fsf@kamboji.qca.qualcomm.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [182.72.17.59]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 3f8bc392-a750-48eb-0c1a-08d720c0ea04
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(7168020)(4627221)(201703031133081)(201702281549075)(8990200)(5600148)(711020)(4605104)(1401327)(2017052603328)(7193020);SRVR:MN2PR18MB2863;
-x-ms-traffictypediagnostic: MN2PR18MB2863:
-x-ms-exchange-purlcount: 1
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <MN2PR18MB28630DB05D4A2B8C684DB5C7A0AD0@MN2PR18MB2863.namprd18.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:7219;
-x-forefront-prvs: 01294F875B
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(4636009)(136003)(366004)(396003)(376002)(39850400004)(346002)(199004)(189003)(6506007)(186003)(99286004)(4326008)(76176011)(25786009)(55236004)(229853002)(102836004)(6246003)(2906002)(6436002)(316002)(26005)(478600001)(6116002)(54906003)(74316002)(7696005)(52536014)(110136005)(66476007)(66556008)(64756008)(66446008)(33656002)(305945005)(71200400001)(8676002)(76116006)(66066001)(53936002)(71190400001)(7416002)(8936002)(966005)(7736002)(55016002)(81166006)(9686003)(81156014)(86362001)(6306002)(3846002)(4744005)(5660300002)(11346002)(486006)(446003)(14454004)(256004)(476003)(66946007);DIR:OUT;SFP:1101;SCL:1;SRVR:MN2PR18MB2863;H:MN2PR18MB2637.namprd18.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-received-spf: None (protection.outlook.com: marvell.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: a9xx4pQfo52hZbR3XyovtBZEYCIcaA/n6rg0AWkkFyoJnj1dOSE74fN7YeaQQ0Rwwxt/FvmPUJa8ScVf0nnoX1JilLxNrZAbCpLV6DkVLn57yihNbBwSAeSNCSgrZU37D9iSAM64L6SZRPMnMRXVMWbxM6bDcwsMOqkQa8Th03ouVGqRkKuq0/nheaneWWta9JEaH9Dhmtln+zsjFqZwuwApo0c6tuNycVBYiCsr/GTbpPCP3mXh+Crr0LwdMYz1GBit+f1609aeZYwB03aPILSZ0kF/ksOQl5ukHtvbIDev/x8WJBxZA1ahVnAiNR9YKeevZGbZq4/XPHzuwWS4tLWlV6UhodZ88FtfnYm3m7B5LjEyfwU2/qpFtucaKwlkrqgOJXgQqR+mIZuEvYPEAP55xOKsUVK1f3XLk7sWmm0=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        Thu, 15 Aug 2019 06:09:42 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:55614 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1731293AbfHOKJm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 15 Aug 2019 06:09:42 -0400
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id B0DBE3082E24;
+        Thu, 15 Aug 2019 10:09:41 +0000 (UTC)
+Received: from localhost (unknown [10.43.2.236])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 51142608AB;
+        Thu, 15 Aug 2019 10:09:38 +0000 (UTC)
+Date:   Thu, 15 Aug 2019 12:09:37 +0200
+From:   Stanislaw Gruszka <sgruszka@redhat.com>
+To:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+Cc:     linux-wireless <linux-wireless@vger.kernel.org>,
+        Felix Fietkau <nbd@nbd.name>,
+        Ryder Lee <ryder.lee@mediatek.com>, Roy Luo <royluo@google.com>
+Subject: Re: [PATCH 5.3] mt76: mt76x0e: don't use hw encryption for MT7630E
+Message-ID: <20190815100936.GA21775@redhat.com>
+References: <1565703400-10623-1-git-send-email-sgruszka@redhat.com>
+ <CAJ0CqmXM4NRMYU6Lt_a4f+DXE2bVmhYrjQbgxHG0g=N+o3TeQw@mail.gmail.com>
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3f8bc392-a750-48eb-0c1a-08d720c0ea04
-X-MS-Exchange-CrossTenant-originalarrivaltime: 14 Aug 2019 14:08:42.5409
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 70e1fb47-1155-421d-87fc-2e58f638b6e0
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 1ngMPoJRR6SXYLcB5NVQe/GEHXmVv3ZpaiZ7e/YAPfdc4bA+XYmCW83wOZ52xNOd1k1K5R9wIf2Zuvlr2UemIA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR18MB2863
-X-OriginatorOrg: marvell.com
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:5.22.84,1.0.8
- definitions=2019-08-14_05:2019-08-14,2019-08-14 signatures=0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAJ0CqmXM4NRMYU6Lt_a4f+DXE2bVmhYrjQbgxHG0g=N+o3TeQw@mail.gmail.com>
+User-Agent: Mutt/1.5.21 (2010-09-15)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.46]); Thu, 15 Aug 2019 10:09:41 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Dmitry/Kalle,
-
-> >>
-> >> Hi Dmitry,
-> >>
-> >> We have a patch to fix this:
-> >> https://patchwork.kernel.org/patch/10990275/
+On Wed, Aug 14, 2019 at 11:50:12AM +0200, Lorenzo Bianconi wrote:
 > >
-> > Hi Ganapathi,
+> > Since 41634aa8d6db ("mt76: only schedule txqs from the tx tasklet")
+> > I can observe firmware hangs on MT7630E on station mode: tx stop
+> > functioning after minor activity (rx keep working) and on module
+> > unload device fail to stop with messages:
 > >
-> > Has this patch been accepted anywhere? This bug is still open on syzbot=
-.
->=20
-> The patch is in "Changes Requested" state which means that the author is
-> supposed to send a new version based on the review comments.
-We will address the review comments and try to push the updated version soo=
-n;
+> > [ 5446.141413] mt76x0e 0000:06:00.0: TX DMA did not stop
+> > [ 5449.176764] mt76x0e 0000:06:00.0: TX DMA did not stop
+> >
+> > Loading module again results in failure to associate with AP.
+> > Only machine power off / power on cycle can make device work again.
+> >
+> > It's unclear why commit 41634aa8d6db causes the problem, but it is
+> > related to HW encryption. Since issue is a firmware hang, that is super
+> > hard to debug, just disable HW encryption as fix for the issue.
+> >
+> > Fixes: 41634aa8d6db ("mt76: only schedule txqs from the tx tasklet")
+> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> > ---
+> >  drivers/net/wireless/mediatek/mt76/mt76x0/pci.c | 15 ++++++++++++++-
+> >  1 file changed, 14 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c b/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
+> > index 4585e1b756c2..6117e6ca08cb 100644
+> > --- a/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
+> > +++ b/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
+> > @@ -62,6 +62,19 @@ static void mt76x0e_stop(struct ieee80211_hw *hw)
+> >         mt76x0e_stop_hw(dev);
+> >  }
+> >
+> > +static int
+> > +mt76x0e_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+> > +               struct ieee80211_vif *vif, struct ieee80211_sta *sta,
+> > +               struct ieee80211_key_conf *key)
+> > +{
+> > +       struct mt76x02_dev *dev = hw->priv;
+> > +
+> > +       if (is_mt7630(dev))
+> > +               return -EOPNOTSUPP;
+> 
+> Hi Stanislaw,
+> 
+> Can you please try if disabling/enabling the tx tasklet during hw key
+> configuration fixes the issue?
+> Doing something like:
+> 
+> tasklet_disable(tx_tasklet)
+> mt76x02_set_key()
+> tasklet_enable(tx_tasklet)
 
-Regards,
-Ganapathi
+It does not help with the problem.
+
+> Moreover, have you double checked if there is any performance impact
+> of not using hw encryption?
+
+I didn't observe any, but realized on this machine I have
+aesni_intel encryption accelerator. After rebuild kernel without
+CONFIG_CRYPTO_AES_NI_INTEL, 'perf top' showed extra 20% of cpu usage
+in aes_encrypt() when sending data with HW encryption disabled.
+
+> If so, I guess it is better to just redefine mt76_wake_tx_queue for
+> mt76x0e and run mt76_txq_schedule for 7630e:
+> 
+> void mt76x0e_wake_tx_queue(struct ieee80211_hw *hw, struct ieee80211_txq *txq)
+> {
+>         if (is_mt7630(dev)) {
+>             mt76_txq_schedule(dev, txq->ac);
+>         } else {
+>             tasklet_schedule(&dev->tx_tasklet);
+>         }
+> }
+
+Not sure about reduction of lock contention for which the tx_tasklet
+was introduced here, but looks ok for me as fix.
+ 
+Stanislaw
