@@ -6,81 +6,68 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91DF4C3A59B
-	for <linux-wireless@archiver.kernel.org>; Sat, 17 Aug 2019 06:52:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 790EBC3A59B
+	for <linux-wireless@archiver.kernel.org>; Sat, 17 Aug 2019 06:52:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6516921019
-	for <linux-wireless@archiver.kernel.org>; Sat, 17 Aug 2019 06:52:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4E76721019
+	for <linux-wireless@archiver.kernel.org>; Sat, 17 Aug 2019 06:52:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726256AbfHQGwl (ORCPT
+        id S1726261AbfHQGwn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 17 Aug 2019 02:52:41 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:36376 "EHLO
+        Sat, 17 Aug 2019 02:52:43 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:36382 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725945AbfHQGwl (ORCPT
+        with ESMTP id S1725945AbfHQGwn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 17 Aug 2019 02:52:41 -0400
+        Sat, 17 Aug 2019 02:52:43 -0400
 Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1hysZg-0006XT-5R; Sat, 17 Aug 2019 09:52:28 +0300
+        id 1hysZX-0006XT-UB; Sat, 17 Aug 2019 09:52:20 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Sat, 17 Aug 2019 09:51:58 +0300
-Message-Id: <20190817065200.9701-21-luca@coelho.fi>
+Date:   Sat, 17 Aug 2019 09:51:49 +0300
+Message-Id: <20190817065200.9701-12-luca@coelho.fi>
 X-Mailer: git-send-email 2.23.0.rc1
 In-Reply-To: <20190817065200.9701-1-luca@coelho.fi>
 References: <20190817065200.9701-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 20/22] iwlwifi: remove CMD_HIGH_PRIO
+Subject: [PATCH 11/22] iwlwifi: mvm: add the skb length to a print
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Shaul Triebitz <shaul.triebitz@intel.com>
 
-This flag is never set on any host command. Remove it.
+When printing a TX, add to the print the length of the frame.
+That will help with BSEP (buffer status report poll) tests.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Shaul Triebitz <shaul.triebitz@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-trans.h | 12 ++++--------
- 1 file changed, 4 insertions(+), 8 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-index 0f8aeb111b0e..20251f5e6f41 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-@@ -159,9 +159,6 @@ static inline u32 iwl_rx_packet_payload_len(const struct iwl_rx_packet *pkt)
-  * @CMD_ASYNC: Return right away and don't wait for the response
-  * @CMD_WANT_SKB: Not valid with CMD_ASYNC. The caller needs the buffer of
-  *	the response. The caller needs to call iwl_free_resp when done.
-- * @CMD_HIGH_PRIO: The command is high priority - it goes to the front of the
-- *	command queue, but after other high priority commands. Valid only
-- *	with CMD_ASYNC.
-  * @CMD_SEND_IN_IDLE: The command should be sent even when the trans is idle.
-  * @CMD_MAKE_TRANS_IDLE: The command response should mark the trans as idle.
-  * @CMD_WAKE_UP_TRANS: The command response should wake up the trans
-@@ -173,11 +170,10 @@ enum CMD_MODE {
- 	CMD_ASYNC		= BIT(0),
- 	CMD_WANT_SKB		= BIT(1),
- 	CMD_SEND_IN_RFKILL	= BIT(2),
--	CMD_HIGH_PRIO		= BIT(3),
--	CMD_SEND_IN_IDLE	= BIT(4),
--	CMD_MAKE_TRANS_IDLE	= BIT(5),
--	CMD_WAKE_UP_TRANS	= BIT(6),
--	CMD_WANT_ASYNC_CALLBACK	= BIT(7),
-+	CMD_SEND_IN_IDLE	= BIT(3),
-+	CMD_MAKE_TRANS_IDLE	= BIT(4),
-+	CMD_WAKE_UP_TRANS	= BIT(5),
-+	CMD_WANT_ASYNC_CALLBACK	= BIT(6),
- };
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index 6ac114a393cc..4effb90b4f75 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -1169,8 +1169,9 @@ static int iwl_mvm_tx_mpdu(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 			schedule_work(&mvm->add_stream_wk);
+ 	}
  
- #define DEF_CMD_PAYLOAD_SIZE 320
+-	IWL_DEBUG_TX(mvm, "TX to [%d|%d] Q:%d - seq: 0x%x\n", mvmsta->sta_id,
+-		     tid, txq_id, IEEE80211_SEQ_TO_SN(seq_number));
++	IWL_DEBUG_TX(mvm, "TX to [%d|%d] Q:%d - seq: 0x%x len %d\n",
++		     mvmsta->sta_id, tid, txq_id,
++		     IEEE80211_SEQ_TO_SN(seq_number), skb->len);
+ 
+ 	/* From now on, we cannot access info->control */
+ 	iwl_mvm_skb_prepare_status(skb, dev_cmd);
 -- 
 2.23.0.rc1
 
