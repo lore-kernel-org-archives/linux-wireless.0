@@ -6,96 +6,64 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1616EC3A59B
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78B8FC41514
 	for <linux-wireless@archiver.kernel.org>; Sat, 17 Aug 2019 06:52:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E5FCE21019
-	for <linux-wireless@archiver.kernel.org>; Sat, 17 Aug 2019 06:52:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 586A021019
+	for <linux-wireless@archiver.kernel.org>; Sat, 17 Aug 2019 06:52:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726220AbfHQGwf (ORCPT
+        id S1726211AbfHQGwf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Sat, 17 Aug 2019 02:52:35 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:36358 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:36310 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725945AbfHQGwe (ORCPT
+        with ESMTP id S1726141AbfHQGwU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 17 Aug 2019 02:52:34 -0400
+        Sat, 17 Aug 2019 02:52:20 -0400
 Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1hysZg-0006XT-Ri; Sat, 17 Aug 2019 09:52:29 +0300
+        id 1hysZW-0006XT-Hc; Sat, 17 Aug 2019 09:52:18 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Sat, 17 Aug 2019 09:51:59 +0300
-Message-Id: <20190817065200.9701-22-luca@coelho.fi>
+Date:   Sat, 17 Aug 2019 09:51:47 +0300
+Message-Id: <20190817065200.9701-10-luca@coelho.fi>
 X-Mailer: git-send-email 2.23.0.rc1
 In-Reply-To: <20190817065200.9701-1-luca@coelho.fi>
 References: <20190817065200.9701-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 21/22] iwlwifi: trans: remove suspending flag
+Subject: [PATCH 09/22] iwlwifi: remove iwl-constants.h
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 
-This is set but never read.
+This file is included in a few source files, but its content
+is never used. Remove it.
 
 Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-trans.h |  1 -
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c  | 14 --------------
- 2 files changed, 15 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-index 20251f5e6f41..942662eaf523 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-@@ -841,7 +841,6 @@ struct iwl_trans {
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index bf0b9ee05c44..2aa5320e9d1a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -414,6 +414,7 @@ static const struct iwl_hcmd_names iwl_mvm_legacy_names[] = {
+ 	HCMD_NAME(SCAN_ITERATION_COMPLETE),
+ 	HCMD_NAME(D0I3_END_CMD),
+ 	HCMD_NAME(LTR_CONFIG),
++	HCMD_NAME(LDBG_CONFIG_CMD),
+ };
  
- 	enum iwl_plat_pm_mode system_pm_mode;
- 	enum iwl_plat_pm_mode runtime_pm_mode;
--	bool suspending;
- 
- 	/* pointer to trans specific struct */
- 	/*Ensure that this pointer will always be aligned to sizeof pointer */
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index de711c1160d3..407abc835012 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -1293,12 +1293,6 @@ static int iwl_pci_system_prepare(struct device *device)
- 
- 	IWL_DEBUG_RPM(trans, "preparing for system suspend\n");
- 
--	/* This is called before entering system suspend and before
--	 * the runtime resume is called.  Set the suspending flag to
--	 * prevent the wakelock from being taken.
--	 */
--	trans->suspending = true;
--
- 	/* Wake the device up from runtime suspend before going to
- 	 * platform suspend.  This is needed because we don't know
- 	 * whether wowlan any is set and, if it's not, mac80211 will
-@@ -1315,14 +1309,6 @@ static void iwl_pci_system_complete(struct device *device)
- 	struct iwl_trans *trans = pci_get_drvdata(pdev);
- 
- 	IWL_DEBUG_RPM(trans, "completing system suspend\n");
--
--	/* This is called as a counterpart to the prepare op.  It is
--	 * called either when suspending fails or when suspend
--	 * completed successfully.  Now there's no risk of grabbing
--	 * the wakelock anymore, so we can release the suspending
--	 * flag.
--	 */
--	trans->suspending = false;
- }
- #endif /* CONFIG_IWLWIFI_PCIE_RTPM */
- 
+ /* Please keep this array *SORTED* by hex value.
 -- 
 2.23.0.rc1
 
