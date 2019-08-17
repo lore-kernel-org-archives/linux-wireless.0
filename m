@@ -2,68 +2,87 @@ Return-Path: <SRS0=m094=WN=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A657AC3A59B
-	for <linux-wireless@archiver.kernel.org>; Sat, 17 Aug 2019 06:52:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C86B7C3A59E
+	for <linux-wireless@archiver.kernel.org>; Sat, 17 Aug 2019 09:08:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8609021019
-	for <linux-wireless@archiver.kernel.org>; Sat, 17 Aug 2019 06:52:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 940662173B
+	for <linux-wireless@archiver.kernel.org>; Sat, 17 Aug 2019 09:08:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726354AbfHQGwx (ORCPT
+        id S1726010AbfHQJIq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 17 Aug 2019 02:52:53 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:36428 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726349AbfHQGwx (ORCPT
+        Sat, 17 Aug 2019 05:08:46 -0400
+Received: from depni-mx.sinp.msu.ru ([213.131.7.21]:25 "EHLO
+        depni-mx.sinp.msu.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725267AbfHQJIq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 17 Aug 2019 02:52:53 -0400
-Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
-        by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.92)
-        (envelope-from <luca@coelho.fi>)
-        id 1hysZX-0006XT-6f; Sat, 17 Aug 2019 09:52:19 +0300
-From:   Luca Coelho <luca@coelho.fi>
-To:     kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org
-Date:   Sat, 17 Aug 2019 09:51:48 +0300
-Message-Id: <20190817065200.9701-11-luca@coelho.fi>
-X-Mailer: git-send-email 2.23.0.rc1
-In-Reply-To: <20190817065200.9701-1-luca@coelho.fi>
-References: <20190817065200.9701-1-luca@coelho.fi>
+        Sat, 17 Aug 2019 05:08:46 -0400
+X-Greylist: delayed 523 seconds by postgrey-1.27 at vger.kernel.org; Sat, 17 Aug 2019 05:08:45 EDT
+Received: from spider (unknown [109.63.188.125])
+        by depni-mx.sinp.msu.ru (Postfix) with ESMTPSA id 54DBD1BF45B;
+        Sat, 17 Aug 2019 12:00:01 +0300 (MSK)
+From:   Serge Belyshev <belyshev@depni.sinp.msu.ru>
+To:     Stuart Little <achirvasub@gmail.com>
+Cc:     Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        kernel list <linux-kernel@vger.kernel.org>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        linux-wireless@vger.kernel.org,
+        Haim Dreyfuss <haim.dreyfuss@intel.com>
+Subject: Re: PROBLEM: 5.3.0-rc* causes iwlwifi failure
+In-Reply-To: <20190817041258.GA1641@chirva-slack.chirva-slack>
+References: <20190817041258.GA1641@chirva-slack.chirva-slack>
+Date:   Sat, 17 Aug 2019 11:59:59 +0300
+Message-ID: <87y2zsf9ps.fsf@depni.sinp.msu.ru>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: [PATCH 10/22] iwlwifi: mvm: fix scan config command size
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Beker Ayala <ayala.beker@intel.com>
 
-Use the actual length of channels array and not the max capable length.
+> I am on an Intel(R) Core(TM) i7-7500U CPU @ 2.70GHz running Linux
+> x86_64 (Slackware), with a custom-compiled 5.3.0-rc4 (.config
+> attached).
+>
+> I am using the Intel wifi adapter on this machine:
+>
+> 02:00.0 Network controller: Intel Corporation Device 24fb (rev 10)
+>
+> with the iwlwifi driver. I am attaching the output to 'lspci -vv -s
+> 02:00.0' as the file device-info.
+>
+> All 5.3.0-rc* versions I have tried (including rc4) cause multiple
+> dmesg iwlwifi-related errors (dmesg attached). Examples:
+>
+> iwlwifi 0000:02:00.0: Failed to get geographic profile info -5
+> iwlwifi 0000:02:00.0: Microcode SW error detected.  Restarting 0x82000000
+> iwlwifi 0000:02:00.0: 0x00000038 | BAD_COMMAND
+>
 
-Signed-off-by: Beker Ayala <ayala.beker@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/scan.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I have my logs filled with similar garbage throughout 5.3-rc*. Also
+since 5.3-rcsomething not only it WARNS in dmesg about firmware failure,
+but completely stops working after suspend/resume cycle.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-index c284e6975b1b..5999b4ebd699 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-@@ -1205,7 +1205,7 @@ int iwl_mvm_config_scan(struct iwl_mvm *mvm)
- 		cmd_size = sizeof(struct iwl_scan_config);
- 	else
- 		cmd_size = sizeof(struct iwl_scan_config_v1);
--	cmd_size += mvm->fw->ucode_capa.n_scan_channels;
-+	cmd_size += num_channels;
- 
- 	cfg = kzalloc(cmd_size, GFP_KERNEL);
- 	if (!cfg)
--- 
-2.23.0.rc1
+It looks like that:
 
+commit 4fd445a2c855bbcab81fbe06d110e78dbd974a5b
+Author: Haim Dreyfuss <haim.dreyfuss@intel.com>
+Date:   Thu May 2 11:45:02 2019 +0300
+
+    iwlwifi: mvm: Add log information about SAR status
+    
+    Inform users when SAR status is changing.
+    
+    Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
+    Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+
+
+is the culprit. (manually) reverting it on top of 5.3-rc4 makes
+everything work again.
