@@ -6,36 +6,36 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6A61C3A59E
-	for <linux-wireless@archiver.kernel.org>; Sat, 17 Aug 2019 06:52:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3750CC3A59B
+	for <linux-wireless@archiver.kernel.org>; Sat, 17 Aug 2019 06:52:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C752621019
-	for <linux-wireless@archiver.kernel.org>; Sat, 17 Aug 2019 06:52:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 13F5421019
+	for <linux-wireless@archiver.kernel.org>; Sat, 17 Aug 2019 06:52:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726347AbfHQGwv (ORCPT
+        id S1726351AbfHQGww (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 17 Aug 2019 02:52:51 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:36414 "EHLO
+        Sat, 17 Aug 2019 02:52:52 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:36420 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726278AbfHQGwu (ORCPT
+        with ESMTP id S1725945AbfHQGwv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 17 Aug 2019 02:52:50 -0400
+        Sat, 17 Aug 2019 02:52:51 -0400
 Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1hysZf-0006XT-C3; Sat, 17 Aug 2019 09:52:27 +0300
+        id 1hysZh-0006XT-JO; Sat, 17 Aug 2019 09:52:30 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Sat, 17 Aug 2019 09:51:57 +0300
-Message-Id: <20190817065200.9701-20-luca@coelho.fi>
+Date:   Sat, 17 Aug 2019 09:52:00 +0300
+Message-Id: <20190817065200.9701-23-luca@coelho.fi>
 X-Mailer: git-send-email 2.23.0.rc1
 In-Reply-To: <20190817065200.9701-1-luca@coelho.fi>
 References: <20190817065200.9701-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 19/22] iwlwifi: mvm: remove last leftovers of d0i3
+Subject: [PATCH 22/22] iwlwifi: remove the code under IWLWIFI_PCIE_RTPM
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -43,81 +43,142 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-We're now left with a status bit that is never set and a few
-other leftovers.
+This is never set.
 
 Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 3 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      | 7 -------
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c      | 7 -------
- 3 files changed, 17 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/Kconfig    | 14 ----
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 71 -------------------
+ .../net/wireless/intel/iwlwifi/pcie/trans.c   |  4 --
+ 3 files changed, 89 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index f4aa121f36f8..e49558fb8aa3 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -1079,9 +1079,6 @@ static void iwl_mvm_restart_cleanup(struct iwl_mvm *mvm)
+diff --git a/drivers/net/wireless/intel/iwlwifi/Kconfig b/drivers/net/wireless/intel/iwlwifi/Kconfig
+index 235349a33a3c..7dbc0d38bb3b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/Kconfig
++++ b/drivers/net/wireless/intel/iwlwifi/Kconfig
+@@ -92,20 +92,6 @@ config IWLWIFI_BCAST_FILTERING
+ 	  If unsure, don't enable this option, as some programs might
+ 	  expect incoming broadcasts for their normal operations.
  
- 	ieee80211_wake_queues(mvm->hw);
- 
--	/* clear any stale d0i3 state */
--	clear_bit(IWL_MVM_STATUS_IN_D0I3, &mvm->status);
+-config IWLWIFI_PCIE_RTPM
+-       bool "Enable runtime power management mode for PCIe devices"
+-       depends on IWLMVM && PM && EXPERT
+-       help
+-         Say Y here to enable runtime power management for PCIe
+-         devices.  If enabled, the device will go into low power mode
+-         when idle for a short period of time, allowing for improved
+-         power saving during runtime. Note that this feature requires
+-         a tight integration with the platform. It is not recommended
+-         to enable this feature without proper validation with the
+-         specific target platform.
 -
- 	mvm->vif_count = 0;
- 	mvm->rx_ba_sessions = 0;
- 	mvm->fwrt.dump.conf = FW_DBG_INVALID;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 15780e994a30..ed52e2ea97d9 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -588,11 +588,6 @@ struct iwl_mvm_frame_stats {
- 	int last_frame_idx;
- };
- 
--enum {
--	D0I3_DEFER_WAKEUP,
--	D0I3_PENDING_WAKEUP,
--};
+-	 If unsure, say N.
 -
- #define IWL_MVM_DEBUG_SET_TEMPERATURE_DISABLE 0xff
- #define IWL_MVM_DEBUG_SET_TEMPERATURE_MIN -100
- #define IWL_MVM_DEBUG_SET_TEMPERATURE_MAX 200
-@@ -1157,7 +1152,6 @@ struct iwl_mvm {
-  * @IWL_MVM_STATUS_ROC_RUNNING: remain-on-channel is running
-  * @IWL_MVM_STATUS_HW_RESTART_REQUESTED: HW restart was requested
-  * @IWL_MVM_STATUS_IN_HW_RESTART: HW restart is active
-- * @IWL_MVM_STATUS_IN_D0I3: NIC is in D0i3
-  * @IWL_MVM_STATUS_ROC_AUX_RUNNING: AUX remain-on-channel is running
-  * @IWL_MVM_STATUS_FIRMWARE_RUNNING: firmware is running
-  * @IWL_MVM_STATUS_NEED_FLUSH_P2P: need to flush P2P bcast STA
-@@ -1168,7 +1162,6 @@ enum iwl_mvm_status {
- 	IWL_MVM_STATUS_ROC_RUNNING,
- 	IWL_MVM_STATUS_HW_RESTART_REQUESTED,
- 	IWL_MVM_STATUS_IN_HW_RESTART,
--	IWL_MVM_STATUS_IN_D0I3,
- 	IWL_MVM_STATUS_ROC_AUX_RUNNING,
- 	IWL_MVM_STATUS_FIRMWARE_RUNNING,
- 	IWL_MVM_STATUS_NEED_FLUSH_P2P,
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index b0f92c9b20f0..aa0a2a3e0875 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -2759,13 +2759,6 @@ int iwl_mvm_sta_tx_agg_start(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ menu "Debugging Options"
  
- 	spin_lock_bh(&mvmsta->lock);
+ config IWLWIFI_DEBUG
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index 407abc835012..2a34f074d72c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -1248,80 +1248,9 @@ int iwl_pci_fw_exit_d0i3(struct iwl_trans *trans)
+ 	return ret;
+ }
  
--	/* possible race condition - we entered D0i3 while starting agg */
--	if (test_bit(IWL_MVM_STATUS_IN_D0I3, &mvm->status)) {
--		spin_unlock_bh(&mvmsta->lock);
--		IWL_ERR(mvm, "Entered D0i3 while starting Tx agg\n");
--		return -EIO;
+-#ifdef CONFIG_IWLWIFI_PCIE_RTPM
+-static int iwl_pci_runtime_suspend(struct device *device)
+-{
+-	struct pci_dev *pdev = to_pci_dev(device);
+-	struct iwl_trans *trans = pci_get_drvdata(pdev);
+-	int ret;
+-
+-	IWL_DEBUG_RPM(trans, "entering runtime suspend\n");
+-
+-	if (test_bit(STATUS_DEVICE_ENABLED, &trans->status)) {
+-		ret = iwl_pci_fw_enter_d0i3(trans);
+-		if (ret < 0)
+-			return ret;
 -	}
 -
- 	/*
- 	 * Note the possible cases:
- 	 *  1. An enabled TXQ - TXQ needs to become agg'ed
+-	trans->system_pm_mode = IWL_PLAT_PM_MODE_D0I3;
+-
+-	iwl_trans_d3_suspend(trans, false, false);
+-
+-	return 0;
+-}
+-
+-static int iwl_pci_runtime_resume(struct device *device)
+-{
+-	struct pci_dev *pdev = to_pci_dev(device);
+-	struct iwl_trans *trans = pci_get_drvdata(pdev);
+-	enum iwl_d3_status d3_status;
+-
+-	IWL_DEBUG_RPM(trans, "exiting runtime suspend (resume)\n");
+-
+-	iwl_trans_d3_resume(trans, &d3_status, false, false);
+-
+-	if (test_bit(STATUS_DEVICE_ENABLED, &trans->status))
+-		return iwl_pci_fw_exit_d0i3(trans);
+-
+-	return 0;
+-}
+-
+-static int iwl_pci_system_prepare(struct device *device)
+-{
+-	struct pci_dev *pdev = to_pci_dev(device);
+-	struct iwl_trans *trans = pci_get_drvdata(pdev);
+-
+-	IWL_DEBUG_RPM(trans, "preparing for system suspend\n");
+-
+-	/* Wake the device up from runtime suspend before going to
+-	 * platform suspend.  This is needed because we don't know
+-	 * whether wowlan any is set and, if it's not, mac80211 will
+-	 * disconnect (in which case, we can't be in D0i3).
+-	 */
+-	pm_runtime_resume(device);
+-
+-	return 0;
+-}
+-
+-static void iwl_pci_system_complete(struct device *device)
+-{
+-	struct pci_dev *pdev = to_pci_dev(device);
+-	struct iwl_trans *trans = pci_get_drvdata(pdev);
+-
+-	IWL_DEBUG_RPM(trans, "completing system suspend\n");
+-}
+-#endif /* CONFIG_IWLWIFI_PCIE_RTPM */
+-
+ static const struct dev_pm_ops iwl_dev_pm_ops = {
+ 	SET_SYSTEM_SLEEP_PM_OPS(iwl_pci_suspend,
+ 				iwl_pci_resume)
+-#ifdef CONFIG_IWLWIFI_PCIE_RTPM
+-	SET_RUNTIME_PM_OPS(iwl_pci_runtime_suspend,
+-			   iwl_pci_runtime_resume,
+-			   NULL)
+-	.prepare = iwl_pci_system_prepare,
+-	.complete = iwl_pci_system_complete,
+-#endif /* CONFIG_IWLWIFI_PCIE_RTPM */
+ };
+ 
+ #define IWL_PM_OPS	(&iwl_dev_pm_ops)
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index a6deb61a3ab4..a423c5c6605e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -3658,11 +3658,7 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
+ 						   WQ_HIGHPRI | WQ_UNBOUND, 1);
+ 	INIT_WORK(&trans_pcie->rba.rx_alloc, iwl_pcie_rx_allocator_work);
+ 
+-#ifdef CONFIG_IWLWIFI_PCIE_RTPM
+-	trans->runtime_pm_mode = IWL_PLAT_PM_MODE_D0I3;
+-#else
+ 	trans->runtime_pm_mode = IWL_PLAT_PM_MODE_DISABLED;
+-#endif /* CONFIG_IWLWIFI_PCIE_RTPM */
+ 
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
+ 	trans_pcie->fw_mon_data.state = IWL_FW_MON_DBGFS_STATE_CLOSED;
 -- 
 2.23.0.rc1
 
