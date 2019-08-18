@@ -2,703 +2,126 @@ Return-Path: <SRS0=IL4L=WO=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1732C3A589
-	for <linux-wireless@archiver.kernel.org>; Sun, 18 Aug 2019 14:35:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 30975C3A589
+	for <linux-wireless@archiver.kernel.org>; Sun, 18 Aug 2019 19:10:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 88E0720851
-	for <linux-wireless@archiver.kernel.org>; Sun, 18 Aug 2019 14:35:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 020DD206C1
+	for <linux-wireless@archiver.kernel.org>; Sun, 18 Aug 2019 19:10:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726743AbfHROfi (ORCPT
+        id S1726953AbfHRTKF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 18 Aug 2019 10:35:38 -0400
-Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:40859 "EHLO
-        alexa-out-ams-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726270AbfHROfh (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 18 Aug 2019 10:35:37 -0400
-Received: from ironmsg03-ams.qualcomm.com ([10.251.56.4])
-  by alexa-out-ams-02.qualcomm.com with ESMTP; 18 Aug 2019 16:35:30 +0200
-Received: from unknown (HELO wigig-1329.mea.qualcomm.com) ([10.4.89.235])
-  by ironmsg03-ams.qualcomm.com with ESMTP; 18 Aug 2019 16:35:28 +0200
-From:   Alexei Avshalom Lazar <ailizaro@codeaurora.org>
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     Alexei Avshalom Lazar <ailizaro@codeaurora.org>,
-        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com
-Subject: [PATCH v8 1/2] nl80211: Add support for EDMG channels
-Date:   Sun, 18 Aug 2019 17:35:17 +0300
-Message-Id: <1566138918-3823-2-git-send-email-ailizaro@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1566138918-3823-1-git-send-email-ailizaro@codeaurora.org>
-References: <1566138918-3823-1-git-send-email-ailizaro@codeaurora.org>
+        Sun, 18 Aug 2019 15:10:05 -0400
+Received: from mx2.mailbox.org ([80.241.60.215]:55502 "EHLO mx2.mailbox.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726089AbfHRTKF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 18 Aug 2019 15:10:05 -0400
+Received: from smtp2.mailbox.org (smtp2.mailbox.org [80.241.60.241])
+        (using TLSv1.2 with cipher ECDHE-RSA-CHACHA20-POLY1305 (256/256 bits))
+        (No client certificate requested)
+        by mx2.mailbox.org (Postfix) with ESMTPS id 558E8A168F;
+        Sun, 18 Aug 2019 21:10:01 +0200 (CEST)
+X-Virus-Scanned: amavisd-new at heinlein-support.de
+Received: from smtp2.mailbox.org ([80.241.60.241])
+        by spamfilter01.heinlein-hosting.de (spamfilter01.heinlein-hosting.de [80.241.56.115]) (amavisd-new, port 10030)
+        with ESMTP id DcJ8SqyB3S_Z; Sun, 18 Aug 2019 21:09:50 +0200 (CEST)
+From:   Hauke Mehrtens <hauke@hauke-m.de>
+To:     kvalo@codeaurora.org
+Cc:     hannu.nyman@iki.fi, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, mpubbise@codeaurora.org,
+        Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH] ath10k: Check if station exists before forwarding tx airtime report
+Date:   Sun, 18 Aug 2019 21:09:20 +0200
+Message-Id: <20190818190920.22813-1-hauke@hauke-m.de>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-802.11ay specification defines Enhanced Directional Multi-Gigabit
-(EDMG) STA and AP which allow channel bonding of 2 channels and more.
+It looks like the FW on QCA9984 already reports the tx airtimes before
+the station is added to the peer entry. The peer entry is created in
+ath10k_peer_map_event() just with the vdev_id and the ethaddr, but
+not with a station entry, this is added later in ath10k_peer_create() in
+callbacks from mac80211.
 
-Introduce new NL attributes that are needed for enabling and
-configuring EDMG support.
+When there is no sta added to the peer entry, this function fails
+because it calls ieee80211_sta_register_airtime() with NULL.
 
-Two new attributes are used by kernel to publish driver's EDMG
-capabilities to the userspace:
-NL80211_BAND_ATTR_EDMG_CHANNELS - bitmap field that indicates the 2.16
-GHz channel(s) that are supported by the driver.
-When this attribute is not set it means driver does not support EDMG.
-NL80211_BAND_ATTR_EDMG_BW_CONFIG - represent the channel bandwidth
-configurations supported by the driver.
+This was reported in OpenWrt some time ago:
+https://bugs.openwrt.org/index.php?do=details&task_id=2414
 
-Additional two new attributes are used by the userspace for connect
-command and for AP configuration:
-NL80211_ATTR_WIPHY_EDMG_CHANNELS
-NL80211_ATTR_WIPHY_EDMG_BW_CONFIG
+This commit should fix this crash:
+[   75.991714] Unable to handle kernel paging request at virtual address fffff9e8
+[   75.991756] pgd = c0204000
+[   75.997955] [fffff9e8] *pgd=5fdfd861, *pte=00000000, *ppte=00000000
+[   76.000537] Internal error: Oops: 37 [#1] SMP ARM
+[   76.006686] Modules linked in: pppoe ppp_async ath10k_pci ath10k_core ath pptp pppox ppp_mppe ppp_generic mac80211 iptable_nat ipt_REJECT ipt_MASQUERADE cfg80211 xt_time xt_tcpudp xt_tcpmss xt_statistic xt_state xt_recent xt_nat xt_multiport xt_mark xt_mac xt_limit xt_length xt_hl xt_helper xt_esp xt_ecn xt_dscp xt_conntrack xt_connmark xt_connlimit xt_connbytes xt_comment xt_TCPMSS xt_REDIRECT xt_LOG xt_HL xt_FLOWOFFLOAD xt_DSCP xt_CT xt_CLASSIFY usbserial slhc nf_reject_ipv4 nf_nat_redirect nf_nat_masquerade_ipv4 nf_conntrack_ipv4 nf_nat_ipv4 nf_log_ipv4 nf_flow_table_hw nf_flow_table nf_defrag_ipv4 nf_conntrack_rtcache nf_conntrack_netlink iptable_raw iptable_mangle iptable_filter ipt_ah ipt_ECN ip_tables crc_ccitt compat chaoskey fuse sch_cake sch_tbf sch_ingress sch_htb sch_hfsc em_u32 cls_u32
+[   76.059974]  cls_tcindex cls_route cls_matchall cls_fw cls_flow cls_basic act_skbedit act_mirred ledtrig_usbport xt_set ip_set_list_set ip_set_hash_netportnet ip_set_hash_netport ip_set_hash_netnet ip_set_hash_netiface ip_set_hash_net ip_set_hash_mac ip_set_hash_ipportnet ip_set_hash_ipportip ip_set_hash_ipport ip_set_hash_ipmark ip_set_hash_ip ip_set_bitmap_port ip_set_bitmap_ipmac ip_set_bitmap_ip ip_set nfnetlink ip6table_nat nf_conntrack_ipv6 nf_defrag_ipv6 nf_nat_ipv6 ip6t_NPT ip6t_MASQUERADE nf_nat_masquerade_ipv6 nf_nat nf_conntrack nf_log_ipv6 nf_log_common ip6table_mangle ip6table_filter ip6_tables ip6t_REJECT x_tables nf_reject_ipv6 msdos ip_gre gre ifb sit tunnel4 ip_tunnel tun vfat fat hfsplus cifs nls_utf8 nls_iso8859_15 nls_iso8859_1 nls_cp850 nls_cp437 nls_cp1250 sha1_generic md5 md4
+[   76.130634]  usb_storage leds_gpio xhci_plat_hcd xhci_pci xhci_hcd dwc3 dwc3_of_simple ohci_platform ohci_hcd phy_qcom_dwc3 ahci ehci_platform sd_mod ahci_platform libahci_platform libahci libata scsi_mod ehci_hcd gpio_button_hotplug ext4 mbcache jbd2 exfat crc32c_generic
+[   76.154772] CPU: 0 PID: 0 Comm: swapper/0 Not tainted 4.14.132 #0
+[   76.177001] Hardware name: Generic DT based system
+[   76.182990] task: c0b06d80 task.stack: c0b00000
+[   76.187832] PC is at ieee80211_sta_register_airtime+0x24/0x148 [mac80211]
+[   76.192211] LR is at ath10k_htt_t2h_msg_handler+0x678/0x10f4 [ath10k_core]
+[   76.199052] pc : [<bf75bfac>]    lr : [<bf83e8b0>]    psr: a0000113
+[   76.205820] sp : c0b01d54  ip : 00000002  fp : bf869c0c
+[   76.211981] r10: 0000003c  r9 : dbdca138  r8 : 00060002
+[   76.217192] r7 : 00000000  r6 : dabe1150  r5 : 00000000  r4 : dbdc95c0
+[   76.222401] r3 : 00000000  r2 : 00060002  r1 : 00000000  r0 : 00000000
+[   76.229003] Flags: NzCv  IRQs on  FIQs on  Mode SVC_32  ISA ARM  Segment none
+[   76.235509] Control: 10c5787d  Table: 5c94006a  DAC: 00000051
+[   76.242716] Process swapper/0 (pid: 0, stack limit = 0xc0b00210)
+[   76.248446] Stack: (0xc0b01d54 to 0xc0b02000)
+[   76.254532] 1d40:                                              dbdc95c0 00000000 dabe1150
+[   76.258808] 1d60: 00000001 dabe1150 dbdca138 0000003c bf869c0c bf83e8b0 00000002 c0314b10
+[   76.266969] 1d80: dbdc9c70 00000001 00000001 dabe114c 00010000 00000000 dbdcd724 bf88f3d8
+[   76.275126] 1da0: c0310d28 db393c00 dbdc95c0 00000000 c0b01dd0 c07fb4c4 dbdcd724 00000001
+[   76.283286] 1dc0: 00000022 bf88b09c db393c00 00000022 c0b01dd0 c0b01dd0 00000000 dbdcc5c0
+[   76.291445] 1de0: bf88f04c dbdcd654 dbdcd71c dbdc95c0 00000014 dbdcd724 dbdcc5c0 00000005
+[   76.299605] 1e00: 0004b400 bf85c360 00000000 bf87101c c0b01e24 00000006 00000000 dbdc95c0
+[   76.307764] 1e20: 00000001 00000040 0000012c c0b01e80 1cf51000 bf85c448 dbdcd440 dbdc95c0
+[   76.315925] 1e40: dbdca440 ffffa880 00000040 bf88cb68 dbdcd440 00000001 00000040 ffffa880
+[   76.324084] 1e60: c0b02d00 c06d72e0 dd990080 c0a3f080 c0b255dc c0b047e4 c090afac c090e80c
+[   76.332244] 1e80: c0b01e80 c0b01e80 c0b01e88 c0b01e88 dd4cc200 00000000 00000003 c0b0208c
+[   76.340405] 1ea0: c0b02080 40000003 ffffe000 00000100 c0b02080 c03015c8 00000000 00000001
+[   76.348564] 1ec0: dd408000 c0a38210 c0b2c7c0 0000000a ffffa880 c0b02d00 c07fb764 00200102
+[   76.356723] 1ee0: dd4cc268 c0a3e414 00000000 00000000 00000001 dd408000 de803000 00000000
+[   76.364883] 1f00: 00000000 c03247cc c0a3e414 c0368f1c c0b03f60 c0b153cc de80200c de802000
+[   76.373042] 1f20: c0b01f48 c0301488 c0308630 60000013 ffffffff c0b01f7c 00000000 c0b00000
+[   76.381204] 1f40: 00000000 c030c08c 00000001 00000000 00000000 c0315180 ffffe000 c0b03cc0
+[   76.389363] 1f60: c0b03c70 00000000 00000000 c0a2da28 00000000 00000000 c0b01f90 c0b01f98
+[   76.397522] 1f80: c030862c c0308630 60000013 ffffffff 00000051 00000000 ffffe000 c035dd18
+[   76.405681] 1fa0: 000000bf c0b03c40 00000000 c0b2c000 dddfce80 c035e060 c0b2c040 c0a00cf4
+[   76.413842] 1fc0: ffffffff ffffffff 00000000 c0a0067c c0a2da28 00000000 00000000 c0b2c1d4
+[   76.422001] 1fe0: c0b03c5c c0a2da24 c0b07ee0 4220406a 512f04d0 4220807c 00000000 00000000
+[   76.430335] [<bf75bfac>] (ieee80211_sta_register_airtime [mac80211]) from [<00000002>] (0x2)
+[   76.438314] Code: e1cd81f0 e1a08002 e1cda1f8 e58de020 (e5102618)
+[   76.446965] ---[ end trace 227a38ade964d642 ]---
 
-New rate info flag - RATE_INFO_FLAGS_EDMG, can be reported from driver
-and used for bitrate calculation that will take into account EDMG
-according to the 802.11ay specification.
-
-Signed-off-by: Alexei Avshalom Lazar <ailizaro@codeaurora.org>
+Fixes: bb31b7cb106c ("ath10k: report tx airtime provided by fw")
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/ath/wil6210/cfg80211.c |   2 +-
- include/net/cfg80211.h                      |  86 ++++++++++++++-
- include/uapi/linux/nl80211.h                |  24 +++++
- net/mac80211/mlme.c                         |   2 +-
- net/mac80211/status.c                       |   2 +-
- net/wireless/chan.c                         | 159 ++++++++++++++++++++++++++++
- net/wireless/nl80211.c                      |  37 +++++++
- net/wireless/util.c                         |  42 +++++++-
- 8 files changed, 346 insertions(+), 8 deletions(-)
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index 2fb4258..2414f57 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -351,7 +351,7 @@ int wil_cid_fill_sinfo(struct wil6210_vif *vif, int cid,
- 			BIT_ULL(NL80211_STA_INFO_RX_DROP_MISC) |
- 			BIT_ULL(NL80211_STA_INFO_TX_FAILED);
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 83a7fb68fd24..7f3ec7fa5a44 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -2639,7 +2639,7 @@ static void ath10k_htt_rx_tx_compl_ind(struct ath10k *ar,
+ 		spin_lock_bh(&ar->data_lock);
  
--	sinfo->txrate.flags = RATE_INFO_FLAGS_60G;
-+	sinfo->txrate.flags = RATE_INFO_FLAGS_DMG;
- 	sinfo->txrate.mcs = le16_to_cpu(reply.evt.bf_mcs);
- 	sinfo->rxrate.mcs = stats->last_mcs_rx;
- 	sinfo->rx_bytes = stats->rx_bytes;
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 26e2ad2..616dfcd 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -318,6 +318,60 @@ struct ieee80211_sband_iftype_data {
- };
- 
- /**
-+ * enum ieee80211_edmg_bw_config - allowed channel bandwidth configurations
-+ *
-+ * @IEEE80211_EDMG_BW_CONFIG_4: 2.16GHz
-+ * @IEEE80211_EDMG_BW_CONFIG_5: 2.16GHz and 4.32GHz
-+ * @IEEE80211_EDMG_BW_CONFIG_6: 2.16GHz, 4.32GHz and 6.48GHz
-+ * @IEEE80211_EDMG_BW_CONFIG_7: 2.16GHz, 4.32GHz, 6.48GHz and 8.64GHz
-+ * @IEEE80211_EDMG_BW_CONFIG_8: 2.16GHz and 2.16GHz + 2.16GHz
-+ * @IEEE80211_EDMG_BW_CONFIG_9: 2.16GHz, 4.32GHz and 2.16GHz + 2.16GHz
-+ * @IEEE80211_EDMG_BW_CONFIG_10: 2.16GHz, 4.32GHz, 6.48GHz and 2.16GHz+2.16GHz
-+ * @IEEE80211_EDMG_BW_CONFIG_11: 2.16GHz, 4.32GHz, 6.48GHz, 8.64GHz and
-+ *	2.16GHz+2.16GHz
-+ * @IEEE80211_EDMG_BW_CONFIG_12: 2.16GHz, 2.16GHz + 2.16GHz and
-+ *	4.32GHz + 4.32GHz
-+ * @IEEE80211_EDMG_BW_CONFIG_13: 2.16GHz, 4.32GHz, 2.16GHz + 2.16GHz and
-+ *	4.32GHz + 4.32GHz
-+ * @IEEE80211_EDMG_BW_CONFIG_14: 2.16GHz, 4.32GHz, 6.48GHz, 2.16GHz + 2.16GHz
-+ *	and 4.32GHz + 4.32GHz
-+ * @IEEE80211_EDMG_BW_CONFIG_15: 2.16GHz, 4.32GHz, 6.48GHz, 8.64GHz,
-+ *	2.16GHz + 2.16GHz and 4.32GHz + 4.32GHz
-+ */
-+enum ieee80211_edmg_bw_config {
-+	IEEE80211_EDMG_BW_CONFIG_4	= 4,
-+	IEEE80211_EDMG_BW_CONFIG_5	= 5,
-+	IEEE80211_EDMG_BW_CONFIG_6	= 6,
-+	IEEE80211_EDMG_BW_CONFIG_7	= 7,
-+	IEEE80211_EDMG_BW_CONFIG_8	= 8,
-+	IEEE80211_EDMG_BW_CONFIG_9	= 9,
-+	IEEE80211_EDMG_BW_CONFIG_10	= 10,
-+	IEEE80211_EDMG_BW_CONFIG_11	= 11,
-+	IEEE80211_EDMG_BW_CONFIG_12	= 12,
-+	IEEE80211_EDMG_BW_CONFIG_13	= 13,
-+	IEEE80211_EDMG_BW_CONFIG_14	= 14,
-+	IEEE80211_EDMG_BW_CONFIG_15	= 15,
-+};
-+
-+/**
-+ * struct ieee80211_edmg - EDMG configuration
-+ *
-+ * This structure describes most essential parameters needed
-+ * to describe 802.11ay EDMG configuration
-+ *
-+ * @channels: bitmap that indicates the 2.16 GHz channel(s)
-+ *	that are allowed to be used for transmissions.
-+ *	Bit 0 indicates channel 1, bit 1 indicates channel 2, etc.
-+ *	Set to 0 indicate EDMG not supported.
-+ * @bw_config: Channel BW Configuration subfield encodes
-+ *	the allowed channel bandwidth configurations
-+ */
-+struct ieee80211_edmg {
-+	u8 channels;
-+	enum ieee80211_edmg_bw_config bw_config;
-+};
-+
-+/**
-  * struct ieee80211_supported_band - frequency band definition
-  *
-  * This structure describes a frequency band a wiphy
-@@ -333,6 +387,7 @@ struct ieee80211_sband_iftype_data {
-  * @n_bitrates: Number of bitrates in @bitrates
-  * @ht_cap: HT capabilities in this band
-  * @vht_cap: VHT capabilities in this band
-+ * @edmg_cap: EDMG capabilities in this band
-  * @n_iftype_data: number of iftype data entries
-  * @iftype_data: interface type data entries.  Note that the bits in
-  *	@types_mask inside this structure cannot overlap (i.e. only
-@@ -347,6 +402,7 @@ struct ieee80211_supported_band {
- 	int n_bitrates;
- 	struct ieee80211_sta_ht_cap ht_cap;
- 	struct ieee80211_sta_vht_cap vht_cap;
-+	struct ieee80211_edmg edmg_cap;
- 	u16 n_iftype_data;
- 	const struct ieee80211_sband_iftype_data *iftype_data;
- };
-@@ -514,12 +570,17 @@ struct key_params {
-  * @center_freq1: center frequency of first segment
-  * @center_freq2: center frequency of second segment
-  *	(only with 80+80 MHz)
-+ * @edmg: define the EDMG channels configuration.
-+ *	If edmg is requested (i.e. the .channels member is non-zero),
-+ *	chan will define the primary channel and all other
-+ *	parameters are ignored.
-  */
- struct cfg80211_chan_def {
- 	struct ieee80211_channel *chan;
- 	enum nl80211_chan_width width;
- 	u32 center_freq1;
- 	u32 center_freq2;
-+	struct ieee80211_edmg edmg;
- };
- 
- /**
-@@ -578,6 +639,19 @@ cfg80211_chandef_identical(const struct cfg80211_chan_def *chandef1,
- }
- 
- /**
-+ * cfg80211_chandef_is_edmg - check if chandef represents an EDMG channel
-+ *
-+ * @chandef: the channel definition
-+ *
-+ * Return: %true if EDMG defined, %false otherwise.
-+ */
-+static inline bool
-+cfg80211_chandef_is_edmg(const struct cfg80211_chan_def *chandef)
-+{
-+	return chandef->edmg.channels || chandef->edmg.bw_config;
-+}
-+
-+/**
-  * cfg80211_chandef_compatible - check if two channel definitions are compatible
-  * @chandef1: first channel definition
-  * @chandef2: second channel definition
-@@ -1162,15 +1236,17 @@ int cfg80211_check_station_change(struct wiphy *wiphy,
-  * @RATE_INFO_FLAGS_MCS: mcs field filled with HT MCS
-  * @RATE_INFO_FLAGS_VHT_MCS: mcs field filled with VHT MCS
-  * @RATE_INFO_FLAGS_SHORT_GI: 400ns guard interval
-- * @RATE_INFO_FLAGS_60G: 60GHz MCS
-+ * @RATE_INFO_FLAGS_DMG: 60GHz MCS
-  * @RATE_INFO_FLAGS_HE_MCS: HE MCS information
-+ * @RATE_INFO_FLAGS_EDMG: 60GHz MCS in EDMG mode
-  */
- enum rate_info_flags {
- 	RATE_INFO_FLAGS_MCS			= BIT(0),
- 	RATE_INFO_FLAGS_VHT_MCS			= BIT(1),
- 	RATE_INFO_FLAGS_SHORT_GI		= BIT(2),
--	RATE_INFO_FLAGS_60G			= BIT(3),
-+	RATE_INFO_FLAGS_DMG			= BIT(3),
- 	RATE_INFO_FLAGS_HE_MCS			= BIT(4),
-+	RATE_INFO_FLAGS_EDMG			= BIT(5),
- };
- 
- /**
-@@ -1210,6 +1286,7 @@ enum rate_info_bw {
-  * @he_dcm: HE DCM value
-  * @he_ru_alloc: HE RU allocation (from &enum nl80211_he_ru_alloc,
-  *	only valid if bw is %RATE_INFO_BW_HE_RU)
-+ * @n_bonded_ch: In case of EDMG the number of bonded channels (1-4)
-  */
- struct rate_info {
- 	u8 flags;
-@@ -1220,6 +1297,7 @@ struct rate_info {
- 	u8 he_gi;
- 	u8 he_dcm;
- 	u8 he_ru_alloc;
-+	u8 n_bonded_ch;
- };
- 
- /**
-@@ -2421,6 +2499,9 @@ struct cfg80211_bss_selection {
-  * @fils_erp_rrk_len: Length of @fils_erp_rrk in octets.
-  * @want_1x: indicates user-space supports and wants to use 802.1X driver
-  *	offload of 4-way handshake.
-+ * @edmg: define the EDMG channels.
-+ *	This may specify multiple channels and bonding options for the driver
-+ *	to choose from, based on BSS configuration.
-  */
- struct cfg80211_connect_params {
- 	struct ieee80211_channel *channel;
-@@ -2454,6 +2535,7 @@ struct cfg80211_connect_params {
- 	const u8 *fils_erp_rrk;
- 	size_t fils_erp_rrk_len;
- 	bool want_1x;
-+	struct ieee80211_edmg edmg;
- };
- 
- /**
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index c45587c..cfe8dfe 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -52,6 +52,11 @@
- #define NL80211_MULTICAST_GROUP_NAN		"nan"
- #define NL80211_MULTICAST_GROUP_TESTMODE	"testmode"
- 
-+#define NL80211_EDMG_BW_CONFIG_MIN	4
-+#define NL80211_EDMG_BW_CONFIG_MAX	15
-+#define NL80211_EDMG_CHANNELS_MIN	1
-+#define NL80211_EDMG_CHANNELS_MAX	0x3c /* 0b00111100 */
-+
- /**
-  * DOC: Station handling
-  *
-@@ -2358,6 +2363,13 @@ enum nl80211_commands {
-  *
-  * @NL80211_ATTR_TWT_RESPONDER: Enable target wait time responder support.
-  *
-+ * @NL80211_ATTR_WIPHY_EDMG_CHANNELS: bitmap that indicates the 2.16 GHz
-+ *	channel(s) that are allowed to be used for EDMG transmissions.
-+ *	Defined by IEEE P802.11ay/D4.0 section 9.4.2.251.
-+ * @NL80211_ATTR_WIPHY_EDMG_BW_CONFIG: Channel BW Configuration subfield encodes
-+ *	the allowed channel bandwidth configurations.
-+ *	Defined by IEEE P802.11ay/D4.0 section 9.4.2.251, Table 13.
-+ *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -2815,6 +2827,9 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_TWT_RESPONDER,
- 
-+	NL80211_ATTR_WIPHY_EDMG_CHANNELS,
-+	NL80211_ATTR_WIPHY_EDMG_BW_CONFIG,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -3423,6 +3438,12 @@ enum nl80211_band_iftype_attr {
-  * @NL80211_BAND_ATTR_VHT_CAPA: VHT capabilities, as in the HT information IE
-  * @NL80211_BAND_ATTR_IFTYPE_DATA: nested array attribute, with each entry using
-  *	attributes from &enum nl80211_band_iftype_attr
-+ * @NL80211_BAND_ATTR_EDMG_CHANNELS: bitmap that indicates the 2.16 GHz
-+ *	channel(s) that are allowed to be used for EDMG transmissions.
-+ *	Defined by IEEE P802.11ay/D4.0 section 9.4.2.251.
-+ * @NL80211_BAND_ATTR_EDMG_BW_CONFIG: Channel BW Configuration subfield encodes
-+ *	the allowed channel bandwidth configurations.
-+ *	Defined by IEEE P802.11ay/D4.0 section 9.4.2.251, Table 13.
-  * @NL80211_BAND_ATTR_MAX: highest band attribute currently defined
-  * @__NL80211_BAND_ATTR_AFTER_LAST: internal use
-  */
-@@ -3440,6 +3461,9 @@ enum nl80211_band_attr {
- 	NL80211_BAND_ATTR_VHT_CAPA,
- 	NL80211_BAND_ATTR_IFTYPE_DATA,
- 
-+	NL80211_BAND_ATTR_EDMG_CHANNELS,
-+	NL80211_BAND_ATTR_EDMG_BW_CONFIG,
-+
- 	/* keep last */
- 	__NL80211_BAND_ATTR_AFTER_LAST,
- 	NL80211_BAND_ATTR_MAX = __NL80211_BAND_ATTR_AFTER_LAST - 1
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index a99ad032..54e847a 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -158,10 +158,10 @@ ieee80211_determine_chantype(struct ieee80211_sub_if_data *sdata,
- 	memcpy(&sta_ht_cap, &sband->ht_cap, sizeof(sta_ht_cap));
- 	ieee80211_apply_htcap_overrides(sdata, &sta_ht_cap);
- 
-+	memset(chandef, 0, sizeof(struct cfg80211_chan_def));
- 	chandef->chan = channel;
- 	chandef->width = NL80211_CHAN_WIDTH_20_NOHT;
- 	chandef->center_freq1 = channel->center_freq;
--	chandef->center_freq2 = 0;
- 
- 	if (!ht_oper || !sta_ht_cap.ht_supported) {
- 		ret = IEEE80211_STA_DISABLE_HT | IEEE80211_STA_DISABLE_VHT;
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index f03aa89..87099e1 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -323,7 +323,7 @@ ieee80211_add_tx_radiotap_header(struct ieee80211_local *local,
- 
- 	if (status && status->rate && !(status->rate->flags &
- 					(RATE_INFO_FLAGS_MCS |
--					 RATE_INFO_FLAGS_60G |
-+					 RATE_INFO_FLAGS_DMG |
- 					 RATE_INFO_FLAGS_VHT_MCS |
- 					 RATE_INFO_FLAGS_HE_MCS)))
- 		legacy_rate = status->rate->legacy;
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index 7dc1bbd..d823e5f 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -14,6 +14,11 @@
- #include "core.h"
- #include "rdev-ops.h"
- 
-+static bool cfg80211_valid_60g_freq(u32 freq)
-+{
-+	return freq >= 58320 && freq <= 70200;
-+}
-+
- void cfg80211_chandef_create(struct cfg80211_chan_def *chandef,
- 			     struct ieee80211_channel *chan,
- 			     enum nl80211_channel_type chan_type)
-@@ -23,6 +28,8 @@ void cfg80211_chandef_create(struct cfg80211_chan_def *chandef,
- 
- 	chandef->chan = chan;
- 	chandef->center_freq2 = 0;
-+	chandef->edmg.bw_config = 0;
-+	chandef->edmg.channels = 0;
- 
- 	switch (chan_type) {
- 	case NL80211_CHAN_NO_HT:
-@@ -47,6 +54,91 @@ void cfg80211_chandef_create(struct cfg80211_chan_def *chandef,
- }
- EXPORT_SYMBOL(cfg80211_chandef_create);
- 
-+static bool cfg80211_edmg_chandef_valid(const struct cfg80211_chan_def *chandef)
-+{
-+	int max_contiguous = 0;
-+	int num_of_enabled = 0;
-+	int contiguous = 0;
-+	int i;
-+
-+	if (!chandef->edmg.channels || !chandef->edmg.bw_config)
-+		return false;
-+
-+	if (!cfg80211_valid_60g_freq(chandef->chan->center_freq))
-+		return false;
-+
-+	for (i = 0; i < 6; i++) {
-+		if (chandef->edmg.channels & BIT(i)) {
-+			contiguous++;
-+			num_of_enabled++;
-+		} else {
-+			contiguous = 0;
-+		}
-+
-+		max_contiguous = max(contiguous, max_contiguous);
-+	}
-+	/* basic verification of edmg configuration according to
-+	 * IEEE P802.11ay/D4.0 section 9.4.2.251
-+	 */
-+	/* check bw_config against contiguous edmg channels */
-+	switch (chandef->edmg.bw_config) {
-+	case IEEE80211_EDMG_BW_CONFIG_4:
-+	case IEEE80211_EDMG_BW_CONFIG_8:
-+	case IEEE80211_EDMG_BW_CONFIG_12:
-+		if (max_contiguous < 1)
-+			return false;
-+		break;
-+	case IEEE80211_EDMG_BW_CONFIG_5:
-+	case IEEE80211_EDMG_BW_CONFIG_9:
-+	case IEEE80211_EDMG_BW_CONFIG_13:
-+		if (max_contiguous < 2)
-+			return false;
-+		break;
-+	case IEEE80211_EDMG_BW_CONFIG_6:
-+	case IEEE80211_EDMG_BW_CONFIG_10:
-+	case IEEE80211_EDMG_BW_CONFIG_14:
-+		if (max_contiguous < 3)
-+			return false;
-+		break;
-+	case IEEE80211_EDMG_BW_CONFIG_7:
-+	case IEEE80211_EDMG_BW_CONFIG_11:
-+	case IEEE80211_EDMG_BW_CONFIG_15:
-+		if (max_contiguous < 4)
-+			return false;
-+		break;
-+
-+	default:
-+		return false;
-+	}
-+
-+	/* check bw_config against aggregated (non contiguous) edmg channels */
-+	switch (chandef->edmg.bw_config) {
-+	case IEEE80211_EDMG_BW_CONFIG_4:
-+	case IEEE80211_EDMG_BW_CONFIG_5:
-+	case IEEE80211_EDMG_BW_CONFIG_6:
-+	case IEEE80211_EDMG_BW_CONFIG_7:
-+		break;
-+	case IEEE80211_EDMG_BW_CONFIG_8:
-+	case IEEE80211_EDMG_BW_CONFIG_9:
-+	case IEEE80211_EDMG_BW_CONFIG_10:
-+	case IEEE80211_EDMG_BW_CONFIG_11:
-+		if (num_of_enabled < 2)
-+			return false;
-+		break;
-+	case IEEE80211_EDMG_BW_CONFIG_12:
-+	case IEEE80211_EDMG_BW_CONFIG_13:
-+	case IEEE80211_EDMG_BW_CONFIG_14:
-+	case IEEE80211_EDMG_BW_CONFIG_15:
-+		if (num_of_enabled < 4 || max_contiguous < 2)
-+			return false;
-+		break;
-+	default:
-+		return false;
-+	}
-+
-+	return true;
-+}
-+
- bool cfg80211_chandef_valid(const struct cfg80211_chan_def *chandef)
- {
- 	u32 control_freq;
-@@ -112,6 +204,10 @@ bool cfg80211_chandef_valid(const struct cfg80211_chan_def *chandef)
- 		return false;
- 	}
- 
-+	if (cfg80211_chandef_is_edmg(chandef) &&
-+	    !cfg80211_edmg_chandef_valid(chandef))
-+		return false;
-+
- 	return true;
- }
- EXPORT_SYMBOL(cfg80211_chandef_valid);
-@@ -721,12 +817,66 @@ static bool cfg80211_secondary_chans_ok(struct wiphy *wiphy,
- 	return true;
- }
- 
-+/* check if the operating channels are valid and supported */
-+static bool cfg80211_edmg_usable(struct wiphy *wiphy, u8 edmg_channels,
-+				 enum ieee80211_edmg_bw_config edmg_bw_config,
-+				 int primary_channel,
-+				 struct ieee80211_edmg *edmg_cap)
-+{
-+	struct ieee80211_channel *chan;
-+	int i, freq;
-+	int channels_counter = 0;
-+
-+	if (!edmg_channels && !edmg_bw_config)
-+		return true;
-+
-+	if ((!edmg_channels && edmg_bw_config) ||
-+	    (edmg_channels && !edmg_bw_config))
-+		return false;
-+
-+	if (!(edmg_channels & BIT(primary_channel - 1)))
-+		return false;
-+
-+	/* 60GHz channels 1..6 */
-+	for (i = 0; i < 6; i++) {
-+		if (!(edmg_channels & BIT(i)))
-+			continue;
-+
-+		if (!(edmg_cap->channels & BIT(i)))
-+			return false;
-+
-+		channels_counter++;
-+
-+		freq = ieee80211_channel_to_frequency(i + 1,
-+						      NL80211_BAND_60GHZ);
-+		chan = ieee80211_get_channel(wiphy, freq);
-+		if (!chan || chan->flags & IEEE80211_CHAN_DISABLED)
-+			return false;
-+	}
-+
-+	/* IEEE802.11 allows max 4 channels */
-+	if (channels_counter > 4)
-+		return false;
-+
-+	/* check bw_config is a subset of what driver supports
-+	 * (see IEEE P802.11ay/D4.0 section 9.4.2.251, Table 13)
-+	 */
-+	if ((edmg_bw_config % 4) > (edmg_cap->bw_config % 4))
-+		return false;
-+
-+	if (edmg_bw_config > edmg_cap->bw_config)
-+		return false;
-+
-+	return true;
-+}
-+
- bool cfg80211_chandef_usable(struct wiphy *wiphy,
- 			     const struct cfg80211_chan_def *chandef,
- 			     u32 prohibited_flags)
- {
- 	struct ieee80211_sta_ht_cap *ht_cap;
- 	struct ieee80211_sta_vht_cap *vht_cap;
-+	struct ieee80211_edmg *edmg_cap;
- 	u32 width, control_freq, cap;
- 
- 	if (WARN_ON(!cfg80211_chandef_valid(chandef)))
-@@ -734,6 +884,15 @@ bool cfg80211_chandef_usable(struct wiphy *wiphy,
- 
- 	ht_cap = &wiphy->bands[chandef->chan->band]->ht_cap;
- 	vht_cap = &wiphy->bands[chandef->chan->band]->vht_cap;
-+	edmg_cap = &wiphy->bands[chandef->chan->band]->edmg_cap;
-+
-+	if (edmg_cap->channels &&
-+	    !cfg80211_edmg_usable(wiphy,
-+				  chandef->edmg.channels,
-+				  chandef->edmg.bw_config,
-+				  chandef->chan->hw_value,
-+				  edmg_cap))
-+		return false;
- 
- 	control_freq = chandef->chan->center_freq;
- 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 65f85fd..11888fa 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -289,6 +289,13 @@ const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
- 
- 	[NL80211_ATTR_WIPHY_FREQ] = { .type = NLA_U32 },
- 	[NL80211_ATTR_WIPHY_CHANNEL_TYPE] = { .type = NLA_U32 },
-+	[NL80211_ATTR_WIPHY_EDMG_CHANNELS] = NLA_POLICY_RANGE(NLA_U8,
-+						NL80211_EDMG_CHANNELS_MIN,
-+						NL80211_EDMG_CHANNELS_MAX),
-+	[NL80211_ATTR_WIPHY_EDMG_BW_CONFIG] = NLA_POLICY_RANGE(NLA_U8,
-+						NL80211_EDMG_BW_CONFIG_MIN,
-+						NL80211_EDMG_BW_CONFIG_MAX),
-+
- 	[NL80211_ATTR_CHANNEL_WIDTH] = { .type = NLA_U32 },
- 	[NL80211_ATTR_CENTER_FREQ1] = { .type = NLA_U32 },
- 	[NL80211_ATTR_CENTER_FREQ2] = { .type = NLA_U32 },
-@@ -1555,6 +1562,15 @@ static int nl80211_send_band_rateinfo(struct sk_buff *msg,
- 		nla_nest_end(msg, nl_iftype_data);
- 	}
- 
-+	/* add EDMG info */
-+	if (sband->edmg_cap.channels &&
-+	    (nla_put_u8(msg, NL80211_BAND_ATTR_EDMG_CHANNELS,
-+		       sband->edmg_cap.channels) ||
-+	    nla_put_u8(msg, NL80211_BAND_ATTR_EDMG_BW_CONFIG,
-+		       sband->edmg_cap.bw_config)))
-+
-+		return -ENOBUFS;
-+
- 	/* add bitrates */
- 	nl_rates = nla_nest_start_noflag(msg, NL80211_BAND_ATTR_RATES);
- 	if (!nl_rates)
-@@ -2646,6 +2662,18 @@ int nl80211_parse_chandef(struct cfg80211_registered_device *rdev,
- 				nla_get_u32(attrs[NL80211_ATTR_CENTER_FREQ2]);
- 	}
- 
-+	if (info->attrs[NL80211_ATTR_WIPHY_EDMG_CHANNELS]) {
-+		chandef->edmg.channels =
-+		      nla_get_u8(info->attrs[NL80211_ATTR_WIPHY_EDMG_CHANNELS]);
-+
-+		if (info->attrs[NL80211_ATTR_WIPHY_EDMG_BW_CONFIG])
-+			chandef->edmg.bw_config =
-+		     nla_get_u8(info->attrs[NL80211_ATTR_WIPHY_EDMG_BW_CONFIG]);
-+	} else {
-+		chandef->edmg.bw_config = 0;
-+		chandef->edmg.channels = 0;
-+	}
-+
- 	if (!cfg80211_chandef_valid(chandef)) {
- 		NL_SET_ERR_MSG(extack, "invalid channel definition");
- 		return -EINVAL;
-@@ -9814,6 +9842,15 @@ static int nl80211_connect(struct sk_buff *skb, struct genl_info *info)
- 			return -EINVAL;
- 	}
- 
-+	if (info->attrs[NL80211_ATTR_WIPHY_EDMG_CHANNELS]) {
-+		connect.edmg.channels =
-+		      nla_get_u8(info->attrs[NL80211_ATTR_WIPHY_EDMG_CHANNELS]);
-+
-+		if (info->attrs[NL80211_ATTR_WIPHY_EDMG_BW_CONFIG])
-+			connect.edmg.bw_config =
-+		     nla_get_u8(info->attrs[NL80211_ATTR_WIPHY_EDMG_BW_CONFIG]);
-+	}
-+
- 	if (connect.privacy && info->attrs[NL80211_ATTR_KEYS]) {
- 		connkeys = nl80211_parse_connkeys(rdev, info, NULL);
- 		if (IS_ERR(connkeys))
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index d0e35b7..01b52ef 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -1034,7 +1034,7 @@ static u32 cfg80211_calculate_bitrate_ht(struct rate_info *rate)
- 	return (bitrate + 50000) / 100000;
- }
- 
--static u32 cfg80211_calculate_bitrate_60g(struct rate_info *rate)
-+static u32 cfg80211_calculate_bitrate_dmg(struct rate_info *rate)
- {
- 	static const u32 __mcs2bitrate[] = {
- 		/* control PHY */
-@@ -1081,6 +1081,40 @@ static u32 cfg80211_calculate_bitrate_60g(struct rate_info *rate)
- 	return __mcs2bitrate[rate->mcs];
- }
- 
-+static u32 cfg80211_calculate_bitrate_edmg(struct rate_info *rate)
-+{
-+	static const u32 __mcs2bitrate[] = {
-+		/* control PHY */
-+		[0] =   275,
-+		/* SC PHY */
-+		[1] =  3850,
-+		[2] =  7700,
-+		[3] =  9625,
-+		[4] = 11550,
-+		[5] = 12512, /* 1251.25 mbps */
-+		[6] = 13475,
-+		[7] = 15400,
-+		[8] = 19250,
-+		[9] = 23100,
-+		[10] = 25025,
-+		[11] = 26950,
-+		[12] = 30800,
-+		[13] = 38500,
-+		[14] = 46200,
-+		[15] = 50050,
-+		[16] = 53900,
-+		[17] = 57750,
-+		[18] = 69300,
-+		[19] = 75075,
-+		[20] = 80850,
-+	};
-+
-+	if (WARN_ON_ONCE(rate->mcs >= ARRAY_SIZE(__mcs2bitrate)))
-+		return 0;
-+
-+	return __mcs2bitrate[rate->mcs] * rate->n_bonded_ch;
-+}
-+
- static u32 cfg80211_calculate_bitrate_vht(struct rate_info *rate)
- {
- 	static const u32 base[4][10] = {
-@@ -1253,8 +1287,10 @@ u32 cfg80211_calculate_bitrate(struct rate_info *rate)
- {
- 	if (rate->flags & RATE_INFO_FLAGS_MCS)
- 		return cfg80211_calculate_bitrate_ht(rate);
--	if (rate->flags & RATE_INFO_FLAGS_60G)
--		return cfg80211_calculate_bitrate_60g(rate);
-+	if (rate->flags & RATE_INFO_FLAGS_DMG)
-+		return cfg80211_calculate_bitrate_dmg(rate);
-+	if (rate->flags & RATE_INFO_FLAGS_EDMG)
-+		return cfg80211_calculate_bitrate_edmg(rate);
- 	if (rate->flags & RATE_INFO_FLAGS_VHT_MCS)
- 		return cfg80211_calculate_bitrate_vht(rate);
- 	if (rate->flags & RATE_INFO_FLAGS_HE_MCS)
+ 		peer = ath10k_peer_find_by_id(ar, peer_id);
+-		if (!peer) {
++		if (!peer || !peer->sta) {
+ 			spin_unlock_bh(&ar->data_lock);
+ 			rcu_read_unlock();
+ 			continue;
 -- 
-2.7.4
+2.20.1
 
