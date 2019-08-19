@@ -2,40 +2,40 @@ Return-Path: <SRS0=IsUp=WP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 061C0C3A5A0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28812C3A5A3
 	for <linux-wireless@archiver.kernel.org>; Mon, 19 Aug 2019 16:50:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D54F62070B
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Aug 2019 16:50:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0291022CEB
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Aug 2019 16:50:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727968AbfHSQuX (ORCPT
+        id S1727890AbfHSQuV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 19 Aug 2019 12:50:23 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:37032 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727873AbfHSQuV (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
         Mon, 19 Aug 2019 12:50:21 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:37016 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727032AbfHSQuU (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Aug 2019 12:50:20 -0400
 Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1hzkrL-0007zi-GP; Mon, 19 Aug 2019 19:50:19 +0300
+        id 1hzkrJ-0007zi-Q1; Mon, 19 Aug 2019 19:50:18 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Mon, 19 Aug 2019 19:49:54 +0300
-Message-Id: <20190819165007.10181-10-luca@coelho.fi>
+Date:   Mon, 19 Aug 2019 19:49:52 +0300
+Message-Id: <20190819165007.10181-8-luca@coelho.fi>
 X-Mailer: git-send-email 2.23.0.rc1
 In-Reply-To: <20190819165007.10181-1-luca@coelho.fi>
 References: <20190819165007.10181-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH v3 09/22] iwlwifi: add ldbg config cmd debug print
+Subject: [PATCH v3 07/22] iwlwifi: dbg: move debug recording stop from trans to op mode
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -43,26 +43,113 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 
-add support to print ldbg command in mvm and xvt mode
+The op mode should stop the debug recording and not the transport layer.
+Rename iwl_fwrt_stop_device into iwl_fw_dbg_stop_sync and move the debug
+stop recording to it.
 
 Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c          | 6 +++---
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.h          | 2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c          | 1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h         | 3 ++-
+ drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c | 3 ---
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c      | 3 ---
+ 6 files changed, 7 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index bf0b9ee05c44..2aa5320e9d1a 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -414,6 +414,7 @@ static const struct iwl_hcmd_names iwl_mvm_legacy_names[] = {
- 	HCMD_NAME(SCAN_ITERATION_COMPLETE),
- 	HCMD_NAME(D0I3_END_CMD),
- 	HCMD_NAME(LTR_CONFIG),
-+	HCMD_NAME(LDBG_CONFIG_CMD),
- };
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+index dfb0c50df94c..9ccaecc10474 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+@@ -2862,7 +2862,7 @@ void iwl_fw_dbg_apply_point(struct iwl_fw_runtime *fwrt,
+ }
+ IWL_EXPORT_SYMBOL(iwl_fw_dbg_apply_point);
  
- /* Please keep this array *SORTED* by hex value.
+-void iwl_fwrt_stop_device(struct iwl_fw_runtime *fwrt)
++void iwl_fw_dbg_stop_sync(struct iwl_fw_runtime *fwrt)
+ {
+ 	int i;
+ 
+@@ -2870,9 +2870,9 @@ void iwl_fwrt_stop_device(struct iwl_fw_runtime *fwrt)
+ 	for (i = 0; i < IWL_FW_RUNTIME_DUMP_WK_NUM; i++)
+ 		iwl_fw_dbg_collect_sync(fwrt, i);
+ 
+-	iwl_trans_stop_device(fwrt->trans);
++	iwl_fw_dbg_stop_recording(fwrt->trans, NULL);
+ }
+-IWL_EXPORT_SYMBOL(iwl_fwrt_stop_device);
++IWL_EXPORT_SYMBOL(iwl_fw_dbg_stop_sync);
+ 
+ void iwl_fw_dbg_periodic_trig_handler(struct timer_list *t)
+ {
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
+index d6b012459b04..5582a11f7c89 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
+@@ -373,7 +373,7 @@ static inline void iwl_fw_resume_timestamp(struct iwl_fw_runtime *fwrt) {}
+ void iwl_fw_dbg_apply_point(struct iwl_fw_runtime *fwrt,
+ 			    enum iwl_fw_ini_apply_point apply_point);
+ 
+-void iwl_fwrt_stop_device(struct iwl_fw_runtime *fwrt);
++void iwl_fw_dbg_stop_sync(struct iwl_fw_runtime *fwrt);
+ 
+ static inline void iwl_fw_lmac1_set_alive_err_table(struct iwl_trans *trans,
+ 						    u32 lmac_error_event_table)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index a57fc6198a72..ed6453b2fc79 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -1140,6 +1140,7 @@ static int iwl_mvm_load_rt_fw(struct iwl_mvm *mvm)
+ 		return ret;
+ 	}
+ 
++	iwl_fw_dbg_stop_sync(&mvm->fwrt);
+ 	/*
+ 	 * Stop and start the transport without entering low power
+ 	 * mode. This will save the state of other components on the
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index a14701c8933b..e5703aa7935e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -2037,7 +2037,8 @@ static inline void iwl_mvm_stop_device(struct iwl_mvm *mvm)
+ 	lockdep_assert_held(&mvm->mutex);
+ 	iwl_fw_cancel_timestamp(&mvm->fwrt);
+ 	clear_bit(IWL_MVM_STATUS_FIRMWARE_RUNNING, &mvm->status);
+-	iwl_fwrt_stop_device(&mvm->fwrt);
++	iwl_fw_dbg_stop_sync(&mvm->fwrt);
++	iwl_trans_stop_device(mvm->trans);
+ 	iwl_free_fw_paging(&mvm->fwrt);
+ 	iwl_fw_dump_conf_clear(&mvm->fwrt);
+ }
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
+index 8d17e68577fd..104b7cc75248 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
+@@ -147,9 +147,6 @@ void _iwl_trans_pcie_gen2_stop_device(struct iwl_trans *trans, bool low_power)
+ 
+ 	trans_pcie->is_down = true;
+ 
+-	/* Stop dbgc before stopping device */
+-	iwl_fw_dbg_stop_recording(trans, NULL);
+-
+ 	/* tell the device to stop sending interrupts */
+ 	iwl_disable_interrupts(trans);
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index f5df5b370d78..a6deb61a3ab4 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -1242,9 +1242,6 @@ static void _iwl_trans_pcie_stop_device(struct iwl_trans *trans, bool low_power)
+ 
+ 	trans_pcie->is_down = true;
+ 
+-	/* Stop dbgc before stopping device */
+-	iwl_fw_dbg_stop_recording(trans, NULL);
+-
+ 	/* tell the device to stop sending interrupts */
+ 	iwl_disable_interrupts(trans);
+ 
 -- 
 2.23.0.rc1
 
