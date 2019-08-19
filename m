@@ -6,36 +6,36 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1DACC3A5A0
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Aug 2019 16:50:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73182C3A5A1
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Aug 2019 16:50:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C611422CEA
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Aug 2019 16:50:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 48E662070B
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Aug 2019 16:50:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727994AbfHSQuk (ORCPT
+        id S1727997AbfHSQul (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 19 Aug 2019 12:50:40 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:37078 "EHLO
+        Mon, 19 Aug 2019 12:50:41 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:37084 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727988AbfHSQuj (ORCPT
+        with ESMTP id S1727995AbfHSQul (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Aug 2019 12:50:39 -0400
+        Mon, 19 Aug 2019 12:50:41 -0400
 Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1hzkrV-0007zi-5H; Mon, 19 Aug 2019 19:50:29 +0300
+        id 1hzkrS-0007zi-Qa; Mon, 19 Aug 2019 19:50:27 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Mon, 19 Aug 2019 19:50:05 +0300
-Message-Id: <20190819165007.10181-21-luca@coelho.fi>
+Date:   Mon, 19 Aug 2019 19:50:02 +0300
+Message-Id: <20190819165007.10181-18-luca@coelho.fi>
 X-Mailer: git-send-email 2.23.0.rc1
 In-Reply-To: <20190819165007.10181-1-luca@coelho.fi>
 References: <20190819165007.10181-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH v3 20/22] iwlwifi: remove CMD_HIGH_PRIO
+Subject: [PATCH v3 17/22] iwlwifi: mvm: remove d0i3_ap_sta_id
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -43,44 +43,67 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-This flag is never set on any host command. Remove it.
+This variable read, but never set. Remove it.
 
 Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-trans.h | 12 ++++--------
- 1 file changed, 4 insertions(+), 8 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 4 ----
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      | 3 ---
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c      | 4 ----
+ 3 files changed, 11 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-index 0f8aeb111b0e..20251f5e6f41 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-@@ -159,9 +159,6 @@ static inline u32 iwl_rx_packet_payload_len(const struct iwl_rx_packet *pkt)
-  * @CMD_ASYNC: Return right away and don't wait for the response
-  * @CMD_WANT_SKB: Not valid with CMD_ASYNC. The caller needs the buffer of
-  *	the response. The caller needs to call iwl_free_resp when done.
-- * @CMD_HIGH_PRIO: The command is high priority - it goes to the front of the
-- *	command queue, but after other high priority commands. Valid only
-- *	with CMD_ASYNC.
-  * @CMD_SEND_IN_IDLE: The command should be sent even when the trans is idle.
-  * @CMD_MAKE_TRANS_IDLE: The command response should mark the trans as idle.
-  * @CMD_WAKE_UP_TRANS: The command response should wake up the trans
-@@ -173,11 +170,10 @@ enum CMD_MODE {
- 	CMD_ASYNC		= BIT(0),
- 	CMD_WANT_SKB		= BIT(1),
- 	CMD_SEND_IN_RFKILL	= BIT(2),
--	CMD_HIGH_PRIO		= BIT(3),
--	CMD_SEND_IN_IDLE	= BIT(4),
--	CMD_MAKE_TRANS_IDLE	= BIT(5),
--	CMD_WAKE_UP_TRANS	= BIT(6),
--	CMD_WANT_ASYNC_CALLBACK	= BIT(7),
-+	CMD_SEND_IN_IDLE	= BIT(3),
-+	CMD_MAKE_TRANS_IDLE	= BIT(4),
-+	CMD_WAKE_UP_TRANS	= BIT(5),
-+	CMD_WANT_ASYNC_CALLBACK	= BIT(6),
- };
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 2a246f69229d..f4aa121f36f8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -1071,7 +1071,6 @@ static void iwl_mvm_restart_cleanup(struct iwl_mvm *mvm)
+ 	ieee80211_iterate_interfaces(mvm->hw, 0, iwl_mvm_cleanup_iterator, mvm);
  
- #define DEF_CMD_PAYLOAD_SIZE 320
+ 	mvm->p2p_device_vif = NULL;
+-	mvm->d0i3_ap_sta_id = IWL_MVM_INVALID_STA;
+ 
+ 	iwl_mvm_reset_phy_ctxts(mvm);
+ 	memset(mvm->fw_key_table, 0, sizeof(mvm->fw_key_table));
+@@ -2335,9 +2334,6 @@ static void iwl_mvm_bss_info_changed_station(struct iwl_mvm *mvm,
+ 					IWL_ERR(mvm,
+ 						"failed to remove AP station\n");
+ 
+-				if (mvm->d0i3_ap_sta_id == mvmvif->ap_sta_id)
+-					mvm->d0i3_ap_sta_id =
+-						IWL_MVM_INVALID_STA;
+ 				mvmvif->ap_sta_id = IWL_MVM_INVALID_STA;
+ 			}
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 03f3faa02781..4a9e8ae99cac 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -1015,9 +1015,6 @@ struct iwl_mvm {
+ #endif
+ #endif
+ 
+-	/* d0i3 */
+-	u8 d0i3_ap_sta_id;
+-
+ 	wait_queue_head_t rx_sync_waitq;
+ 
+ 	/* BT-Coex */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index 4fae0cb22195..b0f92c9b20f0 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -1887,10 +1887,6 @@ int iwl_mvm_rm_sta(struct iwl_mvm *mvm,
+ 
+ 		/* unassoc - go ahead - remove the AP STA now */
+ 		mvmvif->ap_sta_id = IWL_MVM_INVALID_STA;
+-
+-		/* clear d0i3_ap_sta_id if no longer relevant */
+-		if (mvm->d0i3_ap_sta_id == sta_id)
+-			mvm->d0i3_ap_sta_id = IWL_MVM_INVALID_STA;
+ 	}
+ 
+ 	/*
 -- 
 2.23.0.rc1
 
