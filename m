@@ -2,40 +2,40 @@ Return-Path: <SRS0=IsUp=WP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CFCFC3A5A0
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Aug 2019 14:35:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2499BC3A5A0
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Aug 2019 14:35:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DB57620651
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Aug 2019 14:35:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E933B20651
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Aug 2019 14:35:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727375AbfHSOfo (ORCPT
+        id S1727447AbfHSOfq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 19 Aug 2019 10:35:44 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:36866 "EHLO
+        Mon, 19 Aug 2019 10:35:46 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:36870 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726627AbfHSOfo (ORCPT
+        with ESMTP id S1726627AbfHSOfq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Aug 2019 10:35:44 -0400
+        Mon, 19 Aug 2019 10:35:46 -0400
 Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1hzikw-0007sP-NX; Mon, 19 Aug 2019 17:35:35 +0300
+        id 1hzikv-0007sP-3t; Mon, 19 Aug 2019 17:35:33 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Mon, 19 Aug 2019 17:35:04 +0300
-Message-Id: <20190819143507.6989-20-luca@coelho.fi>
+Date:   Mon, 19 Aug 2019 17:35:02 +0300
+Message-Id: <20190819143507.6989-18-luca@coelho.fi>
 X-Mailer: git-send-email 2.23.0.rc1
 In-Reply-To: <20190819143507.6989-1-luca@coelho.fi>
 References: <20190819143507.6989-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH v2 19/22] iwlwifi: mvm: remove last leftovers of d0i3
+Subject: [PATCH v2 17/22] iwlwifi: mvm: remove d0i3_ap_sta_id
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -43,81 +43,67 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-We're now left with a status bit that is never set and a few
-other leftovers.
+This variable read, but never set. Remove it.
 
 Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 3 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      | 7 -------
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c      | 7 -------
- 3 files changed, 17 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 4 ----
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      | 3 ---
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c      | 4 ----
+ 3 files changed, 11 deletions(-)
 
 diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index f4aa121f36f8..e49558fb8aa3 100644
+index 2a246f69229d..f4aa121f36f8 100644
 --- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
 +++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -1079,9 +1079,6 @@ static void iwl_mvm_restart_cleanup(struct iwl_mvm *mvm)
+@@ -1071,7 +1071,6 @@ static void iwl_mvm_restart_cleanup(struct iwl_mvm *mvm)
+ 	ieee80211_iterate_interfaces(mvm->hw, 0, iwl_mvm_cleanup_iterator, mvm);
  
- 	ieee80211_wake_queues(mvm->hw);
+ 	mvm->p2p_device_vif = NULL;
+-	mvm->d0i3_ap_sta_id = IWL_MVM_INVALID_STA;
  
--	/* clear any stale d0i3 state */
--	clear_bit(IWL_MVM_STATUS_IN_D0I3, &mvm->status);
--
- 	mvm->vif_count = 0;
- 	mvm->rx_ba_sessions = 0;
- 	mvm->fwrt.dump.conf = FW_DBG_INVALID;
+ 	iwl_mvm_reset_phy_ctxts(mvm);
+ 	memset(mvm->fw_key_table, 0, sizeof(mvm->fw_key_table));
+@@ -2335,9 +2334,6 @@ static void iwl_mvm_bss_info_changed_station(struct iwl_mvm *mvm,
+ 					IWL_ERR(mvm,
+ 						"failed to remove AP station\n");
+ 
+-				if (mvm->d0i3_ap_sta_id == mvmvif->ap_sta_id)
+-					mvm->d0i3_ap_sta_id =
+-						IWL_MVM_INVALID_STA;
+ 				mvmvif->ap_sta_id = IWL_MVM_INVALID_STA;
+ 			}
+ 
 diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 15780e994a30..ed52e2ea97d9 100644
+index 03f3faa02781..4a9e8ae99cac 100644
 --- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
 +++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -588,11 +588,6 @@ struct iwl_mvm_frame_stats {
- 	int last_frame_idx;
- };
+@@ -1015,9 +1015,6 @@ struct iwl_mvm {
+ #endif
+ #endif
  
--enum {
--	D0I3_DEFER_WAKEUP,
--	D0I3_PENDING_WAKEUP,
--};
+-	/* d0i3 */
+-	u8 d0i3_ap_sta_id;
 -
- #define IWL_MVM_DEBUG_SET_TEMPERATURE_DISABLE 0xff
- #define IWL_MVM_DEBUG_SET_TEMPERATURE_MIN -100
- #define IWL_MVM_DEBUG_SET_TEMPERATURE_MAX 200
-@@ -1157,7 +1152,6 @@ struct iwl_mvm {
-  * @IWL_MVM_STATUS_ROC_RUNNING: remain-on-channel is running
-  * @IWL_MVM_STATUS_HW_RESTART_REQUESTED: HW restart was requested
-  * @IWL_MVM_STATUS_IN_HW_RESTART: HW restart is active
-- * @IWL_MVM_STATUS_IN_D0I3: NIC is in D0i3
-  * @IWL_MVM_STATUS_ROC_AUX_RUNNING: AUX remain-on-channel is running
-  * @IWL_MVM_STATUS_FIRMWARE_RUNNING: firmware is running
-  * @IWL_MVM_STATUS_NEED_FLUSH_P2P: need to flush P2P bcast STA
-@@ -1168,7 +1162,6 @@ enum iwl_mvm_status {
- 	IWL_MVM_STATUS_ROC_RUNNING,
- 	IWL_MVM_STATUS_HW_RESTART_REQUESTED,
- 	IWL_MVM_STATUS_IN_HW_RESTART,
--	IWL_MVM_STATUS_IN_D0I3,
- 	IWL_MVM_STATUS_ROC_AUX_RUNNING,
- 	IWL_MVM_STATUS_FIRMWARE_RUNNING,
- 	IWL_MVM_STATUS_NEED_FLUSH_P2P,
+ 	wait_queue_head_t rx_sync_waitq;
+ 
+ 	/* BT-Coex */
 diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index b0f92c9b20f0..aa0a2a3e0875 100644
+index 4fae0cb22195..b0f92c9b20f0 100644
 --- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
 +++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -2759,13 +2759,6 @@ int iwl_mvm_sta_tx_agg_start(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+@@ -1887,10 +1887,6 @@ int iwl_mvm_rm_sta(struct iwl_mvm *mvm,
  
- 	spin_lock_bh(&mvmsta->lock);
- 
--	/* possible race condition - we entered D0i3 while starting agg */
--	if (test_bit(IWL_MVM_STATUS_IN_D0I3, &mvm->status)) {
--		spin_unlock_bh(&mvmsta->lock);
--		IWL_ERR(mvm, "Entered D0i3 while starting Tx agg\n");
--		return -EIO;
--	}
+ 		/* unassoc - go ahead - remove the AP STA now */
+ 		mvmvif->ap_sta_id = IWL_MVM_INVALID_STA;
 -
+-		/* clear d0i3_ap_sta_id if no longer relevant */
+-		if (mvm->d0i3_ap_sta_id == sta_id)
+-			mvm->d0i3_ap_sta_id = IWL_MVM_INVALID_STA;
+ 	}
+ 
  	/*
- 	 * Note the possible cases:
- 	 *  1. An enabled TXQ - TXQ needs to become agg'ed
 -- 
 2.23.0.rc1
 
