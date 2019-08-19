@@ -2,173 +2,140 @@ Return-Path: <SRS0=IsUp=WP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA466C3A5A0
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Aug 2019 21:15:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80290C3A5A0
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Aug 2019 21:58:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 883D2214DA
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Aug 2019 21:15:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5081922CEC
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Aug 2019 21:58:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="g5ErnOe+"
+	dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b="tF59v52X"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728353AbfHSVP2 (ORCPT
+        id S1728435AbfHSV6P (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 19 Aug 2019 17:15:28 -0400
-Received: from mail-pf1-f193.google.com ([209.85.210.193]:42170 "EHLO
-        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727971AbfHSVP2 (ORCPT
+        Mon, 19 Aug 2019 17:58:15 -0400
+Received: from 3.mo68.mail-out.ovh.net ([46.105.58.60]:52533 "EHLO
+        3.mo68.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728305AbfHSV6O (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Aug 2019 17:15:28 -0400
-Received: by mail-pf1-f193.google.com with SMTP id i30so1908713pfk.9
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Aug 2019 14:15:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=message-id:subject:from:to:date:in-reply-to:references:mime-version
-         :content-transfer-encoding;
-        bh=OzHkxoZ9WMRl6BFgxy9w5C3HMi2V/wnG5Z2iZdgkePU=;
-        b=g5ErnOe+SXbWe2q0nosSQKlksYnQHwxr+KYjRzN3IkSOtDeqHailZwlQTxYynCgti6
-         cdflylVL/Wso998UkoaZycoeK8ndPEu+n/MV4YIDza8ZDhUfBH720CILv5ui3jdsY6RW
-         b4tm2cx7W4qKffQwXy1clV6XydDMXu/aTKvIAQ6hw4jMPD9NX3ANVaGVM65/jK3y1lJJ
-         BhgVRbpKq0fnCrx0x1b2ja+Esnyvq0UE6ZKbFFvS8QNCBoDmdmKy4ihVA1pmmAKgs1UH
-         qckS5C4b68iYCwLzLobcDxpOUZ/uJgoJlsyhtnzZyfztmVk3sSWzj62OkB1KRccQxOmO
-         mIOw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:message-id:subject:from:to:date:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=OzHkxoZ9WMRl6BFgxy9w5C3HMi2V/wnG5Z2iZdgkePU=;
-        b=nUvXYKREFl5QtXfqM8WeKceG4j5vN4kHi2l3LedLmaakcLEy0lUkcUkMWOAPfD1hO5
-         kfVnDiJLG0MKSAoz8M7zSUKeV1L0Yfjeq5vLJqQhenR2ImfKFA6mfvSC4I2tcvrc7rhD
-         9WS9tcfPluXND4/cw5XzQ2/mJgbwB2NW7ARa6B2JTt4YQ1cN3qBg4zXr9HX2xpZI8lfb
-         b63clstZnPetXLZOFfTVIwYrXDjFasGBvsXUArhNAYEYfrRyn+7uKOaAwktksiyY/UgR
-         iC6MJ2L6oOIWo3C6Na8wZOzbpunJScac74uwXND6inY4l9LmDTPIfG7QO9suHwkcKMio
-         7//A==
-X-Gm-Message-State: APjAAAUUL+Vy0RHr3iwV9LG1aHbdbmsSzsKhdZWk0+rd4dr8qYyuJM1r
-        S+30ZBJvWNsYVCMilozIinPhdW5MiZo=
-X-Google-Smtp-Source: APXvYqzxTPVhp/f54VyWOhCr1pAE7MGkMpQrE624cOOvTrHwb7ijKkH1kBmNoyI8anuhiPFuI6Q/4Q==
-X-Received: by 2002:a17:90a:9f4b:: with SMTP id q11mr22492300pjv.105.1566249327673;
-        Mon, 19 Aug 2019 14:15:27 -0700 (PDT)
-Received: from jprestwo-test.jf.intel.com ([134.134.139.76])
-        by smtp.googlemail.com with ESMTPSA id m9sm34594481pgr.24.2019.08.19.14.15.26
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Mon, 19 Aug 2019 14:15:26 -0700 (PDT)
-Message-ID: <c6b719d6279211bbf52443f327884d96ef63f2b2.camel@gmail.com>
-Subject: Re: [RFC 0/1] Allow MAC change on up interface
-From:   James Prestwood <prestwoj@gmail.com>
-To:     Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-Date:   Mon, 19 Aug 2019 14:14:03 -0700
-In-Reply-To: <4848c3a9d0b330fab4442436244387a2c127fa03.camel@sipsolutions.net>
-References: <20190815185702.30937-1-prestwoj@gmail.com>
-         (sfid-20190815_205833_978900_86B1E73D) <645af7dad899e8eb186b3fee0f8a8a151a408557.camel@sipsolutions.net>
-         <394092a2f20697c9b055166a8254a5ef888551a5.camel@gmail.com>
-         (sfid-20190819_175627_344053_E33FB9B0) <4848c3a9d0b330fab4442436244387a2c127fa03.camel@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.1 
-Mime-Version: 1.0
+        Mon, 19 Aug 2019 17:58:14 -0400
+Received: from player756.ha.ovh.net (unknown [10.109.146.1])
+        by mo68.mail-out.ovh.net (Postfix) with ESMTP id 05B7413FDD4
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Aug 2019 22:42:19 +0200 (CEST)
+Received: from awhome.eu (p4FF9179D.dip0.t-ipconnect.de [79.249.23.157])
+        (Authenticated sender: postmaster@awhome.eu)
+        by player756.ha.ovh.net (Postfix) with ESMTPSA id 9A215822A27A;
+        Mon, 19 Aug 2019 20:42:16 +0000 (UTC)
+Subject: Re: [PATCH] iwlwifi: Extended Key ID support for mvm and dvm
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=wetzel-home.de;
+        s=wetzel-home; t=1566247335;
+        bh=JkJmf0f2qQYAH/UTva6yNj+o3ifCd17XHjteBcOJwyU=;
+        h=Subject:To:Cc:References:From:Date:In-Reply-To;
+        b=tF59v52XJxF8c1aIG9nhEaEToJwKxoUkQGJFOVFpNTPMhpaEuAZKzIREf0m4pKN2O
+         XnFnZN++gvUqSmKubQFMtIlG5Q0J7affa4z+FA79DzqwC7xi3oMsb7dQvFS2BfwbnP
+         l2/jMhAKlXIN5KNbTQMJYpN3V6eYL4OnlpvQgKHY=
+To:     Johannes Berg <johannes@sipsolutions.net>, luciano.coelho@intel.com
+Cc:     linux-wireless@vger.kernel.org, linuxwifi@intel.com
+References: <20190819180540.2855-1-alexander@wetzel-home.de>
+ <204c346ab9fc71865e4cb5f5c29ec33ca05050e2.camel@sipsolutions.net>
+ <da471544-3370-8ba1-2265-d02ab09cdcee@wetzel-home.de>
+ <52914e64663283eeff9445b8b1fb37986c15223d.camel@sipsolutions.net>
+From:   Alexander Wetzel <alexander@wetzel-home.de>
+Message-ID: <ae57dab8-a6c2-c0a5-194b-27cef4c55e16@wetzel-home.de>
+Date:   Mon, 19 Aug 2019 22:42:14 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
+MIME-Version: 1.0
+In-Reply-To: <52914e64663283eeff9445b8b1fb37986c15223d.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
+X-Ovh-Tracer-Id: 696650569209158856
+X-VR-SPAMSTATE: OK
+X-VR-SPAMSCORE: -100
+X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgeduvddrudefledgudehfecutefuodetggdotefrodftvfcurfhrohhfihhlvgemucfqggfjpdevjffgvefmvefgnecuuegrihhlohhuthemucehtddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmd
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Johannes,
 
-Without reiterating what Denis said:
 
-<snip>
-
-> I don't, short of
+Am 19.08.19 um 22:03 schrieb Johannes Berg:
+> On Mon, 2019-08-19 at 21:57 +0200, Alexander Wetzel wrote:
+>>>> +
+>>>> +	/* The new Tx API does not allow to pass the key or keyid of a MPDU to
+>>>> +	 * the hw, preventing us to control which key(id) to use per MPDU.
+>>>> +	 * Till that's fixed we can't use Extended Key ID for the newer cards.
+>>>
+>>> Technically we still don't need per MPDU, we just need to switch which
+>>> one to use for TX after installing it for RX already.
+>>
+>> The Extended Key ID API we finally merged in mac80211 is not notifying
+>> the driver when to switch the key over to the other id.
 > 
-> 1) don't do that then
-> 2) extend the network stack to have
-> IFF_LIVE_BUT_NO_CARRIER_ADDR_CHANGE
->    or something like that
-
-So you mean 2 is my only option... ;) I am fine with this.
-
+> Oh, right, good point.
 > 
-> TBH, I'm not really sure I see any point in this to start with, many
-> devices will give the address to the firmware when the interface is
-> brought up (even iwlwifi does - I'm not sure we'd want to take your
-> patch for iwlwifi even if that works today, nothing says the firmware
-> might not change its mind on that), and so it's quite likely only
-> going
-> to be supported in few devices.
-
-The iwlwifi change was just an example. It ultimately would be up to
-the maintainers of each driver to support this or not. Regardless,
-doing the ground work for a driver/firmware to support this is more
-valuable than continuing to neglect these quirks that make use of
-nl80211 difficult/racy.
-
+>> The current API provides the key/keyid per MPDU and let's mac80211 have
+>> the full control what's the correct key for each frame.
 > 
-> You've also not really explained what exactly is troubling you with
-> changing the MAC address, you just mentioned some sort of "race
-> condition"?
+> Yeah, but as you noticed we no longer have that control per MPDU with
+> the new TX API in iwlmvm.
+> 
+>> That's especially critical for drivers setting
+>> IEEE80211_KEY_FLAG_GENERATE_IV and/or supporting A-MPDU's. Allowing the
+>> driver to override the mac80211 decision is only safe when the
+>> driver/card generates the PNs itself and also handles the A-MPDU key
+>> borders correctly.
+> 
+> Sure, the device does generate the PN itself now with the new TX API
+> too. It doesn't care about A-MPDU key borders, but it probably could
+> when taught to care about extended key ID.
+> 
+>> While less desirable we still could get that working: The mvm driver
+>> would have to detect the key borders and then tell the firmware to
+>> switch over to the other key. But we would have to make sure to not
+>> re-enable A-MPDU aggregation till the card really has switched.
+> 
+> I'm not entirely sure off the top of my head how it works, but it seems
+> possible that if we just assign a new PN to retransmits of the same
+> frame but in a new A-MPDU after key switching, it wouldn't actually
+> matter?
 
-In order to change the MAC on a per-AP/SSID is to: ifdown, change MAC,
-ifup via RTNL. The problem is that ifdown generates an RTNL link down
-event and there is no way of knowing how this event was generated (by
-you, hot-unplug, or some other issue in kernel?). Handling this without
-a race is simply not possible. You sort of just have to pray none of
-this happens (and its unlikely but it *could* happen).
+I was thinking about mac80211 re-enabling A-MPDU aggregation but the 
+driver still using the old key for some frames and then switching to the 
+new key within one A-MPDU, causing non-compliant A-MPDUs.
 
-Besides efficiency another obvious reason for this change is simply
-ease of use. If the hardware supports doing this then why should
-userspace have to jump through hoops to accomplish it?
+> But then again maybe somewhere it's stated that we must use the same key
+> for all transmit attempts of a single frame? Not sure.
 
-> 
-> Now, one thing I can imagine would be that you'd want to optimize
-> 
->  * ifdown
->    - remove iface from fw/hw
->    - stop fw/hw
->  * change MAC
->  * ifup
->    - start fw/hw
->    - add iface to fw/hw
-> to just
-> 
->  * ifdown
->    - remove iface from fw/hw
->  * change MAC
->  * ifup
->    - add iface to fw/hw
-> 
-> i.e. not restart the firmware (which takes time) for all this, but
-> that
-> seems much easier to solve by e.g. having a combined operation for
-> all
-> of this that gets handled in mac80211, or more generally by having a
-> "please keep the firmware running" token that you can hold while you
-> do
-> the operation?
-> 
-> 
-> Your changes are also a bit strange - you modified the "connect" path
-> and iwlwifi, but the connect path is not usually (other than with iw
-> or
-> even iwconfig) taken for iwlwifi? And if you modify auth/assoc paths,
-> you get into even weirder problems - what if you use different
-> addresses
-> for auth and assoc? What if the assoc (or even connect) really was a
-> *re*assoc, and thus must have the same MAC address? To me, the whole
-> thing seems like more of a problem than a solution.
-
-The connect path is just what we (IWD) use for almost all types of
-connections that support it (apart from things like SAE/OWE/FT). Not
-sure what you mean for "usually not taken for iwlwifi"? If you have an
-iwlwifi card and you issue CMD_CONNECT thats the path it takes...
-
-Thanks,
-James
+I know of course next to nothing how the hardware/firmware is handling 
+that, but I'm surprised this could be a problem. I assumed the card 
+would create a full MPDU (with the crypto headers) and use that for 
+retransmit and not create the MPDU new... After all you still have to 
+use the old PN and getting that right sounds tricky when you don't have 
+the full MPDU cached somehow. But I guess the high bandwidth and the 
+required buffer space forced you to extreme measures to conserve space...
 
 > 
-> johannes
+> I'm also not sure if we could actually assign a PN from the new key for
+> the retransmit, the hardware has to store those back into memory
+> normally.
 > 
+> So probably you're right, and we'd have to disable A-MPDUs until we have
+> no outstanding old-key-retransmits, but that seems manageable.
 
+Extending the A-MPDU block mac80211 is using to enforce the A-MPDU key 
+borders should be not very hard. Figuring out the time when we safely 
+can restart it - when re-transmits indeed are also an issue - I'm less 
+sure about. I believe re-transmits are handled by the card and not the 
+driver but so far had no reason to dig deeper into that topic. But I 
+guess a call to switch over the keyid which blocks till that is done 
+should take care of it.
+
+Alexander
+
+Alexander
