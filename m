@@ -2,124 +2,148 @@ Return-Path: <SRS0=IsUp=WP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88A5EC3A5A0
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Aug 2019 20:42:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BB64C3A5A0
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Aug 2019 20:58:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5AA6322CEB
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Aug 2019 20:42:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F15BA22CF4
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Aug 2019 20:58:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b="ghb/zn/d"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ipKFTBt9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728101AbfHSUmz (ORCPT
+        id S1728402AbfHSU6U (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 19 Aug 2019 16:42:55 -0400
-Received: from 6.mo7.mail-out.ovh.net ([188.165.39.218]:45258 "EHLO
-        6.mo7.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727980AbfHSUmz (ORCPT
+        Mon, 19 Aug 2019 16:58:20 -0400
+Received: from mail-ot1-f52.google.com ([209.85.210.52]:46240 "EHLO
+        mail-ot1-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727769AbfHSU6U (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Aug 2019 16:42:55 -0400
-X-Greylist: delayed 17392 seconds by postgrey-1.27 at vger.kernel.org; Mon, 19 Aug 2019 16:42:53 EDT
-Received: from player755.ha.ovh.net (unknown [10.108.42.145])
-        by mo7.mail-out.ovh.net (Postfix) with ESMTP id 8687E12BE0C
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Aug 2019 17:52:59 +0200 (CEST)
-Received: from awhome.eu (p4FF9179D.dip0.t-ipconnect.de [79.249.23.157])
-        (Authenticated sender: postmaster@awhome.eu)
-        by player755.ha.ovh.net (Postfix) with ESMTPSA id 0C80A90A4B2C;
-        Mon, 19 Aug 2019 15:52:56 +0000 (UTC)
-From:   Alexander Wetzel <alexander@wetzel-home.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=wetzel-home.de;
-        s=wetzel-home; t=1566229975;
-        bh=eIvcs0iqIrxoz4T9tyYlAB4GiLp35OTVycjMUEyOhJM=;
-        h=From:Subject:To:Cc:References:Date:In-Reply-To;
-        b=ghb/zn/din7ehT1mPJvWerGNlZDgqJeolRJFyGbAJw3okw4PsowJ5s/1on9TCgNpG
-         fjgyNsr0vJ3e25gsglhK1I6BkINpJPOavjOClHXZ9TBPBa5dg3Q/Gr4l7y8zyQgbXM
-         nDLpq/LTfov4uF6nutuUK1PGW9JeAh+L8OwDA/nA=
-Subject: Re: [PATCH 4/4] iwlwifi: Enable Extended Key ID for mvm and dvm
+        Mon, 19 Aug 2019 16:58:20 -0400
+Received: by mail-ot1-f52.google.com with SMTP id z17so2983817otk.13
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Aug 2019 13:58:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:references:from:message-id:date:user-agent:mime-version
+         :in-reply-to:content-language:content-transfer-encoding;
+        bh=hxPql9sb19a8QE3QCF0HOaJAx0zXs17fQuUoIj0wpO8=;
+        b=ipKFTBt9N5CkQsg295S/7Jz0DcwbrCjj2PU61SVSP0ORFjPwmn1sRdEocSMMmxHClB
+         JLm0mSdBdoH2Tzt73PpM2sMW0xHsEkGLzJ1Z0ktwNgW2NckRjJt1GIrMyeJcORUoilpZ
+         ZXRqrIWiAEM/jmLDB0ivWSLt0ICzQBHcvPqocMwkmm1K7GAPGuqvl9fLioaLA9OnBNPn
+         nvhYphCcOJFOjcBN+nzTmiS146BE0Gn4dHcgOUtG4n9vNkVc2Kb+l01iN186EjqC0T6i
+         1nBT68H01r/QYJ6U5WXYP4XFplN4XWmWF6Tj+4kx+bHRRGtnE1P3qIKFHc8DAaIto2dF
+         h6Jg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=hxPql9sb19a8QE3QCF0HOaJAx0zXs17fQuUoIj0wpO8=;
+        b=Ha3+/K41fwvbvrqpdgEGq2ujYMu8Aw+Jb4XMp10GQutSMYtJVpx31zDA1p14e40Md0
+         gk5w0xI/uZAxR6o5fOPE/mKBhV523bm7lMgDDWmTWGfT2Wyv26zDVY4KDoTKu4cJs92/
+         P0Zf/N+58udiXgBgNeaGYaPmQ4EDlqa+bwHctPgSoB5exHhwt8+ke0WrtQ1wZ0q76Wku
+         lG40JAGbrztNh+ojhkc/pqfNTMZSU8pKH0enrISnMEvjvt1HPtGPlGw5UY8vVCI5E8i2
+         GzIJQtdv3YCyUe5UtAgA+2W7lgPJe6JjUkuiBr/57bHx/ePvsTM6yX/tBoVkxfOg1VlB
+         24EA==
+X-Gm-Message-State: APjAAAWncMpCquwte+mwr28Qj58+C7s/jPdhUSL4uaqulif4xl/5GZc5
+        07hX1vp7CbOQ/tK1v0E8c9clReV4
+X-Google-Smtp-Source: APXvYqxVEHaAx344nFeiFcqk1UKIwkSdUvEXeQq62KDSVkWA3Dv3eOnXelnLHSne/r0OAekZ6gW5ow==
+X-Received: by 2002:a9d:7a94:: with SMTP id l20mr20268006otn.66.1566248298813;
+        Mon, 19 Aug 2019 13:58:18 -0700 (PDT)
+Received: from [192.168.1.249] (cpe-70-114-247-242.austin.res.rr.com. [70.114.247.242])
+        by smtp.googlemail.com with ESMTPSA id k6sm5702823otp.57.2019.08.19.13.58.18
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 19 Aug 2019 13:58:18 -0700 (PDT)
+Subject: Re: [RFC 0/1] Allow MAC change on up interface
 To:     Johannes Berg <johannes@sipsolutions.net>,
-        Luca Coelho <luca@coelho.fi>
-Cc:     linux-wireless@vger.kernel.org
-References: <20190629195015.19680-1-alexander@wetzel-home.de>
- <20190629195015.19680-4-alexander@wetzel-home.de>
- <cd1b1a83-55e2-3c07-dbe2-0c459bbcdc7e@wetzel-home.de>
- <d3c6d084728e4203832688b63e884d25b0f74fcf.camel@sipsolutions.net>
-Message-ID: <ae321cd5-6ef4-87c5-98ec-dbac37e83c6d@wetzel-home.de>
-Date:   Mon, 19 Aug 2019 17:52:52 +0200
+        James Prestwood <prestwoj@gmail.com>,
+        linux-wireless@vger.kernel.org
+References: <20190815185702.30937-1-prestwoj@gmail.com>
+ <645af7dad899e8eb186b3fee0f8a8a151a408557.camel@sipsolutions.net>
+ <394092a2f20697c9b055166a8254a5ef888551a5.camel@gmail.com>
+ <4848c3a9d0b330fab4442436244387a2c127fa03.camel@sipsolutions.net>
+From:   Denis Kenzior <denkenz@gmail.com>
+Message-ID: <1d975fec-a480-f40b-ff98-90d0e4852758@gmail.com>
+Date:   Mon, 19 Aug 2019 15:58:16 -0500
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <d3c6d084728e4203832688b63e884d25b0f74fcf.camel@sipsolutions.net>
+In-Reply-To: <4848c3a9d0b330fab4442436244387a2c127fa03.camel@sipsolutions.net>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Ovh-Tracer-Id: 14256989047950679292
-X-VR-SPAMSTATE: OK
-X-VR-SPAMSCORE: -100
-X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgeduvddrudefledgleehucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuqfggjfdpvefjgfevmfevgfenuceurghilhhouhhtmecuhedttdenucesvcftvggtihhpihgvnhhtshculddquddttddm
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Am 19.08.19 um 11:43 schrieb Johannes Berg:
-> On Sat, 2019-08-17 at 10:31 +0200, Alexander Wetzel wrote:
->>> All iwlwifi cards are able to handle multiple keyids per STA and are
->>> therefore fully compatible with the Extended Key ID implementation
->>> provided by mac80211.
->>
->> I just tried Extended Key ID with a AX200 card and it really looks like
->> it's incompatible:-(
-> 
-> Hmm.
-> 
->> The card is starting to use the PTK key immediately after installation,
->> encrypting EAPOL #3 with the new (still Rx only!) key.
-> 
-> Right. This wasn't considered, I guess.
-> 
->> Digging around in the driver code it looks like we do not even pass the
->> key information any longer to the card: iwl_mvm_set_tx_params() is
->> bypassing iwl_mvm_set_tx_cmd_crypto() completely when we use the "new tx
->> API". So all cards setting "use_tfh" to true are now incompatible.
->>
->> Therefore it looks like that all cards starting with the 22000 series
->> can't be used with Extended Key ID any longer.
->>
->> Is there a way to hand over the key information within the new API or is
->> the way forward to block Extended Key ID when the "new tx API" is being
->> used?
-> 
-> Not right now, but I think it could be fixed.
+Hi Johannes,
 
-That would be great!
+> TBH, I'm not really sure I see any point in this to start with, many
+> devices will give the address to the firmware when the interface is
+> brought up (even iwlwifi does - I'm not sure we'd want to take your
+> patch for iwlwifi even if that works today, nothing says the firmware
+> might not change its mind on that), and so it's quite likely only going
+> to be supported in few devices.
 
-We may also get away by adding only means to pass the keyid of the MPDU 
-(zero or one) to the HW. That could be done quite simple, I think:
-
-We could add two new flags, e.g. IWL_TX_FLAGS_ENCRYPT_ID_0 and 
-IWL_TX_FLAGS_ENCRYPT_ID_1 to avoid the need to change the structures 
-iwl_tx_cmd_gen2 and iwl_tx_cmd_gen3.
-When the firmware would check and use the key referenced by the STA + 
-flag-id prior to the "last installed" key that should be sufficient.
-By still using the last installed key without any of the new flags set 
-we also would remain backward compatible.
-
-If you have any experimental firmware to test I'm happy to do so:-)
-Till then I'm back using older iwlwifi cards.
+Hmm... I sense a pattern of you not seeing a point in doing many 
+things... Do you actually use the stuff you maintain?
 
 > 
->> The card is fine with using keyid 1 for unicast keys. But it looks like
->> it assumes that a new key install also tells it to use the new key
->> immediately... Still digging around but pretty sure that's happening now.
-> 
-> Right.
-> 
-> For now I guess we have to disable it with the new TX API (which is
-> really what it depends on), we can try to fix the firmware later.
+> You've also not really explained what exactly is troubling you with
+> changing the MAC address, you just mentioned some sort of "race
+> condition"?
 
-Ok. I'll update the iwlwifi Extended key ID support patch accordingly.
+Well, one possible use case might be, oh something like this:
 
-Alexander
+https://source.android.com/devices/tech/connect/wifi-mac-randomization
+
+> 
+> Now, one thing I can imagine would be that you'd want to optimize
+> 
+>   * ifdown
+>     - remove iface from fw/hw
+>     - stop fw/hw
+>   * change MAC
+>   * ifup
+>     - start fw/hw
+>     - add iface to fw/hw
+> 
+> to just
+> 
+>   * ifdown
+>     - remove iface from fw/hw
+>   * change MAC
+>   * ifup
+>     - add iface to fw/hw
+> 
+
+That would be a part of it...
+
+> i.e. not restart the firmware (which takes time) for all this, but that
+> seems much easier to solve by e.g. having a combined operation for all
+> of this that gets handled in mac80211, or more generally by having a
+> "please keep the firmware running" token that you can hold while you do
+> the operation?
+
+And also maybe a bunch of other optimizations like not flushing scan 
+results?
+
+> 
+> Your changes are also a bit strange - you modified the "connect" path
+> and iwlwifi, but the connect path is not usually (other than with iw or
+> even iwconfig) taken for iwlwifi? And if you modify auth/assoc paths,
+> you get into even weirder problems - what if you use different addresses
+> for auth and assoc? What if the assoc (or even connect) really was a
+> *re*assoc, and thus must have the same MAC address? To me, the whole
+> thing seems like more of a problem than a solution.
+> 
+
+Okay, so there are some obstacles.  But can you get over the whole 
+"Don't hold it like this" part and actually offer up something constructive?
+
+Regards,
+-Denis
