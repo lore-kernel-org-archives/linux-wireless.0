@@ -6,36 +6,36 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FC5EC3A5A1
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Aug 2019 16:50:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AE6BC3A5A0
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Aug 2019 16:50:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0D6712070B
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Aug 2019 16:50:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 592F82070B
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Aug 2019 16:50:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727483AbfHSQup (ORCPT
+        id S1727740AbfHSQur (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 19 Aug 2019 12:50:45 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:37096 "EHLO
+        Mon, 19 Aug 2019 12:50:47 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:37102 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727945AbfHSQuo (ORCPT
+        with ESMTP id S1728004AbfHSQuq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Aug 2019 12:50:44 -0400
+        Mon, 19 Aug 2019 12:50:46 -0400
 Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1hzkrU-0007zi-Da; Mon, 19 Aug 2019 19:50:28 +0300
+        id 1hzkrR-0007zi-SL; Mon, 19 Aug 2019 19:50:26 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Mon, 19 Aug 2019 19:50:04 +0300
-Message-Id: <20190819165007.10181-20-luca@coelho.fi>
+Date:   Mon, 19 Aug 2019 19:50:01 +0300
+Message-Id: <20190819165007.10181-17-luca@coelho.fi>
 X-Mailer: git-send-email 2.23.0.rc1
 In-Reply-To: <20190819165007.10181-1-luca@coelho.fi>
 References: <20190819165007.10181-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH v3 19/22] iwlwifi: mvm: remove last leftovers of d0i3
+Subject: [PATCH v3 16/22] iwlwifi: mvm: iwl_mvm_wowlan_config_key_params is for wowlan only
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -43,81 +43,145 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-We're now left with a status bit that is never set and a few
-other leftovers.
+Now that d0i3 is dead, this function can't be called from d0i3
+flows. Change its signature and make it static.
 
 Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 3 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      | 7 -------
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c      | 7 -------
- 3 files changed, 17 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c  | 64 +++++---------------
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h | 12 ----
+ 2 files changed, 15 insertions(+), 61 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index f4aa121f36f8..e49558fb8aa3 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -1079,9 +1079,6 @@ static void iwl_mvm_restart_cleanup(struct iwl_mvm *mvm)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+index 2ddc6cc56d1d..89839a83d8c2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+@@ -735,40 +735,16 @@ iwl_mvm_get_wowlan_config(struct iwl_mvm *mvm,
+ 	return 0;
+ }
  
- 	ieee80211_wake_queues(mvm->hw);
- 
--	/* clear any stale d0i3 state */
--	clear_bit(IWL_MVM_STATUS_IN_D0I3, &mvm->status);
+-static void
+-iwl_mvm_iter_d0i3_ap_keys(struct iwl_mvm *mvm,
+-			  struct ieee80211_vif *vif,
+-			  void (*iter)(struct ieee80211_hw *hw,
+-				       struct ieee80211_vif *vif,
+-				       struct ieee80211_sta *sta,
+-				       struct ieee80211_key_conf *key,
+-				       void *data),
+-			  void *data)
+-{
+-	struct ieee80211_sta *ap_sta;
 -
- 	mvm->vif_count = 0;
- 	mvm->rx_ba_sessions = 0;
- 	mvm->fwrt.dump.conf = FW_DBG_INVALID;
+-	rcu_read_lock();
+-
+-	ap_sta = rcu_dereference(mvm->fw_id_to_mac_id[mvm->d0i3_ap_sta_id]);
+-	if (IS_ERR_OR_NULL(ap_sta))
+-		goto out;
+-
+-	ieee80211_iter_keys_rcu(mvm->hw, vif, iter, data);
+-out:
+-	rcu_read_unlock();
+-}
+-
+-int iwl_mvm_wowlan_config_key_params(struct iwl_mvm *mvm,
+-				     struct ieee80211_vif *vif,
+-				     bool d0i3,
+-				     u32 cmd_flags)
++static int iwl_mvm_wowlan_config_key_params(struct iwl_mvm *mvm,
++					    struct ieee80211_vif *vif,
++					    u32 cmd_flags)
+ {
+ 	struct iwl_wowlan_kek_kck_material_cmd kek_kck_cmd = {};
+ 	struct iwl_wowlan_tkip_params_cmd tkip_cmd = {};
+ 	bool unified = fw_has_capa(&mvm->fw->ucode_capa,
+ 				   IWL_UCODE_TLV_CAPA_CNSLDTD_D3_D0_IMG);
+ 	struct wowlan_key_data key_data = {
+-		.configure_keys = !d0i3 && !unified,
++		.configure_keys = !unified,
+ 		.use_rsc_tsc = false,
+ 		.tkip = &tkip_cmd,
+ 		.use_tkip = false,
+@@ -784,25 +760,16 @@ int iwl_mvm_wowlan_config_key_params(struct iwl_mvm *mvm,
+ 	 * if we have to configure keys, call ieee80211_iter_keys(),
+ 	 * as we need non-atomic context in order to take the
+ 	 * required locks.
+-	 * for the d0i3 we can't use ieee80211_iter_keys(), as
+-	 * taking (almost) any mutex might result in deadlock.
+ 	 */
+-	if (!d0i3) {
+-		/*
+-		 * Note that currently we don't propagate cmd_flags
+-		 * to the iterator. In case of key_data.configure_keys,
+-		 * all the configured commands are SYNC, and
+-		 * iwl_mvm_wowlan_program_keys() will take care of
+-		 * locking/unlocking mvm->mutex.
+-		 */
+-		ieee80211_iter_keys(mvm->hw, vif,
+-				    iwl_mvm_wowlan_program_keys,
+-				    &key_data);
+-	} else {
+-		iwl_mvm_iter_d0i3_ap_keys(mvm, vif,
+-					  iwl_mvm_wowlan_program_keys,
+-					  &key_data);
+-	}
++	/*
++	 * Note that currently we don't propagate cmd_flags
++	 * to the iterator. In case of key_data.configure_keys,
++	 * all the configured commands are SYNC, and
++	 * iwl_mvm_wowlan_program_keys() will take care of
++	 * locking/unlocking mvm->mutex.
++	 */
++	ieee80211_iter_keys(mvm->hw, vif, iwl_mvm_wowlan_program_keys,
++			    &key_data);
+ 
+ 	if (key_data.error) {
+ 		ret = -EIO;
+@@ -830,7 +797,7 @@ int iwl_mvm_wowlan_config_key_params(struct iwl_mvm *mvm,
+ 	}
+ 
+ 	/* configure rekey data only if offloaded rekey is supported (d3) */
+-	if (mvmvif->rekey_data.valid && !d0i3) {
++	if (mvmvif->rekey_data.valid) {
+ 		memset(&kek_kck_cmd, 0, sizeof(kek_kck_cmd));
+ 		memcpy(kek_kck_cmd.kck, mvmvif->rekey_data.kck,
+ 		       NL80211_KCK_LEN);
+@@ -881,8 +848,7 @@ iwl_mvm_wowlan_config(struct iwl_mvm *mvm,
+ 		 * that isn't really a problem though.
+ 		 */
+ 		mutex_unlock(&mvm->mutex);
+-		ret = iwl_mvm_wowlan_config_key_params(mvm, vif, false,
+-						       CMD_ASYNC);
++		ret = iwl_mvm_wowlan_config_key_params(mvm, vif, CMD_ASYNC);
+ 		mutex_lock(&mvm->mutex);
+ 		if (ret)
+ 			return ret;
 diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 15780e994a30..ed52e2ea97d9 100644
+index 2cf5d31ad3ed..03f3faa02781 100644
 --- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
 +++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -588,11 +588,6 @@ struct iwl_mvm_frame_stats {
- 	int last_frame_idx;
- };
- 
--enum {
--	D0I3_DEFER_WAKEUP,
--	D0I3_PENDING_WAKEUP,
--};
+@@ -1802,21 +1802,9 @@ void iwl_mvm_set_default_unicast_key(struct ieee80211_hw *hw,
+ extern const struct file_operations iwl_dbgfs_d3_test_ops;
+ struct iwl_wowlan_status *iwl_mvm_send_wowlan_get_status(struct iwl_mvm *mvm);
+ #ifdef CONFIG_PM
+-int iwl_mvm_wowlan_config_key_params(struct iwl_mvm *mvm,
+-				     struct ieee80211_vif *vif,
+-				     bool host_awake,
+-				     u32 cmd_flags);
+ void iwl_mvm_set_last_nonqos_seq(struct iwl_mvm *mvm,
+ 				 struct ieee80211_vif *vif);
+ #else
+-static inline int iwl_mvm_wowlan_config_key_params(struct iwl_mvm *mvm,
+-						   struct ieee80211_vif *vif,
+-						   bool host_awake,
+-						   u32 cmd_flags)
+-{
+-	return 0;
+-}
 -
- #define IWL_MVM_DEBUG_SET_TEMPERATURE_DISABLE 0xff
- #define IWL_MVM_DEBUG_SET_TEMPERATURE_MIN -100
- #define IWL_MVM_DEBUG_SET_TEMPERATURE_MAX 200
-@@ -1157,7 +1152,6 @@ struct iwl_mvm {
-  * @IWL_MVM_STATUS_ROC_RUNNING: remain-on-channel is running
-  * @IWL_MVM_STATUS_HW_RESTART_REQUESTED: HW restart was requested
-  * @IWL_MVM_STATUS_IN_HW_RESTART: HW restart is active
-- * @IWL_MVM_STATUS_IN_D0I3: NIC is in D0i3
-  * @IWL_MVM_STATUS_ROC_AUX_RUNNING: AUX remain-on-channel is running
-  * @IWL_MVM_STATUS_FIRMWARE_RUNNING: firmware is running
-  * @IWL_MVM_STATUS_NEED_FLUSH_P2P: need to flush P2P bcast STA
-@@ -1168,7 +1162,6 @@ enum iwl_mvm_status {
- 	IWL_MVM_STATUS_ROC_RUNNING,
- 	IWL_MVM_STATUS_HW_RESTART_REQUESTED,
- 	IWL_MVM_STATUS_IN_HW_RESTART,
--	IWL_MVM_STATUS_IN_D0I3,
- 	IWL_MVM_STATUS_ROC_AUX_RUNNING,
- 	IWL_MVM_STATUS_FIRMWARE_RUNNING,
- 	IWL_MVM_STATUS_NEED_FLUSH_P2P,
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index b0f92c9b20f0..aa0a2a3e0875 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -2759,13 +2759,6 @@ int iwl_mvm_sta_tx_agg_start(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 
- 	spin_lock_bh(&mvmsta->lock);
- 
--	/* possible race condition - we entered D0i3 while starting agg */
--	if (test_bit(IWL_MVM_STATUS_IN_D0I3, &mvm->status)) {
--		spin_unlock_bh(&mvmsta->lock);
--		IWL_ERR(mvm, "Entered D0i3 while starting Tx agg\n");
--		return -EIO;
--	}
--
- 	/*
- 	 * Note the possible cases:
- 	 *  1. An enabled TXQ - TXQ needs to become agg'ed
+ static inline void
+ iwl_mvm_set_last_nonqos_seq(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ {
 -- 
 2.23.0.rc1
 
