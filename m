@@ -6,35 +6,38 @@ X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F32CC3A59D
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Aug 2019 09:43:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6120EC3A59D
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Aug 2019 10:12:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5860B20989
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Aug 2019 09:43:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 41ACB2087B
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Aug 2019 10:12:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726703AbfHSJnM (ORCPT
+        id S1727200AbfHSKMr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 19 Aug 2019 05:43:12 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:38480 "EHLO
+        Mon, 19 Aug 2019 06:12:47 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:38874 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726314AbfHSJnM (ORCPT
+        with ESMTP id S1726703AbfHSKMq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Aug 2019 05:43:12 -0400
+        Mon, 19 Aug 2019 06:12:46 -0400
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1hzeBq-0006qe-Ru; Mon, 19 Aug 2019 11:43:03 +0200
-Message-ID: <d3c6d084728e4203832688b63e884d25b0f74fcf.camel@sipsolutions.net>
-Subject: Re: [PATCH 4/4] iwlwifi: Enable Extended Key ID for mvm and dvm
+        id 1hzeea-0007a4-Nk; Mon, 19 Aug 2019 12:12:44 +0200
+Message-ID: <9985fddfb059640f36665efc9c1ef2dc0bdb7662.camel@sipsolutions.net>
+Subject: Re: Implementing Mikrotik IE
 From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Alexander Wetzel <alexander@wetzel-home.de>,
-        Luca Coelho <luca@coelho.fi>
-Cc:     linux-wireless@vger.kernel.org
-Date:   Mon, 19 Aug 2019 11:43:00 +0200
-In-Reply-To: <cd1b1a83-55e2-3c07-dbe2-0c459bbcdc7e@wetzel-home.de>
-References: <20190629195015.19680-1-alexander@wetzel-home.de>
-         <20190629195015.19680-4-alexander@wetzel-home.de>
-         <cd1b1a83-55e2-3c07-dbe2-0c459bbcdc7e@wetzel-home.de>
+To:     Josef Miegl <josef@miegl.cz>,
+        Sebastian Gottschall <s.gottschall@newmedia-net.de>
+Cc:     linux-wireless <linux-wireless@vger.kernel.org>
+Date:   Mon, 19 Aug 2019 12:12:43 +0200
+In-Reply-To: <20190816113818.ohktykc4fyetzyvq@pepin-laptop.localdomain> (sfid-20190816_133830_699223_6B854E12)
+References: <20190815152844.k5mmddvbwrohkzr6@pepin-laptop.localdomain>
+         <3a079683-6f57-3b42-f909-90c46e14f14f@newmedia-net.de>
+         <20190816111044.4ntizgmpa3twbzcg@pepin-laptop.localdomain>
+         <e8129acb-fc32-c85c-b504-ab8777a3f1a3@newmedia-net.de>
+         <20190816113818.ohktykc4fyetzyvq@pepin-laptop.localdomain>
+         (sfid-20190816_133830_699223_6B854E12)
 Content-Type: text/plain; charset="UTF-8"
 User-Agent: Evolution 3.30.5 (3.30.5-1.fc29) 
 MIME-Version: 1.0
@@ -44,43 +47,18 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Sat, 2019-08-17 at 10:31 +0200, Alexander Wetzel wrote:
-> > All iwlwifi cards are able to handle multiple keyids per STA and are
-> > therefore fully compatible with the Extended Key ID implementation
-> > provided by mac80211.
-> 
-> I just tried Extended Key ID with a AX200 card and it really looks like 
-> it's incompatible:-(
+On Fri, 2019-08-16 at 13:38 +0200, Josef Miegl wrote:
+> On Fri, Aug 16, 2019 at 01:15:30PM +0200, Sebastian Gottschall wrote:
+> > in station mode you are right. you need to modify mac80211.
+> Even if I don't need to capture the IE back? All I want is to include
+> extra vendor IE in client assoc/reassoc frames. If this is something the
+> current wireless stack cannot do, perhaps it should be implemented.
 
-Hmm.
-
-> The card is starting to use the PTK key immediately after installation, 
-> encrypting EAPOL #3 with the new (still Rx only!) key.
-
-Right. This wasn't considered, I guess.
-
-> Digging around in the driver code it looks like we do not even pass the 
-> key information any longer to the card: iwl_mvm_set_tx_params() is 
-> bypassing iwl_mvm_set_tx_cmd_crypto() completely when we use the "new tx 
-> API". So all cards setting "use_tfh" to true are now incompatible.
-> 
-> Therefore it looks like that all cards starting with the 22000 series 
-> can't be used with Extended Key ID any longer.
-> 
-> Is there a way to hand over the key information within the new API or is 
-> the way forward to block Extended Key ID when the "new tx API" is being 
-> used?
-
-Not right now, but I think it could be fixed.
-
-> The card is fine with using keyid 1 for unicast keys. But it looks like 
-> it assumes that a new key install also tells it to use the new key 
-> immediately... Still digging around but pretty sure that's happening now.
-
-Right.
-
-For now I guess we have to disable it with the new TX API (which is
-really what it depends on), we can try to fix the firmware later.
+Contrary to what Sebastian states, it certainly is possible today,
+although not through wpa_supplicant's config file, only through the
+wpa_cli interface, using the VENDOR_ELEM_ADD command. There are various
+tests showing how to use this.
 
 johannes
+
 
