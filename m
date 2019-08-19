@@ -6,36 +6,36 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B32FC3A5A0
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Aug 2019 14:35:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78B18C3A5A0
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Aug 2019 14:35:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4A55220651
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Aug 2019 14:35:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 57A4520651
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Aug 2019 14:35:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727485AbfHSOfx (ORCPT
+        id S1727502AbfHSOfz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 19 Aug 2019 10:35:53 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:36888 "EHLO
+        Mon, 19 Aug 2019 10:35:55 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:36894 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726627AbfHSOfx (ORCPT
+        with ESMTP id S1726654AbfHSOfz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Aug 2019 10:35:53 -0400
+        Mon, 19 Aug 2019 10:35:55 -0400
 Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1hzikv-0007sP-U7; Mon, 19 Aug 2019 17:35:34 +0300
+        id 1hziku-0007sP-Ag; Mon, 19 Aug 2019 17:35:32 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Mon, 19 Aug 2019 17:35:03 +0300
-Message-Id: <20190819143507.6989-19-luca@coelho.fi>
+Date:   Mon, 19 Aug 2019 17:35:01 +0300
+Message-Id: <20190819143507.6989-17-luca@coelho.fi>
 X-Mailer: git-send-email 2.23.0.rc1
 In-Reply-To: <20190819143507.6989-1-luca@coelho.fi>
 References: <20190819143507.6989-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH v2 18/22] iwlwifi: mvm: remove iwl_mvm_update_d0i3_power_mode
+Subject: [PATCH v2 16/22] iwlwifi: mvm: iwl_mvm_wowlan_config_key_params is for wowlan only
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -43,178 +43,145 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Also change the signature of the power functions that won't
-receive d0i3=true anymore.
+Now that d0i3 is dead, this function can't be called from d0i3
+flows. Change its signature and make it static.
 
 Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |  3 -
- .../net/wireless/intel/iwlwifi/mvm/power.c    | 82 +++----------------
- 2 files changed, 11 insertions(+), 74 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c  | 64 +++++---------------
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h | 12 ----
+ 2 files changed, 15 insertions(+), 61 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 4a9e8ae99cac..15780e994a30 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1845,9 +1845,6 @@ iwl_mvm_beacon_filter_debugfs_parameters(struct ieee80211_vif *vif,
- 					 struct iwl_beacon_filter_cmd *cmd)
- {}
- #endif
--int iwl_mvm_update_d0i3_power_mode(struct iwl_mvm *mvm,
--				   struct ieee80211_vif *vif,
--				   bool enable, u32 flags);
- int iwl_mvm_enable_beacon_filter(struct iwl_mvm *mvm,
- 				 struct ieee80211_vif *vif,
- 				 u32 flags);
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/power.c b/drivers/net/wireless/intel/iwlwifi/mvm/power.c
-index 36f5fa1ee793..22136e4832ea 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/power.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/power.c
-@@ -127,12 +127,11 @@ int iwl_mvm_beacon_filter_send_cmd(struct iwl_mvm *mvm,
- static
- void iwl_mvm_beacon_filter_set_cqm_params(struct iwl_mvm *mvm,
- 					  struct ieee80211_vif *vif,
--					  struct iwl_beacon_filter_cmd *cmd,
--					  bool d0i3)
-+					  struct iwl_beacon_filter_cmd *cmd)
- {
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
- 
--	if (vif->bss_conf.cqm_rssi_thold && !d0i3) {
-+	if (vif->bss_conf.cqm_rssi_thold) {
- 		cmd->bf_energy_delta =
- 			cpu_to_le32(vif->bss_conf.cqm_rssi_hyst);
- 		/* fw uses an absolute value for this */
-@@ -849,8 +848,7 @@ iwl_mvm_beacon_filter_debugfs_parameters(struct ieee80211_vif *vif,
- static int _iwl_mvm_enable_beacon_filter(struct iwl_mvm *mvm,
- 					 struct ieee80211_vif *vif,
- 					 struct iwl_beacon_filter_cmd *cmd,
--					 u32 cmd_flags,
--					 bool d0i3)
-+					 u32 cmd_flags)
- {
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
- 	int ret;
-@@ -859,13 +857,11 @@ static int _iwl_mvm_enable_beacon_filter(struct iwl_mvm *mvm,
- 	    vif->type != NL80211_IFTYPE_STATION || vif->p2p)
- 		return 0;
- 
--	iwl_mvm_beacon_filter_set_cqm_params(mvm, vif, cmd, d0i3);
--	if (!d0i3)
--		iwl_mvm_beacon_filter_debugfs_parameters(vif, cmd);
-+	iwl_mvm_beacon_filter_set_cqm_params(mvm, vif, cmd);
-+	iwl_mvm_beacon_filter_debugfs_parameters(vif, cmd);
- 	ret = iwl_mvm_beacon_filter_send_cmd(mvm, cmd, cmd_flags);
- 
--	/* don't change bf_enabled in case of temporary d0i3 configuration */
--	if (!ret && !d0i3)
-+	if (!ret)
- 		mvmvif->bf_data.bf_enabled = true;
- 
- 	return ret;
-@@ -880,12 +876,12 @@ int iwl_mvm_enable_beacon_filter(struct iwl_mvm *mvm,
- 		.bf_enable_beacon_filter = cpu_to_le32(1),
- 	};
- 
--	return _iwl_mvm_enable_beacon_filter(mvm, vif, &cmd, flags, false);
-+	return _iwl_mvm_enable_beacon_filter(mvm, vif, &cmd, flags);
- }
- 
- static int _iwl_mvm_disable_beacon_filter(struct iwl_mvm *mvm,
- 					  struct ieee80211_vif *vif,
--					  u32 flags, bool d0i3)
-+					  u32 flags)
- {
- 	struct iwl_beacon_filter_cmd cmd = {};
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
-@@ -896,8 +892,7 @@ static int _iwl_mvm_disable_beacon_filter(struct iwl_mvm *mvm,
- 
- 	ret = iwl_mvm_beacon_filter_send_cmd(mvm, &cmd, flags);
- 
--	/* don't change bf_enabled in case of temporary d0i3 configuration */
--	if (!ret && !d0i3)
-+	if (!ret)
- 		mvmvif->bf_data.bf_enabled = false;
- 
- 	return ret;
-@@ -907,7 +902,7 @@ int iwl_mvm_disable_beacon_filter(struct iwl_mvm *mvm,
- 				  struct ieee80211_vif *vif,
- 				  u32 flags)
- {
--	return _iwl_mvm_disable_beacon_filter(mvm, vif, flags, false);
-+	return _iwl_mvm_disable_beacon_filter(mvm, vif, flags);
- }
- 
- static int iwl_mvm_power_set_ps(struct iwl_mvm *mvm)
-@@ -958,7 +953,7 @@ static int iwl_mvm_power_set_ba(struct iwl_mvm *mvm,
- 				       !vif->bss_conf.ps ||
- 				       iwl_mvm_vif_low_latency(mvmvif));
- 
--	return _iwl_mvm_enable_beacon_filter(mvm, vif, &cmd, 0, false);
-+	return _iwl_mvm_enable_beacon_filter(mvm, vif, &cmd, 0);
- }
- 
- int iwl_mvm_power_update_ps(struct iwl_mvm *mvm)
-@@ -1022,58 +1017,3 @@ int iwl_mvm_power_update_mac(struct iwl_mvm *mvm)
- 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+index 2ddc6cc56d1d..89839a83d8c2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+@@ -735,40 +735,16 @@ iwl_mvm_get_wowlan_config(struct iwl_mvm *mvm,
  	return 0;
  }
--
--int iwl_mvm_update_d0i3_power_mode(struct iwl_mvm *mvm,
--				   struct ieee80211_vif *vif,
--				   bool enable, u32 flags)
+ 
+-static void
+-iwl_mvm_iter_d0i3_ap_keys(struct iwl_mvm *mvm,
+-			  struct ieee80211_vif *vif,
+-			  void (*iter)(struct ieee80211_hw *hw,
+-				       struct ieee80211_vif *vif,
+-				       struct ieee80211_sta *sta,
+-				       struct ieee80211_key_conf *key,
+-				       void *data),
+-			  void *data)
 -{
--	int ret;
--	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
--	struct iwl_mac_power_cmd cmd = {};
+-	struct ieee80211_sta *ap_sta;
 -
--	if (vif->type != NL80211_IFTYPE_STATION || vif->p2p)
--		return 0;
+-	rcu_read_lock();
 -
--	if (!vif->bss_conf.assoc)
--		return 0;
+-	ap_sta = rcu_dereference(mvm->fw_id_to_mac_id[mvm->d0i3_ap_sta_id]);
+-	if (IS_ERR_OR_NULL(ap_sta))
+-		goto out;
 -
--	iwl_mvm_power_build_cmd(mvm, vif, &cmd, !enable);
--
--	iwl_mvm_power_log(mvm, &cmd);
--#ifdef CONFIG_IWLWIFI_DEBUGFS
--	memcpy(&mvmvif->mac_pwr_cmd, &cmd, sizeof(cmd));
--#endif
--	ret = iwl_mvm_send_cmd_pdu(mvm, MAC_PM_POWER_TABLE, flags,
--				   sizeof(cmd), &cmd);
--	if (ret)
--		return ret;
--
--	/* configure beacon filtering */
--	if (mvmvif != mvm->bf_allowed_vif)
--		return 0;
--
--	if (enable) {
--		struct iwl_beacon_filter_cmd cmd_bf = {
--			IWL_BF_CMD_CONFIG_D0I3,
--			.bf_enable_beacon_filter = cpu_to_le32(1),
--		};
--		/*
--		 * When beacon storing is supported - disable beacon filtering
--		 * altogether - the latest beacon will be sent when exiting d0i3
--		 */
--		if (fw_has_capa(&mvm->fw->ucode_capa,
--				IWL_UCODE_TLV_CAPA_BEACON_STORING))
--			ret = _iwl_mvm_disable_beacon_filter(mvm, vif, flags,
--							     true);
--		else
--			ret = _iwl_mvm_enable_beacon_filter(mvm, vif, &cmd_bf,
--							    flags, true);
--	} else {
--		if (mvmvif->bf_data.bf_enabled)
--			ret = iwl_mvm_enable_beacon_filter(mvm, vif, flags);
--		else
--			ret = iwl_mvm_disable_beacon_filter(mvm, vif, flags);
--	}
--
--	return ret;
+-	ieee80211_iter_keys_rcu(mvm->hw, vif, iter, data);
+-out:
+-	rcu_read_unlock();
 -}
+-
+-int iwl_mvm_wowlan_config_key_params(struct iwl_mvm *mvm,
+-				     struct ieee80211_vif *vif,
+-				     bool d0i3,
+-				     u32 cmd_flags)
++static int iwl_mvm_wowlan_config_key_params(struct iwl_mvm *mvm,
++					    struct ieee80211_vif *vif,
++					    u32 cmd_flags)
+ {
+ 	struct iwl_wowlan_kek_kck_material_cmd kek_kck_cmd = {};
+ 	struct iwl_wowlan_tkip_params_cmd tkip_cmd = {};
+ 	bool unified = fw_has_capa(&mvm->fw->ucode_capa,
+ 				   IWL_UCODE_TLV_CAPA_CNSLDTD_D3_D0_IMG);
+ 	struct wowlan_key_data key_data = {
+-		.configure_keys = !d0i3 && !unified,
++		.configure_keys = !unified,
+ 		.use_rsc_tsc = false,
+ 		.tkip = &tkip_cmd,
+ 		.use_tkip = false,
+@@ -784,25 +760,16 @@ int iwl_mvm_wowlan_config_key_params(struct iwl_mvm *mvm,
+ 	 * if we have to configure keys, call ieee80211_iter_keys(),
+ 	 * as we need non-atomic context in order to take the
+ 	 * required locks.
+-	 * for the d0i3 we can't use ieee80211_iter_keys(), as
+-	 * taking (almost) any mutex might result in deadlock.
+ 	 */
+-	if (!d0i3) {
+-		/*
+-		 * Note that currently we don't propagate cmd_flags
+-		 * to the iterator. In case of key_data.configure_keys,
+-		 * all the configured commands are SYNC, and
+-		 * iwl_mvm_wowlan_program_keys() will take care of
+-		 * locking/unlocking mvm->mutex.
+-		 */
+-		ieee80211_iter_keys(mvm->hw, vif,
+-				    iwl_mvm_wowlan_program_keys,
+-				    &key_data);
+-	} else {
+-		iwl_mvm_iter_d0i3_ap_keys(mvm, vif,
+-					  iwl_mvm_wowlan_program_keys,
+-					  &key_data);
+-	}
++	/*
++	 * Note that currently we don't propagate cmd_flags
++	 * to the iterator. In case of key_data.configure_keys,
++	 * all the configured commands are SYNC, and
++	 * iwl_mvm_wowlan_program_keys() will take care of
++	 * locking/unlocking mvm->mutex.
++	 */
++	ieee80211_iter_keys(mvm->hw, vif, iwl_mvm_wowlan_program_keys,
++			    &key_data);
+ 
+ 	if (key_data.error) {
+ 		ret = -EIO;
+@@ -830,7 +797,7 @@ int iwl_mvm_wowlan_config_key_params(struct iwl_mvm *mvm,
+ 	}
+ 
+ 	/* configure rekey data only if offloaded rekey is supported (d3) */
+-	if (mvmvif->rekey_data.valid && !d0i3) {
++	if (mvmvif->rekey_data.valid) {
+ 		memset(&kek_kck_cmd, 0, sizeof(kek_kck_cmd));
+ 		memcpy(kek_kck_cmd.kck, mvmvif->rekey_data.kck,
+ 		       NL80211_KCK_LEN);
+@@ -881,8 +848,7 @@ iwl_mvm_wowlan_config(struct iwl_mvm *mvm,
+ 		 * that isn't really a problem though.
+ 		 */
+ 		mutex_unlock(&mvm->mutex);
+-		ret = iwl_mvm_wowlan_config_key_params(mvm, vif, false,
+-						       CMD_ASYNC);
++		ret = iwl_mvm_wowlan_config_key_params(mvm, vif, CMD_ASYNC);
+ 		mutex_lock(&mvm->mutex);
+ 		if (ret)
+ 			return ret;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 2cf5d31ad3ed..03f3faa02781 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -1802,21 +1802,9 @@ void iwl_mvm_set_default_unicast_key(struct ieee80211_hw *hw,
+ extern const struct file_operations iwl_dbgfs_d3_test_ops;
+ struct iwl_wowlan_status *iwl_mvm_send_wowlan_get_status(struct iwl_mvm *mvm);
+ #ifdef CONFIG_PM
+-int iwl_mvm_wowlan_config_key_params(struct iwl_mvm *mvm,
+-				     struct ieee80211_vif *vif,
+-				     bool host_awake,
+-				     u32 cmd_flags);
+ void iwl_mvm_set_last_nonqos_seq(struct iwl_mvm *mvm,
+ 				 struct ieee80211_vif *vif);
+ #else
+-static inline int iwl_mvm_wowlan_config_key_params(struct iwl_mvm *mvm,
+-						   struct ieee80211_vif *vif,
+-						   bool host_awake,
+-						   u32 cmd_flags)
+-{
+-	return 0;
+-}
+-
+ static inline void
+ iwl_mvm_set_last_nonqos_seq(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ {
 -- 
 2.23.0.rc1
 
