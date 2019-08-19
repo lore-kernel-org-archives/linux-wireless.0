@@ -6,172 +6,150 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50F9BC3A5A4
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A450C3A5A1
 	for <linux-wireless@archiver.kernel.org>; Mon, 19 Aug 2019 14:35:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 31A9420651
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Aug 2019 14:35:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EDCEB20651
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Aug 2019 14:35:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727356AbfHSOfZ (ORCPT
+        id S1727374AbfHSOf0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 19 Aug 2019 10:35:25 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:36790 "EHLO
+        Mon, 19 Aug 2019 10:35:26 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:36808 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727111AbfHSOfX (ORCPT
+        with ESMTP id S1727094AbfHSOfZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Aug 2019 10:35:23 -0400
+        Mon, 19 Aug 2019 10:35:25 -0400
 Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1hzikj-0007sP-PG; Mon, 19 Aug 2019 17:35:22 +0300
+        id 1hzikl-0007sP-Uo; Mon, 19 Aug 2019 17:35:24 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Mon, 19 Aug 2019 17:34:49 +0300
-Message-Id: <20190819143507.6989-5-luca@coelho.fi>
+Date:   Mon, 19 Aug 2019 17:34:52 +0300
+Message-Id: <20190819143507.6989-8-luca@coelho.fi>
 X-Mailer: git-send-email 2.23.0.rc1
 In-Reply-To: <20190819143507.6989-1-luca@coelho.fi>
 References: <20190819143507.6989-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH v2 04/22] iwlwifi: mvm: Block 26-tone RU OFDMA transmissions
+Subject: [PATCH v2 07/22] iwlwifi: dbg: move debug recording stop from trans to op mode
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ilan Peer <ilan.peer@intel.com>
+From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 
-In case that there are OBSS that do not know how to properly
-interpret 26-tone RU OFDMA transmissions, instruct the FW not
-to use such transmissions.
+The op mode should stop the debug recording and not the transport layer.
+Rename iwl_fwrt_stop_device into iwl_fw_dbg_stop_sync and move the debug
+stop recording to it.
 
-The check is currently only performed upon association.
-
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../net/wireless/intel/iwlwifi/fw/api/mac.h   |  4 ++
- .../net/wireless/intel/iwlwifi/mvm/mac80211.c | 54 +++++++++++++++++++
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |  3 ++
- 3 files changed, 61 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c          | 6 +++---
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.h          | 2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c          | 1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h         | 3 ++-
+ drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c | 3 ---
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c      | 3 ---
+ 6 files changed, 7 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/mac.h b/drivers/net/wireless/intel/iwlwifi/fw/api/mac.h
-index 85c5e367cbf1..73fb0030c496 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/mac.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/mac.h
-@@ -500,6 +500,9 @@ struct iwl_he_pkt_ext {
-  *	enabled AGG, i.e. both BACK and non-BACK frames in a single AGG
-  * @STA_CTXT_HE_MU_EDCA_CW: indicates that there is an element of MU EDCA
-  *	parameter set, i.e. the backoff counters for trig-based ACs
-+ * @STA_CTXT_HE_RU_2MHZ_BLOCK: indicates that 26-tone RU OFDMA transmission are
-+ *      not allowed (as there are OBSS that might classify such transmissions as
-+ *      radar pulses).
-  */
- enum iwl_he_sta_ctxt_flags {
- 	STA_CTXT_HE_REF_BSSID_VALID		= BIT(4),
-@@ -511,6 +514,7 @@ enum iwl_he_sta_ctxt_flags {
- 	STA_CTXT_HE_CONST_TRIG_RND_ALLOC	= BIT(10),
- 	STA_CTXT_HE_ACK_ENABLED			= BIT(11),
- 	STA_CTXT_HE_MU_EDCA_CW			= BIT(12),
-+	STA_CTXT_HE_RU_2MHZ_BLOCK		= BIT(14),
- };
- 
- /**
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index b74bd58f3f45..438a8b5b90c2 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -2254,6 +2254,10 @@ static void iwl_mvm_cfg_he_sta(struct iwl_mvm *mvm,
- 
- 	flags = 0;
- 
-+	/* Block 26-tone RU OFDMA transmissions */
-+	if (mvmvif->he_ru_2mhz_block)
-+		flags |= STA_CTXT_HE_RU_2MHZ_BLOCK;
-+
- 	/* HTC flags */
- 	if (sta->he_cap.he_cap_elem.mac_cap_info[0] &
- 	    IEEE80211_HE_MAC_CAP0_HTC_HE)
-@@ -3205,6 +3209,51 @@ iwl_mvm_tdls_check_trigger(struct iwl_mvm *mvm,
- 				peer_addr, action);
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+index dfb0c50df94c..9ccaecc10474 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+@@ -2862,7 +2862,7 @@ void iwl_fw_dbg_apply_point(struct iwl_fw_runtime *fwrt,
  }
+ IWL_EXPORT_SYMBOL(iwl_fw_dbg_apply_point);
  
-+struct iwl_mvm_he_obss_narrow_bw_ru_data {
-+	bool tolerated;
-+};
-+
-+static void iwl_mvm_check_he_obss_narrow_bw_ru_iter(struct wiphy *wiphy,
-+						    struct cfg80211_bss *bss,
-+						    void *_data)
-+{
-+	struct iwl_mvm_he_obss_narrow_bw_ru_data *data = _data;
-+	const struct element *elem;
-+
-+	elem = cfg80211_find_elem(WLAN_EID_EXT_CAPABILITY, bss->ies->data,
-+				  bss->ies->len);
-+
-+	if (!elem || elem->datalen < 10 ||
-+	    !(elem->data[10] &
-+	      WLAN_EXT_CAPA10_OBSS_NARROW_BW_RU_TOLERANCE_SUPPORT)) {
-+		data->tolerated = false;
-+	}
-+}
-+
-+static void iwl_mvm_check_he_obss_narrow_bw_ru(struct ieee80211_hw *hw,
-+					       struct ieee80211_vif *vif)
-+{
-+	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
-+	struct iwl_mvm_he_obss_narrow_bw_ru_data iter_data = {
-+		.tolerated = true,
-+	};
-+
-+	if (!(vif->bss_conf.chandef.chan->flags & IEEE80211_CHAN_RADAR)) {
-+		mvmvif->he_ru_2mhz_block = false;
-+		return;
-+	}
-+
-+	cfg80211_bss_iter(hw->wiphy, &vif->bss_conf.chandef,
-+			  iwl_mvm_check_he_obss_narrow_bw_ru_iter,
-+			  &iter_data);
-+
-+	/*
-+	 * If there is at least one AP on radar channel that cannot
-+	 * tolerate 26-tone RU UL OFDMA transmissions using HE TB PPDU.
-+	 */
-+	mvmvif->he_ru_2mhz_block = !iter_data.tolerated;
-+}
-+
- static int iwl_mvm_mac_sta_state(struct ieee80211_hw *hw,
- 				 struct ieee80211_vif *vif,
- 				 struct ieee80211_sta *sta,
-@@ -3306,6 +3355,11 @@ static int iwl_mvm_mac_sta_state(struct ieee80211_hw *hw,
- 				iwl_mvm_cfg_he_sta(mvm, vif, mvm_sta->sta_id);
- 		} else if (vif->type == NL80211_IFTYPE_STATION) {
- 			vif->bss_conf.he_support = sta->he_cap.has_he;
-+
-+			mvmvif->he_ru_2mhz_block = false;
-+			if (sta->he_cap.has_he)
-+				iwl_mvm_check_he_obss_narrow_bw_ru(hw, vif);
-+
- 			iwl_mvm_mac_ctxt_changed(mvm, vif, false, NULL);
- 		}
+-void iwl_fwrt_stop_device(struct iwl_fw_runtime *fwrt)
++void iwl_fw_dbg_stop_sync(struct iwl_fw_runtime *fwrt)
+ {
+ 	int i;
  
+@@ -2870,9 +2870,9 @@ void iwl_fwrt_stop_device(struct iwl_fw_runtime *fwrt)
+ 	for (i = 0; i < IWL_FW_RUNTIME_DUMP_WK_NUM; i++)
+ 		iwl_fw_dbg_collect_sync(fwrt, i);
+ 
+-	iwl_trans_stop_device(fwrt->trans);
++	iwl_fw_dbg_stop_recording(fwrt->trans, NULL);
+ }
+-IWL_EXPORT_SYMBOL(iwl_fwrt_stop_device);
++IWL_EXPORT_SYMBOL(iwl_fw_dbg_stop_sync);
+ 
+ void iwl_fw_dbg_periodic_trig_handler(struct timer_list *t)
+ {
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
+index d6b012459b04..5582a11f7c89 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
+@@ -373,7 +373,7 @@ static inline void iwl_fw_resume_timestamp(struct iwl_fw_runtime *fwrt) {}
+ void iwl_fw_dbg_apply_point(struct iwl_fw_runtime *fwrt,
+ 			    enum iwl_fw_ini_apply_point apply_point);
+ 
+-void iwl_fwrt_stop_device(struct iwl_fw_runtime *fwrt);
++void iwl_fw_dbg_stop_sync(struct iwl_fw_runtime *fwrt);
+ 
+ static inline void iwl_fw_lmac1_set_alive_err_table(struct iwl_trans *trans,
+ 						    u32 lmac_error_event_table)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index a57fc6198a72..ed6453b2fc79 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -1140,6 +1140,7 @@ static int iwl_mvm_load_rt_fw(struct iwl_mvm *mvm)
+ 		return ret;
+ 	}
+ 
++	iwl_fw_dbg_stop_sync(&mvm->fwrt);
+ 	/*
+ 	 * Stop and start the transport without entering low power
+ 	 * mode. This will save the state of other components on the
 diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index a263cc629d75..a14701c8933b 100644
+index a14701c8933b..e5703aa7935e 100644
 --- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
 +++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -504,6 +504,9 @@ struct iwl_mvm_vif {
+@@ -2037,7 +2037,8 @@ static inline void iwl_mvm_stop_device(struct iwl_mvm *mvm)
+ 	lockdep_assert_held(&mvm->mutex);
+ 	iwl_fw_cancel_timestamp(&mvm->fwrt);
+ 	clear_bit(IWL_MVM_STATUS_FIRMWARE_RUNNING, &mvm->status);
+-	iwl_fwrt_stop_device(&mvm->fwrt);
++	iwl_fw_dbg_stop_sync(&mvm->fwrt);
++	iwl_trans_stop_device(mvm->trans);
+ 	iwl_free_fw_paging(&mvm->fwrt);
+ 	iwl_fw_dump_conf_clear(&mvm->fwrt);
+ }
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
+index 8d17e68577fd..104b7cc75248 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
+@@ -147,9 +147,6 @@ void _iwl_trans_pcie_gen2_stop_device(struct iwl_trans *trans, bool low_power)
  
- 	/* we can only have 2 GTK + 2 IGTK active at a time */
- 	struct ieee80211_key_conf *ap_early_keys[4];
-+
-+	/* 26-tone RU OFDMA transmissions should be blocked */
-+	bool he_ru_2mhz_block;
- };
+ 	trans_pcie->is_down = true;
  
- static inline struct iwl_mvm_vif *
+-	/* Stop dbgc before stopping device */
+-	iwl_fw_dbg_stop_recording(trans, NULL);
+-
+ 	/* tell the device to stop sending interrupts */
+ 	iwl_disable_interrupts(trans);
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index f5df5b370d78..a6deb61a3ab4 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -1242,9 +1242,6 @@ static void _iwl_trans_pcie_stop_device(struct iwl_trans *trans, bool low_power)
+ 
+ 	trans_pcie->is_down = true;
+ 
+-	/* Stop dbgc before stopping device */
+-	iwl_fw_dbg_stop_recording(trans, NULL);
+-
+ 	/* tell the device to stop sending interrupts */
+ 	iwl_disable_interrupts(trans);
+ 
 -- 
 2.23.0.rc1
 
