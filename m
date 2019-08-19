@@ -6,89 +6,106 @@ X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C10FC3A5A0
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Aug 2019 21:00:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81B3BC3A5A0
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Aug 2019 21:15:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3C0F72087E
-	for <linux-wireless@archiver.kernel.org>; Mon, 19 Aug 2019 21:00:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 07CB62054F
+	for <linux-wireless@archiver.kernel.org>; Mon, 19 Aug 2019 21:15:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b="HrMHO8hL"
+	dkim=pass (1024-bit key) header.d=wetzel-home.de header.i=@wetzel-home.de header.b="sOHZQUbv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728283AbfHSVAD (ORCPT
+        id S1728305AbfHSVPK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 19 Aug 2019 17:00:03 -0400
-Received: from 9.mo177.mail-out.ovh.net ([46.105.72.238]:58092 "EHLO
-        9.mo177.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727769AbfHSVAD (ORCPT
+        Mon, 19 Aug 2019 17:15:10 -0400
+Received: from 3.mo69.mail-out.ovh.net ([188.165.52.203]:49326 "EHLO
+        3.mo69.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727971AbfHSVPK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Aug 2019 17:00:03 -0400
-Received: from player755.ha.ovh.net (unknown [10.108.42.75])
-        by mo177.mail-out.ovh.net (Postfix) with ESMTP id 644151025AB
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Aug 2019 22:50:50 +0200 (CEST)
+        Mon, 19 Aug 2019 17:15:10 -0400
+Received: from player716.ha.ovh.net (unknown [10.108.35.74])
+        by mo69.mail-out.ovh.net (Postfix) with ESMTP id 95EDE64484
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Aug 2019 23:15:07 +0200 (CEST)
 Received: from awhome.eu (p4FF9179D.dip0.t-ipconnect.de [79.249.23.157])
         (Authenticated sender: postmaster@awhome.eu)
-        by player755.ha.ovh.net (Postfix) with ESMTPSA id E59C090B6EAD;
-        Mon, 19 Aug 2019 20:50:46 +0000 (UTC)
-Subject: Re: [PATCH] iwlwifi: Extended Key ID support for mvm and dvm
+        by player716.ha.ovh.net (Postfix) with ESMTPSA id 0DF578E406D2;
+        Mon, 19 Aug 2019 21:15:04 +0000 (UTC)
+Subject: Re: [PATCH 4/4] iwlwifi: Enable Extended Key ID for mvm and dvm
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=wetzel-home.de;
-        s=wetzel-home; t=1566247846;
-        bh=vWC3/wW/csnaR/+Rsx8WN7OJ+Enhk24DjISGYj98Oyc=;
+        s=wetzel-home; t=1566249303;
+        bh=hbmNEuDHtukGJieI+S52JwOjHwsSoZzrGFjR5aHnaG4=;
         h=Subject:To:Cc:References:From:Date:In-Reply-To;
-        b=HrMHO8hLorbZwlLDTY0N1NVsrzCfEi8YfSOo594+2MNZX8/mDR1fTCgMJJ8kCu0u9
-         FO5dsGmJRL6gMaLImDlDRG+iB/gTy07mrmZDQXZf0L/zpoK+C0h8aA1mdi510xHXPk
-         BMWz2yierKSGJrhw7hXr5dcvRO6m2VTuC+zLU960=
-To:     Johannes Berg <johannes@sipsolutions.net>, luciano.coelho@intel.com
-Cc:     linux-wireless@vger.kernel.org, linuxwifi@intel.com
-References: <20190819180540.2855-1-alexander@wetzel-home.de>
- <204c346ab9fc71865e4cb5f5c29ec33ca05050e2.camel@sipsolutions.net>
- <da471544-3370-8ba1-2265-d02ab09cdcee@wetzel-home.de>
- <52914e64663283eeff9445b8b1fb37986c15223d.camel@sipsolutions.net>
- <5bc077f7b2f017da7c027edd27a543910dd6ac32.camel@sipsolutions.net>
+        b=sOHZQUbv8as+MLIDdN713rES/nrPwk5q2NLnJLny8aCRunbD6XbGJeBa4gqYs8tH3
+         xxshjTZ38p9NBfBu4t3uwT53dgGJdSzjXHUK4RYYbpu44aUKHKY8uiCY/yP/dvB1Nr
+         kt9l3ZPgIxT6tJ5viKY4ozSCiTcWLVcr/prCBcDA=
+To:     Johannes Berg <johannes@sipsolutions.net>,
+        Luca Coelho <luca@coelho.fi>
+Cc:     linux-wireless@vger.kernel.org
+References: <20190629195015.19680-1-alexander@wetzel-home.de>
+ <20190629195015.19680-4-alexander@wetzel-home.de>
+ <cd1b1a83-55e2-3c07-dbe2-0c459bbcdc7e@wetzel-home.de>
+ <d3c6d084728e4203832688b63e884d25b0f74fcf.camel@sipsolutions.net>
+ <ae321cd5-6ef4-87c5-98ec-dbac37e83c6d@wetzel-home.de>
+ <eb0481b1928b0554daeda59cfc1d631e44bb2bdd.camel@sipsolutions.net>
 From:   Alexander Wetzel <alexander@wetzel-home.de>
-Message-ID: <9e63e06d-48ef-e7aa-638a-b551a208665f@wetzel-home.de>
-Date:   Mon, 19 Aug 2019 22:50:45 +0200
+Message-ID: <42653433-58b5-10f0-288e-1e5731e012d1@wetzel-home.de>
+Date:   Mon, 19 Aug 2019 23:15:03 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <5bc077f7b2f017da7c027edd27a543910dd6ac32.camel@sipsolutions.net>
+In-Reply-To: <eb0481b1928b0554daeda59cfc1d631e44bb2bdd.camel@sipsolutions.net>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Ovh-Tracer-Id: 840484282674453704
+X-Ovh-Tracer-Id: 1250593322868219132
 X-VR-SPAMSTATE: OK
 X-VR-SPAMSCORE: -100
-X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgeduvddrudefledgudehhecutefuodetggdotefrodftvfcurfhrohhfihhlvgemucfqggfjpdevjffgvefmvefgnecuuegrihhlohhuthemucehtddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmd
+X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgeduvddrudefledgudehkecutefuodetggdotefrodftvfcurfhrohhfihhlvgemucfqggfjpdevjffgvefmvefgnecuuegrihhlohhuthemucehtddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmd
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-
-
-Am 19.08.19 um 22:09 schrieb Johannes Berg:
-> On Mon, 2019-08-19 at 22:03 +0200, Johannes Berg wrote:
+Am 19.08.19 um 22:23 schrieb Johannes Berg:
+> On Mon, 2019-08-19 at 17:52 +0200, Alexander Wetzel wrote:
+> 
+>> We may also get away by adding only means to pass the keyid of the MPDU
+>> (zero or one) to the HW. That could be done quite simple, I think:
 >>
->>> While less desirable we still could get that working: The mvm driver
->>> would have to detect the key borders and then tell the firmware to
->>> switch over to the other key. But we would have to make sure to not
->>> re-enable A-MPDU aggregation till the card really has switched.
+>> We could add two new flags, e.g. IWL_TX_FLAGS_ENCRYPT_ID_0 and
+>> IWL_TX_FLAGS_ENCRYPT_ID_1 to avoid the need to change the structures
+>> iwl_tx_cmd_gen2 and iwl_tx_cmd_gen3.
+>> When the firmware would check and use the key referenced by the STA +
+>> flag-id prior to the "last installed" key that should be sufficient.
+>> By still using the last installed key without any of the new flags set
+>> we also would remain backward compatible.
+>>
+>> If you have any experimental firmware to test I'm happy to do so:-)
+>> Till then I'm back using older iwlwifi cards.
 > 
->> So probably you're right, and we'd have to disable A-MPDUs until we have
->> no outstanding old-key-retransmits, but that seems manageable.
-> 
-> Actually, we probably have to even delay the key switch until there are
-> no more frames to retransmit, because the hardware is involved to some
-> extent and it won't know about two keys or something... Not really sure
-> how it all works though, off the top of my head.
+> I'm not convinced that we can change the TX API at all, I suspect we
+> have to go detect it as we saw in the other patch. If we do actually
+> have the ability to change the TX API it might be simpler overall, but
+> anyway, I'd have to go look at how this is all implemented before I
+> comment further. Doesn't seem like an intractable problem, the only
+> question is if we get to spend time on it :)
 
-This sounds like the card is not really able to handle two unicast key 
-per STA, which would be a show stopper.
-But not sure if I can believe that: After all the card is setting the 
-correct keyid for the key and e.g. able to use keyid 1 for both send and 
-receive, so it's not simply assuming unicast keys are always using keyid 0.
+You are thinking about keeping the tx API untouched and modify the key 
+install logic?
+Just prevent the firmware to activate a key for Tx when it's installed 
+and notify the firmware by some means when the key can be used for Tx 
+and then switch everything to the new key?
 
-Honoring the keyid for that but then not be able to differentiate 
-between the keyids for re-transmits is nothing I would have expected. So 
-I still hope you are wrong here:-)
+I guess there is no practical way I can get access to the firmware code, 
+correct? For me it sounds harder than the optional flag extension I had 
+in mind for the new tx API.
+
+After all one of the existing flags can already suppress the encryption.
+Checking for the presence of two optional flags and use these to select 
+a different key sounded not very hard. But then I literally know nothing 
+about that and if the card/firmware has some fundamental issue handling 
+two unicast keys the picture changes of course...
+
+So let's wait and see what you can turn up. Till then we have more than 
+enough other cards supporting Extended Key ID:-)
 
 Alexander
