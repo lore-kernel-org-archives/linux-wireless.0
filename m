@@ -2,838 +2,184 @@ Return-Path: <SRS0=DLa0=WQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DC7FC3A589
-	for <linux-wireless@archiver.kernel.org>; Tue, 20 Aug 2019 15:48:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23E69C3A589
+	for <linux-wireless@archiver.kernel.org>; Tue, 20 Aug 2019 15:48:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5B8E622DA9
-	for <linux-wireless@archiver.kernel.org>; Tue, 20 Aug 2019 15:48:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EEE7822CE3
+	for <linux-wireless@archiver.kernel.org>; Tue, 20 Aug 2019 15:48:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="goJyPpCk";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="arrcndpn"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PG6eB4aa"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730344AbfHTPsm (ORCPT
+        id S1730380AbfHTPsp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 20 Aug 2019 11:48:42 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:39366 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727077AbfHTPsm (ORCPT
+        Tue, 20 Aug 2019 11:48:45 -0400
+Received: from mail-ot1-f54.google.com ([209.85.210.54]:40016 "EHLO
+        mail-ot1-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727077AbfHTPsp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Aug 2019 11:48:42 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 6203761418; Tue, 20 Aug 2019 15:48:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1566316119;
-        bh=VkM5av0OGhutW6b9cMEoPo9ZxUItGh/5BBjPIsvBoi4=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=goJyPpCkRiQ8dkSUVJJUkbVqlmwdtIfajQ4cBEU54TaBbEVvOR1FYggCTnzsVnMcC
-         e5e0m0nTWa94eDnHuEHtA7kyn3N0Npw3OQM17Gv+t8zVU2nGahGWbto65WmqZNhkKI
-         U5pAI8eBIAftrO0gJW5NFpH4NV/Kiz52ADNALAJQ=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id C8CBC61A20;
-        Tue, 20 Aug 2019 15:48:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1566316117;
-        bh=VkM5av0OGhutW6b9cMEoPo9ZxUItGh/5BBjPIsvBoi4=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=arrcndpneT0LpaRE/bwurCVyf7KZ9rsE82fdLGrXU0jn1lwsV3mOBCTVllSMDj3Qs
-         hxVPFAeo/jAryCUvSF6Ta3R8wNpQH4sq4LQcP/b9ZdGyGkGR//vZpAJwhJRaGJ0htF
-         DC/6+N0EvI3zgjAGTnUrCpqDDnHIUbjeYlSsFVa0=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org C8CBC61A20
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     linux-wireless@vger.kernel.org
-Cc:     ath11k@lists.infradead.org, devicetree@vger.kernel.org
-Subject: [PATCH 08/49] ath11k: add core.c
-Date:   Tue, 20 Aug 2019 18:47:34 +0300
-Message-Id: <1566316095-27507-9-git-send-email-kvalo@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1566316095-27507-1-git-send-email-kvalo@codeaurora.org>
-References: <1566316095-27507-1-git-send-email-kvalo@codeaurora.org>
+        Tue, 20 Aug 2019 11:48:45 -0400
+Received: by mail-ot1-f54.google.com with SMTP id c34so5467118otb.7
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Aug 2019 08:48:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:references:from:message-id:date:user-agent:mime-version
+         :in-reply-to:content-language:content-transfer-encoding;
+        bh=NmcCCioZF16ax1UfyuMOm3tQN/s/GYmwd+A5S/X0rqI=;
+        b=PG6eB4aaqhFsVB0bvGiNIKR4dDj5UFrdrjdzAW8MbcIL4I7nxs1ui1LLe7gBZ6qxO8
+         slid0fWUmHXEwXafZLtvnKPRMGVJeyS1J61BTdT/D6Q4geCzXBkI+tEmFMW63xjQSOag
+         DHTh67hs4AxMYWSzP0wKnt9mKWEemuofVIk0UnQet95LN+OYTttWpfgP7g7/qnHDyBwM
+         DS4Lun6LuRlAkf0CPpve52oWL9wZrqFKaA2F0QeE4Ytepfz+rxeSUUWNQHBnv0vqBi2J
+         xjLCznLbw/FCQrOszi3TNjjP7hc7lKM3ZptCnKfOjxVlwWqXN137fiP66ojzTlzSMJT5
+         GWJg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=NmcCCioZF16ax1UfyuMOm3tQN/s/GYmwd+A5S/X0rqI=;
+        b=RE4ICfjcs2u83WRnHVY1wlGMYgUywAew0+owfM6Gty/AgVjUMx+p3vQY/R1EOv053P
+         IdIPjlPpGMTXEGZ6Y7iEdGlNgQjrbm9FDrgMYHMkMkp7vbvnOFWiX+tsKyn4pnpzdIFc
+         xpwRzaf81tf4nNeHaIN6D9KgNr1MFgKQsSQt+zVnERIRsnPU1wlOa+47hhS5jG9/cJ/S
+         CgObqKQsTdt6ynPwhMIAxjC4mpxeDC08W4KL9Bh7sGxs7WJqi/OtnMvh85PRKgbHoUVR
+         iO0QBLzr6mja86ndBqeoeeOTvIldYwVli/xv8Lo+01gb51JZQW/PAu7Ue5x4lumsLlvg
+         Srdg==
+X-Gm-Message-State: APjAAAXcH6OjZwhOmIsG17lNAF/NlRE3pGqQYyWBhHHEzB7atqPzJIIb
+        crbDTe03mXa7IVdrcfVDTGPlKiIw
+X-Google-Smtp-Source: APXvYqwU44tqB4/fCDRmHuQG3U1lmmrV9Q5aW1h9rceWYZFehMlHSTWX+vJylxyVtu3kNJh/iYjHwg==
+X-Received: by 2002:a05:6830:16ce:: with SMTP id l14mr22002159otr.169.1566316123844;
+        Tue, 20 Aug 2019 08:48:43 -0700 (PDT)
+Received: from [192.168.1.249] (cpe-70-114-247-242.austin.res.rr.com. [70.114.247.242])
+        by smtp.googlemail.com with ESMTPSA id u5sm7209440ote.27.2019.08.20.08.48.42
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 20 Aug 2019 08:48:43 -0700 (PDT)
+Subject: Re: [RFC 0/1] Allow MAC change on up interface
+To:     Johannes Berg <johannes@sipsolutions.net>,
+        James Prestwood <prestwoj@gmail.com>,
+        linux-wireless@vger.kernel.org
+References: <20190815185702.30937-1-prestwoj@gmail.com>
+ <645af7dad899e8eb186b3fee0f8a8a151a408557.camel@sipsolutions.net>
+ <394092a2f20697c9b055166a8254a5ef888551a5.camel@gmail.com>
+ <4848c3a9d0b330fab4442436244387a2c127fa03.camel@sipsolutions.net>
+ <1d975fec-a480-f40b-ff98-90d0e4852758@gmail.com>
+ <72ac048c01619e0639fc182cd32818a5712cda1c.camel@sipsolutions.net>
+From:   Denis Kenzior <denkenz@gmail.com>
+Message-ID: <7b9a7df3-6880-98f6-5c09-257165025559@gmail.com>
+Date:   Tue, 20 Aug 2019 10:40:58 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
+MIME-Version: 1.0
+In-Reply-To: <72ac048c01619e0639fc182cd32818a5712cda1c.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
----
- drivers/net/wireless/ath/ath11k/core.c | 764 +++++++++++++++++++++++++++++++++
- 1 file changed, 764 insertions(+)
+Hi Johannes,
 
-diff --git a/drivers/net/wireless/ath/ath11k/core.c b/drivers/net/wireless/ath/ath11k/core.c
-new file mode 100644
-index 000000000000..9324dcb45bbe
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath11k/core.c
-@@ -0,0 +1,764 @@
-+// SPDX-License-Identifier: ISC
-+/*
-+ * Copyright (c) 2018-2019 The Linux Foundation. All rights reserved.
-+ */
-+
-+#include <linux/module.h>
-+#include <linux/slab.h>
-+#include <linux/remoteproc.h>
-+#include <linux/firmware.h>
-+#include "ahb.h"
-+#include "core.h"
-+#include "dp_tx.h"
-+#include "debug.h"
-+
-+unsigned int ath11k_debug_mask;
-+
-+module_param_named(debug_mask, ath11k_debug_mask, uint, 0644);
-+
-+MODULE_PARM_DESC(debug_mask, "Debugging mask");
-+
-+static const struct ath11k_hw_params ath11k_hw_params = {
-+			.name = "ipq8074",
-+			.fw = {
-+				.dir = IPQ8074_FW_DIR,
-+				.board_size = IPQ8074_MAX_BOARD_DATA_SZ,
-+				.cal_size =  IPQ8074_MAX_CAL_DATA_SZ,
-+			},
-+};
-+
-+/* Map from pdev index to hw mac index */
-+u8 ath11k_core_get_hw_mac_id(struct ath11k_base *ab, int pdev_idx)
-+{
-+	switch (pdev_idx) {
-+	case 0:
-+		return 0;
-+	case 1:
-+		return 2;
-+	case 2:
-+		return 1;
-+	default:
-+		ath11k_warn(ab, "Invalid pdev idx %d\n", pdev_idx);
-+		return ATH11K_INVALID_HW_MAC_ID;
-+	}
-+}
-+
-+static int ath11k_core_create_board_name(struct ath11k_base *ab, char *name,
-+					 size_t name_len)
-+{
-+	/* Note: bus is fixed to ahb. When other bus type supported,
-+	 * make it to dynamic.
-+	 */
-+	scnprintf(name, name_len,
-+		  "bus=ahb,qmi-chip-id=%d,qmi-board-id=%d",
-+		  ab->qmi.target.chip_id,
-+		  ab->qmi.target.board_id);
-+
-+	ath11k_dbg(ab, ATH11K_DBG_BOOT, "boot using board name '%s'\n", name);
-+
-+	return 0;
-+}
-+
-+static const struct firmware *ath11k_fetch_fw_file(struct ath11k_base *ab,
-+						   const char *dir,
-+						   const char *file)
-+{
-+	char filename[100];
-+	const struct firmware *fw;
-+	int ret;
-+
-+	if (file == NULL)
-+		return ERR_PTR(-ENOENT);
-+
-+	if (dir == NULL)
-+		dir = ".";
-+
-+	snprintf(filename, sizeof(filename), "%s/%s", dir, file);
-+	ret = firmware_request_nowarn(&fw, filename, ab->dev);
-+	ath11k_dbg(ab, ATH11K_DBG_BOOT, "boot fw request '%s': %d\n",
-+		   filename, ret);
-+
-+	if (ret)
-+		return ERR_PTR(ret);
-+	ath11k_warn(ab, "Downloading BDF: %s, size: %zu\n",
-+		    filename, fw->size);
-+
-+	return fw;
-+}
-+
-+void ath11k_core_free_bdf(struct ath11k_base *ab, struct ath11k_board_data *bd)
-+{
-+	if (!IS_ERR(bd->fw))
-+		release_firmware(bd->fw);
-+
-+	memset(bd, 0, sizeof(*bd));
-+}
-+
-+static int ath11k_core_parse_bd_ie_board(struct ath11k_base *ab,
-+					 struct ath11k_board_data *bd,
-+					 const void *buf, size_t buf_len,
-+					 const char *boardname,
-+					 int bd_ie_type)
-+{
-+	const struct ath11k_fw_ie *hdr;
-+	bool name_match_found;
-+	int ret, board_ie_id;
-+	size_t board_ie_len;
-+	const void *board_ie_data;
-+
-+	name_match_found = false;
-+
-+	/* go through ATH11K_BD_IE_BOARD_ elements */
-+	while (buf_len > sizeof(struct ath11k_fw_ie)) {
-+		hdr = buf;
-+		board_ie_id = le32_to_cpu(hdr->id);
-+		board_ie_len = le32_to_cpu(hdr->len);
-+		board_ie_data = hdr->data;
-+
-+		buf_len -= sizeof(*hdr);
-+		buf += sizeof(*hdr);
-+
-+		if (buf_len < ALIGN(board_ie_len, 4)) {
-+			ath11k_err(ab, "invalid ATH11K_BD_IE_BOARD length: %zu < %zu\n",
-+				   buf_len, ALIGN(board_ie_len, 4));
-+			ret = -EINVAL;
-+			goto out;
-+		}
-+
-+		switch (board_ie_id) {
-+		case ATH11K_BD_IE_BOARD_NAME:
-+			ath11k_dbg_dump(ab, ATH11K_DBG_BOOT, "board name", "",
-+					board_ie_data, board_ie_len);
-+
-+			if (board_ie_len != strlen(boardname))
-+				break;
-+
-+			ret = memcmp(board_ie_data, boardname, strlen(boardname));
-+			if (ret)
-+				break;
-+
-+			name_match_found = true;
-+			ath11k_dbg(ab, ATH11K_DBG_BOOT,
-+				   "boot found match for name '%s'",
-+				   boardname);
-+			break;
-+		case ATH11K_BD_IE_BOARD_DATA:
-+			if (!name_match_found)
-+				/* no match found */
-+				break;
-+
-+			ath11k_dbg(ab, ATH11K_DBG_BOOT,
-+				   "boot found board data for '%s'", boardname);
-+
-+			bd->data = board_ie_data;
-+			bd->len = board_ie_len;
-+
-+			ret = 0;
-+			goto out;
-+		default:
-+			ath11k_warn(ab, "unknown ATH11K_BD_IE_BOARD found: %d\n",
-+				    board_ie_id);
-+			break;
-+		}
-+
-+		/* jump over the padding */
-+		board_ie_len = ALIGN(board_ie_len, 4);
-+
-+		buf_len -= board_ie_len;
-+		buf += board_ie_len;
-+	}
-+
-+	/* no match found */
-+	ret = -ENOENT;
-+
-+out:
-+	return ret;
-+}
-+
-+static int ath11k_core_fetch_board_data_api_n(struct ath11k_base *ab,
-+					      struct ath11k_board_data *bd,
-+					      const char *boardname)
-+{
-+	size_t len, magic_len;
-+	const u8 *data;
-+	char *filename = ATH11K_BOARD_API2_FILE;
-+	size_t ie_len;
-+	struct ath11k_fw_ie *hdr;
-+	int ret, ie_id;
-+
-+	if (!bd->fw)
-+		bd->fw = ath11k_fetch_fw_file(ab,
-+					      ab->hw_params.fw.dir,
-+					      filename);
-+	if (IS_ERR(bd->fw))
-+		return PTR_ERR(bd->fw);
-+
-+	data = bd->fw->data;
-+	len = bd->fw->size;
-+
-+	/* magic has extra null byte padded */
-+	magic_len = strlen(ATH11K_BOARD_MAGIC) + 1;
-+	if (len < magic_len) {
-+		ath11k_err(ab, "failed to find magic value in %s/%s, file too short: %zu\n",
-+			   ab->hw_params.fw.dir, filename, len);
-+		ret = -EINVAL;
-+		goto err;
-+	}
-+
-+	if (memcmp(data, ATH11K_BOARD_MAGIC, magic_len)) {
-+		ath11k_err(ab, "found invalid board magic\n");
-+		ret = -EINVAL;
-+		goto err;
-+	}
-+
-+	/* magic is padded to 4 bytes */
-+	magic_len = ALIGN(magic_len, 4);
-+	if (len < magic_len) {
-+		ath11k_err(ab, "failed: %s/%s too small to contain board data, len: %zu\n",
-+			   ab->hw_params.fw.dir, filename, len);
-+		ret = -EINVAL;
-+		goto err;
-+	}
-+
-+	data += magic_len;
-+	len -= magic_len;
-+
-+	while (len > sizeof(struct ath11k_fw_ie)) {
-+		hdr = (struct ath11k_fw_ie *)data;
-+		ie_id = le32_to_cpu(hdr->id);
-+		ie_len = le32_to_cpu(hdr->len);
-+
-+		len -= sizeof(*hdr);
-+		data = hdr->data;
-+
-+		if (len < ALIGN(ie_len, 4)) {
-+			ath11k_err(ab, "invalid length for board ie_id %d ie_len %zu len %zu\n",
-+				   ie_id, ie_len, len);
-+			return -EINVAL;
-+		}
-+
-+		switch (ie_id) {
-+		case ATH11K_BD_IE_BOARD:
-+			ret = ath11k_core_parse_bd_ie_board(ab, bd, data,
-+							    ie_len,
-+							    boardname,
-+							    ATH11K_BD_IE_BOARD);
-+			if (ret == -ENOENT)
-+				/* no match found, continue */
-+				break;
-+			else if (ret)
-+				/* there was an error, bail out */
-+				goto err;
-+			/* either found or error, so stop searching */
-+			goto out;
-+		}
-+
-+		/* jump over the padding */
-+		ie_len = ALIGN(ie_len, 4);
-+
-+		len -= ie_len;
-+		data += ie_len;
-+	}
-+
-+out:
-+	if (!bd->data || !bd->len) {
-+		ath11k_err(ab,
-+			   "failed to fetch board data for %s from %s/%s\n",
-+			   boardname, ab->hw_params.fw.dir, filename);
-+		ret = -ENODATA;
-+		goto err;
-+	}
-+
-+	return 0;
-+
-+err:
-+	ath11k_core_free_bdf(ab, bd);
-+	return ret;
-+}
-+
-+static int ath11k_core_fetch_board_data_api_1(struct ath11k_base *ab,
-+					      struct ath11k_board_data *bd)
-+{
-+	bd->fw = ath11k_fetch_fw_file(ab,
-+				      ab->hw_params.fw.dir,
-+				      ATH11K_DEFAULT_BOARD_FILE);
-+	if (IS_ERR(bd->fw))
-+		return PTR_ERR(bd->fw);
-+
-+	bd->data = bd->fw->data;
-+	bd->len = bd->fw->size;
-+
-+	return 0;
-+}
-+
-+#define BOARD_NAME_SIZE 100
-+int ath11k_core_fetch_bdf(struct ath11k_base *ab, struct ath11k_board_data *bd)
-+{
-+	char boardname[BOARD_NAME_SIZE];
-+	int ret;
-+
-+	ret = ath11k_core_create_board_name(ab, boardname, BOARD_NAME_SIZE);
-+	if (ret) {
-+		ath11k_err(ab, "failed to create board name: %d", ret);
-+		return ret;
-+	}
-+
-+	ab->bd_api = 2;
-+	ret = ath11k_core_fetch_board_data_api_n(ab, bd, boardname);
-+	if (!ret)
-+		goto success;
-+
-+	ab->bd_api = 1;
-+	ret = ath11k_core_fetch_board_data_api_1(ab, bd);
-+	if (ret) {
-+		ath11k_err(ab, "failed to fetch board-2.bin or board.bin from %s\n",
-+			   ab->hw_params.fw.dir);
-+		return ret;
-+	}
-+
-+success:
-+	ath11k_dbg(ab, ATH11K_DBG_BOOT, "using board api %d\n", ab->bd_api);
-+	return 0;
-+}
-+
-+static void ath11k_core_stop(struct ath11k_base *ab)
-+{
-+	if (!test_bit(ATH11K_FLAG_CRASH_FLUSH, &ab->dev_flags))
-+		ath11k_qmi_firmware_stop(ab);
-+	ath11k_ahb_stop(ab);
-+	ath11k_wmi_detach(ab);
-+
-+	/* De-Init of components as needed */
-+}
-+
-+static int ath11k_core_soc_create(struct ath11k_base *ab)
-+{
-+	int ret;
-+
-+	ret = ath11k_qmi_init_service(ab);
-+	if (ret) {
-+		ath11k_err(ab, "failed to initialize qmi :%d\n", ret);
-+		return ret;
-+	}
-+
-+	ret = ath11k_debug_soc_create(ab);
-+	if (ret) {
-+		ath11k_err(ab, "failed to create ath11k debugfs\n");
-+		goto err_qmi_deinit;
-+	}
-+
-+	ret = ath11k_ahb_power_up(ab);
-+	if (ret) {
-+		ath11k_err(ab, "failed to power up :%d\n", ret);
-+		goto err_debugfs_reg;
-+	}
-+
-+	return 0;
-+
-+err_debugfs_reg:
-+	ath11k_debug_soc_destroy(ab);
-+err_qmi_deinit:
-+	ath11k_qmi_deinit_service(ab);
-+	return ret;
-+}
-+
-+static void ath11k_core_soc_destroy(struct ath11k_base *ab)
-+{
-+	ath11k_debug_soc_destroy(ab);
-+	ath11k_dp_free(ab);
-+	ath11k_reg_free(ab);
-+	ath11k_qmi_deinit_service(ab);
-+}
-+
-+static int ath11k_core_pdev_create(struct ath11k_base *ab)
-+{
-+	int ret;
-+
-+	ret = ath11k_mac_create(ab);
-+	if (ret) {
-+		ath11k_err(ab, "failed to create new hw device with mac80211 :%d\n",
-+			   ret);
-+		return ret;
-+	}
-+
-+	ret = ath11k_dp_pdev_alloc(ab);
-+	if (ret) {
-+		ath11k_err(ab, "failed to attach DP pdev: %d\n", ret);
-+		goto err_mac_destroy;
-+	}
-+
-+	return 0;
-+
-+err_mac_destroy:
-+	ath11k_mac_destroy(ab);
-+
-+	return ret;
-+}
-+
-+static void ath11k_core_pdev_destroy(struct ath11k_base *ab)
-+{
-+	ath11k_mac_unregister(ab);
-+	ath11k_ahb_ext_irq_disable(ab);
-+	ath11k_dp_pdev_free(ab);
-+}
-+
-+static int ath11k_core_start(struct ath11k_base *ab,
-+			     enum ath11k_firmware_mode mode)
-+{
-+	int ret;
-+
-+	ret = ath11k_qmi_firmware_start(ab, mode);
-+	if (ret) {
-+		ath11k_err(ab, "failed to attach wmi: %d\n", ret);
-+		return ret;
-+	}
-+
-+	ret = ath11k_wmi_attach(ab);
-+	if (ret) {
-+		ath11k_err(ab, "failed to attach wmi: %d\n", ret);
-+		goto err_firmware_stop;
-+	}
-+
-+	ret = ath11k_htc_init(ab);
-+	if (ret) {
-+		ath11k_err(ab, "failed to init htc: %d\n", ret);
-+		goto err_wmi_detach;
-+	}
-+
-+	ret = ath11k_ahb_start(ab);
-+	if (ret) {
-+		ath11k_err(ab, "failed to start HIF: %d\n", ret);
-+		goto err_wmi_detach;
-+	}
-+
-+	ret = ath11k_htc_wait_target(&ab->htc);
-+	if (ret) {
-+		ath11k_err(ab, "failed to connect to HTC: %d\n", ret);
-+		goto err_hif_stop;
-+	}
-+
-+	ret = ath11k_dp_htt_connect(&ab->dp);
-+	if (ret) {
-+		ath11k_err(ab, "failed to connect to HTT: %d\n", ret);
-+		goto err_hif_stop;
-+	}
-+
-+	ret = ath11k_wmi_connect(ab);
-+	if (ret) {
-+		ath11k_err(ab, "failed to connect wmi: %d\n", ret);
-+		goto err_hif_stop;
-+	}
-+
-+	ret = ath11k_htc_start(&ab->htc);
-+	if (ret) {
-+		ath11k_err(ab, "failed to start HTC: %d\n", ret);
-+		goto err_hif_stop;
-+	}
-+
-+	ret = ath11k_wmi_wait_for_service_ready(ab);
-+	if (ret) {
-+		ath11k_err(ab, "failed to receive wmi service ready event: %d\n",
-+			   ret);
-+		goto err_hif_stop;
-+	}
-+
-+	ret = ath11k_wmi_cmd_init(ab);
-+	if (ret) {
-+		ath11k_err(ab, "failed to send wmi init cmd: %d\n", ret);
-+		goto err_hif_stop;
-+	}
-+
-+	ret = ath11k_wmi_wait_for_unified_ready(ab);
-+	if (ret) {
-+		ath11k_err(ab, "failed to receive wmi unified ready event: %d\n",
-+			   ret);
-+		goto err_hif_stop;
-+	}
-+
-+	ret = ath11k_dp_tx_htt_h2t_ver_req_msg(ab);
-+	if (ret) {
-+		ath11k_err(ab, "failed to send htt version request message: %d\n",
-+			   ret);
-+		goto err_hif_stop;
-+	}
-+
-+	return 0;
-+
-+err_hif_stop:
-+	ath11k_ahb_stop(ab);
-+err_wmi_detach:
-+	ath11k_wmi_detach(ab);
-+err_firmware_stop:
-+	ath11k_qmi_firmware_stop(ab);
-+
-+	return ret;
-+}
-+
-+int ath11k_core_qmi_firmware_ready(struct ath11k_base *ab)
-+{
-+	int ret;
-+
-+	ret = ath11k_ce_init_pipes(ab);
-+	if (ret) {
-+		ath11k_err(ab, "failed to initialize CE: %d\n", ret);
-+		return ret;
-+	}
-+
-+	ret = ath11k_dp_alloc(ab);
-+	if (ret) {
-+		ath11k_err(ab, "failed to init DP: %d\n", ret);
-+		return ret;
-+	}
-+
-+	mutex_lock(&ab->core_lock);
-+	ret = ath11k_core_start(ab, ATH11K_FIRMWARE_MODE_NORMAL);
-+	if (ret) {
-+		ath11k_err(ab, "failed to start core: %d\n", ret);
-+		goto err_dp_free;
-+	}
-+
-+	ret = ath11k_core_pdev_create(ab);
-+	if (ret) {
-+		ath11k_err(ab, "failed to create pdev core: %d\n", ret);
-+		goto err_core_stop;
-+	}
-+	ath11k_ahb_ext_irq_enable(ab);
-+	mutex_unlock(&ab->core_lock);
-+
-+	return 0;
-+
-+err_core_stop:
-+	ath11k_core_stop(ab);
-+err_dp_free:
-+	ath11k_dp_free(ab);
-+	return ret;
-+}
-+
-+static int ath11k_core_reconfigure_on_crash(struct ath11k_base *ab)
-+{
-+	int ret;
-+
-+	mutex_lock(&ab->core_lock);
-+	ath11k_ahb_ext_irq_disable(ab);
-+	ath11k_dp_pdev_free(ab);
-+	ath11k_ahb_stop(ab);
-+	ath11k_wmi_detach(ab);
-+	mutex_unlock(&ab->core_lock);
-+
-+	ath11k_dp_free(ab);
-+	ath11k_hal_srng_deinit(ab);
-+
-+	ab->free_vdev_map = (1LL << (ab->num_radios * TARGET_NUM_VDEVS)) - 1;
-+
-+	ret = ath11k_hal_srng_init(ab);
-+	if (ret)
-+		return ret;
-+
-+	clear_bit(ATH11K_FLAG_CRASH_FLUSH, &ab->dev_flags);
-+
-+	ret = ath11k_core_qmi_firmware_ready(ab);
-+	if (ret)
-+		goto err_hal_srng_deinit;
-+
-+	clear_bit(ATH11K_FLAG_RECOVERY, &ab->dev_flags);
-+
-+	return 0;
-+
-+err_hal_srng_deinit:
-+	ath11k_hal_srng_deinit(ab);
-+	return ret;
-+}
-+
-+void ath11k_core_halt(struct ath11k *ar)
-+{
-+	struct ath11k_base *ab = ar->ab;
-+
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	ar->num_created_vdevs = 0;
-+
-+	ath11k_mac_scan_finish(ar);
-+	ath11k_mac_peer_cleanup_all(ar);
-+	cancel_delayed_work_sync(&ar->scan.timeout);
-+	cancel_work_sync(&ar->regd_update_work);
-+
-+	rcu_assign_pointer(ab->pdevs_active[ar->pdev_idx], NULL);
-+	synchronize_rcu();
-+	INIT_LIST_HEAD(&ar->arvifs);
-+	idr_init(&ar->txmgmt_idr);
-+}
-+
-+static void ath11k_core_restart(struct work_struct *work)
-+{
-+	struct ath11k_base *ab = container_of(work, struct ath11k_base, restart_work);
-+	struct ath11k *ar;
-+	struct ath11k_pdev *pdev;
-+	int i, ret = 0;
-+
-+	spin_lock_bh(&ab->base_lock);
-+	ab->stats.fw_crash_counter++;
-+	spin_unlock_bh(&ab->base_lock);
-+
-+	for (i = 0; i < ab->num_radios; i++) {
-+		pdev = &ab->pdevs[i];
-+		ar = pdev->ar;
-+		if (!ar || ar->state == ATH11K_STATE_OFF)
-+			continue;
-+
-+		ieee80211_stop_queues(ar->hw);
-+		ath11k_mac_drain_tx(ar);
-+		complete(&ar->scan.started);
-+		complete(&ar->scan.completed);
-+		complete(&ar->peer_assoc_done);
-+		complete(&ar->install_key_done);
-+		complete(&ar->vdev_setup_done);
-+		complete(&ar->bss_survey_done);
-+
-+		wake_up(&ar->dp.tx_empty_waitq);
-+		idr_for_each(&ar->txmgmt_idr,
-+			     ath11k_mac_tx_mgmt_pending_free, ar);
-+		idr_destroy(&ar->txmgmt_idr);
-+	}
-+
-+	wake_up(&ab->wmi_sc.tx_credits_wq);
-+	wake_up(&ab->peer_mapping_wq);
-+
-+	ret = ath11k_core_reconfigure_on_crash(ab);
-+	if (ret) {
-+		ath11k_err(ab, "failed to reconfigure driver on crash recovery\n");
-+		return;
-+	}
-+
-+	for (i = 0; i < ab->num_radios; i++) {
-+		pdev = &ab->pdevs[i];
-+		ar = pdev->ar;
-+		if (!ar || ar->state == ATH11K_STATE_OFF)
-+			continue;
-+
-+		mutex_lock(&ar->conf_mutex);
-+
-+		switch (ar->state) {
-+		case ATH11K_STATE_ON:
-+			ar->state = ATH11K_STATE_RESTARTING;
-+			ath11k_core_halt(ar);
-+			ieee80211_restart_hw(ar->hw);
-+			break;
-+		case ATH11K_STATE_OFF:
-+			ath11k_warn(ab,
-+				    "cannot restart radio %d that hasn't been started\n",
-+				    i);
-+			break;
-+		case ATH11K_STATE_RESTARTING:
-+			break;
-+		case ATH11K_STATE_RESTARTED:
-+			ar->state = ATH11K_STATE_WEDGED;
-+			/* fall through */
-+		case ATH11K_STATE_WEDGED:
-+			ath11k_warn(ab,
-+				    "device is wedged, will not restart radio %d\n", i);
-+			break;
-+		}
-+		mutex_unlock(&ar->conf_mutex);
-+	}
-+	complete(&ab->driver_recovery);
-+}
-+
-+int ath11k_core_init(struct ath11k_base *ab)
-+{
-+	struct device *dev = ab->dev;
-+	struct rproc *prproc;
-+	phandle rproc_phandle;
-+	int ret;
-+
-+	if (of_property_read_u32(dev->of_node, "qcom,rproc", &rproc_phandle)) {
-+		ath11k_err(ab, "failed to get q6_rproc handle\n");
-+		return -ENOENT;
-+	}
-+
-+	prproc = rproc_get_by_phandle(rproc_phandle);
-+	if (!prproc) {
-+		ath11k_err(ab, "failed to get rproc\n");
-+		return -EINVAL;
-+	}
-+	ab->tgt_rproc = prproc;
-+	ab->hw_params = ath11k_hw_params;
-+
-+	ret = ath11k_core_soc_create(ab);
-+	if (ret) {
-+		ath11k_err(ab, "failed to create soc core: %d\n", ret);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+void ath11k_core_deinit(struct ath11k_base *ab)
-+{
-+	mutex_lock(&ab->core_lock);
-+
-+	ath11k_core_pdev_destroy(ab);
-+	ath11k_core_stop(ab);
-+
-+	mutex_unlock(&ab->core_lock);
-+
-+	ath11k_ahb_power_down(ab);
-+	ath11k_mac_destroy(ab);
-+	ath11k_core_soc_destroy(ab);
-+}
-+
-+void ath11k_core_free(struct ath11k_base *ab)
-+{
-+	kfree(ab);
-+}
-+
-+struct ath11k_base *ath11k_core_alloc(struct device *dev)
-+{
-+	struct ath11k_base *ab;
-+
-+	ab = kzalloc(sizeof(*ab), GFP_KERNEL);
-+	if (!ab)
-+		return NULL;
-+
-+	init_completion(&ab->driver_recovery);
-+
-+	ab->workqueue = create_singlethread_workqueue("ath11k_wq");
-+	if (!ab->workqueue)
-+		goto err_sc_free;
-+
-+	mutex_init(&ab->core_lock);
-+	spin_lock_init(&ab->base_lock);
-+
-+	INIT_LIST_HEAD(&ab->peers);
-+	init_waitqueue_head(&ab->peer_mapping_wq);
-+	init_waitqueue_head(&ab->wmi_sc.tx_credits_wq);
-+	INIT_WORK(&ab->restart_work, ath11k_core_restart);
-+	timer_setup(&ab->rx_replenish_retry, ath11k_ce_rx_replenish_retry, 0);
-+	ab->dev = dev;
-+
-+	return ab;
-+
-+err_sc_free:
-+	kfree(ab);
-+	return NULL;
-+}
-+
-+static int __init ath11k_init(void)
-+{
-+	int ret;
-+
-+	ret = ath11k_ahb_init();
-+	if (ret)
-+		printk(KERN_ERR "failed to register ath11k ahb driver: %d\n",
-+		       ret);
-+	return ret;
-+}
-+module_init(ath11k_init);
-+
-+static void __exit ath11k_exit(void)
-+{
-+	ath11k_ahb_exit();
-+}
-+module_exit(ath11k_exit);
-+
-+MODULE_DESCRIPTION("Driver support for Qualcomm Technologies 802.11ax wireless chip");
-+MODULE_LICENSE("Dual BSD/GPL");
+> Stop.
+> 
+> Your tone, and in particular the constant snide comments and attacks on
+> me are, quite frankly, getting extremely tiring.
+> 
 
+Look, I'm sorry I hit a nerve, but from where I am sitting, it had to be 
+said...
+
+Regardless.  Peace, I'm not trying to start drama here.  We just want to 
+improve things and it feels like you're shutting down every idea without 
+truly understanding the issues we're facing.
+
+> It almost seems like you're just trying to bully me into taking your
+> patches by constantly trying to make me feel that I cannot know better
+> anyway. This is not how you should be treating anyone.
+> 
+
+Before lecturing me on my tone, can you go back and re-read your 
+responses to many of the contributors here?  I mean really read them? 
+Your tone is quite dismissive, whether intentional or not.  When one of 
+my guys comes to me and says:
+	"Johannes' response was completely useless, it feels like he didn't 
+even read my cover letter"
+
+I will come out and call you on it.  So if you don't mean to come off 
+that way, great.  We'll just chalk it up to a mis-understanding.
+
+> Look, I did say I don't see a point in this, but you're taking that out
+> of context. I also stated that I didn't understand the whole thing about
+> "race conditions" and all, because nobody actually explained the
+> reasoning behind the changes here.
+
+Fine.  I get that.  But how about asking what the use case is? Or say 
+you don't quite understand why something is needed?  We'll happily 
+explain.  When the first reaction to an RFC is: "I don't see the point" 
+or "You're doing it wrong" from a maintainer who's job (by definition) 
+is to encourage new contributors and improve the subsystem he 
+maintains...?  Well that's kind of a downer, don't you agree?  You're 
+the maintainer and you should be held to a higher standard...
+
+I maintain 3 projects, I know the job isn't great, but you still should 
+be (more) civil to people...
+
+> 
+> James, unlike you, managed to reply on point and explain why it was
+> needed. If all you can do is accuse me of not using the software and
+> therefore not knowing how it should be used, even implying that I'm not
+> smart enough to understand the use cases, then I don't know why you
+> bother replying at all.
+
+Good on James.  I council all my guys to keep cool when dealing with 
+upstream.  But that doesn't mean you should be dismissing things out of 
+hand on the very first interaction you have with a new contributor.
+
+> 
+> I can understand your frustration to some extent, and I want to give you
+> the benefit of doubt and want to believe this behaviour was borne out of
+> it, since I've been reviewing your changes relatively critically.
+> 
+
+Good.  I want you to do that.  The changes are in very tricky areas and 
+you know the code best.
+
+> However, I also want to believe that I've been (trying to) keep the
+> discussion on a technical level, telling you why I believe some things
+> shouldn't be done the way you did them, rather than telling you that
+> you're not smart enough to be working on this. If you feel otherwise,
+> please do let me know and I'll go back to understand, in order to
+> improve my behaviour in the future.
+
+If you interpreted my rants as an assault to your intelligence, then I'm 
+sorry.  They really were not meant this way.  But sometimes we really 
+had to wonder if you were using the same API we were?  So the question I 
+asked above was purely logical consequence of what I was seeing.
+
+You yourself admitted that you have never implemented an event driven 
+stack.  So how about listening to the guys that are?
+
+We are using your APIs in different ways.  So instead of questioning why 
+or attacking those ways, how about asking whether improvements can be made?
+
+We are facing serious pain points with the API.  So instead of 
+dismissing things out of hand, can we work together to improve things?
+
+We are trying to make things fast.  The API is frequently not setup for 
+that.  The MAC randomization is just one example.  Bringing down the 
+interface (and shutting down the firmware, toggling power state, 
+cleaning up resources/state) prior to every connection is just not 
+acceptable.  Look at the link I sent.  The Android guys state 3 seconds 
+is the typical 'hit'.  This is literally wasting everyone's time.
+
+> 
+> Please help keep the discussion technical, without demeaning undertones.
+
+Point taken.  And I apologize again.  But please consider what I said above.
+
+Regards,
+-Denis
