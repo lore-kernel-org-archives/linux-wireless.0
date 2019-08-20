@@ -7,71 +7,96 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E529AC3A59D
-	for <linux-wireless@archiver.kernel.org>; Tue, 20 Aug 2019 09:54:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF991C3A5A2
+	for <linux-wireless@archiver.kernel.org>; Tue, 20 Aug 2019 09:54:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B0CA122CF4
-	for <linux-wireless@archiver.kernel.org>; Tue, 20 Aug 2019 09:54:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8A6F222CF4
+	for <linux-wireless@archiver.kernel.org>; Tue, 20 Aug 2019 09:54:54 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="LRrmS6+b"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="aigo6H0l"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729518AbfHTJyv (ORCPT
+        id S1729447AbfHTJyv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Tue, 20 Aug 2019 05:54:51 -0400
-Received: from nbd.name ([46.4.11.11]:35134 "EHLO nbd.name"
+Received: from nbd.name ([46.4.11.11]:35126 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728414AbfHTJyv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S1728426AbfHTJyv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 20 Aug 2019 05:54:51 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
-        MIME-Version:Content-Type:Content-Transfer-Encoding:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:
+         s=20160729; h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
+        Sender:Reply-To:MIME-Version:Content-Type:Content-Transfer-Encoding:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
         List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=tTp1fjksS0JpZH20cKYmebD4iIPFT82tIq/AMBeJzhQ=; b=LRrmS6+bVD1sXmNJBo7MIFHByt
-        25mvakMZJrnze/9fA1a+Okg2DR/Rqhc8zKGf6JFZR7jmEIgKOLFb71smCg8ewKqEX49YOSzf9CRpO
-        B9fnVX6mi3mt+9zQtYq9R8WmQuhHOKNWxrayZF9gm9H+kgqXrA32Oh1FgeywhHeqegeY=;
+        bh=sbJGifAP2hJqOW3Xo1SlJAcr8ALTVQTYf9HL5FatkPg=; b=aigo6H0lvuwf8n6qHtEd5NBwle
+        qQszuQuXw5eUKAyh73tTrIMNSF5j1CG4qOTBcPTHB0ZjEwTvvoyhL1t0S5fWIO2waXcO2BjvAXdXC
+        7NABYcNZINUF36HnZD76yeNo53yYDAxqPufFVh0SAtwU12osU3oeTWzu9wZsk8y5p5M0=;
 Received: from p54ae9443.dip0.t-ipconnect.de ([84.174.148.67] helo=maeck.local)
         by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.89)
         (envelope-from <nbd@nbd.name>)
-        id 1i00qn-0003nu-V9; Tue, 20 Aug 2019 11:54:50 +0200
+        id 1i00qn-0003nw-VR; Tue, 20 Aug 2019 11:54:50 +0200
 Received: by maeck.local (Postfix, from userid 501)
-        id 5788063E610C; Tue, 20 Aug 2019 11:54:49 +0200 (CEST)
+        id 57C3763E610D; Tue, 20 Aug 2019 11:54:49 +0200 (CEST)
 From:   Felix Fietkau <nbd@nbd.name>
 To:     linux-wireless@vger.kernel.org
 Cc:     johannes@sipsolutions.net
-Subject: [PATCH 1/4] mac80211: minstrel_ht: fix per-group max throughput rate initialization
-Date:   Tue, 20 Aug 2019 11:54:46 +0200
-Message-Id: <20190820095449.45255-1-nbd@nbd.name>
+Subject: [PATCH 3/4] mac80211: minstrel_ht: fix default max throughput rate indexes
+Date:   Tue, 20 Aug 2019 11:54:48 +0200
+Message-Id: <20190820095449.45255-3-nbd@nbd.name>
 X-Mailer: git-send-email 2.17.0
+In-Reply-To: <20190820095449.45255-1-nbd@nbd.name>
+References: <20190820095449.45255-1-nbd@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The group number needs to be multiplied by the number of rates per group
-to get the full rate index
+Use the first supported rate instead of 0 (which can be invalid)
 
-Fixes: 5935839ad73583 ("mac80211: improve minstrel_ht rate sorting by throughput & probability")
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- net/mac80211/rc80211_minstrel_ht.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/mac80211/rc80211_minstrel_ht.c | 20 ++++++++++++++------
+ 1 file changed, 14 insertions(+), 6 deletions(-)
 
 diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 5a882da82f0e..ba230b037257 100644
+index ad5da9a71da0..c5868a1de306 100644
 --- a/net/mac80211/rc80211_minstrel_ht.c
 +++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -575,7 +575,7 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
+@@ -486,7 +486,7 @@ minstrel_ht_assign_best_tp_rates(struct minstrel_ht_sta *mi,
+ 	tmp_prob = mi->groups[tmp_group].rates[tmp_idx].prob_ewma;
+ 	tmp_mcs_tp = minstrel_ht_get_tp_avg(mi, tmp_group, tmp_idx, tmp_prob);
  
- 		/* (re)Initialize group rate indexes */
- 		for(j = 0; j < MAX_THR_RATES; j++)
--			tmp_group_tp_rate[j] = group;
-+			tmp_group_tp_rate[j] = MCS_GROUP_RATES * group;
+-	if (tmp_cck_tp > tmp_mcs_tp) {
++	if (tmp_cck_tp_rate && tmp_cck_tp > tmp_mcs_tp) {
+ 		for(i = 0; i < MAX_THR_RATES; i++) {
+ 			minstrel_ht_sort_best_tp_rates(mi, tmp_cck_tp_rate[i],
+ 						       tmp_mcs_tp_rate);
+@@ -558,11 +558,19 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
+ 	mi->sample_slow = 0;
+ 	mi->sample_count = 0;
  
- 		for (i = 0; i < MCS_GROUP_RATES; i++) {
- 			if (!(mi->supported[group] & BIT(i)))
+-	/* Initialize global rate indexes */
+-	for(j = 0; j < MAX_THR_RATES; j++){
+-		tmp_mcs_tp_rate[j] = 0;
+-		tmp_cck_tp_rate[j] = 0;
+-	}
++	memset(tmp_mcs_tp_rate, 0, sizeof(tmp_mcs_tp_rate));
++	memset(tmp_cck_tp_rate, 0, sizeof(tmp_cck_tp_rate));
++	if (mi->supported[MINSTREL_CCK_GROUP])
++		for (j = 0; j < ARRAY_SIZE(tmp_cck_tp_rate); j++)
++			tmp_cck_tp_rate[j] = MINSTREL_CCK_GROUP * MCS_GROUP_RATES;
++
++	if (mi->supported[MINSTREL_VHT_GROUP_0])
++		index = MINSTREL_VHT_GROUP_0 * MCS_GROUP_RATES;
++	else
++		index = MINSTREL_HT_GROUP_0 * MCS_GROUP_RATES;
++
++	for (j = 0; j < ARRAY_SIZE(tmp_mcs_tp_rate); j++)
++		tmp_mcs_tp_rate[j] = index;
+ 
+ 	/* Find best rate sets within all MCS groups*/
+ 	for (group = 0; group < ARRAY_SIZE(minstrel_mcs_groups); group++) {
 -- 
 2.17.0
 
