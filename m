@@ -4,57 +4,56 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC0C1C3A589
-	for <linux-wireless@archiver.kernel.org>; Tue, 20 Aug 2019 15:49:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14051C3A59E
+	for <linux-wireless@archiver.kernel.org>; Tue, 20 Aug 2019 15:49:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7A0BC22DBF
+	by mail.kernel.org (Postfix) with ESMTP id CD18022DA9
 	for <linux-wireless@archiver.kernel.org>; Tue, 20 Aug 2019 15:49:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="XhXzuIeV";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="e/5WkSsm"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="IbBOnY74";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="G2RhoXUh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730574AbfHTPtr (ORCPT
+        id S1730577AbfHTPtr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Tue, 20 Aug 2019 11:49:47 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:43812 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:43702 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729981AbfHTPtq (ORCPT
+        with ESMTP id S1729918AbfHTPtr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Aug 2019 11:49:46 -0400
+        Tue, 20 Aug 2019 11:49:47 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 6BC8B61AD2; Tue, 20 Aug 2019 15:49:23 +0000 (UTC)
+        id 633AF61AE2; Tue, 20 Aug 2019 15:49:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1566316185;
-        bh=QK2Nv2czhV5pB3gmxmEuAFwdbHbV8YJjd+T0h59mNFg=;
+        s=default; t=1566316184;
+        bh=Be5P9dfqDD454N5agDB9UPwxZf97Ztg2sZTtadDzDVI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=XhXzuIeVRhJoUGjU6hB7b/3Y4ZhHLrRmowFpsq3Xu1d42+slkU3n2sPZWgBBIcNuf
-         yyMFLUUpfrnLvdYuOw3PLmf8q5z5LXLO9lq47mntyBtpnV0k3SxVKHABkdaoK//Qfg
-         U69dJ+GUz4Qjmd+Z3Xg+i3Fhu6oreZ5RFjukI/bk=
+        b=IbBOnY7407oQahhJpSqzX4+3BqaN3mDonu2nC7gO47tiUkRCBD6OCn5nWWAUo1wwb
+         o7fKBny3c+RVW3rkh+bYJwj/bb8Vv7FsmYgMAEE14gdD6ConCndP5iqDlEC35nxopY
+         tzuTcyI35IQinIHDLftBWmmDtSMRwLGe5XpconC0=
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 060A161AF0;
-        Tue, 20 Aug 2019 15:49:17 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id C7AB661AC2;
+        Tue, 20 Aug 2019 15:49:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1566316160;
-        bh=QK2Nv2czhV5pB3gmxmEuAFwdbHbV8YJjd+T0h59mNFg=;
+        s=default; t=1566316170;
+        bh=Be5P9dfqDD454N5agDB9UPwxZf97Ztg2sZTtadDzDVI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=e/5WkSsmBvS49Y76HUpg+OlG6RL3gOYM5Clc0LLcjaDCOLvdZacZ98KHje7FkGiIi
-         RXm7Ww7IMzdyJmeMEv/lsc47iqOrxnopGLU7qRVgK8LYIjqR6+aydV6W4faUUyEYh4
-         qnUxS3kyl0EwNPwnkQHhZpXcmcZi4awTIsiKJ83g=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 060A161AF0
+        b=G2RhoXUhKpy44bYHp5mZJp5kZDyGT+eFmFHO2Zo8+f5vt9jfPxEVEFfvW0ovopmRy
+         4sKNIo8qOKJ75lsBZxMRGxPwURGLbMhqQKpeIXEe/GBIA8nLSsDS4ma8SJGlWCMdI0
+         y1sOf7/N5/ogFKMDIDewAoyEK3sOJEaRKuB+IYLI=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org C7AB661AC2
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
 To:     linux-wireless@vger.kernel.org
 Cc:     ath11k@lists.infradead.org, devicetree@vger.kernel.org
-Subject: [PATCH 21/49] ath11k: add hal.c
-Date:   Tue, 20 Aug 2019 18:47:47 +0300
-Message-Id: <1566316095-27507-22-git-send-email-kvalo@codeaurora.org>
+Subject: [PATCH 24/49] ath11k: add hal_rx.c
+Date:   Tue, 20 Aug 2019 18:47:50 +0300
+Message-Id: <1566316095-27507-25-git-send-email-kvalo@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1566316095-27507-1-git-send-email-kvalo@codeaurora.org>
 References: <1566316095-27507-1-git-send-email-kvalo@codeaurora.org>
@@ -64,1137 +63,1234 @@ List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 ---
- drivers/net/wireless/ath/ath11k/hal.c | 1124 +++++++++++++++++++++++++++++++++
- 1 file changed, 1124 insertions(+)
+ drivers/net/wireless/ath/ath11k/hal_rx.c | 1221 ++++++++++++++++++++++++++++++
+ 1 file changed, 1221 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath11k/hal.c b/drivers/net/wireless/ath/ath11k/hal.c
+diff --git a/drivers/net/wireless/ath/ath11k/hal_rx.c b/drivers/net/wireless/ath/ath11k/hal_rx.c
 new file mode 100644
-index 000000000000..e0ec7c5f8112
+index 000000000000..f8abbb79261f
 --- /dev/null
-+++ b/drivers/net/wireless/ath/ath11k/hal.c
-@@ -0,0 +1,1124 @@
++++ b/drivers/net/wireless/ath/ath11k/hal_rx.c
+@@ -0,0 +1,1221 @@
 +// SPDX-License-Identifier: ISC
 +/*
 + * Copyright (c) 2018-2019 The Linux Foundation. All rights reserved.
 + */
-+#include <linux/dma-mapping.h>
++
 +#include "ahb.h"
-+#include "hal_tx.h"
 +#include "debug.h"
++#include "hal.h"
++#include "hal_tx.h"
++#include "hal_rx.h"
 +#include "hal_desc.h"
 +
-+static const struct hal_srng_config hw_srng_config[] = {
-+	/* TODO: max_rings can populated by querying HW capabilities */
-+	{ /* REO_DST */
-+		.start_ring_id = HAL_SRNG_RING_ID_REO2SW1,
-+		.max_rings = 4,
-+		.entry_size = sizeof(struct hal_reo_dest_ring) >> 2,
-+		.lmac_ring = false,
-+		.ring_dir = HAL_SRNG_DIR_DST,
-+		.reg_start = {
-+			HAL_SEQ_WCSS_UMAC_REO_REG + HAL_REO1_RING_BASE_LSB,
-+			HAL_SEQ_WCSS_UMAC_REO_REG + HAL_REO1_RING_HP,
-+		},
-+		.reg_size = {
-+			HAL_REO2_RING_BASE_LSB - HAL_REO1_RING_BASE_LSB,
-+			HAL_REO2_RING_HP - HAL_REO1_RING_HP,
-+		},
-+		.max_size = HAL_REO_REO2SW1_RING_BASE_MSB_RING_SIZE,
-+	},
-+	{ /* REO_EXCEPTION */
-+		/* Designating REO2TCL ring as exception ring. This ring is
-+		 * similar to other REO2SW rings though it is named as REO2TCL.
-+		 * Any of theREO2SW rings can be used as exception ring.
-+		 */
-+		.start_ring_id = HAL_SRNG_RING_ID_REO2TCL,
-+		.max_rings = 1,
-+		.entry_size = sizeof(struct hal_reo_dest_ring) >> 2,
-+		.lmac_ring = false,
-+		.ring_dir = HAL_SRNG_DIR_DST,
-+		.reg_start = {
-+			HAL_SEQ_WCSS_UMAC_REO_REG + HAL_REO_TCL_RING_BASE_LSB,
-+			HAL_SEQ_WCSS_UMAC_REO_REG + HAL_REO_TCL_RING_HP,
-+		},
-+		.max_size = HAL_REO_REO2TCL_RING_BASE_MSB_RING_SIZE,
-+	},
-+	{ /* REO_REINJECT */
-+		.start_ring_id = HAL_SRNG_RING_ID_SW2REO,
-+		.max_rings = 1,
-+		.entry_size = sizeof(struct hal_reo_entrance_ring) >> 2,
-+		.lmac_ring = false,
-+		.ring_dir = HAL_SRNG_DIR_SRC,
-+		.reg_start = {
-+			HAL_SEQ_WCSS_UMAC_REO_REG + HAL_SW2REO_RING_BASE_LSB,
-+			HAL_SEQ_WCSS_UMAC_REO_REG + HAL_SW2REO_RING_HP,
-+		},
-+		.max_size = HAL_REO_SW2REO_RING_BASE_MSB_RING_SIZE,
-+	},
-+	{ /* REO_CMD */
-+		.start_ring_id = HAL_SRNG_RING_ID_REO_CMD,
-+		.max_rings = 1,
-+		.entry_size = (sizeof(struct hal_tlv_hdr) +
-+			sizeof(struct hal_reo_get_queue_stats)) >> 2,
-+		.lmac_ring = false,
-+		.ring_dir = HAL_SRNG_DIR_SRC,
-+		.reg_start = {
-+			HAL_SEQ_WCSS_UMAC_REO_REG + HAL_REO_CMD_RING_BASE_LSB,
-+			HAL_SEQ_WCSS_UMAC_REO_REG + HAL_REO_CMD_HP,
-+		},
-+		.max_size = HAL_REO_CMD_RING_BASE_MSB_RING_SIZE,
-+	},
-+	{ /* REO_STATUS */
-+		.start_ring_id = HAL_SRNG_RING_ID_REO_STATUS,
-+		.max_rings = 1,
-+		.entry_size = (sizeof(struct hal_tlv_hdr) +
-+			sizeof(struct hal_reo_get_queue_stats_status)) >> 2,
-+		.lmac_ring = false,
-+		.ring_dir = HAL_SRNG_DIR_DST,
-+		.reg_start = {
-+			HAL_SEQ_WCSS_UMAC_REO_REG +
-+				HAL_REO_STATUS_RING_BASE_LSB,
-+			HAL_SEQ_WCSS_UMAC_REO_REG + HAL_REO_STATUS_HP,
-+		},
-+		.max_size = HAL_REO_STATUS_RING_BASE_MSB_RING_SIZE,
-+	},
-+	{ /* TCL_DATA */
-+		.start_ring_id = HAL_SRNG_RING_ID_SW2TCL1,
-+		.max_rings = 3,
-+		.entry_size = (sizeof(struct hal_tlv_hdr) +
-+			     sizeof(struct hal_tcl_data_cmd)) >> 2,
-+		.lmac_ring = false,
-+		.ring_dir = HAL_SRNG_DIR_SRC,
-+		.reg_start = {
-+			HAL_SEQ_WCSS_UMAC_TCL_REG + HAL_TCL1_RING_BASE_LSB,
-+			HAL_SEQ_WCSS_UMAC_TCL_REG + HAL_TCL1_RING_HP,
-+		},
-+		.reg_size = {
-+			HAL_TCL2_RING_BASE_LSB - HAL_TCL1_RING_BASE_LSB,
-+			HAL_TCL2_RING_HP - HAL_TCL1_RING_HP,
-+		},
-+		.max_size = HAL_SW2TCL1_RING_BASE_MSB_RING_SIZE,
-+	},
-+	{ /* TCL_CMD */
-+		.start_ring_id = HAL_SRNG_RING_ID_SW2TCL_CMD,
-+		.max_rings = 1,
-+		.entry_size = (sizeof(struct hal_tlv_hdr) +
-+			     sizeof(struct hal_tcl_gse_cmd)) >> 2,
-+		.lmac_ring =  false,
-+		.ring_dir = HAL_SRNG_DIR_SRC,
-+		.reg_start = {
-+			HAL_SEQ_WCSS_UMAC_TCL_REG + HAL_TCL_RING_BASE_LSB,
-+			HAL_SEQ_WCSS_UMAC_TCL_REG + HAL_TCL_RING_HP,
-+		},
-+		.max_size = HAL_SW2TCL1_CMD_RING_BASE_MSB_RING_SIZE,
-+	},
-+	{ /* TCL_STATUS */
-+		.start_ring_id = HAL_SRNG_RING_ID_TCL_STATUS,
-+		.max_rings = 1,
-+		.entry_size = (sizeof(struct hal_tlv_hdr) +
-+			     sizeof(struct hal_tcl_status_ring)) >> 2,
-+		.lmac_ring = false,
-+		.ring_dir = HAL_SRNG_DIR_DST,
-+		.reg_start = {
-+			HAL_SEQ_WCSS_UMAC_TCL_REG +
-+				HAL_TCL_STATUS_RING_BASE_LSB,
-+			HAL_SEQ_WCSS_UMAC_TCL_REG + HAL_TCL_STATUS_RING_HP,
-+		},
-+		.max_size = HAL_TCL_STATUS_RING_BASE_MSB_RING_SIZE,
-+	},
-+	{ /* CE_SRC */
-+		.start_ring_id = HAL_SRNG_RING_ID_CE0_SRC,
-+		.max_rings = 12,
-+		.entry_size = sizeof(struct hal_ce_srng_src_desc) >> 2,
-+		.lmac_ring = false,
-+		.ring_dir = HAL_SRNG_DIR_SRC,
-+		.reg_start = {
-+			(HAL_SEQ_WCSS_UMAC_CE0_SRC_REG +
-+			 HAL_CE_DST_RING_BASE_LSB),
-+			HAL_SEQ_WCSS_UMAC_CE0_SRC_REG + HAL_CE_DST_RING_HP,
-+		},
-+		.reg_size = {
-+			(HAL_SEQ_WCSS_UMAC_CE1_SRC_REG -
-+			 HAL_SEQ_WCSS_UMAC_CE0_SRC_REG),
-+			(HAL_SEQ_WCSS_UMAC_CE1_SRC_REG -
-+			 HAL_SEQ_WCSS_UMAC_CE0_SRC_REG),
-+		},
-+		.max_size = HAL_CE_SRC_RING_BASE_MSB_RING_SIZE,
-+	},
-+	{ /* CE_DST */
-+		.start_ring_id = HAL_SRNG_RING_ID_CE0_DST,
-+		.max_rings = 12,
-+		.entry_size = sizeof(struct hal_ce_srng_dest_desc) >> 2,
-+		.lmac_ring = false,
-+		.ring_dir = HAL_SRNG_DIR_SRC,
-+		.reg_start = {
-+			(HAL_SEQ_WCSS_UMAC_CE0_DST_REG +
-+			 HAL_CE_DST_RING_BASE_LSB),
-+			HAL_SEQ_WCSS_UMAC_CE0_DST_REG + HAL_CE_DST_RING_HP,
-+		},
-+		.reg_size = {
-+			(HAL_SEQ_WCSS_UMAC_CE1_DST_REG -
-+			 HAL_SEQ_WCSS_UMAC_CE0_DST_REG),
-+			(HAL_SEQ_WCSS_UMAC_CE1_DST_REG -
-+			 HAL_SEQ_WCSS_UMAC_CE0_DST_REG),
-+		},
-+		.max_size = HAL_CE_DST_RING_BASE_MSB_RING_SIZE,
-+	},
-+	{ /* CE_DST_STATUS */
-+		.start_ring_id = HAL_SRNG_RING_ID_CE0_DST_STATUS,
-+		.max_rings = 12,
-+		.entry_size = sizeof(struct hal_ce_srng_dst_status_desc) >> 2,
-+		.lmac_ring = false,
-+		.ring_dir = HAL_SRNG_DIR_DST,
-+		.reg_start = {
-+			(HAL_SEQ_WCSS_UMAC_CE0_DST_REG +
-+			 HAL_CE_DST_STATUS_RING_BASE_LSB),
-+			(HAL_SEQ_WCSS_UMAC_CE0_DST_REG +
-+			 HAL_CE_DST_STATUS_RING_HP),
-+		},
-+		.reg_size = {
-+			(HAL_SEQ_WCSS_UMAC_CE1_DST_REG -
-+			 HAL_SEQ_WCSS_UMAC_CE0_DST_REG),
-+			(HAL_SEQ_WCSS_UMAC_CE1_DST_REG -
-+			 HAL_SEQ_WCSS_UMAC_CE0_DST_REG),
-+		},
-+		.max_size = HAL_CE_DST_STATUS_RING_BASE_MSB_RING_SIZE,
-+	},
-+	{ /* WBM_IDLE_LINK */
-+		.start_ring_id = HAL_SRNG_RING_ID_WBM_IDLE_LINK,
-+		.max_rings = 1,
-+		.entry_size = sizeof(struct hal_wbm_link_desc) >> 2,
-+		.lmac_ring = false,
-+		.ring_dir = HAL_SRNG_DIR_SRC,
-+		.reg_start = {
-+			(HAL_SEQ_WCSS_UMAC_WBM_REG +
-+			 HAL_WBM_IDLE_LINK_RING_BASE_LSB),
-+			(HAL_SEQ_WCSS_UMAC_WBM_REG + HAL_WBM_IDLE_LINK_RING_HP),
-+		},
-+		.max_size = HAL_WBM_IDLE_LINK_RING_BASE_MSB_RING_SIZE,
-+	},
-+	{ /* SW2WBM_RELEASE */
-+		.start_ring_id = HAL_SRNG_RING_ID_WBM_SW_RELEASE,
-+		.max_rings = 1,
-+		.entry_size = sizeof(struct hal_wbm_release_ring) >> 2,
-+		.lmac_ring = false,
-+		.ring_dir = HAL_SRNG_DIR_SRC,
-+		.reg_start = {
-+			(HAL_SEQ_WCSS_UMAC_WBM_REG +
-+			 HAL_WBM_RELEASE_RING_BASE_LSB),
-+			(HAL_SEQ_WCSS_UMAC_WBM_REG + HAL_WBM_RELEASE_RING_HP),
-+		},
-+		.max_size = HAL_SW2WBM_RELEASE_RING_BASE_MSB_RING_SIZE,
-+	},
-+	{ /* WBM2SW_RELEASE */
-+		.start_ring_id = HAL_SRNG_RING_ID_WBM2SW0_RELEASE,
-+		.max_rings = 4,
-+		.entry_size = sizeof(struct hal_wbm_release_ring) >> 2,
-+		.lmac_ring = false,
-+		.ring_dir = HAL_SRNG_DIR_DST,
-+		.reg_start = {
-+			(HAL_SEQ_WCSS_UMAC_WBM_REG +
-+			 HAL_WBM0_RELEASE_RING_BASE_LSB),
-+			(HAL_SEQ_WCSS_UMAC_WBM_REG + HAL_WBM0_RELEASE_RING_HP),
-+		},
-+		.reg_size = {
-+			(HAL_WBM1_RELEASE_RING_BASE_LSB -
-+			 HAL_WBM0_RELEASE_RING_BASE_LSB),
-+			(HAL_WBM1_RELEASE_RING_HP - HAL_WBM0_RELEASE_RING_HP),
-+		},
-+		.max_size = HAL_WBM2SW_RELEASE_RING_BASE_MSB_RING_SIZE,
-+	},
-+	{ /* RXDMA_BUF */
-+		.start_ring_id = HAL_SRNG_RING_ID_WMAC1_SW2RXDMA0_BUF,
-+		.max_rings = 2,
-+		.entry_size = sizeof(struct hal_wbm_buffer_ring) >> 2,
-+		.lmac_ring = true,
-+		.ring_dir = HAL_SRNG_DIR_SRC,
-+		.max_size = HAL_RXDMA_RING_MAX_SIZE,
-+	},
-+	{ /* RXDMA_DST */
-+		.start_ring_id = HAL_SRNG_RING_ID_WMAC1_RXDMA2SW0,
-+		.max_rings = 1,
-+		.entry_size = sizeof(struct hal_reo_entrance_ring) >> 2,
-+		.lmac_ring = true,
-+		.ring_dir = HAL_SRNG_DIR_DST,
-+		.max_size = HAL_RXDMA_RING_MAX_SIZE,
-+	},
-+	{ /* RXDMA_MONITOR_BUF */
-+		.start_ring_id = HAL_SRNG_RING_ID_WMAC1_SW2RXDMA2_BUF,
-+		.max_rings = 1,
-+		.entry_size = sizeof(struct hal_wbm_buffer_ring) >> 2,
-+		.lmac_ring = true,
-+		.ring_dir = HAL_SRNG_DIR_SRC,
-+		.max_size = HAL_RXDMA_RING_MAX_SIZE,
-+	},
-+	{ /* RXDMA_MONITOR_STATUS */
-+		.start_ring_id = HAL_SRNG_RING_ID_WMAC1_SW2RXDMA1_STATBUF,
-+		.max_rings = 1,
-+		.entry_size = sizeof(struct hal_wbm_buffer_ring) >> 2,
-+		.lmac_ring = true,
-+		.ring_dir = HAL_SRNG_DIR_SRC,
-+		.max_size = HAL_RXDMA_RING_MAX_SIZE,
-+	},
-+	{ /* RXDMA_MONITOR_DST */
-+		.start_ring_id = HAL_SRNG_RING_ID_WMAC1_RXDMA2SW1,
-+		.max_rings = 1,
-+		.entry_size = sizeof(struct hal_reo_entrance_ring) >> 2,
-+		.lmac_ring = true,
-+		.ring_dir = HAL_SRNG_DIR_DST,
-+		.max_size = HAL_RXDMA_RING_MAX_SIZE,
-+	},
-+	{ /* RXDMA_MONITOR_DESC */
-+		.start_ring_id = HAL_SRNG_RING_ID_WMAC1_SW2RXDMA1_DESC,
-+		.max_rings = 1,
-+		.entry_size = sizeof(struct hal_wbm_buffer_ring) >> 2,
-+		.lmac_ring = true,
-+		.ring_dir = HAL_SRNG_DIR_SRC,
-+		.max_size = HAL_RXDMA_RING_MAX_SIZE,
-+	},
-+	{ /* RXDMA DIR BUF */
-+		.start_ring_id = HAL_SRNG_RING_ID_RXDMA_DIR_BUF,
-+		.max_rings = 1,
-+		.entry_size = 8 >> 2, /* TODO: Define the struct */
-+		.lmac_ring = true,
-+		.ring_dir = HAL_SRNG_DIR_SRC,
-+		.max_size = HAL_RXDMA_RING_MAX_SIZE,
-+	},
-+};
-+
-+static int ath11k_hal_alloc_cont_rdp(struct ath11k_base *ab)
++static void ath11k_hal_reo_set_desc_hdr(struct hal_desc_header *hdr,
++					u8 owner, u8 buffer_type, u32 magic)
 +{
-+	struct ath11k_hal *hal = &ab->hal;
-+	size_t size;
++	hdr->info0 = FIELD_PREP(HAL_DESC_HDR_INFO0_OWNER, owner) |
++		     FIELD_PREP(HAL_DESC_HDR_INFO0_BUF_TYPE, buffer_type);
 +
-+	size = sizeof(u32) * HAL_SRNG_RING_ID_MAX;
-+	hal->rdp.vaddr = dma_alloc_coherent(ab->dev, size, &hal->rdp.paddr,
-+					    GFP_KERNEL);
-+	if (!hal->rdp.vaddr)
-+		return -ENOMEM;
-+
-+	return 0;
++	/* Magic pattern in reserved bits for debugging */
++	hdr->info0 |= FIELD_PREP(HAL_DESC_HDR_INFO0_DBG_RESERVED, magic);
 +}
 +
-+static void ath11k_hal_free_cont_rdp(struct ath11k_base *ab)
++static int ath11k_hal_reo_cmd_queue_stats(struct hal_tlv_hdr *tlv,
++					  struct ath11k_hal_reo_cmd *cmd)
 +{
-+	struct ath11k_hal *hal = &ab->hal;
-+	size_t size;
++	struct hal_reo_get_queue_stats *desc;
 +
-+	if (!hal->rdp.vaddr)
-+		return;
++	tlv->tl = FIELD_PREP(HAL_TLV_HDR_TAG, HAL_REO_GET_QUEUE_STATS) |
++		  FIELD_PREP(HAL_TLV_HDR_LEN, sizeof(*desc));
 +
-+	size = sizeof(u32) * HAL_SRNG_RING_ID_MAX;
-+	dma_free_coherent(ab->dev, size,
-+			  hal->rdp.vaddr, hal->rdp.paddr);
-+	hal->rdp.vaddr = NULL;
++	desc = (struct hal_reo_get_queue_stats *)tlv->value;
++	memset(&desc->queue_addr_lo, 0,
++	       (sizeof(*desc) - sizeof(struct hal_reo_cmd_hdr)));
++
++	desc->cmd.info0 &= ~HAL_REO_CMD_HDR_INFO0_STATUS_REQUIRED;
++	if (cmd->flag & HAL_REO_CMD_FLG_NEED_STATUS)
++		desc->cmd.info0 |= HAL_REO_CMD_HDR_INFO0_STATUS_REQUIRED;
++
++	desc->queue_addr_lo = cmd->addr_lo;
++	desc->info0 = FIELD_PREP(HAL_REO_GET_QUEUE_STATS_INFO0_QUEUE_ADDR_HI,
++				 cmd->addr_hi);
++	if (cmd->flag & HAL_REO_CMD_FLG_STATS_CLEAR)
++		desc->info0 |= HAL_REO_GET_QUEUE_STATS_INFO0_CLEAR_STATS;
++
++	return FIELD_GET(HAL_REO_CMD_HDR_INFO0_CMD_NUMBER, desc->cmd.info0);
 +}
 +
-+static int ath11k_hal_alloc_cont_wrp(struct ath11k_base *ab)
++static int ath11k_hal_reo_cmd_flush_cache(struct ath11k_hal *hal, struct hal_tlv_hdr *tlv,
++					  struct ath11k_hal_reo_cmd *cmd)
 +{
-+	struct ath11k_hal *hal = &ab->hal;
-+	size_t size;
++	struct hal_reo_flush_cache *desc;
++	u8 avail_slot = ffz(hal->avail_blk_resource);
 +
-+	size = sizeof(u32) * HAL_SRNG_NUM_LMAC_RINGS;
-+	hal->wrp.vaddr = dma_alloc_coherent(ab->dev, size, &hal->wrp.paddr,
-+					    GFP_KERNEL);
-+	if (!hal->wrp.vaddr)
-+		return -ENOMEM;
++	if (cmd->flag & HAL_REO_CMD_FLG_FLUSH_BLOCK_LATER) {
++		if (avail_slot >= HAL_MAX_AVAIL_BLK_RES)
++			return -ENOSPC;
 +
-+	return 0;
-+}
-+
-+static void ath11k_hal_free_cont_wrp(struct ath11k_base *ab)
-+{
-+	struct ath11k_hal *hal = &ab->hal;
-+	size_t size;
-+
-+	if (!hal->wrp.vaddr)
-+		return;
-+
-+	size = sizeof(u32) * HAL_SRNG_NUM_LMAC_RINGS;
-+	dma_free_coherent(ab->dev, size,
-+			  hal->wrp.vaddr, hal->wrp.paddr);
-+	hal->wrp.vaddr = NULL;
-+}
-+
-+static void ath11k_hal_ce_dst_setup(struct ath11k_base *ab,
-+				    struct hal_srng *srng, int ring_num)
-+{
-+	const struct hal_srng_config *srng_config = &hw_srng_config[HAL_CE_DST];
-+	u32 addr;
-+	u32 val;
-+
-+	addr = HAL_CE_DST_RING_CTRL +
-+	       srng_config->reg_start[HAL_SRNG_REG_GRP_R0] +
-+	       ring_num * srng_config->reg_size[HAL_SRNG_REG_GRP_R0];
-+	val = ath11k_ahb_read32(ab, addr);
-+	val &= ~HAL_CE_DST_R0_DEST_CTRL_MAX_LEN;
-+	val |= FIELD_PREP(HAL_CE_DST_R0_DEST_CTRL_MAX_LEN,
-+			  srng->u.dst_ring.max_buffer_length);
-+	ath11k_ahb_write32(ab, addr, val);
-+}
-+
-+static void ath11k_hal_srng_dst_hw_init(struct ath11k_base *ab,
-+					struct hal_srng *srng)
-+{
-+	struct ath11k_hal *hal = &ab->hal;
-+	u32 val;
-+	u64 hp_addr;
-+	u32 reg_base;
-+
-+	reg_base = srng->hwreg_base[HAL_SRNG_REG_GRP_R0];
-+
-+	if (srng->flags & HAL_SRNG_FLAGS_MSI_INTR) {
-+		ath11k_ahb_write32(ab, reg_base +
-+				       HAL_REO1_RING_MSI1_BASE_LSB_OFFSET,
-+				   (u32)srng->msi_addr);
-+
-+		val = FIELD_PREP(HAL_REO1_RING_MSI1_BASE_MSB_ADDR,
-+				 ((u64)srng->msi_addr >>
-+				  HAL_ADDR_MSB_REG_SHIFT)) |
-+		      HAL_REO1_RING_MSI1_BASE_MSB_MSI1_ENABLE;
-+		ath11k_ahb_write32(ab, reg_base +
-+				       HAL_REO1_RING_MSI1_BASE_MSB_OFFSET, val);
-+
-+		ath11k_ahb_write32(ab,
-+				   reg_base + HAL_REO1_RING_MSI1_DATA_OFFSET,
-+				   srng->msi_data);
++		hal->current_blk_index = avail_slot;
 +	}
 +
-+	ath11k_ahb_write32(ab, reg_base, (u32)srng->ring_base_paddr);
++	tlv->tl = FIELD_PREP(HAL_TLV_HDR_TAG, HAL_REO_FLUSH_CACHE) |
++		  FIELD_PREP(HAL_TLV_HDR_LEN, sizeof(*desc));
 +
-+	val = FIELD_PREP(HAL_REO1_RING_BASE_MSB_RING_BASE_ADDR_MSB,
-+			 ((u64)srng->ring_base_paddr >>
-+			  HAL_ADDR_MSB_REG_SHIFT)) |
-+	      FIELD_PREP(HAL_REO1_RING_BASE_MSB_RING_SIZE,
-+			 (srng->entry_size * srng->num_entries));
-+	ath11k_ahb_write32(ab, reg_base + HAL_REO1_RING_BASE_MSB_OFFSET, val);
++	desc = (struct hal_reo_flush_cache *)tlv->value;
++	memset(&desc->cache_addr_lo, 0,
++	       (sizeof(*desc) - sizeof(struct hal_reo_cmd_hdr)));
 +
-+	val = FIELD_PREP(HAL_REO1_RING_ID_RING_ID, srng->ring_id) |
-+	      FIELD_PREP(HAL_REO1_RING_ID_ENTRY_SIZE, srng->entry_size);
-+	ath11k_ahb_write32(ab, reg_base + HAL_REO1_RING_ID_OFFSET, val);
++	desc->cmd.info0 &= ~HAL_REO_CMD_HDR_INFO0_STATUS_REQUIRED;
++	if (cmd->flag & HAL_REO_CMD_FLG_NEED_STATUS)
++		desc->cmd.info0 |= HAL_REO_CMD_HDR_INFO0_STATUS_REQUIRED;
 +
-+	/* interrupt setup */
-+	val = FIELD_PREP(HAL_REO1_RING_PRDR_INT_SETUP_INTR_TMR_THOLD,
-+			 (srng->intr_timer_thres_us >> 3));
++	desc->cache_addr_lo = cmd->addr_lo;
++	desc->info0 = FIELD_PREP(HAL_REO_FLUSH_CACHE_INFO0_CACHE_ADDR_HI,
++				 cmd->addr_hi);
 +
-+	val |= FIELD_PREP(HAL_REO1_RING_PRDR_INT_SETUP_BATCH_COUNTER_THOLD,
-+			  (srng->intr_batch_cntr_thres_entries *
-+			   srng->entry_size));
++	if (cmd->flag & HAL_REO_CMD_FLG_FLUSH_FWD_ALL_MPDUS)
++		desc->info0 |= HAL_REO_FLUSH_CACHE_INFO0_FWD_ALL_MPDUS;
 +
-+	ath11k_ahb_write32(ab,
-+			   reg_base + HAL_REO1_RING_PRODUCER_INT_SETUP_OFFSET,
-+			   val);
-+
-+	hp_addr = hal->rdp.paddr +
-+		  ((unsigned long)srng->u.dst_ring.hp_addr -
-+		   (unsigned long)hal->rdp.vaddr);
-+	ath11k_ahb_write32(ab, reg_base + HAL_REO1_RING_HP_ADDR_LSB_OFFSET,
-+			   hp_addr & HAL_ADDR_LSB_REG_MASK);
-+	ath11k_ahb_write32(ab, reg_base + HAL_REO1_RING_HP_ADDR_MSB_OFFSET,
-+			   hp_addr >> HAL_ADDR_MSB_REG_SHIFT);
-+
-+	/* Initialize head and tail pointers to indicate ring is empty */
-+	reg_base = srng->hwreg_base[HAL_SRNG_REG_GRP_R2];
-+	ath11k_ahb_write32(ab, reg_base, 0);
-+	ath11k_ahb_write32(ab, reg_base + HAL_REO1_RING_TP_OFFSET, 0);
-+	*srng->u.dst_ring.hp_addr = 0;
-+
-+	reg_base = srng->hwreg_base[HAL_SRNG_REG_GRP_R0];
-+	val = 0;
-+	if (srng->flags & HAL_SRNG_FLAGS_DATA_TLV_SWAP)
-+		val |= HAL_REO1_RING_MISC_DATA_TLV_SWAP;
-+	if (srng->flags & HAL_SRNG_FLAGS_RING_PTR_SWAP)
-+		val |= HAL_REO1_RING_MISC_HOST_FW_SWAP;
-+	if (srng->flags & HAL_SRNG_FLAGS_MSI_SWAP)
-+		val |= HAL_REO1_RING_MISC_MSI_SWAP;
-+	val |= HAL_REO1_RING_MISC_SRNG_ENABLE;
-+
-+	ath11k_ahb_write32(ab, reg_base + HAL_REO1_RING_MISC_OFFSET, val);
-+}
-+
-+static void ath11k_hal_srng_src_hw_init(struct ath11k_base *ab,
-+					struct hal_srng *srng)
-+{
-+	struct ath11k_hal *hal = &ab->hal;
-+	u32 val;
-+	u64 tp_addr;
-+	u32 reg_base;
-+
-+	reg_base = srng->hwreg_base[HAL_SRNG_REG_GRP_R0];
-+
-+	if (srng->flags & HAL_SRNG_FLAGS_MSI_INTR) {
-+		ath11k_ahb_write32(ab, reg_base +
-+				       HAL_TCL1_RING_MSI1_BASE_LSB_OFFSET,
-+				   (u32)srng->msi_addr);
-+
-+		val = FIELD_PREP(HAL_TCL1_RING_MSI1_BASE_MSB_ADDR,
-+				 ((u64)srng->msi_addr >>
-+				  HAL_ADDR_MSB_REG_SHIFT)) |
-+		      HAL_TCL1_RING_MSI1_BASE_MSB_MSI1_ENABLE;
-+		ath11k_ahb_write32(ab, reg_base +
-+				       HAL_TCL1_RING_MSI1_BASE_MSB_OFFSET,
-+				   val);
-+
-+		ath11k_ahb_write32(ab, reg_base +
-+				       HAL_TCL1_RING_MSI1_DATA_OFFSET,
-+				   srng->msi_data);
++	if (cmd->flag & HAL_REO_CMD_FLG_FLUSH_BLOCK_LATER) {
++		desc->info0 |= HAL_REO_FLUSH_CACHE_INFO0_BLOCK_CACHE_USAGE;
++		desc->info0 |=
++			FIELD_PREP(HAL_REO_FLUSH_CACHE_INFO0_BLOCK_RESRC_IDX,
++				   avail_slot);
 +	}
 +
-+	ath11k_ahb_write32(ab, reg_base, (u32)srng->ring_base_paddr);
++	if (cmd->flag & HAL_REO_CMD_FLG_FLUSH_NO_INVAL)
++		desc->info0 |= HAL_REO_FLUSH_CACHE_INFO0_FLUSH_WO_INVALIDATE;
 +
-+	val = FIELD_PREP(HAL_TCL1_RING_BASE_MSB_RING_BASE_ADDR_MSB,
-+			 ((u64)srng->ring_base_paddr >>
-+			  HAL_ADDR_MSB_REG_SHIFT)) |
-+	      FIELD_PREP(HAL_TCL1_RING_BASE_MSB_RING_SIZE,
-+			 (srng->entry_size * srng->num_entries));
-+	ath11k_ahb_write32(ab, reg_base + HAL_TCL1_RING_BASE_MSB_OFFSET, val);
++	if (cmd->flag & HAL_REO_CMD_FLG_FLUSH_ALL)
++		desc->info0 |= HAL_REO_FLUSH_CACHE_INFO0_FLUSH_ALL;
 +
-+	val = FIELD_PREP(HAL_REO1_RING_ID_ENTRY_SIZE, srng->entry_size);
-+	ath11k_ahb_write32(ab, reg_base + HAL_TCL1_RING_ID_OFFSET, val);
-+
-+	/* interrupt setup */
-+	/* NOTE: IPQ8074 v2 requires the interrupt timer threshold in the
-+	 * unit of 8 usecs instead of 1 usec (as required by v1).
-+	 */
-+	val = FIELD_PREP(HAL_TCL1_RING_CONSR_INT_SETUP_IX0_INTR_TMR_THOLD,
-+			 srng->intr_timer_thres_us);
-+
-+	val |= FIELD_PREP(HAL_TCL1_RING_CONSR_INT_SETUP_IX0_BATCH_COUNTER_THOLD,
-+			  (srng->intr_batch_cntr_thres_entries *
-+			   srng->entry_size));
-+
-+	ath11k_ahb_write32(ab,
-+			   reg_base + HAL_TCL1_RING_CONSR_INT_SETUP_IX0_OFFSET,
-+			   val);
-+
-+	val = 0;
-+	if (srng->flags & HAL_SRNG_FLAGS_LOW_THRESH_INTR_EN) {
-+		val |= FIELD_PREP(HAL_TCL1_RING_CONSR_INT_SETUP_IX1_LOW_THOLD,
-+				  srng->u.src_ring.low_threshold);
-+	}
-+	ath11k_ahb_write32(ab,
-+			   reg_base + HAL_TCL1_RING_CONSR_INT_SETUP_IX1_OFFSET,
-+			   val);
-+
-+	if (srng->ring_id != HAL_SRNG_RING_ID_WBM_IDLE_LINK) {
-+		tp_addr = hal->rdp.paddr +
-+			  ((unsigned long)srng->u.src_ring.tp_addr -
-+			   (unsigned long)hal->rdp.vaddr);
-+		ath11k_ahb_write32(ab,
-+				   reg_base + HAL_TCL1_RING_TP_ADDR_LSB_OFFSET,
-+				   tp_addr & HAL_ADDR_LSB_REG_MASK);
-+		ath11k_ahb_write32(ab,
-+				   reg_base + HAL_TCL1_RING_TP_ADDR_MSB_OFFSET,
-+				   tp_addr >> HAL_ADDR_MSB_REG_SHIFT);
-+	}
-+
-+	/* Initialize head and tail pointers to indicate ring is empty */
-+	reg_base = srng->hwreg_base[HAL_SRNG_REG_GRP_R2];
-+	ath11k_ahb_write32(ab, reg_base, 0);
-+	ath11k_ahb_write32(ab, reg_base + HAL_TCL1_RING_TP_OFFSET, 0);
-+	*srng->u.src_ring.tp_addr = 0;
-+
-+	reg_base = srng->hwreg_base[HAL_SRNG_REG_GRP_R0];
-+	val = 0;
-+	if (srng->flags & HAL_SRNG_FLAGS_DATA_TLV_SWAP)
-+		val |= HAL_TCL1_RING_MISC_DATA_TLV_SWAP;
-+	if (srng->flags & HAL_SRNG_FLAGS_RING_PTR_SWAP)
-+		val |= HAL_TCL1_RING_MISC_HOST_FW_SWAP;
-+	if (srng->flags & HAL_SRNG_FLAGS_MSI_SWAP)
-+		val |= HAL_TCL1_RING_MISC_MSI_SWAP;
-+
-+	/* Loop count is not used for SRC rings */
-+	val |= HAL_TCL1_RING_MISC_MSI_LOOPCNT_DISABLE;
-+
-+	val |= HAL_TCL1_RING_MISC_SRNG_ENABLE;
-+
-+	ath11k_ahb_write32(ab, reg_base + HAL_TCL1_RING_MISC_OFFSET, val);
++	return FIELD_GET(HAL_REO_CMD_HDR_INFO0_CMD_NUMBER, desc->cmd.info0);
 +}
 +
-+static void ath11k_hal_srng_hw_init(struct ath11k_base *ab,
-+				    struct hal_srng *srng)
++static int ath11k_hal_reo_cmd_update_rx_queue(struct hal_tlv_hdr *tlv,
++					      struct ath11k_hal_reo_cmd *cmd)
 +{
-+	if (srng->ring_dir == HAL_SRNG_DIR_SRC)
-+		ath11k_hal_srng_src_hw_init(ab, srng);
-+	else
-+		ath11k_hal_srng_dst_hw_init(ab, srng);
++	struct hal_reo_update_rx_queue *desc;
++
++	tlv->tl = FIELD_PREP(HAL_TLV_HDR_TAG, HAL_REO_UPDATE_RX_REO_QUEUE) |
++		  FIELD_PREP(HAL_TLV_HDR_LEN, sizeof(*desc));
++
++	desc = (struct hal_reo_update_rx_queue *)tlv->value;
++	memset(&desc->queue_addr_lo, 0,
++	       (sizeof(*desc) - sizeof(struct hal_reo_cmd_hdr)));
++
++	desc->cmd.info0 &= ~HAL_REO_CMD_HDR_INFO0_STATUS_REQUIRED;
++	if (cmd->flag & HAL_REO_CMD_FLG_NEED_STATUS)
++		desc->cmd.info0 |= HAL_REO_CMD_HDR_INFO0_STATUS_REQUIRED;
++
++	desc->queue_addr_lo = cmd->addr_lo;
++	desc->info0 =
++		FIELD_PREP(HAL_REO_UPD_RX_QUEUE_INFO0_QUEUE_ADDR_HI,
++			   cmd->addr_hi) |
++		FIELD_PREP(HAL_REO_UPD_RX_QUEUE_INFO0_UPD_RX_QUEUE_NUM,
++			   !!(cmd->upd0 & HAL_REO_CMD_UPD0_RX_QUEUE_NUM)) |
++		FIELD_PREP(HAL_REO_UPD_RX_QUEUE_INFO0_UPD_VLD,
++			   !!(cmd->upd0 & HAL_REO_CMD_UPD0_VLD)) |
++		FIELD_PREP(HAL_REO_UPD_RX_QUEUE_INFO0_UPD_ASSOC_LNK_DESC_CNT,
++			   !!(cmd->upd0 & HAL_REO_CMD_UPD0_ALDC)) |
++		FIELD_PREP(HAL_REO_UPD_RX_QUEUE_INFO0_UPD_DIS_DUP_DETECTION,
++			   !!(cmd->upd0 & HAL_REO_CMD_UPD0_DIS_DUP_DETECTION)) |
++		FIELD_PREP(HAL_REO_UPD_RX_QUEUE_INFO0_UPD_SOFT_REORDER_EN,
++			   !!(cmd->upd0 & HAL_REO_CMD_UPD0_SOFT_REORDER_EN)) |
++		FIELD_PREP(HAL_REO_UPD_RX_QUEUE_INFO0_UPD_AC,
++			   !!(cmd->upd0 & HAL_REO_CMD_UPD0_AC)) |
++		FIELD_PREP(HAL_REO_UPD_RX_QUEUE_INFO0_UPD_BAR,
++			   !!(cmd->upd0 & HAL_REO_CMD_UPD0_BAR)) |
++		FIELD_PREP(HAL_REO_UPD_RX_QUEUE_INFO0_UPD_RETRY,
++			   !!(cmd->upd0 & HAL_REO_CMD_UPD0_RETRY)) |
++		FIELD_PREP(HAL_REO_UPD_RX_QUEUE_INFO0_UPD_CHECK_2K_MODE,
++			   !!(cmd->upd0 & HAL_REO_CMD_UPD0_CHECK_2K_MODE)) |
++		FIELD_PREP(HAL_REO_UPD_RX_QUEUE_INFO0_UPD_OOR_MODE,
++			   !!(cmd->upd0 & HAL_REO_CMD_UPD0_OOR_MODE)) |
++		FIELD_PREP(HAL_REO_UPD_RX_QUEUE_INFO0_UPD_BA_WINDOW_SIZE,
++			   !!(cmd->upd0 & HAL_REO_CMD_UPD0_BA_WINDOW_SIZE)) |
++		FIELD_PREP(HAL_REO_UPD_RX_QUEUE_INFO0_UPD_PN_CHECK,
++			   !!(cmd->upd0 & HAL_REO_CMD_UPD0_PN_CHECK)) |
++		FIELD_PREP(HAL_REO_UPD_RX_QUEUE_INFO0_UPD_EVEN_PN,
++			   !!(cmd->upd0 & HAL_REO_CMD_UPD0_EVEN_PN)) |
++		FIELD_PREP(HAL_REO_UPD_RX_QUEUE_INFO0_UPD_UNEVEN_PN,
++			   !!(cmd->upd0 & HAL_REO_CMD_UPD0_UNEVEN_PN)) |
++		FIELD_PREP(HAL_REO_UPD_RX_QUEUE_INFO0_UPD_PN_HANDLE_ENABLE,
++			   !!(cmd->upd0 & HAL_REO_CMD_UPD0_PN_HANDLE_ENABLE)) |
++		FIELD_PREP(HAL_REO_UPD_RX_QUEUE_INFO0_UPD_PN_SIZE,
++			   !!(cmd->upd0 & HAL_REO_CMD_UPD0_PN_SIZE)) |
++		FIELD_PREP(HAL_REO_UPD_RX_QUEUE_INFO0_UPD_IGNORE_AMPDU_FLG,
++			   !!(cmd->upd0 & HAL_REO_CMD_UPD0_IGNORE_AMPDU_FLG)) |
++		FIELD_PREP(HAL_REO_UPD_RX_QUEUE_INFO0_UPD_SVLD,
++			   !!(cmd->upd0 & HAL_REO_CMD_UPD0_SVLD)) |
++		FIELD_PREP(HAL_REO_UPD_RX_QUEUE_INFO0_UPD_SSN,
++			   !!(cmd->upd0 & HAL_REO_CMD_UPD0_SSN)) |
++		FIELD_PREP(HAL_REO_UPD_RX_QUEUE_INFO0_UPD_SEQ_2K_ERR,
++			   !!(cmd->upd0 & HAL_REO_CMD_UPD0_SEQ_2K_ERR)) |
++		FIELD_PREP(HAL_REO_UPD_RX_QUEUE_INFO0_UPD_PN_VALID,
++			   !!(cmd->upd0 & HAL_REO_CMD_UPD0_PN_VALID)) |
++		FIELD_PREP(HAL_REO_UPD_RX_QUEUE_INFO0_UPD_PN,
++			   !!(cmd->upd0 & HAL_REO_CMD_UPD0_PN));
++
++	desc->info1 =
++		FIELD_PREP(HAL_REO_UPD_RX_QUEUE_INFO1_RX_QUEUE_NUMBER,
++			   cmd->rx_queue_num) |
++		FIELD_PREP(HAL_REO_UPD_RX_QUEUE_INFO1_VLD,
++			   !!(cmd->upd1 & HAL_REO_CMD_UPD1_VLD)) |
++		FIELD_PREP(HAL_REO_UPD_RX_QUEUE_INFO1_ASSOC_LNK_DESC_COUNTER,
++			   FIELD_GET(HAL_REO_CMD_UPD1_ALDC, cmd->upd1)) |
++		FIELD_PREP(HAL_REO_UPD_RX_QUEUE_INFO1_DIS_DUP_DETECTION,
++			   !!(cmd->upd1 & HAL_REO_CMD_UPD1_DIS_DUP_DETECTION)) |
++		FIELD_PREP(HAL_REO_UPD_RX_QUEUE_INFO1_SOFT_REORDER_EN,
++			   !!(cmd->upd1 & HAL_REO_CMD_UPD1_SOFT_REORDER_EN)) |
++		FIELD_PREP(HAL_REO_UPD_RX_QUEUE_INFO1_AC,
++			   FIELD_GET(HAL_REO_CMD_UPD1_AC, cmd->upd1)) |
++		FIELD_PREP(HAL_REO_UPD_RX_QUEUE_INFO1_BAR,
++			   !!(cmd->upd1 & HAL_REO_CMD_UPD1_BAR)) |
++		FIELD_PREP(HAL_REO_UPD_RX_QUEUE_INFO1_CHECK_2K_MODE,
++			   !!(cmd->upd1 & HAL_REO_CMD_UPD1_CHECK_2K_MODE)) |
++		FIELD_PREP(HAL_REO_UPD_RX_QUEUE_INFO1_RETRY,
++			   !!(cmd->upd1 & HAL_REO_CMD_UPD1_RETRY)) |
++		FIELD_PREP(HAL_REO_UPD_RX_QUEUE_INFO1_OOR_MODE,
++			   !!(cmd->upd1 & HAL_REO_CMD_UPD1_OOR_MODE)) |
++		FIELD_PREP(HAL_REO_UPD_RX_QUEUE_INFO1_PN_CHECK,
++			   !!(cmd->upd1 & HAL_REO_CMD_UPD1_PN_CHECK)) |
++		FIELD_PREP(HAL_REO_UPD_RX_QUEUE_INFO1_EVEN_PN,
++			   !!(cmd->upd1 & HAL_REO_CMD_UPD1_EVEN_PN)) |
++		FIELD_PREP(HAL_REO_UPD_RX_QUEUE_INFO1_UNEVEN_PN,
++			   !!(cmd->upd1 & HAL_REO_CMD_UPD1_UNEVEN_PN)) |
++		FIELD_PREP(HAL_REO_UPD_RX_QUEUE_INFO1_PN_HANDLE_ENABLE,
++			   !!(cmd->upd1 & HAL_REO_CMD_UPD1_PN_HANDLE_ENABLE)) |
++		FIELD_PREP(HAL_REO_UPD_RX_QUEUE_INFO1_IGNORE_AMPDU_FLG,
++			   !!(cmd->upd1 & HAL_REO_CMD_UPD1_IGNORE_AMPDU_FLG));
++
++	if (cmd->pn_size == 24)
++		cmd->pn_size = HAL_RX_REO_QUEUE_PN_SIZE_24;
++	else if (cmd->pn_size == 48)
++		cmd->pn_size = HAL_RX_REO_QUEUE_PN_SIZE_48;
++	else if (cmd->pn_size == 128)
++		cmd->pn_size = HAL_RX_REO_QUEUE_PN_SIZE_128;
++
++	if (cmd->ba_window_size < 1)
++		cmd->ba_window_size = 1;
++
++	if (cmd->ba_window_size == 1)
++		cmd->ba_window_size++;
++
++	desc->info2 =
++		FIELD_PREP(HAL_REO_UPD_RX_QUEUE_INFO2_BA_WINDOW_SIZE,
++			   cmd->ba_window_size - 1) |
++		FIELD_PREP(HAL_REO_UPD_RX_QUEUE_INFO2_PN_SIZE, cmd->pn_size) |
++		FIELD_PREP(HAL_REO_UPD_RX_QUEUE_INFO2_SVLD,
++			   !!(cmd->upd2 & HAL_REO_CMD_UPD2_SVLD)) |
++		FIELD_PREP(HAL_REO_UPD_RX_QUEUE_INFO2_SSN,
++			   FIELD_GET(HAL_REO_CMD_UPD2_SSN, cmd->upd2)) |
++		FIELD_PREP(HAL_REO_UPD_RX_QUEUE_INFO2_SEQ_2K_ERR,
++			   !!(cmd->upd2 & HAL_REO_CMD_UPD2_SEQ_2K_ERR)) |
++		FIELD_PREP(HAL_REO_UPD_RX_QUEUE_INFO2_PN_ERR,
++			   !!(cmd->upd2 & HAL_REO_CMD_UPD2_PN_ERR));
++
++	return FIELD_GET(HAL_REO_CMD_HDR_INFO0_CMD_NUMBER, desc->cmd.info0);
 +}
 +
-+static int ath11k_hal_srng_get_ring_id(struct ath11k_base *ab,
-+				       enum hal_ring_type type,
-+				       int ring_num, int mac_id)
++int ath11k_hal_reo_cmd_send(struct ath11k_base *ab, struct hal_srng *srng,
++			    enum hal_reo_cmd_type type,
++			    struct ath11k_hal_reo_cmd *cmd)
 +{
-+	const struct hal_srng_config *srng_config = &hw_srng_config[type];
-+	int ring_id;
-+
-+	if (ring_num >= srng_config->max_rings) {
-+		ath11k_warn(ab, "invalid ring number :%d\n", ring_num);
-+		return -EINVAL;
-+	}
-+
-+	ring_id = srng_config->start_ring_id + ring_num;
-+	if (srng_config->lmac_ring)
-+		ring_id += mac_id * HAL_SRNG_RINGS_PER_LMAC;
-+
-+	if (WARN_ON(ring_id >= HAL_SRNG_RING_ID_MAX))
-+		return -EINVAL;
-+
-+	return ring_id;
-+}
-+
-+int ath11k_hal_srng_get_entrysize(u32 ring_type)
-+{
-+	const struct hal_srng_config *srng_config;
-+
-+	if (WARN_ON(ring_type >= HAL_MAX_RING_TYPES))
-+		return -EINVAL;
-+
-+	srng_config = &hw_srng_config[ring_type];
-+
-+	return (srng_config->entry_size << 2);
-+}
-+
-+int ath11k_hal_srng_get_max_entries(u32 ring_type)
-+{
-+	const struct hal_srng_config *srng_config;
-+
-+	if (WARN_ON(ring_type >= HAL_MAX_RING_TYPES))
-+		return -EINVAL;
-+
-+	srng_config = &hw_srng_config[ring_type];
-+
-+	return (srng_config->max_size / srng_config->entry_size);
-+}
-+
-+void ath11k_hal_srng_get_params(struct ath11k_base *ab, struct hal_srng *srng,
-+				struct hal_srng_params *params)
-+{
-+	params->ring_base_paddr = srng->ring_base_paddr;
-+	params->ring_base_vaddr = srng->ring_base_vaddr;
-+	params->num_entries = srng->num_entries;
-+	params->intr_timer_thres_us = srng->intr_timer_thres_us;
-+	params->intr_batch_cntr_thres_entries =
-+		srng->intr_batch_cntr_thres_entries;
-+	params->low_threshold = srng->u.src_ring.low_threshold;
-+	params->flags = srng->flags;
-+}
-+
-+dma_addr_t ath11k_hal_srng_get_hp_addr(struct ath11k_base *ab,
-+				       struct hal_srng *srng)
-+{
-+	if (!(srng->flags & HAL_SRNG_FLAGS_LMAC_RING))
-+		return 0;
-+
-+	if (srng->ring_dir == HAL_SRNG_DIR_SRC)
-+		return ab->hal.wrp.paddr +
-+		       ((unsigned long)srng->u.src_ring.hp_addr -
-+			(unsigned long)ab->hal.wrp.vaddr);
-+	else
-+		return ab->hal.rdp.paddr +
-+		       ((unsigned long)srng->u.dst_ring.hp_addr -
-+			 (unsigned long)ab->hal.rdp.vaddr);
-+}
-+
-+dma_addr_t ath11k_hal_srng_get_tp_addr(struct ath11k_base *ab,
-+				       struct hal_srng *srng)
-+{
-+	if (!(srng->flags & HAL_SRNG_FLAGS_LMAC_RING))
-+		return 0;
-+
-+	if (srng->ring_dir == HAL_SRNG_DIR_SRC)
-+		return ab->hal.rdp.paddr +
-+		       ((unsigned long)srng->u.src_ring.tp_addr -
-+			(unsigned long)ab->hal.rdp.vaddr);
-+	else
-+		return ab->hal.wrp.paddr +
-+		       ((unsigned long)srng->u.dst_ring.tp_addr -
-+			(unsigned long)ab->hal.wrp.vaddr);
-+}
-+
-+u32 ath11k_hal_ce_get_desc_size(enum hal_ce_desc type)
-+{
-+	switch (type) {
-+	case HAL_CE_DESC_SRC:
-+		return sizeof(struct hal_ce_srng_src_desc);
-+	case HAL_CE_DESC_DST:
-+		return sizeof(struct hal_ce_srng_dest_desc);
-+	case HAL_CE_DESC_DST_STATUS:
-+		return sizeof(struct hal_ce_srng_dst_status_desc);
-+	}
-+
-+	return 0;
-+}
-+
-+void ath11k_hal_ce_src_set_desc(void *buf, dma_addr_t paddr, u32 len, u32 id,
-+				u8 byte_swap_data)
-+{
-+	struct hal_ce_srng_src_desc *desc = (struct hal_ce_srng_src_desc *)buf;
-+
-+	desc->buffer_addr_low = paddr & HAL_ADDR_LSB_REG_MASK;
-+	desc->buffer_addr_info =
-+		FIELD_PREP(HAL_CE_SRC_DESC_ADDR_INFO_ADDR_HI,
-+			   ((u64)paddr >> HAL_ADDR_MSB_REG_SHIFT)) |
-+		FIELD_PREP(HAL_CE_SRC_DESC_ADDR_INFO_BYTE_SWAP,
-+			   byte_swap_data) |
-+		FIELD_PREP(HAL_CE_SRC_DESC_ADDR_INFO_GATHER, 0) |
-+		FIELD_PREP(HAL_CE_SRC_DESC_ADDR_INFO_LEN, len);
-+	desc->meta_info = FIELD_PREP(HAL_CE_SRC_DESC_META_INFO_DATA, id);
-+}
-+
-+void ath11k_hal_ce_dst_set_desc(void *buf, dma_addr_t paddr)
-+{
-+	struct hal_ce_srng_dest_desc *desc =
-+		(struct hal_ce_srng_dest_desc *)buf;
-+
-+	desc->buffer_addr_low = paddr & HAL_ADDR_LSB_REG_MASK;
-+	desc->buffer_addr_info =
-+		FIELD_PREP(HAL_CE_DEST_DESC_ADDR_INFO_ADDR_HI,
-+			   ((u64)paddr >> HAL_ADDR_MSB_REG_SHIFT));
-+}
-+
-+u32 ath11k_hal_ce_dst_status_get_length(void *buf)
-+{
-+	struct hal_ce_srng_dst_status_desc *desc =
-+		(struct hal_ce_srng_dst_status_desc *)buf;
-+	u32 len;
-+
-+	len = FIELD_GET(HAL_CE_DST_STATUS_DESC_FLAGS_LEN, desc->flags);
-+	desc->flags &= ~HAL_CE_DST_STATUS_DESC_FLAGS_LEN;
-+
-+	return len;
-+}
-+
-+void ath11k_hal_set_link_desc_addr(struct hal_wbm_link_desc *desc, u32 cookie,
-+				   dma_addr_t paddr)
-+{
-+	desc->buf_addr_info.info0 = FIELD_PREP(BUFFER_ADDR_INFO0_ADDR,
-+					       (paddr & HAL_ADDR_LSB_REG_MASK));
-+	desc->buf_addr_info.info1 = FIELD_PREP(BUFFER_ADDR_INFO1_ADDR,
-+					       ((u64)paddr >> HAL_ADDR_MSB_REG_SHIFT)) |
-+				    FIELD_PREP(BUFFER_ADDR_INFO1_RET_BUF_MGR, 1) |
-+				    FIELD_PREP(BUFFER_ADDR_INFO1_SW_COOKIE, cookie);
-+}
-+
-+u32 *ath11k_hal_srng_dst_peek(struct ath11k_base *ab, struct hal_srng *srng)
-+{
-+	lockdep_assert_held(&srng->lock);
-+
-+	if (srng->u.dst_ring.tp != srng->u.dst_ring.cached_hp)
-+		return (srng->ring_base_vaddr + srng->u.dst_ring.tp);
-+
-+	return NULL;
-+}
-+
-+u32 *ath11k_hal_srng_dst_get_next_entry(struct ath11k_base *ab,
-+					struct hal_srng *srng)
-+{
-+	u32 *desc;
-+
-+	lockdep_assert_held(&srng->lock);
-+
-+	if (srng->u.dst_ring.tp == srng->u.dst_ring.cached_hp)
-+		return NULL;
-+
-+	desc = srng->ring_base_vaddr + srng->u.dst_ring.tp;
-+
-+	srng->u.dst_ring.tp = (srng->u.dst_ring.tp + srng->entry_size) %
-+			      srng->ring_size;
-+
-+	return desc;
-+}
-+
-+int ath11k_hal_srng_dst_num_free(struct ath11k_base *ab, struct hal_srng *srng,
-+				 bool sync_hw_ptr)
-+{
-+	u32 tp, hp;
-+
-+	lockdep_assert_held(&srng->lock);
-+
-+	tp = srng->u.dst_ring.tp;
-+
-+	if (sync_hw_ptr) {
-+		hp = *srng->u.dst_ring.hp_addr;
-+		srng->u.dst_ring.cached_hp = hp;
-+	} else {
-+		hp = srng->u.dst_ring.cached_hp;
-+	}
-+
-+	if (hp >= tp)
-+		return (hp - tp) / srng->entry_size;
-+	else
-+		return (srng->ring_size - tp + hp) / srng->entry_size;
-+}
-+
-+/* Returns number of available entries in src ring */
-+int ath11k_hal_srng_src_num_free(struct ath11k_base *ab, struct hal_srng *srng,
-+				 bool sync_hw_ptr)
-+{
-+	u32 tp, hp;
-+
-+	lockdep_assert_held(&srng->lock);
-+
-+	hp = srng->u.src_ring.hp;
-+
-+	if (sync_hw_ptr) {
-+		tp = *srng->u.src_ring.tp_addr;
-+		srng->u.src_ring.cached_tp = tp;
-+	} else {
-+		tp = srng->u.src_ring.cached_tp;
-+	}
-+
-+	if (tp > hp)
-+		return ((tp - hp) / srng->entry_size) - 1;
-+	else
-+		return ((srng->ring_size - hp + tp) / srng->entry_size) - 1;
-+}
-+
-+u32 *ath11k_hal_srng_src_get_next_entry(struct ath11k_base *ab,
-+					struct hal_srng *srng)
-+{
-+	u32 *desc;
-+	u32 next_hp;
-+
-+	lockdep_assert_held(&srng->lock);
-+
-+	/* TODO: Using % is expensive, but we have to do this since size of some
-+	 * SRNG rings is not power of 2 (due to descriptor sizes). Need to see
-+	 * if separate function is defined for rings having power of 2 ring size
-+	 * (TCL2SW, REO2SW, SW2RXDMA and CE rings) so that we can avoid the
-+	 * overhead of % by using mask (with &).
-+	 */
-+	next_hp = (srng->u.src_ring.hp + srng->entry_size) % srng->ring_size;
-+
-+	if (next_hp == srng->u.src_ring.cached_tp)
-+		return NULL;
-+
-+	desc = srng->ring_base_vaddr + srng->u.src_ring.hp;
-+	srng->u.src_ring.hp = next_hp;
-+
-+	/* TODO: Reap functionality is not used by all rings. If particular
-+	 * ring does not use reap functionality, we need not update reap_hp
-+	 * with next_hp pointer. Need to make sure a separate function is used
-+	 * before doing any optimization by removing below code updating
-+	 * reap_hp.
-+	 */
-+	srng->u.src_ring.reap_hp = next_hp;
-+
-+	return desc;
-+}
-+
-+u32 *ath11k_hal_srng_src_reap_next(struct ath11k_base *ab,
-+				   struct hal_srng *srng)
-+{
-+	u32 *desc;
-+	u32 next_reap_hp;
-+
-+	lockdep_assert_held(&srng->lock);
-+
-+	next_reap_hp = (srng->u.src_ring.reap_hp + srng->entry_size) %
-+		       srng->ring_size;
-+
-+	if (next_reap_hp == srng->u.src_ring.cached_tp)
-+		return NULL;
-+
-+	desc = srng->ring_base_vaddr + next_reap_hp;
-+	srng->u.src_ring.reap_hp = next_reap_hp;
-+
-+	return desc;
-+}
-+
-+u32 *ath11k_hal_srng_src_get_next_reaped(struct ath11k_base *ab,
-+					 struct hal_srng *srng)
-+{
-+	u32 *desc;
-+
-+	lockdep_assert_held(&srng->lock);
-+
-+	if (srng->u.src_ring.hp == srng->u.src_ring.reap_hp)
-+		return NULL;
-+
-+	desc = srng->ring_base_vaddr + srng->u.src_ring.hp;
-+	srng->u.src_ring.hp = (srng->u.src_ring.hp + srng->entry_size) %
-+			      srng->ring_size;
-+
-+	return desc;
-+}
-+
-+u32 *ath11k_hal_srng_src_peek(struct ath11k_base *ab, struct hal_srng *srng)
-+{
-+	lockdep_assert_held(&srng->lock);
-+
-+	if (((srng->u.src_ring.hp + srng->entry_size) % srng->ring_size) ==
-+	    srng->u.src_ring.cached_tp)
-+		return NULL;
-+
-+	return srng->ring_base_vaddr + srng->u.src_ring.hp;
-+}
-+
-+void ath11k_hal_srng_access_begin(struct ath11k_base *ab, struct hal_srng *srng)
-+{
-+	lockdep_assert_held(&srng->lock);
-+
-+	if (srng->ring_dir == HAL_SRNG_DIR_SRC)
-+		srng->u.src_ring.cached_tp =
-+			*(volatile u32 *)srng->u.src_ring.tp_addr;
-+	else
-+		srng->u.dst_ring.cached_hp = *srng->u.dst_ring.hp_addr;
-+}
-+
-+/* Update cached ring head/tail pointers to HW. ath11k_hal_srng_access_begin()
-+ * should have been called before this.
-+ */
-+void ath11k_hal_srng_access_end(struct ath11k_base *ab, struct hal_srng *srng)
-+{
-+	lockdep_assert_held(&srng->lock);
-+
-+	/* TODO: See if we need a write memory barrier here */
-+	if (srng->flags & HAL_SRNG_FLAGS_LMAC_RING) {
-+		/* For LMAC rings, ring pointer updates are done through FW and
-+		 * hence written to a shared memory location that is read by FW
-+		 */
-+		if (srng->ring_dir == HAL_SRNG_DIR_SRC)
-+			*srng->u.src_ring.hp_addr = srng->u.src_ring.hp;
-+		else
-+			*srng->u.dst_ring.tp_addr = srng->u.dst_ring.tp;
-+	} else {
-+		if (srng->ring_dir == HAL_SRNG_DIR_SRC) {
-+			ath11k_ahb_write32(ab,
-+					   (unsigned long)srng->u.src_ring.hp_addr -
-+					   (unsigned long)ab->mem,
-+					   srng->u.src_ring.hp);
-+		} else {
-+			ath11k_ahb_write32(ab,
-+					   (unsigned long)srng->u.dst_ring.tp_addr -
-+					   (unsigned long)ab->mem,
-+					   srng->u.dst_ring.tp);
-+		}
-+	}
-+}
-+
-+void ath11k_hal_setup_link_idle_list(struct ath11k_base *ab,
-+				     struct hal_wbm_idle_scatter_list *sbuf,
-+				     u32 nsbufs, u32 tot_link_desc,
-+				     u32 end_offset)
-+{
-+	struct ath11k_buffer_addr *link_addr;
-+	int i;
-+	u32 reg_scatter_buf_sz = HAL_WBM_IDLE_SCATTER_BUF_SIZE / 64;
-+
-+	link_addr = (void *)sbuf[0].vaddr + HAL_WBM_IDLE_SCATTER_BUF_SIZE;
-+
-+	for (i = 1; i < nsbufs; i++) {
-+		link_addr->info0 = sbuf[i].paddr & HAL_ADDR_LSB_REG_MASK;
-+		link_addr->info1 = FIELD_PREP(
-+				HAL_WBM_SCATTERED_DESC_MSB_BASE_ADDR_39_32,
-+				(u64)sbuf[i].paddr >> HAL_ADDR_MSB_REG_SHIFT) |
-+				FIELD_PREP(
-+				HAL_WBM_SCATTERED_DESC_MSB_BASE_ADDR_MATCH_TAG,
-+				BASE_ADDR_MATCH_TAG_VAL);
-+
-+		link_addr = (void *)sbuf[i].vaddr +
-+			     HAL_WBM_IDLE_SCATTER_BUF_SIZE;
-+	}
-+
-+	ath11k_ahb_write32(ab,
-+			   HAL_SEQ_WCSS_UMAC_WBM_REG + HAL_WBM_R0_IDLE_LIST_CONTROL_ADDR,
-+			   FIELD_PREP(HAL_WBM_SCATTER_BUFFER_SIZE, reg_scatter_buf_sz) |
-+			   FIELD_PREP(HAL_WBM_LINK_DESC_IDLE_LIST_MODE, 0x1));
-+	ath11k_ahb_write32(ab,
-+			   HAL_SEQ_WCSS_UMAC_WBM_REG + HAL_WBM_R0_IDLE_LIST_SIZE_ADDR,
-+			   FIELD_PREP(HAL_WBM_SCATTER_RING_SIZE_OF_IDLE_LINK_DESC_LIST,
-+				      reg_scatter_buf_sz * nsbufs));
-+	ath11k_ahb_write32(ab,
-+			   HAL_SEQ_WCSS_UMAC_WBM_REG +
-+			   HAL_WBM_SCATTERED_RING_BASE_LSB,
-+			   FIELD_PREP(BUFFER_ADDR_INFO0_ADDR,
-+				      sbuf[0].paddr & HAL_ADDR_LSB_REG_MASK));
-+	ath11k_ahb_write32(ab,
-+			   HAL_SEQ_WCSS_UMAC_WBM_REG +
-+			   HAL_WBM_SCATTERED_RING_BASE_MSB,
-+			   FIELD_PREP(
-+				HAL_WBM_SCATTERED_DESC_MSB_BASE_ADDR_39_32,
-+				(u64)sbuf[0].paddr >> HAL_ADDR_MSB_REG_SHIFT) |
-+				FIELD_PREP(
-+				HAL_WBM_SCATTERED_DESC_MSB_BASE_ADDR_MATCH_TAG,
-+				BASE_ADDR_MATCH_TAG_VAL));
-+
-+	/* Setup head and tail pointers for the idle list */
-+	ath11k_ahb_write32(ab,
-+			   HAL_SEQ_WCSS_UMAC_WBM_REG +
-+			   HAL_WBM_SCATTERED_DESC_PTR_HEAD_INFO_IX0,
-+			   FIELD_PREP(BUFFER_ADDR_INFO0_ADDR,
-+				      sbuf[nsbufs - 1].paddr));
-+	ath11k_ahb_write32(ab,
-+			   HAL_SEQ_WCSS_UMAC_WBM_REG +
-+			   HAL_WBM_SCATTERED_DESC_PTR_HEAD_INFO_IX1,
-+			   FIELD_PREP(
-+				HAL_WBM_SCATTERED_DESC_MSB_BASE_ADDR_39_32,
-+				((u64)sbuf[nsbufs - 1].paddr >>
-+				 HAL_ADDR_MSB_REG_SHIFT)) |
-+			   FIELD_PREP(HAL_WBM_SCATTERED_DESC_HEAD_P_OFFSET_IX1,
-+				      (end_offset >> 2)));
-+	ath11k_ahb_write32(ab,
-+			   HAL_SEQ_WCSS_UMAC_WBM_REG +
-+			   HAL_WBM_SCATTERED_DESC_PTR_HEAD_INFO_IX0,
-+			   FIELD_PREP(BUFFER_ADDR_INFO0_ADDR,
-+				      sbuf[0].paddr));
-+
-+	ath11k_ahb_write32(ab,
-+			   HAL_SEQ_WCSS_UMAC_WBM_REG +
-+			   HAL_WBM_SCATTERED_DESC_PTR_TAIL_INFO_IX0,
-+			   FIELD_PREP(BUFFER_ADDR_INFO0_ADDR,
-+				      sbuf[0].paddr));
-+	ath11k_ahb_write32(ab,
-+			   HAL_SEQ_WCSS_UMAC_WBM_REG +
-+			   HAL_WBM_SCATTERED_DESC_PTR_TAIL_INFO_IX1,
-+			   FIELD_PREP(
-+				HAL_WBM_SCATTERED_DESC_MSB_BASE_ADDR_39_32,
-+				((u64)sbuf[0].paddr >> HAL_ADDR_MSB_REG_SHIFT)) |
-+			   FIELD_PREP(HAL_WBM_SCATTERED_DESC_TAIL_P_OFFSET_IX1,
-+				      0));
-+	ath11k_ahb_write32(ab,
-+			   HAL_SEQ_WCSS_UMAC_WBM_REG +
-+			   HAL_WBM_SCATTERED_DESC_PTR_HP_ADDR,
-+			   2 * tot_link_desc);
-+
-+	/* Enable the SRNG */
-+	ath11k_ahb_write32(ab,
-+			   HAL_SEQ_WCSS_UMAC_WBM_REG +
-+			   HAL_WBM_IDLE_LINK_RING_MISC_ADDR, 0x40);
-+}
-+
-+int ath11k_hal_srng_setup(struct ath11k_base *ab, enum hal_ring_type type,
-+			  int ring_num, int mac_id,
-+			  struct hal_srng_params *params)
-+{
-+	struct ath11k_hal *hal = &ab->hal;
-+	const struct hal_srng_config *srng_config = &hw_srng_config[type];
-+	struct hal_srng *srng;
-+	int ring_id;
-+	u32 lmac_idx;
-+	int i;
-+	u32 reg_base;
-+
-+	ring_id = ath11k_hal_srng_get_ring_id(ab, type, ring_num, mac_id);
-+	if (ring_id < 0)
-+		return ring_id;
-+
-+	srng = &hal->srng_list[ring_id];
-+
-+	srng->ring_id = ring_id;
-+	srng->ring_dir = srng_config->ring_dir;
-+	srng->ring_base_paddr = params->ring_base_paddr;
-+	srng->ring_base_vaddr = params->ring_base_vaddr;
-+	srng->entry_size = srng_config->entry_size;
-+	srng->num_entries = params->num_entries;
-+	srng->ring_size = srng->entry_size * srng->num_entries;
-+	srng->intr_batch_cntr_thres_entries =
-+				params->intr_batch_cntr_thres_entries;
-+	srng->intr_timer_thres_us = params->intr_timer_thres_us;
-+	srng->flags = params->flags;
-+	spin_lock_init(&srng->lock);
-+
-+	for (i = 0; i < HAL_SRNG_NUM_REG_GRP; i++) {
-+		srng->hwreg_base[i] = srng_config->reg_start[i] +
-+				      (ring_num * srng_config->reg_size[i]);
-+	}
-+
-+	memset(srng->ring_base_vaddr, 0,
-+	       (srng->entry_size * srng->num_entries) << 2);
-+
-+	/* TODO: Add comments on these swap configurations */
-+	if (IS_ENABLED(CONFIG_CPU_BIG_ENDIAN))
-+		srng->flags |= HAL_SRNG_FLAGS_MSI_SWAP | HAL_SRNG_FLAGS_DATA_TLV_SWAP |
-+			       HAL_SRNG_FLAGS_RING_PTR_SWAP;
-+
-+	reg_base = srng->hwreg_base[HAL_SRNG_REG_GRP_R2];
-+
-+	if (srng->ring_dir == HAL_SRNG_DIR_SRC) {
-+		srng->u.src_ring.hp = 0;
-+		srng->u.src_ring.cached_tp = 0;
-+		srng->u.src_ring.reap_hp = srng->ring_size - srng->entry_size;
-+		srng->u.src_ring.tp_addr = (void *)(hal->rdp.vaddr + ring_id);
-+		srng->u.src_ring.low_threshold = params->low_threshold *
-+						 srng->entry_size;
-+		if (srng_config->lmac_ring) {
-+			lmac_idx = ring_id - HAL_SRNG_RING_ID_LMAC1_ID_START;
-+			srng->u.src_ring.hp_addr = (void *)(hal->wrp.vaddr +
-+						   lmac_idx);
-+			srng->flags |= HAL_SRNG_FLAGS_LMAC_RING;
-+		} else {
-+			srng->u.src_ring.hp_addr =
-+				(u32 *)((unsigned long)ab->mem + reg_base);
-+		}
-+	} else {
-+		/* During initialization loop count in all the descriptors
-+		 * will be set to zero, and HW will set it to 1 on completing
-+		 * descriptor update in first loop, and increments it by 1 on
-+		 * subsequent loops (loop count wraps around after reaching
-+		 * 0xffff). The 'loop_cnt' in SW ring state is the expected
-+		 * loop count in descriptors updated by HW (to be processed
-+		 * by SW).
-+		 */
-+		srng->u.dst_ring.loop_cnt = 1;
-+		srng->u.dst_ring.tp = 0;
-+		srng->u.dst_ring.cached_hp = 0;
-+		srng->u.dst_ring.hp_addr = (void *)(hal->rdp.vaddr + ring_id);
-+		if (srng_config->lmac_ring) {
-+			/* For LMAC rings, tail pointer updates will be done
-+			 * through FW by writing to a shared memory location
-+			 */
-+			lmac_idx = ring_id - HAL_SRNG_RING_ID_LMAC1_ID_START;
-+			srng->u.dst_ring.tp_addr = (void *)(hal->wrp.vaddr +
-+						   lmac_idx);
-+			srng->flags |= HAL_SRNG_FLAGS_LMAC_RING;
-+		} else {
-+			srng->u.dst_ring.tp_addr =
-+				(u32 *)((unsigned long)ab->mem + reg_base +
-+					(HAL_REO1_RING_TP - HAL_REO1_RING_HP));
-+		}
-+	}
-+
-+	if (srng_config->lmac_ring)
-+		return ring_id;
-+
-+	ath11k_hal_srng_hw_init(ab, srng);
-+
-+	if (type == HAL_CE_DST) {
-+		srng->u.dst_ring.max_buffer_length = params->max_buffer_len;
-+		ath11k_hal_ce_dst_setup(ab, srng, ring_num);
-+	}
-+
-+	return ring_id;
-+}
-+
-+int ath11k_hal_srng_init(struct ath11k_base *ab)
-+{
-+	struct ath11k_hal *hal = &ab->hal;
++	struct hal_tlv_hdr *reo_desc;
 +	int ret;
 +
-+	memset(hal, 0, sizeof(*hal));
++	spin_lock_bh(&srng->lock);
 +
-+	hal->srng_config = hw_srng_config;
++	ath11k_hal_srng_access_begin(ab, srng);
++	reo_desc = (struct hal_tlv_hdr *)ath11k_hal_srng_src_get_next_entry(ab, srng);
++	if (!reo_desc) {
++		ret = -ENOBUFS;
++		goto out;
++	}
 +
-+	ret = ath11k_hal_alloc_cont_rdp(ab);
-+	if (ret)
-+		goto err_hal;
++	switch (type) {
++	case HAL_REO_CMD_GET_QUEUE_STATS:
++		ret = ath11k_hal_reo_cmd_queue_stats(reo_desc, cmd);
++		break;
++	case HAL_REO_CMD_FLUSH_CACHE:
++		ret = ath11k_hal_reo_cmd_flush_cache(&ab->hal, reo_desc, cmd);
++		break;
++	case HAL_REO_CMD_UPDATE_RX_QUEUE:
++		ret = ath11k_hal_reo_cmd_update_rx_queue(reo_desc, cmd);
++		break;
++	case HAL_REO_CMD_FLUSH_QUEUE:
++	case HAL_REO_CMD_UNBLOCK_CACHE:
++	case HAL_REO_CMD_FLUSH_TIMEOUT_LIST:
++		ath11k_warn(ab, "Unsupported reo command %d\n", type);
++		ret = -ENOTSUPP;
++		break;
++	default:
++		ath11k_warn(ab, "Unknown reo command %d\n", type);
++		ret = -EINVAL;
++		break;
++	}
 +
-+	ret = ath11k_hal_alloc_cont_wrp(ab);
-+	if (ret)
-+		goto err_free_cont_rdp;
++out:
++	ath11k_hal_srng_access_end(ab, srng);
++	spin_unlock_bh(&srng->lock);
 +
-+	return 0;
-+
-+err_free_cont_rdp:
-+	ath11k_hal_free_cont_rdp(ab);
-+
-+err_hal:
 +	return ret;
 +}
 +
-+void ath11k_hal_srng_deinit(struct ath11k_base *ab)
++void ath11k_hal_rx_buf_addr_info_set(void *desc, dma_addr_t paddr,
++				     u32 cookie, u8 manager)
 +{
-+	ath11k_hal_free_cont_rdp(ab);
-+	ath11k_hal_free_cont_wrp(ab);
++	struct ath11k_buffer_addr *binfo = (struct ath11k_buffer_addr *)desc;
++	u32 paddr_lo, paddr_hi;
++
++	paddr_lo = lower_32_bits(paddr);
++	paddr_hi = upper_32_bits(paddr);
++	binfo->info0 = FIELD_PREP(BUFFER_ADDR_INFO0_ADDR, paddr_lo);
++	binfo->info1 = FIELD_PREP(BUFFER_ADDR_INFO1_ADDR, paddr_hi) |
++		       FIELD_PREP(BUFFER_ADDR_INFO1_SW_COOKIE, cookie) |
++		       FIELD_PREP(BUFFER_ADDR_INFO1_RET_BUF_MGR, manager);
++}
++
++void ath11k_hal_rx_buf_addr_info_get(void *desc, dma_addr_t *paddr,
++				     u32 *cookie, u8 *rbm)
++{
++	struct ath11k_buffer_addr *binfo = (struct ath11k_buffer_addr *)desc;
++
++	*paddr =
++		(((u64)FIELD_GET(BUFFER_ADDR_INFO1_ADDR, binfo->info1)) << 32) |
++		FIELD_GET(BUFFER_ADDR_INFO0_ADDR, binfo->info0);
++	*cookie = FIELD_GET(BUFFER_ADDR_INFO1_SW_COOKIE, binfo->info1);
++	*rbm = FIELD_GET(BUFFER_ADDR_INFO1_RET_BUF_MGR, binfo->info1);
++}
++
++void ath11k_hal_rx_msdu_link_info_get(void *link_desc, u32 *num_msdus,
++				      struct hal_rx_msdu_meta *meta,
++				      enum hal_rx_buf_return_buf_manager *rbm)
++{
++	struct hal_rx_msdu_link *link = (struct hal_rx_msdu_link *)link_desc;
++	struct hal_rx_msdu_details *msdu;
++	int i;
++
++	*num_msdus = HAL_NUM_RX_MSDUS_PER_LINK_DESC;
++
++	msdu = &link->msdu_link[0];
++	*rbm = FIELD_GET(BUFFER_ADDR_INFO1_RET_BUF_MGR,
++			 msdu->buf_addr_info.info1);
++
++	for (i = 0; i < *num_msdus; i++) {
++		msdu = &link->msdu_link[i];
++
++		if (!FIELD_GET(BUFFER_ADDR_INFO0_ADDR,
++			       msdu->buf_addr_info.info0)) {
++			*num_msdus = i;
++			break;
++		}
++		meta->msdu_len = FIELD_GET(RX_MSDU_DESC_INFO0_MSDU_LENGTH,
++					   msdu->rx_msdu_info.info0);
++		meta->first = !!(msdu->rx_msdu_info.info0 &
++				 RX_MSDU_DESC_INFO0_FIRST_MSDU_IN_MPDU);
++		meta->last = !!(msdu->rx_msdu_info.info0 &
++				RX_MSDU_DESC_INFO0_LAST_MSDU_IN_MPDU);
++		meta->continuation = !!(msdu->rx_msdu_info.info0 &
++					RX_MSDU_DESC_INFO0_MSDU_CONTINUATION);
++		meta->cookie = FIELD_GET(BUFFER_ADDR_INFO1_SW_COOKIE,
++					 msdu->buf_addr_info.info1);
++		meta++;
++	}
++}
++
++int ath11k_hal_desc_reo_parse_err(struct ath11k_base *ab, u32 *rx_desc,
++				  dma_addr_t *paddr, u32 *desc_bank)
++{
++	struct hal_reo_dest_ring *desc = (struct hal_reo_dest_ring *)rx_desc;
++	enum hal_reo_dest_ring_push_reason push_reason;
++	enum hal_reo_dest_ring_error_code err_code;
++
++	push_reason = FIELD_GET(HAL_REO_DEST_RING_INFO0_PUSH_REASON,
++				desc->info0);
++	err_code = FIELD_GET(HAL_REO_DEST_RING_INFO0_ERROR_CODE,
++			     desc->info0);
++	ab->soc_stats.reo_error[err_code]++;
++
++	if (push_reason != HAL_REO_DEST_RING_PUSH_REASON_ERR_DETECTED &&
++	    push_reason != HAL_REO_DEST_RING_PUSH_REASON_ROUTING_INSTRUCTION) {
++		ath11k_warn(ab, "expected error push reason code, received %d\n",
++			    push_reason);
++		return -EINVAL;
++	}
++
++	if (FIELD_GET(HAL_REO_DEST_RING_INFO0_BUFFER_TYPE, desc->info0) !=
++	    HAL_REO_DEST_RING_BUFFER_TYPE_LINK_DESC) {
++		ath11k_warn(ab, "expected buffer type link_desc");
++		return -EINVAL;
++	}
++
++	ath11k_hal_rx_reo_ent_paddr_get(ab, rx_desc, paddr, desc_bank);
++
++	return 0;
++}
++
++void ath11k_hal_rx_parse_dst_ring_desc(struct ath11k_base *ab, u32 *rx_desc,
++				       struct hal_rx_meta_info *meta_info)
++{
++	struct hal_reo_dest_ring *desc = (struct hal_reo_dest_ring *)rx_desc;
++	struct rx_mpdu_desc *mpdu = &desc->rx_mpdu_info;
++	struct rx_msdu_desc *msdu = &desc->rx_msdu_info;
++	struct hal_rx_mpdu_meta *meta_mpdu = &meta_info->mpdu_meta;
++	struct hal_rx_msdu_meta *meta_msdu = &meta_info->msdu_meta;
++
++	meta_info->push_reason = FIELD_GET(HAL_REO_DEST_RING_INFO0_PUSH_REASON,
++					   desc->info0);
++
++	meta_mpdu->msdu_cnt = FIELD_GET(RX_MPDU_DESC_INFO0_MSDU_COUNT,
++					mpdu->info0);
++	meta_mpdu->seq_num = FIELD_GET(RX_MPDU_DESC_INFO0_SEQ_NUM, mpdu->info0);
++	meta_mpdu->frag = !!(mpdu->info0 & RX_MPDU_DESC_INFO0_FRAG_FLAG);
++	meta_mpdu->retry = !!(mpdu->info0 & RX_MPDU_DESC_INFO0_MPDU_RETRY);
++	meta_mpdu->ampdu = !!(mpdu->info0 & RX_MPDU_DESC_INFO0_AMPDU_FLAG);
++	meta_mpdu->raw = !!(mpdu->info0 & RX_MPDU_DESC_INFO0_RAW_MPDU);
++	meta_mpdu->peer_meta = mpdu->meta_data;
++
++	meta_msdu->cookie = FIELD_GET(BUFFER_ADDR_INFO1_SW_COOKIE,
++				      desc->buf_addr_info.info1);
++	meta_msdu->msdu_len = FIELD_GET(RX_MSDU_DESC_INFO0_MSDU_LENGTH,
++					msdu->info0);
++	meta_msdu->first =
++		!!(msdu->info0 & RX_MSDU_DESC_INFO0_FIRST_MSDU_IN_MPDU);
++	meta_msdu->last =
++		!!(msdu->info0 & RX_MSDU_DESC_INFO0_LAST_MSDU_IN_MPDU);
++	meta_msdu->continuation =
++		!!(msdu->info0 & RX_MSDU_DESC_INFO0_MSDU_CONTINUATION);
++}
++
++int ath11k_hal_wbm_desc_parse_err(struct ath11k_base *ab, void *desc,
++				  struct hal_rx_wbm_rel_info *rel_info)
++{
++	struct hal_wbm_release_ring *wbm_desc = desc;
++	enum hal_wbm_rel_desc_type type;
++	enum hal_wbm_rel_src_module rel_src;
++
++	type = FIELD_GET(HAL_WBM_RELEASE_INFO0_DESC_TYPE,
++			 wbm_desc->info0);
++	/* We expect only WBM_REL buffer type */
++	if (type != HAL_WBM_REL_DESC_TYPE_REL_MSDU) {
++		WARN_ON(1);
++		return -EINVAL;
++	}
++
++	rel_src = FIELD_GET(HAL_WBM_RELEASE_INFO0_REL_SRC_MODULE,
++			    wbm_desc->info0);
++	if (rel_src != HAL_WBM_REL_SRC_MODULE_RXDMA &&
++	    rel_src != HAL_WBM_REL_SRC_MODULE_REO)
++		return -EINVAL;
++
++	if (FIELD_GET(BUFFER_ADDR_INFO1_RET_BUF_MGR,
++		      wbm_desc->buf_addr_info.info1) != HAL_RX_BUF_RBM_SW3_BM) {
++		ab->soc_stats.invalid_rbm++;
++		return -EINVAL;
++	}
++
++	rel_info->cookie = FIELD_GET(BUFFER_ADDR_INFO1_SW_COOKIE,
++				     wbm_desc->buf_addr_info.info1);
++	rel_info->err_rel_src = rel_src;
++	if (rel_src == HAL_WBM_REL_SRC_MODULE_REO) {
++		rel_info->push_reason =
++			FIELD_GET(HAL_WBM_RELEASE_INFO0_REO_PUSH_REASON,
++				  wbm_desc->info0);
++		rel_info->err_code =
++			FIELD_GET(HAL_WBM_RELEASE_INFO0_REO_ERROR_CODE,
++				  wbm_desc->info0);
++	} else {
++		rel_info->push_reason =
++			FIELD_GET(HAL_WBM_RELEASE_INFO0_RXDMA_PUSH_REASON,
++				  wbm_desc->info0);
++		rel_info->err_code =
++			FIELD_GET(HAL_WBM_RELEASE_INFO0_RXDMA_ERROR_CODE,
++				  wbm_desc->info0);
++	}
++
++	rel_info->first_msdu = FIELD_GET(HAL_WBM_RELEASE_INFO2_FIRST_MSDU,
++					 wbm_desc->info2);
++	rel_info->last_msdu = FIELD_GET(HAL_WBM_RELEASE_INFO2_LAST_MSDU,
++					wbm_desc->info2);
++	return 0;
++}
++
++void ath11k_hal_rx_reo_ent_paddr_get(struct ath11k_base *ab, void *desc,
++				     dma_addr_t *paddr, u32 *desc_bank)
++{
++	struct ath11k_buffer_addr *buff_addr = desc;
++
++	*paddr = ((u64)(FIELD_GET(BUFFER_ADDR_INFO1_ADDR, buff_addr->info1)) << 32) |
++		  FIELD_GET(BUFFER_ADDR_INFO0_ADDR, buff_addr->info0);
++
++	*desc_bank = FIELD_GET(BUFFER_ADDR_INFO1_SW_COOKIE, buff_addr->info1);
++}
++
++void ath11k_hal_rx_msdu_link_desc_set(struct ath11k_base *ab, void *desc,
++				      void *link_desc,
++				      enum hal_wbm_rel_bm_act action)
++{
++	struct hal_wbm_release_ring *dst_desc = desc;
++	struct hal_wbm_release_ring *src_desc = link_desc;
++
++	dst_desc->buf_addr_info = src_desc->buf_addr_info;
++	dst_desc->info0 |= FIELD_PREP(HAL_WBM_RELEASE_INFO0_REL_SRC_MODULE,
++				      HAL_WBM_REL_SRC_MODULE_SW) |
++			   FIELD_PREP(HAL_WBM_RELEASE_INFO0_BM_ACTION, action) |
++			   FIELD_PREP(HAL_WBM_RELEASE_INFO0_DESC_TYPE,
++				      HAL_WBM_REL_DESC_TYPE_MSDU_LINK);
++}
++
++void ath11k_hal_reo_status_queue_stats(struct ath11k_base *ab, u32 *reo_desc,
++				       struct hal_reo_status *status)
++{
++	struct hal_tlv_hdr *tlv = (struct hal_tlv_hdr *)reo_desc;
++	struct hal_reo_get_queue_stats_status *desc =
++		(struct hal_reo_get_queue_stats_status *)tlv->value;
++
++	status->uniform_hdr.cmd_num =
++				FIELD_GET(HAL_REO_STATUS_HDR_INFO0_STATUS_NUM,
++					  desc->hdr.info0);
++	status->uniform_hdr.cmd_status =
++				FIELD_GET(HAL_REO_STATUS_HDR_INFO0_EXEC_STATUS,
++					  desc->hdr.info0);
++
++	ath11k_dbg(ab, ATH11k_DBG_HAL, "Queue stats status:\n");
++	ath11k_dbg(ab, ATH11k_DBG_HAL, "header: cmd_num %d status %d\n",
++		   status->uniform_hdr.cmd_num,
++		   status->uniform_hdr.cmd_status);
++	ath11k_dbg(ab, ATH11k_DBG_HAL, "ssn %ld cur_idx %ld\n",
++		   FIELD_GET(HAL_REO_GET_QUEUE_STATS_STATUS_INFO0_SSN,
++			     desc->info0),
++		   FIELD_GET(HAL_REO_GET_QUEUE_STATS_STATUS_INFO0_CUR_IDX,
++			     desc->info0));
++	ath11k_dbg(ab, ATH11k_DBG_HAL, "pn = [%08x, %08x, %08x, %08x]\n",
++		   desc->pn[0], desc->pn[1], desc->pn[2], desc->pn[3]);
++	ath11k_dbg(ab, ATH11k_DBG_HAL, "last_rx: enqueue_tstamp %08x dequeue_tstamp %08x\n",
++		   desc->last_rx_enqueue_timestamp,
++		   desc->last_rx_dequeue_timestamp);
++	ath11k_dbg(ab, ATH11k_DBG_HAL, "rx_bitmap [%08x %08x %08x %08x %08x %08x %08x %08x]\n",
++		   desc->rx_bitmap[0], desc->rx_bitmap[1], desc->rx_bitmap[2],
++		   desc->rx_bitmap[3], desc->rx_bitmap[4], desc->rx_bitmap[5],
++		   desc->rx_bitmap[6], desc->rx_bitmap[7]);
++	ath11k_dbg(ab, ATH11k_DBG_HAL, "count: cur_mpdu %ld cur_msdu %ld\n",
++		   FIELD_GET(HAL_REO_GET_QUEUE_STATS_STATUS_INFO1_MPDU_COUNT,
++			     desc->info1),
++		   FIELD_GET(HAL_REO_GET_QUEUE_STATS_STATUS_INFO1_MSDU_COUNT,
++			     desc->info1));
++	ath11k_dbg(ab, ATH11k_DBG_HAL, "fwd_timeout %ld fwd_bar %ld dup_count %ld\n",
++		   FIELD_GET(HAL_REO_GET_QUEUE_STATS_STATUS_INFO2_TIMEOUT_COUNT,
++			     desc->info2),
++		   FIELD_GET(HAL_REO_GET_QUEUE_STATS_STATUS_INFO2_FDTB_COUNT,
++			     desc->info2),
++		   FIELD_GET(HAL_REO_GET_QUEUE_STATS_STATUS_INFO2_DUPLICATE_COUNT,
++			     desc->info2));
++	ath11k_dbg(ab, ATH11k_DBG_HAL, "frames_in_order %ld bar_rcvd %ld\n",
++		   FIELD_GET(HAL_REO_GET_QUEUE_STATS_STATUS_INFO3_FIO_COUNT,
++			     desc->info3),
++		   FIELD_GET(HAL_REO_GET_QUEUE_STATS_STATUS_INFO3_BAR_RCVD_CNT,
++			     desc->info3));
++	ath11k_dbg(ab, ATH11k_DBG_HAL, "num_mpdus %d num_msdus %d total_bytes %d\n",
++		   desc->num_mpdu_frames, desc->num_msdu_frames,
++		   desc->total_bytes);
++	ath11k_dbg(ab, ATH11k_DBG_HAL, "late_rcvd %ld win_jump_2k %ld hole_cnt %ld\n",
++		   FIELD_GET(HAL_REO_GET_QUEUE_STATS_STATUS_INFO4_LATE_RX_MPDU,
++			     desc->info4),
++		   FIELD_GET(HAL_REO_GET_QUEUE_STATS_STATUS_INFO4_WINDOW_JMP2K,
++			     desc->info4),
++		   FIELD_GET(HAL_REO_GET_QUEUE_STATS_STATUS_INFO4_HOLE_COUNT,
++			     desc->info4));
++	ath11k_dbg(ab, ATH11k_DBG_HAL, "looping count %ld\n",
++		   FIELD_GET(HAL_REO_GET_QUEUE_STATS_STATUS_INFO5_LOOPING_CNT,
++			     desc->info5));
++}
++
++int ath11k_hal_reo_process_status(u8 *reo_desc, u8 *status)
++{
++	struct hal_tlv_hdr *tlv = (struct hal_tlv_hdr *)reo_desc;
++	struct hal_reo_status_hdr *hdr;
++
++	hdr = (struct hal_reo_status_hdr *)tlv->value;
++	*status = FIELD_GET(HAL_REO_STATUS_HDR_INFO0_EXEC_STATUS, hdr->info0);
++
++	return FIELD_GET(HAL_REO_STATUS_HDR_INFO0_STATUS_NUM, hdr->info0);
++}
++
++void ath11k_hal_reo_flush_queue_status(struct ath11k_base *ab, u32 *reo_desc,
++				       struct hal_reo_status *status)
++{
++	struct hal_tlv_hdr *tlv = (struct hal_tlv_hdr *)reo_desc;
++	struct hal_reo_flush_queue_status *desc =
++		(struct hal_reo_flush_queue_status *)tlv->value;
++
++	status->uniform_hdr.cmd_num =
++				FIELD_GET(HAL_REO_STATUS_HDR_INFO0_STATUS_NUM,
++					  desc->hdr.info0);
++	status->uniform_hdr.cmd_status =
++				FIELD_GET(HAL_REO_STATUS_HDR_INFO0_EXEC_STATUS,
++					  desc->hdr.info0);
++	status->u.flush_queue.err_detected =
++		FIELD_GET(HAL_REO_FLUSH_QUEUE_INFO0_ERR_DETECTED,
++			  desc->info0);
++}
++
++void ath11k_hal_reo_flush_cache_status(struct ath11k_base *ab, u32 *reo_desc,
++				       struct hal_reo_status *status)
++{
++	struct ath11k_hal *hal = &ab->hal;
++	struct hal_tlv_hdr *tlv = (struct hal_tlv_hdr *)reo_desc;
++	struct hal_reo_flush_cache_status *desc =
++		(struct hal_reo_flush_cache_status *)tlv->value;
++
++	status->uniform_hdr.cmd_num =
++				FIELD_GET(HAL_REO_STATUS_HDR_INFO0_STATUS_NUM,
++					  desc->hdr.info0);
++	status->uniform_hdr.cmd_status =
++				FIELD_GET(HAL_REO_STATUS_HDR_INFO0_EXEC_STATUS,
++					  desc->hdr.info0);
++
++	status->u.flush_cache.err_detected =
++			FIELD_GET(HAL_REO_FLUSH_CACHE_STATUS_INFO0_IS_ERR,
++				  desc->info0);
++	status->u.flush_cache.err_code =
++		FIELD_GET(HAL_REO_FLUSH_CACHE_STATUS_INFO0_BLOCK_ERR_CODE,
++			  desc->info0);
++	if (!status->u.flush_cache.err_code)
++		hal->avail_blk_resource |= BIT(hal->current_blk_index);
++
++	status->u.flush_cache.cache_controller_flush_status_hit =
++		FIELD_GET(HAL_REO_FLUSH_CACHE_STATUS_INFO0_FLUSH_STATUS_HIT,
++			  desc->info0);
++
++	status->u.flush_cache.cache_controller_flush_status_desc_type =
++		FIELD_GET(HAL_REO_FLUSH_CACHE_STATUS_INFO0_FLUSH_DESC_TYPE,
++			  desc->info0);
++	status->u.flush_cache.cache_controller_flush_status_client_id =
++		FIELD_GET(HAL_REO_FLUSH_CACHE_STATUS_INFO0_FLUSH_CLIENT_ID,
++			  desc->info0);
++	status->u.flush_cache.cache_controller_flush_status_err =
++		FIELD_GET(HAL_REO_FLUSH_CACHE_STATUS_INFO0_FLUSH_ERR,
++			  desc->info0);
++	status->u.flush_cache.cache_controller_flush_status_cnt =
++		FIELD_GET(HAL_REO_FLUSH_CACHE_STATUS_INFO0_FLUSH_COUNT,
++			  desc->info0);
++}
++
++void ath11k_hal_reo_unblk_cache_status(struct ath11k_base *ab, u32 *reo_desc,
++				       struct hal_reo_status *status)
++{
++	struct ath11k_hal *hal = &ab->hal;
++	struct hal_tlv_hdr *tlv = (struct hal_tlv_hdr *)reo_desc;
++	struct hal_reo_unblock_cache_status *desc =
++		(struct hal_reo_unblock_cache_status *)tlv->value;
++
++	status->uniform_hdr.cmd_num =
++				FIELD_GET(HAL_REO_STATUS_HDR_INFO0_STATUS_NUM,
++					  desc->hdr.info0);
++	status->uniform_hdr.cmd_status =
++				FIELD_GET(HAL_REO_STATUS_HDR_INFO0_EXEC_STATUS,
++					  desc->hdr.info0);
++
++	status->u.unblock_cache.err_detected =
++			FIELD_GET(HAL_REO_UNBLOCK_CACHE_STATUS_INFO0_IS_ERR,
++				  desc->info0);
++	status->u.unblock_cache.unblock_type =
++			FIELD_GET(HAL_REO_UNBLOCK_CACHE_STATUS_INFO0_TYPE,
++				  desc->info0);
++
++	if (!status->u.unblock_cache.err_detected &&
++	    status->u.unblock_cache.unblock_type ==
++	    HAL_REO_STATUS_UNBLOCK_BLOCKING_RESOURCE)
++		hal->avail_blk_resource &= ~BIT(hal->current_blk_index);
++}
++
++void ath11k_hal_reo_flush_timeout_list_status(struct ath11k_base *ab,
++					      u32 *reo_desc,
++					      struct hal_reo_status *status)
++{
++	struct hal_tlv_hdr *tlv = (struct hal_tlv_hdr *)reo_desc;
++	struct hal_reo_flush_timeout_list_status *desc =
++		(struct hal_reo_flush_timeout_list_status *)tlv->value;
++
++	status->uniform_hdr.cmd_num =
++				FIELD_GET(HAL_REO_STATUS_HDR_INFO0_STATUS_NUM,
++					  desc->hdr.info0);
++	status->uniform_hdr.cmd_status =
++				FIELD_GET(HAL_REO_STATUS_HDR_INFO0_EXEC_STATUS,
++					  desc->hdr.info0);
++
++	status->u.timeout_list.err_detected =
++			FIELD_GET(HAL_REO_FLUSH_TIMEOUT_STATUS_INFO0_IS_ERR,
++				  desc->info0);
++	status->u.timeout_list.list_empty =
++			FIELD_GET(HAL_REO_FLUSH_TIMEOUT_STATUS_INFO0_LIST_EMPTY,
++				  desc->info0);
++
++	status->u.timeout_list.release_desc_cnt =
++		FIELD_GET(HAL_REO_FLUSH_TIMEOUT_STATUS_INFO1_REL_DESC_COUNT,
++			  desc->info1);
++	status->u.timeout_list.fwd_buf_cnt =
++		FIELD_GET(HAL_REO_FLUSH_TIMEOUT_STATUS_INFO1_FWD_BUF_COUNT,
++			  desc->info1);
++}
++
++void ath11k_hal_reo_desc_thresh_reached_status(struct ath11k_base *ab,
++					       u32 *reo_desc,
++					       struct hal_reo_status *status)
++{
++	struct hal_tlv_hdr *tlv = (struct hal_tlv_hdr *)reo_desc;
++	struct hal_reo_desc_thresh_reached_status *desc =
++		(struct hal_reo_desc_thresh_reached_status *)tlv->value;
++
++	status->uniform_hdr.cmd_num =
++				FIELD_GET(HAL_REO_STATUS_HDR_INFO0_STATUS_NUM,
++					  desc->hdr.info0);
++	status->uniform_hdr.cmd_status =
++				FIELD_GET(HAL_REO_STATUS_HDR_INFO0_EXEC_STATUS,
++					  desc->hdr.info0);
++
++	status->u.desc_thresh_reached.threshold_idx =
++		FIELD_GET(HAL_REO_DESC_THRESH_STATUS_INFO0_THRESH_INDEX,
++			  desc->info0);
++
++	status->u.desc_thresh_reached.link_desc_counter0 =
++		FIELD_GET(HAL_REO_DESC_THRESH_STATUS_INFO1_LINK_DESC_COUNTER0,
++			  desc->info1);
++
++	status->u.desc_thresh_reached.link_desc_counter1 =
++		FIELD_GET(HAL_REO_DESC_THRESH_STATUS_INFO2_LINK_DESC_COUNTER1,
++			  desc->info2);
++
++	status->u.desc_thresh_reached.link_desc_counter2 =
++		FIELD_GET(HAL_REO_DESC_THRESH_STATUS_INFO3_LINK_DESC_COUNTER2,
++			  desc->info3);
++
++	status->u.desc_thresh_reached.link_desc_counter_sum =
++		FIELD_GET(HAL_REO_DESC_THRESH_STATUS_INFO4_LINK_DESC_COUNTER_SUM,
++			  desc->info4);
++}
++
++void ath11k_hal_reo_update_rx_reo_queue_status(struct ath11k_base *ab,
++					       u32 *reo_desc,
++					       struct hal_reo_status *status)
++{
++	struct hal_tlv_hdr *tlv = (struct hal_tlv_hdr *)reo_desc;
++	struct hal_reo_status_hdr *desc =
++		(struct hal_reo_status_hdr *)tlv->value;
++
++	status->uniform_hdr.cmd_num =
++				FIELD_GET(HAL_REO_STATUS_HDR_INFO0_STATUS_NUM,
++					  desc->info0);
++	status->uniform_hdr.cmd_status =
++				FIELD_GET(HAL_REO_STATUS_HDR_INFO0_EXEC_STATUS,
++					  desc->info0);
++}
++
++u32 ath11k_hal_reo_qdesc_size(u32 ba_window_size, u8 tid)
++{
++	u32 num_ext_desc;
++
++	if (ba_window_size <= 1) {
++		if (tid != HAL_DESC_REO_NON_QOS_TID)
++			num_ext_desc = 1;
++		else
++			num_ext_desc = 0;
++	} else if (ba_window_size <= 105) {
++		num_ext_desc = 1;
++	} else if (ba_window_size <= 210) {
++		num_ext_desc = 2;
++	} else {
++		num_ext_desc = 3;
++	}
++
++	return sizeof(struct hal_rx_reo_queue) +
++		(num_ext_desc * sizeof(struct hal_rx_reo_queue_ext));
++}
++
++void ath11k_hal_reo_qdesc_setup(void *vaddr, int tid, u32 ba_window_size,
++				u32 start_seq)
++{
++	struct hal_rx_reo_queue *qdesc = (struct hal_rx_reo_queue *)vaddr;
++	struct hal_rx_reo_queue_ext *ext_desc;
++
++	memset(qdesc, 0, sizeof(*qdesc));
++
++	ath11k_hal_reo_set_desc_hdr(&qdesc->desc_hdr, HAL_DESC_REO_OWNED,
++				    HAL_DESC_REO_QUEUE_DESC,
++				    REO_QUEUE_DESC_MAGIC_DEBUG_PATTERN_0);
++
++	qdesc->rx_queue_num = FIELD_PREP(HAL_RX_REO_QUEUE_RX_QUEUE_NUMBER, tid);
++
++	qdesc->info0 =
++		FIELD_PREP(HAL_RX_REO_QUEUE_INFO0_VLD, 1) |
++		FIELD_PREP(HAL_RX_REO_QUEUE_INFO0_ASSOC_LNK_DESC_COUNTER, 1) |
++		FIELD_PREP(HAL_RX_REO_QUEUE_INFO0_AC, ath11k_tid_to_ac(tid));
++
++	if (ba_window_size < 1)
++		ba_window_size = 1;
++
++	if (ba_window_size == 1 && tid != HAL_DESC_REO_NON_QOS_TID)
++		ba_window_size++;
++
++	if (ba_window_size == 1)
++		qdesc->info0 |= FIELD_PREP(HAL_RX_REO_QUEUE_INFO0_RETRY, 1);
++
++	qdesc->info0 |= FIELD_PREP(HAL_RX_REO_QUEUE_INFO0_BA_WINDOW_SIZE,
++				   ba_window_size - 1);
++
++	/* TODO: Set Ignore ampdu flags based on BA window size and/or
++	 * AMPDU capabilities
++	 */
++	qdesc->info0 |= FIELD_PREP(HAL_RX_REO_QUEUE_INFO0_IGNORE_AMPDU_FLG, 1);
++
++	qdesc->info1 |= FIELD_PREP(HAL_RX_REO_QUEUE_INFO1_SVLD, 0);
++
++	if (start_seq <= 0xfff)
++		qdesc->info1 = FIELD_PREP(HAL_RX_REO_QUEUE_INFO1_SSN,
++					  start_seq);
++
++	if (tid == HAL_DESC_REO_NON_QOS_TID)
++		return;
++
++	ext_desc = qdesc->ext_desc;
++
++	/* TODO: HW queue descriptors are currently allocated for max BA
++	 * window size for all QOS TIDs so that same descriptor can be used
++	 * later when ADDBA request is recevied. This should be changed to
++	 * allocate HW queue descriptors based on BA window size being
++	 * negotiated (0 for non BA cases), and reallocate when BA window
++	 * size changes and also send WMI message to FW to change the REO
++	 * queue descriptor in Rx peer entry as part of dp_rx_tid_update.
++	 */
++	memset(ext_desc, 0, 3 * sizeof(*ext_desc));
++	ath11k_hal_reo_set_desc_hdr(&ext_desc->desc_hdr, HAL_DESC_REO_OWNED,
++				    HAL_DESC_REO_QUEUE_EXT_DESC,
++				    REO_QUEUE_DESC_MAGIC_DEBUG_PATTERN_1);
++	ext_desc++;
++	ath11k_hal_reo_set_desc_hdr(&ext_desc->desc_hdr, HAL_DESC_REO_OWNED,
++				    HAL_DESC_REO_QUEUE_EXT_DESC,
++				    REO_QUEUE_DESC_MAGIC_DEBUG_PATTERN_2);
++	ext_desc++;
++	ath11k_hal_reo_set_desc_hdr(&ext_desc->desc_hdr, HAL_DESC_REO_OWNED,
++				    HAL_DESC_REO_QUEUE_EXT_DESC,
++				    REO_QUEUE_DESC_MAGIC_DEBUG_PATTERN_3);
++}
++
++void ath11k_hal_reo_init_cmd_ring(struct ath11k_base *ab,
++				  struct hal_srng *srng)
++{
++	struct hal_srng_params params;
++	struct hal_tlv_hdr *tlv;
++	struct hal_reo_get_queue_stats *desc;
++	int i, cmd_num = 1;
++	int entry_size;
++	u8 *entry;
++
++	memset(&params, 0, sizeof(params));
++
++	entry_size = ath11k_hal_srng_get_entrysize(HAL_REO_CMD);
++	ath11k_hal_srng_get_params(ab, srng, &params);
++	entry = (u8 *)params.ring_base_vaddr;
++
++	for (i = 0; i < params.num_entries; i++) {
++		tlv = (struct hal_tlv_hdr *)entry;
++		desc = (struct hal_reo_get_queue_stats *)tlv->value;
++		desc->cmd.info0 =
++			FIELD_PREP(HAL_REO_CMD_HDR_INFO0_CMD_NUMBER, cmd_num++);
++		entry += entry_size;
++	}
++}
++
++void ath11k_hal_reo_hw_setup(struct ath11k_base *ab)
++{
++	u32 reo_base = HAL_SEQ_WCSS_UMAC_REO_REG;
++	u32 val;
++
++	val = ath11k_ahb_read32(ab, reo_base + HAL_REO1_GEN_ENABLE);
++
++	val &= ~HAL_REO1_GEN_ENABLE_FRAG_DST_RING;
++	val |= FIELD_PREP(HAL_REO1_GEN_ENABLE_FRAG_DST_RING,
++			  HAL_SRNG_RING_ID_REO2SW1) |
++	       FIELD_PREP(HAL_REO1_GEN_ENABLE_AGING_LIST_ENABLE, 1) |
++	       FIELD_PREP(HAL_REO1_GEN_ENABLE_AGING_FLUSH_ENABLE, 1);
++	ath11k_ahb_write32(ab, reo_base + HAL_REO1_GEN_ENABLE, val);
++
++	ath11k_ahb_write32(ab, reo_base + HAL_REO1_AGING_THRESH_IX_0,
++			   HAL_DEFAULT_REO_TIMEOUT_USEC);
++	ath11k_ahb_write32(ab, reo_base + HAL_REO1_AGING_THRESH_IX_1,
++			   HAL_DEFAULT_REO_TIMEOUT_USEC);
++	ath11k_ahb_write32(ab, reo_base + HAL_REO1_AGING_THRESH_IX_2,
++			   HAL_DEFAULT_REO_TIMEOUT_USEC);
++	ath11k_ahb_write32(ab, reo_base + HAL_REO1_AGING_THRESH_IX_3,
++			   HAL_DEFAULT_REO_TIMEOUT_USEC);
++}
++
++static enum hal_rx_mon_status
++ath11k_hal_rx_parse_mon_status_tlv(struct ath11k_base *ab,
++				   struct hal_rx_mon_ppdu_info *ppdu_info,
++				   u32 tlv_tag, u8 *tlv_data)
++{
++	u32 info0, info1;
++
++	switch (tlv_tag) {
++	case HAL_RX_PPDU_START: {
++		struct hal_rx_ppdu_start *ppdu_start =
++			(struct hal_rx_ppdu_start *)tlv_data;
++
++		ppdu_info->ppdu_id =
++			FIELD_GET(HAL_RX_PPDU_START_INFO0_PPDU_ID,
++				  __le32_to_cpu(ppdu_start->info0));
++		ppdu_info->chan_num = __le32_to_cpu(ppdu_start->chan_num);
++		ppdu_info->ppdu_ts = __le32_to_cpu(ppdu_start->ppdu_start_ts);
++		break;
++	}
++	case HAL_RX_PPDU_END_USER_STATS: {
++		struct hal_rx_ppdu_end_user_stats *eu_stats =
++			(struct hal_rx_ppdu_end_user_stats *)tlv_data;
++
++		info0 = __le32_to_cpu(eu_stats->info0);
++		info1 = __le32_to_cpu(eu_stats->info1);
++
++		ppdu_info->tid =
++			ffs(FIELD_GET(HAL_RX_PPDU_END_USER_STATS_INFO6_TID_BITMAP,
++				      __le32_to_cpu(eu_stats->info6))) - 1;
++		ppdu_info->tcp_msdu_count =
++			FIELD_GET(HAL_RX_PPDU_END_USER_STATS_INFO4_TCP_MSDU_CNT,
++				  __le32_to_cpu(eu_stats->info4));
++		ppdu_info->udp_msdu_count =
++			FIELD_GET(HAL_RX_PPDU_END_USER_STATS_INFO4_UDP_MSDU_CNT,
++				  __le32_to_cpu(eu_stats->info4));
++		ppdu_info->other_msdu_count =
++			FIELD_GET(HAL_RX_PPDU_END_USER_STATS_INFO5_OTHER_MSDU_CNT,
++				  __le32_to_cpu(eu_stats->info5));
++		ppdu_info->tcp_ack_msdu_count =
++			FIELD_GET(HAL_RX_PPDU_END_USER_STATS_INFO5_TCP_ACK_MSDU_CNT,
++				  __le32_to_cpu(eu_stats->info5));
++		ppdu_info->preamble_type =
++			FIELD_GET(HAL_RX_PPDU_END_USER_STATS_INFO1_PKT_TYPE, info1);
++		ppdu_info->num_mpdu_fcs_ok =
++			FIELD_GET(HAL_RX_PPDU_END_USER_STATS_INFO1_MPDU_CNT_FCS_OK,
++				  info1);
++		ppdu_info->num_mpdu_fcs_err =
++			FIELD_GET(HAL_RX_PPDU_END_USER_STATS_INFO0_MPDU_CNT_FCS_ERR,
++				  info0);
++		break;
++	}
++	case HAL_PHYRX_HT_SIG: {
++		struct hal_rx_ht_sig_info *ht_sig =
++			(struct hal_rx_ht_sig_info *)tlv_data;
++
++		info0 = __le32_to_cpu(ht_sig->info0);
++		info1 = __le32_to_cpu(ht_sig->info1);
++
++		ppdu_info->mcs = FIELD_GET(HAL_RX_HT_SIG_INFO_INFO0_MCS, info0);
++		ppdu_info->bw = FIELD_GET(HAL_RX_HT_SIG_INFO_INFO0_BW, info0);
++		ppdu_info->is_stbc = FIELD_GET(HAL_RX_HT_SIG_INFO_INFO1_STBC,
++					       info1);
++		ppdu_info->ldpc = FIELD_GET(HAL_RX_HT_SIG_INFO_INFO1_FEC_CODING, info1);
++		ppdu_info->gi = info1 & HAL_RX_HT_SIG_INFO_INFO1_GI;
++
++		switch (ppdu_info->mcs) {
++		case 0 ... 7:
++			ppdu_info->nss = 1;
++			break;
++		case 8 ... 15:
++			ppdu_info->nss = 2;
++			break;
++		case 16 ... 23:
++			ppdu_info->nss = 3;
++			break;
++		case 24 ... 31:
++			ppdu_info->nss = 4;
++			break;
++		}
++
++		if (ppdu_info->nss > 1)
++			ppdu_info->mcs = ppdu_info->mcs % 8;
++
++		ppdu_info->reception_type = HAL_RX_RECEPTION_TYPE_SU;
++		break;
++	}
++	case HAL_PHYRX_L_SIG_B: {
++		struct hal_rx_lsig_b_info *lsigb =
++			(struct hal_rx_lsig_b_info *)tlv_data;
++
++		ppdu_info->rate = FIELD_GET(HAL_RX_LSIG_B_INFO_INFO0_RATE,
++					    __le32_to_cpu(lsigb->info0));
++		ppdu_info->reception_type = HAL_RX_RECEPTION_TYPE_SU;
++		break;
++	}
++	case HAL_PHYRX_L_SIG_A: {
++		struct hal_rx_lsig_a_info *lsiga =
++			(struct hal_rx_lsig_a_info *)tlv_data;
++
++		ppdu_info->rate = FIELD_GET(HAL_RX_LSIG_A_INFO_INFO0_RATE,
++					    __le32_to_cpu(lsiga->info0));
++		ppdu_info->reception_type = HAL_RX_RECEPTION_TYPE_SU;
++		break;
++	}
++	case HAL_PHYRX_VHT_SIG_A: {
++		struct hal_rx_vht_sig_a_info *vht_sig =
++			(struct hal_rx_vht_sig_a_info *)tlv_data;
++		u32 nsts;
++		u32 group_id;
++
++		info0 = __le32_to_cpu(vht_sig->info0);
++		info1 = __le32_to_cpu(vht_sig->info1);
++
++		ppdu_info->ldpc = FIELD_GET(HAL_RX_VHT_SIG_A_INFO_INFO1_SU_MU_CODING,
++					    info0);
++		ppdu_info->mcs = FIELD_GET(HAL_RX_VHT_SIG_A_INFO_INFO1_MCS,
++					   info1);
++		ppdu_info->gi =
++			FIELD_GET(HAL_RX_VHT_SIG_A_INFO_INFO1_GI_SETTING,
++				  info1);
++		ppdu_info->is_stbc = info0 & HAL_RX_VHT_SIG_A_INFO_INFO0_STBC;
++		nsts = FIELD_GET(HAL_RX_VHT_SIG_A_INFO_INFO0_NSTS, info0);
++		if (ppdu_info->is_stbc && nsts > 0)
++			nsts = ((nsts + 1) >> 1) - 1;
++
++		ppdu_info->nss = (nsts & VHT_SIG_SU_NSS_MASK) + 1;
++		ppdu_info->bw = FIELD_GET(HAL_RX_VHT_SIG_A_INFO_INFO0_BW,
++					  info0);
++		ppdu_info->beamformed = info1 &
++					HAL_RX_VHT_SIG_A_INFO_INFO1_BEAMFORMED;
++		group_id = FIELD_GET(HAL_RX_VHT_SIG_A_INFO_INFO0_GROUP_ID,
++				     info0);
++		if (group_id == 0 || group_id == 63)
++			ppdu_info->reception_type = HAL_RX_RECEPTION_TYPE_SU;
++		else
++			ppdu_info->reception_type =
++				HAL_RX_RECEPTION_TYPE_MU_MIMO;
++		break;
++	}
++	case HAL_PHYRX_HE_SIG_A_SU: {
++		struct hal_rx_he_sig_a_su_info *he_sig_a =
++			(struct hal_rx_he_sig_a_su_info *)tlv_data;
++		u32 nsts, cp_ltf, dcm;
++
++		info0 = __le32_to_cpu(he_sig_a->info0);
++		info1 = __le32_to_cpu(he_sig_a->info1);
++
++		ppdu_info->mcs =
++			FIELD_GET(HAL_RX_HE_SIG_A_SU_INFO_INFO0_TRANSMIT_MCS,
++				  info0);
++		ppdu_info->bw =
++			FIELD_GET(HAL_RX_HE_SIG_A_SU_INFO_INFO0_TRANSMIT_BW,
++				  info0);
++		ppdu_info->ldpc = FIELD_GET(HAL_RX_HE_SIG_A_SU_INFO_INFO1_CODING, info0);
++		ppdu_info->is_stbc = info1 &
++				     HAL_RX_HE_SIG_A_SU_INFO_INFO1_STBC;
++		ppdu_info->beamformed = info1 &
++					HAL_RX_HE_SIG_A_SU_INFO_INFO1_TXBF;
++		dcm = info0 & HAL_RX_HE_SIG_A_SU_INFO_INFO0_DCM;
++		cp_ltf = FIELD_GET(HAL_RX_HE_SIG_A_SU_INFO_INFO0_CP_LTF_SIZE,
++				   info0);
++		nsts = FIELD_GET(HAL_RX_HE_SIG_A_SU_INFO_INFO0_NSTS, info0);
++
++		switch (cp_ltf) {
++		case 0:
++		case 1:
++			ppdu_info->gi = HAL_RX_GI_0_8_US;
++			break;
++		case 2:
++			ppdu_info->gi = HAL_RX_GI_1_6_US;
++			break;
++		case 3:
++			if (dcm && ppdu_info->is_stbc)
++				ppdu_info->gi = HAL_RX_GI_0_8_US;
++			else
++				ppdu_info->gi = HAL_RX_GI_3_2_US;
++			break;
++		}
++
++		ppdu_info->nss = nsts + 1;
++		ppdu_info->reception_type = HAL_RX_RECEPTION_TYPE_SU;
++		break;
++	}
++	case HAL_PHYRX_HE_SIG_A_MU_DL: {
++		struct hal_rx_he_sig_a_mu_dl_info *he_sig_a_mu_dl =
++			(struct hal_rx_he_sig_a_mu_dl_info *)tlv_data;
++
++		u32 cp_ltf;
++
++		info0 = __le32_to_cpu(he_sig_a_mu_dl->info0);
++		info1 = __le32_to_cpu(he_sig_a_mu_dl->info1);
++
++		ppdu_info->bw =
++			FIELD_GET(HAL_RX_HE_SIG_A_MU_DL_INFO_INFO0_TRANSMIT_BW,
++				  info0);
++		cp_ltf = FIELD_GET(HAL_RX_HE_SIG_A_MU_DL_INFO_INFO0_CP_LTF_SIZE,
++				   info0);
++
++		switch (cp_ltf) {
++		case 0:
++		case 1:
++			ppdu_info->gi = HAL_RX_GI_0_8_US;
++			break;
++		case 2:
++			ppdu_info->gi = HAL_RX_GI_1_6_US;
++			break;
++		case 3:
++			ppdu_info->gi = HAL_RX_GI_3_2_US;
++			break;
++		}
++
++		ppdu_info->is_stbc = info1 &
++				     HAL_RX_HE_SIG_A_MU_DL_INFO_INFO1_STBC;
++		ppdu_info->reception_type = HAL_RX_RECEPTION_TYPE_MU_MIMO;
++		break;
++	}
++	case HAL_PHYRX_HE_SIG_B1_MU: {
++		/* TODO: Check if resource unit(RU) allocation stats
++		 * are required
++		 */
++		ppdu_info->reception_type = HAL_RX_RECEPTION_TYPE_MU_MIMO;
++		break;
++	}
++	case HAL_PHYRX_HE_SIG_B2_MU: {
++		struct hal_rx_he_sig_b2_mu_info *he_sig_b2_mu =
++			(struct hal_rx_he_sig_b2_mu_info *)tlv_data;
++
++		info0 = __le32_to_cpu(he_sig_b2_mu->info0);
++
++		ppdu_info->mcs =
++			FIELD_GET(HAL_RX_HE_SIG_B2_MU_INFO_INFO0_STA_MCS,
++				  info0);
++		ppdu_info->nss =
++			FIELD_GET(HAL_RX_HE_SIG_B2_MU_INFO_INFO0_STA_NSTS,
++				  info0) + 1;
++		ppdu_info->ldpc = FIELD_GET(HAL_RX_HE_SIG_B2_MU_INFO_INFO0_STA_CODING,
++					    info0);
++		break;
++	}
++	case HAL_PHYRX_HE_SIG_B2_OFDMA: {
++		struct hal_rx_he_sig_b2_ofdma_info *he_sig_b2_ofdma =
++			(struct hal_rx_he_sig_b2_ofdma_info *)tlv_data;
++
++		info0 = __le32_to_cpu(he_sig_b2_ofdma->info0);
++
++		ppdu_info->mcs =
++			FIELD_GET(HAL_RX_HE_SIG_B2_OFDMA_INFO_INFO0_STA_MCS,
++				  info0);
++		ppdu_info->nss =
++			FIELD_GET(HAL_RX_HE_SIG_B2_OFDMA_INFO_INFO0_STA_NSTS,
++				  info0) + 1;
++		ppdu_info->beamformed =
++			info0 &
++			HAL_RX_HE_SIG_B2_OFDMA_INFO_INFO0_STA_TXBF;
++		ppdu_info->ldpc = FIELD_GET(HAL_RX_HE_SIG_B2_OFDMA_INFO_INFO0_STA_CODING,
++					    info0);
++		ppdu_info->reception_type = HAL_RX_RECEPTION_TYPE_MU_OFDMA;
++		break;
++	}
++	case HAL_PHYRX_RSSI_LEGACY: {
++		struct hal_rx_phyrx_rssi_legacy_info *rssi =
++			(struct hal_rx_phyrx_rssi_legacy_info *)tlv_data;
++
++		/* TODO: Please note that the combined rssi will not be accurate
++		 * in MU case. Rssi in MU needs to be retrieved from
++		 * PHYRX_OTHER_RECEIVE_INFO TLV.
++		 */
++		ppdu_info->rssi_comb =
++			FIELD_GET(HAL_RX_PHYRX_RSSI_LEGACY_INFO_INFO1_RSSI_COMB,
++				  __le32_to_cpu(rssi->info0));
++		break;
++	}
++	case HAL_RX_MPDU_START: {
++		struct hal_rx_mpdu_info *mpdu_info =
++			(struct hal_rx_mpdu_info *)tlv_data;
++		u16 peer_id;
++
++		peer_id = FIELD_GET(HAL_RX_MPDU_INFO_INFO0_PEERID,
++				    __le32_to_cpu(mpdu_info->info0));
++		if (peer_id)
++			ppdu_info->peer_id = peer_id;
++		break;
++	}
++	case HAL_RXPCU_PPDU_END_INFO: {
++		struct hal_rx_ppdu_end_duration *ppdu_rx_duration =
++			(struct hal_rx_ppdu_end_duration *)tlv_data;
++		ppdu_info->rx_duration =
++			FIELD_GET(HAL_RX_PPDU_END_DURATION,
++				  __le32_to_cpu(ppdu_rx_duration->info0));
++		break;
++	}
++	case HAL_DUMMY:
++		return HAL_RX_MON_STATUS_BUF_DONE;
++	case HAL_RX_PPDU_END_STATUS_DONE:
++	case 0:
++		return HAL_RX_MON_STATUS_PPDU_DONE;
++	default:
++		break;
++	}
++
++	return HAL_RX_MON_STATUS_PPDU_NOT_DONE;
++}
++
++enum hal_rx_mon_status
++ath11k_hal_rx_parse_mon_status(struct ath11k_base *ab,
++			       struct hal_rx_mon_ppdu_info *ppdu_info,
++			       struct sk_buff *skb)
++{
++	struct hal_tlv_hdr *tlv;
++	enum hal_rx_mon_status hal_status = HAL_RX_MON_STATUS_BUF_DONE;
++	u16 tlv_tag;
++	u16 tlv_len;
++	u8 *ptr = skb->data;
++
++	do {
++		tlv = (struct hal_tlv_hdr *)ptr;
++		tlv_tag = FIELD_GET(HAL_TLV_HDR_TAG, tlv->tl);
++		tlv_len = FIELD_GET(HAL_TLV_HDR_LEN, tlv->tl);
++		ptr += sizeof(*tlv);
++
++		/* The actual length of PPDU_END is the combined length of many PHY
++		 * TLVs that follow. Skip the TLV header and
++		 * rx_rxpcu_classification_overview that follows the header to get to
++		 * next TLV.
++		 */
++		if (tlv_tag == HAL_RX_PPDU_END)
++			tlv_len = sizeof(struct hal_rx_rxpcu_classification_overview);
++
++		hal_status = ath11k_hal_rx_parse_mon_status_tlv(ab, ppdu_info,
++								tlv_tag, ptr);
++		ptr += tlv_len;
++		ptr = PTR_ALIGN(ptr, HAL_TLV_ALIGN);
++
++		if ((ptr - skb->data) >= DP_RX_BUFFER_SIZE)
++			break;
++	} while (hal_status == HAL_RX_MON_STATUS_PPDU_NOT_DONE);
++
++	return hal_status;
++}
++
++void ath11k_hal_rx_reo_ent_buf_paddr_get(void *rx_desc, dma_addr_t *paddr,
++					 u32 *sw_cookie, void **pp_buf_addr,
++					 u32  *msdu_cnt)
++{
++	struct hal_reo_entrance_ring *reo_ent_ring =
++		(struct hal_reo_entrance_ring *)rx_desc;
++	struct ath11k_buffer_addr *buf_addr_info;
++	struct rx_mpdu_desc *rx_mpdu_desc_info_details;
++
++	rx_mpdu_desc_info_details =
++			(struct rx_mpdu_desc *)&reo_ent_ring->rx_mpdu_info;
++
++	*msdu_cnt = FIELD_GET(RX_MPDU_DESC_INFO0_MSDU_COUNT,
++			      rx_mpdu_desc_info_details->info0);
++
++	buf_addr_info = (struct ath11k_buffer_addr *)&reo_ent_ring->buf_addr_info;
++
++	*paddr = (((u64)FIELD_GET(BUFFER_ADDR_INFO1_ADDR,
++				  buf_addr_info->info1)) << 32) |
++			FIELD_GET(BUFFER_ADDR_INFO0_ADDR,
++				  buf_addr_info->info0);
++
++	*sw_cookie = FIELD_GET(BUFFER_ADDR_INFO1_SW_COOKIE,
++			       buf_addr_info->info1);
++
++	*pp_buf_addr = (void *)buf_addr_info;
 +}
 
