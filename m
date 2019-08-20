@@ -2,94 +2,81 @@ Return-Path: <SRS0=DLa0=WQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3B11C3A589
-	for <linux-wireless@archiver.kernel.org>; Tue, 20 Aug 2019 15:53:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0738C3A589
+	for <linux-wireless@archiver.kernel.org>; Tue, 20 Aug 2019 15:53:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C326F205ED
-	for <linux-wireless@archiver.kernel.org>; Tue, 20 Aug 2019 15:53:03 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="UKLImnQg";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="hDf6mhPG"
+	by mail.kernel.org (Postfix) with ESMTP id 7CFCD205ED
+	for <linux-wireless@archiver.kernel.org>; Tue, 20 Aug 2019 15:53:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730307AbfHTPxD (ORCPT
+        id S1730149AbfHTPxQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 20 Aug 2019 11:53:03 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:56310 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727077AbfHTPxC (ORCPT
+        Tue, 20 Aug 2019 11:53:16 -0400
+Received: from gesmail.globaledgesoft.com ([182.73.204.242]:54738 "EHLO
+        gesmail.globaledgesoft.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726345AbfHTPxQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Aug 2019 11:53:02 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 7728460DB4; Tue, 20 Aug 2019 15:53:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1566316382;
-        bh=0rDMZlz9T+xvVa034ALOwHytJXeK6p/eD40ZyVWkk90=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=UKLImnQgS531UBwnNhcvgrDshd/1K7Dn/DbH1x10miFzj1v6kCaV6FOA337aXpi70
-         F+mMiHgjsOlvpvXN07BydD3CflSb4THtKjO+NG1yaYdtyCLBkc2SgYAoRnRZPOjhAs
-         XLYQhQLWdqoXSuSezOTMZ7FQK+3oBjBW0ZzLBnPU=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        Tue, 20 Aug 2019 11:53:16 -0400
+X-Greylist: delayed 617 seconds by postgrey-1.27 at vger.kernel.org; Tue, 20 Aug 2019 11:53:16 EDT
+Received: from mail.globaledgesoft.com (mail.globaledgesoft.com [172.16.2.30])
+        (using TLSv1 with cipher ADH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 6853F60FE9;
-        Tue, 20 Aug 2019 15:53:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1566316381;
-        bh=0rDMZlz9T+xvVa034ALOwHytJXeK6p/eD40ZyVWkk90=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=hDf6mhPG5uY+JOCgX0qQnu5hRvi/uiqr9ZXmMrX/InHrsKngrj+fV59+alzcc90f8
-         S+tszES0POthGVTiSreK6S9hzDt/GTL1md57sc0QO3bqRHCBeq2+fvoXB55Oe+wUpU
-         ZqNazuUpzg2+VkePa/Y262wKqwjSHt6PlAkBTtEA=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 6853F60FE9
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Larry Finger <Larry.Finger@lwfinger.net>
-Cc:     linux-wireless@vger.kernel.org, pkshih@realtek.com
-Subject: Re: [PATCH 5/5] rtlwifi: rtl8192cu: Fix value set in descriptor
-References: <20190812192741.14479-1-Larry.Finger@lwfinger.net>
-        <20190820140836.6727960E57@smtp.codeaurora.org>
-        <8b4f8edf-fd73-2b88-b985-22658840f409@lwfinger.net>
-Date:   Tue, 20 Aug 2019 18:52:57 +0300
-In-Reply-To: <8b4f8edf-fd73-2b88-b985-22658840f409@lwfinger.net> (Larry
-        Finger's message of "Tue, 20 Aug 2019 10:36:19 -0500")
-Message-ID: <87d0gzal5y.fsf@kamboji.qca.qualcomm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
-MIME-Version: 1.0
-Content-Type: text/plain
+        by gesmail.globaledgesoft.com (Postfix) with ESMTP id AD8517C884D;
+        Tue, 20 Aug 2019 21:12:06 +0530 (IST)
+Received: from mail.globaledgesoft.com (localhost [127.0.0.1])
+        by mail.globaledgesoft.com (Postfix) with ESMTPS id 1118AB8089E;
+        Tue, 20 Aug 2019 21:18:35 +0530 (IST)
+Received: from localhost (localhost [127.0.0.1])
+        by mail.globaledgesoft.com (Postfix) with ESMTP id E23B1B80855;
+        Tue, 20 Aug 2019 21:18:34 +0530 (IST)
+X-Amavis-Modified: Mail body modified (using disclaimer) -
+        mail.globaledgesoft.com
+Received: from mail.globaledgesoft.com ([127.0.0.1])
+        by localhost (mail.globaledgesoft.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id YtwXZlCJ_6Au; Tue, 20 Aug 2019 21:18:34 +0530 (IST)
+Received: from localhost.localdomain (unknown [172.16.2.250])
+        by mail.globaledgesoft.com (Postfix) with ESMTPSA id A468DB8071C;
+        Tue, 20 Aug 2019 21:18:34 +0530 (IST)
+From:   Balakrishna Bandi <b.balakrishna@globaledgesoft.com>
+To:     lorenzo.bianconi83@gmail.com
+Cc:     linux-wireless@vger.kernel.org,
+        Balakrishna Bandi <b.balakrishna@globaledgesoft.com>
+Subject: [PATCH 1/1] [MT76x02] [STA interface]
+Date:   Tue, 20 Aug 2019 21:12:31 +0530
+Message-Id: <1566315751-7688-1-git-send-email-b.balakrishna@globaledgesoft.com>
+X-Mailer: git-send-email 1.9.1
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
+MT76-Station sends class 3 frames after deauthentication from 3rd party AP
+(Sending BAR frame after deauth).
 
-> On 8/20/19 9:08 AM, Kalle Valo wrote:
->> Larry Finger <Larry.Finger@lwfinger.net> wrote:
->>
->>> In the process of converting the bit manipulation macros were converted
->>> to use GENMASK(), the compiler reported a value too big for the field.
->>> The offending statement was trying to write 0x100 into a 5-bit field.
->>> An accompaning comment says to set bit 3, thus the code is changed
->>> appropriately.
->>>
->>> This error has been in the driver since its initial submission.
->>>
->>> Fixes: 29d00a3e46bb ("rtlwifi: rtl8192cu: Add routine trx")
->>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->>
->> I only see patch 5 on patchwork, what happened to patches 1-4?
->
-> I pulled them at the last minute, but forgot to rename the subject.
-> Please apply that fix alone. The others will follow when I get time;
-> however, they are code improvements. Only this one was a code fix.
+Fix to be, do not send BAR frame after deauth.
 
-Ok, I was just worried if patchwork had lost of them somehow.
+Signed-off-by: Balakrishna Bandi <b.balakrishna@globaledgesoft.com>
+---
+ drivers/net/wireless/mediatek/mt76/mt76x02_util.c | 1 -
+ 1 file changed, 1 deletion(-)
 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
+index ad53234..0126601 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
+@@ -375,7 +375,6 @@ int mt76x02_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 	case IEEE80211_AMPDU_TX_STOP_FLUSH:
+ 	case IEEE80211_AMPDU_TX_STOP_FLUSH_CONT:
+ 		mtxq->aggr = false;
+-		ieee80211_send_bar(vif, sta->addr, tid, mtxq->agg_ssn);
+ 		break;
+ 	case IEEE80211_AMPDU_TX_START:
+ 		mtxq->agg_ssn = IEEE80211_SN_TO_SEQ(*ssn);
 -- 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+1.9.1
+
+Disclaimer:- The information contained in this electronic message and any attachments to this message are intended for the exclusive use of the addressee(s) and may contain proprietary, confidential or privileged information. If you are not the intended recipient, you should not disseminate, distribute or copy this e-mail. Please notify the sender immediately and destroy all copies of this message and any attachments. The views expressed in this E-mail message (including the enclosure/(s) or attachment/(s) if any) are those of the individual sender, except where the sender expressly, and with authority, states them to be the views of GlobalEdge. Before opening any mail and attachments please check them for viruses .GlobalEdge does not accept any liability for virus infected mails.
+
