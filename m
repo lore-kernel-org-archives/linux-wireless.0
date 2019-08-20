@@ -2,78 +2,99 @@ Return-Path: <SRS0=DLa0=WQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96F73C3A589
-	for <linux-wireless@archiver.kernel.org>; Tue, 20 Aug 2019 11:54:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F28AC3A589
+	for <linux-wireless@archiver.kernel.org>; Tue, 20 Aug 2019 11:55:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5D7F922DA7
-	for <linux-wireless@archiver.kernel.org>; Tue, 20 Aug 2019 11:54:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2429322CF7
+	for <linux-wireless@archiver.kernel.org>; Tue, 20 Aug 2019 11:55:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=newmedia-net.de header.i=@newmedia-net.de header.b="NFt/Id4U"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="LmWLAMZI";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="LmWLAMZI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727006AbfHTLyn (ORCPT
+        id S1729342AbfHTLzZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 20 Aug 2019 07:54:43 -0400
-Received: from webmail.newmedia-net.de ([185.84.6.166]:48579 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728771AbfHTLyn (ORCPT
+        Tue, 20 Aug 2019 07:55:25 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:49082 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727006AbfHTLzZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Aug 2019 07:54:43 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=newmedia-net.de; s=mikd;
-        h=Content-Transfer-Encoding:Content-Type:In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:Subject; bh=VuoE3t0KeuPRrsMQRcqh6KVC581VByHkQ/fvcQi8doc=;
-        b=NFt/Id4UnENqr/xOLSFJ7u3RfOQgQyvvUTZJg8RsJqsKBSuuBk9Gbx8bq5U6ZSDGEHZFyXkrYQ22GLE+/bM7Qt9pHcgW0kML/W38zT0VqZgbCFtnEAPx2Sv7Sz1WViJYgewBokJTFhOYGKTJl1NyffEP/uIoPM1yKbQcZYDkuho=;
-Subject: Re: Implementing Mikrotik IE
-To:     Johannes Berg <johannes@sipsolutions.net>,
-        Josef Miegl <josef@miegl.cz>
-Cc:     linux-wireless <linux-wireless@vger.kernel.org>
-References: <20190815152844.k5mmddvbwrohkzr6@pepin-laptop.localdomain>
- <3a079683-6f57-3b42-f909-90c46e14f14f@newmedia-net.de>
- <20190816111044.4ntizgmpa3twbzcg@pepin-laptop.localdomain>
- <e8129acb-fc32-c85c-b504-ab8777a3f1a3@newmedia-net.de>
- <20190816113818.ohktykc4fyetzyvq@pepin-laptop.localdomain>
- <9985fddfb059640f36665efc9c1ef2dc0bdb7662.camel@sipsolutions.net>
-From:   Sebastian Gottschall <s.gottschall@newmedia-net.de>
-Message-ID: <b8009787-a182-d5f2-6dde-ee540c65a03b@newmedia-net.de>
-Date:   Tue, 20 Aug 2019 13:53:41 +0200
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
-MIME-Version: 1.0
-In-Reply-To: <9985fddfb059640f36665efc9c1ef2dc0bdb7662.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Received:  from [212.111.244.1] (helo=[172.29.0.186])
-        by webmail.newmedia-net.de with esmtpsa (TLSv1:AES128-SHA:128)
-        (Exim 4.72)
-        (envelope-from <s.gottschall@newmedia-net.de>)
-        id 1i02iv-0005tk-02; Tue, 20 Aug 2019 13:54:49 +0200
+        Tue, 20 Aug 2019 07:55:25 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id B99CF608FF; Tue, 20 Aug 2019 11:55:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1566302124;
+        bh=Y2rU2d6q6MWwJstvhzKxo56Z5gKFJ7BHKuyQbjStoII=;
+        h=From:To:Cc:Subject:Date:From;
+        b=LmWLAMZIVj7Dl6FMi8IfPXgRyiE8H2PkkaOS9Knvzk+3R3B+FZvUl+Q+RrwPDqzHW
+         aj5/+Cxh1Pg1aggT140lu9bhlDimRUKCzat5XfqBX0b0L8U1IN3bpJCrcFbVJsxlQS
+         waylKDnKbolv4kxi455t2oj8Kc1O7/1YGn9yn0Yw=
+Received: from wgong-HP-Z240-SFF-Workstation.qca.qualcomm.com (unknown [180.166.53.21])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: wgong@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 2A227608CC;
+        Tue, 20 Aug 2019 11:55:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1566302124;
+        bh=Y2rU2d6q6MWwJstvhzKxo56Z5gKFJ7BHKuyQbjStoII=;
+        h=From:To:Cc:Subject:Date:From;
+        b=LmWLAMZIVj7Dl6FMi8IfPXgRyiE8H2PkkaOS9Knvzk+3R3B+FZvUl+Q+RrwPDqzHW
+         aj5/+Cxh1Pg1aggT140lu9bhlDimRUKCzat5XfqBX0b0L8U1IN3bpJCrcFbVJsxlQS
+         waylKDnKbolv4kxi455t2oj8Kc1O7/1YGn9yn0Yw=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 2A227608CC
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=wgong@codeaurora.org
+From:   Wen Gong <wgong@codeaurora.org>
+To:     ath10k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org
+Subject: [PATCH 0/7] ath10k: improve throughout of tcp/udp TX/RX of sdio
+Date:   Tue, 20 Aug 2019 19:55:01 +0800
+Message-Id: <1566302108-18219-1-git-send-email-wgong@codeaurora.org>
+X-Mailer: git-send-email 1.9.1
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+The bottleneck of throughout on sdio chip is the bus bandwidth, to the
+patches are all to increase the use ratio of sdio bus.
 
-Am 19.08.2019 um 12:12 schrieb Johannes Berg:
-> On Fri, 2019-08-16 at 13:38 +0200, Josef Miegl wrote:
->> On Fri, Aug 16, 2019 at 01:15:30PM +0200, Sebastian Gottschall wrote:
->>> in station mode you are right. you need to modify mac80211.
->> Even if I don't need to capture the IE back? All I want is to include
->> extra vendor IE in client assoc/reassoc frames. If this is something the
->> current wireless stack cannot do, perhaps it should be implemented.
-> Contrary to what Sebastian states, it certainly is possible today,
-> although not through wpa_supplicant's config file, only through the
-> wpa_cli interface, using the VENDOR_ELEM_ADD command. There are various
-> tests showing how to use this.
->
-> johannes
-i was talking about a different scenario. its not about adding a 
-element, but to read it back for gui for instance. this is why i made a 
-patch which parses this special ie
-and adds the radioname as extra element to the station table. this works 
-for ap as well of course. so iw ath0 station dump will print out the 
-radio name if available
->
->
->
+                      udp-rx    udp-tx    tcp-rx    tcp-tx
+without patches(Mbps)  320        180       170       151
+with patches(Mbps)     450        410       400       320
+
+These patches only affect sdio bus chip, explanation is mentioned in each
+patch's commit log.
+
+Alagu Sankar (1):
+  ath10k: enable RX bundle receive for sdio
+
+Wen Gong (6):
+  ath10k: change max RX bundle size from 8 to 32 for sdio
+  ath10k: add workqueue for RX path of sdio
+  ath10k: disable TX complete indication of htt for sdio
+  ath10k: add htt TX bundle for sdio
+  ath10k: enable alt data of TX path for sdio
+  ath10k: enable napi on RX path for sdio
+
+ drivers/net/wireless/ath/ath10k/core.c   |  36 ++-
+ drivers/net/wireless/ath/ath10k/core.h   |   4 +-
+ drivers/net/wireless/ath/ath10k/hif.h    |   9 +
+ drivers/net/wireless/ath/ath10k/htc.c    | 375 ++++++++++++++++++++++++++++---
+ drivers/net/wireless/ath/ath10k/htc.h    |  37 ++-
+ drivers/net/wireless/ath/ath10k/htt.c    |  15 ++
+ drivers/net/wireless/ath/ath10k/htt.h    |  21 +-
+ drivers/net/wireless/ath/ath10k/htt_rx.c |  85 ++++++-
+ drivers/net/wireless/ath/ath10k/htt_tx.c |  37 ++-
+ drivers/net/wireless/ath/ath10k/hw.h     |   2 +-
+ drivers/net/wireless/ath/ath10k/sdio.c   | 281 ++++++++++++++++++++---
+ drivers/net/wireless/ath/ath10k/sdio.h   |  31 ++-
+ 12 files changed, 846 insertions(+), 87 deletions(-)
+
+-- 
+1.9.1
+
