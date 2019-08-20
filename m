@@ -2,130 +2,227 @@ Return-Path: <SRS0=DLa0=WQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33E0CC3A589
-	for <linux-wireless@archiver.kernel.org>; Tue, 20 Aug 2019 20:06:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FE4BC3A589
+	for <linux-wireless@archiver.kernel.org>; Tue, 20 Aug 2019 20:06:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0F23D216F4
-	for <linux-wireless@archiver.kernel.org>; Tue, 20 Aug 2019 20:06:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EEEC4216F4
+	for <linux-wireless@archiver.kernel.org>; Tue, 20 Aug 2019 20:06:40 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="H87vdBiN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730744AbfHTUGC (ORCPT
+        id S1730430AbfHTUGk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 20 Aug 2019 16:06:02 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:42808 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729833AbfHTUGC (ORCPT
+        Tue, 20 Aug 2019 16:06:40 -0400
+Received: from mail-oi1-f193.google.com ([209.85.167.193]:43520 "EHLO
+        mail-oi1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729833AbfHTUGk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Aug 2019 16:06:02 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1i0AOD-0007Om-8M; Tue, 20 Aug 2019 22:05:57 +0200
-Message-ID: <8c791df54a831f32fddd634e71e5e91342532535.camel@sipsolutions.net>
-Subject: Re: [PATCH 04/49] ath11k: add ahb.c
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Cc:     ath11k@lists.infradead.org, devicetree@vger.kernel.org
-Date:   Tue, 20 Aug 2019 22:05:55 +0200
-In-Reply-To: <1566316095-27507-5-git-send-email-kvalo@codeaurora.org> (sfid-20190820_175156_108502_D7159DB2)
-References: <1566316095-27507-1-git-send-email-kvalo@codeaurora.org>
-         <1566316095-27507-5-git-send-email-kvalo@codeaurora.org>
-         (sfid-20190820_175156_108502_D7159DB2)
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.30.5 (3.30.5-1.fc29) 
+        Tue, 20 Aug 2019 16:06:40 -0400
+Received: by mail-oi1-f193.google.com with SMTP id y8so5115122oih.10
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Aug 2019 13:06:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=2xGFoIRxAurgLAWzEwqfQLCHQOZuH9k5DTBY5IC2kDo=;
+        b=H87vdBiNYFQ4+61oOdMQxkKcE5f81dHHGg1dlJvzMlW8uD2wwiPyGci7Efp3lmQ2Y4
+         8jsxYtfedpivAHnXoQW75G/l8GbHBm0eDt2RCiUshe7kOzA8o1YJOM1wreX+xQ308JLe
+         yaq1x7uzb41RQTYfXcg0ogxyTdgcSw+/l3R+fQPq4jZaxkw+WFsWv13pxDy/aQsKOcen
+         N+rI6BxPWceEdpqgjPxzjiawW08WM8PXj7b+vfZ/3G1/4wJj6Ayke7qeN7yzCj8oTpDq
+         yMEVf+nvPfVxf+PEifNyJUvEh4Rsfcuuly0W6jEMIxvNTrhNCFfbrJAXlwU+nO1ft8+i
+         siJA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=2xGFoIRxAurgLAWzEwqfQLCHQOZuH9k5DTBY5IC2kDo=;
+        b=ncvI1gCAIbmSPV2tKiiK69jWtvQMDmDrZYhLF8ChTxWes0RPjw8OBL8vXsZfqtBALy
+         oBZgiC/euG9tIpdPb997AHvMqZFzYbtC5H7LgjO7pnSzHxETr8SXBfiig4nnG3WAbDeY
+         Nvs2H5PWlYXi0YHvTt3+/gNLQcI3MuxCCqKlZ812Ajg5fCF8ukYCFUgUGtdYvCEl/kQx
+         1VlzPVMckKhoHoD+e11uMEY5H9oZAC50lk1Itz0jxUhuu2dxL5r6aYfmpziG1SDhfXVV
+         J7du2We7f804NHQCj2ooGCs82y4kQZqXyWEUf9/qfya6JtduqcnBBeF05zqKfl2/dl9s
+         90/g==
+X-Gm-Message-State: APjAAAUJmebpKU3lgyVxq8SwBTj1LacMkfCORuncfed1NxW/bGaWDvPl
+        058rV5/cIM91xyzjulFiG3kfI9IV
+X-Google-Smtp-Source: APXvYqxjsCFrUFHFjiEN4sZeeuwTPIS2QXKTulkrhQZcMHx7AynrixAKFSYzzFsar4dvJaPuhdo2kg==
+X-Received: by 2002:aca:bfc3:: with SMTP id p186mr1335691oif.107.1566331598394;
+        Tue, 20 Aug 2019 13:06:38 -0700 (PDT)
+Received: from [192.168.1.249] (cpe-70-114-247-242.austin.res.rr.com. [70.114.247.242])
+        by smtp.googlemail.com with ESMTPSA id 13sm7077823otv.14.2019.08.20.13.06.37
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 20 Aug 2019 13:06:37 -0700 (PDT)
+Subject: Re: [RFC 0/1] Allow MAC change on up interface
+To:     Johannes Berg <johannes@sipsolutions.net>,
+        James Prestwood <prestwoj@gmail.com>
+Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Dan Williams <dcbw@redhat.com>
+References: <20190815185702.30937-1-prestwoj@gmail.com>
+ <645af7dad899e8eb186b3fee0f8a8a151a408557.camel@sipsolutions.net>
+ <394092a2f20697c9b055166a8254a5ef888551a5.camel@gmail.com>
+ <4848c3a9d0b330fab4442436244387a2c127fa03.camel@sipsolutions.net>
+ <c6b719d6279211bbf52443f327884d96ef63f2b2.camel@gmail.com>
+ <6835732fcc59ba8dbbcda4abc6e17dad499a7d8d.camel@sipsolutions.net>
+ <b115e933-a357-9904-e831-dea7df1b46b9@gmail.com>
+ <3576ad937c0b40b971a1b9c1a7c7396731a94bad.camel@sipsolutions.net>
+From:   Denis Kenzior <denkenz@gmail.com>
+Message-ID: <8c04da29-7515-1196-8431-67a6390bc00d@gmail.com>
+Date:   Tue, 20 Aug 2019 14:58:53 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
+In-Reply-To: <3576ad937c0b40b971a1b9c1a7c7396731a94bad.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, 2019-08-20 at 18:47 +0300, Kalle Valo wrote:
+Hi Johannes,
+
+On 8/20/19 2:43 PM, Johannes Berg wrote:
+> On Tue, 2019-08-20 at 14:22 -0500, Denis Kenzior wrote:
+>> Hi Johannes,
+>>
+>> So keeping things purely technical now :)
+>>
+>>> I thought so, but I had another thought later. It might be possible to
+>>> set LIVE_ADDR_CHANGE, but then block it in mac80211 when the interface
+>>> is already connected (or beaconing, or whatever, using the MAC address
+>>> in some way - even while scanning, remain-on-channel is active, etc.)
+>>>
+>>
+>> Here's what we would like to see:
+>>
+>> - The ability for userspace to add a 'Local Mac Address to use'
+>> attribute on CMD_CONNECT and CMD_AUTHENTICATE.
 > 
-> +static const struct service_to_pipe target_service_to_ce_map_wlan[] = {
-> +	{
-> +		__cpu_to_le32(ATH11K_HTC_SVC_ID_WMI_DATA_VO),
-> +		__cpu_to_le32(PIPEDIR_OUT),	/* out = UL = host -> target */
-> +		__cpu_to_le32(3),
-> +	},
+> Why here though? I don't really like this as it's extra complexity
+> there, and dev_set_mac_address() is really easy to call from userspace.
+> Yes, that's sort of a round-trip more (you wouldn't even really have to
+> wait for it I guess), but we have to make trade-offs like that (vs.
+> kernel complexity) at some point.
 
-this might be nicer as C99 initializers as well? It's a struct of some
-sort, after all.
+But what actual complexity are we talking about here? If the kernel can 
+do this while the CONNECT is pending, why not?  It makes things simpler 
+and faster for userspace.  I don't see the downside unless you can 
+somehow objectively explain 'complexity'.
 
-> +	{ /* must be last */
-> +		__cpu_to_le32(0),
-> +		__cpu_to_le32(0),
-> +		__cpu_to_le32(0),
-> +	},
+> 
+>> - It doesn't seem useful to add this to CMD_ASSOCIATE at the moment, as
+>> for new connections you'd always go either through CMD_AUTHENTICATE,
+>> CMD_ASSOCIATE sequence or use CMD_CONNECT.  This should take care of
+>> some (most) of your objections about specifying different addresses for
+>> authenticate/associate.  Feel free to correct me here.
+> 
+> That wasn't really my objection, I was more wondering why James
+> implemented it *only* for CMD_CONNECT, when I had been under the
+> (apparently mistaken) impression that one would generally prefer
+> CMD_ASSOCIATE over CMD_CONNECT, if available.
 
-You don't need endian conversion for 0, even sparse will not complain,
-but I'd argue it should anyway be something like
+This was an RFC.  There isn't much point for us to cross all the 't's 
+and dot all the 'i's if you hate the idea in the first place.
 
-	{ /* terminator entry */ }
+> 
+>> - Optionally (and I'm thinking of tools like NM here), add the ability
+>> to set the mac address via RTNL while the device is UP but has no
+>> carrier, and things like scanning, offchannel, etc are not in progress.
+>> Though really I don't see how NM could guarantee this without bringing
+>> the device down first, so I'll let NM guys chime in to see if this is a
+>> good idea.
+> 
+> I'm thinking along the lines of letting you do this *instead* of the
+> scheme you described above. That way, we don't even need to have a
+> discussion over whether it makes sense at CONNECT, AUTH, ASSOC, or
+> whatever because you can essentially do it before/with any of these
+> commands.
+> 
+> Why would this not be sufficient?
+> 
 
-since that's why it's there I guess?
+It would get the job done.  But it is still a waste of time and still 
+slowing us down.  Look at it this way, even if we save 10ms here.  Take 
+that and multiply by 3-4 billion devices and then by the number of 
+connections one does each day.  This adds up to some serious time 
+wasted.  So why not do this elegantly and faster in the first place?
 
-> +#define ATH11K_TX_RING_MASK_3 0x0
+>> - We definitely do not want to to mess with the device state otherwise.
+>> E.g. no firmware downloading, powering the adapter down, etc.  That just
+>> takes too much time.
+> 
+> I can understand this part.
+> 
+>> So tell us what you would like to see.  A new
+>> IFF_NO_CARRIER_ADDRESS_CHANGE or whether it is possible to use
+>> IFF_LIVE_ADDR_CHANGE with some additional restrictions.
+> 
+> I don't know. This is not something I'm intimately familiar with. I
+> could imagine (as you quoted above) that we just set
+> IFF_LIVE_ADDR_CHANGE and manage the exclusions local to e.g. mac80211.
+> 
 
-You have a LOT of masks here that are 0, that seems odd?
+Okay, so lets operate under the assumption we can hi-jack 
+IFF_LIVE_ADDR_CHANGE for this
 
-> +/* enum ext_irq_num - irq nubers that can be used by external modules
+>>> I still think you'd have to bake it into the mac80211<->driver API
+>>> somehow, because we normally "add_interface()" with the MAC address, and
+>>> nothing says that the driver cannot ignore the MAC address from that
+>>> point on. The fact that iwlwifi just copies it into every new MAC_CTXT
+>>> command and the firmware actually accepts the update seems rather
+>>> accidental and therefore fragile to rely on.
+>>>
+>>
+>> Since you seem to have a clear(er?) idea here, can you elaborate or
+>> possibly provide the driver interface changes you want to see?
+> 
+> I can see a few ways of doing this, for example having an optional
+> "change_vif_addr" method in the mac80211 ops, so that drivers can do the
+> necessary work. I suppose iwlwifi would actually want to send a new
+> MAC_CONTEXT command at this time, for example, because the firmware is
+> notoriously finicky when it comes to command sequences.
+> 
+> Alternatively, and this would work with all drivers, you could just
+> pretend to remove/add the interface, ie. in mac80211 call
+> 
+>   drv_remove_interface(sdata)
+>   // set new mac addr
+>   drv_add_interface(sdata)
+> 
+> This has the advantage that it'll be guaranteed to work with all
+> drivers, at the expense of perhaps a few more firmware commands
+> (depending on the driver).
+> 
+> You can probably come up with other ways, like having a feature flag
+> whether this is supported and then the driver has to detect it as
+> certain documented points in time, etc., but all of those feel
+> relatively fragile to me.
+> 
+> 
+> My personal preference would be for
+> 
+>   * allow RTNL MAC address changes at "idle" times (TBD what that really
+>     means) with IFF_LIVE_ADDR_CHANGE, but mac80211 guarding it
+>   * mac80211 doing remove/add as far as the driver is concerned
 
-typo ("numbers")
+Okay, so that's really what we wanted from you.  :)
 
-> +inline u32 ath11k_ahb_read32(struct ath11k_base *ab, u32 offset)
-> +{
-> +	return ioread32(ab->mem + offset);
-> +}
-> +
-> +inline void ath11k_ahb_write32(struct ath11k_base *ab, u32 offset, u32 value)
-> +{
-> +	iowrite32(value, ab->mem + offset);
-> +}
+> 
+> Yes, you can probably shave a few more milliseconds off by adding more
+> complexity, but unless we measure that and find it to be significant, I
+> think the added complexity (in cfg80211 code) and restrictions (many
+> drivers not supporting it if it's opt-in) wouldn't be worth it.
+> 
 
-Just "inline" doesn't seem to make that much sense? If it's only used
-here then I guess it should be static, otherwise not inline? Or maybe
-you want it to be inlined *in this file* but available out-of-line
-otherwise? I'm not sure that actually is guaranteed to work right in C?
+So we have a tool in the works that can measure some of these details. 
+Also, we can simply attempt to implement both ways and see if the 
+complexity is as bad as you say.  Then you can make that choice.
 
-> +		val = ath11k_ahb_read32(ab, CE_HOST_IE_ADDRESS);
-> +		val |= BIT(ce_id);
-> +		ath11k_ahb_write32(ab, CE_HOST_IE_ADDRESS, val);
-
-You could perhaps benefit from ath11k_ahb_setbit32() or something like
-that, this repeats a few times?
-
-> +	if (__le32_to_cpu(ce_config->pipedir) & PIPEDIR_OUT) {
-> +		val = ath11k_ahb_read32(ab, CE_HOST_IE_ADDRESS);
-> +		val &= ~BIT(ce_id);
-> +		ath11k_ahb_write32(ab, CE_HOST_IE_ADDRESS, val);
-
-and clearbit32() maybe. Dunno, I saw only 3 instances of each here I
-guess, but still, feels repetitive.
-
-> +int ath11k_ahb_start(struct ath11k_base *ab)
-> +{
-> +	ath11k_ahb_ce_irqs_enable(ab);
-> +	ath11k_ce_rx_post_buf(ab);
-> +
-> +	/* Bring up other components as appropriate */
-
-Hmm. What would be appropriate? It's not really doing anything else?
-
-> +void ath11k_ahb_stop(struct ath11k_base *ab)
-> +{
-> +	if (!test_bit(ATH11K_FLAG_CRASH_FLUSH, &ab->dev_flags))
-> +		ath11k_ahb_ce_irqs_disable(ab);
-> +	ath11k_ahb_sync_ce_irqs(ab);
-> +	ath11k_ahb_kill_tasklets(ab);
-> +	del_timer_sync(&ab->rx_replenish_retry);
-> +	ath11k_ce_cleanup_pipes(ab);
-> +	/* Shutdown other components as appropriate */
-
-likewise, it's not doing anything else?
-
-johannes
-
+Regards,
+-Denis
