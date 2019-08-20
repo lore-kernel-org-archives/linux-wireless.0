@@ -6,54 +6,54 @@ X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B20C9C3A59D
-	for <linux-wireless@archiver.kernel.org>; Tue, 20 Aug 2019 15:50:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FF98C3A59E
+	for <linux-wireless@archiver.kernel.org>; Tue, 20 Aug 2019 15:50:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8828022DA9
-	for <linux-wireless@archiver.kernel.org>; Tue, 20 Aug 2019 15:50:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7161622CE3
+	for <linux-wireless@archiver.kernel.org>; Tue, 20 Aug 2019 15:50:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Jz/cz+B7";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="jLSf5D0Q"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="OZ7DYlgs";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="bG8IILkr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730683AbfHTPuU (ORCPT
+        id S1730701AbfHTPuW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 20 Aug 2019 11:50:20 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:45958 "EHLO
+        Tue, 20 Aug 2019 11:50:22 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:46086 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730661AbfHTPuT (ORCPT
+        with ESMTP id S1730684AbfHTPuV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Aug 2019 11:50:19 -0400
+        Tue, 20 Aug 2019 11:50:21 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 96DB061BE2; Tue, 20 Aug 2019 15:49:53 +0000 (UTC)
+        id 432F361BD3; Tue, 20 Aug 2019 15:49:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1566316217;
-        bh=0Tm9dsgGn1v5E3kEMinoUDouoXdJufht5mJ0KlZ3bXg=;
+        s=default; t=1566316220;
+        bh=8H0TGpc+iKmlgG3sCjwCr9dzlIecp0LPGhHzit9PnG8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Jz/cz+B7UQhAKVPXLOrkZi6OJPFRcipQwSYzWjEFlNk0CypcAOYUCjxkwOEkXz/Oe
-         OmvdF3L0fmX14vXuv0vxfU23Io5EjSOtQt1Y6bYKiHCrSoRGainM3NmlfCmd9W/WZ2
-         srgWKDPTsih1LwLw/NkyfdWTJm8lOGBsIk9Am4+E=
+        b=OZ7DYlgs0mUvpkoyG/LGnSnWlcqt8WtbpE6MyzzqTVeTjkqvuqF1wv+Onf0PRBuue
+         6gVUd7jpkC33Xp9Swa8H8HYHyxtwhQVb3Lc/4YKYDVFnodMGTTivCqUKzul9Y2xtNC
+         cfDqW32ibHj+TnUK9b+ZIm1KJ/nH6R68aUC2Wuwk=
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id E6C2461AD7;
-        Tue, 20 Aug 2019 15:49:50 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 22FC061B62;
+        Tue, 20 Aug 2019 15:49:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1566316192;
-        bh=0Tm9dsgGn1v5E3kEMinoUDouoXdJufht5mJ0KlZ3bXg=;
+        s=default; t=1566316175;
+        bh=8H0TGpc+iKmlgG3sCjwCr9dzlIecp0LPGhHzit9PnG8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=jLSf5D0Qz8OfR9irh0rfad5oSaARAb5GxmUl2N18DIWZQIkoePYAQm/7tIAkOOvOU
-         WQDeLwVkqpydrd0ARrCzi/uzyDfiNZ2czbOtVZlX+bw9+VHaumFGcv/eKGz/nwlbWJ
-         GWMPsnT1K9Qcetm2KV4GETcmRSm1T2lfyrKyMazg=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org E6C2461AD7
+        b=bG8IILkr87oMW7JJUbC9n12kTuNZtjAoa09BEoRWix0D52/KtVLYcoYyMyDSr2B+d
+         hATr2Q8yKeNo8Z+srnFLSVc8OeTJJtcXpF9BIwPA0CbBtSva9u6cTbrw5FxM3qTZ+E
+         /3SDJuPeKaOmubwi/66DOuYzymU3zA2PEswE+v5w=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 22FC061B62
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
 To:     linux-wireless@vger.kernel.org
 Cc:     ath11k@lists.infradead.org, devicetree@vger.kernel.org
-Subject: [PATCH 33/49] ath11k: add peer.c
-Date:   Tue, 20 Aug 2019 18:47:59 +0300
-Message-Id: <1566316095-27507-34-git-send-email-kvalo@codeaurora.org>
+Subject: [PATCH 27/49] ath11k: add hal_tx.h
+Date:   Tue, 20 Aug 2019 18:47:53 +0300
+Message-Id: <1566316095-27507-28-git-send-email-kvalo@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1566316095-27507-1-git-send-email-kvalo@codeaurora.org>
 References: <1566316095-27507-1-git-send-email-kvalo@codeaurora.org>
@@ -63,249 +63,93 @@ List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 ---
- drivers/net/wireless/ath/ath11k/peer.c | 236 +++++++++++++++++++++++++++++++++
- 1 file changed, 236 insertions(+)
+ drivers/net/wireless/ath/ath11k/hal_tx.h | 80 ++++++++++++++++++++++++++++++++
+ 1 file changed, 80 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath11k/peer.c b/drivers/net/wireless/ath/ath11k/peer.c
+diff --git a/drivers/net/wireless/ath/ath11k/hal_tx.h b/drivers/net/wireless/ath/ath11k/hal_tx.h
 new file mode 100644
-index 000000000000..d484a3b42e49
+index 000000000000..3b12dfda7423
 --- /dev/null
-+++ b/drivers/net/wireless/ath/ath11k/peer.c
-@@ -0,0 +1,236 @@
-+// SPDX-License-Identifier: ISC
++++ b/drivers/net/wireless/ath/ath11k/hal_tx.h
+@@ -0,0 +1,80 @@
++/* SPDX-License-Identifier: ISC */
 +/*
 + * Copyright (c) 2018-2019 The Linux Foundation. All rights reserved.
 + */
 +
-+#include "core.h"
-+#include "peer.h"
-+#include "debug.h"
++#ifndef ATH11K_HAL_TX_H
++#define ATH11K_HAL_TX_H
 +
-+struct ath11k_peer *ath11k_peer_find(struct ath11k_base *ab, int vdev_id,
-+				     const u8 *addr)
-+{
-+	struct ath11k_peer *peer;
++#include "hal_desc.h"
 +
-+	lockdep_assert_held(&ab->base_lock);
++#define HAL_TX_ADDRX_EN			1
++#define HAL_TX_ADDRY_EN			2
 +
-+	list_for_each_entry(peer, &ab->peers, list) {
-+		if (peer->vdev_id != vdev_id)
-+			continue;
-+		if (memcmp(peer->addr, addr, ETH_ALEN))
-+			continue;
++#define HAL_TX_ADDR_SEARCH_INDEX	0
++#define HAL_TX_ADDR_SEARCH_DEFAULT	1
 +
-+		return peer;
-+	}
++struct hal_tx_info {
++	u16 meta_data_flags; /* %HAL_TCL_DATA_CMD_INFO0_META_ */
++	u8 ring_id;
++	u32 desc_id;
++	enum hal_tcl_desc_type type;
++	enum hal_tcl_encap_type encap_type;
++	dma_addr_t paddr;
++	u32 data_len;
++	u32 pkt_offset;
++	enum hal_encrypt_type encrypt_type;
++	u32 flags0; /* %HAL_TCL_DATA_CMD_INFO1_ */
++	u32 flags1; /* %HAL_TCL_DATA_CMD_INFO2_ */
++	u16 addr_search_flags; /* %HAL_TCL_DATA_CMD_INFO0_ADDR(X/Y)_ */
++	u16 bss_ast_hash;
++	u8 tid;
++	u8 search_type; /* %HAL_TX_ADDR_SEARCH_ */
++	u8 lmac_id;
++	u8 dscp_tid_tbl_idx;
++};
 +
-+	return NULL;
-+}
++/* TODO: Check if the actual desc macros can be used instead */
++#define HAL_TX_STATUS_FLAGS_FIRST_MSDU		BIT(0)
++#define HAL_TX_STATUS_FLAGS_LAST_MSDU		BIT(1)
++#define HAL_TX_STATUS_FLAGS_MSDU_IN_AMSDU	BIT(2)
++#define HAL_TX_STATUS_FLAGS_RATE_STATS_VALID	BIT(3)
++#define HAL_TX_STATUS_FLAGS_RATE_LDPC		BIT(4)
++#define HAL_TX_STATUS_FLAGS_RATE_STBC		BIT(5)
++#define HAL_TX_STATUS_FLAGS_OFDMA		BIT(6)
 +
-+struct ath11k_peer *ath11k_peer_find_by_addr(struct ath11k_base *ab,
-+					     const u8 *addr)
-+{
-+	struct ath11k_peer *peer;
++#define HAL_TX_STATUS_DESC_LEN		sizeof(struct hal_wbm_release_ring)
 +
-+	lockdep_assert_held(&ab->base_lock);
++/* Tx status parsed from srng desc */
++struct hal_tx_status {
++	enum hal_wbm_rel_src_module buf_rel_source;
++	u32 desc_id;
++	enum hal_wbm_tqm_rel_reason status;
++	u8 ack_rssi;
++	enum hal_tx_rate_stats_bw bw;
++	enum hal_tx_rate_stats_pkt_type pkt_type;
++	enum hal_tx_rate_stats_sgi sgi;
++	u8 mcs;
++	u16 num_tones_in_ru;
++	u32 flags; /* %HAL_TX_STATUS_FLAGS_ */
++	u32 tsf;
++	u32 ppdu_id;
++	u8 try_cnt;
++	u8 tid;
++	u16 peer_id;
++};
 +
-+	list_for_each_entry(peer, &ab->peers, list) {
-+		if (memcmp(peer->addr, addr, ETH_ALEN))
-+			continue;
-+
-+		return peer;
-+	}
-+
-+	return NULL;
-+}
-+
-+struct ath11k_peer *ath11k_peer_find_by_id(struct ath11k_base *ab,
-+					   int peer_id)
-+{
-+	struct ath11k_peer *peer;
-+
-+	lockdep_assert_held(&ab->base_lock);
-+
-+	list_for_each_entry(peer, &ab->peers, list)
-+		if (peer_id == peer->peer_id)
-+			return peer;
-+
-+	return NULL;
-+}
-+
-+void ath11k_peer_unmap_event(struct ath11k_base *ab, u16 peer_id)
-+{
-+	struct ath11k_peer *peer;
-+
-+	spin_lock_bh(&ab->base_lock);
-+
-+	peer = ath11k_peer_find_by_id(ab, peer_id);
-+	if (!peer) {
-+		ath11k_warn(ab, "peer-unmap-event: unknown peer id %d\n",
-+			    peer_id);
-+		goto exit;
-+	}
-+
-+	ath11k_dbg(ab, ATH11K_DBG_DP_HTT, "htt peer unmap vdev %d peer %pM id %d\n",
-+		   peer->vdev_id, peer->addr, peer_id);
-+
-+	list_del(&peer->list);
-+	kfree(peer);
-+	wake_up(&ab->peer_mapping_wq);
-+
-+exit:
-+	spin_unlock_bh(&ab->base_lock);
-+}
-+
-+void ath11k_peer_map_event(struct ath11k_base *ab, u8 vdev_id, u16 peer_id,
-+			   u8 *mac_addr, u16 ast_hash)
-+{
-+	struct ath11k_peer *peer;
-+
-+	spin_lock_bh(&ab->base_lock);
-+	peer = ath11k_peer_find(ab, vdev_id, mac_addr);
-+	if (!peer) {
-+		peer = kzalloc(sizeof(*peer), GFP_ATOMIC);
-+		if (!peer)
-+			goto exit;
-+
-+		peer->vdev_id = vdev_id;
-+		peer->peer_id = peer_id;
-+		peer->ast_hash = ast_hash;
-+		ether_addr_copy(peer->addr, mac_addr);
-+		list_add(&peer->list, &ab->peers);
-+		wake_up(&ab->peer_mapping_wq);
-+	}
-+
-+	ath11k_dbg(ab, ATH11K_DBG_DP_HTT, "htt peer map vdev %d peer %pM id %d\n",
-+		   vdev_id, mac_addr, peer_id);
-+
-+exit:
-+	spin_unlock_bh(&ab->base_lock);
-+}
-+
-+static int ath11k_wait_for_peer_common(struct ath11k_base *ab, int vdev_id,
-+				       const u8 *addr, bool expect_mapped)
-+{
-+	int ret;
-+
-+	ret = wait_event_timeout(ab->peer_mapping_wq, ({
-+				bool mapped;
-+
-+				spin_lock_bh(&ab->base_lock);
-+				mapped = !!ath11k_peer_find(ab, vdev_id, addr);
-+				spin_unlock_bh(&ab->base_lock);
-+
-+				(mapped == expect_mapped ||
-+				 test_bit(ATH11K_FLAG_CRASH_FLUSH, &ab->dev_flags));
-+				}), 3 * HZ);
-+
-+	if (ret <= 0)
-+		return -ETIMEDOUT;
-+
-+	return 0;
-+}
-+
-+void ath11k_peer_cleanup(struct ath11k *ar, u32 vdev_id)
-+{
-+	struct ath11k_peer *peer, *tmp;
-+	struct ath11k_base *ab = ar->ab;
-+
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	spin_lock_bh(&ab->base_lock);
-+	list_for_each_entry_safe(peer, tmp, &ab->peers, list) {
-+		if (peer->vdev_id != vdev_id)
-+			continue;
-+
-+		ath11k_warn(ab, "removing stale peer %pM from vdev_id %d\n",
-+			    peer->addr, vdev_id);
-+
-+		list_del(&peer->list);
-+		kfree(peer);
-+		ar->num_peers--;
-+	}
-+
-+	spin_unlock_bh(&ab->base_lock);
-+}
-+
-+static int ath11k_wait_for_peer_deleted(struct ath11k *ar, int vdev_id, const u8 *addr)
-+{
-+	return ath11k_wait_for_peer_common(ar->ab, vdev_id, addr, false);
-+}
-+
-+int ath11k_peer_delete(struct ath11k *ar, u32 vdev_id, u8 *addr)
-+{
-+	int ret;
-+
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	ret = ath11k_wmi_send_peer_delete_cmd(ar, addr, vdev_id);
-+	if (ret) {
-+		ath11k_warn(ar->ab,
-+			    "failed to delete peer vdev_id %d addr %pM ret %d\n",
-+			    vdev_id, addr, ret);
-+		return ret;
-+	}
-+
-+	ret = ath11k_wait_for_peer_deleted(ar, vdev_id, addr);
-+	if (ret)
-+		return ret;
-+
-+	ar->num_peers--;
-+
-+	return 0;
-+}
-+
-+static int ath11k_wait_for_peer_created(struct ath11k *ar, int vdev_id, const u8 *addr)
-+{
-+	return ath11k_wait_for_peer_common(ar->ab, vdev_id, addr, true);
-+}
-+
-+int ath11k_peer_create(struct ath11k *ar, struct ath11k_vif *arvif,
-+		       struct ieee80211_sta *sta, struct peer_create_params *param)
-+{
-+	struct ath11k_peer *peer;
-+	int ret;
-+
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	if (ar->num_peers > (ar->max_num_peers - 1)) {
-+		ath11k_warn(ar->ab,
-+			    "failed to create peer due to insufficient peer entry resource in firmware\n");
-+		return -ENOBUFS;
-+	}
-+
-+	ret = ath11k_wmi_send_peer_create_cmd(ar, param);
-+	if (ret) {
-+		ath11k_warn(ar->ab,
-+			    "failed to send peer create vdev_id %d ret %d\n",
-+			    param->vdev_id, ret);
-+		return ret;
-+	}
-+
-+	ret = ath11k_wait_for_peer_created(ar, param->vdev_id,
-+					   param->peer_addr);
-+	if (ret)
-+		return ret;
-+
-+	spin_lock_bh(&ar->ab->base_lock);
-+
-+	peer = ath11k_peer_find(ar->ab, param->vdev_id, param->peer_addr);
-+	if (!peer) {
-+		spin_unlock_bh(&ar->ab->base_lock);
-+		ath11k_warn(ar->ab, "failed to find peer %pM on vdev %i after creation\n",
-+			    param->peer_addr, param->vdev_id);
-+		ath11k_wmi_send_peer_delete_cmd(ar, param->peer_addr,
-+						param->vdev_id);
-+		return -ENOENT;
-+	}
-+
-+	peer->sta = sta;
-+	arvif->ast_hash = peer->ast_hash;
-+
-+	ar->num_peers++;
-+
-+	spin_unlock_bh(&ar->ab->base_lock);
-+
-+	return 0;
-+}
++void ath11k_hal_tx_cmd_desc_setup(struct ath11k_base *ab, void *cmd,
++				  struct hal_tx_info *ti);
++void ath11k_hal_tx_desc_sync(void *tx_desc_cached, void *hw_desc);
++void ath11k_hal_tx_status_parse(struct ath11k_base *ab,
++				struct hal_wbm_release_ring *desc,
++				struct hal_tx_status *ts);
++void ath11k_hal_tx_status_desc_sync(void *hw_desc, void *local_desc);
++void ath11k_hal_tx_set_dscp_tid_map(struct ath11k_base *ab, int id);
++int ath11k_hal_reo_cmd_send(struct ath11k_base *ab, struct hal_srng *srng,
++			    enum hal_reo_cmd_type type,
++			    struct ath11k_hal_reo_cmd *cmd);
++void ath11k_hal_tx_init_data_ring(struct ath11k_base *ab,
++				  struct hal_srng *srng);
++#endif
 
