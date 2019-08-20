@@ -2,58 +2,59 @@ Return-Path: <SRS0=DLa0=WQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+X-Spam-Status: No, score=-5.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	SPF_PASS,UPPERCASE_50_75,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E988BC3A589
-	for <linux-wireless@archiver.kernel.org>; Tue, 20 Aug 2019 15:50:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A0ECC3A589
+	for <linux-wireless@archiver.kernel.org>; Tue, 20 Aug 2019 15:50:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BD0BD22DBF
-	for <linux-wireless@archiver.kernel.org>; Tue, 20 Aug 2019 15:50:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5C2D222DA9
+	for <linux-wireless@archiver.kernel.org>; Tue, 20 Aug 2019 15:50:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="KyoRiX3w";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="UI1QxbeL"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="WNrf4W7s";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="WGJxBg0h"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730643AbfHTPuF (ORCPT
+        id S1730648AbfHTPuK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 20 Aug 2019 11:50:05 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:44408 "EHLO
+        Tue, 20 Aug 2019 11:50:10 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:45232 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730591AbfHTPt4 (ORCPT
+        with ESMTP id S1729995AbfHTPuJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Aug 2019 11:49:56 -0400
+        Tue, 20 Aug 2019 11:50:09 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 6D8F061AE8; Tue, 20 Aug 2019 15:49:19 +0000 (UTC)
+        id 3F1C161BE1; Tue, 20 Aug 2019 15:49:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1566316195;
-        bh=BHaHcdn7RS8gEanUjmM3KxCY6OdO9GQmA4AQQzIkJNE=;
+        s=default; t=1566316208;
+        bh=JOqOoA4bOu7jnD9piM95YrBFvG5mZ+/CneK6MIQl0so=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=KyoRiX3wgIztrgb1fKkMOq9O9tz3gY6DGu3MheEQyzpUNIEwDkdDBZYrMIoESdHtY
-         LACq9bcsKrCvo7tzwuXnPulLn+o7d7rxZ1ieBKvwoj39ZAdqRV0Cxihl16DuhyawCy
-         ldm+VmWUwS736lrnQwbP53I2f5//mvQdcg8Jh0i4=
+        b=WNrf4W7snd8eVKEuViMCBdvlHQ69OckTxM3lRpv9m9PE8OW56i8Ujei85aMJ6sf2U
+         LVxzAWqRYhoLKTK/Qa/JlY5RPPonk75DNtICOG8x+JUvsoWr4euAHJQ9VcQihQtUBa
+         zzHNXcH+faIpGJMLd8OYFNhflnaW5e9u3Eyou4nM=
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 37E5361B22;
-        Tue, 20 Aug 2019 15:49:16 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 35D1161516;
+        Tue, 20 Aug 2019 15:49:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1566316157;
-        bh=BHaHcdn7RS8gEanUjmM3KxCY6OdO9GQmA4AQQzIkJNE=;
+        s=default; t=1566316181;
+        bh=JOqOoA4bOu7jnD9piM95YrBFvG5mZ+/CneK6MIQl0so=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=UI1QxbeLVke19JL11J5z5O8oehpvDHmdXzx5StgukGa2nVGzhnYNJ1pZF8NKJc4pu
-         XkfgKrDjkK5jsvHuaFrOnIHAc8fTX83xzV1ZfizzFAW5VEcxLOkaS7u5K2p/i9yaQN
-         Uwap3qu6KTAUOfD8RGxD+uItfe3QIPVhilhqWIEA=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 37E5361B22
+        b=WGJxBg0hm+aZO6fkyyXS4nIgy88Po9G3/yWrjxzHQEcCTn7fpbfd3TghhUKpDBNEG
+         +Zw4vqP5u2zpUm5YaiLfocnPf378mFpkbmss31mOkGJop57lxAiCqfH2kGAZbwYKrO
+         amoaC8Jndd3bwXRoLwrZ553mUkwXL8O4twJVx8nY=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 35D1161516
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
 To:     linux-wireless@vger.kernel.org
 Cc:     ath11k@lists.infradead.org, devicetree@vger.kernel.org
-Subject: [PATCH 20/49] ath11k: add dp_tx.h
-Date:   Tue, 20 Aug 2019 18:47:46 +0300
-Message-Id: <1566316095-27507-21-git-send-email-kvalo@codeaurora.org>
+Subject: [PATCH 30/49] ath11k: add hw.h
+Date:   Tue, 20 Aug 2019 18:47:56 +0300
+Message-Id: <1566316095-27507-31-git-send-email-kvalo@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1566316095-27507-1-git-send-email-kvalo@codeaurora.org>
 References: <1566316095-27507-1-git-send-email-kvalo@codeaurora.org>
@@ -63,53 +64,140 @@ List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 ---
- drivers/net/wireless/ath/ath11k/dp_tx.h | 40 +++++++++++++++++++++++++++++++++
- 1 file changed, 40 insertions(+)
+ drivers/net/wireless/ath/ath11k/hw.h | 127 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 127 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath11k/dp_tx.h b/drivers/net/wireless/ath/ath11k/dp_tx.h
+diff --git a/drivers/net/wireless/ath/ath11k/hw.h b/drivers/net/wireless/ath/ath11k/hw.h
 new file mode 100644
-index 000000000000..0a1f151aad8a
+index 000000000000..f510d9d9263c
 --- /dev/null
-+++ b/drivers/net/wireless/ath/ath11k/dp_tx.h
-@@ -0,0 +1,40 @@
++++ b/drivers/net/wireless/ath/ath11k/hw.h
+@@ -0,0 +1,127 @@
 +/* SPDX-License-Identifier: ISC */
 +/*
 + * Copyright (c) 2018-2019 The Linux Foundation. All rights reserved.
 + */
 +
-+#ifndef ATH11K_DP_TX_H
-+#define ATH11K_DP_TX_H
++#ifndef ATH11K_HW_H
++#define ATH11K_HW_H
 +
-+#include "core.h"
-+#include "hal_tx.h"
++/* Target configuration defines */
 +
-+struct ath11k_dp_htt_wbm_tx_status {
-+	u32 msdu_id;
-+	bool acked;
-+	int ack_rssi;
++/* Num VDEVS per radio */
++#define TARGET_NUM_VDEVS	(16 + 1)
++
++#define TARGET_NUM_PEERS_PDEV	(512 + TARGET_NUM_VDEVS)
++
++/* Num of peers for Single Radio mode */
++#define TARGET_NUM_PEERS_SINGLE		(TARGET_NUM_PEERS_PDEV)
++
++/* Num of peers for DBS */
++#define TARGET_NUM_PEERS_DBS		(2 * TARGET_NUM_PEERS_PDEV)
++
++/* Num of peers for DBS_SBS */
++#define TARGET_NUM_PEERS_DBS_SBS	(3 * TARGET_NUM_PEERS_PDEV)
++
++/* Max num of stations (per radio) */
++#define TARGET_NUM_STATIONS	512
++
++#define TARGET_NUM_PEERS(x)	TARGET_NUM_PEERS_##x
++#define TARGET_NUM_PEER_KEYS	2
++#define TARGET_NUM_TIDS(x)	(2 * TARGET_NUM_PEERS(x) + \
++				 4 * TARGET_NUM_VDEVS + 8)
++
++#define TARGET_AST_SKID_LIMIT	16
++#define TARGET_NUM_OFFLD_PEERS	4
++#define TARGET_NUM_OFFLD_REORDER_BUFFS 4
++
++#define TARGET_TX_CHAIN_MASK	(BIT(0) | BIT(1) | BIT(2) | BIT(4))
++#define TARGET_RX_CHAIN_MASK	(BIT(0) | BIT(1) | BIT(2) | BIT(4))
++#define TARGET_RX_TIMEOUT_LO_PRI	100
++#define TARGET_RX_TIMEOUT_HI_PRI	40
++
++#define TARGET_DECAP_MODE_RAW		0
++#define TARGET_DECAP_MODE_NATIVE_WIFI	1
++#define TARGET_DECAP_MODE_ETH		2
++
++#define TARGET_SCAN_MAX_PENDING_REQS	4
++#define TARGET_BMISS_OFFLOAD_MAX_VDEV	3
++#define TARGET_ROAM_OFFLOAD_MAX_VDEV	3
++#define TARGET_ROAM_OFFLOAD_MAX_AP_PROFILES	8
++#define TARGET_GTK_OFFLOAD_MAX_VDEV	3
++#define TARGET_NUM_MCAST_GROUPS		12
++#define TARGET_NUM_MCAST_TABLE_ELEMS	64
++#define TARGET_MCAST2UCAST_MODE		2
++#define TARGET_TX_DBG_LOG_SIZE		1024
++#define TARGET_RX_SKIP_DEFRAG_TIMEOUT_DUP_DETECTION_CHECK 1
++#define TARGET_VOW_CONFIG		0
++#define TARGET_NUM_MSDU_DESC		(2500)
++#define TARGET_MAX_FRAG_ENTRIES		6
++#define TARGET_MAX_BCN_OFFLD		16
++#define TARGET_NUM_WDS_ENTRIES		32
++#define TARGET_DMA_BURST_SIZE		1
++#define TARGET_RX_BATCHMODE		1
++
++#define ATH11K_HW_MAX_QUEUES		4
++
++#define ATH11k_HW_RATECODE_CCK_SHORT_PREAM_MASK  0x4
++
++#define ATH11K_FW_DIR			"ath11k"
++
++/* IPQ8074 definitions */
++#define IPQ8074_FW_DIR			"IPQ8074"
++#define IPQ8074_MAX_BOARD_DATA_SZ	(256 * 1024)
++#define IPQ8074_MAX_CAL_DATA_SZ		IPQ8074_MAX_BOARD_DATA_SZ
++
++#define ATH11K_BOARD_MAGIC		"QCA-ATH11K-BOARD"
++#define ATH11K_BOARD_API2_FILE		"board-2.bin"
++#define ATH11K_DEFAULT_BOARD_FILE	"bdwlan.bin"
++#define ATH11K_DEFAULT_CAL_FILE		"caldata.bin"
++
++enum ath11k_hw_rate_cck {
++	ATH11K_HW_RATE_CCK_LP_11M = 0,
++	ATH11K_HW_RATE_CCK_LP_5_5M,
++	ATH11K_HW_RATE_CCK_LP_2M,
++	ATH11K_HW_RATE_CCK_LP_1M,
++	ATH11K_HW_RATE_CCK_SP_11M,
++	ATH11K_HW_RATE_CCK_SP_5_5M,
++	ATH11K_HW_RATE_CCK_SP_2M,
 +};
 +
-+int ath11k_dp_tx_htt_h2t_ver_req_msg(struct ath11k_base *ab);
-+int ath11k_dp_tx(struct ath11k *ar, struct ath11k_vif *arvif,
-+		 struct sk_buff *skb);
-+void ath11k_dp_tx_completion_handler(struct ath11k_base *ab, int ring_id);
-+int ath11k_dp_tx_send_reo_cmd(struct ath11k_base *ab, struct dp_rx_tid *rx_tid,
-+			      enum hal_reo_cmd_type type,
-+			      struct ath11k_hal_reo_cmd *cmd,
-+			      void (*func)(struct ath11k_dp *, void *,
-+					   enum hal_reo_cmd_status));
++enum ath11k_hw_rate_ofdm {
++	ATH11K_HW_RATE_OFDM_48M = 0,
++	ATH11K_HW_RATE_OFDM_24M,
++	ATH11K_HW_RATE_OFDM_12M,
++	ATH11K_HW_RATE_OFDM_6M,
++	ATH11K_HW_RATE_OFDM_54M,
++	ATH11K_HW_RATE_OFDM_36M,
++	ATH11K_HW_RATE_OFDM_18M,
++	ATH11K_HW_RATE_OFDM_9M,
++};
 +
-+int ath11k_dp_tx_htt_h2t_ppdu_stats_req(struct ath11k *ar, u32 mask);
-+int
-+ath11k_dp_tx_htt_h2t_ext_stats_req(struct ath11k *ar, u8 type,
-+				   struct htt_ext_stats_cfg_params *cfg_params,
-+				   u64 cookie);
-+int ath11k_dp_tx_htt_monitor_mode_ring_config(struct ath11k *ar, bool reset);
++struct ath11k_hw_params {
++	const char *name;
++	struct {
++		const char *dir;
++		size_t board_size;
++		size_t cal_size;
++	} fw;
++};
 +
-+int ath11k_dp_tx_htt_rx_filter_setup(struct ath11k_base *ab, u32 ring_id,
-+				     int mac_id, enum hal_ring_type ring_type,
-+				     int rx_buf_size,
-+				     struct htt_rx_ring_tlv_filter *tlv_filter);
++struct ath11k_fw_ie {
++	__le32 id;
++	__le32 len;
++	u8 data[0];
++};
++
++enum ath11k_bd_ie_board_type {
++	ATH11K_BD_IE_BOARD_NAME = 0,
++	ATH11K_BD_IE_BOARD_DATA = 1,
++};
++
++enum ath11k_bd_ie_type {
++	/* contains sub IEs of enum ath11k_bd_ie_board_type */
++	ATH11K_BD_IE_BOARD = 0,
++	ATH11K_BD_IE_BOARD_EXT = 1,
++};
 +
 +#endif
 
