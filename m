@@ -2,101 +2,153 @@ Return-Path: <SRS0=DLa0=WQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF991C3A5A2
-	for <linux-wireless@archiver.kernel.org>; Tue, 20 Aug 2019 09:54:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C1E1C3A59E
+	for <linux-wireless@archiver.kernel.org>; Tue, 20 Aug 2019 10:32:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8A6F222CF4
-	for <linux-wireless@archiver.kernel.org>; Tue, 20 Aug 2019 09:54:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 14A9422CF5
+	for <linux-wireless@archiver.kernel.org>; Tue, 20 Aug 2019 10:32:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="aigo6H0l"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="h6p7VoBQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729447AbfHTJyv (ORCPT
+        id S1729687AbfHTKcD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 20 Aug 2019 05:54:51 -0400
-Received: from nbd.name ([46.4.11.11]:35126 "EHLO nbd.name"
+        Tue, 20 Aug 2019 06:32:03 -0400
+Received: from nbd.name ([46.4.11.11]:37280 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728426AbfHTJyv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Aug 2019 05:54:51 -0400
+        id S1729589AbfHTKcD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 20 Aug 2019 06:32:03 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
-        Sender:Reply-To:MIME-Version:Content-Type:Content-Transfer-Encoding:
+         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
+        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
         Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
         Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
         List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=sbJGifAP2hJqOW3Xo1SlJAcr8ALTVQTYf9HL5FatkPg=; b=aigo6H0lvuwf8n6qHtEd5NBwle
-        qQszuQuXw5eUKAyh73tTrIMNSF5j1CG4qOTBcPTHB0ZjEwTvvoyhL1t0S5fWIO2waXcO2BjvAXdXC
-        7NABYcNZINUF36HnZD76yeNo53yYDAxqPufFVh0SAtwU12osU3oeTWzu9wZsk8y5p5M0=;
-Received: from p54ae9443.dip0.t-ipconnect.de ([84.174.148.67] helo=maeck.local)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        bh=G12kepHNo4d/aWlX/r6KKesBBnEBpcHlYG9XPxPrp/c=; b=h6p7VoBQI0mLtHlnnOo+zHrdl0
+        YOGsuB6x1hWAyxaOGPh9rI2Tq6QkJkq/LvF4B1jCEnB6CsdVPF4bqxbadRr/AZrvLt7G5LHfhJwQc
+        e/d6VqDpkA6ZVHm7IoUC4NIX9jB1q6HR2UZFErsfnNiLY9nP+EnStCDps/642QjiwHz0=;
+Received: from p54ae9443.dip0.t-ipconnect.de ([84.174.148.67] helo=nf.local)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.89)
         (envelope-from <nbd@nbd.name>)
-        id 1i00qn-0003nw-VR; Tue, 20 Aug 2019 11:54:50 +0200
-Received: by maeck.local (Postfix, from userid 501)
-        id 57C3763E610D; Tue, 20 Aug 2019 11:54:49 +0200 (CEST)
+        id 1i01Qj-0006Hs-36; Tue, 20 Aug 2019 12:31:57 +0200
+Subject: Re: [PATCH 5.3] mt76: mt76x0e: don't use hw encryption for MT7630E
+To:     Stanislaw Gruszka <sgruszka@redhat.com>
+Cc:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Ryder Lee <ryder.lee@mediatek.com>, Roy Luo <royluo@google.com>
+References: <1565703400-10623-1-git-send-email-sgruszka@redhat.com>
+ <CAJ0CqmXM4NRMYU6Lt_a4f+DXE2bVmhYrjQbgxHG0g=N+o3TeQw@mail.gmail.com>
+ <20190815100936.GA21775@redhat.com>
+ <727fd528-16c1-e3b3-e1a9-2edbcbdddee7@nbd.name>
+ <20190819110639.GA6037@redhat.com>
 From:   Felix Fietkau <nbd@nbd.name>
-To:     linux-wireless@vger.kernel.org
-Cc:     johannes@sipsolutions.net
-Subject: [PATCH 3/4] mac80211: minstrel_ht: fix default max throughput rate indexes
-Date:   Tue, 20 Aug 2019 11:54:48 +0200
-Message-Id: <20190820095449.45255-3-nbd@nbd.name>
-X-Mailer: git-send-email 2.17.0
-In-Reply-To: <20190820095449.45255-1-nbd@nbd.name>
-References: <20190820095449.45255-1-nbd@nbd.name>
+Openpgp: preference=signencrypt
+Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
+ mQGiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
+ ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
+ Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
+ AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
+ vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
+ wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
+ TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
+ l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwbQcRmVsaXggRmll
+ dGthdSA8bmJkQG5iZC5uYW1lPohgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
+ HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
+ VrwYTIThkTlQuQINBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
+ CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
+ VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
+ Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
+ DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
+ wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
+ f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
+ aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
+ FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
+ TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabiEkE
+ GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
+ RjMaxwtSdaCKMw3j33ZbsWS4
+Message-ID: <7b46ab63-d69d-f389-b3c2-245cbe11c7b7@nbd.name>
+Date:   Tue, 20 Aug 2019 12:31:56 +0200
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
+ Gecko/20100101 Thunderbird/60.8.0
+MIME-Version: 1.0
+In-Reply-To: <20190819110639.GA6037@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Use the first supported rate instead of 0 (which can be invalid)
+On 2019-08-19 13:06, Stanislaw Gruszka wrote:
+> On Thu, Aug 15, 2019 at 12:20:54PM +0200, Felix Fietkau wrote:
+>> On 2019-08-15 12:09, Stanislaw Gruszka wrote:
+>> >> Hi Stanislaw,
+>> >> 
+>> >> Can you please try if disabling/enabling the tx tasklet during hw key
+>> >> configuration fixes the issue?
+>> >> Doing something like:
+>> >> 
+>> >> tasklet_disable(tx_tasklet)
+>> >> mt76x02_set_key()
+>> >> tasklet_enable(tx_tasklet)
+>> > 
+>> > It does not help with the problem.
+>> > 
+>> >> Moreover, have you double checked if there is any performance impact
+>> >> of not using hw encryption?
+>> > 
+>> > I didn't observe any, but realized on this machine I have
+>> > aesni_intel encryption accelerator. After rebuild kernel without
+>> > CONFIG_CRYPTO_AES_NI_INTEL, 'perf top' showed extra 20% of cpu usage
+>> > in aes_encrypt() when sending data with HW encryption disabled.
+>> > 
+>> >> If so, I guess it is better to just redefine mt76_wake_tx_queue for
+>> >> mt76x0e and run mt76_txq_schedule for 7630e:
+>> >> 
+>> >> void mt76x0e_wake_tx_queue(struct ieee80211_hw *hw, struct ieee80211_txq *txq)
+>> >> {
+>> >>         if (is_mt7630(dev)) {
+>> >>             mt76_txq_schedule(dev, txq->ac);
+>> >>         } else {
+>> >>             tasklet_schedule(&dev->tx_tasklet);
+>> >>         }
+>> >> }
+>> > 
+>> > Not sure about reduction of lock contention for which the tx_tasklet
+>> > was introduced here, but looks ok for me as fix.
+>> I think if we work around the bug like this, it can easily come back to
+>> bite us again later. 
+> 
+> I'm not into workarounds any kind, but this is really strange issue,
+> maybe FW bug that triggers just by slightly different driver behaviour.
+> 
+>> I don't see any logical explanation as to how this
+>> makes a difference with hardware encryption.
+>> Also, I think it would be helpful to figure out what key operation (if
+>> any) triggers this, adding or removing keys.
+> 
+> Seems not to be related with set_key operation at all. We set 2 HW
+> keys at the beginning and hang happen after some tx/rx traffic
+> without any re-keyring.
+> 
+> I'm not sure why disabling HW encryption helps. Maybe it is due to
+> ordering or timing. With SW encryption we spend more time in mac80211
+> before pass skb's to the driver. Or maybe we just mix some HW keys 
+> and SW (group) keys in way that FW does not like.
+> 
+>> Maybe it could also help if we change the order in which the WCID table
+>> entries are updated, i.e. changing MT_WCID_ATTR first when removing keys.
+>> 
+>> Maybe temporarily clearing MT_MAC_SYS_CTRL_ENABLE_TX before the key
+>> update and setting it again afterwards could also help.
+> 
+> I tested below patch and it did not help.
+Can you test if disabling hw encryption only for shared or only for
+pairwise keys makes any difference?
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- net/mac80211/rc80211_minstrel_ht.c | 20 ++++++++++++++------
- 1 file changed, 14 insertions(+), 6 deletions(-)
-
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index ad5da9a71da0..c5868a1de306 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -486,7 +486,7 @@ minstrel_ht_assign_best_tp_rates(struct minstrel_ht_sta *mi,
- 	tmp_prob = mi->groups[tmp_group].rates[tmp_idx].prob_ewma;
- 	tmp_mcs_tp = minstrel_ht_get_tp_avg(mi, tmp_group, tmp_idx, tmp_prob);
- 
--	if (tmp_cck_tp > tmp_mcs_tp) {
-+	if (tmp_cck_tp_rate && tmp_cck_tp > tmp_mcs_tp) {
- 		for(i = 0; i < MAX_THR_RATES; i++) {
- 			minstrel_ht_sort_best_tp_rates(mi, tmp_cck_tp_rate[i],
- 						       tmp_mcs_tp_rate);
-@@ -558,11 +558,19 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
- 	mi->sample_slow = 0;
- 	mi->sample_count = 0;
- 
--	/* Initialize global rate indexes */
--	for(j = 0; j < MAX_THR_RATES; j++){
--		tmp_mcs_tp_rate[j] = 0;
--		tmp_cck_tp_rate[j] = 0;
--	}
-+	memset(tmp_mcs_tp_rate, 0, sizeof(tmp_mcs_tp_rate));
-+	memset(tmp_cck_tp_rate, 0, sizeof(tmp_cck_tp_rate));
-+	if (mi->supported[MINSTREL_CCK_GROUP])
-+		for (j = 0; j < ARRAY_SIZE(tmp_cck_tp_rate); j++)
-+			tmp_cck_tp_rate[j] = MINSTREL_CCK_GROUP * MCS_GROUP_RATES;
-+
-+	if (mi->supported[MINSTREL_VHT_GROUP_0])
-+		index = MINSTREL_VHT_GROUP_0 * MCS_GROUP_RATES;
-+	else
-+		index = MINSTREL_HT_GROUP_0 * MCS_GROUP_RATES;
-+
-+	for (j = 0; j < ARRAY_SIZE(tmp_mcs_tp_rate); j++)
-+		tmp_mcs_tp_rate[j] = index;
- 
- 	/* Find best rate sets within all MCS groups*/
- 	for (group = 0; group < ARRAY_SIZE(minstrel_mcs_groups); group++) {
--- 
-2.17.0
-
+- Felix
