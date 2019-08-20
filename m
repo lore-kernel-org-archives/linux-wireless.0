@@ -2,171 +2,86 @@ Return-Path: <SRS0=DLa0=WQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45169C3A589
-	for <linux-wireless@archiver.kernel.org>; Tue, 20 Aug 2019 19:54:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C471C3A589
+	for <linux-wireless@archiver.kernel.org>; Tue, 20 Aug 2019 20:01:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0D7FF20C01
-	for <linux-wireless@archiver.kernel.org>; Tue, 20 Aug 2019 19:54:34 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iMfb2751"
+	by mail.kernel.org (Postfix) with ESMTP id 2F36A22DA7
+	for <linux-wireless@archiver.kernel.org>; Tue, 20 Aug 2019 20:01:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730885AbfHTTyd (ORCPT
+        id S1730835AbfHTUB0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 20 Aug 2019 15:54:33 -0400
-Received: from mail-ot1-f67.google.com ([209.85.210.67]:37937 "EHLO
-        mail-ot1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730552AbfHTTyd (ORCPT
+        Tue, 20 Aug 2019 16:01:26 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:42750 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729950AbfHTUB0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Aug 2019 15:54:33 -0400
-Received: by mail-ot1-f67.google.com with SMTP id r20so6200995ota.5
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Aug 2019 12:54:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:references:from:message-id:date:user-agent:mime-version
-         :in-reply-to:content-language:content-transfer-encoding;
-        bh=9/yC4yLR8WBmE/nahyN6o17ldKIX20B3dXoDiaJY11g=;
-        b=iMfb2751WL9pwiW3Bl6QAw+eWn/Ufg4/8HftyDm55L81qhl6PEP6hXU7FMMFoH+u9W
-         1+3Ri93px1NiWWo9Vyy0mD9GhLbBdXtgg9BXrOg6Fyc3LIeLp+oaB1U1192PjXUWuAnv
-         MPKcvzLdFB29WQZ9tVKygXppvPdki3avww2FcSp+dd7a+6EJqouaXgtJ4hX3V14Z0j71
-         vRfvmuPX8tebVKoubQc3Ztjr2NheJ+QKSKCLJms0AoBgQouvuRcG66Ok3xA8jux2xbjI
-         ssDvWujVXyxnJrLWVCh6QhKiePIo7vM7nVNY/c0DpWxF9Ce0bLXp3FYQxrprZ6loRRv3
-         3i8A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=9/yC4yLR8WBmE/nahyN6o17ldKIX20B3dXoDiaJY11g=;
-        b=P8GZ6hWdBnEa4+er6XLtd/i0SW3jUOxef1SN60Tklk6tIBWKh00npr8Q5JVIFUEclL
-         aKy8hMhC9E20SKNgK/3LOGt9in1UzIftVVuR4+y1TKiVQ+2hKVvYhYoHaudbY/JSmqkU
-         IHx40J5kw4m9xklLxABllXM8rgGt0z5JOCXK5JVXMZw2R9QP46eOFg+FkKLqiyTlWGFQ
-         w92S6bSVjD45E+b31Z95yyz9oIE4foPs+fzpSVvvRwYmy5fZyaGETbG4uDdK2umfE8uR
-         xWY9nozxUNmn9j0Tb+hRI1Z7OQlFdAJ8EQiLsCoh6M4LehBmAzlvCjddhKG93/iRnnjX
-         0m1Q==
-X-Gm-Message-State: APjAAAWn+1dvLvhIekYlvLMkXi9wMBAwuJ0egMKb6/U/roSc+vSPPc64
-        61lJwg43kdhrpqGF/8TFEFLBzWjd
-X-Google-Smtp-Source: APXvYqyH3fDwSyAUjW40ZPHWjsmq1HYB7Zs2DSY2ateFuNeO/h2KlPI4UQz5xqCEnyBX7n/sSubbYQ==
-X-Received: by 2002:a9d:458f:: with SMTP id x15mr22908878ote.314.1566330871516;
-        Tue, 20 Aug 2019 12:54:31 -0700 (PDT)
-Received: from [192.168.1.249] (cpe-70-114-247-242.austin.res.rr.com. [70.114.247.242])
-        by smtp.googlemail.com with ESMTPSA id u191sm4546555oie.42.2019.08.20.12.54.30
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 20 Aug 2019 12:54:30 -0700 (PDT)
+        Tue, 20 Aug 2019 16:01:26 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1i0AJo-0007If-D2; Tue, 20 Aug 2019 22:01:24 +0200
+Message-ID: <3dc266154b11381c8f019712e2203b5cbfd3a6da.camel@sipsolutions.net>
 Subject: Re: [RFC 0/1] Allow MAC change on up interface
-To:     Johannes Berg <johannes@sipsolutions.net>,
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Denis Kenzior <denkenz@gmail.com>,
         James Prestwood <prestwoj@gmail.com>,
         linux-wireless@vger.kernel.org
+Date:   Tue, 20 Aug 2019 22:01:23 +0200
+In-Reply-To: <fcfc70bc-78ba-cd06-55ab-d53d80ac2cc8@gmail.com> (sfid-20190820_215433_125295_49BCBF06)
 References: <20190815185702.30937-1-prestwoj@gmail.com>
- <645af7dad899e8eb186b3fee0f8a8a151a408557.camel@sipsolutions.net>
- <394092a2f20697c9b055166a8254a5ef888551a5.camel@gmail.com>
- <4848c3a9d0b330fab4442436244387a2c127fa03.camel@sipsolutions.net>
- <1d975fec-a480-f40b-ff98-90d0e4852758@gmail.com>
- <72ac048c01619e0639fc182cd32818a5712cda1c.camel@sipsolutions.net>
- <7b9a7df3-6880-98f6-5c09-257165025559@gmail.com>
- <dd58815c934ab52acbd8a21d04dd0d44e9d32913.camel@sipsolutions.net>
-From:   Denis Kenzior <denkenz@gmail.com>
-Message-ID: <fcfc70bc-78ba-cd06-55ab-d53d80ac2cc8@gmail.com>
-Date:   Tue, 20 Aug 2019 14:46:46 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+         <645af7dad899e8eb186b3fee0f8a8a151a408557.camel@sipsolutions.net>
+         <394092a2f20697c9b055166a8254a5ef888551a5.camel@gmail.com>
+         <4848c3a9d0b330fab4442436244387a2c127fa03.camel@sipsolutions.net>
+         <1d975fec-a480-f40b-ff98-90d0e4852758@gmail.com>
+         <72ac048c01619e0639fc182cd32818a5712cda1c.camel@sipsolutions.net>
+         <7b9a7df3-6880-98f6-5c09-257165025559@gmail.com>
+         <dd58815c934ab52acbd8a21d04dd0d44e9d32913.camel@sipsolutions.net>
+         <fcfc70bc-78ba-cd06-55ab-d53d80ac2cc8@gmail.com>
+         (sfid-20190820_215433_125295_49BCBF06)
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.30.5 (3.30.5-1.fc29) 
 MIME-Version: 1.0
-In-Reply-To: <dd58815c934ab52acbd8a21d04dd0d44e9d32913.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Johannes,
+Hi,
 
-On 8/20/19 2:32 PM, Johannes Berg wrote:
-> Hi Denis,
+> So let me ask you this.  What do you _want_ to see when a contributor 
+> submits something as an RFC, which that contributor states is not ready 
+> for 'true' review and is really there to generate feedback?
 > 
-> Rather than replying to all the separate items here, just two things:
-> 
-> 1) I'll reiterate - please keep things civil. You're taking things out
->     of context a *lot* here, in what seems like an attempt to draw a
->     parallel between my and your utterances.
-> 
-> 2) I'll take your point that I've been somewhat dismissive in tone, and
->     will try to change that.
-> 
+> Do you want to have that contributor use a different prefix? Every 
+> maintainer is differrent.  I get that.  So if we want to start an actual 
+> brainstorming session with you, how do we accomplish that?
 
-I'll apologize for the methods I used, but you were not getting to 2) 
-above via our earlier discussions.  Anyway, peace.
+I'd be happy if you were to just state what you want to achieve, for
+starters! Whether it's [RFC] with a cover letter saying "hey, we feel
+this could be faster, and have come up with the following as an idea",
+or just another email without any code changes saying "hey, we feel this
+could be faster, how do you think we could do this" ... doesn't really
+matter.
 
-> 
-> I do want to reply to two things specifically though:
-> 
->> Fine.  I get that.  But how about asking what the use case is? Or say
->> you don't quite understand why something is needed?
-> 
-> Really, I should *not* have to ask that. You should consider it your
-> obligation to provide enough information for me to review patches
-> without having to go back and ask what it is you actually want to
-> achieve.
+What you have *actually* been doing though (at least from my
+perspective) is something along the lines of
 
-So let me ask you this.  What do you _want_ to see when a contributor 
-submits something as an RFC, which that contributor states is not ready 
-for 'true' review and is really there to generate feedback?
+"hey, here's a new way to do <X>"
 
-Do you want to have that contributor use a different prefix? Every 
-maintainer is differrent.  I get that.  So if we want to start an actual 
-brainstorming session with you, how do we accomplish that?
+without even really stating why the existing <X> doesn't work for you.
+And where I questioned the need to have a new way to do <X>, well, we
+got the other part of this thread.
 
-> 
-> Compared to some other subsystems and maintainers I've dealt with, I
-> think I've actually been rather patient in trying to extract the purpose
-> of your changes, rather than *really* just dismissing them (which I've
-> felt like many times.)
-> 
+> So this goes back to my earlier point.  How do you want us to start a 
+> discussion with you such that you don't become a 'supervisor' and 
+> instead try to understand the pain points first?
 
-I'll admit you're not the worst I've dealt with, but you can always 
-improve, right? :)
+Just explaining the pain points would help?
 
->> a maintainer who's job (by definition)
->> is to encourage new contributors and improve the subsystem he
->> maintains...?
-> 
-> This is what maybe you see as the maintainer's role, but I disagree, at
-> least to some extent. I see the role more of a supervisor, somebody
-> who's ensuring that all the changes coming in will work together. Yes, I
-> have my own incentive to improve things, but if you have a particular
-> incentive to improve a particular use case, the onus really is on you to
-> convince me of that, not on me to try to ferret the reasoning out of you
-> and make those improvements my own.
-> 
+johannes
 
-So this goes back to my earlier point.  How do you want us to start a 
-discussion with you such that you don't become a 'supervisor' and 
-instead try to understand the pain points first?
-
-And really, we are not expecting you to do the improvements on your own. 
-  But you know the subsystem best.  So you really should consider giving 
-actual guidance on how to accomplish something in the best way.
-
-Also, look at it from the PoV of any new contributor.  So while I can 
-definitely relate to what you're saying here, I think you should put 
-yourself in your peer's shoes and try to be more understanding of their 
-perspective.  At least make the effort to hear people out...
-
-> 
-> So please - come with some actual reasoning. This particular thread only
-> offered "would elminate a few potential race conditions", in the cover
-> letter, not even the patch itself, so it wasn't very useful. I was
-> perhaps less than courteous trying to extract the reasoning, but I
-> shouldn't have to in the first place.
-> 
-
-Okay, so we'll work on that.  But this is a two way street too.  And 
-sometimes it seems like you're not actually reading the cover letters ;)
-
-Regards,
--Denis
