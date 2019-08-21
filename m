@@ -6,191 +6,317 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C5F5C3A5A1
-	for <linux-wireless@archiver.kernel.org>; Wed, 21 Aug 2019 13:38:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0175EC3A59E
+	for <linux-wireless@archiver.kernel.org>; Wed, 21 Aug 2019 13:40:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3CA1F22DD3
-	for <linux-wireless@archiver.kernel.org>; Wed, 21 Aug 2019 13:38:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C200A2339F
+	for <linux-wireless@archiver.kernel.org>; Wed, 21 Aug 2019 13:40:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728909AbfHUNiQ (ORCPT
+        id S1728870AbfHUNkC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 21 Aug 2019 09:38:16 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:37800 "EHLO
+        Wed, 21 Aug 2019 09:40:02 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:37832 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727696AbfHUNiO (ORCPT
+        with ESMTP id S1726484AbfHUNkC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Aug 2019 09:38:14 -0400
+        Wed, 21 Aug 2019 09:40:02 -0400
 Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1i0QoW-0000lZ-KA; Wed, 21 Aug 2019 16:38:13 +0300
+        id 1i0Qoc-0000lZ-Sb; Wed, 21 Aug 2019 16:38:19 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Wed, 21 Aug 2019 16:37:51 +0300
-Message-Id: <20190821133800.23636-10-luca@coelho.fi>
+Date:   Wed, 21 Aug 2019 16:37:59 +0300
+Message-Id: <20190821133800.23636-18-luca@coelho.fi>
 X-Mailer: git-send-email 2.23.0.rc1
 In-Reply-To: <20190821133800.23636-1-luca@coelho.fi>
 References: <20190821133800.23636-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 09/18] iwlwifi: pcie: remove some more d0i3 code from the transport
+Subject: [PATCH 17/18] iwlwifi: dbg_ini: use linked list to store debug TLVs
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 
-CMD_SEND_IN_IDLE, CMD_MAKE_TRANS_IDLE and CMD_WAKE_UP_TRANS
-are not used. Remove them.
+Use a linked list to maintain the debug TLVs instead of a single buffer.
+This way, the driver does not need to iterate over the binary file twice
+and allocates smaller chunks of memory. Also, in case one allocation
+fails the driver will work with the partial configuration instead of
+aborting the entire debug configuration.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../net/wireless/intel/iwlwifi/iwl-trans.h    | 14 +----------
- .../wireless/intel/iwlwifi/pcie/internal.h    |  2 --
- .../net/wireless/intel/iwlwifi/pcie/trans.c   |  2 --
- .../net/wireless/intel/iwlwifi/pcie/tx-gen2.c | 10 --------
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c  | 24 -------------------
- 5 files changed, 1 insertion(+), 51 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c   |  15 ++-
+ .../net/wireless/intel/iwlwifi/iwl-dbg-tlv.c  | 121 ++++++------------
+ .../net/wireless/intel/iwlwifi/iwl-dbg-tlv.h  |  12 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c  |   3 -
+ 4 files changed, 49 insertions(+), 102 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-index 7c63706eb07b..687eced8b548 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-@@ -159,10 +159,6 @@ static inline u32 iwl_rx_packet_payload_len(const struct iwl_rx_packet *pkt)
-  * @CMD_ASYNC: Return right away and don't wait for the response
-  * @CMD_WANT_SKB: Not valid with CMD_ASYNC. The caller needs the buffer of
-  *	the response. The caller needs to call iwl_free_resp when done.
-- * @CMD_SEND_IN_IDLE: The command should be sent even when the trans is idle.
-- * @CMD_MAKE_TRANS_IDLE: The command response should mark the trans as idle.
-- * @CMD_WAKE_UP_TRANS: The command response should wake up the trans
-- *	(i.e. mark it as non-idle).
-  * @CMD_WANT_ASYNC_CALLBACK: the op_mode's async callback function must be
-  *	called after this command completes. Valid only with CMD_ASYNC.
-  */
-@@ -170,10 +166,7 @@ enum CMD_MODE {
- 	CMD_ASYNC		= BIT(0),
- 	CMD_WANT_SKB		= BIT(1),
- 	CMD_SEND_IN_RFKILL	= BIT(2),
--	CMD_SEND_IN_IDLE	= BIT(3),
--	CMD_MAKE_TRANS_IDLE	= BIT(4),
--	CMD_WAKE_UP_TRANS	= BIT(5),
--	CMD_WANT_ASYNC_CALLBACK	= BIT(6),
-+	CMD_WANT_ASYNC_CALLBACK	= BIT(3),
- };
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+index 6d69ed17e7f8..78e13cd182cb 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+@@ -2783,10 +2783,13 @@ static void _iwl_fw_dbg_apply_point(struct iwl_fw_runtime *fwrt,
+ 				    enum iwl_fw_ini_apply_point pnt,
+ 				    bool ext)
+ {
+-	void *iter = data->data;
++	struct iwl_apply_point_data *iter;
  
- #define DEF_CMD_PAYLOAD_SIZE 320
-@@ -659,11 +652,6 @@ enum iwl_plat_pm_mode {
- 	IWL_PLAT_PM_MODE_D3,
- };
+-	while (iter && iter < data->data + data->size) {
+-		struct iwl_ucode_tlv *tlv = iter;
++	if (!data->list.next)
++		return;
++
++	list_for_each_entry(iter, &data->list, list) {
++		struct iwl_ucode_tlv *tlv = &iter->tlv;
+ 		void *ini_tlv = (void *)tlv->data;
+ 		u32 type = le32_to_cpu(tlv->type);
  
--/* Max time to wait for trans to become idle/non-idle on d0i3
-- * enter/exit (in msecs).
-- */
--#define IWL_TRANS_IDLE_TIMEOUT 2000
+@@ -2799,7 +2802,7 @@ static void _iwl_fw_dbg_apply_point(struct iwl_fw_runtime *fwrt,
+ 				IWL_ERR(fwrt,
+ 					"WRT: ext=%d. Invalid apply point %d for buffer allocation\n",
+ 					ext, pnt);
+-				goto next;
++				break;
+ 			}
+ 			iwl_fw_dbg_buffer_apply(fwrt, ini_tlv, pnt);
+ 			break;
+@@ -2808,7 +2811,7 @@ static void _iwl_fw_dbg_apply_point(struct iwl_fw_runtime *fwrt,
+ 				IWL_ERR(fwrt,
+ 					"WRT: ext=%d. Invalid apply point %d for host command\n",
+ 					ext, pnt);
+-				goto next;
++				break;
+ 			}
+ 			iwl_fw_dbg_send_hcmd(fwrt, tlv, ext);
+ 			break;
+@@ -2826,8 +2829,6 @@ static void _iwl_fw_dbg_apply_point(struct iwl_fw_runtime *fwrt,
+ 				  ext, type);
+ 			break;
+ 		}
+-next:
+-		iter += sizeof(*tlv) + le32_to_cpu(tlv->length);
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
+index 5948d769eed0..7c1e76ee7ede 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
+@@ -66,102 +66,56 @@
+ void iwl_dbg_tlv_copy(struct iwl_trans *trans, struct iwl_ucode_tlv *tlv,
+ 		      bool ext)
+ {
+-	struct iwl_apply_point_data *data;
++	struct iwl_apply_point_data *dbg_cfg, *tlv_copy;
+ 	struct iwl_fw_ini_header *header = (void *)&tlv->data[0];
++	u32 tlv_type = le32_to_cpu(tlv->type);
++	u32 len = le32_to_cpu(tlv->length);
+ 	u32 apply_point = le32_to_cpu(header->apply_point);
+ 
+-	int copy_size = le32_to_cpu(tlv->length) + sizeof(*tlv);
+-	int offset_size = copy_size;
 -
- /* Max time to wait for nmi interrupt */
- #define IWL_TRANS_NMI_TIMEOUT (HZ / 4)
+ 	if (le32_to_cpu(header->tlv_version) != 1)
+ 		return;
  
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index b5534fc33539..97f9f0aa5c5f 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -558,7 +558,6 @@ struct iwl_trans_pcie {
- 	bool ucode_write_complete;
- 	wait_queue_head_t ucode_write_waitq;
- 	wait_queue_head_t wait_command_queue;
--	wait_queue_head_t d0i3_waitq;
+ 	if (WARN_ONCE(apply_point >= IWL_FW_INI_APPLY_NUM,
+-		      "Invalid apply point id %d\n", apply_point))
++		      "Invalid apply point %d\n", apply_point))
+ 		return;
  
- 	u8 page_offs, dev_cmd_offs;
- 
-@@ -581,7 +580,6 @@ struct iwl_trans_pcie {
- 	/*protect hw register */
- 	spinlock_t reg_lock;
- 	bool cmd_hold_nic_awake;
--	bool ref_cmd_in_flight;
- 
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- 	struct cont_rec fw_mon_data;
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 8d509ec0e113..d1981e77b8f6 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -3594,8 +3594,6 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
- 	/* Initialize the wait queue for commands */
- 	init_waitqueue_head(&trans_pcie->wait_command_queue);
- 
--	init_waitqueue_head(&trans_pcie->d0i3_waitq);
++	IWL_DEBUG_FW(trans, "WRT: read TLV 0x%x, apply point %d\n",
++		     tlv_type, apply_point);
++
+ 	if (ext)
+-		data = &trans->dbg.apply_points_ext[apply_point];
++		dbg_cfg = &trans->dbg.apply_points_ext[apply_point];
+ 	else
+-		data = &trans->dbg.apply_points[apply_point];
 -
- 	if (trans_pcie->msix_enabled) {
- 		ret = iwl_pcie_init_msix_handler(pdev, trans_pcie);
- 		if (ret)
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-index 3a3ac81195dd..cee507d29238 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-@@ -920,16 +920,6 @@ static int iwl_pcie_gen2_send_hcmd_sync(struct iwl_trans *trans,
- 
- 	IWL_DEBUG_INFO(trans, "Setting HCMD_ACTIVE for command %s\n", cmd_str);
- 
--	if (pm_runtime_suspended(&trans_pcie->pci_dev->dev)) {
--		ret = wait_event_timeout(trans_pcie->d0i3_waitq,
--				 pm_runtime_active(&trans_pcie->pci_dev->dev),
--				 msecs_to_jiffies(IWL_TRANS_IDLE_TIMEOUT));
--		if (!ret) {
--			IWL_ERR(trans, "Timeout exiting D0i3 before hcmd\n");
--			return -ETIMEDOUT;
--		}
--	}
+-	/*
+-	 * Make sure we still have room to copy this TLV. Offset points to the
+-	 * location the last copy ended.
+-	 */
+-	if (WARN_ONCE(data->offset + offset_size > data->size,
+-		      "Not enough memory for apply point %d\n",
+-		      apply_point))
+-		return;
 -
- 	cmd_idx = iwl_pcie_gen2_enqueue_hcmd(trans, cmd);
- 	if (cmd_idx < 0) {
- 		ret = cmd_idx;
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-index 45356195c228..9432374b69e2 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-@@ -1858,20 +1858,6 @@ void iwl_pcie_hcmd_complete(struct iwl_trans *trans,
- 		wake_up(&trans_pcie->wait_command_queue);
+-	memcpy(data->data + data->offset, (void *)tlv, copy_size);
+-	data->offset += offset_size;
+-}
+-
+-void iwl_dbg_tlv_alloc(struct iwl_trans *trans, size_t len, const u8 *data,
+-		       bool ext)
+-{
+-	struct iwl_ucode_tlv *tlv;
+-	u32 size[IWL_FW_INI_APPLY_NUM] = {0};
+-	int i;
+-
+-	while (len >= sizeof(*tlv)) {
+-		u32 tlv_len, tlv_type, apply;
+-		struct iwl_fw_ini_header *hdr;
+-
+-		len -= sizeof(*tlv);
+-		tlv = (void *)data;
+-
+-		tlv_len = le32_to_cpu(tlv->length);
+-		tlv_type = le32_to_cpu(tlv->type);
++		dbg_cfg = &trans->dbg.apply_points[apply_point];
+ 
+-		if (len < tlv_len)
+-			return;
+-
+-		len -= ALIGN(tlv_len, 4);
+-		data += sizeof(*tlv) + ALIGN(tlv_len, 4);
+-
+-		if (tlv_type < IWL_UCODE_TLV_DEBUG_BASE ||
+-		    tlv_type > IWL_UCODE_TLV_DEBUG_MAX)
+-			continue;
+-
+-		hdr = (void *)&tlv->data[0];
+-		apply = le32_to_cpu(hdr->apply_point);
+-
+-		if (le32_to_cpu(hdr->tlv_version) != 1)
+-			continue;
+-
+-		IWL_DEBUG_FW(trans, "WRT: read TLV 0x%x, apply point %d\n",
+-			     le32_to_cpu(tlv->type), apply);
+-
+-		if (WARN_ON(apply >= IWL_FW_INI_APPLY_NUM))
+-			continue;
+-
+-		size[apply] += sizeof(*tlv) + tlv_len;
++	tlv_copy = kzalloc(sizeof(*tlv_copy) + len, GFP_KERNEL);
++	if (!tlv_copy) {
++		IWL_ERR(trans, "WRT: No memory for TLV 0x%x, apply point %d\n",
++			tlv_type, apply_point);
++		return;
  	}
  
--	if (meta->flags & CMD_MAKE_TRANS_IDLE) {
--		IWL_DEBUG_INFO(trans, "complete %s - mark trans as idle\n",
--			       iwl_get_cmd_string(trans, cmd->hdr.cmd));
--		set_bit(STATUS_TRANS_IDLE, &trans->status);
--		wake_up(&trans_pcie->d0i3_waitq);
--	}
--
--	if (meta->flags & CMD_WAKE_UP_TRANS) {
--		IWL_DEBUG_INFO(trans, "complete %s - clear trans idle flag\n",
--			       iwl_get_cmd_string(trans, cmd->hdr.cmd));
--		clear_bit(STATUS_TRANS_IDLE, &trans->status);
--		wake_up(&trans_pcie->d0i3_waitq);
--	}
--
- 	meta->flags = 0;
+-	for (i = 0; i < ARRAY_SIZE(size); i++) {
+-		void *mem;
++	INIT_LIST_HEAD(&tlv_copy->list);
++	memcpy(&tlv_copy->tlv, tlv, sizeof(*tlv) + len);
  
- 	spin_unlock_bh(&txq->lock);
-@@ -1918,16 +1904,6 @@ static int iwl_pcie_send_hcmd_sync(struct iwl_trans *trans,
- 	IWL_DEBUG_INFO(trans, "Setting HCMD_ACTIVE for command %s\n",
- 		       iwl_get_cmd_string(trans, cmd->id));
+-		if (!size[i])
+-			continue;
++	if (!dbg_cfg->list.next)
++		INIT_LIST_HEAD(&dbg_cfg->list);
  
--	if (pm_runtime_suspended(&trans_pcie->pci_dev->dev)) {
--		ret = wait_event_timeout(trans_pcie->d0i3_waitq,
--				 pm_runtime_active(&trans_pcie->pci_dev->dev),
--				 msecs_to_jiffies(IWL_TRANS_IDLE_TIMEOUT));
--		if (!ret) {
--			IWL_ERR(trans, "Timeout exiting D0i3 before hcmd\n");
--			return -ETIMEDOUT;
+-		mem = kzalloc(size[i], GFP_KERNEL);
++	list_add_tail(&tlv_copy->list, &dbg_cfg->list);
+ 
+-		if (!mem) {
+-			IWL_ERR(trans, "No memory for apply point %d\n", i);
+-			return;
 -		}
--	}
++	trans->dbg.ini_valid = true;
++}
+ 
+-		if (ext) {
+-			trans->dbg.apply_points_ext[i].data = mem;
+-			trans->dbg.apply_points_ext[i].size = size[i];
+-		} else {
+-			trans->dbg.apply_points[i].data = mem;
+-			trans->dbg.apply_points[i].size = size[i];
+-		}
++static void iwl_dbg_tlv_free_list(struct list_head *list)
++{
++	if (!list || !list->next)
++		return;
+ 
+-		trans->dbg.ini_valid = true;
++	while (!list_empty(list)) {
++		struct iwl_apply_point_data *node =
++			list_entry(list->next, typeof(*node), list);
++
++		list_del(&node->list);
++		kfree(node);
+ 	}
+ }
+ 
+@@ -170,13 +124,13 @@ void iwl_dbg_tlv_free(struct iwl_trans *trans)
+ 	int i;
+ 
+ 	for (i = 0; i < ARRAY_SIZE(trans->dbg.apply_points); i++) {
+-		kfree(trans->dbg.apply_points[i].data);
+-		trans->dbg.apply_points[i].size = 0;
+-		trans->dbg.apply_points[i].offset = 0;
++		struct iwl_apply_point_data *data;
++
++		data = &trans->dbg.apply_points[i];
++		iwl_dbg_tlv_free_list(&data->list);
+ 
+-		kfree(trans->dbg.apply_points_ext[i].data);
+-		trans->dbg.apply_points_ext[i].size = 0;
+-		trans->dbg.apply_points_ext[i].offset = 0;
++		data = &trans->dbg.apply_points_ext[i];
++		iwl_dbg_tlv_free_list(&data->list);
+ 	}
+ }
+ 
+@@ -232,7 +186,6 @@ void iwl_dbg_tlv_load_bin(struct device *dev, struct iwl_trans *trans)
+ 	if (res)
+ 		return;
+ 
+-	iwl_dbg_tlv_alloc(trans, fw->size, fw->data, true);
+ 	iwl_dbg_tlv_parse_bin(trans, fw->data, fw->size);
+ 
+ 	trans->dbg.external_ini_loaded = true;
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.h b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.h
+index e4911ec6ce13..72552de801d4 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.h
+@@ -66,14 +66,12 @@
+ 
+ /**
+  * struct iwl_apply_point_data
+- * @data: start address of this apply point data
+- * @size total size of the data
+- * @offset: current offset of the copied data
++ * @list: list to go through the TLVs of the apply point
++ * @tlv: a debug TLV
+  */
+ struct iwl_apply_point_data {
+-	void *data;
+-	int size;
+-	int offset;
++	struct list_head list;
++	struct iwl_ucode_tlv tlv;
+ };
+ 
+ struct iwl_trans;
+@@ -81,7 +79,5 @@ void iwl_dbg_tlv_load_bin(struct device *dev, struct iwl_trans *trans);
+ void iwl_dbg_tlv_free(struct iwl_trans *trans);
+ void iwl_dbg_tlv_copy(struct iwl_trans *trans, struct iwl_ucode_tlv *tlv,
+ 		      bool ext);
+-void iwl_dbg_tlv_alloc(struct iwl_trans *trans, size_t len, const u8 *data,
+-		       bool ext);
+ 
+ #endif /* __iwl_dbg_tlv_h__*/
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+index 595dc2fbc3b3..3792b421746e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+@@ -647,9 +647,6 @@ static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
+ 
+ 	len -= sizeof(*ucode);
+ 
+-	if (iwlwifi_mod_params.enable_ini)
+-		iwl_dbg_tlv_alloc(drv->trans, len, data, false);
 -
- 	cmd_idx = iwl_pcie_enqueue_hcmd(trans, cmd);
- 	if (cmd_idx < 0) {
- 		ret = cmd_idx;
+ 	while (len >= sizeof(*tlv)) {
+ 		len -= sizeof(*tlv);
+ 		tlv = (void *)data;
 -- 
 2.23.0.rc1
 
