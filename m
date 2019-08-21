@@ -6,195 +6,183 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BD00DC3A5A0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E00EDC3A5A2
 	for <linux-wireless@archiver.kernel.org>; Wed, 21 Aug 2019 13:38:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9C51D22DD3
+	by mail.kernel.org (Postfix) with ESMTP id C0F78233A0
 	for <linux-wireless@archiver.kernel.org>; Wed, 21 Aug 2019 13:38:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728967AbfHUNiO (ORCPT
+        id S1729009AbfHUNiM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 21 Aug 2019 09:38:14 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:37784 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1729008AbfHUNiM (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 21 Aug 2019 09:38:12 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:37768 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1728995AbfHUNiL (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 21 Aug 2019 09:38:11 -0400
 Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1i0QoU-0000lZ-UV; Wed, 21 Aug 2019 16:38:11 +0300
+        id 1i0QoT-0000lZ-69; Wed, 21 Aug 2019 16:38:09 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Wed, 21 Aug 2019 16:37:49 +0300
-Message-Id: <20190821133800.23636-8-luca@coelho.fi>
+Date:   Wed, 21 Aug 2019 16:37:47 +0300
+Message-Id: <20190821133800.23636-6-luca@coelho.fi>
 X-Mailer: git-send-email 2.23.0.rc1
 In-Reply-To: <20190821133800.23636-1-luca@coelho.fi>
 References: <20190821133800.23636-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 07/18] iwlwifi: remove the opmode's d0i3 handlers
+Subject: [PATCH 05/18] iwlwifi: Set w-pointer upon resume according to SN
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Alex Malamud <alex.malamud@intel.com>
 
-Remove the now unneeded functions that called those from the
-transport layer.
+During D3 state, FW may send packets.
+As a result, "write" queue pointer will be incremented by FW.
+Upon resume from D3, driver should adjust its shadows of "write" and "read"
+pointers to the value reported by FW.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+1. Keep TID used during wowlan configuration.
+2. Upon resume, set driver's "write" and "read" queue pointers
+	to the value reported by FW.
+
+Signed-off-by: Alex Malamud <alex.malamud@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../net/wireless/intel/iwlwifi/iwl-op-mode.h  | 23 ------
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 70 -------------------
- .../wireless/intel/iwlwifi/pcie/internal.h    |  3 -
- 3 files changed, 96 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h     | 13 +++++++++++++
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c        |  9 +++++++++
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |  1 +
+ drivers/net/wireless/intel/iwlwifi/pcie/internal.h |  1 +
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c    |  2 ++
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c       | 14 ++++++++++++++
+ 6 files changed, 40 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-op-mode.h b/drivers/net/wireless/intel/iwlwifi/iwl-op-mode.h
-index f37d6fee0225..3008a5246be8 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-op-mode.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-op-mode.h
-@@ -140,9 +140,6 @@ struct iwl_cfg;
-  * @nic_config: configure NIC, called before firmware is started.
-  *	May sleep
-  * @wimax_active: invoked when WiMax becomes active. May sleep
-- * @enter_d0i3: configure the fw to enter d0i3. return 1 to indicate d0i3
-- *	entrance is aborted (e.g. due to held reference). May sleep.
-- * @exit_d0i3: configure the fw to exit d0i3. May sleep.
-  */
- struct iwl_op_mode_ops {
- 	struct iwl_op_mode *(*start)(struct iwl_trans *trans,
-@@ -164,8 +161,6 @@ struct iwl_op_mode_ops {
- 	void (*cmd_queue_full)(struct iwl_op_mode *op_mode);
- 	void (*nic_config)(struct iwl_op_mode *op_mode);
- 	void (*wimax_active)(struct iwl_op_mode *op_mode);
--	int (*enter_d0i3)(struct iwl_op_mode *op_mode);
--	int (*exit_d0i3)(struct iwl_op_mode *op_mode);
- };
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index 942662eaf523..034c935b5579 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@ -562,6 +562,8 @@ struct iwl_trans_ops {
+ 	void (*reclaim)(struct iwl_trans *trans, int queue, int ssn,
+ 			struct sk_buff_head *skbs);
  
- int iwl_opmode_register(const char *name, const struct iwl_op_mode_ops *ops);
-@@ -258,22 +253,4 @@ static inline void iwl_op_mode_wimax_active(struct iwl_op_mode *op_mode)
- 	op_mode->ops->wimax_active(op_mode);
++	void (*set_q_ptrs)(struct iwl_trans *trans, int queue, int ptr);
++
+ 	bool (*txq_enable)(struct iwl_trans *trans, int queue, u16 ssn,
+ 			   const struct iwl_trans_txq_scd_cfg *cfg,
+ 			   unsigned int queue_wdg_timeout);
+@@ -999,6 +1001,17 @@ static inline void iwl_trans_reclaim(struct iwl_trans *trans, int queue,
+ 	trans->ops->reclaim(trans, queue, ssn, skbs);
  }
  
--static inline int iwl_op_mode_enter_d0i3(struct iwl_op_mode *op_mode)
--{
--	might_sleep();
--
--	if (!op_mode->ops->enter_d0i3)
--		return 0;
--	return op_mode->ops->enter_d0i3(op_mode);
--}
--
--static inline int iwl_op_mode_exit_d0i3(struct iwl_op_mode *op_mode)
--{
--	might_sleep();
--
--	if (!op_mode->ops->exit_d0i3)
--		return 0;
--	return op_mode->ops->exit_d0i3(op_mode);
--}
--
- #endif /* __iwl_op_mode_h__ */
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index 10c9167d78fa..603a3c40d1c8 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -1150,76 +1150,6 @@ static int iwl_pci_resume(struct device *device)
- 	return 0;
- }
++static inline void iwl_trans_set_q_ptrs(struct iwl_trans *trans, int queue,
++					int ptr)
++{
++	if (WARN_ON_ONCE(trans->state != IWL_TRANS_FW_ALIVE)) {
++		IWL_ERR(trans, "%s bad state = %d\n", __func__, trans->state);
++		return;
++	}
++
++	trans->ops->set_q_ptrs(trans, queue, ptr);
++}
++
+ static inline void iwl_trans_txq_disable(struct iwl_trans *trans, int queue,
+ 					 bool configure_scd)
+ {
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+index 89839a83d8c2..6f7345b121a6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+@@ -831,6 +831,8 @@ iwl_mvm_wowlan_config(struct iwl_mvm *mvm,
+ 	bool unified_image = fw_has_capa(&mvm->fw->ucode_capa,
+ 					 IWL_UCODE_TLV_CAPA_CNSLDTD_D3_D0_IMG);
  
--int iwl_pci_fw_enter_d0i3(struct iwl_trans *trans)
--{
--	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
--	int ret;
--
--	if (test_bit(STATUS_FW_ERROR, &trans->status))
--		return 0;
--
--	set_bit(STATUS_TRANS_GOING_IDLE, &trans->status);
--
--	/* config the fw */
--	ret = iwl_op_mode_enter_d0i3(trans->op_mode);
--	if (ret == 1) {
--		IWL_DEBUG_RPM(trans, "aborting d0i3 entrance\n");
--		clear_bit(STATUS_TRANS_GOING_IDLE, &trans->status);
--		return -EBUSY;
--	}
--	if (ret)
--		goto err;
--
--	ret = wait_event_timeout(trans_pcie->d0i3_waitq,
--				 test_bit(STATUS_TRANS_IDLE, &trans->status),
--				 msecs_to_jiffies(IWL_TRANS_IDLE_TIMEOUT));
--	if (!ret) {
--		IWL_ERR(trans, "Timeout entering D0i3\n");
--		ret = -ETIMEDOUT;
--		goto err;
--	}
--
--	clear_bit(STATUS_TRANS_GOING_IDLE, &trans->status);
--
--	return 0;
--err:
--	clear_bit(STATUS_TRANS_GOING_IDLE, &trans->status);
--	iwl_trans_fw_error(trans);
--	return ret;
--}
--
--int iwl_pci_fw_exit_d0i3(struct iwl_trans *trans)
--{
--	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
--	int ret;
--
--	/* sometimes a D0i3 entry is not followed through */
--	if (!test_bit(STATUS_TRANS_IDLE, &trans->status))
--		return 0;
--
--	/* config the fw */
--	ret = iwl_op_mode_exit_d0i3(trans->op_mode);
--	if (ret)
--		goto err;
--
--	/* we clear STATUS_TRANS_IDLE only when D0I3_END command is completed */
--
--	ret = wait_event_timeout(trans_pcie->d0i3_waitq,
--				 !test_bit(STATUS_TRANS_IDLE, &trans->status),
--				 msecs_to_jiffies(IWL_TRANS_IDLE_TIMEOUT));
--	if (!ret) {
--		IWL_ERR(trans, "Timeout exiting D0i3\n");
--		ret = -ETIMEDOUT;
--		goto err;
--	}
--
--	return 0;
--err:
--	clear_bit(STATUS_TRANS_IDLE, &trans->status);
--	iwl_trans_fw_error(trans);
--	return ret;
--}
--
- static const struct dev_pm_ops iwl_dev_pm_ops = {
- 	SET_SYSTEM_SLEEP_PM_OPS(iwl_pci_suspend,
- 				iwl_pci_resume)
++	mvm->offload_tid = wowlan_config_cmd->offloading_tid;
++
+ 	if (!unified_image) {
+ 		ret = iwl_mvm_switch_to_d3(mvm);
+ 		if (ret)
+@@ -1656,6 +1658,13 @@ static bool iwl_mvm_query_wakeup_reasons(struct iwl_mvm *mvm,
+ 		mvm_ap_sta->tid_data[i].seq_number = seq;
+ 	}
+ 
++	if (mvm->trans->cfg->device_family >= IWL_DEVICE_FAMILY_22000) {
++		i = mvm->offload_tid;
++		iwl_trans_set_q_ptrs(mvm->trans,
++				     mvm_ap_sta->tid_data[i].txq_id,
++				     mvm_ap_sta->tid_data[i].seq_number >> 4);
++	}
++
+ 	/* now we have all the data we need, unlock to avoid mac80211 issues */
+ 	mutex_unlock(&mvm->mutex);
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 3efcc3a939b8..79bbdf8121cc 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -1001,6 +1001,7 @@ struct iwl_mvm {
+ 	struct ieee80211_channel **nd_channels;
+ 	int n_nd_channels;
+ 	bool net_detect;
++	u8 offload_tid;
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
+ 	bool d3_wake_sysassert;
+ 	bool d3_test_active;
 diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index 6bf2a816e221..b5534fc33539 100644
+index 9f5d0fc839fe..6bf2a816e221 100644
 --- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
 +++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -1059,9 +1059,6 @@ void iwl_trans_pcie_dbgfs_register(struct iwl_trans *trans);
- static inline void iwl_trans_pcie_dbgfs_register(struct iwl_trans *trans) { }
- #endif
+@@ -697,6 +697,7 @@ void iwl_pcie_hcmd_complete(struct iwl_trans *trans,
+ 			    struct iwl_rx_cmd_buffer *rxb);
+ void iwl_trans_pcie_reclaim(struct iwl_trans *trans, int txq_id, int ssn,
+ 			    struct sk_buff_head *skbs);
++void iwl_trans_pcie_set_q_ptrs(struct iwl_trans *trans, int txq_id, int ptr);
+ void iwl_trans_pcie_tx_reset(struct iwl_trans *trans);
+ void iwl_pcie_gen2_update_byte_tbl(struct iwl_trans_pcie *trans_pcie,
+ 				   struct iwl_txq *txq, u16 byte_cnt,
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index a423c5c6605e..3a4be2ff3d42 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -3397,6 +3397,8 @@ static const struct iwl_trans_ops trans_ops_pcie_gen2 = {
+ 	.tx = iwl_trans_pcie_gen2_tx,
+ 	.reclaim = iwl_trans_pcie_reclaim,
  
--int iwl_pci_fw_exit_d0i3(struct iwl_trans *trans);
--int iwl_pci_fw_enter_d0i3(struct iwl_trans *trans);
--
- void iwl_pcie_rx_allocator_work(struct work_struct *data);
++	.set_q_ptrs = iwl_trans_pcie_set_q_ptrs,
++
+ 	.txq_alloc = iwl_trans_pcie_dyn_txq_alloc,
+ 	.txq_free = iwl_trans_pcie_dyn_txq_free,
+ 	.wait_txq_empty = iwl_trans_pcie_wait_txq_empty,
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+index 2f0ba7ef53b8..b25f51b5893c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+@@ -1234,6 +1234,20 @@ void iwl_trans_pcie_reclaim(struct iwl_trans *trans, int txq_id, int ssn,
+ 	spin_unlock_bh(&txq->lock);
+ }
  
- /* common functions that are used by gen2 transport */
++/* Set wr_ptr of specific device and txq  */
++void iwl_trans_pcie_set_q_ptrs(struct iwl_trans *trans, int txq_id, int ptr)
++{
++	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
++	struct iwl_txq *txq = trans_pcie->txq[txq_id];
++
++	spin_lock_bh(&txq->lock);
++
++	txq->write_ptr = ptr;
++	txq->read_ptr = txq->write_ptr;
++
++	spin_unlock_bh(&txq->lock);
++}
++
+ static int iwl_pcie_set_cmd_in_flight(struct iwl_trans *trans,
+ 				      const struct iwl_host_cmd *cmd)
+ {
 -- 
 2.23.0.rc1
 
