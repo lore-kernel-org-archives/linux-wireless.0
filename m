@@ -6,215 +6,335 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14C7DC3A59E
-	for <linux-wireless@archiver.kernel.org>; Wed, 21 Aug 2019 13:40:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF98EC3A59E
+	for <linux-wireless@archiver.kernel.org>; Wed, 21 Aug 2019 13:40:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DF86B22DD3
-	for <linux-wireless@archiver.kernel.org>; Wed, 21 Aug 2019 13:40:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9184D22DD3
+	for <linux-wireless@archiver.kernel.org>; Wed, 21 Aug 2019 13:40:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729026AbfHUNkL (ORCPT
+        id S1729027AbfHUNkO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 21 Aug 2019 09:40:11 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:37860 "EHLO
+        Wed, 21 Aug 2019 09:40:14 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:37866 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726484AbfHUNkL (ORCPT
+        with ESMTP id S1726484AbfHUNkN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Aug 2019 09:40:11 -0400
+        Wed, 21 Aug 2019 09:40:13 -0400
 Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1i0QoZ-0000lZ-Pi; Wed, 21 Aug 2019 16:38:16 +0300
+        id 1i0QoY-0000lZ-6l; Wed, 21 Aug 2019 16:38:14 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Wed, 21 Aug 2019 16:37:55 +0300
-Message-Id: <20190821133800.23636-14-luca@coelho.fi>
+Date:   Wed, 21 Aug 2019 16:37:53 +0300
+Message-Id: <20190821133800.23636-12-luca@coelho.fi>
 X-Mailer: git-send-email 2.23.0.rc1
 In-Reply-To: <20190821133800.23636-1-luca@coelho.fi>
 References: <20190821133800.23636-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 13/18] iwlwifi: dbg_ini: align dbg tlv functions names to a single format
+Subject: [PATCH 11/18] iwlwifi: remove pm_runtime completely
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-align the naming to iwl_dbg_tlv_*
+This means:
+1) stop calling pm_runtime_resume when starting the hardware
+2) removing the unneeded low_power parameter to start / stop hw / fw
+   transport ops
+3) squashing transport functions that are now the same
+   _iwl_trans_pcie_start_hw / iwl_trans_pcie_start_hw
 
-Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../net/wireless/intel/iwlwifi/iwl-dbg-tlv.c  | 20 +++++++++----------
- .../net/wireless/intel/iwlwifi/iwl-dbg-tlv.h  | 14 ++++++-------
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c  | 10 +++++-----
- 3 files changed, 22 insertions(+), 22 deletions(-)
+ .../net/wireless/intel/iwlwifi/iwl-trans.h    | 33 ++++++-------------
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c   |  9 ++---
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c |  1 -
+ .../wireless/intel/iwlwifi/pcie/internal.h    |  5 ++-
+ .../wireless/intel/iwlwifi/pcie/trans-gen2.c  |  6 ++--
+ .../net/wireless/intel/iwlwifi/pcie/trans.c   | 21 +++++-------
+ .../net/wireless/intel/iwlwifi/pcie/tx-gen2.c |  1 -
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c  |  1 -
+ 8 files changed, 25 insertions(+), 52 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
-index fcaec410b3be..240e48b1d1c7 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
-@@ -63,8 +63,8 @@
- #include "iwl-trans.h"
- #include "iwl-dbg-tlv.h"
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index 687eced8b548..fce0112b3ad4 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@ -452,9 +452,8 @@ struct iwl_trans_rxq_dma_data {
+  *
+  * All the handlers MUST be implemented
+  *
+- * @start_hw: starts the HW. If low_power is true, the NIC needs to be taken
+- *	out of a low power state. From that point on, the HW can send
+- *	interrupts. May sleep.
++ * @start_hw: starts the HW. From that point on, the HW can send interrupts.
++ *	May sleep.
+  * @op_mode_leave: Turn off the HW RF kill indication if on
+  *	May sleep
+  * @start_fw: allocates and inits all the resources for the transport
+@@ -464,9 +463,8 @@ struct iwl_trans_rxq_dma_data {
+  *	the SCD base address in SRAM, then provide it here, or 0 otherwise.
+  *	May sleep
+  * @stop_device: stops the whole device (embedded CPU put to reset) and stops
+- *	the HW. If low_power is true, the NIC will be put in low power state.
+- *	From that point on, the HW will be stopped but will still issue an
+- *	interrupt if the HW RF kill switch is triggered.
++ *	the HW. From that point on, the HW will be stopped but will still issue
++ *	an interrupt if the HW RF kill switch is triggered.
+  *	This callback must do the right thing and not crash even if %start_hw()
+  *	was called but not &start_fw(). May sleep.
+  * @d3_suspend: put the device into the correct mode for WoWLAN during
+@@ -532,12 +530,12 @@ struct iwl_trans_rxq_dma_data {
+  */
+ struct iwl_trans_ops {
  
--void iwl_fw_dbg_copy_tlv(struct iwl_trans *trans, struct iwl_ucode_tlv *tlv,
--			 bool ext)
-+void iwl_dbg_tlv_copy(struct iwl_trans *trans, struct iwl_ucode_tlv *tlv,
-+		      bool ext)
- {
- 	struct iwl_apply_point_data *data;
- 	struct iwl_fw_ini_header *header = (void *)&tlv->data[0];
-@@ -106,7 +106,7 @@ void iwl_fw_dbg_copy_tlv(struct iwl_trans *trans, struct iwl_ucode_tlv *tlv,
- 	data->offset += offset_size;
+-	int (*start_hw)(struct iwl_trans *iwl_trans, bool low_power);
++	int (*start_hw)(struct iwl_trans *iwl_trans);
+ 	void (*op_mode_leave)(struct iwl_trans *iwl_trans);
+ 	int (*start_fw)(struct iwl_trans *trans, const struct fw_img *fw,
+ 			bool run_in_rfkill);
+ 	void (*fw_alive)(struct iwl_trans *trans, u32 scd_addr);
+-	void (*stop_device)(struct iwl_trans *trans, bool low_power);
++	void (*stop_device)(struct iwl_trans *trans);
+ 
+ 	void (*d3_suspend)(struct iwl_trans *trans, bool test, bool reset);
+ 	int (*d3_resume)(struct iwl_trans *trans, enum iwl_d3_status *status,
+@@ -819,16 +817,11 @@ static inline void iwl_trans_configure(struct iwl_trans *trans,
+ 	WARN_ON(iwl_cmd_groups_verify_sorted(trans_cfg));
  }
  
--void iwl_alloc_dbg_tlv(struct iwl_trans *trans, size_t len, const u8 *data,
-+void iwl_dbg_tlv_alloc(struct iwl_trans *trans, size_t len, const u8 *data,
- 		       bool ext)
+-static inline int _iwl_trans_start_hw(struct iwl_trans *trans, bool low_power)
++static inline int iwl_trans_start_hw(struct iwl_trans *trans)
  {
- 	struct iwl_ucode_tlv *tlv;
-@@ -183,7 +183,7 @@ void iwl_alloc_dbg_tlv(struct iwl_trans *trans, size_t len, const u8 *data,
+ 	might_sleep();
+ 
+-	return trans->ops->start_hw(trans, low_power);
+-}
+-
+-static inline int iwl_trans_start_hw(struct iwl_trans *trans)
+-{
+-	return trans->ops->start_hw(trans, true);
++	return trans->ops->start_hw(trans);
+ }
+ 
+ static inline void iwl_trans_op_mode_leave(struct iwl_trans *trans)
+@@ -864,21 +857,15 @@ static inline int iwl_trans_start_fw(struct iwl_trans *trans,
+ 	return trans->ops->start_fw(trans, fw, run_in_rfkill);
+ }
+ 
+-static inline void _iwl_trans_stop_device(struct iwl_trans *trans,
+-					  bool low_power)
++static inline void iwl_trans_stop_device(struct iwl_trans *trans)
+ {
+ 	might_sleep();
+ 
+-	trans->ops->stop_device(trans, low_power);
++	trans->ops->stop_device(trans);
+ 
+ 	trans->state = IWL_TRANS_NO_FW;
+ }
+ 
+-static inline void iwl_trans_stop_device(struct iwl_trans *trans)
+-{
+-	_iwl_trans_stop_device(trans, true);
+-}
+-
+ static inline void iwl_trans_d3_suspend(struct iwl_trans *trans, bool test,
+ 					bool reset)
+ {
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 411a79e15333..0f6925a51435 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -1141,13 +1141,8 @@ static int iwl_mvm_load_rt_fw(struct iwl_mvm *mvm)
+ 	}
+ 
+ 	iwl_fw_dbg_stop_sync(&mvm->fwrt);
+-	/*
+-	 * Stop and start the transport without entering low power
+-	 * mode. This will save the state of other components on the
+-	 * device that are triggered by the INIT firwmare (MFUART).
+-	 */
+-	_iwl_trans_stop_device(mvm->trans, false);
+-	ret = _iwl_trans_start_hw(mvm->trans, false);
++	iwl_trans_stop_device(mvm->trans);
++	ret = iwl_trans_start_hw(mvm->trans);
+ 	if (ret)
+ 		return ret;
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index 603a3c40d1c8..3927d5590bb3 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -65,7 +65,6 @@
+ #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+ 
+ #include <linux/module.h>
+-#include <linux/pm_runtime.h>
+ #include <linux/pci.h>
+ #include <linux/acpi.h>
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+index 97f9f0aa5c5f..95f78d8b4ae5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+@@ -1109,9 +1109,8 @@ int iwl_trans_pcie_gen2_tx(struct iwl_trans *trans, struct sk_buff *skb,
+ 			   struct iwl_device_cmd *dev_cmd, int txq_id);
+ int iwl_trans_pcie_gen2_send_hcmd(struct iwl_trans *trans,
+ 				  struct iwl_host_cmd *cmd);
+-void iwl_trans_pcie_gen2_stop_device(struct iwl_trans *trans,
+-				     bool low_power);
+-void _iwl_trans_pcie_gen2_stop_device(struct iwl_trans *trans, bool low_power);
++void iwl_trans_pcie_gen2_stop_device(struct iwl_trans *trans);
++void _iwl_trans_pcie_gen2_stop_device(struct iwl_trans *trans);
+ void iwl_pcie_gen2_txq_unmap(struct iwl_trans *trans, int txq_id);
+ void iwl_pcie_gen2_tx_free(struct iwl_trans *trans);
+ void iwl_pcie_gen2_tx_stop(struct iwl_trans *trans);
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
+index 104b7cc75248..c099ad8b003f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
+@@ -136,7 +136,7 @@ static void iwl_pcie_gen2_apm_stop(struct iwl_trans *trans, bool op_mode_leave)
+ 		      BIT(trans->cfg->csr->flag_init_done));
+ }
+ 
+-void _iwl_trans_pcie_gen2_stop_device(struct iwl_trans *trans, bool low_power)
++void _iwl_trans_pcie_gen2_stop_device(struct iwl_trans *trans)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 
+@@ -215,7 +215,7 @@ void _iwl_trans_pcie_gen2_stop_device(struct iwl_trans *trans, bool low_power)
+ 	iwl_pcie_prepare_card_hw(trans);
+ }
+ 
+-void iwl_trans_pcie_gen2_stop_device(struct iwl_trans *trans, bool low_power)
++void iwl_trans_pcie_gen2_stop_device(struct iwl_trans *trans)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	bool was_in_rfkill;
+@@ -223,7 +223,7 @@ void iwl_trans_pcie_gen2_stop_device(struct iwl_trans *trans, bool low_power)
+ 	mutex_lock(&trans_pcie->mutex);
+ 	trans_pcie->opmode_down = true;
+ 	was_in_rfkill = test_bit(STATUS_RFKILL_OPMODE, &trans->status);
+-	_iwl_trans_pcie_gen2_stop_device(trans, low_power);
++	_iwl_trans_pcie_gen2_stop_device(trans);
+ 	iwl_trans_pcie_handle_stop_rfkill(trans, was_in_rfkill);
+ 	mutex_unlock(&trans_pcie->mutex);
+ }
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index d1981e77b8f6..0972ef064514 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -69,7 +69,6 @@
+ #include <linux/bitops.h>
+ #include <linux/gfp.h>
+ #include <linux/vmalloc.h>
+-#include <linux/pm_runtime.h>
+ #include <linux/module.h>
+ #include <linux/wait.h>
+ 
+@@ -1231,7 +1230,7 @@ static void iwl_pcie_init_msix(struct iwl_trans_pcie *trans_pcie)
+ 	trans_pcie->hw_mask = trans_pcie->hw_init_mask;
+ }
+ 
+-static void _iwl_trans_pcie_stop_device(struct iwl_trans *trans, bool low_power)
++static void _iwl_trans_pcie_stop_device(struct iwl_trans *trans)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 
+@@ -1448,7 +1447,7 @@ void iwl_trans_pcie_handle_stop_rfkill(struct iwl_trans *trans,
+ 		iwl_trans_pcie_rf_kill(trans, hw_rfkill);
+ }
+ 
+-static void iwl_trans_pcie_stop_device(struct iwl_trans *trans, bool low_power)
++static void iwl_trans_pcie_stop_device(struct iwl_trans *trans)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	bool was_in_rfkill;
+@@ -1456,7 +1455,7 @@ static void iwl_trans_pcie_stop_device(struct iwl_trans *trans, bool low_power)
+ 	mutex_lock(&trans_pcie->mutex);
+ 	trans_pcie->opmode_down = true;
+ 	was_in_rfkill = test_bit(STATUS_RFKILL_OPMODE, &trans->status);
+-	_iwl_trans_pcie_stop_device(trans, low_power);
++	_iwl_trans_pcie_stop_device(trans);
+ 	iwl_trans_pcie_handle_stop_rfkill(trans, was_in_rfkill);
+ 	mutex_unlock(&trans_pcie->mutex);
+ }
+@@ -1472,9 +1471,9 @@ void iwl_trans_pcie_rf_kill(struct iwl_trans *trans, bool state)
+ 		 state ? "disabled" : "enabled");
+ 	if (iwl_op_mode_hw_rf_kill(trans->op_mode, state)) {
+ 		if (trans->cfg->gen2)
+-			_iwl_trans_pcie_gen2_stop_device(trans, true);
++			_iwl_trans_pcie_gen2_stop_device(trans);
+ 		else
+-			_iwl_trans_pcie_stop_device(trans, true);
++			_iwl_trans_pcie_stop_device(trans);
  	}
  }
  
--void iwl_fw_dbg_free(struct iwl_trans *trans)
-+void iwl_dbg_tlv_free(struct iwl_trans *trans)
- {
- 	int i;
- 
-@@ -198,8 +198,8 @@ void iwl_fw_dbg_free(struct iwl_trans *trans)
- 	}
- }
- 
--static int iwl_parse_fw_dbg_tlv(struct iwl_trans *trans, const u8 *data,
--				size_t len)
-+static int iwl_dbg_tlv_parse_bin(struct iwl_trans *trans, const u8 *data,
-+				 size_t len)
- {
- 	struct iwl_ucode_tlv *tlv;
- 	enum iwl_ucode_tlv_type tlv_type;
-@@ -227,7 +227,7 @@ static int iwl_parse_fw_dbg_tlv(struct iwl_trans *trans, const u8 *data,
- 		case IWL_UCODE_TLV_TYPE_REGIONS:
- 		case IWL_UCODE_TLV_TYPE_TRIGGERS:
- 		case IWL_UCODE_TLV_TYPE_DEBUG_FLOW:
--			iwl_fw_dbg_copy_tlv(trans, tlv, true);
-+			iwl_dbg_tlv_copy(trans, tlv, true);
- 			break;
- 		default:
- 			WARN_ONCE(1, "Invalid TLV %x\n", tlv_type);
-@@ -238,7 +238,7 @@ static int iwl_parse_fw_dbg_tlv(struct iwl_trans *trans, const u8 *data,
+@@ -1733,7 +1732,7 @@ static int iwl_trans_pcie_clear_persistence_bit(struct iwl_trans *trans)
  	return 0;
  }
  
--void iwl_load_fw_dbg_tlv(struct device *dev, struct iwl_trans *trans)
-+void iwl_dbg_tlv_load_bin(struct device *dev, struct iwl_trans *trans)
+-static int _iwl_trans_pcie_start_hw(struct iwl_trans *trans, bool low_power)
++static int _iwl_trans_pcie_start_hw(struct iwl_trans *trans)
  {
- 	const struct firmware *fw;
- 	int res;
-@@ -250,8 +250,8 @@ void iwl_load_fw_dbg_tlv(struct device *dev, struct iwl_trans *trans)
- 	if (res)
- 		return;
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	int err;
+@@ -1769,20 +1768,16 @@ static int _iwl_trans_pcie_start_hw(struct iwl_trans *trans, bool low_power)
+ 	/* ...rfkill can call stop_device and set it false if needed */
+ 	iwl_pcie_check_hw_rf_kill(trans);
  
--	iwl_alloc_dbg_tlv(trans, fw->size, fw->data, true);
--	iwl_parse_fw_dbg_tlv(trans, fw->data, fw->size);
-+	iwl_dbg_tlv_alloc(trans, fw->size, fw->data, true);
-+	iwl_dbg_tlv_parse_bin(trans, fw->data, fw->size);
- 
- 	trans->dbg.external_ini_loaded = true;
- 	release_firmware(fw);
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.h b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.h
-index 222cd789e07a..e4911ec6ce13 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.h
-@@ -5,7 +5,7 @@
-  *
-  * GPL LICENSE SUMMARY
-  *
-- * Copyright (C) 2018 Intel Corporation
-+ * Copyright (C) 2018 - 2019 Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -28,7 +28,7 @@
-  *
-  * BSD LICENSE
-  *
-- * Copyright (C) 2018 Intel Corporation
-+ * Copyright (C) 2018 - 2019 Intel Corporation
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -77,11 +77,11 @@ struct iwl_apply_point_data {
- };
- 
- struct iwl_trans;
--void iwl_load_fw_dbg_tlv(struct device *dev, struct iwl_trans *trans);
--void iwl_fw_dbg_free(struct iwl_trans *trans);
--void iwl_fw_dbg_copy_tlv(struct iwl_trans *trans, struct iwl_ucode_tlv *tlv,
--			 bool ext);
--void iwl_alloc_dbg_tlv(struct iwl_trans *trans, size_t len, const u8 *data,
-+void iwl_dbg_tlv_load_bin(struct device *dev, struct iwl_trans *trans);
-+void iwl_dbg_tlv_free(struct iwl_trans *trans);
-+void iwl_dbg_tlv_copy(struct iwl_trans *trans, struct iwl_ucode_tlv *tlv,
-+		      bool ext);
-+void iwl_dbg_tlv_alloc(struct iwl_trans *trans, size_t len, const u8 *data,
- 		       bool ext);
- 
- #endif /* __iwl_dbg_tlv_h__*/
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-index 7afc6e43502a..595dc2fbc3b3 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-@@ -648,7 +648,7 @@ static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
- 	len -= sizeof(*ucode);
- 
- 	if (iwlwifi_mod_params.enable_ini)
--		iwl_alloc_dbg_tlv(drv->trans, len, data, false);
-+		iwl_dbg_tlv_alloc(drv->trans, len, data, false);
- 
- 	while (len >= sizeof(*tlv)) {
- 		len -= sizeof(*tlv);
-@@ -1156,7 +1156,7 @@ static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
- 		case IWL_UCODE_TLV_TYPE_TRIGGERS:
- 		case IWL_UCODE_TLV_TYPE_DEBUG_FLOW:
- 			if (iwlwifi_mod_params.enable_ini)
--				iwl_fw_dbg_copy_tlv(drv->trans, tlv, false);
-+				iwl_dbg_tlv_copy(drv->trans, tlv, false);
- 			break;
- 		case IWL_UCODE_TLV_CMD_VERSIONS:
- 			if (tlv_len % sizeof(struct iwl_fw_cmd_version)) {
-@@ -1640,7 +1640,7 @@ struct iwl_drv *iwl_drv_start(struct iwl_trans *trans)
- 	init_completion(&drv->request_firmware_complete);
- 	INIT_LIST_HEAD(&drv->list);
- 
--	iwl_load_fw_dbg_tlv(drv->trans->dev, drv->trans);
-+	iwl_dbg_tlv_load_bin(drv->trans->dev, drv->trans);
- 
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- 	/* Create the device debugfs entries. */
-@@ -1662,8 +1662,8 @@ struct iwl_drv *iwl_drv_start(struct iwl_trans *trans)
- err_fw:
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- 	debugfs_remove_recursive(drv->dbgfs_drv);
-+	iwl_dbg_tlv_free(drv->trans);
- #endif
--	iwl_fw_dbg_free(drv->trans);
- 	kfree(drv);
- err:
- 	return ERR_PTR(ret);
-@@ -1693,7 +1693,7 @@ void iwl_drv_stop(struct iwl_drv *drv)
- 	debugfs_remove_recursive(drv->dbgfs_drv);
- #endif
- 
--	iwl_fw_dbg_free(drv->trans);
-+	iwl_dbg_tlv_free(drv->trans);
- 
- 	kfree(drv);
+-	/* Make sure we sync here, because we'll need full access later */
+-	if (low_power)
+-		pm_runtime_resume(trans->dev);
+-
+ 	return 0;
  }
+ 
+-static int iwl_trans_pcie_start_hw(struct iwl_trans *trans, bool low_power)
++static int iwl_trans_pcie_start_hw(struct iwl_trans *trans)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	int ret;
+ 
+ 	mutex_lock(&trans_pcie->mutex);
+-	ret = _iwl_trans_pcie_start_hw(trans, low_power);
++	ret = _iwl_trans_pcie_start_hw(trans);
+ 	mutex_unlock(&trans_pcie->mutex);
+ 
+ 	return ret;
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+index cee507d29238..6c19711d5a10 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+@@ -50,7 +50,6 @@
+  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  *
+  *****************************************************************************/
+-#include <linux/pm_runtime.h>
+ #include <net/tso.h>
+ #include <linux/tcp.h>
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+index 9432374b69e2..8b7b918e71ad 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+@@ -65,7 +65,6 @@
+ #include <linux/ieee80211.h>
+ #include <linux/slab.h>
+ #include <linux/sched.h>
+-#include <linux/pm_runtime.h>
+ #include <net/ip6_checksum.h>
+ #include <net/tso.h>
+ 
 -- 
 2.23.0.rc1
 
