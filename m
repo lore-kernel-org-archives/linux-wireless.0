@@ -6,97 +6,235 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 608F3C3A59E
-	for <linux-wireless@archiver.kernel.org>; Wed, 21 Aug 2019 13:40:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 609D3C3A59E
+	for <linux-wireless@archiver.kernel.org>; Wed, 21 Aug 2019 13:40:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 36FBA22DD3
-	for <linux-wireless@archiver.kernel.org>; Wed, 21 Aug 2019 13:40:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3654622DD3
+	for <linux-wireless@archiver.kernel.org>; Wed, 21 Aug 2019 13:40:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729030AbfHUNkP (ORCPT
+        id S1729037AbfHUNkR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 21 Aug 2019 09:40:15 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:37872 "EHLO
+        Wed, 21 Aug 2019 09:40:17 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:37878 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726484AbfHUNkP (ORCPT
+        with ESMTP id S1726484AbfHUNkR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Aug 2019 09:40:15 -0400
+        Wed, 21 Aug 2019 09:40:17 -0400
 Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1i0QoZ-0000lZ-4M; Wed, 21 Aug 2019 16:38:15 +0300
+        id 1i0Qoc-0000lZ-0c; Wed, 21 Aug 2019 16:38:18 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Wed, 21 Aug 2019 16:37:54 +0300
-Message-Id: <20190821133800.23636-13-luca@coelho.fi>
+Date:   Wed, 21 Aug 2019 16:37:58 +0300
+Message-Id: <20190821133800.23636-17-luca@coelho.fi>
 X-Mailer: git-send-email 2.23.0.rc1
 In-Reply-To: <20190821133800.23636-1-luca@coelho.fi>
 References: <20190821133800.23636-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 12/18] iwlwifi: scan: don't pass large argument by value
+Subject: [PATCH 16/18] iwlwifi: dbg_ini: maintain buffer allocations from trans instead of TLVs buffer
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ayala Beker <ayala.beker@intel.com>
+From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 
-Function iwl_mvm_scan_set_legacy_probe_req() second argument
-size is too large to be passed by value.
-Fix it to be passed by reference.
+Maintain DRAM debug buffer status in trans instead of keeping it as
+part of the TLVs buffer to avoid allocating extra space for it.
+Needed for future changes.
 
-Signed-off-by: Ayala Beker <ayala.beker@intel.com>
+Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/scan.c | 15 ++++++++-------
- 1 file changed, 8 insertions(+), 7 deletions(-)
+ .../wireless/intel/iwlwifi/fw/api/dbg-tlv.h   |  2 ++
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c   | 31 ++++++++++---------
+ drivers/net/wireless/intel/iwlwifi/fw/img.h   |  9 ------
+ .../net/wireless/intel/iwlwifi/iwl-dbg-tlv.c  | 18 -----------
+ .../net/wireless/intel/iwlwifi/iwl-trans.h    |  4 ++-
+ 5 files changed, 21 insertions(+), 43 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-index 85e33310804e..afa44345f37b 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-@@ -961,15 +961,15 @@ static int iwl_mvm_scan_lmac_flags(struct iwl_mvm *mvm,
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h b/drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h
+index aaf3974a9a20..e02e289d29b1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h
+@@ -439,6 +439,7 @@ enum iwl_fw_ini_apply_point {
+  * @IWL_FW_INI_ALLOCATION_ID_SDFX: for SDFX module
+  * @IWL_FW_INI_ALLOCATION_ID_FW_DUMP: used for crash and runtime dumps
+  * @IWL_FW_INI_ALLOCATION_ID_USER_DEFINED: for future user scenarios
++ * @IWL_FW_INI_ALLOCATION_NUM: number of allocation ids
+ */
+ enum iwl_fw_ini_allocation_id {
+ 	IWL_FW_INI_ALLOCATION_INVALID,
+@@ -448,6 +449,7 @@ enum iwl_fw_ini_allocation_id {
+ 	IWL_FW_INI_ALLOCATION_ID_SDFX,
+ 	IWL_FW_INI_ALLOCATION_ID_FW_DUMP,
+ 	IWL_FW_INI_ALLOCATION_ID_USER_DEFINED,
++	IWL_FW_INI_ALLOCATION_NUM,
+ }; /* FW_DEBUG_TLV_ALLOCATION_ID_E_VER_1 */
  
- static void
- iwl_mvm_scan_set_legacy_probe_req(struct iwl_scan_probe_req_v1 *p_req,
--				  struct iwl_scan_probe_req src_p_req)
-+				  struct iwl_scan_probe_req *src_p_req)
+ /**
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+index 40b867f984cf..6d69ed17e7f8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+@@ -2503,7 +2503,7 @@ iwl_fw_dbg_buffer_allocation(struct iwl_fw_runtime *fwrt, u32 size)
+ }
+ 
+ static void iwl_fw_dbg_buffer_apply(struct iwl_fw_runtime *fwrt,
+-				    struct iwl_fw_ini_allocation_data *alloc,
++				    struct iwl_fw_ini_allocation_tlv *alloc,
+ 				    enum iwl_fw_ini_apply_point pnt)
  {
- 	int i;
+ 	struct iwl_trans *trans = fwrt->trans;
+@@ -2518,7 +2518,14 @@ static void iwl_fw_dbg_buffer_apply(struct iwl_fw_runtime *fwrt,
+ 		.len[0] = sizeof(ldbg_cmd),
+ 	};
+ 	int block_idx = trans->dbg.num_blocks;
+-	u32 buf_location = le32_to_cpu(alloc->tlv.buffer_location);
++	u32 buf_location = le32_to_cpu(alloc->buffer_location);
++	u32 alloc_id = le32_to_cpu(alloc->allocation_id);
++
++	if (alloc_id <= IWL_FW_INI_ALLOCATION_INVALID ||
++	    alloc_id >= IWL_FW_INI_ALLOCATION_NUM) {
++		IWL_ERR(fwrt, "WRT: Invalid allocation id %d\n", alloc_id);
++		return;
++	}
  
--	p_req->mac_header = src_p_req.mac_header;
-+	p_req->mac_header = src_p_req->mac_header;
- 	for (i = 0; i < SCAN_NUM_BAND_PROBE_DATA_V_1; i++)
--		p_req->band_data[i] = src_p_req.band_data[i];
--	p_req->common_data = src_p_req.common_data;
--	memcpy(p_req->buf, src_p_req.buf, SCAN_OFFLOAD_PROBE_REQ_SIZE);
-+		p_req->band_data[i] = src_p_req->band_data[i];
-+	p_req->common_data = src_p_req->common_data;
-+	memcpy(p_req->buf, src_p_req->buf, sizeof(p_req->buf));
- }
+ 	if (fwrt->trans->dbg.ini_dest == IWL_FW_INI_LOCATION_INVALID)
+ 		fwrt->trans->dbg.ini_dest = buf_location;
+@@ -2543,12 +2550,11 @@ static void iwl_fw_dbg_buffer_apply(struct iwl_fw_runtime *fwrt,
+ 	if (buf_location != IWL_FW_INI_LOCATION_DRAM_PATH)
+ 		return;
  
- static int iwl_mvm_scan_lmac(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
-@@ -1046,7 +1046,7 @@ static int iwl_mvm_scan_lmac(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 	iwl_mvm_lmac_scan_cfg_channels(mvm, params->channels,
- 				       params->n_channels, ssid_bitmap, cmd);
- 
--	iwl_mvm_scan_set_legacy_probe_req(preq, params->preq);
-+	iwl_mvm_scan_set_legacy_probe_req(preq, &params->preq);
- 
- 	return 0;
- }
-@@ -1592,7 +1592,8 @@ static int iwl_mvm_scan_umac(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 		direct_scan = tail_v2->direct_scan;
- 	} else {
- 		tail_v1 = (struct iwl_scan_req_umac_tail_v1 *)sec_part;
--		iwl_mvm_scan_set_legacy_probe_req(&tail_v1->preq, params->preq);
-+		iwl_mvm_scan_set_legacy_probe_req(&tail_v1->preq,
-+						  &params->preq);
- 		direct_scan = tail_v1->direct_scan;
+-	if (!alloc->is_alloc) {
+-		iwl_fw_dbg_buffer_allocation(fwrt,
+-					     le32_to_cpu(alloc->tlv.size));
++	if (!(BIT(alloc_id) & fwrt->trans->dbg.is_alloc)) {
++		iwl_fw_dbg_buffer_allocation(fwrt, le32_to_cpu(alloc->size));
+ 		if (block_idx == trans->dbg.num_blocks)
+ 			return;
+-		alloc->is_alloc = 1;
++		fwrt->trans->dbg.is_alloc |= BIT(alloc_id);
  	}
- 	iwl_scan_build_ssids(params, direct_scan, &ssid_bitmap);
+ 
+ 	/* First block is assigned via registers / context info */
+@@ -2561,9 +2567,9 @@ static void iwl_fw_dbg_buffer_apply(struct iwl_fw_runtime *fwrt,
+ 	cmd->num_frags = cpu_to_le32(1);
+ 	cmd->fragments[0].address =
+ 		cpu_to_le64(trans->dbg.fw_mon[block_idx].physical);
+-	cmd->fragments[0].size = alloc->tlv.size;
+-	cmd->allocation_id = alloc->tlv.allocation_id;
+-	cmd->buffer_location = alloc->tlv.buffer_location;
++	cmd->fragments[0].size = alloc->size;
++	cmd->allocation_id = alloc->allocation_id;
++	cmd->buffer_location = alloc->buffer_location;
+ 
+ 	iwl_trans_send_cmd(trans, &hcmd);
+ }
+@@ -2788,20 +2794,15 @@ static void _iwl_fw_dbg_apply_point(struct iwl_fw_runtime *fwrt,
+ 		case IWL_UCODE_TLV_TYPE_DEBUG_INFO:
+ 			iwl_fw_dbg_info_apply(fwrt, ini_tlv, ext, pnt);
+ 			break;
+-		case IWL_UCODE_TLV_TYPE_BUFFER_ALLOCATION: {
+-			struct iwl_fw_ini_allocation_data *buf_alloc = ini_tlv;
+-
++		case IWL_UCODE_TLV_TYPE_BUFFER_ALLOCATION:
+ 			if (pnt != IWL_FW_INI_APPLY_EARLY) {
+ 				IWL_ERR(fwrt,
+ 					"WRT: ext=%d. Invalid apply point %d for buffer allocation\n",
+ 					ext, pnt);
+ 				goto next;
+ 			}
+-
+ 			iwl_fw_dbg_buffer_apply(fwrt, ini_tlv, pnt);
+-			iter += sizeof(buf_alloc->is_alloc);
+ 			break;
+-		}
+ 		case IWL_UCODE_TLV_TYPE_HCMD:
+ 			if (pnt < IWL_FW_INI_APPLY_AFTER_ALIVE) {
+ 				IWL_ERR(fwrt,
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/img.h b/drivers/net/wireless/intel/iwlwifi/fw/img.h
+index 18ca5f152be6..039576d71276 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/img.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/img.h
+@@ -227,15 +227,6 @@ struct iwl_fw_dbg {
+ 	u32 dump_mask;
+ };
+ 
+-/**
+- * @tlv: the buffer allocation tlv
+- * @is_alloc: indicates if the buffer was already allocated
+- */
+-struct iwl_fw_ini_allocation_data {
+-	struct iwl_fw_ini_allocation_tlv tlv;
+-	u32 is_alloc;
+-} __packed;
+-
+ /**
+  * struct iwl_fw_ini_active_triggers
+  * @active: is this trigger active
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
+index 240e48b1d1c7..5948d769eed0 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
+@@ -85,14 +85,6 @@ void iwl_dbg_tlv_copy(struct iwl_trans *trans, struct iwl_ucode_tlv *tlv,
+ 	else
+ 		data = &trans->dbg.apply_points[apply_point];
+ 
+-	/* add room for is_alloc field in &iwl_fw_ini_allocation_data struct */
+-	if (le32_to_cpu(tlv->type) == IWL_UCODE_TLV_TYPE_BUFFER_ALLOCATION) {
+-		struct iwl_fw_ini_allocation_data *buf_alloc =
+-			(void *)tlv->data;
+-
+-		offset_size += sizeof(buf_alloc->is_alloc);
+-	}
+-
+ 	/*
+ 	 * Make sure we still have room to copy this TLV. Offset points to the
+ 	 * location the last copy ended.
+@@ -145,16 +137,6 @@ void iwl_dbg_tlv_alloc(struct iwl_trans *trans, size_t len, const u8 *data,
+ 		if (WARN_ON(apply >= IWL_FW_INI_APPLY_NUM))
+ 			continue;
+ 
+-		/* add room for is_alloc field in &iwl_fw_ini_allocation_data
+-		 * struct
+-		 */
+-		if (tlv_type == IWL_UCODE_TLV_TYPE_BUFFER_ALLOCATION) {
+-			struct iwl_fw_ini_allocation_data *buf_alloc =
+-				(void *)tlv->data;
+-
+-			size[apply] += sizeof(buf_alloc->is_alloc);
+-		}
+-
+ 		size[apply] += sizeof(*tlv) + tlv_len;
+ 	}
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index fce0112b3ad4..0fa4b100f109 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@ -695,6 +695,7 @@ struct iwl_self_init_dram {
+  * @ini_valid: indicates if debug ini mode is on
+  * @num_blocks: number of blocks in fw_mon
+  * @fw_mon: address of the buffers for firmware monitor
++ * @is_alloc: bit i is set if buffer i was allocated
+  * @hw_error: equals true if hw error interrupt was received from the FW
+  * @ini_dest: debug monitor destination uses &enum iwl_fw_ini_buffer_location
+  */
+@@ -717,7 +718,8 @@ struct iwl_trans_debug {
+ 	struct iwl_apply_point_data apply_points_ext[IWL_FW_INI_APPLY_NUM];
+ 
+ 	int num_blocks;
+-	struct iwl_dram_data fw_mon[IWL_FW_INI_APPLY_NUM];
++	struct iwl_dram_data fw_mon[IWL_FW_INI_ALLOCATION_NUM];
++	u32 is_alloc;
+ 
+ 	bool hw_error;
+ 	enum iwl_fw_ini_buffer_location ini_dest;
 -- 
 2.23.0.rc1
 
