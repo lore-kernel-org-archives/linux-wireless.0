@@ -6,108 +6,217 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35F62C3A5A0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E08A8C3A59E
 	for <linux-wireless@archiver.kernel.org>; Wed, 21 Aug 2019 13:38:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1347122DD3
+	by mail.kernel.org (Postfix) with ESMTP id B6D8522DD3
 	for <linux-wireless@archiver.kernel.org>; Wed, 21 Aug 2019 13:38:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728929AbfHUNiM (ORCPT
+        id S1729015AbfHUNiN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 21 Aug 2019 09:38:12 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:37758 "EHLO
+        Wed, 21 Aug 2019 09:38:13 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:37776 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728932AbfHUNiK (ORCPT
+        with ESMTP id S1727696AbfHUNiM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Aug 2019 09:38:10 -0400
+        Wed, 21 Aug 2019 09:38:12 -0400
 Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1i0QoS-0000lZ-HN; Wed, 21 Aug 2019 16:38:08 +0300
+        id 1i0QoU-0000lZ-0a; Wed, 21 Aug 2019 16:38:10 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Wed, 21 Aug 2019 16:37:46 +0300
-Message-Id: <20190821133800.23636-5-luca@coelho.fi>
+Date:   Wed, 21 Aug 2019 16:37:48 +0300
+Message-Id: <20190821133800.23636-7-luca@coelho.fi>
 X-Mailer: git-send-email 2.23.0.rc1
 In-Reply-To: <20190821133800.23636-1-luca@coelho.fi>
 References: <20190821133800.23636-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 04/18] iwlwifi: mvm: use FW thermal monitoring regardless of CONFIG_THERMAL
+Subject: [PATCH 06/18] iwlwifi: remove runtime_pm_mode
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-It doesn't make sense to use the FW thermal monitoring only if we
-have CONFIG_THERMAL, because then we use the default thresholds
-etc. which may be different from what the firmware implements, as
-we don't maintain them in the driver now. Only the CTDP code needs
-to actually be under CONFIG_THERMAL.
+This is always set to IWL_PLAT_PM_MODE_DISABLED
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c  | 5 +----
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h | 4 ----
- 2 files changed, 1 insertion(+), 8 deletions(-)
+ .../net/wireless/intel/iwlwifi/iwl-trans.h    | 33 +++----------------
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 28 ----------------
+ .../net/wireless/intel/iwlwifi/pcie/trans.c   |  9 -----
+ 3 files changed, 5 insertions(+), 65 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index bb2aec9c6738..411a79e15333 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -1273,7 +1273,6 @@ int iwl_mvm_up(struct iwl_mvm *mvm)
- 			goto error;
- 	}
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index 034c935b5579..b50290a724ff 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@ -630,9 +630,6 @@ enum iwl_trans_state {
+ /**
+  * DOC: Platform power management
+  *
+- * There are two types of platform power management: system-wide
+- * (WoWLAN) and runtime.
+- *
+  * In system-wide power management the entire platform goes into a low
+  * power state (e.g. idle or suspend to RAM) at the same time and the
+  * device is configured as a wakeup source for the entire platform.
+@@ -641,48 +638,32 @@ enum iwl_trans_state {
+  * put the platform in low power mode).  The device's behavior in this
+  * mode is dictated by the wake-on-WLAN configuration.
+  *
+- * In runtime power management, only the devices which are themselves
+- * idle enter a low power state.  This is done at runtime, which means
+- * that the entire system is still running normally.  This mode is
+- * usually triggered automatically by the device driver and requires
+- * the ability to enter and exit the low power modes in a very short
+- * time, so there is not much impact in usability.
+- *
+  * The terms used for the device's behavior are as follows:
+  *
+  *	- D0: the device is fully powered and the host is awake;
+  *	- D3: the device is in low power mode and only reacts to
+  *		specific events (e.g. magic-packet received or scan
+  *		results found);
+- *	- D0I3: the device is in low power mode and reacts to any
+- *		activity (e.g. RX);
+  *
+  * These terms reflect the power modes in the firmware and are not to
+- * be confused with the physical device power state.  The NIC can be
+- * in D0I3 mode even if, for instance, the PCI device is in D3 state.
++ * be confused with the physical device power state.
+  */
  
--#ifdef CONFIG_THERMAL
- 	if (iwl_mvm_is_tt_in_fw(mvm)) {
- 		/* in order to give the responsibility of ct-kill and
- 		 * TX backoff to FW we need to send empty temperature reporting
-@@ -1285,6 +1284,7 @@ int iwl_mvm_up(struct iwl_mvm *mvm)
- 		iwl_mvm_tt_tx_backoff(mvm, 0);
- 	}
+ /**
+  * enum iwl_plat_pm_mode - platform power management mode
+  *
+  * This enumeration describes the device's platform power management
+- * behavior when in idle mode (i.e. runtime power management) or when
+- * in system-wide suspend (i.e WoWLAN).
++ * behavior when in system-wide suspend (i.e WoWLAN).
+  *
+  * @IWL_PLAT_PM_MODE_DISABLED: power management is disabled for this
+- *	device.  At runtime, this means that nothing happens and the
+- *	device always remains in active.  In system-wide suspend mode,
+- *	it means that the all connections will be closed automatically
+- *	by mac80211 before the platform is suspended.
++ *	device.  In system-wide suspend mode, it means that the all
++ *	connections will be closed automatically by mac80211 before
++ *	the platform is suspended.
+  * @IWL_PLAT_PM_MODE_D3: the device goes into D3 mode (i.e. WoWLAN).
+- *	For runtime power management, this mode is not officially
+- *	supported.
+- * @IWL_PLAT_PM_MODE_D0I3: the device goes into D0I3 mode.
+  */
+ enum iwl_plat_pm_mode {
+ 	IWL_PLAT_PM_MODE_DISABLED,
+ 	IWL_PLAT_PM_MODE_D3,
+-	IWL_PLAT_PM_MODE_D0I3,
+ };
  
-+#ifdef CONFIG_THERMAL
- 	/* TODO: read the budget from BIOS / Platform NVM */
+ /* Max time to wait for trans to become idle/non-idle on d0i3
+@@ -795,9 +776,6 @@ struct iwl_trans_debug {
+  * @system_pm_mode: the system-wide power management mode in use.
+  *	This mode is set dynamically, depending on the WoWLAN values
+  *	configured from the userspace at runtime.
+- * @runtime_pm_mode: the runtime power management mode in use.  This
+- *	mode is set during the initialization phase and is not
+- *	supposed to change during runtime.
+  */
+ struct iwl_trans {
+ 	const struct iwl_trans_ops *ops;
+@@ -842,7 +820,6 @@ struct iwl_trans {
+ 	struct iwl_self_init_dram init_dram;
  
- 	/*
-@@ -1297,9 +1297,6 @@ int iwl_mvm_up(struct iwl_mvm *mvm)
- 		if (ret)
- 			goto error;
- 	}
--#else
--	/* Initialize tx backoffs to the minimal possible */
--	iwl_mvm_tt_tx_backoff(mvm, 0);
- #endif
+ 	enum iwl_plat_pm_mode system_pm_mode;
+-	enum iwl_plat_pm_mode runtime_pm_mode;
  
- 	if (!fw_has_capa(&mvm->fw->ucode_capa, IWL_UCODE_TLV_CAPA_SET_LTR_GEN2))
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 2aa9bfc5e113..3efcc3a939b8 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1422,7 +1422,6 @@ iwl_mvm_get_agg_status(struct iwl_mvm *mvm, void *tx_resp)
+ 	/* pointer to trans specific struct */
+ 	/*Ensure that this pointer will always be aligned to sizeof pointer */
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index 2a34f074d72c..10c9167d78fa 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -1076,25 +1076,6 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	/* register transport layer debugfs here */
+ 	iwl_trans_pcie_dbgfs_register(iwl_trans);
  
- static inline bool iwl_mvm_is_tt_in_fw(struct iwl_mvm *mvm)
+-	/* if RTPM is in use, enable it in our device */
+-	if (iwl_trans->runtime_pm_mode != IWL_PLAT_PM_MODE_DISABLED) {
+-		/* We explicitly set the device to active here to
+-		 * clear contingent errors.
+-		 */
+-		pm_runtime_set_active(&pdev->dev);
+-
+-		pm_runtime_set_autosuspend_delay(&pdev->dev,
+-					 iwlwifi_mod_params.d0i3_timeout);
+-		pm_runtime_use_autosuspend(&pdev->dev);
+-
+-		/* We are not supposed to call pm_runtime_allow() by
+-		 * ourselves, but let userspace enable runtime PM via
+-		 * sysfs.  However, since we don't enable this from
+-		 * userspace yet, we need to allow/forbid() ourselves.
+-		*/
+-		pm_runtime_allow(&pdev->dev);
+-	}
+-
+ 	/* The PCI device starts with a reference taken and we are
+ 	 * supposed to release it here.  But to simplify the
+ 	 * interaction with the opmode, we don't do it now, but let
+@@ -1112,15 +1093,6 @@ static void iwl_pci_remove(struct pci_dev *pdev)
  {
--#ifdef CONFIG_THERMAL
- 	/* these two TLV are redundant since the responsibility to CT-kill by
- 	 * FW happens only after we send at least one command of
- 	 * temperature THs report.
-@@ -1431,9 +1430,6 @@ static inline bool iwl_mvm_is_tt_in_fw(struct iwl_mvm *mvm)
- 			   IWL_UCODE_TLV_CAPA_CT_KILL_BY_FW) &&
- 	       fw_has_capa(&mvm->fw->ucode_capa,
- 			   IWL_UCODE_TLV_CAPA_TEMP_THS_REPORT_SUPPORT);
--#else /* CONFIG_THERMAL */
--	return false;
--#endif /* CONFIG_THERMAL */
+ 	struct iwl_trans *trans = pci_get_drvdata(pdev);
+ 
+-	/* if RTPM was in use, restore it to the state before probe */
+-	if (trans->runtime_pm_mode != IWL_PLAT_PM_MODE_DISABLED) {
+-		/* We should not call forbid here, but we do for now.
+-		 * Check the comment to pm_runtime_allow() in
+-		 * iwl_pci_probe().
+-		 */
+-		pm_runtime_forbid(trans->dev);
+-	}
+-
+ 	iwl_drv_stop(trans->drv);
+ 
+ 	iwl_trans_pcie_free(trans);
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index 3a4be2ff3d42..8eaacf423d33 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -3312,18 +3312,11 @@ static struct iwl_trans_dump_data
+ #ifdef CONFIG_PM_SLEEP
+ static int iwl_trans_pcie_suspend(struct iwl_trans *trans)
+ {
+-	if (trans->runtime_pm_mode == IWL_PLAT_PM_MODE_D0I3 &&
+-	    (trans->system_pm_mode == IWL_PLAT_PM_MODE_D0I3))
+-		return iwl_pci_fw_enter_d0i3(trans);
+-
+ 	return 0;
  }
  
- static inline bool iwl_mvm_is_ctdp_supported(struct iwl_mvm *mvm)
+ static void iwl_trans_pcie_resume(struct iwl_trans *trans)
+ {
+-	if (trans->runtime_pm_mode == IWL_PLAT_PM_MODE_D0I3 &&
+-	    (trans->system_pm_mode == IWL_PLAT_PM_MODE_D0I3))
+-		iwl_pci_fw_exit_d0i3(trans);
+ }
+ #endif /* CONFIG_PM_SLEEP */
+ 
+@@ -3660,8 +3653,6 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
+ 						   WQ_HIGHPRI | WQ_UNBOUND, 1);
+ 	INIT_WORK(&trans_pcie->rba.rx_alloc, iwl_pcie_rx_allocator_work);
+ 
+-	trans->runtime_pm_mode = IWL_PLAT_PM_MODE_DISABLED;
+-
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
+ 	trans_pcie->fw_mon_data.state = IWL_FW_MON_DBGFS_STATE_CLOSED;
+ 	mutex_init(&trans_pcie->fw_mon_data.mutex);
 -- 
 2.23.0.rc1
 
