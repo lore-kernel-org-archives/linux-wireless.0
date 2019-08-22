@@ -2,89 +2,70 @@ Return-Path: <SRS0=699K=WS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9636EC3A5A1
-	for <linux-wireless@archiver.kernel.org>; Thu, 22 Aug 2019 21:06:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D1865C3A5A1
+	for <linux-wireless@archiver.kernel.org>; Thu, 22 Aug 2019 22:00:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1902E2173E
-	for <linux-wireless@archiver.kernel.org>; Thu, 22 Aug 2019 21:06:50 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=miegl.cz header.i=@miegl.cz header.b="BdXAq/my"
+	by mail.kernel.org (Postfix) with ESMTP id 8961121655
+	for <linux-wireless@archiver.kernel.org>; Thu, 22 Aug 2019 22:00:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731184AbfHVVGt (ORCPT
+        id S2404548AbfHVWAa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 22 Aug 2019 17:06:49 -0400
-Received: from ocelot.miegl.cz ([195.201.216.236]:32972 "EHLO ocelot.miegl.cz"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729994AbfHVVGt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Aug 2019 17:06:49 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=miegl.cz; s=dkim;
-        t=1566508005; bh=oS+W+U0LENqjrKjT0VVEx1eyDvgQSHg/pCPsP97vWT4=;
-        h=Date:In-Reply-To:References:Subject:To:CC:From;
-        b=BdXAq/mydfr5k0AIt6vddfzFM8DoSoRJvqTi4mnU/7zga2GQ/siQvMkM1ANXjrkGL
-         rLi8Bak00lV3zbUsEONRvkuPLwV1aHJwrQWY0vXBQJEdTLsrwcQ2GMPTPYtaFpDkZ1
-         l0A/akgBz3CRWUYGt+//nZ7CdF794hYPNeXys/UmlnTN4lKF2DdohWwfcLMjY4XON/
-         YF3dLllF5PkioHnEBYBoKOaBpuajXjP1jH+Im6Bzndesm6n05SYHLabJojYkN/82EI
-         1TdJdu0hacGC1gwQBZovccn8GZwbLMbk5dBB6Airt1mGkdvusVzlSdLi6R8infEw3B
-         694zg424ZtMjw==
-Date:   Thu, 22 Aug 2019 23:06:41 +0200
-User-Agent: K-9 Mail for Android
-In-Reply-To: <0452a0cbb36bcffa8371a58dfd931864c1f79eef.camel@sipsolutions.net>
-References: <20190815152844.k5mmddvbwrohkzr6@pepin-laptop.localdomain> <3a079683-6f57-3b42-f909-90c46e14f14f@newmedia-net.de> <20190816111044.4ntizgmpa3twbzcg@pepin-laptop.localdomain> <e8129acb-fc32-c85c-b504-ab8777a3f1a3@newmedia-net.de> <20190816113818.ohktykc4fyetzyvq@pepin-laptop.localdomain> <9985fddfb059640f36665efc9c1ef2dc0bdb7662.camel@sipsolutions.net> <20190819113706.ujsz67sxcwt2ulmt@pepin-laptop.localdomain> <b3b7a99971f1512b4cd9c72920b699c252c1ae83.camel@sipsolutions.net> <A3C14EA9-BA2D-4745-BBB9-E10028B6DE13@miegl.cz> <6efb9b56c77cd9ea945f89c3371b49c301dc2b4e.camel@sipsolutions.net> <58A25955-2A17-4DE7-82FB-3B20E00C96EC@miegl.cz> <5ee160209eb1f9e70f6224c393389266280d7d80.camel@sipsolutions.net> (sfid-20190822_090033_537095_4B41631C) <0452a0cbb36bcffa8371a58dfd931864c1f79eef.camel@sipsolutions.net>
+        Thu, 22 Aug 2019 18:00:30 -0400
+Received: from youngberry.canonical.com ([91.189.89.112]:50197 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2404199AbfHVWAa (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 22 Aug 2019 18:00:30 -0400
+Received: from cpc129250-craw9-2-0-cust139.know.cable.virginm.net ([82.43.126.140] helo=localhost)
+        by youngberry.canonical.com with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+        (Exim 4.76)
+        (envelope-from <colin.king@canonical.com>)
+        id 1i0v85-0005ow-Si; Thu, 22 Aug 2019 22:00:25 +0000
+From:   Colin King <colin.king@canonical.com>
+To:     Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] ipw2x00: fix spelling mistake "initializationg" -> "initialization"
+Date:   Thu, 22 Aug 2019 23:00:25 +0100
+Message-Id: <20190822220025.5690-1-colin.king@canonical.com>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Subject: Re: Implementing Mikrotik IE
-To:     Johannes Berg <johannes@sipsolutions.net>
-CC:     Sebastian Gottschall <s.gottschall@newmedia-net.de>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-From:   Josef Miegl <josef@miegl.cz>
-Message-ID: <68A3B9AF-8864-4C0F-A50B-71CCB76AE81D@miegl.cz>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On August 22, 2019 10:08:13 PM GMT+02:00, Johannes Berg <johannes@sipsoluti=
-ons=2Enet> wrote:
->On Thu, 2019-08-22 at 09:00 +0200, Johannes Berg wrote:
->>=20
->> Perhaps it expects the 4-way-HS to already be in 4-addr frame format,
->or
->> something else special in the 4-way-HS if you have WDS?
->
->I think this is actually the right guess=2E
+From: Colin Ian King <colin.king@canonical.com>
 
-Yes, it indeed it! Thank you so much Johannes!
+There is a spelling mistake in an IPW_DEBUG_INFO message. Fix it.
 
->As a hack, you could do
->
->--- a/net/mac80211/tx=2Ec
->+++ b/net/mac80211/tx=2Ec
->@@ -2623,8 +2623,7 @@ static struct sk_buff *ieee80211_build_hdr(struct
->ieee80211_sub_if_data *sdata,
->                     memcpy(hdr=2Eaddr2, skb->data + ETH_ALEN, ETH_ALEN);
->                       memcpy(hdr=2Eaddr3, sdata->u=2Emgd=2Ebssid, ETH_AL=
-EN);
->                        hdrlen =3D 24;
->-               }  else if (sdata->u=2Emgd=2Euse_4addr &&
->-                           cpu_to_be16(ethertype) !=3D
->sdata->control_port_protocol) {
->+               }  else if (sdata->u=2Emgd=2Euse_4addr) {
->                        fc |=3D cpu_to_le16(IEEE80211_FCTL_FROMDS |
->                                          IEEE80211_FCTL_TODS);
->                        /* RA TA DA SA */
->
->
->in mac80211, then it should send 4-addr frames even for EAPOL=2E
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/net/wireless/intel/ipw2x00/ipw2200.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Works great=2E Is there a possibility that a toggle for this could be acce=
-pted upstream? After all, WDS isn't really standardized=2E
+diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2200.c b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
+index fa55d2ccbfab..ed0f06532d5e 100644
+--- a/drivers/net/wireless/intel/ipw2x00/ipw2200.c
++++ b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
+@@ -2721,7 +2721,7 @@ static void ipw_eeprom_init_sram(struct ipw_priv *priv)
+ 		/* Do not load eeprom data on fatal error or suspend */
+ 		ipw_write32(priv, IPW_EEPROM_LOAD_DISABLE, 0);
+ 	} else {
+-		IPW_DEBUG_INFO("Enabling FW initializationg of SRAM\n");
++		IPW_DEBUG_INFO("Enabling FW initialization of SRAM\n");
+ 
+ 		/* Load eeprom data on fatal error or suspend */
+ 		ipw_write32(priv, IPW_EEPROM_LOAD_DISABLE, 1);
+-- 
+2.20.1
 
-Thank you!
-
-Josef
