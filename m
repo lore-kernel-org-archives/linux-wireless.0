@@ -2,74 +2,105 @@ Return-Path: <SRS0=699K=WS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FA84C3A5A2
-	for <linux-wireless@archiver.kernel.org>; Thu, 22 Aug 2019 12:20:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 540EDC3A5A1
+	for <linux-wireless@archiver.kernel.org>; Thu, 22 Aug 2019 12:38:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7ECF02089E
-	for <linux-wireless@archiver.kernel.org>; Thu, 22 Aug 2019 12:20:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 34E2421726
+	for <linux-wireless@archiver.kernel.org>; Thu, 22 Aug 2019 12:38:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388066AbfHVMUj (ORCPT
+        id S1731974AbfHVMiD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 22 Aug 2019 08:20:39 -0400
-Received: from youngberry.canonical.com ([91.189.89.112]:34283 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728952AbfHVMUi (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Aug 2019 08:20:38 -0400
-Received: from 1.general.cking.uk.vpn ([10.172.193.212] helo=localhost)
-        by youngberry.canonical.com with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
-        (Exim 4.76)
-        (envelope-from <colin.king@canonical.com>)
-        id 1i0m4x-00083J-2M; Thu, 22 Aug 2019 12:20:35 +0000
-From:   Colin King <colin.king@canonical.com>
-To:     Felix Fietkau <nbd@nbd.name>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        "David S . Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH][next] mac80211: minstrel_ht: fix infinite loop because supported is not being shifted
-Date:   Thu, 22 Aug 2019 13:20:34 +0100
-Message-Id: <20190822122034.28664-1-colin.king@canonical.com>
-X-Mailer: git-send-email 2.20.1
+        Thu, 22 Aug 2019 08:38:03 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:32890 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729052AbfHVMiD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 22 Aug 2019 08:38:03 -0400
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id DC3D510C6966;
+        Thu, 22 Aug 2019 12:38:02 +0000 (UTC)
+Received: from localhost (ovpn-204-38.brq.redhat.com [10.40.204.38])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 8E5B75D6A7;
+        Thu, 22 Aug 2019 12:37:59 +0000 (UTC)
+Date:   Thu, 22 Aug 2019 14:37:58 +0200
+From:   Stanislaw Gruszka <sgruszka@redhat.com>
+To:     Lorenzo Bianconi <lorenzo@kernel.org>
+Cc:     nbd@nbd.name, lorenzo.bianconi@redhat.com,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mt76: remove empty flag in mt76_txq_schedule_list
+Message-ID: <20190822123757.GA28300@redhat.com>
+References: <fb24ac317768ec71d16354ef6cd2a9c10931c75d.1566466668.git.lorenzo@kernel.org>
+ <20190822103629.GA2368@redhat.com>
+ <20190822115052.GC3350@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190822115052.GC3350@localhost.localdomain>
+User-Agent: Mutt/1.11.3 (2019-02-01)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.6.2 (mx1.redhat.com [10.5.110.65]); Thu, 22 Aug 2019 12:38:03 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+On Thu, Aug 22, 2019 at 01:50:52PM +0200, Lorenzo Bianconi wrote:
+> > On Thu, Aug 22, 2019 at 11:49:10AM +0200, Lorenzo Bianconi wrote:
+> > > Remove empty flag in mt76_txq_schedule_list and mt76_txq_send_burst
+> > > since we just need retry_q length to notify mac80211 to reschedule the
+> > > current tx queue
+> > > 
+> > > Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+> > > ---
+> > >  drivers/net/wireless/mediatek/mt76/tx.c | 23 +++++++----------------
+> > >  1 file changed, 7 insertions(+), 16 deletions(-)
+> > > 
+> > > diff --git a/drivers/net/wireless/mediatek/mt76/tx.c b/drivers/net/wireless/mediatek/mt76/tx.c
+> > > index d7982aa83c11..51d69329ed06 100644
+> > > --- a/drivers/net/wireless/mediatek/mt76/tx.c
+> > > +++ b/drivers/net/wireless/mediatek/mt76/tx.c
+> > > @@ -378,7 +378,7 @@ EXPORT_SYMBOL_GPL(mt76_release_buffered_frames);
+> > >  
+> > >  static int
+> > >  mt76_txq_send_burst(struct mt76_dev *dev, struct mt76_sw_queue *sq,
+> > > -		    struct mt76_txq *mtxq, bool *empty)
+> > > +		    struct mt76_txq *mtxq)
+> > >  {
+> > >  	struct ieee80211_txq *txq = mtxq_to_txq(mtxq);
+> > >  	enum mt76_txq_id qid = mt76_txq_get_qid(txq);
+> > > @@ -392,16 +392,12 @@ mt76_txq_send_burst(struct mt76_dev *dev, struct mt76_sw_queue *sq,
+> > >  	bool probe;
+> > >  	int idx;
+> > >  
+> > > -	if (test_bit(MT_WCID_FLAG_PS, &wcid->flags)) {
+> > > -		*empty = true;
+> > > +	if (test_bit(MT_WCID_FLAG_PS, &wcid->flags))
+> > >  		return 0;
+> > 
+> > This changes behaviour for station in PS state. If retry_q is not
+> > empty, now we will be rescheduling tx queue for STA in PS mode.
+> > Not sure if this is problem or not, though.
+> 
+> good point..looking at the code it seems not a issue since we will not actually
+> tx frames for PS stations. What do you think?
 
-Currently the for-loop will spin forever if variable supported is
-non-zero because supported is never changed.  Fix this by adding in
-the missing right shift of supported.
+I do not see how changing this could possibly break things, but it 
+was explicitly added by below commit, with changelog sugesting it is
+needed:
 
-Addresses-Coverity: ("Infinite loop")
-Fixes: 48cb39522a9d ("mac80211: minstrel_ht: improve rate probing for devices with static fallback")
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- net/mac80211/rc80211_minstrel_ht.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+commit d225581df3147060bc99e931b11f7cf2dcb1b2ca
+Author: Felix Fietkau <nbd@nbd.name>
+Date:   Mon Jan 21 17:33:38 2019 +0100
 
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index a01168514840..0ef2633349b5 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -634,7 +634,7 @@ minstrel_ht_rate_sample_switch(struct minstrel_priv *mp,
- 		u16 supported = mi->supported[g_idx];
- 
- 		supported >>= mi->max_tp_rate[0] % MCS_GROUP_RATES;
--		for (i = 0; supported; i++) {
-+		for (i = 0; supported; supported >>= 1, i++) {
- 			if (!(supported & 1))
- 				continue;
- 
--- 
-2.20.1
+    mt76: avoid scheduling tx queues for powersave stations
+    
+    In case a tx queue wake call arrives after a client has transitioned to
+    powersave, make sure that the queue is not kept active until the client
+    has left powersave mode
 
+Stanislaw
