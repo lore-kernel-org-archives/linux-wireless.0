@@ -3,67 +3,62 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74343C3A589
-	for <linux-wireless@archiver.kernel.org>; Fri, 23 Aug 2019 05:17:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BFD46C3A589
+	for <linux-wireless@archiver.kernel.org>; Fri, 23 Aug 2019 05:23:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5047D22CF7
-	for <linux-wireless@archiver.kernel.org>; Fri, 23 Aug 2019 05:17:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9983322CEC
+	for <linux-wireless@archiver.kernel.org>; Fri, 23 Aug 2019 05:23:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391945AbfHWFRm (ORCPT
+        id S2392037AbfHWFXt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 23 Aug 2019 01:17:42 -0400
-Received: from mga17.intel.com ([192.55.52.151]:38604 "EHLO mga17.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2391807AbfHWFRm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Aug 2019 01:17:42 -0400
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 22 Aug 2019 22:17:42 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.64,420,1559545200"; 
-   d="scan'208";a="186777188"
-Received: from pkacprow-mobl.ger.corp.intel.com ([10.252.30.96])
-  by FMSMGA003.fm.intel.com with ESMTP; 22 Aug 2019 22:17:40 -0700
-Message-ID: <84a882c0bd2954c21735005534abb5568b2fc806.camel@intel.com>
-Subject: Re: [PATCH] iwlwifi: mvm: fix old-style declaration
-From:   Luciano Coelho <luciano.coelho@intel.com>
-To:     YueHaibing <yuehaibing@huawei.com>, johannes.berg@intel.com,
-        emmanuel.grumbach@intel.com, linuxwifi@intel.com,
-        kvalo@codeaurora.org, sara.sharon@intel.com
-Cc:     linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Date:   Fri, 23 Aug 2019 08:17:39 +0300
-In-Reply-To: <20190726141838.19424-1-yuehaibing@huawei.com>
-References: <20190726141838.19424-1-yuehaibing@huawei.com>
-Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
+        Fri, 23 Aug 2019 01:23:49 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:38256 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S2392030AbfHWFXs (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 23 Aug 2019 01:23:48 -0400
+Received: from [91.156.6.193] (helo=redipa)
+        by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.92)
+        (envelope-from <luca@coelho.fi>)
+        id 1i1238-0003kO-KB; Fri, 23 Aug 2019 08:23:47 +0300
+Message-ID: <d14184a6deb19637864fa7734354f64f387bf24d.camel@coelho.fi>
+From:   Luca Coelho <luca@coelho.fi>
+To:     Wang Xuerui <wangxuerui@qiniu.com>, linux-wireless@vger.kernel.org
+Date:   Fri, 23 Aug 2019 08:23:45 +0300
+In-Reply-To: <20190223083543.6009-2-wangxuerui@qiniu.com>
+References: <20190218150952.6889-1-wangxuerui@qiniu.com>
+         <20190223083543.6009-1-wangxuerui@qiniu.com>
+         <20190223083543.6009-2-wangxuerui@qiniu.com>
 Content-Type: text/plain; charset="UTF-8"
 User-Agent: Evolution 3.30.5-1.1 
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH] iwlwifi: mvm: fix unaligned read of rx_pkt_status
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, 2019-07-26 at 22:18 +0800, YueHaibing wrote:
-> There expect the 'static' keyword to come first in a
-> declaration, and we get a warning for this with "make W=1":
+On Sat, 2019-02-23 at 16:35 +0800, Wang Xuerui wrote:
+> This is present since the introduction of iwlmvm.
+> Example stack trace on MIPS:
 > 
-> drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c:427:1: warning:
->  'static' is not at beginning of declaration [-Wold-style-declaration]
-> drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c:434:1: warning:
->  'static' is not at beginning of declaration [-Wold-style-declaration]
+> [<ffffffffc0789328>] iwl_mvm_rx_rx_mpdu+0xa8/0xb88 [iwlmvm]
+> [<ffffffffc0632b40>] iwl_pcie_rx_handle+0x420/0xc48 [iwlwifi]
 > 
-> Reported-by: Hulk Robot <hulkci@huawei.com>
-> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+> Tested with a Wireless AC 7265 for ~6 months, confirmed to fix the
+> problem. No other unaligned accesses are spotted yet.
+> 
+> Signed-off-by: Wang Xuerui <wangxuerui@qiniu.com>
+> Tested-by: Wang Xuerui <wangxuerui@qiniu.com>
 > ---
 
-Thanks! Johannes applied this in our internal tree a few weeks ago and
-it will reach the mainline following our usual upstreaming process.
+Thanks! I have applied this to our internal tree and it will reach the
+mainline following our normal upstreaming process.
 
 --
 Cheers,
