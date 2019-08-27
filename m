@@ -1,69 +1,70 @@
-Return-Path: <SRS0=sgm+=WW=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=iaJH=WX=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D67CDC3A59F
-	for <linux-wireless@archiver.kernel.org>; Mon, 26 Aug 2019 22:03:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 90468C3A59F
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Aug 2019 00:34:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A4EB82184D
-	for <linux-wireless@archiver.kernel.org>; Mon, 26 Aug 2019 22:03:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 68127206BB
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Aug 2019 00:34:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BFt15WFH"
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="TbRrANRI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726278AbfHZWDv (ORCPT
+        id S1728436AbfH0Aeg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 26 Aug 2019 18:03:51 -0400
-Received: from mail-ot1-f67.google.com ([209.85.210.67]:35099 "EHLO
-        mail-ot1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726160AbfHZWDv (ORCPT
+        Mon, 26 Aug 2019 20:34:36 -0400
+Received: from mail-pf1-f195.google.com ([209.85.210.195]:39388 "EHLO
+        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726596AbfH0Aef (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Aug 2019 18:03:51 -0400
-Received: by mail-ot1-f67.google.com with SMTP id 100so5960169otn.2
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Aug 2019 15:03:50 -0700 (PDT)
+        Mon, 26 Aug 2019 20:34:35 -0400
+Received: by mail-pf1-f195.google.com with SMTP id y200so5218881pfb.6
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Aug 2019 17:34:35 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:from:to:cc:subject:date:message-id:mime-version
+        d=chromium.org; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=T0xz6rcUxyAdoL/mjFWr2brmUZM3SJQbaxYdb5VrHZI=;
-        b=BFt15WFH2k8PelGM2usufNXLI4eHgCjBcMCJV34ynVx4DSt/KpOArDQUNGKOrw7Qop
-         SX7BS2fubaVpsibTEOxoMEZO4+57TkFakp08tEmAbqCPFFB2CSuFfyzvyehr73nft1AU
-         uYbll33j67/2s1SCDlkDxpQlDwOWSS2MjO5k6UQgtw/mWntlehoyp3wrhbxwj8IwSwoU
-         FFySbPhisVOpT3ESTXmEX6gnALZON5D3IjWzHmPdJDdleE+53ZQx4G5mEJOTWxR3jnn3
-         cBgPALRtxLEkqru7FRPgC1S+0JI2TRqYVPogGArqHf4/CQnMdcdi2zeL9+b81nIe7hI6
-         AcsQ==
+        bh=3Vs+TQr7hHy2v8MzMkCOjJVcnNTmLTAgeFS/JpBulfo=;
+        b=TbRrANRIH92j2fSmCx5BdSbQOzmBU/XbqoZ7xd1Ww6AaUEz68WzvbdIanurUAl4uCi
+         TY5ohivdtzQn+XaVmJg6fPUKxrj24BAg74pSnwI7DkAuOrdvMiXXCrTy2hSlOyRnUj+6
+         wtSltIyQcEmY1aect58Y183r1a351O76l3nNE=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:from:to:cc:subject:date:message-id
-         :mime-version:content-transfer-encoding;
-        bh=T0xz6rcUxyAdoL/mjFWr2brmUZM3SJQbaxYdb5VrHZI=;
-        b=hdBmh1M4UE8eqsgFKDKpnCWjnqnvLj79iLsBEKwkP0NwOMOJ7lU3BJFjx9vdbvqolG
-         AtC/UqSwLZ2OHy9epQMn/Jsfcftb1x8D0Z0EQ5rpuEUP0g51BqzxyysZnEGb3TwYO9Nx
-         BKP8zYRZoIPWsNcotZiYlHiXmx+oJ889PBq7fk9HtVOz09TPOLZoQ0sz6PdAO28N9nos
-         6bA1T6KyUKl+PDo2iN33L6VkToyQLVdDB/0UAd/CP/vkD1CneGbAXQDulYuIJ0bVRkr6
-         MqR+ZRIZps5EfCkt1OUZG3/i0IAn8ECB96I+4OE99ATtbMN9kFiQCz5t5zW1nL5pgyKG
-         1Sow==
-X-Gm-Message-State: APjAAAV28VwEkmxqFAULfW2uPckAwKs+enhouxCFEbEQr2ytfFcjwn1P
-        K/3d8B2YwidNBf+IzvhRT6o=
-X-Google-Smtp-Source: APXvYqynw9aQIphSgSKwGJ+pJl0Y976XTPPx0m+C65QqNDSpo1kQeABvHHTm0tvrQQGLc6c28rin/A==
-X-Received: by 2002:a9d:1288:: with SMTP id g8mr1865478otg.306.1566857030313;
-        Mon, 26 Aug 2019 15:03:50 -0700 (PDT)
-Received: from localhost.localdomain (cpe-24-31-245-230.kc.res.rr.com. [24.31.245.230])
-        by smtp.gmail.com with ESMTPSA id n19sm3709926oic.46.2019.08.26.15.03.48
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=3Vs+TQr7hHy2v8MzMkCOjJVcnNTmLTAgeFS/JpBulfo=;
+        b=Q3MvVMnChfayL2QvSal+QIyXjy8UxzmnzAeITMuMTXLraX9p0YQ4Gkk11xBX0yBDxb
+         qBsBeZ98Q1OhaO83kS0GysIA6mqHMgt01pzrf2ihX/OjRIIGlbJp64ZlH9WkkQYMzYBn
+         jEvjNjrgigF+ck7krCf4bWz7K2WEnA7CSjGKvsWd1nKugvKmwVvdSoSpQKH2CuiVjo9n
+         5UumhLmyengNn7nzXzPoJtoXVNvortKBleXWv+foMB4eqAkVbWEx3cZkF00CFuN9nFvf
+         MaHA0x+5PyunZvk/lZGcpf0HbZu7fyU3ixtPnqvX69eXjOoTb8gq8V/W5u1ZME2ZTmCV
+         wvJA==
+X-Gm-Message-State: APjAAAUNLo4po2Pv37ds/VdPfeQ9tRYde19OS6SEZ3NNlgmTSmbuNT26
+        LyKRqI1Fdg/Q2uz32KymswOeWg==
+X-Google-Smtp-Source: APXvYqyXHySgZZYqvzNM28Yd+pRvNdNbnVHxIZpOA4FgrKCaNtwMUDuAlL2eCKLsx6jrUwC8C3dTJQ==
+X-Received: by 2002:a05:6a00:8e:: with SMTP id c14mr22563388pfj.241.1566866074901;
+        Mon, 26 Aug 2019 17:34:34 -0700 (PDT)
+Received: from drinkcat2.tpe.corp.google.com ([2401:fa00:1:b:d8b7:33af:adcb:b648])
+        by smtp.gmail.com with ESMTPSA id a23sm9081429pfc.71.2019.08.26.17.34.32
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 26 Aug 2019 15:03:49 -0700 (PDT)
-From:   Larry Finger <Larry.Finger@lwfinger.net>
-To:     kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org, pkshih@realtek.com,
-        Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH v2] rtlwifi: rtl_pci: Fix memory leak when hardware init fails
-Date:   Mon, 26 Aug 2019 17:03:44 -0500
-Message-Id: <20190826220344.7084-1-Larry.Finger@lwfinger.net>
-X-Mailer: git-send-email 2.22.1
+        Mon, 26 Aug 2019 17:34:34 -0700 (PDT)
+From:   Nicolas Boichat <drinkcat@chromium.org>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     "David S . Miller" <davem@davemloft.net>,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        wgong@codeaurora.org, Niklas Cassel <niklas.cassel@linaro.org>,
+        Alagu Sankar <alagusankar@silex-india.com>,
+        briannorris@chromium.org, tientzu@chromium.org
+Subject: [PATCH,RFC] ath10k: Fix skb->len (properly) in ath10k_sdio_mbox_rx_packet
+Date:   Tue, 27 Aug 2019 08:33:26 +0800
+Message-Id: <20190827003326.147452-1-drinkcat@chromium.org>
+X-Mailer: git-send-email 2.23.0.187.g17f5b7556c-goog
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -71,38 +72,90 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-If the call to hw_init() fails for any of the drivers, the driver will
-leak memory that was allocated in BT coexistence setup. Technically, each
-of the drivers should have done this free; however placing it in rtl_pci
-fixes all the drivers with only a single patch.
+(not a formal patch, take this as a bug report for now, I can clean
+up depending on the feedback I get here)
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+There's at least 3 issues here, and the patch fixes 2/3 only, I'm not sure
+how/if 1 should be handled.
+ 1. ath10k_sdio_mbox_rx_alloc allocating skb of a incorrect size (too
+    small)
+ 2. ath10k_sdio_mbox_rx_packet calling skb_put with that incorrect size.
+ 3. ath10k_sdio_mbox_rx_process_packet attempts to fixup the size, but
+    does not use proper skb_put commands to do so, so we end up with
+    a mismatch between skb->head + skb->tail and skb->data + skb->len.
+
+Let's start with 3, this is quite serious as this and causes corruptions
+in the TCP stack, as the stack tries to coalesce packets, and relies on
+skb->tail being correct (that is, skb_tail_pointer must point to the
+first byte _after_ the data): one must never manipulate skb->len
+directly.
+
+Instead, we need to use skb_put to allocate more space (which updates
+skb->len and skb->tail). But it seems odd to do that in
+ath10k_sdio_mbox_rx_process_packet, so I move the code to
+ath10k_sdio_mbox_rx_packet (point 2 above).
+
+However, there is still something strange (point 1 above), why is
+ath10k_sdio_mbox_rx_alloc allocating packets of the incorrect
+(too small?) size? What happens if the packet is bigger than alloc_len?
+Does this lead to corruption/lost data?
+
+Fixes: 8530b4e7b22bc3b ("ath10k: sdio: set skb len for all rx packets")
+Signed-off-by: Nicolas Boichat <drinkcat@chromium.org>
+
 ---
-v2 - Fix typo in subject line
----
-Kalle,
 
-This bug has been present in the driver since it was added to the
-kernel, there is no particular rush in applying it.
+One simple way to test this is this scriplet, that sends a lot of
+small packets over SSH:
+(for i in `seq 1 300`; do echo $i; sleep 0.1; done) | ssh $IP cat
 
-Larry
----
- drivers/net/wireless/realtek/rtlwifi/pci.c | 2 ++
- 1 file changed, 2 insertions(+)
+In my testing it rarely ever reach 300 without failure.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c b/drivers/net/wireless/realtek/rtlwifi/pci.c
-index 4055e0ab75ba..c275fc932adb 100644
---- a/drivers/net/wireless/realtek/rtlwifi/pci.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
-@@ -1793,6 +1793,8 @@ static int rtl_pci_start(struct ieee80211_hw *hw)
- 	if (err) {
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
- 			 "Failed to config hardware!\n");
-+		kfree(rtlpriv->btcoexist.btc_context);
-+		kfree(rtlpriv->btcoexist.wifi_only_context);
- 		return err;
- 	}
- 	rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_RETRY_LIMIT,
+ drivers/net/wireless/ath/ath10k/sdio.c | 18 ++++++++++++------
+ 1 file changed, 12 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
+index 8ed4fbd8d6c3888..a9f5002863ee7bb 100644
+--- a/drivers/net/wireless/ath/ath10k/sdio.c
++++ b/drivers/net/wireless/ath/ath10k/sdio.c
+@@ -381,16 +381,14 @@ static int ath10k_sdio_mbox_rx_process_packet(struct ath10k *ar,
+ 	struct ath10k_htc_hdr *htc_hdr = (struct ath10k_htc_hdr *)skb->data;
+ 	bool trailer_present = htc_hdr->flags & ATH10K_HTC_FLAG_TRAILER_PRESENT;
+ 	enum ath10k_htc_ep_id eid;
+-	u16 payload_len;
+ 	u8 *trailer;
+ 	int ret;
+ 
+-	payload_len = le16_to_cpu(htc_hdr->len);
+-	skb->len = payload_len + sizeof(struct ath10k_htc_hdr);
++	/* TODO: Remove this? */
++	WARN_ON(skb->len != le16_to_cpu(htc_hdr->len) + sizeof(*htc_hdr));
+ 
+ 	if (trailer_present) {
+-		trailer = skb->data + sizeof(*htc_hdr) +
+-			  payload_len - htc_hdr->trailer_len;
++		trailer = skb->data + skb->len - htc_hdr->trailer_len;
+ 
+ 		eid = pipe_id_to_eid(htc_hdr->eid);
+ 
+@@ -637,8 +635,16 @@ static int ath10k_sdio_mbox_rx_packet(struct ath10k *ar,
+ 	ret = ath10k_sdio_readsb(ar, ar_sdio->mbox_info.htc_addr,
+ 				 skb->data, pkt->alloc_len);
+ 	pkt->status = ret;
+-	if (!ret)
++	if (!ret) {
++		/* Update actual length. */
++		/* FIXME: This looks quite wrong, why is pkt->act_len not
++		 * correct in the first place?
++		 */
++		struct ath10k_htc_hdr *htc_hdr =
++			(struct ath10k_htc_hdr *)skb->data;
++		pkt->act_len = le16_to_cpu(htc_hdr->len) + sizeof(*htc_hdr);
+ 		skb_put(skb, pkt->act_len);
++	}
+ 
+ 	return ret;
+ }
 -- 
-2.22.1
+2.23.0.187.g17f5b7556c-goog
 
