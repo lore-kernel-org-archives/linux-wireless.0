@@ -2,157 +2,198 @@ Return-Path: <SRS0=iaJH=WX=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8C20C3A5A3
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Aug 2019 08:10:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50CE9C3A5A3
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Aug 2019 08:13:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9DE2B217F5
-	for <linux-wireless@archiver.kernel.org>; Tue, 27 Aug 2019 08:10:06 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=qti.qualcomm.com header.i=@qti.qualcomm.com header.b="aJ0Q+q6A"
+	by mail.kernel.org (Postfix) with ESMTP id 330FB206BF
+	for <linux-wireless@archiver.kernel.org>; Tue, 27 Aug 2019 08:13:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731268AbfH0IKF (ORCPT
+        id S1731024AbfH0H6d (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 27 Aug 2019 04:10:05 -0400
-Received: from alexa-out-tai-01.qualcomm.com ([103.229.16.226]:23038 "EHLO
-        alexa-out-tai-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1731391AbfH0IDB (ORCPT
+        Tue, 27 Aug 2019 03:58:33 -0400
+Received: from youngberry.canonical.com ([91.189.89.112]:54991 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731007AbfH0H63 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Aug 2019 04:03:01 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=qti.qualcomm.com; i=@qti.qualcomm.com; q=dns/txt;
-  s=qcdkim; t=1566892980; x=1598428980;
-  h=from:to:cc:date:message-id:references:in-reply-to:
-   content-transfer-encoding:mime-version:subject;
-  bh=4ojrGrL0wESrTRr+PXXy9IAigPfb8/ZmH00rWyuv4dg=;
-  b=aJ0Q+q6AUF4NP+2HQAjCqvvIQu2Q1No2SGOwYGzl1iA7U+BPAkure1zc
-   oEIRiiRcqO5vXnIsWwNvQAfF0uzcTlaVE7P4Kb6Sc0pn5c0t//mRtx4cx
-   dOmUp2kfAN/Q6RKjYlJ/dPnWqCU+z7I7vk1ul5MvdN/ZyAQgwAKAewdRQ
-   c=;
-Subject: RE: [PATCH 1/7] ath10k: enable RX bundle receive for sdio
-Thread-Topic: [PATCH 1/7] ath10k: enable RX bundle receive for sdio
-Received: from ironmsg03-tai.qualcomm.com ([10.249.140.8])
-  by alexa-out-tai-01.qualcomm.com with ESMTP; 27 Aug 2019 16:02:58 +0800
-Received: from aptaiexm02e.ap.qualcomm.com ([10.249.150.15])
-  by ironmsg03-tai.qualcomm.com with ESMTP/TLS/AES256-SHA; 27 Aug 2019 16:02:54 +0800
-Received: from aptaiexm02f.ap.qualcomm.com (10.249.150.16) by
- aptaiexm02e.ap.qualcomm.com (10.249.150.15) with Microsoft SMTP Server (TLS)
- id 15.0.1473.3; Tue, 27 Aug 2019 16:02:52 +0800
-Received: from aptaiexm02f.ap.qualcomm.com ([fe80::4152:1436:e436:faa1]) by
- aptaiexm02f.ap.qualcomm.com ([fe80::4152:1436:e436:faa1%19]) with mapi id
- 15.00.1473.005; Tue, 27 Aug 2019 16:02:52 +0800
-From:   Wen Gong <wgong@qti.qualcomm.com>
-To:     Nicolas Boichat <drinkcat@chromium.org>,
-        Wen Gong <wgong@codeaurora.org>
-CC:     "open list:NETWORKING DRIVERS (WIRELESS)" 
-        <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Thread-Index: AQHVXKrOUvYo32uqIkuIjmEPEapo6qcOngKQ
-Date:   Tue, 27 Aug 2019 08:02:52 +0000
-Message-ID: <2ec213d88ebb4b89812826866b39886d@aptaiexm02f.ap.qualcomm.com>
-References: <1566302108-18219-1-git-send-email-wgong@codeaurora.org>
- <1566302108-18219-2-git-send-email-wgong@codeaurora.org>
- <CANMq1KBR0nd+XOJWpgWyoJdsFgZByQyjD-0dpttygiN0OfiD5Q@mail.gmail.com>
-In-Reply-To: <CANMq1KBR0nd+XOJWpgWyoJdsFgZByQyjD-0dpttygiN0OfiD5Q@mail.gmail.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-ms-exchange-transport-fromentityheader: Hosted
-x-originating-ip: [10.249.136.10]
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        Tue, 27 Aug 2019 03:58:29 -0400
+Received: from cpc129250-craw9-2-0-cust139.know.cable.virginm.net ([82.43.126.140] helo=[192.168.0.11])
+        by youngberry.canonical.com with esmtpsa (TLS1.0:RSA_AES_128_CBC_SHA1:16)
+        (Exim 4.76)
+        (envelope-from <colin.king@canonical.com>)
+        id 1i2WN1-0001L3-Bk; Tue, 27 Aug 2019 07:58:27 +0000
+To:     Larry Finger <Larry.Finger@lwfinger.net>,
+        Hauke Mehrtens <hauke@hauke-m.de>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        linux-wireless@vger.kernel.org
+Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20190822133524.6274-1-colin.king@canonical.com>
+ <d3c16158-ef89-f5ee-2f67-4357c70e8fe9@lwfinger.net>
+ <31258833-174f-080b-489e-85d3556bd1de@canonical.com>
+ <f1aa1f6f-d293-c2cd-d1fc-a6b10d49a1bb@lwfinger.net>
+From:   Colin Ian King <colin.king@canonical.com>
+Openpgp: preference=signencrypt
+Autocrypt: addr=colin.king@canonical.com; prefer-encrypt=mutual; keydata=
+ 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
+Subject: Re: [PATCH] bcma: fix incorrect update of BCMA_CORE_PCI_MDIO_DATA
+Message-ID: <a29bf743-f913-c129-8789-0091ec137491@canonical.com>
+Date:   Tue, 27 Aug 2019 08:58:27 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
+In-Reply-To: <f1aa1f6f-d293-c2cd-d1fc-a6b10d49a1bb@lwfinger.net>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-> -----Original Message-----
-> From: ath10k <ath10k-bounces@lists.infradead.org> On Behalf Of Nicolas
-> Boichat
-> Sent: Tuesday, August 27, 2019 3:41 PM
-> To: Wen Gong <wgong@codeaurora.org>
-> Cc: open list:NETWORKING DRIVERS (WIRELESS) <linux-
-> wireless@vger.kernel.org>; ath10k@lists.infradead.org
-> Subject: [EXT] Re: [PATCH 1/7] ath10k: enable RX bundle receive for sdio
->=20
-> > -static int ath10k_sdio_mbox_rx_fetch(struct ath10k *ar)
-> > +static int ath10k_sdio_mbox_rx_fetch_bundle(struct ath10k *ar)
-> >  {
-> >         struct ath10k_sdio *ar_sdio =3D ath10k_sdio_priv(ar);
-> > +       struct ath10k_sdio_rx_data *pkt;
-> >         int ret, i;
-> > +       u32 pkt_offset, virt_pkt_len;
-> >
-> > +       virt_pkt_len =3D 0;
-> >         for (i =3D 0; i < ar_sdio->n_rx_pkts; i++) {
-> > -               ret =3D ath10k_sdio_mbox_rx_packet(ar,
-> > -                                                &ar_sdio->rx_pkts[i]);
-> > -               if (ret)
-> > +               virt_pkt_len +=3D ar_sdio->rx_pkts[i].alloc_len;
-> > +       }
-> > +
-> > +       if (virt_pkt_len < ATH10K_SDIO_DMA_BUF_SIZE) {
-> > +               ret =3D ath10k_sdio_readsb(ar, ar_sdio->mbox_info.htc_a=
-ddr,
-> > +                                        ar_sdio->vsg_buffer, virt_pkt_=
-len);
-> > +               if (ret) {
-> > +                       i =3D 0;
-> >                         goto err;
-> > +               }
-> > +       } else {
-> > +               ath10k_err(ar, "size exceeding limit %d\n", virt_pkt_le=
-n);
-> > +       }
-> > +
-> > +       pkt_offset =3D 0;
-> > +       for (i =3D 0; i < ar_sdio->n_rx_pkts; i++) {
-> > +               struct sk_buff *skb =3D ar_sdio->rx_pkts[i].skb;
-> > +
-> > +               pkt =3D &ar_sdio->rx_pkts[i];
-> > +               memcpy(skb->data, ar_sdio->vsg_buffer + pkt_offset,
-> > +                      pkt->alloc_len);
->=20
-> Why do you copy alloc_len if you only plan to use act_len?
-alloc_len is aligned to block size(256),  and act_len maybe not same for ea=
-ch packet in the bundle.
-Eg a bundle:
-Packet 1 len 240,   alloc_len: 256, 1st time: act_len 240, left padding siz=
-e is 16,
-Packet 1 len 250, alloc_len: 256, 1st time: act_len 240, left padding size =
-is 6,
-Packet 1 len 230,   alloc_len: 256, 1st time: act_len 240, left padding siz=
-e is 26,
+On 22/08/2019 17:38, Larry Finger wrote:
+> On 8/22/19 11:11 AM, Colin Ian King wrote:
+>> On 22/08/2019 17:03, Larry Finger wrote:
+>>> On 8/22/19 8:35 AM, Colin King wrote:
+>>>> From: Colin Ian King <colin.king@canonical.com>
+>>>>
+>>>> An earlier commit re-worked the setting of the bitmask and is now
+>>>> assigning v with some bit flags rather than bitwise or-ing them
+>>>> into v, consequently the earlier bit-settings of v are being lost.
+>>>> Fix this by replacing an assignment with the bitwise or instead.
+>>>>
+>>>> Addresses-Coverity: ("Unused value")
+>>>> Fixes: 2be25cac8402 ("bcma: add constants for PCI and use them")
+>>>> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+>>>> ---
+>>>>    drivers/bcma/driver_pci.c | 2 +-
+>>>>    1 file changed, 1 insertion(+), 1 deletion(-)
+>>>>
+>>>> diff --git a/drivers/bcma/driver_pci.c b/drivers/bcma/driver_pci.c
+>>>> index f499a469e66d..d219ee947c07 100644
+>>>> --- a/drivers/bcma/driver_pci.c
+>>>> +++ b/drivers/bcma/driver_pci.c
+>>>> @@ -78,7 +78,7 @@ static u16 bcma_pcie_mdio_read(struct bcma_drv_pci
+>>>> *pc, u16 device, u8 address)
+>>>>            v |= (address << BCMA_CORE_PCI_MDIODATA_REGADDR_SHF_OLD);
+>>>>        }
+>>>>    -    v = BCMA_CORE_PCI_MDIODATA_START;
+>>>> +    v |= BCMA_CORE_PCI_MDIODATA_START;
+>>>>        v |= BCMA_CORE_PCI_MDIODATA_READ;
+>>>>        v |= BCMA_CORE_PCI_MDIODATA_TA;
+>>>
+>>> I'm not sure the "Fixes" attribute is correct.
+>>>
+>>> The changes for this section in commit 2be25cac8402 are
+>>>
+>>> -       v = (1 << 30); /* Start of Transaction */
+>>> -       v |= (1 << 28); /* Write Transaction */
+>>> -       v |= (1 << 17); /* Turnaround */
+>>> -       v |= (0x1F << 18);
+>>> +       v = BCMA_CORE_PCI_MDIODATA_START;
+>>> +       v |= BCMA_CORE_PCI_MDIODATA_WRITE;
+>>> +       v |= (BCMA_CORE_PCI_MDIODATA_DEV_ADDR <<
+>>> +             BCMA_CORE_PCI_MDIODATA_DEVADDR_SHF);
+>>> +       v |= (BCMA_CORE_PCI_MDIODATA_BLK_ADDR <<
+>>> +             BCMA_CORE_PCI_MDIODATA_REGADDR_SHF);
+>>> +       v |= BCMA_CORE_PCI_MDIODATA_TA;
+>>>
+>>> Because the code has done quite a bit of work on v just above this
+>>> section, I agree that this is likely an error, but that error happened
+>>> in an earlier commit. Thus 2be25cac8402 did not introduce the error,
+>>> merely copied it.
 
-The bundled buffer len is 256 * 3 =3D 768, it has 256 bytes for each packet=
-, the left size is padding which=20
-Is not needed, but the left padding is not same for each packet, before rea=
-d all the buffer from sdio bus,
-It does not know each packet's act len, it only know the 1st packet's act l=
-en.
-So it need to copy all the alloc_len's buffer to ensure it will not lose da=
-ta.
+I did a second look at Larry's comments above and realized the code he
+is referring to is in bcma_pcie_mdio_set_phy which is OK
 
-> Actually, just use skb_put_data.
->=20
-> Also, do you have the same issue as
-> https://patchwork.kernel.org/patch/11116215/ w.r.t. act_len being
-> incorrect?
->=20
-> > +               pkt->status =3D 0;
-> > +               skb_put(skb, pkt->act_len);
-> > +               pkt_offset +=3D pkt->alloc_len;
-> >         }
-> >
-> >         return 0;
-> >
->=20
-> _______________________________________________
-> ath10k mailing list
-> ath10k@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/ath10k
+Instead, the code I'm fixing is in bcma_pcie_mdio_read, which was broken
+by commit 2be25cac8402fab56bb51166f464d1b420bcf744
+
+        if (pc->core->id.rev >= 10) {
+                max_retries = 200;
+                bcma_pcie_mdio_set_phy(pc, device);
++               v = (BCMA_CORE_PCI_MDIODATA_DEV_ADDR <<
++                    BCMA_CORE_PCI_MDIODATA_DEVADDR_SHF);
++               v |= (address << BCMA_CORE_PCI_MDIODATA_REGADDR_SHF);
++       } else {
++               v = (device << BCMA_CORE_PCI_MDIODATA_DEVADDR_SHF_OLD);
++               v |= (address << BCMA_CORE_PCI_MDIODATA_REGADDR_SHF_OLD);
+        }
+
+-       v = (1 << 30); /* Start of Transaction */
+-       v |= (1 << 29); /* Read Transaction */
+-       v |= (1 << 17); /* Turnaround */
+-       if (pc->core->id.rev < 10)
+-               v |= (u32)device << 22;
+-       v |= (u32)address << 18;
+-       pcicore_write32(pc, mdio_data, v);
++       v = BCMA_CORE_PCI_MDIODATA_START;
++       v |= BCMA_CORE_PCI_MDIODATA_READ;
++       v |= BCMA_CORE_PCI_MDIODATA_TA;
++
++       pcicore_write32(pc, BCMA_CORE_PCI_MDIO_DATA, v);
+
+
+>>
+>> Ugh, this goes back further. I didn't spot that. I'm less confident of
+>> what the correct settings should be now.
+>>
+>>>
+>>> Has this change been tested?
+>>
+>> Afraid not, I don't have the H/W.
+> 
+> I admit that I looked at this only because I found it hard to believe
+> that the collective wisdom of the list would have missed the usage of
+> "=" instead of "|=". At least that test was passed. :)
+
+Maybe not after all :-)
+
+> 
+> Larry
+> 
+
+I'll send a V2 with the write fix, and the same fixes commit sha
