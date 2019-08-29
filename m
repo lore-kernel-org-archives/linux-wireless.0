@@ -2,89 +2,94 @@ Return-Path: <SRS0=l8aR=WZ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DATE_IN_PAST_06_12,
-	DKIM_INVALID,DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+X-Spam-Status: No, score=-5.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49507C3A5A6
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Aug 2019 12:39:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 843A0C3A59F
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Aug 2019 14:57:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 15DA22339E
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Aug 2019 12:39:28 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="VrjuRwfm";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="aeeVAq6Y"
+	by mail.kernel.org (Postfix) with ESMTP id 60B4020644
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Aug 2019 14:57:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727235AbfH2MjZ (ORCPT
+        id S1727590AbfH2O5D (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 29 Aug 2019 08:39:25 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:45580 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725782AbfH2MjY (ORCPT
+        Thu, 29 Aug 2019 10:57:03 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:37672 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727073AbfH2O5D (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Aug 2019 08:39:24 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 77FB48A1A6; Wed, 28 Aug 2019 15:16:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1567005368;
-        bh=+EwOCSrATTfaecERMGr7s8wbx3PWkrc30gIRhDZCi1A=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=VrjuRwfm8DZtQigZQgTgHkacGaLb3S1IyYgj8Deg5Oy3mitdGf4UFK2t7XyRuTIqD
-         h4KWBeC1ksA7iJ6dcJsuLFOqa8wytoZh1aY8Wkkf20mBg6rS+epDCenYX27jaqep8s
-         9VamivGkRTlawfhG3bCPC4JREr4/mTrEsfB/AOsM=
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by smtp.codeaurora.org (Postfix) with ESMTP id 82BCB782A7;
-        Wed, 28 Aug 2019 07:44:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1566978287;
-        bh=+EwOCSrATTfaecERMGr7s8wbx3PWkrc30gIRhDZCi1A=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=aeeVAq6YhSYhMWz5IV7u9cU/D4kOmDQxphEmV2RiAkhT1SkP42Py3FRu9qpZkEGNG
-         RghbuZp6w/Row9bs6u7Hyyhn6yI4zf7ZGSoNTjQxL5kc8maOZhqdV7rU4MelYQ2Jy+
-         UqWQva2uAXCEWYF+vfLcIxVcjRGLUR2anHdGlsC0=
+        Thu, 29 Aug 2019 10:57:03 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.92.1)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1i3LrB-0002n2-KK; Thu, 29 Aug 2019 16:57:01 +0200
+Message-ID: <fa029365caf3db963b1c2ec05ae389a8c8fc20fb.camel@sipsolutions.net>
+Subject: Re: mac80211_hwsim (kernel 4.18+): wmediumd + 2.4Ghz
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Ramon Fontes <ramonreisfontes@gmail.com>,
+        linux-wireless@vger.kernel.org
+Date:   Thu, 29 Aug 2019 16:57:00 +0200
+In-Reply-To: <CAK8U23biuUY9hWE1NOnSbJCRtRVfdg1a27ZOkU5cbaGdzZLYEA@mail.gmail.com> (sfid-20190827_140626_444621_C34D25FA)
+References: <CAK8U23biuUY9hWE1NOnSbJCRtRVfdg1a27ZOkU5cbaGdzZLYEA@mail.gmail.com>
+         (sfid-20190827_140626_444621_C34D25FA)
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.30.5 (3.30.5-1.fc29) 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Content-Transfer-Encoding: 8bit
-Date:   Wed, 28 Aug 2019 10:44:46 +0300
-From:   merez@codeaurora.org
-To:     Markus Elfring <Markus.Elfring@web.de>
-Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        wil6210@qti.qualcomm.com, "David S. Miller" <davem@davemloft.net>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        kernel-janitors@vger.kernel.org,
-        linux-wireless-owner@vger.kernel.org
-Subject: Re: [PATCH] wil6210: Delete an unnecessary kfree() call in
- wil_tid_ampdu_rx_alloc()
-In-Reply-To: <b9620e49-618d-b392-6456-17de5807df75@web.de>
-References: <b9620e49-618d-b392-6456-17de5807df75@web.de>
-Message-ID: <6eea96653c83cffe648465bc8b953913@codeaurora.org>
-X-Sender: merez@codeaurora.org
-User-Agent: Roundcube Webmail/1.2.5
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2019-08-27 17:44, Markus Elfring wrote:
-> From: Markus Elfring <elfring@users.sourceforge.net>
-> Date: Tue, 27 Aug 2019 16:39:02 +0200
-> 
-> A null pointer would be passed to a call of the function “kfree”
-> directly after a call of the function “kcalloc” failed at one place.
-> Remove this superfluous function call.
-> 
-> This issue was detected by using the Coccinelle software.
-> 
-> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
-> ---
+Hi,
 
-Reviewed-by: Maya Erez <merez@codeaurora.org>
+> When I use 2.4Ghz band with -only one- AP (running on top of hostapd)
+> I get a (additional) list of frequencies at 5Ghz. When I do "iw dev ..
+> scan"
+> 
+> BSS 02:00:00:00:04:00(on sta1-wlan0) -- associated
+> TSF: 1566905272877856 usec (18135d, 11:27:52)
+> freq: 2422
+> beacon interval: 100 TUs
+> capability: ESS ShortSlotTime (0x0401)
+> signal: -34.00 dBm
+> last seen: 0 ms ago
+> Information elements from Probe Response frame:
+> SSID: simplewifi
+> Supported rates: 1.0* 2.0* 5.5* 11.0* 6.0 9.0 12.0 18.0
+> DS Parameter set: channel 3
+> ERP: Barker_Preamble_Mode
+> Extended supported rates: 24.0 36.0 48.0 54.0
+> Extended capabilities:
+> * Extended Channel Switching
+> * Multiple BSSID
+> * SSID List
+> * Operating Mode Notification
 
--- 
-Maya Erez
-Qualcomm Israel, Inc. on behalf of Qualcomm Innovation Center, Inc.
-The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
-Linux Foundation Collaborative Project
+I guess this is the one you expect?
+
+> BSS 02:00:00:00:04:00(on sta1-wlan0)
+> TSF: 1566905274269230 usec (18135d, 11:27:54)
+> freq: 5180
+[...]
+> BSS 02:00:00:00:04:00(on sta1-wlan0)
+> TSF: 1566905274269230 usec (18135d, 11:27:54)
+> freq: 5200
+
+and these are garbage.
+
+> and so on (please notice that channel number and frequency)..
+> iw dev scan returns all the 5Ghz frequencies defined in
+> https://github.com/torvalds/linux/blob/master/drivers/net/wireless/mac80211_hwsim.c#L328
+> It happens only when wmediumd is being used.
+
+Since you cannot reproduce this without wmediumd (and neither can I) I
+assume it's a wmediumd bug, in the sense that it's reporting the frame
+on all the channels, or perhaps without any channel information, or so?
+
+Or possibly the hwsim code that handles this is broken, maybe you could
+see what wmediumd does (does it have any log files?)
+
+johannes
+
