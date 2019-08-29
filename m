@@ -2,235 +2,99 @@ Return-Path: <SRS0=l8aR=WZ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3555C3A59F
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Aug 2019 10:55:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1591CC3A59F
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Aug 2019 11:13:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BFD9122CF5
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Aug 2019 10:55:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1567076110;
-	bh=7nPzp5j46jxzMqq21aflthNQUkUdaJ9bksN7iMbrZVE=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=FmUQogkJxAkj5yI0MGckb1oeSzpokM00nNHU/28Osgki+TeyAWScMI9FxWxUvWNSR
-	 UTJTmjm0JzuLYt4NGtEwhXkb0f9SEb33tVOZNqcOiQBKKYRfloAKCoDBngHhllmKFL
-	 dpx6nLkOVXSOYC9bazW2n9N5rCij+UifVomUn9kU=
+	by mail.kernel.org (Postfix) with ESMTP id DC8922054F
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Aug 2019 11:13:14 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="tm1BXQ7A"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728500AbfH2KzF (ORCPT
+        id S1726723AbfH2LNO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 29 Aug 2019 06:55:05 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57486 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727703AbfH2KuT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Aug 2019 06:50:19 -0400
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 81A7B2173E;
-        Thu, 29 Aug 2019 10:50:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1567075818;
-        bh=7nPzp5j46jxzMqq21aflthNQUkUdaJ9bksN7iMbrZVE=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=WeBbuR6NlZUoSj3n9Ela0QkLyChXYVLw9K2TyerhKT7lbVdqEgLbEs9xrxKyD/7Wl
-         WOLqvL+Hgg6VxgAkZxgd26e4rybnkULfBzjMWMzMYPO9TkWRx8u8ivr8wu0iDQS2jI
-         Wjik+zdSJYcZJviYGYREaH1jthm28ok9hS2fsAVQ=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Manikanta Pubbisetty <mpubbise@codeaurora.org>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 07/29] {nl,mac}80211: fix interface combinations on crypto controlled devices
-Date:   Thu, 29 Aug 2019 06:49:47 -0400
-Message-Id: <20190829105009.2265-7-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190829105009.2265-1-sashal@kernel.org>
-References: <20190829105009.2265-1-sashal@kernel.org>
+        Thu, 29 Aug 2019 07:13:14 -0400
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:33147 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725990AbfH2LNO (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 29 Aug 2019 07:13:14 -0400
+Received: by mail-pg1-f195.google.com with SMTP id n190so1436229pgn.0
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Aug 2019 04:13:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=qo9CBG5dwA7rojv0Ol40bhkCmgOPX5RlCcjqFJNsSL4=;
+        b=tm1BXQ7A0hFGcueH6FpM5VmobNVfQ+oLwl9S2MEUOJCAVvE4LawUQ+UzQQdKXF+JZA
+         FgB2A6gB6I93Fsm6Y2wgaAWE3jDda6QUVNGCjW/yjoJrFkCN1Bse3xs0xFagfol6YhbY
+         kZf2bavxW/rOs9QqPM7INCiDe5jbBixQ3TslswBgVjMwOEAzO4gwAlMvZdBy3VDEl8M5
+         fXPWvN4BHGQ0xAxt2VO+sGFaB/GGnK+FFL/Mwd/o5cusnPHPiOhBLUS3VrrEzfCIDCrD
+         5ilNY1MqQTP2Kt2cQWZ6GfrMMJk4uqgtfAWRGl+yUpdhBJw7ABCl5Xq8JWRY1bWZn6sB
+         +gHg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=qo9CBG5dwA7rojv0Ol40bhkCmgOPX5RlCcjqFJNsSL4=;
+        b=H5iVjNakwgDwVKUljqtTbtTPdzIgGFwj3XfQUzzN5S59SNoz6wnJHY6s6vfkSxH0ph
+         Csfx27TNNOJIHHWPVinn1LNiRWe3cILmESBP+tMRB6cmwQNeb1IJWvbTy6g7OLGpXeHQ
+         x9cu5TRngUNRImNU0ojynNnY91td5eZZhPRTIpEH+qQ/o3Dr7c+GfoXc0B+CRxzpD5vq
+         pDMcRVQyP98FXNg0LmzGCJO3M+iMcvkDVRIem/1fGyXXFZI8DRKa3HT6q3BS5QM9qLMK
+         Zcv3ubkpnzEes2Sd1cnyAUTciW5GKA5g55NqVjxraRL97gqsvrMxS6IW0AvVUnMe2iGJ
+         w7CA==
+X-Gm-Message-State: APjAAAU6vGqS0g4lKAt7bNSuLZ449abS/hUFDWEG44VJ3KF7P86AMsgS
+        1RrMgaP81oARV1IOcaA9x0upHUgjaQ/Qa3A1oBVyX+SjCZE=
+X-Google-Smtp-Source: APXvYqzHDOn8/axkrgHKtmHJA+S9jFtJnR9q80CpDzr3fgh/J1gUZdyTd7QjTic+BP6aDrC1Z7hpBlGBUAqfNCoyINI=
+X-Received: by 2002:a62:52d0:: with SMTP id g199mr10877992pfb.32.1567077193321;
+ Thu, 29 Aug 2019 04:13:13 -0700 (PDT)
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+References: <CAJp6tx-L0Q4_OaUp+xMod0jsLjAByqnbrvk=JbEq5LOxTdhr_g@mail.gmail.com>
+ <CAJp6tx-RcubaTdL4tK1fuLv08s-pqU+RQz4m1mb1LRhg3625zw@mail.gmail.com> <20190829100336.GA1930@redhat.com>
+In-Reply-To: <20190829100336.GA1930@redhat.com>
+From:   Sergey Maranchuk <slav0nic0@gmail.com>
+Date:   Thu, 29 Aug 2019 14:13:01 +0300
+Message-ID: <CAJp6tx86X+sxv7NtUcg0f7OdLSZu08UDg-Wf-NKnUB6eSzLB=g@mail.gmail.com>
+Subject: Re: rt2x00: 5Ghz signal power degradation with linux 5.2 kernel
+To:     Stanislaw Gruszka <sgruszka@redhat.com>
+Cc:     linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Manikanta Pubbisetty <mpubbise@codeaurora.org>
+Yes, it is!
+After reverting this commit (i used debian 5.2 kernel sources +
+patched rt2800lib.ko mod) i see my home 5Ghz network with -45dBm
+tnx for quick help
 
-[ Upstream commit e6f4051123fd33901e9655a675b22aefcdc5d277 ]
-
-Commit 33d915d9e8ce ("{nl,mac}80211: allow 4addr AP operation on
-crypto controlled devices") has introduced a change which allows
-4addr operation on crypto controlled devices (ex: ath10k). This
-change has inadvertently impacted the interface combinations logic
-on such devices.
-
-General rule is that software interfaces like AP/VLAN should not be
-listed under supported interface combinations and should not be
-considered during validation of these combinations; because of the
-aforementioned change, AP/VLAN interfaces(if present) will be checked
-against interfaces supported by the device and blocks valid interface
-combinations.
-
-Consider a case where an AP and AP/VLAN are up and running; when a
-second AP device is brought up on the same physical device, this AP
-will be checked against the AP/VLAN interface (which will not be
-part of supported interface combinations of the device) and blocks
-second AP to come up.
-
-Add a new API cfg80211_iftype_allowed() to fix the problem, this
-API works for all devices with/without SW crypto control.
-
-Signed-off-by: Manikanta Pubbisetty <mpubbise@codeaurora.org>
-Fixes: 33d915d9e8ce ("{nl,mac}80211: allow 4addr AP operation on crypto controlled devices")
-Link: https://lore.kernel.org/r/1563779690-9716-1-git-send-email-mpubbise@codeaurora.org
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- include/net/cfg80211.h | 15 +++++++++++++++
- net/mac80211/util.c    |  7 +++----
- net/wireless/core.c    |  6 ++----
- net/wireless/nl80211.c |  4 +---
- net/wireless/util.c    | 27 +++++++++++++++++++++++++--
- 5 files changed, 46 insertions(+), 13 deletions(-)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 67e0a990144a6..468deae5d603e 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -6562,6 +6562,21 @@ int cfg80211_external_auth_request(struct net_device *netdev,
- 				   struct cfg80211_external_auth_params *params,
- 				   gfp_t gfp);
- 
-+/**
-+ * cfg80211_iftype_allowed - check whether the interface can be allowed
-+ * @wiphy: the wiphy
-+ * @iftype: interface type
-+ * @is_4addr: use_4addr flag, must be '0' when check_swif is '1'
-+ * @check_swif: check iftype against software interfaces
-+ *
-+ * Check whether the interface is allowed to operate; additionally, this API
-+ * can be used to check iftype against the software interfaces when
-+ * check_swif is '1'.
-+ */
-+bool cfg80211_iftype_allowed(struct wiphy *wiphy, enum nl80211_iftype iftype,
-+			     bool is_4addr, u8 check_swif);
-+
-+
- /* Logging, debugging and troubleshooting/diagnostic helpers. */
- 
- /* wiphy_printk helpers, similar to dev_printk */
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index c59638574cf8b..f101a6460b44b 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -3527,9 +3527,7 @@ int ieee80211_check_combinations(struct ieee80211_sub_if_data *sdata,
- 	}
- 
- 	/* Always allow software iftypes */
--	if (local->hw.wiphy->software_iftypes & BIT(iftype) ||
--	    (iftype == NL80211_IFTYPE_AP_VLAN &&
--	     local->hw.wiphy->flags & WIPHY_FLAG_4ADDR_AP)) {
-+	if (cfg80211_iftype_allowed(local->hw.wiphy, iftype, 0, 1)) {
- 		if (radar_detect)
- 			return -EINVAL;
- 		return 0;
-@@ -3564,7 +3562,8 @@ int ieee80211_check_combinations(struct ieee80211_sub_if_data *sdata,
- 
- 		if (sdata_iter == sdata ||
- 		    !ieee80211_sdata_running(sdata_iter) ||
--		    local->hw.wiphy->software_iftypes & BIT(wdev_iter->iftype))
-+		    cfg80211_iftype_allowed(local->hw.wiphy,
-+					    wdev_iter->iftype, 0, 1))
- 			continue;
- 
- 		params.iftype_num[wdev_iter->iftype]++;
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 2a46ec3cb72c1..68660781aa51f 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -1335,10 +1335,8 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
- 		}
- 		break;
- 	case NETDEV_PRE_UP:
--		if (!(wdev->wiphy->interface_modes & BIT(wdev->iftype)) &&
--		    !(wdev->iftype == NL80211_IFTYPE_AP_VLAN &&
--		      rdev->wiphy.flags & WIPHY_FLAG_4ADDR_AP &&
--		      wdev->use_4addr))
-+		if (!cfg80211_iftype_allowed(wdev->wiphy, wdev->iftype,
-+					     wdev->use_4addr, 0))
- 			return notifier_from_errno(-EOPNOTSUPP);
- 
- 		if (rfkill_blocked(rdev->rfkill))
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 8e2f03ab4cc9f..2a85bff6a8f35 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -3210,9 +3210,7 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
- 			return err;
- 	}
- 
--	if (!(rdev->wiphy.interface_modes & (1 << type)) &&
--	    !(type == NL80211_IFTYPE_AP_VLAN && params.use_4addr &&
--	      rdev->wiphy.flags & WIPHY_FLAG_4ADDR_AP))
-+	if (!cfg80211_iftype_allowed(&rdev->wiphy, type, params.use_4addr, 0))
- 		return -EOPNOTSUPP;
- 
- 	err = nl80211_parse_mon_options(rdev, type, info, &params);
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index d57e2f679a3e4..c14e8f6e5e198 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -1670,7 +1670,7 @@ int cfg80211_iter_combinations(struct wiphy *wiphy,
- 	for (iftype = 0; iftype < NUM_NL80211_IFTYPES; iftype++) {
- 		num_interfaces += params->iftype_num[iftype];
- 		if (params->iftype_num[iftype] > 0 &&
--		    !(wiphy->software_iftypes & BIT(iftype)))
-+		    !cfg80211_iftype_allowed(wiphy, iftype, 0, 1))
- 			used_iftypes |= BIT(iftype);
- 	}
- 
-@@ -1692,7 +1692,7 @@ int cfg80211_iter_combinations(struct wiphy *wiphy,
- 			return -ENOMEM;
- 
- 		for (iftype = 0; iftype < NUM_NL80211_IFTYPES; iftype++) {
--			if (wiphy->software_iftypes & BIT(iftype))
-+			if (cfg80211_iftype_allowed(wiphy, iftype, 0, 1))
- 				continue;
- 			for (j = 0; j < c->n_limits; j++) {
- 				all_iftypes |= limits[j].types;
-@@ -1895,3 +1895,26 @@ EXPORT_SYMBOL(rfc1042_header);
- const unsigned char bridge_tunnel_header[] __aligned(2) =
- 	{ 0xaa, 0xaa, 0x03, 0x00, 0x00, 0xf8 };
- EXPORT_SYMBOL(bridge_tunnel_header);
-+
-+bool cfg80211_iftype_allowed(struct wiphy *wiphy, enum nl80211_iftype iftype,
-+			     bool is_4addr, u8 check_swif)
-+
-+{
-+	bool is_vlan = iftype == NL80211_IFTYPE_AP_VLAN;
-+
-+	switch (check_swif) {
-+	case 0:
-+		if (is_vlan && is_4addr)
-+			return wiphy->flags & WIPHY_FLAG_4ADDR_AP;
-+		return wiphy->interface_modes & BIT(iftype);
-+	case 1:
-+		if (!(wiphy->software_iftypes & BIT(iftype)) && is_vlan)
-+			return wiphy->flags & WIPHY_FLAG_4ADDR_AP;
-+		return wiphy->software_iftypes & BIT(iftype);
-+	default:
-+		break;
-+	}
-+
-+	return false;
-+}
-+EXPORT_SYMBOL(cfg80211_iftype_allowed);
--- 
-2.20.1
-
+=D1=87=D1=82, 29 =D0=B0=D0=B2=D0=B3. 2019 =D0=B3. =D0=B2 13:03, Stanislaw G=
+ruszka <sgruszka@redhat.com>:
+>
+> On Thu, Aug 29, 2019 at 12:42:44PM +0300, Sergey Maranchuk wrote:
+> > I got some problem after upgrade kernel to 5.2 version (debian testing
+> > linux-image-5.2.0-2-amd64). 5Ghz client  stopped to see AP.
+> > Some tests with 1metre distance between client-AP: 2.4Ghz  -22dBm, for
+> > 5Ghz - 53dBm !, for longer distance (8m + walls) 2.4 - 61dBm, 5Ghz not
+> > visible.
+> > All works fine with kernel 4.19 and on windows 10, other devices also
+> > see AP without any problems with same distance.
+>
+> After looking on the changlog most possible cause of it seems to be
+> commit 9ad3b55654455258a9463384edb40077439d879f:
+> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit=
+/?id=3D9ad3b55654455258a9463384edb40077439d879f
+>
+> Please try to revert it, and see if that improve rx signal level.
+>
+> It that would not help, please try to narrow regression to two
+> consecutive kernel versions - it is: 4.19 -> 5.0 or 5.0 -> 5.1
+> or 5.1 -> 5.2 ?
+>
+> Stanislaw
