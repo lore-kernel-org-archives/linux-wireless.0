@@ -2,107 +2,98 @@ Return-Path: <SRS0=l8aR=WZ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A7E2C3A59F
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Aug 2019 17:53:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 592AAC3A59F
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Aug 2019 19:06:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4E4A720644
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Aug 2019 17:53:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 253AD22CEA
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Aug 2019 19:06:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="RKYtsq1X";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="K9BXqJol"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dLd6n1cu"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727686AbfH2Rxy (ORCPT
+        id S1728173AbfH2TGA (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 29 Aug 2019 13:53:54 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:54692 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726661AbfH2Rxy (ORCPT
+        Thu, 29 Aug 2019 15:06:00 -0400
+Received: from mail-io1-f65.google.com ([209.85.166.65]:44720 "EHLO
+        mail-io1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727910AbfH2TGA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Aug 2019 13:53:54 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 5ED8C6374A; Thu, 29 Aug 2019 17:50:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1567101154;
-        bh=bleuRIGGQXtxy2m1UO/Sr1VcKu3Nw/apzjxW1618aAo=;
-        h=From:To:Cc:Subject:Date:From;
-        b=RKYtsq1XdhjALRG6LQmlgMc7+KTI6L+EiHdtomuzrOMLW6XoFL68Do67kmpilPvGi
-         E8JJXxXNU7c8xxrlNp7sn3fg2Gg+1zKNkOFM4CeXIl97QVbIo6t7ziKd5KgC9BBBYj
-         1BP9nGgllqr91FcGudmFK/9+YqGPqTkYsnJIy1cg=
-Received: from smtp.codeaurora.org (unknown [180.166.53.21])
-        (using TLSv1 with cipher AES128-SHA (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: miaoqing@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id CD65B89988;
-        Thu, 29 Aug 2019 02:46:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1567046776;
-        bh=bleuRIGGQXtxy2m1UO/Sr1VcKu3Nw/apzjxW1618aAo=;
-        h=From:To:Cc:Subject:Date:From;
-        b=K9BXqJolkVr+10nYEjo7UV8uqgeZyr2oaDE4MEgOOsBXwFi0+Vg3OY40HL0rIDbbI
-         mNiufXPr0dIXAgaYTLGOSGhjpUmfHZ73fADOqbAiCvU/pyJucyqoZlPJRnhFtKZhbD
-         0huRk1ohqrkSourfcyJyl6xVY66JUueONpUgvW0A=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org CD65B89988
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=miaoqing@codeaurora.org
-Received: by smtp.codeaurora.org (sSMTP sendmail emulation); Thu, 29 Aug 2019 10:46:09 +0800
-From:   Miaoqing Pan <miaoqing@codeaurora.org>
-To:     ath10k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org,
-        Miaoqing Pan <miaoqing@codeaurora.org>
-Subject: [PATCH] ath10k: fix latency issue for QCA988x
-Date:   Thu, 29 Aug 2019 10:45:12 +0800
-Message-Id: <1567046712-23057-1-git-send-email-miaoqing@codeaurora.org>
-X-Mailer: git-send-email 1.9.1
+        Thu, 29 Aug 2019 15:06:00 -0400
+Received: by mail-io1-f65.google.com with SMTP id j4so9021434iog.11
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Aug 2019 12:05:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=c6ODR4liUJUcLKxYPurm7ggAPp8kN1h7mndbudDzdgE=;
+        b=dLd6n1cuN59FKLyUeX6f4ieG2cTQdv+xUByWesHiL3g3EZX/q5fQIXm8Xgom3esmGv
+         XUV89a0MelbyPW8TYxAojgI8ihZHrop5G/RTHA2WpVz12rplN+eyyvAx8ye+L+/DNFtk
+         x4yN5Qe9ZSjA86rtfL8FkqIWW8tYme+eiR1a/Ybpl/okzcmP21q7mV+keyA4PnKi03GM
+         7UJFvlw69t+toAzFCp2vN75Ly9S1uGiFnF3uCmSe6t/0g6PXTK1iHyHWJUzHtIu3kGNQ
+         Pgzb0B2g+TcdZsyFDEejksNW6Hais5Hr2Jc8PTMVsJgQCHMvIQ/KcIN3qiJTTUz10wQb
+         +26g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=c6ODR4liUJUcLKxYPurm7ggAPp8kN1h7mndbudDzdgE=;
+        b=HBVg/HeGiYNvNaCxv1M1pIU3ZMdjyws5boj5bxxTYLcj9d1VX7M99vUCx73wrvnFpm
+         GAURdZwRQVyBwFPVL+Om0r1Iad+EHuu8vE89lWVylmoTtrDJt8v9bpWQdj8yOk60r+V6
+         7vKv6TTy1Fj+V9Irxctg8GF5YeKJCwjG1KVwfmkc8cHvrses6JyOhVn5JnNiRfensWk4
+         3iXinHmv92FoQhEgLIA/3Oq+il+jdW+nbSywDAj45DJHunIMZBUm1HPPW2y8BhKKjtpu
+         OTB/B1nL95u7hW+M8EynmgooiGlrwVD6tV4MtRgHojnR+fSGSuM6t6bt6lU4X6z1fk2f
+         3t1g==
+X-Gm-Message-State: APjAAAVH43mSXPPwZsDxC6r+oVJgstuoyjeHM8+dsv5VLaeI1LStucAm
+        UnRIGly3nbGlwIXKAXvJmVzhF3/vcsku3chIhb4=
+X-Google-Smtp-Source: APXvYqzEOJTQtWu0fJ7VMYY9IECqZX0ZuA4HMC9DeBW0981fs1Ilz42laGwf/1kso8DHr6Q/uWBUUKPUVBcValphx10=
+X-Received: by 2002:a6b:620f:: with SMTP id f15mr12453499iog.190.1567105559154;
+ Thu, 29 Aug 2019 12:05:59 -0700 (PDT)
+MIME-Version: 1.0
+References: <CAK8U23biuUY9hWE1NOnSbJCRtRVfdg1a27ZOkU5cbaGdzZLYEA@mail.gmail.com>
+ <fa029365caf3db963b1c2ec05ae389a8c8fc20fb.camel@sipsolutions.net>
+ <CAK8U23aHprXtZm2PV3sj6g4Da_ponK9L0YmSO1tb6xoFgK-ZLA@mail.gmail.com> <80d9c12986ec0a13c34672ca1c16f37cae0cc096.camel@sipsolutions.net>
+In-Reply-To: <80d9c12986ec0a13c34672ca1c16f37cae0cc096.camel@sipsolutions.net>
+From:   Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date:   Fri, 30 Aug 2019 00:35:48 +0530
+Message-ID: <CABPxzYLrTC3kS86iyfq+RY=XEgjedu2MWPtn+i+H50jPz3oh3w@mail.gmail.com>
+Subject: Re: mac80211_hwsim (kernel 4.18+): wmediumd + 2.4Ghz
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     Ramon Fontes <ramonreisfontes@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Bad latency is found on QCA988x, the issue was introduced by
-commit 4504f0e5b571 ("ath10k: sdio: workaround firmware UART
-pin configuration bug"). If uart_pin_workaround is false, this
-change will set uart pin even if uart_print is false.
-
-Tested HW: QCA9880
-Tested FW: 10.2.4-1.0-00037
-
-Fixes: 4504f0e5b571 ("ath10k: sdio: workaround firmware UART pin configuration bug")
-Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/core.c | 15 +++++++++------
- 1 file changed, 9 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index dc45d16..383d4fa 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -2118,12 +2118,15 @@ static int ath10k_init_uart(struct ath10k *ar)
- 		return ret;
- 	}
- 
--	if (!uart_print && ar->hw_params.uart_pin_workaround) {
--		ret = ath10k_bmi_write32(ar, hi_dbg_uart_txpin,
--					 ar->hw_params.uart_pin);
--		if (ret) {
--			ath10k_warn(ar, "failed to set UART TX pin: %d", ret);
--			return ret;
-+	if (!uart_print) {
-+		if (ar->hw_params.uart_pin_workaround) {
-+			ret = ath10k_bmi_write32(ar, hi_dbg_uart_txpin,
-+						 ar->hw_params.uart_pin);
-+			if (ret) {
-+				ath10k_warn(ar, "failed to set UART TX pin: %d",
-+					    ret);
-+				return ret;
-+			}
- 		}
- 
- 		return 0;
--- 
-1.9.1
-
+On Thu, Aug 29, 2019 at 10:55 PM Johannes Berg
+<johannes@sipsolutions.net> wrote:
+>
+> On Thu, 2019-08-29 at 14:04 -0300, Ramon Fontes wrote:
+> > Yes, that's what I (we?) expect.
+> >
+> > Yes, wmediumd has some log files, but they don't help me to identify
+> > the reason of the problem. I also unsuccessfully tried to modified the
+> > wmediumd code. Both wmediumd and mac80211_hwsim work fine up to kernel
+> > version 4.17. The problem comes only from kernel 4.18. Since there are
+> > some wmediumd related-codes in mac80211_hwsim, I was wondering whether
+> > something wasn't missing in mac80211_hwsim (or even some needed
+> > changes in wmediumd) that is causing such problem.
+>
+> Hmm, but are there? There's basically no change in hwsim between 4.17
+> and 4.18, only a few error path cleanups/fixes and the SUPPORTS_PS
+> change which also shouldn't matter for this?
+>
+> > Another weird thing
+> > is the channel, since the channel is the same as defined in hostapd
+> > and doesn't match 5Ghz channels.
+>
+> You mean the DS element? That's just from the frame itself.
+Is this supposed to work at all? AFAICS, in hwsim channel matching
+checks are only done in non-mediumd path (no_nl), and wmediumd also
+doesn't have any checks? So, hostapd responds to all probe requests in all
+channels. Am I missing something?
