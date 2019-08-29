@@ -2,68 +2,106 @@ Return-Path: <SRS0=l8aR=WZ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FC04C3A59F
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Aug 2019 10:03:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07F42C3A5A3
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Aug 2019 10:52:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1041D23405
-	for <linux-wireless@archiver.kernel.org>; Thu, 29 Aug 2019 10:03:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C4B01233FF
+	for <linux-wireless@archiver.kernel.org>; Thu, 29 Aug 2019 10:52:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1567075944;
+	bh=GzeRH4UgyVOHI0ey86YhHXT1lIRYzwFIUv1/hmjQmCg=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=MAZNmvLDHv/6nGiYtBHAj/Z/YFP9QUJgn36yoUx0txb1bjQQX2FE7WB8nr9YY4njP
+	 ACg24rbsOH8Z/2UDlz4ISA2megG81Vtl8MkDJ1A+ypXeHi2F5hx6v8ND7g+pesF1LD
+	 Uth+G4yhOlMV8LTa5E2+HTQi7mVEuTQqRu+RIb7s=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727085AbfH2KDl (ORCPT
+        id S1728129AbfH2KwQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 29 Aug 2019 06:03:41 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:57720 "EHLO mx1.redhat.com"
+        Thu, 29 Aug 2019 06:52:16 -0400
+Received: from mail.kernel.org ([198.145.29.99]:59174 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727026AbfH2KDl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Aug 2019 06:03:41 -0400
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S1728552AbfH2KvQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 29 Aug 2019 06:51:16 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id EE0E4106E289;
-        Thu, 29 Aug 2019 10:03:40 +0000 (UTC)
-Received: from localhost (unknown [10.43.2.236])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 4C72660C05;
-        Thu, 29 Aug 2019 10:03:40 +0000 (UTC)
-Date:   Thu, 29 Aug 2019 12:03:37 +0200
-From:   Stanislaw Gruszka <sgruszka@redhat.com>
-To:     Sergey Maranchuk <slav0nic0@gmail.com>
-Cc:     linux-wireless@vger.kernel.org
-Subject: Re: rt2x00: 5Ghz signal power degradation with linux 5.2 kernel
-Message-ID: <20190829100336.GA1930@redhat.com>
-References: <CAJp6tx-L0Q4_OaUp+xMod0jsLjAByqnbrvk=JbEq5LOxTdhr_g@mail.gmail.com>
- <CAJp6tx-RcubaTdL4tK1fuLv08s-pqU+RQz4m1mb1LRhg3625zw@mail.gmail.com>
+        by mail.kernel.org (Postfix) with ESMTPSA id 9C48B2341C;
+        Thu, 29 Aug 2019 10:51:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1567075875;
+        bh=GzeRH4UgyVOHI0ey86YhHXT1lIRYzwFIUv1/hmjQmCg=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=S+YXI7P0GVfHsBInUPcElNsOyvzqNlCPTSM18b62xSixH0NcyiAWiKcu0kzVsJ1CE
+         gUI9JaWjwVsi6GgkQ8b+Eg+jW4QS7kynhtNp4al8SZYO0ZSQxNVUmZtrta2TGOYz9U
+         x2qQZwdv1M8/3flSlEjWy/MHNPgINL8YqNc4j1Go=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Johannes Berg <johannes.berg@intel.com>,
+        Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.4 3/6] mac80211: fix possible sta leak
+Date:   Thu, 29 Aug 2019 06:51:07 -0400
+Message-Id: <20190829105110.2748-3-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20190829105110.2748-1-sashal@kernel.org>
+References: <20190829105110.2748-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAJp6tx-RcubaTdL4tK1fuLv08s-pqU+RQz4m1mb1LRhg3625zw@mail.gmail.com>
-User-Agent: Mutt/1.5.21 (2010-09-15)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.6.2 (mx1.redhat.com [10.5.110.64]); Thu, 29 Aug 2019 10:03:41 +0000 (UTC)
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, Aug 29, 2019 at 12:42:44PM +0300, Sergey Maranchuk wrote:
-> I got some problem after upgrade kernel to 5.2 version (debian testing
-> linux-image-5.2.0-2-amd64). 5Ghz client  stopped to see AP.
-> Some tests with 1metre distance between client-AP: 2.4Ghz  -22dBm, for
-> 5Ghz - 53dBm !, for longer distance (8m + walls) 2.4 - 61dBm, 5Ghz not
-> visible.
-> All works fine with kernel 4.19 and on windows 10, other devices also
-> see AP without any problems with same distance.
+From: Johannes Berg <johannes.berg@intel.com>
 
-After looking on the changlog most possible cause of it seems to be
-commit 9ad3b55654455258a9463384edb40077439d879f:
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=9ad3b55654455258a9463384edb40077439d879f
+[ Upstream commit 5fd2f91ad483baffdbe798f8a08f1b41442d1e24 ]
 
-Please try to revert it, and see if that improve rx signal level. 
+If TDLS station addition is rejected, the sta memory is leaked.
+Avoid this by moving the check before the allocation.
 
-It that would not help, please try to narrow regression to two
-consecutive kernel versions - it is: 4.19 -> 5.0 or 5.0 -> 5.1
-or 5.1 -> 5.2 ?
+Cc: stable@vger.kernel.org
+Fixes: 7ed5285396c2 ("mac80211: don't initiate TDLS connection if station is not associated to AP")
+Link: https://lore.kernel.org/r/20190801073033.7892-1-johannes@sipsolutions.net
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ net/mac80211/cfg.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-Stanislaw
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 7349bf26ae7b3..1999a7eaa6920 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1211,6 +1211,11 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
+ 	if (is_multicast_ether_addr(mac))
+ 		return -EINVAL;
+ 
++	if (params->sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER) &&
++	    sdata->vif.type == NL80211_IFTYPE_STATION &&
++	    !sdata->u.mgd.associated)
++		return -EINVAL;
++
+ 	sta = sta_info_alloc(sdata, mac, GFP_KERNEL);
+ 	if (!sta)
+ 		return -ENOMEM;
+@@ -1228,10 +1233,6 @@ static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
+ 	if (params->sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER))
+ 		sta->sta.tdls = true;
+ 
+-	if (sta->sta.tdls && sdata->vif.type == NL80211_IFTYPE_STATION &&
+-	    !sdata->u.mgd.associated)
+-		return -EINVAL;
+-
+ 	err = sta_apply_parameters(local, sta, params);
+ 	if (err) {
+ 		sta_info_free(local, sta);
+-- 
+2.20.1
+
