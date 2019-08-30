@@ -4,42 +4,44 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5367DC3A5A7
-	for <linux-wireless@archiver.kernel.org>; Fri, 30 Aug 2019 11:25:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FB2BC3A5A4
+	for <linux-wireless@archiver.kernel.org>; Fri, 30 Aug 2019 11:41:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 261E62186A
-	for <linux-wireless@archiver.kernel.org>; Fri, 30 Aug 2019 11:25:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3101121721
+	for <linux-wireless@archiver.kernel.org>; Fri, 30 Aug 2019 11:41:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727809AbfH3LZI (ORCPT
+        id S1727938AbfH3LlE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 30 Aug 2019 07:25:08 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:39428 "EHLO
+        Fri, 30 Aug 2019 07:41:04 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:39488 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727780AbfH3LZA (ORCPT
+        with ESMTP id S1727522AbfH3LlE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Aug 2019 07:25:00 -0400
+        Fri, 30 Aug 2019 07:41:04 -0400
 Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1i3f1V-0001lc-Vz; Fri, 30 Aug 2019 14:24:58 +0300
+        id 1i3fH3-0001na-JL; Fri, 30 Aug 2019 14:41:02 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org
-Date:   Fri, 30 Aug 2019 14:24:45 +0300
-Message-Id: <20190830112451.21655-3-luca@coelho.fi>
+Date:   Fri, 30 Aug 2019 14:40:57 +0300
+Message-Id: <20190830114057.22197-1-luca@coelho.fi>
 X-Mailer: git-send-email 2.23.0.rc1
-In-Reply-To: <20190830112451.21655-1-luca@coelho.fi>
-References: <20190830112451.21655-1-luca@coelho.fi>
+In-Reply-To: <20190830112451.21655-3-luca@coelho.fi>
+References: <20190830112451.21655-3-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 1/8] cfg80211: always shut down on HW rfkill
+Subject: [PATCH v2] mac80211: vht: add support VHT EXT NSS BW in parsing VHT
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
+
+From: Mordechay Goodstein <mordechay.goodstein@intel.com>
 
 This fixes was missed in parsing the vht capabilities max bw
 support.
@@ -48,7 +50,11 @@ Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
 Fixes: e80d642552a3 ("mac80211: copy VHT EXT NSS BW Support/Capable data to station")
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- net/mac80211/vht.c | 10 +++++++++-
+
+Fixed the subject in v2 (no idea what happened there).
+
+
+net/mac80211/vht.c | 10 +++++++++-
  1 file changed, 9 insertions(+), 1 deletion(-)
 
 diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
