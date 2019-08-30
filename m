@@ -2,37 +2,37 @@ Return-Path: <SRS0=jb13=W2=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69E20C3A5A3
-	for <linux-wireless@archiver.kernel.org>; Fri, 30 Aug 2019 07:17:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59333C41514
+	for <linux-wireless@archiver.kernel.org>; Fri, 30 Aug 2019 07:19:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 46ABD23405
-	for <linux-wireless@archiver.kernel.org>; Fri, 30 Aug 2019 07:17:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2CF2C23428
+	for <linux-wireless@archiver.kernel.org>; Fri, 30 Aug 2019 07:19:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728181AbfH3HRD (ORCPT
+        id S1728550AbfH3HTT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 30 Aug 2019 03:17:03 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:59608 "EHLO
+        Fri, 30 Aug 2019 03:19:19 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:59630 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726510AbfH3HRC (ORCPT
+        with ESMTP id S1728538AbfH3HTT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Aug 2019 03:17:02 -0400
+        Fri, 30 Aug 2019 03:19:19 -0400
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92.1)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1i3b9Y-0008HG-1K; Fri, 30 Aug 2019 09:17:00 +0200
-Message-ID: <94e4db96eb0602dd795cbbc171a7a3b7383a0b37.camel@sipsolutions.net>
-Subject: Re: [PATCH] cfg80211: Add new helper function for channels
+        id 1i3bBl-0008KG-Kb; Fri, 30 Aug 2019 09:19:17 +0200
+Message-ID: <b97b57bdd07fa5cfdc07d5fd451d506b20e0cd0e.camel@sipsolutions.net>
+Subject: Re: [PATCH] cfg80211: Add new fields to wiphy structure
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     Amar Singhal <asinghal@codeaurora.org>, jouni@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org, jjohnson@codeaurora.org,
         rmanohar@codeaurora.org
-Date:   Fri, 30 Aug 2019 09:16:59 +0200
-In-Reply-To: <1567115381-7831-1-git-send-email-asinghal@codeaurora.org>
-References: <1567115381-7831-1-git-send-email-asinghal@codeaurora.org>
+Date:   Fri, 30 Aug 2019 09:19:16 +0200
+In-Reply-To: <1567116559-17419-1-git-send-email-asinghal@codeaurora.org>
+References: <1567116559-17419-1-git-send-email-asinghal@codeaurora.org>
 Content-Type: text/plain; charset="UTF-8"
 User-Agent: Evolution 3.30.5 (3.30.5-1.fc29) 
 MIME-Version: 1.0
@@ -42,65 +42,28 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, 2019-08-29 at 14:49 -0700, Amar Singhal wrote:
-> Add new helper function to convert (chan_number, oper_class) pair to
-> frequency. Call this function ieee80211_channel_op_class_to_frequency.
-> This function would be very useful in the context of 6 GHz channels,
-> where channel number is not unique.
+On Thu, 2019-08-29 at 15:09 -0700, Amar Singhal wrote:
+> A channel is completely defined by (oper_class, channel number) tuple,
+> and not just by center frequency. Operating class also tells about the
+> bandwidth supported by the channel. Therefore add the operating class and
+> channel number to the wiphy structure.
 
-Nit: it is unique within 6 GHz, just not within the overall channel
-number space, and that was actually already not unique before, it just
-didn't matter much to us :-)
+We don't split out the channels that way, so this doesn't seem like the
+right approach.
 
-I may reword that when I apply it.
+Instead, we list the *frequencies*, and then have flags for the
+permitted bandwidths. We already support things like "no-HT40+" and
+could possibly extend that to others, if it were _really_ possible,
+though in practice those limitations are usually not present in devices,
+just in the spec, and we can rely on hostapd/wpa_s to take care of them.
 
-> Signed-off-by: Amar Singhal <asinghal@codeaurora.org>
-> ---
->  include/net/cfg80211.h | 10 ++++++++++
->  net/wireless/util.c    | 23 +++++++++++++++++++++++
->  2 files changed, 33 insertions(+)
-> 
-> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-> index 6467b60..decafba 100644
-> --- a/include/net/cfg80211.h
-> +++ b/include/net/cfg80211.h
-> @@ -4914,1 +4914,1 @@ static inline void *wdev_priv(struct wireless_dev *wdev)
->  int ieee80211_channel_to_frequency(int chan, enum nl80211_band band);
-> 
->  /**
-> + * ieee80211_channel_op_class_to_frequency - convert
-> + * (channel, operating class) to frequency
+Even if you do have those limitations, this isn't the right way to go
+about it, because it'll be very confusing to userspace to see the same
+frequency multiple times. It'd also cause a bunch of problems with
+scanning (listing the same channel twice) etc.
 
-That's formatted badly, the short description must fit on one line.
-
-> +	if (global_op_class >= 131 && global_op_class <= 135)
-> +		return (5940 + 5 * chan_num);
-> +	else if (global_op_class >= 115 && global_op_class <= 130)
-> +		return (5000 + 5 * chan_num);
-> +	else if (global_op_class >= 112 && global_op_class <= 113)
-> +		return (5000 + 5 * chan_num);
-> +	else if (global_op_class >= 109 && global_op_class <= 110)
-> +		return (4000 + 5 * chan_num);
-> +	else if (global_op_class >= 83 && global_op_class <= 84)
-> +		return (2407 + 5 * chan_num);
-> +	else if (global_op_class == 81)
-> +		return (2407 + 5 * chan_num);
-> +	else if (global_op_class == 82)
-> +		return (2414 + 5 * chan_num);
-> +	else if (global_op_class == 180)
-> +		return (56160 + 5 * chan_num);
-
-I think it would be good to have a list of valid channel numbers for
-them as well. I was wondering about 82 for a second there for example,
-until I looked up again that it is just for channel 14.
-
-I think this is also missing 83/84 and various other operating classes
-for wider channels. Perhaps in those we don't really need to check the
-channel numbers precisely, i.e. we could probably treat 81/83/84 all the
-same.
-
-But depending on what you feed to the function, it's possible that you
-could encounter those other operating classes.
+Since you haven't explained why you want to do this I cannot offer any
+further guidance, but this cannot be the right approach.
 
 johannes
 
