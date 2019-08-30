@@ -6,33 +6,38 @@ X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59333C41514
-	for <linux-wireless@archiver.kernel.org>; Fri, 30 Aug 2019 07:19:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CED5C3A5A3
+	for <linux-wireless@archiver.kernel.org>; Fri, 30 Aug 2019 07:32:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2CF2C23428
-	for <linux-wireless@archiver.kernel.org>; Fri, 30 Aug 2019 07:19:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EA64422CE3
+	for <linux-wireless@archiver.kernel.org>; Fri, 30 Aug 2019 07:32:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728550AbfH3HTT (ORCPT
+        id S1728201AbfH3HcN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 30 Aug 2019 03:19:19 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:59630 "EHLO
+        Fri, 30 Aug 2019 03:32:13 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:59810 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728538AbfH3HTT (ORCPT
+        with ESMTP id S1727958AbfH3HcN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Aug 2019 03:19:19 -0400
+        Fri, 30 Aug 2019 03:32:13 -0400
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92.1)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1i3bBl-0008KG-Kb; Fri, 30 Aug 2019 09:19:17 +0200
-Message-ID: <b97b57bdd07fa5cfdc07d5fd451d506b20e0cd0e.camel@sipsolutions.net>
-Subject: Re: [PATCH] cfg80211: Add new fields to wiphy structure
+        id 1i3bOF-00007y-3r; Fri, 30 Aug 2019 09:32:11 +0200
+Message-ID: <39d646206446159a2b0a67ee7d8667483ade0733.camel@sipsolutions.net>
+Subject: Re: mac80211_hwsim (kernel 4.18+): wmediumd + 2.4Ghz
 From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Amar Singhal <asinghal@codeaurora.org>, jouni@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org, jjohnson@codeaurora.org,
-        rmanohar@codeaurora.org
-Date:   Fri, 30 Aug 2019 09:19:16 +0200
-In-Reply-To: <1567116559-17419-1-git-send-email-asinghal@codeaurora.org>
-References: <1567116559-17419-1-git-send-email-asinghal@codeaurora.org>
+To:     Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Cc:     Ramon Fontes <ramonreisfontes@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Date:   Fri, 30 Aug 2019 09:32:10 +0200
+In-Reply-To: <CABPxzYLrTC3kS86iyfq+RY=XEgjedu2MWPtn+i+H50jPz3oh3w@mail.gmail.com> (sfid-20190829_210601_376380_DF9028CF)
+References: <CAK8U23biuUY9hWE1NOnSbJCRtRVfdg1a27ZOkU5cbaGdzZLYEA@mail.gmail.com>
+         <fa029365caf3db963b1c2ec05ae389a8c8fc20fb.camel@sipsolutions.net>
+         <CAK8U23aHprXtZm2PV3sj6g4Da_ponK9L0YmSO1tb6xoFgK-ZLA@mail.gmail.com>
+         <80d9c12986ec0a13c34672ca1c16f37cae0cc096.camel@sipsolutions.net>
+         <CABPxzYLrTC3kS86iyfq+RY=XEgjedu2MWPtn+i+H50jPz3oh3w@mail.gmail.com>
+         (sfid-20190829_210601_376380_DF9028CF)
 Content-Type: text/plain; charset="UTF-8"
 User-Agent: Evolution 3.30.5 (3.30.5-1.fc29) 
 MIME-Version: 1.0
@@ -42,28 +47,24 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, 2019-08-29 at 15:09 -0700, Amar Singhal wrote:
-> A channel is completely defined by (oper_class, channel number) tuple,
-> and not just by center frequency. Operating class also tells about the
-> bandwidth supported by the channel. Therefore add the operating class and
-> channel number to the wiphy structure.
+On Fri, 2019-08-30 at 00:35 +0530, Krishna Chaitanya wrote:
+> 
+> Is this supposed to work at all? AFAICS, in hwsim channel matching
+> checks are only done in non-mediumd path (no_nl), and wmediumd also
+> doesn't have any checks? So, hostapd responds to all probe requests in all
+> channels. Am I missing something?
 
-We don't split out the channels that way, so this doesn't seem like the
-right approach.
+Hmm. Interesting observation, I wasn't aware of that.
 
-Instead, we list the *frequencies*, and then have flags for the
-permitted bandwidths. We already support things like "no-HT40+" and
-could possibly extend that to others, if it were _really_ possible,
-though in practice those limitations are usually not present in devices,
-just in the spec, and we can rely on hostapd/wpa_s to take care of them.
+That certainly explains the situation though - on 2.4 GHz we'd prefer
+using the DS Element, and thus not use the scan result, while on 5 GHz
+we assume that the reported RX frequency is correct (there's no channel
+overlap).
 
-Even if you do have those limitations, this isn't the right way to go
-about it, because it'll be very confusing to userspace to see the same
-frequency multiple times. It'd also cause a bunch of problems with
-scanning (listing the same channel twice) etc.
+Still doesn't explain why it should work in 4.17 and not in 4.18, there
+aren't a lot of wifi changes there at all.
 
-Since you haven't explained why you want to do this I cannot offer any
-further guidance, but this cannot be the right approach.
+I guess we should fix that in hwsim, anyone esle want to? :-)
 
 johannes
 
