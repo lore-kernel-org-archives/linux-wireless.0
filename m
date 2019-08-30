@@ -2,154 +2,65 @@ Return-Path: <SRS0=jb13=W2=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0842C3A5A6
-	for <linux-wireless@archiver.kernel.org>; Fri, 30 Aug 2019 10:40:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27F85C3A5A4
+	for <linux-wireless@archiver.kernel.org>; Fri, 30 Aug 2019 10:41:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7740C2073F
-	for <linux-wireless@archiver.kernel.org>; Fri, 30 Aug 2019 10:40:25 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="BbrWwki/"
+	by mail.kernel.org (Postfix) with ESMTP id 0161F21874
+	for <linux-wireless@archiver.kernel.org>; Fri, 30 Aug 2019 10:41:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728088AbfH3KkY (ORCPT
+        id S1727792AbfH3Klq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 30 Aug 2019 06:40:24 -0400
-Received: from mail-wm1-f65.google.com ([209.85.128.65]:50870 "EHLO
-        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725780AbfH3KkX (ORCPT
+        Fri, 30 Aug 2019 06:41:46 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:34642 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727603AbfH3Klq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Aug 2019 06:40:23 -0400
-Received: by mail-wm1-f65.google.com with SMTP id v15so6798918wml.0
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Aug 2019 03:40:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=JjCGk953Wcxs0Gns8eITBhEGK4wipyV/zJbSLGtTENw=;
-        b=BbrWwki/Fpi650/waZ8y2mrYZweWZJ6dZBFUqCrvE0H8xzYfNUsZ3gGJo4V++UiYBN
-         sP1U3DvpfcLt1I2ehDFznhbplv8xCtqnfaeC+Dv5uhdr1Jw4SIXSSSZqarrVo6QbosE6
-         La2IBTrg+GJlKRebcEPWd9gta0L6ftelr1mvY=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=JjCGk953Wcxs0Gns8eITBhEGK4wipyV/zJbSLGtTENw=;
-        b=BRw8fFD8SHvTnLqT3a99ydyXIU03crTh+mFLRJn/oveM3nZvW69XJXC0T5MMSRjThS
-         OkwKzuwPTHpRZ/70aFYVG5+7PW+dVovHMbcpTaKGm+ExfPDYe/BZ10DvlBmCN2xhO+K9
-         70SdqQMxogxyZcnjaEDFQd2wDL+GX19S+V+K8pAGsoip1N6bLuFe7XgWJ98Qr05hnLHo
-         Pd3DK7MdXyT5Tnj7YTv6x1JHAu4P6d2AMyP5j6wdKloFCaN3Y3iz0zqmjp1pdtxMMDsO
-         0+iP9/FVwn7R+g3lNZuWP8AeDX/gVNn9d4ccdRUtgSB0H1KO0Hz1GvYh08cumvvi2hyR
-         +f8w==
-X-Gm-Message-State: APjAAAWLLOS4q5LQLwtYOF5xJKAnNUyhkva5BoOx7/PZAd/MYKwwRMSY
-        erHn+ghHqUQQzQhVThHo1UP6SQ==
-X-Google-Smtp-Source: APXvYqwsiqEA7cNNg03VqSAMyz/r0eDF0hhMDXWNFrG7yLAhbFGAh0QRVnAAEjQZKQjbE05eXaMaFg==
-X-Received: by 2002:a1c:ed1a:: with SMTP id l26mr18258664wmh.34.1567161621645;
-        Fri, 30 Aug 2019 03:40:21 -0700 (PDT)
-Received: from [10.176.68.244] ([192.19.248.250])
-        by smtp.gmail.com with ESMTPSA id u6sm5254220wmm.26.2019.08.30.03.40.20
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 30 Aug 2019 03:40:21 -0700 (PDT)
+        Fri, 30 Aug 2019 06:41:46 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.92.1)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1i3eLg-00046D-7h; Fri, 30 Aug 2019 12:41:44 +0200
+Message-ID: <6222b9d9d125c4c3a9f60cc0fe73cef2011b9959.camel@sipsolutions.net>
 Subject: Re: [PATCH] cfg80211: Add new helper function for channels
-To:     Amar Singhal <asinghal@codeaurora.org>, jouni@codeaurora.org
-Cc:     johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-        jjohnson@codeaurora.org, rmanohar@codeaurora.org
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Amar Singhal <asinghal@codeaurora.org>, jouni@codeaurora.org
+Cc:     linux-wireless@vger.kernel.org, jjohnson@codeaurora.org,
+        rmanohar@codeaurora.org
+Date:   Fri, 30 Aug 2019 12:41:43 +0200
+In-Reply-To: <01082dca-8d71-c674-1f61-ab5d7e07c007@broadcom.com> (sfid-20190830_124022_495117_5F33303B)
 References: <1567115381-7831-1-git-send-email-asinghal@codeaurora.org>
-From:   Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <01082dca-8d71-c674-1f61-ab5d7e07c007@broadcom.com>
-Date:   Fri, 30 Aug 2019 12:40:19 +0200
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+         <01082dca-8d71-c674-1f61-ab5d7e07c007@broadcom.com>
+         (sfid-20190830_124022_495117_5F33303B)
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.30.5 (3.30.5-1.fc29) 
 MIME-Version: 1.0
-In-Reply-To: <1567115381-7831-1-git-send-email-asinghal@codeaurora.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 8/29/2019 11:49 PM, Amar Singhal wrote:
-> Add new helper function to convert (chan_number, oper_class) pair to
-> frequency. Call this function ieee80211_channel_op_class_to_frequency.
-> This function would be very useful in the context of 6 GHz channels,
-> where channel number is not unique.
+On Fri, 2019-08-30 at 12:40 +0200, Arend Van Spriel wrote:
 
-That 'unique' statement does not apply to 6GHz by itself. The addition 
-of 6GHz channels makes channel numbers across bands not unique.
-
-The funcion
-> Signed-off-by: Amar Singhal <asinghal@codeaurora.org>
-> ---
->   include/net/cfg80211.h | 10 ++++++++++
->   net/wireless/util.c    | 23 +++++++++++++++++++++++
->   2 files changed, 33 insertions(+)
+> > +EXPORT_SYMBOL(ieee80211_channel_op_class_to_frequency);
 > 
-> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-> index 6467b60..decafba 100644
-> --- a/include/net/cfg80211.h
-> +++ b/include/net/cfg80211.h
-> @@ -4914,1 +4914,1 @@ static inline void *wdev_priv(struct wireless_dev *wdev)
->   int ieee80211_channel_to_frequency(int chan, enum nl80211_band band);
+> The function ieee80211_operating_class_to_band() uses ranges within 
+> switch statement, eg.:
 > 
->   /**
-> + * ieee80211_channel_op_class_to_frequency - convert
-> + * (channel, operating class) to frequency
-> + * @chan_num: channel number
-> + * @global_op_class: global operating class
-> + *
-> + * Return: The corresponding frequency, or 0 if the conversion failed.
-> + */
-> +int ieee80211_channel_op_class_to_frequency(u8 chan_num, u8 global_op_class);
-> +
-> +/**
->    * ieee80211_frequency_to_channel - convert frequency to channel number
->    * @freq: center frequency
->    * Return: The corresponding channel, or 0 if the conversion failed.
-> diff --git a/net/wireless/util.c b/net/wireless/util.c
-> index 9aba8d54..7f64b4a 100644
-> --- a/net/wireless/util.c
-> +++ b/net/wireless/util.c
-> @@ -144,6 +144,29 @@ struct ieee80211_channel *ieee80211_get_channel(struct wiphy *wiphy, int freq)
->   }
->   EXPORT_SYMBOL(ieee80211_get_channel);
-> 
-> +int ieee80211_channel_op_class_to_frequency(u8 chan_num, u8 global_op_class)
-> +{
-> +	if (global_op_class >= 131 && global_op_class <= 135)
-> +		return (5940 + 5 * chan_num);
-> +	else if (global_op_class >= 115 && global_op_class <= 130)
-> +		return (5000 + 5 * chan_num);
-> +	else if (global_op_class >= 112 && global_op_class <= 113)
-> +		return (5000 + 5 * chan_num);
-> +	else if (global_op_class >= 109 && global_op_class <= 110)
-> +		return (4000 + 5 * chan_num);
-> +	else if (global_op_class >= 83 && global_op_class <= 84)
-> +		return (2407 + 5 * chan_num);
-> +	else if (global_op_class == 81)
-> +		return (2407 + 5 * chan_num);
-> +	else if (global_op_class == 82)
-> +		return (2414 + 5 * chan_num);
-> +	else if (global_op_class == 180)
-> +		return (56160 + 5 * chan_num);
-> +	else
-> +		return 0;
-> +}
-> +EXPORT_SYMBOL(ieee80211_channel_op_class_to_frequency);
+>          case 128 ... 130:
+>                  *band = NL80211_BAND_5GHZ;
+>                  return true;
 
-The function ieee80211_operating_class_to_band() uses ranges within 
-switch statement, eg.:
+No that you remind me - how is this new function not just a composition
+of the existing ones?
 
-         case 128 ... 130:
-                 *band = NL80211_BAND_5GHZ;
-                 return true;
+i.e. just convert the op_class to band first, and then (band, channel)
+to freq?
 
-For consistency it might be good to do the same here.
+johannes
 
-Regards,
-Arend
