@@ -7,61 +7,61 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3808AC3A5A7
-	for <linux-wireless@archiver.kernel.org>; Sat, 31 Aug 2019 18:07:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA0F7C3A5A8
+	for <linux-wireless@archiver.kernel.org>; Sat, 31 Aug 2019 18:07:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F282523426
-	for <linux-wireless@archiver.kernel.org>; Sat, 31 Aug 2019 18:07:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 927ED23426
+	for <linux-wireless@archiver.kernel.org>; Sat, 31 Aug 2019 18:07:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VI5APHEi"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ql6Wt/+T"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728512AbfHaSHD (ORCPT
+        id S1728526AbfHaSHF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 31 Aug 2019 14:07:03 -0400
-Received: from mail-ot1-f65.google.com ([209.85.210.65]:45113 "EHLO
-        mail-ot1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728504AbfHaSHC (ORCPT
+        Sat, 31 Aug 2019 14:07:05 -0400
+Received: from mail-oi1-f195.google.com ([209.85.167.195]:43237 "EHLO
+        mail-oi1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728519AbfHaSHF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 31 Aug 2019 14:07:02 -0400
-Received: by mail-ot1-f65.google.com with SMTP id m24so9979550otp.12
-        for <linux-wireless@vger.kernel.org>; Sat, 31 Aug 2019 11:07:01 -0700 (PDT)
+        Sat, 31 Aug 2019 14:07:05 -0400
+Received: by mail-oi1-f195.google.com with SMTP id y8so7764133oih.10
+        for <linux-wireless@vger.kernel.org>; Sat, 31 Aug 2019 11:07:04 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=p4OjUwuRl59WlUGstgY0rrpth8qfhHkKxY5XVhXp0kA=;
-        b=VI5APHEirWqa3W5eM9KuQPdntog9B5PgTFwRUCmiN42v43xsUeu0A5Qr19LcqK2H8S
-         gMC+50rlVm2TVDEd0/A/7pjjEcojYEGqsjlWkXO+jPR13g/JjHhtdLgty5Ea8EPgJv5T
-         xvo+lWDHSr1Cus77NBz8/kKazbDRrF6Vup5312mDf4NzfZtv4Wijkwj79+8VRK4qwscj
-         ASAuJQwNniaRA7Ohc9JLOjOl9aTHEUaZeD6TWz4hcytxZj0ysjjnDQ1eThd61XcQ0Dx5
-         /JdeRgFP8xel+EKmxFcgQeG0ELLApsFZokiLgtDP3LJhbnOr8U3Vav0RDREdzqX48sd0
-         Gcng==
+        bh=h9vkFSIyZKr/2ZT3potH3SV9JMxBedNQOEGKRc6BAO0=;
+        b=ql6Wt/+TF2BCuBVoVtDSttrpQp3OPGa8mBNekdSqBe5cKYok1EbRNu22gHmvEEKWrU
+         Kx/eBO43BW4UxvtODtbQkf4WiFr4zM0RyCHvJ7iTvgOwuLQn7YbphNa0W7/vNP5XqLsg
+         hyZWYo2jVJSABxNKYr1WkXG3DJ3XN7c+5StrW2ZvrnGRVVpnHAcf6Fi0XJZwYQdIodIl
+         E6VnPyI4hAC/2Av00X54zLaYVsVD9ygZwoiUtSBG71ED+e894OOmIzZfXYVanVJ7SUJx
+         fX9MkNRc8JXh01n4IvUToqNbUtEFBLuLNriGTdNA1iFu39IKyuRUab7Kfb/RCV4xdkTE
+         rIRw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:sender:from:to:cc:subject:date:message-id
          :in-reply-to:references;
-        bh=p4OjUwuRl59WlUGstgY0rrpth8qfhHkKxY5XVhXp0kA=;
-        b=dJ28AN0daZOciV5rGuhteMyLvpPodjgwPjPNNdUNrwb+6L+N3ejB21mymuB6z1W9PN
-         GMIgTKOW1uYYNsWFMdcPgerh/F7hlXAOGU1Cd9xB6lk6PeiR/RMKzZ/26quZ3jaZBqOW
-         oDqjb8udQ/RZBSm1DAzcfC247Okhf56n8MzL/lYGNtv+kPTDXvMooNVdquffbhceJ8AS
-         OXoZpLNL/sVv4grLxBF6l0Rh99VZBoCrzN/uiAFErGF3wS3lkz1OhgQlE6llTKxxJKxH
-         JTbHGaCsBUxONoob0AzsNA1I/ZVvya65RRBWrquPpflsCxkMAQMpzPB4n9f7y9wiy3/p
-         /eSg==
-X-Gm-Message-State: APjAAAWoDnejetNJT+tA7gs16JD65wO3L1wiKFI3NUguNb+FHeb/jMMG
-        iAFCwQeqmnNsDg/PPSTv0Ok=
-X-Google-Smtp-Source: APXvYqwA2TymP75d8N9tR0J/UN2CoIvsPEFjZXDe5gZpicYN7vZVI6CXFI5QkYRcasTIbjkVQcN+YA==
-X-Received: by 2002:a05:6830:2056:: with SMTP id f22mr16020467otp.177.1567274820958;
-        Sat, 31 Aug 2019 11:07:00 -0700 (PDT)
+        bh=h9vkFSIyZKr/2ZT3potH3SV9JMxBedNQOEGKRc6BAO0=;
+        b=DPbnEPRHQQh/6PclYBeemkfdBsOIv35hWk+ifF3iI02aM7AJO4eAslQbpNJf9Swbfr
+         CnSPfRxLJmBB6mrGrleRViX1UKXHKdR6IKaP6LhxT6JAAsj9rV9Mi0BPa6DIz/PXyxfQ
+         O+4d7HdgxiKde5aOFhTo2uFjeZqCUHXG1lwNtN6rDw5U3qYm5ofUU+Kc6xYT7gsK2gGG
+         ccDEFRXg16NgPVx6IZtm09yz461h33VMCv2rVCbKUU8x52K815WpQnuZyFsI58MYIMoM
+         cm7MXt8chiuUF7ai1eCLzeWNWj0T91BFNvIm8zRCNkKHRI6jNAJNB3419KyfO2smLH4I
+         iVsw==
+X-Gm-Message-State: APjAAAVvxHNSTXxyTWWstAYIoYYA454x8fl7Ic1JqeLBKd558XoQ6FMF
+        vvBV+IuvInfO1IsaPsBhm8I=
+X-Google-Smtp-Source: APXvYqxt+se0BXKseY/OBlV8aGkAyCLs1ir/Y69lPcZUjKNrvQVV9Ze/+LTnxDeoB4TOsmMjPSPt1Q==
+X-Received: by 2002:aca:f4ca:: with SMTP id s193mr13676046oih.131.1567274823935;
+        Sat, 31 Aug 2019 11:07:03 -0700 (PDT)
 Received: from localhost.localdomain (cpe-24-31-245-230.kc.res.rr.com. [24.31.245.230])
-        by smtp.gmail.com with ESMTPSA id c11sm3222346otr.54.2019.08.31.11.07.00
+        by smtp.gmail.com with ESMTPSA id c11sm3222346otr.54.2019.08.31.11.07.02
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Sat, 31 Aug 2019 11:07:00 -0700 (PDT)
+        Sat, 31 Aug 2019 11:07:03 -0700 (PDT)
 From:   Larry Finger <Larry.Finger@lwfinger.net>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org, pkshih@realtek.com,
         Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH 2/5] rtlwifi: rtl8192ee: Replace local bit manipulation macros
-Date:   Sat, 31 Aug 2019 13:06:41 -0500
-Message-Id: <20190831180644.7937-3-Larry.Finger@lwfinger.net>
+Subject: [PATCH 5/5] rtlwifi: rtl8192ee: Remove some variable initializations
+Date:   Sat, 31 Aug 2019 13:06:44 -0500
+Message-Id: <20190831180644.7937-6-Larry.Finger@lwfinger.net>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20190831180644.7937-1-Larry.Finger@lwfinger.net>
 References: <20190831180644.7937-1-Larry.Finger@lwfinger.net>
@@ -70,324 +70,122 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This driver uses a set of local macros to manipulate the RX and TX
-descriptors, which are all little-endian quantities. These macros
-are replaced by the bitfield macros le32p_replace_bits() and
-le32_get_bits(). In several places, the macros operated on an entire
-32-bit word. In these cases, a direct read or replacement is used.
+A number of variables are initialized when declared that set later in the
+routine, thus the initialization can be removed.
 
 Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- .../net/wireless/realtek/rtlwifi/rtl8192ee/trx.h   | 168 ++++++++++-----------
- 1 file changed, 84 insertions(+), 84 deletions(-)
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/trx.c   | 26 ++++++++++++----------
+ 1 file changed, 14 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.h
-index 9a68edd3ea0a..3b00072ba5d2 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.h
-@@ -15,218 +15,218 @@
- #define MAX_RECEIVE_BUFFER_SIZE				8192
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
+index 0706888fe3de..27f1a631b569 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
+@@ -34,7 +34,7 @@ static void _rtl92ee_query_rxphystatus(struct ieee80211_hw *hw,
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct phy_status_rpt *p_phystrpt = (struct phy_status_rpt *)p_drvinfo;
+-	s8 rx_pwr_all = 0, rx_pwr[4];
++	s8 rx_pwr_all, rx_pwr[4];
+ 	u8 rf_rx_num = 0, evm, pwdb_all;
+ 	u8 i, max_spatial_stream;
+ 	u32 rssi, total_rssi = 0;
+@@ -95,6 +95,7 @@ static void _rtl92ee_query_rxphystatus(struct ieee80211_hw *hw,
+ 				rx_pwr_all = 14 - 2 * vga_idx;
+ 				break;
+ 		default:
++				rx_pwr_all = 0;
+ 				break;
+ 		}
+ 		rx_pwr_all += 16;
+@@ -273,7 +274,7 @@ static void _rtl92ee_translate_rx_signal_stuff(struct ieee80211_hw *hw,
+ static void _rtl92ee_insert_emcontent(struct rtl_tcb_desc *ptcb_desc,
+ 				      u8 *virtualaddress8)
+ {
+-	u32 dwtmp = 0;
++	u32 dwtmp;
+ 	__le32 *virtualaddress = (__le32 *)virtualaddress8;
  
- #define SET_TX_DESC_PKT_SIZE(__pdesc, __val)		\
--	SET_BITS_TO_LE_4BYTE(__pdesc, 0, 16, __val)
-+	le32p_replace_bits((__le32 *)__pdesc, __val, GENMASK(15, 0))
- #define SET_TX_DESC_OFFSET(__pdesc, __val)		\
--	SET_BITS_TO_LE_4BYTE(__pdesc, 16, 8, __val)
-+	le32p_replace_bits((__le32 *)__pdesc, __val, GENMASK(23, 16))
- #define SET_TX_DESC_BMC(__pdesc, __val)			\
--	SET_BITS_TO_LE_4BYTE(__pdesc, 24, 1, __val)
-+	le32p_replace_bits((__le32 *)__pdesc, __val, BIT(24))
- #define SET_TX_DESC_HTC(__pdesc, __val)			\
--	SET_BITS_TO_LE_4BYTE(__pdesc, 25, 1, __val)
-+	le32p_replace_bits((__le32 *)__pdesc, __val, BIT(25))
- #define SET_TX_DESC_LAST_SEG(__pdesc, __val)		\
--	SET_BITS_TO_LE_4BYTE(__pdesc, 26, 1, __val)
-+	le32p_replace_bits((__le32 *)__pdesc, __val, BIT(26))
- #define SET_TX_DESC_FIRST_SEG(__pdesc, __val)		\
--	SET_BITS_TO_LE_4BYTE(__pdesc, 27, 1, __val)
-+	le32p_replace_bits((__le32 *)__pdesc, __val, BIT(27))
- #define SET_TX_DESC_LINIP(__pdesc, __val)		\
--	SET_BITS_TO_LE_4BYTE(__pdesc, 28, 1, __val)
-+	le32p_replace_bits((__le32 *)__pdesc, __val, BIT(28))
- #define SET_TX_DESC_OWN(__pdesc, __val)			\
--	SET_BITS_TO_LE_4BYTE(__pdesc, 31, 1, __val)
-+	le32p_replace_bits((__le32 *)__pdesc, __val, BIT(31))
+ 	memset(virtualaddress, 0, 8);
+@@ -458,8 +459,8 @@ u16 rtl92ee_rx_desc_buff_remained_cnt(struct ieee80211_hw *hw, u8 queue_index)
+ {
+ 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	u16 read_point = 0, write_point = 0, remind_cnt = 0;
+-	u32 tmp_4byte = 0;
++	u16 read_point, write_point, remind_cnt;
++	u32 tmp_4byte;
+ 	static bool start_rx;
  
- #define GET_TX_DESC_OWN(__pdesc)			\
--	LE_BITS_TO_4BYTE(__pdesc, 31, 1)
-+	le32_get_bits(*((__le32 *)__pdesc), BIT(31))
+ 	tmp_4byte = rtl_read_dword(rtlpriv, REG_RXQ_TXBD_IDX);
+@@ -493,7 +494,7 @@ u16 rtl92ee_rx_desc_buff_remained_cnt(struct ieee80211_hw *hw, u8 queue_index)
  
- #define SET_TX_DESC_MACID(__pdesc, __val)		\
--	SET_BITS_TO_LE_4BYTE(__pdesc+4, 0, 7, __val)
-+	le32p_replace_bits((__le32 *)(__pdesc + 4), __val, GENMASK(6, 0))
- #define SET_TX_DESC_QUEUE_SEL(__pdesc, __val)		\
--	SET_BITS_TO_LE_4BYTE(__pdesc+4, 15, 1, __val)
-+	le32p_replace_bits((__le32 *)(__pdesc + 4), __val, GENMASK(12, 8))
- #define SET_TX_DESC_RATE_ID(__pdesc, __val)		\
--	SET_BITS_TO_LE_4BYTE(__pdesc+4, 16, 5, __val)
-+	le32p_replace_bits((__le32 *)(__pdesc + 4), __val, GENMASK(20, 16))
- #define SET_TX_DESC_SEC_TYPE(__pdesc, __val)		\
--	SET_BITS_TO_LE_4BYTE(__pdesc+4, 22, 2, __val)
-+	le32p_replace_bits((__le32 *)(__pdesc + 4), __val, GENMASK(23, 22))
- #define SET_TX_DESC_PKT_OFFSET(__pdesc, __val)		\
--	SET_BITS_TO_LE_4BYTE(__pdesc+4, 24, 5, __val)
-+	le32p_replace_bits((__le32 *)(__pdesc + 4), __val, GENMASK(28, 24))
+ static u16 get_desc_addr_fr_q_idx(u16 queue_index)
+ {
+-	u16 desc_address = REG_BEQ_TXBD_IDX;
++	u16 desc_address;
  
- #define SET_TX_DESC_AGG_ENABLE(__pdesc, __val)		\
--	SET_BITS_TO_LE_4BYTE(__pdesc+8, 12, 1, __val)
-+	le32p_replace_bits((__le32 *)(__pdesc + 8), __val, BIT(12))
- #define SET_TX_DESC_RDG_ENABLE(__pdesc, __val)		\
--	SET_BITS_TO_LE_4BYTE(__pdesc+8, 13, 1, __val)
-+	le32p_replace_bits((__le32 *)(__pdesc + 8), __val, BIT(13))
- #define SET_TX_DESC_MORE_FRAG(__pdesc, __val)		\
--	SET_BITS_TO_LE_4BYTE(__pdesc+8, 17, 1, __val)
-+	le32p_replace_bits((__le32 *)(__pdesc + 8), __val, BIT(17))
- #define SET_TX_DESC_AMPDU_DENSITY(__pdesc, __val)	\
--	SET_BITS_TO_LE_4BYTE(__pdesc+8, 20, 3, __val)
-+	le32p_replace_bits((__le32 *)(__pdesc + 8), __val, GENMASK(22, 20))
+ 	switch (queue_index) {
+ 	case BK_QUEUE:
+@@ -524,6 +525,7 @@ static u16 get_desc_addr_fr_q_idx(u16 queue_index)
+ 		desc_address = REG_BEQ_TXBD_IDX;
+ 		break;
+ 	default:
++		desc_address = REG_BEQ_TXBD_IDX;
+ 		break;
+ 	}
+ 	return desc_address;
+@@ -533,7 +535,7 @@ u16 rtl92ee_get_available_desc(struct ieee80211_hw *hw, u8 q_idx)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	u16 point_diff = 0;
+-	u16 current_tx_read_point = 0, current_tx_write_point = 0;
++	u16 current_tx_read_point, current_tx_write_point;
+ 	u32 tmp_4byte;
  
- #define SET_TX_DESC_USE_RATE(__pdesc, __val)		\
--	SET_BITS_TO_LE_4BYTE(__pdesc+12, 8, 1, __val)
-+	le32p_replace_bits((__le32 *)(__pdesc + 12), __val, BIT(8))
- #define SET_TX_DESC_DISABLE_FB(__pdesc, __val)		\
--	SET_BITS_TO_LE_4BYTE(__pdesc+12, 10, 1, __val)
-+	le32p_replace_bits((__le32 *)(__pdesc + 12), __val, BIT(10))
- #define SET_TX_DESC_CTS2SELF(__pdesc, __val)		\
--	SET_BITS_TO_LE_4BYTE(__pdesc+12, 11, 1, __val)
-+	le32p_replace_bits((__le32 *)(__pdesc + 12), __val, BIT(11))
- #define SET_TX_DESC_RTS_ENABLE(__pdesc, __val)		\
--	SET_BITS_TO_LE_4BYTE(__pdesc+12, 12, 1, __val)
-+	le32p_replace_bits((__le32 *)(__pdesc + 12), __val, BIT(12))
- #define SET_TX_DESC_HW_RTS_ENABLE(__pdesc, __val)	\
--	SET_BITS_TO_LE_4BYTE(__pdesc+12, 13, 1, __val)
-+	le32p_replace_bits((__le32 *)(__pdesc + 12), __val, BIT(13))
- #define SET_TX_DESC_NAV_USE_HDR(__pdesc, __val)		\
--	SET_BITS_TO_LE_4BYTE(__pdesc+12, 15, 1, __val)
-+	le32p_replace_bits((__le32 *)(__pdesc + 12), __val, BIT(15))
- #define SET_TX_DESC_MAX_AGG_NUM(__pdesc, __val)		\
--	SET_BITS_TO_LE_4BYTE(__pdesc+12, 17, 5, __val)
-+	le32p_replace_bits((__le32 *)(__pdesc + 12), __val, GENMASK(21, 17))
+ 	tmp_4byte = rtl_read_dword(rtlpriv,
+@@ -557,10 +559,10 @@ void rtl92ee_pre_fill_tx_bd_desc(struct ieee80211_hw *hw,
+ 	u32 pkt_len = skb->len;
+ 	u16 desc_size = 40; /*tx desc size*/
+ 	u32 psblen = 0;
+-	u16 tx_page_size = 0;
+-	u32 total_packet_size = 0;
++	u16 tx_page_size;
++	u32 total_packet_size;
+ 	u16 current_bd_desc;
+-	u8 i = 0;
++	u8 i;
+ 	u16 real_desc_size = 0x28;
+ 	u16	append_early_mode_size = 0;
+ 	u8 segmentnum = 1 << (RTL8192EE_SEG_NUM + 1);
+@@ -649,7 +651,7 @@ void rtl92ee_tx_fill_desc(struct ieee80211_hw *hw,
+ 	struct rtlwifi_tx_info *tx_info = rtl_tx_skb_cb_info(skb);
+ 	u16 seq_number;
+ 	__le16 fc = hdr->frame_control;
+-	unsigned int buf_len = 0;
++	unsigned int buf_len;
+ 	u8 fw_qsel = _rtl92ee_map_hwqueue_to_fwqueue(skb, hw_queue);
+ 	bool firstseg = ((hdr->seq_ctrl &
+ 			    cpu_to_le16(IEEE80211_SCTL_FRAG)) == 0);
+@@ -657,7 +659,7 @@ void rtl92ee_tx_fill_desc(struct ieee80211_hw *hw,
+ 			   cpu_to_le16(IEEE80211_FCTL_MOREFRAGS)) == 0);
+ 	dma_addr_t mapping;
+ 	u8 bw_40 = 0;
+-	u8 short_gi = 0;
++	u8 short_gi;
+ 	__le32 *pdesc = (__le32 *)pdesc8;
  
- /* Dword 4 */
- #define SET_TX_DESC_TX_RATE(__pdesc, __val)		\
--	SET_BITS_TO_LE_4BYTE(__pdesc+16, 0, 7, __val)
-+	le32p_replace_bits((__le32 *)(__pdesc + 16), __val, GENMASK(6, 0))
- #define SET_TX_DESC_DATA_RATE_FB_LIMIT(__pdesc, __val)	\
--	SET_BITS_TO_LE_4BYTE(__pdesc+16, 8, 5, __val)
-+	le32p_replace_bits((__le32 *)(__pdesc + 16), __val, GENMASK(12, 8))
- #define SET_TX_DESC_RTS_RATE_FB_LIMIT(__pdesc, __val)	\
--	SET_BITS_TO_LE_4BYTE(__pdesc+16, 13, 4, __val)
-+	le32p_replace_bits((__le32 *)(__pdesc + 16), __val, GENMASK(16, 13))
- #define SET_TX_DESC_RTS_RATE(__pdesc, __val)		\
--	SET_BITS_TO_LE_4BYTE(__pdesc+16, 24, 5, __val)
-+	le32p_replace_bits((__le32 *)(__pdesc + 16), __val, GENMASK(28, 24))
+ 	if (mac->opmode == NL80211_IFTYPE_STATION) {
+@@ -1009,7 +1011,7 @@ bool rtl92ee_is_tx_desc_closed(struct ieee80211_hw *hw, u8 hw_queue, u16 index)
  
- /* Dword 5 */
- #define SET_TX_DESC_TX_SUB_CARRIER(__pdesc, __val)	\
--	SET_BITS_TO_LE_4BYTE(__pdesc+20, 0, 4, __val)
-+	le32p_replace_bits((__le32 *)(__pdesc + 20), __val, GENMASK(3, 0))
- #define SET_TX_DESC_DATA_BW(__pdesc, __val)		\
--	SET_BITS_TO_LE_4BYTE(__pdesc+20, 5, 2, __val)
-+	le32p_replace_bits((__le32 *)(__pdesc + 20), __val, GENMASK(6, 5))
- #define SET_TX_DESC_RTS_SHORT(__pdesc, __val)		\
--	SET_BITS_TO_LE_4BYTE(__pdesc+20, 12, 1, __val)
-+	le32p_replace_bits((__le32 *)(__pdesc + 20), __val, BIT(12))
- #define SET_TX_DESC_RTS_SC(__pdesc, __val)		\
--	SET_BITS_TO_LE_4BYTE(__pdesc+20, 13, 4, __val)
-+	le32p_replace_bits((__le32 *)(__pdesc + 20), __val, GENMASK(16, 13))
+ 	{
+ 		u16 cur_tx_rp, cur_tx_wp;
+-		u32 tmpu32 = 0;
++		u32 tmpu32;
  
- /* Dword 7 */
- #define SET_TX_DESC_TX_BUFFER_SIZE(__pdesc, __val)	\
--	SET_BITS_TO_LE_4BYTE(__pdesc+28, 0, 16, __val)
-+	le32p_replace_bits((__le32 *)(__pdesc + 28), __val, GENMASK(15, 0))
- 
- /* Dword 9 */
- #define SET_TX_DESC_SEQ(__pdesc, __val)			\
--	SET_BITS_TO_LE_4BYTE(__pdesc+36, 12, 12, __val)
-+	le32p_replace_bits((__le32 *)(__pdesc + 36), __val, GENMASK(23, 12))
- 
- /* Dword 10 */
- #define SET_TX_DESC_TX_BUFFER_ADDRESS(__pdesc, __val)	\
--	SET_BITS_TO_LE_4BYTE(__pdesc+40, 0, 32, __val)
-+	*(__le32 *)(__pdesc + 40) = cpu_to_le32(__val)
- 
- /* Dword 11*/
- #define SET_TX_DESC_NEXT_DESC_ADDRESS(__pdesc, __val)	\
--	SET_BITS_TO_LE_4BYTE(__pdesc+48, 0, 32, __val)
-+	*(__le32 *)(__pdesc + 48) = cpu_to_le32(__val)
- 
- #define SET_EARLYMODE_PKTNUM(__paddr, __val)		\
--	SET_BITS_TO_LE_4BYTE(__paddr, 0, 4, __val)
-+	le32p_replace_bits((__le32 *)__paddr, __val, GENMASK(3, 0))
- #define SET_EARLYMODE_LEN0(__paddr, __val)		\
--	SET_BITS_TO_LE_4BYTE(__paddr, 4, 15, __val)
-+	le32p_replace_bits((__le32 *)__paddr, __val, GENMASK(18, 4))
- #define SET_EARLYMODE_LEN1(__paddr, __val)		\
--	SET_BITS_TO_LE_4BYTE(__paddr, 16, 2, __val)
-+	le32p_replace_bits((__le32 *)__paddr, __val, GENMASK(17, 16))
- #define SET_EARLYMODE_LEN2_1(__paddr, __val)		\
--	SET_BITS_TO_LE_4BYTE(__paddr, 2, 4,  __val)
-+	le32p_replace_bits((__le32 *)__paddr, __val, GENMASK(5, 2))
- #define SET_EARLYMODE_LEN2_2(__paddr, __val)		\
--	SET_BITS_TO_LE_4BYTE(__paddr+4, 0, 8,  __val)
-+	le32p_replace_bits((__le32 *)(__paddr + 4), __val, GENMASK(7, 0))
- #define SET_EARLYMODE_LEN3(__paddr, __val)		\
--	SET_BITS_TO_LE_4BYTE(__paddr+4, 17, 15, __val)
-+	le32p_replace_bits((__le32 *)(__paddr + 4), __val, GENMASK(31, 17))
- #define SET_EARLYMODE_LEN4(__paddr, __val)		\
--	SET_BITS_TO_LE_4BYTE(__paddr+4, 20, 12, __val)
-+	le32p_replace_bits((__le32 *)(__paddr + 4), __val, GENMASK(31, 20))
- 
- /* TX/RX buffer descriptor */
- 
- /* for Txfilldescroptor92ee, fill the desc content. */
- #define SET_TXBUFFER_DESC_LEN_WITH_OFFSET(__pdesc, __offset, __val)            \
--	SET_BITS_TO_LE_4BYTE((__pdesc) + ((__offset) * 16), 0, 16, __val)
-+	le32p_replace_bits((__le32 *)(__pdesc + 16 * __offset), __val,	\
-+			   GENMASK(15, 0))
- #define SET_TXBUFFER_DESC_AMSDU_WITH_OFFSET(__pdesc, __offset, __val)          \
--	SET_BITS_TO_LE_4BYTE((__pdesc) + ((__offset) * 16), 31, 1, __val)
-+	le32p_replace_bits((__le32 *)(__pdesc + 16 * __offset), __val, BIT(31))
- #define SET_TXBUFFER_DESC_ADD_LOW_WITH_OFFSET(__pdesc, __offset, __val)        \
--	SET_BITS_TO_LE_4BYTE((__pdesc) + ((__offset) * 16) + 4, 0, 32, __val)
-+	*(__le32 *)(__pdesc + 16 * __offset + 4) = cpu_to_le32(__val)
- #define SET_TXBUFFER_DESC_ADD_HIGH_WITH_OFFSET(pbd, off, val, dma64)	       \
--	(dma64 ? SET_BITS_TO_LE_4BYTE((pbd) + ((off) * 16) + 8, 0, 32, val) : 0)
-+	 *(__le32 *)(pbd + 16 * off + 8) = dma64 ? cpu_to_le32(val) : 0
- #define GET_TXBUFFER_DESC_ADDR_LOW(__pdesc, __offset)                          \
--	LE_BITS_TO_4BYTE((__pdesc) + ((__offset) * 16) + 4, 0, 32)
-+	le32_to_cpu(*((__le32 *)(__pdesc + 16 * __offset + 4)))
- #define GET_TXBUFFER_DESC_ADDR_HIGH(pbd, off, dma64)			       \
--	(dma64 ? LE_BITS_TO_4BYTE((pbd) + ((off) * 16) + 8, 0, 32) : 0)
-+	(dma64 ? le32_to_cpu(*((__le32 *)(pbd + 16 * off + 8))) : 0)
- 
- /* Dword 0 */
- #define SET_TX_BUFF_DESC_LEN_0(__pdesc, __val)                                 \
--	SET_BITS_TO_LE_4BYTE(__pdesc, 0, 14, __val)
-+	le32p_replace_bits((__le32 *)__pdesc, __val, GENMASK(13, 0))
- #define SET_TX_BUFF_DESC_PSB(__pdesc, __val)                                   \
--	SET_BITS_TO_LE_4BYTE(__pdesc, 16, 15, __val)
-+	le32p_replace_bits((__le32 *)__pdesc, __val, GENMASK(30, 16))
- #define SET_TX_BUFF_DESC_OWN(__pdesc, __val)                                   \
--	SET_BITS_TO_LE_4BYTE(__pdesc, 31, 1, __val)
-+	le32p_replace_bits((__le32 *)__pdesc, __val, BIT(31))
- 
- /* Dword 1 */
- #define SET_TX_BUFF_DESC_ADDR_LOW_0(__pdesc, __val)                            \
--	SET_BITS_TO_LE_4BYTE((__pdesc) + 4, 0, 32, __val)
-+	*(__le32 *)(__pdesc + 4) = cpu_to_le32(__val)
- /* Dword 2 */
- #define SET_TX_BUFF_DESC_ADDR_HIGH_0(bdesc, val, dma64)			       \
- 	SET_TXBUFFER_DESC_ADD_HIGH_WITH_OFFSET(bdesc, 0, val, dma64)
--/* Dword 3 / RESERVED 0 */
- 
- /* RX buffer  */
- 
- /* DWORD 0 */
- #define SET_RX_BUFFER_DESC_DATA_LENGTH(__status, __val)	\
--	SET_BITS_TO_LE_4BYTE(__status, 0, 14, __val)
-+	le32p_replace_bits((__le32 *)__status, __val, GENMASK(13, 0))
- #define SET_RX_BUFFER_DESC_LS(__status, __val)		\
--	SET_BITS_TO_LE_4BYTE(__status, 15, 1, __val)
-+	le32p_replace_bits((__le32 *)__status, __val, BIT(15))
- #define SET_RX_BUFFER_DESC_FS(__status, __val)		\
--	SET_BITS_TO_LE_4BYTE(__status, 16, 1, __val)
-+	le32p_replace_bits((__le32 *)__status, __val, BIT(16))
- #define SET_RX_BUFFER_DESC_TOTAL_LENGTH(__status, __val)	\
--	SET_BITS_TO_LE_4BYTE(__status, 16, 15, __val)
-+	le32p_replace_bits((__le32 *)__status, __val, GENMASK(30, 16))
- 
- #define GET_RX_BUFFER_DESC_LS(__status)			\
--	LE_BITS_TO_4BYTE(__status, 15, 1)
-+	le32_get_bits(*((__le32 *)__status), BIT(15))
- #define GET_RX_BUFFER_DESC_FS(__status)			\
--	LE_BITS_TO_4BYTE(__status, 16, 1)
-+	le32_get_bits(*((__le32 *)__status), BIT(16))
- #define GET_RX_BUFFER_DESC_TOTAL_LENGTH(__status)	\
--	LE_BITS_TO_4BYTE(__status, 16, 15)
-+	le32_get_bits(*((__le32 *)__status), GENMASK(30, 16))
- 
- /* DWORD 1 */
- #define SET_RX_BUFFER_PHYSICAL_LOW(__status, __val)	\
--	SET_BITS_TO_LE_4BYTE(__status+4, 0, 32, __val)
-+	*(__le32 *)(__status + 4) = cpu_to_le32(__val)
- 
- /* DWORD 2 */
- #define SET_RX_BUFFER_PHYSICAL_HIGH(__rx_status_desc, __val, dma64)            \
--	(dma64 ? SET_BITS_TO_LE_4BYTE((__rx_status_desc) + 8, 0, 32, __val) : 0)
-+	*(__le32 *)(__rx_status_desc + 8) = (dma64 ? cpu_to_le32(__val) : 0)
- 
- #define GET_RX_DESC_PKT_LEN(__pdesc)			\
--	LE_BITS_TO_4BYTE(__pdesc, 0, 14)
-+	le32_get_bits(*(__le32 *)__pdesc, GENMASK(13, 0))
- #define GET_RX_DESC_CRC32(__pdesc)			\
--	LE_BITS_TO_4BYTE(__pdesc, 14, 1)
-+	le32_get_bits(*(__le32 *)__pdesc, BIT(14))
- #define GET_RX_DESC_ICV(__pdesc)			\
--	LE_BITS_TO_4BYTE(__pdesc, 15, 1)
-+	le32_get_bits(*(__le32 *)__pdesc, BIT(15))
- #define GET_RX_DESC_DRV_INFO_SIZE(__pdesc)		\
--	LE_BITS_TO_4BYTE(__pdesc, 16, 4)
-+	le32_get_bits(*(__le32 *)__pdesc, GENMASK(19, 16))
- #define GET_RX_DESC_SHIFT(__pdesc)			\
--	LE_BITS_TO_4BYTE(__pdesc, 24, 2)
-+	le32_get_bits(*(__le32 *)__pdesc, GENMASK(25, 24))
- #define GET_RX_DESC_PHYST(__pdesc)			\
--	LE_BITS_TO_4BYTE(__pdesc, 26, 1)
-+	le32_get_bits(*(__le32 *)__pdesc, BIT(26))
- #define GET_RX_DESC_SWDEC(__pdesc)			\
--	LE_BITS_TO_4BYTE(__pdesc, 27, 1)
-+	le32_get_bits(*(__le32 *)__pdesc, BIT(27))
- #define GET_RX_DESC_OWN(__pdesc)			\
--	LE_BITS_TO_4BYTE(__pdesc, 31, 1)
-+	le32_get_bits(*(__le32 *)__pdesc, BIT(31))
- 
- #define SET_RX_DESC_EOR(__pdesc, __val)			\
--	SET_BITS_TO_LE_4BYTE(__pdesc, 30, 1, __val)
-+	le32p_replace_bits((__le32 *)__pdesc, __val, BIT(30))
- 
- #define GET_RX_DESC_MACID(__pdesc)			\
--	LE_BITS_TO_4BYTE(__pdesc+4, 0, 7)
-+	le32_get_bits(*(__le32 *)(__pdesc + 4), GENMASK(6, 0))
- #define GET_RX_DESC_PAGGR(__pdesc)			\
--	LE_BITS_TO_4BYTE(__pdesc+4, 15, 1)
-+	le32_get_bits(*(__le32 *)(__pdesc + 4), BIT(15))
- #define GET_RX_STATUS_DESC_RPT_SEL(__pdesc)		\
--	LE_BITS_TO_4BYTE(__pdesc+8, 28, 1)
-+	le32_get_bits(*(__le32 *)(__pdesc + 8), BIT(28))
- 
- #define GET_RX_DESC_RXMCS(__pdesc)			\
--	LE_BITS_TO_4BYTE(__pdesc+12, 0, 7)
-+	le32_get_bits(*(__le32 *)(__pdesc + 12), GENMASK(6, 0))
- #define GET_RX_STATUS_DESC_PATTERN_MATCH(__pdesc)	\
--	LE_BITS_TO_4BYTE(__pdesc+12, 29, 1)
-+	le32_get_bits(*(__le32 *)(__pdesc + 12), BIT(29))
- #define GET_RX_STATUS_DESC_UNICAST_MATCH(__pdesc)	\
--	LE_BITS_TO_4BYTE(__pdesc+12, 30, 1)
-+	le32_get_bits(*(__le32 *)(__pdesc + 12), BIT(30))
- #define GET_RX_STATUS_DESC_MAGIC_MATCH(__pdesc)		\
--	LE_BITS_TO_4BYTE(__pdesc+12, 31, 1)
-+	le32_get_bits(*(__le32 *)(__pdesc + 12), BIT(31))
- 
- #define GET_RX_DESC_TSFL(__pdesc)			\
--	LE_BITS_TO_4BYTE(__pdesc+20, 0, 32)
-+	le32_to_cpu(*((__le32 *)(__pdesc + 20)))
- 
- #define GET_RX_DESC_BUFF_ADDR(__pdesc)			\
--	LE_BITS_TO_4BYTE(__pdesc+24, 0, 32)
-+	le32_to_cpu(*((__le32 *)(__pdesc + 24)))
- 
- /* TX report 2 format in Rx desc*/
- 
- #define GET_RX_RPT2_DESC_MACID_VALID_1(__status)	\
--	LE_BITS_TO_4BYTE(__status+16, 0, 32)
-+	le32_to_cpu(*((__le32 *)(__status + 16)))
- #define GET_RX_RPT2_DESC_MACID_VALID_2(__status)	\
--	LE_BITS_TO_4BYTE(__status+20, 0, 32)
-+	le32_to_cpu(*((__le32 *)(__status + 20)))
- 
- #define CLEAR_PCI_TX_DESC_CONTENT(__pdesc, _size)		\
- do {								\
+ 		tmpu32 =
+ 		  rtl_read_dword(rtlpriv,
 -- 
 2.16.4
 
