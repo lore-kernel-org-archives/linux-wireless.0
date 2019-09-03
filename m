@@ -7,61 +7,61 @@ X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D39A2C3A5A7
-	for <linux-wireless@archiver.kernel.org>; Tue,  3 Sep 2019 01:18:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37483C41514
+	for <linux-wireless@archiver.kernel.org>; Tue,  3 Sep 2019 01:18:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AD67121881
-	for <linux-wireless@archiver.kernel.org>; Tue,  3 Sep 2019 01:18:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 10DDD21881
+	for <linux-wireless@archiver.kernel.org>; Tue,  3 Sep 2019 01:18:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="qdGRaApG"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fh7MKIWp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726074AbfICBSh (ORCPT
+        id S1726220AbfICBSi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 2 Sep 2019 21:18:37 -0400
-Received: from mail-ot1-f67.google.com ([209.85.210.67]:41547 "EHLO
+        Mon, 2 Sep 2019 21:18:38 -0400
+Received: from mail-ot1-f67.google.com ([209.85.210.67]:35319 "EHLO
         mail-ot1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725977AbfICBSh (ORCPT
+        with ESMTP id S1725955AbfICBSi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Sep 2019 21:18:37 -0400
-Received: by mail-ot1-f67.google.com with SMTP id o101so15068930ota.8
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Sep 2019 18:18:36 -0700 (PDT)
+        Mon, 2 Sep 2019 21:18:38 -0400
+Received: by mail-ot1-f67.google.com with SMTP id 100so15134220otn.2
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Sep 2019 18:18:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=17EKxzbZ4mVYEmjN9suxyqpGaIxSPUwazBx/Ht6eI+M=;
-        b=qdGRaApGMoTLMvAOrdAPxZbZEsTsD/WZAmRyotIhF4npI1i9D707gSwGSI6fvqBk66
-         Zo56NzZHQBF7B3O5GgSlL/ckrzQ6XB59eM8qAK8P4hVbqOloyFPcLflikhsYH4/IRPg9
-         CBrapjZxZS0q3kxHrZZ5Uly8UhYZMNTgAmBSWcq/X0J/Mp09B/ETNw0ogttxsx7ZrHZ2
-         a5JiNzAaGGJSIQ9leXU6ojQBMmcSo+em7HWrvBBySQNYciU6DPlsQZp110ysBBJ9up8j
-         PnaJhSsd66xYtIqDCE8fePaAuM8W5WZsw5JG9h4uy6x65V6zLG95qRpQQbmnl9xfAkZ0
-         AOMA==
+        bh=iKRw3YAmqmgHvf0RsxYwv0O/aEY2i3zqXVRRQVICAnA=;
+        b=fh7MKIWpVMn+vBpBL+m8DP7sPbJQqC/WCYwJH9+Y73947T4YPIGKZrCEpQeSzZx5SC
+         FYEsAr7iCvA2IMTUbPuK37Z6FikaCjxEJXU5nds/Df3huEBKk19pXx5UhEmY3WZmT4gt
+         /gLbIbL9iv1Ufwy0UQO+Rv3t28aQXr+Az+tvrrC2kMwIInRi7Z8qgIp8EluFrDEOqncg
+         X2Do7PD85VKFpWl340buuG3Lkt9g7R4MHprKNbuOnCdKTNtwQqA5i34gjPBZpPlx5NXR
+         dHATFfkBAes+Nt8dgqWI1dRyK0NnMUkJ3FGjQamo93h4EYdEUyuE6sQ38rrg+TeYBIlD
+         TCQg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:sender:from:to:cc:subject:date:message-id
          :in-reply-to:references;
-        bh=17EKxzbZ4mVYEmjN9suxyqpGaIxSPUwazBx/Ht6eI+M=;
-        b=EJ5YwyiOBGfnmH+F1w/Q7EkTGAkFwgw1kOjScrfpRFG3VcnsaNRLPWQC7tQ3GGl37W
-         WGnqljTk0yTaBre89IzQQnCyIRp89mC6+nQODriwiQ4CAMkqrwmq5gbUQ2Gqign7b9Kx
-         gDSHycEuVjX4FVpCBcnfsJquSwMwhfxtCXvKWG08tvFmPipG7fd89OXWelyvEQY+irMM
-         AzejUKDCxxDny3r18aV0KI9NRoaz3lL23pByRSk17vZzsYSwgryN8ZuqrYvKRnuq9IcQ
-         I1secdpb+P0cO2GjA9fe0K+lunE1kpSycoicUX/4uI7p3jidxswhRrORhJRGAYM76MkO
-         yq6w==
-X-Gm-Message-State: APjAAAU5uYjrZRWmuTSQ1jP+8XYCQeDABg4rrEeArQIpEomB/UZyZNgw
-        jmS5k9d8M6qtzikzdMCX2ac=
-X-Google-Smtp-Source: APXvYqx6anVXbh23JXu5xdm8nmUhh7EOk7jwP1jaXcSjsUDottpz+WT82rzK2u6AmgjXWafcFQRx4A==
-X-Received: by 2002:a05:6830:1bd4:: with SMTP id v20mr17170998ota.159.1567473516414;
-        Mon, 02 Sep 2019 18:18:36 -0700 (PDT)
+        bh=iKRw3YAmqmgHvf0RsxYwv0O/aEY2i3zqXVRRQVICAnA=;
+        b=c7/r7qcIrYoRYuSSW5PWTDa9IbLfhTaNOfEg2xPU72NwsPX6wtdxMKipYTuw+RGvNC
+         qBtM1L5DLCGUECmgSIXEQ4evgAWcXZi5FSaq8KEpDZ6It6uazC5mDRy3gIgxIK/ltu9h
+         1cLJwp8coPizeV4Sl6E7IBCnlwfHSuh/mPzSxkCeG5xfWfBLKhwTky8pqTk8Gj0Ic/kc
+         Z69FPNmh8lH7/thDaaX+epzEm+QrWJxxgh1Un+u6J3mFYhvbSM1QB/Ow/8NnPix1bVlR
+         vaNq8sWlp6wJHh2kQ6SnwJXyFUvhKg+lKxQD0wZdLidaXtPPxNzOsclrilfoJ2jel8E1
+         KHGg==
+X-Gm-Message-State: APjAAAWNoAQpbWV+ka75GJmzUAA8c5UoLE+iRtvzE66AJyBAcaweBygj
+        Ik63bShrr7ZxHyBtPTOdUQk=
+X-Google-Smtp-Source: APXvYqxHIgEL05Ycemi7/iJWxvOnAVE8IkHOECBc50/bu/zQO2yh/JGXct17ghTA4/snCCncNhKvvw==
+X-Received: by 2002:a9d:6218:: with SMTP id g24mr845309otj.326.1567473517833;
+        Mon, 02 Sep 2019 18:18:37 -0700 (PDT)
 Received: from localhost.localdomain (cpe-24-31-245-230.kc.res.rr.com. [24.31.245.230])
-        by smtp.gmail.com with ESMTPSA id d13sm230244oth.11.2019.09.02.18.18.35
+        by smtp.gmail.com with ESMTPSA id d13sm230244oth.11.2019.09.02.18.18.37
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 02 Sep 2019 18:18:36 -0700 (PDT)
+        Mon, 02 Sep 2019 18:18:37 -0700 (PDT)
 From:   Larry Finger <Larry.Finger@lwfinger.net>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org, pkshih@realtek.com,
         Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH 1/3] rtlwifi: rtl8821ae: Fix incorrect returned values
-Date:   Mon,  2 Sep 2019 20:18:11 -0500
-Message-Id: <20190903011813.13946-2-Larry.Finger@lwfinger.net>
+Subject: [PATCH 3/3] rtlwifi: rtl8192ce: Fix incorrect returned values
+Date:   Mon,  2 Sep 2019 20:18:13 -0500
+Message-Id: <20190903011813.13946-4-Larry.Finger@lwfinger.net>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20190903011813.13946-1-Larry.Finger@lwfinger.net>
 References: <20190903011813.13946-1-Larry.Finger@lwfinger.net>
@@ -70,60 +70,45 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-In commit bd421dab7515 ("rtlwifi: rtl8821ae: Convert macros that set
+In commit 98fd8db59a00 ("rtlwifi: rtl8192ce: Convert macros that set
 descriptor"), all the routines that get fields from a descriptor
 were changed to return signed integer values. This is incorrect for the
 routines that get the entire 32-bit word. In this case, an unsigned
 quantity is required.
 
-Fixes: bd421dab7515 ("rtlwifi: rtl8821ae: Convert macros that set descriptor")
+Fixes: 98fd8db59a00 ("rtlwifi: rtl8192ce: Convert macros that set descriptor")
 Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.h | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/rtl8192ce/trx.h | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.h b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.h
-index 81951f0c80b6..a9ed6fd41089 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.h
-@@ -214,7 +214,7 @@ static inline void set_tx_desc_tx_buffer_address(__le32 *__pdesc, u32 __val)
- 	*(__pdesc + 10) = cpu_to_le32(__val);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/trx.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/trx.h
+index 709dcac9d84b..b45b05a6a523 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/trx.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/trx.h
+@@ -216,7 +216,7 @@ static inline void set_tx_desc_tx_buffer_address(__le32 *__pdesc, u32  __val)
+ 	*(__pdesc + 8) = cpu_to_le32(__val);
  }
  
 -static inline int get_tx_desc_tx_buffer_address(__le32 *__pdesc)
 +static inline u32 get_tx_desc_tx_buffer_address(__le32 *__pdesc)
  {
- 	return le32_to_cpu(*(__pdesc + 10));
+ 	return le32_to_cpu(*((__pdesc + 8)));
  }
-@@ -324,12 +324,12 @@ static inline int get_rx_desc_bw(__le32 *__pdesc)
- 	return le32_get_bits(*(__pdesc + 4), GENMASK(5, 4));
+@@ -311,12 +311,12 @@ static inline int get_rx_desc_bw(__le32 *__pdesc)
+ 	return le32_get_bits(*((__pdesc + 3)), BIT(9));
  }
  
 -static inline int get_rx_desc_tsfl(__le32 *__pdesc)
 +static inline u32 get_rx_desc_tsfl(__le32 *__pdesc)
  {
- 	return le32_to_cpu(*(__pdesc + 5));
+ 	return le32_to_cpu(*((__pdesc + 5)));
  }
  
 -static inline int get_rx_desc_buff_addr(__le32 *__pdesc)
 +static inline u32 get_rx_desc_buff_addr(__le32 *__pdesc)
  {
- 	return le32_to_cpu(*(__pdesc + 6));
- }
-@@ -341,12 +341,12 @@ static inline void set_rx_desc_buff_addr(__le32 *__pdesc, u32 __val)
- 
- /* TX report 2 format in Rx desc*/
- 
--static inline int get_rx_rpt2_desc_macid_valid_1(__le32 *__status)
-+static inline u32 get_rx_rpt2_desc_macid_valid_1(__le32 *__status)
- {
- 	return le32_to_cpu(*(__status + 4));
- }
- 
--static inline int get_rx_rpt2_desc_macid_valid_2(__le32 *__status)
-+static inline u32 get_rx_rpt2_desc_macid_valid_2(__le32 *__status)
- {
- 	return le32_to_cpu(*(__status + 5));
+ 	return le32_to_cpu(*((__pdesc + 6)));
  }
 -- 
 2.16.4
