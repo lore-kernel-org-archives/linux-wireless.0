@@ -6,156 +6,114 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D283C41514
-	for <linux-wireless@archiver.kernel.org>; Tue,  3 Sep 2019 07:37:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0355C41514
+	for <linux-wireless@archiver.kernel.org>; Tue,  3 Sep 2019 07:37:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F336322D6D
-	for <linux-wireless@archiver.kernel.org>; Tue,  3 Sep 2019 07:37:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 81466230F2
+	for <linux-wireless@archiver.kernel.org>; Tue,  3 Sep 2019 07:37:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728026AbfICHhb (ORCPT
+        id S1726698AbfICHhc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 3 Sep 2019 03:37:31 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:40234 "EHLO
+        Tue, 3 Sep 2019 03:37:32 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:40252 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727999AbfICHh3 (ORCPT
+        with ESMTP id S1728023AbfICHhc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Sep 2019 03:37:29 -0400
+        Tue, 3 Sep 2019 03:37:32 -0400
 Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1i53NX-0004Cd-6Y; Tue, 03 Sep 2019 10:37:27 +0300
+        id 1i53Na-0004Cd-4u; Tue, 03 Sep 2019 10:37:30 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Tue,  3 Sep 2019 10:36:58 +0300
-Message-Id: <20190903073714.32278-6-luca@coelho.fi>
+Date:   Tue,  3 Sep 2019 10:37:00 +0300
+Message-Id: <20190903073714.32278-8-luca@coelho.fi>
 X-Mailer: git-send-email 2.23.0.rc1
 In-Reply-To: <20190903073714.32278-1-luca@coelho.fi>
 References: <20190903073714.32278-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 05/21] iwlwifi: pass the iwl_config_trans_params when needed
+Subject: [PATCH 07/21] iwlwifi: pass the iwl_trans instead of cfg to some functions
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Shaul Triebitz <shaul.triebitz@intel.com>
 
-Instead of accessing the iwl_config_trans_params from the cfg that is
-stored in the trans struct, pass this structure directly to functions
-that need it during trans_alloc.  This will be useful to isolate the
-elements needed during allocation and pass them separately before the
-actual cfg struct is known.
+A few functions were receiving the iwl_cfg struct directly, but we
+will also need other parts of the trans, so pass the trans (which
+includes the cfg) to them.
 
+Signed-off-by: Ido Yariv <idox.yariv@intel.com>
+Signed-off-by: Shaul Triebitz <shaul.triebitz@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c    |  2 +-
- .../net/wireless/intel/iwlwifi/pcie/internal.h   |  7 ++++---
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c  | 16 ++++++++--------
- 3 files changed, 13 insertions(+), 12 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index 5ecfc27a4d25..11e1c2b363bb 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -1000,7 +1000,7 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	if (WARN_ONCE(!cfg->trans.csr, "CSR addresses aren't configured\n"))
- 		return -EINVAL;
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+index e43e452403f5..83d4311e83d7 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+@@ -393,11 +393,12 @@ static int iwl_init_channel_map(struct device *dev, const struct iwl_cfg *cfg,
+ 	return n_channels;
+ }
  
--	iwl_trans = iwl_trans_pcie_alloc(pdev, ent, cfg);
-+	iwl_trans = iwl_trans_pcie_alloc(pdev, ent, &cfg->trans);
- 	if (IS_ERR(iwl_trans))
- 		return PTR_ERR(iwl_trans);
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index 53999ea7bb04..eba9660a2bc8 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -635,9 +635,10 @@ iwl_trans_pcie_get_trans(struct iwl_trans_pcie *trans_pcie)
-  * Convention: trans API functions: iwl_trans_pcie_XXX
-  *	Other functions: iwl_pcie_XXX
-  */
--struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
--				       const struct pci_device_id *ent,
--				       const struct iwl_cfg *cfg);
-+struct iwl_trans
-+*iwl_trans_pcie_alloc(struct pci_dev *pdev,
-+		      const struct pci_device_id *ent,
-+		      const struct iwl_cfg_trans_params *cfg_trans);
- void iwl_trans_pcie_free(struct iwl_trans *trans);
- 
- /*****************************************************
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index c602e4914424..e196e3b87574 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -3373,8 +3373,8 @@ static const struct iwl_trans_ops trans_ops_pcie_gen2 = {
- };
- 
- struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
--				       const struct pci_device_id *ent,
--				       const struct iwl_cfg *cfg)
-+			       const struct pci_device_id *ent,
-+			       const struct iwl_cfg_trans_params *cfg_trans)
+-static void iwl_init_vht_hw_capab(const struct iwl_cfg *cfg,
++static void iwl_init_vht_hw_capab(struct iwl_trans *trans,
+ 				  struct iwl_nvm_data *data,
+ 				  struct ieee80211_sta_vht_cap *vht_cap,
+ 				  u8 tx_chains, u8 rx_chains)
  {
- 	struct iwl_trans_pcie *trans_pcie;
- 	struct iwl_trans *trans;
-@@ -3384,7 +3384,7 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
- 	if (ret)
- 		return ERR_PTR(ret);
- 
--	if (cfg->trans.gen2)
-+	if (cfg_trans->gen2)
- 		trans = iwl_trans_alloc(sizeof(struct iwl_trans_pcie),
- 					&pdev->dev, &trans_ops_pcie_gen2);
- 	else
-@@ -3409,7 +3409,7 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
++	const struct iwl_cfg *cfg = trans->cfg;
+ 	int num_rx_ants = num_of_ant(rx_chains);
+ 	int num_tx_ants = num_of_ant(tx_chains);
+ 	unsigned int max_ampdu_exponent = (cfg->max_vht_ampdu_exponent ?:
+@@ -669,11 +670,13 @@ static void iwl_init_he_hw_capab(struct ieee80211_supported_band *sband,
  	}
- 	trans_pcie->debug_rfkill = -1;
+ }
  
--	if (!cfg->trans.base_params->pcie_l1_allowed) {
-+	if (!cfg_trans->base_params->pcie_l1_allowed) {
- 		/*
- 		 * W/A - seems to solve weird behavior. We need to remove this
- 		 * if we don't want to stay in L1 all the time. This wastes a
-@@ -3422,7 +3422,7 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
+-static void iwl_init_sbands(struct device *dev, const struct iwl_cfg *cfg,
++static void iwl_init_sbands(struct iwl_trans *trans,
+ 			    struct iwl_nvm_data *data,
+ 			    const void *nvm_ch_flags, u8 tx_chains,
+ 			    u8 rx_chains, u32 sbands_flags, bool v4)
+ {
++	struct device *dev = trans->dev;
++	const struct iwl_cfg *cfg = trans->cfg;
+ 	int n_channels;
+ 	int n_used = 0;
+ 	struct ieee80211_supported_band *sband;
+@@ -701,7 +704,7 @@ static void iwl_init_sbands(struct device *dev, const struct iwl_cfg *cfg,
+ 	iwl_init_ht_hw_capab(cfg, data, &sband->ht_cap, NL80211_BAND_5GHZ,
+ 			     tx_chains, rx_chains);
+ 	if (data->sku_cap_11ac_enable && !iwlwifi_mod_params.disable_11ac)
+-		iwl_init_vht_hw_capab(cfg, data, &sband->vht_cap,
++		iwl_init_vht_hw_capab(trans, data, &sband->vht_cap,
+ 				      tx_chains, rx_chains);
  
- 	trans_pcie->def_rx_queue = 0;
+ 	if (data->sku_cap_11ax_enable && !iwlwifi_mod_params.disable_11ax)
+@@ -1019,7 +1022,7 @@ iwl_parse_nvm_data(struct iwl_trans *trans, const struct iwl_cfg *cfg,
+ 	if (iwl_nvm_no_wide_in_5ghz(dev, cfg, nvm_hw))
+ 		sbands_flags |= IWL_NVM_SBANDS_FLAGS_NO_WIDE_IN_5GHZ;
  
--	if (cfg->trans.use_tfh) {
-+	if (cfg_trans->use_tfh) {
- 		addr_size = 64;
- 		trans_pcie->max_tbs = IWL_TFH_NUM_TBS;
- 		trans_pcie->tfd_size = sizeof(struct iwl_tfh_tfd);
-@@ -3484,7 +3484,7 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
- 	 * "dash" value). To keep hw_rev backwards compatible - we'll store it
- 	 * in the old format.
- 	 */
--	if (cfg->trans.device_family >= IWL_DEVICE_FAMILY_8000) {
-+	if (cfg_trans->device_family >= IWL_DEVICE_FAMILY_8000) {
- 		trans->hw_rev = (trans->hw_rev & 0xfff0) |
- 				(CSR_HW_REV_STEP(trans->hw_rev << 2) << 2);
+-	iwl_init_sbands(dev, cfg, data, ch_section, tx_chains, rx_chains,
++	iwl_init_sbands(trans, data, ch_section, tx_chains, rx_chains,
+ 			sbands_flags, false);
+ 	data->calib_version = 255;
  
-@@ -3498,7 +3498,7 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
- 		 * in-order to recognize C step driver should read chip version
- 		 * id located at the AUX bus MISC address space.
- 		 */
--		ret = iwl_finish_nic_init(trans, &cfg->trans);
-+		ret = iwl_finish_nic_init(trans, cfg_trans);
- 		if (ret)
- 			goto out_no_pci;
+@@ -1485,7 +1488,7 @@ struct iwl_nvm_data *iwl_get_nvm(struct iwl_trans *trans,
+ 	channel_profile = v4 ? (void *)rsp->regulatory.channel_profile :
+ 			  (void *)rsp_v3->regulatory.channel_profile;
  
-@@ -3506,7 +3506,7 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
- 
- 	IWL_DEBUG_INFO(trans, "HW REV: 0x%0x\n", trans->hw_rev);
- 
--	iwl_pcie_set_interrupt_capa(pdev, trans, &cfg->trans);
-+	iwl_pcie_set_interrupt_capa(pdev, trans, cfg_trans);
- 	trans->hw_id = (pdev->device << 16) + pdev->subsystem_device;
- 	snprintf(trans->hw_id_str, sizeof(trans->hw_id_str),
- 		 "PCI ID: 0x%04X:0x%04X", pdev->device, pdev->subsystem_device);
+-	iwl_init_sbands(trans->dev, trans->cfg, nvm,
++	iwl_init_sbands(trans, nvm,
+ 			channel_profile,
+ 			nvm->valid_tx_ant & fw->valid_tx_ant,
+ 			nvm->valid_rx_ant & fw->valid_rx_ant,
 -- 
 2.23.0.rc1
 
