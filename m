@@ -2,38 +2,40 @@ Return-Path: <SRS0=FCSK=W6=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD816C3A5A2
-	for <linux-wireless@archiver.kernel.org>; Tue,  3 Sep 2019 07:37:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10999C3A5A5
+	for <linux-wireless@archiver.kernel.org>; Tue,  3 Sep 2019 07:37:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A657E22DBF
-	for <linux-wireless@archiver.kernel.org>; Tue,  3 Sep 2019 07:37:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E3FC321897
+	for <linux-wireless@archiver.kernel.org>; Tue,  3 Sep 2019 07:37:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727961AbfICHhX (ORCPT
+        id S1727998AbfICHh1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 3 Sep 2019 03:37:23 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:40204 "EHLO
+        Tue, 3 Sep 2019 03:37:27 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:40216 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726473AbfICHhW (ORCPT
+        with ESMTP id S1727986AbfICHh0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Sep 2019 03:37:22 -0400
+        Tue, 3 Sep 2019 03:37:26 -0400
 Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1i53NQ-0004Cd-DJ; Tue, 03 Sep 2019 10:37:21 +0300
+        id 1i53NU-0004Cd-Sm; Tue, 03 Sep 2019 10:37:25 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Tue,  3 Sep 2019 10:36:53 +0300
-Message-Id: <20190903073714.32278-1-luca@coelho.fi>
+Date:   Tue,  3 Sep 2019 10:36:55 +0300
+Message-Id: <20190903073714.32278-3-luca@coelho.fi>
 X-Mailer: git-send-email 2.23.0.rc1
+In-Reply-To: <20190903073714.32278-1-luca@coelho.fi>
+References: <20190903073714.32278-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 00/21] iwlwifi: updates intended for v5.4 2019-09-03
+Subject: [PATCH 02/21] iwlwifi: pcie: use the cfg we passed to iwl_trans_pcie_alloc()
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -41,132 +43,61 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Luca Coelho <luciano.coelho@intel.com>
 
-Hi,
+Instead of using iwl_trans->cfg in iwl_trans_pcie_alloc(), use the
+local argument that we received.  This will allow us to not to set the
+cfg during iwl_trans_alloc() so it can be decided later.
 
-Here's the fourth set of patches intended for v5.4.  It's the usual
-development, new features, cleanups and bugfixes.
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-The changes are:
-
-* Support for single antenna diversity;
-* Support for new WoWLAN FW API;
-* Initial refactoring of the device selection code;
-* Debug infrastructure work continues;
-* A few clean-ups;
-* Other small fixes and improvements;
-
-As usual, I'm pushing this to a pending branch, for kbuild bot, and
-will send a pull-request later.
-
-Please review.
-
-Cheers,
-Luca.
-
-
-Emmanuel Grumbach (1):
-  iwlwifi: mvm: don't log un-decrypted frames
-
-Haim Dreyfuss (3):
-  iwlwifi: add support for suspend-resume flow for new device generation
-  iwlwifi: add sta_id to WOWLAN_CONFIG_CMD
-  iwlwifi: mvm: add support for single antenna diversity
-
-Hariprasad Kelam (1):
-  iwlwifi: fix warning iwl-trans.h is included more than once
-
-Johannes Berg (2):
-  iwlwifi: mvm: drop BA sessions on too many old-SN frames
-  iwlwifi: mvm: handle BAR_FRAME_RELEASE (0xc2) notification
-
-Luca Coelho (7):
-  iwlwifi: separate elements from cfg that are needed by trans_alloc
-  iwlwifi: pcie: use the cfg we passed to iwl_trans_pcie_alloc()
-  iwlwifi: pcie: move some cfg mangling from trans_pcie_alloc to probe
-  iwlwifi: pcie: set iwl_trans->cfg later in the probe function
-  iwlwifi: pass the iwl_config_trans_params when needed
-  iwlwifi: add a pointer to the trans_cfg directly in trans
-  iwlwifi: always access the trans configuration via trans
-
-Shahar S Matityahu (6):
-  iwlwifi: add iwl_tlv_array_len()
-  iwlwifi: dbg_ini: remove apply point, switch to time point API
-  iwlwifi: fw api: add DRAM buffer allocation command
-  iwlwifi: dbg_ini: fix dump structs doc
-  iwlwifi: dbg_ini: remove periodic trigger
-  iwlwifi: dbg: remove iwl_fw_cancel_dumps function
-
-Shaul Triebitz (1):
-  iwlwifi: pass the iwl_trans instead of cfg to some functions
-
- drivers/net/wireless/intel/iwlwifi/cfg/1000.c |  14 +-
- drivers/net/wireless/intel/iwlwifi/cfg/2000.c |  26 +-
- .../net/wireless/intel/iwlwifi/cfg/22000.c    |  35 +-
- drivers/net/wireless/intel/iwlwifi/cfg/5000.c |  18 +-
- drivers/net/wireless/intel/iwlwifi/cfg/6000.c |  44 +-
- drivers/net/wireless/intel/iwlwifi/cfg/7000.c |  10 +-
- drivers/net/wireless/intel/iwlwifi/cfg/8000.c |  10 +-
- drivers/net/wireless/intel/iwlwifi/cfg/9000.c |  10 +-
- .../net/wireless/intel/iwlwifi/dvm/devices.c  |   3 +-
- drivers/net/wireless/intel/iwlwifi/dvm/led.c  |   5 +-
- .../net/wireless/intel/iwlwifi/dvm/mac80211.c |   4 +-
- drivers/net/wireless/intel/iwlwifi/dvm/main.c |  12 +-
- .../net/wireless/intel/iwlwifi/dvm/power.c    |   3 +-
- drivers/net/wireless/intel/iwlwifi/dvm/tx.c   |   5 +-
- .../wireless/intel/iwlwifi/fw/api/commands.h  |   7 +
- .../net/wireless/intel/iwlwifi/fw/api/d3.h    |   6 +-
- .../wireless/intel/iwlwifi/fw/api/dbg-tlv.h   |  89 +++-
- .../net/wireless/intel/iwlwifi/fw/api/debug.h |  71 ++-
- .../net/wireless/intel/iwlwifi/fw/api/rx.h    |  32 ++
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c   |  59 +--
- drivers/net/wireless/intel/iwlwifi/fw/dbg.h   |  17 +-
- .../wireless/intel/iwlwifi/fw/error-dump.h    |  16 +-
- drivers/net/wireless/intel/iwlwifi/fw/file.h  |  20 +
- drivers/net/wireless/intel/iwlwifi/fw/init.c  |   2 -
- .../net/wireless/intel/iwlwifi/fw/paging.c    |   6 +-
- .../net/wireless/intel/iwlwifi/fw/runtime.h   |   5 +-
- drivers/net/wireless/intel/iwlwifi/fw/smem.c  |   2 +-
- .../net/wireless/intel/iwlwifi/iwl-config.h   |  51 +-
- .../net/wireless/intel/iwlwifi/iwl-dbg-tlv.c  | 489 +-----------------
- .../net/wireless/intel/iwlwifi/iwl-dbg-tlv.h  |  14 +-
- .../net/wireless/intel/iwlwifi/iwl-devtrace.h |   1 -
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c  |  10 +-
- .../wireless/intel/iwlwifi/iwl-eeprom-parse.c |  21 +-
- .../wireless/intel/iwlwifi/iwl-eeprom-parse.h |   4 +-
- .../wireless/intel/iwlwifi/iwl-eeprom-read.c  |  14 +-
- drivers/net/wireless/intel/iwlwifi/iwl-fh.h   |   6 +-
- drivers/net/wireless/intel/iwlwifi/iwl-io.c   |  21 +-
- drivers/net/wireless/intel/iwlwifi/iwl-io.h   |  18 +-
- .../wireless/intel/iwlwifi/iwl-nvm-parse.c    |  40 +-
- drivers/net/wireless/intel/iwlwifi/iwl-prph.h |   5 +
- .../net/wireless/intel/iwlwifi/iwl-trans.c    |   2 -
- .../net/wireless/intel/iwlwifi/iwl-trans.h    |  20 +-
- .../wireless/intel/iwlwifi/mvm/constants.h    |   1 +
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c   |  28 +-
- .../net/wireless/intel/iwlwifi/mvm/debugfs.c  |   6 +-
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c   |  19 +-
- drivers/net/wireless/intel/iwlwifi/mvm/led.c  |   6 +-
- .../net/wireless/intel/iwlwifi/mvm/mac-ctxt.c |   5 +-
- .../net/wireless/intel/iwlwifi/mvm/mac80211.c |  10 +-
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |  19 +-
- drivers/net/wireless/intel/iwlwifi/mvm/nvm.c  |   4 +-
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c  |  20 +-
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c   |   2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 115 +++-
- drivers/net/wireless/intel/iwlwifi/mvm/scan.c |   2 -
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c  |  10 +-
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c   |   4 +-
- .../net/wireless/intel/iwlwifi/mvm/utils.c    |  11 +-
- .../intel/iwlwifi/pcie/ctxt-info-gen3.c       |   2 +-
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 141 +++--
- .../wireless/intel/iwlwifi/pcie/internal.h    |  25 +-
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c  |  77 +--
- .../wireless/intel/iwlwifi/pcie/trans-gen2.c  |  10 +-
- .../net/wireless/intel/iwlwifi/pcie/trans.c   | 305 +++++------
- .../net/wireless/intel/iwlwifi/pcie/tx-gen2.c |  10 +-
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c  |  84 +--
- 66 files changed, 994 insertions(+), 1169 deletions(-)
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index 567f613572d8..8a95930e6c00 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -3481,7 +3481,7 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
+ 	 * "dash" value). To keep hw_rev backwards compatible - we'll store it
+ 	 * in the old format.
+ 	 */
+-	if (trans->cfg->trans.device_family >= IWL_DEVICE_FAMILY_8000) {
++	if (cfg->trans.device_family >= IWL_DEVICE_FAMILY_8000) {
+ 		unsigned long flags;
+ 
+ 		trans->hw_rev = (trans->hw_rev & 0xfff0) |
+@@ -3497,7 +3497,7 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
+ 		 * in-order to recognize C step driver should read chip version
+ 		 * id located at the AUX bus MISC address space.
+ 		 */
+-		ret = iwl_finish_nic_init(trans, &trans->cfg->trans);
++		ret = iwl_finish_nic_init(trans, &cfg->trans);
+ 		if (ret)
+ 			goto out_no_pci;
+ 
+@@ -3524,7 +3524,7 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
+ #if IS_ENABLED(CONFIG_IWLMVM)
+ 	trans->hw_rf_id = iwl_read32(trans, CSR_HW_RF_ID);
+ 
+-	if (trans->cfg == &iwlax210_2ax_cfg_so_hr_a0) {
++	if (cfg == &iwlax210_2ax_cfg_so_hr_a0) {
+ 		if (trans->hw_rev == CSR_HW_REV_TYPE_TY) {
+ 			trans->cfg = &iwlax210_2ax_cfg_ty_gf_a0;
+ 		} else if (CSR_HW_RF_ID_TYPE_CHIP_ID(trans->hw_rf_id) ==
+@@ -3563,10 +3563,10 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
+ 		}
+ 	} else if (CSR_HW_RF_ID_TYPE_CHIP_ID(trans->hw_rf_id) ==
+ 		   CSR_HW_RF_ID_TYPE_CHIP_ID(CSR_HW_RF_ID_TYPE_HR) &&
+-		   ((trans->cfg != &iwl_ax200_cfg_cc &&
+-		     trans->cfg != &killer1650x_2ax_cfg &&
+-		     trans->cfg != &killer1650w_2ax_cfg &&
+-		     trans->cfg != &iwl_ax201_cfg_quz_hr) ||
++		   ((cfg != &iwl_ax200_cfg_cc &&
++		     cfg != &killer1650x_2ax_cfg &&
++		     cfg != &killer1650w_2ax_cfg &&
++		     cfg != &iwl_ax201_cfg_quz_hr) ||
+ 		    trans->hw_rev == CSR_HW_REV_TYPE_QNJ_B0)) {
+ 		u32 hw_status;
+ 
 -- 
 2.23.0.rc1
 
