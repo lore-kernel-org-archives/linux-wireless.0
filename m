@@ -6,201 +6,104 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76796C3A5A2
-	for <linux-wireless@archiver.kernel.org>; Tue,  3 Sep 2019 07:38:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21EADC3A5A2
+	for <linux-wireless@archiver.kernel.org>; Tue,  3 Sep 2019 07:38:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4F23620644
-	for <linux-wireless@archiver.kernel.org>; Tue,  3 Sep 2019 07:38:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 00C3620644
+	for <linux-wireless@archiver.kernel.org>; Tue,  3 Sep 2019 07:38:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728118AbfICHiJ (ORCPT
+        id S1728120AbfICHiL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 3 Sep 2019 03:38:09 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:40358 "EHLO
+        Tue, 3 Sep 2019 03:38:11 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:40364 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728043AbfICHiH (ORCPT
+        with ESMTP id S1728117AbfICHiK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Sep 2019 03:38:07 -0400
+        Tue, 3 Sep 2019 03:38:10 -0400
 Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1i53Nk-0004Cd-SL; Tue, 03 Sep 2019 10:37:41 +0300
+        id 1i53Ng-0004Cd-4K; Tue, 03 Sep 2019 10:37:36 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Tue,  3 Sep 2019 10:37:13 +0300
-Message-Id: <20190903073714.32278-21-luca@coelho.fi>
+Date:   Tue,  3 Sep 2019 10:37:07 +0300
+Message-Id: <20190903073714.32278-15-luca@coelho.fi>
 X-Mailer: git-send-email 2.23.0.rc1
 In-Reply-To: <20190903073714.32278-1-luca@coelho.fi>
 References: <20190903073714.32278-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 20/21] iwlwifi: dbg_ini: remove periodic trigger
+Subject: [PATCH 14/21] iwlwifi: mvm: add support for single antenna diversity
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
+From: Haim Dreyfuss <haim.dreyfuss@intel.com>
 
-Remove periodic trigger functionality.
-After moving to the new API we will add periodic trigger functionality
-that matches the new API.
+There are products which have a single chain with 2 antennas.
+In these products, we need to inform the FW that the device has the
+single antenna diversity(SAD) feature. In the future, we will read
+the active antenna from a BIOS configuration. Currently, we use a
+default configuration which means that the FW decides which antenna to use.
 
-Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
+Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c   | 27 +------------------
- drivers/net/wireless/intel/iwlwifi/fw/dbg.h   |  6 ++---
- drivers/net/wireless/intel/iwlwifi/fw/init.c  |  2 --
- .../net/wireless/intel/iwlwifi/fw/runtime.h   |  1 -
- .../net/wireless/intel/iwlwifi/iwl-dbg-tlv.c  |  6 +++++
- .../net/wireless/intel/iwlwifi/iwl-dbg-tlv.h  |  1 +
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c  |  2 +-
- 7 files changed, 11 insertions(+), 34 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/cfg/22000.c  | 1 +
+ drivers/net/wireless/intel/iwlwifi/fw/file.h    | 4 ++++
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h | 2 ++
+ 3 files changed, 7 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-index 310b85b508b3..5c8602de9168 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-@@ -2381,7 +2381,7 @@ void iwl_fw_dbg_stop_sync(struct iwl_fw_runtime *fwrt)
- {
- 	int i;
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
+index 4ef28d916fd3..3bd03ddbe22f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
+@@ -240,6 +240,7 @@ const struct iwl_cfg iwl_ax101_cfg_qu_hr = {
+ 	 * HT size; mac80211 would otherwise pick the HE max (256) by default.
+ 	 */
+ 	.max_tx_agg_size = IEEE80211_MAX_AMPDU_BUF_HT,
++	.tx_with_siso_diversity = true,
+ };
  
--	del_timer(&fwrt->dump.periodic_trig);
-+	iwl_dbg_tlv_del_timers(fwrt->trans);
- 	for (i = 0; i < IWL_FW_RUNTIME_DUMP_WK_NUM; i++)
- 		iwl_fw_dbg_collect_sync(fwrt, i);
+ const struct iwl_cfg iwl_ax201_cfg_qu_hr = {
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/file.h b/drivers/net/wireless/intel/iwlwifi/fw/file.h
+index 00db39427be7..329b00e90fa4 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/file.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/file.h
+@@ -524,6 +524,10 @@ enum iwl_fw_phy_cfg {
+ 	FW_PHY_CFG_TX_CHAIN = 0xf << FW_PHY_CFG_TX_CHAIN_POS,
+ 	FW_PHY_CFG_RX_CHAIN_POS = 20,
+ 	FW_PHY_CFG_RX_CHAIN = 0xf << FW_PHY_CFG_RX_CHAIN_POS,
++	FW_PHY_CFG_CHAIN_SAD_POS = 23,
++	FW_PHY_CFG_CHAIN_SAD_ENABLED = 0x1 << FW_PHY_CFG_CHAIN_SAD_POS,
++	FW_PHY_CFG_CHAIN_SAD_ANT_A = 0x2 << FW_PHY_CFG_CHAIN_SAD_POS,
++	FW_PHY_CFG_CHAIN_SAD_ANT_B = 0x4 << FW_PHY_CFG_CHAIN_SAD_POS,
+ 	FW_PHY_CFG_SHARED_CLK = BIT(31),
+ };
  
-@@ -2389,31 +2389,6 @@ void iwl_fw_dbg_stop_sync(struct iwl_fw_runtime *fwrt)
- }
- IWL_EXPORT_SYMBOL(iwl_fw_dbg_stop_sync);
- 
--void iwl_fw_dbg_periodic_trig_handler(struct timer_list *t)
--{
--	struct iwl_fw_runtime *fwrt;
--	enum iwl_fw_ini_trigger_id id = IWL_FW_TRIGGER_ID_PERIODIC_TRIGGER;
--	int ret;
--	typeof(fwrt->dump) *dump_ptr = container_of(t, typeof(fwrt->dump),
--						    periodic_trig);
--
--	fwrt = container_of(dump_ptr, typeof(*fwrt), dump);
--
--	ret = _iwl_fw_dbg_ini_collect(fwrt, id);
--	if (!ret || ret == -EBUSY) {
--		struct iwl_fw_ini_trigger *trig =
--			fwrt->dump.active_trigs[id].trig;
--		u32 occur = le32_to_cpu(trig->occurrences);
--		u32 collect_interval = le32_to_cpu(trig->trigger_data);
--
--		if (!occur)
--			return;
--
--		mod_timer(&fwrt->dump.periodic_trig,
--			  jiffies + msecs_to_jiffies(collect_interval));
--	}
--}
--
- #define FSEQ_REG(x) { .addr = (x), .str = #x, }
- 
- void iwl_fw_error_print_fseq_regs(struct iwl_fw_runtime *fwrt)
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
-index b2445bef908c..14181e6dc00d 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
-@@ -314,7 +314,7 @@ static inline void iwl_fw_flush_dumps(struct iwl_fw_runtime *fwrt)
- {
- 	int i;
- 
--	del_timer(&fwrt->dump.periodic_trig);
-+	iwl_dbg_tlv_del_timers(fwrt->trans);
- 	for (i = 0; i < IWL_FW_RUNTIME_DUMP_WK_NUM; i++) {
- 		flush_delayed_work(&fwrt->dump.wks[i].wk);
- 		fwrt->dump.wks[i].ini_trig_id = IWL_FW_TRIGGER_ID_INVALID;
-@@ -325,7 +325,7 @@ static inline void iwl_fw_cancel_dumps(struct iwl_fw_runtime *fwrt)
- {
- 	int i;
- 
--	del_timer(&fwrt->dump.periodic_trig);
-+	iwl_dbg_tlv_del_timers(fwrt->trans);
- 	for (i = 0; i < IWL_FW_RUNTIME_DUMP_WK_NUM; i++) {
- 		cancel_delayed_work_sync(&fwrt->dump.wks[i].wk);
- 		fwrt->dump.wks[i].ini_trig_id = IWL_FW_TRIGGER_ID_INVALID;
-@@ -400,8 +400,6 @@ static inline void iwl_fw_error_collect(struct iwl_fw_runtime *fwrt)
- 	}
- }
- 
--void iwl_fw_dbg_periodic_trig_handler(struct timer_list *t);
--
- void iwl_fw_error_print_fseq_regs(struct iwl_fw_runtime *fwrt);
- 
- static inline void iwl_fwrt_update_fw_versions(struct iwl_fw_runtime *fwrt,
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/init.c b/drivers/net/wireless/intel/iwlwifi/fw/init.c
-index c16d6e126e3c..ba00d162ce72 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/init.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/init.c
-@@ -81,8 +81,6 @@ void iwl_fw_runtime_init(struct iwl_fw_runtime *fwrt, struct iwl_trans *trans,
- 		INIT_DELAYED_WORK(&fwrt->dump.wks[i].wk, iwl_fw_error_dump_wk);
- 	}
- 	iwl_fwrt_dbgfs_register(fwrt, dbgfs_dir);
--	timer_setup(&fwrt->dump.periodic_trig,
--		    iwl_fw_dbg_periodic_trig_handler, 0);
- }
- IWL_EXPORT_SYMBOL(iwl_fw_runtime_init);
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-index 40b92509085d..8b8ab6d692b6 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-@@ -159,7 +159,6 @@ struct iwl_fw_runtime {
- 		u32 umac_err_id;
- 
- 		struct iwl_txf_iter_data txf_iter_data;
--		struct timer_list periodic_trig;
- 
- 		u8 img_name[IWL_FW_INI_MAX_IMG_NAME_LEN];
- 		u8 internal_dbg_cfg_name[IWL_FW_INI_MAX_DBG_CFG_NAME_LEN];
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
-index db76b28eac40..3d7f8ff8ef58 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
-@@ -151,6 +151,12 @@ void iwl_dbg_tlv_alloc(struct iwl_trans *trans, struct iwl_ucode_tlv *tlv,
- 	*cfg_state = IWL_INI_CFG_STATE_CORRUPTED;
- }
- 
-+void iwl_dbg_tlv_del_timers(struct iwl_trans *trans)
-+{
-+	/* will be used later */
-+}
-+IWL_EXPORT_SYMBOL(iwl_dbg_tlv_del_timers);
-+
- void iwl_dbg_tlv_free(struct iwl_trans *trans)
- {
- 	/* will be used again later */
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.h b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.h
-index c7988b6a209a..e257ad358c94 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.h
-@@ -92,5 +92,6 @@ void iwl_dbg_tlv_alloc(struct iwl_trans *trans, struct iwl_ucode_tlv *tlv,
- void iwl_dbg_tlv_time_point(struct iwl_fw_runtime *fwrt,
- 			    enum iwl_fw_ini_time_point tp_id,
- 			    union iwl_dbg_tlv_tp_data *tp_data);
-+void iwl_dbg_tlv_del_timers(struct iwl_trans *trans);
- 
- #endif /* __iwl_dbg_tlv_h__*/
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index 35af56acc30b..3acbd5b7ab4b 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -1239,7 +1239,7 @@ static void iwl_mvm_reprobe_wk(struct work_struct *wk)
- void iwl_mvm_nic_restart(struct iwl_mvm *mvm, bool fw_error)
- {
- 	iwl_abort_notification_waits(&mvm->notif_wait);
--	del_timer(&mvm->fwrt.dump.periodic_trig);
-+	iwl_dbg_tlv_del_timers(mvm->trans);
- 
- 	/*
- 	 * This is a bit racy, but worst case we tell mac80211 about
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+index 02b65e2580a3..47bd35618573 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+@@ -379,6 +379,7 @@ struct iwl_cfg_trans_params {
+  * @ht_params: point to ht parameters
+  * @led_mode: 0=blinking, 1=On(RF On)/Off(RF Off)
+  * @rx_with_siso_diversity: 1x1 device with rx antenna diversity
++ * @tx_with_siso_diversity: 1x1 device with tx antenna diversity
+  * @internal_wimax_coex: internal wifi/wimax combo device
+  * @high_temp: Is this NIC is designated to be in high temperature.
+  * @host_interrupt_operation_mode: device needs host interrupt operation
+@@ -441,6 +442,7 @@ struct iwl_cfg {
+ 	u16 nvm_ver;
+ 	u16 nvm_calib_ver;
+ 	u32 rx_with_siso_diversity:1,
++	    tx_with_siso_diversity:1,
+ 	    bt_shared_single_ant:1,
+ 	    internal_wimax_coex:1,
+ 	    host_interrupt_operation_mode:1,
 -- 
 2.23.0.rc1
 
