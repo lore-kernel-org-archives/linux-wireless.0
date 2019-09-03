@@ -4,210 +4,101 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE6C9C3A5A2
-	for <linux-wireless@archiver.kernel.org>; Tue,  3 Sep 2019 07:37:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B314C3A5A2
+	for <linux-wireless@archiver.kernel.org>; Tue,  3 Sep 2019 07:37:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9B59D21897
-	for <linux-wireless@archiver.kernel.org>; Tue,  3 Sep 2019 07:37:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 690542053B
+	for <linux-wireless@archiver.kernel.org>; Tue,  3 Sep 2019 07:37:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728053AbfICHhw (ORCPT
+        id S1728056AbfICHhx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 3 Sep 2019 03:37:52 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:40316 "EHLO
+        Tue, 3 Sep 2019 03:37:53 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:40322 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725888AbfICHhv (ORCPT
+        with ESMTP id S1725888AbfICHhx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Sep 2019 03:37:51 -0400
+        Tue, 3 Sep 2019 03:37:53 -0400
 Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1i53Nf-0004Cd-A4; Tue, 03 Sep 2019 10:37:35 +0300
+        id 1i53Nd-0004Cd-M0; Tue, 03 Sep 2019 10:37:34 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Tue,  3 Sep 2019 10:37:06 +0300
-Message-Id: <20190903073714.32278-14-luca@coelho.fi>
+Date:   Tue,  3 Sep 2019 10:37:04 +0300
+Message-Id: <20190903073714.32278-12-luca@coelho.fi>
 X-Mailer: git-send-email 2.23.0.rc1
 In-Reply-To: <20190903073714.32278-1-luca@coelho.fi>
 References: <20190903073714.32278-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 13/21] iwlwifi: mvm: handle BAR_FRAME_RELEASE (0xc2) notification
+Subject: [PATCH 11/21] iwlwifi: add sta_id to WOWLAN_CONFIG_CMD
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Haim Dreyfuss <haim.dreyfuss@intel.com>
 
-In prior hardware generations (e.g. 9000 series), we received the BAR
-frame with fake NSSN information to handle releasing frames from the
-reorder buffer for the default queue, the other queues were getting
-the FRAME_RELEASE notification in this case.
+WoWlan feature within the FW uses the station id for various of reasons.
+Thus we need to add this information to the command.
 
-With multi-TID block-ack, the firmware no longer sends us the BAR
-frame because the fake RX is quite big (just the metadata is around
-48 bytes or so). Instead, it now sends us one (or multiple) special
-release notifications (0xc2). The hardware consumes these as well,
-but only generates the FRAME_RELEASE (0xc3) for queues other than
-the default queue. We thus need to handle them in the same way we
-handle the normal FRAME_RELEASE.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../wireless/intel/iwlwifi/fw/api/commands.h  |  7 ++++
- .../net/wireless/intel/iwlwifi/fw/api/rx.h    | 32 +++++++++++++++
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |  2 +
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c  |  3 ++
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 39 +++++++++++++++++++
- 5 files changed, 83 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/fw/api/d3.h | 6 ++++--
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c    | 4 ++++
+ 2 files changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/commands.h b/drivers/net/wireless/intel/iwlwifi/fw/api/commands.h
-index 4d2274bcc0b5..22dff2c92d4f 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/commands.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/commands.h
-@@ -474,6 +474,13 @@ enum iwl_legacy_cmds {
- 	 */
- 	REPLY_RX_MPDU_CMD = 0xc1,
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/d3.h b/drivers/net/wireless/intel/iwlwifi/fw/api/d3.h
+index 31231b223aae..4c3219e7beb6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/d3.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/d3.h
+@@ -396,6 +396,7 @@ enum iwl_wowlan_flags {
+  * @is_11n_connection: indicates HT connection
+  * @offloading_tid: TID reserved for firmware use
+  * @flags: extra flags, see &enum iwl_wowlan_flags
++ * @sta_id: station ID for wowlan.
+  * @reserved: reserved
+  */
+ struct iwl_wowlan_config_cmd {
+@@ -406,8 +407,9 @@ struct iwl_wowlan_config_cmd {
+ 	u8 is_11n_connection;
+ 	u8 offloading_tid;
+ 	u8 flags;
+-	u8 reserved[2];
+-} __packed; /* WOWLAN_CONFIG_API_S_VER_4 */
++	u8 sta_id;
++	u8 reserved;
++} __packed; /* WOWLAN_CONFIG_API_S_VER_5 */
  
-+	/**
-+	 * @BAR_FRAME_RELEASE: Frame release from BAR notification, used for
-+	 *	multi-TID BAR (previously, the BAR frame itself was reported
-+	 *	instead). Uses &struct iwl_bar_frame_release.
-+	 */
-+	BAR_FRAME_RELEASE = 0xc2,
-+
- 	/**
- 	 * @FRAME_RELEASE:
- 	 * Frame release (reorder helper) notification, uses
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h b/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h
-index 9b0bb89599fc..a93449db7bb2 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/rx.h
-@@ -746,6 +746,38 @@ struct iwl_frame_release {
- 	__le16 nssn;
- };
+ /*
+  * WOWLAN_TSC_RSC_PARAMS
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+index 66d610a2f3d6..86c2c587e755 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+@@ -904,6 +904,8 @@ iwl_mvm_netdetect_config(struct iwl_mvm *mvm,
+ 		wowlan_config_cmd.wakeup_filter |=
+ 			cpu_to_le32(IWL_WOWLAN_WAKEUP_RF_KILL_DEASSERT);
  
-+/**
-+ * enum iwl_bar_frame_release_sta_tid - STA/TID information for BAR release
-+ * @IWL_BAR_FRAME_RELEASE_TID_MASK: TID mask
-+ * @IWL_BAR_FRAME_RELEASE_STA_MASK: STA mask
-+ */
-+enum iwl_bar_frame_release_sta_tid {
-+	IWL_BAR_FRAME_RELEASE_TID_MASK = 0x0000000f,
-+	IWL_BAR_FRAME_RELEASE_STA_MASK = 0x000001f0,
-+};
++	wowlan_config_cmd.sta_id = mvm->aux_sta.sta_id;
 +
-+/**
-+ * enum iwl_bar_frame_release_ba_info - BA information for BAR release
-+ * @IWL_BAR_FRAME_RELEASE_NSSN_MASK: NSSN mask
-+ * @IWL_BAR_FRAME_RELEASE_SN_MASK: SN mask (ignored by driver)
-+ * @IWL_BAR_FRAME_RELEASE_BAID_MASK: BAID mask
-+ */
-+enum iwl_bar_frame_release_ba_info {
-+	IWL_BAR_FRAME_RELEASE_NSSN_MASK	= 0x00000fff,
-+	IWL_BAR_FRAME_RELEASE_SN_MASK	= 0x00fff000,
-+	IWL_BAR_FRAME_RELEASE_BAID_MASK	= 0x3f000000,
-+};
+ 	ret = iwl_mvm_send_cmd_pdu(mvm, WOWLAN_CONFIGURATION, 0,
+ 				   sizeof(wowlan_config_cmd),
+ 				   &wowlan_config_cmd);
+@@ -1011,6 +1013,8 @@ static int __iwl_mvm_suspend(struct ieee80211_hw *hw,
+ 	} else {
+ 		struct iwl_wowlan_config_cmd wowlan_config_cmd = {};
+ 
++		wowlan_config_cmd.sta_id = mvmvif->ap_sta_id;
 +
-+/**
-+ * struct iwl_bar_frame_release - frame release from BAR info
-+ * @sta_tid: STA & TID information, see &enum iwl_bar_frame_release_sta_tid.
-+ * @ba_info: BA information, see &enum iwl_bar_frame_release_ba_info.
-+ */
-+struct iwl_bar_frame_release {
-+	__le32 sta_tid;
-+	__le32 ba_info;
-+} __packed; /* RX_BAR_TO_FRAME_RELEASE_API_S_VER_1 */
-+
- enum iwl_rss_hash_func_en {
- 	IWL_RSS_HASH_TYPE_IPV4_TCP,
- 	IWL_RSS_HASH_TYPE_IPV4_UDP,
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index b8a8369457b9..843d00bf2bd5 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1606,6 +1606,8 @@ void iwl_mvm_rx_monitor_no_data(struct iwl_mvm *mvm, struct napi_struct *napi,
- 				struct iwl_rx_cmd_buffer *rxb, int queue);
- void iwl_mvm_rx_frame_release(struct iwl_mvm *mvm, struct napi_struct *napi,
- 			      struct iwl_rx_cmd_buffer *rxb, int queue);
-+void iwl_mvm_rx_bar_frame_release(struct iwl_mvm *mvm, struct napi_struct *napi,
-+				  struct iwl_rx_cmd_buffer *rxb, int queue);
- int iwl_mvm_notify_rx_queue(struct iwl_mvm *mvm, u32 rxq_mask,
- 			    const u8 *data, u32 count, bool async);
- void iwl_mvm_rx_queue_notif(struct iwl_mvm *mvm, struct napi_struct *napi,
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index 35b393f8cd85..961c7ab7950b 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -389,6 +389,7 @@ static const struct iwl_hcmd_names iwl_mvm_legacy_names[] = {
- 	HCMD_NAME(SCAN_ITERATION_COMPLETE_UMAC),
- 	HCMD_NAME(REPLY_RX_PHY_CMD),
- 	HCMD_NAME(REPLY_RX_MPDU_CMD),
-+	HCMD_NAME(BAR_FRAME_RELEASE),
- 	HCMD_NAME(FRAME_RELEASE),
- 	HCMD_NAME(BA_NOTIF),
- 	HCMD_NAME(MCC_UPDATE_CMD),
-@@ -1060,6 +1061,8 @@ static void iwl_mvm_rx_mq(struct iwl_op_mode *op_mode,
- 		iwl_mvm_rx_queue_notif(mvm, napi, rxb, 0);
- 	else if (cmd == WIDE_ID(LEGACY_GROUP, FRAME_RELEASE))
- 		iwl_mvm_rx_frame_release(mvm, napi, rxb, 0);
-+	else if (cmd == WIDE_ID(LEGACY_GROUP, BAR_FRAME_RELEASE))
-+		iwl_mvm_rx_bar_frame_release(mvm, napi, rxb, 0);
- 	else if (cmd == WIDE_ID(DATA_PATH_GROUP, RX_NO_DATA_NOTIF))
- 		iwl_mvm_rx_monitor_no_data(mvm, napi, rxb, 0);
- 	else
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index f3f9e641ae70..c48d6fb16408 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -2014,3 +2014,42 @@ void iwl_mvm_rx_frame_release(struct iwl_mvm *mvm, struct napi_struct *napi,
- 					  le16_to_cpu(release->nssn),
- 					  queue, 0);
- }
-+
-+void iwl_mvm_rx_bar_frame_release(struct iwl_mvm *mvm, struct napi_struct *napi,
-+				  struct iwl_rx_cmd_buffer *rxb, int queue)
-+{
-+	struct iwl_rx_packet *pkt = rxb_addr(rxb);
-+	struct iwl_bar_frame_release *release = (void *)pkt->data;
-+	unsigned int baid = le32_get_bits(release->ba_info,
-+					  IWL_BAR_FRAME_RELEASE_BAID_MASK);
-+	unsigned int nssn = le32_get_bits(release->ba_info,
-+					  IWL_BAR_FRAME_RELEASE_NSSN_MASK);
-+	unsigned int sta_id = le32_get_bits(release->sta_tid,
-+					    IWL_BAR_FRAME_RELEASE_STA_MASK);
-+	unsigned int tid = le32_get_bits(release->sta_tid,
-+					 IWL_BAR_FRAME_RELEASE_TID_MASK);
-+	struct iwl_mvm_baid_data *baid_data;
-+
-+	if (WARN_ON_ONCE(baid == IWL_RX_REORDER_DATA_INVALID_BAID ||
-+			 baid >= ARRAY_SIZE(mvm->baid_map)))
-+		return;
-+
-+	rcu_read_lock();
-+	baid_data = rcu_dereference(mvm->baid_map[baid]);
-+	if (!baid_data) {
-+		IWL_DEBUG_RX(mvm,
-+			     "Got valid BAID %d but not allocated, invalid BAR release!\n",
-+			      baid);
-+		goto out;
-+	}
-+
-+	if (WARN(tid != baid_data->tid || sta_id != baid_data->sta_id,
-+		 "baid 0x%x is mapped to sta:%d tid:%d, but BAR release received for sta:%d tid:%d\n",
-+		 baid, baid_data->sta_id, baid_data->tid, sta_id,
-+		 tid))
-+		goto out;
-+
-+	iwl_mvm_release_frames_from_notif(mvm, napi, baid, nssn, queue, 0);
-+out:
-+	rcu_read_unlock();
-+}
+ 		ap_sta = rcu_dereference_protected(
+ 			mvm->fw_id_to_mac_id[mvmvif->ap_sta_id],
+ 			lockdep_is_held(&mvm->mutex));
 -- 
 2.23.0.rc1
 
