@@ -6,104 +6,127 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 21EADC3A5A2
-	for <linux-wireless@archiver.kernel.org>; Tue,  3 Sep 2019 07:38:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0AF9C3A5A2
+	for <linux-wireless@archiver.kernel.org>; Tue,  3 Sep 2019 07:38:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 00C3620644
-	for <linux-wireless@archiver.kernel.org>; Tue,  3 Sep 2019 07:38:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 925F820644
+	for <linux-wireless@archiver.kernel.org>; Tue,  3 Sep 2019 07:38:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728120AbfICHiL (ORCPT
+        id S1728121AbfICHiM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 3 Sep 2019 03:38:11 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:40364 "EHLO
+        Tue, 3 Sep 2019 03:38:12 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:40368 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728117AbfICHiK (ORCPT
+        with ESMTP id S1728117AbfICHiM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Sep 2019 03:38:10 -0400
+        Tue, 3 Sep 2019 03:38:12 -0400
 Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1i53Ng-0004Cd-4K; Tue, 03 Sep 2019 10:37:36 +0300
+        id 1i53Nj-0004Cd-FS; Tue, 03 Sep 2019 10:37:39 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Tue,  3 Sep 2019 10:37:07 +0300
-Message-Id: <20190903073714.32278-15-luca@coelho.fi>
+Date:   Tue,  3 Sep 2019 10:37:11 +0300
+Message-Id: <20190903073714.32278-19-luca@coelho.fi>
 X-Mailer: git-send-email 2.23.0.rc1
 In-Reply-To: <20190903073714.32278-1-luca@coelho.fi>
 References: <20190903073714.32278-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 14/21] iwlwifi: mvm: add support for single antenna diversity
+Subject: [PATCH 18/21] iwlwifi: fw api: add DRAM buffer allocation command
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Haim Dreyfuss <haim.dreyfuss@intel.com>
+From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 
-There are products which have a single chain with 2 antennas.
-In these products, we need to inform the FW that the device has the
-single antenna diversity(SAD) feature. In the future, we will read
-the active antenna from a BIOS configuration. Currently, we use a
-default configuration which means that the FW decides which antenna to use.
+Add support code to be able to use the DRAM buffer allocation command,
+which allows us to send information about a buffer to the firmware
+to use it with the DBGC hardware.
 
-Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
+Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/cfg/22000.c  | 1 +
- drivers/net/wireless/intel/iwlwifi/fw/file.h    | 4 ++++
- drivers/net/wireless/intel/iwlwifi/iwl-config.h | 2 ++
- 3 files changed, 7 insertions(+)
+ .../net/wireless/intel/iwlwifi/fw/api/debug.h | 32 +++++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/fw/file.h  |  1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c  |  1 +
+ 3 files changed, 34 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-index 4ef28d916fd3..3bd03ddbe22f 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-@@ -240,6 +240,7 @@ const struct iwl_cfg iwl_ax101_cfg_qu_hr = {
- 	 * HT size; mac80211 would otherwise pick the HE max (256) by default.
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/debug.h b/drivers/net/wireless/intel/iwlwifi/fw/api/debug.h
+index c67a6ab6491c..98e957ecbeed 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/debug.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/debug.h
+@@ -87,6 +87,12 @@ enum iwl_debug_cmds {
+ 	 * 1 - suspend DBGC recording
  	 */
- 	.max_tx_agg_size = IEEE80211_MAX_AMPDU_BUF_HT,
-+	.tx_with_siso_diversity = true,
- };
+ 	DBGC_SUSPEND_RESUME = 0x7,
++	/**
++	 * @BUFFER_ALLOCATION:
++	 * passes DRAM buffers to a DBGC
++	 * &struct iwl_buf_alloc_cmd
++	 */
++	BUFFER_ALLOCATION = 0x8,
+ 	/**
+ 	 * @MFU_ASSERT_DUMP_NTF:
+ 	 * &struct iwl_mfu_assert_dump_notif
+@@ -361,4 +367,30 @@ struct iwl_dbg_suspend_resume_cmd {
+ 	__le32 operation;
+ } __packed;
  
- const struct iwl_cfg iwl_ax201_cfg_qu_hr = {
++#define BUF_ALLOC_MAX_NUM_FRAGS 16
++
++/**
++ * struct iwl_buf_alloc_frag - a DBGC fragment
++ * @addr: base address of the fragment
++ * @size: size of the fragment
++ */
++struct iwl_buf_alloc_frag {
++	__le64 addr;
++	__le32 size;
++} __packed; /* FRAGMENT_STRUCTURE_API_S_VER_1 */
++
++/**
++ * struct iwl_buf_alloc_cmd - buffer allocation command
++ * @alloc_id: &enum iwl_fw_ini_allocation_id
++ * @buf_location: &enum iwl_fw_ini_buffer_location
++ * @num_frags: number of fragments
++ * @frags: fragments array
++ */
++struct iwl_buf_alloc_cmd {
++	__le32 alloc_id;
++	__le32 buf_location;
++	__le32 num_frags;
++	struct iwl_buf_alloc_frag frags[BUF_ALLOC_MAX_NUM_FRAGS];
++} __packed; /* BUFFER_ALLOCATION_CMD_API_S_VER_2 */
++
+ #endif /* __iwl_fw_api_debug_h__ */
 diff --git a/drivers/net/wireless/intel/iwlwifi/fw/file.h b/drivers/net/wireless/intel/iwlwifi/fw/file.h
-index 00db39427be7..329b00e90fa4 100644
+index 1bdcab9b9275..423cc0cf8e78 100644
 --- a/drivers/net/wireless/intel/iwlwifi/fw/file.h
 +++ b/drivers/net/wireless/intel/iwlwifi/fw/file.h
-@@ -524,6 +524,10 @@ enum iwl_fw_phy_cfg {
- 	FW_PHY_CFG_TX_CHAIN = 0xf << FW_PHY_CFG_TX_CHAIN_POS,
- 	FW_PHY_CFG_RX_CHAIN_POS = 20,
- 	FW_PHY_CFG_RX_CHAIN = 0xf << FW_PHY_CFG_RX_CHAIN_POS,
-+	FW_PHY_CFG_CHAIN_SAD_POS = 23,
-+	FW_PHY_CFG_CHAIN_SAD_ENABLED = 0x1 << FW_PHY_CFG_CHAIN_SAD_POS,
-+	FW_PHY_CFG_CHAIN_SAD_ANT_A = 0x2 << FW_PHY_CFG_CHAIN_SAD_POS,
-+	FW_PHY_CFG_CHAIN_SAD_ANT_B = 0x4 << FW_PHY_CFG_CHAIN_SAD_POS,
- 	FW_PHY_CFG_SHARED_CLK = BIT(31),
+@@ -468,6 +468,7 @@ enum iwl_ucode_tlv_capa {
+ 	IWL_UCODE_TLV_CAPA_MCC_UPDATE_11AX_SUPPORT	= (__force iwl_ucode_tlv_capa_t)89,
+ 	IWL_UCODE_TLV_CAPA_CSI_REPORTING		= (__force iwl_ucode_tlv_capa_t)90,
+ 	IWL_UCODE_TLV_CAPA_DBG_SUSPEND_RESUME_CMD_SUPP	= (__force iwl_ucode_tlv_capa_t)92,
++	IWL_UCODE_TLV_CAPA_DBG_BUF_ALLOC_CMD_SUPP	= (__force iwl_ucode_tlv_capa_t)93,
+ 
+ 	/* set 3 */
+ 	IWL_UCODE_TLV_CAPA_MLME_OFFLOAD			= (__force iwl_ucode_tlv_capa_t)96,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index 28e836a55119..35af56acc30b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -468,6 +468,7 @@ static const struct iwl_hcmd_names iwl_mvm_data_path_names[] = {
+  */
+ static const struct iwl_hcmd_names iwl_mvm_debug_names[] = {
+ 	HCMD_NAME(DBGC_SUSPEND_RESUME),
++	HCMD_NAME(BUFFER_ALLOCATION),
+ 	HCMD_NAME(MFU_ASSERT_DUMP_NTF),
  };
  
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-index 02b65e2580a3..47bd35618573 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-@@ -379,6 +379,7 @@ struct iwl_cfg_trans_params {
-  * @ht_params: point to ht parameters
-  * @led_mode: 0=blinking, 1=On(RF On)/Off(RF Off)
-  * @rx_with_siso_diversity: 1x1 device with rx antenna diversity
-+ * @tx_with_siso_diversity: 1x1 device with tx antenna diversity
-  * @internal_wimax_coex: internal wifi/wimax combo device
-  * @high_temp: Is this NIC is designated to be in high temperature.
-  * @host_interrupt_operation_mode: device needs host interrupt operation
-@@ -441,6 +442,7 @@ struct iwl_cfg {
- 	u16 nvm_ver;
- 	u16 nvm_calib_ver;
- 	u32 rx_with_siso_diversity:1,
-+	    tx_with_siso_diversity:1,
- 	    bt_shared_single_ant:1,
- 	    internal_wimax_coex:1,
- 	    host_interrupt_operation_mode:1,
 -- 
 2.23.0.rc1
 
