@@ -2,60 +2,60 @@ Return-Path: <SRS0=FCSK=W6=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-5.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02FEDC3A5A2
-	for <linux-wireless@archiver.kernel.org>; Tue,  3 Sep 2019 18:59:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E2EDC3A5A2
+	for <linux-wireless@archiver.kernel.org>; Tue,  3 Sep 2019 19:03:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CAD4C21897
-	for <linux-wireless@archiver.kernel.org>; Tue,  3 Sep 2019 18:59:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1253722CF8
+	for <linux-wireless@archiver.kernel.org>; Tue,  3 Sep 2019 19:03:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="PW43JY3G"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Djjic5/q"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726589AbfICS70 (ORCPT
+        id S1726602AbfICTDl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 3 Sep 2019 14:59:26 -0400
-Received: from mail-wm1-f65.google.com ([209.85.128.65]:33980 "EHLO
-        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725962AbfICS70 (ORCPT
+        Tue, 3 Sep 2019 15:03:41 -0400
+Received: from mail-wm1-f67.google.com ([209.85.128.67]:54668 "EHLO
+        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725882AbfICTDl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Sep 2019 14:59:26 -0400
-Received: by mail-wm1-f65.google.com with SMTP id y135so709578wmc.1
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Sep 2019 11:59:24 -0700 (PDT)
+        Tue, 3 Sep 2019 15:03:41 -0400
+Received: by mail-wm1-f67.google.com with SMTP id k2so632046wmj.4
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Sep 2019 12:03:39 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=subject:to:cc:references:from:message-id:date:user-agent
          :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=cCiLi9G0JnKfIu6Oqo9KsIMKr5FffxQ/wE79TYJXYJ8=;
-        b=PW43JY3GLYffNhYGwvG4PmrwwJynONIOML3Dg/XLnMNqG5v8g4uPnCKzL6Cg9+R4pf
-         6X7ekYkgqNwbEAOsuaC55pR/RExBwRLcs5iDXbKqjInnhuf8JO18i8b1GOCEkkcb1FWk
-         SaLSolck+6YhG4ktS9tRIONHr9iiRW257xz4s=
+        bh=3pKB/s7QIRjzR74E3kb2LPD38Qsso7bn4uv9aOUYFW0=;
+        b=Djjic5/qjFPywC0E5JslCge+wapy7Mva/hu5YL1n9HjKtPJNQ6hu78fIWeOmIbblbT
+         5gp56GpDlDDBb81thNZngnnrYJEh0eUMX5pbk/zWdPcLwUTCNoEyQ/HBr8cvgXiadXQ5
+         flMN/82gCjOhtQDS4xBsnU+4ZP43WvbzDZWsE=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=cCiLi9G0JnKfIu6Oqo9KsIMKr5FffxQ/wE79TYJXYJ8=;
-        b=qfwDTMGVLyHhweopSJVzczapANtAB6dCh4ZTRBa9F6YOsD7DFhKe/GCpvUcHwU9As+
-         SZQMLDcz6JCJf7jd1tAzvXBkZ9yjjGMJfDnX2bKHZcOMnqkmPyI9kpHRR1VSHbK6EQEh
-         IK3WcN9hu7KYn5tKGAJhiRNjENCOBjVfLxb0YmCTM6YO/ebhpa6Th9eJWTUsIROT4fp9
-         dCadtYdP8y7GE9Egt06txM8LDA52uCLoS3c/Z9nmQTU/NvtS5ppaYzA3WF+FQPJJsmgl
-         fHxKOV36gDfM08abETvWgr0/OP7qKZRxfZetKjdYtnjcj/PIlLqg7SRjchQ8v93EpR9T
-         P5Yg==
-X-Gm-Message-State: APjAAAXQyWMy67wVz3LlJMYz9KDCdi4ZTq//qSa1nxdZRIPDowB0RCmf
-        GsCyyUCC2+oFBygQkU6hhn9vrQ==
-X-Google-Smtp-Source: APXvYqzCgEaq7mSDYcP4jQvw/l4Mj3ogsX95tQ4YPTp6uNy21cpb64iibkzPMkhxPIZ39mBWOKW2lg==
-X-Received: by 2002:a05:600c:259:: with SMTP id 25mr981158wmj.158.1567537163797;
-        Tue, 03 Sep 2019 11:59:23 -0700 (PDT)
+        bh=3pKB/s7QIRjzR74E3kb2LPD38Qsso7bn4uv9aOUYFW0=;
+        b=Gu41L29kdA4utlCaL309AGRThDgj3zxP0vkrO3q5Jzf1TKeIsnuuEHfSlW57SlUrOQ
+         EVlnGO3jZnisHpnbueBEI2PGFhJOHT93a52mMxngVm6BbIXghrrOK2uciXiK0IYy8z9I
+         7p03PaXq1HghpdUp3Tj5GiITXqOyDILVyDyskvLWiL+GNsxrUk/hFxhO/oUZ2ULn3fRv
+         vjQMYxucbPgT7VIn5ELcZ/EUXmuYrzWs5IEAqZNetV8fQ7winDWs0lK9eTNUmKWj4tbX
+         feZDQc1l7RfUY/d3WU+qz2u1r1d7zJeTc/MHnoPor43LlRPDvnDgaRmsSxWm1rEAafsA
+         VbNg==
+X-Gm-Message-State: APjAAAVJGq2yQec71qvvlZFPvKJi7qOrFxc/nNhutxiziU1hiCWx/C36
+        wcq9u/RPDB1nK3XEnKVuLIEeIGsdcnKTJA==
+X-Google-Smtp-Source: APXvYqxth98K0tShDu7b/q4uM/GyUqobljOmGn4ySzL3043chwPTK0pHCE5qUfrdNvB1O9P9GME7Bg==
+X-Received: by 2002:a1c:6c0c:: with SMTP id h12mr1019962wmc.162.1567537418937;
+        Tue, 03 Sep 2019 12:03:38 -0700 (PDT)
 Received: from [10.230.33.15] ([192.19.248.250])
-        by smtp.gmail.com with ESMTPSA id b194sm291318wmg.46.2019.09.03.11.59.22
+        by smtp.gmail.com with ESMTPSA id 207sm826024wme.17.2019.09.03.12.03.37
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 03 Sep 2019 11:59:23 -0700 (PDT)
-Subject: Re: [PATCH 1/3] brcmfmac: move "cfg80211_ops" pointer to another
- struct
+        Tue, 03 Sep 2019 12:03:38 -0700 (PDT)
+Subject: Re: [PATCH 2/3] brcmfmac: split brcmf_attach() and brcmf_detach()
+ functions
 To:     =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
         Kalle Valo <kvalo@codeaurora.org>
 Cc:     Franky Lin <franky.lin@broadcom.com>,
@@ -68,14 +68,14 @@ Cc:     Franky Lin <franky.lin@broadcom.com>,
         brcm80211-dev-list@cypress.com,
         =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
 References: <20190903042928.18621-1-zajec5@gmail.com>
- <20190903042928.18621-2-zajec5@gmail.com>
+ <20190903042928.18621-3-zajec5@gmail.com>
 From:   Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <527c6f46-bad4-58ac-afce-ca62ddda7c5b@broadcom.com>
-Date:   Tue, 3 Sep 2019 20:59:21 +0200
+Message-ID: <12d6c6d0-4f7d-dc6a-5a5c-ade8585033fd@broadcom.com>
+Date:   Tue, 3 Sep 2019 21:03:35 +0200
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
  Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <20190903042928.18621-2-zajec5@gmail.com>
+In-Reply-To: <20190903042928.18621-3-zajec5@gmail.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -84,20 +84,21 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+
+
 On 9/3/2019 6:29 AM, Rafał Miłecki wrote:
 > From: Rafał Miłecki <rafal@milecki.pl>
 > 
-> This moves "ops" pointer from "struct brcmf_cfg80211_info" to the
-> "struct brcmf_pub". This movement makes it possible to allocate wiphy
-> without attaching cfg80211 (brcmf_cfg80211_attach()). It's required for
-> later separation of wiphy allocation and driver initialization.
-> 
-> While at it fix also an unlikely memory leak in the brcmf_attach().
+> Move code allocating/freeing wiphy out of above functions. This will
+> allow reinitializing the driver (e.g. on some error) without allocating
+> a new wiphy.
 
-Always good ;-)
-
-I recall there is some fiddling with the callback ops in cfg80211.c. Is 
-that broken by this reorg. Need to look into that.
-
-Regards,
-Arend
+Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+> ---
+>   .../broadcom/brcm80211/brcmfmac/bus.h         |  4 ++-
+>   .../broadcom/brcm80211/brcmfmac/core.c        | 33 ++++++++++++++----
+>   .../broadcom/brcm80211/brcmfmac/pcie.c        | 13 +++++--
+>   .../broadcom/brcm80211/brcmfmac/sdio.c        | 15 ++++++--
+>   .../broadcom/brcm80211/brcmfmac/usb.c         | 34 +++++++++++++++----
+>   5 files changed, 80 insertions(+), 19 deletions(-)
