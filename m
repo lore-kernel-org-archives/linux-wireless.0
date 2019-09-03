@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28931C3A5A5
-	for <linux-wireless@archiver.kernel.org>; Tue,  3 Sep 2019 16:30:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BF3BC3A5A5
+	for <linux-wireless@archiver.kernel.org>; Tue,  3 Sep 2019 16:36:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E9E392343A
-	for <linux-wireless@archiver.kernel.org>; Tue,  3 Sep 2019 16:30:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2D1C923717
+	for <linux-wireless@archiver.kernel.org>; Tue,  3 Sep 2019 16:36:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1567528236;
-	bh=eDSMTHcpK8ENZugZPnl/ekUkYEnn0M31kzXWhMcwrno=;
+	s=default; t=1567528561;
+	bh=0JIc5Xd51Cvq9nD6MJO5pe1/yMiw9hOTdQiacZjbLt8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=lzklA1y34gG+RAXVJD/sC6X6QUoWPhOPR5+rGKfUzNUljtUEL3Q4MEnC+B5MUOz46
-	 XIcugCfxkqlWSnsFUK3vXKgjdiBuhaecAosHb6h9GFa9ynJS+2FgWSoxGVAB/StIm9
-	 a+05P2oaQh6/3iMFHwy5edtorltaCnGGLgpcbSII=
+	b=COhornKYlJ/DmQsF1Elh03LxqoGsz2FEuJ5ZlV5duqIxQ39LV1xM3CAwMqJ69CYct
+	 5KqoeUywdxSNXJJOODGx4eGK7vLDxs4L6JD52LOOO/ziSu42ZXBTQzAJ8/D5JN11NU
+	 Swnhfk1uoPDJnVTkqptp/Mv4GQlWLCWZalIPIGb0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730355AbfICQab (ORCPT
+        id S1730910AbfICQ1j (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 3 Sep 2019 12:30:31 -0400
-Received: from mail.kernel.org ([198.145.29.99]:51288 "EHLO mail.kernel.org"
+        Tue, 3 Sep 2019 12:27:39 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49026 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730234AbfICQ2x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Sep 2019 12:28:53 -0400
+        id S1730464AbfICQ1h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 3 Sep 2019 12:27:37 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 915EA238D1;
-        Tue,  3 Sep 2019 16:28:51 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id E26512343A;
+        Tue,  3 Sep 2019 16:27:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1567528132;
-        bh=eDSMTHcpK8ENZugZPnl/ekUkYEnn0M31kzXWhMcwrno=;
+        s=default; t=1567528056;
+        bh=0JIc5Xd51Cvq9nD6MJO5pe1/yMiw9hOTdQiacZjbLt8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=HfN0AI7ej2knUp4KgDhxoRotgfKaCab5By7F6IKfiogWczWfhw6m0GYZscIf4sY5E
-         GMuGjKS/fdcPdAKxLRmrymyKvG6uawQ0WtKRJFky53CGOpftdwCVbqqcJGehuVRHfV
-         NFQ+9WzdEtzRJcDAoerGZ7HHgECyXWl/Qkoyk9lQ=
+        b=KvEWwP2E9ocMniCmIzwUVTnlrtf6ekAW34+oRPV7uVXRUnrcaiAsUmVtaT7FCfU1s
+         qlZ7H2LcWE6G0Cy2kCxbSBwRZQZpDL7YVJiCvLyH9SKGUtVe1Ibqb/d23uKnRW2SP/
+         qRxTb47AADs8l3aI9gLQfm5LHfNDulKQExbkg9L8=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Ajay Singh <ajay.kathat@microchip.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+Cc:     Ihab Zhaika <ihab.zhaika@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
         Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
-Subject: [PATCH AUTOSEL 4.19 127/167] staging: wilc1000: fix error path cleanup in wilc_wlan_initialize()
-Date:   Tue,  3 Sep 2019 12:24:39 -0400
-Message-Id: <20190903162519.7136-127-sashal@kernel.org>
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 072/167] iwlwifi: add new card for 9260 series
+Date:   Tue,  3 Sep 2019 12:23:44 -0400
+Message-Id: <20190903162519.7136-72-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190903162519.7136-1-sashal@kernel.org>
 References: <20190903162519.7136-1-sashal@kernel.org>
@@ -60,59 +60,32 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ajay Singh <ajay.kathat@microchip.com>
+From: Ihab Zhaika <ihab.zhaika@intel.com>
 
-[ Upstream commit 6419f818ababebc1116fb2d0e220bd4fe835d0e3 ]
+[ Upstream commit 3941310cf665b8a7965424d2a185c80782faa030 ]
 
-For the error path in wilc_wlan_initialize(), the resources are not
-cleanup in the correct order. Reverted the previous changes and use the
-correct order to free during error condition.
+Add one PCI ID for 9260 series.
 
-Fixes: b46d68825c2d ("staging: wilc1000: remove COMPLEMENT_BOOT")
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: <stable@vger.kernel.org> # 4.14+
+Signed-off-by: Ihab Zhaika <ihab.zhaika@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/staging/wilc1000/linux_wlan.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 649caae2b6033..25798119426b3 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -649,17 +649,17 @@ static int wilc_wlan_initialize(struct net_device *dev, struct wilc_vif *vif)
- 			goto fail_locks;
- 		}
- 
--		if (wl->gpio_irq && init_irq(dev)) {
--			ret = -EIO;
--			goto fail_locks;
--		}
--
- 		ret = wlan_initialize_threads(dev);
- 		if (ret < 0) {
- 			ret = -EIO;
- 			goto fail_wilc_wlan;
- 		}
- 
-+		if (wl->gpio_irq && init_irq(dev)) {
-+			ret = -EIO;
-+			goto fail_threads;
-+		}
-+
- 		if (!wl->dev_irq_num &&
- 		    wl->hif_func->enable_interrupt &&
- 		    wl->hif_func->enable_interrupt(wl)) {
-@@ -715,7 +715,7 @@ static int wilc_wlan_initialize(struct net_device *dev, struct wilc_vif *vif)
- fail_irq_init:
- 		if (wl->dev_irq_num)
- 			deinit_irq(dev);
--
-+fail_threads:
- 		wlan_deinitialize_threads(dev);
- fail_wilc_wlan:
- 		wilc_wlan_cleanup(dev);
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index d3a1c13bcf6f1..0982bd99b1c3c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -601,6 +601,7 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ 	{IWL_PCI_DEVICE(0x2526, 0x2030, iwl9560_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x2034, iwl9560_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x4010, iwl9260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2526, 0x4018, iwl9260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x4030, iwl9560_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x4034, iwl9560_2ac_cfg_soc)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x40A4, iwl9460_2ac_cfg)},
 -- 
 2.20.1
 
