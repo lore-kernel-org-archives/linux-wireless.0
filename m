@@ -6,36 +6,36 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FA54C3A5A2
-	for <linux-wireless@archiver.kernel.org>; Tue,  3 Sep 2019 07:37:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9249CC3A5A2
+	for <linux-wireless@archiver.kernel.org>; Tue,  3 Sep 2019 07:37:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7C34F21897
-	for <linux-wireless@archiver.kernel.org>; Tue,  3 Sep 2019 07:37:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6BC5421897
+	for <linux-wireless@archiver.kernel.org>; Tue,  3 Sep 2019 07:37:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726946AbfICHhr (ORCPT
+        id S1727961AbfICHht (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 3 Sep 2019 03:37:47 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:40304 "EHLO
+        Tue, 3 Sep 2019 03:37:49 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:40310 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725888AbfICHhr (ORCPT
+        with ESMTP id S1725888AbfICHht (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Sep 2019 03:37:47 -0400
+        Tue, 3 Sep 2019 03:37:49 -0400
 Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1i53Nh-0004Cd-Ek; Tue, 03 Sep 2019 10:37:37 +0300
+        id 1i53Nk-0004Cd-6K; Tue, 03 Sep 2019 10:37:40 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Tue,  3 Sep 2019 10:37:09 +0300
-Message-Id: <20190903073714.32278-17-luca@coelho.fi>
+Date:   Tue,  3 Sep 2019 10:37:12 +0300
+Message-Id: <20190903073714.32278-20-luca@coelho.fi>
 X-Mailer: git-send-email 2.23.0.rc1
 In-Reply-To: <20190903073714.32278-1-luca@coelho.fi>
 References: <20190903073714.32278-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 16/21] iwlwifi: add iwl_tlv_array_len()
+Subject: [PATCH 19/21] iwlwifi: dbg_ini: fix dump structs doc
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -43,38 +43,49 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 
-Allows to easily calculate array length at the end of a TLV.
+Fix the documentation of struct iwl_fw_ini_monitor_dump and
+iwl_fw_ini_error_dump_range.
 
 Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/file.h | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+ .../net/wireless/intel/iwlwifi/fw/error-dump.h   | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/file.h b/drivers/net/wireless/intel/iwlwifi/fw/file.h
-index 329b00e90fa4..1bdcab9b9275 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/file.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/file.h
-@@ -972,4 +972,19 @@ struct iwl_fw_cmd_version {
- 	u8 notif_ver;
- } __packed;
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
+index 9529e5925ad5..2e763678dbdb 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
+@@ -323,10 +323,10 @@ struct iwl_fw_ini_fifo_hdr {
+ /**
+  * struct iwl_fw_ini_error_dump_range - range of memory
+  * @range_data_size: the size of this range, in bytes
+- * @internal_base_addr - base address of internal memory range
+- * @dram_base_addr - base address of dram monitor range
+- * @page_num - page number of memory range
+- * @fifo_hdr - fifo header of memory range
++ * @internal_base_addr: base address of internal memory range
++ * @dram_base_addr: base address of dram monitor range
++ * @page_num: page number of memory range
++ * @fifo_hdr: fifo header of memory range
+  * @data: the actual memory
+  */
+ struct iwl_fw_ini_error_dump_range {
+@@ -454,10 +454,10 @@ struct iwl_fw_error_dump_rb {
  
-+static inline size_t _iwl_tlv_array_len(const struct iwl_ucode_tlv *tlv,
-+					size_t fixed_size, size_t var_size)
-+{
-+	size_t var_len = le32_to_cpu(tlv->length) - fixed_size;
-+
-+	if (WARN_ON(var_len % var_size))
-+		return 0;
-+
-+	return var_len / var_size;
-+}
-+
-+#define iwl_tlv_array_len(_tlv_ptr, _struct_ptr, _memb)			\
-+	_iwl_tlv_array_len((_tlv_ptr), sizeof(*(_struct_ptr)),		\
-+			   sizeof(_struct_ptr->_memb[0]))
-+
- #endif  /* __iwl_fw_file_h__ */
+ /**
+  * struct iwl_fw_ini_monitor_dump - ini monitor dump
+- * @header - header of the region
+- * @write_ptr - write pointer position in the buffer
+- * @cycle_cnt - cycles count
+- * @ranges - the memory ranges of this this region
++ * @header: header of the region
++ * @write_ptr: write pointer position in the buffer
++ * @cycle_cnt: cycles count
++ * @ranges: the memory ranges of this this region
+  */
+ struct iwl_fw_ini_monitor_dump {
+ 	struct iwl_fw_ini_error_dump_header header;
 -- 
 2.23.0.rc1
 
