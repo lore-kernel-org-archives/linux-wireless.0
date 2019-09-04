@@ -6,33 +6,33 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8173AC3A5A7
-	for <linux-wireless@archiver.kernel.org>; Wed,  4 Sep 2019 13:58:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EABBC3A5A7
+	for <linux-wireless@archiver.kernel.org>; Wed,  4 Sep 2019 13:58:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 64E3222CF7
-	for <linux-wireless@archiver.kernel.org>; Wed,  4 Sep 2019 13:58:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 32EAB2339D
+	for <linux-wireless@archiver.kernel.org>; Wed,  4 Sep 2019 13:58:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730214AbfIDN6Q (ORCPT
+        id S1730380AbfIDN6W (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 4 Sep 2019 09:58:16 -0400
-Received: from szxga05-in.huawei.com ([45.249.212.191]:5763 "EHLO huawei.com"
+        Wed, 4 Sep 2019 09:58:22 -0400
+Received: from szxga05-in.huawei.com ([45.249.212.191]:5764 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1729677AbfIDN6Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Sep 2019 09:58:16 -0400
-Received: from DGGEMS413-HUB.china.huawei.com (unknown [172.30.72.60])
-        by Forcepoint Email with ESMTP id A71EC5BCA6E2A015C1C6;
-        Wed,  4 Sep 2019 21:58:13 +0800 (CST)
+        id S1729677AbfIDN6W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 4 Sep 2019 09:58:22 -0400
+Received: from DGGEMS401-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id F329485DB3A85469E95C;
+        Wed,  4 Sep 2019 21:58:20 +0800 (CST)
 Received: from localhost.localdomain.localdomain (10.175.113.25) by
- DGGEMS413-HUB.china.huawei.com (10.3.19.213) with Microsoft SMTP Server id
- 14.3.439.0; Wed, 4 Sep 2019 21:58:05 +0800
+ DGGEMS401-HUB.china.huawei.com (10.3.19.201) with Microsoft SMTP Server id
+ 14.3.439.0; Wed, 4 Sep 2019 21:58:14 +0800
 From:   Wei Yongjun <weiyongjun1@huawei.com>
-To:     Yan-Hsuan Chuang <yhchuang@realtek.com>,
+To:     Ping-Ke Shih <pkshih@realtek.com>,
         Kalle Valo <kvalo@codeaurora.org>
 CC:     Wei Yongjun <weiyongjun1@huawei.com>,
         <linux-wireless@vger.kernel.org>, <kernel-janitors@vger.kernel.org>
-Subject: [PATCH] rtw88: fix seq_file memory leak
-Date:   Wed, 4 Sep 2019 14:16:01 +0000
-Message-ID: <20190904141601.186107-1-weiyongjun1@huawei.com>
+Subject: [PATCH] rtlwifi: Fix file release memory leak
+Date:   Wed, 4 Sep 2019 14:16:11 +0000
+Message-ID: <20190904141611.4780-1-weiyongjun1@huawei.com>
 X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
 Content-Type:   text/plain; charset=US-ASCII
@@ -44,30 +44,30 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-When using single_open(), single_release() should be used instead
-of seq_release(), otherwise there is a memory leak.
+When using single_open() for opening, single_release() should be
+used instead of seq_release(), otherwise there is a memory leak.
 
 This is detected by Coccinelle semantic patch.
 
-Fixes: e3037485c68e ("rtw88: new Realtek 802.11ac driver")
+Fixes: 610247f46feb ("rtlwifi: Improve debugging by using debugfs")
 Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
 ---
- drivers/net/wireless/realtek/rtw88/debug.c | 2 +-
+ drivers/net/wireless/realtek/rtlwifi/debug.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/debug.c b/drivers/net/wireless/realtek/rtw88/debug.c
-index f0ae26018f97..a7d45f4d34c4 100644
---- a/drivers/net/wireless/realtek/rtw88/debug.c
-+++ b/drivers/net/wireless/realtek/rtw88/debug.c
-@@ -76,7 +76,7 @@ static const struct file_operations file_ops_single_r = {
- 	.open = rtw_debugfs_single_open_rw,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/debug.c b/drivers/net/wireless/realtek/rtlwifi/debug.c
+index a051de16284d..55db71c766fe 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/debug.c
++++ b/drivers/net/wireless/realtek/rtlwifi/debug.c
+@@ -88,7 +88,7 @@ static const struct file_operations file_ops_common = {
+ 	.open = dl_debug_open_common,
  	.read = seq_read,
  	.llseek = seq_lseek,
 -	.release = seq_release,
 +	.release = single_release,
  };
  
- static const struct file_operations file_ops_single_rw = {
+ static int rtl_debug_get_mac_page(struct seq_file *m, void *v)
 
 
 
