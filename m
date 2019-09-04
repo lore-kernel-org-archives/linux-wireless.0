@@ -2,72 +2,84 @@ Return-Path: <SRS0=IwVr=W7=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65B13C3A5A2
-	for <linux-wireless@archiver.kernel.org>; Wed,  4 Sep 2019 02:32:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56FCAC3A5A2
+	for <linux-wireless@archiver.kernel.org>; Wed,  4 Sep 2019 02:33:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3F379208E4
-	for <linux-wireless@archiver.kernel.org>; Wed,  4 Sep 2019 02:32:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2EED9208E4
+	for <linux-wireless@archiver.kernel.org>; Wed,  4 Sep 2019 02:33:33 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=qti.qualcomm.com header.i=@qti.qualcomm.com header.b="Fw9Or7d/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727222AbfIDCb7 (ORCPT
+        id S1727499AbfIDCdc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 3 Sep 2019 22:31:59 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:36275 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726925AbfIDCb6 (ORCPT
+        Tue, 3 Sep 2019 22:33:32 -0400
+Received: from alexa-out-tai-01.qualcomm.com ([103.229.16.226]:5780 "EHLO
+        alexa-out-tai-01.qualcomm.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727065AbfIDCdc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Sep 2019 22:31:58 -0400
-Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x842ViBL016652, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (RTITCASV01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x842ViBL016652
-        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
-        Wed, 4 Sep 2019 10:31:44 +0800
-Received: from RTITMBSVM04.realtek.com.tw ([fe80::e404:880:2ef1:1aa1]) by
- RTITCASV01.realtek.com.tw ([::1]) with mapi id 14.03.0468.000; Wed, 4 Sep
- 2019 10:31:43 +0800
-From:   Tony Chuang <yhchuang@realtek.com>
-To:     Kalle Valo <kvalo@codeaurora.org>
-CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "briannorris@chromium.org" <briannorris@chromium.org>,
-        "sgruszka@redhat.com" <sgruszka@redhat.com>
-Subject: RE: [PATCH 4/8] rtw88: 8822c: add FW IQK support
-Thread-Topic: [PATCH 4/8] rtw88: 8822c: add FW IQK support
-Thread-Index: AQHVTQyHeGrW/0lhJEuPz5bjYVAAaacZjO8AgAFnE8A=
-Date:   Wed, 4 Sep 2019 02:31:42 +0000
-Message-ID: <F7CD281DE3E379468C6D07993EA72F84D18C6B3B@RTITMBSVM04.realtek.com.tw>
-References: <1565174405-2689-5-git-send-email-yhchuang@realtek.com>
- <20190903125324.4CDC76085C@smtp.codeaurora.org>
-In-Reply-To: <20190903125324.4CDC76085C@smtp.codeaurora.org>
-Accept-Language: zh-TW, en-US
-Content-Language: zh-TW
+        Tue, 3 Sep 2019 22:33:32 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=qti.qualcomm.com; i=@qti.qualcomm.com; q=dns/txt;
+  s=qcdkim; t=1567564410; x=1599100410;
+  h=from:to:cc:date:message-id:references:in-reply-to:
+   content-transfer-encoding:mime-version:subject;
+  bh=1jV4FCpqNNc2FKSQvjt737YtE0bfFSptZVZVApDLF/8=;
+  b=Fw9Or7d/OnTzqpHOkBLZuAjlTs4q9ob/RcuRqig28PAcxmocWu/qu6I9
+   nMnjp1Gj2tbC83IwpBlvaVg3/uSfNgXUjdh1qRvdQYvurbmVQ9NTgxHOx
+   NhRE+JaAnXwZJ0WPK9VWLDmAdWl0mAeCqFmSs5PAGfY1c2RF6v4xaqu9O
+   M=;
+Subject: RE: [PATCH 4/7] ath10k: disable TX complete indication of htt for sdio
+Thread-Topic: [PATCH 4/7] ath10k: disable TX complete indication of htt for sdio
+Received: from ironmsg01-tai.qualcomm.com ([10.249.140.6])
+  by alexa-out-tai-01.qualcomm.com with ESMTP; 04 Sep 2019 10:33:29 +0800
+Received: from aptaiexm02e.ap.qualcomm.com ([10.249.150.15])
+  by ironmsg01-tai.qualcomm.com with ESMTP/TLS/AES256-SHA; 04 Sep 2019 10:33:26 +0800
+Received: from aptaiexm02f.ap.qualcomm.com (10.249.150.16) by
+ aptaiexm02e.ap.qualcomm.com (10.249.150.15) with Microsoft SMTP Server (TLS)
+ id 15.0.1473.3; Wed, 4 Sep 2019 10:33:24 +0800
+Received: from aptaiexm02f.ap.qualcomm.com ([fe80::4152:1436:e436:faa1]) by
+ aptaiexm02f.ap.qualcomm.com ([fe80::4152:1436:e436:faa1%19]) with mapi id
+ 15.00.1473.005; Wed, 4 Sep 2019 10:33:24 +0800
+From:   Wen Gong <wgong@qti.qualcomm.com>
+To:     Wen Gong <wgong@codeaurora.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Thread-Index: AQHVV05YxAe/tDTcpEq1n2AngIHyU6ca42qw
+Date:   Wed, 4 Sep 2019 02:33:24 +0000
+Message-ID: <6f9112febc5c4afb8cb6548db0089987@aptaiexm02f.ap.qualcomm.com>
+References: <1566302108-18219-1-git-send-email-wgong@codeaurora.org>
+ <1566302108-18219-5-git-send-email-wgong@codeaurora.org>
+In-Reply-To: <1566302108-18219-5-git-send-email-wgong@codeaurora.org>
+Accept-Language: en-US
+Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
-x-originating-ip: [172.21.68.183]
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+x-ms-exchange-transport-fromentityheader: Hosted
+x-originating-ip: [10.249.136.10]
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-PiANCj4gPHloY2h1YW5nQHJlYWx0ZWsuY29tPiB3cm90ZToNCj4gDQo+ID4gRnJvbTogWWFuLUhz
-dWFuIENodWFuZyA8eWhjaHVhbmdAcmVhbHRlay5jb20+DQo+ID4NCj4gPiBBZGQgc3VwcG9ydCBm
-b3IgZG9pbmcgSVFLIGluIGZpcm13YXJlDQo+ID4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBZYW4tSHN1
-YW4gQ2h1YW5nIDx5aGNodWFuZ0ByZWFsdGVrLmNvbT4NCj4gDQo+IFRoZSBjb21taXQgbG9nIGRv
-ZXMgbm90IGFuc3dlciAiV2h5PyIuIFdoYXQgaXMgSVFLIGFuZCBob3cgZG9lcyBpdCBoZWxwPw0K
-PiANCj4gTm8gbmVlZCB0byByZXNlbmQsIEkgY2FuIHVwZGF0ZSB0aGUgY29tbWl0IGxvZyBidXQg
-anVzdCBsZXQgbWUga25vdyB3aGF0IHRvDQo+IGFkZC4NCj4gDQoNCklkZWFsbHkgdGhlIFJGIGNv
-bXBvbmVudCdzIEkvUSB2ZWN0b3JzIHNob3VsZCBiZSBvcnRob2dvbmFsLCBidXQgdXN1YWxseSB0
-aGV5IGFyZSBub3QuDQpTbyB3ZSBuZWVkIHRvIGNhbGlicmF0ZSBmb3IgdGhlIFJGIGNvbXBvbmVu
-dHMsIGV4LiBQQS9MTkEsIEFEQy9EQUMuDQoNCkFuZCBpZiB0aGUgSS9RIHZlY3RvcnMgYXJlIG1v
-cmUgb3J0aG9nb25hbCwgdGhlIG1peGVkIHNpZ25hbCB3aWxsIGhhdmUgbGVzcyBkZXZpYXRpb24u
-DQpUaGlzIGhlbHBzIHdpdGggdGhvc2UgcmF0ZXMgd2l0aCBoaWdoZXIgbW9kdWxhdGlvbiAoTUNT
-OC05KSwgYmVjYXVzZSB0aGV5IGhhdmUgbW9yZQ0Kc3RyaWN0IEVWTS9TTlIgcmVxdWlyZW1lbnQu
-IEFsc28gdGhlIGJldHRlciBvZiB0aGUgcXVhbGl0eSBvZiB0aGUgc2lnbmFsLCB0aGUgbG9uZ2Vy
-IGl0DQpjYW4gcHJvcGFnYXRlLCBhbmQgdGhlIGJldHRlciB0aHJvdWdocHV0IHBlcmZvcm1hbmNl
-IHdlIGNhbiBnZXQuDQoNCllhbi1Ic3Vhbg0KDQo=
+> -----Original Message-----
+> From: ath10k <ath10k-bounces@lists.infradead.org> On Behalf Of Wen Gong
+> Sent: Tuesday, August 20, 2019 7:55 PM
+> To: ath10k@lists.infradead.org
+> Cc: linux-wireless@vger.kernel.org
+> Subject: [EXT] [PATCH 4/7] ath10k: disable TX complete indication of htt =
+for
+> sdio
+>=20
+Patch v2 sent, https://patchwork.kernel.org/patch/11116685/=20
+>=20
+> _______________________________________________
+> ath10k mailing list
+> ath10k@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/ath10k
