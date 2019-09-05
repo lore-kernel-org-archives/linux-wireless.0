@@ -7,54 +7,54 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9C61C3A5A5
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Sep 2019 10:38:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD536C3A5AA
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Sep 2019 10:38:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 826A6206BB
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Sep 2019 10:38:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A9D57206BB
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Sep 2019 10:38:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="BitKmokB";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="RpHiNxF0"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="KguheAi6";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="KguheAi6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387941AbfIEKi5 (ORCPT
+        id S2387946AbfIEKi6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 5 Sep 2019 06:38:57 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:38188 "EHLO
+        Thu, 5 Sep 2019 06:38:58 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:38274 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732466AbfIEKi4 (ORCPT
+        with ESMTP id S2387934AbfIEKi6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Sep 2019 06:38:56 -0400
+        Thu, 5 Sep 2019 06:38:58 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 44E72611CF; Thu,  5 Sep 2019 10:38:55 +0000 (UTC)
+        id E3AB561230; Thu,  5 Sep 2019 10:38:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1567679935;
-        bh=DLXIjGtHdGWT4NVO5y+uaLp2VQiojmzBJziLfMoFqXE=;
+        s=default; t=1567679936;
+        bh=SDxBUd6HIYIrePrYleC2ADNu/GlSH0+J59Pev6zi2Ws=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=BitKmokBi3GV/XO51tEZnJ7q/FrBTxzMqiEY697aWWIrTd0GEKP/vTkadxGuQz+2W
-         NSxu0NYhF5eU8feWUciLvU1O8K28XuY75e8lbefHRnHYjKiFk25nm/0HNxD0nGfuZd
-         GbdjTwG/m4jSlQITF+rn/IS7WbkojimtkYidxzME=
+        b=KguheAi6M2BJv2/C/DYJsWqQoNRpIiL1FVK6FVIjhcVhBBeq7PxHGckg4EtZ5FMkv
+         y1T3ksmRNeF8jXgIOJB+F6XaYi2xzfxR6FDVQjcTQgoHIhUyj031pJWwqzT0gHFaIo
+         UxEPH4P6nkLmoQlxqut/hyDeSqk+rpR7y7qGrSy8=
 Received: from wgong-HP-Z240-SFF-Workstation.qca.qualcomm.com (unknown [180.166.53.21])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: wgong@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 3EBDB611CF;
-        Thu,  5 Sep 2019 10:38:53 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 9373B60850;
+        Thu,  5 Sep 2019 10:38:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1567679933;
-        bh=DLXIjGtHdGWT4NVO5y+uaLp2VQiojmzBJziLfMoFqXE=;
+        s=default; t=1567679936;
+        bh=SDxBUd6HIYIrePrYleC2ADNu/GlSH0+J59Pev6zi2Ws=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=RpHiNxF0NhYgBEuuxnaHLCCjUPPRJ0904rjfzr3iEG411XPJKjidLX0guMS/SOGNW
-         vTNJvgg16UlOOV15hgmr7f1d/No9jkI68oXJbBn+OEpF4x962x+hmysf75iJQTU01B
-         ypFsCdkFejO+rPn4Pspsa56LgkJZMNSkWbyFFmgU=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 3EBDB611CF
+        b=KguheAi6M2BJv2/C/DYJsWqQoNRpIiL1FVK6FVIjhcVhBBeq7PxHGckg4EtZ5FMkv
+         y1T3ksmRNeF8jXgIOJB+F6XaYi2xzfxR6FDVQjcTQgoHIhUyj031pJWwqzT0gHFaIo
+         UxEPH4P6nkLmoQlxqut/hyDeSqk+rpR7y7qGrSy8=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 9373B60850
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=wgong@codeaurora.org
 From:   Wen Gong <wgong@codeaurora.org>
 To:     ath10k@lists.infradead.org
 Cc:     linux-wireless@vger.kernel.org
-Subject: [PATCH v5 6/8] ath10k: add htt TX bundle for sdio
-Date:   Thu,  5 Sep 2019 18:38:11 +0800
-Message-Id: <1567679893-14029-7-git-send-email-wgong@codeaurora.org>
+Subject: [PATCH v5 8/8] ath10k: enable napi on RX path for sdio
+Date:   Thu,  5 Sep 2019 18:38:13 +0800
+Message-Id: <1567679893-14029-9-git-send-email-wgong@codeaurora.org>
 X-Mailer: git-send-email 1.9.1
 In-Reply-To: <1567679893-14029-1-git-send-email-wgong@codeaurora.org>
 References: <1567679893-14029-1-git-send-email-wgong@codeaurora.org>
@@ -63,28 +63,63 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The transmission utilization ratio for sdio bus for small packet is
-slow, because the space and time cost for sdio bus is same for large
-length packet and small length packet. So the speed of data for large
-length packet is higher than small length.
+For tcp RX, the quantity of tcp acks to remote is 1/2 of the quantity
+of tcp data from remote, then it will have many small length packets
+on TX path of sdio bus, then it reduce the RX packets's bandwidth of
+tcp.
 
-Test result of different length of data:
+This patch enable napi on RX path, then the RX packet of tcp will not
+feed to tcp stack immeditely from mac80211 since GRO is enabled by
+default, it will feed to tcp stack after napi complete, if rx bundle
+is enabled, then it will feed to tcp stack one time for each bundle
+of RX. For example, RX bundle size is 32, then tcp stack will receive
+one large length packet, its length is neary 1500*32, then tcp stack
+will send a tcp ack for this large packet, this will reduce the tcp
+acks ratio from 1/2 to 1/32. This results in significant performance
+improvement for tcp RX.
 
-data packet(byte)   cost time(us)   calculated rate(Mbps)
-      256               28                73
-      512               33               124
-     1024               35               234
-     1792               45               318
-    14336              168               682
-    28672              333               688
-    57344              660               695
+Tcp rx throughout is 240Mbps without this patch, and it arrive 390Mbps
+with this patch. The cpu usage has no obvious difference with and
+without NAPI.
 
-This patch change the TX packet from single packet to a large length
-bundle packet, max size is 32, it results in significant performance
-improvement on TX path.
+call stack for each RX packet on GRO path:
+(skb length is about 1500 bytes)
+  skb_gro_receive ([kernel.kallsyms])
+  tcp4_gro_receive ([kernel.kallsyms])
+  inet_gro_receive ([kernel.kallsyms])
+  dev_gro_receive ([kernel.kallsyms])
+  napi_gro_receive ([kernel.kallsyms])
+  ieee80211_deliver_skb ([mac80211])
+  ieee80211_rx_handlers ([mac80211])
+  ieee80211_prepare_and_rx_handle ([mac80211])
+  ieee80211_rx_napi ([mac80211])
+  ath10k_htt_rx_proc_rx_ind_hl ([ath10k_core])
+  ath10k_htt_rx_pktlog_completion_handler ([ath10k_core])
+  ath10k_sdio_napi_poll ([ath10k_sdio])
+  net_rx_action ([kernel.kallsyms])
+  softirqentry_text_start ([kernel.kallsyms])
+  do_softirq ([kernel.kallsyms])
 
-This patch only effect sdio chip, it will not effect PCI, SNOC etc.
-It only enable bundle for sdio chip.
+call stack for napi complete and send tcp ack from tcp stack:
+(skb length is about 1500*32 bytes)
+ _tcp_ack_snd_check ([kernel.kallsyms])
+ tcp_v4_do_rcv ([kernel.kallsyms])
+ tcp_v4_rcv ([kernel.kallsyms])
+ local_deliver_finish ([kernel.kallsyms])
+ ip_local_deliver ([kernel.kallsyms])
+ ip_rcv_finish ([kernel.kallsyms])
+ ip_rcv ([kernel.kallsyms])
+ netif_receive_skb_core ([kernel.kallsyms])
+ netif_receive_skb_one_core([kernel.kallsyms])
+ netif_receive_skb ([kernel.kallsyms])
+ netif_receive_skb_internal ([kernel.kallsyms])
+ napi_gro_complete ([kernel.kallsyms])
+ napi_gro_flush ([kernel.kallsyms])
+ napi_complete_done ([kernel.kallsyms])
+ ath10k_sdio_napi_poll ([ath10k_sdio])
+ net_rx_action ([kernel.kallsyms])
+ __softirqentry_text_start ([kernel.kallsyms])
+ do_softirq ([kernel.kallsyms])
 
 Tested with QCA6174 SDIO with firmware
 WLAN.RMH.4.4.1-00007-QCARMSWP-1.
@@ -93,679 +128,200 @@ Signed-off-by: Wen Gong <wgong@codeaurora.org>
 ---
 v2: no change
 v3: change some code style
-v4: no change
-v5: change ath10k_htc_setup_tx_req to add check bundle_tx
-to forbidden init 2 times
- drivers/net/wireless/ath/ath10k/core.c   |  14 +-
- drivers/net/wireless/ath/ath10k/core.h   |   4 +-
- drivers/net/wireless/ath/ath10k/htc.c    | 356 ++++++++++++++++++++++++++++---
- drivers/net/wireless/ath/ath10k/htc.h    |  21 +-
- drivers/net/wireless/ath/ath10k/htt.c    |   8 +
- drivers/net/wireless/ath/ath10k/htt.h    |   4 +
- drivers/net/wireless/ath/ath10k/htt_rx.c |   1 +
- drivers/net/wireless/ath/ath10k/htt_tx.c |   7 +-
- 8 files changed, 378 insertions(+), 37 deletions(-)
+v4: change some code style
+v5: move skb_queue_head_init(&ar->htt.rx_indication_head)
+from ath10k_htt_connect to ath10k_core_create to forbidden 
+init 2 times
+ drivers/net/wireless/ath/ath10k/core.c   |  2 ++
+ drivers/net/wireless/ath/ath10k/htt.h    |  3 +++
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 45 ++++++++++++++++++++++++++------
+ drivers/net/wireless/ath/ath10k/sdio.c   | 33 +++++++++++++++++++++++
+ 4 files changed, 75 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index d56dcbd..9841533 100644
+index 9fd07c7..aff7812 100644
 --- a/drivers/net/wireless/ath/ath10k/core.c
 +++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -3195,6 +3195,11 @@ struct ath10k *ath10k_core_create(size_t priv_size, struct device *dev,
- 	if (!ar->workqueue_aux)
- 		goto err_free_wq;
+@@ -3224,6 +3224,8 @@ struct ath10k *ath10k_core_create(size_t priv_size, struct device *dev,
+ 	init_waitqueue_head(&ar->htt.empty_tx_wq);
+ 	init_waitqueue_head(&ar->wmi.tx_credits_wq);
  
-+	ar->workqueue_tx_complete =
-+		create_singlethread_workqueue("ath10k_tx_complete_wq");
-+	if (!ar->workqueue_tx_complete)
-+		goto err_free_aux_wq;
++	skb_queue_head_init(&ar->htt.rx_indication_head);
 +
- 	mutex_init(&ar->conf_mutex);
- 	mutex_init(&ar->dump_mutex);
- 	spin_lock_init(&ar->data_lock);
-@@ -3220,7 +3225,7 @@ struct ath10k *ath10k_core_create(size_t priv_size, struct device *dev,
+ 	init_completion(&ar->offchan_tx_completed);
+ 	INIT_WORK(&ar->offchan_tx_work, ath10k_offchan_tx_work);
+ 	skb_queue_head_init(&ar->offchan_tx_queue);
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index 4851a2e..462a25b 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -1879,6 +1879,8 @@ struct ath10k_htt {
+ 	struct ath10k *ar;
+ 	enum ath10k_htc_ep_id eid;
  
- 	ret = ath10k_coredump_create(ar);
- 	if (ret)
--		goto err_free_aux_wq;
-+		goto err_free_tx_complete;
- 
- 	ret = ath10k_debug_create(ar);
- 	if (ret)
-@@ -3230,12 +3235,12 @@ struct ath10k *ath10k_core_create(size_t priv_size, struct device *dev,
- 
- err_free_coredump:
- 	ath10k_coredump_destroy(ar);
--
-+err_free_tx_complete:
-+	destroy_workqueue(ar->workqueue_tx_complete);
- err_free_aux_wq:
- 	destroy_workqueue(ar->workqueue_aux);
- err_free_wq:
- 	destroy_workqueue(ar->workqueue);
--
- err_free_mac:
- 	ath10k_mac_destroy(ar);
- 
-@@ -3251,6 +3256,9 @@ void ath10k_core_destroy(struct ath10k *ar)
- 	flush_workqueue(ar->workqueue_aux);
- 	destroy_workqueue(ar->workqueue_aux);
- 
-+	flush_workqueue(ar->workqueue_tx_complete);
-+	destroy_workqueue(ar->workqueue_tx_complete);
++	struct sk_buff_head rx_indication_head;
 +
- 	ath10k_debug_destroy(ar);
- 	ath10k_coredump_destroy(ar);
- 	ath10k_htt_tx_destroy(&ar->htt);
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 4d7db07..be9eb37 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -1079,7 +1079,7 @@ struct ath10k {
- 	struct workqueue_struct *workqueue;
- 	/* Auxiliary workqueue */
- 	struct workqueue_struct *workqueue_aux;
--
-+	struct workqueue_struct *workqueue_tx_complete;
- 	/* prevents concurrent FW reconfiguration */
- 	struct mutex conf_mutex;
+ 	u8 target_version_major;
+ 	u8 target_version_minor;
+ 	struct completion target_version_received;
+@@ -2298,6 +2300,7 @@ int ath10k_htt_tx_mgmt_inc_pending(struct ath10k_htt *htt, bool is_mgmt,
+ void ath10k_htt_rx_pktlog_completion_handler(struct ath10k *ar,
+ 					     struct sk_buff *skb);
+ int ath10k_htt_txrx_compl_task(struct ath10k *ar, int budget);
++int ath10k_htt_rx_hl_indication(struct ath10k *ar, int budget);
+ void ath10k_htt_set_tx_ops(struct ath10k_htt *htt);
+ void ath10k_htt_set_rx_ops(struct ath10k_htt *htt);
+ #endif
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 09825b1..07b6351 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -2263,7 +2263,7 @@ static bool ath10k_htt_rx_proc_rx_ind_hl(struct ath10k_htt *htt,
+ 	if (mpdu_ranges->mpdu_range_status == HTT_RX_IND_MPDU_STATUS_TKIP_MIC_ERR)
+ 		rx_status->flag |= RX_FLAG_MMIC_ERROR;
  
-@@ -1120,6 +1120,8 @@ struct ath10k {
+-	ieee80211_rx_ni(ar->hw, skb);
++	ieee80211_rx_napi(ar->hw, NULL, skb, &ar->napi);
  
- 	struct work_struct register_work;
- 	struct work_struct restart_work;
-+	struct work_struct bundle_tx_work;
-+	struct work_struct tx_complete_work;
- 
- 	/* cycle count is reported twice for each visited channel during scan.
- 	 * access protected by data_lock
-diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
-index 4c6cdc2..3e551e4 100644
---- a/drivers/net/wireless/ath/ath10k/htc.c
-+++ b/drivers/net/wireless/ath/ath10k/htc.c
-@@ -51,10 +51,12 @@ void ath10k_htc_notify_tx_completion(struct ath10k_htc_ep *ep,
- 				     struct sk_buff *skb)
- {
- 	struct ath10k *ar = ep->htc->ar;
-+	struct ath10k_htc_hdr *hdr;
- 
- 	ath10k_dbg(ar, ATH10K_DBG_HTC, "%s: ep %d skb %pK\n", __func__,
- 		   ep->eid, skb);
- 
-+	hdr = (struct ath10k_htc_hdr *)skb->data;
- 	ath10k_htc_restore_tx_skb(ep->htc, skb);
- 
- 	if (!ep->ep_ops.ep_tx_complete) {
-@@ -63,6 +65,11 @@ void ath10k_htc_notify_tx_completion(struct ath10k_htc_ep *ep,
- 		return;
+ 	/* We have delivered the skb to the upper layers (mac80211) so we
+ 	 * must not free it.
+@@ -3664,14 +3664,12 @@ bool ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
+ 		break;
  	}
- 
-+	if (hdr->flags & ATH10K_HTC_FLAG_SEND_BUNDLE) {
-+		dev_kfree_skb_any(skb);
-+		return;
-+	}
-+
- 	ep->ep_ops.ep_tx_complete(ep->htc->ar, skb);
- }
- EXPORT_SYMBOL(ath10k_htc_notify_tx_completion);
-@@ -78,7 +85,7 @@ static void ath10k_htc_prepare_tx_skb(struct ath10k_htc_ep *ep,
- 	hdr->eid = ep->eid;
- 	hdr->len = __cpu_to_le16(skb->len - sizeof(*hdr));
- 	hdr->flags = 0;
--	if (ep->tx_credit_flow_enabled)
-+	if (ep->tx_credit_flow_enabled && !ep->bundle_tx)
- 		hdr->flags |= ATH10K_HTC_FLAG_NEED_CREDIT_UPDATE;
- 
- 	spin_lock_bh(&ep->htc->tx_lock);
-@@ -86,6 +93,64 @@ static void ath10k_htc_prepare_tx_skb(struct ath10k_htc_ep *ep,
- 	spin_unlock_bh(&ep->htc->tx_lock);
- }
- 
-+static int ath10k_htc_consume_credit(struct ath10k_htc_ep *ep,
-+				     unsigned int len,
-+				     bool consume)
-+{
-+	int credits;
-+	struct ath10k_htc *htc = ep->htc;
-+	struct ath10k *ar = htc->ar;
-+	enum ath10k_htc_ep_id eid = ep->eid;
-+	int ret = 0;
-+
-+	if (!ep->tx_credit_flow_enabled)
-+		return 0;
-+
-+	credits = DIV_ROUND_UP(len, ep->tx_credit_size);
-+	spin_lock_bh(&htc->tx_lock);
-+
-+	if (ep->tx_credits < credits) {
-+		ath10k_dbg(ar, ATH10K_DBG_HTC,
-+			   "htc insufficient credits ep %d required %d available %d consume %d\n",
-+			   eid, credits, ep->tx_credits, consume);
-+		ret = -EAGAIN;
-+		goto unlock;
-+	}
-+
-+	if (consume) {
-+		ep->tx_credits -= credits;
-+		ath10k_dbg(ar, ATH10K_DBG_HTC,
-+			   "htc ep %d consumed %d credits (total %d)\n",
-+			   eid, credits, ep->tx_credits);
-+	}
-+
-+unlock:
-+	spin_unlock_bh(&htc->tx_lock);
-+	return ret;
-+}
-+
-+static void ath10k_htc_release_credit(struct ath10k_htc_ep *ep, unsigned int len)
-+{
-+	int credits;
-+	struct ath10k_htc *htc = ep->htc;
-+	struct ath10k *ar = htc->ar;
-+	enum ath10k_htc_ep_id eid = ep->eid;
-+
-+	if (!ep->tx_credit_flow_enabled)
-+		return;
-+
-+	credits = DIV_ROUND_UP(len, ep->tx_credit_size);
-+	spin_lock_bh(&htc->tx_lock);
-+	ep->tx_credits += credits;
-+	ath10k_dbg(ar, ATH10K_DBG_HTC,
-+		   "htc ep %d reverted %d credits back (total %d)\n",
-+		   eid, credits, ep->tx_credits);
-+	spin_unlock_bh(&htc->tx_lock);
-+
-+	if (ep->ep_ops.ep_tx_credits)
-+		ep->ep_ops.ep_tx_credits(htc->ar);
-+}
-+
- int ath10k_htc_send(struct ath10k_htc *htc,
- 		    enum ath10k_htc_ep_id eid,
- 		    struct sk_buff *skb)
-@@ -95,8 +160,8 @@ int ath10k_htc_send(struct ath10k_htc *htc,
- 	struct ath10k_skb_cb *skb_cb = ATH10K_SKB_CB(skb);
- 	struct ath10k_hif_sg_item sg_item;
- 	struct device *dev = htc->ar->dev;
--	int credits = 0;
- 	int ret;
-+	unsigned int skb_len;
- 
- 	if (htc->ar->state == ATH10K_STATE_WEDGED)
- 		return -ECOMM;
-@@ -108,23 +173,10 @@ int ath10k_htc_send(struct ath10k_htc *htc,
- 
- 	skb_push(skb, sizeof(struct ath10k_htc_hdr));
- 
--	if (ep->tx_credit_flow_enabled) {
--		credits = DIV_ROUND_UP(skb->len, htc->target_credit_size);
--		spin_lock_bh(&htc->tx_lock);
--		if (ep->tx_credits < credits) {
--			ath10k_dbg(ar, ATH10K_DBG_HTC,
--				   "htc insufficient credits ep %d required %d available %d\n",
--				   eid, credits, ep->tx_credits);
--			spin_unlock_bh(&htc->tx_lock);
--			ret = -EAGAIN;
--			goto err_pull;
--		}
--		ep->tx_credits -= credits;
--		ath10k_dbg(ar, ATH10K_DBG_HTC,
--			   "htc ep %d consumed %d credits (total %d)\n",
--			   eid, credits, ep->tx_credits);
--		spin_unlock_bh(&htc->tx_lock);
--	}
-+	skb_len = skb->len;
-+	ret = ath10k_htc_consume_credit(ep, skb_len, true);
-+	if (ret)
-+		goto err_pull;
- 
- 	ath10k_htc_prepare_tx_skb(ep, skb);
- 
-@@ -155,17 +207,7 @@ int ath10k_htc_send(struct ath10k_htc *htc,
- 	if (ar->bus_param.dev_type != ATH10K_DEV_TYPE_HL)
- 		dma_unmap_single(dev, skb_cb->paddr, skb->len, DMA_TO_DEVICE);
- err_credits:
--	if (ep->tx_credit_flow_enabled) {
--		spin_lock_bh(&htc->tx_lock);
--		ep->tx_credits += credits;
--		ath10k_dbg(ar, ATH10K_DBG_HTC,
--			   "htc ep %d reverted %d credits back (total %d)\n",
--			   eid, credits, ep->tx_credits);
--		spin_unlock_bh(&htc->tx_lock);
--
--		if (ep->ep_ops.ep_tx_credits)
--			ep->ep_ops.ep_tx_credits(htc->ar);
--	}
-+	ath10k_htc_release_credit(ep, skb_len);
- err_pull:
- 	skb_pull(skb, sizeof(struct ath10k_htc_hdr));
- 	return ret;
-@@ -581,6 +623,256 @@ static u8 ath10k_htc_get_credit_allocation(struct ath10k_htc *htc,
- 	return allocation;
- }
- 
-+static int ath10k_htc_send_bundle(struct ath10k_htc_ep *ep,
-+				  struct sk_buff *bundle_skb,
-+				  struct sk_buff_head *tx_save_head)
-+{
-+	struct ath10k_hif_sg_item sg_item;
-+	struct ath10k_htc *htc = ep->htc;
-+	struct ath10k *ar = htc->ar;
-+	struct sk_buff *skb;
-+	int ret;
-+	int cn = 0;
-+	unsigned int skb_len;
-+
-+	ath10k_dbg(ar, ATH10K_DBG_HTC, "bundle skb: len:%d\n", bundle_skb->len);
-+	skb_len = bundle_skb->len;
-+	ret = ath10k_htc_consume_credit(ep, skb_len, true);
-+
-+	if (!ret) {
-+		sg_item.transfer_id = ep->eid;
-+		sg_item.transfer_context = bundle_skb;
-+		sg_item.vaddr = bundle_skb->data;
-+		sg_item.len = bundle_skb->len;
-+
-+		ret = ath10k_hif_tx_sg(htc->ar, ep->ul_pipe_id, &sg_item, 1);
-+		if (ret)
-+			ath10k_htc_release_credit(ep, skb_len);
-+	}
-+
-+	if (ret)
-+		dev_kfree_skb_any(bundle_skb);
-+
-+	for (cn = 0; (skb = skb_dequeue_tail(tx_save_head)); cn++) {
-+		if (ret) {
-+			skb_pull(skb, sizeof(struct ath10k_htc_hdr));
-+			skb_queue_head(&ep->tx_req_head, skb);
+ 	case HTT_T2H_MSG_TYPE_RX_IND:
+-		if (ar->bus_param.dev_type == ATH10K_DEV_TYPE_HL)
+-			return ath10k_htt_rx_proc_rx_ind_hl(htt,
+-							    &resp->rx_ind_hl,
+-							    skb,
+-							    HTT_RX_PN_CHECK,
+-							    HTT_RX_NON_TKIP_MIC);
+-		else
++		if (ar->bus_param.dev_type != ATH10K_DEV_TYPE_HL) {
+ 			ath10k_htt_rx_proc_rx_ind_ll(htt, &resp->rx_ind);
 +		} else {
-+			skb_queue_tail(&ep->tx_complete_head, skb);
++			skb_queue_tail(&htt->rx_indication_head, skb);
++			return false;
 +		}
-+	}
-+
-+	if (!ret)
-+		queue_work(ar->workqueue_tx_complete, &ar->tx_complete_work);
-+
-+	ath10k_dbg(ar, ATH10K_DBG_HTC,
-+		   "bundle tx status:%d, eid:%d, req count:%d, count:%d, len:%d\n",
-+		   ret, ep->eid, skb_queue_len(&ep->tx_req_head), cn, bundle_skb->len);
-+	return ret;
-+}
-+
-+static void ath10k_htc_send_one_skb(struct ath10k_htc_ep *ep, struct sk_buff *skb)
+ 		break;
+ 	case HTT_T2H_MSG_TYPE_PEER_MAP: {
+ 		struct htt_peer_map_event ev = {
+@@ -3894,6 +3892,37 @@ static int ath10k_htt_rx_deliver_msdu(struct ath10k *ar, int quota, int budget)
+ 	return quota;
+ }
+ 
++int ath10k_htt_rx_hl_indication(struct ath10k *ar, int budget)
 +{
-+	struct ath10k_htc *htc = ep->htc;
-+	struct ath10k *ar = htc->ar;
-+	int ret;
++	struct htt_resp *resp;
++	struct ath10k_htt *htt = &ar->htt;
++	struct sk_buff *skb;
++	bool release;
++	int quota;
 +
-+	ret = ath10k_htc_send(htc, ep->eid, skb);
-+
-+	if (ret)
-+		skb_queue_head(&ep->tx_req_head, skb);
-+
-+	ath10k_dbg(ar, ATH10K_DBG_HTC, "tx one status:%d, eid:%d, len:%d, pending count:%d\n",
-+		   ret, ep->eid, skb->len, skb_queue_len(&ep->tx_req_head));
-+}
-+
-+static int ath10k_htc_send_bundle_skbs(struct ath10k_htc_ep *ep)
-+{
-+	int ret = 0;
-+	struct ath10k_htc *htc = ep->htc;
-+	struct sk_buff *bundle_skb, *skb;
-+	struct sk_buff_head tx_save_head;
-+	struct ath10k_htc_hdr *hdr;
-+	u8 *bundle_buf;
-+	int credit_pad, credit_remainder, trans_len, bundles_left = 0;
-+
-+	if (htc->ar->state == ATH10K_STATE_WEDGED)
-+		return -ECOMM;
-+
-+	if (ep->tx_credit_flow_enabled &&
-+	    ep->tx_credits < HTC_HOST_MIN_CREDIT_PER_TX_BUNDLE)
-+		return 0;
-+
-+	bundles_left = HTC_HOST_MAX_MSG_PER_TX_BUNDLE * ep->tx_credit_size;
-+	bundle_skb = dev_alloc_skb(bundles_left);
-+
-+	if (!bundle_skb)
-+		return -ENOMEM;
-+
-+	bundle_buf = bundle_skb->data;
-+	skb_queue_head_init(&tx_save_head);
-+
-+	while (true) {
-+		skb = skb_dequeue(&ep->tx_req_head);
++	for (quota = 0; quota < budget; quota++) {
++		skb = skb_dequeue(&htt->rx_indication_head);
 +		if (!skb)
 +			break;
 +
-+		credit_pad = 0;
-+		trans_len = skb->len + sizeof(*hdr);
-+		credit_remainder = trans_len % ep->tx_credit_size;
++		resp = (struct htt_resp *)skb->data;
 +
-+		if (credit_remainder != 0) {
-+			credit_pad = ep->tx_credit_size - credit_remainder;
-+			trans_len += credit_pad;
-+		}
++		release = ath10k_htt_rx_proc_rx_ind_hl(htt,
++						       &resp->rx_ind_hl,
++						       skb,
++						       HTT_RX_PN_CHECK,
++						       HTT_RX_NON_TKIP_MIC);
 +
-+		ret = ath10k_htc_consume_credit(ep,
-+						bundle_buf + trans_len - bundle_skb->data,
-+						false);
-+		if (ret) {
-+			skb_queue_head(&ep->tx_req_head, skb);
-+			break;
-+		}
++		if (release)
++			dev_kfree_skb_any(skb);
 +
-+		if (bundles_left < trans_len) {
-+			bundle_skb->len = bundle_buf - bundle_skb->data;
-+			ret = ath10k_htc_send_bundle(ep, bundle_skb, &tx_save_head);
-+
-+			if (ret) {
-+				skb_queue_head(&ep->tx_req_head, skb);
-+				return ret;
-+			}
-+
-+			if (skb_queue_len(&ep->tx_req_head) == 0) {
-+				ath10k_htc_send_one_skb(ep, skb);
-+				return ret;
-+			}
-+
-+			if (ep->tx_credit_flow_enabled &&
-+			    ep->tx_credits < HTC_HOST_MIN_CREDIT_PER_TX_BUNDLE) {
-+				skb_queue_head(&ep->tx_req_head, skb);
-+				return 0;
-+			}
-+
-+			bundles_left =
-+				HTC_HOST_MAX_MSG_PER_TX_BUNDLE * ep->tx_credit_size;
-+			bundle_skb = dev_alloc_skb(bundles_left);
-+
-+			if (!bundle_skb) {
-+				skb_queue_head(&ep->tx_req_head, skb);
-+				return -ENOMEM;
-+			}
-+			bundle_buf = bundle_skb->data;
-+			skb_queue_head_init(&tx_save_head);
-+		}
-+
-+		skb_push(skb, sizeof(struct ath10k_htc_hdr));
-+		ath10k_htc_prepare_tx_skb(ep, skb);
-+
-+		memcpy(bundle_buf, skb->data, skb->len);
-+		hdr = (struct ath10k_htc_hdr *)bundle_buf;
-+		hdr->flags |= ATH10K_HTC_FLAG_SEND_BUNDLE;
-+		hdr->pad_len = __cpu_to_le16(credit_pad);
-+		bundle_buf += trans_len;
-+		bundles_left -= trans_len;
-+		skb_queue_tail(&tx_save_head, skb);
++		ath10k_dbg(ar, ATH10K_DBG_HTT, "rx indication poll pending count:%d\n",
++			   skb_queue_len(&htt->rx_indication_head));
 +	}
-+
-+	if (bundle_buf != bundle_skb->data) {
-+		bundle_skb->len = bundle_buf - bundle_skb->data;
-+		ret = ath10k_htc_send_bundle(ep, bundle_skb, &tx_save_head);
-+	} else {
-+		dev_kfree_skb_any(bundle_skb);
-+	}
-+
-+	return ret;
++	return quota;
 +}
++EXPORT_SYMBOL(ath10k_htt_rx_hl_indication);
 +
-+static void ath10k_htc_bundle_tx_work(struct work_struct *work)
-+{
-+	struct ath10k *ar = container_of(work, struct ath10k, bundle_tx_work);
-+	int i;
-+	struct ath10k_htc_ep *ep;
-+	enum ath10k_htc_ep_id eid;
-+	struct sk_buff *skb;
-+
-+	for (i = 0; i < ARRAY_SIZE(ar->htc.endpoint); i++) {
-+		ep = &ar->htc.endpoint[i];
-+		eid = ep->eid;
-+
-+		if (!ep->bundle_tx)
-+			continue;
-+
-+		ath10k_dbg(ar, ATH10K_DBG_HTC, "bundle tx work, eid:%d, count:%d\n",
-+			   ep->eid, skb_queue_len(&ep->tx_req_head));
-+
-+		if (skb_queue_len(&ep->tx_req_head) >=
-+		    HTC_HOST_MIN_MSG_PER_TX_BUNDLE) {
-+			ath10k_htc_send_bundle_skbs(ep);
-+		} else {
-+			skb = skb_dequeue(&ep->tx_req_head);
-+
-+			if (!skb)
-+				continue;
-+			ath10k_htc_send_one_skb(ep, skb);
-+		}
-+	}
-+}
-+
-+static void ath10k_htc_tx_complete_work(struct work_struct *work)
-+{
-+	struct ath10k *ar = container_of(work, struct ath10k, tx_complete_work);
-+	int i;
-+	struct ath10k_htc_ep *ep;
-+	enum ath10k_htc_ep_id eid;
-+	struct sk_buff *skb;
-+
-+	for (i = 0; i < ARRAY_SIZE(ar->htc.endpoint); i++) {
-+		ep = &ar->htc.endpoint[i];
-+		eid = ep->eid;
-+		if (ep->bundle_tx && eid == ar->htt.eid) {
-+			ath10k_dbg(ar, ATH10K_DBG_HTC, "bundle tx complete, eid:%d, pending complete count:%d\n",
-+				   ep->eid, skb_queue_len(&ep->tx_complete_head));
-+
-+			while (true) {
-+				skb = skb_dequeue(&ep->tx_complete_head);
-+				if (!skb)
-+					break;
-+				ath10k_htc_notify_tx_completion(ep, skb);
-+			}
-+		}
-+	}
-+}
-+
-+int ath10k_htc_send_hl(struct ath10k_htc *htc,
-+		       enum ath10k_htc_ep_id eid,
-+		       struct sk_buff *skb)
-+{
-+	struct ath10k_htc_ep *ep = &htc->endpoint[eid];
-+	struct ath10k *ar = htc->ar;
-+
-+	ath10k_dbg(ar, ATH10K_DBG_HTC, "htc send hl: eid:%d, bundle:%d, tx count:%d, len:%d\n",
-+		   eid, ep->bundle_tx, skb_queue_len(&ep->tx_req_head), skb->len);
-+
-+	if (ep->bundle_tx) {
-+		skb_queue_tail(&ep->tx_req_head, skb);
-+		queue_work(ar->workqueue, &ar->bundle_tx_work);
-+		return 0;
-+	} else {
-+		return ath10k_htc_send(htc, eid, skb);
-+	}
-+}
-+
-+void ath10k_htc_setup_tx_req(struct ath10k_htc_ep *ep)
-+{
-+	if (ep->htc->max_msgs_per_htc_bundle >= HTC_HOST_MIN_MSG_PER_TX_BUNDLE &&
-+	    !ep->bundle_tx) {
-+		ep->bundle_tx = true;
-+		skb_queue_head_init(&ep->tx_req_head);
-+		skb_queue_head_init(&ep->tx_complete_head);
-+	}
-+}
-+
- int ath10k_htc_wait_target(struct ath10k_htc *htc)
- {
- 	struct ath10k *ar = htc->ar;
-@@ -657,6 +949,9 @@ int ath10k_htc_wait_target(struct ath10k_htc *htc)
- 			   htc->max_msgs_per_htc_bundle);
- 	}
- 
-+	INIT_WORK(&ar->bundle_tx_work, ath10k_htc_bundle_tx_work);
-+	INIT_WORK(&ar->tx_complete_work, ath10k_htc_tx_complete_work);
-+
- 	return 0;
- }
- 
-@@ -801,6 +1096,7 @@ int ath10k_htc_connect_service(struct ath10k_htc *htc,
- 	ep->max_tx_queue_depth = conn_req->max_send_queue_depth;
- 	ep->max_ep_message_len = __le16_to_cpu(resp_msg->max_msg_size);
- 	ep->tx_credits = tx_alloc;
-+	ep->tx_credit_size = htc->target_credit_size;
- 
- 	/* copy all the callbacks */
- 	ep->ep_ops = conn_req->ep_ops;
-diff --git a/drivers/net/wireless/ath/ath10k/htc.h b/drivers/net/wireless/ath/ath10k/htc.h
-index d61eb6c0..ec4957a 100644
---- a/drivers/net/wireless/ath/ath10k/htc.h
-+++ b/drivers/net/wireless/ath/ath10k/htc.h
-@@ -40,6 +40,9 @@
-  */
- 
- #define HTC_HOST_MAX_MSG_PER_RX_BUNDLE        32
-+#define HTC_HOST_MAX_MSG_PER_TX_BUNDLE        32
-+#define HTC_HOST_MIN_MSG_PER_TX_BUNDLE        2
-+#define HTC_HOST_MIN_CREDIT_PER_TX_BUNDLE     2
- 
- enum ath10k_htc_tx_flags {
- 	ATH10K_HTC_FLAG_NEED_CREDIT_UPDATE = 0x01,
-@@ -70,8 +73,14 @@ struct ath10k_htc_hdr {
- 		u8 seq_no; /* for tx */
- 		u8 control_byte1;
- 	} __packed;
--	u8 pad0;
--	u8 pad1;
-+	union {
-+		__le16 pad_len;
-+		struct {
-+			u8 pad0;
-+			u8 pad1;
-+		} __packed;
-+	} __packed;
-+
- } __packed __aligned(4);
- 
- enum ath10k_ath10k_htc_msg_id {
-@@ -340,7 +349,12 @@ struct ath10k_htc_ep {
- 
- 	u8 seq_no; /* for debugging */
- 	int tx_credits;
-+	int tx_credit_size;
- 	bool tx_credit_flow_enabled;
-+	bool bundle_tx;
-+	struct sk_buff_head tx_req_head;
-+	struct sk_buff_head tx_complete_head;
-+
- };
- 
- struct ath10k_htc_svc_tx_credits {
-@@ -369,6 +383,7 @@ struct ath10k_htc {
- 
- int ath10k_htc_init(struct ath10k *ar);
- int ath10k_htc_wait_target(struct ath10k_htc *htc);
-+void ath10k_htc_setup_tx_req(struct ath10k_htc_ep *ep);
- int ath10k_htc_start(struct ath10k_htc *htc);
- int ath10k_htc_connect_service(struct ath10k_htc *htc,
- 			       struct ath10k_htc_svc_conn_req  *conn_req,
-@@ -378,6 +393,8 @@ void ath10k_htc_change_tx_credit_flow(struct ath10k_htc *htc,
- 				      bool enable);
- int ath10k_htc_send(struct ath10k_htc *htc, enum ath10k_htc_ep_id eid,
- 		    struct sk_buff *packet);
-+int ath10k_htc_send_hl(struct ath10k_htc *htc, enum ath10k_htc_ep_id eid,
-+		       struct sk_buff *packet);
- struct sk_buff *ath10k_htc_alloc_skb(struct ath10k *ar, int size);
- void ath10k_htc_tx_completion_handler(struct ath10k *ar, struct sk_buff *skb);
- void ath10k_htc_rx_completion_handler(struct ath10k *ar, struct sk_buff *skb);
-diff --git a/drivers/net/wireless/ath/ath10k/htt.c b/drivers/net/wireless/ath/ath10k/htt.c
-index 4354bf2..127b4e4 100644
---- a/drivers/net/wireless/ath/ath10k/htt.c
-+++ b/drivers/net/wireless/ath/ath10k/htt.c
-@@ -135,6 +135,8 @@ int ath10k_htt_connect(struct ath10k_htt *htt)
- {
- 	struct ath10k_htc_svc_conn_req conn_req;
- 	struct ath10k_htc_svc_conn_resp conn_resp;
-+	struct ath10k *ar = htt->ar;
-+	struct ath10k_htc_ep *ep;
- 	int status;
- 
- 	memset(&conn_req, 0, sizeof(conn_req));
-@@ -142,6 +144,7 @@ int ath10k_htt_connect(struct ath10k_htt *htt)
- 
- 	conn_req.ep_ops.ep_tx_complete = ath10k_htt_htc_tx_complete;
- 	conn_req.ep_ops.ep_rx_complete = ath10k_htt_htc_t2h_msg_handler;
-+	conn_req.ep_ops.ep_tx_credits = ath10k_htt_op_ep_tx_credits;
- 
- 	/* connect to control service */
- 	conn_req.service_id = ATH10K_HTC_SVC_ID_HTT_DATA_MSG;
-@@ -154,6 +157,11 @@ int ath10k_htt_connect(struct ath10k_htt *htt)
- 
- 	htt->eid = conn_resp.eid;
- 
-+	if (ar->bus_param.dev_type == ATH10K_DEV_TYPE_HL) {
-+		ep = &ar->htc.endpoint[htt->eid];
-+		ath10k_htc_setup_tx_req(ep);
-+	}
-+
- 	htt->disable_tx_comp = ath10k_hif_get_htt_tx_complete(htt->ar);
- 	if (htt->disable_tx_comp)
- 		ath10k_htc_change_tx_credit_flow(&htt->ar->htc, htt->eid, true);
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index 889bf9f..4851a2e 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -2030,6 +2030,9 @@ struct ath10k_htt {
- 	const struct ath10k_htt_tx_ops *tx_ops;
- 	const struct ath10k_htt_rx_ops *rx_ops;
- 	bool disable_tx_comp;
-+	bool bundle_tx;
-+	struct sk_buff_head tx_req_head;
-+	struct sk_buff_head tx_complete_head;
- };
- 
- struct ath10k_htt_tx_ops {
-@@ -2276,6 +2279,7 @@ int ath10k_htt_tx_fetch_resp(struct ath10k *ar,
- 			     __le16 fetch_seq_num,
- 			     struct htt_tx_fetch_record *records,
- 			     size_t num_records);
-+void ath10k_htt_op_ep_tx_credits(struct ath10k *ar);
- 
- void ath10k_htt_tx_txq_update(struct ieee80211_hw *hw,
- 			      struct ieee80211_txq *txq);
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 5bf3179..09825b1 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -3821,6 +3821,7 @@ bool ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
- 			ath10k_dbg(ar, ATH10K_DBG_HTT,
- 				   "credit total:%d\n",
- 				   ep->tx_credits);
-+			ep->ep_ops.ep_tx_credits(htc->ar);
- 		}
- 		break;
- 	}
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index 7eb753a8..e619b33 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -541,6 +541,11 @@ void ath10k_htt_tx_free(struct ath10k_htt *htt)
- 	ath10k_htt_tx_destroy(htt);
- }
- 
-+void ath10k_htt_op_ep_tx_credits(struct ath10k *ar)
-+{
-+	queue_work(ar->workqueue, &ar->bundle_tx_work);
-+}
-+
- void ath10k_htt_htc_tx_complete(struct ath10k *ar, struct sk_buff *skb)
+ int ath10k_htt_txrx_compl_task(struct ath10k *ar, int budget)
  {
  	struct ath10k_htt *htt = &ar->htt;
-@@ -1357,7 +1362,7 @@ static int ath10k_htt_tx_hl(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txm
- 	 */
- 	tx_desc->peerid = __cpu_to_le32(HTT_INVALID_PEERID);
+diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
+index e01ab63..7432d1c 100644
+--- a/drivers/net/wireless/ath/ath10k/sdio.c
++++ b/drivers/net/wireless/ath/ath10k/sdio.c
+@@ -1402,6 +1402,9 @@ static void ath10k_rx_indication_async_work(struct work_struct *work)
+ 		spin_lock_bh(&ar_sdio->wr_async_lock_rx);
+ 	}
  
--	res = ath10k_htc_send(&htt->ar->htc, htt->eid, msdu);
-+	res = ath10k_htc_send_hl(&htt->ar->htc, htt->eid, msdu);
++	if (test_bit(ATH10K_FLAG_CORE_REGISTERED, &ar->dev_flags))
++		napi_schedule(&ar->napi);
++
+ 	spin_unlock_bh(&ar_sdio->wr_async_lock_rx);
+ }
  
- out:
- 	return res;
+@@ -1815,6 +1818,8 @@ static int ath10k_sdio_hif_start(struct ath10k *ar)
+ 	struct ath10k_sdio *ar_sdio = ath10k_sdio_priv(ar);
+ 	int ret;
+ 
++	napi_enable(&ar->napi);
++
+ 	/* Sleep 20 ms before HIF interrupts are disabled.
+ 	 * This will give target plenty of time to process the BMI done
+ 	 * request before interrupts are disabled.
+@@ -1953,6 +1958,9 @@ static void ath10k_sdio_hif_stop(struct ath10k *ar)
+ 	}
+ 
+ 	spin_unlock_bh(&ar_sdio->wr_async_lock);
++
++	napi_synchronize(&ar->napi);
++	napi_disable(&ar->napi);
+ }
+ 
+ #ifdef CONFIG_PM
+@@ -2129,6 +2137,26 @@ static SIMPLE_DEV_PM_OPS(ath10k_sdio_pm_ops, ath10k_sdio_pm_suspend,
+ 
+ #endif /* CONFIG_PM_SLEEP */
+ 
++static int ath10k_sdio_napi_poll(struct napi_struct *ctx, int budget)
++{
++	struct ath10k *ar = container_of(ctx, struct ath10k, napi);
++	int done;
++
++	done = ath10k_htt_rx_hl_indication(ar, budget);
++	ath10k_dbg(ar, ATH10K_DBG_SDIO, "napi poll: done: %d, budget:%d\n", done, budget);
++
++	if (done < budget)
++		napi_complete_done(ctx, done);
++
++	return done;
++}
++
++void ath10k_sdio_init_napi(struct ath10k *ar)
++{
++	netif_napi_add(&ar->napi_dev, &ar->napi, ath10k_sdio_napi_poll,
++		       ATH10K_NAPI_BUDGET);
++}
++
+ static int ath10k_sdio_probe(struct sdio_func *func,
+ 			     const struct sdio_device_id *id)
+ {
+@@ -2154,6 +2182,8 @@ static int ath10k_sdio_probe(struct sdio_func *func,
+ 		return -ENOMEM;
+ 	}
+ 
++	ath10k_sdio_init_napi(ar);
++
+ 	ath10k_dbg(ar, ATH10K_DBG_BOOT,
+ 		   "sdio new func %d vendor 0x%x device 0x%x block 0x%x/0x%x\n",
+ 		   func->num, func->vendor, func->device,
+@@ -2274,6 +2304,9 @@ static void ath10k_sdio_remove(struct sdio_func *func)
+ 		   func->num, func->vendor, func->device);
+ 
+ 	ath10k_core_unregister(ar);
++
++	netif_napi_del(&ar->napi);
++
+ 	ath10k_core_destroy(ar);
+ 
+ 	flush_workqueue(ar_sdio->workqueue);
 -- 
 1.9.1
 
