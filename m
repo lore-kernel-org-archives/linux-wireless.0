@@ -2,133 +2,172 @@ Return-Path: <SRS0=82ey=XA=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 200B9C3A5AA
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Sep 2019 13:12:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0B20C3A5A5
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Sep 2019 13:12:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CDF7D2067D
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Sep 2019 13:12:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5944520692
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Sep 2019 13:12:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732712AbfIENMt (ORCPT
+        id S2388243AbfIENMw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 5 Sep 2019 09:12:49 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:40894 "EHLO
+        Thu, 5 Sep 2019 09:12:52 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:40912 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1730839AbfIENMt (ORCPT
+        with ESMTP id S1731633AbfIENMv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Sep 2019 09:12:49 -0400
+        Thu, 5 Sep 2019 09:12:51 -0400
 Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1i5rZ8-0005yI-Ev; Thu, 05 Sep 2019 16:12:47 +0300
+        id 1i5rZB-0005yI-2Q; Thu, 05 Sep 2019 16:12:49 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Thu,  5 Sep 2019 16:12:23 +0300
-Message-Id: <20190905131241.23487-1-luca@coelho.fi>
+Date:   Thu,  5 Sep 2019 16:12:26 +0300
+Message-Id: <20190905131241.23487-4-luca@coelho.fi>
 X-Mailer: git-send-email 2.23.0.rc1
+In-Reply-To: <20190905131241.23487-1-luca@coelho.fi>
+References: <20190905131241.23487-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH v2 00/18] iwlwifi: updates intended for v5.4 2019-08-21-2
+Subject: [PATCH v2 03/18] iwlwifi: mvm: name magic numbers with enum
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Mordechay Goodstein <mordechay.goodstein@intel.com>
 
-Hi,
+It's hard to follow the numbers so rename it with enum
 
-Here's the second set of patches intended for v5.4.  It's the usual
-development, new features, cleanups and bugfixes.
+Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ .../net/wireless/intel/iwlwifi/fw/api/rs.h    | 18 +++++++++++++-----
+ .../net/wireless/intel/iwlwifi/mvm/rs-fw.c    | 19 +++++++++++--------
+ 2 files changed, 24 insertions(+), 13 deletions(-)
 
-The changes are:
-
-* Removal of (broken) d0i3 continues;
-* Debug infrastructure work continues;
-* Fix for the SN value in certain suspend/resume situations;
-* Some work on new FW scan APIs;
-* Work on LTR FW APIs;
-* A few clean-ups;
-* Other small fixes and improvements;
-
-In v2:
-   * fixed subject and commit message of the first patch;
-
-As usual, I'm pushing this to a pending branch, for kbuild bot, and
-will send a pull-request later.
-
-Please review.
-
-Cheers,
-Luca.
-
-
-Alex Malamud (2):
-  iwlwifi: LTR updates
-  iwlwifi: Set w-pointer upon resume according to SN
-
-Ayala Beker (2):
-  iwlwifi: scan: add support for new scan request command version
-  iwlwifi: scan: don't pass large argument by value
-
-Emmanuel Grumbach (6):
-  iwlwifi: remove runtime_pm_mode
-  iwlwifi: remove the opmode's d0i3 handlers
-  iwlwifi: pcie: remove the refs / unrefs from the transport
-  iwlwifi: pcie: remove some more d0i3 code from the transport
-  iwlwifi: remove the d0i3 related module parameters
-  iwlwifi: remove pm_runtime completely
-
-Haim Dreyfuss (1):
-  iwlwifi: remove unused regdb_ptrs allocation
-
-Johannes Berg (1):
-  iwlwifi: mvm: use FW thermal monitoring regardless of CONFIG_THERMAL
-
-Mordechay Goodstein (1):
-  iwlwifi: mvm: name magic numbers with enum
-
-Shahar S Matityahu (5):
-  iwlwifi: dbg_ini: align dbg tlv functions names to a single format
-  iwlwifi: dbg: add debug periphery registers to 9000 device family
-  iwlwifi: dbg_ini: maintain buffer allocations from trans instead of
-    TLVs buffer
-  iwlwifi: dbg_ini: use linked list to store debug TLVs
-  iwlwifi: dbg_ini: remove periphery phy and aux regions handling
-
- .../wireless/intel/iwlwifi/fw/api/dbg-tlv.h   |   2 +
- .../net/wireless/intel/iwlwifi/fw/api/rs.h    |  18 ++-
- .../net/wireless/intel/iwlwifi/fw/api/scan.h  |  55 ++++++-
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c   |  53 +++---
- drivers/net/wireless/intel/iwlwifi/fw/file.h  |   4 +-
- drivers/net/wireless/intel/iwlwifi/fw/img.h   |   9 --
- .../net/wireless/intel/iwlwifi/iwl-dbg-tlv.c  | 153 +++++-------------
- .../net/wireless/intel/iwlwifi/iwl-dbg-tlv.h  |  24 ++-
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c  |  19 +--
- .../wireless/intel/iwlwifi/iwl-modparams.h    |   9 +-
- .../wireless/intel/iwlwifi/iwl-nvm-parse.c    |  14 --
- .../net/wireless/intel/iwlwifi/iwl-op-mode.h  |  23 ---
- .../net/wireless/intel/iwlwifi/iwl-trans.c    |  14 --
- .../net/wireless/intel/iwlwifi/iwl-trans.h    | 106 ++++--------
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c   |   9 ++
- .../net/wireless/intel/iwlwifi/mvm/debugfs.c  |  37 +++++
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c   |  17 +-
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |  11 +-
- .../net/wireless/intel/iwlwifi/mvm/rs-fw.c    |  19 ++-
- drivers/net/wireless/intel/iwlwifi/mvm/scan.c |  87 +++++++---
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c |  99 ------------
- .../wireless/intel/iwlwifi/pcie/internal.h    |  11 +-
- .../wireless/intel/iwlwifi/pcie/trans-gen2.c  |   6 +-
- .../net/wireless/intel/iwlwifi/pcie/trans.c   |  67 ++------
- .../net/wireless/intel/iwlwifi/pcie/tx-gen2.c |  42 +----
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c  |  92 ++++-------
- 26 files changed, 363 insertions(+), 637 deletions(-)
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/rs.h b/drivers/net/wireless/intel/iwlwifi/fw/api/rs.h
+index 9eddc4dc2ae6..4347be6491e9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/rs.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/rs.h
+@@ -7,7 +7,7 @@
+  *
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2017 Intel Deutschland GmbH
+- * Copyright(c) 2018 Intel Corporation
++ * Copyright(c) 2018 - 2019 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -29,7 +29,7 @@
+  *
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2017 Intel Deutschland GmbH
+- * Copyright(c) 2018 Intel Corporation
++ * Copyright(c) 2018 - 2019 Intel Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -166,8 +166,16 @@ enum iwl_tlc_mng_ht_rates {
+ 	IWL_TLC_MNG_HT_RATE_MAX = IWL_TLC_MNG_HT_RATE_MCS11,
+ };
+ 
+-/* Maximum supported tx antennas number */
+-#define MAX_NSS 2
++enum IWL_TLC_MNG_NSS {
++	IWL_TLC_NSS_1,
++	IWL_TLC_NSS_2,
++	IWL_TLC_NSS_MAX
++};
++
++enum IWL_TLC_HT_BW_RATES {
++	IWL_TLC_HT_BW_NONE_160,
++	IWL_TLC_HT_BW_160,
++};
+ 
+ /**
+  * struct tlc_config_cmd - TLC configuration
+@@ -195,7 +203,7 @@ struct iwl_tlc_config_cmd {
+ 	u8 amsdu;
+ 	__le16 flags;
+ 	__le16 non_ht_rates;
+-	__le16 ht_rates[MAX_NSS][2];
++	__le16 ht_rates[IWL_TLC_NSS_MAX][2];
+ 	__le16 max_mpdu_len;
+ 	u8 sgi_ch_width_supp;
+ 	u8 reserved2[1];
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c
+index 08b67812e94e..8f50e2b121bd 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c
+@@ -193,7 +193,7 @@ rs_fw_vht_set_enabled_rates(const struct ieee80211_sta *sta,
+ 	int i, highest_mcs;
+ 
+ 	for (i = 0; i < sta->rx_nss; i++) {
+-		if (i == MAX_NSS)
++		if (i == IWL_TLC_NSS_MAX)
+ 			break;
+ 
+ 		highest_mcs = rs_fw_vht_highest_rx_mcs_index(vht_cap, i + 1);
+@@ -204,9 +204,10 @@ rs_fw_vht_set_enabled_rates(const struct ieee80211_sta *sta,
+ 		if (sta->bandwidth == IEEE80211_STA_RX_BW_20)
+ 			supp &= ~BIT(IWL_TLC_MNG_HT_RATE_MCS9);
+ 
+-		cmd->ht_rates[i][0] = cpu_to_le16(supp);
++		cmd->ht_rates[i][IWL_TLC_HT_BW_NONE_160] = cpu_to_le16(supp);
+ 		if (sta->bandwidth == IEEE80211_STA_RX_BW_160)
+-			cmd->ht_rates[i][1] = cmd->ht_rates[i][0];
++			cmd->ht_rates[i][IWL_TLC_HT_BW_160] =
++				cmd->ht_rates[i][IWL_TLC_HT_BW_NONE_160];
+ 	}
+ }
+ 
+@@ -241,7 +242,7 @@ rs_fw_he_set_enabled_rates(const struct ieee80211_sta *sta,
+ 		le16_to_cpu(sband->iftype_data->he_cap.he_mcs_nss_supp.tx_mcs_160);
+ 	int i;
+ 
+-	for (i = 0; i < sta->rx_nss && i < MAX_NSS; i++) {
++	for (i = 0; i < sta->rx_nss && i < IWL_TLC_NSS_MAX; i++) {
+ 		u16 _mcs_160 = (mcs_160 >> (2 * i)) & 0x3;
+ 		u16 _mcs_80 = (mcs_80 >> (2 * i)) & 0x3;
+ 		u16 _tx_mcs_160 = (tx_mcs_160 >> (2 * i)) & 0x3;
+@@ -255,7 +256,7 @@ rs_fw_he_set_enabled_rates(const struct ieee80211_sta *sta,
+ 		}
+ 		if (_mcs_80 > _tx_mcs_80)
+ 			_mcs_80 = _tx_mcs_80;
+-		cmd->ht_rates[i][0] =
++		cmd->ht_rates[i][IWL_TLC_HT_BW_NONE_160] =
+ 			cpu_to_le16(rs_fw_he_ieee80211_mcs_to_rs_mcs(_mcs_80));
+ 
+ 		/* If one side doesn't support - mark both as not supporting */
+@@ -266,7 +267,7 @@ rs_fw_he_set_enabled_rates(const struct ieee80211_sta *sta,
+ 		}
+ 		if (_mcs_160 > _tx_mcs_160)
+ 			_mcs_160 = _tx_mcs_160;
+-		cmd->ht_rates[i][1] =
++		cmd->ht_rates[i][IWL_TLC_HT_BW_160] =
+ 			cpu_to_le16(rs_fw_he_ieee80211_mcs_to_rs_mcs(_mcs_160));
+ 	}
+ }
+@@ -300,8 +301,10 @@ static void rs_fw_set_supp_rates(struct ieee80211_sta *sta,
+ 		rs_fw_vht_set_enabled_rates(sta, vht_cap, cmd);
+ 	} else if (ht_cap->ht_supported) {
+ 		cmd->mode = IWL_TLC_MNG_MODE_HT;
+-		cmd->ht_rates[0][0] = cpu_to_le16(ht_cap->mcs.rx_mask[0]);
+-		cmd->ht_rates[1][0] = cpu_to_le16(ht_cap->mcs.rx_mask[1]);
++		cmd->ht_rates[IWL_TLC_NSS_1][IWL_TLC_HT_BW_NONE_160] =
++			cpu_to_le16(ht_cap->mcs.rx_mask[0]);
++		cmd->ht_rates[IWL_TLC_NSS_2][IWL_TLC_HT_BW_NONE_160] =
++			cpu_to_le16(ht_cap->mcs.rx_mask[1]);
+ 	}
+ }
+ 
 -- 
 2.23.0.rc1
 
