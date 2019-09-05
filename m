@@ -6,36 +6,36 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC05BC3A5A5
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Sep 2019 13:23:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ACF99C3A5A5
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Sep 2019 13:23:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F072B206CD
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Sep 2019 13:23:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AFD7D206CD
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Sep 2019 13:23:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389338AbfIENXO (ORCPT
+        id S2389501AbfIENXQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 5 Sep 2019 09:23:14 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:41210 "EHLO
+        Thu, 5 Sep 2019 09:23:16 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:41216 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1732933AbfIENXO (ORCPT
+        with ESMTP id S1732933AbfIENXQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Sep 2019 09:23:14 -0400
+        Thu, 5 Sep 2019 09:23:16 -0400
 Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1i5rip-00062D-S2; Thu, 05 Sep 2019 16:22:48 +0300
+        id 1i5rio-00062D-9K; Thu, 05 Sep 2019 16:22:46 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Thu,  5 Sep 2019 16:22:20 +0300
-Message-Id: <20190905132220.23970-22-luca@coelho.fi>
+Date:   Thu,  5 Sep 2019 16:22:18 +0300
+Message-Id: <20190905132220.23970-20-luca@coelho.fi>
 X-Mailer: git-send-email 2.23.0.rc1
 In-Reply-To: <20190905132220.23970-1-luca@coelho.fi>
 References: <20190905132220.23970-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH v2 21/21] iwlwifi: dbg: remove iwl_fw_cancel_dumps function
+Subject: [PATCH v2 19/21] iwlwifi: dbg_ini: fix dump structs doc
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -43,69 +43,49 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 
-Use cancel_delayed_work_sync on the dump workers only in case of
-unloading the op mode. In any other case use iwl_fw_flush_dumps or
-iwl_fw_dbg_stop_sync (depends if the op mode mutex is held or not).
-This way, the driver will wait until debug data is collected in all
-cases but op mode unloading.
+Fix the documentation of struct iwl_fw_ini_monitor_dump and
+iwl_fw_ini_error_dump_range.
 
 Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/dbg.h       | 11 -----------
- drivers/net/wireless/intel/iwlwifi/fw/runtime.h   |  4 ++++
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c |  1 -
- 3 files changed, 4 insertions(+), 12 deletions(-)
+ .../net/wireless/intel/iwlwifi/fw/error-dump.h   | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
-index 14181e6dc00d..e3b5dd34643f 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
-@@ -321,17 +321,6 @@ static inline void iwl_fw_flush_dumps(struct iwl_fw_runtime *fwrt)
- 	}
- }
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
+index 9529e5925ad5..2e763678dbdb 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
+@@ -323,10 +323,10 @@ struct iwl_fw_ini_fifo_hdr {
+ /**
+  * struct iwl_fw_ini_error_dump_range - range of memory
+  * @range_data_size: the size of this range, in bytes
+- * @internal_base_addr - base address of internal memory range
+- * @dram_base_addr - base address of dram monitor range
+- * @page_num - page number of memory range
+- * @fifo_hdr - fifo header of memory range
++ * @internal_base_addr: base address of internal memory range
++ * @dram_base_addr: base address of dram monitor range
++ * @page_num: page number of memory range
++ * @fifo_hdr: fifo header of memory range
+  * @data: the actual memory
+  */
+ struct iwl_fw_ini_error_dump_range {
+@@ -454,10 +454,10 @@ struct iwl_fw_error_dump_rb {
  
--static inline void iwl_fw_cancel_dumps(struct iwl_fw_runtime *fwrt)
--{
--	int i;
--
--	iwl_dbg_tlv_del_timers(fwrt->trans);
--	for (i = 0; i < IWL_FW_RUNTIME_DUMP_WK_NUM; i++) {
--		cancel_delayed_work_sync(&fwrt->dump.wks[i].wk);
--		fwrt->dump.wks[i].ini_trig_id = IWL_FW_TRIGGER_ID_INVALID;
--	}
--}
--
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- static inline void iwl_fw_cancel_timestamp(struct iwl_fw_runtime *fwrt)
- {
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-index 8b8ab6d692b6..be436c18a047 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-@@ -203,6 +203,10 @@ static inline void iwl_fw_runtime_free(struct iwl_fw_runtime *fwrt)
- 		kfree(active->trig);
- 		active->trig = NULL;
- 	}
-+
-+	iwl_dbg_tlv_del_timers(fwrt->trans);
-+	for (i = 0; i < IWL_FW_RUNTIME_DUMP_WK_NUM; i++)
-+		cancel_delayed_work_sync(&fwrt->dump.wks[i].wk);
- }
- 
- void iwl_fw_runtime_suspend(struct iwl_fw_runtime *fwrt);
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 11b24d143cb6..2d14c59ccbdb 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -1243,7 +1243,6 @@ static void iwl_mvm_mac_stop(struct ieee80211_hw *hw)
- 	 */
- 	clear_bit(IWL_MVM_STATUS_FIRMWARE_RUNNING, &mvm->status);
- 
--	iwl_fw_cancel_dumps(&mvm->fwrt);
- 	cancel_delayed_work_sync(&mvm->cs_tx_unblock_dwork);
- 	cancel_delayed_work_sync(&mvm->scan_timeout_dwork);
- 	iwl_fw_free_dump_desc(&mvm->fwrt);
+ /**
+  * struct iwl_fw_ini_monitor_dump - ini monitor dump
+- * @header - header of the region
+- * @write_ptr - write pointer position in the buffer
+- * @cycle_cnt - cycles count
+- * @ranges - the memory ranges of this this region
++ * @header: header of the region
++ * @write_ptr: write pointer position in the buffer
++ * @cycle_cnt: cycles count
++ * @ranges: the memory ranges of this this region
+  */
+ struct iwl_fw_ini_monitor_dump {
+ 	struct iwl_fw_ini_error_dump_header header;
 -- 
 2.23.0.rc1
 
