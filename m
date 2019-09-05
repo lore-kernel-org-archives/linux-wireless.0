@@ -2,239 +2,112 @@ Return-Path: <SRS0=82ey=XA=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81EBAC3A5A5
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Sep 2019 13:13:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A63CC3A5A5
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Sep 2019 13:18:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 33E0B20692
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Sep 2019 13:13:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5DF1C207E0
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Sep 2019 13:18:13 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="B0HZE85k";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="B0HZE85k"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388645AbfIENNn (ORCPT
+        id S1731556AbfIENSN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 5 Sep 2019 09:13:43 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:41036 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S2388358AbfIENNm (ORCPT
+        Thu, 5 Sep 2019 09:18:13 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:40284 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730780AbfIENSN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Sep 2019 09:13:42 -0400
-Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
-        by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.92)
-        (envelope-from <luca@coelho.fi>)
-        id 1i5rZK-0005yI-SH; Thu, 05 Sep 2019 16:12:59 +0300
-From:   Luca Coelho <luca@coelho.fi>
-To:     kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org
-Date:   Thu,  5 Sep 2019 16:12:39 +0300
-Message-Id: <20190905131241.23487-17-luca@coelho.fi>
-X-Mailer: git-send-email 2.23.0.rc1
-In-Reply-To: <20190905131241.23487-1-luca@coelho.fi>
-References: <20190905131241.23487-1-luca@coelho.fi>
+        Thu, 5 Sep 2019 09:18:13 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 75AA060710; Thu,  5 Sep 2019 13:18:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1567689492;
+        bh=aUuPqj9wb/JmSVV1hNFjJjdcQfTmN3Eohmt0r8g+oJ4=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=B0HZE85kueSI3pQ/FfFcLvFa3KTZftrFsNAtUNg7F1aCS1LzagU1K/Nqhfa6e4fJD
+         Vvyl2kC8/Shu1zRok9OM7zro3dqtRtInBHPxxLB8yFA++k+obILM+8QUMO3OTbSmiJ
+         c5KoezylnQhfQbmUTnz97GuWPfO2Orf08+b3w/qs=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id D849E6025A;
+        Thu,  5 Sep 2019 13:18:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1567689492;
+        bh=aUuPqj9wb/JmSVV1hNFjJjdcQfTmN3Eohmt0r8g+oJ4=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=B0HZE85kueSI3pQ/FfFcLvFa3KTZftrFsNAtUNg7F1aCS1LzagU1K/Nqhfa6e4fJD
+         Vvyl2kC8/Shu1zRok9OM7zro3dqtRtInBHPxxLB8yFA++k+obILM+8QUMO3OTbSmiJ
+         c5KoezylnQhfQbmUTnz97GuWPfO2Orf08+b3w/qs=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org D849E6025A
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Rob Herring <robh@kernel.org>
+Cc:     devicetree@vger.kernel.org, linux-wireless@vger.kernel.org,
+        ath11k@lists.infradead.org
+Subject: Re: [PATCH 01/49] dt: bindings: net: add qcom,ath11k.txt
+References: <1566316095-27507-1-git-send-email-kvalo@codeaurora.org>
+        <1566316095-27507-2-git-send-email-kvalo@codeaurora.org>
+        <20190827171307.GA23128@bogus>
+Date:   Thu, 05 Sep 2019 16:18:08 +0300
+In-Reply-To: <20190827171307.GA23128@bogus> (Rob Herring's message of "Tue, 27
+        Aug 2019 12:13:07 -0500")
+Message-ID: <87o8zylw4v.fsf@kamboji.qca.qualcomm.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: [PATCH v2 16/18] iwlwifi: dbg_ini: maintain buffer allocations from trans instead of TLVs buffer
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
+Rob Herring <robh@kernel.org> writes:
 
-Maintain DRAM debug buffer status in trans instead of keeping it as
-part of the TLVs buffer to avoid allocating extra space for it.
-Needed for future changes.
+> On Tue, Aug 20, 2019 at 06:47:27PM +0300, Kalle Valo wrote:
+>
+> Missing commit message and Sob (and on the other patches).
 
-Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- .../wireless/intel/iwlwifi/fw/api/dbg-tlv.h   |  2 ++
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c   | 31 ++++++++++---------
- drivers/net/wireless/intel/iwlwifi/fw/img.h   |  9 ------
- .../net/wireless/intel/iwlwifi/iwl-dbg-tlv.c  | 18 -----------
- .../net/wireless/intel/iwlwifi/iwl-trans.h    |  4 ++-
- 5 files changed, 21 insertions(+), 43 deletions(-)
+My original plan was to commit all this in one commit and use the cover
+letter as my commit. But based on your comment I realised we should have
+three commits:
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h b/drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h
-index aaf3974a9a20..e02e289d29b1 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h
-@@ -439,6 +439,7 @@ enum iwl_fw_ini_apply_point {
-  * @IWL_FW_INI_ALLOCATION_ID_SDFX: for SDFX module
-  * @IWL_FW_INI_ALLOCATION_ID_FW_DUMP: used for crash and runtime dumps
-  * @IWL_FW_INI_ALLOCATION_ID_USER_DEFINED: for future user scenarios
-+ * @IWL_FW_INI_ALLOCATION_NUM: number of allocation ids
- */
- enum iwl_fw_ini_allocation_id {
- 	IWL_FW_INI_ALLOCATION_INVALID,
-@@ -448,6 +449,7 @@ enum iwl_fw_ini_allocation_id {
- 	IWL_FW_INI_ALLOCATION_ID_SDFX,
- 	IWL_FW_INI_ALLOCATION_ID_FW_DUMP,
- 	IWL_FW_INI_ALLOCATION_ID_USER_DEFINED,
-+	IWL_FW_INI_ALLOCATION_NUM,
- }; /* FW_DEBUG_TLV_ALLOCATION_ID_E_VER_1 */
- 
- /**
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-index 40b867f984cf..6d69ed17e7f8 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-@@ -2503,7 +2503,7 @@ iwl_fw_dbg_buffer_allocation(struct iwl_fw_runtime *fwrt, u32 size)
- }
- 
- static void iwl_fw_dbg_buffer_apply(struct iwl_fw_runtime *fwrt,
--				    struct iwl_fw_ini_allocation_data *alloc,
-+				    struct iwl_fw_ini_allocation_tlv *alloc,
- 				    enum iwl_fw_ini_apply_point pnt)
- {
- 	struct iwl_trans *trans = fwrt->trans;
-@@ -2518,7 +2518,14 @@ static void iwl_fw_dbg_buffer_apply(struct iwl_fw_runtime *fwrt,
- 		.len[0] = sizeof(ldbg_cmd),
- 	};
- 	int block_idx = trans->dbg.num_blocks;
--	u32 buf_location = le32_to_cpu(alloc->tlv.buffer_location);
-+	u32 buf_location = le32_to_cpu(alloc->buffer_location);
-+	u32 alloc_id = le32_to_cpu(alloc->allocation_id);
-+
-+	if (alloc_id <= IWL_FW_INI_ALLOCATION_INVALID ||
-+	    alloc_id >= IWL_FW_INI_ALLOCATION_NUM) {
-+		IWL_ERR(fwrt, "WRT: Invalid allocation id %d\n", alloc_id);
-+		return;
-+	}
- 
- 	if (fwrt->trans->dbg.ini_dest == IWL_FW_INI_LOCATION_INVALID)
- 		fwrt->trans->dbg.ini_dest = buf_location;
-@@ -2543,12 +2550,11 @@ static void iwl_fw_dbg_buffer_apply(struct iwl_fw_runtime *fwrt,
- 	if (buf_location != IWL_FW_INI_LOCATION_DRAM_PATH)
- 		return;
- 
--	if (!alloc->is_alloc) {
--		iwl_fw_dbg_buffer_allocation(fwrt,
--					     le32_to_cpu(alloc->tlv.size));
-+	if (!(BIT(alloc_id) & fwrt->trans->dbg.is_alloc)) {
-+		iwl_fw_dbg_buffer_allocation(fwrt, le32_to_cpu(alloc->size));
- 		if (block_idx == trans->dbg.num_blocks)
- 			return;
--		alloc->is_alloc = 1;
-+		fwrt->trans->dbg.is_alloc |= BIT(alloc_id);
- 	}
- 
- 	/* First block is assigned via registers / context info */
-@@ -2561,9 +2567,9 @@ static void iwl_fw_dbg_buffer_apply(struct iwl_fw_runtime *fwrt,
- 	cmd->num_frags = cpu_to_le32(1);
- 	cmd->fragments[0].address =
- 		cpu_to_le64(trans->dbg.fw_mon[block_idx].physical);
--	cmd->fragments[0].size = alloc->tlv.size;
--	cmd->allocation_id = alloc->tlv.allocation_id;
--	cmd->buffer_location = alloc->tlv.buffer_location;
-+	cmd->fragments[0].size = alloc->size;
-+	cmd->allocation_id = alloc->allocation_id;
-+	cmd->buffer_location = alloc->buffer_location;
- 
- 	iwl_trans_send_cmd(trans, &hcmd);
- }
-@@ -2788,20 +2794,15 @@ static void _iwl_fw_dbg_apply_point(struct iwl_fw_runtime *fwrt,
- 		case IWL_UCODE_TLV_TYPE_DEBUG_INFO:
- 			iwl_fw_dbg_info_apply(fwrt, ini_tlv, ext, pnt);
- 			break;
--		case IWL_UCODE_TLV_TYPE_BUFFER_ALLOCATION: {
--			struct iwl_fw_ini_allocation_data *buf_alloc = ini_tlv;
--
-+		case IWL_UCODE_TLV_TYPE_BUFFER_ALLOCATION:
- 			if (pnt != IWL_FW_INI_APPLY_EARLY) {
- 				IWL_ERR(fwrt,
- 					"WRT: ext=%d. Invalid apply point %d for buffer allocation\n",
- 					ext, pnt);
- 				goto next;
- 			}
--
- 			iwl_fw_dbg_buffer_apply(fwrt, ini_tlv, pnt);
--			iter += sizeof(buf_alloc->is_alloc);
- 			break;
--		}
- 		case IWL_UCODE_TLV_TYPE_HCMD:
- 			if (pnt < IWL_FW_INI_APPLY_AFTER_ALIVE) {
- 				IWL_ERR(fwrt,
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/img.h b/drivers/net/wireless/intel/iwlwifi/fw/img.h
-index 18ca5f152be6..039576d71276 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/img.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/img.h
-@@ -227,15 +227,6 @@ struct iwl_fw_dbg {
- 	u32 dump_mask;
- };
- 
--/**
-- * @tlv: the buffer allocation tlv
-- * @is_alloc: indicates if the buffer was already allocated
-- */
--struct iwl_fw_ini_allocation_data {
--	struct iwl_fw_ini_allocation_tlv tlv;
--	u32 is_alloc;
--} __packed;
--
- /**
-  * struct iwl_fw_ini_active_triggers
-  * @active: is this trigger active
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
-index 240e48b1d1c7..5948d769eed0 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
-@@ -85,14 +85,6 @@ void iwl_dbg_tlv_copy(struct iwl_trans *trans, struct iwl_ucode_tlv *tlv,
- 	else
- 		data = &trans->dbg.apply_points[apply_point];
- 
--	/* add room for is_alloc field in &iwl_fw_ini_allocation_data struct */
--	if (le32_to_cpu(tlv->type) == IWL_UCODE_TLV_TYPE_BUFFER_ALLOCATION) {
--		struct iwl_fw_ini_allocation_data *buf_alloc =
--			(void *)tlv->data;
--
--		offset_size += sizeof(buf_alloc->is_alloc);
--	}
--
- 	/*
- 	 * Make sure we still have room to copy this TLV. Offset points to the
- 	 * location the last copy ended.
-@@ -145,16 +137,6 @@ void iwl_dbg_tlv_alloc(struct iwl_trans *trans, size_t len, const u8 *data,
- 		if (WARN_ON(apply >= IWL_FW_INI_APPLY_NUM))
- 			continue;
- 
--		/* add room for is_alloc field in &iwl_fw_ini_allocation_data
--		 * struct
--		 */
--		if (tlv_type == IWL_UCODE_TLV_TYPE_BUFFER_ALLOCATION) {
--			struct iwl_fw_ini_allocation_data *buf_alloc =
--				(void *)tlv->data;
--
--			size[apply] += sizeof(buf_alloc->is_alloc);
--		}
--
- 		size[apply] += sizeof(*tlv) + tlv_len;
- 	}
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-index fce0112b3ad4..0fa4b100f109 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-@@ -695,6 +695,7 @@ struct iwl_self_init_dram {
-  * @ini_valid: indicates if debug ini mode is on
-  * @num_blocks: number of blocks in fw_mon
-  * @fw_mon: address of the buffers for firmware monitor
-+ * @is_alloc: bit i is set if buffer i was allocated
-  * @hw_error: equals true if hw error interrupt was received from the FW
-  * @ini_dest: debug monitor destination uses &enum iwl_fw_ini_buffer_location
-  */
-@@ -717,7 +718,8 @@ struct iwl_trans_debug {
- 	struct iwl_apply_point_data apply_points_ext[IWL_FW_INI_APPLY_NUM];
- 
- 	int num_blocks;
--	struct iwl_dram_data fw_mon[IWL_FW_INI_APPLY_NUM];
-+	struct iwl_dram_data fw_mon[IWL_FW_INI_ALLOCATION_NUM];
-+	u32 is_alloc;
- 
- 	bool hw_error;
- 	enum iwl_fw_ini_buffer_location ini_dest;
+1. devicetree bindings doc
+2. ath11k itself
+3. add entry to MAINTAINERS file
+
+>> ---
+>>  .../bindings/net/wireless/qcom,ath11k.txt          | 127 +++++++++++++++++++++
+>>  1 file changed, 127 insertions(+)
+>
+> Please use the DT schema format (YAML). See writing-schema.md.
+
+Oh, I didn't know about the new format. We'll use that.
+
+>> --- /dev/null
+>> +++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath11k.txt
+>> @@ -0,0 +1,127 @@
+>> +* Qualcomm Technologies ath11k wireless devices
+>> +
+>> +Required properties:
+>> +- compatible: Should be "qcom,ipq8074-wifi"
+>> +
+>> +AHB based ipq8074 uses most of the properties defined in this doc.
+>> +
+>> +Optional properties:
+>> +- reg: Address and length of the register set for the device.
+>> +- interrupts: List of interrupt lines. Must contain an entry
+>> +	      for each entry in the interrupt-names property.
+>
+> Need to be explicit as to how many interrupts and what they are.
+
+Ok, we'll add that.
+
 -- 
-2.23.0.rc1
-
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
