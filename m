@@ -2,103 +2,155 @@ Return-Path: <SRS0=82ey=XA=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24BE7C3A5A5
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Sep 2019 12:58:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 944A0C3A5AB
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Sep 2019 13:12:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5E240218AC
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Sep 2019 12:58:48 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="JtvXigEw";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="VEaFOVjZ"
+	by mail.kernel.org (Postfix) with ESMTP id 4E7BA207E0
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Sep 2019 13:12:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389597AbfIEM6t (ORCPT
+        id S2388178AbfIENMt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 5 Sep 2019 08:58:49 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:57220 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726968AbfIEM6t (ORCPT
+        Thu, 5 Sep 2019 09:12:49 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:40900 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1731633AbfIENMt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Sep 2019 08:58:49 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 40F066085C; Thu,  5 Sep 2019 12:58:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1567688328;
-        bh=SVm1xOC+6yoRDmuNHC0o7z9gkaB5p3fWnHJ6QbO85UU=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=JtvXigEw1r+Dueatd3lGzlpTIfodkLhohP3p4N9t9PV78bfCcA39dgGyNGxBnKq2u
-         VsdKXS71dMkfUbz50t7DQOYbrObq0ftqiCB6URwWdHeaWFXeLr4T+9Qj5jMxUaXGx6
-         qjudbA9ZuXYbiLrNhkcKwg1WJSJQBjBtSEuChpxU=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 1BA546013C;
-        Thu,  5 Sep 2019 12:58:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1567688327;
-        bh=SVm1xOC+6yoRDmuNHC0o7z9gkaB5p3fWnHJ6QbO85UU=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=VEaFOVjZzKJ4RZH68izomToIgoCKvK0BfhNO1nMo6C3/HSkd9qOWVwjRcEnWBkZ5k
-         jpMWoD/cU589U2JN1Oz8+ZVpNJVsZYPKRI/I6xQuhkbQHuGVYPxqqlraH1Q/YaK85k
-         C1EQA8s7UmvYE9Wk73TSx5RsftIZEWgSdOmhpXOI=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 1BA546013C
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Luca Coelho <luca@coelho.fi>
+        Thu, 5 Sep 2019 09:12:49 -0400
+Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
+        by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.92)
+        (envelope-from <luca@coelho.fi>)
+        id 1i5rZ9-0005yI-CZ; Thu, 05 Sep 2019 16:12:47 +0300
+From:   Luca Coelho <luca@coelho.fi>
+To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 05/18] iwlwifi: Set w-pointer upon resume according to SN
-References: <20190821133800.23636-1-luca@coelho.fi>
-        <20190821133800.23636-6-luca@coelho.fi>
-        <87sgpdpqni.fsf@kamboji.qca.qualcomm.com>
-        <183bb8fceadadebc688bf3419321b5700df001fd.camel@coelho.fi>
-Date:   Thu, 05 Sep 2019 15:58:44 +0300
-In-Reply-To: <183bb8fceadadebc688bf3419321b5700df001fd.camel@coelho.fi> (Luca
-        Coelho's message of "Thu, 05 Sep 2019 15:56:01 +0300")
-Message-ID: <87sgpalx17.fsf@kamboji.qca.qualcomm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+Date:   Thu,  5 Sep 2019 16:12:24 +0300
+Message-Id: <20190905131241.23487-2-luca@coelho.fi>
+X-Mailer: git-send-email 2.23.0.rc1
+In-Reply-To: <20190905131241.23487-1-luca@coelho.fi>
+References: <20190905131241.23487-1-luca@coelho.fi>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
+Subject: [PATCH v2 01/18] iwlwifi: LTR updates
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Luca Coelho <luca@coelho.fi> writes:
+From: Alex Malamud <alex.malamud@intel.com>
 
-> On Tue, 2019-09-03 at 14:26 +0300, Kalle Valo wrote:
->> Luca Coelho <luca@coelho.fi> writes:
->> 
->> > From: Alex Malamud <alex.malamud@intel.com>
->> > 
->> > During D3 state, FW may send packets.
->> > As a result, "write" queue pointer will be incremented by FW.
->> > Upon resume from D3, driver should adjust its shadows of "write" and "read"
->> > pointers to the value reported by FW.
->> > 
->> > 1. Keep TID used during wowlan configuration.
->> > 2. Upon resume, set driver's "write" and "read" queue pointers
->> > 	to the value reported by FW.
->> > 
->> > Signed-off-by: Alex Malamud <alex.malamud@intel.com>
->> > Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
->> 
->> A typo in the title, s/w-pointer/q-pointer/ maybe?
->
-> This means "write pointer" because that's the one that is incremented
-> during WoWLAN.  The feature was called update write pointer or
-> something, that's where it comes from.
+New FW versions introduces LTR feature enablement by default.
+For such FW versions, driver (mvm/xvt) should not send
+host command to enable LTR feature, also it should be possible to
+override LTR configuration through the debugfs.
 
-Ok.
+1. Send LTR feature enablement command only for FW versions
+which does not advertises SET_LTR_GEN2 capability.
+2. Implement ltr_config file in debugfs for LTR configuration override.
 
-> Do you want me to reword the subject?
+Signed-off-by: Alex Malamud <alex.malamud@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/fw/file.h  |  3 +-
+ .../net/wireless/intel/iwlwifi/mvm/debugfs.c  | 37 +++++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c   |  3 +-
+ 3 files changed, 41 insertions(+), 2 deletions(-)
 
-Nah, I was just curious because I couldn't figure out what that
-"w-pointer" means and saw q-ptr (something like that) in the code.
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/file.h b/drivers/net/wireless/intel/iwlwifi/fw/file.h
+index ea2b3d77f848..418064ced337 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/file.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/file.h
+@@ -441,9 +441,10 @@ enum iwl_ucode_tlv_capa {
+ 	IWL_UCODE_TLV_CAPA_DYNAMIC_QUOTA                = (__force iwl_ucode_tlv_capa_t)44,
+ 	IWL_UCODE_TLV_CAPA_COEX_SCHEMA_2		= (__force iwl_ucode_tlv_capa_t)45,
+ 	IWL_UCODE_TLV_CAPA_CHANNEL_SWITCH_CMD		= (__force iwl_ucode_tlv_capa_t)46,
+-	IWL_UCODE_TLV_CAPA_ULTRA_HB_CHANNELS		= (__force iwl_ucode_tlv_capa_t)48,
+ 	IWL_UCODE_TLV_CAPA_FTM_CALIBRATED		= (__force iwl_ucode_tlv_capa_t)47,
++	IWL_UCODE_TLV_CAPA_ULTRA_HB_CHANNELS		= (__force iwl_ucode_tlv_capa_t)48,
+ 	IWL_UCODE_TLV_CAPA_CS_MODIFY			= (__force iwl_ucode_tlv_capa_t)49,
++	IWL_UCODE_TLV_CAPA_SET_LTR_GEN2			= (__force iwl_ucode_tlv_capa_t)50,
+ 
+ 	/* set 2 */
+ 	IWL_UCODE_TLV_CAPA_EXTENDED_DTS_MEASURE		= (__force iwl_ucode_tlv_capa_t)64,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+index 6d67d3da31e0..994a4ba07204 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+@@ -1758,6 +1758,38 @@ iwl_dbgfs_uapsd_noagg_bssids_read(struct file *file, char __user *user_buf,
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, pos);
+ }
+ 
++static ssize_t
++iwl_dbgfs_ltr_config_write(struct iwl_mvm *mvm,
++			   char *buf, size_t count, loff_t *ppos)
++{
++	int ret;
++	struct iwl_ltr_config_cmd ltr_config = {0};
++
++	if (!iwl_mvm_firmware_running(mvm))
++		return -EIO;
++
++	if (sscanf(buf, "%x,%x,%x,%x,%x,%x,%x",
++		   &ltr_config.flags,
++		   &ltr_config.static_long,
++		   &ltr_config.static_short,
++		   &ltr_config.ltr_cfg_values[0],
++		   &ltr_config.ltr_cfg_values[1],
++		   &ltr_config.ltr_cfg_values[2],
++		   &ltr_config.ltr_cfg_values[3]) != 7) {
++		return -EINVAL;
++	}
++
++	mutex_lock(&mvm->mutex);
++	ret = iwl_mvm_send_cmd_pdu(mvm, LTR_CONFIG, 0, sizeof(ltr_config),
++				   &ltr_config);
++	mutex_unlock(&mvm->mutex);
++
++	if (ret)
++		IWL_ERR(mvm, "failed to send ltr configuration cmd\n");
++
++	return ret ?: count;
++}
++
+ MVM_DEBUGFS_READ_WRITE_FILE_OPS(prph_reg, 64);
+ 
+ /* Device wide debugfs entries */
+@@ -1806,6 +1838,8 @@ MVM_DEBUGFS_READ_WRITE_STA_FILE_OPS(amsdu_len, 16);
+ 
+ MVM_DEBUGFS_READ_WRITE_FILE_OPS(he_sniffer_params, 32);
+ 
++MVM_DEBUGFS_WRITE_FILE_OPS(ltr_config, 512);
++
+ static ssize_t iwl_dbgfs_mem_read(struct file *file, char __user *user_buf,
+ 				  size_t count, loff_t *ppos)
+ {
+@@ -1993,6 +2027,9 @@ void iwl_mvm_dbgfs_register(struct iwl_mvm *mvm, struct dentry *dbgfs_dir)
+ #endif
+ 	MVM_DEBUGFS_ADD_FILE(he_sniffer_params, mvm->debugfs_dir, 0600);
+ 
++	if (fw_has_capa(&mvm->fw->ucode_capa, IWL_UCODE_TLV_CAPA_SET_LTR_GEN2))
++		MVM_DEBUGFS_ADD_FILE(ltr_config, mvm->debugfs_dir, 0200);
++
+ 	debugfs_create_bool("enable_scan_iteration_notif", 0600,
+ 			    mvm->debugfs_dir, &mvm->scan_iter_notif_enabled);
+ 	debugfs_create_bool("drop_bcn_ap_mode", 0600, mvm->debugfs_dir,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 251e7c235aaa..bb2aec9c6738 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -1302,7 +1302,8 @@ int iwl_mvm_up(struct iwl_mvm *mvm)
+ 	iwl_mvm_tt_tx_backoff(mvm, 0);
+ #endif
+ 
+-	WARN_ON(iwl_mvm_config_ltr(mvm));
++	if (!fw_has_capa(&mvm->fw->ucode_capa, IWL_UCODE_TLV_CAPA_SET_LTR_GEN2))
++		WARN_ON(iwl_mvm_config_ltr(mvm));
+ 
+ 	ret = iwl_mvm_power_update_device(mvm);
+ 	if (ret)
 -- 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.23.0.rc1
+
