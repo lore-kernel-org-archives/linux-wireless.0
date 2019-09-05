@@ -6,126 +6,97 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 221B4C3A5A5
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Sep 2019 13:13:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84A57C3A5A5
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Sep 2019 13:13:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D1B632067D
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Sep 2019 13:13:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 402382067D
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Sep 2019 13:13:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388399AbfIENNB (ORCPT
+        id S2388424AbfIENND (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 5 Sep 2019 09:13:01 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:40990 "EHLO
+        Thu, 5 Sep 2019 09:13:03 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:41000 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1731633AbfIENNB (ORCPT
+        with ESMTP id S1731633AbfIENNC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Sep 2019 09:13:01 -0400
+        Thu, 5 Sep 2019 09:13:02 -0400
 Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1i5rZG-0005yI-Kb; Thu, 05 Sep 2019 16:12:55 +0300
+        id 1i5rZI-0005yI-6X; Thu, 05 Sep 2019 16:12:56 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Thu,  5 Sep 2019 16:12:33 +0300
-Message-Id: <20190905131241.23487-11-luca@coelho.fi>
+Date:   Thu,  5 Sep 2019 16:12:35 +0300
+Message-Id: <20190905131241.23487-13-luca@coelho.fi>
 X-Mailer: git-send-email 2.23.0.rc1
 In-Reply-To: <20190905131241.23487-1-luca@coelho.fi>
 References: <20190905131241.23487-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH v2 10/18] iwlwifi: remove the d0i3 related module parameters
+Subject: [PATCH v2 12/18] iwlwifi: scan: don't pass large argument by value
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Ayala Beker <ayala.beker@intel.com>
 
-Those are now effectless.
+Function iwl_mvm_scan_set_legacy_probe_req() second argument
+size is too large to be passed by value.
+Fix it to be passed by reference.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Ayala Beker <ayala.beker@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c       | 8 --------
- drivers/net/wireless/intel/iwlwifi/iwl-modparams.h | 9 ++-------
- 2 files changed, 2 insertions(+), 15 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/scan.c | 15 ++++++++-------
+ 1 file changed, 8 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-index 38672dd5aae9..7afc6e43502a 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-@@ -1704,8 +1704,6 @@ struct iwl_mod_params iwlwifi_mod_params = {
- 	.fw_restart = true,
- 	.bt_coex_active = true,
- 	.power_level = IWL_POWER_INDEX_1,
--	.d0i3_disable = true,
--	.d0i3_timeout = 1000,
- 	.uapsd_disable = IWL_DISABLE_UAPSD_BSS | IWL_DISABLE_UAPSD_P2P_CLIENT,
- 	/* the rest are 0 by default */
- };
-@@ -1823,9 +1821,6 @@ MODULE_PARM_DESC(antenna_coupling,
- module_param_named(nvm_file, iwlwifi_mod_params.nvm_file, charp, 0444);
- MODULE_PARM_DESC(nvm_file, "NVM file name");
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
+index 85e33310804e..afa44345f37b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
+@@ -961,15 +961,15 @@ static int iwl_mvm_scan_lmac_flags(struct iwl_mvm *mvm,
  
--module_param_named(d0i3_disable, iwlwifi_mod_params.d0i3_disable, bool, 0444);
--MODULE_PARM_DESC(d0i3_disable, "disable d0i3 functionality (default: Y)");
--
- module_param_named(lar_disable, iwlwifi_mod_params.lar_disable, bool, 0444);
- MODULE_PARM_DESC(lar_disable, "disable LAR functionality (default: N)");
+ static void
+ iwl_mvm_scan_set_legacy_probe_req(struct iwl_scan_probe_req_v1 *p_req,
+-				  struct iwl_scan_probe_req src_p_req)
++				  struct iwl_scan_probe_req *src_p_req)
+ {
+ 	int i;
  
-@@ -1873,9 +1868,6 @@ module_param_named(fw_monitor, iwlwifi_mod_params.fw_monitor, bool, 0444);
- MODULE_PARM_DESC(fw_monitor,
- 		 "firmware monitor - to debug FW (default: false - needs lots of memory)");
+-	p_req->mac_header = src_p_req.mac_header;
++	p_req->mac_header = src_p_req->mac_header;
+ 	for (i = 0; i < SCAN_NUM_BAND_PROBE_DATA_V_1; i++)
+-		p_req->band_data[i] = src_p_req.band_data[i];
+-	p_req->common_data = src_p_req.common_data;
+-	memcpy(p_req->buf, src_p_req.buf, SCAN_OFFLOAD_PROBE_REQ_SIZE);
++		p_req->band_data[i] = src_p_req->band_data[i];
++	p_req->common_data = src_p_req->common_data;
++	memcpy(p_req->buf, src_p_req->buf, sizeof(p_req->buf));
+ }
  
--module_param_named(d0i3_timeout, iwlwifi_mod_params.d0i3_timeout, uint, 0444);
--MODULE_PARM_DESC(d0i3_timeout, "Timeout to D0i3 entry when idle (ms)");
--
- module_param_named(disable_11ac, iwlwifi_mod_params.disable_11ac, bool, 0444);
- MODULE_PARM_DESC(disable_11ac, "Disable VHT capabilities (default: false)");
+ static int iwl_mvm_scan_lmac(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+@@ -1046,7 +1046,7 @@ static int iwl_mvm_scan_lmac(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 	iwl_mvm_lmac_scan_cfg_channels(mvm, params->channels,
+ 				       params->n_channels, ssid_bitmap, cmd);
  
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h b/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h
-index 0cae2ef9b9df..ebea3f308b5d 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h
-@@ -6,7 +6,7 @@
-  * GPL LICENSE SUMMARY
-  *
-  * Copyright(c) 2007 - 2014 Intel Corporation. All rights reserved.
-- * Copyright(c) 2018 Intel Corporation
-+ * Copyright(c) 2018 - 2019 Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -27,7 +27,7 @@
-  * BSD LICENSE
-  *
-  * Copyright(c) 2005 - 2014 Intel Corporation. All rights reserved.
-- * Copyright(c) 2018 Intel Corporation
-+ * Copyright(c) 2018 - 2019 Intel Corporation
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -115,9 +115,6 @@ enum iwl_uapsd_disable {
-  * @nvm_file: specifies a external NVM file
-  * @uapsd_disable: disable U-APSD, see &enum iwl_uapsd_disable, default =
-  *	IWL_DISABLE_UAPSD_BSS | IWL_DISABLE_UAPSD_P2P_CLIENT
-- * @d0i3_disable: disable d0i3, default = 1,
-- * @d0i3_timeout: time to wait after no refs are taken before
-- *	entering D0i3 (in msecs)
-  * @lar_disable: disable LAR (regulatory), default = 0
-  * @fw_monitor: allow to use firmware monitor
-  * @disable_11ac: disable VHT capabilities, default = false.
-@@ -139,8 +136,6 @@ struct iwl_mod_params {
- 	int antenna_coupling;
- 	char *nvm_file;
- 	u32 uapsd_disable;
--	bool d0i3_disable;
--	unsigned int d0i3_timeout;
- 	bool lar_disable;
- 	bool fw_monitor;
- 	bool disable_11ac;
+-	iwl_mvm_scan_set_legacy_probe_req(preq, params->preq);
++	iwl_mvm_scan_set_legacy_probe_req(preq, &params->preq);
+ 
+ 	return 0;
+ }
+@@ -1592,7 +1592,8 @@ static int iwl_mvm_scan_umac(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 		direct_scan = tail_v2->direct_scan;
+ 	} else {
+ 		tail_v1 = (struct iwl_scan_req_umac_tail_v1 *)sec_part;
+-		iwl_mvm_scan_set_legacy_probe_req(&tail_v1->preq, params->preq);
++		iwl_mvm_scan_set_legacy_probe_req(&tail_v1->preq,
++						  &params->preq);
+ 		direct_scan = tail_v1->direct_scan;
+ 	}
+ 	iwl_scan_build_ssids(params, direct_scan, &ssid_bitmap);
 -- 
 2.23.0.rc1
 
