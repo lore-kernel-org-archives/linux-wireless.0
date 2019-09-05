@@ -2,90 +2,78 @@ Return-Path: <SRS0=82ey=XA=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ACF99C3A5A5
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Sep 2019 13:23:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77971C3A5A5
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Sep 2019 13:45:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AFD7D206CD
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Sep 2019 13:23:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 059C82070C
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Sep 2019 13:45:52 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Th/mutnX";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="LRz+Keon"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389501AbfIENXQ (ORCPT
+        id S1731128AbfIENpo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 5 Sep 2019 09:23:16 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:41216 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1732933AbfIENXQ (ORCPT
+        Thu, 5 Sep 2019 09:45:44 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:33038 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727768AbfIENpo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Sep 2019 09:23:16 -0400
-Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
-        by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.92)
-        (envelope-from <luca@coelho.fi>)
-        id 1i5rio-00062D-9K; Thu, 05 Sep 2019 16:22:46 +0300
-From:   Luca Coelho <luca@coelho.fi>
-To:     kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org
-Date:   Thu,  5 Sep 2019 16:22:18 +0300
-Message-Id: <20190905132220.23970-20-luca@coelho.fi>
-X-Mailer: git-send-email 2.23.0.rc1
-In-Reply-To: <20190905132220.23970-1-luca@coelho.fi>
-References: <20190905132220.23970-1-luca@coelho.fi>
+        Thu, 5 Sep 2019 09:45:44 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 3F7506058E; Thu,  5 Sep 2019 13:45:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1567691143;
+        bh=w/3IIFOS8nQCteH4ddE4gwv4ezqYRxVFmhWF+d+7VVo=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=Th/mutnX9LoQy2L+Z2WxUuvkvxHhhZ7Mm7O/CGwZJMHjB86g/C/f4PA1XjaycV9PV
+         U3B7/n8G19cBWyfSOwXEal5vD5gyjeoZEARHBoPulvNndDj5nxkk+4S51SxEQH3jPb
+         hWXKrY+/8tV9xOjkAEhG8jjSPziXnCSyC+Q6NNlc=
+Received: from tynnyri.adurom.net (tynnyri.adurom.net [51.15.11.48])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id F0148606E1;
+        Thu,  5 Sep 2019 13:45:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1567691141;
+        bh=w/3IIFOS8nQCteH4ddE4gwv4ezqYRxVFmhWF+d+7VVo=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=LRz+KeonYRJHD+DyRA20Bu+pgLL9j/vsbUaKJ1ZP7Ag6GRwlJdDuNNnOeQ/oZk+aj
+         y/50pCEp9lgl9poE40jH8uXGLxlucvMp8HKF+DCjV28XEw1U2G8FYNG9/icUxf4wP9
+         Mqw0Haixr+BmHHHq+FSO0TdRi0Mk6PozxfUFvfzw=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org F0148606E1
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     zhong jiang <zhongjiang@huawei.com>
+Cc:     <kvalo@codeaurora.org>, <davem@davemloft.net>,
+        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] hostap: remove set but not used variable 'copied' in prism2_io_debug_proc_read
+References: <1567497430-22539-1-git-send-email-zhongjiang@huawei.com>
+        <5D6E1DF2.1000109@huawei.com>
+Date:   Thu, 05 Sep 2019 16:45:37 +0300
+In-Reply-To: <5D6E1DF2.1000109@huawei.com> (zhong jiang's message of "Tue, 3
+        Sep 2019 16:01:54 +0800")
+Message-ID: <87zhjij1q6.fsf@tynnyri.adurom.net>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: [PATCH v2 19/21] iwlwifi: dbg_ini: fix dump structs doc
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
+zhong jiang <zhongjiang@huawei.com> writes:
 
-Fix the documentation of struct iwl_fw_ini_monitor_dump and
-iwl_fw_ini_error_dump_range.
+> Please ignore the patch.  Because  the hostap_proc.c is marked as 'obsolete'.
 
-Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- .../net/wireless/intel/iwlwifi/fw/error-dump.h   | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+You mean marked in the MAINTAINERS file? I don't see that as a problem,
+I can (and should) still apply any patches submitted to hostap driver.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
-index 9529e5925ad5..2e763678dbdb 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
-@@ -323,10 +323,10 @@ struct iwl_fw_ini_fifo_hdr {
- /**
-  * struct iwl_fw_ini_error_dump_range - range of memory
-  * @range_data_size: the size of this range, in bytes
-- * @internal_base_addr - base address of internal memory range
-- * @dram_base_addr - base address of dram monitor range
-- * @page_num - page number of memory range
-- * @fifo_hdr - fifo header of memory range
-+ * @internal_base_addr: base address of internal memory range
-+ * @dram_base_addr: base address of dram monitor range
-+ * @page_num: page number of memory range
-+ * @fifo_hdr: fifo header of memory range
-  * @data: the actual memory
-  */
- struct iwl_fw_ini_error_dump_range {
-@@ -454,10 +454,10 @@ struct iwl_fw_error_dump_rb {
- 
- /**
-  * struct iwl_fw_ini_monitor_dump - ini monitor dump
-- * @header - header of the region
-- * @write_ptr - write pointer position in the buffer
-- * @cycle_cnt - cycles count
-- * @ranges - the memory ranges of this this region
-+ * @header: header of the region
-+ * @write_ptr: write pointer position in the buffer
-+ * @cycle_cnt: cycles count
-+ * @ranges: the memory ranges of this this region
-  */
- struct iwl_fw_ini_monitor_dump {
- 	struct iwl_fw_ini_error_dump_header header;
 -- 
-2.23.0.rc1
-
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
