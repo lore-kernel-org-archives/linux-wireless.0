@@ -2,113 +2,65 @@ Return-Path: <SRS0=82ey=XA=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A64A2C3A5A5
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Sep 2019 12:29:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B421C3A5A5
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Sep 2019 12:50:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 77A852080C
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Sep 2019 12:29:46 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="eko1zFEN";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="jXJiqHaK"
+	by mail.kernel.org (Postfix) with ESMTP id 9011420640
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Sep 2019 12:50:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389378AbfIEM3q (ORCPT
+        id S2387932AbfIEMu1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 5 Sep 2019 08:29:46 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:46044 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388457AbfIEM3p (ORCPT
+        Thu, 5 Sep 2019 08:50:27 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:36754 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730864AbfIEMu1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Sep 2019 08:29:45 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 0BAC761156; Thu,  5 Sep 2019 12:29:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1567686585;
-        bh=w28KEsOScY0eiDy8iwTbqHacHS1x80YGi2SWuFeJWgU=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=eko1zFENroTN9NzY/YjIQHB/9daem2+xOnPMEmPNtpIm+eOQHkz1/ykMIGrs3u54T
-         Yz7mKjttsOWCANtkzVJeWLnMBnRuaf0/BEGb5GbvdFJVvcKY4dreqz+JFYsdu6CgQv
-         Lcx3J3bFFZN6TRdXSTnwJ233db69GEceTTzhlVxQ=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 179CC601D4;
-        Thu,  5 Sep 2019 12:29:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1567686584;
-        bh=w28KEsOScY0eiDy8iwTbqHacHS1x80YGi2SWuFeJWgU=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=jXJiqHaKSQ7rOb9wXwPlsxaJuWeigwU7+8o0J/jQGY7LtDV+JCMsOPGg5/pR0myPc
-         wNzNUwCb8nOjdv0eVPgz1cOLXlYgOjlxwpx24sMnT6DqnrV1GDplaVgFj2vuL694gF
-         bKYrJNBFdSyPrUyQLE2GZESs1QMjds73xYkEUPoQ=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 179CC601D4
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
-Cc:     devicetree@vger.kernel.org,
-        Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org, ath11k@lists.infradead.org
+        Thu, 5 Sep 2019 08:50:27 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.92.1)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1i5rDV-0001I3-B8; Thu, 05 Sep 2019 14:50:25 +0200
+Message-ID: <45e530c7066090878470e65a0e74738b98aacef0.camel@sipsolutions.net>
 Subject: Re: [PATCH 31/49] ath11k: add mac.c
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Kalle Valo <kvalo@codeaurora.org>,
+        Vasanthakumar Thiagarajan <vthiagar@codeaurora.org>
+Cc:     devicetree@vger.kernel.org, linux-wireless@vger.kernel.org,
+        ath11k@lists.infradead.org
+Date:   Thu, 05 Sep 2019 14:50:24 +0200
+In-Reply-To: <87woenkjt7.fsf@kamboji.qca.qualcomm.com>
 References: <1566316095-27507-1-git-send-email-kvalo@codeaurora.org>
-        <1566316095-27507-32-git-send-email-kvalo@codeaurora.org>
-        <4076919b34cad119eb4146025f587285ef40e37c.camel@sipsolutions.net>
-        <ee38dc5e80097d0ebc186f81b2f11d37@codeaurora.org>
-        <878sr3nfz8.fsf@kamboji.qca.qualcomm.com>
-        <8e90a557c1659995d117c6dc8b728d7f@codeaurora.org>
-Date:   Thu, 05 Sep 2019 15:29:40 +0300
-In-Reply-To: <8e90a557c1659995d117c6dc8b728d7f@codeaurora.org> (Vasanthakumar
-        Thiagarajan's message of "Thu, 05 Sep 2019 17:28:53 +0530")
-Message-ID: <87woenkjt7.fsf@kamboji.qca.qualcomm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+         <1566316095-27507-32-git-send-email-kvalo@codeaurora.org>
+         <4076919b34cad119eb4146025f587285ef40e37c.camel@sipsolutions.net>
+         <ee38dc5e80097d0ebc186f81b2f11d37@codeaurora.org>
+         <878sr3nfz8.fsf@kamboji.qca.qualcomm.com>
+         <8e90a557c1659995d117c6dc8b728d7f@codeaurora.org>
+         <87woenkjt7.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.30.5 (3.30.5-1.fc29) 
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Vasanthakumar Thiagarajan <vthiagar@codeaurora.org> writes:
+On Thu, 2019-09-05 at 15:29 +0300, Kalle Valo wrote:
+> 
+> Yeah, I was supposed to write:
+> 
+> "maybe we should change mac80211 to not require this op to be present"
+> 
+> But of course I could have just misunderstood, let's see what Johannes
+> says :)
 
-> On 2019-09-05 16:54, Kalle Valo wrote:
->> Vasanthakumar Thiagarajan <vthiagar@codeaurora.org> writes:
->>
->>> On 2019-08-21 02:16, Johannes Berg wrote:
->>>> On Tue, 2019-08-20 at 18:47 +0300, Kalle Valo wrote:
->>>>
->>>>> +static int ath11k_mac_op_config(struct ieee80211_hw *hw, u32
->>>>> changed)
->>>>> +{
->>>>> +	struct ath11k *ar = hw->priv;
->>>>> +	int ret = 0;
->>>>> +
->>>>> +	/* mac80211 requires this op to be present and that's why
->>>>> +	 * there's an empty function, this can be extended when
->>>>> +	 * required.
->>>>> +	 */
->>>>
->>>> Well, oops. Maybe it shouldn't be required?
->>>
->>> I think we require this for some configuration handling. The comment
->>> is to be updated with proper information. We'll address that.
->>
->> The way I'm understanding Johannes' comment is that maybe we should
->> change mac80211 to require this op to be present. Should be easy to fix
->> in mac80211, right?
->
-> Ok. So make this callback optional in mac80211? should be a simple
-> code change.
+:-)
 
-Yeah, I was supposed to write:
+Yes, that's what I meant.
 
-"maybe we should change mac80211 to not require this op to be present"
+johannes
 
-But of course I could have just misunderstood, let's see what Johannes
-says :)
-
--- 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
