@@ -6,176 +6,75 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EF77C3A5A5
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Sep 2019 13:22:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C84EC3A5A5
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Sep 2019 13:22:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 228B4206CD
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Sep 2019 13:22:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 191E7206CD
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Sep 2019 13:22:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388817AbfIENWu (ORCPT
+        id S2388827AbfIENWx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 5 Sep 2019 09:22:50 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:41156 "EHLO
+        Thu, 5 Sep 2019 09:22:53 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:41162 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725290AbfIENWu (ORCPT
+        with ESMTP id S2388825AbfIENWw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Sep 2019 09:22:50 -0400
+        Thu, 5 Sep 2019 09:22:52 -0400
 Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1i5rii-00062D-Qg; Thu, 05 Sep 2019 16:22:41 +0300
+        id 1i5ril-00062D-Lq; Thu, 05 Sep 2019 16:22:44 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Thu,  5 Sep 2019 16:22:11 +0300
-Message-Id: <20190905132220.23970-13-luca@coelho.fi>
+Date:   Thu,  5 Sep 2019 16:22:15 +0300
+Message-Id: <20190905132220.23970-17-luca@coelho.fi>
 X-Mailer: git-send-email 2.23.0.rc1
 In-Reply-To: <20190905132220.23970-1-luca@coelho.fi>
 References: <20190905132220.23970-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH v2 12/21] iwlwifi: mvm: drop BA sessions on too many old-SN frames
+Subject: [PATCH v2 16/21] iwlwifi: add iwl_tlv_array_len()
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 
-Certain APs (I think a certain Broadcom model) interact badly with our
-full state BA bitmap handling, and if triggered badly with many powersave
-transitions they keep sending frames from before the window, which our
-hardware then doesn't appear to ACK (to them) since it has moved on and
-is sending ACKs for higher SNs now.
+Allows to easily calculate array length at the end of a TLV.
 
-Try to detect this situation and if this keeps happening, disable the
-aggregation session.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../wireless/intel/iwlwifi/mvm/constants.h    |  1 +
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |  9 ++++
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 53 +++++++++++++++++++
- 3 files changed, 63 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/fw/file.h | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/constants.h b/drivers/net/wireless/intel/iwlwifi/mvm/constants.h
-index 915b172da57a..60aff2ecec12 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/constants.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/constants.h
-@@ -153,5 +153,6 @@
- #define IWL_MVM_FTM_INITIATOR_DYNACK		true
- #define IWL_MVM_D3_DEBUG			false
- #define IWL_MVM_USE_TWT				false
-+#define IWL_MVM_AMPDU_CONSEC_DROPS_DELBA	10
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/file.h b/drivers/net/wireless/intel/iwlwifi/fw/file.h
+index 329b00e90fa4..1bdcab9b9275 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/file.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/file.h
+@@ -972,4 +972,19 @@ struct iwl_fw_cmd_version {
+ 	u8 notif_ver;
+ } __packed;
  
- #endif /* __MVM_CONSTANTS_H */
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 2540d7ffbbc1..b8a8369457b9 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -661,6 +661,12 @@ struct iwl_mvm_tcm {
-  * @valid: reordering is valid for this queue
-  * @lock: protect reorder buffer internal state
-  * @mvm: mvm pointer, needed for frame timer context
-+ * @consec_oldsn_drops: consecutive drops due to old SN
-+ * @consec_oldsn_ampdu_gp2: A-MPDU GP2 timestamp to track
-+ *	when to apply old SN consecutive drop workaround
-+ * @consec_oldsn_prev_drop: track whether or not an MPDU
-+ *	that was single/part of the previous A-MPDU was
-+ *	dropped due to old SN
-  */
- struct iwl_mvm_reorder_buffer {
- 	u16 head_sn;
-@@ -674,6 +680,9 @@ struct iwl_mvm_reorder_buffer {
- 	bool valid;
- 	spinlock_t lock;
- 	struct iwl_mvm *mvm;
-+	unsigned int consec_oldsn_drops;
-+	u32 consec_oldsn_ampdu_gp2;
-+	unsigned int consec_oldsn_prev_drop:1;
- } ____cacheline_aligned_in_smp;
- 
- /**
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index 25d038092eec..f3f9e641ae70 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -781,6 +781,55 @@ void iwl_mvm_rx_queue_notif(struct iwl_mvm *mvm, struct napi_struct *napi,
- 		wake_up(&mvm->rx_sync_waitq);
- }
- 
-+static void iwl_mvm_oldsn_workaround(struct iwl_mvm *mvm,
-+				     struct ieee80211_sta *sta, int tid,
-+				     struct iwl_mvm_reorder_buffer *buffer,
-+				     u32 reorder, u32 gp2, int queue)
++static inline size_t _iwl_tlv_array_len(const struct iwl_ucode_tlv *tlv,
++					size_t fixed_size, size_t var_size)
 +{
-+	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
++	size_t var_len = le32_to_cpu(tlv->length) - fixed_size;
 +
-+	if (gp2 != buffer->consec_oldsn_ampdu_gp2) {
-+		/* we have a new (A-)MPDU ... */
++	if (WARN_ON(var_len % var_size))
++		return 0;
 +
-+		/*
-+		 * reset counter to 0 if we didn't have any oldsn in
-+		 * the last A-MPDU (as detected by GP2 being identical)
-+		 */
-+		if (!buffer->consec_oldsn_prev_drop)
-+			buffer->consec_oldsn_drops = 0;
-+
-+		/* either way, update our tracking state */
-+		buffer->consec_oldsn_ampdu_gp2 = gp2;
-+	} else if (buffer->consec_oldsn_prev_drop) {
-+		/*
-+		 * tracking state didn't change, and we had an old SN
-+		 * indication before - do nothing in this case, we
-+		 * already noted this one down and are waiting for the
-+		 * next A-MPDU (by GP2)
-+		 */
-+		return;
-+	}
-+
-+	/* return unless this MPDU has old SN */
-+	if (!(reorder & IWL_RX_MPDU_REORDER_BA_OLD_SN))
-+		return;
-+
-+	/* update state */
-+	buffer->consec_oldsn_prev_drop = 1;
-+	buffer->consec_oldsn_drops++;
-+
-+	/* if limit is reached, send del BA and reset state */
-+	if (buffer->consec_oldsn_drops == IWL_MVM_AMPDU_CONSEC_DROPS_DELBA) {
-+		IWL_WARN(mvm,
-+			 "reached %d old SN frames from %pM on queue %d, stopping BA session on TID %d\n",
-+			 IWL_MVM_AMPDU_CONSEC_DROPS_DELBA,
-+			 sta->addr, queue, tid);
-+		ieee80211_stop_rx_ba_session(mvmsta->vif, BIT(tid), sta->addr);
-+		buffer->consec_oldsn_prev_drop = 0;
-+		buffer->consec_oldsn_drops = 0;
-+	}
++	return var_len / var_size;
 +}
 +
- /*
-  * Returns true if the MPDU was buffered\dropped, false if it should be passed
-  * to upper layer.
-@@ -792,6 +841,7 @@ static bool iwl_mvm_reorder(struct iwl_mvm *mvm,
- 			    struct sk_buff *skb,
- 			    struct iwl_rx_mpdu_desc *desc)
- {
-+	struct ieee80211_rx_status *rx_status = IEEE80211_SKB_RXCB(skb);
- 	struct ieee80211_hdr *hdr = iwl_mvm_skb_get_hdr(skb);
- 	struct iwl_mvm_sta *mvm_sta;
- 	struct iwl_mvm_baid_data *baid_data;
-@@ -894,6 +944,9 @@ static bool iwl_mvm_reorder(struct iwl_mvm *mvm,
- 				       min_sn, IWL_MVM_RELEASE_SEND_RSS_SYNC);
- 	}
- 
-+	iwl_mvm_oldsn_workaround(mvm, sta, tid, buffer, reorder,
-+				 rx_status->device_timestamp, queue);
++#define iwl_tlv_array_len(_tlv_ptr, _struct_ptr, _memb)			\
++	_iwl_tlv_array_len((_tlv_ptr), sizeof(*(_struct_ptr)),		\
++			   sizeof(_struct_ptr->_memb[0]))
 +
- 	/* drop any oudated packets */
- 	if (ieee80211_sn_less(sn, buffer->head_sn))
- 		goto drop;
+ #endif  /* __iwl_fw_file_h__ */
 -- 
 2.23.0.rc1
 
