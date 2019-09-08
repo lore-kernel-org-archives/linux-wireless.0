@@ -6,32 +6,31 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 641C6C433EF
-	for <linux-wireless@archiver.kernel.org>; Sun,  8 Sep 2019 08:39:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FBFAC433EF
+	for <linux-wireless@archiver.kernel.org>; Sun,  8 Sep 2019 08:39:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4707220863
-	for <linux-wireless@archiver.kernel.org>; Sun,  8 Sep 2019 08:39:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 034C620863
+	for <linux-wireless@archiver.kernel.org>; Sun,  8 Sep 2019 08:39:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727486AbfIHIjW (ORCPT
+        id S1727494AbfIHIjX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 8 Sep 2019 04:39:22 -0400
-Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:51394 "EHLO
+        Sun, 8 Sep 2019 04:39:23 -0400
+Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:7970 "EHLO
         alexa-out-ams-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727418AbfIHIjS (ORCPT
+        by vger.kernel.org with ESMTP id S1727423AbfIHIjT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 8 Sep 2019 04:39:18 -0400
-X-Greylist: delayed 365 seconds by postgrey-1.27 at vger.kernel.org; Sun, 08 Sep 2019 04:39:09 EDT
+        Sun, 8 Sep 2019 04:39:19 -0400
 Received: from ironmsg03-ams.qualcomm.com ([10.251.56.4])
-  by alexa-out-ams-02.qualcomm.com with ESMTP; 08 Sep 2019 10:33:04 +0200
+  by alexa-out-ams-02.qualcomm.com with ESMTP; 08 Sep 2019 10:33:06 +0200
 Received: from lx-merez1.mea.qualcomm.com ([10.18.173.103])
-  by ironmsg03-ams.qualcomm.com with ESMTP; 08 Sep 2019 10:33:03 +0200
+  by ironmsg03-ams.qualcomm.com with ESMTP; 08 Sep 2019 10:33:05 +0200
 From:   Maya Erez <merez@codeaurora.org>
 To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     Maya Erez <merez@codeaurora.org>, linux-wireless@vger.kernel.org,
-        wil6210@qti.qualcomm.com
-Subject: [PATCH 08/11] wil6210: report boottime_ns in scan results
-Date:   Sun,  8 Sep 2019 11:32:52 +0300
-Message-Id: <1567931575-27984-9-git-send-email-merez@codeaurora.org>
+Cc:     Lior David <liord@codeaurora.org>, linux-wireless@vger.kernel.org,
+        wil6210@qti.qualcomm.com, Maya Erez <merez@codeaurora.org>
+Subject: [PATCH 11/11] wil6210: ignore reset errors for FW during probe
+Date:   Sun,  8 Sep 2019 11:32:55 +0300
+Message-Id: <1567931575-27984-12-git-send-email-merez@codeaurora.org>
 X-Mailer: git-send-email 1.9.1
 In-Reply-To: <1567931575-27984-1-git-send-email-merez@codeaurora.org>
 References: <1567931575-27984-1-git-send-email-merez@codeaurora.org>
@@ -40,68 +39,53 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Call cfg80211_inform_bss_frame_data to report cfg80211 on the
-boottime_ns in order to prevent the scan results filtering due to
-aging.
+From: Lior David <liord@codeaurora.org>
 
+There are special kinds of FW such as WMI only which
+are used for testing, diagnostics and other specific
+scenario.
+Such FW is loaded during driver probe and the driver
+disallows enabling any network interface, to avoid
+operational issues.
+In many cases it is used to debug early versions
+of FW with new features, which sometimes fail
+on startup.
+Currently when such FW fails to load (for example,
+because of init failure), the driver probe would fail
+and shutdown the device making it difficult to debug
+the early failure.
+To fix this, ignore load failures in WMI only FW and
+allow driver probe to succeed, making it possible to
+continue and debug the FW load failure.
+
+Signed-off-by: Lior David <liord@codeaurora.org>
 Signed-off-by: Maya Erez <merez@codeaurora.org>
 ---
- drivers/net/wireless/ath/wil6210/wmi.c | 21 +++++++++++++++++----
- 1 file changed, 17 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/wil6210/pcie_bus.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index 88d9e5a..153b844 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -878,6 +878,12 @@ static void wmi_evt_rx_mgmt(struct wil6210_vif *vif, int id, void *d, int len)
- 
- 	if (ieee80211_is_beacon(fc) || ieee80211_is_probe_resp(fc)) {
- 		struct cfg80211_bss *bss;
-+		struct cfg80211_inform_bss bss_data = {
-+			.chan = channel,
-+			.scan_width = NL80211_BSS_CHAN_WIDTH_20,
-+			.signal = signal,
-+			.boottime_ns = ktime_to_ns(ktime_get_boottime()),
-+		};
- 		u64 tsf = le64_to_cpu(rx_mgmt_frame->u.beacon.timestamp);
- 		u16 cap = le16_to_cpu(rx_mgmt_frame->u.beacon.capab_info);
- 		u16 bi = le16_to_cpu(rx_mgmt_frame->u.beacon.beacon_int);
-@@ -892,8 +898,9 @@ static void wmi_evt_rx_mgmt(struct wil6210_vif *vif, int id, void *d, int len)
- 
- 		wil_dbg_wmi(wil, "Capability info : 0x%04x\n", cap);
- 
--		bss = cfg80211_inform_bss_frame(wiphy, channel, rx_mgmt_frame,
--						d_len, signal, GFP_KERNEL);
-+		bss = cfg80211_inform_bss_frame_data(wiphy, &bss_data,
-+						     rx_mgmt_frame,
-+						     d_len, GFP_KERNEL);
- 		if (bss) {
- 			wil_dbg_wmi(wil, "Added BSS %pM\n",
- 				    rx_mgmt_frame->bssid);
-@@ -1391,6 +1398,10 @@ static void wmi_evt_delba(struct wil6210_vif *vif, int id, void *d, int len)
- 	__le16 fc;
- 	u32 d_len;
- 	struct cfg80211_bss *bss;
-+	struct cfg80211_inform_bss bss_data = {
-+		.scan_width = NL80211_BSS_CHAN_WIDTH_20,
-+		.boottime_ns = ktime_to_ns(ktime_get_boottime()),
-+	};
- 
- 	if (flen < 0) {
- 		wil_err(wil, "sched scan result event too short, len %d\n",
-@@ -1433,8 +1444,10 @@ static void wmi_evt_delba(struct wil6210_vif *vif, int id, void *d, int len)
- 		return;
+diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+index cd417fa..904dcfa 100644
+--- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
++++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+@@ -537,7 +537,7 @@ static int wil_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		mutex_unlock(&wil->mutex);
+ 		if (rc) {
+ 			wil_err(wil, "failed to load WMI only FW\n");
+-			goto if_remove;
++			/* ignore the error to allow debugging */
+ 		}
  	}
  
--	bss = cfg80211_inform_bss_frame(wiphy, channel, rx_mgmt_frame,
--					d_len, signal, GFP_KERNEL);
-+	bss_data.signal = signal;
-+	bss_data.chan = channel;
-+	bss = cfg80211_inform_bss_frame_data(wiphy, &bss_data, rx_mgmt_frame,
-+					     d_len, GFP_KERNEL);
- 	if (bss) {
- 		wil_dbg_wmi(wil, "Added BSS %pM\n", rx_mgmt_frame->bssid);
- 		cfg80211_put_bss(wiphy, bss);
+@@ -557,8 +557,6 @@ static int wil_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 
+ 	return 0;
+ 
+-if_remove:
+-	wil_if_remove(wil);
+ bus_disable:
+ 	wil_if_pcie_disable(wil);
+ err_iounmap:
 -- 
 1.9.1
 
