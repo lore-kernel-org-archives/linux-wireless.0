@@ -2,115 +2,87 @@ Return-Path: <SRS0=80ln=XE=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.0 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2B65C433EF
-	for <linux-wireless@archiver.kernel.org>; Mon,  9 Sep 2019 06:19:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 798E2C433EF
+	for <linux-wireless@archiver.kernel.org>; Mon,  9 Sep 2019 07:16:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9D52921924
-	for <linux-wireless@archiver.kernel.org>; Mon,  9 Sep 2019 06:19:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 47429218AC
+	for <linux-wireless@archiver.kernel.org>; Mon,  9 Sep 2019 07:16:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727917AbfIIGTC (ORCPT
+        id S1731292AbfIIHQZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 9 Sep 2019 02:19:02 -0400
-Received: from mga01.intel.com ([192.55.52.88]:2052 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727898AbfIIGTC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Sep 2019 02:19:02 -0400
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 08 Sep 2019 23:19:02 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.64,483,1559545200"; 
-   d="scan'208";a="359386304"
-Received: from mjtillin-mobl1.ger.corp.intel.com ([10.252.1.17])
-  by orsmga005.jf.intel.com with ESMTP; 08 Sep 2019 23:19:00 -0700
-Message-ID: <10f877f29750ceb357fa5b54bf07122c658270ca.camel@intel.com>
-Subject: Re: [linuxwifi] Slow performance (~30mbps) with Intel 9260 (and
- 8265, 3168) using 5G
-From:   Luciano Coelho <luciano.coelho@intel.com>
-To:     Qu Wenruo <quwenruo.btrfs@gmx.com>, linuxwifi@intel.com,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Date:   Mon, 09 Sep 2019 09:18:59 +0300
-In-Reply-To: <42bd356c-6c59-79dc-bb37-5bc36d07a9af@gmx.com>
-References: <c078f515-51bd-2195-6b96-901db8872028@gmx.com>
-         <5d79c06b7d718e8255ee192902dba5aad780fba5.camel@intel.com>
-         <42bd356c-6c59-79dc-bb37-5bc36d07a9af@gmx.com>
-Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.30.5-1.1 
+        Mon, 9 Sep 2019 03:16:25 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:57947 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727307AbfIIHQZ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 9 Sep 2019 03:16:25 -0400
+Authenticated-By: 
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x897GJFV014346, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (RTITCASV01.realtek.com.tw[172.21.6.18])
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x897GJFV014346
+        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
+        Mon, 9 Sep 2019 15:16:19 +0800
+Received: from localhost.localdomain (172.21.68.126) by
+ RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
+ 14.3.468.0; Mon, 9 Sep 2019 15:16:18 +0800
+From:   <yhchuang@realtek.com>
+To:     <kvalo@codeaurora.org>
+CC:     <linux-wireless@vger.kernel.org>, <briannorris@chromium.org>
+Subject: [PATCH v2 2/8] rtw88: 8822c: update pwr_seq to v13
+Date:   Mon, 9 Sep 2019 15:16:05 +0800
+Message-ID: <1568013371-21805-3-git-send-email-yhchuang@realtek.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1568013371-21805-1-git-send-email-yhchuang@realtek.com>
+References: <1568013371-21805-1-git-send-email-yhchuang@realtek.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [172.21.68.126]
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, 2019-09-09 at 14:09 +0800, Qu Wenruo wrote:
-> 
-> On 2019/9/9 下午2:00, Luciano Coelho wrote:
-> > Hi,
-> > 
-> > On Sun, 2019-09-08 at 06:45 +0800, Qu Wenruo wrote:
-> > > Hi,
-> > > 
-> [...]
-> > > Any ideas how this could happen to 3 different intel cards on two
-> > > different systems? (Although all running the same Arch kernel and latest
-> > > firmware)
-> > 
-> > This really must be an environment issue.  You are describing the same
-> > problem with different NICs (which mean different FWs are being used)
-> > and the same problem on Windows (which means different driver version
-> > being used), so it's not a new bug in either the firmware or the
-> > driver.
-> 
-> You're completely right. I have reset and upgraded my router (an MT7621
-> based router with OpenWRT) to latest OpenWRT, then the problem just went
-> away.
+From: Chin-Yen Lee <timlee@realtek.com>
 
-Great!
+update sequence to v13 to reduce power consumption
+when MAC power off
 
+Signed-off-by: Chin-Yen Lee <timlee@realtek.com>
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+---
 
-> It looks like, under the original environment, it's the Android phone
-> doing something strange.
+v1 -> v2
+   * no change
 
-It's hard to tell, because the characteristics of the WiFi on your
-Android phone are very different from those on your laptop.
+ drivers/net/wireless/realtek/rtw88/rtw8822c.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-
-> > Was it working properly before? Did it start happening only when you
-> > changed the NIC (even though you changed it back and it remained not
-> > working)? What else changed?
-> 
-> Nothing really, so I may hit something wrong with the NIC of the router,
-> not all these NICs.
-
-There was probably an upgrade of OpenWRT that started causing the
-issue.  Hard to say.
-
-
-> > I can't see anything hinting any issues in dmesg.  Also, I'm a bit
-> > confused about the "5G" you mention.  Does that mean that the AP is
-> > connected to the internet via 5G?
-> 
-> Sorry for the confusion, I mean 5Ghz.
-
-Ah, I should have guessed, of course.  It's just that the word 5G has a
-totally different meaning, hardcoded in my head, so I got confused. ;)
-
-
-> All tests are done in 5GHz freq (802.11ac), and iperf server is
-> connected by RJ45 (1Gbps) and iperf client is through wifi.
-> 
-> Anyway, after resetting the router, it's now back to the ~300 mpbs range.
-
-That's great to hear! Let us know if you encounter any further issues.
-
---
-Cheers,
-Luca.
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+index 207f64c..b072d43 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+@@ -2275,6 +2275,16 @@ static struct rtw_pwr_seq_cmd trans_cardemu_to_carddis_8822c[] = {
+ 	 RTW_PWR_INTF_ALL_MSK,
+ 	 RTW_PWR_ADDR_MAC,
+ 	 RTW_PWR_CMD_WRITE, BIT(1), 0},
++	{0x0092,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_PCI_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, 0xFF, 0x20},
++	{0x0093,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_PCI_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, 0xFF, 0x04},
+ 	{0x0005,
+ 	 RTW_PWR_CUT_ALL_MSK,
+ 	 RTW_PWR_INTF_USB_MSK | RTW_PWR_INTF_SDIO_MSK,
+-- 
+2.7.4
 
