@@ -2,92 +2,132 @@ Return-Path: <SRS0=RZjE=XF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4B6BC3A5A2
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Sep 2019 13:32:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F428C49ED7
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Sep 2019 19:04:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9BDDE21019
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Sep 2019 13:32:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 353AC21479
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Sep 2019 19:04:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Kuy79+Os";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="nYJ/FPZV"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="guKxL0Fn"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728244AbfIJNcN (ORCPT
+        id S1726931AbfIJTEw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 10 Sep 2019 09:32:13 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:44746 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725935AbfIJNcN (ORCPT
+        Tue, 10 Sep 2019 15:04:52 -0400
+Received: from mail-wr1-f68.google.com ([209.85.221.68]:45640 "EHLO
+        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726679AbfIJTEv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Sep 2019 09:32:13 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 2DAE3602F2; Tue, 10 Sep 2019 13:32:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1568122332;
-        bh=vQPgNw5a7gU0FduUPKVc7pHyoB4RAkWfX8HhQ2BonBY=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=Kuy79+OsiVZi69+uo8aTQy6XYrve8opGsQxOGUI1M2SeGG9WJsxx1Hx/VrD/D7Ffg
-         Mh/CAlGN8fig8/sky/UO88/xsgUnCi4yYq1IGQgvapB/748K7HIPyaH/VMlTn5vuWC
-         qstsYV9bVyyq3iaidfihKzfP8ifCd+lqc7wQ7eFI=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 421EF602BC;
-        Tue, 10 Sep 2019 13:32:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1568122331;
-        bh=vQPgNw5a7gU0FduUPKVc7pHyoB4RAkWfX8HhQ2BonBY=;
-        h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=nYJ/FPZVw/skDA6fn9S/lZGMJvbw9+aRH3ncbVxul5PV/jnTLGL27uM82xIB8kQpj
-         J2OLOTtObzZYslP9fEgyPC8JledNL/vcqSmFedf846VXmVKm7d9CYjcO0Je8Etd7/p
-         lSFf9+kqCoTEYGOQlvEuVYIs+EJ/c00ZxM5H9v/Q=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 421EF602BC
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] ath9k: release allocated buffer if timed out
-From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20190906185931.19288-1-navid.emamdoost@gmail.com>
-References: <20190906185931.19288-1-navid.emamdoost@gmail.com>
-To:     Navid Emamdoost <navid.emamdoost@gmail.com>
-Cc:     unlisted-recipients:; (no To-header on input) emamd001@umn.edu,
-        smccaman@umn.edu, kjlu@umn.edu,
-        Navid Emamdoost <navid.emamdoost@gmail.com>,
-        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        "David S. Miller" <davem@davemloft.net>,
+        Tue, 10 Sep 2019 15:04:51 -0400
+Received: by mail-wr1-f68.google.com with SMTP id l16so21725668wrv.12;
+        Tue, 10 Sep 2019 12:04:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=/hilQzsCJxKwP3iLZ8HzlKgy8yH9kb6fEFDV5ZKdCyE=;
+        b=guKxL0FnNLiU5TMDidgTSYgeuDCCp9r9hApW3wtyxtFScjHBwNUsnLsm6tbY6FDwTU
+         t/u6ZlTtchki5wWrmGjqydgbnJVG294aOW8R7AIuqm5Bs5KsHs3wl2T99FmZupA7VDCg
+         o0rxxL1oXw+Ri45p4uOBLTCt5GMjMfYHvHxVLajupEnJmLUrLAiwKh9bnKbrYIfBjYBx
+         6VvJkzNH7YWgmau1t/18BmxoxrWiWahHXK55ckcMydegZ7iwrbTXAlfVYOm9riF/dQkk
+         6gNcQydwC6SA9TgoL5a54gFvE7sWcMOBPCjOS0Gj3yCftaKtL2HpUMq/2Ll8s7UeZMQS
+         HgWA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=/hilQzsCJxKwP3iLZ8HzlKgy8yH9kb6fEFDV5ZKdCyE=;
+        b=Szp45FCjl0RcoC6iO247VrzOnGQ2N4AtQN0/3z/f44VQUyqchz+aOgpngQ1X/qRnt2
+         n80yAKEnkzqqMhuHsGe/+ZtSme0fqjT+FyLQTDeHyfXfossVw0dt9Yfs2XEH3M9reogG
+         b5SgdKGMxC8/4l+mly7MxSMaYSBmKRtOZr7WiYtQmwr8q01FYglE2kbOUhEUqoN240eB
+         UBDhQxhrcH8gENPsdsBpeZFhB1XJLiZWfOja5EhmCIFIlVkDthNT7Q0Jhh8xkU8cvjTI
+         Qlw4NH14vTFB/B66xb0TMAg+6bcjds/4r93CAm2FVYPuSDm8l908/VGPG71IU17aCcEY
+         aKNQ==
+X-Gm-Message-State: APjAAAWsl0ej9dmxc5LAxF3wJKELpFyZ3OY+Mcv5qCI36Cn+OcMlkbTW
+        s0T4YzBqiMP29wCnekJmuJk=
+X-Google-Smtp-Source: APXvYqziVqQ9ov3KhhvPUgg3puxHFUg4O/RuIwQstmHpmz5lZB8ZM3LWhklSgOXw5sYb+cS3M4JxRA==
+X-Received: by 2002:adf:f2cd:: with SMTP id d13mr26723957wrp.143.1568142289391;
+        Tue, 10 Sep 2019 12:04:49 -0700 (PDT)
+Received: from localhost.localdomain ([2a02:8108:96bf:e0ab:2b68:5d76:a12a:e6ba])
+        by smtp.gmail.com with ESMTPSA id w15sm14222967wru.53.2019.09.10.12.04.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 10 Sep 2019 12:04:48 -0700 (PDT)
+From:   Michael Straube <straube.linux@gmail.com>
+To:     kvalo@codeaurora.org
+Cc:     pkshih@realtek.com, davem@davemloft.net,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Illegal-Object: Syntax error in Cc: address found on vger.kernel.org:
-        Cc:     unlisted-recipients:; (no To-header on input)emamd001@umn.edu
-                                                                     ^-missing end of address
-User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20190910133212.2DAE3602F2@smtp.codeaurora.org>
-Date:   Tue, 10 Sep 2019 13:32:12 +0000 (UTC)
+        linux-kernel@vger.kernel.org,
+        Michael Straube <straube.linux@gmail.com>
+Subject: [PATCH 3/3] rtlwifi: rtl8192de: replace _rtl92d_evm_db_to_percentage with generic version
+Date:   Tue, 10 Sep 2019 21:04:22 +0200
+Message-Id: <20190910190422.63378-4-straube.linux@gmail.com>
+X-Mailer: git-send-email 2.23.0
+In-Reply-To: <20190910190422.63378-1-straube.linux@gmail.com>
+References: <20190910190422.63378-1-straube.linux@gmail.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Navid Emamdoost <navid.emamdoost@gmail.com> wrote:
+Function _rtl92d_evm_db_to_percentage is functionally identical
+to the generic version rtl_evm_db_to_percentage, so remove
+_rtl92d_evm_db_to_percentage and use the generic version instead.
 
-> In ath9k_wmi_cmd, the allocated network buffer needs to be released
-> if timeout happens. Otherwise memory will be leaked.
-> 
-> Signed-off-by: Navid Emamdoost <navid.emamdoost@gmail.com>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Signed-off-by: Michael Straube <straube.linux@gmail.com>
+---
+ .../wireless/realtek/rtlwifi/rtl8192de/trx.c   | 18 ++----------------
+ 1 file changed, 2 insertions(+), 16 deletions(-)
 
-Patch applied to ath-next branch of ath.git, thanks.
-
-728c1e2a05e4 ath9k: release allocated buffer if timed out
-
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/trx.c
+index d162884a9e00..2494e1f118f8 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/trx.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/trx.c
+@@ -4,6 +4,7 @@
+ #include "../wifi.h"
+ #include "../pci.h"
+ #include "../base.h"
++#include "../stats.h"
+ #include "reg.h"
+ #include "def.h"
+ #include "phy.h"
+@@ -32,21 +33,6 @@ static u8 _rtl92d_query_rxpwrpercentage(s8 antpower)
+ 		return 100 + antpower;
+ }
+ 
+-static u8 _rtl92d_evm_db_to_percentage(s8 value)
+-{
+-	s8 ret_val = value;
+-
+-	if (ret_val >= 0)
+-		ret_val = 0;
+-	if (ret_val <= -33)
+-		ret_val = -33;
+-	ret_val = 0 - ret_val;
+-	ret_val *= 3;
+-	if (ret_val == 99)
+-		ret_val = 100;
+-	return ret_val;
+-}
+-
+ static long _rtl92de_translate_todbm(struct ieee80211_hw *hw,
+ 				     u8 signal_strength_index)
+ {
+@@ -215,7 +201,7 @@ static void _rtl92de_query_rxphystatus(struct ieee80211_hw *hw,
+ 		else
+ 			max_spatial_stream = 1;
+ 		for (i = 0; i < max_spatial_stream; i++) {
+-			evm = _rtl92d_evm_db_to_percentage(p_drvinfo->rxevm[i]);
++			evm = rtl_evm_db_to_percentage(p_drvinfo->rxevm[i]);
+ 			if (packet_match_bssid) {
+ 				if (i == 0)
+ 					pstats->signalquality =
 -- 
-https://patchwork.kernel.org/patch/11135843/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.23.0
 
