@@ -2,90 +2,92 @@ Return-Path: <SRS0=RZjE=XF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0909C3A5A2
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Sep 2019 13:18:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D2CEC3A5A2
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Sep 2019 13:19:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C35A72084D
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Sep 2019 13:18:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EA5BE2084D
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Sep 2019 13:19:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="dJMKrYrP";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="AxfgXMXX"
+	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="hAkZVrtN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731542AbfIJNSp (ORCPT
+        id S1731929AbfIJNTh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 10 Sep 2019 09:18:45 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:35720 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726188AbfIJNSo (ORCPT
+        Tue, 10 Sep 2019 09:19:37 -0400
+Received: from mail2.candelatech.com ([208.74.158.173]:47282 "EHLO
+        mail3.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725935AbfIJNTg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Sep 2019 09:18:44 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id BC3BD60779; Tue, 10 Sep 2019 13:18:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1568121523;
-        bh=jxJ9F7I16sMuycArxBq68I5GFTjVQE3Aq0gdFEmzW+8=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=dJMKrYrPsnVD0KlTQ513TKRTS8nJ2RhpysNcy5fI3CJ2oBACQft5R2+f5tQUBK2N7
-         GPnCIYphd+ODMlNmpyADQsFGsGlf2Tn/aRVrfFgQGsw28CyMjPmgbDdtRZiPqsIS6B
-         bU0MAT22d9G9BkWZieZ5lXzWuCbb/v6vLS23/r30=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        Tue, 10 Sep 2019 09:19:36 -0400
+Received: from [192.168.1.47] (unknown [50.34.216.97])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 5BE6B602BC;
-        Tue, 10 Sep 2019 13:18:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1568121523;
-        bh=jxJ9F7I16sMuycArxBq68I5GFTjVQE3Aq0gdFEmzW+8=;
-        h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=AxfgXMXXNwiQAfzPzoymgkCNEOpocSRprTZrAQwqPnlumJqLFLutp+x/tJRg8CobR
-         cBYblKOwUOqeAqvY65fKVkFlMusAwWh+7Tp/yu3DqFD5VGPoPXm+iWxDfXklmFvLty
-         KvBFLvkl4UaTk8pNO96qR33q+rrQYHNZeDFdqh9M=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 5BE6B602BC
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
+        by mail3.candelatech.com (Postfix) with ESMTPSA id E33D8104F;
+        Tue, 10 Sep 2019 06:19:35 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com E33D8104F
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
+        s=default; t=1568121576;
+        bh=JA0ADspSHp+Rb9ZUh6KL1eOvy9wEnd+GKRwLsN5l5tU=;
+        h=Subject:To:References:Cc:From:Date:In-Reply-To:From;
+        b=hAkZVrtNED9+nz1OQPG0JOHHxBFuSA6fVubMJWh75oUuUf5016A4jDgBc+jy80Lj7
+         VCFCAJowTW0CCgUea42EpvdETf1sT6ySXqAEz8GxHEu03kvL3Hxtd5Rg/sqBPZRhGP
+         oYsqZK3uBbR3Vx+wVqrDJvX+c7ZO1ZSHylS03mMw=
+Subject: Re: [PATCH] ath10k: Free beacon buf later in vdev teardown.
+To:     Kalle Valo <kvalo@codeaurora.org>
+References: <20190227162756.13048-1-greearb@candelatech.com>
+ <20190910131244.267AF602F2@smtp.codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org
+From:   Ben Greear <greearb@candelatech.com>
+Message-ID: <89712e32-1fb2-f002-15ed-046871c161ce@candelatech.com>
+Date:   Tue, 10 Sep 2019 06:19:35 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:45.0) Gecko/20100101
+ Thunderbird/45.8.0
 MIME-Version: 1.0
+In-Reply-To: <20190910131244.267AF602F2@smtp.codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] ath10k: add mic bytes for pmf management packet
-From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1560757079-19266-1-git-send-email-wgong@codeaurora.org>
-References: <1560757079-19266-1-git-send-email-wgong@codeaurora.org>
-To:     Wen Gong <wgong@codeaurora.org>
-Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20190910131843.BC3BD60779@smtp.codeaurora.org>
-Date:   Tue, 10 Sep 2019 13:18:43 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Wen Gong <wgong@codeaurora.org> wrote:
 
-> For PMF case, the action,deauth,disassoc management need to encrypt
-> by hardware, it need to reserve 8 bytes for encryption, otherwise
-> the packet will be sent out with error format, then PMF case will
-> fail.
-> 
-> After add the 8 bytes, it will pass the PMF case.
-> 
-> Tested with QCA6174 SDIO with firmware
-> WLAN.RMH.4.4.1-00005-QCARMSWP-1.
-> 
-> Signed-off-by: Wen Gong <wgong@codeaurora.org>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-Patch applied to ath-next branch of ath.git, thanks.
+On 09/10/2019 06:12 AM, Kalle Valo wrote:
+> greearb@candelatech.com wrote:
+>
+>> My wave-1 firmware often crashes when I am bringing down
+>> AP vdevs, and sometimes at least some machines lockup hard
+>> after spewing IOMMU errors.
+>>
+>> I don't see the same issue in STA mode, so I suspect beacons
+>> are the issue.
+>>
+>> Moving the beacon buf deletion to later in the vdev teardown
+>> logic appears to help this problem.  Firmware still crashes
+>> often, but several iterations did not show IOMMU errors and
+>> machine didn't hang.
+>
+> I'm not really fond of fixing issues just by luck but after a quick look at the
+> code I can't see any harm in this change either. So I guess it's ok.
+>
+> But can you provide the exact hardware and firmware you used for testing, I'll
+> add it to the commit log. I want to document that in every commit:
 
-83ac260151e7 ath10k: add mic bytes for pmf management packet
+I used Compex WLE900VX hardware, and the firmware was ath10k-ct something or other,
+it has been a long time, so I don't recall the exact firmware version.
+
+The real fix for this is to have the firmware do proper beacon tx completion
+logic so that the driver can know when it can safely free buffers.  I implemented
+this in my ath10k-ct firmware/driver, but unless you want to start accepting patches for my
+firmware, then that will not help upstream ath10k.
+
+Thanks,
+Ben
 
 -- 
-https://patchwork.kernel.org/patch/10998135/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
-
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
