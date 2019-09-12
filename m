@@ -2,101 +2,94 @@ Return-Path: <SRS0=PXnU=XH=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.0 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C19D8C4CEC6
-	for <linux-wireless@archiver.kernel.org>; Thu, 12 Sep 2019 15:39:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F1C0C4CEC5
+	for <linux-wireless@archiver.kernel.org>; Thu, 12 Sep 2019 16:44:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 94E6C20578
-	for <linux-wireless@archiver.kernel.org>; Thu, 12 Sep 2019 15:39:35 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="hWmU42kr";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="cLPuYJok"
+	by mail.kernel.org (Postfix) with ESMTP id 6BD5420830
+	for <linux-wireless@archiver.kernel.org>; Thu, 12 Sep 2019 16:44:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733005AbfILPje (ORCPT
+        id S1732855AbfILQos (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 12 Sep 2019 11:39:34 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:59038 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732566AbfILPje (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Sep 2019 11:39:34 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 7A2296083E; Thu, 12 Sep 2019 15:39:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1568302773;
-        bh=hHHBTfNtzMKKd0mSltPpqrfqv6HJp7GitBCPceSZ6mc=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=hWmU42krLoUvkLK313LJ7Kr63UCkwnN8A4BRMCk1xse4rwVH9jHE/4rRAafH9+ZQy
-         xG5eTvVRFwE4S+ZTUoB49yG8samH64/WWj+Ahw7UmhQruGIAblv0MoKxnS9QYpxmH4
-         nlcV+3LUlCuk4eCL9PRTj1VgEcsNJpWgwqbEYGrw=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 848B16055A;
-        Thu, 12 Sep 2019 15:39:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1568302772;
-        bh=hHHBTfNtzMKKd0mSltPpqrfqv6HJp7GitBCPceSZ6mc=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=cLPuYJokIj+wsdj6tpwXTxDf/adYZnXXIlKzHid088HzjM0do1p0Q/gkP7ASE36+r
-         sYNihBu63AYsrrbr03+ro30377Ej6BvouZrAbcJ+IStiMAxVKRlKhNlOGU6oloVbK8
-         +qUpdlIOLHrdkxyZfO5EyvZPbdHvwJogZr8AiP/U=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 848B16055A
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Wen Gong <wgong@codeaurora.org>
-Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v5 0/8] ath10k: improve throughout of tcp/udp TX/RX of sdio
-References: <1567679893-14029-1-git-send-email-wgong@codeaurora.org>
-Date:   Thu, 12 Sep 2019 18:39:29 +0300
-In-Reply-To: <1567679893-14029-1-git-send-email-wgong@codeaurora.org> (Wen
-        Gong's message of "Thu, 5 Sep 2019 18:38:05 +0800")
-Message-ID: <87tv9hikwe.fsf@kamboji.qca.qualcomm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Thu, 12 Sep 2019 12:44:48 -0400
+Received: from szxga06-in.huawei.com ([45.249.212.32]:53340 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725972AbfILQor (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 12 Sep 2019 12:44:47 -0400
+Received: from DGGEMS401-HUB.china.huawei.com (unknown [172.30.72.59])
+        by Forcepoint Email with ESMTP id 542F2CD0AB34221E6235;
+        Fri, 13 Sep 2019 00:44:45 +0800 (CST)
+Received: from linux-ibm.site (10.175.102.37) by
+ DGGEMS401-HUB.china.huawei.com (10.3.19.201) with Microsoft SMTP Server id
+ 14.3.439.0; Fri, 13 Sep 2019 00:44:35 +0800
+From:   zhong jiang <zhongjiang@huawei.com>
+To:     <kvalo@codeaurora.org>
+CC:     <davem@davemloft.net>, <zhongjiang@huawei.com>,
+        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: [PATCH 3/3] libertas: Remove unneeded variable and make function to be void
+Date:   Fri, 13 Sep 2019 00:41:32 +0800
+Message-ID: <1568306492-42998-4-git-send-email-zhongjiang@huawei.com>
+X-Mailer: git-send-email 1.7.12.4
+In-Reply-To: <1568306492-42998-1-git-send-email-zhongjiang@huawei.com>
+References: <1568306492-42998-1-git-send-email-zhongjiang@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain
+X-Originating-IP: [10.175.102.37]
+X-CFilter-Loop: Reflected
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Wen Gong <wgong@codeaurora.org> writes:
+lbs_process_event  do not need return value to cope with different
+cases. And change functon return type to void.
 
-> The bottleneck of throughout on sdio chip is the bus bandwidth, to the
-> patches are all to increase the use ratio of sdio bus.
->
->                       udp-rx    udp-tx    tcp-rx    tcp-tx
-> without patches(Mbps)  320        180       170       151
-> with patches(Mbps)     450        410       400       320
->
-> These patches only affect sdio bus chip, explanation is mentioned in each
-> patch's commit log.
+Signed-off-by: zhong jiang <zhongjiang@huawei.com>
+---
+ drivers/net/wireless/marvell/libertas/cmd.h     | 2 +-
+ drivers/net/wireless/marvell/libertas/cmdresp.c | 5 +----
+ 2 files changed, 2 insertions(+), 5 deletions(-)
 
-I tried to apply patches 2-8, patch 2 had a conflict due to my changes
-and patch 8 didn't apply at all. Also I saw few warnings with the
-patches I was able to test:
-
-$ ath10k-check
-drivers/net/wireless/ath/ath10k/htc.c: In function 'ath10k_htc_bundle_tx_work':
-drivers/net/wireless/ath/ath10k/htc.c:796:24: warning: variable 'eid' set but not used [-Wunused-but-set-variable]
-drivers/net/wireless/ath/ath10k/sdio.c:2169:6: warning: no previous prototype for 'ath10k_sdio_check_fw_reg' [-Wmissing-prototypes]
-drivers/net/wireless/ath/ath10k/sdio.c: In function 'ath10k_sdio_check_fw_reg':
-drivers/net/wireless/ath/ath10k/sdio.c:2171:6: warning: variable 'ret' set but not used [-Wunused-but-set-variable]
-drivers/net/wireless/ath/ath10k/sdio.c: In function 'ath10k_sdio_fw_crashed_dump':
-drivers/net/wireless/ath/ath10k/sdio.c:2434:17: warning: too many arguments for format [-Wformat-extra-args]
-drivers/net/wireless/ath/ath10k/sdio.c:2169:6: warning: symbol 'ath10k_sdio_check_fw_reg' was not declared. Should it be static?
-drivers/net/wireless/ath/ath10k/sdio.c: In function 'ath10k_sdio_fw_crashed_dump':
-drivers/net/wireless/ath/ath10k/sdio.c:2434:17: warning: too many arguments for format [-Wformat-extra-args]
-drivers/net/wireless/ath/ath10k/sdio.c:734: braces {} are not necessary for single statement blocks
-drivers/net/wireless/ath/ath10k/sdio.c:969: braces {} are not necessary for single statement blocks
-
-But please don't send a new version until I have provided review
-comments.
-
+diff --git a/drivers/net/wireless/marvell/libertas/cmd.h b/drivers/net/wireless/marvell/libertas/cmd.h
+index 8087856..3c19307 100644
+--- a/drivers/net/wireless/marvell/libertas/cmd.h
++++ b/drivers/net/wireless/marvell/libertas/cmd.h
+@@ -76,7 +76,7 @@ void lbs_mac_event_disconnected(struct lbs_private *priv,
+ 
+ /* Events */
+ 
+-int lbs_process_event(struct lbs_private *priv, u32 event);
++void lbs_process_event(struct lbs_private *priv, u32 event);
+ 
+ 
+ /* Actual commands */
+diff --git a/drivers/net/wireless/marvell/libertas/cmdresp.c b/drivers/net/wireless/marvell/libertas/cmdresp.c
+index b73d083..cb515c5 100644
+--- a/drivers/net/wireless/marvell/libertas/cmdresp.c
++++ b/drivers/net/wireless/marvell/libertas/cmdresp.c
+@@ -220,9 +220,8 @@ int lbs_process_command_response(struct lbs_private *priv, u8 *data, u32 len)
+ 	return ret;
+ }
+ 
+-int lbs_process_event(struct lbs_private *priv, u32 event)
++void lbs_process_event(struct lbs_private *priv, u32 event)
+ {
+-	int ret = 0;
+ 	struct cmd_header cmd;
+ 
+ 	switch (event) {
+@@ -351,6 +350,4 @@ int lbs_process_event(struct lbs_private *priv, u32 event)
+ 		netdev_alert(priv->dev, "EVENT: unknown event id %d\n", event);
+ 		break;
+ 	}
+-
+-	return ret;
+ }
 -- 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+1.7.12.4
+
