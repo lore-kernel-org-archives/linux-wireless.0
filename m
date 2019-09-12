@@ -2,68 +2,78 @@ Return-Path: <SRS0=PXnU=XH=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.0 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA11AC49ED6
-	for <linux-wireless@archiver.kernel.org>; Thu, 12 Sep 2019 01:18:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3E88C49ED9
+	for <linux-wireless@archiver.kernel.org>; Thu, 12 Sep 2019 06:39:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7F3142082C
-	for <linux-wireless@archiver.kernel.org>; Thu, 12 Sep 2019 01:18:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CC6922075C
+	for <linux-wireless@archiver.kernel.org>; Thu, 12 Sep 2019 06:39:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728080AbfILBSm (ORCPT
+        id S1729032AbfILGjm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 11 Sep 2019 21:18:42 -0400
-Received: from aibo.runbox.com ([91.220.196.211]:60602 "EHLO aibo.runbox.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727020AbfILBSm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Sep 2019 21:18:42 -0400
-X-Greylist: delayed 2956 seconds by postgrey-1.27 at vger.kernel.org; Wed, 11 Sep 2019 21:18:41 EDT
-Received: from [10.9.9.204] (helo=mailfront22.runbox)
-        by mailtransmit03.runbox with esmtp (Exim 4.86_2)
-        (envelope-from <davep@mbuf.com>)
-        id 1i8CzC-0006nc-A0; Thu, 12 Sep 2019 02:29:22 +0200
-Received: by mailfront22.runbox with esmtpsa  [Authenticated alias (644123)]  (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.90_1)
-        id 1i8Cz2-00013c-LM; Thu, 12 Sep 2019 02:29:13 +0200
-Message-ID: <7753f3cd252b35dfa45c921e330fd98192230fe7.camel@mbuf.com>
-Subject: Re: Question on Intel AX200
-From:   David Poole <davep@mbuf.com>
-To:     Ben Greear <greearb@candelatech.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date:   Wed, 11 Sep 2019 18:29:09 -0600
-In-Reply-To: <33bd9a39-0028-2f99-f43e-5e15c9e87287@candelatech.com>
-References: <33bd9a39-0028-2f99-f43e-5e15c9e87287@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.32.4 (3.32.4-1.fc30) 
+        Thu, 12 Sep 2019 02:39:42 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:41620 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725765AbfILGjl (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 12 Sep 2019 02:39:41 -0400
+Authenticated-By: 
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x8C6dMVp009945, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (RTITCASV01.realtek.com.tw[172.21.6.18])
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x8C6dMVp009945
+        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
+        Thu, 12 Sep 2019 14:39:23 +0800
+Received: from localhost.localdomain (172.21.68.126) by
+ RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
+ 14.3.468.0; Thu, 12 Sep 2019 14:39:22 +0800
+From:   <yhchuang@realtek.com>
+To:     <kvalo@codeaurora.org>
+CC:     <linux-wireless@vger.kernel.org>, <briannorris@chromium.org>
+Subject: [PATCH 1/2] rtw88: fix wrong rx power calculation
+Date:   Thu, 12 Sep 2019 14:39:14 +0800
+Message-ID: <1568270355-29727-2-git-send-email-yhchuang@realtek.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1568270355-29727-1-git-send-email-yhchuang@realtek.com>
+References: <1568270355-29727-1-git-send-email-yhchuang@realtek.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-Originating-IP: [172.21.68.126]
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, 2019-09-11 at 06:49 -0700, Ben Greear wrote:
-> Hello,
-> 
-> Does anyone know how well AX200 currently supports:
-> 
-> OFDMA
-> 
-> MU-MIMO (receiver)
-> 
-> AP Mode
-> 
-> And, can anyone suggest a good /AX AP to test against for these
-> features?
-> 
-> Thanks,
-> Ben
-> 
+From: Tsang-Shian Lin <thlin@realtek.com>
 
-On the AP Mode side, we have a few AX200 PCIe cards. I've been working
-to get AP mode working with hostpad. Device says supports AP mode but
-I'm hitting some issues with regulatory domains (channel EINVAL).
+Fix the wrong RF path for CCK rx power calculation.
 
+Fixes: e3037485c68e ("rtw88: new Realtek 802.11ac driver")
+Signed-off-by: Tsang-Shian Lin <thlin@realtek.com>
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw88/rtw8822c.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+index 207f64c..24b27bc 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+@@ -1620,9 +1620,9 @@ static void query_phy_status_page0(struct rtw_dev *rtwdev, u8 *phy_status,
+ 	else if (gain_a > u_bnd)
+ 		rx_power[RF_PATH_A] -= (gain_a - u_bnd) << 1;
+ 	if (gain_b < l_bnd)
+-		rx_power[RF_PATH_A] += (l_bnd - gain_b) << 1;
++		rx_power[RF_PATH_B] += (l_bnd - gain_b) << 1;
+ 	else if (gain_b > u_bnd)
+-		rx_power[RF_PATH_A] -= (gain_b - u_bnd) << 1;
++		rx_power[RF_PATH_B] -= (gain_b - u_bnd) << 1;
+ 
+ 	rx_power[RF_PATH_A] -= 110;
+ 	rx_power[RF_PATH_B] -= 110;
+-- 
+2.7.4
 
