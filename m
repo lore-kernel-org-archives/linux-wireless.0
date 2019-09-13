@@ -2,101 +2,87 @@ Return-Path: <SRS0=I2fZ=XI=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4CA7C49ED7
-	for <linux-wireless@archiver.kernel.org>; Fri, 13 Sep 2019 12:42:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A398C49ED7
+	for <linux-wireless@archiver.kernel.org>; Fri, 13 Sep 2019 13:37:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8354B20830
-	for <linux-wireless@archiver.kernel.org>; Fri, 13 Sep 2019 12:42:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6129620717
+	for <linux-wireless@archiver.kernel.org>; Fri, 13 Sep 2019 13:37:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="eX4A9h5v";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="DjsHxB8G"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="FN6AbRao";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Kf384DT0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729801AbfIMMmJ (ORCPT
+        id S2388707AbfIMNhy (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 13 Sep 2019 08:42:09 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:60426 "EHLO
+        Fri, 13 Sep 2019 09:37:54 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:56944 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726771AbfIMMmJ (ORCPT
+        with ESMTP id S2387584AbfIMNhx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Sep 2019 08:42:09 -0400
+        Fri, 13 Sep 2019 09:37:53 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 328FB6083E; Fri, 13 Sep 2019 12:42:08 +0000 (UTC)
+        id BDA7760767; Fri, 13 Sep 2019 13:37:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1568378528;
-        bh=3JyKM7QLNfs8cE2S9rwNkGLcRkTSx0TOHJc5XmhFRRA=;
-        h=From:To:Cc:Subject:Date:From;
-        b=eX4A9h5v+uLyjQAR3m16An0QFtmIFr2ubNaDgOUg+ymsjmmwfC4DklOLapgp8V6Z6
-         BTJdhEauosKhoUW9nRJVIuCmV+pchkCEuy9NuUk73fus1/bi+rdTpbHMv9txUPMb/C
-         qZEPOn2Zt3KlYcmf0Nxx3B0GZ0eo6TPKiLTUA8B8=
-Received: from usdutt-linux.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        s=default; t=1568381872;
+        bh=IISeWQxNAdCObwP9mJjaExic+PQ/4Av37VV7Ya2x/YM=;
+        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+        b=FN6AbRaoI/KGMGj0HLNzg2KWAdrlZOGMbfVpz8oxQ+rXbglOwuksxtXfoEv0q6Nhc
+         7rpPE3QyP2y2weTMI5/8at9+VonrFn0IFFVEL21C+K9kpg2S4HDvPymfYVR7xesGqr
+         iH8JNxNG8L8ZFcu/yBcDvXnBStU2sXHu0a/lMIX8=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: usdutt@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 72ABF60767;
-        Fri, 13 Sep 2019 12:42:06 +0000 (UTC)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id E8686601C3;
+        Fri, 13 Sep 2019 13:37:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1568378527;
-        bh=3JyKM7QLNfs8cE2S9rwNkGLcRkTSx0TOHJc5XmhFRRA=;
-        h=From:To:Cc:Subject:Date:From;
-        b=DjsHxB8GfEdaXpgeX6aPLh+PuznHFnOGppqg3LN1laQQuPJ1t6kV4PZsaKSDK5AV4
-         7i8s8/yshdnrHcdR9LI6wOAt6A9QnZQZjfvIMzlv8fZxrsm2QPFiegPSDIWq6kxH/1
-         2OplAxKAfAmO1Bp2GXmxN6f/drGrkFnwdUSnWNGU=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 72ABF60767
+        s=default; t=1568381872;
+        bh=IISeWQxNAdCObwP9mJjaExic+PQ/4Av37VV7Ya2x/YM=;
+        h=Subject:From:In-Reply-To:References:To:Cc:From;
+        b=Kf384DT0b91WwyV904MdaAgk3pq8OvtjEOKdoLdqIf/olHRzwCjgaZBUlJKimrrD5
+         rucfghzCrEjencpdiisW0jbMVZpumk+kwmoNl/YUIPrni3J5n77r9Rtm4lm3cKoH+T
+         sh/Evla47IOLKBw1t1+ocXNjpnhUMQ1z6rIN+CNQ=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org E8686601C3
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=usdutt@codeaurora.org
-From:   Sunil Dutt <usdutt@codeaurora.org>
-To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org, Sunil Dutt <usdutt@codeaurora.org>
-Subject: [PATCH] nl80211: Document the expectation for NL80211_ATTR_IE in NL80211_CMD_CONNECT
-Date:   Fri, 13 Sep 2019 18:11:44 +0530
-Message-Id: <1568378504-15179-1-git-send-email-usdutt@codeaurora.org>
-X-Mailer: git-send-email 1.9.1
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH 1/3] brcmsmac: Remove unneeded variable and make function
+ to be void
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1568306492-42998-2-git-send-email-zhongjiang@huawei.com>
+References: <1568306492-42998-2-git-send-email-zhongjiang@huawei.com>
+To:     zhong jiang <zhongjiang@huawei.com>
+Cc:     <davem@davemloft.net>, <zhongjiang@huawei.com>,
+        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
+Message-Id: <20190913133752.BDA7760767@smtp.codeaurora.org>
+Date:   Fri, 13 Sep 2019 13:37:52 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This commit documents the expectation for NL80211_ATTR_IE when included
-in NL80211_CMD_CONNECT, as following.
+zhong jiang <zhongjiang@huawei.com> wrote:
 
-Driver shall not modify the IEs specified through NL80211_ATTR_IE if
-NL80211_ATTR_MAC is included. However, if NL80211_ATTR_MAC_HINT is
-included, these IEs through NL80211_ATTR_IE are specified by the user
-space based on the best possible BSS selected. Thus, if the driver ends
-up selecting a different BSS, it can modify these IEs accordingly (e.g.
-userspace asks the driver to perform PMKSA caching with BSS1 and the
-driver ends up selecting BSS2 with different PMKSA cache entry. RSNIE
-has to get updated with the apt PMKID).
+> brcms_c_set_mac  do not need return value to cope with different
+> cases. And change functon return type to void.
+> 
+> Signed-off-by: zhong jiang <zhongjiang@huawei.com>
 
-Signed-off-by: Sunil Dutt <usdutt@codeaurora.org>
----
- include/uapi/linux/nl80211.h | 8 ++++++++
- 1 file changed, 8 insertions(+)
+I just don't see the benefit from changing the function to return void.
+And if we ever add error handling to the function we need to change it
+back to return int again, which is extra work.
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index beee59c..325aaf1 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -571,6 +571,14 @@
-  *	set of BSSID,frequency parameters is used (i.e., either the enforcing
-  *	%NL80211_ATTR_MAC,%NL80211_ATTR_WIPHY_FREQ or the less strict
-  *	%NL80211_ATTR_MAC_HINT and %NL80211_ATTR_WIPHY_FREQ_HINT).
-+ *	Driver shall not modify the IEs specified through %NL80211_ATTR_IE if
-+ *	%NL80211_ATTR_MAC is included. However, if %NL80211_ATTR_MAC_HINT is
-+ *	included, these IEs through %NL80211_ATTR_IE are specified by the user
-+ *	space based on the best possible BSS selected. Thus, if the driver ends
-+ *	up selecting a different BSS, it can modify these IEs accordingly (e.g.
-+ *	userspace asks the driver to perform PMKSA caching with BSS1 and the
-+ *	driver ends up selecting BSS2 with different PMKSA cache entry. RSNIE
-+ *	has to get updated with the apt PMKID).
-  *	%NL80211_ATTR_PREV_BSSID can be used to request a reassociation within
-  *	the ESS in case the device is already associated and an association with
-  *	a different BSS is desired.
+Patch set to Rejected.
+
 -- 
-1.9.1
+https://patchwork.kernel.org/patch/11143403/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
