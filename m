@@ -6,35 +6,35 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B18B9C4CECF
-	for <linux-wireless@archiver.kernel.org>; Mon, 16 Sep 2019 07:04:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A4CEC4CEC7
+	for <linux-wireless@archiver.kernel.org>; Mon, 16 Sep 2019 07:04:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 88A5720890
-	for <linux-wireless@archiver.kernel.org>; Mon, 16 Sep 2019 07:04:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E50892067D
+	for <linux-wireless@archiver.kernel.org>; Mon, 16 Sep 2019 07:04:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730203AbfIPHD6 (ORCPT
+        id S1730272AbfIPHED (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 16 Sep 2019 03:03:58 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:60331 "EHLO
+        Mon, 16 Sep 2019 03:04:03 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:60347 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726946AbfIPHD5 (ORCPT
+        with ESMTP id S1730241AbfIPHEB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Sep 2019 03:03:57 -0400
+        Mon, 16 Sep 2019 03:04:01 -0400
 Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x8G73q9k029963, This message is accepted by code: ctloc85258
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x8G73thg029988, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (RTITCASV01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x8G73q9k029963
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x8G73thg029988
         (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
-        Mon, 16 Sep 2019 15:03:52 +0800
+        Mon, 16 Sep 2019 15:03:56 +0800
 Received: from localhost.localdomain (172.21.68.126) by
  RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
- 14.3.468.0; Mon, 16 Sep 2019 15:03:51 +0800
+ 14.3.468.0; Mon, 16 Sep 2019 15:03:55 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>, <briannorris@chromium.org>
-Subject: [PATCH 03/15] rtw88: pci: reset H2C queue indexes in a single write
-Date:   Mon, 16 Sep 2019 15:03:33 +0800
-Message-ID: <1568617425-28062-4-git-send-email-yhchuang@realtek.com>
+Subject: [PATCH 08/15] rtw88: remove unused lps state check helper
+Date:   Mon, 16 Sep 2019 15:03:38 +0800
+Message-ID: <1568617425-28062-9-git-send-email-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1568617425-28062-1-git-send-email-yhchuang@realtek.com>
 References: <1568617425-28062-1-git-send-email-yhchuang@realtek.com>
@@ -48,37 +48,41 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-If the driver doesn't reset the host's and device's indexes
-in a single write, the indexes will become different in a
-short period. And it will confuse the DMA engine, make it
-start to process non-existed entries.
-
-Better to Write-1-to-reset the indexes, for the DMA engine
-to know that this is a reset of the H2C queue, not a kick
-off.
+This is no more used, remove it.
 
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/pci.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/realtek/rtw88/ps.c | 5 -----
+ drivers/net/wireless/realtek/rtw88/ps.h | 1 -
+ 2 files changed, 6 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/pci.c b/drivers/net/wireless/realtek/rtw88/pci.c
-index 3fdb52a..9cc068a 100644
---- a/drivers/net/wireless/realtek/rtw88/pci.c
-+++ b/drivers/net/wireless/realtek/rtw88/pci.c
-@@ -441,9 +441,9 @@ static void rtw_pci_reset_buf_desc(struct rtw_dev *rtwdev)
- 	/* reset read/write point */
- 	rtw_write32(rtwdev, RTK_PCI_TXBD_RWPTR_CLR, 0xffffffff);
- 
--	/* rest H2C Queue index */
--	rtw_write32_set(rtwdev, RTK_PCI_TXBD_H2CQ_CSR, BIT_CLR_H2CQ_HOST_IDX);
--	rtw_write32_set(rtwdev, RTK_PCI_TXBD_H2CQ_CSR, BIT_CLR_H2CQ_HW_IDX);
-+	/* reset H2C Queue index in a single write */
-+	rtw_write32_set(rtwdev, RTK_PCI_TXBD_H2CQ_CSR,
-+			BIT_CLR_H2CQ_HOST_IDX | BIT_CLR_H2CQ_HW_IDX);
+diff --git a/drivers/net/wireless/realtek/rtw88/ps.c b/drivers/net/wireless/realtek/rtw88/ps.c
+index a154177..d57996e 100644
+--- a/drivers/net/wireless/realtek/rtw88/ps.c
++++ b/drivers/net/wireless/realtek/rtw88/ps.c
+@@ -91,11 +91,6 @@ static void rtw_enter_lps_core(struct rtw_dev *rtwdev)
+ 	set_bit(RTW_FLAG_LEISURE_PS, rtwdev->flags);
  }
  
- static void rtw_pci_reset_trx_ring(struct rtw_dev *rtwdev)
+-bool rtw_in_lps(struct rtw_dev *rtwdev)
+-{
+-	return test_bit(RTW_FLAG_LEISURE_PS, rtwdev->flags);
+-}
+-
+ void rtw_enter_lps(struct rtw_dev *rtwdev, u8 port_id)
+ {
+ 	struct rtw_lps_conf *conf = &rtwdev->lps_conf;
+diff --git a/drivers/net/wireless/realtek/rtw88/ps.h b/drivers/net/wireless/realtek/rtw88/ps.h
+index d2aae61..5aed11b 100644
+--- a/drivers/net/wireless/realtek/rtw88/ps.h
++++ b/drivers/net/wireless/realtek/rtw88/ps.h
+@@ -12,6 +12,5 @@ int rtw_leave_ips(struct rtw_dev *rtwdev);
+ 
+ void rtw_enter_lps(struct rtw_dev *rtwdev, u8 port_id);
+ void rtw_leave_lps(struct rtw_dev *rtwdev);
+-bool rtw_in_lps(struct rtw_dev *rtwdev);
+ 
+ #endif
 -- 
 2.7.4
 
