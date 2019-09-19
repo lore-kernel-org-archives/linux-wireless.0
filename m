@@ -2,84 +2,92 @@ Return-Path: <SRS0=v6pW=XO=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B61A2C3A5A6
-	for <linux-wireless@archiver.kernel.org>; Thu, 19 Sep 2019 18:18:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 93501C3A5A6
+	for <linux-wireless@archiver.kernel.org>; Thu, 19 Sep 2019 18:58:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 88F8921928
-	for <linux-wireless@archiver.kernel.org>; Thu, 19 Sep 2019 18:18:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 65DAE21907
+	for <linux-wireless@archiver.kernel.org>; Thu, 19 Sep 2019 18:58:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UeazCZMG"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="OK/yCCcw";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="AHauwgH4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732583AbfISSSY (ORCPT
+        id S2392139AbfISS6o (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 19 Sep 2019 14:18:24 -0400
-Received: from mail-io1-f42.google.com ([209.85.166.42]:40495 "EHLO
-        mail-io1-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732578AbfISSSY (ORCPT
+        Thu, 19 Sep 2019 14:58:44 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:45644 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388943AbfISS6o (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Sep 2019 14:18:24 -0400
-Received: by mail-io1-f42.google.com with SMTP id h144so10004789iof.7
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Sep 2019 11:18:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=ahligibXiJhNWBTuy+o9QiP7Cz5qoO2HoJkp8A3bcZk=;
-        b=UeazCZMG6znxqqDbIjAEXzYjQoUqaFMi5Yle6YG0oV4XjWz0wBzo0PL9AK9W7dD3+Y
-         x37jDBwZPmYficI5qnO25HYtorgThbSwWlz+ZJArqobZhH9IXE+DRhYF1mgm3UkBREPT
-         G0P2GVrw5Vi583MqUt/JiYGwbwg46SXrkzC4xNpxC+94QgS9ux0e2k3/bXnBtT1eET2F
-         9MYbNnUd2JkFLd8eOpBYnBw/hsJWD7zVo0gCMloOPJ8jErIz+eOk0rHTOn4Y5YzFGvUq
-         yxMbZMFv8zt7FV3hrZvjVCswnfkYBic0A3nNtEOpEI08kZGo64Opumt8cQJPUgUgQOqC
-         K7YA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=ahligibXiJhNWBTuy+o9QiP7Cz5qoO2HoJkp8A3bcZk=;
-        b=olsIJ2Md4w2ae+x7qd35v5IZQ86B6XvMSfDrjYnosy3NL8nX4hZieP4gzlo2JCB0fh
-         3Z31KuOrEpaz/3usmuuKQx/iIQb3YY+osDKdWm1hpPYdF3xBiTnU/T2fGmYTi93/HW8t
-         +P0yJx3ExTFDioE5S7Kgghb5mq0SXBvsfGsYTWkikyP95ZCWy7HIDz15PgM/RL3MipEU
-         4GgYKMjAcOcl6BtTPjhtMy8ax2QQQmlIA/MhhohIhbdD4GHa8zAySlQxeV77mQenK9aC
-         FR2UBdrSm8uDhypoZ9NhPOwcoxQrhPuqWIKPJ3nS6k8QDYaeYtRM95yCxFbXAmmFLn/J
-         V/1g==
-X-Gm-Message-State: APjAAAUtEy8APnUGASx8T8na0BIWpw5rM8XWEcfjJlDDmXVDdqeGOlz3
-        ahoLUSXBxSTmTNhTkf11FRbHywCB+XUh6Nk+eeM=
-X-Google-Smtp-Source: APXvYqyR7oiJFqJ7SwTF5dfuPR0vrfX4sD+D2XDjjXPbGC1xu89OBLxAm08rEDsrO+Nc7rZrC2iFUQyK3Rf0+wlm+Sk=
-X-Received: by 2002:a6b:3705:: with SMTP id e5mr8990417ioa.213.1568917103551;
- Thu, 19 Sep 2019 11:18:23 -0700 (PDT)
+        Thu, 19 Sep 2019 14:58:44 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id A308B61359; Thu, 19 Sep 2019 18:58:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1568919523;
+        bh=dG5mX7JocLh9XxgA0NIIRz0EESmdoJCFsaJgQeol7TQ=;
+        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+        b=OK/yCCcwGc705IIGsc+QSEdJJ3WbUVkglffVybDjj4AoB6vjJkJIroHD+crczKK9W
+         JLJsCISrkTxpnXvUUlabJZOOGBoy5yDEzC1gndUb9tmXDdhxn37IQRlQqDMRMnRUFh
+         bCnnC2sF047s03HleMmYLx0m8WsfTyllo2YzBtr8=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id A4EAF6118C;
+        Thu, 19 Sep 2019 18:58:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1568919523;
+        bh=dG5mX7JocLh9XxgA0NIIRz0EESmdoJCFsaJgQeol7TQ=;
+        h=Subject:From:In-Reply-To:References:To:Cc:From;
+        b=AHauwgH40KXnT1k65Qih2u1feqKXZEskZTFRXKteamMVr8fa6sruhCg3dQiX0OfYW
+         9cJgZ+1deWsg1WU8V5zifc1RDgg4jAbJZhyPytzneWafupMVpWzVK5uF+Mjt+wLKTc
+         9BixhHde1CMmbBTsahgQNFGG28TaLDl9rGMngyaU=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org A4EAF6118C
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-References: <156889576422.191202.5906619710809654631.stgit@alrua-x1>
- <156889576869.191202.510507546538322707.stgit@alrua-x1> <f21b10fd-02ae-af59-8e2f-88f654627ab3@eero.com>
- <879913e9-4254-1381-07f6-d860fb0b8de0@candelatech.com> <f9b224a0-305f-9715-f627-7a5fae0988d3@eero.com>
- <df105ac6-833b-4a22-9ecc-484513a2eb9c@eero.com>
-In-Reply-To: <df105ac6-833b-4a22-9ecc-484513a2eb9c@eero.com>
-From:   Dave Taht <dave.taht@gmail.com>
-Date:   Thu, 19 Sep 2019 11:18:11 -0700
-Message-ID: <CAA93jw4F4vuXdWOne_A=h6x-ERMshw5B5UqxU1-ZrnD74nAavw@mail.gmail.com>
-Subject: Re: [Make-wifi-fast] [PATCH RFC/RFT 4/4] mac80211: Apply
- Airtime-based Queue Limit (AQL) on packet dequeue
-To:     Peter Oh <peter.oh@eero.com>
-Cc:     Ben Greear <greearb@candelatech.com>,
-        =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@redhat.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Make-Wifi-fast <make-wifi-fast@lists.bufferbloat.net>,
-        Lorenzo Bianconi <lorenzo@kernel.org>,
-        Felix Fietkau <nbd@nbd.name>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        John Crispin <john@phrozen.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH v5.4] iwlwifi: mvm: fix build w/o CONFIG_THERMAL
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20190918134903.10103-1-luca@coelho.fi>
+References: <20190918134903.10103-1-luca@coelho.fi>
+To:     Luca Coelho <luca@coelho.fi>
+Cc:     linux-wireless@vger.kernel.org
+User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
+Message-Id: <20190919185843.A308B61359@smtp.codeaurora.org>
+Date:   Thu, 19 Sep 2019 18:58:43 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-For the record, this was the google report on their implementation in 3.18.
+Luca Coelho <luca@coelho.fi> wrote:
 
-http://flent-newark.bufferbloat.net/~d/Airtime%20based%20queue%20limit%20for%20FQ_CoDel%20in%20wireless%20interface.pdf
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> Without CONFIG_THERMAL, the driver fails to link as it calls
+> iwl_mvm_send_temp_report_ths_cmd() unconditionally. Fix this
+> by making that function available, but do almost nothing but
+> send the empty firmware command to enable CT-kill reporting.
+> 
+> While at it, also fix that function itself to not error out
+> when the thermal zone hasn't been initialized, but instead
+> just send the empty firmware command in this case as well.
+> 
+> Fixes: 242d9c8b9a93 ("iwlwifi: mvm: use FW thermal monitoring regardless of CONFIG_THERMAL")
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 
-The latency vs RvR graphs at the end were to die for.
+Patch applied to wireless-drivers.git, thanks.
+
+2d88b2cf2f00 iwlwifi: mvm: fix build w/o CONFIG_THERMAL
+
+-- 
+https://patchwork.kernel.org/patch/11150431/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+
