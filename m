@@ -2,112 +2,75 @@ Return-Path: <SRS0=+Ljc=XP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65C3CC49ED7
-	for <linux-wireless@archiver.kernel.org>; Fri, 20 Sep 2019 12:45:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09CC6C4CECD
+	for <linux-wireless@archiver.kernel.org>; Fri, 20 Sep 2019 12:54:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 389432086A
-	for <linux-wireless@archiver.kernel.org>; Fri, 20 Sep 2019 12:45:07 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="FuC3zhZg";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="P0LswFBt"
+	by mail.kernel.org (Postfix) with ESMTP id DE9E62073F
+	for <linux-wireless@archiver.kernel.org>; Fri, 20 Sep 2019 12:54:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726150AbfITMpG (ORCPT
+        id S1726677AbfITMyU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 20 Sep 2019 08:45:06 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:48806 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725922AbfITMpG (ORCPT
+        Fri, 20 Sep 2019 08:54:20 -0400
+Received: from youngberry.canonical.com ([91.189.89.112]:48254 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726527AbfITMyU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Sep 2019 08:45:06 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id E59256141B; Fri, 20 Sep 2019 12:45:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1568983504;
-        bh=vGllR88P9hEZE+i0twWfEPOok8AM3MexNj8GcIjzAwQ=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=FuC3zhZgA2QjEAFiqt/D0exGT9WWA7mGL2uoFj1D5Tdf+9Q7RdZ9l0sA5uGA0pLMK
-         TUL1GE6z6xcfP9M0UfE0+RNsZRlGxzEx9ndMl3l0gdKVCXI2uMKIQsnMxXP6Jk3/Xb
-         grtMuM7LoNLFw262qq8soPMl/3XHXb7RLq2e10ek=
-Received: from x230.qca.qualcomm.com (37-136-106-186.rev.dnainternet.fi [37.136.106.186])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 40B5060A60;
-        Fri, 20 Sep 2019 12:45:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1568983503;
-        bh=vGllR88P9hEZE+i0twWfEPOok8AM3MexNj8GcIjzAwQ=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=P0LswFBtKy4swZy+f/Wrw2EiCFXrPZoNu4pDPpFDSWs3AC9zv4ewGfpSNzXEkbucx
-         yF+0YQIqLPTKAceL67pBakc/y8jC0C9dZrWyW1Rwuhk2J5N1JjJ4SSYEYtTc9vvtP9
-         nusCYOBBBOG2jWXInjahLKYEpnEJ2KV06isaiU0w=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 40B5060A60
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Wen Gong <wgong@qti.qualcomm.com>
-Cc:     Wen Gong <wgong@codeaurora.org>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k\@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH v5 0/8] ath10k: improve throughout of tcp/udp TX/RX of sdio
-References: <1567679893-14029-1-git-send-email-wgong@codeaurora.org>
-        <87tv9hikwe.fsf@kamboji.qca.qualcomm.com>
-        <87d0g5h07v.fsf@kamboji.qca.qualcomm.com>
-        <1568346854209.29270@qti.qualcomm.com>
-Date:   Fri, 20 Sep 2019 15:44:59 +0300
-In-Reply-To: <1568346854209.29270@qti.qualcomm.com> (Wen Gong's message of
-        "Fri, 13 Sep 2019 03:54:14 +0000")
-Message-ID: <87tv97b0hg.fsf@codeaurora.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Fri, 20 Sep 2019 08:54:20 -0400
+Received: from 1.general.cking.uk.vpn ([10.172.193.212] helo=localhost)
+        by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.86_2)
+        (envelope-from <colin.king@canonical.com>)
+        id 1iBIQQ-0008PS-Q7; Fri, 20 Sep 2019 12:54:14 +0000
+From:   Colin King <colin.king@canonical.com>
+To:     Jakub Kicinski <kubakici@wp.pl>, Kalle Valo <kvalo@codeaurora.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] mt7601u: phy: simplify zero check on val
+Date:   Fri, 20 Sep 2019 14:54:14 +0200
+Message-Id: <20190920125414.15507-1-colin.king@canonical.com>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Wen Gong <wgong@qti.qualcomm.com> writes:
+From: Colin Ian King <colin.king@canonical.com>
 
->>>> The bottleneck of throughout on sdio chip is the bus bandwidth, to the
->>>>patches are all to increase the use ratio of sdio bus.
->
->>> I tried to apply patches 2-8, patch 2 had a conflict due to my changes
->>> and patch 8 didn't apply at all. Also I saw few warnings with the
->>> patches I was able to test:
->
-> Hi kalle,
->
-> i see some warning is from patch "ath10k: add fw coredump for sdio when firmware assert"
-> and this patch also have change in sdio.c, so maybe it will have
-> conflict with the 8 patches.
->
-> patch 8 didn't apply at all, is it means each change of the patch is
-> conflict?
+Currently the zero check on val to break out of a loop
+is a little obscure.  Replace the val is zero and break check
+with a loop while value is non-zero.
 
-Patches 1-7 applied fine, but patch 8 didn't apply. I didn't investigate
-what was the conflict.
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/net/wireless/mediatek/mt7601u/phy.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-> I used command to check each patch.
-> perl ~/opensource/checkpatch.pl --strict --no-tree
-> --max-line-length=90 --show-types --ignore CONST_STRUCT ./*
->
-> I found it not check Wunused-but-set-variable.
-
-checkpatch only checks style issues, unused-but-set-variable is a
-warning from GCC.
-
-I use ath10k-check script to check all ath10k patches:
-
-https://wireless.wiki.kernel.org/en/users/drivers/ath10k/codingstyle#checking_code
-
-And I use latest GCC and sparse with that. crosstool is a simple way to
-install a relatively new version of GCC for kernel compilation:
-
-https://mirrors.edge.kernel.org/pub/tools/crosstool/
-
+diff --git a/drivers/net/wireless/mediatek/mt7601u/phy.c b/drivers/net/wireless/mediatek/mt7601u/phy.c
+index 06f5702ab4bd..4e0e473caae1 100644
+--- a/drivers/net/wireless/mediatek/mt7601u/phy.c
++++ b/drivers/net/wireless/mediatek/mt7601u/phy.c
+@@ -213,9 +213,7 @@ int mt7601u_wait_bbp_ready(struct mt7601u_dev *dev)
+ 
+ 	do {
+ 		val = mt7601u_bbp_rr(dev, MT_BBP_REG_VERSION);
+-		if (val && ~val)
+-			break;
+-	} while (--i);
++	} while (val && --i);
+ 
+ 	if (!i) {
+ 		dev_err(dev->dev, "Error: BBP is not ready\n");
 -- 
-Kalle Valo
+2.20.1
+
