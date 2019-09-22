@@ -7,51 +7,52 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69AC4C3A5A2
-	for <linux-wireless@archiver.kernel.org>; Sun, 22 Sep 2019 19:02:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91CAFC49ED7
+	for <linux-wireless@archiver.kernel.org>; Sun, 22 Sep 2019 19:14:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 37FBE214AF
-	for <linux-wireless@archiver.kernel.org>; Sun, 22 Sep 2019 19:02:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6A2A920882
+	for <linux-wireless@archiver.kernel.org>; Sun, 22 Sep 2019 19:14:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1569178977;
-	bh=uJycNw4DL+U+YCISpHKsr1iB52emBHrVSbHwAuMW0VY=;
+	s=default; t=1569179648;
+	bh=dHg+UqiT6WV5wD4kJBwsxxJ5umjrfYXlD5jeO2Zj59U=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=SqPOrUjRppJMm1b6kXFkwlC/Spkwrsn/P657lg7bqI9rKjRn/J19RTobdSI/5Mp75
-	 ubeQGWBNzpziyGvSEZ9sWtvONJFwG9Yk4kdlNPowetiOgIhPUIHgCZOowlB6PVlwpV
-	 SUhRLOoFw+DEwQ6ml1WvRIqFAFIOsSPA3eBdUtq4=
+	b=AxX5oj887GdSPAuuI9xT0OhRV0baj1URNmagNmhPDqeAKcmEiU9uNnhala88W3Fi3
+	 mhqRVGQ+J55OgI6E1JNna4A7PNAGpNake0UhU/QNLhwT9QdFr6AnZFHH76SAbq+51k
+	 8ZTkFnHw4if7SWFL2A1/pJ5/BoeIwR+1n8y3Sl6c=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2439068AbfIVTCJ (ORCPT
+        id S2394755AbfIVS5F (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 22 Sep 2019 15:02:09 -0400
-Received: from mail.kernel.org ([198.145.29.99]:38510 "EHLO mail.kernel.org"
+        Sun, 22 Sep 2019 14:57:05 -0400
+Received: from mail.kernel.org ([198.145.29.99]:59482 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2395407AbfIVTCI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 22 Sep 2019 15:02:08 -0400
+        id S2394742AbfIVS5E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 22 Sep 2019 14:57:04 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 06F262070C;
-        Sun, 22 Sep 2019 19:02:06 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id E0C4D21907;
+        Sun, 22 Sep 2019 18:57:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1569178927;
-        bh=uJycNw4DL+U+YCISpHKsr1iB52emBHrVSbHwAuMW0VY=;
+        s=default; t=1569178623;
+        bh=dHg+UqiT6WV5wD4kJBwsxxJ5umjrfYXlD5jeO2Zj59U=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=DES2T/ltkwgIglMSkJEZlAAa6LvlEnCGCfBijM9HNofsBN2Sjch7exj8EClOemrd/
-         YvDonNU1WpsHmkL65fUPrFanvJScbMUH7CKo9gs9gEhfibuchRbsgXm5CUu9dwisWT
-         UDb2qo5yokg2LdcG52bGz4i1brDIKsbWofhnQaHY=
+        b=bvwey5Zp0mfuxeoLZeep8Fb0qna+V8b4O9D4BBkS8eq7Ae6ZFCsxT113ixqHArjKJ
+         NO8A9GP+SR3uF7f8mw7VHu+jCbNVoHbk2sUYIwETIlgKwxQqdbT+hLPDXwBaShcxul
+         lAagRmJens44svars6TfY5SpiUIGbt+IWyv79ctM=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Kevin Easton <kevin@guarana.org>,
         syzbot+98156c174c5a2cad9f8f@syzkaller.appspotmail.com,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.4 41/44] libertas: Add missing sentinel at end of if_usb.c fw_table
-Date:   Sun, 22 Sep 2019 15:00:59 -0400
-Message-Id: <20190922190103.4906-41-sashal@kernel.org>
+        libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 121/128] libertas: Add missing sentinel at end of if_usb.c fw_table
+Date:   Sun, 22 Sep 2019 14:54:11 -0400
+Message-Id: <20190922185418.2158-121-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190922190103.4906-1-sashal@kernel.org>
-References: <20190922190103.4906-1-sashal@kernel.org>
+In-Reply-To: <20190922185418.2158-1-sashal@kernel.org>
+References: <20190922185418.2158-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -72,13 +73,13 @@ Signed-off-by: Kevin Easton <kevin@guarana.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/libertas/if_usb.c | 3 ++-
+ drivers/net/wireless/marvell/libertas/if_usb.c | 3 ++-
  1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
-index dff08a2896a38..d271eaf1f9499 100644
---- a/drivers/net/wireless/libertas/if_usb.c
-+++ b/drivers/net/wireless/libertas/if_usb.c
+diff --git a/drivers/net/wireless/marvell/libertas/if_usb.c b/drivers/net/wireless/marvell/libertas/if_usb.c
+index 3dbfce972c56b..9e82ec12564bb 100644
+--- a/drivers/net/wireless/marvell/libertas/if_usb.c
++++ b/drivers/net/wireless/marvell/libertas/if_usb.c
 @@ -49,7 +49,8 @@ static const struct lbs_fw_table fw_table[] = {
  	{ MODEL_8388, "libertas/usb8388_v5.bin", NULL },
  	{ MODEL_8388, "libertas/usb8388.bin", NULL },
@@ -88,7 +89,7 @@ index dff08a2896a38..d271eaf1f9499 100644
 +	{ 0, NULL, NULL }
  };
  
- static struct usb_device_id if_usb_table[] = {
+ static const struct usb_device_id if_usb_table[] = {
 -- 
 2.20.1
 
