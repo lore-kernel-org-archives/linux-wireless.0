@@ -4,51 +4,52 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9D6CC3A5A2
-	for <linux-wireless@archiver.kernel.org>; Sun, 22 Sep 2019 19:21:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CB24C3A5A2
+	for <linux-wireless@archiver.kernel.org>; Sun, 22 Sep 2019 19:21:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8921B2067B
-	for <linux-wireless@archiver.kernel.org>; Sun, 22 Sep 2019 19:21:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 19867206C2
+	for <linux-wireless@archiver.kernel.org>; Sun, 22 Sep 2019 19:21:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1569180082;
-	bh=GSS11zVS5sAZCAm/t7b3x4fHnf3ZmTKbpHI1jMi/XZQ=;
+	s=default; t=1569180115;
+	bh=FdSpS9PdX8CaNXfj0Fl/oV1rmce5v6VKCnvC7P0Fu/k=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=eWjFeq/fXzkIjnlyDaQ7vrzYGGyGYW+s+sSQj8DQPqAxwIOYeo1+smaWHJ5kV7ALL
-	 6nrfAOtbjtQPOL9Y+33rQHwx/B0rU+EhaBkBtH7beQ1gP9CmGQib7luPOAKKqSdYVn
-	 JwYUmIAgD8OXWoHZYWpXfZ/L26q7lkzUNXUrt24U=
+	b=k0Er6soXxcLoLb79trni3mnR1g6YpHDDl1xNnQT+GNiROk+qOrpmmfYwqpPWdovny
+	 0vDWaEmRY16CXdsry76o4LErXFcXRo3I37LwvByXSgEG3YXb7pnG8xGw4L4KArm/Wp
+	 IsehGa07d7BwXttaDkxP97BwH6+zUfCEpOMviobs=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2404232AbfIVSyL (ORCPT
+        id S1731070AbfIVTVy (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 22 Sep 2019 14:54:11 -0400
-Received: from mail.kernel.org ([198.145.29.99]:54538 "EHLO mail.kernel.org"
+        Sun, 22 Sep 2019 15:21:54 -0400
+Received: from mail.kernel.org ([198.145.29.99]:54152 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2393701AbfIVSyJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 22 Sep 2019 14:54:09 -0400
+        id S2394460AbfIVSx5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 22 Sep 2019 14:53:57 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3882121479;
-        Sun, 22 Sep 2019 18:54:08 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 25ABC2190F;
+        Sun, 22 Sep 2019 18:53:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1569178449;
-        bh=GSS11zVS5sAZCAm/t7b3x4fHnf3ZmTKbpHI1jMi/XZQ=;
+        s=default; t=1569178437;
+        bh=FdSpS9PdX8CaNXfj0Fl/oV1rmce5v6VKCnvC7P0Fu/k=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=oXlMrOI6CGXh7DhAxkY3+SHYsvMcB3j67BbZ2uBP3IwO9qubeODNMUhroVdNLyN8J
-         bSPS82kr+1YYc8nhg9V8koEIQplDmUizIIjNaLtbk67Zxu+TCmtZVX5/gIjKpQwuHq
-         G8FeRDzgV+a0xwBQtbZcbBByD+BokKPMX0WTG8SY=
+        b=mzyr8zN5tj+A42rGKy7/Jcqqkh6sCQkNdvL0UIRa/Eq5pJMRCUD65yRu+/p0eo0CQ
+         ivZl0P8WlaXEND/+LlCHtrwnL9dJXmzH38PyFzHE3WlMa3myYHoQ64oookiHSD+SKJ
+         U4o9dFYCjOQc03LK1v7INlEeuS3UHfAZSkaJu1tE=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Oliver Neukum <oneukum@suse.com>,
-        syzbot+74c65761783d66a9c97c@syzkaller.appspotmail.com,
+Cc:     Kevin Easton <kevin@guarana.org>,
+        syzbot+98156c174c5a2cad9f8f@syzkaller.appspotmail.com,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.2 180/185] zd1211rw: remove false assertion from zd_mac_clear()
-Date:   Sun, 22 Sep 2019 14:49:18 -0400
-Message-Id: <20190922184924.32534-180-sashal@kernel.org>
+        libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.2 171/185] libertas: Add missing sentinel at end of if_usb.c fw_table
+Date:   Sun, 22 Sep 2019 14:49:09 -0400
+Message-Id: <20190922184924.32534-171-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190922184924.32534-1-sashal@kernel.org>
 References: <20190922184924.32534-1-sashal@kernel.org>
@@ -61,33 +62,34 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Oliver Neukum <oneukum@suse.com>
+From: Kevin Easton <kevin@guarana.org>
 
-[ Upstream commit 7a2eb7367fdea72e448d1a847aa857f6caf8ea2f ]
+[ Upstream commit 764f3f1ecffc434096e0a2b02f1a6cc964a89df6 ]
 
-The function is called before the lock which is asserted was ever used.
-Just remove it.
+This sentinel tells the firmware loading process when to stop.
 
-Reported-by: syzbot+74c65761783d66a9c97c@syzkaller.appspotmail.com
-Signed-off-by: Oliver Neukum <oneukum@suse.com>
+Reported-and-tested-by: syzbot+98156c174c5a2cad9f8f@syzkaller.appspotmail.com
+Signed-off-by: Kevin Easton <kevin@guarana.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/zydas/zd1211rw/zd_mac.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/net/wireless/marvell/libertas/if_usb.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/zydas/zd1211rw/zd_mac.c b/drivers/net/wireless/zydas/zd1211rw/zd_mac.c
-index da7e63fca9f57..a9999d10ae81f 100644
---- a/drivers/net/wireless/zydas/zd1211rw/zd_mac.c
-+++ b/drivers/net/wireless/zydas/zd1211rw/zd_mac.c
-@@ -223,7 +223,6 @@ void zd_mac_clear(struct zd_mac *mac)
- {
- 	flush_workqueue(zd_workqueue);
- 	zd_chip_clear(&mac->chip);
--	lockdep_assert_held(&mac->lock);
- 	ZD_MEMCLEAR(mac, sizeof(struct zd_mac));
- }
+diff --git a/drivers/net/wireless/marvell/libertas/if_usb.c b/drivers/net/wireless/marvell/libertas/if_usb.c
+index f1622f0ff8c9e..fe3142d85d1e4 100644
+--- a/drivers/net/wireless/marvell/libertas/if_usb.c
++++ b/drivers/net/wireless/marvell/libertas/if_usb.c
+@@ -50,7 +50,8 @@ static const struct lbs_fw_table fw_table[] = {
+ 	{ MODEL_8388, "libertas/usb8388_v5.bin", NULL },
+ 	{ MODEL_8388, "libertas/usb8388.bin", NULL },
+ 	{ MODEL_8388, "usb8388.bin", NULL },
+-	{ MODEL_8682, "libertas/usb8682.bin", NULL }
++	{ MODEL_8682, "libertas/usb8682.bin", NULL },
++	{ 0, NULL, NULL }
+ };
  
+ static const struct usb_device_id if_usb_table[] = {
 -- 
 2.20.1
 
