@@ -2,87 +2,125 @@ Return-Path: <SRS0=l3ON=XT=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88366C432C1
-	for <linux-wireless@archiver.kernel.org>; Tue, 24 Sep 2019 14:48:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF7AEC4320D
+	for <linux-wireless@archiver.kernel.org>; Tue, 24 Sep 2019 18:12:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 597CB207FD
-	for <linux-wireless@archiver.kernel.org>; Tue, 24 Sep 2019 14:48:20 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Ky5noSWl";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Ub1Fip3C"
+	by mail.kernel.org (Postfix) with ESMTP id D84E0217D7
+	for <linux-wireless@archiver.kernel.org>; Tue, 24 Sep 2019 18:12:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731146AbfIXOsT (ORCPT
+        id S2439615AbfIXSMz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 24 Sep 2019 10:48:19 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:36742 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726130AbfIXOqT (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Sep 2019 10:46:19 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 8AAB160A97; Tue, 24 Sep 2019 14:46:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1569336378;
-        bh=VwDBP5dU+zG6Qy6lwpYKrZqDwxKMAH0pQAIBblp0SyU=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=Ky5noSWlyARiEkt0tlkSqQ8lZCmwGj9O4/9zl+V55dsF1M2BImrjbNke8XsA+qYX5
-         wklGLXlQUYth121o2v4UiCYe3qMjhMhopbA/OYLrueZb5hiA7IQ5AT8PKf5fbEkuzv
-         wpnuqvVrQNdGRfx7p3pyQktTjBsbrb3N6mJgArNg=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id C019760128;
-        Tue, 24 Sep 2019 14:46:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1569336378;
-        bh=VwDBP5dU+zG6Qy6lwpYKrZqDwxKMAH0pQAIBblp0SyU=;
-        h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=Ub1Fip3ChS7/RJUqi4FSKhQu60u8WX85RcRSzdRylPIIKaWClDeAj4Lm8HHmH/GVW
-         H2w8l+4+JlJL+TUEZlI+CIQ6CeBGOMOpTlgOzRxq4JtxbTkBwF32LFVnqlYCWlgomm
-         pzyQEuyRFcwRy8uXHpFCNByaZqeKYIgPHfBYbAPc=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org C019760128
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
+        Tue, 24 Sep 2019 14:12:55 -0400
+Received: from mx2.suse.de ([195.135.220.15]:43946 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S2393874AbfIXSMy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 24 Sep 2019 14:12:54 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx1.suse.de (Postfix) with ESMTP id 22E57AC93;
+        Tue, 24 Sep 2019 18:12:51 +0000 (UTC)
+From:   Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
+To:     robh+dt@kernel.org, devicetree@vger.kernel.org,
+        frowand.list@gmail.com, linux-arm-kernel@lists.infradead.org,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, dmaengine@vger.kernel.org,
+        etnaviv@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        xen-devel@lists.xenproject.org, linux-tegra@vger.kernel.org,
+        linux-media@vger.kernel.org, linux-pci@vger.kernel.org
+Cc:     mbrugger@suse.com, robin.murphy@arm.com, f.fainelli@gmail.com,
+        james.quinlan@broadcom.com, wahrenst@gmx.net,
+        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
+        Dan Williams <dan.j.williams@intel.com>,
+        freedreno@lists.freedesktop.org
+Subject: [PATCH 00/11] of: Fix DMA configuration for non-DT masters
+Date:   Tue, 24 Sep 2019 20:12:31 +0200
+Message-Id: <20190924181244.7159-1-nsaenzjulienne@suse.de>
+X-Mailer: git-send-email 2.23.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] mt76: mt7615: fix mt7615 firmware path definitions
-From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <9e132c0949139155a4fb3375e4c83218159efce7.1569159209.git.lorenzo@kernel.org>
-References: <9e132c0949139155a4fb3375e4c83218159efce7.1569159209.git.lorenzo@kernel.org>
-To:     Lorenzo Bianconi <lorenzo@kernel.org>
-Cc:     nbd@nbd.name, lorenzo.bianconi@redhat.com,
-        linux-wireless@vger.kernel.org, ryder.lee@mediatek.com
-User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20190924144618.8AAB160A97@smtp.codeaurora.org>
-Date:   Tue, 24 Sep 2019 14:46:18 +0000 (UTC)
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Lorenzo Bianconi <lorenzo@kernel.org> wrote:
+Hi All,
+this series tries to address one of the issues blocking us from
+upstreaming Broadcom's STB PCIe controller[1]. Namely, the fact that
+devices not represented in DT which sit behind a PCI bus fail to get the
+bus' DMA addressing constraints.
 
-> mt7615 patch/n9/cr4 firmwares are available in mediatek folder in
-> linux-firmware repository. Because of this mt7615 won't work on regular
-> distributions like Ubuntu. Fix path definitions.  Moreover remove useless
-> firmware name pointers and use definitions directly
-> 
-> Fixes: 04b8e65922f6 ("mt76: add mac80211 driver for MT7615 PCIe-based chipsets")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+This is due to the fact that of_dma_configure() assumes it's receiving a
+DT node representing the device being configured, as opposed to the PCIe
+bridge node we currently pass. This causes the code to directly jump
+into PCI's parent node when checking for 'dma-ranges' and misses
+whatever was set there.
 
-Patch applied to wireless-drivers.git, thanks.
+To address this I create a new API in OF - inspired from Robin Murphys
+original proposal[2] - which accepts a bus DT node as it's input in
+order to configure a device's DMA constraints. The changes go deep into
+of/address.c's implementation, as a device being having a DT node
+assumption was pretty strong.
 
-9d4d0d06bbf9 mt76: mt7615: fix mt7615 firmware path definitions
+On top of this work, I also cleaned up of_dma_configure() removing its
+redundant arguments and creating an alternative function for the special cases
+not applicable to either the above case or the default usage.
+
+IMO the resulting functions are more explicit. They will probably
+surface some hacky usages that can be properly fixed as I show with the
+DT fixes on the Layerscape platform.
+
+This was also tested on a Raspberry Pi 4 with a custom PCIe driver and
+on a Seattle AMD board.
+
+Regards,
+Nicolas
+
+[1] https://patchwork.kernel.org/patch/9650345/#20294961
+[2] https://patchwork.kernel.org/patch/9650345/
+
+---
+
+Nicolas Saenz Julienne (11):
+  of: address: clean-up unused variable in of_dma_get_range()
+  of: base: introduce __of_n_*_cells_parent()
+  of: address: use parent DT node in bus->count_cells()
+  of: address: introduce of_translate_dma_address_parent()
+  of: expose __of_get_dma_parent() to OF subsystem
+  of: address: use parent OF node in of_dma_get_range()
+  dts: arm64: layerscape: add dma-ranges property to qoric-mc node
+  dts: arm64: layerscape: add dma-ranges property to pcie nodes
+  of: device: remove comment in of_dma_configure()
+  of: device: introduce of_dma_configure_parent()
+  of: simplify of_dma_config()'s arguments
+
+ .../arm64/boot/dts/freescale/fsl-ls1088a.dtsi |   1 +
+ .../arm64/boot/dts/freescale/fsl-ls208xa.dtsi |   5 +
+ .../arm64/boot/dts/freescale/fsl-lx2160a.dtsi |   1 +
+ drivers/base/platform.c                       |   2 +-
+ drivers/bcma/main.c                           |   2 +-
+ drivers/bus/fsl-mc/fsl-mc-bus.c               |   2 +-
+ drivers/dma/qcom/hidma_mgmt.c                 |   2 +-
+ drivers/gpu/drm/etnaviv/etnaviv_drv.c         |   2 +-
+ drivers/gpu/drm/msm/adreno/a6xx_gmu.c         |   2 +-
+ drivers/gpu/drm/sun4i/sun4i_backend.c         |   2 +-
+ drivers/gpu/drm/xen/xen_drm_front.c           |   2 +-
+ drivers/gpu/host1x/bus.c                      |   4 +-
+ drivers/media/platform/qcom/venus/firmware.c  |   2 +-
+ drivers/media/platform/s5p-mfc/s5p_mfc.c      |   2 +-
+ drivers/of/address.c                          | 136 +++++++++---------
+ drivers/of/base.c                             |  69 +++++++--
+ drivers/of/device.c                           |  59 +++++++-
+ drivers/of/of_private.h                       |   5 +
+ drivers/pci/pci-driver.c                      |   3 +-
+ drivers/xen/gntdev.c                          |   2 +-
+ include/linux/of_address.h                    |   8 +-
+ include/linux/of_device.h                     |  23 ++-
+ 22 files changed, 223 insertions(+), 113 deletions(-)
 
 -- 
-https://patchwork.kernel.org/patch/11155889/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.23.0
 
