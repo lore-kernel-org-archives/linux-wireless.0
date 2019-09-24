@@ -2,118 +2,91 @@ Return-Path: <SRS0=l3ON=XT=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7E4EC432C2
-	for <linux-wireless@archiver.kernel.org>; Tue, 24 Sep 2019 07:49:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C650C432C1
+	for <linux-wireless@archiver.kernel.org>; Tue, 24 Sep 2019 07:56:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7857020673
-	for <linux-wireless@archiver.kernel.org>; Tue, 24 Sep 2019 07:49:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4E824214D9
+	for <linux-wireless@archiver.kernel.org>; Tue, 24 Sep 2019 07:56:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="n8OfIJ7s"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="lujCygFO";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="dVcNQEcF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392681AbfIXHtU (ORCPT
+        id S2394761AbfIXH4f (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 24 Sep 2019 03:49:20 -0400
-Received: from mail-ot1-f67.google.com ([209.85.210.67]:34485 "EHLO
-        mail-ot1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388712AbfIXHtU (ORCPT
+        Tue, 24 Sep 2019 03:56:35 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:48090 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388712AbfIXH4f (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Sep 2019 03:49:20 -0400
-Received: by mail-ot1-f67.google.com with SMTP id m19so667061otp.1
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Sep 2019 00:49:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=HVZDBzFnn/+6/eX2i6ZvoSlRuJ3gztniPjuOgTp9/dk=;
-        b=n8OfIJ7s4YOK4wUING3b8Y7BfaOB4T6MA+Ys/5+Vbh2+YRQfEdBCIkahUSco88/RwZ
-         FyOGVH6WpTZSbNxkbcHvxipsUuiWoFdjVynUY3RvmoUxW125VAzkh5gH77Dk/yTJgp1S
-         Are2idhLJkDX0y4Y79HUbvOMVA7qB4PpgR0u+xvgnjyMmPUwCPMx81lBfuUjBNommOmk
-         Wn1FARh9Ia/DJ5oppLkdhzaNtB9oafOWqJf6HbPbE9O1Ayz9tLc82f6+r/OYy1N5VNM5
-         SaqVpDQxR+MyI1Lhcw0qCztqsSUsOyFHKxbMwcKcoiaud82Z9spuqCpcrmGtET2lU6Wk
-         9H/w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:in-reply-to:references:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=HVZDBzFnn/+6/eX2i6ZvoSlRuJ3gztniPjuOgTp9/dk=;
-        b=Xxz0Mhk1CV2ftIvpcSMUeTMHrqZnbxKzyIYsTNIYbmqSh2KNw4P7vDCvpF0V6ABauT
-         9wlr1LEy70cm7UzK3DxPbYR/8OkGDaGgTVP77zHZLdTPXET0D7zGyb/6fZIg9BqG7lZV
-         2eXA8XFlMxKoCqy4Jg7rDCCP7jluWkugw0EERr1WtLAFW2G0zJNXeRzYv9csg2Q59WIM
-         dM4QpBa12ccm5IZLzZ6bjAhB5cl6p1UqjGI00UcHzg4WWTgjcvyNb2OCOC986wCcRwy3
-         0iumNOAcUULb9bA10n9a15HEATG1hPPtR7/FiOEs6Gbo1YrV/fI5QiJfejsHmFDei8JY
-         bQjQ==
-X-Gm-Message-State: APjAAAUJ8BTRoY7Ffihov/48aasXKwnzPvu+s/UAWw5sYb2Pv/K+BvkJ
-        gnppZjovDpezaE/ujGmGEvg0PSE2RzLJ6io0Za0=
-X-Google-Smtp-Source: APXvYqzegMetRoVOqRGe1NS8PMI7YmLR/6NHLj0xcPYup7lHxHXMqTMG0/TKnNGFxX9JWPFVIVGwk4qc7xTb36M2Ats=
-X-Received: by 2002:a9d:5f9a:: with SMTP id g26mr768874oti.27.1569311359420;
- Tue, 24 Sep 2019 00:49:19 -0700 (PDT)
+        Tue, 24 Sep 2019 03:56:35 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id DEA7861AD7; Tue, 24 Sep 2019 07:56:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1569311791;
+        bh=muwisYgtwDH/JfvQvz8m5f+1Jt/JSBTbwB4GBv4v/No=;
+        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+        b=lujCygFOVm4GWSQ4VFXgmm5n+nCwaYl6k0wqh24jpS/aV+p5PbyW+/aSkZmU/4a82
+         +Pnj7xl79xjSnZbi3dZo2MQZ6gm9C5PUwOG9TxJnFe2KIS2vVdXxWgpge3s4oIh6US
+         ApFVoS0/5HjqM7Gv6Z4hJVAQUewU5ayAAOiD+28c=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 58FB161790;
+        Tue, 24 Sep 2019 07:56:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1569311779;
+        bh=muwisYgtwDH/JfvQvz8m5f+1Jt/JSBTbwB4GBv4v/No=;
+        h=Subject:From:In-Reply-To:References:To:Cc:From;
+        b=dVcNQEcFq+t3gPFnkvvEeCVmT29Bl279RgJm6K1b+SmIkX4DYUP4fNuq+81rwKp9L
+         vjKWiBm178d74nDAYW/q8mhvTMTMVEEkfCmgv/qq5e+lXk5BsV31r1BOLH2QYXH1Fz
+         1xPX35pKAOgoKUn439thKrQ/n4eGSibhh/o63VKc=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 58FB161790
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Received: by 2002:a9d:2286:0:0:0:0:0 with HTTP; Tue, 24 Sep 2019 00:49:18
- -0700 (PDT)
-In-Reply-To: <87d0fq5kic.fsf@codeaurora.org>
-References: <1569268165-1639-1-git-send-email-pozega.tomislav@gmail.com>
- <1569268165-1639-5-git-send-email-pozega.tomislav@gmail.com> <87d0fq5kic.fsf@codeaurora.org>
-From:   Tom Psyborg <pozega.tomislav@gmail.com>
-Date:   Tue, 24 Sep 2019 09:49:18 +0200
-Message-ID: <CAKR_QVK=XwLtaGgoLeU5-+XQP_-jVvAdWfkGvdyV9WNK_5QUng@mail.gmail.com>
-Subject: Re: [PATCH 5/5] ath10k: pull_svc_rdy code-style fix
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH 5.4 v2] rtw88: configure firmware after HCI started
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20190923024703.2995-1-yhchuang@realtek.com>
+References: <20190923024703.2995-1-yhchuang@realtek.com>
+To:     <yhchuang@realtek.com>
+Cc:     <linux-wireless@vger.kernel.org>, <briannorris@chromium.org>
+User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
+Message-Id: <20190924075630.DEA7861AD7@smtp.codeaurora.org>
+Date:   Tue, 24 Sep 2019 07:56:30 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 24/09/2019, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Tomislav Po=C5=BEega <pozega.tomislav@gmail.com> writes:
->
->> Drop unneeded lines by moving skb data in both main and 10x WMI
->> pull service ready event operations.
->>
->> Signed-off-by: Tomislav Po=C5=BEega <pozega.tomislav@gmail.com>
->> ---
->>  drivers/net/wireless/ath/ath10k/wmi.c |    6 ++----
->>  1 files changed, 2 insertions(+), 4 deletions(-)
->>
->> diff --git a/drivers/net/wireless/ath/ath10k/wmi.c
->> b/drivers/net/wireless/ath/ath10k/wmi.c
->> index 59d2d2a..8ab178c 100644
->> --- a/drivers/net/wireless/ath/ath10k/wmi.c
->> +++ b/drivers/net/wireless/ath/ath10k/wmi.c
->> @@ -5345,13 +5345,12 @@ static int ath10k_wmi_alloc_host_mem(struct ath1=
-0k
->> *ar, u32 req_id,
->>  ath10k_wmi_main_op_pull_svc_rdy_ev(struct ath10k *ar, struct sk_buff
->> *skb,
->>  				   struct wmi_svc_rdy_ev_arg *arg)
->>  {
->> -	struct wmi_service_ready_event *ev;
->> +	struct wmi_service_ready_event *ev =3D (void *)skb->data;
->>  	size_t i, n;
->>
->>  	if (skb->len < sizeof(*ev))
->>  		return -EPROTO;
->>
->> -	ev =3D (void *)skb->data;
->
-> Actually I prefer the original style, so that we first check the data in
-> skb is valid and only then assign the data to ev.
->
-> --
-> Kalle Valo
->
+<yhchuang@realtek.com> wrote:
 
-It came to my mind that this might be the reason why the current
-driver did not give me warning about too short service ready event,
-but there was no warning about event length in either case.
-I even tested this with compat wireless from 2013. and there the
-situation was the opposite: in both cases there was warning about
-service ready length.
+> From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+> 
+> After firmware has been downloaded, driver should send
+> some information to it through H2C commands. Those H2C
+> commands are transmitted through TX path.
+> 
+> But before HCI has been started, the TX path is not
+> working completely. Such as PCI interfaces, the interrupts
+> are not enabled, hence TX interrupts will not be issued
+> after H2C skb has been DMAed to the device. And the H2C
+> skbs will not be released until the device is powered off.
+> 
+> Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+
+Patch applied to wireless-drivers.git, thanks.
+
+0b8dc6abbdb9 rtw88: configure firmware after HCI started
+
+-- 
+https://patchwork.kernel.org/patch/11155999/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+
