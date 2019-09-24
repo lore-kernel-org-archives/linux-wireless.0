@@ -7,23 +7,23 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77197C4320D
-	for <linux-wireless@archiver.kernel.org>; Tue, 24 Sep 2019 18:13:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53F2CC432C1
+	for <linux-wireless@archiver.kernel.org>; Tue, 24 Sep 2019 18:13:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5CC3B21655
-	for <linux-wireless@archiver.kernel.org>; Tue, 24 Sep 2019 18:13:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3B86721655
+	for <linux-wireless@archiver.kernel.org>; Tue, 24 Sep 2019 18:13:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2439826AbfIXSNs (ORCPT
+        id S2502089AbfIXSM7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 24 Sep 2019 14:13:48 -0400
+        Tue, 24 Sep 2019 14:12:59 -0400
 Received: from mx2.suse.de ([195.135.220.15]:44010 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S2439657AbfIXSM7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Sep 2019 14:12:59 -0400
+        id S2393831AbfIXSM4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 24 Sep 2019 14:12:56 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id D66E4AE78;
-        Tue, 24 Sep 2019 18:12:56 +0000 (UTC)
+        by mx1.suse.de (Postfix) with ESMTP id E4980AEF8;
+        Tue, 24 Sep 2019 18:12:53 +0000 (UTC)
 From:   Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
 To:     robh+dt@kernel.org, devicetree@vger.kernel.org,
         frowand.list@gmail.com, linux-arm-kernel@lists.infradead.org,
@@ -35,9 +35,9 @@ To:     robh+dt@kernel.org, devicetree@vger.kernel.org,
 Cc:     mbrugger@suse.com, robin.murphy@arm.com, f.fainelli@gmail.com,
         james.quinlan@broadcom.com, wahrenst@gmx.net,
         Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
-Subject: [PATCH 05/11] of: expose __of_get_dma_parent() to OF subsystem
-Date:   Tue, 24 Sep 2019 20:12:36 +0200
-Message-Id: <20190924181244.7159-6-nsaenzjulienne@suse.de>
+Subject: [PATCH 03/11] of: address: use parent DT node in bus->count_cells()
+Date:   Tue, 24 Sep 2019 20:12:34 +0200
+Message-Id: <20190924181244.7159-4-nsaenzjulienne@suse.de>
 X-Mailer: git-send-email 2.23.0
 In-Reply-To: <20190924181244.7159-1-nsaenzjulienne@suse.de>
 References: <20190924181244.7159-1-nsaenzjulienne@suse.de>
@@ -48,95 +48,92 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The function was only available locally to of/address.c, make it
-available to the OF subsystem.
+The function provides the cell sizes for a specific bus type. Instead of
+passing it the device DT node sitting on top of that bus we directly
+pass its parent which is the actual node the function will start looking
+from.
 
 Signed-off-by: Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
 ---
 
- drivers/of/address.c    | 18 ------------------
- drivers/of/base.c       | 25 +++++++++++++++++++++++++
- drivers/of/of_private.h |  2 ++
- 3 files changed, 27 insertions(+), 18 deletions(-)
+ drivers/of/address.c | 18 ++++++++++--------
+ 1 file changed, 10 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/of/address.c b/drivers/of/address.c
-index c9eb4ebcc2e9..53666063e938 100644
+index 0f898756199d..9c1e638fa8ea 100644
 --- a/drivers/of/address.c
 +++ b/drivers/of/address.c
-@@ -681,24 +681,6 @@ u64 of_translate_address(struct device_node *dev, const __be32 *in_addr)
- }
- EXPORT_SYMBOL(of_translate_address);
+@@ -14,6 +14,8 @@
+ #include <linux/slab.h>
+ #include <linux/string.h>
  
--static struct device_node *__of_get_dma_parent(const struct device_node *np)
--{
--	struct of_phandle_args args;
--	int ret, index;
--
--	index = of_property_match_string(np, "interconnect-names", "dma-mem");
--	if (index < 0)
--		return of_get_parent(np);
--
--	ret = of_parse_phandle_with_args(np, "interconnects",
--					 "#interconnect-cells",
--					 index, &args);
--	if (ret < 0)
--		return of_get_parent(np);
--
--	return of_node_get(args.np);
--}
--
- static u64 of_translate_dma_address_parent(struct device_node *parent,
- 					   const __be32 *in_addr)
++#include "of_private.h"
++
+ /* Max address size we deal with */
+ #define OF_MAX_ADDR_CELLS	4
+ #define OF_CHECK_ADDR_COUNT(na)	((na) > 0 && (na) <= OF_MAX_ADDR_CELLS)
+@@ -42,7 +44,7 @@ struct of_bus {
+ 	const char	*name;
+ 	const char	*addresses;
+ 	int		(*match)(struct device_node *parent);
+-	void		(*count_cells)(struct device_node *child,
++	void		(*count_cells)(struct device_node *parent,
+ 				       int *addrc, int *sizec);
+ 	u64		(*map)(__be32 *addr, const __be32 *range,
+ 				int na, int ns, int pna);
+@@ -54,13 +56,13 @@ struct of_bus {
+  * Default translator (generic bus)
+  */
+ 
+-static void of_bus_default_count_cells(struct device_node *dev,
++static void of_bus_default_count_cells(struct device_node *parent,
+ 				       int *addrc, int *sizec)
  {
-diff --git a/drivers/of/base.c b/drivers/of/base.c
-index 94f83051910c..ec161e6b5222 100644
---- a/drivers/of/base.c
-+++ b/drivers/of/base.c
-@@ -716,6 +716,31 @@ struct device_node *of_get_parent(const struct device_node *node)
+ 	if (addrc)
+-		*addrc = of_n_addr_cells(dev);
++		*addrc = __of_n_addr_cells_parent(parent);
+ 	if (sizec)
+-		*sizec = of_n_size_cells(dev);
++		*sizec = __of_n_size_cells_parent(parent);
  }
- EXPORT_SYMBOL(of_get_parent);
  
-+/**
-+ *	__of_get_dma_parent - Get a node's dma parent if any
-+ *	@node:	Node to get dma parent
-+ *
-+ *	Returns a node pointer with refcount incremented, use
-+ *	of_node_put() on it when done.
-+ */
-+struct device_node *__of_get_dma_parent(const struct device_node *np)
-+{
-+	struct of_phandle_args args;
-+	int ret, index;
-+
-+	index = of_property_match_string(np, "interconnect-names", "dma-mem");
-+	if (index < 0)
-+		return of_get_parent(np);
-+
-+	ret = of_parse_phandle_with_args(np, "interconnects",
-+					 "#interconnect-cells",
-+					 index, &args);
-+	if (ret < 0)
-+		return of_get_parent(np);
-+
-+	return of_node_get(args.np);
-+}
-+
- /**
-  *	of_get_next_parent - Iterate to a node's parent
-  *	@node:	Node to get parent of
-diff --git a/drivers/of/of_private.h b/drivers/of/of_private.h
-index b528304be244..63bb16cc454c 100644
---- a/drivers/of/of_private.h
-+++ b/drivers/of/of_private.h
-@@ -42,6 +42,8 @@ extern struct kset *of_kset;
- int __of_n_addr_cells_parent(struct device_node *parent);
- int __of_n_size_cells_parent(struct device_node *parent);
+ static u64 of_bus_default_map(__be32 *addr, const __be32 *range,
+@@ -192,7 +194,7 @@ const __be32 *of_get_pci_address(struct device_node *dev, int bar_no, u64 *size,
+ 		of_node_put(parent);
+ 		return NULL;
+ 	}
+-	bus->count_cells(dev, &na, &ns);
++	bus->count_cells(parent, &na, &ns);
+ 	of_node_put(parent);
+ 	if (!OF_CHECK_ADDR_COUNT(na))
+ 		return NULL;
+@@ -592,7 +594,7 @@ static u64 __of_translate_address(struct device_node *dev,
+ 	bus = of_match_bus(parent);
  
-+struct device_node *__of_get_dma_parent(const struct device_node *np);
-+
- #if defined(CONFIG_OF_DYNAMIC)
- extern int of_property_notify(int action, struct device_node *np,
- 			      struct property *prop, struct property *old_prop);
+ 	/* Count address cells & copy address locally */
+-	bus->count_cells(dev, &na, &ns);
++	bus->count_cells(parent, &na, &ns);
+ 	if (!OF_CHECK_COUNTS(na, ns)) {
+ 		pr_debug("Bad cell count for %pOF\n", dev);
+ 		goto bail;
+@@ -634,7 +636,7 @@ static u64 __of_translate_address(struct device_node *dev,
+ 
+ 		/* Get new parent bus and counts */
+ 		pbus = of_match_bus(parent);
+-		pbus->count_cells(dev, &pna, &pns);
++		pbus->count_cells(parent, &pna, &pns);
+ 		if (!OF_CHECK_COUNTS(pna, pns)) {
+ 			pr_err("Bad cell count for %pOF\n", dev);
+ 			break;
+@@ -726,7 +728,7 @@ const __be32 *of_get_address(struct device_node *dev, int index, u64 *size,
+ 	if (parent == NULL)
+ 		return NULL;
+ 	bus = of_match_bus(parent);
+-	bus->count_cells(dev, &na, &ns);
++	bus->count_cells(parent, &na, &ns);
+ 	of_node_put(parent);
+ 	if (!OF_CHECK_ADDR_COUNT(na))
+ 		return NULL;
 -- 
 2.23.0
 
