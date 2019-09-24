@@ -2,114 +2,86 @@ Return-Path: <SRS0=l3ON=XT=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A82AC432C1
-	for <linux-wireless@archiver.kernel.org>; Tue, 24 Sep 2019 07:27:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25628C432C1
+	for <linux-wireless@archiver.kernel.org>; Tue, 24 Sep 2019 07:28:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EDF16214D9
-	for <linux-wireless@archiver.kernel.org>; Tue, 24 Sep 2019 07:27:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DCE24214DA
+	for <linux-wireless@archiver.kernel.org>; Tue, 24 Sep 2019 07:28:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="CzwByyJc"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="pMIcusaQ";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="LJQBi6BB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729368AbfIXH1W (ORCPT
+        id S1729331AbfIXH2P (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 24 Sep 2019 03:27:22 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:28579 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1729331AbfIXH1W (ORCPT
+        Tue, 24 Sep 2019 03:28:15 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:49802 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726828AbfIXH2P (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Sep 2019 03:27:22 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1569310040;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=VrS9VEE8wj7I9sF1sYK3hSJa0lvG+UB1EqYemHawqgU=;
-        b=CzwByyJcIuxDX3+TvHKEnOGMnc9M6HGQuUyP3FKZqFyOgRTTz4dEP/WTvDDP5WFrIDRfKn
-        O1hOW6AiRebYCYspmuSAXTNeRR/MtdJZMXPVVPystB/5Fwt4dwlrzEfrCIIf8oXUdmQOuH
-        yRbL/MGgHde5txR69nqJFH8JnBbGhv0=
-Received: from mail-ed1-f71.google.com (mail-ed1-f71.google.com
- [209.85.208.71]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-112-nI70fbjNMQ2gn1I-uWGPQQ-1; Tue, 24 Sep 2019 03:27:19 -0400
-Received: by mail-ed1-f71.google.com with SMTP id l5so503140edr.10
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Sep 2019 00:27:18 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:in-reply-to:references:date
-         :message-id:mime-version:content-transfer-encoding;
-        bh=/1VLA+e9xRwyWnJC8ZSrc5rL/HXsWpwr1W6f6XJFn7s=;
-        b=HkqVlVPo08krPgMpqXo4CsifP0tWzT3edArYM2hDV+dNyHMCeVNY/JY2bf9GfQ00Ii
-         mE5B8FEAIgie/5cOEllP7wXiRST0U1/g3V1iZ5a2woS5gNSvf2k8SRq6neRM3o4VIEwT
-         nPCYFIWBnX0PgcjjoWdA8M6yuQPnnlwsKKNQ5U5sCdXnowtc9B04+prUvmIeP9COwGQY
-         HVZmZG9VbDI9XOuf+sX85sjfgg79KXhbN7C1kLaYzeDL0QbzwXQ15eaYgeGhGZ8jXRpf
-         A0W5O19z+ZZ/cjCdJwMs+LD6tvNB+nxDslo/6arTsYOFAOq6OtcF1OUZn+JoCqoxEh6V
-         V0Hw==
-X-Gm-Message-State: APjAAAV42aTab+1JeQFeni+C/9ZkYWkOfZx3fZcOrpna4nSIj+zN/IrU
-        hMP71wtliDm7fyTy4GqP+BMsNte3yjnWJRCa2DVNktPjpTWEeLPT0mMVsG/MTp7T9S8Dxok+gYL
-        SOrN/W5LUZJWfwb1jMNeuf55VgxE=
-X-Received: by 2002:aa7:c5c1:: with SMTP id h1mr1185691eds.10.1569310037884;
-        Tue, 24 Sep 2019 00:27:17 -0700 (PDT)
-X-Google-Smtp-Source: APXvYqwGDjw/G0kxoR0PSfhHk+XP+1yQUVrQ7UOQQZUCO75G11wlytFb9omISqHRvF9miV+baqh0TQ==
-X-Received: by 2002:aa7:c5c1:: with SMTP id h1mr1185688eds.10.1569310037768;
-        Tue, 24 Sep 2019 00:27:17 -0700 (PDT)
-Received: from alrua-x1.borgediget.toke.dk ([2a00:7660:6da:443::2])
-        by smtp.gmail.com with ESMTPSA id t30sm197870edt.91.2019.09.24.00.27.17
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 24 Sep 2019 00:27:17 -0700 (PDT)
-Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
-        id D858218063F; Tue, 24 Sep 2019 09:27:16 +0200 (CEST)
-From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
-To:     Yibo Zhao <yiboz@codeaurora.org>
-Cc:     linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-        linux-wireless-owner@vger.kernel.org
-Subject: Re: [PATCH V3 4/4] mac80211: Sync airtime weight sum with per AC synced sta airtime weight together
-In-Reply-To: <ffe79f35d4dcb50aa31dc04035855f79@codeaurora.org>
-References: <1569223201-1490-1-git-send-email-yiboz@codeaurora.org> <1569223201-1490-5-git-send-email-yiboz@codeaurora.org> <87blvb5lb9.fsf@toke.dk> <ffe79f35d4dcb50aa31dc04035855f79@codeaurora.org>
-X-Clacks-Overhead: GNU Terry Pratchett
-Date:   Tue, 24 Sep 2019 09:27:16 +0200
-Message-ID: <87o8za40iz.fsf@toke.dk>
-MIME-Version: 1.0
-X-MC-Unique: nI70fbjNMQ2gn1I-uWGPQQ-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+        Tue, 24 Sep 2019 03:28:15 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id E2302602A8; Tue, 24 Sep 2019 07:28:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1569310093;
+        bh=m4oh2sKaBrS+R7ssC+0OwiRzrOWe1INnGLzyH2Ljuss=;
+        h=From:To:Cc:Subject:Date:From;
+        b=pMIcusaQDPRtspI9UF+HwdKIDzAwp1vJPXrfPWkVfNm9TT2y71QHVfyyDcQmMVnjp
+         hcmeEsgg8pylILxxb6t6X5MfFYl6YEwVEZzTHOrYFa2grUNE0Dx7Z/JA38exAHGFaQ
+         5H1dFt++xNKgcQJ68d3xWon1X+lUtB97n+qFw+XY=
+Received: from wgong-HP-Z240-SFF-Workstation.qca.qualcomm.com (unknown [180.166.53.21])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: wgong@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 2B04060397;
+        Tue, 24 Sep 2019 07:28:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1569310092;
+        bh=m4oh2sKaBrS+R7ssC+0OwiRzrOWe1INnGLzyH2Ljuss=;
+        h=From:To:Cc:Subject:Date:From;
+        b=LJQBi6BBiiSV91JtObxlbPBnx74ClJhQRAGZ8xBCsrvlWntXdhpRufEAxY6yTJTEO
+         GtvTvDSFx5JY3tmq6nVw5sGthas6mvSH21kDUKUYCF5EjVzqnkQHzPyE6tp5XgzMEK
+         jzzaQ82xfJQlFyIQ1x5yq8qJMiWs4V88/3mCOUV4=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 2B04060397
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=wgong@codeaurora.org
+From:   Wen Gong <wgong@codeaurora.org>
+To:     ath10k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org
+Subject: [PATCH v4 0/2] add fw coredump for sdio when firmware assert
+Date:   Tue, 24 Sep 2019 15:27:08 +0800
+Message-Id: <1569310030-834-1-git-send-email-wgong@codeaurora.org>
+X-Mailer: git-send-email 1.9.1
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Yibo Zhao <yiboz@codeaurora.org> writes:
+add fw coredump for sdio when firmware assert
 
-> On 2019-09-23 19:00, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
->
->>> -=09if (params->airtime_weight)
->>> -=09=09sta->airtime_weight =3D params->airtime_weight;
->>> +=09if (params->airtime_weight &&
->>> +=09    params->airtime_weight !=3D sta->airtime_weight) {
->>=20
->> This check doesn't work I think? You're not using the array-based
->> sta->airtime_weight[], and there are locking issues by just checking
->> like this; so maybe just keep the if() on params->airtime_weight, and=20
->> do
->> the checking inside the loop while holding the lock?
->
-> It should be array-based sta->airtime_weight[] and I am missing that=20
-> part during the porting. But you are right about we should check it=20
-> inside the loop with the lock.
->
->>=20
->> Or could we just turn the weights into atomics to avoid the locking
->> entirely?
->
-> Actually, we still need the active txq locking to make sure the txq is=20
-> on the rbtree. Otherwise, no need to change airtime weight sum.
+v2: change code style
 
-True. Just moving the check inside the locking will be the right thing
-to do, then.
+v3: split bus type to another patch, 
+remove ATH10K_BUS_ANY, 
+add bus type for each layout
 
--Toke
+v4: rebase to latest commit
+
+Wen Gong (2):
+  ath10k: add bus type for each layout of coredump
+  ath10k: add fw coredump for sdio when firmware assert
+
+ drivers/net/wireless/ath/ath10k/bmi.c       |   1 +
+ drivers/net/wireless/ath/ath10k/core.c      |  10 +
+ drivers/net/wireless/ath/ath10k/coredump.c  | 349 +++++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath10k/coredump.h  |   1 +
+ drivers/net/wireless/ath/ath10k/sdio.c      | 338 ++++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath10k/targaddrs.h |  10 +
+ 6 files changed, 704 insertions(+), 5 deletions(-)
+
+-- 
+1.9.1
 
