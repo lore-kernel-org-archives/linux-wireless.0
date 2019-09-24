@@ -2,92 +2,120 @@ Return-Path: <SRS0=l3ON=XT=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+X-Spam-Status: No, score=-6.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 772E7C432C1
-	for <linux-wireless@archiver.kernel.org>; Tue, 24 Sep 2019 18:14:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC2F2C432C1
+	for <linux-wireless@archiver.kernel.org>; Tue, 24 Sep 2019 21:59:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 55339214AF
-	for <linux-wireless@archiver.kernel.org>; Tue, 24 Sep 2019 18:14:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B060E214DA
+	for <linux-wireless@archiver.kernel.org>; Tue, 24 Sep 2019 21:59:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1569362376;
+	bh=7EnBQLGJXbJ0krx6sf9eAXMt0SpVcFYHvJ4Ffxc+GEI=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
+	b=Iy+ZxICC4XZCP4MnasLcddAH4fC8Qi2X40UYQr/C+pYfJYrATARlqH21of1M5+6EA
+	 7yexBrpSRtsdDC1oJA1eKXyS49nr/20KefccCyoAoqETtTuYnS32rTRW8e8MrwE6Sl
+	 hXiWVOTEGrz/X3A74KcAkmC/PCvPv5tkjj+riLDw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2439454AbfIXSMy (ORCPT
+        id S2633606AbfIXV7e (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 24 Sep 2019 14:12:54 -0400
-Received: from mx2.suse.de ([195.135.220.15]:43932 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S2393831AbfIXSMx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Sep 2019 14:12:53 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 3AA7DAEF1;
-        Tue, 24 Sep 2019 18:12:51 +0000 (UTC)
-From:   Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
-To:     robh+dt@kernel.org, devicetree@vger.kernel.org,
-        frowand.list@gmail.com, linux-arm-kernel@lists.infradead.org,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, dmaengine@vger.kernel.org,
-        etnaviv@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        xen-devel@lists.xenproject.org, linux-tegra@vger.kernel.org,
-        linux-media@vger.kernel.org, linux-pci@vger.kernel.org
-Cc:     mbrugger@suse.com, robin.murphy@arm.com, f.fainelli@gmail.com,
-        james.quinlan@broadcom.com, wahrenst@gmx.net,
-        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
-Subject: [PATCH 01/11] of: address: clean-up unused variable in of_dma_get_range()
-Date:   Tue, 24 Sep 2019 20:12:32 +0200
-Message-Id: <20190924181244.7159-2-nsaenzjulienne@suse.de>
-X-Mailer: git-send-email 2.23.0
-In-Reply-To: <20190924181244.7159-1-nsaenzjulienne@suse.de>
-References: <20190924181244.7159-1-nsaenzjulienne@suse.de>
+        Tue, 24 Sep 2019 17:59:34 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60378 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2387723AbfIXV7d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 24 Sep 2019 17:59:33 -0400
+Received: from mail-qt1-f179.google.com (mail-qt1-f179.google.com [209.85.160.179])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 6156D217D7;
+        Tue, 24 Sep 2019 21:59:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1569362372;
+        bh=7EnBQLGJXbJ0krx6sf9eAXMt0SpVcFYHvJ4Ffxc+GEI=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=ZUjBfJ5y+ysHUqZVHvVQV6vmXEF5m5l7X/D3o8MMo6T+fnXCBe1Len91UdIVSmNm8
+         1+IgmCK2yWkyLXKdLfON0wTF2uVY6/Zj+z4CbqBQ8S1mTFhTzxJ4K+kIhlIbeitlp5
+         qXtcO6SJzhSJ74/8s14mN0YBxYms1LJJP0SwTimA=
+Received: by mail-qt1-f179.google.com with SMTP id x4so4100980qtq.8;
+        Tue, 24 Sep 2019 14:59:32 -0700 (PDT)
+X-Gm-Message-State: APjAAAUSipfNLAs0r3iY98Oq51rlrlAyRzY6XaLme2e9ZLFqmU4bXOcs
+        y3XFqQogK86HIUelflV99P3yYhl0p6JxbjmCsw==
+X-Google-Smtp-Source: APXvYqxu7lx2ORNXYuD01RyoAdK8YY//zQYn3oJnMVZaPVMMDgXcioCqkbUXveNdRfpBkQzN/4OY/SjTncH5t1k8eUk=
+X-Received: by 2002:ac8:6982:: with SMTP id o2mr5274643qtq.143.1569362371529;
+ Tue, 24 Sep 2019 14:59:31 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20190924181244.7159-1-nsaenzjulienne@suse.de>
+In-Reply-To: <20190924181244.7159-1-nsaenzjulienne@suse.de>
+From:   Rob Herring <robh+dt@kernel.org>
+Date:   Tue, 24 Sep 2019 16:59:20 -0500
+X-Gmail-Original-Message-ID: <CAL_Jsq+v+svTyna7UzQdRVqfNc5Z_bgWzxNRXv7-Wqv3NwDu2g@mail.gmail.com>
+Message-ID: <CAL_Jsq+v+svTyna7UzQdRVqfNc5Z_bgWzxNRXv7-Wqv3NwDu2g@mail.gmail.com>
+Subject: Re: [PATCH 00/11] of: Fix DMA configuration for non-DT masters
+To:     Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
+Cc:     devicetree@vger.kernel.org, Frank Rowand <frowand.list@gmail.com>,
+        "moderated list:ARM/FREESCALE IMX / MXC ARM ARCHITECTURE" 
+        <linux-arm-kernel@lists.infradead.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        linux-arm-msm <linux-arm-msm@vger.kernel.org>,
+        "open list:DMA GENERIC OFFLOAD ENGINE SUBSYSTEM" 
+        <dmaengine@vger.kernel.org>, etnaviv@lists.freedesktop.org,
+        dri-devel <dri-devel@lists.freedesktop.org>,
+        xen-devel@lists.xenproject.org, linux-tegra@vger.kernel.org,
+        Linux Media Mailing List <linux-media@vger.kernel.org>,
+        linux-pci@vger.kernel.org, Matthias Brugger <mbrugger@suse.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        james.quinlan@broadcom.com, Stefan Wahren <wahrenst@gmx.net>,
+        Dan Williams <dan.j.williams@intel.com>,
+        freedreno <freedreno@lists.freedesktop.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-'len' in of_dma_get_range() is used to check the 'dma-ranges' property
-length. After the fact, some calculations are run on the variable to be
-then left unused.
+On Tue, Sep 24, 2019 at 1:12 PM Nicolas Saenz Julienne
+<nsaenzjulienne@suse.de> wrote:
+>
+> Hi All,
+> this series tries to address one of the issues blocking us from
+> upstreaming Broadcom's STB PCIe controller[1]. Namely, the fact that
+> devices not represented in DT which sit behind a PCI bus fail to get the
+> bus' DMA addressing constraints.
+>
+> This is due to the fact that of_dma_configure() assumes it's receiving a
+> DT node representing the device being configured, as opposed to the PCIe
+> bridge node we currently pass. This causes the code to directly jump
+> into PCI's parent node when checking for 'dma-ranges' and misses
+> whatever was set there.
+>
+> To address this I create a new API in OF - inspired from Robin Murphys
+> original proposal[2] - which accepts a bus DT node as it's input in
+> order to configure a device's DMA constraints. The changes go deep into
+> of/address.c's implementation, as a device being having a DT node
+> assumption was pretty strong.
+>
+> On top of this work, I also cleaned up of_dma_configure() removing its
+> redundant arguments and creating an alternative function for the special cases
+> not applicable to either the above case or the default usage.
+>
+> IMO the resulting functions are more explicit. They will probably
+> surface some hacky usages that can be properly fixed as I show with the
+> DT fixes on the Layerscape platform.
+>
+> This was also tested on a Raspberry Pi 4 with a custom PCIe driver and
+> on a Seattle AMD board.
 
-Signed-off-by: Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
----
+Humm, I've been working on this issue too. Looks similar though yours
+has a lot more churn and there's some other bugs I've found.
 
- drivers/of/address.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+Can you test out this branch[1]. I don't have any h/w needing this,
+but wrote a unittest and tested with modified QEMU.
 
-diff --git a/drivers/of/address.c b/drivers/of/address.c
-index 978427a9d5e6..0f898756199d 100644
---- a/drivers/of/address.c
-+++ b/drivers/of/address.c
-@@ -922,7 +922,7 @@ int of_dma_get_range(struct device_node *np, u64 *dma_addr, u64 *paddr, u64 *siz
- {
- 	struct device_node *node = of_node_get(np);
- 	const __be32 *ranges = NULL;
--	int len, naddr, nsize, pna;
-+	int naddr, nsize, pna;
- 	int ret = 0;
- 	u64 dmaaddr;
- 
-@@ -931,6 +931,7 @@ int of_dma_get_range(struct device_node *np, u64 *dma_addr, u64 *paddr, u64 *siz
- 
- 	while (1) {
- 		struct device_node *parent;
-+		int len;
- 
- 		naddr = of_n_addr_cells(node);
- 		nsize = of_n_size_cells(node);
-@@ -962,8 +963,6 @@ int of_dma_get_range(struct device_node *np, u64 *dma_addr, u64 *paddr, u64 *siz
- 		goto out;
- 	}
- 
--	len /= sizeof(u32);
--
- 	pna = of_n_addr_cells(node);
- 
- 	/* dma-ranges format:
--- 
-2.23.0
+Rob
 
+[1] git://git.kernel.org/pub/scm/linux/kernel/git/robh/linux.git dma-masks
