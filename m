@@ -2,131 +2,192 @@ Return-Path: <SRS0=Sl5Z=XU=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A3ACC432C1
-	for <linux-wireless@archiver.kernel.org>; Wed, 25 Sep 2019 08:11:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F24DC432C1
+	for <linux-wireless@archiver.kernel.org>; Wed, 25 Sep 2019 09:11:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1BD0A2082F
-	for <linux-wireless@archiver.kernel.org>; Wed, 25 Sep 2019 08:11:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2FA3A20673
+	for <linux-wireless@archiver.kernel.org>; Wed, 25 Sep 2019 09:11:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="NaqC7WgW"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="jorIhOxZ";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="OYEFjpao"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2634045AbfIYILQ (ORCPT
+        id S1732464AbfIYJLQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 25 Sep 2019 04:11:16 -0400
-Received: from us-smtp-1.mimecast.com ([205.139.110.61]:31039 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2634024AbfIYILP (ORCPT
+        Wed, 25 Sep 2019 05:11:16 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:54644 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728608AbfIYJK5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Sep 2019 04:11:15 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1569399073;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=H5j3oKikjWd/GFL/yTQQfZvWkrIpbvVCnx997hnY+NU=;
-        b=NaqC7WgWNRKAviTWeZhgJMn8wWynbeI1ioLaDQWa2iHymo8xkEua2KkYxpfVbgJ24mIZui
-        G5mXRJMxymRu7zPRuDTLyTt2D7xc2B2iemcUzq/1xUllA8KYBpDRXO2/fO9kG4+iPjXhmr
-        GR2fwhkBkzOvDtxt5ajb0mu21/41a5g=
-Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
- [209.85.128.70]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-16-KT8HOrB-M1OoVk5q63JG0w-1; Wed, 25 Sep 2019 04:11:11 -0400
-Received: by mail-wm1-f70.google.com with SMTP id t185so1532964wmg.4
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Sep 2019 01:11:11 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:in-reply-to:references:date
-         :message-id:mime-version;
-        bh=FF+TG94B/K1rpPfAPH78lOMh36aUB89zAzE6f7nuppk=;
-        b=LvU+obsdgjU1xkXHxlEK1YV42nMXpEUnwCTKlpJXjqpqr+K3BrxYBGyGQTeuPfjX6C
-         OTldZZlWPHAI5CHqg8RXSCgKXDSWDFmhaF+qlH/jGhd8ZswIAMDMwrtKlXl3u+8yJwBv
-         vh9ebEDi1VNg8uJ5ub/CdoIFd5bxCQXOQfWUBOOAKWGYBKHh3ZurWt6DChNmPIE7VLvd
-         kCEikurEANx86y+awD62UVFof8TqqJZ16u+L/9r7AuCeA01vVDNUP641oX3IhGWjvBsb
-         EIXR6Ojwh3i18cHlJUspc4nrP+2k9HfFDN3uu1HwbBNL8Qirn38zZHxg0f1whme+ZwdE
-         xbgA==
-X-Gm-Message-State: APjAAAUSKyj0/xfd/KewOwF+g1fY/uMU2ryYm+YROvqebWm48c2U2beq
-        LM+Ws2KcNpAo0YKW1xtpYU/nErPi9n+t14ubT5yA5BhqGy/bNVOvkvaLEolPBk/j+/TDdPpH5jp
-        sg9IjdaqoRZf6/FM7kB5OvWtpdrk=
-X-Received: by 2002:a1c:3281:: with SMTP id y123mr5817224wmy.34.1569399070202;
-        Wed, 25 Sep 2019 01:11:10 -0700 (PDT)
-X-Google-Smtp-Source: APXvYqy/rPqlcv9OUDGl3pYBZnN8fH0fTTUx0H2m+tcBh4NPRNkX3Qv6OPWXIuOWTy7yacxBIK66VA==
-X-Received: by 2002:a1c:3281:: with SMTP id y123mr5817203wmy.34.1569399069987;
-        Wed, 25 Sep 2019 01:11:09 -0700 (PDT)
-Received: from alrua-x1.borgediget.toke.dk (borgediget.toke.dk. [85.204.121.218])
-        by smtp.gmail.com with ESMTPSA id r18sm864579edl.6.2019.09.25.01.11.08
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 25 Sep 2019 01:11:09 -0700 (PDT)
-Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
-        id 56A4C18063D; Wed, 25 Sep 2019 10:11:08 +0200 (CEST)
-From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
-To:     Yibo Zhao <yiboz@codeaurora.org>
-Cc:     Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org,
-        make-wifi-fast@lists.bufferbloat.net,
-        John Crispin <john@phrozen.org>,
-        Lorenzo Bianconi <lorenzo@kernel.org>,
-        Felix Fietkau <nbd@nbd.name>,
-        linux-wireless-owner@vger.kernel.org
-Subject: Re: [PATCH RFC/RFT 4/4] mac80211: Apply Airtime-based Queue Limit (AQL) on packet dequeue
-In-Reply-To: <2f6b649dcb788222e070ebb5593918c7@codeaurora.org>
-References: <156889576422.191202.5906619710809654631.stgit@alrua-x1> <156889576869.191202.510507546538322707.stgit@alrua-x1> <2f6b649dcb788222e070ebb5593918c7@codeaurora.org>
-X-Clacks-Overhead: GNU Terry Pratchett
-Date:   Wed, 25 Sep 2019 10:11:08 +0200
-Message-ID: <87y2yc3ieb.fsf@toke.dk>
-MIME-Version: 1.0
-X-MC-Unique: KT8HOrB-M1OoVk5q63JG0w-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=WINDOWS-1252
-Content-Transfer-Encoding: quoted-printable
+        Wed, 25 Sep 2019 05:10:57 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 4851F611FA; Wed, 25 Sep 2019 09:10:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1569402652;
+        bh=28HjTg107xudXWilP3f2TOc5WYDSsZ6Rmykw7iVlDPk=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=jorIhOxZaKDA0MH+G1vEM98l42BK/Im7HQ/VQ1kFg/0P9tcM9fGfH3Wt6zDaGJIiV
+         VW98bF1kQOWlrKK8m6Yh8SMVOkneuJB6uUM9Rzh6QHkW0SjvoHMvnvEObChyUtd+FD
+         ApEGq1abMcYUPOqT4MVxXg/XjDJYdJw/1GJjRHLs=
+Received: from wgong-HP-Z240-SFF-Workstation.qca.qualcomm.com (unknown [180.166.53.21])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: wgong@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 15A01611BF;
+        Wed, 25 Sep 2019 09:10:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1569402651;
+        bh=28HjTg107xudXWilP3f2TOc5WYDSsZ6Rmykw7iVlDPk=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=OYEFjpaoK9Ba/iJHXZOrlSVJZMYMqqDwViS/7YKe7yCfU59hLlGiwAkA/irQ8lFpy
+         gmpwRA6ZRiFRmf2tv2M+Zeff1Ss61c9i+u1pQHRHqUQ/kz6TudW9MUHqTbivE9SUse
+         e9cx7lZ8Snqz4x4JP5HNH4S/F0iTK+BRDOrQh2HI=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 15A01611BF
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=wgong@codeaurora.org
+From:   Wen Gong <wgong@codeaurora.org>
+To:     ath10k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org
+Subject: [PATCH v6 3/3] ath10k: add workqueue for RX path of sdio
+Date:   Wed, 25 Sep 2019 17:10:39 +0800
+Message-Id: <1569402639-31720-4-git-send-email-wgong@codeaurora.org>
+X-Mailer: git-send-email 1.9.1
+In-Reply-To: <1569402639-31720-1-git-send-email-wgong@codeaurora.org>
+References: <1569402639-31720-1-git-send-email-wgong@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Yibo Zhao <yiboz@codeaurora.org> writes:
+For RX, it has two parts, one is to read data from sdio, another
+is to indicate the packets to upper stack. Recently it has only
+one thread to do all RX things, it results that it is sequential
+for RX and low throughout, change RX to parallel for the two parts
+will increase throughout.
 
-> So if it is going to work together with virtual time based mechanism in=
-=20
-> the future, the Tx criteria will be met both of below conditions,
->         1. Lower than g_vt
->         2. Lower than IEEE80211_AIRTIME_QUEUE_LIMIT
+This patch move the indication to a workqueue, it results in
+significant performance improvement on RX path.
 
-> Are we going to maintain two kinds of airtime that one is from=20
-> estimation and the other is basically from FW reporting?
+Udp rx throughout is 200Mbps without this patch, and it arrives
+400Mbps with this patch.
 
-Yes, that was my plan. For devices that don't have FW reporting of
-airtime, we can fall back to the estimation; but if we do have FW
-reporting that is most likely going to be more accurate, so better to
-use that for fairness...
+Tested with QCA6174 SDIO with firmware
+WLAN.RMH.4.4.1-00017-QCARMSWPZ-1
 
-> Meanwhile, airtime_queued will also limit the situation that we only
-> have a station for transmission. Not sure if the peak throughput will
-> be impacted. I believe it may work fine with 11ac in chromiumos, how
-> about 11n and 11a?
+Signed-off-by: Wen Gong <wgong@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath10k/sdio.c | 35 +++++++++++++++++++++++++++++++---
+ drivers/net/wireless/ath/ath10k/sdio.h | 11 +++++++++++
+ 2 files changed, 43 insertions(+), 3 deletions(-)
 
-Well, we will need to test that, of course. But ath9k shows that it's
-quite possible to run with quite shallow buffers, so with a bit of
-tuning I think we should be fine. If anything, slower networks need
-*fewer* packets queued in the firmware, and it's *easier* for the host
-to keep up with transmission.
-
-> Anyway, I think this approach will help to improve performance of the=20
-> virtual time based mechanism since it makes packets buffered in host=20
-> instead of FW's deep queue. We have observed 2-clients case with=20
-> different ratio in TCP fails to maintain the ratio because the packets=20
-> arriving at host get pushed to FW immediately and thus the airtime=20
-> weight sum is 0 in most of time meaning no TXQ in the rbtree. For UDP,=20
-> if we pump load more than the PHY rate, the ratio can be maintained=20
-> beacuse the FW queue is full and packtes begin to be buffered in host=20
-> making TXQs staying on the rbtree for most of time. However, TCP has its=
-=20
-> own flow control that we can not push enough load like UDP.
-
-Yes, fixing that is exactly the point of this series :)
-
--Toke
+diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
+index a510101..ff02833 100644
+--- a/drivers/net/wireless/ath/ath10k/sdio.c
++++ b/drivers/net/wireless/ath/ath10k/sdio.c
+@@ -419,6 +419,7 @@ static int ath10k_sdio_mbox_rx_process_packets(struct ath10k *ar,
+ 	struct ath10k_htc *htc = &ar->htc;
+ 	struct ath10k_sdio_rx_data *pkt;
+ 	struct ath10k_htc_ep *ep;
++	struct ath10k_skb_cb *cb;
+ 	enum ath10k_htc_ep_id id;
+ 	int ret, i, *n_lookahead_local;
+ 	u32 *lookaheads_local;
+@@ -464,10 +465,16 @@ static int ath10k_sdio_mbox_rx_process_packets(struct ath10k *ar,
+ 		if (ret)
+ 			goto out;
+ 
+-		if (!pkt->trailer_only)
+-			ep->ep_ops.ep_rx_complete(ar_sdio->ar, pkt->skb);
+-		else
++		if (!pkt->trailer_only) {
++			cb = ATH10K_SKB_CB(pkt->skb);
++			cb->eid = id;
++
++			skb_queue_tail(&ar_sdio->rx_head, pkt->skb);
++			queue_work(ar->workqueue_aux,
++				   &ar_sdio->async_work_rx);
++		} else {
+ 			kfree_skb(pkt->skb);
++		}
+ 
+ 		/* The RX complete handler now owns the skb...*/
+ 		pkt->skb = NULL;
+@@ -1317,6 +1324,25 @@ static void __ath10k_sdio_write_async(struct ath10k *ar,
+ 	ath10k_sdio_free_bus_req(ar, req);
+ }
+ 
++static void ath10k_rx_indication_async_work(struct work_struct *work)
++{
++	struct ath10k_sdio *ar_sdio = container_of(work, struct ath10k_sdio,
++						   async_work_rx);
++	struct ath10k *ar = ar_sdio->ar;
++	struct ath10k_htc_ep *ep;
++	struct ath10k_skb_cb *cb;
++	struct sk_buff *skb;
++
++	while (true) {
++		skb = skb_dequeue(&ar_sdio->rx_head);
++		if (!skb)
++			break;
++		cb = ATH10K_SKB_CB(skb);
++		ep = &ar->htc.endpoint[cb->eid];
++		ep->ep_ops.ep_rx_complete(ar, skb);
++	}
++}
++
+ static void ath10k_sdio_write_async_work(struct work_struct *work)
+ {
+ 	struct ath10k_sdio *ar_sdio = container_of(work, struct ath10k_sdio,
+@@ -2087,6 +2113,9 @@ static int ath10k_sdio_probe(struct sdio_func *func,
+ 	for (i = 0; i < ATH10K_SDIO_BUS_REQUEST_MAX_NUM; i++)
+ 		ath10k_sdio_free_bus_req(ar, &ar_sdio->bus_req[i]);
+ 
++	skb_queue_head_init(&ar_sdio->rx_head);
++	INIT_WORK(&ar_sdio->async_work_rx, ath10k_rx_indication_async_work);
++
+ 	dev_id_base = FIELD_GET(QCA_MANUFACTURER_ID_BASE, id->device);
+ 	switch (dev_id_base) {
+ 	case QCA_MANUFACTURER_ID_AR6005_BASE:
+diff --git a/drivers/net/wireless/ath/ath10k/sdio.h b/drivers/net/wireless/ath/ath10k/sdio.h
+index 00bd4ca..8aa0dbc 100644
+--- a/drivers/net/wireless/ath/ath10k/sdio.h
++++ b/drivers/net/wireless/ath/ath10k/sdio.h
+@@ -98,6 +98,12 @@
+ #define ATH10K_FIFO_TIMEOUT_AND_CHIP_CONTROL_DISABLE_SLEEP_OFF 0xFFFEFFFF
+ #define ATH10K_FIFO_TIMEOUT_AND_CHIP_CONTROL_DISABLE_SLEEP_ON 0x10000
+ 
++struct ath10k_sdio_rx_request {
++	struct list_head list;
++	struct sk_buff *skb;
++	struct ath10k_htc_ep *ep;
++};
++
+ struct ath10k_sdio_bus_request {
+ 	struct list_head list;
+ 
+@@ -187,6 +193,9 @@ struct ath10k_sdio {
+ 	struct ath10k_sdio_bus_request bus_req[ATH10K_SDIO_BUS_REQUEST_MAX_NUM];
+ 	/* free list of bus requests */
+ 	struct list_head bus_req_freeq;
++
++	struct sk_buff_head rx_head;
++
+ 	/* protects access to bus_req_freeq */
+ 	spinlock_t lock;
+ 
+@@ -213,6 +222,8 @@ struct ath10k_sdio {
+ 	struct list_head wr_asyncq;
+ 	/* protects access to wr_asyncq */
+ 	spinlock_t wr_async_lock;
++
++	struct work_struct async_work_rx;
+ };
+ 
+ static inline struct ath10k_sdio *ath10k_sdio_priv(struct ath10k *ar)
+-- 
+1.9.1
 
