@@ -2,94 +2,66 @@ Return-Path: <SRS0=Sl5Z=XU=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D17FDC432C1
-	for <linux-wireless@archiver.kernel.org>; Wed, 25 Sep 2019 09:12:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D03BC432C1
+	for <linux-wireless@archiver.kernel.org>; Wed, 25 Sep 2019 09:16:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A35A020673
-	for <linux-wireless@archiver.kernel.org>; Wed, 25 Sep 2019 09:12:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6E65520640
+	for <linux-wireless@archiver.kernel.org>; Wed, 25 Sep 2019 09:16:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="WaRGVGrW";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Mgr4SvT+"
+	dkim=pass (1024-bit key) header.d=fedux.com.ar header.i=@fedux.com.ar header.b="yePeTKb3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731212AbfIYJL4 (ORCPT
+        id S1726975AbfIYJPw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 25 Sep 2019 05:11:56 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:54532 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732047AbfIYJK5 (ORCPT
+        Wed, 25 Sep 2019 05:15:52 -0400
+Received: from mail.fedux.com.ar ([116.203.58.232]:59242 "EHLO
+        mail.fedux.com.ar" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726025AbfIYJPc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Sep 2019 05:10:57 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id F3D036115A; Wed, 25 Sep 2019 09:10:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1569402648;
-        bh=5PJK+SEQ8N7jhb0SG9vi+nd3Gvu/oOJKz/borfItxDc=;
+        Wed, 25 Sep 2019 05:15:32 -0400
+Received: from kaoz-xps.fedux.com.ar (unknown [192.168.12.12])
+        by mail.fedux.com.ar (Postfix) with ESMTP id 90AAC2911FA;
+        Wed, 25 Sep 2019 11:08:58 +0200 (CEST)
+Authentication-Results: mail.fedux.com.ar; dmarc=fail (p=none dis=none) header.from=fedux.com.ar
+Authentication-Results: mail.fedux.com.ar; spf=fail smtp.mailfrom=fedux@fedux.com.ar
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fedux.com.ar;
+        s=default; t=1569402538;
+        bh=rvX46RF6nf0sD/QksdtcBCmzkEhusG9u1aHeTNBCeJo=;
         h=From:To:Cc:Subject:Date:From;
-        b=WaRGVGrWhfX5m1fPlqLhRxGRJOtyGua/5CEfxRHYLSpB2l8UAtCx+XevH47NUDD2F
-         byjBDCU8q3n5H5vSpwGZSkvWkdlCcY3GOLYPHFC5uhq+OYybURTHws11cZ9BqavDyP
-         mKZu2yo/RK/GSo5gkZ17fzE+UY+SuTX3gMH5yuhI=
-Received: from wgong-HP-Z240-SFF-Workstation.qca.qualcomm.com (unknown [180.166.53.21])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: wgong@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id D61336115A;
-        Wed, 25 Sep 2019 09:10:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1569402647;
-        bh=5PJK+SEQ8N7jhb0SG9vi+nd3Gvu/oOJKz/borfItxDc=;
-        h=From:To:Cc:Subject:Date:From;
-        b=Mgr4SvT+R3yHsS8BEepSaYWfLLpSowRJkN58Osz5lhIbbfKfbr0dnAC8sweoPqz8p
-         KyHZ9kBqvGVMqZLjq7ewZkmgU0LaDeIAOvoKUA8txVrtKKhhPjM7LbDFzN+AXi7P2D
-         jCePmHumHrgj0Ln6QBN28IWWeQZXsghGPHhq7Y0o=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org D61336115A
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=wgong@codeaurora.org
-From:   Wen Gong <wgong@codeaurora.org>
-To:     ath10k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org
-Subject: [PATCH v6 0/3] ath10k: improve throughout of RX of sdio
-Date:   Wed, 25 Sep 2019 17:10:36 +0800
-Message-Id: <1569402639-31720-1-git-send-email-wgong@codeaurora.org>
-X-Mailer: git-send-email 1.9.1
+        b=yePeTKb3SaJJRQU41Ga0SO+v8wY72ncVQz/X89AcaV39E5EmEG8OUlrsVQ+15/6mF
+         i+IDHz6RYtx12GM6MtrUj3u1QQwwEENGZqjyT6g71PXFtIuhBdwove/9YOx/WxMKx8
+         k+1NGWW7H7quLiMZxE1mXG48Gxmpk+cVVIFfLOTs=
+Received: by kaoz-xps.fedux.com.ar (Postfix, from userid 1000)
+        id 65253140C0E; Wed, 25 Sep 2019 11:08:58 +0200 (CEST)
+From:   Federico Cuello <fedux@fedux.com.ar>
+To:     linux-wireless@vger.kernel.org
+Cc:     wgong@codeaurora.org
+Subject: ath10k: Poor performance with kernel 5.3 fixed
+Date:   Wed, 25 Sep 2019 11:08:55 +0200
+Message-Id: <20190925090856.6964-1-fedux@fedux.com.ar>
+X-Mailer: git-send-email 2.23.0
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-v6: change code style, change commit log to add test value of RX, use sk_buff_head to replace the rx queue
-this is 3 patches of the 7 patches from ath10k: improve throughout of tcp/udp TX/RX of sdio
+When upgrading to 5.3 my AP started to work really slow. I tracked the problem to 4504f0e5b5714d9d26b1a80bf1fc133c95830588 and fixed the issue.
 
-v5: no change
+Logs before the patch:
 
-v4: add err handle in ath10k_sdio_mbox_rx_fetch_bundle, change commit log
+ ath10k_pci 0000:04:00.0: qca988x hw2.0 target 0x4100016c chip_id 0x043222ff sub 0000:0000
+ ath10k_pci 0000:04:00.0: kconfig debug 1 debugfs 1 tracing 1 dfs 0 testmode 0
+ ath10k_pci 0000:04:00.0: firmware ver 10.2.4-1.0-00047 api 5 features no-p2p,raw-mode,mfp,allows-mesh-bcast crc32 35bd9258
+ ath10k_pci 0000:04:00.0: board_file api 1 bmi_id N/A crc32 bebc7c08
+ ath10k_pci 0000:04:00.0: UART prints enabled
 
-v3: change some code style
-split fix incorrect skb tail of rx bundle to patch "adjust skb length in ath10k_sdio_mbox_rx_packet"
+Notice that UART prints were enabled (when they were not enabled by param)
 
-v2: fix incorrect skb tail of rx bundle in ath10k_sdio_mbox_rx_process_packet, change macro HTC_GET_BUNDLE_COUNT
+The attached patch fixes the issue when uart_print is false and uart_pin_workaround also false.
 
-The bottleneck of throughout on sdio chip is the bus bandwidth, to the
-patches are all to increase the use ratio of sdio bus.
-
-These patches only affect sdio bus chip, explanation is mentioned in each
-patch's commit log.
-
-Alagu Sankar (1):
-  ath10k: enable RX bundle receive for sdio
-
-Wen Gong (2):
-  ath10k: change max RX bundle size from 8 to 32 for sdio
-  ath10k: add workqueue for RX path of sdio
-
- drivers/net/wireless/ath/ath10k/htc.h  |  12 ++-
- drivers/net/wireless/ath/ath10k/sdio.c | 147 +++++++++++++++++++++++----------
- drivers/net/wireless/ath/ath10k/sdio.h |  26 +++++-
- 3 files changed, 134 insertions(+), 51 deletions(-)
-
--- 
-1.9.1
 
