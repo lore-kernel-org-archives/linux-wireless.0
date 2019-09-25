@@ -2,94 +2,94 @@ Return-Path: <SRS0=Sl5Z=XU=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 949B7C432C1
-	for <linux-wireless@archiver.kernel.org>; Wed, 25 Sep 2019 09:16:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DDE89C432C2
+	for <linux-wireless@archiver.kernel.org>; Wed, 25 Sep 2019 10:35:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5C3C020640
-	for <linux-wireless@archiver.kernel.org>; Wed, 25 Sep 2019 09:16:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AD18C214D9
+	for <linux-wireless@archiver.kernel.org>; Wed, 25 Sep 2019 10:35:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=fedux.com.ar header.i=@fedux.com.ar header.b="WQImZaPg"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Wi5Ag0SH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726690AbfIYJPq (ORCPT
+        id S2390011AbfIYKfH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 25 Sep 2019 05:15:46 -0400
-Received: from mail.fedux.com.ar ([116.203.58.232]:59238 "EHLO
-        mail.fedux.com.ar" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725980AbfIYJP1 (ORCPT
+        Wed, 25 Sep 2019 06:35:07 -0400
+Received: from mail-ot1-f66.google.com ([209.85.210.66]:33964 "EHLO
+        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389655AbfIYKfG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Sep 2019 05:15:27 -0400
-X-Greylist: delayed 384 seconds by postgrey-1.27 at vger.kernel.org; Wed, 25 Sep 2019 05:15:26 EDT
-Received: from kaoz-xps.fedux.com.ar (unknown [192.168.12.12])
-        by mail.fedux.com.ar (Postfix) with ESMTP id 15D232911FB;
-        Wed, 25 Sep 2019 11:08:59 +0200 (CEST)
-Authentication-Results: mail.fedux.com.ar; dmarc=fail (p=none dis=none) header.from=fedux.com.ar
-Authentication-Results: mail.fedux.com.ar; spf=fail smtp.mailfrom=fedux@fedux.com.ar
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fedux.com.ar;
-        s=default; t=1569402539;
-        bh=LYXUhPYeCMrWz+2Di6NEBd2QtPIYlty7oxUM/DeccAk=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=WQImZaPgsvAFwLC1uRAlGpgyXJzeT5cWh1ISevBNKAtAP/JkYcnpG9RFHHUllCsfG
-         8gk8y7g/KNUbIZ/3B3+6KMpjjMN9yvDqTwR8AJLoAg0VRhUMUxngH7odJAZs2ltUGt
-         Hc8b3aO5QleyZaQRqtUdJo1WMc1vhTb+OfxDJDEE=
-Received: by kaoz-xps.fedux.com.ar (Postfix, from userid 1000)
-        id EBB4F140C0E; Wed, 25 Sep 2019 11:08:58 +0200 (CEST)
-From:   Federico Cuello <fedux@fedux.com.ar>
-To:     linux-wireless@vger.kernel.org
-Cc:     wgong@codeaurora.org, Federico Cuello <fedux@fedux.com.ar>
-Subject: [PATCH] ath10k: Fix ath10k_init_uart when uart_print is false
-Date:   Wed, 25 Sep 2019 11:08:56 +0200
-Message-Id: <20190925090856.6964-2-fedux@fedux.com.ar>
-X-Mailer: git-send-email 2.23.0
-In-Reply-To: <20190925090856.6964-1-fedux@fedux.com.ar>
-References: <20190925090856.6964-1-fedux@fedux.com.ar>
+        Wed, 25 Sep 2019 06:35:06 -0400
+Received: by mail-ot1-f66.google.com with SMTP id m19so4351454otp.1
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Sep 2019 03:35:06 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=8wzVpUT1lF+LA85bI7Ppewnhb+cRPfMX9zvQYDu2GVU=;
+        b=Wi5Ag0SHfzxXZInHydI4YbqTIB/rrxCCL1JJscBC7KJCrxqB4Ihcn+UIjSPYjwKNch
+         7cBa5Lxf5Asnek9AGEu7V36waFAgT7Or0k7KzIQ7IqGDEtdO/MXNsdY5WBtitHzWOQug
+         dUsljL/wTOy+dxiX1U3vAHWmR9SN7rWKDO4xvpVJxDfg4q8fkQBIJKe6XT43I+awGL9n
+         0PtaYQaGTZf6vRsZpwOZj2V0vHGkpFSCuBIcN+YY78+rZf/1/LvnDEwI2PZuyWI6wHmh
+         kjxQiEMtUzmTUqeGS+dL5jv7ZhYB7rocdWN8xmwn+eQsu0engwyPl9ftTLcelVUVEqxy
+         8+SA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:in-reply-to:references:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=8wzVpUT1lF+LA85bI7Ppewnhb+cRPfMX9zvQYDu2GVU=;
+        b=qTK+/gIbQXm7gmdsC4rV4gCDquC/5Ce0P/VS91d/n5fwqcBU6A6KNHp9XSjXYdflYX
+         DkhC7U45f4kQtr/6MQBpNu/+4PWI788v1aUxHhQg7KglN1jpm6PizN+7Oi4xJmApJbBc
+         tkiTj49nv4zBSz6ZBoc1XFudgUZUy2os41VZIYVYUIFTvWFgHP1rva4lfmItgdw/nXxB
+         njqm3j1o6Vp/GpCersT1n2Qr9NJHSuIRqdldkvEVpmHKzbHM8achpZYQ/AyZ5j3amvEZ
+         ppB+50Z8oSZx3PLK9b47GRAD0Ag/qIah8Nblv2ZlQTmCMw3Xr0fDA1Oeux8lpIvORPcq
+         b7Yg==
+X-Gm-Message-State: APjAAAVIAZ6gQzkdc3nws6nyrqK4eJ0rT7xtD0CPJ1MdhFaE9Ii0k9Yz
+        O4lbfU6qoJfkFgqS1yKB/2l/Hx0X6wN6dE/grTQ=
+X-Google-Smtp-Source: APXvYqyX/ZlcKUdbiApg5M1nDcipCDSrDxDkBnkm+TsyGlNqd0QuRU4h563tY5h2saYISCa6BDUaXRSCxfZliuxl4KU=
+X-Received: by 2002:a05:6830:5a:: with SMTP id d26mr5405952otp.256.1569407705902;
+ Wed, 25 Sep 2019 03:35:05 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Received: by 2002:a9d:2286:0:0:0:0:0 with HTTP; Wed, 25 Sep 2019 03:35:05
+ -0700 (PDT)
+In-Reply-To: <a87917de-d60c-b746-742a-ade37ffe9c4c@candelatech.com>
+References: <1553025580-6118-1-git-send-email-pozega.tomislav@gmail.com>
+ <2715bcef-5b03-fc19-e665-3c6f90a7d123@candelatech.com> <CAKR_QVKfb5vkT1xmmEyvJzeb+VnPx8T3ZpkdLPTMx+agtSBYMg@mail.gmail.com>
+ <a87917de-d60c-b746-742a-ade37ffe9c4c@candelatech.com>
+From:   Tom Psyborg <pozega.tomislav@gmail.com>
+Date:   Wed, 25 Sep 2019 12:35:05 +0200
+Message-ID: <CAKR_QV+TDi5DQ5Vsc-nactAryzAExe470VNJ+tj+vUa37rs_Xg@mail.gmail.com>
+Subject: Re: [PATCH] ath10k: Fix ASPM L1 state on QCA988X
+To:     kvalo@codeaurora.org
+Cc:     linux-wireless@vger.kernel.org,
+        Ben Greear <greearb@candelatech.com>,
+        Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Patch 4504f0e5b5714d9d26b1a80bf1fc133c95830588 introduced a workaround
-for a firmware UART pin configuration bug, but it caused uart_print to be
-interpreted as true when it was false and uart_pin_workaround also false.
+Hi
 
-This patch corrects the exit condition when uart_print is false.
+Some more info: the actual regression was introduced with the commit:
+ath10k: enable ASPM - reverting this change only is enough to have
+card operating as expected.
 
-Signed-off-by: Federico Cuello <fedux@fedux.com.ar>
----
- drivers/net/wireless/ath/ath10k/core.c | 14 ++++++++------
- 1 file changed, 8 insertions(+), 6 deletions(-)
+Still, this patch would apply, but in slightly different manner.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index dc45d16e8d21..dd1311910d6a 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -2118,12 +2118,14 @@ static int ath10k_init_uart(struct ath10k *ar)
- 		return ret;
- 	}
- 
--	if (!uart_print && ar->hw_params.uart_pin_workaround) {
--		ret = ath10k_bmi_write32(ar, hi_dbg_uart_txpin,
--					 ar->hw_params.uart_pin);
--		if (ret) {
--			ath10k_warn(ar, "failed to set UART TX pin: %d", ret);
--			return ret;
-+	if (!uart_print) {
-+		if (ar->hw_params.uart_pin_workaround) {
-+			ret = ath10k_bmi_write32(ar, hi_dbg_uart_txpin,
-+						 ar->hw_params.uart_pin);
-+			if (ret) {
-+				ath10k_warn(ar, "failed to set UART TX pin: %d", ret);
-+				return ret;
-+			}
- 		}
- 
- 		return 0;
--- 
-2.23.0
+On OpenWrt router, masked value would always read 0x27 with two cards
+tested QCA9862 and QCA9880 v1.
 
+But on HP laptop, QCA9862 masked value reading was 0x0f, and writing
+0x27 to this register still seems fine, as long as the faulty ASPM
+change is kept reverted.
+
+I did also notice about 10=C2=B0C temperature drop in ath10k_hwmon and no
+more crashes when resuming from sleep, but that might be related to
+the fact these tests were now done with backports-5.1 instead of the
+in-tree 4.9 driver.
