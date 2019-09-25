@@ -2,116 +2,151 @@ Return-Path: <SRS0=Sl5Z=XU=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F3D7C432C2
-	for <linux-wireless@archiver.kernel.org>; Wed, 25 Sep 2019 12:52:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D420C432C2
+	for <linux-wireless@archiver.kernel.org>; Wed, 25 Sep 2019 13:45:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 06C4D217F4
-	for <linux-wireless@archiver.kernel.org>; Wed, 25 Sep 2019 12:52:47 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="RBg5vSSU"
+	by mail.kernel.org (Postfix) with ESMTP id 2AC2821D7E
+	for <linux-wireless@archiver.kernel.org>; Wed, 25 Sep 2019 13:45:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405798AbfIYMwr (ORCPT
+        id S2406832AbfIYNo6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 25 Sep 2019 08:52:47 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:41692 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1732452AbfIYMwq (ORCPT
+        Wed, 25 Sep 2019 09:44:58 -0400
+Received: from bhuna.collabora.co.uk ([46.235.227.227]:58004 "EHLO
+        bhuna.collabora.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2406650AbfIYNo5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Sep 2019 08:52:46 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1569415965;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=RAxkE1h5ax6Fw7x83rQJVKg6nF9IOu73qh/OcRTyCUM=;
-        b=RBg5vSSUHOtdGSVlApDsNSQjFDYy//xqBQbRMCuCPJiWcuq/yzzmjFsrVWLlKkM8FufA9x
-        0qp52DAfRAFFW936C6tgpbboro8VsDnqbks9GVrcPHu+HxCykA0P6DCdmQ4U+52mj5AQ0n
-        H52gfkP6AbXdSULzbSkiKt5aoUuOW18=
-Received: from mail-lf1-f69.google.com (mail-lf1-f69.google.com
- [209.85.167.69]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-221-8Tk1wGIkN_OjwrWm0aHLMA-1; Wed, 25 Sep 2019 08:52:43 -0400
-Received: by mail-lf1-f69.google.com with SMTP id y27so814911lfg.21
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Sep 2019 05:52:42 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:in-reply-to:references:date
-         :message-id:mime-version:content-transfer-encoding;
-        bh=RAxkE1h5ax6Fw7x83rQJVKg6nF9IOu73qh/OcRTyCUM=;
-        b=NNqm9X70nwbJUsadXrc5Od5QI09AAUcv3DMaQhH0Mpkzm5DgXNp8b28CNGGV5DZ8wr
-         fVACrN91xRqUyP3vmwkiNCnrdiaOsUqYLDpek3x/U3QzdnbpdT9NUZJAQB+2Ud8Vb02O
-         f4vLx8UkunsdWALMk/BlF/HZb35Gw1niQt3uFGDT5qAEuHFnBd5Eimgoh7aITwAO2BZe
-         dW+2v4AXdEMM1yDSn35mr/OPnjpZ4JmG4OTE/BLIQuZKv67tH6spYskUI8MJdKSZAjAQ
-         6UANJ+5pBLJH/GlrOhqNm9QU7S+yMfXDMJh7pxHvvv9fAJ5rC3IWYH+bhVgJ+2CT310W
-         d+eA==
-X-Gm-Message-State: APjAAAXSOFNlpDU9niYNAjwtlK0S8SsvCE78ZVHNIuPKIAjW5+0gdrWG
-        YWlJeYK7Cv/b97vCoSGjsNFknQ807+ZcQOdhBgnIXxcTKnBth6YiMFX7i4GQSxDXub/Ebj5Pm/I
-        +pub53SwR6PT0UiD80r8vsWgQHmU=
-X-Received: by 2002:a2e:6e04:: with SMTP id j4mr5754586ljc.99.1569415961692;
-        Wed, 25 Sep 2019 05:52:41 -0700 (PDT)
-X-Google-Smtp-Source: APXvYqzDu6srlULdJ6FcUoQhtVcUpzhekdTROR9PDW2pnqEP42W3cf8lyFlaLcAbuTgcVyv31wAOpw==
-X-Received: by 2002:a2e:6e04:: with SMTP id j4mr5754561ljc.99.1569415961476;
-        Wed, 25 Sep 2019 05:52:41 -0700 (PDT)
-Received: from alrua-x1.borgediget.toke.dk (borgediget.toke.dk. [85.204.121.218])
-        by smtp.gmail.com with ESMTPSA id q66sm1181957ljq.101.2019.09.25.05.52.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 25 Sep 2019 05:52:40 -0700 (PDT)
-Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
-        id 9D6A218063D; Wed, 25 Sep 2019 14:52:39 +0200 (CEST)
-From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
-To:     Yibo Zhao <yiboz@codeaurora.org>
-Cc:     Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org,
-        make-wifi-fast@lists.bufferbloat.net,
-        John Crispin <john@phrozen.org>,
-        Lorenzo Bianconi <lorenzo@kernel.org>,
-        Felix Fietkau <nbd@nbd.name>,
-        linux-wireless-owner@vger.kernel.org
-Subject: Re: [PATCH RFC/RFT 4/4] mac80211: Apply Airtime-based Queue Limit (AQL) on packet dequeue
-In-Reply-To: <8c5a3a011f03d4dd4165b838a2b8bc72@codeaurora.org>
-References: <156889576422.191202.5906619710809654631.stgit@alrua-x1> <156889576869.191202.510507546538322707.stgit@alrua-x1> <2f6b649dcb788222e070ebb5593918c7@codeaurora.org> <87y2yc3ieb.fsf@toke.dk> <8c5a3a011f03d4dd4165b838a2b8bc72@codeaurora.org>
-X-Clacks-Overhead: GNU Terry Pratchett
-Date:   Wed, 25 Sep 2019 14:52:39 +0200
-Message-ID: <87mues35d4.fsf@toke.dk>
+        Wed, 25 Sep 2019 09:44:57 -0400
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+        (Authenticated sender: aratiu)
+        with ESMTPSA id 8EFA628BCCF
+From:   Adrian Ratiu <adrian.ratiu@collabora.com>
+To:     brcm80211-dev-list.pdl@broadcom.com
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Gustavo Padovan <gustavo.padovan@collabora.com>
+Subject: [PATCH 2/2] brcmfmac: fix suspend/resume when power is cut off
+Date:   Wed, 25 Sep 2019 16:44:58 +0300
+Message-Id: <20190925134458.1413790-2-adrian.ratiu@collabora.com>
+X-Mailer: git-send-email 2.23.0
+In-Reply-To: <20190925134458.1413790-1-adrian.ratiu@collabora.com>
+References: <20190925134458.1413790-1-adrian.ratiu@collabora.com>
 MIME-Version: 1.0
-X-MC-Unique: 8Tk1wGIkN_OjwrWm0aHLMA-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Yibo Zhao <yiboz@codeaurora.org> writes:
+brcmfmac assumed the wifi device always remains powered on and thus
+hardcoded the MMC_PM_KEEP_POWER flag expecting the wifi device to
+remain on even during suspend/resume cycles.
 
-> On 2019-09-25 16:11, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
->> Yibo Zhao <yiboz@codeaurora.org> writes:
->>=20
->>> So if it is going to work together with virtual time based mechanism=20
->>> in
->>> the future, the Tx criteria will be met both of below conditions,
->>>         1. Lower than g_vt
->>>         2. Lower than IEEE80211_AIRTIME_QUEUE_LIMIT
->>=20
->>> Are we going to maintain two kinds of airtime that one is from
->>> estimation and the other is basically from FW reporting?
->>=20
->> Yes, that was my plan. For devices that don't have FW reporting of
->> airtime, we can fall back to the estimation; but if we do have FW
->> reporting that is most likely going to be more accurate, so better to
->> use that for fairness...
->
-> Do you mean we will use airtime reported by FW to calculate=20
-> local->airtime_queued in case we have FW reporting airtime?
+This is not always the case, some appliances cut power to everything
+connected via SDIO for efficiency reasons and this leads to wifi not
+being usable after coming out of suspend because the device was not
+correctly reinitialized.
 
-No, the opposite; if the firmware can't report airtime, we can use the
-estimated values to feed into report_airtime() for the fairness
-calculation...
+So we check for the keep_power capability and if it's not present then
+we remove the device and probe it again during resume to mirror what's
+happening in hardware and ensure correct reinitialization in the case
+when MMC_PM_KEEP_POWER is not supported.
 
--Toke
+Suggested-by: Gustavo Padovan <gustavo.padovan@collabora.com>
+Signed-off-by: Adrian Ratiu <adrian.ratiu@collabora.com>
+---
+ .../broadcom/brcm80211/brcmfmac/bcmsdh.c      | 53 ++++++++++++++-----
+ 1 file changed, 39 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+index fc12598b2dd3..96fd8e2bf773 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+@@ -1108,7 +1108,8 @@ static int brcmf_ops_sdio_suspend(struct device *dev)
+ 	struct sdio_func *func;
+ 	struct brcmf_bus *bus_if;
+ 	struct brcmf_sdio_dev *sdiodev;
+-	mmc_pm_flag_t sdio_flags;
++	mmc_pm_flag_t pm_caps, sdio_flags;
++	int ret = 0;
+ 
+ 	func = container_of(dev, struct sdio_func, dev);
+ 	brcmf_dbg(SDIO, "Enter: F%d\n", func->num);
+@@ -1119,19 +1120,33 @@ static int brcmf_ops_sdio_suspend(struct device *dev)
+ 	bus_if = dev_get_drvdata(dev);
+ 	sdiodev = bus_if->bus_priv.sdio;
+ 
+-	brcmf_sdiod_freezer_on(sdiodev);
+-	brcmf_sdio_wd_timer(sdiodev->bus, 0);
++	pm_caps = sdio_get_host_pm_caps(func);
++
++	if (pm_caps & MMC_PM_KEEP_POWER) {
++		/* preserve card power during suspend */
++		brcmf_sdiod_freezer_on(sdiodev);
++		brcmf_sdio_wd_timer(sdiodev->bus, 0);
++
++		sdio_flags = MMC_PM_KEEP_POWER;
++		if (sdiodev->wowl_enabled) {
++			if (sdiodev->settings->bus.sdio.oob_irq_supported)
++				enable_irq_wake(sdiodev->settings->bus.sdio.oob_irq_nr);
++			else
++				sdio_flags |= MMC_PM_WAKE_SDIO_IRQ;
++		}
++
++		if (sdio_set_host_pm_flags(sdiodev->func1, sdio_flags))
++			brcmf_err("Failed to set pm_flags %x\n", sdio_flags);
+ 
+-	sdio_flags = MMC_PM_KEEP_POWER;
+-	if (sdiodev->wowl_enabled) {
+-		if (sdiodev->settings->bus.sdio.oob_irq_supported)
+-			enable_irq_wake(sdiodev->settings->bus.sdio.oob_irq_nr);
+-		else
+-			sdio_flags |= MMC_PM_WAKE_SDIO_IRQ;
++	} else {
++		/* power will be cut so remove device, probe again in resume */
++		brcmf_sdiod_intr_unregister(sdiodev);
++		ret = brcmf_sdiod_remove(sdiodev);
++		if (ret)
++			brcmf_err("Failed to remove device on suspend\n");
+ 	}
+-	if (sdio_set_host_pm_flags(sdiodev->func1, sdio_flags))
+-		brcmf_err("Failed to set pm_flags %x\n", sdio_flags);
+-	return 0;
++
++	return ret;
+ }
+ 
+ static int brcmf_ops_sdio_resume(struct device *dev)
+@@ -1139,13 +1154,23 @@ static int brcmf_ops_sdio_resume(struct device *dev)
+ 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+ 	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
+ 	struct sdio_func *func = container_of(dev, struct sdio_func, dev);
++	mmc_pm_flag_t pm_caps = sdio_get_host_pm_caps(func);
++	int ret = 0;
+ 
+ 	brcmf_dbg(SDIO, "Enter: F%d\n", func->num);
+ 	if (func->num != 2)
+ 		return 0;
+ 
+-	brcmf_sdiod_freezer_off(sdiodev);
+-	return 0;
++	if (!(pm_caps & MMC_PM_KEEP_POWER)) {
++		/* bus was powered off and device removed, probe again */
++		ret = brcmf_sdiod_probe(sdiodev);
++		if (ret)
++			brcmf_err("Failed to probe device on resume\n");
++	} else {
++		brcmf_sdiod_freezer_off(sdiodev);
++	}
++
++	return ret;
+ }
+ 
+ static const struct dev_pm_ops brcmf_sdio_pm_ops = {
+-- 
+2.23.0
 
