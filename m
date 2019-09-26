@@ -7,20 +7,20 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30CFAC352AB
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EEB0CC352AC
 	for <linux-wireless@archiver.kernel.org>; Thu, 26 Sep 2019 17:47:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0B9F021D56
+	by mail.kernel.org (Postfix) with ESMTP id C5BE921D56
 	for <linux-wireless@archiver.kernel.org>; Thu, 26 Sep 2019 17:47:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="IHPRCKDA"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="IGYFsQvI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727877AbfIZRri (ORCPT
+        id S1727870AbfIZRrh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 26 Sep 2019 13:47:38 -0400
-Received: from nbd.name ([46.4.11.11]:55258 "EHLO nbd.name"
+        Thu, 26 Sep 2019 13:47:37 -0400
+Received: from nbd.name ([46.4.11.11]:55240 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727830AbfIZRrg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S1727796AbfIZRrg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 26 Sep 2019 13:47:36 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=References:In-Reply-To:Message-Id:Date:Subject:To:From:Sender:
@@ -28,22 +28,22 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
         Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
         :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
         List-Post:List-Owner:List-Archive;
-        bh=Y//Qehg6tabJKw1viHh72vqTTZssnjWRqNxT3cFfin8=; b=IHPRCKDAwyLs8mBYsQ0v37arve
-        hkppeUMoDuYj2CQlDHyF6ZdIZ0/qOjVy8SS5MbuIip6MJRskvMHsyX9qRxfCzMB8wjQAhjPjnTgIB
-        Igyh6Imr54nJh5LqblB6YDCWCvoDqdf76r3DkDog5Jn0B5f+qlWdFeeG98OYgzEBTz3w=;
+        bh=rA60bGR8u4HU6kcFr9xXmRBRPNRoWZEzKJE5aXlYE4w=; b=IGYFsQvICOy3hq0P4ZobR09ca4
+        MUwxWQlUuhzzBNTiTJ/YJ9ym5Jdq9TgoUItxm2+tgbZfG7fUN1mjU4brael1nCgh83RqAxecIITdE
+        3X96LbfOCwF0VjtcUKy7OvHGHuD36hSmznz8Kf2fSIjzoUgcp8nrK0pBqmJz4bkisV0o=;
 Received: from p54ae9b80.dip0.t-ipconnect.de ([84.174.155.128] helo=maeck.local)
         by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.89)
         (envelope-from <nbd@nbd.name>)
-        id 1iDXra-0000yv-Hm
-        for linux-wireless@vger.kernel.org; Thu, 26 Sep 2019 19:47:34 +0200
+        id 1iDXrZ-0000yb-A3
+        for linux-wireless@vger.kernel.org; Thu, 26 Sep 2019 19:47:33 +0200
 Received: by maeck.local (Postfix, from userid 501)
-        id B770069B6A8B; Thu, 26 Sep 2019 19:47:32 +0200 (CEST)
+        id B483269B6A83; Thu, 26 Sep 2019 19:47:32 +0200 (CEST)
 From:   Felix Fietkau <nbd@nbd.name>
 To:     linux-wireless@vger.kernel.org
-Subject: [PATCH 03/15] mt76: rename mt76_driver_ops txwi_flags to drv_flags and include tx aligned4
-Date:   Thu, 26 Sep 2019 19:47:20 +0200
-Message-Id: <20190926174732.42375-3-nbd@nbd.name>
+Subject: [PATCH 13/15] mt76: mt7615: introduce mt7615_mac_wtbl_update routine
+Date:   Thu, 26 Sep 2019 19:47:30 +0200
+Message-Id: <20190926174732.42375-13-nbd@nbd.name>
 X-Mailer: git-send-email 2.17.0
 In-Reply-To: <20190926174732.42375-1-nbd@nbd.name>
 References: <20190926174732.42375-1-nbd@nbd.name>
@@ -52,97 +52,64 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This reduces the struct size and is useful for adding more flags later
+From: Lorenzo Bianconi <lorenzo@kernel.org>
 
+Introduce mt7615_mac_wtbl_update utility routine in order to update
+WTBL update register
+
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/mediatek/mt76/dma.c        | 4 ++--
- drivers/net/wireless/mediatek/mt76/mt76.h       | 6 +++---
- drivers/net/wireless/mediatek/mt76/mt7615/pci.c | 2 +-
- drivers/net/wireless/mediatek/mt76/mt76x0/pci.c | 2 +-
- drivers/net/wireless/mediatek/mt76/mt76x2/pci.c | 2 +-
- 5 files changed, 8 insertions(+), 8 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7615/mac.c  | 16 +++++++++++-----
+ .../net/wireless/mediatek/mt76/mt7615/mt7615.h   |  1 +
+ 2 files changed, 12 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
-index c747eb24581c..e2ce59b260c1 100644
---- a/drivers/net/wireless/mediatek/mt76/dma.c
-+++ b/drivers/net/wireless/mediatek/mt76/dma.c
-@@ -164,7 +164,7 @@ mt76_dma_tx_cleanup(struct mt76_dev *dev, enum mt76_txq_id qid, bool flush)
- 			dev->drv->tx_complete_skb(dev, qid, &entry);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
+index f688390bfd3a..2e36b3289fa6 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
+@@ -492,6 +492,15 @@ static u32 mt7615_mac_wtbl_addr(int wcid)
+ 	return MT_WTBL_BASE + wcid * MT_WTBL_ENTRY_SIZE;
+ }
  
- 		if (entry.txwi) {
--			if (!(dev->drv->txwi_flags & MT_TXWI_NO_FREE))
-+			if (!(dev->drv->drv_flags & MT_DRV_TXWI_NO_FREE))
- 				mt76_put_txwi(dev, entry.txwi);
- 			wake = !flush;
- 		}
-@@ -299,7 +299,7 @@ mt76_dma_tx_queue_skb(struct mt76_dev *dev, enum mt76_txq_id qid,
- 	txwi = mt76_get_txwi_ptr(dev, t);
++bool mt7615_mac_wtbl_update(struct mt7615_dev *dev, int idx, u32 mask)
++{
++	mt76_rmw(dev, MT_WTBL_UPDATE, MT_WTBL_UPDATE_WLAN_IDX,
++		 FIELD_PREP(MT_WTBL_UPDATE_WLAN_IDX, idx) | mask);
++
++	return mt76_poll(dev, MT_WTBL_UPDATE, MT_WTBL_UPDATE_BUSY,
++			 0, 5000);
++}
++
+ void mt7615_mac_set_rates(struct mt7615_dev *dev, struct mt7615_sta *sta,
+ 			  struct ieee80211_tx_rate *probe_rate,
+ 			  struct ieee80211_tx_rate *rates)
+@@ -724,11 +733,8 @@ mt7615_mac_wtbl_update_pk(struct mt7615_dev *dev, struct mt76_wcid *wcid,
+ 	mt76_wr(dev, MT_WTBL_RICR0, w0);
+ 	mt76_wr(dev, MT_WTBL_RICR1, w1);
  
- 	skb->prev = skb->next = NULL;
--	if (dev->drv->tx_aligned4_skbs)
-+	if (dev->drv->drv_flags & MT_DRV_TX_ALIGNED4_SKBS)
- 		mt76_insert_hdr_pad(skb);
+-	mt76_wr(dev, MT_WTBL_UPDATE,
+-		FIELD_PREP(MT_WTBL_UPDATE_WLAN_IDX, wcid->idx) |
+-		MT_WTBL_UPDATE_RXINFO_UPDATE);
+-
+-	if (!mt76_poll(dev, MT_WTBL_UPDATE, MT_WTBL_UPDATE_BUSY, 0, 5000))
++	if (!mt7615_mac_wtbl_update(dev, wcid->idx,
++				    MT_WTBL_UPDATE_RXINFO_UPDATE))
+ 		return -ETIMEDOUT;
  
- 	len = skb_headlen(skb);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index 173d158d7018..af71773c2d55 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -279,11 +279,11 @@ struct mt76_hw_cap {
- 	bool has_5ghz;
- };
+ 	return 0;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
+index fe084555754b..070afba63e43 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
+@@ -231,6 +231,7 @@ static inline void mt7615_irq_disable(struct mt7615_dev *dev, u32 mask)
+ }
  
--#define MT_TXWI_NO_FREE			BIT(0)
-+#define MT_DRV_TXWI_NO_FREE		BIT(0)
-+#define MT_DRV_TX_ALIGNED4_SKBS		BIT(1)
- 
- struct mt76_driver_ops {
--	bool tx_aligned4_skbs;
--	u32 txwi_flags;
-+	u32 drv_flags;
- 	u16 txwi_size;
- 
- 	void (*update_survey)(struct mt76_dev *dev);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/pci.c b/drivers/net/wireless/mediatek/mt76/mt7615/pci.c
-index e250607e0a80..73744563a573 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/pci.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/pci.c
-@@ -72,7 +72,7 @@ static int mt7615_pci_probe(struct pci_dev *pdev,
- 	static const struct mt76_driver_ops drv_ops = {
- 		/* txwi_size = txd size + txp size */
- 		.txwi_size = MT_TXD_SIZE + sizeof(struct mt7615_txp),
--		.txwi_flags = MT_TXWI_NO_FREE,
-+		.drv_flags = MT_DRV_TXWI_NO_FREE,
- 		.tx_prepare_skb = mt7615_tx_prepare_skb,
- 		.tx_complete_skb = mt7615_tx_complete_skb,
- 		.rx_skb = mt7615_queue_rx_skb,
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c b/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
-index 7705e55aa3d1..d20fd40418a7 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/pci.c
-@@ -155,7 +155,7 @@ mt76x0e_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- {
- 	static const struct mt76_driver_ops drv_ops = {
- 		.txwi_size = sizeof(struct mt76x02_txwi),
--		.tx_aligned4_skbs = true,
-+		.drv_flags = MT_DRV_TX_ALIGNED4_SKBS,
- 		.update_survey = mt76x02_update_channel,
- 		.tx_prepare_skb = mt76x02_tx_prepare_skb,
- 		.tx_complete_skb = mt76x02_tx_complete_skb,
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/pci.c b/drivers/net/wireless/mediatek/mt76/mt76x2/pci.c
-index 73c3104f8858..f7a1f82d8320 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/pci.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2/pci.c
-@@ -21,7 +21,7 @@ mt76pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- {
- 	static const struct mt76_driver_ops drv_ops = {
- 		.txwi_size = sizeof(struct mt76x02_txwi),
--		.tx_aligned4_skbs = true,
-+		.drv_flags = MT_DRV_TX_ALIGNED4_SKBS,
- 		.update_survey = mt76x02_update_channel,
- 		.tx_prepare_skb = mt76x02_tx_prepare_skb,
- 		.tx_complete_skb = mt76x02_tx_complete_skb,
+ void mt7615_update_channel(struct mt76_dev *mdev);
++bool mt7615_mac_wtbl_update(struct mt7615_dev *dev, int idx, u32 mask);
+ void mt7615_mac_reset_counters(struct mt7615_dev *dev);
+ void mt7615_mac_cca_stats_reset(struct mt7615_dev *dev);
+ void mt7615_mac_set_scs(struct mt7615_dev *dev, bool enable);
 -- 
 2.17.0
 
