@@ -2,25 +2,25 @@ Return-Path: <SRS0=TTqJ=XV=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C144BC4360C
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Sep 2019 17:47:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61F35C352AB
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Sep 2019 17:47:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 94A7221D56
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Sep 2019 17:47:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1697E21D56
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Sep 2019 17:47:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="tEso1y+k"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="BkpAkDEH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727835AbfIZRrn (ORCPT
+        id S1727883AbfIZRrn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Thu, 26 Sep 2019 13:47:43 -0400
-Received: from nbd.name ([46.4.11.11]:55248 "EHLO nbd.name"
+Received: from nbd.name ([46.4.11.11]:55260 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727827AbfIZRrg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S1727754AbfIZRrg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 26 Sep 2019 13:47:36 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=References:In-Reply-To:Message-Id:Date:Subject:To:From:Sender:
@@ -28,22 +28,22 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
         Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
         :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
         List-Post:List-Owner:List-Archive;
-        bh=l5C1QekK0Ir662dxIC9EX+bEBywEnVBn/SD2ATbPhrI=; b=tEso1y+knUoYqPGs5WqP51DVmM
-        HDoX8BkXHoy4b/UDSWbSVR3tCltHFauVAogjJd3aQ/f0eD5s/ctS4d1bVuG70ZdrXQNeXaqSg/t5H
-        N9YmChSOKJRw/ZsMJjo2LMnpogQ+jA/gV6sbcmGyTEO18grVRg3CZyGT+RYi6JbERXfg=;
+        bh=OB+Vy3vEhvW36jRxtXRU6NATCe8KjqN4H0pHRhUyd68=; b=BkpAkDEHVXy6I3e+SCQHN65KPu
+        97BENbW4pPnmovS/Ouo4R9QTZVae+I1MM/zpclQx0U36wQ/gXIuU0K3jSCZ0HODNkBtP7rD0J2nyu
+        9yG+Ssyfg8LIMcVnU3a6i8CDqrUqInxMojlG1lu9xW+jnkNuT0CWE7ep+O+fZoZRSFhs=;
 Received: from p54ae9b80.dip0.t-ipconnect.de ([84.174.155.128] helo=maeck.local)
         by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.89)
         (envelope-from <nbd@nbd.name>)
-        id 1iDXra-0000ym-2C
-        for linux-wireless@vger.kernel.org; Thu, 26 Sep 2019 19:47:34 +0200
+        id 1iDXrb-0000z3-3B
+        for linux-wireless@vger.kernel.org; Thu, 26 Sep 2019 19:47:35 +0200
 Received: by maeck.local (Postfix, from userid 501)
-        id B614B69B6A87; Thu, 26 Sep 2019 19:47:32 +0200 (CEST)
+        id B6CE269B6A89; Thu, 26 Sep 2019 19:47:32 +0200 (CEST)
 From:   Felix Fietkau <nbd@nbd.name>
 To:     linux-wireless@vger.kernel.org
-Subject: [PATCH 04/15] mt76: store current channel survey_state in struct mt76_dev
-Date:   Thu, 26 Sep 2019 19:47:21 +0200
-Message-Id: <20190926174732.42375-4-nbd@nbd.name>
+Subject: [PATCH 02/15] mt76: report rx a-mpdu subframe status
+Date:   Thu, 26 Sep 2019 19:47:19 +0200
+Message-Id: <20190926174732.42375-2-nbd@nbd.name>
 X-Mailer: git-send-email 2.17.0
 In-Reply-To: <20190926174732.42375-1-nbd@nbd.name>
 References: <20190926174732.42375-1-nbd@nbd.name>
@@ -52,148 +52,154 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Move mt76_channel_state() from mt76.h to mac80211.c
-Preparation for updating channel state from more places in the drivers/core
+This can be used in monitor mode to figure out which subframes were sent as
+part of which A-MPDU
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/mediatek/mt76/mac80211.c | 24 +++++++++++++++----
- drivers/net/wireless/mediatek/mt76/mt76.h     | 16 +------------
- .../net/wireless/mediatek/mt76/mt7603/mac.c   |  2 +-
- .../net/wireless/mediatek/mt76/mt7615/mac.c   |  2 +-
- .../net/wireless/mediatek/mt76/mt76x02_mac.c  |  2 +-
- 5 files changed, 23 insertions(+), 23 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mac80211.c     |  1 +
+ drivers/net/wireless/mediatek/mt76/mt76.h         |  3 +++
+ drivers/net/wireless/mediatek/mt76/mt7603/mac.c   | 14 ++++++++++++++
+ .../net/wireless/mediatek/mt76/mt7603/mt7603.h    |  1 +
+ drivers/net/wireless/mediatek/mt76/mt7615/mac.c   | 14 ++++++++++++++
+ .../net/wireless/mediatek/mt76/mt7615/mt7615.h    |  2 ++
+ drivers/net/wireless/mediatek/mt76/mt76x02_mac.c  | 15 +++++++++++++++
+ 7 files changed, 50 insertions(+)
 
 diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
-index cc301216e527..aefdd22d74ef 100644
+index 1a2c143b34d0..cc301216e527 100644
 --- a/drivers/net/wireless/mediatek/mt76/mac80211.c
 +++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
-@@ -180,6 +180,7 @@ mt76_init_sband(struct mt76_dev *dev, struct mt76_sband *msband,
- 	sband->bitrates = rates;
- 	sband->n_bitrates = n_rates;
- 	dev->chandef.chan = &sband->channels[0];
-+	dev->chan_state = &msband->chan[0];
+@@ -502,6 +502,7 @@ static struct ieee80211_sta *mt76_rx_convert(struct sk_buff *skb)
+ 	status->band = mstat.band;
+ 	status->signal = mstat.signal;
+ 	status->chains = mstat.chains;
++	status->ampdu_reference = mstat.ampdu_ref;
  
- 	ht_cap = &sband->ht_cap;
- 	ht_cap->ht_supported = true;
-@@ -398,11 +399,25 @@ bool mt76_has_tx_pending(struct mt76_dev *dev)
- }
- EXPORT_SYMBOL_GPL(mt76_has_tx_pending);
- 
-+static struct mt76_channel_state *
-+mt76_channel_state(struct mt76_dev *dev, struct ieee80211_channel *c)
-+{
-+	struct mt76_sband *msband;
-+	int idx;
-+
-+	if (c->band == NL80211_BAND_2GHZ)
-+		msband = &dev->sband_2g;
-+	else
-+		msband = &dev->sband_5g;
-+
-+	idx = c - &msband->sband.channels[0];
-+	return &msband->chan[idx];
-+}
-+
- void mt76_set_channel(struct mt76_dev *dev)
- {
- 	struct ieee80211_hw *hw = dev->hw;
- 	struct cfg80211_chan_def *chandef = &hw->conf.chandef;
--	struct mt76_channel_state *state;
- 	bool offchannel = hw->conf.flags & IEEE80211_CONF_OFFCHANNEL;
- 	int timeout = HZ / 5;
- 
-@@ -412,14 +427,13 @@ void mt76_set_channel(struct mt76_dev *dev)
- 		dev->drv->update_survey(dev);
- 
- 	dev->chandef = *chandef;
-+	dev->chan_state = mt76_channel_state(dev, chandef->chan);
- 
- 	if (!offchannel)
- 		dev->main_chan = chandef->chan;
- 
--	if (chandef->chan != dev->main_chan) {
--		state = mt76_channel_state(dev, chandef->chan);
--		memset(state, 0, sizeof(*state));
--	}
-+	if (chandef->chan != dev->main_chan)
-+		memset(dev->chan_state, 0, sizeof(*dev->chan_state));
- }
- EXPORT_SYMBOL_GPL(mt76_set_channel);
- 
+ 	BUILD_BUG_ON(sizeof(mstat) > sizeof(skb->cb));
+ 	BUILD_BUG_ON(sizeof(status->chain_signal) !=
 diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index af71773c2d55..3e4ababcae9b 100644
+index 331de7c44b6c..173d158d7018 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt76.h
 +++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -423,6 +423,7 @@ struct mt76_dev {
- 	struct cfg80211_chan_def chandef;
- 	struct ieee80211_channel *main_chan;
+@@ -437,6 +437,7 @@ struct mt76_dev {
+ 	spinlock_t rx_lock;
+ 	struct napi_struct napi[__MT_RXQ_MAX];
+ 	struct sk_buff_head rx_skb[__MT_RXQ_MAX];
++	u32 ampdu_ref;
  
-+	struct mt76_channel_state *chan_state;
- 	spinlock_t lock;
- 	spinlock_t cc_lock;
+ 	struct list_head txwi_cache;
+ 	struct mt76_sw_queue q_tx[__MT_TXQ_MAX];
+@@ -513,6 +514,8 @@ struct mt76_rx_status {
  
-@@ -603,21 +604,6 @@ static inline u16 mt76_rev(struct mt76_dev *dev)
- #define mt76_queue_tx_cleanup(dev, ...)	(dev)->mt76.queue_ops->tx_cleanup(&((dev)->mt76), __VA_ARGS__)
- #define mt76_queue_kick(dev, ...)	(dev)->mt76.queue_ops->kick(&((dev)->mt76), __VA_ARGS__)
+ 	unsigned long reorder_time;
  
--static inline struct mt76_channel_state *
--mt76_channel_state(struct mt76_dev *dev, struct ieee80211_channel *c)
--{
--	struct mt76_sband *msband;
--	int idx;
--
--	if (c->band == NL80211_BAND_2GHZ)
--		msband = &dev->sband_2g;
--	else
--		msband = &dev->sband_5g;
--
--	idx = c - &msband->sband.channels[0];
--	return &msband->chan[idx];
--}
--
- struct mt76_dev *mt76_alloc_device(struct device *pdev, unsigned int size,
- 				   const struct ieee80211_ops *ops,
- 				   const struct mt76_driver_ops *drv_ops);
++	u32 ampdu_ref;
++
+ 	u8 iv[6];
+ 
+ 	u8 aggr:1;
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/mac.c b/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
-index 44d093943588..3d160230d929 100644
+index c52c4bf5597e..44d093943588 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
-@@ -1491,7 +1491,7 @@ void mt7603_update_channel(struct mt76_dev *mdev)
- 	if (!test_bit(MT76_STATE_RUNNING, &dev->mt76.state))
- 		return;
+@@ -445,6 +445,20 @@ mt7603_mac_fill_rx(struct mt7603_dev *dev, struct sk_buff *skb)
+ 		status->flag |= RX_FLAG_MMIC_STRIPPED | RX_FLAG_MIC_STRIPPED;
+ 	}
  
--	state = mt76_channel_state(&dev->mt76, dev->mt76.chandef.chan);
-+	state = mdev->chan_state;
- 	busy = mt76_rr(dev, MT_MIB_STAT_PSCCA);
++	if (!(rxd2 & (MT_RXD2_NORMAL_NON_AMPDU_SUB |
++		      MT_RXD2_NORMAL_NON_AMPDU))) {
++		status->flag |= RX_FLAG_AMPDU_DETAILS;
++
++		/* all subframes of an A-MPDU have the same timestamp */
++		if (dev->rx_ampdu_ts != rxd[12]) {
++			if (!++dev->mt76.ampdu_ref)
++				dev->mt76.ampdu_ref++;
++		}
++		dev->rx_ampdu_ts = rxd[12];
++
++		status->ampdu_ref = dev->mt76.ampdu_ref;
++	}
++
+ 	remove_pad = rxd1 & MT_RXD1_NORMAL_HDR_OFFSET;
  
- 	spin_lock_bh(&dev->mt76.cc_lock);
+ 	if (rxd2 & MT_RXD2_NORMAL_MAX_LEN_ERROR)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/mt7603.h b/drivers/net/wireless/mediatek/mt76/mt7603/mt7603.h
+index 17176de4fb23..01b933538c25 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7603/mt7603.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7603/mt7603.h
+@@ -109,6 +109,7 @@ struct mt7603_dev {
+ 	u32 false_cca_ofdm, false_cca_cck;
+ 	unsigned long last_cca_adj;
+ 
++	__le32 rx_ampdu_ts;
+ 	u8 rssi_offset[3];
+ 
+ 	u8 slottime;
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-index 88271524fb83..9189a86d7825 100644
+index 237d15521e18..88271524fb83 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-@@ -1269,7 +1269,7 @@ void mt7615_update_channel(struct mt76_dev *mdev)
- 	if (!test_bit(MT76_STATE_RUNNING, &mdev->state))
- 		return;
+@@ -93,6 +93,20 @@ int mt7615_mac_fill_rx(struct mt7615_dev *dev, struct sk_buff *skb)
+ 		status->flag |= RX_FLAG_MMIC_STRIPPED | RX_FLAG_MIC_STRIPPED;
+ 	}
  
--	state = mt76_channel_state(mdev, mdev->chandef.chan);
-+	state = mdev->chan_state;
- 	/* TODO: add DBDC support */
- 	busy = mt76_get_field(dev, MT_MIB_SDR16(0), MT_MIB_BUSY_MASK);
++	if (!(rxd2 & (MT_RXD2_NORMAL_NON_AMPDU_SUB |
++		      MT_RXD2_NORMAL_NON_AMPDU))) {
++		status->flag |= RX_FLAG_AMPDU_DETAILS;
++
++		/* all subframes of an A-MPDU have the same timestamp */
++		if (dev->rx_ampdu_ts != rxd[12]) {
++			if (!++dev->mt76.ampdu_ref)
++				dev->mt76.ampdu_ref++;
++		}
++		dev->rx_ampdu_ts = rxd[12];
++
++		status->ampdu_ref = dev->mt76.ampdu_ref;
++	}
++
+ 	remove_pad = rxd1 & MT_RXD1_NORMAL_HDR_OFFSET;
  
+ 	if (rxd2 & MT_RXD2_NORMAL_MAX_LEN_ERROR)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
+index 8a6142637bfd..fe084555754b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
+@@ -81,6 +81,8 @@ struct mt7615_dev {
+ 	u32 vif_mask;
+ 	u32 omac_mask;
+ 
++	__le32 rx_ampdu_ts;
++
+ 	struct {
+ 		u8 n_pulses;
+ 		u32 period;
 diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-index 9d2795c1e943..f73ec17e5f47 100644
+index 0d000906b2e1..9d2795c1e943 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-@@ -986,7 +986,7 @@ void mt76x02_update_channel(struct mt76_dev *mdev)
- 	struct mt76_channel_state *state;
- 	u32 active, busy;
+@@ -789,6 +789,21 @@ int mt76x02_mac_process_rx(struct mt76x02_dev *dev, struct sk_buff *skb,
+ 	if ((rxinfo & MT_RXINFO_BA) && !(rxinfo & MT_RXINFO_NULL))
+ 		status->aggr = true;
  
--	state = mt76_channel_state(&dev->mt76, dev->mt76.chandef.chan);
-+	state = mdev->chan_state;
++	if (rxinfo & MT_RXINFO_AMPDU) {
++		status->flag |= RX_FLAG_AMPDU_DETAILS;
++		status->ampdu_ref = dev->mt76.ampdu_ref;
++
++		/*
++		 * When receiving an A-MPDU subframe and RSSI info is not valid,
++		 * we can assume that more subframes belonging to the same A-MPDU
++		 * are coming. The last one will have valid RSSI info
++		 */
++		if (!(rxinfo & MT_RXINFO_RSSI)) {
++			if (!++dev->mt76.ampdu_ref)
++				dev->mt76.ampdu_ref++;
++		}
++	}
++
+ 	if (WARN_ON_ONCE(len > skb->len))
+ 		return -EINVAL;
  
- 	busy = mt76_rr(dev, MT_CH_BUSY);
- 	active = busy + mt76_rr(dev, MT_CH_IDLE);
 -- 
 2.17.0
 
