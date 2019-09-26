@@ -2,145 +2,139 @@ Return-Path: <SRS0=TTqJ=XV=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=FROM_EXCESS_BASE64,
+X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A9BCC432C2
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Sep 2019 12:09:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2636CC4360C
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Sep 2019 12:53:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2DFC4208C3
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Sep 2019 12:09:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D4D64222C0
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Sep 2019 12:53:48 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="cSQYQulK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726380AbfIZMJo (ORCPT
+        id S1726759AbfIZMxs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 26 Sep 2019 08:09:44 -0400
-Received: from 6.mo2.mail-out.ovh.net ([87.98.165.38]:58900 "EHLO
-        6.mo2.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725836AbfIZMJo (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Sep 2019 08:09:44 -0400
-X-Greylist: delayed 1043 seconds by postgrey-1.27 at vger.kernel.org; Thu, 26 Sep 2019 08:09:42 EDT
-Received: from player688.ha.ovh.net (unknown [10.108.42.184])
-        by mo2.mail-out.ovh.net (Postfix) with ESMTP id CCAFC1AE29B
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Sep 2019 13:52:17 +0200 (CEST)
-Received: from milecki.pl (ip-194-187-74-233.konfederacka.maverick.com.pl [194.187.74.233])
-        (Authenticated sender: rafal@milecki.pl)
-        by player688.ha.ovh.net (Postfix) with ESMTPSA id 1EFA2A2EC583;
-        Thu, 26 Sep 2019 11:52:07 +0000 (UTC)
-Subject: Re: [PATCH RFC] cfg80211: add new command for reporting wiphy crashes
-To:     Jouni Malinen <j@w1.fi>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc:     Johannes Berg <johannes@sipsolutions.net>,
-        "David S . Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, hostap@lists.infradead.org,
-        openwrt-devel@lists.openwrt.org
-References: <20190920133708.15313-1-zajec5@gmail.com>
- <20190920140143.GA30514@w1.fi>
-From:   =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-Message-ID: <4f6f37e5-802c-4504-3dcb-c4a640d138bd@milecki.pl>
-Date:   Thu, 26 Sep 2019 13:52:05 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.5.2
+        Thu, 26 Sep 2019 08:53:48 -0400
+Received: from nbd.name ([46.4.11.11]:37964 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725768AbfIZMxr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 26 Sep 2019 08:53:47 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
+        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=PgfaL7kAdJ5065sz1aXBV1oyDb5cna3C7xcf4wBeMLw=; b=cSQYQulKUjIwrKLwLdPPtwWbF0
+        VRxAESd0QXXzKUfBLUWClujUb+WwL65ELyMU6W2jtuac5CpC7SViICAGz9Jfbh9eh9r9dF7c2t/98
+        qkGeaalqWbtBK2NEje7OrV6BbpbhNippqRflkyjQYsRTzVKKE5WQvvghjQykoyoB2stU=;
+Received: from p54ae9b80.dip0.t-ipconnect.de ([84.174.155.128] helo=nf.local)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.89)
+        (envelope-from <nbd@nbd.name>)
+        id 1iDTHE-0005oY-3G; Thu, 26 Sep 2019 14:53:44 +0200
+Subject: Re: [PATCH RFC/RFT 4/4] mac80211: Apply Airtime-based Queue Limit
+ (AQL) on packet dequeue
+To:     =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@redhat.com>,
+        Johannes Berg <johannes@sipsolutions.net>
+Cc:     linux-wireless@vger.kernel.org,
+        make-wifi-fast@lists.bufferbloat.net,
+        John Crispin <john@phrozen.org>,
+        Lorenzo Bianconi <lorenzo@kernel.org>
+References: <156889576422.191202.5906619710809654631.stgit@alrua-x1>
+ <156889576869.191202.510507546538322707.stgit@alrua-x1>
+From:   Felix Fietkau <nbd@nbd.name>
+Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
+ xsDiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
+ ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
+ Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
+ AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
+ vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
+ wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
+ TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
+ l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwc0cRmVsaXggRmll
+ dGthdSA8bmJkQG5iZC5uYW1lPsJgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
+ HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
+ VrwYTIThkTlQzsFNBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
+ CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
+ VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
+ Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
+ DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
+ wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
+ f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
+ aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
+ FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
+ TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
+ GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
+ RjMaxwtSdaCKMw3j33ZbsWS4
+Message-ID: <08f0ed6e-b746-9689-6dc8-7c0ea705666d@nbd.name>
+Date:   Thu, 26 Sep 2019 14:53:43 +0200
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:68.0)
+ Gecko/20100101 Thunderbird/68.1.0
 MIME-Version: 1.0
-In-Reply-To: <20190920140143.GA30514@w1.fi>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <156889576869.191202.510507546538322707.stgit@alrua-x1>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-X-Ovh-Tracer-Id: 11993367286735539761
-X-VR-SPAMSTATE: OK
-X-VR-SPAMSCORE: -100
-X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedufedrfeeggdeghecutefuodetggdotefrodftvfcurfhrohhfihhlvgemucfqggfjpdevjffgvefmvefgnecuuegrihhlohhuthemucehtddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmd
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 20.09.2019 16:01, Jouni Malinen wrote:
-> On Fri, Sep 20, 2019 at 03:37:08PM +0200, Rafał Miłecki wrote:
->> Hardware or firmware instability may result in unusable wiphy. In such
->> cases usually a hardware reset is needed. To allow a full recovery
->> kernel has to indicate problem to the user space.
+On 2019-09-19 14:22, Toke Høiland-Jørgensen wrote:
+> From: Toke Høiland-Jørgensen <toke@redhat.com>
 > 
-> Why? Shouldn't the driver be able to handle this on its own since all
-> the previous configuration was done through the driver anyway. As far as
-> I know, there are drivers that do indeed try to do this and handle it
-> successfully at least for station mode. AP mode may be more complex, but
-> for that one, I guess it would be fine to drop all associations (and
-> provide indication of that to user space) and just restart the BSS.
-
-Indeed my main concert is AP mode. I'm afraid that cfg80211 doesn't
-cache all settings, consider e.g. nl80211_start_ap(). It builds
-struct cfg80211_ap_settings using info from nl80211 message and
-passes it to the driver (rdev_start_ap()). Once it's done it
-caches only a small subset of all setup data.
-
-In other words driver doesn't have enough info to recover interfaces
-setup.
-
-
->> This new nl80211 command lets user space known wiphy has crashed and has
->> been just recovered. When applicable it should result in supplicant or
->> authenticator reconfiguring all interfaces.
+> Some devices have deep buffers in firmware and/or hardware which prevents
+> the FQ structure in mac80211 from effectively limiting bufferbloat on the
+> link. For Ethernet devices we have BQL to limit the lower-level queues, but
+> this cannot be applied to mac80211 because transmit rates can vary wildly
+> between packets depending on which station we are transmitting it to.
 > 
-> For me, that is not really "recovered" if some additional
-> reconfiguration steps are needed.. I'd like to get a more detailed view
-> on what exactly might need to be reconfigured and how would user space
-> know what exactly to do. Or would the plan here be that the driver would
-> not even indicate this crash if it is actually able to internally
-> recover fully from the firmware restart?
-
-I meant that hardware has been recovered & is operational again (driver
-can talk to it). I expected user space to reconfigure all interfaces
-using the same settings that were used on previous run.
-
-If driver were able to recover interfaces setup on its own (with a help
-of cfg80211) then user space wouldn't need to be involved.
-
-
->> I'd like to use this new cfg80211_crash_report() in brcmfmac after a
->> successful recovery from a FullMAC firmware crash.
->>
->> Later on I'd like to modify hostapd to reconfigure wiphy using a
->> previously used setup.
+> To overcome this, we can use airtime-based queue limiting (AQL), where we
+> estimate the transmission time for each packet before dequeueing it, and
+> use that to limit the amount of data in-flight to the hardware. This idea
+> was originally implemented as part of the out-of-tree airtime fairness
+> patch to ath10k[0] in chromiumos.
 > 
-> So this implies that at least something would need to happen in AP mode.
-> Do you have a list of items that the driver cannot do on its own and why
-> it would be better to do them from user space?
-
-First of all I was wondering how to handle interfaces creation. After a
-firmware crash we have:
-1) Interfaces created in Linux
-2) No corresponsing interfaces in firmware
-
-Syncing that (re-creating in-firmware firmwares) may be a bit tricky
-depending on a driver and hardware. For some cases it could be easier to
-delete all interfaces and ask user space to setup wiphy (create required
-interfaces) again. I'm not sure if that's acceptable though?
-
-If we agree interfaces should stay and driver simply should configure
-firmware properly, then we need all data as explained earlier. struct
-cfg80211_ap_settings is not available during runtime. How should we
-handle that problem?
-
-
->> I'm OpenWrt developer & user and I got annoyed by my devices not auto
->> recovering after various failures. There are things I cannot fix (hw
->> failures or closed fw crashes) but I still expect my devices to get
->> back to operational state as soon as possible on their own.
+> This patch ports that idea over to mac80211. The basic idea is simple
+> enough: Whenever we dequeue a packet from the TXQs and send it to the
+> driver, we estimate its airtime usage, based on the last recorded TX rate
+> of the station that packet is destined for. We keep a running per-AC total
+> of airtime queued for the whole device, and when that total climbs above 8
+> ms' worth of data (corresponding to two maximum-sized aggregates), we
+> simply throttle the queues until it drops down again.
 > 
-> I fully agree with the auto recovery being important thing to cover for
-> this, but I'm not yet convinced that this needs user space action. Or if
-> it does, there would need to be more detailed way of indicating what
-> exactly is needed for user space to do. The proposed change here is just
-> saying "hey, I crashed and did something to get the hardware/firmware
-> responding again" which does not really tell much to user space other
-> than potentially requiring full disable + re-enable for the related
-> interfaces. And that is something that should not actually be done in
-> all cases of firmware crashes since there are drivers that handle
-> recovery in a manner that is in practice completely transparent to user
-> space.
+> The estimated airtime for each skb is stored in the tx_info, so we can
+> subtract the same amount from the running total when the skb is freed or
+> recycled. The throttling mechanism relies on this accounting to be
+> accurate (i.e., that we are not freeing skbs without subtracting any
+> airtime they were accounted for), so we put the subtraction into
+> ieee80211_report_used_skb().
+> 
+> This patch does *not* include any mechanism to wake a throttled TXQ again,
+> on the assumption that this will happen anyway as a side effect of whatever
+> freed the skb (most commonly a TX completion).
+> 
+> The throttling mechanism only kicks in if the queued airtime total goes
+> above the limit. Since mac80211 calculates the time based on the reported
+> last_tx_time from the driver, the whole throttling mechanism only kicks in
+> for drivers that actually report this value. With the exception of
+> multicast, where we always calculate an estimated tx time on the assumption
+> that multicast is transmitted at the lowest (6 Mbps) rate.
+> 
+> The throttling added in this patch is in addition to any throttling already
+> performed by the airtime fairness mechanism, and in principle the two
+> mechanisms are orthogonal (and currently also uses two different sources of
+> airtime). In the future, we could amend this, using the airtime estimates
+> calculated by this mechanism as a fallback input to the airtime fairness
+> scheduler, to enable airtime fairness even on drivers that don't have a
+> hardware source of airtime usage for each station.
+> 
+> [0] https://chromium-review.googlesource.com/c/chromiumos/third_party/kernel/+/588190/13/drivers/net/wireless-4.2/ath/ath10k/mac.c#3845
+One thing that might be missing here is dealing with airtime accounting
+of frames that remain queued in the driver/hardware because the station
+is in powersave mode.
 
-I was aiming for a brutal force solution: just make user space
-interfaces need a full setup just at they were just created.
+- Felix
