@@ -2,106 +2,75 @@ Return-Path: <SRS0=TTqJ=XV=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3ED5DECE589
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Sep 2019 16:32:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F036AC352AB
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Sep 2019 17:47:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0E10721655
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Sep 2019 16:32:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C1D5421D56
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Sep 2019 17:47:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=exuvo-se.20150623.gappssmtp.com header.i=@exuvo-se.20150623.gappssmtp.com header.b="ovMO+opF"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="iTjukitN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727445AbfIZQcf (ORCPT
+        id S1727857AbfIZRrg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 26 Sep 2019 12:32:35 -0400
-Received: from mail-lj1-f179.google.com ([209.85.208.179]:46844 "EHLO
-        mail-lj1-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727358AbfIZQcf (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Sep 2019 12:32:35 -0400
-Received: by mail-lj1-f179.google.com with SMTP id d1so1795468ljl.13
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Sep 2019 09:32:33 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=exuvo-se.20150623.gappssmtp.com; s=20150623;
-        h=to:cc:from:subject:message-id:date:user-agent:mime-version
-         :content-transfer-encoding:content-language;
-        bh=OSvR5dO8OalNTsIwOKd4HunwNDSt9hr5TxW9OQ6ta4Q=;
-        b=ovMO+opFzUY8AYZBJJlakRnPBrSRgGvNfL5fYv/kA8dA3do7A0RNBAxMBTw7ZQ5m8m
-         tO3LmSf+q84TEoSKiYuo1HQkh+EP66uUL+oyLWnnXSQ4J3DZz2ryXzkD/dqqkRTV/6r0
-         zY9Vz5g0MX0dN6py/830ZtG1j7OMA3QSRThuwH5YdlqNkuAyebXkygh4KpyR6EXbfUIU
-         /DlEv4mSwiXvxOROn7DJo39OmCdWBFoLGTqqFqwgmXWW6bXwdTltW18n4uG3eW07lm5y
-         0MR2wFuqtV0POLg5bZ7k6j4tiKLHCLX/Ixl5EHyY1Av14EQe1WYNSPXeDFxNVbUcr6hT
-         uYNA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:to:cc:from:subject:message-id:date:user-agent
-         :mime-version:content-transfer-encoding:content-language;
-        bh=OSvR5dO8OalNTsIwOKd4HunwNDSt9hr5TxW9OQ6ta4Q=;
-        b=OgOGdVSxi86UVaFXmOfacs8BIAaA7Y29Vd+GIAZPEx9E1WzS7F5g+AB1C8EHBt97i+
-         df6ZU3jUNqkItMeRgpDqq9q4Iie30HhoQoZbHJJjU3wla599EKbyLaBp72Xs/ubW25l6
-         kFMdfHSeZlDrpQWTOqzWYF4b5wX3qrpwQgflSNhwjOIAn5BoV7qJbg6hJJG+kW6+CoZT
-         b/raNQw7x7Je+8YhKRByqX6wkVHNuvwO4RdthB+admgAeX6EKj5PMYQ9iOtwjYiXaNjw
-         kf5bVmNBA3KyWSxvxpCjQEp5728TH/2G1kN2Nsif+siEMXJcqOZIzH4Kgt+/hKhVAS7L
-         +dow==
-X-Gm-Message-State: APjAAAXUmIDTRjZtkIMFMI45PqanXArmny8HwPVk7RRRPqVy5SWeywfd
-        W7uBrJSDHuxZOxGQNKmw/dT2hA==
-X-Google-Smtp-Source: APXvYqzsbLFZOCgBGZ1xRVBJEF0SJlyHlyP0fT0x7nJ1ScHsj/3GvOj9yqGo25+3YzLe7PfJDB692A==
-X-Received: by 2002:a2e:9702:: with SMTP id r2mr3269054lji.190.1569515552727;
-        Thu, 26 Sep 2019 09:32:32 -0700 (PDT)
-Received: from [192.168.1.30] (c-22a0205c.06-131-73766c1.bbcust.telenor.se. [92.32.160.34])
-        by smtp.gmail.com with ESMTPSA id c16sm623826lfj.8.2019.09.26.09.32.31
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 26 Sep 2019 09:32:31 -0700 (PDT)
+        Thu, 26 Sep 2019 13:47:36 -0400
+Received: from nbd.name ([46.4.11.11]:55242 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727800AbfIZRrf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 26 Sep 2019 13:47:35 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=References:In-Reply-To:Message-Id:Date:Subject:To:From:Sender:
+        Reply-To:Cc:MIME-Version:Content-Type:Content-Transfer-Encoding:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=oE+kwRikllpYpngDRvkdPPYo6B+K5EDH/xgCc7e6L3Q=; b=iTjukitN5dsABmZKL0o9QnRIhY
+        3oKD4SbzpL2kH5Ws7phYi0pRFBtJZ8h679NW/GoAQLqkSDmArTCYp4IvWWYxl+C5UYtx3TuJGCAHS
+        X7CbNmzIytMI3Lw5MoH2pHaHuVivLM9LZ+ktFWO9c1xwqKLkgSsHO7raJrIzp9R5rVCs=;
+Received: from p54ae9b80.dip0.t-ipconnect.de ([84.174.155.128] helo=maeck.local)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.89)
+        (envelope-from <nbd@nbd.name>)
+        id 1iDXra-0000yj-11
+        for linux-wireless@vger.kernel.org; Thu, 26 Sep 2019 19:47:34 +0200
+Received: by maeck.local (Postfix, from userid 501)
+        id B53A569B6A85; Thu, 26 Sep 2019 19:47:32 +0200 (CEST)
+From:   Felix Fietkau <nbd@nbd.name>
 To:     linux-wireless@vger.kernel.org
-Cc:     Stanislaw Gruszka <sgruszka@redhat.com>,
-        Helmut Schaa <helmut.schaa@googlemail.com>
-From:   Anton Olsson <exuvo@exuvo.se>
-Subject: rt2x00 regression
-Message-ID: <bff7d309-a816-6a75-51b6-5928ef4f7a8c@exuvo.se>
-Date:   Thu, 26 Sep 2019 18:32:23 +0200
-User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.3.0
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+Subject: [PATCH 15/15] mt76: enable airtime fairness
+Date:   Thu, 26 Sep 2019 19:47:32 +0200
+Message-Id: <20190926174732.42375-15-nbd@nbd.name>
+X-Mailer: git-send-email 2.17.0
+In-Reply-To: <20190926174732.42375-1-nbd@nbd.name>
+References: <20190926174732.42375-1-nbd@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello I have a USB based ID 148f:3070 Ralink Technology, Corp. RT2870/RT3070 Wireless Adapter, that stops working with recent kernels. It works on kernel 5.1.15 and does not work with 5.2.7 or 5.3.1 (I have not tested other versions). I use it in AP mode.
+It is supported by all hardware drivers now
 
-I found this similar bug report https://marc.info/?l=linux-wireless&m=156630037103575&w=2 but that did not have related error messages so I assume this is different?
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ drivers/net/wireless/mediatek/mt76/mac80211.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Logs of working kernel 5.1.15-arch1-1-ARCH.
-[   78.680555] ieee80211 phy0: rt2x00_set_rt: Info - RT chipset 3070, rev 0201 detected
-[   78.690992] ieee80211 phy0: rt2x00_set_rf: Info - RF chipset 0005 detected
-[   78.799625] ieee80211 phy0: Selected rate control algorithm 'minstrel_ht'
-sep 26 17:13:03 kernel: usbcore: registered new interface driver rt2800usb
-sep 26 17:13:03 systemd[1]: Found device RT2870/RT3070 Wireless Adapter.
-[  113.812454] ieee80211 phy0: rt2x00lib_request_firmware: Info - Loading firmware file 'rt2870.bin'
-[  113.905279] ieee80211 phy0: rt2x00lib_request_firmware: Info - Firmware detected - version: 0.36
-[  114.028703] ieee80211 phy0: rt2x00usb_vendor_request: Error - Vendor Request 0x06 failed for offset 0x0404 with error -71
-
-The last error there does not seem to affect the operation of the device.
-
-Logs of not working with kernel 5.3.1, 5.2.7 has similar output.
-sep 26 17:06:12 kernel: ieee80211 phy0: rt2x00_set_rt: Info - RT chipset 3070, rev 0201 detected
-sep 26 17:06:12 kernel: ieee80211 phy0: rt2x00_set_rf: Info - RF chipset 0005 detected
-sep 26 17:06:12 kernel: ieee80211 phy0: Selected rate control algorithm 'minstrel_ht'
-sep 26 17:06:12 kernel: usbcore: registered new interface driver rt2800usb
-sep 26 17:06:12 systemd[1]: Found device RT2870/RT3070 Wireless Adapter.
-sep 26 17:06:21 ieee80211 phy0: rt2x00lib_request_firmware: Info - Loading firmware file 'rt2870.bin'
-sep 26 17:06:21 ieee80211 phy0: rt2x00lib_request_firmware: Info - Firmware detected - version: 0.36
-sep 26 17:06:21 ieee80211 phy0: rt2x00usb_vendor_request: Error - Vendor Request 0x06 failed for offset 0x0404 with>
-sep 26 17:06:22 ieee80211 phy0: rt2800_wait_csr_ready: Error - Unstable hardware
-sep 26 17:06:22 ieee80211 phy0: rt2800usb_set_device_state: Error - Device failed to enter state 4 (-5)
-
-Unable to bring up the network interface here.
-
-Tell me if you want me to run any commands or test any patches.
+diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
+index fd64172ca785..9a59a1b54c97 100644
+--- a/drivers/net/wireless/mediatek/mt76/mac80211.c
++++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
+@@ -307,6 +307,7 @@ int mt76_register_device(struct mt76_dev *dev, bool vht,
+ 	wiphy->features |= NL80211_FEATURE_ACTIVE_MONITOR;
+ 
+ 	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
++	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_AIRTIME_FAIRNESS);
+ 
+ 	wiphy->available_antennas_tx = dev->antenna_mask;
+ 	wiphy->available_antennas_rx = dev->antenna_mask;
+-- 
+2.17.0
 
