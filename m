@@ -2,93 +2,145 @@ Return-Path: <SRS0=TTqJ=XV=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=FROM_EXCESS_BASE64,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BD24C432C2
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Sep 2019 12:05:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A9BCC432C2
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Sep 2019 12:09:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7CAE2208C3
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Sep 2019 12:05:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2DFC4208C3
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Sep 2019 12:09:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726295AbfIZME7 (ORCPT
+        id S1726380AbfIZMJo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 26 Sep 2019 08:04:59 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:51726 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725815AbfIZME7 (ORCPT
+        Thu, 26 Sep 2019 08:09:44 -0400
+Received: from 6.mo2.mail-out.ovh.net ([87.98.165.38]:58900 "EHLO
+        6.mo2.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725836AbfIZMJo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Sep 2019 08:04:59 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1iDSVx-0000lJ-AK; Thu, 26 Sep 2019 14:04:53 +0200
-Message-ID: <8b36a751a3498415a6474940ed904dbd40e1f26b.camel@sipsolutions.net>
-Subject: Re: [PATCH RFC] cfg80211: add new command for reporting wiphy
- crashes
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-        Jouni Malinen <j@w1.fi>
-Cc:     "David S . Miller" <davem@davemloft.net>,
+        Thu, 26 Sep 2019 08:09:44 -0400
+X-Greylist: delayed 1043 seconds by postgrey-1.27 at vger.kernel.org; Thu, 26 Sep 2019 08:09:42 EDT
+Received: from player688.ha.ovh.net (unknown [10.108.42.184])
+        by mo2.mail-out.ovh.net (Postfix) with ESMTP id CCAFC1AE29B
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Sep 2019 13:52:17 +0200 (CEST)
+Received: from milecki.pl (ip-194-187-74-233.konfederacka.maverick.com.pl [194.187.74.233])
+        (Authenticated sender: rafal@milecki.pl)
+        by player688.ha.ovh.net (Postfix) with ESMTPSA id 1EFA2A2EC583;
+        Thu, 26 Sep 2019 11:52:07 +0000 (UTC)
+Subject: Re: [PATCH RFC] cfg80211: add new command for reporting wiphy crashes
+To:     Jouni Malinen <j@w1.fi>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc:     Johannes Berg <johannes@sipsolutions.net>,
+        "David S . Miller" <davem@davemloft.net>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org, hostap@lists.infradead.org,
         openwrt-devel@lists.openwrt.org
-Date:   Thu, 26 Sep 2019 14:04:52 +0200
-In-Reply-To: <09503390-91f0-3789-496a-6e9891156c5e@gmail.com> (sfid-20190926_140042_451511_E87E7FE4)
 References: <20190920133708.15313-1-zajec5@gmail.com>
-         <20190920140143.GA30514@w1.fi>
-         <4f6f37e5-802c-4504-3dcb-c4a640d138bd@milecki.pl>
-         <9ece533700be8237699881312a99cc91c6a71d36.camel@sipsolutions.net>
-         <09503390-91f0-3789-496a-6e9891156c5e@gmail.com>
-         (sfid-20190926_140042_451511_E87E7FE4)
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.30.5 (3.30.5-1.fc29) 
+ <20190920140143.GA30514@w1.fi>
+From:   =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+Message-ID: <4f6f37e5-802c-4504-3dcb-c4a640d138bd@milecki.pl>
+Date:   Thu, 26 Sep 2019 13:52:05 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.5.2
 MIME-Version: 1.0
+In-Reply-To: <20190920140143.GA30514@w1.fi>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
+X-Ovh-Tracer-Id: 11993367286735539761
+X-VR-SPAMSTATE: OK
+X-VR-SPAMSCORE: -100
+X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedufedrfeeggdeghecutefuodetggdotefrodftvfcurfhrohhfihhlvgemucfqggfjpdevjffgvefmvefgnecuuegrihhlohhuthemucehtddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmd
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, 2019-09-26 at 14:00 +0200, Rafał Miłecki wrote:
-
-> > You can't seriously be suggesting that the driver doesn't *have* enough
-> > information - everything passed through it :)
+On 20.09.2019 16:01, Jouni Malinen wrote:
+> On Fri, Sep 20, 2019 at 03:37:08PM +0200, Rafał Miłecki wrote:
+>> Hardware or firmware instability may result in unusable wiphy. In such
+>> cases usually a hardware reset is needed. To allow a full recovery
+>> kernel has to indicate problem to the user space.
 > 
-> Precisely: it doesn't store (cache) enough info.
+> Why? Shouldn't the driver be able to handle this on its own since all
+> the previous configuration was done through the driver anyway. As far as
+> I know, there are drivers that do indeed try to do this and handle it
+> successfully at least for station mode. AP mode may be more complex, but
+> for that one, I guess it would be fine to drop all associations (and
+> provide indication of that to user space) and just restart the BSS.
 
-But nothing stops it (the driver) from doing so!
+Indeed my main concert is AP mode. I'm afraid that cfg80211 doesn't
+cache all settings, consider e.g. nl80211_start_ap(). It builds
+struct cfg80211_ap_settings using info from nl80211 message and
+passes it to the driver (rdev_start_ap()). Once it's done it
+caches only a small subset of all setup data.
 
-> In brcmfmac on .add_virtual_intf() we:
-> 1) Send request to the FullMAC firmware
-> 2) Wait for a reply
-> 3) On success we create interface
-> 4) We wake up .add_virtual_intf() handler
+In other words driver doesn't have enough info to recover interfaces
+setup.
+
+
+>> This new nl80211 command lets user space known wiphy has crashed and has
+>> been just recovered. When applicable it should result in supplicant or
+>> authenticator reconfiguring all interfaces.
 > 
-> I'll need to find a way to skip step 3 in recovery path since interface
-> on host side already exists.
+> For me, that is not really "recovered" if some additional
+> reconfiguration steps are needed.. I'd like to get a more detailed view
+> on what exactly might need to be reconfigured and how would user space
+> know what exactly to do. Or would the plan here be that the driver would
+> not even indicate this crash if it is actually able to internally
+> recover fully from the firmware restart?
 
-Sure, we skip lots of things in all drivers, look at iwlwifi for example
-with IWL_MVM_STATUS_IN_HW_RESTART.
+I meant that hardware has been recovered & is operational again (driver
+can talk to it). I expected user space to reconfigure all interfaces
+using the same settings that were used on previous run.
 
-> OK, so basically I need to work on caching setup data. Should I try
-> doing that at my selected driver level (brcmfmac)? Or should I focus on
-> generic solution (cfg80211) and consider offloading mac80211 if
-> possible?
+If driver were able to recover interfaces setup on its own (with a help
+of cfg80211) then user space wouldn't need to be involved.
 
-I think doing it generically will not work well, you have different code
-paths and different formats, different data that you need etc.
 
-Sometimes there's information cfg80211 doesn't even *have*, because the
-driver is responsible for things (e.g. elements). I guess you can try,
-but my gut feeling is that it'd simpler in the driver.
+>> I'd like to use this new cfg80211_crash_report() in brcmfmac after a
+>> successful recovery from a FullMAC firmware crash.
+>>
+>> Later on I'd like to modify hostapd to reconfigure wiphy using a
+>> previously used setup.
+> 
+> So this implies that at least something would need to happen in AP mode.
+> Do you have a list of items that the driver cannot do on its own and why
+> it would be better to do them from user space?
 
-Now you can argue that everything passes through cfg80211 so it must
-have enough data too (just like I'm arguing the driver certainly has
-enough data), but ... it seems to me the cfg80211 is usually more
-action-based, where the restore flow needs to keep the *state*, not
-replay the series of actions that happened.
+First of all I was wondering how to handle interfaces creation. After a
+firmware crash we have:
+1) Interfaces created in Linux
+2) No corresponsing interfaces in firmware
 
-johannes
+Syncing that (re-creating in-firmware firmwares) may be a bit tricky
+depending on a driver and hardware. For some cases it could be easier to
+delete all interfaces and ask user space to setup wiphy (create required
+interfaces) again. I'm not sure if that's acceptable though?
 
+If we agree interfaces should stay and driver simply should configure
+firmware properly, then we need all data as explained earlier. struct
+cfg80211_ap_settings is not available during runtime. How should we
+handle that problem?
+
+
+>> I'm OpenWrt developer & user and I got annoyed by my devices not auto
+>> recovering after various failures. There are things I cannot fix (hw
+>> failures or closed fw crashes) but I still expect my devices to get
+>> back to operational state as soon as possible on their own.
+> 
+> I fully agree with the auto recovery being important thing to cover for
+> this, but I'm not yet convinced that this needs user space action. Or if
+> it does, there would need to be more detailed way of indicating what
+> exactly is needed for user space to do. The proposed change here is just
+> saying "hey, I crashed and did something to get the hardware/firmware
+> responding again" which does not really tell much to user space other
+> than potentially requiring full disable + re-enable for the related
+> interfaces. And that is something that should not actually be done in
+> all cases of firmware crashes since there are drivers that handle
+> recovery in a manner that is in practice completely transparent to user
+> space.
+
+I was aiming for a brutal force solution: just make user space
+interfaces need a full setup just at they were just created.
