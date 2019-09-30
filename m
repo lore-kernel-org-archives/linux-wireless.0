@@ -4,36 +4,36 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.0 required=3.0
 	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F902C388F4
-	for <linux-wireless@archiver.kernel.org>; Mon, 30 Sep 2019 08:48:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9155BC4360C
+	for <linux-wireless@archiver.kernel.org>; Mon, 30 Sep 2019 08:48:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 60FDD21721
-	for <linux-wireless@archiver.kernel.org>; Mon, 30 Sep 2019 08:48:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 60EA62086A
+	for <linux-wireless@archiver.kernel.org>; Mon, 30 Sep 2019 08:48:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730256AbfI3IsP (ORCPT
+        id S1730244AbfI3IsP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Mon, 30 Sep 2019 04:48:15 -0400
-Received: from szxga04-in.huawei.com ([45.249.212.190]:3181 "EHLO huawei.com"
+Received: from szxga04-in.huawei.com ([45.249.212.190]:3187 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726121AbfI3IsM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Sep 2019 04:48:12 -0400
-Received: from DGGEMS402-HUB.china.huawei.com (unknown [172.30.72.58])
-        by Forcepoint Email with ESMTP id 33FDE3A4053CE2472D4C;
+        id S1730212AbfI3IsN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 30 Sep 2019 04:48:13 -0400
+Received: from DGGEMS402-HUB.china.huawei.com (unknown [172.30.72.60])
+        by Forcepoint Email with ESMTP id 632BAE3356B085B1330C;
         Mon, 30 Sep 2019 16:48:09 +0800 (CST)
 Received: from huawei.com (10.90.53.225) by DGGEMS402-HUB.china.huawei.com
  (10.3.19.202) with Microsoft SMTP Server id 14.3.439.0; Mon, 30 Sep 2019
- 16:48:00 +0800
+ 16:47:59 +0800
 From:   zhengbin <zhengbin13@huawei.com>
 To:     <pkshih@realtek.com>, <kvalo@codeaurora.org>,
         <davem@davemloft.net>, <linux-wireless@vger.kernel.org>,
         <netdev@vger.kernel.org>
 CC:     <zhengbin13@huawei.com>
-Subject: [PATCH 4/6] rtlwifi: rtl8192ee: Remove set but not used variables 'short_gi','buf_len'
-Date:   Mon, 30 Sep 2019 16:54:50 +0800
-Message-ID: <1569833692-93288-5-git-send-email-zhengbin13@huawei.com>
+Subject: [PATCH 1/6] rtlwifi: Remove set but not used variable 'rtstate'
+Date:   Mon, 30 Sep 2019 16:54:47 +0800
+Message-ID: <1569833692-93288-2-git-send-email-zhengbin13@huawei.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1569833692-93288-1-git-send-email-zhengbin13@huawei.com>
 References: <1569833692-93288-1-git-send-email-zhengbin13@huawei.com>
@@ -48,60 +48,39 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Fixes gcc '-Wunused-but-set-variable' warning:
 
-drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c: In function rtl92ee_tx_fill_desc:
-drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c:656:5: warning: variable short_gi set but not used [-Wunused-but-set-variable]
-drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c: In function rtl92ee_tx_fill_desc:
-drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c:648:15: warning: variable buf_len set but not used [-Wunused-but-set-variable]
+drivers/net/wireless/realtek/rtlwifi/ps.c: In function rtl_ps_set_rf_state:
+drivers/net/wireless/realtek/rtlwifi/ps.c:71:19: warning: variable rtstate set but not used [-Wunused-but-set-variable]
 
-They are not used since commit f1d2b4d338bf ("rtlwifi:
+It is not used since commit f1d2b4d338bf ("rtlwifi:
 rtl818x: Move drivers into new realtek directory")
 
 Reported-by: Hulk Robot <hulkci@huawei.com>
 Signed-off-by: zhengbin <zhengbin13@huawei.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c | 8 --------
- 1 file changed, 8 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/ps.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
-index 27f1a63..36a8a51 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
-@@ -651,7 +651,6 @@ void rtl92ee_tx_fill_desc(struct ieee80211_hw *hw,
- 	struct rtlwifi_tx_info *tx_info = rtl_tx_skb_cb_info(skb);
- 	u16 seq_number;
- 	__le16 fc = hdr->frame_control;
--	unsigned int buf_len;
- 	u8 fw_qsel = _rtl92ee_map_hwqueue_to_fwqueue(skb, hw_queue);
- 	bool firstseg = ((hdr->seq_ctrl &
- 			    cpu_to_le16(IEEE80211_SCTL_FRAG)) == 0);
-@@ -659,7 +658,6 @@ void rtl92ee_tx_fill_desc(struct ieee80211_hw *hw,
- 			   cpu_to_le16(IEEE80211_FCTL_MOREFRAGS)) == 0);
- 	dma_addr_t mapping;
- 	u8 bw_40 = 0;
--	u8 short_gi;
- 	__le32 *pdesc = (__le32 *)pdesc8;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/ps.c b/drivers/net/wireless/realtek/rtlwifi/ps.c
+index 70f04c2..e13913a 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/ps.c
++++ b/drivers/net/wireless/realtek/rtlwifi/ps.c
+@@ -68,7 +68,6 @@ static bool rtl_ps_set_rf_state(struct ieee80211_hw *hw,
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
+-	enum rf_pwrstate rtstate;
+ 	bool actionallowed = false;
+ 	u16 rfwait_cnt = 0;
 
- 	if (mac->opmode == NL80211_IFTYPE_STATION) {
-@@ -677,7 +675,6 @@ void rtl92ee_tx_fill_desc(struct ieee80211_hw *hw,
- 		skb_push(skb, EM_HDR_LEN);
- 		memset(skb->data, 0, EM_HDR_LEN);
- 	}
--	buf_len = skb->len;
- 	mapping = pci_map_single(rtlpci->pdev, skb->data, skb->len,
- 				 PCI_DMA_TODEVICE);
- 	if (pci_dma_mapping_error(rtlpci->pdev, mapping)) {
-@@ -724,11 +721,6 @@ void rtl92ee_tx_fill_desc(struct ieee80211_hw *hw,
- 			}
+@@ -102,8 +101,6 @@ static bool rtl_ps_set_rf_state(struct ieee80211_hw *hw,
  		}
+ 	}
 
--		if (ptcb_desc->hw_rate > DESC_RATEMCS0)
--			short_gi = (ptcb_desc->use_shortgi) ? 1 : 0;
--		else
--			short_gi = (ptcb_desc->use_shortpreamble) ? 1 : 0;
+-	rtstate = ppsc->rfpwr_state;
 -
- 		if (info->flags & IEEE80211_TX_CTL_AMPDU) {
- 			set_tx_desc_agg_enable(pdesc, 1);
- 			set_tx_desc_max_agg_num(pdesc, 0x14);
+ 	switch (state_toset) {
+ 	case ERFON:
+ 		ppsc->rfoff_reason &= (~changesource);
 --
 2.7.4
 
