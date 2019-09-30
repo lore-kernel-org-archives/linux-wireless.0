@@ -2,38 +2,41 @@ Return-Path: <SRS0=16ef=XZ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+X-Spam-Status: No, score=-10.0 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38630C4360C
-	for <linux-wireless@archiver.kernel.org>; Mon, 30 Sep 2019 08:48:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F902C388F4
+	for <linux-wireless@archiver.kernel.org>; Mon, 30 Sep 2019 08:48:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1AB932086A
-	for <linux-wireless@archiver.kernel.org>; Mon, 30 Sep 2019 08:48:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 60FDD21721
+	for <linux-wireless@archiver.kernel.org>; Mon, 30 Sep 2019 08:48:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730230AbfI3IsO (ORCPT
+        id S1730256AbfI3IsP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 30 Sep 2019 04:48:14 -0400
-Received: from szxga04-in.huawei.com ([45.249.212.190]:3185 "EHLO huawei.com"
+        Mon, 30 Sep 2019 04:48:15 -0400
+Received: from szxga04-in.huawei.com ([45.249.212.190]:3181 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1730110AbfI3IsN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Sep 2019 04:48:13 -0400
+        id S1726121AbfI3IsM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 30 Sep 2019 04:48:12 -0400
 Received: from DGGEMS402-HUB.china.huawei.com (unknown [172.30.72.58])
-        by Forcepoint Email with ESMTP id 4299B58D45E983FB740F;
+        by Forcepoint Email with ESMTP id 33FDE3A4053CE2472D4C;
         Mon, 30 Sep 2019 16:48:09 +0800 (CST)
 Received: from huawei.com (10.90.53.225) by DGGEMS402-HUB.china.huawei.com
  (10.3.19.202) with Microsoft SMTP Server id 14.3.439.0; Mon, 30 Sep 2019
- 16:47:58 +0800
+ 16:48:00 +0800
 From:   zhengbin <zhengbin13@huawei.com>
 To:     <pkshih@realtek.com>, <kvalo@codeaurora.org>,
         <davem@davemloft.net>, <linux-wireless@vger.kernel.org>,
         <netdev@vger.kernel.org>
 CC:     <zhengbin13@huawei.com>
-Subject: [PATCH 0/6] rtlwifi: Remove a bunch of set but not used variables
-Date:   Mon, 30 Sep 2019 16:54:46 +0800
-Message-ID: <1569833692-93288-1-git-send-email-zhengbin13@huawei.com>
+Subject: [PATCH 4/6] rtlwifi: rtl8192ee: Remove set but not used variables 'short_gi','buf_len'
+Date:   Mon, 30 Sep 2019 16:54:50 +0800
+Message-ID: <1569833692-93288-5-git-send-email-zhengbin13@huawei.com>
 X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1569833692-93288-1-git-send-email-zhengbin13@huawei.com>
+References: <1569833692-93288-1-git-send-email-zhengbin13@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [10.90.53.225]
@@ -43,25 +46,62 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-zhengbin (6):
-  rtlwifi: Remove set but not used variable 'rtstate'
-  rtlwifi: Remove set but not used variables 'dataempty','hoffset'
-  rtlwifi: rtl8192ee: Remove set but not used variable 'err'
-  rtlwifi: rtl8192ee: Remove set but not used variables
-    'short_gi','buf_len'
-  rtlwifi: rtl8192ee: Remove set but not used variables
-    'reg_ecc','reg_eac'
-  rtlwifi: rtl8723be: Remove set but not used variables
-    'reg_ecc','reg_eac'
+Fixes gcc '-Wunused-but-set-variable' warning:
 
- drivers/net/wireless/realtek/rtlwifi/efuse.c         | 6 ++----
- drivers/net/wireless/realtek/rtlwifi/ps.c            | 3 ---
- drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c  | 3 +--
- drivers/net/wireless/realtek/rtlwifi/rtl8192ee/phy.c | 8 ++------
+drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c: In function rtl92ee_tx_fill_desc:
+drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c:656:5: warning: variable short_gi set but not used [-Wunused-but-set-variable]
+drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c: In function rtl92ee_tx_fill_desc:
+drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c:648:15: warning: variable buf_len set but not used [-Wunused-but-set-variable]
+
+They are not used since commit f1d2b4d338bf ("rtlwifi:
+rtl818x: Move drivers into new realtek directory")
+
+Reported-by: Hulk Robot <hulkci@huawei.com>
+Signed-off-by: zhengbin <zhengbin13@huawei.com>
+---
  drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c | 8 --------
- drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c | 8 ++------
- 6 files changed, 7 insertions(+), 29 deletions(-)
+ 1 file changed, 8 deletions(-)
 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
+index 27f1a63..36a8a51 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
+@@ -651,7 +651,6 @@ void rtl92ee_tx_fill_desc(struct ieee80211_hw *hw,
+ 	struct rtlwifi_tx_info *tx_info = rtl_tx_skb_cb_info(skb);
+ 	u16 seq_number;
+ 	__le16 fc = hdr->frame_control;
+-	unsigned int buf_len;
+ 	u8 fw_qsel = _rtl92ee_map_hwqueue_to_fwqueue(skb, hw_queue);
+ 	bool firstseg = ((hdr->seq_ctrl &
+ 			    cpu_to_le16(IEEE80211_SCTL_FRAG)) == 0);
+@@ -659,7 +658,6 @@ void rtl92ee_tx_fill_desc(struct ieee80211_hw *hw,
+ 			   cpu_to_le16(IEEE80211_FCTL_MOREFRAGS)) == 0);
+ 	dma_addr_t mapping;
+ 	u8 bw_40 = 0;
+-	u8 short_gi;
+ 	__le32 *pdesc = (__le32 *)pdesc8;
+
+ 	if (mac->opmode == NL80211_IFTYPE_STATION) {
+@@ -677,7 +675,6 @@ void rtl92ee_tx_fill_desc(struct ieee80211_hw *hw,
+ 		skb_push(skb, EM_HDR_LEN);
+ 		memset(skb->data, 0, EM_HDR_LEN);
+ 	}
+-	buf_len = skb->len;
+ 	mapping = pci_map_single(rtlpci->pdev, skb->data, skb->len,
+ 				 PCI_DMA_TODEVICE);
+ 	if (pci_dma_mapping_error(rtlpci->pdev, mapping)) {
+@@ -724,11 +721,6 @@ void rtl92ee_tx_fill_desc(struct ieee80211_hw *hw,
+ 			}
+ 		}
+
+-		if (ptcb_desc->hw_rate > DESC_RATEMCS0)
+-			short_gi = (ptcb_desc->use_shortgi) ? 1 : 0;
+-		else
+-			short_gi = (ptcb_desc->use_shortpreamble) ? 1 : 0;
+-
+ 		if (info->flags & IEEE80211_TX_CTL_AMPDU) {
+ 			set_tx_desc_agg_enable(pdesc, 1);
+ 			set_tx_desc_max_agg_num(pdesc, 0x14);
 --
 2.7.4
 
