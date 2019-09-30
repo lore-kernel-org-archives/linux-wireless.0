@@ -2,79 +2,107 @@ Return-Path: <SRS0=16ef=XZ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no
+X-Spam-Status: No, score=-10.0 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F61FC388F3
-	for <linux-wireless@archiver.kernel.org>; Mon, 30 Sep 2019 06:57:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3C30C388F4
+	for <linux-wireless@archiver.kernel.org>; Mon, 30 Sep 2019 08:48:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 253E320842
-	for <linux-wireless@archiver.kernel.org>; Mon, 30 Sep 2019 06:57:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A5AEE21721
+	for <linux-wireless@archiver.kernel.org>; Mon, 30 Sep 2019 08:48:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729482AbfI3G5O (ORCPT
+        id S1730189AbfI3IsL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 30 Sep 2019 02:57:14 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:45646 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726121AbfI3G5O (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Sep 2019 02:57:14 -0400
-Received: from [91.156.6.193] (helo=redipa)
-        by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.92)
-        (envelope-from <luca@coelho.fi>)
-        id 1iEpcE-0008QN-4w; Mon, 30 Sep 2019 09:57:02 +0300
-Message-ID: <ab9673e80e53e217b0a4a871713b375b3e4a2fa3.camel@coelho.fi>
-From:   Luca Coelho <luca@coelho.fi>
-To:     Navid Emamdoost <navid.emamdoost@gmail.com>
-Cc:     emamd001@umn.edu, smccaman@umn.edu, kjlu@umn.edu,
-        Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Shaul Triebitz <shaul.triebitz@intel.com>,
-        Sara Sharon <sara.sharon@intel.com>,
-        Shahar S Matityahu <shahar.s.matityahu@intel.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date:   Mon, 30 Sep 2019 09:57:00 +0300
-In-Reply-To: <20190927205608.8755-1-navid.emamdoost@gmail.com>
-References: <20190927205608.8755-1-navid.emamdoost@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.30.5-1.1 
+        Mon, 30 Sep 2019 04:48:11 -0400
+Received: from szxga04-in.huawei.com ([45.249.212.190]:3183 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1729899AbfI3IsL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 30 Sep 2019 04:48:11 -0400
+Received: from DGGEMS402-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id 38E7D77053A048E6B021;
+        Mon, 30 Sep 2019 16:48:09 +0800 (CST)
+Received: from huawei.com (10.90.53.225) by DGGEMS402-HUB.china.huawei.com
+ (10.3.19.202) with Microsoft SMTP Server id 14.3.439.0; Mon, 30 Sep 2019
+ 16:48:00 +0800
+From:   zhengbin <zhengbin13@huawei.com>
+To:     <pkshih@realtek.com>, <kvalo@codeaurora.org>,
+        <davem@davemloft.net>, <linux-wireless@vger.kernel.org>,
+        <netdev@vger.kernel.org>
+CC:     <zhengbin13@huawei.com>
+Subject: [PATCH 5/6] rtlwifi: rtl8192ee: Remove set but not used variables 'reg_ecc','reg_eac'
+Date:   Mon, 30 Sep 2019 16:54:51 +0800
+Message-ID: <1569833692-93288-6-git-send-email-zhengbin13@huawei.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1569833692-93288-1-git-send-email-zhengbin13@huawei.com>
+References: <1569833692-93288-1-git-send-email-zhengbin13@huawei.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] iwlwifi: fix memory leaks in
- iwl_pcie_ctxt_info_gen3_init
+Content-Type: text/plain
+X-Originating-IP: [10.90.53.225]
+X-CFilter-Loop: Reflected
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, 2019-09-27 at 15:56 -0500, Navid Emamdoost wrote:
-> In iwl_pcie_ctxt_info_gen3_init there are cases that the allocated dma
-> memory is leaked in case of error.
-> DMA memories prph_scratch, prph_info, and ctxt_info_gen3 are allocated
-> and initialized to be later assigned to trans_pcie. But in any error case
-> before such assignment the allocated memories should be released.
-> First of such error cases happens when iwl_pcie_init_fw_sec fails.
-> Current implementation correctly releases prph_scratch. But in two
-> sunsequent error cases where dma_alloc_coherent may fail, such releases
-> are missing. This commit adds release for prph_scratch when allocation
-> for prph_info fails, and adds releases for prph_scratch and prph_info
-> when allocation for ctxt_info_gen3 fails.
-> 
-> Fixes: 2ee824026288 ("iwlwifi: pcie: support context information for 22560 devices")
-> 
-> Signed-off-by: Navid Emamdoost <navid.emamdoost@gmail.com>
-> ---
+Fixes gcc '-Wunused-but-set-variable' warning:
 
-Thanks, Navid! I have applied this to our internal tree and it will
-reach the mainline following our usual upstreaming process.
+drivers/net/wireless/realtek/rtlwifi/rtl8192ee/phy.c: In function rtl92ee_phy_iq_calibrate:
+drivers/net/wireless/realtek/rtlwifi/rtl8192ee/phy.c:2805:34: warning: variable reg_ecc set but not used [-Wunused-but-set-variable]
+drivers/net/wireless/realtek/rtlwifi/rtl8192ee/phy.c: In function rtl92ee_phy_iq_calibrate:
+drivers/net/wireless/realtek/rtlwifi/rtl8192ee/phy.c:2804:34: warning: variable reg_eac set but not used [-Wunused-but-set-variable]
 
+They are not used since commit b1a3bfc97cd9 ("rtlwifi:
+rtl8192ee: Move driver from staging to the regular tree")
+
+Reported-by: Hulk Robot <hulkci@huawei.com>
+Signed-off-by: zhengbin <zhengbin13@huawei.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/rtl8192ee/phy.c | 8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/phy.c
+index 222abc4..f03de8b 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/phy.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/phy.c
+@@ -2801,8 +2801,8 @@ void rtl92ee_phy_iq_calibrate(struct ieee80211_hw *hw, bool b_recovery)
+ 	long result[4][8];
+ 	u8 i, final_candidate;
+ 	bool b_patha_ok, b_pathb_ok;
+-	long reg_e94, reg_e9c, reg_ea4, reg_eac;
+-	long reg_eb4, reg_ebc, reg_ec4, reg_ecc;
++	long reg_e94, reg_e9c, reg_ea4;
++	long reg_eb4, reg_ebc, reg_ec4;
+ 	bool is12simular, is13simular, is23simular;
+ 	u8 idx;
+ 	u32 iqk_bb_reg[IQK_BB_REG_NUM] = {
+@@ -2873,11 +2873,9 @@ void rtl92ee_phy_iq_calibrate(struct ieee80211_hw *hw, bool b_recovery)
+ 		reg_e94 = result[i][0];
+ 		reg_e9c = result[i][1];
+ 		reg_ea4 = result[i][2];
+-		reg_eac = result[i][3];
+ 		reg_eb4 = result[i][4];
+ 		reg_ebc = result[i][5];
+ 		reg_ec4 = result[i][6];
+-		reg_ecc = result[i][7];
+ 	}
+
+ 	if (final_candidate != 0xff) {
+@@ -2886,13 +2884,11 @@ void rtl92ee_phy_iq_calibrate(struct ieee80211_hw *hw, bool b_recovery)
+ 		reg_e9c = result[final_candidate][1];
+ 		rtlphy->reg_e9c = reg_e9c;
+ 		reg_ea4 = result[final_candidate][2];
+-		reg_eac = result[final_candidate][3];
+ 		reg_eb4 = result[final_candidate][4];
+ 		rtlphy->reg_eb4 = reg_eb4;
+ 		reg_ebc = result[final_candidate][5];
+ 		rtlphy->reg_ebc = reg_ebc;
+ 		reg_ec4 = result[final_candidate][6];
+-		reg_ecc = result[final_candidate][7];
+ 		b_patha_ok = true;
+ 		b_pathb_ok = true;
+ 	} else {
 --
-Cheers,
-Luca.
+2.7.4
 
