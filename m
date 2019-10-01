@@ -2,72 +2,81 @@ Return-Path: <SRS0=KFxB=X2=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E14ECC388F3
-	for <linux-wireless@archiver.kernel.org>; Tue,  1 Oct 2019 10:56:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5B83C352AA
+	for <linux-wireless@archiver.kernel.org>; Tue,  1 Oct 2019 10:59:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BC5E121920
-	for <linux-wireless@archiver.kernel.org>; Tue,  1 Oct 2019 10:56:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 98DAB21920
+	for <linux-wireless@archiver.kernel.org>; Tue,  1 Oct 2019 10:59:18 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="o6dR18Md";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="kNo3gg+2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731194AbfJAK4a (ORCPT
+        id S1726292AbfJAK7R (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 1 Oct 2019 06:56:30 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:59666 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725865AbfJAK4a (ORCPT
+        Tue, 1 Oct 2019 06:59:17 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:51302 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725865AbfJAK7R (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 Oct 2019 06:56:30 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.92.2)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1iFFpU-0005wU-Oj; Tue, 01 Oct 2019 12:56:28 +0200
-Message-ID: <bb98e67fd47effce9eada17bdf24a9d0b7102f31.camel@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: keep BHs disabled while calling
- drv_tx_wake_queue()
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@redhat.com>,
-        linux-wireless@vger.kernel.org
-Cc:     Jiri Kosina <jikos@kernel.org>, Aaron Hill <aa1ronham@gmail.com>,
-        Lukas Redlinger <rel+kernel@agilox.net>,
-        Oleksii Shevchuk <alxchk@gmail.com>
-Date:   Tue, 01 Oct 2019 12:56:27 +0200
-In-Reply-To: <87blv0visz.fsf@toke.dk>
-References: <1569924485-I3e8838c5ecad878e59d4a94eb069a90f6641461a@changeid>
-         <87blv0visz.fsf@toke.dk>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.30.5 (3.30.5-1.fc29) 
+        Tue, 1 Oct 2019 06:59:17 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 21D936081C; Tue,  1 Oct 2019 10:59:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1569927557;
+        bh=iH+bHk9YNb+SDR51Y0QiL2vVXFJFJVavPQIC/mQurFw=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=o6dR18Mdu/W8qaH17dL/VAkoObWjWEo0f1J6ApZBj5iimLL6VfUezvH/k5mVy5msg
+         LQ/pTpdKFc08YuPKJ382+NbcnkJMNQrRelYePjQ4/rVIbSOr5HgzY8Tsry2+r14YLl
+         Si1i5Tu8UDXWMWAbrLW0JnmEOWJwsqhyWtuT45iY=
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by smtp.codeaurora.org (Postfix) with ESMTP id BB5DC6016D;
+        Tue,  1 Oct 2019 10:59:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1569927556;
+        bh=iH+bHk9YNb+SDR51Y0QiL2vVXFJFJVavPQIC/mQurFw=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=kNo3gg+2oDOUvpgKENR32dmJNKFUBzpq3371JrhvZNDfUFESgkaOkz1Ke+O00oMf5
+         ZUruhwOnuJjDytDDHkLE7GxM4n4qosMh/KPEoOWipPNbt/OW6bPTuDUp9SfKmglTcn
+         FPDVNHaaNmeY/8FdyAcnTdL0mAJ+QxRPz46DZYt4=
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Tue, 01 Oct 2019 18:59:16 +0800
+From:   Yibo Zhao <yiboz@codeaurora.org>
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        linux-wireless-owner@vger.kernel.org
+Subject: Re: [PATCH V3 0/4] Enable virtual time-based airtime scheduler
+ support on ath10k
+In-Reply-To: <20985660fd0872db1511948bd42cd925cef13cee.camel@sipsolutions.net>
+References: <1569223201-1490-1-git-send-email-yiboz@codeaurora.org>
+ (sfid-20190923_092024_747005_B4B11EDF)
+ <20985660fd0872db1511948bd42cd925cef13cee.camel@sipsolutions.net>
+Message-ID: <e710a18d65ecaf2168a27556c85dada8@codeaurora.org>
+X-Sender: yiboz@codeaurora.org
+User-Agent: Roundcube Webmail/1.2.5
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, 2019-10-01 at 12:53 +0200, Toke Høiland-Jørgensen wrote:
+On 2019-10-01 18:19, Johannes Berg wrote:
+> On Mon, 2019-09-23 at 15:19 +0800, Yibo Zhao wrote:
+>> This series fix some issues when enabling virtual time-based airtime 
+>> scheduler on ath10k.
+>> 
+> Given the lengthy discussion here and also over in the related thread
+> about AQL, I'm assuming you're going to repost this eventually.
+
+Yes, will repost once Toke have updated "mac80211: Switch to a virtual 
+time-based airtime scheduler" with his new ideas.
 > 
-> > -			spin_unlock_bh(&fq->lock);
-> > +			spin_unlock(&fq->lock);
-> >  			drv_wake_tx_queue(local, txqi);
-> > -			spin_lock_bh(&fq->lock);
-> > +			spin_lock(&fq->lock);
-> 
-> Okay, so this will mean that the drv_wake_tx_queue() entry point will be
-> called with bhs disabled.
+> johannes
 
-Right.
-
->  But there are lots of uses of
-> spin_{,un}lock_bh() in tx.c:
-
-[snip]
-
-> so won't that mean that the driver still gets bhs re-enabled after (for
-> instance) the first call to ieee80211_tx_dequeue()?
-
-No, local_bh_disable()/local_bh_enable() is re-entrant and nests fine.
-
-johannes
-
+-- 
+Yibo
