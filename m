@@ -2,132 +2,86 @@ Return-Path: <SRS0=KFxB=X2=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
 	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A81BC388F3
-	for <linux-wireless@archiver.kernel.org>; Tue,  1 Oct 2019 09:08:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 642F1C352AA
+	for <linux-wireless@archiver.kernel.org>; Tue,  1 Oct 2019 09:09:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1B8692190F
-	for <linux-wireless@archiver.kernel.org>; Tue,  1 Oct 2019 09:08:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 315682190F
+	for <linux-wireless@archiver.kernel.org>; Tue,  1 Oct 2019 09:09:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="DAIv4Ttb"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="czQNHWHl";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="FwbvP5WT"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729949AbfJAJIh (ORCPT
+        id S1729998AbfJAJJi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 1 Oct 2019 05:08:37 -0400
-Received: from us-smtp-2.mimecast.com ([205.139.110.61]:29621 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728892AbfJAJIh (ORCPT
+        Tue, 1 Oct 2019 05:09:38 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:33954 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729876AbfJAJJi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 Oct 2019 05:08:37 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1569920915;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=ztuEv3F1VvUb37/sb6lMwENjtvEWt91fS/pfkH1uTOo=;
-        b=DAIv4TtbMvnaAU1cwjaHs0TUJzmf9lRWanjd+Jbh/YTsrYalKBN5TTO586xsnuXMmY7GWE
-        NNNnG0P2M5v3GXK+sdu9mYGrLhBGRunQHO8/MnyNajTFlJvj00olIMmKpM+3Ner1pBmENY
-        fatnaw+i6oXM0mUKpEZ99/S/UZI9nwc=
-Received: from mail-lf1-f71.google.com (mail-lf1-f71.google.com
- [209.85.167.71]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-360-CWdt7FA0OSKwpO3SIgyM5w-1; Tue, 01 Oct 2019 05:08:33 -0400
-Received: by mail-lf1-f71.google.com with SMTP id p15so2620654lfc.20
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Oct 2019 02:08:33 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:in-reply-to:references:date
-         :message-id:mime-version:content-transfer-encoding;
-        bh=10PCp8jeul/Ln8OdCxlZHThqI0Uexho93oGHCJziLrg=;
-        b=cwaEqMZ4gTY9KbWfbxDtb9fImITi+tPNzqi9UJXz4311bf6bJX9fl0yD4/uyqk1gi6
-         VMzLkM/QxETXqu2sEzk/dFXuHyImaR27U+pdsOXFu04Nh7oek3CkK73lCRh0f/zwPL73
-         K5/Wepre7Dg6p0tFPjKHNSRxGySt5FTr/NrTkjG7deHOWSalmJUFiUZekatzsgAi2aJK
-         MAtNVHs003PBw5K47PNihMqmsBuVBkJaY5eNv8Xiuu5w029uFHU+lWnhe4qw9GIc3lOk
-         WI9vXJeIl3yZRIkmN3nFfE6k05jUK8Kk94eLM7ktqcBY43ygmEMnPLp4BBlIF7YQmQ6F
-         4jBQ==
-X-Gm-Message-State: APjAAAWqwnMeNPcqOGrZF2f6YI3ERR6O5Pcx8bHliWjcbcdekwJ2tn0x
-        zlk3mttfoIEqHDFryazCQ0m+KqmtcIiALyytvBzw7OUjFyMOI2ZShX02v2vTwzzpZXml4MxQBtv
-        zLJK1p48s+qS9lqP+QRYJSVvYSS0=
-X-Received: by 2002:a2e:894b:: with SMTP id b11mr10980566ljk.152.1569920912182;
-        Tue, 01 Oct 2019 02:08:32 -0700 (PDT)
-X-Google-Smtp-Source: APXvYqwMmoZWktrU9t3bsxs/zxOrAZ9ZKCtaEs/KadF1Rn2MREKt6ho0vvj8CvEvxNHwXsMNihwIvg==
-X-Received: by 2002:a2e:894b:: with SMTP id b11mr10980561ljk.152.1569920912043;
-        Tue, 01 Oct 2019 02:08:32 -0700 (PDT)
-Received: from alrua-x1.borgediget.toke.dk ([2a00:7660:6da:443::2])
-        by smtp.gmail.com with ESMTPSA id t22sm3720806lfg.91.2019.10.01.02.08.30
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 01 Oct 2019 02:08:31 -0700 (PDT)
-Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
-        id 589A218063D; Tue,  1 Oct 2019 11:08:30 +0200 (CEST)
-From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless@vger.kernel.org,
-        make-wifi-fast@lists.bufferbloat.net,
-        John Crispin <john@phrozen.org>,
-        Lorenzo Bianconi <lorenzo@kernel.org>,
-        Felix Fietkau <nbd@nbd.name>
-Subject: Re: [PATCH RFC/RFT 1/4] mac80211: Rearrange ieee80211_tx_info to make room for tx_time_est
-In-Reply-To: <fd0d467d352177ac20100239cb18f80310b43fa9.camel@sipsolutions.net>
-References: <156889576422.191202.5906619710809654631.stgit@alrua-x1> <156889576534.191202.17686228416284995279.stgit@alrua-x1> <fd0d467d352177ac20100239cb18f80310b43fa9.camel@sipsolutions.net>
-X-Clacks-Overhead: GNU Terry Pratchett
-Date:   Tue, 01 Oct 2019 11:08:30 +0200
-Message-ID: <87v9t8vnn5.fsf@toke.dk>
+        Tue, 1 Oct 2019 05:09:38 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 2887D60A37; Tue,  1 Oct 2019 09:09:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1569920977;
+        bh=8+qPw+buh2bAKVu/iserVs8uM7m0xAhuaEbDYL7F03M=;
+        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+        b=czQNHWHl0/QoV8gSLPVlye++bYS40MuzHS6i73lbElBG4DEhDPwvnep4tzE0YHAW2
+         TIg7ogTpnzPmXg4bG/J7BIwP6VYoNStVUquWQwPGbqIY6dyxUKP377B5FMXFwmDNY4
+         gpsBe9dofJoRcR/FLXSYPc6VAJ7ekJcuYidxTObo=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 056AB6081C;
+        Tue,  1 Oct 2019 09:09:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1569920976;
+        bh=8+qPw+buh2bAKVu/iserVs8uM7m0xAhuaEbDYL7F03M=;
+        h=Subject:From:In-Reply-To:References:To:Cc:From;
+        b=FwbvP5WTOR82ONB2Nr483TRNx4dQSsMT67ln0zlaIsbXwZCxPn2cL+AZQXj4R3GEe
+         JYs3abF7Dan5KxTmdHYZDbXDfcV8v68qB6FP1AUwNKQomUipZO04JeaAjSIIXl/P6A
+         o7qI20nGo20FGEE5AOcvploO45/u+BEPqKeU9bP0=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 056AB6081C
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-X-MC-Unique: CWdt7FA0OSKwpO3SIgyM5w-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH] rt2x00: initialize last_reset
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20190926085433.1300-1-sgruszka@redhat.com>
+References: <20190926085433.1300-1-sgruszka@redhat.com>
+To:     Stanislaw Gruszka <sgruszka@redhat.com>
+Cc:     linux-wireless@vger.kernel.org,
+        =?utf-8?q?Tomislav_Po=C5=BEega?= <pozega.tomislav@gmail.com>,
+        Daniel Golle <daniel@makrotopia.org>,
+        Felix Fietkau <nbd@nbd.name>, Mathias Kresin <dev@kresin.me>,
+        Jonathan Liu <net147@gmail.com>
+User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
+Message-Id: <20191001090937.2887D60A37@smtp.codeaurora.org>
+Date:   Tue,  1 Oct 2019 09:09:37 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+Stanislaw Gruszka <sgruszka@redhat.com> wrote:
 
-> Hi,
->
-> Sorry for the long time to review here ...
->
-> On Thu, 2019-09-19 at 14:22 +0200, Toke H=C3=B8iland-J=C3=B8rgensen wrote=
-:
->> From: Toke H=C3=B8iland-J=C3=B8rgensen <toke@redhat.com>
->>=20
->> To implement airtime queue limiting, we need to keep a running account o=
-f
->> the estimated airtime of all skbs queued into the device. Do to this
->> correctly, we need to store the airtime estimate into the skb so we can
->> decrease the outstanding balance when the skb is freed. This means that =
-the
->> time estimate must be stored somewhere that will survive for the lifetim=
-e
->> of the skb.
->>=20
->> Fortunately, we had a couple of bytes left in the 'status' field in the
->> ieee80211_tx_info; and since we only plan to calculate the airtime estim=
-ate
->> after the skb is dequeued from the FQ structure, on the control side we =
-can
->> share the space with the codel enqueue time. And by rearranging the orde=
-r
->> of elements it is possible to have the position of the new tx_time_est l=
-ine
->> up between the control and status structs, so the value will survive fro=
-m
->> when mac80211 hands the packet to the driver, and until the driver eithe=
-r
->> frees it, or hands it back through TX status.
->
-> Seems reasonable to me, if we end up needing it and don't have an out-
-> of-band path (that you seem to have been discussing in this long
-> thread too)
+> Initialize last_reset variable to INITIAL_JIFFIES, otherwise it is not
+> possible to test H/W reset for first 5 minutes of system run.
+> 
+> Fixes: e403fa31ed71 ("rt2x00: add restart hw")
+> Reported-and-tested-by: Jonathan Liu <net147@gmail.com>
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-Awesome! Any idea for how to make it work on big-endian systems? I got a
-splat from the kbuild robot that triggered the BUILD_BUG_ON when
-building for m68k. I assume it's the union with codel_time_t that ends
-up being aligned wrong...
+I'll queue this to v5.4.
 
--Toke
+-- 
+https://patchwork.kernel.org/patch/11161981/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
