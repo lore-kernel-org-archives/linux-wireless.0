@@ -6,86 +6,88 @@ X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
 	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F3CFC388F3
-	for <linux-wireless@archiver.kernel.org>; Tue,  1 Oct 2019 09:18:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23402C352AA
+	for <linux-wireless@archiver.kernel.org>; Tue,  1 Oct 2019 09:19:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0B9AF2133F
-	for <linux-wireless@archiver.kernel.org>; Tue,  1 Oct 2019 09:18:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ECBBF2133F
+	for <linux-wireless@archiver.kernel.org>; Tue,  1 Oct 2019 09:19:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="hh/QQJ4o";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="cXHSy2XB"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="IQM5yFLV";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="U5cz+xpq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733105AbfJAJS0 (ORCPT
+        id S2387418AbfJAJTJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 1 Oct 2019 05:18:26 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:38668 "EHLO
+        Tue, 1 Oct 2019 05:19:09 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:39574 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729418AbfJAJS0 (ORCPT
+        with ESMTP id S1728748AbfJAJTI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 Oct 2019 05:18:26 -0400
+        Tue, 1 Oct 2019 05:19:08 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 7FCED61156; Tue,  1 Oct 2019 09:18:25 +0000 (UTC)
+        id 6D01C6076C; Tue,  1 Oct 2019 09:19:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1569921505;
-        bh=t5SrsnSO3W9v+9/ySTiF8sg1I6e+XTnn5JfjhAj1jwg=;
+        s=default; t=1569921547;
+        bh=aAWvCZYegerllMvZ/ZPMWpSmc22b+zyrwrm+VBt9azk=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=hh/QQJ4oR9JZhgv72BhTulk8NcRgnqZvZQIwCMmtdx8CGJNb3Hq/THbeSFeL/0F0Y
-         YrWHAnbwVNnILdKaZXaTlRPfocy/lv33DM5DTfgWWjRe3+vNK5vjTOseP7mCdQI5Rx
-         HI3Vx6bav05llRxbhWvrpsRMtR6rbw13DOjWXIyo=
+        b=IQM5yFLVVg6bnVhG3YLAMpKk3d+vgPg7Wj8vWj/ep7AtPo9FV7CLztUozmM8UHpxj
+         7Ef/p+tNBOyK04AkxZg5rtpOYAH82cJq1vc39V3belywebN393RynRVsVG9jrtSThE
+         BJbs2e1IigaO9mol6UlmtkoKaAyfuPwjK4AtptDI=
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 6F16C608CE;
-        Tue,  1 Oct 2019 09:18:24 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 4157B6076C;
+        Tue,  1 Oct 2019 09:19:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1569921505;
-        bh=t5SrsnSO3W9v+9/ySTiF8sg1I6e+XTnn5JfjhAj1jwg=;
+        s=default; t=1569921546;
+        bh=aAWvCZYegerllMvZ/ZPMWpSmc22b+zyrwrm+VBt9azk=;
         h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=cXHSy2XBx/sM+Lo1JGMJiCsXZHhiN3QUlV40rU68SAjP95YLYZtZ5xMBAM0udvfiZ
-         CyH+BDDfg4PrPFso78dikY/nXnBpHIjHIn56QYSKOQWtgnOs4NzHW7fBhZjfDdL5df
-         zWhp3Ie2o805r/NbjtCTvS5qv3sPhYEYijGS3mg4=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 6F16C608CE
+        b=U5cz+xpqROcI8f5DTuGJByz3aIj61Uka+9PZdzKkLPBmkze5DajJYTCYJvG9RIuho
+         ml6Dh7HaFo+io5nwNbu0VgKqHO8R3jy8uYRSh44brVJS6s5F5QfUOpdDNm25nO2ODx
+         5Ubtx6hxAio3qz9uaVMJ/Y1U4TDBcKCl93jG9idI=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 4157B6076C
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] rtw88: 8822c: fix boolreturn.cocci warnings
+Subject: Re: [PATCH] rsi: release skb if rsi_prepare_beacon fails
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1568601700-12162-1-git-send-email-yhchuang@realtek.com>
-References: <1568601700-12162-1-git-send-email-yhchuang@realtek.com>
-To:     <yhchuang@realtek.com>
-Cc:     <linux-wireless@vger.kernel.org>, <tehuang@realtek.com>
+In-Reply-To: <20190914000812.10188-1-navid.emamdoost@gmail.com>
+References: <20190914000812.10188-1-navid.emamdoost@gmail.com>
+To:     Navid Emamdoost <navid.emamdoost@gmail.com>
+Cc:     unlisted-recipients:; (no To-header on input) emamd001@umn.edu,
+        smccaman@umn.edu, kjlu@umn.edu,
+        Navid Emamdoost <navid.emamdoost@gmail.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Siva Rebbagondla <siva8118@gmail.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Illegal-Object: Syntax error in Cc: address found on vger.kernel.org:
+        Cc:     unlisted-recipients:; (no To-header on input)emamd001@umn.edu
+                                                                     ^-missing end of address
 User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20191001091825.7FCED61156@smtp.codeaurora.org>
-Date:   Tue,  1 Oct 2019 09:18:25 +0000 (UTC)
+Message-Id: <20191001091907.6D01C6076C@smtp.codeaurora.org>
+Date:   Tue,  1 Oct 2019 09:19:07 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-<yhchuang@realtek.com> wrote:
+Navid Emamdoost <navid.emamdoost@gmail.com> wrote:
 
-> From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+> In rsi_send_beacon, if rsi_prepare_beacon fails the allocated skb should
+> be released.
 > 
-> drivers/net/wireless/realtek/rtw88/rtw8822c.c:2606:9-10: WARNING: return
-> of 0/1 in function 'rtw8822c_dpk_coef_iq_check' with return type bool
-> 
-> Return statements in functions returning bool should use true/false
-> instead of 1/0.
-> Generated by: scripts/coccinelle/misc/boolreturn.cocci
-> 
-> Fixes: 5227c2ee453d ("rtw88: 8822c: add SW DPK support")
-> Reported-by: kbuild test robot <lkp@intel.com>
-> Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+> Signed-off-by: Navid Emamdoost <navid.emamdoost@gmail.com>
 
 Patch applied to wireless-drivers-next.git, thanks.
 
-0d32f5d93bba rtw88: 8822c: fix boolreturn.cocci warnings
+d563131ef23c rsi: release skb if rsi_prepare_beacon fails
 
 -- 
-https://patchwork.kernel.org/patch/11146287/
+https://patchwork.kernel.org/patch/11145515/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
