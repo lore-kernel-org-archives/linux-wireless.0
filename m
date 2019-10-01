@@ -2,90 +2,73 @@ Return-Path: <SRS0=KFxB=X2=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46E33C352AA
-	for <linux-wireless@archiver.kernel.org>; Tue,  1 Oct 2019 11:00:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E1A6C352AA
+	for <linux-wireless@archiver.kernel.org>; Tue,  1 Oct 2019 11:01:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 08D6C21920
-	for <linux-wireless@archiver.kernel.org>; Tue,  1 Oct 2019 11:00:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1569927633;
-	bh=/rD1NXp0yBqq0N4gwG67dO1KzQlRYlyRZCVj4yCgDH4=;
-	h=Date:From:To:cc:Subject:In-Reply-To:References:List-ID:From;
-	b=TS0krroF9hCkqI86EfXplxpxBdVnFmi7mHDmzbiQxZvt2eZdjkv7DrvSM1zO+f7AL
-	 Xx6n8DDKaEHNrZt6jE+q9RFiAe46hlne+gr9Rw8nbs1epLwnHllS3tMrQIIB7+397E
-	 zAIKzrgxYPB6Z+/Ni9z4m4tm11NVm6Wo2r8vXqc4=
+	by mail.kernel.org (Postfix) with ESMTP id 1A52121924
+	for <linux-wireless@archiver.kernel.org>; Tue,  1 Oct 2019 11:01:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726748AbfJALAc (ORCPT
+        id S1726945AbfJALBR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 1 Oct 2019 07:00:32 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58122 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725865AbfJALAc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 Oct 2019 07:00:32 -0400
-Received: from pobox.suse.cz (prg-ext-pat.suse.com [213.151.95.130])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 4CED02133F;
-        Tue,  1 Oct 2019 11:00:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1569927631;
-        bh=/rD1NXp0yBqq0N4gwG67dO1KzQlRYlyRZCVj4yCgDH4=;
-        h=Date:From:To:cc:Subject:In-Reply-To:References:From;
-        b=M83NJw1SKsydoUIyRFVbj/3mFHTsyIiGmZAkhwZm8ELaFaxmYD8nnaWyuSWF/Uwgo
-         KeW0v0en9aY6sQao7/EFl9z4WlZgplfoNCnR7qOsxfSWkJUkhIK23AiNpW6Qfikrsi
-         F1SzWjdN82aBg01HXB4jd0HPqOrDoBtYak0SAgnk=
-Date:   Tue, 1 Oct 2019 12:56:59 +0200 (CEST)
-From:   Jiri Kosina <jikos@kernel.org>
-To:     =?ISO-8859-15?Q?Toke_H=F8iland-J=F8rgensen?= <toke@redhat.com>
-cc:     Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Aaron Hill <aa1ronham@gmail.com>,
-        Lukas Redlinger <rel+kernel@agilox.net>,
-        Oleksii Shevchuk <alxchk@gmail.com>
+        Tue, 1 Oct 2019 07:01:17 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:59740 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725865AbfJALBR (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 1 Oct 2019 07:01:17 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.92.2)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1iFFu5-00064U-9Y; Tue, 01 Oct 2019 13:01:13 +0200
+Message-ID: <5bbc9f7d3a01cd578cbf894469734d88c8f59279.camel@sipsolutions.net>
 Subject: Re: [PATCH] mac80211: keep BHs disabled while calling
  drv_tx_wake_queue()
-In-Reply-To: <87blv0visz.fsf@toke.dk>
-Message-ID: <nycvar.YFH.7.76.1910011256001.13160@cbobk.fhfr.pm>
-References: <1569924485-I3e8838c5ecad878e59d4a94eb069a90f6641461a@changeid> <87blv0visz.fsf@toke.dk>
-User-Agent: Alpine 2.21 (LSU 202 2017-01-01)
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Jiri Kosina <jikos@kernel.org>,
+        Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@redhat.com>
+Cc:     linux-wireless@vger.kernel.org, Aaron Hill <aa1ronham@gmail.com>,
+        Lukas Redlinger <rel+kernel@agilox.net>,
+        Oleksii Shevchuk <alxchk@gmail.com>
+Date:   Tue, 01 Oct 2019 13:01:12 +0200
+In-Reply-To: <nycvar.YFH.7.76.1910011256001.13160@cbobk.fhfr.pm>
+References: <1569924485-I3e8838c5ecad878e59d4a94eb069a90f6641461a@changeid>
+         <87blv0visz.fsf@toke.dk>
+         <nycvar.YFH.7.76.1910011256001.13160@cbobk.fhfr.pm>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.30.5 (3.30.5-1.fc29) 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=WINDOWS-1252
-Content-Transfer-Encoding: 8BIT
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, 1 Oct 2019, Toke Høiland-Jørgensen wrote:
-
-> > -			spin_unlock_bh(&fq->lock);
-> > +			spin_unlock(&fq->lock);
-> >  			drv_wake_tx_queue(local, txqi);
-> > -			spin_lock_bh(&fq->lock);
-> > +			spin_lock(&fq->lock);
+On Tue, 2019-10-01 at 12:56 +0200, Jiri Kosina wrote:
+> On Tue, 1 Oct 2019, Toke HÃ¸iland-JÃ¸rgensen wrote:
 > 
-> Okay, so this will mean that the drv_wake_tx_queue() entry point will be
-> called with bhs disabled. But there are lots of uses of
-> spin_{,un}lock_bh() in tx.c:
+> > > -			spin_unlock_bh(&fq->lock);
+> > > +			spin_unlock(&fq->lock);
+> > >  			drv_wake_tx_queue(local, txqi);
+> > > -			spin_lock_bh(&fq->lock);
+> > > +			spin_lock(&fq->lock);
+> > 
+> > Okay, so this will mean that the drv_wake_tx_queue() entry point will be
+> > called with bhs disabled. But there are lots of uses of
+> > spin_{,un}lock_bh() in tx.c:
+> 
+> I am fine with whatever fix for this you guys settle on :) Just for the 
+> record, I proposed this back then:
+> 
+> 	http://lore.kernel.org/r/nycvar.YFH.7.76.1904151300160.9803@cbobk.fhfr.pm
+> 
+> maybe it could be resurected, as I believe it'd fix this one as well?
 
-I am fine with whatever fix for this you guys settle on :) Just for the 
-record, I proposed this back then:
+Yes, it would, but it wouldn't address any other driver that likely has
+the same issue :)
 
-	http://lore.kernel.org/r/nycvar.YFH.7.76.1904151300160.9803@cbobk.fhfr.pm
-
-maybe it could be resurected, as I believe it'd fix this one as well?
-
-But again, I have absolutely no preference either way, only that it'd be 
-nice to have this fixed :)
-
-Thanks!
-
--- 
-Jiri Kosina
-SUSE Labs
+johannes
 
