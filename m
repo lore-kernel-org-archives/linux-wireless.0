@@ -2,115 +2,95 @@ Return-Path: <SRS0=KFxB=X2=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
 	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C074DC388F3
-	for <linux-wireless@archiver.kernel.org>; Tue,  1 Oct 2019 09:09:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21A6CC352AA
+	for <linux-wireless@archiver.kernel.org>; Tue,  1 Oct 2019 09:11:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 965322190F
-	for <linux-wireless@archiver.kernel.org>; Tue,  1 Oct 2019 09:09:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EDA7C21924
+	for <linux-wireless@archiver.kernel.org>; Tue,  1 Oct 2019 09:11:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="gkG76F9C"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="jfFLapo2";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="LQaG/LEB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730021AbfJAJJj (ORCPT
+        id S1733306AbfJAJLu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 1 Oct 2019 05:09:39 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:49649 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728892AbfJAJJi (ORCPT
+        Tue, 1 Oct 2019 05:11:50 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:34450 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728892AbfJAJLt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 Oct 2019 05:09:38 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1569920976;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=Ey2S05y+qH9qcmtAVhMGP0PZwCwz3gwo0pP+/KPv2RA=;
-        b=gkG76F9CbZqEFCLqOAzEcGCDhgysDJzeeMASotw2zoB3rXeO2KA3Zn+6+vQLCUnKj0SnCW
-        KM1vJAlJcXDfr9p9S8qco0/2HfLihcwBgvJqRDyDFaoh9NjSYvIzg6kaDN5hwH4UpqZzxp
-        j2dC1VgLbRjZZm92GpGsrsh5V9fuSIE=
-Received: from mail-ed1-f71.google.com (mail-ed1-f71.google.com
- [209.85.208.71]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-31-C4vqDroYP7-2vJ0NuHonmA-1; Tue, 01 Oct 2019 05:09:32 -0400
-Received: by mail-ed1-f71.google.com with SMTP id d7so8156432edp.23
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Oct 2019 02:09:32 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:in-reply-to:references:date
-         :message-id:mime-version:content-transfer-encoding;
-        bh=wlyXXImOIp1mcAi7TD8GXAiJ2gSaRKFmxGZ/4rWjOZk=;
-        b=HQeSgTxXWUdeZO1B0wlK8XQ9RRXIQt4INzhxalj5laM92C7nopexqA2yr7NTxfQvgr
-         4vdZZYhpWqlAxP7eK9UXQRTq/dN6toSqTKqhfqU2VjfSo+nRClyMVtkoeLvnmwooaFEl
-         GyrDysgA/UMy3iblHBL2UFbJ9/eosbLCEGTSucuBrcrCyltSFYvKU5gxc1S0Fwkw3KEP
-         uPhprvglg7NzpDQKPp9ykJiuGRgl+rk+mep3Vze7Bs9rogI9KnIXtCCr3FDt/pq+tsO5
-         AFwltiARthJp/JNqp89sV3NyTetiGOjVDWwFVGHw427aReLZQNkrZImYRcXOtUsRzmnM
-         zaRw==
-X-Gm-Message-State: APjAAAUo8AqRGO9nKt+RfQcd6bFMGlgUPF/fBUwuNIB7dfNYVYEouwcO
-        FxXFAvpTluifkEtT3jY2qn5YiIx14FuCl8yEsYPEWJweQSwHSSxyrHJ6c0i2i+hxkXbhCWuWCo5
-        4U0ejQ0MlZ9B62pODt89KIey0GEw=
-X-Received: by 2002:aa7:d789:: with SMTP id s9mr24215875edq.62.1569920971873;
-        Tue, 01 Oct 2019 02:09:31 -0700 (PDT)
-X-Google-Smtp-Source: APXvYqyCqH9jlzfDumYbdUArITAjkR/o1V5EP9TaHmmbcp6BHtfMgQprpm+eLJx+fRgaiLD0rIE/BQ==
-X-Received: by 2002:aa7:d789:: with SMTP id s9mr24215867edq.62.1569920971722;
-        Tue, 01 Oct 2019 02:09:31 -0700 (PDT)
-Received: from alrua-x1.borgediget.toke.dk (borgediget.toke.dk. [85.204.121.218])
-        by smtp.gmail.com with ESMTPSA id u27sm3018104edb.48.2019.10.01.02.09.30
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 01 Oct 2019 02:09:31 -0700 (PDT)
-Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
-        id B4F9118063D; Tue,  1 Oct 2019 11:09:30 +0200 (CEST)
-From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless@vger.kernel.org,
-        make-wifi-fast@lists.bufferbloat.net,
-        John Crispin <john@phrozen.org>,
-        Lorenzo Bianconi <lorenzo@kernel.org>,
-        Felix Fietkau <nbd@nbd.name>
-Subject: Re: [PATCH RFC/RFT 2/4] mac80211: Add API function to set the last TX bitrate for a station
-In-Reply-To: <2518c49c96b8b5233fabcb8bafccba6b8f3155bf.camel@sipsolutions.net>
-References: <156889576422.191202.5906619710809654631.stgit@alrua-x1> <156889576646.191202.14461472477971784776.stgit@alrua-x1> <2518c49c96b8b5233fabcb8bafccba6b8f3155bf.camel@sipsolutions.net>
-X-Clacks-Overhead: GNU Terry Pratchett
-Date:   Tue, 01 Oct 2019 11:09:30 +0200
-Message-ID: <87sgocvnlh.fsf@toke.dk>
+        Tue, 1 Oct 2019 05:11:49 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 0BE8760A37; Tue,  1 Oct 2019 09:11:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1569921109;
+        bh=64cRdgl/w9VBwZj+X1Zjo9wnyvSCIjqjuCnmWaq54jo=;
+        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+        b=jfFLapo26ZTIi6pTwYa65ZuKczdRqc5QZcKdwzZU+ynkmG4isq/tUMFMRVFPNacHP
+         g0YztM77ZjhS9h3DDPYzM4Bpi3haOxw4Sgw4c1VPBlCOZLK/vi20fjouI5Wwdevxhj
+         BaecR1omngPrNjY8+jO5+NKIqjlDSlx9Qefe9rdo=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 4B88E608CE;
+        Tue,  1 Oct 2019 09:11:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1569921108;
+        bh=64cRdgl/w9VBwZj+X1Zjo9wnyvSCIjqjuCnmWaq54jo=;
+        h=Subject:From:In-Reply-To:References:To:Cc:From;
+        b=LQaG/LEB1BttZW9/8MHncCA3l4w8CN6pl3y+BF7Hro2Jw/CW8JTu7PVS634Wvwsim
+         1T04W+6w/EWpRs3FB28g4HXx2aj3n0zlpBq0lr7e/vGObSMUHVdTm4IqQWDyVNtiqc
+         d4gXhJKTI/1la+Jztk/HAsCu910HFiqdEHy4YDH0=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 4B88E608CE
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-X-MC-Unique: C4vqDroYP7-2vJ0NuHonmA-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH V2 2/2] brcmfmac: send port authorized event for FT-802.1X
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1557395289-41133-3-git-send-email-chi-hsien.lin@cypress.com>
+References: <1557395289-41133-3-git-send-email-chi-hsien.lin@cypress.com>
+To:     Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>
+Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
+        brcm80211-dev-list <brcm80211-dev-list@cypress.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Wright Feng <Wright.Feng@cypress.com>,
+        Stanley Hsu <Stanley.Hsu@cypress.com>,
+        Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>
+User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
+Message-Id: <20191001091149.0BE8760A37@smtp.codeaurora.org>
+Date:   Tue,  1 Oct 2019 09:11:49 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com> wrote:
 
-> On Thu, 2019-09-19 at 14:22 +0200, Toke H=C3=B8iland-J=C3=B8rgensen wrote=
-:
->
-> Given a ULL constant:
->
->> +/* constants for calculating reciprocals to avoid division in fast path=
- */
->> +#define IEEE80211_RECIPROCAL_DIVISOR 0x100000000ULL
->
-> [...]
->
->> +void ieee80211_sta_set_last_tx_bitrate(struct ieee80211_sta *pubsta,
->> +=09=09=09=09       u32 rate)
->> +{
->> +=09struct sta_info *sta =3D container_of(pubsta, struct sta_info, sta);
->> +
->> +=09sta->last_tx_bitrate =3D rate;
->> +=09sta->last_tx_bitrate_reciprocal =3D ((u64)IEEE80211_RECIPROCAL_DIVIS=
-OR / rate);
->
-> that cast seems unnecessary?
+> From: Chung-Hsien Hsu <stanley.hsu@cypress.com>
+> 
+> With FT-802.1X, driver should send a port authorized event right after
+> sending a roamed event. It is used to indicate that a new AP is already
+> authorized so 802.1X is not required.
+> 
+> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Chung-Hsien Hsu <stanley.hsu@cypress.com>
+> Signed-off-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
 
-Yeah. I only remembered to make it a ULL constant later, and forgot to
-remove the cast. But I guess this should be using do_div() anyway...
+Patch applied to wireless-drivers-next.git, thanks.
 
--Toke
+be898fed355e brcmfmac: send port authorized event for FT-802.1X
+
+-- 
+https://patchwork.kernel.org/patch/10936943/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
