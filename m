@@ -2,84 +2,69 @@ Return-Path: <SRS0=KFxB=X2=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF58BC388F3
-	for <linux-wireless@archiver.kernel.org>; Tue,  1 Oct 2019 10:08:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC606C352AA
+	for <linux-wireless@archiver.kernel.org>; Tue,  1 Oct 2019 10:17:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B77202133F
-	for <linux-wireless@archiver.kernel.org>; Tue,  1 Oct 2019 10:08:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9834121906
+	for <linux-wireless@archiver.kernel.org>; Tue,  1 Oct 2019 10:17:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730153AbfJAKIV (ORCPT
+        id S1730018AbfJAKRj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 1 Oct 2019 06:08:21 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:58626 "EHLO
+        Tue, 1 Oct 2019 06:17:39 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:58778 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729841AbfJAKIU (ORCPT
+        with ESMTP id S1726109AbfJAKRj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 Oct 2019 06:08:20 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        Tue, 1 Oct 2019 06:17:39 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92.2)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1iFF4s-0004qc-5p; Tue, 01 Oct 2019 12:08:18 +0200
+        id 1iFFDt-000558-MI; Tue, 01 Oct 2019 12:17:37 +0200
+Message-ID: <f40bd542d0d13f5be701de41b8870b0bd1f34230.camel@sipsolutions.net>
+Subject: Re: [PATCH 2/2] mac80211: minstrel_ht: replace rate stats ewma with
+ a better moving average
 From:   Johannes Berg <johannes@sipsolutions.net>
-To:     linux-wireless@vger.kernel.org
-Cc:     =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Jiri Kosina <jikos@kernel.org>,
-        Aaron Hill <aa1ronham@gmail.com>,
-        Lukas Redlinger <rel+kernel@agilox.net>,
-        Oleksii Shevchuk <alxchk@gmail.com>
-Subject: [PATCH] mac80211: keep BHs disabled while calling drv_tx_wake_queue()
-Date:   Tue,  1 Oct 2019 12:08:05 +0200
-Message-Id: <1569924485-I3e8838c5ecad878e59d4a94eb069a90f6641461a@changeid>
-X-Mailer: git-send-email 2.20.1
+To:     Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
+Date:   Tue, 01 Oct 2019 12:17:36 +0200
+In-Reply-To: <20190929154646.90901-2-nbd@nbd.name>
+References: <20190929154646.90901-1-nbd@nbd.name>
+         <20190929154646.90901-2-nbd@nbd.name>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.30.5 (3.30.5-1.fc29) 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-Drivers typically expect this, as it's the case for almost all cases
-where this is called (i.e. from the TX path). Also, the code in mac80211
-itself (if the driver calls ieee80211_tx_dequeue()) expects this as it
-uses this_cpu_ptr() without additional protection.
+> This change replaces the EWMA implementation with a moving average that's
+> designed to significantly reduce lag while keeping a bigger window size
+> by being better at filtering out noise.
+> 
+> It is only slightly more expensive than the simple EWMA and still avoids
+> divisions in its calculation.
+> 
+> The algorithm is adapted from an implementation intended for a completely
+> different field (stock market trading), where the tradeoff of lag vs
+> noise filtering is equally important. It is based on the "smoothing filter"
+> from http://www.stockspotter.com/files/PredictiveIndicators.pdf.
+> 
+> I have adapted it to fixed-point math with some constants so that it uses
+> only addition, bit shifts and multiplication
+> 
 
-This should fix various reports of the problem:
-https://bugzilla.kernel.org/show_bug.cgi?id=204127
-https://lore.kernel.org/linux-wireless/CAN5HydrWb3o_FE6A1XDnP1E+xS66d5kiEuhHfiGKkLNQokx13Q@mail.gmail.com/
-https://lore.kernel.org/lkml/nycvar.YFH.7.76.1909111238470.473@cbobk.fhfr.pm/
+Would it be worth pulling that out into similar helpers to EWMA in
+average.h, perhaps even in the same file?
 
-Reported-by: Jiri Kosina <jikos@kernel.org>
-Reported-by: Aaron Hill <aa1ronham@gmail.com>
-Reported-by: Lukas Redlinger <rel+kernel@agilox.net>
-Reported-by: Oleksii Shevchuk <alxchk@gmail.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/util.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+You need to keep a bit more state, but essentially the same API should
+work since EWMA already declares the "struct ewma_something" once you
+use the DECLARE_EWMA().
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 051a02ddcb85..ad1e88958da2 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -273,9 +273,9 @@ static void __ieee80211_wake_txqs(struct ieee80211_sub_if_data *sdata, int ac)
- 						&txqi->flags))
- 				continue;
- 
--			spin_unlock_bh(&fq->lock);
-+			spin_unlock(&fq->lock);
- 			drv_wake_tx_queue(local, txqi);
--			spin_lock_bh(&fq->lock);
-+			spin_lock(&fq->lock);
- 		}
- 	}
- 
--- 
-2.20.1
+johannes
 
