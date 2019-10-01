@@ -6,34 +6,48 @@ X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63809C352AA
-	for <linux-wireless@archiver.kernel.org>; Tue,  1 Oct 2019 07:32:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B29B5C388F3
+	for <linux-wireless@archiver.kernel.org>; Tue,  1 Oct 2019 07:39:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3EB9F21783
-	for <linux-wireless@archiver.kernel.org>; Tue,  1 Oct 2019 07:32:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9309021783
+	for <linux-wireless@archiver.kernel.org>; Tue,  1 Oct 2019 07:39:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732905AbfJAHcr (ORCPT
+        id S1731358AbfJAHjU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 1 Oct 2019 03:32:47 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:55946 "EHLO
+        Tue, 1 Oct 2019 03:39:20 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:56008 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729457AbfJAHcr (ORCPT
+        with ESMTP id S1725777AbfJAHjU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 Oct 2019 03:32:47 -0400
+        Tue, 1 Oct 2019 03:39:20 -0400
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92.2)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1iFCeL-0000u5-27; Tue, 01 Oct 2019 09:32:45 +0200
-Message-ID: <7b920db4e91a7e68f9eeacd95339b5f509e3273b.camel@sipsolutions.net>
-Subject: Re: bug: nl80211 / brcmfmac broken for bcm4329/bcm4330 sdio in
- linux-next
+        id 1iFCkW-00013w-NK; Tue, 01 Oct 2019 09:39:08 +0200
+Message-ID: <1b17084d8649bab347b952231d9312b7fb7307f4.camel@sipsolutions.net>
+Subject: Re: [PATCH net v4 00/12] net: fix nested device bugs
 From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Peter Geis <pgwipeout@gmail.com>, kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org
-Date:   Tue, 01 Oct 2019 09:32:43 +0200
-In-Reply-To: <CAMdYzYpqYbgb-9s1VPSreoosQ=BPnhzC_gKOzbGipKikk5+4zA@mail.gmail.com> (sfid-20190930_194259_322677_22853590)
-References: <CAMdYzYpqYbgb-9s1VPSreoosQ=BPnhzC_gKOzbGipKikk5+4zA@mail.gmail.com>
-         (sfid-20190930_194259_322677_22853590)
+To:     Taehee Yoo <ap420073@gmail.com>
+Cc:     David Miller <davem@davemloft.net>,
+        Netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org,
+        Jakub Kicinski <jakub.kicinski@netronome.com>,
+        j.vosburgh@gmail.com, vfalico@gmail.com,
+        Andy Gospodarek <andy@greyhouse.net>,
+        =?UTF-8?Q?Ji=C5=99=C3=AD_P=C3=ADrko?= <jiri@resnulli.us>,
+        sd@queasysnail.net, Roopa Prabhu <roopa@cumulusnetworks.com>,
+        saeedm@mellanox.com, manishc@marvell.com, rahulv@marvell.com,
+        kys@microsoft.com, haiyangz@microsoft.com,
+        Stephen Hemminger <stephen@networkplumber.org>,
+        sashal@kernel.org, hare@suse.de, varun@chelsio.com,
+        ubraun@linux.ibm.com, kgraul@linux.ibm.com,
+        Jay Vosburgh <jay.vosburgh@canonical.com>,
+        Cody Schuffelen <schuffelen@google.com>, bjorn@mork.no
+Date:   Tue, 01 Oct 2019 09:39:07 +0200
+In-Reply-To: <CAMArcTWs3wzad7ai_zQPCwzC62cFp-poELn+jnDaP7eT1a9ucw@mail.gmail.com> (sfid-20190929_103128_233294_188E5AB3)
+References: <20190928164843.31800-1-ap420073@gmail.com>
+         <2e836018c7ea299037d732e5138ca395bd1ae50f.camel@sipsolutions.net>
+         <CAMArcTWs3wzad7ai_zQPCwzC62cFp-poELn+jnDaP7eT1a9ucw@mail.gmail.com>
+         (sfid-20190929_103128_233294_188E5AB3)
 Content-Type: text/plain; charset="UTF-8"
 User-Agent: Evolution 3.30.5 (3.30.5-1.fc29) 
 MIME-Version: 1.0
@@ -43,17 +57,74 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
+On Sun, 2019-09-29 at 17:31 +0900, Taehee Yoo wrote:
 
-> Since 5.3 landed, brcmfmac has been broken both on bcm4329 and bcm4330
-> sdio devices.
+> virt_wifi case is a little bit different case.
 
-Yep, thanks for the report. I don't think you mean 5.3, as that doesn't
-contain the problematic commit as far as I can tell? That was commit
-2a38075cd0be ("nl80211: Add support for EDMG channels").
+Well, arguably, it was also just missing this - it just looks different
+:)
 
-I have a fix for this already pending I believe:
-https://patchwork.kernel.org/patch/11156631/
+> I add the last patch that is to fix refcnt leaks in the virt_wifi module.
+> The way to fix this is to add notifier routine.
+> The notifier routine could delete lower device before deleting
+> virt_wifi device.
+> If virt_wifi devices are nested, notifier would work recursively.
+> At that time, it would make stack memory overflow.
+> 
+> Actually, before this patch, virt_wifi doesn't have the same problem.
+> So, I will update a comment in a v5 patch.
+
+OK, sure.
+
+> Many other devices use this way to avoid wrong nesting configuration.
+> And I think it's a good way.
+> But we should think about the below configuration.
+> 
+> vlan5
+>    |
+> virt_wifi4
+>    |
+> vlan3
+>    |
+> virt_wifi2
+>    |
+> vlan1
+>    |
+> dummy0
+> 
+> That code wouldn't avoid this configuration.
+> And all devices couldn't avoid this config.
+
+Good point, so then really that isn't useful to check - most people
+won't try to set it up that way (since it's completely useless) and if
+they do anyway too much nesting would be caught by your patchset here.
+
+> I have been considering this case, but I couldn't make a decision yet.
+> Maybe common netdev function is needed to find the same device type
+>  in their graph.
+
+I don't think it's worthwhile just to prevent somebody from making a
+configuration that we think now is nonsense. Perhaps they do have some
+kind of useful use-case for it ...
+
+> This is a little bit different question for you.
+> I found another bug in virt_wifi after my last patch.
+> Please test below commands
+>     ip link add dummy0 type dummy
+>     ip link add vw1 link dummy0 type virt_wifi
+>     ip link add vw2 link vw1 type virt_wifi
+>     modprobe -rv virt_wifi
+> 
+> Then, you can see the warning messages.
+> If SET_NETDEV_DEV() is deleted in the virt_wifi_newlink(),
+> you can avoid that warning message.
+> But I'm not sure about it's safe to remove that.
+> I would really appreciate it if you let me know about that.
+
+Hmm, I don't see any warnings. SET_NETDEV_DEV() should be there though.
+Do you see the same if you stack it with something else inbetween? If
+not, I guess preventing virt_wifi from stacking on top of itself would
+be sufficient ...
 
 johannes
 
