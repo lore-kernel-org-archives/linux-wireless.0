@@ -6,35 +6,35 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E4C6ECE597
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C0273ECE599
 	for <linux-wireless@archiver.kernel.org>; Wed,  2 Oct 2019 02:31:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 60A5320B7C
+	by mail.kernel.org (Postfix) with ESMTP id A214220B7C
 	for <linux-wireless@archiver.kernel.org>; Wed,  2 Oct 2019 02:31:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729801AbfJBCbp (ORCPT
+        id S1729806AbfJBCbr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 1 Oct 2019 22:31:45 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:46018 "EHLO
+        Tue, 1 Oct 2019 22:31:47 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:46022 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729796AbfJBCbo (ORCPT
+        with ESMTP id S1729802AbfJBCbq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 Oct 2019 22:31:44 -0400
+        Tue, 1 Oct 2019 22:31:46 -0400
 Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x922VcJj031865, This message is accepted by code: ctloc85258
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x922VeBp031873, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (RTITCASV01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x922VcJj031865
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x922VeBp031873
         (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
-        Wed, 2 Oct 2019 10:31:38 +0800
+        Wed, 2 Oct 2019 10:31:40 +0800
 Received: from localhost.localdomain (172.21.68.126) by
  RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
- 14.3.468.0; Wed, 2 Oct 2019 10:31:38 +0800
+ 14.3.468.0; Wed, 2 Oct 2019 10:31:39 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>, <briannorris@chromium.org>
-Subject: [PATCH v2 10/12] rtw88: select deep PS mode when module is inserted
-Date:   Wed, 2 Oct 2019 10:31:26 +0800
-Message-ID: <20191002023128.12090-11-yhchuang@realtek.com>
+Subject: [PATCH v2 12/12] rtw88: remove misleading module parameter rtw_fw_support_lps
+Date:   Wed, 2 Oct 2019 10:31:28 +0800
+Message-ID: <20191002023128.12090-13-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20191002023128.12090-1-yhchuang@realtek.com>
 References: <20191002023128.12090-1-yhchuang@realtek.com>
@@ -48,15 +48,19 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-Add a module parameter to select deep PS mode. And the mode
-cannot be changed after the module has been inserted and probed.
-If anyone wants to change the deep mode, should change the mode
-and probe the device again to setup the changed deep mode.
+The module parameter rtw_fw_support_lps is misleading. It
+is not used to represent the firmware's property, but to
+determine if driver wants to ask firmware to enter LPS.
 
-When the device is probed, driver will check the deep PS mode
-with different IC's PS mode suppotability. If none of the
-PS mode is matched, the deep PS mode is changed to NONE,
-means deep PS is disabled.
+However, driver should better enable/disable PS through
+cfg80211_ops::set_power_mgmt instead.
+For example, one could use iw command to set PS state.
+
+  $ sudo iw wlanX set power_save [on/off]
+
+So rtw_fw_support_lps should be removed because it is
+misleading and useless. Instead of checking the parameter,
+set PS mode according to IEEE80211_CONF_PS.
 
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
@@ -64,132 +68,131 @@ Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 v1 -> v2
   - rebase on top of wireless-drivers-next
 
- drivers/net/wireless/realtek/rtw88/main.c     | 9 +++++++++
- drivers/net/wireless/realtek/rtw88/main.h     | 8 ++++++++
- drivers/net/wireless/realtek/rtw88/ps.c       | 3 +++
- drivers/net/wireless/realtek/rtw88/rtw8822b.c | 1 +
- drivers/net/wireless/realtek/rtw88/rtw8822c.c | 1 +
- 5 files changed, 22 insertions(+)
+ drivers/net/wireless/realtek/rtw88/mac80211.c |  9 +++++
+ drivers/net/wireless/realtek/rtw88/main.c     | 33 +++++++++----------
+ drivers/net/wireless/realtek/rtw88/main.h     |  1 +
+ 3 files changed, 25 insertions(+), 18 deletions(-)
 
+diff --git a/drivers/net/wireless/realtek/rtw88/mac80211.c b/drivers/net/wireless/realtek/rtw88/mac80211.c
+index 22b13e45fcee..97777c7fdce8 100644
+--- a/drivers/net/wireless/realtek/rtw88/mac80211.c
++++ b/drivers/net/wireless/realtek/rtw88/mac80211.c
+@@ -74,6 +74,15 @@ static int rtw_ops_config(struct ieee80211_hw *hw, u32 changed)
+ 		}
+ 	}
+ 
++	if (changed & IEEE80211_CONF_CHANGE_PS) {
++		if (hw->conf.flags & IEEE80211_CONF_PS) {
++			rtwdev->ps_enabled = true;
++		} else {
++			rtwdev->ps_enabled = false;
++			rtw_leave_lps(rtwdev);
++		}
++	}
++
+ 	if (changed & IEEE80211_CONF_CHANGE_CHANNEL)
+ 		rtw_set_channel(rtwdev);
+ 
 diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
-index 0d7ad1756bd6..3c366a3314cb 100644
+index 3c366a3314cb..a3e9f917adef 100644
 --- a/drivers/net/wireless/realtek/rtw88/main.c
 +++ b/drivers/net/wireless/realtek/rtw88/main.c
-@@ -14,13 +14,17 @@
- #include "efuse.h"
- #include "debug.h"
+@@ -16,16 +16,13 @@
  
-+unsigned int rtw_fw_lps_deep_mode;
-+EXPORT_SYMBOL(rtw_fw_lps_deep_mode);
- static bool rtw_fw_support_lps;
+ unsigned int rtw_fw_lps_deep_mode;
+ EXPORT_SYMBOL(rtw_fw_lps_deep_mode);
+-static bool rtw_fw_support_lps;
  unsigned int rtw_debug_mask;
  EXPORT_SYMBOL(rtw_debug_mask);
  
-+module_param_named(lps_deep_mode, rtw_fw_lps_deep_mode, uint, 0644);
- module_param_named(support_lps, rtw_fw_support_lps, bool, 0644);
+ module_param_named(lps_deep_mode, rtw_fw_lps_deep_mode, uint, 0644);
+-module_param_named(support_lps, rtw_fw_support_lps, bool, 0644);
  module_param_named(debug_mask, rtw_debug_mask, uint, 0644);
  
-+MODULE_PARM_DESC(lps_deep_mode, "Deeper PS mode. If 0, deep PS is disabled");
- MODULE_PARM_DESC(support_lps, "Set Y to enable Leisure Power Save support, to turn radio off between beacons");
+ MODULE_PARM_DESC(lps_deep_mode, "Deeper PS mode. If 0, deep PS is disabled");
+-MODULE_PARM_DESC(support_lps, "Set Y to enable Leisure Power Save support, to turn radio off between beacons");
  MODULE_PARM_DESC(debug_mask, "Debugging mask");
  
-@@ -1152,6 +1156,7 @@ EXPORT_SYMBOL(rtw_chip_info_setup);
+ static struct ieee80211_channel rtw_channeltable_2g[] = {
+@@ -117,8 +114,6 @@ static struct ieee80211_supported_band rtw_band_5ghz = {
  
- int rtw_core_init(struct rtw_dev *rtwdev)
- {
-+	struct rtw_chip_info *chip = rtwdev->chip;
- 	struct rtw_coex *coex = &rtwdev->coex;
- 	int ret;
- 
-@@ -1183,6 +1188,10 @@ int rtw_core_init(struct rtw_dev *rtwdev)
- 	rtwdev->sec.total_cam_num = 32;
- 	rtwdev->hal.current_channel = 1;
- 	set_bit(RTW_BC_MC_MACID, rtwdev->mac_id_map);
-+	if (!(BIT(rtw_fw_lps_deep_mode) & chip->lps_deep_mode_supported))
-+		rtwdev->lps_conf.deep_mode = LPS_DEEP_MODE_NONE;
-+	else
-+		rtwdev->lps_conf.deep_mode = rtw_fw_lps_deep_mode;
- 
- 	mutex_lock(&rtwdev->mutex);
- 	rtw_add_rsvd_page(rtwdev, RSVD_BEACON, false);
-diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
-index 6e6b04759ace..a59cbaefde4e 100644
---- a/drivers/net/wireless/realtek/rtw88/main.h
-+++ b/drivers/net/wireless/realtek/rtw88/main.h
-@@ -27,6 +27,7 @@
- #define RTW_RF_PATH_MAX			4
- #define HW_FEATURE_LEN			13
- 
-+extern unsigned int rtw_fw_lps_deep_mode;
- extern unsigned int rtw_debug_mask;
- extern const struct ieee80211_ops rtw_ops;
- extern struct rtw_chip_info rtw8822b_hw_spec;
-@@ -528,6 +529,11 @@ enum rtw_lps_mode {
- 	RTW_MODE_WMM_PS	= 2,
+ struct rtw_watch_dog_iter_data {
+ 	struct rtw_vif *rtwvif;
+-	bool active;
+-	u8 assoc_cnt;
  };
  
-+enum rtw_lps_deep_mode {
-+	LPS_DEEP_MODE_NONE	= 0,
-+	LPS_DEEP_MODE_LCLK	= 1,
-+};
+ static void rtw_vif_watch_dog_iter(void *data, u8 *mac,
+@@ -127,18 +122,9 @@ static void rtw_vif_watch_dog_iter(void *data, u8 *mac,
+ 	struct rtw_watch_dog_iter_data *iter_data = data;
+ 	struct rtw_vif *rtwvif = (struct rtw_vif *)vif->drv_priv;
+ 
+-	if (vif->type == NL80211_IFTYPE_STATION) {
+-		if (vif->bss_conf.assoc) {
+-			iter_data->assoc_cnt++;
++	if (vif->type == NL80211_IFTYPE_STATION)
++		if (vif->bss_conf.assoc)
+ 			iter_data->rtwvif = rtwvif;
+-		}
+-		if (rtwvif->stats.tx_cnt > RTW_LPS_THRESHOLD ||
+-		    rtwvif->stats.rx_cnt > RTW_LPS_THRESHOLD)
+-			iter_data->active = true;
+-	} else {
+-		/* only STATION mode can enter lps */
+-		iter_data->active = true;
+-	}
+ 
+ 	rtwvif->stats.tx_unicast = 0;
+ 	rtwvif->stats.rx_unicast = 0;
+@@ -155,6 +141,7 @@ static void rtw_watch_dog_work(struct work_struct *work)
+ 					      watch_dog_work.work);
+ 	struct rtw_watch_dog_iter_data data = {};
+ 	bool busy_traffic = test_bit(RTW_FLAG_BUSY_TRAFFIC, rtwdev->flags);
++	bool ps_active;
+ 
+ 	mutex_lock(&rtwdev->mutex);
+ 
+@@ -172,6 +159,12 @@ static void rtw_watch_dog_work(struct work_struct *work)
+ 	if (busy_traffic != test_bit(RTW_FLAG_BUSY_TRAFFIC, rtwdev->flags))
+ 		rtw_coex_wl_status_change_notify(rtwdev);
+ 
++	if (rtwdev->stats.tx_cnt > RTW_LPS_THRESHOLD ||
++	    rtwdev->stats.rx_cnt > RTW_LPS_THRESHOLD)
++		ps_active = true;
++	else
++		ps_active = false;
 +
- enum rtw_pwr_state {
- 	RTW_RF_OFF	= 0x0,
- 	RTW_RF_ON	= 0x4,
-@@ -536,6 +542,7 @@ enum rtw_pwr_state {
+ 	/* reset tx/rx statictics */
+ 	rtwdev->stats.tx_unicast = 0;
+ 	rtwdev->stats.rx_unicast = 0;
+@@ -192,9 +185,13 @@ static void rtw_watch_dog_work(struct work_struct *work)
+ 	/* fw supports only one station associated to enter lps, if there are
+ 	 * more than two stations associated to the AP, then we can not enter
+ 	 * lps, because fw does not handle the overlapped beacon interval
++	 *
++	 * mac80211 should iterate vifs and determine if driver can enter
++	 * ps by passing IEEE80211_CONF_PS to us, all we need to do is to
++	 * get that vif and check if device is having traffic more than the
++	 * threshold.
+ 	 */
+-	if (rtw_fw_support_lps &&
+-	    data.rtwvif && !data.active && data.assoc_cnt == 1)
++	if (rtwdev->ps_enabled && data.rtwvif && !ps_active)
+ 		rtw_enter_lps(rtwdev, data.rtwvif->port);
  
- struct rtw_lps_conf {
- 	enum rtw_lps_mode mode;
-+	enum rtw_lps_deep_mode deep_mode;
- 	enum rtw_pwr_state state;
- 	u8 awake_interval;
- 	u8 rlbm;
-@@ -844,6 +851,7 @@ struct rtw_chip_info {
+ 	rtwdev->watch_dog_cnt++;
+diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
+index 6221dc45fc2a..161297ad7d99 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.h
++++ b/drivers/net/wireless/realtek/rtw88/main.h
+@@ -1372,6 +1372,7 @@ struct rtw_dev {
  
- 	bool ht_supported;
- 	bool vht_supported;
-+	u8 lps_deep_mode_supported;
+ 	/* lps power state & handler work */
+ 	struct rtw_lps_conf lps_conf;
++	bool ps_enabled;
  
- 	/* init values */
- 	u8 sys_func_en;
-diff --git a/drivers/net/wireless/realtek/rtw88/ps.c b/drivers/net/wireless/realtek/rtw88/ps.c
-index 1661cc2e5fe3..02e104ac7b9e 100644
---- a/drivers/net/wireless/realtek/rtw88/ps.c
-+++ b/drivers/net/wireless/realtek/rtw88/ps.c
-@@ -132,6 +132,9 @@ static void rtw_leave_lps_core(struct rtw_dev *rtwdev)
+ 	struct dentry *debugfs;
  
- static void __rtw_enter_lps_deep(struct rtw_dev *rtwdev)
- {
-+	if (rtwdev->lps_conf.deep_mode == LPS_DEEP_MODE_NONE)
-+		return;
-+
- 	if (!test_bit(RTW_FLAG_LEISURE_PS, rtwdev->flags)) {
- 		rtw_dbg(rtwdev, RTW_DBG_PS,
- 			"Should enter LPS before entering deep PS\n");
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822b.c b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
-index 63abda3b0ebf..2b6cd7cf763b 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8822b.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
-@@ -1977,6 +1977,7 @@ struct rtw_chip_info rtw8822b_hw_spec = {
- 	.dig_min = 0x1c,
- 	.ht_supported = true,
- 	.vht_supported = true,
-+	.lps_deep_mode_supported = BIT(LPS_DEEP_MODE_LCLK),
- 	.sys_func_en = 0xDC,
- 	.pwr_on_seq = card_enable_flow_8822b,
- 	.pwr_off_seq = card_disable_flow_8822b,
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-index c2f6cd76a658..579afdfcf685 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-@@ -3747,6 +3747,7 @@ struct rtw_chip_info rtw8822c_hw_spec = {
- 	.dig_min = 0x20,
- 	.ht_supported = true,
- 	.vht_supported = true,
-+	.lps_deep_mode_supported = BIT(LPS_DEEP_MODE_LCLK),
- 	.sys_func_en = 0xD8,
- 	.pwr_on_seq = card_enable_flow_8822c,
- 	.pwr_off_seq = card_disable_flow_8822c,
 -- 
 2.17.1
 
