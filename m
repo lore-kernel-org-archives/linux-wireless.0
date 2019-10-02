@@ -2,40 +2,42 @@ Return-Path: <SRS0=/cM4=X3=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ABBFFECE58D
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B7B5ECE587
 	for <linux-wireless@archiver.kernel.org>; Wed,  2 Oct 2019 02:31:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8D79520815
+	by mail.kernel.org (Postfix) with ESMTP id 433A320815
 	for <linux-wireless@archiver.kernel.org>; Wed,  2 Oct 2019 02:31:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729775AbfJBCbk (ORCPT
+        id S1729782AbfJBCbk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Tue, 1 Oct 2019 22:31:40 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:45997 "EHLO
+Received: from rtits2.realtek.com ([211.75.126.72]:46006 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729341AbfJBCbj (ORCPT
+        with ESMTP id S1726062AbfJBCbk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 Oct 2019 22:31:39 -0400
+        Tue, 1 Oct 2019 22:31:40 -0400
 Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x922VUK6031823, This message is accepted by code: ctloc85258
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x922VYAh031844, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (RTITCASV01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x922VUK6031823
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x922VYAh031844
         (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
-        Wed, 2 Oct 2019 10:31:31 +0800
+        Wed, 2 Oct 2019 10:31:35 +0800
 Received: from localhost.localdomain (172.21.68.126) by
  RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
- 14.3.468.0; Wed, 2 Oct 2019 10:31:30 +0800
+ 14.3.468.0; Wed, 2 Oct 2019 10:31:34 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>, <briannorris@chromium.org>
-Subject: [PATCH v2 00/12] rtw88: Add support for deep PS mode
-Date:   Wed, 2 Oct 2019 10:31:16 +0800
-Message-ID: <20191002023128.12090-1-yhchuang@realtek.com>
+Subject: [PATCH v2 05/12] rtw88: remove unused lps state check helper
+Date:   Wed, 2 Oct 2019 10:31:21 +0800
+Message-ID: <20191002023128.12090-6-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20191002023128.12090-1-yhchuang@realtek.com>
+References: <20191002023128.12090-1-yhchuang@realtek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [172.21.68.126]
@@ -46,70 +48,45 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-RTL8822B/RTL8822C series devices are capable of entering deep PS
-mode. In contrast to Leisure Power Save (LPS) which turns off RF
-components periodically between beacons, deep PS mode turns off
-more hardware circuits. But device should enter LPS before enter
-deep PS mode, otherwise the state of the firmware is undefined.
+This is no more used, remove it.
 
-Under deep PS mode, driver can not read/write registers, and also
-the TX path is reuiqred to be idle. To make sure it, driver should
-acquired rtwdev->mutex lock, and then leave deep PS mode before
-operating on the hardware, otherwise the behavior of the device
-is unexpected and undefined.
-
-To add deep PS mode, some modifications for the driver are needed.
-
-For PCI part, drivers need to keep tracking on the SKBs delivered
-to the device and see if there will have any activity on the TX
-path. For the others, driver should make sure to acquire lock and
-leave deep PS mode.
-
-Also remove a misleading module parameter named "rtw_fw_support_lps".
-It is not representing property of the firmware, but to let driver
-decide if it wants to use LPS mode. But IEEE80211_CONF_PS can
-handle it, by setting power save [on/off] through user space.
-So just remove it, and listen to IEEE80211_CONF_CHANGE_PS.
-
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+---
 
 v1 -> v2
   - rebase on top of wireless-drivers-next
 
-Yan-Hsuan Chuang (12):
-  rtw88: remove redundant flag check helper function
-  rtw88: pci: reset H2C queue indexes in a single write
-  rtw88: not to enter or leave PS under IRQ
-  rtw88: not to control LPS by each vif
-  rtw88: remove unused lps state check helper
-  rtw88: LPS enter/leave should be protected by lock
-  rtw88: leave PS state for dynamic mechanism
-  rtw88: add deep power save support
-  rtw88: not to enter LPS by coex strategy
-  rtw88: select deep PS mode when module is inserted
-  rtw88: add deep PS PG mode for 8822c
-  rtw88: remove misleading module parameter rtw_fw_support_lps
+ drivers/net/wireless/realtek/rtw88/ps.c | 5 -----
+ drivers/net/wireless/realtek/rtw88/ps.h | 1 -
+ 2 files changed, 6 deletions(-)
 
- drivers/net/wireless/realtek/rtw88/coex.c     |  14 +-
- drivers/net/wireless/realtek/rtw88/debug.h    |   1 +
- drivers/net/wireless/realtek/rtw88/fw.c       |  77 +++++++++
- drivers/net/wireless/realtek/rtw88/fw.h       |  29 ++++
- drivers/net/wireless/realtek/rtw88/hci.h      |   6 +
- drivers/net/wireless/realtek/rtw88/mac.c      |   2 +-
- drivers/net/wireless/realtek/rtw88/mac80211.c |  43 ++++-
- drivers/net/wireless/realtek/rtw88/main.c     |  84 +++++----
- drivers/net/wireless/realtek/rtw88/main.h     |  32 ++--
- drivers/net/wireless/realtek/rtw88/pci.c      |  77 ++++++++-
- drivers/net/wireless/realtek/rtw88/phy.c      |   2 +-
- drivers/net/wireless/realtek/rtw88/ps.c       | 162 ++++++++++++------
- drivers/net/wireless/realtek/rtw88/ps.h       |  14 +-
- drivers/net/wireless/realtek/rtw88/rtw8822b.c |   1 +
- drivers/net/wireless/realtek/rtw88/rtw8822c.c |   1 +
- drivers/net/wireless/realtek/rtw88/rx.c       |   2 -
- drivers/net/wireless/realtek/rtw88/sec.c      |  21 +++
- drivers/net/wireless/realtek/rtw88/sec.h      |   1 +
- drivers/net/wireless/realtek/rtw88/tx.c       |   2 -
- 19 files changed, 429 insertions(+), 142 deletions(-)
-
+diff --git a/drivers/net/wireless/realtek/rtw88/ps.c b/drivers/net/wireless/realtek/rtw88/ps.c
+index a1541774cf0d..d57996e446fb 100644
+--- a/drivers/net/wireless/realtek/rtw88/ps.c
++++ b/drivers/net/wireless/realtek/rtw88/ps.c
+@@ -91,11 +91,6 @@ static void rtw_enter_lps_core(struct rtw_dev *rtwdev)
+ 	set_bit(RTW_FLAG_LEISURE_PS, rtwdev->flags);
+ }
+ 
+-bool rtw_in_lps(struct rtw_dev *rtwdev)
+-{
+-	return test_bit(RTW_FLAG_LEISURE_PS, rtwdev->flags);
+-}
+-
+ void rtw_enter_lps(struct rtw_dev *rtwdev, u8 port_id)
+ {
+ 	struct rtw_lps_conf *conf = &rtwdev->lps_conf;
+diff --git a/drivers/net/wireless/realtek/rtw88/ps.h b/drivers/net/wireless/realtek/rtw88/ps.h
+index d2aae613bca4..5aed11b5c182 100644
+--- a/drivers/net/wireless/realtek/rtw88/ps.h
++++ b/drivers/net/wireless/realtek/rtw88/ps.h
+@@ -12,6 +12,5 @@ int rtw_leave_ips(struct rtw_dev *rtwdev);
+ 
+ void rtw_enter_lps(struct rtw_dev *rtwdev, u8 port_id);
+ void rtw_leave_lps(struct rtw_dev *rtwdev);
+-bool rtw_in_lps(struct rtw_dev *rtwdev);
+ 
+ #endif
 -- 
 2.17.1
 
