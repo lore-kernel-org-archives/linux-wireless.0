@@ -2,135 +2,155 @@ Return-Path: <SRS0=/cM4=X3=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EB15C352AA
-	for <linux-wireless@archiver.kernel.org>; Wed,  2 Oct 2019 06:05:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15BC9C352AA
+	for <linux-wireless@archiver.kernel.org>; Wed,  2 Oct 2019 06:35:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 513A7215EA
-	for <linux-wireless@archiver.kernel.org>; Wed,  2 Oct 2019 06:05:40 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="TaJk2Pjr";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="TaJk2Pjr"
+	by mail.kernel.org (Postfix) with ESMTP id E3B082086A
+	for <linux-wireless@archiver.kernel.org>; Wed,  2 Oct 2019 06:35:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727481AbfJBGFj (ORCPT
+        id S1726869AbfJBGfm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 2 Oct 2019 02:05:39 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:40280 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726965AbfJBGFj (ORCPT
+        Wed, 2 Oct 2019 02:35:42 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:57690 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726202AbfJBGfl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Oct 2019 02:05:39 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id E0B3D61728; Wed,  2 Oct 2019 06:05:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1569996337;
-        bh=DF+HW6wwmJzYoEIrxyHBzQsB32Vt++k7jcLNJ4FIdkQ=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=TaJk2PjroQBJnnxISNMqNzo8+NH/9buRv5Ov8ia4195It4HQcP7Z9iEzSP1pnyJvK
-         A48XwfqfqELzcG5+y6AlKyFO5DkYeWxl8DbXErvopo2qIkch5uQo3AJNnCIgXBz4aK
-         Ei03eyaWWUV50LD70Ez6Bpk47oGVsHB7o2r7jePg=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id D2D7661728;
-        Wed,  2 Oct 2019 06:05:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1569996337;
-        bh=DF+HW6wwmJzYoEIrxyHBzQsB32Vt++k7jcLNJ4FIdkQ=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=TaJk2PjroQBJnnxISNMqNzo8+NH/9buRv5Ov8ia4195It4HQcP7Z9iEzSP1pnyJvK
-         A48XwfqfqELzcG5+y6AlKyFO5DkYeWxl8DbXErvopo2qIkch5uQo3AJNnCIgXBz4aK
-         Ei03eyaWWUV50LD70Ez6Bpk47oGVsHB7o2r7jePg=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org D2D7661728
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Antonio Quartulli <antonio.quartulli@kaiwoo.ai>
-Cc:     greearb@candelatech.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Subject: Re: [PATCH] ath10k: Fix offchannel tx failure when no ath10k_mac_tx_frm_has_freq
-References: <1508284992-3574-1-git-send-email-greearb@candelatech.com>
-        <ba256006-b42b-0dee-4eb7-093da5885341@kaiwoo.ai>
-Date:   Wed, 02 Oct 2019 09:05:33 +0300
-In-Reply-To: <ba256006-b42b-0dee-4eb7-093da5885341@kaiwoo.ai> (Antonio
-        Quartulli's message of "Mon, 30 Sep 2019 16:29:32 +0200")
-Message-ID: <87tv8r3cnm.fsf@kamboji.qca.qualcomm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Wed, 2 Oct 2019 02:35:41 -0400
+Authenticated-By: 
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x926ZYeV013042, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (RTITCASV01.realtek.com.tw[172.21.6.18])
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x926ZYeV013042
+        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
+        Wed, 2 Oct 2019 14:35:35 +0800
+Received: from localhost.localdomain (172.21.68.126) by
+ RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
+ 14.3.468.0; Wed, 2 Oct 2019 14:35:34 +0800
+From:   <yhchuang@realtek.com>
+To:     <kvalo@codeaurora.org>
+CC:     <linux-wireless@vger.kernel.org>, <briannorris@chromium.org>
+Subject: [PATCH 01/14] rtw88: check firmware leave lps successfully
+Date:   Wed, 2 Oct 2019 14:35:18 +0800
+Message-ID: <20191002063531.18135-2-yhchuang@realtek.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20191002063531.18135-1-yhchuang@realtek.com>
+References: <20191002063531.18135-1-yhchuang@realtek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
+X-Originating-IP: [172.21.68.126]
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Antonio Quartulli <antonio.quartulli@kaiwoo.ai> writes:
+From: Chin-Yen Lee <timlee@realtek.com>
 
-> Hi,
->
-> On 18/10/2017 02:03, greearb@candelatech.com wrote:
->> From: Ben Greear <greearb@candelatech.com>
->> 
->> This bug appears to have been added between 4.0 (which works for us),
->> and 4.4, which does not work.
->> 
->> I think this is because the tx-offchannel logic gets in a loop when
->> ath10k_mac_tx_frm_has_freq(ar) is false, so pkt is never actually
->> sent to the firmware for transmit.
->> 
->> This patch fixes the problem on 4.9 for me, and now HS20 clients
->> can work again with my firmware.
->> 
->> Signed-off-by: Ben Greear <greearb@candelatech.com>
->
-> I have been struggling to send offchannels mgmt frames since a while, as
-> I was always getting:
->
-> [18099.253732] ath10k_pci 0000:01:00.0: timed out waiting for offchannel
-> skb cf0e3780
-> [18102.293686] ath10k_pci 0000:01:00.0: timed out waiting for offchannel
-> skb cf0e3780
-> [18105.333653] ath10k_pci 0000:01:00.0: timed out waiting for offchannel
-> skb cf0e3780
-> [18108.373712] ath10k_pci 0000:01:00.0: timed out waiting for offchannel
-> skb cf0e3780
-> [18111.413687] ath10k_pci 0000:01:00.0: timed out waiting for offchannel
-> skb cf0e36c0
-> [18114.453726] ath10k_pci 0000:01:00.0: timed out waiting for offchannel
-> skb cf0e3f00
-> [18117.493773] ath10k_pci 0000:01:00.0: timed out waiting for offchannel
-> skb cf0e36c0
-> [18120.533631] ath10k_pci 0000:01:00.0: timed out waiting for offchannel
-> skb cf0e3f00
->
-> After digging through the ath10k patchwork I have found this patch which
-> touches exactly the code I was trying to debug.
->
-> After applying this set of changes, I can confirm that sending
-> offchannel frames works again like a charm.
->
-> I have tested only one fw though: ver 10.4-3.5.3-00057.
->
-> It's a bummer that this trivial but critical patch is not yet merged
-> upstream :-(
+Driver needs to wait for firmware to restore hardware setting
+to active mode after leaving lps.
 
-Ben has it's own firmware and own hacks in kernel so I can't apply them
-without testing, and it's just very difficult for me to find time to
-test anything right now.
+After getting H2C from driver for leaving lps, firmware will
+issue null packet without PS bit to inform AP driver is active,
+and then restore REG_TCR Register if AP has receiced null packet.
 
-> Tested-by: Antonio Quartulli <antonio.quartulli@kaiwoo.ai>
+But the transmission of null packet may cost much more time
+in noisy environment. If driver does not wait for firmware,
+null packet with PS bit could be sent due to incorrect REG_TCR setting.
+And AP will be confused.
 
-Thanks! What hardware did you test this? I'll add that to the commit
-log.
+In our test, 100ms is enough for firmware to send null packet
+to AP. If REG_TCR Register is still wrong after 100ms, we will
+modify it directly, force the PS bit to be cleared
 
-The patch also had some conflicts which I fixed in the pending branch,
-please check:
+Signed-off-by: Chin-Yen Lee <timlee@realtek.com>
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw88/ps.c  | 29 ++++++++++++++++++++++++
+ drivers/net/wireless/realtek/rtw88/ps.h  |  2 ++
+ drivers/net/wireless/realtek/rtw88/reg.h |  1 +
+ 3 files changed, 32 insertions(+)
 
-https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=bdc657dd0c0cb7163fcf39b94e664e3d9409140e
-
+diff --git a/drivers/net/wireless/realtek/rtw88/ps.c b/drivers/net/wireless/realtek/rtw88/ps.c
+index 83db6cf6a219..bf149956b04e 100644
+--- a/drivers/net/wireless/realtek/rtw88/ps.c
++++ b/drivers/net/wireless/realtek/rtw88/ps.c
+@@ -9,6 +9,7 @@
+ #include "mac.h"
+ #include "coex.h"
+ #include "debug.h"
++#include "reg.h"
+ 
+ static int rtw_ips_pwr_up(struct rtw_dev *rtwdev)
+ {
+@@ -118,6 +119,32 @@ static void __rtw_leave_lps_deep(struct rtw_dev *rtwdev)
+ 	rtw_hci_deep_ps(rtwdev, false);
+ }
+ 
++static void rtw_fw_leave_lps_state_check(struct rtw_dev *rtwdev)
++{
++	int i;
++
++	/* Driver needs to wait for firmware to leave LPS state
++	 * successfully. Firmware will send null packet to inform AP,
++	 * and see if AP sends an ACK back, then firmware will restore
++	 * the REG_TCR register.
++	 *
++	 * If driver does not wait for firmware, null packet with
++	 * PS bit could be sent due to incorrect REG_TCR setting.
++	 *
++	 * In our test, 100ms should be enough for firmware to finish
++	 * the flow. If REG_TCR Register is still incorrect after 100ms,
++	 * just modify it directly, and throw a warn message.
++	 */
++	for (i = 0 ; i < LEAVE_LPS_TRY_CNT; i++) {
++		if (rtw_read32_mask(rtwdev, REG_TCR, BIT_PWRMGT_HWDATA_EN) == 0)
++			return;
++		msleep(20);
++	}
++
++	rtw_write32_mask(rtwdev, REG_TCR, BIT_PWRMGT_HWDATA_EN, 0);
++	rtw_warn(rtwdev, "firmware failed to restore hardware setting\n");
++}
++
+ static void rtw_leave_lps_core(struct rtw_dev *rtwdev)
+ {
+ 	struct rtw_lps_conf *conf = &rtwdev->lps_conf;
+@@ -128,6 +155,8 @@ static void rtw_leave_lps_core(struct rtw_dev *rtwdev)
+ 	conf->smart_ps = 0;
+ 
+ 	rtw_fw_set_pwr_mode(rtwdev);
++	rtw_fw_leave_lps_state_check(rtwdev);
++
+ 	clear_bit(RTW_FLAG_LEISURE_PS, rtwdev->flags);
+ 
+ 	rtw_coex_lps_notify(rtwdev, COEX_LPS_DISABLE);
+diff --git a/drivers/net/wireless/realtek/rtw88/ps.h b/drivers/net/wireless/realtek/rtw88/ps.h
+index 18f687cfe211..25925eedbad4 100644
+--- a/drivers/net/wireless/realtek/rtw88/ps.h
++++ b/drivers/net/wireless/realtek/rtw88/ps.h
+@@ -11,6 +11,8 @@
+ #define POWER_MODE_PG		BIT(4)
+ #define POWER_MODE_LCLK		BIT(0)
+ 
++#define LEAVE_LPS_TRY_CNT	5
++
+ int rtw_enter_ips(struct rtw_dev *rtwdev);
+ int rtw_leave_ips(struct rtw_dev *rtwdev);
+ 
+diff --git a/drivers/net/wireless/realtek/rtw88/reg.h b/drivers/net/wireless/realtek/rtw88/reg.h
+index fe793e270d22..60014077de77 100644
+--- a/drivers/net/wireless/realtek/rtw88/reg.h
++++ b/drivers/net/wireless/realtek/rtw88/reg.h
+@@ -271,6 +271,7 @@
+ #define BIT_TSFT_SEL_TIMER0	(BIT(4) | BIT(5) | BIT(6))
+ 
+ #define REG_TCR			0x0604
++#define BIT_PWRMGT_HWDATA_EN	BIT(7)
+ #define REG_RCR			0x0608
+ #define BIT_APP_FCS		BIT(31)
+ #define BIT_APP_MIC		BIT(30)
 -- 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.17.1
+
