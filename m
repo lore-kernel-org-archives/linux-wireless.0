@@ -6,85 +6,93 @@ X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
 	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9132DC352AA
-	for <linux-wireless@archiver.kernel.org>; Wed,  2 Oct 2019 17:19:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73910C352AA
+	for <linux-wireless@archiver.kernel.org>; Wed,  2 Oct 2019 17:21:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 66AD321848
-	for <linux-wireless@archiver.kernel.org>; Wed,  2 Oct 2019 17:19:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4823520659
+	for <linux-wireless@archiver.kernel.org>; Wed,  2 Oct 2019 17:21:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="UtWYVxTw";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="T3sIHtVz"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="bFBueE0n";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="HUAty5JT"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728692AbfJBRTX (ORCPT
+        id S1728495AbfJBRVL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 2 Oct 2019 13:19:23 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:59714 "EHLO
+        Wed, 2 Oct 2019 13:21:11 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:32812 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726076AbfJBRTX (ORCPT
+        with ESMTP id S1726697AbfJBRVL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Oct 2019 13:19:23 -0400
+        Wed, 2 Oct 2019 13:21:11 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 8A8A861156; Wed,  2 Oct 2019 17:19:22 +0000 (UTC)
+        id 5F86261156; Wed,  2 Oct 2019 17:21:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1570036762;
-        bh=imE2p37CSqor8L69mmMVfy+EnI7tKW4jVxuM6K6bv+0=;
+        s=default; t=1570036870;
+        bh=e0mkWPheC4RLsC5Ev5u60gSM5LPK0EZWhf9MXAn5Wxk=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=UtWYVxTwRfZt2vGfyFBwWZtJnKkjmPjWW+kZMH1GxUEF4NSAIb1xQoXOEmLBOimmS
-         JhFDQbRSos1ooeG4aXdBouD9/Y430SH9zjk093WEPPn4dUuN6a5fs/xAlw0yX2Zx3c
-         n4xE/m1J+QN5RrjvmpP16RmSaSzwOfjA5QE+pMxo=
+        b=bFBueE0nDNHOzLJFtsoX8EQCBogQMXqjfEjNHrOYCRJd3eWfFt51sw1ADQUZ3JOEI
+         g9wO+FBhAn1asSu+6V0cv5sz6lix9aDayqhKvg+15ul+eW9ZI+XLuTRc3KVXeBzsB/
+         JaZzas0meod3MRi6YPXR6GAYvAFX1XdKgagvRt2A=
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 6637360A78;
-        Wed,  2 Oct 2019 17:19:20 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id A13FD60790;
+        Wed,  2 Oct 2019 17:21:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1570036761;
-        bh=imE2p37CSqor8L69mmMVfy+EnI7tKW4jVxuM6K6bv+0=;
+        s=default; t=1570036869;
+        bh=e0mkWPheC4RLsC5Ev5u60gSM5LPK0EZWhf9MXAn5Wxk=;
         h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=T3sIHtVzzjQP3abRNcto4X7LY9am3e34E+K+9XieUyd0RW4W7iFrv2OhoKI4fC/pU
-         VqN204pWOOmKKZV66MmBAdZ/o/g/DtyW1CJIymvFssOtdB3Xy48Bke41dESTNS1D86
-         Us5hwPDYRWMl8tgvMrQdHTkacMPOwuNYWoY8HdYs=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 6637360A78
+        b=HUAty5JTjljLZbFbl9uElQDhWLknEpT9YJLkslzKx/+dF76M/C8WuXIrif1UIESR/
+         tdQWjPHTq/YH9na8lAWATDHy8WCsFIKPxbCnvoIIMBsOyNhx4rWrUeQu0wymCgRUqi
+         ngV/FfOTDBCZmDJqUDNerQXWaKCzniNBl2T2/SC4=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org A13FD60790
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] ath10k: restore QCA9880-AR1A (v1) detection
+Subject: Re: [PATCH] ath10k: add support for hardware rfkill
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20190906215423.23589-1-chunkeey@gmail.com>
-References: <20190906215423.23589-1-chunkeey@gmail.com>
-To:     Christian Lamparter <chunkeey@gmail.com>
-Cc:     linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+In-Reply-To: <156985855686.10126.201242458794108566.stgit@potku.adurom.net>
+References: <156985855686.10126.201242458794108566.stgit@potku.adurom.net>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
 User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20191002171922.8A8A861156@smtp.codeaurora.org>
-Date:   Wed,  2 Oct 2019 17:19:22 +0000 (UTC)
+Message-Id: <20191002172110.5F86261156@smtp.codeaurora.org>
+Date:   Wed,  2 Oct 2019 17:21:10 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Christian Lamparter <chunkeey@gmail.com> wrote:
+Kalle Valo <kvalo@codeaurora.org> wrote:
 
-> This patch restores the old behavior that read
-> the chip_id on the QCA988x before resetting the
-> chip. This needs to be done in this order since
-> the unsupported QCA988x AR1A chips fall off the
-> bus when resetted. Otherwise the next MMIO Op
-> after the reset causes a BUS ERROR and panic.
+> When hardware rfkill is enabled in the firmware it will report the
+> capability via using WMI_TLV_SYS_CAP_INFO_RFKILL bit in the WMI_SERVICE_READY
+> event to the host. ath10k will check the capability, and if it is enabled then
+> ath10k will set the GPIO information to firmware using WMI_PDEV_SET_PARAM. When
+> the firmware detects hardware rfkill is enabled by the user, it will report it
+> via WMI_RFKILL_STATE_CHANGE_EVENTID. Once ath10k receives the event it will
+> send wmi command WMI_PDEV_SET_PARAM to the firmware to enable/disable the radio
+> and also notifies cfg80211.
 > 
-> Cc: stable@vger.kernel.org
-> Fixes: 1a7fecb766c8 ("ath10k: reset chip before reading chip_id in probe")
-> Signed-off-by: Christian Lamparter <chunkeey@gmail.com>
+> We can't power off the device when rfkill is enabled, as otherwise the
+> firmware would not be able to detect GPIO changes and report them to the
+> host. So when rfkill is enabled, we need to keep the firmware running.
+> 
+> Tested with QCA6174 PCI with firmware
+> WLAN.RM.4.4.1-00109-QCARMSWPZ-1.
+> 
+> Signed-off-by: Alan Liu <alanliu@codeaurora.org>
+> Signed-off-by: Wen Gong <wgong@codeaurora.org>
 > Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
 Patch applied to ath-next branch of ath.git, thanks.
 
-f8914a14623a ath10k: restore QCA9880-AR1A (v1) detection
+1382993f882b ath10k: add support for hardware rfkill
 
 -- 
-https://patchwork.kernel.org/patch/11136089/
+https://patchwork.kernel.org/patch/11166921/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
