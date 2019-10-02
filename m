@@ -6,35 +6,35 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93667C352AA
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B2A45C35280
 	for <linux-wireless@archiver.kernel.org>; Wed,  2 Oct 2019 06:35:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7505F21783
+	by mail.kernel.org (Postfix) with ESMTP id 95538218DE
 	for <linux-wireless@archiver.kernel.org>; Wed,  2 Oct 2019 06:35:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727341AbfJBGfu (ORCPT
+        id S1727312AbfJBGft (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 2 Oct 2019 02:35:50 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:57715 "EHLO
+        Wed, 2 Oct 2019 02:35:49 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:57722 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727053AbfJBGfp (ORCPT
+        with ESMTP id S1727014AbfJBGfs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Oct 2019 02:35:45 -0400
+        Wed, 2 Oct 2019 02:35:48 -0400
 Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x926ZeLq013076, This message is accepted by code: ctloc85258
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x926Zg0I013089, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (RTITCASV01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x926ZeLq013076
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x926Zg0I013089
         (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
-        Wed, 2 Oct 2019 14:35:40 +0800
+        Wed, 2 Oct 2019 14:35:42 +0800
 Received: from localhost.localdomain (172.21.68.126) by
  RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
- 14.3.468.0; Wed, 2 Oct 2019 14:35:40 +0800
+ 14.3.468.0; Wed, 2 Oct 2019 14:35:41 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>, <briannorris@chromium.org>
-Subject: [PATCH 09/14] rtw88: Don't set RX_FLAG_DECRYPTED if packet has no encryption
-Date:   Wed, 2 Oct 2019 14:35:26 +0800
-Message-ID: <20191002063531.18135-10-yhchuang@realtek.com>
+Subject: [PATCH 11/14] rtw88: raise firmware version debug level
+Date:   Wed, 2 Oct 2019 14:35:28 +0800
+Message-ID: <20191002063531.18135-12-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20191002063531.18135-1-yhchuang@realtek.com>
 References: <20191002063531.18135-1-yhchuang@realtek.com>
@@ -46,83 +46,37 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-The value of GET_RX_DESC_SWDEC() indicates that if this RX
-packet requires software decryption or not. And software
-decryption is required when the packet was encrypted and the
-hardware failed to decrypt it.
+It's better to print firmware version at load time.
+But since we need to set debug_mask properly to default print
+rtw_dbg(), raise the debug level to rtw_info() instead.
 
-So, GET_RX_DESC_SWDEC() is negative does not mean that this
-packet is decrypted, it might just have no encryption at all.
-To actually see if the packet is decrypted, driver needs to
-further check if the hardware has successfully decrypted it,
-with a specific type of encryption algorithm.
+Also change the multiple line style to one line only, it will
+be easier for log analyzing.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/rtw8822b.c |  3 ++-
- drivers/net/wireless/realtek/rtw88/rtw8822c.c |  3 ++-
- drivers/net/wireless/realtek/rtw88/rx.h       | 11 +++++++++++
- 3 files changed, 15 insertions(+), 2 deletions(-)
+ drivers/net/wireless/realtek/rtw88/mac.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822b.c b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
-index 2b6cd7cf763b..1e20c4465bc9 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8822b.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
-@@ -836,7 +836,8 @@ static void rtw8822b_query_rx_desc(struct rtw_dev *rtwdev, u8 *rx_desc,
- 	pkt_stat->phy_status = GET_RX_DESC_PHYST(rx_desc);
- 	pkt_stat->icv_err = GET_RX_DESC_ICV_ERR(rx_desc);
- 	pkt_stat->crc_err = GET_RX_DESC_CRC32(rx_desc);
--	pkt_stat->decrypted = !GET_RX_DESC_SWDEC(rx_desc);
-+	pkt_stat->decrypted = !GET_RX_DESC_SWDEC(rx_desc) &&
-+			      GET_RX_DESC_ENC_TYPE(rx_desc) != RX_DESC_ENC_NONE;
- 	pkt_stat->is_c2h = GET_RX_DESC_C2H(rx_desc);
- 	pkt_stat->pkt_len = GET_RX_DESC_PKT_LEN(rx_desc);
- 	pkt_stat->drv_info_sz = GET_RX_DESC_DRV_INFO_SIZE(rx_desc);
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-index 4c983666e830..b1f8c417a7e1 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-@@ -1704,7 +1704,8 @@ static void rtw8822c_query_rx_desc(struct rtw_dev *rtwdev, u8 *rx_desc,
- 	pkt_stat->phy_status = GET_RX_DESC_PHYST(rx_desc);
- 	pkt_stat->icv_err = GET_RX_DESC_ICV_ERR(rx_desc);
- 	pkt_stat->crc_err = GET_RX_DESC_CRC32(rx_desc);
--	pkt_stat->decrypted = !GET_RX_DESC_SWDEC(rx_desc);
-+	pkt_stat->decrypted = !GET_RX_DESC_SWDEC(rx_desc) &&
-+			      GET_RX_DESC_ENC_TYPE(rx_desc) != RX_DESC_ENC_NONE;
- 	pkt_stat->is_c2h = GET_RX_DESC_C2H(rx_desc);
- 	pkt_stat->pkt_len = GET_RX_DESC_PKT_LEN(rx_desc);
- 	pkt_stat->drv_info_sz = GET_RX_DESC_DRV_INFO_SIZE(rx_desc);
-diff --git a/drivers/net/wireless/realtek/rtw88/rx.h b/drivers/net/wireless/realtek/rtw88/rx.h
-index 383f3b2babc1..3342e3761281 100644
---- a/drivers/net/wireless/realtek/rtw88/rx.h
-+++ b/drivers/net/wireless/realtek/rtw88/rx.h
-@@ -5,6 +5,15 @@
- #ifndef __RTW_RX_H_
- #define __RTW_RX_H_
+diff --git a/drivers/net/wireless/realtek/rtw88/mac.c b/drivers/net/wireless/realtek/rtw88/mac.c
+index f40877bc9c9a..75f35a97dca7 100644
+--- a/drivers/net/wireless/realtek/rtw88/mac.c
++++ b/drivers/net/wireless/realtek/rtw88/mac.c
+@@ -578,10 +578,8 @@ static void update_firmware_info(struct rtw_dev *rtwdev,
+ 	fw->sub_version = *(data + FW_HDR_SUBVERSION);
+ 	fw->sub_index = *(data + FW_HDR_SUBINDEX);
  
-+enum rtw_rx_desc_enc {
-+	RX_DESC_ENC_NONE	= 0,
-+	RX_DESC_ENC_WEP40	= 1,
-+	RX_DESC_ENC_TKIP_WO_MIC	= 2,
-+	RX_DESC_ENC_TKIP_MIC	= 3,
-+	RX_DESC_ENC_AES		= 4,
-+	RX_DESC_ENC_WEP104	= 5,
-+};
-+
- #define GET_RX_DESC_PHYST(rxdesc)                                              \
- 	le32_get_bits(*((__le32 *)(rxdesc) + 0x00), BIT(26))
- #define GET_RX_DESC_ICV_ERR(rxdesc)                                            \
-@@ -21,6 +30,8 @@
- 	le32_get_bits(*((__le32 *)(rxdesc) + 0x00), GENMASK(19, 16))
- #define GET_RX_DESC_SHIFT(rxdesc)                                              \
- 	le32_get_bits(*((__le32 *)(rxdesc) + 0x00), GENMASK(25, 24))
-+#define GET_RX_DESC_ENC_TYPE(rxdesc)                                           \
-+	le32_get_bits(*((__le32 *)(rxdesc) + 0x00), GENMASK(22, 20))
- #define GET_RX_DESC_RX_RATE(rxdesc)                                            \
- 	le32_get_bits(*((__le32 *)(rxdesc) + 0x03), GENMASK(6, 0))
- #define GET_RX_DESC_MACID(rxdesc)                                              \
+-	rtw_dbg(rtwdev, RTW_DBG_FW, "fw h2c version: %x\n", fw->h2c_version);
+-	rtw_dbg(rtwdev, RTW_DBG_FW, "fw version:     %x\n", fw->version);
+-	rtw_dbg(rtwdev, RTW_DBG_FW, "fw sub version: %x\n", fw->sub_version);
+-	rtw_dbg(rtwdev, RTW_DBG_FW, "fw sub index:   %x\n", fw->sub_index);
++	rtw_info(rtwdev, "Firmware version %u.%u.%u, H2C version %u\n",
++		 fw->version, fw->sub_version, fw->sub_index, fw->h2c_version);
+ }
+ 
+ static int
 -- 
 2.17.1
 
