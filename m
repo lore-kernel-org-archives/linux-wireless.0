@@ -6,35 +6,35 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CAA7C352AA
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA829ECE58B
 	for <linux-wireless@archiver.kernel.org>; Wed,  2 Oct 2019 06:35:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4D0D021783
+	by mail.kernel.org (Postfix) with ESMTP id C22632086A
 	for <linux-wireless@archiver.kernel.org>; Wed,  2 Oct 2019 06:35:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727191AbfJBGfq (ORCPT
+        id S1727188AbfJBGfq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Wed, 2 Oct 2019 02:35:46 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:57711 "EHLO
+Received: from rtits2.realtek.com ([211.75.126.72]:57697 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727014AbfJBGfp (ORCPT
+        with ESMTP id S1726882AbfJBGfo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Oct 2019 02:35:45 -0400
+        Wed, 2 Oct 2019 02:35:44 -0400
 Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x926ZeEc013072, This message is accepted by code: ctloc85258
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x926ZbYV013060, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (RTITCASV01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x926ZeEc013072
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x926ZbYV013060
         (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
-        Wed, 2 Oct 2019 14:35:40 +0800
+        Wed, 2 Oct 2019 14:35:38 +0800
 Received: from localhost.localdomain (172.21.68.126) by
  RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
- 14.3.468.0; Wed, 2 Oct 2019 14:35:39 +0800
+ 14.3.468.0; Wed, 2 Oct 2019 14:35:37 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>, <briannorris@chromium.org>
-Subject: [PATCH 08/14] rtw88: fix beaconing mode rsvd_page memory violation issue
-Date:   Wed, 2 Oct 2019 14:35:25 +0800
-Message-ID: <20191002063531.18135-9-yhchuang@realtek.com>
+Subject: [PATCH 05/14] rtw88: report tx rate to mac80211 stack
+Date:   Wed, 2 Oct 2019 14:35:22 +0800
+Message-ID: <20191002063531.18135-6-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20191002063531.18135-1-yhchuang@realtek.com>
 References: <20191002063531.18135-1-yhchuang@realtek.com>
@@ -46,128 +46,309 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+From: Tzu-En Huang <tehuang@realtek.com>
 
-When downloading the reserved page, the first page always contains
-a beacon for the firmware to reference. For non-beaconing modes such
-as station mode, also put a blank skb with length=1.
+Whenever the firmware increases/decreases the bit rate used
+to transmit to a peer, it sends an RA report through C2H to
+driver. Driver can then record the bit rate in the peer's
+struct rtw_sta_info, and report to mac80211 when it asks us
+for the statistics of the sta by ieee80211_ops::sta_statistics
 
-And for the beaconing modes, driver will get a real beacon with a
-length approximate to the page size. But as the beacon is always put
-at the first page, it does not need a tx_desc, because the TX path
-will generate one when TXing the reserved page to the hardware. So we
-could allocate a buffer with a size smaller than the reserved page,
-when using memcpy() to copy the content of reserved page to the buffer,
-the over-sized reserved page will violate the kernel memory.
-
-To fix it, add the tx_desc before memcpy() the reserved packets to
-the buffer, then we can get SKBs with correct length when counting
-the pages in total. And for page 0, count the extra tx_desc_sz that
-the TX path will generate. This way, the first beacon that allocated
-without tx_desc can be counted with the extra tx_desc_sz to get
-actual pages it requires.
-
-Fixes: e3037485c68e ("rtw88: new Realtek 802.11ac driver")
+Signed-off-by: Tzu-En Huang <tehuang@realtek.com>
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/fw.c | 52 ++++++++++++++++++++-----
- 1 file changed, 43 insertions(+), 9 deletions(-)
+ drivers/net/wireless/realtek/rtw88/fw.c       | 73 +++++++++++++++++++
+ drivers/net/wireless/realtek/rtw88/fw.h       |  6 ++
+ drivers/net/wireless/realtek/rtw88/mac80211.c | 12 +++
+ drivers/net/wireless/realtek/rtw88/main.c     | 12 +++
+ drivers/net/wireless/realtek/rtw88/main.h     | 10 +++
+ drivers/net/wireless/realtek/rtw88/rx.c       | 22 +-----
+ drivers/net/wireless/realtek/rtw88/util.c     | 27 +++++++
+ 7 files changed, 143 insertions(+), 19 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wireless/realtek/rtw88/fw.c
-index 51649df7cc98..65594393dd1e 100644
+index 430d73cff32e..4b41bf531998 100644
 --- a/drivers/net/wireless/realtek/rtw88/fw.c
 +++ b/drivers/net/wireless/realtek/rtw88/fw.c
-@@ -672,9 +672,6 @@ static void rtw_rsvd_page_list_to_buf(struct rtw_dev *rtwdev, u8 page_size,
- {
- 	struct sk_buff *skb = rsvd_pkt->skb;
+@@ -9,6 +9,7 @@
+ #include "reg.h"
+ #include "sec.h"
+ #include "debug.h"
++#include "util.h"
  
--	if (rsvd_pkt->add_txdesc)
--		rtw_fill_rsvd_page_desc(rtwdev, skb);
--
- 	if (page >= 1)
- 		memcpy(buf + page_margin + page_size * (page - 1),
- 		       skb->data, skb->len);
-@@ -799,16 +796,37 @@ static u8 *rtw_build_rsvd_page(struct rtw_dev *rtwdev,
- 	list_for_each_entry(rsvd_pkt, &rtwdev->rsvd_page_list, list) {
- 		iter = rtw_get_rsvd_page_skb(hw, vif, rsvd_pkt->type);
- 		if (!iter) {
--			rtw_err(rtwdev, "fail to build rsvd packet\n");
-+			rtw_err(rtwdev, "failed to build rsvd packet\n");
- 			goto release_skb;
- 		}
-+
-+		/* Fill the tx_desc for the rsvd pkt that requires one.
-+		 * And iter->len will be added with size of tx_desc_sz.
-+		 */
-+		if (rsvd_pkt->add_txdesc)
-+			rtw_fill_rsvd_page_desc(rtwdev, iter);
-+
- 		rsvd_pkt->skb = iter;
- 		rsvd_pkt->page = total_page;
--		if (rsvd_pkt->add_txdesc)
-+
-+		/* Reserved page is downloaded via TX path, and TX path will
-+		 * generate a tx_desc at the header to describe length of
-+		 * the buffer. If we are not counting page numbers with the
-+		 * size of tx_desc added at the first rsvd_pkt (usually a
-+		 * beacon, firmware default refer to the first page as the
-+		 * content of beacon), we could generate a buffer which size
-+		 * is smaller than the actual size of the whole rsvd_page
-+		 */
-+		if (total_page == 0) {
-+			if (rsvd_pkt->type != RSVD_BEACON) {
-+				rtw_err(rtwdev, "first page should be a beacon\n");
-+				goto release_skb;
-+			}
- 			total_page += rtw_len_to_page(iter->len + tx_desc_sz,
- 						      page_size);
--		else
-+		} else {
- 			total_page += rtw_len_to_page(iter->len, page_size);
-+		}
+ static void rtw_fw_c2h_cmd_handle_ext(struct rtw_dev *rtwdev,
+ 				      struct sk_buff *skb)
+@@ -28,6 +29,75 @@ static void rtw_fw_c2h_cmd_handle_ext(struct rtw_dev *rtwdev,
  	}
+ }
  
- 	if (total_page > rtwdev->fifo.rsvd_drv_pg_num) {
-@@ -821,13 +839,24 @@ static u8 *rtw_build_rsvd_page(struct rtw_dev *rtwdev,
- 	if (!buf)
- 		goto release_skb;
- 
-+	/* Copy the content of each rsvd_pkt to the buf, and they should
-+	 * be aligned to the pages.
-+	 *
-+	 * Note that the first rsvd_pkt is a beacon no matter what vif->type.
-+	 * And that rsvd_pkt does not require tx_desc because when it goes
-+	 * through TX path, the TX path will generate one for it.
-+	 */
- 	list_for_each_entry(rsvd_pkt, &rtwdev->rsvd_page_list, list) {
- 		rtw_rsvd_page_list_to_buf(rtwdev, page_size, page_margin,
- 					  page, buf, rsvd_pkt);
--		page += rtw_len_to_page(rsvd_pkt->skb->len, page_size);
--	}
--	list_for_each_entry(rsvd_pkt, &rtwdev->rsvd_page_list, list)
-+		if (page == 0)
-+			page += rtw_len_to_page(rsvd_pkt->skb->len +
-+						tx_desc_sz, page_size);
-+		else
-+			page += rtw_len_to_page(rsvd_pkt->skb->len, page_size);
++struct rtw_fw_iter_ra_data {
++	struct rtw_dev *rtwdev;
++	u8 *payload;
++};
 +
- 		kfree_skb(rsvd_pkt->skb);
++static void rtw_fw_ra_report_iter(void *data, struct ieee80211_sta *sta)
++{
++	struct rtw_fw_iter_ra_data *ra_data = data;
++	struct rtw_sta_info *si = (struct rtw_sta_info *)sta->drv_priv;
++	u8 mac_id, rate, sgi, bw;
++	u8 mcs, nss;
++	u32 bit_rate;
++
++	mac_id = GET_RA_REPORT_MACID(ra_data->payload);
++	if (si->mac_id != mac_id)
++		return;
++
++	si->ra_report.txrate.flags = 0;
++
++	rate = GET_RA_REPORT_RATE(ra_data->payload);
++	sgi = GET_RA_REPORT_SGI(ra_data->payload);
++	bw = GET_RA_REPORT_BW(ra_data->payload);
++
++	if (rate < DESC_RATEMCS0) {
++		si->ra_report.txrate.legacy = rtw_desc_to_bitrate(rate);
++		goto legacy;
 +	}
- 
- 	return buf;
- 
-@@ -880,6 +909,11 @@ int rtw_fw_download_rsvd_page(struct rtw_dev *rtwdev, struct ieee80211_vif *vif)
- 		goto free;
++
++	rtw_desc_to_mcsrate(rate, &mcs, &nss);
++	if (rate >= DESC_RATEVHT1SS_MCS0)
++		si->ra_report.txrate.flags |= RATE_INFO_FLAGS_VHT_MCS;
++	else if (rate >= DESC_RATEMCS0)
++		si->ra_report.txrate.flags |= RATE_INFO_FLAGS_MCS;
++
++	if (rate >= DESC_RATEMCS0) {
++		si->ra_report.txrate.mcs = mcs;
++		si->ra_report.txrate.nss = nss;
++	}
++
++	if (sgi)
++		si->ra_report.txrate.flags |= RATE_INFO_FLAGS_SHORT_GI;
++
++	if (bw == RTW_CHANNEL_WIDTH_80)
++		si->ra_report.txrate.bw = RATE_INFO_BW_80;
++	else if (bw == RTW_CHANNEL_WIDTH_40)
++		si->ra_report.txrate.bw = RATE_INFO_BW_40;
++	else
++		si->ra_report.txrate.bw = RATE_INFO_BW_20;
++
++legacy:
++	bit_rate = cfg80211_calculate_bitrate(&si->ra_report.txrate);
++
++	si->ra_report.desc_rate = rate;
++	si->ra_report.bit_rate = bit_rate;
++}
++
++static void rtw_fw_ra_report_handle(struct rtw_dev *rtwdev, u8 *payload,
++				    u8 length)
++{
++	struct rtw_fw_iter_ra_data ra_data;
++
++	if (WARN(length < 7, "invalid ra report c2h length\n"))
++		return;
++
++	ra_data.rtwdev = rtwdev;
++	ra_data.payload = payload;
++	rtw_iterate_stas_atomic(rtwdev, rtw_fw_ra_report_iter, &ra_data);
++}
++
+ void rtw_fw_c2h_cmd_handle(struct rtw_dev *rtwdev, struct sk_buff *skb)
+ {
+ 	struct rtw_c2h_cmd *c2h;
+@@ -50,6 +120,9 @@ void rtw_fw_c2h_cmd_handle(struct rtw_dev *rtwdev, struct sk_buff *skb)
+ 	case C2H_HALMAC:
+ 		rtw_fw_c2h_cmd_handle_ext(rtwdev, skb);
+ 		break;
++	case C2H_RA_RPT:
++		rtw_fw_ra_report_handle(rtwdev, c2h->payload, len);
++		break;
+ 	default:
+ 		break;
  	}
+diff --git a/drivers/net/wireless/realtek/rtw88/fw.h b/drivers/net/wireless/realtek/rtw88/fw.h
+index f4028ef63ee8..fd34986a13d2 100644
+--- a/drivers/net/wireless/realtek/rtw88/fw.h
++++ b/drivers/net/wireless/realtek/rtw88/fw.h
+@@ -36,6 +36,7 @@
+ enum rtw_c2h_cmd_id {
+ 	C2H_BT_INFO = 0x09,
+ 	C2H_BT_MP_INFO = 0x0b,
++	C2H_RA_RPT = 0x0c,
+ 	C2H_HW_FEATURE_REPORT = 0x19,
+ 	C2H_WLAN_INFO = 0x27,
+ 	C2H_HW_FEATURE_DUMP = 0xfd,
+@@ -119,6 +120,11 @@ struct rtw_rsvd_page {
+ #define GET_CCX_REPORT_SEQNUM(c2h_payload)	(c2h_payload[8] & 0xfc)
+ #define GET_CCX_REPORT_STATUS(c2h_payload)	(c2h_payload[9] & 0xc0)
  
-+	/* The last thing is to download the *ONLY* beacon again, because
-+	 * the previous tx_desc is to describe the total rsvd page. Download
-+	 * the beacon again to replace the TX desc header, and we will get
-+	 * a correct tx_desc for the beacon in the rsvd page.
-+	 */
- 	ret = rtw_download_beacon(rtwdev, vif);
- 	if (ret) {
- 		rtw_err(rtwdev, "failed to download beacon\n");
++#define GET_RA_REPORT_RATE(c2h_payload)		(c2h_payload[0] & 0x7f)
++#define GET_RA_REPORT_SGI(c2h_payload)		((c2h_payload[0] & 0x80) >> 7)
++#define GET_RA_REPORT_BW(c2h_payload)		(c2h_payload[6])
++#define GET_RA_REPORT_MACID(c2h_payload)	(c2h_payload[1])
++
+ /* PKT H2C */
+ #define H2C_PKT_CMD_ID 0xFF
+ #define H2C_PKT_CATEGORY 0x01
+diff --git a/drivers/net/wireless/realtek/rtw88/mac80211.c b/drivers/net/wireless/realtek/rtw88/mac80211.c
+index fe58a99ca48e..9c77c86d3021 100644
+--- a/drivers/net/wireless/realtek/rtw88/mac80211.c
++++ b/drivers/net/wireless/realtek/rtw88/mac80211.c
+@@ -578,6 +578,17 @@ static int rtw_ops_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
+ 	return 0;
+ }
+ 
++static void rtw_ops_sta_statistics(struct ieee80211_hw *hw,
++				   struct ieee80211_vif *vif,
++				   struct ieee80211_sta *sta,
++				   struct station_info *sinfo)
++{
++	struct rtw_sta_info *si = (struct rtw_sta_info *)sta->drv_priv;
++
++	sinfo->txrate = si->ra_report.txrate;
++	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_BITRATE);
++}
++
+ const struct ieee80211_ops rtw_ops = {
+ 	.tx			= rtw_ops_tx,
+ 	.wake_tx_queue		= rtw_ops_wake_tx_queue,
+@@ -596,5 +607,6 @@ const struct ieee80211_ops rtw_ops = {
+ 	.sw_scan_complete	= rtw_ops_sw_scan_complete,
+ 	.mgd_prepare_tx		= rtw_ops_mgd_prepare_tx,
+ 	.set_rts_threshold	= rtw_ops_set_rts_threshold,
++	.sta_statistics		= rtw_ops_sta_statistics,
+ };
+ EXPORT_SYMBOL(rtw_ops);
+diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
+index 0cee91869daa..690a5c4d64e7 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.c
++++ b/drivers/net/wireless/realtek/rtw88/main.c
+@@ -86,6 +86,18 @@ static struct ieee80211_rate rtw_ratetable[] = {
+ 	{.bitrate = 540, .hw_value = 0x0b,},
+ };
+ 
++u16 rtw_desc_to_bitrate(u8 desc_rate)
++{
++	struct ieee80211_rate rate;
++
++	if (WARN(desc_rate >= ARRAY_SIZE(rtw_ratetable), "invalid desc rate\n"))
++		return 0;
++
++	rate = rtw_ratetable[desc_rate];
++
++	return rate.bitrate;
++}
++
+ static struct ieee80211_supported_band rtw_band_2ghz = {
+ 	.band = NL80211_BAND_2GHZ,
+ 
+diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
+index dcf806ac8155..cd34d4d77b52 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.h
++++ b/drivers/net/wireless/realtek/rtw88/main.h
+@@ -592,6 +592,12 @@ struct rtw_tx_report {
+ 	struct timer_list purge_timer;
+ };
+ 
++struct rtw_ra_report {
++	struct rate_info txrate;
++	u32 bit_rate;
++	u8 desc_rate;
++};
++
+ struct rtw_txq {
+ 	struct list_head list;
+ 
+@@ -623,6 +629,8 @@ struct rtw_sta_info {
+ 	u64 ra_mask;
+ 
+ 	DECLARE_BITMAP(tid_ba, IEEE80211_NUM_TIDS);
++
++	struct rtw_ra_report ra_report;
+ };
+ 
+ struct rtw_vif {
+@@ -1430,6 +1438,7 @@ bool ltecoex_read_reg(struct rtw_dev *rtwdev, u16 offset, u32 *val);
+ bool ltecoex_reg_write(struct rtw_dev *rtwdev, u16 offset, u32 value);
+ void rtw_restore_reg(struct rtw_dev *rtwdev,
+ 		     struct rtw_backup_info *bckp, u32 num);
++void rtw_desc_to_mcsrate(u16 rate, u8 *mcs, u8 *nss);
+ void rtw_set_channel(struct rtw_dev *rtwdev);
+ void rtw_vif_port_config(struct rtw_dev *rtwdev, struct rtw_vif *rtwvif,
+ 			 u32 config);
+@@ -1442,5 +1451,6 @@ int rtw_core_init(struct rtw_dev *rtwdev);
+ void rtw_core_deinit(struct rtw_dev *rtwdev);
+ int rtw_register_hw(struct rtw_dev *rtwdev, struct ieee80211_hw *hw);
+ void rtw_unregister_hw(struct rtw_dev *rtwdev, struct ieee80211_hw *hw);
++u16 rtw_desc_to_bitrate(u8 desc_rate);
+ 
+ #endif
+diff --git a/drivers/net/wireless/realtek/rtw88/rx.c b/drivers/net/wireless/realtek/rtw88/rx.c
+index 16b22eb57171..d97d2c2c57c2 100644
+--- a/drivers/net/wireless/realtek/rtw88/rx.c
++++ b/drivers/net/wireless/realtek/rtw88/rx.c
+@@ -103,25 +103,9 @@ void rtw_rx_fill_rx_status(struct rtw_dev *rtwdev,
+ 	else if (pkt_stat->rate >= DESC_RATEMCS0)
+ 		rx_status->encoding = RX_ENC_HT;
+ 
+-	if (pkt_stat->rate >= DESC_RATEVHT1SS_MCS0 &&
+-	    pkt_stat->rate <= DESC_RATEVHT1SS_MCS9) {
+-		rx_status->nss = 1;
+-		rx_status->rate_idx = pkt_stat->rate - DESC_RATEVHT1SS_MCS0;
+-	} else if (pkt_stat->rate >= DESC_RATEVHT2SS_MCS0 &&
+-		   pkt_stat->rate <= DESC_RATEVHT2SS_MCS9) {
+-		rx_status->nss = 2;
+-		rx_status->rate_idx = pkt_stat->rate - DESC_RATEVHT2SS_MCS0;
+-	} else if (pkt_stat->rate >= DESC_RATEVHT3SS_MCS0 &&
+-		   pkt_stat->rate <= DESC_RATEVHT3SS_MCS9) {
+-		rx_status->nss = 3;
+-		rx_status->rate_idx = pkt_stat->rate - DESC_RATEVHT3SS_MCS0;
+-	} else if (pkt_stat->rate >= DESC_RATEVHT4SS_MCS0 &&
+-		   pkt_stat->rate <= DESC_RATEVHT4SS_MCS9) {
+-		rx_status->nss = 4;
+-		rx_status->rate_idx = pkt_stat->rate - DESC_RATEVHT4SS_MCS0;
+-	} else if (pkt_stat->rate >= DESC_RATEMCS0 &&
+-		   pkt_stat->rate <= DESC_RATEMCS15) {
+-		rx_status->rate_idx = pkt_stat->rate - DESC_RATEMCS0;
++	if (pkt_stat->rate >= DESC_RATEMCS0) {
++		rtw_desc_to_mcsrate(pkt_stat->rate, &rx_status->rate_idx,
++				    &rx_status->nss);
+ 	} else if (rx_status->band == NL80211_BAND_5GHZ &&
+ 		   pkt_stat->rate >= DESC_RATE6M &&
+ 		   pkt_stat->rate <= DESC_RATE54M) {
+diff --git a/drivers/net/wireless/realtek/rtw88/util.c b/drivers/net/wireless/realtek/rtw88/util.c
+index 212070c2baa8..10f1117c0cfb 100644
+--- a/drivers/net/wireless/realtek/rtw88/util.c
++++ b/drivers/net/wireless/realtek/rtw88/util.c
+@@ -70,3 +70,30 @@ void rtw_restore_reg(struct rtw_dev *rtwdev,
+ 		}
+ 	}
+ }
++
++void rtw_desc_to_mcsrate(u16 rate, u8 *mcs, u8 *nss)
++{
++	if (rate <= DESC_RATE54M)
++		return;
++
++	if (rate >= DESC_RATEVHT1SS_MCS0 &&
++	    rate <= DESC_RATEVHT1SS_MCS9) {
++		*nss = 1;
++		*mcs = rate - DESC_RATEVHT1SS_MCS0;
++	} else if (rate >= DESC_RATEVHT2SS_MCS0 &&
++		   rate <= DESC_RATEVHT2SS_MCS9) {
++		*nss = 2;
++		*mcs = rate - DESC_RATEVHT2SS_MCS0;
++	} else if (rate >= DESC_RATEVHT3SS_MCS0 &&
++		   rate <= DESC_RATEVHT3SS_MCS9) {
++		*nss = 3;
++		*mcs = rate - DESC_RATEVHT3SS_MCS0;
++	} else if (rate >= DESC_RATEVHT4SS_MCS0 &&
++		   rate <= DESC_RATEVHT4SS_MCS9) {
++		*nss = 4;
++		*mcs = rate - DESC_RATEVHT4SS_MCS0;
++	} else if (rate >= DESC_RATEMCS0 &&
++		   rate <= DESC_RATEMCS15) {
++		*mcs = rate - DESC_RATEMCS0;
++	}
++}
 -- 
 2.17.1
 
