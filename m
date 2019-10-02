@@ -2,106 +2,87 @@ Return-Path: <SRS0=/cM4=X3=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 986F9C352AA
-	for <linux-wireless@archiver.kernel.org>; Wed,  2 Oct 2019 00:00:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44C16C352AA
+	for <linux-wireless@archiver.kernel.org>; Wed,  2 Oct 2019 02:31:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 62CA520818
-	for <linux-wireless@archiver.kernel.org>; Wed,  2 Oct 2019 00:00:12 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=bobcopeland-com.20150623.gappssmtp.com header.i=@bobcopeland-com.20150623.gappssmtp.com header.b="kdX1+Dmx"
+	by mail.kernel.org (Postfix) with ESMTP id 18F4B20815
+	for <linux-wireless@archiver.kernel.org>; Wed,  2 Oct 2019 02:31:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729406AbfJBAAL (ORCPT
+        id S1729724AbfJBCbj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 1 Oct 2019 20:00:11 -0400
-Received: from mail-io1-f66.google.com ([209.85.166.66]:44695 "EHLO
-        mail-io1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729390AbfJBAAL (ORCPT
+        Tue, 1 Oct 2019 22:31:39 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:45995 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729030AbfJBCbj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 Oct 2019 20:00:11 -0400
-Received: by mail-io1-f66.google.com with SMTP id w12so24597196iol.11
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Oct 2019 17:00:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bobcopeland-com.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=8XuORGyon1VOMPog0b9ChPguzhG8P8i4vzM4Xv8Uqzc=;
-        b=kdX1+Dmx5NsPMOpihunGR2OJCSfrr4JjlntcxD7R+ALz1L+MwnXxobTL70wA2xhkk5
-         DwZP8QdL0TeschpMkiVMjuu0HecXiTkp3/TUQUxR8jfV5r7muksNi7KIp1pnfeT1qLrK
-         pccYQLe4dgK6uIpaQvVp3OawufdrG1ZyQ4SkHuzQf8Bg9tJT7PXAPfYD76GF4AbNmBQB
-         hukUohuq02OJtHqySKMVLikBHYIhgnF8f+waZEVJ2RfBsJ2nU4ThtkOaxhjbHxr8Ujqa
-         M0zgmpiK+fQjANVvcglvdKACVKLEB04RBxa9ReB0MAA9/Lah5GA2/d2gXIec4qthEjmA
-         s1yQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=8XuORGyon1VOMPog0b9ChPguzhG8P8i4vzM4Xv8Uqzc=;
-        b=nBnERP99y3FyWmPEmiqPM8OriVDx18bqIk0fL9fXrBd1uD4dpnR3ku+RgX3zCOPzsa
-         UFwyq/0va3rGVf0DTyc0D5NwJQ1/N+iydZfxfi2YONUVr5cxQgw9ZA/vu2Cmkd4EngVe
-         FvjAmW4OVqyHlmcxF69AdlEy9e8O6yopailRPE4gy+W2df3rn0zSPggbALCW3kNyOJOg
-         k4tart31UU1y/B0fh7wEeV6wd4daIYJr4y8tAu9kmK9r67/obkf87Kharx9a8HeHJXUm
-         3k5m+L12FsVUw+cN36P4xTWTLV7T5tWJT17yiz6kp8sflXGx+M1rNZ6zE6xiOaeXMeRP
-         Dfqg==
-X-Gm-Message-State: APjAAAXxKPvXf5ZN+P9q7AGUDqiC6Uda2aBd9/i78Y8TdB0PNFbRjkZe
-        tCKw1vX5pdpRcs9+zGBpKy3SPg==
-X-Google-Smtp-Source: APXvYqzJARkEVuAEFbC8zVztAVf2Nk11aZ/GxPqcZs2fEKZIz912KOLJmKEHDG8oiQFWxDzoU4ZwHQ==
-X-Received: by 2002:a02:638a:: with SMTP id j132mr1092256jac.100.1569974409183;
-        Tue, 01 Oct 2019 17:00:09 -0700 (PDT)
-Received: from hash.lan ([2607:fea8:5ac0:1dd8::d25])
-        by smtp.gmail.com with ESMTPSA id m21sm7456621iob.82.2019.10.01.17.00.08
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 01 Oct 2019 17:00:08 -0700 (PDT)
-Received: from bob by hash.lan with local (Exim 4.92.2)
-        (envelope-from <me@bobcopeland.com>)
-        id 1iFS3r-0005XC-GC; Tue, 01 Oct 2019 20:00:07 -0400
-Date:   Tue, 1 Oct 2019 20:00:07 -0400
-From:   Bob Copeland <me@bobcopeland.com>
-To:     Ramon Fontes <ramonreisfontes@gmail.com>
-Cc:     Johannes Berg <johannes@sipsolutions.net>,
-        Krishna Chaitanya <chaitanya.mgit@gmail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: mac80211_hwsim (kernel 4.18+): wmediumd + 2.4Ghz
-Message-ID: <20191002000007.GA20953@localhost>
-References: <CABPxzYLrTC3kS86iyfq+RY=XEgjedu2MWPtn+i+H50jPz3oh3w@mail.gmail.com>
- <39d646206446159a2b0a67ee7d8667483ade0733.camel@sipsolutions.net>
- <CABPxzYL0i+YbKh-xMXsS-xWeQvwfFUvv7vGhugM1e+OFMOSHSg@mail.gmail.com>
- <CAK8U23bbiGhmDg-ChDJtbRVVc_6njVdoUjfAhqM+V3yfQXTC4Q@mail.gmail.com>
- <CABPxzY+8Jjvjv0x79yzo+rL3nONTZSkROK1T+gMqq5nhXb=7-g@mail.gmail.com>
- <CAK8U23bb9C+16zuGi+uAYxUg-goddiSZfDAJUYeC1Xpu=jud+Q@mail.gmail.com>
- <df3b53f157e113e309360ed40b1f36b9f08f4d8c.camel@sipsolutions.net>
- <CAK8U23YMeFcQPLfWTMijyJaiX1V+NO9FWmq70nhS+bLVNxFYkg@mail.gmail.com>
- <616a319e4b8623508f6cd00fcfca8303f494a2de.camel@sipsolutions.net>
- <CAK8U23Yrdw8dtO2jDQMMECWpnp=8LEOPqbfL5NQt4sjz3VjsDQ@mail.gmail.com>
+        Tue, 1 Oct 2019 22:31:39 -0400
+Authenticated-By: 
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x922VW5E031831, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (RTITCASV01.realtek.com.tw[172.21.6.18])
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x922VW5E031831
+        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
+        Wed, 2 Oct 2019 10:31:32 +0800
+Received: from localhost.localdomain (172.21.68.126) by
+ RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
+ 14.3.468.0; Wed, 2 Oct 2019 10:31:32 +0800
+From:   <yhchuang@realtek.com>
+To:     <kvalo@codeaurora.org>
+CC:     <linux-wireless@vger.kernel.org>, <briannorris@chromium.org>
+Subject: [PATCH v2 02/12] rtw88: pci: reset H2C queue indexes in a single write
+Date:   Wed, 2 Oct 2019 10:31:18 +0800
+Message-ID: <20191002023128.12090-3-yhchuang@realtek.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20191002023128.12090-1-yhchuang@realtek.com>
+References: <20191002023128.12090-1-yhchuang@realtek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAK8U23Yrdw8dtO2jDQMMECWpnp=8LEOPqbfL5NQt4sjz3VjsDQ@mail.gmail.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Type: text/plain
+X-Originating-IP: [172.21.68.126]
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, Oct 01, 2019 at 02:01:06PM -0300, Ramon Fontes wrote:
-> > Now that I look at that, I think most likely the reason is commit
-> > 119f94a6fefc ("cfg80211: Address some corner cases in scan result
-> > channel updating") which was backported to the 4.18 series.
-> 
-> The problem is now fixed! :)
-> Thank you so much for your support Johannes.
-> 
-> Sorry for my ignorance but where can I follow up with these wmediumd changes?
-> https://p.sipsolutions.net/6c52392b5e31d9d1.txt
-> 
-> Btw, I've created a PR for this in the Bob's repo:
-> https://github.com/bcopeland/wmediumd/pull/21/files
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-Thanks, I merged that.
+If the driver doesn't reset the host's and device's indexes
+in a single write, the indexes will become different in a
+short period. And it will confuse the DMA engine, make it
+start to process non-existed entries.
 
+Better to Write-1-to-reset the indexes, for the DMA engine
+to know that this is a reset of the H2C queue, not a kick
+off.
+
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+---
+
+v1 -> v2
+  - rebase on top of wireless-drivers-next
+
+ drivers/net/wireless/realtek/rtw88/pci.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtw88/pci.c b/drivers/net/wireless/realtek/rtw88/pci.c
+index d90928be663b..509743cfd70a 100644
+--- a/drivers/net/wireless/realtek/rtw88/pci.c
++++ b/drivers/net/wireless/realtek/rtw88/pci.c
+@@ -457,9 +457,9 @@ static void rtw_pci_reset_buf_desc(struct rtw_dev *rtwdev)
+ 	/* reset read/write point */
+ 	rtw_write32(rtwdev, RTK_PCI_TXBD_RWPTR_CLR, 0xffffffff);
+ 
+-	/* rest H2C Queue index */
+-	rtw_write32_set(rtwdev, RTK_PCI_TXBD_H2CQ_CSR, BIT_CLR_H2CQ_HOST_IDX);
+-	rtw_write32_set(rtwdev, RTK_PCI_TXBD_H2CQ_CSR, BIT_CLR_H2CQ_HW_IDX);
++	/* reset H2C Queue index in a single write */
++	rtw_write32_set(rtwdev, RTK_PCI_TXBD_H2CQ_CSR,
++			BIT_CLR_H2CQ_HOST_IDX | BIT_CLR_H2CQ_HW_IDX);
+ }
+ 
+ static void rtw_pci_reset_trx_ring(struct rtw_dev *rtwdev)
 -- 
-Bob Copeland %% https://bobcopeland.com/
+2.17.1
+
