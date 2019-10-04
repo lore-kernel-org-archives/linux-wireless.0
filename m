@@ -2,74 +2,67 @@ Return-Path: <SRS0=IBNP=X5=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9E99C4360C
-	for <linux-wireless@archiver.kernel.org>; Fri,  4 Oct 2019 12:34:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7928C4360C
+	for <linux-wireless@archiver.kernel.org>; Fri,  4 Oct 2019 12:37:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 882AC215EA
-	for <linux-wireless@archiver.kernel.org>; Fri,  4 Oct 2019 12:34:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9DB7B222CB
+	for <linux-wireless@archiver.kernel.org>; Fri,  4 Oct 2019 12:37:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730389AbfJDMen (ORCPT
+        id S2387584AbfJDMhW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 4 Oct 2019 08:34:43 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:39270 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726024AbfJDMen (ORCPT
+        Fri, 4 Oct 2019 08:37:22 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:46524 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S2387542AbfJDMhV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 4 Oct 2019 08:34:43 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.92.2)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1iGMnB-000819-Sd; Fri, 04 Oct 2019 14:34:42 +0200
-Message-ID: <0dbf438d7e176c85164b8568a98f0d6e98292152.camel@sipsolutions.net>
-Subject: Re: [PATCH 1/2] mac80211: Implement Airtime-based Queue Limit (AQL)
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Kan Yan <kyan@google.com>
-Cc:     linux-wireless@vger.kernel.org,
-        make-wifi-fast@lists.bufferbloat.net, toke@redhat.com,
-        nbd@nbd.name, yiboz@codeaurora.org
-Date:   Fri, 04 Oct 2019 14:34:41 +0200
-In-Reply-To: <20191004062151.131405-2-kyan@google.com> (sfid-20191004_082219_852781_215A08B7)
-References: <20191004062151.131405-1-kyan@google.com>
-         <20191004062151.131405-2-kyan@google.com>
-         (sfid-20191004_082219_852781_215A08B7)
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.30.5 (3.30.5-1.fc29) 
+        Fri, 4 Oct 2019 08:37:21 -0400
+Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
+        by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.92)
+        (envelope-from <luca@coelho.fi>)
+        id 1iGMpj-0000k1-Lj; Fri, 04 Oct 2019 15:37:20 +0300
+From:   Luca Coelho <luca@coelho.fi>
+To:     johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org
+Date:   Fri,  4 Oct 2019 15:37:04 +0300
+Message-Id: <20191004123706.15768-1-luca@coelho.fi>
+X-Mailer: git-send-email 2.23.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Subject: [PATCH 0/2] cfg80211/mac80211 patches from our internal tree 2019-10-04
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, 2019-10-03 at 23:21 -0700, Kan Yan wrote:
-> 
-> +/* The firmware's transmit queue size limit in airtime */
-> +#define IEEE80211_DEFAULT_AQL_INTERFACE_LIMIT	24000
+From: Luca Coelho <luciano.coelho@intel.com>
 
-I'm not sure I understand this completely, but IMHO rewording it to be
-like a "NIC limit" would be better.
+Hi,
 
-However, I'm not sure it *shouldn't* actually be per interface (i.e.
-moving from
-	local->aql_total_pending_airtime
-to
-	sdata->aql_total_pending_airtime
+A couple of patches with mac80211 and cfg80211 changes from our
+internal tree.
 
-because you could have multiple channels etc. involved and then using a
-single airtime limit across two interfaces that are actually on two
-different channels (e.g. 2.4 and 5 GHz) doesn't make that much sense.
+Please review, though you have already reviewed most if not all of
+them ;)
 
-Actually, it does make some sense as long as the NIC is actually
-channel-hopping ... but that's in the process of changing now, there's
-going to be hardware really soon (or perhaps already exists) that has
-real dual-band capabilities...
+Cheers,
+Luca.
 
-Maybe we can live with this now, but we'd probably expect to change this
-really soon.
 
-johannes
+Johannes Berg (1):
+  mac80211: accept deauth frames in IBSS mode
+
+Sara Sharon (1):
+  cfg80211: fix a bunch of RCU issues in multi-bssid code
+
+ net/mac80211/rx.c   | 11 ++++++++++-
+ net/wireless/scan.c | 23 +++++++++++++----------
+ 2 files changed, 23 insertions(+), 11 deletions(-)
+
+-- 
+2.23.0
 
