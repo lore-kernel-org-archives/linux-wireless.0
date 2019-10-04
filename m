@@ -6,93 +6,133 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0B8BC4CED1
-	for <linux-wireless@archiver.kernel.org>; Fri,  4 Oct 2019 13:14:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70176C47404
+	for <linux-wireless@archiver.kernel.org>; Fri,  4 Oct 2019 13:14:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A8DE3215EA
-	for <linux-wireless@archiver.kernel.org>; Fri,  4 Oct 2019 13:14:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4EE8C215EA
+	for <linux-wireless@archiver.kernel.org>; Fri,  4 Oct 2019 13:14:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388328AbfJDNOZ (ORCPT
+        id S2388340AbfJDNO1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 4 Oct 2019 09:14:25 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:46576 "EHLO
+        Fri, 4 Oct 2019 09:14:27 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:46600 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S2388186AbfJDNOY (ORCPT
+        with ESMTP id S2388332AbfJDNO1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 4 Oct 2019 09:14:24 -0400
+        Fri, 4 Oct 2019 09:14:27 -0400
 Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1iGNPb-0000l2-1W; Fri, 04 Oct 2019 16:14:23 +0300
+        id 1iGNPd-0000l2-22; Fri, 04 Oct 2019 16:14:25 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Fri,  4 Oct 2019 16:14:11 +0300
-Message-Id: <20191004131414.27372-6-luca@coelho.fi>
+Date:   Fri,  4 Oct 2019 16:14:14 +0300
+Message-Id: <20191004131414.27372-9-luca@coelho.fi>
 X-Mailer: git-send-email 2.23.0
 In-Reply-To: <20191004131414.27372-1-luca@coelho.fi>
 References: <20191004131414.27372-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 5/8] iwlwifi: pcie: fix indexing in command dump for new HW
+Subject: [PATCH 8/8] iwlwifi: pcie: fix memory leaks in iwl_pcie_ctxt_info_gen3_init
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Navid Emamdoost <navid.emamdoost@gmail.com>
 
-We got a crash in iwl_trans_pcie_get_cmdlen(), while the TFD was
-being accessed to sum up the lengths.
+In iwl_pcie_ctxt_info_gen3_init there are cases that the allocated dma
+memory is leaked in case of error.
 
-We want to access the TFD here, which is the information for the
-hardware. We always only allocate 32 buffers for the cmd queue,
-but on newer hardware (using TFH) we can also allocate only a
-shorter hardware array, also only 32 TFDs. Prior to the TFH, we
-had to allocate a bigger TFD array but would make those point to
-a smaller set of buffers.
+DMA memories prph_scratch, prph_info, and ctxt_info_gen3 are allocated
+and initialized to be later assigned to trans_pcie. But in any error case
+before such assignment the allocated memories should be released.
 
-Additionally, now max_tfd_queue_size is up to 65536, so we can
-access *way* out of bounds of a really only 32-entry array, so
-it crashes.
+First of such error cases happens when iwl_pcie_init_fw_sec fails.
+Current implementation correctly releases prph_scratch. But in two
+sunsequent error cases where dma_alloc_coherent may fail, such
+releases are missing.
 
-Fix this by making the TFD index depend on which hardware we are
-using right now.
+This commit adds release for prph_scratch when allocation for
+prph_info fails, and adds releases for prph_scratch and prph_info when
+allocation for ctxt_info_gen3 fails.
 
-While changing the calculation, also fix it to not use void ptr
-arithmetic, but cast to u8 * before.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Fixes: 2ee824026288 ("iwlwifi: pcie: support context information for 22560 devices")
+Signed-off-by: Navid Emamdoost <navid.emamdoost@gmail.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ .../intel/iwlwifi/pcie/ctxt-info-gen3.c       | 36 +++++++++++++------
+ 1 file changed, 25 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index f8a1f985a1d8..ab7480a85015 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -3272,11 +3272,17 @@ static struct iwl_trans_dump_data
- 		ptr = cmdq->write_ptr;
- 		for (i = 0; i < cmdq->n_window; i++) {
- 			u8 idx = iwl_pcie_get_cmd_index(cmdq, ptr);
-+			u8 tfdidx;
- 			u32 caplen, cmdlen;
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
+index 75fa8a6aafee..74980382e64c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
+@@ -107,13 +107,9 @@ int iwl_pcie_ctxt_info_gen3_init(struct iwl_trans *trans,
  
-+			if (trans->trans_cfg->use_tfh)
-+				tfdidx = idx;
-+			else
-+				tfdidx = ptr;
+ 	/* allocate ucode sections in dram and set addresses */
+ 	ret = iwl_pcie_init_fw_sec(trans, fw, &prph_scratch->dram);
+-	if (ret) {
+-		dma_free_coherent(trans->dev,
+-				  sizeof(*prph_scratch),
+-				  prph_scratch,
+-				  trans_pcie->prph_scratch_dma_addr);
+-		return ret;
+-	}
++	if (ret)
++		goto err_free_prph_scratch;
 +
- 			cmdlen = iwl_trans_pcie_get_cmdlen(trans,
--							   cmdq->tfds +
--							   tfd_size * ptr);
-+							   (u8 *)cmdq->tfds +
-+							   tfd_size * tfdidx);
- 			caplen = min_t(u32, TFD_MAX_PAYLOAD_SIZE, cmdlen);
  
- 			if (cmdlen) {
+ 	/* Allocate prph information
+ 	 * currently we don't assign to the prph info anything, but it would get
+@@ -121,16 +117,20 @@ int iwl_pcie_ctxt_info_gen3_init(struct iwl_trans *trans,
+ 	prph_info = dma_alloc_coherent(trans->dev, sizeof(*prph_info),
+ 				       &trans_pcie->prph_info_dma_addr,
+ 				       GFP_KERNEL);
+-	if (!prph_info)
+-		return -ENOMEM;
++	if (!prph_info) {
++		ret = -ENOMEM;
++		goto err_free_prph_scratch;
++	}
+ 
+ 	/* Allocate context info */
+ 	ctxt_info_gen3 = dma_alloc_coherent(trans->dev,
+ 					    sizeof(*ctxt_info_gen3),
+ 					    &trans_pcie->ctxt_info_dma_addr,
+ 					    GFP_KERNEL);
+-	if (!ctxt_info_gen3)
+-		return -ENOMEM;
++	if (!ctxt_info_gen3) {
++		ret = -ENOMEM;
++		goto err_free_prph_info;
++	}
+ 
+ 	ctxt_info_gen3->prph_info_base_addr =
+ 		cpu_to_le64(trans_pcie->prph_info_dma_addr);
+@@ -186,6 +186,20 @@ int iwl_pcie_ctxt_info_gen3_init(struct iwl_trans *trans,
+ 		iwl_set_bit(trans, CSR_GP_CNTRL, CSR_AUTO_FUNC_INIT);
+ 
+ 	return 0;
++
++err_free_prph_info:
++	dma_free_coherent(trans->dev,
++			  sizeof(*prph_info),
++			prph_info,
++			trans_pcie->prph_info_dma_addr);
++
++err_free_prph_scratch:
++	dma_free_coherent(trans->dev,
++			  sizeof(*prph_scratch),
++			prph_scratch,
++			trans_pcie->prph_scratch_dma_addr);
++	return ret;
++
+ }
+ 
+ void iwl_pcie_ctxt_info_gen3_free(struct iwl_trans *trans)
 -- 
 2.23.0
 
