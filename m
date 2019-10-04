@@ -4,35 +4,35 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5834AC47404
-	for <linux-wireless@archiver.kernel.org>; Fri,  4 Oct 2019 08:37:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 43432C4360C
+	for <linux-wireless@archiver.kernel.org>; Fri,  4 Oct 2019 08:37:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 317052084D
-	for <linux-wireless@archiver.kernel.org>; Fri,  4 Oct 2019 08:37:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1F19E2084D
+	for <linux-wireless@archiver.kernel.org>; Fri,  4 Oct 2019 08:37:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387605AbfJDIhG (ORCPT
+        id S1731308AbfJDIgz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 4 Oct 2019 04:37:06 -0400
-Received: from szxga07-in.huawei.com ([45.249.212.35]:43574 "EHLO huawei.com"
+        Fri, 4 Oct 2019 04:36:55 -0400
+Received: from szxga07-in.huawei.com ([45.249.212.35]:43546 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1731354AbfJDIhE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 4 Oct 2019 04:37:04 -0400
+        id S1729311AbfJDIgz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 4 Oct 2019 04:36:55 -0400
 Received: from DGGEMS409-HUB.china.huawei.com (unknown [172.30.72.60])
-        by Forcepoint Email with ESMTP id D817735762423652B4D8;
+        by Forcepoint Email with ESMTP id D34C4F2B6CD4AE77E543;
         Fri,  4 Oct 2019 16:36:52 +0800 (CST)
 Received: from huawei.com (10.90.53.225) by DGGEMS409-HUB.china.huawei.com
  (10.3.19.209) with Microsoft SMTP Server id 14.3.439.0; Fri, 4 Oct 2019
- 16:36:45 +0800
+ 16:36:44 +0800
 From:   zhengbin <zhengbin13@huawei.com>
 To:     <pkshih@realtek.com>, <kvalo@codeaurora.org>,
         <davem@davemloft.net>, <Larry.Finger@lwfinger.net>,
         <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
 CC:     <zhengbin13@huawei.com>
-Subject: [PATCH 7/8] rtlwifi: btcoex: Remove set but not used variables 'wifi_busy','bt_info_ext'
-Date:   Fri, 4 Oct 2019 16:43:54 +0800
-Message-ID: <1570178635-57582-8-git-send-email-zhengbin13@huawei.com>
+Subject: [PATCH 1/8] rtlwifi: rtl8821ae: Remove set but not used variables 'rtstatus','bd'
+Date:   Fri, 4 Oct 2019 16:43:48 +0800
+Message-ID: <1570178635-57582-2-git-send-email-zhengbin13@huawei.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1570178635-57582-1-git-send-email-zhengbin13@huawei.com>
 References: <1570178635-57582-1-git-send-email-zhengbin13@huawei.com>
@@ -47,54 +47,75 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Fixes gcc '-Wunused-but-set-variable' warning:
 
-drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c: In function btc8723b1ant_tdma_dur_adj_for_acl:
-drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c:1428:7: warning: variable wifi_busy set but not used [-Wunused-but-set-variable]
-drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c: In function btc8723b1ant_tdma_dur_adj_for_acl:
-drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c:1427:22: warning: variable bt_info_ext set but not used [-Wunused-but-set-variable]
+drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c: In function rtl8812ae_phy_config_rf_with_headerfile:
+drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c:2079:7: warning: variable rtstatus set but not used [-Wunused-but-set-variable]
+drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c: In function rtl8821ae_phy_config_rf_with_headerfile:
+drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c:2114:7: warning: variable rtstatus set but not used [-Wunused-but-set-variable]
+drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c: In function _rtl8812ae_phy_get_txpower_limit:
+drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c:2354:6: warning: variable bd set but not used [-Wunused-but-set-variable]
 
-'wifi_busy' is not used since commit 158707f9584c ("rtlwifi:
-btcoex: Restore 23b 1ant routine for tdma adjustment")
-
-'bt_info_ext' is not used since commit 2622d7d86a57 ("rtlwifi:
-btcoex: 23b 1ant: TDMA duration for ACL busy")
+They are not used since commit f1d2b4d338bf ("rtlwifi:
+rtl818x: Move drivers into new realtek directory")
 
 Reported-by: Hulk Robot <hulkci@huawei.com>
 Signed-off-by: zhengbin <zhengbin13@huawei.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c | 9 +--------
- 1 file changed, 1 insertion(+), 8 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c | 7 +------
+ 1 file changed, 1 insertion(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-index 5f57399..528e442 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c
-@@ -1424,17 +1424,11 @@ void btc8723b1ant_tdma_dur_adj_for_acl(struct btc_coexist *btcoexist,
- 	 * -1: decrease WiFi duration
- 	 */
- 	s32 result;
--	u8 retry_count = 0, bt_info_ext;
--	bool wifi_busy = false;
-+	u8 retry_count = 0;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
+index 979e434..c54b80d 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
+@@ -2076,7 +2076,6 @@ static bool _rtl8821ae_phy_config_bb_with_pgheaderfile(struct ieee80211_hw *hw,
+ bool rtl8812ae_phy_config_rf_with_headerfile(struct ieee80211_hw *hw,
+ 					     enum radio_path rfpath)
+ {
+-	bool rtstatus = true;
+ 	u32 *radioa_array_table_a, *radioa_array_table_b;
+ 	u16 radioa_arraylen_a, radioa_arraylen_b;
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+@@ -2088,7 +2087,6 @@ bool rtl8812ae_phy_config_rf_with_headerfile(struct ieee80211_hw *hw,
+ 	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+ 		 "Radio_A:RTL8821AE_RADIOA_ARRAY %d\n", radioa_arraylen_a);
+ 	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "Radio No %x\n", rfpath);
+-	rtstatus = true;
+ 	switch (rfpath) {
+ 	case RF90_PATH_A:
+ 		return __rtl8821ae_phy_config_with_headerfile(hw,
+@@ -2111,7 +2109,6 @@ bool rtl8812ae_phy_config_rf_with_headerfile(struct ieee80211_hw *hw,
+ bool rtl8821ae_phy_config_rf_with_headerfile(struct ieee80211_hw *hw,
+ 						enum radio_path rfpath)
+ {
+-	bool rtstatus = true;
+ 	u32 *radioa_array_table;
+ 	u16 radioa_arraylen;
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+@@ -2121,7 +2118,6 @@ bool rtl8821ae_phy_config_rf_with_headerfile(struct ieee80211_hw *hw,
+ 	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+ 		 "Radio_A:RTL8821AE_RADIOA_ARRAY %d\n", radioa_arraylen);
+ 	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "Radio No %x\n", rfpath);
+-	rtstatus = true;
+ 	switch (rfpath) {
+ 	case RF90_PATH_A:
+ 		return __rtl8821ae_phy_config_with_headerfile(hw,
+@@ -2351,7 +2347,7 @@ static s8 _rtl8812ae_phy_get_txpower_limit(struct ieee80211_hw *hw,
+ 	struct rtl_phy *rtlphy = &rtlpriv->phy;
+ 	short band_temp = -1, regulation = -1, bandwidth_temp = -1,
+ 		 rate_section = -1, channel_temp = -1;
+-	u16 bd, regu, bdwidth, sec, chnl;
++	u16 regu, bdwidth, sec, chnl;
+ 	s8 power_limit = MAX_POWER_INDEX;
 
- 	RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_LOUD,
- 		 "[BTCoex], TdmaDurationAdjustForAcl()\n");
+ 	if (rtlefuse->eeprom_regulatory == 2)
+@@ -2472,7 +2468,6 @@ static s8 _rtl8812ae_phy_get_txpower_limit(struct ieee80211_hw *hw,
+ 		return MAX_POWER_INDEX;
+ 	}
 
--	if (wifi_status == BT_8723B_1ANT_WIFI_STATUS_CONNECTED_BUSY)
--		wifi_busy = true;
--	else
--		wifi_busy = false;
--
- 	if ((wifi_status ==
- 	     BT_8723B_1ANT_WIFI_STATUS_NON_CONNECTED_ASSO_AUTH_SCAN) ||
- 	    (wifi_status == BT_8723B_1ANT_WIFI_STATUS_CONNECTED_SCAN) ||
-@@ -1472,7 +1466,6 @@ void btc8723b1ant_tdma_dur_adj_for_acl(struct btc_coexist *btcoexist,
- 	} else {
- 		/* acquire the BT TRx retry count from BT_Info byte2 */
- 		retry_count = coex_sta->bt_retry_cnt;
--		bt_info_ext = coex_sta->bt_info_ext;
-
- 		if ((coex_sta->low_priority_tx) > 1050 ||
- 		    (coex_sta->low_priority_rx) > 1250)
+-	bd = band_temp;
+ 	regu = regulation;
+ 	bdwidth = bandwidth_temp;
+ 	sec = rate_section;
 --
 2.7.4
 
