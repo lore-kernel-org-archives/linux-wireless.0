@@ -6,165 +6,103 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81E8FC47404
-	for <linux-wireless@archiver.kernel.org>; Fri,  4 Oct 2019 13:14:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04A77C4360C
+	for <linux-wireless@archiver.kernel.org>; Fri,  4 Oct 2019 13:14:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 644C321D81
-	for <linux-wireless@archiver.kernel.org>; Fri,  4 Oct 2019 13:14:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D6F0B215EA
+	for <linux-wireless@archiver.kernel.org>; Fri,  4 Oct 2019 13:14:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388305AbfJDNOX (ORCPT
+        id S2388321AbfJDNOZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 4 Oct 2019 09:14:23 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:46560 "EHLO
+        Fri, 4 Oct 2019 09:14:25 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:46572 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S2388186AbfJDNOW (ORCPT
+        with ESMTP id S2388297AbfJDNOY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 4 Oct 2019 09:14:22 -0400
+        Fri, 4 Oct 2019 09:14:24 -0400
 Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1iGNPY-0000l2-Ug; Fri, 04 Oct 2019 16:14:21 +0300
+        id 1iGNPa-0000l2-Dn; Fri, 04 Oct 2019 16:14:22 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Fri,  4 Oct 2019 16:14:08 +0300
-Message-Id: <20191004131414.27372-3-luca@coelho.fi>
+Date:   Fri,  4 Oct 2019 16:14:10 +0300
+Message-Id: <20191004131414.27372-5-luca@coelho.fi>
 X-Mailer: git-send-email 2.23.0
 In-Reply-To: <20191004131414.27372-1-luca@coelho.fi>
 References: <20191004131414.27372-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 2/8] iwlwifi: fix ACPI table revision checks
+Subject: [PATCH 4/8] iwlwifi: mvm: fix race in sync rx queue notification
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Naftali Goldstein <naftali.goldstein@intel.com>
 
-We can't check for the ACPI table revision validity in the same if
-where we check if the package was read correctly, because we return
-PTR_ERR(pkg) and if the table is not valid but the pointer is, we
-would return a valid pointer as an error.  Fix that by moving the
-table checks to a separate if and return -EINVAL if it's not valid.
+Consider the following flow:
+ 1. Driver starts to sync the rx queues due to a delba.
+    mvm->queue_sync_cookie=1.
+    This rx-queues-sync is synchronous, so it doesn't increment the
+    cookie until all rx queues handle the notification from FW.
+ 2. During this time, driver starts to sync rx queues due to nssn sync
+    required.
+    The cookie's value is still 1, but it doesn't matter since this
+    rx-queue-sync is non-synchronous so in the notification handler the
+    cookie is ignored.
+    What _does_ matter is that this flow increments the cookie to 2
+    immediately.
+    Remember though that the FW won't start servicing this command until
+    it's done with the previous one.
+ 3. FW is still handling the first command, so it sends a notification
+    with internal_notif->sync=1, and internal_notif->cookie=0, which
+    triggers a WARN_ONCE.
 
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+The solution for this race is to only use the mvm->queue_sync_cookie in
+case of a synchronous sync-rx-queues. This way in step 2 the cookie's
+value won't change so we avoid the WARN.
+
+The commit in the "fixes" field is the first commit to introduce
+non-synchronous sending of this command to FW.
+
+Signed-off-by: Naftali Goldstein <naftali.goldstein@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/acpi.c | 10 ++++----
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c  | 24 +++++++++++++++-----
- 2 files changed, 24 insertions(+), 10 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/acpi.c b/drivers/net/wireless/intel/iwlwifi/fw/acpi.c
-index 7573af2d88ce..c2db758b9d54 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/acpi.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/acpi.c
-@@ -162,12 +162,13 @@ int iwl_acpi_get_mcc(struct device *dev, char *mcc)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index cd1b10042fbf..d31f96c3f925 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -4881,11 +4881,11 @@ void iwl_mvm_sync_rx_queues_internal(struct iwl_mvm *mvm,
+ 	if (!iwl_mvm_has_new_rx_api(mvm))
+ 		return;
  
- 	wifi_pkg = iwl_acpi_get_wifi_pkg(dev, data, ACPI_WRDD_WIFI_DATA_SIZE,
- 					 &tbl_rev);
--	if (IS_ERR(wifi_pkg) || tbl_rev != 0) {
-+	if (IS_ERR(wifi_pkg)) {
- 		ret = PTR_ERR(wifi_pkg);
- 		goto out_free;
- 	}
- 
--	if (wifi_pkg->package.elements[1].type != ACPI_TYPE_INTEGER) {
-+	if (wifi_pkg->package.elements[1].type != ACPI_TYPE_INTEGER ||
-+	    tbl_rev != 0) {
- 		ret = -EINVAL;
- 		goto out_free;
- 	}
-@@ -224,12 +225,13 @@ int iwl_acpi_get_eckv(struct device *dev, u32 *extl_clk)
- 
- 	wifi_pkg = iwl_acpi_get_wifi_pkg(dev, data, ACPI_ECKV_WIFI_DATA_SIZE,
- 					 &tbl_rev);
--	if (IS_ERR(wifi_pkg) || tbl_rev != 0) {
-+	if (IS_ERR(wifi_pkg)) {
- 		ret = PTR_ERR(wifi_pkg);
- 		goto out_free;
- 	}
- 
--	if (wifi_pkg->package.elements[1].type != ACPI_TYPE_INTEGER) {
-+	if (wifi_pkg->package.elements[1].type != ACPI_TYPE_INTEGER ||
-+	    tbl_rev != 0) {
- 		ret = -EINVAL;
- 		goto out_free;
- 	}
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index 32a5e4e5461f..b2eb18eedf02 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -694,12 +694,13 @@ static int iwl_mvm_sar_get_wrds_table(struct iwl_mvm *mvm)
- 
- 	wifi_pkg = iwl_acpi_get_wifi_pkg(mvm->dev, data,
- 					 ACPI_WRDS_WIFI_DATA_SIZE, &tbl_rev);
--	if (IS_ERR(wifi_pkg) || tbl_rev != 0) {
-+	if (IS_ERR(wifi_pkg)) {
- 		ret = PTR_ERR(wifi_pkg);
- 		goto out_free;
- 	}
- 
--	if (wifi_pkg->package.elements[1].type != ACPI_TYPE_INTEGER) {
-+	if (wifi_pkg->package.elements[1].type != ACPI_TYPE_INTEGER ||
-+	    tbl_rev != 0) {
- 		ret = -EINVAL;
- 		goto out_free;
- 	}
-@@ -731,13 +732,14 @@ static int iwl_mvm_sar_get_ewrd_table(struct iwl_mvm *mvm)
- 
- 	wifi_pkg = iwl_acpi_get_wifi_pkg(mvm->dev, data,
- 					 ACPI_EWRD_WIFI_DATA_SIZE, &tbl_rev);
--	if (IS_ERR(wifi_pkg) || tbl_rev != 0) {
-+	if (IS_ERR(wifi_pkg)) {
- 		ret = PTR_ERR(wifi_pkg);
- 		goto out_free;
- 	}
- 
- 	if ((wifi_pkg->package.elements[1].type != ACPI_TYPE_INTEGER) ||
--	    (wifi_pkg->package.elements[2].type != ACPI_TYPE_INTEGER)) {
-+	    (wifi_pkg->package.elements[2].type != ACPI_TYPE_INTEGER) ||
-+	    tbl_rev != 0) {
- 		ret = -EINVAL;
- 		goto out_free;
- 	}
-@@ -791,11 +793,16 @@ static int iwl_mvm_sar_get_wgds_table(struct iwl_mvm *mvm)
- 
- 	wifi_pkg = iwl_acpi_get_wifi_pkg(mvm->dev, data,
- 					 ACPI_WGDS_WIFI_DATA_SIZE, &tbl_rev);
--	if (IS_ERR(wifi_pkg) || tbl_rev > 1) {
-+	if (IS_ERR(wifi_pkg)) {
- 		ret = PTR_ERR(wifi_pkg);
- 		goto out_free;
- 	}
- 
-+	if (tbl_rev != 0) {
-+		ret = -EINVAL;
-+		goto out_free;
+-	notif->cookie = mvm->queue_sync_cookie;
+-
+-	if (notif->sync)
++	if (notif->sync) {
++		notif->cookie = mvm->queue_sync_cookie;
+ 		atomic_set(&mvm->queue_sync_counter,
+ 			   mvm->trans->num_rx_queues);
 +	}
-+
- 	mvm->geo_rev = tbl_rev;
- 	for (i = 0; i < ACPI_NUM_GEO_PROFILES; i++) {
- 		for (j = 0; j < ACPI_GEO_TABLE_SIZE; j++) {
-@@ -1020,11 +1027,16 @@ static int iwl_mvm_get_ppag_table(struct iwl_mvm *mvm)
- 	wifi_pkg = iwl_acpi_get_wifi_pkg(mvm->dev, data,
- 					 ACPI_PPAG_WIFI_DATA_SIZE, &tbl_rev);
  
--	if (IS_ERR(wifi_pkg) || tbl_rev != 0) {
-+	if (IS_ERR(wifi_pkg)) {
- 		ret = PTR_ERR(wifi_pkg);
- 		goto out_free;
- 	}
+ 	ret = iwl_mvm_notify_rx_queue(mvm, qmask, (u8 *)notif,
+ 				      size, !notif->sync);
+@@ -4905,7 +4905,8 @@ void iwl_mvm_sync_rx_queues_internal(struct iwl_mvm *mvm,
  
-+	if (tbl_rev != 0) {
-+		ret = -EINVAL;
-+		goto out_free;
-+	}
-+
- 	enabled = &wifi_pkg->package.elements[1];
- 	if (enabled->type != ACPI_TYPE_INTEGER ||
- 	    (enabled->integer.value != 0 && enabled->integer.value != 1)) {
+ out:
+ 	atomic_set(&mvm->queue_sync_counter, 0);
+-	mvm->queue_sync_cookie++;
++	if (notif->sync)
++		mvm->queue_sync_cookie++;
+ }
+ 
+ static void iwl_mvm_sync_rx_queues(struct ieee80211_hw *hw)
 -- 
 2.23.0
 
