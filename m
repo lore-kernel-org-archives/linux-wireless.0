@@ -2,100 +2,85 @@ Return-Path: <SRS0=IBNP=X5=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F261CC4CED1
-	for <linux-wireless@archiver.kernel.org>; Fri,  4 Oct 2019 08:23:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AD9EC4CED1
+	for <linux-wireless@archiver.kernel.org>; Fri,  4 Oct 2019 08:36:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C9981215EA
-	for <linux-wireless@archiver.kernel.org>; Fri,  4 Oct 2019 08:23:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1570177429;
-	bh=y0a26l5BoLt6LDIhhczFXqNAIo+MU2bPPx6nwZoc6ew=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=VUr5fOdjMPFm8Gntcc81i9KTEs8f6AnqQu8J8O+Q6yCFZnt6Od2NuUvUsXzUH4k4f
-	 DAlGq0lhhYBmX5U3rsijf9KY7mIVZP5akdwbf5wt3x9Iv8lGvz/grqUGLPEwt0AHLW
-	 YLtc9spFg82uaKrxFyYSC7v8YPVjE+ip71TtCHrg=
+	by mail.kernel.org (Postfix) with ESMTP id DB67021A4C
+	for <linux-wireless@archiver.kernel.org>; Fri,  4 Oct 2019 08:36:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729319AbfJDIXq (ORCPT
+        id S1731336AbfJDIg4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 4 Oct 2019 04:23:46 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47568 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728095AbfJDIXq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 4 Oct 2019 04:23:46 -0400
-Received: from localhost (83-86-89-107.cable.dynamic.v4.ziggo.nl [83.86.89.107])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id D49FA215EA;
-        Fri,  4 Oct 2019 08:23:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1570177425;
-        bh=y0a26l5BoLt6LDIhhczFXqNAIo+MU2bPPx6nwZoc6ew=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=pc7kKbLNjQ60Htp2grrbUQKS6/ezg4x7E2dvUqm7GjZwB/+c01cbuC/1jTgthnBwS
-         FYO0NB/mrWJG5TxGokI8FzLZf56xeesfHRx/lS98REBrATcIqoZBTxyVbvyC4JHiQS
-         eAlEvYuj7lqvu3QDYCyPIxqk3KM0oRlAMRi6A2Kg=
-Date:   Fri, 4 Oct 2019 10:23:42 +0200
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     Jerome Pouiller <Jerome.Pouiller@silabs.com>
-Cc:     "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        David Le Goff <David.Legoff@silabs.com>,
-        "David S . Miller" <davem@davemloft.net>,
-        Kalle Valo <kvalo@codeaurora.org>
-Subject: Re: [PATCH v3 01/20] staging: wfx: add infrastructure for new driver
-Message-ID: <20191004082342.GA94454@kroah.com>
-References: <20190919142527.31797-1-Jerome.Pouiller@silabs.com>
- <20190919142527.31797-2-Jerome.Pouiller@silabs.com>
+        Fri, 4 Oct 2019 04:36:56 -0400
+Received: from szxga07-in.huawei.com ([45.249.212.35]:43414 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1729994AbfJDIg4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 4 Oct 2019 04:36:56 -0400
+Received: from DGGEMS409-HUB.china.huawei.com (unknown [172.30.72.60])
+        by Forcepoint Email with ESMTP id C51DCDE0C2880A6A8D89;
+        Fri,  4 Oct 2019 16:36:52 +0800 (CST)
+Received: from huawei.com (10.90.53.225) by DGGEMS409-HUB.china.huawei.com
+ (10.3.19.209) with Microsoft SMTP Server id 14.3.439.0; Fri, 4 Oct 2019
+ 16:36:46 +0800
+From:   zhengbin <zhengbin13@huawei.com>
+To:     <pkshih@realtek.com>, <kvalo@codeaurora.org>,
+        <davem@davemloft.net>, <Larry.Finger@lwfinger.net>,
+        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
+CC:     <zhengbin13@huawei.com>
+Subject: [PATCH 8/8] rtlwifi: rtl8723: Remove set but not used variable 'own'
+Date:   Fri, 4 Oct 2019 16:43:55 +0800
+Message-ID: <1570178635-57582-9-git-send-email-zhengbin13@huawei.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1570178635-57582-1-git-send-email-zhengbin13@huawei.com>
+References: <1570178635-57582-1-git-send-email-zhengbin13@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20190919142527.31797-2-Jerome.Pouiller@silabs.com>
-User-Agent: Mutt/1.12.2 (2019-09-21)
+Content-Type: text/plain
+X-Originating-IP: [10.90.53.225]
+X-CFilter-Loop: Reflected
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, Sep 19, 2019 at 02:25:36PM +0000, Jerome Pouiller wrote:
-> From: Jérôme Pouiller <jerome.pouiller@silabs.com>
-> 
-> Instantiate build infrastructure WFx driver. This driver provides support
-> for Wifi chipset Silicon Labs WF200 and further:
-> 
->    https://www.silabs.com/documents/public/data-sheets/wf200-datasheet.pdf
-> 
-> This chip support SPI and SDIO bus.
-> 
-> SDIO interface has two particularities:
->     1. Some parameters may be useful for end user (I will talk about
->        gpio_wakeup later).
->     2. The SDIO VID and PID of WF200 are 0000:0001 which are too much
->        generic to rely on.
-> 
-> So, current code checks VID/PID and looks for a node in DT (since WF200
-> targets embedded platforms, I don't think it is a problem to rely on
-> DT). DT can also be used to define to parameters for driver. Currently,
-> if no node is found, a warning is emitted, but it could be changed in
-> error.
-> 
-> Signed-off-by: Jérôme Pouiller <jerome.pouiller@silabs.com>
+Fixes gcc '-Wunused-but-set-variable' warning:
 
-Personally, I think you are going to find that this is going to take
-more work to get this cleaned up in the staging tree and then out of it
-into the "real" part of the kernel, instead of just doing the needed
-work out of the tree now and then submitting it "properly" to the right
-part of the tree.
+drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.c: In function rtl8723_cmd_send_packet:
+drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.c:226:5: warning: variable own set but not used [-Wunused-but-set-variable]
 
-But hey, who am I to judge people who like to do extra work!  :)
+It is not used since commit f1d2b4d338bf ("rtlwifi:
+rtl818x: Move drivers into new realtek directory")
 
-I'll go queue this up now, good luck!
+Reported-by: Hulk Robot <hulkci@huawei.com>
+Signed-off-by: zhengbin <zhengbin13@huawei.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-greg k-h
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.c
+index 18ce285..37036e6 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.c
+@@ -223,7 +223,6 @@ bool rtl8723_cmd_send_packet(struct ieee80211_hw *hw,
+ 	struct rtl8192_tx_ring *ring;
+ 	struct rtl_tx_desc *pdesc;
+ 	struct sk_buff *pskb = NULL;
+-	u8 own;
+ 	unsigned long flags;
+
+ 	ring = &rtlpci->tx_ring[BEACON_QUEUE];
+@@ -233,9 +232,6 @@ bool rtl8723_cmd_send_packet(struct ieee80211_hw *hw,
+ 	spin_lock_irqsave(&rtlpriv->locks.irq_th_lock, flags);
+
+ 	pdesc = &ring->desc[0];
+-	own = (u8)rtlpriv->cfg->ops->get_desc(hw, (u8 *)pdesc, true,
+-					      HW_DESC_OWN);
+-
+ 	rtlpriv->cfg->ops->fill_tx_cmddesc(hw, (u8 *)pdesc, 1, 1, skb);
+
+ 	__skb_queue_tail(&ring->queue, skb);
+--
+2.7.4
+
