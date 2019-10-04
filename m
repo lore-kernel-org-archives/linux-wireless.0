@@ -2,84 +2,67 @@ Return-Path: <SRS0=IBNP=X5=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D4914C32792
-	for <linux-wireless@archiver.kernel.org>; Fri,  4 Oct 2019 02:36:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80319C32792
+	for <linux-wireless@archiver.kernel.org>; Fri,  4 Oct 2019 03:10:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B3F2D20865
-	for <linux-wireless@archiver.kernel.org>; Fri,  4 Oct 2019 02:36:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 605EB206C0
+	for <linux-wireless@archiver.kernel.org>; Fri,  4 Oct 2019 03:10:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731951AbfJDCgg (ORCPT
+        id S2387397AbfJDDK3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 3 Oct 2019 22:36:36 -0400
-Received: from szxga07-in.huawei.com ([45.249.212.35]:52336 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728360AbfJDCgg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Oct 2019 22:36:36 -0400
-Received: from DGGEMS409-HUB.china.huawei.com (unknown [172.30.72.58])
-        by Forcepoint Email with ESMTP id 9083BD9F2CCEE641D326;
-        Fri,  4 Oct 2019 10:36:34 +0800 (CST)
-Received: from [127.0.0.1] (10.184.213.217) by DGGEMS409-HUB.china.huawei.com
- (10.3.19.209) with Microsoft SMTP Server id 14.3.439.0; Fri, 4 Oct 2019
- 10:36:27 +0800
-To:     <pkshih@realtek.com>, <kvalo@codeaurora.org>,
-        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
-CC:     <zhengbin13@huawei.com>
-From:   "zhengbin (A)" <zhengbin13@huawei.com>
-Subject: [PATCH v2] rtlwifi: rtl8192ee: Remove set but not used variable 'err'
-Message-ID: <2ca176f2-e9ef-87cd-7f7d-cd51c67da38b@huawei.com>
-Date:   Fri, 4 Oct 2019 10:36:16 +0800
-User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.3.0
-MIME-Version: 1.0
+        Thu, 3 Oct 2019 23:10:29 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:54700 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728962AbfJDDK2 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 3 Oct 2019 23:10:28 -0400
+Authenticated-By: 
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x943AHZx023329, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (RTITCAS11.realtek.com.tw[172.21.6.12])
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x943AHZx023329
+        (version=TLSv1.2 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 4 Oct 2019 11:10:17 +0800
+Received: from RTITMBSVM04.realtek.com.tw ([fe80::e404:880:2ef1:1aa1]) by
+ RTITCAS11.realtek.com.tw ([fe80::7c6d:ced5:c4ff:8297%15]) with mapi id
+ 14.03.0468.000; Fri, 4 Oct 2019 11:10:16 +0800
+From:   Pkshih <pkshih@realtek.com>
+To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "zhengbin13@huawei.com" <zhengbin13@huawei.com>,
+        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: Re: [PATCH v2] rtlwifi: rtl8192ee: Remove set but not used variable 'err'
+Thread-Topic: [PATCH v2] rtlwifi: rtl8192ee: Remove set but not used
+ variable 'err'
+Thread-Index: AQHVelyPBV9gOxQgBk6ZEuGNsgYqX6dJR6gA
+Date:   Fri, 4 Oct 2019 03:10:15 +0000
+Message-ID: <1570158616.3603.1.camel@realtek.com>
+References: <2ca176f2-e9ef-87cd-7f7d-cd51c67da38b@huawei.com>
+In-Reply-To: <2ca176f2-e9ef-87cd-7f7d-cd51c67da38b@huawei.com>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [172.21.69.95]
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
-X-Originating-IP: [10.184.213.217]
-X-CFilter-Loop: Reflected
+Content-ID: <36AA4F202D83474496CDA9A0445FAFE9@realtek.com>
+Content-Transfer-Encoding: base64
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Fixes gcc '-Wunused-but-set-variable' warning:
-
-drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c: In function rtl92ee_download_fw:
-drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c:111:6: warning: variable err set but not used [-Wunused-but-set-variable]
-
-Reported-by: Hulk Robot <hulkci@huawei.com>
-Signed-off-by: zhengbin <zhengbin13@huawei.com>
----
- drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
-index 67305ce..0546242 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
-@@ -108,7 +108,6 @@ int rtl92ee_download_fw(struct ieee80211_hw *hw, bool buse_wake_on_wlan_fw)
-        struct rtlwifi_firmware_header *pfwheader;
-        u8 *pfwdata;
-        u32 fwsize;
--       int err;
-        enum version_8192e version = rtlhal->version;
-
-        if (!rtlhal->pfirmware)
-@@ -146,9 +145,7 @@ int rtl92ee_download_fw(struct ieee80211_hw *hw, bool buse_wake_on_wlan_fw)
-        _rtl92ee_write_fw(hw, version, pfwdata, fwsize);
-        _rtl92ee_enable_fw_download(hw, false);
-
--       err = _rtl92ee_fw_free_to_go(hw);
--
--       return 0;
-+       return _rtl92ee_fw_free_to_go(hw);
- }
-
- static bool _rtl92ee_check_fw_read_last_h2c(struct ieee80211_hw *hw, u8 boxnum)
---
-2.7.4
-
-
+T24gRnJpLCAyMDE5LTEwLTA0IGF0IDEwOjM2ICswODAwLCB6aGVuZ2JpbiAoQSkgd3JvdGU6DQo+
+IEZpeGVzIGdjYyAnLVd1bnVzZWQtYnV0LXNldC12YXJpYWJsZScgd2FybmluZzoNCj4gDQo+IGRy
+aXZlcnMvbmV0L3dpcmVsZXNzL3JlYWx0ZWsvcnRsd2lmaS9ydGw4MTkyZWUvZncuYzogSW4gZnVu
+Y3Rpb24NCj4gcnRsOTJlZV9kb3dubG9hZF9mdzoNCj4gZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVh
+bHRlay9ydGx3aWZpL3J0bDgxOTJlZS9mdy5jOjExMTo2OiB3YXJuaW5nOiB2YXJpYWJsZQ0KPiBl
+cnIgc2V0IGJ1dCBub3QgdXNlZCBbLVd1bnVzZWQtYnV0LXNldC12YXJpYWJsZV0NCj4gDQo+IFJl
+cG9ydGVkLWJ5OiBIdWxrIFJvYm90IDxodWxrY2lAaHVhd2VpLmNvbT4NCj4gU2lnbmVkLW9mZi1i
+eTogemhlbmdiaW4gPHpoZW5nYmluMTNAaHVhd2VpLmNvbT4NCg0KTG9va3MgZ29vZCB0byBtZS4g
+VGhhbmsgeW91LsKgDQoNCkFja2VkLWJ5OiBQaW5nLUtlIFNoaWggPHBrc2hpaEByZWFsdGVrLmNv
+bT4NCg0KDQo=
