@@ -6,86 +6,86 @@ X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
 	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69864C4360C
-	for <linux-wireless@archiver.kernel.org>; Fri,  4 Oct 2019 13:46:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3491C4360C
+	for <linux-wireless@archiver.kernel.org>; Fri,  4 Oct 2019 13:47:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4006820700
-	for <linux-wireless@archiver.kernel.org>; Fri,  4 Oct 2019 13:46:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8A81020873
+	for <linux-wireless@archiver.kernel.org>; Fri,  4 Oct 2019 13:47:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="jN7pYUj2";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="ViTfqnTx"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="jNOBjg77";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="ESd3wgaB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388796AbfJDNqn (ORCPT
+        id S2388869AbfJDNrh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 4 Oct 2019 09:46:43 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:50854 "EHLO
+        Fri, 4 Oct 2019 09:47:37 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:51540 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388733AbfJDNqm (ORCPT
+        with ESMTP id S2388438AbfJDNrh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 4 Oct 2019 09:46:42 -0400
+        Fri, 4 Oct 2019 09:47:37 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 62F9D61A37; Fri,  4 Oct 2019 13:46:41 +0000 (UTC)
+        id 2D517619F4; Fri,  4 Oct 2019 13:47:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1570196801;
-        bh=7z8K8z1kVtW4QRmy9LQUNBsQnTcmL+HKDaKSTRVrlrk=;
+        s=default; t=1570196856;
+        bh=YTbkcIOSoT6sfkliDWftlO8oLXWgzNqKOEziTUyn0HU=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=jN7pYUj2OrIhhdjp/i8GP2SYmK6REE/SkjCzJwZvh4FlUWwxB14XZpz9n/ulXpeue
-         ikaeeDigxkc9pO0IXRR1GXLLbY1moi0FKgATgM8OSxxGvDockGl4qbS+VTY+x9+Owr
-         08eOjd2JjsNQZvTfLFkKPYplzOXGP5hpWB6I9lbU=
+        b=jNOBjg77Md9jO1ArgJgRIulK23TEMZaqZ/JV6WLuLYPcAFqvLwYV/wrUhKsdbZa4+
+         w5LGElS3knZUK4dg6HW4O6t6a/0zSuO2ftehftqW3qQTHvWkSwaLXZ9pn86g47c82J
+         HQLKAoo1QS7TwMt4KXNd4OicHVBiI7ipjxfJor+Q=
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 40FD2613A8;
-        Fri,  4 Oct 2019 13:46:38 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 28C4A6081C;
+        Fri,  4 Oct 2019 13:47:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1570196800;
-        bh=7z8K8z1kVtW4QRmy9LQUNBsQnTcmL+HKDaKSTRVrlrk=;
+        s=default; t=1570196855;
+        bh=YTbkcIOSoT6sfkliDWftlO8oLXWgzNqKOEziTUyn0HU=;
         h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=ViTfqnTxmBIMf4p1Hx277E8BubfHs+nBxCPzvrE/JNSgJ1JjSfbBjO+SzAWFQpDWw
-         NMi5PtAtTJw96KeSqS0vcM8BKX82vv3jiQ542DUG6ovIS6xMyT6P6IfNWdFefh0iOO
-         7gKaeeclOdMMHzX/S8JIFNdXaEeMeAGqlqB+a/gE=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 40FD2613A8
+        b=ESd3wgaBuhMt7Vw0LAcQG80pZLg82sIGccWfnpkFvmJvHKErgvVz/Gwg7OXZMo5M+
+         2QkIUoWqLvWjT5dvTYuD+71vcJusxAhvcD6cEp3WP/XQEpGC9Nr0KI1Jot1RNOuFy3
+         7JvVAlt3hoq+UDbGBByU5Qq4YWhuDrZol0TMOWzM=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 28C4A6081C
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] libertas: remove redundant assignment to variable ret
+Subject: Re: [PATCH] rsi: fix potential null dereference in rsi_probe()
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20191002101517.10836-1-colin.king@canonical.com>
-References: <20191002101517.10836-1-colin.king@canonical.com>
-To:     Colin King <colin.king@canonical.com>
-Cc:     "David S . Miller" <davem@davemloft.net>,
-        libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, kernel-janitors@vger.kernel.org,
-        linux-kernel@vger.kernel.org
+In-Reply-To: <20191002171811.23993-1-efremov@linux.com>
+References: <20191002171811.23993-1-efremov@linux.com>
+To:     Denis Efremov <efremov@linux.com>
+Cc:     linux-wireless@vger.kernel.org, Denis Efremov <efremov@linux.com>,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Siva Rebbagondla <siva8118@gmail.com>
 User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20191004134641.62F9D61A37@smtp.codeaurora.org>
-Date:   Fri,  4 Oct 2019 13:46:41 +0000 (UTC)
+Message-Id: <20191004134736.2D517619F4@smtp.codeaurora.org>
+Date:   Fri,  4 Oct 2019 13:47:36 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Colin King <colin.king@canonical.com> wrote:
+Denis Efremov <efremov@linux.com> wrote:
 
-> From: Colin Ian King <colin.king@canonical.com>
+> The id pointer can be NULL in rsi_probe(). It is checked everywhere except
+> for the else branch in the idProduct condition. The patch adds NULL check
+> before the id dereference in the rsi_dbg() call.
 > 
-> The variable ret is being assigned a value that is never read and is
-> being re-assigned a little later on. The assignment is redundant and hence
-> can be removed.
-> 
-> Addresses-Coverity: ("Unused value")
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> Reviewed-by: Dan Carpenter <dan.carpenter@oracle.com>
+> Fixes: 54fdb318c111 ("rsi: add new device model for 9116")
+> Cc: Amitkumar Karwar <amitkarwar@gmail.com>
+> Cc: Siva Rebbagondla <siva8118@gmail.com>
+> Cc: Kalle Valo <kvalo@codeaurora.org>
+> Signed-off-by: Denis Efremov <efremov@linux.com>
 
 Patch applied to wireless-drivers-next.git, thanks.
 
-60b5b49f6a6e libertas: remove redundant assignment to variable ret
+f170d44bc4ec rsi: fix potential null dereference in rsi_probe()
 
 -- 
-https://patchwork.kernel.org/patch/11170731/
+https://patchwork.kernel.org/patch/11171695/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
