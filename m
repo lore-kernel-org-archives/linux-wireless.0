@@ -6,70 +6,86 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4EF5C4360C
-	for <linux-wireless@archiver.kernel.org>; Fri,  4 Oct 2019 13:14:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89E8EC4360C
+	for <linux-wireless@archiver.kernel.org>; Fri,  4 Oct 2019 13:24:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8CF8A21D81
-	for <linux-wireless@archiver.kernel.org>; Fri,  4 Oct 2019 13:14:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 679C021D81
+	for <linux-wireless@archiver.kernel.org>; Fri,  4 Oct 2019 13:24:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388313AbfJDNOY (ORCPT
+        id S2388333AbfJDNX7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 4 Oct 2019 09:14:24 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:46566 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S2387796AbfJDNOX (ORCPT
+        Fri, 4 Oct 2019 09:23:59 -0400
+Received: from mout.kundenserver.de ([212.227.126.134]:53409 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387952AbfJDNX7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 4 Oct 2019 09:14:23 -0400
-Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
-        by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.92)
-        (envelope-from <luca@coelho.fi>)
-        id 1iGNPZ-0000l2-Lh; Fri, 04 Oct 2019 16:14:22 +0300
-From:   Luca Coelho <luca@coelho.fi>
-To:     kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org
-Date:   Fri,  4 Oct 2019 16:14:09 +0300
-Message-Id: <20191004131414.27372-4-luca@coelho.fi>
-X-Mailer: git-send-email 2.23.0
-In-Reply-To: <20191004131414.27372-1-luca@coelho.fi>
-References: <20191004131414.27372-1-luca@coelho.fi>
+        Fri, 4 Oct 2019 09:23:59 -0400
+Received: from buildfff.adridolf.com ([188.192.135.195]) by
+ mrelayeu.kundenserver.de (mreue012 [212.227.15.167]) with ESMTPSA (Nemesis)
+ id 1N0Ip5-1hsX7b2DmJ-00xL5x; Fri, 04 Oct 2019 15:23:56 +0200
+From:   Adrian Schmutzler <freifunk@adrianschmutzler.de>
+To:     linux-wireless@vger.kernel.org
+Cc:     Pawel Dembicki <paweldembicki@gmail.com>,
+        Felix Fietkau <nbd@nbd.name>
+Subject: [PATCH] mt76x0: eeprom: add support for MAC address from OF
+Date:   Fri,  4 Oct 2019 15:23:49 +0200
+Message-Id: <20191004132349.4924-1-freifunk@adrianschmutzler.de>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 3/8] iwlwifi: mvm: force single phy init
+X-Provags-ID: V03:K1:yW/JQ6pu16OzzS6/VyGukoWRZuL/1OuANGO07xzBePOxSMbndaj
+ xZBYAc5kQPoy1JH62iPX9IB315RNPuxCcKCgIWhOXXZGPZ8gmGwQoBc838QHUW74293g/Od
+ JuqB4KlzOtlDyqr+G7CIR71KqXIH4W3ZNyTDHIoFBDwkimSdE5OUPDSScGRq6qtWhemGpN2
+ sqzEffO3aEFShbwnT5gMQ==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:v6uqdu53s/4=:itXk7U/3//5suAeyTMd85e
+ sUc1nSRCn0NDu3FCHdhw+mXcGIZ3ZAqWwMlBVEdf2cHEx7AXdewy9NmAm1gSLutunxz4N2/bw
+ tPMD/qvgym/g1PDmF5XXsWZV4EdeFdkTYwZp/8A7/19Uc61FuEhRGXcVWvxLTt0/o2WOl6xj/
+ WyAxbcCMPIDtKyyvokTalZO13nfMcWQ8/DEonE3VhP7Z50ZOoeNt+j3DqJs3u9aKwOc64eO6n
+ t/Z4B3WJ6fu8wyAAMMKfzh7LmbDpmcOXCVGMZMFqIemgqcWCqtISNN7rRZz4QtOg6USgrr5Ul
+ OJqsHx8t6urNiffvh7v6uFnFjWMGcS0OUFuxZ6IzyMO9MOQQOdVOCg/KTSzK+avbBls51yDOx
+ VSJdcpqxZJGRv5vEvzhjtyP83R5PxbkHTdukIXVXsA5Vjzf32+2ShoN8mXZIHsp8Q3cTwtDu2
+ +KmJMqa0BxkqPSt2rs4dEigDtjts8bOqh5ioaR5m7dYe5YxjmCFQuQNesiRazh09/Fqa8lzbE
+ TjOgA3ZubcwYNkBkTCB2YH8PeYn1Ouuk+7jZt3XFmzF0NkXm5oYt5gpmV2R3MSAb1xk+JGFt3
+ +qHRZ8xE3bXo+tTdTV18H9BnatbZ3/4lnn/lMtyaoAhpmniYPXvQ8IBLnvncdzoQFfz2wluUR
+ IMI8q4xsKbJG4MN+Aa3PVT4g3VOgdegjWYgKcQ8XbVpqIBNtI36W+RzRDG8q6qqu9klK2Htt+
+ i19sep6GDFdXC7QeYWpXNFyepn941MwdQDHklMWn8B4rTRKEl7hUfkh9vKJUMF57QrZu7u8TW
+ KVBLIgyUfAs25BP3NaPgNF3cFqn3HhWYnY519c6Kb6PJ3A1FbcR2c6WpHf4PEAYn7fKh5UJQ2
+ 9MfPjMH1vFWLi4nXGPj9QRgRO/YikfIEosVzT+fgI=
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Haim Dreyfuss <haim.dreyfuss@intel.com>
+From: Pawel Dembicki <paweldembicki@gmail.com>
 
-The PHY is initialized during device initialization, but devices with
-the tx_siso_diversity flag set need to send PHY_CONFIGURATION_CMD first,
-otherwise the PHY would be reinitialized, causing a SYSASSERT.
+mt76x0e driver only supports MAC addresses from
+calibration data eeprom. Many routers however do not
+have a valid stock address set in this field.
 
-To fix this, use a bit that tells the FW not to complete the PHY
-initialization before a PHY_CONFIGURATION_CMD is received.
+This patch makes it possible to take a MAC address
+from OF (e.g. from mtd).
 
-Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Cc: Felix Fietkau <nbd@nbd.name>
+
+Signed-off-by: Pawel Dembicki <paweldembicki@gmail.com>
+[adjusted for kernel submission]
+Signed-off-by: Adrian Schmutzler <freifunk@adrianschmutzler.de>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index b2eb18eedf02..0d2229319261 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -420,6 +420,9 @@ static int iwl_run_unified_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
- 	};
- 	int ret;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c
+index 9d4426f6905f..48f61fd49c04 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/eeprom.c
+@@ -343,6 +343,7 @@ int mt76x0_eeprom_init(struct mt76x02_dev *dev)
+ 		 version, fae);
  
-+	if (mvm->trans->cfg->tx_with_siso_diversity)
-+		init_cfg.init_flags |= cpu_to_le32(BIT(IWL_INIT_PHY));
-+
- 	lockdep_assert_held(&mvm->mutex);
- 
- 	mvm->rfkill_safe_init_done = false;
+ 	mt76x02_mac_setaddr(dev, dev->mt76.eeprom.data + MT_EE_MAC_ADDR);
++	mt76_eeprom_override(&dev->mt76);
+ 	mt76x0_set_chip_cap(dev);
+ 	mt76x0_set_freq_offset(dev);
+ 	mt76x0_set_temp_offset(dev);
 -- 
-2.23.0
+2.20.1
 
