@@ -2,143 +2,327 @@ Return-Path: <SRS0=+4M0=X6=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.4 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_IN_DEF_DKIM_WL
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93E09C4360C
-	for <linux-wireless@archiver.kernel.org>; Sat,  5 Oct 2019 01:52:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04FC4C4360C
+	for <linux-wireless@archiver.kernel.org>; Sat,  5 Oct 2019 02:09:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 60A7F2084D
-	for <linux-wireless@archiver.kernel.org>; Sat,  5 Oct 2019 01:52:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BD1DA20830
+	for <linux-wireless@archiver.kernel.org>; Sat,  5 Oct 2019 02:09:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="E1+y1nHB";
-	dkim=pass (1024-bit key) header.d=marvell.onmicrosoft.com header.i=@marvell.onmicrosoft.com header.b="dzHZyzRN"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="YA8thqUx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726709AbfJEBwG (ORCPT
+        id S1726053AbfJECJD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 4 Oct 2019 21:52:06 -0400
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:45388 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725887AbfJEBwF (ORCPT
+        Fri, 4 Oct 2019 22:09:03 -0400
+Received: from mail-lf1-f68.google.com ([209.85.167.68]:43727 "EHLO
+        mail-lf1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725887AbfJECJD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 4 Oct 2019 21:52:05 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id x951p68P005145;
-        Fri, 4 Oct 2019 18:51:49 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : references : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=pfpt0818;
- bh=IoOO84f11ZbaAq15IbvyLBf5+bIoLDCYU2mb+DJwKO0=;
- b=E1+y1nHBrGMEQClmp0o+eeOiUpmv1aNw+JZCta7tb0xNGfP5aJjHWFWBT01Zuk/qWNIC
- KX7Jm/3mzCiP6Wp3fP6s3xU3axXn0grvxnps5J7oGSEL8xxq6AlcY+ihUXU/sBArlVR0
- eHY6I6x7JEh2uDs/JB2VG+ceIGpkAJpTVtKQil4HvdepXi8O3i7nkpFDTUrUSKpxsAFx
- ReVs9+0SRLPxMQfCDQebR7dzAOzSuprtIvthcvEJJdsHjSBpF0QumZVRXLH72t9Xq9aZ
- mAY0vO4GmcIHmqD2yRihvH6vMS3P5T1rfYeRr7nQtnLMFXfZapO+vDGcOrObbmRNPXFZ /A== 
-Received: from sc-exch03.marvell.com ([199.233.58.183])
-        by mx0b-0016f401.pphosted.com with ESMTP id 2vd0yaaagh-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Fri, 04 Oct 2019 18:51:48 -0700
-Received: from SC-EXCH01.marvell.com (10.93.176.81) by SC-EXCH03.marvell.com
- (10.93.176.83) with Microsoft SMTP Server (TLS) id 15.0.1367.3; Fri, 4 Oct
- 2019 18:51:47 -0700
-Received: from NAM01-SN1-obe.outbound.protection.outlook.com (104.47.32.51) by
- SC-EXCH01.marvell.com (10.93.176.81) with Microsoft SMTP Server (TLS) id
- 15.0.1367.3 via Frontend Transport; Fri, 4 Oct 2019 18:51:47 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=H3Uq812PHGZub8/N02KIC4JCwE0wX9aMA0hY5K3y98gywmCFdrquhy7boaekwSpyvhNqaS1V+7SwddRJBK95K8yifcuv9k+HVpDHUfiG3IU04rlO51jWa83bYxdAlDJc3TWPKhF0c1U0+izz4JnBtWl8YbnoV5LcB5CQmcEJzieR5k08I/Vigeggb4DfMRDu9CZJjjjB0LvZMgimiOe/yBHN+TGp5z5oRYtDapmMdagrLmTLF2I9E3JkxHjeDzfdRoavlPmQayB0exVkSDfBU5iWWsicl32Nv04AL/7cL5iepVSgudifSf9Ntu/ybSkWZKaUNW5vnuXbsyeHya8iwQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=IoOO84f11ZbaAq15IbvyLBf5+bIoLDCYU2mb+DJwKO0=;
- b=AaJdxrbonGMOhKk+d2GDctYYP+66YACfNGuFI5nQRVw+0L54lpiE2D76EEphos4fpSkEChzoD4R3nDNxTajVTafGbwsYVRC2KOFNxHf+hJ7h/f3uh6oDlK7lTzz48Q9FI9TVi78VGkxATiGzED/1tk+cCyMyACT7WG/9+7w2ZGgk3Atn1eR1DE346RPxoQLsScaAT0snzbq+zhk6+ckDuTyaH9tx/Jxl1OLAItSw8YCvqRU3eEuiKPvYLOwjjWxQJvshayI27SHQ0ZRICXgajt5sHl3nzs0KST89gPWra/U0k6XqYMUwKshgt2t1JUbQqn4ANz64ZDXh6qvb6Ln/1g==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=marvell.com; dmarc=pass action=none header.from=marvell.com;
- dkim=pass header.d=marvell.com; arc=none
+        Fri, 4 Oct 2019 22:09:03 -0400
+Received: by mail-lf1-f68.google.com with SMTP id u3so5688267lfl.10
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Oct 2019 19:09:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=marvell.onmicrosoft.com; s=selector2-marvell-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=IoOO84f11ZbaAq15IbvyLBf5+bIoLDCYU2mb+DJwKO0=;
- b=dzHZyzRNtJJN7SmBVq6DIuPq7BB4V0F8Mi+0F7k5Wb+VaXlShIcNldcSXS2kLQlsbczcHx+MBUm7+ECC1KVnT1MVnqtOdAVCD03KP4owEhFT1Clk3E7lQY4WT7pDO8J2fWPzP/UzGhDNS9i6spbYyj1n7PeU6puo6jGaYUNaghE=
-Received: from MN2PR18MB2637.namprd18.prod.outlook.com (20.179.80.147) by
- MN2PR18MB3133.namprd18.prod.outlook.com (10.255.238.143) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2327.23; Sat, 5 Oct 2019 01:51:45 +0000
-Received: from MN2PR18MB2637.namprd18.prod.outlook.com
- ([fe80::cf1:1b59:ac77:5828]) by MN2PR18MB2637.namprd18.prod.outlook.com
- ([fe80::cf1:1b59:ac77:5828%7]) with mapi id 15.20.2305.023; Sat, 5 Oct 2019
- 01:51:45 +0000
-From:   Ganapathi Bhat <gbhat@marvell.com>
-To:     Navid Emamdoost <navid.emamdoost@gmail.com>
-CC:     "emamd001@umn.edu" <emamd001@umn.edu>,
-        "kjlu@umn.edu" <kjlu@umn.edu>,
-        "smccaman@umn.edu" <smccaman@umn.edu>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Xinming Hu <huxinming820@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [EXT] [PATCH] mwifiex: pcie: Fix memory leak in
- mwifiex_pcie_alloc_cmdrsp_buf
-Thread-Topic: [EXT] [PATCH] mwifiex: pcie: Fix memory leak in
- mwifiex_pcie_alloc_cmdrsp_buf
-Thread-Index: AQHVeu+VjJmN3rtj6Em9c/YO9xW8c6dLQGQQ
-Date:   Sat, 5 Oct 2019 01:51:44 +0000
-Message-ID: <MN2PR18MB263767B6B7B771837F0137F7A0990@MN2PR18MB2637.namprd18.prod.outlook.com>
-References: <20191004200853.23353-1-navid.emamdoost@gmail.com>
-In-Reply-To: <20191004200853.23353-1-navid.emamdoost@gmail.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [106.193.243.133]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 6edf8c16-65ab-4db6-4e60-08d7493693a9
-x-ms-traffictypediagnostic: MN2PR18MB3133:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <MN2PR18MB313387612ACD01A37C35969EA0990@MN2PR18MB3133.namprd18.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:5236;
-x-forefront-prvs: 0181F4652A
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(4636009)(346002)(396003)(376002)(39860400002)(366004)(136003)(199004)(189003)(51914003)(6916009)(6506007)(26005)(102836004)(7696005)(14454004)(74316002)(76176011)(2906002)(7736002)(305945005)(7416002)(8936002)(33656002)(8676002)(99286004)(25786009)(478600001)(81156014)(81166006)(476003)(66556008)(64756008)(66446008)(66476007)(76116006)(66946007)(71200400001)(71190400001)(486006)(5660300002)(52536014)(66066001)(11346002)(446003)(256004)(186003)(3846002)(6116002)(316002)(86362001)(6246003)(4326008)(6436002)(229853002)(9686003)(55016002)(558084003)(54906003);DIR:OUT;SFP:1101;SCL:1;SRVR:MN2PR18MB3133;H:MN2PR18MB2637.namprd18.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-received-spf: None (protection.outlook.com: marvell.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 4fugZ09RWy7jpDc/69RCmFObwP9nc4wwyV/WaRBSgLaOMDV2U1EFzkWpe3ldeFvbKpipfi/7C3FybBcwe76MQVofT+Gw4ukMQtvZcnO4Dsn0+084l1O9sSbrIJtym1Wt2gbCV5Ihu7FhB0ZQ2nr/wWg1NzdZC/u41jChMPuQZEYc36nZUSHRboCBGmjLKDmrqpafoOW1pK/RT4aeM+eLRwYhb1gDBbw3drpN4Aak0+jBIF3++DkwFr/w7kr5+3OcMp7oCDbTU6CDfzqoS4fIAxZFO5FOhteGO9v9QpiDLM1TA219bVqg4Sbdy0MA3W5h+8hlNOZ7KyW4W2DHyX3n/ksWZwRLjwKgehMGFSR1qySMfqYr7CPPVeD92HJqj2etJF3nW7Mk7XMt4WAdeU7fkDP2tQDjRTysq8q00c5qlE0=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=ELNRmNe516bgfnPdnLJ7hxtaf8fCER9+O5NLla272QM=;
+        b=YA8thqUxesXw2JsIZjOdwv0tMxZzE/PQ2JHVe410WVP2UUYtZiMmBU+/6rsD6LjIyi
+         Giw1/nNwcRG8VOOXBm6EATMHqb52/oiPMiv6mJdTJv/jIxuv7TBzgTb8eBY4UrDR6tET
+         HgR6anHqZC/1P9jm9PFzv+yvfYK8ihl7gjDF36jzHHFHRZVG0oDuIhzZf1/zY6LW9ItA
+         o+y/uyVmmf68pf3z9xJBC4ohw76iohQVcGppiaZiCbLpQTqbIOAWnxojjMMNpOiX1E0Q
+         VfBW/Nh56PI5AkP77q/BlW4G9lxkJNryULqSWfa8Lem/6cjCTeP+mHSgp4gYDzwejerR
+         jsAA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=ELNRmNe516bgfnPdnLJ7hxtaf8fCER9+O5NLla272QM=;
+        b=LNnyTN8lpoZoez76/IGy/rta2qa+Nt7X07ZAB+uYzNCII9re06EpDdn3vlY61tN28t
+         mpwaR/ISKzfzzr3M7iKlkTNwyAmIayktSPhDJBadGM7v/OePAKI7QTsGXMoN6LiPtOEH
+         bgZOZa057oLzER5eVMago6AvPVizjb+k1F5Aif4k34BIEdpiLq8Iyu35QhOC3nyTv9FN
+         GcBTdqS7OJPQMfoA1ridd5WOTVsCjjRSchWao8ZQWi7GmpJcc3EH5cGArteJKKFC8chh
+         +pKwyRBDl1g9Pa8ZkCn2DIkz71TTQfvPN6NZOA8FJQ9/0KONWqH32y4Yp1XbdRXPwSYy
+         IUhg==
+X-Gm-Message-State: APjAAAVY1k0+1advLF+KJOYBjj4AcTp6MGWQwLT+LNZZy236Zib1nLS7
+        k6/NHX5//hyiDKr16UB000VGqs8iBn1Ctb00JoGz9g==
+X-Google-Smtp-Source: APXvYqwz2x7U/0l4DMObb6cY7Zt2ejdiVwJfM1zI653d5SimKq6TJzBj2GKYMTw+bd148XMkxCbbOSMQ7a0KnNWYSQQ=
+X-Received: by 2002:ac2:4853:: with SMTP id 19mr10396782lfy.69.1570241340094;
+ Fri, 04 Oct 2019 19:09:00 -0700 (PDT)
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-Network-Message-Id: 6edf8c16-65ab-4db6-4e60-08d7493693a9
-X-MS-Exchange-CrossTenant-originalarrivaltime: 05 Oct 2019 01:51:44.9023
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 70e1fb47-1155-421d-87fc-2e58f638b6e0
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: tE2xeGGPnSff8BVMs590dtTPIszakXCbGZZBrgLDb1LqYbEhwpaHMnCAxll9S6XnFCfZOykowMJAUWk4AcehtA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR18MB3133
-X-OriginatorOrg: marvell.com
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.95,1.0.8
- definitions=2019-10-04_15:2019-10-03,2019-10-04 signatures=0
+References: <20191004062151.131405-1-kyan@google.com> <20191004062151.131405-2-kyan@google.com>
+ <87imp4o6qp.fsf@toke.dk>
+In-Reply-To: <87imp4o6qp.fsf@toke.dk>
+From:   Kan Yan <kyan@google.com>
+Date:   Fri, 4 Oct 2019 19:08:48 -0700
+Message-ID: <CA+iem5vJFRxskyHOKf5K73X8aGH965P4hoiCj-wQtK-Z-47pdg@mail.gmail.com>
+Subject: Re: [PATCH 1/2] mac80211: Implement Airtime-based Queue Limit (AQL)
+To:     =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@redhat.com>
+Cc:     Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org,
+        make-wifi-fast@lists.bufferbloat.net, Felix Fietkau <nbd@nbd.name>,
+        Yibo Zhao <yiboz@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Navid,
+Hi Johannes,
 
-> Fixes: fc3314609047 ("mwifiex: use pci_alloc/free_consistent APIs for PCI=
-e")
+Thanks for help review this patch.  I will fix all style errors.
 
-Thanks for the change;
+> > +ieee80211_txq_airtime_check(struct ieee80211_hw *hw, struct ieee80211_=
+txq *txq);
+> Why is it necessary to call this, vs. just returning NULL when an SKB is
+> requested?
+This function is also called by ath10k, from ath10k_mac_tx_can_push(),
+which returns a boolean.
 
-Acked-by: Ganapathi Bhat <gbhat@marvell.com>
+> However, I'm not sure it *shouldn't* actually be per interface (i.e.
+> moving from
+>         local->aql_total_pending_airtime
+> to
+>
+>         sdata->aql_total_pending_airtime
+>
+> because you could have multiple channels etc. involved and then using a
+> single airtime limit across two interfaces that are actually on two
+> different channels (e.g. 2.4 and 5 GHz) doesn't make that much sense.
+>
+> Actually, it does make some sense as long as the NIC is actually
+> channel-hopping ... but that's in the process of changing now, there's
+> going to be hardware really soon (or perhaps already exists) that has
+> real dual-band capabilities...
 
-Regards,
-Ganapathi
+That's a good point.  I haven't thought about real simultaneous dual
+band chipset and such chipset do exists now. Is RSDB support coming to
+mac80211 soon? Just curious if it will be just virtual interfaces or
+something else. I chose "local" instead of "sdata" thinking about the
+case of several virtual interfaces (AP, STA, MESH) operates in the
+same channel, then the interface total could be a better choice.
 
+I am ok with moving the "aql_total_pending_airtime" into sdata, but
+afraid that's not the most optimal choice for the case of multiple
+virtual interfaces operates in the same channel.
+Maybe we could leave it in "local" for now. What do you think?
 
+Kan
 
-
+On Fri, Oct 4, 2019 at 8:44 AM Toke H=C3=B8iland-J=C3=B8rgensen <toke@redha=
+t.com> wrote:
+>
+> Kan Yan <kyan@google.com> writes:
+>
+> > In order for the Fq_CoDel integrated in mac80211 layer operates
+> > effectively to control excessive queueing latency, the CoDel algorithm
+> > requires an accurate measure of how long the packets stays in the
+> > queue, aka sojourn time. The sojourn time measured at mac80211 layer
+> > doesn't include queueing latency in lower layer (firmware/hardware)
+> > and CoDel expects lower layer to have a short queue. However, most
+> > 802.11ac chipsets offload tasks such TX aggregation to firmware or
+> > hardware, thus have a deep lower layer queue. Without a mechanism to
+> > control the lower layer queue size, packets only stays in mac80211
+> > layer transiently before being released to firmware due to the deep
+> > queue in the lower layer. In this case, the sojourn time measured by
+> > CoDel in the mac80211 layer is always lower than the CoDel latency
+> > target hence it does little to control the latency, even when the lower
+> > layer queue causes excessive latency.
+> >
+> > Byte Queue limits (BQL) is commonly used to address the similar issue
+> > with wired network interface. However, this method can not be applied
+> > directly to the wireless network interface. Byte is not a suitable
+> > measure of queue depth in the wireless network, as the data rate can
+> > vary dramatically from station to station in the same network, from a
+> > few Mbps to over 1 Gbps.
+> >
+> > This patch implemented an Airtime-based Queue Limit (AQL) to make CoDel
+> > works effectively with wireless drivers that utilized firmware/hardware
+> > offloading. It only allows each txq to release just enough packets to
+> > form 1-2 large aggregations to keep hardware fully utilized and keep th=
+e
+> > rest of frames in mac80211 layer to be controlled by CoDel.
+> >
+> > Change-Id: I1427db2c4c7fcb4162b087514dcb06d5613fa5d2
+> > Signed-off-by: Kan Yan <kyan@google.com>
+> > ---
+> >  include/net/cfg80211.h     |  7 ++++
+> >  include/net/mac80211.h     | 34 ++++++++++++++++
+> >  net/mac80211/debugfs.c     | 79 ++++++++++++++++++++++++++++++++++++++
+> >  net/mac80211/debugfs_sta.c | 43 +++++++++++++++------
+> >  net/mac80211/ieee80211_i.h |  4 ++
+> >  net/mac80211/main.c        |  7 +++-
+> >  net/mac80211/sta_info.c    | 23 +++++++++++
+> >  net/mac80211/sta_info.h    |  4 ++
+> >  net/mac80211/tx.c          | 60 ++++++++++++++++++++++++-----
+> >  9 files changed, 239 insertions(+), 22 deletions(-)
+> >
+> > diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+> > index 26e2ad2c7027..301c11be366a 100644
+> > --- a/include/net/cfg80211.h
+> > +++ b/include/net/cfg80211.h
+> > @@ -2499,6 +2499,13 @@ enum wiphy_params_flags {
+> >
+> >  #define IEEE80211_DEFAULT_AIRTIME_WEIGHT     256
+> >
+> > +/* The per TXQ firmware queue limit in airtime */
+> > +#define IEEE80211_DEFAULT_AQL_TXQ_LIMIT_L    4000
+> > +#define IEEE80211_DEFAULT_AQL_TXQ_LIMIT_H    8000
+> > +
+> > +/* The firmware's transmit queue size limit in airtime */
+> > +#define IEEE80211_DEFAULT_AQL_INTERFACE_LIMIT        24000
+> > +
+> >  /**
+> >   * struct cfg80211_pmksa - PMK Security Association
+> >   *
+> > diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+> > index d26da013f7c0..4d62aba3e4b2 100644
+> > --- a/include/net/mac80211.h
+> > +++ b/include/net/mac80211.h
+> > @@ -5543,6 +5543,40 @@ void ieee80211_send_eosp_nullfunc(struct ieee802=
+11_sta *pubsta, int tid);
+> >  void ieee80211_sta_register_airtime(struct ieee80211_sta *pubsta, u8 t=
+id,
+> >                                   u32 tx_airtime, u32 rx_airtime);
+> >
+> > +/**
+> > + * ieee80211_sta_register_pending_airtime - register the estimated air=
+time for
+> > + * the frames pending in lower layer (firmware/hardware) txq.
+> > + *
+> > + * Update the total pending airtime of the frames released to firmware=
+. The
+> > + * pending airtime is used by AQL to control queue size in the lower l=
+ayer.
+> > + *
+> > + * The airtime is estimated using frame length and the last reported d=
+ata
+> > + * rate. The pending airtime for a txq is increased by the estimated
+> > + * airtime when the frame is relased to the lower layer, and decreased=
+ by the
+> > + * same amount at the tx completion event.
+> > + *
+> > + * @pubsta: the station
+> > + * @tid: the TID to register airtime for
+> > + * @tx_airtime: the estimated airtime (in usec)
+> > + * @tx_commpleted: true if called from the tx completion event.
+> > + */
+> > +void ieee80211_sta_register_pending_airtime(struct ieee80211_sta *pubs=
+ta,
+> > +                                         u8 tid, u32 tx_airtime,
+> > +                                         bool tx_completed);
+> > +
+> > +/**
+> > + * ieee80211_txq_aritme_check - check if the airtime limit of AQL (Air=
+time based
+> > + * queue limit) has been reached.
+> > + * @hw: pointer obtained from ieee80211_alloc_hw()
+> > + * @txq: pointer obtained from station or virtual interface
+> > + * Retrun true if the queue limit has not been reached and txq can con=
+tinue to
+> > + * release packets to the lower layer.
+> > + * Return false if the queue limit has been reached and the txq should=
+ not
+> > + * release more frames to the lower layer.
+> > + */
+> > +bool
+> > +ieee80211_txq_airtime_check(struct ieee80211_hw *hw, struct ieee80211_=
+txq *txq);
+> > +
+>
+> So I think it'll be better to pass up the last_rate and have mac80211
+> calculate the airtime (like I did in my patch set). But we can keep the
+> rest of your logic and just switch the calculation, I guess?
+>
+> I'd like to use the new rate calculation code that Felix added to mt76.
+> Is the arsta->txrate info in ath10k suitable to be passed up to mac80211
+> and used in that, do you think? Because then that would probably be the
+> easiest way to go about it...
+>
+> [...]
+>
+> > @@ -3726,9 +3733,7 @@ void __ieee80211_schedule_txq(struct ieee80211_hw=
+ *hw,
+> >                * get immediately moved to the back of the list on the n=
+ext
+> >                * call to ieee80211_next_txq().
+> >                */
+> > -             if (txqi->txq.sta &&
+> > -                 wiphy_ext_feature_isset(local->hw.wiphy,
+> > -                                         NL80211_EXT_FEATURE_AIRTIME_F=
+AIRNESS))
+> > +             if (txqi->txq.sta && local->airtime_flags & AIRTIME_USE_T=
+X)
+>
+> This is wrong. The USE_TX/USE_RX flags just set which types of airtime
+> will be subtracted from the deficit. We should still be running the
+> scheduler if *either* of them is set...
+>
+> >                       list_add(&txqi->schedule_order,
+> >                                &local->active_txqs[txq->ac]);
+> >               else
+> > @@ -3740,6 +3745,37 @@ void __ieee80211_schedule_txq(struct ieee80211_h=
+w *hw,
+> >  }
+> >  EXPORT_SYMBOL(__ieee80211_schedule_txq);
+> >
+> > +bool ieee80211_txq_airtime_check(struct ieee80211_hw *hw,
+> > +                          struct ieee80211_txq *txq)
+> > +{
+> > +     struct sta_info *sta;
+> > +     struct ieee80211_local *local =3D hw_to_local(hw);
+> > +
+> > +
+> > +     if (!(local->airtime_flags & AIRTIME_USE_TX))
+>
+> Ditto.
+>
+> > +             return true;
+> > +
+> > +     if (!txq->sta)
+> > +             return true;
+> > +
+> > +     sta =3D container_of(txq->sta, struct sta_info, sta);
+> > +     if (sta->airtime[txq->ac].deficit < 0)
+> > +             return false;
+> > +
+> > +     if (!(local->airtime_flags & AIRTIME_USE_AQL))
+> > +             return true;
+> > +
+> > +     if ((sta->airtime[txq->ac].aql_tx_pending <
+> > +          sta->airtime[txq->ac].aql_limit_low) ||
+> > +         (local->aql_total_pending_airtime < local->aql_interface_limi=
+t &&
+> > +          sta->airtime[txq->ac].aql_tx_pending <
+> > +          sta->airtime[txq->ac].aql_limit_high))
+> > +             return true;
+> > +     else
+> > +             return false;
+> > +}
+> > +EXPORT_SYMBOL(ieee80211_txq_airtime_check);
+> > +
+> >  bool ieee80211_txq_may_transmit(struct ieee80211_hw *hw,
+> >                               struct ieee80211_txq *txq)
+> >  {
+> > @@ -3748,10 +3784,13 @@ bool ieee80211_txq_may_transmit(struct ieee8021=
+1_hw *hw,
+> >       struct sta_info *sta;
+> >       u8 ac =3D txq->ac;
+> >
+> > -     spin_lock_bh(&local->active_txq_lock[ac]);
+> > -
+> >       if (!txqi->txq.sta)
+> > -             goto out;
+> > +             return true;
+> > +
+> > +     if (!(local->airtime_flags & AIRTIME_USE_TX))
+>
+> Ditto.
+>
+>
+> -Toke
+>
