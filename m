@@ -2,124 +2,107 @@ Return-Path: <SRS0=BfPD=YA=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A96FECE58D
-	for <linux-wireless@archiver.kernel.org>; Mon,  7 Oct 2019 14:10:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B55FC47404
+	for <linux-wireless@archiver.kernel.org>; Mon,  7 Oct 2019 15:37:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E62E420867
-	for <linux-wireless@archiver.kernel.org>; Mon,  7 Oct 2019 14:10:26 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="OpkeW5Y0"
+	by mail.kernel.org (Postfix) with ESMTP id 390A321655
+	for <linux-wireless@archiver.kernel.org>; Mon,  7 Oct 2019 15:37:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728121AbfJGOKY (ORCPT
+        id S1728511AbfJGPhf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 7 Oct 2019 10:10:24 -0400
-Received: from nbd.name ([46.4.11.11]:59052 "EHLO nbd.name"
+        Mon, 7 Oct 2019 11:37:35 -0400
+Received: from muru.com ([72.249.23.125]:35584 "EHLO muru.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727904AbfJGOKY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 Oct 2019 10:10:24 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Message-Id:Date:Subject:To:From:Sender:Reply-To:Cc:
-        MIME-Version:Content-Type:Content-Transfer-Encoding:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=SzMS/xNH5yS9K5OiOz59Z65xWoHUa7vNVY+jV5vKe18=; b=OpkeW5Y0OJJXNbKE4dX13aAQDd
-        aqgQ9hdLUzlELjmuLSwKWoILZUgMBqIaASFht6q1yWJVmzvfJ1MYcoitH7u6H64qirap07LR1mbU5
-        MSYRXAc6ayaV/9kTpDtmssFuZN1wUfvcioOaVyjcoydg9WrWe6yN4WHpX4b2ovkZrRMg=;
-Received: from p54ae9582.dip0.t-ipconnect.de ([84.174.149.130] helo=maeck.lan)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.89)
-        (envelope-from <nbd@nbd.name>)
-        id 1iHTiQ-0002Wq-Un
-        for linux-wireless@vger.kernel.org; Mon, 07 Oct 2019 16:10:23 +0200
-Received: by maeck.lan (Postfix, from userid 501)
-        id 5B1AC6AB2C98; Mon,  7 Oct 2019 16:10:22 +0200 (CEST)
-From:   Felix Fietkau <nbd@nbd.name>
-To:     linux-wireless@vger.kernel.org
-Subject: [PATCH 1/4] mt76: add missing locking around ampdu action
-Date:   Mon,  7 Oct 2019 16:10:19 +0200
-Message-Id: <20191007141022.75184-1-nbd@nbd.name>
-X-Mailer: git-send-email 2.17.0
+        id S1728071AbfJGPhf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 7 Oct 2019 11:37:35 -0400
+Received: from hillo.muru.com (localhost [127.0.0.1])
+        by muru.com (Postfix) with ESMTP id 6FDE880A5;
+        Mon,  7 Oct 2019 15:38:07 +0000 (UTC)
+From:   Tony Lindgren <tony@atomide.com>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     Eyal Reizer <eyalr@ti.com>, Kishon Vijay Abraham I <kishon@ti.com>,
+        Guy Mishol <guym@ti.com>, linux-wireless@vger.kernel.org,
+        linux-omap@vger.kernel.org,
+        Anders Roxell <anders.roxell@linaro.org>,
+        John Stultz <john.stultz@linaro.org>,
+        Ulf Hansson <ulf.hansson@linaro.org>
+Subject: [PATCH] wlcore: fix race for WL1271_FLAG_IRQ_RUNNING
+Date:   Mon,  7 Oct 2019 08:37:31 -0700
+Message-Id: <20191007153731.58045-1-tony@atomide.com>
+X-Mailer: git-send-email 2.23.0
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This is needed primarily to avoid races in dealing with rx aggregation
-related data structures
+We set WL1271_FLAG_IRQ_RUNNING in the beginning of wlcore_irq(), and test
+for it in wlcore_runtime_resume(). But WL1271_FLAG_IRQ_RUNNING currently
+gets cleared too early by wlcore_irq_locked() before wlcore_irq() is done
+calling it. And this will race against wlcore_runtime_resume() testing it.
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Let's set and clear IRQ_RUNNING in wlcore_irq() so wlcore_runtime_resume()
+can rely on it. And let's remove old comments about hardirq, that's no
+longer the case as we're using request_threaded_irq().
+
+This fixes occasional annoying wlcore firmware reboots stat start with
+"wlcore: WARNING ELP wakeup timeout!" followed by a multisecond latency
+when the wlcore firmware gets wrongly rebooted waiting for an ELP wake
+interrupt that won't be coming.
+
+Note that I also suspect some form of this issue was the root cause why
+the wlcore GPIO interrupt has been often configured as a level interrupt
+instead of edge as an attempt to work around the ELP wake timeout errors.
+
+Fixes: fa2648a34e73 ("wlcore: Add support for runtime PM")
+Cc: Anders Roxell <anders.roxell@linaro.org>
+Cc: Eyal Reizer <eyalr@ti.com>
+Cc: Guy Mishol <guym@ti.com>
+Cc: John Stultz <john.stultz@linaro.org>
+Cc: Ulf Hansson <ulf.hansson@linaro.org>
+Signed-off-by: Tony Lindgren <tony@atomide.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7603/main.c  | 2 ++
- drivers/net/wireless/mediatek/mt76/mt7615/main.c  | 2 ++
- drivers/net/wireless/mediatek/mt76/mt76x02_util.c | 2 ++
- 3 files changed, 6 insertions(+)
+ drivers/net/wireless/ti/wlcore/main.c | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/main.c b/drivers/net/wireless/mediatek/mt76/mt7603/main.c
-index 180eb6bb781a..c4dac556fb2e 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7603/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7603/main.c
-@@ -569,6 +569,7 @@ mt7603_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 
- 	mtxq = (struct mt76_txq *)txq->drv_priv;
- 
-+	mutex_lock(&dev->mt76.mutex);
- 	switch (action) {
- 	case IEEE80211_AMPDU_RX_START:
- 		mt76_rx_aggr_start(&dev->mt76, &msta->wcid, tid, ssn,
-@@ -598,6 +599,7 @@ mt7603_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		ieee80211_stop_tx_ba_cb_irqsafe(vif, sta->addr, tid);
- 		break;
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -544,11 +544,6 @@ static int wlcore_irq_locked(struct wl1271 *wl)
  	}
-+	mutex_unlock(&dev->mt76.mutex);
  
- 	return 0;
- }
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/main.c b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
-index 942076b6d1ad..d9f4d425424c 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
-@@ -483,6 +483,7 @@ mt7615_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 	while (!done && loopcount--) {
+-		/*
+-		 * In order to avoid a race with the hardirq, clear the flag
+-		 * before acknowledging the chip.
+-		 */
+-		clear_bit(WL1271_FLAG_IRQ_RUNNING, &wl->flags);
+ 		smp_mb__after_atomic();
  
- 	mtxq = (struct mt76_txq *)txq->drv_priv;
- 
-+	mutex_lock(&dev->mt76.mutex);
- 	switch (action) {
- 	case IEEE80211_AMPDU_RX_START:
- 		mt76_rx_aggr_start(&dev->mt76, &msta->wcid, tid, ssn,
-@@ -513,6 +514,7 @@ mt7615_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		ieee80211_stop_tx_ba_cb_irqsafe(vif, sta->addr, tid);
- 		break;
+ 		ret = wlcore_fw_status(wl, wl->fw_status);
+@@ -668,7 +663,7 @@ static irqreturn_t wlcore_irq(int irq, void *cookie)
+ 		disable_irq_nosync(wl->irq);
+ 		pm_wakeup_event(wl->dev, 0);
+ 		spin_unlock_irqrestore(&wl->wl_lock, flags);
+-		return IRQ_HANDLED;
++		goto out_handled;
  	}
-+	mutex_unlock(&dev->mt76.mutex);
+ 	spin_unlock_irqrestore(&wl->wl_lock, flags);
  
- 	return 0;
+@@ -692,6 +687,9 @@ static irqreturn_t wlcore_irq(int irq, void *cookie)
+ 
+ 	mutex_unlock(&wl->mutex);
+ 
++out_handled:
++	clear_bit(WL1271_FLAG_IRQ_RUNNING, &wl->flags);
++
+ 	return IRQ_HANDLED;
  }
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-index f5695ebdb225..bb7edf288597 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-@@ -372,6 +372,7 @@ int mt76x02_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
  
- 	mtxq = (struct mt76_txq *)txq->drv_priv;
- 
-+	mutex_lock(&dev->mt76.mutex);
- 	switch (action) {
- 	case IEEE80211_AMPDU_RX_START:
- 		mt76_rx_aggr_start(&dev->mt76, &msta->wcid, tid,
-@@ -401,6 +402,7 @@ int mt76x02_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		ieee80211_stop_tx_ba_cb_irqsafe(vif, sta->addr, tid);
- 		break;
- 	}
-+	mutex_unlock(&dev->mt76.mutex);
- 
- 	return 0;
- }
 -- 
-2.17.0
-
+2.23.0
