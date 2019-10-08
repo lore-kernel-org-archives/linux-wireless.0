@@ -2,106 +2,85 @@ Return-Path: <SRS0=jiki=YB=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71D2EECE596
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Oct 2019 08:21:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5013AC4360C
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Oct 2019 09:18:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 542DF206BB
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Oct 2019 08:21:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 245AD206C2
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Oct 2019 09:18:50 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=ncentric-com.20150623.gappssmtp.com header.i=@ncentric-com.20150623.gappssmtp.com header.b="cPqArEJ4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730609AbfJHIVP (ORCPT
+        id S1730038AbfJHJSt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Oct 2019 04:21:15 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:47347 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730554AbfJHIVO (ORCPT
+        Tue, 8 Oct 2019 05:18:49 -0400
+Received: from mail-ed1-f52.google.com ([209.85.208.52]:36484 "EHLO
+        mail-ed1-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729375AbfJHJSt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Oct 2019 04:21:14 -0400
-Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x988L8Yc028146, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (RTITCASV01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x988L8Yc028146
-        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
-        Tue, 8 Oct 2019 16:21:09 +0800
-Received: from localhost.localdomain (172.21.68.126) by
- RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
- 14.3.468.0; Tue, 8 Oct 2019 16:21:08 +0800
-From:   <yhchuang@realtek.com>
-To:     <kvalo@codeaurora.org>
-CC:     <linux-wireless@vger.kernel.org>, <briannorris@chromium.org>
-Subject: [PATCH 06/10] rtw88: add NL80211_EXT_FEATURE_CAN_REPLACE_PTK0 support
-Date:   Tue, 8 Oct 2019 16:20:57 +0800
-Message-ID: <20191008082101.2494-7-yhchuang@realtek.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20191008082101.2494-1-yhchuang@realtek.com>
-References: <20191008082101.2494-1-yhchuang@realtek.com>
+        Tue, 8 Oct 2019 05:18:49 -0400
+Received: by mail-ed1-f52.google.com with SMTP id h2so14992179edn.3
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Oct 2019 02:18:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ncentric-com.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-transfer-encoding:content-language;
+        bh=XJNzwuSACqoG+YjSXJpWGWIqK0oqnbLGm7FyNj3gfNY=;
+        b=cPqArEJ438pOxalTUW86kmCX4xhal4ix+RV8c8SHc/TcSU4gE33HWQ/8u5fQc5smIl
+         Ict0SZAcQk5TLUbrg0suFIC1j9Fi4LKUy18Tdb7WNzYCSFH8zwRjUcZyE2UpHfCE8U27
+         OJ2EsL0E3i+EDr+h7T3i9W+SqqvbI9oqOPnbV0nxuukyGx7rAdUsNbu2X5/MbwT0MXSw
+         Cib3OFzTPg/lq0K1N5CS83S+Ig07NpUcppW9hIPC1ZPET+TJiWO+cM81VSyCy2/Sae+h
+         DSThFDj5JTBD6UBQs/cV5bSpa28LGRO5+X0K+BYJT9div96dd1EQWLVqoEUt3d3wEQ0f
+         xqMg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-transfer-encoding
+         :content-language;
+        bh=XJNzwuSACqoG+YjSXJpWGWIqK0oqnbLGm7FyNj3gfNY=;
+        b=Ra9m7yih/uDzWjTuW4x1EYnrUoo2iaZlAWUxNNGz0ysORhaF/UCoDRVTblNnqM1uIa
+         seaooV50iKEYXvC2ICSYKwzBi/0fOoMbWSIMzhBz+wvcndTv8QE97wVOHV9q9KcilgG2
+         CLzrH+CD2WujSX4g7zu0K3/hjByUeFeNQ7kMkEJHQAQGNvqpmrnNokvr/0hu8T4k3uKv
+         DETqWrCAJiVPBQgnLOzIgi8Vo6/YknEIbT9PAIPTuPTYiL5oHq8l4i3aHO6suGqXYL3R
+         FZhGJ4Q7Lt5VniJO5weD9kUa6BYyI/oAkRkezDU0SVqAmTBDMmb9RdqDqGr0XO31qZlb
+         Uw7g==
+X-Gm-Message-State: APjAAAUql+aIc5C1yuShHAdeHrEsSPDzUKQFdMd+mpvLZC1h6LZU9D1W
+        MsFdoQ1qf7/b30Ui6qVZXu4ZSQ==
+X-Google-Smtp-Source: APXvYqw2RpwD4vEI/quEsrxSTUFxvJbJUmj2AejKSv4bhUH49UUTFp/W9tVKv3vXUFda0RAzDbH5iQ==
+X-Received: by 2002:a17:906:81c6:: with SMTP id e6mr27466019ejx.284.1570526326383;
+        Tue, 08 Oct 2019 02:18:46 -0700 (PDT)
+Received: from [192.168.3.176] (d515300d8.static.telenet.be. [81.83.0.216])
+        by smtp.gmail.com with ESMTPSA id rl4sm2207819ejb.27.2019.10.08.02.18.45
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 08 Oct 2019 02:18:45 -0700 (PDT)
+Subject: Re: [PATCH 2/2] mac80211: minstrel_ht: replace rate stats ewma with a
+ better moving average
+To:     Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
+Cc:     johannes@sipsolutions.net
+References: <20190929154646.90901-1-nbd@nbd.name>
+ <20190929154646.90901-2-nbd@nbd.name>
+From:   Koen Vandeputte <koen.vandeputte@ncentric.com>
+Message-ID: <a60a96ba-e344-fd5a-7af0-caea23f21945@ncentric.com>
+Date:   Tue, 8 Oct 2019 11:18:44 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [172.21.68.126]
+In-Reply-To: <20190929154646.90901-2-nbd@nbd.name>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Tzu-En Huang <tehuang@realtek.com>
+Tested on dozens of devices interconnected offshore in IBSS (static and 
+moving)
 
-Add support for NL80211_EXT_FEATURE_CAN_REPLACE_PTK0 feature.
-According to the "Hardware crypto acceleration" documentation section,
-when set_key() is called with %DISABLE_KEY command, for outgoing frames,
-we flush out frames in the queues with the old key; for incoming frames,
-no frames will be passed to mac80211 decrypted with the old key due to
-rtw_sec_clear_cam().
+Works as advertised and reduces slight drops noticed on vessel movement.
 
-Signed-off-by: Tzu-En Huang <tehuang@realtek.com>
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
----
- drivers/net/wireless/realtek/rtw88/mac.h      | 5 +++++
- drivers/net/wireless/realtek/rtw88/mac80211.c | 1 +
- drivers/net/wireless/realtek/rtw88/main.c     | 2 ++
- 3 files changed, 8 insertions(+)
-
-diff --git a/drivers/net/wireless/realtek/rtw88/mac.h b/drivers/net/wireless/realtek/rtw88/mac.h
-index a67fa82973e4..592dc830160c 100644
---- a/drivers/net/wireless/realtek/rtw88/mac.h
-+++ b/drivers/net/wireless/realtek/rtw88/mac.h
-@@ -33,4 +33,9 @@ int rtw_download_firmware(struct rtw_dev *rtwdev, struct rtw_fw_state *fw);
- int rtw_mac_init(struct rtw_dev *rtwdev);
- void rtw_mac_flush_queues(struct rtw_dev *rtwdev, u32 queues, bool drop);
- 
-+static inline void rtw_mac_flush_all_queues(struct rtw_dev *rtwdev, bool drop)
-+{
-+	rtw_mac_flush_queues(rtwdev, BIT(rtwdev->hw->queues) - 1, drop);
-+}
-+
- #endif
-diff --git a/drivers/net/wireless/realtek/rtw88/mac80211.c b/drivers/net/wireless/realtek/rtw88/mac80211.c
-index 3e4f2f27ced2..2247bd61e716 100644
---- a/drivers/net/wireless/realtek/rtw88/mac80211.c
-+++ b/drivers/net/wireless/realtek/rtw88/mac80211.c
-@@ -546,6 +546,7 @@ static int rtw_ops_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 				  hw_key_type, hw_key_idx);
- 		break;
- 	case DISABLE_KEY:
-+		rtw_mac_flush_all_queues(rtwdev, false);
- 		rtw_sec_clear_cam(rtwdev, sec, key->hw_key_idx);
- 		break;
- 	}
-diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
-index edd490c507b5..71f11c973307 100644
---- a/drivers/net/wireless/realtek/rtw88/main.c
-+++ b/drivers/net/wireless/realtek/rtw88/main.c
-@@ -1403,6 +1403,8 @@ int rtw_register_hw(struct rtw_dev *rtwdev, struct ieee80211_hw *hw)
- 
- 	hw->wiphy->features |= NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR;
- 
-+	wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_CAN_REPLACE_PTK0);
-+
- 	rtw_set_supported_band(hw, rtwdev->chip);
- 	SET_IEEE80211_PERM_ADDR(hw, rtwdev->efuse.addr);
- 
--- 
-2.17.1
+Tested-by: Koen Vandeputte <koen.vandeputte@ncentric.com>
 
