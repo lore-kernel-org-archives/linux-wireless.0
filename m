@@ -2,118 +2,113 @@ Return-Path: <SRS0=jiki=YB=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82E3CC10F14
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Oct 2019 17:11:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A4E0C4360C
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Oct 2019 18:50:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5AC35206C2
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Oct 2019 17:11:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 50C8521835
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Oct 2019 18:50:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="HpxjrR2z"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lDnYQqc4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727876AbfJHRLn (ORCPT
+        id S1729412AbfJHSu6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Oct 2019 13:11:43 -0400
-Received: from nbd.name ([46.4.11.11]:40302 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726138AbfJHRLm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Oct 2019 13:11:42 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
-        MIME-Version:Content-Type:Content-Transfer-Encoding:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=pQj+MbErxLF/AoTx92UNgwkNq1oEtPrBNHakCtTqRfk=; b=HpxjrR2zpEKmrrG4W6DWL49zIB
-        74C4ADZpN35K3Dlui72PtFXAbGO0SQMgnb7ukw9t18niNhvWvfg2ohokb4Bgi1mO9lwqfu8Ust/A7
-        LrBXJQPwDAnni5yte5E1OItN5hf27R5FCB6CKr8rmh3Tj4UefprteV+HE+AWrKmYv5nQ=;
-Received: from p54ae92e8.dip0.t-ipconnect.de ([84.174.146.232] helo=maeck.local)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.89)
-        (envelope-from <nbd@nbd.name>)
-        id 1iHt1Q-0006Pv-5Z; Tue, 08 Oct 2019 19:11:40 +0200
-Received: by maeck.local (Postfix, from userid 501)
-        id 778D66AF2799; Tue,  8 Oct 2019 19:11:39 +0200 (CEST)
-From:   Felix Fietkau <nbd@nbd.name>
-To:     linux-wireless@vger.kernel.org
-Cc:     johannes@sipsolutions.net
-Subject: [PATCH v2 1/3] mac80211: minstrel: remove divisions in tx status path
-Date:   Tue,  8 Oct 2019 19:11:37 +0200
-Message-Id: <20191008171139.96476-1-nbd@nbd.name>
-X-Mailer: git-send-email 2.17.0
+        Tue, 8 Oct 2019 14:50:58 -0400
+Received: from mail-ot1-f68.google.com ([209.85.210.68]:38200 "EHLO
+        mail-ot1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726098AbfJHSu6 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 8 Oct 2019 14:50:58 -0400
+Received: by mail-ot1-f68.google.com with SMTP id e11so14966961otl.5
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Oct 2019 11:50:57 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:references:from:message-id:date:user-agent:mime-version
+         :in-reply-to:content-language:content-transfer-encoding;
+        bh=4ojXyagueRpYxGulw3wDVpX2f6vxGjdaDyeBInEnQcA=;
+        b=lDnYQqc4wkzEla06oo4AW7tir7aVOFZqEVwKnWjimDODuxDtSPWcUibW8cv9jZaJEA
+         t3WzS/5jGUoQ+wwDl9yIggKaYji9fxJ+zn2GG/e8P/fqtjSRIJ6TsXl5WPSLBNTugnqa
+         W4Qf4twMu11wPN6BHr86MkFqXSdfua69yOmYBZMZmd3yyhWFTeEaizfC/6pJbp8hJNYe
+         B83ierWvZAF+pZ0auF24i4i09nZMjsp1OMQXeMvcP+KEhUKgQiQyU4P2TaAOLfYecx6U
+         uJqqAG21JO1uqnfsWKvXLZcUoaWQmGrh36Z2NRwdDPRkPrXPUGjIn3ZagPXrO9SoV3o4
+         ydMg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=4ojXyagueRpYxGulw3wDVpX2f6vxGjdaDyeBInEnQcA=;
+        b=o4zcB7YKSbfWYHOEhmkMvGwFscpbyNjB2l7nuIYPq52lX+NRO+E83TpfiIJr8OKO0Z
+         575NxXnzyaaKo3u0g/sHK3fY0SaR11tHW90LqhfMGwTGLMuUx5i1eJB6QLWmccW3Cm99
+         yJbH4HclTkqWYqJ13IofLWM91ymHUEFyACLuwYhP2Kp4636HjFiEx0sVI+4mATriuZUT
+         /lAP2seYnjcXsPZbDah2i1iSVjXl/dPKTS1vhdMoyCWPrKz463pK/ZUyGNBi4rzT6/l+
+         y3qMiELRc4u+AMUO+DHieIRjEPm9V43vbap/lo2TonThV+aCSIKd/lU9ZxnQCf92unz2
+         d2vQ==
+X-Gm-Message-State: APjAAAUm1saeIfKly7sOBevluwrrrgCQ13CJWqAKlvc9/fo2cmfx0A1k
+        2F4JOELSI1sTm0aMvK3SR293KrAp
+X-Google-Smtp-Source: APXvYqxEKPBsZamFhTyVrg0Texbi1t2OPyiwWuwvZnKtm2rmHnWpJau3Z72YgUo6OqtfjbFXzfzepQ==
+X-Received: by 2002:a9d:3463:: with SMTP id v90mr27211682otb.29.1570560657292;
+        Tue, 08 Oct 2019 11:50:57 -0700 (PDT)
+Received: from [192.168.1.249] (cpe-70-114-247-242.austin.res.rr.com. [70.114.247.242])
+        by smtp.googlemail.com with ESMTPSA id a9sm5768341otc.75.2019.10.08.11.50.56
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 08 Oct 2019 11:50:56 -0700 (PDT)
+Subject: Re: [PATCH 2/2] mac80211: Support LIVE_ADDRESS_CHANGE feature
+To:     Johannes Berg <johannes@sipsolutions.net>,
+        James Prestwood <prestwoj@gmail.com>,
+        linux-wireless@vger.kernel.org
+References: <20190913195908.7871-1-prestwoj@gmail.com>
+ <20190913195908.7871-2-prestwoj@gmail.com>
+ <c6835b5c5d2a97fa82b0fb21f7b7f0056aa42e1b.camel@sipsolutions.net>
+ <90ae00044bc0834d87d3f9fb75ce63dce4cfadd5.camel@gmail.com>
+ <0b57c1288016310050ccd6233dda886fc4a89b02.camel@gmail.com>
+ <f468a8d573ddf401d2084b76eb625fef5950f265.camel@sipsolutions.net>
+ <6fa34e4c-5c81-4875-da29-cada1a078e2c@gmail.com>
+ <6530a6b06176790c5a6949d6ffccf37b506975bd.camel@sipsolutions.net>
+ <864267ec-9158-940d-6e0e-db84a395888e@gmail.com>
+ <f02b81f6dac29da911f8793b952a9efb6a1fdb62.camel@sipsolutions.net>
+ <1bb5450b-bc4e-8c83-f99e-fc7e739b08f0@gmail.com>
+ <fbb287a82656dd3f89817590e86b23d6968a2822.camel@sipsolutions.net>
+From:   Denis Kenzior <denkenz@gmail.com>
+Message-ID: <193168d4-6466-60a4-bc89-c4a44e84ac46@gmail.com>
+Date:   Tue, 8 Oct 2019 13:50:55 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
+MIME-Version: 1.0
+In-Reply-To: <fbb287a82656dd3f89817590e86b23d6968a2822.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Use a slightly different threshold for downgrading spatial streams to
-make it easier to calculate without divisions.
-Slightly reduces CPU overhead.
+Hi Johannes,
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- net/mac80211/rc80211_minstrel.c    |  3 +--
- net/mac80211/rc80211_minstrel_ht.c | 10 ++++------
- 2 files changed, 5 insertions(+), 8 deletions(-)
+>> But they shouldn't change due a mac address change?  I wonder if we can
+>> further relax the requirements to allow mac change if
+>> NL80211_SCAN_FLAG_RANDOM_ADDR was used?
+> 
+> No, at least with HW scan that would completely confuse the driver -
+> since from the driver's POV we'd remove the interface it's currently
+> managing the scan for.
 
-diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
-index ee86c3333999..f73017e08111 100644
---- a/net/mac80211/rc80211_minstrel.c
-+++ b/net/mac80211/rc80211_minstrel.c
-@@ -289,8 +289,7 @@ minstrel_tx_status(void *priv, struct ieee80211_supported_band *sband,
- 	if (mi->sample_deferred > 0)
- 		mi->sample_deferred--;
- 
--	if (time_after(jiffies, mi->last_stats_update +
--				(mp->update_interval * HZ) / 1000))
-+	if (time_after(jiffies, mi->last_stats_update + mp->update_interval))
- 		minstrel_update_stats(mp, mi);
- }
- 
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 0ef2633349b5..21c74b200269 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -970,23 +970,21 @@ minstrel_ht_tx_status(void *priv, struct ieee80211_supported_band *sband,
- 		 */
- 		rate = minstrel_get_ratestats(mi, mi->max_tp_rate[0]);
- 		if (rate->attempts > 30 &&
--		    MINSTREL_FRAC(rate->success, rate->attempts) <
--		    MINSTREL_FRAC(20, 100)) {
-+		    rate->success < rate->attempts / 4) {
- 			minstrel_downgrade_rate(mi, &mi->max_tp_rate[0], true);
- 			update = true;
- 		}
- 
- 		rate2 = minstrel_get_ratestats(mi, mi->max_tp_rate[1]);
- 		if (rate2->attempts > 30 &&
--		    MINSTREL_FRAC(rate2->success, rate2->attempts) <
--		    MINSTREL_FRAC(20, 100)) {
-+		    rate2->success < rate2->attempts / 4) {
- 			minstrel_downgrade_rate(mi, &mi->max_tp_rate[1], false);
- 			update = true;
- 		}
- 	}
- 
- 	if (time_after(jiffies, mi->last_stats_update +
--				(mp->update_interval / 2 * HZ) / 1000)) {
-+				mp->update_interval / 2)) {
- 		update = true;
- 		minstrel_ht_update_stats(mp, mi, true);
- 	}
-@@ -1666,7 +1664,7 @@ minstrel_ht_alloc(struct ieee80211_hw *hw, struct dentry *debugfsdir)
- 		mp->has_mrr = true;
- 
- 	mp->hw = hw;
--	mp->update_interval = 100;
-+	mp->update_interval = HZ / 10;
- 
- #ifdef CONFIG_MAC80211_DEBUGFS
- 	mp->fixed_rate_idx = (u32) -1;
--- 
-2.17.0
+So help me understand this better.  Just by virtue of copying the new 
+mac into sdata->vif.addr we'd be confusing the driver such that it can't 
+associate the ongoing scan request to the wdev it was started on?  Even 
+when it has all this info?  I mean you have a single scan request on a 
+phy, how hard can this be? :)
 
+Note that some apps perform poor-man's scan address randomization by 
+varying the mac (I assume prior to each nth scan).  So being able to 
+change the mac while scanning might be a boon to them.  I personally 
+don't think changing mac via rtnl to accomplish this is a great idea, 
+but just tossing it out for you.
+
+Regards,
+-Denis
