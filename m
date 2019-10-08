@@ -2,92 +2,120 @@ Return-Path: <SRS0=jiki=YB=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DCA35C35280
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Oct 2019 15:56:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AA60C4360C
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Oct 2019 16:00:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B5ED7206C0
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Oct 2019 15:56:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 43D96206C0
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Oct 2019 16:00:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="eFBJapDy";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="V6kEAXsM"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QCRICrIi"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727711AbfJHP4q (ORCPT
+        id S1728081AbfJHQAl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Oct 2019 11:56:46 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:47974 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726822AbfJHP4q (ORCPT
+        Tue, 8 Oct 2019 12:00:41 -0400
+Received: from mail-pl1-f193.google.com ([209.85.214.193]:34096 "EHLO
+        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726336AbfJHQAl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Oct 2019 11:56:46 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 1FDAF61A39; Tue,  8 Oct 2019 15:56:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1570550205;
-        bh=L02AIM1GDP5tyCdGCD4NsXNAC9LOxToRmZrIOu+Kfu4=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=eFBJapDyOcG98E4JlTFj2ucszzQQHNTzISpqVgQCvSJpzhbreSb5FZB/skJ51z9eT
-         OgqexAsOczd0e7VLxkVvlC0sK59lXZVIoIIOxGkOXTvHc7POCE2Xf+ZDA7k0nIW2MS
-         J9sneRvcCoOY/8a0XPcz3ANJgElFWmBLKo0KI+6Q=
-Received: from tynnyri.adurom.net (tynnyri.adurom.net [51.15.11.48])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id C468960BE8;
-        Tue,  8 Oct 2019 15:56:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1570550203;
-        bh=L02AIM1GDP5tyCdGCD4NsXNAC9LOxToRmZrIOu+Kfu4=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=V6kEAXsMzJLpIptKk8+/llAq38z07bU9/OGHNCA/Rvm6CLOGq6N1LzXb+aZs+qKPp
-         YlktqtQD136KHoY59UN4/9na7esCdnqwrUH/iLCIlnowRLH4w6RPf3YBRI3nhR5SnV
-         VJxoO5O5ZsGJ4m/+aXNphrlMWM1zE3XgXI/Fza0A=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org C468960BE8
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     Johan Hovold <johan@kernel.org>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Siva Rebbagondla <siva8118@gmail.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Denis Efremov <efremov@linux.com>
-Subject: Re: [PATCH 1/2] Revert "rsi: fix potential null dereference in rsi_probe()"
-References: <20191004144422.13003-1-johan@kernel.org>
-        <87a7aes2oh.fsf@codeaurora.org>
-Date:   Tue, 08 Oct 2019 18:56:37 +0300
-In-Reply-To: <87a7aes2oh.fsf@codeaurora.org> (Kalle Valo's message of "Sun, 06
-        Oct 2019 11:23:10 +0300")
-Message-ID: <87pnj7grii.fsf@tynnyri.adurom.net>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
+        Tue, 8 Oct 2019 12:00:41 -0400
+Received: by mail-pl1-f193.google.com with SMTP id k7so8652861pll.1;
+        Tue, 08 Oct 2019 09:00:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:subject:to:cc:references:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=wjbVP6SypA/yqxO11UpZl9j4IvRacVDxxX21VBwViOY=;
+        b=QCRICrIihtFumFoyDtKyU2p+eUACHmtbZBnIV0I8OuOXiYPKh2f5BKz8oUUaXc3lvT
+         7LAq+EF9Fgn2LluD0gVmI534y4qpfDwOTaici1bPDAHhcFWqopXA409BSgIWJZcD/SDw
+         lPq3t7Qagr/CSAOx+VNnFuqDQ3iRUW2jC0/8GqvYkJRH49X+nF4LVgPgt53eoAwZW3OU
+         FQx2oeOWRBEY9LtdVjld21f0OccvhTzw1QxwYy7okCmg+c0QJb1/JU6D8S/wYv3wIOrj
+         6qLHELPGnSIcVnTP7jZ429gFuU945Tf5Ce4RL/f6z8JQWACBjcVBQT0YncITmG//Xk4h
+         mlsg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:subject:to:cc:references:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=wjbVP6SypA/yqxO11UpZl9j4IvRacVDxxX21VBwViOY=;
+        b=nt9z+2oFUPdZWwh40bDWyMoNsD1lPZpG1uSfSzJ0pIdCHt+RiNNDce2GS0VkjRWJFZ
+         M9LQR81Ob8CUo6wp3YzuFqfSAowJF2lxhicIUUO+zZfaee/yG36atQQrM1NH33BSfzWj
+         krx0v0e4nhiMNcv2xa28cws0gJLQozSL8Uv4XXLHwQ3/Ex4nVivQWM816CEI9cHK8SyX
+         CsOFhQ1zAtxk/hbzUsk3YyOf7HIjw3xx5ZfrzDrIKfTael1NnBFi6LwvzQalvwrtZABA
+         cQBrx7AVfFFzixeo7xtH4S9u1w38KPXi97ULfxY5v/1LfIwqf5p2KLm7vx8rR6jhcD1J
+         18pA==
+X-Gm-Message-State: APjAAAVTAaOlQpFqQO5V0PupOKqBSHdliteEziRpyH+C77a3leiGmeKg
+        OT291bR8C2i02dbuVStZ3wo=
+X-Google-Smtp-Source: APXvYqxTubSCND8Zeg5GzoPb4dZLEhBcUxVuv81AxxZDH2iL+IHH8/l2M59SrZ23dDtZksHH6C+Zuw==
+X-Received: by 2002:a17:902:b583:: with SMTP id a3mr36650807pls.169.1570550439806;
+        Tue, 08 Oct 2019 09:00:39 -0700 (PDT)
+Received: from ?IPv6:2620:10d:c082:1055::2a69? ([2620:10d:c090:200::3:df92])
+        by smtp.gmail.com with ESMTPSA id c128sm19211093pfc.166.2019.10.08.09.00.38
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 08 Oct 2019 09:00:38 -0700 (PDT)
+From:   Jes Sorensen <jes.sorensen@gmail.com>
+X-Google-Original-From: Jes Sorensen <Jes.Sorensen@gmail.com>
+Subject: Re: [PATCH v3] rtl8xxxu: add bluetooth co-existence support for
+ single antenna
+To:     Chris Chiu <chiu@endlessm.com>, kvalo@codeaurora.org,
+        davem@davemloft.net
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux@endlessm.com
+References: <20191005094826.90814-1-chiu@endlessm.com>
+Message-ID: <4603f17b-6739-1168-f784-58b0b9cf1a74@gmail.com>
+Date:   Tue, 8 Oct 2019 12:00:37 -0400
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.0
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20191005094826.90814-1-chiu@endlessm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Kalle Valo <kvalo@codeaurora.org> writes:
+On 10/5/19 5:48 AM, Chris Chiu wrote:
+> The RTL8723BU suffers the wifi disconnection problem while bluetooth
+> device connected. While wifi is doing tx/rx, the bluetooth will scan
+> without results. This is due to the wifi and bluetooth share the same
+> single antenna for RF communication and they need to have a mechanism
+> to collaborate.
+> 
+> BT information is provided via the packet sent from co-processor to
+> host (C2H). It contains the status of BT but the rtl8723bu_handle_c2h
+> dose not really handle it. And there's no bluetooth coexistence
+> mechanism to deal with it.
+> 
+> This commit adds a workqueue to set the tdma configurations and
+> coefficient table per the parsed bluetooth link status and given
+> wifi connection state. The tdma/coef table comes from the vendor
+> driver code of the RTL8192EU and RTL8723BU. However, this commit is
+> only for single antenna scenario which RTL8192EU is default dual
+> antenna. The rtl8xxxu_parse_rxdesc24 which invokes the handle_c2h
+> is only for 8723b and 8192e so the mechanism is expected to work
+> on both chips with single antenna. Note RTL8192EU dual antenna is
+> not supported.
+> 
+> Signed-off-by: Chris Chiu <chiu@endlessm.com>
+> ---
+> 
+> Notes:
+>    v2:
+>     - Add helper functions to replace bunch of tdma settings
+>     - Reformat some lines to meet kernel coding style
+>    v3:
+>     - Add comment for rtl8723bu_set_coex_with_type()
 
-> Johan Hovold <johan@kernel.org> writes:
->
->> This reverts commit f170d44bc4ec2feae5f6206980e7ae7fbf0432a0.
->>
->> USB core will never call a USB-driver probe function with a NULL
->> device-id pointer.
->>
->> Reverting before removing the existing checks in order to document this
->> and prevent the offending commit from being "autoselected" for stable.
->>
->> Signed-off-by: Johan Hovold <johan@kernel.org>
->
-> I'll queue these two to v5.4.
+Looks good to me!
 
-Actually I'll take that back. Commit f170d44bc4ec is in -next so I have
-to also queue these to -next.
+Signed-off-by: Jes Sorensen <Jes.Sorensen@gmail.com>
 
--- 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Jes
+
