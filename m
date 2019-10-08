@@ -2,104 +2,86 @@ Return-Path: <SRS0=jiki=YB=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A66C2C4360C
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Oct 2019 15:38:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19E83C10F14
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Oct 2019 15:42:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7C7C321721
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Oct 2019 15:38:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E3E1B2070B
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Oct 2019 15:42:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fVQQQSkY"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="pGJZiCJe";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="WF+Bvjbc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727813AbfJHPin (ORCPT
+        id S1727798AbfJHPm5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Oct 2019 11:38:43 -0400
-Received: from mail-oi1-f180.google.com ([209.85.167.180]:36540 "EHLO
-        mail-oi1-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725908AbfJHPik (ORCPT
+        Tue, 8 Oct 2019 11:42:57 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:33014 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725908AbfJHPm5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Oct 2019 11:38:40 -0400
-Received: by mail-oi1-f180.google.com with SMTP id k20so15195803oih.3
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Oct 2019 08:38:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:references:from:message-id:date:user-agent:mime-version
-         :in-reply-to:content-language:content-transfer-encoding;
-        bh=cvTOYLheFd0dfZ2lmF9Eizw+BwIMNmNffCYIZFbkI1Q=;
-        b=fVQQQSkY4cY6JW1YPpqb1C4IG0NaIsgGqsWYt/1Z4SVww5n0iD9nhP1wjhwgg70h6u
-         eKkKMCHY4B/3/2WSRUQ3S3MkXddV5nXfat446nR967LZhzUbjwbTa1bZebG05QTAVggX
-         AuUX3xzT2tPcSWvZ5Wgt6ppffXAfxi2r+ED5LEed2aHYTt75Iz/k9AN0AUl8FHSWbHcn
-         0jbYTB0bFK2jToyilxgfZBc2FlxtOTwve+Jaj71haYC/70qqCuOB/R9TW1PYO+Sxx/K6
-         hHOW/bii05phi5KaM6gcwbFonGHM4XdwGCje0ezkiG55sHNWq/XEbnPtAc3jbxc36k83
-         /qFw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=cvTOYLheFd0dfZ2lmF9Eizw+BwIMNmNffCYIZFbkI1Q=;
-        b=knGOssGvkkrtnKGacLt+ok1V7FFIqmtY9DCM+xz7FfEcen8UGr/93umJmdbLw+76wb
-         m2BRsdiHsAzDI7EF8T1KiZJpqNyTRVrUrYz2XV6GtRhA8bWQCJHcQj/oiIriJ+razFMQ
-         bzZkHvULCj5TT5mZHKIxpQJAVwRCIMjIZwNdkW35m6ST+/KWRkNtNZIf93KT8sV4eGlR
-         CSFwqBUojNxuP84hITZ4Wvb9DATykVu80RAzjxBPmfLcNfjwPP/UOtKPaikit3cIPH4K
-         SkoFv7n47wCnCrrKH4Txr5FG4fHYRwzuNM0y1k/JGxYzJ1O0pdTS6As9j146Mqi+uOyQ
-         7HfA==
-X-Gm-Message-State: APjAAAWMdX91zs+mDt7csSo+mHekUrjcor7FzmEjLAck3uyHvzT6BW/j
-        ln7oq7BU/ISYBrUnfFWPyNscKLL3
-X-Google-Smtp-Source: APXvYqyTUxrGXWSuDrey+8trLjirMYTCtnsmeCUMk67/TSDoXYwtXl+R1F1NceJ2Skk8vBtEDRgGiQ==
-X-Received: by 2002:a54:4582:: with SMTP id z2mr4274060oib.53.1570549119790;
-        Tue, 08 Oct 2019 08:38:39 -0700 (PDT)
-Received: from [192.168.1.249] (cpe-70-114-247-242.austin.res.rr.com. [70.114.247.242])
-        by smtp.googlemail.com with ESMTPSA id n4sm5737693oij.9.2019.10.08.08.38.38
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 08 Oct 2019 08:38:38 -0700 (PDT)
-Subject: Re: [PATCH 2/2] mac80211: Support LIVE_ADDRESS_CHANGE feature
-To:     Johannes Berg <johannes@sipsolutions.net>,
-        James Prestwood <prestwoj@gmail.com>,
-        linux-wireless@vger.kernel.org
-References: <20190913195908.7871-1-prestwoj@gmail.com>
- <20190913195908.7871-2-prestwoj@gmail.com>
- <c6835b5c5d2a97fa82b0fb21f7b7f0056aa42e1b.camel@sipsolutions.net>
- <90ae00044bc0834d87d3f9fb75ce63dce4cfadd5.camel@gmail.com>
- <fa09d946e85a637d7b49e208714945dcbcc23f76.camel@sipsolutions.net>
-From:   Denis Kenzior <denkenz@gmail.com>
-Message-ID: <2cf6ce4c-e9b7-9927-0f6f-52433ab3c66b@gmail.com>
-Date:   Tue, 8 Oct 2019 10:28:43 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        Tue, 8 Oct 2019 11:42:57 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 6B9CD6119D; Tue,  8 Oct 2019 15:42:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1570549375;
+        bh=PtXv/2PG6+HWdTsnqs6llorLWiI9qSK6Mjw3frrEvdU=;
+        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+        b=pGJZiCJetnit4uFq4GfRFyROzFHSWIhBwt/qxAwlivWc94A7dc6BzZrWg7g0riB5c
+         3bCtxc8RyXrRZVodle2EGZk4DklhswwxE1eSjmoHhzvaE85I/Fw3MI1SBPO1ofREYC
+         pUErT++2JGg4cttTjBNbhszBVzH0/o1hZ4ORR12s=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id B58D061ADB;
+        Tue,  8 Oct 2019 15:42:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1570549375;
+        bh=PtXv/2PG6+HWdTsnqs6llorLWiI9qSK6Mjw3frrEvdU=;
+        h=Subject:From:In-Reply-To:References:To:Cc:From;
+        b=WF+BvjbczkSra7F7qLXxhbe0xA1TwPJ4MSUSWXDR5ytPA9DnHK8nO547bgjuDhjBp
+         O5vbv9uTnpFMeYjYbJ7lCB1QWA/JDp4JU4Eyp4fau3b6IXyZFy9xwsj2LYNsZJ+lY/
+         WJ7AXekaFOJixje2MwyjlQX5r3BsJZ9mdGC2jryc=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org B58D061ADB
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <fa09d946e85a637d7b49e208714945dcbcc23f76.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
 Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH] ath10k: Fix an && vs || typo
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20191007085003.GB3865@mwanda>
+References: <20191007085003.GB3865@mwanda>
+To:     Dan Carpenter <dan.carpenter@oracle.com>
+Cc:     Govind Singh <govinds@codeaurora.org>, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
+Message-Id: <20191008154255.6B9CD6119D@smtp.codeaurora.org>
+Date:   Tue,  8 Oct 2019 15:42:55 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Johannes,
+Dan Carpenter <dan.carpenter@oracle.com> wrote:
 
->>> And, I'm confused, but isn't the polarity of the scanning check
->>> wrong?
->>
->> Ah yeah, after you pointed that out I realized 'scanning' is a bit
->> field. I should be doing:
->>
->> test_bit(SCAN_HW_SCANNING, &sdata->local->scanning)
+> The kernel will Oops later in the function if either of these pointers
+> is NULL so clearly || was intended instead of &&.
 > 
-> I think checking for all the bits is fine (and necessary, just HW scan
-> is unlikely to be enough, changing the MAC address would also disrupt a
-> software scan) - just need to invert the polarity?
+> Fixes: 3f14b73c3843 ("ath10k: Enable MSA region dump support for WCN3990")
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-I concur that scanning should be checked as
-if (sdata->local->scanning).  So Johannes you're right that the polarity 
-is reversed.  However, __ieee80211_start_scan seems to check for 
-local->scan_req instead to take deferred scans into account.  So I 
-wonder if that is a better approach.
+Sorry, Colin was faster :)
 
-Regards,
--Denis
+https://patchwork.kernel.org/patch/11174955/
+
+Patch set to Rejected.
+
+-- 
+https://patchwork.kernel.org/patch/11176991/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+
