@@ -2,100 +2,78 @@ Return-Path: <SRS0=jiki=YB=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BB88C35280
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Oct 2019 16:53:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ACDA8C10F14
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Oct 2019 17:08:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 31CBA217D7
-	for <linux-wireless@archiver.kernel.org>; Tue,  8 Oct 2019 16:53:52 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="g7FeHb2p"
+	by mail.kernel.org (Postfix) with ESMTP id 8B153206C2
+	for <linux-wireless@archiver.kernel.org>; Tue,  8 Oct 2019 17:08:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727753AbfJHQxv (ORCPT
+        id S1727703AbfJHRIc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Oct 2019 12:53:51 -0400
-Received: from mail-ot1-f67.google.com ([209.85.210.67]:40202 "EHLO
-        mail-ot1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725966AbfJHQxv (ORCPT
+        Tue, 8 Oct 2019 13:08:32 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:43520 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726253AbfJHRIc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Oct 2019 12:53:51 -0400
-Received: by mail-ot1-f67.google.com with SMTP id y39so14621324ota.7
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Oct 2019 09:53:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=TO34/XLF7MMwZNQDORRoF5NnGumt+zIPeUOrhbl7GH0=;
-        b=g7FeHb2pcsj99+eO8O728lAxGEgatpPK7HVzvMTyM6xZYrWcm+5LooA6aBYdCzlDvx
-         YIFZVA5WgLMgK9lOvUZkAmGiUvNjs8IcjhsdRKO/fy5BV3IiLf/yiMc3gTmfnpPL1r2E
-         JaWbSaNznRXRbad3n8UPTan48BZTdw3CJ23ISPI0t3UeyiiGJCApoTUBLNtbsOR5RE3l
-         LLTEKArYwUFmPF4I0OAIriVzP1JUxfq5u4+BM89AmQmyC8ac0t6DlYf4nrJ4DjaVyU0Q
-         dUaHf9nLvztBdDJLzGbtKr1/mO+uzdW5nzFULd9D/gh78frqWuyLtmYcO5tqAdzMmYcL
-         GxWA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=TO34/XLF7MMwZNQDORRoF5NnGumt+zIPeUOrhbl7GH0=;
-        b=dbBVHUN2jilG/3/YDS3LFBIXR6Q/HXa4bU5TI4xpIJzk/IgLt60+e4olm0m9dx3GR3
-         +sT9c0oh20P0vyuICkGmltHYEdSAD/ds3a0JpFeX+x07oFItqHXzizUHAeOhy0pWQmNM
-         J5U8VnXVLcuxAHMhI+LzBPQSbHmhPPNrMunSIZ6jVm/2xiLXt6by0PIenpbKPN2u6yEI
-         pyCxHF5q5rlBfcEiTYQU3Tb3EYCYB9GdqgM0fMTUgB+4KyeXCn71WARcRLfllmamDbpD
-         8BZ6DtOl/Ib5UQz1UT5eLW4wgSVM0U8K54nscdrjgXUFLb8DQ6p+YoN39UCoGEy/p2ab
-         31KQ==
-X-Gm-Message-State: APjAAAX7D5v9Yg2f8MYJQaX6/pRn1kpSrGf8vMmdhxsau2hjHQG4FU2s
-        TrvfDGyZTQadwkjDGm4vlf1Ymnr9
-X-Google-Smtp-Source: APXvYqwBq712vmuPYGr7+gL+Hp1kV1NAuBSCzXBALLPAPl+oEWDF13PVeWXCHMPjQGsYZzQ2MUY0YA==
-X-Received: by 2002:a05:6830:4b2:: with SMTP id l18mr27521194otd.9.1570553630039;
-        Tue, 08 Oct 2019 09:53:50 -0700 (PDT)
-Received: from localhost.localdomain (cpe-70-114-247-242.austin.res.rr.com. [70.114.247.242])
-        by smtp.gmail.com with ESMTPSA id 93sm5707057ota.16.2019.10.08.09.53.49
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 08 Oct 2019 09:53:49 -0700 (PDT)
-From:   Denis Kenzior <denkenz@gmail.com>
-To:     linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Cc:     Denis Kenzior <denkenz@gmail.com>
-Subject: [PATCH] nl80211: trivial: Remove redundant loop
-Date:   Tue,  8 Oct 2019 11:43:50 -0500
-Message-Id: <20191008164350.2836-1-denkenz@gmail.com>
-X-Mailer: git-send-email 2.21.0
+        Tue, 8 Oct 2019 13:08:32 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.92.2)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1iHsyN-00054j-1u; Tue, 08 Oct 2019 19:08:31 +0200
+Message-ID: <fbb287a82656dd3f89817590e86b23d6968a2822.camel@sipsolutions.net>
+Subject: Re: [PATCH 2/2] mac80211: Support LIVE_ADDRESS_CHANGE feature
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Denis Kenzior <denkenz@gmail.com>,
+        James Prestwood <prestwoj@gmail.com>,
+        linux-wireless@vger.kernel.org
+Date:   Tue, 08 Oct 2019 19:08:28 +0200
+In-Reply-To: <1bb5450b-bc4e-8c83-f99e-fc7e739b08f0@gmail.com> (sfid-20191008_183311_878473_B38C04A4)
+References: <20190913195908.7871-1-prestwoj@gmail.com>
+         <20190913195908.7871-2-prestwoj@gmail.com>
+         <c6835b5c5d2a97fa82b0fb21f7b7f0056aa42e1b.camel@sipsolutions.net>
+         <90ae00044bc0834d87d3f9fb75ce63dce4cfadd5.camel@gmail.com>
+         <0b57c1288016310050ccd6233dda886fc4a89b02.camel@gmail.com>
+         <f468a8d573ddf401d2084b76eb625fef5950f265.camel@sipsolutions.net>
+         <6fa34e4c-5c81-4875-da29-cada1a078e2c@gmail.com>
+         <6530a6b06176790c5a6949d6ffccf37b506975bd.camel@sipsolutions.net>
+         <864267ec-9158-940d-6e0e-db84a395888e@gmail.com>
+         <f02b81f6dac29da911f8793b952a9efb6a1fdb62.camel@sipsolutions.net>
+         <1bb5450b-bc4e-8c83-f99e-fc7e739b08f0@gmail.com>
+         (sfid-20191008_183311_878473_B38C04A4)
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.30.5 (3.30.5-1.fc29) 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-cfg80211_assign_cookie already checks & prevents a 0 from being
-returned, so the explicit loop is unnecessary.
 
-Signed-off-by: Denis Kenzior <denkenz@gmail.com>
----
- net/wireless/nl80211.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+> > > > No, this typically cannot be fixed, and it doesn't really make sense.
+> > > > The NIC cannot possibly do two scans at a time since it has only a
+> > > > single radio resource :-)
+> > > 
+> > > So why is the scan request not per phy then?  And should mac address
+> > > even affect the ongoing scan?  Can we simply change it with the scan
+> > > ongoing?
+> > 
+> > There are things that affect the scan from the interface, e.g.
+> > capability overrides, (extended) capabilities, the MAC address is used
+> > unless randomization is requested, etc.
+> > 
+> 
+> But they shouldn't change due a mac address change?  I wonder if we can 
+> further relax the requirements to allow mac change if 
+> NL80211_SCAN_FLAG_RANDOM_ADDR was used?
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index d21b1581a665..57bade7ea41c 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -8227,10 +8227,8 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
- 	/* leave request id zero for legacy request
- 	 * or if driver does not support multi-scheduled scan
- 	 */
--	if (want_multi && rdev->wiphy.max_sched_scan_reqs > 1) {
--		while (!sched_scan_req->reqid)
--			sched_scan_req->reqid = cfg80211_assign_cookie(rdev);
--	}
-+	if (want_multi && rdev->wiphy.max_sched_scan_reqs > 1)
-+		sched_scan_req->reqid = cfg80211_assign_cookie(rdev);
- 
- 	err = rdev_sched_scan_start(rdev, dev, sched_scan_req);
- 	if (err)
--- 
-2.21.0
+No, at least with HW scan that would completely confuse the driver -
+since from the driver's POV we'd remove the interface it's currently
+managing the scan for.
+
+johannes
 
