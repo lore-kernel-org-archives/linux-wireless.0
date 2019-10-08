@@ -2,40 +2,42 @@ Return-Path: <SRS0=jiki=YB=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 543A3ECE58E
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71D2EECE596
 	for <linux-wireless@archiver.kernel.org>; Tue,  8 Oct 2019 08:21:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 365C6206B6
+	by mail.kernel.org (Postfix) with ESMTP id 542DF206BB
 	for <linux-wireless@archiver.kernel.org>; Tue,  8 Oct 2019 08:21:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730584AbfJHIVM (ORCPT
+        id S1730609AbfJHIVP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 8 Oct 2019 04:21:12 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:47339 "EHLO
+        Tue, 8 Oct 2019 04:21:15 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:47347 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730491AbfJHIVM (ORCPT
+        with ESMTP id S1730554AbfJHIVO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Oct 2019 04:21:12 -0400
+        Tue, 8 Oct 2019 04:21:14 -0400
 Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x988L42H028120, This message is accepted by code: ctloc85258
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x988L8Yc028146, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (RTITCASV01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x988L42H028120
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x988L8Yc028146
         (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
-        Tue, 8 Oct 2019 16:21:04 +0800
+        Tue, 8 Oct 2019 16:21:09 +0800
 Received: from localhost.localdomain (172.21.68.126) by
  RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
- 14.3.468.0; Tue, 8 Oct 2019 16:21:03 +0800
+ 14.3.468.0; Tue, 8 Oct 2019 16:21:08 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>, <briannorris@chromium.org>
-Subject: [PATCH 00/10] rtw88: minor throughput improvement
-Date:   Tue, 8 Oct 2019 16:20:51 +0800
-Message-ID: <20191008082101.2494-1-yhchuang@realtek.com>
+Subject: [PATCH 06/10] rtw88: add NL80211_EXT_FEATURE_CAN_REPLACE_PTK0 support
+Date:   Tue, 8 Oct 2019 16:20:57 +0800
+Message-ID: <20191008082101.2494-7-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20191008082101.2494-1-yhchuang@realtek.com>
+References: <20191008082101.2494-1-yhchuang@realtek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [172.21.68.126]
@@ -44,65 +46,62 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+From: Tzu-En Huang <tehuang@realtek.com>
 
-This patchset mainly adds support for beamforming and power
-tracking. Power tracking can monitor the thermal value of
-the device and adjust corresponding power indexes, to make
-sure the RF output power is expected.
+Add support for NL80211_EXT_FEATURE_CAN_REPLACE_PTK0 feature.
+According to the "Hardware crypto acceleration" documentation section,
+when set_key() is called with %DISABLE_KEY command, for outgoing frames,
+we flush out frames in the queues with the old key; for incoming frames,
+no frames will be passed to mac80211 decrypted with the old key due to
+rtw_sec_clear_cam().
 
-And another thing is to add a debugfs for physical layer
-information. This is useful when sometimes the environment
-is too harsh for the device, and provides the activities
-for us to debug.
+Signed-off-by: Tzu-En Huang <tehuang@realtek.com>
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw88/mac.h      | 5 +++++
+ drivers/net/wireless/realtek/rtw88/mac80211.c | 1 +
+ drivers/net/wireless/realtek/rtw88/main.c     | 2 ++
+ 3 files changed, 8 insertions(+)
 
-The rest patches are some minor fixes.
-
-
-Ping-Ke Shih (1):
-  rtw88: coex: Set 4 slot mode for A2DP
-
-Tsang-Shian Lin (1):
-  rtw88: add phy_info debugfs to show Tx/Rx physical status
-
-Tzu-En Huang (6):
-  rtw88: add power tracking support
-  rtw88: Enable 802.11ac beamformee support
-  rtw88: config 8822c multicast address in MAC init flow
-  rtw88: add set_bitrate_mask support
-  rtw88: update regulatory settings implementaion
-  rtw88: add NL80211_EXT_FEATURE_CAN_REPLACE_PTK0 support
-
-Yan-Hsuan Chuang (2):
-  rtw88: Use rtw_write8_set to set SYS_FUNC
-  rtw88: pci: config phy after chip info is setup
-
- drivers/net/wireless/realtek/rtw88/Makefile   |   1 +
- drivers/net/wireless/realtek/rtw88/bf.c       | 408 +++++++++++++++++
- drivers/net/wireless/realtek/rtw88/bf.h       |  92 ++++
- drivers/net/wireless/realtek/rtw88/coex.c     |  24 +-
- drivers/net/wireless/realtek/rtw88/debug.c    | 174 +++++++-
- drivers/net/wireless/realtek/rtw88/debug.h    |   1 +
- drivers/net/wireless/realtek/rtw88/fw.c       |   1 +
- drivers/net/wireless/realtek/rtw88/mac.c      |   2 +-
- drivers/net/wireless/realtek/rtw88/mac.h      |   5 +
- drivers/net/wireless/realtek/rtw88/mac80211.c |  65 +++
- drivers/net/wireless/realtek/rtw88/main.c     | 159 ++++++-
- drivers/net/wireless/realtek/rtw88/main.h     | 155 ++++++-
- drivers/net/wireless/realtek/rtw88/pci.c      |   4 +-
- drivers/net/wireless/realtek/rtw88/phy.c      | 118 +++++
- drivers/net/wireless/realtek/rtw88/phy.h      |  12 +
- drivers/net/wireless/realtek/rtw88/reg.h      |   2 +
- drivers/net/wireless/realtek/rtw88/regd.c     |  61 ++-
- drivers/net/wireless/realtek/rtw88/rtw8822b.c | 413 ++++++++++++++++++
- drivers/net/wireless/realtek/rtw88/rtw8822b.h |  12 +
- drivers/net/wireless/realtek/rtw88/rtw8822c.c | 341 +++++++++++++++
- drivers/net/wireless/realtek/rtw88/rtw8822c.h |  12 +
- drivers/net/wireless/realtek/rtw88/rx.c       |  69 ++-
- 22 files changed, 2056 insertions(+), 75 deletions(-)
- create mode 100644 drivers/net/wireless/realtek/rtw88/bf.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/bf.h
-
+diff --git a/drivers/net/wireless/realtek/rtw88/mac.h b/drivers/net/wireless/realtek/rtw88/mac.h
+index a67fa82973e4..592dc830160c 100644
+--- a/drivers/net/wireless/realtek/rtw88/mac.h
++++ b/drivers/net/wireless/realtek/rtw88/mac.h
+@@ -33,4 +33,9 @@ int rtw_download_firmware(struct rtw_dev *rtwdev, struct rtw_fw_state *fw);
+ int rtw_mac_init(struct rtw_dev *rtwdev);
+ void rtw_mac_flush_queues(struct rtw_dev *rtwdev, u32 queues, bool drop);
+ 
++static inline void rtw_mac_flush_all_queues(struct rtw_dev *rtwdev, bool drop)
++{
++	rtw_mac_flush_queues(rtwdev, BIT(rtwdev->hw->queues) - 1, drop);
++}
++
+ #endif
+diff --git a/drivers/net/wireless/realtek/rtw88/mac80211.c b/drivers/net/wireless/realtek/rtw88/mac80211.c
+index 3e4f2f27ced2..2247bd61e716 100644
+--- a/drivers/net/wireless/realtek/rtw88/mac80211.c
++++ b/drivers/net/wireless/realtek/rtw88/mac80211.c
+@@ -546,6 +546,7 @@ static int rtw_ops_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 				  hw_key_type, hw_key_idx);
+ 		break;
+ 	case DISABLE_KEY:
++		rtw_mac_flush_all_queues(rtwdev, false);
+ 		rtw_sec_clear_cam(rtwdev, sec, key->hw_key_idx);
+ 		break;
+ 	}
+diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
+index edd490c507b5..71f11c973307 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.c
++++ b/drivers/net/wireless/realtek/rtw88/main.c
+@@ -1403,6 +1403,8 @@ int rtw_register_hw(struct rtw_dev *rtwdev, struct ieee80211_hw *hw)
+ 
+ 	hw->wiphy->features |= NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR;
+ 
++	wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_CAN_REPLACE_PTK0);
++
+ 	rtw_set_supported_band(hw, rtwdev->chip);
+ 	SET_IEEE80211_PERM_ADDR(hw, rtwdev->efuse.addr);
+ 
 -- 
 2.17.1
 
