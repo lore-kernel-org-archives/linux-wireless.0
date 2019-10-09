@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BAD01C47404
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Oct 2019 17:26:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 405FBC47404
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Oct 2019 17:27:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 903DB20679
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Oct 2019 17:26:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1ACDF20679
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Oct 2019 17:27:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1570641992;
-	bh=h8lq4nixI4nM9csfCj+ze8GYtJp/yVBqr0i/cifHhj4=;
+	s=default; t=1570642048;
+	bh=DBMaSU6DKS4TAqhmNY3mmHiGPosqmVwGEwfGAIWsNPk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=N37ywCZJwhsRkMHpwaiFqcyLHIXOTjSxpAqdSXQpjiMhsp9xbjx73loTWnxMz6hbh
-	 X3msIR3Wj+TIlXy5thlq4e3tXY6qbpZivofQnNIWA3mb4eo64N/0zdkmSrUqRBkluU
-	 xmUqJ4n8Zu/1x9iRF3435uhGStG7P2s++AV0yS3Q=
+	b=ugdFLaXsEwBruqBaOIICw/QCD8C6DY3IUWZrBwoUUPcSgAFAUA7Iu6YXqp8lwd/LG
+	 ElncI/fKgVDFBHEV+/aMHUvsvmnX30/8cmMbS048uHvCfmD6KkihCXuxGlcO19YsjU
+	 SlQmyL/OLJFX9E0nirnsvb5wSJfL090CDbugjbHw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732084AbfJIR02 (ORCPT
+        id S1732785AbfJIR1Q (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 9 Oct 2019 13:26:28 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49714 "EHLO mail.kernel.org"
+        Wed, 9 Oct 2019 13:27:16 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49246 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732433AbfJIRYp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Oct 2019 13:24:45 -0400
+        id S1732348AbfJIRYa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 9 Oct 2019 13:24:30 -0400
 Received: from sasha-vm.mshome.net (unknown [167.220.2.234])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 4AA6F20B7C;
-        Wed,  9 Oct 2019 17:24:45 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 4063E222D1;
+        Wed,  9 Oct 2019 17:24:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1570641885;
-        bh=h8lq4nixI4nM9csfCj+ze8GYtJp/yVBqr0i/cifHhj4=;
+        s=default; t=1570641870;
+        bh=DBMaSU6DKS4TAqhmNY3mmHiGPosqmVwGEwfGAIWsNPk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=uj9/EGSVo7PDcdA330BQ0gc5wI9DJpkQ6LbB+Scb+tPBJkGEZvCtTKZOfF2PCQ5TM
-         EJduyiqVZjDWnFJR6x8o9TvpkkLKx0vt2Pp/RRh9s3WwHxIpKJfut/EM6wtb2Yn1ll
-         wdwhH49YD9bhOvjcWu2WHfD8WmwQOOBWqgHbzUwE=
+        b=QcdEzyJJK/GrWKG4zsGxiZgpgNYEwfhZjmvRgW6Udy1SEKKzCucXQI+PzlRhbWh6b
+         zE/vs+I1a8aakT6XEqV5QwviPN5qQUxAEALgYFuvbnjd3jwRUHSmaV8IxNT92d7BCA
+         ydoQkBn7EoI2TDvwJdRT3r+6MzPeASbKWvl9Erls=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Miaoqing Pan <miaoqing@codeaurora.org>,
@@ -46,12 +46,12 @@ Cc:     Miaoqing Pan <miaoqing@codeaurora.org>,
         Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 09/13] mac80211: fix txq null pointer dereference
-Date:   Wed,  9 Oct 2019 13:06:28 -0400
-Message-Id: <20191009170635.536-9-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 15/21] mac80211: fix txq null pointer dereference
+Date:   Wed,  9 Oct 2019 13:06:08 -0400
+Message-Id: <20191009170615.32750-15-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191009170635.536-1-sashal@kernel.org>
-References: <20191009170635.536-1-sashal@kernel.org>
+In-Reply-To: <20191009170615.32750-1-sashal@kernel.org>
+References: <20191009170615.32750-1-sashal@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 X-stable: review
@@ -98,7 +98,7 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 9 insertions(+), 2 deletions(-)
 
 diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
-index bcec1240f41d9..9769db9818d2f 100644
+index c813207bb1236..928b6b0464b82 100644
 --- a/net/mac80211/debugfs_netdev.c
 +++ b/net/mac80211/debugfs_netdev.c
 @@ -490,9 +490,14 @@ static ssize_t ieee80211_if_fmt_aqm(
@@ -117,7 +117,7 @@ index bcec1240f41d9..9769db9818d2f 100644
  	spin_lock_bh(&local->fq.lock);
  	rcu_read_lock();
  
-@@ -657,7 +662,9 @@ static void add_common_files(struct ieee80211_sub_if_data *sdata)
+@@ -659,7 +664,9 @@ static void add_common_files(struct ieee80211_sub_if_data *sdata)
  	DEBUGFS_ADD(rc_rateidx_vht_mcs_mask_5ghz);
  	DEBUGFS_ADD(hw_queues);
  
