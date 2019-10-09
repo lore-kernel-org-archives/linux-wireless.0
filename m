@@ -7,50 +7,50 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C6FFCECE58D
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Oct 2019 17:27:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06A94C47404
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Oct 2019 17:30:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A151020679
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Oct 2019 17:27:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D025F20679
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Oct 2019 17:30:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1570642054;
-	bh=Ay+h74khH/1fU1y9XJ3IOYOYoc+ZH4aIsf7L+V39wB0=;
+	s=default; t=1570642200;
+	bh=a/MCXoavl9JvhK3hpE2GJaVA161WW/cC61fw8BtEg2w=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=0nX74X9+kOCTSsxT0d46dx6zW+uk8ZYWjeRE/kEH4xVcqrqIIis1cYi9jNyo5djYp
-	 1s68ZZF0XG+Agfsl2E6YbqajvS/2ECgjBccMTjVM1oxTdDfTvlcXwSLQWFwNOVnjxF
-	 3aQ8EoZE4gTzUngmAHODEXf2U6R/SwChc9MmRi5w=
+	b=HJz2pUJ2jxuxC1+/oUvEVOojV9R29eidQ7T5y9NCwxbLHrfS5PEnw3v5x0kIVXHGR
+	 xXUXt9IGAlPJUG5mCkpnrElTjH+D5FNy/MQtRIfZdVF0Ooj9kk/7mYdUEdA8sufRk3
+	 Lk9+L4Hv2u4fE3YcWwFiMb8drty46LHI8iPQPLwc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732763AbfJIR1P (ORCPT
+        id S1732177AbfJIRYK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 9 Oct 2019 13:27:15 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49234 "EHLO mail.kernel.org"
+        Wed, 9 Oct 2019 13:24:10 -0400
+Received: from mail.kernel.org ([198.145.29.99]:48600 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732347AbfJIRYa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Oct 2019 13:24:30 -0400
+        id S1732157AbfJIRYJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 9 Oct 2019 13:24:09 -0400
 Received: from sasha-vm.mshome.net (unknown [167.220.2.234])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E9AE021929;
-        Wed,  9 Oct 2019 17:24:29 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 0DA6A21D80;
+        Wed,  9 Oct 2019 17:24:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1570641870;
-        bh=Ay+h74khH/1fU1y9XJ3IOYOYoc+ZH4aIsf7L+V39wB0=;
+        s=default; t=1570641849;
+        bh=a/MCXoavl9JvhK3hpE2GJaVA161WW/cC61fw8BtEg2w=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=hbWkVaLPRh2yoLGYrRgbwb8eAZ64Jg6clV5OJ4L+uwQY64F4QH1IwgUVgKIY9BBJk
-         v2B0Dk2AmMz3DuMJ5Llhl0Lzk4gRePabUK2whKnBaJ2Z8S+qFrIIXfRK1tAwtoEgJh
-         hXp7n+QVybWsOJLH1OOIHljzoTYYy4g95LmMN12k=
+        b=wr+TnJ2NkdBAfNOGnbBgScESL1GYfdPyIDf9mhwUXZBmQ/sl1i8oPISYiDtdiPQfv
+         obrD6t3v69yMoKJyNJ9QcNLlJ79WnmusUIZRqH483Md9lPJvM8hvAHHdpL2tkdZe50
+         khdugWbICmTsEbobkGJQBJKFy4Dd3BXn7BVQqpvk=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Miaoqing Pan <miaoqing@codeaurora.org>,
         Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 14/21] nl80211: fix null pointer dereference
-Date:   Wed,  9 Oct 2019 13:06:07 -0400
-Message-Id: <20191009170615.32750-14-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 16/26] nl80211: fix null pointer dereference
+Date:   Wed,  9 Oct 2019 13:05:48 -0400
+Message-Id: <20191009170558.32517-16-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191009170615.32750-1-sashal@kernel.org>
-References: <20191009170615.32750-1-sashal@kernel.org>
+In-Reply-To: <20191009170558.32517-1-sashal@kernel.org>
+References: <20191009170558.32517-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -101,10 +101,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 3 insertions(+)
 
 diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index f19d5a55f09ef..8477209906aba 100644
+index 6168db3c35e4c..9af8e5c60e13d 100644
 --- a/net/wireless/nl80211.c
 +++ b/net/wireless/nl80211.c
-@@ -5464,6 +5464,9 @@ static int nl80211_del_mpath(struct sk_buff *skb, struct genl_info *info)
+@@ -5803,6 +5803,9 @@ static int nl80211_del_mpath(struct sk_buff *skb, struct genl_info *info)
  	if (!rdev->ops->del_mpath)
  		return -EOPNOTSUPP;
  
