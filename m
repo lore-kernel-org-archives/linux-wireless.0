@@ -2,120 +2,216 @@ Return-Path: <SRS0=Z1rL=YC=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1F6BECE58D
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Oct 2019 08:18:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39C43C47404
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Oct 2019 08:18:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 890D020B7C
-	for <linux-wireless@archiver.kernel.org>; Wed,  9 Oct 2019 08:18:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 044FB20B7C
+	for <linux-wireless@archiver.kernel.org>; Wed,  9 Oct 2019 08:18:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="ivhG/JU+";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="ivhG/JU+"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="CySRCJjl";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="jZyx0nBW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726336AbfJIISW (ORCPT
+        id S1726765AbfJIIS1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 9 Oct 2019 04:18:22 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:50992 "EHLO
+        Wed, 9 Oct 2019 04:18:27 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:51076 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725848AbfJIISV (ORCPT
+        with ESMTP id S1725848AbfJIIS1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Oct 2019 04:18:21 -0400
+        Wed, 9 Oct 2019 04:18:27 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id E882861A3D; Wed,  9 Oct 2019 08:18:20 +0000 (UTC)
+        id D863561AF9; Wed,  9 Oct 2019 08:18:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1570609100;
-        bh=yVACcIyD8sXXrbvUi7xGYw1ltxq2hUy0puNDsNVcAn4=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=ivhG/JU+cTVrmdhpnrLdXGsCooIKAEZqO7DYSWKY4G41n8T74SlVcBDJXQJaXhaAV
-         ejpB48gAyWjHlWfw5exQ4EE3NORgezA0C/xbW32EgODzgI+On19IXlResl8QQphaXe
-         JlPYKueW95h0pO4rcSF6GdnH0HCdRXFTyOeqR8to=
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by smtp.codeaurora.org (Postfix) with ESMTP id 1BC4561A3D;
-        Wed,  9 Oct 2019 08:18:20 +0000 (UTC)
+        s=default; t=1570609105;
+        bh=fRlz7tw4YQKX5yIPcojrc6u4Ge2rc8wPk0N36qvbVIM=;
+        h=From:To:Cc:Subject:Date:From;
+        b=CySRCJjlxGc4zn4Vv6VmXxuPkj4q45h4GwIgVkyi8uWOWjeQd6ZX04MKVGl5l27ij
+         pTC0Axp8g/Z5EDkGJAc77yOj27TUALD06T9eD53QrATLI8KVc0ZwqV8qnq3HrJUJaH
+         bkSb8CPi0lLCYLXIaQb6NNMiHnbeT/z05mkfUG4g=
+Received: from smtp.codeaurora.org (unknown [180.166.53.21])
+        (using TLSv1 with cipher AES128-SHA (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: miaoqing@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 12DC361A1B;
+        Wed,  9 Oct 2019 08:18:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1570609100;
-        bh=yVACcIyD8sXXrbvUi7xGYw1ltxq2hUy0puNDsNVcAn4=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=ivhG/JU+cTVrmdhpnrLdXGsCooIKAEZqO7DYSWKY4G41n8T74SlVcBDJXQJaXhaAV
-         ejpB48gAyWjHlWfw5exQ4EE3NORgezA0C/xbW32EgODzgI+On19IXlResl8QQphaXe
-         JlPYKueW95h0pO4rcSF6GdnH0HCdRXFTyOeqR8to=
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Wed, 09 Oct 2019 16:18:20 +0800
-From:   Yibo Zhao <yiboz@codeaurora.org>
-To:     Kan Yan <kyan@google.com>
-Cc:     johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-        make-wifi-fast@lists.bufferbloat.net, toke@redhat.com, nbd@nbd.name
-Subject: Re: [PATCH v2 1/2] mac80211: Implement Airtime-based Queue Limit
- (AQL)
-In-Reply-To: <20191007043120.67567-2-kyan@google.com>
-References: <20191007043120.67567-1-kyan@google.com>
- <20191007043120.67567-2-kyan@google.com>
-Message-ID: <18630c07d0aa46d16cf660d013f96b3d@codeaurora.org>
-X-Sender: yiboz@codeaurora.org
-User-Agent: Roundcube Webmail/1.2.5
+        s=default; t=1570609104;
+        bh=fRlz7tw4YQKX5yIPcojrc6u4Ge2rc8wPk0N36qvbVIM=;
+        h=From:To:Cc:Subject:Date:From;
+        b=jZyx0nBW3UFDv/+FquMqXvMlJC2B56+k5tD9YYAPrRt6uaVtZHDPaEFPtx3Hfyt7J
+         Y6tvt8gihNnyg88VwAOvhbjZsjR412ux9gthPYTj1UQ/V0LE8gLx84ouuhE74p3JJc
+         zmu0Z94HsHygEqw90bRYS33rFOexMdeMeKUQMsJQ=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 12DC361A1B
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=miaoqing@codeaurora.org
+Received: by smtp.codeaurora.org (sSMTP sendmail emulation); Wed, 09 Oct 2019 16:18:17 +0800
+From:   Miaoqing Pan <miaoqing@codeaurora.org>
+To:     ath10k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org,
+        Miaoqing Pan <miaoqing@codeaurora.org>
+Subject: [PATCH 1/2] ath10k: fix array out-of-bounds access
+Date:   Wed,  9 Oct 2019 16:18:08 +0800
+Message-Id: <1570609089-22071-1-git-send-email-miaoqing@codeaurora.org>
+X-Mailer: git-send-email 1.9.1
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-> index f13eb2f61ccf..dadb643a5498 100644
-> --- a/net/mac80211/tx.c
-> +++ b/net/mac80211/tx.c
-> @@ -3669,7 +3669,8 @@ struct ieee80211_txq *ieee80211_next_txq(struct
-> ieee80211_hw *hw, u8 ac)
->  {
->  	struct ieee80211_local *local = hw_to_local(hw);
->  	struct ieee80211_txq *ret = NULL;
-> -	struct txq_info *txqi = NULL;
-> +	struct txq_info *txqi = NULL, *head = NULL;
-> +	bool found_eligible_txq = false;
-> 
->  	spin_lock_bh(&local->active_txq_lock[ac]);
-> 
-> @@ -3680,20 +3681,32 @@ struct ieee80211_txq
-> *ieee80211_next_txq(struct ieee80211_hw *hw, u8 ac)
->  	if (!txqi)
->  		goto out;
-> 
-> +	if (txqi == head && !found_eligible_txq)
-> +		goto out;
+If firmware reports rate_max > WMI_TPC_RATE_MAX(WMI_TPC_FINAL_RATE_MAX)
+or num_tx_chain > WMI_TPC_TX_N_CHAIN, it will cause array out-of-bounds
+access, so print a warning and reset to avoid memory corruption.
 
-I assume here the only txq in the list that does not meet AQL check will 
-not be dequeued. Right? Will it affect peak throughput once there is 
-only one station.
+Tested HW: QCA9984
+Tested FW: 10.4-3.9.0.2-00035
 
-How about dequeuing it anyway regardless AQL because it is the only one 
-active now so it is fine to occupy the rest bandwidth. Otherwise, I am 
-afraid next_txq() will return NULL in the test only one station is 
-present.
+Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath10k/debug.c |  2 +-
+ drivers/net/wireless/ath/ath10k/wmi.c   | 49 +++++++++++++++++++++------------
+ 2 files changed, 32 insertions(+), 19 deletions(-)
 
-> @@ -3748,10 +3785,10 @@ bool ieee80211_txq_may_transmit(struct 
-> ieee80211_hw *hw,
->  	struct sta_info *sta;
->  	u8 ac = txq->ac;
-> 
-> -	spin_lock_bh(&local->active_txq_lock[ac]);
-> -
->  	if (!txqi->txq.sta)
-> -		goto out;
-> +		return true;
-
-why return here? I think even a txq without sta info should get removed 
-from list and added it back later in return_txq() if needed. No?
-
-> +
-> +	spin_lock_bh(&local->active_txq_lock[ac]);
-> 
->  	if (list_empty(&txqi->schedule_order))
->  		goto out;
-
-
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index bd2b562..40baf25 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -1516,7 +1516,7 @@ static void ath10k_tpc_stats_print(struct ath10k_tpc_stats *tpc_stats,
+ 	*len += scnprintf(buf + *len, buf_len - *len,
+ 			  "No.  Preamble Rate_code ");
+ 
+-	for (i = 0; i < WMI_TPC_TX_N_CHAIN; i++)
++	for (i = 0; i < tpc_stats->num_tx_chain; i++)
+ 		*len += scnprintf(buf + *len, buf_len - *len,
+ 				  "tpc_value%d ", i);
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index f0ab115..4473b13 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -4681,16 +4681,13 @@ static void ath10k_tpc_config_disp_tables(struct ath10k *ar,
+ 	}
+ 
+ 	pream_idx = 0;
+-	for (i = 0; i < __le32_to_cpu(ev->rate_max); i++) {
++	for (i = 0; i < tpc_stats->rate_max; i++) {
+ 		memset(tpc_value, 0, sizeof(tpc_value));
+ 		memset(buff, 0, sizeof(buff));
+ 		if (i == pream_table[pream_idx])
+ 			pream_idx++;
+ 
+-		for (j = 0; j < WMI_TPC_TX_N_CHAIN; j++) {
+-			if (j >= __le32_to_cpu(ev->num_tx_chain))
+-				break;
+-
++		for (j = 0; j < tpc_stats->num_tx_chain; j++) {
+ 			tpc[j] = ath10k_tpc_config_get_rate(ar, ev, i, j + 1,
+ 							    rate_code[i],
+ 							    type);
+@@ -4803,7 +4800,7 @@ void ath10k_wmi_tpc_config_get_rate_code(u8 *rate_code, u16 *pream_table,
+ 
+ void ath10k_wmi_event_pdev_tpc_config(struct ath10k *ar, struct sk_buff *skb)
+ {
+-	u32 num_tx_chain;
++	u32 num_tx_chain, rate_max;
+ 	u8 rate_code[WMI_TPC_RATE_MAX];
+ 	u16 pream_table[WMI_TPC_PREAM_TABLE_MAX];
+ 	struct wmi_pdev_tpc_config_event *ev;
+@@ -4819,6 +4816,13 @@ void ath10k_wmi_event_pdev_tpc_config(struct ath10k *ar, struct sk_buff *skb)
+ 		return;
+ 	}
+ 
++	rate_max = __le32_to_cpu(ev->rate_max);
++	if (rate_max > WMI_TPC_RATE_MAX) {
++		ath10k_warn(ar, "number of rate is %d greater than TPC configured rate %d\n",
++			    rate_max, WMI_TPC_RATE_MAX);
++		rate_max = WMI_TPC_RATE_MAX;
++	}
++
+ 	tpc_stats = kzalloc(sizeof(*tpc_stats), GFP_ATOMIC);
+ 	if (!tpc_stats)
+ 		return;
+@@ -4835,8 +4839,8 @@ void ath10k_wmi_event_pdev_tpc_config(struct ath10k *ar, struct sk_buff *skb)
+ 		__le32_to_cpu(ev->twice_antenna_reduction);
+ 	tpc_stats->power_limit = __le32_to_cpu(ev->power_limit);
+ 	tpc_stats->twice_max_rd_power = __le32_to_cpu(ev->twice_max_rd_power);
+-	tpc_stats->num_tx_chain = __le32_to_cpu(ev->num_tx_chain);
+-	tpc_stats->rate_max = __le32_to_cpu(ev->rate_max);
++	tpc_stats->num_tx_chain = num_tx_chain;
++	tpc_stats->rate_max = rate_max;
+ 
+ 	ath10k_tpc_config_disp_tables(ar, ev, tpc_stats,
+ 				      rate_code, pream_table,
+@@ -5031,16 +5035,13 @@ void ath10k_wmi_event_pdev_tpc_config(struct ath10k *ar, struct sk_buff *skb)
+ 	}
+ 
+ 	pream_idx = 0;
+-	for (i = 0; i < __le32_to_cpu(ev->rate_max); i++) {
++	for (i = 0; i < tpc_stats->rate_max; i++) {
+ 		memset(tpc_value, 0, sizeof(tpc_value));
+ 		memset(buff, 0, sizeof(buff));
+ 		if (i == pream_table[pream_idx])
+ 			pream_idx++;
+ 
+-		for (j = 0; j < WMI_TPC_TX_N_CHAIN; j++) {
+-			if (j >= __le32_to_cpu(ev->num_tx_chain))
+-				break;
+-
++		for (j = 0; j < tpc_stats->num_tx_chain; j++) {
+ 			tpc[j] = ath10k_wmi_tpc_final_get_rate(ar, ev, i, j + 1,
+ 							       rate_code[i],
+ 							       type, pream_idx);
+@@ -5056,7 +5057,7 @@ void ath10k_wmi_event_pdev_tpc_config(struct ath10k *ar, struct sk_buff *skb)
+ 
+ void ath10k_wmi_event_tpc_final_table(struct ath10k *ar, struct sk_buff *skb)
+ {
+-	u32 num_tx_chain;
++	u32 num_tx_chain, rate_max;
+ 	u8 rate_code[WMI_TPC_FINAL_RATE_MAX];
+ 	u16 pream_table[WMI_TPC_PREAM_TABLE_MAX];
+ 	struct wmi_pdev_tpc_final_table_event *ev;
+@@ -5064,12 +5065,24 @@ void ath10k_wmi_event_tpc_final_table(struct ath10k *ar, struct sk_buff *skb)
+ 
+ 	ev = (struct wmi_pdev_tpc_final_table_event *)skb->data;
+ 
++	num_tx_chain = __le32_to_cpu(ev->num_tx_chain);
++	if (num_tx_chain > WMI_TPC_TX_N_CHAIN) {
++		ath10k_warn(ar, "number of tx chain is %d greater than TPC final configured tx chain %d\n",
++			    num_tx_chain, WMI_TPC_TX_N_CHAIN);
++		return;
++	}
++
++	rate_max = __le32_to_cpu(ev->rate_max);
++	if (rate_max > WMI_TPC_FINAL_RATE_MAX) {
++		ath10k_warn(ar, "number of rate is %d greater than TPC final configured rate %d\n",
++			    rate_max, WMI_TPC_FINAL_RATE_MAX);
++		rate_max = WMI_TPC_FINAL_RATE_MAX;
++	}
++
+ 	tpc_stats = kzalloc(sizeof(*tpc_stats), GFP_ATOMIC);
+ 	if (!tpc_stats)
+ 		return;
+ 
+-	num_tx_chain = __le32_to_cpu(ev->num_tx_chain);
+-
+ 	ath10k_wmi_tpc_config_get_rate_code(rate_code, pream_table,
+ 					    num_tx_chain);
+ 
+@@ -5082,8 +5095,8 @@ void ath10k_wmi_event_tpc_final_table(struct ath10k *ar, struct sk_buff *skb)
+ 		__le32_to_cpu(ev->twice_antenna_reduction);
+ 	tpc_stats->power_limit = __le32_to_cpu(ev->power_limit);
+ 	tpc_stats->twice_max_rd_power = __le32_to_cpu(ev->twice_max_rd_power);
+-	tpc_stats->num_tx_chain = __le32_to_cpu(ev->num_tx_chain);
+-	tpc_stats->rate_max = __le32_to_cpu(ev->rate_max);
++	tpc_stats->num_tx_chain = num_tx_chain;
++	tpc_stats->rate_max = rate_max;
+ 
+ 	ath10k_wmi_tpc_stats_final_disp_tables(ar, ev, tpc_stats,
+ 					       rate_code, pream_table,
 -- 
-Yibo
+1.9.1
+
