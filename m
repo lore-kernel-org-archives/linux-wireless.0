@@ -1,196 +1,106 @@
-Return-Path: <SRS0=pq45=YD=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=YUKO=YE=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-11.4 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9A11C10F14
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Oct 2019 20:53:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1869AC4360C
+	for <linux-wireless@archiver.kernel.org>; Fri, 11 Oct 2019 02:24:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8DD5B208C3
-	for <linux-wireless@archiver.kernel.org>; Thu, 10 Oct 2019 20:53:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DAD37214E0
+	for <linux-wireless@archiver.kernel.org>; Fri, 11 Oct 2019 02:24:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lC2l7cvB"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="TZpDuH+C"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726728AbfJJUxW (ORCPT
+        id S1727950AbfJKCYU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 10 Oct 2019 16:53:22 -0400
-Received: from mail-wr1-f66.google.com ([209.85.221.66]:42770 "EHLO
-        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726533AbfJJUxV (ORCPT
+        Thu, 10 Oct 2019 22:24:20 -0400
+Received: from mail-vk1-f202.google.com ([209.85.221.202]:44778 "EHLO
+        mail-vk1-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727851AbfJKCYU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Oct 2019 16:53:21 -0400
-Received: by mail-wr1-f66.google.com with SMTP id n14so9445184wrw.9
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Oct 2019 13:53:20 -0700 (PDT)
+        Thu, 10 Oct 2019 22:24:20 -0400
+Received: by mail-vk1-f202.google.com with SMTP id b204so2919388vkb.11
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Oct 2019 19:24:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=zbWsOyqaUaMHm6xbSII/Hh4r9T9pk6P3FHSekk7NLFU=;
-        b=lC2l7cvBPfIl4Gq/l8GvzR3FxvmfuhHxOkkKNG+Nzv3wKCi4kplrEMVe2j6TbVpk/l
-         SdZTvDG/1zbVLm4dJaCnG8Xy8+ghhrToYzKyFegOnQtjEi1OWRlueKewQLjqt25tXr4i
-         hnYHONPrQN02siE1dX1miH07uqVW4gXOub1dICHKpO5wb3vQbxc/qxuSNwWiYQJj6pTp
-         ir9tudAC5vFJgsOPCCgxkHEDOWlWjP+LKRk9IAA+6DM6ASTNUezOEhQxwPKVqvB+J1lJ
-         9EGxl6y9CDKsSjJwDyv0c5BqqWtYNW8s4Kkr/kjtkjj5GIg7NkT1OoNVKROhl2Fur2z/
-         Y+cg==
+        d=google.com; s=20161025;
+        h=date:message-id:mime-version:subject:from:to:cc;
+        bh=pUbhQpJqyQJujGGClNz5rGmi70325W4vJGIc//2AsLU=;
+        b=TZpDuH+CtoaZW48xbK27bT8Enq+cfoyxNqz92gTog1NMcRv7axdRUt8GE1jRFig2yl
+         dADCRJ4LoasiDbn4RtpXrlUjHr1VgguwFY+OkzpFxTZwDZrUQGIzs2clK+JF6/9/n4QA
+         pXPG7JS+/kMnOTbrupQrdIiaxRdZ+ENo/rjxMVQux/hI8ZR11FLDETY20TcOk5RQVH3o
+         vu7XpXIJCnnMDwAhVhbBGpCAO5Bx1ud9L7NiViyWoPpDkX9NH7GZ0vB0OfrUte2JBjJ0
+         T3CA+Ph/1o5OZTRaATzD3Wu2m31eRR5JXfTZFirBX3UebEwlMwlv/Uy4wFqDU44Sj1+8
+         93bA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=zbWsOyqaUaMHm6xbSII/Hh4r9T9pk6P3FHSekk7NLFU=;
-        b=YoKzmkukXGE+ti+HzlZ3Wwidq9WdqFqjzonRz5QK3j0htbsNkVjCu7K7cSm//nJhmz
-         f2ygBOe3yyfYimRpxMtK3o67ZFKlbBshvnuDc4Dmh4sDsqtg18Y1uOyHmvaYMtn3M0It
-         GXdXj8KplLmOLk8pNvf4lskCl2zPzVGA3LWCkfJpkYlfva+EGKAKGNS+3UMjR0cb93dj
-         bYYVgHHu8n5FC69tcgrf6VhC6vtcAVti990J0jCVp9WAWiFTMM/2sLlgCH5MTdvu9fQ3
-         LpJj6uIo4pQzwjfJFZqPR3dWfBieMZ7tvgYYK+Gzu0icmg5jyTUoZJXx1bzFpORBMufT
-         eu1Q==
-X-Gm-Message-State: APjAAAVpZ6PZ7xfNfnU1w/QSYiLjy9rj01+7nA9u6qbh6rh2MRiabySU
-        yYU5XqXBpd1HJBZuZYIQ3U1MGB6ZuP8=
-X-Google-Smtp-Source: APXvYqwAVP4Sirp8uMbLsyEKE2RUSL0NVI9HK5gNpEZC2jXRuM8qAOBVr6co12geF+Z0ocycj3RI6Q==
-X-Received: by 2002:a5d:4901:: with SMTP id x1mr2092059wrq.28.1570740799141;
-        Thu, 10 Oct 2019 13:53:19 -0700 (PDT)
-Received: from localhost.localdomain ([31.147.208.18])
-        by smtp.googlemail.com with ESMTPSA id y18sm5179081wrs.6.2019.10.10.13.53.18
-        (version=TLS1 cipher=AES128-SHA bits=128/128);
-        Thu, 10 Oct 2019 13:53:18 -0700 (PDT)
-From:   =?UTF-8?q?Tomislav=20Po=C5=BEega?= <pozega.tomislav@gmail.com>
-To:     linux-wireless@vger.kernel.org
-Cc:     kvalo@codeaurora.org, ath10k@lists.infradead.org
-Subject: [PATCH] ath: rename regulatory rules
-Date:   Thu, 10 Oct 2019 22:53:15 +0200
-Message-Id: <1570740795-12522-1-git-send-email-pozega.tomislav@gmail.com>
-X-Mailer: git-send-email 1.7.0.4
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+        h=x-gm-message-state:date:message-id:mime-version:subject:from:to:cc;
+        bh=pUbhQpJqyQJujGGClNz5rGmi70325W4vJGIc//2AsLU=;
+        b=SWRJcv0YoSGE9YyWc2EivlHqdoH/iTrbD24wE/aUkYYkvQKL9gScusk/hc0saldVpg
+         ozSgzn2lVQqzWdbMu/kOqGJOZB3tei+o5GOBXNv3lZta2Qd8QUv3Iq0IDr+fXiQ5R929
+         jzN7J24PoblijqNqE+YWR5TNm69EKylA3JNoFnGh9MY5AXDAySWaOEt3epYcAQaIbXjq
+         i6jOFnkVxZD5RZ7MK/8Krc3mo0AYlt25dqE3zY/8DHAb3sD9mYoig7CiUTTDoRxl5SBU
+         8s7G8KgH6F7k/nA1cDSr9DNKO3Ung8SlyOZs8qxyIiHYh2F5LIJrM0kEjjzVIdLiQsv7
+         m8qQ==
+X-Gm-Message-State: APjAAAXPqiS7xJ5GHRaCuc9gOWue2c+6HQ5T7S0GXa+LKOhMMe6jN3J/
+        guCAWHEYTulnzryJPBltcjpimkBy
+X-Google-Smtp-Source: APXvYqxY3q2B3RSwzFSwc+FyjuVBvP5Fj90jJy/rxeafgUwzP3vNGN4KnVt5cfm9v1T2wdN74PDWYXeB
+X-Received: by 2002:a67:f4c4:: with SMTP id s4mr7526195vsn.185.1570760658126;
+ Thu, 10 Oct 2019 19:24:18 -0700 (PDT)
+Date:   Thu, 10 Oct 2019 19:24:11 -0700
+Message-Id: <20191011022413.176208-1-kyan@google.com>
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.23.0.700.g56cf767bdb-goog
+Subject: [PATCH v4 0/2] Implement Airtime-based Queue Limit (AQL)
+From:   Kan Yan <kyan@google.com>
+To:     johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org,
+        make-wifi-fast@lists.bufferbloat.net, toke@redhat.com,
+        nbd@nbd.name, ath10k@lists.infradead.org, yiboz@codeaurora.org,
+        Kan Yan <kyan@google.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Regulatory rule defines in regd.c are used not only by ath9k but also
-ath10k driver (haven't test other drivers) and thus should be
-renamed from ATH9K* to ATH*.
+This patch series implements Airtime-based Queue Limit (AQL) in the mac80211 and Ath10k driver. It is based on an earlier version from the ChromiumOS tree[0].
 
-Signed-off-by: Tomislav Požega <pozega.tomislav@gmail.com>
----
- drivers/net/wireless/ath/regd.c |   50 +++++++++++++++++++-------------------
- 1 files changed, 25 insertions(+), 25 deletions(-)
+This version has been tested with QCA9884 platform with 4.14 kernel. Tests show AQL is able to reduce latency by an order of magnitude in a congested environment without negative impact on the throughput.
 
-diff --git a/drivers/net/wireless/ath/regd.c b/drivers/net/wireless/ath/regd.c
-index e25bfdf..20f4f8e 100644
---- a/drivers/net/wireless/ath/regd.c
-+++ b/drivers/net/wireless/ath/regd.c
-@@ -33,33 +33,33 @@
-  */
- 
- /* Only these channels all allow active scan on all world regulatory domains */
--#define ATH9K_2GHZ_CH01_11	REG_RULE(2412-10, 2462+10, 40, 0, 20, 0)
-+#define ATH_2GHZ_CH01_11	REG_RULE(2412-10, 2462+10, 40, 0, 20, 0)
- 
- /* We enable active scan on these a case by case basis by regulatory domain */
--#define ATH9K_2GHZ_CH12_13	REG_RULE(2467-10, 2472+10, 40, 0, 20,\
-+#define ATH_2GHZ_CH12_13	REG_RULE(2467-10, 2472+10, 40, 0, 20,\
- 					 NL80211_RRF_NO_IR)
--#define ATH9K_2GHZ_CH14		REG_RULE(2484-10, 2484+10, 40, 0, 20,\
-+#define ATH_2GHZ_CH14		REG_RULE(2484-10, 2484+10, 40, 0, 20,\
- 					 NL80211_RRF_NO_IR | \
- 					 NL80211_RRF_NO_OFDM)
- 
- /* We allow IBSS on these on a case by case basis by regulatory domain */
--#define ATH9K_5GHZ_5150_5350	REG_RULE(5150-10, 5350+10, 80, 0, 30,\
-+#define ATH_5GHZ_5150_5350	REG_RULE(5150-10, 5350+10, 80, 0, 30,\
- 					 NL80211_RRF_NO_IR)
--#define ATH9K_5GHZ_5470_5850	REG_RULE(5470-10, 5850+10, 80, 0, 30,\
-+#define ATH_5GHZ_5470_5850	REG_RULE(5470-10, 5850+10, 80, 0, 30,\
- 					 NL80211_RRF_NO_IR)
--#define ATH9K_5GHZ_5725_5850	REG_RULE(5725-10, 5850+10, 80, 0, 30,\
-+#define ATH_5GHZ_5725_5850	REG_RULE(5725-10, 5850+10, 80, 0, 30,\
- 					 NL80211_RRF_NO_IR)
- 
--#define ATH9K_2GHZ_ALL		ATH9K_2GHZ_CH01_11, \
--				ATH9K_2GHZ_CH12_13, \
--				ATH9K_2GHZ_CH14
-+#define ATH_2GHZ_ALL		ATH_2GHZ_CH01_11, \
-+				ATH_2GHZ_CH12_13, \
-+				ATH_2GHZ_CH14
- 
--#define ATH9K_5GHZ_ALL		ATH9K_5GHZ_5150_5350, \
--				ATH9K_5GHZ_5470_5850
-+#define ATH_5GHZ_ALL		ATH_5GHZ_5150_5350, \
-+				ATH_5GHZ_5470_5850
- 
- /* This one skips what we call "mid band" */
--#define ATH9K_5GHZ_NO_MIDBAND	ATH9K_5GHZ_5150_5350, \
--				ATH9K_5GHZ_5725_5850
-+#define ATH_5GHZ_NO_MIDBAND	ATH_5GHZ_5150_5350, \
-+				ATH_5GHZ_5725_5850
- 
- /* Can be used for:
-  * 0x60, 0x61, 0x62 */
-@@ -67,8 +67,8 @@
- 	.n_reg_rules = 5,
- 	.alpha2 =  "99",
- 	.reg_rules = {
--		ATH9K_2GHZ_ALL,
--		ATH9K_5GHZ_ALL,
-+		ATH_2GHZ_ALL,
-+		ATH_5GHZ_ALL,
- 	}
- };
- 
-@@ -77,9 +77,9 @@
- 	.n_reg_rules = 4,
- 	.alpha2 =  "99",
- 	.reg_rules = {
--		ATH9K_2GHZ_CH01_11,
--		ATH9K_2GHZ_CH12_13,
--		ATH9K_5GHZ_NO_MIDBAND,
-+		ATH_2GHZ_CH01_11,
-+		ATH_2GHZ_CH12_13,
-+		ATH_5GHZ_NO_MIDBAND,
- 	}
- };
- 
-@@ -88,8 +88,8 @@
- 	.n_reg_rules = 3,
- 	.alpha2 =  "99",
- 	.reg_rules = {
--		ATH9K_2GHZ_CH01_11,
--		ATH9K_5GHZ_NO_MIDBAND,
-+		ATH_2GHZ_CH01_11,
-+		ATH_5GHZ_NO_MIDBAND,
- 	}
- };
- 
-@@ -98,8 +98,8 @@
- 	.n_reg_rules = 3,
- 	.alpha2 =  "99",
- 	.reg_rules = {
--		ATH9K_2GHZ_CH01_11,
--		ATH9K_5GHZ_ALL,
-+		ATH_2GHZ_CH01_11,
-+		ATH_5GHZ_ALL,
- 	}
- };
- 
-@@ -108,9 +108,9 @@
- 	.n_reg_rules = 4,
- 	.alpha2 =  "99",
- 	.reg_rules = {
--		ATH9K_2GHZ_CH01_11,
--		ATH9K_2GHZ_CH12_13,
--		ATH9K_5GHZ_ALL,
-+		ATH_2GHZ_CH01_11,
-+		ATH_2GHZ_CH12_13,
-+		ATH_5GHZ_ALL,
- 	}
- };
- 
+[0] https://chromium-review.googlesource.com/c/chromiumos/third_party/kernel/+/1703105/7
+
+Kan Yan (2):
+  mac80211: Implement Airtime-based Queue Limit (AQL)
+  ath10k: Enable Airtime-based Queue Limit (AQL)
+
+ drivers/net/wireless/ath/ath10k/htt_rx.c |  1 +
+ drivers/net/wireless/ath/ath10k/mac.c    |  6 +-
+ drivers/net/wireless/ath/ath10k/txrx.c   | 11 +++-
+ include/net/cfg80211.h                   |  7 +++
+ include/net/mac80211.h                   | 47 ++++++++++++++
+ net/mac80211/debugfs.c                   | 78 ++++++++++++++++++++++++
+ net/mac80211/debugfs_sta.c               | 43 ++++++++++---
+ net/mac80211/ieee80211_i.h               |  4 ++
+ net/mac80211/main.c                      |  9 ++-
+ net/mac80211/sta_info.c                  | 33 ++++++++++
+ net/mac80211/sta_info.h                  |  4 ++
+ net/mac80211/tx.c                        | 46 +++++++++++++-
+ 12 files changed, 270 insertions(+), 19 deletions(-)
+
 -- 
-1.7.0.4
+Changes from v1:
+ - Fix checkpatch error.
+ - Keep iterate the list of active_txq until an eligible txq's deficit become non-negative in ieee80211_next_txq(), instead of break the loop after one iteration.
+ - Enforce the AQL limit in ath10k's pull mode in ath10k_htt_rx_tx_fetch_ind()
 
+Changes from v2:
+ - More coding style fixes.
+ - Fixed a bug that txq is not removed from the active_txqs list when txq.sta is null.
+ - Removed AQL queue limit check from ieee80211_txq_may_transmit(), so at least one frame will be sent to the firmware when called from ath10k_htt_rx_tx_fetch_ind() in ath10k's poll mode.
+
+Changes from v3:
+ - Coding style fixes.
