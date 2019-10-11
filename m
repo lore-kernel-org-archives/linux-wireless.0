@@ -2,134 +2,87 @@ Return-Path: <SRS0=YUKO=YE=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0
-	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CEBDEECE58C
-	for <linux-wireless@archiver.kernel.org>; Fri, 11 Oct 2019 08:57:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF444C47404
+	for <linux-wireless@archiver.kernel.org>; Fri, 11 Oct 2019 11:57:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A862D21A4A
-	for <linux-wireless@archiver.kernel.org>; Fri, 11 Oct 2019 08:57:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 987E0206CD
+	for <linux-wireless@archiver.kernel.org>; Fri, 11 Oct 2019 11:57:37 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="dcyAOLXl";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="eCT6yiCW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727509AbfJKI5x (ORCPT
+        id S1727855AbfJKL5d (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 11 Oct 2019 04:57:53 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:34772 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726310AbfJKI5w (ORCPT
+        Fri, 11 Oct 2019 07:57:33 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:37928 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727198AbfJKL5d (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 Oct 2019 04:57:52 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.92.2)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1iIqk9-0005yz-TB; Fri, 11 Oct 2019 10:57:50 +0200
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     netdev@vger.kernel.org
-Cc:     linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211-next next-2019-10-11
-Date:   Fri, 11 Oct 2019 10:57:35 +0200
-Message-Id: <20191011085736.15772-1-johannes@sipsolutions.net>
-X-Mailer: git-send-email 2.20.1
+        Fri, 11 Oct 2019 07:57:33 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 173FC60ADE; Fri, 11 Oct 2019 11:57:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1570795052;
+        bh=EPYe5kTBBGci2tg48EPs5GLHdxzLBPQNaqpnWCbvN0A=;
+        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
+        b=dcyAOLXlc63HacOqTCRkTOezC44jm2EsyeUorxd4Y2Czh0nylMKLnukFv2yIPyDC6
+         gSEkVyhOQ9ZCuAADkDBMe2oepgpoWIS6GeGE5xrcy8lb2+J7dP2OL3jy6rJbjCP01C
+         +IHbZyPOYgUzaj0GS9Nt+pRHzcpRXpJGfgV2qm1w=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id B19BB602EE;
+        Fri, 11 Oct 2019 11:57:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1570795051;
+        bh=EPYe5kTBBGci2tg48EPs5GLHdxzLBPQNaqpnWCbvN0A=;
+        h=Subject:From:In-Reply-To:References:To:Cc:From;
+        b=eCT6yiCW4z23JIr4WE8iA1QhYZu/HoLLv/OdH8G5QEa5TVLcY4VigfBIS5uGhmp5d
+         ds0tQP+w3Vc91Niy04tYYt51RBcWIsQeY182WQVCX9JPWZIQEo5T4etyqE2VxVguwl
+         07Ii9gVVw/vvgqEa50iIDZK8TnIqgB7yHP0PYHaI=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org B19BB602EE
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH] ath10k: Correct error check of dma_map_single()
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20191010162653.141303-1-bjorn.andersson@linaro.org>
+References: <20191010162653.141303-1-bjorn.andersson@linaro.org>
+To:     Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc:     "David S. Miller" <davem@davemloft.net>,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Niklas Cassel <niklas.cassel@linaro.org>,
+        stable@vger.kernel.org
+User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
+Message-Id: <20191011115732.173FC60ADE@smtp.codeaurora.org>
+Date:   Fri, 11 Oct 2019 11:57:32 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
+Bjorn Andersson <bjorn.andersson@linaro.org> wrote:
 
-Let me try to be a bit "maintainer-of-the-day agnostic" ;-)
+> The return value of dma_map_single() should be checked for errors using
+> dma_mapping_error(), rather than testing for NULL. Correct this.
+> 
+> Fixes: 1807da49733e ("ath10k: wmi: add management tx by reference support over wmi")
+> Cc: stable@vger.kernel.org
+> Reported-by: Niklas Cassel <niklas.cassel@linaro.org>
+> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
 
-I'll be going on vacation, but figured I'd at least get this
-stuff out. As usual, I ran the hwsim tests from wpa_s/hostapd
-and all looks fine, compilation also was OK.
+Did this fix any real bug? Or is this just something found during code review?
 
-Kalle has agreed to help cover when I'm on vacation (though
-I'm home next week, so if there's any fallout I'll deal with
-it then), so if there's something urgent he may include some
-stack changes in his trees or ask you to or apply a patch.
+-- 
+https://patchwork.kernel.org/patch/11183923/
 
-Please pull and let me know if there's any problem.
-
-Thanks,
-johannes
-
-
-
-The following changes since commit 9077f052abd5391a866dd99e27212213648becef:
-
-  net: propagate errors correctly in register_netdevice() (2019-10-03 12:31:06 -0700)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git tags/mac80211-next-for-net-next-2019-10-11
-
-for you to fetch changes up to 7dfd8ac327301f302b03072066c66eb32578e940:
-
-  mac80211_hwsim: add support for OCB (2019-10-11 10:33:34 +0200)
-
-----------------------------------------------------------------
-A few more small things, nothing really stands out:
- * minstrel improvements from Felix
- * a TX aggregation simplification
- * some additional capabilities for hwsim
- * minor cleanups & docs updates
-
-----------------------------------------------------------------
-Denis Kenzior (1):
-      nl80211: trivial: Remove redundant loop
-
-Felix Fietkau (3):
-      mac80211: minstrel: remove divisions in tx status path
-      mac80211: minstrel_ht: replace rate stats ewma with a better moving average
-      mac80211: minstrel_ht: rename prob_ewma to prob_avg, use it for the new average
-
-Johannes Berg (2):
-      mac80211: pass internal sta to ieee80211_tx_frags()
-      mac80211: simplify TX aggregation start
-
-Koen Vandeputte (1):
-      mac80211: IBSS: avoid unneeded return value processing
-
-Ramon Fontes (2):
-      mac80211_hwsim: add more 5GHz channels, 5/10 MHz support
-      mac80211_hwsim: add support for OCB
-
-Sunil Dutt (1):
-      nl80211: Document the expectation for NL80211_ATTR_IE in NL80211_CMD_CONNECT
-
- drivers/net/wireless/ath/ath9k/htc_drv_main.c      |  2 +-
- drivers/net/wireless/ath/ath9k/main.c              |  2 +-
- drivers/net/wireless/ath/carl9170/main.c           |  3 +-
- drivers/net/wireless/ath/wcn36xx/main.c            |  5 +-
- .../broadcom/brcm80211/brcmsmac/mac80211_if.c      |  3 +-
- drivers/net/wireless/intel/iwlegacy/4965-mac.c     |  2 +-
- drivers/net/wireless/intel/iwlwifi/dvm/tx.c        |  2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c       |  5 +-
- drivers/net/wireless/mac80211_hwsim.c              | 37 +++++++++--
- drivers/net/wireless/marvell/mwl8k.c               |  2 +-
- drivers/net/wireless/mediatek/mt76/mt7603/main.c   |  3 +-
- drivers/net/wireless/mediatek/mt76/mt7615/main.c   |  3 +-
- drivers/net/wireless/mediatek/mt76/mt76x02_util.c  |  3 +-
- drivers/net/wireless/mediatek/mt7601u/main.c       |  3 +-
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c     |  4 +-
- drivers/net/wireless/realtek/rtlwifi/base.c        |  3 +-
- drivers/net/wireless/realtek/rtw88/mac80211.c      |  3 +-
- drivers/net/wireless/rsi/rsi_91x_mac80211.c        |  3 +-
- include/net/mac80211.h                             | 11 +++-
- include/uapi/linux/nl80211.h                       |  8 +++
- net/mac80211/agg-tx.c                              |  9 ++-
- net/mac80211/ibss.c                                |  9 +--
- net/mac80211/rc80211_minstrel.c                    | 48 +++++++-------
- net/mac80211/rc80211_minstrel.h                    | 57 +++++++++++++++--
- net/mac80211/rc80211_minstrel_debugfs.c            |  8 +--
- net/mac80211/rc80211_minstrel_ht.c                 | 73 ++++++++++++----------
- net/mac80211/rc80211_minstrel_ht.h                 |  2 +-
- net/mac80211/rc80211_minstrel_ht_debugfs.c         |  8 +--
- net/mac80211/tx.c                                  | 15 ++---
- net/wireless/nl80211.c                             |  6 +-
- 30 files changed, 212 insertions(+), 130 deletions(-)
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
