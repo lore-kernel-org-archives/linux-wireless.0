@@ -2,236 +2,101 @@ Return-Path: <SRS0=gYjh=YF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 776C7C10F14
-	for <linux-wireless@archiver.kernel.org>; Sat, 12 Oct 2019 11:44:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 381DFC4360C
+	for <linux-wireless@archiver.kernel.org>; Sat, 12 Oct 2019 15:48:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 41DC12089F
-	for <linux-wireless@archiver.kernel.org>; Sat, 12 Oct 2019 11:44:41 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ITLTft8A"
+	by mail.kernel.org (Postfix) with ESMTP id 0E84B206CD
+	for <linux-wireless@archiver.kernel.org>; Sat, 12 Oct 2019 15:48:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727642AbfJLLo0 (ORCPT
+        id S1729146AbfJLPsf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 12 Oct 2019 07:44:26 -0400
-Received: from mail-lj1-f193.google.com ([209.85.208.193]:39580 "EHLO
-        mail-lj1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727083AbfJLLmZ (ORCPT
+        Sat, 12 Oct 2019 11:48:35 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:48596 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727115AbfJLPsf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 12 Oct 2019 07:42:25 -0400
-Received: by mail-lj1-f193.google.com with SMTP id y3so12261395ljj.6;
-        Sat, 12 Oct 2019 04:42:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=y11pBCe1CKAjsPMn1sqz/oYdoQIUENwcNyPETlfS7fU=;
-        b=ITLTft8A4VLVxPboRseeDV2uqnjEVCF9cadQ+LcoeaUZcDpo3zF2O9AINuaIkyND6L
-         /1/lA/sScUZblZRjpvdoky/Bc0HYMr8YCUQGgpgqnrRY65N1GZVfSSQ78f+qAElw2Dcw
-         DpuohN20RNKfrIsPyxBYk7hT79xOqI9tvYT1+X+BNOTbTfNkBjP6b6G0kdC0ssvHjX6B
-         IA5f5o8aDKnxfsB3SI8fQrvnwyu1xEhuhtjWrELnT7hja3YhnG82AkmLuU8p6RHYDhBV
-         Qi+I8f0icJ5AmGNR2cMB66fu4D6Xg1X3oTfLzFSpI28qfPjZjYhC5vwmGxKPO0mpL+Y5
-         kp/A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=y11pBCe1CKAjsPMn1sqz/oYdoQIUENwcNyPETlfS7fU=;
-        b=tyLUG+bF+c4MBlPxkP0ILpiTFZiualTP+VmkX7Fb/pxzusKjZLt7wZTHx9OROHK5Os
-         Sdg9jZ+yZDIXjx32FEWBtIU6rz+vDexVs0/QxYgS7HChRYb2OfnZYtB4tvC/2s51ZRLC
-         PgPQSeIP+yBsGihs669dUCPFWqSb5cytKKPlqxFi3Vdb8NYywT20o1e2luQ6o9fcVNUf
-         uL6OqAFNlUgqT0qmDpPJEzUEYXHDYikpnoiRSLdvFIqqAY89F2N/GSpzNF91bfDLyYI7
-         zoOOgLS7ctxTpGVo9MvGscyWu7lsS611G7XUfpCHrZ7fqi+kYkcFKypKdH6zbFrvMaTu
-         5LlA==
-X-Gm-Message-State: APjAAAWIgTpXjpZ/KU/uTan6J+ILQX7J24jzwWAp/NEENV0rTXOpeQ/p
-        ld57swf8RVrRXSIRzaWw6Yr3rrEIq279Jumq8wE=
-X-Google-Smtp-Source: APXvYqy/gnffCmgt2jJTKy6Gr8N+EK2KyGkJCilmqHqxTdAB2DDpDC2Yx3nJC/JcHfFIUJw68YBSZGH85FgG/jF7Qw4=
-X-Received: by 2002:a2e:9695:: with SMTP id q21mr12014562lji.105.1570880540837;
- Sat, 12 Oct 2019 04:42:20 -0700 (PDT)
+        Sat, 12 Oct 2019 11:48:35 -0400
+Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
+        by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.92)
+        (envelope-from <luca@coelho.fi>)
+        id 1iJJdA-0005yf-VG; Sat, 12 Oct 2019 18:48:33 +0300
+From:   Luca Coelho <luca@coelho.fi>
+To:     kvalo@codeaurora.org
+Cc:     linux-wireless@vger.kernel.org
+Date:   Sat, 12 Oct 2019 18:48:12 +0300
+Message-Id: <20191012154828.9249-1-luca@coelho.fi>
+X-Mailer: git-send-email 2.23.0
 MIME-Version: 1.0
-References: <20190928164843.31800-1-ap420073@gmail.com> <20190928164843.31800-2-ap420073@gmail.com>
- <20191010101925.GA93190@bistromath.localdomain>
-In-Reply-To: <20191010101925.GA93190@bistromath.localdomain>
-From:   Taehee Yoo <ap420073@gmail.com>
-Date:   Sat, 12 Oct 2019 20:42:09 +0900
-Message-ID: <CAMArcTWEbH5=UKRSrw0-QR+dyT2GCJf3sjUA=eKVOEUJ3Wj8gQ@mail.gmail.com>
-Subject: Re: [PATCH net v4 01/12] net: core: limit nested device depth
-To:     Sabrina Dubroca <sd@queasysnail.net>
-Cc:     David Miller <davem@davemloft.net>,
-        Netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org,
-        Jakub Kicinski <jakub.kicinski@netronome.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        j.vosburgh@gmail.com, vfalico@gmail.com,
-        Andy Gospodarek <andy@greyhouse.net>,
-        =?UTF-8?B?SmnFmcOtIFDDrXJrbw==?= <jiri@resnulli.us>,
-        Roopa Prabhu <roopa@cumulusnetworks.com>, saeedm@mellanox.com,
-        manishc@marvell.com, rahulv@marvell.com, kys@microsoft.com,
-        haiyangz@microsoft.com,
-        Stephen Hemminger <stephen@networkplumber.org>,
-        sashal@kernel.org, hare@suse.de, varun@chelsio.com,
-        ubraun@linux.ibm.com, kgraul@linux.ibm.com,
-        Jay Vosburgh <jay.vosburgh@canonical.com>,
-        Cody Schuffelen <schuffelen@google.com>, bjorn@mork.no
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+Subject: [PATCH 00/16] iwlwifi: updates intended for v5.5 2019-10-12
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, 10 Oct 2019 at 19:19, Sabrina Dubroca <sd@queasysnail.net> wrote:
->
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Hi Sabrina,
+Hi,
 
-Thank you for review and testing!
+Here's the first set of patches intended for v5.5.  This one contains
+only changes to our debugging infrastructure.  There was a big revamp
+on what we had before and this patchset is a bit large, but I didn't
+see a reason to break it in two artificially.
 
-> 2019-09-28, 16:48:32 +0000, Taehee Yoo wrote:
-> > @@ -6790,23 +6878,45 @@ int netdev_walk_all_lower_dev(struct net_device *dev,
-> >                                       void *data),
-> >                             void *data)
-> >  {
-> > -     struct net_device *ldev;
-> > -     struct list_head *iter;
-> > -     int ret;
-> > +     struct net_device *ldev, *next, *now, *dev_stack[MAX_NEST_DEV + 1];
-> > +     struct list_head *niter, *iter, *iter_stack[MAX_NEST_DEV + 1];
-> > +     int ret, cur = 0;
-> >
-> > -     for (iter = &dev->adj_list.lower,
-> > -          ldev = netdev_next_lower_dev(dev, &iter);
-> > -          ldev;
-> > -          ldev = netdev_next_lower_dev(dev, &iter)) {
-> > -             /* first is the lower device itself */
-> > -             ret = fn(ldev, data);
-> > -             if (ret)
-> > -                     return ret;
-> > +     now = dev;
-> > +     iter = &dev->adj_list.lower;
-> >
-> > -             /* then look at all of its lower devices */
-> > -             ret = netdev_walk_all_lower_dev(ldev, fn, data);
-> > -             if (ret)
-> > -                     return ret;
-> > +     while (1) {
-> > +             if (now != dev) {
-> > +                     ret = fn(now, data);
-> > +                     if (ret)
-> > +                             return ret;
-> > +             }
-> > +
-> > +             next = NULL;
-> > +             while (1) {
-> > +                     ldev = netdev_next_lower_dev(now, &iter);
-> > +                     if (!ldev)
-> > +                             break;
-> > +
-> > +                     if (!next) {
-> > +                             next = ldev;
-> > +                             niter = &ldev->adj_list.lower;
-> > +                     } else {
-> > +                             dev_stack[cur] = ldev;
-> > +                             iter_stack[cur++] = &ldev->adj_list.lower;
-> > +                             break;
-> > +                     }
-> > +             }
-> > +
-> > +             if (!next) {
-> > +                     if (!cur)
-> > +                             return 0;
->
-> Hmm, I don't think this condition is correct.
->
-> If we have this topology:
->
->
->                 bridge0
->                 /  |  \
->                /   |   \
->               /    |    \
->         dummy0   vlan1   vlan2
->                    |       \
->                  dummy1    dummy2
->
-> We end up with the expected lower/upper levels for all devices:
->
->     | device  | upper | lower |
->     |---------+-------+-------|
->     | dummy0  |     2 |     1 |
->     | dummy1  |     3 |     1 |
->     | dummy2  |     3 |     1 |
->     | vlan1   |     2 |     2 |
->     | vlan2   |     2 |     2 |
->     | bridge0 |     1 |     3 |
->
->
-> If we then add macvlan0 on top of bridge0:
->
->
->                 macvlan0
->                    |
->                    |
->                 bridge0
->                 /  |  \
->                /   |   \
->               /    |    \
->         dummy0   vlan1   vlan2
->                    |       \
->                  dummy1    dummy2
->
->
-> we can observe that __netdev_update_upper_level is only called for
-> some of the devices under bridge0. I added a perf probe:
->
->  # perf probe -a '__netdev_update_upper_level dev->name:string'
->
-> which gets hit for bridge0 (called directly by
-> __netdev_upper_dev_link) and then dummy0, vlan1, dummy1. It is never
-> called for vlan2 and dummy2.
->
-> After this, we have the following levels (*):
->
->     | device   | upper | lower |
->     |----------+-------+-------|
->     | dummy0   |     3 |     1 |
->     | dummy1   |     4 |     1 |
->     | dummy2   |     3 |     1 |
->     | vlan1    |     3 |     2 |
->     | vlan2    |     2 |     2 |
->     | bridge0  |     2 |     3 |
->     | macvlan0 |     1 |     4 |
->
-> For dummy0, dummy1, vlan1, the upper level has increased by 1, as
-> expected. For dummy2 and vlan2, it's still the same, which is wrong.
->
->
-> (*) observed easily by adding another probe:
->
->  # perf probe -a 'dev_get_stats dev->name:string dev->upper_level dev->lower_level'
->
-> and running "ip link"
->
-> Or you can just add prints and recompile, of course :)
->
+As usual, I'm pushing this to a pending branch, for kbuild bot, and
+will send a pull-request later.
 
-Thank you so much, I found a bug very easily with your test config.
-I will fix this bug in a v5 patch.
+Please review.
 
-> > +                     next = dev_stack[--cur];
-> > +                     niter = iter_stack[cur];
-> > +             }
-> > +
-> > +             now = next;
-> > +             iter = niter;
-> >       }
-> >
-> >       return 0;
->
-> --
-> Sabrina
+Cheers,
+Luca.
 
-Thank you,
-Taehee Yoo
+
+Shahar S Matityahu (16):
+  iwlwifi: dbg_ini: load external dbg cfg after internal cfg is loaded
+  iwlwifi: dbg_ini: use new region TLV in dump flow
+  iwlwifi: dbg_ini: use new trigger TLV in dump flow
+  iwlwifi: dbg: remove multi buffers infra
+  iwlwifi: dbg_ini: add monitor dumping support
+  iwlwifi: dbg_ini: add error tables dumping support
+  iwlwifi: dbg_ini: use new API in dump info
+  iwlwifi: dbg_ini: add TLV allocation new API support
+  iwlwifi: dbg_ini: implement time point handling
+  iwlwifi: dbg_ini: implement monitor allocation flow
+  iwlwifi: dbg_ini: add periodic trigger new API support
+  iwlwifi: dbg_ini: support domain changing via debugfs
+  iwlwifi: dbg_ini: support FW response/notification region type
+  iwlwifi: dbg_ini: rename external debug configuration file
+  iwlwifi: dbg_ini: remove old API and some related code
+  iwlwifi: dbg_ini: support FW notification dumping in case of missed
+    beacon
+
+ .../net/wireless/intel/iwlwifi/cfg/22000.c    |  55 +-
+ drivers/net/wireless/intel/iwlwifi/cfg/9000.c |  25 +-
+ .../wireless/intel/iwlwifi/fw/api/dbg-tlv.h   | 514 ++++------
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c   | 800 ++++++++++------
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.h   |  47 +-
+ .../net/wireless/intel/iwlwifi/fw/debugfs.c   |  37 +
+ .../wireless/intel/iwlwifi/fw/error-dump.h    |  63 +-
+ drivers/net/wireless/intel/iwlwifi/fw/file.h  |   3 +-
+ drivers/net/wireless/intel/iwlwifi/fw/img.h   |  12 -
+ .../net/wireless/intel/iwlwifi/fw/runtime.h   |  58 +-
+ .../net/wireless/intel/iwlwifi/iwl-config.h   |  28 +-
+ .../net/wireless/intel/iwlwifi/iwl-dbg-tlv.c  | 891 +++++++++++++++++-
+ .../net/wireless/intel/iwlwifi/iwl-dbg-tlv.h  |  22 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c  |   4 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-prph.h |   7 +
+ .../net/wireless/intel/iwlwifi/iwl-trans.h    |  40 +-
+ .../net/wireless/intel/iwlwifi/mvm/mac-ctxt.c |   3 +-
+ .../intel/iwlwifi/pcie/ctxt-info-gen3.c       |  77 +-
+ .../net/wireless/intel/iwlwifi/pcie/trans.c   | 149 +--
+ 19 files changed, 2003 insertions(+), 832 deletions(-)
+
+-- 
+2.23.0
+
