@@ -6,36 +6,36 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE185C4360C
-	for <linux-wireless@archiver.kernel.org>; Sat, 12 Oct 2019 15:48:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FC91ECE58C
+	for <linux-wireless@archiver.kernel.org>; Sat, 12 Oct 2019 15:48:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C9477206CD
-	for <linux-wireless@archiver.kernel.org>; Sat, 12 Oct 2019 15:48:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 639A4206CD
+	for <linux-wireless@archiver.kernel.org>; Sat, 12 Oct 2019 15:48:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729257AbfJLPsf (ORCPT
+        id S1729381AbfJLPsl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 12 Oct 2019 11:48:35 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:48602 "EHLO
+        Sat, 12 Oct 2019 11:48:41 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:48636 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728977AbfJLPsf (ORCPT
+        with ESMTP id S1729274AbfJLPsl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 12 Oct 2019 11:48:35 -0400
+        Sat, 12 Oct 2019 11:48:41 -0400
 Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1iJJdB-0005yf-Pn; Sat, 12 Oct 2019 18:48:34 +0300
+        id 1iJJdH-0005yf-Et; Sat, 12 Oct 2019 18:48:39 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Sat, 12 Oct 2019 18:48:13 +0300
-Message-Id: <20191012184707.5e5cf637d18a.I918d7240a425d5904677c2b95d1446cb643ce5db@changeid>
+Date:   Sat, 12 Oct 2019 18:48:18 +0300
+Message-Id: <20191012184707.144ef5f93643.I20693d5e3ff0007029a6e1cf17b7c174c29442c6@changeid>
 X-Mailer: git-send-email 2.23.0
 In-Reply-To: <20191012154828.9249-1-luca@coelho.fi>
 References: <20191012154828.9249-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 01/16] iwlwifi: dbg_ini: load external dbg cfg after internal cfg is loaded
+Subject: [PATCH 06/16] iwlwifi: dbg_ini: add error tables dumping support
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -43,41 +43,131 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 
-In the new API implementation the driver does not keep the internal and
-external debug configurations in separate structs so the last
-configuration that is loaded overrides the previous ones (this is true
-only in some of the TLVs e.g. the buffer allocation TLV).
-Load the external configuration after the internal is loaded so that
-user configuration will override the default coming with the FW.
+Allow to collect error table data.
 
 Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c   | 61 ++++++++++++++++++-
+ .../wireless/intel/iwlwifi/fw/error-dump.h    | 11 ++++
+ 2 files changed, 70 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-index ff0519ea00a5..b0881e713b48 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-@@ -1560,6 +1560,8 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
- 	IWL_INFO(drv, "loaded firmware version %s op_mode %s\n",
- 		 drv->fw.fw_version, op->name);
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+index dbaaac2486c7..ee555b8cf5bb 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+@@ -1430,6 +1430,25 @@ static int iwl_dump_ini_rxf_iter(struct iwl_fw_runtime *fwrt,
+ 	return sizeof(*range) + le32_to_cpu(range->range_data_size);
+ }
  
-+	iwl_dbg_tlv_load_bin(drv->trans->dev, drv->trans);
++static int
++iwl_dump_ini_err_table_iter(struct iwl_fw_runtime *fwrt,
++			    struct iwl_dump_ini_region_data *reg_data,
++			    void *range_ptr, int idx)
++{
++	struct iwl_fw_ini_region_tlv *reg = (void *)reg_data->reg_tlv->data;
++	struct iwl_fw_ini_region_err_table *err_table = &reg->err_table;
++	struct iwl_fw_ini_error_dump_range *range = range_ptr;
++	u32 addr = le32_to_cpu(err_table->base_addr) +
++		   le32_to_cpu(err_table->offset);
 +
- 	/* add this device to the list of devices using this op_mode */
- 	list_add_tail(&drv->list, &op->drv);
++	range->internal_base_addr = cpu_to_le32(addr);
++	range->range_data_size = err_table->size;
++	iwl_trans_read_mem_bytes(fwrt->trans, addr, range->data,
++				 le32_to_cpu(err_table->size));
++
++	return sizeof(*range) + le32_to_cpu(range->range_data_size);
++}
++
+ static void *
+ iwl_dump_ini_mem_fill_header(struct iwl_fw_runtime *fwrt,
+ 			     struct iwl_dump_ini_region_data *reg_data,
+@@ -1524,6 +1543,20 @@ iwl_dump_ini_mon_smem_fill_header(struct iwl_fw_runtime *fwrt,
+ 					    &fwrt->trans->cfg->mon_smem_regs);
+ }
  
-@@ -1636,8 +1638,6 @@ struct iwl_drv *iwl_drv_start(struct iwl_trans *trans)
- 	init_completion(&drv->request_firmware_complete);
- 	INIT_LIST_HEAD(&drv->list);
++static void *
++iwl_dump_ini_err_table_fill_header(struct iwl_fw_runtime *fwrt,
++				   struct iwl_dump_ini_region_data *reg_data,
++				   void *data)
++{
++	struct iwl_fw_ini_region_tlv *reg = (void *)reg_data->reg_tlv->data;
++	struct iwl_fw_ini_err_table_dump *dump = data;
++
++	dump->header.version = cpu_to_le32(IWL_INI_DUMP_VER);
++	dump->version = reg->err_table.version;
++
++	return dump->ranges;
++}
++
+ static u32 iwl_dump_ini_mem_ranges(struct iwl_fw_runtime *fwrt,
+ 				   struct iwl_dump_ini_region_data *reg_data)
+ {
+@@ -1706,6 +1739,20 @@ static u32 iwl_dump_ini_rxf_get_size(struct iwl_fw_runtime *fwrt,
+ 	return size;
+ }
  
--	iwl_dbg_tlv_load_bin(drv->trans->dev, drv->trans);
--
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- 	/* Create the device debugfs entries. */
- 	drv->dbgfs_drv = debugfs_create_dir(dev_name(trans->dev),
++static u32
++iwl_dump_ini_err_table_get_size(struct iwl_fw_runtime *fwrt,
++				struct iwl_dump_ini_region_data *reg_data)
++{
++	struct iwl_fw_ini_region_tlv *reg = (void *)reg_data->reg_tlv->data;
++	u32 size = le32_to_cpu(reg->err_table.size);
++
++	if (size)
++		size += sizeof(struct iwl_fw_ini_err_table_dump) +
++			sizeof(struct iwl_fw_ini_error_dump_range);
++
++	return size;
++}
++
+ /**
+  * struct iwl_dump_ini_mem_ops - ini memory dump operations
+  * @get_num_of_ranges: returns the number of memory ranges in the region.
+@@ -1892,8 +1939,18 @@ static const struct iwl_dump_ini_mem_ops iwl_dump_ini_region_ops[] = {
+ 		.fill_mem_hdr = iwl_dump_ini_mem_fill_header,
+ 		.fill_range = iwl_dump_ini_rxf_iter,
+ 	},
+-	[IWL_FW_INI_REGION_LMAC_ERROR_TABLE] = {},
+-	[IWL_FW_INI_REGION_UMAC_ERROR_TABLE] = {},
++	[IWL_FW_INI_REGION_LMAC_ERROR_TABLE] = {
++		.get_num_of_ranges = iwl_dump_ini_single_range,
++		.get_size = iwl_dump_ini_err_table_get_size,
++		.fill_mem_hdr = iwl_dump_ini_err_table_fill_header,
++		.fill_range = iwl_dump_ini_err_table_iter,
++	},
++	[IWL_FW_INI_REGION_UMAC_ERROR_TABLE] = {
++		.get_num_of_ranges = iwl_dump_ini_single_range,
++		.get_size = iwl_dump_ini_err_table_get_size,
++		.fill_mem_hdr = iwl_dump_ini_err_table_fill_header,
++		.fill_range = iwl_dump_ini_err_table_iter,
++	},
+ 	[IWL_FW_INI_REGION_RSP_OR_NOTIF] = {},
+ 	[IWL_FW_INI_REGION_DEVICE_MEMORY] = {
+ 		.get_num_of_ranges = iwl_dump_ini_mem_ranges,
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
+index 629af3f9c683..7be1c4b54503 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
+@@ -434,7 +434,18 @@ struct iwl_fw_ini_dump_info {
+ 	u8 external_dbg_cfg_name[IWL_FW_INI_MAX_DBG_CFG_NAME_LEN];
+ 	__le32 regions_num;
+ 	__le32 region_ids[];
++} __packed;
+ 
++/**
++ * struct iwl_fw_ini_err_table_dump - ini error table dump
++ * @header: header of the region
++ * @version: error table version
++ * @ranges: the memory ranges of this this region
++ */
++struct iwl_fw_ini_err_table_dump {
++	struct iwl_fw_ini_error_dump_header header;
++	__le32 version;
++	struct iwl_fw_ini_error_dump_range ranges[];
+ } __packed;
+ 
+ /**
 -- 
 2.23.0
 
