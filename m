@@ -4,38 +4,38 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD71FC4360C
-	for <linux-wireless@archiver.kernel.org>; Sat, 12 Oct 2019 15:48:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B83DECE58C
+	for <linux-wireless@archiver.kernel.org>; Sat, 12 Oct 2019 15:49:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AE5B421850
-	for <linux-wireless@archiver.kernel.org>; Sat, 12 Oct 2019 15:48:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E32E4206CD
+	for <linux-wireless@archiver.kernel.org>; Sat, 12 Oct 2019 15:49:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729439AbfJLPs6 (ORCPT
+        id S1729453AbfJLPtE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 12 Oct 2019 11:48:58 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:48710 "EHLO
+        Sat, 12 Oct 2019 11:49:04 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:48722 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1729427AbfJLPs6 (ORCPT
+        with ESMTP id S1729427AbfJLPtE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 12 Oct 2019 11:48:58 -0400
+        Sat, 12 Oct 2019 11:49:04 -0400
 Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1iJJdO-0005yf-E1; Sat, 12 Oct 2019 18:48:46 +0300
+        id 1iJJdQ-0005yf-7n; Sat, 12 Oct 2019 18:48:48 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Sat, 12 Oct 2019 18:48:26 +0300
-Message-Id: <20191012184707.d25a27b53bea.Idc1ae686433b4235ec1eade66dab8f9eac753551@changeid>
+Date:   Sat, 12 Oct 2019 18:48:28 +0300
+Message-Id: <20191012184707.ab63f52cd814.I32352bb41705f21cd7fa03665ff92fde2247924c@changeid>
 X-Mailer: git-send-email 2.23.0
 In-Reply-To: <20191012154828.9249-1-luca@coelho.fi>
 References: <20191012154828.9249-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 14/16] iwlwifi: dbg_ini: rename external debug configuration file
+Subject: [PATCH 16/16] iwlwifi: dbg_ini: support FW notification dumping in case of missed beacon
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -43,27 +43,49 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 
-Rename the external configuration file to align to the debug SAS.
+Pass the FW notification packet to the dump collection flow to allow
+the driver to include it in the dump file if requested.
 
 Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c  | 1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c | 3 ++-
+ 2 files changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
-index 4f2a4d88f399..1934df7fccb8 100644
+index 1934df7fccb8..f266647dc08c 100644
 --- a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
 +++ b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
-@@ -445,7 +445,7 @@ void iwl_dbg_tlv_load_bin(struct device *dev, struct iwl_trans *trans)
- 	if (!iwlwifi_mod_params.enable_ini)
- 		return;
+@@ -1067,6 +1067,7 @@ void iwl_dbg_tlv_time_point(struct iwl_fw_runtime *fwrt,
+ 		iwl_dbg_tlv_send_hcmds(fwrt, hcmd_list);
+ 		break;
+ 	case IWL_FW_INI_TIME_POINT_FW_RSP_OR_NOTIF:
++	case IWL_FW_INI_TIME_POINT_MISSED_BEACONS:
+ 		iwl_dbg_tlv_send_hcmds(fwrt, hcmd_list);
+ 		iwl_dbg_tlv_tp_trigger(fwrt, trig_list, tp_data,
+ 				       iwl_dbg_tlv_check_fw_pkt);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+index 9c417dd06291..70bb150ee0ca 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+@@ -1404,6 +1404,7 @@ void iwl_mvm_rx_missed_beacons_notif(struct iwl_mvm *mvm,
+ 	u32 rx_missed_bcon, rx_missed_bcon_since_rx;
+ 	struct ieee80211_vif *vif;
+ 	u32 id = le32_to_cpu(mb->mac_id);
++	union iwl_dbg_tlv_tp_data tp_data = { .fw_pkt = pkt };
  
--	res = request_firmware(&fw, "iwl-dbg-tlv.ini", dev);
-+	res = request_firmware(&fw, "iwl-debug-yoyo.bin", dev);
- 	if (res)
- 		return;
+ 	IWL_DEBUG_INFO(mvm,
+ 		       "missed bcn mac_id=%u, consecutive=%u (%u, %u, %u)\n",
+@@ -1432,7 +1433,7 @@ void iwl_mvm_rx_missed_beacons_notif(struct iwl_mvm *mvm,
+ 		ieee80211_beacon_loss(vif);
  
+ 	iwl_dbg_tlv_time_point(&mvm->fwrt,
+-			       IWL_FW_INI_TIME_POINT_MISSED_BEACONS, NULL);
++			       IWL_FW_INI_TIME_POINT_MISSED_BEACONS, &tp_data);
+ 
+ 	trigger = iwl_fw_dbg_trigger_on(&mvm->fwrt, ieee80211_vif_to_wdev(vif),
+ 					FW_DBG_TRIGGER_MISSED_BEACONS);
 -- 
 2.23.0
 
