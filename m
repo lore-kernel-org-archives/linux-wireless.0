@@ -6,91 +6,66 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD4A6C4CECE
-	for <linux-wireless@archiver.kernel.org>; Sat, 12 Oct 2019 16:29:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B782C4360C
+	for <linux-wireless@archiver.kernel.org>; Sat, 12 Oct 2019 16:29:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A6A1B2087E
-	for <linux-wireless@archiver.kernel.org>; Sat, 12 Oct 2019 16:29:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 352D32087E
+	for <linux-wireless@archiver.kernel.org>; Sat, 12 Oct 2019 16:29:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729387AbfJLQ3c (ORCPT
+        id S1729427AbfJLQ3d (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 12 Oct 2019 12:29:32 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:48738 "EHLO
+        Sat, 12 Oct 2019 12:29:33 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:48750 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728338AbfJLQ3b (ORCPT
+        with ESMTP id S1728338AbfJLQ3d (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 12 Oct 2019 12:29:31 -0400
+        Sat, 12 Oct 2019 12:29:33 -0400
 Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1iJKGn-00062r-V0; Sat, 12 Oct 2019 19:29:30 +0300
+        id 1iJKGp-00062r-DK; Sat, 12 Oct 2019 19:29:31 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Sat, 12 Oct 2019 19:29:12 +0300
-Message-Id: <20191012192536.0e45e69a388a.I1d63567def2526950608f62c88626ef489e18041@changeid>
+Date:   Sat, 12 Oct 2019 19:29:14 +0300
+Message-Id: <20191012192536.9bbc08ae13d9.I4844a20ce5ef57c58703a4011a00eb842c548b40@changeid>
 X-Mailer: git-send-email 2.23.0
 In-Reply-To: <20191012162924.19848-1-luca@coelho.fi>
 References: <20191012162924.19848-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 01/13] iwlwifi: mvm: consider ieee80211 station max amsdu value
+Subject: [PATCH 03/13] iwlwifi: mvm: remove leftover rs_remove_sta_debugfs() prototype
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Mordechay Goodstein <mordechay.goodstein@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-debugfs amsdu_len sets only the max_amsdu_len for ieee80211 station
-so take it into consideration while getting max amsdu
+This prototype is no longer used, remove it.
 
-Fixes: af2984e9e625 ("iwlwifi: mvm: add a debugfs entry to set a fixed size AMSDU for all TX packets")
-Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c | 8 +++++++-
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c    | 7 ++++++-
- 2 files changed, 13 insertions(+), 2 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.h | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c
-index 8f50e2b121bd..098d48153a38 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c
-@@ -350,7 +350,13 @@ void iwl_mvm_tlc_update_notif(struct iwl_mvm *mvm,
- 		u16 size = le32_to_cpu(notif->amsdu_size);
- 		int i;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.h b/drivers/net/wireless/intel/iwlwifi/mvm/rs.h
+index 428642e66658..7cd62c5622ce 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.h
+@@ -445,10 +445,6 @@ int iwl_mvm_tx_protection(struct iwl_mvm *mvm, struct iwl_mvm_sta *mvmsta,
+ void iwl_mvm_reset_frame_stats(struct iwl_mvm *mvm);
+ #endif
  
--		if (WARN_ON(sta->max_amsdu_len < size))
-+		/*
-+		 * In debug sta->max_amsdu_len < size
-+		 * so also check with orig_amsdu_len which holds the original
-+		 * data before debugfs changed the value
-+		 */
-+		if (WARN_ON(sta->max_amsdu_len < size &&
-+			    mvmsta->orig_amsdu_len < size))
- 			goto out;
- 
- 		mvmsta->amsdu_enabled = le32_to_cpu(notif->amsdu_enabled);
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index 8a059da7a1fa..e3b2a2bf3863 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -935,7 +935,12 @@ static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb,
- 	    !(mvmsta->amsdu_enabled & BIT(tid)))
- 		return iwl_mvm_tx_tso_segment(skb, 1, netdev_flags, mpdus_skb);
- 
--	max_amsdu_len = iwl_mvm_max_amsdu_size(mvm, sta, tid);
-+	/*
-+	 * Take the min of ieee80211 station and mvm station
-+	 */
-+	max_amsdu_len =
-+		min_t(unsigned int, sta->max_amsdu_len,
-+		      iwl_mvm_max_amsdu_size(mvm, sta, tid));
- 
- 	/*
- 	 * Limit A-MSDU in A-MPDU to 4095 bytes when VHT is not
+-#ifdef CONFIG_MAC80211_DEBUGFS
+-void rs_remove_sta_debugfs(void *mvm, void *mvm_sta);
+-#endif
+-
+ void iwl_mvm_rs_add_sta(struct iwl_mvm *mvm, struct iwl_mvm_sta *mvmsta);
+ void rs_fw_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ 		     enum nl80211_band band, bool update);
 -- 
 2.23.0
 
