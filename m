@@ -6,36 +6,36 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BF4FC10F14
-	for <linux-wireless@archiver.kernel.org>; Sat, 12 Oct 2019 16:29:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C58C9C4360C
+	for <linux-wireless@archiver.kernel.org>; Sat, 12 Oct 2019 16:29:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3FA652087E
-	for <linux-wireless@archiver.kernel.org>; Sat, 12 Oct 2019 16:29:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AACFE21850
+	for <linux-wireless@archiver.kernel.org>; Sat, 12 Oct 2019 16:29:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729466AbfJLQ3i (ORCPT
+        id S1729469AbfJLQ3k (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 12 Oct 2019 12:29:38 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:48786 "EHLO
+        Sat, 12 Oct 2019 12:29:40 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:48798 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1729428AbfJLQ3i (ORCPT
+        with ESMTP id S1729461AbfJLQ3j (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 12 Oct 2019 12:29:38 -0400
+        Sat, 12 Oct 2019 12:29:39 -0400
 Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1iJKGt-00062r-Vq; Sat, 12 Oct 2019 19:29:36 +0300
+        id 1iJKGu-00062r-LF; Sat, 12 Oct 2019 19:29:37 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Sat, 12 Oct 2019 19:29:19 +0300
-Message-Id: <20191012192536.cdb26055600f.Ie8c5365bff1872e6d66fbd915489b3c280cb39c1@changeid>
+Date:   Sat, 12 Oct 2019 19:29:20 +0300
+Message-Id: <20191012192536.4ccda4b2f9c8.Ia7b2a13b07de0ae02c69de37cbbcd9b4aaa67d6e@changeid>
 X-Mailer: git-send-email 2.23.0
 In-Reply-To: <20191012162924.19848-1-luca@coelho.fi>
 References: <20191012162924.19848-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 08/13] iwlwifi: dbg_ini: add user trigger support
+Subject: [PATCH 09/13] iwlwifi: dbg_ini: use vzalloc to allocate dumping memory regions
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -43,27 +43,76 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 
-Allow to fire user trigger in ini mode
+During dump flow, the driver allocates spaces to store the memory
+regions that will be included in the dump. These regions can be very
+large so in order to avoid allocation failure, use vzalloc instead.
+The kmalloc uses GFP_KERNEL and the driver does not make any use of the
+fact that the memory is contiguous so the same functionality is
+maintained.
 
 Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-index ad18c2f1a806..b6db1f8f40cc 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-@@ -1375,6 +1375,9 @@ static ssize_t iwl_dbgfs_fw_dbg_collect_write(struct iwl_mvm *mvm,
- 	if (count == 0)
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+index ce77ed17ede0..007a722cf1c6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+@@ -1846,7 +1846,7 @@ static u32 iwl_dump_ini_mem(struct iwl_fw_runtime *fwrt, struct list_head *list,
+ 	if (!size)
  		return 0;
  
-+	iwl_dbg_tlv_time_point(&mvm->fwrt, IWL_FW_INI_TIME_POINT_USER_TRIGGER,
-+			       NULL);
-+
- 	iwl_fw_dbg_collect(&mvm->fwrt, FW_DBG_TRIGGER_USER, buf,
- 			   (count - 1), NULL);
+-	entry = kmalloc(sizeof(*entry) + sizeof(*tlv) + size, GFP_KERNEL);
++	entry = vzalloc(sizeof(*entry) + sizeof(*tlv) + size);
+ 	if (!entry)
+ 		return 0;
+ 
+@@ -1892,7 +1892,7 @@ static u32 iwl_dump_ini_mem(struct iwl_fw_runtime *fwrt, struct list_head *list,
+ 	return entry->size;
+ 
+ out_err:
+-	kfree(entry);
++	vfree(entry);
+ 
+ 	return 0;
+ }
+@@ -1914,7 +1914,7 @@ static u32 iwl_dump_ini_info(struct iwl_fw_runtime *fwrt,
+ 		num_of_cfg_names++;
+ 	}
+ 
+-	entry = kmalloc(sizeof(*entry) + size, GFP_KERNEL);
++	entry = vzalloc(sizeof(*entry) + size);
+ 	if (!entry)
+ 		return 0;
+ 
+@@ -2121,7 +2121,7 @@ static u32 iwl_dump_ini_file_gen(struct iwl_fw_runtime *fwrt,
+ 	    !le64_to_cpu(trigger->regions_mask))
+ 		return 0;
+ 
+-	entry = kmalloc(sizeof(*entry) + sizeof(*hdr), GFP_KERNEL);
++	entry = vzalloc(sizeof(*entry) + sizeof(*hdr));
+ 	if (!entry)
+ 		return 0;
+ 
+@@ -2129,7 +2129,7 @@ static u32 iwl_dump_ini_file_gen(struct iwl_fw_runtime *fwrt,
+ 
+ 	size = iwl_dump_ini_trigger(fwrt, dump_data, list);
+ 	if (!size) {
+-		kfree(entry);
++		vfree(entry);
+ 		return 0;
+ 	}
+ 
+@@ -2195,7 +2195,7 @@ static void iwl_dump_ini_list_free(struct list_head *list)
+ 			list_entry(list->next, typeof(*entry), list);
+ 
+ 		list_del(&entry->list);
+-		kfree(entry);
++		vfree(entry);
+ 	}
+ }
  
 -- 
 2.23.0
