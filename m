@@ -2,41 +2,40 @@ Return-Path: <SRS0=gYjh=YF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DFBBDECE599
-	for <linux-wireless@archiver.kernel.org>; Sat, 12 Oct 2019 15:48:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FC93ECE59C
+	for <linux-wireless@archiver.kernel.org>; Sat, 12 Oct 2019 15:48:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C3FB221929
-	for <linux-wireless@archiver.kernel.org>; Sat, 12 Oct 2019 15:48:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 44C5621929
+	for <linux-wireless@archiver.kernel.org>; Sat, 12 Oct 2019 15:48:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729421AbfJLPso (ORCPT
+        id S1729434AbfJLPsy (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 12 Oct 2019 11:48:44 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:48654 "EHLO
+        Sat, 12 Oct 2019 11:48:54 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:48688 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1729272AbfJLPso (ORCPT
+        with ESMTP id S1729427AbfJLPsx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 12 Oct 2019 11:48:44 -0400
+        Sat, 12 Oct 2019 11:48:53 -0400
 Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1iJJdK-0005yf-5F; Sat, 12 Oct 2019 18:48:42 +0300
+        id 1iJJdN-0005yf-Ju; Sat, 12 Oct 2019 18:48:46 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Sat, 12 Oct 2019 18:48:21 +0300
-Message-Id: <20191012184707.2ab2a940997c.I13d6ae78602b2e54eb388ac33770e27357470db3@changeid>
+Date:   Sat, 12 Oct 2019 18:48:25 +0300
+Message-Id: <20191012184707.6c18ceb905b4.I363d34e5ae1774e88953fc542c3d785d6c833c57@changeid>
 X-Mailer: git-send-email 2.23.0
 In-Reply-To: <20191012154828.9249-1-luca@coelho.fi>
 References: <20191012154828.9249-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 09/16] iwlwifi: dbg_ini: implement time point handling
+Subject: [PATCH 13/16] iwlwifi: dbg_ini: support FW response/notification region type
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -44,478 +43,198 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 
-Calculate active triggers list and implement time points handling.
-Also allow to override the debug domain via iwl-dbg-cfg.ini by setting
-FW_DBG_DOMAIN field.
+Allow the driver to collect FW response/notification region type
+during dump and allow triggering dump collection for a given FW
+response/notification.
 
 Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../wireless/intel/iwlwifi/fw/api/dbg-tlv.h   |  31 +-
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c   |   3 +
- .../net/wireless/intel/iwlwifi/fw/runtime.h   |  13 +
- .../net/wireless/intel/iwlwifi/iwl-dbg-tlv.c  | 280 +++++++++++++++++-
- .../net/wireless/intel/iwlwifi/iwl-dbg-tlv.h  |   3 +
- .../net/wireless/intel/iwlwifi/iwl-trans.h    |   4 +
- 6 files changed, 321 insertions(+), 13 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c   | 53 ++++++++++++++++++-
+ .../wireless/intel/iwlwifi/fw/error-dump.h    |  3 ++
+ .../net/wireless/intel/iwlwifi/iwl-dbg-tlv.c  | 32 +++++++++++
+ 3 files changed, 86 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h b/drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h
-index 21e1de9166cf..4d1b084da4b1 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/dbg-tlv.h
-@@ -61,18 +61,7 @@
- #include <linux/bitops.h>
- 
- #define IWL_FW_INI_MAX_CFG_NAME			64
--
--/**
-- * enum iwl_fw_ini_dbg_domain - debug domains
-- * allows to send host cmd or collect memory region if a given domain is enabled
-- *
-- * @IWL_FW_INI_DBG_DOMAIN_ALWAYS_ON: the default domain, always on
-- * @IWL_FW_INI_DBG_DOMAIN_REPORT_PS: power save domain
-- */
--enum iwl_fw_ini_dbg_domain {
--	IWL_FW_INI_DBG_DOMAIN_ALWAYS_ON = 0,
--	IWL_FW_INI_DBG_DOMAIN_REPORT_PS,
--}; /* FW_DEBUG_TLV_DOMAIN_API_E_VER_1 */
-+#define IWL_FW_INI_DOMAIN_ALWAYS_ON		0
- 
- /**
-  * struct iwl_fw_ini_hcmd
-@@ -652,4 +641,22 @@ enum iwl_fw_ini_time_point {
- 	IWL_FW_INI_TIME_POINT_NUM,
- }; /* FW_TLV_DEBUG_TIME_POINT_API_E */
- 
-+/**
-+ * enum iwl_fw_ini_trigger_apply_policy - Determines how to apply triggers
-+ *
-+ * @IWL_FW_INI_APPLY_POLICY_MATCH_TIME_POINT: match by time point
-+ * @IWL_FW_INI_APPLY_POLICY_MATCH_DATA: match by trigger data
-+ * @IWL_FW_INI_APPLY_POLICY_OVERRIDE_REGIONS: override regions mask.
-+ *	Append otherwise
-+ * @IWL_FW_INI_APPLY_POLICY_OVERRIDE_CFG: override trigger configuration
-+ * @IWL_FW_INI_APPLY_POLICY_OVERRIDE_DATA: override trigger data.
-+ *	Append otherwise
-+ */
-+enum iwl_fw_ini_trigger_apply_policy {
-+	IWL_FW_INI_APPLY_POLICY_MATCH_TIME_POINT	= BIT(0),
-+	IWL_FW_INI_APPLY_POLICY_MATCH_DATA		= BIT(1),
-+	IWL_FW_INI_APPLY_POLICY_OVERRIDE_REGIONS	= BIT(8),
-+	IWL_FW_INI_APPLY_POLICY_OVERRIDE_CFG		= BIT(9),
-+	IWL_FW_INI_APPLY_POLICY_OVERRIDE_DATA		= BIT(10),
-+};
- #endif
 diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-index 1e4143327add..591c9f07a64c 100644
+index 591c9f07a64c..cc4627d27602 100644
 --- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
 +++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-@@ -2301,6 +2301,9 @@ int iwl_fw_dbg_ini_collect(struct iwl_fw_runtime *fwrt,
- 	u32 occur, delay;
- 	unsigned long idx;
- 
-+	if (test_bit(STATUS_GEN_ACTIVE_TRIGS, &fwrt->status))
-+		return -EBUSY;
-+
- 	if (!iwl_fw_ini_trigger_on(fwrt, trig)) {
- 		IWL_WARN(fwrt, "WRT: Trigger %d is not active, aborting dump\n",
- 			 tp_id);
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-index 6c2ade4c7a0c..87adbd3dd764 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-@@ -67,6 +67,8 @@
- #include "fw/api/paging.h"
- #include "iwl-eeprom-parse.h"
- 
-+#define IWL_FW_DBG_DOMAIN		IWL_FW_INI_DOMAIN_ALWAYS_ON
-+
- struct iwl_fw_runtime_ops {
- 	int (*dump_start)(void *ctx);
- 	void (*dump_end)(void *ctx);
-@@ -125,6 +127,14 @@ struct iwl_txf_iter_data {
- 	u8 internal_txf;
+@@ -1057,9 +1057,11 @@ iwl_fw_error_dump_file(struct iwl_fw_runtime *fwrt,
+ /**
+  * struct iwl_dump_ini_region_data - region data
+  * @reg_tlv: region TLV
++ * @dump_data: dump data
+  */
+ struct iwl_dump_ini_region_data {
+ 	struct iwl_ucode_tlv *reg_tlv;
++	struct iwl_fwrt_dump_data *dump_data;
  };
  
-+/**
-+ * enum iwl_fw_runtime_status - fw runtime status flags
-+ * @STATUS_GEN_ACTIVE_TRIGS: generating active trigger list
-+ */
-+enum iwl_fw_runtime_status {
-+	STATUS_GEN_ACTIVE_TRIGS,
-+};
+ static int iwl_dump_ini_prph_iter(struct iwl_fw_runtime *fwrt,
+@@ -1449,6 +1451,27 @@ iwl_dump_ini_err_table_iter(struct iwl_fw_runtime *fwrt,
+ 	return sizeof(*range) + le32_to_cpu(range->range_data_size);
+ }
+ 
++static int iwl_dump_ini_fw_pkt_iter(struct iwl_fw_runtime *fwrt,
++				    struct iwl_dump_ini_region_data *reg_data,
++				    void *range_ptr, int idx)
++{
++	struct iwl_fw_ini_error_dump_range *range = range_ptr;
++	struct iwl_rx_packet *pkt = reg_data->dump_data->fw_pkt;
++	u32 pkt_len;
++
++	if (!pkt)
++		return -EIO;
++
++	pkt_len = iwl_rx_packet_payload_len(pkt);
++
++	memcpy(&range->fw_pkt_hdr, &pkt->hdr, sizeof(range->fw_pkt_hdr));
++	range->range_data_size = cpu_to_le32(pkt_len);
++
++	memcpy(range->data, pkt->data, pkt_len);
++
++	return sizeof(*range) + le32_to_cpu(range->range_data_size);
++}
++
+ static void *
+ iwl_dump_ini_mem_fill_header(struct iwl_fw_runtime *fwrt,
+ 			     struct iwl_dump_ini_region_data *reg_data,
+@@ -1753,6 +1776,23 @@ iwl_dump_ini_err_table_get_size(struct iwl_fw_runtime *fwrt,
+ 	return size;
+ }
+ 
++static u32
++iwl_dump_ini_fw_pkt_get_size(struct iwl_fw_runtime *fwrt,
++			     struct iwl_dump_ini_region_data *reg_data)
++{
++	u32 size = 0;
++
++	if (!reg_data->dump_data->fw_pkt)
++		return 0;
++
++	size += iwl_rx_packet_payload_len(reg_data->dump_data->fw_pkt);
++	if (size)
++		size += sizeof(struct iwl_fw_ini_error_dump) +
++			sizeof(struct iwl_fw_ini_error_dump_range);
++
++	return size;
++}
 +
  /**
-  * struct iwl_fw_runtime - runtime data for firmware
-  * @fw: firmware image
-@@ -138,6 +148,7 @@ struct iwl_txf_iter_data {
-  * @smem_cfg: saved firmware SMEM configuration
-  * @cur_fw_img: current firmware image, must be maintained by
-  *	the driver by calling &iwl_fw_set_current_image()
-+ * @status: &enum iwl_fw_runtime_status
-  * @dump: debug dump data
-  */
- struct iwl_fw_runtime {
-@@ -158,6 +169,8 @@ struct iwl_fw_runtime {
- 	/* memory configuration */
- 	struct iwl_fwrt_shared_mem_cfg smem_cfg;
+  * struct iwl_dump_ini_mem_ops - ini memory dump operations
+  * @get_num_of_ranges: returns the number of memory ranges in the region.
+@@ -1976,7 +2016,12 @@ static const struct iwl_dump_ini_mem_ops iwl_dump_ini_region_ops[] = {
+ 		.fill_mem_hdr = iwl_dump_ini_err_table_fill_header,
+ 		.fill_range = iwl_dump_ini_err_table_iter,
+ 	},
+-	[IWL_FW_INI_REGION_RSP_OR_NOTIF] = {},
++	[IWL_FW_INI_REGION_RSP_OR_NOTIF] = {
++		.get_num_of_ranges = iwl_dump_ini_single_range,
++		.get_size = iwl_dump_ini_fw_pkt_get_size,
++		.fill_mem_hdr = iwl_dump_ini_mem_fill_header,
++		.fill_range = iwl_dump_ini_fw_pkt_iter,
++	},
+ 	[IWL_FW_INI_REGION_DEVICE_MEMORY] = {
+ 		.get_num_of_ranges = iwl_dump_ini_mem_ranges,
+ 		.get_size = iwl_dump_ini_mem_get_size,
+@@ -2012,7 +2057,9 @@ static u32 iwl_dump_ini_trigger(struct iwl_fw_runtime *fwrt,
+ 				struct list_head *list)
+ {
+ 	struct iwl_fw_ini_trigger_tlv *trigger = dump_data->trig;
+-	struct iwl_dump_ini_region_data reg_data = {};
++	struct iwl_dump_ini_region_data reg_data = {
++		.dump_data = dump_data,
++	};
+ 	int i;
+ 	u32 size = 0;
+ 	u64 regions_mask = le64_to_cpu(trigger->regions_mask);
+@@ -2155,6 +2202,8 @@ static void iwl_dump_ini_list_free(struct list_head *list)
+ static void iwl_fw_error_dump_data_free(struct iwl_fwrt_dump_data *dump_data)
+ {
+ 	dump_data->trig = NULL;
++	kfree(dump_data->fw_pkt);
++	dump_data->fw_pkt = NULL;
+ }
  
-+	unsigned long status;
-+
- 	/* debug */
- 	struct {
- 		const struct iwl_fw_dump_desc *desc;
+ static void iwl_fw_error_ini_dump(struct iwl_fw_runtime *fwrt,
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
+index a7bf17e5ca9c..f008e1bbfdf4 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/error-dump.h
+@@ -65,6 +65,7 @@
+ #define __fw_error_dump_h__
+ 
+ #include <linux/types.h>
++#include "fw/api/cmdhdr.h"
+ 
+ #define IWL_FW_ERROR_DUMP_BARKER	0x14789632
+ #define IWL_FW_INI_ERROR_DUMP_BARKER	0x14789633
+@@ -327,6 +328,7 @@ struct iwl_fw_ini_fifo_hdr {
+  * @dram_base_addr: base address of dram monitor range
+  * @page_num: page number of memory range
+  * @fifo_hdr: fifo header of memory range
++ * @fw_pkt: FW packet header of memory range
+  * @data: the actual memory
+  */
+ struct iwl_fw_ini_error_dump_range {
+@@ -336,6 +338,7 @@ struct iwl_fw_ini_error_dump_range {
+ 		__le64 dram_base_addr;
+ 		__le32 page_num;
+ 		struct iwl_fw_ini_fifo_hdr fifo_hdr;
++		struct iwl_cmd_header fw_pkt_hdr;
+ 	};
+ 	__le32 data[];
+ } __packed;
 diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
-index 651e1fee2763..1cec10a60cba 100644
+index f813b2333565..4f2a4d88f399 100644
 --- a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
 +++ b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
-@@ -350,6 +350,12 @@ void iwl_dbg_tlv_free(struct iwl_trans *trans)
- 			list_del(&tlv_node->list);
- 			kfree(tlv_node);
- 		}
-+
-+		list_for_each_entry_safe(tlv_node, tlv_node_tmp,
-+					 &tp->active_trig_list, list) {
-+			list_del(&tlv_node->list);
-+			kfree(tlv_node);
-+		}
- 	}
+@@ -940,6 +940,33 @@ int iwl_dbg_tlv_gen_active_trigs(struct iwl_fw_runtime *fwrt, u32 new_domain)
+ 	return 0;
  }
  
-@@ -408,13 +414,285 @@ void iwl_dbg_tlv_init(struct iwl_trans *trans)
- 
- 		INIT_LIST_HEAD(&tp->trig_list);
- 		INIT_LIST_HEAD(&tp->hcmd_list);
-+		INIT_LIST_HEAD(&tp->active_trig_list);
-+	}
-+}
-+
-+static void iwl_dbg_tlv_send_hcmds(struct iwl_fw_runtime *fwrt,
-+				   struct list_head *hcmd_list)
++static bool iwl_dbg_tlv_check_fw_pkt(struct iwl_fw_runtime *fwrt,
++				     struct iwl_fwrt_dump_data *dump_data,
++				     union iwl_dbg_tlv_tp_data *tp_data,
++				     u32 trig_data)
 +{
-+	struct iwl_dbg_tlv_node *node;
++	struct iwl_rx_packet *pkt = tp_data->fw_pkt;
++	struct iwl_cmd_header *wanted_hdr = (void *)&trig_data;
 +
-+	list_for_each_entry(node, hcmd_list, list) {
-+		struct iwl_fw_ini_hcmd_tlv *hcmd = (void *)node->tlv.data;
-+		struct iwl_fw_ini_hcmd *hcmd_data = &hcmd->hcmd;
-+		u32 domain = le32_to_cpu(hcmd->hdr.domain);
-+		u16 hcmd_len = le32_to_cpu(node->tlv.length) - sizeof(*hcmd);
-+		struct iwl_host_cmd cmd = {
-+			.id = WIDE_ID(hcmd_data->group, hcmd_data->id),
-+			.len = { hcmd_len, },
-+			.data = { hcmd_data->data, },
-+		};
++	if (pkt && ((wanted_hdr->cmd == 0 && wanted_hdr->group_id == 0) ||
++		    (pkt->hdr.cmd == wanted_hdr->cmd &&
++		     pkt->hdr.group_id == wanted_hdr->group_id))) {
++		struct iwl_rx_packet *fw_pkt =
++			kmemdup(pkt,
++				sizeof(*pkt) + iwl_rx_packet_payload_len(pkt),
++				GFP_ATOMIC);
 +
-+		if (domain != IWL_FW_INI_DOMAIN_ALWAYS_ON &&
-+		    !(domain & fwrt->trans->dbg.domains_bitmap))
-+			continue;
-+
-+		iwl_trans_send_cmd(fwrt->trans, &cmd);
-+	}
-+}
-+
-+static bool is_trig_data_contained(struct iwl_ucode_tlv *new,
-+				   struct iwl_ucode_tlv *old)
-+{
-+	struct iwl_fw_ini_trigger_tlv *new_trig = (void *)new->data;
-+	struct iwl_fw_ini_trigger_tlv *old_trig = (void *)old->data;
-+	__le32 *new_data = new_trig->data, *old_data = old_trig->data;
-+	u32 new_dwords_num = iwl_tlv_array_len(new, new_trig, data);
-+	u32 old_dwords_num = iwl_tlv_array_len(new, new_trig, data);
-+	int i, j;
-+
-+	for (i = 0; i < new_dwords_num; i++) {
-+		bool match = false;
-+
-+		for (j = 0; j < old_dwords_num; j++) {
-+			if (new_data[i] == old_data[j]) {
-+				match = true;
-+				break;
-+			}
-+		}
-+		if (!match)
++		if (!fw_pkt)
 +			return false;
++
++		dump_data->fw_pkt = fw_pkt;
++
++		return true;
 +	}
 +
-+	return true;
++	return false;
 +}
 +
-+static int iwl_dbg_tlv_override_trig_node(struct iwl_fw_runtime *fwrt,
-+					  struct iwl_ucode_tlv *trig_tlv,
-+					  struct iwl_dbg_tlv_node *node)
-+{
-+	struct iwl_ucode_tlv *node_tlv = &node->tlv;
-+	struct iwl_fw_ini_trigger_tlv *node_trig = (void *)node_tlv->data;
-+	struct iwl_fw_ini_trigger_tlv *trig = (void *)trig_tlv->data;
-+	u32 policy = le32_to_cpu(trig->apply_policy);
-+	u32 size = le32_to_cpu(trig_tlv->length);
-+	u32 trig_data_len = size - sizeof(*trig);
-+	u32 offset = 0;
-+
-+	if (!(policy & IWL_FW_INI_APPLY_POLICY_OVERRIDE_DATA)) {
-+		u32 data_len = le32_to_cpu(node_tlv->length) -
-+			sizeof(*node_trig);
-+
-+		IWL_DEBUG_FW(fwrt,
-+			     "WRT: Appending trigger data (time point %u)\n",
-+			     le32_to_cpu(trig->time_point));
-+
-+		offset += data_len;
-+		size += data_len;
-+	} else {
-+		IWL_DEBUG_FW(fwrt,
-+			     "WRT: Overriding trigger data (time point %u)\n",
-+			     le32_to_cpu(trig->time_point));
-+	}
-+
-+	if (size != le32_to_cpu(node_tlv->length)) {
-+		struct list_head *prev = node->list.prev;
-+		struct iwl_dbg_tlv_node *tmp;
-+
-+		list_del(&node->list);
-+
-+		tmp = krealloc(node, sizeof(*node) + size, GFP_KERNEL);
-+		if (!tmp) {
-+			IWL_WARN(fwrt,
-+				 "WRT: No memory to override trigger (time point %u)\n",
-+				 le32_to_cpu(trig->time_point));
-+
-+			list_add(&node->list, prev);
-+
-+			return -ENOMEM;
-+		}
-+
-+		list_add(&tmp->list, prev);
-+		node_tlv = &tmp->tlv;
-+		node_trig = (void *)node_tlv->data;
-+	}
-+
-+	memcpy(node_trig->data + offset, trig->data, trig_data_len);
-+	node_tlv->length = cpu_to_le32(size);
-+
-+	if (policy & IWL_FW_INI_APPLY_POLICY_OVERRIDE_CFG) {
-+		IWL_DEBUG_FW(fwrt,
-+			     "WRT: Overriding trigger configuration (time point %u)\n",
-+			     le32_to_cpu(trig->time_point));
-+
-+		/* the first 11 dwords are configuration related */
-+		memcpy(node_trig, trig, sizeof(__le32) * 11);
-+	}
-+
-+	if (policy & IWL_FW_INI_APPLY_POLICY_OVERRIDE_REGIONS) {
-+		IWL_DEBUG_FW(fwrt,
-+			     "WRT: Overriding trigger regions (time point %u)\n",
-+			     le32_to_cpu(trig->time_point));
-+
-+		node_trig->regions_mask = trig->regions_mask;
-+	} else {
-+		IWL_DEBUG_FW(fwrt,
-+			     "WRT: Appending trigger regions (time point %u)\n",
-+			     le32_to_cpu(trig->time_point));
-+
-+		node_trig->regions_mask |= trig->regions_mask;
-+	}
-+
-+	return 0;
-+}
-+
-+static int
-+iwl_dbg_tlv_add_active_trigger(struct iwl_fw_runtime *fwrt,
-+			       struct list_head *trig_list,
-+			       struct iwl_ucode_tlv *trig_tlv)
-+{
-+	struct iwl_fw_ini_trigger_tlv *trig = (void *)trig_tlv->data;
-+	struct iwl_dbg_tlv_node *node, *match = NULL;
-+	u32 policy = le32_to_cpu(trig->apply_policy);
-+
-+	list_for_each_entry(node, trig_list, list) {
-+		if (!(policy & IWL_FW_INI_APPLY_POLICY_MATCH_TIME_POINT))
-+			break;
-+
-+		if (!(policy & IWL_FW_INI_APPLY_POLICY_MATCH_DATA) ||
-+		    is_trig_data_contained(trig_tlv, &node->tlv)) {
-+			match = node;
-+			break;
-+		}
- 	}
-+
-+	if (!match) {
-+		IWL_DEBUG_FW(fwrt, "WRT: Enabling trigger (time point %u)\n",
-+			     le32_to_cpu(trig->time_point));
-+		return iwl_dbg_tlv_add(trig_tlv, trig_list);
-+	}
-+
-+	return iwl_dbg_tlv_override_trig_node(fwrt, trig_tlv, match);
-+}
-+
-+static void
-+iwl_dbg_tlv_gen_active_trig_list(struct iwl_fw_runtime *fwrt,
-+				 struct iwl_dbg_tlv_time_point_data *tp)
-+{
-+	struct iwl_dbg_tlv_node *node, *tmp;
-+	struct list_head *trig_list = &tp->trig_list;
-+	struct list_head *active_trig_list = &tp->active_trig_list;
-+
-+	list_for_each_entry_safe(node, tmp, active_trig_list, list) {
-+		list_del(&node->list);
-+		kfree(node);
-+	}
-+
-+	list_for_each_entry(node, trig_list, list) {
-+		struct iwl_ucode_tlv *tlv = &node->tlv;
-+		struct iwl_fw_ini_trigger_tlv *trig = (void *)tlv->data;
-+		u32 domain = le32_to_cpu(trig->hdr.domain);
-+
-+		if (domain != IWL_FW_INI_DOMAIN_ALWAYS_ON &&
-+		    !(domain & fwrt->trans->dbg.domains_bitmap))
-+			continue;
-+
-+		iwl_dbg_tlv_add_active_trigger(fwrt, active_trig_list, tlv);
-+	}
-+}
-+
-+int iwl_dbg_tlv_gen_active_trigs(struct iwl_fw_runtime *fwrt, u32 new_domain)
-+{
-+	int i;
-+
-+	if (test_and_set_bit(STATUS_GEN_ACTIVE_TRIGS, &fwrt->status))
-+		return -EBUSY;
-+
-+	iwl_fw_flush_dumps(fwrt);
-+
-+	fwrt->trans->dbg.domains_bitmap = new_domain;
-+
-+	IWL_DEBUG_FW(fwrt,
-+		     "WRT: Generating active triggers list, domain 0x%x\n",
-+		     fwrt->trans->dbg.domains_bitmap);
-+
-+	for (i = 0; i < ARRAY_SIZE(fwrt->trans->dbg.time_point); i++) {
-+		struct iwl_dbg_tlv_time_point_data *tp =
-+			&fwrt->trans->dbg.time_point[i];
-+
-+		iwl_dbg_tlv_gen_active_trig_list(fwrt, tp);
-+	}
-+
-+	clear_bit(STATUS_GEN_ACTIVE_TRIGS, &fwrt->status);
-+
-+	return 0;
-+}
-+
-+static int
-+iwl_dbg_tlv_tp_trigger(struct iwl_fw_runtime *fwrt,
-+		       struct list_head *active_trig_list,
-+		       union iwl_dbg_tlv_tp_data *tp_data,
-+		       bool (*data_check)(struct iwl_fw_runtime *fwrt,
-+					  struct iwl_fwrt_dump_data *dump_data,
-+					  union iwl_dbg_tlv_tp_data *tp_data,
-+					  u32 trig_data))
-+{
-+	struct iwl_dbg_tlv_node *node;
-+
-+	list_for_each_entry(node, active_trig_list, list) {
-+		struct iwl_fwrt_dump_data dump_data = {
-+			.trig = (void *)node->tlv.data,
-+		};
-+		u32 num_data = iwl_tlv_array_len(&node->tlv, dump_data.trig,
-+						 data);
-+		int ret, i;
-+
-+		if (!num_data) {
-+			ret = iwl_fw_dbg_ini_collect(fwrt, &dump_data);
-+			if (ret)
-+				return ret;
-+		}
-+
-+		for (i = 0; i < num_data; i++) {
-+			if (!data_check ||
-+			    data_check(fwrt, &dump_data, tp_data,
-+				       le32_to_cpu(dump_data.trig->data[i]))) {
-+				ret = iwl_fw_dbg_ini_collect(fwrt, &dump_data);
-+				if (ret)
-+					return ret;
-+
-+				break;
-+			}
-+		}
-+	}
-+
-+	return 0;
- }
- 
- void iwl_dbg_tlv_time_point(struct iwl_fw_runtime *fwrt,
- 			    enum iwl_fw_ini_time_point tp_id,
- 			    union iwl_dbg_tlv_tp_data *tp_data)
- {
--	/* will be used later */
-+	struct list_head *hcmd_list, *trig_list;
-+
-+	if (!iwl_trans_dbg_ini_valid(fwrt->trans) ||
-+	    tp_id == IWL_FW_INI_TIME_POINT_INVALID ||
-+	    tp_id >= IWL_FW_INI_TIME_POINT_NUM)
-+		return;
-+
-+	hcmd_list = &fwrt->trans->dbg.time_point[tp_id].hcmd_list;
-+	trig_list = &fwrt->trans->dbg.time_point[tp_id].active_trig_list;
-+
-+	switch (tp_id) {
-+	case IWL_FW_INI_TIME_POINT_EARLY:
-+		iwl_dbg_tlv_gen_active_trigs(fwrt, IWL_FW_DBG_DOMAIN);
-+		iwl_dbg_tlv_tp_trigger(fwrt, trig_list, tp_data, NULL);
-+		break;
-+	default:
+ static int
+ iwl_dbg_tlv_tp_trigger(struct iwl_fw_runtime *fwrt,
+ 		       struct list_head *active_trig_list,
+@@ -1039,6 +1066,11 @@ void iwl_dbg_tlv_time_point(struct iwl_fw_runtime *fwrt,
+ 		iwl_dbg_tlv_set_periodic_trigs(fwrt);
+ 		iwl_dbg_tlv_send_hcmds(fwrt, hcmd_list);
+ 		break;
++	case IWL_FW_INI_TIME_POINT_FW_RSP_OR_NOTIF:
 +		iwl_dbg_tlv_send_hcmds(fwrt, hcmd_list);
-+		iwl_dbg_tlv_tp_trigger(fwrt, trig_list, tp_data, NULL);
++		iwl_dbg_tlv_tp_trigger(fwrt, trig_list, tp_data,
++				       iwl_dbg_tlv_check_fw_pkt);
 +		break;
-+	}
- }
- IWL_EXPORT_SYMBOL(iwl_dbg_tlv_time_point);
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.h b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.h
-index 64c0638998f2..f18946872569 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.h
-@@ -85,10 +85,12 @@ union iwl_dbg_tlv_tp_data {
- /**
-  * struct iwl_dbg_tlv_time_point_data
-  * @trig_list: list of triggers
-+ * @active_trig_list: list of active triggers
-  * @hcmd_list: list of host commands
-  */
- struct iwl_dbg_tlv_time_point_data {
- 	struct list_head trig_list;
-+	struct list_head active_trig_list;
- 	struct list_head hcmd_list;
- };
- 
-@@ -103,6 +105,7 @@ void iwl_dbg_tlv_init(struct iwl_trans *trans);
- void iwl_dbg_tlv_time_point(struct iwl_fw_runtime *fwrt,
- 			    enum iwl_fw_ini_time_point tp_id,
- 			    union iwl_dbg_tlv_tp_data *tp_data);
-+int iwl_dbg_tlv_gen_active_trigs(struct iwl_fw_runtime *fwrt, u32 new_domain);
- void iwl_dbg_tlv_del_timers(struct iwl_trans *trans);
- 
- #endif /* __iwl_dbg_tlv_h__*/
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-index 63031c030600..59debf6e1b9d 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-@@ -724,6 +724,8 @@ struct iwl_self_init_dram {
-  * @active_regions: active regions
-  * @debug_info_tlv_list: list of debug info TLVs
-  * @time_point: array of debug time points
-+ * @domains_bitmap: bitmap of active domains other than
-+ *	&IWL_FW_INI_DOMAIN_ALWAYS_ON
-  */
- struct iwl_trans_debug {
- 	u8 n_dest_reg;
-@@ -752,6 +754,8 @@ struct iwl_trans_debug {
- 	struct list_head debug_info_tlv_list;
- 	struct iwl_dbg_tlv_time_point_data
- 		time_point[IWL_FW_INI_TIME_POINT_NUM];
-+
-+	u32 domains_bitmap;
- };
- 
- /**
+ 	default:
+ 		iwl_dbg_tlv_send_hcmds(fwrt, hcmd_list);
+ 		iwl_dbg_tlv_tp_trigger(fwrt, trig_list, tp_data, NULL);
 -- 
 2.23.0
 
