@@ -2,77 +2,98 @@ Return-Path: <SRS0=qTSE=YH=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2EA3ECE587
-	for <linux-wireless@archiver.kernel.org>; Mon, 14 Oct 2019 08:30:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB0FDC4CECE
+	for <linux-wireless@archiver.kernel.org>; Mon, 14 Oct 2019 08:32:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B162C2173B
-	for <linux-wireless@archiver.kernel.org>; Mon, 14 Oct 2019 08:30:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1571041852;
-	bh=p7mjM/EcKkarwYBL8yjO5OkJb2HPOW4/n1CL+uOOlMU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=tvZ3bm3TWevbI31HPgqSH6kTiczAXutFLkHnjjSTF/QaXVb4emEGmXHORLoSs8udh
-	 ZzoS4TTdjTDFs81SWElTQKmzgSeK/lc+l5BzLwy58Y7O/1s8GMogn2tYUtxQ2Q4JoW
-	 HO7rqWt/k1JcYhHGodv62Sjd21gggJE51b0PAHYs=
+	by mail.kernel.org (Postfix) with ESMTP id 9349520650
+	for <linux-wireless@archiver.kernel.org>; Mon, 14 Oct 2019 08:32:41 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="XUUeeIZr";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="CjTLFxp2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730469AbfJNIav (ORCPT
+        id S1730463AbfJNIcf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 14 Oct 2019 04:30:51 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56922 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725936AbfJNIau (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 Oct 2019 04:30:50 -0400
-Received: from dragon (li937-157.members.linode.com [45.56.119.157])
-        (using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+        Mon, 14 Oct 2019 04:32:35 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:33186 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730281AbfJNIce (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 14 Oct 2019 04:32:34 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 20B03606CF; Mon, 14 Oct 2019 08:32:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1571041954;
+        bh=mqqICtAwQO6IrAaUIxFT7Uu3ziQTlKCLs+IOJ1bdsVE=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=XUUeeIZrI8TbhyfqZoP6OuDHJq13fKXFppsRTkNoM/uBjHEjc4Ov+tIAm21sNsxDg
+         jXO/+c6lz8ULlJJ9/MLP91eJx7PwU2m63i8qduzGzF+VGjeFeoaT3BXZglKN83eS7F
+         gptdYVI6qaLxMxc9nJtBbTpb20w39GPoACNz9lSo=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 5443B207FF;
-        Mon, 14 Oct 2019 08:29:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1571041850;
-        bh=p7mjM/EcKkarwYBL8yjO5OkJb2HPOW4/n1CL+uOOlMU=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=RTnfmVLrzT1mElpLV1XpxtXmAYaHC4vXjDk1D8B2kTsZLHBXEuOXdUn57LgcXb0Ej
-         h3mpF2mTZzuwOHBrv9gd3TZkQ4d/61IzyEHJNqi+GNSCzH6D3Q9rxbNjPNVhwsqsHm
-         enxUHSuGte972ZNKUuW2YUasfYnn5BuldVKKqFww=
-Date:   Mon, 14 Oct 2019 16:29:28 +0800
-From:   Shawn Guo <shawnguo@kernel.org>
-To:     Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
-Cc:     robh+dt@kernel.org, devicetree@vger.kernel.org,
-        frowand.list@gmail.com, linux-arm-kernel@lists.infradead.org,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, dmaengine@vger.kernel.org,
-        etnaviv@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        xen-devel@lists.xenproject.org, linux-tegra@vger.kernel.org,
-        linux-media@vger.kernel.org, linux-pci@vger.kernel.org,
-        Li Yang <leoyang.li@nxp.com>, mbrugger@suse.com,
-        robin.murphy@arm.com, f.fainelli@gmail.com,
-        james.quinlan@broadcom.com, wahrenst@gmx.net,
-        Mark Rutland <mark.rutland@arm.com>
-Subject: Re: [PATCH 08/11] dts: arm64: layerscape: add dma-ranges property to
- pcie nodes
-Message-ID: <20191014082924.GI12262@dragon>
-References: <20190924181244.7159-1-nsaenzjulienne@suse.de>
- <20190924181244.7159-9-nsaenzjulienne@suse.de>
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 2650360256;
+        Mon, 14 Oct 2019 08:32:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1571041953;
+        bh=mqqICtAwQO6IrAaUIxFT7Uu3ziQTlKCLs+IOJ1bdsVE=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=CjTLFxp2I4Aq0r4fNj7qxXzPLOND7hKWl/kODSbPW7F6SkZC3gvr+NRkQMAL57ifH
+         DQliA/kyrk+g6J3Dtgj7A4nABSPkdNfjtmeEYO4+iWFXB9dxB3H8ZFJzjxQ2hPR4k2
+         /sFz3BcTnfgIJYdQ5coy+pWyYIxHHlruAFf+fb2E=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 2650360256
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+        ath10k@lists.infradead.org,
+        Niklas Cassel <niklas.cassel@linaro.org>,
+        "David S. Miller" <davem@davemloft.net>
+Subject: Re: [PATCH] ath10k: Correct error check of dma_map_single()
+References: <20191010162653.141303-1-bjorn.andersson@linaro.org>
+        <20191011115732.044BF60BE8@smtp.codeaurora.org>
+        <20191011171652.GF571@minitux>
+Date:   Mon, 14 Oct 2019 11:32:28 +0300
+In-Reply-To: <20191011171652.GF571@minitux> (Bjorn Andersson's message of
+        "Fri, 11 Oct 2019 10:16:52 -0700")
+Message-ID: <87a7a3zq03.fsf@kamboji.qca.qualcomm.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190924181244.7159-9-nsaenzjulienne@suse.de>
-User-Agent: Mutt/1.5.21 (2010-09-15)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, Sep 24, 2019 at 08:12:39PM +0200, Nicolas Saenz Julienne wrote:
-> The bus behind the board's PCIe core has DMA addressing limitations. Add
-> an empty 'dma-ranges' property on all PCIe bus descriptions to inform
-> the OF core that a translation is due further down the line.
-> 
-> Signed-off-by: Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
+Bjorn Andersson <bjorn.andersson@linaro.org> writes:
 
-Applied, thanks.
+> On Fri 11 Oct 04:57 PDT 2019, Kalle Valo wrote:
+>
+>> Bjorn Andersson <bjorn.andersson@linaro.org> wrote:
+>> 
+>> > The return value of dma_map_single() should be checked for errors using
+>> > dma_mapping_error(), rather than testing for NULL. Correct this.
+>> > 
+>> > Fixes: 1807da49733e ("ath10k: wmi: add management tx by reference
+>> > support over wmi")
+>> > Cc: stable@vger.kernel.org
+>> > Reported-by: Niklas Cassel <niklas.cassel@linaro.org>
+>> > Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+>> 
+>> Did this fix any real bug? Or is this just something found during code review?
+>> 
+>
+> CONFIG_DMA_API_DEBUG screamed at us for calling dma_unmap_single()
+> without ever having called dma_mapping_error() on the return value.
+
+Ok, I'll add something about to the commit log in v2 so that the
+background is also documented.
+
+-- 
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
