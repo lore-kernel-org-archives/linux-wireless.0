@@ -4,38 +4,38 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE271C47404
-	for <linux-wireless@archiver.kernel.org>; Mon, 14 Oct 2019 07:20:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EC66C4CECE
+	for <linux-wireless@archiver.kernel.org>; Mon, 14 Oct 2019 07:20:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 94BD82064A
-	for <linux-wireless@archiver.kernel.org>; Mon, 14 Oct 2019 07:20:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7762920854
+	for <linux-wireless@archiver.kernel.org>; Mon, 14 Oct 2019 07:20:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730382AbfJNHUw (ORCPT
+        id S1730385AbfJNHUx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 14 Oct 2019 03:20:52 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:49256 "EHLO
+        Mon, 14 Oct 2019 03:20:53 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:49260 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1730276AbfJNHUv (ORCPT
+        with ESMTP id S1730276AbfJNHUx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 Oct 2019 03:20:51 -0400
+        Mon, 14 Oct 2019 03:20:53 -0400
 Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1iJueh-0007ae-QG; Mon, 14 Oct 2019 10:20:36 +0300
+        id 1iJuej-0007ae-F3; Mon, 14 Oct 2019 10:20:37 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Mon, 14 Oct 2019 10:20:13 +0300
-Message-Id: <20191014101813.8a876e8fbb14.I578488b770d6f705c06099bd1d3e40acf7695ea9@changeid>
+Date:   Mon, 14 Oct 2019 10:20:15 +0300
+Message-Id: <20191014101813.7e2742c1e22f.I65d0d5e782864f53b4ed8a6f43e72c50a09d9fd9@changeid>
 X-Mailer: git-send-email 2.23.0
 In-Reply-To: <20191014072019.1254-1-luca@coelho.fi>
 References: <20191014072019.1254-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH v2 10/16] iwlwifi: dbg_ini: implement monitor allocation flow
+Subject: [PATCH v2 12/16] iwlwifi: dbg_ini: support domain changing via debugfs
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -43,302 +43,84 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 
-Allow allocating fragmented buffers for several allocation IDs.
+Allow to change or read the debug domain bitmap at runtime via
+fw_dbg_domain debugfs.
 
 Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../net/wireless/intel/iwlwifi/iwl-dbg-tlv.c  | 249 +++++++++++++++++-
- 1 file changed, 248 insertions(+), 1 deletion(-)
+ .../net/wireless/intel/iwlwifi/fw/debugfs.c   | 37 +++++++++++++++++++
+ .../net/wireless/intel/iwlwifi/iwl-trans.h    |  5 +++
+ 2 files changed, 42 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
-index 1cec10a60cba..c657acf61fe9 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
-@@ -314,6 +314,34 @@ void iwl_dbg_tlv_del_timers(struct iwl_trans *trans)
- }
- IWL_EXPORT_SYMBOL(iwl_dbg_tlv_del_timers);
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/debugfs.c b/drivers/net/wireless/intel/iwlwifi/fw/debugfs.c
+index c1aa4360736b..7f1d299e8b0a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/debugfs.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/debugfs.c
+@@ -320,10 +320,47 @@ static ssize_t iwl_dbgfs_send_hcmd_write(struct iwl_fw_runtime *fwrt, char *buf,
  
-+static void iwl_dbg_tlv_fragments_free(struct iwl_trans *trans,
-+				       enum iwl_fw_ini_allocation_id alloc_id)
+ FWRT_DEBUGFS_WRITE_FILE_OPS(send_hcmd, 512);
+ 
++static ssize_t iwl_dbgfs_fw_dbg_domain_write(struct iwl_fw_runtime *fwrt,
++					     char *buf, size_t count)
 +{
-+	struct iwl_fw_mon *fw_mon;
-+	int i;
++	u32 new_domain;
++	long val;
++	int ret;
 +
-+	if (alloc_id <= IWL_FW_INI_ALLOCATION_INVALID ||
-+	    alloc_id >= IWL_FW_INI_ALLOCATION_NUM)
-+		return;
-+
-+	fw_mon = &trans->dbg.fw_mon_ini[alloc_id];
-+
-+	for (i = 0; i < fw_mon->num_frags; i++) {
-+		struct iwl_dram_data *frag = &fw_mon->frags[i];
-+
-+		dma_free_coherent(trans->dev, frag->size, frag->block,
-+				  frag->physical);
-+
-+		frag->physical = 0;
-+		frag->block = NULL;
-+		frag->size = 0;
-+	}
-+
-+	kfree(fw_mon->frags);
-+	fw_mon->frags = NULL;
-+	fw_mon->num_frags = 0;
-+}
-+
- void iwl_dbg_tlv_free(struct iwl_trans *trans)
- {
- 	struct iwl_dbg_tlv_node *tlv_node, *tlv_node_tmp;
-@@ -357,6 +385,9 @@ void iwl_dbg_tlv_free(struct iwl_trans *trans)
- 			kfree(tlv_node);
- 		}
- 	}
-+
-+	for (i = 0; i < ARRAY_SIZE(trans->dbg.fw_mon_ini); i++)
-+		iwl_dbg_tlv_fragments_free(trans, i);
- }
- 
- static int iwl_dbg_tlv_parse_bin(struct iwl_trans *trans, const u8 *data,
-@@ -418,6 +449,187 @@ void iwl_dbg_tlv_init(struct iwl_trans *trans)
- 	}
- }
- 
-+static int iwl_dbg_tlv_alloc_fragment(struct iwl_fw_runtime *fwrt,
-+				      struct iwl_dram_data *frag, u32 pages)
-+{
-+	void *block = NULL;
-+	dma_addr_t physical;
-+
-+	if (!frag || frag->size || !pages)
++	if (!iwl_trans_fw_running(fwrt->trans))
 +		return -EIO;
 +
-+	while (pages) {
-+		block = dma_alloc_coherent(fwrt->dev, pages * PAGE_SIZE,
-+					   &physical,
-+					   GFP_KERNEL | __GFP_NOWARN);
-+		if (block)
-+			break;
++	ret = kstrtol(buf, 0, &val);
++	if (ret)
++		return ret;
 +
-+		IWL_WARN(fwrt, "WRT: Failed to allocate fragment size %lu\n",
-+			 pages * PAGE_SIZE);
-+
-+		pages = DIV_ROUND_UP(pages, 2);
-+	}
-+
-+	if (!block)
-+		return -ENOMEM;
-+
-+	frag->physical = physical;
-+	frag->block = block;
-+	frag->size = pages * PAGE_SIZE;
-+
-+	return pages;
-+}
-+
-+static int iwl_dbg_tlv_alloc_fragments(struct iwl_fw_runtime *fwrt,
-+				       enum iwl_fw_ini_allocation_id alloc_id)
-+{
-+	struct iwl_fw_mon *fw_mon;
-+	struct iwl_fw_ini_allocation_tlv *fw_mon_cfg;
-+	u32 num_frags, remain_pages, frag_pages;
-+	int i;
-+
-+	if (alloc_id < IWL_FW_INI_ALLOCATION_INVALID ||
-+	    alloc_id >= IWL_FW_INI_ALLOCATION_NUM)
-+		return -EIO;
-+
-+	fw_mon_cfg = &fwrt->trans->dbg.fw_mon_cfg[alloc_id];
-+	fw_mon = &fwrt->trans->dbg.fw_mon_ini[alloc_id];
-+
-+	if (fw_mon->num_frags ||
-+	    fw_mon_cfg->buf_location !=
-+	    cpu_to_le32(IWL_FW_INI_LOCATION_DRAM_PATH))
-+		return 0;
-+
-+	num_frags = le32_to_cpu(fw_mon_cfg->max_frags_num);
-+	if (!fw_has_capa(&fwrt->fw->ucode_capa,
-+			 IWL_UCODE_TLV_CAPA_DBG_BUF_ALLOC_CMD_SUPP)) {
-+		if (alloc_id != IWL_FW_INI_ALLOCATION_ID_DBGC1)
-+			return -EIO;
-+		num_frags = 1;
-+	}
-+
-+	remain_pages = DIV_ROUND_UP(le32_to_cpu(fw_mon_cfg->req_size),
-+				    PAGE_SIZE);
-+	num_frags = min_t(u32, num_frags, BUF_ALLOC_MAX_NUM_FRAGS);
-+	num_frags = min_t(u32, num_frags, remain_pages);
-+	frag_pages = DIV_ROUND_UP(remain_pages, num_frags);
-+
-+	fw_mon->frags = kcalloc(num_frags, sizeof(*fw_mon->frags), GFP_KERNEL);
-+	if (!fw_mon->frags)
-+		return -ENOMEM;
-+
-+	for (i = 0; i < num_frags; i++) {
-+		int pages = min_t(u32, frag_pages, remain_pages);
-+
-+		IWL_DEBUG_FW(fwrt,
-+			     "WRT: Allocating DRAM buffer (alloc_id=%u, fragment=%u, size=0x%lx)\n",
-+			     alloc_id, i, pages * PAGE_SIZE);
-+
-+		pages = iwl_dbg_tlv_alloc_fragment(fwrt, &fw_mon->frags[i],
-+						   pages);
-+		if (pages < 0) {
-+			u32 alloc_size = le32_to_cpu(fw_mon_cfg->req_size) -
-+				(remain_pages * PAGE_SIZE);
-+
-+			if (alloc_size < le32_to_cpu(fw_mon_cfg->min_size)) {
-+				iwl_dbg_tlv_fragments_free(fwrt->trans,
-+							   alloc_id);
-+				return pages;
-+			}
-+			break;
-+		}
-+
-+		remain_pages -= pages;
-+		fw_mon->num_frags++;
-+	}
-+
-+	return 0;
-+}
-+
-+static int iwl_dbg_tlv_apply_buffer(struct iwl_fw_runtime *fwrt,
-+				    enum iwl_fw_ini_allocation_id alloc_id)
-+{
-+	struct iwl_fw_mon *fw_mon;
-+	u32 remain_frags, num_commands;
-+	int i, fw_mon_idx = 0;
-+
-+	if (!fw_has_capa(&fwrt->fw->ucode_capa,
-+			 IWL_UCODE_TLV_CAPA_DBG_BUF_ALLOC_CMD_SUPP))
-+		return 0;
-+
-+	if (alloc_id < IWL_FW_INI_ALLOCATION_INVALID ||
-+	    alloc_id >= IWL_FW_INI_ALLOCATION_NUM)
-+		return -EIO;
-+
-+	if (le32_to_cpu(fwrt->trans->dbg.fw_mon_cfg[alloc_id].buf_location) !=
-+	    IWL_FW_INI_LOCATION_DRAM_PATH)
-+		return 0;
-+
-+	fw_mon = &fwrt->trans->dbg.fw_mon_ini[alloc_id];
-+
-+	/* the first fragment of DBGC1 is given to the FW via register
-+	 * or context info
-+	 */
-+	if (alloc_id == IWL_FW_INI_ALLOCATION_ID_DBGC1)
-+		fw_mon_idx++;
-+
-+	remain_frags = fw_mon->num_frags - fw_mon_idx;
-+	if (!remain_frags)
-+		return 0;
-+
-+	num_commands = DIV_ROUND_UP(remain_frags, BUF_ALLOC_MAX_NUM_FRAGS);
-+
-+	IWL_DEBUG_FW(fwrt, "WRT: Applying DRAM destination (alloc_id=%u)\n",
-+		     alloc_id);
-+
-+	for (i = 0; i < num_commands; i++) {
-+		u32 num_frags = min_t(u32, remain_frags,
-+				      BUF_ALLOC_MAX_NUM_FRAGS);
-+		struct iwl_buf_alloc_cmd data = {
-+			.alloc_id = cpu_to_le32(alloc_id),
-+			.num_frags = cpu_to_le32(num_frags),
-+			.buf_location =
-+				cpu_to_le32(IWL_FW_INI_LOCATION_DRAM_PATH),
-+		};
-+		struct iwl_host_cmd hcmd = {
-+			.id = WIDE_ID(DEBUG_GROUP, BUFFER_ALLOCATION),
-+			.data[0] = &data,
-+			.len[0] = sizeof(data),
-+		};
-+		int ret, j;
-+
-+		for (j = 0; j < num_frags; j++) {
-+			struct iwl_buf_alloc_frag *frag = &data.frags[j];
-+			struct iwl_dram_data *fw_mon_frag =
-+				&fw_mon->frags[fw_mon_idx++];
-+
-+			frag->addr = cpu_to_le64(fw_mon_frag->physical);
-+			frag->size = cpu_to_le32(fw_mon_frag->size);
-+		}
-+		ret = iwl_trans_send_cmd(fwrt->trans, &hcmd);
++	new_domain = (u32)val;
++	if (new_domain != fwrt->trans->dbg.domains_bitmap) {
++		ret = iwl_dbg_tlv_gen_active_trigs(fwrt, new_domain);
 +		if (ret)
 +			return ret;
 +
-+		remain_frags -= num_frags;
++		iwl_dbg_tlv_time_point(fwrt, IWL_FW_INI_TIME_POINT_PERIODIC,
++				       NULL);
 +	}
 +
-+	return 0;
++	return count;
 +}
 +
-+static void iwl_dbg_tlv_apply_buffers(struct iwl_fw_runtime *fwrt)
++static ssize_t iwl_dbgfs_fw_dbg_domain_read(struct iwl_fw_runtime *fwrt,
++					    size_t size, char *buf)
 +{
-+	int ret, i;
-+
-+	for (i = 0; i < IWL_FW_INI_ALLOCATION_NUM; i++) {
-+		ret = iwl_dbg_tlv_apply_buffer(fwrt, i);
-+		if (ret)
-+			IWL_WARN(fwrt,
-+				 "WRT: Failed to apply DRAM buffer for allocation id %d, ret=%d\n",
-+				 i, ret);
-+	}
++	return scnprintf(buf, size, "0x%08x\n",
++			 fwrt->trans->dbg.domains_bitmap);
 +}
 +
- static void iwl_dbg_tlv_send_hcmds(struct iwl_fw_runtime *fwrt,
- 				   struct list_head *hcmd_list)
++FWRT_DEBUGFS_READ_WRITE_FILE_OPS(fw_dbg_domain, 20);
++
+ void iwl_fwrt_dbgfs_register(struct iwl_fw_runtime *fwrt,
+ 			    struct dentry *dbgfs_dir)
  {
-@@ -670,6 +882,36 @@ iwl_dbg_tlv_tp_trigger(struct iwl_fw_runtime *fwrt,
- 	return 0;
+ 	INIT_DELAYED_WORK(&fwrt->timestamp.wk, iwl_fw_timestamp_marker_wk);
+ 	FWRT_DEBUGFS_ADD_FILE(timestamp_marker, dbgfs_dir, 0200);
+ 	FWRT_DEBUGFS_ADD_FILE(send_hcmd, dbgfs_dir, 0200);
++	FWRT_DEBUGFS_ADD_FILE(fw_dbg_domain, dbgfs_dir, 0600);
+ }
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index 32e522991068..8cadad7364ac 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@ -1249,6 +1249,11 @@ static inline void iwl_trans_fw_error(struct iwl_trans *trans)
+ 		iwl_op_mode_nic_error(trans->op_mode);
  }
  
-+static void iwl_dbg_tlv_init_cfg(struct iwl_fw_runtime *fwrt)
++static inline bool iwl_trans_fw_running(struct iwl_trans *trans)
 +{
-+	enum iwl_fw_ini_buffer_location *ini_dest = &fwrt->trans->dbg.ini_dest;
-+	int ret, i;
-+
-+	iwl_dbg_tlv_gen_active_trigs(fwrt, IWL_FW_DBG_DOMAIN);
-+
-+	*ini_dest = IWL_FW_INI_LOCATION_INVALID;
-+	for (i = 0; i < IWL_FW_INI_ALLOCATION_NUM; i++) {
-+		struct iwl_fw_ini_allocation_tlv *fw_mon_cfg =
-+			&fwrt->trans->dbg.fw_mon_cfg[i];
-+		u32 dest = le32_to_cpu(fw_mon_cfg->buf_location);
-+
-+		if (dest == IWL_FW_INI_LOCATION_INVALID)
-+			continue;
-+
-+		if (*ini_dest == IWL_FW_INI_LOCATION_INVALID)
-+			*ini_dest = dest;
-+
-+		if (dest != *ini_dest)
-+			continue;
-+
-+		ret = iwl_dbg_tlv_alloc_fragments(fwrt, i);
-+		if (ret)
-+			IWL_WARN(fwrt,
-+				 "WRT: Failed to allocate DRAM buffer for allocation id %d, ret=%d\n",
-+				 i, ret);
-+	}
++	return trans->state == IWL_TRANS_FW_ALIVE;
 +}
 +
- void iwl_dbg_tlv_time_point(struct iwl_fw_runtime *fwrt,
- 			    enum iwl_fw_ini_time_point tp_id,
- 			    union iwl_dbg_tlv_tp_data *tp_data)
-@@ -686,7 +928,12 @@ void iwl_dbg_tlv_time_point(struct iwl_fw_runtime *fwrt,
- 
- 	switch (tp_id) {
- 	case IWL_FW_INI_TIME_POINT_EARLY:
--		iwl_dbg_tlv_gen_active_trigs(fwrt, IWL_FW_DBG_DOMAIN);
-+		iwl_dbg_tlv_init_cfg(fwrt);
-+		iwl_dbg_tlv_tp_trigger(fwrt, trig_list, tp_data, NULL);
-+		break;
-+	case IWL_FW_INI_TIME_POINT_AFTER_ALIVE:
-+		iwl_dbg_tlv_apply_buffers(fwrt);
-+		iwl_dbg_tlv_send_hcmds(fwrt, hcmd_list);
- 		iwl_dbg_tlv_tp_trigger(fwrt, trig_list, tp_data, NULL);
- 		break;
- 	default:
+ static inline void iwl_trans_sync_nmi(struct iwl_trans *trans)
+ {
+ 	if (trans->ops->sync_nmi)
 -- 
 2.23.0
 
