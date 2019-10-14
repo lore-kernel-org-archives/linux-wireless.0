@@ -2,68 +2,130 @@ Return-Path: <SRS0=qTSE=YH=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA742C4CECE
-	for <linux-wireless@archiver.kernel.org>; Mon, 14 Oct 2019 07:20:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3F3EC4CECE
+	for <linux-wireless@archiver.kernel.org>; Mon, 14 Oct 2019 08:29:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B7DE220854
-	for <linux-wireless@archiver.kernel.org>; Mon, 14 Oct 2019 07:20:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7CF0F207FF
+	for <linux-wireless@archiver.kernel.org>; Mon, 14 Oct 2019 08:29:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1571041756;
+	bh=4xRYNc1AsGeEeRyhMqeyE0eI5lZWBeRZlGnQlsC3iT8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=jMF9r06E3oTThlConyl7lHT0yQ07W5zNAVPtRYfbK46+z+IvIHYtX7CdGJMVFVOSM
+	 DFsENEPm1gt58yVunmNFOmIYWlz2K/kDlg0aIz3mwe4RIt276qNlBYcjWIMXkD4n2D
+	 z5zXmbVfdK24/44YE9p7vQxKOt3D1aW+N9SQ65uA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730201AbfJNHU6 (ORCPT
+        id S1730440AbfJNI3O (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 14 Oct 2019 03:20:58 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:49272 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1730273AbfJNHU5 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 Oct 2019 03:20:57 -0400
-Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
-        by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.92)
-        (envelope-from <luca@coelho.fi>)
-        id 1iJuel-0007ae-1U; Mon, 14 Oct 2019 10:20:39 +0300
-From:   Luca Coelho <luca@coelho.fi>
-To:     kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org
-Date:   Mon, 14 Oct 2019 10:20:17 +0300
-Message-Id: <20191014101813.3c0b6fe42b2b.Idc1ae686433b4235ec1eade66dab8f9eac753551@changeid>
-X-Mailer: git-send-email 2.23.0
-In-Reply-To: <20191014072019.1254-1-luca@coelho.fi>
-References: <20191014072019.1254-1-luca@coelho.fi>
+        Mon, 14 Oct 2019 04:29:14 -0400
+Received: from mail.kernel.org ([198.145.29.99]:56478 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725936AbfJNI3O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 14 Oct 2019 04:29:14 -0400
+Received: from dragon (li937-157.members.linode.com [45.56.119.157])
+        (using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 975F220673;
+        Mon, 14 Oct 2019 08:28:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1571041752;
+        bh=4xRYNc1AsGeEeRyhMqeyE0eI5lZWBeRZlGnQlsC3iT8=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=poW3FdOhnfzxFqeIBCD96TFK9ogf+8ey1lA8yG5SXAHL0D+X3YPBSgIrE4MospI+Z
+         hb7zs1kMA8wdggiEu844GDKWPb4Rcib/9/G/2T7FwutmRJD3ym78J+PHMeoJEufODN
+         RPspDY69Cl+C4TjFoM9KzAMs5IyG7dvkprUUGz3U=
+Date:   Mon, 14 Oct 2019 16:28:49 +0800
+From:   Shawn Guo <shawnguo@kernel.org>
+To:     Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
+Cc:     robh+dt@kernel.org, devicetree@vger.kernel.org,
+        frowand.list@gmail.com, linux-arm-kernel@lists.infradead.org,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, dmaengine@vger.kernel.org,
+        etnaviv@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        xen-devel@lists.xenproject.org, linux-tegra@vger.kernel.org,
+        linux-media@vger.kernel.org, linux-pci@vger.kernel.org,
+        Li Yang <leoyang.li@nxp.com>, mbrugger@suse.com,
+        robin.murphy@arm.com, f.fainelli@gmail.com,
+        james.quinlan@broadcom.com, wahrenst@gmx.net,
+        Mark Rutland <mark.rutland@arm.com>
+Subject: Re: [PATCH 07/11] dts: arm64: layerscape: add dma-ranges property to
+ qoric-mc node
+Message-ID: <20191014082847.GH12262@dragon>
+References: <20190924181244.7159-1-nsaenzjulienne@suse.de>
+ <20190924181244.7159-8-nsaenzjulienne@suse.de>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: [PATCH v2 14/16] iwlwifi: dbg_ini: rename external debug configuration file
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190924181244.7159-8-nsaenzjulienne@suse.de>
+User-Agent: Mutt/1.5.21 (2010-09-15)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
+On Tue, Sep 24, 2019 at 08:12:38PM +0200, Nicolas Saenz Julienne wrote:
+> qoriq-mc's dpmacs DMA configuration is inherited from their parent node,
+> which acts a bus in this regard. So far it maked all devices as
+> dma-coherent but no dma-ranges recommendation is made.
+> 
+> The truth is that the underlying interconnect has DMA constraints, so
+> add an empty dma-ranges in qoriq-mc's node in order for DT's DMA
+> configuration code to get the DMA constraints from it.
+> 
+> Signed-off-by: Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
 
-Rename the external configuration file to align to the debug SAS.
+Updated subject prefix as 'arm64: dts: ...', and applied the patch.
 
-Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Shawn
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
-index 4f2a4d88f399..1934df7fccb8 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
-@@ -445,7 +445,7 @@ void iwl_dbg_tlv_load_bin(struct device *dev, struct iwl_trans *trans)
- 	if (!iwlwifi_mod_params.enable_ini)
- 		return;
- 
--	res = request_firmware(&fw, "iwl-dbg-tlv.ini", dev);
-+	res = request_firmware(&fw, "iwl-debug-yoyo.bin", dev);
- 	if (res)
- 		return;
- 
--- 
-2.23.0
-
+> ---
+> 
+>  arch/arm64/boot/dts/freescale/fsl-ls1088a.dtsi | 1 +
+>  arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi | 1 +
+>  arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi | 1 +
+>  3 files changed, 3 insertions(+)
+> 
+> diff --git a/arch/arm64/boot/dts/freescale/fsl-ls1088a.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls1088a.dtsi
+> index c676d0771762..f0d0b6145b72 100644
+> --- a/arch/arm64/boot/dts/freescale/fsl-ls1088a.dtsi
+> +++ b/arch/arm64/boot/dts/freescale/fsl-ls1088a.dtsi
+> @@ -698,6 +698,7 @@
+>  			      <0x00000000 0x08340000 0 0x40000>; /* MC control reg */
+>  			msi-parent = <&its>;
+>  			iommu-map = <0 &smmu 0 0>;	/* This is fixed-up by u-boot */
+> +			dma-ranges;
+>  			dma-coherent;
+>  			#address-cells = <3>;
+>  			#size-cells = <1>;
+> diff --git a/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi
+> index 7a0be8eaa84a..fd6036b7865c 100644
+> --- a/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi
+> +++ b/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi
+> @@ -340,6 +340,7 @@
+>  			      <0x00000000 0x08340000 0 0x40000>; /* MC control reg */
+>  			msi-parent = <&its>;
+>  			iommu-map = <0 &smmu 0 0>;	/* This is fixed-up by u-boot */
+> +			dma-ranges;
+>  			dma-coherent;
+>  			#address-cells = <3>;
+>  			#size-cells = <1>;
+> diff --git a/arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi b/arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi
+> index 408e0ecdce6a..3735bb139cb2 100644
+> --- a/arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi
+> +++ b/arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi
+> @@ -868,6 +868,7 @@
+>  			msi-parent = <&its>;
+>  			/* iommu-map property is fixed up by u-boot */
+>  			iommu-map = <0 &smmu 0 0>;
+> +			dma-ranges;
+>  			dma-coherent;
+>  			#address-cells = <3>;
+>  			#size-cells = <1>;
+> -- 
+> 2.23.0
+> 
