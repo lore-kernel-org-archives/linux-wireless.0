@@ -2,74 +2,110 @@ Return-Path: <SRS0=T8HV=YK=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79B2CECE599
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Oct 2019 02:55:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71CD5FA3728
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Oct 2019 03:17:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 51AB82082C
-	for <linux-wireless@archiver.kernel.org>; Thu, 17 Oct 2019 02:55:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4758C2064A
+	for <linux-wireless@archiver.kernel.org>; Thu, 17 Oct 2019 03:17:49 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="nMwzx3K3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2404308AbfJQCzb (ORCPT
+        id S2404522AbfJQDRs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 16 Oct 2019 22:55:31 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:33268 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2392045AbfJQCzb (ORCPT
+        Wed, 16 Oct 2019 23:17:48 -0400
+Received: from mail-qt1-f195.google.com ([209.85.160.195]:33665 "EHLO
+        mail-qt1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730479AbfJQDRs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 Oct 2019 22:55:31 -0400
-Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x9H2tOZS009506, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (RTITCAS12.realtek.com.tw[172.21.6.16])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x9H2tOZS009506
-        (version=TLSv1.2 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 17 Oct 2019 10:55:25 +0800
-Received: from RTITMBSVM04.realtek.com.tw ([fe80::e404:880:2ef1:1aa1]) by
- RTITCAS12.realtek.com.tw ([::1]) with mapi id 14.03.0439.000; Thu, 17 Oct
- 2019 10:55:24 +0800
-From:   Tony Chuang <yhchuang@realtek.com>
-To:     Brian Norris <briannorris@chromium.org>
-CC:     Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH v2 4/6] rtw88: update regulatory settings implementaion
-Thread-Topic: [PATCH v2 4/6] rtw88: update regulatory settings implementaion
-Thread-Index: AQHVhB3i85C44Tj9vUuCv01IpIQXlqdc9gcAgAEr8NA=
-Date:   Thu, 17 Oct 2019 02:55:23 +0000
-Message-ID: <F7CD281DE3E379468C6D07993EA72F84D1900CF3@RTITMBSVM04.realtek.com.tw>
-References: <20191016123301.2649-1-yhchuang@realtek.com>
- <20191016123301.2649-5-yhchuang@realtek.com>
- <CA+ASDXMj_f9q1aKgkcqd+2NPmxQfcQsJK8zQLUQSu8DSUW7Fsw@mail.gmail.com>
-In-Reply-To: <CA+ASDXMj_f9q1aKgkcqd+2NPmxQfcQsJK8zQLUQSu8DSUW7Fsw@mail.gmail.com>
-Accept-Language: zh-TW, en-US
-Content-Language: zh-TW
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [172.21.68.183]
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+        Wed, 16 Oct 2019 23:17:48 -0400
+Received: by mail-qt1-f195.google.com with SMTP id r5so1511087qtd.0
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Oct 2019 20:17:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=zfG7ZLV6gt6IG6KOv7MQIlUlPONYymvz8IlPeVuwwCg=;
+        b=nMwzx3K3NL3cQy45ief6pSitotCCjIl+6ftpWEUcLTDocPexdcW2GlmyidBcrsCJvs
+         IoJ2khLA5w9tvB0HaAqTo7nS8I0QJAum2Oiwbl0U9cr9NSdnvJi0Nyw4a4ttRt2MsUkT
+         0Dn07vOWEuGo+P5jiToi8NuEvLzlHZkKPtdc8=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=zfG7ZLV6gt6IG6KOv7MQIlUlPONYymvz8IlPeVuwwCg=;
+        b=r9VYHrK9yHCj12uWWGz2R8FOOZ7lWpOCIhNNsYPIr+68voo0hZfaNgFpB9fDDkFinQ
+         AdHgz+FgSPZFb++A58WCWbFCM/Raw0mzZhVAZqnDFmSZRRaxMd+w8oPNsQJJ40MVOb3D
+         +MV11oguFs0h9Zk6d+OA1xyCKSExBt5EiIhRfMjeC8zI3h1db/EBWC54JXM2AeYJzif2
+         N+ghzR4BvYwArqNpPcFs6gUI12FgwcLD8T9X0AgoXT/8N7wQzLKYkCrvG38rUO2b0Cjb
+         bdzpxBKRyK2D6j5BEUJS/4nihT5kNxP2VDSUinK7l4OoCKvd1Q1UEKNhkwN2pUAm/4YL
+         7pfQ==
+X-Gm-Message-State: APjAAAWnakPGFOxvGqLfGUe6+VSkRalCullXeVMPZeKJcCakFfiCAm03
+        +LhH+yYRZdPpu9XlmXdAe99B3/Qfhuk=
+X-Google-Smtp-Source: APXvYqw6wsCIl5K1MVGorR2r/nDmQoK/HFVqE5OaTSWJucXhljRxqeMfWq+X2jOUt1ObxZqP3WOgkg==
+X-Received: by 2002:a0c:fa49:: with SMTP id k9mr1563173qvo.239.1571282266475;
+        Wed, 16 Oct 2019 20:17:46 -0700 (PDT)
+Received: from mail-qt1-f177.google.com (mail-qt1-f177.google.com. [209.85.160.177])
+        by smtp.gmail.com with ESMTPSA id x8sm407541qkx.77.2019.10.16.20.17.45
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 16 Oct 2019 20:17:45 -0700 (PDT)
+Received: by mail-qt1-f177.google.com with SMTP id n17so1470006qtr.4
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Oct 2019 20:17:45 -0700 (PDT)
+X-Received: by 2002:ac8:529a:: with SMTP id s26mr1575999qtn.238.1571282265026;
+ Wed, 16 Oct 2019 20:17:45 -0700 (PDT)
 MIME-Version: 1.0
+References: <20191016123301.2649-1-yhchuang@realtek.com> <20191016123301.2649-5-yhchuang@realtek.com>
+ <CA+ASDXMj_f9q1aKgkcqd+2NPmxQfcQsJK8zQLUQSu8DSUW7Fsw@mail.gmail.com> <F7CD281DE3E379468C6D07993EA72F84D1900CF3@RTITMBSVM04.realtek.com.tw>
+In-Reply-To: <F7CD281DE3E379468C6D07993EA72F84D1900CF3@RTITMBSVM04.realtek.com.tw>
+From:   Brian Norris <briannorris@chromium.org>
+Date:   Wed, 16 Oct 2019 20:17:32 -0700
+X-Gmail-Original-Message-ID: <CA+ASDXPkU8+8haHbyiQ5gf2e6rZ-2ks=D6zfV0CDnAzaWPZXFA@mail.gmail.com>
+Message-ID: <CA+ASDXPkU8+8haHbyiQ5gf2e6rZ-2ks=D6zfV0CDnAzaWPZXFA@mail.gmail.com>
+Subject: Re: [PATCH v2 4/6] rtw88: update regulatory settings implementaion
+To:     Tony Chuang <yhchuang@realtek.com>
+Cc:     Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-RnJvbTogQnJpYW4gTm9ycmlzDQo+IA0KPiBPbiBXZWQsIE9jdCAxNiwgMjAxOSBhdCA1OjMzIEFN
-IDx5aGNodWFuZ0ByZWFsdGVrLmNvbT4gd3JvdGU6DQo+ID4gVGhpcyBhbHNvIHN1cHBvcnRzIHVz
-ZXIgcmVndWxhdG9yeSBoaW50cywgYW5kIGl0IHNob3VsZCBvbmx5IGJlDQo+ID4gZW5hYmxlZCBm
-b3Igc3BlY2lmaWMgZGlzdHJpYnV0aW9ucyB0aGF0IG5lZWQgdGhpcyB0byBjb3JyZWN0DQo+ID4g
-dGhlIGNhcmRzIHJlZ2x1dG9yeS4NCj4gDQo+IHMvY2FyZHMvY2FyZCdzLw0KPiBzL3JlZ2x1dG9y
-eS9yZWd1bGF0b3J5Lw0KDQpUeXBvIHNob3VsZCBiZSBmaXhlZCBpbiB2MyA6KQ0KDQo+IA0KPiBU
-aGVyZSBzaG91bGQgYmUgYSBwcmV0dHkgaGlnaCBiYXIgZm9yIGludHJvZHVjaW5nIGVpdGhlciBu
-ZXcgQ09ORklHXyoNCj4gb3B0aW9ucyBvciBtb2R1bGUgcGFyYW1ldGVycywgaW4gbXkgb3Bpbmlv
-biwgYW5kIEknbSBub3Qgc3VyZSB5b3UNCj4gcmVhbGx5IHNhdGlzZmllZCBpdC4gV2h5ICJzaG91
-bGQgb25seSBiZSBlbmFibGVkIiBieSBjZXJ0YWluDQo+IGRpc3RyaWJ1dGlvbnM/IFlvdXIgb3Bp
-bmlvbj8gSWYgaXQncyB0aGUgdGVjaG5pY2FsIGxpbWl0YXRpb24geW91DQo+IHJlZmVyIHRvICgi
-ZWZ1c2Ugc2V0dGluZ3MiKSwgdGhlbiBqdXN0IGRldGVjdCB0aGUgZWZ1c2UgYW5kIHByZXZlbnQN
-Cj4gdXNlciBoaW50cyBvbmx5IG9uIHRob3NlIG1vZHVsZXMuDQo+IA0KDQpCZWNhdXNlIHRoZSBl
-ZnVzZS9tb2R1bGUgZG9lcyBub3QgY29udGFpbiB0aGUgaW5mb3JtYXRpb24gaWYgdGhlDQp1c2Vy
-J3MgaGludCBpcyBhbGxvd2VkLiBCdXQgc29tZXRpbWVzIGRpc3RyaWJ1dGlvbnMgcmVxdWlyZSB0
-byBzZXQgdGhlDQpyZWd1bGF0b3J5IHZpYSAiTkw4MDIxMV9DTURfU0VUX1JFRyIuDQpTbyB3ZSBh
-cmUgbGVhdmluZyB0aGUgQ09ORklHXyogaGVyZSBmb3Igc29tZSByZWFzb24gdGhhdCBuZWVkcyBp
-dC4NCg0KWWFuLUhzdWFuDQo=
+On Wed, Oct 16, 2019 at 7:55 PM Tony Chuang <yhchuang@realtek.com> wrote:
+>
+> From: Brian Norris
+> >
+> > On Wed, Oct 16, 2019 at 5:33 AM <yhchuang@realtek.com> wrote:
+> > > This also supports user regulatory hints, and it should only be
+> > > enabled for specific distributions that need this to correct
+> > > the cards reglutory.
+...
+> > There should be a pretty high bar for introducing either new CONFIG_*
+> > options or module parameters, in my opinion, and I'm not sure you
+> > really satisfied it. Why "should only be enabled" by certain
+> > distributions? Your opinion? If it's the technical limitation you
+> > refer to ("efuse settings"), then just detect the efuse and prevent
+> > user hints only on those modules.
+> >
+>
+> Because the efuse/module does not contain the information if the
+> user's hint is allowed. But sometimes distributions require to set the
+> regulatory via "NL80211_CMD_SET_REG".
+> So we are leaving the CONFIG_* here for some reason that needs it.
+
+Is there ever a case where user hint is not allowed? For what reason?
+If not efuse, then what?
+
+Or alternatively: if someone sets CONFIG_RTW88_REGD_USER_REG_HINTS=y,
+then what problems will they have? Technical problems (e.g., firmware
+will crash on certain modules) or <other> problems?
+
+(If "<other>" means "legal", then just blink twice to acknowledge. Or
+just don't answer.)
+
+Brian
