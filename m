@@ -7,41 +7,41 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58CAACA9EA9
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Oct 2019 20:37:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F301CA9EA9
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Oct 2019 20:38:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2C0DF21925
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Oct 2019 20:37:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 23AA02054F
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Oct 2019 20:38:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=goldelico.com header.i=@goldelico.com header.b="eNVy8CCD"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=goldelico.com header.i=@goldelico.com header.b="IFLzioIg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2393468AbfJRUhg (ORCPT
+        id S2502626AbfJRUiB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 18 Oct 2019 16:37:36 -0400
-Received: from mo4-p03-ob.smtp.rzone.de ([85.215.255.101]:30451 "EHLO
-        mo4-p03-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2406020AbfJRUhf (ORCPT
+        Fri, 18 Oct 2019 16:38:01 -0400
+Received: from mo4-p04-ob.smtp.rzone.de ([85.215.255.121]:18129 "EHLO
+        mo4-p04-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2392595AbfJRUhg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Oct 2019 16:37:35 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1571431052;
+        Fri, 18 Oct 2019 16:37:36 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1571431054;
         s=strato-dkim-0002; d=goldelico.com;
         h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
         X-RZG-CLASS-ID:X-RZG-AUTH:From:Subject:Sender;
-        bh=FJTzAJtOyW1fELY6o5Xc6FD2/JieVkVYHZp5uH7ofjY=;
-        b=eNVy8CCDGAD8ZKOMn2jVNrPVV+6Jm3R8kIaw/1qlklC7mVvw7F6j28ZG9DELsNzMhx
-        uWtbqpe8fwWIczac3Oytwb6ELF/ER0V9QccZqlJ9iJjg/OdAo+XAblRTfgFCtDKzn9BH
-        wo+DNFJiEpVIcrIWG+kV7bkKFGlsD1TzJrYZO5hVa005x3bNyLyCtcjherTCcQb2WZ/m
-        fqyxhROBFnVwNIK3wyTunQaf+H5hAmJc3LV4uZbWfPWHrKZMR7MEtkJWzj9i/9QpuPSE
-        1xpP25zwmNzzr3/jwRSkbsWoB4jszM9fd7FFq9fhMyxpoR5ElWgokMZwGgPSorWSXzGm
-        jlPQ==
+        bh=25DfecDcdh+DVwUyD4qgXCP+yn92mKOk4bVidKb69Io=;
+        b=IFLzioIgBLUFEUIzLvr1ZOE5i7U/ez2oqg7hq5pV7vtk2h7sh38SRY+x8mmPuEADlI
+        0925VLdpm0i8QlQpdqwLJrE907MQqDUmIto4vRxWy75gXIFO2UFvq/P9b6YHWViE6J5K
+        aEikf2DMmnmj60O/RkQBAo8ZISBu7P1jfOVgwKHh6mRX3GphNeCmt5gvTwkp+Bf6a8NJ
+        PnF4ALhEBD/rR30/S9kjWQNVPdKbddNynxVUEM9fLJVjhCsKZqGzeGaf5apBENZfjmsk
+        RHiZo+saxNnVvqMGy2KtMeypxto8Ux4WVQ64HkJmfkC+OvJhf8ysxf211i4KtY+6Vfdk
+        5cMw==
 X-RZG-AUTH: ":JGIXVUS7cutRB/49FwqZ7WcJeFKiMhflhwDubTJ9o1mfYzBGHXH6F3CFF60="
 X-RZG-CLASS-ID: mo00
 Received: from iMac.fritz.box
         by smtp.strato.de (RZmta 44.28.1 DYNA|AUTH)
-        with ESMTPSA id R0b2a8v9IKPZDUq
+        with ESMTPSA id R0b2a8v9IKPbDUt
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (curve secp521r1 with 521 ECDH bits, eq. 15360 bits RSA))
         (Client did not present a certificate);
-        Fri, 18 Oct 2019 22:25:35 +0200 (CEST)
+        Fri, 18 Oct 2019 22:25:37 +0200 (CEST)
 From:   "H. Nikolaus Schaller" <hns@goldelico.com>
 To:     =?UTF-8?q?Beno=C3=AEt=20Cousson?= <bcousson@baylibre.com>,
         Tony Lindgren <tony@atomide.com>,
@@ -69,9 +69,9 @@ Cc:     linux-omap@vger.kernel.org, devicetree@vger.kernel.org,
         linux-mmc@vger.kernel.org, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org, letux-kernel@openphoenux.org,
         kernel@pyra-handheld.com, stable@vger.kernel.org
-Subject: [PATCH 4/9] mmc: host: omap_hsmmc: add code for special init of wl1251 to get rid of pandora_wl1251_init_card
-Date:   Fri, 18 Oct 2019 22:25:25 +0200
-Message-Id: <347c23983a727a88c80179c7d7611d9b39e83e9d.1571430329.git.hns@goldelico.com>
+Subject: [PATCH 7/9] mmc: core: fix wl1251 sdio quirks
+Date:   Fri, 18 Oct 2019 22:25:28 +0200
+Message-Id: <388ccc1b96dc9aaa5953cdb45097888869ab7e5f.1571430329.git.hns@goldelico.com>
 X-Mailer: git-send-email 2.19.1
 In-Reply-To: <cover.1571430329.git.hns@goldelico.com>
 References: <cover.1571430329.git.hns@goldelico.com>
@@ -82,56 +82,36 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Pandora_wl1251_init_card was used to do special pdata based
-setup of the sdio mmc interface. This does no longer work with
-v4.7 and later. A fix requires a device tree based mmc3 setup.
+wl1251 and wl1271 have different vendor id and device id.
+So we need to handle both with sdio quirks.
 
-Therefore we move the special setup to omap_hsmmc.c instead
-of calling some pdata supplied init_card function.
-
-The new code checks for a DT child node compatible to wl1251
-so it will not affect other MMC3 use cases.
-
-Fixes: 81eef6ca9201 ("mmc: omap_hsmmc: Use dma_request_chan() for requesting DMA channel")
+Fixes: 884f38607897 ("mmc: core: move some sdio IDs out of quirks file")
 
 Signed-off-by: H. Nikolaus Schaller <hns@goldelico.com>
-Cc: <stable@vger.kernel.org> # 4.7.0
+Cc: <stable@vger.kernel.org> # 4.11.0
 ---
- drivers/mmc/host/omap_hsmmc.c | 21 +++++++++++++++++++++
- 1 file changed, 21 insertions(+)
+ drivers/mmc/core/quirks.h | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/mmc/host/omap_hsmmc.c b/drivers/mmc/host/omap_hsmmc.c
-index 952fa4063ff8..03ba80bcf319 100644
---- a/drivers/mmc/host/omap_hsmmc.c
-+++ b/drivers/mmc/host/omap_hsmmc.c
-@@ -1512,6 +1512,27 @@ static void omap_hsmmc_init_card(struct mmc_host *mmc, struct mmc_card *card)
+diff --git a/drivers/mmc/core/quirks.h b/drivers/mmc/core/quirks.h
+index 2d2d9ea8be4f..3dba15bccce2 100644
+--- a/drivers/mmc/core/quirks.h
++++ b/drivers/mmc/core/quirks.h
+@@ -119,7 +119,14 @@ static const struct mmc_fixup mmc_ext_csd_fixups[] = {
+ 	END_FIXUP
+ };
  
- 	if (mmc_pdata(host)->init_card)
- 		mmc_pdata(host)->init_card(card);
-+	else if (card->type == MMC_TYPE_SDIO || card->type == MMC_TYPE_SD_COMBO) {
-+		struct device_node *np = mmc_dev(mmc)->of_node;
 +
-+		np = of_get_compatible_child(np, "ti,wl1251");
-+		if (np) {
-+			/*
-+			 * We have TI wl1251 attached to MMC3. Pass this information to
-+			 * SDIO core because it can't be probed by normal methods.
-+			 */
+ static const struct mmc_fixup sdio_fixup_methods[] = {
++	SDIO_FIXUP(SDIO_VENDOR_ID_TI_WL1251, SDIO_DEVICE_ID_TI_WL1251,
++		   add_quirk, MMC_QUIRK_NONSTD_FUNC_IF),
 +
-+			dev_info(host->dev, "found wl1251\n");
-+			card->quirks |= MMC_QUIRK_NONSTD_SDIO;
-+			card->cccr.wide_bus = 1;
-+			card->cis.vendor = 0x104c;
-+			card->cis.device = 0x9066;
-+			card->cis.blksize = 512;
-+			card->cis.max_dtr = 24000000;
-+			card->ocr = 0x80;
-+			of_node_put(np);
-+		}
-+	}
- }
++	SDIO_FIXUP(SDIO_VENDOR_ID_TI_WL1251, SDIO_DEVICE_ID_TI_WL1251,
++		   add_quirk, MMC_QUIRK_DISABLE_CD),
++
+ 	SDIO_FIXUP(SDIO_VENDOR_ID_TI, SDIO_DEVICE_ID_TI_WL1271,
+ 		   add_quirk, MMC_QUIRK_NONSTD_FUNC_IF),
  
- static void omap_hsmmc_enable_sdio_irq(struct mmc_host *mmc, int enable)
 -- 
 2.19.1
 
