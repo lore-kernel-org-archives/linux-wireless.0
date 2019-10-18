@@ -2,80 +2,135 @@ Return-Path: <SRS0=fVU0=YL=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67D42CA9EA1
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Oct 2019 07:49:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6468CA9EA0
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Oct 2019 07:58:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3F17221897
-	for <linux-wireless@archiver.kernel.org>; Fri, 18 Oct 2019 07:49:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 90F3021897
+	for <linux-wireless@archiver.kernel.org>; Fri, 18 Oct 2019 07:58:42 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="VqbjfRno";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="QBX6rLJC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2504689AbfJRHtL (ORCPT
+        id S2395062AbfJRH6i (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 18 Oct 2019 03:49:11 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:50116 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S2504670AbfJRHtL (ORCPT
+        Fri, 18 Oct 2019 03:58:38 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:35006 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728064AbfJRH6h (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Oct 2019 03:49:11 -0400
-Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
-        by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.92)
-        (envelope-from <luca@coelho.fi>)
-        id 1iLN0X-0001zy-4u; Fri, 18 Oct 2019 10:49:09 +0300
-From:   Luca Coelho <luca@coelho.fi>
-To:     kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org
-Date:   Fri, 18 Oct 2019 10:49:01 +0300
-Message-Id: <20191018104748.37249e76f17d.Id28ce460f03b8bac50e05d648e8ac15d32d6f14d@changeid>
-X-Mailer: git-send-email 2.23.0
+        Fri, 18 Oct 2019 03:58:37 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 171DB6090E; Fri, 18 Oct 2019 07:58:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1571385517;
+        bh=3GTFwjIlWhXTOjjTyMlnew+m09s2RvpZ8RrP6LlGZ+w=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=VqbjfRnoFf9T8b6Wn9tLe9Cf3QFkkqwUA5zfqhdPV56zEfNCVxVwo2gDBRWxfnoms
+         CsLxcC+5pgkhqgIFCOG6N0k7RyaZuhvXDQVJj5cAby+KZejhQsILl3/lRErYzH/yEO
+         ktPJOuCgMT2L/1XZ60yTzXYof8WVV1ELnIJUYMgM=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id A344B60953;
+        Fri, 18 Oct 2019 07:58:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1571385516;
+        bh=3GTFwjIlWhXTOjjTyMlnew+m09s2RvpZ8RrP6LlGZ+w=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=QBX6rLJCbBNII7ggBVwu4dfcDbjt8gKfG7Kg46eji3m0uIZemysUMpoRrSht6kCVy
+         LKCe/KLyuJ/bnHGG9gn4sRGEiehMCTW5NlDKO0si+LeufMejv+9JJkoO0UrVJl6tAC
+         q3n6zWuMNzfIslJFoG955hkanpk19ZaQiAXSivk8=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org A344B60953
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Guenter Roeck <linux@roeck-us.net>
+Cc:     Hui Peng <benquike@gmail.com>, davem@davemloft.net,
+        Mathias Payer <mathias.payer@nebelwelt.net>,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/2] Fix a NULL-ptr-deref bug in ath10k_usb_alloc_urb_from_pipe
+References: <20190804003101.11541-1-benquike@gmail.com>
+        <20190831213139.GA32507@roeck-us.net>
+        <87ftlgqw42.fsf@kamboji.qca.qualcomm.com>
+        <20191018040530.GA28167@roeck-us.net>
+Date:   Fri, 18 Oct 2019 10:58:32 +0300
+In-Reply-To: <20191018040530.GA28167@roeck-us.net> (Guenter Roeck's message of
+        "Thu, 17 Oct 2019 21:05:30 -0700")
+Message-ID: <875zkmxz6f.fsf@kamboji.qca.qualcomm.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: [PATCH v5.4] iwlwifi: pcie: fix merge damage on making QnJ exclusive
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Luca Coelho <luciano.coelho@intel.com>
+Guenter Roeck <linux@roeck-us.net> writes:
 
-Two patches were sent out of order: one removed some conditions from
-an if and the other moved the code elsewhere.  When sending the patch
-that moved the code, an older version of the original code was moved,
-causing the "make QnJ exclusive" code to be essentially undone.
+> On Sun, Sep 01, 2019 at 11:06:05AM +0300, Kalle Valo wrote:
+>> Guenter Roeck <linux@roeck-us.net> writes:
+>> 
+>> > Hi,
+>> >
+>> > On Sat, Aug 03, 2019 at 08:31:01PM -0400, Hui Peng wrote:
+>> >> The `ar_usb` field of `ath10k_usb_pipe_usb_pipe` objects
+>> >> are initialized to point to the containing `ath10k_usb` object
+>> >> according to endpoint descriptors read from the device side, as shown
+>> >> below in `ath10k_usb_setup_pipe_resources`:
+>> >> 
+>> >> for (i = 0; i < iface_desc->desc.bNumEndpoints; ++i) {
+>> >>         endpoint = &iface_desc->endpoint[i].desc;
+>> >> 
+>> >>         // get the address from endpoint descriptor
+>> >>         pipe_num = ath10k_usb_get_logical_pipe_num(ar_usb,
+>> >>                                                 endpoint->bEndpointAddress,
+>> >>                                                 &urbcount);
+>> >>         ......
+>> >>         // select the pipe object
+>> >>         pipe = &ar_usb->pipes[pipe_num];
+>> >> 
+>> >>         // initialize the ar_usb field
+>> >>         pipe->ar_usb = ar_usb;
+>> >> }
+>> >> 
+>> >> The driver assumes that the addresses reported in endpoint
+>> >> descriptors from device side  to be complete. If a device is
+>> >> malicious and does not report complete addresses, it may trigger
+>> >> NULL-ptr-deref `ath10k_usb_alloc_urb_from_pipe` and
+>> >> `ath10k_usb_free_urb_to_pipe`.
+>> >> 
+>> >> This patch fixes the bug by preventing potential NULL-ptr-deref.
+>> >> 
+>> >> Signed-off-by: Hui Peng <benquike@gmail.com>
+>> >> Reported-by: Hui Peng <benquike@gmail.com>
+>> >> Reported-by: Mathias Payer <mathias.payer@nebelwelt.net>
+>> >
+>> > This patch fixes CVE-2019-15099, which has CVSS scores of 7.5 (CVSS 3.0)
+>> > and 7.8 (CVSS 2.0). Yet, I don't find it in the upstream kernel or in Linux
+>> > next.
+>> >
+>> > Is the patch going to be applied to the upstream kernel anytime soon ?
+>> 
+>> Same answer as in patch 1:
+>> 
+>> https://patchwork.kernel.org/patch/11074655/
+>> 
+>
+> Sorry to bring this up again. The ath6k patch made it into the upstream
+> kernel, but the ath10k patch didn't. Did it get lost, or was there a
+> reason not to apply this patch ?
 
-Fix that by removing the inclusive conditions from the check again.
+This patch had a build warning, you can see it from patchwork:
 
-Fixes: 809805a820c6 ("iwlwifi: pcie: move some cfg mangling from trans_pcie_alloc to probe")
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
+https://patchwork.kernel.org/patch/11074657/
 
-Kalle, can you please apply this directly to wireless-drivers? This
-fixes a regression in v5.4.  Thanks!
+Can someone fix it and resend the patch, please?
 
-
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index 6f4bb7ce71a5..9d41d783e59f 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -1067,11 +1067,7 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		}
- 	} else if (CSR_HW_RF_ID_TYPE_CHIP_ID(iwl_trans->hw_rf_id) ==
- 		   CSR_HW_RF_ID_TYPE_CHIP_ID(CSR_HW_RF_ID_TYPE_HR) &&
--		   ((cfg != &iwl_ax200_cfg_cc &&
--		     cfg != &killer1650x_2ax_cfg &&
--		     cfg != &killer1650w_2ax_cfg &&
--		     cfg != &iwl_ax201_cfg_quz_hr) ||
--		    iwl_trans->hw_rev == CSR_HW_REV_TYPE_QNJ_B0)) {
-+		   iwl_trans->hw_rev == CSR_HW_REV_TYPE_QNJ_B0) {
- 		u32 hw_status;
- 
- 		hw_status = iwl_read_prph(iwl_trans, UMAG_GEN_HW_STATUS);
 -- 
-2.23.0
-
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
