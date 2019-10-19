@@ -2,98 +2,78 @@ Return-Path: <SRS0=C9SN=YM=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96DAFCA9EAC
-	for <linux-wireless@archiver.kernel.org>; Sat, 19 Oct 2019 09:39:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70B58CA9EAB
+	for <linux-wireless@archiver.kernel.org>; Sat, 19 Oct 2019 10:03:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 788972082F
-	for <linux-wireless@archiver.kernel.org>; Sat, 19 Oct 2019 09:39:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 43C5021D7C
+	for <linux-wireless@archiver.kernel.org>; Sat, 19 Oct 2019 10:03:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726564AbfJSJj1 (ORCPT
+        id S1725802AbfJSKDi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 19 Oct 2019 05:39:27 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:50480 "EHLO
+        Sat, 19 Oct 2019 06:03:38 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:50500 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726561AbfJSJj1 (ORCPT
+        with ESMTP id S1725283AbfJSKDi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 19 Oct 2019 05:39:27 -0400
+        Sat, 19 Oct 2019 06:03:38 -0400
 Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1iLlCf-0002fy-6i; Sat, 19 Oct 2019 12:39:17 +0300
+        id 1iLlaC-0002jL-4f; Sat, 19 Oct 2019 13:03:36 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Sat, 19 Oct 2019 12:39:01 +0300
-Message-Id: <20191019093902.29823-7-luca@coelho.fi>
+Date:   Sat, 19 Oct 2019 13:03:26 +0300
+Message-Id: <20191019100331.21322-1-luca@coelho.fi>
 X-Mailer: git-send-email 2.23.0
-In-Reply-To: <20191019093902.29823-1-luca@coelho.fi>
-References: <20191019093902.29823-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 11/12] iwlwifi: FW API: reference enum in docs of modify_mask
+Subject: [PATCH 0/5] iwlwifi: fixes intended for 5.4 2019-10-19
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Add a reference to the correct enum rather than showing
-the pattern of the actual constants.
+This is my third patchset with fixes for v5.4.  This time I have five
+important fixes.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/fw/api/sta.h | 10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
+The changes are:
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/sta.h b/drivers/net/wireless/intel/iwlwifi/fw/api/sta.h
-index 450227f81706..970e9e508ad0 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/sta.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/sta.h
-@@ -8,7 +8,7 @@
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
-  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-- * Copyright(c) 2018 Intel Corporation
-+ * Copyright(c) 2018 - 2019 Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -31,7 +31,7 @@
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
-  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-- * Copyright(c) 2018 Intel Corporation
-+ * Copyright(c) 2018 - 2019 Intel Corporation
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -288,8 +288,7 @@ struct iwl_mvm_keyinfo {
-  * @addr: station's MAC address
-  * @reserved2: reserved
-  * @sta_id: index of station in uCode's station table
-- * @modify_mask: STA_MODIFY_*, selects which parameters to modify vs. leave
-- *	alone. 1 - modify, 0 - don't change.
-+ * @modify_mask: from &enum iwl_sta_modify_flag, selects what to change
-  * @reserved3: reserved
-  * @station_flags: look at &enum iwl_sta_flags
-  * @station_flags_msk: what of %station_flags have changed,
-@@ -369,8 +368,7 @@ enum iwl_sta_type {
-  * @addr: station's MAC address
-  * @reserved2: reserved
-  * @sta_id: index of station in uCode's station table
-- * @modify_mask: STA_MODIFY_*, selects which parameters to modify vs. leave
-- *	alone. 1 - modify, 0 - don't change.
-+ * @modify_mask: from &enum iwl_sta_modify_flag, selects what to change
-  * @reserved3: reserved
-  * @station_flags: look at &enum iwl_sta_flags
-  * @station_flags_msk: what of %station_flags have changed,
+* Fix a bogus queue number when allocation fails;
+* A few PCI ID mapping fixes;
+* A workaround to force power gating in integrated 22000 devices.
+
+As usual, I'm pushing this to a pending branch, for kbuild bot.  As we
+agreed, please apply them directly to wireless-drivers (after
+reviewing, obviously). ;)
+
+Cheers,
+Luca.
+
+
+Johannes Berg (1):
+  iwlwifi: mvm: handle iwl_mvm_tvqm_enable_txq() error return
+
+Luca Coelho (4):
+  iwlwifi: pcie: fix PCI ID 0x2720 configs that should be soc
+  iwlwifi: pcie: fix all 9460 entries for qnj
+  iwlwifi: pcie: add workaround for power gating in integrated 22000
+  iwlwifi: pcie: 0x2720 is qu and 0x30DC is not
+
+ drivers/net/wireless/intel/iwlwifi/iwl-csr.h  |   1 +
+ drivers/net/wireless/intel/iwlwifi/iwl-prph.h |   5 +
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c  | 140 +++++++++++-------
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 125 ++++++++--------
+ .../wireless/intel/iwlwifi/pcie/trans-gen2.c  |  25 ++++
+ 5 files changed, 177 insertions(+), 119 deletions(-)
+
 -- 
 2.23.0
 
