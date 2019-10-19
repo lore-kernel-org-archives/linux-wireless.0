@@ -4,70 +4,85 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14A03CA9EAD
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 969DFCA9EB0
 	for <linux-wireless@archiver.kernel.org>; Sat, 19 Oct 2019 09:39:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DFAB5222C2
-	for <linux-wireless@archiver.kernel.org>; Sat, 19 Oct 2019 09:39:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6DE7B222C2
+	for <linux-wireless@archiver.kernel.org>; Sat, 19 Oct 2019 09:39:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726136AbfJSJjM (ORCPT
+        id S1726393AbfJSJjO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 19 Oct 2019 05:39:12 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:50400 "EHLO
+        Sat, 19 Oct 2019 05:39:14 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:50418 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725828AbfJSJjL (ORCPT
+        with ESMTP id S1725828AbfJSJjO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 19 Oct 2019 05:39:11 -0400
+        Sat, 19 Oct 2019 05:39:14 -0400
 Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1iLlCX-0002fy-TC; Sat, 19 Oct 2019 12:39:10 +0300
+        id 1iLlCa-0002fy-5R; Sat, 19 Oct 2019 12:39:12 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Sat, 19 Oct 2019 12:38:52 +0300
-Message-Id: <20191019123747.2ee90c430c5b.I793862b611507a827393d544ffbd4fa7cce3c79c@changeid>
+Date:   Sat, 19 Oct 2019 12:38:55 +0300
+Message-Id: <20191019093902.29823-4-luca@coelho.fi>
 X-Mailer: git-send-email 2.23.0
 In-Reply-To: <20191019093902.29823-1-luca@coelho.fi>
 References: <20191019093902.29823-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 02/12] iwlwifi: mvm: remove else-if in iwl_send_phy_cfg_cmd()
+Subject: [PATCH 05/12] iwlwifi: pcie: make iwl_pcie_gen2_update_byte_tbl static
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-We return in the if block, so it's unnecessary to have an else
-statement.  Remove it.
+It is called within tx-gen2.c only.
 
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/internal.h | 3 ---
+ drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c  | 6 +++---
+ 2 files changed, 3 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index 7afdf0c1b1e9..aa644b82e93c 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -512,9 +512,10 @@ static int iwl_send_phy_cfg_cmd(struct iwl_mvm *mvm)
- 	enum iwl_ucode_type ucode_type = mvm->fwrt.cur_fw_img;
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+index 1047d48beaa5..fcef2806ebb1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+@@ -702,9 +702,6 @@ void iwl_trans_pcie_reclaim(struct iwl_trans *trans, int txq_id, int ssn,
+ 			    struct sk_buff_head *skbs);
+ void iwl_trans_pcie_set_q_ptrs(struct iwl_trans *trans, int txq_id, int ptr);
+ void iwl_trans_pcie_tx_reset(struct iwl_trans *trans);
+-void iwl_pcie_gen2_update_byte_tbl(struct iwl_trans_pcie *trans_pcie,
+-				   struct iwl_txq *txq, u16 byte_cnt,
+-				   int num_tbs);
  
- 	if (iwl_mvm_has_unified_ucode(mvm) &&
--	    !mvm->trans->cfg->tx_with_siso_diversity) {
-+	    !mvm->trans->cfg->tx_with_siso_diversity)
- 		return 0;
--	} else if (mvm->trans->cfg->tx_with_siso_diversity) {
-+
-+	if (mvm->trans->cfg->tx_with_siso_diversity) {
- 		/*
- 		 * TODO: currently we don't set the antenna but letting the NIC
- 		 * to decide which antenna to use. This should come from BIOS.
+ static inline u16 iwl_pcie_tfd_tb_get_len(struct iwl_trans *trans, void *_tfd,
+ 					  u8 idx)
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+index 8894027429d6..1c69a2ddd7c7 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+@@ -86,9 +86,9 @@ void iwl_pcie_gen2_tx_stop(struct iwl_trans *trans)
+ /*
+  * iwl_pcie_txq_update_byte_tbl - Set up entry in Tx byte-count array
+  */
+-void iwl_pcie_gen2_update_byte_tbl(struct iwl_trans_pcie *trans_pcie,
+-				   struct iwl_txq *txq, u16 byte_cnt,
+-				   int num_tbs)
++static void iwl_pcie_gen2_update_byte_tbl(struct iwl_trans_pcie *trans_pcie,
++					  struct iwl_txq *txq, u16 byte_cnt,
++					  int num_tbs)
+ {
+ 	struct iwlagn_scd_bc_tbl *scd_bc_tbl = txq->bc_tbl.addr;
+ 	struct iwl_trans *trans = iwl_trans_pcie_get_trans(trans_pcie);
 -- 
 2.23.0
 
