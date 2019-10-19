@@ -4,85 +4,67 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 969DFCA9EB0
-	for <linux-wireless@archiver.kernel.org>; Sat, 19 Oct 2019 09:39:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5F76CA9EAD
+	for <linux-wireless@archiver.kernel.org>; Sat, 19 Oct 2019 09:39:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6DE7B222C2
-	for <linux-wireless@archiver.kernel.org>; Sat, 19 Oct 2019 09:39:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C60362082F
+	for <linux-wireless@archiver.kernel.org>; Sat, 19 Oct 2019 09:39:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726393AbfJSJjO (ORCPT
+        id S1726415AbfJSJjP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 19 Oct 2019 05:39:14 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:50418 "EHLO
+        Sat, 19 Oct 2019 05:39:15 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:50424 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725828AbfJSJjO (ORCPT
+        with ESMTP id S1726275AbfJSJjO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Sat, 19 Oct 2019 05:39:14 -0400
 Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1iLlCa-0002fy-5R; Sat, 19 Oct 2019 12:39:12 +0300
+        id 1iLlCb-0002fy-0c; Sat, 19 Oct 2019 12:39:13 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Sat, 19 Oct 2019 12:38:55 +0300
-Message-Id: <20191019093902.29823-4-luca@coelho.fi>
+Date:   Sat, 19 Oct 2019 12:38:56 +0300
+Message-Id: <20191019093902.29823-5-luca@coelho.fi>
 X-Mailer: git-send-email 2.23.0
 In-Reply-To: <20191019093902.29823-1-luca@coelho.fi>
 References: <20191019093902.29823-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 05/12] iwlwifi: pcie: make iwl_pcie_gen2_update_byte_tbl static
+Subject: [PATCH 06/12] iwlwifi: dbg_ini: support dump collection upon assert during D3
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 
-It is called within tx-gen2.c only.
+add assert time point in the D3 resume flow in case there was an assert
+during D3.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/internal.h | 3 ---
- drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c  | 6 +++---
- 2 files changed, 3 insertions(+), 6 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index 1047d48beaa5..fcef2806ebb1 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -702,9 +702,6 @@ void iwl_trans_pcie_reclaim(struct iwl_trans *trans, int txq_id, int ssn,
- 			    struct sk_buff_head *skbs);
- void iwl_trans_pcie_set_q_ptrs(struct iwl_trans *trans, int txq_id, int ptr);
- void iwl_trans_pcie_tx_reset(struct iwl_trans *trans);
--void iwl_pcie_gen2_update_byte_tbl(struct iwl_trans_pcie *trans_pcie,
--				   struct iwl_txq *txq, u16 byte_cnt,
--				   int num_tbs);
- 
- static inline u16 iwl_pcie_tfd_tb_get_len(struct iwl_trans *trans, void *_tfd,
- 					  u8 idx)
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-index 8894027429d6..1c69a2ddd7c7 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-@@ -86,9 +86,9 @@ void iwl_pcie_gen2_tx_stop(struct iwl_trans *trans)
- /*
-  * iwl_pcie_txq_update_byte_tbl - Set up entry in Tx byte-count array
-  */
--void iwl_pcie_gen2_update_byte_tbl(struct iwl_trans_pcie *trans_pcie,
--				   struct iwl_txq *txq, u16 byte_cnt,
--				   int num_tbs)
-+static void iwl_pcie_gen2_update_byte_tbl(struct iwl_trans_pcie *trans_pcie,
-+					  struct iwl_txq *txq, u16 byte_cnt,
-+					  int num_tbs)
- {
- 	struct iwlagn_scd_bc_tbl *scd_bc_tbl = txq->bc_tbl.addr;
- 	struct iwl_trans *trans = iwl_trans_pcie_get_trans(trans_pcie);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+index 1a9d83d6230f..43ebb2149b63 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+@@ -1939,6 +1939,8 @@ static int __iwl_mvm_resume(struct iwl_mvm *mvm, bool test)
+ 	if (iwl_mvm_check_rt_status(mvm, vif)) {
+ 		set_bit(STATUS_FW_ERROR, &mvm->trans->status);
+ 		iwl_mvm_dump_nic_error_log(mvm);
++		iwl_dbg_tlv_time_point(&mvm->fwrt,
++				       IWL_FW_INI_TIME_POINT_FW_ASSERT, NULL);
+ 		iwl_fw_dbg_collect_desc(&mvm->fwrt, &iwl_dump_desc_assert,
+ 					false, 0);
+ 		ret = 1;
 -- 
 2.23.0
 
