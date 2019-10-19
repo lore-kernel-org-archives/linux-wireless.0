@@ -4,96 +4,73 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD3C0CA9EAB
-	for <linux-wireless@archiver.kernel.org>; Sat, 19 Oct 2019 09:39:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68871CA9EAF
+	for <linux-wireless@archiver.kernel.org>; Sat, 19 Oct 2019 09:39:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B4640222CD
-	for <linux-wireless@archiver.kernel.org>; Sat, 19 Oct 2019 09:39:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 40AB7222C2
+	for <linux-wireless@archiver.kernel.org>; Sat, 19 Oct 2019 09:39:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726081AbfJSJjL (ORCPT
+        id S1726191AbfJSJjN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 19 Oct 2019 05:39:11 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:50394 "EHLO
+        Sat, 19 Oct 2019 05:39:13 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:50406 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725812AbfJSJjL (ORCPT
+        with ESMTP id S1725812AbfJSJjM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 19 Oct 2019 05:39:11 -0400
+        Sat, 19 Oct 2019 05:39:12 -0400
 Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1iLlCX-0002fy-7P; Sat, 19 Oct 2019 12:39:09 +0300
+        id 1iLlCY-0002fy-Hf; Sat, 19 Oct 2019 12:39:11 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Sat, 19 Oct 2019 12:38:51 +0300
-Message-Id: <20191019123747.7b0596d91b2e.Iff59ce78eebe633cecebadc69ba3d98cc4154888@changeid>
+Date:   Sat, 19 Oct 2019 12:38:53 +0300
+Message-Id: <20191019093902.29823-2-luca@coelho.fi>
 X-Mailer: git-send-email 2.23.0
 In-Reply-To: <20191019093902.29823-1-luca@coelho.fi>
 References: <20191019093902.29823-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 01/12] iwlwifi: mvm: fix support for single antenna diversity
+Subject: [PATCH 03/12] iwlwifi: nvm: update iwl_uhb_nvm_channels
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Tova Mussai <tova.mussai@intel.com>
 
-When the single antenna diversity support was sent upstream, only some
-definitions were sent, due to a bad revert.
+Update uhb channels numbers to start from 1
 
-Fix this by adding the actual code.
-
-Fixes: 5952e0ec3f05 ("iwlwifi: mvm: add support for single antenna diversity")
+Signed-off-by: Tova Mussai <tova.mussai@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 20 ++++++++++++++++----
- 1 file changed, 16 insertions(+), 4 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index 32a5e4e5461f..7afdf0c1b1e9 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -511,6 +511,18 @@ static int iwl_send_phy_cfg_cmd(struct iwl_mvm *mvm)
- 	struct iwl_phy_cfg_cmd phy_cfg_cmd;
- 	enum iwl_ucode_type ucode_type = mvm->fwrt.cur_fw_img;
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+index b0a0901ce0f3..1e240a2a8329 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+@@ -156,11 +156,10 @@ static const u16 iwl_uhb_nvm_channels[] = {
+ 	96, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 144,
+ 	149, 153, 157, 161, 165, 169, 173, 177, 181,
+ 	/* 6-7 GHz */
+-	189, 193, 197, 201, 205, 209, 213, 217, 221, 225, 229, 233, 237, 241,
+-	245, 249, 253, 257, 261, 265, 269, 273, 277, 281, 285, 289, 293, 297,
+-	301, 305, 309, 313, 317, 321, 325, 329, 333, 337, 341, 345, 349, 353,
+-	357, 361, 365, 369, 373, 377, 381, 385, 389, 393, 397, 401, 405, 409,
+-	413, 417, 421
++	1, 5, 9, 13, 17, 21, 25, 29, 33, 37, 41, 45, 49, 53, 57, 61, 65, 69,
++	73, 77, 81, 85, 89, 93, 97, 101, 105, 109, 113, 117, 121, 125, 129,
++	133, 137, 141, 145, 149, 153, 157, 161, 165, 169, 173, 177, 181, 185,
++	189, 193, 197, 201, 205, 209, 213, 217, 221, 225, 229, 233
+ };
  
-+	if (iwl_mvm_has_unified_ucode(mvm) &&
-+	    !mvm->trans->cfg->tx_with_siso_diversity) {
-+		return 0;
-+	} else if (mvm->trans->cfg->tx_with_siso_diversity) {
-+		/*
-+		 * TODO: currently we don't set the antenna but letting the NIC
-+		 * to decide which antenna to use. This should come from BIOS.
-+		 */
-+		phy_cfg_cmd.phy_cfg =
-+			cpu_to_le32(FW_PHY_CFG_CHAIN_SAD_ENABLED);
-+	}
-+
- 	/* Set parameters */
- 	phy_cfg_cmd.phy_cfg = cpu_to_le32(iwl_mvm_get_phy_config(mvm));
- 
-@@ -1327,12 +1339,12 @@ int iwl_mvm_up(struct iwl_mvm *mvm)
- 		ret = iwl_send_phy_db_data(mvm->phy_db);
- 		if (ret)
- 			goto error;
--
--		ret = iwl_send_phy_cfg_cmd(mvm);
--		if (ret)
--			goto error;
- 	}
- 
-+	ret = iwl_send_phy_cfg_cmd(mvm);
-+	if (ret)
-+		goto error;
-+
- 	ret = iwl_mvm_send_bt_init_conf(mvm);
- 	if (ret)
- 		goto error;
+ #define IWL_NVM_NUM_CHANNELS		ARRAY_SIZE(iwl_nvm_channels)
 -- 
 2.23.0
 
