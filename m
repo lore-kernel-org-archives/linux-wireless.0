@@ -4,94 +4,70 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F0E5CA9EAE
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14A03CA9EAD
 	for <linux-wireless@archiver.kernel.org>; Sat, 19 Oct 2019 09:39:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 16303222CC
-	for <linux-wireless@archiver.kernel.org>; Sat, 19 Oct 2019 09:39:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DFAB5222C2
+	for <linux-wireless@archiver.kernel.org>; Sat, 19 Oct 2019 09:39:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726215AbfJSJjN (ORCPT
+        id S1726136AbfJSJjM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 19 Oct 2019 05:39:13 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:50410 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725828AbfJSJjM (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
         Sat, 19 Oct 2019 05:39:12 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:50400 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1725828AbfJSJjL (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 19 Oct 2019 05:39:11 -0400
 Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1iLlCZ-0002fy-FL; Sat, 19 Oct 2019 12:39:11 +0300
+        id 1iLlCX-0002fy-TC; Sat, 19 Oct 2019 12:39:10 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Sat, 19 Oct 2019 12:38:54 +0300
-Message-Id: <20191019093902.29823-3-luca@coelho.fi>
+Date:   Sat, 19 Oct 2019 12:38:52 +0300
+Message-Id: <20191019123747.2ee90c430c5b.I793862b611507a827393d544ffbd4fa7cce3c79c@changeid>
 X-Mailer: git-send-email 2.23.0
 In-Reply-To: <20191019093902.29823-1-luca@coelho.fi>
 References: <20191019093902.29823-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 04/12] iwlwifi: mvm: in VHT connection use only VHT capabilities
+Subject: [PATCH 02/12] iwlwifi: mvm: remove else-if in iwl_send_phy_cfg_cmd()
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Mordechay Goodstein <mordechay.goodstein@intel.com>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-mac80211 limits amsdu size to the minimum of HT and VHT capabilities
-but since in a VHT connection we don't transmit HT frames we can discard
-HT limits.
+We return in the if block, so it's unnecessary to have an else
+statement.  Remove it.
 
-Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c | 2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c    | 2 ++
- drivers/net/wireless/intel/iwlwifi/mvm/rs.h    | 2 ++
- 3 files changed, 5 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c
-index 098d48153a38..10a08fae2942 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c
-@@ -384,7 +384,7 @@ void iwl_mvm_tlc_update_notif(struct iwl_mvm *mvm,
- 	rcu_read_unlock();
- }
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 7afdf0c1b1e9..aa644b82e93c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -512,9 +512,10 @@ static int iwl_send_phy_cfg_cmd(struct iwl_mvm *mvm)
+ 	enum iwl_ucode_type ucode_type = mvm->fwrt.cur_fw_img;
  
--static u16 rs_fw_get_max_amsdu_len(struct ieee80211_sta *sta)
-+u16 rs_fw_get_max_amsdu_len(struct ieee80211_sta *sta)
- {
- 	const struct ieee80211_sta_vht_cap *vht_cap = &sta->vht_cap;
- 	const struct ieee80211_sta_ht_cap *ht_cap = &sta->ht_cap;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-index 42d525e46e80..0a442cb7f223 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-@@ -1533,6 +1533,8 @@ static void rs_set_amsdu_len(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
- 	int i;
- 
-+	sta->max_amsdu_len = rs_fw_get_max_amsdu_len(sta);
+ 	if (iwl_mvm_has_unified_ucode(mvm) &&
+-	    !mvm->trans->cfg->tx_with_siso_diversity) {
++	    !mvm->trans->cfg->tx_with_siso_diversity)
+ 		return 0;
+-	} else if (mvm->trans->cfg->tx_with_siso_diversity) {
 +
- 	/*
- 	 * In case TLC offload is not active amsdu_enabled is either 0xFFFF
- 	 * or 0, since there is no per-TID alg.
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.h b/drivers/net/wireless/intel/iwlwifi/mvm/rs.h
-index 7cd62c5622ce..32104c9f8f5e 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.h
-@@ -452,4 +452,6 @@ int rs_fw_tx_protection(struct iwl_mvm *mvm, struct iwl_mvm_sta *mvmsta,
- 			bool enable);
- void iwl_mvm_tlc_update_notif(struct iwl_mvm *mvm,
- 			      struct iwl_rx_cmd_buffer *rxb);
-+
-+u16 rs_fw_get_max_amsdu_len(struct ieee80211_sta *sta);
- #endif /* __rs__ */
++	if (mvm->trans->cfg->tx_with_siso_diversity) {
+ 		/*
+ 		 * TODO: currently we don't set the antenna but letting the NIC
+ 		 * to decide which antenna to use. This should come from BIOS.
 -- 
 2.23.0
 
