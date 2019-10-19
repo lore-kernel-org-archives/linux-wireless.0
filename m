@@ -2,46 +2,46 @@ Return-Path: <SRS0=C9SN=YM=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C217CA9EAB
-	for <linux-wireless@archiver.kernel.org>; Sat, 19 Oct 2019 18:43:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98916CA9EAC
+	for <linux-wireless@archiver.kernel.org>; Sat, 19 Oct 2019 18:43:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 05AF7222D2
-	for <linux-wireless@archiver.kernel.org>; Sat, 19 Oct 2019 18:43:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 71510222BD
+	for <linux-wireless@archiver.kernel.org>; Sat, 19 Oct 2019 18:43:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=goldelico.com header.i=@goldelico.com header.b="X6aF03Ph"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=goldelico.com header.i=@goldelico.com header.b="LgcxVtEt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726752AbfJSSnB (ORCPT
+        id S1726260AbfJSSlt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 19 Oct 2019 14:43:01 -0400
-Received: from mo4-p04-ob.smtp.rzone.de ([85.215.255.120]:34744 "EHLO
+        Sat, 19 Oct 2019 14:41:49 -0400
+Received: from mo4-p04-ob.smtp.rzone.de ([81.169.146.177]:34873 "EHLO
         mo4-p04-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726101AbfJSSlu (ORCPT
+        with ESMTP id S1726090AbfJSSlt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 19 Oct 2019 14:41:50 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1571510508;
+        Sat, 19 Oct 2019 14:41:49 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1571510506;
         s=strato-dkim-0002; d=goldelico.com;
         h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
         X-RZG-CLASS-ID:X-RZG-AUTH:From:Subject:Sender;
-        bh=01rqe/WWWS1jdN6uwfrdHLE5RSg5tpvr2uQMZiCIpfI=;
-        b=X6aF03PhFJXulPWhbugDFOgcclQefSCiiyboyXhCZd9ZeJvOAbuirCCaIiTWlpbZvJ
-        yU40POGkqe0HvDyTMeavUmqdzai+d2G6i9YG9WkuFrGY8a6FC0462Gu797yvcubBON+b
-        eiIpU2dqcErCLgqEWp4rPs+h3972Vbnlx6g9T2xi17a6gIgid0uAXc14TsC+hfPLIP92
-        X46h05RIeMt+uffBe1hQLzh/QmWmTrGxL4RJQ1sCaVFZkuzQ9DbVY/KLkC/4p7IMKJO7
-        O+07/I9DpE7lAPM6UXUd5681NyJPxsQ/yLfRlXkl0mri8y3r95h4uqlKd4i93dPLIGVq
-        7LEw==
+        bh=AkdUrtyEx7mUP1X18MNNmz4IbzfL7G/mQNoS1MEKiv0=;
+        b=LgcxVtEtbioTRjD/g3qgOABYrrZf7DSpakEyIMY1E/DDpGhViU4n6if+g3JOrTsjcb
+        J1XD95KZIIhtkDq3ZlHNL3dn6iOz27ye0BnozGdaHYrZV3v0O6cW0PFIxvhQV60i41X6
+        SA49lcHNQnv/fwvpK0Qcxr6PMjMDETF9cHwZH2m1u7OvnneihTk7tZ/W9UO7vvw+19Xh
+        Er4wgWYwCM5UPuKClIDntTFGYti4rnMuQAujmhZ2TrIoAXCxqXkez6xlpV6AR/IiNfo1
+        OabUyIraMXK0mHwJEI7+xPApoHnnh5az0CYJPaXTEkou4JBw0H70tjEZyKRnCI7DiAVQ
+        f43Q==
 X-RZG-AUTH: ":JGIXVUS7cutRB/49FwqZ7WcJeFKiMhflhwDubTJ9o12DNOsPj0pAyXkHTz8="
 X-RZG-CLASS-ID: mo00
 Received: from iMac.fritz.box
         by smtp.strato.de (RZmta 44.28.1 DYNA|AUTH)
-        with ESMTPSA id R0b2a8v9JIfZFMT
+        with ESMTPSA id R0b2a8v9JIfWFMQ
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (curve secp521r1 with 521 ECDH bits, eq. 15360 bits RSA))
         (Client did not present a certificate);
-        Sat, 19 Oct 2019 20:41:35 +0200 (CEST)
+        Sat, 19 Oct 2019 20:41:32 +0200 (CEST)
 From:   "H. Nikolaus Schaller" <hns@goldelico.com>
 To:     =?UTF-8?q?Beno=C3=AEt=20Cousson?= <bcousson@baylibre.com>,
         Tony Lindgren <tony@atomide.com>,
@@ -68,10 +68,10 @@ Cc:     linux-omap@vger.kernel.org, devicetree@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         linux-mmc@vger.kernel.org, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org, letux-kernel@openphoenux.org,
-        kernel@pyra-handheld.com, stable@vger.kernel.org
-Subject: [PATCH v2 08/11] mmc: sdio: fix wl1251 vendor id
-Date:   Sat, 19 Oct 2019 20:41:23 +0200
-Message-Id: <75c6048ae4ad940b05aba7edb40f91876f497780.1571510481.git.hns@goldelico.com>
+        kernel@pyra-handheld.com
+Subject: [PATCH v2 05/11] omap: pdata-quirks: revert pandora specific gpiod additions
+Date:   Sat, 19 Oct 2019 20:41:20 +0200
+Message-Id: <24197fe0ad72cb0822ac4ab7aa2d541e50e6fbe0.1571510481.git.hns@goldelico.com>
 X-Mailer: git-send-email 2.19.1
 In-Reply-To: <cover.1571510481.git.hns@goldelico.com>
 References: <cover.1571510481.git.hns@goldelico.com>
@@ -82,37 +82,79 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-v4.11-rc1 did introduce a patch series that rearranged the
-sdio quirks into a header file. Unfortunately this did forget
-to handle SDIO_VENDOR_ID_TI differently between wl1251 and
-wl1271 with the result that although the wl1251 was found on
-the sdio bus, the firmware did not load any more and there was
-no interface registration.
+introduced by commit
 
-This patch defines separate constants to be used by sdio quirks
-and drivers.
+efdfeb079cc3b ("regulator: fixed: Convert to use GPIO descriptor only")
 
-Fixes: 884f38607897 ("mmc: core: move some sdio IDs out of quirks file")
+We must remove this from mainline first, so that the following patch
+to remove the openpandora quirks for mmc3 and wl1251 cleanly applies
+to stable v4.9, v4.14, v4.19 where the above mentioned patch is not yet
+present.
 
 Signed-off-by: H. Nikolaus Schaller <hns@goldelico.com>
-Cc: <stable@vger.kernel.org> # 4.11.0
 ---
- include/linux/mmc/sdio_ids.h | 2 ++
- 1 file changed, 2 insertions(+)
+ arch/arm/mach-omap2/pdata-quirks.c | 19 ++++---------------
+ 1 file changed, 4 insertions(+), 15 deletions(-)
 
-diff --git a/include/linux/mmc/sdio_ids.h b/include/linux/mmc/sdio_ids.h
-index d1a5d5df02f5..08b25c02b5a1 100644
---- a/include/linux/mmc/sdio_ids.h
-+++ b/include/linux/mmc/sdio_ids.h
-@@ -71,6 +71,8 @@
+diff --git a/arch/arm/mach-omap2/pdata-quirks.c b/arch/arm/mach-omap2/pdata-quirks.c
+index d942a3357090..89734ef9ab1e 100644
+--- a/arch/arm/mach-omap2/pdata-quirks.c
++++ b/arch/arm/mach-omap2/pdata-quirks.c
+@@ -7,7 +7,6 @@
+ #include <linux/clk.h>
+ #include <linux/davinci_emac.h>
+ #include <linux/gpio.h>
+-#include <linux/gpio/machine.h>
+ #include <linux/init.h>
+ #include <linux/kernel.h>
+ #include <linux/of_platform.h>
+@@ -327,7 +326,9 @@ static struct regulator_init_data pandora_vmmc3 = {
+ static struct fixed_voltage_config pandora_vwlan = {
+ 	.supply_name		= "vwlan",
+ 	.microvolts		= 1800000, /* 1.8V */
++	.gpio			= PANDORA_WIFI_NRESET_GPIO,
+ 	.startup_delay		= 50000, /* 50ms */
++	.enable_high		= 1,
+ 	.init_data		= &pandora_vmmc3,
+ };
  
- #define SDIO_VENDOR_ID_TI			0x0097
- #define SDIO_DEVICE_ID_TI_WL1271		0x4076
-+#define SDIO_VENDOR_ID_TI_WL1251		0x104c
-+#define SDIO_DEVICE_ID_TI_WL1251		0x9066
+@@ -339,19 +340,6 @@ static struct platform_device pandora_vwlan_device = {
+ 	},
+ };
  
- #define SDIO_VENDOR_ID_STE			0x0020
- #define SDIO_DEVICE_ID_STE_CW1200		0x2280
+-static struct gpiod_lookup_table pandora_vwlan_gpiod_table = {
+-	.dev_id = "reg-fixed-voltage.1",
+-	.table = {
+-		/*
+-		 * As this is a low GPIO number it should be at the first
+-		 * GPIO bank.
+-		 */
+-		GPIO_LOOKUP("gpio-0-31", PANDORA_WIFI_NRESET_GPIO,
+-			    NULL, GPIO_ACTIVE_HIGH),
+-		{ },
+-	},
+-};
+-
+ static void pandora_wl1251_init_card(struct mmc_card *card)
+ {
+ 	/*
+@@ -373,6 +361,8 @@ static struct omap2_hsmmc_info pandora_mmc3[] = {
+ 	{
+ 		.mmc		= 3,
+ 		.caps		= MMC_CAP_4_BIT_DATA | MMC_CAP_POWER_OFF_CARD,
++		.gpio_cd	= -EINVAL,
++		.gpio_wp	= -EINVAL,
+ 		.init_card	= pandora_wl1251_init_card,
+ 	},
+ 	{}	/* Terminator */
+@@ -411,7 +401,6 @@ static void __init pandora_wl1251_init(void)
+ static void __init omap3_pandora_legacy_init(void)
+ {
+ 	platform_device_register(&pandora_backlight);
+-	gpiod_add_lookup_table(&pandora_vwlan_gpiod_table);
+ 	platform_device_register(&pandora_vwlan_device);
+ 	omap_hsmmc_init(pandora_mmc3);
+ 	omap_hsmmc_late_init(pandora_mmc3);
 -- 
 2.19.1
 
