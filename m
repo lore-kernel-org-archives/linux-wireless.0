@@ -2,276 +2,111 @@ Return-Path: <SRS0=C9SN=YM=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D38C0CA9EAD
-	for <linux-wireless@archiver.kernel.org>; Sat, 19 Oct 2019 10:03:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5514ECA9EAB
+	for <linux-wireless@archiver.kernel.org>; Sat, 19 Oct 2019 10:52:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A5A0A222C2
-	for <linux-wireless@archiver.kernel.org>; Sat, 19 Oct 2019 10:03:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2A804222C2
+	for <linux-wireless@archiver.kernel.org>; Sat, 19 Oct 2019 10:52:07 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="JIVpdTb5";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="itmLqvHz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725890AbfJSKDl (ORCPT
+        id S1725912AbfJSKvh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 19 Oct 2019 06:03:41 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:50518 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725294AbfJSKDl (ORCPT
+        Sat, 19 Oct 2019 06:51:37 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:40652 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725535AbfJSKvh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 19 Oct 2019 06:03:41 -0400
-Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
-        by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.92)
-        (envelope-from <luca@coelho.fi>)
-        id 1iLlaE-0002jL-DX; Sat, 19 Oct 2019 13:03:38 +0300
-From:   Luca Coelho <luca@coelho.fi>
-To:     kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org
-Date:   Sat, 19 Oct 2019 13:03:29 +0300
-Message-Id: <20191019100331.21322-4-luca@coelho.fi>
-X-Mailer: git-send-email 2.23.0
-In-Reply-To: <20191019100331.21322-1-luca@coelho.fi>
-References: <20191019100331.21322-1-luca@coelho.fi>
+        Sat, 19 Oct 2019 06:51:37 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 417FA60716; Sat, 19 Oct 2019 10:51:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1571482296;
+        bh=Zmkpjo/I5aAU8+rQ0bWrjNgIdtKvqhgADZlmRlXPBm8=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=JIVpdTb5hoQJW07ua7UwHE4TvwkRjQhxXAxRY5sG307Clow3ZH9z1xie9xYTZ/1Vs
+         oJigZKG1victBwDsok7I7V9H89f68SGi2avSZGqF/A2S1Hnziw3ulvd82RpZvE2P5s
+         73llfWQpu16kLQGa1J2+Ha922N1o45/2IpX0hIkA=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id C01D16039E;
+        Sat, 19 Oct 2019 10:51:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1571482295;
+        bh=Zmkpjo/I5aAU8+rQ0bWrjNgIdtKvqhgADZlmRlXPBm8=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=itmLqvHzzIsUWuwGTlA7pacgaBs22Lo7f/HNrlCNoJY1SW9BeRo7Asd8cyAoFOIGp
+         5H+Hx775cjy0eOeuPiDLD2ZaOaOA+sziSF4zU0yZWZGGiS+prjqUlBL9sOgfBxH16i
+         PoRjcFqUNZK4gXhicUXrxYE4UMsASg5wWKck7OeU=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org C01D16039E
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Laura Abbott <labbott@redhat.com>
+Cc:     Ping-Ke Shih <pkshih@realtek.com>,
+        "David S . Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Nicolas Waisman <nico@semmle.com>
+Subject: Re: [PATCH v2] rtlwifi: Fix potential overflow on P2P code
+References: <20191018114321.13131-1-labbott@redhat.com>
+Date:   Sat, 19 Oct 2019 13:51:30 +0300
+In-Reply-To: <20191018114321.13131-1-labbott@redhat.com> (Laura Abbott's
+        message of "Fri, 18 Oct 2019 07:43:21 -0400")
+Message-ID: <871rv9xb2l.fsf@kamboji.qca.qualcomm.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: [PATCH 3/5] iwlwifi: mvm: handle iwl_mvm_tvqm_enable_txq() error return
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+Laura Abbott <labbott@redhat.com> writes:
 
-iwl_mvm_tvqm_enable_txq() can return an error, notably if unable
-to allocate memory for the queue. Handle this error throughout,
-avoiding storing the invalid value into a u16 which later leads
-to a disable of an invalid queue ("queue 65524 not used", where
-65524 is just -ENOMEM in a u16).
+> Nicolas Waisman noticed that even though noa_len is checked for
+> a compatible length it's still possible to overrun the buffers
+> of p2pinfo since there's no check on the upper bound of noa_num.
+> Bound noa_num against P2P_MAX_NOA_NUM.
+>
+> Reported-by: Nicolas Waisman <nico@semmle.com>
+> Signed-off-by: Laura Abbott <labbott@redhat.com>
+> ---
+> v2: Use P2P_MAX_NOA_NUM instead of erroring out.
+> ---
+>  drivers/net/wireless/realtek/rtlwifi/ps.c | 6 ++++++
+>  1 file changed, 6 insertions(+)
+>
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/ps.c b/drivers/net/wireless/realtek/rtlwifi/ps.c
+> index 70f04c2f5b17..fff8dda14023 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/ps.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/ps.c
+> @@ -754,6 +754,9 @@ static void rtl_p2p_noa_ie(struct ieee80211_hw *hw, void *data,
+>  				return;
+>  			} else {
+>  				noa_num = (noa_len - 2) / 13;
+> +				if (noa_num > P2P_MAX_NOA_NUM)
+> +					noa_num = P2P_MAX_NOA_NUM;
+> +
+>  			}
+>  			noa_index = ie[3];
+>  			if (rtlpriv->psc.p2p_ps_info.p2p_ps_mode ==
+> @@ -848,6 +851,9 @@ static void rtl_p2p_action_ie(struct ieee80211_hw *hw, void *data,
+>  				return;
+>  			} else {
+>  				noa_num = (noa_len - 2) / 13;
+> +				if (noa_num > P2P_MAX_NOA_NUM)
+> +					noa_num = P2P_MAX_NOA_NUM;
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 140 +++++++++++--------
- 1 file changed, 83 insertions(+), 57 deletions(-)
+IMHO using min() would be cleaner, but I'm fine with this as well. Up to
+you.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index 0bedba4c61f2..b3768d5d852a 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -1482,6 +1482,13 @@ static void iwl_mvm_realloc_queues_after_restart(struct iwl_mvm *mvm,
- 					    mvm_sta->sta_id, i);
- 			txq_id = iwl_mvm_tvqm_enable_txq(mvm, mvm_sta->sta_id,
- 							 i, wdg);
-+			/*
-+			 * on failures, just set it to IWL_MVM_INVALID_QUEUE
-+			 * to try again later, we have no other good way of
-+			 * failing here
-+			 */
-+			if (txq_id < 0)
-+				txq_id = IWL_MVM_INVALID_QUEUE;
- 			tid_data->txq_id = txq_id;
- 
- 			/*
-@@ -1950,30 +1957,73 @@ void iwl_mvm_dealloc_int_sta(struct iwl_mvm *mvm, struct iwl_mvm_int_sta *sta)
- 	sta->sta_id = IWL_MVM_INVALID_STA;
- }
- 
--static void iwl_mvm_enable_aux_snif_queue(struct iwl_mvm *mvm, u16 *queue,
-+static void iwl_mvm_enable_aux_snif_queue(struct iwl_mvm *mvm, u16 queue,
- 					  u8 sta_id, u8 fifo)
- {
- 	unsigned int wdg_timeout = iwlmvm_mod_params.tfd_q_hang_detect ?
- 		mvm->trans->trans_cfg->base_params->wd_timeout :
- 		IWL_WATCHDOG_DISABLED;
-+	struct iwl_trans_txq_scd_cfg cfg = {
-+		.fifo = fifo,
-+		.sta_id = sta_id,
-+		.tid = IWL_MAX_TID_COUNT,
-+		.aggregate = false,
-+		.frame_limit = IWL_FRAME_LIMIT,
-+	};
-+
-+	WARN_ON(iwl_mvm_has_new_tx_api(mvm));
-+
-+	iwl_mvm_enable_txq(mvm, NULL, queue, 0, &cfg, wdg_timeout);
-+}
-+
-+static int iwl_mvm_enable_aux_snif_queue_tvqm(struct iwl_mvm *mvm, u8 sta_id)
-+{
-+	unsigned int wdg_timeout = iwlmvm_mod_params.tfd_q_hang_detect ?
-+		mvm->trans->trans_cfg->base_params->wd_timeout :
-+		IWL_WATCHDOG_DISABLED;
-+
-+	WARN_ON(!iwl_mvm_has_new_tx_api(mvm));
-+
-+	return iwl_mvm_tvqm_enable_txq(mvm, sta_id, IWL_MAX_TID_COUNT,
-+				       wdg_timeout);
-+}
- 
-+static int iwl_mvm_add_int_sta_with_queue(struct iwl_mvm *mvm, int macidx,
-+					  int maccolor,
-+					  struct iwl_mvm_int_sta *sta,
-+					  u16 *queue, int fifo)
-+{
-+	int ret;
-+
-+	/* Map queue to fifo - needs to happen before adding station */
-+	if (!iwl_mvm_has_new_tx_api(mvm))
-+		iwl_mvm_enable_aux_snif_queue(mvm, *queue, sta->sta_id, fifo);
-+
-+	ret = iwl_mvm_add_int_sta_common(mvm, sta, NULL, macidx, maccolor);
-+	if (ret) {
-+		if (!iwl_mvm_has_new_tx_api(mvm))
-+			iwl_mvm_disable_txq(mvm, NULL, *queue,
-+					    IWL_MAX_TID_COUNT, 0);
-+		return ret;
-+	}
-+
-+	/*
-+	 * For 22000 firmware and on we cannot add queue to a station unknown
-+	 * to firmware so enable queue here - after the station was added
-+	 */
- 	if (iwl_mvm_has_new_tx_api(mvm)) {
--		int tvqm_queue =
--			iwl_mvm_tvqm_enable_txq(mvm, sta_id,
--						IWL_MAX_TID_COUNT,
--						wdg_timeout);
--		*queue = tvqm_queue;
--	} else {
--		struct iwl_trans_txq_scd_cfg cfg = {
--			.fifo = fifo,
--			.sta_id = sta_id,
--			.tid = IWL_MAX_TID_COUNT,
--			.aggregate = false,
--			.frame_limit = IWL_FRAME_LIMIT,
--		};
-+		int txq;
- 
--		iwl_mvm_enable_txq(mvm, NULL, *queue, 0, &cfg, wdg_timeout);
-+		txq = iwl_mvm_enable_aux_snif_queue_tvqm(mvm, sta->sta_id);
-+		if (txq < 0) {
-+			iwl_mvm_rm_sta_common(mvm, sta->sta_id);
-+			return txq;
-+		}
-+
-+		*queue = txq;
- 	}
-+
-+	return 0;
- }
- 
- int iwl_mvm_add_aux_sta(struct iwl_mvm *mvm)
-@@ -1989,59 +2039,26 @@ int iwl_mvm_add_aux_sta(struct iwl_mvm *mvm)
- 	if (ret)
- 		return ret;
- 
--	/* Map Aux queue to fifo - needs to happen before adding Aux station */
--	if (!iwl_mvm_has_new_tx_api(mvm))
--		iwl_mvm_enable_aux_snif_queue(mvm, &mvm->aux_queue,
--					      mvm->aux_sta.sta_id,
--					      IWL_MVM_TX_FIFO_MCAST);
--
--	ret = iwl_mvm_add_int_sta_common(mvm, &mvm->aux_sta, NULL,
--					 MAC_INDEX_AUX, 0);
-+	ret = iwl_mvm_add_int_sta_with_queue(mvm, MAC_INDEX_AUX, 0,
-+					     &mvm->aux_sta, &mvm->aux_queue,
-+					     IWL_MVM_TX_FIFO_MCAST);
- 	if (ret) {
- 		iwl_mvm_dealloc_int_sta(mvm, &mvm->aux_sta);
- 		return ret;
- 	}
- 
--	/*
--	 * For 22000 firmware and on we cannot add queue to a station unknown
--	 * to firmware so enable queue here - after the station was added
--	 */
--	if (iwl_mvm_has_new_tx_api(mvm))
--		iwl_mvm_enable_aux_snif_queue(mvm, &mvm->aux_queue,
--					      mvm->aux_sta.sta_id,
--					      IWL_MVM_TX_FIFO_MCAST);
--
- 	return 0;
- }
- 
- int iwl_mvm_add_snif_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
- {
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
--	int ret;
- 
- 	lockdep_assert_held(&mvm->mutex);
- 
--	/* Map snif queue to fifo - must happen before adding snif station */
--	if (!iwl_mvm_has_new_tx_api(mvm))
--		iwl_mvm_enable_aux_snif_queue(mvm, &mvm->snif_queue,
--					      mvm->snif_sta.sta_id,
-+	return iwl_mvm_add_int_sta_with_queue(mvm, mvmvif->id, mvmvif->color,
-+					      &mvm->snif_sta, &mvm->snif_queue,
- 					      IWL_MVM_TX_FIFO_BE);
--
--	ret = iwl_mvm_add_int_sta_common(mvm, &mvm->snif_sta, vif->addr,
--					 mvmvif->id, 0);
--	if (ret)
--		return ret;
--
--	/*
--	 * For 22000 firmware and on we cannot add queue to a station unknown
--	 * to firmware so enable queue here - after the station was added
--	 */
--	if (iwl_mvm_has_new_tx_api(mvm))
--		iwl_mvm_enable_aux_snif_queue(mvm, &mvm->snif_queue,
--					      mvm->snif_sta.sta_id,
--					      IWL_MVM_TX_FIFO_BE);
--
--	return 0;
- }
- 
- int iwl_mvm_rm_snif_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
-@@ -2133,6 +2150,10 @@ int iwl_mvm_send_add_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
- 		queue = iwl_mvm_tvqm_enable_txq(mvm, bsta->sta_id,
- 						IWL_MAX_TID_COUNT,
- 						wdg_timeout);
-+		if (queue < 0) {
-+			iwl_mvm_rm_sta_common(mvm, bsta->sta_id);
-+			return queue;
-+		}
- 
- 		if (vif->type == NL80211_IFTYPE_AP ||
- 		    vif->type == NL80211_IFTYPE_ADHOC)
-@@ -2307,10 +2328,8 @@ int iwl_mvm_add_mcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
- 	}
- 	ret = iwl_mvm_add_int_sta_common(mvm, msta, maddr,
- 					 mvmvif->id, mvmvif->color);
--	if (ret) {
--		iwl_mvm_dealloc_int_sta(mvm, msta);
--		return ret;
--	}
-+	if (ret)
-+		goto err;
- 
- 	/*
- 	 * Enable cab queue after the ADD_STA command is sent.
-@@ -2323,6 +2342,10 @@ int iwl_mvm_add_mcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
- 		int queue = iwl_mvm_tvqm_enable_txq(mvm, msta->sta_id,
- 						    0,
- 						    timeout);
-+		if (queue < 0) {
-+			ret = queue;
-+			goto err;
-+		}
- 		mvmvif->cab_queue = queue;
- 	} else if (!fw_has_api(&mvm->fw->ucode_capa,
- 			       IWL_UCODE_TLV_API_STA_TYPE))
-@@ -2330,6 +2353,9 @@ int iwl_mvm_add_mcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
- 				   timeout);
- 
- 	return 0;
-+err:
-+	iwl_mvm_dealloc_int_sta(mvm, msta);
-+	return ret;
- }
- 
- static int __iwl_mvm_remove_sta_key(struct iwl_mvm *mvm, u8 sta_id,
 -- 
-2.23.0
-
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
