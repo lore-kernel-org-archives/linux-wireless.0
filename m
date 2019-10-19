@@ -2,162 +2,164 @@ Return-Path: <SRS0=C9SN=YM=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 37228CA9EAE
-	for <linux-wireless@archiver.kernel.org>; Sat, 19 Oct 2019 11:35:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1068ACA9EAC
+	for <linux-wireless@archiver.kernel.org>; Sat, 19 Oct 2019 11:37:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0D79F21D7C
-	for <linux-wireless@archiver.kernel.org>; Sat, 19 Oct 2019 11:35:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CD3C921D7C
+	for <linux-wireless@archiver.kernel.org>; Sat, 19 Oct 2019 11:37:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="SAysUsZY";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="dgwjPI86"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="NlfOAKI3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725912AbfJSLfK (ORCPT
+        id S1726079AbfJSLhV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 19 Oct 2019 07:35:10 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:60378 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725283AbfJSLfJ (ORCPT
+        Sat, 19 Oct 2019 07:37:21 -0400
+Received: from us-smtp-2.mimecast.com ([207.211.31.81]:32631 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725912AbfJSLhU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 19 Oct 2019 07:35:09 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id C717460D5A; Sat, 19 Oct 2019 11:35:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1571484907;
-        bh=2Xx/PoFNBKT4cvQQWZqZuKa3vjJHJ9OPdlZAX5aVIgg=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=SAysUsZYh9P8k1dX9KyTcyzvT6Nn5nOwtBib/jo52daUzwIbdADuRajitkY8h82A2
-         rjxMOC4R65kyQSEZIhrKoV+aL7CLjO5BNEBSFpxD3Eud23EsOHvLdzqaaRAaOxs4CP
-         p6ajZWBjeYMKL69L84pR1YLkjpksi6W2eTx+elho=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 88F67601EA;
-        Sat, 19 Oct 2019 11:34:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1571484905;
-        bh=2Xx/PoFNBKT4cvQQWZqZuKa3vjJHJ9OPdlZAX5aVIgg=;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-        b=dgwjPI86YslgyZtCByFuNG0ZcDPASaMoues6By5VUtSUYDCEbKXOD3luVCNv8pUTR
-         p7HGPy9hOYJAuk70bVirNgBMNTAKeUSKLheDm07QT1l9y5mVFEjEb5OYNIQ5yKfZzU
-         Fat4Amj3p2tyRb3vMlcKSuLEOQ5e/xPH4z/dM6Hw=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 88F67601EA
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     "H. Nikolaus Schaller" <hns@goldelico.com>
-Cc:     =?utf-8?Q?Beno=C3=AEt?= Cousson <bcousson@baylibre.com>,
-        Tony Lindgren <tony@atomide.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Russell King <linux@armlinux.org.uk>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Mike Rapoport <rppt@linux.ibm.com>,
-        David Sterba <dsterba@suse.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Petr Mladek <pmladek@suse.com>,
-        Sakari Ailus <sakari.ailus@linux.intel.com>,
-        Kefeng Wang <wangkefeng.wang@huawei.com>,
-        Yangtao Li <tiny.windzz@gmail.com>,
-        Alexios Zavras <alexios.zavras@intel.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Allison Randal <allison@lohutok.net>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        John Stultz <john.stultz@linaro.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-omap@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-mmc@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, letux-kernel@openphoenux.org,
-        kernel@pyra-handheld.com
-Subject: Re: [PATCH 0/9] OpenPandora: make wl1251 connected to mmc3 sdio port of OpenPandora work again
-References: <cover.1571430329.git.hns@goldelico.com>
-        <87sgnpvvsu.fsf@kamboji.qca.qualcomm.com>
-        <584D2E2D-7617-4F7D-A567-507C7CCB4A53@goldelico.com>
-Date:   Sat, 19 Oct 2019 14:34:57 +0300
-In-Reply-To: <584D2E2D-7617-4F7D-A567-507C7CCB4A53@goldelico.com> (H. Nikolaus
-        Schaller's message of "Sat, 19 Oct 2019 13:25:20 +0200")
-Message-ID: <87d0etvuhq.fsf@kamboji.qca.qualcomm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Sat, 19 Oct 2019 07:37:20 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1571485039;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=Eg6GWygKeYzqmkq+LDj844ZOc9L0SpguuNdAt7HOGwI=;
+        b=NlfOAKI3FLe96FZVC1YmQhPOl5zJ0aMUVlEZnWCkY7aoME9/BNNbbEGXWD/+SPE9GNnZcP
+        hA+pKBXAHcWYyTLAUi43SSk5pBfvKn8QfVM//aTbF/qvrKQ2T6jNCGzfT1CmNlr2xNo0WZ
+        WoPc6tAsNr4G7CoMko4Wbf1TyY6+fqI=
+Received: from mail-lf1-f72.google.com (mail-lf1-f72.google.com
+ [209.85.167.72]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-265-qX6acbbyNWugMVQJS57T7w-1; Sat, 19 Oct 2019 07:37:18 -0400
+Received: by mail-lf1-f72.google.com with SMTP id u14so1763721lfi.10
+        for <linux-wireless@vger.kernel.org>; Sat, 19 Oct 2019 04:37:17 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:from:to:cc:date:message-id:in-reply-to
+         :references:user-agent:mime-version:content-transfer-encoding;
+        bh=gQX28cV4kR5e8hFv0Sv15bTp7rYQDznh9B4z2Gx6gas=;
+        b=QWq/LBR60vtjAMAsVZ0iaM4ujEkNuCuGsY3K/nISwswge/2BjgRNI/fJk3hZ1fqsuq
+         URgMfz7EgfbJEf119EGo5YmJN4Dtp3PsJWpUFLOjd8fH4BV+49vlf2dli59Mqd2AbMvr
+         B9rsZtDOL/fQym0Z5oaEWXKQ/kGUueXbhm0dNc1zoKlfs+J8B5oumzY7EOYMSKgl+sjx
+         /QRfXFw739iuVyeIn4dNwYJCblxk5NJ8s1GXL/GQM36EN+YHCy/EoE3jNH/+cbe6SQc/
+         jJgcueUTdyqshcWQtE7iU6cA3WYvrc7IkvOfu2w+93GFr3SUAT3TdW12NZryrJN1Okcj
+         2xvg==
+X-Gm-Message-State: APjAAAUq0RWdqx3lN4OJgmbtF82z2xzA2QRsYb9l/0A1RzyRzWhLa6IB
+        PbpUADnfsM9TR4s3uXsayRG2xhCFHlc8TJFaaYS0ZVYaBXgw8tnZsEwle/DH4aCiJ6s2VrrqFCv
+        b4py5Wvp7qiyQybyNhnvowlQYiRg=
+X-Received: by 2002:a2e:9890:: with SMTP id b16mr9161984ljj.4.1571485036738;
+        Sat, 19 Oct 2019 04:37:16 -0700 (PDT)
+X-Google-Smtp-Source: APXvYqyJEjxmojsJP7IanyFe53Iv8Ncd2ZXFdJBhgc/XXnG9JRPPb5VwPEj6BG1t7AJcX3UPrE3L2g==
+X-Received: by 2002:a2e:9890:: with SMTP id b16mr9161976ljj.4.1571485036534;
+        Sat, 19 Oct 2019 04:37:16 -0700 (PDT)
+Received: from alrua-x1.borgediget.toke.dk ([2a00:7660:6da:443::2])
+        by smtp.gmail.com with ESMTPSA id i17sm5961865lfj.35.2019.10.19.04.37.15
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 19 Oct 2019 04:37:15 -0700 (PDT)
+Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
+        id 5ED841804C9; Sat, 19 Oct 2019 13:37:15 +0200 (CEST)
+Subject: [PATCH v4 1/4] mac80211: Shrink the size of ack_frame_id to make room
+ for tx_time_est
+From:   =?utf-8?q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     linux-wireless@vger.kernel.org,
+        make-wifi-fast@lists.bufferbloat.net, ath10k@lists.infradead.org,
+        John Crispin <john@phrozen.org>,
+        Lorenzo Bianconi <lorenzo@kernel.org>,
+        Felix Fietkau <nbd@nbd.name>, Kan Yan <kyan@google.com>,
+        Rajkumar Manoharan <rmanohar@codeaurora.org>,
+        Kevin Hayes <kevinhayes@google.com>
+Date:   Sat, 19 Oct 2019 13:37:15 +0200
+Message-ID: <157148503526.2989444.13871793436722188173.stgit@toke.dk>
+In-Reply-To: <157148503415.2989444.7391437309981941226.stgit@toke.dk>
+References: <157148503415.2989444.7391437309981941226.stgit@toke.dk>
+User-Agent: StGit/0.20
 MIME-Version: 1.0
-Content-Type: text/plain
+X-MC-Unique: qX6acbbyNWugMVQJS57T7w-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-"H. Nikolaus Schaller" <hns@goldelico.com> writes:
+From: Toke H=C3=B8iland-J=C3=B8rgensen <toke@redhat.com>
 
-> Hi,
->
->> Am 19.10.2019 um 13:06 schrieb Kalle Valo <kvalo@codeaurora.org>:
->> 
->> "H. Nikolaus Schaller" <hns@goldelico.com> writes:
->> 
->>> Here we have a set of scattered patches to make the OpenPandora WiFi work again.
->>> 
->>> v4.7 did break the pdata-quirks which made the mmc3 interface
->>> fail completely, because some code now assumes device tree
->>> based instantiation.
->>> 
->>> Fixes: 81eef6ca9201 ("mmc: omap_hsmmc: Use dma_request_chan() for requesting DMA channel")
->>> 
->>> v4.11 did break the sdio qirks for wl1251 which made the driver no longer
->>> load, although the device was found as an sdio client.
->>> 
->>> Fixes: 884f38607897 ("mmc: core: move some sdio IDs out of quirks file")
->>> 
->>> To solve these issues:
->>> * we convert mmc3 and wl1251 initialization from pdata-quirks
->>>  to device tree
->>> * we make the wl1251 driver read properties from device tree
->>> * we fix the mmc core vendor ids and quirks
->>> * we fix the wl1251 (and wl1271) driver to use only vendor ids
->>>  from header file instead of (potentially conflicting) local
->>>  definitions
->>> 
->>> 
->>> H. Nikolaus Schaller (9):
->>>  Documentation: dt: wireless: update wl1251 for sdio
->>>  net: wireless: ti: wl1251 add device tree support
->>>  DTS: ARM: pandora-common: define wl1251 as child node of mmc3
->>>  mmc: host: omap_hsmmc: add code for special init of wl1251 to get rid
->>>    of pandora_wl1251_init_card
->>>  omap: pdata-quirks: remove openpandora quirks for mmc3 and wl1251
->>>  mmc: sdio: fix wl1251 vendor id
->>>  mmc: core: fix wl1251 sdio quirks
->>>  net: wireless: ti: wl1251 use new SDIO_VENDOR_ID_TI_WL1251 definition
->>>  net: wireless: ti: remove local VENDOR_ID and DEVICE_ID definitions
->> 
->> I didn't get patches 3-7
->
-> oh sorry. I don't know why.
->
-> Here they are all: https://patchwork.kernel.org/cover/11199599/
+To implement airtime queue limiting, we need to keep a running account of
+the estimated airtime of all skbs queued into the device. Do to this
+correctly, we need to store the airtime estimate into the skb so we can
+decrease the outstanding balance when the skb is freed. This means that the
+time estimate must be stored somewhere that will survive for the lifetime
+of the skb.
 
-Thanks.
+To get this, decrease the size of the ack_frame_id field to 6 bits, and
+lower the size of the ID space accordingly. This leaves 10 bits for use for
+tx_time_est, which is enough to store a maximum of 4096 us, if we shift the
+values so they become units of 4us.
 
->> so I don't know what they have, but what's the
->> plan how these should be applied? Normally wl1251 patches go via
->> wireless-drivers-next but are you planning something else?
->
-> Well, I have no plan for that except that all should end up fixed in mainline
-> and stable.
->
-> The issue is that multiple subsystems are involved (net/wireless, mmc and arm/omap)
-> and all patches should be ideally be applied in combination.
+Signed-off-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@redhat.com>
+---
+ include/net/mac80211.h |    4 +++-
+ net/mac80211/cfg.c     |    2 +-
+ net/mac80211/tx.c      |    2 +-
+ 3 files changed, 5 insertions(+), 3 deletions(-)
 
-Ok, I then assume someone else is going to handle these, wl1251 rarely
-has any changes so the chance of conflicts is small anyway, and I'll
-drop the wl1251 patches from my patchwork.
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index d69081c38788..4288ace72c2b 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -967,6 +967,7 @@ ieee80211_rate_get_vht_nss(const struct ieee80211_tx_ra=
+te *rate)
+  * @band: the band to transmit on (use for checking for races)
+  * @hw_queue: HW queue to put the frame on, skb_get_queue_mapping() gives =
+the AC
+  * @ack_frame_id: internal frame ID for TX status, used internally
++ * @tx_time_est: TX time estimate in units of 4us, used internally
+  * @control: union part for control data
+  * @control.rates: TX rates array to try
+  * @control.rts_cts_rate_idx: rate for RTS or CTS
+@@ -1007,7 +1008,8 @@ struct ieee80211_tx_info {
+=20
+ =09u8 hw_queue;
+=20
+-=09u16 ack_frame_id;
++=09u16 ack_frame_id:6;
++=09u16 tx_time_est:10;
+=20
+ =09union {
+ =09=09struct {
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 70739e746c13..4fb7f1f12109 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3428,7 +3428,7 @@ int ieee80211_attach_ack_skb(struct ieee80211_local *=
+local, struct sk_buff *skb,
+=20
+ =09spin_lock_irqsave(&local->ack_status_lock, spin_flags);
+ =09id =3D idr_alloc(&local->ack_status_frames, ack_skb,
+-=09=09       1, 0x10000, GFP_ATOMIC);
++=09=09       1, 0x40, GFP_ATOMIC);
+ =09spin_unlock_irqrestore(&local->ack_status_lock, spin_flags);
+=20
+ =09if (id < 0) {
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 938c10f7955b..a16c2f863702 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2719,7 +2719,7 @@ static struct sk_buff *ieee80211_build_hdr(struct iee=
+e80211_sub_if_data *sdata,
+=20
+ =09=09=09spin_lock_irqsave(&local->ack_status_lock, flags);
+ =09=09=09id =3D idr_alloc(&local->ack_status_frames, ack_skb,
+-=09=09=09=09       1, 0x10000, GFP_ATOMIC);
++=09=09=09=09       1, 0x40, GFP_ATOMIC);
+ =09=09=09spin_unlock_irqrestore(&local->ack_status_lock, flags);
+=20
+ =09=09=09if (id >=3D 0) {
 
-For wl1251 patches 1, 2, 8 and 9:
-
-Acked-by: Kalle Valo <kvalo@codeaurora.org>
-
--- 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
