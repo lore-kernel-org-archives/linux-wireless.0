@@ -2,68 +2,69 @@ Return-Path: <SRS0=C9SN=YM=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BF71CA9EAC
-	for <linux-wireless@archiver.kernel.org>; Sat, 19 Oct 2019 11:37:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73407CA9EAB
+	for <linux-wireless@archiver.kernel.org>; Sat, 19 Oct 2019 11:37:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3C192222C2
-	for <linux-wireless@archiver.kernel.org>; Sat, 19 Oct 2019 11:37:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 411B421D7C
+	for <linux-wireless@archiver.kernel.org>; Sat, 19 Oct 2019 11:37:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="GWFYCsbJ"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BWcOvuLN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726263AbfJSLhZ (ORCPT
+        id S1726276AbfJSLh1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 19 Oct 2019 07:37:25 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:30868 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725912AbfJSLhY (ORCPT
+        Sat, 19 Oct 2019 07:37:27 -0400
+Received: from us-smtp-1.mimecast.com ([205.139.110.61]:32409 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725912AbfJSLh0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 19 Oct 2019 07:37:24 -0400
+        Sat, 19 Oct 2019 07:37:26 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1571485042;
+        s=mimecast20190719; t=1571485045;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=037kYcrwRSTSMLRfx4CfzNcNZlFM0quGkGQoN08cL8c=;
-        b=GWFYCsbJUAwSwPwovvpcC7es1Sek6oegz+ruVaRzzkrXSO9050jMyWuAvQaYYvsGIBdn3g
-        pT+JVQCLYh8P6MYHpvpmrLhLWajcdnAiaU4N1/GjqiVVWZCyTRSB3E2iDp98P1A5NledHR
-        2dYj9S6qNcYUB/N89kRsv8RTIi0JSXk=
-Received: from mail-lf1-f71.google.com (mail-lf1-f71.google.com
- [209.85.167.71]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-244-LsuxyQ--OQiMH5zt02wo0Q-1; Sat, 19 Oct 2019 07:37:20 -0400
-Received: by mail-lf1-f71.google.com with SMTP id m24so1760989lfh.22
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Oct 2019 04:37:20 -0700 (PDT)
+        bh=MVaudQUuQCI+ljMWLLAsex2zEz8cPUhBc2aoUxPRkR8=;
+        b=BWcOvuLNv5sd3XrirToRijYY47SKmawEq67pkT1OMXCnwQdWSd3bTeGjy62B3W5BSk4E+o
+        wfPek17boDv3Z1Wo0UlGmMf3RHSucmJHliD+ujH7u6mmmWWoY3dX5uIth7amXxNmGdSA1I
+        ekb94G5xkt3eIjEseeXtclveKH/GuTE=
+Received: from mail-lj1-f198.google.com (mail-lj1-f198.google.com
+ [209.85.208.198]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-206-BjThIq7eM0Gx-bXcFrpW7Q-1; Sat, 19 Oct 2019 07:37:22 -0400
+Received: by mail-lj1-f198.google.com with SMTP id m81so1620377lje.4
+        for <linux-wireless@vger.kernel.org>; Sat, 19 Oct 2019 04:37:22 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:from:to:cc:date:message-id:in-reply-to
          :references:user-agent:mime-version:content-transfer-encoding;
-        bh=8YRb2N6dvs3xtiXuol7/wWZTQ7TYCWwqAjekk5alzxE=;
-        b=uU6/JVgYdoUY5ulA+n2bVIZTO2sn7oU8j8FSrA21TralLEDBDuLAVuOS4A1CchJeis
-         x8WA4m2vfRHo9WHY10Px2IZg9x6CrClW0gudeSJMnhD9JCH2Ri4guNGfu+aviwdlI8c0
-         FFwdDYpluHl0GfsCBzO0bQwLzDfS5dDMXzYnfQrIWZmB/1sME4JH1Ouu45rtyBGbw9JQ
-         Q08Pnhh94x/MfLnFE5jPkYakBZgeGDhG9wDvO9+YRA1yZMUV8wCfBy7LUrm80kfUPn4M
-         ZFuyOQny6NmaPOD4DTsv2GiotiFHY+5F+0PS6oeNc0ah7xNS4Nu8XDOAl/YvACEapIfG
-         Gt2w==
-X-Gm-Message-State: APjAAAWNOFWvT6bsvm9LmXkxfxFCAhmtC3f8yGSu6p9U7EWMBsAZHHuV
-        A2RN1SmO6OM9xPqmDIF0epxxKqc1WdIZqYs4FD2nA7SNdS9v77mBBDMAlpo3DFxtzVj8+86rX0H
-        uwe16XF20njiXmGZV2YkIUMgtSRY=
-X-Received: by 2002:a05:6512:71:: with SMTP id i17mr8732633lfo.68.1571485038572;
-        Sat, 19 Oct 2019 04:37:18 -0700 (PDT)
-X-Google-Smtp-Source: APXvYqx5Sb37FfZdcXLsWgNLkG3Qp9yoKg+1KpKvOrzk68btQ0fb7apBhu+aAD3ATqBsh9D3ijUO8g==
-X-Received: by 2002:a05:6512:71:: with SMTP id i17mr8732613lfo.68.1571485038103;
-        Sat, 19 Oct 2019 04:37:18 -0700 (PDT)
+        bh=KwtZFfw3+zEIBpCSK3JjIjdY2khNQMsybmZnMAvVGWM=;
+        b=oxXi5RR2dKIcq19W184KbDHr5EfrPod6SK2wOBtfb+O1KySWIYtYp3zIBOAYaz5H5H
+         MJvqi40q/HD37W64Vjuw8FyIx42mkZxLh0mckJJclTG2f0UWtcJsWvUqt21XxeZiVUf7
+         3rdlbjUGPxENWFlK3sfHUgTGeGW+dCNL/dUikvR85XJtPmu1OsFEGZtBaj67n9LkrjL/
+         dJaMpHscHVRbzZ2XoTIxz2skWTW/dyj0LAx7zrMEg46J8P5VrrHaDGykWjnPZWgXyedI
+         zR2g61ixazDrHzicSz20NjOkv/MvtCuyOVe9thiJdkRJedtC8y7Imy6xl7Q6nvehy8vU
+         kdzA==
+X-Gm-Message-State: APjAAAWIaeCixlBoZ/GjlsB7sfSjg6dYipxsIvwPIm0lL5Cisk9U/f1t
+        HCvYeA9uL2vSn2WbqPjRXIXWJIlpy6zkKj3za6cw2DBpOZFDimEQNhEHJtSJGW2Pbi2VCYu4Yl6
+        UNhndvqlHaRVl/JV+WhepmdeKMGQ=
+X-Received: by 2002:a19:9146:: with SMTP id y6mr645542lfj.11.1571485040858;
+        Sat, 19 Oct 2019 04:37:20 -0700 (PDT)
+X-Google-Smtp-Source: APXvYqy6A2s0kb12rWbr+kZlB9sAojMXKwZLl1GcZkznDPvWiSSK5d9yqvGSQlvsPztMK75+Z9uVsw==
+X-Received: by 2002:a19:9146:: with SMTP id y6mr645532lfj.11.1571485040619;
+        Sat, 19 Oct 2019 04:37:20 -0700 (PDT)
 Received: from alrua-x1.borgediget.toke.dk (borgediget.toke.dk. [85.204.121.218])
-        by smtp.gmail.com with ESMTPSA id d24sm269009lfl.65.2019.10.19.04.37.17
+        by smtp.gmail.com with ESMTPSA id h3sm5459652ljf.12.2019.10.19.04.37.19
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 19 Oct 2019 04:37:17 -0700 (PDT)
+        Sat, 19 Oct 2019 04:37:19 -0700 (PDT)
 Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
-        id 800331804C8; Sat, 19 Oct 2019 13:37:16 +0200 (CEST)
-Subject: [PATCH v4 2/4] mac80211: Import airtime calculation code from mt76
+        id BD12A1804C8; Sat, 19 Oct 2019 13:37:18 +0200 (CEST)
+Subject: [PATCH v4 4/4] mac80211: Use Airtime-based Queue Limits (AQL) on
+ packet dequeue
 From:   =?utf-8?q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
 To:     Johannes Berg <johannes@sipsolutions.net>
 Cc:     linux-wireless@vger.kernel.org,
@@ -73,13 +74,13 @@ Cc:     linux-wireless@vger.kernel.org,
         Felix Fietkau <nbd@nbd.name>, Kan Yan <kyan@google.com>,
         Rajkumar Manoharan <rmanohar@codeaurora.org>,
         Kevin Hayes <kevinhayes@google.com>
-Date:   Sat, 19 Oct 2019 13:37:16 +0200
-Message-ID: <157148503639.2989444.8337290298332344733.stgit@toke.dk>
+Date:   Sat, 19 Oct 2019 13:37:18 +0200
+Message-ID: <157148503865.2989444.7118792679603045723.stgit@toke.dk>
 In-Reply-To: <157148503415.2989444.7391437309981941226.stgit@toke.dk>
 References: <157148503415.2989444.7391437309981941226.stgit@toke.dk>
 User-Agent: StGit/0.20
 MIME-Version: 1.0
-X-MC-Unique: LsuxyQ--OQiMH5zt02wo0Q-1
+X-MC-Unique: BjThIq7eM0Gx-bXcFrpW7Q-1
 X-Mimecast-Spam-Score: 0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
@@ -90,470 +91,128 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Toke H=C3=B8iland-J=C3=B8rgensen <toke@redhat.com>
 
-Felix recently added code to calculate airtime of packets to the mt76
-driver. Import this into mac80211 so we can use it for airtime queue limit
-calculations later.
+The previous commit added the ability to throttle stations when they queue
+too much airtime in the hardware. This commit enables the functionality by
+calculating the expected airtime usage of each packet that is dequeued from
+the TXQs in mac80211, and accounting that as pending airtime.
 
-The airtime.c file is copied verbatim from the mt76 driver, and adjusted to
-use mac80211 data structures instead (which is fairly straight forward).
-The per-rate TX rate calculation is split out to its own
-function (ieee80211_calc_tx_airtime_rate()) so it can be used directly for
-the AQL calculations added in a subsequent patch.
+The estimated airtime for each skb is stored in the tx_info, so we can
+subtract the same amount from the running total when the skb is freed or
+recycled. The throttling mechanism relies on this accounting to be
+accurate (i.e., that we are not freeing skbs without subtracting any
+airtime they were accounted for), so we put the subtraction into
+ieee80211_report_used_skb(). As an optimisation, we also subtract the
+airtime on regular TX completion, zeroing out the value stored in the
+packet afterwards, to avoid having to do an expensive lookup of the
+station from the packet data on every packet.
 
-The only thing that it was not possible to port directly was the bit that
-read the internal driver flags of struct ieee80211_rate to determine
-whether a rate is using CCK or OFDM encoding. Instead, just look at the
-rate index, since at least mt76 and ath10k both seem to have the same
-number of CCK rates (4) in their tables.
+This patch does *not* include any mechanism to wake a throttled TXQ again,
+on the assumption that this will happen anyway as a side effect of whatever
+freed the skb (most commonly a TX completion).
 
 Signed-off-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@redhat.com>
 ---
- include/net/mac80211.h     |   14 ++
- net/mac80211/Makefile      |    3=20
- net/mac80211/airtime.c     |  377 ++++++++++++++++++++++++++++++++++++++++=
-++++
- net/mac80211/ieee80211_i.h |    4=20
- 4 files changed, 397 insertions(+), 1 deletion(-)
- create mode 100644 net/mac80211/airtime.c
+ net/mac80211/status.c |   38 ++++++++++++++++++++++++++++++++++++++
+ net/mac80211/tx.c     |   21 +++++++++++++++++++++
+ 2 files changed, 59 insertions(+)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 4288ace72c2b..f058386e3fef 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -6424,4 +6424,18 @@ void ieee80211_nan_func_match(struct ieee80211_vif *=
-vif,
- =09=09=09      struct cfg80211_nan_match_params *match,
- =09=09=09      gfp_t gfp);
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index ab8ba5835ca0..905b4afd457d 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -676,6 +676,33 @@ static void ieee80211_report_used_skb(struct ieee80211=
+_local *local,
+ =09if (dropped)
+ =09=09acked =3D false;
 =20
-+/**
-+ * ieee80211_calc_tx_airtime - calculate estimated transmission airtime.
-+ *
-+ * This function calculates the estimated airtime usage of a frame based o=
-n the
-+ * rate information in the TX info struct and the frame length.
-+ *
-+ * @hw: pointer as obtained from ieee80211_alloc_hw()
-+ * @info: &struct ieee80211_tx_info of the frame.
-+ * @len: frame length in bytes
-+ */
-+u32 ieee80211_calc_tx_airtime(struct ieee80211_hw *hw,
-+=09=09=09      struct ieee80211_tx_info *info,
-+=09=09=09      int len);
++=09if (info->tx_time_est) {
++=09=09struct ieee80211_sub_if_data *sdata;
++=09=09struct sta_info *sta =3D NULL;
++=09=09u8 *qc, ac;
++=09=09int tid;
 +
- #endif /* MAC80211_H */
-diff --git a/net/mac80211/Makefile b/net/mac80211/Makefile
-index 4f03ebe732fa..6cbb1286d6c0 100644
---- a/net/mac80211/Makefile
-+++ b/net/mac80211/Makefile
-@@ -32,7 +32,8 @@ mac80211-y :=3D \
- =09chan.o \
- =09trace.o mlme.o \
- =09tdls.o \
--=09ocb.o
-+=09ocb.o \
-+=09airtime.o
++=09=09rcu_read_lock();
++
++=09=09sdata =3D ieee80211_sdata_from_skb(local, skb);
++=09=09if (sdata)
++=09=09=09sta =3D sta_info_get_bss(sdata, skb_mac_header(skb));
++
++=09=09if (ieee80211_is_data_qos(hdr->frame_control)) {
++=09=09=09qc =3D ieee80211_get_qos_ctl(hdr);
++=09=09=09tid =3D qc[0] & 0xf;
++=09=09=09ac =3D ieee80211_ac_from_tid(tid);
++=09=09} else {
++=09=09=09ac =3D IEEE80211_AC_BE;
++=09=09}
++
++=09=09ieee80211_sta_update_pending_airtime(local, sta, ac,
++=09=09=09=09=09=09     info->tx_time_est << 2,
++=09=09=09=09=09=09     true);
++=09=09rcu_read_unlock();
++
++=09}
++
+ =09if (info->flags & IEEE80211_TX_INTFL_MLME_CONN_TX) {
+ =09=09struct ieee80211_sub_if_data *sdata;
 =20
- mac80211-$(CONFIG_MAC80211_LEDS) +=3D led.o
- mac80211-$(CONFIG_MAC80211_DEBUGFS) +=3D \
-diff --git a/net/mac80211/airtime.c b/net/mac80211/airtime.c
-new file mode 100644
-index 000000000000..c8d0cee61366
---- /dev/null
-+++ b/net/mac80211/airtime.c
-@@ -0,0 +1,377 @@
-+// SPDX-License-Identifier: ISC
-+/*
-+ * Copyright (C) 2019 Felix Fietkau <nbd@nbd.name>
-+ */
-+
-+#include <net/mac80211.h>
-+#include "ieee80211_i.h"
-+#include "sta_info.h"
-+
-+#define AVG_PKT_SIZE=091024
-+
-+/* Number of bits for an average sized packet */
-+#define MCS_NBITS (AVG_PKT_SIZE << 3)
-+
-+/* Number of symbols for a packet with (bps) bits per symbol */
-+#define MCS_NSYMS(bps) DIV_ROUND_UP(MCS_NBITS, (bps))
-+
-+/* Transmission time (1024 usec) for a packet containing (syms) * symbols =
-*/
-+#define MCS_SYMBOL_TIME(sgi, syms)=09=09=09=09=09\
-+=09(sgi ?=09=09=09=09=09=09=09=09\
-+=09  ((syms) * 18 * 1024 + 4 * 1024) / 5 :=09/* syms * 3.6 us */=09\
-+=09  ((syms) * 1024) << 2=09=09=09/* syms * 4 us */=09\
-+=09)
-+
-+/* Transmit duration for the raw data part of an average sized packet */
-+#define MCS_DURATION(streams, sgi, bps) \
-+=09MCS_SYMBOL_TIME(sgi, MCS_NSYMS((streams) * (bps)))
-+
-+#define BW_20=09=09=090
-+#define BW_40=09=09=091
-+#define BW_80=09=09=092
-+
-+/*
-+ * Define group sort order: HT40 -> SGI -> #streams
-+ */
-+#define IEEE80211_MAX_STREAMS=09=094
-+#define IEEE80211_HT_STREAM_GROUPS=094 /* BW(=3D2) * SGI(=3D2) */
-+#define IEEE80211_VHT_STREAM_GROUPS=096 /* BW(=3D3) * SGI(=3D2) */
-+
-+#define IEEE80211_HT_GROUPS_NB=09(IEEE80211_MAX_STREAMS *=09\
-+=09=09=09=09 IEEE80211_HT_STREAM_GROUPS)
-+#define IEEE80211_VHT_GROUPS_NB=09(IEEE80211_MAX_STREAMS *=09\
-+=09=09=09=09=09 IEEE80211_VHT_STREAM_GROUPS)
-+#define IEEE80211_GROUPS_NB=09(IEEE80211_HT_GROUPS_NB +=09\
-+=09=09=09=09 IEEE80211_VHT_GROUPS_NB)
-+
-+#define IEEE80211_HT_GROUP_0=090
-+#define IEEE80211_VHT_GROUP_0=09(IEEE80211_HT_GROUP_0 + IEEE80211_HT_GROUP=
-S_NB)
-+
-+#define MCS_GROUP_RATES=09=0910
-+#define CCK_NUM_RATES=09=09=094
-+
-+#define HT_GROUP_IDX(_streams, _sgi, _ht40)=09\
-+=09IEEE80211_HT_GROUP_0 +=09=09=09\
-+=09IEEE80211_MAX_STREAMS * 2 * _ht40 +=09\
-+=09IEEE80211_MAX_STREAMS * _sgi +=09=09\
-+=09_streams - 1
-+
-+#define _MAX(a, b) (((a)>(b))?(a):(b))
-+
-+#define GROUP_SHIFT(duration)=09=09=09=09=09=09\
-+=09_MAX(0, 16 - __builtin_clz(duration))
-+
-+/* MCS rate information for an MCS group */
-+#define __MCS_GROUP(_streams, _sgi, _ht40, _s)=09=09=09=09\
-+=09[HT_GROUP_IDX(_streams, _sgi, _ht40)] =3D {=09=09=09\
-+=09.shift =3D _s,=09=09=09=09=09=09=09\
-+=09.duration =3D {=09=09=09=09=09=09=09\
-+=09=09MCS_DURATION(_streams, _sgi, _ht40 ? 54 : 26) >> _s,=09\
-+=09=09MCS_DURATION(_streams, _sgi, _ht40 ? 108 : 52) >> _s,=09\
-+=09=09MCS_DURATION(_streams, _sgi, _ht40 ? 162 : 78) >> _s,=09\
-+=09=09MCS_DURATION(_streams, _sgi, _ht40 ? 216 : 104) >> _s,=09\
-+=09=09MCS_DURATION(_streams, _sgi, _ht40 ? 324 : 156) >> _s,=09\
-+=09=09MCS_DURATION(_streams, _sgi, _ht40 ? 432 : 208) >> _s,=09\
-+=09=09MCS_DURATION(_streams, _sgi, _ht40 ? 486 : 234) >> _s,=09\
-+=09=09MCS_DURATION(_streams, _sgi, _ht40 ? 540 : 260) >> _s=09\
-+=09}=09=09=09=09=09=09=09=09\
-+}
-+
-+#define MCS_GROUP_SHIFT(_streams, _sgi, _ht40)=09=09=09=09\
-+=09GROUP_SHIFT(MCS_DURATION(_streams, _sgi, _ht40 ? 54 : 26))
-+
-+#define MCS_GROUP(_streams, _sgi, _ht40)=09=09=09=09\
-+=09__MCS_GROUP(_streams, _sgi, _ht40,=09=09=09=09\
-+=09=09    MCS_GROUP_SHIFT(_streams, _sgi, _ht40))
-+
-+#define VHT_GROUP_IDX(_streams, _sgi, _bw)=09=09=09=09\
-+=09(IEEE80211_VHT_GROUP_0 +=09=09=09=09=09=09\
-+=09 IEEE80211_MAX_STREAMS * 2 * (_bw) +=09=09=09=09\
-+=09 IEEE80211_MAX_STREAMS * (_sgi) +=09=09=09=09\
-+=09 (_streams) - 1)
-+
-+#define BW2VBPS(_bw, r3, r2, r1)=09=09=09=09=09\
-+=09(_bw =3D=3D BW_80 ? r3 : _bw =3D=3D BW_40 ? r2 : r1)
-+
-+#define __VHT_GROUP(_streams, _sgi, _bw, _s)=09=09=09=09\
-+=09[VHT_GROUP_IDX(_streams, _sgi, _bw)] =3D {=09=09=09\
-+=09.shift =3D _s,=09=09=09=09=09=09=09\
-+=09.duration =3D {=09=09=09=09=09=09=09\
-+=09=09MCS_DURATION(_streams, _sgi,=09=09=09=09\
-+=09=09=09     BW2VBPS(_bw,  117,  54,  26)) >> _s,=09\
-+=09=09MCS_DURATION(_streams, _sgi,=09=09=09=09\
-+=09=09=09     BW2VBPS(_bw,  234, 108,  52)) >> _s,=09\
-+=09=09MCS_DURATION(_streams, _sgi,=09=09=09=09\
-+=09=09=09     BW2VBPS(_bw,  351, 162,  78)) >> _s,=09\
-+=09=09MCS_DURATION(_streams, _sgi,=09=09=09=09\
-+=09=09=09     BW2VBPS(_bw,  468, 216, 104)) >> _s,=09\
-+=09=09MCS_DURATION(_streams, _sgi,=09=09=09=09\
-+=09=09=09     BW2VBPS(_bw,  702, 324, 156)) >> _s,=09\
-+=09=09MCS_DURATION(_streams, _sgi,=09=09=09=09\
-+=09=09=09     BW2VBPS(_bw,  936, 432, 208)) >> _s,=09\
-+=09=09MCS_DURATION(_streams, _sgi,=09=09=09=09\
-+=09=09=09     BW2VBPS(_bw, 1053, 486, 234)) >> _s,=09\
-+=09=09MCS_DURATION(_streams, _sgi,=09=09=09=09\
-+=09=09=09     BW2VBPS(_bw, 1170, 540, 260)) >> _s,=09\
-+=09=09MCS_DURATION(_streams, _sgi,=09=09=09=09\
-+=09=09=09     BW2VBPS(_bw, 1404, 648, 312)) >> _s,=09\
-+=09=09MCS_DURATION(_streams, _sgi,=09=09=09=09\
-+=09=09=09     BW2VBPS(_bw, 1560, 720, 346)) >> _s=09\
-+=09}=09=09=09=09=09=09=09=09\
-+}
-+
-+#define VHT_GROUP_SHIFT(_streams, _sgi, _bw)=09=09=09=09\
-+=09GROUP_SHIFT(MCS_DURATION(_streams, _sgi,=09=09=09\
-+=09=09=09=09 BW2VBPS(_bw,  117,  54,  26)))
-+
-+#define VHT_GROUP(_streams, _sgi, _bw)=09=09=09=09=09\
-+=09__VHT_GROUP(_streams, _sgi, _bw,=09=09=09=09\
-+=09=09    VHT_GROUP_SHIFT(_streams, _sgi, _bw))
-+
-+struct mcs_group {
-+=09u8 shift;
-+=09u16 duration[MCS_GROUP_RATES];
-+};
-+
-+static const struct mcs_group airtime_mcs_groups[] =3D {
-+=09MCS_GROUP(1, 0, BW_20),
-+=09MCS_GROUP(2, 0, BW_20),
-+=09MCS_GROUP(3, 0, BW_20),
-+=09MCS_GROUP(4, 0, BW_20),
-+
-+=09MCS_GROUP(1, 1, BW_20),
-+=09MCS_GROUP(2, 1, BW_20),
-+=09MCS_GROUP(3, 1, BW_20),
-+=09MCS_GROUP(4, 1, BW_20),
-+
-+=09MCS_GROUP(1, 0, BW_40),
-+=09MCS_GROUP(2, 0, BW_40),
-+=09MCS_GROUP(3, 0, BW_40),
-+=09MCS_GROUP(4, 0, BW_40),
-+
-+=09MCS_GROUP(1, 1, BW_40),
-+=09MCS_GROUP(2, 1, BW_40),
-+=09MCS_GROUP(3, 1, BW_40),
-+=09MCS_GROUP(4, 1, BW_40),
-+
-+=09VHT_GROUP(1, 0, BW_20),
-+=09VHT_GROUP(2, 0, BW_20),
-+=09VHT_GROUP(3, 0, BW_20),
-+=09VHT_GROUP(4, 0, BW_20),
-+
-+=09VHT_GROUP(1, 1, BW_20),
-+=09VHT_GROUP(2, 1, BW_20),
-+=09VHT_GROUP(3, 1, BW_20),
-+=09VHT_GROUP(4, 1, BW_20),
-+
-+=09VHT_GROUP(1, 0, BW_40),
-+=09VHT_GROUP(2, 0, BW_40),
-+=09VHT_GROUP(3, 0, BW_40),
-+=09VHT_GROUP(4, 0, BW_40),
-+
-+=09VHT_GROUP(1, 1, BW_40),
-+=09VHT_GROUP(2, 1, BW_40),
-+=09VHT_GROUP(3, 1, BW_40),
-+=09VHT_GROUP(4, 1, BW_40),
-+
-+=09VHT_GROUP(1, 0, BW_80),
-+=09VHT_GROUP(2, 0, BW_80),
-+=09VHT_GROUP(3, 0, BW_80),
-+=09VHT_GROUP(4, 0, BW_80),
-+
-+=09VHT_GROUP(1, 1, BW_80),
-+=09VHT_GROUP(2, 1, BW_80),
-+=09VHT_GROUP(3, 1, BW_80),
-+=09VHT_GROUP(4, 1, BW_80),
-+};
-+
-+static u32
-+ieee80211_calc_legacy_rate_duration(const struct ieee80211_rate *rate,
-+=09=09=09=09    bool short_pre, bool cck,
-+=09=09=09=09    int len)
-+{
-+=09u32 duration;
-+
-+=09if (cck) {
-+=09=09duration =3D 144 + 48; /* preamble + PLCP */
-+=09=09if (short_pre)
-+=09=09=09duration >>=3D 1;
-+
-+=09=09duration +=3D 10; /* SIFS */
-+=09} else {
-+=09=09duration =3D 20 + 16; /* premable + SIFS */
-+=09}
-+
-+=09len <<=3D 3;
-+=09duration +=3D (len * 10) / rate->bitrate;
-+
-+=09return duration;
-+}
-+
-+u32 ieee80211_calc_rx_airtime(struct ieee80211_hw *hw,
-+=09=09=09      struct ieee80211_rx_status *status,
-+=09=09=09      int len)
-+{
-+=09struct ieee80211_supported_band *sband;
-+=09const struct ieee80211_rate *rate;
-+=09bool sgi =3D status->enc_flags & RX_ENC_FLAG_SHORT_GI;
-+=09bool sp =3D status->enc_flags & RX_ENC_FLAG_SHORTPRE;
-+=09int bw, streams;
-+=09u32 duration;
-+=09int group, idx;
-+=09bool cck;
-+
-+=09switch (status->bw) {
-+=09case RATE_INFO_BW_20:
-+=09=09bw =3D BW_20;
-+=09=09break;
-+=09case RATE_INFO_BW_40:
-+=09=09bw =3D BW_40;
-+=09=09break;
-+=09case RATE_INFO_BW_80:
-+=09=09bw =3D BW_80;
-+=09=09break;
-+=09default:
-+=09=09WARN_ON_ONCE(1);
-+=09=09return 0;
-+=09}
-+
-+=09switch (status->encoding) {
-+=09case RX_ENC_LEGACY:
-+=09=09if (WARN_ON_ONCE(status->band > NL80211_BAND_5GHZ))
-+=09=09=09return 0;
-+
-+=09=09sband =3D hw->wiphy->bands[status->band];
-+=09=09if (!sband || status->rate_idx > sband->n_bitrates)
-+=09=09=09return 0;
-+
-+=09=09rate =3D &sband->bitrates[status->rate_idx];
-+=09=09cck =3D (status->rate_idx < CCK_NUM_RATES);
-+
-+=09=09return ieee80211_calc_legacy_rate_duration(rate, sp, cck, len);
-+
-+=09case RX_ENC_VHT:
-+=09=09streams =3D status->nss;
-+=09=09idx =3D status->rate_idx;
-+=09=09group =3D VHT_GROUP_IDX(streams, sgi, bw);
-+=09=09break;
-+=09case RX_ENC_HT:
-+=09=09streams =3D ((status->rate_idx >> 3) & 3) + 1;
-+=09=09idx =3D status->rate_idx & 7;
-+=09=09group =3D HT_GROUP_IDX(streams, sgi, bw);
-+=09=09break;
-+=09default:
-+=09=09WARN_ON_ONCE(1);
-+=09=09return 0;
-+=09}
-+
-+=09if (WARN_ON_ONCE(streams > 4))
-+=09=09return 0;
-+
-+=09duration =3D airtime_mcs_groups[group].duration[idx];
-+=09duration <<=3D airtime_mcs_groups[group].shift;
-+=09duration *=3D len;
-+=09duration /=3D AVG_PKT_SIZE;
-+=09duration /=3D 1024;
-+
-+=09duration +=3D 36 + (streams << 2);
-+
-+=09return duration;
-+}
-+
-+u32 ieee80211_calc_tx_airtime_rate(struct ieee80211_hw *hw,
-+=09=09=09=09   struct ieee80211_tx_rate *rate,
-+=09=09=09=09   u8 band, int len)
-+{
-+=09struct ieee80211_rx_status stat =3D {
-+=09=09.band =3D band,
-+=09};
-+
-+=09if (rate->idx < 0 || !rate->count)
-+=09=09return 0;
-+
-+=09if (rate->flags & IEEE80211_TX_RC_80_MHZ_WIDTH)
-+=09=09stat.bw =3D RATE_INFO_BW_80;
-+=09else if (rate->flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
-+=09=09stat.bw =3D RATE_INFO_BW_40;
-+=09else
-+=09=09stat.bw =3D RATE_INFO_BW_20;
-+
-+=09stat.enc_flags =3D 0;
-+=09if (rate->flags & IEEE80211_TX_RC_USE_SHORT_PREAMBLE)
-+=09=09stat.enc_flags |=3D RX_ENC_FLAG_SHORTPRE;
-+=09if (rate->flags & IEEE80211_TX_RC_SHORT_GI)
-+=09=09stat.enc_flags |=3D RX_ENC_FLAG_SHORT_GI;
-+
-+=09stat.rate_idx =3D rate->idx;
-+=09if (rate->flags & IEEE80211_TX_RC_VHT_MCS) {
-+=09=09stat.encoding =3D RX_ENC_VHT;
-+=09=09stat.rate_idx =3D ieee80211_rate_get_vht_mcs(rate);
-+=09=09stat.nss =3D ieee80211_rate_get_vht_nss(rate);
-+=09} else if (rate->flags & IEEE80211_TX_RC_MCS) {
-+=09=09stat.encoding =3D RX_ENC_HT;
-+=09} else {
-+=09=09stat.encoding =3D RX_ENC_LEGACY;
-+=09}
-+
-+=09return ieee80211_calc_rx_airtime(hw, &stat, len);
-+}
-+
-+u32 ieee80211_calc_tx_airtime(struct ieee80211_hw *hw,
-+=09=09=09      struct ieee80211_tx_info *info,
-+=09=09=09      int len)
-+{
-+=09u32 duration =3D 0;
-+=09int i;
-+
-+=09for (i =3D 0; i < ARRAY_SIZE(info->status.rates); i++) {
-+=09=09struct ieee80211_tx_rate *rate =3D &info->status.rates[i];
-+=09=09u32 cur_duration;
-+
-+=09=09cur_duration =3D ieee80211_calc_tx_airtime_rate(hw, rate,
-+=09=09=09=09=09=09=09      info->band, len);
-+=09=09if (!cur_duration)
-+=09=09=09break;
-+
-+=09=09duration +=3D cur_duration * rate->count;
-+=09}
-+
-+=09return duration;
-+}
-+EXPORT_SYMBOL_GPL(ieee80211_calc_tx_airtime);
-+
-+
-+u32 ieee80211_calc_expected_tx_airtime(struct ieee80211_hw *hw,
-+=09=09=09=09       struct ieee80211_vif *vif,
-+=09=09=09=09       struct ieee80211_sta *pubsta,
-+=09=09=09=09       int len)
-+{
-+=09struct ieee80211_supported_band *sband;
-+=09struct ieee80211_chanctx_conf *conf;
-+=09struct ieee80211_rate *rate;
-+=09struct sta_info *sta;
-+=09u8 band =3D 0;
-+
-+=09len +=3D 38; /* Ethernet header length */
-+
-+=09conf =3D rcu_dereference(vif->chanctx_conf);
-+=09if (conf)
-+=09=09band =3D conf->def.chan->band;
-+
-+=09if (pubsta) {
-+=09=09sta  =3D container_of(pubsta, struct sta_info, sta);
-+=09=09return ieee80211_calc_tx_airtime_rate(hw, &sta->tx_stats.last_rate,
-+=09=09=09=09=09=09      band, len);
-+=09}
-+
-+=09if (!conf)
-+=09=09return 0;
-+
-+=09/* No station to get latest rate from, so calculate the
-+=09 * worst-case duration for the lowest rate.
-+=09 */
-+=09sband =3D hw->wiphy->bands[band];
-+=09rate =3D &sband->bitrates[0];
-+
-+=09return ieee80211_calc_legacy_rate_duration(rate, false, true, len);
-+}
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 05406e9c05b3..225ea4e3cd76 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -2249,6 +2249,10 @@ const char *ieee80211_get_reason_code_string(u16 rea=
-son_code);
+@@ -930,6 +957,17 @@ static void __ieee80211_tx_status(struct ieee80211_hw =
+*hw,
+ =09=09=09tid =3D qc[0] & 0xf;
+ =09=09}
 =20
- extern const struct ethtool_ops ieee80211_ethtool_ops;
++=09=09if (info->tx_time_est) {
++=09=09=09/* Do this here to avoid the expensive lookup of the sta
++=09=09=09 * in ieee80211_report_used_skb().
++=09=09=09 */
++=09=09=09ieee80211_sta_update_pending_airtime(local, sta,
++=09=09=09=09=09=09=09     ieee80211_ac_from_tid(tid),
++=09=09=09=09=09=09=09     info->tx_time_est << 2,
++=09=09=09=09=09=09=09     true);
++=09=09=09info->tx_time_est =3D 0;
++=09=09}
++
+ =09=09if (!acked && ieee80211_is_back_req(fc)) {
+ =09=09=09u16 control;
 =20
-+u32 ieee80211_calc_expected_tx_airtime(struct ieee80211_hw *hw,
-+=09=09=09=09       struct ieee80211_vif *vif,
-+=09=09=09=09       struct ieee80211_sta *pubsta,
-+=09=09=09=09       int len);
- #ifdef CONFIG_MAC80211_NOINLINE
- #define debug_noinline noinline
- #else
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 12653d873b8c..b8ff56d1d661 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -3542,6 +3542,9 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211=
+_hw *hw,
+=20
+ =09WARN_ON_ONCE(softirq_count() =3D=3D 0);
+=20
++=09if (!ieee80211_txq_airtime_check(hw, txq))
++=09=09return NULL;
++
+ begin:
+ =09spin_lock_bh(&fq->lock);
+=20
+@@ -3652,6 +3655,24 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee8021=
+1_hw *hw,
+ =09}
+=20
+ =09IEEE80211_SKB_CB(skb)->control.vif =3D vif;
++
++=09if (local->airtime_flags & AIRTIME_USE_AQL) {
++=09=09u32 airtime;
++
++=09=09airtime =3D ieee80211_calc_expected_tx_airtime(hw, vif, txq->sta,
++=09=09=09=09=09=09=09     skb->len);
++=09=09if (airtime) {
++=09=09=09/* We only have 10 bits in tx_time_est, so store airtime
++=09=09=09 * in increments of 4 us and clamp the maximum to 2**12-1
++=09=09=09 */
++=09=09=09airtime =3D min_t(u32, airtime, 4095) & ~3U;
++=09=09=09info->tx_time_est =3D airtime >> 2;
++=09=09=09ieee80211_sta_update_pending_airtime(local, tx.sta,
++=09=09=09=09=09=09=09     txq->ac, airtime,
++=09=09=09=09=09=09=09     false);
++=09=09}
++=09}
++
+ =09return skb;
+=20
+ out:
 
