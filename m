@@ -6,65 +6,111 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5F76CA9EAD
-	for <linux-wireless@archiver.kernel.org>; Sat, 19 Oct 2019 09:39:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12B84CA9EAC
+	for <linux-wireless@archiver.kernel.org>; Sat, 19 Oct 2019 09:39:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C60362082F
+	by mail.kernel.org (Postfix) with ESMTP id E7A2B222C2
 	for <linux-wireless@archiver.kernel.org>; Sat, 19 Oct 2019 09:39:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726415AbfJSJjP (ORCPT
+        id S1726514AbfJSJjR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 19 Oct 2019 05:39:15 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:50424 "EHLO
+        Sat, 19 Oct 2019 05:39:17 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:50440 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726275AbfJSJjO (ORCPT
+        with ESMTP id S1726275AbfJSJjQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 19 Oct 2019 05:39:14 -0400
+        Sat, 19 Oct 2019 05:39:16 -0400
 Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1iLlCb-0002fy-0c; Sat, 19 Oct 2019 12:39:13 +0300
+        id 1iLlCc-0002fy-J3; Sat, 19 Oct 2019 12:39:15 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Sat, 19 Oct 2019 12:38:56 +0300
-Message-Id: <20191019093902.29823-5-luca@coelho.fi>
+Date:   Sat, 19 Oct 2019 12:38:58 +0300
+Message-Id: <20191019093902.29823-6-luca@coelho.fi>
 X-Mailer: git-send-email 2.23.0
 In-Reply-To: <20191019093902.29823-1-luca@coelho.fi>
 References: <20191019093902.29823-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 06/12] iwlwifi: dbg_ini: support dump collection upon assert during D3
+Subject: [PATCH 08/12] iwlwifi: scan: Create function to build scan cmd
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
+From: Tova Mussai <tova.mussai@intel.com>
 
-add assert time point in the D3 resume flow in case there was an assert
-during D3.
+Currently, the code to build scan cmd is duplicated in
+iwl_mvm_reg_scan_start and iwl_mvm_sched_scan_start.
 
-Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
+Create a function to build this command, and call the function instead.
+
+Signed-off-by: Tova Mussai <tova.mussai@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/mvm/scan.c | 32 ++++++++++---------
+ 1 file changed, 17 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-index 1a9d83d6230f..43ebb2149b63 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-@@ -1939,6 +1939,8 @@ static int __iwl_mvm_resume(struct iwl_mvm *mvm, bool test)
- 	if (iwl_mvm_check_rt_status(mvm, vif)) {
- 		set_bit(STATUS_FW_ERROR, &mvm->trans->status);
- 		iwl_mvm_dump_nic_error_log(mvm);
-+		iwl_dbg_tlv_time_point(&mvm->fwrt,
-+				       IWL_FW_INI_TIME_POINT_FW_ASSERT, NULL);
- 		iwl_fw_dbg_collect_desc(&mvm->fwrt, &iwl_dump_desc_assert,
- 					false, 0);
- 		ret = 1;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
+index 538cd7b2018b..7ea395681c94 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
+@@ -1712,6 +1712,20 @@ static void iwl_mvm_fill_scan_type(struct iwl_mvm *mvm,
+ 	}
+ }
+ 
++static int iwl_mvm_build_scan_cmd(struct iwl_mvm *mvm,
++				  struct ieee80211_vif *vif,
++				  struct iwl_host_cmd *hcmd,
++				  struct iwl_mvm_scan_params *params,
++				  int type)
++{
++	if (fw_has_capa(&mvm->fw->ucode_capa, IWL_UCODE_TLV_CAPA_UMAC_SCAN)) {
++		hcmd->id = iwl_cmd_id(SCAN_REQ_UMAC, IWL_ALWAYS_LONG_GROUP, 0);
++		return  iwl_mvm_scan_umac(mvm, vif, params, type);
++	}
++	hcmd->id = SCAN_OFFLOAD_REQUEST_CMD;
++	return  iwl_mvm_scan_lmac(mvm, vif, params);
++}
++
+ int iwl_mvm_reg_scan_start(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 			   struct cfg80211_scan_request *req,
+ 			   struct ieee80211_scan_ies *ies)
+@@ -1769,14 +1783,8 @@ int iwl_mvm_reg_scan_start(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 
+ 	iwl_mvm_build_scan_probe(mvm, vif, ies, &params);
+ 
+-	if (fw_has_capa(&mvm->fw->ucode_capa, IWL_UCODE_TLV_CAPA_UMAC_SCAN)) {
+-		hcmd.id = iwl_cmd_id(SCAN_REQ_UMAC, IWL_ALWAYS_LONG_GROUP, 0);
+-		ret = iwl_mvm_scan_umac(mvm, vif, &params,
+-					IWL_MVM_SCAN_REGULAR);
+-	} else {
+-		hcmd.id = SCAN_OFFLOAD_REQUEST_CMD;
+-		ret = iwl_mvm_scan_lmac(mvm, vif, &params);
+-	}
++	ret = iwl_mvm_build_scan_cmd(mvm, vif, &hcmd, &params,
++				     IWL_MVM_SCAN_REGULAR);
+ 
+ 	if (ret)
+ 		return ret;
+@@ -1874,13 +1882,7 @@ int iwl_mvm_sched_scan_start(struct iwl_mvm *mvm,
+ 
+ 	iwl_mvm_build_scan_probe(mvm, vif, ies, &params);
+ 
+-	if (fw_has_capa(&mvm->fw->ucode_capa, IWL_UCODE_TLV_CAPA_UMAC_SCAN)) {
+-		hcmd.id = iwl_cmd_id(SCAN_REQ_UMAC, IWL_ALWAYS_LONG_GROUP, 0);
+-		ret = iwl_mvm_scan_umac(mvm, vif, &params, type);
+-	} else {
+-		hcmd.id = SCAN_OFFLOAD_REQUEST_CMD;
+-		ret = iwl_mvm_scan_lmac(mvm, vif, &params);
+-	}
++	ret = iwl_mvm_build_scan_cmd(mvm, vif, &hcmd, &params, type);
+ 
+ 	if (ret)
+ 		return ret;
 -- 
 2.23.0
 
