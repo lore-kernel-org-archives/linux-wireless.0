@@ -2,59 +2,59 @@ Return-Path: <SRS0=wsxy=YN=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78632CA9EA9
-	for <linux-wireless@archiver.kernel.org>; Sun, 20 Oct 2019 10:06:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EE96CA9EAD
+	for <linux-wireless@archiver.kernel.org>; Sun, 20 Oct 2019 10:06:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 44F84222BD
-	for <linux-wireless@archiver.kernel.org>; Sun, 20 Oct 2019 10:06:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 65243222BD
+	for <linux-wireless@archiver.kernel.org>; Sun, 20 Oct 2019 10:06:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="SN4xG3rN";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="aCnQ4heK"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="jdSnaovO";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="FPlLaQnv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726562AbfJTKGQ (ORCPT
+        id S1726565AbfJTKGR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 20 Oct 2019 06:06:16 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:51896 "EHLO
+        Sun, 20 Oct 2019 06:06:17 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:51930 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726282AbfJTKGQ (ORCPT
+        with ESMTP id S1726563AbfJTKGR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 20 Oct 2019 06:06:16 -0400
+        Sun, 20 Oct 2019 06:06:17 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 81AF9614BB; Sun, 20 Oct 2019 10:06:10 +0000 (UTC)
+        id 3AEF961494; Sun, 20 Oct 2019 10:06:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1571565975;
-        bh=VeiYsOiJ34C6mK+O1IMpFSujsRltb99Y7wY7+/sOdn8=;
+        s=default; t=1571565976;
+        bh=7yr0h2lx+YiXkiqw/19KA0wgyqVjlnuYE49SnKa4coI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=SN4xG3rNN/mRNNxob3z/OG3Fpu8csdw2nBry8mtDGWbtbk3sQ6eJvQoCTijbzjWrj
-         Ybv7yCUZcStRwdKfZZ5tRZ+gjZDnYH7m8Vz2O7g2ILB+YEzNhurOytvlJtGkg5A0gF
-         FZgAUirpKTa83HXydD2gGoaPV2EnDLNvTqOsTdWc=
+        b=jdSnaovOHcR+j5eSTSartTNi/ykFyDvhe4rbkEVOFNrQgXVV1gGbufzA3VC7cLyYc
+         GRH9UfFuSedRSWaDR42VWGdnOE2swLWHrcsqGvv8t06GAJe7WqQIc2hhGYvXCLfa23
+         lM6NHiUD6VEwhAKRtokpC33p0CIaHNVNFbolTt0U=
 Received: from x230.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 52D74616E5;
-        Sun, 20 Oct 2019 10:06:08 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 2C921612D1;
+        Sun, 20 Oct 2019 10:06:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1571565969;
-        bh=VeiYsOiJ34C6mK+O1IMpFSujsRltb99Y7wY7+/sOdn8=;
+        s=default; t=1571565966;
+        bh=7yr0h2lx+YiXkiqw/19KA0wgyqVjlnuYE49SnKa4coI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=aCnQ4heKRUL7VjVmkpyAMdqArLL/QQm987KejCo0S3BcUCvOdbbtu1+mQn+RZt0lJ
-         urgPvBrmPal+MxoYRpo9y32ISFeQ8ShdF44IC4IIq2Cp/lMDPEjjfYu+rZ3K5UlTnj
-         DYpMIhS6xW3cIs1WRvDoMmpa0ZakV2kdQuxrBMG4=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 52D74616E5
+        b=FPlLaQnvWicPWnIdaClMVVISAldMfrsoFrUou4xjGkGEoMOOjXN7c6XVEZzUJ4GgW
+         GtmrbFsxoXrJGpoFZLC8IQ7Mk47iN52GqKoke1b0Dkz3EZaI7/rgjbv2iW1cqqKR+V
+         HP30mPFIlMfvHP3eX17u8CkMx+DuOgjFZFqqUNMI=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 2C921612D1
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
 To:     linux-wireless@vger.kernel.org
 Cc:     ath11k@lists.infradead.org, devicetree@vger.kernel.org
-Subject: [PATCH v2 49/49] MAINTAINERS: add ath11k
-Date:   Sun, 20 Oct 2019 13:04:07 +0300
-Message-Id: <1571565847-10338-50-git-send-email-kvalo@codeaurora.org>
+Subject: [PATCH v2 47/49] ath: add ath11k to Makefile
+Date:   Sun, 20 Oct 2019 13:04:05 +0300
+Message-Id: <1571565847-10338-48-git-send-email-kvalo@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1571565847-10338-1-git-send-email-kvalo@codeaurora.org>
 References: <1571565847-10338-1-git-send-email-kvalo@codeaurora.org>
@@ -63,30 +63,23 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add an entry for ath11k to the MAINTAINERS file.
+(patches split for easier review, see the cover letter for more)
 
-Signed-off-by: John Crispin <john@phrozen.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 ---
- MAINTAINERS | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/net/wireless/ath/Makefile | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 677ef41cb012..ae00b2c443b6 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -13028,6 +13028,13 @@ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git
- S:	Supported
- F:	drivers/net/wireless/ath/ath10k/
+diff --git a/drivers/net/wireless/ath/Makefile b/drivers/net/wireless/ath/Makefile
+index e4e460b5498e..72f8e3a24c67 100644
+--- a/drivers/net/wireless/ath/Makefile
++++ b/drivers/net/wireless/ath/Makefile
+@@ -7,6 +7,7 @@ obj-$(CONFIG_AR5523)		+= ar5523/
+ obj-$(CONFIG_WIL6210)		+= wil6210/
+ obj-$(CONFIG_ATH10K)		+= ath10k/
+ obj-$(CONFIG_WCN36XX)		+= wcn36xx/
++obj-$(CONFIG_ATH11K)		+= ath11k/
  
-+QUALCOMM ATHEROS ATH11K WIRELESS DRIVER
-+M:	Kalle Valo <kvalo@codeaurora.org>
-+L:	ath11k@lists.infradead.org
-+T:	git git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git
-+S:	Supported
-+F:	drivers/net/wireless/ath/ath11k/
-+
- QUALCOMM ATHEROS ATH9K WIRELESS DRIVER
- M:	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
- L:	linux-wireless@vger.kernel.org
+ obj-$(CONFIG_ATH_COMMON)	+= ath.o
+ 
 
