@@ -6,78 +6,102 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A200CA9EA0
-	for <linux-wireless@archiver.kernel.org>; Sun, 20 Oct 2019 08:56:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59CDACA9EB1
+	for <linux-wireless@archiver.kernel.org>; Sun, 20 Oct 2019 08:56:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 68A0720679
-	for <linux-wireless@archiver.kernel.org>; Sun, 20 Oct 2019 08:56:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3A3E320679
+	for <linux-wireless@archiver.kernel.org>; Sun, 20 Oct 2019 08:56:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726327AbfJTI4K (ORCPT
+        id S1726303AbfJTI4C (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 20 Oct 2019 04:56:10 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:50838 "EHLO
+        Sun, 20 Oct 2019 04:56:02 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:50796 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726115AbfJTI4K (ORCPT
+        with ESMTP id S1726285AbfJTI4A (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 20 Oct 2019 04:56:10 -0400
+        Sun, 20 Oct 2019 04:56:00 -0400
 Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1iM70M-0003LY-SR; Sun, 20 Oct 2019 11:56:03 +0300
+        id 1iM70I-0003LY-U8; Sun, 20 Oct 2019 11:55:59 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Sun, 20 Oct 2019 11:55:45 +0300
-Message-Id: <20191020085545.16407-11-luca@coelho.fi>
+Date:   Sun, 20 Oct 2019 11:55:40 +0300
+Message-Id: <20191020085545.16407-6-luca@coelho.fi>
 X-Mailer: git-send-email 2.23.0
 In-Reply-To: <20191020085545.16407-1-luca@coelho.fi>
 References: <20191020085545.16407-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 12/12] iwlwifi: mvm: fix non-ACPI function
+Subject: [PATCH 07/12] iwlwifi: mvm: don't skip mgmt tid when flushing all tids
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Haim Dreyfuss <haim.dreyfuss@intel.com>
 
-The code now compiles without ACPI, but there's a warning since
-iwl_mvm_get_ppag_table() isn't used, and iwl_mvm_ppag_init() must
-not unconditionally fail but return success instead.
+There are various of flows which require tids flushing
+(disconnection, suspend, etc...).
+Currently, when the driver instructs the FW to flush
+he masks all the data tids(0-7).
+However, the driver doesn't set the management tid (#15)
+which cause the FW not to flush it.
+When the FW tries to remove the mgmt queue he throws an assert
+since it is not an empty queue.
+instead of just set only the data tids set everything and let
+the FW ignore the invalid tids.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 7 +------
- 1 file changed, 1 insertion(+), 6 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c  | 3 ++-
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c       | 2 +-
+ 3 files changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index e842133779f4..18b62727b6d7 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -889,11 +889,6 @@ static int iwl_mvm_sar_geo_init(struct iwl_mvm *mvm)
- 	return 0;
- }
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+index 754adc0146be..9970f61b9f9f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+@@ -148,7 +148,8 @@ static ssize_t iwl_dbgfs_tx_flush_write(struct iwl_mvm *mvm, char *buf,
+ 				    "FLUSHING all tids queues on sta_id = %d\n",
+ 				    flush_arg);
+ 		mutex_lock(&mvm->mutex);
+-		ret = iwl_mvm_flush_sta_tids(mvm, flush_arg, 0xFF, 0) ? : count;
++		ret = iwl_mvm_flush_sta_tids(mvm, flush_arg, 0xFFFF, 0)
++			? : count;
+ 		mutex_unlock(&mvm->mutex);
+ 		return ret;
+ 	}
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index e879c02ca4db..e0ffc3cdd677 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -4644,7 +4644,7 @@ static void iwl_mvm_flush_no_vif(struct iwl_mvm *mvm, u32 queues, bool drop)
+ 			continue;
  
--static int iwl_mvm_get_ppag_table(struct iwl_mvm *mvm)
--{
--	return -ENOENT;
--}
--
- int iwl_mvm_ppag_send_cmd(struct iwl_mvm *mvm)
- {
- 	return -ENOENT;
-@@ -901,7 +896,7 @@ int iwl_mvm_ppag_send_cmd(struct iwl_mvm *mvm)
+ 		if (drop)
+-			iwl_mvm_flush_sta_tids(mvm, i, 0xFF, 0);
++			iwl_mvm_flush_sta_tids(mvm, i, 0xFFFF, 0);
+ 		else
+ 			iwl_mvm_wait_sta_queues_empty(mvm,
+ 					iwl_mvm_sta_from_mac80211(sta));
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index f4778a6a40b9..81a88a89ea74 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -2059,7 +2059,7 @@ int iwl_mvm_flush_sta(struct iwl_mvm *mvm, void *sta, bool internal, u32 flags)
  
- static int iwl_mvm_ppag_init(struct iwl_mvm *mvm)
- {
--	return -ENOENT;
-+	return 0;
- }
- #endif /* CONFIG_ACPI */
+ 	if (iwl_mvm_has_new_tx_api(mvm))
+ 		return iwl_mvm_flush_sta_tids(mvm, mvm_sta->sta_id,
+-					      0xff | BIT(IWL_MGMT_TID), flags);
++					      0xffff, flags);
  
+ 	if (internal)
+ 		return iwl_mvm_flush_tx_path(mvm, int_sta->tfd_queue_msk,
 -- 
 2.23.0
 
