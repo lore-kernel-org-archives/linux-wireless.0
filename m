@@ -7,54 +7,54 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D36F5CA9EA0
-	for <linux-wireless@archiver.kernel.org>; Sun, 20 Oct 2019 10:05:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E9F6CA9EAE
+	for <linux-wireless@archiver.kernel.org>; Sun, 20 Oct 2019 10:05:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9F4802190F
-	for <linux-wireless@archiver.kernel.org>; Sun, 20 Oct 2019 10:05:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 636DD2190F
+	for <linux-wireless@archiver.kernel.org>; Sun, 20 Oct 2019 10:05:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="MWJ6Iiz3";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="NPGr9j7w"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="GgxJ1Hl5";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="agRZ6fPL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726496AbfJTKFg (ORCPT
+        id S1726505AbfJTKFh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 20 Oct 2019 06:05:36 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:48238 "EHLO
+        Sun, 20 Oct 2019 06:05:37 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:48332 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726319AbfJTKFf (ORCPT
+        with ESMTP id S1726486AbfJTKFg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 20 Oct 2019 06:05:35 -0400
+        Sun, 20 Oct 2019 06:05:36 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 95A3861330; Sun, 20 Oct 2019 10:05:21 +0000 (UTC)
+        id 3A5BA614E7; Sun, 20 Oct 2019 10:05:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1571565933;
-        bh=snncLReTw1yMIh3xsZC0GMJaIxzyIQxfYI9od1UMK1A=;
+        s=default; t=1571565935;
+        bh=YbVSfJ+TWhVSy/qQtkDS8TaEaQUR87uBuI/Evf7rhgk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=MWJ6Iiz3HAM8oigwfcy8BcYaGGOheQEjjmIB2njo9gsmdlQlgV8h6nnJ2lXWVRBzJ
-         P/vqqpM36MioEK0OZ4TvL4kcfNF2cdJnLHz/VhvPAeSbL07vXM+MQaW0BRoSEDtQ0w
-         D2A1kZxlOXGJA9NUtAWSj9FVIw8KOK4y4dRwzvPg=
+        b=GgxJ1Hl5cK6S2LzNA/vxEyav+yKumihMtHXLNKjU4BVycjqKRFKw8Kw/HKt8G1z2/
+         p/jwF+hhlx6u/92AjXzMm+RksgrO077ER0htjcPo76XoFc84ve/5wH/k+mKStnR+2C
+         ogv6dJHRywIfJSu1FO9ktm/hIucGnQ3Mtong7dEA=
 Received: from x230.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 7FFB4613B8;
-        Sun, 20 Oct 2019 10:05:17 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id DAFAD6149C;
+        Sun, 20 Oct 2019 10:05:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1571565918;
-        bh=snncLReTw1yMIh3xsZC0GMJaIxzyIQxfYI9od1UMK1A=;
+        s=default; t=1571565930;
+        bh=YbVSfJ+TWhVSy/qQtkDS8TaEaQUR87uBuI/Evf7rhgk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=NPGr9j7wb0XizKLnR5kdP48iVsCnpRsF79HVK2Pu47S0UZU8Fx/BlRM69Empc4YCi
-         ZMOakBo/3IrqvZQx8ze1NOhFLX0x17Vus4K1wWvWkFaAOXTxDO38dGweh3EYpoRguf
-         gVqPsbZFyn5VVSXA5+ayO276Eyxz5O3mbGPIgqGk=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 7FFB4613B8
+        b=agRZ6fPLYvdM+pDNc/8kBxcyiKdX9yOzAd9iwrdWJPDp3dg2Hpio44VOkOrRG29pF
+         XTgDztRglsaCHIMyUo6qOU5tKEu0eIBYQ5DW95cag8rMQzlffrJHv0jkD9YiwVVGTC
+         7CAJIAAdPiHGMDG8+UUw0gxcqRUAiQCToE8lNcEY=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org DAFAD6149C
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
 To:     linux-wireless@vger.kernel.org
 Cc:     ath11k@lists.infradead.org, devicetree@vger.kernel.org
-Subject: [PATCH v2 29/49] ath11k: add htc.h
-Date:   Sun, 20 Oct 2019 13:03:47 +0300
-Message-Id: <1571565847-10338-30-git-send-email-kvalo@codeaurora.org>
+Subject: [PATCH v2 33/49] ath11k: add peer.c
+Date:   Sun, 20 Oct 2019 13:03:51 +0300
+Message-Id: <1571565847-10338-34-git-send-email-kvalo@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1571565847-10338-1-git-send-email-kvalo@codeaurora.org>
 References: <1571565847-10338-1-git-send-email-kvalo@codeaurora.org>
@@ -67,326 +67,249 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath11k/htc.h | 313 ++++++++++++++++++++++++++++++++++
- 1 file changed, 313 insertions(+)
+ drivers/net/wireless/ath/ath11k/peer.c | 236 +++++++++++++++++++++++++++++++++
+ 1 file changed, 236 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath11k/htc.h b/drivers/net/wireless/ath/ath11k/htc.h
+diff --git a/drivers/net/wireless/ath/ath11k/peer.c b/drivers/net/wireless/ath/ath11k/peer.c
 new file mode 100644
-index 000000000000..f0a3387567ca
+index 000000000000..4bf1dfa498b6
 --- /dev/null
-+++ b/drivers/net/wireless/ath/ath11k/htc.h
-@@ -0,0 +1,313 @@
-+/* SPDX-License-Identifier: BSD-3-Clause-Clear */
++++ b/drivers/net/wireless/ath/ath11k/peer.c
+@@ -0,0 +1,236 @@
++// SPDX-License-Identifier: BSD-3-Clause-Clear
 +/*
 + * Copyright (c) 2018-2019 The Linux Foundation. All rights reserved.
 + */
 +
-+#ifndef ATH11K_HTC_H
-+#define ATH11K_HTC_H
++#include "core.h"
++#include "peer.h"
++#include "debug.h"
 +
-+#include <linux/kernel.h>
-+#include <linux/list.h>
-+#include <linux/bug.h>
-+#include <linux/skbuff.h>
-+#include <linux/timer.h>
++struct ath11k_peer *ath11k_peer_find(struct ath11k_base *ab, int vdev_id,
++				     const u8 *addr)
++{
++	struct ath11k_peer *peer;
 +
-+struct ath11k_base;
++	lockdep_assert_held(&ab->base_lock);
 +
-+#define HTC_HDR_ENDPOINTID                       GENMASK(7, 0)
-+#define HTC_HDR_FLAGS                            GENMASK(15, 8)
-+#define HTC_HDR_PAYLOADLEN                       GENMASK(31, 16)
-+#define HTC_HDR_CONTROLBYTES0                    GENMASK(7, 0)
-+#define HTC_HDR_CONTROLBYTES1                    GENMASK(15, 8)
-+#define HTC_HDR_RESERVED                         GENMASK(31, 16)
++	list_for_each_entry(peer, &ab->peers, list) {
++		if (peer->vdev_id != vdev_id)
++			continue;
++		if (memcmp(peer->addr, addr, ETH_ALEN))
++			continue;
 +
-+#define HTC_SVC_MSG_SERVICE_ID                   GENMASK(31, 16)
-+#define HTC_SVC_MSG_CONNECTIONFLAGS              GENMASK(15, 0)
-+#define HTC_SVC_MSG_SERVICEMETALENGTH            GENMASK(23, 16)
-+#define HTC_READY_MSG_CREDITCOUNT                GENMASK(31, 16)
-+#define HTC_READY_MSG_CREDITSIZE                 GENMASK(15, 0)
-+#define HTC_READY_MSG_MAXENDPOINTS               GENMASK(23, 16)
++		return peer;
++	}
 +
-+#define HTC_READY_EX_MSG_HTCVERSION              GENMASK(7, 0)
-+#define HTC_READY_EX_MSG_MAXMSGSPERHTCBUNDLE     GENMASK(15, 8)
++	return NULL;
++}
 +
-+#define HTC_SVC_RESP_MSG_SERVICEID           GENMASK(31, 16)
-+#define HTC_SVC_RESP_MSG_STATUS              GENMASK(7, 0)
-+#define HTC_SVC_RESP_MSG_ENDPOINTID          GENMASK(15, 8)
-+#define HTC_SVC_RESP_MSG_MAXMSGSIZE          GENMASK(31, 16)
-+#define HTC_SVC_RESP_MSG_SERVICEMETALENGTH   GENMASK(7, 0)
++struct ath11k_peer *ath11k_peer_find_by_addr(struct ath11k_base *ab,
++					     const u8 *addr)
++{
++	struct ath11k_peer *peer;
 +
-+#define HTC_MSG_MESSAGEID                        GENMASK(15, 0)
-+#define HTC_SETUP_COMPLETE_EX_MSG_SETUPFLAGS     GENMASK(31, 0)
-+#define HTC_SETUP_COMPLETE_EX_MSG_MAXMSGSPERBUNDLEDRECV      GENMASK(7, 0)
-+#define HTC_SETUP_COMPLETE_EX_MSG_RSVD0          GENMASK(15, 8)
-+#define HTC_SETUP_COMPLETE_EX_MSG_RSVD1          GENMASK(23, 16)
-+#define HTC_SETUP_COMPLETE_EX_MSG_RSVD2          GENMASK(31, 24)
++	lockdep_assert_held(&ab->base_lock);
 +
-+enum ath11k_htc_tx_flags {
-+	ATH11K_HTC_FLAG_NEED_CREDIT_UPDATE = 0x01,
-+	ATH11K_HTC_FLAG_SEND_BUNDLE        = 0x02
-+};
++	list_for_each_entry(peer, &ab->peers, list) {
++		if (memcmp(peer->addr, addr, ETH_ALEN))
++			continue;
 +
-+enum ath11k_htc_rx_flags {
-+	ATH11K_HTC_FLAG_TRAILER_PRESENT = 0x02,
-+	ATH11K_HTC_FLAG_BUNDLE_MASK     = 0xF0
-+};
++		return peer;
++	}
 +
-+struct ath11k_htc_hdr {
-+	u32 htc_info;
-+	u32 ctrl_info;
-+} __packed __aligned(4);
++	return NULL;
++}
 +
-+enum ath11k_htc_msg_id {
-+	ATH11K_HTC_MSG_READY_ID                = 1,
-+	ATH11K_HTC_MSG_CONNECT_SERVICE_ID      = 2,
-+	ATH11K_HTC_MSG_CONNECT_SERVICE_RESP_ID = 3,
-+	ATH11K_HTC_MSG_SETUP_COMPLETE_ID       = 4,
-+	ATH11K_HTC_MSG_SETUP_COMPLETE_EX_ID    = 5,
-+	ATH11K_HTC_MSG_SEND_SUSPEND_COMPLETE   = 6
-+};
++struct ath11k_peer *ath11k_peer_find_by_id(struct ath11k_base *ab,
++					   int peer_id)
++{
++	struct ath11k_peer *peer;
 +
-+enum ath11k_htc_version {
-+	ATH11K_HTC_VERSION_2P0 = 0x00, /* 2.0 */
-+	ATH11K_HTC_VERSION_2P1 = 0x01, /* 2.1 */
-+};
++	lockdep_assert_held(&ab->base_lock);
 +
-+#define ATH11K_HTC_CONN_FLAGS_THRESHOLD_LEVEL_MASK GENMASK(1, 0)
-+#define ATH11K_HTC_CONN_FLAGS_RECV_ALLOC GENMASK(15, 8)
++	list_for_each_entry(peer, &ab->peers, list)
++		if (peer_id == peer->peer_id)
++			return peer;
 +
-+enum ath11k_htc_conn_flags {
-+	ATH11K_HTC_CONN_FLAGS_THRESHOLD_LEVEL_ONE_FOURTH    = 0x0,
-+	ATH11K_HTC_CONN_FLAGS_THRESHOLD_LEVEL_ONE_HALF      = 0x1,
-+	ATH11K_HTC_CONN_FLAGS_THRESHOLD_LEVEL_THREE_FOURTHS = 0x2,
-+	ATH11K_HTC_CONN_FLAGS_THRESHOLD_LEVEL_UNITY         = 0x3,
-+	ATH11K_HTC_CONN_FLAGS_REDUCE_CREDIT_DRIBBLE    = 1 << 2,
-+	ATH11K_HTC_CONN_FLAGS_DISABLE_CREDIT_FLOW_CTRL = 1 << 3
-+};
++	return NULL;
++}
 +
-+enum ath11k_htc_conn_svc_status {
-+	ATH11K_HTC_CONN_SVC_STATUS_SUCCESS      = 0,
-+	ATH11K_HTC_CONN_SVC_STATUS_NOT_FOUND    = 1,
-+	ATH11K_HTC_CONN_SVC_STATUS_FAILED       = 2,
-+	ATH11K_HTC_CONN_SVC_STATUS_NO_RESOURCES = 3,
-+	ATH11K_HTC_CONN_SVC_STATUS_NO_MORE_EP   = 4
-+};
++void ath11k_peer_unmap_event(struct ath11k_base *ab, u16 peer_id)
++{
++	struct ath11k_peer *peer;
 +
-+struct ath11k_htc_ready {
-+	u32 id_credit_count;
-+	u32 size_ep;
-+} __packed;
++	spin_lock_bh(&ab->base_lock);
 +
-+struct ath11k_htc_ready_extended {
-+	struct ath11k_htc_ready base;
-+	u32 ver_bundle;
-+} __packed;
++	peer = ath11k_peer_find_by_id(ab, peer_id);
++	if (!peer) {
++		ath11k_warn(ab, "peer-unmap-event: unknown peer id %d\n",
++			    peer_id);
++		goto exit;
++	}
 +
-+struct ath11k_htc_conn_svc {
-+	u32 msg_svc_id;
-+	u32 flags_len;
-+} __packed;
++	ath11k_dbg(ab, ATH11K_DBG_DP_HTT, "htt peer unmap vdev %d peer %pM id %d\n",
++		   peer->vdev_id, peer->addr, peer_id);
 +
-+struct ath11k_htc_conn_svc_resp {
-+	u32 msg_svc_id;
-+	u32 flags_len;
-+	u32 svc_meta_pad;
-+} __packed;
++	list_del(&peer->list);
++	kfree(peer);
++	wake_up(&ab->peer_mapping_wq);
 +
-+struct ath11k_htc_setup_complete_extended {
-+	u32 msg_id;
-+	u32 flags;
-+	u32 max_msgs_per_bundled_recv;
-+} __packed;
++exit:
++	spin_unlock_bh(&ab->base_lock);
++}
 +
-+struct ath11k_htc_msg {
-+	u32 msg_svc_id;
-+	u32 flags_len;
-+} __packed __aligned(4);
++void ath11k_peer_map_event(struct ath11k_base *ab, u8 vdev_id, u16 peer_id,
++			   u8 *mac_addr, u16 ast_hash)
++{
++	struct ath11k_peer *peer;
 +
-+enum ath11k_htc_record_id {
-+	ATH11K_HTC_RECORD_NULL    = 0,
-+	ATH11K_HTC_RECORD_CREDITS = 1
-+};
++	spin_lock_bh(&ab->base_lock);
++	peer = ath11k_peer_find(ab, vdev_id, mac_addr);
++	if (!peer) {
++		peer = kzalloc(sizeof(*peer), GFP_ATOMIC);
++		if (!peer)
++			goto exit;
 +
-+struct ath11k_htc_record_hdr {
-+	u8 id; /* @enum ath11k_htc_record_id */
-+	u8 len;
-+	u8 pad0;
-+	u8 pad1;
-+} __packed;
++		peer->vdev_id = vdev_id;
++		peer->peer_id = peer_id;
++		peer->ast_hash = ast_hash;
++		ether_addr_copy(peer->addr, mac_addr);
++		list_add(&peer->list, &ab->peers);
++		wake_up(&ab->peer_mapping_wq);
++	}
 +
-+struct ath11k_htc_credit_report {
-+	u8 eid; /* @enum ath11k_htc_ep_id */
-+	u8 credits;
-+	u8 pad0;
-+	u8 pad1;
-+} __packed;
++	ath11k_dbg(ab, ATH11K_DBG_DP_HTT, "htt peer map vdev %d peer %pM id %d\n",
++		   vdev_id, mac_addr, peer_id);
 +
-+struct ath11k_htc_record {
-+	struct ath11k_htc_record_hdr hdr;
-+	union {
-+		struct ath11k_htc_credit_report credit_report[0];
-+		u8 pauload[0];
-+	};
-+} __packed __aligned(4);
++exit:
++	spin_unlock_bh(&ab->base_lock);
++}
 +
-+/* note: the trailer offset is dynamic depending
-+ * on payload length. this is only a struct layout draft
-+ */
-+struct ath11k_htc_frame {
-+	struct ath11k_htc_hdr hdr;
-+	union {
-+		struct ath11k_htc_msg msg;
-+		u8 payload[0];
-+	};
-+	struct ath11k_htc_record trailer[0];
-+} __packed __aligned(4);
++static int ath11k_wait_for_peer_common(struct ath11k_base *ab, int vdev_id,
++				       const u8 *addr, bool expect_mapped)
++{
++	int ret;
 +
-+enum ath11k_htc_svc_gid {
-+	ATH11K_HTC_SVC_GRP_RSVD = 0,
-+	ATH11K_HTC_SVC_GRP_WMI = 1,
-+	ATH11K_HTC_SVC_GRP_NMI = 2,
-+	ATH11K_HTC_SVC_GRP_HTT = 3,
-+	ATH11K_HTC_SVC_GRP_CFG = 4,
-+	ATH11K_HTC_SVC_GRP_IPA = 5,
-+	ATH11K_HTC_SVC_GRP_PKTLOG = 6,
++	ret = wait_event_timeout(ab->peer_mapping_wq, ({
++				bool mapped;
 +
-+	ATH11K_HTC_SVC_GRP_TEST = 254,
-+	ATH11K_HTC_SVC_GRP_LAST = 255,
-+};
++				spin_lock_bh(&ab->base_lock);
++				mapped = !!ath11k_peer_find(ab, vdev_id, addr);
++				spin_unlock_bh(&ab->base_lock);
 +
-+#define SVC(group, idx) \
-+	(int)(((int)(group) << 8) | (int)(idx))
++				(mapped == expect_mapped ||
++				 test_bit(ATH11K_FLAG_CRASH_FLUSH, &ab->dev_flags));
++				}), 3 * HZ);
 +
-+enum ath11k_htc_svc_id {
-+	/* NOTE: service ID of 0x0000 is reserved and should never be used */
-+	ATH11K_HTC_SVC_ID_RESERVED	= 0x0000,
-+	ATH11K_HTC_SVC_ID_UNUSED	= ATH11K_HTC_SVC_ID_RESERVED,
++	if (ret <= 0)
++		return -ETIMEDOUT;
 +
-+	ATH11K_HTC_SVC_ID_RSVD_CTRL	= SVC(ATH11K_HTC_SVC_GRP_RSVD, 1),
-+	ATH11K_HTC_SVC_ID_WMI_CONTROL	= SVC(ATH11K_HTC_SVC_GRP_WMI, 0),
-+	ATH11K_HTC_SVC_ID_WMI_DATA_BE	= SVC(ATH11K_HTC_SVC_GRP_WMI, 1),
-+	ATH11K_HTC_SVC_ID_WMI_DATA_BK	= SVC(ATH11K_HTC_SVC_GRP_WMI, 2),
-+	ATH11K_HTC_SVC_ID_WMI_DATA_VI	= SVC(ATH11K_HTC_SVC_GRP_WMI, 3),
-+	ATH11K_HTC_SVC_ID_WMI_DATA_VO	= SVC(ATH11K_HTC_SVC_GRP_WMI, 4),
-+	ATH11K_HTC_SVC_ID_WMI_CONTROL_MAC1 = SVC(ATH11K_HTC_SVC_GRP_WMI, 5),
-+	ATH11K_HTC_SVC_ID_WMI_CONTROL_MAC2 = SVC(ATH11K_HTC_SVC_GRP_WMI, 6),
++	return 0;
++}
 +
-+	ATH11K_HTC_SVC_ID_NMI_CONTROL	= SVC(ATH11K_HTC_SVC_GRP_NMI, 0),
-+	ATH11K_HTC_SVC_ID_NMI_DATA	= SVC(ATH11K_HTC_SVC_GRP_NMI, 1),
++void ath11k_peer_cleanup(struct ath11k *ar, u32 vdev_id)
++{
++	struct ath11k_peer *peer, *tmp;
++	struct ath11k_base *ab = ar->ab;
 +
-+	ATH11K_HTC_SVC_ID_HTT_DATA_MSG	= SVC(ATH11K_HTC_SVC_GRP_HTT, 0),
++	lockdep_assert_held(&ar->conf_mutex);
 +
-+	/* raw stream service (i.e. flash, tcmd, calibration apps) */
-+	ATH11K_HTC_SVC_ID_TEST_RAW_STREAMS = SVC(ATH11K_HTC_SVC_GRP_TEST, 0),
-+	ATH11K_HTC_SVC_ID_IPA_TX = SVC(ATH11K_HTC_SVC_GRP_IPA, 0),
-+	ATH11K_HTC_SVC_ID_PKT_LOG = SVC(ATH11K_HTC_SVC_GRP_PKTLOG, 0),
-+};
++	spin_lock_bh(&ab->base_lock);
++	list_for_each_entry_safe(peer, tmp, &ab->peers, list) {
++		if (peer->vdev_id != vdev_id)
++			continue;
 +
-+#undef SVC
++		ath11k_warn(ab, "removing stale peer %pM from vdev_id %d\n",
++			    peer->addr, vdev_id);
 +
-+enum ath11k_htc_ep_id {
-+	ATH11K_HTC_EP_UNUSED = -1,
-+	ATH11K_HTC_EP_0 = 0,
-+	ATH11K_HTC_EP_1 = 1,
-+	ATH11K_HTC_EP_2,
-+	ATH11K_HTC_EP_3,
-+	ATH11K_HTC_EP_4,
-+	ATH11K_HTC_EP_5,
-+	ATH11K_HTC_EP_6,
-+	ATH11K_HTC_EP_7,
-+	ATH11K_HTC_EP_8,
-+	ATH11K_HTC_EP_COUNT,
-+};
++		list_del(&peer->list);
++		kfree(peer);
++		ar->num_peers--;
++	}
 +
-+struct ath11k_htc_ops {
-+	void (*target_send_suspend_complete)(struct ath11k_base *ar);
-+};
++	spin_unlock_bh(&ab->base_lock);
++}
 +
-+struct ath11k_htc_ep_ops {
-+	void (*ep_tx_complete)(struct ath11k_base *, struct sk_buff *);
-+	void (*ep_rx_complete)(struct ath11k_base *, struct sk_buff *);
-+	void (*ep_tx_credits)(struct ath11k_base *);
-+};
++static int ath11k_wait_for_peer_deleted(struct ath11k *ar, int vdev_id, const u8 *addr)
++{
++	return ath11k_wait_for_peer_common(ar->ab, vdev_id, addr, false);
++}
 +
-+/* service connection information */
-+struct ath11k_htc_svc_conn_req {
-+	u16 service_id;
-+	struct ath11k_htc_ep_ops ep_ops;
-+	int max_send_queue_depth;
-+};
++int ath11k_peer_delete(struct ath11k *ar, u32 vdev_id, u8 *addr)
++{
++	int ret;
 +
-+/* service connection response information */
-+struct ath11k_htc_svc_conn_resp {
-+	u8 buffer_len;
-+	u8 actual_len;
-+	enum ath11k_htc_ep_id eid;
-+	unsigned int max_msg_len;
-+	u8 connect_resp_code;
-+};
++	lockdep_assert_held(&ar->conf_mutex);
 +
-+#define ATH11K_NUM_CONTROL_TX_BUFFERS 2
-+#define ATH11K_HTC_MAX_LEN 4096
-+#define ATH11K_HTC_MAX_CTRL_MSG_LEN 256
-+#define ATH11K_HTC_WAIT_TIMEOUT_HZ (1 * HZ)
-+#define ATH11K_HTC_CONTROL_BUFFER_SIZE (ATH11K_HTC_MAX_CTRL_MSG_LEN + \
-+					sizeof(struct ath11k_htc_hdr))
-+#define ATH11K_HTC_CONN_SVC_TIMEOUT_HZ (1 * HZ)
-+#define ATH11K_HTC_MAX_SERVICE_ALLOC_ENTRIES 8
++	ret = ath11k_wmi_send_peer_delete_cmd(ar, addr, vdev_id);
++	if (ret) {
++		ath11k_warn(ar->ab,
++			    "failed to delete peer vdev_id %d addr %pM ret %d\n",
++			    vdev_id, addr, ret);
++		return ret;
++	}
 +
-+struct ath11k_htc_ep {
-+	struct ath11k_htc *htc;
-+	enum ath11k_htc_ep_id eid;
-+	enum ath11k_htc_svc_id service_id;
-+	struct ath11k_htc_ep_ops ep_ops;
++	ret = ath11k_wait_for_peer_deleted(ar, vdev_id, addr);
++	if (ret)
++		return ret;
 +
-+	int max_tx_queue_depth;
-+	int max_ep_message_len;
-+	u8 ul_pipe_id;
-+	u8 dl_pipe_id;
++	ar->num_peers--;
 +
-+	u8 seq_no; /* for debugging */
-+	int tx_credits;
-+	bool tx_credit_flow_enabled;
-+};
++	return 0;
++}
 +
-+struct ath11k_htc_svc_tx_credits {
-+	u16 service_id;
-+	u8  credit_allocation;
-+};
++static int ath11k_wait_for_peer_created(struct ath11k *ar, int vdev_id, const u8 *addr)
++{
++	return ath11k_wait_for_peer_common(ar->ab, vdev_id, addr, true);
++}
 +
-+struct ath11k_htc {
-+	struct ath11k_base *ab;
-+	struct ath11k_htc_ep endpoint[ATH11K_HTC_EP_COUNT];
++int ath11k_peer_create(struct ath11k *ar, struct ath11k_vif *arvif,
++		       struct ieee80211_sta *sta, struct peer_create_params *param)
++{
++	struct ath11k_peer *peer;
++	int ret;
 +
-+	/* protects endpoints */
-+	spinlock_t tx_lock;
++	lockdep_assert_held(&ar->conf_mutex);
 +
-+	struct ath11k_htc_ops htc_ops;
++	if (ar->num_peers > (ar->max_num_peers - 1)) {
++		ath11k_warn(ar->ab,
++			    "failed to create peer due to insufficient peer entry resource in firmware\n");
++		return -ENOBUFS;
++	}
 +
-+	u8 control_resp_buffer[ATH11K_HTC_MAX_CTRL_MSG_LEN];
-+	int control_resp_len;
++	ret = ath11k_wmi_send_peer_create_cmd(ar, param);
++	if (ret) {
++		ath11k_warn(ar->ab,
++			    "failed to send peer create vdev_id %d ret %d\n",
++			    param->vdev_id, ret);
++		return ret;
++	}
 +
-+	struct completion ctl_resp;
++	ret = ath11k_wait_for_peer_created(ar, param->vdev_id,
++					   param->peer_addr);
++	if (ret)
++		return ret;
 +
-+	int total_transmit_credits;
-+	struct ath11k_htc_svc_tx_credits
-+		service_alloc_table[ATH11K_HTC_MAX_SERVICE_ALLOC_ENTRIES];
-+	int target_credit_size;
-+	u8 wmi_ep_count;
-+};
++	spin_lock_bh(&ar->ab->base_lock);
 +
-+int ath11k_htc_init(struct ath11k_base *ar);
-+int ath11k_htc_wait_target(struct ath11k_htc *htc);
-+int ath11k_htc_start(struct ath11k_htc *htc);
-+int ath11k_htc_connect_service(struct ath11k_htc *htc,
-+			       struct ath11k_htc_svc_conn_req  *conn_req,
-+			       struct ath11k_htc_svc_conn_resp *conn_resp);
-+int ath11k_htc_send(struct ath11k_htc *htc, enum ath11k_htc_ep_id eid,
-+		    struct sk_buff *packet);
-+struct sk_buff *ath11k_htc_alloc_skb(struct ath11k_base *ar, int size);
-+void ath11k_htc_rx_completion_handler(struct ath11k_base *ar,
-+				      struct sk_buff *skb);
++	peer = ath11k_peer_find(ar->ab, param->vdev_id, param->peer_addr);
++	if (!peer) {
++		spin_unlock_bh(&ar->ab->base_lock);
++		ath11k_warn(ar->ab, "failed to find peer %pM on vdev %i after creation\n",
++			    param->peer_addr, param->vdev_id);
++		ath11k_wmi_send_peer_delete_cmd(ar, param->peer_addr,
++						param->vdev_id);
++		return -ENOENT;
++	}
 +
-+#endif
++	peer->sta = sta;
++	arvif->ast_hash = peer->ast_hash;
++
++	ar->num_peers++;
++
++	spin_unlock_bh(&ar->ab->base_lock);
++
++	return 0;
++}
 
