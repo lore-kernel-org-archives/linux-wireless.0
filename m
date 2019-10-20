@@ -7,54 +7,54 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EB14CA9EAD
-	for <linux-wireless@archiver.kernel.org>; Sun, 20 Oct 2019 10:04:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B3D7CA9EAE
+	for <linux-wireless@archiver.kernel.org>; Sun, 20 Oct 2019 10:04:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F2A5B222CD
-	for <linux-wireless@archiver.kernel.org>; Sun, 20 Oct 2019 10:04:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 61CBF222BD
+	for <linux-wireless@archiver.kernel.org>; Sun, 20 Oct 2019 10:04:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="HAKkIoox";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="aRHw+ddG"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="MNtiSAg5";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="IBIlZ86t"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726299AbfJTKEZ (ORCPT
+        id S1726311AbfJTKE1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 20 Oct 2019 06:04:25 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:42272 "EHLO
+        Sun, 20 Oct 2019 06:04:27 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:42688 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726195AbfJTKEY (ORCPT
+        with ESMTP id S1726302AbfJTKE0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 20 Oct 2019 06:04:24 -0400
+        Sun, 20 Oct 2019 06:04:26 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id D4E2360EB7; Sun, 20 Oct 2019 10:04:22 +0000 (UTC)
+        id 7185F60F2F; Sun, 20 Oct 2019 10:04:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1571565862;
-        bh=WIwlPYFAMCcqWQqtRtriYZgxc33oMaJ8TEuDsG2RGtc=;
+        s=default; t=1571565865;
+        bh=ORnUiZvd+X1M1+piS+iAIMVRX7FbpzjGxyJF/YYkI/E=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=HAKkIooxLtiec7VmDW5o0Iz0+pLtD0sA+ad6NjRFYmyWCQskiNJZJGUMhs51QMXsY
-         zinvNcFuiJ8qKPVn9E1eYIUule8YrE6gZQYjyoTZqaSpHwifkYMcfrtEDQlEP98Vyv
-         TLXngxHQa67fbarE62OQOV+bFgdS3/T5A3UsiF6g=
+        b=MNtiSAg5z6uHl+8HgpD/sjTwFrBaufcJFc4MFha/Hpd4RGJWzs6FftfqE5+8kCSrV
+         uDnn0sX7S4i6/+Vv0GsMQdF9JHSl5odDYOahgdcPv/v5b9LLIBI0Nv0T2mzsNLdrS0
+         BP7bxGwt7o9cCwAjX/xWiQK656EkNgSLK59L51pI=
 Received: from x230.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 4367760DCF;
-        Sun, 20 Oct 2019 10:04:19 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id B4D0B60EC7;
+        Sun, 20 Oct 2019 10:04:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1571565860;
-        bh=WIwlPYFAMCcqWQqtRtriYZgxc33oMaJ8TEuDsG2RGtc=;
+        s=default; t=1571565864;
+        bh=ORnUiZvd+X1M1+piS+iAIMVRX7FbpzjGxyJF/YYkI/E=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=aRHw+ddGbw7EbcJsb9Sz/BVN6cuqV4q45AiqlU6hgiHRGMhhaogo3+MiOQ7kM9THV
-         6oUC1v9oVHWiPPVioQKWUMKyvxDg/dasRW+/zmNrWFEkBea80SNxunaBghyEfKjlHr
-         qKsqbN0aMQDXelPzHKWznNGKEFhGRuME/oWL+xxo=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 4367760DCF
+        b=IBIlZ86tPdIybZiTl9NI/dmE5uR+Wb/JnIUGETdDqq7o6C7icf8PHIDD61/nbqfrj
+         JlQ3DWKUiRMMVLYAshItNkWXCs1SdGcGGYQoPaL6WgpBXTxaCDZEkveZVkG5gA9MSG
+         sh+DDzC7MCzAuCZjCIeHa67acfRZXej1QSsGPKWw=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org B4D0B60EC7
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
 To:     linux-wireless@vger.kernel.org
 Cc:     ath11k@lists.infradead.org, devicetree@vger.kernel.org
-Subject: [PATCH v2 06/49] ath11k: add ce.c
-Date:   Sun, 20 Oct 2019 13:03:24 +0300
-Message-Id: <1571565847-10338-7-git-send-email-kvalo@codeaurora.org>
+Subject: [PATCH v2 08/49] ath11k: add core.c
+Date:   Sun, 20 Oct 2019 13:03:26 +0300
+Message-Id: <1571565847-10338-9-git-send-email-kvalo@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1571565847-10338-1-git-send-email-kvalo@codeaurora.org>
 References: <1571565847-10338-1-git-send-email-kvalo@codeaurora.org>
@@ -67,818 +67,785 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath11k/ce.c | 805 +++++++++++++++++++++++++++++++++++
- 1 file changed, 805 insertions(+)
+ drivers/net/wireless/ath/ath11k/core.c | 772 +++++++++++++++++++++++++++++++++
+ 1 file changed, 772 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath11k/ce.c b/drivers/net/wireless/ath/ath11k/ce.c
+diff --git a/drivers/net/wireless/ath/ath11k/core.c b/drivers/net/wireless/ath/ath11k/core.c
 new file mode 100644
-index 000000000000..a6572b414303
+index 000000000000..b0c71b5879b1
 --- /dev/null
-+++ b/drivers/net/wireless/ath/ath11k/ce.c
-@@ -0,0 +1,805 @@
++++ b/drivers/net/wireless/ath/ath11k/core.c
+@@ -0,0 +1,772 @@
 +// SPDX-License-Identifier: BSD-3-Clause-Clear
 +/*
 + * Copyright (c) 2018-2019 The Linux Foundation. All rights reserved.
 + */
 +
-+#include "dp_rx.h"
++#include <linux/module.h>
++#include <linux/slab.h>
++#include <linux/remoteproc.h>
++#include <linux/firmware.h>
++#include "ahb.h"
++#include "core.h"
++#include "dp_tx.h"
 +#include "debug.h"
 +
-+static const struct ce_attr host_ce_config_wlan[] = {
-+	/* CE0: host->target HTC control and raw streams */
-+	{
-+		.flags = CE_ATTR_FLAGS,
-+		.src_nentries = 16,
-+		.src_sz_max = 2048,
-+		.dest_nentries = 0,
-+	},
++unsigned int ath11k_debug_mask;
++module_param_named(debug_mask, ath11k_debug_mask, uint, 0644);
++MODULE_PARM_DESC(debug_mask, "Debugging mask");
 +
-+	/* CE1: target->host HTT + HTC control */
-+	{
-+		.flags = CE_ATTR_FLAGS,
-+		.src_nentries = 0,
-+		.src_sz_max = 2048,
-+		.dest_nentries = 512,
-+		.recv_cb = ath11k_htc_rx_completion_handler,
-+	},
-+
-+	/* CE2: target->host WMI */
-+	{
-+		.flags = CE_ATTR_FLAGS,
-+		.src_nentries = 0,
-+		.src_sz_max = 2048,
-+		.dest_nentries = 512,
-+		.recv_cb = ath11k_htc_rx_completion_handler,
-+	},
-+
-+	/* CE3: host->target WMI (mac0) */
-+	{
-+		.flags = CE_ATTR_FLAGS,
-+		.src_nentries = 32,
-+		.src_sz_max = 2048,
-+		.dest_nentries = 0,
-+	},
-+
-+	/* CE4: host->target HTT */
-+	{
-+		.flags = CE_ATTR_FLAGS | CE_ATTR_DIS_INTR,
-+		.src_nentries = 2048,
-+		.src_sz_max = 256,
-+		.dest_nentries = 0,
-+	},
-+
-+	/* CE5: target->host pktlog */
-+	{
-+		.flags = CE_ATTR_FLAGS,
-+		.src_nentries = 0,
-+		.src_sz_max = 2048,
-+		.dest_nentries = 512,
-+		.recv_cb = ath11k_dp_htt_htc_t2h_msg_handler,
-+	},
-+
-+	/* CE6: target autonomous hif_memcpy */
-+	{
-+		.flags = CE_ATTR_FLAGS | CE_ATTR_DIS_INTR,
-+		.src_nentries = 0,
-+		.src_sz_max = 0,
-+		.dest_nentries = 0,
-+	},
-+
-+	/* CE7: host->target WMI (mac1) */
-+	{
-+		.flags = CE_ATTR_FLAGS,
-+		.src_nentries = 32,
-+		.src_sz_max = 2048,
-+		.dest_nentries = 0,
-+	},
-+
-+	/* CE8: target autonomous hif_memcpy */
-+	{
-+		.flags = CE_ATTR_FLAGS,
-+		.src_nentries = 0,
-+		.src_sz_max = 0,
-+		.dest_nentries = 0,
-+	},
-+
-+	/* CE9: host->target WMI (mac2) */
-+	{
-+		.flags = CE_ATTR_FLAGS,
-+		.src_nentries = 32,
-+		.src_sz_max = 2048,
-+		.dest_nentries = 0,
-+	},
-+
-+	/* CE10: target->host HTT */
-+	{
-+		.flags = CE_ATTR_FLAGS,
-+		.src_nentries = 0,
-+		.src_sz_max = 2048,
-+		.dest_nentries = 512,
-+		.recv_cb = ath11k_htc_rx_completion_handler,
-+	},
-+
-+	/* CE11: Not used */
-+	{
-+		.flags = CE_ATTR_FLAGS,
-+		.src_nentries = 0,
-+		.src_sz_max = 0,
-+		.dest_nentries = 0,
++static const struct ath11k_hw_params ath11k_hw_params = {
++	.name = "ipq8074",
++	.fw = {
++		.dir = IPQ8074_FW_DIR,
++		.board_size = IPQ8074_MAX_BOARD_DATA_SZ,
++		.cal_size =  IPQ8074_MAX_CAL_DATA_SZ,
 +	},
 +};
 +
-+static int ath11k_ce_rx_buf_enqueue_pipe(struct ath11k_ce_pipe *pipe,
-+					 struct sk_buff *skb, dma_addr_t paddr)
++/* Map from pdev index to hw mac index */
++u8 ath11k_core_get_hw_mac_id(struct ath11k_base *ab, int pdev_idx)
 +{
-+	struct ath11k_base *ab = pipe->ab;
-+	struct ath11k_ce_ring *ring = pipe->dest_ring;
-+	struct hal_srng *srng;
-+	unsigned int write_index;
-+	unsigned int nentries_mask = ring->nentries_mask;
-+	u32 *desc;
-+	int ret;
-+
-+	lockdep_assert_held(&ab->ce.ce_lock);
-+
-+	write_index = ring->write_index;
-+
-+	srng = &ab->hal.srng_list[ring->hal_ring_id];
-+
-+	spin_lock_bh(&srng->lock);
-+
-+	ath11k_hal_srng_access_begin(ab, srng);
-+
-+	if (unlikely(ath11k_hal_srng_src_num_free(ab, srng, false) < 1)) {
-+		ret = -ENOSPC;
-+		goto exit;
-+	}
-+
-+	desc = ath11k_hal_srng_src_get_next_entry(ab, srng);
-+	if (!desc) {
-+		ret = -ENOSPC;
-+		goto exit;
-+	}
-+
-+	ath11k_hal_ce_dst_set_desc(desc, paddr);
-+
-+	ring->skb[write_index] = skb;
-+	write_index = CE_RING_IDX_INCR(nentries_mask, write_index);
-+	ring->write_index = write_index;
-+
-+	pipe->rx_buf_needed--;
-+
-+	ret = 0;
-+exit:
-+	ath11k_hal_srng_access_end(ab, srng);
-+
-+	spin_unlock_bh(&srng->lock);
-+
-+	return ret;
-+}
-+
-+static int ath11k_ce_rx_post_pipe(struct ath11k_ce_pipe *pipe)
-+{
-+	struct ath11k_base *ab = pipe->ab;
-+	struct sk_buff *skb;
-+	dma_addr_t paddr;
-+	int ret = 0;
-+
-+	if (!(pipe->dest_ring || pipe->status_ring))
++	switch (pdev_idx) {
++	case 0:
 +		return 0;
-+
-+	spin_lock_bh(&ab->ce.ce_lock);
-+	while (pipe->rx_buf_needed) {
-+		skb = dev_alloc_skb(pipe->buf_sz);
-+		if (!skb) {
-+			ret = -ENOMEM;
-+			goto exit;
-+		}
-+
-+		WARN_ON_ONCE(!IS_ALIGNED((unsigned long)skb->data, 4));
-+
-+		paddr = dma_map_single(ab->dev, skb->data,
-+				       skb->len + skb_tailroom(skb),
-+				       DMA_FROM_DEVICE);
-+		if (unlikely(dma_mapping_error(ab->dev, paddr))) {
-+			ath11k_warn(ab, "failed to dma map ce rx buf\n");
-+			dev_kfree_skb_any(skb);
-+			ret = -EIO;
-+			goto exit;
-+		}
-+
-+		ATH11K_SKB_RXCB(skb)->paddr = paddr;
-+
-+		ret = ath11k_ce_rx_buf_enqueue_pipe(pipe, skb, paddr);
-+
-+		if (ret) {
-+			ath11k_warn(ab, "failed to enqueue rx buf: %d\n", ret);
-+			dma_unmap_single(ab->dev, paddr,
-+					 skb->len + skb_tailroom(skb),
-+					 DMA_FROM_DEVICE);
-+			dev_kfree_skb_any(skb);
-+			goto exit;
-+		}
-+	}
-+
-+exit:
-+	spin_unlock_bh(&ab->ce.ce_lock);
-+	return ret;
-+}
-+
-+static int ath11k_ce_completed_recv_next(struct ath11k_ce_pipe *pipe,
-+					 struct sk_buff **skb, int *nbytes)
-+{
-+	struct ath11k_base *ab = pipe->ab;
-+	struct hal_srng *srng;
-+	unsigned int sw_index;
-+	unsigned int nentries_mask;
-+	u32 *desc;
-+	int ret = 0;
-+
-+	spin_lock_bh(&ab->ce.ce_lock);
-+
-+	sw_index = pipe->dest_ring->sw_index;
-+	nentries_mask = pipe->dest_ring->nentries_mask;
-+
-+	srng = &ab->hal.srng_list[pipe->status_ring->hal_ring_id];
-+
-+	spin_lock_bh(&srng->lock);
-+
-+	ath11k_hal_srng_access_begin(ab, srng);
-+
-+	desc = ath11k_hal_srng_dst_get_next_entry(ab, srng);
-+	if (!desc) {
-+		ret = -EIO;
-+		goto err;
-+	}
-+
-+	*nbytes = ath11k_hal_ce_dst_status_get_length(desc);
-+	if (*nbytes == 0) {
-+		ret = -EIO;
-+		goto err;
-+	}
-+
-+	*skb = pipe->dest_ring->skb[sw_index];
-+	pipe->dest_ring->skb[sw_index] = NULL;
-+
-+	sw_index = CE_RING_IDX_INCR(nentries_mask, sw_index);
-+	pipe->dest_ring->sw_index = sw_index;
-+
-+	pipe->rx_buf_needed++;
-+err:
-+	ath11k_hal_srng_access_end(ab, srng);
-+
-+	spin_unlock_bh(&srng->lock);
-+
-+	spin_unlock_bh(&ab->ce.ce_lock);
-+
-+	return ret;
-+}
-+
-+static void ath11k_ce_recv_process_cb(struct ath11k_ce_pipe *pipe)
-+{
-+	struct ath11k_base *ab = pipe->ab;
-+	struct sk_buff *skb;
-+	struct sk_buff_head list;
-+	unsigned int nbytes, max_nbytes;
-+	int ret;
-+
-+	__skb_queue_head_init(&list);
-+	while (ath11k_ce_completed_recv_next(pipe, &skb, &nbytes) == 0) {
-+		max_nbytes = skb->len + skb_tailroom(skb);
-+		dma_unmap_single(ab->dev, ATH11K_SKB_RXCB(skb)->paddr,
-+				 max_nbytes, DMA_FROM_DEVICE);
-+
-+		if (unlikely(max_nbytes < nbytes)) {
-+			ath11k_warn(ab, "rxed more than expected (nbytes %d, max %d)",
-+				    nbytes, max_nbytes);
-+			dev_kfree_skb_any(skb);
-+			continue;
-+		}
-+
-+		skb_put(skb, nbytes);
-+		__skb_queue_tail(&list, skb);
-+	}
-+
-+	while ((skb = __skb_dequeue(&list))) {
-+		ath11k_dbg(ab, ATH11K_DBG_AHB, "rx ce pipe %d len %d\n",
-+			   pipe->pipe_num, skb->len);
-+		pipe->recv_cb(ab, skb);
-+	}
-+
-+	ret = ath11k_ce_rx_post_pipe(pipe);
-+	if (ret && ret != -ENOSPC) {
-+		ath11k_warn(ab, "failed to post rx buf to pipe: %d err: %d\n",
-+			    pipe->pipe_num, ret);
-+		mod_timer(&ab->rx_replenish_retry,
-+			  jiffies + ATH11K_CE_RX_POST_RETRY_JIFFIES);
-+	}
-+}
-+
-+static struct sk_buff *ath11k_ce_completed_send_next(struct ath11k_ce_pipe *pipe)
-+{
-+	struct ath11k_base *ab = pipe->ab;
-+	struct hal_srng *srng;
-+	unsigned int sw_index;
-+	unsigned int nentries_mask;
-+	struct sk_buff *skb;
-+	u32 *desc;
-+
-+	spin_lock_bh(&ab->ce.ce_lock);
-+
-+	sw_index = pipe->src_ring->sw_index;
-+	nentries_mask = pipe->src_ring->nentries_mask;
-+
-+	srng = &ab->hal.srng_list[pipe->src_ring->hal_ring_id];
-+
-+	spin_lock_bh(&srng->lock);
-+
-+	ath11k_hal_srng_access_begin(ab, srng);
-+
-+	desc = ath11k_hal_srng_src_reap_next(ab, srng);
-+	if (!desc) {
-+		skb = ERR_PTR(-EIO);
-+		goto err_unlock;
-+	}
-+
-+	skb = pipe->src_ring->skb[sw_index];
-+
-+	pipe->src_ring->skb[sw_index] = NULL;
-+
-+	sw_index = CE_RING_IDX_INCR(nentries_mask, sw_index);
-+	pipe->src_ring->sw_index = sw_index;
-+
-+err_unlock:
-+	spin_unlock_bh(&srng->lock);
-+
-+	spin_unlock_bh(&ab->ce.ce_lock);
-+
-+	return skb;
-+}
-+
-+static void ath11k_ce_send_done_cb(struct ath11k_ce_pipe *pipe)
-+{
-+	struct ath11k_base *ab = pipe->ab;
-+	struct sk_buff *skb;
-+
-+	while (!IS_ERR(skb = ath11k_ce_completed_send_next(pipe))) {
-+		if (!skb)
-+			continue;
-+
-+		dma_unmap_single(ab->dev, ATH11K_SKB_CB(skb)->paddr, skb->len,
-+				 DMA_TO_DEVICE);
-+		dev_kfree_skb_any(skb);
-+	}
-+}
-+
-+static int ath11k_ce_init_ring(struct ath11k_base *ab,
-+			       struct ath11k_ce_ring *ce_ring,
-+			       int ce_id, enum hal_ring_type type)
-+{
-+	struct hal_srng_params params = { 0 };
-+	int ret;
-+
-+	params.ring_base_paddr = ce_ring->base_addr_ce_space;
-+	params.ring_base_vaddr = ce_ring->base_addr_owner_space;
-+	params.num_entries = ce_ring->nentries;
-+
-+	switch (type) {
-+	case HAL_CE_SRC:
-+		if (!(CE_ATTR_DIS_INTR & host_ce_config_wlan[ce_id].flags))
-+			params.intr_batch_cntr_thres_entries = 1;
-+		break;
-+	case HAL_CE_DST:
-+		params.max_buffer_len = host_ce_config_wlan[ce_id].src_sz_max;
-+		if (!(host_ce_config_wlan[ce_id].flags & CE_ATTR_DIS_INTR)) {
-+			params.intr_timer_thres_us = 1024;
-+			params.flags |= HAL_SRNG_FLAGS_LOW_THRESH_INTR_EN;
-+			params.low_threshold = ce_ring->nentries - 3;
-+		}
-+		break;
-+	case HAL_CE_DST_STATUS:
-+		if (!(host_ce_config_wlan[ce_id].flags & CE_ATTR_DIS_INTR)) {
-+			params.intr_batch_cntr_thres_entries = 1;
-+			params.intr_timer_thres_us = 0x1000;
-+		}
-+		break;
++	case 1:
++		return 2;
++	case 2:
++		return 1;
 +	default:
-+		ath11k_warn(ab, "Invalid CE ring type %d\n", type);
-+		return -EINVAL;
++		ath11k_warn(ab, "Invalid pdev idx %d\n", pdev_idx);
++		return ATH11K_INVALID_HW_MAC_ID;
++	}
++}
++
++static int ath11k_core_create_board_name(struct ath11k_base *ab, char *name,
++					 size_t name_len)
++{
++	/* Note: bus is fixed to ahb. When other bus type supported,
++	 * make it to dynamic.
++	 */
++	scnprintf(name, name_len,
++		  "bus=ahb,qmi-chip-id=%d,qmi-board-id=%d",
++		  ab->qmi.target.chip_id,
++		  ab->qmi.target.board_id);
++
++	ath11k_dbg(ab, ATH11K_DBG_BOOT, "boot using board name '%s'\n", name);
++
++	return 0;
++}
++
++static const struct firmware *ath11k_fetch_fw_file(struct ath11k_base *ab,
++						   const char *dir,
++						   const char *file)
++{
++	char filename[100];
++	const struct firmware *fw;
++	int ret;
++
++	if (file == NULL)
++		return ERR_PTR(-ENOENT);
++
++	if (dir == NULL)
++		dir = ".";
++
++	snprintf(filename, sizeof(filename), "%s/%s", dir, file);
++	ret = firmware_request_nowarn(&fw, filename, ab->dev);
++	ath11k_dbg(ab, ATH11K_DBG_BOOT, "boot fw request '%s': %d\n",
++		   filename, ret);
++
++	if (ret)
++		return ERR_PTR(ret);
++	ath11k_warn(ab, "Downloading BDF: %s, size: %zu\n",
++		    filename, fw->size);
++
++	return fw;
++}
++
++void ath11k_core_free_bdf(struct ath11k_base *ab, struct ath11k_board_data *bd)
++{
++	if (!IS_ERR(bd->fw))
++		release_firmware(bd->fw);
++
++	memset(bd, 0, sizeof(*bd));
++}
++
++static int ath11k_core_parse_bd_ie_board(struct ath11k_base *ab,
++					 struct ath11k_board_data *bd,
++					 const void *buf, size_t buf_len,
++					 const char *boardname,
++					 int bd_ie_type)
++{
++	const struct ath11k_fw_ie *hdr;
++	bool name_match_found;
++	int ret, board_ie_id;
++	size_t board_ie_len;
++	const void *board_ie_data;
++
++	name_match_found = false;
++
++	/* go through ATH11K_BD_IE_BOARD_ elements */
++	while (buf_len > sizeof(struct ath11k_fw_ie)) {
++		hdr = buf;
++		board_ie_id = le32_to_cpu(hdr->id);
++		board_ie_len = le32_to_cpu(hdr->len);
++		board_ie_data = hdr->data;
++
++		buf_len -= sizeof(*hdr);
++		buf += sizeof(*hdr);
++
++		if (buf_len < ALIGN(board_ie_len, 4)) {
++			ath11k_err(ab, "invalid ATH11K_BD_IE_BOARD length: %zu < %zu\n",
++				   buf_len, ALIGN(board_ie_len, 4));
++			ret = -EINVAL;
++			goto out;
++		}
++
++		switch (board_ie_id) {
++		case ATH11K_BD_IE_BOARD_NAME:
++			ath11k_dbg_dump(ab, ATH11K_DBG_BOOT, "board name", "",
++					board_ie_data, board_ie_len);
++
++			if (board_ie_len != strlen(boardname))
++				break;
++
++			ret = memcmp(board_ie_data, boardname, strlen(boardname));
++			if (ret)
++				break;
++
++			name_match_found = true;
++			ath11k_dbg(ab, ATH11K_DBG_BOOT,
++				   "boot found match for name '%s'",
++				   boardname);
++			break;
++		case ATH11K_BD_IE_BOARD_DATA:
++			if (!name_match_found)
++				/* no match found */
++				break;
++
++			ath11k_dbg(ab, ATH11K_DBG_BOOT,
++				   "boot found board data for '%s'", boardname);
++
++			bd->data = board_ie_data;
++			bd->len = board_ie_len;
++
++			ret = 0;
++			goto out;
++		default:
++			ath11k_warn(ab, "unknown ATH11K_BD_IE_BOARD found: %d\n",
++				    board_ie_id);
++			break;
++		}
++
++		/* jump over the padding */
++		board_ie_len = ALIGN(board_ie_len, 4);
++
++		buf_len -= board_ie_len;
++		buf += board_ie_len;
 +	}
 +
-+	/* TODO: Init other params needed by HAL to init the ring */
++	/* no match found */
++	ret = -ENOENT;
 +
-+	ret = ath11k_hal_srng_setup(ab, type, ce_id, 0, &params);
-+	if (ret < 0) {
-+		ath11k_warn(ab, "failed to setup srng: %d ring_id %d\n",
-+			    ret, ce_id);
++out:
++	return ret;
++}
++
++static int ath11k_core_fetch_board_data_api_n(struct ath11k_base *ab,
++					      struct ath11k_board_data *bd,
++					      const char *boardname)
++{
++	size_t len, magic_len;
++	const u8 *data;
++	char *filename = ATH11K_BOARD_API2_FILE;
++	size_t ie_len;
++	struct ath11k_fw_ie *hdr;
++	int ret, ie_id;
++
++	if (!bd->fw)
++		bd->fw = ath11k_fetch_fw_file(ab,
++					      ab->hw_params.fw.dir,
++					      filename);
++	if (IS_ERR(bd->fw))
++		return PTR_ERR(bd->fw);
++
++	data = bd->fw->data;
++	len = bd->fw->size;
++
++	/* magic has extra null byte padded */
++	magic_len = strlen(ATH11K_BOARD_MAGIC) + 1;
++	if (len < magic_len) {
++		ath11k_err(ab, "failed to find magic value in %s/%s, file too short: %zu\n",
++			   ab->hw_params.fw.dir, filename, len);
++		ret = -EINVAL;
++		goto err;
++	}
++
++	if (memcmp(data, ATH11K_BOARD_MAGIC, magic_len)) {
++		ath11k_err(ab, "found invalid board magic\n");
++		ret = -EINVAL;
++		goto err;
++	}
++
++	/* magic is padded to 4 bytes */
++	magic_len = ALIGN(magic_len, 4);
++	if (len < magic_len) {
++		ath11k_err(ab, "failed: %s/%s too small to contain board data, len: %zu\n",
++			   ab->hw_params.fw.dir, filename, len);
++		ret = -EINVAL;
++		goto err;
++	}
++
++	data += magic_len;
++	len -= magic_len;
++
++	while (len > sizeof(struct ath11k_fw_ie)) {
++		hdr = (struct ath11k_fw_ie *)data;
++		ie_id = le32_to_cpu(hdr->id);
++		ie_len = le32_to_cpu(hdr->len);
++
++		len -= sizeof(*hdr);
++		data = hdr->data;
++
++		if (len < ALIGN(ie_len, 4)) {
++			ath11k_err(ab, "invalid length for board ie_id %d ie_len %zu len %zu\n",
++				   ie_id, ie_len, len);
++			return -EINVAL;
++		}
++
++		switch (ie_id) {
++		case ATH11K_BD_IE_BOARD:
++			ret = ath11k_core_parse_bd_ie_board(ab, bd, data,
++							    ie_len,
++							    boardname,
++							    ATH11K_BD_IE_BOARD);
++			if (ret == -ENOENT)
++				/* no match found, continue */
++				break;
++			else if (ret)
++				/* there was an error, bail out */
++				goto err;
++			/* either found or error, so stop searching */
++			goto out;
++		}
++
++		/* jump over the padding */
++		ie_len = ALIGN(ie_len, 4);
++
++		len -= ie_len;
++		data += ie_len;
++	}
++
++out:
++	if (!bd->data || !bd->len) {
++		ath11k_err(ab,
++			   "failed to fetch board data for %s from %s/%s\n",
++			   boardname, ab->hw_params.fw.dir, filename);
++		ret = -ENODATA;
++		goto err;
++	}
++
++	return 0;
++
++err:
++	ath11k_core_free_bdf(ab, bd);
++	return ret;
++}
++
++static int ath11k_core_fetch_board_data_api_1(struct ath11k_base *ab,
++					      struct ath11k_board_data *bd)
++{
++	bd->fw = ath11k_fetch_fw_file(ab,
++				      ab->hw_params.fw.dir,
++				      ATH11K_DEFAULT_BOARD_FILE);
++	if (IS_ERR(bd->fw))
++		return PTR_ERR(bd->fw);
++
++	bd->data = bd->fw->data;
++	bd->len = bd->fw->size;
++
++	return 0;
++}
++
++#define BOARD_NAME_SIZE 100
++int ath11k_core_fetch_bdf(struct ath11k_base *ab, struct ath11k_board_data *bd)
++{
++	char boardname[BOARD_NAME_SIZE];
++	int ret;
++
++	ret = ath11k_core_create_board_name(ab, boardname, BOARD_NAME_SIZE);
++	if (ret) {
++		ath11k_err(ab, "failed to create board name: %d", ret);
 +		return ret;
 +	}
-+	ce_ring->hal_ring_id = ret;
 +
++	ab->bd_api = 2;
++	ret = ath11k_core_fetch_board_data_api_n(ab, bd, boardname);
++	if (!ret)
++		goto success;
++
++	ab->bd_api = 1;
++	ret = ath11k_core_fetch_board_data_api_1(ab, bd);
++	if (ret) {
++		ath11k_err(ab, "failed to fetch board-2.bin or board.bin from %s\n",
++			   ab->hw_params.fw.dir);
++		return ret;
++	}
++
++success:
++	ath11k_dbg(ab, ATH11K_DBG_BOOT, "using board api %d\n", ab->bd_api);
 +	return 0;
 +}
 +
-+static struct ath11k_ce_ring *
-+ath11k_ce_alloc_ring(struct ath11k_base *ab, int nentries, int desc_sz)
++static void ath11k_core_stop(struct ath11k_base *ab)
 +{
-+	struct ath11k_ce_ring *ce_ring;
-+	dma_addr_t base_addr;
++	if (!test_bit(ATH11K_FLAG_CRASH_FLUSH, &ab->dev_flags))
++		ath11k_qmi_firmware_stop(ab);
++	ath11k_ahb_stop(ab);
++	ath11k_wmi_detach(ab);
 +
-+	ce_ring = kzalloc(struct_size(ce_ring, skb, nentries), GFP_KERNEL);
-+	if (ce_ring == NULL)
-+		return ERR_PTR(-ENOMEM);
-+
-+	ce_ring->nentries = nentries;
-+	ce_ring->nentries_mask = nentries - 1;
-+
-+	/* Legacy platforms that do not support cache
-+	 * coherent DMA are unsupported
-+	 */
-+	ce_ring->base_addr_owner_space_unaligned =
-+		dma_alloc_coherent(ab->dev,
-+				   nentries * desc_sz + CE_DESC_RING_ALIGN,
-+				   &base_addr, GFP_KERNEL);
-+	if (!ce_ring->base_addr_owner_space_unaligned) {
-+		kfree(ce_ring);
-+		return ERR_PTR(-ENOMEM);
-+	}
-+
-+	ce_ring->base_addr_ce_space_unaligned = base_addr;
-+
-+	ce_ring->base_addr_owner_space = PTR_ALIGN(
-+			ce_ring->base_addr_owner_space_unaligned,
-+			CE_DESC_RING_ALIGN);
-+	ce_ring->base_addr_ce_space = ALIGN(
-+			ce_ring->base_addr_ce_space_unaligned,
-+			CE_DESC_RING_ALIGN);
-+
-+	return ce_ring;
++	/* De-Init of components as needed */
 +}
 +
-+static int ath11k_ce_alloc_pipe(struct ath11k_base *ab, int ce_id)
++static int ath11k_core_soc_create(struct ath11k_base *ab)
 +{
-+	struct ath11k_ce_pipe *pipe = &ab->ce.ce_pipe[ce_id];
-+	const struct ce_attr *attr = &host_ce_config_wlan[ce_id];
-+	int nentries;
-+	int desc_sz;
++	int ret;
 +
-+	pipe->attr_flags = attr->flags;
-+
-+	if (attr->src_nentries) {
-+		pipe->send_cb = ath11k_ce_send_done_cb;
-+		nentries = roundup_pow_of_two(attr->src_nentries);
-+		desc_sz = ath11k_hal_ce_get_desc_size(HAL_CE_DESC_SRC);
-+		pipe->src_ring = ath11k_ce_alloc_ring(ab, nentries, desc_sz);
-+		if (!pipe->src_ring)
-+			return -ENOMEM;
++	ret = ath11k_qmi_init_service(ab);
++	if (ret) {
++		ath11k_err(ab, "failed to initialize qmi :%d\n", ret);
++		return ret;
 +	}
 +
-+	if (attr->dest_nentries) {
-+		pipe->recv_cb = attr->recv_cb;
-+		nentries = roundup_pow_of_two(attr->dest_nentries);
-+		desc_sz = ath11k_hal_ce_get_desc_size(HAL_CE_DESC_DST);
-+		pipe->dest_ring = ath11k_ce_alloc_ring(ab, nentries, desc_sz);
++	ret = ath11k_debug_soc_create(ab);
++	if (ret) {
++		ath11k_err(ab, "failed to create ath11k debugfs\n");
++		goto err_qmi_deinit;
++	}
 +
-+		if (!pipe->dest_ring)
-+			return -ENOMEM;
-+
-+		desc_sz = ath11k_hal_ce_get_desc_size(HAL_CE_DESC_DST_STATUS);
-+		pipe->status_ring = ath11k_ce_alloc_ring(ab, nentries, desc_sz);
-+		if (!pipe->status_ring)
-+			return -ENOMEM;
++	ret = ath11k_ahb_power_up(ab);
++	if (ret) {
++		ath11k_err(ab, "failed to power up :%d\n", ret);
++		goto err_debugfs_reg;
 +	}
 +
 +	return 0;
++
++err_debugfs_reg:
++	ath11k_debug_soc_destroy(ab);
++err_qmi_deinit:
++	ath11k_qmi_deinit_service(ab);
++	return ret;
 +}
 +
-+void ath11k_ce_per_engine_service(struct ath11k_base *ab, u16 ce_id)
++static void ath11k_core_soc_destroy(struct ath11k_base *ab)
 +{
-+	struct ath11k_ce_pipe *pipe = &ab->ce.ce_pipe[ce_id];
-+
-+	if (pipe->send_cb)
-+		pipe->send_cb(pipe);
-+
-+	if (pipe->recv_cb)
-+		ath11k_ce_recv_process_cb(pipe);
++	ath11k_debug_soc_destroy(ab);
++	ath11k_dp_free(ab);
++	ath11k_reg_free(ab);
++	ath11k_qmi_deinit_service(ab);
 +}
 +
-+void ath11k_ce_poll_send_completed(struct ath11k_base *ab, u8 pipe_id)
++static int ath11k_core_pdev_create(struct ath11k_base *ab)
 +{
-+	struct ath11k_ce_pipe *pipe = &ab->ce.ce_pipe[pipe_id];
++	int ret;
 +
-+	if ((pipe->attr_flags & CE_ATTR_DIS_INTR) && pipe->send_cb)
-+		pipe->send_cb(pipe);
-+}
-+
-+int ath11k_ce_send(struct ath11k_base *ab, struct sk_buff *skb, u8 pipe_id,
-+		   u16 transfer_id)
-+{
-+	struct ath11k_ce_pipe *pipe = &ab->ce.ce_pipe[pipe_id];
-+	struct hal_srng *srng;
-+	u32 *desc;
-+	unsigned int write_index, sw_index;
-+	unsigned int nentries_mask;
-+	int ret = 0;
-+	u8 byte_swap_data = 0;
-+	int num_used;
-+
-+	/* Check if some entries could be regained by handling tx completion if
-+	 * the CE has interrupts disabled and the used entries is more than the
-+	 * defined usage threshold.
-+	 */
-+	if (pipe->attr_flags & CE_ATTR_DIS_INTR) {
-+		spin_lock_bh(&ab->ce.ce_lock);
-+		write_index = pipe->src_ring->write_index;
-+
-+		sw_index = pipe->src_ring->sw_index;
-+
-+		if (write_index >= sw_index)
-+			num_used = write_index - sw_index;
-+		else
-+			num_used = pipe->src_ring->nentries - sw_index +
-+				   write_index;
-+
-+		spin_unlock_bh(&ab->ce.ce_lock);
-+
-+		if (num_used > ATH11K_CE_USAGE_THRESHOLD)
-+			ath11k_ce_poll_send_completed(ab, pipe->pipe_num);
++	ret = ath11k_debug_pdev_create(ab);
++	if (ret) {
++		ath11k_err(ab, "failed to create core pdev debugfs: %d\n", ret);
++		return ret;
 +	}
 +
-+	if (test_bit(ATH11K_FLAG_CRASH_FLUSH, &ab->dev_flags))
-+		return -ESHUTDOWN;
-+
-+	spin_lock_bh(&ab->ce.ce_lock);
-+
-+	write_index = pipe->src_ring->write_index;
-+	nentries_mask = pipe->src_ring->nentries_mask;
-+
-+	srng = &ab->hal.srng_list[pipe->src_ring->hal_ring_id];
-+
-+	spin_lock_bh(&srng->lock);
-+
-+	ath11k_hal_srng_access_begin(ab, srng);
-+
-+	if (unlikely(ath11k_hal_srng_src_num_free(ab, srng, false) < 1)) {
-+		ath11k_hal_srng_access_end(ab, srng);
-+		ret = -ENOBUFS;
-+		goto err_unlock;
++	ret = ath11k_mac_create(ab);
++	if (ret) {
++		ath11k_err(ab, "failed to create new hw device with mac80211 :%d\n",
++			   ret);
++		goto err_pdev_debug;
 +	}
 +
-+	desc = ath11k_hal_srng_src_get_next_reaped(ab, srng);
-+	if (!desc) {
-+		ath11k_hal_srng_access_end(ab, srng);
-+		ret = -ENOBUFS;
-+		goto err_unlock;
++	ret = ath11k_dp_pdev_alloc(ab);
++	if (ret) {
++		ath11k_err(ab, "failed to attach DP pdev: %d\n", ret);
++		goto err_mac_destroy;
 +	}
-+
-+	if (pipe->attr_flags & CE_ATTR_BYTE_SWAP_DATA)
-+		byte_swap_data = 1;
-+
-+	ath11k_hal_ce_src_set_desc(desc, ATH11K_SKB_CB(skb)->paddr,
-+				   skb->len, transfer_id, byte_swap_data);
-+
-+	pipe->src_ring->skb[write_index] = skb;
-+	pipe->src_ring->write_index = CE_RING_IDX_INCR(nentries_mask,
-+						       write_index);
-+
-+	ath11k_hal_srng_access_end(ab, srng);
-+
-+	spin_unlock_bh(&srng->lock);
-+
-+	spin_unlock_bh(&ab->ce.ce_lock);
 +
 +	return 0;
 +
-+err_unlock:
-+	spin_unlock_bh(&srng->lock);
++err_mac_destroy:
++	ath11k_mac_destroy(ab);
 +
-+	spin_unlock_bh(&ab->ce.ce_lock);
++err_pdev_debug:
++	ath11k_debug_pdev_destroy(ab);
 +
 +	return ret;
 +}
 +
-+static void ath11k_ce_rx_pipe_cleanup(struct ath11k_ce_pipe *pipe)
++static void ath11k_core_pdev_destroy(struct ath11k_base *ab)
 +{
-+	struct ath11k_base *ab = pipe->ab;
-+	struct ath11k_ce_ring *ring = pipe->dest_ring;
-+	struct sk_buff *skb;
-+	int i;
++	ath11k_mac_unregister(ab);
++	ath11k_ahb_ext_irq_disable(ab);
++	ath11k_dp_pdev_free(ab);
++	ath11k_debug_pdev_destroy(ab);
++}
 +
-+	if (!(ring && pipe->buf_sz))
-+		return;
++static int ath11k_core_start(struct ath11k_base *ab,
++			     enum ath11k_firmware_mode mode)
++{
++	int ret;
 +
-+	for (i = 0; i < ring->nentries; i++) {
-+		skb = ring->skb[i];
-+		if (!skb)
++	ret = ath11k_qmi_firmware_start(ab, mode);
++	if (ret) {
++		ath11k_err(ab, "failed to attach wmi: %d\n", ret);
++		return ret;
++	}
++
++	ret = ath11k_wmi_attach(ab);
++	if (ret) {
++		ath11k_err(ab, "failed to attach wmi: %d\n", ret);
++		goto err_firmware_stop;
++	}
++
++	ret = ath11k_htc_init(ab);
++	if (ret) {
++		ath11k_err(ab, "failed to init htc: %d\n", ret);
++		goto err_wmi_detach;
++	}
++
++	ret = ath11k_ahb_start(ab);
++	if (ret) {
++		ath11k_err(ab, "failed to start HIF: %d\n", ret);
++		goto err_wmi_detach;
++	}
++
++	ret = ath11k_htc_wait_target(&ab->htc);
++	if (ret) {
++		ath11k_err(ab, "failed to connect to HTC: %d\n", ret);
++		goto err_hif_stop;
++	}
++
++	ret = ath11k_dp_htt_connect(&ab->dp);
++	if (ret) {
++		ath11k_err(ab, "failed to connect to HTT: %d\n", ret);
++		goto err_hif_stop;
++	}
++
++	ret = ath11k_wmi_connect(ab);
++	if (ret) {
++		ath11k_err(ab, "failed to connect wmi: %d\n", ret);
++		goto err_hif_stop;
++	}
++
++	ret = ath11k_htc_start(&ab->htc);
++	if (ret) {
++		ath11k_err(ab, "failed to start HTC: %d\n", ret);
++		goto err_hif_stop;
++	}
++
++	ret = ath11k_wmi_wait_for_service_ready(ab);
++	if (ret) {
++		ath11k_err(ab, "failed to receive wmi service ready event: %d\n",
++			   ret);
++		goto err_hif_stop;
++	}
++
++	ret = ath11k_wmi_cmd_init(ab);
++	if (ret) {
++		ath11k_err(ab, "failed to send wmi init cmd: %d\n", ret);
++		goto err_hif_stop;
++	}
++
++	ret = ath11k_wmi_wait_for_unified_ready(ab);
++	if (ret) {
++		ath11k_err(ab, "failed to receive wmi unified ready event: %d\n",
++			   ret);
++		goto err_hif_stop;
++	}
++
++	ret = ath11k_dp_tx_htt_h2t_ver_req_msg(ab);
++	if (ret) {
++		ath11k_err(ab, "failed to send htt version request message: %d\n",
++			   ret);
++		goto err_hif_stop;
++	}
++
++	return 0;
++
++err_hif_stop:
++	ath11k_ahb_stop(ab);
++err_wmi_detach:
++	ath11k_wmi_detach(ab);
++err_firmware_stop:
++	ath11k_qmi_firmware_stop(ab);
++
++	return ret;
++}
++
++int ath11k_core_qmi_firmware_ready(struct ath11k_base *ab)
++{
++	int ret;
++
++	ret = ath11k_ce_init_pipes(ab);
++	if (ret) {
++		ath11k_err(ab, "failed to initialize CE: %d\n", ret);
++		return ret;
++	}
++
++	ret = ath11k_dp_alloc(ab);
++	if (ret) {
++		ath11k_err(ab, "failed to init DP: %d\n", ret);
++		return ret;
++	}
++
++	mutex_lock(&ab->core_lock);
++	ret = ath11k_core_start(ab, ATH11K_FIRMWARE_MODE_NORMAL);
++	if (ret) {
++		ath11k_err(ab, "failed to start core: %d\n", ret);
++		goto err_dp_free;
++	}
++
++	ret = ath11k_core_pdev_create(ab);
++	if (ret) {
++		ath11k_err(ab, "failed to create pdev core: %d\n", ret);
++		goto err_core_stop;
++	}
++	ath11k_ahb_ext_irq_enable(ab);
++	mutex_unlock(&ab->core_lock);
++
++	return 0;
++
++err_core_stop:
++	ath11k_core_stop(ab);
++err_dp_free:
++	ath11k_dp_free(ab);
++	return ret;
++}
++
++static int ath11k_core_reconfigure_on_crash(struct ath11k_base *ab)
++{
++	int ret;
++
++	mutex_lock(&ab->core_lock);
++	ath11k_ahb_ext_irq_disable(ab);
++	ath11k_dp_pdev_free(ab);
++	ath11k_ahb_stop(ab);
++	ath11k_wmi_detach(ab);
++	mutex_unlock(&ab->core_lock);
++
++	ath11k_dp_free(ab);
++	ath11k_hal_srng_deinit(ab);
++
++	ab->free_vdev_map = (1LL << (ab->num_radios * TARGET_NUM_VDEVS)) - 1;
++
++	ret = ath11k_hal_srng_init(ab);
++	if (ret)
++		return ret;
++
++	clear_bit(ATH11K_FLAG_CRASH_FLUSH, &ab->dev_flags);
++
++	ret = ath11k_core_qmi_firmware_ready(ab);
++	if (ret)
++		goto err_hal_srng_deinit;
++
++	clear_bit(ATH11K_FLAG_RECOVERY, &ab->dev_flags);
++
++	return 0;
++
++err_hal_srng_deinit:
++	ath11k_hal_srng_deinit(ab);
++	return ret;
++}
++
++void ath11k_core_halt(struct ath11k *ar)
++{
++	struct ath11k_base *ab = ar->ab;
++
++	lockdep_assert_held(&ar->conf_mutex);
++
++	ar->num_created_vdevs = 0;
++
++	ath11k_mac_scan_finish(ar);
++	ath11k_mac_peer_cleanup_all(ar);
++	cancel_delayed_work_sync(&ar->scan.timeout);
++	cancel_work_sync(&ar->regd_update_work);
++
++	rcu_assign_pointer(ab->pdevs_active[ar->pdev_idx], NULL);
++	synchronize_rcu();
++	INIT_LIST_HEAD(&ar->arvifs);
++	idr_init(&ar->txmgmt_idr);
++}
++
++static void ath11k_core_restart(struct work_struct *work)
++{
++	struct ath11k_base *ab = container_of(work, struct ath11k_base, restart_work);
++	struct ath11k *ar;
++	struct ath11k_pdev *pdev;
++	int i, ret = 0;
++
++	spin_lock_bh(&ab->base_lock);
++	ab->stats.fw_crash_counter++;
++	spin_unlock_bh(&ab->base_lock);
++
++	for (i = 0; i < ab->num_radios; i++) {
++		pdev = &ab->pdevs[i];
++		ar = pdev->ar;
++		if (!ar || ar->state == ATH11K_STATE_OFF)
 +			continue;
 +
-+		ring->skb[i] = NULL;
-+		dma_unmap_single(ab->dev, ATH11K_SKB_RXCB(skb)->paddr,
-+				 skb->len + skb_tailroom(skb), DMA_FROM_DEVICE);
-+		dev_kfree_skb_any(skb);
++		ieee80211_stop_queues(ar->hw);
++		ath11k_mac_drain_tx(ar);
++		complete(&ar->scan.started);
++		complete(&ar->scan.completed);
++		complete(&ar->peer_assoc_done);
++		complete(&ar->install_key_done);
++		complete(&ar->vdev_setup_done);
++		complete(&ar->bss_survey_done);
++
++		wake_up(&ar->dp.tx_empty_waitq);
++		idr_for_each(&ar->txmgmt_idr,
++			     ath11k_mac_tx_mgmt_pending_free, ar);
++		idr_destroy(&ar->txmgmt_idr);
 +	}
++
++	wake_up(&ab->wmi_sc.tx_credits_wq);
++	wake_up(&ab->peer_mapping_wq);
++
++	ret = ath11k_core_reconfigure_on_crash(ab);
++	if (ret) {
++		ath11k_err(ab, "failed to reconfigure driver on crash recovery\n");
++		return;
++	}
++
++	for (i = 0; i < ab->num_radios; i++) {
++		pdev = &ab->pdevs[i];
++		ar = pdev->ar;
++		if (!ar || ar->state == ATH11K_STATE_OFF)
++			continue;
++
++		mutex_lock(&ar->conf_mutex);
++
++		switch (ar->state) {
++		case ATH11K_STATE_ON:
++			ar->state = ATH11K_STATE_RESTARTING;
++			ath11k_core_halt(ar);
++			ieee80211_restart_hw(ar->hw);
++			break;
++		case ATH11K_STATE_OFF:
++			ath11k_warn(ab,
++				    "cannot restart radio %d that hasn't been started\n",
++				    i);
++			break;
++		case ATH11K_STATE_RESTARTING:
++			break;
++		case ATH11K_STATE_RESTARTED:
++			ar->state = ATH11K_STATE_WEDGED;
++			/* fall through */
++		case ATH11K_STATE_WEDGED:
++			ath11k_warn(ab,
++				    "device is wedged, will not restart radio %d\n", i);
++			break;
++		}
++		mutex_unlock(&ar->conf_mutex);
++	}
++	complete(&ab->driver_recovery);
 +}
 +
-+void ath11k_ce_cleanup_pipes(struct ath11k_base *ab)
++int ath11k_core_init(struct ath11k_base *ab)
 +{
-+	struct ath11k_ce_pipe *pipe;
-+	int pipe_num;
-+
-+	for (pipe_num = 0; pipe_num < CE_COUNT; pipe_num++) {
-+		pipe = &ab->ce.ce_pipe[pipe_num];
-+		ath11k_ce_rx_pipe_cleanup(pipe);
-+
-+		/* Cleanup any src CE's which have interrupts disabled */
-+		ath11k_ce_poll_send_completed(ab, pipe_num);
-+
-+		/* NOTE: Should we also clean up tx buffer in all pipes? */
-+	}
-+}
-+
-+void ath11k_ce_rx_post_buf(struct ath11k_base *ab)
-+{
-+	struct ath11k_ce_pipe *pipe;
-+	int i;
++	struct device *dev = ab->dev;
++	struct rproc *prproc;
++	phandle rproc_phandle;
 +	int ret;
 +
-+	for (i = 0; i < CE_COUNT; i++) {
-+		pipe = &ab->ce.ce_pipe[i];
-+		ret = ath11k_ce_rx_post_pipe(pipe);
-+		if (ret) {
-+			if (ret == -ENOSPC)
-+				continue;
-+
-+			ath11k_warn(ab, "failed to post rx buf to pipe: %d err: %d\n",
-+				    i, ret);
-+			mod_timer(&ab->rx_replenish_retry,
-+				  jiffies + ATH11K_CE_RX_POST_RETRY_JIFFIES);
-+
-+			return;
-+		}
-+	}
-+}
-+
-+void ath11k_ce_rx_replenish_retry(struct timer_list *t)
-+{
-+	struct ath11k_base *ab = from_timer(ab, t, rx_replenish_retry);
-+
-+	ath11k_ce_rx_post_buf(ab);
-+}
-+
-+int ath11k_ce_init_pipes(struct ath11k_base *ab)
-+{
-+	struct ath11k_ce_pipe *pipe;
-+	int i;
-+	int ret;
-+
-+	for (i = 0; i < CE_COUNT; i++) {
-+		pipe = &ab->ce.ce_pipe[i];
-+
-+		if (pipe->src_ring) {
-+			ret = ath11k_ce_init_ring(ab, pipe->src_ring, i,
-+						  HAL_CE_SRC);
-+			if (ret) {
-+				ath11k_warn(ab, "failed to init src ring: %d\n",
-+					    ret);
-+				/* Should we clear any partial init */
-+				return ret;
-+			}
-+
-+			pipe->src_ring->write_index = 0;
-+			pipe->src_ring->sw_index = 0;
-+		}
-+
-+		if (pipe->dest_ring) {
-+			ret = ath11k_ce_init_ring(ab, pipe->dest_ring, i,
-+						  HAL_CE_DST);
-+			if (ret) {
-+				ath11k_warn(ab, "failed to init dest ring: %d\n",
-+					    ret);
-+				/* Should we clear any partial init */
-+				return ret;
-+			}
-+
-+			pipe->rx_buf_needed = pipe->dest_ring->nentries ?
-+					      pipe->dest_ring->nentries - 2 : 0;
-+
-+			pipe->dest_ring->write_index = 0;
-+			pipe->dest_ring->sw_index = 0;
-+		}
-+
-+		if (pipe->status_ring) {
-+			ret = ath11k_ce_init_ring(ab, pipe->status_ring, i,
-+						  HAL_CE_DST_STATUS);
-+			if (ret) {
-+				ath11k_warn(ab, "failed to init dest status ing: %d\n",
-+					    ret);
-+				/* Should we clear any partial init */
-+				return ret;
-+			}
-+
-+			pipe->status_ring->write_index = 0;
-+			pipe->status_ring->sw_index = 0;
-+		}
++	if (of_property_read_u32(dev->of_node, "qcom,rproc", &rproc_phandle)) {
++		ath11k_err(ab, "failed to get q6_rproc handle\n");
++		return -ENOENT;
 +	}
 +
-+	return 0;
-+}
-+
-+void ath11k_ce_free_pipes(struct ath11k_base *ab)
-+{
-+	struct ath11k_ce_pipe *pipe;
-+	int desc_sz;
-+	int i;
-+
-+	for (i = 0; i < CE_COUNT; i++) {
-+		pipe = &ab->ce.ce_pipe[i];
-+
-+		if (pipe->src_ring) {
-+			desc_sz = ath11k_hal_ce_get_desc_size(HAL_CE_DESC_SRC);
-+			dma_free_coherent(ab->dev,
-+					  pipe->src_ring->nentries * desc_sz +
-+					  CE_DESC_RING_ALIGN,
-+					  pipe->src_ring->base_addr_owner_space,
-+					  pipe->src_ring->base_addr_ce_space);
-+			kfree(pipe->src_ring);
-+			pipe->src_ring = NULL;
-+		}
-+
-+		if (pipe->dest_ring) {
-+			desc_sz = ath11k_hal_ce_get_desc_size(HAL_CE_DESC_DST);
-+			dma_free_coherent(ab->dev,
-+					  pipe->dest_ring->nentries * desc_sz +
-+					  CE_DESC_RING_ALIGN,
-+					  pipe->dest_ring->base_addr_owner_space,
-+					  pipe->dest_ring->base_addr_ce_space);
-+			kfree(pipe->dest_ring);
-+			pipe->dest_ring = NULL;
-+		}
-+
-+		if (pipe->status_ring) {
-+			desc_sz =
-+			  ath11k_hal_ce_get_desc_size(HAL_CE_DESC_DST_STATUS);
-+			dma_free_coherent(ab->dev,
-+					  pipe->status_ring->nentries * desc_sz +
-+					  CE_DESC_RING_ALIGN,
-+					  pipe->status_ring->base_addr_owner_space,
-+					  pipe->status_ring->base_addr_ce_space);
-+			kfree(pipe->status_ring);
-+			pipe->status_ring = NULL;
-+		}
-+	}
-+}
-+
-+int ath11k_ce_alloc_pipes(struct ath11k_base *ab)
-+{
-+	struct ath11k_ce_pipe *pipe;
-+	int i;
-+	int ret;
-+	const struct ce_attr *attr;
-+
-+	spin_lock_init(&ab->ce.ce_lock);
-+
-+	for (i = 0; i < CE_COUNT; i++) {
-+		attr = &host_ce_config_wlan[i];
-+		pipe = &ab->ce.ce_pipe[i];
-+		pipe->pipe_num = i;
-+		pipe->ab = ab;
-+		pipe->buf_sz = attr->src_sz_max;
-+
-+		ret = ath11k_ce_alloc_pipe(ab, i);
-+		if (ret) {
-+			/* Free any parial successful allocation */
-+			ath11k_ce_free_pipes(ab);
-+			return ret;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+/* For Big Endian Host, Copy Engine byte_swap is enabled
-+ * When Copy Engine does byte_swap, need to byte swap again for the
-+ * Host to get/put buffer content in the correct byte order
-+ */
-+void ath11k_ce_byte_swap(void *mem, u32 len)
-+{
-+	int i;
-+
-+	if (IS_ENABLED(CONFIG_CPU_BIG_ENDIAN)) {
-+		if (!mem)
-+			return;
-+
-+		for (i = 0; i < (len / 4); i++) {
-+			*(u32 *)mem = swab32(*(u32 *)mem);
-+			mem += 4;
-+		}
-+	}
-+}
-+
-+int ath11k_ce_get_attr_flags(int ce_id)
-+{
-+	if (ce_id >= CE_COUNT)
++	prproc = rproc_get_by_phandle(rproc_phandle);
++	if (!prproc) {
++		ath11k_err(ab, "failed to get rproc\n");
 +		return -EINVAL;
++	}
++	ab->tgt_rproc = prproc;
++	ab->hw_params = ath11k_hw_params;
 +
-+	return host_ce_config_wlan[ce_id].flags;
++	ret = ath11k_core_soc_create(ab);
++	if (ret) {
++		ath11k_err(ab, "failed to create soc core: %d\n", ret);
++		return ret;
++	}
++
++	return 0;
 +}
++
++void ath11k_core_deinit(struct ath11k_base *ab)
++{
++	mutex_lock(&ab->core_lock);
++
++	ath11k_core_pdev_destroy(ab);
++	ath11k_core_stop(ab);
++
++	mutex_unlock(&ab->core_lock);
++
++	ath11k_ahb_power_down(ab);
++	ath11k_mac_destroy(ab);
++	ath11k_core_soc_destroy(ab);
++}
++
++void ath11k_core_free(struct ath11k_base *ab)
++{
++	kfree(ab);
++}
++
++struct ath11k_base *ath11k_core_alloc(struct device *dev)
++{
++	struct ath11k_base *ab;
++
++	ab = kzalloc(sizeof(*ab), GFP_KERNEL);
++	if (!ab)
++		return NULL;
++
++	init_completion(&ab->driver_recovery);
++
++	ab->workqueue = create_singlethread_workqueue("ath11k_wq");
++	if (!ab->workqueue)
++		goto err_sc_free;
++
++	mutex_init(&ab->core_lock);
++	spin_lock_init(&ab->base_lock);
++
++	INIT_LIST_HEAD(&ab->peers);
++	init_waitqueue_head(&ab->peer_mapping_wq);
++	init_waitqueue_head(&ab->wmi_sc.tx_credits_wq);
++	INIT_WORK(&ab->restart_work, ath11k_core_restart);
++	timer_setup(&ab->rx_replenish_retry, ath11k_ce_rx_replenish_retry, 0);
++	ab->dev = dev;
++
++	return ab;
++
++err_sc_free:
++	kfree(ab);
++	return NULL;
++}
++
++static int __init ath11k_init(void)
++{
++	int ret;
++
++	ret = ath11k_ahb_init();
++	if (ret)
++		printk(KERN_ERR "failed to register ath11k ahb driver: %d\n",
++		       ret);
++	return ret;
++}
++module_init(ath11k_init);
++
++static void __exit ath11k_exit(void)
++{
++	ath11k_ahb_exit();
++}
++module_exit(ath11k_exit);
++
++MODULE_DESCRIPTION("Driver support for Qualcomm Technologies 802.11ax wireless chip");
++MODULE_LICENSE("Dual BSD/GPL");
 
