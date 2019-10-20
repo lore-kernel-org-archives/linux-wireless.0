@@ -6,102 +6,111 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59CDACA9EB1
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5C03CA9EB5
 	for <linux-wireless@archiver.kernel.org>; Sun, 20 Oct 2019 08:56:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3A3E320679
+	by mail.kernel.org (Postfix) with ESMTP id A74FD2067B
 	for <linux-wireless@archiver.kernel.org>; Sun, 20 Oct 2019 08:56:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726303AbfJTI4C (ORCPT
+        id S1726320AbfJTI4I (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 20 Oct 2019 04:56:02 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:50796 "EHLO
+        Sun, 20 Oct 2019 04:56:08 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:50830 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726285AbfJTI4A (ORCPT
+        with ESMTP id S1726115AbfJTI4H (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 20 Oct 2019 04:56:00 -0400
+        Sun, 20 Oct 2019 04:56:07 -0400
 Received: from [91.156.6.193] (helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1iM70I-0003LY-U8; Sun, 20 Oct 2019 11:55:59 +0300
+        id 1iM70M-0003LY-7W; Sun, 20 Oct 2019 11:56:02 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Sun, 20 Oct 2019 11:55:40 +0300
-Message-Id: <20191020085545.16407-6-luca@coelho.fi>
+Date:   Sun, 20 Oct 2019 11:55:44 +0300
+Message-Id: <20191020085545.16407-10-luca@coelho.fi>
 X-Mailer: git-send-email 2.23.0
 In-Reply-To: <20191020085545.16407-1-luca@coelho.fi>
 References: <20191020085545.16407-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 07/12] iwlwifi: mvm: don't skip mgmt tid when flushing all tids
+Subject: [PATCH 11/12] iwlwifi: 22000: fix some indentation
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Haim Dreyfuss <haim.dreyfuss@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-There are various of flows which require tids flushing
-(disconnection, suspend, etc...).
-Currently, when the driver instructs the FW to flush
-he masks all the data tids(0-7).
-However, the driver doesn't set the management tid (#15)
-which cause the FW not to flush it.
-When the FW tries to remove the mgmt queue he throws an assert
-since it is not an empty queue.
-instead of just set only the data tids set everything and let
-the FW ignore the invalid tids.
+Somehow two tabs snuck into this file where just one should be
+used, fix that.
 
-Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c  | 3 ++-
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c       | 2 +-
- 3 files changed, 4 insertions(+), 3 deletions(-)
+ .../net/wireless/intel/iwlwifi/cfg/22000.c    | 30 +++++++++----------
+ 1 file changed, 15 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-index 754adc0146be..9970f61b9f9f 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-@@ -148,7 +148,8 @@ static ssize_t iwl_dbgfs_tx_flush_write(struct iwl_mvm *mvm, char *buf,
- 				    "FLUSHING all tids queues on sta_id = %d\n",
- 				    flush_arg);
- 		mutex_lock(&mvm->mutex);
--		ret = iwl_mvm_flush_sta_tids(mvm, flush_arg, 0xFF, 0) ? : count;
-+		ret = iwl_mvm_flush_sta_tids(mvm, flush_arg, 0xFFFF, 0)
-+			? : count;
- 		mutex_unlock(&mvm->mutex);
- 		return ret;
- 	}
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index e879c02ca4db..e0ffc3cdd677 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -4644,7 +4644,7 @@ static void iwl_mvm_flush_no_vif(struct iwl_mvm *mvm, u32 queues, bool drop)
- 			continue;
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
+index 37bcf157f0bb..8ad771dadae2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
+@@ -317,39 +317,39 @@ const struct iwl_cfg iwl_ax101_cfg_quz_hr = {
+ };
  
- 		if (drop)
--			iwl_mvm_flush_sta_tids(mvm, i, 0xFF, 0);
-+			iwl_mvm_flush_sta_tids(mvm, i, 0xFFFF, 0);
- 		else
- 			iwl_mvm_wait_sta_queues_empty(mvm,
- 					iwl_mvm_sta_from_mac80211(sta));
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index f4778a6a40b9..81a88a89ea74 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -2059,7 +2059,7 @@ int iwl_mvm_flush_sta(struct iwl_mvm *mvm, void *sta, bool internal, u32 flags)
+ const struct iwl_cfg iwl_ax201_cfg_quz_hr = {
+-		.name = "Intel(R) Wi-Fi 6 AX201 160MHz",
+-		.fw_name_pre = IWL_QUZ_A_HR_B_FW_PRE,
+-		IWL_DEVICE_22500,
+-		/*
++	.name = "Intel(R) Wi-Fi 6 AX201 160MHz",
++	.fw_name_pre = IWL_QUZ_A_HR_B_FW_PRE,
++	IWL_DEVICE_22500,
++	/*
+          * This device doesn't support receiving BlockAck with a large bitmap
+          * so we need to restrict the size of transmitted aggregation to the
+          * HT size; mac80211 would otherwise pick the HE max (256) by default.
+          */
+-		.max_tx_agg_size = IEEE80211_MAX_AMPDU_BUF_HT,
++	.max_tx_agg_size = IEEE80211_MAX_AMPDU_BUF_HT,
+ };
  
- 	if (iwl_mvm_has_new_tx_api(mvm))
- 		return iwl_mvm_flush_sta_tids(mvm, mvm_sta->sta_id,
--					      0xff | BIT(IWL_MGMT_TID), flags);
-+					      0xffff, flags);
+ const struct iwl_cfg iwl_ax1650s_cfg_quz_hr = {
+-		.name = "Killer(R) Wi-Fi 6 AX1650s 160MHz Wireless Network Adapter (201D2W)",
+-		.fw_name_pre = IWL_QUZ_A_HR_B_FW_PRE,
+-		IWL_DEVICE_22500,
+-		/*
++	.name = "Killer(R) Wi-Fi 6 AX1650s 160MHz Wireless Network Adapter (201D2W)",
++	.fw_name_pre = IWL_QUZ_A_HR_B_FW_PRE,
++	IWL_DEVICE_22500,
++	/*
+          * This device doesn't support receiving BlockAck with a large bitmap
+          * so we need to restrict the size of transmitted aggregation to the
+          * HT size; mac80211 would otherwise pick the HE max (256) by default.
+          */
+-		.max_tx_agg_size = IEEE80211_MAX_AMPDU_BUF_HT,
++	.max_tx_agg_size = IEEE80211_MAX_AMPDU_BUF_HT,
+ };
  
- 	if (internal)
- 		return iwl_mvm_flush_tx_path(mvm, int_sta->tfd_queue_msk,
+ const struct iwl_cfg iwl_ax1650i_cfg_quz_hr = {
+-		.name = "Killer(R) Wi-Fi 6 AX1650i 160MHz Wireless Network Adapter (201NGW)",
+-		.fw_name_pre = IWL_QUZ_A_HR_B_FW_PRE,
+-		IWL_DEVICE_22500,
+-		/*
++	.name = "Killer(R) Wi-Fi 6 AX1650i 160MHz Wireless Network Adapter (201NGW)",
++	.fw_name_pre = IWL_QUZ_A_HR_B_FW_PRE,
++	IWL_DEVICE_22500,
++	/*
+          * This device doesn't support receiving BlockAck with a large bitmap
+          * so we need to restrict the size of transmitted aggregation to the
+          * HT size; mac80211 would otherwise pick the HE max (256) by default.
+          */
+-		.max_tx_agg_size = IEEE80211_MAX_AMPDU_BUF_HT,
++	.max_tx_agg_size = IEEE80211_MAX_AMPDU_BUF_HT,
+ };
+ 
+ const struct iwl_cfg iwl_ax200_cfg_cc = {
 -- 
 2.23.0
 
