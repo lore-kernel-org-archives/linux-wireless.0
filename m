@@ -2,87 +2,92 @@ Return-Path: <SRS0=EcM/=YO=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D579CA9EB5
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Oct 2019 09:34:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15C5FCA9EAF
+	for <linux-wireless@archiver.kernel.org>; Mon, 21 Oct 2019 12:19:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 53122206C2
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Oct 2019 09:34:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DEB79214B2
+	for <linux-wireless@archiver.kernel.org>; Mon, 21 Oct 2019 12:19:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NcOj25e2"
+	dkim=pass (1024-bit key) header.d=piap.pl header.i=@piap.pl header.b="CLbMeDVx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727284AbfJUJez (ORCPT
+        id S1728134AbfJUMS5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 21 Oct 2019 05:34:55 -0400
-Received: from mail-il1-f175.google.com ([209.85.166.175]:45915 "EHLO
-        mail-il1-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726847AbfJUJez (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 Oct 2019 05:34:55 -0400
-Received: by mail-il1-f175.google.com with SMTP id u1so11344561ilq.12
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Oct 2019 02:34:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to;
-        bh=PJBlx8MUt4FojMRZ9wTw+AdBZ7uXuAxeK3s1S608x0E=;
-        b=NcOj25e2KNatmN6nDma6o13Ze4M+fZpGymZQeZX4f4Fu9Eu9aaJqtM4gPYVPgZIfTj
-         +HxdDXTQuI8AChGZDxcg0wj7z7mOGJitbx/z9up2+MSA30plbvw2t457pitX9yffpZCa
-         p4qre1yOx6rk/MooqvXE0NOqve0cE/4eeNE/fsvXmJc3dY0axspfDMVaL5ELiZ/yLvhd
-         LPotMIU9nQa0XmXgLapviROb3N6lsDSqER7/DOELSTSdI/S9AndhR5TbkNB1y4K66DL0
-         l133elmnORHtDse8L70z1r8+JfRNKM4NnbjqaCtpE+EUv7QIWmx4L3ZP2FxhMT4/fi4q
-         TjTw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to;
-        bh=PJBlx8MUt4FojMRZ9wTw+AdBZ7uXuAxeK3s1S608x0E=;
-        b=GBo6kmLNP88PJsHcB/cXMpLImE5nBSh3dlfqxIBEyH8iz2dE5t1jCup1MFpVZaSWsw
-         FodvsN+1lwkVXgqa26kc60VMIrAOwW9lRd0+42lhpu8C1HRlFHPDi/1MLc5SiXu3qLd/
-         IVQUBGnTsX3+kH6z+eIdLa+TS/Gx1d2n4aNl58juhvsvf5xyr7jviLq4EaVhE8g6os7/
-         HAY1qCiZR0GfClFsJjxuFSdcbzs4JkzOM1QMTQwfVjK+wZ7N1B5LNZXW++YELl7p4r8Y
-         zQdh6xZM9XEO1FGuLBNF1BM8RcXqWdXmYffhXZaI4bhquoWODPulIl5SuzDuSMfFgyfR
-         LJvA==
-X-Gm-Message-State: APjAAAXclAhbdjw9+QtMXlcjKD3hOEb/7248rBAKEQMPtShFF0FJvdOs
-        bPYYPIAN1ch5m9aS5NWhkXnFXhmG/U8I1j6CNpVt9g==
-X-Google-Smtp-Source: APXvYqzPMD865o43bnHMqAuU2oi9xl45HisKyHg8Gh+4uY1NbKyQkxhMbeFBmbZI7gBfEvM7P3kIewvPg8FUZlregD0=
-X-Received: by 2002:a92:3c1a:: with SMTP id j26mr25619113ila.167.1571650493347;
- Mon, 21 Oct 2019 02:34:53 -0700 (PDT)
+        Mon, 21 Oct 2019 08:18:57 -0400
+Received: from ni.piap.pl ([195.187.100.5]:48156 "EHLO ni.piap.pl"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727256AbfJUMS5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 21 Oct 2019 08:18:57 -0400
+X-Greylist: delayed 440 seconds by postgrey-1.27 at vger.kernel.org; Mon, 21 Oct 2019 08:18:55 EDT
+Received: from t19.piap.pl (OSB1819.piap.pl [10.0.9.19])
+        (using TLSv1.2 with cipher AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ni.piap.pl (Postfix) with ESMTPSA id A1B08443491;
+        Mon, 21 Oct 2019 14:18:54 +0200 (CEST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 ni.piap.pl A1B08443491
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=piap.pl; s=mail;
+        t=1571660334; bh=Tp8OSf1h/wDKpwi0+HzYPecCfDy55FK9qmwYC4Eai90=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=CLbMeDVxHJ9JNtZuGbwZP5WljuUhEqWhdQiChl7+y7D2bbVOAbXSXERRWrruUaAnQ
+         joD5Cz0rULQLcizQTb3L6boWn+924hxz9bhnhKdU9wPCgcP+y+QVf/5dMGPUm2jWxi
+         HdZzdmfKXtgE0xHWFOaAwH/nSKLtw9vhkz3X9M/0=
+From:   khalasa@piap.pl (Krzysztof =?utf-8?Q?Ha=C5=82asa?=)
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] 802.11n IBSS: wlan0 stops receiving packets due to aggregation after sender reboot
+References: <m34l02mh71.fsf@t19.piap.pl>
+Date:   Mon, 21 Oct 2019 14:18:53 +0200
+In-Reply-To: <m34l02mh71.fsf@t19.piap.pl> ("Krzysztof \=\?utf-8\?Q\?Ha\=C5\=82as\?\=
+ \=\?utf-8\?Q\?a\=22's\?\= message of
+        "Mon, 21 Oct 2019 14:11:30 +0200")
+Message-ID: <m3zhhul2aa.fsf@t19.piap.pl>
 MIME-Version: 1.0
-References: <CADh-Cm=umBWCkz41-e0-PDnDrbpfQi_PRdT--SePmQLCqj5rwg@mail.gmail.com>
-In-Reply-To: <CADh-Cm=umBWCkz41-e0-PDnDrbpfQi_PRdT--SePmQLCqj5rwg@mail.gmail.com>
-From:   Ryan Adolf <ryanadolf123@gmail.com>
-Date:   Mon, 21 Oct 2019 02:34:42 -0700
-Message-ID: <CADh-CmnrWe_hrdfs3RqL0mF4ipAxthUgE3=eBSvaiudbEtsQvw@mail.gmail.com>
-Subject: Fwd: iw package typo in help command output
-To:     linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+X-KLMS-Rule-ID: 4
+X-KLMS-Message-Action: skipped
+X-KLMS-AntiSpam-Status: not scanned, whitelist
+X-KLMS-AntiPhishing: not scanned, whitelist
+X-KLMS-AntiVirus: Kaspersky Security 8.0 for Linux Mail Server, version 8.0.1.721, not scanned, whitelist
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello,
+Fix a bug where the mac80211 RX aggregation code sets a new aggregation
+"session" at the remote station's request, but the head_seq_num
+(the sequence number the receiver expects to receive) isn't reset.
 
-First of all I'm not sure what the policy of this community is on
-typos. It's my first time contributing to iw :) If you consider this
-too minor to fix, I understand. The package has a lot of amazing stuff
-to it.
+Spotted on a pair of AR9580 in IBSS mode.
 
-While reading through the output of `iw help`, I noticed that
-"timestamp" was misspelled as "timstamp":
+diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
+index 4d1c335e06e5..775a51cc51c9 100644
+--- a/net/mac80211/agg-rx.c
++++ b/net/mac80211/agg-rx.c
+@@ -354,9 +354,11 @@ void ___ieee80211_start_rx_ba_session(struct sta_info =
+*sta,
+ 			 */
+ 			rcu_read_lock();
+ 			tid_rx =3D rcu_dereference(sta->ampdu_mlme.tid_rx[tid]);
+-			if (tid_rx && tid_rx->timeout =3D=3D timeout)
++			if (tid_rx && tid_rx->timeout =3D=3D timeout) {
++				tid_rx->ssn =3D start_seq_num;
++				tid_rx->head_seq_num =3D start_seq_num;
+ 				status =3D WLAN_STATUS_SUCCESS;
+-			else
++			} else
+ 				status =3D WLAN_STATUS_REQUEST_DECLINED;
+ 			rcu_read_unlock();
+ 			goto end;
 
-event [-t|-r] [-f]
-Monitor events from the kernel.
--t - print timestamp
--r - print relative timstamp
--f - print full frame for auth/assoc etc.
+--=20
+Krzysztof Ha=C5=82asa
 
-The erroneous line seems to be
-https://git.sipsolutions.net/iw.git/tree/event.c#n1175.
-
-Thanks,
-Ryan
+=C5=81UKASIEWICZ Research Network
+Industrial Research Institute for Automation and Measurements PIAP
+Al. Jerozolimskie 202, 02-486 Warsaw, Poland
