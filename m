@@ -4,32 +4,33 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AF5DCA9EAF
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Oct 2019 14:38:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2075CA9EB7
+	for <linux-wireless@archiver.kernel.org>; Mon, 21 Oct 2019 14:38:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EC25420659
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Oct 2019 14:38:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 76AC620B7C
+	for <linux-wireless@archiver.kernel.org>; Mon, 21 Oct 2019 14:38:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729442AbfJUOh4 (ORCPT
+        id S1729436AbfJUOh4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Mon, 21 Oct 2019 10:37:56 -0400
-Received: from xavier.telenet-ops.be ([195.130.132.52]:54266 "EHLO
+Received: from xavier.telenet-ops.be ([195.130.132.52]:54276 "EHLO
         xavier.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727674AbfJUOhz (ORCPT
+        with ESMTP id S1727774AbfJUOhz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Mon, 21 Oct 2019 10:37:55 -0400
 Received: from ramsan ([84.194.98.4])
         by xavier.telenet-ops.be with bizsmtp
-        id GEdo2100C05gfCL01Edox6; Mon, 21 Oct 2019 16:37:54 +0200
+        id GEdo2100E05gfCL01Edox7; Mon, 21 Oct 2019 16:37:54 +0200
 Received: from rox.of.borg ([192.168.97.57])
         by ramsan with esmtp (Exim 4.90_1)
         (envelope-from <geert@linux-m68k.org>)
-        id 1iMYoe-0007cx-CY; Mon, 21 Oct 2019 16:37:48 +0200
+        id 1iMYoe-0007d9-GL; Mon, 21 Oct 2019 16:37:48 +0200
 Received: from geert by rox.of.borg with local (Exim 4.90_1)
         (envelope-from <geert@linux-m68k.org>)
-        id 1iMYoe-0003ma-AN; Mon, 21 Oct 2019 16:37:48 +0200
+        id 1iMYoe-0003mm-E8; Mon, 21 Oct 2019 16:37:48 +0200
 From:   Geert Uytterhoeven <geert+renesas@glider.be>
 To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Ludovic Desroches <ludovic.desroches@microchip.com>,
@@ -44,9 +45,9 @@ Cc:     linux-mmc@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
         linux-kernel@vger.kernel.org,
         Geert Uytterhoeven <geert+renesas@glider.be>
-Subject: [PATCH 1/7] debugfs: Add debugfs_create_xul() for hexadecimal unsigned long
-Date:   Mon, 21 Oct 2019 16:37:36 +0200
-Message-Id: <20191021143742.14487-2-geert+renesas@glider.be>
+Subject: [PATCH 5/7] mmc: atmel-mci: Remove superfluous cast in debugfs_create_u32() call
+Date:   Mon, 21 Oct 2019 16:37:40 +0200
+Message-Id: <20191021143742.14487-6-geert+renesas@glider.be>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20191021143742.14487-1-geert+renesas@glider.be>
 References: <20191021143742.14487-1-geert+renesas@glider.be>
@@ -55,41 +56,27 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The existing debugfs_create_ulong() function supports objects of
-type "unsigned long", which are 32-bit or 64-bit depending on the
-platform, in decimal form.  To format objects in hexadecimal, various
-debugfs_create_x*() functions exist, but all of them take fixed-size
-types.
-
-Add a debugfs helper for "unsigned long" objects in hexadecimal format.
-This avoids the need for users to open-code the same, or introduce
-bugs when casting the value pointer to "u32 *" or "u64 *" to call
-debugfs_create_x{32,64}().
+"atmel_mci.state" is an enum, which is compatible with u32, so there is
+no need to cast its address, preventing further compiler checks.
 
 Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
 ---
- include/linux/debugfs.h | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ drivers/mmc/host/atmel-mci.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/include/linux/debugfs.h b/include/linux/debugfs.h
-index 33690949b45d6904..d7b2aebcc277d65e 100644
---- a/include/linux/debugfs.h
-+++ b/include/linux/debugfs.h
-@@ -356,4 +356,14 @@ static inline ssize_t debugfs_write_file_bool(struct file *file,
+diff --git a/drivers/mmc/host/atmel-mci.c b/drivers/mmc/host/atmel-mci.c
+index ef2eb9e7c75a32a1..34c992d875298932 100644
+--- a/drivers/mmc/host/atmel-mci.c
++++ b/drivers/mmc/host/atmel-mci.c
+@@ -583,7 +583,7 @@ static void atmci_init_debugfs(struct atmel_mci_slot *slot)
  
- #endif
- 
-+static inline void debugfs_create_xul(const char *name, umode_t mode,
-+				      struct dentry *parent,
-+				      unsigned long *value)
-+{
-+	if (sizeof(*value) == sizeof(u32))
-+		debugfs_create_x32(name, mode, parent, (u32 *)value);
-+	else
-+		debugfs_create_x64(name, mode, parent, (u64 *)value);
-+}
-+
- #endif
+ 	debugfs_create_file("regs", S_IRUSR, root, host, &atmci_regs_fops);
+ 	debugfs_create_file("req", S_IRUSR, root, slot, &atmci_req_fops);
+-	debugfs_create_u32("state", S_IRUSR, root, (u32 *)&host->state);
++	debugfs_create_u32("state", S_IRUSR, root, &host->state);
+ 	debugfs_create_xul("pending_events", S_IRUSR, root,
+ 			   &host->pending_events);
+ 	debugfs_create_xul("completed_events", S_IRUSR, root,
 -- 
 2.17.1
 
