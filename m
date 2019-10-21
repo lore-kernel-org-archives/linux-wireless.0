@@ -2,130 +2,95 @@ Return-Path: <SRS0=EcM/=YO=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F01A1CA9EAF
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Oct 2019 22:13:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF73CCA9EAF
+	for <linux-wireless@archiver.kernel.org>; Mon, 21 Oct 2019 22:14:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C095120882
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Oct 2019 22:13:53 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="CZ8d0bWm"
+	by mail.kernel.org (Postfix) with ESMTP id C7C782084C
+	for <linux-wireless@archiver.kernel.org>; Mon, 21 Oct 2019 22:14:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730427AbfJUWNx (ORCPT
+        id S1730350AbfJUWO5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 21 Oct 2019 18:13:53 -0400
-Received: from mail-il1-f193.google.com ([209.85.166.193]:33764 "EHLO
-        mail-il1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727264AbfJUWNw (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 Oct 2019 18:13:52 -0400
-Received: by mail-il1-f193.google.com with SMTP id v2so13560081ilm.0
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Oct 2019 15:13:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=6TLExkVMvOpDTxrAPa6CkioyV3R0cc46IoRh0yejrVk=;
-        b=CZ8d0bWmuMWru3AuFCtc8RsvHw3UW0faKzpKCLpXoJOFhaUreDa3gG9lEnrMDyZEOK
-         oI9frqf3iST1+eHSgZ8WOafLB+qfwhFpsBjwUiR16MCTKrZK2K0liu2lF3VHxqVf/GlH
-         6LW2eeboJNosnHtnVdNhFR4tNMnIVDWh5y2Kg=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=6TLExkVMvOpDTxrAPa6CkioyV3R0cc46IoRh0yejrVk=;
-        b=R6JX0EPwle7hiYyTtwNw17KpGpyD6RQ7hNynROn/P6w2QJNXXucgYqgZIGJ0H7BtBD
-         SWDiy8LVg2SJf7Remk4aCqoecuEtQOPrOeMN0g8W1XpIWDRDx3u/rVlonzRLvb4ipTuB
-         uUay0udrbVB635rGPoXnnCBymHW3y5A5n3yUBqLyCuvNXHQfUExYg4mb3Pl7FZ+v99l5
-         CSRe2xE+CSSxgQI0pjzvaHHHtmP/wKntXdfryIymdz49Q1nMlplzPOaWsU2vII6s83n0
-         aJ7eCl0NFlgnt5K7EhhDb1QcVCByfjvvUDupPs7LGOy3HEioRbSYHGEnywEPAuYn1I1U
-         GG9A==
-X-Gm-Message-State: APjAAAWjSCNIPtCGWfFLLV8PtVVwO909IGyjZusG18Wm9LFFzCxoFCv3
-        OE/4PASCREsHtKLceT9D4YBY3Jh2Xnk=
-X-Google-Smtp-Source: APXvYqwFB25L2abNeXSnGF8KIMjRUVysUpDiDhI1CK+QvJnifpfnLA4m7hCYmz1PboVmHWOOSgP9HQ==
-X-Received: by 2002:a92:489b:: with SMTP id j27mr12027354ilg.113.1571696031019;
-        Mon, 21 Oct 2019 15:13:51 -0700 (PDT)
-Received: from mail-io1-f48.google.com (mail-io1-f48.google.com. [209.85.166.48])
-        by smtp.gmail.com with ESMTPSA id d20sm6573429ilk.83.2019.10.21.15.13.50
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 21 Oct 2019 15:13:50 -0700 (PDT)
-Received: by mail-io1-f48.google.com with SMTP id y12so337935ioa.6
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Oct 2019 15:13:50 -0700 (PDT)
-X-Received: by 2002:a6b:7715:: with SMTP id n21mr561180iom.142.1571696029970;
- Mon, 21 Oct 2019 15:13:49 -0700 (PDT)
+        Mon, 21 Oct 2019 18:14:57 -0400
+Received: from mga04.intel.com ([192.55.52.120]:57768 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729406AbfJUWO4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 21 Oct 2019 18:14:56 -0400
+X-Amp-Result: UNKNOWN
+X-Amp-Original-Verdict: FILE UNKNOWN
+X-Amp-File-Uploaded: False
+Received: from fmsmga001.fm.intel.com ([10.253.24.23])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 21 Oct 2019 15:14:56 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.67,325,1566889200"; 
+   d="scan'208";a="209532870"
+Received: from lkp-server01.sh.intel.com (HELO lkp-server01) ([10.239.97.150])
+  by fmsmga001.fm.intel.com with ESMTP; 21 Oct 2019 15:14:54 -0700
+Received: from kbuild by lkp-server01 with local (Exim 4.89)
+        (envelope-from <lkp@intel.com>)
+        id 1iMfwz-0003qt-Mn; Tue, 22 Oct 2019 06:14:53 +0800
+Date:   Tue, 22 Oct 2019 06:14:33 +0800
+From:   kbuild test robot <lkp@intel.com>
+To:     Toke =?iso-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@redhat.com>
+Cc:     kbuild-all@lists.01.org, Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org,
+        make-wifi-fast@lists.bufferbloat.net, ath10k@lists.infradead.org,
+        John Crispin <john@phrozen.org>,
+        Lorenzo Bianconi <lorenzo@kernel.org>,
+        Felix Fietkau <nbd@nbd.name>, Kan Yan <kyan@google.com>,
+        Rajkumar Manoharan <rmanohar@codeaurora.org>,
+        Kevin Hayes <kevinhayes@google.com>
+Subject: [RFC PATCH] mac80211: ieee80211_calc_rx_airtime() can be static
+Message-ID: <20191021221433.5nnny72acwx7lr4a@4978f4969bb8>
+References: <157148503639.2989444.8337290298332344733.stgit@toke.dk>
 MIME-Version: 1.0
-References: <20191017135739.1315-1-ulf.hansson@linaro.org> <20191017135739.1315-2-ulf.hansson@linaro.org>
-In-Reply-To: <20191017135739.1315-2-ulf.hansson@linaro.org>
-From:   Doug Anderson <dianders@chromium.org>
-Date:   Mon, 21 Oct 2019 15:13:39 -0700
-X-Gmail-Original-Message-ID: <CAD=FV=Wh3bnvNu-_1cXf1xT44-EwomoZEWDt88PZzhUVCn9PcQ@mail.gmail.com>
-Message-ID: <CAD=FV=Wh3bnvNu-_1cXf1xT44-EwomoZEWDt88PZzhUVCn9PcQ@mail.gmail.com>
-Subject: Re: [PATCH 1/2] mmc: core: Drop check for mmc_card_is_removable() in mmc_rescan()
-To:     Ulf Hansson <ulf.hansson@linaro.org>
-Cc:     Linux MMC List <linux-mmc@vger.kernel.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Matthias Kaehlcke <mka@chromium.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Tony Lindgren <tony@atomide.com>,
-        Wen Gong <wgong@codeaurora.org>,
-        Erik Stromdahl <erik.stromdahl@gmail.com>,
-        Eyal Reizer <eyalreizer@gmail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <157148503639.2989444.8337290298332344733.stgit@toke.dk>
+X-Patchwork-Hint: ignore
+User-Agent: NeoMutt/20170113 (1.7.2)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
 
-On Thu, Oct 17, 2019 at 6:57 AM Ulf Hansson <ulf.hansson@linaro.org> wrote:
->
-> Upfront in mmc_rescan() we use the host->rescan_entered flag, to allow
-> scanning only once for non-removable cards. Therefore, it's also not
-> possible that we can have bus attached, when we are scanning non-removable
-> cards. For this reason, let' drop the check for mmc_card_is_removable() as
-> it's redundant.
->
-> Signed-off-by: Ulf Hansson <ulf.hansson@linaro.org>
-> ---
->  drivers/mmc/core/core.c | 7 ++-----
->  1 file changed, 2 insertions(+), 5 deletions(-)
->
-> diff --git a/drivers/mmc/core/core.c b/drivers/mmc/core/core.c
-> index 221127324709..6f8342702c73 100644
-> --- a/drivers/mmc/core/core.c
-> +++ b/drivers/mmc/core/core.c
-> @@ -2297,11 +2297,8 @@ void mmc_rescan(struct work_struct *work)
->
->         mmc_bus_get(host);
->
-> -       /*
-> -        * if there is a _removable_ card registered, check whether it is
-> -        * still present
-> -        */
-> -       if (host->bus_ops && !host->bus_dead && mmc_card_is_removable(host))
-> +       /* Verify a registered card to be functional, else remove it. */
-> +       if (host->bus_ops && !host->bus_dead)
->                 host->bus_ops->detect(host);
+Fixes: 427959c8f966 ("mac80211: Import airtime calculation code from mt76")
+Signed-off-by: kbuild test robot <lkp@intel.com>
+---
+ airtime.c |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-At first I thought this was a bit more of a change than your
-description makes it sound like.  Specifically it seemed like
-non-removable cards used to never call host->bus_ops->detect() here
-(even during the first call to mmc_rescan) but now they would call it
-the first time through.
-
-...so I put in a bunch of printouts.  It appears that the first time
-through mmc_rescan() host->bus_ops is NULL.
-
-...ah, and this is what that sentence in your description means about
-having a bus attached.  Now I get it!  :-)
-
-...so, right, this looks fine.
-
-Reviewed-by: Douglas Anderson <dianders@chromium.org>
+diff --git a/net/mac80211/airtime.c b/net/mac80211/airtime.c
+index c8d0cee613660..3f13640643e34 100644
+--- a/net/mac80211/airtime.c
++++ b/net/mac80211/airtime.c
+@@ -208,9 +208,9 @@ ieee80211_calc_legacy_rate_duration(const struct ieee80211_rate *rate,
+ 	return duration;
+ }
+ 
+-u32 ieee80211_calc_rx_airtime(struct ieee80211_hw *hw,
+-			      struct ieee80211_rx_status *status,
+-			      int len)
++static u32 ieee80211_calc_rx_airtime(struct ieee80211_hw *hw,
++				     struct ieee80211_rx_status *status,
++				     int len)
+ {
+ 	struct ieee80211_supported_band *sband;
+ 	const struct ieee80211_rate *rate;
+@@ -279,9 +279,9 @@ u32 ieee80211_calc_rx_airtime(struct ieee80211_hw *hw,
+ 	return duration;
+ }
+ 
+-u32 ieee80211_calc_tx_airtime_rate(struct ieee80211_hw *hw,
+-				   struct ieee80211_tx_rate *rate,
+-				   u8 band, int len)
++static u32 ieee80211_calc_tx_airtime_rate(struct ieee80211_hw *hw,
++					  struct ieee80211_tx_rate *rate,
++					  u8 band, int len)
+ {
+ 	struct ieee80211_rx_status stat = {
+ 		.band = band,
