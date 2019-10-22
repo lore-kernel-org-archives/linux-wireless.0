@@ -1,92 +1,120 @@
-Return-Path: <SRS0=EcM/=YO=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=sWjF=YP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D743CA9EB7
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Oct 2019 22:14:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CE1ACA9EB7
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Oct 2019 00:51:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7C07A2084C
-	for <linux-wireless@archiver.kernel.org>; Mon, 21 Oct 2019 22:14:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D70C520656
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Oct 2019 00:51:19 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FDCkswBo"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730427AbfJUWO5 (ORCPT
+        id S1730600AbfJVAvS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 21 Oct 2019 18:14:57 -0400
-Received: from mga12.intel.com ([192.55.52.136]:1655 "EHLO mga12.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729406AbfJUWO5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 Oct 2019 18:14:57 -0400
-X-Amp-Result: UNKNOWN
-X-Amp-Original-Verdict: FILE UNKNOWN
-X-Amp-File-Uploaded: False
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 21 Oct 2019 15:14:57 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.67,325,1566889200"; 
-   d="scan'208";a="196249108"
-Received: from lkp-server01.sh.intel.com (HELO lkp-server01) ([10.239.97.150])
-  by fmsmga008.fm.intel.com with ESMTP; 21 Oct 2019 15:14:55 -0700
-Received: from kbuild by lkp-server01 with local (Exim 4.89)
-        (envelope-from <lkp@intel.com>)
-        id 1iMfx0-0003vx-Q4; Tue, 22 Oct 2019 06:14:54 +0800
-Date:   Tue, 22 Oct 2019 06:14:32 +0800
-From:   kbuild test robot <lkp@intel.com>
-To:     Toke =?iso-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@redhat.com>
-Cc:     kbuild-all@lists.01.org, Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org,
-        make-wifi-fast@lists.bufferbloat.net, ath10k@lists.infradead.org,
-        John Crispin <john@phrozen.org>,
-        Lorenzo Bianconi <lorenzo@kernel.org>,
-        Felix Fietkau <nbd@nbd.name>, Kan Yan <kyan@google.com>,
-        Rajkumar Manoharan <rmanohar@codeaurora.org>,
-        Kevin Hayes <kevinhayes@google.com>
-Subject: Re: [PATCH v4 2/4] mac80211: Import airtime calculation code from
- mt76
-Message-ID: <201910220654.AzuMkFgk%lkp@intel.com>
-References: <157148503639.2989444.8337290298332344733.stgit@toke.dk>
+        Mon, 21 Oct 2019 20:51:18 -0400
+Received: from mail-qt1-f195.google.com ([209.85.160.195]:38102 "EHLO
+        mail-qt1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729270AbfJVAvS (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 21 Oct 2019 20:51:18 -0400
+Received: by mail-qt1-f195.google.com with SMTP id o25so10791252qtr.5;
+        Mon, 21 Oct 2019 17:51:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:references:from:message-id:date:user-agent:mime-version
+         :in-reply-to:content-language:content-transfer-encoding;
+        bh=UgHNrnh51LB6rsCCFN3sZSSt5cfq2Pvtlch4dtYv1tA=;
+        b=FDCkswBoPdusvkkQyAi0DqMRQ9KngFpAG+MZPS8AhwUjkAT8Fg3UwFa/qlaN0BlOZP
+         ucN3naXBSANDhjFQkE0iX+eyY3Y3GRifwfnQ6tsI+yrMcnlcg4SlJFDHc1DnZGq5bt+C
+         8xo0naNKxUG1EaXFer3+jR+0m3zxROC+NDrH47/yP7H7y4Wtu6TM+nn+d/opZWvUtwr0
+         kmf8BNVt1+ee25+MIKuBcp/sk34b/XovxFo/IUSOnUvuDMg82uz6rf4TSSOFT5FgLcZ6
+         8CnA3MjDkZJDgMsXQQQdS+faDQsSk0zHPV0q1jqRPzIRuLGjYKx7kRj3I/MGPZpYsj4d
+         +W2A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=UgHNrnh51LB6rsCCFN3sZSSt5cfq2Pvtlch4dtYv1tA=;
+        b=isW+k4/Bjdstr+TCG9opwdps5pahxMojKEddLdmJ20REVoOxE/ffi2WqXkImu7u5dF
+         HspzJZakJrpXIJH7HX7MMwcgI5P5nffhS4DDO8CRMTEMIY9kJnoOgCZ1z9bLIlC9zHVi
+         6f1GdXMmyXNwTMalKWli5WVEku51ZMk85c6KTSc5I/BJ6vYP9+qcfM06zQUc20IAA09t
+         fs3+f/fJxAHegFN1jCR4fGHjJEcxAN/YkDp9LOJ2Bd+7yeEvJUk/0iRIaUWhhI9PfYBr
+         NAZ02ed40+MVTqm7ek7fnxXZFu+qwyd9xrgRpYc5XMyw0w6VrNYOGS66HIBy10rJyh6L
+         pfTA==
+X-Gm-Message-State: APjAAAUTTU8J/i5u6zObBYS/MMaGhyMhnkLkMP7RnAFx4Pual4hv1U9G
+        +1OQLNgrRKMFQ0QdJt0SJ2A=
+X-Google-Smtp-Source: APXvYqxYjd0Zi1qjHa8UGioJLYyhNTYMQQASxvsQpy+HH86ZA+573b8Qsy/j+Geh8Ny+S3nN1XO8fA==
+X-Received: by 2002:a05:6214:104b:: with SMTP id l11mr539620qvr.195.1571705476013;
+        Mon, 21 Oct 2019 17:51:16 -0700 (PDT)
+Received: from dahern-DO-MB.local ([2601:282:800:fd80:b912:7de9:ffc9:d1c])
+        by smtp.googlemail.com with ESMTPSA id r36sm6006903qta.27.2019.10.21.17.51.12
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 21 Oct 2019 17:51:14 -0700 (PDT)
+Subject: Re: [PATCH net v5 01/10] net: core: limit nested device depth
+To:     Taehee Yoo <ap420073@gmail.com>, davem@davemloft.net,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        jakub.kicinski@netronome.com, johannes@sipsolutions.net,
+        j.vosburgh@gmail.com, vfalico@gmail.com, andy@greyhouse.net,
+        jiri@resnulli.us, sd@queasysnail.net, roopa@cumulusnetworks.com,
+        saeedm@mellanox.com, manishc@marvell.com, rahulv@marvell.com,
+        kys@microsoft.com, haiyangz@microsoft.com,
+        stephen@networkplumber.org, sashal@kernel.org, hare@suse.de,
+        varun@chelsio.com, ubraun@linux.ibm.com, kgraul@linux.ibm.com,
+        jay.vosburgh@canonical.com, schuffelen@google.com, bjorn@mork.no
+References: <20191021184759.13125-1-ap420073@gmail.com>
+From:   David Ahern <dsahern@gmail.com>
+Message-ID: <c0e17051-ab18-ac60-9c00-348cce84d12f@gmail.com>
+Date:   Mon, 21 Oct 2019 18:51:11 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
+ Gecko/20100101 Thunderbird/60.9.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <157148503639.2989444.8337290298332344733.stgit@toke.dk>
-X-Patchwork-Hint: ignore
-User-Agent: NeoMutt/20170113 (1.7.2)
+In-Reply-To: <20191021184759.13125-1-ap420073@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi "Toke,
+On 10/21/19 12:47 PM, Taehee Yoo wrote:
+> Current code doesn't limit the number of nested devices.
+> Nested devices would be handled recursively and this needs huge stack
+> memory. So, unlimited nested devices could make stack overflow.
+> 
+> This patch adds upper_level and lower_level, they are common variables
+> and represent maximum lower/upper depth.
+> When upper/lower device is attached or dettached,
+> {lower/upper}_level are updated. and if maximum depth is bigger than 8,
+> attach routine fails and returns -EMLINK.
+> 
+> In addition, this patch converts recursive routine of
+> netdev_walk_all_{lower/upper} to iterator routine.
 
-I love your patch! Perhaps something to improve:
+They were made recursive because of a particular setup. Did you verify
+your changes did not break it? See commits starting with
+5bb61cb5fd115bed1814f6b97417e0f397da3c79
 
-[auto build test WARNING on mac80211-next/master]
-[cannot apply to v5.4-rc4 next-20191021]
-[if your patch is applied to the wrong git tree, please drop us a note to help
-improve the system. BTW, we also suggest to use '--base' option to specify the
-base tree in git format-patch, please see https://stackoverflow.com/a/37406982]
+> 
+> Test commands:
+>     ip link add dummy0 type dummy
+>     ip link add link dummy0 name vlan1 type vlan id 1
+>     ip link set vlan1 up
+> 
+>     for i in {2..55}
+>     do
+> 	    let A=$i-1
+> 
+> 	    ip link add vlan$i link vlan$A type vlan id $i
+>     done
+>     ip link del dummy0
 
-url:    https://github.com/0day-ci/linux/commits/Toke-H-iland-J-rgensen/Add-Airtime-Queue-Limits-AQL-to-mac80211/20191021-234455
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git master
-reproduce:
-        # apt-get install sparse
-        # sparse version: v0.6.1-dirty
-        make ARCH=x86_64 allmodconfig
-        make C=1 CF='-fdiagnostic-prefix -D__CHECK_ENDIAN__'
-
-If you fix the issue, kindly add following tag
-Reported-by: kbuild test robot <lkp@intel.com>
-
-
-sparse warnings: (new ones prefixed by >>)
-
->> net/mac80211/airtime.c:211:5: sparse: sparse: symbol 'ieee80211_calc_rx_airtime' was not declared. Should it be static?
->> net/mac80211/airtime.c:282:5: sparse: sparse: symbol 'ieee80211_calc_tx_airtime_rate' was not declared. Should it be static?
-
-Please review and possibly fold the followup patch.
-
----
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+8 levels of nested vlan seems like complete nonsense. Why not just limit
+that stacking and not mess with the rest which can affect real use cases?
