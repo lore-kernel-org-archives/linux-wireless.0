@@ -2,207 +2,142 @@ Return-Path: <SRS0=sWjF=YP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C8B9CA9EB7
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Oct 2019 13:30:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7527CA9EA0
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Oct 2019 14:47:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5992C21872
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Oct 2019 13:30:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8E28321783
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Oct 2019 14:47:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="DI7ps11E"
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="MhxylbhK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388749AbfJVNaZ (ORCPT
+        id S1732031AbfJVOrS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Oct 2019 09:30:25 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:27618 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S2388644AbfJVNaY (ORCPT
+        Tue, 22 Oct 2019 10:47:18 -0400
+Received: from mail-il1-f195.google.com ([209.85.166.195]:46699 "EHLO
+        mail-il1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726955AbfJVOrS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Oct 2019 09:30:24 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1571751023;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=bfi5GeAeASQB1mQGyA998jFPTSgjtLqljftKsgNmsmA=;
-        b=DI7ps11Enh2W7MeCSvnmlvylZNBG4P3MjQdX95HB4mESvxizzOD/Kp4d148C3dD3zK/ajs
-        ZjZjbIADucGEtEjQ14DmIlD34nK9dZ+TxqoUqvu/nlXh3xa5Dip5TIKUjT0MijMOnbHY7N
-        0jkIbLbfG5WmtPmEbTh+jlj80Ec34zw=
-Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com
- [209.85.221.72]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-139-l8xpBakmOXm6aEHrglQvPA-1; Tue, 22 Oct 2019 09:30:22 -0400
-Received: by mail-wr1-f72.google.com with SMTP id f4so9159848wrj.12
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Oct 2019 06:30:22 -0700 (PDT)
+        Tue, 22 Oct 2019 10:47:18 -0400
+Received: by mail-il1-f195.google.com with SMTP id m16so9264555iln.13
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Oct 2019 07:47:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=RtR0PWo1dnvCC8sVNqIrEQULx6YseetGPasRYtSEfgU=;
+        b=MhxylbhKkpmyjYOkefoLAam3gigL71xHU7w6C3RixbGIvY/htZLZ3NLPukRnCrP3tb
+         EQ/HSW2Pf9P7GEFdQvHA7IkPm+joLGn+EnOslY9EhkKYD7B47a5V+ks4rnpudK5oQytn
+         78uU9PCAmnihBor54R6P4YKJ3jC1Qdq4YKuNk=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:from:to:cc:date:message-id:in-reply-to
-         :references:user-agent:mime-version:content-transfer-encoding;
-        bh=F3IUzbWrPuZHLVvq2XMf85ecX3kHWPzPpSEeKPTtYeU=;
-        b=g8dlajvMHiT/IFcKD44elrhiFQz9OUdk8rOOHrKXc1FZ02nd+XCEahTPVT2PfhNWhK
-         ZUPacb/zOreoWpGHJNhnq/rgmpIb10QgD3Bc/3RIvt5Ol7ku12k2kKxMmAdrFLE23uQ+
-         bEd6Fb9YJqh4/UILtrWorw8dX2xQ4ydkmJURN5WSmtebj53a/4Cat5xp0hWdyJnPPPYK
-         ckkUa1btolJA4zpe3AqTiYkO4qUXKq9c7exhbX01NkZKc0mBAczR/OdcMuoqrE5l5Xxm
-         uKVgy8v8VLjzXaowCdmPP4JZUOqEmw8n8sC2cNjWPc4pAbCVJkjrZGsSe9M1TDIa9g6p
-         ktyw==
-X-Gm-Message-State: APjAAAVvzQPKfhkZuVSwpqJ4FQkTwHN+6Jp2ePoB48KVTtAIjolVC+yI
-        1Ky2sL9fPykwB2znMtR6vVN414rze2CZTv3iZJrmZiFJ1ZzncBAckbpZa1HhwSoUIJnI5wBeCFj
-        R7CTpZDmALGx1U/fETsl8bO6NhN4=
-X-Received: by 2002:a1c:7219:: with SMTP id n25mr2894084wmc.23.1571751021130;
-        Tue, 22 Oct 2019 06:30:21 -0700 (PDT)
-X-Google-Smtp-Source: APXvYqziX4ekm8/1EpyD3Im3QUBAKWW7u9wMWWw/uuSmmFI0HTkPrNzx3so3jUSjzVYxgaQs9oaw8Q==
-X-Received: by 2002:a1c:7219:: with SMTP id n25mr2894066wmc.23.1571751020898;
-        Tue, 22 Oct 2019 06:30:20 -0700 (PDT)
-Received: from alrua-x1.borgediget.toke.dk (borgediget.toke.dk. [85.204.121.218])
-        by smtp.gmail.com with ESMTPSA id a17sm13394388wmb.8.2019.10.22.06.30.19
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 22 Oct 2019 06:30:20 -0700 (PDT)
-Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
-        id 9D5FF1804B6; Tue, 22 Oct 2019 15:30:19 +0200 (CEST)
-Subject: [PATCH v5 4/4] mac80211: Use Airtime-based Queue Limits (AQL) on
- packet dequeue
-From:   =?utf-8?q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless@vger.kernel.org,
-        make-wifi-fast@lists.bufferbloat.net, ath10k@lists.infradead.org,
-        John Crispin <john@phrozen.org>,
-        Lorenzo Bianconi <lorenzo@kernel.org>,
-        Felix Fietkau <nbd@nbd.name>, Kan Yan <kyan@google.com>,
-        Rajkumar Manoharan <rmanohar@codeaurora.org>,
-        Kevin Hayes <kevinhayes@google.com>
-Date:   Tue, 22 Oct 2019 15:30:19 +0200
-Message-ID: <157175101956.104114.5352455639882457638.stgit@toke.dk>
-In-Reply-To: <157175101518.104114.6722791270722911023.stgit@toke.dk>
-References: <157175101518.104114.6722791270722911023.stgit@toke.dk>
-User-Agent: StGit/0.20
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=RtR0PWo1dnvCC8sVNqIrEQULx6YseetGPasRYtSEfgU=;
+        b=T6SB1pKEqJvpFwuHtkbO7BHxbvS4mqyb3mBRXt/9TP7lp7kfU0tnVdYLNEv4bidvYB
+         eNui9Im3mID2P/9yeeBRjtYciZ7q8RdTVCnykbxiqRT+E62TamOCZGWm+PYpkJ2OMneJ
+         /tRRaQWaT8QOSI4d6399Mb9hcUYi5YPM8paQeNCtngzXTihvuKaTHxPlBvmPklO47ez3
+         ZYg+8dnw/Q80XNCajuXoUunIB+nWiISi8pn5/S+3WSr/MmMJuQjHYtYKNRlbnrnUcwoz
+         REPMlBf5C2Bpl1WGQi5Zll0k6RABrvvLdkSj2eZItiMy2MMjJUhCIOfdb0zLpbUhICE0
+         +t/A==
+X-Gm-Message-State: APjAAAVOJS+hPGYVo5/4y/Mwx7YmfDToz93I0Q9wv+xH7fe2y/WFcTsE
+        /xjWrR+b4eDXYULMJZpq96Tz3t8rOi8=
+X-Google-Smtp-Source: APXvYqyLVaKQWFfFki5uvCDP9NL/8tENUoApisrKm4W1CDgVwOZVdRfcBjvaBDpnTHHHRE8KGbpRtw==
+X-Received: by 2002:a92:d145:: with SMTP id t5mr5478799ilg.35.1571755637109;
+        Tue, 22 Oct 2019 07:47:17 -0700 (PDT)
+Received: from mail-il1-f170.google.com (mail-il1-f170.google.com. [209.85.166.170])
+        by smtp.gmail.com with ESMTPSA id d6sm6529260ilc.39.2019.10.22.07.47.15
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 22 Oct 2019 07:47:16 -0700 (PDT)
+Received: by mail-il1-f170.google.com with SMTP id s75so5920407ilc.3
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Oct 2019 07:47:15 -0700 (PDT)
+X-Received: by 2002:a92:1e03:: with SMTP id e3mr8267234ile.168.1571755634923;
+ Tue, 22 Oct 2019 07:47:14 -0700 (PDT)
 MIME-Version: 1.0
-X-MC-Unique: l8xpBakmOXm6aEHrglQvPA-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+References: <20191017135739.1315-1-ulf.hansson@linaro.org> <20191017135739.1315-3-ulf.hansson@linaro.org>
+ <CAD=FV=XsCGqLwKOicW47Yk3y3mHzU+9fR8kS7jx2pW6SzjgCbg@mail.gmail.com> <CAPDyKFq_Utz+ztdXTV534pY9Q9CyTSBJV_mfyPKAsHxaSyZjpA@mail.gmail.com>
+In-Reply-To: <CAPDyKFq_Utz+ztdXTV534pY9Q9CyTSBJV_mfyPKAsHxaSyZjpA@mail.gmail.com>
+From:   Doug Anderson <dianders@chromium.org>
+Date:   Tue, 22 Oct 2019 07:47:03 -0700
+X-Gmail-Original-Message-ID: <CAD=FV=U7Tm0eB00Ze8PUvCvDw_nqHFL6nGO=vEP2t9d-zVveTw@mail.gmail.com>
+Message-ID: <CAD=FV=U7Tm0eB00Ze8PUvCvDw_nqHFL6nGO=vEP2t9d-zVveTw@mail.gmail.com>
+Subject: Re: [PATCH 2/2] mmc: core: Re-work HW reset for SDIO cards
+To:     Ulf Hansson <ulf.hansson@linaro.org>
+Cc:     Linux MMC List <linux-mmc@vger.kernel.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Matthias Kaehlcke <mka@chromium.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Tony Lindgren <tony@atomide.com>,
+        Wen Gong <wgong@codeaurora.org>,
+        Erik Stromdahl <erik.stromdahl@gmail.com>,
+        Eyal Reizer <eyalreizer@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Toke H=C3=B8iland-J=C3=B8rgensen <toke@redhat.com>
+Hi,
 
-The previous commit added the ability to throttle stations when they queue
-too much airtime in the hardware. This commit enables the functionality by
-calculating the expected airtime usage of each packet that is dequeued from
-the TXQs in mac80211, and accounting that as pending airtime.
+On Mon, Oct 21, 2019 at 11:51 PM Ulf Hansson <ulf.hansson@linaro.org> wrote:
+>
+> > The problem I see here is that callers of this reset function aren't
+> > expecting it to work this way.  Look specifically at
+> > mwifiex_sdio_card_reset_work().  It's assuming that it needs to do
+> > things like shutdown / reinit.  Now it's true that the old
+> > mwifiex_sdio_card_reset_work() was pretty broken on any systems that
+> > also had SDIO bluetooth, but presumably it worked OK on systems
+> > without SDIO Bluetooth.  I don't think it'll work so well now.
+>
+> Good point!
+>
+> I guess I was hoping that running through ->remove() and then
+> ->probe() for the SDIO func drivers should simply take care of
+> whatever that may be needed. In some way this makes the driver broken
+> already in regards to this path, but never mind.
 
-The estimated airtime for each skb is stored in the tx_info, so we can
-subtract the same amount from the running total when the skb is freed or
-recycled. The throttling mechanism relies on this accounting to be
-accurate (i.e., that we are not freeing skbs without subtracting any
-airtime they were accounted for), so we put the subtraction into
-ieee80211_report_used_skb(). As an optimisation, we also subtract the
-airtime on regular TX completion, zeroing out the value stored in the
-packet afterwards, to avoid having to do an expensive lookup of the station
-from the packet data on every packet.
+Yeah, probably true.  I guess if anyone actually expected to use one
+of these cards as a removable SDIO card (I have seen such dev boards
+long ago) then it would always have been possible for someone to
+remove the card at just the wrong time and break things.
 
-This patch does *not* include any mechanism to wake a throttled TXQ again,
-on the assumption that this will happen anyway as a side effect of whatever
-freed the skb (most commonly a TX completion).
 
-Signed-off-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@redhat.com>
----
- net/mac80211/status.c |   28 ++++++++++++++++++++++++++++
- net/mac80211/tx.c     |   21 +++++++++++++++++++++
- 2 files changed, 49 insertions(+)
+> > Testing shows that indeed your patch breaks mwifiex reset worse than
+> > it was before (AKA WiFi totally fails instead of it just killing
+> > Bluetooth).
+> >
+> > I think it may be better to add a new API call rather than trying to
+> > co-opt the old one.  Maybe put a WARN_ON() for the old API call to
+> > make people move away from it, or something?
+>
+> Thanks again for testing and for valuable feedback! Clearly this needs
+> a little more thinking.
+>
+> An additional concern I see with the "hotplug approach" implemented in
+> $subject patch, is that it becomes unnecessary heavy when there is
+> only one SDIO func driver bound.
+>
+> In one way I am tempted to try to address that situation, as it seems
+> a bit silly to do full hotplug dance when it isn't needed.
 
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index ab8ba5835ca0..f125984d5beb 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -676,6 +676,23 @@ static void ieee80211_report_used_skb(struct ieee80211=
-_local *local,
- =09if (dropped)
- =09=09acked =3D false;
-=20
-+=09if (info->tx_time_est) {
-+=09=09struct ieee80211_sub_if_data *sdata;
-+=09=09struct sta_info *sta =3D NULL;
-+
-+=09=09rcu_read_lock();
-+
-+=09=09sdata =3D ieee80211_sdata_from_skb(local, skb);
-+=09=09if (sdata)
-+=09=09=09sta =3D sta_info_get_bss(sdata, skb_mac_header(skb));
-+
-+=09=09ieee80211_sta_update_pending_airtime(local, sta,
-+=09=09=09=09=09=09     skb_get_queue_mapping(skb),
-+=09=09=09=09=09=09     info->tx_time_est << 2,
-+=09=09=09=09=09=09     true);
-+=09=09rcu_read_unlock();
-+=09}
-+
- =09if (info->flags & IEEE80211_TX_INTFL_MLME_CONN_TX) {
- =09=09struct ieee80211_sub_if_data *sdata;
-=20
-@@ -930,6 +947,17 @@ static void __ieee80211_tx_status(struct ieee80211_hw =
-*hw,
- =09=09=09tid =3D qc[0] & 0xf;
- =09=09}
-=20
-+=09=09if (info->tx_time_est) {
-+=09=09=09/* Do this here to avoid the expensive lookup of the sta
-+=09=09=09 * in ieee80211_report_used_skb().
-+=09=09=09 */
-+=09=09=09ieee80211_sta_update_pending_airtime(local, sta,
-+=09=09=09=09=09=09=09     skb_get_queue_mapping(skb),
-+=09=09=09=09=09=09=09     info->tx_time_est << 2,
-+=09=09=09=09=09=09=09     true);
-+=09=09=09info->tx_time_est =3D 0;
-+=09=09}
-+
- =09=09if (!acked && ieee80211_is_back_req(fc)) {
- =09=09=09u16 control;
-=20
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 12653d873b8c..1405304d8994 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -3542,6 +3542,9 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211=
-_hw *hw,
-=20
- =09WARN_ON_ONCE(softirq_count() =3D=3D 0);
-=20
-+=09if (!ieee80211_txq_airtime_check(hw, txq))
-+=09=09return NULL;
-+
- begin:
- =09spin_lock_bh(&fq->lock);
-=20
-@@ -3652,6 +3655,24 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee8021=
-1_hw *hw,
- =09}
-=20
- =09IEEE80211_SKB_CB(skb)->control.vif =3D vif;
-+
-+=09if (local->airtime_flags & AIRTIME_USE_AQL) {
-+=09=09u32 airtime;
-+
-+=09=09airtime =3D ieee80211_calc_expected_tx_airtime(hw, vif, txq->sta,
-+=09=09=09=09=09=09=09     skb->len);
-+=09=09if (airtime) {
-+=09=09=09/* We only have 10 bits in tx_time_est, so store airtime
-+=09=09=09 * in increments of 4us and clamp the maximum to 2**12-1
-+=09=09=09 */
-+=09=09=09airtime =3D min_t(u32, airtime, 4095) & ~3U;
-+=09=09=09info->tx_time_est =3D airtime >> 2;
-+=09=09=09ieee80211_sta_update_pending_airtime(local, tx.sta,
-+=09=09=09=09=09=09=09     txq->ac, airtime,
-+=09=09=09=09=09=09=09     false);
-+=09=09}
-+=09}
-+
- =09return skb;
-=20
- out:
+True, though I kinda like the heavy solution here.  At least in the
+mwifiex case this isn't a part of the normal flow.  AKA: we don't call
+this function during normal bootup nor during any normal operations.
+It's much more of an "oh crap, something's not working and we don't
+know what to do" type solution.  I mean, I guess it's still not
+uncommon that we end up in this code path due to the number of bugs in
+Marvell firmware, but I'm just trying to say that it's an error code
+path and not a normal one.  In my mind that means the more things we
+can re-init the better.
 
+If this was, on the other hand, a reset that we were supposed to
+always assert when doing a normal operation (like it wants us to reset
+it when we switch modes, or something) then a lighter operation would
+make more sense.
+
+-Doug
