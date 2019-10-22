@@ -2,172 +2,164 @@ Return-Path: <SRS0=sWjF=YP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 264A8CA9EA0
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Oct 2019 12:49:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ECBB9CA9EB9
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Oct 2019 13:30:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E3D5021872
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Oct 2019 12:49:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C046321872
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Oct 2019 13:30:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=endlessm-com.20150623.gappssmtp.com header.i=@endlessm-com.20150623.gappssmtp.com header.b="jxTKricf"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="iHnbH1u7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388854AbfJVMtj (ORCPT
+        id S2388707AbfJVNaX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Oct 2019 08:49:39 -0400
-Received: from mail-qk1-f195.google.com ([209.85.222.195]:43923 "EHLO
-        mail-qk1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388655AbfJVMti (ORCPT
+        Tue, 22 Oct 2019 09:30:23 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:47722 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S2388644AbfJVNaW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Oct 2019 08:49:38 -0400
-Received: by mail-qk1-f195.google.com with SMTP id a194so11987930qkg.10
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Oct 2019 05:49:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=endlessm-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=NVF1a4sqfTg/qvlmXrv43POYUsL2YuC6+2CUMmBXnEA=;
-        b=jxTKricf4UGdQP8/+NpAKTS9l6cT5QXnIvCA6kvJaB1Ft3ITDjS2AzHclemTuux7e3
-         aNlE1wAqV0ut4k0bzKths0CRjrZ/1dbX2NPCQrA4QiYW+5SEox9QYHqCH4G+f09ugZNf
-         LaJyMT6QRfM+VsVVEh1ThMDmfkILMCPfBT0EjAkIwcBjx0AUggYgM2fEAlbg96yuxrv0
-         /eF0I6GnrWRX+sGNNqE5/XUJ+CXyZOwhP3SG5WpEugTwdE4NGn52lXEy42tl0NgNYBwU
-         838TsbeH2caUVrW1qy+PSr1+S8yTTTmPXjMr7S6nMnZoYX+YobNeaRliAy75chJlPsb+
-         oGdg==
+        Tue, 22 Oct 2019 09:30:22 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1571751021;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=Eg6GWygKeYzqmkq+LDj844ZOc9L0SpguuNdAt7HOGwI=;
+        b=iHnbH1u7b0K1lECjOgPPky8dufxXJxcMpJCn96zKz5BjB5nbf3eW2Truar/13kGfSw0g1U
+        j8GUHIwJemWpjRhMi+mbhnAY8f07BWcifSasVh0TW/EO8Qukmgun5Bk7I+bPiiAw7kHj+E
+        GcJh9dkHseqj7leJNDSfKc9TEjUxERM=
+Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
+ [209.85.128.72]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-281-p5QihPULPFS_BlixSiqT9A-1; Tue, 22 Oct 2019 09:30:19 -0400
+Received: by mail-wm1-f72.google.com with SMTP id v26so4195757wmh.2
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Oct 2019 06:30:18 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=NVF1a4sqfTg/qvlmXrv43POYUsL2YuC6+2CUMmBXnEA=;
-        b=OxnWvRMLI8Qkgd6XiohboxlSB/QAih3FZHF8OqpGsIkUa9jUdBYdkc6yXB0kFCb8do
-         WiZOnY/2otLgcwbt1lz1Hy/VjrvXCN4xJkXM95yDUS7tuUQkcB9kNUkg+0HpK6ZBdLFZ
-         wG//iLpCwXLorv1rbIEq8aMCJfmpmxm6fU2K+eoHVOZYMN9V17n9ZMix0Dlm3D2Tbh+p
-         6TNB1AL+rIKuqgyA0jbuUGjYt+6V4hr8vDpw+o9qOyAkKrj8JpGVz0oF5hosOYyZVyEy
-         xQ6iXDiGPOS4jV4Pz9oR/oiz9npMEbgvljXy9WfqiahekUD/9uDrpHBHwVWz+ud8tpwE
-         L3zQ==
-X-Gm-Message-State: APjAAAXJCTrt6G6BmzweQ3maIO5sYBRWvIUeWuaTc2F+8PIhM+KqYYB/
-        VdV/JLLys4Zg2Rn6H3l6Mo+iWTDyvZ94cDaGVnYbTQ==
-X-Google-Smtp-Source: APXvYqypmO0Q6APoDbpi3gMpQEkLypaUOGDOq0VJykYYY3t58/7KI8l/fRVIHvovcfgh/PR/GRS7vNEwShcMxlLlzIc=
-X-Received: by 2002:a37:5f46:: with SMTP id t67mr2634677qkb.220.1571748577648;
- Tue, 22 Oct 2019 05:49:37 -0700 (PDT)
+        h=x-gm-message-state:subject:from:to:cc:date:message-id:in-reply-to
+         :references:user-agent:mime-version:content-transfer-encoding;
+        bh=gQX28cV4kR5e8hFv0Sv15bTp7rYQDznh9B4z2Gx6gas=;
+        b=BRbY+QrTCsJ0U+ImG6t7xT6IU2/oDt8DBHoCNf6I4F1F15eERJ/XRWLIs1KvVDgbGW
+         SXf20Z9VKQux5tREnczxewlNNECIutDViXw37VzzcJKX+iIgG5YdpSzc0KiFP/NvYumt
+         +umQWM0ivvFFKgbCE3iazs7JGwoJaEu4r0lJIR334a11XuRZDvQJfvpKmFp/edRYelPu
+         EGAIJXPuUDRrzQMI9GOSaXtAI5LqM3HlCF4uWkHjkYdSwBaoOqpF0QRwilZDDffIh6CL
+         /FaOlYlE+yovpV72b/pWvxIWbEcHxsut43rIiMUoWkEg0rbiLFPhCdz3O8b899AjvB4M
+         DzBw==
+X-Gm-Message-State: APjAAAWaoxWv4Qn/8t/Ybq3h8bzHmUCKTgWIVlNqdKdi7qFwFHsHpq7A
+        UOYXq1XD8o740eBQeYnWid/tuWSmZx6Rjz04lD71SwFsKyh0L4l2vb0nyPc+/hFk+3Hj2v3HMA0
+        dTIZcsVOS5JrvmA+Jl8eXxjqzXBY=
+X-Received: by 2002:a05:600c:206:: with SMTP id 6mr1671896wmi.15.1571751017872;
+        Tue, 22 Oct 2019 06:30:17 -0700 (PDT)
+X-Google-Smtp-Source: APXvYqzQLvmXxWVS4OswFAPMKSoIxHnaomAvxoNb/fhJv2nk/orRXPx1bA7oaCwhcrSFKfh0ApDsww==
+X-Received: by 2002:a05:600c:206:: with SMTP id 6mr1671871wmi.15.1571751017629;
+        Tue, 22 Oct 2019 06:30:17 -0700 (PDT)
+Received: from alrua-x1.borgediget.toke.dk (borgediget.toke.dk. [85.204.121.218])
+        by smtp.gmail.com with ESMTPSA id a2sm5549163wrv.39.2019.10.22.06.30.16
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 22 Oct 2019 06:30:16 -0700 (PDT)
+Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
+        id 5CC891804B6; Tue, 22 Oct 2019 15:30:16 +0200 (CEST)
+Subject: [PATCH v5 1/4] mac80211: Shrink the size of ack_frame_id to make room
+ for tx_time_est
+From:   =?utf-8?q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     linux-wireless@vger.kernel.org,
+        make-wifi-fast@lists.bufferbloat.net, ath10k@lists.infradead.org,
+        John Crispin <john@phrozen.org>,
+        Lorenzo Bianconi <lorenzo@kernel.org>,
+        Felix Fietkau <nbd@nbd.name>, Kan Yan <kyan@google.com>,
+        Rajkumar Manoharan <rmanohar@codeaurora.org>,
+        Kevin Hayes <kevinhayes@google.com>
+Date:   Tue, 22 Oct 2019 15:30:16 +0200
+Message-ID: <157175101629.104114.3204705179013332449.stgit@toke.dk>
+In-Reply-To: <157175101518.104114.6722791270722911023.stgit@toke.dk>
+References: <157175101518.104114.6722791270722911023.stgit@toke.dk>
+User-Agent: StGit/0.20
 MIME-Version: 1.0
-References: <20191022100420.25116-1-yhchuang@realtek.com> <20191022100420.25116-5-yhchuang@realtek.com>
-In-Reply-To: <20191022100420.25116-5-yhchuang@realtek.com>
-From:   Chris Chiu <chiu@endlessm.com>
-Date:   Tue, 22 Oct 2019 20:49:26 +0800
-Message-ID: <CAB4CAwcBUHMR3btH9LGd=GzqU1mRmfmL0o4EOY4E8H1OxfpvMg@mail.gmail.com>
-Subject: Re: [PATCH v3 4/5] rtw88: add set_bitrate_mask support
-To:     Tony Chuang <yhchuang@realtek.com>
-Cc:     Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Brian Norris <briannorris@chromium.org>
-Content-Type: text/plain; charset="UTF-8"
+X-MC-Unique: p5QihPULPFS_BlixSiqT9A-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, Oct 22, 2019 at 6:04 PM <yhchuang@realtek.com> wrote:
->
-> From: Tzu-En Huang <tehuang@realtek.com>
->
-> Support setting bit rate from upper layer.
-> After configuring the original rate control result in the driver, the
-> result is then masked by the bit rate mask received from the ops
-> set_bitrate_mask. Lastly, the masked result will be sent to firmware.
->
-> Signed-off-by: Tzu-En Huang <tehuang@realtek.com>
-> Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-> ---
->
-> v1 -> v2
->   * No change
->
-> v2 -> v3
->   * use u64_encode_bits
->
->  drivers/net/wireless/realtek/rtw88/mac80211.c | 53 +++++++++++++
->  drivers/net/wireless/realtek/rtw88/main.c     | 78 +++++++++++++++----
->  drivers/net/wireless/realtek/rtw88/main.h     |  3 +
->  3 files changed, 118 insertions(+), 16 deletions(-)
->
-> diff --git a/drivers/net/wireless/realtek/rtw88/mac80211.c b/drivers/net/wireless/realtek/rtw88/mac80211.c
-> index bc04cc280a96..2247bd61e716 100644
-> --- a/drivers/net/wireless/realtek/rtw88/mac80211.c
-> +++ b/drivers/net/wireless/realtek/rtw88/mac80211.c
-> @@ -684,6 +686,56 @@ static void rtw_ops_flush(struct ieee80211_hw *hw,
->         mutex_unlock(&rtwdev->mutex);
->  }
->
-> +struct rtw_iter_bitrate_mask_data {
-> +       struct rtw_dev *rtwdev;
-> +       struct ieee80211_vif *vif;
-> +       const struct cfg80211_bitrate_mask *mask;
-> +};
-> +
-> +static void rtw_ra_mask_info_update_iter(void *data, struct ieee80211_sta *sta)
-> +{
-> +       struct rtw_iter_bitrate_mask_data *br_data = data;
-> +       struct rtw_sta_info *si = (struct rtw_sta_info *)sta->drv_priv;
-> +
-> +       if (si->vif != br_data->vif)
-> +               return;
-> +
-> +       /* free previous mask setting */
-> +       kfree(si->mask);
+From: Toke H=C3=B8iland-J=C3=B8rgensen <toke@redhat.com>
 
-You may want to do NULL check for si->mask before kfree.
+To implement airtime queue limiting, we need to keep a running account of
+the estimated airtime of all skbs queued into the device. Do to this
+correctly, we need to store the airtime estimate into the skb so we can
+decrease the outstanding balance when the skb is freed. This means that the
+time estimate must be stored somewhere that will survive for the lifetime
+of the skb.
 
-> +       si->mask = kmemdup(br_data->mask, sizeof(struct cfg80211_bitrate_mask),
-> +                          GFP_ATOMIC);
-> +       if (!si->mask) {
-> +               si->use_cfg_mask = false;
-> +               return;
-> +       }
-> +
-> +       si->use_cfg_mask = true;
-> +       rtw_update_sta_info(br_data->rtwdev, si);
-> +}
-> +
-> diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
-> index 47e74f0aec06..e53143132a9b 100644
-> --- a/drivers/net/wireless/realtek/rtw88/main.c
-> +++ b/drivers/net/wireless/realtek/rtw88/main.c
-> @@ -612,12 +612,71 @@ static u8 get_rate_id(u8 wireless_set, enum rtw_bandwidth bw_mode, u8 tx_num)
->  #define RA_MASK_OFDM_IN_HT_2G  0x00010
->  #define RA_MASK_OFDM_IN_HT_5G  0x00030
->
-> +static u64 rtw_update_rate_mask(struct rtw_dev *rtwdev,
-> +                               struct rtw_sta_info *si,
-> +                               u64 ra_mask, bool is_vht_enable,
-> +                               u8 wireless_set)
-> +{
-> +       struct rtw_hal *hal = &rtwdev->hal;
-> +       const struct cfg80211_bitrate_mask *mask = si->mask;
-> +       u64 cfg_mask = GENMASK(63, 0);
-> +       u8 rssi_level, band;
-> +
-> +       if (wireless_set != WIRELESS_CCK) {
-> +               rssi_level = si->rssi_level;
-> +               if (rssi_level == 0)
-> +                       ra_mask &= 0xffffffffffffffffULL;
-> +               else if (rssi_level == 1)
-> +                       ra_mask &= 0xfffffffffffffff0ULL;
-> +               else if (rssi_level == 2)
-> +                       ra_mask &= 0xffffffffffffefe0ULL;
-> +               else if (rssi_level == 3)
-> +                       ra_mask &= 0xffffffffffffcfc0ULL;
-> +               else if (rssi_level == 4)
-> +                       ra_mask &= 0xffffffffffff8f80ULL;
-> +               else if (rssi_level >= 5)
-> +                       ra_mask &= 0xffffffffffff0f00ULL;
-> +       }
+To get this, decrease the size of the ack_frame_id field to 6 bits, and
+lower the size of the ID space accordingly. This leaves 10 bits for use for
+tx_time_est, which is enough to store a maximum of 4096 us, if we shift the
+values so they become units of 4us.
 
-Would be better to enumerate rssi_level instead of 0 to 5. Does level
-0 means bad rssi or good?
+Signed-off-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@redhat.com>
+---
+ include/net/mac80211.h |    4 +++-
+ net/mac80211/cfg.c     |    2 +-
+ net/mac80211/tx.c      |    2 +-
+ 3 files changed, 5 insertions(+), 3 deletions(-)
 
-> --
-> 2.17.1
->
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index d69081c38788..4288ace72c2b 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -967,6 +967,7 @@ ieee80211_rate_get_vht_nss(const struct ieee80211_tx_ra=
+te *rate)
+  * @band: the band to transmit on (use for checking for races)
+  * @hw_queue: HW queue to put the frame on, skb_get_queue_mapping() gives =
+the AC
+  * @ack_frame_id: internal frame ID for TX status, used internally
++ * @tx_time_est: TX time estimate in units of 4us, used internally
+  * @control: union part for control data
+  * @control.rates: TX rates array to try
+  * @control.rts_cts_rate_idx: rate for RTS or CTS
+@@ -1007,7 +1008,8 @@ struct ieee80211_tx_info {
+=20
+ =09u8 hw_queue;
+=20
+-=09u16 ack_frame_id;
++=09u16 ack_frame_id:6;
++=09u16 tx_time_est:10;
+=20
+ =09union {
+ =09=09struct {
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 70739e746c13..4fb7f1f12109 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3428,7 +3428,7 @@ int ieee80211_attach_ack_skb(struct ieee80211_local *=
+local, struct sk_buff *skb,
+=20
+ =09spin_lock_irqsave(&local->ack_status_lock, spin_flags);
+ =09id =3D idr_alloc(&local->ack_status_frames, ack_skb,
+-=09=09       1, 0x10000, GFP_ATOMIC);
++=09=09       1, 0x40, GFP_ATOMIC);
+ =09spin_unlock_irqrestore(&local->ack_status_lock, spin_flags);
+=20
+ =09if (id < 0) {
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 938c10f7955b..a16c2f863702 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2719,7 +2719,7 @@ static struct sk_buff *ieee80211_build_hdr(struct iee=
+e80211_sub_if_data *sdata,
+=20
+ =09=09=09spin_lock_irqsave(&local->ack_status_lock, flags);
+ =09=09=09id =3D idr_alloc(&local->ack_status_frames, ack_skb,
+-=09=09=09=09       1, 0x10000, GFP_ATOMIC);
++=09=09=09=09       1, 0x40, GFP_ATOMIC);
+ =09=09=09spin_unlock_irqrestore(&local->ack_status_lock, flags);
+=20
+ =09=09=09if (id >=3D 0) {
+
