@@ -6,35 +6,35 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6225DC47E49
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Oct 2019 10:04:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C181CA9EBA
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Oct 2019 10:04:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 423EA214B2
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Oct 2019 10:04:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 22CEB2064B
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Oct 2019 10:04:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731735AbfJVKEb (ORCPT
+        id S1731733AbfJVKEb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Tue, 22 Oct 2019 06:04:31 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:37559 "EHLO
+Received: from rtits2.realtek.com ([211.75.126.72]:37556 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731635AbfJVKEa (ORCPT
+        with ESMTP id S1729700AbfJVKEb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Oct 2019 06:04:30 -0400
+        Tue, 22 Oct 2019 06:04:31 -0400
 Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x9MA4PCW017644, This message is accepted by code: ctloc85258
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x9MA4M7C017632, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (RTITCASV01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x9MA4PCW017644
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x9MA4M7C017632
         (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
-        Tue, 22 Oct 2019 18:04:25 +0800
+        Tue, 22 Oct 2019 18:04:23 +0800
 Received: from localhost.localdomain (172.21.68.126) by
  RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
- 14.3.468.0; Tue, 22 Oct 2019 18:04:24 +0800
+ 14.3.468.0; Tue, 22 Oct 2019 18:04:22 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>, <briannorris@chromium.org>
-Subject: [PATCH v3 4/5] rtw88: add set_bitrate_mask support
-Date:   Tue, 22 Oct 2019 18:04:19 +0800
-Message-ID: <20191022100420.25116-5-yhchuang@realtek.com>
+Subject: [PATCH v3 1/5] rtw88: use macro to check the current band
+Date:   Tue, 22 Oct 2019 18:04:16 +0800
+Message-ID: <20191022100420.25116-2-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20191022100420.25116-1-yhchuang@realtek.com>
 References: <20191022100420.25116-1-yhchuang@realtek.com>
@@ -46,220 +46,260 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Tzu-En Huang <tehuang@realtek.com>
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-Support setting bit rate from upper layer.
-After configuring the original rate control result in the driver, the
-result is then masked by the bit rate mask received from the ops
-set_bitrate_mask. Lastly, the masked result will be sent to firmware.
+Add macros to see which band we are, based on the current channel.
 
-Signed-off-by: Tzu-En Huang <tehuang@realtek.com>
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
 
-v1 -> v2
-  * No change
-
 v2 -> v3
-  * use u64_encode_bits
+ * no change
 
- drivers/net/wireless/realtek/rtw88/mac80211.c | 53 +++++++++++++
- drivers/net/wireless/realtek/rtw88/main.c     | 78 +++++++++++++++----
- drivers/net/wireless/realtek/rtw88/main.h     |  3 +
- 3 files changed, 118 insertions(+), 16 deletions(-)
+ drivers/net/wireless/realtek/rtw88/mac.c      |  2 +-
+ drivers/net/wireless/realtek/rtw88/main.h     | 13 ++++++
+ drivers/net/wireless/realtek/rtw88/phy.c      |  2 +-
+ drivers/net/wireless/realtek/rtw88/rtw8822b.c | 40 +++++++++----------
+ drivers/net/wireless/realtek/rtw88/rtw8822c.c | 16 ++++----
+ 5 files changed, 41 insertions(+), 32 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/mac80211.c b/drivers/net/wireless/realtek/rtw88/mac80211.c
-index bc04cc280a96..2247bd61e716 100644
---- a/drivers/net/wireless/realtek/rtw88/mac80211.c
-+++ b/drivers/net/wireless/realtek/rtw88/mac80211.c
-@@ -475,6 +475,8 @@ static int rtw_ops_sta_remove(struct ieee80211_hw *hw,
- 	for (i = 0; i < ARRAY_SIZE(sta->txq); i++)
- 		rtw_txq_cleanup(rtwdev, sta->txq[i]);
+diff --git a/drivers/net/wireless/realtek/rtw88/mac.c b/drivers/net/wireless/realtek/rtw88/mac.c
+index 8d72825ed3a7..c471117b1472 100644
+--- a/drivers/net/wireless/realtek/rtw88/mac.c
++++ b/drivers/net/wireless/realtek/rtw88/mac.c
+@@ -47,7 +47,7 @@ void rtw_set_channel_mac(struct rtw_dev *rtwdev, u8 channel, u8 bw,
  
-+	kfree(si->mask);
-+
- 	rtwdev->sta_cnt--;
- 
- 	rtw_info(rtwdev, "sta %pM with macid %d left\n",
-@@ -684,6 +686,56 @@ static void rtw_ops_flush(struct ieee80211_hw *hw,
- 	mutex_unlock(&rtwdev->mutex);
+ 	value8 = rtw_read8(rtwdev, REG_CCK_CHECK);
+ 	value8 = value8 & ~BIT_CHECK_CCK_EN;
+-	if (channel > 35)
++	if (IS_CH_5G_BAND(channel))
+ 		value8 |= BIT_CHECK_CCK_EN;
+ 	rtw_write8(rtwdev, REG_CCK_CHECK, value8);
  }
- 
-+struct rtw_iter_bitrate_mask_data {
-+	struct rtw_dev *rtwdev;
-+	struct ieee80211_vif *vif;
-+	const struct cfg80211_bitrate_mask *mask;
-+};
-+
-+static void rtw_ra_mask_info_update_iter(void *data, struct ieee80211_sta *sta)
-+{
-+	struct rtw_iter_bitrate_mask_data *br_data = data;
-+	struct rtw_sta_info *si = (struct rtw_sta_info *)sta->drv_priv;
-+
-+	if (si->vif != br_data->vif)
-+		return;
-+
-+	/* free previous mask setting */
-+	kfree(si->mask);
-+	si->mask = kmemdup(br_data->mask, sizeof(struct cfg80211_bitrate_mask),
-+			   GFP_ATOMIC);
-+	if (!si->mask) {
-+		si->use_cfg_mask = false;
-+		return;
-+	}
-+
-+	si->use_cfg_mask = true;
-+	rtw_update_sta_info(br_data->rtwdev, si);
-+}
-+
-+static void rtw_ra_mask_info_update(struct rtw_dev *rtwdev,
-+				    struct ieee80211_vif *vif,
-+				    const struct cfg80211_bitrate_mask *mask)
-+{
-+	struct rtw_iter_bitrate_mask_data br_data;
-+
-+	br_data.rtwdev = rtwdev;
-+	br_data.vif = vif;
-+	br_data.mask = mask;
-+	rtw_iterate_stas_atomic(rtwdev, rtw_ra_mask_info_update_iter, &br_data);
-+}
-+
-+static int rtw_ops_set_bitrate_mask(struct ieee80211_hw *hw,
-+				    struct ieee80211_vif *vif,
-+				    const struct cfg80211_bitrate_mask *mask)
-+{
-+	struct rtw_dev *rtwdev = hw->priv;
-+
-+	rtw_ra_mask_info_update(rtwdev, vif, mask);
-+
-+	return 0;
-+}
-+
- const struct ieee80211_ops rtw_ops = {
- 	.tx			= rtw_ops_tx,
- 	.wake_tx_queue		= rtw_ops_wake_tx_queue,
-@@ -705,5 +757,6 @@ const struct ieee80211_ops rtw_ops = {
- 	.set_rts_threshold	= rtw_ops_set_rts_threshold,
- 	.sta_statistics		= rtw_ops_sta_statistics,
- 	.flush			= rtw_ops_flush,
-+	.set_bitrate_mask	= rtw_ops_set_bitrate_mask,
- };
- EXPORT_SYMBOL(rtw_ops);
-diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
-index 47e74f0aec06..e53143132a9b 100644
---- a/drivers/net/wireless/realtek/rtw88/main.c
-+++ b/drivers/net/wireless/realtek/rtw88/main.c
-@@ -612,12 +612,71 @@ static u8 get_rate_id(u8 wireless_set, enum rtw_bandwidth bw_mode, u8 tx_num)
- #define RA_MASK_OFDM_IN_HT_2G	0x00010
- #define RA_MASK_OFDM_IN_HT_5G	0x00030
- 
-+static u64 rtw_update_rate_mask(struct rtw_dev *rtwdev,
-+				struct rtw_sta_info *si,
-+				u64 ra_mask, bool is_vht_enable,
-+				u8 wireless_set)
-+{
-+	struct rtw_hal *hal = &rtwdev->hal;
-+	const struct cfg80211_bitrate_mask *mask = si->mask;
-+	u64 cfg_mask = GENMASK(63, 0);
-+	u8 rssi_level, band;
-+
-+	if (wireless_set != WIRELESS_CCK) {
-+		rssi_level = si->rssi_level;
-+		if (rssi_level == 0)
-+			ra_mask &= 0xffffffffffffffffULL;
-+		else if (rssi_level == 1)
-+			ra_mask &= 0xfffffffffffffff0ULL;
-+		else if (rssi_level == 2)
-+			ra_mask &= 0xffffffffffffefe0ULL;
-+		else if (rssi_level == 3)
-+			ra_mask &= 0xffffffffffffcfc0ULL;
-+		else if (rssi_level == 4)
-+			ra_mask &= 0xffffffffffff8f80ULL;
-+		else if (rssi_level >= 5)
-+			ra_mask &= 0xffffffffffff0f00ULL;
-+	}
-+
-+	if (!si->use_cfg_mask)
-+		return ra_mask;
-+
-+	band = hal->current_band_type;
-+	if (band == RTW_BAND_2G) {
-+		band = NL80211_BAND_2GHZ;
-+		cfg_mask = mask->control[band].legacy;
-+	} else if (band == RTW_BAND_5G) {
-+		band = NL80211_BAND_5GHZ;
-+		cfg_mask = u64_encode_bits(mask->control[band].legacy,
-+					   RA_MASK_OFDM_RATES);
-+	}
-+
-+	if (!is_vht_enable) {
-+		if (ra_mask & RA_MASK_HT_RATES_1SS)
-+			cfg_mask |= u64_encode_bits(mask->control[band].ht_mcs[0],
-+						    RA_MASK_HT_RATES_1SS);
-+		if (ra_mask & RA_MASK_HT_RATES_2SS)
-+			cfg_mask |= u64_encode_bits(mask->control[band].ht_mcs[1],
-+						    RA_MASK_HT_RATES_2SS);
-+	} else {
-+		if (ra_mask & RA_MASK_VHT_RATES_1SS)
-+			cfg_mask |= u64_encode_bits(mask->control[band].vht_mcs[0],
-+						    RA_MASK_VHT_RATES_1SS);
-+		if (ra_mask & RA_MASK_VHT_RATES_2SS)
-+			cfg_mask |= u64_encode_bits(mask->control[band].vht_mcs[1],
-+						    RA_MASK_VHT_RATES_2SS);
-+	}
-+
-+	ra_mask &= cfg_mask;
-+
-+	return ra_mask;
-+}
-+
- void rtw_update_sta_info(struct rtw_dev *rtwdev, struct rtw_sta_info *si)
- {
- 	struct ieee80211_sta *sta = si->sta;
- 	struct rtw_efuse *efuse = &rtwdev->efuse;
- 	struct rtw_hal *hal = &rtwdev->hal;
--	u8 rssi_level;
- 	u8 wireless_set;
- 	u8 bw_mode;
- 	u8 rate_id;
-@@ -710,21 +769,8 @@ void rtw_update_sta_info(struct rtw_dev *rtwdev, struct rtw_sta_info *si)
- 
- 	rate_id = get_rate_id(wireless_set, bw_mode, tx_num);
- 
--	if (wireless_set != WIRELESS_CCK) {
--		rssi_level = si->rssi_level;
--		if (rssi_level == 0)
--			ra_mask &= 0xffffffffffffffffULL;
--		else if (rssi_level == 1)
--			ra_mask &= 0xfffffffffffffff0ULL;
--		else if (rssi_level == 2)
--			ra_mask &= 0xffffffffffffefe0ULL;
--		else if (rssi_level == 3)
--			ra_mask &= 0xffffffffffffcfc0ULL;
--		else if (rssi_level == 4)
--			ra_mask &= 0xffffffffffff8f80ULL;
--		else if (rssi_level >= 5)
--			ra_mask &= 0xffffffffffff0f00ULL;
--	}
-+	ra_mask = rtw_update_rate_mask(rtwdev, si, ra_mask, is_vht_enable,
-+				       wireless_set);
- 
- 	si->bw_mode = bw_mode;
- 	si->stbc_en = stbc_en;
 diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
-index 14b35152fe9f..5e33b7e47a9d 100644
+index 4759d6a0ca6e..492a2bfc0d5a 100644
 --- a/drivers/net/wireless/realtek/rtw88/main.h
 +++ b/drivers/net/wireless/realtek/rtw88/main.h
-@@ -646,6 +646,9 @@ struct rtw_sta_info {
- 	DECLARE_BITMAP(tid_ba, IEEE80211_NUM_TIDS);
- 
- 	struct rtw_ra_report ra_report;
-+
-+	bool use_cfg_mask;
-+	struct cfg80211_bitrate_mask *mask;
+@@ -58,6 +58,19 @@ struct rtw_hci {
+ 	u8 bulkout_num;
  };
  
- enum rtw_bfee_role {
++#define IS_CH_5G_BAND_1(channel) ((channel) >= 36 && (channel <= 48))
++#define IS_CH_5G_BAND_2(channel) ((channel) >= 52 && (channel <= 64))
++#define IS_CH_5G_BAND_3(channel) ((channel) >= 100 && (channel <= 144))
++#define IS_CH_5G_BAND_4(channel) ((channel) >= 149 && (channel <= 177))
++
++#define IS_CH_5G_BAND_MID(channel) \
++	(IS_CH_5G_BAND_2(channel) || IS_CH_5G_BAND_3(channel))
++
++#define IS_CH_2G_BAND(channel) ((channel) <= 14)
++#define IS_CH_5G_BAND(channel) \
++	(IS_CH_5G_BAND_1(channel) || IS_CH_5G_BAND_2(channel) || \
++	 IS_CH_5G_BAND_3(channel) || IS_CH_5G_BAND_4(channel))
++
+ enum rtw_supported_band {
+ 	RTW_BAND_2G = 1 << 0,
+ 	RTW_BAND_5G = 1 << 1,
+diff --git a/drivers/net/wireless/realtek/rtw88/phy.c b/drivers/net/wireless/realtek/rtw88/phy.c
+index 8ebe1f4b76ad..ae5ecefb424e 100644
+--- a/drivers/net/wireless/realtek/rtw88/phy.c
++++ b/drivers/net/wireless/realtek/rtw88/phy.c
+@@ -1748,7 +1748,7 @@ void rtw_get_tx_power_params(struct rtw_dev *rtwdev, u8 path, u8 rate, u8 bw,
+ 	group = rtw_get_channel_group(ch);
+ 
+ 	/* base power index for 2.4G/5G */
+-	if (ch <= 14) {
++	if (IS_CH_2G_BAND(ch)) {
+ 		band = PHY_BAND_2G;
+ 		*base = rtw_phy_get_2g_tx_power_index(rtwdev,
+ 						      &pwr_idx->pwr_idx_2g,
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822b.c b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
+index 1e20c4465bc9..baf5091fa253 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822b.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
+@@ -211,9 +211,8 @@ static int rtw8822b_mac_init(struct rtw_dev *rtwdev)
+ static void rtw8822b_set_channel_rfe_efem(struct rtw_dev *rtwdev, u8 channel)
+ {
+ 	struct rtw_hal *hal = &rtwdev->hal;
+-	bool is_channel_2g = (channel <= 14) ? true : false;
+ 
+-	if (is_channel_2g) {
++	if (IS_CH_2G_BAND(channel)) {
+ 		rtw_write32s_mask(rtwdev, REG_RFESEL0, 0xffffff, 0x705770);
+ 		rtw_write32s_mask(rtwdev, REG_RFESEL8, MASKBYTE1, 0x57);
+ 		rtw_write32s_mask(rtwdev, REG_RFECTL, BIT(4), 0);
+@@ -241,9 +240,8 @@ static void rtw8822b_set_channel_rfe_efem(struct rtw_dev *rtwdev, u8 channel)
+ static void rtw8822b_set_channel_rfe_ifem(struct rtw_dev *rtwdev, u8 channel)
+ {
+ 	struct rtw_hal *hal = &rtwdev->hal;
+-	bool is_channel_2g = (channel <= 14) ? true : false;
+ 
+-	if (is_channel_2g) {
++	if (IS_CH_2G_BAND(channel)) {
+ 		/* signal source */
+ 		rtw_write32s_mask(rtwdev, REG_RFESEL0, 0xffffff, 0x745774);
+ 		rtw_write32s_mask(rtwdev, REG_RFESEL8, MASKBYTE1, 0x57);
+@@ -255,7 +253,7 @@ static void rtw8822b_set_channel_rfe_ifem(struct rtw_dev *rtwdev, u8 channel)
+ 
+ 	rtw_write32s_mask(rtwdev, REG_RFEINV, BIT(11) | BIT(10) | 0x3f, 0x0);
+ 
+-	if (is_channel_2g) {
++	if (IS_CH_2G_BAND(channel)) {
+ 		if (hal->antenna_rx == BB_PATH_AB ||
+ 		    hal->antenna_tx == BB_PATH_AB) {
+ 			/* 2TX or 2RX */
+@@ -350,7 +348,7 @@ static void rtw8822b_set_channel_cca(struct rtw_dev *rtwdev, u8 channel, u8 bw,
+ 	u32 reg82c, reg830, reg838;
+ 	bool is_efem_cca = false, is_ifem_cca = false, is_rfe_type = false;
+ 
+-	if (channel <= 14) {
++	if (IS_CH_2G_BAND(channel)) {
+ 		cca_ccut = rfe_info->cca_ccut_2g;
+ 
+ 		if (hal->antenna_rx == BB_PATH_A ||
+@@ -381,7 +379,7 @@ static void rtw8822b_set_channel_cca(struct rtw_dev *rtwdev, u8 channel, u8 bw,
+ 		is_efem_cca = true;
+ 		break;
+ 	case RTW_RFE_IFEM2G_EFEM5G:
+-		if (channel <= 14)
++		if (IS_CH_2G_BAND(channel))
+ 			is_ifem_cca = true;
+ 		else
+ 			is_efem_cca = true;
+@@ -405,9 +403,7 @@ static void rtw8822b_set_channel_cca(struct rtw_dev *rtwdev, u8 channel, u8 bw,
+ 	if (is_efem_cca && !(hal->cut_version == RTW_CHIP_VER_CUT_B))
+ 		rtw_write32_mask(rtwdev, REG_L1WT, MASKDWORD, 0x9194b2b9);
+ 
+-	if (bw == RTW_CHANNEL_WIDTH_20 &&
+-	    ((channel >= 52 && channel <= 64) ||
+-	     (channel >= 100 && channel <= 144)))
++	if (bw == RTW_CHANNEL_WIDTH_20 && IS_CH_5G_BAND_MID(channel))
+ 		rtw_write32_mask(rtwdev, REG_CCA2ND, 0xf0, 0x4);
+ }
+ 
+@@ -442,7 +438,7 @@ static void rtw8822b_set_channel_rf(struct rtw_dev *rtwdev, u8 channel, u8 bw)
+ 	rf_reg18 &= ~(RF18_BAND_MASK | RF18_CHANNEL_MASK | RF18_RFSI_MASK |
+ 		      RF18_BW_MASK);
+ 
+-	rf_reg18 |= (channel <= 14 ? RF18_BAND_2G : RF18_BAND_5G);
++	rf_reg18 |= (IS_CH_2G_BAND(channel) ? RF18_BAND_2G : RF18_BAND_5G);
+ 	rf_reg18 |= (channel & RF18_CHANNEL_MASK);
+ 	if (channel > 144)
+ 		rf_reg18 |= RF18_RFSI_GT_CH144;
+@@ -464,13 +460,13 @@ static void rtw8822b_set_channel_rf(struct rtw_dev *rtwdev, u8 channel, u8 bw)
+ 		break;
+ 	}
+ 
+-	if (channel <= 14)
++	if (IS_CH_2G_BAND(channel))
+ 		rf_reg_be = 0x0;
+-	else if (channel >= 36 && channel <= 64)
++	else if (IS_CH_5G_BAND_1(channel) || IS_CH_5G_BAND_2(channel))
+ 		rf_reg_be = low_band[(channel - 36) >> 1];
+-	else if (channel >= 100 && channel <= 144)
++	else if (IS_CH_5G_BAND_3(channel))
+ 		rf_reg_be = middle_band[(channel - 100) >> 1];
+-	else if (channel >= 149 && channel <= 177)
++	else if (IS_CH_5G_BAND_4(channel))
+ 		rf_reg_be = high_band[(channel - 149) >> 1];
+ 	else
+ 		goto err;
+@@ -539,7 +535,7 @@ static void rtw8822b_set_channel_bb(struct rtw_dev *rtwdev, u8 channel, u8 bw,
+ 	u8 rfe_option = efuse->rfe_option;
+ 	u32 val32;
+ 
+-	if (channel <= 14) {
++	if (IS_CH_2G_BAND(channel)) {
+ 		rtw_write32_mask(rtwdev, REG_RXPSEL, BIT(28), 0x1);
+ 		rtw_write32_mask(rtwdev, REG_CCK_CHECK, BIT(7), 0x0);
+ 		rtw_write32_mask(rtwdev, REG_ENTXCCK, BIT(18), 0x0);
+@@ -556,22 +552,22 @@ static void rtw8822b_set_channel_bb(struct rtw_dev *rtwdev, u8 channel, u8 bw,
+ 		}
+ 
+ 		rtw_write32_mask(rtwdev, REG_RFEINV, 0x300, 0x2);
+-	} else if (channel > 35) {
++	} else if (IS_CH_5G_BAND(channel)) {
+ 		rtw_write32_mask(rtwdev, REG_ENTXCCK, BIT(18), 0x1);
+ 		rtw_write32_mask(rtwdev, REG_CCK_CHECK, BIT(7), 0x1);
+ 		rtw_write32_mask(rtwdev, REG_RXPSEL, BIT(28), 0x0);
+ 		rtw_write32_mask(rtwdev, REG_RXCCAMSK, 0x0000FC00, 34);
+ 
+-		if (channel >= 36 && channel <= 64)
++		if (IS_CH_5G_BAND_1(channel) || IS_CH_5G_BAND_2(channel))
+ 			rtw_write32_mask(rtwdev, REG_ACGG2TBL, 0x1f, 0x1);
+-		else if (channel >= 100 && channel <= 144)
++		else if (IS_CH_5G_BAND_3(channel))
+ 			rtw_write32_mask(rtwdev, REG_ACGG2TBL, 0x1f, 0x2);
+-		else if (channel >= 149)
++		else if (IS_CH_5G_BAND_4(channel))
+ 			rtw_write32_mask(rtwdev, REG_ACGG2TBL, 0x1f, 0x3);
+ 
+-		if (channel >= 36 && channel <= 48)
++		if (IS_CH_5G_BAND_1(channel))
+ 			rtw_write32_mask(rtwdev, REG_CLKTRK, 0x1ffe0000, 0x494);
+-		else if (channel >= 52 && channel <= 64)
++		else if (IS_CH_5G_BAND_2(channel))
+ 			rtw_write32_mask(rtwdev, REG_CLKTRK, 0x1ffe0000, 0x453);
+ 		else if (channel >= 100 && channel <= 116)
+ 			rtw_write32_mask(rtwdev, REG_CLKTRK, 0x1ffe0000, 0x452);
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+index 690934386b85..167af317c7c5 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+@@ -1287,11 +1287,11 @@ static void rtw8822c_set_channel_rf(struct rtw_dev *rtwdev, u8 channel, u8 bw)
+ 	rf_reg18 &= ~(RF18_BAND_MASK | RF18_CHANNEL_MASK | RF18_RFSI_MASK |
+ 		      RF18_BW_MASK);
+ 
+-	rf_reg18 |= (channel <= 14 ? RF18_BAND_2G : RF18_BAND_5G);
++	rf_reg18 |= (IS_CH_2G_BAND(channel) ? RF18_BAND_2G : RF18_BAND_5G);
+ 	rf_reg18 |= (channel & RF18_CHANNEL_MASK);
+-	if (channel > 144)
++	if (IS_CH_5G_BAND_4(channel))
+ 		rf_reg18 |= RF18_RFSI_GT_CH140;
+-	else if (channel >= 80)
++	else if (IS_CH_5G_BAND_3(channel))
+ 		rf_reg18 |= RF18_RFSI_GE_CH80;
+ 
+ 	switch (bw) {
+@@ -1341,7 +1341,7 @@ static void rtw8822c_toggle_igi(struct rtw_dev *rtwdev)
+ static void rtw8822c_set_channel_bb(struct rtw_dev *rtwdev, u8 channel, u8 bw,
+ 				    u8 primary_ch_idx)
+ {
+-	if (channel <= 14) {
++	if (IS_CH_2G_BAND(channel)) {
+ 		rtw_write32_clr(rtwdev, REG_BGCTRL, BITS_RX_IQ_WEIGHT);
+ 		rtw_write32_mask(rtwdev, REG_RXCCKSEL, 0xf0000000, 0x8);
+ 		rtw_write32_set(rtwdev, REG_TXF4, BIT(20));
+@@ -1406,7 +1406,7 @@ static void rtw8822c_set_channel_bb(struct rtw_dev *rtwdev, u8 channel, u8 bw,
+ 			rtw_write32_mask(rtwdev, REG_TXDFIR0, 0x70, 0x3);
+ 		else
+ 			rtw_write32_mask(rtwdev, REG_TXDFIR0, 0x70, 0x1);
+-	} else if (channel > 35) {
++	} else if (IS_CH_5G_BAND(channel)) {
+ 		rtw_write32_set(rtwdev, REG_CCKTXONLY, BIT_BB_CCK_CHECK_EN);
+ 		rtw_write32_set(rtwdev, REG_CCK_CHECK, BIT_CHECK_CCK_EN);
+ 		rtw_write32_set(rtwdev, REG_BGCTRL, BITS_RX_IQ_WEIGHT);
+@@ -1414,17 +1414,17 @@ static void rtw8822c_set_channel_bb(struct rtw_dev *rtwdev, u8 channel, u8 bw,
+ 		rtw_write32_mask(rtwdev, REG_RXCCKSEL, 0xf0000000, 0x0);
+ 		rtw_write32_mask(rtwdev, REG_CCAMSK, 0x3F000000, 0x22);
+ 		rtw_write32_mask(rtwdev, REG_TXDFIR0, 0x70, 0x3);
+-		if (channel >= 36 && channel <= 64) {
++		if (IS_CH_5G_BAND_1(channel) || IS_CH_5G_BAND_2(channel)) {
+ 			rtw_write32_mask(rtwdev, REG_RXAGCCTL0, BITS_RXAGC_OFDM,
+ 					 0x1);
+ 			rtw_write32_mask(rtwdev, REG_RXAGCCTL, BITS_RXAGC_OFDM,
+ 					 0x1);
+-		} else if (channel >= 100 && channel <= 144) {
++		} else if (IS_CH_5G_BAND_3(channel)) {
+ 			rtw_write32_mask(rtwdev, REG_RXAGCCTL0, BITS_RXAGC_OFDM,
+ 					 0x2);
+ 			rtw_write32_mask(rtwdev, REG_RXAGCCTL, BITS_RXAGC_OFDM,
+ 					 0x2);
+-		} else if (channel >= 149) {
++		} else if (IS_CH_5G_BAND_4(channel)) {
+ 			rtw_write32_mask(rtwdev, REG_RXAGCCTL0, BITS_RXAGC_OFDM,
+ 					 0x3);
+ 			rtw_write32_mask(rtwdev, REG_RXAGCCTL, BITS_RXAGC_OFDM,
 -- 
 2.17.1
 
