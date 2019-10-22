@@ -2,124 +2,214 @@ Return-Path: <SRS0=sWjF=YP=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D668CA9EB7
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Oct 2019 10:07:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA387CA9EA0
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Oct 2019 10:12:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 51F6A20700
-	for <linux-wireless@archiver.kernel.org>; Tue, 22 Oct 2019 10:07:48 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GLvaM+em"
+	by mail.kernel.org (Postfix) with ESMTP id 8A8E22075A
+	for <linux-wireless@archiver.kernel.org>; Tue, 22 Oct 2019 10:12:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731730AbfJVKHr (ORCPT
+        id S1731735AbfJVKMi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 22 Oct 2019 06:07:47 -0400
-Received: from mail-oi1-f196.google.com ([209.85.167.196]:43220 "EHLO
-        mail-oi1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727609AbfJVKHr (ORCPT
+        Tue, 22 Oct 2019 06:12:38 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:38295 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731589AbfJVKMi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Oct 2019 06:07:47 -0400
-Received: by mail-oi1-f196.google.com with SMTP id t84so13631318oih.10
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Oct 2019 03:07:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
-         :cc;
-        bh=iFTeSU9DK9ebNJwCkq6A2UglnA/84QdLInUE+UVt72Q=;
-        b=GLvaM+emlsDUj6Xx9I/LNo1xIxNCSAf5UYV4VRs5hw48hWzheIvw3/mg7Fe4NpNjne
-         7tUEvHhvrLgivW2XZxBrYgJMDsrDhcGhXybAMvxodIAhIiawPCSZn8Wu+ZpKlz516lQ8
-         +UrDGEamtRGL1IMzJZ5d3L2KBOuWT0oxMaXgBlWn1Oab5JzxCioQqfUqldZ6FG/Fmt1g
-         YQ/aY+dW4QiSKzHkQEvBQxue25Ec/J+1TRXE989utfeHrH2HkEfecOb5t1ARKXdsWeH6
-         c6BIMUY7+y9HqjjGuigZX772gK1SbBU9+xAljSMEz5YpdB0liu+isDe6/T96EPfsVrjx
-         X3pA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:in-reply-to:references:from:date
-         :message-id:subject:to:cc;
-        bh=iFTeSU9DK9ebNJwCkq6A2UglnA/84QdLInUE+UVt72Q=;
-        b=eTx+MQwIG6Ql4b7uP4bn397b/goNLMaSyJofYKIxjnYyN2B138yaBQEeBFbq/A+ZIn
-         rvqwXifu9JE9CHPCIL8I4HZder0ZsXW05Uz+bzfgf1FqzEV7EgI8wUOxohz5cVnQmt2I
-         HhnH04TtaaXqSP6+1iPjWvj3zBtFxjpv+8f3va5KH/UqyCt6Tp4D1XtXWWfv5NUXUZqI
-         JaM6/xFJOPSAUiAXmLKl+SwU8YD6tKhDPewpaWGDEsSi56hDPtrkXwYcpiJwE1DhKX0S
-         hLe2kt3O9draAmnW3RajR9wRa0cmBMeYGndh9CbZrNiYb1Behi0WNnMUCbZcAIqLcGNX
-         XXxA==
-X-Gm-Message-State: APjAAAUe5nsFnl531Qdbw9Vg+nCkne3iex6prpTTSmpLA5tLrJNqpV+Y
-        bkVMHdbs81VD8a/HkJcyJvDFPTF754wZTzZeoKE=
-X-Google-Smtp-Source: APXvYqwZwk63iNNN4Hs2V0NWyfBlNKBesMXZy+huRrLlYqynjtIPveX6tpdEvoVLg+oIOs3+icmF89FRFb8Tg+CxDe8=
-X-Received: by 2002:a05:6808:aad:: with SMTP id r13mr2248651oij.30.1571738864718;
- Tue, 22 Oct 2019 03:07:44 -0700 (PDT)
+        Tue, 22 Oct 2019 06:12:38 -0400
+Authenticated-By: 
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x9MACWvw019312, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (RTITCASV01.realtek.com.tw[172.21.6.18])
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x9MACWvw019312
+        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
+        Tue, 22 Oct 2019 18:12:32 +0800
+Received: from localhost.localdomain (172.21.68.126) by
+ RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
+ 14.3.468.0; Tue, 22 Oct 2019 18:12:32 +0800
+From:   <yhchuang@realtek.com>
+To:     <kvalo@codeaurora.org>
+CC:     <linux-wireless@vger.kernel.org>, <briannorris@chromium.org>
+Subject: [PATCH v3 1/2] rtw88: add regulatory process strategy for different chipset
+Date:   Tue, 22 Oct 2019 18:12:28 +0800
+Message-ID: <20191022101229.26044-2-yhchuang@realtek.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20191022101229.26044-1-yhchuang@realtek.com>
+References: <20191022101229.26044-1-yhchuang@realtek.com>
 MIME-Version: 1.0
-Received: by 2002:a9d:2286:0:0:0:0:0 with HTTP; Tue, 22 Oct 2019 03:07:44
- -0700 (PDT)
-In-Reply-To: <1571734629-18028-1-git-send-email-zhichen@codeaurora.org>
-References: <1571734629-18028-1-git-send-email-zhichen@codeaurora.org>
-From:   Tom Psyborg <pozega.tomislav@gmail.com>
-Date:   Tue, 22 Oct 2019 12:07:44 +0200
-Message-ID: <CAKR_QVLDFBVMDDP4mPYVNdpT9TA3podNeQMpVJQwE7A5eG=0kA@mail.gmail.com>
-Subject: Re: [PATCH RFC] Revert "ath10k: fix DMA related firmware crashes on
- multiple devices"
-To:     Zhi Chen <zhichen@codeaurora.org>
-Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
+X-Originating-IP: [172.21.68.126]
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 22/10/2019, Zhi Chen <zhichen@codeaurora.org> wrote:
-> This reverts commit 76d164f582150fd0259ec0fcbc485470bcd8033e.
-> PCIe hung issue was observed on multiple platforms. The issue was
-> reproduced
-> when DUT was configured as AP and associated with 50+ STAs.
->
-> With PCIe protocol analyzer, we can see DMA Read crossing 4KB boundary when
-> issue happened. It broke PCIe spec and caused PCIe stuck.
->
-> Tested:  IPQ8064 + QCA9984 with firmware 10.4-3.10-00047
->          QCS404 + QCA9984 with firmware 10.4-3.9.0.2--00044
->          Synaptics AS370 + QCA9888  with firmware 10.4-3.9.0.2--00040
->
-> Signed-off-by: Zhi Chen <zhichen@codeaurora.org>
-> ---
->  drivers/net/wireless/ath/ath10k/hw.h | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/hw.h
-> b/drivers/net/wireless/ath/ath10k/hw.h
-> index 35a3623..17f620b 100644
-> --- a/drivers/net/wireless/ath/ath10k/hw.h
-> +++ b/drivers/net/wireless/ath/ath10k/hw.h
-> @@ -753,7 +753,7 @@ ath10k_is_rssi_enable(struct ath10k_hw_params *hw,
->  #define TARGET_10X_MAX_FRAG_ENTRIES		0
->
->  /* 10.2 parameters */
-> -#define TARGET_10_2_DMA_BURST_SIZE		0
-> +#define TARGET_10_2_DMA_BURST_SIZE		1
->
->  /* Target specific defines for WMI-TLV firmware */
->  #define TARGET_TLV_NUM_VDEVS			4
-> @@ -813,7 +813,7 @@ ath10k_is_rssi_enable(struct ath10k_hw_params *hw,
->
->  #define TARGET_10_4_TX_DBG_LOG_SIZE		1024
->  #define TARGET_10_4_NUM_WDS_ENTRIES		32
-> -#define TARGET_10_4_DMA_BURST_SIZE		0
-> +#define TARGET_10_4_DMA_BURST_SIZE		1
->  #define TARGET_10_4_MAC_AGGR_DELIM		0
->  #define TARGET_10_4_RX_SKIP_DEFRAG_TIMEOUT_DUP_DETECTION_CHECK 1
->  #define TARGET_10_4_VOW_CONFIG			0
-> --
-> 2.7.4
->
->
-> _______________________________________________
-> ath10k mailing list
-> ath10k@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/ath10k
->
+From: Tzu-En Huang <tehuang@realtek.com>
 
-What about main and 10x firmware branch?
+There are two kinds of country/regulatory efuse settings
+for Realtek's chipset, one is worldwide and the other is
+a specific country. For both settings, REGULATORY_STRICT_REG
+will be set, telling stack that devices original regulatory is
+the superset of any further settings.
+
+For the chipset with the country setting being a specific
+country, Realtek does not apply any new regulatory setting
+notifiers to the card.
+
+For the chipset with a worldwide regulatory setting,
+Realtek's custom worldwide regulatory setting will be
+provided via wiphy_apply_custom_regulatory().
+And if a new regulatory notification is set by
+NL80211_REGDOM_SET_BY_COUNTRY_IE, the new setting will be
+applied to the card.
+
+Signed-off-by: Tzu-En Huang <tehuang@realtek.com>
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw88/main.c |  6 ++-
+ drivers/net/wireless/realtek/rtw88/main.h |  1 +
+ drivers/net/wireless/realtek/rtw88/regd.c | 58 +++++++++++++++++++----
+ 3 files changed, 53 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
+index 5343d860189b..25d450aada8a 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.c
++++ b/drivers/net/wireless/realtek/rtw88/main.c
+@@ -1337,8 +1337,10 @@ int rtw_register_hw(struct rtw_dev *rtwdev, struct ieee80211_hw *hw)
+ 		return ret;
+ 	}
+ 
+-	if (regulatory_hint(hw->wiphy, rtwdev->regd.alpha2))
+-		rtw_err(rtwdev, "regulatory_hint fail\n");
++	if (!rtwdev->efuse.country_worldwide) {
++		if (regulatory_hint(hw->wiphy, rtwdev->efuse.country_code))
++			rtw_err(rtwdev, "regulatory_hint fail\n");
++	}
+ 
+ 	rtw_debugfs_init(rtwdev);
+ 
+diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
+index 4759d6a0ca6e..88ad03472063 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.h
++++ b/drivers/net/wireless/realtek/rtw88/main.h
+@@ -1205,6 +1205,7 @@ struct rtw_efuse {
+ 	u8 addr[ETH_ALEN];
+ 	u8 channel_plan;
+ 	u8 country_code[2];
++	bool country_worldwide;
+ 	u8 rf_board_option;
+ 	u8 rfe_option;
+ 	u8 thermal_meter;
+diff --git a/drivers/net/wireless/realtek/rtw88/regd.c b/drivers/net/wireless/realtek/rtw88/regd.c
+index 69744dd65968..718a147697cc 100644
+--- a/drivers/net/wireless/realtek/rtw88/regd.c
++++ b/drivers/net/wireless/realtek/rtw88/regd.c
+@@ -7,6 +7,18 @@
+ #include "debug.h"
+ #include "phy.h"
+ 
++static const struct ieee80211_regdomain rtw88_world_regdom = {
++	.n_reg_rules = 5,
++	.alpha2 =  "99",
++	.reg_rules = {
++		REG_RULE(2412 - 10, 2462 + 10, 40, 0, 20, 0),
++		REG_RULE(2467 - 10, 2484 + 10, 40, 0, 20, NL80211_RRF_NO_IR),
++		REG_RULE(5180 - 10, 5240 + 10, 80, 0, 20, NL80211_RRF_NO_IR),
++		REG_RULE(5260 - 10, 5700 + 10, 80, 0, 20,
++			 NL80211_RRF_NO_IR | NL80211_RRF_DFS),
++		REG_RULE(5745 - 10, 5825 + 10, 80, 0, 20, NL80211_RRF_NO_IR),
++	}
++};
+ #define COUNTRY_CHPLAN_ENT(_alpha2, _chplan, _txpwr_regd) \
+ 	{.alpha2 = (_alpha2), \
+ 	 .chplan = (_chplan), \
+@@ -339,12 +351,30 @@ static struct rtw_regulatory rtw_regd_find_reg_by_name(char *alpha2)
+ 	return rtw_defined_chplan;
+ }
+ 
++static bool rtw_regd_is_ww(struct rtw_regulatory *reg)
++{
++	if (reg->txpwr_regd == RTW_REGD_WW)
++		return true;
++	return false;
++}
++
+ static int rtw_regd_notifier_apply(struct rtw_dev *rtwdev,
+ 				   struct wiphy *wiphy,
+ 				   struct regulatory_request *request)
+ {
++	if (request->initiator == NL80211_REGDOM_SET_BY_DRIVER)
++		return -EINVAL;
+ 	if (request->initiator == NL80211_REGDOM_SET_BY_USER)
++		return -EINVAL;
++	if (request->initiator == NL80211_REGDOM_SET_BY_COUNTRY_IE &&
++	    !rtw_regd_is_ww(&rtwdev->regd))
++		return -EINVAL;
++	if (request->initiator == NL80211_REGDOM_SET_BY_CORE &&
++	    !rtwdev->efuse.country_worldwide) {
++		rtwdev->regd =
++			rtw_regd_find_reg_by_name(rtwdev->efuse.country_code);
+ 		return 0;
++	}
+ 	rtwdev->regd = rtw_regd_find_reg_by_name(request->alpha2);
+ 	rtw_regd_apply_world_flags(wiphy, request->initiator);
+ 
+@@ -352,15 +382,22 @@ static int rtw_regd_notifier_apply(struct rtw_dev *rtwdev,
+ }
+ 
+ static int
+-rtw_regd_init_wiphy(struct rtw_regulatory *reg, struct wiphy *wiphy,
++rtw_regd_init_wiphy(struct rtw_dev *rtwdev, struct wiphy *wiphy,
+ 		    void (*reg_notifier)(struct wiphy *wiphy,
+ 					 struct regulatory_request *request))
+ {
++	struct rtw_regulatory *reg = &rtwdev->regd;
++
+ 	wiphy->reg_notifier = reg_notifier;
+ 
+-	wiphy->regulatory_flags &= ~REGULATORY_CUSTOM_REG;
+-	wiphy->regulatory_flags &= ~REGULATORY_STRICT_REG;
+-	wiphy->regulatory_flags &= ~REGULATORY_DISABLE_BEACON_HINTS;
++	if (rtw_regd_is_ww(reg)) {
++		rtwdev->efuse.country_worldwide = true;
++		wiphy->regulatory_flags |= REGULATORY_CUSTOM_REG;
++		wiphy_apply_custom_regulatory(wiphy, &rtw88_world_regdom);
++	} else {
++		rtwdev->efuse.country_worldwide = false;
++	}
++	wiphy->regulatory_flags |= REGULATORY_STRICT_REG;
+ 
+ 	rtw_regd_apply_hw_cap_flags(wiphy);
+ 
+@@ -377,7 +414,7 @@ int rtw_regd_init(struct rtw_dev *rtwdev,
+ 		return -EINVAL;
+ 
+ 	rtwdev->regd = rtw_regd_find_reg_by_name(rtwdev->efuse.country_code);
+-	rtw_regd_init_wiphy(&rtwdev->regd, wiphy, reg_notifier);
++	rtw_regd_init_wiphy(rtwdev, wiphy, reg_notifier);
+ 
+ 	return 0;
+ }
+@@ -388,11 +425,12 @@ void rtw_regd_notifier(struct wiphy *wiphy, struct regulatory_request *request)
+ 	struct rtw_dev *rtwdev = hw->priv;
+ 	struct rtw_hal *hal = &rtwdev->hal;
+ 
+-	rtw_regd_notifier_apply(rtwdev, wiphy, request);
+-	rtw_dbg(rtwdev, RTW_DBG_REGD,
+-		"get alpha2 %c%c from initiator %d, mapping to chplan 0x%x, txregd %d\n",
+-		request->alpha2[0], request->alpha2[1], request->initiator,
+-		rtwdev->regd.chplan, rtwdev->regd.txpwr_regd);
++	if (!rtw_regd_notifier_apply(rtwdev, wiphy, request))
++		rtw_dbg(rtwdev, RTW_DBG_REGD,
++			"get alpha2 %c%c from initiator %d, mapping to chplan 0x%x, txregd %d\n",
++			request->alpha2[0], request->alpha2[1],
++			request->initiator, rtwdev->regd.chplan,
++			rtwdev->regd.txpwr_regd);
+ 
+ 	rtw_phy_set_tx_power_level(rtwdev, hal->current_channel);
+ }
+-- 
+2.17.1
+
