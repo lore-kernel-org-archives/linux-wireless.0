@@ -2,51 +2,54 @@ Return-Path: <SRS0=XJ3z=YQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DBC5CA9EB9
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Oct 2019 22:23:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EAE88C47E49
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Oct 2019 22:24:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D75D42173B
-	for <linux-wireless@archiver.kernel.org>; Wed, 23 Oct 2019 22:23:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C033021929
+	for <linux-wireless@archiver.kernel.org>; Wed, 23 Oct 2019 22:24:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1571869428;
-	bh=vlpVZYvaUE1VTVX3xNbH1XFQzcYBGlvDDimEJavMs7Q=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=1rL5lFQpYAV8QtfRmKPw799Cu17kKPmECUqCL4NXXMiOUe+RyIyHNS0Kl71usWZJK
-	 DRXxgaJx55ZkjsLlAp1bYMxUC2hhpdiWloQo/2tR7/0EeYWnvxdrxDIIocPXLcUYMz
-	 w+Dxj9Cx/CU9Q6QQr/MXyQKJxQKIRiVo49xRClvI=
+	s=default; t=1571869464;
+	bh=9Rf/2A2133N2RaTq0AUraTZm7Ddefm9mGc7uW0+g0xg=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=2H82/A5VcsXrAW7m+sqF3OW0BG45B06MWZshCJ8oI69qMLGyx5XiyaQsw7E9ji4F6
+	 P3MvIjBMNGzQwejsMTwEhO/GHIoo5nViwDLnDWvJuPbgVxZDIavqhnkRSN90jxkppO
+	 DsDQHKqw8R/sYHno+hHwmGSn6HWBYw14iEQSwMg0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2436651AbfJWWXq (ORCPT
+        id S2436732AbfJWWYX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 23 Oct 2019 18:23:46 -0400
-Received: from mail.kernel.org ([198.145.29.99]:54266 "EHLO mail.kernel.org"
+        Wed, 23 Oct 2019 18:24:23 -0400
+Received: from mail.kernel.org ([198.145.29.99]:54322 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2407859AbfJWWXq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Oct 2019 18:23:46 -0400
+        id S2436651AbfJWWYX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 23 Oct 2019 18:24:23 -0400
 Received: from lore-desk.lan (unknown [151.66.11.57])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 77BF22173B;
-        Wed, 23 Oct 2019 22:23:42 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id AD5302173B;
+        Wed, 23 Oct 2019 22:24:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1571869425;
-        bh=vlpVZYvaUE1VTVX3xNbH1XFQzcYBGlvDDimEJavMs7Q=;
-        h=From:To:Cc:Subject:Date:From;
-        b=a0RQrO7uQMbl1YJAk4yto+/yIEVkW8iXZAO9gSN505iwNEfPi89F10AumMQjIYdm2
-         wrvLGl6yhlM99pON3NPDAC/CBDAgFE9mJgKdPYKE47arTb0u7lGA7UgIO5M2ZkLHcy
-         h8R/KW9dqvtZPY787nM5MFcu/SecWnrKbGwMovNw=
+        s=default; t=1571869462;
+        bh=9Rf/2A2133N2RaTq0AUraTZm7Ddefm9mGc7uW0+g0xg=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=mtQDBqZR+uxSfwoyPtDXzCryBoLFjzAk2LdBXvrTqfnnVvxVDvKeep8PkEqk+SGRe
+         iuqJZ/54c3dodivjW7enr9jDJkNxsIvarkx09+9HNtmu9Olci2YRnh5u4hrBPqh+GV
+         ZDsvLO7WeWq0nIDuqeL71qEALt7lEDDQ21t3dL08=
 From:   Lorenzo Bianconi <lorenzo@kernel.org>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org, nbd@nbd.name, sgruszka@redhat.com,
         lorenzo.bianconi@redhat.com, oleksandr@natalenko.name,
         netdev@vger.kernel.org
-Subject: [PATCH wireless-drivers 0/2] fix mt76x2e hangs on U7612E mini-pcie
-Date:   Thu, 24 Oct 2019 00:23:14 +0200
-Message-Id: <cover.1571868221.git.lorenzo@kernel.org>
+Subject: [PATCH wireless-drivers 1/2] mt76: mt76x2e: disable pcie_aspm by default
+Date:   Thu, 24 Oct 2019 00:23:15 +0200
+Message-Id: <fec60f066bab1936d58b2e69bae3f20e645d1304.1571868221.git.lorenzo@kernel.org>
 X-Mailer: git-send-email 2.21.0
+In-Reply-To: <cover.1571868221.git.lorenzo@kernel.org>
+References: <cover.1571868221.git.lorenzo@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -54,26 +57,108 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Various mt76x2e issues have been reported on U7612E mini-pcie card [1].
-On U7612E-H1 PCIE_ASPM causes continuous mcu hangs and instability and
-so patch 1/2 disable it by default.
-Moreover mt76 does not properly unmap dma buffers for non-linear skbs.
-This issue may result in hw hangs if the system relies on IOMMU.
-Patch 2/2 fix the problem properly unmapping data fragments on
-non-linear skbs. 
+On same device (e.g. U7612E-H1) PCIE_ASPM causes continuous mcu hangs and
+instability and so let's disable PCIE_ASPM by default. This patch has
+been successfully tested on U7612E-H1 mini-pice card
 
-[1]: https://lore.kernel.org/netdev/deaafa7a3e9ea2111ebb5106430849c6@natalenko.name/
-
-Lorenzo Bianconi (2):
-  mt76: mt76x2e: disable pcie_aspm by default
-  mt76: dma: fix buffer unmap with non-linear skbs
-
- drivers/net/wireless/mediatek/mt76/dma.c      | 10 ++--
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+---
  drivers/net/wireless/mediatek/mt76/mmio.c     | 47 +++++++++++++++++++
  drivers/net/wireless/mediatek/mt76/mt76.h     |  1 +
  .../net/wireless/mediatek/mt76/mt76x2/pci.c   |  2 +
- 4 files changed, 57 insertions(+), 3 deletions(-)
+ 3 files changed, 50 insertions(+)
 
+diff --git a/drivers/net/wireless/mediatek/mt76/mmio.c b/drivers/net/wireless/mediatek/mt76/mmio.c
+index 1c974df1fe25..f991a8f1c42a 100644
+--- a/drivers/net/wireless/mediatek/mt76/mmio.c
++++ b/drivers/net/wireless/mediatek/mt76/mmio.c
+@@ -3,6 +3,8 @@
+  * Copyright (C) 2016 Felix Fietkau <nbd@nbd.name>
+  */
+ 
++#include <linux/pci.h>
++
+ #include "mt76.h"
+ #include "trace.h"
+ 
+@@ -78,6 +80,51 @@ void mt76_set_irq_mask(struct mt76_dev *dev, u32 addr,
+ }
+ EXPORT_SYMBOL_GPL(mt76_set_irq_mask);
+ 
++void mt76_mmio_disable_aspm(struct pci_dev *pdev)
++{
++	struct pci_dev *parent = pdev->bus->self;
++	u16 aspm_conf, parent_aspm_conf = 0;
++
++	pcie_capability_read_word(pdev, PCI_EXP_LNKCTL, &aspm_conf);
++	aspm_conf &= PCI_EXP_LNKCTL_ASPMC;
++	if (parent) {
++		pcie_capability_read_word(parent, PCI_EXP_LNKCTL,
++					  &parent_aspm_conf);
++		parent_aspm_conf &= PCI_EXP_LNKCTL_ASPMC;
++	}
++
++	if (!aspm_conf && (!parent || !parent_aspm_conf)) {
++		/* aspm already disabled */
++		return;
++	}
++
++	dev_info(&pdev->dev, "disabling ASPM %s %s\n",
++		 (aspm_conf & PCI_EXP_LNKCTL_ASPM_L0S) ? "L0s" : "",
++		 (aspm_conf & PCI_EXP_LNKCTL_ASPM_L1) ? "L1" : "");
++
++#ifdef CONFIG_PCIEASPM
++	pci_disable_link_state(pdev, aspm_conf);
++
++	/* Double-check ASPM control.  If not disabled by the above, the
++	 * BIOS is preventing that from happening (or CONFIG_PCIEASPM is
++	 * not enabled); override by writing PCI config space directly.
++	 */
++	pcie_capability_read_word(pdev, PCI_EXP_LNKCTL, &aspm_conf);
++	if (!(aspm_conf & PCI_EXP_LNKCTL_ASPMC))
++		return;
++#endif /* CONFIG_PCIEASPM */
++
++	/* Both device and parent should have the same ASPM setting.
++	 * Disable ASPM in downstream component first and then upstream.
++	 */
++	pcie_capability_clear_word(pdev, PCI_EXP_LNKCTL, aspm_conf);
++
++	if (parent)
++		pcie_capability_clear_word(parent, PCI_EXP_LNKCTL,
++					   aspm_conf);
++}
++EXPORT_SYMBOL_GPL(mt76_mmio_disable_aspm);
++
+ void mt76_mmio_init(struct mt76_dev *dev, void __iomem *regs)
+ {
+ 	static const struct mt76_bus_ops mt76_mmio_ops = {
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index 570c159515a0..962812b6247d 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -578,6 +578,7 @@ bool __mt76_poll_msec(struct mt76_dev *dev, u32 offset, u32 mask, u32 val,
+ #define mt76_poll_msec(dev, ...) __mt76_poll_msec(&((dev)->mt76), __VA_ARGS__)
+ 
+ void mt76_mmio_init(struct mt76_dev *dev, void __iomem *regs);
++void mt76_mmio_disable_aspm(struct pci_dev *pdev);
+ 
+ static inline u16 mt76_chip(struct mt76_dev *dev)
+ {
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/pci.c b/drivers/net/wireless/mediatek/mt76/mt76x2/pci.c
+index 73c3104f8858..264bef87e5c7 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2/pci.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2/pci.c
+@@ -81,6 +81,8 @@ mt76pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	/* RG_SSUSB_CDR_BR_PE1D = 0x3 */
+ 	mt76_rmw_field(dev, 0x15c58, 0x3 << 6, 0x3);
+ 
++	mt76_mmio_disable_aspm(pdev);
++
+ 	return 0;
+ 
+ error:
 -- 
 2.21.0
 
