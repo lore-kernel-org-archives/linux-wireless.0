@@ -2,61 +2,61 @@ Return-Path: <SRS0=l1pt=YR=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BCAAACA9EAF
-	for <linux-wireless@archiver.kernel.org>; Thu, 24 Oct 2019 09:40:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58685CA9EBB
+	for <linux-wireless@archiver.kernel.org>; Thu, 24 Oct 2019 09:47:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8E9A02166E
-	for <linux-wireless@archiver.kernel.org>; Thu, 24 Oct 2019 09:40:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1FC8220856
+	for <linux-wireless@archiver.kernel.org>; Thu, 24 Oct 2019 09:47:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="IUSCoPlf";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="EO3iRyBJ"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="KBV53puN";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="LafDKB1y"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391046AbfJXJk3 (ORCPT
+        id S1731951AbfJXJrI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 24 Oct 2019 05:40:29 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:35558 "EHLO
+        Thu, 24 Oct 2019 05:47:08 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:50358 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727275AbfJXJk2 (ORCPT
+        with ESMTP id S1730343AbfJXJrI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 Oct 2019 05:40:28 -0400
+        Thu, 24 Oct 2019 05:47:08 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 878A061069; Thu, 24 Oct 2019 09:40:26 +0000 (UTC)
+        id 3265C60B67; Thu, 24 Oct 2019 09:47:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1571910027;
-        bh=RpzuRCtxTdpM4TGsOHhiUmecfsb9FisvPIpB9QSVE7w=;
+        s=default; t=1571910427;
+        bh=FgebyyM68KyCZTp8a5RynFQnhebEfIplee6uQIgAQqU=;
         h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=IUSCoPlfTKRm3mqrUXs0r0dkJuoMehYvPtJIDNv0AoNxM4xuRC8z+lZ8/ECcZs2wn
-         fB2rAma8LIROH35VK1gb4o4S8FtDCP/YaGAmrMhmDdqYT3qQeE9kU5Qn0qclhKAw1M
-         5cfh399V9o7b/VcHLy96GiJ+LhG89ys7CNKhBhW0=
+        b=KBV53puNNObhltDnZ/11NInDZ5MHzlcguSGItDS6u5/x7v8Kb3e4l80f/ghQ6PqgZ
+         PVAU1r8DmleRyrIzKCUN2MzeTMvjMcxT/Cxp0XjsNu5TQpiCPxO6Hkid99BTwDey/L
+         TxBDi3eo0WUVpq/5rHLkiryFyGG1vrF70X17gI6E=
 Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by smtp.codeaurora.org (Postfix) with ESMTP id 068CD6135A;
-        Thu, 24 Oct 2019 09:40:26 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTP id 063A060FEF;
+        Thu, 24 Oct 2019 09:47:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1571910026;
-        bh=RpzuRCtxTdpM4TGsOHhiUmecfsb9FisvPIpB9QSVE7w=;
+        s=default; t=1571910426;
+        bh=FgebyyM68KyCZTp8a5RynFQnhebEfIplee6uQIgAQqU=;
         h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=EO3iRyBJhIHdc5BGNEaeEcAAESxwhomaOc6oQbg3Vl7M3FYHT8robYoL3dd4ymdjE
-         O/THd85vxj2C6utsg3rX5ZnyTehRINtZiMIjT4Ob3yvTRHqOWmJmbs1A5LBe/2la1s
-         TdH9XUBvvFHh5ImRfBd6+tiqbaOGzv7G2J5aYsc4=
+        b=LafDKB1y/2/61nQFjgpvN6qi8a3ZprsPjfuzsazfWp41f70tYiWXVJp962CFe+2M8
+         AyYVXTFUUfuRARtLhlBVjFUMG7kOyilWzBAV5fS7QsWFog42E5K5xctgtsodWgwVkm
+         qie7thlh0PcWDcvslo/lQDWrOGH4zYdhWefCERKo=
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII;
  format=flowed
 Content-Transfer-Encoding: 7bit
-Date:   Thu, 24 Oct 2019 17:40:25 +0800
+Date:   Thu, 24 Oct 2019 17:47:05 +0800
 From:   Wen Gong <wgong@codeaurora.org>
 To:     Kalle Valo <kvalo@codeaurora.org>
 Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
 Subject: Re: [PATCH v6 2/3] ath10k: change max RX bundle size from 8 to 32 for
  sdio
-In-Reply-To: <87r232sdeh.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87mudqsd6d.fsf@kamboji.qca.qualcomm.com>
 References: <1569402639-31720-1-git-send-email-wgong@codeaurora.org>
  <1569402639-31720-3-git-send-email-wgong@codeaurora.org>
- <87r232sdeh.fsf@kamboji.qca.qualcomm.com>
-Message-ID: <c2227ffd5901b03a2874fddb98298e0d@codeaurora.org>
+ <87mudqsd6d.fsf@kamboji.qca.qualcomm.com>
+Message-ID: <200eef83925da532e49565bcf4f9ffc1@codeaurora.org>
 X-Sender: wgong@codeaurora.org
 User-Agent: Roundcube Webmail/1.2.5
 Sender: linux-wireless-owner@vger.kernel.org
@@ -64,7 +64,7 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2019-10-24 17:25, Kalle Valo wrote:
+On 2019-10-24 17:30, Kalle Valo wrote:
 > Wen Gong <wgong@codeaurora.org> writes:
 > 
 >> The max bundle size support by firmware is 32, change it from 8 to 32
@@ -75,32 +75,21 @@ On 2019-10-24 17:25, Kalle Valo wrote:
 >> WLAN.RMH.4.4.1-00017-QCARMSWPZ-1
 >> 
 >> Signed-off-by: Wen Gong <wgong@codeaurora.org>
->> ---
->>  drivers/net/wireless/ath/ath10k/htc.h  | 12 +++++++++---
->>  drivers/net/wireless/ath/ath10k/sdio.c |  4 ++--
->>  drivers/net/wireless/ath/ath10k/sdio.h |  4 ++--
->>  3 files changed, 13 insertions(+), 7 deletions(-)
->> 
->> diff --git a/drivers/net/wireless/ath/ath10k/htc.h 
->> b/drivers/net/wireless/ath/ath10k/htc.h
->> index f55d3ca..7055156 100644
->> --- a/drivers/net/wireless/ath/ath10k/htc.h
->> +++ b/drivers/net/wireless/ath/ath10k/htc.h
->> @@ -39,7 +39,7 @@
->>   * 4-byte aligned.
->>   */
->> 
->> -#define HTC_HOST_MAX_MSG_PER_RX_BUNDLE        8
->> +#define HTC_HOST_MAX_MSG_PER_RX_BUNDLE        32
 > 
-> So how do I know that this change doesn't break any other hardware? I
-> did a quick review and I think it's safe, but the commit log mentions
-> nothing about this.
-the real max rx bundle is decided in ath10k_htc_wait_target.
-it is the min value of HTC_HOST_MAX_MSG_PER_RX_BUNDLE and the value 
-reported from firmware.
-htc->max_msgs_per_htc_bundle =
-			min_t(u8, msg->ready_ext.max_msgs_per_htc_bundle,
-			      HTC_HOST_MAX_MSG_PER_RX_BUNDLE);
+> [...]
 > 
-> Please clarify and I can update the commit log.
+>> --- a/drivers/net/wireless/ath/ath10k/sdio.c
+>> +++ b/drivers/net/wireless/ath/ath10k/sdio.c
+>> @@ -24,7 +24,7 @@
+>>  #include "trace.h"
+>>  #include "sdio.h"
+>> 
+>> -#define ATH10K_SDIO_VSG_BUF_SIZE	(32 * 1024)
+>> +#define ATH10K_SDIO_VSG_BUF_SIZE	(64 * 1024)
+> 
+> Is allocating 64 kb with kmalloc() reliable, especially on smaller
+> systems? I hope it is, but checking if someone else knows better. We
+> only do this only once in probe(), though.
+rx packet is more than 1500 bytes for performance test, so for 32 
+packets, 32*1024 is not enough.
+yes, it is allocated only one time for probe.
