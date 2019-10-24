@@ -2,107 +2,144 @@ Return-Path: <SRS0=l1pt=YR=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9E0ECA9EBB
-	for <linux-wireless@archiver.kernel.org>; Thu, 24 Oct 2019 09:54:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA6FCCA9EAF
+	for <linux-wireless@archiver.kernel.org>; Thu, 24 Oct 2019 10:06:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A05C82166E
-	for <linux-wireless@archiver.kernel.org>; Thu, 24 Oct 2019 09:54:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B9A86205F4
+	for <linux-wireless@archiver.kernel.org>; Thu, 24 Oct 2019 10:06:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="WhZQoLA8";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="JDfRl5BJ"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Kdf88FKG";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="cYHopb92"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2393110AbfJXJyQ (ORCPT
+        id S2389669AbfJXKGA (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 24 Oct 2019 05:54:16 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:57070 "EHLO
+        Thu, 24 Oct 2019 06:06:00 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:35412 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725775AbfJXJyQ (ORCPT
+        with ESMTP id S1725874AbfJXKGA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 Oct 2019 05:54:16 -0400
+        Thu, 24 Oct 2019 06:06:00 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id CE2936119B; Thu, 24 Oct 2019 09:54:15 +0000 (UTC)
+        id 5D07A60134; Thu, 24 Oct 2019 10:05:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1571910855;
-        bh=olhz53eSWn8B+t4e5HJ9Ad44Ha9vyjbjoKXi42voITg=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=WhZQoLA8i0HpKEx1qRBVAPJPh2YR4fmSmTNe1J2OxpqCvsUAj1oQ8c4blEMNdqp1G
-         Mz5/OZWBPhNqlP4uU+6Z608BIhGZVGak+iKjchffUBvQwmPVjSloyjC80ZdMSu2yfP
-         h7Oxy2jaGZd+vi7gj6uxmWNXEAnZrcmRAY4rWyeY=
+        s=default; t=1571911559;
+        bh=KzgCcuMZO8K844GlsK2yNsEGh+11mPBRcWET/19MD+E=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=Kdf88FKGc45bWbymtLiitwLwaG+CbtpUdXFdWnqsLhbeof9SQFxGDhjyqvu8N5eU9
+         +UT7tpQMCuMD9xFJ1oQcKA61a9id+vjDQZbtgsy9ca9NLY0G7VqqlVmp6keTObwiJE
+         r6eKQ+82bWyDN3TjZD2cfukqD0WTkucAMrWv6FSc=
 Received: from potku.adurom.net (unknown [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id DA49B61178;
-        Thu, 24 Oct 2019 09:54:13 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id C31C6606CF;
+        Thu, 24 Oct 2019 10:05:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1571910854;
-        bh=olhz53eSWn8B+t4e5HJ9Ad44Ha9vyjbjoKXi42voITg=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=JDfRl5BJj4KZNxrJnHiASCIFw/vDi/ubsXk/J4p4/xAnlvMSWjnnaArjlh5zSm4jU
-         0xrnTH9DBW02+f7HzJVvR9yAkY8ReEY4BgApndjyKdZL6gS+Au1NVFV6N+g+eoaEng
-         fcS4DV/XoFvxQtUQZ89jsEKNx9FYmzITTo7NR+dU=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org DA49B61178
+        s=default; t=1571911556;
+        bh=KzgCcuMZO8K844GlsK2yNsEGh+11mPBRcWET/19MD+E=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=cYHopb926186KOTXqqPmy74r7zwUKy0qcZqNZsAmCYvUzno4sZtF+DQ6UlPIdL40t
+         wsH01wvxHMQMubeC3wKp2/xy1zriQulFKHicO7+KsrmLbhFiOtF2VxGMe7Lz94qDJH
+         3VvXlhjkd9qIpr6k/hCOnwTCWoZFNknUkWoVLBV4=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org C31C6606CF
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
-To:     ath10k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org
-Subject: [PATCH 2/2] ath10k: sdio: remove struct ath10k_sdio_rx_data::status
-Date:   Thu, 24 Oct 2019 12:54:09 +0300
-Message-Id: <1571910849-11489-2-git-send-email-kvalo@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1571910849-11489-1-git-send-email-kvalo@codeaurora.org>
-References: <1571910849-11489-1-git-send-email-kvalo@codeaurora.org>
+To:     Wen Gong <wgong@codeaurora.org>
+Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v6 2/3] ath10k: change max RX bundle size from 8 to 32 for sdio
+References: <1569402639-31720-1-git-send-email-wgong@codeaurora.org>
+        <1569402639-31720-3-git-send-email-wgong@codeaurora.org>
+Date:   Thu, 24 Oct 2019 13:05:53 +0300
+In-Reply-To: <1569402639-31720-3-git-send-email-wgong@codeaurora.org> (Wen
+        Gong's message of "Wed, 25 Sep 2019 17:10:38 +0800")
+Message-ID: <87h83ysbjy.fsf@kamboji.qca.qualcomm.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-It seems to be unused.
+Wen Gong <wgong@codeaurora.org> writes:
 
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
----
- drivers/net/wireless/ath/ath10k/sdio.c | 2 --
- drivers/net/wireless/ath/ath10k/sdio.h | 1 -
- 2 files changed, 3 deletions(-)
+> The max bundle size support by firmware is 32, change it from 8 to 32
+> will help performance. This results in significant performance
+> improvement on RX path.
+>
+> Tested with QCA6174 SDIO with firmware
+> WLAN.RMH.4.4.1-00017-QCARMSWPZ-1
+>
+> Signed-off-by: Wen Gong <wgong@codeaurora.org>
 
-diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
-index ef16b45c18da..ceeee465a73a 100644
---- a/drivers/net/wireless/ath/ath10k/sdio.c
-+++ b/drivers/net/wireless/ath/ath10k/sdio.c
-@@ -649,7 +649,6 @@ static int ath10k_sdio_mbox_rx_fetch(struct ath10k *ar)
- 
- 	htc_hdr = (struct ath10k_htc_hdr *)skb->data;
- 	pkt->act_len = le16_to_cpu(htc_hdr->len) + sizeof(*htc_hdr);
--	pkt->status = ret;
- 	skb_put(skb, pkt->act_len);
- 
- 	return ret;
-@@ -687,7 +686,6 @@ static int ath10k_sdio_mbox_rx_fetch_bundle(struct ath10k *ar)
- 		pkt->act_len = le16_to_cpu(htc_hdr->len) + sizeof(*htc_hdr);
- 
- 		skb_put_data(pkt->skb, htc_hdr, pkt->act_len);
--		pkt->status = 0;
- 		pkt_offset += pkt->alloc_len;
- 	}
- 
-diff --git a/drivers/net/wireless/ath/ath10k/sdio.h b/drivers/net/wireless/ath/ath10k/sdio.h
-index 9acaf0229cf2..33195f49acab 100644
---- a/drivers/net/wireless/ath/ath10k/sdio.h
-+++ b/drivers/net/wireless/ath/ath10k/sdio.h
-@@ -126,7 +126,6 @@ struct ath10k_sdio_rx_data {
- 	bool part_of_bundle;
- 	bool last_in_bundle;
- 	bool trailer_only;
--	int status;
- };
- 
- struct ath10k_sdio_irq_proc_regs {
+[...]
+
+> --- a/drivers/net/wireless/ath/ath10k/htc.h
+> +++ b/drivers/net/wireless/ath/ath10k/htc.h
+> @@ -39,7 +39,7 @@
+>   * 4-byte aligned.
+>   */
+>  
+> -#define HTC_HOST_MAX_MSG_PER_RX_BUNDLE        8
+> +#define HTC_HOST_MAX_MSG_PER_RX_BUNDLE        32
+>  
+>  enum ath10k_htc_tx_flags {
+>  	ATH10K_HTC_FLAG_NEED_CREDIT_UPDATE = 0x01,
+> @@ -48,10 +48,16 @@ enum ath10k_htc_tx_flags {
+>  
+>  enum ath10k_htc_rx_flags {
+>  	ATH10K_HTC_FLAGS_RECV_1MORE_BLOCK = 0x01,
+> -	ATH10K_HTC_FLAG_TRAILER_PRESENT = 0x02,
+> -	ATH10K_HTC_FLAG_BUNDLE_MASK     = 0xF0
+> +	ATH10K_HTC_FLAG_TRAILER_PRESENT = 0x02
+>  };
+
+I left the comma in ATH10K_HTC_FLAG_TRAILER_PRESENT to make the diff cleaner.
+
+> +#define ATH10K_HTC_FLAG_BUNDLE_MASK 0xF0
+> +#define ATH10K_HTC_BUNDLE_EXTRA_MASK GENMASK(3, 2)
+> +
+> +#define ATH10K_HTC_GET_BUNDLE_COUNT(flags) \
+> +	    (FIELD_GET(ATH10K_HTC_FLAG_BUNDLE_MASK, (flags)) +  \
+> +	    (FIELD_GET(ATH10K_HTC_BUNDLE_EXTRA_MASK, (flags)) << 4))
+
+I think I asked you about the shift of 4 bits earlier but now I figured
+it out (I hope) and documented it like this:
+
+#define ATH10K_HTC_FLAG_BUNDLE_MASK GENMASK(7,4)
+
+/* bits 2-3 are for extra bundle count bits 4-5 */
+#define ATH10K_HTC_BUNDLE_EXTRA_MASK GENMASK(3, 2)
+#define ATH10K_HTC_BUNDLE_EXTRA_SHIFT 4
+
+static inline unsigned int ath10k_htc_get_bundle_count(u8 flags)
+{
+	unsigned int count, extra_count;
+
+	count = FIELD_GET(ATH10K_HTC_FLAG_BUNDLE_MASK, flags);
+	extra_count = FIELD_GET(ATH10K_HTC_BUNDLE_EXTRA_MASK, flags) <<
+		ATH10K_HTC_BUNDLE_EXTRA_SHIFT;
+
+	return count + extra_count;
+}
+
+As you can see I also changed the macro to a function, as I prefer C
+over CPP :) And changed ATH10K_HTC_FLAG_BUNDLE_MASK to use GENMASK().
+
+But this only compiled tested, please do properly test the patches from
+pending branch and let me know if I broke something:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=afd85ca1b086695cfd26bf484442eaf3bccb6bdd
+
+https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=4225b4d50a4f6a1159dc3316d068398f1b5edb57
+
+https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=911e0fc846cfc46fb4ccd1d223cb153681ff05bd
+
 -- 
-2.7.4
-
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
