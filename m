@@ -7,86 +7,73 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AABF8CA9EA0
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Oct 2019 11:09:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14E2EC47E49
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Oct 2019 11:31:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8CB122084C
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Oct 2019 11:09:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E153F21929
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Oct 2019 11:31:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2502985AbfJYLIo (ORCPT
+        id S2440122AbfJYLbI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 25 Oct 2019 07:08:44 -0400
-Received: from andre.telenet-ops.be ([195.130.132.53]:34282 "EHLO
-        andre.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2502745AbfJYLIo (ORCPT
+        Fri, 25 Oct 2019 07:31:08 -0400
+Received: from youngberry.canonical.com ([91.189.89.112]:42810 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727602AbfJYLbI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 Oct 2019 07:08:44 -0400
-Received: from ramsan ([84.195.182.253])
-        by andre.telenet-ops.be with bizsmtp
-        id Hn8b2100B5USYZQ01n8bdK; Fri, 25 Oct 2019 13:08:43 +0200
-Received: from rox.of.borg ([192.168.97.57])
-        by ramsan with esmtp (Exim 4.90_1)
-        (envelope-from <geert@linux-m68k.org>)
-        id 1iNxSN-0003rD-9j; Fri, 25 Oct 2019 13:08:35 +0200
-Received: from geert by rox.of.borg with local (Exim 4.90_1)
-        (envelope-from <geert@linux-m68k.org>)
-        id 1iNw6A-0006mw-LI; Fri, 25 Oct 2019 11:41:34 +0200
-From:   Geert Uytterhoeven <geert+renesas@glider.be>
-To:     Jonathan Corbet <corbet@lwn.net>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Ludovic Desroches <ludovic.desroches@microchip.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Nicolas Ferre <nicolas.ferre@microchip.com>,
-        Alexandre Belloni <alexandre.belloni@bootlin.com>,
-        Jaehoon Chung <jh80.chung@samsung.com>,
+        Fri, 25 Oct 2019 07:31:08 -0400
+Received: from 1.general.cking.uk.vpn ([10.172.193.212] helo=localhost)
+        by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.86_2)
+        (envelope-from <colin.king@canonical.com>)
+        id 1iNxo1-0004N2-3o; Fri, 25 Oct 2019 11:30:57 +0000
+From:   Colin King <colin.king@canonical.com>
+To:     Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
         "David S . Miller" <davem@davemloft.net>,
-        "Rafael J . Wysocki" <rafael@kernel.org>,
-        Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-doc@vger.kernel.org, linux-mmc@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Geert Uytterhoeven <geert+renesas@glider.be>
-Subject: [PATCH v2 3/7] net: caif: Fix debugfs on 64-bit platforms
-Date:   Fri, 25 Oct 2019 11:41:26 +0200
-Message-Id: <20191025094130.26033-4-geert+renesas@glider.be>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20191025094130.26033-1-geert+renesas@glider.be>
-References: <20191025094130.26033-1-geert+renesas@glider.be>
+        Chris Chiu <chiu@endlessm.com>,
+        Tzu-En Huang <tehuang@realtek.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH][next] rtw88: remove redundant null pointer check on arrays
+Date:   Fri, 25 Oct 2019 12:30:56 +0100
+Message-Id: <20191025113056.19167-1-colin.king@canonical.com>
+X-Mailer: git-send-email 2.20.1
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-"ser_device.state" is "unsigned long", i.e. 32-bit or 64-bit, depending
-on the platform.  Hence casting its address to "u32 *", and calling
-debugfs_create_x32() breaks operation on 64-bit platforms.
+From: Colin Ian King <colin.king@canonical.com>
 
-Fix this by using the new debugfs_create_xul() helper instead.
+The checks to see if swing_table->n or swing_table->p are null are
+redundant since n and p are arrays and can never be null if
+swing_table is non-null.  I believe these are redundant checks
+and can be safely removed, especially the checks implies that these
+are not arrays which can lead to confusion.
 
-Fixes: 9b27105b4a44c54b ("net-caif-driver: add CAIF serial driver (ldisc)")
-Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Addresses-Coverity: ("Array compared against 0")
+Fixes: c97ee3e0bea2 ("rtw88: add power tracking support")
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
-v2:
-  - No changes.
----
- drivers/net/caif/caif_serial.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/realtek/rtw88/phy.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/caif/caif_serial.c b/drivers/net/caif/caif_serial.c
-index 40b079162804fb0c..bd40b114d6cd7214 100644
---- a/drivers/net/caif/caif_serial.c
-+++ b/drivers/net/caif/caif_serial.c
-@@ -102,8 +102,8 @@ static inline void debugfs_init(struct ser_device *ser, struct tty_struct *tty)
- 	debugfs_create_blob("last_rx_msg", 0400, ser->debugfs_tty_dir,
- 			    &ser->rx_blob);
+diff --git a/drivers/net/wireless/realtek/rtw88/phy.c b/drivers/net/wireless/realtek/rtw88/phy.c
+index 69e7edb629f4..11893ec73376 100644
+--- a/drivers/net/wireless/realtek/rtw88/phy.c
++++ b/drivers/net/wireless/realtek/rtw88/phy.c
+@@ -2071,7 +2071,7 @@ s8 rtw_phy_pwrtrack_get_pwridx(struct rtw_dev *rtwdev,
+ 		return 0;
+ 	}
  
--	debugfs_create_x32("ser_state", 0400, ser->debugfs_tty_dir,
--			   (u32 *)&ser->state);
-+	debugfs_create_xul("ser_state", 0400, ser->debugfs_tty_dir,
-+			   &ser->state);
- 
- 	debugfs_create_x8("tty_status", 0400, ser->debugfs_tty_dir,
- 			  &ser->tty_status);
+-	if (!swing_table || !swing_table->n || !swing_table->p) {
++	if (!swing_table) {
+ 		rtw_warn(rtwdev, "swing table not configured\n");
+ 		return 0;
+ 	}
 -- 
-2.17.1
+2.20.1
 
