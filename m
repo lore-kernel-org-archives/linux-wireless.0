@@ -2,34 +2,34 @@ Return-Path: <SRS0=+qZr=YS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3400CA9EBD
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Oct 2019 11:09:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2CE0C47E49
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Oct 2019 11:09:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D50EA21D71
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Oct 2019 11:09:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A2D3C21D71
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Oct 2019 11:09:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2503684AbfJYLJF (ORCPT
+        id S2503303AbfJYLIr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 25 Oct 2019 07:09:05 -0400
-Received: from baptiste.telenet-ops.be ([195.130.132.51]:55418 "EHLO
-        baptiste.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2503236AbfJYLIs (ORCPT
+        Fri, 25 Oct 2019 07:08:47 -0400
+Received: from xavier.telenet-ops.be ([195.130.132.52]:36568 "EHLO
+        xavier.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2503126AbfJYLIr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 Oct 2019 07:08:48 -0400
+        Fri, 25 Oct 2019 07:08:47 -0400
 Received: from ramsan ([84.195.182.253])
-        by baptiste.telenet-ops.be with bizsmtp
-        id Hn8b210045USYZQ01n8b1h; Fri, 25 Oct 2019 13:08:46 +0200
+        by xavier.telenet-ops.be with bizsmtp
+        id Hn8b210045USYZQ01n8bm6; Fri, 25 Oct 2019 13:08:46 +0200
 Received: from rox.of.borg ([192.168.97.57])
         by ramsan with esmtp (Exim 4.90_1)
         (envelope-from <geert@linux-m68k.org>)
-        id 1iNxSN-0003rD-1k; Fri, 25 Oct 2019 13:08:35 +0200
+        id 1iNxSM-0003rD-VJ; Fri, 25 Oct 2019 13:08:34 +0200
 Received: from geert by rox.of.borg with local (Exim 4.90_1)
         (envelope-from <geert@linux-m68k.org>)
-        id 1iNw6A-0006nA-Oz; Fri, 25 Oct 2019 11:41:34 +0200
+        id 1iNw6A-0006n4-NF; Fri, 25 Oct 2019 11:41:34 +0200
 From:   Geert Uytterhoeven <geert+renesas@glider.be>
 To:     Jonathan Corbet <corbet@lwn.net>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -45,9 +45,9 @@ Cc:     linux-doc@vger.kernel.org, linux-mmc@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, netdev@vger.kernel.org,
         linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
         Geert Uytterhoeven <geert+renesas@glider.be>
-Subject: [PATCH v2 7/7] mmc: dw_mmc: Remove superfluous cast in debugfs_create_u32() call
-Date:   Fri, 25 Oct 2019 11:41:30 +0200
-Message-Id: <20191025094130.26033-8-geert+renesas@glider.be>
+Subject: [PATCH v2 5/7] mmc: atmel-mci: Remove superfluous cast in debugfs_create_u32() call
+Date:   Fri, 25 Oct 2019 11:41:28 +0200
+Message-Id: <20191025094130.26033-6-geert+renesas@glider.be>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20191025094130.26033-1-geert+renesas@glider.be>
 References: <20191025094130.26033-1-geert+renesas@glider.be>
@@ -56,8 +56,8 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-"dw_mci.state" is an enum, which is compatible with u32, so there is no
-need to cast its address, preventing further compiler checks.
+"atmel_mci.state" is an enum, which is compatible with u32, so there is
+no need to cast its address, preventing further compiler checks.
 
 Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
 Acked-by: Ulf Hansson <ulf.hansson@linaro.org>
@@ -65,17 +65,17 @@ Acked-by: Ulf Hansson <ulf.hansson@linaro.org>
 v2:
   - Add Acked-by.
 ---
- drivers/mmc/host/dw_mmc.c | 2 +-
+ drivers/mmc/host/atmel-mci.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/mmc/host/dw_mmc.c b/drivers/mmc/host/dw_mmc.c
-index b4c4a9cd6365f122..fc9d4d000f97e434 100644
---- a/drivers/mmc/host/dw_mmc.c
-+++ b/drivers/mmc/host/dw_mmc.c
-@@ -176,7 +176,7 @@ static void dw_mci_init_debugfs(struct dw_mci_slot *slot)
+diff --git a/drivers/mmc/host/atmel-mci.c b/drivers/mmc/host/atmel-mci.c
+index ef2eb9e7c75a32a1..34c992d875298932 100644
+--- a/drivers/mmc/host/atmel-mci.c
++++ b/drivers/mmc/host/atmel-mci.c
+@@ -583,7 +583,7 @@ static void atmci_init_debugfs(struct atmel_mci_slot *slot)
  
- 	debugfs_create_file("regs", S_IRUSR, root, host, &dw_mci_regs_fops);
- 	debugfs_create_file("req", S_IRUSR, root, slot, &dw_mci_req_fops);
+ 	debugfs_create_file("regs", S_IRUSR, root, host, &atmci_regs_fops);
+ 	debugfs_create_file("req", S_IRUSR, root, slot, &atmci_req_fops);
 -	debugfs_create_u32("state", S_IRUSR, root, (u32 *)&host->state);
 +	debugfs_create_u32("state", S_IRUSR, root, &host->state);
  	debugfs_create_xul("pending_events", S_IRUSR, root,
