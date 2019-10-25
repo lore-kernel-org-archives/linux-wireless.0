@@ -7,30 +7,30 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A230CA9EA0
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Oct 2019 11:09:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1851CA9EBC
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Oct 2019 11:09:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 79D6021D71
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Oct 2019 11:09:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9351821D7F
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Oct 2019 11:09:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2503617AbfJYLI7 (ORCPT
+        id S2503380AbfJYLIs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 25 Oct 2019 07:08:59 -0400
-Received: from baptiste.telenet-ops.be ([195.130.132.51]:55458 "EHLO
-        baptiste.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2502841AbfJYLIt (ORCPT
+        Fri, 25 Oct 2019 07:08:48 -0400
+Received: from xavier.telenet-ops.be ([195.130.132.52]:36630 "EHLO
+        xavier.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2503148AbfJYLIs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 Oct 2019 07:08:49 -0400
+        Fri, 25 Oct 2019 07:08:48 -0400
 Received: from ramsan ([84.195.182.253])
-        by baptiste.telenet-ops.be with bizsmtp
-        id Hn8b2100H5USYZQ01n8b1k; Fri, 25 Oct 2019 13:08:46 +0200
+        by xavier.telenet-ops.be with bizsmtp
+        id Hn8b2100H5USYZQ01n8bm9; Fri, 25 Oct 2019 13:08:46 +0200
 Received: from rox.of.borg ([192.168.97.57])
         by ramsan with esmtp (Exim 4.90_1)
         (envelope-from <geert@linux-m68k.org>)
-        id 1iNxSN-0003rD-Co; Fri, 25 Oct 2019 13:08:35 +0200
+        id 1iNxSN-0003rD-78; Fri, 25 Oct 2019 13:08:35 +0200
 Received: from geert by rox.of.borg with local (Exim 4.90_1)
         (envelope-from <geert@linux-m68k.org>)
-        id 1iNw6A-0006mu-Kc; Fri, 25 Oct 2019 11:41:34 +0200
+        id 1iNw6A-0006n1-MM; Fri, 25 Oct 2019 11:41:34 +0200
 From:   Geert Uytterhoeven <geert+renesas@glider.be>
 To:     Jonathan Corbet <corbet@lwn.net>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -46,9 +46,9 @@ Cc:     linux-doc@vger.kernel.org, linux-mmc@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, netdev@vger.kernel.org,
         linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
         Geert Uytterhoeven <geert+renesas@glider.be>
-Subject: [PATCH v2 2/7] mac80211: Use debugfs_create_xul() helper
-Date:   Fri, 25 Oct 2019 11:41:25 +0200
-Message-Id: <20191025094130.26033-3-geert+renesas@glider.be>
+Subject: [PATCH v2 4/7] mmc: atmel-mci: Fix debugfs on 64-bit platforms
+Date:   Fri, 25 Oct 2019 11:41:27 +0200
+Message-Id: <20191025094130.26033-5-geert+renesas@glider.be>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20191025094130.26033-1-geert+renesas@glider.be>
 References: <20191025094130.26033-1-geert+renesas@glider.be>
@@ -57,52 +57,42 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Use the new debugfs_create_xul() helper instead of open-coding the same
-operation.
+"atmel_mci.pending_events" and "atmel_mci.completed_events" are
+"unsigned long", i.e. 32-bit or 64-bit, depending on the platform.
+Hence casting their addresses to "u32 *", and calling
+debugfs_create_x32() breaks operation on 64-bit platforms.
 
+Fix this by using the new debugfs_create_xul() helper instead.
+
+Fixes: deec9ae31e607955 ("atmel-mci: debugfs support")
 Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Acked-by: Ulf Hansson <ulf.hansson@linaro.org>
 ---
 v2:
-  - No changes.
+  - Add Acked-by.
 ---
- net/mac80211/debugfs_sta.c | 17 +++--------------
- 1 file changed, 3 insertions(+), 14 deletions(-)
+ drivers/mmc/host/atmel-mci.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
-index c8ad20c28c438dab..ca34dcdac8c0bd4d 100644
---- a/net/mac80211/debugfs_sta.c
-+++ b/net/mac80211/debugfs_sta.c
-@@ -928,12 +928,7 @@ STA_OPS(he_capa);
- 		sta->debugfs_dir, sta, &sta_ ##name## _ops);
- 
- #define DEBUGFS_ADD_COUNTER(name, field)				\
--	if (sizeof(sta->field) == sizeof(u32))				\
--		debugfs_create_u32(#name, 0400, sta->debugfs_dir,	\
--			(u32 *) &sta->field);				\
--	else								\
--		debugfs_create_u64(#name, 0400, sta->debugfs_dir,	\
--			(u64 *) &sta->field);
-+	debugfs_create_ulong(#name, 0400, sta->debugfs_dir, &sta->field);
- 
- void ieee80211_sta_debugfs_add(struct sta_info *sta)
- {
-@@ -978,14 +973,8 @@ void ieee80211_sta_debugfs_add(struct sta_info *sta)
- 				    NL80211_EXT_FEATURE_AIRTIME_FAIRNESS))
- 		DEBUGFS_ADD(airtime);
- 
--	if (sizeof(sta->driver_buffered_tids) == sizeof(u32))
--		debugfs_create_x32("driver_buffered_tids", 0400,
--				   sta->debugfs_dir,
--				   (u32 *)&sta->driver_buffered_tids);
--	else
--		debugfs_create_x64("driver_buffered_tids", 0400,
--				   sta->debugfs_dir,
--				   (u64 *)&sta->driver_buffered_tids);
-+	debugfs_create_xul("driver_buffered_tids", 0400, sta->debugfs_dir,
-+			   &sta->driver_buffered_tids);
- 
- 	drv_sta_add_debugfs(local, sdata, &sta->sta, sta->debugfs_dir);
+diff --git a/drivers/mmc/host/atmel-mci.c b/drivers/mmc/host/atmel-mci.c
+index c26fbe5f22221d95..ef2eb9e7c75a32a1 100644
+--- a/drivers/mmc/host/atmel-mci.c
++++ b/drivers/mmc/host/atmel-mci.c
+@@ -584,10 +584,10 @@ static void atmci_init_debugfs(struct atmel_mci_slot *slot)
+ 	debugfs_create_file("regs", S_IRUSR, root, host, &atmci_regs_fops);
+ 	debugfs_create_file("req", S_IRUSR, root, slot, &atmci_req_fops);
+ 	debugfs_create_u32("state", S_IRUSR, root, (u32 *)&host->state);
+-	debugfs_create_x32("pending_events", S_IRUSR, root,
+-			   (u32 *)&host->pending_events);
+-	debugfs_create_x32("completed_events", S_IRUSR, root,
+-			   (u32 *)&host->completed_events);
++	debugfs_create_xul("pending_events", S_IRUSR, root,
++			   &host->pending_events);
++	debugfs_create_xul("completed_events", S_IRUSR, root,
++			   &host->completed_events);
  }
+ 
+ #if defined(CONFIG_OF)
 -- 
 2.17.1
 
