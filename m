@@ -2,89 +2,111 @@ Return-Path: <SRS0=+qZr=YS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6433CA9EA0
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Oct 2019 08:32:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B65D6CA9EBC
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Oct 2019 08:48:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8BA4A2070B
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Oct 2019 08:32:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 96D5221D71
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Oct 2019 08:48:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2408294AbfJYIcI (ORCPT
+        id S2392959AbfJYIso (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 25 Oct 2019 04:32:08 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:46818 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2407828AbfJYIcI (ORCPT
+        Fri, 25 Oct 2019 04:48:44 -0400
+Received: from mail-oi1-f196.google.com ([209.85.167.196]:42741 "EHLO
+        mail-oi1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389425AbfJYIso (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 Oct 2019 04:32:08 -0400
-Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x9P8W2Ht003648, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (RTITCASV01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x9P8W2Ht003648
-        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
-        Fri, 25 Oct 2019 16:32:03 +0800
-Received: from localhost.localdomain (172.21.68.126) by
- RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
- 14.3.468.0; Fri, 25 Oct 2019 16:32:02 +0800
-From:   <yhchuang@realtek.com>
-To:     <kvalo@codeaurora.org>
-CC:     <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/2] rtw88: fix sparse warnings for DPK
-Date:   Fri, 25 Oct 2019 16:31:59 +0800
-Message-ID: <20191025083200.20245-2-yhchuang@realtek.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20191025083200.20245-1-yhchuang@realtek.com>
-References: <20191025083200.20245-1-yhchuang@realtek.com>
+        Fri, 25 Oct 2019 04:48:44 -0400
+Received: by mail-oi1-f196.google.com with SMTP id i185so1050033oif.9;
+        Fri, 25 Oct 2019 01:48:43 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=uA6lSNHDRCatiJVJ/bgW4yuf0LByUeyt0njk9B4ukrc=;
+        b=pB1+s7USrm2jK85Akcv2CH3fUw/7POfgi/pgDdjS44HoqmOwhRJtXlOBQHZ2MEEmZz
+         zu9xxhWTFFKoHoaQMdR60oyEToi9uPlwzM1BBa2FNJ2D58lrim6ylC/Z1eY04ZZg6Fi4
+         yXdYkFlm7DbQBtjVP2+uFUxx+0qkSBCyk3gYQuXKGl/yTFANNMvx1reHErjCeQePx++4
+         8wY3yEAY+hSwF4/cEGQxXi8/Q6yJIXeITmGmxUARPAP4I+TM3sLtu3MgrZmOM1wpvbQg
+         FtcJRprTvebpzrS4IP17JXY7ad5Vw6O52Pjz8/W6o05yoDGNbPO3HcFv+5oFuSAfmDwv
+         K69A==
+X-Gm-Message-State: APjAAAXd7HRybCHuKR49gUG/tXaXd9tT+IRTL99HwWmVJ6M1pCcKlTS7
+        cJgcweT4SFuFCbApgqlqv7rlhXFWaEQDhZF7W+c=
+X-Google-Smtp-Source: APXvYqy3g9SYZvOxsJVmghtKOBqa12cq3/vF5Q6/wloURwxegziLuCjjGM4yxIDdlwF02aQ5tVVijREi3KOgNM/I0d4=
+X-Received: by 2002:aca:882:: with SMTP id 124mr2027997oii.54.1571993322988;
+ Fri, 25 Oct 2019 01:48:42 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [172.21.68.126]
+References: <20191024152201.29868-1-geert+renesas@glider.be>
+ <878spaqg2k.fsf@kamboji.qca.qualcomm.com> <20191024.095709.187911510311520475.davem@davemloft.net>
+In-Reply-To: <20191024.095709.187911510311520475.davem@davemloft.net>
+From:   Geert Uytterhoeven <geert@linux-m68k.org>
+Date:   Fri, 25 Oct 2019 10:48:31 +0200
+Message-ID: <CAMuHMdXLyoxpjYYVhnZ35hwD25+MPXkte5QV_YYOadPVTf9_zA@mail.gmail.com>
+Subject: Re: [PATCH v2] [trivial] net: Fix misspellings of "configure" and "configuration"
+To:     David Miller <davem@davemloft.net>
+Cc:     Kalle Valo <kvalo@codeaurora.org>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Jiri Kosina <trivial@kernel.org>,
+        netdev <netdev@vger.kernel.org>,
+        linux-rdma <linux-rdma@vger.kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Hi David,
 
-sparse warnings:
-    drivers/net/wireless/realtek/rtw88/rtw8822c.c:2871:6: sparse:
-sparse: symbol 'rtw8822c_dpk_cal_coef1' was not declared. Should it be
-static?
-    drivers/net/wireless/realtek/rtw88/rtw8822c.c:3112:6: sparse:
-sparse: symbol 'rtw8822c_dpk_track' was not declared. Should it be
-static?
+On Thu, Oct 24, 2019 at 6:57 PM David Miller <davem@davemloft.net> wrote:
+> From: Kalle Valo <kvalo@codeaurora.org>
+> Date: Thu, 24 Oct 2019 19:11:15 +0300
+>
+> > Geert Uytterhoeven <geert+renesas@glider.be> writes:
+> >
+> >> Fix various misspellings of "configuration" and "configure".
+> >>
+> >> Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+> >> ---
+> >> v2:
+> >>   - Merge
+> >>     [trivial] net/mlx5e: Spelling s/configuraiton/configuration/
+> >>     [trivial] qed: Spelling s/configuraiton/configuration/
+> >>   - Fix typo in subject,
+> >>   - Extend with various other similar misspellings.
+> >> ---
+> >>  drivers/net/ethernet/mellanox/mlx5/core/en/port_buffer.c | 2 +-
+> >>  drivers/net/ethernet/qlogic/qed/qed_int.h                | 4 ++--
+> >>  drivers/net/ethernet/qlogic/qed/qed_sriov.h              | 2 +-
+> >>  drivers/net/ethernet/qlogic/qede/qede_filter.c           | 2 +-
+> >>  drivers/net/wireless/ath/ath9k/ar9003_hw.c               | 2 +-
+> >>  drivers/net/wireless/intel/iwlwifi/iwl-fh.h              | 2 +-
+> >>  drivers/net/wireless/ti/wlcore/spi.c                     | 2 +-
+> >>  include/uapi/linux/dcbnl.h                               | 2 +-
+> >>  8 files changed, 9 insertions(+), 9 deletions(-)
+> >
+> > I hope this goes to net-next? Easier to handle possible conflicts that
+> > way.
+> >
+> > For the wireless part:
+> >
+> > Acked-by: Kalle Valo <kvalo@codeaurora.org>
+>
+> Yeah I can take it if that's easier.
 
-Fixes: 5227c2ee453d ("rtw88: 8822c: add SW DPK support")
-Reported-by: kbuild test robot <lkp@intel.com>
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
----
- drivers/net/wireless/realtek/rtw88/rtw8822c.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+That would be great, thanks!
 
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-index b77905196ffb..97f4c4e1d7e9 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-@@ -2970,7 +2970,7 @@ static void rtw8822c_dpk_cal_gs(struct rtw_dev *rtwdev, u8 path)
- 	dpk_info->dpk_gs[path] = tmp_gs;
- }
- 
--void rtw8822c_dpk_cal_coef1(struct rtw_dev *rtwdev)
-+static void rtw8822c_dpk_cal_coef1(struct rtw_dev *rtwdev)
- {
- 	struct rtw_dpk_info *dpk_info = &rtwdev->dm_info.dpk_info;
- 	u32 offset[DPK_RF_PATH_NUM] = {0, 0x58};
-@@ -3211,7 +3211,7 @@ static void rtw8822c_phy_calibration(struct rtw_dev *rtwdev)
- 	rtw8822c_do_dpk(rtwdev);
- }
- 
--void rtw8822c_dpk_track(struct rtw_dev *rtwdev)
-+static void rtw8822c_dpk_track(struct rtw_dev *rtwdev)
- {
- 	struct rtw_dpk_info *dpk_info = &rtwdev->dm_info.dpk_info;
- 	u8 path;
+Gr{oetje,eeting}s,
+
+                        Geert
+
 -- 
-2.17.1
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
