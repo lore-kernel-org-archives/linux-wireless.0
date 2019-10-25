@@ -7,30 +7,30 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65C40CA9EBF
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Oct 2019 11:09:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AABF8CA9EA0
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Oct 2019 11:09:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 48BF121D81
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Oct 2019 11:09:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8CB122084C
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Oct 2019 11:09:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2503072AbfJYLIp (ORCPT
+        id S2502985AbfJYLIo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 25 Oct 2019 07:08:45 -0400
-Received: from andre.telenet-ops.be ([195.130.132.53]:34328 "EHLO
+        Fri, 25 Oct 2019 07:08:44 -0400
+Received: from andre.telenet-ops.be ([195.130.132.53]:34282 "EHLO
         andre.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2502907AbfJYLIp (ORCPT
+        with ESMTP id S2502745AbfJYLIo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 Oct 2019 07:08:45 -0400
+        Fri, 25 Oct 2019 07:08:44 -0400
 Received: from ramsan ([84.195.182.253])
         by andre.telenet-ops.be with bizsmtp
-        id Hn8b2100L5USYZQ01n8bdM; Fri, 25 Oct 2019 13:08:43 +0200
+        id Hn8b2100B5USYZQ01n8bdK; Fri, 25 Oct 2019 13:08:43 +0200
 Received: from rox.of.borg ([192.168.97.57])
         by ramsan with esmtp (Exim 4.90_1)
         (envelope-from <geert@linux-m68k.org>)
-        id 1iNxSN-0003rD-GA; Fri, 25 Oct 2019 13:08:35 +0200
+        id 1iNxSN-0003rD-9j; Fri, 25 Oct 2019 13:08:35 +0200
 Received: from geert by rox.of.borg with local (Exim 4.90_1)
         (envelope-from <geert@linux-m68k.org>)
-        id 1iNw6A-0006ms-Jl; Fri, 25 Oct 2019 11:41:34 +0200
+        id 1iNw6A-0006mw-LI; Fri, 25 Oct 2019 11:41:34 +0200
 From:   Geert Uytterhoeven <geert+renesas@glider.be>
 To:     Jonathan Corbet <corbet@lwn.net>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -46,9 +46,9 @@ Cc:     linux-doc@vger.kernel.org, linux-mmc@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, netdev@vger.kernel.org,
         linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
         Geert Uytterhoeven <geert+renesas@glider.be>
-Subject: [PATCH v2 1/7] debugfs: Add debugfs_create_xul() for hexadecimal unsigned long
-Date:   Fri, 25 Oct 2019 11:41:24 +0200
-Message-Id: <20191025094130.26033-2-geert+renesas@glider.be>
+Subject: [PATCH v2 3/7] net: caif: Fix debugfs on 64-bit platforms
+Date:   Fri, 25 Oct 2019 11:41:26 +0200
+Message-Id: <20191025094130.26033-4-geert+renesas@glider.be>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20191025094130.26033-1-geert+renesas@glider.be>
 References: <20191025094130.26033-1-geert+renesas@glider.be>
@@ -57,77 +57,36 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The existing debugfs_create_ulong() function supports objects of
-type "unsigned long", which are 32-bit or 64-bit depending on the
-platform, in decimal form.  To format objects in hexadecimal, various
-debugfs_create_x*() functions exist, but all of them take fixed-size
-types.
+"ser_device.state" is "unsigned long", i.e. 32-bit or 64-bit, depending
+on the platform.  Hence casting its address to "u32 *", and calling
+debugfs_create_x32() breaks operation on 64-bit platforms.
 
-Add a debugfs helper for "unsigned long" objects in hexadecimal format.
-This avoids the need for users to open-code the same, or introduce
-bugs when casting the value pointer to "u32 *" or "u64 *" to call
-debugfs_create_x{32,64}().
+Fix this by using the new debugfs_create_xul() helper instead.
 
+Fixes: 9b27105b4a44c54b ("net-caif-driver: add CAIF serial driver (ldisc)")
 Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
 ---
 v2:
-  - Add kerneldoc,
-  - Update Documentation/filesystems/debugfs.txt.
+  - No changes.
 ---
- Documentation/filesystems/debugfs.txt |  5 ++++-
- include/linux/debugfs.h               | 21 +++++++++++++++++++++
- 2 files changed, 25 insertions(+), 1 deletion(-)
+ drivers/net/caif/caif_serial.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/Documentation/filesystems/debugfs.txt b/Documentation/filesystems/debugfs.txt
-index 50e8f91f2421ec04..8c8e60fe8c7deb86 100644
---- a/Documentation/filesystems/debugfs.txt
-+++ b/Documentation/filesystems/debugfs.txt
-@@ -102,11 +102,14 @@ functions meant to help out in such special cases:
- As might be expected, this function will create a debugfs file to represent
- a variable of type size_t.
+diff --git a/drivers/net/caif/caif_serial.c b/drivers/net/caif/caif_serial.c
+index 40b079162804fb0c..bd40b114d6cd7214 100644
+--- a/drivers/net/caif/caif_serial.c
++++ b/drivers/net/caif/caif_serial.c
+@@ -102,8 +102,8 @@ static inline void debugfs_init(struct ser_device *ser, struct tty_struct *tty)
+ 	debugfs_create_blob("last_rx_msg", 0400, ser->debugfs_tty_dir,
+ 			    &ser->rx_blob);
  
--Similarly, there is a helper for variables of type unsigned long:
-+Similarly, there are helpers for variables of type unsigned long, in decimal
-+and hexadecimal:
+-	debugfs_create_x32("ser_state", 0400, ser->debugfs_tty_dir,
+-			   (u32 *)&ser->state);
++	debugfs_create_xul("ser_state", 0400, ser->debugfs_tty_dir,
++			   &ser->state);
  
-     struct dentry *debugfs_create_ulong(const char *name, umode_t mode,
- 					struct dentry *parent,
- 					unsigned long *value);
-+    void debugfs_create_xul(const char *name, umode_t mode,
-+			    struct dentry *parent, unsigned long *value);
- 
- Boolean values can be placed in debugfs with:
- 
-diff --git a/include/linux/debugfs.h b/include/linux/debugfs.h
-index 33690949b45d6904..af6c2e5b7d3c7afa 100644
---- a/include/linux/debugfs.h
-+++ b/include/linux/debugfs.h
-@@ -356,4 +356,25 @@ static inline ssize_t debugfs_write_file_bool(struct file *file,
- 
- #endif
- 
-+/**
-+ * debugfs_create_xul - create a debugfs file that is used to read and write an
-+ * unsigned long value, formatted in hexadecimal
-+ * @name: a pointer to a string containing the name of the file to create.
-+ * @mode: the permission that the file should have
-+ * @parent: a pointer to the parent dentry for this file.  This should be a
-+ *          directory dentry if set.  If this parameter is %NULL, then the
-+ *          file will be created in the root of the debugfs filesystem.
-+ * @value: a pointer to the variable that the file should read to and write
-+ *         from.
-+ */
-+static inline void debugfs_create_xul(const char *name, umode_t mode,
-+				      struct dentry *parent,
-+				      unsigned long *value)
-+{
-+	if (sizeof(*value) == sizeof(u32))
-+		debugfs_create_x32(name, mode, parent, (u32 *)value);
-+	else
-+		debugfs_create_x64(name, mode, parent, (u64 *)value);
-+}
-+
- #endif
+ 	debugfs_create_x8("tty_status", 0400, ser->debugfs_tty_dir,
+ 			  &ser->tty_status);
 -- 
 2.17.1
 
