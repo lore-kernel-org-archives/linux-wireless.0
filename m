@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66AE8CA9EA0
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Oct 2019 14:03:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB018CA9EA0
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Oct 2019 14:06:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3DB9120679
-	for <linux-wireless@archiver.kernel.org>; Fri, 25 Oct 2019 14:03:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C285A20663
+	for <linux-wireless@archiver.kernel.org>; Fri, 25 Oct 2019 14:06:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1572012216;
-	bh=M+mdSED+ku2Dex57fysCFC6s0u2WCo4GX+Um1EfdXmU=;
+	s=default; t=1572012404;
+	bh=TgHgFRPkTtXZrx3dH/wH0Sh7Sunx/cPD0igSj6wTcSA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=gOVfjmKma/vPWfTg4zw9kaEmB0h6NB98xjpNZ0bwk7QWUG0c4+i+yCkjeLnwWgCvW
-	 phCN51r/A9tvZfmEEZEAR2ROj5Kv4h5nnSC1ww3vn2XuMsz/Lsh/0BB6cAogglyVzy
-	 ZcFeJPhbs0YTvy4ApWgRgpirsI3wSZRyA3LkoRD4=
+	b=WmWcNVx/ksmDNNn0jBUN2PpKssTLPT/+MvxDPEbYyOV2C7w5x+8XJ+qQpeDYGbrZZ
+	 Qe+C5YLSrlUt5Ema3CzVgPoeEWcZqtMXsE+U5n8ZmxBnS7YTW81tnsZqH3vDYFg3nY
+	 QpnCRfuIeTyoFPkNF00tZ4v0o3NVrlMqf/7sKsTk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2394748AbfJYN5C (ORCPT
+        id S2632747AbfJYNzn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 25 Oct 2019 09:57:02 -0400
-Received: from mail.kernel.org ([198.145.29.99]:51558 "EHLO mail.kernel.org"
+        Fri, 25 Oct 2019 09:55:43 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49718 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2394759AbfJYN5A (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 Oct 2019 09:57:00 -0400
+        id S2632731AbfJYNzm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 25 Oct 2019 09:55:42 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 9A8B421E6F;
-        Fri, 25 Oct 2019 13:56:58 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id BDEBF222D1;
+        Fri, 25 Oct 2019 13:55:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1572011819;
-        bh=M+mdSED+ku2Dex57fysCFC6s0u2WCo4GX+Um1EfdXmU=;
+        s=default; t=1572011740;
+        bh=TgHgFRPkTtXZrx3dH/wH0Sh7Sunx/cPD0igSj6wTcSA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=qC2hyzyefC4z7dLA6TtAsNdAIv4Y7E4muvVeMKrMcfpgqJmlcMsSRzwgxG9JBbZQ7
-         doZNjqd1HuGZtW7ssaLFY6aSJw3kVH8Q8JSKp1nuxlAff0BoeAGdQJIZZEFV6qSj6F
-         pM0hDNTBw6VOpfgz0isGxiIXLOr2QbQw+J+z/VvY=
+        b=DQBo+gsGyfyxC9kj+hSUyOlqz6WhYOOiQ6tLVRiNAJvDiI9jBAhGlA3LVr51LjpRU
+         b5iY3wR39g96wkhggWtcWUye9oTKBiy37/gv9JlwDnGOwjGKLIygGH+PrkHhhxpHKp
+         zOUErA3o9LC+KcEVs9Pxk+GacA2Ewc6GaYMLepDw=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Lorenzo Bianconi <lorenzo@kernel.org>,
@@ -46,12 +46,12 @@ Cc:     Lorenzo Bianconi <lorenzo@kernel.org>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 30/37] ath9k: dynack: fix possible deadlock in ath_dynack_node_{de}init
-Date:   Fri, 25 Oct 2019 09:55:54 -0400
-Message-Id: <20191025135603.25093-30-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.3 21/33] ath9k: dynack: fix possible deadlock in ath_dynack_node_{de}init
+Date:   Fri, 25 Oct 2019 09:54:53 -0400
+Message-Id: <20191025135505.24762-21-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191025135603.25093-1-sashal@kernel.org>
-References: <20191025135603.25093-1-sashal@kernel.org>
+In-Reply-To: <20191025135505.24762-1-sashal@kernel.org>
+References: <20191025135505.24762-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -162,10 +162,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/net/wireless/ath/ath9k/dynack.c b/drivers/net/wireless/ath/ath9k/dynack.c
-index 6e236a4854311..71b4888b30e71 100644
+index f112fa5b2eacf..1ccf20d8c1607 100644
 --- a/drivers/net/wireless/ath/ath9k/dynack.c
 +++ b/drivers/net/wireless/ath/ath9k/dynack.c
-@@ -300,9 +300,9 @@ void ath_dynack_node_init(struct ath_hw *ah, struct ath_node *an)
+@@ -298,9 +298,9 @@ void ath_dynack_node_init(struct ath_hw *ah, struct ath_node *an)
  
  	an->ackto = ackto;
  
@@ -177,7 +177,7 @@ index 6e236a4854311..71b4888b30e71 100644
  }
  EXPORT_SYMBOL(ath_dynack_node_init);
  
-@@ -316,9 +316,9 @@ void ath_dynack_node_deinit(struct ath_hw *ah, struct ath_node *an)
+@@ -314,9 +314,9 @@ void ath_dynack_node_deinit(struct ath_hw *ah, struct ath_node *an)
  {
  	struct ath_dynack *da = &ah->dynack;
  
