@@ -2,41 +2,43 @@ Return-Path: <SRS0=+qZr=YS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C65ACA9EA0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78487C47E49
 	for <linux-wireless@archiver.kernel.org>; Fri, 25 Oct 2019 09:33:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0934B21D71
+	by mail.kernel.org (Postfix) with ESMTP id 5912D21D71
 	for <linux-wireless@archiver.kernel.org>; Fri, 25 Oct 2019 09:33:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730221AbfJYJd5 (ORCPT
+        id S1730207AbfJYJd5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Fri, 25 Oct 2019 05:33:57 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:50460 "EHLO
+Received: from rtits2.realtek.com ([211.75.126.72]:50464 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730184AbfJYJd5 (ORCPT
+        with ESMTP id S1729612AbfJYJd4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 Oct 2019 05:33:57 -0400
+        Fri, 25 Oct 2019 05:33:56 -0400
 Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x9P9Xl8x026466, This message is accepted by code: ctloc85258
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID x9P9XnOi026479, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (RTITCASV01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x9P9Xl8x026466
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id x9P9XnOi026479
         (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
-        Fri, 25 Oct 2019 17:33:47 +0800
+        Fri, 25 Oct 2019 17:33:49 +0800
 Received: from localhost.localdomain (172.21.68.126) by
  RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
- 14.3.468.0; Fri, 25 Oct 2019 17:33:46 +0800
+ 14.3.468.0; Fri, 25 Oct 2019 17:33:49 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>, <briannorris@chromium.org>,
         <g.schlmm@googlemail.com>
-Subject: [PATCH 0/6] rtw88: minor driver updates
-Date:   Fri, 25 Oct 2019 17:33:39 +0800
-Message-ID: <20191025093345.22643-1-yhchuang@realtek.com>
+Subject: [PATCH 3/6] rtw88: use a module parameter to control LPS enter
+Date:   Fri, 25 Oct 2019 17:33:42 +0800
+Message-ID: <20191025093345.22643-4-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20191025093345.22643-1-yhchuang@realtek.com>
+References: <20191025093345.22643-1-yhchuang@realtek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [172.21.68.126]
@@ -47,35 +49,70 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-This patch set contains some minor driver updates including RFE
-type 3 for RTL8822BE.
+If the number of packets is less than the LPS threshold, driver
+can then enter LPS mode.
+And driver used to take RTW_LPS_THRESHOLD as the threshold. As
+the macro can not be changed after compiled, use a parameter
+instead.
 
-Also refine the tables with proper struct instead of arrays.
+The larger of the threshold, the more traffic required to leave
+power save mode, responsive time could be longer, but also the
+power consumption could be lower.
 
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw88/main.c | 7 +++++--
+ drivers/net/wireless/realtek/rtw88/ps.h   | 2 --
+ 2 files changed, 5 insertions(+), 4 deletions(-)
 
-Tzu-En Huang (1):
-  rtw88: fix potential read outside array boundary
-
-Yan-Hsuan Chuang (5):
-  rtw88: 8822b: add RFE type 3 support
-  rtw88: use rtw_phy_pg_cfg_pair struct, not arrays
-  rtw88: use a module parameter to control LPS enter
-  rtw88: rearrange if..else statements for rx rate indexes
-  rtw88: avoid FW info flood
-
- drivers/net/wireless/realtek/rtw88/mac.c      |  17 -
- drivers/net/wireless/realtek/rtw88/main.c     |  17 +-
- drivers/net/wireless/realtek/rtw88/phy.c      |  32 +-
- drivers/net/wireless/realtek/rtw88/phy.h      |  18 +
- drivers/net/wireless/realtek/rtw88/ps.h       |   2 -
- drivers/net/wireless/realtek/rtw88/rtw8822b.c |   4 +-
- .../wireless/realtek/rtw88/rtw8822b_table.c   | 829 ++++++++++++++++--
- .../wireless/realtek/rtw88/rtw8822b_table.h   |   2 +
- drivers/net/wireless/realtek/rtw88/rtw8822c.c |   4 +-
- .../wireless/realtek/rtw88/rtw8822c_table.c   |  94 +-
- drivers/net/wireless/realtek/rtw88/rx.c       |  14 +-
- 11 files changed, 838 insertions(+), 195 deletions(-)
-
+diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
+index 7c1b89c4fb6c..bff8a0b129d9 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.c
++++ b/drivers/net/wireless/realtek/rtw88/main.c
+@@ -16,16 +16,19 @@
+ #include "debug.h"
+ #include "bf.h"
+ 
++unsigned int rtw_lps_threshold = 2;
+ unsigned int rtw_fw_lps_deep_mode;
+ EXPORT_SYMBOL(rtw_fw_lps_deep_mode);
+ bool rtw_bf_support = true;
+ unsigned int rtw_debug_mask;
+ EXPORT_SYMBOL(rtw_debug_mask);
+ 
++module_param_named(lps_threshold, rtw_lps_threshold, uint, 0644);
+ module_param_named(lps_deep_mode, rtw_fw_lps_deep_mode, uint, 0644);
+ module_param_named(support_bf, rtw_bf_support, bool, 0644);
+ module_param_named(debug_mask, rtw_debug_mask, uint, 0644);
+ 
++MODULE_PARM_DESC(lps_threshold, "Threshold of number of packets in every 2 seconds");
+ MODULE_PARM_DESC(lps_deep_mode, "Deeper PS mode. If 0, deep PS is disabled");
+ MODULE_PARM_DESC(support_bf, "Set Y to enable beamformee support");
+ MODULE_PARM_DESC(debug_mask, "Debugging mask");
+@@ -199,8 +202,8 @@ static void rtw_watch_dog_work(struct work_struct *work)
+ 	if (busy_traffic != test_bit(RTW_FLAG_BUSY_TRAFFIC, rtwdev->flags))
+ 		rtw_coex_wl_status_change_notify(rtwdev);
+ 
+-	if (stats->tx_cnt > RTW_LPS_THRESHOLD ||
+-	    stats->rx_cnt > RTW_LPS_THRESHOLD)
++	if (stats->tx_cnt > rtw_lps_threshold ||
++	    stats->rx_cnt > rtw_lps_threshold)
+ 		ps_active = true;
+ 	else
+ 		ps_active = false;
+diff --git a/drivers/net/wireless/realtek/rtw88/ps.h b/drivers/net/wireless/realtek/rtw88/ps.h
+index 25925eedbad4..fe43f8d96d04 100644
+--- a/drivers/net/wireless/realtek/rtw88/ps.h
++++ b/drivers/net/wireless/realtek/rtw88/ps.h
+@@ -5,8 +5,6 @@
+ #ifndef __RTW_PS_H_
+ #define __RTW_PS_H_
+ 
+-#define RTW_LPS_THRESHOLD	2
+-
+ #define POWER_MODE_ACK		BIT(6)
+ #define POWER_MODE_PG		BIT(4)
+ #define POWER_MODE_LCLK		BIT(0)
 -- 
 2.17.1
 
