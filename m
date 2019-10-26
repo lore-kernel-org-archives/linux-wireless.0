@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C7B5CA9EB9
-	for <linux-wireless@archiver.kernel.org>; Sat, 26 Oct 2019 13:35:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE57CCA9EB9
+	for <linux-wireless@archiver.kernel.org>; Sat, 26 Oct 2019 13:35:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 39BCC214DA
-	for <linux-wireless@archiver.kernel.org>; Sat, 26 Oct 2019 13:35:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C528D214DA
+	for <linux-wireless@archiver.kernel.org>; Sat, 26 Oct 2019 13:35:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1572096939;
-	bh=d30o/IJjeuRx2IN8/lTJ5LyPTjn9Kkv1YZ8fBNY6+0U=;
+	s=default; t=1572096944;
+	bh=IwXLtZYSRQETy3vtwD0q6ws/+iJoqLTX5++fq33rcuA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=b2RiiY967QPSLWeXhMFQZy8yFDq+aJhTzl32uFzC84L9/bsKUeUeyPzmya+oAbvyU
-	 zL7yrzKGkFI2cGV0QvkZCQ78PFpbi6dUXazy3mZXUvC7NNfZePA6mdHdgJ7Jy0QpT2
-	 1VVHCJC0BGn3dZyK8hP9QZPezj6or7o+IOvJRUEc=
+	b=dU/LaR91c+xCBPwhOJXzzdPOcqUouWfCdOJqRqNKMlnW1aqu02TsK1/JR0+DNfMKU
+	 w47qVSryv/tTYV9c6CuqTzelThw7TFf6PHS+DUwTqtIgiJ4mPSdF4yomeU1muTSZBb
+	 G4uUKgFv9nbf8S9sN3atXB/ouPJavhLVizFSm3p8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727193AbfJZNRK (ORCPT
+        id S1727151AbfJZNRG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 26 Oct 2019 09:17:10 -0400
-Received: from mail.kernel.org ([198.145.29.99]:38716 "EHLO mail.kernel.org"
+        Sat, 26 Oct 2019 09:17:06 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38706 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727175AbfJZNRJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 26 Oct 2019 09:17:09 -0400
+        id S1727128AbfJZNRG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 26 Oct 2019 09:17:06 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A62CC21655;
-        Sat, 26 Oct 2019 13:17:07 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 8A9F92245B;
+        Sat, 26 Oct 2019 13:17:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1572095828;
-        bh=d30o/IJjeuRx2IN8/lTJ5LyPTjn9Kkv1YZ8fBNY6+0U=;
+        s=default; t=1572095825;
+        bh=IwXLtZYSRQETy3vtwD0q6ws/+iJoqLTX5++fq33rcuA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=xw1gT+r9h6FB9/LmIj21h1SkjEWE8Xwfx8xHsFj4STasdy2iFLI/+5loGB2qpdHXl
-         52nR9nMUlH9NXxoiCjqNjcuQcZy6HT4gO3/N1KFT9zCDgUDYcWXgjImxQ2MQGenUGv
-         m92sQgL95YjyOlpYBK7yB6hOgcYI3bmmTcVgMNOs=
+        b=MZE7glz/XzUaFWoJ5FobkIGsyOiIgrXVDOo3KF/3Vs4wL0mJRaGDUtxTvMI6pSa7y
+         3pbtfzfW3izKuolCWprkrFO4N6DYYfOdqlKof1knCMIhr94Eeb8d/Z9jXksez8qy0C
+         T1lMSeFB2t2/i7O4aqxukAKbr8LK1f6FD7CJD6ig=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Navid Emamdoost <navid.emamdoost@gmail.com>,
+Cc:     Naftali Goldstein <naftali.goldstein@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.3 36/99] iwlwifi: dbg_ini: fix memory leak in alloc_sgtable
-Date:   Sat, 26 Oct 2019 09:14:57 -0400
-Message-Id: <20191026131600.2507-36-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.3 35/99] iwlwifi: mvm: fix race in sync rx queue notification
+Date:   Sat, 26 Oct 2019 09:14:56 -0400
+Message-Id: <20191026131600.2507-35-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191026131600.2507-1-sashal@kernel.org>
 References: <20191026131600.2507-1-sashal@kernel.org>
@@ -60,32 +60,72 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Navid Emamdoost <navid.emamdoost@gmail.com>
+From: Naftali Goldstein <naftali.goldstein@intel.com>
 
-[ Upstream commit b4b814fec1a5a849383f7b3886b654a13abbda7d ]
+[ Upstream commit a2113cc44d4387a7c3ef3a9082d273524f9230ac ]
 
-In alloc_sgtable if alloc_page fails, the alocated table should be
-released.
+Consider the following flow:
+ 1. Driver starts to sync the rx queues due to a delba.
+    mvm->queue_sync_cookie=1.
+    This rx-queues-sync is synchronous, so it doesn't increment the
+    cookie until all rx queues handle the notification from FW.
+ 2. During this time, driver starts to sync rx queues due to nssn sync
+    required.
+    The cookie's value is still 1, but it doesn't matter since this
+    rx-queue-sync is non-synchronous so in the notification handler the
+    cookie is ignored.
+    What _does_ matter is that this flow increments the cookie to 2
+    immediately.
+    Remember though that the FW won't start servicing this command until
+    it's done with the previous one.
+ 3. FW is still handling the first command, so it sends a notification
+    with internal_notif->sync=1, and internal_notif->cookie=0, which
+    triggers a WARN_ONCE.
 
-Signed-off-by: Navid Emamdoost <navid.emamdoost@gmail.com>
+The solution for this race is to only use the mvm->queue_sync_cookie in
+case of a synchronous sync-rx-queues. This way in step 2 the cookie's
+value won't change so we avoid the WARN.
+
+The commit in the "fixes" field is the first commit to introduce
+non-synchronous sending of this command to FW.
+
+Fixes: 3c514bf831ac ("iwlwifi: mvm: add a loose synchronization of the NSSN across Rx queues")
+Signed-off-by: Naftali Goldstein <naftali.goldstein@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-index 4d81776f576dc..db41abb3361dd 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-@@ -643,6 +643,7 @@ static struct scatterlist *alloc_sgtable(int size)
- 				if (new_page)
- 					__free_page(new_page);
- 			}
-+			kfree(table);
- 			return NULL;
- 		}
- 		alloc_size = min_t(int, size, PAGE_SIZE);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index a7bc00d1296fe..24a6beaacb156 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -5080,11 +5080,11 @@ void iwl_mvm_sync_rx_queues_internal(struct iwl_mvm *mvm,
+ 	if (!iwl_mvm_has_new_rx_api(mvm))
+ 		return;
+ 
+-	notif->cookie = mvm->queue_sync_cookie;
+-
+-	if (notif->sync)
++	if (notif->sync) {
++		notif->cookie = mvm->queue_sync_cookie;
+ 		atomic_set(&mvm->queue_sync_counter,
+ 			   mvm->trans->num_rx_queues);
++	}
+ 
+ 	ret = iwl_mvm_notify_rx_queue(mvm, qmask, (u8 *)notif,
+ 				      size, !notif->sync);
+@@ -5104,7 +5104,8 @@ void iwl_mvm_sync_rx_queues_internal(struct iwl_mvm *mvm,
+ 
+ out:
+ 	atomic_set(&mvm->queue_sync_counter, 0);
+-	mvm->queue_sync_cookie++;
++	if (notif->sync)
++		mvm->queue_sync_cookie++;
+ }
+ 
+ static void iwl_mvm_sync_rx_queues(struct ieee80211_hw *hw)
 -- 
 2.20.1
 
