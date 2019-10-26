@@ -7,50 +7,49 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EB25CA9EBD
-	for <linux-wireless@archiver.kernel.org>; Sat, 26 Oct 2019 13:28:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8F55CA9EBD
+	for <linux-wireless@archiver.kernel.org>; Sat, 26 Oct 2019 13:30:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DCD1B206DD
-	for <linux-wireless@archiver.kernel.org>; Sat, 26 Oct 2019 13:28:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C0014214DA
+	for <linux-wireless@archiver.kernel.org>; Sat, 26 Oct 2019 13:30:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1572096488;
-	bh=L9cinPEi7M+i9MwB/krobyiQhUdl5qi4MNEIMRE+Dq4=;
+	s=default; t=1572096610;
+	bh=+RXZgY1pNTGvQ+1526ck6j6FRsdHz9lJ0dRvajUZKyc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=B5mggX/VEFAeF4PVP0KvhaH2UPivMaR3LpqUWxKsd4i8DVtEznW8nLWaZ5dcmRwPY
-	 Sb0Q5z6/d0kWa4SyUyTTL0pbG2unGiUGxgwDUPbMQGG2jT4p0CJs4z65wbeiyteDi6
-	 1WDsPpWOKBvB3Tvkvyg5ujY6LlOeZ/K/MJzcrWYs=
+	b=yqm7r1AvUSCqrWJPHXAqJ6vm8GcahvIPHlyp7UDXZ43a/G1JK1S+khtWfc5Uf2Dam
+	 AM16p9ZjAcURutjBUsjYZOjFdWhAYvNdW48bFt+ya+C9xiyCwePwc9QoZk8BWJjAw5
+	 XA6/mMbuhIJ+IYhjiF9CgZkk2DZ0WEZeQTNqr7jU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727515AbfJZNVP (ORCPT
+        id S1728524AbfJZNT7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 26 Oct 2019 09:21:15 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42956 "EHLO mail.kernel.org"
+        Sat, 26 Oct 2019 09:19:59 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41884 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727682AbfJZNVN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 26 Oct 2019 09:21:13 -0400
+        id S1728504AbfJZNT6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 26 Oct 2019 09:19:58 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 4CD16222C1;
-        Sat, 26 Oct 2019 13:21:12 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id C69392070B;
+        Sat, 26 Oct 2019 13:19:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1572096073;
-        bh=L9cinPEi7M+i9MwB/krobyiQhUdl5qi4MNEIMRE+Dq4=;
+        s=default; t=1572095997;
+        bh=+RXZgY1pNTGvQ+1526ck6j6FRsdHz9lJ0dRvajUZKyc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=q+/1YX9TLVfnruicAXEf/Eq6nRTgK7O2knvzDo8gfDkfpPO7Na0vuiuxR23B/f5eG
-         mL7uq8zUbmoWfwi0CD69isubk0zf1qHRPNJl7sr6dnvtrJ7a5LtAkpf1bkSGI/lMV6
-         40FPI8XjMEb6yOiuVzUV++Ore/1UmSMk5+wq5T3A=
+        b=v3v6Mc41BbEypAabo1yxtAw+6e6EMNi14jU0uBfrFJqEOa+Q2UsTQvucounAqySXx
+         y+0HWswF1xOI0hsDXMVsoVMFnP9map1xMFtGv7d1G026L4DowXUWEPRi/aeNSA6PDC
+         dS/yNFUT7HLiq4+kxVysLnVQBUc4CTglDHhN1AK0=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Michael Vassernis <michael.vassernis@tandemg.com>,
-        Johannes Berg <johannes.berg@intel.com>,
+Cc:     Luca Coelho <luciano.coelho@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 02/33] mac80211_hwsim: fix incorrect dev_alloc_name failure goto
-Date:   Sat, 26 Oct 2019 09:20:39 -0400
-Message-Id: <20191026132110.4026-2-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 25/59] iwlwifi: exclude GEO SAR support for 3168
+Date:   Sat, 26 Oct 2019 09:18:36 -0400
+Message-Id: <20191026131910.3435-25-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191026132110.4026-1-sashal@kernel.org>
-References: <20191026132110.4026-1-sashal@kernel.org>
+In-Reply-To: <20191026131910.3435-1-sashal@kernel.org>
+References: <20191026131910.3435-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -60,36 +59,51 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Michael Vassernis <michael.vassernis@tandemg.com>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-[ Upstream commit 313c3fe9c2348e7147eca38bb446f295b45403a0 ]
+[ Upstream commit 12e36d98d3e5acf5fc57774e0a15906d55f30cb9 ]
 
-If dev_alloc_name fails, hwsim_mon's memory allocated in alloc_netdev
-needs to be freed.
-Change goto command in dev_alloc_name failure to out_free_mon in
-order to perform free_netdev.
+We currently support two NICs in FW version 29, namely 7265D and 3168.
+Out of these, only 7265D supports GEO SAR, so adjust the function that
+checks for it accordingly.
 
-Signed-off-by: Michael Vassernis <michael.vassernis@tandemg.com>
-Link: https://lore.kernel.org/r/20191003073049.3760-1-michael.vassernis@tandemg.com
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Fixes: f5a47fae6aa3 ("iwlwifi: mvm: fix version check for GEO_TX_POWER_LIMIT support")
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/mac80211_hwsim.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 16 +++++++++-------
+ 1 file changed, 9 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 27224dc264133..e9e2e128125b6 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -3571,7 +3571,7 @@ static int __init init_mac80211_hwsim(void)
- 	err = dev_alloc_name(hwsim_mon, hwsim_mon->name);
- 	if (err < 0) {
- 		rtnl_unlock();
--		goto out_free_radios;
-+		goto out_free_mon;
- 	}
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 9cb9f0544c9b1..2eba6d6f367f8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -843,15 +843,17 @@ static bool iwl_mvm_sar_geo_support(struct iwl_mvm *mvm)
+ 	 * firmware versions.  Unfortunately, we don't have a TLV API
+ 	 * flag to rely on, so rely on the major version which is in
+ 	 * the first byte of ucode_ver.  This was implemented
+-	 * initially on version 38 and then backported to29 and 17.
+-	 * The intention was to have it in 36 as well, but not all
+-	 * 8000 family got this feature enabled.  The 8000 family is
+-	 * the only one using version 36, so skip this version
+-	 * entirely.
++	 * initially on version 38 and then backported to 17.  It was
++	 * also backported to 29, but only for 7265D devices.  The
++	 * intention was to have it in 36 as well, but not all 8000
++	 * family got this feature enabled.  The 8000 family is the
++	 * only one using version 36, so skip this version entirely.
+ 	 */
+ 	return IWL_UCODE_SERIAL(mvm->fw->ucode_ver) >= 38 ||
+-	       IWL_UCODE_SERIAL(mvm->fw->ucode_ver) == 29 ||
+-	       IWL_UCODE_SERIAL(mvm->fw->ucode_ver) == 17;
++	       IWL_UCODE_SERIAL(mvm->fw->ucode_ver) == 17 ||
++	       (IWL_UCODE_SERIAL(mvm->fw->ucode_ver) == 29 &&
++		((mvm->trans->hw_rev & CSR_HW_REV_TYPE_MSK) ==
++		 CSR_HW_REV_TYPE_7265D));
+ }
  
- 	err = register_netdevice(hwsim_mon);
+ int iwl_mvm_get_sar_geo_profile(struct iwl_mvm *mvm)
 -- 
 2.20.1
 
