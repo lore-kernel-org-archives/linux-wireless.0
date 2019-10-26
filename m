@@ -4,51 +4,49 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54F5FCA9EBC
-	for <linux-wireless@archiver.kernel.org>; Sat, 26 Oct 2019 13:16:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1A3FCA9EBC
+	for <linux-wireless@archiver.kernel.org>; Sat, 26 Oct 2019 13:17:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 21DFF222BE
-	for <linux-wireless@archiver.kernel.org>; Sat, 26 Oct 2019 13:16:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 78F6221E6F
+	for <linux-wireless@archiver.kernel.org>; Sat, 26 Oct 2019 13:17:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1572095798;
-	bh=D5MAHeyDcTYlwUrhihOy3TU+/cG5UlEbHY58W5ziSO4=;
+	s=default; t=1572095841;
+	bh=P+x0vk8c6GjcSwPpPa+2eiHOdIpm+8+UEleTFKRbyOs=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=D2FQTUUcbNzYWAbDQPYvtwVlKY0hT83eKKZ/k5qptdPunCsWoeziJbvuNDOUAAmsh
-	 UAJw1wzmO0GZATKSAiO+tTfGadJsIVvbrVdTmt+7ML0DMESHHrobZImOQBbQtWzug2
-	 SvTKMVZ7Tkws09wLnt1gMZfeNSSNmuMHusob8hQc=
+	b=vYEtehA30O7yEku/kW8ALqiyesDSG1kkUQvQngvSuzm0/v/EJaAOknxA1VgtLqVFy
+	 iEOPxalN6MbFxZ+25LjnFUCkVrc7wk+MF5aNUWVyrFpFHU0Pvla/FoqVwY87FPLep8
+	 MV2VsTzSbVFzdk6Ug3/6Y37EdCKymT14kAyOO0jg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726805AbfJZNQh (ORCPT
+        id S1727243AbfJZNRQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 26 Oct 2019 09:16:37 -0400
-Received: from mail.kernel.org ([198.145.29.99]:38148 "EHLO mail.kernel.org"
+        Sat, 26 Oct 2019 09:17:16 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38832 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726846AbfJZNQg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 26 Oct 2019 09:16:36 -0400
+        id S1727225AbfJZNRO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 26 Oct 2019 09:17:14 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 9B3A0222C4;
-        Sat, 26 Oct 2019 13:16:34 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 7391D21655;
+        Sat, 26 Oct 2019 13:17:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1572095795;
-        bh=D5MAHeyDcTYlwUrhihOy3TU+/cG5UlEbHY58W5ziSO4=;
+        s=default; t=1572095834;
+        bh=P+x0vk8c6GjcSwPpPa+2eiHOdIpm+8+UEleTFKRbyOs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=NBxF0+760NuqAo8yDFeGf3FX+66Ngza80PryGU1Oxb5yh77J5q1299PbCPAWJrWUg
-         MLjIvMfw6vJynhvuvg3Oi0G0rP7AczA1GYcFu1IgKp+egGe+u6CFvkDiYhGXyoLwbj
-         hB3Whm4zHg8ZMjZ5hEvCsHS2NwgSvvnw7bWtf4m0=
+        b=EOPwo2t1SG4oE+WymKEDzvlZqzz6xgekMorPGK76/i5viXNCcjSCSzREjWDoFvbLO
+         iAuGi98kJQcL64Z80iTPlfHYLSFcn7SNjo2vYAMStK42GTsk978IjRy7n+GCZq3qp/
+         CwVo5qcbZ0VJLvfkrLVpuqDaU0W6DvKKcYPZRApk=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>,
+Cc:     Luca Coelho <luciano.coelho@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.3 22/99] cfg80211: fix a bunch of RCU issues in multi-bssid code
-Date:   Sat, 26 Oct 2019 09:14:43 -0400
-Message-Id: <20191026131600.2507-22-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.3 38/99] iwlwifi: exclude GEO SAR support for 3168
+Date:   Sat, 26 Oct 2019 09:14:59 -0400
+Message-Id: <20191026131600.2507-38-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191026131600.2507-1-sashal@kernel.org>
 References: <20191026131600.2507-1-sashal@kernel.org>
@@ -61,102 +59,51 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sara Sharon <sara.sharon@intel.com>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-[ Upstream commit 461c4c2b4c0731d7452bad4e77c0cdbdcea1804c ]
+[ Upstream commit 12e36d98d3e5acf5fc57774e0a15906d55f30cb9 ]
 
-cfg80211_update_notlisted_nontrans() leaves the RCU critical session
-too early, while still using nontrans_ssid which is RCU protected. In
-addition, it performs a bunch of RCU pointer update operations such
-as rcu_access_pointer and rcu_assign_pointer.
+We currently support two NICs in FW version 29, namely 7265D and 3168.
+Out of these, only 7265D supports GEO SAR, so adjust the function that
+checks for it accordingly.
 
-The caller, cfg80211_inform_bss_frame_data(), also accesses the RCU
-pointer without holding the lock.
-
-Just wrap all of this with bss_lock.
-
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/20191004123706.15768-3-luca@coelho.fi
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Fixes: f5a47fae6aa3 ("iwlwifi: mvm: fix version check for GEO_TX_POWER_LIMIT support")
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/wireless/scan.c | 23 +++++++++++++----------
- 1 file changed, 13 insertions(+), 10 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 16 +++++++++-------
+ 1 file changed, 9 insertions(+), 7 deletions(-)
 
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index 27d76c4c5cea1..00f7a4630f45d 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -1691,8 +1691,7 @@ cfg80211_parse_mbssid_frame_data(struct wiphy *wiphy,
- static void
- cfg80211_update_notlisted_nontrans(struct wiphy *wiphy,
- 				   struct cfg80211_bss *nontrans_bss,
--				   struct ieee80211_mgmt *mgmt, size_t len,
--				   gfp_t gfp)
-+				   struct ieee80211_mgmt *mgmt, size_t len)
- {
- 	u8 *ie, *new_ie, *pos;
- 	const u8 *nontrans_ssid, *trans_ssid, *mbssid;
-@@ -1703,6 +1702,8 @@ cfg80211_update_notlisted_nontrans(struct wiphy *wiphy,
- 	const struct cfg80211_bss_ies *old;
- 	u8 cpy_len;
- 
-+	lockdep_assert_held(&wiphy_to_rdev(wiphy)->bss_lock);
-+
- 	ie = mgmt->u.probe_resp.variable;
- 
- 	new_ie_len = ielen;
-@@ -1719,23 +1720,22 @@ cfg80211_update_notlisted_nontrans(struct wiphy *wiphy,
- 	if (!mbssid || mbssid < trans_ssid)
- 		return;
- 	new_ie_len -= mbssid[1];
--	rcu_read_lock();
-+
- 	nontrans_ssid = ieee80211_bss_get_ie(nontrans_bss, WLAN_EID_SSID);
--	if (!nontrans_ssid) {
--		rcu_read_unlock();
-+	if (!nontrans_ssid)
- 		return;
--	}
-+
- 	new_ie_len += nontrans_ssid[1];
--	rcu_read_unlock();
- 
- 	/* generate new ie for nontrans BSS
- 	 * 1. replace SSID with nontrans BSS' SSID
- 	 * 2. skip MBSSID IE
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 8b0b464a1f213..c520f42d165cd 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -887,15 +887,17 @@ static bool iwl_mvm_sar_geo_support(struct iwl_mvm *mvm)
+ 	 * firmware versions.  Unfortunately, we don't have a TLV API
+ 	 * flag to rely on, so rely on the major version which is in
+ 	 * the first byte of ucode_ver.  This was implemented
+-	 * initially on version 38 and then backported to29 and 17.
+-	 * The intention was to have it in 36 as well, but not all
+-	 * 8000 family got this feature enabled.  The 8000 family is
+-	 * the only one using version 36, so skip this version
+-	 * entirely.
++	 * initially on version 38 and then backported to 17.  It was
++	 * also backported to 29, but only for 7265D devices.  The
++	 * intention was to have it in 36 as well, but not all 8000
++	 * family got this feature enabled.  The 8000 family is the
++	 * only one using version 36, so skip this version entirely.
  	 */
--	new_ie = kzalloc(new_ie_len, gfp);
-+	new_ie = kzalloc(new_ie_len, GFP_ATOMIC);
- 	if (!new_ie)
- 		return;
--	new_ies = kzalloc(sizeof(*new_ies) + new_ie_len, gfp);
-+
-+	new_ies = kzalloc(sizeof(*new_ies) + new_ie_len, GFP_ATOMIC);
- 	if (!new_ies)
- 		goto out_free;
- 
-@@ -1895,6 +1895,8 @@ cfg80211_inform_bss_frame_data(struct wiphy *wiphy,
- 	cfg80211_parse_mbssid_frame_data(wiphy, data, mgmt, len,
- 					 &non_tx_data, gfp);
- 
-+	spin_lock_bh(&wiphy_to_rdev(wiphy)->bss_lock);
-+
- 	/* check if the res has other nontransmitting bss which is not
- 	 * in MBSSID IE
- 	 */
-@@ -1909,8 +1911,9 @@ cfg80211_inform_bss_frame_data(struct wiphy *wiphy,
- 		ies2 = rcu_access_pointer(tmp_bss->ies);
- 		if (ies2->tsf < ies1->tsf)
- 			cfg80211_update_notlisted_nontrans(wiphy, tmp_bss,
--							   mgmt, len, gfp);
-+							   mgmt, len);
- 	}
-+	spin_unlock_bh(&wiphy_to_rdev(wiphy)->bss_lock);
- 
- 	return res;
+ 	return IWL_UCODE_SERIAL(mvm->fw->ucode_ver) >= 38 ||
+-	       IWL_UCODE_SERIAL(mvm->fw->ucode_ver) == 29 ||
+-	       IWL_UCODE_SERIAL(mvm->fw->ucode_ver) == 17;
++	       IWL_UCODE_SERIAL(mvm->fw->ucode_ver) == 17 ||
++	       (IWL_UCODE_SERIAL(mvm->fw->ucode_ver) == 29 &&
++		((mvm->trans->hw_rev & CSR_HW_REV_TYPE_MSK) ==
++		 CSR_HW_REV_TYPE_7265D));
  }
+ 
+ int iwl_mvm_get_sar_geo_profile(struct iwl_mvm *mvm)
 -- 
 2.20.1
 
