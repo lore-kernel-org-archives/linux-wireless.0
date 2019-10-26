@@ -7,46 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8F55CA9EBD
-	for <linux-wireless@archiver.kernel.org>; Sat, 26 Oct 2019 13:30:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE3BBCA9EBD
+	for <linux-wireless@archiver.kernel.org>; Sat, 26 Oct 2019 13:30:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C0014214DA
-	for <linux-wireless@archiver.kernel.org>; Sat, 26 Oct 2019 13:30:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B3D48206DD
+	for <linux-wireless@archiver.kernel.org>; Sat, 26 Oct 2019 13:30:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1572096610;
-	bh=+RXZgY1pNTGvQ+1526ck6j6FRsdHz9lJ0dRvajUZKyc=;
+	s=default; t=1572096614;
+	bh=hDikS1awY/0aXNhA0+x0s4YQ+EHE9cfhwP7iUsrcJhg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=yqm7r1AvUSCqrWJPHXAqJ6vm8GcahvIPHlyp7UDXZ43a/G1JK1S+khtWfc5Uf2Dam
-	 AM16p9ZjAcURutjBUsjYZOjFdWhAYvNdW48bFt+ya+C9xiyCwePwc9QoZk8BWJjAw5
-	 XA6/mMbuhIJ+IYhjiF9CgZkk2DZ0WEZeQTNqr7jU=
+	b=noBHJbiWLKv3UnctsrdVezp+UYMu9xg0HFOvWWj12CNHZsRHNvdzb1NIVJ3Q9Am56
+	 3cwrXtxVQQuGKsFNnQDUcwCq/5cLbdUB1K1gAU+DOwCLNE6VVspDUmO4ZTWHS0ybUK
+	 6r9sObfXvisVH2FFrvPmMWJlY9wqTYR5nv1iwDPY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728524AbfJZNT7 (ORCPT
+        id S1728496AbfJZNT4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 26 Oct 2019 09:19:59 -0400
-Received: from mail.kernel.org ([198.145.29.99]:41884 "EHLO mail.kernel.org"
+        Sat, 26 Oct 2019 09:19:56 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41852 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728504AbfJZNT6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 26 Oct 2019 09:19:58 -0400
+        id S1728477AbfJZNTz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 26 Oct 2019 09:19:55 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id C69392070B;
-        Sat, 26 Oct 2019 13:19:56 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 2F707222BD;
+        Sat, 26 Oct 2019 13:19:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1572095997;
-        bh=+RXZgY1pNTGvQ+1526ck6j6FRsdHz9lJ0dRvajUZKyc=;
+        s=default; t=1572095994;
+        bh=hDikS1awY/0aXNhA0+x0s4YQ+EHE9cfhwP7iUsrcJhg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=v3v6Mc41BbEypAabo1yxtAw+6e6EMNi14jU0uBfrFJqEOa+Q2UsTQvucounAqySXx
-         y+0HWswF1xOI0hsDXMVsoVMFnP9map1xMFtGv7d1G026L4DowXUWEPRi/aeNSA6PDC
-         dS/yNFUT7HLiq4+kxVysLnVQBUc4CTglDHhN1AK0=
+        b=BqAHNFwV1PqCXO8dRKcMj+AhPod2u/A9zfGj6Qn5cgC91Nv11XuzSnAm5BWAzJs7y
+         8PILiLokhVTiNlzrGUI0rMGt/uMP5nL0MLO34a/dBDyKBd9LVDYW6PpcMJuRFJEULr
+         GdBBwPyqHRBidCFve2OJXL2WmrdadmsSA9kjjC6E=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Luca Coelho <luciano.coelho@intel.com>,
+Cc:     Navid Emamdoost <navid.emamdoost@gmail.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 25/59] iwlwifi: exclude GEO SAR support for 3168
-Date:   Sat, 26 Oct 2019 09:18:36 -0400
-Message-Id: <20191026131910.3435-25-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 24/59] iwlwifi: pcie: fix memory leaks in iwl_pcie_ctxt_info_gen3_init
+Date:   Sat, 26 Oct 2019 09:18:35 -0400
+Message-Id: <20191026131910.3435-24-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191026131910.3435-1-sashal@kernel.org>
 References: <20191026131910.3435-1-sashal@kernel.org>
@@ -59,51 +60,101 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Navid Emamdoost <navid.emamdoost@gmail.com>
 
-[ Upstream commit 12e36d98d3e5acf5fc57774e0a15906d55f30cb9 ]
+[ Upstream commit 0f4f199443faca715523b0659aa536251d8b978f ]
 
-We currently support two NICs in FW version 29, namely 7265D and 3168.
-Out of these, only 7265D supports GEO SAR, so adjust the function that
-checks for it accordingly.
+In iwl_pcie_ctxt_info_gen3_init there are cases that the allocated dma
+memory is leaked in case of error.
 
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Fixes: f5a47fae6aa3 ("iwlwifi: mvm: fix version check for GEO_TX_POWER_LIMIT support")
+DMA memories prph_scratch, prph_info, and ctxt_info_gen3 are allocated
+and initialized to be later assigned to trans_pcie. But in any error case
+before such assignment the allocated memories should be released.
+
+First of such error cases happens when iwl_pcie_init_fw_sec fails.
+Current implementation correctly releases prph_scratch. But in two
+sunsequent error cases where dma_alloc_coherent may fail, such
+releases are missing.
+
+This commit adds release for prph_scratch when allocation for
+prph_info fails, and adds releases for prph_scratch and prph_info when
+allocation for ctxt_info_gen3 fails.
+
+Fixes: 2ee824026288 ("iwlwifi: pcie: support context information for 22560 devices")
+Signed-off-by: Navid Emamdoost <navid.emamdoost@gmail.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 16 +++++++++-------
- 1 file changed, 9 insertions(+), 7 deletions(-)
+ .../intel/iwlwifi/pcie/ctxt-info-gen3.c       | 36 +++++++++++++------
+ 1 file changed, 25 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index 9cb9f0544c9b1..2eba6d6f367f8 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -843,15 +843,17 @@ static bool iwl_mvm_sar_geo_support(struct iwl_mvm *mvm)
- 	 * firmware versions.  Unfortunately, we don't have a TLV API
- 	 * flag to rely on, so rely on the major version which is in
- 	 * the first byte of ucode_ver.  This was implemented
--	 * initially on version 38 and then backported to29 and 17.
--	 * The intention was to have it in 36 as well, but not all
--	 * 8000 family got this feature enabled.  The 8000 family is
--	 * the only one using version 36, so skip this version
--	 * entirely.
-+	 * initially on version 38 and then backported to 17.  It was
-+	 * also backported to 29, but only for 7265D devices.  The
-+	 * intention was to have it in 36 as well, but not all 8000
-+	 * family got this feature enabled.  The 8000 family is the
-+	 * only one using version 36, so skip this version entirely.
- 	 */
- 	return IWL_UCODE_SERIAL(mvm->fw->ucode_ver) >= 38 ||
--	       IWL_UCODE_SERIAL(mvm->fw->ucode_ver) == 29 ||
--	       IWL_UCODE_SERIAL(mvm->fw->ucode_ver) == 17;
-+	       IWL_UCODE_SERIAL(mvm->fw->ucode_ver) == 17 ||
-+	       (IWL_UCODE_SERIAL(mvm->fw->ucode_ver) == 29 &&
-+		((mvm->trans->hw_rev & CSR_HW_REV_TYPE_MSK) ==
-+		 CSR_HW_REV_TYPE_7265D));
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
+index 64d976d872b84..6783b20d9681b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
+@@ -102,13 +102,9 @@ int iwl_pcie_ctxt_info_gen3_init(struct iwl_trans *trans,
+ 
+ 	/* allocate ucode sections in dram and set addresses */
+ 	ret = iwl_pcie_init_fw_sec(trans, fw, &prph_scratch->dram);
+-	if (ret) {
+-		dma_free_coherent(trans->dev,
+-				  sizeof(*prph_scratch),
+-				  prph_scratch,
+-				  trans_pcie->prph_scratch_dma_addr);
+-		return ret;
+-	}
++	if (ret)
++		goto err_free_prph_scratch;
++
+ 
+ 	/* Allocate prph information
+ 	 * currently we don't assign to the prph info anything, but it would get
+@@ -116,16 +112,20 @@ int iwl_pcie_ctxt_info_gen3_init(struct iwl_trans *trans,
+ 	prph_info = dma_alloc_coherent(trans->dev, sizeof(*prph_info),
+ 				       &trans_pcie->prph_info_dma_addr,
+ 				       GFP_KERNEL);
+-	if (!prph_info)
+-		return -ENOMEM;
++	if (!prph_info) {
++		ret = -ENOMEM;
++		goto err_free_prph_scratch;
++	}
+ 
+ 	/* Allocate context info */
+ 	ctxt_info_gen3 = dma_alloc_coherent(trans->dev,
+ 					    sizeof(*ctxt_info_gen3),
+ 					    &trans_pcie->ctxt_info_dma_addr,
+ 					    GFP_KERNEL);
+-	if (!ctxt_info_gen3)
+-		return -ENOMEM;
++	if (!ctxt_info_gen3) {
++		ret = -ENOMEM;
++		goto err_free_prph_info;
++	}
+ 
+ 	ctxt_info_gen3->prph_info_base_addr =
+ 		cpu_to_le64(trans_pcie->prph_info_dma_addr);
+@@ -176,6 +176,20 @@ int iwl_pcie_ctxt_info_gen3_init(struct iwl_trans *trans,
+ 	iwl_set_bit(trans, CSR_GP_CNTRL, CSR_AUTO_FUNC_INIT);
+ 
+ 	return 0;
++
++err_free_prph_info:
++	dma_free_coherent(trans->dev,
++			  sizeof(*prph_info),
++			prph_info,
++			trans_pcie->prph_info_dma_addr);
++
++err_free_prph_scratch:
++	dma_free_coherent(trans->dev,
++			  sizeof(*prph_scratch),
++			prph_scratch,
++			trans_pcie->prph_scratch_dma_addr);
++	return ret;
++
  }
  
- int iwl_mvm_get_sar_geo_profile(struct iwl_mvm *mvm)
+ void iwl_pcie_ctxt_info_gen3_free(struct iwl_trans *trans)
 -- 
 2.20.1
 
