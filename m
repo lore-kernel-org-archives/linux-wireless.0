@@ -7,50 +7,50 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 40AA4CA9EB9
-	for <linux-wireless@archiver.kernel.org>; Sat, 26 Oct 2019 13:25:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29D76CA9EB9
+	for <linux-wireless@archiver.kernel.org>; Sat, 26 Oct 2019 13:27:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0B3F82070B
-	for <linux-wireless@archiver.kernel.org>; Sat, 26 Oct 2019 13:25:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EB30320867
+	for <linux-wireless@archiver.kernel.org>; Sat, 26 Oct 2019 13:27:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1572096357;
-	bh=Vt7CJhpB0LiswZHCEHqxV9uDX/kHekbB8hF5SvXRc8U=;
+	s=default; t=1572096475;
+	bh=fZ5b/0CjTl/y0q4mG/aNFlc0SydL+UI5brBMk+5wOI4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=iKYiUwzCsKhgAbpurEkDQDqubhoUzDhPzHQufpL726omKMw7VGrXkzDhmViAClvYM
-	 QWtHSSNs431kGz7AkxU8rKuJJUtYm7qxuvPkTqIFHXawYpO8YGDd2Drv7CcT6zxxBG
-	 8/kqROV7B/jGHv8byGiAAQmsJ7gc8ElNVHYXYN7Y=
+	b=mLCvIBiq0QIgdnwmq/NwvP0qfjoyybOjGAhQ7NeAuM+XYM1CfUQoJvoE77hIr9tIM
+	 FYt5e0jnH4fyl/hsUVqgRvzmH9r7KIo1ofheYpJe11EljoPVeUeJ6gh35oHfFz925M
+	 JZKOG7+4z3lYVJyjuPWxNIq/G7xtGrS+Q4WGyKh4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729004AbfJZNZr (ORCPT
+        id S1727285AbfJZNVU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 26 Oct 2019 09:25:47 -0400
-Received: from mail.kernel.org ([198.145.29.99]:44124 "EHLO mail.kernel.org"
+        Sat, 26 Oct 2019 09:21:20 -0400
+Received: from mail.kernel.org ([198.145.29.99]:43104 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728187AbfJZNWV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 26 Oct 2019 09:22:21 -0400
+        id S1728880AbfJZNVT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 26 Oct 2019 09:21:19 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id DFD8D222D1;
-        Sat, 26 Oct 2019 13:22:19 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id F0BCF222BD;
+        Sat, 26 Oct 2019 13:21:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1572096140;
-        bh=Vt7CJhpB0LiswZHCEHqxV9uDX/kHekbB8hF5SvXRc8U=;
+        s=default; t=1572096078;
+        bh=fZ5b/0CjTl/y0q4mG/aNFlc0SydL+UI5brBMk+5wOI4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Pru1u12E1Gtx7A2BBWrKHt0E1oRUqyNDjIfjIaoNvhFhGy2vXHw8YXuB0P4pisiCg
-         Ag4bhYGVXhMv8/hqF2AlKkpAgOHpCq0pFAi9ZU/IHGGbw/KUum6NoOIZ6l/7KmFtvI
-         5dfZ5NxFxdrpnXk3arXlpZCjMniIlksJHGVeZENw=
+        b=udwb1UfGDwohNqRgye6PC04tzo9gr09nUKD99WwGimTCFoXMsRKH3jM+IkXmkeoXx
+         q+842h3dcN3uM5fn8mXqjk6NeKkzDfH19EHczxNnINnl4cN6oJCtN/dJ6xR6ikZK9P
+         Bq4n8RyI62O15o+qv/lYpCdavDiigFnZOzyFGClc=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Michael Vassernis <michael.vassernis@tandemg.com>,
-        Johannes Berg <johannes.berg@intel.com>,
+Cc:     Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 02/21] mac80211_hwsim: fix incorrect dev_alloc_name failure goto
-Date:   Sat, 26 Oct 2019 09:21:58 -0400
-Message-Id: <20191026132217.4380-2-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 07/33] mac80211: accept deauth frames in IBSS mode
+Date:   Sat, 26 Oct 2019 09:20:44 -0400
+Message-Id: <20191026132110.4026-7-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191026132217.4380-1-sashal@kernel.org>
-References: <20191026132217.4380-1-sashal@kernel.org>
+In-Reply-To: <20191026132110.4026-1-sashal@kernel.org>
+References: <20191026132110.4026-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -60,36 +60,47 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Michael Vassernis <michael.vassernis@tandemg.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit 313c3fe9c2348e7147eca38bb446f295b45403a0 ]
+[ Upstream commit 95697f9907bfe3eab0ef20265a766b22e27dde64 ]
 
-If dev_alloc_name fails, hwsim_mon's memory allocated in alloc_netdev
-needs to be freed.
-Change goto command in dev_alloc_name failure to out_free_mon in
-order to perform free_netdev.
+We can process deauth frames and all, but we drop them very
+early in the RX path today - this could never have worked.
 
-Signed-off-by: Michael Vassernis <michael.vassernis@tandemg.com>
-Link: https://lore.kernel.org/r/20191003073049.3760-1-michael.vassernis@tandemg.com
+Fixes: 2cc59e784b54 ("mac80211: reply to AUTH with DEAUTH if sta allocation fails in IBSS")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Link: https://lore.kernel.org/r/20191004123706.15768-2-luca@coelho.fi
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/mac80211_hwsim.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/mac80211/rx.c | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index e9ec1da9935d8..0651a323b64f1 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -3502,7 +3502,7 @@ static int __init init_mac80211_hwsim(void)
- 	err = dev_alloc_name(hwsim_mon, hwsim_mon->name);
- 	if (err < 0) {
- 		rtnl_unlock();
--		goto out_free_radios;
-+		goto out_free_mon;
- 	}
- 
- 	err = register_netdevice(hwsim_mon);
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 4a6b3c7b35e37..31000622376df 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -3227,9 +3227,18 @@ ieee80211_rx_h_mgmt(struct ieee80211_rx_data *rx)
+ 	case cpu_to_le16(IEEE80211_STYPE_PROBE_RESP):
+ 		/* process for all: mesh, mlme, ibss */
+ 		break;
++	case cpu_to_le16(IEEE80211_STYPE_DEAUTH):
++		if (is_multicast_ether_addr(mgmt->da) &&
++		    !is_broadcast_ether_addr(mgmt->da))
++			return RX_DROP_MONITOR;
++
++		/* process only for station/IBSS */
++		if (sdata->vif.type != NL80211_IFTYPE_STATION &&
++		    sdata->vif.type != NL80211_IFTYPE_ADHOC)
++			return RX_DROP_MONITOR;
++		break;
+ 	case cpu_to_le16(IEEE80211_STYPE_ASSOC_RESP):
+ 	case cpu_to_le16(IEEE80211_STYPE_REASSOC_RESP):
+-	case cpu_to_le16(IEEE80211_STYPE_DEAUTH):
+ 	case cpu_to_le16(IEEE80211_STYPE_DISASSOC):
+ 		if (is_multicast_ether_addr(mgmt->da) &&
+ 		    !is_broadcast_ether_addr(mgmt->da))
 -- 
 2.20.1
 
