@@ -1,95 +1,164 @@
-Return-Path: <SRS0=0b32=YT=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=3Swi=YU=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FF13CA9EBC
-	for <linux-wireless@archiver.kernel.org>; Sat, 26 Oct 2019 13:37:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F9F0CA9EBD
+	for <linux-wireless@archiver.kernel.org>; Sun, 27 Oct 2019 13:28:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 29A3221897
-	for <linux-wireless@archiver.kernel.org>; Sat, 26 Oct 2019 13:37:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1572097048;
-	bh=NQ0FnJ1VBANMVsMUTfmcHRHbQvXmLQjJYYhHODkSERc=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=R/E4wl70GUApyHXjLaw0zCywHJ7595S6VP1Kf7mKQChnAsLGYxUdVP+CzRYXGnDkp
-	 1bjMi7TPQRxsO9wEfQveUqwpTAx6JiJs8rl9fpNTjqsXi021kxDeShv1FcvcjBpK3g
-	 A/rzqSitTiGSTCDt3xacF07mykc7xJHp4J4WBx9A=
+	by mail.kernel.org (Postfix) with ESMTP id 54F1D21E6F
+	for <linux-wireless@archiver.kernel.org>; Sun, 27 Oct 2019 13:28:30 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="LXnDmbXb";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="KWV/6SWh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726613AbfJZNQR (ORCPT
+        id S1726818AbfJ0N23 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 26 Oct 2019 09:16:17 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37738 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726566AbfJZNQQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 26 Oct 2019 09:16:16 -0400
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        Sun, 27 Oct 2019 09:28:29 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:49548 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726549AbfJ0N23 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 27 Oct 2019 09:28:29 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 0ACB460D52; Sun, 27 Oct 2019 13:28:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1572182908;
+        bh=9ZZre0NuSoDeFDxf4oUJniz9M2r5yh3TTjgFWZaZdtA=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=LXnDmbXbqE5Pn5kUsfYvei2OaHKhD9g7VEIlFyzgpJSakPUjhAHlisivcsyNsUUMp
+         LRBC+AltQKLPlam6d7Ppk5YBTrfeUQ166iiN4+Om/tAcCAKLocNdHjRK+B7Te0+5lg
+         DVxjEb+a8iuDLb+GmErt/FyrqG+jy4IaBsKrHqaI=
+Received: from potku.adurom.net (unknown [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 6B83721897;
-        Sat, 26 Oct 2019 13:16:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1572095776;
-        bh=NQ0FnJ1VBANMVsMUTfmcHRHbQvXmLQjJYYhHODkSERc=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=p11wgfF/ez48B8UA/kQZYySvqHW6RAwkVFOSTsY3rlUY5sihPg3UiTzBUcp/XJvD/
-         KMzFKYcinGhAQ1NuzMWN0GY9AV/CdVPDERJx/JNxHZa06d65RZOW2HcgZQSl7Zialv
-         QYnBPx7CFfHU7iLJnYEpsy+jg7ZYP0zO0iVKwT54=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Michael Vassernis <michael.vassernis@tandemg.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.3 07/99] mac80211_hwsim: fix incorrect dev_alloc_name failure goto
-Date:   Sat, 26 Oct 2019 09:14:28 -0400
-Message-Id: <20191026131600.2507-7-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191026131600.2507-1-sashal@kernel.org>
-References: <20191026131600.2507-1-sashal@kernel.org>
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 0BFC760BFA;
+        Sun, 27 Oct 2019 13:28:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1572182907;
+        bh=9ZZre0NuSoDeFDxf4oUJniz9M2r5yh3TTjgFWZaZdtA=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=KWV/6SWhNivItb8uhSpxeULt5KHH5YM8fcN677+JgVRn1xDrGiB49kWgNnocXNKUr
+         tw0hh5CheuFdBTGr7bRU9WcYO49ttETTT9Szdz7i8AxkIweHHpeAkj7ZirBr7NOGc9
+         Jevhgcba+2cAAsP/MBO+fEmZ1yWhKyMoPkXIMy2k=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 0BFC760BFA
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Rob Herring <robh@kernel.org>
+Cc:     devicetree@vger.kernel.org, linux-wireless@vger.kernel.org,
+        ath11k@lists.infradead.org
+Subject: Re: [PATCH v2 01/49] dt: bindings: net: add qcom,ath11k.yaml
+References: <1571565847-10338-1-git-send-email-kvalo@codeaurora.org>
+        <1571565847-10338-2-git-send-email-kvalo@codeaurora.org>
+        <20191025213028.GA5117@bogus>
+Date:   Sun, 27 Oct 2019 15:28:23 +0200
+In-Reply-To: <20191025213028.GA5117@bogus> (Rob Herring's message of "Fri, 25
+        Oct 2019 16:30:28 -0500")
+Message-ID: <874kzu9v2g.fsf@kamboji.qca.qualcomm.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Michael Vassernis <michael.vassernis@tandemg.com>
+Rob Herring <robh@kernel.org> writes:
 
-[ Upstream commit 313c3fe9c2348e7147eca38bb446f295b45403a0 ]
+> On Sun, Oct 20, 2019 at 01:03:19PM +0300, Kalle Valo wrote:
+>> ath11k is a driver for Qualcomm IEEE 802.11ax devices. Add a
+>> bindings document for the driver, first documenting IPQ8074 which is the
+>> only device ath11k currently supports.
+>> 
+>> Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
+>> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+>> ---
+>>  .../bindings/net/wireless/qcom,ath11k.yaml         | 277 +++++++++++++++++++++
+>>  1 file changed, 277 insertions(+)
+>> 
+>> diff --git
+>> a/Documentation/devicetree/bindings/net/wireless/qcom,ath11k.yaml
+>> b/Documentation/devicetree/bindings/net/wireless/qcom,ath11k.yaml
+>> new file mode 100644
+>> index 000000000000..5d25542f85f8
+>> --- /dev/null
+>> +++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath11k.yaml
+>> @@ -0,0 +1,277 @@
+>> +# SPDX-License-Identifier: BSD-3-Clause-Clear
+>
+> (GPL-2.0-only OR BSD-2-Clause) please.
 
-If dev_alloc_name fails, hwsim_mon's memory allocated in alloc_netdev
-needs to be freed.
-Change goto command in dev_alloc_name failure to out_free_mon in
-order to perform free_netdev.
+I chose BSD-3-Clause-Clear because ath11k uses that license and I would
+prefer to use the same license throughout the driver. Also it's
+categorised as a preferred license:
 
-Signed-off-by: Michael Vassernis <michael.vassernis@tandemg.com>
-Link: https://lore.kernel.org/r/20191003073049.3760-1-michael.vassernis@tandemg.com
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/net/wireless/mac80211_hwsim.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/LICENSES/preferred
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 772e54f0696fd..141508e01c31f 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -3929,7 +3929,7 @@ static int __init init_mac80211_hwsim(void)
- 	err = dev_alloc_name(hwsim_mon, hwsim_mon->name);
- 	if (err < 0) {
- 		rtnl_unlock();
--		goto out_free_radios;
-+		goto out_free_mon;
- 	}
- 
- 	err = register_netdevice(hwsim_mon);
+Any specific reason why you want to change the license?
+
+>> +# Copyright (c) 2018-2019 The Linux Foundation. All rights reserved.
+>> +
+>> +%YAML 1.2
+>> +---
+>> +$id: http://devicetree.org/schemas/net/wireless/qcom,ath11k.yaml#
+>> +$schema: http://devicetree.org/meta-schemas/core.yaml#
+>> +
+>> +title: Qualcomm Technologies ath11k wireless devices Generic Binding
+>> +
+>> +maintainers:
+>> +  - Kalle Valo <kvalo@codeaurora.org>
+>> +
+>> +description: |
+>> + These are dt entries used on ath11k driver. AHB based ipq8074 uses
+>> most of the properties defined in this doc.
+>
+> Describe the h/w, not what the document is.
+>
+> Wrap your lines.
+>
+>> +
+>> +properties:
+>> +  compatible:
+>> +    const: "qcom,ipq8074-wifi"
+>
+> Drop quotes.
+>
+>> +
+>> +  reg:
+>> +    description: Address and length of the register set for the device
+>
+> Don't need a description.
+>
+>> +    maxItems: 1
+>> +
+>> +  interrupts:
+>> +    minItems: 53
+>> +    maxItems: 53
+>
+> Assuming the list below has 53 entries min/maxItems is implied.
+
+Will fix these.
+
+>> +examples:
+>> +  - |
+>> +
+>> +    q6v5_wcss: q6v5_wcss@CD00000 {
+>> +    	compatible = "qcom,ipq8074-wcss-pil";
+>> +    	reg = <0xCD00000 0x4040>,
+>> +    	      <0x4AB000 0x20>;
+>> +    	reg-names = "qdsp6",
+>> +    		    "rmb";
+>
+> Mixed tabs and spaces. YAML needs spaces (at least at the beginning), so 
+> just use spaces. More below...
+
+Ok, I'll remove all the tabs from the doc. Thanks for the review!
+
 -- 
-2.20.1
-
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
