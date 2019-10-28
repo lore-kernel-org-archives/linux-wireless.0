@@ -4,35 +4,35 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.2 required=3.0
 	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0F45CA9EC0
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Oct 2019 21:22:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57178CA9EC0
+	for <linux-wireless@archiver.kernel.org>; Mon, 28 Oct 2019 21:23:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AAE4F21479
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Oct 2019 21:22:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3003521835
+	for <linux-wireless@archiver.kernel.org>; Mon, 28 Oct 2019 21:23:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729847AbfJ1VWj (ORCPT
+        id S1729885AbfJ1VXJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 28 Oct 2019 17:22:39 -0400
-Received: from fudo.makrotopia.org ([185.142.180.71]:57312 "EHLO
+        Mon, 28 Oct 2019 17:23:09 -0400
+Received: from fudo.makrotopia.org ([185.142.180.71]:49111 "EHLO
         fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729836AbfJ1VWi (ORCPT
+        with ESMTP id S1729836AbfJ1VXJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Oct 2019 17:22:38 -0400
+        Mon, 28 Oct 2019 17:23:09 -0400
 Received: from local
         by fudo.makrotopia.org with esmtpsa (TLSv1.2:ECDHE-RSA-AES256-GCM-SHA384:256)
          (Exim 4.92.2)
         (envelope-from <daniel@makrotopia.org>)
-        id 1iPCQy-0006a0-59; Mon, 28 Oct 2019 22:22:35 +0100
-Date:   Mon, 28 Oct 2019 22:20:01 +0100
+        id 1iPCTh-0006eU-3x; Mon, 28 Oct 2019 22:23:06 +0100
+Date:   Mon, 28 Oct 2019 22:22:44 +0100
 From:   Daniel Golle <daniel@makrotopia.org>
 To:     linux-wireless@vger.kernel.org
 Cc:     Roman Yeryomin <roman@advem.lv>, wbob <wbob@jify.de>,
         Stanislaw Gruszka <sgruszka@redhat.com>
 Subject: [PATCH] rt2800: remove erroneous duplicate condition
-Message-ID: <20191028212001.GA2318@makrotopia.org>
+Message-ID: <20191028212244.GA2590@makrotopia.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
