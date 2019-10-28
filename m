@@ -6,33 +6,33 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0D15CA9EC0
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Oct 2019 17:22:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56B7ECA9EC0
+	for <linux-wireless@archiver.kernel.org>; Mon, 28 Oct 2019 17:24:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 73FC420862
-	for <linux-wireless@archiver.kernel.org>; Mon, 28 Oct 2019 17:22:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 19A4B20862
+	for <linux-wireless@archiver.kernel.org>; Mon, 28 Oct 2019 17:24:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2404123AbfJ1RW5 (ORCPT
+        id S1731902AbfJ1RYr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 28 Oct 2019 13:22:57 -0400
-Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:2717 "EHLO
+        Mon, 28 Oct 2019 13:24:47 -0400
+Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:8562 "EHLO
         alexa-out-ams-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730212AbfJ1RW5 (ORCPT
+        by vger.kernel.org with ESMTP id S1730402AbfJ1RYr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Oct 2019 13:22:57 -0400
+        Mon, 28 Oct 2019 13:24:47 -0400
 Received: from ironmsg01-ams.qualcomm.com ([10.251.56.2])
-  by alexa-out-ams-02.qualcomm.com with ESMTP; 28 Oct 2019 18:22:50 +0100
-IronPort-SDR: ++i18f7GvkFTNwlM53M0mFw9LmOK1fF8jlL+kDmaFd4MWXieKoEt3C+yqH6RKVIbVvntd7kdeQ
- pZXsQYhQjQtIybsm5O+jTMGsGOYC2qDKc=
+  by alexa-out-ams-02.qualcomm.com with ESMTP; 28 Oct 2019 18:24:41 +0100
+IronPort-SDR: 9sRmY7UQhCl+jEfOFGc5eNacSBTtUwdVjSAu3/9qK7uK//WdHzxFSNXmJv4FHRQfpxHe4Y+AqO
+ +fHu+qS3kC+C7hDWiG7RRkiDf9KRc6TNM=
 Received: from lx-merez1.mea.qualcomm.com ([10.18.173.103])
-  by ironmsg01-ams.qualcomm.com with ESMTP; 28 Oct 2019 18:22:44 +0100
+  by ironmsg01-ams.qualcomm.com with ESMTP; 28 Oct 2019 18:24:41 +0100
 From:   Maya Erez <merez@codeaurora.org>
 To:     Kalle Valo <kvalo@codeaurora.org>
 Cc:     Lior David <liord@codeaurora.org>, linux-wireless@vger.kernel.org,
         wil6210@qti.qualcomm.com, Maya Erez <merez@codeaurora.org>
-Subject: [PATCH] wil6210: add SPDX license identifiers
-Date:   Mon, 28 Oct 2019 19:22:41 +0200
-Message-Id: <1572283361-22874-1-git-send-email-merez@codeaurora.org>
+Subject: [PATCH v2] wil6210: add SPDX license identifiers
+Date:   Mon, 28 Oct 2019 19:24:37 +0200
+Message-Id: <1572283477-22976-1-git-send-email-merez@codeaurora.org>
 X-Mailer: git-send-email 1.9.1
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
