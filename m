@@ -2,137 +2,86 @@ Return-Path: <SRS0=76X5=YW=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E06B3CA9EB9
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Oct 2019 04:01:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA886CA9EC2
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Oct 2019 04:41:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A6CC620717
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Oct 2019 04:01:44 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=endlessm-com.20150623.gappssmtp.com header.i=@endlessm-com.20150623.gappssmtp.com header.b="KlKGwIx8"
+	by mail.kernel.org (Postfix) with ESMTP id 91AE62087F
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Oct 2019 04:41:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725994AbfJ2EBn (ORCPT
+        id S1731704AbfJ2El1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 29 Oct 2019 00:01:43 -0400
-Received: from mail-qk1-f195.google.com ([209.85.222.195]:34452 "EHLO
-        mail-qk1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725830AbfJ2EBn (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Oct 2019 00:01:43 -0400
-Received: by mail-qk1-f195.google.com with SMTP id c25so4703923qkk.1
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Oct 2019 21:01:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=endlessm-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=lDvFbMqtLQKHIm5EaIS2pT+S04TntpX/aAE34tFDiwo=;
-        b=KlKGwIx8cfO8yaZzxzEbFh5++cMI7RVpXh/rLolviVV991j0eAW2/dnvaFoqFTPCjy
-         h2b+K+ht+FSeKFG0KXR27D3uanJKHlxuYwqQlBglJMr7PDNNmahQJ7NgU99renrkdEDh
-         x9RfFUDtymqLDHzFFjSoW5Y70KvoImCVUyBi3zlRJxRIUPPGCCEMV0kW8IvKmRSHxeHj
-         DdECs4VPIWISAmBCqNocw/NkKqw33eVreZV2PVMwYwlK2EDto6ldP/95fYEACeogOM+G
-         Ffdzauv5IHziGh0rbVHFWXzzkCR0i6eQP4GzII5VbNMwRf8EAJoz1q0k3xm0JnYwAXcI
-         JcVA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=lDvFbMqtLQKHIm5EaIS2pT+S04TntpX/aAE34tFDiwo=;
-        b=VgA/ljDGJtusAetSf+9wdYVdG57qN47kO+7Enmf19U1T3GsC3zkHqZnUvBTuHxnHJk
-         4rWrOcHwRhUIlEXfl2DyVMofYfumYsbhDaaiyR18hl6ijx1GGMHkQhM+8HO6lfQVXl5q
-         EvZ0fqUCH+9ZysRtvJFlcn6nm3wYqUDJPqc2e8lWfXSIDbsuw9jZ/Xra1Q7s1Vjl52Mo
-         tGzaJQQKeJXZyH0EBr5+hwoFbhUaK4kb9CUcZaS4LMs3rmGfGJdLjYOVEgJBKEkd9mMC
-         E3Che1hUt0f0lfZ6enPmSeKKckzP4T3O5FyPukPqE6bXdpfO5VjWaRO4G8WfKfwtIFVz
-         oGxA==
-X-Gm-Message-State: APjAAAXGcJ3jI9+UtVeQ+G7Ypl3Umcnjgbgy0Aexe62YgsRoaaAvpUX2
-        NqyjZ+WNsUBVi+iivEa5u10xJBwfURp89jp/AdCuPg==
-X-Google-Smtp-Source: APXvYqygyQgFGmyWASvk1Lk50rkSstRO54cIOU4m+cUxT5PiYJMd7ue19uwrQ7WE4d4krXOzVyhUGrLBiAQwCnsj0lE=
-X-Received: by 2002:a37:847:: with SMTP id 68mr18123162qki.366.1572321702297;
- Mon, 28 Oct 2019 21:01:42 -0700 (PDT)
+        Tue, 29 Oct 2019 00:41:27 -0400
+Received: from szxga06-in.huawei.com ([45.249.212.32]:46854 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727294AbfJ2El1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 29 Oct 2019 00:41:27 -0400
+Received: from DGGEMS412-HUB.china.huawei.com (unknown [172.30.72.59])
+        by Forcepoint Email with ESMTP id 5EB26E443D1CB4F03C80;
+        Tue, 29 Oct 2019 12:41:23 +0800 (CST)
+Received: from huawei.com (10.90.53.225) by DGGEMS412-HUB.china.huawei.com
+ (10.3.19.212) with Microsoft SMTP Server id 14.3.439.0; Tue, 29 Oct 2019
+ 12:41:16 +0800
+From:   zhengbin <zhengbin13@huawei.com>
+To:     <nbd@nbd.name>, <lorenzo.bianconi83@gmail.com>,
+        <ryder.lee@mediatek.com>, <royluo@google.com>,
+        <kvalo@codeaurora.org>, <davem@davemloft.net>,
+        <matthias.bgg@gmail.com>, <linux-wireless@vger.kernel.org>,
+        <netdev@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+        <linux-mediatek@lists.infradead.org>
+CC:     <zhengbin13@huawei.com>
+Subject: [PATCH] mt76: Remove set but not used variable 'idx'
+Date:   Tue, 29 Oct 2019 12:48:39 +0800
+Message-ID: <1572324519-39669-1-git-send-email-zhengbin13@huawei.com>
+X-Mailer: git-send-email 2.7.4
 MIME-Version: 1.0
-References: <20191025093345.22643-1-yhchuang@realtek.com> <20191025093345.22643-4-yhchuang@realtek.com>
- <CAB4CAwf_Y0tMG37nZDtsU9FmACaOB=eALCNCazVk1kbAvOE26Q@mail.gmail.com> <F7CD281DE3E379468C6D07993EA72F84D1911E08@RTITMBSVM04.realtek.com.tw>
-In-Reply-To: <F7CD281DE3E379468C6D07993EA72F84D1911E08@RTITMBSVM04.realtek.com.tw>
-From:   Chris Chiu <chiu@endlessm.com>
-Date:   Tue, 29 Oct 2019 12:01:30 +0800
-Message-ID: <CAB4CAweAExW+8hj5asHeF3jpcyn79joATUCqRnpwFW7aRTb8OA@mail.gmail.com>
-Subject: Re: [PATCH 3/6] rtw88: use a module parameter to control LPS enter
-To:     Tony Chuang <yhchuang@realtek.com>
-Cc:     Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Brian Norris <briannorris@chromium.org>,
-        "g.schlmm@googlemail.com" <g.schlmm@googlemail.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
+X-Originating-IP: [10.90.53.225]
+X-CFilter-Loop: Reflected
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, Oct 28, 2019 at 11:13 AM Tony Chuang <yhchuang@realtek.com> wrote:
->
-> > On Fri, Oct 25, 2019 at 5:33 PM <yhchuang@realtek.com> wrote:
-> > >
-> > > From: Yan-Hsuan Chuang <yhchuang@realtek.com>
-> > >
-> > > If the number of packets is less than the LPS threshold, driver
-> > > can then enter LPS mode.
-> > > And driver used to take RTW_LPS_THRESHOLD as the threshold. As
-> > > the macro can not be changed after compiled, use a parameter
-> > > instead.
-> > >
-> > > The larger of the threshold, the more traffic required to leave
-> > > power save mode, responsive time could be longer, but also the
-> > > power consumption could be lower.
-> > >
-> > > Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-> > > ---
-Reviewed-by: Chris Chiu <chiu@endlessm.com>
+Fixes gcc '-Wunused-but-set-variable' warning:
 
-> > >  drivers/net/wireless/realtek/rtw88/main.c | 7 +++++--
-> > >  drivers/net/wireless/realtek/rtw88/ps.h   | 2 --
-> > >  2 files changed, 5 insertions(+), 4 deletions(-)
-> > >
-> > > diff --git a/drivers/net/wireless/realtek/rtw88/main.c
-> > b/drivers/net/wireless/realtek/rtw88/main.c
-> > > index 7c1b89c4fb6c..bff8a0b129d9 100644
-> > > --- a/drivers/net/wireless/realtek/rtw88/main.c
-> > > +++ b/drivers/net/wireless/realtek/rtw88/main.c
-> >
-> > > @@ -199,8 +202,8 @@ static void rtw_watch_dog_work(struct
-> > work_struct *work)
-> > >         if (busy_traffic != test_bit(RTW_FLAG_BUSY_TRAFFIC,
-> > rtwdev->flags))
-> > >                 rtw_coex_wl_status_change_notify(rtwdev);
-> > >
-> > > -       if (stats->tx_cnt > RTW_LPS_THRESHOLD ||
-> > > -           stats->rx_cnt > RTW_LPS_THRESHOLD)
-> > > +       if (stats->tx_cnt > rtw_lps_threshold ||
-> > > +           stats->rx_cnt > rtw_lps_threshold)
-> > >                 ps_active = true;
-> > >         else
-> > >                 ps_active = false;
-> >
-> > The naming of 'ps_active' is a bit confusing. Per the commit message,
-> > it will leave LPS
-> > it tx/rx count > threshold. But I'll be misled by the name ps_active.
-> > Does it mean the
-> > current condition is PS active and ready to power sleep? I'd like to
-> > rename it to old-fashioned
-> > 'lps_enter' to represent the action that would be taken. It would be
-> > easier for me to understand.
-> >
-> > Chris
-> >
->
-> I think according to the context, ps_active is good for me.
-> But I can still send a separate patch to rename it.
-> Or you can :)
->
-> Yan-Hsuan
+drivers/net/wireless/mediatek/mt76/dma.c: In function mt76_dma_rx_fill:
+drivers/net/wireless/mediatek/mt76/dma.c:377:6: warning: variable idx set but not used [-Wunused-but-set-variable]
 
-OK. Then I have no problem with this patch.
+It is not used since commit 17f1de56df05 ("mt76:
+add common code shared between multiple chipsets")
 
-Chris
+Reported-by: Hulk Robot <hulkci@huawei.com>
+Signed-off-by: zhengbin <zhengbin13@huawei.com>
+---
+ drivers/net/wireless/mediatek/mt76/dma.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
+index c747eb2..70fab98 100644
+--- a/drivers/net/wireless/mediatek/mt76/dma.c
++++ b/drivers/net/wireless/mediatek/mt76/dma.c
+@@ -363,7 +363,6 @@ mt76_dma_rx_fill(struct mt76_dev *dev, struct mt76_queue *q)
+ 	int frames = 0;
+ 	int len = SKB_WITH_OVERHEAD(q->buf_size);
+ 	int offset = q->buf_offset;
+-	int idx;
+
+ 	spin_lock_bh(&q->lock);
+
+@@ -382,7 +381,7 @@ mt76_dma_rx_fill(struct mt76_dev *dev, struct mt76_queue *q)
+
+ 		qbuf.addr = addr + offset;
+ 		qbuf.len = len - offset;
+-		idx = mt76_dma_add_buf(dev, q, &qbuf, 1, 0, buf, NULL);
++		mt76_dma_add_buf(dev, q, &qbuf, 1, 0, buf, NULL);
+ 		frames++;
+ 	}
+
+--
+2.7.4
+
