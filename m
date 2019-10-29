@@ -2,95 +2,91 @@ Return-Path: <SRS0=76X5=YW=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.4 required=3.0 tests=FROM_LOCAL_HEX,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5B62CA9EB9
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Oct 2019 04:46:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39FB2CA9EB9
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Oct 2019 05:53:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8F1B42067D
-	for <linux-wireless@archiver.kernel.org>; Tue, 29 Oct 2019 04:46:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 103E120862
+	for <linux-wireless@archiver.kernel.org>; Tue, 29 Oct 2019 05:53:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731704AbfJ2EqE (ORCPT
+        id S1731994AbfJ2FxX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 29 Oct 2019 00:46:04 -0400
-Received: from mail-il1-f199.google.com ([209.85.166.199]:44208 "EHLO
-        mail-il1-f199.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727294AbfJ2EqE (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Oct 2019 00:46:04 -0400
-Received: by mail-il1-f199.google.com with SMTP id 13so11788535iln.11
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Oct 2019 21:46:02 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:date:in-reply-to:message-id:subject
-         :from:to;
-        bh=YLV8f9ZsfAXyIIZYYq3+IarNtK/1IHU/hb3TF47qpcU=;
-        b=P/FgLG1NM4rNo50iu20WmvU05YLhbIEwojMa4fMTXE3W5JaigXyokbPLroMpP/abt2
-         WILWX76kItXGpHVcU69UG6GaWxxFMKTfvEANbaBPyb4bSIKbrrjIdTU8zckH59THJEoQ
-         hbtIIcogYMFafHvSljjvB7+u8DnHb7FgZEQL2Cv8KccFFY4w0WPGBrHJ0zWipvOvC4yD
-         5Pw+k0A+WKab3vtxLhkshEMKwxwx7bp+6FYPbKhD4OD/XGjFMWzXEI/ysAWdISWsLTk6
-         8UAQisPSl/LxH+fVBcvcuLce1p8SDAPuhMHB2o3dNsW6NzITOZECGEu4S13gBabqRpGe
-         orTw==
-X-Gm-Message-State: APjAAAV5jphN3arY70+eVNaOJdF27OJ7Q36leqld9D2/OFiydyWA1uZG
-        wyNuubjqlcM6If42WnruJCslItvfkY5JnK2UHBBOpOM+LPdr
-X-Google-Smtp-Source: APXvYqy8A5HcqCyEPL5dtBElWBUVccfpfDJnoTHkuyLyMyzE3tC2AL+v78u811xV2KkRr1yWR23ZU1ZAqiGqqPS8jMwtkIRFFbuv
+        Tue, 29 Oct 2019 01:53:23 -0400
+Received: from smtp3-1.goneo.de ([85.220.129.38]:49373 "EHLO smtp3-1.goneo.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726034AbfJ2FxX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 29 Oct 2019 01:53:23 -0400
+X-Greylist: delayed 629 seconds by postgrey-1.27 at vger.kernel.org; Tue, 29 Oct 2019 01:53:20 EDT
+Received: from localhost (localhost [127.0.0.1])
+        by smtp3.goneo.de (Postfix) with ESMTP id 1EC9B24007F;
+        Tue, 29 Oct 2019 06:42:49 +0100 (CET)
+X-Virus-Scanned: by goneo
+Received: from smtp3.goneo.de ([127.0.0.1])
+        by localhost (smtp3.goneo.de [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id qZjqyjNzm7GN; Tue, 29 Oct 2019 06:42:47 +0100 (CET)
+Received: from [192.168.1.103] (dyndsl-037-138-239-146.ewe-ip-backbone.de [37.138.239.146])
+        by smtp3.goneo.de (Postfix) with ESMTPSA id 024AA23F854;
+        Tue, 29 Oct 2019 06:42:46 +0100 (CET)
+Subject: Re: [PATCH v2] kernel-doc: rename the kernel-doc directive
+ 'functions' to 'identifiers'
+To:     Changbin Du <changbin.du@gmail.com>,
+        Jani Nikula <jani.nikula@linux.intel.com>
+Cc:     Jonathan Corbet <corbet@lwn.net>, linux-pci@vger.kernel.org,
+        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-mm@kvack.org, linux-crypto@vger.kernel.org,
+        linux-kselftest@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-fpga@vger.kernel.org, linux-usb@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org,
+        Matthew Wilcox <willy@infradead.org>,
+        Thomas Zimmermann <tzimmermann@suse.de>
+References: <20191020131717.28990-1-changbin.du@gmail.com>
+ <20191024121940.1d6a64df@lwn.net> <87woctb9cj.fsf@intel.com>
+ <20191025144802.uixg2crhw6h7gghq@mail.google.com> <87v9s99q9l.fsf@intel.com>
+ <20191029003120.llve32crfw63ovpw@mail.google.com>
+From:   Markus Heiser <markus.heiser@darmarit.de>
+Message-ID: <36c4dcfb-5425-b4bc-a5e9-4fd1458c8385@darmarit.de>
+Date:   Tue, 29 Oct 2019 06:42:46 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.0
 MIME-Version: 1.0
-X-Received: by 2002:a5e:d90c:: with SMTP id n12mr1656385iop.140.1572324361470;
- Mon, 28 Oct 2019 21:46:01 -0700 (PDT)
-Date:   Mon, 28 Oct 2019 21:46:01 -0700
-In-Reply-To: <000000000000fc25a1059602460a@google.com>
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <0000000000000987900596054b0f@google.com>
-Subject: Re: INFO: trying to register non-static key in bond_3ad_update_lacp_rate
-From:   syzbot <syzbot+0d083911ab18b710da71@syzkaller.appspotmail.com>
-To:     a@unstable.cc, alex.aring@gmail.com, allison@lohutok.net,
-        andrew@lunn.ch, andy@greyhouse.net, ap420073@gmail.com,
-        aroulin@cumulusnetworks.com, ast@domdv.de,
-        b.a.t.m.a.n@lists.open-mesh.org, bridge@lists.linux-foundation.org,
-        cleech@redhat.com, daniel@iogearbox.net, davem@davemloft.net,
-        dcaratti@redhat.com, dsa@cumulusnetworks.com, edumazet@google.com,
-        f.fainelli@gmail.com, fw@strlen.de, gregkh@linuxfoundation.org,
-        gustavo@embeddedor.com, gvaradar@cisco.com, haiyangz@microsoft.com,
-        idosch@mellanox.com, info@metux.net, ivan.khoronzhuk@linaro.org,
-        j.vosburgh@gmail.com, j@w1.fi, jakub.kicinski@netronome.com,
-        jhs@mojatatu.com, jiri@mellanox.com, jiri@resnulli.us,
-        johan.hedberg@gmail.com, johannes.berg@intel.com,
-        john.hurley@netronome.com, jwi@linux.ibm.com,
-        kstewart@linuxfoundation.org, kvalo@codeaurora.org,
-        kys@microsoft.com, lariel@mellanox.com, linmiaohe@huawei.com,
-        linux-bluetooth@vger.kernel.org, linux-hams@vger.kernel.org,
-        linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-ppp@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-wpan@vger.kernel.org, liuhangbin@gmail.com,
-        marcel@holtmann.org, mareklindner@neomailbox.ch
-Content-Type: text/plain; charset="UTF-8"; format=flowed; delsp=yes
+In-Reply-To: <20191029003120.llve32crfw63ovpw@mail.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: de-DE
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-syzbot has bisected this bug to:
+Am 29.10.19 um 01:31 schrieb Changbin Du:
+>> But is it, really? I agree with Jon about the distinction between None
+>> and '' being confusing.
+>>
+> Here python is different from C. Both empty string and None are False in python.
+> Note such condition is common in python.
 
-commit ab92d68fc22f9afab480153bd82a20f6e2533769
-Author: Taehee Yoo <ap420073@gmail.com>
-Date:   Mon Oct 21 18:47:51 2019 +0000
+The one is a empty string str(''), its bool('') value is False.
 
-     net: core: add generic lockdep keys
+| >>> type(''), bool('')
+| (<class 'str'>, False)
 
-bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=1467f674e00000
-start commit:   60c1769a Add linux-next specific files for 20191028
-git tree:       linux-next
-final crash:    https://syzkaller.appspot.com/x/report.txt?x=1667f674e00000
-console output: https://syzkaller.appspot.com/x/log.txt?x=1267f674e00000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=cb86688f30db053d
-dashboard link: https://syzkaller.appspot.com/bug?extid=0d083911ab18b710da71
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=15381ee0e00000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=11571570e00000
+The other is a NoneType, its bool(None) value is False.
 
-Reported-by: syzbot+0d083911ab18b710da71@syzkaller.appspotmail.com
-Fixes: ab92d68fc22f ("net: core: add generic lockdep keys")
+| >>> type(None), bool(None)
+| (<class 'NoneType'>, False)
 
-For information about bisection process see: https://goo.gl/tpsmEJ#bisection
+None often used like NULL (pointer). E.g if a function does not give an explicit 
+return value, the returned value is None.
+
+| >>> def foo():
+| ...     pass
+| ...
+| >>> print(foo())
+| None
+
+
+-- Markus --
+
