@@ -2,92 +2,88 @@ Return-Path: <SRS0=eZlD=YX=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91E19CA9EC7
-	for <linux-wireless@archiver.kernel.org>; Wed, 30 Oct 2019 15:08:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AF09CA9EC5
+	for <linux-wireless@archiver.kernel.org>; Wed, 30 Oct 2019 15:13:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6291B20874
-	for <linux-wireless@archiver.kernel.org>; Wed, 30 Oct 2019 15:08:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EEACE2087E
+	for <linux-wireless@archiver.kernel.org>; Wed, 30 Oct 2019 15:13:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Jw6gV1c4";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="GZHtUulv"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="md6Aj/hx";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="olb191fx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727149AbfJ3PIr (ORCPT
+        id S1726804AbfJ3PNY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 30 Oct 2019 11:08:47 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:60552 "EHLO
+        Wed, 30 Oct 2019 11:13:24 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:34210 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726772AbfJ3PIr (ORCPT
+        with ESMTP id S1726461AbfJ3PNY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Oct 2019 11:08:47 -0400
+        Wed, 30 Oct 2019 11:13:24 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id AFFA06119B; Wed, 30 Oct 2019 15:08:44 +0000 (UTC)
+        id 677E561066; Wed, 30 Oct 2019 15:13:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1572448126;
-        bh=t9mKk8row3OjrBOpQ5PdlkOpZwZfNmADOYMWRBEzM1c=;
+        s=default; t=1572448403;
+        bh=bTFoXXHtT54AZpimf/1etutVoG+HS1pIqnZSpiLck8U=;
         h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=Jw6gV1c4t40ucxWxoOiwggEdhCV9wjrLyz5+YECxP2vBr4SO8mhpMUKytFpMuxSc3
-         w4P+LDzwMfujFSnPN2NIlWvnCKJZ4upTGRIFe8R3W8j/r1R1S5LXImRo0rsTvuH7zg
-         qw3Fts13FN44aj170r3yWR19tURQGJUzwb2ZHWgY=
+        b=md6Aj/hxoFY78diGitDe17wdXQhatEzBNAdak5BWSAqd2PmX8TsMCkNr0tRqjSH8U
+         YIK+IxVQciTJsXTyEhc5YqardH39hVN0KOzo5NXeRCxCEFTcje/WakZRFaOVl3BRNN
+         RSb+oiTBRDm+bICfosBT5abIx+/FpcoQhdo9+4xg=
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 9E42661139;
-        Wed, 30 Oct 2019 15:08:43 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id B868661139;
+        Wed, 30 Oct 2019 15:13:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1572448124;
-        bh=t9mKk8row3OjrBOpQ5PdlkOpZwZfNmADOYMWRBEzM1c=;
+        s=default; t=1572448401;
+        bh=bTFoXXHtT54AZpimf/1etutVoG+HS1pIqnZSpiLck8U=;
         h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=GZHtUulvF437o+fFWWewrRyNTxDT3u1+pvfYBrthU60nDyEqPCvqe33tyApYiQVwK
-         bw4vHBEAuGwDiaxY2Ew1qTkGZUpbmXAJ4ilLixKdv3GR8WjBcRVHaC1T4VH4MJUuSO
-         6SElSkWq/DlF2GmJVrmFIi8/YMGsT4sf520T/hcU=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 9E42661139
+        b=olb191fxF1NVukR+GnoM31O3YmwI8GVCLdF03JPkaVIlfLEmVtfqzI+J20Ph0jKzZ
+         fXNrtoKd06qnf4mVCprvmy4ckAWgFDeMBSuckh11R5pu7sePWBgNK+Jzh3tM5OIjcH
+         zb8NcN9/mwEcydtWqy+steITpOUTNjwXIHiJ5jLc=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org B868661139
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v5.4 v2] iwlwifi: fw api: support new API for scan config
- cmd
+Subject: Re: [PATCH] wil6210: add SPDX license identifiers
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20191029154720.26477-1-luca@coelho.fi>
-References: <20191029154720.26477-1-luca@coelho.fi>
-To:     Luca Coelho <luca@coelho.fi>
-Cc:     linux-wireless@vger.kernel.org
+In-Reply-To: <1572283361-22874-1-git-send-email-merez@codeaurora.org>
+References: <1572283361-22874-1-git-send-email-merez@codeaurora.org>
+To:     Maya Erez <merez@codeaurora.org>
+Cc:     Lior David <liord@codeaurora.org>, linux-wireless@vger.kernel.org,
+        wil6210@qti.qualcomm.com, Maya Erez <merez@codeaurora.org>
 User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20191030150846.AFFA06119B@smtp.codeaurora.org>
-Date:   Wed, 30 Oct 2019 15:08:44 +0000 (UTC)
+Message-Id: <20191030151323.677E561066@smtp.codeaurora.org>
+Date:   Wed, 30 Oct 2019 15:13:22 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Luca Coelho <luca@coelho.fi> wrote:
+Maya Erez <merez@codeaurora.org> wrote:
 
-> From: Ayala Beker <ayala.beker@intel.com>
+> From: Lior David <liord@codeaurora.org>
 > 
-> The API was reduced to include only knowledge currently needed by the
-> FW scan logic, the rest is legacy.  Support the new, reduced version.
+> Change all files to add SPDX license identifiers and
+> remove license text.
+> This is only an administrative change, there is no change
+> in actual license or copyright for any file.
 > 
-> Using the old API with newer firmwares (starting from
-> iwlwifi-*-50.ucode, which implements and requires the new API version)
-> causes an assertion failure similar to this one:
-> 
-> [    2.854505] iwlwifi 0000:00:14.3: 0x20000038 | BAD_COMMAND
-> 
-> Signed-off-by: Ayala Beker <ayala.beker@intel.com>
-> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+> Signed-off-by: Lior David <liord@codeaurora.org>
+> Signed-off-by: Maya Erez <merez@codeaurora.org>
 
-Patch applied to wireless-drivers.git, thanks.
+I assume this was supposed to be v2, so dropping.
 
-3d206e6899a0 iwlwifi: fw api: support new API for scan config cmd
+Patch set to Superseded.
 
 -- 
-https://patchwork.kernel.org/patch/11218089/
+https://patchwork.kernel.org/patch/11216171/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
