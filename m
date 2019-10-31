@@ -2,124 +2,103 @@ Return-Path: <SRS0=+7Bs=YY=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A767CA9EC3
-	for <linux-wireless@archiver.kernel.org>; Thu, 31 Oct 2019 10:47:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00085CA9EC3
+	for <linux-wireless@archiver.kernel.org>; Thu, 31 Oct 2019 12:13:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 56E2120862
-	for <linux-wireless@archiver.kernel.org>; Thu, 31 Oct 2019 10:47:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C78FD2080F
+	for <linux-wireless@archiver.kernel.org>; Thu, 31 Oct 2019 12:13:04 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PNa/5ax8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727033AbfJaKrI (ORCPT
+        id S1726897AbfJaMNE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 31 Oct 2019 06:47:08 -0400
-Received: from www74.your-server.de ([213.133.104.74]:50536 "EHLO
-        www74.your-server.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726932AbfJaKrI (ORCPT
+        Thu, 31 Oct 2019 08:13:04 -0400
+Received: from mail-wm1-f65.google.com ([209.85.128.65]:53518 "EHLO
+        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726821AbfJaMNE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 31 Oct 2019 06:47:08 -0400
-X-Greylist: delayed 1020 seconds by postgrey-1.27 at vger.kernel.org; Thu, 31 Oct 2019 06:47:06 EDT
-Received: from sslproxy01.your-server.de ([88.198.220.130])
-        by www74.your-server.de with esmtpsa (TLSv1.2:DHE-RSA-AES256-GCM-SHA384:256)
-        (Exim 4.89_1)
-        (envelope-from <klaus.kusche@computerix.info>)
-        id 1iQ7iP-000089-5u; Thu, 31 Oct 2019 11:30:05 +0100
-Received: from [95.91.84.106] (helo=[192.168.178.28])
-        by sslproxy01.your-server.de with esmtpsa (TLSv1.2:ECDHE-RSA-AES256-GCM-SHA384:256)
-        (Exim 4.89)
-        (envelope-from <klaus.kusche@computerix.info>)
-        id 1iQ7iO-0003RW-Lt; Thu, 31 Oct 2019 11:30:04 +0100
-Subject: PATCH: Change log level of "iwlwifi 0000:6f:00.0: BIOS contains WGDS
- but no WRDS" to "info"
-From:   Klaus Kusche <klaus.kusche@computerix.info>
-To:     linuxwifi@intel.com, johannes.berg@intel.com,
-        emmanuel.grumbach@intel.com, linux-wireless@vger.kernel.org
-References: <dcd58b9b-43d0-a05c-68fe-2f787457f2a4@computerix.info>
-Message-ID: <30e95fb1-96df-b96a-c79e-e35a945ec889@computerix.info>
-Date:   Thu, 31 Oct 2019 11:30:04 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.2.0
-MIME-Version: 1.0
-In-Reply-To: <dcd58b9b-43d0-a05c-68fe-2f787457f2a4@computerix.info>
-Content-Type: text/plain; charset=windows-1252
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Authenticated-Sender: klaus.kusche@computerix.info
-X-Virus-Scanned: Clear (ClamAV 0.101.4/25619/Thu Oct 31 09:55:29 2019)
+        Thu, 31 Oct 2019 08:13:04 -0400
+Received: by mail-wm1-f65.google.com with SMTP id n7so5674720wmc.3
+        for <linux-wireless@vger.kernel.org>; Thu, 31 Oct 2019 05:13:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=xAtVRfhDg48i3Bwmqx792TgOAvBvCbqs6I8oYFPPEXA=;
+        b=PNa/5ax82TvKVdAgHhXJEtvzkLFRPcQgMr5EfIF5LyeSWFSWxfhIt5xyOU6hlCquIe
+         pScK+23M3S1h/she8uoDqsG2JOaVKB0F+gqWnK/UE0roZBPcQ9RIKyQFRgUdzl+CT56r
+         RwP2YUsxz7LGxUZSVM0h7LDV6FqgCP+CNFL79W5vmft40wfTzPSXAgPy2GVoLi2YaVFp
+         wA3jvKbcAr/usUSmiq4jwiBxfM2jNCMc8VT7H/GVK6lfjbNnrem88TdhPe7YcKqCM6mJ
+         hGlYLl592Rx7JkAp2bumikRm1YQtMgB7XRDHcbmGkxtIdGL0ynIxQHvf2kfKmTcczIys
+         DgLg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=xAtVRfhDg48i3Bwmqx792TgOAvBvCbqs6I8oYFPPEXA=;
+        b=PnNqzQzj+R9/YoDUcEKtzCCvZqSwkbf5QQcsnduv3AHP7B0vmuOXQeCBu6jNUClAtg
+         WH5BPmJmhJNKN6O6D5awA0Gj2b1xuMiv+ILJRHtobRkDnReQJKVRrHVgq9weicA1FGcN
+         JfjQu5R5Fm1BdHYCVWfFqCGaUCavJzCpUoLtrZ5ZPBsUDZkPpxW2I/LjZbPcCuVj0WAm
+         enMmciPmHCnfMlqLxQrevidsZ0l+Ma6tje6GHFo72DZrb8AromcNMTqTk9CL2ypeleNb
+         4LfUyevrj6tlrEuiZEp6CMsYJ0dnwBP+h+XXD+F5bG9foaZB685LJmeY/b6U14h94BMM
+         dKmQ==
+X-Gm-Message-State: APjAAAUuABjbOlBA5e9jxq55bIq030aWcGzQGBvHN/53bpjWsVaORNx9
+        N9OXmLfoae2OyXDAaHdmD3JNp4rd
+X-Google-Smtp-Source: APXvYqwJppDou0klFe0dOpPWaQJ14OdMtfTYWGUAx7TFVIU+v6W1pJIqBGZpBvKJ07xr5DY8UUibQA==
+X-Received: by 2002:a1c:750e:: with SMTP id o14mr5211893wmc.28.1572523982121;
+        Thu, 31 Oct 2019 05:13:02 -0700 (PDT)
+Received: from localhost.localdomain ([156.197.16.66])
+        by smtp.googlemail.com with ESMTPSA id n22sm2796856wmk.19.2019.10.31.05.13.00
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 31 Oct 2019 05:13:01 -0700 (PDT)
+From:   Ahmed Zaki <anzaki@gmail.com>
+To:     johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org, Ahmed Zaki <anzaki@gmail.com>
+Subject: [PATCH v2] mac80211: fix insane values that sometimes appear in inactive_time
+Date:   Thu, 31 Oct 2019 06:12:43 -0600
+Message-Id: <20191031121243.27694-1-anzaki@gmail.com>
+X-Mailer: git-send-email 2.17.1
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+In the first 5 minutes after boot (time of INITIAL_JIFFIES),
+ieee80211_sta_last_active() returns zero if last_ack is zero. This
+leads to "inactive time" showing jiffies_to_msecs(jiffies).
 
-Hello again,
+ # iw wlan0 station get fc:ec:da:64:a6:dd
+ Station fc:ec:da:64:a6:dd (on wlan0)
+	inactive time:	4294894049 ms
+	.
+	.
+	connected time:	70 seconds
 
-On 22/10/2019 20:39, Klaus Kusche wrote:
-> Hello,
-> 
-> every time I boot my dell notebook (with Wi-Fi 6 AX200), I get the error message 
-> "iwlwifi 0000:6f:00.0: BIOS contains WGDS but no WRDS".
-> 
-> This is the only message which such a high log level I get while booting,
-> it is the only message which is displayed on all text consoles on boot,
-> and it is the only message which makes my automated logchecker nervous each time.
-> 
-> However, iwlwifi works perfectly fine for wifi in spite of the message
-> (and bluetooth has deliberately been disabled in the bios settings
-> for security reasons),
-> and there is absolutely nothing I could do about the message
-> (I have no influence what dell does in their bios and what they don't).
-> Internet wisdom also says that the message is just annoying and
-> can be safely ignored.
-> 
-> Hence, the message is not an error at all ("error" being defined as
-> "something definitely failed, manual intervention required for correct operation").
-> It does not even qualify as a warning ("warning" being defined as
-> "something is likely to fail, manual checking recommended").
-> 
-> So please set the log level of that message down to "info"
-> (besides, the message text is completely cryptic and uninformative,
-> I still don't know what this message wants to tell me,
-> although I searched the internet).
+Fix by returning last_rx if last_ack == 0.
 
-Discussed this with Mario.Limonciello@dell.com.
-He also wants this to be patched:
+Signed-off-by: Ahmed Zaki <anzaki@gmail.com>
+---
+ net/mac80211/sta_info.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-On 29/10/2019 22:43, Mario.Limonciello@dell.com wrote:
-> Dell Customer Communication - Confidential
-> 
->> -----Original Message-----
->> From: Klaus Kusche <klaus.kusche@computerix.info>
->>...
->> When booting, there is a single kernel message of loglevel error
->> which stands out in red in journalctl
->> and which gets displayed on all text consoles (very annoying):
->>
->> kernel: iwlwifi 0000:6f:00.0: BIOS contains WGDS but no WRDS
-> 
-> If possible, you should probably submit a patch to iwlwifi driver to downgrade this message to
-> debug.  It really isn't useful to many people typically.
-
-So here comes a patch:
-
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c       2019-10-19 09:21:14.541422680 +0200
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c       2019-10-27 14:43:43.990623338 +0100
-@@ -1345,7 +1345,7 @@
-                 * available, issue an error, because we can't use SAR
-                 * Geo without basic SAR.
-                 */
--               IWL_ERR(mvm, "BIOS contains WGDS but no WRDS\n");
-+               IWL_INFO(mvm, "BIOS contains WGDS but no WRDS\n");
-        }
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index bd11fef2139f..428866ff7c0a 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -2457,7 +2457,8 @@ unsigned long ieee80211_sta_last_active(struct sta_info *sta)
+ {
+ 	struct ieee80211_sta_rx_stats *stats = sta_get_last_rx_stats(sta);
  
-        if (ret < 0)
-
-
+-	if (time_after(stats->last_rx, sta->status_stats.last_ack))
++	if (!sta->status_stats.last_ack ||
++		time_after(stats->last_rx, sta->status_stats.last_ack))
+ 		return stats->last_rx;
+ 	return sta->status_stats.last_ack;
+ }
 -- 
-Prof. Dr. Klaus Kusche
-Private address: Rosenberg 41, 07546 Gera, Germany
-+49 365 20413058 klaus.kusche@computerix.info https://www.computerix.info
-Office address: DHGE Gera, Weg der Freundschaft 4, 07546 Gera, Germany
-+49 365 4341 306 klaus.kusche@dhge.de https://www.dhge.de
+2.17.1
+
