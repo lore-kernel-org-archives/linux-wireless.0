@@ -2,51 +2,36 @@ Return-Path: <SRS0=+7Bs=YY=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22C08CA9EC3
-	for <linux-wireless@archiver.kernel.org>; Thu, 31 Oct 2019 10:03:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50E7BCA9ECE
+	for <linux-wireless@archiver.kernel.org>; Thu, 31 Oct 2019 10:37:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E86A020873
-	for <linux-wireless@archiver.kernel.org>; Thu, 31 Oct 2019 10:03:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1572516212;
-	bh=pzit5unwoaiIN6E5PyZAEM/n4wlr/kcb2JmVVdV6kNU=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=C2AaBC9GPICa3vaRr0Iwe8nw+agBFxxRM6oBLYX+V+x7FroXzWYTLqJfRAlkc85fl
-	 GBPnl2NBfy3eUf4ClmTgxsHYp/N4N0qfYTuyUWQ3RAXOVtG+/PyG2RB4Mp39cpwQZ2
-	 PfhU7bt+uQny/S1/4Qgxg2siSvixlwIiZxbD0FRw=
+	by mail.kernel.org (Postfix) with ESMTP id 318922083E
+	for <linux-wireless@archiver.kernel.org>; Thu, 31 Oct 2019 10:37:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726949AbfJaKDb (ORCPT
+        id S1727119AbfJaKh5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 31 Oct 2019 06:03:31 -0400
-Received: from mail.kernel.org ([198.145.29.99]:51926 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726884AbfJaKDa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 31 Oct 2019 06:03:30 -0400
-Received: from localhost.localdomain.com (unknown [176.229.194.15])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 36E1620862;
-        Thu, 31 Oct 2019 10:03:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1572516209;
-        bh=pzit5unwoaiIN6E5PyZAEM/n4wlr/kcb2JmVVdV6kNU=;
-        h=From:To:Cc:Subject:Date:From;
-        b=LHuwJ6KtCcCjCvrRJWa70ayqZoCYofqhzHKi5I77pxtNGeBC1a10Ms7mPfLtL2YxO
-         mqcnM0q4K+bg4d1ap+c42zsykBJkxsxumgVYwoxvK2JwMY91g7rYCzZdgbDMLdhkTQ
-         +lYuAXaRWYOjZJ8gy6b2fnfPOO69Ei2YrhIQ8BC4=
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     nbd@nbd.name
-Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
-        sgruszka@redhat.com
-Subject: [PATCH] mt76: move interface_modes definition in mt76_core module
-Date:   Thu, 31 Oct 2019 11:03:12 +0100
-Message-Id: <551855c98d4c09fff460e2e3c9239a0ac8ee82fc.1572516107.git.lorenzo@kernel.org>
-X-Mailer: git-send-email 2.21.0
+        Thu, 31 Oct 2019 06:37:57 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:52308 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726867AbfJaKh4 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 31 Oct 2019 06:37:56 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.92.2)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1iQ7py-00083L-QP; Thu, 31 Oct 2019 11:37:54 +0100
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     netdev@vger.kernel.org
+Cc:     linux-wireless@vger.kernel.org
+Subject: pull-request: mac80211 2019-10-31
+Date:   Thu, 31 Oct 2019 11:37:42 +0100
+Message-Id: <20191031103743.24923-1-johannes@sipsolutions.net>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -54,94 +39,43 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Move interface modes declaration in common code since now mt76
-chipsets support all modes (NL80211_IFTYPE_STATION, NL80211_IFTYPE_AP,
-NL80211_IFTYPE_MESH_POINT and NL80211_IFTYPE_ADHOC)
+Hi Dave,
 
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
----
- drivers/net/wireless/mediatek/mt76/mac80211.c     | 7 +++++++
- drivers/net/wireless/mediatek/mt76/mt7603/init.c  | 9 ---------
- drivers/net/wireless/mediatek/mt76/mt7615/init.c  | 7 -------
- drivers/net/wireless/mediatek/mt76/mt76x02_util.c | 8 --------
- 4 files changed, 7 insertions(+), 24 deletions(-)
+We have two more fixes, see below.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
-index 17d04ebff996..2003223ff329 100644
---- a/drivers/net/wireless/mediatek/mt76/mac80211.c
-+++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
-@@ -340,6 +340,13 @@ int mt76_register_device(struct mt76_dev *dev, bool vht,
- 	ieee80211_hw_set(hw, SUPPORTS_REORDERING_BUFFER);
- 
- 	wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
-+	wiphy->interface_modes =
-+		BIT(NL80211_IFTYPE_STATION) |
-+		BIT(NL80211_IFTYPE_AP) |
-+#ifdef CONFIG_MAC80211_MESH
-+		BIT(NL80211_IFTYPE_MESH_POINT) |
-+#endif
-+		BIT(NL80211_IFTYPE_ADHOC);
- 
- 	if (dev->cap.has_2ghz) {
- 		ret = mt76_init_sband_2g(dev, rates, n_rates);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/init.c b/drivers/net/wireless/mediatek/mt76/mt7603/init.c
-index 50c6a2828c18..0696dbf28c5b 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7603/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7603/init.c
-@@ -564,16 +564,7 @@ int mt7603_register_device(struct mt7603_dev *dev)
- 		dev->mt76.led_cdev.blink_set = mt7603_led_set_blink;
- 	}
- 
--	wiphy->interface_modes =
--		BIT(NL80211_IFTYPE_STATION) |
--		BIT(NL80211_IFTYPE_AP) |
--#ifdef CONFIG_MAC80211_MESH
--		BIT(NL80211_IFTYPE_MESH_POINT) |
--#endif
--		BIT(NL80211_IFTYPE_ADHOC);
--
- 	wiphy->flags |= WIPHY_FLAG_HAS_CHANNEL_SWITCH;
--
- 	wiphy->reg_notifier = mt7603_regd_notifier;
- 
- 	ret = mt76_register_device(&dev->mt76, true, mt7603_rates,
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/init.c b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
-index 888ca8bbdef0..128a6ee1fa6d 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
-@@ -307,13 +307,6 @@ int mt7615_register_device(struct mt7615_dev *dev)
- 	dev->mt76.antenna_mask = 0xf;
- 	dev->dfs_state = -1;
- 
--	wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
--				 BIT(NL80211_IFTYPE_ADHOC) |
--#ifdef CONFIG_MAC80211_MESH
--				 BIT(NL80211_IFTYPE_MESH_POINT) |
--#endif
--				 BIT(NL80211_IFTYPE_AP);
--
- 	ret = mt76_register_device(&dev->mt76, true, mt7615_rates,
- 				   ARRAY_SIZE(mt7615_rates));
- 	if (ret)
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-index 2ce852caf247..c0500d8f9a67 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-@@ -153,14 +153,6 @@ void mt76x02_init_device(struct mt76x02_dev *dev)
- 	hw->max_rate_tries = 1;
- 	hw->extra_tx_headroom = 2;
- 
--	wiphy->interface_modes =
--		BIT(NL80211_IFTYPE_STATION) |
--		BIT(NL80211_IFTYPE_AP) |
--#ifdef CONFIG_MAC80211_MESH
--		BIT(NL80211_IFTYPE_MESH_POINT) |
--#endif
--		BIT(NL80211_IFTYPE_ADHOC);
--
- 	if (mt76_is_usb(&dev->mt76)) {
- 		hw->extra_tx_headroom += sizeof(struct mt76x02_txwi) +
- 					 MT_DMA_HDR_LEN;
--- 
-2.21.0
+Please pull and let me know if there's any problem.
+
+Thanks,
+johannes
+
+
+
+The following changes since commit 6f74a55d49004df760381df525f14edf018a640f:
+
+  Merge tag 'mlx5-fixes-2019-10-24' of git://git.kernel.org/pub/scm/linux/kernel/git/saeed/linux (2019-10-29 20:59:11 -0700)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-net-2019-10-31
+
+for you to fetch changes up to 1fab1b89e2e8f01204a9c05a39fd0b6411a48593:
+
+  nl80211: fix validation of mesh path nexthop (2019-10-30 10:11:18 +0100)
+
+----------------------------------------------------------------
+Just two fixes:
+ * HT operation is not allowed on channel 14 (Japan only)
+ * netlink policy for nexthop attribute was wrong
+
+----------------------------------------------------------------
+Markus Theil (1):
+      nl80211: fix validation of mesh path nexthop
+
+Masashi Honma (1):
+      nl80211: Disallow setting of HT for channel 14
+
+ net/wireless/chan.c    | 5 +++++
+ net/wireless/nl80211.c | 2 +-
+ net/wireless/util.c    | 3 ++-
+ 3 files changed, 8 insertions(+), 2 deletions(-)
 
