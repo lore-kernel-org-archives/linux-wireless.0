@@ -2,38 +2,40 @@ Return-Path: <SRS0=wpaD=YZ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 201DBCA9ED0
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Nov 2019 12:37:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5F76CA9ECF
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Nov 2019 12:37:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 034F82067D
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 Nov 2019 12:37:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7C1DC217D9
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 Nov 2019 12:37:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730305AbfKAMho (ORCPT
+        id S1730225AbfKAMhn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 1 Nov 2019 08:37:44 -0400
-Received: from szxga04-in.huawei.com ([45.249.212.190]:5687 "EHLO huawei.com"
+        Fri, 1 Nov 2019 08:37:43 -0400
+Received: from szxga04-in.huawei.com ([45.249.212.190]:5688 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727806AbfKAMhn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S1727487AbfKAMhn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 1 Nov 2019 08:37:43 -0400
 Received: from DGGEMS403-HUB.china.huawei.com (unknown [172.30.72.58])
-        by Forcepoint Email with ESMTP id 02B56760E61FCB5E63A1;
+        by Forcepoint Email with ESMTP id 0AB54AB08411281977FE;
         Fri,  1 Nov 2019 20:37:41 +0800 (CST)
 Received: from linux-ibm.site (10.175.102.37) by
  DGGEMS403-HUB.china.huawei.com (10.3.19.203) with Microsoft SMTP Server id
- 14.3.439.0; Fri, 1 Nov 2019 20:37:33 +0800
+ 14.3.439.0; Fri, 1 Nov 2019 20:37:34 +0800
 From:   zhong jiang <zhongjiang@huawei.com>
 To:     <kvalo@codeaurora.org>, <stas.yakovlev@gmail.com>,
         <simon.horman@netronome.com>
 CC:     <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
         <zhongjiang@huawei.com>
-Subject: [PATCH v2 0/3] wireless: remove unneeded variable and return 0
-Date:   Fri, 1 Nov 2019 20:33:38 +0800
-Message-ID: <1572611621-13280-1-git-send-email-zhongjiang@huawei.com>
+Subject: [PATCH v2 1/3] ipw2x00: Remove redundant variable "rc"
+Date:   Fri, 1 Nov 2019 20:33:39 +0800
+Message-ID: <1572611621-13280-2-git-send-email-zhongjiang@huawei.com>
 X-Mailer: git-send-email 1.7.12.4
+In-Reply-To: <1572611621-13280-1-git-send-email-zhongjiang@huawei.com>
+References: <1572611621-13280-1-git-send-email-zhongjiang@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [10.175.102.37]
@@ -43,22 +45,42 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The issue is detected with help of coccinelle.
+local variable "rc" is not used. It is safe to remove and
+There is only one caller of libipw_qos_convert_ac_to_parameters().
+hence make it void
 
-v1 -> v2:
-   libipw_qos_convert_ac_to_parameters() make it void.
+Signed-off-by: zhong jiang <zhongjiang@huawei.com>
+---
+ drivers/net/wireless/intel/ipw2x00/libipw_rx.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-
-zhong jiang (3):
-  ipw2x00: Remove redundant variable "rc"
-  iwlegacy: Remove redundant variable "ret"
-  b43legacy: ASoC: ux500: Remove redundant variable "count"
-
- drivers/net/wireless/broadcom/b43legacy/debugfs.c | 9 +++------
- drivers/net/wireless/intel/ipw2x00/libipw_rx.c    | 4 +---
- drivers/net/wireless/intel/iwlegacy/4965-mac.c    | 3 +--
- 3 files changed, 5 insertions(+), 11 deletions(-)
-
+diff --git a/drivers/net/wireless/intel/ipw2x00/libipw_rx.c b/drivers/net/wireless/intel/ipw2x00/libipw_rx.c
+index 34cfd81..0cb36d1 100644
+--- a/drivers/net/wireless/intel/ipw2x00/libipw_rx.c
++++ b/drivers/net/wireless/intel/ipw2x00/libipw_rx.c
+@@ -999,13 +999,12 @@ static int libipw_read_qos_info_element(struct
+ /*
+  * Write QoS parameters from the ac parameters.
+  */
+-static int libipw_qos_convert_ac_to_parameters(struct
++static void libipw_qos_convert_ac_to_parameters(struct
+ 						  libipw_qos_parameter_info
+ 						  *param_elm, struct
+ 						  libipw_qos_parameters
+ 						  *qos_param)
+ {
+-	int rc = 0;
+ 	int i;
+ 	struct libipw_qos_ac_parameter *ac_params;
+ 	u32 txop;
+@@ -1030,7 +1029,6 @@ static int libipw_qos_convert_ac_to_parameters(struct
+ 		txop = le16_to_cpu(ac_params->tx_op_limit) * 32;
+ 		qos_param->tx_op_limit[i] = cpu_to_le16(txop);
+ 	}
+-	return rc;
+ }
+ 
+ /*
 -- 
 1.7.12.4
 
