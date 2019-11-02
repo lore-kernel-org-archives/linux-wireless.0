@@ -2,86 +2,63 @@ Return-Path: <SRS0=CgQo=Y2=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E39C0CA9ED1
-	for <linux-wireless@archiver.kernel.org>; Sat,  2 Nov 2019 08:59:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1B3CC47E49
+	for <linux-wireless@archiver.kernel.org>; Sat,  2 Nov 2019 09:00:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BC9EF20862
-	for <linux-wireless@archiver.kernel.org>; Sat,  2 Nov 2019 08:59:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A3A31217D9
+	for <linux-wireless@archiver.kernel.org>; Sat,  2 Nov 2019 09:00:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727797AbfKBI7c (ORCPT
+        id S1727797AbfKBJA2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 2 Nov 2019 04:59:32 -0400
-Received: from szxga07-in.huawei.com ([45.249.212.35]:41778 "EHLO huawei.com"
+        Sat, 2 Nov 2019 05:00:28 -0400
+Received: from szxga06-in.huawei.com ([45.249.212.32]:40480 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726999AbfKBI7c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 2 Nov 2019 04:59:32 -0400
-Received: from DGGEMS410-HUB.china.huawei.com (unknown [172.30.72.60])
-        by Forcepoint Email with ESMTP id 4E1B717A9324712E8E4C;
-        Sat,  2 Nov 2019 16:59:27 +0800 (CST)
-Received: from linux-ibm.site (10.175.102.37) by
- DGGEMS410-HUB.china.huawei.com (10.3.19.210) with Microsoft SMTP Server id
- 14.3.439.0; Sat, 2 Nov 2019 16:59:18 +0800
+        id S1726999AbfKBJA2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 2 Nov 2019 05:00:28 -0400
+Received: from DGGEMS412-HUB.china.huawei.com (unknown [172.30.72.60])
+        by Forcepoint Email with ESMTP id 677F7A0B1EA4340F04BC;
+        Sat,  2 Nov 2019 17:00:26 +0800 (CST)
+Received: from [127.0.0.1] (10.133.219.218) by DGGEMS412-HUB.china.huawei.com
+ (10.3.19.212) with Microsoft SMTP Server id 14.3.439.0; Sat, 2 Nov 2019
+ 17:00:25 +0800
+Message-ID: <5DBD45A8.3000701@huawei.com>
+Date:   Sat, 2 Nov 2019 17:00:24 +0800
 From:   zhong jiang <zhongjiang@huawei.com>
-To:     <kvalo@codeaurora.org>, <stas.yakovlev@gmail.com>,
-        <simon.horman@netronome.com>
-CC:     <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <zhongjiang@huawei.com>
-Subject: [PATCH v3 1/2] ipw2x00: Remove redundant variable "rc"
-Date:   Sat, 2 Nov 2019 16:55:21 +0800
-Message-ID: <1572684922-61805-2-git-send-email-zhongjiang@huawei.com>
-X-Mailer: git-send-email 1.7.12.4
-In-Reply-To: <1572684922-61805-1-git-send-email-zhongjiang@huawei.com>
-References: <1572684922-61805-1-git-send-email-zhongjiang@huawei.com>
+User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:12.0) Gecko/20120428 Thunderbird/12.0.1
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.175.102.37]
+To:     Simon Horman <simon.horman@netronome.com>
+CC:     <kvalo@codeaurora.org>, <stas.yakovlev@gmail.com>,
+        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
+Subject: Re: [PATCH v2 0/3] wireless: remove unneeded variable and return
+ 0
+References: <1572611621-13280-1-git-send-email-zhongjiang@huawei.com> <20191101134456.GA5859@netronome.com>
+In-Reply-To: <20191101134456.GA5859@netronome.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.133.219.218]
 X-CFilter-Loop: Reflected
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-local variable "rc" is not used. It is safe to remove and
-There is only one caller of libipw_qos_convert_ac_to_parameters().
-hence make it void
+On 2019/11/1 21:44, Simon Horman wrote:
+> On Fri, Nov 01, 2019 at 08:33:38PM +0800, zhong jiang wrote:
+>> The issue is detected with help of coccinelle.
+>>
+>> v1 -> v2:
+>>    libipw_qos_convert_ac_to_parameters() make it void.
+> Reviewed-by: Simon Horman <simon.horman@netronome.com>
+I am sorry for that.  [PATCH 3/3] is not correct.  its local variable will be used by
+fappend.  hence just remove the patch in v3.
 
-Signed-off-by: zhong jiang <zhongjiang@huawei.com>
----
- drivers/net/wireless/intel/ipw2x00/libipw_rx.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+Thanks,
+zhong jiang
+> .
+>
 
-diff --git a/drivers/net/wireless/intel/ipw2x00/libipw_rx.c b/drivers/net/wireless/intel/ipw2x00/libipw_rx.c
-index 34cfd81..0cb36d1 100644
---- a/drivers/net/wireless/intel/ipw2x00/libipw_rx.c
-+++ b/drivers/net/wireless/intel/ipw2x00/libipw_rx.c
-@@ -999,13 +999,12 @@ static int libipw_read_qos_info_element(struct
- /*
-  * Write QoS parameters from the ac parameters.
-  */
--static int libipw_qos_convert_ac_to_parameters(struct
-+static void libipw_qos_convert_ac_to_parameters(struct
- 						  libipw_qos_parameter_info
- 						  *param_elm, struct
- 						  libipw_qos_parameters
- 						  *qos_param)
- {
--	int rc = 0;
- 	int i;
- 	struct libipw_qos_ac_parameter *ac_params;
- 	u32 txop;
-@@ -1030,7 +1029,6 @@ static int libipw_qos_convert_ac_to_parameters(struct
- 		txop = le16_to_cpu(ac_params->tx_op_limit) * 32;
- 		qos_param->tx_op_limit[i] = cpu_to_le16(txop);
- 	}
--	return rc;
- }
- 
- /*
--- 
-1.7.12.4
 
