@@ -2,63 +2,51 @@ Return-Path: <SRS0=CgQo=Y2=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+X-Spam-Status: No, score=-0.5 required=3.0 tests=FREEMAIL_REPLYTO_END_DIGIT,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1B3CC47E49
-	for <linux-wireless@archiver.kernel.org>; Sat,  2 Nov 2019 09:00:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19BE2CA9EC7
+	for <linux-wireless@archiver.kernel.org>; Sat,  2 Nov 2019 13:44:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A3A31217D9
-	for <linux-wireless@archiver.kernel.org>; Sat,  2 Nov 2019 09:00:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EBE71214AF
+	for <linux-wireless@archiver.kernel.org>; Sat,  2 Nov 2019 13:44:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727797AbfKBJA2 (ORCPT
+        id S1727166AbfKBNoW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 2 Nov 2019 05:00:28 -0400
-Received: from szxga06-in.huawei.com ([45.249.212.32]:40480 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726999AbfKBJA2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 2 Nov 2019 05:00:28 -0400
-Received: from DGGEMS412-HUB.china.huawei.com (unknown [172.30.72.60])
-        by Forcepoint Email with ESMTP id 677F7A0B1EA4340F04BC;
-        Sat,  2 Nov 2019 17:00:26 +0800 (CST)
-Received: from [127.0.0.1] (10.133.219.218) by DGGEMS412-HUB.china.huawei.com
- (10.3.19.212) with Microsoft SMTP Server id 14.3.439.0; Sat, 2 Nov 2019
- 17:00:25 +0800
-Message-ID: <5DBD45A8.3000701@huawei.com>
-Date:   Sat, 2 Nov 2019 17:00:24 +0800
-From:   zhong jiang <zhongjiang@huawei.com>
-User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:12.0) Gecko/20120428 Thunderbird/12.0.1
+        Sat, 2 Nov 2019 09:44:22 -0400
+Received: from [211.53.128.215] ([211.53.128.215]:36679 "EHLO MAIL.isd.co.kr"
+        rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727090AbfKBNoW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 2 Nov 2019 09:44:22 -0400
+X-Greylist: delayed 345 seconds by postgrey-1.27 at vger.kernel.org; Sat, 02 Nov 2019 09:44:21 EDT
+Received: from 192.168.1.163 (217.217.179.17) by MAIL.isd.co.kr (10.10.10.22)
+ with Microsoft SMTP Server id 14.3.123.3; Sat, 2 Nov 2019 22:38:33 +0900
+Date:   Sat, 2 Nov 2019 14:38:21 +0100
+From:   Peter Wong <choimj@isd.co.kr>
+Reply-To: Peter Wong <pw178484@gmail.com>
+To:     <linux-wireless@vger.kernel.org>
+Message-ID: <4052744.38227.1572701912623.JavaMail.cash@webmail.isd.co.kr>
+Subject: Your opportunity
 MIME-Version: 1.0
-To:     Simon Horman <simon.horman@netronome.com>
-CC:     <kvalo@codeaurora.org>, <stas.yakovlev@gmail.com>,
-        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
-Subject: Re: [PATCH v2 0/3] wireless: remove unneeded variable and return
- 0
-References: <1572611621-13280-1-git-send-email-zhongjiang@huawei.com> <20191101134456.GA5859@netronome.com>
-In-Reply-To: <20191101134456.GA5859@netronome.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.133.219.218]
-X-CFilter-Loop: Reflected
+X-Originating-IP: [217.217.179.17]
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2019/11/1 21:44, Simon Horman wrote:
-> On Fri, Nov 01, 2019 at 08:33:38PM +0800, zhong jiang wrote:
->> The issue is detected with help of coccinelle.
->>
->> v1 -> v2:
->>    libipw_qos_convert_ac_to_parameters() make it void.
-> Reviewed-by: Simon Horman <simon.horman@netronome.com>
-I am sorry for that.  [PATCH 3/3] is not correct.  its local variable will be used by
-fappend.  hence just remove the patch in v3.
+Greetings,
 
-Thanks,
-zhong jiang
-> .
->
+Find this mail very confidential. reply for more details
 
+Thanks.
+Peter Wong
+
+
+
+
+----------------------------------------------------
+This email was sent by the shareware version of Postman Professional.
 
