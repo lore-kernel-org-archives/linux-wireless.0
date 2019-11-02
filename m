@@ -7,21 +7,21 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11479CA9ED0
-	for <linux-wireless@archiver.kernel.org>; Sat,  2 Nov 2019 08:59:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E39C0CA9ED1
+	for <linux-wireless@archiver.kernel.org>; Sat,  2 Nov 2019 08:59:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E6A5A21726
+	by mail.kernel.org (Postfix) with ESMTP id BC9EF20862
 	for <linux-wireless@archiver.kernel.org>; Sat,  2 Nov 2019 08:59:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727707AbfKBI7b (ORCPT
+        id S1727797AbfKBI7c (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 2 Nov 2019 04:59:31 -0400
-Received: from szxga07-in.huawei.com ([45.249.212.35]:41774 "EHLO huawei.com"
+        Sat, 2 Nov 2019 04:59:32 -0400
+Received: from szxga07-in.huawei.com ([45.249.212.35]:41778 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727052AbfKBI7b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 2 Nov 2019 04:59:31 -0400
+        id S1726999AbfKBI7c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 2 Nov 2019 04:59:32 -0400
 Received: from DGGEMS410-HUB.china.huawei.com (unknown [172.30.72.60])
-        by Forcepoint Email with ESMTP id 4999FB6C81768D9A4095;
+        by Forcepoint Email with ESMTP id 4E1B717A9324712E8E4C;
         Sat,  2 Nov 2019 16:59:27 +0800 (CST)
 Received: from linux-ibm.site (10.175.102.37) by
  DGGEMS410-HUB.china.huawei.com (10.3.19.210) with Microsoft SMTP Server id
@@ -31,9 +31,9 @@ To:     <kvalo@codeaurora.org>, <stas.yakovlev@gmail.com>,
         <simon.horman@netronome.com>
 CC:     <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
         <zhongjiang@huawei.com>
-Subject: [PATCH v3 2/2] iwlegacy: Remove redundant variable "ret"
-Date:   Sat, 2 Nov 2019 16:55:22 +0800
-Message-ID: <1572684922-61805-3-git-send-email-zhongjiang@huawei.com>
+Subject: [PATCH v3 1/2] ipw2x00: Remove redundant variable "rc"
+Date:   Sat, 2 Nov 2019 16:55:21 +0800
+Message-ID: <1572684922-61805-2-git-send-email-zhongjiang@huawei.com>
 X-Mailer: git-send-email 1.7.12.4
 In-Reply-To: <1572684922-61805-1-git-send-email-zhongjiang@huawei.com>
 References: <1572684922-61805-1-git-send-email-zhongjiang@huawei.com>
@@ -46,35 +46,42 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-local variable "ret" is not used. hence it is safe to remove and
-just return 0.
+local variable "rc" is not used. It is safe to remove and
+There is only one caller of libipw_qos_convert_ac_to_parameters().
+hence make it void
 
 Signed-off-by: zhong jiang <zhongjiang@huawei.com>
 ---
- drivers/net/wireless/intel/iwlegacy/4965-mac.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/net/wireless/intel/ipw2x00/libipw_rx.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlegacy/4965-mac.c b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-index 51fdd7c..3664f56 100644
---- a/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-@@ -3331,7 +3331,6 @@ struct il_mod_params il4965_mod_params = {
- 				 struct ieee80211_key_conf *keyconf, u8 sta_id)
+diff --git a/drivers/net/wireless/intel/ipw2x00/libipw_rx.c b/drivers/net/wireless/intel/ipw2x00/libipw_rx.c
+index 34cfd81..0cb36d1 100644
+--- a/drivers/net/wireless/intel/ipw2x00/libipw_rx.c
++++ b/drivers/net/wireless/intel/ipw2x00/libipw_rx.c
+@@ -999,13 +999,12 @@ static int libipw_read_qos_info_element(struct
+ /*
+  * Write QoS parameters from the ac parameters.
+  */
+-static int libipw_qos_convert_ac_to_parameters(struct
++static void libipw_qos_convert_ac_to_parameters(struct
+ 						  libipw_qos_parameter_info
+ 						  *param_elm, struct
+ 						  libipw_qos_parameters
+ 						  *qos_param)
  {
- 	unsigned long flags;
--	int ret = 0;
- 	__le16 key_flags = 0;
- 
- 	key_flags |= (STA_KEY_FLG_TKIP | STA_KEY_FLG_MAP_KEY_MSK);
-@@ -3368,7 +3367,7 @@ struct il_mod_params il4965_mod_params = {
- 
- 	spin_unlock_irqrestore(&il->sta_lock, flags);
- 
--	return ret;
-+	return 0;
+-	int rc = 0;
+ 	int i;
+ 	struct libipw_qos_ac_parameter *ac_params;
+ 	u32 txop;
+@@ -1030,7 +1029,6 @@ static int libipw_qos_convert_ac_to_parameters(struct
+ 		txop = le16_to_cpu(ac_params->tx_op_limit) * 32;
+ 		qos_param->tx_op_limit[i] = cpu_to_le16(txop);
+ 	}
+-	return rc;
  }
  
- void
+ /*
 -- 
 1.7.12.4
 
