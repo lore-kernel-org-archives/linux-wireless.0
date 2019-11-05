@@ -2,97 +2,166 @@ Return-Path: <SRS0=b/BL=Y5=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D4DFC5DF60
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 Nov 2019 16:08:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F08CCC5DF60
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 Nov 2019 16:55:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0239F214B2
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 Nov 2019 16:08:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BABF721D7C
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 Nov 2019 16:55:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="RfRVT80+"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=c0d3.blue header.i=@c0d3.blue header.b="eKaM8U5a"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390157AbfKEQIS (ORCPT
+        id S2390415AbfKEQzP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 5 Nov 2019 11:08:18 -0500
-Received: from us-smtp-2.mimecast.com ([207.211.31.81]:56410 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S2390125AbfKEQIR (ORCPT
+        Tue, 5 Nov 2019 11:55:15 -0500
+Received: from mail.aperture-lab.de ([138.201.29.205]:57106 "EHLO
+        mail.aperture-lab.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2390060AbfKEQzP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Nov 2019 11:08:17 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1572970096;
+        Tue, 5 Nov 2019 11:55:15 -0500
+X-Greylist: delayed 307 seconds by postgrey-1.27 at vger.kernel.org; Tue, 05 Nov 2019 11:55:14 EST
+From:   =?UTF-8?q?Linus=20L=C3=BCssing?= <linus.luessing@c0d3.blue>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=c0d3.blue; s=2018;
+        t=1572972606;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=BBtC4wx9lH61Ec616GSt/IEqhhvk+uVpWKqDt5axrQY=;
-        b=RfRVT80+s84iHco+vsq2xLqNBhs3zcK/gmeLORc8KJTPTofE2uylYb0CWPRXOvyFmBo2Hp
-        xCPL5v0NL8pWYvl5UT2sFNU+cuoRb126Co5BPthCEDhks6hHIh9G0kWEpx64JDfNMRSC1T
-        tMtIh0EIFvhd1RAMtVFmXgpKD8fh3JI=
-Received: from mail-lj1-f198.google.com (mail-lj1-f198.google.com
- [209.85.208.198]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-249-PFfbHToJMg-xafpEpjeqPw-1; Tue, 05 Nov 2019 11:08:15 -0500
-Received: by mail-lj1-f198.google.com with SMTP id d5so4381444ljj.2
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Nov 2019 08:08:14 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:subject:in-reply-to:references:date
-         :message-id:mime-version:content-transfer-encoding;
-        bh=yScEydMevhBmtDjojQRQxGwIEmJv9l6s1srbmHp5ERM=;
-        b=FsIHs5S+CNxqeF6YAFtjlgvOwXoYtW0QaD7iaf1oRdivUlXlVy9KneUJFAKkviKvwr
-         JlxBoMTo0ru6Q6cZTsThKTEEUIciolUL+cvEokA3YyLXaox7yar2JmaWYvGv6TBk/VFH
-         56CwFySdHqgiuR1CQmLUu+zG1qSdYKcoMXx59iZXJeULxZ7NW1OrCxSyralhfMZeybXB
-         eYK9Ag7Wr9sNsn5buIyEsGR6uMWp38QOdssH7RiY1AD6R3B3ArG/ZvAZ/BC+YrP633U4
-         ufyBaf1GwFx70z5YWvHoWL0NibcWrRlYgYxTvoBm+NFztO8i/lFtU3T1RMSiBT5uQ0uR
-         s5lA==
-X-Gm-Message-State: APjAAAXSQw94CA8qH3COZB+83i4yj4aZjbihUXBjeI8QuuK0q6Z3r/o+
-        avQ/opjZU0qiSFrnKsgSq4n0tWrC29A72fAL+ACe+zL0sH22fvYCABTrqP460Sx63N5wd55MKIk
-        nA7TJnoElNYMPeoGHhLYSlRaTuiE=
-X-Received: by 2002:a2e:9a9a:: with SMTP id p26mr18422445lji.164.1572970093790;
-        Tue, 05 Nov 2019 08:08:13 -0800 (PST)
-X-Google-Smtp-Source: APXvYqxOmHtccuQt8rjZZDgZ0XYw7bjRBvkX0yVh8IrfhQBAsjoqvZROV/wAl5mrIyouL7SbDAqdzA==
-X-Received: by 2002:a2e:9a9a:: with SMTP id p26mr18422438lji.164.1572970093673;
-        Tue, 05 Nov 2019 08:08:13 -0800 (PST)
-Received: from alrua-x1.borgediget.toke.dk ([2a00:7660:6da:443::2])
-        by smtp.gmail.com with ESMTPSA id n1sm3620901ljg.44.2019.11.05.08.08.12
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 05 Nov 2019 08:08:13 -0800 (PST)
-Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
-        id 580F61818B5; Tue,  5 Nov 2019 17:08:12 +0100 (CET)
-From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
-To:     Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] net/fq_impl: Switch to kvmalloc() for memory allocation
-In-Reply-To: <6db5847262bce0691dbe3e0c4df04a4996770e0e.camel@sipsolutions.net>
-References: <20191105154951.546285-1-toke@redhat.com> <0690b548e233fba3758df0ce1eeca1c0803a62c4.camel@sipsolutions.net> <8736f2jp0o.fsf@toke.dk> <6db5847262bce0691dbe3e0c4df04a4996770e0e.camel@sipsolutions.net>
-X-Clacks-Overhead: GNU Terry Pratchett
-Date:   Tue, 05 Nov 2019 17:08:12 +0100
-Message-ID: <87v9ryi9w3.fsf@toke.dk>
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=A4o+TvT+3DU2TuZZZ5Ukyqq2OA7OUrD/LYDeu136xXo=;
+        b=eKaM8U5anTeSSbpbTfQEDsinYFx/8JXx6rrdvuxtR33xfv34H1McpU2Iwpo94Ei+126A8k
+        29w3ftw7jTj4FJwskOhlMV1Zp03RS+V++a4Mui8gAhhEb9LO8ovQoNv8g/82g036QGF4Az
+        ShI3CiJYa+M3ECi5fYdQf5pDH9ymPyn1nTmW+MQ0QtjP30vWFFBF59c6E3GVlsxv6HTN7L
+        Zlm/LxHkvZFQPqJadbLcTUc7URlB++HU/AXmZx4pezgnrJYLegJG8orlBQ3cjT9nqFoZdS
+        dt5YEzAQe87d1oGQ7tfiGnumm99LM3O3hondz8WEB8NJhgW2QDjxhojEprqQBw==
+To:     ath10k@lists.infradead.org
+Cc:     Kalle Valo <kvalo@codeaurora.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        Ben Greear <greearb@candelatech.com>,
+        Simon Wunderlich <sw@simonwunderlich.de>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        =?UTF-8?q?Linus=20L=C3=BCssing?= <ll@simonwunderlich.de>
+Subject: [PATCH net-next] ath10k: fix RX of frames with broken FCS in monitor mode
+Date:   Tue,  5 Nov 2019 17:49:32 +0100
+Message-Id: <20191105164932.11799-1-linus.luessing@c0d3.blue>
 MIME-Version: 1.0
-X-MC-Unique: PFfbHToJMg-xafpEpjeqPw-1
-X-Mimecast-Spam-Score: 0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=c0d3.blue;
+        s=2018; t=1572972606;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=A4o+TvT+3DU2TuZZZ5Ukyqq2OA7OUrD/LYDeu136xXo=;
+        b=auYd3bMkXFMp2tggRSB3WRF+GpXQmASYI8pWe/jIXmf3bEcxf3hI9StYZsZZUo1s8VaG7X
+        WvZ54nJJdXz/5Ewd94d9WU6RykrBkLACXE2m3fxyh/1ofJO8qyvjprMpcbeHzj2SLgqV9M
+        gr0FQa5orGMeMDcRXp4Vkp6dyUqbvRx+5qruQW1wgFTp6v3LP0kV4QB32oyGnYMbdN+lDx
+        HGy1YD6TTtRFMom80NKpPtmu1oraEKZR46Zv/uktMPvcXY+o6omAa6jpvXI0LWS2HVWC1s
+        c4Xd3ApQ2RJp171Vae9iRLNTQUHARIxVdOd6YPoGmiV1A50A4/XoeZXTJ3dJ/g==
+ARC-Seal: i=1; s=2018; d=c0d3.blue; t=1572972606; a=rsa-sha256; cv=none;
+        b=Qv6YtoEdX4ewk6c7mjveFfqd8SPLQ/pcDdgTLLQMxlaED05U4f0kbgHUwWWraP9psScsOV
+        roaGaQ+zFVzlBtJucdQXGBjARGzHED5HdnaJPOjo7Y312D/Xa0Ua0o4pUr4LwQz5NdnIat
+        2aSEhx2MiuANhK5np95uLiVzw2XK4bseBYjuNNjX6IR7NaiTO0AFDYlTevck60z48FuWxb
+        4kM4c3WjdjHoKm2BW8TitacGo6H9CxnTgG1g++6j9iy73r0UoODtQ9usQ/0zXdsPcHNJHD
+        ouF7nomAi3O9LDwqWSNlCwKOeb2JkEPrWFDL3F+MQERU0uCf3cM77zdW5b0sKw==
+ARC-Authentication-Results: i=1;
+        ORIGINATING;
+        auth=pass smtp.auth=linus.luessing@c0d3.blue smtp.mailfrom=linus.luessing@c0d3.blue
+Authentication-Results: ORIGINATING;
+        auth=pass smtp.auth=linus.luessing@c0d3.blue smtp.mailfrom=linus.luessing@c0d3.blue
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+From: Linus Lüssing <ll@simonwunderlich.de>
 
-> On Tue, 2019-11-05 at 16:56 +0100, Toke H=C3=B8iland-J=C3=B8rgensen wrote=
-:
->>=20
->> Oh, right, of course; silly me. Guess I was a bit too trigger-happy on
->> the nice one-character patch ;)
->>=20
->
-> I guess two characters is still pretty good ;)
+So far, frames were forwarded regardless of the FCS correctness leading
+to userspace applications listening on the monitor mode interface to
+receive potentially broken frames, even with the "fcsfail" flag unset.
 
-Hehe, yeah, I can live with that ;)
+By default, with the "fcsfail" flag of a monitor mode interface
+unset, frames with FCS errors should be dropped. With this patch, the
+fcsfail flag is taken into account correctly.
 
--Toke
+Cc: Simon Wunderlich <sw@simonwunderlich.de>
+Signed-off-by: Linus Lüssing <ll@simonwunderlich.de>
+---
+This was tested on an Open Mesh A41 device, featuring a QCA4019. And
+with this firmware:
+
+https://www.candelatech.com/downloads/ath10k-4019-10-4b/firmware-5-ct-full-community-12.bin-lede.011
+
+But from looking at the code it seems that the vanilla ath10k has the
+same issue, therefore submitting it here.
+
+Changelog RFC->v1:
+
+* removed "ar->monitor" check
+* added a debug counter
+
+---
+ drivers/net/wireless/ath/ath10k/core.h   |  1 +
+ drivers/net/wireless/ath/ath10k/debug.c  |  2 ++
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 10 ++++++++++
+ 3 files changed, 13 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 4d7db07db6ba..787065a9eb3f 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -1171,6 +1171,7 @@ struct ath10k {
+ 
+ 	struct {
+ 		/* protected by data_lock */
++		u32 rx_crc_err_drop;
+ 		u32 fw_crash_counter;
+ 		u32 fw_warm_reset_counter;
+ 		u32 fw_cold_reset_counter;
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index bd2b5628f850..5e4cd2966e6f 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -1094,6 +1094,7 @@ static const char ath10k_gstrings_stats[][ETH_GSTRING_LEN] = {
+ 	"d_rts_good",
+ 	"d_tx_power", /* in .5 dbM I think */
+ 	"d_rx_crc_err", /* fcs_bad */
++	"d_rx_crc_err_drop", /* frame with FCS error, dropped late in kernel */
+ 	"d_no_beacon",
+ 	"d_tx_mpdus_queued",
+ 	"d_tx_msdu_queued",
+@@ -1193,6 +1194,7 @@ void ath10k_debug_get_et_stats(struct ieee80211_hw *hw,
+ 	data[i++] = pdev_stats->rts_good;
+ 	data[i++] = pdev_stats->chan_tx_power;
+ 	data[i++] = pdev_stats->fcs_bad;
++	data[i++] = ar->stats.rx_crc_err_drop;
+ 	data[i++] = pdev_stats->no_beacons;
+ 	data[i++] = pdev_stats->mpdu_enqued;
+ 	data[i++] = pdev_stats->msdu_enqued;
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 53f1095de8ff..149728588e80 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -1285,6 +1285,16 @@ static void ath10k_process_rx(struct ath10k *ar, struct sk_buff *skb)
+ 
+ 	status = IEEE80211_SKB_RXCB(skb);
+ 
++	if (!(ar->filter_flags & FIF_FCSFAIL) &&
++	    status->flag & RX_FLAG_FAILED_FCS_CRC) {
++		spin_lock_bh(&ar->data_lock);
++		ar->stats.rx_crc_err_drop++;
++		spin_unlock_bh(&ar->data_lock);
++
++		dev_kfree_skb_any(skb);
++		return;
++	}
++
+ 	ath10k_dbg(ar, ATH10K_DBG_DATA,
+ 		   "rx skb %pK len %u peer %pM %s %s sn %u %s%s%s%s%s%s %srate_idx %u vht_nss %u freq %u band %u flag 0x%x fcs-err %i mic-err %i amsdu-more %i\n",
+ 		   skb,
+-- 
+2.24.0.rc2
 
