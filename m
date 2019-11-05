@@ -7,26 +7,26 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52E56C49EAB
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 Nov 2019 09:51:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 142DEC49EAD
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 Nov 2019 09:51:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1812920869
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 Nov 2019 09:51:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CEFF620869
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 Nov 2019 09:51:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="GenCmDXZ"
+	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="rx9juNw1"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730692AbfKEJvj (ORCPT
+        id S2387866AbfKEJvn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 5 Nov 2019 04:51:39 -0500
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:28039 "EHLO
-        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730583AbfKEJvj (ORCPT
+        Tue, 5 Nov 2019 04:51:43 -0500
+Received: from esa5.microchip.iphmx.com ([216.71.150.166]:55789 "EHLO
+        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730583AbfKEJvn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 Nov 2019 04:51:39 -0500
-Received-SPF: Pass (esa2.microchip.iphmx.com: domain of
+        Tue, 5 Nov 2019 04:51:43 -0500
+Received-SPF: Pass (esa5.microchip.iphmx.com: domain of
   Ajay.Kathat@microchip.com designates 198.175.253.82 as
   permitted sender) identity=mailfrom;
-  client-ip=198.175.253.82; receiver=esa2.microchip.iphmx.com;
+  client-ip=198.175.253.82; receiver=esa5.microchip.iphmx.com;
   envelope-from="Ajay.Kathat@microchip.com";
   x-sender="Ajay.Kathat@microchip.com"; x-conformance=spf_only;
   x-record-type="v=spf1"; x-record-text="v=spf1 mx
@@ -34,38 +34,38 @@ Received-SPF: Pass (esa2.microchip.iphmx.com: domain of
   a:mx1.microchip.iphmx.com a:mx2.microchip.iphmx.com
   include:servers.mcsv.net include:mktomail.com
   include:spf.protection.outlook.com ~all"
-Received-SPF: None (esa2.microchip.iphmx.com: no sender
+Received-SPF: None (esa5.microchip.iphmx.com: no sender
   authenticity information available from domain of
   postmaster@email.microchip.com) identity=helo;
-  client-ip=198.175.253.82; receiver=esa2.microchip.iphmx.com;
+  client-ip=198.175.253.82; receiver=esa5.microchip.iphmx.com;
   envelope-from="Ajay.Kathat@microchip.com";
   x-sender="postmaster@email.microchip.com";
   x-conformance=spf_only
-Authentication-Results: esa2.microchip.iphmx.com; spf=Pass smtp.mailfrom=Ajay.Kathat@microchip.com; spf=None smtp.helo=postmaster@email.microchip.com; dkim=pass (signature verified) header.i=@microchiptechnology.onmicrosoft.com; dmarc=pass (p=none dis=none) d=microchip.com
-IronPort-SDR: 7DVj/YiA6VTqEEYOiOlG3YtrQ0B3zaNMpnGtREsDCgHPo+vu33s8Et5wt2eqidCqs8pgMviKLg
- 0bcksLzMei4ima/lzxvHBXYGvHuOZsnFI0CIsQL+CsePDGVl6ywcTxbd08BuUZCR5jsZe2CekC
- 6tkCaEJpW/pVSMv875WMfQOSa3+zDbP4Nm88N0PzRJYtpWWptn6RCIpjlsDYqgQuvMrkWp6ScB
- cAFkUyN7h9XswDvjxxSzW42VojhoJ7HX8A7n4TwpSBaihIXyBSeaF+VpHxxaN4Rh1IhwgAMQu8
- hsw=
+Authentication-Results: esa5.microchip.iphmx.com; spf=Pass smtp.mailfrom=Ajay.Kathat@microchip.com; spf=None smtp.helo=postmaster@email.microchip.com; dkim=pass (signature verified) header.i=@microchiptechnology.onmicrosoft.com; dmarc=pass (p=none dis=none) d=microchip.com
+IronPort-SDR: v2y9UtyJ+v9xdzPheXDGZRUS8CU9kHO/ieWzqIxOJwkQpaIL4gln1IFQE4TBd4TT6iAT2mykR5
+ Prn0pnEVR4QH/zOXZsAzivBiBMqnZgMvNTbbyviLbMJFxEQzlQeJbAEUVDuZBH+R4EkSQV7ByN
+ oRx2bnNwlaZlkTmw68foqia0iMCn3hgxUKFBlH8gkRVTBByw1IqnQhnLb8RygnPu7fmo9G7DvP
+ rNHsuRxVZn93GRtHDEB7QHmGAA797Ixyjjpq2H0pQI6saSf+YzzOn31Y/sttN4c4X9KWCpcrbP
+ f9M=
 X-IronPort-AV: E=Sophos;i="5.68,270,1569308400"; 
-   d="scan'208";a="55347263"
+   d="scan'208";a="54166709"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa2.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 05 Nov 2019 02:51:37 -0700
-Received: from chn-vm-ex01.mchp-main.com (10.10.85.143) by
- chn-vm-ex02.mchp-main.com (10.10.85.144) with Microsoft SMTP Server
+  by esa5.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 05 Nov 2019 02:51:41 -0700
+Received: from chn-vm-ex03.mchp-main.com (10.10.85.151) by
+ chn-vm-ex04.mchp-main.com (10.10.85.152) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1713.5; Tue, 5 Nov 2019 02:51:28 -0700
+ 15.1.1713.5; Tue, 5 Nov 2019 02:51:35 -0700
 Received: from NAM05-DM3-obe.outbound.protection.outlook.com (10.10.215.89) by
- email.microchip.com (10.10.87.71) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id 15.1.1713.5 via Frontend
- Transport; Tue, 5 Nov 2019 02:51:30 -0700
+ email.microchip.com (10.10.87.152) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5
+ via Frontend Transport; Tue, 5 Nov 2019 02:51:35 -0700
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=korfY6WFAFFsQjWEs+Y9aEf0+0b+DMuMdaniYCDNmg01O8Zexp6RyLMQQ2sIGIouh7L4Vi3WfBiLnHLbYqCS62Er/MwFwiwQfengGapkVRt4FyyS+IvEnX339hqFHhDVLL0j/bemgvkUlDVxVra/lyTwmvuzwDXfP6phG+98Y1YwwCSE6izyXNdfu2dOvk5t9Z5iAk1da3swsCorbDpo/sDvVxGJ2sc2rIvw9q5WAlUhLn34tSNaKyaCdkCTi6+Tp70TaaW5aG9xw5UNj5qYDW93tuyLbtgLXPbi2UEOsupH9hEikoKGfEFJVDPBD2bfmGJZIepFzz/yO3As9aod2A==
+ b=hFuqX1pwz6NyjWUgjFnsT37GTWOaJiuE6V8ZU4jDtiTLtS4skKsa8TfqhmrkeckG0znuDL2bideiK9l0v9qYdh9K5vAZVEOUvMdIRQEpcmZuk2E55YQnpi4XKtoV3GtLqTzcz5EUTDKHvKPHn3JQvmYapE6QP6aOyPmmogRAPtTwQAnqhzZdXGvCpAQMtOMw3PB35T73Oc5w80wrsFtDDIQtzH5EzxUnGv/3cYF+C07nkgR+R2f/8BCP9JofYAf8Egbgkw8bweDZ7Nc2XF5F6PVLUYkgQXoDT95m30LW+pXUFwpv5KM9FT32vinFrUTRFSNNejq36UFjsAo2WnNWsQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ICLvsKY46TwBBTouyaWjAlTXn//H1RlTLAqgSNezE0w=;
- b=A44a2xPohjLr2I9JG7m3DSnCNaA/tkMmwKWHYXmgLXbxQaS2mlvjkGrEx+Ldt70JW7v5myGVobRhjIYDHbxQkmajWFl+yYQStybJzJETu5T5Cv+Hf/pAgeuy64rftWg7Fn+gVIhReoNasunprnQwifxa5VnxVIf2nsTEJd0Y+R6nKuUUgfrJa6DLwOJUxsumI9l6Eoo+rrRRfIT7BpvMNpkTSpIo7Xhs4303EVQb9q4y+kFIIAVYn5NxLD24rJv25vc5BqYIQUR8W+ZmbujrNgqc4CoeaugweU/rjGjm4/yobqjLrl5Q7qFJQ8pY4B4gU1r4gkAfC15LLVIjzcmuog==
+ bh=Bbjw6EEhk7b5MvuVWJsD0hxRoURNRjcJfkWEDT3Aw4E=;
+ b=Zg5jXCxIAgVi8ON3iyhRbAs/1kDh09iUiADZkm0GXu+4pIOpzC+y+Vvg+sBjKiavdMOr2LxjmKcSMv2tglyQyGiTjGyX5ajuenkttNF/oh/LbNooPoL0844PJF4c3+RamUd8MGpRiW7tZt0dOv3//U5goO9G7fh9DQIyJXRD2uPO7BfGXu7RHFpEb22wC0Qysq0W03c3kSJjIyjHoGeTAtyxaXMzX9E4U3XAyc3WvXwPhJAwOlFTwy5/C12xUB5QGmhrhywX2lQKekO/XUJkepyLqzKjkCkIxjGPv0UWzdgLxYpBO4DUGHDovdb97ynWEUPnF6Wdxq+Dj1OUlON3og==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=microchip.com; dmarc=pass action=none
  header.from=microchip.com; dkim=pass header.d=microchip.com; arc=none
@@ -73,28 +73,26 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=microchiptechnology.onmicrosoft.com;
  s=selector2-microchiptechnology-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ICLvsKY46TwBBTouyaWjAlTXn//H1RlTLAqgSNezE0w=;
- b=GenCmDXZjmb/L4BYgkC0cUO7w7s3mRwgmYcl+5JFwZVXmwrW75GtdQJ+A0KIYUv7lneAJdZKyUIEUL4pGiiLcSl5vk4aVAz0zdGX3OpnrAlPfA6Xt4PUIZoDiOgM5oLajQKATlqYg4UZJ2/gqKNYf+hhx3riofpBmpocek7raz0=
+ bh=Bbjw6EEhk7b5MvuVWJsD0hxRoURNRjcJfkWEDT3Aw4E=;
+ b=rx9juNw10xH3cQWY8NypkAqaqrB0YeLUbi9rSwK1Wbi/NDofEhPLRxdfFGQyAKu31K/H1d/B5UmevsRi2H1nrVIh/QtMVESC7LQ/RHzZv6O1RChB856jT/bbVB/wdbHAGIBXM1lqCIWj/7w0G21+UfZx1Zwr7CR27N5l9udQXBY=
 Received: from BN6PR11MB3985.namprd11.prod.outlook.com (10.255.129.78) by
  BN6PR11MB1972.namprd11.prod.outlook.com (10.175.100.149) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2408.24; Tue, 5 Nov 2019 09:51:28 +0000
+ 15.20.2408.24; Tue, 5 Nov 2019 09:51:34 +0000
 Received: from BN6PR11MB3985.namprd11.prod.outlook.com
  ([fe80::5994:7522:979f:5e29]) by BN6PR11MB3985.namprd11.prod.outlook.com
  ([fe80::5994:7522:979f:5e29%7]) with mapi id 15.20.2408.024; Tue, 5 Nov 2019
- 09:51:28 +0000
+ 09:51:34 +0000
 From:   <Ajay.Kathat@microchip.com>
 To:     <linux-wireless@vger.kernel.org>
 CC:     <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
         <Adham.Abozaeid@microchip.com>, <johannes@sipsolutions.net>,
         <Ajay.Kathat@microchip.com>
-Subject: [PATCH 3/6] staging: wilc1000: added 'WILC_' prefix in header guard
- macro
-Thread-Topic: [PATCH 3/6] staging: wilc1000: added 'WILC_' prefix in header
- guard macro
-Thread-Index: AQHVk76YBU8d/Q2rzEitM8uyhib/bw==
-Date:   Tue, 5 Nov 2019 09:51:28 +0000
-Message-ID: <20191105095058.24223-4-ajay.kathat@microchip.com>
+Subject: [PATCH 5/6] staging: wilc1000: added proper spacing for comments
+Thread-Topic: [PATCH 5/6] staging: wilc1000: added proper spacing for comments
+Thread-Index: AQHVk76bJBrmfkaY5U6CWW3A8Q5NZQ==
+Date:   Tue, 5 Nov 2019 09:51:33 +0000
+Message-ID: <20191105095058.24223-6-ajay.kathat@microchip.com>
 References: <20191105095058.24223-1-ajay.kathat@microchip.com>
 In-Reply-To: <20191105095058.24223-1-ajay.kathat@microchip.com>
 Accept-Language: en-US
@@ -108,28 +106,28 @@ x-mailer: git-send-email 2.22.0
 x-ms-exchange-messagesentrepresentingtype: 1
 x-originating-ip: [121.244.27.38]
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 6bfd7fc3-49c8-402b-9c59-08d761d5ba51
+x-ms-office365-filtering-correlation-id: 1e421f66-2ccc-447f-6224-08d761d5bd9d
 x-ms-traffictypediagnostic: BN6PR11MB1972:
 x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <BN6PR11MB1972A5BC86223D5BD5B7539EE37E0@BN6PR11MB1972.namprd11.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:3631;
+x-microsoft-antispam-prvs: <BN6PR11MB197245101246FB3035AB5416E37E0@BN6PR11MB1972.namprd11.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:2887;
 x-forefront-prvs: 0212BDE3BE
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(366004)(396003)(376002)(136003)(346002)(39860400002)(199004)(189003)(6486002)(6436002)(2616005)(36756003)(71190400001)(486006)(186003)(86362001)(76176011)(386003)(14454004)(5640700003)(52116002)(2501003)(6512007)(64756008)(99286004)(6916009)(66446008)(66476007)(66946007)(66556008)(71200400001)(2351001)(26005)(316002)(8936002)(8676002)(50226002)(81166006)(81156014)(102836004)(6506007)(5660300002)(11346002)(1076003)(476003)(107886003)(54906003)(446003)(478600001)(25786009)(2906002)(7736002)(305945005)(4326008)(6116002)(3846002)(256004)(66066001);DIR:OUT;SFP:1101;SCL:1;SRVR:BN6PR11MB1972;H:BN6PR11MB3985.namprd11.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(366004)(396003)(376002)(136003)(346002)(39860400002)(199004)(189003)(6486002)(6436002)(2616005)(36756003)(71190400001)(486006)(186003)(86362001)(76176011)(386003)(14454004)(5640700003)(52116002)(2501003)(6512007)(64756008)(99286004)(6916009)(66446008)(66476007)(66946007)(66556008)(71200400001)(2351001)(26005)(316002)(8936002)(8676002)(50226002)(81166006)(81156014)(102836004)(6506007)(5660300002)(11346002)(1076003)(476003)(107886003)(54906003)(446003)(478600001)(25786009)(2906002)(7736002)(305945005)(4326008)(6116002)(3846002)(256004)(14444005)(66066001);DIR:OUT;SFP:1101;SCL:1;SRVR:BN6PR11MB1972;H:BN6PR11MB3985.namprd11.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
 received-spf: None (protection.outlook.com: microchip.com does not designate
  permitted sender hosts)
 x-ms-exchange-senderadcheck: 1
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: fOykZ74etlwa1O4dy46bnfUasJL8w5l6QeQYd+zVgC+HOhv+cuK48fChUx56ZdOzfpk0T5Sps4tFp865stB5G84Uoe4Jh8oGgZgYLud8/StxK/CYkERU/0PcsRaKYUdF6NKgrt2qsfnG/Y5FMYBAqIvVUGz79E0LeB6djCMsxgP/pTNGhZZ47y1kHDXTPevUmGiRt6Vad9q+QLcZoQ/JGJR1i2jmX/kiyr1MeecRE5l3IuIiNS4WTo3LE6mgIjqNz47ZH+wfRoGBiCnpVy98QP8BSdV9LclgKx2XNfojiFrt02r7wk8V/vb124xLjs+TEw0g7gISRrcwMjtz06AOozjac9dKfIaXddSg+34HcRbEjW8yGfmPJlwMtjZI9QTPCgvP/ftjpwNP57L2oY60DnnRkeFNQgcOpUiCHrm9ek9R0pm4Hbu6XZ2uxHfeVCR4
+x-microsoft-antispam-message-info: kvd6wlnvILy42uZE/cg5v5xqmL8d1TcxdCOTHqk2xAMyYOaf57Jl0/+AQJ7nXwxULcgKKS2pu4lK4pXaTC//oFb7WRUJ2wC9dfUfS9/18VVyaZML0mJ/rX/XfVl8qidG+MpZeQFSUR+Vj9xn+14baMSSCdV4MzHFEPKTlBkCu/L7nnKsTM40XddMfErGcTNMjSktVMiQ/zbZnNMHuvudl4Zf4P7UtRVedebHnJdv1hl67vg95pFD1YMg5Q6DUccfdR3LBN0swDS88Hb8An98+kHfFRIWoIx+8BsqhnxaFSNSNGP1mkOs9I9TDeLp2X2JikSB8SPc43MoX9bByv1PvVKbqmr8+5Qb7ECQmq2zDPRz4zfDgs/ZuaBkNz9FPxrxSfSbRvhD8WjWRkE3WBxzsRt8OShUovsWheECPIf03KTwKuXsQwJYunAL11pQg4xB
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-Network-Message-Id: 6bfd7fc3-49c8-402b-9c59-08d761d5ba51
-X-MS-Exchange-CrossTenant-originalarrivaltime: 05 Nov 2019 09:51:28.0931
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1e421f66-2ccc-447f-6224-08d761d5bd9d
+X-MS-Exchange-CrossTenant-originalarrivaltime: 05 Nov 2019 09:51:33.8387
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 7OBNZcug/DoqEAv25zi4ovwoPz7xfhVQ3Yxz5WMKki/IhlEeQkP9J2+zRqmWnG6MBL6o1ZCA9irjCyxda0FgY575LK5GeJ1+fyNN9qKXCKk=
+X-MS-Exchange-CrossTenant-userprincipalname: nIm0r85//9WPHfH8eCLsVurr/Ufxt06J/9H8G+swAzjIl+dDduuobj7Cr2PvhDwO6RmE/T5RO1MS3aMiJoJ8q5i5eWDJj+0bhgn+IQAr/Tw=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN6PR11MB1972
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
@@ -138,64 +136,152 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ajay Singh <ajay.kathat@microchip.com>
 
-Use 'WILC_' prefix in header guard to follow the proper naming
-convention for macro name.
+Added proper space for the comments and added newline before the
+comments inside a struct.
 
 Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/staging/wilc1000/cfg80211.h | 4 ++--
- drivers/staging/wilc1000/hif.h      | 4 ++--
- drivers/staging/wilc1000/netdev.h   | 4 ++--
- 3 files changed, 6 insertions(+), 6 deletions(-)
+ drivers/staging/wilc1000/mon.c      |  2 +-
+ drivers/staging/wilc1000/netdev.h   | 19 ++++++++++++++-----
+ drivers/staging/wilc1000/wlan.h     |  2 +-
+ drivers/staging/wilc1000/wlan_cfg.c |  2 +-
+ drivers/staging/wilc1000/wlan_if.h  |  8 ++++----
+ 5 files changed, 21 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/cfg80211.h b/drivers/staging/wilc1000=
-/cfg80211.h
-index 05c910baf095..5e5d63f70df2 100644
---- a/drivers/staging/wilc1000/cfg80211.h
-+++ b/drivers/staging/wilc1000/cfg80211.h
-@@ -4,8 +4,8 @@
-  * All rights reserved.
-  */
+diff --git a/drivers/staging/wilc1000/mon.c b/drivers/staging/wilc1000/mon.=
+c
+index 853fe3056a53..48ac33f06f63 100644
+--- a/drivers/staging/wilc1000/mon.c
++++ b/drivers/staging/wilc1000/mon.c
+@@ -220,7 +220,7 @@ struct net_device *wilc_wfi_init_mon_interface(struct w=
+ilc *wl,
+ {
+ 	struct wilc_wfi_mon_priv *priv;
 =20
--#ifndef NM_WFI_CFGOPERATIONS
--#define NM_WFI_CFGOPERATIONS
-+#ifndef WILC_CFG80211_H
-+#define WILC_CFG80211_H
- #include "netdev.h"
-=20
- struct wiphy *wilc_cfg_alloc(void);
-diff --git a/drivers/staging/wilc1000/hif.h b/drivers/staging/wilc1000/hif.=
-h
-index 2defe58ab194..22ee6fffd599 100644
---- a/drivers/staging/wilc1000/hif.h
-+++ b/drivers/staging/wilc1000/hif.h
-@@ -4,8 +4,8 @@
-  * All rights reserved.
-  */
-=20
--#ifndef HOST_INT_H
--#define HOST_INT_H
-+#ifndef WILC_HIF_H
-+#define WILC_HIF_H
- #include <linux/ieee80211.h>
- #include "wlan_if.h"
+-	/*If monitor interface is already initialized, return it*/
++	/* If monitor interface is already initialized, return it */
+ 	if (wl->monitor_dev)
+ 		return wl->monitor_dev;
 =20
 diff --git a/drivers/staging/wilc1000/netdev.h b/drivers/staging/wilc1000/n=
 etdev.h
-index 8bc62ce4f2f7..42e0eb192b86 100644
+index 42e0eb192b86..cd8f0d72caaa 100644
 --- a/drivers/staging/wilc1000/netdev.h
 +++ b/drivers/staging/wilc1000/netdev.h
-@@ -4,8 +4,8 @@
-  * All rights reserved.
-  */
+@@ -60,7 +60,7 @@ struct sta_info {
+ 	u8 sta_associated_bss[WILC_MAX_NUM_STA][ETH_ALEN];
+ };
 =20
--#ifndef WILC_WFI_NETDEVICE
--#define WILC_WFI_NETDEVICE
-+#ifndef WILC_NETDEV_H
-+#define WILC_NETDEV_H
+-/*Parameters needed for host interface for  remaining on channel*/
++/* Parameters needed for host interface for remaining on channel */
+ struct wilc_wfi_p2p_listen_params {
+ 	struct ieee80211_channel *listen_ch;
+ 	u32 listen_duration;
+@@ -145,11 +145,13 @@ struct wilc_priv {
+ 	struct wilc_pmkid_attr pmkid_list;
+ 	u8 wep_key[4][WLAN_KEY_LEN_WEP104];
+ 	u8 wep_key_len[4];
++
+ 	/* The real interface that the monitor is on */
+ 	struct net_device *real_ndev;
+ 	struct wilc_wfi_key *wilc_gtk[WILC_MAX_NUM_STA];
+ 	struct wilc_wfi_key *wilc_ptk[WILC_MAX_NUM_STA];
+ 	u8 wilc_groupkey;
++
+ 	/* mutexes */
+ 	struct mutex scan_req_lock;
+ 	bool p2p_listen_state;
+@@ -224,16 +226,21 @@ struct wilc {
+ 	int close;
+ 	u8 vif_num;
+ 	struct list_head vif_list;
+-	/*protect vif list*/
++
++	/* protect vif list */
+ 	struct mutex vif_mutex;
+ 	struct srcu_struct srcu;
+ 	u8 open_ifcs;
+-	/*protect head of transmit queue*/
++
++	/* protect head of transmit queue */
+ 	struct mutex txq_add_to_head_cs;
+-	/*protect txq_entry_t transmit queue*/
++
++	/* protect txq_entry_t transmit queue */
+ 	spinlock_t txq_spinlock;
+-	/*protect rxq_entry_t receiver queue*/
++
++	/* protect rxq_entry_t receiver queue */
+ 	struct mutex rxq_cs;
++
+ 	/* lock to protect hif access */
+ 	struct mutex hif_cs;
 =20
- #include <linux/tcp.h>
- #include <linux/ieee80211.h>
+@@ -245,6 +252,7 @@ struct wilc {
+ 	struct task_struct *txq_thread;
+=20
+ 	int quit;
++
+ 	/* lock to protect issue of wid command to firmware */
+ 	struct mutex cfg_cmd_lock;
+ 	struct wilc_cfg_frame cfg_frame;
+@@ -271,6 +279,7 @@ struct wilc {
+ 	struct wilc_cfg cfg;
+ 	void *bus_data;
+ 	struct net_device *monitor_dev;
++
+ 	/* deinit lock */
+ 	struct mutex deinit_lock;
+ 	u8 sta_ch;
+diff --git a/drivers/staging/wilc1000/wlan.h b/drivers/staging/wilc1000/wla=
+n.h
+index 7469fa47d588..1f6957cf2e9c 100644
+--- a/drivers/staging/wilc1000/wlan.h
++++ b/drivers/staging/wilc1000/wlan.h
+@@ -190,7 +190,7 @@
+=20
+ #define ENABLE_RX_VMM		(SEL_VMM_TBL1 | EN_VMM)
+ #define ENABLE_TX_VMM		(SEL_VMM_TBL0 | EN_VMM)
+-/*time for expiring the completion of cfg packets*/
++/* time for expiring the completion of cfg packets */
+ #define WILC_CFG_PKTS_TIMEOUT	msecs_to_jiffies(2000)
+=20
+ #define IS_MANAGMEMENT		0x100
+diff --git a/drivers/staging/wilc1000/wlan_cfg.c b/drivers/staging/wilc1000=
+/wlan_cfg.c
+index 904f84077ff7..c5b1678c7b5e 100644
+--- a/drivers/staging/wilc1000/wlan_cfg.c
++++ b/drivers/staging/wilc1000/wlan_cfg.c
+@@ -378,7 +378,7 @@ void wilc_wlan_cfg_indicate_rx(struct wilc *wilc, u8 *f=
+rame, int size,
+ 		wilc_wlan_parse_info_frame(wilc, frame);
+ 		rsp->type =3D WILC_CFG_RSP_STATUS;
+ 		rsp->seq_no =3D msg_id;
+-		/*call host interface info parse as well*/
++		/* call host interface info parse as well */
+ 		wilc_gnrl_async_info_received(wilc, frame - 4, size + 4);
+ 		break;
+=20
+diff --git a/drivers/staging/wilc1000/wlan_if.h b/drivers/staging/wilc1000/=
+wlan_if.h
+index 70eac586f80c..7c7ee66c35f5 100644
+--- a/drivers/staging/wilc1000/wlan_if.h
++++ b/drivers/staging/wilc1000/wlan_if.h
+@@ -750,10 +750,10 @@ enum {
+ 	WID_REMOVE_KEY			=3D 0x301E,
+ 	WID_ASSOC_REQ_INFO		=3D 0x301F,
+ 	WID_ASSOC_RES_INFO		=3D 0x3020,
+-	WID_MANUFACTURER		=3D 0x3026, /*Added for CAPI tool */
+-	WID_MODEL_NAME			=3D 0x3027, /*Added for CAPI tool */
+-	WID_MODEL_NUM			=3D 0x3028, /*Added for CAPI tool */
+-	WID_DEVICE_NAME			=3D 0x3029, /*Added for CAPI tool */
++	WID_MANUFACTURER		=3D 0x3026, /* Added for CAPI tool */
++	WID_MODEL_NAME			=3D 0x3027, /* Added for CAPI tool */
++	WID_MODEL_NUM			=3D 0x3028, /* Added for CAPI tool */
++	WID_DEVICE_NAME			=3D 0x3029, /* Added for CAPI tool */
+=20
+ 	/* NMAC String WID list */
+ 	WID_SET_OPERATION_MODE		=3D 0x3079,
 --=20
 2.22.0
 
