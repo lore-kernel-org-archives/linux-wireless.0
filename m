@@ -4,44 +4,44 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 307E6C5DF61
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Nov 2019 10:32:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3717FFC6197
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Nov 2019 10:32:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EEB422085B
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Nov 2019 10:32:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 01C882178F
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Nov 2019 10:32:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=goldelico.com header.i=@goldelico.com header.b="KqlFBmFe"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=goldelico.com header.i=@goldelico.com header.b="TOBqmHWe"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388449AbfKGKcP (ORCPT
+        id S2388074AbfKGKbW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 7 Nov 2019 05:32:15 -0500
-Received: from mo4-p04-ob.smtp.rzone.de ([85.215.255.124]:20298 "EHLO
-        mo4-p04-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387796AbfKGKbX (ORCPT
+        Thu, 7 Nov 2019 05:31:22 -0500
+Received: from mo4-p03-ob.smtp.rzone.de ([85.215.255.102]:16799 "EHLO
+        mo4-p03-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728183AbfKGKbV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Nov 2019 05:31:23 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1573122680;
+        Thu, 7 Nov 2019 05:31:21 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1573122677;
         s=strato-dkim-0002; d=goldelico.com;
         h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
         X-RZG-CLASS-ID:X-RZG-AUTH:From:Subject:Sender;
-        bh=IlCRjv0CTyLkVn2wwwsmH6O8lEqmq9Ui0QvF+uYgs+E=;
-        b=KqlFBmFeyylH5lFRJAur66h4jD6eh9/q9XidKY7YOW1LurwlYqEyxvBc7D4DBzz3QY
-        8Xcykm88Kd0wQ7QZ5LdRDDxXDv5qJWre6W180WmSL8VKXT81A2LH5zFF8UxmmsOmXhGW
-        yTiS2tIp3F0hCsvLxk8jde1YP4oQ2t2BQNgf8QpXow92t1HaH6rJVT9MAXiP3SOb5l8h
-        tPZmuhzwdkFHqT3yUw1wA7w2Z94pEdWYf+FLnl/fHTXwHtE2TeGdk6rI+F7yg6pb8hkZ
-        JHoSxmlxlEVLsKzMWhXAsRDHjyOrtdW3ur6aHbcIOdPJXbulddWBs3YHPKuuZWIgyRqc
-        5kAA==
+        bh=ASNuvd7V/uA02cC5zcYDFG836H7FsX/F4dttej/eQB0=;
+        b=TOBqmHWefpaPzm/8r1qQes+FBS362X+aU3/lyfS8zxVP5G9G+iM2+a8YvCdrqNxdt6
+        kskhqm07PaHHRAchJXav08lmWMNfWt2DcQKvcO71/PI1ryoXLt82rETXmVTX5N6SgAFP
+        TKoNBQTgUgquwIt5wWdJYO5g9onhJNE8ioG0PLzQhQS1C7iML2NoUVR5sICN+z1/Rnc5
+        Hf3NwrHTwPTD5jEid+RBTVT39gmZTFJPMO+8xNDXDUzJ5SCushOGUpi0HJqQ6qZNdG3P
+        UIG9NxUwUrgmH0+mxZYdOa31mFaZl0hgvXyQDz5I9lotggsAe2y2qUSwiSjBTlt3KgqC
+        h9YQ==
 X-RZG-AUTH: ":JGIXVUS7cutRB/49FwqZ7WcJeFKiMhflhwDubTJ9o1OAA2UNf2M7PR5/L9P0"
 X-RZG-CLASS-ID: mo00
 Received: from iMac.fritz.box
         by smtp.strato.de (RZmta 44.29.0 DYNA|AUTH)
-        with ESMTPSA id L09db3vA7AUsdS2
+        with ESMTPSA id L09db3vA7AUndRs
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (curve secp521r1 with 521 ECDH bits, eq. 15360 bits RSA))
         (Client did not present a certificate);
-        Thu, 7 Nov 2019 11:30:54 +0100 (CET)
+        Thu, 7 Nov 2019 11:30:49 +0100 (CET)
 From:   "H. Nikolaus Schaller" <hns@goldelico.com>
 To:     =?UTF-8?q?Beno=C3=AEt=20Cousson?= <bcousson@baylibre.com>,
         Tony Lindgren <tony@atomide.com>,
@@ -69,9 +69,9 @@ Cc:     linux-omap@vger.kernel.org, devicetree@vger.kernel.org,
         linux-mmc@vger.kernel.org, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org, letux-kernel@openphoenux.org,
         kernel@pyra-handheld.com, stable@vger.kernel.org
-Subject: [PATCH v3 09/12] mmc: sdio: fix wl1251 vendor id
-Date:   Thu,  7 Nov 2019 11:30:42 +0100
-Message-Id: <e3342a0118feb492a2e2af57956093511232f1d6.1573122644.git.hns@goldelico.com>
+Subject: [PATCH v3 03/12] ARM: dts: pandora-common: define wl1251 as child node of mmc3
+Date:   Thu,  7 Nov 2019 11:30:36 +0100
+Message-Id: <bd14b481105b21a0c1882a1ea34281893233db31.1573122644.git.hns@goldelico.com>
 X-Mailer: git-send-email 2.23.0
 In-Reply-To: <cover.1573122644.git.hns@goldelico.com>
 References: <cover.1573122644.git.hns@goldelico.com>
@@ -82,37 +82,77 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-v4.11-rc1 did introduce a patch series that rearranged the
-sdio quirks into a header file. Unfortunately this did forget
-to handle SDIO_VENDOR_ID_TI differently between wl1251 and
-wl1271 with the result that although the wl1251 was found on
-the sdio bus, the firmware did not load any more and there was
-no interface registration.
+Since v4.7 the dma initialization requires that there is a
+device tree property for "rx" and "tx" channels which is
+not provided by the pdata-quirks initialization.
 
-This patch defines separate constants to be used by sdio quirks
-and drivers.
+By conversion of the mmc3 setup to device tree this will
+finally allows to remove the OpenPandora wlan specific omap3
+data-quirks.
 
-Fixes: 884f38607897 ("mmc: core: move some sdio IDs out of quirks file")
+Fixes: 81eef6ca9201 ("mmc: omap_hsmmc: Use dma_request_chan() for requesting DMA channel")
 
 Signed-off-by: H. Nikolaus Schaller <hns@goldelico.com>
-Cc: <stable@vger.kernel.org> # 4.11.0
+Cc: <stable@vger.kernel.org> # 4.7.0
 ---
- include/linux/mmc/sdio_ids.h | 2 ++
- 1 file changed, 2 insertions(+)
+ arch/arm/boot/dts/omap3-pandora-common.dtsi | 36 +++++++++++++++++++--
+ 1 file changed, 34 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/mmc/sdio_ids.h b/include/linux/mmc/sdio_ids.h
-index d1a5d5df02f5..08b25c02b5a1 100644
---- a/include/linux/mmc/sdio_ids.h
-+++ b/include/linux/mmc/sdio_ids.h
-@@ -71,6 +71,8 @@
+diff --git a/arch/arm/boot/dts/omap3-pandora-common.dtsi b/arch/arm/boot/dts/omap3-pandora-common.dtsi
+index ec5891718ae6..150d5be42d27 100644
+--- a/arch/arm/boot/dts/omap3-pandora-common.dtsi
++++ b/arch/arm/boot/dts/omap3-pandora-common.dtsi
+@@ -226,6 +226,17 @@
+ 		gpio = <&gpio6 4 GPIO_ACTIVE_HIGH>;	/* GPIO_164 */
+ 	};
  
- #define SDIO_VENDOR_ID_TI			0x0097
- #define SDIO_DEVICE_ID_TI_WL1271		0x4076
-+#define SDIO_VENDOR_ID_TI_WL1251		0x104c
-+#define SDIO_DEVICE_ID_TI_WL1251		0x9066
++	/* wl1251 wifi+bt module */
++	wlan_en: fixed-regulator-wg7210_en {
++		compatible = "regulator-fixed";
++		regulator-name = "vwlan";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <1800000>;
++		startup-delay-us = <50000>;
++		enable-active-high;
++		gpio = <&gpio1 23 GPIO_ACTIVE_HIGH>;
++	};
++
+ 	/* wg7210 (wifi+bt module) 32k clock buffer */
+ 	wg7210_32k: fixed-regulator-wg7210_32k {
+ 		compatible = "regulator-fixed";
+@@ -522,9 +533,30 @@
+ 	/*wp-gpios = <&gpio4 31 GPIO_ACTIVE_HIGH>;*/	/* GPIO_127 */
+ };
  
- #define SDIO_VENDOR_ID_STE			0x0020
- #define SDIO_DEVICE_ID_STE_CW1200		0x2280
+-/* mmc3 is probed using pdata-quirks to pass wl1251 card data */
+ &mmc3 {
+-	status = "disabled";
++	vmmc-supply = <&wlan_en>;
++
++	bus-width = <4>;
++	non-removable;
++	ti,non-removable;
++	cap-power-off-card;
++
++	pinctrl-names = "default";
++	pinctrl-0 = <&mmc3_pins>;
++
++	#address-cells = <1>;
++	#size-cells = <0>;
++
++	wlan: wifi@1 {
++		compatible = "ti,wl1251";
++
++		reg = <1>;
++
++		interrupt-parent = <&gpio1>;
++		interrupts = <21 IRQ_TYPE_LEVEL_HIGH>;	/* GPIO_21 */
++
++		ti,wl1251-has-eeprom;
++	};
+ };
+ 
+ /* bluetooth*/
 -- 
 2.23.0
 
