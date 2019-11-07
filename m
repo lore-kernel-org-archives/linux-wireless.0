@@ -2,68 +2,121 @@ Return-Path: <SRS0=sGVr=Y7=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F3A3C5DF61
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Nov 2019 11:16:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50564C5DF60
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Nov 2019 11:51:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 040272187F
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Nov 2019 11:16:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1A26A20673
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Nov 2019 11:51:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388482AbfKGLQR (ORCPT
+        id S2388156AbfKGLv5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 7 Nov 2019 06:16:17 -0500
-Received: from rtits2.realtek.com ([211.75.126.72]:43299 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388178AbfKGLQP (ORCPT
+        Thu, 7 Nov 2019 06:51:57 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:55138 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727178AbfKGLv5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Nov 2019 06:16:15 -0500
-Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID xA7BG7TT012861, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (RTITCASV01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id xA7BG7TT012861
-        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
-        Thu, 7 Nov 2019 19:16:07 +0800
-Received: from localhost.localdomain (172.21.68.126) by
- RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
- 14.3.468.0; Thu, 7 Nov 2019 19:16:06 +0800
-From:   <yhchuang@realtek.com>
-To:     <kvalo@codeaurora.org>
-CC:     <linux-wireless@vger.kernel.org>, <briannorris@chromium.org>
-Subject: [PATCH 0/4] rtw88: enable PCI CLKREQ and ASPM
-Date:   Thu, 7 Nov 2019 19:15:59 +0800
-Message-ID: <20191107111603.12317-1-yhchuang@realtek.com>
-X-Mailer: git-send-email 2.17.1
+        Thu, 7 Nov 2019 06:51:57 -0500
+Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
+        by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.92)
+        (envelope-from <luca@coelho.fi>)
+        id 1iSgKR-0000wr-3W; Thu, 07 Nov 2019 13:51:55 +0200
+From:   Luca Coelho <luca@coelho.fi>
+To:     kvalo@codeaurora.org
+Cc:     linux-wireless@vger.kernel.org
+Date:   Thu,  7 Nov 2019 13:51:47 +0200
+Message-Id: <20191107115149.10709-1-luca@coelho.fi>
+X-Mailer: git-send-email 2.24.0.rc1
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [172.21.68.126]
+Content-Transfer-Encoding: 8bit
+Subject: [PATCH v5.4 1/3] iwlwifi: pcie: don't consider IV len in A-MSDU
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+From: Mordechay Goodstein <mordechay.goodstein@intel.com>
 
-This set enables PCI CLKREQ and ASPM for power save. Basically
-they should be enabled through PCI configuration space, but
-for some reasons (see comments in pci.c), they are disabled by
-default. So driver requires to check the configuration space
-and then enable them properly.
+From gen2 PN is totally offloaded to hardware (also the space for the
+IV isn't part of the skb).  As you can see in mvm/mac80211.c:3545, the
+MAC for cipher types CCMP/GCMP doesn't set
+IEEE80211_KEY_FLAG_PUT_IV_SPACE for gen2 NICs.
 
-Yan-Hsuan Chuang (4):
-  rtw88: pci: use macros to access PCI DBI/MDIO registers
-  rtw88: pci: use for loop instead of while loop for DBI/MDIO
-  rtw88: pci: enable CLKREQ function if host supports it
-  rtw88: allows to enable/disable HCI link PS mechanism
+This causes all the AMSDU data to be corrupted with cipher enabled.
 
- drivers/net/wireless/realtek/rtw88/hci.h |   6 +
- drivers/net/wireless/realtek/rtw88/pci.c | 158 ++++++++++++++++++++---
- drivers/net/wireless/realtek/rtw88/pci.h |  16 +++
- drivers/net/wireless/realtek/rtw88/ps.c  |   6 +
- 4 files changed, 168 insertions(+), 18 deletions(-)
+Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ .../net/wireless/intel/iwlwifi/pcie/tx-gen2.c | 20 +++++++------------
+ 1 file changed, 7 insertions(+), 13 deletions(-)
 
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+index 8894027429d6..d80f71f82a6d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+@@ -251,27 +251,23 @@ static int iwl_pcie_gen2_build_amsdu(struct iwl_trans *trans,
+ 	struct ieee80211_hdr *hdr = (void *)skb->data;
+ 	unsigned int snap_ip_tcp_hdrlen, ip_hdrlen, total_len, hdr_room;
+ 	unsigned int mss = skb_shinfo(skb)->gso_size;
+-	u16 length, iv_len, amsdu_pad;
++	u16 length, amsdu_pad;
+ 	u8 *start_hdr;
+ 	struct iwl_tso_hdr_page *hdr_page;
+ 	struct page **page_ptr;
+ 	struct tso_t tso;
+ 
+-	/* if the packet is protected, then it must be CCMP or GCMP */
+-	iv_len = ieee80211_has_protected(hdr->frame_control) ?
+-		IEEE80211_CCMP_HDR_LEN : 0;
+-
+ 	trace_iwlwifi_dev_tx(trans->dev, skb, tfd, sizeof(*tfd),
+ 			     &dev_cmd->hdr, start_len, 0);
+ 
+ 	ip_hdrlen = skb_transport_header(skb) - skb_network_header(skb);
+ 	snap_ip_tcp_hdrlen = 8 + ip_hdrlen + tcp_hdrlen(skb);
+-	total_len = skb->len - snap_ip_tcp_hdrlen - hdr_len - iv_len;
++	total_len = skb->len - snap_ip_tcp_hdrlen - hdr_len;
+ 	amsdu_pad = 0;
+ 
+ 	/* total amount of header we may need for this A-MSDU */
+ 	hdr_room = DIV_ROUND_UP(total_len, mss) *
+-		(3 + snap_ip_tcp_hdrlen + sizeof(struct ethhdr)) + iv_len;
++		(3 + snap_ip_tcp_hdrlen + sizeof(struct ethhdr));
+ 
+ 	/* Our device supports 9 segments at most, it will fit in 1 page */
+ 	hdr_page = get_page_hdr(trans, hdr_room);
+@@ -282,14 +278,12 @@ static int iwl_pcie_gen2_build_amsdu(struct iwl_trans *trans,
+ 	start_hdr = hdr_page->pos;
+ 	page_ptr = (void *)((u8 *)skb->cb + trans_pcie->page_offs);
+ 	*page_ptr = hdr_page->page;
+-	memcpy(hdr_page->pos, skb->data + hdr_len, iv_len);
+-	hdr_page->pos += iv_len;
+ 
+ 	/*
+-	 * Pull the ieee80211 header + IV to be able to use TSO core,
++	 * Pull the ieee80211 header to be able to use TSO core,
+ 	 * we will restore it for the tx_status flow.
+ 	 */
+-	skb_pull(skb, hdr_len + iv_len);
++	skb_pull(skb, hdr_len);
+ 
+ 	/*
+ 	 * Remove the length of all the headers that we don't actually
+@@ -364,8 +358,8 @@ static int iwl_pcie_gen2_build_amsdu(struct iwl_trans *trans,
+ 		}
+ 	}
+ 
+-	/* re -add the WiFi header and IV */
+-	skb_push(skb, hdr_len + iv_len);
++	/* re -add the WiFi header */
++	skb_push(skb, hdr_len);
+ 
+ 	return 0;
+ 
 -- 
-2.17.1
+2.24.0.rc1
 
