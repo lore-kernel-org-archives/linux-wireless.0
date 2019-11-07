@@ -4,77 +4,58 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0267C5DF60
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Nov 2019 10:33:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F04EC5DF61
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Nov 2019 10:51:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7B82D2178F
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Nov 2019 10:33:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0403E21882
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Nov 2019 10:51:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=goldelico.com header.i=@goldelico.com header.b="rWAeG7mt"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="KnCq1uPs";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="PCoQ9Yan"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387856AbfKGKbV (ORCPT
+        id S2387638AbfKGKvD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 7 Nov 2019 05:31:21 -0500
-Received: from mo4-p02-ob.smtp.rzone.de ([85.215.255.81]:28016 "EHLO
-        mo4-p02-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1733278AbfKGKbU (ORCPT
+        Thu, 7 Nov 2019 05:51:03 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:58056 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727528AbfKGKvD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Nov 2019 05:31:20 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1573122677;
-        s=strato-dkim-0002; d=goldelico.com;
-        h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
-        X-RZG-CLASS-ID:X-RZG-AUTH:From:Subject:Sender;
-        bh=LLIeK8S6G1SDMrMu+3CtmiOGIPjPL6uN+44MEpfUPE8=;
-        b=rWAeG7mtelo0nbRpImYik96vj49i6AudO/40NwcUJoz5SOIk/abtRphr8yvcbPkYDp
-        2HT7h6h0+zEwS6sdOcyUGXUgxXdWDP9UqOnMNh0O2bxQjYvOYy943D3IGFhx9ZlM9FHA
-        Pu/3vDl8yx8hmvrjAx64ke3cR9k0OZXcD5Xx6WyaPWzHYLsxfVNh0hYG5ps0sMX7pzKV
-        m5uq8PiI77pCI5DhNrApt1WGlHbLw6CbZFZaAfIQd1aUhaM75SfDjpyPTz/da9zS0pEq
-        4p+VEtkCTzwdoVWHQ+fCoHe5KhS/lYc5wrWGnxA5lEHH4gS0+HhzyahhWnK4S0or8jES
-        Xypw==
-X-RZG-AUTH: ":JGIXVUS7cutRB/49FwqZ7WcJeFKiMhflhwDubTJ9o1OAA2UNf2M7PR5/L9P0"
-X-RZG-CLASS-ID: mo00
-Received: from iMac.fritz.box
-        by smtp.strato.de (RZmta 44.29.0 DYNA|AUTH)
-        with ESMTPSA id L09db3vA7AUmdRp
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (curve secp521r1 with 521 ECDH bits, eq. 15360 bits RSA))
-        (Client did not present a certificate);
-        Thu, 7 Nov 2019 11:30:48 +0100 (CET)
-From:   "H. Nikolaus Schaller" <hns@goldelico.com>
-To:     =?UTF-8?q?Beno=C3=AEt=20Cousson?= <bcousson@baylibre.com>,
-        Tony Lindgren <tony@atomide.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Russell King <linux@armlinux.org.uk>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Mike Rapoport <rppt@linux.ibm.com>,
-        David Sterba <dsterba@suse.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Petr Mladek <pmladek@suse.com>,
-        Sakari Ailus <sakari.ailus@linux.intel.com>,
-        "H. Nikolaus Schaller" <hns@goldelico.com>,
-        Kefeng Wang <wangkefeng.wang@huawei.com>,
-        Yangtao Li <tiny.windzz@gmail.com>,
-        Alexios Zavras <alexios.zavras@intel.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Allison Randal <allison@lohutok.net>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        John Stultz <john.stultz@linaro.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc:     linux-omap@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-mmc@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, letux-kernel@openphoenux.org,
-        kernel@pyra-handheld.com
-Subject: [PATCH v3 01/12] Documentation: dt: wireless: update wl1251 for sdio
-Date:   Thu,  7 Nov 2019 11:30:34 +0100
-Message-Id: <17b12e91c878dcb74160e3df5f88bc8a9e3f7fce.1573122644.git.hns@goldelico.com>
+        Thu, 7 Nov 2019 05:51:03 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 7A93E60A1B; Thu,  7 Nov 2019 10:51:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1573123861;
+        bh=LOcMY5sQJkRQiah+/yf73QQL0fTF1BGHLYaI6N12Bgg=;
+        h=From:To:Cc:Subject:Date:From;
+        b=KnCq1uPsh3ILruKaxqMdjmsieSqfjCFhziitN9PfDFucqSOQjzvWtk2VD5Eoo+360
+         tJFBXGkugiAtOWKpm7vKdgqBE48CxAqiBFBkWnw+2GTIeAemRaH0/qp6DU7OKBQXS3
+         /tmVfpoa5wXHeuu2gXzltgr5n7PT4Wt2BU6Gpo1I=
+Received: from wgong-HP-Z240-SFF-Workstation.qca.qualcomm.com (unknown [180.166.53.21])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: wgong@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 798AC60721;
+        Thu,  7 Nov 2019 10:50:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1573123860;
+        bh=LOcMY5sQJkRQiah+/yf73QQL0fTF1BGHLYaI6N12Bgg=;
+        h=From:To:Cc:Subject:Date:From;
+        b=PCoQ9Yan1bpiE8cxerM4/u+yQ4ITZzTL6T3aUx+J5uWEzywstjNMnQI/3yCWNXDc2
+         TMNIqKYD/TItF3aF2T9r/5VKYkBfd3SHP5/qWnLsdVfBG1+htR1oc98Vgzl9ap2YkZ
+         WLnV+3EKjuNI5PDVbQROH8bqoBsEYFOvBefrQ+VM=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 798AC60721
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=wgong@codeaurora.org
+From:   Wen Gong <wgong@codeaurora.org>
+To:     ath10k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org
+Subject: [PATCH] ath10k: add NL80211_FEATURE_ND_RANDOM_MAC_ADDR for NLO
+Date:   Thu,  7 Nov 2019 18:50:47 +0800
+Message-Id: <20191107105047.24084-1-wgong@codeaurora.org>
 X-Mailer: git-send-email 2.23.0
-In-Reply-To: <cover.1573122644.git.hns@goldelico.com>
-References: <cover.1573122644.git.hns@goldelico.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -82,50 +63,34 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The standard method for sdio devices connected to
-an sdio interface is to define them as a child node
-like we can see with wlcore.
+Add NL80211_FEATURE_ND_RANDOM_MAC_ADDR for NLO will enable the random
+mac address for netdetect case.
+iw command:
+iw phy0 wowlan enable net-detect net-detect
+randomize=AA:7B:A1:AC:B2:41/FF:FF:FF:FF:FF:FF interval 5000 delay 30
+freqs 2412 matches ssid foo.
+After suspend, DUT will send probe request with mac AA:7B:A1:AC:B2:41.
 
-Signed-off-by: H. Nikolaus Schaller <hns@goldelico.com>
-Acked-by: Kalle Valo <kvalo@codeaurora.org>
+Tested with QCA6174 SDIO with firmware
+WLAN.RMH.4.4.1-00029.
+
+Signed-off-by: Wen Gong <wgong@codeaurora.org>
 ---
- .../bindings/net/wireless/ti,wl1251.txt       | 26 +++++++++++++++++++
- 1 file changed, 26 insertions(+)
+ drivers/net/wireless/ath/ath10k/mac.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt b/Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt
-index bb2fcde6f7ff..f38950560982 100644
---- a/Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt
-+++ b/Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt
-@@ -35,3 +35,29 @@ Examples:
- 		ti,power-gpio = <&gpio3 23 GPIO_ACTIVE_HIGH>; /* 87 */
- 	};
- };
-+
-+&mmc3 {
-+	vmmc-supply = <&wlan_en>;
-+
-+	bus-width = <4>;
-+	non-removable;
-+	ti,non-removable;
-+	cap-power-off-card;
-+
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&mmc3_pins>;
-+
-+	#address-cells = <1>;
-+	#size-cells = <0>;
-+
-+	wlan: wifi@1 {
-+		compatible = "ti,wl1251";
-+
-+		reg = <1>;
-+
-+		interrupt-parent = <&gpio1>;
-+		interrupts = <21 IRQ_TYPE_LEVEL_HIGH>;	/* GPIO_21 */
-+
-+		ti,wl1251-has-eeprom;
-+	};
-+};
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index e8bdb2ba9b18..753a6a174106 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -8911,6 +8911,7 @@ int ath10k_mac_register(struct ath10k *ar)
+ 			WMI_PNO_MAX_SCHED_SCAN_PLAN_INT;
+ 		ar->hw->wiphy->max_sched_scan_plan_iterations =
+ 			WMI_PNO_MAX_SCHED_SCAN_PLAN_ITRNS;
++		ar->hw->wiphy->features |= NL80211_FEATURE_ND_RANDOM_MAC_ADDR;
+ 	}
+ 
+ 	ar->hw->vif_data_size = sizeof(struct ath10k_vif);
 -- 
 2.23.0
 
