@@ -6,116 +6,81 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50564C5DF60
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Nov 2019 11:51:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B702C5DF61
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Nov 2019 11:51:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1A26A20673
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Nov 2019 11:51:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 345E92067B
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Nov 2019 11:51:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388156AbfKGLv5 (ORCPT
+        id S2388304AbfKGLv6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 7 Nov 2019 06:51:57 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:55138 "EHLO
+        Thu, 7 Nov 2019 06:51:58 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:55150 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727178AbfKGLv5 (ORCPT
+        with ESMTP id S1727178AbfKGLv6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Nov 2019 06:51:57 -0500
+        Thu, 7 Nov 2019 06:51:58 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1iSgKR-0000wr-3W; Thu, 07 Nov 2019 13:51:55 +0200
+        id 1iSgKS-0000wr-RC; Thu, 07 Nov 2019 13:51:57 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Thu,  7 Nov 2019 13:51:47 +0200
-Message-Id: <20191107115149.10709-1-luca@coelho.fi>
+Date:   Thu,  7 Nov 2019 13:51:49 +0200
+Message-Id: <20191107115149.10709-3-luca@coelho.fi>
 X-Mailer: git-send-email 2.24.0.rc1
+In-Reply-To: <20191107115149.10709-1-luca@coelho.fi>
+References: <20191107115149.10709-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH v5.4 1/3] iwlwifi: pcie: don't consider IV len in A-MSDU
+Subject: [PATCH v5.4 3/3] iwlwifi: check kasprintf() return value
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Mordechay Goodstein <mordechay.goodstein@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-From gen2 PN is totally offloaded to hardware (also the space for the
-IV isn't part of the skb).  As you can see in mvm/mac80211.c:3545, the
-MAC for cipher types CCMP/GCMP doesn't set
-IEEE80211_KEY_FLAG_PUT_IV_SPACE for gen2 NICs.
+kasprintf() can fail, we should check the return value.
 
-This causes all the AMSDU data to be corrupted with cipher enabled.
-
-Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
+Fixes: 5ed540aecc2a ("iwlwifi: use mac80211 throughput trigger")
+Fixes: 8ca151b568b6 ("iwlwifi: add the MVM driver")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../net/wireless/intel/iwlwifi/pcie/tx-gen2.c | 20 +++++++------------
- 1 file changed, 7 insertions(+), 13 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/dvm/led.c | 3 +++
+ drivers/net/wireless/intel/iwlwifi/mvm/led.c | 3 +++
+ 2 files changed, 6 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-index 8894027429d6..d80f71f82a6d 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-@@ -251,27 +251,23 @@ static int iwl_pcie_gen2_build_amsdu(struct iwl_trans *trans,
- 	struct ieee80211_hdr *hdr = (void *)skb->data;
- 	unsigned int snap_ip_tcp_hdrlen, ip_hdrlen, total_len, hdr_room;
- 	unsigned int mss = skb_shinfo(skb)->gso_size;
--	u16 length, iv_len, amsdu_pad;
-+	u16 length, amsdu_pad;
- 	u8 *start_hdr;
- 	struct iwl_tso_hdr_page *hdr_page;
- 	struct page **page_ptr;
- 	struct tso_t tso;
+diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/led.c b/drivers/net/wireless/intel/iwlwifi/dvm/led.c
+index dd387aba3317..e8a4d604b910 100644
+--- a/drivers/net/wireless/intel/iwlwifi/dvm/led.c
++++ b/drivers/net/wireless/intel/iwlwifi/dvm/led.c
+@@ -171,6 +171,9 @@ void iwl_leds_init(struct iwl_priv *priv)
  
--	/* if the packet is protected, then it must be CCMP or GCMP */
--	iv_len = ieee80211_has_protected(hdr->frame_control) ?
--		IEEE80211_CCMP_HDR_LEN : 0;
--
- 	trace_iwlwifi_dev_tx(trans->dev, skb, tfd, sizeof(*tfd),
- 			     &dev_cmd->hdr, start_len, 0);
+ 	priv->led.name = kasprintf(GFP_KERNEL, "%s-led",
+ 				   wiphy_name(priv->hw->wiphy));
++	if (!priv->led.name)
++		return;
++
+ 	priv->led.brightness_set = iwl_led_brightness_set;
+ 	priv->led.blink_set = iwl_led_blink_set;
+ 	priv->led.max_brightness = 1;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/led.c b/drivers/net/wireless/intel/iwlwifi/mvm/led.c
+index d104da9170ca..72c4b2b8399d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/led.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/led.c
+@@ -129,6 +129,9 @@ int iwl_mvm_leds_init(struct iwl_mvm *mvm)
  
- 	ip_hdrlen = skb_transport_header(skb) - skb_network_header(skb);
- 	snap_ip_tcp_hdrlen = 8 + ip_hdrlen + tcp_hdrlen(skb);
--	total_len = skb->len - snap_ip_tcp_hdrlen - hdr_len - iv_len;
-+	total_len = skb->len - snap_ip_tcp_hdrlen - hdr_len;
- 	amsdu_pad = 0;
- 
- 	/* total amount of header we may need for this A-MSDU */
- 	hdr_room = DIV_ROUND_UP(total_len, mss) *
--		(3 + snap_ip_tcp_hdrlen + sizeof(struct ethhdr)) + iv_len;
-+		(3 + snap_ip_tcp_hdrlen + sizeof(struct ethhdr));
- 
- 	/* Our device supports 9 segments at most, it will fit in 1 page */
- 	hdr_page = get_page_hdr(trans, hdr_room);
-@@ -282,14 +278,12 @@ static int iwl_pcie_gen2_build_amsdu(struct iwl_trans *trans,
- 	start_hdr = hdr_page->pos;
- 	page_ptr = (void *)((u8 *)skb->cb + trans_pcie->page_offs);
- 	*page_ptr = hdr_page->page;
--	memcpy(hdr_page->pos, skb->data + hdr_len, iv_len);
--	hdr_page->pos += iv_len;
- 
- 	/*
--	 * Pull the ieee80211 header + IV to be able to use TSO core,
-+	 * Pull the ieee80211 header to be able to use TSO core,
- 	 * we will restore it for the tx_status flow.
- 	 */
--	skb_pull(skb, hdr_len + iv_len);
-+	skb_pull(skb, hdr_len);
- 
- 	/*
- 	 * Remove the length of all the headers that we don't actually
-@@ -364,8 +358,8 @@ static int iwl_pcie_gen2_build_amsdu(struct iwl_trans *trans,
- 		}
- 	}
- 
--	/* re -add the WiFi header and IV */
--	skb_push(skb, hdr_len + iv_len);
-+	/* re -add the WiFi header */
-+	skb_push(skb, hdr_len);
- 
- 	return 0;
+ 	mvm->led.name = kasprintf(GFP_KERNEL, "%s-led",
+ 				   wiphy_name(mvm->hw->wiphy));
++	if (!mvm->led.name)
++		return -ENOMEM;
++
+ 	mvm->led.brightness_set = iwl_led_brightness_set;
+ 	mvm->led.max_brightness = 1;
  
 -- 
 2.24.0.rc1
