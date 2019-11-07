@@ -2,175 +2,106 @@ Return-Path: <SRS0=sGVr=Y7=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.4 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_IN_DEF_DKIM_WL autolearn=ham
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8466CC5DF60
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Nov 2019 06:14:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F7F4C5DF60
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Nov 2019 09:31:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4F295218AE
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 Nov 2019 06:14:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 15364214D8
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 Nov 2019 09:31:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Pfr4O/UF"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="pIYnpNmR";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="DCjFZHi4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726282AbfKGGOf (ORCPT
+        id S1727643AbfKGJb2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 7 Nov 2019 01:14:35 -0500
-Received: from mail-lj1-f196.google.com ([209.85.208.196]:42632 "EHLO
-        mail-lj1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725938AbfKGGOf (ORCPT
+        Thu, 7 Nov 2019 04:31:28 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:47612 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727415AbfKGJb2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 Nov 2019 01:14:35 -0500
-Received: by mail-lj1-f196.google.com with SMTP id n5so851020ljc.9
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Nov 2019 22:14:33 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=G20uDCnZ3VggElG4QPQIueyfFp9elwSxdclEXe5q4wI=;
-        b=Pfr4O/UFKdu1PstiJc5UkY5CxZVKh1mQyDEUnzFkBFC36EJnrfqe3p8x/jEhdnN6SD
-         ovz0YB2wHd5vKFez+AL9kEqfC7CmhiWdQMUPI/675Aam8MGpaElHbf+bJQjuBmlkNIM/
-         MECzG6CXNrhdeW5zfg7BH8XAcRGgbfVs2DJr0HhpldDVjyM64qAtH3oLCReaZEeyQ7Jz
-         o052OkpraQz92DWJjimWTjtVqABhXgmduCv8trSbCbof6udAu1dCndCmkigiGbQboFPH
-         R85rfBwd1rk9MOip3TRuyCciD2jVqa3mqyEZ1sOKnPHQGhE6DEy7Bym46JP5vdwFs1iP
-         4EAQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=G20uDCnZ3VggElG4QPQIueyfFp9elwSxdclEXe5q4wI=;
-        b=tgiekmsKqlm6giUo3BEd8SnQbRCqxKykAV5NRvBBwu3RgZEOTSiK2fXcWxnp4APqpQ
-         C6La43MKgjpwqKhsD8nnd1cRKs+Snpk2MBXUtEQLax0ZqS6RmXl6mJJulgl5XuSJr42/
-         2cUm4nffIqPXTQZrQtpTsDmS//ZkKrUwQMgjeak3FX1TZZOsla5rMZn6q3QoGD9tJOK2
-         RMLt0RzW5g2coI+z6cMSEmlahhW90a1Zlx6yQr31QGNWZ5KFSkgzlsT76wozjB4Z7vWt
-         7TYX5HfZQsfMGWW+VPXKsReQOXqstiyRznKGf32kncRP2hC2jPF0C2hv1nueGQ4QJ47W
-         uB3Q==
-X-Gm-Message-State: APjAAAVlWqrdHqQT+88P0O5ZKLwt7bGD+8ddyvVqh+d0SEQ6DcSM7jm8
-        xvtZYeek1plW7XlqnhpfuPhUyqmDdVg275sNcc1yCw==
-X-Google-Smtp-Source: APXvYqysDCGa4md3DJKlaj1XmpADyCPv3/2tOdV7mFSIVBTUCjOtcAW5LEDFojFZhMnhdYazOBoH+jLACx6BhWt3znk=
-X-Received: by 2002:a2e:9ad8:: with SMTP id p24mr961356ljj.114.1573107272596;
- Wed, 06 Nov 2019 22:14:32 -0800 (PST)
+        Thu, 7 Nov 2019 04:31:28 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id E6786607C3; Thu,  7 Nov 2019 09:31:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1573119087;
+        bh=mqtpqHY18ivGiFB5+qIy1kwckL/kg/AIykdO52D3w1o=;
+        h=From:To:Cc:Subject:Date:From;
+        b=pIYnpNmR2Snb3K9ymxslj1cZntblGxVZ6spBg/uTBsUTKuxZ2OlBeX7X6SrDbdhOR
+         uS2Z8t75JeFbDhysWmcEOZh6dZWI4AJ3kum4SdyACUV/e71fOHuXPVA5gSBykP0tCH
+         XhpPJHWVgV4rdkKjW4jX0oHZv6Jnb6Gt2Fg3kDCQ=
+Received: from wgong-HP-Z240-SFF-Workstation.qca.qualcomm.com (unknown [180.166.53.21])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: wgong@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 4166960300;
+        Thu,  7 Nov 2019 09:31:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1573119086;
+        bh=mqtpqHY18ivGiFB5+qIy1kwckL/kg/AIykdO52D3w1o=;
+        h=From:To:Cc:Subject:Date:From;
+        b=DCjFZHi46F3yAca4xMBV3UpL4lZlMGLWtadylxkAy47Igd1IIgzI2s7G2Fr0d3qUy
+         BW84AfN1dFgfGxFciehgiscfkjcMzoWJRmtiuYA99mjxZOIAKUccQCqo19SC28Ig/U
+         trV/HXCGFHW673QSXw86lzUtuJC2uMSkbN5zTyYo=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 4166960300
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=wgong@codeaurora.org
+From:   Wen Gong <wgong@codeaurora.org>
+To:     ath10k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org
+Subject: [PATCH] ath10k: correct the tlv len of ath10k_wmi_tlv_op_gen_config_pno_start
+Date:   Thu,  7 Nov 2019 17:30:31 +0800
+Message-Id: <20191107093031.24131-1-wgong@codeaurora.org>
+X-Mailer: git-send-email 2.23.0
 MIME-Version: 1.0
-References: <157182473951.150713.7978051149956899705.stgit@toke.dk>
-In-Reply-To: <157182473951.150713.7978051149956899705.stgit@toke.dk>
-From:   Kan Yan <kyan@google.com>
-Date:   Wed, 6 Nov 2019 22:14:20 -0800
-Message-ID: <CA+iem5s6jDNR+yA21UB_zJiZeVxix_QaO6RYw6sN69j2859zFw@mail.gmail.com>
-Subject: Re: [PATCH v6 0/4] Add Airtime Queue Limits (AQL) to mac80211
-To:     =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@redhat.com>
-Cc:     Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org,
-        Make-Wifi-fast <make-wifi-fast@lists.bufferbloat.net>,
-        ath10k@lists.infradead.org, John Crispin <john@phrozen.org>,
-        Lorenzo Bianconi <lorenzo@kernel.org>,
-        Felix Fietkau <nbd@nbd.name>,
-        Rajkumar Manoharan <rmanohar@codeaurora.org>,
-        Kevin Hayes <kevinhayes@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Patchset v6 works for me with ath10k driver.  AQL does its job as
-expected and tests show very significant reduction in latency in
-congested environment. The txq stuck issue in patchset v4 got fixed.
+the tlv len is set to the total len of the wmi cmd, it will trigger
+firmware crash, correct the tlv len.
 
-However, the device's total pending airtime count still underflows
-sometimes. Even though it doesn't cause apparent side effect, there is
-some issue with the pending airtime update and needs further
-debugging.
+Tested with QCA6174 SDIO with firmware
+WLAN.RMH.4.4.1-00017-QCARMSWP-1 and QCA6174
+PCIE with firmware WLAN.RM.4.4.1-00110-QCARMSWPZ-1.
 
-Regards,
-Kan
+Fixes: ce834e280f2f875 ("ath10k: support NET_DETECT WoWLAN feature")
+Signed-off-by: Wen Gong <wgong@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index 69a1ec53df29..7b358484940e 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -3707,6 +3707,7 @@ ath10k_wmi_tlv_op_gen_config_pno_start(struct ath10k *ar,
+ 	struct wmi_tlv *tlv;
+ 	struct sk_buff *skb;
+ 	__le32 *channel_list;
++	u16 tlv_len;
+ 	size_t len;
+ 	void *ptr;
+ 	u32 i;
+@@ -3764,10 +3765,12 @@ ath10k_wmi_tlv_op_gen_config_pno_start(struct ath10k *ar,
+ 	/* nlo_configured_parameters(nlo_list) */
+ 	cmd->no_of_ssids = __cpu_to_le32(min_t(u8, pno->uc_networks_count,
+ 					       WMI_NLO_MAX_SSIDS));
++	tlv_len = __le32_to_cpu(cmd->no_of_ssids) *
++		sizeof(struct nlo_configured_parameters);
+ 
+ 	tlv = ptr;
+ 	tlv->tag = __cpu_to_le16(WMI_TLV_TAG_ARRAY_STRUCT);
+-	tlv->len = __cpu_to_le16(len);
++	tlv->len = __cpu_to_le16(tlv_len);
+ 
+ 	ptr += sizeof(*tlv);
+ 	nlo_list = ptr;
+-- 
+2.23.0
 
-On Wed, Oct 23, 2019 at 2:59 AM Toke H=C3=B8iland-J=C3=B8rgensen <toke@redh=
-at.com> wrote:
->
-> This series is a first attempt at porting the Airtime Queue Limits concep=
-t from
-> the out-of-tree ath10k implementation[0] to mac80211. This version takes =
-Kan's
-> patch to do the throttling in mac80211, and replaces the driver API with =
-the
-> mechanism from the previous version of my series, which instead calculate=
-d the
-> expected airtime at dequeue time inside mac80211, storing it in the SKB c=
-b
-> field.
->
-> This series also imports Felix' airtime calculation code from mt76 into
-> mac80211, adjusting the API so it can be used from TX dequeue, by extract=
-ing the
-> latest TX rate from the tx_stats structure kept for each station.
->
-> As before, I've only compile tested this (lacking the proper hardware to =
-do more
-> testing). So I'm hoping someone with a proper testing setup can take the =
-whole
-> thing for a spin... :)
->
-> The series is also available in my git repo here:
-> https://git.kernel.org/pub/scm/linux/kernel/git/toke/linux.git/log/?h=3Dm=
-ac80211-aql-06
->
-> Changelog:
->
-> v6:
->   - Fix sta lookup in ieee80211_report_used_skb().
->   - Move call to ieee80211_sta_update_pending_airtime() to a bit later in
->     __ieee80211_tx_status()
-> v5:
->   - Add missing export of ieee80211_calc_rx_airtime() and make
->     ieee80211_calc_tx_airtime_rate() static (kbuildbot).
->   - Use skb_get_queue_mapping() to get the AC from the skb.
->   - Take basic rate configuration for the BSS into account when calculati=
-ng
->     multicast rate.
-> v4:
->   - Fix calculation that clamps the maximum airtime to fit into 10 bits
->   - Incorporate Rich Brown's nits for the commit message in Kan's patch
->   - Add fewer local variables to ieee80211_tx_dequeue()
-> v3:
->   - Move the tx_time_est field so it's shared with ack_frame_id, and use =
-units
->     of 4us for the value stored in it.
->   - Move the addition of the Ethernet header size into ieee80211_calc_exp=
-ected_tx_airtime()
-> v2:
->   - Integrate Kan's approach to airtime throttling.
->   - Hopefully fix the cb struct alignment on big-endian architectures.
->
-> ---
->
-> Kan Yan (1):
->       mac80211: Implement Airtime-based Queue Limit (AQL)
->
-> Toke H=C3=B8iland-J=C3=B8rgensen (3):
->       mac80211: Shrink the size of ack_frame_id to make room for tx_time_=
-est
->       mac80211: Import airtime calculation code from mt76
->       mac80211: Use Airtime-based Queue Limits (AQL) on packet dequeue
->
->
->  include/net/cfg80211.h     |    7 +
->  include/net/mac80211.h     |   45 +++++
->  net/mac80211/Makefile      |    3
->  net/mac80211/airtime.c     |  390 ++++++++++++++++++++++++++++++++++++++=
-++++++
->  net/mac80211/cfg.c         |    2
->  net/mac80211/debugfs.c     |   78 +++++++++
->  net/mac80211/debugfs_sta.c |   43 ++++-
->  net/mac80211/ieee80211_i.h |    8 +
->  net/mac80211/main.c        |    9 +
->  net/mac80211/sta_info.c    |   32 ++++
->  net/mac80211/sta_info.h    |    8 +
->  net/mac80211/status.c      |   33 ++++
->  net/mac80211/tx.c          |   69 +++++++-
->  13 files changed, 709 insertions(+), 18 deletions(-)
->  create mode 100644 net/mac80211/airtime.c
->
