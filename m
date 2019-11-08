@@ -4,52 +4,50 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B03E7FC6196
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 11:38:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A20C2C5DF60
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 11:39:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7CB0C20869
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 11:38:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 788EC21D7E
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 11:39:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573213104;
-	bh=DWeebrJx8H6xViZvK61SrP4XsgVD2r/OoVtegmbXWEs=;
+	s=default; t=1573213149;
+	bh=JT53lHzlxTCvHdD2h1AKBQEq+cdCUIcoomU7kVIRX94=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=1WEg+D2VE6sF4iFe9Xu0aCtOZSZW++NSLwt5OOWHOe90wSmbQzlkUlBcg9T568tlQ
-	 rcpMTJa7vYAth40VKMsenZgZ8NjFpv/qgkNpASV3A97aLActOY6iL1F8Yx9P0dmS2i
-	 tQRXXz2pW9KduS37PjpN5bT/DrC8OjCeIUnp8Wng=
+	b=X1yMxdsv6bkJ/tLw1/Q0fsauDtq9nX29ZOJK1yixMo26nienMJff5P4ASSivAYXQ1
+	 fK4+0NRao8czfric/M8HXkk8mEM9WyKghE2QqMut4J68W0RvKcpee/I2XnaP+fek9r
+	 yQ/DvUD0ef+UyhyAwH4EYeZhwOG7Nb5QxolttGbw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732540AbfKHLiX (ORCPT
+        id S1733094AbfKHLjI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Nov 2019 06:38:23 -0500
-Received: from mail.kernel.org ([198.145.29.99]:51280 "EHLO mail.kernel.org"
+        Fri, 8 Nov 2019 06:39:08 -0500
+Received: from mail.kernel.org ([198.145.29.99]:52044 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732499AbfKHLiW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Nov 2019 06:38:22 -0500
+        id S1733053AbfKHLjH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 8 Nov 2019 06:39:07 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 647EA222C2;
-        Fri,  8 Nov 2019 11:38:20 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id E5A0120869;
+        Fri,  8 Nov 2019 11:39:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573213101;
-        bh=DWeebrJx8H6xViZvK61SrP4XsgVD2r/OoVtegmbXWEs=;
+        s=default; t=1573213146;
+        bh=JT53lHzlxTCvHdD2h1AKBQEq+cdCUIcoomU7kVIRX94=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ahVc+eFTfO4RMuAXD4vSR7UF9Bcd+9f3PeU188QHveSo0YyNMQuD437kUtnjm0BwE
-         T3O4hwDzv3mqTjTVPuX4jkxrL4UgToOAuCgR+xfaJOmT5hS1KTH9uMXyhgYkCMBHHV
-         6ILnSSYV08NRAPS50tvKtO3PIjATdstHRFzO5XZ0=
+        b=zS1NjXeAYrql3FpZs96bc4c3cGC8PZYln240rco/nnyShsfrDv2Q+afNO5LDiYDyw
+         9r+D3X0ALz4M86v+6gl8RY6LqvpwIGDQDKUBv+YML1HCQ/YZWk159WGZDcmVuYNzdA
+         5ZN/g7wIoIzrHN9pbFzDYTmZSnfjm8D+SnHXLYUg=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Dedy Lansky <dlansky@codeaurora.org>,
-        Maya Erez <merez@codeaurora.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
         Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
-        netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 025/205] wil6210: drop Rx multicast packets that are looped-back to STA
-Date:   Fri,  8 Nov 2019 06:34:52 -0500
-Message-Id: <20191108113752.12502-25-sashal@kernel.org>
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 057/205] iwlwifi: don't WARN on trying to dump dead firmware
+Date:   Fri,  8 Nov 2019 06:35:24 -0500
+Message-Id: <20191108113752.12502-57-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191108113752.12502-1-sashal@kernel.org>
 References: <20191108113752.12502-1-sashal@kernel.org>
@@ -62,43 +60,49 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Dedy Lansky <dlansky@codeaurora.org>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit 9a65064abdf82934e0ed4744125f9f466f421f57 ]
+[ Upstream commit 84f260251ed8153e84c64eb2c5278ab18d3ddef6 ]
 
-Delivering a looped-back multicast packet to network stack can cause
-higher layer protocols to fail like for example IPv6 DAD.
-In STA mode, upon receiving Rx multicast packet, check if the source
-MAC address is equal to our own MAC address and if so drop the packet.
+There's no point in warning here, the user will just get an
+error back to the debugfs file write, and warning just makes
+it seem like there's an internal consistency problem when in
+reality the user just happened to hit this at a bad time.
+Remove the warning.
 
-Signed-off-by: Dedy Lansky <dlansky@codeaurora.org>
-Signed-off-by: Maya Erez <merez@codeaurora.org>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Fixes: f45f979dc208 ("iwlwifi: mvm: disable dbg data collect when fw isn't alive")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/wil6210/txrx.c | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
-index 1b1b58e0129a3..25a65ca424c84 100644
---- a/drivers/net/wireless/ath/wil6210/txrx.c
-+++ b/drivers/net/wireless/ath/wil6210/txrx.c
-@@ -766,7 +766,14 @@ void wil_netif_rx_any(struct sk_buff *skb, struct net_device *ndev)
- 		return;
- 	}
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+index a31a42e673c46..8070b2d4c46fe 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+@@ -1016,7 +1016,7 @@ int iwl_fw_dbg_collect_desc(struct iwl_fw_runtime *fwrt,
+ 	 * If the loading of the FW completed successfully, the next step is to
+ 	 * get the SMEM config data. Thus, if fwrt->smem_cfg.num_lmacs is non
+ 	 * zero, the FW was already loaded successully. If the state is "NO_FW"
+-	 * in such a case - WARN and exit, since FW may be dead. Otherwise, we
++	 * in such a case - exit, since FW may be dead. Otherwise, we
+ 	 * can try to collect the data, since FW might just not be fully
+ 	 * loaded (no "ALIVE" yet), and the debug data is accessible.
+ 	 *
+@@ -1024,9 +1024,8 @@ int iwl_fw_dbg_collect_desc(struct iwl_fw_runtime *fwrt,
+ 	 *	config. In such a case, due to HW access problems, we might
+ 	 *	collect garbage.
+ 	 */
+-	if (WARN((fwrt->trans->state == IWL_TRANS_NO_FW) &&
+-		 fwrt->smem_cfg.num_lmacs,
+-		 "Can't collect dbg data when FW isn't alive\n"))
++	if (fwrt->trans->state == IWL_TRANS_NO_FW &&
++	    fwrt->smem_cfg.num_lmacs)
+ 		return -EIO;
  
--	if (wdev->iftype == NL80211_IFTYPE_AP && !vif->ap_isolate) {
-+	if (wdev->iftype == NL80211_IFTYPE_STATION) {
-+		if (mcast && ether_addr_equal(eth->h_source, ndev->dev_addr)) {
-+			/* mcast packet looped back to us */
-+			rc = GRO_DROP;
-+			dev_kfree_skb(skb);
-+			goto stats;
-+		}
-+	} else if (wdev->iftype == NL80211_IFTYPE_AP && !vif->ap_isolate) {
- 		if (mcast) {
- 			/* send multicast frames both to higher layers in
- 			 * local net stack and back to the wireless medium
+ 	if (test_and_set_bit(IWL_FWRT_STATUS_DUMPING, &fwrt->status))
 -- 
 2.20.1
 
