@@ -6,34 +6,34 @@ X-Spam-Status: No, score=-0.3 required=3.0 tests=DATE_IN_PAST_24_48,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AFC6AC43331
-	for <linux-wireless@archiver.kernel.org>; Sat,  9 Nov 2019 20:29:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BF40C17440
+	for <linux-wireless@archiver.kernel.org>; Sat,  9 Nov 2019 20:30:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8E58720869
-	for <linux-wireless@archiver.kernel.org>; Sat,  9 Nov 2019 20:29:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3AA4B20869
+	for <linux-wireless@archiver.kernel.org>; Sat,  9 Nov 2019 20:30:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726653AbfKIU3f (ORCPT
+        id S1726843AbfKIUaB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 9 Nov 2019 15:29:35 -0500
-Received: from shards.monkeyblade.net ([23.128.96.9]:53672 "EHLO
+        Sat, 9 Nov 2019 15:30:01 -0500
+Received: from shards.monkeyblade.net ([23.128.96.9]:53668 "EHLO
         shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726609AbfKIU3e (ORCPT
+        with ESMTP id S1726470AbfKIU3e (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Sat, 9 Nov 2019 15:29:34 -0500
 Received: from localhost (unknown [IPv6:2601:601:9f00:1e2::d71])
         (using TLSv1 with cipher AES256-SHA (256/256 bits))
         (Client did not present a certificate)
         (Authenticated sender: davem-davemloft)
-        by shards.monkeyblade.net (Postfix) with ESMTPSA id 79F6414747E88;
+        by shards.monkeyblade.net (Postfix) with ESMTPSA id 4726514746C51;
         Sat,  9 Nov 2019 12:29:34 -0800 (PST)
-Date:   Fri, 08 Nov 2019 11:37:49 -0800 (PST)
-Message-Id: <20191108.113749.1605164732361302652.davem@davemloft.net>
+Date:   Fri, 08 Nov 2019 11:37:13 -0800 (PST)
+Message-Id: <20191108.113713.787196845271459836.davem@davemloft.net>
 To:     johannes@sipsolutions.net
 Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211 2019-11-08
+Subject: Re: pull-request: mac80211-next next-2019-11-08
 From:   David Miller <davem@davemloft.net>
-In-Reply-To: <20191108123850.17527-1-johannes@sipsolutions.net>
-References: <20191108123850.17527-1-johannes@sipsolutions.net>
+In-Reply-To: <20191108123738.17359-1-johannes@sipsolutions.net>
+References: <20191108123738.17359-1-johannes@sipsolutions.net>
 X-Mailer: Mew version 6.8 on Emacs 26.1
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
@@ -45,13 +45,12 @@ List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes@sipsolutions.net>
-Date: Fri,  8 Nov 2019 13:38:49 +0100
+Date: Fri,  8 Nov 2019 13:37:36 +0100
 
-> Three more small fixes for the current cycle - the allocation
-> and its failure must've been around for a while but we've started
-> hitting it (I'm also investigating if we have a leak), and the
-> inactive time thing also must've been around forever.
+> Here are a couple of more things for net-next. Nothing
+> really that relevant, but I figured I'd flush my queue
+> now and get some preparatory patches in for 5.5 still.
 > 
 > Please pull and let me know if there's any problem.
 
-Ok, also pulled, thanks.
+Pulled, thanks Johannes.
