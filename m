@@ -4,49 +4,50 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C1AAFC6196
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 11:53:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98550C5DF60
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 11:54:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 432272084D
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 11:53:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 66B20207FA
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 11:54:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573214025;
-	bh=Kahgey2BXK9558I9dynuhjHSzq1L5lj1vi1iv57xIpk=;
+	s=default; t=1573214088;
+	bh=lZXxMuWIybLFtXGs8v1ZWRWHg9eTWJ+Zb4KyQrFSfR0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=teCXfimeFi+jbogF5QHPi7MMJLqQiyW0Oh6k4gNEOqnfPCX/zetLo2LDV/R2Eb16J
-	 n3IsiwZomOVP4UABnjtGuMNjs66kL8mJKS2FPOk/eGOQmsjo6Xa80U7KOza6QLe76J
-	 fcHYib6XDnbft0O3KGtUz1pKeHWoM2uzS4EUTRrQ=
+	b=L3KSPfLYmI5rIViLp0be3gdDKvPqZFAc7ZZ00xg9pctxUWp2/yiIF403T4vFwCPZ8
+	 u5fVNnNS2NO0AZFT6i2OWlCtUUz+l6JXY0+7qo3eItV9Gs8Fb57YXlTrwlus/ikUu0
+	 z87b1IYIAqNy9H9t0i5cGWrfu93XAIiVShUcGg64=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391380AbfKHLqh (ORCPT
+        id S2389604AbfKHLyr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Nov 2019 06:46:37 -0500
-Received: from mail.kernel.org ([198.145.29.99]:34390 "EHLO mail.kernel.org"
+        Fri, 8 Nov 2019 06:54:47 -0500
+Received: from mail.kernel.org ([198.145.29.99]:33840 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2391305AbfKHLqf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Nov 2019 06:46:35 -0500
+        id S2391277AbfKHLqM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 8 Nov 2019 06:46:12 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 0E0A021D82;
-        Fri,  8 Nov 2019 11:46:33 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 6023D20656;
+        Fri,  8 Nov 2019 11:46:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573213594;
-        bh=Kahgey2BXK9558I9dynuhjHSzq1L5lj1vi1iv57xIpk=;
+        s=default; t=1573213572;
+        bh=lZXxMuWIybLFtXGs8v1ZWRWHg9eTWJ+Zb4KyQrFSfR0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=e0PkvXHOBf3I/67hXGAH/oA9u2aGu9Wv2angbfgiJozBlQqWNhe71eh8rC75mGEjr
-         7AapEiamvDB7xilSRwn+6/NxUu3O6YxUmxcA7JPCcWYEZoq7p3Xp3WbRiC0keLR5BS
-         Tx3X54HE1hetfoTF84jia40q8ZR/1ImP5DxGmpJ4=
+        b=EqCqO7Y0bJeLwaI1IoAcVrKiR2axvDv4ex+7ZhP1fYE0tB8ZZhELnZb4OXcb1qn48
+         KFTjA19qrDohzkUYc93VjGRGSnu5kC5b8+kQNY+JAltRDXL0ELQLYWzpYabjKAMH8T
+         IZ1rK38F/tOE7LkzJ8UqleLlBfzJ+yL8k9b2VsbI=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Felix Fietkau <nbd@nbd.name>, Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 36/64] ath9k: add back support for using active monitor interfaces for tx99
-Date:   Fri,  8 Nov 2019 06:45:17 -0500
-Message-Id: <20191108114545.15351-36-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 18/64] iwlwifi: mvm: avoid sending too many BARs
+Date:   Fri,  8 Nov 2019 06:44:59 -0500
+Message-Id: <20191108114545.15351-18-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191108114545.15351-1-sashal@kernel.org>
 References: <20191108114545.15351-1-sashal@kernel.org>
@@ -59,116 +60,48 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Felix Fietkau <nbd@nbd.name>
+From: Sara Sharon <sara.sharon@intel.com>
 
-[ Upstream commit 6df0580be8bc30803c4d8b2ed9c2230a2740c795 ]
+[ Upstream commit 1a19c139be18ed4d6d681049cc48586fae070120 ]
 
-Various documented examples on how to set up tx99 with ath9k rely
-on setting up a regular monitor interface for setting the channel.
-My previous patch "ath9k: fix tx99 with monitor mode interface" made
-it possible to set it up this way again. However, it was removing support
-for using an active monitor interface, which is required for controlling
-the bitrate as well, since the bitrate is not passed down with a regular
-monitor interface.
+When we receive TX response, we may release a few packets
+due to a hole that was closed in the transmission window.
 
-This patch partially reverts the previous one, but keeps support for using
-a regular monitor interface to keep documented steps working in cases
-where the bitrate does not matter
+However, if that frame failed, we will mark all the released
+frames as failed and will send multiple BARs.
 
-Fixes: d9c52fd17cb48 ("ath9k: fix tx99 with monitor mode interface")
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+This affects statistics badly, and cause unnecessary frames
+transmission.
+
+Instead, mark all the following packets as success, with the
+desired result of sending a bar for the failed frame only.
+
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |  1 +
- drivers/net/wireless/ath/ath9k/main.c  | 10 ++++++++--
- drivers/net/wireless/ath/ath9k/tx99.c  |  7 +++++++
- drivers/net/wireless/ath/ath9k/xmit.c  |  2 +-
- 4 files changed, 17 insertions(+), 3 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 51e878a9d5211..7bda18c61eb6e 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -1033,6 +1033,7 @@ struct ath_softc {
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index 1aa74b87599ff..63dcea640d076 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -1303,6 +1303,14 @@ static void iwl_mvm_rx_tx_cmd_single(struct iwl_mvm *mvm,
+ 			break;
+ 		}
  
- 	struct ath_spec_scan_priv spec_priv;
- 
-+	struct ieee80211_vif *tx99_vif;
- 	struct sk_buff *tx99_skb;
- 	bool tx99_state;
- 	s16 tx99_power;
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index fbc34beee1580..f6151a00041d6 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1249,8 +1249,13 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
- 	struct ath_vif *avp = (void *)vif->drv_priv;
- 	struct ath_node *an = &avp->mcast_node;
- 
--	if (IS_ENABLED(CONFIG_ATH9K_TX99))
--		return -EOPNOTSUPP;
-+	if (IS_ENABLED(CONFIG_ATH9K_TX99)) {
-+		if (sc->cur_chan->nvifs >= 1) {
-+			mutex_unlock(&sc->mutex);
-+			return -EOPNOTSUPP;
-+		}
-+		sc->tx99_vif = vif;
-+	}
- 
- 	mutex_lock(&sc->mutex);
- 
-@@ -1335,6 +1340,7 @@ static void ath9k_remove_interface(struct ieee80211_hw *hw,
- 	ath9k_p2p_remove_vif(sc, vif);
- 
- 	sc->cur_chan->nvifs--;
-+	sc->tx99_vif = NULL;
- 	if (!ath9k_is_chanctx_enabled())
- 		list_del(&avp->list);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/tx99.c b/drivers/net/wireless/ath/ath9k/tx99.c
-index 0cb5b2a873be8..096902e0fdf5c 100644
---- a/drivers/net/wireless/ath/ath9k/tx99.c
-+++ b/drivers/net/wireless/ath/ath9k/tx99.c
-@@ -54,6 +54,7 @@ static struct sk_buff *ath9k_build_tx99_skb(struct ath_softc *sc)
- 	struct ieee80211_hdr *hdr;
- 	struct ieee80211_tx_info *tx_info;
- 	struct sk_buff *skb;
-+	struct ath_vif *avp;
- 
- 	skb = alloc_skb(len, GFP_KERNEL);
- 	if (!skb)
-@@ -71,11 +72,17 @@ static struct sk_buff *ath9k_build_tx99_skb(struct ath_softc *sc)
- 	memcpy(hdr->addr2, hw->wiphy->perm_addr, ETH_ALEN);
- 	memcpy(hdr->addr3, hw->wiphy->perm_addr, ETH_ALEN);
- 
-+	if (sc->tx99_vif) {
-+		avp = (struct ath_vif *) sc->tx99_vif->drv_priv;
-+		hdr->seq_ctrl |= cpu_to_le16(avp->seq_no);
-+	}
++		/*
++		 * If we are freeing multiple frames, mark all the frames
++		 * but the first one as acked, since they were acknowledged
++		 * before
++		 * */
++		if (skb_freed > 1)
++			info->flags |= IEEE80211_TX_STAT_ACK;
 +
- 	tx_info = IEEE80211_SKB_CB(skb);
- 	memset(tx_info, 0, sizeof(*tx_info));
- 	rate = &tx_info->control.rates[0];
- 	tx_info->band = sc->cur_chan->chandef.chan->band;
- 	tx_info->flags = IEEE80211_TX_CTL_NO_ACK;
-+	tx_info->control.vif = sc->tx99_vif;
- 	rate->count = 1;
- 	if (ah->curchan && IS_CHAN_HT(ah->curchan)) {
- 		rate->flags |= IEEE80211_TX_RC_MCS;
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 2c35819f65426..0ef27d99bef33 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -2970,7 +2970,7 @@ int ath9k_tx99_send(struct ath_softc *sc, struct sk_buff *skb,
- 		return -EINVAL;
- 	}
+ 		iwl_mvm_tx_status_check_trigger(mvm, status);
  
--	ath_set_rates(NULL, NULL, bf);
-+	ath_set_rates(sc->tx99_vif, NULL, bf);
- 
- 	ath9k_hw_set_desc_link(sc->sc_ah, bf->bf_desc, bf->bf_daddr);
- 	ath9k_hw_tx99_start(sc->sc_ah, txctl->txq->axq_qnum);
+ 		info->status.rates[0].count = tx_resp->failure_frame + 1;
 -- 
 2.20.1
 
