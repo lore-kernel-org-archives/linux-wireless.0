@@ -7,48 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64D9FFC6194
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 12:13:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F374BFA372C
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 12:13:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3AEA920656
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 12:13:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C6A5320656
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 12:13:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573215225;
-	bh=dcjRh652H+XEuWKwLgX9wdRsjFVakecNt9ObboueuPk=;
+	s=default; t=1573215228;
+	bh=i+9e5uzmPVSTjNnxlthc51AiwO2a9Rqc6wn1xXw9caw=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=iTru+0BL7dY+Cc1+bwZA7PRd2mhPpleqbQqgFaTOPMcb+ouU3g2HFzixDpoqBfJO6
-	 MKm4RxnnDyZ/eEJFgsCsANkWHxQIpMXSRrJBH1BhRahK1sTAobiWP7uOu4Qk8HhGUd
-	 3v7qrdX0RQj+eMB6gsJjXmTryvRofKAAYBDdeuuE=
+	b=qBYn9OCH7jRtowB2+RAqPDC+eV+db+z7+73sGlbxKbnOh6pmaot8WPJp4HZjpFjMu
+	 sUl+Ke3rOtnW6QJDcIW3xBubBuXy9EaXHMNqASthWNiBq7SJPbcJTuLhJL8OqPHxjL
+	 DB3erLgMs6MPsZpYwtOUDXS3aN1UKMdFwYx+id7o=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387945AbfKHMNk (ORCPT
+        id S1732490AbfKHLiU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Nov 2019 07:13:40 -0500
-Received: from mail.kernel.org ([198.145.29.99]:51294 "EHLO mail.kernel.org"
+        Fri, 8 Nov 2019 06:38:20 -0500
+Received: from mail.kernel.org ([198.145.29.99]:51242 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732532AbfKHLiX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Nov 2019 06:38:23 -0500
+        id S1732259AbfKHLiU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 8 Nov 2019 06:38:20 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id D019020869;
-        Fri,  8 Nov 2019 11:38:21 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id E2F4B20869;
+        Fri,  8 Nov 2019 11:38:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573213102;
-        bh=dcjRh652H+XEuWKwLgX9wdRsjFVakecNt9ObboueuPk=;
+        s=default; t=1573213098;
+        bh=i+9e5uzmPVSTjNnxlthc51AiwO2a9Rqc6wn1xXw9caw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ZYs05gZ1z+kyGt9g1N1zuEacTHmT2yryzCC6N23hU+vJXsytIXNJIbrcm6nZPbmDT
-         OxpjCPpKVL0FqqJBhsfOc+q5NDqb3G08dSrz+/L4rFCk3CK6nXegjEClAEDq/YkR2F
-         vXW6rNjuAZ+/vUaCFmQ1XTmzg7/XtgDDQB+XO7Xs=
+        b=G3j9EksLH+Lei38ldvTgU2g/Rpyh62ihOaPswjF2oVBjKhq5m4n0pqT9G5lssuLud
+         N67p4HUkyaIrSPAHlYxtFUSPNNtpXSyOX/ij6jLW57zZ4THYHzfxh9NaGu83xQShmk
+         quCjZj4BSG/0epW6aI4YNzuyQJhx4EjW76YjuZow=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Maya Erez <merez@codeaurora.org>,
+Cc:     Rakesh Pillai <pillair@codeaurora.org>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
-        netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 026/205] wil6210: set edma variables only for Talyn-MB devices
-Date:   Fri,  8 Nov 2019 06:34:53 -0500
-Message-Id: <20191108113752.12502-26-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 023/205] ath10k: skip resetting rx filter for WCN3990
+Date:   Fri,  8 Nov 2019 06:34:50 -0500
+Message-Id: <20191108113752.12502-23-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191108113752.12502-1-sashal@kernel.org>
 References: <20191108113752.12502-1-sashal@kernel.org>
@@ -61,49 +60,172 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Maya Erez <merez@codeaurora.org>
+From: Rakesh Pillai <pillair@codeaurora.org>
 
-[ Upstream commit 596bdbcce90fa93f43ebcb99cefea34bd2e27707 ]
+[ Upstream commit 58da3b42307061b71f2dcce2bd1185d578a3aa53 ]
 
-use_rx_hw_reordering is already set to true in wil_set_capabilities
-for Talyn-MB devices. Remove its setting from wil_priv_init to
-prevent its activation for older chips.
-Similarly, move the setting of use_compressed_rx_status to
-wil_set_capabilities.
+WCN3990 has the MAC_PCU_ADDR1 configured properly
+and hence it will not send spurious ack frames
+during boot up.
 
-Signed-off-by: Maya Erez <merez@codeaurora.org>
+Hence the reset_rx_filter workaround is not needed
+for WCN3990. Add a hw_param to indicate if hardware rx
+filter reset is needed and skip the reset_rx_filter for
+WCN3990.
+
+Tested HW: WCN3990
+Tested FW: WLAN.HL.2.0-01188-QCAHLSWMTPLZ-1
+
+Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/wil6210/main.c     | 2 --
- drivers/net/wireless/ath/wil6210/pcie_bus.c | 1 +
- 2 files changed, 1 insertion(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.c | 17 ++++++++++++++++-
+ drivers/net/wireless/ath/ath10k/hw.h   |  5 +++++
+ 2 files changed, 21 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index a0fe8cbad104f..d186b6886c6bf 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -653,8 +653,6 @@ int wil_priv_init(struct wil6210_priv *wil)
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 5210cffb53440..7e64fe426a055 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -91,6 +91,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.rx_ring_fill_level = HTT_RX_RING_FILL_LEVEL,
+ 		.shadow_reg_support = false,
+ 		.rri_on_ddr = false,
++		.hw_filter_reset_required = true,
+ 	},
+ 	{
+ 		.id = QCA988X_HW_2_0_VERSION,
+@@ -124,6 +125,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.per_ce_irq = false,
+ 		.shadow_reg_support = false,
+ 		.rri_on_ddr = false,
++		.hw_filter_reset_required = true,
+ 	},
+ 	{
+ 		.id = QCA9887_HW_1_0_VERSION,
+@@ -157,6 +159,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.per_ce_irq = false,
+ 		.shadow_reg_support = false,
+ 		.rri_on_ddr = false,
++		.hw_filter_reset_required = true,
+ 	},
+ 	{
+ 		.id = QCA6174_HW_2_1_VERSION,
+@@ -189,6 +192,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.per_ce_irq = false,
+ 		.shadow_reg_support = false,
+ 		.rri_on_ddr = false,
++		.hw_filter_reset_required = true,
+ 	},
+ 	{
+ 		.id = QCA6174_HW_2_1_VERSION,
+@@ -221,6 +225,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.per_ce_irq = false,
+ 		.shadow_reg_support = false,
+ 		.rri_on_ddr = false,
++		.hw_filter_reset_required = true,
+ 	},
+ 	{
+ 		.id = QCA6174_HW_3_0_VERSION,
+@@ -253,6 +258,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.per_ce_irq = false,
+ 		.shadow_reg_support = false,
+ 		.rri_on_ddr = false,
++		.hw_filter_reset_required = true,
+ 	},
+ 	{
+ 		.id = QCA6174_HW_3_2_VERSION,
+@@ -288,6 +294,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.per_ce_irq = false,
+ 		.shadow_reg_support = false,
+ 		.rri_on_ddr = false,
++		.hw_filter_reset_required = true,
+ 	},
+ 	{
+ 		.id = QCA99X0_HW_2_0_DEV_VERSION,
+@@ -326,6 +333,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.per_ce_irq = false,
+ 		.shadow_reg_support = false,
+ 		.rri_on_ddr = false,
++		.hw_filter_reset_required = true,
+ 	},
+ 	{
+ 		.id = QCA9984_HW_1_0_DEV_VERSION,
+@@ -369,6 +377,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.per_ce_irq = false,
+ 		.shadow_reg_support = false,
+ 		.rri_on_ddr = false,
++		.hw_filter_reset_required = true,
+ 	},
+ 	{
+ 		.id = QCA9888_HW_2_0_DEV_VERSION,
+@@ -411,6 +420,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.per_ce_irq = false,
+ 		.shadow_reg_support = false,
+ 		.rri_on_ddr = false,
++		.hw_filter_reset_required = true,
+ 	},
+ 	{
+ 		.id = QCA9377_HW_1_0_DEV_VERSION,
+@@ -443,6 +453,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.per_ce_irq = false,
+ 		.shadow_reg_support = false,
+ 		.rri_on_ddr = false,
++		.hw_filter_reset_required = true,
+ 	},
+ 	{
+ 		.id = QCA9377_HW_1_1_DEV_VERSION,
+@@ -477,6 +488,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.per_ce_irq = false,
+ 		.shadow_reg_support = false,
+ 		.rri_on_ddr = false,
++		.hw_filter_reset_required = true,
+ 	},
+ 	{
+ 		.id = QCA4019_HW_1_0_DEV_VERSION,
+@@ -516,6 +528,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.per_ce_irq = false,
+ 		.shadow_reg_support = false,
+ 		.rri_on_ddr = false,
++		.hw_filter_reset_required = true,
+ 	},
+ 	{
+ 		.id = WCN3990_HW_1_0_DEV_VERSION,
+@@ -540,6 +553,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.per_ce_irq = true,
+ 		.shadow_reg_support = true,
+ 		.rri_on_ddr = true,
++		.hw_filter_reset_required = false,
+ 	},
+ };
  
- 	/* edma configuration can be updated via debugfs before allocation */
- 	wil->num_rx_status_rings = WIL_DEFAULT_NUM_RX_STATUS_RINGS;
--	wil->use_compressed_rx_status = true;
--	wil->use_rx_hw_reordering = true;
- 	wil->tx_status_ring_order = WIL_TX_SRING_SIZE_ORDER_DEFAULT;
+@@ -2406,7 +2420,8 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode,
+ 	 * possible to implicitly make it correct by creating a dummy vdev and
+ 	 * then deleting it.
+ 	 */
+-	if (mode == ATH10K_FIRMWARE_MODE_NORMAL) {
++	if (ar->hw_params.hw_filter_reset_required &&
++	    mode == ATH10K_FIRMWARE_MODE_NORMAL) {
+ 		status = ath10k_core_reset_rx_filter(ar);
+ 		if (status) {
+ 			ath10k_err(ar,
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 977f79ebb4fd5..fac58c3c576a2 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -589,6 +589,11 @@ struct ath10k_hw_params {
  
- 	/* Rx status ring size should be bigger than the number of RX buffers
-diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-index 89119e7facd00..c8c6613371d1b 100644
---- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
-+++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-@@ -108,6 +108,7 @@ int wil_set_capabilities(struct wil6210_priv *wil)
- 		set_bit(hw_capa_no_flash, wil->hw_capa);
- 		wil->use_enhanced_dma_hw = true;
- 		wil->use_rx_hw_reordering = true;
-+		wil->use_compressed_rx_status = true;
- 		wil_fw_name = ftm_mode ? WIL_FW_NAME_FTM_TALYN :
- 			      WIL_FW_NAME_TALYN;
- 		if (wil_fw_verify_file_exists(wil, wil_fw_name))
+ 	/* Number of bytes to be the offset for each FFT sample */
+ 	int spectral_bin_offset;
++
++	/* targets which require hw filter reset during boot up,
++	 * to avoid it sending spurious acks.
++	 */
++	bool hw_filter_reset_required;
+ };
+ 
+ struct htt_rx_desc;
 -- 
 2.20.1
 
