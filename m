@@ -7,52 +7,53 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C657FC6194
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 12:10:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA32CFC6194
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 12:10:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 33F7B21848
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 12:10:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A00CE2085B
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 12:10:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573215042;
-	bh=ZPSKGSZEulSokc6OQ6g3QxfBYvIV5a0XHwF8ROZCzws=;
+	s=default; t=1573215056;
+	bh=v0Q4Snohb0rPBMGpAzHmPvwE44PlPjfHwBHTVwdU0+k=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=GgNoQsjoeOUxFyBzQ7HMjB6Xcfajdyp0W/FNWn4uu770wLil74tRvtwAy8VpacvBE
-	 b4cPRpExqzzey/L0ssgFITTUaZSoPGdPuFy69WKbF2DmXEVOpTp8bdeQh6BLk1+X2A
-	 26f4vRkIb7ZsM3ze/1hiu0MX1lmUViavGRYVTu5A=
+	b=EQLjEjqiv2SSoF26U7GAiYQUqD5b3q313+2/Z8somkkF6sy9Z5E0CLuOtgZSQSSF4
+	 0rO/Jy0KibVnuSeG9JiybwgMQ/qEtxZV5EFXAY9zaY6XHM+KWq/DUt5xiAlf0jWVxw
+	 2sUo27zOOTUS/6QtMbkmUrevaytjL3q7Zpvp0S1k=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387459AbfKHLj3 (ORCPT
+        id S2389229AbfKHMKv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Nov 2019 06:39:29 -0500
-Received: from mail.kernel.org ([198.145.29.99]:52384 "EHLO mail.kernel.org"
+        Fri, 8 Nov 2019 07:10:51 -0500
+Received: from mail.kernel.org ([198.145.29.99]:52320 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387396AbfKHLj0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Nov 2019 06:39:26 -0500
+        id S1733228AbfKHLjU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 8 Nov 2019 06:39:20 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A599D21D7E;
-        Fri,  8 Nov 2019 11:39:24 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id EA5A4222C6;
+        Fri,  8 Nov 2019 11:39:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573213165;
-        bh=ZPSKGSZEulSokc6OQ6g3QxfBYvIV5a0XHwF8ROZCzws=;
+        s=default; t=1573213159;
+        bh=v0Q4Snohb0rPBMGpAzHmPvwE44PlPjfHwBHTVwdU0+k=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=G76pBEJH3zlNtGtfwcBqJRch4iVm00H2UX5TxEHvmswglGUXVMItC00zT+Qfslf7k
-         XPwJcXHS5Yqou9YeKtzZasfUa0IBR+oKd3/8UzMZ5OoJWWHx9GJuhcGw6K3+tlyk0n
-         uwt2QOQp8XafnZ7gxHa1rLZX+qqYPcs4Lq0RMbM0=
+        b=R++CaginImy/LualAnumJkxXWWzrFcWFTK1hHJLpDbCc9MwHN6YbVmZO502J4Js+s
+         HAcxYhkDa5FNDN3QeaI1jb42jWOdxVJ+R3OuyBG7qg/lLyEymaDpZpZTTL4jsvrf1h
+         vNtYvTsfEk+xom9Lb3QnocR0Pf15EXIfKCo5rjM4=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Geert Uytterhoeven <geert@linux-m68k.org>,
+Cc:     Ganapathi Bhat <gbhat@marvell.com>,
+        Vidya Dharmaraju <vidyad@marvell.com>,
+        Cathy Luo <cluo@marvell.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 068/205] mt76: Fix comparisons with invalid hardware key index
-Date:   Fri,  8 Nov 2019 06:35:35 -0500
-Message-Id: <20191108113752.12502-68-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 066/205] mwifex: free rx_cmd skb in suspended state
+Date:   Fri,  8 Nov 2019 06:35:33 -0500
+Message-Id: <20191108113752.12502-66-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191108113752.12502-1-sashal@kernel.org>
 References: <20191108113752.12502-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
@@ -61,57 +62,48 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Geert Uytterhoeven <geert@linux-m68k.org>
+From: Ganapathi Bhat <gbhat@marvell.com>
 
-[ Upstream commit 81c8eccc2404d06082025b773f1d90e8c861bc6a ]
+[ Upstream commit 33a164fa8a4c91408e0b7738f754cb1a7827c5f2 ]
 
-With gcc 4.1.2:
+USB suspend handler will kill the presubmitted rx_cmd URB. This
+triggers a call to the corresponding URB complete handler, which
+will free the rx_cmd skb, associated with rx_cmd URB. Due to a
+possible race betwen suspend handler and main thread, depicted in
+'commit bfcacac6c84b ("mwifiex: do no submit URB in suspended
+state")', it is possible that the rx_cmd skb will fail to get
+freed. This causes a memory leak, since the resume handler will
+always allocate a new rx_cmd skb.
 
-    drivers/net/wireless/mediatek/mt76/mt76x0/tx.c: In function ‘mt76x0_tx’:
-    drivers/net/wireless/mediatek/mt76/mt76x0/tx.c:169: warning: comparison is always true due to limited range of data type
-    drivers/net/wireless/mediatek/mt76/mt76x2_tx_common.c: In function ‘mt76x2_tx’:
-    drivers/net/wireless/mediatek/mt76/mt76x2_tx_common.c:35: warning: comparison is always true due to limited range of data type
+To fix this, free the rx_cmd skb in mwifiex_usb_submit_rx_urb, if
+the device is in suspended state.
 
-While assigning -1 to a u8 works fine, comparing with -1 does not work
-as expected.
-
-Fix this by comparing with 0xff, like is already done in some other
-places.
-
-Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+Signed-off-by: Vidya Dharmaraju <vidyad@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x0/tx.c        | 2 +-
- drivers/net/wireless/mediatek/mt76/mt76x2_tx_common.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/usb.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/tx.c b/drivers/net/wireless/mediatek/mt76/mt76x0/tx.c
-index 751b49c28ae53..c45d05d5aab1d 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x0/tx.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x0/tx.c
-@@ -166,7 +166,7 @@ void mt76x0_tx(struct ieee80211_hw *hw, struct ieee80211_tx_control *control,
- 	if (sta) {
- 		msta = (struct mt76_sta *) sta->drv_priv;
- 		wcid = &msta->wcid;
--	} else if (vif && (!info->control.hw_key && wcid->hw_key_idx != -1)) {
-+	} else if (vif && (!info->control.hw_key && wcid->hw_key_idx != 0xff)) {
- 		struct mt76_vif *mvif = (struct mt76_vif *)vif->drv_priv;
+diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
+index 76d80fd545236..d445acc4786b7 100644
+--- a/drivers/net/wireless/marvell/mwifiex/usb.c
++++ b/drivers/net/wireless/marvell/mwifiex/usb.c
+@@ -299,6 +299,12 @@ static int mwifiex_usb_submit_rx_urb(struct urb_context *ctx, int size)
+ 	struct usb_card_rec *card = (struct usb_card_rec *)adapter->card;
  
- 		wcid = &mvif->group_wcid;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_tx_common.c b/drivers/net/wireless/mediatek/mt76/mt76x2_tx_common.c
-index 36afb166fa3ff..c0ca0df84ed8b 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_tx_common.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_tx_common.c
-@@ -32,7 +32,7 @@ void mt76x2_tx(struct ieee80211_hw *hw, struct ieee80211_tx_control *control,
- 		msta = (struct mt76x2_sta *)control->sta->drv_priv;
- 		wcid = &msta->wcid;
- 		/* sw encrypted frames */
--		if (!info->control.hw_key && wcid->hw_key_idx != -1)
-+		if (!info->control.hw_key && wcid->hw_key_idx != 0xff)
- 			control->sta = NULL;
- 	}
- 
+ 	if (test_bit(MWIFIEX_IS_SUSPENDED, &adapter->work_flags)) {
++		if (card->rx_cmd_ep == ctx->ep) {
++			mwifiex_dbg(adapter, INFO, "%s: free rx_cmd skb\n",
++				    __func__);
++			dev_kfree_skb_any(ctx->skb);
++			ctx->skb = NULL;
++		}
+ 		mwifiex_dbg(adapter, ERROR,
+ 			    "%s: card removed/suspended, EP %d rx_cmd URB submit skipped\n",
+ 			    __func__, ctx->ep);
 -- 
 2.20.1
 
