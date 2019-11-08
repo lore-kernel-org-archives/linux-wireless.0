@@ -2,44 +2,47 @@ Return-Path: <SRS0=s5sB=ZA=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE5F5C5DF60
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 19:42:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A243FC6195
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 19:42:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7DF83206A3
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 19:42:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6EC92206A3
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 19:42:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="MLW9C7G9"
+	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="l4vHtLGI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731132AbfKHTm0 (ORCPT
+        id S1732358AbfKHTmb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Nov 2019 14:42:26 -0500
-Received: from mail2.candelatech.com ([208.74.158.173]:46154 "EHLO
+        Fri, 8 Nov 2019 14:42:31 -0500
+Received: from mail2.candelatech.com ([208.74.158.173]:46158 "EHLO
         mail3.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730092AbfKHTmZ (ORCPT
+        with ESMTP id S1730720AbfKHTm0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Nov 2019 14:42:25 -0500
+        Fri, 8 Nov 2019 14:42:26 -0500
 Received: from ben-dt4.candelatech.com (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
-        by mail3.candelatech.com (Postfix) with ESMTP id 12A1F13C283;
+        by mail3.candelatech.com (Postfix) with ESMTP id 73E3913C2B8;
         Fri,  8 Nov 2019 11:42:25 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 12A1F13C283
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 73E3913C2B8
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
         s=default; t=1573242145;
-        bh=BJb4vVZjGrUl9yDgrxCFDoWZAcBHhkUyLSCkxbGjPIo=;
-        h=From:To:Cc:Subject:Date:From;
-        b=MLW9C7G9ifeZxNBTU/irnyeQr0x+cfy3aWa9hrc6iPIvR0xjBWu95TRdZOchJv+UI
-         gjbbFboGl6YdRruPjHqlVKyUt4w+8gfdB6difWSOcJ1rlxb06wc/pJm12Z5993jBAD
-         LbwLtmfD3x2vOKNQ2GzIsnLoI+4S0TDtbB9j98JI=
+        bh=mZ1B91Q31N0eF1FTFMU7WwqKj9LBZGeMtHNrBG45SXM=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=l4vHtLGIf/+h+XmC9qB0tOFjWQ4EtrKVuXBtHSYmCFYZqxiAzi1y4eEHQAzt8X8iV
+         mhZJw4ZW+YzqmiIXg107kXcZd8ml5ZPaC4qMxWBJJ8Vl9FJGRm2LMutjKGJELvWQG6
+         GeLrGfem2hfXpzXrFeqC2WuSaIZ2ftHBTW8jr8hA=
 From:   greearb@candelatech.com
 To:     linux-wireless@vger.kernel.org
 Cc:     johannes@sipsolutions.net, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 00/10] Ben's grab bag of mac80211 patches
-Date:   Fri,  8 Nov 2019 11:42:01 -0800
-Message-Id: <20191108194210.23618-1-greearb@candelatech.com>
+Subject: [PATCH 02/10] mac80211: Change warn-on to warn-on-once
+Date:   Fri,  8 Nov 2019 11:42:03 -0800
+Message-Id: <20191108194210.23618-3-greearb@candelatech.com>
 X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20191108194210.23618-1-greearb@candelatech.com>
+References: <20191108194210.23618-1-greearb@candelatech.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -49,38 +52,26 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ben Greear <greearb@candelatech.com>
 
-Here are some patches from my tree, freshly applied and compile tested on top of
-upstream 5.4.0-rc6.  One incorporates a fix suggested back in 2013 :)
+I saw a bunch of splats while reloading ath10k module, one splat is plenty.
 
-There should not be much dependencies between these, so just
-skip any you don't want.
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ net/mac80211/rx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Ben Greear (10):
-  mac80211: Add comment about tx on monitor devs.
-  mac80211: Change warn-on to warn-on-once
-  mac80211: Don't spam kernel with sdata-in-driver failures.
-  mac80211: Don't spam so loud about warned-sdata-in-driver.
-  mac80211: Improve connection-loss probing.
-  mac80211: Make max-auth-tries configurable as module option
-  mac80211: Revert some of e8e4f5, fixes setting single rate in ath10k.
-  mac80211: Support decrypting action frames for reinsertion into the
-    driver.
-  mac80211: Use warn-on-once for queue mis-configuration.
-  mlme: Don't unlink bss on assoc timeout and similar.
-
- include/net/mac80211.h     | 10 +++++
- net/mac80211/cfg.c         |  6 ++-
- net/mac80211/debug.h       |  3 ++
- net/mac80211/driver-ops.c  |  9 ++++
- net/mac80211/driver-ops.h  | 36 ++++++++++++++--
- net/mac80211/ieee80211_i.h |  3 +-
- net/mac80211/iface.c       |  7 ++++
- net/mac80211/mlme.c        | 84 +++++++++++++++++---------------------
- net/mac80211/rx.c          |  2 +-
- net/mac80211/tx.c          |  6 +++
- net/mac80211/util.c        |  5 ++-
- 11 files changed, 115 insertions(+), 56 deletions(-)
-
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 0e05ff037672..670ae0cecc33 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -4553,7 +4553,7 @@ void ieee80211_rx_napi(struct ieee80211_hw *hw, struct ieee80211_sta *pubsta,
+ 	 * The same happens when we're not even started,
+ 	 * but that's worth a warning.
+ 	 */
+-	if (WARN_ON(!local->started))
++	if (WARN_ON_ONCE(!local->started))
+ 		goto drop;
+ 
+ 	if (likely(!(status->flag & RX_FLAG_FAILED_PLCP_CRC))) {
 -- 
 2.20.1
 
