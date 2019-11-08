@@ -7,50 +7,50 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69A30FC6197
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 11:44:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BBAB2C5DF60
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 11:46:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 367AC21D6C
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 11:44:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 88921222CF
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 11:46:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573213452;
-	bh=JMzbT0jpHdIV1pZ8eUDKVYmn7oMS7LIGuRRUm5UaNrk=;
+	s=default; t=1573213577;
+	bh=HImH6DBQCdYDbrYV5nm8VU8wabB9MtuWvxvVxo2aZSQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=n43UODtgEme/9RbFMr7oT0fYb+x/EjyKF2hhC/mzl7jm+rC0PXsiyXie5CMPnNxOu
-	 buDcppK+B3xaHu/8k5DnTnOwsk/4Cs+XFd1IT8ipODTW6NI+xdEE3OVWtE5uXIvSLL
-	 jFOWuz8mmuHis0paONS7VoyQmeZeVnGgJ8/qN/cE=
+	b=ycrweABXKTigpwJ6/2rDera6k96hIEUO/aaDYc711OydlQwFcTLDtld5wXarNB2iF
+	 pDAhq+HJJjynYIPqzyi35mZvuC3HdBMpDon+rNnzlZosBnJzxnXS/HaUheB2iTnVXx
+	 JM+8/F7EJRiPMvmLLyLvlvhE7DTYISjXuDruXIns=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390693AbfKHLoL (ORCPT
+        id S2391292AbfKHLqQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Nov 2019 06:44:11 -0500
-Received: from mail.kernel.org ([198.145.29.99]:58970 "EHLO mail.kernel.org"
+        Fri, 8 Nov 2019 06:46:16 -0500
+Received: from mail.kernel.org ([198.145.29.99]:33870 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387894AbfKHLoJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Nov 2019 06:44:09 -0500
+        id S2391281AbfKHLqP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 8 Nov 2019 06:46:15 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3AF4922473;
-        Fri,  8 Nov 2019 11:44:08 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 8C7A421D82;
+        Fri,  8 Nov 2019 11:46:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573213449;
-        bh=JMzbT0jpHdIV1pZ8eUDKVYmn7oMS7LIGuRRUm5UaNrk=;
+        s=default; t=1573213574;
+        bh=HImH6DBQCdYDbrYV5nm8VU8wabB9MtuWvxvVxo2aZSQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=kwYtaNXEVBBxkcYOa/M07883G/AvRLfvh4xCOW22rvtNydPzIKebDlZDZ6jpGXW9B
-         79BtdqaonsQ/YUS8eYGoErAKrM8nx/i5EhoNRK4beTa99ZWbZZWd6oOFkfT1vt6H79
-         C/xEiaZlvtv8+CXb4QDrs1fdYcCQPv8IOke4NyO8=
+        b=Z6OfsJbG0TDk491sGkSr32yDZHEule2jJ9FO9Y4t6d1SyS0YKhVLxExSKlO1iyrDW
+         +I+VIex8+9il/lasc+bJG6Ic9SBEPwRQ2iT9G6sVVpvubc0q0O/ILlqAAC6isSINhi
+         0u8c38IUbqWw49AAdwygWYqhakQsYr0TRWqgbTiY=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Erik Stromdahl <erik.stromdahl@gmail.com>,
+Cc:     Larry Finger <Larry.Finger@lwfinger.net>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
+        Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 042/103] ath10k: wmi: disable softirq's while calling ieee80211_rx
-Date:   Fri,  8 Nov 2019 06:42:07 -0500
-Message-Id: <20191108114310.14363-42-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 20/64] rtl8187: Fix warning generated when strncpy() destination length matches the sixe argument
+Date:   Fri,  8 Nov 2019 06:45:01 -0500
+Message-Id: <20191108114545.15351-20-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191108114310.14363-1-sashal@kernel.org>
-References: <20191108114310.14363-1-sashal@kernel.org>
+In-Reply-To: <20191108114545.15351-1-sashal@kernel.org>
+References: <20191108114545.15351-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -60,48 +60,34 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
 
-[ Upstream commit 37f62c0d5822f631b786b29a1b1069ab714d1a28 ]
+[ Upstream commit 199ba9faca909e77ac533449ecd1248123ce89e7 ]
 
-This is done in order not to trig the below warning in
-ieee80211_rx_napi:
+In gcc8, when the 3rd argument (size) of a call to strncpy() matches the
+length of the first argument, the compiler warns of the possibility of an
+unterminated string. Using strlcpy() forces a null at the end.
 
-WARN_ON_ONCE(softirq_count() == 0);
-
-ieee80211_rx_napi requires that softirq's are disabled during
-execution.
-
-The High latency bus drivers (SDIO and USB) sometimes call the wmi
-ep_rx_complete callback from non softirq context, resulting in a trigger
-of the above warning.
-
-Calling ieee80211_rx_ni with softirq's already disabled (e.g., from
-softirq context) should be safe as the local_bh_disable and
-local_bh_enable functions (called from ieee80211_rx_ni) are fully
-reentrant.
-
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath10k/wmi.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtl818x/rtl8187/leds.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index ab8eb9cdfda0f..4d6c2986c40dd 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -2414,7 +2414,8 @@ int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
- 		   status->freq, status->band, status->signal,
- 		   status->rate_idx);
+diff --git a/drivers/net/wireless/realtek/rtl818x/rtl8187/leds.c b/drivers/net/wireless/realtek/rtl818x/rtl8187/leds.c
+index c2d5b495c179a..c089540116fa7 100644
+--- a/drivers/net/wireless/realtek/rtl818x/rtl8187/leds.c
++++ b/drivers/net/wireless/realtek/rtl818x/rtl8187/leds.c
+@@ -146,7 +146,7 @@ static int rtl8187_register_led(struct ieee80211_hw *dev,
+ 	led->dev = dev;
+ 	led->ledpin = ledpin;
+ 	led->is_radio = is_radio;
+-	strncpy(led->name, name, sizeof(led->name));
++	strlcpy(led->name, name, sizeof(led->name));
  
--	ieee80211_rx(ar->hw, skb);
-+	ieee80211_rx_ni(ar->hw, skb);
-+
- 	return 0;
- }
- 
+ 	led->led_dev.name = led->name;
+ 	led->led_dev.default_trigger = default_trigger;
 -- 
 2.20.1
 
