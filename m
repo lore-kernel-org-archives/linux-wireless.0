@@ -7,39 +7,39 @@ X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F619FC6198
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 19:42:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35712C5DF60
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 19:42:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 67BE8206C3
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 19:42:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0E66A206A3
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 19:42:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="DptXW+4H"
+	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="KmTBSzgd"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732332AbfKHTm2 (ORCPT
+        id S1732342AbfKHTm2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Fri, 8 Nov 2019 14:42:28 -0500
-Received: from mail2.candelatech.com ([208.74.158.173]:46166 "EHLO
+Received: from mail2.candelatech.com ([208.74.158.173]:46176 "EHLO
         mail3.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730759AbfKHTm0 (ORCPT
+        with ESMTP id S1732057AbfKHTm2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Nov 2019 14:42:26 -0500
+        Fri, 8 Nov 2019 14:42:28 -0500
 Received: from ben-dt4.candelatech.com (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
-        by mail3.candelatech.com (Postfix) with ESMTP id A8A5813C2B9;
-        Fri,  8 Nov 2019 11:42:25 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com A8A5813C2B9
+        by mail3.candelatech.com (Postfix) with ESMTP id 9A79F13C344;
+        Fri,  8 Nov 2019 11:42:26 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 9A79F13C344
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-        s=default; t=1573242145;
-        bh=8ELRAG2n71de0dF7xggWJbz2Vlx0Mjl0IOo9finFisw=;
+        s=default; t=1573242146;
+        bh=dAfkrecoZ/4g9FfUejdYcZyZn8oAZsnLU+MkX3o2L+E=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=DptXW+4HMlZ3yQCRNZw6tOZCsyCEYFR5W5KbKXsZxrW+sTojG4wKux/ILPPdSemFP
-         Azq6pMbXijLuQ4jaKCkmESwDhrDpczlh6ts/kGnTI1I/sHA/AVAFLSsNtmfXuwySHA
-         AwqWHUJg2hFywvoGNVIql06LhHErafNNSzK/w1cs=
+        b=KmTBSzgdf3iKFRgeMqbRSsqYCn0hJhml5bNDbt4lZim0FSZyJiDoQLI0zbpQ3/UQj
+         eN7WlrHdTUpInhLCCwv4sEQdRdSxujgq98UjwDu9ZB0AM7RE3Ky24YOD1z+aiQH6Eh
+         8dvJfKNj6QSvlvlLSZGfA/qyEOA1WrZR89sWoMiM=
 From:   greearb@candelatech.com
 To:     linux-wireless@vger.kernel.org
 Cc:     johannes@sipsolutions.net, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 03/10] mac80211: Don't spam kernel with sdata-in-driver failures.
-Date:   Fri,  8 Nov 2019 11:42:04 -0800
-Message-Id: <20191108194210.23618-4-greearb@candelatech.com>
+Subject: [PATCH 08/10] mac80211: Support decrypting action frames for reinsertion into the driver.
+Date:   Fri,  8 Nov 2019 11:42:09 -0800
+Message-Id: <20191108194210.23618-9-greearb@candelatech.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191108194210.23618-1-greearb@candelatech.com>
 References: <20191108194210.23618-1-greearb@candelatech.com>
@@ -52,94 +52,107 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ben Greear <greearb@candelatech.com>
 
-Using 400 hwsim radios with 1 station on each, we see lots and
-lots of kernel warnings about sdata-in-driver check failures:
-
-Feb 19 17:08:22 kernel: WARNING: CPU: 0 PID: 24673 at /home/greearb/git/linux-4.2.dev.y/net/mac80211/driver-ops.h:12 ieee80211_bss_info_change_notify+0xe7/0x166 [mac80211]()
-Feb 19 17:08:22 kernel: S170657910:  Failed check-sdata-in-driver check, flags: 0x0
-Feb 19 17:08:22 kernel: Modules linked in: nf_conntrack_netlink nf_conntrack nfnetlink wanlink(O) mac80211_hwsim nf_defrag_ipv4 mac80211 cfg80211 8021q mrp garp stp llc macvlan pktgen iscsi_tcp libiscsi_tcp libiscsi scsi_transport_iscsi vfat fat ipv6 ppdev pvpanic parport_pc parport 8250_fintek pcspkr joydev i2c_piix4 floppy cirrus ttm drm_kms_helper drm i2c_core [last unloaded: nfnetlink]
-Feb 19 17:08:22 kernel: CPU: 0 PID: 24673 Comm: iwconfig Tainted: G        W  O    4.2.8+ #53
-Feb 19 17:08:22 kernel: Hardware name: OpenStack Foundation OpenStack Nova, BIOS Bochs 01/01/2011
-Feb 19 17:08:22 kernel: 0000000000000009 ffff8800bb233b68 ffffffff81696197 0000000000000006
-Feb 19 17:08:22 kernel: ffff8800bb233bb8 ffff8800bb233ba8 ffffffff810e1fb4 ffff8800bb233c68
-Feb 19 17:08:22 kernel: ffffffffa02ec8f2 ffff88037424a800 0000000000040000 ffff88037424b018
-Feb 19 17:08:22 kernel: Call Trace:
-Feb 19 17:08:22 kernel: [<ffffffff81696197>] dump_stack+0x4c/0x6e
-Feb 19 17:08:22 kernel: [<ffffffff810e1fb4>] warn_slowpath_common+0x96/0xb0
-Feb 19 17:08:22 kernel: [<ffffffffa02ec8f2>] ? ieee80211_bss_info_change_notify+0xe7/0x166 [mac80211]
-Feb 19 17:08:22 kernel: [<ffffffff810e200f>] warn_slowpath_fmt+0x41/0x43
-Feb 19 17:08:22 kernel: [<ffffffffa02ec8f2>] ieee80211_bss_info_change_notify+0xe7/0x166 [mac80211]
-Feb 19 17:08:22 kernel: [<ffffffffa02fda00>] ieee80211_recalc_txpower+0x28/0x2d [mac80211]
-Feb 19 17:08:22 kernel: [<ffffffffa0304155>] ieee80211_set_tx_power+0x8a/0x152 [mac80211]
-Feb 19 17:08:22 kernel: [<ffffffffa027e4e1>] cfg80211_wext_siwtxpower+0xdc/0x12b [cfg80211]
-Feb 19 17:08:22 kernel: [<ffffffff816837dc>] ioctl_standard_call+0x4a/0xa3
-Feb 19 17:08:22 kernel: [<ffffffff816840f5>] ? iw_handler_get_private+0x49/0x49
-Feb 19 17:08:22 kernel: [<ffffffff81683792>] ? call_commit_handler+0x2c/0x2c
-Feb 19 17:08:22 kernel: [<ffffffff81682fba>] wireless_process_ioctl+0x6b/0x124
-Feb 19 17:08:22 kernel: [<ffffffff816840f5>] ? iw_handler_get_private+0x49/0x49
-Feb 19 17:08:22 kernel: [<ffffffff81683915>] wext_handle_ioctl+0x64/0xa1
-Feb 19 17:08:22 kernel: [<ffffffff811f5af6>] ? inode_init_always+0x109/0x1b0
-Feb 19 17:08:22 kernel: [<ffffffff815ffd30>] dev_ioctl+0x5a5/0x5d6
-Feb 19 17:08:22 kernel: [<ffffffff811b3650>] ? handle_mm_fault+0xe6c/0xeb5
-Feb 19 17:08:22 kernel: [<ffffffff815d4f12>] sock_ioctl+0x46/0x208
-Feb 19 17:08:22 kernel: [<ffffffff811efb3c>] do_vfs_ioctl+0x372/0x420
-Feb 19 17:08:22 kernel: [<ffffffff811365d2>] ? current_kernel_time+0x9/0x2d
-Feb 19 17:08:22 kernel: [<ffffffff8115c765>] ? __audit_syscall_entry+0xbc/0xde
-Feb 19 17:08:22 kernel: [<ffffffff811f7a59>] ? __fget_light+0x28/0x4a
-Feb 19 17:08:22 kernel: [<ffffffff811efc3f>] SyS_ioctl+0x55/0x7a
-Feb 19 17:08:22 kernel: [<ffffffff8169bcf2>] entry_SYSCALL_64_fastpath+0x16/0x75
-Feb 19 17:08:22 kernel: ---[ end trace d4e525588dd9d9fc ]---
-Feb 19 17:08:22 kernel: cfg80211: Setting DFS Master region in update_regulatory, was: 00 unset, new: 00 unset  lr: ffff8803ca63b300  regdom: ffffffffa0280f50
-
-Instead, warn once, and then be silent after that.
+Some drivers, like ath10k-ct support rxswcrypt, but the firmware needs to
+handle at least part of the blockack logic internally.  Since firmware cannot
+decode the frame in rxswcrypt mode, this patch adds a way for the driver to
+request to be delivered the decrypted blockack action frames.  The
+driver can then re-insert the decrypted frame for proper handling.
 
 Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- net/mac80211/driver-ops.h | 16 +++++++++++++++-
- 1 file changed, 15 insertions(+), 1 deletion(-)
+ include/net/mac80211.h    | 10 ++++++++++
+ net/mac80211/driver-ops.c |  9 +++++++++
+ net/mac80211/driver-ops.h |  3 +++
+ net/mac80211/iface.c      |  7 +++++++
+ 4 files changed, 29 insertions(+)
 
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 2c9b3eb8b652..d8967cd461fe 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -19,6 +19,17 @@ static inline bool check_sdata_in_driver(struct ieee80211_sub_if_data *sdata)
- 		     sdata->dev ? sdata->dev->name : sdata->name, sdata->flags);
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 523c6a09e1c8..7ea9a17c8cb8 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -3752,6 +3752,14 @@ enum ieee80211_reconfig_type {
+  *
+  * @start_pmsr: start peer measurement (e.g. FTM) (this call can sleep)
+  * @abort_pmsr: abort peer measurement (this call can sleep)
++ * @consume_block_ack: Offer block-ack management frames back to driver to see
++ *      if it wishes to consume it.  This can be useful for when firmware wants
++ *      to handle block-ack logic itself, but PMF is used and the firmware
++ *      cannot actually decode the block-ack frames itself.  So, firmware can
++ *      pass the encoded block-ack up the stack, and receive it through this
++ *      callback.  If return value is zero, the mac80211 stack will not further
++ *      process the skb.  skb will be freed by calling code, so driver must
++ *      make a copy of anything it needs in the skb before returning.
+  */
+ struct ieee80211_ops {
+ 	void (*tx)(struct ieee80211_hw *hw,
+@@ -4043,6 +4051,8 @@ struct ieee80211_ops {
+ 	void (*del_nan_func)(struct ieee80211_hw *hw,
+ 			    struct ieee80211_vif *vif,
+ 			    u8 instance_id);
++	int (*consume_block_ack)(struct ieee80211_hw *hw,
++				 struct ieee80211_vif *vif, struct sk_buff* skb);
+ 	bool (*can_aggregate_in_amsdu)(struct ieee80211_hw *hw,
+ 				       struct sk_buff *head,
+ 				       struct sk_buff *skb);
+diff --git a/net/mac80211/driver-ops.c b/net/mac80211/driver-ops.c
+index c9a8a2433e8a..aba803bd2718 100644
+--- a/net/mac80211/driver-ops.c
++++ b/net/mac80211/driver-ops.c
+@@ -49,6 +49,15 @@ void drv_stop(struct ieee80211_local *local)
+ 	local->started = false;
  }
  
-+static inline bool _check_sdata_in_driver(struct ieee80211_sub_if_data *sdata,
-+					  bool can_warn)
++int drv_consume_block_ack(struct ieee80211_local *local,
++			  struct ieee80211_sub_if_data *sdata, struct sk_buff *skb)
 +{
-+	if (can_warn)
-+		return !WARN(!(sdata->flags & IEEE80211_SDATA_IN_DRIVER),
-+			     "%s:  Failed check-sdata-in-driver check, flags: 0x%x\n",
-+			     sdata->dev ? sdata->dev->name : sdata->name, sdata->flags);
-+
-+	return (sdata->flags & IEEE80211_SDATA_IN_DRIVER);
++	/*pr_warn("consume-block-ack: %p\n", local->ops->consume_block_ack);*/
++	if (local->ops->consume_block_ack)
++		return local->ops->consume_block_ack(&local->hw, &sdata->vif, skb);
++	return -EINVAL;
 +}
 +
- static inline struct ieee80211_sub_if_data *
- get_bss_sdata(struct ieee80211_sub_if_data *sdata)
+ int drv_add_interface(struct ieee80211_local *local,
+ 		      struct ieee80211_sub_if_data *sdata)
  {
-@@ -153,6 +164,7 @@ static inline void drv_bss_info_changed(struct ieee80211_local *local,
- 					struct ieee80211_bss_conf *info,
- 					u32 changed)
- {
-+	static int warn_once = true;
- 	might_sleep();
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index e734a85165ad..b3cf5d88f83e 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -148,6 +148,9 @@ static inline void drv_set_wakeup(struct ieee80211_local *local,
+ }
+ #endif
  
- 	if (WARN_ON_ONCE(changed & (BSS_CHANGED_BEACON |
-@@ -170,8 +182,10 @@ static inline void drv_bss_info_changed(struct ieee80211_local *local,
- 			  !(changed & BSS_CHANGED_TXPOWER))))
- 		return;
++int drv_consume_block_ack(struct ieee80211_local *local,
++			  struct ieee80211_sub_if_data *sdata, struct sk_buff *skb);
++
+ int drv_add_interface(struct ieee80211_local *local,
+ 		      struct ieee80211_sub_if_data *sdata);
  
--	if (!check_sdata_in_driver(sdata))
-+	if (!_check_sdata_in_driver(sdata, warn_once)) {
-+		warn_once = false;
- 		return;
-+	}
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index af8b09214786..f050410d0986 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -1249,6 +1249,11 @@ static void ieee80211_iface_work(struct work_struct *work)
+ 		if (ieee80211_is_action(mgmt->frame_control) &&
+ 		    mgmt->u.action.category == WLAN_CATEGORY_BACK) {
+ 			int len = skb->len;
++			int barv = drv_consume_block_ack(local, sdata, skb);
++
++			/*pr_err("called drv_consume_blockack, rv: %d\n", barv);*/
++			if (barv == 0)
++				goto done_skb_free;
  
- 	trace_drv_bss_info_changed(local, sdata, info, changed);
- 	if (local->ops->bss_info_changed)
+ 			mutex_lock(&local->sta_mtx);
+ 			sta = sta_info_get_bss(sdata, mgmt->sa);
+@@ -1349,6 +1354,8 @@ static void ieee80211_iface_work(struct work_struct *work)
+ 			break;
+ 		}
+ 
++	done_skb_free:
++
+ 		kfree_skb(skb);
+ 	}
+ 
 -- 
 2.20.1
 
