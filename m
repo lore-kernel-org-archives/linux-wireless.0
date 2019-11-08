@@ -2,89 +2,81 @@ Return-Path: <SRS0=s5sB=ZA=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5486CFA372C
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 19:37:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CE5AC5DF60
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 19:42:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1F2C720679
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 19:37:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BE4D1206C3
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 19:42:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="D8G7xJ2a";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="PuqdhLSN"
+	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="U9t4Mnim"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388339AbfKHTh2 (ORCPT
+        id S1731283AbfKHTm0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Nov 2019 14:37:28 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:56856 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387561AbfKHTh2 (ORCPT
+        Fri, 8 Nov 2019 14:42:26 -0500
+Received: from mail2.candelatech.com ([208.74.158.173]:46156 "EHLO
+        mail3.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730685AbfKHTmZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Nov 2019 14:37:28 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 6906F61282; Fri,  8 Nov 2019 19:37:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1573241847;
-        bh=Z3j0Gz/vD7Z3P0IwT9HGD7SHVyARaBMIuWDN4vqQy/c=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=D8G7xJ2a2l2NVikZ4c4hcW5sfWh6Aw+8s9znPFLbAw8CIqC+5U+oXtRilZbhuejQJ
-         S3suPJjQL5+3Uwrh8xesyDN1OE0d/mf4JnQs2h0t9DL1X0OZOcmd4yhF7SYZ7ggHGw
-         7g5JPlpCjlxi7LN1FtNCKF65M8oAtNnlgWbvy/jI=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 8C8A060247;
-        Fri,  8 Nov 2019 19:37:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1573241846;
-        bh=Z3j0Gz/vD7Z3P0IwT9HGD7SHVyARaBMIuWDN4vqQy/c=;
-        h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=PuqdhLSNQDSMLBYbgf4QjgorUe8CvvN7btOUMqHcjb6M7xm8GepHHN7JrU7qlb3RP
-         71i/qJg50P2sNRPDAFpSMqPvkFoiAIBxcTc5AEHWL87CsDapqhOj54yKmPIMNh0xGu
-         4jDu2oEwnHNw7TYEvcnYzSjJ7322y8JcwlYPvzZc=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 8C8A060247
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
+        Fri, 8 Nov 2019 14:42:25 -0500
+Received: from ben-dt4.candelatech.com (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
+        by mail3.candelatech.com (Postfix) with ESMTP id 4396213C2B0;
+        Fri,  8 Nov 2019 11:42:25 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 4396213C2B0
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
+        s=default; t=1573242145;
+        bh=CWOFwbroLrpeV7aUmHEyw2QuTFO/ZM9C25Nk3YNcBdI=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=U9t4Mnim31OuJPesUuIITcEkj8iTgVnBmak7n7yIahtF7XYRsF1GbE43OiItBKPWt
+         L4Gj8CWQFKPANMPv6pe2uKzujDucZTCwDYH5XaOXsMUG8dSSQ9q5DOpPxOnCE31oA7
+         Bta/+SZPFKOeN+HIJEoY9zBs/7VBDy/ff5WMM44o=
+From:   greearb@candelatech.com
+To:     linux-wireless@vger.kernel.org
+Cc:     johannes@sipsolutions.net, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 01/10] mac80211: Add comment about tx on monitor devs.
+Date:   Fri,  8 Nov 2019 11:42:02 -0800
+Message-Id: <20191108194210.23618-2-greearb@candelatech.com>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20191108194210.23618-1-greearb@candelatech.com>
+References: <20191108194210.23618-1-greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v5.4 1/3] iwlwifi: pcie: don't consider IV len in A-MSDU
-From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20191107115149.10709-1-luca@coelho.fi>
-References: <20191107115149.10709-1-luca@coelho.fi>
-To:     Luca Coelho <luca@coelho.fi>
-Cc:     linux-wireless@vger.kernel.org
-User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20191108193727.6906F61282@smtp.codeaurora.org>
-Date:   Fri,  8 Nov 2019 19:37:27 +0000 (UTC)
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Luca Coelho <luca@coelho.fi> wrote:
+From: Ben Greear <greearb@candelatech.com>
 
-> From: Mordechay Goodstein <mordechay.goodstein@intel.com>
-> 
-> From gen2 PN is totally offloaded to hardware (also the space for the
-> IV isn't part of the skb).  As you can see in mvm/mac80211.c:3545, the
-> MAC for cipher types CCMP/GCMP doesn't set
-> IEEE80211_KEY_FLAG_PUT_IV_SPACE for gen2 NICs.
-> 
-> This causes all the AMSDU data to be corrupted with cipher enabled.
-> 
-> Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
-> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+This tries to encapsulate email conversation with Johannes on
+this topic for posterity's sake.
 
-Patch applied to wireless-drivers.git, thanks.
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ net/mac80211/tx.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-cb1a4badf592 iwlwifi: pcie: don't consider IV len in A-MSDU
-
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 1fa422782905..05982538c3cf 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2277,6 +2277,12 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
+ 	 * isn't always enough to find the interface to use; for proper
+ 	 * VLAN/WDS support we will need a different mechanism (which
+ 	 * likely isn't going to be monitor interfaces).
++	 *
++	 * I had a question about why we need to do this, and the answer
++	 * is that old hostap used this API and expects it to work like this,
++	 * and also monitor vdevs are not directly mapped into the driver
++	 * (and have no chantx in my case, at least), so you cannot directly
++	 * transmit on a monitor port anyway.
+ 	 */
+ 	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 
 -- 
-https://patchwork.kernel.org/patch/11232699/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.20.1
 
