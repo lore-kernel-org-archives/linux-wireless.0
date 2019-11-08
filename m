@@ -2,173 +2,166 @@ Return-Path: <SRS0=s5sB=ZA=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC7B1FA372C
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 12:07:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD96DC5DF60
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 12:07:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C11A52085B
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 12:07:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573214820;
-	bh=jcdjDlMMFADdICBMD4s0I1aeRQNEcKQDEw2Nqhkdgco=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=mlyYuZeNjPDX2Qrn5owKliDgbrVMgBK/6bNZMKX4TSxy8ZWY0wy1bbQca63XeVKJl
-	 C9DZnp5u+OLjQTA5nnB6TcY4XLM3dUCzlx/+gjvrZlD97mRgEjUKzpSt3y9Zifw7VN
-	 RnfKkRsCyCLX97x93l2BSPpUZQQP4So/pHO9qSP0=
+	by mail.kernel.org (Postfix) with ESMTP id 6FB94215EA
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 12:07:29 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=quantenna.com header.i=@quantenna.com header.b="cJm89hJ8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390704AbfKHMGv (ORCPT
+        id S2390609AbfKHMH2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Nov 2019 07:06:51 -0500
-Received: from mail.kernel.org ([198.145.29.99]:54176 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2389130AbfKHLlE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Nov 2019 06:41:04 -0500
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 4E314222CF;
-        Fri,  8 Nov 2019 11:41:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573213263;
-        bh=jcdjDlMMFADdICBMD4s0I1aeRQNEcKQDEw2Nqhkdgco=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=pddRRyvDLlCVvXlVgHayefJ5G5EEI1E2zX8Ln5h3nWiKBJ+e3cROVY3oGwrEdWsI3
-         9841CdSU/TZWcj5PtX9uB6ab4SWOpIz7WFjz1mZStoFxrZzlfKOT+9bJdF82Giyuw3
-         qEfoQ3WDgskFZkB+rOEyiwedMhjIvM+VxviGo+vM=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Felix Fietkau <nbd@nbd.name>, Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 127/205] ath9k: add back support for using active monitor interfaces for tx99
-Date:   Fri,  8 Nov 2019 06:36:34 -0500
-Message-Id: <20191108113752.12502-127-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191108113752.12502-1-sashal@kernel.org>
-References: <20191108113752.12502-1-sashal@kernel.org>
+        Fri, 8 Nov 2019 07:07:28 -0500
+Received: from mx0b-00183b01.pphosted.com ([67.231.157.42]:30534 "EHLO
+        mx0a-00183b01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S2391877AbfKHMHV (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 8 Nov 2019 07:07:21 -0500
+Received: from pps.filterd (m0048103.ppops.net [127.0.0.1])
+        by mx0b-00183b01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id xA8C57kA023002;
+        Fri, 8 Nov 2019 05:05:36 -0700
+Received: from nam03-dm3-obe.outbound.protection.outlook.com (mail-dm3nam03lp2056.outbound.protection.outlook.com [104.47.41.56])
+        by mx0b-00183b01.pphosted.com with ESMTP id 2w41u0njwb-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 08 Nov 2019 05:05:36 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=e5aQhd+EwxZXlW+HXhyiQonu4ErC4xiSfzPtLkAbUXjfBGOvmTo/rw20z9tzaUPj98CUqXuuUTa71vp22eOh7GS28+33MGd5Rhf2SDFaqMIKcQVG+ZVDOoV1mnzfwY13daacNmQp57AXyN2fNt4DnOwxpG4aFdy6g0DhoAbd9rUEkmuOSQOQfEI5Tp+tBnA35jDYvBfTU44bccFnuY2WvIb0WbJpQAC+km5Q+eHFNEJcce/IMYaFg2tBzObYTrGVPtljZiKJjIHc9bQNNxTKXEUyMZA4ZftTl3xsCmlzew/tkzL/t1bvvwZhLQi1TgzfHiMLSjxuSPYZHrfi9t77Jg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=i3UQI8ZWS2/avjt/CX90h55Q5sU/YPXSZKU8KVlHu7g=;
+ b=Tj47dHUMDdD79aIBYnhGBs9HOuqTB2KlczzkeGkAr2BF7n0ZxCbajx/fkgD5L5aZhvsXC0JvmEF2mmhiQ79gzJC0AOjxXostgJHW5j+ln1K8+9GvVFGGu66cZKLkL87xazHBK0MxcVNwaXK+HVOLT06FUigS2lmTi38icOOMONnvC/KJu9nbJI96EZOrDMFVmmcrjNYsyi/6619d8WqYwrn3eA7HLFC6o1M9k6RgGCkL8LOdkF8orrJmBnjj6t/SaM8mPt472j8DO2YDbqVt3yL0OvCufRiSx9t56BR8VMSHyeH2H7Ofo4LzREVuC4duKk03L060jDTu0rovoxIpfQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=quantenna.com; dmarc=pass action=none
+ header.from=quantenna.com; dkim=pass header.d=quantenna.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quantenna.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=i3UQI8ZWS2/avjt/CX90h55Q5sU/YPXSZKU8KVlHu7g=;
+ b=cJm89hJ8D5NJwgqkyu5nwE2TKk60OuQ5vubHG5UjjpUnM1GFUpZXU49FmJxi2G63IQZvFu5JAh0/kx/MXjdKeq24kLlQhT2vgMQ42wtiSlgrIC7GGg1pS/dex88tUN3tAR2FF9KVEi3oorHCGpBxrhrY6QOVZccvBZXz3TemQA0=
+Received: from MWHPR0501MB3801.namprd05.prod.outlook.com (10.167.163.161) by
+ MWHPR0501MB3835.namprd05.prod.outlook.com (10.167.173.13) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2430.13; Fri, 8 Nov 2019 12:05:34 +0000
+Received: from MWHPR0501MB3801.namprd05.prod.outlook.com
+ ([fe80::ed3f:8a5a:a8d5:1c71]) by MWHPR0501MB3801.namprd05.prod.outlook.com
+ ([fe80::ed3f:8a5a:a8d5:1c71%6]) with mapi id 15.20.2430.020; Fri, 8 Nov 2019
+ 12:05:34 +0000
+Received: from SN6PR05MB4928.namprd05.prod.outlook.com (52.135.117.74) by
+ SN6PR05MB5664.namprd05.prod.outlook.com (52.135.111.223) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2451.16; Fri, 8 Nov 2019 12:05:11 +0000
+Received: from SN6PR05MB4928.namprd05.prod.outlook.com
+ ([fe80::61a0:dd3d:3477:29c9]) by SN6PR05MB4928.namprd05.prod.outlook.com
+ ([fe80::61a0:dd3d:3477:29c9%5]) with mapi id 15.20.2451.013; Fri, 8 Nov 2019
+ 12:05:10 +0000
+From:   Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To:     Johannes Berg <johannes@sipsolutions.net>
+CC:     Tamizh chelvam <tamizhr@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCHv8 0/6] cfg80211/mac80211: Add support for TID specific
+ configuration
+Thread-Topic: [PATCHv8 0/6] cfg80211/mac80211: Add support for TID specific
+ configuration
+Thread-Index: AQHVk9Zp+IDFjvKhwUy86pHdyrrRoqeBOWSA///PyYCAACipgA==
+Date:   Fri, 8 Nov 2019 12:05:10 +0000
+Message-ID: <20191108120504.ptl25hacxcftb7tw@bars>
+References: <1572957714-16085-1-git-send-email-tamizhr@codeaurora.org>
+ <20191108093207.uv4j44xpm2qvtsv5@bars>
+ <84ca3a8b61757360ab9898afcdd3f2f63c770f86.camel@sipsolutions.net>
+In-Reply-To: <84ca3a8b61757360ab9898afcdd3f2f63c770f86.camel@sipsolutions.net>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-clientproxiedby: BY5PR03CA0003.namprd03.prod.outlook.com
+ (2603:10b6:a03:1e0::13) To SN6PR05MB4928.namprd05.prod.outlook.com
+ (2603:10b6:805:9d::10)
+x-ms-exchange-messagesentrepresentingtype: 1
+x-originating-ip: [195.182.157.78]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 569990b5-028d-4a28-48e2-08d76443e77a
+x-ms-traffictypediagnostic: SN6PR05MB5664:|MWHPR0501MB3835:
+x-microsoft-antispam-prvs: <SN6PR05MB5664AA13EA6357E80D102B3EA37B0@SN6PR05MB5664.namprd05.prod.outlook.com>
+x-moderation-data: 11/8/2019 12:05:31 PM
+x-ms-oob-tlc-oobclassifiers: OLM:10000;
+x-forefront-prvs: 0215D7173F
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(7916004)(136003)(376002)(39850400004)(346002)(396003)(366004)(189003)(199004)(33716001)(436003)(6512007)(305945005)(71190400001)(7736002)(1076003)(5660300002)(229853002)(9686003)(6436002)(476003)(6916009)(256004)(6486002)(486006)(52116002)(11346002)(446003)(8676002)(6246003)(81166006)(8936002)(316002)(99286004)(26005)(14454004)(3846002)(6116002)(386003)(71200400001)(66066001)(76176011)(66556008)(25786009)(86362001)(6506007)(186003)(102836004)(66476007)(66946007)(4326008)(64756008)(478600001)(2906002)(54906003)(81156014)(66446008);DIR:OUT;SFP:1101;SCL:1;SRVR:MWHPR0501MB3835;H:MWHPR0501MB3801.namprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+received-spf: None (protection.outlook.com: quantenna.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: KCwTD+aEqSuouYtxQTPeK/p7ipvh6meg9Jtoj4y6jPNw6KY+YTsb2WA1ynacHCdzF3dVkeZmc3ncmlZ2Jhif1/piV58RkdOPN+O6yXpPtqQBgwfhI2pduZQW7aSb7q4s0dN/iNASK6G/T6SjTCNT/KAXpRI01qlJEdHZoxVXQkenkcq3xmMGPCTqid4Pko+hzC2wp6A6mzjxTTDM+UbkNL/QF34Qvdbz84j30TCOxpd2fbgVb0EfGMtCHb6j4AaEdtxRW0jnzPTT4GfTh4oFlr+SylRlrWeU+HXpLNlnr42MhpBtFZ0uM5aBPYKxqzmyFtyIdAucE8JCVrZztK8CLsj6cm7Y3CMUE3Ssn8n1fM7cIlXVZ06agJtJkNQ6BjDd1VL4+YP5mvPn+OfPDI9YYVlG/kw6D0v+vvynYz5vzCPmd+0hvPLZomOeSc9UYbF9
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <6EC29C0B87002145B1B884546745DF0A@namprd05.prod.outlook.com>
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+X-OriginatorOrg: quantenna.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 569990b5-028d-4a28-48e2-08d76443e77a
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: a355dbce-62b4-4789-9446-c1d5582180ff
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: XjcNJ09RkDDaHHeYXm8XtWk+SevHUmyp8MEaz24EDGjNOevD06kDStk7knrjmtTCMYQQbnvfwiFLP9mB9wPCtnbLbixJf/iQzB5OQCmW6iscNwpl+7CmgyTRqUzAHSs2rLLHacywv1qI/JqPwwyu9KINGWYYIAMzgImtOA2+veo2qnsSYxHIG9oqe1WFQLOyM+jSBAW5TX9EmlGnG7HoHQ==
+X-MS-Exchange-CrossTenant-originalarrivaltime: 08 Nov 2019 12:05:34.4991
+ (UTC)
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR0501MB3835
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.95,18.0.572
+ definitions=2019-11-08_03:2019-11-08,2019-11-08 signatures=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 priorityscore=1501
+ suspectscore=0 impostorscore=0 mlxlogscore=999 phishscore=0 bulkscore=0
+ mlxscore=0 clxscore=1015 adultscore=0 malwarescore=0 lowpriorityscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-1910280000
+ definitions=main-1911080120
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Felix Fietkau <nbd@nbd.name>
+> > - 'apply to all TIDs' usecase
+> >   Currently, if peer is not specified, then configuration is applied to
+> >   all the connected STAs. It is tempting to use some spare TID value
+> >   to inform drivers that provided configuration should be applied to
+> >   all TIDs of the specified STA or even to all TIDS and STAs. But that
+> >   can not be left up to drivers since this value needs to be passed
+> >   from userspace tools, e.g. from iw.
+>=20
+> I was *just* replying on exactly the same point over in patch 1 (not
+> sent yet). It's actually not even clear to me that the configuration
+> really would be applied to *all* STAs, it's sort of left open for the
+> driver, afaict?
+>=20
+> But I agree with you that this is not a good thing.
+>=20
+> I don't think using a spare TID value is the right signalling, we can
+> add another attribute? E.g. we could easily add
+>=20
+> 	NL80211_TID_CONFIG_ATTR_OVERRIDE
+>=20
+> and make that be
+>=20
+> @NL80211_TID_CONFIG_ATTR_OVERRIDE: flag attribute, valid only if no STA
+> 	is selected, if set indicates that the new configuration
+> 	overrides all previous STA configurations, otherwise previous
+> 	STA-specific configurations should be left untouched
+>=20
+> You also raise a good point wrt. "all TIDs" - but then we should
+> probably just remove NL80211_TID_CONFIG_ATTR_TID and add a new
+> NL80211_TID_CONFIG_ATTR_TIDS as a bitmap? OTOH, it's not hard to just
+> explicitly spell out all TIDs either, I guess, just makes the message a
+> bit bigger.
 
-[ Upstream commit 6df0580be8bc30803c4d8b2ed9c2230a2740c795 ]
+The idea with bitmask for TIDs looks good. It eliminates the need for both
+'all TIDs' define and additional attribute NL80211_TID_CONFIG_ATTR_OVERRIDE=
+.
+In fact, almost no changes are needed for the patch, mostly comments need
+to be updated. Manual typing in iw will be less convenient, but I guess
+this interface is not supposed to be used by humans after all...
 
-Various documented examples on how to set up tx99 with ath9k rely
-on setting up a regular monitor interface for setting the channel.
-My previous patch "ath9k: fix tx99 with monitor mode interface" made
-it possible to set it up this way again. However, it was removing support
-for using an active monitor interface, which is required for controlling
-the bitrate as well, since the bitrate is not passed down with a regular
-monitor interface.
-
-This patch partially reverts the previous one, but keeps support for using
-a regular monitor interface to keep documented steps working in cases
-where the bitrate does not matter
-
-Fixes: d9c52fd17cb48 ("ath9k: fix tx99 with monitor mode interface")
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |  1 +
- drivers/net/wireless/ath/ath9k/main.c  | 10 ++++++++--
- drivers/net/wireless/ath/ath9k/tx99.c  |  7 +++++++
- drivers/net/wireless/ath/ath9k/xmit.c  |  2 +-
- 4 files changed, 17 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 50206a6d8a850..0fca44e91a712 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -1074,6 +1074,7 @@ struct ath_softc {
- 
- 	struct ath_spec_scan_priv spec_priv;
- 
-+	struct ieee80211_vif *tx99_vif;
- 	struct sk_buff *tx99_skb;
- 	bool tx99_state;
- 	s16 tx99_power;
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 6ce4b9f1dcb44..c85f613e8ceb5 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1251,8 +1251,13 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
- 	struct ath_vif *avp = (void *)vif->drv_priv;
- 	struct ath_node *an = &avp->mcast_node;
- 
--	if (IS_ENABLED(CONFIG_ATH9K_TX99))
--		return -EOPNOTSUPP;
-+	if (IS_ENABLED(CONFIG_ATH9K_TX99)) {
-+		if (sc->cur_chan->nvifs >= 1) {
-+			mutex_unlock(&sc->mutex);
-+			return -EOPNOTSUPP;
-+		}
-+		sc->tx99_vif = vif;
-+	}
- 
- 	mutex_lock(&sc->mutex);
- 
-@@ -1337,6 +1342,7 @@ static void ath9k_remove_interface(struct ieee80211_hw *hw,
- 	ath9k_p2p_remove_vif(sc, vif);
- 
- 	sc->cur_chan->nvifs--;
-+	sc->tx99_vif = NULL;
- 	if (!ath9k_is_chanctx_enabled())
- 		list_del(&avp->list);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/tx99.c b/drivers/net/wireless/ath/ath9k/tx99.c
-index 9b05ffb68c34a..95544ce05acf9 100644
---- a/drivers/net/wireless/ath/ath9k/tx99.c
-+++ b/drivers/net/wireless/ath/ath9k/tx99.c
-@@ -54,6 +54,7 @@ static struct sk_buff *ath9k_build_tx99_skb(struct ath_softc *sc)
- 	struct ieee80211_hdr *hdr;
- 	struct ieee80211_tx_info *tx_info;
- 	struct sk_buff *skb;
-+	struct ath_vif *avp;
- 
- 	skb = alloc_skb(len, GFP_KERNEL);
- 	if (!skb)
-@@ -71,11 +72,17 @@ static struct sk_buff *ath9k_build_tx99_skb(struct ath_softc *sc)
- 	memcpy(hdr->addr2, hw->wiphy->perm_addr, ETH_ALEN);
- 	memcpy(hdr->addr3, hw->wiphy->perm_addr, ETH_ALEN);
- 
-+	if (sc->tx99_vif) {
-+		avp = (struct ath_vif *) sc->tx99_vif->drv_priv;
-+		hdr->seq_ctrl |= cpu_to_le16(avp->seq_no);
-+	}
-+
- 	tx_info = IEEE80211_SKB_CB(skb);
- 	memset(tx_info, 0, sizeof(*tx_info));
- 	rate = &tx_info->control.rates[0];
- 	tx_info->band = sc->cur_chan->chandef.chan->band;
- 	tx_info->flags = IEEE80211_TX_CTL_NO_ACK;
-+	tx_info->control.vif = sc->tx99_vif;
- 	rate->count = 1;
- 	if (ah->curchan && IS_CHAN_HT(ah->curchan)) {
- 		rate->flags |= IEEE80211_TX_RC_MCS;
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 3ae8d0585b6f3..4b7a7fc2a0fe0 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -2974,7 +2974,7 @@ int ath9k_tx99_send(struct ath_softc *sc, struct sk_buff *skb,
- 		return -EINVAL;
- 	}
- 
--	ath_set_rates(NULL, NULL, bf);
-+	ath_set_rates(sc->tx99_vif, NULL, bf);
- 
- 	ath9k_hw_set_desc_link(sc->sc_ah, bf->bf_desc, bf->bf_daddr);
- 	ath9k_hw_tx99_start(sc->sc_ah, txctl->txq->axq_qnum);
--- 
-2.20.1
-
+Regards,
+Sergey
