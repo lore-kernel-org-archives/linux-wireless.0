@@ -7,49 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61410FA372C
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 12:10:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DB04C5DF60
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 12:11:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2F53F2085B
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 12:10:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6D7332085B
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 12:11:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573215059;
-	bh=cE+XnpIA2UlQ3+nHh+xT7kPEuciIqH7gZf5c/sPtmCU=;
+	s=default; t=1573215066;
+	bh=HImH6DBQCdYDbrYV5nm8VU8wabB9MtuWvxvVxo2aZSQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=jwmfS/DHebKQmDeUTX9aYPudeXKDO07mpRDR2mt+hI2CCFIagnWb+EvcgQVnMkQgj
-	 8myzI3qf/DR0cj1+xz7ERoW1ur99W4mKpop0u9SXv+rAzYtdLAX2Q1VWzvpOueHevK
-	 /nbqtvjqa9THkaX3IQCgfspFPRV5FdmSD2B53IMc=
+	b=Wv7zcsTJPlrapypmphW1gvzoA0prSmtm+rhVsDHSVja9+1YXQA3HuwUZdGzGfUM83
+	 4n+etCReZ4TCxyZaYoHcdShutIrZtb1IV+ngPK+seKJd8BOp/D//O8NkIHY6H6U61z
+	 DnLchz7bPFhlG4b+8NEYx3PXIu3EJnikjyGyg4X4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733233AbfKHLjU (ORCPT
+        id S2390349AbfKHMLB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Nov 2019 06:39:20 -0500
-Received: from mail.kernel.org ([198.145.29.99]:52300 "EHLO mail.kernel.org"
+        Fri, 8 Nov 2019 07:11:01 -0500
+Received: from mail.kernel.org ([198.145.29.99]:52258 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1733218AbfKHLjT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Nov 2019 06:39:19 -0500
+        id S1732937AbfKHLjR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 8 Nov 2019 06:39:17 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A04B120869;
-        Fri,  8 Nov 2019 11:39:17 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 856B5222CD;
+        Fri,  8 Nov 2019 11:39:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573213158;
-        bh=cE+XnpIA2UlQ3+nHh+xT7kPEuciIqH7gZf5c/sPtmCU=;
+        s=default; t=1573213157;
+        bh=HImH6DBQCdYDbrYV5nm8VU8wabB9MtuWvxvVxo2aZSQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=yrsjlXdM6wL/XIbJrCodJsmytnUQzXl0XoYS9d0r8p4ceSJNHlLBBxvxjWl34gr3G
-         DFgFwbv3Y6VTdLgCc2FD8uwets21ZWxzmo+uk7NjkYNQgJKULqAUE1HANzSO59blyv
-         YaXphWwMRob1BJUjxzLwsfoFYUZXr35ZvJ7tprQk=
+        b=DLWY03XZrU6/qpf6spJqM+Ys74t8ugya9QGjZTlDl0+Os5/3S98BKdaYKl+WgEFzg
+         uugyIPRHxBK13ooP5KasOksHxWEZwk5uSlmwpH7jxKyZRePAvJc6UcajOEpBiXhoHs
+         bQOQyC5iYm5y7NVqZZuA+9vhrtZp/9R6PxgauueA=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Ganapathi Bhat <gbhat@marvell.com>,
-        Vidya Dharmaraju <vidyad@marvell.com>,
-        Cathy Luo <cluo@marvell.com>,
+Cc:     Larry Finger <Larry.Finger@lwfinger.net>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 065/205] mwifiex: do no submit URB in suspended state
-Date:   Fri,  8 Nov 2019 06:35:32 -0500
-Message-Id: <20191108113752.12502-65-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 064/205] rtl8187: Fix warning generated when strncpy() destination length matches the sixe argument
+Date:   Fri,  8 Nov 2019 06:35:31 -0500
+Message-Id: <20191108113752.12502-64-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191108113752.12502-1-sashal@kernel.org>
 References: <20191108113752.12502-1-sashal@kernel.org>
@@ -62,53 +60,34 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ganapathi Bhat <gbhat@marvell.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
 
-[ Upstream commit 7bd4628c2f31c51254aa39628ecae521d00d0b90 ]
+[ Upstream commit 199ba9faca909e77ac533449ecd1248123ce89e7 ]
 
-There is a possible race between USB suspend and main thread:
+In gcc8, when the 3rd argument (size) of a call to strncpy() matches the
+length of the first argument, the compiler warns of the possibility of an
+unterminated string. Using strlcpy() forces a null at the end.
 
-1. After processing the command response, main thread will submit
-rx_cmd URB back so as to process next command response, by
-calling mwifiex_usb_submit_rx_urb.
-
-2. During USB suspend, the suspend handler will check if rx_cmd
-URB is pending(submitted) and if true, kill this URB.
-
-There is a possible race between #1 and #2, where rx_cmd URB will
-be submitted by main thread(#1) after the suspend handler check
-in #2.
-
-To fix this, check if device is already suspended in
-mwifiex_usb_submit_rx_urb, in which case do not submit the URB.
-
-Signed-off-by: Vidya Dharmaraju <vidyad@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/marvell/mwifiex/usb.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/net/wireless/realtek/rtl818x/rtl8187/leds.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
-index 433c6a16870b6..76d80fd545236 100644
---- a/drivers/net/wireless/marvell/mwifiex/usb.c
-+++ b/drivers/net/wireless/marvell/mwifiex/usb.c
-@@ -298,6 +298,13 @@ static int mwifiex_usb_submit_rx_urb(struct urb_context *ctx, int size)
- 	struct mwifiex_adapter *adapter = ctx->adapter;
- 	struct usb_card_rec *card = (struct usb_card_rec *)adapter->card;
+diff --git a/drivers/net/wireless/realtek/rtl818x/rtl8187/leds.c b/drivers/net/wireless/realtek/rtl818x/rtl8187/leds.c
+index c2d5b495c179a..c089540116fa7 100644
+--- a/drivers/net/wireless/realtek/rtl818x/rtl8187/leds.c
++++ b/drivers/net/wireless/realtek/rtl818x/rtl8187/leds.c
+@@ -146,7 +146,7 @@ static int rtl8187_register_led(struct ieee80211_hw *dev,
+ 	led->dev = dev;
+ 	led->ledpin = ledpin;
+ 	led->is_radio = is_radio;
+-	strncpy(led->name, name, sizeof(led->name));
++	strlcpy(led->name, name, sizeof(led->name));
  
-+	if (test_bit(MWIFIEX_IS_SUSPENDED, &adapter->work_flags)) {
-+		mwifiex_dbg(adapter, ERROR,
-+			    "%s: card removed/suspended, EP %d rx_cmd URB submit skipped\n",
-+			    __func__, ctx->ep);
-+		return -1;
-+	}
-+
- 	if (card->rx_cmd_ep != ctx->ep) {
- 		ctx->skb = dev_alloc_skb(size);
- 		if (!ctx->skb) {
+ 	led->led_dev.name = led->name;
+ 	led->led_dev.default_trigger = default_trigger;
 -- 
 2.20.1
 
