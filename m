@@ -2,145 +2,79 @@ Return-Path: <SRS0=s5sB=ZA=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA32DFA372C
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 12:14:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EFB85C5DF60
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 12:20:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 91900206A3
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 12:14:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573215296;
-	bh=Fg5pM85VZ8gc9IacEwwS48xCug5JBY0OJ95DuXzajTs=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=kLoDBhONFuJyVt23PkxRFkIAjZiG6EQZYz+5d1j23iNbpR83VNNmSkfrXLN4SeXMK
-	 XbIX3CzFBgVRTEo+RSI7JHU/YVDi2E2jvKAuso8RARU4PJBAX5tHxgbpElAGbhVRNg
-	 hU5p9dgFhjwu7R5bqkZjO5NxBnWTrMZOdlhMRCnc=
+	by mail.kernel.org (Postfix) with ESMTP id BA18E206DF
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 12:20:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732057AbfKHLh7 (ORCPT
+        id S1731824AbfKHMUH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Nov 2019 06:37:59 -0500
-Received: from mail.kernel.org ([198.145.29.99]:50716 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731981AbfKHLh5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Nov 2019 06:37:57 -0500
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 79FAC21D7E;
-        Fri,  8 Nov 2019 11:37:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573213076;
-        bh=Fg5pM85VZ8gc9IacEwwS48xCug5JBY0OJ95DuXzajTs=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=x5O88K7Pd2bwa14FpvcXui/gGDcwavr8FSr5g3pfkRbqKXUqV2hkX1DVfKHURot0g
-         RrktS9RR0edwgsUYe/kAfTau6O5+7deSBpgTQlN/xwK72brfvDy155+u6LHuC3JQak
-         dM4w5zPo0h4/pSFlpOnkfxjtxvnmM2ashd3uDfmE=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+        Fri, 8 Nov 2019 07:20:07 -0500
+Received: from s3.sipsolutions.net ([144.76.43.62]:59440 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729896AbfKHMUH (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 8 Nov 2019 07:20:07 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.92.3)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1iT3FC-0002Fu-P4; Fri, 08 Nov 2019 13:20:02 +0100
+Message-ID: <1c553c457024b295c7d0a6b118c3848eec28bcbd.camel@sipsolutions.net>
+Subject: Re: [PATCHv8 0/6] cfg80211/mac80211: Add support for TID specific
+ configuration
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 Cc:     Tamizh chelvam <tamizhr@codeaurora.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 003/205] ath10k: fix kernel panic by moving pci flush after napi_disable
-Date:   Fri,  8 Nov 2019 06:34:30 -0500
-Message-Id: <20191108113752.12502-3-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191108113752.12502-1-sashal@kernel.org>
-References: <20191108113752.12502-1-sashal@kernel.org>
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date:   Fri, 08 Nov 2019 13:20:01 +0100
+In-Reply-To: <20191108120504.ptl25hacxcftb7tw@bars>
+References: <1572957714-16085-1-git-send-email-tamizhr@codeaurora.org>
+         <20191108093207.uv4j44xpm2qvtsv5@bars>
+         <84ca3a8b61757360ab9898afcdd3f2f63c770f86.camel@sipsolutions.net>
+         <20191108120504.ptl25hacxcftb7tw@bars>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.30.5 (3.30.5-1.fc29) 
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Tamizh chelvam <tamizhr@codeaurora.org>
+On Fri, 2019-11-08 at 12:05 +0000, Sergey Matyukevich wrote:
 
-[ Upstream commit bd1d395070cca4f42a93e520b0597274789274a4 ]
+> > @NL80211_TID_CONFIG_ATTR_OVERRIDE: flag attribute, valid only if no STA
+> > 	is selected, if set indicates that the new configuration
+> > 	overrides all previous STA configurations, otherwise previous
+> > 	STA-specific configurations should be left untouched
+> > 
+> > You also raise a good point wrt. "all TIDs" - but then we should
+> > probably just remove NL80211_TID_CONFIG_ATTR_TID and add a new
+> > NL80211_TID_CONFIG_ATTR_TIDS as a bitmap? OTOH, it's not hard to just
+> > explicitly spell out all TIDs either, I guess, just makes the message a
+> > bit bigger.
+> 
+> The idea with bitmask for TIDs looks good. It eliminates the need for both
+> 'all TIDs' define and additional attribute NL80211_TID_CONFIG_ATTR_OVERRIDE.
 
-When continuously running wifi up/down sequence, the napi poll
-can be scheduled after the CE buffers being freed by ath10k_pci_flush
+I think we still need NL80211_TID_CONFIG_ATTR_OVERRIDE in some way
+(maybe only as a flag attribute), since you could have
 
-Steps:
-  In a certain condition, during wifi down below scenario might occur.
+ * change all stations (some subset of TIDs) *including* already
+   configured stations
+ * or *excluding* already configured stations
 
-ath10k_stop->ath10k_hif_stop->napi_schedule->ath10k_pci_flush->napi_poll(napi_synchronize).
+> In fact, almost no changes are needed for the patch, mostly comments need
+> to be updated. Manual typing in iw will be less convenient, but I guess
+> this interface is not supposed to be used by humans after all...
 
-In the above scenario, CE buffer entries will be freed up and become NULL in
-ath10k_pci_flush. And the napi_poll has been invoked after the flush process
-and it will try to get the skb from the CE buffer entry and perform some action on that.
-Since the CE buffer already cleaned by pci flush this action will create NULL
-pointer dereference and trigger below kernel panic.
+If that's a concern we can parse a list in iw, e.g. "0,1,2,3" instaed of
+"0xf", right?
 
-Unable to handle kernel NULL pointer dereference at virtual address 0000005c
-PC is at ath10k_pci_htt_rx_cb+0x64/0x3ec [ath10k_pci]
-ath10k_pci_htt_rx_cb [ath10k_pci]
-ath10k_ce_per_engine_service+0x74/0xc4 [ath10k_pci]
-ath10k_ce_per_engine_service [ath10k_pci]
-ath10k_ce_per_engine_service_any+0x74/0x80 [ath10k_pci]
-ath10k_ce_per_engine_service_any [ath10k_pci]
-ath10k_pci_napi_poll+0x48/0xec [ath10k_pci]
-ath10k_pci_napi_poll [ath10k_pci]
-net_rx_action+0xac/0x160
-net_rx_action
-__do_softirq+0xdc/0x208
-__do_softirq
-irq_exit+0x84/0xe0
-irq_exit
-__handle_domain_irq+0x80/0xa0
-__handle_domain_irq
-gic_handle_irq+0x38/0x5c
-gic_handle_irq
-__irq_usr+0x44/0x60
-
-Tested on QCA4019 and firmware version 10.4.3.2.1.1-00010
-
-Signed-off-by: Tamizh chelvam <tamizhr@codeaurora.org>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/net/wireless/ath/ath10k/ahb.c | 4 ++--
- drivers/net/wireless/ath/ath10k/pci.c | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/ahb.c b/drivers/net/wireless/ath/ath10k/ahb.c
-index c9bd0e2b5db7e..be90c9e9e5bc1 100644
---- a/drivers/net/wireless/ath/ath10k/ahb.c
-+++ b/drivers/net/wireless/ath/ath10k/ahb.c
-@@ -655,10 +655,10 @@ static void ath10k_ahb_hif_stop(struct ath10k *ar)
- 	ath10k_ahb_irq_disable(ar);
- 	synchronize_irq(ar_ahb->irq);
- 
--	ath10k_pci_flush(ar);
--
- 	napi_synchronize(&ar->napi);
- 	napi_disable(&ar->napi);
-+
-+	ath10k_pci_flush(ar);
- }
- 
- static int ath10k_ahb_hif_power_up(struct ath10k *ar)
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index af2cf55c4c1e6..97fa5c74f2fe7 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -2068,9 +2068,9 @@ static void ath10k_pci_hif_stop(struct ath10k *ar)
- 
- 	ath10k_pci_irq_disable(ar);
- 	ath10k_pci_irq_sync(ar);
--	ath10k_pci_flush(ar);
- 	napi_synchronize(&ar->napi);
- 	napi_disable(&ar->napi);
-+	ath10k_pci_flush(ar);
- 
- 	spin_lock_irqsave(&ar_pci->ps_lock, flags);
- 	WARN_ON(ar_pci->ps_wake_refcount > 0);
--- 
-2.20.1
+johannes
 
