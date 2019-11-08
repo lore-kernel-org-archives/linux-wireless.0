@@ -7,30 +7,30 @@ X-Spam-Status: No, score=-13.8 required=3.0
 	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1E4BFA372C
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 12:37:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9F1FC5DF60
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 12:38:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9174B2245B
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 12:37:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A14252245B
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 12:38:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727208AbfKHMhu (ORCPT
+        id S1726349AbfKHMi4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Nov 2019 07:37:50 -0500
-Received: from s3.sipsolutions.net ([144.76.43.62]:60362 "EHLO
+        Fri, 8 Nov 2019 07:38:56 -0500
+Received: from s3.sipsolutions.net ([144.76.43.62]:60428 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726457AbfKHMhu (ORCPT
+        with ESMTP id S1725933AbfKHMi4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Nov 2019 07:37:50 -0500
+        Fri, 8 Nov 2019 07:38:56 -0500
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92.3)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1iT3WO-0002bo-7o; Fri, 08 Nov 2019 13:37:48 +0100
+        id 1iT3XS-0002dE-81; Fri, 08 Nov 2019 13:38:54 +0100
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     netdev@vger.kernel.org
 Cc:     linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211-next next-2019-11-08
-Date:   Fri,  8 Nov 2019 13:37:36 +0100
-Message-Id: <20191108123738.17359-1-johannes@sipsolutions.net>
+Subject: pull-request: mac80211 2019-11-08
+Date:   Fri,  8 Nov 2019 13:38:49 +0100
+Message-Id: <20191108123850.17527-1-johannes@sipsolutions.net>
 X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -42,9 +42,10 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Hi Dave,
 
-Here are a couple of more things for net-next. Nothing
-really that relevant, but I figured I'd flush my queue
-now and get some preparatory patches in for 5.5 still.
+Three more small fixes for the current cycle - the allocation
+and its failure must've been around for a while but we've started
+hitting it (I'm also investigating if we have a leak), and the
+inactive time thing also must've been around forever.
 
 Please pull and let me know if there's any problem.
 
@@ -53,57 +54,38 @@ johannes
 
 
 
-The following changes since commit 5b7fe93db008ff013db24239136a25f3ac5142ac:
+The following changes since commit e0a312629fefa943534fc46f7bfbe6de3fdaf463:
 
-  Merge git://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf-next (2019-10-26 22:57:27 -0700)
+  ipv4: Fix table id reference in fib_sync_down_addr (2019-11-07 16:14:36 -0800)
 
 are available in the Git repository at:
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git tags/mac80211-next-for-net-next-2019-11-08
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-net-2019-11-08
 
-for you to fetch changes up to 14f34e36b36ceede9877ca422a62fcac17b52023:
+for you to fetch changes up to 285531f9e6774e3be71da6673d475ff1a088d675:
 
-  cfg80211: VLAN offload support for set_key and set_sta_vlan (2019-11-08 11:19:19 +0100)
-
-----------------------------------------------------------------
-Some relatively small changes:
- * typo fixes in docs
- * APIs for station separation using VLAN tags rather
-   than separate wifi netdevs
- * some preparations for upcoming features (802.3 offload
-   and airtime queue limits (AQL)
- * stack reduction in ieee80211_assoc_success()
- * use DEFINE_DEBUGFS_ATTRIBUTE in hwsim
+  mac80211: fix station inactive_time shortly after boot (2019-11-08 09:17:28 +0100)
 
 ----------------------------------------------------------------
-Chris Packham (1):
-      mac80211: typo fixes in kerneldoc comments
+Three small fixes:
+ * we hit a failure path bug related to
+   ieee80211_txq_setup_flows()
+ * also use kvmalloc() to make that less likely
+ * fix a timing value shortly after boot (during
+   INITIAL_JIFFIES)
 
-Gurumoorthi Gnanasambandhan (1):
-      cfg80211: VLAN offload support for set_key and set_sta_vlan
-
-Joe Perches (1):
-      mac80211: fix a typo of "function"
+----------------------------------------------------------------
+Ahmed Zaki (1):
+      mac80211: fix station inactive_time shortly after boot
 
 Johannes Berg (1):
-      mac80211: don't re-parse elems in ieee80211_assoc_success()
-
-John Crispin (1):
-      mac80211: move store skb ack code to its own function
+      mac80211: fix ieee80211_txq_setup_flows() failure path
 
 Toke Høiland-Jørgensen (1):
-      mac80211: Shrink the size of ack_frame_id to make room for tx_time_est
+      net/fq_impl: Switch to kvmalloc() for memory allocation
 
-zhong jiang (1):
-      mac80211_hwsim: use DEFINE_DEBUGFS_ATTRIBUTE to define debugfs fops
-
- drivers/net/wireless/mac80211_hwsim.c |  14 ++---
- include/net/cfg80211.h                |   4 ++
- include/net/mac80211.h                |  22 ++++----
- include/uapi/linux/nl80211.h          |  26 +++++++++
- net/mac80211/cfg.c                    |   2 +-
- net/mac80211/mlme.c                   | 103 ++++++++++++++++------------------
- net/mac80211/tx.c                     |  49 +++++++++-------
- net/wireless/nl80211.c                |  11 ++++
- 8 files changed, 139 insertions(+), 92 deletions(-)
+ include/net/fq_impl.h   | 4 ++--
+ net/mac80211/main.c     | 2 +-
+ net/mac80211/sta_info.c | 3 ++-
+ 3 files changed, 5 insertions(+), 4 deletions(-)
 
