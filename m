@@ -2,79 +2,108 @@ Return-Path: <SRS0=s5sB=ZA=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EFB85C5DF60
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 12:20:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1E4BFA372C
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 12:37:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BA18E206DF
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 12:20:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9174B2245B
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 12:37:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731824AbfKHMUH (ORCPT
+        id S1727208AbfKHMhu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Nov 2019 07:20:07 -0500
-Received: from s3.sipsolutions.net ([144.76.43.62]:59440 "EHLO
+        Fri, 8 Nov 2019 07:37:50 -0500
+Received: from s3.sipsolutions.net ([144.76.43.62]:60362 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729896AbfKHMUH (ORCPT
+        with ESMTP id S1726457AbfKHMhu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Nov 2019 07:20:07 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        Fri, 8 Nov 2019 07:37:50 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92.3)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1iT3FC-0002Fu-P4; Fri, 08 Nov 2019 13:20:02 +0100
-Message-ID: <1c553c457024b295c7d0a6b118c3848eec28bcbd.camel@sipsolutions.net>
-Subject: Re: [PATCHv8 0/6] cfg80211/mac80211: Add support for TID specific
- configuration
+        id 1iT3WO-0002bo-7o; Fri, 08 Nov 2019 13:37:48 +0100
 From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Cc:     Tamizh chelvam <tamizhr@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date:   Fri, 08 Nov 2019 13:20:01 +0100
-In-Reply-To: <20191108120504.ptl25hacxcftb7tw@bars>
-References: <1572957714-16085-1-git-send-email-tamizhr@codeaurora.org>
-         <20191108093207.uv4j44xpm2qvtsv5@bars>
-         <84ca3a8b61757360ab9898afcdd3f2f63c770f86.camel@sipsolutions.net>
-         <20191108120504.ptl25hacxcftb7tw@bars>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.30.5 (3.30.5-1.fc29) 
+To:     netdev@vger.kernel.org
+Cc:     linux-wireless@vger.kernel.org
+Subject: pull-request: mac80211-next next-2019-11-08
+Date:   Fri,  8 Nov 2019 13:37:36 +0100
+Message-Id: <20191108123738.17359-1-johannes@sipsolutions.net>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, 2019-11-08 at 12:05 +0000, Sergey Matyukevich wrote:
+Hi Dave,
 
-> > @NL80211_TID_CONFIG_ATTR_OVERRIDE: flag attribute, valid only if no STA
-> > 	is selected, if set indicates that the new configuration
-> > 	overrides all previous STA configurations, otherwise previous
-> > 	STA-specific configurations should be left untouched
-> > 
-> > You also raise a good point wrt. "all TIDs" - but then we should
-> > probably just remove NL80211_TID_CONFIG_ATTR_TID and add a new
-> > NL80211_TID_CONFIG_ATTR_TIDS as a bitmap? OTOH, it's not hard to just
-> > explicitly spell out all TIDs either, I guess, just makes the message a
-> > bit bigger.
-> 
-> The idea with bitmask for TIDs looks good. It eliminates the need for both
-> 'all TIDs' define and additional attribute NL80211_TID_CONFIG_ATTR_OVERRIDE.
+Here are a couple of more things for net-next. Nothing
+really that relevant, but I figured I'd flush my queue
+now and get some preparatory patches in for 5.5 still.
 
-I think we still need NL80211_TID_CONFIG_ATTR_OVERRIDE in some way
-(maybe only as a flag attribute), since you could have
+Please pull and let me know if there's any problem.
 
- * change all stations (some subset of TIDs) *including* already
-   configured stations
- * or *excluding* already configured stations
-
-> In fact, almost no changes are needed for the patch, mostly comments need
-> to be updated. Manual typing in iw will be less convenient, but I guess
-> this interface is not supposed to be used by humans after all...
-
-If that's a concern we can parse a list in iw, e.g. "0,1,2,3" instaed of
-"0xf", right?
-
+Thanks,
 johannes
+
+
+
+The following changes since commit 5b7fe93db008ff013db24239136a25f3ac5142ac:
+
+  Merge git://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf-next (2019-10-26 22:57:27 -0700)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git tags/mac80211-next-for-net-next-2019-11-08
+
+for you to fetch changes up to 14f34e36b36ceede9877ca422a62fcac17b52023:
+
+  cfg80211: VLAN offload support for set_key and set_sta_vlan (2019-11-08 11:19:19 +0100)
+
+----------------------------------------------------------------
+Some relatively small changes:
+ * typo fixes in docs
+ * APIs for station separation using VLAN tags rather
+   than separate wifi netdevs
+ * some preparations for upcoming features (802.3 offload
+   and airtime queue limits (AQL)
+ * stack reduction in ieee80211_assoc_success()
+ * use DEFINE_DEBUGFS_ATTRIBUTE in hwsim
+
+----------------------------------------------------------------
+Chris Packham (1):
+      mac80211: typo fixes in kerneldoc comments
+
+Gurumoorthi Gnanasambandhan (1):
+      cfg80211: VLAN offload support for set_key and set_sta_vlan
+
+Joe Perches (1):
+      mac80211: fix a typo of "function"
+
+Johannes Berg (1):
+      mac80211: don't re-parse elems in ieee80211_assoc_success()
+
+John Crispin (1):
+      mac80211: move store skb ack code to its own function
+
+Toke Høiland-Jørgensen (1):
+      mac80211: Shrink the size of ack_frame_id to make room for tx_time_est
+
+zhong jiang (1):
+      mac80211_hwsim: use DEFINE_DEBUGFS_ATTRIBUTE to define debugfs fops
+
+ drivers/net/wireless/mac80211_hwsim.c |  14 ++---
+ include/net/cfg80211.h                |   4 ++
+ include/net/mac80211.h                |  22 ++++----
+ include/uapi/linux/nl80211.h          |  26 +++++++++
+ net/mac80211/cfg.c                    |   2 +-
+ net/mac80211/mlme.c                   | 103 ++++++++++++++++------------------
+ net/mac80211/tx.c                     |  49 +++++++++-------
+ net/wireless/nl80211.c                |  11 ++++
+ 8 files changed, 139 insertions(+), 92 deletions(-)
 
