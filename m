@@ -6,23 +6,23 @@ X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A00E2C5DF60
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 17:11:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79A7CFA372C
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 17:11:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7FB9C21882
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 17:11:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5B51C20869
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 Nov 2019 17:11:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728892AbfKHRLN (ORCPT
+        id S1729668AbfKHRLi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 Nov 2019 12:11:13 -0500
-Received: from muru.com ([72.249.23.125]:41074 "EHLO muru.com"
+        Fri, 8 Nov 2019 12:11:38 -0500
+Received: from muru.com ([72.249.23.125]:41100 "EHLO muru.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725970AbfKHRLM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 Nov 2019 12:11:12 -0500
+        id S1725970AbfKHRLi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 8 Nov 2019 12:11:38 -0500
 Received: from atomide.com (localhost [127.0.0.1])
-        by muru.com (Postfix) with ESMTPS id D4BDB817C;
-        Fri,  8 Nov 2019 17:11:45 +0000 (UTC)
-Date:   Fri, 8 Nov 2019 09:11:06 -0800
+        by muru.com (Postfix) with ESMTPS id 6A97381A1;
+        Fri,  8 Nov 2019 17:12:11 +0000 (UTC)
+Date:   Fri, 8 Nov 2019 09:11:32 -0800
 From:   Tony Lindgren <tony@atomide.com>
 To:     "H. Nikolaus Schaller" <hns@goldelico.com>
 Cc:     =?utf-8?Q?Beno=C3=AEt?= Cousson <bcousson@baylibre.com>,
@@ -48,16 +48,16 @@ Cc:     =?utf-8?Q?Beno=C3=AEt?= Cousson <bcousson@baylibre.com>,
         linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         linux-mmc@vger.kernel.org, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org, letux-kernel@openphoenux.org,
-        kernel@pyra-handheld.com, stable@vger.kernel.org
-Subject: Re: [PATCH v3 06/12] omap: pdata-quirks: remove openpandora quirks
- for mmc3 and wl1251
-Message-ID: <20191108171106.GL5610@atomide.com>
+        kernel@pyra-handheld.com
+Subject: Re: [PATCH v3 07/12] omap: remove omap2_hsmmc_info in old hsmmc.[ch]
+ and update Makefile
+Message-ID: <20191108171132.GM5610@atomide.com>
 References: <cover.1573122644.git.hns@goldelico.com>
- <ff450c14eb1e13d2db6533fa06e069c5bec3a0c4.1573122644.git.hns@goldelico.com>
+ <c3e0a1392dd6d44fe8bde0161c508007f4abdd5f.1573122644.git.hns@goldelico.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ff450c14eb1e13d2db6533fa06e069c5bec3a0c4.1573122644.git.hns@goldelico.com>
+In-Reply-To: <c3e0a1392dd6d44fe8bde0161c508007f4abdd5f.1573122644.git.hns@goldelico.com>
 User-Agent: Mutt/1.12.1 (2019-06-15)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
@@ -65,15 +65,10 @@ List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 * H. Nikolaus Schaller <hns@goldelico.com> [191107 10:32]:
-> With a wl1251 child node of mmc3 in the device tree decoded
-> in omap_hsmmc.c to handle special wl1251 initialization, we do
-> no longer need to instantiate the mmc3 through pdata quirks.
-> 
-> We also can remove the wlan regulator and reset/interrupt definitions
-> and do them through device tree.
-> 
-> Fixes: 81eef6ca9201 ("mmc: omap_hsmmc: Use dma_request_chan() for requesting DMA channel")
+> There is a new driver in drivers/mmc/host/omap_hsmmc.c
+> configured by CONFIG_MMC_OMAP_HS and the last user
+> was the pdata-quirks for pandora.
 
-Good to see this go away:
+Thanks for doing this:
 
 Acked-by: Tony Lindgren <tony@atomide.com>
