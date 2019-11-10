@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D458DC43331
-	for <linux-wireless@archiver.kernel.org>; Sun, 10 Nov 2019 03:08:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27282C43331
+	for <linux-wireless@archiver.kernel.org>; Sun, 10 Nov 2019 03:08:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 90E46208C3
-	for <linux-wireless@archiver.kernel.org>; Sun, 10 Nov 2019 03:08:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EE08D21848
+	for <linux-wireless@archiver.kernel.org>; Sun, 10 Nov 2019 03:08:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573355333;
-	bh=1NofNetifklNsULoKa8iBoNhHM8w7x2djmZ0FjMFPW8=;
+	s=default; t=1573355338;
+	bh=yN32PYfjsyUrcNe1jxL8v16H/2fHGlbsjA34/dPKFko=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=18mYsFLYgmbaiBKeeb5+iAu+j7G4ZKK+bL8tOr5dY9cV3zU1VkMKhk4NRvOsXHH4d
-	 vSsjfK9RJwhYWdiouEPTvpEiTmbt/0Xu9eYAP00ZCrzIVY1Q/kd/mc6LBxD9voFjlK
-	 aoQaCRKwkhgez6uWMjupW701QcQSizhgWSodC65I=
+	b=arTO0B1+cPYJviI6OZSNbhyfB8vFvwKag/rDXq32I3wxgaPMwVjMGd/YsoXDFG/cX
+	 qzflq7gdShCOWYP4GAZQX8XhrsbdOGXOMAoq+SkX+6wWjQKPzsuNj1uqJQKc03MfXu
+	 J69UiiFuLnqxCXHDK1tQVmBnJioULMe8SDfkCE3M=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729037AbfKJDIn (ORCPT
+        id S1728669AbfKJCov (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 9 Nov 2019 22:08:43 -0500
-Received: from mail.kernel.org ([198.145.29.99]:45200 "EHLO mail.kernel.org"
+        Sat, 9 Nov 2019 21:44:51 -0500
+Received: from mail.kernel.org ([198.145.29.99]:44840 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727642AbfKJCoy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 9 Nov 2019 21:44:54 -0500
+        id S1727668AbfKJCou (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 9 Nov 2019 21:44:50 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3CFFC215EA;
-        Sun, 10 Nov 2019 02:44:53 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id E1D4421655;
+        Sun, 10 Nov 2019 02:44:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573353894;
-        bh=1NofNetifklNsULoKa8iBoNhHM8w7x2djmZ0FjMFPW8=;
+        s=default; t=1573353889;
+        bh=yN32PYfjsyUrcNe1jxL8v16H/2fHGlbsjA34/dPKFko=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=weVQxyEL4SXere2AdwwwRbyiZwU4Z0pHu0/rGkARLerrAYSBXWijpCbcM28roBx8F
-         E4vXazI29gYtkFHYzQnthnUF6MoPMDfsN/BdPMkNuWVPttLHtHU9e9tkv+L0L3h8Lu
-         VNoGRq+6QokVvL1Qdk34iGPa6C9gB7u83UQk7GRY=
+        b=u2kEZbDvG2YsQ8CZNygGSJ5hIZ48/g7dQKZ+a+KBcIcQQT+kAsyXcL9cpeoJMrcro
+         kn4IPu8u6IWfOUrUgt1NK5pp6OvVZITW7vomqSSwBDj2A0b97Fiqr6+kpxx3U7b96V
+         L/GVqwupyx7+92cknUxTqVm6auZfGMMttc12d6vU=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>,
+Cc:     Sara Sharon <sara.sharon@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 164/191] iwlwifi: pcie: gen2: build A-MSDU only for GSO
-Date:   Sat,  9 Nov 2019 21:39:46 -0500
-Message-Id: <20191110024013.29782-164-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 162/191] iwlwifi: pcie: read correct prph address for newer devices
+Date:   Sat,  9 Nov 2019 21:39:44 -0500
+Message-Id: <20191110024013.29782-162-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191110024013.29782-1-sashal@kernel.org>
 References: <20191110024013.29782-1-sashal@kernel.org>
@@ -60,40 +60,57 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Sara Sharon <sara.sharon@intel.com>
 
-[ Upstream commit 53f474e6a8d74d5dc0c3a015d889471f9a157685 ]
+[ Upstream commit 84fb372c892e231e9a2ffdaa5c2df52d94aa536c ]
 
-If the incoming frame should be an A-MSDU, it may already be one,
-for example in the case of NAN multicast being encapsulated in an
-A-MSDU. Thus, use the GSO algorithm to build A-MSDU only if the
-skb actually contains GSO data.
+For newer devices we have higher range of periphery
+addresses. Currently it is masked out, so we end up
+reading another address.
 
-Fixes: 6ffe5de35b05 ("iwlwifi: pcie: add AMSDU to gen2")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 16 ++++++++++++++--
+ 1 file changed, 14 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-index b99f33ff91230..61ffa1d1a00d7 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-@@ -526,7 +526,12 @@ struct iwl_tfh_tfd *iwl_pcie_gen2_build_tfd(struct iwl_trans *trans,
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index 7d319b6863feb..954f932e9c88e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -1830,18 +1830,30 @@ static u32 iwl_trans_pcie_read32(struct iwl_trans *trans, u32 ofs)
+ 	return readl(IWL_TRANS_GET_PCIE_TRANS(trans)->hw_base + ofs);
+ }
  
- 	hdr_len = ieee80211_hdrlen(hdr->frame_control);
++static u32 iwl_trans_pcie_prph_msk(struct iwl_trans *trans)
++{
++	if (trans->cfg->device_family >= IWL_DEVICE_FAMILY_22560)
++		return 0x00FFFFFF;
++	else
++		return 0x000FFFFF;
++}
++
+ static u32 iwl_trans_pcie_read_prph(struct iwl_trans *trans, u32 reg)
+ {
++	u32 mask = iwl_trans_pcie_prph_msk(trans);
++
+ 	iwl_trans_pcie_write32(trans, HBUS_TARG_PRPH_RADDR,
+-			       ((reg & 0x000FFFFF) | (3 << 24)));
++			       ((reg & mask) | (3 << 24)));
+ 	return iwl_trans_pcie_read32(trans, HBUS_TARG_PRPH_RDAT);
+ }
  
--	if (amsdu)
-+	/*
-+	 * Only build A-MSDUs here if doing so by GSO, otherwise it may be
-+	 * an A-MSDU for other reasons, e.g. NAN or an A-MSDU having been
-+	 * built in the higher layers already.
-+	 */
-+	if (amsdu && skb_shinfo(skb)->gso_size)
- 		return iwl_pcie_gen2_build_tx_amsdu(trans, txq, dev_cmd, skb,
- 						    out_meta, hdr_len, len);
+ static void iwl_trans_pcie_write_prph(struct iwl_trans *trans, u32 addr,
+ 				      u32 val)
+ {
++	u32 mask = iwl_trans_pcie_prph_msk(trans);
++
+ 	iwl_trans_pcie_write32(trans, HBUS_TARG_PRPH_WADDR,
+-			       ((addr & 0x000FFFFF) | (3 << 24)));
++			       ((addr & mask) | (3 << 24)));
+ 	iwl_trans_pcie_write32(trans, HBUS_TARG_PRPH_WDAT, val);
+ }
  
 -- 
 2.20.1
