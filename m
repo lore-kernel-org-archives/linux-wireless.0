@@ -4,50 +4,51 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EFA80C43331
-	for <linux-wireless@archiver.kernel.org>; Sun, 10 Nov 2019 03:10:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7315C17444
+	for <linux-wireless@archiver.kernel.org>; Sun, 10 Nov 2019 03:14:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BB64821924
-	for <linux-wireless@archiver.kernel.org>; Sun, 10 Nov 2019 03:10:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8F9DA217D9
+	for <linux-wireless@archiver.kernel.org>; Sun, 10 Nov 2019 03:14:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573355449;
-	bh=WpEQZ96HSyMvJyMLElFdXV/w39V1EhtGl8Y9d68T/ME=;
+	s=default; t=1573355679;
+	bh=G8lJ2j3/oBPS6i/yoR6pbKyVq2pXSDmOnUhlWt+bOgk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=aieqPDMH+ROvqQK69aMmSVT+8PnGcLxpQbErg6pcjAIov6t/JSIFGVn4a3M54fZSM
-	 4st2OQ6EISLi+K8fSf/Wp2lG5ljR9STuhU1FyY39ExsyfYg7mkveMXEmJZ89oWPm2G
-	 +YbINTyztmkFdqgb/Av472LPRkmS4WHtF+4/3HHQ=
+	b=q4Nx4XmuZL7buZCueSmt+4F40xuVi4uGH/qknsBYBbVy33af2XU7shb2ZM70wuIjJ
+	 jOVJR+FDrMGeOxcEw2vnUIwLOLm4dYFHhkYeJ1QuAYcUkHIkLUJ9WZhZwoIV2Q2fKU
+	 GZLZ/XQWySBVnq2IwpXVGQ47GdoPsg2ssy0vCY+E=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729126AbfKJDKt (ORCPT
+        id S1728274AbfKJDOf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 9 Nov 2019 22:10:49 -0500
-Received: from mail.kernel.org ([198.145.29.99]:45058 "EHLO mail.kernel.org"
+        Sat, 9 Nov 2019 22:14:35 -0500
+Received: from mail.kernel.org ([198.145.29.99]:37892 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728683AbfKJCow (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 9 Nov 2019 21:44:52 -0500
+        id S1727809AbfKJCmS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 9 Nov 2019 21:42:18 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 147AB21655;
-        Sun, 10 Nov 2019 02:44:50 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id C604221655;
+        Sun, 10 Nov 2019 02:42:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573353891;
-        bh=WpEQZ96HSyMvJyMLElFdXV/w39V1EhtGl8Y9d68T/ME=;
+        s=default; t=1573353737;
+        bh=G8lJ2j3/oBPS6i/yoR6pbKyVq2pXSDmOnUhlWt+bOgk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=S/0/6SEwkD2ayaACbkvmQh6EyLs7u8CQH/NHsuNA3v1omK9vFuSrJYd2/k74CkyxJ
-         hFxuo+YQum1mo5BsANr1xumr9TFrS/kAXqjEOOd1BgS4nmgyzsZiWsuectljdgixdd
-         JB9ADSuSnpUll6pAOFupgaLiYDevEIvyS9j7Y/48=
+        b=u1THzImqux36XCiZ5y+6ee3GpN17P44ywfq1wk9SvO0K2fS9sYqd2RmCsr7L1794A
+         zT+HguKMVMzZbWgKymaW5N+BZlHFu2WpYUPE2bYuDh/eQEj8DEsm6xbsxxxszvZZco
+         ONc+R8Ix+Yfo3E0zFQ6gLv1WJQ/BchlZBdcs5/6Y=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
+Cc:     Takashi Iwai <tiwai@suse.de>, Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 163/191] iwlwifi: api: annotate compressed BA notif array sizes
-Date:   Sat,  9 Nov 2019 21:39:45 -0500
-Message-Id: <20191110024013.29782-163-sashal@kernel.org>
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 059/191] brcmsmac: Use kvmalloc() for ucode allocations
+Date:   Sat,  9 Nov 2019 21:38:01 -0500
+Message-Id: <20191110024013.29782-59-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191110024013.29782-1-sashal@kernel.org>
 References: <20191110024013.29782-1-sashal@kernel.org>
@@ -60,48 +61,50 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Takashi Iwai <tiwai@suse.de>
 
-[ Upstream commit 6f68cc367ab6578a33cca21b6056804165621f00 ]
+[ Upstream commit 6c3efbe77bc78bf49db851aec7f385be475afca6 ]
 
-Annotate the compressed BA notification array sizes and
-make both of them 0-length since the length of 1 is just
-confusing - it may be different than that and the offset
-to the second one needs to be calculated in the C code
-anyhow.
+The ucode chunk might be relatively large and the allocation with
+kmalloc() may fail occasionally.  Since the data isn't DMA-transferred
+but by manual loops, we can use vmalloc instead of kmalloc.
+For a better performance, though, kvmalloc() would be the best choice
+in such a case, so let's replace with it.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Bugzilla: https://bugzilla.suse.com/show_bug.cgi?id=1103431
+Signed-off-by: Takashi Iwai <tiwai@suse.de>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/api/tx.h | 6 +++---
+ .../net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c  | 6 +++---
  1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
-index 514b86123d3d3..80853f6cbd6d2 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
-@@ -747,9 +747,9 @@ enum iwl_mvm_ba_resp_flags {
-  * @tfd_cnt: number of TFD-Q elements
-  * @ra_tid_cnt: number of RATID-Q elements
-  * @tfd: array of TFD queue status updates. See &iwl_mvm_compressed_ba_tfd
-- *	for details.
-+ *	for details. Length in @tfd_cnt.
-  * @ra_tid: array of RA-TID queue status updates. For debug purposes only. See
-- *	&iwl_mvm_compressed_ba_ratid for more details.
-+ *	&iwl_mvm_compressed_ba_ratid for more details. Length in @ra_tid_cnt.
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c
+index ecc89e718b9c1..6255fb6d97a70 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c
+@@ -1578,10 +1578,10 @@ int brcms_ucode_init_buf(struct brcms_info *wl, void **pbuf, u32 idx)
+ 			if (le32_to_cpu(hdr->idx) == idx) {
+ 				pdata = wl->fw.fw_bin[i]->data +
+ 					le32_to_cpu(hdr->offset);
+-				*pbuf = kmemdup(pdata, len, GFP_KERNEL);
++				*pbuf = kvmalloc(len, GFP_KERNEL);
+ 				if (*pbuf == NULL)
+ 					goto fail;
+-
++				memcpy(*pbuf, pdata, len);
+ 				return 0;
+ 			}
+ 		}
+@@ -1629,7 +1629,7 @@ int brcms_ucode_init_uint(struct brcms_info *wl, size_t *n_bytes, u32 idx)
   */
- struct iwl_mvm_compressed_ba_notif {
- 	__le32 flags;
-@@ -766,7 +766,7 @@ struct iwl_mvm_compressed_ba_notif {
- 	__le32 tx_rate;
- 	__le16 tfd_cnt;
- 	__le16 ra_tid_cnt;
--	struct iwl_mvm_compressed_ba_tfd tfd[1];
-+	struct iwl_mvm_compressed_ba_tfd tfd[0];
- 	struct iwl_mvm_compressed_ba_ratid ra_tid[0];
- } __packed; /* COMPRESSED_BA_RES_API_S_VER_4 */
+ void brcms_ucode_free_buf(void *p)
+ {
+-	kfree(p);
++	kvfree(p);
+ }
  
+ /*
 -- 
 2.20.1
 
