@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27282C43331
-	for <linux-wireless@archiver.kernel.org>; Sun, 10 Nov 2019 03:08:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5812C43331
+	for <linux-wireless@archiver.kernel.org>; Sun, 10 Nov 2019 03:09:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EE08D21848
-	for <linux-wireless@archiver.kernel.org>; Sun, 10 Nov 2019 03:08:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7502221850
+	for <linux-wireless@archiver.kernel.org>; Sun, 10 Nov 2019 03:09:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573355338;
-	bh=yN32PYfjsyUrcNe1jxL8v16H/2fHGlbsjA34/dPKFko=;
+	s=default; t=1573355345;
+	bh=ltuqeh4pgWkWNtMciU1akQaTGuNdUOU/m4QsRZ0H6Ok=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=arTO0B1+cPYJviI6OZSNbhyfB8vFvwKag/rDXq32I3wxgaPMwVjMGd/YsoXDFG/cX
-	 qzflq7gdShCOWYP4GAZQX8XhrsbdOGXOMAoq+SkX+6wWjQKPzsuNj1uqJQKc03MfXu
-	 J69UiiFuLnqxCXHDK1tQVmBnJioULMe8SDfkCE3M=
+	b=XizYGrFIuF1Z0lBAAqcaZWGb0ecuy8y9Im3stq1BeuoSo81DmX6q1lECb/ayJ6Myz
+	 qMdrhNu1C3sY4bFAYzF7a1LD030pYNG4S8OSE5AIbiAo+Dx3m9TJL+czEdcLQULh72
+	 Hl/IChTYK4uVTIRnabmvmpEFG+6Ffh5XKHxF/dCQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728669AbfKJCov (ORCPT
+        id S1728852AbfKJDJB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 9 Nov 2019 21:44:51 -0500
-Received: from mail.kernel.org ([198.145.29.99]:44840 "EHLO mail.kernel.org"
+        Sat, 9 Nov 2019 22:09:01 -0500
+Received: from mail.kernel.org ([198.145.29.99]:44568 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727668AbfKJCou (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 9 Nov 2019 21:44:50 -0500
+        id S1728642AbfKJCop (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 9 Nov 2019 21:44:45 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E1D4421655;
-        Sun, 10 Nov 2019 02:44:48 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 71FBF215EA;
+        Sun, 10 Nov 2019 02:44:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573353889;
-        bh=yN32PYfjsyUrcNe1jxL8v16H/2fHGlbsjA34/dPKFko=;
+        s=default; t=1573353885;
+        bh=ltuqeh4pgWkWNtMciU1akQaTGuNdUOU/m4QsRZ0H6Ok=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=u2kEZbDvG2YsQ8CZNygGSJ5hIZ48/g7dQKZ+a+KBcIcQQT+kAsyXcL9cpeoJMrcro
-         kn4IPu8u6IWfOUrUgt1NK5pp6OvVZITW7vomqSSwBDj2A0b97Fiqr6+kpxx3U7b96V
-         L/GVqwupyx7+92cknUxTqVm6auZfGMMttc12d6vU=
+        b=1QPHLZOp9Qt3DBwXh+CyuSgyhGs+so5OpmVDJV/9LYgYaO/B5thRb9x8LhVJ3X0XT
+         CMSrpanaDri+LmNTl5ze2ZALk86bnYOIxept0bs3i3cnOhzGshiZrfioSbuFIRCg0H
+         GTyPKqiMjuC5gb0E+gdTOyyCVrxTmhdP0OhTv02M=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Sara Sharon <sara.sharon@intel.com>,
+Cc:     Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 162/191] iwlwifi: pcie: read correct prph address for newer devices
-Date:   Sat,  9 Nov 2019 21:39:44 -0500
-Message-Id: <20191110024013.29782-162-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 160/191] iwlwifi: dbg: don't crash if the firmware crashes in the middle of a debug dump
+Date:   Sat,  9 Nov 2019 21:39:42 -0500
+Message-Id: <20191110024013.29782-160-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191110024013.29782-1-sashal@kernel.org>
 References: <20191110024013.29782-1-sashal@kernel.org>
@@ -60,58 +60,56 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sara Sharon <sara.sharon@intel.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-[ Upstream commit 84fb372c892e231e9a2ffdaa5c2df52d94aa536c ]
+[ Upstream commit 79f25b10c9da3dbc953e47033d0494e51580ac3b ]
 
-For newer devices we have higher range of periphery
-addresses. Currently it is masked out, so we end up
-reading another address.
+We can dump data from the firmware either when it crashes,
+or when the firmware is alive.
+Not all the data is available if the firmware is running
+(like the Tx / Rx FIFOs which are available only when the
+firmware is halted), so we first check that the firmware
+is alive to compute the required size for the dump and then
+fill the buffer with the data.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+When we allocate the buffer, we test the STATUS_FW_ERROR
+bit to check if the firmware is alive or not. This bit
+can be changed during the course of the dump since it is
+modified in the interrupt handler.
+
+We hit a case where we allocate the buffer while the
+firmware is sill working, and while we start to fill the
+buffer, the firmware crashes. Then we test STATUS_FW_ERROR
+again and decide to fill the buffer with data like the
+FIFOs even if no room was allocated for this data in the
+buffer. This means that we overflow the buffer that was
+allocated leading to memory corruption.
+
+To fix this, test the STATUS_FW_ERROR bit only once and
+rely on local variables to check if we should dump fifos
+or other firmware components.
+
+Fixes: 04fd2c28226f ("iwlwifi: mvm: add rxf and txf to dump data")
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 16 ++++++++++++++--
- 1 file changed, 14 insertions(+), 2 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 7d319b6863feb..954f932e9c88e 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -1830,18 +1830,30 @@ static u32 iwl_trans_pcie_read32(struct iwl_trans *trans, u32 ofs)
- 	return readl(IWL_TRANS_GET_PCIE_TRANS(trans)->hw_base + ofs);
- }
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+index a31a42e673c46..37657e999ff8b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+@@ -824,7 +824,7 @@ void iwl_fw_error_dump(struct iwl_fw_runtime *fwrt)
+ 	}
  
-+static u32 iwl_trans_pcie_prph_msk(struct iwl_trans *trans)
-+{
-+	if (trans->cfg->device_family >= IWL_DEVICE_FAMILY_22560)
-+		return 0x00FFFFFF;
-+	else
-+		return 0x000FFFFF;
-+}
-+
- static u32 iwl_trans_pcie_read_prph(struct iwl_trans *trans, u32 reg)
- {
-+	u32 mask = iwl_trans_pcie_prph_msk(trans);
-+
- 	iwl_trans_pcie_write32(trans, HBUS_TARG_PRPH_RADDR,
--			       ((reg & 0x000FFFFF) | (3 << 24)));
-+			       ((reg & mask) | (3 << 24)));
- 	return iwl_trans_pcie_read32(trans, HBUS_TARG_PRPH_RDAT);
- }
- 
- static void iwl_trans_pcie_write_prph(struct iwl_trans *trans, u32 addr,
- 				      u32 val)
- {
-+	u32 mask = iwl_trans_pcie_prph_msk(trans);
-+
- 	iwl_trans_pcie_write32(trans, HBUS_TARG_PRPH_WADDR,
--			       ((addr & 0x000FFFFF) | (3 << 24)));
-+			       ((addr & mask) | (3 << 24)));
- 	iwl_trans_pcie_write32(trans, HBUS_TARG_PRPH_WDAT, val);
- }
- 
+ 	/* We only dump the FIFOs if the FW is in error state */
+-	if (test_bit(STATUS_FW_ERROR, &fwrt->trans->status)) {
++	if (fifo_data_len) {
+ 		iwl_fw_dump_fifos(fwrt, &dump_data);
+ 		if (radio_len)
+ 			iwl_read_radio_regs(fwrt, &dump_data);
 -- 
 2.20.1
 
