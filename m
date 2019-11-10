@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93FA7C43331
-	for <linux-wireless@archiver.kernel.org>; Sun, 10 Nov 2019 02:58:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16B12C43331
+	for <linux-wireless@archiver.kernel.org>; Sun, 10 Nov 2019 03:01:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 64BF321019
-	for <linux-wireless@archiver.kernel.org>; Sun, 10 Nov 2019 02:58:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E0D6821D7F
+	for <linux-wireless@archiver.kernel.org>; Sun, 10 Nov 2019 03:01:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573354706;
-	bh=+n7iVh86RQOyMDJvHXT6SEMYYRji/+S9KG4f4GoUtnU=;
+	s=default; t=1573354863;
+	bh=qX0frf5V4JFJGYGpyYcZ1RuX4317DQq5x9AahDUvJEM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=AHyEdOAcBv8Q7bvrwvrRsRQcZ0DSjYTJn//jrBuXIXJIxNKQe3Md069+8xfSjiitr
-	 wAhinO2KYwuxhZGlneITbewMucPWV9hdiXEmHjhCYIFg3fS5IaJaSui9S7tjAL33rm
-	 c8kVScDVm9KMp2tWwarK54xyk+xBNRKo415CoCWQ=
+	b=2JxH3BHkgwE0jyJ0BA/Wfze0mJqiskJ3dQNM+dFyquN9vD3Z3quIMdbIFJpFs3W2R
+	 68hOFnYhvXQgjjPQL/KDQmN+03mYf2mjZwO81VjOjJYHBfiilccIrR2bkIFn6IVPrQ
+	 25GVkI38ytvMkin51itQbcVTodcx1mCBiIpDhqkg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727834AbfKJC6P (ORCPT
+        id S1729908AbfKJDAx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 9 Nov 2019 21:58:15 -0500
-Received: from mail.kernel.org ([198.145.29.99]:47208 "EHLO mail.kernel.org"
+        Sat, 9 Nov 2019 22:00:53 -0500
+Received: from mail.kernel.org ([198.145.29.99]:47200 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729449AbfKJC4s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 9 Nov 2019 21:56:48 -0500
+        id S1729206AbfKJC4q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 9 Nov 2019 21:56:46 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id D1495224D5;
-        Sun, 10 Nov 2019 02:48:13 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 3621E224D3;
+        Sun, 10 Nov 2019 02:48:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573354094;
-        bh=+n7iVh86RQOyMDJvHXT6SEMYYRji/+S9KG4f4GoUtnU=;
+        s=default; t=1573354099;
+        bh=qX0frf5V4JFJGYGpyYcZ1RuX4317DQq5x9AahDUvJEM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=NRbsaftyHu5+cXCQwxZQlp1YdLrvCUJbvog8Jt3VX7fKIu11Xaae6uGxwBB27ER8P
-         K+N68k9ngCWfn4nbT6ldnKwBl2wupAZPoNwKG/fJfaHVCgW8mQlO75ZLK4ykrUX+r6
-         RiQkD8XGKgQWmnHMh3WTvew6iidphtY8YYdIFmso=
+        b=cU8e3hl8kaCUzfJ1j/+0oVHea2Ht55HA0Q7z5Pxl5PLFOErMzce12xiAlV3QPhr8b
+         Wf2QiGh6DLH4UyDwFLx79n/sTI03BD+2CcMfTy3ZgoZogh0eXOI1KPgtnp27jmc2eA
+         2D1X0Kuma24+e6VtO5SUb8089AUZrR7TYmUWGxI0=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+Cc:     Ilan Peer <ilan.peer@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 088/109] iwlwifi: dbg: don't crash if the firmware crashes in the middle of a debug dump
-Date:   Sat,  9 Nov 2019 21:45:20 -0500
-Message-Id: <20191110024541.31567-88-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 090/109] iwlwifi: mvm: Allow TKIP for AP mode
+Date:   Sat,  9 Nov 2019 21:45:22 -0500
+Message-Id: <20191110024541.31567-90-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191110024541.31567-1-sashal@kernel.org>
 References: <20191110024541.31567-1-sashal@kernel.org>
@@ -60,56 +60,36 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Ilan Peer <ilan.peer@intel.com>
 
-[ Upstream commit 79f25b10c9da3dbc953e47033d0494e51580ac3b ]
+[ Upstream commit 6f3df8c1192c873a6ad9a76328920f6f85af90a8 ]
 
-We can dump data from the firmware either when it crashes,
-or when the firmware is alive.
-Not all the data is available if the firmware is running
-(like the Tx / Rx FIFOs which are available only when the
-firmware is halted), so we first check that the firmware
-is alive to compute the required size for the dump and then
-fill the buffer with the data.
+Support for setting keys for TKIP cipher suite was mistakenly removed
+for AP mode. Fix this.
 
-When we allocate the buffer, we test the STATUS_FW_ERROR
-bit to check if the firmware is alive or not. This bit
-can be changed during the course of the dump since it is
-modified in the interrupt handler.
-
-We hit a case where we allocate the buffer while the
-firmware is sill working, and while we start to fill the
-buffer, the firmware crashes. Then we test STATUS_FW_ERROR
-again and decide to fill the buffer with data like the
-FIFOs even if no room was allocated for this data in the
-buffer. This means that we overflow the buffer that was
-allocated leading to memory corruption.
-
-To fix this, test the STATUS_FW_ERROR bit only once and
-rely on local variables to check if we should dump fifos
-or other firmware components.
-
-Fixes: 04fd2c28226f ("iwlwifi: mvm: add rxf and txf to dump data")
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Fixes: 85aeb58cec1a ("iwlwifi: mvm: Enable security on new TX API")
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-index 8390104172410..414dc34f3f3bd 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-@@ -775,7 +775,7 @@ void iwl_fw_error_dump(struct iwl_fw_runtime *fwrt)
- 	dump_data = iwl_fw_error_next_data(dump_data);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index d31d84eebc5d0..d16e2ed4419fe 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -3067,10 +3067,6 @@ static int __iwl_mvm_set_sta_key(struct iwl_mvm *mvm,
  
- 	/* We only dump the FIFOs if the FW is in error state */
--	if (test_bit(STATUS_FW_ERROR, &fwrt->trans->status)) {
-+	if (fifo_data_len) {
- 		iwl_fw_dump_fifos(fwrt, &dump_data);
- 		if (radio_len)
- 			iwl_read_radio_regs(fwrt, &dump_data);
+ 	switch (keyconf->cipher) {
+ 	case WLAN_CIPHER_SUITE_TKIP:
+-		if (vif->type == NL80211_IFTYPE_AP) {
+-			ret = -EINVAL;
+-			break;
+-		}
+ 		addr = iwl_mvm_get_mac_addr(mvm, vif, sta);
+ 		/* get phase 1 key from mac80211 */
+ 		ieee80211_get_key_rx_seq(keyconf, 0, &seq);
 -- 
 2.20.1
 
