@@ -1,56 +1,107 @@
-Return-Path: <SRS0=vl6n=ZB=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=Jrqb=ZC=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.3 required=3.0 tests=DATE_IN_PAST_24_48,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BF40C17440
-	for <linux-wireless@archiver.kernel.org>; Sat,  9 Nov 2019 20:30:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55A7FC17443
+	for <linux-wireless@archiver.kernel.org>; Sun, 10 Nov 2019 02:57:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3AA4B20869
-	for <linux-wireless@archiver.kernel.org>; Sat,  9 Nov 2019 20:30:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1DB2B206B6
+	for <linux-wireless@archiver.kernel.org>; Sun, 10 Nov 2019 02:57:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1573354641;
+	bh=ty4jM+l1o5jHcZfIlJd9naAI9QaKwSjPCQLnsWRdjcU=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=Vg6QFQ66SRVQJ1B8TTE7kxAREvqd2osdgvV/jHPhfFhCTomnb9w/RGRpaHj0N6eC5
+	 joAKrbrLfNDxuTg1F9qpLH4fR/BYnWwh4q3TEyJwbdheJth04pm4NyHjSiPrkhA6e8
+	 FKEgZ2GaR5gWmM/dxO+itA1W4l64HtTUjNY1o1hk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726843AbfKIUaB (ORCPT
+        id S1729485AbfKJC4t (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 9 Nov 2019 15:30:01 -0500
-Received: from shards.monkeyblade.net ([23.128.96.9]:53668 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726470AbfKIU3e (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 9 Nov 2019 15:29:34 -0500
-Received: from localhost (unknown [IPv6:2601:601:9f00:1e2::d71])
-        (using TLSv1 with cipher AES256-SHA (256/256 bits))
-        (Client did not present a certificate)
-        (Authenticated sender: davem-davemloft)
-        by shards.monkeyblade.net (Postfix) with ESMTPSA id 4726514746C51;
-        Sat,  9 Nov 2019 12:29:34 -0800 (PST)
-Date:   Fri, 08 Nov 2019 11:37:13 -0800 (PST)
-Message-Id: <20191108.113713.787196845271459836.davem@davemloft.net>
-To:     johannes@sipsolutions.net
-Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211-next next-2019-11-08
-From:   David Miller <davem@davemloft.net>
-In-Reply-To: <20191108123738.17359-1-johannes@sipsolutions.net>
-References: <20191108123738.17359-1-johannes@sipsolutions.net>
-X-Mailer: Mew version 6.8 on Emacs 26.1
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-X-Greylist: Sender succeeded SMTP AUTH, not delayed by milter-greylist-4.5.12 (shards.monkeyblade.net [149.20.54.216]); Sat, 09 Nov 2019 12:29:34 -0800 (PST)
+        Sat, 9 Nov 2019 21:56:49 -0500
+Received: from mail.kernel.org ([198.145.29.99]:47264 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729396AbfKJC4s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 9 Nov 2019 21:56:48 -0500
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 01F462248F;
+        Sun, 10 Nov 2019 02:48:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1573354096;
+        bh=ty4jM+l1o5jHcZfIlJd9naAI9QaKwSjPCQLnsWRdjcU=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=A2eIP11HdC/VN167SbyXQBE9t5AUss6bBST1pTpcw1RI79kGfBIcmZKcR8PymQ4tz
+         x4lN9xah9NSbZs53L82bnDL6gvyHmIGwKMXCsuTEF/D60PCQNxNbjCN0qwPzHvsc7l
+         TwGzycUlJQ+zltq5r7NXS96DVzaq8GYX5bkT8QHM=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.14 089/109] iwlwifi: api: annotate compressed BA notif array sizes
+Date:   Sat,  9 Nov 2019 21:45:21 -0500
+Message-Id: <20191110024541.31567-89-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20191110024541.31567-1-sashal@kernel.org>
+References: <20191110024541.31567-1-sashal@kernel.org>
+MIME-Version: 1.0
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Fri,  8 Nov 2019 13:37:36 +0100
+From: Johannes Berg <johannes.berg@intel.com>
 
-> Here are a couple of more things for net-next. Nothing
-> really that relevant, but I figured I'd flush my queue
-> now and get some preparatory patches in for 5.5 still.
-> 
-> Please pull and let me know if there's any problem.
+[ Upstream commit 6f68cc367ab6578a33cca21b6056804165621f00 ]
 
-Pulled, thanks Johannes.
+Annotate the compressed BA notification array sizes and
+make both of them 0-length since the length of 1 is just
+confusing - it may be different than that and the offset
+to the second one needs to be calculated in the C code
+anyhow.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/net/wireless/intel/iwlwifi/fw/api/tx.h | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
+index 14ad9fb895f93..a9c8352a76418 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
+@@ -722,9 +722,9 @@ enum iwl_mvm_ba_resp_flags {
+  * @tfd_cnt: number of TFD-Q elements
+  * @ra_tid_cnt: number of RATID-Q elements
+  * @tfd: array of TFD queue status updates. See &iwl_mvm_compressed_ba_tfd
+- *	for details.
++ *	for details. Length in @tfd_cnt.
+  * @ra_tid: array of RA-TID queue status updates. For debug purposes only. See
+- *	&iwl_mvm_compressed_ba_ratid for more details.
++ *	&iwl_mvm_compressed_ba_ratid for more details. Length in @ra_tid_cnt.
+  */
+ struct iwl_mvm_compressed_ba_notif {
+ 	__le32 flags;
+@@ -741,7 +741,7 @@ struct iwl_mvm_compressed_ba_notif {
+ 	__le32 tx_rate;
+ 	__le16 tfd_cnt;
+ 	__le16 ra_tid_cnt;
+-	struct iwl_mvm_compressed_ba_tfd tfd[1];
++	struct iwl_mvm_compressed_ba_tfd tfd[0];
+ 	struct iwl_mvm_compressed_ba_ratid ra_tid[0];
+ } __packed; /* COMPRESSED_BA_RES_API_S_VER_4 */
+ 
+-- 
+2.20.1
+
