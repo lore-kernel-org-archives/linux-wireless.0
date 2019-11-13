@@ -2,53 +2,54 @@ Return-Path: <SRS0=dvfj=ZF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA6E2C43331
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Nov 2019 02:27:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DAE5C43331
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Nov 2019 02:27:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7A4DA21A49
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Nov 2019 02:27:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 582CC222D3
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Nov 2019 02:27:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573612022;
-	bh=QSLuD+YpzU6b8rUYnHY1H1u65Kcdamyi0w+ofodb1vg=;
+	s=default; t=1573612037;
+	bh=cSP2I36sgXizIVf9FnNRZCxT9E+EkRMfG2cJCSFnRmw=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=FnG6UpcVtToXfobTynhC295DRH/8nvb6rYJPhhUhY8/vGwsR9tbg5//OQHwYJohcd
-	 ith3nZVNcJ57b9t86FoJfWWoNyhpyiKQNoWzc/aU6tzk5K8AAN+EOtLB+beMkRG/Ir
-	 qEUx2hwitOHed1x6zQ/fGaeBjJVFADAumGJ0EFGA=
+	b=yOFsVjozUVSzxMfiuGKz2P1VtcpDZCrWv2sILy2eE5JFqko1Y68bFvxNRHjjySHkx
+	 mew4zyvlOpv56VqYAm61fNIOviQ98fe54MKEdFqrniPG6fjqESiUJw82Rd/JlynMcC
+	 S9vEVJww6iv5LS9IHz75zOXu0TLKvgOb9lBWl5PM=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727688AbfKMBvI (ORCPT
+        id S1727620AbfKMBvC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 12 Nov 2019 20:51:08 -0500
-Received: from mail.kernel.org ([198.145.29.99]:38426 "EHLO mail.kernel.org"
+        Tue, 12 Nov 2019 20:51:02 -0500
+Received: from mail.kernel.org ([198.145.29.99]:38214 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727678AbfKMBvH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Nov 2019 20:51:07 -0500
+        id S1727505AbfKMBvB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 12 Nov 2019 20:51:01 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 6FC32222CE;
-        Wed, 13 Nov 2019 01:51:06 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 78F85222D3;
+        Wed, 13 Nov 2019 01:50:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573609867;
-        bh=QSLuD+YpzU6b8rUYnHY1H1u65Kcdamyi0w+ofodb1vg=;
+        s=default; t=1573609860;
+        bh=cSP2I36sgXizIVf9FnNRZCxT9E+EkRMfG2cJCSFnRmw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=l2gr41mHLYu+9KCgqf+rjKeEBQvJACogYZBJTf7imp+V4JnIfORmHA/Xq7f03gSkb
-         GNHP6OG7qYjxtAn8ugqFNzpvqlO/YcAPunJ0dXyi2c5KuV5Ai7PHS/44ai+4fdcZBV
-         bHuxvUK96hos8UU5B+edYYXB3U8i7QTtP7W7OsSQ=
+        b=hzXlZLa4mt9tPTQ8oeWRy2OuwyuWhUIBSfNH9qg4j0r8ZvVbveBKhp/8zFivbHQsp
+         /dKCnaz9YFOg0YMJ5JQm5BJeQ7MGXCYHhxRqP1cip53o/M6VbCvKfOjViywct74foT
+         Qg9PodwtuDWjH9FSz4uLYhLJpId0qoox+ztAczOE=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Simon Wunderlich <sw@simonwunderlich.de>,
-        Nick Kossifidis <mickflemm@gmail.com>,
+Cc:     Nathan Chancellor <natechancellor@gmail.com>,
+        Ping-Ke Shih <pkshih@realtek.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 032/209] ath9k: fix reporting calculated new FFT upper max
-Date:   Tue, 12 Nov 2019 20:47:28 -0500
-Message-Id: <20191113015025.9685-32-sashal@kernel.org>
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        clang-built-linux@googlegroups.com
+Subject: [PATCH AUTOSEL 4.19 026/209] rtlwifi: btcoex: Use proper enumerated types for Wi-Fi only interface
+Date:   Tue, 12 Nov 2019 20:47:22 -0500
+Message-Id: <20191113015025.9685-26-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191113015025.9685-1-sashal@kernel.org>
 References: <20191113015025.9685-1-sashal@kernel.org>
@@ -61,34 +62,68 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Simon Wunderlich <sw@simonwunderlich.de>
+From: Nathan Chancellor <natechancellor@gmail.com>
 
-[ Upstream commit 4fb5837ac2bd46a85620b297002c704e9958f64d ]
+[ Upstream commit 31138a827d1b3d6e4855bddb5a1e44e7b32309c0 ]
 
-Since the debug print code is outside of the loop, it shouldn't use the loop
-iterator anymore but instead print the found maximum index.
+Clang warns when one enumerated type is implicitly converted to another.
 
-Cc: Nick Kossifidis <mickflemm@gmail.com>
-Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
+drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c:1327:34:
+warning: implicit conversion from enumeration type 'enum
+btc_chip_interface' to different enumeration type 'enum
+wifionly_chip_interface' [-Wenum-conversion]
+                wifionly_cfg->chip_interface = BTC_INTF_PCI;
+                                             ~ ^~~~~~~~~~~~
+drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c:1330:34:
+warning: implicit conversion from enumeration type 'enum
+btc_chip_interface' to different enumeration type 'enum
+wifionly_chip_interface' [-Wenum-conversion]
+                wifionly_cfg->chip_interface = BTC_INTF_USB;
+                                             ~ ^~~~~~~~~~~~
+drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c:1333:34:
+warning: implicit conversion from enumeration type 'enum
+btc_chip_interface' to different enumeration type 'enum
+wifionly_chip_interface' [-Wenum-conversion]
+                wifionly_cfg->chip_interface = BTC_INTF_UNKNOWN;
+                                             ~ ^~~~~~~~~~~~~~~~
+3 warnings generated.
+
+Use the values from the correct enumerated type, wifionly_chip_interface.
+
+BTC_INTF_UNKNOWN = WIFIONLY_INTF_UNKNOWN = 0
+BTC_INTF_PCI = WIFIONLY_INTF_PCI = 1
+BTC_INTF_USB = WIFIONLY_INTF_USB = 2
+
+Link: https://github.com/ClangBuiltLinux/linux/issues/135
+Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+Acked-by: Ping-Ke Shih <pkshih@realtek.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath9k/common-spectral.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ .../net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c   | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/common-spectral.c b/drivers/net/wireless/ath/ath9k/common-spectral.c
-index 440e16e641e4a..f75eb068e6cfc 100644
---- a/drivers/net/wireless/ath/ath9k/common-spectral.c
-+++ b/drivers/net/wireless/ath/ath9k/common-spectral.c
-@@ -411,7 +411,7 @@ ath_cmn_process_ht20_40_fft(struct ath_rx_status *rs,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+index b026e80940a4d..6fbf8845a2ab6 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+@@ -1324,13 +1324,13 @@ bool exhalbtc_initlize_variables_wifi_only(struct rtl_priv *rtlpriv)
  
- 		ath_dbg(common, SPECTRAL_SCAN,
- 			"Calculated new upper max 0x%X at %i\n",
--			tmp_mag, i);
-+			tmp_mag, fft_sample_40.upper_max_index);
- 	} else
- 	for (i = dc_pos; i < SPECTRAL_HT20_40_NUM_BINS; i++) {
- 		if (fft_sample_40.data[i] == (upper_mag >> max_exp))
+ 	switch (rtlpriv->rtlhal.interface) {
+ 	case INTF_PCI:
+-		wifionly_cfg->chip_interface = BTC_INTF_PCI;
++		wifionly_cfg->chip_interface = WIFIONLY_INTF_PCI;
+ 		break;
+ 	case INTF_USB:
+-		wifionly_cfg->chip_interface = BTC_INTF_USB;
++		wifionly_cfg->chip_interface = WIFIONLY_INTF_USB;
+ 		break;
+ 	default:
+-		wifionly_cfg->chip_interface = BTC_INTF_UNKNOWN;
++		wifionly_cfg->chip_interface = WIFIONLY_INTF_UNKNOWN;
+ 		break;
+ 	}
+ 
 -- 
 2.20.1
 
