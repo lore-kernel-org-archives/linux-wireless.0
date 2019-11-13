@@ -2,93 +2,102 @@ Return-Path: <SRS0=dvfj=ZF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9ED07C17441
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Nov 2019 02:28:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FA50C43331
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Nov 2019 03:38:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6EE122067B
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Nov 2019 02:28:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573612083;
-	bh=IWdzDFSf/TRr9ci4D2Ci/WM12+j7L/sItckgGxtTqy4=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=WrX6/5+kGifvZtUguYkJfGB4kxCFCT9kSbdJHrJlJ5GSUUKYm2lW5803I+Jv8iz19
-	 DEO3LqUms2WUCTZRebQ39as1uJ6kwCfxs6HUW/Fr3HQ/pjD/fpY8eUOeIAZDohCenn
-	 8Zqm8f0YWmIQpO5pffIWciVi2SkhUxPo05Bj5Qzo=
+	by mail.kernel.org (Postfix) with ESMTP id 2CEAB222C9
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Nov 2019 03:38:00 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="NRtfCdPd";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="E8PM8j6A"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729199AbfKMC1o (ORCPT
+        id S1727352AbfKMDh7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 12 Nov 2019 21:27:44 -0500
-Received: from mail.kernel.org ([198.145.29.99]:37832 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727515AbfKMBut (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Nov 2019 20:50:49 -0500
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 4E9AB22459;
-        Wed, 13 Nov 2019 01:50:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573609849;
-        bh=IWdzDFSf/TRr9ci4D2Ci/WM12+j7L/sItckgGxtTqy4=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=2EGJ3IgeNfif66fLmlCCb7QOhlMizbXYgtBBsjaZT01ggxyoOgP/yQ2ERsNy13YH9
-         ILmAjG0W3ZanCb25diiDPOmx9okWGx/goj7rG5GYa1r4Ef6jTS9QGtrniUeAEoNs8g
-         /NkA686EtOpkqeUHvo2YLkCYoXcKTFIIRFiD9rJM=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Felix Fietkau <nbd@nbd.name>, Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 020/209] mt76: fix handling ps-poll frames
-Date:   Tue, 12 Nov 2019 20:47:16 -0500
-Message-Id: <20191113015025.9685-20-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191113015025.9685-1-sashal@kernel.org>
-References: <20191113015025.9685-1-sashal@kernel.org>
+        Tue, 12 Nov 2019 22:37:59 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:55336 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726994AbfKMDh7 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 12 Nov 2019 22:37:59 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 6DFD160591; Wed, 13 Nov 2019 03:37:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1573616278;
+        bh=GEBgaE4DdNY7qFa24EInCgdSI0JAGHtKkaCNGSQWEpo=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=NRtfCdPdoaUfDngdFCmj2RtA5t6p/IyYO/860f6GKn0H4VYasYcGLyBnlX9NrtYhX
+         f00+dwv4A0N5jfw9/8JU2uCcRrq1ZhnYSg+/5/zQ2F27hESX681yG1Ch3YyC+I1kTa
+         p3fb3Z+3bnNvA2BCMgMFqmGDfC2gLz1lWA+BFBMY=
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by smtp.codeaurora.org (Postfix) with ESMTP id BCA8C601E7;
+        Wed, 13 Nov 2019 03:37:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1573616277;
+        bh=GEBgaE4DdNY7qFa24EInCgdSI0JAGHtKkaCNGSQWEpo=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=E8PM8j6AtSy5jbglHF8pcJqGCJ9WhpxRqFw9ZnhJth3HeXGTWPjibTFXg4K1AN6K/
+         cpSTv50vWcg2JTU7RAQhCyN/7VBz5KKGSTECycbILk5aUyRTEqojDC6YK5WZwPk9Zp
+         qeJ+Bd3+VFET4NdbTgq6jrq5WcRNRjE6URZo28G0=
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
 Content-Transfer-Encoding: 8bit
+Date:   Wed, 13 Nov 2019 11:37:57 +0800
+From:   Wen Gong <wgong@codeaurora.org>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v6 3/3] ath10k: add workqueue for RX path of sdio
+In-Reply-To: <87r22ewqi6.fsf@codeaurora.org>
+References: <1569402639-31720-1-git-send-email-wgong@codeaurora.org>
+ <1569402639-31720-4-git-send-email-wgong@codeaurora.org>
+ <8736f92sfx.fsf@kamboji.qca.qualcomm.com>
+ <3f3641ad49a2664d346558760e38b404@codeaurora.org>
+ <70f8f208f631a2a2c7337f45b873a16e@codeaurora.org>
+ <87r22ewqi6.fsf@codeaurora.org>
+Message-ID: <ee6539c50cff626968984df3b511a5a8@codeaurora.org>
+X-Sender: wgong@codeaurora.org
+User-Agent: Roundcube Webmail/1.2.5
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Felix Fietkau <nbd@nbd.name>
+On 2019-11-11 20:23, Kalle Valo wrote:
+> Wen Gong <wgong@codeaurora.org> writes:
+> 
+>> On 2019-11-01 15:42, Wen Gong wrote:
+>>> On 2019-10-31 17:08, Kalle Valo wrote:
+>>> 、> I just realised that this is RX path so we should use
+>>> ATH10K_SKB_RXCB()
+>>>> instead. I made the change below to this commit in pending branch:
+>>>> 
+>>> I will test with the new patch together with other performance 
+>>> patches.
+>> Hi Kalle, I have tested with the patches of pending branch, it is
+>> success.
+>> result is same with the public review which I tested before.
+>> 
+>> the patches I tested on pending branch:
+>> 
+>> ath10k: enable alt data of TX path for sdio
+>> ath10k: add htt TX bundle for sdio
+>> ath10k: disable TX complete indication of htt for sdio
+>> ath10k: enable napi on RX path for sdio
+>> ath10k: sdio: remove struct ath10k_sdio_rx_data::status
+>> ath10k: sdio: cosmetic cleanup
+>> ath10k: add workqueue for RX path of sdio
+>> ath10k: change max RX bundle size from 8 to 32 for sdio
+>> ath10k: enable RX bundle receive for sdio
+> 
+> Very good, thanks for testing.
+Hi Kalle,
 
-[ Upstream commit 36d910960fae3f9e74bedf3e0ef39ee26bdaa51f ]
+this patch will trigger connect fail for PSK mode AP:
+ath10k: add workqueue for RX path of sdio
 
-Hardware station lookup for pspoll frames can fail, which makes the driver
-ignore ps-poll frames. Fix the resulting powersave issues by looking up
-the station for pspoll frames in software
-
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/net/wireless/mediatek/mt76/mac80211.c | 6 ++++++
- 1 file changed, 6 insertions(+)
-
-diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
-index ade4a2029a24a..1b5abd4816ed7 100644
---- a/drivers/net/wireless/mediatek/mt76/mac80211.c
-+++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
-@@ -548,6 +548,12 @@ mt76_check_ps(struct mt76_dev *dev, struct sk_buff *skb)
- 	struct mt76_wcid *wcid = status->wcid;
- 	bool ps;
- 
-+	if (ieee80211_is_pspoll(hdr->frame_control) && !wcid) {
-+		sta = ieee80211_find_sta_by_ifaddr(dev->hw, hdr->addr2, NULL);
-+		if (sta)
-+			wcid = status->wcid = (struct mt76_wcid *) sta->drv_priv;
-+	}
-+
- 	if (!wcid || !wcid->sta)
- 		return;
- 
--- 
-2.20.1
-
+I have sent patch to fix it:
+ath10k: clear ieee80211_rx_status for sdio
