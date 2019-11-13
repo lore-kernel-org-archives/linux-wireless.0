@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D05F2C17441
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Nov 2019 02:10:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60BE8C43331
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Nov 2019 02:10:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AAA2321783
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Nov 2019 02:10:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 356C5206B6
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Nov 2019 02:10:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573611012;
-	bh=Fq/yIuL9dKOTU0E1sOLDaD+7dLeb3Xgyd2LlguKHxZI=;
+	s=default; t=1573611024;
+	bh=Sy7hbScv19rV8NDL9qHrMbFUObG15Smc8I2tCM0i/MU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=GM7uodNa5fqsJBoUJlfrwHf81JhHFSRCCs5tepuiGtRLD+sit7yUj1dcuj6GbSaKh
-	 cGDSfxjr3IQnI1ox0nQtY808FldkSULvrH9WAusYYqLwHmt9RibQ7vpcLTY4Rd3fpE
-	 5yRaUY/XQhfxt2T1Se6T1E4HuiEZFK0MgrWhNmy0=
+	b=uFTPmpMxzWGubdnnJy1xIKZAht1OAYZtztT14s0KtyZtjyGnaKj62hrso7fQS9GLW
+	 93VwvyoA2cOYGRYC3Wxp5a50/QOXArqKoNpa0SWVkRoIiG1Vapw3DTR+7wLjYixEUK
+	 OsmBbnL3OF9yTY+IouAbs5oZEf6ZAtNTmZGJ6ZpI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730924AbfKMCKI (ORCPT
+        id S1730951AbfKMCKQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 12 Nov 2019 21:10:08 -0500
-Received: from mail.kernel.org ([198.145.29.99]:53762 "EHLO mail.kernel.org"
+        Tue, 12 Nov 2019 21:10:16 -0500
+Received: from mail.kernel.org ([198.145.29.99]:53678 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730217AbfKMB7T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Nov 2019 20:59:19 -0500
+        id S1730211AbfKMB7R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 12 Nov 2019 20:59:17 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3B3D92246A;
-        Wed, 13 Nov 2019 01:59:18 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id E5AA02053B;
+        Wed, 13 Nov 2019 01:59:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573610359;
-        bh=Fq/yIuL9dKOTU0E1sOLDaD+7dLeb3Xgyd2LlguKHxZI=;
+        s=default; t=1573610356;
+        bh=Sy7hbScv19rV8NDL9qHrMbFUObG15Smc8I2tCM0i/MU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=LRQ+5u/NVbmJpA5xHbabc3qT8U8wcTH74G1Y+KLej9d1jNuzteUq5uwU9LKzoZP1B
-         zrfTubdYV/szN5cKwcWDNUTGaBuhaw3PXVfyq7t+aQQ4/k/eTdXKrq9hTxAhU8Ani+
-         CckG78LjvlP1Pwe+Q3k/HKqWMTBWCLDe9l+qrQug=
+        b=yU4oxzmSkA2VzU9925+tX0JAxWOnCkbp5mAUe39rAxHdys4P2/kuJStzjjFM5rPep
+         +u1I/vINGw2CoEOxmQs8Gj9GUYSYWjdcPlIq5YgIOC/E8wF1WhZeYSko/MktBWXC61
+         akZboQ7lF0uF2YfOVKS9RU0akyDimdCv6fn4RMeo=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Felix Fietkau <nbd@nbd.name>,
         Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 109/115] mac80211: minstrel: fix sampling/reporting of CCK rates in HT mode
-Date:   Tue, 12 Nov 2019 20:56:16 -0500
-Message-Id: <20191113015622.11592-109-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 107/115] mac80211: minstrel: fix using short preamble CCK rates on HT clients
+Date:   Tue, 12 Nov 2019 20:56:14 -0500
+Message-Id: <20191113015622.11592-107-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191113015622.11592-1-sashal@kernel.org>
 References: <20191113015622.11592-1-sashal@kernel.org>
@@ -62,67 +62,43 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Felix Fietkau <nbd@nbd.name>
 
-[ Upstream commit 972b66b86f85f4e8201db454f4c3e9d990cf9836 ]
+[ Upstream commit 37439f2d6e43ae79e22be9be159f0af157468f82 ]
 
-Long/short preamble selection cannot be sampled separately, since it
-depends on the BSS state. Because of that, sampling attempts to
-currently not used preamble modes are not counted in the statistics,
-which leads to CCK rates being sampled too often.
+mi->supported[MINSTREL_CCK_GROUP] needs to be updated
+short preamble rates need to be marked as supported regardless of
+whether it's currently enabled. Its state can change at any time without
+a rate_update call.
 
-Fix statistics accounting for long/short preamble by increasing the
-index where necessary.
-Fix excessive CCK rate sampling by dropping unsupported sample attempts.
-
-This improves throughput on 2.4 GHz channels
-
+Fixes: 782dda00ab8e ("mac80211: minstrel_ht: move short preamble check out of get_rate")
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/mac80211/rc80211_minstrel_ht.c | 14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
+ net/mac80211/rc80211_minstrel_ht.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
 diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index bc97d31907f60..e57811e4b91f6 100644
+index 4a5bdad9f3030..25cb3e5f8b482 100644
 --- a/net/mac80211/rc80211_minstrel_ht.c
 +++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -282,7 +282,8 @@ minstrel_ht_get_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
- 				break;
+@@ -1132,7 +1132,6 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
+ 	struct ieee80211_mcs_info *mcs = &sta->ht_cap.mcs;
+ 	u16 sta_cap = sta->ht_cap.cap;
+ 	struct ieee80211_sta_vht_cap *vht_cap = &sta->vht_cap;
+-	struct sta_info *sinfo = container_of(sta, struct sta_info, sta);
+ 	int use_vht;
+ 	int n_supported = 0;
+ 	int ack_dur;
+@@ -1258,8 +1257,7 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
+ 	if (!n_supported)
+ 		goto use_legacy;
  
- 		/* short preamble */
--		if (!(mi->supported[group] & BIT(idx)))
-+		if ((mi->supported[group] & BIT(idx + 4)) &&
-+		    (rate->flags & IEEE80211_TX_RC_USE_SHORT_PREAMBLE))
- 			idx += 4;
- 	}
- 	return &mi->groups[group].rates[idx];
-@@ -1077,18 +1078,23 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
- 		return;
+-	if (test_sta_flag(sinfo, WLAN_STA_SHORT_PREAMBLE))
+-		mi->cck_supported_short |= mi->cck_supported_short << 4;
++	mi->supported[MINSTREL_CCK_GROUP] |= mi->cck_supported_short << 4;
  
- 	sample_group = &minstrel_mcs_groups[sample_idx / MCS_GROUP_RATES];
-+	sample_idx %= MCS_GROUP_RATES;
-+
-+	if (sample_group == &minstrel_mcs_groups[MINSTREL_CCK_GROUP] &&
-+	    (sample_idx >= 4) != txrc->short_preamble)
-+		return;
-+
- 	info->flags |= IEEE80211_TX_CTL_RATE_CTRL_PROBE;
- 	rate->count = 1;
- 
--	if (sample_idx / MCS_GROUP_RATES == MINSTREL_CCK_GROUP) {
-+	if (sample_group == &minstrel_mcs_groups[MINSTREL_CCK_GROUP]) {
- 		int idx = sample_idx % ARRAY_SIZE(mp->cck_rates);
- 		rate->idx = mp->cck_rates[idx];
- 	} else if (sample_group->flags & IEEE80211_TX_RC_VHT_MCS) {
- 		ieee80211_rate_set_vht(rate, sample_idx % MCS_GROUP_RATES,
- 				       sample_group->streams);
- 	} else {
--		rate->idx = sample_idx % MCS_GROUP_RATES +
--			    (sample_group->streams - 1) * 8;
-+		rate->idx = sample_idx + (sample_group->streams - 1) * 8;
- 	}
- 
- 	rate->flags = sample_group->flags;
+ 	/* create an initial rate table with the lowest supported rates */
+ 	minstrel_ht_update_stats(mp, mi);
 -- 
 2.20.1
 
