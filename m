@@ -7,50 +7,50 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FCEEC43331
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Nov 2019 02:16:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10D72C17441
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Nov 2019 02:17:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D8FDA21783
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Nov 2019 02:16:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DD64121D7F
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Nov 2019 02:17:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573611367;
-	bh=rI7+QFdDnzZoZ4C9gZukEMW6iBJhwj9njuHC+g2axG4=;
+	s=default; t=1573611470;
+	bh=K4n3aYJXAo17CDZa0QtfmAmu1waj7vh3I8pX8B47fb4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=bP8pvGKpEHkVwYxYqgjKOR5ipRXN9beGHS1Z8qAWSdkdvE2eH7NycC5F1Nps1U0rn
-	 fJCVTEOiP95ojeuceG5XG3jeQibtgsvuEFXxJvj+LMYeeH01G664MQepitbLFy4kcf
-	 Elh+qv0CPn2HBZtMdLUNu+0Tb6d0Jy9ZR7wK6YjY=
+	b=zKhTqs/VbgvJ9Zm+oKYlxciPrKn8a7mK4Yku+u5kMclPQuoR83Sl9EbTz12wdVWrA
+	 7VQOIUlFz9dmsdQ31vGF7OXxe++c16IKO5CxB96hQeLXmhnKBx53CcWc14mi91h31K
+	 dcNjiLhKV9rueSzTh62Mto10zHtPlaGeqzhDnxoQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730556AbfKMCQB (ORCPT
+        id S1729331AbfKMBz5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 12 Nov 2019 21:16:01 -0500
-Received: from mail.kernel.org ([198.145.29.99]:49232 "EHLO mail.kernel.org"
+        Tue, 12 Nov 2019 20:55:57 -0500
+Received: from mail.kernel.org ([198.145.29.99]:47848 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729554AbfKMB4m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Nov 2019 20:56:42 -0500
+        id S1728415AbfKMBz4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 12 Nov 2019 20:55:56 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 94DE6222D4;
-        Wed, 13 Nov 2019 01:56:40 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id CC0CE2247D;
+        Wed, 13 Nov 2019 01:55:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573610201;
-        bh=rI7+QFdDnzZoZ4C9gZukEMW6iBJhwj9njuHC+g2axG4=;
+        s=default; t=1573610155;
+        bh=K4n3aYJXAo17CDZa0QtfmAmu1waj7vh3I8pX8B47fb4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=qPtxRcVcbxo5p4v7xhHMNPUIqF9CDtm42IDnxLSFGbVay0WJaFTmryU3jJJgn/rwE
-         JC9A1PKrJSxvxWhWN9nXQHjtjrP4Q3QOfpr72hFtPTdxCESxo3CMhkTRq8PRZxIHxh
-         ZVgS/JH75I5Ovda88C2OK2GcmofE0lIXRXbked2A=
+        b=z7gTlhbPwaOI+d8CwDcphQ9fa27w+4Zy5xdxor62BfuIF8+onnUShnouwL6DJqXeU
+         0t9+Huvc5bFVyTr2XQTBL77FvVqXiQsp3eEKCvHbjYRedtCmwpEVjz1Y42uDqrx/sg
+         bgQESEZcter7g3XKNcLQl0TaQjs29R9MZ5asF5Gs=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Ben Greear <greearb@candelatech.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
+Cc:     Felix Fietkau <nbd@nbd.name>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 013/115] ath10k: fix vdev-start timeout on error
-Date:   Tue, 12 Nov 2019 20:54:40 -0500
-Message-Id: <20191113015622.11592-13-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 199/209] mac80211: minstrel: fix sampling/reporting of CCK rates in HT mode
+Date:   Tue, 12 Nov 2019 20:50:15 -0500
+Message-Id: <20191113015025.9685-199-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191113015622.11592-1-sashal@kernel.org>
-References: <20191113015622.11592-1-sashal@kernel.org>
+In-Reply-To: <20191113015025.9685-1-sashal@kernel.org>
+References: <20191113015025.9685-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -60,115 +60,69 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ben Greear <greearb@candelatech.com>
+From: Felix Fietkau <nbd@nbd.name>
 
-[ Upstream commit 833fd34d743c728afe6d127ef7bee67e7d9199a8 ]
+[ Upstream commit 972b66b86f85f4e8201db454f4c3e9d990cf9836 ]
 
-The vdev-start-response message should cause the
-completion to fire, even in the error case.  Otherwise,
-the user still gets no useful information and everything
-is blocked until the timeout period.
+Long/short preamble selection cannot be sampled separately, since it
+depends on the BSS state. Because of that, sampling attempts to
+currently not used preamble modes are not counted in the statistics,
+which leads to CCK rates being sampled too often.
 
-Add some warning text to print out the invalid status
-code to aid debugging, and propagate failure code.
+Fix statistics accounting for long/short preamble by increasing the
+index where necessary.
+Fix excessive CCK rate sampling by dropping unsupported sample attempts.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+This improves throughput on 2.4 GHz channels
+
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath10k/core.h |  1 +
- drivers/net/wireless/ath/ath10k/mac.c  |  2 +-
- drivers/net/wireless/ath/ath10k/wmi.c  | 19 ++++++++++++++++---
- drivers/net/wireless/ath/ath10k/wmi.h  |  8 +++++++-
- 4 files changed, 25 insertions(+), 5 deletions(-)
+ net/mac80211/rc80211_minstrel_ht.c | 14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 949ebb3e967bb..be9ec265dfe55 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -881,6 +881,7 @@ struct ath10k {
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index 2ecca10f6c24a..3d5520776655d 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -282,7 +282,8 @@ minstrel_ht_get_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
+ 				break;
  
- 	struct completion install_key_done;
+ 		/* short preamble */
+-		if (!(mi->supported[group] & BIT(idx)))
++		if ((mi->supported[group] & BIT(idx + 4)) &&
++		    (rate->flags & IEEE80211_TX_RC_USE_SHORT_PREAMBLE))
+ 			idx += 4;
+ 	}
+ 	return &mi->groups[group].rates[idx];
+@@ -1077,18 +1078,23 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+ 		return;
  
-+	int last_wmi_vdev_start_status;
- 	struct completion vdev_setup_done;
- 
- 	struct workqueue_struct *workqueue;
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 58a3c42c4aedb..259ef6a0d1740 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -954,7 +954,7 @@ static inline int ath10k_vdev_setup_sync(struct ath10k *ar)
- 	if (time_left == 0)
- 		return -ETIMEDOUT;
- 
--	return 0;
-+	return ar->last_wmi_vdev_start_status;
- }
- 
- static int ath10k_monitor_vdev_start(struct ath10k *ar, int vdev_id)
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index ab8eb9cdfda0f..c29e908c97317 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -3132,18 +3132,31 @@ void ath10k_wmi_event_vdev_start_resp(struct ath10k *ar, struct sk_buff *skb)
- {
- 	struct wmi_vdev_start_ev_arg arg = {};
- 	int ret;
-+	u32 status;
- 
- 	ath10k_dbg(ar, ATH10K_DBG_WMI, "WMI_VDEV_START_RESP_EVENTID\n");
- 
-+	ar->last_wmi_vdev_start_status = 0;
+ 	sample_group = &minstrel_mcs_groups[sample_idx / MCS_GROUP_RATES];
++	sample_idx %= MCS_GROUP_RATES;
 +
- 	ret = ath10k_wmi_pull_vdev_start(ar, skb, &arg);
- 	if (ret) {
- 		ath10k_warn(ar, "failed to parse vdev start event: %d\n", ret);
--		return;
-+		ar->last_wmi_vdev_start_status = ret;
-+		goto out;
++	if (sample_group == &minstrel_mcs_groups[MINSTREL_CCK_GROUP] &&
++	    (sample_idx >= 4) != txrc->short_preamble)
++		return;
++
+ 	info->flags |= IEEE80211_TX_CTL_RATE_CTRL_PROBE;
+ 	rate->count = 1;
+ 
+-	if (sample_idx / MCS_GROUP_RATES == MINSTREL_CCK_GROUP) {
++	if (sample_group == &minstrel_mcs_groups[MINSTREL_CCK_GROUP]) {
+ 		int idx = sample_idx % ARRAY_SIZE(mp->cck_rates);
+ 		rate->idx = mp->cck_rates[idx];
+ 	} else if (sample_group->flags & IEEE80211_TX_RC_VHT_MCS) {
+ 		ieee80211_rate_set_vht(rate, sample_idx % MCS_GROUP_RATES,
+ 				       sample_group->streams);
+ 	} else {
+-		rate->idx = sample_idx % MCS_GROUP_RATES +
+-			    (sample_group->streams - 1) * 8;
++		rate->idx = sample_idx + (sample_group->streams - 1) * 8;
  	}
  
--	if (WARN_ON(__le32_to_cpu(arg.status)))
--		return;
-+	status = __le32_to_cpu(arg.status);
-+	if (WARN_ON_ONCE(status)) {
-+		ath10k_warn(ar, "vdev-start-response reports status error: %d (%s)\n",
-+			    status, (status == WMI_VDEV_START_CHAN_INVALID) ?
-+			    "chan-invalid" : "unknown");
-+		/* Setup is done one way or another though, so we should still
-+		 * do the completion, so don't return here.
-+		 */
-+		ar->last_wmi_vdev_start_status = -EINVAL;
-+	}
- 
-+out:
- 	complete(&ar->vdev_setup_done);
- }
- 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index d0e05aa437e36..947b74c64fec0 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -6480,11 +6480,17 @@ struct wmi_ch_info_ev_arg {
- 	__le32 rx_frame_count;
- };
- 
-+/* From 10.4 firmware, not sure all have the same values. */
-+enum wmi_vdev_start_status {
-+	WMI_VDEV_START_OK = 0,
-+	WMI_VDEV_START_CHAN_INVALID,
-+};
-+
- struct wmi_vdev_start_ev_arg {
- 	__le32 vdev_id;
- 	__le32 req_id;
- 	__le32 resp_type; /* %WMI_VDEV_RESP_ */
--	__le32 status;
-+	__le32 status; /* See wmi_vdev_start_status enum above */
- };
- 
- struct wmi_peer_kick_ev_arg {
+ 	rate->flags = sample_group->flags;
 -- 
 2.20.1
 
