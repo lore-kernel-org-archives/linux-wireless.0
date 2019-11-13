@@ -7,47 +7,50 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 509E0C17441
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Nov 2019 02:22:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CAD2DC17440
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Nov 2019 02:23:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2B2422067B
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Nov 2019 02:22:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A1D1A21D7F
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Nov 2019 02:23:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573611775;
-	bh=2KUh2tDx0koScgjBuyBrWUfhSOsfanBbT7qewGFoA70=;
+	s=default; t=1573611787;
+	bh=Em/6r+eVCEBPBMQzKf3l+OODRJz6v5UF0j2kgMaZOdQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=WCnbPd21CTvMQY/H/YGzyiMX/SA+slGV2NcBRQ/u9f6/pIX1lwY6UKNhvH00p0NzM
-	 6yWawK2+mdntrYgcVd85nkHCbr8br1BsCJMblNc3G/+HLdRItF7H0cx8qhUFyDhTYD
-	 +qefwTjWJ1UrZRozBma1x6v6LTbt4M133L0ktWWY=
+	b=ipJwT2gjvkc0jvbnVM7fNPSZp3w07F+QGw8INhpFWZETApX5Avo8ZTv6SxVCS2tRM
+	 DSPZDNx8exccFPpfUMUxkDGaNWk/oR9OWTuzOaMKvWSHctgrHUqAmyz5ifqw9SHtEz
+	 MOfCpWrKd7XiM7vZNYatV1+Oud2YffccCl5AwLT0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728472AbfKMBxG (ORCPT
+        id S1729186AbfKMCXD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 12 Nov 2019 20:53:06 -0500
-Received: from mail.kernel.org ([198.145.29.99]:42448 "EHLO mail.kernel.org"
+        Tue, 12 Nov 2019 21:23:03 -0500
+Received: from mail.kernel.org ([198.145.29.99]:42228 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728456AbfKMBxE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Nov 2019 20:53:04 -0500
+        id S1728344AbfKMBw4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 12 Nov 2019 20:52:56 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 27F1A222D3;
-        Wed, 13 Nov 2019 01:53:03 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id BFF46222CD;
+        Wed, 13 Nov 2019 01:52:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573609983;
-        bh=2KUh2tDx0koScgjBuyBrWUfhSOsfanBbT7qewGFoA70=;
+        s=default; t=1573609974;
+        bh=Em/6r+eVCEBPBMQzKf3l+OODRJz6v5UF0j2kgMaZOdQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=W3pI4iHJ1sGwb7pDZx2UdsHzJ4ifmeHdgpOkrGnxKGNzC3RW/1DYCqBVqyKI5oXsf
-         wG69r4iA6WaKBjlvxI5OrRsDkxHSA27d0iNCFJ2fRXr3XYvdV4AE9+mgTMoatQ2Ziw
-         2qzUMLJ14882hDA18OplJLNF4dHXLoznm31LE9nk=
+        b=Cis2shCPkh/6aSYjOwmgosilxQ0x9o3s2PQ16VXmX2YT6byHjS9C7EpydbvSQf+cA
+         4yHlTSNudcvTGgyZqK3Cek5Uc9bEW7CbE4jv1JUtWwTHrDUx0oUKjR2qUIuMMmMyGE
+         TgNXY0ZPsXbeaQrkjFC7BylSOntW+yL6RJZYlSH0=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+Cc:     Chung-Hsien Hsu <stanley.hsu@cypress.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 102/209] qtnfmac: request userspace to do OBSS scanning if FW can not
-Date:   Tue, 12 Nov 2019 20:48:38 -0500
-Message-Id: <20191113015025.9685-102-sashal@kernel.org>
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 100/209] brcmfmac: reduce timeout for action frame scan
+Date:   Tue, 12 Nov 2019 20:48:36 -0500
+Message-Id: <20191113015025.9685-100-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191113015025.9685-1-sashal@kernel.org>
 References: <20191113015025.9685-1-sashal@kernel.org>
@@ -60,56 +63,75 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+From: Chung-Hsien Hsu <stanley.hsu@cypress.com>
 
-[ Upstream commit 92246b126ebf66ab1fec9d631df78d7c675b66db ]
+[ Upstream commit edb6d6885bef82d1eac432dbeca9fbf4ec349d7e ]
 
-In case firmware reports that it can not do OBSS scanning for 40MHz
-2.4GHz channels itself, tell userpsace to do that instead by setting
-NL80211_FEATURE_NEED_OBSS_SCAN flag.
+Finding a common channel to send an action frame out is required for
+some action types. Since a loop with several scan retry is used to find
+the channel, a short wait time could be considered for each attempt.
+This patch reduces the wait time from 1500 to 450 msec for each action
+frame scan.
 
-Signed-off-by: Igor mitsyanko <igor.mitsyanko.os@quantenna.com>
+This patch fixes the WFA p2p certification 5.1.20 failure caused by the
+long action frame send time.
+
+Signed-off-by: Chung-Hsien Hsu <stanley.hsu@cypress.com>
+Signed-off-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 3 +++
- drivers/net/wireless/quantenna/qtnfmac/qlink.h    | 2 ++
- 2 files changed, 5 insertions(+)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-index 4aa332f4646b1..1519d986b74a4 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-@@ -1109,6 +1109,9 @@ int qtnf_wiphy_register(struct qtnf_hw_info *hw_info, struct qtnf_wmac *mac)
- 	if (hw_info->hw_capab & QLINK_HW_CAPAB_SCAN_RANDOM_MAC_ADDR)
- 		wiphy->features |= NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+index 3e9c4f2f5dd12..7822740a8cb40 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+@@ -74,7 +74,7 @@
+ #define P2P_AF_MAX_WAIT_TIME		msecs_to_jiffies(2000)
+ #define P2P_INVALID_CHANNEL		-1
+ #define P2P_CHANNEL_SYNC_RETRY		5
+-#define P2P_AF_FRM_SCAN_MAX_WAIT	msecs_to_jiffies(1500)
++#define P2P_AF_FRM_SCAN_MAX_WAIT	msecs_to_jiffies(450)
+ #define P2P_DEFAULT_SLEEP_TIME_VSDB	200
  
-+	if (!(hw_info->hw_capab & QLINK_HW_CAPAB_OBSS_SCAN))
-+		wiphy->features |= NL80211_FEATURE_NEED_OBSS_SCAN;
-+
- #ifdef CONFIG_PM
- 	if (macinfo->wowlan)
- 		wiphy->wowlan = macinfo->wowlan;
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink.h b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-index 99d37e3efba63..c5ae4ea9a47a9 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-@@ -71,6 +71,7 @@ struct qlink_msg_header {
-  * @QLINK_HW_CAPAB_DFS_OFFLOAD: device implements DFS offload functionality
-  * @QLINK_HW_CAPAB_SCAN_RANDOM_MAC_ADDR: device supports MAC Address
-  *	Randomization in probe requests.
-+ * @QLINK_HW_CAPAB_OBSS_SCAN: device can perform OBSS scanning.
-  */
- enum qlink_hw_capab {
- 	QLINK_HW_CAPAB_REG_UPDATE		= BIT(0),
-@@ -78,6 +79,7 @@ enum qlink_hw_capab {
- 	QLINK_HW_CAPAB_DFS_OFFLOAD		= BIT(2),
- 	QLINK_HW_CAPAB_SCAN_RANDOM_MAC_ADDR	= BIT(3),
- 	QLINK_HW_CAPAB_PWR_MGMT			= BIT(4),
-+	QLINK_HW_CAPAB_OBSS_SCAN		= BIT(5),
- };
+ /* WiFi P2P Public Action Frame OUI Subtypes */
+@@ -1134,7 +1134,6 @@ static s32 brcmf_p2p_af_searching_channel(struct brcmf_p2p_info *p2p)
+ {
+ 	struct afx_hdl *afx_hdl = &p2p->afx_hdl;
+ 	struct brcmf_cfg80211_vif *pri_vif;
+-	unsigned long duration;
+ 	s32 retry;
  
- enum qlink_iface_type {
+ 	brcmf_dbg(TRACE, "Enter\n");
+@@ -1150,7 +1149,6 @@ static s32 brcmf_p2p_af_searching_channel(struct brcmf_p2p_info *p2p)
+ 	 * pending action frame tx is cancelled.
+ 	 */
+ 	retry = 0;
+-	duration = msecs_to_jiffies(P2P_AF_FRM_SCAN_MAX_WAIT);
+ 	while ((retry < P2P_CHANNEL_SYNC_RETRY) &&
+ 	       (afx_hdl->peer_chan == P2P_INVALID_CHANNEL)) {
+ 		afx_hdl->is_listen = false;
+@@ -1158,7 +1156,8 @@ static s32 brcmf_p2p_af_searching_channel(struct brcmf_p2p_info *p2p)
+ 			  retry);
+ 		/* search peer on peer's listen channel */
+ 		schedule_work(&afx_hdl->afx_work);
+-		wait_for_completion_timeout(&afx_hdl->act_frm_scan, duration);
++		wait_for_completion_timeout(&afx_hdl->act_frm_scan,
++					    P2P_AF_FRM_SCAN_MAX_WAIT);
+ 		if ((afx_hdl->peer_chan != P2P_INVALID_CHANNEL) ||
+ 		    (!test_bit(BRCMF_P2P_STATUS_FINDING_COMMON_CHANNEL,
+ 			       &p2p->status)))
+@@ -1171,7 +1170,7 @@ static s32 brcmf_p2p_af_searching_channel(struct brcmf_p2p_info *p2p)
+ 			afx_hdl->is_listen = true;
+ 			schedule_work(&afx_hdl->afx_work);
+ 			wait_for_completion_timeout(&afx_hdl->act_frm_scan,
+-						    duration);
++						    P2P_AF_FRM_SCAN_MAX_WAIT);
+ 		}
+ 		if ((afx_hdl->peer_chan != P2P_INVALID_CHANNEL) ||
+ 		    (!test_bit(BRCMF_P2P_STATUS_FINDING_COMMON_CHANNEL,
 -- 
 2.20.1
 
