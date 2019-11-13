@@ -2,115 +2,130 @@ Return-Path: <SRS0=dvfj=ZF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE6CCC47431
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Nov 2019 16:31:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23054C432C3
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Nov 2019 19:28:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E3B012248A
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Nov 2019 15:46:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7A3E9206D7
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Nov 2019 19:28:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mvo2vdSi"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="kAKj678F"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728066AbfKMPqv (ORCPT
+        id S1727202AbfKMT2Z (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 13 Nov 2019 10:46:51 -0500
-Received: from mail-pf1-f194.google.com ([209.85.210.194]:40544 "EHLO
-        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727745AbfKMPqv (ORCPT
+        Wed, 13 Nov 2019 14:28:25 -0500
+Received: from mail-pg1-f194.google.com ([209.85.215.194]:43901 "EHLO
+        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727004AbfKMT2Z (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Nov 2019 10:46:51 -0500
-Received: by mail-pf1-f194.google.com with SMTP id r4so1918835pfl.7;
-        Wed, 13 Nov 2019 07:46:50 -0800 (PST)
+        Wed, 13 Nov 2019 14:28:25 -0500
+Received: by mail-pg1-f194.google.com with SMTP id l24so1959000pgh.10
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Nov 2019 11:28:24 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=TBVtymOI9WwZsWEvU07x8pNEkzVPUQwttMv3w1HkiJ8=;
-        b=mvo2vdSi3TpgqVnEPaWhYlSWv2KwG7IyopXGZJg3fMsbp3v6j1pIvTAVW8UfVQkH9K
-         XdEFqj8ztEc9jrMWhZI0oyM3fLG+vzPaurnl13NBHlkvwMQQDhKJ6tjoxWfmuVy3EnkF
-         WoqlsNflDPGF0RgSgSo+t5DT/6kTQvRdi+rzdAh/wqLE6FZw2HyT08WjnZD03GNGakdY
-         rCCVMbfDRWP3TaNAPYx8WgMgXBxyrbVUACB9X7fOfbiVcpTu4DTMkV9WBeSyi6DAx7dY
-         YzujGpVbXJ+ZM7bDbrBcRP2H5GvkH/9WTqLtPyQuonXAb2cs/0VgfHG1ZROKJeg9Ea2Y
-         imUQ==
+        d=linaro.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=MAMD8GrM8dHDXrjY8rB11bYG41rlwSHG+RL00OkRN/o=;
+        b=kAKj678FOeRgSTgvgGizY5G9JM6SOedytMkY28h49lcSAdCwJa8TigOkgPmwgEAmFl
+         7lVRSFwk2qORKcwSLUM1DiKTx71kKurWIMaiBtzw/+zUI6DyVo8nIr54GG+84a7z/N4L
+         bJBoL7U57vlio0KtxJPnXPQqNZEmpADcUyz47F1FYT9O2hvMqk1AigAhyOYHwxP8TBqP
+         dzNxLUWBNVslIFHB55wEXdMx4sjqo9BLrz3POeQh4iFTei538Q8lIw7AaU8yzPmro5o4
+         1mTDOZMeWMLxxLNlCNY4RH10WHgw4Hu8lheD6ExtAfsMPWc5bWNscnVoslU1zFhBQtM5
+         VnRg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=TBVtymOI9WwZsWEvU07x8pNEkzVPUQwttMv3w1HkiJ8=;
-        b=cJWfVSNCMkEefci9wmM/TGe3+gPIhXQ7hgUQwP5CfJ9w4nZEW5LCjxbkjEotZRlU0J
-         8nlzuvQ6wr2YdopsTQ853Fo1i91DISKroVjLfk5SucRP5jsiyr/iLZPwvFHRWpRFmWT+
-         418LV1N6Ri9F4tWTPFbeDCSu5ntmM+5fd3N02DavPKKPFNDYdEm14O9UPIQ0dtpCmI1n
-         g9X3sxbBrcrZQgk7yb32gfDPqZbC35IytqCOMCPTAkVnDBFn40GaSdn1JJXZ5nEjkWcp
-         AzPaG2h1fdlB9ZIBV2MkUpHsJn1rJEevIlWwU7tEu723lsF2Lpf5ZVPKWB/NkK52g/5p
-         I7rg==
-X-Gm-Message-State: APjAAAVUZFfScK6acZq7D1LT2q1beUn2i3ITnbSLdOVSdzU9h91WofcY
-        dnbDo70EeRWpfsYqBRhP3lQ=
-X-Google-Smtp-Source: APXvYqw+4YtAO4BurwCMDsiaBzTWfhVwSTwA+/T/CjKbuQnohvT7t9DtGQo9ioj0WANfV+2kt5VWFA==
-X-Received: by 2002:a63:e84d:: with SMTP id a13mr4422751pgk.226.1573660010409;
-        Wed, 13 Nov 2019 07:46:50 -0800 (PST)
-Received: from aw-bldr-10.qualcomm.com (i-global254.qualcomm.com. [199.106.103.254])
-        by smtp.gmail.com with ESMTPSA id 16sm3953091pfc.21.2019.11.13.07.46.49
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=MAMD8GrM8dHDXrjY8rB11bYG41rlwSHG+RL00OkRN/o=;
+        b=SJxYPwUAkxAg+Y8wrtti4z+xjTDVF37GD4s6akjmXZ5fef65KaDWk/3RDs+9hIlCSz
+         PkBgBkU2gSQrLt7l+jj/GBZGw6iiHTMDfIP2pdmS8Br3Vqd9IXKEbYviw1jy7KSves7F
+         HcXGRr2BVv1eouLjmf2AVqD86v5F3xpguQ+8DacMPERpxoCybUYpz8OXGef3NOgxiF20
+         U4OF6BrhMZkvvuh+3q16Cn6yxumk6wh8j8ZxO5VJGJxCB+yhETFzNfkrNYPqaADm6jHg
+         MvDJUs3gWNyAWQLvGwew460IohmkKJBj2GVlqI5vgETr1V0q4aPmeJNb2lITFASzU/Nf
+         JMfA==
+X-Gm-Message-State: APjAAAWskwc1WWMO+DKRUaQTMdPxlmjBIOeOltP7+8+9dZvtde9L+Tlm
+        Io903aCx4q+mKfT5SroCgtZ0pQ==
+X-Google-Smtp-Source: APXvYqzVZUY1tsQDfkbM7m/TmFRXF1CAa7JwqkS6wPqF7BuiwbTHdXn0YX0vI9kQk5s72HxPcOWbHg==
+X-Received: by 2002:a62:2686:: with SMTP id m128mr6406494pfm.143.1573673304126;
+        Wed, 13 Nov 2019 11:28:24 -0800 (PST)
+Received: from builder (104-188-17-28.lightspeed.sndgca.sbcglobal.net. [104.188.17.28])
+        by smtp.gmail.com with ESMTPSA id z7sm3437838pgk.10.2019.11.13.11.28.22
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 13 Nov 2019 07:46:49 -0800 (PST)
-From:   Jeffrey Hugo <jeffrey.l.hugo@gmail.com>
-To:     kvalo@codeaurora.org, davem@davemloft.net
-Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Jeffrey Hugo <jeffrey.l.hugo@gmail.com>
-Subject: [PATCH v2] ath10k: Handle "invalid" BDFs for msm8998 devices
-Date:   Wed, 13 Nov 2019 07:46:46 -0800
-Message-Id: <20191113154646.43048-1-jeffrey.l.hugo@gmail.com>
-X-Mailer: git-send-email 2.17.1
+        Wed, 13 Nov 2019 11:28:23 -0800 (PST)
+Date:   Wed, 13 Nov 2019 11:28:21 -0800
+From:   Bjorn Andersson <bjorn.andersson@linaro.org>
+To:     Wenwen Wang <wenwen@cs.uga.edu>, Kalle Valo <kvalo@codeaurora.org>
+Cc:     "David S. Miller" <davem@davemloft.net>,
+        "open list:QUALCOMM ATHEROS ATH10K WIRELESS DRIVER" 
+        <ath10k@lists.infradead.org>,
+        "open list:NETWORKING DRIVERS (WIRELESS)" 
+        <linux-wireless@vger.kernel.org>,
+        "open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>,
+        jeffrey.l.hugo@gmail.com, govinds@codeaurora.org
+Subject: Re: [PATCH] ath10k: add cleanup in ath10k_sta_state()
+Message-ID: <20191113192821.GA3441686@builder>
+References: <1565903072-3948-1-git-send-email-wenwen@cs.uga.edu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1565903072-3948-1-git-send-email-wenwen@cs.uga.edu>
+User-Agent: Mutt/1.12.2 (2019-09-21)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-When the BDF download QMI message has the end field set to 1, it signals
-the end of the transfer, and triggers the firmware to do a CRC check.  The
-BDFs for msm8998 devices fail this check, yet the firmware is happy to
-still use the BDF.  It appears that this error is not caught by the
-downstream drive by concidence, therefore there are production devices
-in the field where this issue needs to be handled otherwise we cannot
-support wifi on them.  So, attempt to detect this scenario as best we can
-and treat it as non-fatal.
+On Thu 15 Aug 14:04 PDT 2019, Wenwen Wang wrote:
 
-Signed-off-by: Jeffrey Hugo <jeffrey.l.hugo@gmail.com>
-Reviewed-by: Bjorn Andersson <bjorn.andersson@linaro.org>
----
+> If 'sta->tdls' is false, no cleanup is executed, leading to memory/resource
+> leaks, e.g., 'arsta->tx_stats'. To fix this issue, perform cleanup before
+> go to the 'exit' label.
+> 
 
-v2:
--tweak conditional nesting
--add comment in code to clarify
+Unfortunately this patch consistently crashes all my msm8998, sdm845 and
+qcs404 devices (running ath10k_snoc).  Upon trying to join a network the
+WiFi firmware crashes with the following:
 
- drivers/net/wireless/ath/ath10k/qmi.c | 10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
+[  124.315286] wlan0: authenticate with 70:3a:cb:4d:34:f3
+[  124.334051] wlan0: send auth to 70:3a:cb:4d:34:f3 (try 1/3)
+[  124.338828] wlan0: authenticated
+[  124.342470] wlan0: associate with 70:3a:cb:4d:34:f3 (try 1/3)
+[  124.347223] wlan0: RX AssocResp from 70:3a:cb:4d:34:f3 (capab=0x1011 status=0 aid=2)
+[  124.402535] qcom-q6v5-mss 4080000.remoteproc: fatal error received: err_qdi.c:456:EF:wlan_process:1:cmnos_thread.c:3900:Asserted in wlan_vdev.c:_wlan_vdev_up:3219
 
-diff --git a/drivers/net/wireless/ath/ath10k/qmi.c b/drivers/net/wireless/ath/ath10k/qmi.c
-index 637f83ef65f8..6df2d3ac5474 100644
---- a/drivers/net/wireless/ath/ath10k/qmi.c
-+++ b/drivers/net/wireless/ath/ath10k/qmi.c
-@@ -279,7 +279,15 @@ static int ath10k_qmi_bdf_dnld_send_sync(struct ath10k_qmi *qmi)
- 		if (ret < 0)
- 			goto out;
- 
--		if (resp.resp.result != QMI_RESULT_SUCCESS_V01) {
-+		/* end = 1 triggers a CRC check on the BDF.  If this fails, we
-+		 * get a QMI_ERR_MALFORMED_MSG_V01 error, but the FW is still
-+		 * willing to use the BDF.  For some platforms, all the valid
-+		 * released BDFs fail this CRC check, so attempt to detect this
-+		 * scenario and treat it as non-fatal.
-+		 */
-+		if (resp.resp.result != QMI_RESULT_SUCCESS_V01 &&
-+		    !(req->end == 1 &&
-+		      resp.resp.result == QMI_ERR_MALFORMED_MSG_V01)) {
- 			ath10k_err(ar, "failed to download board data file: %d\n",
- 				   resp.resp.error);
- 			ret = -EINVAL;
--- 
-2.17.1
+Can we please revert it for v5.5?
 
+Regards,
+Bjorn
+
+> Signed-off-by: Wenwen Wang <wenwen@cs.uga.edu>
+> ---
+>  drivers/net/wireless/ath/ath10k/mac.c | 6 +++++-
+>  1 file changed, 5 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+> index 0606416..f99e6d2 100644
+> --- a/drivers/net/wireless/ath/ath10k/mac.c
+> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+> @@ -6548,8 +6548,12 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
+>  
+>  		spin_unlock_bh(&ar->data_lock);
+>  
+> -		if (!sta->tdls)
+> +		if (!sta->tdls) {
+> +			ath10k_peer_delete(ar, arvif->vdev_id, sta->addr);
+> +			ath10k_mac_dec_num_stations(arvif, sta);
+> +			kfree(arsta->tx_stats);
+>  			goto exit;
+> +		}
+>  
+>  		ret = ath10k_wmi_update_fw_tdls_state(ar, arvif->vdev_id,
+>  						      WMI_TDLS_ENABLE_ACTIVE);
+> -- 
+> 2.7.4
+> 
