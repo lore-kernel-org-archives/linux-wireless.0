@@ -7,45 +7,46 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE893C43331
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Nov 2019 02:27:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3906C43331
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Nov 2019 02:28:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BF8612067B
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Nov 2019 02:27:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A2F0F2067B
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Nov 2019 02:28:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573612077;
-	bh=urMkjndaCFT8P0B6YUlwM2kbeo3+BVId8Tiq7RtV6pc=;
+	s=default; t=1573612080;
+	bh=WatvhTlnTrUeKgE4vGEfMfvYTXMAw5MLRYU+EHcOmmA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=hBtcKdBMxTvycmAh3TvIXXmmLW0mL4seQPzkhAHg6tfYDhmoORUNRsd2oOI7Quu/p
-	 9AYC8MZtwgpkbp17stxh4PlZrRAO14i9wSnDfFMbQsnMBF/QNihwBbZOFlBNkZnR9F
-	 lw58lmykvvpLnwBF2BM45rFIDhgsByT4OAexXUG4=
+	b=LpeYZj7R+Hscp5rGMZqi2dPSkUfDJ/83VmjC5gKfEtl2UBhII99VxFKHIPBJ5EDM3
+	 GCAFjI/u0Tg8oQT/gpwa5oUC7LdBV/XAhK249ZrHVbgSSXpq/RbNLcsvQhdhOvGmOR
+	 gJWU36A41E4kn6Q/uQr3tsZRMe6wBb6RU+vUrlfw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729556AbfKMC1p (ORCPT
+        id S1729264AbfKMC1o (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 12 Nov 2019 21:27:45 -0500
-Received: from mail.kernel.org ([198.145.29.99]:37778 "EHLO mail.kernel.org"
+        Tue, 12 Nov 2019 21:27:44 -0500
+Received: from mail.kernel.org ([198.145.29.99]:37746 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727513AbfKMBus (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Nov 2019 20:50:48 -0500
+        id S1727508AbfKMBur (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 12 Nov 2019 20:50:47 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 459B8222D4;
-        Wed, 13 Nov 2019 01:50:47 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 1D54B222CE;
+        Wed, 13 Nov 2019 01:50:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573609847;
-        bh=urMkjndaCFT8P0B6YUlwM2kbeo3+BVId8Tiq7RtV6pc=;
+        s=default; t=1573609846;
+        bh=WatvhTlnTrUeKgE4vGEfMfvYTXMAw5MLRYU+EHcOmmA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=WO11k3vp2fVr03jpwqpfwQhS5W20EGSk+f+3jombbSG6t24gXI+qrhO5QIGqt2rNq
-         0oLcTeea88soWfB/4mPw0YRRmqmtZHg0nvp9/hGIADtYxpoFZnqQsTzyXCo3maWmUc
-         /t8U+a7JcUS0O8X29ZX31nxVOCwR8i24s7RzlfaI=
+        b=DLPpSQMue8YGB9dBP1N6Er52/66wIf2qQ/6uw5JzrNrbJZxuWiww/+yO9BaMeJYr1
+         pmc3ehZfNLkpSJx/1rJgT2/2W8eOexDfD+PT8cfuTqQpfVbL1CienxDN+NqlFjq91a
+         Jpjn1KBaAayicGysk/zGTWrYdlius+KTxqzZe0hc=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Felix Fietkau <nbd@nbd.name>, Sasha Levin <sashal@kernel.org>,
+Cc:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
+        Felix Fietkau <nbd@nbd.name>, Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 019/209] mt76x2: disable WLAN core before probe
-Date:   Tue, 12 Nov 2019 20:47:15 -0500
-Message-Id: <20191113015025.9685-19-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 018/209] mt76x2: fix tx power configuration for VHT mcs 9
+Date:   Tue, 12 Nov 2019 20:47:14 -0500
+Message-Id: <20191113015025.9685-18-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191113015025.9685-1-sashal@kernel.org>
 References: <20191113015025.9685-1-sashal@kernel.org>
@@ -58,55 +59,38 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Felix Fietkau <nbd@nbd.name>
+From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 
-[ Upstream commit 62e04f8a31fcc375c978b7f83b4229a10c3e746d ]
+[ Upstream commit 60b6645ef1a9239a02c70adeae136298395d145a ]
 
-If the WLAN core is still active during initialization, it might cause
-the MCU or DMA to hang. This can happen during soft reboot, so disable
-the core + clock early to avoid this issue.
+Fix tx power configuration for VHT 1SS/STBC mcs 9 since
+in MT_TX_PWR_CFG_{8,9} mcs 8,9 bits are GENMASK(21,16) and
+GENMASK(29,24) while GENMASK(15,6) are marked as reserved
 
+Fixes: 7bc04215a66b ("mt76: add driver code for MT76x2e")
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x2_init_common.c | 4 ++++
- drivers/net/wireless/mediatek/mt76/mt76x2_pci.c         | 1 +
- 2 files changed, 5 insertions(+)
+ drivers/net/wireless/mediatek/mt76/mt76x2_phy_common.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_init_common.c b/drivers/net/wireless/mediatek/mt76/mt76x2_init_common.c
-index 324b2a4b8b67c..54a9e1dfaf7a4 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_init_common.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_init_common.c
-@@ -72,6 +72,9 @@ void mt76x2_reset_wlan(struct mt76x2_dev *dev, bool enable)
- {
- 	u32 val;
- 
-+	if (!enable)
-+		goto out;
-+
- 	val = mt76_rr(dev, MT_WLAN_FUN_CTRL);
- 
- 	val &= ~MT_WLAN_FUN_CTRL_FRC_WL_ANT_SEL;
-@@ -87,6 +90,7 @@ void mt76x2_reset_wlan(struct mt76x2_dev *dev, bool enable)
- 	mt76_wr(dev, MT_WLAN_FUN_CTRL, val);
- 	udelay(20);
- 
-+out:
- 	mt76x2_set_wlan_state(dev, enable);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_phy_common.c b/drivers/net/wireless/mediatek/mt76/mt76x2_phy_common.c
+index 9fd6ab4cbb949..ca68dd184489b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2_phy_common.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2_phy_common.c
+@@ -232,9 +232,9 @@ void mt76x2_phy_set_txpower(struct mt76x2_dev *dev)
+ 	mt76_wr(dev, MT_TX_PWR_CFG_7,
+ 		mt76x2_tx_power_mask(t.ofdm[6], t.vht[8], t.ht[6], t.vht[8]));
+ 	mt76_wr(dev, MT_TX_PWR_CFG_8,
+-		mt76x2_tx_power_mask(t.ht[14], t.vht[8], t.vht[8], 0));
++		mt76x2_tx_power_mask(t.ht[14], 0, t.vht[8], t.vht[8]));
+ 	mt76_wr(dev, MT_TX_PWR_CFG_9,
+-		mt76x2_tx_power_mask(t.ht[6], t.vht[8], t.vht[8], 0));
++		mt76x2_tx_power_mask(t.ht[6], 0, t.vht[8], t.vht[8]));
  }
- EXPORT_SYMBOL_GPL(mt76x2_reset_wlan);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2_pci.c b/drivers/net/wireless/mediatek/mt76/mt76x2_pci.c
-index e66f047ea4481..26cfda24ce085 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2_pci.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2_pci.c
-@@ -53,6 +53,7 @@ mt76pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 		return -ENOMEM;
+ EXPORT_SYMBOL_GPL(mt76x2_phy_set_txpower);
  
- 	mt76_mmio_init(&dev->mt76, pcim_iomap_table(pdev)[0]);
-+	mt76x2_reset_wlan(dev, false);
- 
- 	dev->mt76.rev = mt76_rr(dev, MT_ASIC_VERSION);
- 	dev_info(dev->mt76.dev, "ASIC revision: %08x\n", dev->mt76.rev);
 -- 
 2.20.1
 
