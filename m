@@ -7,50 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CAD2DC17440
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Nov 2019 02:23:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 334A2C43331
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Nov 2019 02:26:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A1D1A21D7F
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Nov 2019 02:23:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0AFBB20693
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Nov 2019 02:26:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573611787;
-	bh=Em/6r+eVCEBPBMQzKf3l+OODRJz6v5UF0j2kgMaZOdQ=;
+	s=default; t=1573612008;
+	bh=Won7SlOQeI+Zv/jE+G+dXFjBkqoZGFbtpIQEj4ENMVU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=ipJwT2gjvkc0jvbnVM7fNPSZp3w07F+QGw8INhpFWZETApX5Avo8ZTv6SxVCS2tRM
-	 DSPZDNx8exccFPpfUMUxkDGaNWk/oR9OWTuzOaMKvWSHctgrHUqAmyz5ifqw9SHtEz
-	 MOfCpWrKd7XiM7vZNYatV1+Oud2YffccCl5AwLT0=
+	b=HR7dqhc7aK0kbmi+l3HPHMla3jgOR5Fr7egLhgoHHGk725Qod2g3KeBIJ3nRDltFx
+	 hOD7ff0vmGqSLS3idSLYxkpYBEw3oIX/9e9LPnePICI1suFQxJ7mpdueX+nOTxY0Eu
+	 py+M8nfSL6wpviZMNqoBY7+DiCTmWQykPgJWv754=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729186AbfKMCXD (ORCPT
+        id S1730488AbfKMC0m (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 12 Nov 2019 21:23:03 -0500
-Received: from mail.kernel.org ([198.145.29.99]:42228 "EHLO mail.kernel.org"
+        Tue, 12 Nov 2019 21:26:42 -0500
+Received: from mail.kernel.org ([198.145.29.99]:38668 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728344AbfKMBw4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Nov 2019 20:52:56 -0500
+        id S1727736AbfKMBvN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 12 Nov 2019 20:51:13 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id BFF46222CD;
-        Wed, 13 Nov 2019 01:52:53 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 8CF7F222D3;
+        Wed, 13 Nov 2019 01:51:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573609974;
-        bh=Em/6r+eVCEBPBMQzKf3l+OODRJz6v5UF0j2kgMaZOdQ=;
+        s=default; t=1573609873;
+        bh=Won7SlOQeI+Zv/jE+G+dXFjBkqoZGFbtpIQEj4ENMVU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Cis2shCPkh/6aSYjOwmgosilxQ0x9o3s2PQ16VXmX2YT6byHjS9C7EpydbvSQf+cA
-         4yHlTSNudcvTGgyZqK3Cek5Uc9bEW7CbE4jv1JUtWwTHrDUx0oUKjR2qUIuMMmMyGE
-         TgNXY0ZPsXbeaQrkjFC7BylSOntW+yL6RJZYlSH0=
+        b=uJGJuScqCyNjsQpQxAa4fRL/39dGOZprNbAmfPBofIJwCYrnHxkOX5yyXSUdjtzQM
+         IuEwQm4FNGHrqZVzlzxSUxcAIDiIQvnBqqjIiw0B1BKyVHYHA/Mol1Z/P4cVFbQ5F9
+         003PNPm1dIsoAUolU8jrA4bS0zwymcTVAePuGa6s=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Chung-Hsien Hsu <stanley.hsu@cypress.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Andrew Zaborowski <andrew.zaborowski@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 100/209] brcmfmac: reduce timeout for action frame scan
-Date:   Tue, 12 Nov 2019 20:48:36 -0500
-Message-Id: <20191113015025.9685-100-sashal@kernel.org>
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 036/209] nl80211: Fix a GET_KEY reply attribute
+Date:   Tue, 12 Nov 2019 20:47:32 -0500
+Message-Id: <20191113015025.9685-36-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191113015025.9685-1-sashal@kernel.org>
 References: <20191113015025.9685-1-sashal@kernel.org>
@@ -63,75 +60,34 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Chung-Hsien Hsu <stanley.hsu@cypress.com>
+From: Andrew Zaborowski <andrew.zaborowski@intel.com>
 
-[ Upstream commit edb6d6885bef82d1eac432dbeca9fbf4ec349d7e ]
+[ Upstream commit efdfce7270de85a8706d1ea051bef3a7486809ff ]
 
-Finding a common channel to send an action frame out is required for
-some action types. Since a loop with several scan retry is used to find
-the channel, a short wait time could be considered for each attempt.
-This patch reduces the wait time from 1500 to 450 msec for each action
-frame scan.
+Use the NL80211_KEY_IDX attribute inside the NL80211_ATTR_KEY in
+NL80211_CMD_GET_KEY responses to comply with nl80211_key_policy.
+This is unlikely to affect existing userspace.
 
-This patch fixes the WFA p2p certification 5.1.20 failure caused by the
-long action frame send time.
-
-Signed-off-by: Chung-Hsien Hsu <stanley.hsu@cypress.com>
-Signed-off-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Signed-off-by: Andrew Zaborowski <andrew.zaborowski@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+ net/wireless/nl80211.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-index 3e9c4f2f5dd12..7822740a8cb40 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-@@ -74,7 +74,7 @@
- #define P2P_AF_MAX_WAIT_TIME		msecs_to_jiffies(2000)
- #define P2P_INVALID_CHANNEL		-1
- #define P2P_CHANNEL_SYNC_RETRY		5
--#define P2P_AF_FRM_SCAN_MAX_WAIT	msecs_to_jiffies(1500)
-+#define P2P_AF_FRM_SCAN_MAX_WAIT	msecs_to_jiffies(450)
- #define P2P_DEFAULT_SLEEP_TIME_VSDB	200
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 2ef1f56504cbb..5075fd293febb 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3396,7 +3396,7 @@ static void get_key_callback(void *c, struct key_params *params)
+ 			 params->cipher)))
+ 		goto nla_put_failure;
  
- /* WiFi P2P Public Action Frame OUI Subtypes */
-@@ -1134,7 +1134,6 @@ static s32 brcmf_p2p_af_searching_channel(struct brcmf_p2p_info *p2p)
- {
- 	struct afx_hdl *afx_hdl = &p2p->afx_hdl;
- 	struct brcmf_cfg80211_vif *pri_vif;
--	unsigned long duration;
- 	s32 retry;
+-	if (nla_put_u8(cookie->msg, NL80211_ATTR_KEY_IDX, cookie->idx))
++	if (nla_put_u8(cookie->msg, NL80211_KEY_IDX, cookie->idx))
+ 		goto nla_put_failure;
  
- 	brcmf_dbg(TRACE, "Enter\n");
-@@ -1150,7 +1149,6 @@ static s32 brcmf_p2p_af_searching_channel(struct brcmf_p2p_info *p2p)
- 	 * pending action frame tx is cancelled.
- 	 */
- 	retry = 0;
--	duration = msecs_to_jiffies(P2P_AF_FRM_SCAN_MAX_WAIT);
- 	while ((retry < P2P_CHANNEL_SYNC_RETRY) &&
- 	       (afx_hdl->peer_chan == P2P_INVALID_CHANNEL)) {
- 		afx_hdl->is_listen = false;
-@@ -1158,7 +1156,8 @@ static s32 brcmf_p2p_af_searching_channel(struct brcmf_p2p_info *p2p)
- 			  retry);
- 		/* search peer on peer's listen channel */
- 		schedule_work(&afx_hdl->afx_work);
--		wait_for_completion_timeout(&afx_hdl->act_frm_scan, duration);
-+		wait_for_completion_timeout(&afx_hdl->act_frm_scan,
-+					    P2P_AF_FRM_SCAN_MAX_WAIT);
- 		if ((afx_hdl->peer_chan != P2P_INVALID_CHANNEL) ||
- 		    (!test_bit(BRCMF_P2P_STATUS_FINDING_COMMON_CHANNEL,
- 			       &p2p->status)))
-@@ -1171,7 +1170,7 @@ static s32 brcmf_p2p_af_searching_channel(struct brcmf_p2p_info *p2p)
- 			afx_hdl->is_listen = true;
- 			schedule_work(&afx_hdl->afx_work);
- 			wait_for_completion_timeout(&afx_hdl->act_frm_scan,
--						    duration);
-+						    P2P_AF_FRM_SCAN_MAX_WAIT);
- 		}
- 		if ((afx_hdl->peer_chan != P2P_INVALID_CHANNEL) ||
- 		    (!test_bit(BRCMF_P2P_STATUS_FINDING_COMMON_CHANNEL,
+ 	nla_nest_end(cookie->msg, key);
 -- 
 2.20.1
 
