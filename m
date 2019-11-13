@@ -2,74 +2,77 @@ Return-Path: <SRS0=dvfj=ZF=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2200EC43331
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Nov 2019 11:07:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2543DC43331
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Nov 2019 11:07:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D8734222BD
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Nov 2019 11:07:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EA0B0222BD
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Nov 2019 11:07:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=quantenna.com header.i=@quantenna.com header.b="AE9AHjW0"
+	dkim=pass (1024-bit key) header.d=quantenna.com header.i=@quantenna.com header.b="PqHasP6L"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727777AbfKMLHh (ORCPT
+        id S1727787AbfKMLHj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 13 Nov 2019 06:07:37 -0500
-Received: from mx0b-00183b01.pphosted.com ([67.231.157.42]:47384 "EHLO
+        Wed, 13 Nov 2019 06:07:39 -0500
+Received: from mx0b-00183b01.pphosted.com ([67.231.157.42]:30068 "EHLO
         mx0a-00183b01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727736AbfKMLHh (ORCPT
+        by vger.kernel.org with ESMTP id S1727780AbfKMLHj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 Nov 2019 06:07:37 -0500
-Received: from pps.filterd (m0059811.ppops.net [127.0.0.1])
-        by mx0b-00183b01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id xADB5OX5007583
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Nov 2019 04:07:35 -0700
-Received: from nam01-sn1-obe.outbound.protection.outlook.com (mail-sn1nam01lp2055.outbound.protection.outlook.com [104.47.32.55])
-        by mx0b-00183b01.pphosted.com with ESMTP id 2w7psq3cv0-1
+        Wed, 13 Nov 2019 06:07:39 -0500
+Received: from pps.filterd (m0048104.ppops.net [127.0.0.1])
+        by mx0b-00183b01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id xADArlt3028773
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Nov 2019 04:07:37 -0700
+Received: from nam03-dm3-obe.outbound.protection.outlook.com (mail-dm3nam03lp2055.outbound.protection.outlook.com [104.47.41.55])
+        by mx0b-00183b01.pphosted.com with ESMTP id 2w7psmbgb8-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Nov 2019 04:07:35 -0700
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Nov 2019 04:07:37 -0700
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=aziaMFEEtP0hShr64/tdlPj2Mns+/uY7KndLMYUHE0Rc+RmF0DC23p6xX5UeOHloZcD97b7F+hiWosyPaCnYaLwCar63lAcKUj+NkeTqNCL4aZYRrRtbKJyBABJY8Yjmg2QIliQOgQH9sg8faOfmgbp5wi1i0qpHYFoFHwqIsy6zcpggS/JEC4YxljKNLRuC+eE3sNTGr1YTzlPVKiE32AoTpsJYXSgm3AAKlOPZ8cyFnnDSlMbqr3zEPQSr/P53/rHu626AQob4WyAl+HZDzNRf+TWi0SkD5HwL9POSExZ+MalQ0YL9Q3xjFlgLEK9UVrR987/dKeYJ7ef6cmECgw==
+ b=JAnqhzUbC8mLSEqp5wB4wX0GtebhbWdwsGq4StRISZgBzzXqpYCwHuF1aLTswvUhJEu+NgQ+MxVI/GqLftQRdKRqWqgnc8oEpnA5FUJgwWnm7Y0UeF6B4fLuvqHantHhEPiCEEF9XOjDG15wFrOD1QlIQlbLqPEXXe5cK3xgwFiCdMms5vlmdMVRh58sDmxZOJOHhcXqZTn7pGqPbNwXmuINil7/kp6b5htdXPleHockI+RkmQyHK9FwzPtwcdMUYj3OOFeejjCg3OlR2+8CRFyfCO8+EkgyWkVXyaVJYRMuKcWDaSB2UYLa0GtTECa/szltFWI1HKRWWqXgVesvRQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=iwC+4/7RyPB93myol9jC6Yihnj7U9Oaz9/ZmoVeaJcc=;
- b=BXp9BDkl9EiYwZwodvCRUyYnbR32JRO4klU0stZXOdXKSx0IU5mXpsa7cBe9sKX+djydYXkY7sPWD9pbl+6v7qGjLRsRDl7PeITNsHkKsLdo7Wf8cXyQba0JPqIVb77ibeDboFKMLMwBPx8EZPNN402HfhceQt4TesSNO0Ka2R2u21ihvRC63E5BZ6dUmrej9KcsjPGN5SEMRVDMsTo0U6lSzWmhrTbGPlH6XwnV6LIEU3ypGwb3PP5UCcqAceeAgneMmPqmBmCBPBXuEmED6+IHVLe3Lp6cKxxOnhaUwRvYD1wfwVzHkk+ISENtAD5DH/UbAg+9CGlAWz0msxXJyA==
+ bh=unbZJshkuaKpYC0MuiWC54zXGOmrKukjn4+euqiSGpI=;
+ b=UbeXmu4jnMLxl1ufGts+NyF0oLtpu4FyNp3Phv9zBTQNiyyi1qCvDOsblTH2F+ouaKQHtkjuAagnF+nJIqXoijs5tzEyWnIeRiF13dvBFFHyVphTLUogVG9PX7kgS2vVqLN4aAPWEeHXclcQ1g3agYytys419vusu3LZ/5xU93sjjwzGAEhbJc7pbl3qzoG1z8Q0hMi/G0uSuaxxE5E76QEbxHHLlyczYoRjnIYUL/hZ9QL3kKiGN4XrdsDBhNJYgzR1dAPP+HSgNFjp6odxZOswQZWODBweHf6JE5Ls5T2eCbNq+AldFPh/fVmrE7yT1Eubx4Qt8KKjkaLGllqM+g==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=quantenna.com; dmarc=pass action=none
  header.from=quantenna.com; dkim=pass header.d=quantenna.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quantenna.com;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=iwC+4/7RyPB93myol9jC6Yihnj7U9Oaz9/ZmoVeaJcc=;
- b=AE9AHjW08y/b27FoSagSGC9PqjrtJ4dG/a4/rIs6cNDpnH0rLgBRzrXCVPxgoGoJ0ZzTODWTxC5b/5C0ZcK+KbN+xJ7ech8vDorIeHCi+tdgmFyFkTzMREEVQ0MeSFKs2OWPLx7xELBr32ASLs3yKLu9xb4XGAaIQLq/zh9Cilk=
-Received: from DM6PR05MB4379.namprd05.prod.outlook.com (20.176.78.24) by
- DM6PR05MB4555.namprd05.prod.outlook.com (20.176.77.149) with Microsoft SMTP
+ bh=unbZJshkuaKpYC0MuiWC54zXGOmrKukjn4+euqiSGpI=;
+ b=PqHasP6LkQKbbOSecbaS3CIRLI95wb8UUAKLAhLfo9PnLgX0LTC5ujnuDXoy94C/kR0PSRkTIp42MrNy7DjBlgHNNGo15Lfp2liceyvvoOWl6iQuMozSsRf4hXAjy4TK4FVmE3snITLoeBV8bR/yCYpvfJgQy/z4RXD7PLaHHtA=
+Received: from DM5PR0501MB3733.namprd05.prod.outlook.com (10.167.110.151) by
+ DM5PR0501MB3701.namprd05.prod.outlook.com (10.167.106.19) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2451.15; Wed, 13 Nov 2019 11:07:33 +0000
-Received: from DM6PR05MB4379.namprd05.prod.outlook.com
- ([fe80::f525:b90b:9c2c:e569]) by DM6PR05MB4379.namprd05.prod.outlook.com
- ([fe80::f525:b90b:9c2c:e569%5]) with mapi id 15.20.2451.023; Wed, 13 Nov 2019
- 11:07:33 +0000
+ 15.20.2451.21; Wed, 13 Nov 2019 11:07:36 +0000
+Received: from DM5PR0501MB3733.namprd05.prod.outlook.com
+ ([fe80::6848:5b92:9e42:fc23]) by DM5PR0501MB3733.namprd05.prod.outlook.com
+ ([fe80::6848:5b92:9e42:fc23%2]) with mapi id 15.20.2451.023; Wed, 13 Nov 2019
+ 11:07:36 +0000
 Received: from SN6PR05MB4928.namprd05.prod.outlook.com (52.135.117.74) by
- SN6PR05MB5789.namprd05.prod.outlook.com (20.178.7.16) with Microsoft SMTP
+ SN6PR05MB5295.namprd05.prod.outlook.com (52.135.109.74) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2451.17; Wed, 13 Nov 2019 11:06:46 +0000
+ 15.20.2451.17; Wed, 13 Nov 2019 11:06:58 +0000
 Received: from SN6PR05MB4928.namprd05.prod.outlook.com
  ([fe80::61a0:dd3d:3477:29c9]) by SN6PR05MB4928.namprd05.prod.outlook.com
  ([fe80::61a0:dd3d:3477:29c9%5]) with mapi id 15.20.2451.023; Wed, 13 Nov 2019
- 11:06:45 +0000
+ 11:06:58 +0000
 From:   Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 CC:     Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
         Mikhail Karpenko <mkarpenko@quantenna.com>,
         Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Subject: [PATCH 0/7] qtnfmac: misc features and fixes
-Thread-Topic: [PATCH 0/7] qtnfmac: misc features and fixes
-Thread-Index: AQHVmhJvyvKKPrMNm0q+6X+jtQgTqA==
-Date:   Wed, 13 Nov 2019 11:06:45 +0000
-Message-ID: <20191113110639.9226-1-sergey.matyukevich.os@quantenna.com>
+Subject: [PATCH 6/7] qtnfmac: handle MIC failure event from firmware
+Thread-Topic: [PATCH 6/7] qtnfmac: handle MIC failure event from firmware
+Thread-Index: AQHVmhJ37ztStXznuU6xhMrM859dCA==
+Date:   Wed, 13 Nov 2019 11:06:57 +0000
+Message-ID: <20191113110639.9226-7-sergey.matyukevich.os@quantenna.com>
+References: <20191113110639.9226-1-sergey.matyukevich.os@quantenna.com>
+In-Reply-To: <20191113110639.9226-1-sergey.matyukevich.os@quantenna.com>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
@@ -81,81 +84,146 @@ x-ms-exchange-messagesentrepresentingtype: 1
 x-mailer: git-send-email 2.11.0
 x-originating-ip: [195.182.157.78]
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 4a71df02-f90e-44c2-143d-08d76829922b
-x-ms-traffictypediagnostic: SN6PR05MB5789:|DM6PR05MB4555:
+x-ms-office365-filtering-correlation-id: f3206c4d-0e80-4039-32e6-08d768299999
+x-ms-traffictypediagnostic: SN6PR05MB5295:|DM5PR0501MB3701:
 x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <SN6PR05MB578926EBCAE77DF612D9E232A3760@SN6PR05MB5789.namprd05.prod.outlook.com>
-x-moderation-data: 11/13/2019 11:07:28 AM
-x-ms-oob-tlc-oobclassifiers: OLM:6790;
+x-microsoft-antispam-prvs: <SN6PR05MB52950B7EC20F56BB20464080A3760@SN6PR05MB5295.namprd05.prod.outlook.com>
+x-moderation-data: 11/13/2019 11:07:34 AM
+x-ms-oob-tlc-oobclassifiers: OLM:3968;
 x-forefront-prvs: 0220D4B98D
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(136003)(346002)(366004)(39850400004)(376002)(396003)(199004)(189003)(186003)(36756003)(102836004)(25786009)(66476007)(26005)(1076003)(66446008)(103116003)(66556008)(316002)(3846002)(50226002)(6116002)(64756008)(5640700003)(436003)(99286004)(66066001)(66946007)(386003)(2351001)(2906002)(52116002)(54906003)(6506007)(6436002)(86362001)(14444005)(6512007)(2616005)(486006)(256004)(476003)(71190400001)(81156014)(478600001)(5660300002)(6916009)(14454004)(107886003)(8676002)(6486002)(2501003)(4326008)(7736002)(305945005)(8936002)(71200400001)(81166006);DIR:OUT;SFP:1101;SCL:1;SRVR:DM6PR05MB4555;H:DM6PR05MB4379.namprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(396003)(39830400003)(376002)(346002)(136003)(366004)(189003)(199004)(26005)(316002)(81156014)(81166006)(2906002)(256004)(103116003)(14454004)(66946007)(14444005)(8936002)(1076003)(478600001)(446003)(99286004)(102836004)(2501003)(6916009)(476003)(54906003)(6506007)(76176011)(386003)(11346002)(2616005)(36756003)(186003)(436003)(71190400001)(71200400001)(107886003)(8676002)(486006)(52116002)(86362001)(6436002)(25786009)(4326008)(5640700003)(6486002)(7736002)(66476007)(3846002)(66446008)(66556008)(6512007)(66066001)(50226002)(5660300002)(6116002)(2351001)(305945005)(64756008);DIR:OUT;SFP:1101;SCL:1;SRVR:DM5PR0501MB3701;H:DM5PR0501MB3733.namprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
 received-spf: None (protection.outlook.com: quantenna.com does not designate
  permitted sender hosts)
 x-ms-exchange-senderadcheck: 1
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: We8VoFdjRFzKgzozao2Rb+AJ9UCCuxVKoZJfWYdOLjyXFy3cKejzVKMTnNtSGRTxUh9yA/yJ8SuS/adGE4QWdHEcWYnU9pLDi6fto4hVm5rTm0lQeJ8tY992oVnHf2IxhsiJCnq0i5wAOO11YkKR6pG4SUF1DTRY6sLFNGEv9yTLGCKN47KwObNQyi5v+B+jJEoM7wppC1cc41RTD3C6cwdbEE5GVuHER2YnnG7ytu+35vWN2Lz2tb4Bj0iOjq/3AquJfM/+O1SpTbY2bYoP2ZrDyW9XVhV1OmvWU2FIGfzJS+F+7hCXvmPIQ7qJD43jtE6WktfcUgKcJXnkvSc0CtKRBVJKL4uxRel/waIs+SJSxSt/IJPhckjCpTPLipR4wkVfBsqm02wwFQZo4f8Gvd7XBDOIF8/RPsfgiTyuZJYP4QvoA/qcQDL3AeCRPzBz
+x-microsoft-antispam-message-info: Ja/MjinHhaWpGeTeC6GNCdMRoZaNxnhTdPPdgXqsPG1VeyH+i0rN2kfuROOIWjWpZE1msmNCzj1HFXiv8tK3tmuMCf04GeGdcftl8GGaKxOrcnBO871901JfTP409Bst8r9Nxtdo0/PZAVV6Sb0cdyDu4eNUocE0Y4q34cwOtdcZr+JfxzRi6bYL2l1NMXDitevCoyW7iAIPdfP0ZXIzcPTufVouonIpafJ8DMIhW+h0d0mIXmTlOZmcrmy8E5ya8xyxMBvyy1e8jjF4mVGVG2tn0beCKjT+p+lOu28hon176WYjYE80P8O/+SrV3UNYbhBgF5RZhKJSGooJWKg46rqA8E9RwTORmdCzrSlXc6xDSbCVQIGzkVAziIMbXM9Cy1lIxqAUhfKebZQHrRfM/wDM/PKiIvBUEP52PLtUUS+udZSQGa3d4emTGPBNQbdK
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: quantenna.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4a71df02-f90e-44c2-143d-08d76829922b
+X-MS-Exchange-CrossTenant-Network-Message-Id: f3206c4d-0e80-4039-32e6-08d768299999
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: a355dbce-62b4-4789-9446-c1d5582180ff
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 75qItCgoi6de9CwwhXRMaWlQeUs9IN1eMf9l1uzuNxpS1V+YXkNpD/aCo7e/BnlHgt3mc8TvsuYEAD+JzyjOhgj9mxdbZQUAalQmM3GegkNOSHHWfbz/O1kHXPgJEHXIErFGWdDMHFf2q7h4mDt6BBJidznEIs11zItsPWtAmde/Fvz5L1/pxkgnnlAD5wv1pRzQikBY+VcBP/f2nSdHF3PTMJoiSgKJLVa0kQZKeR4=
-X-MS-Exchange-CrossTenant-originalarrivaltime: 13 Nov 2019 11:07:33.5303
+X-MS-Exchange-CrossTenant-userprincipalname: KfBtWLzskz2cr/pZ1o6+IjMarnXO1lk5V190vZofhLlssyZsKU1XJiFjROu2i4AjiXIkb5S581xuc6uHTzQvnbqum9RinSW4oy6RdV8pKJRy2KOQIPaV3DpCxUNCoRDoSvjtoYFTarCTY6eu40oKNBWe1eh0afvMyl0Ofb5UIBRhHrRgBqY8qWnLKfbq5EUV6+STEFWOxHJ0oaPqW5ENqkma/tRCHfamIYBIQh/jAWYV6ruU78txyijqZ76joTnr
+X-MS-Exchange-CrossTenant-originalarrivaltime: 13 Nov 2019 11:07:36.3169
  (UTC)
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR05MB4555
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR0501MB3701
 X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.95,18.0.572
  definitions=2019-11-13_03:2019-11-13,2019-11-13 signatures=0
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- mlxscore=0 clxscore=1015 phishscore=0 adultscore=0 spamscore=0
- lowpriorityscore=0 priorityscore=1501 bulkscore=0 mlxlogscore=999
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-1910280000 definitions=main-1911130105
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 suspectscore=0 phishscore=0
+ spamscore=0 lowpriorityscore=0 adultscore=0 mlxlogscore=999 bulkscore=0
+ priorityscore=1501 malwarescore=0 impostorscore=0 clxscore=1015
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-1910280000
+ definitions=main-1911130103
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello Kalle and all,
+Report MIC failure from firmware to cfg80211 subsystem
+using dedicated callback cfg80211_michael_mic_failure.
 
-Here is the patch set with misc fixes and minor enhancements for
-qtnfmac driver. The changes include the following major items:
+Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+---
+ drivers/net/wireless/quantenna/qtnfmac/event.c | 40 ++++++++++++++++++++++=
+++++
+ drivers/net/wireless/quantenna/qtnfmac/qlink.h | 15 ++++++++++
+ 2 files changed, 55 insertions(+)
 
-- get_tx_power/set_tx_power cfg80211 callback
-- report MIC failure events to wireless core
-- fix for 'use after free' error reported by KASAN
-
-Regards,
-Sergey
-
-
-Mikhail Karpenko (1):
-  qtnfmac: add support for getting/setting transmit power
-
-Sergey Matyukevich (6):
-  qtnfmac: fix using skb after free
-  qtnfmac: fix debugfs support for multiple cards
-  qtnfmac: fix invalid channel information output
-  qtnfmac: modify Rx descriptors queue setup
-  qtnfmac: send EAPOL frames via control path
-  qtnfmac: handle MIC failure event from firmware
-
- drivers/net/wireless/quantenna/qtnfmac/cfg80211.c  | 41 +++++++++++++
- drivers/net/wireless/quantenna/qtnfmac/commands.c  | 71 ++++++++++++++++++=
-+++-
- drivers/net/wireless/quantenna/qtnfmac/commands.h  |  3 +
- drivers/net/wireless/quantenna/qtnfmac/core.c      | 23 ++++---
- drivers/net/wireless/quantenna/qtnfmac/core.h      |  1 -
- drivers/net/wireless/quantenna/qtnfmac/event.c     | 47 +++++++++++++-
- drivers/net/wireless/quantenna/qtnfmac/pcie/pcie.c | 12 ++--
- .../wireless/quantenna/qtnfmac/pcie/pcie_priv.h    |  4 +-
- .../wireless/quantenna/qtnfmac/pcie/pearl_pcie.c   | 36 ++++++-----
- .../wireless/quantenna/qtnfmac/pcie/topaz_pcie.c   | 28 +++++----
- drivers/net/wireless/quantenna/qtnfmac/qlink.h     | 57 +++++++++++++++++
- 11 files changed, 274 insertions(+), 49 deletions(-)
-
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/event.c b/drivers/net/w=
+ireless/quantenna/qtnfmac/event.c
+index 7846383c8828..51af93bdf06e 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/event.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/event.c
+@@ -618,6 +618,42 @@ qtnf_event_handle_external_auth(struct qtnf_vif *vif,
+ 	return ret;
+ }
+=20
++static int
++qtnf_event_handle_mic_failure(struct qtnf_vif *vif,
++			      const struct qlink_event_mic_failure *mic_ev,
++			      u16 len)
++{
++	struct wiphy *wiphy =3D priv_to_wiphy(vif->mac);
++	u8 pairwise;
++
++	if (len < sizeof(*mic_ev)) {
++		pr_err("VIF%u.%u: payload is too short (%u < %zu)\n",
++		       vif->mac->macid, vif->vifid, len,
++		       sizeof(struct qlink_event_mic_failure));
++		return -EINVAL;
++	}
++
++	if (!wiphy->registered || !vif->netdev)
++		return 0;
++
++	if (vif->wdev.iftype !=3D NL80211_IFTYPE_STATION) {
++		pr_err("VIF%u.%u: MIC_FAILURE event when not in STA mode\n",
++		       vif->mac->macid, vif->vifid);
++		return -EPROTO;
++	}
++
++	pairwise =3D mic_ev->pairwise ?
++		NL80211_KEYTYPE_PAIRWISE : NL80211_KEYTYPE_GROUP;
++
++	pr_info("%s: MIC error: src=3D%pM key_index=3D%u pairwise=3D%u\n",
++		vif->netdev->name, mic_ev->src, mic_ev->key_index, pairwise);
++
++	cfg80211_michael_mic_failure(vif->netdev, mic_ev->src, pairwise,
++				     mic_ev->key_index, NULL, GFP_KERNEL);
++
++	return 0;
++}
++
+ static int qtnf_event_parse(struct qtnf_wmac *mac,
+ 			    const struct sk_buff *event_skb)
+ {
+@@ -680,6 +716,10 @@ static int qtnf_event_parse(struct qtnf_wmac *mac,
+ 		ret =3D qtnf_event_handle_external_auth(vif, (const void *)event,
+ 						      event_len);
+ 		break;
++	case QLINK_EVENT_MIC_FAILURE:
++		ret =3D qtnf_event_handle_mic_failure(vif, (const void *)event,
++						    event_len);
++		break;
+ 	default:
+ 		pr_warn("unknown event type: %x\n", event_id);
+ 		break;
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink.h b/drivers/net/w=
+ireless/quantenna/qtnfmac/qlink.h
+index 8a3c6344fa8e..ac1ebe4bb580 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/qlink.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
+@@ -958,6 +958,7 @@ enum qlink_event_type {
+ 	QLINK_EVENT_FREQ_CHANGE		=3D 0x0028,
+ 	QLINK_EVENT_RADAR		=3D 0x0029,
+ 	QLINK_EVENT_EXTERNAL_AUTH	=3D 0x0030,
++	QLINK_EVENT_MIC_FAILURE		=3D 0x0031,
+ };
+=20
+ /**
+@@ -1151,6 +1152,20 @@ struct qlink_event_external_auth {
+ 	u8 action;
+ } __packed;
+=20
++/**
++ * struct qlink_event_mic_failure - data for QLINK_EVENT_MIC_FAILURE event
++ *
++ * @src: source MAC address of the frame
++ * @key_index: index of the key being reported
++ * @pairwise: whether the key is pairwise or group
++ */
++struct qlink_event_mic_failure {
++	struct qlink_event ehdr;
++	u8 src[ETH_ALEN];
++	u8 key_index;
++	u8 pairwise;
++} __packed;
++
+ /* QLINK TLVs (Type-Length Values) definitions
+  */
+=20
 --=20
 2.11.0
 
