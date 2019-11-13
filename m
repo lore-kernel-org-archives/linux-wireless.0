@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F399C43331
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Nov 2019 02:21:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23740C17440
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Nov 2019 02:22:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E5039222C9
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 Nov 2019 02:21:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E749D2067B
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 Nov 2019 02:22:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573611665;
-	bh=6yz8go43iHC+AAKEOPUoDNtqcwOpSfLcYushubWE3K4=;
+	s=default; t=1573611764;
+	bh=EnyyH4Gnn0E8+qOWwE4uOz6+S+a2zftDJp8SNn1mVxo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=DusEA2Ukv/ehAn+NiY5rK+qYxq/8vtKYL3hp+t/JTKADcoUCrMSdPspw8h5iJMUDd
-	 XdzwM7DTxOqf7bPF5HzX+FhKXnfRr0KrNhEss1LBA/HdlBS++Wg2IB8uw0S0XDbe/d
-	 Ije48Dm+V9NERVFBmgu9pj3XYICmCQBLzhnuhUcs=
+	b=mL+0YagUbSLoQOC6O2nn4hS9eLjrRz8ZUnLr4HFJqLig4zGKF8YuEU50fSIJgF1kO
+	 W4i4pmnhsC8EmR//8SiLTM6hGEhOF6eDjXRzWT/MRoKIMSRCIT+Yb9Je86KVHtnSUQ
+	 CmZUlC7MSnyZ1O9FB92yd1wjD28J3hV2woJzbbPM=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728762AbfKMByI (ORCPT
+        id S1728526AbfKMBxS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 12 Nov 2019 20:54:08 -0500
-Received: from mail.kernel.org ([198.145.29.99]:44452 "EHLO mail.kernel.org"
+        Tue, 12 Nov 2019 20:53:18 -0500
+Received: from mail.kernel.org ([198.145.29.99]:42762 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728716AbfKMByG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 Nov 2019 20:54:06 -0500
+        id S1727514AbfKMBxR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 12 Nov 2019 20:53:17 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 2CBBE20674;
-        Wed, 13 Nov 2019 01:54:05 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id D14A5204EC;
+        Wed, 13 Nov 2019 01:53:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573610045;
-        bh=6yz8go43iHC+AAKEOPUoDNtqcwOpSfLcYushubWE3K4=;
+        s=default; t=1573609996;
+        bh=EnyyH4Gnn0E8+qOWwE4uOz6+S+a2zftDJp8SNn1mVxo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Z/cM0X+XqwGxUutEiXS3KtDBVgfCOil15+dRwqI/bQ+rXNmO5ZaTzndKeiRyoCxz2
-         npT6BAq3i3PmKzUiU9rLknR0lUUH3upnkh+5ctyiDgPDWuidtCr24t6/2FHtsdqade
-         tqfVte7TNo5g3EQTFsITrO98a+Vxn7p2XsDRMtEw=
+        b=mDL9yU4sXXa255wRJDubc9+QCKYY5VJrC3G570bUO9WHZ7v01HFgsfQpufoDMJryJ
+         jK//iPrrmsRRTw6uGw5B29PcQ2hRbIMBu3j4Hxz2x7pie8VuTVhXv+v+wzjloYz+oP
+         MMp4nblWejqfG4/DJ/4g6t2+PADFasCugRtGb9n0=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
+Cc:     Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 134/209] iwlwifi: mvm: don't send keys when entering D3
-Date:   Tue, 12 Nov 2019 20:49:10 -0500
-Message-Id: <20191113015025.9685-134-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 105/209] qtnfmac: drop error reports for out-of-bounds key indexes
+Date:   Tue, 12 Nov 2019 20:48:41 -0500
+Message-Id: <20191113015025.9685-105-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191113015025.9685-1-sashal@kernel.org>
 References: <20191113015025.9685-1-sashal@kernel.org>
@@ -60,40 +60,46 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sara Sharon <sara.sharon@intel.com>
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 
-[ Upstream commit 8c7fd6a365eb5b2647b2c01918730d0a485b9f85 ]
+[ Upstream commit 35da3fe63b8647ce3cc52fccdf186a60710815fb ]
 
-In the past, we needed to program the keys when entering D3. This was
-since we replaced the image. However, now that there is a single
-image, this is no longer needed.  Note that RSC is sent separately in
-a new command.  This solves issues with newer devices that support PN
-offload. Since driver re-sent the keys, the PN got zeroed and the
-receiver dropped the next packets, until PN caught up again.
+On disconnect wireless core attempts to remove all the supported keys.
+Following cfg80211_ops conventions, firmware returns -ENOENT code
+for the out-of-bound key indexes. This is a normal behavior,
+so no need to report errors for this case.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-index 79bdae9948228..868cb1195a74b 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-@@ -731,8 +731,10 @@ int iwl_mvm_wowlan_config_key_params(struct iwl_mvm *mvm,
- {
- 	struct iwl_wowlan_kek_kck_material_cmd kek_kck_cmd = {};
- 	struct iwl_wowlan_tkip_params_cmd tkip_cmd = {};
-+	bool unified = fw_has_capa(&mvm->fw->ucode_capa,
-+				   IWL_UCODE_TLV_CAPA_CNSLDTD_D3_D0_IMG);
- 	struct wowlan_key_data key_data = {
--		.configure_keys = !d0i3,
-+		.configure_keys = !d0i3 && !unified,
- 		.use_rsc_tsc = false,
- 		.tkip = &tkip_cmd,
- 		.use_tkip = false,
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+index 05b93f301ca08..ff8a46c9595e1 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
+@@ -521,9 +521,16 @@ static int qtnf_del_key(struct wiphy *wiphy, struct net_device *dev,
+ 	int ret;
+ 
+ 	ret = qtnf_cmd_send_del_key(vif, key_index, pairwise, mac_addr);
+-	if (ret)
+-		pr_err("VIF%u.%u: failed to delete key: idx=%u pw=%u\n",
+-		       vif->mac->macid, vif->vifid, key_index, pairwise);
++	if (ret) {
++		if (ret == -ENOENT) {
++			pr_debug("VIF%u.%u: key index %d out of bounds\n",
++				 vif->mac->macid, vif->vifid, key_index);
++		} else {
++			pr_err("VIF%u.%u: failed to delete key: idx=%u pw=%u\n",
++			       vif->mac->macid, vif->vifid,
++			       key_index, pairwise);
++		}
++	}
+ 
+ 	return ret;
+ }
 -- 
 2.20.1
 
