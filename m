@@ -2,98 +2,109 @@ Return-Path: <SRS0=YOlZ=ZG=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 589D3C432C3
-	for <linux-wireless@archiver.kernel.org>; Thu, 14 Nov 2019 15:29:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2FD0C43215
+	for <linux-wireless@archiver.kernel.org>; Thu, 14 Nov 2019 19:16:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2CA85206DC
-	for <linux-wireless@archiver.kernel.org>; Thu, 14 Nov 2019 15:29:33 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="RPPn6PVY";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="eZ7OLA2R"
+	by mail.kernel.org (Postfix) with ESMTP id C0C832072C
+	for <linux-wireless@archiver.kernel.org>; Thu, 14 Nov 2019 19:16:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1573759003;
+	bh=YlCIunOHUg4GKzJ1LLkcvaBy9GhEnsWTGdFTImnbQAM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=Jl/5wrTJZNNKgzblNxr0pWwnDKphNbxGGxLULrbK6+PYcsBuHA/fEhAzL2+hi9DdV
+	 3kDNi7X1rbzAcLnOQBJr0hWZZHPtmu+AI2DJO6eZslDHsAy/T8vA5ETWhOv+Lq3wYe
+	 bjdGyNZHu2qwePXiT6hukvmraVbRBri98TW+xB6w=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726592AbfKNP3c (ORCPT
+        id S1726628AbfKNTQn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 14 Nov 2019 10:29:32 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:34556 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726251AbfKNP3c (ORCPT
+        Thu, 14 Nov 2019 14:16:43 -0500
+Received: from mail-oi1-f193.google.com ([209.85.167.193]:46022 "EHLO
+        mail-oi1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726098AbfKNTQn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 14 Nov 2019 10:29:32 -0500
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 8FEA460EB7; Thu, 14 Nov 2019 15:29:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1573745371;
-        bh=YECjVZw1OtqdDC/hqLRVhw3jSck8p1UeEqN1VmS1fg8=;
-        h=Subject:From:In-Reply-To:References:To:Cc:Date:From;
-        b=RPPn6PVYwtmBYLdqP87kgz2T6IEqOYUXYq1VVe8Y3H2UuW501AY8rBj0yffd7Az3L
-         tlhMp1/ZDC6wwZ1NtFXpuNkKKWKdLuhn9kBEdA+9/iZ8JDGGAC6AdLgdWVv+IQw3z1
-         ury7OWHaXjITsycvQLZVWQMXF4SkgBM3TuL8VvTU=
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 9CC8A6076A;
-        Thu, 14 Nov 2019 15:29:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1573745370;
-        bh=YECjVZw1OtqdDC/hqLRVhw3jSck8p1UeEqN1VmS1fg8=;
-        h=Subject:From:In-Reply-To:References:To:Cc:From;
-        b=eZ7OLA2RCFRVjXXWqYEREYSI/EYn+64AeQzOuLxzZk2XLWa3NSSI5WdjUPhA0iZPu
-         JSZR9hq8F5M4PT4Gw0EW55c5S57Py2c85IeexJmROpcPR3v79FCXw9MJBnoW/sQeOZ
-         ZPHKPupdmr/R5zVjteykW80jNj+bdJqpU1TXW3fM=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 9CC8A6076A
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
+        Thu, 14 Nov 2019 14:16:43 -0500
+Received: by mail-oi1-f193.google.com with SMTP id 14so6299059oir.12;
+        Thu, 14 Nov 2019 11:16:42 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=JupwLIMCy0kD1DylEYdUBcHFa8QvARGaEvLmmurxdDo=;
+        b=FLXWvS0B1iwLJsPpf6vD5tUIJ06B+YGhlGqkgzsgtCACVa8amI16rG4aaaNyKKlGic
+         V/aYOKvsW6NmngqTxZCX9LpjdPpe5ct5CWBlnIPv5OTuZoYwvAEB3VoRO1fk4Kr3uoqd
+         tRaQBCrZ0wZFI9C87s1rsdNmzDJr5EO4DLw0DYOQeFegWX5hm5qe11FKceoW7lTC2ZPv
+         a0zPmYcFZcD6nNsD6t245UDRABaNzImxmu8ddGbQ6fwg51HS6s3QErFRPQdxcd7B+n2w
+         L0FV4ucvGGaUZKp0z7nMrcBal74LWWTu/p2pQBpuI/l9yhStkc4VfzhjOS0gtQiXH6vZ
+         5RBA==
+X-Gm-Message-State: APjAAAXXuXQT97iuQbkOMXkwLOnrSvTPcn2j0ekM7ALS07lTBVhUtmDw
+        c3udKRFCxHJpv3jZd+mE8g==
+X-Google-Smtp-Source: APXvYqx216qmRtLD8fvRbb7HfVk7gUkrflyOyJZGhawNK0RcsBGErmtzyzCcTrZdLV6OxprI+8YFKQ==
+X-Received: by 2002:aca:cdd6:: with SMTP id d205mr4981354oig.9.1573759001815;
+        Thu, 14 Nov 2019 11:16:41 -0800 (PST)
+Received: from localhost (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
+        by smtp.gmail.com with ESMTPSA id u1sm2044899oie.37.2019.11.14.11.16.41
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 14 Nov 2019 11:16:41 -0800 (PST)
+Date:   Thu, 14 Nov 2019 13:16:40 -0600
+From:   Rob Herring <robh@kernel.org>
+To:     Govind Singh <govinds@codeaurora.org>
+Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        devicetree@vger.kernel.org
+Subject: Re: [PATCH v2 1/2] dt: bindings: add dt entry flag to skip SCM call
+ for msa region
+Message-ID: <20191114191640.GA8426@bogus>
+References: <20191111042508.12628-1-govinds@codeaurora.org>
+ <20191111042508.12628-2-govinds@codeaurora.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH 1/7] qtnfmac: fix using skb after free
-From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20191113110639.9226-2-sergey.matyukevich.os@quantenna.com>
-References: <20191113110639.9226-2-sergey.matyukevich.os@quantenna.com>
-To:     Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Mikhail Karpenko <mkarpenko@quantenna.com>,
-        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20191114152931.8FEA460EB7@smtp.codeaurora.org>
-Date:   Thu, 14 Nov 2019 15:29:31 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191111042508.12628-2-govinds@codeaurora.org>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Sergey Matyukevich <sergey.matyukevich.os@quantenna.com> wrote:
+On Mon, Nov 11, 2019 at 09:55:07AM +0530, Govind Singh wrote:
+> Add boolean context flag to disable SCM call for statically
+> mapped msa region.
 
-> KASAN reported use-after-free error:
+Can't this be implied by the compatible string?
+
 > 
-> [  995.220767] BUG: KASAN: use-after-free in qtnf_cmd_send_with_reply+0x169/0x3e0 [qtnfmac]
-> [  995.221098] Read of size 2 at addr ffff888213d1ded0 by task kworker/1:1/71
+> Signed-off-by: Govind Singh <govinds@codeaurora.org>
+> ---
+>  .../devicetree/bindings/net/wireless/qcom,ath10k.txt          | 4 ++++
+>  1 file changed, 4 insertions(+)
 > 
-> The issue in qtnf_cmd_send_with_reply impacts all the commands that do
-> not need response other then return code. For such commands, consume_skb
-> is used for response skb and right after that return code in response
-> skb is accessed.
+> diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+> index 017128394a3e..7ba22918bab7 100644
+> --- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+> +++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+> @@ -88,6 +88,9 @@ Optional properties:
+>  		    of the host capability QMI request
+>  - qcom,xo-cal-data: xo cal offset to be configured in xo trim register.
+>  
+> +- qcom,msa_fixed_perm: Boolean context flag to disable SCM call for statically
+> +		       mapped msa region.
+> +
+
+s/_/-/
+
+>  Example (to supply PCI based wifi block details):
+>  
+>  In this example, the node is defined as child node of the PCI controller.
+> @@ -185,4 +188,5 @@ wifi@18000000 {
+>  		vdd-3.3-ch0-supply = <&vreg_l25a_3p3>;
+>  		memory-region = <&wifi_msa_mem>;
+>  		iommus = <&apps_smmu 0x0040 0x1>;
+> +		qcom,msa_fixed_perm;
+>  };
+> -- 
+> 2.22.0
 > 
-> Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-
-7 patches applied to wireless-drivers-next.git, thanks.
-
-4a33f21cef84 qtnfmac: fix using skb after free
-dd4c2260dab0 qtnfmac: fix debugfs support for multiple cards
-24227a9e956a qtnfmac: fix invalid channel information output
-97aef03cb71b qtnfmac: modify Rx descriptors queue setup
-46d55fcec163 qtnfmac: send EAPOL frames via control path
-239ce8a79778 qtnfmac: handle MIC failure event from firmware
-0756e913fc02 qtnfmac: add support for getting/setting transmit power
-
--- 
-https://patchwork.kernel.org/patch/11241691/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
-
