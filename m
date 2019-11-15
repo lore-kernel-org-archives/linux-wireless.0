@@ -2,59 +2,59 @@ Return-Path: <SRS0=1RAM=ZH=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,UPPERCASE_50_75,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1C5EC33C9B
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Nov 2019 09:30:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B71E0C432C3
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Nov 2019 09:31:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7B62D20733
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Nov 2019 09:30:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8CB012073A
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Nov 2019 09:31:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="OUuGAdaJ";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="TvyqRUAN"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="ECErEEfJ";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="c0xzcHdl"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727452AbfKOJax (ORCPT
+        id S1727463AbfKOJbD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 15 Nov 2019 04:30:53 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:56732 "EHLO
+        Fri, 15 Nov 2019 04:31:03 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:57516 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727443AbfKOJaw (ORCPT
+        with ESMTP id S1727059AbfKOJbC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Nov 2019 04:30:52 -0500
+        Fri, 15 Nov 2019 04:31:02 -0500
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 62DC361637; Fri, 15 Nov 2019 09:30:33 +0000 (UTC)
+        id 19329615BC; Fri, 15 Nov 2019 09:30:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1573810251;
-        bh=pl6Ocic2aqR0s79kzWcmd3BJAiKceiT20Kqy4wyFQOg=;
+        s=default; t=1573810261;
+        bh=n1TH14OOke05BEB5V7rTjBgazVntCdJIxU0InuIFfBM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=OUuGAdaJdeigF7J1VCS3SouHvV1aVAqHeUXvdpNg7zELJR/pXH7fxUK2e7rNC96Ne
-         b6hLG2zgWxcdpvvfXP/pKRk5LD+0yO5K5OVEVbTjwpMmt2QWJPcKcNjBpHE1crl5nL
-         jQw8MATgLagF1GbtSQaZO8xGko+yuWMYrmHmyeT8=
+        b=ECErEEfJFMeLO6NzYnuEdxU92g9z+lctnGlHTEam3CUWAV77ds+cPGVmhGm+8xfF+
+         W6gE5cYira89fELVp5Sd4LZA1F1lUdByrmuYdUJ5TafqJ8fYpkfwXDO7UGeixyfSud
+         /sL2JI/MKSo1H/EHoCq8fFhHhSE9bDBLcKjXb/X4=
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 715F0614BB;
-        Fri, 15 Nov 2019 09:30:31 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 3F99C61626;
+        Fri, 15 Nov 2019 09:30:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1573810232;
-        bh=pl6Ocic2aqR0s79kzWcmd3BJAiKceiT20Kqy4wyFQOg=;
+        s=default; t=1573810241;
+        bh=n1TH14OOke05BEB5V7rTjBgazVntCdJIxU0InuIFfBM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=TvyqRUANhkqADHufo3LRO4AqJcitSJxSkUP5nCNTNn6ly2GcV8x7Nb/Ya+r7GG/BW
-         QPNQdYtzDkARLL7Ro095DTTqtdYkAQ4K1C2pWIVUxr1ToKxZ4ZS1bW3FFibSUjOs6c
-         gVwmwBfMC1H8rOL92xVfnd7bl2MY3h5UfTLx4KQE=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 715F0614BB
+        b=c0xzcHdlXzaUW/THOmseXKd9k/jR0MoBbaIt40nbx9A1IPkCNth9wQx3U0apJXFVE
+         vXzB1jj5mUH6kQtxpEvZRw7xV95nVgzw6bmkayWdPPDvOT8ANXhE5jv0kUbz6z0jQx
+         zDVnVfnQ2YRP7cQv1N56fOtFJfQ+tThZ+fQbdKRg=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 3F99C61626
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
 To:     linux-wireless@vger.kernel.org
 Cc:     ath11k@lists.infradead.org, devicetree@vger.kernel.org
-Subject: [PATCH v3 30/49] ath11k: add hw.h
-Date:   Fri, 15 Nov 2019 11:28:54 +0200
-Message-Id: <1573810153-29623-31-git-send-email-kvalo@codeaurora.org>
+Subject: [PATCH v3 32/49] ath11k: add mac.h
+Date:   Fri, 15 Nov 2019 11:28:56 +0200
+Message-Id: <1573810153-29623-33-git-send-email-kvalo@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1573810153-29623-1-git-send-email-kvalo@codeaurora.org>
 References: <1573810153-29623-1-git-send-email-kvalo@codeaurora.org>
@@ -67,140 +67,158 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath11k/hw.h | 127 +++++++++++++++++++++++++++++++++++
- 1 file changed, 127 insertions(+)
+ drivers/net/wireless/ath/ath11k/mac.h | 145 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 145 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath11k/hw.h b/drivers/net/wireless/ath/ath11k/hw.h
+diff --git a/drivers/net/wireless/ath/ath11k/mac.h b/drivers/net/wireless/ath/ath11k/mac.h
 new file mode 100644
-index 000000000000..dd39333ec0ea
+index 000000000000..f84af1fc4952
 --- /dev/null
-+++ b/drivers/net/wireless/ath/ath11k/hw.h
-@@ -0,0 +1,127 @@
++++ b/drivers/net/wireless/ath/ath11k/mac.h
+@@ -0,0 +1,145 @@
 +/* SPDX-License-Identifier: BSD-3-Clause-Clear */
 +/*
 + * Copyright (c) 2018-2019 The Linux Foundation. All rights reserved.
 + */
 +
-+#ifndef ATH11K_HW_H
-+#define ATH11K_HW_H
++#ifndef ATH11K_MAC_H
++#define ATH11K_MAC_H
 +
-+/* Target configuration defines */
++#include <net/mac80211.h>
++#include <net/cfg80211.h>
 +
-+/* Num VDEVS per radio */
-+#define TARGET_NUM_VDEVS	(16 + 1)
++struct ath11k;
++struct ath11k_base;
 +
-+#define TARGET_NUM_PEERS_PDEV	(512 + TARGET_NUM_VDEVS)
-+
-+/* Num of peers for Single Radio mode */
-+#define TARGET_NUM_PEERS_SINGLE		(TARGET_NUM_PEERS_PDEV)
-+
-+/* Num of peers for DBS */
-+#define TARGET_NUM_PEERS_DBS		(2 * TARGET_NUM_PEERS_PDEV)
-+
-+/* Num of peers for DBS_SBS */
-+#define TARGET_NUM_PEERS_DBS_SBS	(3 * TARGET_NUM_PEERS_PDEV)
-+
-+/* Max num of stations (per radio) */
-+#define TARGET_NUM_STATIONS	512
-+
-+#define TARGET_NUM_PEERS(x)	TARGET_NUM_PEERS_##x
-+#define TARGET_NUM_PEER_KEYS	2
-+#define TARGET_NUM_TIDS(x)	(2 * TARGET_NUM_PEERS(x) + \
-+				 4 * TARGET_NUM_VDEVS + 8)
-+
-+#define TARGET_AST_SKID_LIMIT	16
-+#define TARGET_NUM_OFFLD_PEERS	4
-+#define TARGET_NUM_OFFLD_REORDER_BUFFS 4
-+
-+#define TARGET_TX_CHAIN_MASK	(BIT(0) | BIT(1) | BIT(2) | BIT(4))
-+#define TARGET_RX_CHAIN_MASK	(BIT(0) | BIT(1) | BIT(2) | BIT(4))
-+#define TARGET_RX_TIMEOUT_LO_PRI	100
-+#define TARGET_RX_TIMEOUT_HI_PRI	40
-+
-+#define TARGET_DECAP_MODE_RAW		0
-+#define TARGET_DECAP_MODE_NATIVE_WIFI	1
-+#define TARGET_DECAP_MODE_ETH		2
-+
-+#define TARGET_SCAN_MAX_PENDING_REQS	4
-+#define TARGET_BMISS_OFFLOAD_MAX_VDEV	3
-+#define TARGET_ROAM_OFFLOAD_MAX_VDEV	3
-+#define TARGET_ROAM_OFFLOAD_MAX_AP_PROFILES	8
-+#define TARGET_GTK_OFFLOAD_MAX_VDEV	3
-+#define TARGET_NUM_MCAST_GROUPS		12
-+#define TARGET_NUM_MCAST_TABLE_ELEMS	64
-+#define TARGET_MCAST2UCAST_MODE		2
-+#define TARGET_TX_DBG_LOG_SIZE		1024
-+#define TARGET_RX_SKIP_DEFRAG_TIMEOUT_DUP_DETECTION_CHECK 1
-+#define TARGET_VOW_CONFIG		0
-+#define TARGET_NUM_MSDU_DESC		(2500)
-+#define TARGET_MAX_FRAG_ENTRIES		6
-+#define TARGET_MAX_BCN_OFFLD		16
-+#define TARGET_NUM_WDS_ENTRIES		32
-+#define TARGET_DMA_BURST_SIZE		1
-+#define TARGET_RX_BATCHMODE		1
-+
-+#define ATH11K_HW_MAX_QUEUES		4
-+
-+#define ATH11k_HW_RATECODE_CCK_SHORT_PREAM_MASK  0x4
-+
-+#define ATH11K_FW_DIR			"ath11k"
-+
-+/* IPQ8074 definitions */
-+#define IPQ8074_FW_DIR			"IPQ8074"
-+#define IPQ8074_MAX_BOARD_DATA_SZ	(256 * 1024)
-+#define IPQ8074_MAX_CAL_DATA_SZ		IPQ8074_MAX_BOARD_DATA_SZ
-+
-+#define ATH11K_BOARD_MAGIC		"QCA-ATH11K-BOARD"
-+#define ATH11K_BOARD_API2_FILE		"board-2.bin"
-+#define ATH11K_DEFAULT_BOARD_FILE	"bdwlan.bin"
-+#define ATH11K_DEFAULT_CAL_FILE		"caldata.bin"
-+
-+enum ath11k_hw_rate_cck {
-+	ATH11K_HW_RATE_CCK_LP_11M = 0,
-+	ATH11K_HW_RATE_CCK_LP_5_5M,
-+	ATH11K_HW_RATE_CCK_LP_2M,
-+	ATH11K_HW_RATE_CCK_LP_1M,
-+	ATH11K_HW_RATE_CCK_SP_11M,
-+	ATH11K_HW_RATE_CCK_SP_5_5M,
-+	ATH11K_HW_RATE_CCK_SP_2M,
++struct ath11k_generic_iter {
++	struct ath11k *ar;
++	int ret;
 +};
 +
-+enum ath11k_hw_rate_ofdm {
-+	ATH11K_HW_RATE_OFDM_48M = 0,
-+	ATH11K_HW_RATE_OFDM_24M,
-+	ATH11K_HW_RATE_OFDM_12M,
-+	ATH11K_HW_RATE_OFDM_6M,
-+	ATH11K_HW_RATE_OFDM_54M,
-+	ATH11K_HW_RATE_OFDM_36M,
-+	ATH11K_HW_RATE_OFDM_18M,
-+	ATH11K_HW_RATE_OFDM_9M,
-+};
++/* number of failed packets (20 packets with 16 sw reties each) */
++#define ATH11K_KICKOUT_THRESHOLD		(20 * 16)
 +
-+struct ath11k_hw_params {
-+	const char *name;
-+	struct {
-+		const char *dir;
-+		size_t board_size;
-+		size_t cal_size;
-+	} fw;
-+};
++/* Use insanely high numbers to make sure that the firmware implementation
++ * won't start, we have the same functionality already in hostapd. Unit
++ * is seconds.
++ */
++#define ATH11K_KEEPALIVE_MIN_IDLE		3747
++#define ATH11K_KEEPALIVE_MAX_IDLE		3895
++#define ATH11K_KEEPALIVE_MAX_UNRESPONSIVE	3900
 +
-+struct ath11k_fw_ie {
-+	__le32 id;
-+	__le32 len;
-+	u8 data[0];
-+};
++#define WMI_HOST_RC_DS_FLAG			0x01
++#define WMI_HOST_RC_CW40_FLAG			0x02
++#define WMI_HOST_RC_SGI_FLAG			0x04
++#define WMI_HOST_RC_HT_FLAG			0x08
++#define WMI_HOST_RC_RTSCTS_FLAG			0x10
++#define WMI_HOST_RC_TX_STBC_FLAG		0x20
++#define WMI_HOST_RC_RX_STBC_FLAG		0xC0
++#define WMI_HOST_RC_RX_STBC_FLAG_S		6
++#define WMI_HOST_RC_WEP_TKIP_FLAG		0x100
++#define WMI_HOST_RC_TS_FLAG			0x200
++#define WMI_HOST_RC_UAPSD_FLAG			0x400
 +
-+enum ath11k_bd_ie_board_type {
-+	ATH11K_BD_IE_BOARD_NAME = 0,
-+	ATH11K_BD_IE_BOARD_DATA = 1,
-+};
++#define WMI_HT_CAP_ENABLED			0x0001
++#define WMI_HT_CAP_HT20_SGI			0x0002
++#define WMI_HT_CAP_DYNAMIC_SMPS			0x0004
++#define WMI_HT_CAP_TX_STBC			0x0008
++#define WMI_HT_CAP_TX_STBC_MASK_SHIFT		3
++#define WMI_HT_CAP_RX_STBC			0x0030
++#define WMI_HT_CAP_RX_STBC_MASK_SHIFT		4
++#define WMI_HT_CAP_LDPC				0x0040
++#define WMI_HT_CAP_L_SIG_TXOP_PROT		0x0080
++#define WMI_HT_CAP_MPDU_DENSITY			0x0700
++#define WMI_HT_CAP_MPDU_DENSITY_MASK_SHIFT	8
++#define WMI_HT_CAP_HT40_SGI			0x0800
++#define WMI_HT_CAP_RX_LDPC			0x1000
++#define WMI_HT_CAP_TX_LDPC			0x2000
++#define WMI_HT_CAP_IBF_BFER			0x4000
 +
-+enum ath11k_bd_ie_type {
-+	/* contains sub IEs of enum ath11k_bd_ie_board_type */
-+	ATH11K_BD_IE_BOARD = 0,
-+	ATH11K_BD_IE_BOARD_EXT = 1,
-+};
++/* These macros should be used when we wish to advertise STBC support for
++ * only 1SS or 2SS or 3SS.
++ */
++#define WMI_HT_CAP_RX_STBC_1SS			0x0010
++#define WMI_HT_CAP_RX_STBC_2SS			0x0020
++#define WMI_HT_CAP_RX_STBC_3SS			0x0030
 +
++#define WMI_HT_CAP_DEFAULT_ALL (WMI_HT_CAP_ENABLED    | \
++				WMI_HT_CAP_HT20_SGI   | \
++				WMI_HT_CAP_HT40_SGI   | \
++				WMI_HT_CAP_TX_STBC    | \
++				WMI_HT_CAP_RX_STBC    | \
++				WMI_HT_CAP_LDPC)
++
++#define WMI_VHT_CAP_MAX_MPDU_LEN_MASK		0x00000003
++#define WMI_VHT_CAP_RX_LDPC			0x00000010
++#define WMI_VHT_CAP_SGI_80MHZ			0x00000020
++#define WMI_VHT_CAP_SGI_160MHZ			0x00000040
++#define WMI_VHT_CAP_TX_STBC			0x00000080
++#define WMI_VHT_CAP_RX_STBC_MASK		0x00000300
++#define WMI_VHT_CAP_RX_STBC_MASK_SHIFT		8
++#define WMI_VHT_CAP_SU_BFER			0x00000800
++#define WMI_VHT_CAP_SU_BFEE			0x00001000
++#define WMI_VHT_CAP_MAX_CS_ANT_MASK		0x0000E000
++#define WMI_VHT_CAP_MAX_CS_ANT_MASK_SHIFT	13
++#define WMI_VHT_CAP_MAX_SND_DIM_MASK		0x00070000
++#define WMI_VHT_CAP_MAX_SND_DIM_MASK_SHIFT	16
++#define WMI_VHT_CAP_MU_BFER			0x00080000
++#define WMI_VHT_CAP_MU_BFEE			0x00100000
++#define WMI_VHT_CAP_MAX_AMPDU_LEN_EXP		0x03800000
++#define WMI_VHT_CAP_MAX_AMPDU_LEN_EXP_SHIT	23
++#define WMI_VHT_CAP_RX_FIXED_ANT		0x10000000
++#define WMI_VHT_CAP_TX_FIXED_ANT		0x20000000
++
++#define WMI_VHT_CAP_MAX_MPDU_LEN_11454		0x00000002
++
++/* These macros should be used when we wish to advertise STBC support for
++ * only 1SS or 2SS or 3SS.
++ */
++#define WMI_VHT_CAP_RX_STBC_1SS			0x00000100
++#define WMI_VHT_CAP_RX_STBC_2SS			0x00000200
++#define WMI_VHT_CAP_RX_STBC_3SS			0x00000300
++
++#define WMI_VHT_CAP_DEFAULT_ALL (WMI_VHT_CAP_MAX_MPDU_LEN_11454  | \
++				 WMI_VHT_CAP_SGI_80MHZ      |       \
++				 WMI_VHT_CAP_TX_STBC        |       \
++				 WMI_VHT_CAP_RX_STBC_MASK   |       \
++				 WMI_VHT_CAP_RX_LDPC        |       \
++				 WMI_VHT_CAP_MAX_AMPDU_LEN_EXP   |  \
++				 WMI_VHT_CAP_RX_FIXED_ANT   |       \
++				 WMI_VHT_CAP_TX_FIXED_ANT)
++
++/* FIXME: should these be in ieee80211.h? */
++#define IEEE80211_VHT_MCS_SUPPORT_0_11_MASK	GENMASK(23, 16)
++#define IEEE80211_DISABLE_VHT_MCS_SUPPORT_0_11	BIT(24)
++
++#define WMI_MAX_SPATIAL_STREAM			3
++
++#define ATH11K_CHAN_WIDTH_NUM			8
++
++extern const struct htt_rx_ring_tlv_filter ath11k_mac_mon_status_filter_default;
++
++int ath11k_mac_create(struct ath11k_base *ab);
++void ath11k_mac_destroy(struct ath11k_base *ab);
++void ath11k_mac_unregister(struct ath11k_base *ab);
++int ath11k_mac_hw_ratecode_to_legacy_rate(u8 hw_rc, u8 preamble, u8 *rateidx,
++					  u16 *rate);
++u8 ath11k_mac_bitrate_to_idx(const struct ieee80211_supported_band *sband,
++			     u32 bitrate);
++u8 ath11k_mac_hw_rate_to_idx(const struct ieee80211_supported_band *sband,
++			     u8 hw_rate, bool cck);
++
++void __ath11k_mac_scan_finish(struct ath11k *ar);
++void ath11k_mac_scan_finish(struct ath11k *ar);
++
++struct ath11k_vif *ath11k_mac_get_arvif(struct ath11k *ar, u32 vdev_id);
++struct ath11k_vif *ath11k_mac_get_arvif_by_vdev_id(struct ath11k_base *ab,
++						   u32 vdev_id);
++struct ath11k *ath11k_mac_get_ar_by_vdev_id(struct ath11k_base *ab, u32 vdev_id);
++struct ath11k *ath11k_mac_get_ar_by_pdev_id(struct ath11k_base *ab, u32 pdev_id);
++struct ath11k *ath11k_mac_get_ar_vdev_stop_status(struct ath11k_base *ab,
++						  u32 vdev_id);
++
++void ath11k_mac_drain_tx(struct ath11k *ar);
++void ath11k_mac_peer_cleanup_all(struct ath11k *ar);
++int ath11k_mac_tx_mgmt_pending_free(int buf_id, void *skb, void *ctx);
 +#endif
 
