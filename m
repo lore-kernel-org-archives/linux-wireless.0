@@ -2,59 +2,59 @@ Return-Path: <SRS0=1RAM=ZH=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,UPPERCASE_50_75,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 242AEC43215
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Nov 2019 09:32:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85191C33C99
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Nov 2019 09:32:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E7CFC20740
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Nov 2019 09:32:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 480F02073A
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Nov 2019 09:32:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="HrVenyRi";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="VzdMNpFn"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="W14mWYWr";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="jrdAKnuX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727374AbfKOJcE (ORCPT
+        id S1727380AbfKOJcI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 15 Nov 2019 04:32:04 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:36080 "EHLO
+        Fri, 15 Nov 2019 04:32:08 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:36518 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727142AbfKOJcD (ORCPT
+        with ESMTP id S1727142AbfKOJcI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Nov 2019 04:32:03 -0500
+        Fri, 15 Nov 2019 04:32:08 -0500
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 76A17617A3; Fri, 15 Nov 2019 09:31:06 +0000 (UTC)
+        id 3A555617DB; Fri, 15 Nov 2019 09:31:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1573810318;
-        bh=//13TQmscer0GiSMmlMuKEm2Z0bO0l/38CJA8JGXhec=;
+        s=default; t=1573810324;
+        bh=C7+fWDtwdrrO2O57VQZmJr5j6yxOtFeSY7GrzF0NbZc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=HrVenyRizVqc1/TrJN/psTJBbHCsKinVcOfF0ImwL90Eot50vceYhTQVwMy7Rnmny
-         oNutyBSts6pO9PgbG04cgLbvrTEsslBAHMF/eAbsfsWHJYS5Tb0E49ePOJoqlnKm3P
-         U30V5WNPkG8gKTFGLaRwbWy1QNBfolq++g06Vc/w=
+        b=W14mWYWrpRxuEosJCZO8xH8pARLl0MCwzZCzu5lu4hsX3XNy9cc9ID3FAZMQYM0Ix
+         aXdigUn3SgUsdV1NKKuoPizEBIljqqBqbFcOgazm3dXMtu7qheC5gYhRqKOYQ6fAaG
+         pGSaa/+plO63gZQFQOe6MkNpJX6ISHWaLrEMAZE0=
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 2713961615;
-        Fri, 15 Nov 2019 09:30:32 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 2EDD661777;
+        Fri, 15 Nov 2019 09:31:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1573810239;
-        bh=//13TQmscer0GiSMmlMuKEm2Z0bO0l/38CJA8JGXhec=;
+        s=default; t=1573810279;
+        bh=C7+fWDtwdrrO2O57VQZmJr5j6yxOtFeSY7GrzF0NbZc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=VzdMNpFnu7zz0PoNdNtB39VgYGQSSNPfZKZHf/Hs9pJSrqLWyTRvfARKOdGu5IoR4
-         ritjJpn8dTbb3lKcgX4JMwzkRStA1HjHkrxOAKTW+hnQeZuXLx+xbZJ439nlHdZiX6
-         CRuRrtU6DdQ6GvHFCuQmtstLzmb0HIy4VpCCVYaQ=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 2713961615
+        b=jrdAKnuXwlPnt+T7yGDQUtMVNFIXz/29OQNcRdttxK5ISmaox4RxR/fdHDlkvTgZr
+         tbq+tt/BQjJFjfZnkyaTBUiuwIfJdPyKURBhksJ1WYAujZfbWRr9xpUhPrc7AqoMqf
+         8Pck6FJ3rtSE0uwqVxJPncXOZdXybu4EGegS7Fw8=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 2EDD661777
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
 To:     linux-wireless@vger.kernel.org
 Cc:     ath11k@lists.infradead.org, devicetree@vger.kernel.org
-Subject: [PATCH v3 31/49] ath11k: add mac.c
-Date:   Fri, 15 Nov 2019 11:28:55 +0200
-Message-Id: <1573810153-29623-32-git-send-email-kvalo@codeaurora.org>
+Subject: [PATCH v3 46/49] ath11k: add wmi.h
+Date:   Fri, 15 Nov 2019 11:29:10 +0200
+Message-Id: <1573810153-29623-47-git-send-email-kvalo@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1573810153-29623-1-git-send-email-kvalo@codeaurora.org>
 References: <1573810153-29623-1-git-send-email-kvalo@codeaurora.org>
@@ -67,5440 +67,4677 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath11k/mac.c | 5427 +++++++++++++++++++++++++++++++++
- 1 file changed, 5427 insertions(+)
+ drivers/net/wireless/ath/ath11k/wmi.h | 4664 +++++++++++++++++++++++++++++++++
+ 1 file changed, 4664 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.h b/drivers/net/wireless/ath/ath11k/wmi.h
 new file mode 100644
-index 000000000000..cb025a4a5785
+index 000000000000..00c51cc83d47
 --- /dev/null
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -0,0 +1,5427 @@
-+// SPDX-License-Identifier: BSD-3-Clause-Clear
++++ b/drivers/net/wireless/ath/ath11k/wmi.h
+@@ -0,0 +1,4664 @@
++/* SPDX-License-Identifier: BSD-3-Clause-Clear */
 +/*
 + * Copyright (c) 2018-2019 The Linux Foundation. All rights reserved.
 + */
 +
++#ifndef ATH11K_WMI_H
++#define ATH11K_WMI_H
++
 +#include <net/mac80211.h>
-+#include <linux/etherdevice.h>
-+#include "mac.h"
-+#include "core.h"
-+#include "debug.h"
-+#include "wmi.h"
-+#include "hw.h"
-+#include "dp_tx.h"
-+#include "dp_rx.h"
-+#include "testmode.h"
-+#include "peer.h"
++#include "htc.h"
 +
-+#define CHAN2G(_channel, _freq, _flags) { \
-+	.band                   = NL80211_BAND_2GHZ, \
-+	.hw_value               = (_channel), \
-+	.center_freq            = (_freq), \
-+	.flags                  = (_flags), \
-+	.max_antenna_gain       = 0, \
-+	.max_power              = 30, \
-+}
++struct ath11k_base;
++struct ath11k;
++struct ath11k_fw_stats;
 +
-+#define CHAN5G(_channel, _freq, _flags) { \
-+	.band                   = NL80211_BAND_5GHZ, \
-+	.hw_value               = (_channel), \
-+	.center_freq            = (_freq), \
-+	.flags                  = (_flags), \
-+	.max_antenna_gain       = 0, \
-+	.max_power              = 30, \
-+}
++#define PSOC_HOST_MAX_NUM_SS (8)
 +
-+static const struct ieee80211_channel ath11k_2ghz_channels[] = {
-+	CHAN2G(1, 2412, 0),
-+	CHAN2G(2, 2417, 0),
-+	CHAN2G(3, 2422, 0),
-+	CHAN2G(4, 2427, 0),
-+	CHAN2G(5, 2432, 0),
-+	CHAN2G(6, 2437, 0),
-+	CHAN2G(7, 2442, 0),
-+	CHAN2G(8, 2447, 0),
-+	CHAN2G(9, 2452, 0),
-+	CHAN2G(10, 2457, 0),
-+	CHAN2G(11, 2462, 0),
-+	CHAN2G(12, 2467, 0),
-+	CHAN2G(13, 2472, 0),
-+	CHAN2G(14, 2484, 0),
-+};
++/* defines to set Packet extension values whic can be 0 us, 8 usec or 16 usec */
++#define MAX_HE_NSS               8
++#define MAX_HE_MODULATION        8
++#define MAX_HE_RU                4
++#define HE_MODULATION_NONE       7
++#define HE_PET_0_USEC            0
++#define HE_PET_8_USEC            1
++#define HE_PET_16_USEC           2
 +
-+static const struct ieee80211_channel ath11k_5ghz_channels[] = {
-+	CHAN5G(36, 5180, 0),
-+	CHAN5G(40, 5200, 0),
-+	CHAN5G(44, 5220, 0),
-+	CHAN5G(48, 5240, 0),
-+	CHAN5G(52, 5260, 0),
-+	CHAN5G(56, 5280, 0),
-+	CHAN5G(60, 5300, 0),
-+	CHAN5G(64, 5320, 0),
-+	CHAN5G(100, 5500, 0),
-+	CHAN5G(104, 5520, 0),
-+	CHAN5G(108, 5540, 0),
-+	CHAN5G(112, 5560, 0),
-+	CHAN5G(116, 5580, 0),
-+	CHAN5G(120, 5600, 0),
-+	CHAN5G(124, 5620, 0),
-+	CHAN5G(128, 5640, 0),
-+	CHAN5G(132, 5660, 0),
-+	CHAN5G(136, 5680, 0),
-+	CHAN5G(140, 5700, 0),
-+	CHAN5G(144, 5720, 0),
-+	CHAN5G(149, 5745, 0),
-+	CHAN5G(153, 5765, 0),
-+	CHAN5G(157, 5785, 0),
-+	CHAN5G(161, 5805, 0),
-+	CHAN5G(165, 5825, 0),
-+	CHAN5G(169, 5845, 0),
-+	CHAN5G(173, 5865, 0),
-+};
++#define WMI_MAX_NUM_SS                    MAX_HE_NSS
++#define WMI_MAX_NUM_RU                    MAX_HE_RU
 +
-+static struct ieee80211_rate ath11k_legacy_rates[] = {
-+	{ .bitrate = 10,
-+	  .hw_value = ATH11K_HW_RATE_CCK_LP_1M },
-+	{ .bitrate = 20,
-+	  .hw_value = ATH11K_HW_RATE_CCK_LP_2M,
-+	  .hw_value_short = ATH11K_HW_RATE_CCK_SP_2M,
-+	  .flags = IEEE80211_RATE_SHORT_PREAMBLE },
-+	{ .bitrate = 55,
-+	  .hw_value = ATH11K_HW_RATE_CCK_LP_5_5M,
-+	  .hw_value_short = ATH11K_HW_RATE_CCK_SP_5_5M,
-+	  .flags = IEEE80211_RATE_SHORT_PREAMBLE },
-+	{ .bitrate = 110,
-+	  .hw_value = ATH11K_HW_RATE_CCK_LP_11M,
-+	  .hw_value_short = ATH11K_HW_RATE_CCK_SP_11M,
-+	  .flags = IEEE80211_RATE_SHORT_PREAMBLE },
++#define WMI_TLV_CMD(grp_id) (((grp_id) << 12) | 0x1)
++#define WMI_TLV_EV(grp_id) (((grp_id) << 12) | 0x1)
++#define WMI_TLV_CMD_UNSUPPORTED 0
++#define WMI_TLV_PDEV_PARAM_UNSUPPORTED 0
++#define WMI_TLV_VDEV_PARAM_UNSUPPORTED 0
 +
-+	{ .bitrate = 60, .hw_value = ATH11K_HW_RATE_OFDM_6M },
-+	{ .bitrate = 90, .hw_value = ATH11K_HW_RATE_OFDM_9M },
-+	{ .bitrate = 120, .hw_value = ATH11K_HW_RATE_OFDM_12M },
-+	{ .bitrate = 180, .hw_value = ATH11K_HW_RATE_OFDM_18M },
-+	{ .bitrate = 240, .hw_value = ATH11K_HW_RATE_OFDM_24M },
-+	{ .bitrate = 360, .hw_value = ATH11K_HW_RATE_OFDM_36M },
-+	{ .bitrate = 480, .hw_value = ATH11K_HW_RATE_OFDM_48M },
-+	{ .bitrate = 540, .hw_value = ATH11K_HW_RATE_OFDM_54M },
-+};
++struct wmi_cmd_hdr {
++	u32 cmd_id;
++} __packed;
 +
-+static const int
-+ath11k_phymodes[NUM_NL80211_BANDS][ATH11K_CHAN_WIDTH_NUM] = {
-+	[NL80211_BAND_2GHZ] = {
-+			[NL80211_CHAN_WIDTH_5] = MODE_UNKNOWN,
-+			[NL80211_CHAN_WIDTH_10] = MODE_UNKNOWN,
-+			[NL80211_CHAN_WIDTH_20_NOHT] = MODE_11AX_HE20_2G,
-+			[NL80211_CHAN_WIDTH_20] = MODE_11AX_HE20_2G,
-+			[NL80211_CHAN_WIDTH_40] = MODE_11AX_HE40_2G,
-+			[NL80211_CHAN_WIDTH_80] = MODE_11AX_HE80_2G,
-+			[NL80211_CHAN_WIDTH_80P80] = MODE_UNKNOWN,
-+			[NL80211_CHAN_WIDTH_160] = MODE_UNKNOWN,
-+	},
-+	[NL80211_BAND_5GHZ] = {
-+			[NL80211_CHAN_WIDTH_5] = MODE_UNKNOWN,
-+			[NL80211_CHAN_WIDTH_10] = MODE_UNKNOWN,
-+			[NL80211_CHAN_WIDTH_20_NOHT] = MODE_11AX_HE20,
-+			[NL80211_CHAN_WIDTH_20] = MODE_11AX_HE20,
-+			[NL80211_CHAN_WIDTH_40] = MODE_11AX_HE40,
-+			[NL80211_CHAN_WIDTH_80] = MODE_11AX_HE80,
-+			[NL80211_CHAN_WIDTH_160] = MODE_11AX_HE160,
-+			[NL80211_CHAN_WIDTH_80P80] = MODE_11AX_HE80_80,
-+	},
-+};
++struct wmi_tlv {
++	u32 header;
++	u8 value[0];
++} __packed;
 +
-+const struct htt_rx_ring_tlv_filter ath11k_mac_mon_status_filter_default = {
-+	.rx_filter = HTT_RX_FILTER_TLV_FLAGS_MPDU_START |
-+		     HTT_RX_FILTER_TLV_FLAGS_PPDU_END |
-+		     HTT_RX_FILTER_TLV_FLAGS_PPDU_END_STATUS_DONE,
-+	.pkt_filter_flags0 = HTT_RX_FP_MGMT_FILTER_FLAGS0,
-+	.pkt_filter_flags1 = HTT_RX_FP_MGMT_FILTER_FLAGS1,
-+	.pkt_filter_flags2 = HTT_RX_FP_CTRL_FILTER_FLASG2,
-+	.pkt_filter_flags3 = HTT_RX_FP_DATA_FILTER_FLASG3 |
-+			     HTT_RX_FP_CTRL_FILTER_FLASG3
-+};
++#define WMI_TLV_LEN	GENMASK(15, 0)
++#define WMI_TLV_TAG	GENMASK(31, 16)
++#define TLV_HDR_SIZE	FIELD_SIZEOF(struct wmi_tlv, header)
 +
-+#define ATH11K_MAC_FIRST_OFDM_RATE_IDX 4
-+#define ath11k_g_rates ath11k_legacy_rates
-+#define ath11k_g_rates_size (ARRAY_SIZE(ath11k_legacy_rates))
-+#define ath11k_a_rates (ath11k_legacy_rates + 4)
-+#define ath11k_a_rates_size (ARRAY_SIZE(ath11k_legacy_rates) - 4)
++#define WMI_CMD_HDR_CMD_ID      GENMASK(23, 0)
++#define WMI_MAX_MEM_REQS        32
++#define ATH11K_MAX_HW_LISTEN_INTERVAL 5
 +
-+#define ATH11K_MAC_SCAN_TIMEOUT_MSECS 200 /* in msecs */
++#define WLAN_SCAN_PARAMS_MAX_SSID    16
++#define WLAN_SCAN_PARAMS_MAX_BSSID   4
++#define WLAN_SCAN_PARAMS_MAX_IE_LEN  256
 +
-+static const u32 ath11k_smps_map[] = {
-+	[WLAN_HT_CAP_SM_PS_STATIC] = WMI_PEER_SMPS_STATIC,
-+	[WLAN_HT_CAP_SM_PS_DYNAMIC] = WMI_PEER_SMPS_DYNAMIC,
-+	[WLAN_HT_CAP_SM_PS_INVALID] = WMI_PEER_SMPS_PS_NONE,
-+	[WLAN_HT_CAP_SM_PS_DISABLED] = WMI_PEER_SMPS_PS_NONE,
-+};
-+
-+int ath11k_mac_hw_ratecode_to_legacy_rate(u8 hw_rc, u8 preamble, u8 *rateidx,
-+					  u16 *rate)
-+{
-+	/* As default, it is OFDM rates */
-+	int i = ATH11K_MAC_FIRST_OFDM_RATE_IDX;
-+	int max_rates_idx = ath11k_g_rates_size;
-+
-+	if (preamble == WMI_RATE_PREAMBLE_CCK) {
-+		hw_rc &= ~ATH11k_HW_RATECODE_CCK_SHORT_PREAM_MASK;
-+		i = 0;
-+		max_rates_idx = ATH11K_MAC_FIRST_OFDM_RATE_IDX;
-+	}
-+
-+	while (i < max_rates_idx) {
-+		if (hw_rc == ath11k_legacy_rates[i].hw_value) {
-+			*rateidx = i;
-+			*rate = ath11k_legacy_rates[i].bitrate;
-+			return 0;
-+		}
-+		i++;
-+	}
-+
-+	return -EINVAL;
-+}
-+
-+static int get_num_chains(u32 mask)
-+{
-+	int num_chains = 0;
-+
-+	while (mask) {
-+		if (mask & BIT(0))
-+			num_chains++;
-+		mask >>= 1;
-+	}
-+
-+	return num_chains;
-+}
-+
-+u8 ath11k_mac_bitrate_to_idx(const struct ieee80211_supported_band *sband,
-+			     u32 bitrate)
-+{
-+	int i;
-+
-+	for (i = 0; i < sband->n_bitrates; i++)
-+		if (sband->bitrates[i].bitrate == bitrate)
-+			return i;
-+
-+	return 0;
-+}
-+
-+static u32
-+ath11k_mac_max_ht_nss(const u8 ht_mcs_mask[IEEE80211_HT_MCS_MASK_LEN])
-+{
-+	int nss;
-+
-+	for (nss = IEEE80211_HT_MCS_MASK_LEN - 1; nss >= 0; nss--)
-+		if (ht_mcs_mask[nss])
-+			return nss + 1;
-+
-+	return 1;
-+}
-+
-+static u32
-+ath11k_mac_max_vht_nss(const u16 vht_mcs_mask[NL80211_VHT_NSS_MAX])
-+{
-+	int nss;
-+
-+	for (nss = NL80211_VHT_NSS_MAX - 1; nss >= 0; nss--)
-+		if (vht_mcs_mask[nss])
-+			return nss + 1;
-+
-+	return 1;
-+}
-+
-+static u8 ath11k_parse_mpdudensity(u8 mpdudensity)
-+{
-+/* 802.11n D2.0 defined values for "Minimum MPDU Start Spacing":
-+ *   0 for no restriction
-+ *   1 for 1/4 us
-+ *   2 for 1/2 us
-+ *   3 for 1 us
-+ *   4 for 2 us
-+ *   5 for 4 us
-+ *   6 for 8 us
-+ *   7 for 16 us
++/*
++ * HW mode config type replicated from FW header
++ * @WMI_HOST_HW_MODE_SINGLE: Only one PHY is active.
++ * @WMI_HOST_HW_MODE_DBS: Both PHYs are active in different bands,
++ *                        one in 2G and another in 5G.
++ * @WMI_HOST_HW_MODE_SBS_PASSIVE: Both PHYs are in passive mode (only rx) in
++ *                        same band; no tx allowed.
++ * @WMI_HOST_HW_MODE_SBS: Both PHYs are active in the same band.
++ *                        Support for both PHYs within one band is planned
++ *                        for 5G only(as indicated in WMI_MAC_PHY_CAPABILITIES),
++ *                        but could be extended to other bands in the future.
++ *                        The separation of the band between the two PHYs needs
++ *                        to be communicated separately.
++ * @WMI_HOST_HW_MODE_DBS_SBS: 3 PHYs, with 2 on the same band doing SBS
++ *                           as in WMI_HW_MODE_SBS, and 3rd on the other band
++ * @WMI_HOST_HW_MODE_DBS_OR_SBS: Two PHY with one PHY capabale of both 2G and
++ *                        5G. It can support SBS (5G + 5G) OR DBS (5G + 2G).
++ * @WMI_HOST_HW_MODE_MAX: Max hw_mode_id. Used to indicate invalid mode.
 + */
-+	switch (mpdudensity) {
-+	case 0:
-+		return 0;
-+	case 1:
-+	case 2:
-+	case 3:
-+	/* Our lower layer calculations limit our precision to
-+	 * 1 microsecond
-+	 */
-+		return 1;
-+	case 4:
-+		return 2;
-+	case 5:
-+		return 4;
-+	case 6:
-+		return 8;
-+	case 7:
-+		return 16;
-+	default:
-+		return 0;
-+	}
-+}
-+
-+static int ath11k_mac_vif_chan(struct ieee80211_vif *vif,
-+			       struct cfg80211_chan_def *def)
-+{
-+	struct ieee80211_chanctx_conf *conf;
-+
-+	rcu_read_lock();
-+	conf = rcu_dereference(vif->chanctx_conf);
-+	if (!conf) {
-+		rcu_read_unlock();
-+		return -ENOENT;
-+	}
-+
-+	*def = conf->def;
-+	rcu_read_unlock();
-+
-+	return 0;
-+}
-+
-+static bool ath11k_mac_bitrate_is_cck(int bitrate)
-+{
-+	switch (bitrate) {
-+	case 10:
-+	case 20:
-+	case 55:
-+	case 110:
-+		return true;
-+	}
-+
-+	return false;
-+}
-+
-+u8 ath11k_mac_hw_rate_to_idx(const struct ieee80211_supported_band *sband,
-+			     u8 hw_rate, bool cck)
-+{
-+	const struct ieee80211_rate *rate;
-+	int i;
-+
-+	for (i = 0; i < sband->n_bitrates; i++) {
-+		rate = &sband->bitrates[i];
-+
-+		if (ath11k_mac_bitrate_is_cck(rate->bitrate) != cck)
-+			continue;
-+
-+		if (rate->hw_value == hw_rate)
-+			return i;
-+		else if (rate->flags & IEEE80211_RATE_SHORT_PREAMBLE &&
-+			 rate->hw_value_short == hw_rate)
-+			return i;
-+	}
-+
-+	return 0;
-+}
-+
-+static u8 ath11k_mac_bitrate_to_rate(int bitrate)
-+{
-+	return DIV_ROUND_UP(bitrate, 5) |
-+	       (ath11k_mac_bitrate_is_cck(bitrate) ? BIT(7) : 0);
-+}
-+
-+static void ath11k_get_arvif_iter(void *data, u8 *mac,
-+				  struct ieee80211_vif *vif)
-+{
-+	struct ath11k_vif_iter *arvif_iter = data;
-+	struct ath11k_vif *arvif = (void *)vif->drv_priv;
-+
-+	if (arvif->vdev_id == arvif_iter->vdev_id)
-+		arvif_iter->arvif = arvif;
-+}
-+
-+struct ath11k_vif *ath11k_mac_get_arvif(struct ath11k *ar, u32 vdev_id)
-+{
-+	struct ath11k_vif_iter arvif_iter;
-+	u32 flags;
-+
-+	memset(&arvif_iter, 0, sizeof(struct ath11k_vif_iter));
-+	arvif_iter.vdev_id = vdev_id;
-+
-+	flags = IEEE80211_IFACE_ITER_RESUME_ALL;
-+	ieee80211_iterate_active_interfaces_atomic(ar->hw,
-+						   flags,
-+						   ath11k_get_arvif_iter,
-+						   &arvif_iter);
-+	if (!arvif_iter.arvif)
-+		return NULL;
-+
-+	return arvif_iter.arvif;
-+}
-+
-+struct ath11k_vif *ath11k_mac_get_arvif_by_vdev_id(struct ath11k_base *ab,
-+						   u32 vdev_id)
-+{
-+	int i;
-+	struct ath11k_pdev *pdev;
-+	struct ath11k_vif *arvif;
-+
-+	for (i = 0; i < ab->num_radios; i++) {
-+		pdev = rcu_dereference(ab->pdevs_active[i]);
-+		if (pdev && pdev->ar) {
-+			arvif = ath11k_mac_get_arvif(pdev->ar, vdev_id);
-+			if (arvif)
-+				return arvif;
-+		}
-+	}
-+
-+	return NULL;
-+}
-+
-+struct ath11k *ath11k_mac_get_ar_by_vdev_id(struct ath11k_base *ab, u32 vdev_id)
-+{
-+	int i;
-+	struct ath11k_pdev *pdev;
-+	struct ath11k_vif *arvif;
-+
-+	for (i = 0; i < ab->num_radios; i++) {
-+		pdev = rcu_dereference(ab->pdevs_active[i]);
-+		if (pdev && pdev->ar) {
-+			arvif = ath11k_mac_get_arvif(pdev->ar, vdev_id);
-+			if (arvif)
-+				return arvif->ar;
-+		}
-+	}
-+
-+	return NULL;
-+}
-+
-+struct ath11k *ath11k_mac_get_ar_by_pdev_id(struct ath11k_base *ab, u32 pdev_id)
-+{
-+	int i;
-+	struct ath11k_pdev *pdev;
-+
-+	if (WARN_ON(pdev_id > ab->num_radios))
-+		return NULL;
-+
-+	for (i = 0; i < ab->num_radios; i++) {
-+		pdev = rcu_dereference(ab->pdevs_active[i]);
-+
-+		if (pdev && pdev->pdev_id == pdev_id)
-+			return (pdev->ar ? pdev->ar : NULL);
-+	}
-+
-+	return NULL;
-+}
-+
-+struct ath11k *ath11k_mac_get_ar_vdev_stop_status(struct ath11k_base *ab,
-+						  u32 vdev_id)
-+{
-+	int i;
-+	struct ath11k_pdev *pdev;
-+	struct ath11k *ar;
-+
-+	for (i = 0; i < ab->num_radios; i++) {
-+		pdev = rcu_dereference(ab->pdevs_active[i]);
-+		if (pdev && pdev->ar) {
-+			ar = pdev->ar;
-+
-+			spin_lock_bh(&ar->data_lock);
-+			if (ar->vdev_stop_status.stop_in_progress &&
-+			    ar->vdev_stop_status.vdev_id == vdev_id) {
-+				ar->vdev_stop_status.stop_in_progress = false;
-+				spin_unlock_bh(&ar->data_lock);
-+				return ar;
-+			}
-+			spin_unlock_bh(&ar->data_lock);
-+		}
-+	}
-+	return NULL;
-+}
-+
-+static void ath11k_pdev_caps_update(struct ath11k *ar)
-+{
-+	struct ath11k_base *ab = ar->ab;
-+
-+	ar->max_tx_power = ab->target_caps.hw_max_tx_power;
-+
-+	/* FIXME Set min_tx_power to ab->target_caps.hw_min_tx_power.
-+	 * But since the received value in svcrdy is same as hw_max_tx_power,
-+	 * we can set ar->min_tx_power to 0 currently until
-+	 * this is fixed in firmware
-+	 */
-+	ar->min_tx_power = 0;
-+
-+	ar->txpower_limit_2g = ar->max_tx_power;
-+	ar->txpower_limit_5g = ar->max_tx_power;
-+	ar->txpower_scale = WMI_HOST_TP_SCALE_MAX;
-+}
-+
-+static int ath11k_mac_txpower_recalc(struct ath11k *ar)
-+{
-+	struct ath11k_pdev *pdev = ar->pdev;
-+	struct ath11k_vif *arvif;
-+	int ret, txpower = -1;
-+	u32 param;
-+
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	list_for_each_entry(arvif, &ar->arvifs, list) {
-+		if (arvif->txpower <= 0)
-+			continue;
-+
-+		if (txpower == -1)
-+			txpower = arvif->txpower;
-+		else
-+			txpower = min(txpower, arvif->txpower);
-+	}
-+
-+	if (txpower == -1)
-+		return 0;
-+
-+	/* txpwr is set as 2 units per dBm in FW*/
-+	txpower = min_t(u32, max_t(u32, ar->min_tx_power, txpower),
-+			ar->max_tx_power) * 2;
-+
-+	ath11k_dbg(ar->ab, ATH11K_DBG_MAC, "txpower to set in hw %d\n",
-+		   txpower / 2);
-+
-+	if ((pdev->cap.supported_bands & WMI_HOST_WLAN_2G_CAP) &&
-+	    ar->txpower_limit_2g != txpower) {
-+		param = WMI_PDEV_PARAM_TXPOWER_LIMIT2G;
-+		ret = ath11k_wmi_pdev_set_param(ar, param,
-+						txpower, ar->pdev->pdev_id);
-+		if (ret)
-+			goto fail;
-+		ar->txpower_limit_2g = txpower;
-+	}
-+
-+	if ((pdev->cap.supported_bands & WMI_HOST_WLAN_5G_CAP) &&
-+	    ar->txpower_limit_5g != txpower) {
-+		param = WMI_PDEV_PARAM_TXPOWER_LIMIT5G;
-+		ret = ath11k_wmi_pdev_set_param(ar, param,
-+						txpower, ar->pdev->pdev_id);
-+		if (ret)
-+			goto fail;
-+		ar->txpower_limit_5g = txpower;
-+	}
-+
-+	return 0;
-+
-+fail:
-+	ath11k_warn(ar->ab, "failed to recalc txpower limit %d using pdev param %d: %d\n",
-+		    txpower / 2, param, ret);
-+	return ret;
-+}
-+
-+static int ath11k_recalc_rtscts_prot(struct ath11k_vif *arvif)
-+{
-+	struct ath11k *ar = arvif->ar;
-+	u32 vdev_param, rts_cts = 0;
-+	int ret;
-+
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	vdev_param = WMI_VDEV_PARAM_ENABLE_RTSCTS;
-+
-+	/* Enable RTS/CTS protection for sw retries (when legacy stations
-+	 * are in BSS) or by default only for second rate series.
-+	 * TODO: Check if we need to enable CTS 2 Self in any case
-+	 */
-+	rts_cts = WMI_USE_RTS_CTS;
-+
-+	if (arvif->num_legacy_stations > 0)
-+		rts_cts |= WMI_RTSCTS_ACROSS_SW_RETRIES << 4;
-+	else
-+		rts_cts |= WMI_RTSCTS_FOR_SECOND_RATESERIES << 4;
-+
-+	/* Need not send duplicate param value to firmware */
-+	if (arvif->rtscts_prot_mode == rts_cts)
-+		return 0;
-+
-+	arvif->rtscts_prot_mode = rts_cts;
-+
-+	ath11k_dbg(ar->ab, ATH11K_DBG_MAC, "mac vdev %d recalc rts/cts prot %d\n",
-+		   arvif->vdev_id, rts_cts);
-+
-+	ret =  ath11k_wmi_vdev_set_param_cmd(ar, arvif->vdev_id,
-+					     vdev_param, rts_cts);
-+	if (ret)
-+		ath11k_warn(ar->ab, "failed to recalculate rts/cts prot for vdev %d: %d\n",
-+			    arvif->vdev_id, ret);
-+
-+	return ret;
-+}
-+
-+static int ath11k_mac_set_kickout(struct ath11k_vif *arvif)
-+{
-+	struct ath11k *ar = arvif->ar;
-+	u32 param;
-+	int ret;
-+
-+	ret = ath11k_wmi_pdev_set_param(ar, WMI_PDEV_PARAM_STA_KICKOUT_TH,
-+					ATH11K_KICKOUT_THRESHOLD,
-+					ar->pdev->pdev_id);
-+	if (ret) {
-+		ath11k_warn(ar->ab, "failed to set kickout threshold on vdev %i: %d\n",
-+			    arvif->vdev_id, ret);
-+		return ret;
-+	}
-+
-+	param = WMI_VDEV_PARAM_AP_KEEPALIVE_MIN_IDLE_INACTIVE_TIME_SECS;
-+	ret = ath11k_wmi_vdev_set_param_cmd(ar, arvif->vdev_id, param,
-+					    ATH11K_KEEPALIVE_MIN_IDLE);
-+	if (ret) {
-+		ath11k_warn(ar->ab, "failed to set keepalive minimum idle time on vdev %i: %d\n",
-+			    arvif->vdev_id, ret);
-+		return ret;
-+	}
-+
-+	param = WMI_VDEV_PARAM_AP_KEEPALIVE_MAX_IDLE_INACTIVE_TIME_SECS;
-+	ret = ath11k_wmi_vdev_set_param_cmd(ar, arvif->vdev_id, param,
-+					    ATH11K_KEEPALIVE_MAX_IDLE);
-+	if (ret) {
-+		ath11k_warn(ar->ab, "failed to set keepalive maximum idle time on vdev %i: %d\n",
-+			    arvif->vdev_id, ret);
-+		return ret;
-+	}
-+
-+	param = WMI_VDEV_PARAM_AP_KEEPALIVE_MAX_UNRESPONSIVE_TIME_SECS;
-+	ret = ath11k_wmi_vdev_set_param_cmd(ar, arvif->vdev_id, param,
-+					    ATH11K_KEEPALIVE_MAX_UNRESPONSIVE);
-+	if (ret) {
-+		ath11k_warn(ar->ab, "failed to set keepalive maximum unresponsive time on vdev %i: %d\n",
-+			    arvif->vdev_id, ret);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+void ath11k_mac_peer_cleanup_all(struct ath11k *ar)
-+{
-+	struct ath11k_peer *peer, *tmp;
-+	struct ath11k_base *ab = ar->ab;
-+
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	spin_lock_bh(&ab->base_lock);
-+	list_for_each_entry_safe(peer, tmp, &ab->peers, list) {
-+		ath11k_peer_rx_tid_cleanup(ar, peer);
-+		list_del(&peer->list);
-+		kfree(peer);
-+	}
-+	spin_unlock_bh(&ab->base_lock);
-+
-+	ar->num_peers = 0;
-+	ar->num_stations = 0;
-+}
-+
-+static int ath11k_monitor_vdev_up(struct ath11k *ar, int vdev_id)
-+{
-+	int ret = 0;
-+
-+	ret = ath11k_wmi_vdev_up(ar, vdev_id, 0, ar->mac_addr);
-+	if (ret) {
-+		ath11k_warn(ar->ab, "failed to put up monitor vdev %i: %d\n",
-+			    vdev_id, ret);
-+		return ret;
-+	}
-+
-+	ath11k_dbg(ar->ab, ATH11K_DBG_MAC, "mac monitor vdev %i started\n",
-+		   vdev_id);
-+	return 0;
-+}
-+
-+static int ath11k_mac_op_config(struct ieee80211_hw *hw, u32 changed)
-+{
-+	struct ath11k *ar = hw->priv;
-+	int ret = 0;
-+
-+	/* mac80211 requires this op to be present and that's why
-+	 * there's an empty function, this can be extended when
-+	 * required.
-+	 */
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	/* TODO: Handle configuration changes as appropriate */
-+
-+	mutex_unlock(&ar->conf_mutex);
-+
-+	return ret;
-+}
-+
-+static int ath11k_mac_setup_bcn_tmpl(struct ath11k_vif *arvif)
-+{
-+	struct ath11k *ar = arvif->ar;
-+	struct ath11k_base *ab = ar->ab;
-+	struct ieee80211_hw *hw = ar->hw;
-+	struct ieee80211_vif *vif = arvif->vif;
-+	struct ieee80211_mutable_offsets offs = {};
-+	struct sk_buff *bcn;
-+	int ret;
-+
-+	if (arvif->vdev_type != WMI_VDEV_TYPE_AP)
-+		return 0;
-+
-+	bcn = ieee80211_beacon_get_template(hw, vif, &offs);
-+	if (!bcn) {
-+		ath11k_warn(ab, "failed to get beacon template from mac80211\n");
-+		return -EPERM;
-+	}
-+
-+	ret = ath11k_wmi_bcn_tmpl(ar, arvif->vdev_id, &offs, bcn);
-+
-+	kfree_skb(bcn);
-+
-+	if (ret)
-+		ath11k_warn(ab, "failed to submit beacon template command: %d\n",
-+			    ret);
-+
-+	return ret;
-+}
-+
-+static void ath11k_control_beaconing(struct ath11k_vif *arvif,
-+				     struct ieee80211_bss_conf *info)
-+{
-+	struct ath11k *ar = arvif->ar;
-+	int ret = 0;
-+
-+	lockdep_assert_held(&arvif->ar->conf_mutex);
-+
-+	if (!info->enable_beacon) {
-+		ret = ath11k_wmi_vdev_down(ar, arvif->vdev_id);
-+		if (ret)
-+			ath11k_warn(ar->ab, "failed to down vdev_id %i: %d\n",
-+				    arvif->vdev_id, ret);
-+
-+		arvif->is_up = false;
-+		return;
-+	}
-+
-+	/* Install the beacon template to the FW */
-+	ret = ath11k_mac_setup_bcn_tmpl(arvif);
-+	if (ret) {
-+		ath11k_warn(ar->ab, "failed to update bcn tmpl during vdev up: %d\n",
-+			    ret);
-+		return;
-+	}
-+
-+	arvif->tx_seq_no = 0x1000;
-+
-+	arvif->aid = 0;
-+
-+	ether_addr_copy(arvif->bssid, info->bssid);
-+
-+	ret = ath11k_wmi_vdev_up(arvif->ar, arvif->vdev_id, arvif->aid,
-+				 arvif->bssid);
-+	if (ret) {
-+		ath11k_warn(ar->ab, "failed to bring up vdev %d: %i\n",
-+			    arvif->vdev_id, ret);
-+		return;
-+	}
-+
-+	arvif->is_up = true;
-+
-+	ath11k_dbg(ar->ab, ATH11K_DBG_MAC, "mac vdev %d up\n", arvif->vdev_id);
-+}
-+
-+static void ath11k_peer_assoc_h_basic(struct ath11k *ar,
-+				      struct ieee80211_vif *vif,
-+				      struct ieee80211_sta *sta,
-+				      struct peer_assoc_params *arg)
-+{
-+	struct ath11k_vif *arvif = (void *)vif->drv_priv;
-+	u32 aid;
-+
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	if (vif->type == NL80211_IFTYPE_STATION)
-+		aid = vif->bss_conf.aid;
-+	else
-+		aid = sta->aid;
-+
-+	ether_addr_copy(arg->peer_mac, sta->addr);
-+	arg->vdev_id = arvif->vdev_id;
-+	arg->peer_associd = aid;
-+	arg->auth_flag = true;
-+	/* TODO: STA WAR in ath10k for listen interval required? */
-+	arg->peer_listen_intval = ar->hw->conf.listen_interval;
-+	arg->peer_nss = 1;
-+	arg->peer_caps = vif->bss_conf.assoc_capability;
-+}
-+
-+static void ath11k_peer_assoc_h_crypto(struct ath11k *ar,
-+				       struct ieee80211_vif *vif,
-+				       struct ieee80211_sta *sta,
-+				       struct peer_assoc_params *arg)
-+{
-+	struct ieee80211_bss_conf *info = &vif->bss_conf;
-+	struct cfg80211_chan_def def;
-+	struct cfg80211_bss *bss;
-+	const u8 *rsnie = NULL;
-+	const u8 *wpaie = NULL;
-+
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	if (WARN_ON(ath11k_mac_vif_chan(vif, &def)))
-+		return;
-+
-+	bss = cfg80211_get_bss(ar->hw->wiphy, def.chan, info->bssid, NULL, 0,
-+			       IEEE80211_BSS_TYPE_ANY, IEEE80211_PRIVACY_ANY);
-+	if (bss) {
-+		const struct cfg80211_bss_ies *ies;
-+
-+		rcu_read_lock();
-+		rsnie = ieee80211_bss_get_ie(bss, WLAN_EID_RSN);
-+
-+		ies = rcu_dereference(bss->ies);
-+
-+		wpaie = cfg80211_find_vendor_ie(WLAN_OUI_MICROSOFT,
-+						WLAN_OUI_TYPE_MICROSOFT_WPA,
-+						ies->data,
-+						ies->len);
-+		rcu_read_unlock();
-+		cfg80211_put_bss(ar->hw->wiphy, bss);
-+	}
-+
-+	/* FIXME: base on RSN IE/WPA IE is a correct idea? */
-+	if (rsnie || wpaie) {
-+		ath11k_dbg(ar->ab, ATH11K_DBG_WMI,
-+			   "%s: rsn ie found\n", __func__);
-+		arg->need_ptk_4_way = true;
-+	}
-+
-+	if (wpaie) {
-+		ath11k_dbg(ar->ab, ATH11K_DBG_WMI,
-+			   "%s: wpa ie found\n", __func__);
-+		arg->need_gtk_2_way = true;
-+	}
-+
-+	if (sta->mfp) {
-+		/* TODO: Need to check if FW supports PMF? */
-+		arg->is_pmf_enabled = true;
-+	}
-+
-+	/* TODO: safe_mode_enabled (bypass 4-way handshake) flag req? */
-+}
-+
-+static void ath11k_peer_assoc_h_rates(struct ath11k *ar,
-+				      struct ieee80211_vif *vif,
-+				      struct ieee80211_sta *sta,
-+				      struct peer_assoc_params *arg)
-+{
-+	struct ath11k_vif *arvif = (void *)vif->drv_priv;
-+	struct wmi_rate_set_arg *rateset = &arg->peer_legacy_rates;
-+	struct cfg80211_chan_def def;
-+	const struct ieee80211_supported_band *sband;
-+	const struct ieee80211_rate *rates;
-+	enum nl80211_band band;
-+	u32 ratemask;
-+	u8 rate;
-+	int i;
-+
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	if (WARN_ON(ath11k_mac_vif_chan(vif, &def)))
-+		return;
-+
-+	band = def.chan->band;
-+	sband = ar->hw->wiphy->bands[band];
-+	ratemask = sta->supp_rates[band];
-+	ratemask &= arvif->bitrate_mask.control[band].legacy;
-+	rates = sband->bitrates;
-+
-+	rateset->num_rates = 0;
-+
-+	for (i = 0; i < 32; i++, ratemask >>= 1, rates++) {
-+		if (!(ratemask & 1))
-+			continue;
-+
-+		rate = ath11k_mac_bitrate_to_rate(rates->bitrate);
-+		rateset->rates[rateset->num_rates] = rate;
-+		rateset->num_rates++;
-+	}
-+}
-+
-+static bool
-+ath11k_peer_assoc_h_ht_masked(const u8 ht_mcs_mask[IEEE80211_HT_MCS_MASK_LEN])
-+{
-+	int nss;
-+
-+	for (nss = 0; nss < IEEE80211_HT_MCS_MASK_LEN; nss++)
-+		if (ht_mcs_mask[nss])
-+			return false;
-+
-+	return true;
-+}
-+
-+static bool
-+ath11k_peer_assoc_h_vht_masked(const u16 vht_mcs_mask[NL80211_VHT_NSS_MAX])
-+{
-+	int nss;
-+
-+	for (nss = 0; nss < NL80211_VHT_NSS_MAX; nss++)
-+		if (vht_mcs_mask[nss])
-+			return false;
-+
-+	return true;
-+}
-+
-+static void ath11k_peer_assoc_h_ht(struct ath11k *ar,
-+				   struct ieee80211_vif *vif,
-+				   struct ieee80211_sta *sta,
-+				   struct peer_assoc_params *arg)
-+{
-+	const struct ieee80211_sta_ht_cap *ht_cap = &sta->ht_cap;
-+	struct ath11k_vif *arvif = (void *)vif->drv_priv;
-+	struct cfg80211_chan_def def;
-+	enum nl80211_band band;
-+	const u8 *ht_mcs_mask;
-+	int i, n;
-+	u8 max_nss;
-+	u32 stbc;
-+
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	if (WARN_ON(ath11k_mac_vif_chan(vif, &def)))
-+		return;
-+
-+	if (!ht_cap->ht_supported)
-+		return;
-+
-+	band = def.chan->band;
-+	ht_mcs_mask = arvif->bitrate_mask.control[band].ht_mcs;
-+
-+	if (ath11k_peer_assoc_h_ht_masked(ht_mcs_mask))
-+		return;
-+
-+	arg->ht_flag = true;
-+
-+	arg->peer_max_mpdu = (1 << (IEEE80211_HT_MAX_AMPDU_FACTOR +
-+				    ht_cap->ampdu_factor)) - 1;
-+
-+	arg->peer_mpdu_density =
-+		ath11k_parse_mpdudensity(ht_cap->ampdu_density);
-+
-+	arg->peer_ht_caps = ht_cap->cap;
-+	arg->peer_rate_caps |= WMI_HOST_RC_HT_FLAG;
-+
-+	if (ht_cap->cap & IEEE80211_HT_CAP_LDPC_CODING)
-+		arg->ldpc_flag = true;
-+
-+	if (sta->bandwidth >= IEEE80211_STA_RX_BW_40) {
-+		arg->bw_40 = true;
-+		arg->peer_rate_caps |= WMI_HOST_RC_CW40_FLAG;
-+	}
-+
-+	if (arvif->bitrate_mask.control[band].gi != NL80211_TXRATE_FORCE_LGI) {
-+		if (ht_cap->cap & (IEEE80211_HT_CAP_SGI_20 |
-+		    IEEE80211_HT_CAP_SGI_40))
-+			arg->peer_rate_caps |= WMI_HOST_RC_SGI_FLAG;
-+	}
-+
-+	if (ht_cap->cap & IEEE80211_HT_CAP_TX_STBC) {
-+		arg->peer_rate_caps |= WMI_HOST_RC_TX_STBC_FLAG;
-+		arg->stbc_flag = true;
-+	}
-+
-+	if (ht_cap->cap & IEEE80211_HT_CAP_RX_STBC) {
-+		stbc = ht_cap->cap & IEEE80211_HT_CAP_RX_STBC;
-+		stbc = stbc >> IEEE80211_HT_CAP_RX_STBC_SHIFT;
-+		stbc = stbc << WMI_HOST_RC_RX_STBC_FLAG_S;
-+		arg->peer_rate_caps |= stbc;
-+		arg->stbc_flag = true;
-+	}
-+
-+	if (ht_cap->mcs.rx_mask[1] && ht_cap->mcs.rx_mask[2])
-+		arg->peer_rate_caps |= WMI_HOST_RC_TS_FLAG;
-+	else if (ht_cap->mcs.rx_mask[1])
-+		arg->peer_rate_caps |= WMI_HOST_RC_DS_FLAG;
-+
-+	for (i = 0, n = 0, max_nss = 0; i < IEEE80211_HT_MCS_MASK_LEN * 8; i++)
-+		if ((ht_cap->mcs.rx_mask[i / 8] & BIT(i % 8)) &&
-+		    (ht_mcs_mask[i / 8] & BIT(i % 8))) {
-+			max_nss = (i / 8) + 1;
-+			arg->peer_ht_rates.rates[n++] = i;
-+		}
-+
-+	/* This is a workaround for HT-enabled STAs which break the spec
-+	 * and have no HT capabilities RX mask (no HT RX MCS map).
-+	 *
-+	 * As per spec, in section 20.3.5 Modulation and coding scheme (MCS),
-+	 * MCS 0 through 7 are mandatory in 20MHz with 800 ns GI at all STAs.
-+	 *
-+	 * Firmware asserts if such situation occurs.
-+	 */
-+	if (n == 0) {
-+		arg->peer_ht_rates.num_rates = 8;
-+		for (i = 0; i < arg->peer_ht_rates.num_rates; i++)
-+			arg->peer_ht_rates.rates[i] = i;
-+	} else {
-+		arg->peer_ht_rates.num_rates = n;
-+		arg->peer_nss = min(sta->rx_nss, max_nss);
-+	}
-+
-+	ath11k_dbg(ar->ab, ATH11K_DBG_MAC, "mac ht peer %pM mcs cnt %d nss %d\n",
-+		   arg->peer_mac,
-+		   arg->peer_ht_rates.num_rates,
-+		   arg->peer_nss);
-+}
-+
-+static int ath11k_mac_get_max_vht_mcs_map(u16 mcs_map, int nss)
-+{
-+	switch ((mcs_map >> (2 * nss)) & 0x3) {
-+	case IEEE80211_VHT_MCS_SUPPORT_0_7: return BIT(8) - 1;
-+	case IEEE80211_VHT_MCS_SUPPORT_0_8: return BIT(9) - 1;
-+	case IEEE80211_VHT_MCS_SUPPORT_0_9: return BIT(10) - 1;
-+	}
-+	return 0;
-+}
-+
-+static u16
-+ath11k_peer_assoc_h_vht_limit(u16 tx_mcs_set,
-+			      const u16 vht_mcs_limit[NL80211_VHT_NSS_MAX])
-+{
-+	int idx_limit;
-+	int nss;
-+	u16 mcs_map;
-+	u16 mcs;
-+
-+	for (nss = 0; nss < NL80211_VHT_NSS_MAX; nss++) {
-+		mcs_map = ath11k_mac_get_max_vht_mcs_map(tx_mcs_set, nss) &
-+			  vht_mcs_limit[nss];
-+
-+		if (mcs_map)
-+			idx_limit = fls(mcs_map) - 1;
-+		else
-+			idx_limit = -1;
-+
-+		switch (idx_limit) {
-+		case 0: /* fall through */
-+		case 1: /* fall through */
-+		case 2: /* fall through */
-+		case 3: /* fall through */
-+		case 4: /* fall through */
-+		case 5: /* fall through */
-+		case 6: /* fall through */
-+		case 7:
-+			mcs = IEEE80211_VHT_MCS_SUPPORT_0_7;
-+			break;
-+		case 8:
-+			mcs = IEEE80211_VHT_MCS_SUPPORT_0_8;
-+			break;
-+		case 9:
-+			mcs = IEEE80211_VHT_MCS_SUPPORT_0_9;
-+			break;
-+		default:
-+			WARN_ON(1);
-+			/* fall through */
-+		case -1:
-+			mcs = IEEE80211_VHT_MCS_NOT_SUPPORTED;
-+			break;
-+		}
-+
-+		tx_mcs_set &= ~(0x3 << (nss * 2));
-+		tx_mcs_set |= mcs << (nss * 2);
-+	}
-+
-+	return tx_mcs_set;
-+}
-+
-+static void ath11k_peer_assoc_h_vht(struct ath11k *ar,
-+				    struct ieee80211_vif *vif,
-+				    struct ieee80211_sta *sta,
-+				    struct peer_assoc_params *arg)
-+{
-+	const struct ieee80211_sta_vht_cap *vht_cap = &sta->vht_cap;
-+	struct ath11k_vif *arvif = (void *)vif->drv_priv;
-+	struct cfg80211_chan_def def;
-+	enum nl80211_band band;
-+	const u16 *vht_mcs_mask;
-+	u8 ampdu_factor;
-+	u8 max_nss, vht_mcs;
-+	int i;
-+
-+	if (WARN_ON(ath11k_mac_vif_chan(vif, &def)))
-+		return;
-+
-+	if (!vht_cap->vht_supported)
-+		return;
-+
-+	band = def.chan->band;
-+	vht_mcs_mask = arvif->bitrate_mask.control[band].vht_mcs;
-+
-+	if (ath11k_peer_assoc_h_vht_masked(vht_mcs_mask))
-+		return;
-+
-+	arg->vht_flag = true;
-+
-+	/* TODO: similar flags required? */
-+	arg->vht_capable = true;
-+
-+	if (def.chan->band == NL80211_BAND_2GHZ)
-+		arg->vht_ng_flag = true;
-+
-+	arg->peer_vht_caps = vht_cap->cap;
-+
-+	ampdu_factor = (vht_cap->cap &
-+			IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_MASK) >>
-+		       IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_SHIFT;
-+
-+	/* Workaround: Some Netgear/Linksys 11ac APs set Rx A-MPDU factor to
-+	 * zero in VHT IE. Using it would result in degraded throughput.
-+	 * arg->peer_max_mpdu at this point contains HT max_mpdu so keep
-+	 * it if VHT max_mpdu is smaller.
-+	 */
-+	arg->peer_max_mpdu = max(arg->peer_max_mpdu,
-+				 (1U << (IEEE80211_HT_MAX_AMPDU_FACTOR +
-+					ampdu_factor)) - 1);
-+
-+	if (sta->bandwidth == IEEE80211_STA_RX_BW_80)
-+		arg->bw_80 = true;
-+
-+	if (sta->bandwidth == IEEE80211_STA_RX_BW_160)
-+		arg->bw_160 = true;
-+
-+	/* Calculate peer NSS capability from VHT capabilities if STA
-+	 * supports VHT.
-+	 */
-+	for (i = 0, max_nss = 0, vht_mcs = 0; i < NL80211_VHT_NSS_MAX; i++) {
-+		vht_mcs = __le16_to_cpu(vht_cap->vht_mcs.rx_mcs_map) >>
-+			  (2 * i) & 3;
-+
-+		if (vht_mcs != IEEE80211_VHT_MCS_NOT_SUPPORTED &&
-+		    vht_mcs_mask[i])
-+			max_nss = i + 1;
-+	}
-+	arg->peer_nss = min(sta->rx_nss, max_nss);
-+	arg->rx_max_rate = __le16_to_cpu(vht_cap->vht_mcs.rx_highest);
-+	arg->rx_mcs_set = __le16_to_cpu(vht_cap->vht_mcs.rx_mcs_map);
-+	arg->tx_max_rate = __le16_to_cpu(vht_cap->vht_mcs.tx_highest);
-+	arg->tx_mcs_set = ath11k_peer_assoc_h_vht_limit(
-+		__le16_to_cpu(vht_cap->vht_mcs.tx_mcs_map), vht_mcs_mask);
-+
-+	/* In IPQ8074 platform, VHT mcs rate 10 and 11 is enabled by default.
-+	 * VHT mcs rate 10 and 11 is not suppoerted in 11ac standard.
-+	 * so explicitly disable the VHT MCS rate 10 and 11 in 11ac mode.
-+	 */
-+	arg->tx_mcs_set &= ~IEEE80211_VHT_MCS_SUPPORT_0_11_MASK;
-+	arg->tx_mcs_set |= IEEE80211_DISABLE_VHT_MCS_SUPPORT_0_11;
-+
-+	/* TODO:  Check */
-+	arg->tx_max_mcs_nss = 0xFF;
-+
-+	ath11k_dbg(ar->ab, ATH11K_DBG_MAC, "mac vht peer %pM max_mpdu %d flags 0x%x\n",
-+		   sta->addr, arg->peer_max_mpdu, arg->peer_flags);
-+
-+	/* TODO: rxnss_override */
-+}
-+
-+static void ath11k_peer_assoc_h_he(struct ath11k *ar,
-+				   struct ieee80211_vif *vif,
-+				   struct ieee80211_sta *sta,
-+				   struct peer_assoc_params *arg)
-+{
-+	/* TODO: Implementation */
-+}
-+
-+static void ath11k_peer_assoc_h_smps(struct ieee80211_sta *sta,
-+				     struct peer_assoc_params *arg)
-+{
-+	const struct ieee80211_sta_ht_cap *ht_cap = &sta->ht_cap;
-+	int smps;
-+
-+	if (!ht_cap->ht_supported)
-+		return;
-+
-+	smps = ht_cap->cap & IEEE80211_HT_CAP_SM_PS;
-+	smps >>= IEEE80211_HT_CAP_SM_PS_SHIFT;
-+
-+	switch (smps) {
-+	case WLAN_HT_CAP_SM_PS_STATIC:
-+		arg->static_mimops_flag = true;
-+		break;
-+	case WLAN_HT_CAP_SM_PS_DYNAMIC:
-+		arg->dynamic_mimops_flag = true;
-+		break;
-+	case WLAN_HT_CAP_SM_PS_DISABLED:
-+		arg->spatial_mux_flag = true;
-+		break;
-+	default:
-+		break;
-+	}
-+}
-+
-+static void ath11k_peer_assoc_h_qos(struct ath11k *ar,
-+				    struct ieee80211_vif *vif,
-+				    struct ieee80211_sta *sta,
-+				    struct peer_assoc_params *arg)
-+{
-+	struct ath11k_vif *arvif = (void *)vif->drv_priv;
-+
-+	switch (arvif->vdev_type) {
-+	case WMI_VDEV_TYPE_AP:
-+		if (sta->wme) {
-+			/* TODO: Check WME vs QoS */
-+			arg->is_wme_set = true;
-+			arg->qos_flag = true;
-+		}
-+
-+		if (sta->wme && sta->uapsd_queues) {
-+			/* TODO: Check WME vs QoS */
-+			arg->is_wme_set = true;
-+			arg->apsd_flag = true;
-+			arg->peer_rate_caps |= WMI_HOST_RC_UAPSD_FLAG;
-+		}
-+		break;
-+	case WMI_VDEV_TYPE_STA:
-+		if (sta->wme) {
-+			arg->is_wme_set = true;
-+			arg->qos_flag = true;
-+		}
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	ath11k_dbg(ar->ab, ATH11K_DBG_MAC, "mac peer %pM qos %d\n",
-+		   sta->addr, arg->qos_flag);
-+}
-+
-+static int ath11k_peer_assoc_qos_ap(struct ath11k *ar,
-+				    struct ath11k_vif *arvif,
-+				    struct ieee80211_sta *sta)
-+{
-+	struct ap_ps_params params;
-+	u32 max_sp;
-+	u32 uapsd;
-+	int ret;
-+
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	params.vdev_id = arvif->vdev_id;
-+
-+	ath11k_dbg(ar->ab, ATH11K_DBG_MAC, "mac uapsd_queues 0x%x max_sp %d\n",
-+		   sta->uapsd_queues, sta->max_sp);
-+
-+	uapsd = 0;
-+	if (sta->uapsd_queues & IEEE80211_WMM_IE_STA_QOSINFO_AC_VO)
-+		uapsd |= WMI_AP_PS_UAPSD_AC3_DELIVERY_EN |
-+			 WMI_AP_PS_UAPSD_AC3_TRIGGER_EN;
-+	if (sta->uapsd_queues & IEEE80211_WMM_IE_STA_QOSINFO_AC_VI)
-+		uapsd |= WMI_AP_PS_UAPSD_AC2_DELIVERY_EN |
-+			 WMI_AP_PS_UAPSD_AC2_TRIGGER_EN;
-+	if (sta->uapsd_queues & IEEE80211_WMM_IE_STA_QOSINFO_AC_BK)
-+		uapsd |= WMI_AP_PS_UAPSD_AC1_DELIVERY_EN |
-+			 WMI_AP_PS_UAPSD_AC1_TRIGGER_EN;
-+	if (sta->uapsd_queues & IEEE80211_WMM_IE_STA_QOSINFO_AC_BE)
-+		uapsd |= WMI_AP_PS_UAPSD_AC0_DELIVERY_EN |
-+			 WMI_AP_PS_UAPSD_AC0_TRIGGER_EN;
-+
-+	max_sp = 0;
-+	if (sta->max_sp < MAX_WMI_AP_PS_PEER_PARAM_MAX_SP)
-+		max_sp = sta->max_sp;
-+
-+	params.param = WMI_AP_PS_PEER_PARAM_UAPSD;
-+	params.value = uapsd;
-+	ret = ath11k_wmi_send_set_ap_ps_param_cmd(ar, sta->addr, &params);
-+	if (ret)
-+		goto err;
-+
-+	params.param = WMI_AP_PS_PEER_PARAM_MAX_SP;
-+	params.value = max_sp;
-+	ret = ath11k_wmi_send_set_ap_ps_param_cmd(ar, sta->addr, &params);
-+	if (ret)
-+		goto err;
-+
-+	/* TODO revisit during testing */
-+	params.param = WMI_AP_PS_PEER_PARAM_SIFS_RESP_FRMTYPE;
-+	params.value = DISABLE_SIFS_RESPONSE_TRIGGER;
-+	ret = ath11k_wmi_send_set_ap_ps_param_cmd(ar, sta->addr, &params);
-+	if (ret)
-+		goto err;
-+
-+	params.param = WMI_AP_PS_PEER_PARAM_SIFS_RESP_UAPSD;
-+	params.value = DISABLE_SIFS_RESPONSE_TRIGGER;
-+	ret = ath11k_wmi_send_set_ap_ps_param_cmd(ar, sta->addr, &params);
-+	if (ret)
-+		goto err;
-+
-+	return 0;
-+
-+err:
-+	ath11k_warn(ar->ab, "failed to set ap ps peer param %d for vdev %i: %d\n",
-+		    params.param, arvif->vdev_id, ret);
-+	return ret;
-+}
-+
-+static bool ath11k_mac_sta_has_ofdm_only(struct ieee80211_sta *sta)
-+{
-+	return sta->supp_rates[NL80211_BAND_2GHZ] >>
-+	       ATH11K_MAC_FIRST_OFDM_RATE_IDX;
-+}
-+
-+static enum wmi_phy_mode ath11k_mac_get_phymode_vht(struct ath11k *ar,
-+						    struct ieee80211_sta *sta)
-+{
-+	if (sta->bandwidth == IEEE80211_STA_RX_BW_160) {
-+		switch (sta->vht_cap.cap &
-+			IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK) {
-+		case IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160MHZ:
-+			return MODE_11AC_VHT160;
-+		case IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160_80PLUS80MHZ:
-+			return MODE_11AC_VHT80_80;
-+		default:
-+			/* not sure if this is a valid case? */
-+			return MODE_11AC_VHT160;
-+		}
-+	}
-+
-+	if (sta->bandwidth == IEEE80211_STA_RX_BW_80)
-+		return MODE_11AC_VHT80;
-+
-+	if (sta->bandwidth == IEEE80211_STA_RX_BW_40)
-+		return MODE_11AC_VHT40;
-+
-+	if (sta->bandwidth == IEEE80211_STA_RX_BW_20)
-+		return MODE_11AC_VHT20;
-+
-+	return MODE_UNKNOWN;
-+}
-+
-+static void ath11k_peer_assoc_h_phymode(struct ath11k *ar,
-+					struct ieee80211_vif *vif,
-+					struct ieee80211_sta *sta,
-+					struct peer_assoc_params *arg)
-+{
-+	struct ath11k_vif *arvif = (void *)vif->drv_priv;
-+	struct cfg80211_chan_def def;
-+	enum nl80211_band band;
-+	const u8 *ht_mcs_mask;
-+	const u16 *vht_mcs_mask;
-+	enum wmi_phy_mode phymode = MODE_UNKNOWN;
-+
-+	if (WARN_ON(ath11k_mac_vif_chan(vif, &def)))
-+		return;
-+
-+	band = def.chan->band;
-+	ht_mcs_mask = arvif->bitrate_mask.control[band].ht_mcs;
-+	vht_mcs_mask = arvif->bitrate_mask.control[band].vht_mcs;
-+
-+	switch (band) {
-+	case NL80211_BAND_2GHZ:
-+		if (sta->vht_cap.vht_supported &&
-+		    !ath11k_peer_assoc_h_vht_masked(vht_mcs_mask)) {
-+			if (sta->bandwidth == IEEE80211_STA_RX_BW_40)
-+				phymode = MODE_11AC_VHT40;
-+			else
-+				phymode = MODE_11AC_VHT20;
-+		} else if (sta->ht_cap.ht_supported &&
-+			   !ath11k_peer_assoc_h_ht_masked(ht_mcs_mask)) {
-+			if (sta->bandwidth == IEEE80211_STA_RX_BW_40)
-+				phymode = MODE_11NG_HT40;
-+			else
-+				phymode = MODE_11NG_HT20;
-+		} else if (ath11k_mac_sta_has_ofdm_only(sta)) {
-+			phymode = MODE_11G;
-+		} else {
-+			phymode = MODE_11B;
-+		}
-+		/* TODO: HE */
-+
-+		break;
-+	case NL80211_BAND_5GHZ:
-+		/* Check VHT first */
-+		if (sta->vht_cap.vht_supported &&
-+		    !ath11k_peer_assoc_h_vht_masked(vht_mcs_mask)) {
-+			phymode = ath11k_mac_get_phymode_vht(ar, sta);
-+		} else if (sta->ht_cap.ht_supported &&
-+			   !ath11k_peer_assoc_h_ht_masked(ht_mcs_mask)) {
-+			if (sta->bandwidth >= IEEE80211_STA_RX_BW_40)
-+				phymode = MODE_11NA_HT40;
-+			else
-+				phymode = MODE_11NA_HT20;
-+		} else {
-+			phymode = MODE_11A;
-+		}
-+		/* TODO: HE Phymode */
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	ath11k_dbg(ar->ab, ATH11K_DBG_MAC, "mac peer %pM phymode %s\n",
-+		   sta->addr, ath11k_wmi_phymode_str(phymode));
-+
-+	arg->peer_phymode = phymode;
-+	WARN_ON(phymode == MODE_UNKNOWN);
-+}
-+
-+static void ath11k_peer_assoc_prepare(struct ath11k *ar,
-+				      struct ieee80211_vif *vif,
-+				      struct ieee80211_sta *sta,
-+				      struct peer_assoc_params *arg,
-+				      bool reassoc)
-+{
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	memset(arg, 0, sizeof(*arg));
-+
-+	reinit_completion(&ar->peer_assoc_done);
-+
-+	arg->peer_new_assoc = !reassoc;
-+	ath11k_peer_assoc_h_basic(ar, vif, sta, arg);
-+	ath11k_peer_assoc_h_crypto(ar, vif, sta, arg);
-+	ath11k_peer_assoc_h_rates(ar, vif, sta, arg);
-+	ath11k_peer_assoc_h_ht(ar, vif, sta, arg);
-+	ath11k_peer_assoc_h_vht(ar, vif, sta, arg);
-+	ath11k_peer_assoc_h_he(ar, vif, sta, arg);
-+	ath11k_peer_assoc_h_qos(ar, vif, sta, arg);
-+	ath11k_peer_assoc_h_phymode(ar, vif, sta, arg);
-+	ath11k_peer_assoc_h_smps(sta, arg);
-+
-+	/* TODO: amsdu_disable req? */
-+}
-+
-+static int ath11k_setup_peer_smps(struct ath11k *ar, struct ath11k_vif *arvif,
-+				  const u8 *addr,
-+				  const struct ieee80211_sta_ht_cap *ht_cap)
-+{
-+	int smps;
-+
-+	if (!ht_cap->ht_supported)
-+		return 0;
-+
-+	smps = ht_cap->cap & IEEE80211_HT_CAP_SM_PS;
-+	smps >>= IEEE80211_HT_CAP_SM_PS_SHIFT;
-+
-+	if (smps >= ARRAY_SIZE(ath11k_smps_map))
-+		return -EINVAL;
-+
-+	return ath11k_wmi_set_peer_param(ar, addr, arvif->vdev_id,
-+					 WMI_PEER_MIMO_PS_STATE,
-+					 ath11k_smps_map[smps]);
-+}
-+
-+static void ath11k_bss_assoc(struct ieee80211_hw *hw,
-+			     struct ieee80211_vif *vif,
-+			     struct ieee80211_bss_conf *bss_conf)
-+{
-+	struct ath11k *ar = hw->priv;
-+	struct ath11k_vif *arvif = (void *)vif->drv_priv;
-+	struct peer_assoc_params peer_arg;
-+	struct ieee80211_sta *ap_sta;
-+	int ret;
-+
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	ath11k_dbg(ar->ab, ATH11K_DBG_MAC, "mac vdev %i assoc bssid %pM aid %d\n",
-+		   arvif->vdev_id, arvif->bssid, arvif->aid);
-+
-+	rcu_read_lock();
-+
-+	ap_sta = ieee80211_find_sta(vif, bss_conf->bssid);
-+	if (!ap_sta) {
-+		ath11k_warn(ar->ab, "failed to find station entry for bss %pM vdev %i\n",
-+			    bss_conf->bssid, arvif->vdev_id);
-+		rcu_read_unlock();
-+		return;
-+	}
-+
-+	ath11k_peer_assoc_prepare(ar, vif, ap_sta, &peer_arg, false);
-+
-+	rcu_read_unlock();
-+
-+	ret = ath11k_wmi_send_peer_assoc_cmd(ar, &peer_arg);
-+	if (ret) {
-+		ath11k_warn(ar->ab, "failed to run peer assoc for %pM vdev %i: %d\n",
-+			    bss_conf->bssid, arvif->vdev_id, ret);
-+		return;
-+	}
-+
-+	if (!wait_for_completion_timeout(&ar->peer_assoc_done, 1 * HZ)) {
-+		ath11k_warn(ar->ab, "failed to get peer assoc conf event for %pM vdev %i\n",
-+			    bss_conf->bssid, arvif->vdev_id);
-+		return;
-+	}
-+
-+	ret = ath11k_setup_peer_smps(ar, arvif, bss_conf->bssid,
-+				     &ap_sta->ht_cap);
-+	if (ret) {
-+		ath11k_warn(ar->ab, "failed to setup peer SMPS for vdev %d: %d\n",
-+			    arvif->vdev_id, ret);
-+		return;
-+	}
-+
-+	WARN_ON(arvif->is_up);
-+
-+	arvif->aid = bss_conf->aid;
-+	ether_addr_copy(arvif->bssid, bss_conf->bssid);
-+
-+	ret = ath11k_wmi_vdev_up(ar, arvif->vdev_id, arvif->aid, arvif->bssid);
-+	if (ret) {
-+		ath11k_warn(ar->ab, "failed to set vdev %d up: %d\n",
-+			    arvif->vdev_id, ret);
-+		return;
-+	}
-+
-+	arvif->is_up = true;
-+
-+	ath11k_dbg(ar->ab, ATH11K_DBG_MAC,
-+		   "mac vdev %d up (associated) bssid %pM aid %d\n",
-+		   arvif->vdev_id, bss_conf->bssid, bss_conf->aid);
-+
-+	/* Authorize BSS Peer */
-+	ret = ath11k_wmi_set_peer_param(ar, arvif->bssid,
-+					arvif->vdev_id,
-+					WMI_PEER_AUTHORIZE,
-+					1);
-+	if (ret)
-+		ath11k_warn(ar->ab, "Unable to authorize BSS peer: %d\n", ret);
-+}
-+
-+static void ath11k_bss_disassoc(struct ieee80211_hw *hw,
-+				struct ieee80211_vif *vif)
-+{
-+	struct ath11k *ar = hw->priv;
-+	struct ath11k_vif *arvif = (void *)vif->drv_priv;
-+	int ret;
-+
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	ath11k_dbg(ar->ab, ATH11K_DBG_MAC, "mac vdev %i disassoc bssid %pM\n",
-+		   arvif->vdev_id, arvif->bssid);
-+
-+	ret = ath11k_wmi_vdev_down(ar, arvif->vdev_id);
-+	if (ret)
-+		ath11k_warn(ar->ab, "failed to down vdev %i: %d\n",
-+			    arvif->vdev_id, ret);
-+
-+	arvif->is_up = false;
-+
-+	/* TODO: cancel connection_loss_work */
-+}
-+
-+static u32 ath11k_mac_get_rate_hw_value(int bitrate)
-+{
-+	u32 preamble;
-+	u16 hw_value;
-+	int rate;
-+	size_t i;
-+
-+	if (ath11k_mac_bitrate_is_cck(bitrate))
-+		preamble = WMI_RATE_PREAMBLE_CCK;
-+	else
-+		preamble = WMI_RATE_PREAMBLE_OFDM;
-+
-+	for (i = 0; i < ARRAY_SIZE(ath11k_legacy_rates); i++) {
-+		if (ath11k_legacy_rates[i].bitrate != bitrate)
-+			continue;
-+
-+		hw_value = ath11k_legacy_rates[i].hw_value;
-+		rate = ATH11K_HW_RATE_CODE(hw_value, 0, preamble);
-+
-+		return rate;
-+	}
-+
-+	return -EINVAL;
-+}
-+
-+static void ath11k_recalculate_mgmt_rate(struct ath11k *ar,
-+					 struct ieee80211_vif *vif,
-+					 struct cfg80211_chan_def *def)
-+{
-+	struct ath11k_vif *arvif = (void *)vif->drv_priv;
-+	const struct ieee80211_supported_band *sband;
-+	u8 basic_rate_idx;
-+	int hw_rate_code;
-+	u32 vdev_param;
-+	u16 bitrate;
-+	int ret;
-+
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	sband = ar->hw->wiphy->bands[def->chan->band];
-+	basic_rate_idx = ffs(vif->bss_conf.basic_rates) - 1;
-+	bitrate = sband->bitrates[basic_rate_idx].bitrate;
-+
-+	hw_rate_code = ath11k_mac_get_rate_hw_value(bitrate);
-+	if (hw_rate_code < 0) {
-+		ath11k_warn(ar->ab, "bitrate not supported %d\n", bitrate);
-+		return;
-+	}
-+
-+	vdev_param = WMI_VDEV_PARAM_MGMT_RATE;
-+	ret = ath11k_wmi_vdev_set_param_cmd(ar, arvif->vdev_id, vdev_param,
-+					    hw_rate_code);
-+	if (ret)
-+		ath11k_warn(ar->ab, "failed to set mgmt tx rate %d\n", ret);
-+
-+	vdev_param = WMI_VDEV_PARAM_BEACON_RATE;
-+	ret = ath11k_wmi_vdev_set_param_cmd(ar, arvif->vdev_id, vdev_param,
-+					    hw_rate_code);
-+	if (ret)
-+		ath11k_warn(ar->ab, "failed to set beacon tx rate %d\n", ret);
-+}
-+
-+static void ath11k_mac_op_bss_info_changed(struct ieee80211_hw *hw,
-+					   struct ieee80211_vif *vif,
-+					   struct ieee80211_bss_conf *info,
-+					   u32 changed)
-+{
-+	struct ath11k *ar = hw->priv;
-+	struct ath11k_vif *arvif = ath11k_vif_to_arvif(vif);
-+	struct cfg80211_chan_def def;
-+	u32 param_id, param_value;
-+	enum nl80211_band band;
-+	u32 vdev_param;
-+	int mcast_rate;
-+	u32 preamble;
-+	u16 hw_value;
-+	u16 bitrate;
-+	int ret = 0;
-+	u8 rateidx;
-+	u32 rate;
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	if (changed & BSS_CHANGED_BEACON_INT) {
-+		arvif->beacon_interval = info->beacon_int;
-+
-+		param_id = WMI_VDEV_PARAM_BEACON_INTERVAL;
-+		ret = ath11k_wmi_vdev_set_param_cmd(ar, arvif->vdev_id,
-+						    param_id,
-+						    arvif->beacon_interval);
-+		if (ret)
-+			ath11k_warn(ar->ab, "Failed to set beacon interval for VDEV: %d\n",
-+				    arvif->vdev_id);
-+		else
-+			ath11k_dbg(ar->ab, ATH11K_DBG_MAC,
-+				   "Beacon interval: %d set for VDEV: %d\n",
-+				   arvif->beacon_interval, arvif->vdev_id);
-+	}
-+
-+	if (changed & BSS_CHANGED_BEACON) {
-+		param_id = WMI_PDEV_PARAM_BEACON_TX_MODE;
-+		param_value = WMI_BEACON_STAGGERED_MODE;
-+		ret = ath11k_wmi_pdev_set_param(ar, param_id,
-+						param_value, ar->pdev->pdev_id);
-+		if (ret)
-+			ath11k_warn(ar->ab, "Failed to set beacon mode for VDEV: %d\n",
-+				    arvif->vdev_id);
-+		else
-+			ath11k_dbg(ar->ab, ATH11K_DBG_MAC,
-+				   "Set staggered beacon mode for VDEV: %d\n",
-+				   arvif->vdev_id);
-+
-+		ret = ath11k_mac_setup_bcn_tmpl(arvif);
-+		if (ret)
-+			ath11k_warn(ar->ab, "failed to update bcn template: %d\n",
-+				    ret);
-+	}
-+
-+	if (changed & (BSS_CHANGED_BEACON_INFO | BSS_CHANGED_BEACON)) {
-+		arvif->dtim_period = info->dtim_period;
-+
-+		param_id = WMI_VDEV_PARAM_DTIM_PERIOD;
-+		ret = ath11k_wmi_vdev_set_param_cmd(ar, arvif->vdev_id,
-+						    param_id,
-+						    arvif->dtim_period);
-+
-+		if (ret)
-+			ath11k_warn(ar->ab, "Failed to set dtim period for VDEV %d: %i\n",
-+				    arvif->vdev_id, ret);
-+		else
-+			ath11k_dbg(ar->ab, ATH11K_DBG_MAC,
-+				   "DTIM period: %d set for VDEV: %d\n",
-+				   arvif->dtim_period, arvif->vdev_id);
-+	}
-+
-+	if (changed & BSS_CHANGED_SSID &&
-+	    vif->type == NL80211_IFTYPE_AP) {
-+		arvif->u.ap.ssid_len = info->ssid_len;
-+		if (info->ssid_len)
-+			memcpy(arvif->u.ap.ssid, info->ssid, info->ssid_len);
-+		arvif->u.ap.hidden_ssid = info->hidden_ssid;
-+	}
-+
-+	if (changed & BSS_CHANGED_BSSID && !is_zero_ether_addr(info->bssid))
-+		ether_addr_copy(arvif->bssid, info->bssid);
-+
-+	if (changed & BSS_CHANGED_BEACON_ENABLED)
-+		ath11k_control_beaconing(arvif, info);
-+
-+	if (changed & BSS_CHANGED_ERP_CTS_PROT) {
-+		u32 cts_prot;
-+
-+		cts_prot = !!(info->use_cts_prot);
-+		param_id = WMI_VDEV_PARAM_PROTECTION_MODE;
-+
-+		if (arvif->is_started) {
-+			ret = ath11k_wmi_vdev_set_param_cmd(ar, arvif->vdev_id,
-+							    param_id, cts_prot);
-+			if (ret)
-+				ath11k_warn(ar->ab, "Failed to set CTS prot for VDEV: %d\n",
-+					    arvif->vdev_id);
-+			else
-+				ath11k_dbg(ar->ab, ATH11K_DBG_MAC, "Set CTS prot: %d for VDEV: %d\n",
-+					   cts_prot, arvif->vdev_id);
-+		} else {
-+			ath11k_dbg(ar->ab, ATH11K_DBG_MAC, "defer protection mode setup, vdev is not ready yet\n");
-+		}
-+	}
-+
-+	if (changed & BSS_CHANGED_ERP_SLOT) {
-+		u32 slottime;
-+
-+		if (info->use_short_slot)
-+			slottime = WMI_VDEV_SLOT_TIME_SHORT; /* 9us */
-+
-+		else
-+			slottime = WMI_VDEV_SLOT_TIME_LONG; /* 20us */
-+
-+		param_id = WMI_VDEV_PARAM_SLOT_TIME;
-+		ret = ath11k_wmi_vdev_set_param_cmd(ar, arvif->vdev_id,
-+						    param_id, slottime);
-+		if (ret)
-+			ath11k_warn(ar->ab, "Failed to set erp slot for VDEV: %d\n",
-+				    arvif->vdev_id);
-+		else
-+			ath11k_dbg(ar->ab, ATH11K_DBG_MAC,
-+				   "Set slottime: %d for VDEV: %d\n",
-+				   slottime, arvif->vdev_id);
-+	}
-+
-+	if (changed & BSS_CHANGED_ERP_PREAMBLE) {
-+		u32 preamble;
-+
-+		if (info->use_short_preamble)
-+			preamble = WMI_VDEV_PREAMBLE_SHORT;
-+		else
-+			preamble = WMI_VDEV_PREAMBLE_LONG;
-+
-+		param_id = WMI_VDEV_PARAM_PREAMBLE;
-+		ret = ath11k_wmi_vdev_set_param_cmd(ar, arvif->vdev_id,
-+						    param_id, preamble);
-+		if (ret)
-+			ath11k_warn(ar->ab, "Failed to set preamble for VDEV: %d\n",
-+				    arvif->vdev_id);
-+		else
-+			ath11k_dbg(ar->ab, ATH11K_DBG_MAC,
-+				   "Set preamble: %d for VDEV: %d\n",
-+				   preamble, arvif->vdev_id);
-+	}
-+
-+	if (changed & BSS_CHANGED_ASSOC) {
-+		if (info->assoc)
-+			ath11k_bss_assoc(hw, vif, info);
-+		else
-+			ath11k_bss_disassoc(hw, vif);
-+	}
-+
-+	if (changed & BSS_CHANGED_TXPOWER) {
-+		ath11k_dbg(ar->ab, ATH11K_DBG_MAC, "mac vdev_id %i txpower %d\n",
-+			   arvif->vdev_id, info->txpower);
-+
-+		arvif->txpower = info->txpower;
-+		ath11k_mac_txpower_recalc(ar);
-+	}
-+
-+	if (changed & BSS_CHANGED_MCAST_RATE &&
-+	    !ath11k_mac_vif_chan(arvif->vif, &def)) {
-+		band = def.chan->band;
-+		mcast_rate = vif->bss_conf.mcast_rate[band];
-+
-+		if (mcast_rate > 0)
-+			rateidx = mcast_rate - 1;
-+		else
-+			rateidx = ffs(vif->bss_conf.basic_rates) - 1;
-+
-+		if (ar->pdev->cap.supported_bands & WMI_HOST_WLAN_5G_CAP)
-+			rateidx += ATH11K_MAC_FIRST_OFDM_RATE_IDX;
-+
-+		bitrate = ath11k_legacy_rates[rateidx].bitrate;
-+		hw_value = ath11k_legacy_rates[rateidx].hw_value;
-+
-+		if (ath11k_mac_bitrate_is_cck(bitrate))
-+			preamble = WMI_RATE_PREAMBLE_CCK;
-+		else
-+			preamble = WMI_RATE_PREAMBLE_OFDM;
-+
-+		rate = ATH11K_HW_RATE_CODE(hw_value, 0, preamble);
-+
-+		ath11k_dbg(ar->ab, ATH11K_DBG_MAC,
-+			   "mac vdev %d mcast_rate %x\n",
-+			   arvif->vdev_id, rate);
-+
-+		vdev_param = WMI_VDEV_PARAM_MCAST_DATA_RATE;
-+		ret = ath11k_wmi_vdev_set_param_cmd(ar, arvif->vdev_id,
-+						    vdev_param, rate);
-+		if (ret)
-+			ath11k_warn(ar->ab,
-+				    "failed to set mcast rate on vdev %i: %d\n",
-+				    arvif->vdev_id,  ret);
-+
-+		vdev_param = WMI_VDEV_PARAM_BCAST_DATA_RATE;
-+		ret = ath11k_wmi_vdev_set_param_cmd(ar, arvif->vdev_id,
-+						    vdev_param, rate);
-+		if (ret)
-+			ath11k_warn(ar->ab,
-+				    "failed to set bcast rate on vdev %i: %d\n",
-+				    arvif->vdev_id,  ret);
-+	}
-+
-+	if (changed & BSS_CHANGED_BASIC_RATES &&
-+	    !ath11k_mac_vif_chan(arvif->vif, &def))
-+		ath11k_recalculate_mgmt_rate(ar, vif, &def);
-+
-+	mutex_unlock(&ar->conf_mutex);
-+}
-+
-+void __ath11k_mac_scan_finish(struct ath11k *ar)
-+{
-+	lockdep_assert_held(&ar->data_lock);
-+
-+	switch (ar->scan.state) {
-+	case ATH11K_SCAN_IDLE:
-+		break;
-+	case ATH11K_SCAN_RUNNING:
-+	case ATH11K_SCAN_ABORTING:
-+		if (!ar->scan.is_roc) {
-+			struct cfg80211_scan_info info = {
-+				.aborted = (ar->scan.state ==
-+					    ATH11K_SCAN_ABORTING),
-+			};
-+
-+			ieee80211_scan_completed(ar->hw, &info);
-+		} else if (ar->scan.roc_notify) {
-+			ieee80211_remain_on_channel_expired(ar->hw);
-+		}
-+		/* fall through */
-+	case ATH11K_SCAN_STARTING:
-+		ar->scan.state = ATH11K_SCAN_IDLE;
-+		ar->scan_channel = NULL;
-+		ar->scan.roc_freq = 0;
-+		cancel_delayed_work(&ar->scan.timeout);
-+		complete(&ar->scan.completed);
-+		break;
-+	}
-+}
-+
-+void ath11k_mac_scan_finish(struct ath11k *ar)
-+{
-+	spin_lock_bh(&ar->data_lock);
-+	__ath11k_mac_scan_finish(ar);
-+	spin_unlock_bh(&ar->data_lock);
-+}
-+
-+static int ath11k_scan_stop(struct ath11k *ar)
-+{
-+	struct scan_cancel_param arg = {
-+		.req_type = WLAN_SCAN_CANCEL_SINGLE,
-+		.scan_id = ATH11K_SCAN_ID,
-+	};
-+	int ret;
-+
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	/* TODO: Fill other STOP Params */
-+	arg.pdev_id = ar->pdev->pdev_id;
-+
-+	ret = ath11k_wmi_send_scan_stop_cmd(ar, &arg);
-+	if (ret) {
-+		ath11k_warn(ar->ab, "failed to stop wmi scan: %d\n", ret);
-+		goto out;
-+	}
-+
-+	ret = wait_for_completion_timeout(&ar->scan.completed, 3 * HZ);
-+	if (ret == 0) {
-+		ath11k_warn(ar->ab,
-+			    "failed to receive scan abort comple: timed out\n");
-+		ret = -ETIMEDOUT;
-+	} else if (ret > 0) {
-+		ret = 0;
-+	}
-+
-+out:
-+	/* Scan state should be updated upon scan completion but in case
-+	 * firmware fails to deliver the event (for whatever reason) it is
-+	 * desired to clean up scan state anyway. Firmware may have just
-+	 * dropped the scan completion event delivery due to transport pipe
-+	 * being overflown with data and/or it can recover on its own before
-+	 * next scan request is submitted.
-+	 */
-+	spin_lock_bh(&ar->data_lock);
-+	if (ar->scan.state != ATH11K_SCAN_IDLE)
-+		__ath11k_mac_scan_finish(ar);
-+	spin_unlock_bh(&ar->data_lock);
-+
-+	return ret;
-+}
-+
-+static void ath11k_scan_abort(struct ath11k *ar)
-+{
-+	int ret;
-+
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	spin_lock_bh(&ar->data_lock);
-+
-+	switch (ar->scan.state) {
-+	case ATH11K_SCAN_IDLE:
-+		/* This can happen if timeout worker kicked in and called
-+		 * abortion while scan completion was being processed.
-+		 */
-+		break;
-+	case ATH11K_SCAN_STARTING:
-+	case ATH11K_SCAN_ABORTING:
-+		ath11k_warn(ar->ab, "refusing scan abortion due to invalid scan state: %d\n",
-+			    ar->scan.state);
-+		break;
-+	case ATH11K_SCAN_RUNNING:
-+		ar->scan.state = ATH11K_SCAN_ABORTING;
-+		spin_unlock_bh(&ar->data_lock);
-+
-+		ret = ath11k_scan_stop(ar);
-+		if (ret)
-+			ath11k_warn(ar->ab, "failed to abort scan: %d\n", ret);
-+
-+		spin_lock_bh(&ar->data_lock);
-+		break;
-+	}
-+
-+	spin_unlock_bh(&ar->data_lock);
-+}
-+
-+static void ath11k_scan_timeout_work(struct work_struct *work)
-+{
-+	struct ath11k *ar = container_of(work, struct ath11k,
-+					 scan.timeout.work);
-+
-+	mutex_lock(&ar->conf_mutex);
-+	ath11k_scan_abort(ar);
-+	mutex_unlock(&ar->conf_mutex);
-+}
-+
-+static int ath11k_start_scan(struct ath11k *ar,
-+			     struct scan_req_params *arg)
-+{
-+	int ret;
-+
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	ret = ath11k_wmi_send_scan_start_cmd(ar, arg);
-+	if (ret)
-+		return ret;
-+
-+	ret = wait_for_completion_timeout(&ar->scan.started, 1 * HZ);
-+	if (ret == 0) {
-+		ret = ath11k_scan_stop(ar);
-+		if (ret)
-+			ath11k_warn(ar->ab, "failed to stop scan: %d\n", ret);
-+
-+		return -ETIMEDOUT;
-+	}
-+
-+	/* If we failed to start the scan, return error code at
-+	 * this point.  This is probably due to some issue in the
-+	 * firmware, but no need to wedge the driver due to that...
-+	 */
-+	spin_lock_bh(&ar->data_lock);
-+	if (ar->scan.state == ATH11K_SCAN_IDLE) {
-+		spin_unlock_bh(&ar->data_lock);
-+		return -EINVAL;
-+	}
-+	spin_unlock_bh(&ar->data_lock);
-+
-+	return 0;
-+}
-+
-+static int ath11k_mac_op_hw_scan(struct ieee80211_hw *hw,
-+				 struct ieee80211_vif *vif,
-+				 struct ieee80211_scan_request *hw_req)
-+{
-+	struct ath11k *ar = hw->priv;
-+	struct ath11k_vif *arvif = ath11k_vif_to_arvif(vif);
-+	struct cfg80211_scan_request *req = &hw_req->req;
-+	struct scan_req_params arg;
-+	int ret = 0;
-+	int i;
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	spin_lock_bh(&ar->data_lock);
-+	switch (ar->scan.state) {
-+	case ATH11K_SCAN_IDLE:
-+		reinit_completion(&ar->scan.started);
-+		reinit_completion(&ar->scan.completed);
-+		ar->scan.state = ATH11K_SCAN_STARTING;
-+		ar->scan.is_roc = false;
-+		ar->scan.vdev_id = arvif->vdev_id;
-+		ret = 0;
-+		break;
-+	case ATH11K_SCAN_STARTING:
-+	case ATH11K_SCAN_RUNNING:
-+	case ATH11K_SCAN_ABORTING:
-+		ret = -EBUSY;
-+		break;
-+	}
-+	spin_unlock_bh(&ar->data_lock);
-+
-+	if (ret)
-+		goto exit;
-+
-+	memset(&arg, 0, sizeof(arg));
-+	ath11k_wmi_start_scan_init(ar, &arg);
-+	arg.vdev_id = arvif->vdev_id;
-+	arg.scan_id = ATH11K_SCAN_ID;
-+
-+	if (req->ie_len) {
-+		arg.extraie.len = req->ie_len;
-+		arg.extraie.ptr = kzalloc(req->ie_len, GFP_KERNEL);
-+		memcpy(arg.extraie.ptr, req->ie, req->ie_len);
-+	}
-+
-+	if (req->n_ssids) {
-+		arg.num_ssids = req->n_ssids;
-+		for (i = 0; i < arg.num_ssids; i++) {
-+			arg.ssid[i].length  = req->ssids[i].ssid_len;
-+			memcpy(&arg.ssid[i].ssid, req->ssids[i].ssid,
-+			       req->ssids[i].ssid_len);
-+		}
-+	} else {
-+		arg.scan_flags |= WMI_SCAN_FLAG_PASSIVE;
-+	}
-+
-+	if (req->n_channels) {
-+		arg.num_chan = req->n_channels;
-+		for (i = 0; i < arg.num_chan; i++)
-+			arg.chan_list[i] = req->channels[i]->center_freq;
-+	}
-+
-+	ret = ath11k_start_scan(ar, &arg);
-+	if (ret) {
-+		ath11k_warn(ar->ab, "failed to start hw scan: %d\n", ret);
-+		spin_lock_bh(&ar->data_lock);
-+		ar->scan.state = ATH11K_SCAN_IDLE;
-+		spin_unlock_bh(&ar->data_lock);
-+	}
-+
-+	/* Add a 200ms margin to account for event/command processing */
-+	ieee80211_queue_delayed_work(ar->hw, &ar->scan.timeout,
-+				     msecs_to_jiffies(arg.max_scan_time +
-+						      ATH11K_MAC_SCAN_TIMEOUT_MSECS));
-+
-+exit:
-+	if (req->ie_len)
-+		kfree(arg.extraie.ptr);
-+
-+	mutex_unlock(&ar->conf_mutex);
-+	return ret;
-+}
-+
-+static void ath11k_mac_op_cancel_hw_scan(struct ieee80211_hw *hw,
-+					 struct ieee80211_vif *vif)
-+{
-+	struct ath11k *ar = hw->priv;
-+
-+	mutex_lock(&ar->conf_mutex);
-+	ath11k_scan_abort(ar);
-+	mutex_unlock(&ar->conf_mutex);
-+
-+	cancel_delayed_work_sync(&ar->scan.timeout);
-+}
-+
-+static int ath11k_install_key(struct ath11k_vif *arvif,
-+			      struct ieee80211_key_conf *key,
-+			      enum set_key_cmd cmd,
-+			      const u8 *macaddr, u32 flags)
-+{
-+	int ret;
-+	struct ath11k *ar = arvif->ar;
-+	struct wmi_vdev_install_key_arg arg = {
-+		.vdev_id = arvif->vdev_id,
-+		.key_idx = key->keyidx,
-+		.key_len = key->keylen,
-+		.key_data = key->key,
-+		.key_flags = flags,
-+		.macaddr = macaddr,
-+	};
-+
-+	lockdep_assert_held(&arvif->ar->conf_mutex);
-+
-+	reinit_completion(&ar->install_key_done);
-+
-+	if (cmd == DISABLE_KEY) {
-+		/* TODO: Check if FW expects  value other than NONE for del */
-+		/* arg.key_cipher = WMI_CIPHER_NONE; */
-+		arg.key_len = 0;
-+		arg.key_data = NULL;
-+		goto install;
-+	}
-+
-+	switch (key->cipher) {
-+	case WLAN_CIPHER_SUITE_CCMP:
-+		arg.key_cipher = WMI_CIPHER_AES_CCM;
-+		/* TODO: Re-check if flag is valid */
-+		key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV_MGMT;
-+		break;
-+	case WLAN_CIPHER_SUITE_TKIP:
-+		arg.key_cipher = WMI_CIPHER_TKIP;
-+		arg.key_txmic_len = 8;
-+		arg.key_rxmic_len = 8;
-+		break;
-+	case WLAN_CIPHER_SUITE_CCMP_256:
-+		arg.key_cipher = WMI_CIPHER_AES_CCM;
-+		break;
-+	case WLAN_CIPHER_SUITE_GCMP:
-+	case WLAN_CIPHER_SUITE_GCMP_256:
-+		arg.key_cipher = WMI_CIPHER_AES_GCM;
-+		break;
-+	default:
-+		ath11k_warn(ar->ab, "cipher %d is not supported\n", key->cipher);
-+		return -EOPNOTSUPP;
-+	}
-+
-+install:
-+	ret = ath11k_wmi_vdev_install_key(arvif->ar, &arg);
-+	if (ret)
-+		return ret;
-+
-+	if (!wait_for_completion_timeout(&ar->install_key_done, 1 * HZ))
-+		return -ETIMEDOUT;
-+
-+	return ar->install_key_status ? -EINVAL : 0;
-+}
-+
-+static int ath11k_clear_peer_keys(struct ath11k_vif *arvif,
-+				  const u8 *addr)
-+{
-+	struct ath11k *ar = arvif->ar;
-+	struct ath11k_base *ab = ar->ab;
-+	struct ath11k_peer *peer;
-+	int first_errno = 0;
-+	int ret;
-+	int i;
-+	u32 flags = 0;
-+
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	spin_lock_bh(&ab->base_lock);
-+	peer = ath11k_peer_find(ab, arvif->vdev_id, addr);
-+	spin_unlock_bh(&ab->base_lock);
-+
-+	if (!peer)
-+		return -ENOENT;
-+
-+	for (i = 0; i < ARRAY_SIZE(peer->keys); i++) {
-+		if (!peer->keys[i])
-+			continue;
-+
-+		/* key flags are not required to delete the key */
-+		ret = ath11k_install_key(arvif, peer->keys[i],
-+					 DISABLE_KEY, addr, flags);
-+		if (ret < 0 && first_errno == 0)
-+			first_errno = ret;
-+
-+		if (ret < 0)
-+			ath11k_warn(ab, "failed to remove peer key %d: %d\n",
-+				    i, ret);
-+
-+		spin_lock_bh(&ab->base_lock);
-+		peer->keys[i] = NULL;
-+		spin_unlock_bh(&ab->base_lock);
-+	}
-+
-+	return first_errno;
-+}
-+
-+static int ath11k_mac_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
-+				 struct ieee80211_vif *vif, struct ieee80211_sta *sta,
-+				 struct ieee80211_key_conf *key)
-+{
-+	struct ath11k *ar = hw->priv;
-+	struct ath11k_base *ab = ar->ab;
-+	struct ath11k_vif *arvif = ath11k_vif_to_arvif(vif);
-+	struct ath11k_peer *peer;
-+	const u8 *peer_addr;
-+	int ret = 0;
-+	u32 flags = 0;
-+
-+	/* BIP needs to be done in software */
-+	if (key->cipher == WLAN_CIPHER_SUITE_AES_CMAC ||
-+	    key->cipher == WLAN_CIPHER_SUITE_BIP_GMAC_128 ||
-+	    key->cipher == WLAN_CIPHER_SUITE_BIP_GMAC_256 ||
-+	    key->cipher == WLAN_CIPHER_SUITE_BIP_CMAC_256)
-+		return 1;
-+
-+	if (key->keyidx > WMI_MAX_KEY_INDEX)
-+		return -ENOSPC;
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	if (sta)
-+		peer_addr = sta->addr;
-+	else if (arvif->vdev_type == WMI_VDEV_TYPE_STA)
-+		peer_addr = vif->bss_conf.bssid;
-+	else
-+		peer_addr = vif->addr;
-+
-+	key->hw_key_idx = key->keyidx;
-+
-+	/* the peer should not disappear in mid-way (unless FW goes awry) since
-+	 * we already hold conf_mutex. we just make sure its there now.
-+	 */
-+	spin_lock_bh(&ab->base_lock);
-+	peer = ath11k_peer_find(ab, arvif->vdev_id, peer_addr);
-+	spin_unlock_bh(&ab->base_lock);
-+
-+	if (!peer) {
-+		if (cmd == SET_KEY) {
-+			ath11k_warn(ab, "cannot install key for non-existent peer %pM\n",
-+				    peer_addr);
-+			ret = -EOPNOTSUPP;
-+			goto exit;
-+		} else {
-+			/* if the peer doesn't exist there is no key to disable
-+			 * anymore
-+			 */
-+			goto exit;
-+		}
-+	}
-+
-+	if (key->flags & IEEE80211_KEY_FLAG_PAIRWISE)
-+		flags |= WMI_KEY_PAIRWISE;
-+	else
-+		flags |= WMI_KEY_GROUP;
-+
-+	ret = ath11k_install_key(arvif, key, cmd, peer_addr, flags);
-+	if (ret) {
-+		ath11k_warn(ab, "ath11k_install_key failed (%d)\n", ret);
-+		goto exit;
-+	}
-+
-+	spin_lock_bh(&ab->base_lock);
-+	peer = ath11k_peer_find(ab, arvif->vdev_id, peer_addr);
-+	if (peer && cmd == SET_KEY)
-+		peer->keys[key->keyidx] = key;
-+	else if (peer && cmd == DISABLE_KEY)
-+		peer->keys[key->keyidx] = NULL;
-+	else if (!peer)
-+		/* impossible unless FW goes crazy */
-+		ath11k_warn(ab, "peer %pM disappeared!\n", peer_addr);
-+	spin_unlock_bh(&ab->base_lock);
-+
-+exit:
-+	mutex_unlock(&ar->conf_mutex);
-+	return ret;
-+}
-+
-+static int
-+ath11k_mac_bitrate_mask_num_vht_rates(struct ath11k *ar,
-+				      enum nl80211_band band,
-+				      const struct cfg80211_bitrate_mask *mask)
-+{
-+	int num_rates = 0;
-+	int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(mask->control[band].vht_mcs); i++)
-+		num_rates += hweight16(mask->control[band].vht_mcs[i]);
-+
-+	return num_rates;
-+}
-+
-+static int
-+ath11k_mac_set_peer_vht_fixed_rate(struct ath11k_vif *arvif,
-+				   struct ieee80211_sta *sta,
-+				   const struct cfg80211_bitrate_mask *mask,
-+				   enum nl80211_band band)
-+{
-+	struct ath11k *ar = arvif->ar;
-+	u8 vht_rate, nss;
-+	u32 rate_code;
-+	int ret, i;
-+
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	nss = 0;
-+
-+	for (i = 0; i < ARRAY_SIZE(mask->control[band].vht_mcs); i++) {
-+		if (hweight16(mask->control[band].vht_mcs[i]) == 1) {
-+			nss = i + 1;
-+			vht_rate = ffs(mask->control[band].vht_mcs[i]) - 1;
-+		}
-+	}
-+
-+	if (!nss) {
-+		ath11k_warn(ar->ab, "No single VHT Fixed rate found to set for %pM",
-+			    sta->addr);
-+		return -EINVAL;
-+	}
-+
-+	ath11k_dbg(ar->ab, ATH11K_DBG_MAC,
-+		   "Setting Fixed VHT Rate for peer %pM. Device will not switch to any other selected rates",
-+		   sta->addr);
-+
-+	rate_code = ATH11K_HW_RATE_CODE(vht_rate, nss - 1,
-+					WMI_RATE_PREAMBLE_VHT);
-+	ret = ath11k_wmi_set_peer_param(ar, sta->addr,
-+					arvif->vdev_id,
-+					WMI_PEER_PARAM_FIXED_RATE,
-+					rate_code);
-+	if (ret)
-+		ath11k_warn(ar->ab,
-+			    "failed to update STA %pM Fixed Rate %d: %d\n",
-+			     sta->addr, rate_code, ret);
-+
-+	return ret;
-+}
-+
-+static int ath11k_station_assoc(struct ath11k *ar,
-+				struct ieee80211_vif *vif,
-+				struct ieee80211_sta *sta,
-+				bool reassoc)
-+{
-+	struct ath11k_vif *arvif = ath11k_vif_to_arvif(vif);
-+	struct peer_assoc_params peer_arg;
-+	int ret = 0;
-+	struct cfg80211_chan_def def;
-+	enum nl80211_band band;
-+	struct cfg80211_bitrate_mask *mask;
-+	u8 num_vht_rates;
-+
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	if (WARN_ON(ath11k_mac_vif_chan(vif, &def)))
-+		return -EPERM;
-+
-+	band = def.chan->band;
-+	mask = &arvif->bitrate_mask;
-+
-+	ath11k_peer_assoc_prepare(ar, vif, sta, &peer_arg, reassoc);
-+
-+	ret = ath11k_wmi_send_peer_assoc_cmd(ar, &peer_arg);
-+	if (ret) {
-+		ath11k_warn(ar->ab, "failed to run peer assoc for STA %pM vdev %i: %d\n",
-+			    sta->addr, arvif->vdev_id, ret);
-+		return ret;
-+	}
-+
-+	if (!wait_for_completion_timeout(&ar->peer_assoc_done, 1 * HZ)) {
-+		ath11k_warn(ar->ab, "failed to get peer assoc conf event for %pM vdev %i\n",
-+			    sta->addr, arvif->vdev_id);
-+		return -ETIMEDOUT;
-+	}
-+
-+	num_vht_rates = ath11k_mac_bitrate_mask_num_vht_rates(ar, band, mask);
-+
-+	/* If single VHT rate is configured (by set_bitrate_mask()),
-+	 * peer_assoc will disable VHT. This is now enabled by a peer specific
-+	 * fixed param.
-+	 * Note that all other rates and NSS will be disabled for this peer.
-+	 */
-+	if (sta->vht_cap.vht_supported && num_vht_rates == 1) {
-+		ret = ath11k_mac_set_peer_vht_fixed_rate(arvif, sta, mask,
-+							 band);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	/* Re-assoc is run only to update supported rates for given station. It
-+	 * doesn't make much sense to reconfigure the peer completely.
-+	 */
-+	if (reassoc)
-+		return 0;
-+
-+	ret = ath11k_setup_peer_smps(ar, arvif, sta->addr,
-+				     &sta->ht_cap);
-+	if (ret) {
-+		ath11k_warn(ar->ab, "failed to setup peer SMPS for vdev %d: %d\n",
-+			    arvif->vdev_id, ret);
-+		return ret;
-+	}
-+
-+	if (!sta->wme) {
-+		arvif->num_legacy_stations++;
-+		ret = ath11k_recalc_rtscts_prot(arvif);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	if (sta->wme && sta->uapsd_queues) {
-+		ret = ath11k_peer_assoc_qos_ap(ar, arvif, sta);
-+		if (ret) {
-+			ath11k_warn(ar->ab, "failed to set qos params for STA %pM for vdev %i: %d\n",
-+				    sta->addr, arvif->vdev_id, ret);
-+			return ret;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+static int ath11k_station_disassoc(struct ath11k *ar,
-+				   struct ieee80211_vif *vif,
-+				   struct ieee80211_sta *sta)
-+{
-+	struct ath11k_vif *arvif = (void *)vif->drv_priv;
-+	int ret = 0;
-+
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	if (!sta->wme) {
-+		arvif->num_legacy_stations--;
-+		ret = ath11k_recalc_rtscts_prot(arvif);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	ret = ath11k_clear_peer_keys(arvif, sta->addr);
-+	if (ret) {
-+		ath11k_warn(ar->ab, "failed to clear all peer keys for vdev %i: %d\n",
-+			    arvif->vdev_id, ret);
-+		return ret;
-+	}
-+	return 0;
-+}
-+
-+static void ath11k_sta_rc_update_wk(struct work_struct *wk)
-+{
-+	struct ath11k *ar;
-+	struct ath11k_vif *arvif;
-+	struct ath11k_sta *arsta;
-+	struct ieee80211_sta *sta;
-+	struct cfg80211_chan_def def;
-+	enum nl80211_band band;
-+	const u8 *ht_mcs_mask;
-+	const u16 *vht_mcs_mask;
-+	u32 changed, bw, nss, smps;
-+	int err, num_vht_rates;
-+	const struct cfg80211_bitrate_mask *mask;
-+	struct peer_assoc_params peer_arg;
-+
-+	arsta = container_of(wk, struct ath11k_sta, update_wk);
-+	sta = container_of((void *)arsta, struct ieee80211_sta, drv_priv);
-+	arvif = arsta->arvif;
-+	ar = arvif->ar;
-+
-+	if (WARN_ON(ath11k_mac_vif_chan(arvif->vif, &def)))
-+		return;
-+
-+	band = def.chan->band;
-+	ht_mcs_mask = arvif->bitrate_mask.control[band].ht_mcs;
-+	vht_mcs_mask = arvif->bitrate_mask.control[band].vht_mcs;
-+
-+	spin_lock_bh(&ar->data_lock);
-+
-+	changed = arsta->changed;
-+	arsta->changed = 0;
-+
-+	bw = arsta->bw;
-+	nss = arsta->nss;
-+	smps = arsta->smps;
-+
-+	spin_unlock_bh(&ar->data_lock);
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	nss = max_t(u32, 1, nss);
-+	nss = min(nss, max(ath11k_mac_max_ht_nss(ht_mcs_mask),
-+			   ath11k_mac_max_vht_nss(vht_mcs_mask)));
-+
-+	if (changed & IEEE80211_RC_BW_CHANGED) {
-+		err = ath11k_wmi_set_peer_param(ar, sta->addr, arvif->vdev_id,
-+						WMI_PEER_CHWIDTH, bw);
-+		if (err)
-+			ath11k_warn(ar->ab, "failed to update STA %pM peer bw %d: %d\n",
-+				    sta->addr, bw, err);
-+	}
-+
-+	if (changed & IEEE80211_RC_NSS_CHANGED) {
-+		ath11k_dbg(ar->ab, ATH11K_DBG_MAC, "mac update sta %pM nss %d\n",
-+			   sta->addr, nss);
-+
-+		err = ath11k_wmi_set_peer_param(ar, sta->addr, arvif->vdev_id,
-+						WMI_PEER_NSS, nss);
-+		if (err)
-+			ath11k_warn(ar->ab, "failed to update STA %pM nss %d: %d\n",
-+				    sta->addr, nss, err);
-+	}
-+
-+	if (changed & IEEE80211_RC_SMPS_CHANGED) {
-+		ath11k_dbg(ar->ab, ATH11K_DBG_MAC, "mac update sta %pM smps %d\n",
-+			   sta->addr, smps);
-+
-+		err = ath11k_wmi_set_peer_param(ar, sta->addr, arvif->vdev_id,
-+						WMI_PEER_MIMO_PS_STATE, smps);
-+		if (err)
-+			ath11k_warn(ar->ab, "failed to update STA %pM smps %d: %d\n",
-+				    sta->addr, smps, err);
-+	}
-+
-+	if (changed & IEEE80211_RC_SUPP_RATES_CHANGED) {
-+		mask = &arvif->bitrate_mask;
-+		num_vht_rates = ath11k_mac_bitrate_mask_num_vht_rates(ar, band,
-+								      mask);
-+
-+		/* Peer_assoc_prepare will reject vht rates in
-+		 * bitrate_mask if its not available in range format and
-+		 * sets vht tx_rateset as unsupported. So multiple VHT MCS
-+		 * setting(eg. MCS 4,5,6) per peer is not supported here.
-+		 * But, Single rate in VHT mask can be set as per-peer
-+		 * fixed rate. But even if any HT rates are configured in
-+		 * the bitrate mask, device will not switch to those rates
-+		 * when per-peer Fixed rate is set.
-+		 * TODO: Check RATEMASK_CMDID to support auto rates selection
-+		 * across HT/VHT and for multiple VHT MCS support.
-+		 */
-+		if (sta->vht_cap.vht_supported && num_vht_rates == 1) {
-+			ath11k_mac_set_peer_vht_fixed_rate(arvif, sta, mask,
-+							   band);
-+		} else {
-+			/* If the peer is non-VHT or no fixed VHT rate
-+			 * is provided in the new bitrate mask we set the
-+			 * other rates using peer_assoc command.
-+			 */
-+			ath11k_peer_assoc_prepare(ar, arvif->vif, sta,
-+						  &peer_arg, true);
-+
-+			err = ath11k_wmi_send_peer_assoc_cmd(ar, &peer_arg);
-+			if (err)
-+				ath11k_warn(ar->ab, "failed to run peer assoc for STA %pM vdev %i: %d\n",
-+					    sta->addr, arvif->vdev_id, err);
-+
-+			if (!wait_for_completion_timeout(&ar->peer_assoc_done, 1 * HZ))
-+				ath11k_warn(ar->ab, "failed to get peer assoc conf event for %pM vdev %i\n",
-+					    sta->addr, arvif->vdev_id);
-+		}
-+	}
-+
-+	mutex_unlock(&ar->conf_mutex);
-+}
-+
-+static int ath11k_mac_inc_num_stations(struct ath11k_vif *arvif,
-+				       struct ieee80211_sta *sta)
-+{
-+	struct ath11k *ar = arvif->ar;
-+
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	if (arvif->vdev_type == WMI_VDEV_TYPE_STA && !sta->tdls)
-+		return 0;
-+
-+	if (ar->num_stations >= ar->max_num_stations)
-+		return -ENOBUFS;
-+
-+	ar->num_stations++;
-+
-+	return 0;
-+}
-+
-+static void ath11k_mac_dec_num_stations(struct ath11k_vif *arvif,
-+					struct ieee80211_sta *sta)
-+{
-+	struct ath11k *ar = arvif->ar;
-+
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	if (arvif->vdev_type == WMI_VDEV_TYPE_STA && !sta->tdls)
-+		return;
-+
-+	ar->num_stations--;
-+}
-+
-+static int ath11k_mac_op_sta_state(struct ieee80211_hw *hw,
-+				   struct ieee80211_vif *vif,
-+				   struct ieee80211_sta *sta,
-+				   enum ieee80211_sta_state old_state,
-+				   enum ieee80211_sta_state new_state)
-+{
-+	struct ath11k *ar = hw->priv;
-+	struct ath11k_vif *arvif = ath11k_vif_to_arvif(vif);
-+	struct ath11k_sta *arsta = (struct ath11k_sta *)sta->drv_priv;
-+	struct peer_create_params peer_param;
-+	int ret = 0;
-+
-+	/* cancel must be done outside the mutex to avoid deadlock */
-+	if ((old_state == IEEE80211_STA_NONE &&
-+	     new_state == IEEE80211_STA_NOTEXIST))
-+		cancel_work_sync(&arsta->update_wk);
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	if (old_state == IEEE80211_STA_NOTEXIST &&
-+	    new_state == IEEE80211_STA_NONE) {
-+		memset(arsta, 0, sizeof(*arsta));
-+		arsta->arvif = arvif;
-+		INIT_WORK(&arsta->update_wk, ath11k_sta_rc_update_wk);
-+
-+		ret = ath11k_mac_inc_num_stations(arvif, sta);
-+		if (ret) {
-+			ath11k_warn(ar->ab, "refusing to associate station: too many connected already (%d)\n",
-+				    ar->max_num_stations);
-+			goto exit;
-+		}
-+
-+		arsta->rx_stats = kzalloc(sizeof(*arsta->rx_stats), GFP_KERNEL);
-+		if (!arsta->rx_stats) {
-+			ret = -ENOMEM;
-+			goto exit;
-+		}
-+
-+		peer_param.vdev_id = arvif->vdev_id;
-+		peer_param.peer_addr = sta->addr;
-+		peer_param.peer_type = WMI_PEER_TYPE_DEFAULT;
-+		ret = ath11k_peer_create(ar, arvif, sta, &peer_param);
-+		if (ret) {
-+			ath11k_warn(ar->ab, "Failed to add peer: %pM for VDEV: %d\n",
-+				    sta->addr, arvif->vdev_id);
-+			ath11k_mac_dec_num_stations(arvif, sta);
-+			goto exit;
-+		}
-+
-+		ath11k_info(ar->ab, "Added peer: %pM for VDEV: %d\n",
-+			    sta->addr, arvif->vdev_id);
-+
-+		if (ath11k_debug_is_extd_tx_stats_enabled(ar)) {
-+			arsta->tx_stats = kzalloc(sizeof(*arsta->tx_stats),
-+						  GFP_KERNEL);
-+			if (!arsta->tx_stats) {
-+				ret = -ENOMEM;
-+				goto exit;
-+			}
-+		}
-+
-+		if (ieee80211_vif_is_mesh(vif)) {
-+			ret = ath11k_wmi_set_peer_param(ar, sta->addr,
-+							arvif->vdev_id,
-+							WMI_PEER_USE_4ADDR, 1);
-+			if (ret) {
-+				ath11k_warn(ar->ab, "failed to STA %pM 4addr capability: %d\n",
-+					    sta->addr, ret);
-+				goto exit;
-+			}
-+		}
-+
-+		ret = ath11k_dp_peer_setup(ar, arvif->vdev_id, sta->addr);
-+		if (ret) {
-+			ath11k_warn(ar->ab, "failed to setup dp for peer %pM on vdev %i (%d)\n",
-+				    sta->addr, arvif->vdev_id, ret);
-+			ath11k_peer_delete(ar, arvif->vdev_id, sta->addr);
-+			ath11k_mac_dec_num_stations(arvif, sta);
-+		}
-+	} else if ((old_state == IEEE80211_STA_NONE &&
-+		    new_state == IEEE80211_STA_NOTEXIST)) {
-+		ath11k_dp_peer_cleanup(ar, arvif->vdev_id, sta->addr);
-+
-+		ret = ath11k_peer_delete(ar, arvif->vdev_id, sta->addr);
-+		if (ret)
-+			ath11k_warn(ar->ab, "Failed to delete peer: %pM for VDEV: %d\n",
-+				    sta->addr, arvif->vdev_id);
-+		else
-+			ath11k_info(ar->ab,
-+				    "Removed peer: %pM for VDEV: %d\n",
-+				    sta->addr, arvif->vdev_id);
-+
-+		ath11k_mac_dec_num_stations(arvif, sta);
-+
-+		kfree(arsta->tx_stats);
-+		arsta->tx_stats = NULL;
-+
-+		kfree(arsta->rx_stats);
-+		arsta->rx_stats = NULL;
-+	} else if (old_state == IEEE80211_STA_AUTH &&
-+		   new_state == IEEE80211_STA_ASSOC &&
-+		   (vif->type == NL80211_IFTYPE_AP ||
-+		    vif->type == NL80211_IFTYPE_MESH_POINT ||
-+		    vif->type == NL80211_IFTYPE_ADHOC)) {
-+		ret = ath11k_station_assoc(ar, vif, sta, false);
-+		if (ret)
-+			ath11k_warn(ar->ab, "Failed to associate station: %pM\n",
-+				    sta->addr);
-+		else
-+			ath11k_info(ar->ab,
-+				    "Station %pM moved to assoc state\n",
-+				    sta->addr);
-+	} else if (old_state == IEEE80211_STA_ASSOC &&
-+		   new_state == IEEE80211_STA_AUTH &&
-+		   (vif->type == NL80211_IFTYPE_AP ||
-+		    vif->type == NL80211_IFTYPE_MESH_POINT ||
-+		    vif->type == NL80211_IFTYPE_ADHOC)) {
-+		ret = ath11k_station_disassoc(ar, vif, sta);
-+		if (ret)
-+			ath11k_warn(ar->ab, "Failed to disassociate station: %pM\n",
-+				    sta->addr);
-+		else
-+			ath11k_info(ar->ab,
-+				    "Station %pM moved to disassociated state\n",
-+				    sta->addr);
-+	}
-+
-+exit:
-+	mutex_unlock(&ar->conf_mutex);
-+	return ret;
-+}
-+
-+static void ath11k_mac_op_sta_rc_update(struct ieee80211_hw *hw,
-+					struct ieee80211_vif *vif,
-+					struct ieee80211_sta *sta,
-+					u32 changed)
-+{
-+	struct ath11k *ar = hw->priv;
-+	struct ath11k_sta *arsta = (struct ath11k_sta *)sta->drv_priv;
-+	struct ath11k_vif *arvif = (void *)vif->drv_priv;
-+	struct ath11k_peer *peer;
-+	u32 bw, smps;
-+
-+	spin_lock_bh(&ar->ab->base_lock);
-+
-+	peer = ath11k_peer_find(ar->ab, arvif->vdev_id, sta->addr);
-+	if (!peer) {
-+		spin_unlock_bh(&ar->ab->base_lock);
-+		ath11k_warn(ar->ab, "mac sta rc update failed to find peer %pM on vdev %i\n",
-+			    sta->addr, arvif->vdev_id);
-+		return;
-+	}
-+
-+	spin_unlock_bh(&ar->ab->base_lock);
-+
-+	ath11k_dbg(ar->ab, ATH11K_DBG_MAC,
-+		   "mac sta rc update for %pM changed %08x bw %d nss %d smps %d\n",
-+		   sta->addr, changed, sta->bandwidth, sta->rx_nss,
-+		   sta->smps_mode);
-+
-+	spin_lock_bh(&ar->data_lock);
-+
-+	if (changed & IEEE80211_RC_BW_CHANGED) {
-+		bw = WMI_PEER_CHWIDTH_20MHZ;
-+
-+		switch (sta->bandwidth) {
-+		case IEEE80211_STA_RX_BW_20:
-+			bw = WMI_PEER_CHWIDTH_20MHZ;
-+			break;
-+		case IEEE80211_STA_RX_BW_40:
-+			bw = WMI_PEER_CHWIDTH_40MHZ;
-+			break;
-+		case IEEE80211_STA_RX_BW_80:
-+			bw = WMI_PEER_CHWIDTH_80MHZ;
-+			break;
-+		case IEEE80211_STA_RX_BW_160:
-+			bw = WMI_PEER_CHWIDTH_160MHZ;
-+			break;
-+		default:
-+			ath11k_warn(ar->ab, "Invalid bandwidth %d in rc update for %pM\n",
-+				    sta->bandwidth, sta->addr);
-+			bw = WMI_PEER_CHWIDTH_20MHZ;
-+			break;
-+		}
-+
-+		arsta->bw = bw;
-+	}
-+
-+	if (changed & IEEE80211_RC_NSS_CHANGED)
-+		arsta->nss = sta->rx_nss;
-+
-+	if (changed & IEEE80211_RC_SMPS_CHANGED) {
-+		smps = WMI_PEER_SMPS_PS_NONE;
-+
-+		switch (sta->smps_mode) {
-+		case IEEE80211_SMPS_AUTOMATIC:
-+		case IEEE80211_SMPS_OFF:
-+			smps = WMI_PEER_SMPS_PS_NONE;
-+			break;
-+		case IEEE80211_SMPS_STATIC:
-+			smps = WMI_PEER_SMPS_STATIC;
-+			break;
-+		case IEEE80211_SMPS_DYNAMIC:
-+			smps = WMI_PEER_SMPS_DYNAMIC;
-+			break;
-+		default:
-+			ath11k_warn(ar->ab, "Invalid smps %d in sta rc update for %pM\n",
-+				    sta->smps_mode, sta->addr);
-+			smps = WMI_PEER_SMPS_PS_NONE;
-+			break;
-+		}
-+
-+		arsta->smps = smps;
-+	}
-+
-+	arsta->changed |= changed;
-+
-+	spin_unlock_bh(&ar->data_lock);
-+
-+	ieee80211_queue_work(hw, &arsta->update_wk);
-+}
-+
-+static int ath11k_conf_tx_uapsd(struct ath11k *ar, struct ieee80211_vif *vif,
-+				u16 ac, bool enable)
-+{
-+	struct ath11k_vif *arvif = ath11k_vif_to_arvif(vif);
-+	u32 value = 0;
-+	int ret = 0;
-+
-+	if (arvif->vdev_type != WMI_VDEV_TYPE_STA)
-+		return 0;
-+
-+	switch (ac) {
-+	case IEEE80211_AC_VO:
-+		value = WMI_STA_PS_UAPSD_AC3_DELIVERY_EN |
-+			WMI_STA_PS_UAPSD_AC3_TRIGGER_EN;
-+		break;
-+	case IEEE80211_AC_VI:
-+		value = WMI_STA_PS_UAPSD_AC2_DELIVERY_EN |
-+			WMI_STA_PS_UAPSD_AC2_TRIGGER_EN;
-+		break;
-+	case IEEE80211_AC_BE:
-+		value = WMI_STA_PS_UAPSD_AC1_DELIVERY_EN |
-+			WMI_STA_PS_UAPSD_AC1_TRIGGER_EN;
-+		break;
-+	case IEEE80211_AC_BK:
-+		value = WMI_STA_PS_UAPSD_AC0_DELIVERY_EN |
-+			WMI_STA_PS_UAPSD_AC0_TRIGGER_EN;
-+		break;
-+	}
-+
-+	if (enable)
-+		arvif->u.sta.uapsd |= value;
-+	else
-+		arvif->u.sta.uapsd &= ~value;
-+
-+	ret = ath11k_wmi_set_sta_ps_param(ar, arvif->vdev_id,
-+					  WMI_STA_PS_PARAM_UAPSD,
-+					  arvif->u.sta.uapsd);
-+	if (ret) {
-+		ath11k_warn(ar->ab, "could not set uapsd params %d\n", ret);
-+		goto exit;
-+	}
-+
-+	if (arvif->u.sta.uapsd)
-+		value = WMI_STA_PS_RX_WAKE_POLICY_POLL_UAPSD;
-+	else
-+		value = WMI_STA_PS_RX_WAKE_POLICY_WAKE;
-+
-+	ret = ath11k_wmi_set_sta_ps_param(ar, arvif->vdev_id,
-+					  WMI_STA_PS_PARAM_RX_WAKE_POLICY,
-+					  value);
-+	if (ret)
-+		ath11k_warn(ar->ab, "could not set rx wake param %d\n", ret);
-+
-+exit:
-+	return ret;
-+}
-+
-+static int ath11k_mac_op_conf_tx(struct ieee80211_hw *hw,
-+				 struct ieee80211_vif *vif, u16 ac,
-+				 const struct ieee80211_tx_queue_params *params)
-+{
-+	struct ath11k *ar = hw->priv;
-+	struct ath11k_vif *arvif = (void *)vif->drv_priv;
-+	struct wmi_wmm_params_arg *p = NULL;
-+	int ret;
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	switch (ac) {
-+	case IEEE80211_AC_VO:
-+		p = &arvif->wmm_params.ac_vo;
-+		break;
-+	case IEEE80211_AC_VI:
-+		p = &arvif->wmm_params.ac_vi;
-+		break;
-+	case IEEE80211_AC_BE:
-+		p = &arvif->wmm_params.ac_be;
-+		break;
-+	case IEEE80211_AC_BK:
-+		p = &arvif->wmm_params.ac_bk;
-+		break;
-+	}
-+
-+	if (WARN_ON(!p)) {
-+		ret = -EINVAL;
-+		goto exit;
-+	}
-+
-+	p->cwmin = params->cw_min;
-+	p->cwmax = params->cw_max;
-+	p->aifs = params->aifs;
-+
-+	/* The channel time duration programmed in the HW is in absolute
-+	 * microseconds, while mac80211 gives the txop in units of
-+	 * 32 microseconds.
-+	 */
-+	p->txop = params->txop * 32;
-+
-+	ret = ath11k_wmi_send_wmm_update_cmd_tlv(ar, arvif->vdev_id,
-+						 &arvif->wmm_params);
-+	if (ret) {
-+		ath11k_warn(ar->ab, "failed to set wmm params: %d\n", ret);
-+		goto exit;
-+	}
-+
-+	ret = ath11k_conf_tx_uapsd(ar, vif, ac, params->uapsd);
-+
-+	if (ret)
-+		ath11k_warn(ar->ab, "failed to set sta uapsd: %d\n", ret);
-+
-+exit:
-+	mutex_unlock(&ar->conf_mutex);
-+	return ret;
-+}
-+
-+static struct ieee80211_sta_ht_cap
-+ath11k_create_ht_cap(struct ath11k *ar, u32 ar_ht_cap, u32 rate_cap_rx_chainmask)
-+{
-+	int i;
-+	struct ieee80211_sta_ht_cap ht_cap = {0};
-+	u32 ar_vht_cap = ar->pdev->cap.vht_cap;
-+
-+	if (!(ar_ht_cap & WMI_HT_CAP_ENABLED))
-+		return ht_cap;
-+
-+	ht_cap.ht_supported = 1;
-+	ht_cap.ampdu_factor = IEEE80211_HT_MAX_AMPDU_64K;
-+	ht_cap.ampdu_density = IEEE80211_HT_MPDU_DENSITY_8;
-+	ht_cap.cap |= IEEE80211_HT_CAP_SUP_WIDTH_20_40;
-+	ht_cap.cap |= IEEE80211_HT_CAP_DSSSCCK40;
-+	ht_cap.cap |= WLAN_HT_CAP_SM_PS_STATIC << IEEE80211_HT_CAP_SM_PS_SHIFT;
-+
-+	if (ar_ht_cap & WMI_HT_CAP_HT20_SGI)
-+		ht_cap.cap |= IEEE80211_HT_CAP_SGI_20;
-+
-+	if (ar_ht_cap & WMI_HT_CAP_HT40_SGI)
-+		ht_cap.cap |= IEEE80211_HT_CAP_SGI_40;
-+
-+	if (ar_ht_cap & WMI_HT_CAP_DYNAMIC_SMPS) {
-+		u32 smps;
-+
-+		smps   = WLAN_HT_CAP_SM_PS_DYNAMIC;
-+		smps <<= IEEE80211_HT_CAP_SM_PS_SHIFT;
-+
-+		ht_cap.cap |= smps;
-+	}
-+
-+	if (ar_ht_cap & WMI_HT_CAP_TX_STBC)
-+		ht_cap.cap |= IEEE80211_HT_CAP_TX_STBC;
-+
-+	if (ar_ht_cap & WMI_HT_CAP_RX_STBC) {
-+		u32 stbc;
-+
-+		stbc   = ar_ht_cap;
-+		stbc  &= WMI_HT_CAP_RX_STBC;
-+		stbc >>= WMI_HT_CAP_RX_STBC_MASK_SHIFT;
-+		stbc <<= IEEE80211_HT_CAP_RX_STBC_SHIFT;
-+		stbc  &= IEEE80211_HT_CAP_RX_STBC;
-+
-+		ht_cap.cap |= stbc;
-+	}
-+
-+	if (ar_ht_cap & WMI_HT_CAP_RX_LDPC)
-+		ht_cap.cap |= IEEE80211_HT_CAP_LDPC_CODING;
-+
-+	if (ar_ht_cap & WMI_HT_CAP_L_SIG_TXOP_PROT)
-+		ht_cap.cap |= IEEE80211_HT_CAP_LSIG_TXOP_PROT;
-+
-+	if (ar_vht_cap & WMI_VHT_CAP_MAX_MPDU_LEN_MASK)
-+		ht_cap.cap |= IEEE80211_HT_CAP_MAX_AMSDU;
-+
-+	for (i = 0; i < ar->num_rx_chains; i++) {
-+		if (rate_cap_rx_chainmask & BIT(i))
-+			ht_cap.mcs.rx_mask[i] = 0xFF;
-+	}
-+
-+	ht_cap.mcs.tx_params |= IEEE80211_HT_MCS_TX_DEFINED;
-+
-+	return ht_cap;
-+}
-+
-+static int ath11k_mac_set_txbf_conf(struct ath11k_vif *arvif)
-+{
-+	u32 value = 0;
-+	struct ath11k *ar = arvif->ar;
-+	int nsts;
-+	int sound_dim;
-+	u32 vht_cap = ar->pdev->cap.vht_cap;
-+	u32 vdev_param = WMI_VDEV_PARAM_TXBF;
-+
-+	if (vht_cap & (IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE)) {
-+		nsts = vht_cap & IEEE80211_VHT_CAP_BEAMFORMEE_STS_MASK;
-+		nsts >>= IEEE80211_VHT_CAP_BEAMFORMEE_STS_SHIFT;
-+		value |= SM(nsts, WMI_TXBF_STS_CAP_OFFSET);
-+	}
-+
-+	if (vht_cap & (IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE)) {
-+		sound_dim = vht_cap &
-+			    IEEE80211_VHT_CAP_SOUNDING_DIMENSIONS_MASK;
-+		sound_dim >>= IEEE80211_VHT_CAP_SOUNDING_DIMENSIONS_SHIFT;
-+		if (sound_dim > (ar->num_tx_chains - 1))
-+			sound_dim = ar->num_tx_chains - 1;
-+		value |= SM(sound_dim, WMI_BF_SOUND_DIM_OFFSET);
-+	}
-+
-+	if (!value)
-+		return 0;
-+
-+	if (vht_cap & IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE) {
-+		value |= WMI_VDEV_PARAM_TXBF_SU_TX_BFER;
-+
-+		if ((vht_cap & IEEE80211_VHT_CAP_MU_BEAMFORMER_CAPABLE) &&
-+		    arvif->vdev_type == WMI_VDEV_TYPE_AP)
-+			value |= WMI_VDEV_PARAM_TXBF_MU_TX_BFER;
-+	}
-+
-+	/* TODO: SUBFEE not validated in HK, disable here until validated? */
-+
-+	if (vht_cap & IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE) {
-+		value |= WMI_VDEV_PARAM_TXBF_SU_TX_BFEE;
-+
-+		if ((vht_cap & IEEE80211_VHT_CAP_MU_BEAMFORMEE_CAPABLE) &&
-+		    arvif->vdev_type == WMI_VDEV_TYPE_STA)
-+			value |= WMI_VDEV_PARAM_TXBF_MU_TX_BFEE;
-+	}
-+
-+	return ath11k_wmi_vdev_set_param_cmd(ar, arvif->vdev_id,
-+					     vdev_param, value);
-+}
-+
-+static void ath11k_set_vht_txbf_cap(struct ath11k *ar, u32 *vht_cap)
-+{
-+	bool subfer, subfee;
-+	int sound_dim = 0;
-+
-+	subfer = !!(*vht_cap & (IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE));
-+	subfee = !!(*vht_cap & (IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE));
-+
-+	if (ar->num_tx_chains < 2) {
-+		*vht_cap &= ~(IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE);
-+		subfer = false;
-+	}
-+
-+	/* If SU Beaformer is not set, then disable MU Beamformer Capability */
-+	if (!subfer)
-+		*vht_cap &= ~(IEEE80211_VHT_CAP_MU_BEAMFORMER_CAPABLE);
-+
-+	/* If SU Beaformee is not set, then disable MU Beamformee Capability */
-+	if (!subfee)
-+		*vht_cap &= ~(IEEE80211_VHT_CAP_MU_BEAMFORMEE_CAPABLE);
-+
-+	sound_dim = (*vht_cap & IEEE80211_VHT_CAP_SOUNDING_DIMENSIONS_MASK);
-+	sound_dim >>= IEEE80211_VHT_CAP_SOUNDING_DIMENSIONS_SHIFT;
-+	*vht_cap &= ~IEEE80211_VHT_CAP_SOUNDING_DIMENSIONS_MASK;
-+
-+	/* TODO: Need to check invalid STS and Sound_dim values set by FW? */
-+
-+	/* Enable Sounding Dimension Field only if SU BF is enabled */
-+	if (subfer) {
-+		if (sound_dim > (ar->num_tx_chains - 1))
-+			sound_dim = ar->num_tx_chains - 1;
-+
-+		sound_dim <<= IEEE80211_VHT_CAP_SOUNDING_DIMENSIONS_SHIFT;
-+		sound_dim &=  IEEE80211_VHT_CAP_SOUNDING_DIMENSIONS_MASK;
-+		*vht_cap |= sound_dim;
-+	}
-+
-+	/* Use the STS advertised by FW unless SU Beamformee is not supported*/
-+	if (!subfee)
-+		*vht_cap &= ~(IEEE80211_VHT_CAP_BEAMFORMEE_STS_MASK);
-+}
-+
-+static struct ieee80211_sta_vht_cap
-+ath11k_create_vht_cap(struct ath11k *ar, u32 rate_cap_tx_chainmask,
-+		      u32 rate_cap_rx_chainmask)
-+{
-+	struct ieee80211_sta_vht_cap vht_cap = {0};
-+	u16 txmcs_map, rxmcs_map;
-+	int i;
-+
-+	vht_cap.vht_supported = 1;
-+	vht_cap.cap = ar->pdev->cap.vht_cap;
-+
-+	ath11k_set_vht_txbf_cap(ar, &vht_cap.cap);
-+
-+	/* TODO: Enable back VHT160 mode once association issues are fixed */
-+	/* Disabling VHT160 and VHT80+80 modes */
-+	vht_cap.cap &= ~IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK;
-+	vht_cap.cap &= ~IEEE80211_VHT_CAP_SHORT_GI_160;
-+
-+	rxmcs_map = 0;
-+	txmcs_map = 0;
-+	for (i = 0; i < 8; i++) {
-+		if (i < ar->num_tx_chains && rate_cap_tx_chainmask & BIT(i))
-+			txmcs_map |= IEEE80211_VHT_MCS_SUPPORT_0_9 << (i * 2);
-+		else
-+			txmcs_map |= IEEE80211_VHT_MCS_NOT_SUPPORTED << (i * 2);
-+
-+		if (i < ar->num_rx_chains && rate_cap_rx_chainmask & BIT(i))
-+			rxmcs_map |= IEEE80211_VHT_MCS_SUPPORT_0_9 << (i * 2);
-+		else
-+			rxmcs_map |= IEEE80211_VHT_MCS_NOT_SUPPORTED << (i * 2);
-+	}
-+
-+	if (rate_cap_tx_chainmask <= 1)
-+		vht_cap.cap &= ~IEEE80211_VHT_CAP_TXSTBC;
-+
-+	vht_cap.vht_mcs.rx_mcs_map = cpu_to_le16(rxmcs_map);
-+	vht_cap.vht_mcs.tx_mcs_map = cpu_to_le16(txmcs_map);
-+
-+	return vht_cap;
-+}
-+
-+static void ath11k_mac_setup_ht_vht_cap(struct ath11k *ar,
-+					struct ath11k_pdev_cap *cap,
-+					u32 *ht_cap_info)
-+{
-+	struct ieee80211_supported_band *band;
-+	u32 rate_cap_tx_chainmask;
-+	u32 rate_cap_rx_chainmask;
-+	u32 ht_cap;
-+
-+	rate_cap_tx_chainmask = ar->cfg_tx_chainmask >> cap->tx_chain_mask_shift;
-+	rate_cap_rx_chainmask = ar->cfg_rx_chainmask >> cap->rx_chain_mask_shift;
-+
-+	if (cap->supported_bands & WMI_HOST_WLAN_2G_CAP) {
-+		band = &ar->mac.sbands[NL80211_BAND_2GHZ];
-+		ht_cap = cap->band[NL80211_BAND_2GHZ].ht_cap_info;
-+		if (ht_cap_info)
-+			*ht_cap_info = ht_cap;
-+		band->ht_cap = ath11k_create_ht_cap(ar, ht_cap,
-+						    rate_cap_rx_chainmask);
-+	}
-+
-+	if (cap->supported_bands & WMI_HOST_WLAN_5G_CAP) {
-+		band = &ar->mac.sbands[NL80211_BAND_5GHZ];
-+		ht_cap = cap->band[NL80211_BAND_5GHZ].ht_cap_info;
-+		if (ht_cap_info)
-+			*ht_cap_info = ht_cap;
-+		band->ht_cap = ath11k_create_ht_cap(ar, ht_cap,
-+						    rate_cap_rx_chainmask);
-+		band->vht_cap = ath11k_create_vht_cap(ar, rate_cap_tx_chainmask,
-+						      rate_cap_rx_chainmask);
-+	}
-+}
-+
-+static int ath11k_check_chain_mask(struct ath11k *ar, u32 ant, bool is_tx_ant)
-+{
-+	/* TODO: Check the request chainmask against the supported
-+	 * chainmask table which is advertised in extented_service_ready event
-+	 */
-+
-+	return 0;
-+}
-+
-+static int __ath11k_set_antenna(struct ath11k *ar, u32 tx_ant, u32 rx_ant)
-+{
-+	int ret;
-+
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	if (ath11k_check_chain_mask(ar, tx_ant, true))
-+		return -EINVAL;
-+
-+	if (ath11k_check_chain_mask(ar, rx_ant, false))
-+		return -EINVAL;
-+
-+	ar->cfg_tx_chainmask = tx_ant;
-+	ar->cfg_rx_chainmask = rx_ant;
-+
-+	if (ar->state != ATH11K_STATE_ON &&
-+	    ar->state != ATH11K_STATE_RESTARTED)
-+		return 0;
-+
-+	ret = ath11k_wmi_pdev_set_param(ar, WMI_PDEV_PARAM_TX_CHAIN_MASK,
-+					tx_ant, ar->pdev->pdev_id);
-+	if (ret) {
-+		ath11k_warn(ar->ab, "failed to set tx-chainmask: %d, req 0x%x\n",
-+			    ret, tx_ant);
-+		return ret;
-+	}
-+
-+	ret = ath11k_wmi_pdev_set_param(ar, WMI_PDEV_PARAM_RX_CHAIN_MASK,
-+					rx_ant, ar->pdev->pdev_id);
-+	if (ret) {
-+		ath11k_warn(ar->ab, "failed to set rx-chainmask: %d, req 0x%x\n",
-+			    ret, rx_ant);
-+		return ret;
-+	}
-+
-+	/* Reload HT/VHT capability */
-+	ath11k_mac_setup_ht_vht_cap(ar, &ar->pdev->cap, NULL);
-+
-+	return 0;
-+}
-+
-+int ath11k_mac_tx_mgmt_pending_free(int buf_id, void *skb, void *ctx)
-+{
-+	struct ath11k *ar = ctx;
-+	struct ath11k_base *ab = ar->ab;
-+	struct sk_buff *msdu = skb;
-+	struct ieee80211_tx_info *info;
-+
-+	spin_lock_bh(&ar->txmgmt_idr_lock);
-+	idr_remove(&ar->txmgmt_idr, buf_id);
-+	spin_unlock_bh(&ar->txmgmt_idr_lock);
-+	dma_unmap_single(ab->dev, ATH11K_SKB_CB(msdu)->paddr, msdu->len,
-+			 DMA_TO_DEVICE);
-+
-+	info = IEEE80211_SKB_CB(msdu);
-+	memset(&info->status, 0, sizeof(info->status));
-+
-+	ieee80211_free_txskb(ar->hw, msdu);
-+
-+	return 0;
-+}
-+
-+static int ath11k_mac_vif_txmgmt_idr_remove(int buf_id, void *skb, void *ctx)
-+{
-+	struct ieee80211_vif *vif = ctx;
-+	struct ath11k_skb_cb *skb_cb = ATH11K_SKB_CB((struct sk_buff *)skb);
-+	struct sk_buff *msdu = skb;
-+	struct ath11k *ar = skb_cb->ar;
-+	struct ath11k_base *ab = ar->ab;
-+
-+	if (skb_cb->vif == vif) {
-+		spin_lock_bh(&ar->txmgmt_idr_lock);
-+		idr_remove(&ar->txmgmt_idr, buf_id);
-+		spin_unlock_bh(&ar->txmgmt_idr_lock);
-+		dma_unmap_single(ab->dev, skb_cb->paddr, msdu->len,
-+				 DMA_TO_DEVICE);
-+	}
-+
-+	return 0;
-+}
-+
-+static int ath11k_mac_mgmt_tx_wmi(struct ath11k *ar, struct ath11k_vif *arvif,
-+				  struct sk_buff *skb)
-+{
-+	struct ath11k_base *ab = ar->ab;
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
++enum wmi_host_hw_mode_config_type {
++	WMI_HOST_HW_MODE_SINGLE       = 0,
++	WMI_HOST_HW_MODE_DBS          = 1,
++	WMI_HOST_HW_MODE_SBS_PASSIVE  = 2,
++	WMI_HOST_HW_MODE_SBS          = 3,
++	WMI_HOST_HW_MODE_DBS_SBS      = 4,
++	WMI_HOST_HW_MODE_DBS_OR_SBS   = 5,
++
++	/* keep last */
++	WMI_HOST_HW_MODE_MAX
++};
++
++/* HW mode priority values used to detect the preferred HW mode
++ * on the available modes.
++ */
++enum wmi_host_hw_mode_priority {
++	WMI_HOST_HW_MODE_DBS_SBS_PRI,
++	WMI_HOST_HW_MODE_DBS_PRI,
++	WMI_HOST_HW_MODE_DBS_OR_SBS_PRI,
++	WMI_HOST_HW_MODE_SBS_PRI,
++	WMI_HOST_HW_MODE_SBS_PASSIVE_PRI,
++	WMI_HOST_HW_MODE_SINGLE_PRI,
++
++	/* keep last the lowest priority */
++	WMI_HOST_HW_MODE_MAX_PRI
++};
++
++enum {
++	WMI_HOST_WLAN_2G_CAP	= 0x1,
++	WMI_HOST_WLAN_5G_CAP	= 0x2,
++	WMI_HOST_WLAN_2G_5G_CAP	= 0x3,
++};
++
++/*
++ * wmi command groups.
++ */
++enum wmi_cmd_group {
++	/* 0 to 2 are reserved */
++	WMI_GRP_START = 0x3,
++	WMI_GRP_SCAN = WMI_GRP_START,
++	WMI_GRP_PDEV		= 0x4,
++	WMI_GRP_VDEV           = 0x5,
++	WMI_GRP_PEER           = 0x6,
++	WMI_GRP_MGMT           = 0x7,
++	WMI_GRP_BA_NEG         = 0x8,
++	WMI_GRP_STA_PS         = 0x9,
++	WMI_GRP_DFS            = 0xa,
++	WMI_GRP_ROAM           = 0xb,
++	WMI_GRP_OFL_SCAN       = 0xc,
++	WMI_GRP_P2P            = 0xd,
++	WMI_GRP_AP_PS          = 0xe,
++	WMI_GRP_RATE_CTRL      = 0xf,
++	WMI_GRP_PROFILE        = 0x10,
++	WMI_GRP_SUSPEND        = 0x11,
++	WMI_GRP_BCN_FILTER     = 0x12,
++	WMI_GRP_WOW            = 0x13,
++	WMI_GRP_RTT            = 0x14,
++	WMI_GRP_SPECTRAL       = 0x15,
++	WMI_GRP_STATS          = 0x16,
++	WMI_GRP_ARP_NS_OFL     = 0x17,
++	WMI_GRP_NLO_OFL        = 0x18,
++	WMI_GRP_GTK_OFL        = 0x19,
++	WMI_GRP_CSA_OFL        = 0x1a,
++	WMI_GRP_CHATTER        = 0x1b,
++	WMI_GRP_TID_ADDBA      = 0x1c,
++	WMI_GRP_MISC           = 0x1d,
++	WMI_GRP_GPIO           = 0x1e,
++	WMI_GRP_FWTEST         = 0x1f,
++	WMI_GRP_TDLS           = 0x20,
++	WMI_GRP_RESMGR         = 0x21,
++	WMI_GRP_STA_SMPS       = 0x22,
++	WMI_GRP_WLAN_HB        = 0x23,
++	WMI_GRP_RMC            = 0x24,
++	WMI_GRP_MHF_OFL        = 0x25,
++	WMI_GRP_LOCATION_SCAN  = 0x26,
++	WMI_GRP_OEM            = 0x27,
++	WMI_GRP_NAN            = 0x28,
++	WMI_GRP_COEX           = 0x29,
++	WMI_GRP_OBSS_OFL       = 0x2a,
++	WMI_GRP_LPI            = 0x2b,
++	WMI_GRP_EXTSCAN        = 0x2c,
++	WMI_GRP_DHCP_OFL       = 0x2d,
++	WMI_GRP_IPA            = 0x2e,
++	WMI_GRP_MDNS_OFL       = 0x2f,
++	WMI_GRP_SAP_OFL        = 0x30,
++	WMI_GRP_OCB            = 0x31,
++	WMI_GRP_SOC            = 0x32,
++	WMI_GRP_PKT_FILTER     = 0x33,
++	WMI_GRP_MAWC           = 0x34,
++	WMI_GRP_PMF_OFFLOAD    = 0x35,
++	WMI_GRP_BPF_OFFLOAD    = 0x36,
++	WMI_GRP_NAN_DATA       = 0x37,
++	WMI_GRP_PROTOTYPE      = 0x38,
++	WMI_GRP_MONITOR        = 0x39,
++	WMI_GRP_REGULATORY     = 0x3a,
++	WMI_GRP_HW_DATA_FILTER = 0x3b,
++};
++
++#define WMI_CMD_GRP(grp_id) (((grp_id) << 12) | 0x1)
++#define WMI_EVT_GRP_START_ID(grp_id) (((grp_id) << 12) | 0x1)
++
++#define WMI_CMD_UNSUPPORTED 0
++
++enum wmi_tlv_cmd_id {
++	WMI_INIT_CMDID = 0x1,
++	WMI_START_SCAN_CMDID = WMI_TLV_CMD(WMI_GRP_SCAN),
++	WMI_STOP_SCAN_CMDID,
++	WMI_SCAN_CHAN_LIST_CMDID,
++	WMI_SCAN_SCH_PRIO_TBL_CMDID,
++	WMI_SCAN_UPDATE_REQUEST_CMDID,
++	WMI_SCAN_PROB_REQ_OUI_CMDID,
++	WMI_SCAN_ADAPTIVE_DWELL_CONFIG_CMDID,
++	WMI_PDEV_SET_REGDOMAIN_CMDID = WMI_TLV_CMD(WMI_GRP_PDEV),
++	WMI_PDEV_SET_CHANNEL_CMDID,
++	WMI_PDEV_SET_PARAM_CMDID,
++	WMI_PDEV_PKTLOG_ENABLE_CMDID,
++	WMI_PDEV_PKTLOG_DISABLE_CMDID,
++	WMI_PDEV_SET_WMM_PARAMS_CMDID,
++	WMI_PDEV_SET_HT_CAP_IE_CMDID,
++	WMI_PDEV_SET_VHT_CAP_IE_CMDID,
++	WMI_PDEV_SET_DSCP_TID_MAP_CMDID,
++	WMI_PDEV_SET_QUIET_MODE_CMDID,
++	WMI_PDEV_GREEN_AP_PS_ENABLE_CMDID,
++	WMI_PDEV_GET_TPC_CONFIG_CMDID,
++	WMI_PDEV_SET_BASE_MACADDR_CMDID,
++	WMI_PDEV_DUMP_CMDID,
++	WMI_PDEV_SET_LED_CONFIG_CMDID,
++	WMI_PDEV_GET_TEMPERATURE_CMDID,
++	WMI_PDEV_SET_LED_FLASHING_CMDID,
++	WMI_PDEV_SMART_ANT_ENABLE_CMDID,
++	WMI_PDEV_SMART_ANT_SET_RX_ANTENNA_CMDID,
++	WMI_PDEV_SET_ANTENNA_SWITCH_TABLE_CMDID,
++	WMI_PDEV_SET_CTL_TABLE_CMDID,
++	WMI_PDEV_SET_MIMOGAIN_TABLE_CMDID,
++	WMI_PDEV_FIPS_CMDID,
++	WMI_PDEV_GET_ANI_CCK_CONFIG_CMDID,
++	WMI_PDEV_GET_ANI_OFDM_CONFIG_CMDID,
++	WMI_PDEV_GET_NFCAL_POWER_CMDID,
++	WMI_PDEV_GET_TPC_CMDID,
++	WMI_MIB_STATS_ENABLE_CMDID,
++	WMI_PDEV_SET_PCL_CMDID,
++	WMI_PDEV_SET_HW_MODE_CMDID,
++	WMI_PDEV_SET_MAC_CONFIG_CMDID,
++	WMI_PDEV_SET_ANTENNA_MODE_CMDID,
++	WMI_SET_PERIODIC_CHANNEL_STATS_CONFIG_CMDID,
++	WMI_PDEV_WAL_POWER_DEBUG_CMDID,
++	WMI_PDEV_SET_REORDER_TIMEOUT_VAL_CMDID,
++	WMI_PDEV_SET_WAKEUP_CONFIG_CMDID,
++	WMI_PDEV_GET_ANTDIV_STATUS_CMDID,
++	WMI_PDEV_GET_CHIP_POWER_STATS_CMDID,
++	WMI_PDEV_SET_STATS_THRESHOLD_CMDID,
++	WMI_PDEV_MULTIPLE_VDEV_RESTART_REQUEST_CMDID,
++	WMI_PDEV_UPDATE_PKT_ROUTING_CMDID,
++	WMI_PDEV_CHECK_CAL_VERSION_CMDID,
++	WMI_PDEV_SET_DIVERSITY_GAIN_CMDID,
++	WMI_PDEV_DIV_GET_RSSI_ANTID_CMDID,
++	WMI_PDEV_BSS_CHAN_INFO_REQUEST_CMDID,
++	WMI_PDEV_UPDATE_PMK_CACHE_CMDID,
++	WMI_PDEV_UPDATE_FILS_HLP_PKT_CMDID,
++	WMI_PDEV_UPDATE_CTLTABLE_REQUEST_CMDID,
++	WMI_PDEV_CONFIG_VENDOR_OUI_ACTION_CMDID,
++	WMI_PDEV_SET_AC_TX_QUEUE_OPTIMIZED_CMDID,
++	WMI_PDEV_SET_RX_FILTER_PROMISCUOUS_CMDID,
++	WMI_PDEV_DMA_RING_CFG_REQ_CMDID,
++	WMI_PDEV_HE_TB_ACTION_FRM_CMDID,
++	WMI_PDEV_PKTLOG_FILTER_CMDID,
++	WMI_VDEV_CREATE_CMDID = WMI_TLV_CMD(WMI_GRP_VDEV),
++	WMI_VDEV_DELETE_CMDID,
++	WMI_VDEV_START_REQUEST_CMDID,
++	WMI_VDEV_RESTART_REQUEST_CMDID,
++	WMI_VDEV_UP_CMDID,
++	WMI_VDEV_STOP_CMDID,
++	WMI_VDEV_DOWN_CMDID,
++	WMI_VDEV_SET_PARAM_CMDID,
++	WMI_VDEV_INSTALL_KEY_CMDID,
++	WMI_VDEV_WNM_SLEEPMODE_CMDID,
++	WMI_VDEV_WMM_ADDTS_CMDID,
++	WMI_VDEV_WMM_DELTS_CMDID,
++	WMI_VDEV_SET_WMM_PARAMS_CMDID,
++	WMI_VDEV_SET_GTX_PARAMS_CMDID,
++	WMI_VDEV_IPSEC_NATKEEPALIVE_FILTER_CMDID,
++	WMI_VDEV_PLMREQ_START_CMDID,
++	WMI_VDEV_PLMREQ_STOP_CMDID,
++	WMI_VDEV_TSF_TSTAMP_ACTION_CMDID,
++	WMI_VDEV_SET_IE_CMDID,
++	WMI_VDEV_RATEMASK_CMDID,
++	WMI_VDEV_ATF_REQUEST_CMDID,
++	WMI_VDEV_SET_DSCP_TID_MAP_CMDID,
++	WMI_VDEV_FILTER_NEIGHBOR_RX_PACKETS_CMDID,
++	WMI_VDEV_SET_QUIET_MODE_CMDID,
++	WMI_VDEV_SET_CUSTOM_AGGR_SIZE_CMDID,
++	WMI_VDEV_ENCRYPT_DECRYPT_DATA_REQ_CMDID,
++	WMI_VDEV_ADD_MAC_ADDR_TO_RX_FILTER_CMDID,
++	WMI_PEER_CREATE_CMDID = WMI_TLV_CMD(WMI_GRP_PEER),
++	WMI_PEER_DELETE_CMDID,
++	WMI_PEER_FLUSH_TIDS_CMDID,
++	WMI_PEER_SET_PARAM_CMDID,
++	WMI_PEER_ASSOC_CMDID,
++	WMI_PEER_ADD_WDS_ENTRY_CMDID,
++	WMI_PEER_REMOVE_WDS_ENTRY_CMDID,
++	WMI_PEER_MCAST_GROUP_CMDID,
++	WMI_PEER_INFO_REQ_CMDID,
++	WMI_PEER_GET_ESTIMATED_LINKSPEED_CMDID,
++	WMI_PEER_SET_RATE_REPORT_CONDITION_CMDID,
++	WMI_PEER_UPDATE_WDS_ENTRY_CMDID,
++	WMI_PEER_ADD_PROXY_STA_ENTRY_CMDID,
++	WMI_PEER_SMART_ANT_SET_TX_ANTENNA_CMDID,
++	WMI_PEER_SMART_ANT_SET_TRAIN_INFO_CMDID,
++	WMI_PEER_SMART_ANT_SET_NODE_CONFIG_OPS_CMDID,
++	WMI_PEER_ATF_REQUEST_CMDID,
++	WMI_PEER_BWF_REQUEST_CMDID,
++	WMI_PEER_REORDER_QUEUE_SETUP_CMDID,
++	WMI_PEER_REORDER_QUEUE_REMOVE_CMDID,
++	WMI_PEER_SET_RX_BLOCKSIZE_CMDID,
++	WMI_PEER_ANTDIV_INFO_REQ_CMDID,
++	WMI_PEER_OPER_MODE_CHANGE_EVENTID,
++	WMI_BCN_TX_CMDID = WMI_TLV_CMD(WMI_GRP_MGMT),
++	WMI_PDEV_SEND_BCN_CMDID,
++	WMI_BCN_TMPL_CMDID,
++	WMI_BCN_FILTER_RX_CMDID,
++	WMI_PRB_REQ_FILTER_RX_CMDID,
++	WMI_MGMT_TX_CMDID,
++	WMI_PRB_TMPL_CMDID,
++	WMI_MGMT_TX_SEND_CMDID,
++	WMI_OFFCHAN_DATA_TX_SEND_CMDID,
++	WMI_PDEV_SEND_FD_CMDID,
++	WMI_BCN_OFFLOAD_CTRL_CMDID,
++	WMI_BSS_COLOR_CHANGE_ENABLE_CMDID,
++	WMI_VDEV_BCN_OFFLOAD_QUIET_CONFIG_CMDID,
++	WMI_ADDBA_CLEAR_RESP_CMDID = WMI_TLV_CMD(WMI_GRP_BA_NEG),
++	WMI_ADDBA_SEND_CMDID,
++	WMI_ADDBA_STATUS_CMDID,
++	WMI_DELBA_SEND_CMDID,
++	WMI_ADDBA_SET_RESP_CMDID,
++	WMI_SEND_SINGLEAMSDU_CMDID,
++	WMI_STA_POWERSAVE_MODE_CMDID = WMI_TLV_CMD(WMI_GRP_STA_PS),
++	WMI_STA_POWERSAVE_PARAM_CMDID,
++	WMI_STA_MIMO_PS_MODE_CMDID,
++	WMI_PDEV_DFS_ENABLE_CMDID = WMI_TLV_CMD(WMI_GRP_DFS),
++	WMI_PDEV_DFS_DISABLE_CMDID,
++	WMI_DFS_PHYERR_FILTER_ENA_CMDID,
++	WMI_DFS_PHYERR_FILTER_DIS_CMDID,
++	WMI_PDEV_DFS_PHYERR_OFFLOAD_ENABLE_CMDID,
++	WMI_PDEV_DFS_PHYERR_OFFLOAD_DISABLE_CMDID,
++	WMI_VDEV_ADFS_CH_CFG_CMDID,
++	WMI_VDEV_ADFS_OCAC_ABORT_CMDID,
++	WMI_ROAM_SCAN_MODE = WMI_TLV_CMD(WMI_GRP_ROAM),
++	WMI_ROAM_SCAN_RSSI_THRESHOLD,
++	WMI_ROAM_SCAN_PERIOD,
++	WMI_ROAM_SCAN_RSSI_CHANGE_THRESHOLD,
++	WMI_ROAM_AP_PROFILE,
++	WMI_ROAM_CHAN_LIST,
++	WMI_ROAM_SCAN_CMD,
++	WMI_ROAM_SYNCH_COMPLETE,
++	WMI_ROAM_SET_RIC_REQUEST_CMDID,
++	WMI_ROAM_INVOKE_CMDID,
++	WMI_ROAM_FILTER_CMDID,
++	WMI_ROAM_SUBNET_CHANGE_CONFIG_CMDID,
++	WMI_ROAM_CONFIGURE_MAWC_CMDID,
++	WMI_ROAM_SET_MBO_PARAM_CMDID,
++	WMI_ROAM_PER_CONFIG_CMDID,
++	WMI_OFL_SCAN_ADD_AP_PROFILE = WMI_TLV_CMD(WMI_GRP_OFL_SCAN),
++	WMI_OFL_SCAN_REMOVE_AP_PROFILE,
++	WMI_OFL_SCAN_PERIOD,
++	WMI_P2P_DEV_SET_DEVICE_INFO = WMI_TLV_CMD(WMI_GRP_P2P),
++	WMI_P2P_DEV_SET_DISCOVERABILITY,
++	WMI_P2P_GO_SET_BEACON_IE,
++	WMI_P2P_GO_SET_PROBE_RESP_IE,
++	WMI_P2P_SET_VENDOR_IE_DATA_CMDID,
++	WMI_P2P_DISC_OFFLOAD_CONFIG_CMDID,
++	WMI_P2P_DISC_OFFLOAD_APPIE_CMDID,
++	WMI_P2P_DISC_OFFLOAD_PATTERN_CMDID,
++	WMI_P2P_SET_OPPPS_PARAM_CMDID,
++	WMI_P2P_LISTEN_OFFLOAD_START_CMDID,
++	WMI_P2P_LISTEN_OFFLOAD_STOP_CMDID,
++	WMI_AP_PS_PEER_PARAM_CMDID = WMI_TLV_CMD(WMI_GRP_AP_PS),
++	WMI_AP_PS_PEER_UAPSD_COEX_CMDID,
++	WMI_AP_PS_EGAP_PARAM_CMDID,
++	WMI_PEER_RATE_RETRY_SCHED_CMDID = WMI_TLV_CMD(WMI_GRP_RATE_CTRL),
++	WMI_WLAN_PROFILE_TRIGGER_CMDID = WMI_TLV_CMD(WMI_GRP_PROFILE),
++	WMI_WLAN_PROFILE_SET_HIST_INTVL_CMDID,
++	WMI_WLAN_PROFILE_GET_PROFILE_DATA_CMDID,
++	WMI_WLAN_PROFILE_ENABLE_PROFILE_ID_CMDID,
++	WMI_WLAN_PROFILE_LIST_PROFILE_ID_CMDID,
++	WMI_PDEV_SUSPEND_CMDID = WMI_TLV_CMD(WMI_GRP_SUSPEND),
++	WMI_PDEV_RESUME_CMDID,
++	WMI_ADD_BCN_FILTER_CMDID = WMI_TLV_CMD(WMI_GRP_BCN_FILTER),
++	WMI_RMV_BCN_FILTER_CMDID,
++	WMI_WOW_ADD_WAKE_PATTERN_CMDID = WMI_TLV_CMD(WMI_GRP_WOW),
++	WMI_WOW_DEL_WAKE_PATTERN_CMDID,
++	WMI_WOW_ENABLE_DISABLE_WAKE_EVENT_CMDID,
++	WMI_WOW_ENABLE_CMDID,
++	WMI_WOW_HOSTWAKEUP_FROM_SLEEP_CMDID,
++	WMI_WOW_IOAC_ADD_KEEPALIVE_CMDID,
++	WMI_WOW_IOAC_DEL_KEEPALIVE_CMDID,
++	WMI_WOW_IOAC_ADD_WAKE_PATTERN_CMDID,
++	WMI_WOW_IOAC_DEL_WAKE_PATTERN_CMDID,
++	WMI_D0_WOW_ENABLE_DISABLE_CMDID,
++	WMI_EXTWOW_ENABLE_CMDID,
++	WMI_EXTWOW_SET_APP_TYPE1_PARAMS_CMDID,
++	WMI_EXTWOW_SET_APP_TYPE2_PARAMS_CMDID,
++	WMI_WOW_ENABLE_ICMPV6_NA_FLT_CMDID,
++	WMI_WOW_UDP_SVC_OFLD_CMDID,
++	WMI_WOW_HOSTWAKEUP_GPIO_PIN_PATTERN_CONFIG_CMDID,
++	WMI_WOW_SET_ACTION_WAKE_UP_CMDID,
++	WMI_RTT_MEASREQ_CMDID = WMI_TLV_CMD(WMI_GRP_RTT),
++	WMI_RTT_TSF_CMDID,
++	WMI_VDEV_SPECTRAL_SCAN_CONFIGURE_CMDID = WMI_TLV_CMD(WMI_GRP_SPECTRAL),
++	WMI_VDEV_SPECTRAL_SCAN_ENABLE_CMDID,
++	WMI_REQUEST_STATS_CMDID = WMI_TLV_CMD(WMI_GRP_STATS),
++	WMI_MCC_SCHED_TRAFFIC_STATS_CMDID,
++	WMI_REQUEST_STATS_EXT_CMDID,
++	WMI_REQUEST_LINK_STATS_CMDID,
++	WMI_START_LINK_STATS_CMDID,
++	WMI_CLEAR_LINK_STATS_CMDID,
++	WMI_GET_FW_MEM_DUMP_CMDID,
++	WMI_DEBUG_MESG_FLUSH_CMDID,
++	WMI_DIAG_EVENT_LOG_CONFIG_CMDID,
++	WMI_REQUEST_WLAN_STATS_CMDID,
++	WMI_REQUEST_RCPI_CMDID,
++	WMI_REQUEST_PEER_STATS_INFO_CMDID,
++	WMI_REQUEST_RADIO_CHAN_STATS_CMDID,
++	WMI_SET_ARP_NS_OFFLOAD_CMDID = WMI_TLV_CMD(WMI_GRP_ARP_NS_OFL),
++	WMI_ADD_PROACTIVE_ARP_RSP_PATTERN_CMDID,
++	WMI_DEL_PROACTIVE_ARP_RSP_PATTERN_CMDID,
++	WMI_NETWORK_LIST_OFFLOAD_CONFIG_CMDID = WMI_TLV_CMD(WMI_GRP_NLO_OFL),
++	WMI_APFIND_CMDID,
++	WMI_PASSPOINT_LIST_CONFIG_CMDID,
++	WMI_NLO_CONFIGURE_MAWC_CMDID,
++	WMI_GTK_OFFLOAD_CMDID = WMI_TLV_CMD(WMI_GRP_GTK_OFL),
++	WMI_CSA_OFFLOAD_ENABLE_CMDID = WMI_TLV_CMD(WMI_GRP_CSA_OFL),
++	WMI_CSA_OFFLOAD_CHANSWITCH_CMDID,
++	WMI_CHATTER_SET_MODE_CMDID = WMI_TLV_CMD(WMI_GRP_CHATTER),
++	WMI_CHATTER_ADD_COALESCING_FILTER_CMDID,
++	WMI_CHATTER_DELETE_COALESCING_FILTER_CMDID,
++	WMI_CHATTER_COALESCING_QUERY_CMDID,
++	WMI_PEER_TID_ADDBA_CMDID = WMI_TLV_CMD(WMI_GRP_TID_ADDBA),
++	WMI_PEER_TID_DELBA_CMDID,
++	WMI_STA_DTIM_PS_METHOD_CMDID,
++	WMI_STA_UAPSD_AUTO_TRIG_CMDID,
++	WMI_STA_KEEPALIVE_CMDID,
++	WMI_BA_REQ_SSN_CMDID,
++	WMI_ECHO_CMDID = WMI_TLV_CMD(WMI_GRP_MISC),
++	WMI_PDEV_UTF_CMDID,
++	WMI_DBGLOG_CFG_CMDID,
++	WMI_PDEV_QVIT_CMDID,
++	WMI_PDEV_FTM_INTG_CMDID,
++	WMI_VDEV_SET_KEEPALIVE_CMDID,
++	WMI_VDEV_GET_KEEPALIVE_CMDID,
++	WMI_FORCE_FW_HANG_CMDID,
++	WMI_SET_MCASTBCAST_FILTER_CMDID,
++	WMI_THERMAL_MGMT_CMDID,
++	WMI_HOST_AUTO_SHUTDOWN_CFG_CMDID,
++	WMI_TPC_CHAINMASK_CONFIG_CMDID,
++	WMI_SET_ANTENNA_DIVERSITY_CMDID,
++	WMI_OCB_SET_SCHED_CMDID,
++	WMI_RSSI_BREACH_MONITOR_CONFIG_CMDID,
++	WMI_LRO_CONFIG_CMDID,
++	WMI_TRANSFER_DATA_TO_FLASH_CMDID,
++	WMI_CONFIG_ENHANCED_MCAST_FILTER_CMDID,
++	WMI_VDEV_WISA_CMDID,
++	WMI_DBGLOG_TIME_STAMP_SYNC_CMDID,
++	WMI_SET_MULTIPLE_MCAST_FILTER_CMDID,
++	WMI_READ_DATA_FROM_FLASH_CMDID,
++	WMI_GPIO_CONFIG_CMDID = WMI_TLV_CMD(WMI_GRP_GPIO),
++	WMI_GPIO_OUTPUT_CMDID,
++	WMI_TXBF_CMDID,
++	WMI_FWTEST_VDEV_MCC_SET_TBTT_MODE_CMDID = WMI_TLV_CMD(WMI_GRP_FWTEST),
++	WMI_FWTEST_P2P_SET_NOA_PARAM_CMDID,
++	WMI_UNIT_TEST_CMDID,
++	WMI_FWTEST_CMDID,
++	WMI_QBOOST_CFG_CMDID,
++	WMI_TDLS_SET_STATE_CMDID = WMI_TLV_CMD(WMI_GRP_TDLS),
++	WMI_TDLS_PEER_UPDATE_CMDID,
++	WMI_TDLS_SET_OFFCHAN_MODE_CMDID,
++	WMI_RESMGR_ADAPTIVE_OCS_EN_DIS_CMDID = WMI_TLV_CMD(WMI_GRP_RESMGR),
++	WMI_RESMGR_SET_CHAN_TIME_QUOTA_CMDID,
++	WMI_RESMGR_SET_CHAN_LATENCY_CMDID,
++	WMI_STA_SMPS_FORCE_MODE_CMDID = WMI_TLV_CMD(WMI_GRP_STA_SMPS),
++	WMI_STA_SMPS_PARAM_CMDID,
++	WMI_HB_SET_ENABLE_CMDID = WMI_TLV_CMD(WMI_GRP_WLAN_HB),
++	WMI_HB_SET_TCP_PARAMS_CMDID,
++	WMI_HB_SET_TCP_PKT_FILTER_CMDID,
++	WMI_HB_SET_UDP_PARAMS_CMDID,
++	WMI_HB_SET_UDP_PKT_FILTER_CMDID,
++	WMI_RMC_SET_MODE_CMDID = WMI_TLV_CMD(WMI_GRP_RMC),
++	WMI_RMC_SET_ACTION_PERIOD_CMDID,
++	WMI_RMC_CONFIG_CMDID,
++	WMI_RMC_SET_MANUAL_LEADER_CMDID,
++	WMI_MHF_OFFLOAD_SET_MODE_CMDID = WMI_TLV_CMD(WMI_GRP_MHF_OFL),
++	WMI_MHF_OFFLOAD_PLUMB_ROUTING_TBL_CMDID,
++	WMI_BATCH_SCAN_ENABLE_CMDID = WMI_TLV_CMD(WMI_GRP_LOCATION_SCAN),
++	WMI_BATCH_SCAN_DISABLE_CMDID,
++	WMI_BATCH_SCAN_TRIGGER_RESULT_CMDID,
++	WMI_OEM_REQ_CMDID = WMI_TLV_CMD(WMI_GRP_OEM),
++	WMI_OEM_REQUEST_CMDID,
++	WMI_LPI_OEM_REQ_CMDID,
++	WMI_NAN_CMDID = WMI_TLV_CMD(WMI_GRP_NAN),
++	WMI_MODEM_POWER_STATE_CMDID = WMI_TLV_CMD(WMI_GRP_COEX),
++	WMI_CHAN_AVOID_UPDATE_CMDID,
++	WMI_COEX_CONFIG_CMDID,
++	WMI_CHAN_AVOID_RPT_ALLOW_CMDID,
++	WMI_COEX_GET_ANTENNA_ISOLATION_CMDID,
++	WMI_SAR_LIMITS_CMDID,
++	WMI_OBSS_SCAN_ENABLE_CMDID = WMI_TLV_CMD(WMI_GRP_OBSS_OFL),
++	WMI_OBSS_SCAN_DISABLE_CMDID,
++	WMI_LPI_MGMT_SNOOPING_CONFIG_CMDID = WMI_TLV_CMD(WMI_GRP_LPI),
++	WMI_LPI_START_SCAN_CMDID,
++	WMI_LPI_STOP_SCAN_CMDID,
++	WMI_EXTSCAN_START_CMDID = WMI_TLV_CMD(WMI_GRP_EXTSCAN),
++	WMI_EXTSCAN_STOP_CMDID,
++	WMI_EXTSCAN_CONFIGURE_WLAN_CHANGE_MONITOR_CMDID,
++	WMI_EXTSCAN_CONFIGURE_HOTLIST_MONITOR_CMDID,
++	WMI_EXTSCAN_GET_CACHED_RESULTS_CMDID,
++	WMI_EXTSCAN_GET_WLAN_CHANGE_RESULTS_CMDID,
++	WMI_EXTSCAN_SET_CAPABILITIES_CMDID,
++	WMI_EXTSCAN_GET_CAPABILITIES_CMDID,
++	WMI_EXTSCAN_CONFIGURE_HOTLIST_SSID_MONITOR_CMDID,
++	WMI_EXTSCAN_CONFIGURE_MAWC_CMDID,
++	WMI_SET_DHCP_SERVER_OFFLOAD_CMDID = WMI_TLV_CMD(WMI_GRP_DHCP_OFL),
++	WMI_IPA_OFFLOAD_ENABLE_DISABLE_CMDID = WMI_TLV_CMD(WMI_GRP_IPA),
++	WMI_MDNS_OFFLOAD_ENABLE_CMDID = WMI_TLV_CMD(WMI_GRP_MDNS_OFL),
++	WMI_MDNS_SET_FQDN_CMDID,
++	WMI_MDNS_SET_RESPONSE_CMDID,
++	WMI_MDNS_GET_STATS_CMDID,
++	WMI_SAP_OFL_ENABLE_CMDID = WMI_TLV_CMD(WMI_GRP_SAP_OFL),
++	WMI_SAP_SET_BLACKLIST_PARAM_CMDID,
++	WMI_OCB_SET_CONFIG_CMDID = WMI_TLV_CMD(WMI_GRP_OCB),
++	WMI_OCB_SET_UTC_TIME_CMDID,
++	WMI_OCB_START_TIMING_ADVERT_CMDID,
++	WMI_OCB_STOP_TIMING_ADVERT_CMDID,
++	WMI_OCB_GET_TSF_TIMER_CMDID,
++	WMI_DCC_GET_STATS_CMDID,
++	WMI_DCC_CLEAR_STATS_CMDID,
++	WMI_DCC_UPDATE_NDL_CMDID,
++	WMI_SOC_SET_PCL_CMDID = WMI_TLV_CMD(WMI_GRP_SOC),
++	WMI_SOC_SET_HW_MODE_CMDID,
++	WMI_SOC_SET_DUAL_MAC_CONFIG_CMDID,
++	WMI_SOC_SET_ANTENNA_MODE_CMDID,
++	WMI_PACKET_FILTER_CONFIG_CMDID = WMI_TLV_CMD(WMI_GRP_PKT_FILTER),
++	WMI_PACKET_FILTER_ENABLE_CMDID,
++	WMI_MAWC_SENSOR_REPORT_IND_CMDID = WMI_TLV_CMD(WMI_GRP_MAWC),
++	WMI_PMF_OFFLOAD_SET_SA_QUERY_CMDID = WMI_TLV_CMD(WMI_GRP_PMF_OFFLOAD),
++	WMI_BPF_GET_CAPABILITY_CMDID = WMI_TLV_CMD(WMI_GRP_BPF_OFFLOAD),
++	WMI_BPF_GET_VDEV_STATS_CMDID,
++	WMI_BPF_SET_VDEV_INSTRUCTIONS_CMDID,
++	WMI_BPF_DEL_VDEV_INSTRUCTIONS_CMDID,
++	WMI_BPF_SET_VDEV_ACTIVE_MODE_CMDID,
++	WMI_MNT_FILTER_CMDID = WMI_TLV_CMD(WMI_GRP_MONITOR),
++	WMI_SET_CURRENT_COUNTRY_CMDID = WMI_TLV_CMD(WMI_GRP_REGULATORY),
++	WMI_11D_SCAN_START_CMDID,
++	WMI_11D_SCAN_STOP_CMDID,
++	WMI_SET_INIT_COUNTRY_CMDID,
++	WMI_NDI_GET_CAP_REQ_CMDID = WMI_TLV_CMD(WMI_GRP_PROTOTYPE),
++	WMI_NDP_INITIATOR_REQ_CMDID,
++	WMI_NDP_RESPONDER_REQ_CMDID,
++	WMI_NDP_END_REQ_CMDID,
++	WMI_HW_DATA_FILTER_CMDID = WMI_TLV_CMD(WMI_GRP_HW_DATA_FILTER),
++};
++
++enum wmi_tlv_event_id {
++	WMI_SERVICE_READY_EVENTID = 0x1,
++	WMI_READY_EVENTID,
++	WMI_SERVICE_AVAILABLE_EVENTID,
++	WMI_SCAN_EVENTID = WMI_EVT_GRP_START_ID(WMI_GRP_SCAN),
++	WMI_PDEV_TPC_CONFIG_EVENTID = WMI_TLV_CMD(WMI_GRP_PDEV),
++	WMI_CHAN_INFO_EVENTID,
++	WMI_PHYERR_EVENTID,
++	WMI_PDEV_DUMP_EVENTID,
++	WMI_TX_PAUSE_EVENTID,
++	WMI_DFS_RADAR_EVENTID,
++	WMI_PDEV_L1SS_TRACK_EVENTID,
++	WMI_PDEV_TEMPERATURE_EVENTID,
++	WMI_SERVICE_READY_EXT_EVENTID,
++	WMI_PDEV_FIPS_EVENTID,
++	WMI_PDEV_CHANNEL_HOPPING_EVENTID,
++	WMI_PDEV_ANI_CCK_LEVEL_EVENTID,
++	WMI_PDEV_ANI_OFDM_LEVEL_EVENTID,
++	WMI_PDEV_TPC_EVENTID,
++	WMI_PDEV_NFCAL_POWER_ALL_CHANNELS_EVENTID,
++	WMI_PDEV_SET_HW_MODE_RESP_EVENTID,
++	WMI_PDEV_HW_MODE_TRANSITION_EVENTID,
++	WMI_PDEV_SET_MAC_CONFIG_RESP_EVENTID,
++	WMI_PDEV_ANTDIV_STATUS_EVENTID,
++	WMI_PDEV_CHIP_POWER_STATS_EVENTID,
++	WMI_PDEV_CHIP_POWER_SAVE_FAILURE_DETECTED_EVENTID,
++	WMI_PDEV_CSA_SWITCH_COUNT_STATUS_EVENTID,
++	WMI_PDEV_CHECK_CAL_VERSION_EVENTID,
++	WMI_PDEV_DIV_RSSI_ANTID_EVENTID,
++	WMI_PDEV_BSS_CHAN_INFO_EVENTID,
++	WMI_PDEV_UPDATE_CTLTABLE_EVENTID,
++	WMI_PDEV_DMA_RING_CFG_RSP_EVENTID,
++	WMI_PDEV_DMA_RING_BUF_RELEASE_EVENTID,
++	WMI_PDEV_CTL_FAILSAFE_CHECK_EVENTID,
++	WMI_VDEV_START_RESP_EVENTID = WMI_TLV_CMD(WMI_GRP_VDEV),
++	WMI_VDEV_STOPPED_EVENTID,
++	WMI_VDEV_INSTALL_KEY_COMPLETE_EVENTID,
++	WMI_VDEV_MCC_BCN_INTERVAL_CHANGE_REQ_EVENTID,
++	WMI_VDEV_TSF_REPORT_EVENTID,
++	WMI_VDEV_DELETE_RESP_EVENTID,
++	WMI_VDEV_ENCRYPT_DECRYPT_DATA_RESP_EVENTID,
++	WMI_VDEV_ADD_MAC_ADDR_TO_RX_FILTER_STATUS_EVENTID,
++	WMI_PEER_STA_KICKOUT_EVENTID = WMI_TLV_CMD(WMI_GRP_PEER),
++	WMI_PEER_INFO_EVENTID,
++	WMI_PEER_TX_FAIL_CNT_THR_EVENTID,
++	WMI_PEER_ESTIMATED_LINKSPEED_EVENTID,
++	WMI_PEER_STATE_EVENTID,
++	WMI_PEER_ASSOC_CONF_EVENTID,
++	WMI_PEER_DELETE_RESP_EVENTID,
++	WMI_PEER_RATECODE_LIST_EVENTID,
++	WMI_WDS_PEER_EVENTID,
++	WMI_PEER_STA_PS_STATECHG_EVENTID,
++	WMI_PEER_ANTDIV_INFO_EVENTID,
++	WMI_MGMT_RX_EVENTID = WMI_TLV_CMD(WMI_GRP_MGMT),
++	WMI_HOST_SWBA_EVENTID,
++	WMI_TBTTOFFSET_UPDATE_EVENTID,
++	WMI_OFFLOAD_BCN_TX_STATUS_EVENTID,
++	WMI_OFFLOAD_PROB_RESP_TX_STATUS_EVENTID,
++	WMI_MGMT_TX_COMPLETION_EVENTID,
++	WMI_MGMT_TX_BUNDLE_COMPLETION_EVENTID,
++	WMI_TBTTOFFSET_EXT_UPDATE_EVENTID,
++	WMI_TX_DELBA_COMPLETE_EVENTID = WMI_TLV_CMD(WMI_GRP_BA_NEG),
++	WMI_TX_ADDBA_COMPLETE_EVENTID,
++	WMI_BA_RSP_SSN_EVENTID,
++	WMI_AGGR_STATE_TRIG_EVENTID,
++	WMI_ROAM_EVENTID = WMI_TLV_CMD(WMI_GRP_ROAM),
++	WMI_PROFILE_MATCH,
++	WMI_ROAM_SYNCH_EVENTID,
++	WMI_P2P_DISC_EVENTID = WMI_TLV_CMD(WMI_GRP_P2P),
++	WMI_P2P_NOA_EVENTID,
++	WMI_P2P_LISTEN_OFFLOAD_STOPPED_EVENTID,
++	WMI_AP_PS_EGAP_INFO_EVENTID = WMI_TLV_CMD(WMI_GRP_AP_PS),
++	WMI_PDEV_RESUME_EVENTID = WMI_TLV_CMD(WMI_GRP_SUSPEND),
++	WMI_WOW_WAKEUP_HOST_EVENTID = WMI_TLV_CMD(WMI_GRP_WOW),
++	WMI_D0_WOW_DISABLE_ACK_EVENTID,
++	WMI_WOW_INITIAL_WAKEUP_EVENTID,
++	WMI_RTT_MEASUREMENT_REPORT_EVENTID = WMI_TLV_CMD(WMI_GRP_RTT),
++	WMI_TSF_MEASUREMENT_REPORT_EVENTID,
++	WMI_RTT_ERROR_REPORT_EVENTID,
++	WMI_STATS_EXT_EVENTID = WMI_TLV_CMD(WMI_GRP_STATS),
++	WMI_IFACE_LINK_STATS_EVENTID,
++	WMI_PEER_LINK_STATS_EVENTID,
++	WMI_RADIO_LINK_STATS_EVENTID,
++	WMI_UPDATE_FW_MEM_DUMP_EVENTID,
++	WMI_DIAG_EVENT_LOG_SUPPORTED_EVENTID,
++	WMI_INST_RSSI_STATS_EVENTID,
++	WMI_RADIO_TX_POWER_LEVEL_STATS_EVENTID,
++	WMI_REPORT_STATS_EVENTID,
++	WMI_UPDATE_RCPI_EVENTID,
++	WMI_PEER_STATS_INFO_EVENTID,
++	WMI_RADIO_CHAN_STATS_EVENTID,
++	WMI_NLO_MATCH_EVENTID = WMI_TLV_CMD(WMI_GRP_NLO_OFL),
++	WMI_NLO_SCAN_COMPLETE_EVENTID,
++	WMI_APFIND_EVENTID,
++	WMI_PASSPOINT_MATCH_EVENTID,
++	WMI_GTK_OFFLOAD_STATUS_EVENTID = WMI_TLV_CMD(WMI_GRP_GTK_OFL),
++	WMI_GTK_REKEY_FAIL_EVENTID,
++	WMI_CSA_HANDLING_EVENTID = WMI_TLV_CMD(WMI_GRP_CSA_OFL),
++	WMI_CHATTER_PC_QUERY_EVENTID = WMI_TLV_CMD(WMI_GRP_CHATTER),
++	WMI_PDEV_DFS_RADAR_DETECTION_EVENTID = WMI_TLV_CMD(WMI_GRP_DFS),
++	WMI_VDEV_DFS_CAC_COMPLETE_EVENTID,
++	WMI_VDEV_ADFS_OCAC_COMPLETE_EVENTID,
++	WMI_ECHO_EVENTID = WMI_TLV_CMD(WMI_GRP_MISC),
++	WMI_PDEV_UTF_EVENTID,
++	WMI_DEBUG_MESG_EVENTID,
++	WMI_UPDATE_STATS_EVENTID,
++	WMI_DEBUG_PRINT_EVENTID,
++	WMI_DCS_INTERFERENCE_EVENTID,
++	WMI_PDEV_QVIT_EVENTID,
++	WMI_WLAN_PROFILE_DATA_EVENTID,
++	WMI_PDEV_FTM_INTG_EVENTID,
++	WMI_WLAN_FREQ_AVOID_EVENTID,
++	WMI_VDEV_GET_KEEPALIVE_EVENTID,
++	WMI_THERMAL_MGMT_EVENTID,
++	WMI_DIAG_DATA_CONTAINER_EVENTID,
++	WMI_HOST_AUTO_SHUTDOWN_EVENTID,
++	WMI_UPDATE_WHAL_MIB_STATS_EVENTID,
++	WMI_UPDATE_VDEV_RATE_STATS_EVENTID,
++	WMI_DIAG_EVENTID,
++	WMI_OCB_SET_SCHED_EVENTID,
++	WMI_DEBUG_MESG_FLUSH_COMPLETE_EVENTID,
++	WMI_RSSI_BREACH_EVENTID,
++	WMI_TRANSFER_DATA_TO_FLASH_COMPLETE_EVENTID,
++	WMI_PDEV_UTF_SCPC_EVENTID,
++	WMI_READ_DATA_FROM_FLASH_EVENTID,
++	WMI_REPORT_RX_AGGR_FAILURE_EVENTID,
++	WMI_PKGID_EVENTID,
++	WMI_GPIO_INPUT_EVENTID = WMI_TLV_CMD(WMI_GRP_GPIO),
++	WMI_UPLOADH_EVENTID,
++	WMI_CAPTUREH_EVENTID,
++	WMI_RFKILL_STATE_CHANGE_EVENTID,
++	WMI_TDLS_PEER_EVENTID = WMI_TLV_CMD(WMI_GRP_TDLS),
++	WMI_STA_SMPS_FORCE_MODE_COMPL_EVENTID = WMI_TLV_CMD(WMI_GRP_STA_SMPS),
++	WMI_BATCH_SCAN_ENABLED_EVENTID = WMI_TLV_CMD(WMI_GRP_LOCATION_SCAN),
++	WMI_BATCH_SCAN_RESULT_EVENTID,
++	WMI_OEM_CAPABILITY_EVENTID = WMI_TLV_CMD(WMI_GRP_OEM),
++	WMI_OEM_MEASUREMENT_REPORT_EVENTID,
++	WMI_OEM_ERROR_REPORT_EVENTID,
++	WMI_OEM_RESPONSE_EVENTID,
++	WMI_NAN_EVENTID = WMI_TLV_CMD(WMI_GRP_NAN),
++	WMI_NAN_DISC_IFACE_CREATED_EVENTID,
++	WMI_NAN_DISC_IFACE_DELETED_EVENTID,
++	WMI_NAN_STARTED_CLUSTER_EVENTID,
++	WMI_NAN_JOINED_CLUSTER_EVENTID,
++	WMI_COEX_REPORT_ANTENNA_ISOLATION_EVENTID = WMI_TLV_CMD(WMI_GRP_COEX),
++	WMI_LPI_RESULT_EVENTID = WMI_TLV_CMD(WMI_GRP_LPI),
++	WMI_LPI_STATUS_EVENTID,
++	WMI_LPI_HANDOFF_EVENTID,
++	WMI_EXTSCAN_START_STOP_EVENTID = WMI_TLV_CMD(WMI_GRP_EXTSCAN),
++	WMI_EXTSCAN_OPERATION_EVENTID,
++	WMI_EXTSCAN_TABLE_USAGE_EVENTID,
++	WMI_EXTSCAN_CACHED_RESULTS_EVENTID,
++	WMI_EXTSCAN_WLAN_CHANGE_RESULTS_EVENTID,
++	WMI_EXTSCAN_HOTLIST_MATCH_EVENTID,
++	WMI_EXTSCAN_CAPABILITIES_EVENTID,
++	WMI_EXTSCAN_HOTLIST_SSID_MATCH_EVENTID,
++	WMI_MDNS_STATS_EVENTID = WMI_TLV_CMD(WMI_GRP_MDNS_OFL),
++	WMI_SAP_OFL_ADD_STA_EVENTID = WMI_TLV_CMD(WMI_GRP_SAP_OFL),
++	WMI_SAP_OFL_DEL_STA_EVENTID,
++	WMI_OCB_SET_CONFIG_RESP_EVENTID = WMI_TLV_CMD(WMI_GRP_OCB),
++	WMI_OCB_GET_TSF_TIMER_RESP_EVENTID,
++	WMI_DCC_GET_STATS_RESP_EVENTID,
++	WMI_DCC_UPDATE_NDL_RESP_EVENTID,
++	WMI_DCC_STATS_EVENTID,
++	WMI_SOC_SET_HW_MODE_RESP_EVENTID = WMI_TLV_CMD(WMI_GRP_SOC),
++	WMI_SOC_HW_MODE_TRANSITION_EVENTID,
++	WMI_SOC_SET_DUAL_MAC_CONFIG_RESP_EVENTID,
++	WMI_MAWC_ENABLE_SENSOR_EVENTID = WMI_TLV_CMD(WMI_GRP_MAWC),
++	WMI_BPF_CAPABILIY_INFO_EVENTID = WMI_TLV_CMD(WMI_GRP_BPF_OFFLOAD),
++	WMI_BPF_VDEV_STATS_INFO_EVENTID,
++	WMI_RMC_NEW_LEADER_EVENTID = WMI_TLV_CMD(WMI_GRP_RMC),
++	WMI_REG_CHAN_LIST_CC_EVENTID = WMI_TLV_CMD(WMI_GRP_REGULATORY),
++	WMI_11D_NEW_COUNTRY_EVENTID,
++	WMI_NDI_CAP_RSP_EVENTID = WMI_TLV_CMD(WMI_GRP_PROTOTYPE),
++	WMI_NDP_INITIATOR_RSP_EVENTID,
++	WMI_NDP_RESPONDER_RSP_EVENTID,
++	WMI_NDP_END_RSP_EVENTID,
++	WMI_NDP_INDICATION_EVENTID,
++	WMI_NDP_CONFIRM_EVENTID,
++	WMI_NDP_END_INDICATION_EVENTID,
++};
++
++enum wmi_tlv_pdev_param {
++	WMI_PDEV_PARAM_TX_CHAIN_MASK = 0x1,
++	WMI_PDEV_PARAM_RX_CHAIN_MASK,
++	WMI_PDEV_PARAM_TXPOWER_LIMIT2G,
++	WMI_PDEV_PARAM_TXPOWER_LIMIT5G,
++	WMI_PDEV_PARAM_TXPOWER_SCALE,
++	WMI_PDEV_PARAM_BEACON_GEN_MODE,
++	WMI_PDEV_PARAM_BEACON_TX_MODE,
++	WMI_PDEV_PARAM_RESMGR_OFFCHAN_MODE,
++	WMI_PDEV_PARAM_PROTECTION_MODE,
++	WMI_PDEV_PARAM_DYNAMIC_BW,
++	WMI_PDEV_PARAM_NON_AGG_SW_RETRY_TH,
++	WMI_PDEV_PARAM_AGG_SW_RETRY_TH,
++	WMI_PDEV_PARAM_STA_KICKOUT_TH,
++	WMI_PDEV_PARAM_AC_AGGRSIZE_SCALING,
++	WMI_PDEV_PARAM_LTR_ENABLE,
++	WMI_PDEV_PARAM_LTR_AC_LATENCY_BE,
++	WMI_PDEV_PARAM_LTR_AC_LATENCY_BK,
++	WMI_PDEV_PARAM_LTR_AC_LATENCY_VI,
++	WMI_PDEV_PARAM_LTR_AC_LATENCY_VO,
++	WMI_PDEV_PARAM_LTR_AC_LATENCY_TIMEOUT,
++	WMI_PDEV_PARAM_LTR_SLEEP_OVERRIDE,
++	WMI_PDEV_PARAM_LTR_RX_OVERRIDE,
++	WMI_PDEV_PARAM_LTR_TX_ACTIVITY_TIMEOUT,
++	WMI_PDEV_PARAM_L1SS_ENABLE,
++	WMI_PDEV_PARAM_DSLEEP_ENABLE,
++	WMI_PDEV_PARAM_PCIELP_TXBUF_FLUSH,
++	WMI_PDEV_PARAM_PCIELP_TXBUF_WATERMARK,
++	WMI_PDEV_PARAM_PCIELP_TXBUF_TMO_EN,
++	WMI_PDEV_PARAM_PCIELP_TXBUF_TMO_VALUE,
++	WMI_PDEV_PARAM_PDEV_STATS_UPDATE_PERIOD,
++	WMI_PDEV_PARAM_VDEV_STATS_UPDATE_PERIOD,
++	WMI_PDEV_PARAM_PEER_STATS_UPDATE_PERIOD,
++	WMI_PDEV_PARAM_BCNFLT_STATS_UPDATE_PERIOD,
++	WMI_PDEV_PARAM_PMF_QOS,
++	WMI_PDEV_PARAM_ARP_AC_OVERRIDE,
++	WMI_PDEV_PARAM_DCS,
++	WMI_PDEV_PARAM_ANI_ENABLE,
++	WMI_PDEV_PARAM_ANI_POLL_PERIOD,
++	WMI_PDEV_PARAM_ANI_LISTEN_PERIOD,
++	WMI_PDEV_PARAM_ANI_OFDM_LEVEL,
++	WMI_PDEV_PARAM_ANI_CCK_LEVEL,
++	WMI_PDEV_PARAM_DYNTXCHAIN,
++	WMI_PDEV_PARAM_PROXY_STA,
++	WMI_PDEV_PARAM_IDLE_PS_CONFIG,
++	WMI_PDEV_PARAM_POWER_GATING_SLEEP,
++	WMI_PDEV_PARAM_RFKILL_ENABLE,
++	WMI_PDEV_PARAM_BURST_DUR,
++	WMI_PDEV_PARAM_BURST_ENABLE,
++	WMI_PDEV_PARAM_HW_RFKILL_CONFIG,
++	WMI_PDEV_PARAM_LOW_POWER_RF_ENABLE,
++	WMI_PDEV_PARAM_L1SS_TRACK,
++	WMI_PDEV_PARAM_HYST_EN,
++	WMI_PDEV_PARAM_POWER_COLLAPSE_ENABLE,
++	WMI_PDEV_PARAM_LED_SYS_STATE,
++	WMI_PDEV_PARAM_LED_ENABLE,
++	WMI_PDEV_PARAM_AUDIO_OVER_WLAN_LATENCY,
++	WMI_PDEV_PARAM_AUDIO_OVER_WLAN_ENABLE,
++	WMI_PDEV_PARAM_WHAL_MIB_STATS_UPDATE_ENABLE,
++	WMI_PDEV_PARAM_VDEV_RATE_STATS_UPDATE_PERIOD,
++	WMI_PDEV_PARAM_CTS_CBW,
++	WMI_PDEV_PARAM_WNTS_CONFIG,
++	WMI_PDEV_PARAM_ADAPTIVE_EARLY_RX_ENABLE,
++	WMI_PDEV_PARAM_ADAPTIVE_EARLY_RX_MIN_SLEEP_SLOP,
++	WMI_PDEV_PARAM_ADAPTIVE_EARLY_RX_INC_DEC_STEP,
++	WMI_PDEV_PARAM_EARLY_RX_FIX_SLEEP_SLOP,
++	WMI_PDEV_PARAM_BMISS_BASED_ADAPTIVE_BTO_ENABLE,
++	WMI_PDEV_PARAM_BMISS_BTO_MIN_BCN_TIMEOUT,
++	WMI_PDEV_PARAM_BMISS_BTO_INC_DEC_STEP,
++	WMI_PDEV_PARAM_BTO_FIX_BCN_TIMEOUT,
++	WMI_PDEV_PARAM_CE_BASED_ADAPTIVE_BTO_ENABLE,
++	WMI_PDEV_PARAM_CE_BTO_COMBO_CE_VALUE,
++	WMI_PDEV_PARAM_TX_CHAIN_MASK_2G,
++	WMI_PDEV_PARAM_RX_CHAIN_MASK_2G,
++	WMI_PDEV_PARAM_TX_CHAIN_MASK_5G,
++	WMI_PDEV_PARAM_RX_CHAIN_MASK_5G,
++	WMI_PDEV_PARAM_TX_CHAIN_MASK_CCK,
++	WMI_PDEV_PARAM_TX_CHAIN_MASK_1SS,
++	WMI_PDEV_PARAM_CTS2SELF_FOR_P2P_GO_CONFIG,
++	WMI_PDEV_PARAM_TXPOWER_DECR_DB,
++	WMI_PDEV_PARAM_AGGR_BURST,
++	WMI_PDEV_PARAM_RX_DECAP_MODE,
++	WMI_PDEV_PARAM_FAST_CHANNEL_RESET,
++	WMI_PDEV_PARAM_SMART_ANTENNA_DEFAULT_ANTENNA,
++	WMI_PDEV_PARAM_ANTENNA_GAIN,
++	WMI_PDEV_PARAM_RX_FILTER,
++	WMI_PDEV_SET_MCAST_TO_UCAST_TID,
++	WMI_PDEV_PARAM_PROXY_STA_MODE,
++	WMI_PDEV_PARAM_SET_MCAST2UCAST_MODE,
++	WMI_PDEV_PARAM_SET_MCAST2UCAST_BUFFER,
++	WMI_PDEV_PARAM_REMOVE_MCAST2UCAST_BUFFER,
++	WMI_PDEV_PEER_STA_PS_STATECHG_ENABLE,
++	WMI_PDEV_PARAM_IGMPMLD_AC_OVERRIDE,
++	WMI_PDEV_PARAM_BLOCK_INTERBSS,
++	WMI_PDEV_PARAM_SET_DISABLE_RESET_CMDID,
++	WMI_PDEV_PARAM_SET_MSDU_TTL_CMDID,
++	WMI_PDEV_PARAM_SET_PPDU_DURATION_CMDID,
++	WMI_PDEV_PARAM_TXBF_SOUND_PERIOD_CMDID,
++	WMI_PDEV_PARAM_SET_PROMISC_MODE_CMDID,
++	WMI_PDEV_PARAM_SET_BURST_MODE_CMDID,
++	WMI_PDEV_PARAM_EN_STATS,
++	WMI_PDEV_PARAM_MU_GROUP_POLICY,
++	WMI_PDEV_PARAM_NOISE_DETECTION,
++	WMI_PDEV_PARAM_NOISE_THRESHOLD,
++	WMI_PDEV_PARAM_DPD_ENABLE,
++	WMI_PDEV_PARAM_SET_MCAST_BCAST_ECHO,
++	WMI_PDEV_PARAM_ATF_STRICT_SCH,
++	WMI_PDEV_PARAM_ATF_SCHED_DURATION,
++	WMI_PDEV_PARAM_ANT_PLZN,
++	WMI_PDEV_PARAM_MGMT_RETRY_LIMIT,
++	WMI_PDEV_PARAM_SENSITIVITY_LEVEL,
++	WMI_PDEV_PARAM_SIGNED_TXPOWER_2G,
++	WMI_PDEV_PARAM_SIGNED_TXPOWER_5G,
++	WMI_PDEV_PARAM_ENABLE_PER_TID_AMSDU,
++	WMI_PDEV_PARAM_ENABLE_PER_TID_AMPDU,
++	WMI_PDEV_PARAM_CCA_THRESHOLD,
++	WMI_PDEV_PARAM_RTS_FIXED_RATE,
++	WMI_PDEV_PARAM_PDEV_RESET,
++	WMI_PDEV_PARAM_WAPI_MBSSID_OFFSET,
++	WMI_PDEV_PARAM_ARP_DBG_SRCADDR,
++	WMI_PDEV_PARAM_ARP_DBG_DSTADDR,
++	WMI_PDEV_PARAM_ATF_OBSS_NOISE_SCH,
++	WMI_PDEV_PARAM_ATF_OBSS_NOISE_SCALING_FACTOR,
++	WMI_PDEV_PARAM_CUST_TXPOWER_SCALE,
++	WMI_PDEV_PARAM_ATF_DYNAMIC_ENABLE,
++	WMI_PDEV_PARAM_CTRL_RETRY_LIMIT,
++	WMI_PDEV_PARAM_PROPAGATION_DELAY,
++	WMI_PDEV_PARAM_ENA_ANT_DIV,
++	WMI_PDEV_PARAM_FORCE_CHAIN_ANT,
++	WMI_PDEV_PARAM_ANT_DIV_SELFTEST,
++	WMI_PDEV_PARAM_ANT_DIV_SELFTEST_INTVL,
++	WMI_PDEV_PARAM_STATS_OBSERVATION_PERIOD,
++	WMI_PDEV_PARAM_TX_PPDU_DELAY_BIN_SIZE_MS,
++	WMI_PDEV_PARAM_TX_PPDU_DELAY_ARRAY_LEN,
++	WMI_PDEV_PARAM_TX_MPDU_AGGR_ARRAY_LEN,
++	WMI_PDEV_PARAM_RX_MPDU_AGGR_ARRAY_LEN,
++	WMI_PDEV_PARAM_TX_SCH_DELAY,
++	WMI_PDEV_PARAM_ENABLE_RTS_SIFS_BURSTING,
++	WMI_PDEV_PARAM_MAX_MPDUS_IN_AMPDU,
++	WMI_PDEV_PARAM_PEER_STATS_INFO_ENABLE,
++	WMI_PDEV_PARAM_FAST_PWR_TRANSITION,
++	WMI_PDEV_PARAM_RADIO_CHAN_STATS_ENABLE,
++	WMI_PDEV_PARAM_RADIO_DIAGNOSIS_ENABLE,
++	WMI_PDEV_PARAM_MESH_MCAST_ENABLE,
++};
++
++enum wmi_tlv_vdev_param {
++	WMI_VDEV_PARAM_RTS_THRESHOLD = 0x1,
++	WMI_VDEV_PARAM_FRAGMENTATION_THRESHOLD,
++	WMI_VDEV_PARAM_BEACON_INTERVAL,
++	WMI_VDEV_PARAM_LISTEN_INTERVAL,
++	WMI_VDEV_PARAM_MULTICAST_RATE,
++	WMI_VDEV_PARAM_MGMT_TX_RATE,
++	WMI_VDEV_PARAM_SLOT_TIME,
++	WMI_VDEV_PARAM_PREAMBLE,
++	WMI_VDEV_PARAM_SWBA_TIME,
++	WMI_VDEV_STATS_UPDATE_PERIOD,
++	WMI_VDEV_PWRSAVE_AGEOUT_TIME,
++	WMI_VDEV_HOST_SWBA_INTERVAL,
++	WMI_VDEV_PARAM_DTIM_PERIOD,
++	WMI_VDEV_OC_SCHEDULER_AIR_TIME_LIMIT,
++	WMI_VDEV_PARAM_WDS,
++	WMI_VDEV_PARAM_ATIM_WINDOW,
++	WMI_VDEV_PARAM_BMISS_COUNT_MAX,
++	WMI_VDEV_PARAM_BMISS_FIRST_BCNT,
++	WMI_VDEV_PARAM_BMISS_FINAL_BCNT,
++	WMI_VDEV_PARAM_FEATURE_WMM,
++	WMI_VDEV_PARAM_CHWIDTH,
++	WMI_VDEV_PARAM_CHEXTOFFSET,
++	WMI_VDEV_PARAM_DISABLE_HTPROTECTION,
++	WMI_VDEV_PARAM_STA_QUICKKICKOUT,
++	WMI_VDEV_PARAM_MGMT_RATE,
++	WMI_VDEV_PARAM_PROTECTION_MODE,
++	WMI_VDEV_PARAM_FIXED_RATE,
++	WMI_VDEV_PARAM_SGI,
++	WMI_VDEV_PARAM_LDPC,
++	WMI_VDEV_PARAM_TX_STBC,
++	WMI_VDEV_PARAM_RX_STBC,
++	WMI_VDEV_PARAM_INTRA_BSS_FWD,
++	WMI_VDEV_PARAM_DEF_KEYID,
++	WMI_VDEV_PARAM_NSS,
++	WMI_VDEV_PARAM_BCAST_DATA_RATE,
++	WMI_VDEV_PARAM_MCAST_DATA_RATE,
++	WMI_VDEV_PARAM_MCAST_INDICATE,
++	WMI_VDEV_PARAM_DHCP_INDICATE,
++	WMI_VDEV_PARAM_UNKNOWN_DEST_INDICATE,
++	WMI_VDEV_PARAM_AP_KEEPALIVE_MIN_IDLE_INACTIVE_TIME_SECS,
++	WMI_VDEV_PARAM_AP_KEEPALIVE_MAX_IDLE_INACTIVE_TIME_SECS,
++	WMI_VDEV_PARAM_AP_KEEPALIVE_MAX_UNRESPONSIVE_TIME_SECS,
++	WMI_VDEV_PARAM_AP_ENABLE_NAWDS,
++	WMI_VDEV_PARAM_ENABLE_RTSCTS,
++	WMI_VDEV_PARAM_TXBF,
++	WMI_VDEV_PARAM_PACKET_POWERSAVE,
++	WMI_VDEV_PARAM_DROP_UNENCRY,
++	WMI_VDEV_PARAM_TX_ENCAP_TYPE,
++	WMI_VDEV_PARAM_AP_DETECT_OUT_OF_SYNC_SLEEPING_STA_TIME_SECS,
++	WMI_VDEV_PARAM_EARLY_RX_ADJUST_ENABLE,
++	WMI_VDEV_PARAM_EARLY_RX_TGT_BMISS_NUM,
++	WMI_VDEV_PARAM_EARLY_RX_BMISS_SAMPLE_CYCLE,
++	WMI_VDEV_PARAM_EARLY_RX_SLOP_STEP,
++	WMI_VDEV_PARAM_EARLY_RX_INIT_SLOP,
++	WMI_VDEV_PARAM_EARLY_RX_ADJUST_PAUSE,
++	WMI_VDEV_PARAM_TX_PWRLIMIT,
++	WMI_VDEV_PARAM_SNR_NUM_FOR_CAL,
++	WMI_VDEV_PARAM_ROAM_FW_OFFLOAD,
++	WMI_VDEV_PARAM_ENABLE_RMC,
++	WMI_VDEV_PARAM_IBSS_MAX_BCN_LOST_MS,
++	WMI_VDEV_PARAM_MAX_RATE,
++	WMI_VDEV_PARAM_EARLY_RX_DRIFT_SAMPLE,
++	WMI_VDEV_PARAM_SET_IBSS_TX_FAIL_CNT_THR,
++	WMI_VDEV_PARAM_EBT_RESYNC_TIMEOUT,
++	WMI_VDEV_PARAM_AGGR_TRIG_EVENT_ENABLE,
++	WMI_VDEV_PARAM_IS_IBSS_POWER_SAVE_ALLOWED,
++	WMI_VDEV_PARAM_IS_POWER_COLLAPSE_ALLOWED,
++	WMI_VDEV_PARAM_IS_AWAKE_ON_TXRX_ENABLED,
++	WMI_VDEV_PARAM_INACTIVITY_CNT,
++	WMI_VDEV_PARAM_TXSP_END_INACTIVITY_TIME_MS,
++	WMI_VDEV_PARAM_DTIM_POLICY,
++	WMI_VDEV_PARAM_IBSS_PS_WARMUP_TIME_SECS,
++	WMI_VDEV_PARAM_IBSS_PS_1RX_CHAIN_IN_ATIM_WINDOW_ENABLE,
++	WMI_VDEV_PARAM_RX_LEAK_WINDOW,
++	WMI_VDEV_PARAM_STATS_AVG_FACTOR,
++	WMI_VDEV_PARAM_DISCONNECT_TH,
++	WMI_VDEV_PARAM_RTSCTS_RATE,
++	WMI_VDEV_PARAM_MCC_RTSCTS_PROTECTION_ENABLE,
++	WMI_VDEV_PARAM_MCC_BROADCAST_PROBE_ENABLE,
++	WMI_VDEV_PARAM_TXPOWER_SCALE,
++	WMI_VDEV_PARAM_TXPOWER_SCALE_DECR_DB,
++	WMI_VDEV_PARAM_MCAST2UCAST_SET,
++	WMI_VDEV_PARAM_RC_NUM_RETRIES,
++	WMI_VDEV_PARAM_CABQ_MAXDUR,
++	WMI_VDEV_PARAM_MFPTEST_SET,
++	WMI_VDEV_PARAM_RTS_FIXED_RATE,
++	WMI_VDEV_PARAM_VHT_SGIMASK,
++	WMI_VDEV_PARAM_VHT80_RATEMASK,
++	WMI_VDEV_PARAM_PROXY_STA,
++	WMI_VDEV_PARAM_VIRTUAL_CELL_MODE,
++	WMI_VDEV_PARAM_RX_DECAP_TYPE,
++	WMI_VDEV_PARAM_BW_NSS_RATEMASK,
++	WMI_VDEV_PARAM_SENSOR_AP,
++	WMI_VDEV_PARAM_BEACON_RATE,
++	WMI_VDEV_PARAM_DTIM_ENABLE_CTS,
++	WMI_VDEV_PARAM_STA_KICKOUT,
++	WMI_VDEV_PARAM_CAPABILITIES,
++	WMI_VDEV_PARAM_TSF_INCREMENT,
++	WMI_VDEV_PARAM_AMPDU_PER_AC,
++	WMI_VDEV_PARAM_RX_FILTER,
++	WMI_VDEV_PARAM_MGMT_TX_POWER,
++	WMI_VDEV_PARAM_NON_AGG_SW_RETRY_TH,
++	WMI_VDEV_PARAM_AGG_SW_RETRY_TH,
++	WMI_VDEV_PARAM_DISABLE_DYN_BW_RTS,
++	WMI_VDEV_PARAM_ATF_SSID_SCHED_POLICY,
++	WMI_VDEV_PARAM_HE_DCM,
++	WMI_VDEV_PARAM_HE_RANGE_EXT,
++	WMI_VDEV_PARAM_ENABLE_BCAST_PROBE_RESPONSE,
++	WMI_VDEV_PARAM_FILS_MAX_CHANNEL_GUARD_TIME,
++	WMI_VDEV_PARAM_SET_HE_SOUNDING_MODE = 0x87,
++	WMI_VDEV_PARAM_PROTOTYPE = 0x8000,
++	WMI_VDEV_PARAM_BSS_COLOR,
++	WMI_VDEV_PARAM_SET_HEMU_MODE,
++	WMI_VDEV_PARAM_TX_OFDMA_CPLEN,
++};
++
++enum wmi_tlv_peer_flags {
++	WMI_TLV_PEER_AUTH = 0x00000001,
++	WMI_TLV_PEER_QOS = 0x00000002,
++	WMI_TLV_PEER_NEED_PTK_4_WAY = 0x00000004,
++	WMI_TLV_PEER_NEED_GTK_2_WAY = 0x00000010,
++	WMI_TLV_PEER_APSD = 0x00000800,
++	WMI_TLV_PEER_HT = 0x00001000,
++	WMI_TLV_PEER_40MHZ = 0x00002000,
++	WMI_TLV_PEER_STBC = 0x00008000,
++	WMI_TLV_PEER_LDPC = 0x00010000,
++	WMI_TLV_PEER_DYN_MIMOPS = 0x00020000,
++	WMI_TLV_PEER_STATIC_MIMOPS = 0x00040000,
++	WMI_TLV_PEER_SPATIAL_MUX = 0x00200000,
++	WMI_TLV_PEER_VHT = 0x02000000,
++	WMI_TLV_PEER_80MHZ = 0x04000000,
++	WMI_TLV_PEER_PMF = 0x08000000,
++	WMI_PEER_IS_P2P_CAPABLE = 0x20000000,
++	WMI_PEER_160MHZ         = 0x40000000,
++	WMI_PEER_SAFEMODE_EN    = 0x80000000,
++
++};
++
++/** Enum list of TLV Tags for each parameter structure type. */
++enum wmi_tlv_tag {
++	WMI_TAG_LAST_RESERVED = 15,
++	WMI_TAG_FIRST_ARRAY_ENUM,
++	WMI_TAG_ARRAY_UINT32 = WMI_TAG_FIRST_ARRAY_ENUM,
++	WMI_TAG_ARRAY_BYTE,
++	WMI_TAG_ARRAY_STRUCT,
++	WMI_TAG_ARRAY_FIXED_STRUCT,
++	WMI_TAG_LAST_ARRAY_ENUM = 31,
++	WMI_TAG_SERVICE_READY_EVENT,
++	WMI_TAG_HAL_REG_CAPABILITIES,
++	WMI_TAG_WLAN_HOST_MEM_REQ,
++	WMI_TAG_READY_EVENT,
++	WMI_TAG_SCAN_EVENT,
++	WMI_TAG_PDEV_TPC_CONFIG_EVENT,
++	WMI_TAG_CHAN_INFO_EVENT,
++	WMI_TAG_COMB_PHYERR_RX_HDR,
++	WMI_TAG_VDEV_START_RESPONSE_EVENT,
++	WMI_TAG_VDEV_STOPPED_EVENT,
++	WMI_TAG_VDEV_INSTALL_KEY_COMPLETE_EVENT,
++	WMI_TAG_PEER_STA_KICKOUT_EVENT,
++	WMI_TAG_MGMT_RX_HDR,
++	WMI_TAG_TBTT_OFFSET_EVENT,
++	WMI_TAG_TX_DELBA_COMPLETE_EVENT,
++	WMI_TAG_TX_ADDBA_COMPLETE_EVENT,
++	WMI_TAG_ROAM_EVENT,
++	WMI_TAG_WOW_EVENT_INFO,
++	WMI_TAG_WOW_EVENT_INFO_SECTION_BITMAP,
++	WMI_TAG_RTT_EVENT_HEADER,
++	WMI_TAG_RTT_ERROR_REPORT_EVENT,
++	WMI_TAG_RTT_MEAS_EVENT,
++	WMI_TAG_ECHO_EVENT,
++	WMI_TAG_FTM_INTG_EVENT,
++	WMI_TAG_VDEV_GET_KEEPALIVE_EVENT,
++	WMI_TAG_GPIO_INPUT_EVENT,
++	WMI_TAG_CSA_EVENT,
++	WMI_TAG_GTK_OFFLOAD_STATUS_EVENT,
++	WMI_TAG_IGTK_INFO,
++	WMI_TAG_DCS_INTERFERENCE_EVENT,
++	WMI_TAG_ATH_DCS_CW_INT,
++	WMI_TAG_WLAN_DCS_CW_INT = /* ALIAS */
++		WMI_TAG_ATH_DCS_CW_INT,
++	WMI_TAG_ATH_DCS_WLAN_INT_STAT,
++	WMI_TAG_WLAN_DCS_IM_TGT_STATS_T = /* ALIAS */
++		WMI_TAG_ATH_DCS_WLAN_INT_STAT,
++	WMI_TAG_WLAN_PROFILE_CTX_T,
++	WMI_TAG_WLAN_PROFILE_T,
++	WMI_TAG_PDEV_QVIT_EVENT,
++	WMI_TAG_HOST_SWBA_EVENT,
++	WMI_TAG_TIM_INFO,
++	WMI_TAG_P2P_NOA_INFO,
++	WMI_TAG_STATS_EVENT,
++	WMI_TAG_AVOID_FREQ_RANGES_EVENT,
++	WMI_TAG_AVOID_FREQ_RANGE_DESC,
++	WMI_TAG_GTK_REKEY_FAIL_EVENT,
++	WMI_TAG_INIT_CMD,
++	WMI_TAG_RESOURCE_CONFIG,
++	WMI_TAG_WLAN_HOST_MEMORY_CHUNK,
++	WMI_TAG_START_SCAN_CMD,
++	WMI_TAG_STOP_SCAN_CMD,
++	WMI_TAG_SCAN_CHAN_LIST_CMD,
++	WMI_TAG_CHANNEL,
++	WMI_TAG_PDEV_SET_REGDOMAIN_CMD,
++	WMI_TAG_PDEV_SET_PARAM_CMD,
++	WMI_TAG_PDEV_SET_WMM_PARAMS_CMD,
++	WMI_TAG_WMM_PARAMS,
++	WMI_TAG_PDEV_SET_QUIET_CMD,
++	WMI_TAG_VDEV_CREATE_CMD,
++	WMI_TAG_VDEV_DELETE_CMD,
++	WMI_TAG_VDEV_START_REQUEST_CMD,
++	WMI_TAG_P2P_NOA_DESCRIPTOR,
++	WMI_TAG_P2P_GO_SET_BEACON_IE,
++	WMI_TAG_GTK_OFFLOAD_CMD,
++	WMI_TAG_VDEV_UP_CMD,
++	WMI_TAG_VDEV_STOP_CMD,
++	WMI_TAG_VDEV_DOWN_CMD,
++	WMI_TAG_VDEV_SET_PARAM_CMD,
++	WMI_TAG_VDEV_INSTALL_KEY_CMD,
++	WMI_TAG_PEER_CREATE_CMD,
++	WMI_TAG_PEER_DELETE_CMD,
++	WMI_TAG_PEER_FLUSH_TIDS_CMD,
++	WMI_TAG_PEER_SET_PARAM_CMD,
++	WMI_TAG_PEER_ASSOC_COMPLETE_CMD,
++	WMI_TAG_VHT_RATE_SET,
++	WMI_TAG_BCN_TMPL_CMD,
++	WMI_TAG_PRB_TMPL_CMD,
++	WMI_TAG_BCN_PRB_INFO,
++	WMI_TAG_PEER_TID_ADDBA_CMD,
++	WMI_TAG_PEER_TID_DELBA_CMD,
++	WMI_TAG_STA_POWERSAVE_MODE_CMD,
++	WMI_TAG_STA_POWERSAVE_PARAM_CMD,
++	WMI_TAG_STA_DTIM_PS_METHOD_CMD,
++	WMI_TAG_ROAM_SCAN_MODE,
++	WMI_TAG_ROAM_SCAN_RSSI_THRESHOLD,
++	WMI_TAG_ROAM_SCAN_PERIOD,
++	WMI_TAG_ROAM_SCAN_RSSI_CHANGE_THRESHOLD,
++	WMI_TAG_PDEV_SUSPEND_CMD,
++	WMI_TAG_PDEV_RESUME_CMD,
++	WMI_TAG_ADD_BCN_FILTER_CMD,
++	WMI_TAG_RMV_BCN_FILTER_CMD,
++	WMI_TAG_WOW_ENABLE_CMD,
++	WMI_TAG_WOW_HOSTWAKEUP_FROM_SLEEP_CMD,
++	WMI_TAG_STA_UAPSD_AUTO_TRIG_CMD,
++	WMI_TAG_STA_UAPSD_AUTO_TRIG_PARAM,
++	WMI_TAG_SET_ARP_NS_OFFLOAD_CMD,
++	WMI_TAG_ARP_OFFLOAD_TUPLE,
++	WMI_TAG_NS_OFFLOAD_TUPLE,
++	WMI_TAG_FTM_INTG_CMD,
++	WMI_TAG_STA_KEEPALIVE_CMD,
++	WMI_TAG_STA_KEEPALVE_ARP_RESPONSE,
++	WMI_TAG_P2P_SET_VENDOR_IE_DATA_CMD,
++	WMI_TAG_AP_PS_PEER_CMD,
++	WMI_TAG_PEER_RATE_RETRY_SCHED_CMD,
++	WMI_TAG_WLAN_PROFILE_TRIGGER_CMD,
++	WMI_TAG_WLAN_PROFILE_SET_HIST_INTVL_CMD,
++	WMI_TAG_WLAN_PROFILE_GET_PROF_DATA_CMD,
++	WMI_TAG_WLAN_PROFILE_ENABLE_PROFILE_ID_CMD,
++	WMI_TAG_WOW_DEL_PATTERN_CMD,
++	WMI_TAG_WOW_ADD_DEL_EVT_CMD,
++	WMI_TAG_RTT_MEASREQ_HEAD,
++	WMI_TAG_RTT_MEASREQ_BODY,
++	WMI_TAG_RTT_TSF_CMD,
++	WMI_TAG_VDEV_SPECTRAL_CONFIGURE_CMD,
++	WMI_TAG_VDEV_SPECTRAL_ENABLE_CMD,
++	WMI_TAG_REQUEST_STATS_CMD,
++	WMI_TAG_NLO_CONFIG_CMD,
++	WMI_TAG_NLO_CONFIGURED_PARAMETERS,
++	WMI_TAG_CSA_OFFLOAD_ENABLE_CMD,
++	WMI_TAG_CSA_OFFLOAD_CHANSWITCH_CMD,
++	WMI_TAG_CHATTER_SET_MODE_CMD,
++	WMI_TAG_ECHO_CMD,
++	WMI_TAG_VDEV_SET_KEEPALIVE_CMD,
++	WMI_TAG_VDEV_GET_KEEPALIVE_CMD,
++	WMI_TAG_FORCE_FW_HANG_CMD,
++	WMI_TAG_GPIO_CONFIG_CMD,
++	WMI_TAG_GPIO_OUTPUT_CMD,
++	WMI_TAG_PEER_ADD_WDS_ENTRY_CMD,
++	WMI_TAG_PEER_REMOVE_WDS_ENTRY_CMD,
++	WMI_TAG_BCN_TX_HDR,
++	WMI_TAG_BCN_SEND_FROM_HOST_CMD,
++	WMI_TAG_MGMT_TX_HDR,
++	WMI_TAG_ADDBA_CLEAR_RESP_CMD,
++	WMI_TAG_ADDBA_SEND_CMD,
++	WMI_TAG_DELBA_SEND_CMD,
++	WMI_TAG_ADDBA_SETRESPONSE_CMD,
++	WMI_TAG_SEND_SINGLEAMSDU_CMD,
++	WMI_TAG_PDEV_PKTLOG_ENABLE_CMD,
++	WMI_TAG_PDEV_PKTLOG_DISABLE_CMD,
++	WMI_TAG_PDEV_SET_HT_IE_CMD,
++	WMI_TAG_PDEV_SET_VHT_IE_CMD,
++	WMI_TAG_PDEV_SET_DSCP_TID_MAP_CMD,
++	WMI_TAG_PDEV_GREEN_AP_PS_ENABLE_CMD,
++	WMI_TAG_PDEV_GET_TPC_CONFIG_CMD,
++	WMI_TAG_PDEV_SET_BASE_MACADDR_CMD,
++	WMI_TAG_PEER_MCAST_GROUP_CMD,
++	WMI_TAG_ROAM_AP_PROFILE,
++	WMI_TAG_AP_PROFILE,
++	WMI_TAG_SCAN_SCH_PRIORITY_TABLE_CMD,
++	WMI_TAG_PDEV_DFS_ENABLE_CMD,
++	WMI_TAG_PDEV_DFS_DISABLE_CMD,
++	WMI_TAG_WOW_ADD_PATTERN_CMD,
++	WMI_TAG_WOW_BITMAP_PATTERN_T,
++	WMI_TAG_WOW_IPV4_SYNC_PATTERN_T,
++	WMI_TAG_WOW_IPV6_SYNC_PATTERN_T,
++	WMI_TAG_WOW_MAGIC_PATTERN_CMD,
++	WMI_TAG_SCAN_UPDATE_REQUEST_CMD,
++	WMI_TAG_CHATTER_PKT_COALESCING_FILTER,
++	WMI_TAG_CHATTER_COALESCING_ADD_FILTER_CMD,
++	WMI_TAG_CHATTER_COALESCING_DELETE_FILTER_CMD,
++	WMI_TAG_CHATTER_COALESCING_QUERY_CMD,
++	WMI_TAG_TXBF_CMD,
++	WMI_TAG_DEBUG_LOG_CONFIG_CMD,
++	WMI_TAG_NLO_EVENT,
++	WMI_TAG_CHATTER_QUERY_REPLY_EVENT,
++	WMI_TAG_UPLOAD_H_HDR,
++	WMI_TAG_CAPTURE_H_EVENT_HDR,
++	WMI_TAG_VDEV_WNM_SLEEPMODE_CMD,
++	WMI_TAG_VDEV_IPSEC_NATKEEPALIVE_FILTER_CMD,
++	WMI_TAG_VDEV_WMM_ADDTS_CMD,
++	WMI_TAG_VDEV_WMM_DELTS_CMD,
++	WMI_TAG_VDEV_SET_WMM_PARAMS_CMD,
++	WMI_TAG_TDLS_SET_STATE_CMD,
++	WMI_TAG_TDLS_PEER_UPDATE_CMD,
++	WMI_TAG_TDLS_PEER_EVENT,
++	WMI_TAG_TDLS_PEER_CAPABILITIES,
++	WMI_TAG_VDEV_MCC_SET_TBTT_MODE_CMD,
++	WMI_TAG_ROAM_CHAN_LIST,
++	WMI_TAG_VDEV_MCC_BCN_INTVL_CHANGE_EVENT,
++	WMI_TAG_RESMGR_ADAPTIVE_OCS_ENABLE_DISABLE_CMD,
++	WMI_TAG_RESMGR_SET_CHAN_TIME_QUOTA_CMD,
++	WMI_TAG_RESMGR_SET_CHAN_LATENCY_CMD,
++	WMI_TAG_BA_REQ_SSN_CMD,
++	WMI_TAG_BA_RSP_SSN_EVENT,
++	WMI_TAG_STA_SMPS_FORCE_MODE_CMD,
++	WMI_TAG_SET_MCASTBCAST_FILTER_CMD,
++	WMI_TAG_P2P_SET_OPPPS_CMD,
++	WMI_TAG_P2P_SET_NOA_CMD,
++	WMI_TAG_BA_REQ_SSN_CMD_SUB_STRUCT_PARAM,
++	WMI_TAG_BA_REQ_SSN_EVENT_SUB_STRUCT_PARAM,
++	WMI_TAG_STA_SMPS_PARAM_CMD,
++	WMI_TAG_VDEV_SET_GTX_PARAMS_CMD,
++	WMI_TAG_MCC_SCHED_TRAFFIC_STATS_CMD,
++	WMI_TAG_MCC_SCHED_STA_TRAFFIC_STATS,
++	WMI_TAG_OFFLOAD_BCN_TX_STATUS_EVENT,
++	WMI_TAG_P2P_NOA_EVENT,
++	WMI_TAG_HB_SET_ENABLE_CMD,
++	WMI_TAG_HB_SET_TCP_PARAMS_CMD,
++	WMI_TAG_HB_SET_TCP_PKT_FILTER_CMD,
++	WMI_TAG_HB_SET_UDP_PARAMS_CMD,
++	WMI_TAG_HB_SET_UDP_PKT_FILTER_CMD,
++	WMI_TAG_HB_IND_EVENT,
++	WMI_TAG_TX_PAUSE_EVENT,
++	WMI_TAG_RFKILL_EVENT,
++	WMI_TAG_DFS_RADAR_EVENT,
++	WMI_TAG_DFS_PHYERR_FILTER_ENA_CMD,
++	WMI_TAG_DFS_PHYERR_FILTER_DIS_CMD,
++	WMI_TAG_BATCH_SCAN_RESULT_SCAN_LIST,
++	WMI_TAG_BATCH_SCAN_RESULT_NETWORK_INFO,
++	WMI_TAG_BATCH_SCAN_ENABLE_CMD,
++	WMI_TAG_BATCH_SCAN_DISABLE_CMD,
++	WMI_TAG_BATCH_SCAN_TRIGGER_RESULT_CMD,
++	WMI_TAG_BATCH_SCAN_ENABLED_EVENT,
++	WMI_TAG_BATCH_SCAN_RESULT_EVENT,
++	WMI_TAG_VDEV_PLMREQ_START_CMD,
++	WMI_TAG_VDEV_PLMREQ_STOP_CMD,
++	WMI_TAG_THERMAL_MGMT_CMD,
++	WMI_TAG_THERMAL_MGMT_EVENT,
++	WMI_TAG_PEER_INFO_REQ_CMD,
++	WMI_TAG_PEER_INFO_EVENT,
++	WMI_TAG_PEER_INFO,
++	WMI_TAG_PEER_TX_FAIL_CNT_THR_EVENT,
++	WMI_TAG_RMC_SET_MODE_CMD,
++	WMI_TAG_RMC_SET_ACTION_PERIOD_CMD,
++	WMI_TAG_RMC_CONFIG_CMD,
++	WMI_TAG_MHF_OFFLOAD_SET_MODE_CMD,
++	WMI_TAG_MHF_OFFLOAD_PLUMB_ROUTING_TABLE_CMD,
++	WMI_TAG_ADD_PROACTIVE_ARP_RSP_PATTERN_CMD,
++	WMI_TAG_DEL_PROACTIVE_ARP_RSP_PATTERN_CMD,
++	WMI_TAG_NAN_CMD_PARAM,
++	WMI_TAG_NAN_EVENT_HDR,
++	WMI_TAG_PDEV_L1SS_TRACK_EVENT,
++	WMI_TAG_DIAG_DATA_CONTAINER_EVENT,
++	WMI_TAG_MODEM_POWER_STATE_CMD_PARAM,
++	WMI_TAG_PEER_GET_ESTIMATED_LINKSPEED_CMD,
++	WMI_TAG_PEER_ESTIMATED_LINKSPEED_EVENT,
++	WMI_TAG_AGGR_STATE_TRIG_EVENT,
++	WMI_TAG_MHF_OFFLOAD_ROUTING_TABLE_ENTRY,
++	WMI_TAG_ROAM_SCAN_CMD,
++	WMI_TAG_REQ_STATS_EXT_CMD,
++	WMI_TAG_STATS_EXT_EVENT,
++	WMI_TAG_OBSS_SCAN_ENABLE_CMD,
++	WMI_TAG_OBSS_SCAN_DISABLE_CMD,
++	WMI_TAG_OFFLOAD_PRB_RSP_TX_STATUS_EVENT,
++	WMI_TAG_PDEV_SET_LED_CONFIG_CMD,
++	WMI_TAG_HOST_AUTO_SHUTDOWN_CFG_CMD,
++	WMI_TAG_HOST_AUTO_SHUTDOWN_EVENT,
++	WMI_TAG_UPDATE_WHAL_MIB_STATS_EVENT,
++	WMI_TAG_CHAN_AVOID_UPDATE_CMD_PARAM,
++	WMI_TAG_WOW_IOAC_PKT_PATTERN_T,
++	WMI_TAG_WOW_IOAC_TMR_PATTERN_T,
++	WMI_TAG_WOW_IOAC_ADD_KEEPALIVE_CMD,
++	WMI_TAG_WOW_IOAC_DEL_KEEPALIVE_CMD,
++	WMI_TAG_WOW_IOAC_KEEPALIVE_T,
++	WMI_TAG_WOW_IOAC_ADD_PATTERN_CMD,
++	WMI_TAG_WOW_IOAC_DEL_PATTERN_CMD,
++	WMI_TAG_START_LINK_STATS_CMD,
++	WMI_TAG_CLEAR_LINK_STATS_CMD,
++	WMI_TAG_REQUEST_LINK_STATS_CMD,
++	WMI_TAG_IFACE_LINK_STATS_EVENT,
++	WMI_TAG_RADIO_LINK_STATS_EVENT,
++	WMI_TAG_PEER_STATS_EVENT,
++	WMI_TAG_CHANNEL_STATS,
++	WMI_TAG_RADIO_LINK_STATS,
++	WMI_TAG_RATE_STATS,
++	WMI_TAG_PEER_LINK_STATS,
++	WMI_TAG_WMM_AC_STATS,
++	WMI_TAG_IFACE_LINK_STATS,
++	WMI_TAG_LPI_MGMT_SNOOPING_CONFIG_CMD,
++	WMI_TAG_LPI_START_SCAN_CMD,
++	WMI_TAG_LPI_STOP_SCAN_CMD,
++	WMI_TAG_LPI_RESULT_EVENT,
++	WMI_TAG_PEER_STATE_EVENT,
++	WMI_TAG_EXTSCAN_BUCKET_CMD,
++	WMI_TAG_EXTSCAN_BUCKET_CHANNEL_EVENT,
++	WMI_TAG_EXTSCAN_START_CMD,
++	WMI_TAG_EXTSCAN_STOP_CMD,
++	WMI_TAG_EXTSCAN_CONFIGURE_WLAN_CHANGE_MONITOR_CMD,
++	WMI_TAG_EXTSCAN_WLAN_CHANGE_BSSID_PARAM_CMD,
++	WMI_TAG_EXTSCAN_CONFIGURE_HOTLIST_MONITOR_CMD,
++	WMI_TAG_EXTSCAN_GET_CACHED_RESULTS_CMD,
++	WMI_TAG_EXTSCAN_GET_WLAN_CHANGE_RESULTS_CMD,
++	WMI_TAG_EXTSCAN_SET_CAPABILITIES_CMD,
++	WMI_TAG_EXTSCAN_GET_CAPABILITIES_CMD,
++	WMI_TAG_EXTSCAN_OPERATION_EVENT,
++	WMI_TAG_EXTSCAN_START_STOP_EVENT,
++	WMI_TAG_EXTSCAN_TABLE_USAGE_EVENT,
++	WMI_TAG_EXTSCAN_WLAN_DESCRIPTOR_EVENT,
++	WMI_TAG_EXTSCAN_RSSI_INFO_EVENT,
++	WMI_TAG_EXTSCAN_CACHED_RESULTS_EVENT,
++	WMI_TAG_EXTSCAN_WLAN_CHANGE_RESULTS_EVENT,
++	WMI_TAG_EXTSCAN_WLAN_CHANGE_RESULT_BSSID_EVENT,
++	WMI_TAG_EXTSCAN_HOTLIST_MATCH_EVENT,
++	WMI_TAG_EXTSCAN_CAPABILITIES_EVENT,
++	WMI_TAG_EXTSCAN_CACHE_CAPABILITIES_EVENT,
++	WMI_TAG_EXTSCAN_WLAN_CHANGE_MONITOR_CAPABILITIES_EVENT,
++	WMI_TAG_EXTSCAN_HOTLIST_MONITOR_CAPABILITIES_EVENT,
++	WMI_TAG_D0_WOW_ENABLE_DISABLE_CMD,
++	WMI_TAG_D0_WOW_DISABLE_ACK_EVENT,
++	WMI_TAG_UNIT_TEST_CMD,
++	WMI_TAG_ROAM_OFFLOAD_TLV_PARAM,
++	WMI_TAG_ROAM_11I_OFFLOAD_TLV_PARAM,
++	WMI_TAG_ROAM_11R_OFFLOAD_TLV_PARAM,
++	WMI_TAG_ROAM_ESE_OFFLOAD_TLV_PARAM,
++	WMI_TAG_ROAM_SYNCH_EVENT,
++	WMI_TAG_ROAM_SYNCH_COMPLETE,
++	WMI_TAG_EXTWOW_ENABLE_CMD,
++	WMI_TAG_EXTWOW_SET_APP_TYPE1_PARAMS_CMD,
++	WMI_TAG_EXTWOW_SET_APP_TYPE2_PARAMS_CMD,
++	WMI_TAG_LPI_STATUS_EVENT,
++	WMI_TAG_LPI_HANDOFF_EVENT,
++	WMI_TAG_VDEV_RATE_STATS_EVENT,
++	WMI_TAG_VDEV_RATE_HT_INFO,
++	WMI_TAG_RIC_REQUEST,
++	WMI_TAG_PDEV_GET_TEMPERATURE_CMD,
++	WMI_TAG_PDEV_TEMPERATURE_EVENT,
++	WMI_TAG_SET_DHCP_SERVER_OFFLOAD_CMD,
++	WMI_TAG_TPC_CHAINMASK_CONFIG_CMD,
++	WMI_TAG_RIC_TSPEC,
++	WMI_TAG_TPC_CHAINMASK_CONFIG,
++	WMI_TAG_IPA_OFFLOAD_ENABLE_DISABLE_CMD,
++	WMI_TAG_SCAN_PROB_REQ_OUI_CMD,
++	WMI_TAG_KEY_MATERIAL,
++	WMI_TAG_TDLS_SET_OFFCHAN_MODE_CMD,
++	WMI_TAG_SET_LED_FLASHING_CMD,
++	WMI_TAG_MDNS_OFFLOAD_CMD,
++	WMI_TAG_MDNS_SET_FQDN_CMD,
++	WMI_TAG_MDNS_SET_RESP_CMD,
++	WMI_TAG_MDNS_GET_STATS_CMD,
++	WMI_TAG_MDNS_STATS_EVENT,
++	WMI_TAG_ROAM_INVOKE_CMD,
++	WMI_TAG_PDEV_RESUME_EVENT,
++	WMI_TAG_PDEV_SET_ANTENNA_DIVERSITY_CMD,
++	WMI_TAG_SAP_OFL_ENABLE_CMD,
++	WMI_TAG_SAP_OFL_ADD_STA_EVENT,
++	WMI_TAG_SAP_OFL_DEL_STA_EVENT,
++	WMI_TAG_APFIND_CMD_PARAM,
++	WMI_TAG_APFIND_EVENT_HDR,
++	WMI_TAG_OCB_SET_SCHED_CMD,
++	WMI_TAG_OCB_SET_SCHED_EVENT,
++	WMI_TAG_OCB_SET_CONFIG_CMD,
++	WMI_TAG_OCB_SET_CONFIG_RESP_EVENT,
++	WMI_TAG_OCB_SET_UTC_TIME_CMD,
++	WMI_TAG_OCB_START_TIMING_ADVERT_CMD,
++	WMI_TAG_OCB_STOP_TIMING_ADVERT_CMD,
++	WMI_TAG_OCB_GET_TSF_TIMER_CMD,
++	WMI_TAG_OCB_GET_TSF_TIMER_RESP_EVENT,
++	WMI_TAG_DCC_GET_STATS_CMD,
++	WMI_TAG_DCC_CHANNEL_STATS_REQUEST,
++	WMI_TAG_DCC_GET_STATS_RESP_EVENT,
++	WMI_TAG_DCC_CLEAR_STATS_CMD,
++	WMI_TAG_DCC_UPDATE_NDL_CMD,
++	WMI_TAG_DCC_UPDATE_NDL_RESP_EVENT,
++	WMI_TAG_DCC_STATS_EVENT,
++	WMI_TAG_OCB_CHANNEL,
++	WMI_TAG_OCB_SCHEDULE_ELEMENT,
++	WMI_TAG_DCC_NDL_STATS_PER_CHANNEL,
++	WMI_TAG_DCC_NDL_CHAN,
++	WMI_TAG_QOS_PARAMETER,
++	WMI_TAG_DCC_NDL_ACTIVE_STATE_CONFIG,
++	WMI_TAG_ROAM_SCAN_EXTENDED_THRESHOLD_PARAM,
++	WMI_TAG_ROAM_FILTER,
++	WMI_TAG_PASSPOINT_CONFIG_CMD,
++	WMI_TAG_PASSPOINT_EVENT_HDR,
++	WMI_TAG_EXTSCAN_CONFIGURE_HOTLIST_SSID_MONITOR_CMD,
++	WMI_TAG_EXTSCAN_HOTLIST_SSID_MATCH_EVENT,
++	WMI_TAG_VDEV_TSF_TSTAMP_ACTION_CMD,
++	WMI_TAG_VDEV_TSF_REPORT_EVENT,
++	WMI_TAG_GET_FW_MEM_DUMP,
++	WMI_TAG_UPDATE_FW_MEM_DUMP,
++	WMI_TAG_FW_MEM_DUMP_PARAMS,
++	WMI_TAG_DEBUG_MESG_FLUSH,
++	WMI_TAG_DEBUG_MESG_FLUSH_COMPLETE,
++	WMI_TAG_PEER_SET_RATE_REPORT_CONDITION,
++	WMI_TAG_ROAM_SUBNET_CHANGE_CONFIG,
++	WMI_TAG_VDEV_SET_IE_CMD,
++	WMI_TAG_RSSI_BREACH_MONITOR_CONFIG,
++	WMI_TAG_RSSI_BREACH_EVENT,
++	WMI_TAG_WOW_EVENT_INITIAL_WAKEUP,
++	WMI_TAG_SOC_SET_PCL_CMD,
++	WMI_TAG_SOC_SET_HW_MODE_CMD,
++	WMI_TAG_SOC_SET_HW_MODE_RESPONSE_EVENT,
++	WMI_TAG_SOC_HW_MODE_TRANSITION_EVENT,
++	WMI_TAG_VDEV_TXRX_STREAMS,
++	WMI_TAG_SOC_SET_HW_MODE_RESPONSE_VDEV_MAC_ENTRY,
++	WMI_TAG_SOC_SET_DUAL_MAC_CONFIG_CMD,
++	WMI_TAG_SOC_SET_DUAL_MAC_CONFIG_RESPONSE_EVENT,
++	WMI_TAG_WOW_IOAC_SOCK_PATTERN_T,
++	WMI_TAG_WOW_ENABLE_ICMPV6_NA_FLT_CMD,
++	WMI_TAG_DIAG_EVENT_LOG_CONFIG,
++	WMI_TAG_DIAG_EVENT_LOG_SUPPORTED_EVENT_FIXED_PARAMS,
++	WMI_TAG_PACKET_FILTER_CONFIG,
++	WMI_TAG_PACKET_FILTER_ENABLE,
++	WMI_TAG_SAP_SET_BLACKLIST_PARAM_CMD,
++	WMI_TAG_MGMT_TX_SEND_CMD,
++	WMI_TAG_MGMT_TX_COMPL_EVENT,
++	WMI_TAG_SOC_SET_ANTENNA_MODE_CMD,
++	WMI_TAG_WOW_UDP_SVC_OFLD_CMD,
++	WMI_TAG_LRO_INFO_CMD,
++	WMI_TAG_ROAM_EARLYSTOP_RSSI_THRES_PARAM,
++	WMI_TAG_SERVICE_READY_EXT_EVENT,
++	WMI_TAG_MAWC_SENSOR_REPORT_IND_CMD,
++	WMI_TAG_MAWC_ENABLE_SENSOR_EVENT,
++	WMI_TAG_ROAM_CONFIGURE_MAWC_CMD,
++	WMI_TAG_NLO_CONFIGURE_MAWC_CMD,
++	WMI_TAG_EXTSCAN_CONFIGURE_MAWC_CMD,
++	WMI_TAG_PEER_ASSOC_CONF_EVENT,
++	WMI_TAG_WOW_HOSTWAKEUP_GPIO_PIN_PATTERN_CONFIG_CMD,
++	WMI_TAG_AP_PS_EGAP_PARAM_CMD,
++	WMI_TAG_AP_PS_EGAP_INFO_EVENT,
++	WMI_TAG_PMF_OFFLOAD_SET_SA_QUERY_CMD,
++	WMI_TAG_TRANSFER_DATA_TO_FLASH_CMD,
++	WMI_TAG_TRANSFER_DATA_TO_FLASH_COMPLETE_EVENT,
++	WMI_TAG_SCPC_EVENT,
++	WMI_TAG_AP_PS_EGAP_INFO_CHAINMASK_LIST,
++	WMI_TAG_STA_SMPS_FORCE_MODE_COMPLETE_EVENT,
++	WMI_TAG_BPF_GET_CAPABILITY_CMD,
++	WMI_TAG_BPF_CAPABILITY_INFO_EVT,
++	WMI_TAG_BPF_GET_VDEV_STATS_CMD,
++	WMI_TAG_BPF_VDEV_STATS_INFO_EVT,
++	WMI_TAG_BPF_SET_VDEV_INSTRUCTIONS_CMD,
++	WMI_TAG_BPF_DEL_VDEV_INSTRUCTIONS_CMD,
++	WMI_TAG_VDEV_DELETE_RESP_EVENT,
++	WMI_TAG_PEER_DELETE_RESP_EVENT,
++	WMI_TAG_ROAM_DENSE_THRES_PARAM,
++	WMI_TAG_ENLO_CANDIDATE_SCORE_PARAM,
++	WMI_TAG_PEER_UPDATE_WDS_ENTRY_CMD,
++	WMI_TAG_VDEV_CONFIG_RATEMASK,
++	WMI_TAG_PDEV_FIPS_CMD,
++	WMI_TAG_PDEV_SMART_ANT_ENABLE_CMD,
++	WMI_TAG_PDEV_SMART_ANT_SET_RX_ANTENNA_CMD,
++	WMI_TAG_PEER_SMART_ANT_SET_TX_ANTENNA_CMD,
++	WMI_TAG_PEER_SMART_ANT_SET_TRAIN_ANTENNA_CMD,
++	WMI_TAG_PEER_SMART_ANT_SET_NODE_CONFIG_OPS_CMD,
++	WMI_TAG_PDEV_SET_ANT_SWITCH_TBL_CMD,
++	WMI_TAG_PDEV_SET_CTL_TABLE_CMD,
++	WMI_TAG_PDEV_SET_MIMOGAIN_TABLE_CMD,
++	WMI_TAG_FWTEST_SET_PARAM_CMD,
++	WMI_TAG_PEER_ATF_REQUEST,
++	WMI_TAG_VDEV_ATF_REQUEST,
++	WMI_TAG_PDEV_GET_ANI_CCK_CONFIG_CMD,
++	WMI_TAG_PDEV_GET_ANI_OFDM_CONFIG_CMD,
++	WMI_TAG_INST_RSSI_STATS_RESP,
++	WMI_TAG_MED_UTIL_REPORT_EVENT,
++	WMI_TAG_PEER_STA_PS_STATECHANGE_EVENT,
++	WMI_TAG_WDS_ADDR_EVENT,
++	WMI_TAG_PEER_RATECODE_LIST_EVENT,
++	WMI_TAG_PDEV_NFCAL_POWER_ALL_CHANNELS_EVENT,
++	WMI_TAG_PDEV_TPC_EVENT,
++	WMI_TAG_ANI_OFDM_EVENT,
++	WMI_TAG_ANI_CCK_EVENT,
++	WMI_TAG_PDEV_CHANNEL_HOPPING_EVENT,
++	WMI_TAG_PDEV_FIPS_EVENT,
++	WMI_TAG_ATF_PEER_INFO,
++	WMI_TAG_PDEV_GET_TPC_CMD,
++	WMI_TAG_VDEV_FILTER_NRP_CONFIG_CMD,
++	WMI_TAG_QBOOST_CFG_CMD,
++	WMI_TAG_PDEV_SMART_ANT_GPIO_HANDLE,
++	WMI_TAG_PEER_SMART_ANT_SET_TX_ANTENNA_SERIES,
++	WMI_TAG_PEER_SMART_ANT_SET_TRAIN_ANTENNA_PARAM,
++	WMI_TAG_PDEV_SET_ANT_CTRL_CHAIN,
++	WMI_TAG_PEER_CCK_OFDM_RATE_INFO,
++	WMI_TAG_PEER_MCS_RATE_INFO,
++	WMI_TAG_PDEV_NFCAL_POWER_ALL_CHANNELS_NFDBR,
++	WMI_TAG_PDEV_NFCAL_POWER_ALL_CHANNELS_NFDBM,
++	WMI_TAG_PDEV_NFCAL_POWER_ALL_CHANNELS_FREQNUM,
++	WMI_TAG_MU_REPORT_TOTAL_MU,
++	WMI_TAG_VDEV_SET_DSCP_TID_MAP_CMD,
++	WMI_TAG_ROAM_SET_MBO,
++	WMI_TAG_MIB_STATS_ENABLE_CMD,
++	WMI_TAG_NAN_DISC_IFACE_CREATED_EVENT,
++	WMI_TAG_NAN_DISC_IFACE_DELETED_EVENT,
++	WMI_TAG_NAN_STARTED_CLUSTER_EVENT,
++	WMI_TAG_NAN_JOINED_CLUSTER_EVENT,
++	WMI_TAG_NDI_GET_CAP_REQ,
++	WMI_TAG_NDP_INITIATOR_REQ,
++	WMI_TAG_NDP_RESPONDER_REQ,
++	WMI_TAG_NDP_END_REQ,
++	WMI_TAG_NDI_CAP_RSP_EVENT,
++	WMI_TAG_NDP_INITIATOR_RSP_EVENT,
++	WMI_TAG_NDP_RESPONDER_RSP_EVENT,
++	WMI_TAG_NDP_END_RSP_EVENT,
++	WMI_TAG_NDP_INDICATION_EVENT,
++	WMI_TAG_NDP_CONFIRM_EVENT,
++	WMI_TAG_NDP_END_INDICATION_EVENT,
++	WMI_TAG_VDEV_SET_QUIET_CMD,
++	WMI_TAG_PDEV_SET_PCL_CMD,
++	WMI_TAG_PDEV_SET_HW_MODE_CMD,
++	WMI_TAG_PDEV_SET_MAC_CONFIG_CMD,
++	WMI_TAG_PDEV_SET_ANTENNA_MODE_CMD,
++	WMI_TAG_PDEV_SET_HW_MODE_RESPONSE_EVENT,
++	WMI_TAG_PDEV_HW_MODE_TRANSITION_EVENT,
++	WMI_TAG_PDEV_SET_HW_MODE_RESPONSE_VDEV_MAC_ENTRY,
++	WMI_TAG_PDEV_SET_MAC_CONFIG_RESPONSE_EVENT,
++	WMI_TAG_COEX_CONFIG_CMD,
++	WMI_TAG_CONFIG_ENHANCED_MCAST_FILTER,
++	WMI_TAG_CHAN_AVOID_RPT_ALLOW_CMD,
++	WMI_TAG_SET_PERIODIC_CHANNEL_STATS_CONFIG,
++	WMI_TAG_VDEV_SET_CUSTOM_AGGR_SIZE_CMD,
++	WMI_TAG_PDEV_WAL_POWER_DEBUG_CMD,
++	WMI_TAG_MAC_PHY_CAPABILITIES,
++	WMI_TAG_HW_MODE_CAPABILITIES,
++	WMI_TAG_SOC_MAC_PHY_HW_MODE_CAPS,
++	WMI_TAG_HAL_REG_CAPABILITIES_EXT,
++	WMI_TAG_SOC_HAL_REG_CAPABILITIES,
++	WMI_TAG_VDEV_WISA_CMD,
++	WMI_TAG_TX_POWER_LEVEL_STATS_EVT,
++	WMI_TAG_SCAN_ADAPTIVE_DWELL_PARAMETERS_TLV,
++	WMI_TAG_SCAN_ADAPTIVE_DWELL_CONFIG,
++	WMI_TAG_WOW_SET_ACTION_WAKE_UP_CMD,
++	WMI_TAG_NDP_END_RSP_PER_NDI,
++	WMI_TAG_PEER_BWF_REQUEST,
++	WMI_TAG_BWF_PEER_INFO,
++	WMI_TAG_DBGLOG_TIME_STAMP_SYNC_CMD,
++	WMI_TAG_RMC_SET_LEADER_CMD,
++	WMI_TAG_RMC_MANUAL_LEADER_EVENT,
++	WMI_TAG_PER_CHAIN_RSSI_STATS,
++	WMI_TAG_RSSI_STATS,
++	WMI_TAG_P2P_LO_START_CMD,
++	WMI_TAG_P2P_LO_STOP_CMD,
++	WMI_TAG_P2P_LO_STOPPED_EVENT,
++	WMI_TAG_REORDER_QUEUE_SETUP_CMD,
++	WMI_TAG_REORDER_QUEUE_REMOVE_CMD,
++	WMI_TAG_SET_MULTIPLE_MCAST_FILTER_CMD,
++	WMI_TAG_MGMT_TX_COMPL_BUNDLE_EVENT,
++	WMI_TAG_READ_DATA_FROM_FLASH_CMD,
++	WMI_TAG_READ_DATA_FROM_FLASH_EVENT,
++	WMI_TAG_PDEV_SET_REORDER_TIMEOUT_VAL_CMD,
++	WMI_TAG_PEER_SET_RX_BLOCKSIZE_CMD,
++	WMI_TAG_PDEV_SET_WAKEUP_CONFIG_CMDID,
++	WMI_TAG_TLV_BUF_LEN_PARAM,
++	WMI_TAG_SERVICE_AVAILABLE_EVENT,
++	WMI_TAG_PEER_ANTDIV_INFO_REQ_CMD,
++	WMI_TAG_PEER_ANTDIV_INFO_EVENT,
++	WMI_TAG_PEER_ANTDIV_INFO,
++	WMI_TAG_PDEV_GET_ANTDIV_STATUS_CMD,
++	WMI_TAG_PDEV_ANTDIV_STATUS_EVENT,
++	WMI_TAG_MNT_FILTER_CMD,
++	WMI_TAG_GET_CHIP_POWER_STATS_CMD,
++	WMI_TAG_PDEV_CHIP_POWER_STATS_EVENT,
++	WMI_TAG_COEX_GET_ANTENNA_ISOLATION_CMD,
++	WMI_TAG_COEX_REPORT_ISOLATION_EVENT,
++	WMI_TAG_CHAN_CCA_STATS,
++	WMI_TAG_PEER_SIGNAL_STATS,
++	WMI_TAG_TX_STATS,
++	WMI_TAG_PEER_AC_TX_STATS,
++	WMI_TAG_RX_STATS,
++	WMI_TAG_PEER_AC_RX_STATS,
++	WMI_TAG_REPORT_STATS_EVENT,
++	WMI_TAG_CHAN_CCA_STATS_THRESH,
++	WMI_TAG_PEER_SIGNAL_STATS_THRESH,
++	WMI_TAG_TX_STATS_THRESH,
++	WMI_TAG_RX_STATS_THRESH,
++	WMI_TAG_PDEV_SET_STATS_THRESHOLD_CMD,
++	WMI_TAG_REQUEST_WLAN_STATS_CMD,
++	WMI_TAG_RX_AGGR_FAILURE_EVENT,
++	WMI_TAG_RX_AGGR_FAILURE_INFO,
++	WMI_TAG_VDEV_ENCRYPT_DECRYPT_DATA_REQ_CMD,
++	WMI_TAG_VDEV_ENCRYPT_DECRYPT_DATA_RESP_EVENT,
++	WMI_TAG_PDEV_BAND_TO_MAC,
++	WMI_TAG_TBTT_OFFSET_INFO,
++	WMI_TAG_TBTT_OFFSET_EXT_EVENT,
++	WMI_TAG_SAR_LIMITS_CMD,
++	WMI_TAG_SAR_LIMIT_CMD_ROW,
++	WMI_TAG_PDEV_DFS_PHYERR_OFFLOAD_ENABLE_CMD,
++	WMI_TAG_PDEV_DFS_PHYERR_OFFLOAD_DISABLE_CMD,
++	WMI_TAG_VDEV_ADFS_CH_CFG_CMD,
++	WMI_TAG_VDEV_ADFS_OCAC_ABORT_CMD,
++	WMI_TAG_PDEV_DFS_RADAR_DETECTION_EVENT,
++	WMI_TAG_VDEV_ADFS_OCAC_COMPLETE_EVENT,
++	WMI_TAG_VDEV_DFS_CAC_COMPLETE_EVENT,
++	WMI_TAG_VENDOR_OUI,
++	WMI_TAG_REQUEST_RCPI_CMD,
++	WMI_TAG_UPDATE_RCPI_EVENT,
++	WMI_TAG_REQUEST_PEER_STATS_INFO_CMD,
++	WMI_TAG_PEER_STATS_INFO,
++	WMI_TAG_PEER_STATS_INFO_EVENT,
++	WMI_TAG_PKGID_EVENT,
++	WMI_TAG_CONNECTED_NLO_RSSI_PARAMS,
++	WMI_TAG_SET_CURRENT_COUNTRY_CMD,
++	WMI_TAG_REGULATORY_RULE_STRUCT,
++	WMI_TAG_REG_CHAN_LIST_CC_EVENT,
++	WMI_TAG_11D_SCAN_START_CMD,
++	WMI_TAG_11D_SCAN_STOP_CMD,
++	WMI_TAG_11D_NEW_COUNTRY_EVENT,
++	WMI_TAG_REQUEST_RADIO_CHAN_STATS_CMD,
++	WMI_TAG_RADIO_CHAN_STATS,
++	WMI_TAG_RADIO_CHAN_STATS_EVENT,
++	WMI_TAG_ROAM_PER_CONFIG,
++	WMI_TAG_VDEV_ADD_MAC_ADDR_TO_RX_FILTER_CMD,
++	WMI_TAG_VDEV_ADD_MAC_ADDR_TO_RX_FILTER_STATUS_EVENT,
++	WMI_TAG_BPF_SET_VDEV_ACTIVE_MODE_CMD,
++	WMI_TAG_HW_DATA_FILTER_CMD,
++	WMI_TAG_CONNECTED_NLO_BSS_BAND_RSSI_PREF,
++	WMI_TAG_PEER_OPER_MODE_CHANGE_EVENT,
++	WMI_TAG_CHIP_POWER_SAVE_FAILURE_DETECTED,
++	WMI_TAG_PDEV_MULTIPLE_VDEV_RESTART_REQUEST_CMD,
++	WMI_TAG_PDEV_CSA_SWITCH_COUNT_STATUS_EVENT,
++	WMI_TAG_PDEV_UPDATE_PKT_ROUTING_CMD,
++	WMI_TAG_PDEV_CHECK_CAL_VERSION_CMD,
++	WMI_TAG_PDEV_CHECK_CAL_VERSION_EVENT,
++	WMI_TAG_PDEV_SET_DIVERSITY_GAIN_CMD,
++	WMI_TAG_MAC_PHY_CHAINMASK_COMBO,
++	WMI_TAG_MAC_PHY_CHAINMASK_CAPABILITY,
++	WMI_TAG_VDEV_SET_ARP_STATS_CMD,
++	WMI_TAG_VDEV_GET_ARP_STATS_CMD,
++	WMI_TAG_VDEV_GET_ARP_STATS_EVENT,
++	WMI_TAG_IFACE_OFFLOAD_STATS,
++	WMI_TAG_REQUEST_STATS_CMD_SUB_STRUCT_PARAM,
++	WMI_TAG_RSSI_CTL_EXT,
++	WMI_TAG_SINGLE_PHYERR_EXT_RX_HDR,
++	WMI_TAG_COEX_BT_ACTIVITY_EVENT,
++	WMI_TAG_VDEV_GET_TX_POWER_CMD,
++	WMI_TAG_VDEV_TX_POWER_EVENT,
++	WMI_TAG_OFFCHAN_DATA_TX_COMPL_EVENT,
++	WMI_TAG_OFFCHAN_DATA_TX_SEND_CMD,
++	WMI_TAG_TX_SEND_PARAMS,
++	WMI_TAG_HE_RATE_SET,
++	WMI_TAG_CONGESTION_STATS,
++	WMI_TAG_SET_INIT_COUNTRY_CMD,
++	WMI_TAG_SCAN_DBS_DUTY_CYCLE,
++	WMI_TAG_SCAN_DBS_DUTY_CYCLE_PARAM_TLV,
++	WMI_TAG_PDEV_DIV_GET_RSSI_ANTID,
++	WMI_TAG_THERM_THROT_CONFIG_REQUEST,
++	WMI_TAG_THERM_THROT_LEVEL_CONFIG_INFO,
++	WMI_TAG_THERM_THROT_STATS_EVENT,
++	WMI_TAG_THERM_THROT_LEVEL_STATS_INFO,
++	WMI_TAG_PDEV_DIV_RSSI_ANTID_EVENT,
++	WMI_TAG_OEM_DMA_RING_CAPABILITIES,
++	WMI_TAG_OEM_DMA_RING_CFG_REQ,
++	WMI_TAG_OEM_DMA_RING_CFG_RSP,
++	WMI_TAG_OEM_INDIRECT_DATA,
++	WMI_TAG_OEM_DMA_BUF_RELEASE,
++	WMI_TAG_OEM_DMA_BUF_RELEASE_ENTRY,
++	WMI_TAG_PDEV_BSS_CHAN_INFO_REQUEST,
++	WMI_TAG_PDEV_BSS_CHAN_INFO_EVENT,
++	WMI_TAG_ROAM_LCA_DISALLOW_CONFIG,
++	WMI_TAG_VDEV_LIMIT_OFFCHAN_CMD,
++	WMI_TAG_ROAM_RSSI_REJECTION_OCE_CONFIG,
++	WMI_TAG_UNIT_TEST_EVENT,
++	WMI_TAG_ROAM_FILS_OFFLOAD,
++	WMI_TAG_PDEV_UPDATE_PMK_CACHE_CMD,
++	WMI_TAG_PMK_CACHE,
++	WMI_TAG_PDEV_UPDATE_FILS_HLP_PKT_CMD,
++	WMI_TAG_ROAM_FILS_SYNCH,
++	WMI_TAG_GTK_OFFLOAD_EXTENDED,
++	WMI_TAG_ROAM_BG_SCAN_ROAMING,
++	WMI_TAG_OIC_PING_OFFLOAD_PARAMS_CMD,
++	WMI_TAG_OIC_PING_OFFLOAD_SET_ENABLE_CMD,
++	WMI_TAG_OIC_PING_HANDOFF_EVENT,
++	WMI_TAG_DHCP_LEASE_RENEW_OFFLOAD_CMD,
++	WMI_TAG_DHCP_LEASE_RENEW_EVENT,
++	WMI_TAG_BTM_CONFIG,
++	WMI_TAG_DEBUG_MESG_FW_DATA_STALL,
++	WMI_TAG_WLM_CONFIG_CMD,
++	WMI_TAG_PDEV_UPDATE_CTLTABLE_REQUEST,
++	WMI_TAG_PDEV_UPDATE_CTLTABLE_EVENT,
++	WMI_TAG_ROAM_CND_SCORING_PARAM,
++	WMI_TAG_PDEV_CONFIG_VENDOR_OUI_ACTION,
++	WMI_TAG_VENDOR_OUI_EXT,
++	WMI_TAG_ROAM_SYNCH_FRAME_EVENT,
++	WMI_TAG_FD_SEND_FROM_HOST_CMD,
++	WMI_TAG_ENABLE_FILS_CMD,
++	WMI_TAG_HOST_SWFDA_EVENT,
++	WMI_TAG_BCN_OFFLOAD_CTRL_CMD,
++	WMI_TAG_PDEV_SET_AC_TX_QUEUE_OPTIMIZED_CMD,
++	WMI_TAG_STATS_PERIOD,
++	WMI_TAG_NDL_SCHEDULE_UPDATE,
++	WMI_TAG_PEER_TID_MSDUQ_QDEPTH_THRESH_UPDATE_CMD,
++	WMI_TAG_MSDUQ_QDEPTH_THRESH_UPDATE,
++	WMI_TAG_PDEV_SET_RX_FILTER_PROMISCUOUS_CMD,
++	WMI_TAG_SAR2_RESULT_EVENT,
++	WMI_TAG_SAR_CAPABILITIES,
++	WMI_TAG_SAP_OBSS_DETECTION_CFG_CMD,
++	WMI_TAG_SAP_OBSS_DETECTION_INFO_EVT,
++	WMI_TAG_DMA_RING_CAPABILITIES,
++	WMI_TAG_DMA_RING_CFG_REQ,
++	WMI_TAG_DMA_RING_CFG_RSP,
++	WMI_TAG_DMA_BUF_RELEASE,
++	WMI_TAG_DMA_BUF_RELEASE_ENTRY,
++	WMI_TAG_SAR_GET_LIMITS_CMD,
++	WMI_TAG_SAR_GET_LIMITS_EVENT,
++	WMI_TAG_SAR_GET_LIMITS_EVENT_ROW,
++	WMI_TAG_OFFLOAD_11K_REPORT,
++	WMI_TAG_INVOKE_NEIGHBOR_REPORT,
++	WMI_TAG_NEIGHBOR_REPORT_OFFLOAD,
++	WMI_TAG_VDEV_SET_CONNECTIVITY_CHECK_STATS,
++	WMI_TAG_VDEV_GET_CONNECTIVITY_CHECK_STATS,
++	WMI_TAG_BPF_SET_VDEV_ENABLE_CMD,
++	WMI_TAG_BPF_SET_VDEV_WORK_MEMORY_CMD,
++	WMI_TAG_BPF_GET_VDEV_WORK_MEMORY_CMD,
++	WMI_TAG_BPF_GET_VDEV_WORK_MEMORY_RESP_EVT,
++	WMI_TAG_PDEV_GET_NFCAL_POWER,
++	WMI_TAG_BSS_COLOR_CHANGE_ENABLE,
++	WMI_TAG_OBSS_COLOR_COLLISION_DET_CONFIG,
++	WMI_TAG_OBSS_COLOR_COLLISION_EVT,
++	WMI_TAG_RUNTIME_DPD_RECAL_CMD,
++	WMI_TAG_TWT_ENABLE_CMD,
++	WMI_TAG_TWT_DISABLE_CMD,
++	WMI_TAG_TWT_ADD_DIALOG_CMD,
++	WMI_TAG_TWT_DEL_DIALOG_CMD,
++	WMI_TAG_TWT_PAUSE_DIALOG_CMD,
++	WMI_TAG_TWT_RESUME_DIALOG_CMD,
++	WMI_TAG_TWT_ENABLE_COMPLETE_EVENT,
++	WMI_TAG_TWT_DISABLE_COMPLETE_EVENT,
++	WMI_TAG_TWT_ADD_DIALOG_COMPLETE_EVENT,
++	WMI_TAG_TWT_DEL_DIALOG_COMPLETE_EVENT,
++	WMI_TAG_TWT_PAUSE_DIALOG_COMPLETE_EVENT,
++	WMI_TAG_TWT_RESUME_DIALOG_COMPLETE_EVENT,
++	WMI_TAG_REQUEST_ROAM_SCAN_STATS_CMD,
++	WMI_TAG_ROAM_SCAN_STATS_EVENT,
++	WMI_TAG_PEER_TID_CONFIGURATIONS_CMD,
++	WMI_TAG_VDEV_SET_CUSTOM_SW_RETRY_TH_CMD,
++	WMI_TAG_GET_TPC_POWER_CMD,
++	WMI_TAG_GET_TPC_POWER_EVENT,
++	WMI_TAG_DMA_BUF_RELEASE_SPECTRAL_META_DATA,
++	WMI_TAG_MOTION_DET_CONFIG_PARAMS_CMD,
++	WMI_TAG_MOTION_DET_BASE_LINE_CONFIG_PARAMS_CMD,
++	WMI_TAG_MOTION_DET_START_STOP_CMD,
++	WMI_TAG_MOTION_DET_BASE_LINE_START_STOP_CMD,
++	WMI_TAG_MOTION_DET_EVENT,
++	WMI_TAG_MOTION_DET_BASE_LINE_EVENT,
++	WMI_TAG_NDP_TRANSPORT_IP,
++	WMI_TAG_OBSS_SPATIAL_REUSE_SET_CMD,
++	WMI_TAG_ESP_ESTIMATE_EVENT,
++	WMI_TAG_NAN_HOST_CONFIG,
++	WMI_TAG_SPECTRAL_BIN_SCALING_PARAMS,
++	WMI_TAG_PEER_CFR_CAPTURE_CMD,
++	WMI_TAG_PEER_CHAN_WIDTH_SWITCH_CMD,
++	WMI_TAG_CHAN_WIDTH_PEER_LIST,
++	WMI_TAG_OBSS_SPATIAL_REUSE_SET_DEF_OBSS_THRESH_CMD,
++	WMI_TAG_PDEV_HE_TB_ACTION_FRM_CMD,
++	WMI_TAG_PEER_EXTD2_STATS,
++	WMI_TAG_HPCS_PULSE_START_CMD,
++	WMI_TAG_PDEV_CTL_FAILSAFE_CHECK_EVENT,
++	WMI_TAG_VDEV_CHAINMASK_CONFIG_CMD,
++	WMI_TAG_VDEV_BCN_OFFLOAD_QUIET_CONFIG_CMD,
++	WMI_TAG_NAN_EVENT_INFO,
++	WMI_TAG_NDP_CHANNEL_INFO,
++	WMI_TAG_NDP_CMD,
++	WMI_TAG_NDP_EVENT,
++	/* TODO add all the missing cmds */
++	WMI_TAG_PDEV_PEER_PKTLOG_FILTER_CMD = 0x301,
++	WMI_TAG_PDEV_PEER_PKTLOG_FILTER_INFO,
++	WMI_TAG_MAX
++};
++
++enum wmi_tlv_service {
++	WMI_TLV_SERVICE_BEACON_OFFLOAD = 0,
++	WMI_TLV_SERVICE_SCAN_OFFLOAD = 1,
++	WMI_TLV_SERVICE_ROAM_SCAN_OFFLOAD = 2,
++	WMI_TLV_SERVICE_BCN_MISS_OFFLOAD = 3,
++	WMI_TLV_SERVICE_STA_PWRSAVE = 4,
++	WMI_TLV_SERVICE_STA_ADVANCED_PWRSAVE = 5,
++	WMI_TLV_SERVICE_AP_UAPSD = 6,
++	WMI_TLV_SERVICE_AP_DFS = 7,
++	WMI_TLV_SERVICE_11AC = 8,
++	WMI_TLV_SERVICE_BLOCKACK = 9,
++	WMI_TLV_SERVICE_PHYERR = 10,
++	WMI_TLV_SERVICE_BCN_FILTER = 11,
++	WMI_TLV_SERVICE_RTT = 12,
++	WMI_TLV_SERVICE_WOW = 13,
++	WMI_TLV_SERVICE_RATECTRL_CACHE = 14,
++	WMI_TLV_SERVICE_IRAM_TIDS = 15,
++	WMI_TLV_SERVICE_ARPNS_OFFLOAD = 16,
++	WMI_TLV_SERVICE_NLO = 17,
++	WMI_TLV_SERVICE_GTK_OFFLOAD = 18,
++	WMI_TLV_SERVICE_SCAN_SCH = 19,
++	WMI_TLV_SERVICE_CSA_OFFLOAD = 20,
++	WMI_TLV_SERVICE_CHATTER = 21,
++	WMI_TLV_SERVICE_COEX_FREQAVOID = 22,
++	WMI_TLV_SERVICE_PACKET_POWER_SAVE = 23,
++	WMI_TLV_SERVICE_FORCE_FW_HANG = 24,
++	WMI_TLV_SERVICE_GPIO = 25,
++	WMI_TLV_SERVICE_STA_DTIM_PS_MODULATED_DTIM = 26,
++	WMI_STA_UAPSD_BASIC_AUTO_TRIG = 27,
++	WMI_STA_UAPSD_VAR_AUTO_TRIG = 28,
++	WMI_TLV_SERVICE_STA_KEEP_ALIVE = 29,
++	WMI_TLV_SERVICE_TX_ENCAP = 30,
++	WMI_TLV_SERVICE_AP_PS_DETECT_OUT_OF_SYNC = 31,
++	WMI_TLV_SERVICE_EARLY_RX = 32,
++	WMI_TLV_SERVICE_STA_SMPS = 33,
++	WMI_TLV_SERVICE_FWTEST = 34,
++	WMI_TLV_SERVICE_STA_WMMAC = 35,
++	WMI_TLV_SERVICE_TDLS = 36,
++	WMI_TLV_SERVICE_BURST = 37,
++	WMI_TLV_SERVICE_MCC_BCN_INTERVAL_CHANGE = 38,
++	WMI_TLV_SERVICE_ADAPTIVE_OCS = 39,
++	WMI_TLV_SERVICE_BA_SSN_SUPPORT = 40,
++	WMI_TLV_SERVICE_FILTER_IPSEC_NATKEEPALIVE = 41,
++	WMI_TLV_SERVICE_WLAN_HB = 42,
++	WMI_TLV_SERVICE_LTE_ANT_SHARE_SUPPORT = 43,
++	WMI_TLV_SERVICE_BATCH_SCAN = 44,
++	WMI_TLV_SERVICE_QPOWER = 45,
++	WMI_TLV_SERVICE_PLMREQ = 46,
++	WMI_TLV_SERVICE_THERMAL_MGMT = 47,
++	WMI_TLV_SERVICE_RMC = 48,
++	WMI_TLV_SERVICE_MHF_OFFLOAD = 49,
++	WMI_TLV_SERVICE_COEX_SAR = 50,
++	WMI_TLV_SERVICE_BCN_TXRATE_OVERRIDE = 51,
++	WMI_TLV_SERVICE_NAN = 52,
++	WMI_TLV_SERVICE_L1SS_STAT = 53,
++	WMI_TLV_SERVICE_ESTIMATE_LINKSPEED = 54,
++	WMI_TLV_SERVICE_OBSS_SCAN = 55,
++	WMI_TLV_SERVICE_TDLS_OFFCHAN = 56,
++	WMI_TLV_SERVICE_TDLS_UAPSD_BUFFER_STA = 57,
++	WMI_TLV_SERVICE_TDLS_UAPSD_SLEEP_STA = 58,
++	WMI_TLV_SERVICE_IBSS_PWRSAVE = 59,
++	WMI_TLV_SERVICE_LPASS = 60,
++	WMI_TLV_SERVICE_EXTSCAN = 61,
++	WMI_TLV_SERVICE_D0WOW = 62,
++	WMI_TLV_SERVICE_HSOFFLOAD = 63,
++	WMI_TLV_SERVICE_ROAM_HO_OFFLOAD = 64,
++	WMI_TLV_SERVICE_RX_FULL_REORDER = 65,
++	WMI_TLV_SERVICE_DHCP_OFFLOAD = 66,
++	WMI_TLV_SERVICE_STA_RX_IPA_OFFLOAD_SUPPORT = 67,
++	WMI_TLV_SERVICE_MDNS_OFFLOAD = 68,
++	WMI_TLV_SERVICE_SAP_AUTH_OFFLOAD = 69,
++	WMI_TLV_SERVICE_DUAL_BAND_SIMULTANEOUS_SUPPORT = 70,
++	WMI_TLV_SERVICE_OCB = 71,
++	WMI_TLV_SERVICE_AP_ARPNS_OFFLOAD = 72,
++	WMI_TLV_SERVICE_PER_BAND_CHAINMASK_SUPPORT = 73,
++	WMI_TLV_SERVICE_PACKET_FILTER_OFFLOAD = 74,
++	WMI_TLV_SERVICE_MGMT_TX_HTT = 75,
++	WMI_TLV_SERVICE_MGMT_TX_WMI = 76,
++	WMI_TLV_SERVICE_EXT_MSG = 77,
++	WMI_TLV_SERVICE_MAWC = 78,
++	WMI_TLV_SERVICE_PEER_ASSOC_CONF = 79,
++	WMI_TLV_SERVICE_EGAP = 80,
++	WMI_TLV_SERVICE_STA_PMF_OFFLOAD = 81,
++	WMI_TLV_SERVICE_UNIFIED_WOW_CAPABILITY = 82,
++	WMI_TLV_SERVICE_ENHANCED_PROXY_STA = 83,
++	WMI_TLV_SERVICE_ATF = 84,
++	WMI_TLV_SERVICE_COEX_GPIO = 85,
++	WMI_TLV_SERVICE_AUX_SPECTRAL_INTF = 86,
++	WMI_TLV_SERVICE_AUX_CHAN_LOAD_INTF = 87,
++	WMI_TLV_SERVICE_BSS_CHANNEL_INFO_64 = 88,
++	WMI_TLV_SERVICE_ENTERPRISE_MESH = 89,
++	WMI_TLV_SERVICE_RESTRT_CHNL_SUPPORT = 90,
++	WMI_TLV_SERVICE_BPF_OFFLOAD = 91,
++	WMI_TLV_SERVICE_SYNC_DELETE_CMDS = 92,
++	WMI_TLV_SERVICE_SMART_ANTENNA_SW_SUPPORT = 93,
++	WMI_TLV_SERVICE_SMART_ANTENNA_HW_SUPPORT = 94,
++	WMI_TLV_SERVICE_RATECTRL_LIMIT_MAX_MIN_RATES = 95,
++	WMI_TLV_SERVICE_NAN_DATA = 96,
++	WMI_TLV_SERVICE_NAN_RTT = 97,
++	WMI_TLV_SERVICE_11AX = 98,
++	WMI_TLV_SERVICE_DEPRECATED_REPLACE = 99,
++	WMI_TLV_SERVICE_TDLS_CONN_TRACKER_IN_HOST_MODE = 100,
++	WMI_TLV_SERVICE_ENHANCED_MCAST_FILTER = 101,
++	WMI_TLV_SERVICE_PERIODIC_CHAN_STAT_SUPPORT = 102,
++	WMI_TLV_SERVICE_MESH_11S = 103,
++	WMI_TLV_SERVICE_HALF_RATE_QUARTER_RATE_SUPPORT = 104,
++	WMI_TLV_SERVICE_VDEV_RX_FILTER = 105,
++	WMI_TLV_SERVICE_P2P_LISTEN_OFFLOAD_SUPPORT = 106,
++	WMI_TLV_SERVICE_MARK_FIRST_WAKEUP_PACKET = 107,
++	WMI_TLV_SERVICE_MULTIPLE_MCAST_FILTER_SET = 108,
++	WMI_TLV_SERVICE_HOST_MANAGED_RX_REORDER = 109,
++	WMI_TLV_SERVICE_FLASH_RDWR_SUPPORT = 110,
++	WMI_TLV_SERVICE_WLAN_STATS_REPORT = 111,
++	WMI_TLV_SERVICE_TX_MSDU_ID_NEW_PARTITION_SUPPORT = 112,
++	WMI_TLV_SERVICE_DFS_PHYERR_OFFLOAD = 113,
++	WMI_TLV_SERVICE_RCPI_SUPPORT = 114,
++	WMI_TLV_SERVICE_FW_MEM_DUMP_SUPPORT = 115,
++	WMI_TLV_SERVICE_PEER_STATS_INFO = 116,
++	WMI_TLV_SERVICE_REGULATORY_DB = 117,
++	WMI_TLV_SERVICE_11D_OFFLOAD = 118,
++	WMI_TLV_SERVICE_HW_DATA_FILTERING = 119,
++	WMI_TLV_SERVICE_MULTIPLE_VDEV_RESTART = 120,
++	WMI_TLV_SERVICE_PKT_ROUTING = 121,
++	WMI_TLV_SERVICE_CHECK_CAL_VERSION = 122,
++	WMI_TLV_SERVICE_OFFCHAN_TX_WMI = 123,
++	WMI_TLV_SERVICE_8SS_TX_BFEE  =  124,
++	WMI_TLV_SERVICE_EXTENDED_NSS_SUPPORT = 125,
++	WMI_TLV_SERVICE_ACK_TIMEOUT = 126,
++	WMI_TLV_SERVICE_PDEV_BSS_CHANNEL_INFO_64 = 127,
++
++	WMI_MAX_SERVICE = 128,
++
++	WMI_TLV_SERVICE_CHAN_LOAD_INFO = 128,
++	WMI_TLV_SERVICE_TX_PPDU_INFO_STATS_SUPPORT = 129,
++	WMI_TLV_SERVICE_VDEV_LIMIT_OFFCHAN_SUPPORT = 130,
++	WMI_TLV_SERVICE_FILS_SUPPORT = 131,
++	WMI_TLV_SERVICE_WLAN_OIC_PING_OFFLOAD = 132,
++	WMI_TLV_SERVICE_WLAN_DHCP_RENEW = 133,
++	WMI_TLV_SERVICE_MAWC_SUPPORT = 134,
++	WMI_TLV_SERVICE_VDEV_LATENCY_CONFIG = 135,
++	WMI_TLV_SERVICE_PDEV_UPDATE_CTLTABLE_SUPPORT = 136,
++	WMI_TLV_SERVICE_PKTLOG_SUPPORT_OVER_HTT = 137,
++	WMI_TLV_SERVICE_VDEV_MULTI_GROUP_KEY_SUPPORT = 138,
++	WMI_TLV_SERVICE_SCAN_PHYMODE_SUPPORT = 139,
++	WMI_TLV_SERVICE_THERM_THROT = 140,
++	WMI_TLV_SERVICE_BCN_OFFLOAD_START_STOP_SUPPORT = 141,
++	WMI_TLV_SERVICE_WOW_WAKEUP_BY_TIMER_PATTERN = 142,
++	WMI_TLV_SERVICE_PEER_MAP_UNMAP_V2_SUPPORT = 143,
++	WMI_TLV_SERVICE_OFFCHAN_DATA_TID_SUPPORT = 144,
++	WMI_TLV_SERVICE_RX_PROMISC_ENABLE_SUPPORT = 145,
++	WMI_TLV_SERVICE_SUPPORT_DIRECT_DMA = 146,
++	WMI_TLV_SERVICE_AP_OBSS_DETECTION_OFFLOAD = 147,
++	WMI_TLV_SERVICE_11K_NEIGHBOUR_REPORT_SUPPORT = 148,
++	WMI_TLV_SERVICE_LISTEN_INTERVAL_OFFLOAD_SUPPORT = 149,
++	WMI_TLV_SERVICE_BSS_COLOR_OFFLOAD = 150,
++	WMI_TLV_SERVICE_RUNTIME_DPD_RECAL = 151,
++	WMI_TLV_SERVICE_STA_TWT = 152,
++	WMI_TLV_SERVICE_AP_TWT = 153,
++	WMI_TLV_SERVICE_GMAC_OFFLOAD_SUPPORT = 154,
++	WMI_TLV_SERVICE_SPOOF_MAC_SUPPORT = 155,
++	WMI_TLV_SERVICE_PEER_TID_CONFIGS_SUPPORT = 156,
++	WMI_TLV_SERVICE_VDEV_SWRETRY_PER_AC_CONFIG_SUPPORT = 157,
++	WMI_TLV_SERVICE_DUAL_BEACON_ON_SINGLE_MAC_SCC_SUPPORT = 158,
++	WMI_TLV_SERVICE_DUAL_BEACON_ON_SINGLE_MAC_MCC_SUPPORT = 159,
++	WMI_TLV_SERVICE_MOTION_DET = 160,
++	WMI_TLV_SERVICE_INFRA_MBSSID = 161,
++	WMI_TLV_SERVICE_OBSS_SPATIAL_REUSE = 162,
++	WMI_TLV_SERVICE_VDEV_DIFFERENT_BEACON_INTERVAL_SUPPORT = 163,
++	WMI_TLV_SERVICE_NAN_DBS_SUPPORT = 164,
++	WMI_TLV_SERVICE_NDI_DBS_SUPPORT = 165,
++	WMI_TLV_SERVICE_NAN_SAP_SUPPORT = 166,
++	WMI_TLV_SERVICE_NDI_SAP_SUPPORT = 167,
++	WMI_TLV_SERVICE_CFR_CAPTURE_SUPPORT = 168,
++	WMI_TLV_SERVICE_CFR_CAPTURE_IND_MSG_TYPE_1 = 169,
++	WMI_TLV_SERVICE_ESP_SUPPORT = 170,
++	WMI_TLV_SERVICE_PEER_CHWIDTH_CHANGE = 171,
++	WMI_TLV_SERVICE_WLAN_HPCS_PULSE = 172,
++	WMI_TLV_SERVICE_PER_VDEV_CHAINMASK_CONFIG_SUPPORT = 173,
++	WMI_TLV_SERVICE_TX_DATA_MGMT_ACK_RSSI = 174,
++	WMI_TLV_SERVICE_NAN_DISABLE_SUPPORT = 175,
++	WMI_TLV_SERVICE_HTT_H2T_NO_HTC_HDR_LEN_IN_MSG_LEN = 176,
++
++	WMI_MAX_EXT_SERVICE
++
++};
++
++enum {
++	WMI_SMPS_FORCED_MODE_NONE = 0,
++	WMI_SMPS_FORCED_MODE_DISABLED,
++	WMI_SMPS_FORCED_MODE_STATIC,
++	WMI_SMPS_FORCED_MODE_DYNAMIC
++};
++
++#define WMI_TPC_CHAINMASK_CONFIG_BAND_2G      0
++#define WMI_TPC_CHAINMASK_CONFIG_BAND_5G      1
++#define WMI_NUM_SUPPORTED_BAND_MAX 2
++
++#define WMI_PEER_MIMO_PS_STATE                          0x1
++#define WMI_PEER_AMPDU                                  0x2
++#define WMI_PEER_AUTHORIZE                              0x3
++#define WMI_PEER_CHWIDTH                                0x4
++#define WMI_PEER_NSS                                    0x5
++#define WMI_PEER_USE_4ADDR                              0x6
++#define WMI_PEER_MEMBERSHIP                             0x7
++#define WMI_PEER_USERPOS                                0x8
++#define WMI_PEER_CRIT_PROTO_HINT_ENABLED                0x9
++#define WMI_PEER_TX_FAIL_CNT_THR                        0xA
++#define WMI_PEER_SET_HW_RETRY_CTS2S                     0xB
++#define WMI_PEER_IBSS_ATIM_WINDOW_LENGTH                0xC
++#define WMI_PEER_PHYMODE                                0xD
++#define WMI_PEER_USE_FIXED_PWR                          0xE
++#define WMI_PEER_PARAM_FIXED_RATE                       0xF
++#define WMI_PEER_SET_MU_WHITELIST                       0x10
++#define WMI_PEER_SET_MAX_TX_RATE                        0x11
++#define WMI_PEER_SET_MIN_TX_RATE                        0x12
++#define WMI_PEER_SET_DEFAULT_ROUTING                    0x13
++
++/* slot time long */
++#define WMI_VDEV_SLOT_TIME_LONG         0x1
++/* slot time short */
++#define WMI_VDEV_SLOT_TIME_SHORT        0x2
++/* preablbe long */
++#define WMI_VDEV_PREAMBLE_LONG          0x1
++/* preablbe short */
++#define WMI_VDEV_PREAMBLE_SHORT         0x2
++
++enum wmi_peer_smps_state {
++	WMI_PEER_SMPS_PS_NONE = 0x0,
++	WMI_PEER_SMPS_STATIC  = 0x1,
++	WMI_PEER_SMPS_DYNAMIC = 0x2
++};
++
++enum wmi_peer_chwidth {
++	WMI_PEER_CHWIDTH_20MHZ = 0,
++	WMI_PEER_CHWIDTH_40MHZ = 1,
++	WMI_PEER_CHWIDTH_80MHZ = 2,
++	WMI_PEER_CHWIDTH_160MHZ = 3,
++};
++
++enum wmi_beacon_gen_mode {
++	WMI_BEACON_STAGGERED_MODE = 0,
++	WMI_BEACON_BURST_MODE = 1
++};
++
++struct wmi_host_pdev_band_to_mac {
++	u32 pdev_id;
++	u32 start_freq;
++	u32 end_freq;
++};
++
++struct ath11k_ppe_threshold {
++	u32 numss_m1;
++	u32 ru_bit_mask;
++	u32 ppet16_ppet8_ru3_ru0[PSOC_HOST_MAX_NUM_SS];
++};
++
++struct ath11k_service_ext_param {
++	u32 default_conc_scan_config_bits;
++	u32 default_fw_config_bits;
++	struct ath11k_ppe_threshold ppet;
++	u32 he_cap_info;
++	u32 mpdu_density;
++	u32 max_bssid_rx_filters;
++	u32 num_hw_modes;
++	u32 num_phy;
++};
++
++struct ath11k_hw_mode_caps {
++	u32 hw_mode_id;
++	u32 phy_id_map;
++	u32 hw_mode_config_type;
++};
++
++#define PSOC_HOST_MAX_PHY_SIZE (3)
++#define ATH11K_11B_SUPPORT                 BIT(0)
++#define ATH11K_11G_SUPPORT                 BIT(1)
++#define ATH11K_11A_SUPPORT                 BIT(2)
++#define ATH11K_11N_SUPPORT                 BIT(3)
++#define ATH11K_11AC_SUPPORT                BIT(4)
++#define ATH11K_11AX_SUPPORT                BIT(5)
++
++struct ath11k_hal_reg_capabilities_ext {
++	u32 phy_id;
++	u32 eeprom_reg_domain;
++	u32 eeprom_reg_domain_ext;
++	u32 regcap1;
++	u32 regcap2;
++	u32 wireless_modes;
++	u32 low_2ghz_chan;
++	u32 high_2ghz_chan;
++	u32 low_5ghz_chan;
++	u32 high_5ghz_chan;
++};
++
++#define WMI_HOST_MAX_PDEV 3
++
++struct wlan_host_mem_chunk {
++	u32 tlv_header;
++	u32 req_id;
++	u32 ptr;
++	u32 size;
++} __packed;
++
++struct wmi_host_mem_chunk {
++	void *vaddr;
 +	dma_addr_t paddr;
-+	int buf_id;
-+	int ret;
++	u32 len;
++	u32 req_id;
++};
 +
-+	spin_lock_bh(&ar->txmgmt_idr_lock);
-+	buf_id = idr_alloc(&ar->txmgmt_idr, skb, 0,
-+			   ATH11K_TX_MGMT_NUM_PENDING_MAX, GFP_ATOMIC);
-+	spin_unlock_bh(&ar->txmgmt_idr_lock);
-+	if (buf_id < 0)
-+		return -ENOSPC;
++struct wmi_init_cmd_param {
++	u32 tlv_header;
++	struct target_resource_config *res_cfg;
++	u8 num_mem_chunks;
++	struct wmi_host_mem_chunk *mem_chunks;
++	u32 hw_mode_id;
++	u32 num_band_to_mac;
++	struct wmi_host_pdev_band_to_mac band_to_mac[WMI_HOST_MAX_PDEV];
++};
 +
-+	if ((ieee80211_is_action(hdr->frame_control) ||
-+	     ieee80211_is_deauth(hdr->frame_control) ||
-+	     ieee80211_is_disassoc(hdr->frame_control)) &&
-+	     ieee80211_has_protected(hdr->frame_control)) {
-+		skb_put(skb, IEEE80211_CCMP_MIC_LEN);
-+	}
++struct wmi_pdev_band_to_mac {
++	u32 tlv_header;
++	u32 pdev_id;
++	u32 start_freq;
++	u32 end_freq;
++} __packed;
 +
-+	paddr = dma_map_single(ab->dev, skb->data, skb->len, DMA_TO_DEVICE);
-+	if (dma_mapping_error(ab->dev, paddr)) {
-+		ath11k_warn(ab, "failed to DMA map mgmt Tx buffer\n");
-+		ret = -EIO;
-+		goto err_free_idr;
-+	}
++struct wmi_pdev_set_hw_mode_cmd_param {
++	u32 tlv_header;
++	u32 pdev_id;
++	u32 hw_mode_index;
++	u32 num_band_to_mac;
++} __packed;
 +
-+	ATH11K_SKB_CB(skb)->paddr = paddr;
++struct wmi_ppe_threshold {
++	u32 numss_m1; /** NSS - 1*/
++	union {
++		u32 ru_count;
++		u32 ru_mask;
++	} __packed;
++	u32 ppet16_ppet8_ru3_ru0[WMI_MAX_NUM_SS];
++} __packed;
 +
-+	ret = ath11k_wmi_mgmt_send(ar, arvif->vdev_id, buf_id, skb);
-+	if (ret) {
-+		ath11k_warn(ar->ab, "failed to send mgmt frame: %d\n", ret);
-+		goto err_unmap_buf;
-+	}
++#define HW_BD_INFO_SIZE       5
 +
-+	return 0;
++struct wmi_abi_version {
++	u32 abi_version_0;
++	u32 abi_version_1;
++	u32 abi_version_ns_0;
++	u32 abi_version_ns_1;
++	u32 abi_version_ns_2;
++	u32 abi_version_ns_3;
++} __packed;
 +
-+err_unmap_buf:
-+	dma_unmap_single(ab->dev, ATH11K_SKB_CB(skb)->paddr,
-+			 skb->len, DMA_TO_DEVICE);
-+err_free_idr:
-+	spin_lock_bh(&ar->txmgmt_idr_lock);
-+	idr_remove(&ar->txmgmt_idr, buf_id);
-+	spin_unlock_bh(&ar->txmgmt_idr_lock);
++struct wmi_init_cmd {
++	u32 tlv_header;
++	struct wmi_abi_version host_abi_vers;
++	u32 num_host_mem_chunks;
++} __packed;
 +
-+	return ret;
-+}
++struct wmi_resource_config {
++	u32 tlv_header;
++	u32 num_vdevs;
++	u32 num_peers;
++	u32 num_offload_peers;
++	u32 num_offload_reorder_buffs;
++	u32 num_peer_keys;
++	u32 num_tids;
++	u32 ast_skid_limit;
++	u32 tx_chain_mask;
++	u32 rx_chain_mask;
++	u32 rx_timeout_pri[4];
++	u32 rx_decap_mode;
++	u32 scan_max_pending_req;
++	u32 bmiss_offload_max_vdev;
++	u32 roam_offload_max_vdev;
++	u32 roam_offload_max_ap_profiles;
++	u32 num_mcast_groups;
++	u32 num_mcast_table_elems;
++	u32 mcast2ucast_mode;
++	u32 tx_dbg_log_size;
++	u32 num_wds_entries;
++	u32 dma_burst_size;
++	u32 mac_aggr_delim;
++	u32 rx_skip_defrag_timeout_dup_detection_check;
++	u32 vow_config;
++	u32 gtk_offload_max_vdev;
++	u32 num_msdu_desc;
++	u32 max_frag_entries;
++	u32 num_tdls_vdevs;
++	u32 num_tdls_conn_table_entries;
++	u32 beacon_tx_offload_max_vdev;
++	u32 num_multicast_filter_entries;
++	u32 num_wow_filters;
++	u32 num_keep_alive_pattern;
++	u32 keep_alive_pattern_size;
++	u32 max_tdls_concurrent_sleep_sta;
++	u32 max_tdls_concurrent_buffer_sta;
++	u32 wmi_send_separate;
++	u32 num_ocb_vdevs;
++	u32 num_ocb_channels;
++	u32 num_ocb_schedules;
++	u32 flag1;
++	u32 smart_ant_cap;
++	u32 bk_minfree;
++	u32 be_minfree;
++	u32 vi_minfree;
++	u32 vo_minfree;
++	u32 alloc_frag_desc_for_data_pkt;
++	u32 num_ns_ext_tuples_cfg;
++	u32 bpf_instruction_size;
++	u32 max_bssid_rx_filters;
++	u32 use_pdev_id;
++	u32 max_num_dbs_scan_duty_cycle;
++	u32 max_num_group_keys;
++	u32 peer_map_unmap_v2_support;
++} __packed;
 +
-+static void ath11k_mgmt_over_wmi_tx_purge(struct ath11k *ar)
-+{
-+	struct sk_buff *skb;
-+
-+	while ((skb = skb_dequeue(&ar->wmi_mgmt_tx_queue)) != NULL)
-+		ieee80211_free_txskb(ar->hw, skb);
-+}
-+
-+static void ath11k_mgmt_over_wmi_tx_work(struct work_struct *work)
-+{
-+	struct ath11k *ar = container_of(work, struct ath11k, wmi_mgmt_tx_work);
-+	struct ieee80211_tx_info *info;
-+	struct ath11k_vif *arvif;
-+	struct sk_buff *skb;
-+	int ret;
-+
-+	while ((skb = skb_dequeue(&ar->wmi_mgmt_tx_queue)) != NULL) {
-+		info = IEEE80211_SKB_CB(skb);
-+		arvif = ath11k_vif_to_arvif(info->control.vif);
-+
-+		ret = ath11k_mac_mgmt_tx_wmi(ar, arvif, skb);
-+		if (ret) {
-+			ath11k_warn(ar->ab, "failed to transmit management frame %d\n",
-+				    ret);
-+			ieee80211_free_txskb(ar->hw, skb);
-+		} else {
-+			atomic_inc(&ar->num_pending_mgmt_tx);
-+		}
-+	}
-+}
-+
-+static int ath11k_mac_mgmt_tx(struct ath11k *ar, struct sk_buff *skb,
-+			      bool is_prb_rsp)
-+{
-+	struct sk_buff_head *q = &ar->wmi_mgmt_tx_queue;
-+
-+	if (test_bit(ATH11K_FLAG_CRASH_FLUSH, &ar->ab->dev_flags))
-+		return -ESHUTDOWN;
-+
-+	/* Drop probe response packets when the pending management tx
-+	 * count has reached a certain threshold, so as to prioritize
-+	 * other mgmt packets like auth and assoc to be sent on time
-+	 * for establishing successful connections.
++struct wmi_service_ready_event {
++	u32 fw_build_vers;
++	struct wmi_abi_version fw_abi_vers;
++	u32 phy_capability;
++	u32 max_frag_entry;
++	u32 num_rf_chains;
++	u32 ht_cap_info;
++	u32 vht_cap_info;
++	u32 vht_supp_mcs;
++	u32 hw_min_tx_power;
++	u32 hw_max_tx_power;
++	u32 sys_cap_info;
++	u32 min_pkt_size_enable;
++	u32 max_bcn_ie_size;
++	u32 num_mem_reqs;
++	u32 max_num_scan_channels;
++	u32 hw_bd_id;
++	u32 hw_bd_info[HW_BD_INFO_SIZE];
++	u32 max_supported_macs;
++	u32 wmi_fw_sub_feat_caps;
++	u32 num_dbs_hw_modes;
++	/* txrx_chainmask
++	 *    [7:0]   - 2G band tx chain mask
++	 *    [15:8]  - 2G band rx chain mask
++	 *    [23:16] - 5G band tx chain mask
++	 *    [31:24] - 5G band rx chain mask
 +	 */
-+	if (is_prb_rsp &&
-+	    atomic_read(&ar->num_pending_mgmt_tx) > ATH11K_PRB_RSP_DROP_THRESHOLD) {
-+		ath11k_warn(ar->ab,
-+			    "dropping probe response as pending queue is almost full\n");
-+		return -ENOSPC;
-+	}
++	u32 txrx_chainmask;
++	u32 default_dbs_hw_mode_index;
++	u32 num_msdu_desc;
++} __packed;
 +
-+	if (skb_queue_len(q) == ATH11K_TX_MGMT_NUM_PENDING_MAX) {
-+		ath11k_warn(ar->ab, "mgmt tx queue is full\n");
-+		return -ENOSPC;
-+	}
++#define WMI_SERVICE_BM_SIZE	((WMI_MAX_SERVICE + sizeof(u32) - 1) / sizeof(u32))
 +
-+	skb_queue_tail(q, skb);
-+	ieee80211_queue_work(ar->hw, &ar->wmi_mgmt_tx_work);
++#define WMI_SERVICE_SEGMENT_BM_SIZE32 4 /* 4x u32 = 128 bits */
++#define WMI_SERVICE_EXT_BM_SIZE (WMI_SERVICE_SEGMENT_BM_SIZE32 * sizeof(u32))
++#define WMI_AVAIL_SERVICE_BITS_IN_SIZE32 32
++#define WMI_SERVICE_BITS_IN_SIZE32 4
 +
-+	return 0;
-+}
++struct wmi_service_ready_ext_event {
++	u32 default_conc_scan_config_bits;
++	u32 default_fw_config_bits;
++	struct wmi_ppe_threshold ppet;
++	u32 he_cap_info;
++	u32 mpdu_density;
++	u32 max_bssid_rx_filters;
++	u32 fw_build_vers_ext;
++	u32 max_nlo_ssids;
++	u32 max_bssid_indicator;
++	u32 he_cap_info_ext;
++} __packed;
 +
-+static void ath11k_mac_op_tx(struct ieee80211_hw *hw,
-+			     struct ieee80211_tx_control *control,
-+			     struct sk_buff *skb)
++struct wmi_soc_mac_phy_hw_mode_caps {
++	u32 num_hw_modes;
++	u32 num_chainmask_tables;
++} __packed;
++
++struct wmi_hw_mode_capabilities {
++	u32 tlv_header;
++	u32 hw_mode_id;
++	u32 phy_id_map;
++	u32 hw_mode_config_type;
++} __packed;
++
++#define WMI_MAX_HECAP_PHY_SIZE                 (3)
++
++struct wmi_mac_phy_capabilities {
++	u32 tlv_header;
++	u32 hw_mode_id;
++	u32 pdev_id;
++	u32 phy_id;
++	u32 supported_flags;
++	u32 supported_bands;
++	u32 ampdu_density;
++	u32 max_bw_supported_2g;
++	u32 ht_cap_info_2g;
++	u32 vht_cap_info_2g;
++	u32 vht_supp_mcs_2g;
++	u32 he_cap_info_2g;
++	u32 he_supp_mcs_2g;
++	u32 tx_chain_mask_2g;
++	u32 rx_chain_mask_2g;
++	u32 max_bw_supported_5g;
++	u32 ht_cap_info_5g;
++	u32 vht_cap_info_5g;
++	u32 vht_supp_mcs_5g;
++	u32 he_cap_info_5g;
++	u32 he_supp_mcs_5g;
++	u32 tx_chain_mask_5g;
++	u32 rx_chain_mask_5g;
++	u32 he_cap_phy_info_2g[WMI_MAX_HECAP_PHY_SIZE];
++	u32 he_cap_phy_info_5g[WMI_MAX_HECAP_PHY_SIZE];
++	struct wmi_ppe_threshold he_ppet2g;
++	struct wmi_ppe_threshold he_ppet5g;
++	u32 chainmask_table_id;
++	u32 lmac_id;
++	u32 he_cap_info_2g_ext;
++	u32 he_cap_info_5g_ext;
++	u32 he_cap_info_internal;
++} __packed;
++
++struct wmi_hal_reg_capabilities_ext {
++	u32 tlv_header;
++	u32 phy_id;
++	u32 eeprom_reg_domain;
++	u32 eeprom_reg_domain_ext;
++	u32 regcap1;
++	u32 regcap2;
++	u32 wireless_modes;
++	u32 low_2ghz_chan;
++	u32 high_2ghz_chan;
++	u32 low_5ghz_chan;
++	u32 high_5ghz_chan;
++} __packed;
++
++struct wmi_soc_hal_reg_capabilities {
++	u32 num_phy;
++} __packed;
++
++/* 2 word representation of MAC addr */
++struct wmi_mac_addr {
++	union {
++		u8 addr[6];
++		struct {
++			u32 word0;
++			u32 word1;
++		} __packed;
++	} __packed;
++} __packed;
++
++struct wmi_ready_event {
++	struct wmi_abi_version fw_abi_vers;
++	struct wmi_mac_addr mac_addr;
++	u32 status;
++	u32 num_dscp_table;
++	u32 num_extra_mac_addr;
++	u32 num_total_peers;
++	u32 num_extra_peers;
++} __packed;
++
++struct wmi_service_available_event {
++	u32 wmi_service_segment_offset;
++	u32 wmi_service_segment_bitmap[WMI_SERVICE_SEGMENT_BM_SIZE32];
++} __packed;
++
++struct ath11k_pdev_wmi {
++	struct ath11k_wmi_base *wmi_sc;
++	enum ath11k_htc_ep_id eid;
++	const struct wmi_peer_flags_map *peer_flags;
++	u32 rx_decap_mode;
++};
++
++struct vdev_create_params {
++	u8 if_id;
++	u32 type;
++	u32 subtype;
++	struct {
++		u8 tx;
++		u8 rx;
++	} chains[NUM_NL80211_BANDS];
++	u32 pdev_id;
++};
++
++struct wmi_vdev_create_cmd {
++	u32 tlv_header;
++	u32 vdev_id;
++	u32 vdev_type;
++	u32 vdev_subtype;
++	struct wmi_mac_addr vdev_macaddr;
++	u32 num_cfg_txrx_streams;
++	u32 pdev_id;
++} __packed;
++
++struct wmi_vdev_txrx_streams {
++	u32 tlv_header;
++	u32 band;
++	u32 supported_tx_streams;
++	u32 supported_rx_streams;
++} __packed;
++
++struct wmi_vdev_delete_cmd {
++	u32 tlv_header;
++	u32 vdev_id;
++} __packed;
++
++struct wmi_vdev_up_cmd {
++	u32 tlv_header;
++	u32 vdev_id;
++	u32 vdev_assoc_id;
++	struct wmi_mac_addr vdev_bssid;
++	struct wmi_mac_addr trans_bssid;
++	u32 profile_idx;
++	u32 profile_num;
++} __packed;
++
++struct wmi_vdev_stop_cmd {
++	u32 tlv_header;
++	u32 vdev_id;
++} __packed;
++
++struct wmi_vdev_down_cmd {
++	u32 tlv_header;
++	u32 vdev_id;
++} __packed;
++
++#define WMI_VDEV_START_HIDDEN_SSID  BIT(0)
++#define WMI_VDEV_START_PMF_ENABLED  BIT(1)
++#define WMI_VDEV_START_LDPC_RX_ENABLED BIT(3)
++
++struct wmi_ssid {
++	u32 ssid_len;
++	u32 ssid[8];
++} __packed;
++
++#define ATH11K_VDEV_SETUP_TIMEOUT_HZ (1 * HZ)
++
++struct wmi_vdev_start_request_cmd {
++	u32 tlv_header;
++	u32 vdev_id;
++	u32 requestor_id;
++	u32 beacon_interval;
++	u32 dtim_period;
++	u32 flags;
++	struct wmi_ssid ssid;
++	u32 bcn_tx_rate;
++	u32 bcn_txpower;
++	u32 num_noa_descriptors;
++	u32 disable_hw_ack;
++	u32 preferred_tx_streams;
++	u32 preferred_rx_streams;
++	u32 he_ops;
++	u32 cac_duration_ms;
++	u32 regdomain;
++} __packed;
++
++#define MGMT_TX_DL_FRM_LEN		     64
++#define WMI_MAC_MAX_SSID_LENGTH              32
++struct mac_ssid {
++	u8 length;
++	u8 mac_ssid[WMI_MAC_MAX_SSID_LENGTH];
++} __packed;
++
++struct wmi_p2p_noa_descriptor {
++	u32 type_count;
++	u32 duration;
++	u32 interval;
++	u32 start_time;
++};
++
++struct channel_param {
++	u8 chan_id;
++	u8 pwr;
++	u32 mhz;
++	u32 half_rate:1,
++	    quarter_rate:1,
++	    dfs_set:1,
++	    dfs_set_cfreq2:1,
++	    is_chan_passive:1,
++	    allow_ht:1,
++	    allow_vht:1,
++	    set_agile:1;
++	u32 phy_mode;
++	u32 cfreq1;
++	u32 cfreq2;
++	char   maxpower;
++	char   minpower;
++	char   maxregpower;
++	u8  antennamax;
++	u8  reg_class_id;
++} __packed;
++
++enum wmi_phy_mode {
++	MODE_11A        = 0,
++	MODE_11G        = 1,   /* 11b/g Mode */
++	MODE_11B        = 2,   /* 11b Mode */
++	MODE_11GONLY    = 3,   /* 11g only Mode */
++	MODE_11NA_HT20   = 4,
++	MODE_11NG_HT20   = 5,
++	MODE_11NA_HT40   = 6,
++	MODE_11NG_HT40   = 7,
++	MODE_11AC_VHT20 = 8,
++	MODE_11AC_VHT40 = 9,
++	MODE_11AC_VHT80 = 10,
++	MODE_11AC_VHT20_2G = 11,
++	MODE_11AC_VHT40_2G = 12,
++	MODE_11AC_VHT80_2G = 13,
++	MODE_11AC_VHT80_80 = 14,
++	MODE_11AC_VHT160 = 15,
++	MODE_11AX_HE20 = 16,
++	MODE_11AX_HE40 = 17,
++	MODE_11AX_HE80 = 18,
++	MODE_11AX_HE80_80 = 19,
++	MODE_11AX_HE160 = 20,
++	MODE_11AX_HE20_2G = 21,
++	MODE_11AX_HE40_2G = 22,
++	MODE_11AX_HE80_2G = 23,
++	MODE_UNKNOWN = 24,
++	MODE_MAX = 24
++};
++
++static inline const char *ath11k_wmi_phymode_str(enum wmi_phy_mode mode)
 +{
-+	struct ath11k *ar = hw->priv;
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct ieee80211_vif *vif = info->control.vif;
-+	struct ath11k_vif *arvif = ath11k_vif_to_arvif(vif);
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-+	bool is_prb_rsp;
-+	int ret;
-+
-+	if (ieee80211_is_mgmt(hdr->frame_control)) {
-+		is_prb_rsp = ieee80211_is_probe_resp(hdr->frame_control);
-+		ret = ath11k_mac_mgmt_tx(ar, skb, is_prb_rsp);
-+		if (ret) {
-+			ath11k_warn(ar->ab, "failed to queue management frame %d\n",
-+				    ret);
-+			ieee80211_free_txskb(ar->hw, skb);
-+		}
-+		return;
-+	}
-+
-+	ret = ath11k_dp_tx(ar, arvif, skb);
-+	if (ret) {
-+		ath11k_warn(ar->ab, "failed to transmit frame %d\n", ret);
-+		ieee80211_free_txskb(ar->hw, skb);
-+	}
-+}
-+
-+void ath11k_mac_drain_tx(struct ath11k *ar)
-+{
-+	/* make sure rcu-protected mac80211 tx path itself is drained */
-+	synchronize_net();
-+
-+	cancel_work_sync(&ar->wmi_mgmt_tx_work);
-+	ath11k_mgmt_over_wmi_tx_purge(ar);
-+}
-+
-+static int ath11k_mac_config_mon_status_default(struct ath11k *ar, bool enable)
-+{
-+	struct htt_rx_ring_tlv_filter tlv_filter = {0};
-+	u32 ring_id;
-+
-+	if (enable)
-+		tlv_filter = ath11k_mac_mon_status_filter_default;
-+
-+	ring_id = ar->dp.rx_mon_status_refill_ring.refill_buf_ring.ring_id;
-+
-+	return ath11k_dp_tx_htt_rx_filter_setup(ar->ab, ring_id, ar->dp.mac_id,
-+						HAL_RXDMA_MONITOR_STATUS,
-+						DP_RX_BUFFER_SIZE, &tlv_filter);
-+}
-+
-+static int ath11k_mac_op_start(struct ieee80211_hw *hw)
-+{
-+	struct ath11k *ar = hw->priv;
-+	struct ath11k_base *ab = ar->ab;
-+	struct ath11k_pdev *pdev = ar->pdev;
-+	int ret;
-+
-+	ath11k_mac_drain_tx(ar);
-+	mutex_lock(&ar->conf_mutex);
-+
-+	switch (ar->state) {
-+	case ATH11K_STATE_OFF:
-+		ar->state = ATH11K_STATE_ON;
++	switch (mode) {
++	case MODE_11A:
++		return "11a";
++	case MODE_11G:
++		return "11g";
++	case MODE_11B:
++		return "11b";
++	case MODE_11GONLY:
++		return "11gonly";
++	case MODE_11NA_HT20:
++		return "11na-ht20";
++	case MODE_11NG_HT20:
++		return "11ng-ht20";
++	case MODE_11NA_HT40:
++		return "11na-ht40";
++	case MODE_11NG_HT40:
++		return "11ng-ht40";
++	case MODE_11AC_VHT20:
++		return "11ac-vht20";
++	case MODE_11AC_VHT40:
++		return "11ac-vht40";
++	case MODE_11AC_VHT80:
++		return "11ac-vht80";
++	case MODE_11AC_VHT160:
++		return "11ac-vht160";
++	case MODE_11AC_VHT80_80:
++		return "11ac-vht80+80";
++	case MODE_11AC_VHT20_2G:
++		return "11ac-vht20-2g";
++	case MODE_11AC_VHT40_2G:
++		return "11ac-vht40-2g";
++	case MODE_11AC_VHT80_2G:
++		return "11ac-vht80-2g";
++	case MODE_11AX_HE20:
++		return "11ax-he20";
++	case MODE_11AX_HE40:
++		return "11ax-he40";
++	case MODE_11AX_HE80:
++		return "11ax-he80";
++	case MODE_11AX_HE80_80:
++		return "11ax-he80+80";
++	case MODE_11AX_HE160:
++		return "11ax-he160";
++	case MODE_11AX_HE20_2G:
++		return "11ax-he20-2g";
++	case MODE_11AX_HE40_2G:
++		return "11ax-he40-2g";
++	case MODE_11AX_HE80_2G:
++		return "11ax-he80-2g";
++	case MODE_UNKNOWN:
++		/* skip */
 +		break;
-+	case ATH11K_STATE_RESTARTING:
-+		ar->state = ATH11K_STATE_RESTARTED;
-+		break;
-+	case ATH11K_STATE_RESTARTED:
-+	case ATH11K_STATE_WEDGED:
-+	case ATH11K_STATE_ON:
-+		WARN_ON(1);
-+		ret = -EINVAL;
-+		goto err;
-+	}
 +
-+	ret = ath11k_wmi_pdev_set_param(ar, WMI_PDEV_PARAM_PMF_QOS,
-+					1, pdev->pdev_id);
-+
-+	if (ret) {
-+		ath11k_err(ar->ab, "failed to enable PMF QOS: (%d\n", ret);
-+		goto err;
-+	}
-+
-+	ret = ath11k_wmi_pdev_set_param(ar, WMI_PDEV_PARAM_DYNAMIC_BW, 1,
-+					pdev->pdev_id);
-+	if (ret) {
-+		ath11k_err(ar->ab, "failed to enable dynamic bw: %d\n", ret);
-+		goto err;
-+	}
-+
-+	ret = ath11k_wmi_pdev_set_param(ar, WMI_PDEV_PARAM_ARP_AC_OVERRIDE,
-+					0, pdev->pdev_id);
-+	if (ret) {
-+		ath11k_err(ab, "failed to set ac override for ARP: %d\n",
-+			   ret);
-+		goto err;
-+	}
-+
-+	ret = ath11k_wmi_send_dfs_phyerr_offload_enable_cmd(ar, pdev->pdev_id);
-+	if (ret) {
-+		ath11k_err(ab, "failed to offload radar detection: %d\n",
-+			   ret);
-+		goto err;
-+	}
-+
-+	ret = ath11k_dp_tx_htt_h2t_ppdu_stats_req(ar,
-+						  HTT_PPDU_STATS_TAG_DEFAULT);
-+	if (ret) {
-+		ath11k_err(ab, "failed to req ppdu stats: %d\n", ret);
-+		goto err;
-+	}
-+
-+	ret = ath11k_wmi_pdev_set_param(ar, WMI_PDEV_PARAM_MESH_MCAST_ENABLE,
-+					1, pdev->pdev_id);
-+
-+	if (ret) {
-+		ath11k_err(ar->ab, "failed to enable MESH MCAST ENABLE: (%d\n", ret);
-+		goto err;
-+	}
-+
-+	__ath11k_set_antenna(ar, ar->cfg_tx_chainmask, ar->cfg_rx_chainmask);
-+
-+	/* TODO: Do we need to enable ANI? */
-+
-+	ath11k_reg_update_chan_list(ar);
-+
-+	ar->num_started_vdevs = 0;
-+	ar->num_created_vdevs = 0;
-+	ar->num_peers = 0;
-+
-+	/* Configure monitor status ring with default rx_filter to get rx status
-+	 * such as rssi, rx_duration.
-+	 */
-+	ret = ath11k_mac_config_mon_status_default(ar, true);
-+	if (ret) {
-+		ath11k_err(ab, "failed to configure monitor status ring with default rx_filter: (%d)\n",
-+			   ret);
-+		goto err;
-+	}
-+
-+	mutex_unlock(&ar->conf_mutex);
-+
-+	rcu_assign_pointer(ab->pdevs_active[ar->pdev_idx],
-+			   &ab->pdevs[ar->pdev_idx]);
-+
-+	return 0;
-+
-+err:
-+	ar->state = ATH11K_STATE_OFF;
-+	mutex_unlock(&ar->conf_mutex);
-+
-+	return ret;
-+}
-+
-+static void ath11k_mac_op_stop(struct ieee80211_hw *hw)
-+{
-+	struct ath11k *ar = hw->priv;
-+	struct htt_ppdu_stats_info *ppdu_stats, *tmp;
-+	int ret;
-+
-+	ath11k_mac_drain_tx(ar);
-+
-+	mutex_lock(&ar->conf_mutex);
-+	ret = ath11k_mac_config_mon_status_default(ar, false);
-+	if (ret)
-+		ath11k_err(ar->ab, "failed to clear rx_filter for monitor status ring: (%d)\n",
-+			   ret);
-+
-+	clear_bit(ATH11K_CAC_RUNNING, &ar->dev_flags);
-+	ar->state = ATH11K_STATE_OFF;
-+	mutex_unlock(&ar->conf_mutex);
-+
-+	cancel_delayed_work_sync(&ar->scan.timeout);
-+	cancel_work_sync(&ar->regd_update_work);
-+
-+	spin_lock_bh(&ar->data_lock);
-+	list_for_each_entry_safe(ppdu_stats, tmp, &ar->ppdu_stats_info, list) {
-+		list_del(&ppdu_stats->list);
-+		kfree(ppdu_stats);
-+	}
-+	spin_unlock_bh(&ar->data_lock);
-+
-+	rcu_assign_pointer(ar->ab->pdevs_active[ar->pdev_idx], NULL);
-+
-+	synchronize_rcu();
-+
-+	atomic_set(&ar->num_pending_mgmt_tx, 0);
-+}
-+
-+static void
-+ath11k_mac_setup_vdev_create_params(struct ath11k_vif *arvif,
-+				    struct vdev_create_params *params)
-+{
-+	struct ath11k *ar = arvif->ar;
-+	struct ath11k_pdev *pdev = ar->pdev;
-+
-+	params->if_id = arvif->vdev_id;
-+	params->type = arvif->vdev_type;
-+	params->subtype = arvif->vdev_subtype;
-+	params->pdev_id = pdev->pdev_id;
-+
-+	if (pdev->cap.supported_bands & WMI_HOST_WLAN_2G_CAP) {
-+		params->chains[NL80211_BAND_2GHZ].tx = ar->num_tx_chains;
-+		params->chains[NL80211_BAND_2GHZ].rx = ar->num_rx_chains;
-+	}
-+	if (pdev->cap.supported_bands & WMI_HOST_WLAN_5G_CAP) {
-+		params->chains[NL80211_BAND_5GHZ].tx = ar->num_tx_chains;
-+		params->chains[NL80211_BAND_5GHZ].rx = ar->num_rx_chains;
-+	}
-+}
-+
-+static u32
-+ath11k_mac_prepare_he_mode(struct ath11k_pdev *pdev, u32 viftype)
-+{
-+	struct ath11k_pdev_cap *pdev_cap = &pdev->cap;
-+	struct ath11k_band_cap *cap_band = NULL;
-+	u32 *hecap_phy_ptr = NULL;
-+	u32 hemode = 0;
-+
-+	if (pdev->cap.supported_bands & WMI_HOST_WLAN_2G_CAP)
-+		cap_band = &pdev_cap->band[NL80211_BAND_2GHZ];
-+	else
-+		cap_band = &pdev_cap->band[NL80211_BAND_5GHZ];
-+
-+	hecap_phy_ptr = &cap_band->he_cap_phy_info[0];
-+
-+	hemode = FIELD_PREP(HE_MODE_SU_TX_BFEE, HE_SU_BFEE_ENABLE) |
-+		FIELD_PREP(HE_MODE_SU_TX_BFER, HECAP_PHY_SUBFMR_GET(hecap_phy_ptr)) |
-+		FIELD_PREP(HE_MODE_UL_MUMIMO, HECAP_PHY_ULMUMIMO_GET(hecap_phy_ptr));
-+
-+	/* TODO WDS and other modes */
-+	if (viftype == NL80211_IFTYPE_AP) {
-+		hemode |= FIELD_PREP(HE_MODE_MU_TX_BFER,
-+			   HECAP_PHY_MUBFMR_GET(hecap_phy_ptr)) |
-+			FIELD_PREP(HE_MODE_DL_OFDMA, HE_DL_MUOFDMA_ENABLE) |
-+			FIELD_PREP(HE_MODE_UL_OFDMA, HE_UL_MUOFDMA_ENABLE);
-+	} else {
-+		hemode |= FIELD_PREP(HE_MODE_MU_TX_BFEE, HE_MU_BFEE_ENABLE);
-+	}
-+
-+	return hemode;
-+}
-+
-+static int ath11k_set_he_mu_sounding_mode(struct ath11k *ar,
-+					  struct ath11k_vif *arvif)
-+{
-+	u32 param_id, param_value;
-+	struct ath11k_base *ab = ar->ab;
-+	int ret = 0;
-+
-+	param_id = WMI_VDEV_PARAM_SET_HEMU_MODE;
-+	param_value = ath11k_mac_prepare_he_mode(ar->pdev, arvif->vif->type);
-+	ret = ath11k_wmi_vdev_set_param_cmd(ar, arvif->vdev_id,
-+					    param_id, param_value);
-+	if (ret) {
-+		ath11k_warn(ab, "failed to set vdev %d HE MU mode: %d param_value %x\n",
-+			    arvif->vdev_id, ret, param_value);
-+		return ret;
-+	}
-+	param_id = WMI_VDEV_PARAM_SET_HE_SOUNDING_MODE;
-+	param_value =
-+		FIELD_PREP(HE_VHT_SOUNDING_MODE, HE_VHT_SOUNDING_MODE_ENABLE) |
-+		FIELD_PREP(HE_TRIG_NONTRIG_SOUNDING_MODE,
-+			   HE_TRIG_NONTRIG_SOUNDING_MODE_ENABLE);
-+	ret = ath11k_wmi_vdev_set_param_cmd(ar, arvif->vdev_id,
-+					    param_id, param_value);
-+	if (ret) {
-+		ath11k_warn(ab, "failed to set vdev %d HE MU mode: %d\n",
-+			    arvif->vdev_id, ret);
-+		return ret;
-+	}
-+	return ret;
-+}
-+
-+static int ath11k_mac_op_add_interface(struct ieee80211_hw *hw,
-+				       struct ieee80211_vif *vif)
-+{
-+	struct ath11k *ar = hw->priv;
-+	struct ath11k_base *ab = ar->ab;
-+	struct ath11k_vif *arvif = ath11k_vif_to_arvif(vif);
-+	struct vdev_create_params vdev_param = {0};
-+	struct peer_create_params peer_param;
-+	u32 param_id, param_value;
-+	u16 nss;
-+	int i;
-+	int ret;
-+	int bit;
-+
-+	vif->driver_flags |= IEEE80211_VIF_SUPPORTS_UAPSD;
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	if (vif->type == NL80211_IFTYPE_AP &&
-+	    ar->num_peers > (ar->max_num_peers - 1)) {
-+		ath11k_warn(ab, "failed to create vdev due to insufficient peer entry resource in firmware\n");
-+		ret = -ENOBUFS;
-+		goto err;
-+	}
-+
-+	if (ar->num_created_vdevs > (TARGET_NUM_VDEVS - 1)) {
-+		ath11k_warn(ab, "failed to create vdev, reached max vdev limit %d\n",
-+			    TARGET_NUM_VDEVS);
-+		ret = -EBUSY;
-+		goto err;
-+	}
-+
-+	memset(arvif, 0, sizeof(*arvif));
-+
-+	arvif->ar = ar;
-+	arvif->vif = vif;
-+
-+	INIT_LIST_HEAD(&arvif->list);
-+
-+	/* Should we initialize any worker to handle connection loss indication
-+	 * from firmware in sta mode?
-+	 */
-+
-+	for (i = 0; i < ARRAY_SIZE(arvif->bitrate_mask.control); i++) {
-+		arvif->bitrate_mask.control[i].legacy = 0xffffffff;
-+		memset(arvif->bitrate_mask.control[i].ht_mcs, 0xff,
-+		       sizeof(arvif->bitrate_mask.control[i].ht_mcs));
-+		memset(arvif->bitrate_mask.control[i].vht_mcs, 0xff,
-+		       sizeof(arvif->bitrate_mask.control[i].vht_mcs));
-+	}
-+
-+	bit = __ffs64(ab->free_vdev_map);
-+
-+	arvif->vdev_id = bit;
-+	arvif->vdev_subtype = WMI_VDEV_SUBTYPE_NONE;
-+
-+	switch (vif->type) {
-+	case NL80211_IFTYPE_UNSPECIFIED:
-+	case NL80211_IFTYPE_STATION:
-+		arvif->vdev_type = WMI_VDEV_TYPE_STA;
-+		break;
-+	case NL80211_IFTYPE_MESH_POINT:
-+		arvif->vdev_subtype = WMI_VDEV_SUBTYPE_MESH_11S;
-+		/* fall through */
-+	case NL80211_IFTYPE_AP:
-+		arvif->vdev_type = WMI_VDEV_TYPE_AP;
-+		break;
-+	case NL80211_IFTYPE_MONITOR:
-+		arvif->vdev_type = WMI_VDEV_TYPE_MONITOR;
-+		break;
-+	default:
-+		WARN_ON(1);
-+		break;
-+	}
-+
-+	ath11k_dbg(ar->ab, ATH11K_DBG_MAC, "mac add interface id %d type %d subtype %d map %llx\n",
-+		   arvif->vdev_id, arvif->vdev_type, arvif->vdev_subtype,
-+		   ab->free_vdev_map);
-+
-+	vif->cab_queue = arvif->vdev_id % (ATH11K_HW_MAX_QUEUES - 1);
-+	for (i = 0; i < ARRAY_SIZE(vif->hw_queue); i++)
-+		vif->hw_queue[i] = i % (ATH11K_HW_MAX_QUEUES - 1);
-+
-+	ath11k_mac_setup_vdev_create_params(arvif, &vdev_param);
-+
-+	ret = ath11k_wmi_vdev_create(ar, vif->addr, &vdev_param);
-+	if (ret) {
-+		ath11k_warn(ab, "failed to create WMI vdev %d: %d\n",
-+			    arvif->vdev_id, ret);
-+		goto err;
-+	}
-+
-+	ar->num_created_vdevs++;
-+
-+	ab->free_vdev_map &= ~(1LL << arvif->vdev_id);
-+	spin_lock_bh(&ar->data_lock);
-+	list_add(&arvif->list, &ar->arvifs);
-+	spin_unlock_bh(&ar->data_lock);
-+
-+	param_id = WMI_VDEV_PARAM_TX_ENCAP_TYPE;
-+	param_value = ATH11K_HW_TXRX_NATIVE_WIFI;
-+	ret = ath11k_wmi_vdev_set_param_cmd(ar, arvif->vdev_id,
-+					    param_id, param_value);
-+	if (ret) {
-+		ath11k_warn(ab, "failed to set vdev %d tx encap mode: %d\n",
-+			    arvif->vdev_id, ret);
-+		goto err_vdev_del;
-+	}
-+
-+	nss = get_num_chains(ar->cfg_tx_chainmask) ? : 1;
-+	ret = ath11k_wmi_vdev_set_param_cmd(ar, arvif->vdev_id,
-+					    WMI_VDEV_PARAM_NSS, nss);
-+	if (ret) {
-+		ath11k_warn(ab, "failed to set vdev %d chainmask 0x%x, nss %d :%d\n",
-+			    arvif->vdev_id, ar->cfg_tx_chainmask, nss, ret);
-+		goto err_vdev_del;
-+	}
-+
-+	switch (arvif->vdev_type) {
-+	case WMI_VDEV_TYPE_AP:
-+		peer_param.vdev_id = arvif->vdev_id;
-+		peer_param.peer_addr = vif->addr;
-+		peer_param.peer_type = WMI_PEER_TYPE_DEFAULT;
-+		ret = ath11k_peer_create(ar, arvif, NULL, &peer_param);
-+		if (ret) {
-+			ath11k_warn(ab, "failed to vdev %d create peer for AP: %d\n",
-+				    arvif->vdev_id, ret);
-+			goto err_vdev_del;
-+		}
-+
-+		ret = ath11k_mac_set_kickout(arvif);
-+		if (ret) {
-+			ath11k_warn(ar->ab, "failed to set vdev %i kickout parameters: %d\n",
-+				    arvif->vdev_id, ret);
-+			goto err_peer_del;
-+		}
-+		break;
-+	case WMI_VDEV_TYPE_STA:
-+		param_id = WMI_STA_PS_PARAM_RX_WAKE_POLICY;
-+		param_value = WMI_STA_PS_RX_WAKE_POLICY_WAKE;
-+		ret = ath11k_wmi_set_sta_ps_param(ar, arvif->vdev_id,
-+						  param_id, param_value);
-+		if (ret) {
-+			ath11k_warn(ar->ab, "failed to set vdev %d RX wake policy: %d\n",
-+				    arvif->vdev_id, ret);
-+			goto err_peer_del;
-+		}
-+
-+		param_id = WMI_STA_PS_PARAM_TX_WAKE_THRESHOLD;
-+		param_value = WMI_STA_PS_TX_WAKE_THRESHOLD_ALWAYS;
-+		ret = ath11k_wmi_set_sta_ps_param(ar, arvif->vdev_id,
-+						  param_id, param_value);
-+		if (ret) {
-+			ath11k_warn(ar->ab, "failed to set vdev %d TX wake threshold: %d\n",
-+				    arvif->vdev_id, ret);
-+			goto err_peer_del;
-+		}
-+
-+		param_id = WMI_STA_PS_PARAM_PSPOLL_COUNT;
-+		param_value = WMI_STA_PS_PSPOLL_COUNT_NO_MAX;
-+		ret = ath11k_wmi_set_sta_ps_param(ar, arvif->vdev_id,
-+						  param_id, param_value);
-+		if (ret) {
-+			ath11k_warn(ar->ab, "failed to set vdev %d pspoll count: %d\n",
-+				    arvif->vdev_id, ret);
-+			goto err_peer_del;
-+		}
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	arvif->txpower = vif->bss_conf.txpower;
-+	ret = ath11k_mac_txpower_recalc(ar);
-+	if (ret)
-+		goto err_peer_del;
-+
-+	param_id = WMI_VDEV_PARAM_RTS_THRESHOLD;
-+	param_value = ar->hw->wiphy->rts_threshold;
-+	ret = ath11k_wmi_vdev_set_param_cmd(ar, arvif->vdev_id,
-+					    param_id, param_value);
-+	if (ret) {
-+		ath11k_warn(ar->ab, "failed to set rts threshold for vdev %d: %d\n",
-+			    arvif->vdev_id, ret);
-+	}
-+
-+	ret = ath11k_mac_set_txbf_conf(arvif);
-+	if (ret) {
-+		ath11k_warn(ar->ab, "failed to set txbf conf for vdev %d: %d\n",
-+			    arvif->vdev_id, ret);
-+	}
-+
-+	ath11k_dp_vdev_tx_attach(ar, arvif);
-+
-+	mutex_unlock(&ar->conf_mutex);
-+
-+	return 0;
-+
-+err_peer_del:
-+	if (arvif->vdev_type == WMI_VDEV_TYPE_AP) {
-+		ar->num_peers--;
-+		ath11k_wmi_send_peer_delete_cmd(ar, vif->addr, arvif->vdev_id);
-+	}
-+
-+err_vdev_del:
-+	ath11k_wmi_vdev_delete(ar, arvif->vdev_id);
-+	ar->num_created_vdevs--;
-+	ab->free_vdev_map |= 1LL << arvif->vdev_id;
-+	spin_lock_bh(&ar->data_lock);
-+	list_del(&arvif->list);
-+	spin_unlock_bh(&ar->data_lock);
-+
-+err:
-+	mutex_unlock(&ar->conf_mutex);
-+
-+	return ret;
-+}
-+
-+static int ath11k_mac_vif_unref(int buf_id, void *skb, void *ctx)
-+{
-+	struct ieee80211_vif *vif = (struct ieee80211_vif *)ctx;
-+	struct ath11k_skb_cb *skb_cb = ATH11K_SKB_CB((struct sk_buff *)skb);
-+
-+	if (skb_cb->vif == vif)
-+		skb_cb->vif = NULL;
-+
-+	return 0;
-+}
-+
-+static void ath11k_mac_op_remove_interface(struct ieee80211_hw *hw,
-+					   struct ieee80211_vif *vif)
-+{
-+	struct ath11k *ar = hw->priv;
-+	struct ath11k_vif *arvif = ath11k_vif_to_arvif(vif);
-+	struct ath11k_base *ab = ar->ab;
-+	int ret;
-+	int i;
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	ath11k_dbg(ab, ATH11K_DBG_MAC, "mac remove interface (vdev %d)\n",
-+		   arvif->vdev_id);
-+
-+	ab->free_vdev_map |= 1LL << (arvif->vdev_id);
-+	spin_lock_bh(&ar->data_lock);
-+	list_del(&arvif->list);
-+	spin_unlock_bh(&ar->data_lock);
-+
-+	if (arvif->vdev_type == WMI_VDEV_TYPE_AP) {
-+		ret = ath11k_peer_delete(ar, arvif->vdev_id, vif->addr);
-+		if (ret)
-+			ath11k_warn(ab, "failed to submit AP self-peer removal on vdev %d: %d\n",
-+				    arvif->vdev_id, ret);
-+	}
-+
-+	ret = ath11k_wmi_vdev_delete(ar, arvif->vdev_id);
-+	if (ret)
-+		ath11k_warn(ab, "failed to delete WMI vdev %d: %d\n",
-+			    arvif->vdev_id, ret);
-+
-+	ar->num_created_vdevs--;
-+
-+	ath11k_peer_cleanup(ar, arvif->vdev_id);
-+
-+	idr_for_each(&ar->txmgmt_idr,
-+		     ath11k_mac_vif_txmgmt_idr_remove, vif);
-+
-+	for (i = 0; i < DP_TCL_NUM_RING_MAX; i++) {
-+		spin_lock_bh(&ab->dp.tx_ring[i].tx_idr_lock);
-+		idr_for_each(&ab->dp.tx_ring[i].txbuf_idr,
-+			     ath11k_mac_vif_unref, vif);
-+		spin_unlock_bh(&ab->dp.tx_ring[i].tx_idr_lock);
-+	}
-+
-+	/* Recalc txpower for remaining vdev */
-+	ath11k_mac_txpower_recalc(ar);
-+	clear_bit(ATH11K_FLAG_MONITOR_ENABLED, &ar->monitor_flags);
-+
-+	/* TODO: recal traffic pause state based on the available vdevs */
-+
-+	mutex_unlock(&ar->conf_mutex);
-+}
-+
-+/* FIXME: Has to be verified. */
-+#define SUPPORTED_FILTERS			\
-+	(FIF_ALLMULTI |				\
-+	FIF_CONTROL |				\
-+	FIF_PSPOLL |				\
-+	FIF_OTHER_BSS |				\
-+	FIF_BCN_PRBRESP_PROMISC |		\
-+	FIF_PROBE_REQ |				\
-+	FIF_FCSFAIL)
-+
-+static void ath11k_mac_op_configure_filter(struct ieee80211_hw *hw,
-+					   unsigned int changed_flags,
-+					   unsigned int *total_flags,
-+					   u64 multicast)
-+{
-+	struct ath11k *ar = hw->priv;
-+	bool reset_flag = false;
-+	int ret = 0;
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	changed_flags &= SUPPORTED_FILTERS;
-+	*total_flags &= SUPPORTED_FILTERS;
-+	ar->filter_flags = *total_flags;
-+
-+	/* For monitor mode */
-+	reset_flag = !(ar->filter_flags & FIF_BCN_PRBRESP_PROMISC);
-+
-+	ret = ath11k_dp_tx_htt_monitor_mode_ring_config(ar, reset_flag);
-+	if (!ret) {
-+		if (!reset_flag)
-+			set_bit(ATH11K_FLAG_MONITOR_ENABLED, &ar->monitor_flags);
-+		else
-+			clear_bit(ATH11K_FLAG_MONITOR_ENABLED, &ar->monitor_flags);
-+	} else {
-+		ath11k_warn(ar->ab,
-+			    "fail to set monitor filter: %d\n", ret);
-+	}
-+	mutex_unlock(&ar->conf_mutex);
-+}
-+
-+static int ath11k_mac_op_get_antenna(struct ieee80211_hw *hw, u32 *tx_ant, u32 *rx_ant)
-+{
-+	struct ath11k *ar = hw->priv;
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	*tx_ant = ar->cfg_tx_chainmask;
-+	*rx_ant = ar->cfg_rx_chainmask;
-+
-+	mutex_unlock(&ar->conf_mutex);
-+
-+	return 0;
-+}
-+
-+static int ath11k_mac_op_set_antenna(struct ieee80211_hw *hw, u32 tx_ant, u32 rx_ant)
-+{
-+	struct ath11k *ar = hw->priv;
-+	int ret;
-+
-+	mutex_lock(&ar->conf_mutex);
-+	ret = __ath11k_set_antenna(ar, tx_ant, rx_ant);
-+	mutex_unlock(&ar->conf_mutex);
-+
-+	return ret;
-+}
-+
-+static int ath11k_mac_op_ampdu_action(struct ieee80211_hw *hw,
-+				      struct ieee80211_vif *vif,
-+				      struct ieee80211_ampdu_params *params)
-+{
-+	struct ath11k *ar = hw->priv;
-+	int ret = -EINVAL;
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	switch (params->action) {
-+	case IEEE80211_AMPDU_RX_START:
-+		ret = ath11k_dp_rx_ampdu_start(ar, params);
-+		break;
-+	case IEEE80211_AMPDU_RX_STOP:
-+		ret = ath11k_dp_rx_ampdu_stop(ar, params);
-+		break;
-+	case IEEE80211_AMPDU_TX_START:
-+	case IEEE80211_AMPDU_TX_STOP_CONT:
-+	case IEEE80211_AMPDU_TX_STOP_FLUSH:
-+	case IEEE80211_AMPDU_TX_STOP_FLUSH_CONT:
-+	case IEEE80211_AMPDU_TX_OPERATIONAL:
-+		/* Tx A-MPDU aggregation offloaded to hw/fw so deny mac80211
-+		 * Tx aggregation requests.
++		/* no default handler to allow compiler to check that the
++		 * enum is fully handled
 +		 */
-+		ret = -EOPNOTSUPP;
-+		break;
-+	}
-+
-+	mutex_unlock(&ar->conf_mutex);
-+
-+	return ret;
-+}
-+
-+static int ath11k_mac_op_add_chanctx(struct ieee80211_hw *hw,
-+				     struct ieee80211_chanctx_conf *ctx)
-+{
-+	struct ath11k *ar = hw->priv;
-+	struct ath11k_base *ab = ar->ab;
-+
-+	ath11k_dbg(ab, ATH11K_DBG_MAC,
-+		   "mac chanctx add freq %hu width %d ptr %pK\n",
-+		   ctx->def.chan->center_freq, ctx->def.width, ctx);
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	spin_lock_bh(&ar->data_lock);
-+	/* TODO: In case of multiple channel context, populate rx_channel from
-+	 * Rx PPDU desc information.
-+	 */
-+	ar->rx_channel = ctx->def.chan;
-+	spin_unlock_bh(&ar->data_lock);
-+
-+	mutex_unlock(&ar->conf_mutex);
-+
-+	return 0;
-+}
-+
-+static void ath11k_mac_op_remove_chanctx(struct ieee80211_hw *hw,
-+					 struct ieee80211_chanctx_conf *ctx)
-+{
-+	struct ath11k *ar = hw->priv;
-+	struct ath11k_base *ab = ar->ab;
-+
-+	ath11k_dbg(ab, ATH11K_DBG_MAC,
-+		   "mac chanctx remove freq %hu width %d ptr %pK\n",
-+		   ctx->def.chan->center_freq, ctx->def.width, ctx);
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	spin_lock_bh(&ar->data_lock);
-+	/* TODO: In case of there is one more channel context left, populate
-+	 * rx_channel with the channel of that remaining channel context.
-+	 */
-+	ar->rx_channel = NULL;
-+	spin_unlock_bh(&ar->data_lock);
-+
-+	mutex_unlock(&ar->conf_mutex);
-+}
-+
-+static inline int ath11k_mac_vdev_setup_sync(struct ath11k *ar)
-+{
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	if (test_bit(ATH11K_FLAG_CRASH_FLUSH, &ar->ab->dev_flags))
-+		return -ESHUTDOWN;
-+
-+	if (!wait_for_completion_timeout(&ar->vdev_setup_done,
-+					 ATH11K_VDEV_SETUP_TIMEOUT_HZ))
-+		return -ETIMEDOUT;
-+
-+	return ar->last_wmi_vdev_start_status ? -EINVAL : 0;
-+}
-+
-+static int
-+ath11k_mac_vdev_start_restart(struct ath11k_vif *arvif,
-+			      const struct cfg80211_chan_def *chandef,
-+			      bool restart)
-+{
-+	struct ath11k *ar = arvif->ar;
-+	struct ath11k_base *ab = ar->ab;
-+	struct wmi_vdev_start_req_arg arg = {};
-+	int he_support = arvif->vif->bss_conf.he_support;
-+	int ret = 0;
-+
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	reinit_completion(&ar->vdev_setup_done);
-+
-+	arg.vdev_id = arvif->vdev_id;
-+	arg.dtim_period = arvif->dtim_period;
-+	arg.bcn_intval = arvif->beacon_interval;
-+
-+	arg.channel.freq = chandef->chan->center_freq;
-+	arg.channel.band_center_freq1 = chandef->center_freq1;
-+	arg.channel.band_center_freq2 = chandef->center_freq2;
-+	arg.channel.mode =
-+		ath11k_phymodes[chandef->chan->band][chandef->width];
-+
-+	arg.channel.min_power = 0;
-+	arg.channel.max_power = chandef->chan->max_power * 2;
-+	arg.channel.max_reg_power = chandef->chan->max_reg_power * 2;
-+	arg.channel.max_antenna_gain = chandef->chan->max_antenna_gain * 2;
-+
-+	arg.pref_tx_streams = ar->num_tx_chains;
-+	arg.pref_rx_streams = ar->num_rx_chains;
-+
-+	if (arvif->vdev_type == WMI_VDEV_TYPE_AP) {
-+		arg.ssid = arvif->u.ap.ssid;
-+		arg.ssid_len = arvif->u.ap.ssid_len;
-+		arg.hidden_ssid = arvif->u.ap.hidden_ssid;
-+
-+		/* For now allow DFS for AP mode */
-+		arg.channel.chan_radar =
-+			!!(chandef->chan->flags & IEEE80211_CHAN_RADAR);
-+
-+		arg.channel.passive = arg.channel.chan_radar;
-+
-+		spin_lock_bh(&ab->base_lock);
-+		arg.regdomain = ar->ab->dfs_region;
-+		spin_unlock_bh(&ab->base_lock);
-+
-+		/* TODO: Notify if secondary 80Mhz also needs radar detection */
-+		if (he_support) {
-+			ret = ath11k_set_he_mu_sounding_mode(ar, arvif);
-+			if (ret) {
-+				ath11k_warn(ar->ab, "failed to set he mode vdev %i\n",
-+					    arg.vdev_id);
-+				return ret;
-+			}
-+		}
-+	}
-+
-+	arg.channel.passive |= !!(chandef->chan->flags & IEEE80211_CHAN_NO_IR);
-+
-+	ath11k_dbg(ab, ATH11K_DBG_MAC,
-+		   "mac vdev %d start center_freq %d phymode %s\n",
-+		   arg.vdev_id, arg.channel.freq,
-+		   ath11k_wmi_phymode_str(arg.channel.mode));
-+
-+	ret = ath11k_wmi_vdev_start(ar, &arg, restart);
-+	if (ret) {
-+		ath11k_warn(ar->ab, "failed to %s WMI vdev %i\n",
-+			    restart ? "restart" : "start", arg.vdev_id);
-+		return ret;
-+	}
-+
-+	ret = ath11k_mac_vdev_setup_sync(ar);
-+	if (ret) {
-+		ath11k_warn(ab, "failed to synchronize setup for vdev %i %s: %d\n",
-+			    arg.vdev_id, restart ? "restart" : "start", ret);
-+		return ret;
-+	}
-+
-+	ar->num_started_vdevs++;
-+
-+	/* Enable CAC Flag in the driver by checking the channel DFS cac time,
-+	 * i.e dfs_cac_ms value which will be valid only for radar channels
-+	 * and state as NL80211_DFS_USABLE which indicates CAC needs to be
-+	 * done before channel usage. This flags is used to drop rx packets.
-+	 * during CAC.
-+	 */
-+	/* TODO Set the flag for other interface types as required */
-+	if (arvif->vdev_type == WMI_VDEV_TYPE_AP &&
-+	    chandef->chan->dfs_cac_ms &&
-+	    chandef->chan->dfs_state == NL80211_DFS_USABLE) {
-+		set_bit(ATH11K_CAC_RUNNING, &ar->dev_flags);
-+		ath11k_dbg(ab, ATH11K_DBG_MAC,
-+			   "CAC Started in chan_freq %d for vdev %d\n",
-+			   arg.channel.freq, arg.vdev_id);
-+	}
-+
-+	return 0;
-+}
-+
-+static int ath11k_mac_vdev_stop(struct ath11k_vif *arvif)
-+{
-+	struct ath11k *ar = arvif->ar;
-+	int ret;
-+
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	reinit_completion(&ar->vdev_setup_done);
-+
-+	spin_lock_bh(&ar->data_lock);
-+
-+	ar->vdev_stop_status.stop_in_progress = true;
-+	ar->vdev_stop_status.vdev_id = arvif->vdev_id;
-+
-+	spin_unlock_bh(&ar->data_lock);
-+
-+	ret = ath11k_wmi_vdev_stop(ar, arvif->vdev_id);
-+	if (ret) {
-+		ath11k_warn(ar->ab, "failed to stop WMI vdev %i: %d\n",
-+			    arvif->vdev_id, ret);
-+		goto err;
-+	}
-+
-+	ret = ath11k_mac_vdev_setup_sync(ar);
-+	if (ret) {
-+		ath11k_warn(ar->ab, "failed to synchronize setup for vdev %i: %d\n",
-+			    arvif->vdev_id, ret);
-+		goto err;
-+	}
-+
-+	WARN_ON(ar->num_started_vdevs == 0);
-+
-+	ar->num_started_vdevs--;
-+
-+	if (test_bit(ATH11K_CAC_RUNNING, &ar->dev_flags)) {
-+		clear_bit(ATH11K_CAC_RUNNING, &ar->dev_flags);
-+		ath11k_dbg(ar->ab, ATH11K_DBG_MAC, "CAC Stopped for vdev %d\n",
-+			   arvif->vdev_id);
-+	}
-+
-+	return 0;
-+err:
-+	spin_lock_bh(&ar->data_lock);
-+	ar->vdev_stop_status.stop_in_progress = false;
-+	spin_unlock_bh(&ar->data_lock);
-+
-+	return ret;
-+}
-+
-+static int ath11k_mac_vdev_start(struct ath11k_vif *arvif,
-+				 const struct cfg80211_chan_def *chandef)
-+{
-+	return ath11k_mac_vdev_start_restart(arvif, chandef, false);
-+}
-+
-+static int ath11k_mac_vdev_restart(struct ath11k_vif *arvif,
-+				   const struct cfg80211_chan_def *chandef)
-+{
-+	return ath11k_mac_vdev_start_restart(arvif, chandef, true);
-+}
-+
-+struct ath11k_mac_change_chanctx_arg {
-+	struct ieee80211_chanctx_conf *ctx;
-+	struct ieee80211_vif_chanctx_switch *vifs;
-+	int n_vifs;
-+	int next_vif;
-+};
-+
-+static void
-+ath11k_mac_change_chanctx_cnt_iter(void *data, u8 *mac,
-+				   struct ieee80211_vif *vif)
-+{
-+	struct ath11k_mac_change_chanctx_arg *arg = data;
-+
-+	if (rcu_access_pointer(vif->chanctx_conf) != arg->ctx)
-+		return;
-+
-+	arg->n_vifs++;
-+}
-+
-+static void
-+ath11k_mac_change_chanctx_fill_iter(void *data, u8 *mac,
-+				    struct ieee80211_vif *vif)
-+{
-+	struct ath11k_mac_change_chanctx_arg *arg = data;
-+	struct ieee80211_chanctx_conf *ctx;
-+
-+	ctx = rcu_access_pointer(vif->chanctx_conf);
-+	if (ctx != arg->ctx)
-+		return;
-+
-+	if (WARN_ON(arg->next_vif == arg->n_vifs))
-+		return;
-+
-+	arg->vifs[arg->next_vif].vif = vif;
-+	arg->vifs[arg->next_vif].old_ctx = ctx;
-+	arg->vifs[arg->next_vif].new_ctx = ctx;
-+	arg->next_vif++;
-+}
-+
-+static void
-+ath11k_mac_update_vif_chan(struct ath11k *ar,
-+			   struct ieee80211_vif_chanctx_switch *vifs,
-+			   int n_vifs)
-+{
-+	struct ath11k_base *ab = ar->ab;
-+	struct ath11k_vif *arvif;
-+	int ret;
-+	int i;
-+
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	for (i = 0; i < n_vifs; i++) {
-+		arvif = (void *)vifs[i].vif->drv_priv;
-+
-+		ath11k_dbg(ab, ATH11K_DBG_MAC,
-+			   "mac chanctx switch vdev_id %i freq %hu->%hu width %d->%d\n",
-+			   arvif->vdev_id,
-+			   vifs[i].old_ctx->def.chan->center_freq,
-+			   vifs[i].new_ctx->def.chan->center_freq,
-+			   vifs[i].old_ctx->def.width,
-+			   vifs[i].new_ctx->def.width);
-+
-+		if (WARN_ON(!arvif->is_started))
-+			continue;
-+
-+		if (WARN_ON(!arvif->is_up))
-+			continue;
-+
-+		ret = ath11k_wmi_vdev_down(ar, arvif->vdev_id);
-+		if (ret) {
-+			ath11k_warn(ab, "failed to down vdev %d: %d\n",
-+				    arvif->vdev_id, ret);
-+			continue;
-+		}
-+	}
-+
-+	/* All relevant vdevs are downed and associated channel resources
-+	 * should be available for the channel switch now.
-+	 */
-+
-+	/* TODO: Update ar->rx_channel */
-+
-+	for (i = 0; i < n_vifs; i++) {
-+		arvif = (void *)vifs[i].vif->drv_priv;
-+
-+		if (WARN_ON(!arvif->is_started))
-+			continue;
-+
-+		if (WARN_ON(!arvif->is_up))
-+			continue;
-+
-+		ret = ath11k_mac_setup_bcn_tmpl(arvif);
-+		if (ret)
-+			ath11k_warn(ab, "failed to update bcn tmpl during csa: %d\n",
-+				    ret);
-+
-+		ret = ath11k_mac_vdev_restart(arvif, &vifs[i].new_ctx->def);
-+		if (ret) {
-+			ath11k_warn(ab, "failed to restart vdev %d: %d\n",
-+				    arvif->vdev_id, ret);
-+			continue;
-+		}
-+
-+		ret = ath11k_wmi_vdev_up(arvif->ar, arvif->vdev_id, arvif->aid,
-+					 arvif->bssid);
-+		if (ret) {
-+			ath11k_warn(ab, "failed to bring vdev up %d: %d\n",
-+				    arvif->vdev_id, ret);
-+			continue;
-+		}
-+	}
-+}
-+
-+static void
-+ath11k_mac_update_active_vif_chan(struct ath11k *ar,
-+				  struct ieee80211_chanctx_conf *ctx)
-+{
-+	struct ath11k_mac_change_chanctx_arg arg = { .ctx = ctx };
-+
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	ieee80211_iterate_active_interfaces_atomic(ar->hw,
-+						   IEEE80211_IFACE_ITER_NORMAL,
-+						   ath11k_mac_change_chanctx_cnt_iter,
-+						   &arg);
-+	if (arg.n_vifs == 0)
-+		return;
-+
-+	arg.vifs = kcalloc(arg.n_vifs, sizeof(arg.vifs[0]), GFP_KERNEL);
-+	if (!arg.vifs)
-+		return;
-+
-+	ieee80211_iterate_active_interfaces_atomic(ar->hw,
-+						   IEEE80211_IFACE_ITER_NORMAL,
-+						   ath11k_mac_change_chanctx_fill_iter,
-+						   &arg);
-+
-+	ath11k_mac_update_vif_chan(ar, arg.vifs, arg.n_vifs);
-+
-+	kfree(arg.vifs);
-+}
-+
-+static void ath11k_mac_op_change_chanctx(struct ieee80211_hw *hw,
-+					 struct ieee80211_chanctx_conf *ctx,
-+					 u32 changed)
-+{
-+	struct ath11k *ar = hw->priv;
-+	struct ath11k_base *ab = ar->ab;
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	ath11k_dbg(ab, ATH11K_DBG_MAC,
-+		   "mac chanctx change freq %hu width %d ptr %pK changed %x\n",
-+		   ctx->def.chan->center_freq, ctx->def.width, ctx, changed);
-+
-+	/* This shouldn't really happen because channel switching should use
-+	 * switch_vif_chanctx().
-+	 */
-+	if (WARN_ON(changed & IEEE80211_CHANCTX_CHANGE_CHANNEL))
-+		goto unlock;
-+
-+	if (changed & IEEE80211_CHANCTX_CHANGE_WIDTH)
-+		ath11k_mac_update_active_vif_chan(ar, ctx);
-+
-+	/* TODO: Recalc radar detection */
-+
-+unlock:
-+	mutex_unlock(&ar->conf_mutex);
-+}
-+
-+static int
-+ath11k_mac_op_assign_vif_chanctx(struct ieee80211_hw *hw,
-+				 struct ieee80211_vif *vif,
-+				 struct ieee80211_chanctx_conf *ctx)
-+{
-+	struct ath11k *ar = hw->priv;
-+	struct ath11k_base *ab = ar->ab;
-+	struct ath11k_vif *arvif = (void *)vif->drv_priv;
-+	int ret;
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	ath11k_dbg(ab, ATH11K_DBG_MAC,
-+		   "mac chanctx assign ptr %pK vdev_id %i\n",
-+		   ctx, arvif->vdev_id);
-+
-+	if (WARN_ON(arvif->is_started)) {
-+		mutex_unlock(&ar->conf_mutex);
-+		return -EBUSY;
-+	}
-+
-+	ret = ath11k_mac_vdev_start(arvif, &ctx->def);
-+	if (ret) {
-+		ath11k_warn(ab, "failed to start vdev %i addr %pM on freq %d: %d\n",
-+			    arvif->vdev_id, vif->addr,
-+			    ctx->def.chan->center_freq, ret);
-+		goto err;
-+	}
-+	if (arvif->vdev_type == WMI_VDEV_TYPE_MONITOR) {
-+		ret = ath11k_monitor_vdev_up(ar, arvif->vdev_id);
-+		if (ret)
-+			goto err;
-+	}
-+
-+	arvif->is_started = true;
-+
-+	/* TODO: Setup ps and cts/rts protection */
-+
-+	mutex_unlock(&ar->conf_mutex);
-+
-+	return 0;
-+
-+err:
-+	mutex_unlock(&ar->conf_mutex);
-+
-+	return ret;
-+}
-+
-+static void
-+ath11k_mac_op_unassign_vif_chanctx(struct ieee80211_hw *hw,
-+				   struct ieee80211_vif *vif,
-+				   struct ieee80211_chanctx_conf *ctx)
-+{
-+	struct ath11k *ar = hw->priv;
-+	struct ath11k_base *ab = ar->ab;
-+	struct ath11k_vif *arvif = (void *)vif->drv_priv;
-+	int ret;
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	ath11k_dbg(ab, ATH11K_DBG_MAC,
-+		   "mac chanctx unassign ptr %pK vdev_id %i\n",
-+		   ctx, arvif->vdev_id);
-+
-+	WARN_ON(!arvif->is_started);
-+
-+	ret = ath11k_mac_vdev_stop(arvif);
-+	if (ret)
-+		ath11k_warn(ab, "failed to stop vdev %i: %d\n",
-+			    arvif->vdev_id, ret);
-+
-+	arvif->is_started = false;
-+
-+	mutex_unlock(&ar->conf_mutex);
-+}
-+
-+static int
-+ath11k_mac_op_switch_vif_chanctx(struct ieee80211_hw *hw,
-+				 struct ieee80211_vif_chanctx_switch *vifs,
-+				 int n_vifs,
-+				 enum ieee80211_chanctx_switch_mode mode)
-+{
-+	struct ath11k *ar = hw->priv;
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	ath11k_dbg(ar->ab, ATH11K_DBG_MAC,
-+		   "mac chanctx switch n_vifs %d mode %d\n",
-+		   n_vifs, mode);
-+	ath11k_mac_update_vif_chan(ar, vifs, n_vifs);
-+
-+	mutex_unlock(&ar->conf_mutex);
-+
-+	return 0;
-+}
-+
-+static int
-+ath11k_set_vdev_param_to_all_vifs(struct ath11k *ar, int param, u32 value)
-+{
-+	struct ath11k_vif *arvif;
-+	int ret = 0;
-+
-+	mutex_lock(&ar->conf_mutex);
-+	list_for_each_entry(arvif, &ar->arvifs, list) {
-+		ath11k_dbg(ar->ab, ATH11K_DBG_MAC, "setting mac vdev %d param %d value %d\n",
-+			   param, arvif->vdev_id, value);
-+
-+		ret = ath11k_wmi_vdev_set_param_cmd(ar, arvif->vdev_id,
-+						    param, value);
-+		if (ret) {
-+			ath11k_warn(ar->ab, "failed to set param %d for vdev %d: %d\n",
-+				    param, arvif->vdev_id, ret);
-+			break;
-+		}
-+	}
-+	mutex_unlock(&ar->conf_mutex);
-+	return ret;
-+}
-+
-+/* mac80211 stores device specific RTS/Fragmentation threshold value,
-+ * this is set interface specific to firmware from ath11k driver
-+ */
-+static int ath11k_mac_op_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
-+{
-+	struct ath11k *ar = hw->priv;
-+	int param_id = WMI_VDEV_PARAM_RTS_THRESHOLD;
-+
-+	return ath11k_set_vdev_param_to_all_vifs(ar, param_id, value);
-+}
-+
-+static int ath11k_mac_op_set_frag_threshold(struct ieee80211_hw *hw, u32 value)
-+{
-+	/* Even though there's a WMI vdev param for fragmentation threshold no
-+	 * known firmware actually implements it. Moreover it is not possible to
-+	 * rely frame fragmentation to mac80211 because firmware clears the
-+	 * "more fragments" bit in frame control making it impossible for remote
-+	 * devices to reassemble frames.
-+	 *
-+	 * Hence implement a dummy callback just to say fragmentation isn't
-+	 * supported. This effectively prevents mac80211 from doing frame
-+	 * fragmentation in software.
-+	 */
-+	return -EOPNOTSUPP;
-+}
-+
-+static void ath11k_mac_op_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-+				u32 queues, bool drop)
-+{
-+	struct ath11k *ar = hw->priv;
-+	long time_left;
-+
-+	if (drop)
-+		return;
-+
-+	time_left = wait_event_timeout(ar->dp.tx_empty_waitq,
-+				       (atomic_read(&ar->dp.num_tx_pending) == 0),
-+				       ATH11K_FLUSH_TIMEOUT);
-+	if (time_left == 0)
-+		ath11k_warn(ar->ab, "failed to flush transmit queue %ld\n", time_left);
-+}
-+
-+static int
-+ath11k_mac_bitrate_mask_num_ht_rates(struct ath11k *ar,
-+				     enum nl80211_band band,
-+				     const struct cfg80211_bitrate_mask *mask)
-+{
-+	int num_rates = 0;
-+	int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(mask->control[band].ht_mcs); i++)
-+		num_rates += hweight16(mask->control[band].ht_mcs[i]);
-+
-+	return num_rates;
-+}
-+
-+static bool
-+ath11k_mac_has_single_legacy_rate(struct ath11k *ar,
-+				  enum nl80211_band band,
-+				  const struct cfg80211_bitrate_mask *mask)
-+{
-+	int num_rates = 0;
-+
-+	num_rates = hweight32(mask->control[band].legacy);
-+
-+	if (ath11k_mac_bitrate_mask_num_ht_rates(ar, band, mask))
-+		return false;
-+
-+	if (ath11k_mac_bitrate_mask_num_vht_rates(ar, band, mask))
-+		return false;
-+
-+	return num_rates == 1;
-+}
-+
-+static bool
-+ath11k_mac_bitrate_mask_get_single_nss(struct ath11k *ar,
-+				       enum nl80211_band band,
-+				       const struct cfg80211_bitrate_mask *mask,
-+				       int *nss)
-+{
-+	struct ieee80211_supported_band *sband = &ar->mac.sbands[band];
-+	u16 vht_mcs_map = le16_to_cpu(sband->vht_cap.vht_mcs.tx_mcs_map);
-+	u8 ht_nss_mask = 0;
-+	u8 vht_nss_mask = 0;
-+	int i;
-+
-+	/* No need to consider legacy here. Basic rates are always present
-+	 * in bitrate mask
-+	 */
-+
-+	for (i = 0; i < ARRAY_SIZE(mask->control[band].ht_mcs); i++) {
-+		if (mask->control[band].ht_mcs[i] == 0)
-+			continue;
-+		else if (mask->control[band].ht_mcs[i] ==
-+			 sband->ht_cap.mcs.rx_mask[i])
-+			ht_nss_mask |= BIT(i);
-+		else
-+			return false;
-+	}
-+
-+	for (i = 0; i < ARRAY_SIZE(mask->control[band].vht_mcs); i++) {
-+		if (mask->control[band].vht_mcs[i] == 0)
-+			continue;
-+		else if (mask->control[band].vht_mcs[i] ==
-+			 ath11k_mac_get_max_vht_mcs_map(vht_mcs_map, i))
-+			vht_nss_mask |= BIT(i);
-+		else
-+			return false;
-+	}
-+
-+	if (ht_nss_mask != vht_nss_mask)
-+		return false;
-+
-+	if (ht_nss_mask == 0)
-+		return false;
-+
-+	if (BIT(fls(ht_nss_mask)) - 1 != ht_nss_mask)
-+		return false;
-+
-+	*nss = fls(ht_nss_mask);
-+
-+	return true;
-+}
-+
-+static int
-+ath11k_mac_get_single_legacy_rate(struct ath11k *ar,
-+				  enum nl80211_band band,
-+				  const struct cfg80211_bitrate_mask *mask,
-+				  u32 *rate, u8 *nss)
-+{
-+	int rate_idx;
-+	u16 bitrate;
-+	u8 preamble;
-+	u8 hw_rate;
-+
-+	if (hweight32(mask->control[band].legacy) != 1)
-+		return -EINVAL;
-+
-+	rate_idx = ffs(mask->control[band].legacy) - 1;
-+
-+	if (band == NL80211_BAND_5GHZ)
-+		rate_idx += ATH11K_MAC_FIRST_OFDM_RATE_IDX;
-+
-+	hw_rate = ath11k_legacy_rates[rate_idx].hw_value;
-+	bitrate = ath11k_legacy_rates[rate_idx].bitrate;
-+
-+	if (ath11k_mac_bitrate_is_cck(bitrate))
-+		preamble = WMI_RATE_PREAMBLE_CCK;
-+	else
-+		preamble = WMI_RATE_PREAMBLE_OFDM;
-+
-+	*nss = 1;
-+	*rate = ATH11K_HW_RATE_CODE(hw_rate, 0, preamble);
-+
-+	return 0;
-+}
-+
-+static int ath11k_mac_set_fixed_rate_params(struct ath11k_vif *arvif,
-+					    u32 rate, u8 nss, u8 sgi, u8 ldpc)
-+{
-+	struct ath11k *ar = arvif->ar;
-+	u32 vdev_param;
-+	int ret;
-+
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	ath11k_dbg(ar->ab, ATH11K_DBG_MAC, "mac set fixed rate params vdev %i rate 0x%02hhx nss %hhu sgi %hhu\n",
-+		   arvif->vdev_id, rate, nss, sgi);
-+
-+	vdev_param = WMI_VDEV_PARAM_FIXED_RATE;
-+	ret = ath11k_wmi_vdev_set_param_cmd(ar, arvif->vdev_id,
-+					    vdev_param, rate);
-+	if (ret) {
-+		ath11k_warn(ar->ab, "failed to set fixed rate param 0x%02x: %d\n",
-+			    rate, ret);
-+		return ret;
-+	}
-+
-+	vdev_param = WMI_VDEV_PARAM_NSS;
-+	ret = ath11k_wmi_vdev_set_param_cmd(ar, arvif->vdev_id,
-+					    vdev_param, nss);
-+	if (ret) {
-+		ath11k_warn(ar->ab, "failed to set nss param %d: %d\n",
-+			    nss, ret);
-+		return ret;
-+	}
-+
-+	vdev_param = WMI_VDEV_PARAM_SGI;
-+	ret = ath11k_wmi_vdev_set_param_cmd(ar, arvif->vdev_id,
-+					    vdev_param, sgi);
-+	if (ret) {
-+		ath11k_warn(ar->ab, "failed to set sgi param %d: %d\n",
-+			    sgi, ret);
-+		return ret;
-+	}
-+
-+	vdev_param = WMI_VDEV_PARAM_LDPC;
-+	ret = ath11k_wmi_vdev_set_param_cmd(ar, arvif->vdev_id,
-+					    vdev_param, ldpc);
-+	if (ret) {
-+		ath11k_warn(ar->ab, "failed to set ldpc param %d: %d\n",
-+			    ldpc, ret);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static bool
-+ath11k_mac_vht_mcs_range_present(struct ath11k *ar,
-+				 enum nl80211_band band,
-+				 const struct cfg80211_bitrate_mask *mask)
-+{
-+	int i;
-+	u16 vht_mcs;
-+
-+	for (i = 0; i < NL80211_VHT_NSS_MAX; i++) {
-+		vht_mcs = mask->control[band].vht_mcs[i];
-+
-+		switch (vht_mcs) {
-+		case 0:
-+		case BIT(8) - 1:
-+		case BIT(9) - 1:
-+		case BIT(10) - 1:
-+			break;
-+		default:
-+			return false;
-+		}
-+	}
-+
-+	return true;
-+}
-+
-+static void ath11k_mac_set_bitrate_mask_iter(void *data,
-+					     struct ieee80211_sta *sta)
-+{
-+	struct ath11k_vif *arvif = data;
-+	struct ath11k_sta *arsta = (struct ath11k_sta *)sta->drv_priv;
-+	struct ath11k *ar = arvif->ar;
-+
-+	spin_lock_bh(&ar->data_lock);
-+	arsta->changed |= IEEE80211_RC_SUPP_RATES_CHANGED;
-+	spin_unlock_bh(&ar->data_lock);
-+
-+	ieee80211_queue_work(ar->hw, &arsta->update_wk);
-+}
-+
-+static void ath11k_mac_disable_peer_fixed_rate(void *data,
-+					       struct ieee80211_sta *sta)
-+{
-+	struct ath11k_vif *arvif = data;
-+	struct ath11k *ar = arvif->ar;
-+	int ret;
-+
-+	ret = ath11k_wmi_set_peer_param(ar, sta->addr,
-+					arvif->vdev_id,
-+					WMI_PEER_PARAM_FIXED_RATE,
-+					WMI_FIXED_RATE_NONE);
-+	if (ret)
-+		ath11k_warn(ar->ab,
-+			    "failed to disable peer fixed rate for STA %pM ret %d\n",
-+			    sta->addr, ret);
-+}
-+
-+static int
-+ath11k_mac_op_set_bitrate_mask(struct ieee80211_hw *hw,
-+			       struct ieee80211_vif *vif,
-+			       const struct cfg80211_bitrate_mask *mask)
-+{
-+	struct ath11k_vif *arvif = (void *)vif->drv_priv;
-+	struct cfg80211_chan_def def;
-+	struct ath11k *ar = arvif->ar;
-+	enum nl80211_band band;
-+	const u8 *ht_mcs_mask;
-+	const u16 *vht_mcs_mask;
-+	u32 rate;
-+	u8 nss;
-+	u8 sgi;
-+	u8 ldpc;
-+	int single_nss;
-+	int ret;
-+	int num_rates;
-+
-+	if (ath11k_mac_vif_chan(vif, &def))
-+		return -EPERM;
-+
-+	band = def.chan->band;
-+	ht_mcs_mask = mask->control[band].ht_mcs;
-+	vht_mcs_mask = mask->control[band].vht_mcs;
-+	ldpc = !!(ar->ht_cap_info & WMI_HT_CAP_LDPC);
-+
-+	sgi = mask->control[band].gi;
-+	if (sgi == NL80211_TXRATE_FORCE_LGI)
-+		return -EINVAL;
-+
-+	/* mac80211 doesn't support sending a fixed HT/VHT MCS alone, rather it
-+	 * requires passing atleast one of used basic rates along with them.
-+	 * Fixed rate setting across different preambles(legacy, HT, VHT) is
-+	 * not supported by the FW. Hence use of FIXED_RATE vdev param is not
-+	 * suitable for setting single HT/VHT rates.
-+	 * But, there could be a single basic rate passed from userspace which
-+	 * can be done through the FIXED_RATE param.
-+	 */
-+	if (ath11k_mac_has_single_legacy_rate(ar, band, mask)) {
-+		ret = ath11k_mac_get_single_legacy_rate(ar, band, mask, &rate,
-+							&nss);
-+		if (ret) {
-+			ath11k_warn(ar->ab, "failed to get single legacy rate for vdev %i: %d\n",
-+				    arvif->vdev_id, ret);
-+			return ret;
-+		}
-+		ieee80211_iterate_stations_atomic(ar->hw,
-+						  ath11k_mac_disable_peer_fixed_rate,
-+						  arvif);
-+	} else if (ath11k_mac_bitrate_mask_get_single_nss(ar, band, mask,
-+							  &single_nss)) {
-+		rate = WMI_FIXED_RATE_NONE;
-+		nss = single_nss;
-+	} else {
-+		rate = WMI_FIXED_RATE_NONE;
-+		nss = min_t(u32, ar->num_tx_chains,
-+			    max(ath11k_mac_max_ht_nss(ht_mcs_mask),
-+				ath11k_mac_max_vht_nss(vht_mcs_mask)));
-+
-+		/* If multiple rates across different preambles are given
-+		 * we can reconfigure this info with all peers using PEER_ASSOC
-+		 * command with the below exception cases.
-+		 * - Single VHT Rate : peer_assoc command accommodates only MCS
-+		 * range values i.e 0-7, 0-8, 0-9 for VHT. Though mac80211
-+		 * mandates passing basic rates along with HT/VHT rates, FW
-+		 * doesn't allow switching from VHT to Legacy. Hence instead of
-+		 * setting legacy and VHT rates using RATEMASK_CMD vdev cmd,
-+		 * we could set this VHT rate as peer fixed rate param, which
-+		 * will override FIXED rate and FW rate control algorithm.
-+		 * If single VHT rate is passed along with HT rates, we select
-+		 * the VHT rate as fixed rate for vht peers.
-+		 * - Multiple VHT Rates : When Multiple VHT rates are given,this
-+		 * can be set using RATEMASK CMD which uses FW rate-ctl alg.
-+		 * TODO: Setting multiple VHT MCS and replacing peer_assoc with
-+		 * RATEMASK_CMDID can cover all use cases of setting rates
-+		 * across multiple preambles and rates within same type.
-+		 * But requires more validation of the command at this point.
-+		 */
-+
-+		num_rates = ath11k_mac_bitrate_mask_num_vht_rates(ar, band,
-+								  mask);
-+
-+		if (!ath11k_mac_vht_mcs_range_present(ar, band, mask) &&
-+		    num_rates > 1) {
-+			/* TODO: Handle multiple VHT MCS values setting using
-+			 * RATEMASK CMD
-+			 */
-+			ath11k_warn(ar->ab,
-+				    "Setting more than one MCS Value in bitrate mask not supported\n");
-+			return -EINVAL;
-+		}
-+
-+		ieee80211_iterate_stations_atomic(ar->hw,
-+						  ath11k_mac_disable_peer_fixed_rate,
-+						  arvif);
-+
-+		mutex_lock(&ar->conf_mutex);
-+
-+		arvif->bitrate_mask = *mask;
-+		ieee80211_iterate_stations_atomic(ar->hw,
-+						  ath11k_mac_set_bitrate_mask_iter,
-+						  arvif);
-+
-+		mutex_unlock(&ar->conf_mutex);
-+	}
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	ret = ath11k_mac_set_fixed_rate_params(arvif, rate, nss, sgi, ldpc);
-+	if (ret) {
-+		ath11k_warn(ar->ab, "failed to set fixed rate params on vdev %i: %d\n",
-+			    arvif->vdev_id, ret);
-+	}
-+
-+	mutex_unlock(&ar->conf_mutex);
-+
-+	return ret;
-+}
-+
-+static void
-+ath11k_mac_op_reconfig_complete(struct ieee80211_hw *hw,
-+				enum ieee80211_reconfig_type reconfig_type)
-+{
-+	struct ath11k *ar = hw->priv;
-+
-+	if (reconfig_type != IEEE80211_RECONFIG_TYPE_RESTART)
-+		return;
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	if (ar->state == ATH11K_STATE_RESTARTED) {
-+		ath11k_warn(ar->ab, "pdev %d successfully recovered\n",
-+			    ar->pdev->pdev_id);
-+		ar->state = ATH11K_STATE_ON;
-+		ieee80211_wake_queues(ar->hw);
-+	}
-+
-+	mutex_unlock(&ar->conf_mutex);
-+}
-+
-+static void
-+ath11k_mac_update_bss_chan_survey(struct ath11k *ar,
-+				  struct ieee80211_channel *channel)
-+{
-+	int ret;
-+	enum wmi_bss_chan_info_req_type type = WMI_BSS_SURVEY_REQ_TYPE_READ;
-+
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	if (!test_bit(WMI_TLV_SERVICE_BSS_CHANNEL_INFO_64, ar->ab->wmi_sc.svc_map) ||
-+	    ar->rx_channel != channel)
-+		return;
-+
-+	if (ar->scan.state != ATH11K_SCAN_IDLE) {
-+		ath11k_dbg(ar->ab, ATH11K_DBG_MAC,
-+			   "ignoring bss chan info req while scanning..\n");
-+		return;
-+	}
-+
-+	reinit_completion(&ar->bss_survey_done);
-+
-+	ret = ath11k_wmi_pdev_bss_chan_info_request(ar, type);
-+	if (ret) {
-+		ath11k_warn(ar->ab, "failed to send pdev bss chan info request\n");
-+		return;
-+	}
-+
-+	ret = wait_for_completion_timeout(&ar->bss_survey_done, 3 * HZ);
-+	if (ret == 0)
-+		ath11k_warn(ar->ab, "bss channel survey timed out\n");
-+}
-+
-+static int ath11k_mac_op_get_survey(struct ieee80211_hw *hw, int idx,
-+				    struct survey_info *survey)
-+{
-+	struct ath11k *ar = hw->priv;
-+	struct ieee80211_supported_band *sband;
-+	struct survey_info *ar_survey;
-+	int ret = 0;
-+
-+	if (idx >= ATH11K_NUM_CHANS)
-+		return -ENOENT;
-+
-+	ar_survey = &ar->survey[idx];
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	sband = hw->wiphy->bands[NL80211_BAND_2GHZ];
-+	if (sband && idx >= sband->n_channels) {
-+		idx -= sband->n_channels;
-+		sband = NULL;
-+	}
-+
-+	if (!sband)
-+		sband = hw->wiphy->bands[NL80211_BAND_5GHZ];
-+
-+	if (!sband || idx >= sband->n_channels) {
-+		ret = -ENOENT;
-+		goto exit;
-+	}
-+
-+	ath11k_mac_update_bss_chan_survey(ar, &sband->channels[idx]);
-+
-+	spin_lock_bh(&ar->data_lock);
-+	memcpy(survey, ar_survey, sizeof(*survey));
-+	spin_unlock_bh(&ar->data_lock);
-+
-+	survey->channel = &sband->channels[idx];
-+
-+	if (ar->rx_channel == survey->channel)
-+		survey->filled |= SURVEY_INFO_IN_USE;
-+
-+exit:
-+	mutex_unlock(&ar->conf_mutex);
-+	return ret;
-+}
-+
-+static void ath11k_mac_op_sta_statistics(struct ieee80211_hw *hw,
-+					 struct ieee80211_vif *vif,
-+					 struct ieee80211_sta *sta,
-+					 struct station_info *sinfo)
-+{
-+	struct ath11k_sta *arsta = (struct ath11k_sta *)sta->drv_priv;
-+
-+	sinfo->rx_duration = arsta->rx_duration;
-+	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_RX_DURATION);
-+
-+	if (!arsta->txrate.legacy && !arsta->txrate.nss)
-+		return;
-+
-+	if (arsta->txrate.legacy) {
-+		sinfo->txrate.legacy = arsta->txrate.legacy;
-+	} else {
-+		sinfo->txrate.mcs = arsta->txrate.mcs;
-+		sinfo->txrate.nss = arsta->txrate.nss;
-+		sinfo->txrate.bw = arsta->txrate.bw;
-+		sinfo->txrate.he_gi = arsta->txrate.he_gi;
-+		sinfo->txrate.he_dcm = arsta->txrate.he_dcm;
-+		sinfo->txrate.he_ru_alloc = arsta->txrate.he_ru_alloc;
-+	}
-+	sinfo->txrate.flags = arsta->txrate.flags;
-+	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_BITRATE);
-+
-+	/* TODO: Use real NF instead of default one. */
-+	sinfo->signal = arsta->rssi_comb + ATH11K_DEFAULT_NOISE_FLOOR;
-+}
-+
-+static const struct ieee80211_ops ath11k_ops = {
-+	.tx				= ath11k_mac_op_tx,
-+	.start                          = ath11k_mac_op_start,
-+	.stop                           = ath11k_mac_op_stop,
-+	.reconfig_complete              = ath11k_mac_op_reconfig_complete,
-+	.add_interface                  = ath11k_mac_op_add_interface,
-+	.remove_interface		= ath11k_mac_op_remove_interface,
-+	.config                         = ath11k_mac_op_config,
-+	.bss_info_changed               = ath11k_mac_op_bss_info_changed,
-+	.configure_filter		= ath11k_mac_op_configure_filter,
-+	.hw_scan                        = ath11k_mac_op_hw_scan,
-+	.cancel_hw_scan                 = ath11k_mac_op_cancel_hw_scan,
-+	.set_key                        = ath11k_mac_op_set_key,
-+	.sta_state                      = ath11k_mac_op_sta_state,
-+	.sta_rc_update			= ath11k_mac_op_sta_rc_update,
-+	.conf_tx                        = ath11k_mac_op_conf_tx,
-+	.set_antenna			= ath11k_mac_op_set_antenna,
-+	.get_antenna			= ath11k_mac_op_get_antenna,
-+	.ampdu_action			= ath11k_mac_op_ampdu_action,
-+	.add_chanctx			= ath11k_mac_op_add_chanctx,
-+	.remove_chanctx			= ath11k_mac_op_remove_chanctx,
-+	.change_chanctx			= ath11k_mac_op_change_chanctx,
-+	.assign_vif_chanctx		= ath11k_mac_op_assign_vif_chanctx,
-+	.unassign_vif_chanctx		= ath11k_mac_op_unassign_vif_chanctx,
-+	.switch_vif_chanctx		= ath11k_mac_op_switch_vif_chanctx,
-+	.set_rts_threshold		= ath11k_mac_op_set_rts_threshold,
-+	.set_frag_threshold		= ath11k_mac_op_set_frag_threshold,
-+	.set_bitrate_mask		= ath11k_mac_op_set_bitrate_mask,
-+	.get_survey			= ath11k_mac_op_get_survey,
-+	.flush				= ath11k_mac_op_flush,
-+	.sta_statistics			= ath11k_mac_op_sta_statistics,
-+	CFG80211_TESTMODE_CMD(ath11k_tm_cmd)
-+#ifdef CONFIG_MAC80211_DEBUGFS
-+	.sta_add_debugfs		= ath11k_sta_add_debugfs,
-+#endif
-+};
-+
-+static const struct ieee80211_iface_limit ath11k_if_limits[] = {
-+	{
-+		.max = 1,
-+		.types = BIT(NL80211_IFTYPE_STATION),
-+	},
-+	{
-+		.max    = 16,
-+		.types  = BIT(NL80211_IFTYPE_AP)
-+#ifdef CONFIG_MAC80211_MESH
-+			| BIT(NL80211_IFTYPE_MESH_POINT)
-+#endif
-+	},
-+};
-+
-+static const struct ieee80211_iface_combination ath11k_if_comb[] = {
-+	{
-+		.limits = ath11k_if_limits,
-+		.n_limits = ARRAY_SIZE(ath11k_if_limits),
-+		.max_interfaces = 16,
-+		.num_different_channels = 1,
-+		.beacon_int_infra_match = true,
-+		.beacon_int_min_gcd = 100,
-+		.radar_detect_widths =	BIT(NL80211_CHAN_WIDTH_20_NOHT) |
-+					BIT(NL80211_CHAN_WIDTH_20) |
-+					BIT(NL80211_CHAN_WIDTH_40) |
-+					BIT(NL80211_CHAN_WIDTH_80),
-+	},
-+};
-+
-+static void ath11k_mac_update_ch_list(struct ath11k *ar,
-+				      struct ieee80211_supported_band *band,
-+				      u32 freq_low, u32 freq_high)
-+{
-+	int i;
-+
-+	if (!(freq_low && freq_high))
-+		return;
-+
-+	for (i = 0; i < band->n_channels; i++) {
-+		if (band->channels[i].center_freq < freq_low ||
-+		    band->channels[i].center_freq > freq_high)
-+			band->channels[i].flags |= IEEE80211_CHAN_DISABLED;
-+	}
-+}
-+
-+static int ath11k_mac_setup_channels_rates(struct ath11k *ar,
-+					   u32 supported_bands)
-+{
-+	struct ieee80211_supported_band *band;
-+	struct ath11k_hal_reg_capabilities_ext *reg_cap;
-+	void *channels;
-+
-+	BUILD_BUG_ON((ARRAY_SIZE(ath11k_2ghz_channels) +
-+		      ARRAY_SIZE(ath11k_5ghz_channels)) !=
-+		     ATH11K_NUM_CHANS);
-+
-+	reg_cap = &ar->ab->hal_reg_cap[ar->pdev_idx];
-+
-+	if (supported_bands & WMI_HOST_WLAN_2G_CAP) {
-+		channels = kmemdup(ath11k_2ghz_channels,
-+				   sizeof(ath11k_2ghz_channels),
-+				   GFP_KERNEL);
-+		if (!channels)
-+			return -ENOMEM;
-+
-+		band = &ar->mac.sbands[NL80211_BAND_2GHZ];
-+		band->n_channels = ARRAY_SIZE(ath11k_2ghz_channels);
-+		band->channels = channels;
-+		band->n_bitrates = ath11k_g_rates_size;
-+		band->bitrates = ath11k_g_rates;
-+		ar->hw->wiphy->bands[NL80211_BAND_2GHZ] = band;
-+		ath11k_mac_update_ch_list(ar, band,
-+					  reg_cap->low_2ghz_chan,
-+					  reg_cap->high_2ghz_chan);
-+	}
-+
-+	if (supported_bands & WMI_HOST_WLAN_5G_CAP) {
-+		channels = kmemdup(ath11k_5ghz_channels,
-+				   sizeof(ath11k_5ghz_channels),
-+				   GFP_KERNEL);
-+		if (!channels) {
-+			kfree(ar->mac.sbands[NL80211_BAND_2GHZ].channels);
-+			return -ENOMEM;
-+		}
-+
-+		band = &ar->mac.sbands[NL80211_BAND_5GHZ];
-+		band->n_channels = ARRAY_SIZE(ath11k_5ghz_channels);
-+		band->channels = channels;
-+		band->n_bitrates = ath11k_a_rates_size;
-+		band->bitrates = ath11k_a_rates;
-+		ar->hw->wiphy->bands[NL80211_BAND_5GHZ] = band;
-+		ath11k_mac_update_ch_list(ar, band,
-+					  reg_cap->low_5ghz_chan,
-+					  reg_cap->high_5ghz_chan);
-+	}
-+
-+	return 0;
-+}
-+
-+static const u8 ath11k_if_types_ext_capa[] = {
-+	[0] = WLAN_EXT_CAPA1_EXT_CHANNEL_SWITCHING,
-+	[7] = WLAN_EXT_CAPA8_OPMODE_NOTIF,
-+};
-+
-+static const u8 ath11k_if_types_ext_capa_sta[] = {
-+	[0] = WLAN_EXT_CAPA1_EXT_CHANNEL_SWITCHING,
-+	[7] = WLAN_EXT_CAPA8_OPMODE_NOTIF,
-+	[9] = WLAN_EXT_CAPA10_TWT_REQUESTER_SUPPORT,
-+};
-+
-+static const u8 ath11k_if_types_ext_capa_ap[] = {
-+	[0] = WLAN_EXT_CAPA1_EXT_CHANNEL_SWITCHING,
-+	[7] = WLAN_EXT_CAPA8_OPMODE_NOTIF,
-+	[9] = WLAN_EXT_CAPA10_TWT_RESPONDER_SUPPORT,
-+};
-+
-+static const struct wiphy_iftype_ext_capab ath11k_iftypes_ext_capa[] = {
-+	{
-+		.extended_capabilities = ath11k_if_types_ext_capa,
-+		.extended_capabilities_mask = ath11k_if_types_ext_capa,
-+		.extended_capabilities_len = sizeof(ath11k_if_types_ext_capa),
-+	}, {
-+		.iftype = NL80211_IFTYPE_STATION,
-+		.extended_capabilities = ath11k_if_types_ext_capa_sta,
-+		.extended_capabilities_mask = ath11k_if_types_ext_capa_sta,
-+		.extended_capabilities_len =
-+				sizeof(ath11k_if_types_ext_capa_sta),
-+	}, {
-+		.iftype = NL80211_IFTYPE_AP,
-+		.extended_capabilities = ath11k_if_types_ext_capa_ap,
-+		.extended_capabilities_mask = ath11k_if_types_ext_capa_ap,
-+		.extended_capabilities_len =
-+				sizeof(ath11k_if_types_ext_capa_ap),
-+	},
-+};
-+
-+static int ath11k_mac_register(struct ath11k *ar)
-+{
-+	struct ath11k_base *ab = ar->ab;
-+	struct ath11k_pdev_cap *cap = &ar->pdev->cap;
-+	static const u32 cipher_suites[] = {
-+		WLAN_CIPHER_SUITE_TKIP,
-+		WLAN_CIPHER_SUITE_CCMP,
-+		WLAN_CIPHER_SUITE_AES_CMAC,
-+		WLAN_CIPHER_SUITE_BIP_CMAC_256,
-+		WLAN_CIPHER_SUITE_BIP_GMAC_128,
-+		WLAN_CIPHER_SUITE_BIP_GMAC_256,
-+		WLAN_CIPHER_SUITE_GCMP,
-+		WLAN_CIPHER_SUITE_GCMP_256,
-+		WLAN_CIPHER_SUITE_CCMP_256,
 +	};
-+	int ret;
-+	u32 ht_cap = 0;
 +
-+	ath11k_pdev_caps_update(ar);
++	return "<unknown>";
++}
 +
-+	SET_IEEE80211_PERM_ADDR(ar->hw, ar->mac_addr);
++struct wmi_channel_arg {
++	u32 freq;
++	u32 band_center_freq1;
++	u32 band_center_freq2;
++	bool passive;
++	bool allow_ibss;
++	bool allow_ht;
++	bool allow_vht;
++	bool ht40plus;
++	bool chan_radar;
++	bool freq2_radar;
++	bool allow_he;
++	u32 min_power;
++	u32 max_power;
++	u32 max_reg_power;
++	u32 max_antenna_gain;
++	enum wmi_phy_mode mode;
++};
 +
-+	SET_IEEE80211_DEV(ar->hw, ab->dev);
++struct wmi_vdev_start_req_arg {
++	u32 vdev_id;
++	struct wmi_channel_arg channel;
++	u32 bcn_intval;
++	u32 dtim_period;
++	u8 *ssid;
++	u32 ssid_len;
++	u32 bcn_tx_rate;
++	u32 bcn_tx_power;
++	bool disable_hw_ack;
++	bool hidden_ssid;
++	bool pmf_enabled;
++	u32 he_ops;
++	u32 cac_duration_ms;
++	u32 regdomain;
++	u32 pref_rx_streams;
++	u32 pref_tx_streams;
++	u32 num_noa_descriptors;
++};
 +
-+	ret = ath11k_mac_setup_channels_rates(ar,
-+					      cap->supported_bands);
-+	if (ret)
-+		goto err_free;
++struct peer_create_params {
++	const u8 *peer_addr;
++	u32 peer_type;
++	u32 vdev_id;
++};
 +
-+	ath11k_mac_setup_ht_vht_cap(ar, cap, &ht_cap);
++struct peer_delete_params {
++	u8 vdev_id;
++};
 +
-+	ar->hw->wiphy->available_antennas_rx = cap->rx_chain_mask;
-+	ar->hw->wiphy->available_antennas_tx = cap->tx_chain_mask;
++struct peer_flush_params {
++	u32 peer_tid_bitmap;
++	u8 vdev_id;
++};
 +
-+	ar->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
-+					 BIT(NL80211_IFTYPE_AP) |
-+					 BIT(NL80211_IFTYPE_MESH_POINT);
++struct pdev_set_regdomain_params {
++	u16 current_rd_in_use;
++	u16 current_rd_2g;
++	u16 current_rd_5g;
++	u32 ctl_2g;
++	u32 ctl_5g;
++	u8 dfs_domain;
++	u32 pdev_id;
++};
 +
-+	ieee80211_hw_set(ar->hw, SIGNAL_DBM);
-+	ieee80211_hw_set(ar->hw, SUPPORTS_PS);
-+	ieee80211_hw_set(ar->hw, SUPPORTS_DYNAMIC_PS);
-+	ieee80211_hw_set(ar->hw, MFP_CAPABLE);
-+	ieee80211_hw_set(ar->hw, REPORTS_TX_ACK_STATUS);
-+	ieee80211_hw_set(ar->hw, HAS_RATE_CONTROL);
-+	ieee80211_hw_set(ar->hw, AP_LINK_PS);
-+	ieee80211_hw_set(ar->hw, SPECTRUM_MGMT);
-+	ieee80211_hw_set(ar->hw, SUPPORT_FAST_XMIT);
-+	ieee80211_hw_set(ar->hw, CONNECTION_MONITOR);
-+	ieee80211_hw_set(ar->hw, SUPPORTS_PER_STA_GTK);
-+	ieee80211_hw_set(ar->hw, WANT_MONITOR_VIF);
-+	ieee80211_hw_set(ar->hw, CHANCTX_STA_CSA);
-+	ieee80211_hw_set(ar->hw, QUEUE_CONTROL);
-+	ieee80211_hw_set(ar->hw, SUPPORTS_TX_FRAG);
-+	ieee80211_hw_set(ar->hw, REPORTS_LOW_ACK);
-+	if (ht_cap & WMI_HT_CAP_ENABLED) {
-+		ieee80211_hw_set(ar->hw, AMPDU_AGGREGATION);
-+		ieee80211_hw_set(ar->hw, TX_AMPDU_SETUP_IN_HW);
-+		ieee80211_hw_set(ar->hw, SUPPORTS_REORDERING_BUFFER);
-+		ieee80211_hw_set(ar->hw, SUPPORTS_AMSDU_IN_AMPDU);
-+	}
++struct rx_reorder_queue_remove_params {
++	u8 *peer_macaddr;
++	u16 vdev_id;
++	u32 peer_tid_bitmap;
++};
 +
-+	ar->hw->wiphy->features |= NL80211_FEATURE_STATIC_SMPS;
-+	ar->hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
++#define WMI_HOST_PDEV_ID_SOC 0xFF
++#define WMI_HOST_PDEV_ID_0   0
++#define WMI_HOST_PDEV_ID_1   1
++#define WMI_HOST_PDEV_ID_2   2
 +
-+	/* TODO: Check if HT capability advertised from firmware is different
-+	 * for each band for a dual band capable radio. It will be tricky to
-+	 * handle it when the ht capability different for each band.
++#define WMI_PDEV_ID_SOC         0
++#define WMI_PDEV_ID_1ST         1
++#define WMI_PDEV_ID_2ND         2
++#define WMI_PDEV_ID_3RD         3
++
++/* Freq units in MHz */
++#define REG_RULE_START_FREQ			0x0000ffff
++#define REG_RULE_END_FREQ			0xffff0000
++#define REG_RULE_FLAGS				0x0000ffff
++#define REG_RULE_MAX_BW				0x0000ffff
++#define REG_RULE_REG_PWR			0x00ff0000
++#define REG_RULE_ANT_GAIN			0xff000000
++
++#define WMI_VDEV_PARAM_TXBF_SU_TX_BFEE BIT(0)
++#define WMI_VDEV_PARAM_TXBF_MU_TX_BFEE BIT(1)
++#define WMI_VDEV_PARAM_TXBF_SU_TX_BFER BIT(2)
++#define WMI_VDEV_PARAM_TXBF_MU_TX_BFER BIT(3)
++
++#define HECAP_PHYDWORD_0	0
++#define HECAP_PHYDWORD_1	1
++#define HECAP_PHYDWORD_2	2
++
++#define HECAP_PHY_SU_BFER		BIT(31)
++#define HECAP_PHY_SU_BFEE		BIT(0)
++#define HECAP_PHY_MU_BFER		BIT(1)
++#define HECAP_PHY_UL_MUMIMO		BIT(22)
++#define HECAP_PHY_UL_MUOFDMA		BIT(23)
++
++#define HECAP_PHY_SUBFMR_GET(hecap_phy) \
++	FIELD_GET(HECAP_PHY_SU_BFER, hecap_phy[HECAP_PHYDWORD_0])
++
++#define HECAP_PHY_SUBFME_GET(hecap_phy) \
++	FIELD_GET(HECAP_PHY_SU_BFEE, hecap_phy[HECAP_PHYDWORD_1])
++
++#define HECAP_PHY_MUBFMR_GET(hecap_phy) \
++	FIELD_GET(HECAP_PHY_MU_BFER, hecap_phy[HECAP_PHYDWORD_1])
++
++#define HECAP_PHY_ULMUMIMO_GET(hecap_phy) \
++	FIELD_GET(HECAP_PHY_UL_MUMIMO, hecap_phy[HECAP_PHYDWORD_0])
++
++#define HECAP_PHY_ULOFDMA_GET(hecap_phy) \
++	FIELD_GET(HECAP_PHY_UL_MUOFDMA, hecap_phy[HECAP_PHYDWORD_0])
++
++#define HE_MODE_SU_TX_BFEE	BIT(0)
++#define HE_MODE_SU_TX_BFER	BIT(1)
++#define HE_MODE_MU_TX_BFEE	BIT(2)
++#define HE_MODE_MU_TX_BFER	BIT(3)
++#define HE_MODE_DL_OFDMA	BIT(4)
++#define HE_MODE_UL_OFDMA	BIT(5)
++#define HE_MODE_UL_MUMIMO	BIT(6)
++
++#define HE_DL_MUOFDMA_ENABLE	1
++#define HE_UL_MUOFDMA_ENABLE	1
++#define HE_DL_MUMIMO_ENABLE	1
++#define HE_MU_BFEE_ENABLE	1
++#define HE_SU_BFEE_ENABLE	1
++
++#define HE_VHT_SOUNDING_MODE_ENABLE		1
++#define HE_SU_MU_SOUNDING_MODE_ENABLE		1
++#define HE_TRIG_NONTRIG_SOUNDING_MODE_ENABLE	1
++
++/* HE or VHT Sounding */
++#define HE_VHT_SOUNDING_MODE		BIT(0)
++/* SU or MU Sounding */
++#define HE_SU_MU_SOUNDING_MODE		BIT(2)
++/* Trig or Non-Trig Sounding */
++#define HE_TRIG_NONTRIG_SOUNDING_MODE	BIT(3)
++
++#define WMI_TXBF_STS_CAP_OFFSET_LSB	4
++#define WMI_TXBF_STS_CAP_OFFSET_MASK	0x70
++#define WMI_BF_SOUND_DIM_OFFSET_LSB	8
++#define WMI_BF_SOUND_DIM_OFFSET_MASK	0x700
++
++struct pdev_params {
++	u32 param_id;
++	u32 param_value;
++};
++
++enum wmi_peer_type {
++	WMI_PEER_TYPE_DEFAULT = 0,
++	WMI_PEER_TYPE_BSS = 1,
++	WMI_PEER_TYPE_TDLS = 2,
++};
++
++struct wmi_peer_create_cmd {
++	u32 tlv_header;
++	u32 vdev_id;
++	struct wmi_mac_addr peer_macaddr;
++	u32 peer_type;
++} __packed;
++
++struct wmi_peer_delete_cmd {
++	u32 tlv_header;
++	u32 vdev_id;
++	struct wmi_mac_addr peer_macaddr;
++} __packed;
++
++struct wmi_peer_reorder_queue_setup_cmd {
++	u32 tlv_header;
++	u32 vdev_id;
++	struct wmi_mac_addr peer_macaddr;
++	u32 tid;
++	u32 queue_ptr_lo;
++	u32 queue_ptr_hi;
++	u32 queue_no;
++	u32 ba_window_size_valid;
++	u32 ba_window_size;
++} __packed;
++
++struct wmi_peer_reorder_queue_remove_cmd {
++	u32 tlv_header;
++	u32 vdev_id;
++	struct wmi_mac_addr peer_macaddr;
++	u32 tid_mask;
++} __packed;
++
++struct gpio_config_params {
++	u32 gpio_num;
++	u32 input;
++	u32 pull_type;
++	u32 intr_mode;
++};
++
++enum wmi_gpio_type {
++	WMI_GPIO_PULL_NONE,
++	WMI_GPIO_PULL_UP,
++	WMI_GPIO_PULL_DOWN
++};
++
++enum wmi_gpio_intr_type {
++	WMI_GPIO_INTTYPE_DISABLE,
++	WMI_GPIO_INTTYPE_RISING_EDGE,
++	WMI_GPIO_INTTYPE_FALLING_EDGE,
++	WMI_GPIO_INTTYPE_BOTH_EDGE,
++	WMI_GPIO_INTTYPE_LEVEL_LOW,
++	WMI_GPIO_INTTYPE_LEVEL_HIGH
++};
++
++enum wmi_bss_chan_info_req_type {
++	WMI_BSS_SURVEY_REQ_TYPE_READ = 1,
++	WMI_BSS_SURVEY_REQ_TYPE_READ_CLEAR,
++};
++
++struct wmi_gpio_config_cmd_param {
++	u32 tlv_header;
++	u32 gpio_num;
++	u32 input;
++	u32 pull_type;
++	u32 intr_mode;
++};
++
++struct gpio_output_params {
++	u32 gpio_num;
++	u32 set;
++};
++
++struct wmi_gpio_output_cmd_param {
++	u32 tlv_header;
++	u32 gpio_num;
++	u32 set;
++};
++
++struct set_fwtest_params {
++	u32 arg;
++	u32 value;
++};
++
++struct wmi_fwtest_set_param_cmd_param {
++	u32 tlv_header;
++	u32 param_id;
++	u32 param_value;
++};
++
++struct wmi_pdev_set_param_cmd {
++	u32 tlv_header;
++	u32 pdev_id;
++	u32 param_id;
++	u32 param_value;
++} __packed;
++
++struct wmi_pdev_suspend_cmd {
++	u32 tlv_header;
++	u32 pdev_id;
++	u32 suspend_opt;
++} __packed;
++
++struct wmi_pdev_resume_cmd {
++	u32 tlv_header;
++	u32 pdev_id;
++} __packed;
++
++struct wmi_pdev_bss_chan_info_req_cmd {
++	u32 tlv_header;
++	/* ref wmi_bss_chan_info_req_type */
++	u32 req_type;
++} __packed;
++
++struct wmi_ap_ps_peer_cmd {
++	u32 tlv_header;
++	u32 vdev_id;
++	struct wmi_mac_addr peer_macaddr;
++	u32 param;
++	u32 value;
++} __packed;
++
++struct wmi_sta_powersave_param_cmd {
++	u32 tlv_header;
++	u32 vdev_id;
++	u32 param;
++	u32 value;
++} __packed;
++
++struct wmi_pdev_set_regdomain_cmd {
++	u32 tlv_header;
++	u32 pdev_id;
++	u32 reg_domain;
++	u32 reg_domain_2g;
++	u32 reg_domain_5g;
++	u32 conformance_test_limit_2g;
++	u32 conformance_test_limit_5g;
++	u32 dfs_domain;
++} __packed;
++
++struct wmi_peer_set_param_cmd {
++	u32 tlv_header;
++	u32 vdev_id;
++	struct wmi_mac_addr peer_macaddr;
++	u32 param_id;
++	u32 param_value;
++} __packed;
++
++struct wmi_peer_flush_tids_cmd {
++	u32 tlv_header;
++	u32 vdev_id;
++	struct wmi_mac_addr peer_macaddr;
++	u32 peer_tid_bitmap;
++} __packed;
++
++struct wmi_dfs_phyerr_offload_cmd {
++	u32 tlv_header;
++	u32 pdev_id;
++} __packed;
++
++struct wmi_bcn_offload_ctrl_cmd {
++	u32 tlv_header;
++	u32 vdev_id;
++	u32 bcn_ctrl_op;
++} __packed;
++
++enum scan_priority {
++	SCAN_PRIORITY_VERY_LOW,
++	SCAN_PRIORITY_LOW,
++	SCAN_PRIORITY_MEDIUM,
++	SCAN_PRIORITY_HIGH,
++	SCAN_PRIORITY_VERY_HIGH,
++	SCAN_PRIORITY_COUNT,
++};
++
++enum scan_dwelltime_adaptive_mode {
++	SCAN_DWELL_MODE_DEFAULT = 0,
++	SCAN_DWELL_MODE_CONSERVATIVE = 1,
++	SCAN_DWELL_MODE_MODERATE = 2,
++	SCAN_DWELL_MODE_AGGRESSIVE = 3,
++	SCAN_DWELL_MODE_STATIC = 4
++};
++
++#define WLAN_SCAN_MAX_NUM_SSID          10
++#define WLAN_SCAN_MAX_NUM_BSSID         10
++#define WLAN_SCAN_MAX_NUM_CHANNELS      40
++
++#define WLAN_SSID_MAX_LEN 32
++
++struct element_info {
++	u32 len;
++	u8 *ptr;
++};
++
++struct wlan_ssid {
++	u8 length;
++	u8 ssid[WLAN_SSID_MAX_LEN];
++};
++
++#define WMI_IE_BITMAP_SIZE             8
++
++#define WMI_SCAN_MAX_NUM_SSID                0x0A
++/* prefix used by scan requestor ids on the host */
++#define WMI_HOST_SCAN_REQUESTOR_ID_PREFIX 0xA000
++
++/* prefix used by scan request ids generated on the host */
++/* host cycles through the lower 12 bits to generate ids */
++#define WMI_HOST_SCAN_REQ_ID_PREFIX 0xA000
++
++#define WLAN_SCAN_PARAMS_MAX_SSID    16
++#define WLAN_SCAN_PARAMS_MAX_BSSID   4
++#define WLAN_SCAN_PARAMS_MAX_IE_LEN  256
++
++/* Values lower than this may be refused by some firmware revisions with a scan
++ * completion with a timedout reason.
++ */
++#define WMI_SCAN_CHAN_MIN_TIME_MSEC 40
++
++/* Scan priority numbers must be sequential, starting with 0 */
++enum wmi_scan_priority {
++	WMI_SCAN_PRIORITY_VERY_LOW = 0,
++	WMI_SCAN_PRIORITY_LOW,
++	WMI_SCAN_PRIORITY_MEDIUM,
++	WMI_SCAN_PRIORITY_HIGH,
++	WMI_SCAN_PRIORITY_VERY_HIGH,
++	WMI_SCAN_PRIORITY_COUNT   /* number of priorities supported */
++};
++
++enum wmi_scan_event_type {
++	WMI_SCAN_EVENT_STARTED              = BIT(0),
++	WMI_SCAN_EVENT_COMPLETED            = BIT(1),
++	WMI_SCAN_EVENT_BSS_CHANNEL          = BIT(2),
++	WMI_SCAN_EVENT_FOREIGN_CHAN         = BIT(3),
++	WMI_SCAN_EVENT_DEQUEUED             = BIT(4),
++	/* possibly by high-prio scan */
++	WMI_SCAN_EVENT_PREEMPTED            = BIT(5),
++	WMI_SCAN_EVENT_START_FAILED         = BIT(6),
++	WMI_SCAN_EVENT_RESTARTED            = BIT(7),
++	WMI_SCAN_EVENT_FOREIGN_CHAN_EXIT    = BIT(8),
++	WMI_SCAN_EVENT_SUSPENDED            = BIT(9),
++	WMI_SCAN_EVENT_RESUMED              = BIT(10),
++	WMI_SCAN_EVENT_MAX                  = BIT(15),
++};
++
++enum wmi_scan_completion_reason {
++	WMI_SCAN_REASON_COMPLETED,
++	WMI_SCAN_REASON_CANCELLED,
++	WMI_SCAN_REASON_PREEMPTED,
++	WMI_SCAN_REASON_TIMEDOUT,
++	WMI_SCAN_REASON_INTERNAL_FAILURE,
++	WMI_SCAN_REASON_MAX,
++};
++
++struct  wmi_start_scan_cmd {
++	u32 tlv_header;
++	u32 scan_id;
++	u32 scan_req_id;
++	u32 vdev_id;
++	u32 scan_priority;
++	u32 notify_scan_events;
++	u32 dwell_time_active;
++	u32 dwell_time_passive;
++	u32 min_rest_time;
++	u32 max_rest_time;
++	u32 repeat_probe_time;
++	u32 probe_spacing_time;
++	u32 idle_time;
++	u32 max_scan_time;
++	u32 probe_delay;
++	u32 scan_ctrl_flags;
++	u32 burst_duration;
++	u32 num_chan;
++	u32 num_bssid;
++	u32 num_ssids;
++	u32 ie_len;
++	u32 n_probes;
++	struct wmi_mac_addr mac_addr;
++	struct wmi_mac_addr mac_mask;
++	u32 ie_bitmap[WMI_IE_BITMAP_SIZE];
++	u32 num_vendor_oui;
++	u32 scan_ctrl_flags_ext;
++	u32 dwell_time_active_2g;
++} __packed;
++
++#define WMI_SCAN_FLAG_PASSIVE        0x1
++#define WMI_SCAN_ADD_BCAST_PROBE_REQ 0x2
++#define WMI_SCAN_ADD_CCK_RATES       0x4
++#define WMI_SCAN_ADD_OFDM_RATES      0x8
++#define WMI_SCAN_CHAN_STAT_EVENT     0x10
++#define WMI_SCAN_FILTER_PROBE_REQ    0x20
++#define WMI_SCAN_BYPASS_DFS_CHN      0x40
++#define WMI_SCAN_CONTINUE_ON_ERROR   0x80
++#define WMI_SCAN_FILTER_PROMISCUOS   0x100
++#define WMI_SCAN_FLAG_FORCE_ACTIVE_ON_DFS 0x200
++#define WMI_SCAN_ADD_TPC_IE_IN_PROBE_REQ  0x400
++#define WMI_SCAN_ADD_DS_IE_IN_PROBE_REQ   0x800
++#define WMI_SCAN_ADD_SPOOF_MAC_IN_PROBE_REQ   0x1000
++#define WMI_SCAN_OFFCHAN_MGMT_TX    0x2000
++#define WMI_SCAN_OFFCHAN_DATA_TX    0x4000
++#define WMI_SCAN_CAPTURE_PHY_ERROR  0x8000
++#define WMI_SCAN_FLAG_STRICT_PASSIVE_ON_PCHN 0x10000
++#define WMI_SCAN_FLAG_HALF_RATE_SUPPORT      0x20000
++#define WMI_SCAN_FLAG_QUARTER_RATE_SUPPORT   0x40000
++#define WMI_SCAN_RANDOM_SEQ_NO_IN_PROBE_REQ 0x80000
++#define WMI_SCAN_ENABLE_IE_WHTELIST_IN_PROBE_REQ 0x100000
++
++#define WMI_SCAN_DWELL_MODE_MASK 0x00E00000
++#define WMI_SCAN_DWELL_MODE_SHIFT        21
++
++enum {
++	WMI_SCAN_DWELL_MODE_DEFAULT      = 0,
++	WMI_SCAN_DWELL_MODE_CONSERVATIVE = 1,
++	WMI_SCAN_DWELL_MODE_MODERATE     = 2,
++	WMI_SCAN_DWELL_MODE_AGGRESSIVE   = 3,
++	WMI_SCAN_DWELL_MODE_STATIC       = 4,
++};
++
++#define WMI_SCAN_SET_DWELL_MODE(flag, mode) \
++	((flag) |= (((mode) << WMI_SCAN_DWELL_MODE_SHIFT) & \
++		    WMI_SCAN_DWELL_MODE_MASK))
++
++struct scan_req_params {
++	u32 scan_id;
++	u32 scan_req_id;
++	u32 vdev_id;
++	u32 pdev_id;
++	enum scan_priority scan_priority;
++	union {
++		struct {
++			u32 scan_ev_started:1,
++			    scan_ev_completed:1,
++			    scan_ev_bss_chan:1,
++			    scan_ev_foreign_chan:1,
++			    scan_ev_dequeued:1,
++			    scan_ev_preempted:1,
++			    scan_ev_start_failed:1,
++			    scan_ev_restarted:1,
++			    scan_ev_foreign_chn_exit:1,
++			    scan_ev_invalid:1,
++			    scan_ev_gpio_timeout:1,
++			    scan_ev_suspended:1,
++			    scan_ev_resumed:1;
++		};
++		u32 scan_events;
++	};
++	u32 dwell_time_active;
++	u32 dwell_time_active_2g;
++	u32 dwell_time_passive;
++	u32 min_rest_time;
++	u32 max_rest_time;
++	u32 repeat_probe_time;
++	u32 probe_spacing_time;
++	u32 idle_time;
++	u32 max_scan_time;
++	u32 probe_delay;
++	union {
++		struct {
++			u32 scan_f_passive:1,
++			    scan_f_bcast_probe:1,
++			    scan_f_cck_rates:1,
++			    scan_f_ofdm_rates:1,
++			    scan_f_chan_stat_evnt:1,
++			    scan_f_filter_prb_req:1,
++			    scan_f_bypass_dfs_chn:1,
++			    scan_f_continue_on_err:1,
++			    scan_f_offchan_mgmt_tx:1,
++			    scan_f_offchan_data_tx:1,
++			    scan_f_promisc_mode:1,
++			    scan_f_capture_phy_err:1,
++			    scan_f_strict_passive_pch:1,
++			    scan_f_half_rate:1,
++			    scan_f_quarter_rate:1,
++			    scan_f_force_active_dfs_chn:1,
++			    scan_f_add_tpc_ie_in_probe:1,
++			    scan_f_add_ds_ie_in_probe:1,
++			    scan_f_add_spoofed_mac_in_probe:1,
++			    scan_f_add_rand_seq_in_probe:1,
++			    scan_f_en_ie_whitelist_in_probe:1,
++			    scan_f_forced:1,
++			    scan_f_2ghz:1,
++			    scan_f_5ghz:1,
++			    scan_f_80mhz:1;
++		};
++		u32 scan_flags;
++	};
++	enum scan_dwelltime_adaptive_mode adaptive_dwell_time_mode;
++	u32 burst_duration;
++	u32 num_chan;
++	u32 num_bssid;
++	u32 num_ssids;
++	u32 n_probes;
++	u32 chan_list[WLAN_SCAN_MAX_NUM_CHANNELS];
++	u32 notify_scan_events;
++	struct wlan_ssid ssid[WLAN_SCAN_MAX_NUM_SSID];
++	struct wmi_mac_addr bssid_list[WLAN_SCAN_MAX_NUM_BSSID];
++	struct element_info extraie;
++	struct element_info htcap;
++	struct element_info vhtcap;
++};
++
++struct wmi_ssid_arg {
++	int len;
++	const u8 *ssid;
++};
++
++struct wmi_bssid_arg {
++	const u8 *bssid;
++};
++
++struct wmi_start_scan_arg {
++	u32 scan_id;
++	u32 scan_req_id;
++	u32 vdev_id;
++	u32 scan_priority;
++	u32 notify_scan_events;
++	u32 dwell_time_active;
++	u32 dwell_time_passive;
++	u32 min_rest_time;
++	u32 max_rest_time;
++	u32 repeat_probe_time;
++	u32 probe_spacing_time;
++	u32 idle_time;
++	u32 max_scan_time;
++	u32 probe_delay;
++	u32 scan_ctrl_flags;
++
++	u32 ie_len;
++	u32 n_channels;
++	u32 n_ssids;
++	u32 n_bssids;
++
++	u8 ie[WLAN_SCAN_PARAMS_MAX_IE_LEN];
++	u32 channels[64];
++	struct wmi_ssid_arg ssids[WLAN_SCAN_PARAMS_MAX_SSID];
++	struct wmi_bssid_arg bssids[WLAN_SCAN_PARAMS_MAX_BSSID];
++};
++
++#define WMI_SCAN_STOP_ONE       0x00000000
++#define WMI_SCN_STOP_VAP_ALL    0x01000000
++#define WMI_SCAN_STOP_ALL       0x04000000
++
++/* Prefix 0xA000 indicates that the scan request
++ * is trigger by HOST
++ */
++#define ATH11K_SCAN_ID          0xA000
++
++enum scan_cancel_req_type {
++	WLAN_SCAN_CANCEL_SINGLE = 1,
++	WLAN_SCAN_CANCEL_VDEV_ALL,
++	WLAN_SCAN_CANCEL_PDEV_ALL,
++};
++
++struct scan_cancel_param {
++	u32 requester;
++	u32 scan_id;
++	enum scan_cancel_req_type req_type;
++	u32 vdev_id;
++	u32 pdev_id;
++};
++
++struct  wmi_bcn_send_from_host_cmd {
++	u32 tlv_header;
++	u32 vdev_id;
++	u32 data_len;
++	union {
++		u32 frag_ptr;
++		u32 frag_ptr_lo;
++	};
++	u32 frame_ctrl;
++	u32 dtim_flag;
++	u32 bcn_antenna;
++	u32 frag_ptr_hi;
++};
++
++#define WMI_CHAN_INFO_MODE		GENMASK(5, 0)
++#define WMI_CHAN_INFO_HT40_PLUS		BIT(6)
++#define WMI_CHAN_INFO_PASSIVE		BIT(7)
++#define WMI_CHAN_INFO_ADHOC_ALLOWED	BIT(8)
++#define WMI_CHAN_INFO_AP_DISABLED	BIT(9)
++#define WMI_CHAN_INFO_DFS		BIT(10)
++#define WMI_CHAN_INFO_ALLOW_HT		BIT(11)
++#define WMI_CHAN_INFO_ALLOW_VHT		BIT(12)
++#define WMI_CHAN_INFO_CHAN_CHANGE_CAUSE_CSA	BIT(13)
++#define WMI_CHAN_INFO_HALF_RATE		BIT(14)
++#define WMI_CHAN_INFO_QUARTER_RATE	BIT(15)
++#define WMI_CHAN_INFO_DFS_FREQ2		BIT(16)
++#define WMI_CHAN_INFO_ALLOW_HE		BIT(17)
++
++#define WMI_CHAN_REG_INFO1_MIN_PWR	GENMASK(7, 0)
++#define WMI_CHAN_REG_INFO1_MAX_PWR	GENMASK(15, 8)
++#define WMI_CHAN_REG_INFO1_MAX_REG_PWR	GENMASK(23, 16)
++#define WMI_CHAN_REG_INFO1_REG_CLS	GENMASK(31, 24)
++
++#define WMI_CHAN_REG_INFO2_ANT_MAX	GENMASK(7, 0)
++#define WMI_CHAN_REG_INFO2_MAX_TX_PWR	GENMASK(15, 8)
++
++struct wmi_channel {
++	u32 tlv_header;
++	u32 mhz;
++	u32 band_center_freq1;
++	u32 band_center_freq2;
++	u32 info;
++	u32 reg_info_1;
++	u32 reg_info_2;
++} __packed;
++
++struct wmi_mgmt_params {
++	void *tx_frame;
++	u16 frm_len;
++	u8 vdev_id;
++	u16 chanfreq;
++	void *pdata;
++	u16 desc_id;
++	u8 *macaddr;
++	void *qdf_ctx;
++};
++
++enum wmi_sta_ps_mode {
++	WMI_STA_PS_MODE_DISABLED = 0,
++	WMI_STA_PS_MODE_ENABLED = 1,
++};
++
++#define WMI_SMPS_MASK_LOWER_16BITS 0xFF
++#define WMI_SMPS_MASK_UPPER_3BITS 0x7
++#define WMI_SMPS_PARAM_VALUE_SHIFT 29
++
++#define ATH11K_WMI_FW_HANG_ASSERT_TYPE 1
++#define ATH11K_WMI_FW_HANG_DELAY 0
++
++/* type, 0:unused 1: ASSERT 2: not respond detect command
++ * delay_time_ms, the simulate will delay time
++ */
++
++struct wmi_force_fw_hang_cmd {
++	u32 tlv_header;
++	u32 type;
++	u32 delay_time_ms;
++};
++
++struct wmi_vdev_set_param_cmd {
++	u32 tlv_header;
++	u32 vdev_id;
++	u32 param_id;
++	u32 param_value;
++} __packed;
++
++enum wmi_stats_id {
++	WMI_REQUEST_PEER_STAT			= BIT(0),
++	WMI_REQUEST_AP_STAT			= BIT(1),
++	WMI_REQUEST_PDEV_STAT			= BIT(2),
++	WMI_REQUEST_VDEV_STAT			= BIT(3),
++	WMI_REQUEST_BCNFLT_STAT			= BIT(4),
++	WMI_REQUEST_VDEV_RATE_STAT		= BIT(5),
++	WMI_REQUEST_INST_STAT			= BIT(6),
++	WMI_REQUEST_MIB_STAT			= BIT(7),
++	WMI_REQUEST_RSSI_PER_CHAIN_STAT		= BIT(8),
++	WMI_REQUEST_CONGESTION_STAT		= BIT(9),
++	WMI_REQUEST_PEER_EXTD_STAT		= BIT(10),
++	WMI_REQUEST_BCN_STAT			= BIT(11),
++	WMI_REQUEST_BCN_STAT_RESET		= BIT(12),
++	WMI_REQUEST_PEER_EXTD2_STAT		= BIT(13),
++};
++
++struct wmi_request_stats_cmd {
++	u32 tlv_header;
++	enum wmi_stats_id stats_id;
++	u32 vdev_id;
++	struct wmi_mac_addr peer_macaddr;
++	u32 pdev_id;
++} __packed;
++
++#define WMI_BEACON_TX_BUFFER_SIZE	512
++
++struct wmi_bcn_tmpl_cmd {
++	u32 tlv_header;
++	u32 vdev_id;
++	u32 tim_ie_offset;
++	u32 buf_len;
++	u32 csa_switch_count_offset;
++	u32 ext_csa_switch_count_offset;
++	u32 csa_event_bitmap;
++	u32 mbssid_ie_offset;
++	u32 esp_ie_offset;
++} __packed;
++
++struct wmi_key_seq_counter {
++	u32 key_seq_counter_l;
++	u32 key_seq_counter_h;
++} __packed;
++
++struct wmi_vdev_install_key_cmd {
++	u32 tlv_header;
++	u32 vdev_id;
++	struct wmi_mac_addr peer_macaddr;
++	u32 key_idx;
++	u32 key_flags;
++	u32 key_cipher;
++	struct wmi_key_seq_counter key_rsc_counter;
++	struct wmi_key_seq_counter key_global_rsc_counter;
++	struct wmi_key_seq_counter key_tsc_counter;
++	u8 wpi_key_rsc_counter[16];
++	u8 wpi_key_tsc_counter[16];
++	u32 key_len;
++	u32 key_txmic_len;
++	u32 key_rxmic_len;
++	u32 is_group_key_id_valid;
++	u32 group_key_id;
++
++	/* Followed by key_data containing key followed by
++	 * tx mic and then rx mic
 +	 */
-+	if (ht_cap & WMI_HT_CAP_DYNAMIC_SMPS)
-+		ar->hw->wiphy->features |= NL80211_FEATURE_DYNAMIC_SMPS;
++} __packed;
 +
-+	ar->hw->wiphy->max_scan_ssids = WLAN_SCAN_PARAMS_MAX_SSID;
-+	ar->hw->wiphy->max_scan_ie_len = WLAN_SCAN_PARAMS_MAX_IE_LEN;
++struct wmi_vdev_install_key_arg {
++	u32 vdev_id;
++	const u8 *macaddr;
++	u32 key_idx;
++	u32 key_flags;
++	u32 key_cipher;
++	u32 key_len;
++	u32 key_txmic_len;
++	u32 key_rxmic_len;
++	u64 key_rsc_counter;
++	const void *key_data;
++};
 +
-+	ar->hw->max_listen_interval = ATH11K_MAX_HW_LISTEN_INTERVAL;
++#define WMI_MAX_SUPPORTED_RATES			128
++#define WMI_HOST_MAX_HECAP_PHY_SIZE		3
++#define WMI_HOST_MAX_HE_RATE_SET		1
 +
-+	ar->hw->wiphy->flags |= WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
-+	ar->hw->wiphy->flags |= WIPHY_FLAG_HAS_CHANNEL_SWITCH;
-+	ar->hw->wiphy->max_remain_on_channel_duration = 5000;
++struct wmi_rate_set_arg {
++	u32 num_rates;
++	u8 rates[WMI_MAX_SUPPORTED_RATES];
++};
 +
-+	ar->hw->wiphy->flags |= WIPHY_FLAG_AP_UAPSD;
-+	ar->hw->wiphy->features |= NL80211_FEATURE_AP_MODE_CHAN_WIDTH_CHANGE |
-+				   NL80211_FEATURE_AP_SCAN;
++struct peer_assoc_params {
++	struct wmi_mac_addr peer_macaddr;
++	u32 vdev_id;
++	u32 peer_new_assoc;
++	u32 peer_associd;
++	u32 peer_flags;
++	u32 peer_caps;
++	u32 peer_listen_intval;
++	u32 peer_ht_caps;
++	u32 peer_max_mpdu;
++	u32 peer_mpdu_density;
++	u32 peer_rate_caps;
++	u32 peer_nss;
++	u32 peer_vht_caps;
++	u32 peer_phymode;
++	u32 peer_ht_info[2];
++	struct wmi_rate_set_arg peer_legacy_rates;
++	struct wmi_rate_set_arg peer_ht_rates;
++	u32 rx_max_rate;
++	u32 rx_mcs_set;
++	u32 tx_max_rate;
++	u32 tx_mcs_set;
++	u8 vht_capable;
++	u32 tx_max_mcs_nss;
++	u32 peer_bw_rxnss_override;
++	bool is_pmf_enabled;
++	bool is_wme_set;
++	bool qos_flag;
++	bool apsd_flag;
++	bool ht_flag;
++	bool bw_40;
++	bool bw_80;
++	bool bw_160;
++	bool stbc_flag;
++	bool ldpc_flag;
++	bool static_mimops_flag;
++	bool dynamic_mimops_flag;
++	bool spatial_mux_flag;
++	bool vht_flag;
++	bool vht_ng_flag;
++	bool need_ptk_4_way;
++	bool need_gtk_2_way;
++	bool auth_flag;
++	bool safe_mode_enabled;
++	bool amsdu_disable;
++	/* Use common structure */
++	u8 peer_mac[ETH_ALEN];
 +
-+	ar->max_num_stations = TARGET_NUM_STATIONS;
-+	ar->max_num_peers = TARGET_NUM_PEERS_PDEV;
++	bool he_flag;
++	u32 peer_he_cap_macinfo[2];
++	u32 peer_he_cap_macinfo_internal;
++	u32 peer_he_ops;
++	u32 peer_he_cap_phyinfo[WMI_HOST_MAX_HECAP_PHY_SIZE];
++	u32 peer_he_mcs_count;
++	u32 peer_he_rx_mcs_set[WMI_HOST_MAX_HE_RATE_SET];
++	u32 peer_he_tx_mcs_set[WMI_HOST_MAX_HE_RATE_SET];
++	struct ath11k_ppe_threshold peer_ppet;
++};
 +
-+	ar->hw->wiphy->max_ap_assoc_sta = ar->max_num_stations;
++struct  wmi_peer_assoc_complete_cmd {
++	u32 tlv_header;
++	struct wmi_mac_addr peer_macaddr;
++	u32 vdev_id;
++	u32 peer_new_assoc;
++	u32 peer_associd;
++	u32 peer_flags;
++	u32 peer_caps;
++	u32 peer_listen_intval;
++	u32 peer_ht_caps;
++	u32 peer_max_mpdu;
++	u32 peer_mpdu_density;
++	u32 peer_rate_caps;
++	u32 peer_nss;
++	u32 peer_vht_caps;
++	u32 peer_phymode;
++	u32 peer_ht_info[2];
++	u32 num_peer_legacy_rates;
++	u32 num_peer_ht_rates;
++	u32 peer_bw_rxnss_override;
++	struct  wmi_ppe_threshold peer_ppet;
++	u32 peer_he_cap_info;
++	u32 peer_he_ops;
++	u32 peer_he_cap_phy[WMI_MAX_HECAP_PHY_SIZE];
++	u32 peer_he_mcs;
++	u32 peer_he_cap_info_ext;
++	u32 peer_he_cap_info_internal;
++} __packed;
 +
-+	ar->hw->queues = ATH11K_HW_MAX_QUEUES;
-+	ar->hw->offchannel_tx_hw_queue = ATH11K_HW_MAX_QUEUES - 1;
-+	ar->hw->max_rx_aggregation_subframes = IEEE80211_MAX_AMPDU_BUF;
++struct wmi_stop_scan_cmd {
++	u32 tlv_header;
++	u32 requestor;
++	u32 scan_id;
++	u32 req_type;
++	u32 vdev_id;
++	u32 pdev_id;
++};
 +
-+	ar->hw->vif_data_size = sizeof(struct ath11k_vif);
-+	ar->hw->sta_data_size = sizeof(struct ath11k_sta);
++struct scan_chan_list_params {
++	u32 pdev_id;
++	u16 nallchans;
++	struct channel_param ch_param[1];
++};
 +
-+	ar->hw->wiphy->iface_combinations = ath11k_if_comb;
-+	ar->hw->wiphy->n_iface_combinations = ARRAY_SIZE(ath11k_if_comb);
++struct wmi_scan_chan_list_cmd {
++	u32 tlv_header;
++	u32 num_scan_chans;
++	u32 flags;
++	u32 pdev_id;
++} __packed;
 +
-+	wiphy_ext_feature_set(ar->hw->wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
++#define WMI_MGMT_SEND_DOWNLD_LEN	64
 +
-+	ar->hw->wiphy->cipher_suites = cipher_suites;
-+	ar->hw->wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
++#define WMI_TX_PARAMS_DWORD0_POWER		GENMASK(7, 0)
++#define WMI_TX_PARAMS_DWORD0_MCS_MASK		GENMASK(19, 8)
++#define WMI_TX_PARAMS_DWORD0_NSS_MASK		GENMASK(27, 20)
++#define WMI_TX_PARAMS_DWORD0_RETRY_LIMIT	GENMASK(31, 28)
 +
-+	ar->hw->wiphy->iftype_ext_capab = ath11k_iftypes_ext_capa;
-+	ar->hw->wiphy->num_iftype_ext_capab =
-+		ARRAY_SIZE(ath11k_iftypes_ext_capa);
++#define WMI_TX_PARAMS_DWORD1_CHAIN_MASK		GENMASK(7, 0)
++#define WMI_TX_PARAMS_DWORD1_BW_MASK		GENMASK(14, 8)
++#define WMI_TX_PARAMS_DWORD1_PREAMBLE_TYPE	GENMASK(19, 15)
++#define WMI_TX_PARAMS_DWORD1_FRAME_TYPE		BIT(20)
++#define WMI_TX_PARAMS_DWORD1_RSVD		GENMASK(31, 21)
 +
-+	ath11k_reg_init(ar);
++struct wmi_mgmt_send_params {
++	u32 tlv_header;
++	u32 tx_params_dword0;
++	u32 tx_params_dword1;
++};
 +
-+	/* advertise HW checksum offload capabilities */
-+	ar->hw->netdev_features = NETIF_F_HW_CSUM;
++struct wmi_mgmt_send_cmd {
++	u32 tlv_header;
++	u32 vdev_id;
++	u32 desc_id;
++	u32 chanfreq;
++	u32 paddr_lo;
++	u32 paddr_hi;
++	u32 frame_len;
++	u32 buf_len;
++	u32 tx_params_valid;
 +
-+	ret = ieee80211_register_hw(ar->hw);
-+	if (ret) {
-+		ath11k_err(ar->ab, "ieee80211 registration failed: %d\n", ret);
-+		goto err_free;
-+	}
++	/* This TLV is followed by struct wmi_mgmt_frame */
 +
-+	/* Apply the regd received during initialization */
-+	ret = ath11k_regd_update(ar, true);
-+	if (ret) {
-+		ath11k_err(ar->ab, "ath11k regd update failed: %d\n", ret);
-+		goto err_free;
-+	}
++	/* Followed by struct wmi_mgmt_send_params */
++} __packed;
 +
-+	ret = ath11k_debug_register(ar);
-+	if (ret) {
-+		ath11k_err(ar->ab, "debugfs registration failed: %d\n", ret);
-+		goto err_free;
-+	}
++struct wmi_sta_powersave_mode_cmd {
++	u32 tlv_header;
++	u32 vdev_id;
++	u32 sta_ps_mode;
++};
 +
-+	return 0;
++struct wmi_sta_smps_force_mode_cmd {
++	u32 tlv_header;
++	u32 vdev_id;
++	u32 forced_mode;
++};
 +
-+err_free:
-+	kfree(ar->mac.sbands[NL80211_BAND_2GHZ].channels);
-+	kfree(ar->mac.sbands[NL80211_BAND_5GHZ].channels);
++struct wmi_sta_smps_param_cmd {
++	u32 tlv_header;
++	u32 vdev_id;
++	u32 param;
++	u32 value;
++};
 +
-+	SET_IEEE80211_DEV(ar->hw, NULL);
-+	return ret;
-+}
++struct wmi_bcn_prb_info {
++	u32 tlv_header;
++	u32 caps;
++	u32 erp;
++} __packed;
 +
-+void ath11k_mac_unregister(struct ath11k_base *ab)
-+{
-+	struct ath11k *ar;
-+	struct ath11k_pdev *pdev;
-+	int i;
++enum {
++	WMI_PDEV_SUSPEND,
++	WMI_PDEV_SUSPEND_AND_DISABLE_INTR,
++};
 +
-+	for (i = 0; i < ab->num_radios; i++) {
-+		pdev = &ab->pdevs[i];
-+		ar = pdev->ar;
-+		if (!ar)
-+			continue;
-+		cancel_work_sync(&ar->regd_update_work);
++struct green_ap_ps_params {
++	u32 value;
++};
 +
-+		ieee80211_unregister_hw(ar->hw);
++struct wmi_pdev_green_ap_ps_enable_cmd_param {
++	u32 tlv_header;
++	u32 pdev_id;
++	u32 enable;
++};
 +
-+		idr_for_each(&ar->txmgmt_idr, ath11k_mac_tx_mgmt_pending_free, ar);
-+		idr_destroy(&ar->txmgmt_idr);
++struct ap_ps_params {
++	u32 vdev_id;
++	u32 param;
++	u32 value;
++};
 +
-+		kfree(ar->mac.sbands[NL80211_BAND_2GHZ].channels);
-+		kfree(ar->mac.sbands[NL80211_BAND_5GHZ].channels);
++struct vdev_set_params {
++	u32 if_id;
++	u32 param_id;
++	u32 param_value;
++};
 +
-+		SET_IEEE80211_DEV(ar->hw, NULL);
-+	}
-+}
++struct stats_request_params {
++	u32 stats_id;
++	u32 vdev_id;
++	u32 pdev_id;
++};
 +
-+int ath11k_mac_create(struct ath11k_base *ab)
-+{
-+	struct ieee80211_hw *hw;
-+	struct ath11k *ar;
-+	struct ath11k_pdev *pdev;
-+	int ret;
-+	int i;
++enum set_init_cc_type {
++	WMI_COUNTRY_INFO_TYPE_ALPHA,
++	WMI_COUNTRY_INFO_TYPE_COUNTRY_CODE,
++	WMI_COUNTRY_INFO_TYPE_REGDOMAIN,
++};
 +
-+	if (test_bit(ATH11K_FLAG_REGISTERED, &ab->dev_flags))
-+		return 0;
++enum set_init_cc_flags {
++	INVALID_CC,
++	CC_IS_SET,
++	REGDMN_IS_SET,
++	ALPHA_IS_SET,
++};
 +
-+	for (i = 0; i < ab->num_radios; i++) {
-+		pdev = &ab->pdevs[i];
-+		hw = ieee80211_alloc_hw(sizeof(struct ath11k), &ath11k_ops);
-+		if (!hw) {
-+			ath11k_warn(ab, "failed to allocate mac80211 hw device\n");
-+			ret = -ENOMEM;
-+			goto err_destroy_mac;
-+		}
++struct wmi_init_country_params {
++	union {
++		u16 country_code;
++		u16 regdom_id;
++		u8 alpha2[3];
++	} cc_info;
++	enum set_init_cc_flags flags;
++};
 +
-+		ar = hw->priv;
-+		ar->hw = hw;
-+		ar->ab = ab;
-+		ar->pdev = pdev;
-+		ar->pdev_idx = i;
-+		ar->lmac_id = ath11k_core_get_hw_mac_id(ab, i);
++struct wmi_init_country_cmd {
++	u32 tlv_header;
++	u32 pdev_id;
++	u32 init_cc_type;
++	union {
++		u32 country_code;
++		u32 regdom_id;
++		u32 alpha2;
++	} cc_info;
++} __packed;
 +
-+		ar->wmi = &ab->wmi_sc.wmi[i];
-+		/* FIXME wmi[0] is already initialized during attach,
-+		 * Should we do this again?
-+		 */
-+		ath11k_wmi_pdev_attach(ab, i);
++struct wmi_pdev_pktlog_filter_info {
++	u32 tlv_header;
++	struct wmi_mac_addr peer_macaddr;
++} __packed;
 +
-+		ar->cfg_tx_chainmask = pdev->cap.tx_chain_mask;
-+		ar->cfg_rx_chainmask = pdev->cap.rx_chain_mask;
-+		ar->num_tx_chains = get_num_chains(pdev->cap.tx_chain_mask);
-+		ar->num_rx_chains = get_num_chains(pdev->cap.rx_chain_mask);
++struct wmi_pdev_pktlog_filter_cmd {
++	u32 tlv_header;
++	u32 pdev_id;
++	u32 enable;
++	u32 filter_type;
++	u32 num_mac;
++} __packed;
 +
-+		if (ab->pdevs_macaddr_valid) {
-+			ether_addr_copy(ar->mac_addr, pdev->mac_addr);
-+		} else {
-+			ether_addr_copy(ar->mac_addr, ab->mac_addr);
-+			ar->mac_addr[4] += i;
-+		}
++enum ath11k_wmi_pktlog_enable {
++	ATH11K_WMI_PKTLOG_ENABLE_AUTO  = 0,
++	ATH11K_WMI_PKTLOG_ENABLE_FORCE = 1,
++};
 +
-+		pdev->ar = ar;
-+		spin_lock_init(&ar->data_lock);
-+		INIT_LIST_HEAD(&ar->arvifs);
-+		INIT_LIST_HEAD(&ar->ppdu_stats_info);
-+		mutex_init(&ar->conf_mutex);
-+		init_completion(&ar->vdev_setup_done);
-+		init_completion(&ar->peer_assoc_done);
-+		init_completion(&ar->install_key_done);
-+		init_completion(&ar->bss_survey_done);
-+		init_completion(&ar->scan.started);
-+		init_completion(&ar->scan.completed);
-+		INIT_DELAYED_WORK(&ar->scan.timeout, ath11k_scan_timeout_work);
-+		INIT_WORK(&ar->regd_update_work, ath11k_regd_update_work);
++struct wmi_pktlog_enable_cmd {
++	u32 tlv_header;
++	u32 pdev_id;
++	u32 evlist; /* WMI_PKTLOG_EVENT */
++	u32 enable;
++} __packed;
 +
-+		INIT_WORK(&ar->wmi_mgmt_tx_work, ath11k_mgmt_over_wmi_tx_work);
-+		skb_queue_head_init(&ar->wmi_mgmt_tx_queue);
-+		clear_bit(ATH11K_FLAG_MONITOR_ENABLED, &ar->monitor_flags);
++struct wmi_pktlog_disable_cmd {
++	u32 tlv_header;
++	u32 pdev_id;
++} __packed;
 +
-+		ret = ath11k_mac_register(ar);
-+		if (ret) {
-+			ath11k_warn(ab, "failed to register hw device\n");
-+			pdev->ar = NULL;
-+			ieee80211_free_hw(hw);
-+			goto err_destroy_mac;
-+		}
++#define DFS_PHYERR_UNIT_TEST_CMD 0
++#define DFS_UNIT_TEST_MODULE	0x2b
++#define DFS_UNIT_TEST_TOKEN	0xAA
 +
-+		idr_init(&ar->txmgmt_idr);
-+		spin_lock_init(&ar->txmgmt_idr_lock);
-+	}
++enum dfs_test_args_idx {
++	DFS_TEST_CMDID = 0,
++	DFS_TEST_PDEV_ID,
++	DFS_TEST_RADAR_PARAM,
++	DFS_MAX_TEST_ARGS,
++};
 +
-+	/* Initialize channel counters frequency value in hertz */
-+	ab->cc_freq_hz = IPQ8074_CC_FREQ_HERTZ;
-+	ab->free_vdev_map = (1LL << (ab->num_radios * TARGET_NUM_VDEVS)) - 1;
++struct wmi_dfs_unit_test_arg {
++	u32 cmd_id;
++	u32 pdev_id;
++	u32 radar_param;
++};
 +
-+	return 0;
++struct wmi_unit_test_cmd {
++	u32 tlv_header;
++	u32 vdev_id;
++	u32 module_id;
++	u32 num_args;
++	u32 diag_token;
++	/* Followed by test args*/
++} __packed;
 +
-+err_destroy_mac:
-+	ath11k_mac_destroy(ab);
++#define MAX_SUPPORTED_RATES 128
 +
-+	return ret;
-+}
++#define WMI_PEER_AUTH		0x00000001
++#define WMI_PEER_QOS		0x00000002
++#define WMI_PEER_NEED_PTK_4_WAY	0x00000004
++#define WMI_PEER_NEED_GTK_2_WAY	0x00000010
++#define WMI_PEER_HE		0x00000400
++#define WMI_PEER_APSD		0x00000800
++#define WMI_PEER_HT		0x00001000
++#define WMI_PEER_40MHZ		0x00002000
++#define WMI_PEER_STBC		0x00008000
++#define WMI_PEER_LDPC		0x00010000
++#define WMI_PEER_DYN_MIMOPS	0x00020000
++#define WMI_PEER_STATIC_MIMOPS	0x00040000
++#define WMI_PEER_SPATIAL_MUX	0x00200000
++#define WMI_PEER_VHT		0x02000000
++#define WMI_PEER_80MHZ		0x04000000
++#define WMI_PEER_PMF		0x08000000
++/* TODO: Place holder for WLAN_PEER_F_PS_PRESEND_REQUIRED = 0x10000000.
++ * Need to be cleaned up
++ */
++#define WMI_PEER_IS_P2P_CAPABLE	0x20000000
++#define WMI_PEER_160MHZ		0x40000000
++#define WMI_PEER_SAFEMODE_EN	0x80000000
 +
-+void ath11k_mac_destroy(struct ath11k_base *ab)
-+{
-+	struct ath11k *ar;
-+	struct ath11k_pdev *pdev;
-+	int i;
++struct beacon_tmpl_params {
++	u8 vdev_id;
++	u32 tim_ie_offset;
++	u32 tmpl_len;
++	u32 tmpl_len_aligned;
++	u32 csa_switch_count_offset;
++	u32 ext_csa_switch_count_offset;
++	u8 *frm;
++};
 +
-+	for (i = 0; i < ab->num_radios; i++) {
-+		pdev = &ab->pdevs[i];
-+		ar = pdev->ar;
-+		if (!ar)
-+			continue;
++struct wmi_rate_set {
++	u32 num_rates;
++	u32 rates[(MAX_SUPPORTED_RATES / 4) + 1];
++};
 +
-+		ieee80211_free_hw(ar->hw);
-+		pdev->ar = NULL;
-+	}
-+}
++struct wmi_vht_rate_set {
++	u32 tlv_header;
++	u32 rx_max_rate;
++	u32 rx_mcs_set;
++	u32 tx_max_rate;
++	u32 tx_mcs_set;
++	u32 tx_max_mcs_nss;
++} __packed;
++
++struct wmi_he_rate_set {
++	u32 tlv_header;
++	u32 rx_mcs_set;
++	u32 tx_mcs_set;
++} __packed;
++
++#define MAX_REG_RULES 10
++#define REG_ALPHA2_LEN 2
++
++enum wmi_start_event_param {
++	WMI_VDEV_START_RESP_EVENT = 0,
++	WMI_VDEV_RESTART_RESP_EVENT,
++};
++
++struct wmi_vdev_start_resp_event {
++	u32 vdev_id;
++	u32 requestor_id;
++	enum wmi_start_event_param resp_type;
++	u32 status;
++	u32 chain_mask;
++	u32 smps_mode;
++	union {
++		u32 mac_id;
++		u32 pdev_id;
++	};
++	u32 cfgd_tx_streams;
++	u32 cfgd_rx_streams;
++} __packed;
++
++/* VDEV start response status codes */
++enum wmi_vdev_start_resp_status_code {
++	WMI_VDEV_START_RESPONSE_STATUS_SUCCESS = 0,
++	WMI_VDEV_START_RESPONSE_INVALID_VDEVID = 1,
++	WMI_VDEV_START_RESPONSE_NOT_SUPPORTED = 2,
++	WMI_VDEV_START_RESPONSE_DFS_VIOLATION = 3,
++	WMI_VDEV_START_RESPONSE_INVALID_REGDOMAIN = 4,
++};
++
++;
++enum cc_setting_code {
++	REG_SET_CC_STATUS_PASS = 0,
++	REG_CURRENT_ALPHA2_NOT_FOUND = 1,
++	REG_INIT_ALPHA2_NOT_FOUND = 2,
++	REG_SET_CC_CHANGE_NOT_ALLOWED = 3,
++	REG_SET_CC_STATUS_NO_MEMORY = 4,
++	REG_SET_CC_STATUS_FAIL = 5,
++};
++
++/* Regaulatory Rule Flags Passed by FW */
++#define REGULATORY_CHAN_DISABLED     BIT(0)
++#define REGULATORY_CHAN_NO_IR        BIT(1)
++#define REGULATORY_CHAN_RADAR        BIT(3)
++#define REGULATORY_CHAN_NO_OFDM      BIT(6)
++#define REGULATORY_CHAN_INDOOR_ONLY  BIT(9)
++
++#define REGULATORY_CHAN_NO_HT40      BIT(4)
++#define REGULATORY_CHAN_NO_80MHZ     BIT(7)
++#define REGULATORY_CHAN_NO_160MHZ    BIT(8)
++#define REGULATORY_CHAN_NO_20MHZ     BIT(11)
++#define REGULATORY_CHAN_NO_10MHZ     BIT(12)
++
++enum {
++	WMI_REG_SET_CC_STATUS_PASS = 0,
++	WMI_REG_CURRENT_ALPHA2_NOT_FOUND = 1,
++	WMI_REG_INIT_ALPHA2_NOT_FOUND = 2,
++	WMI_REG_SET_CC_CHANGE_NOT_ALLOWED = 3,
++	WMI_REG_SET_CC_STATUS_NO_MEMORY = 4,
++	WMI_REG_SET_CC_STATUS_FAIL = 5,
++};
++
++struct cur_reg_rule {
++	u16 start_freq;
++	u16 end_freq;
++	u16 max_bw;
++	u8 reg_power;
++	u8 ant_gain;
++	u16 flags;
++};
++
++struct cur_regulatory_info {
++	enum cc_setting_code status_code;
++	u8 num_phy;
++	u8 phy_id;
++	u16 reg_dmn_pair;
++	u16 ctry_code;
++	u8 alpha2[REG_ALPHA2_LEN + 1];
++	u32 dfs_region;
++	u32 phybitmap;
++	u32 min_bw_2g;
++	u32 max_bw_2g;
++	u32 min_bw_5g;
++	u32 max_bw_5g;
++	u32 num_2g_reg_rules;
++	u32 num_5g_reg_rules;
++	struct cur_reg_rule *reg_rules_2g_ptr;
++	struct cur_reg_rule *reg_rules_5g_ptr;
++};
++
++struct wmi_reg_chan_list_cc_event {
++	u32 status_code;
++	u32 phy_id;
++	u32 alpha2;
++	u32 num_phy;
++	u32 country_id;
++	u32 domain_code;
++	u32 dfs_region;
++	u32 phybitmap;
++	u32 min_bw_2g;
++	u32 max_bw_2g;
++	u32 min_bw_5g;
++	u32 max_bw_5g;
++	u32 num_2g_reg_rules;
++	u32 num_5g_reg_rules;
++} __packed;
++
++struct wmi_regulatory_rule_struct {
++	u32  tlv_header;
++	u32  freq_info;
++	u32  bw_pwr_info;
++	u32  flag_info;
++};
++
++struct wmi_peer_delete_resp_event {
++	u32 vdev_id;
++	struct wmi_mac_addr peer_macaddr;
++} __packed;
++
++struct wmi_bcn_tx_status_event {
++	u32 vdev_id;
++	u32 tx_status;
++} __packed;
++
++struct wmi_vdev_stopped_event {
++	u32 vdev_id;
++} __packed;
++
++struct wmi_pdev_bss_chan_info_event {
++	u32 pdev_id;
++	u32 freq;	/* Units in MHz */
++	u32 noise_floor;	/* units are dBm */
++	/* rx clear - how often the channel was unused */
++	u32 rx_clear_count_low;
++	u32 rx_clear_count_high;
++	/* cycle count - elapsed time during measured period, in clock ticks */
++	u32 cycle_count_low;
++	u32 cycle_count_high;
++	/* tx cycle count - elapsed time spent in tx, in clock ticks */
++	u32 tx_cycle_count_low;
++	u32 tx_cycle_count_high;
++	/* rx cycle count - elapsed time spent in rx, in clock ticks */
++	u32 rx_cycle_count_low;
++	u32 rx_cycle_count_high;
++	/*rx_cycle cnt for my bss in 64bits format */
++	u32 rx_bss_cycle_count_low;
++	u32 rx_bss_cycle_count_high;
++} __packed;
++
++#define WMI_VDEV_INSTALL_KEY_COMPL_STATUS_SUCCESS 0
++
++struct wmi_vdev_install_key_compl_event {
++	u32 vdev_id;
++	struct wmi_mac_addr peer_macaddr;
++	u32 key_idx;
++	u32 key_flags;
++	u32 status;
++} __packed;
++
++struct wmi_vdev_install_key_complete_arg {
++	u32 vdev_id;
++	const u8 *macaddr;
++	u32 key_idx;
++	u32 key_flags;
++	u32 status;
++};
++
++struct wmi_peer_assoc_conf_event {
++	u32 vdev_id;
++	struct wmi_mac_addr peer_macaddr;
++} __packed;
++
++struct wmi_peer_assoc_conf_arg {
++	u32 vdev_id;
++	const u8 *macaddr;
++};
++
++/*
++ * PDEV statistics
++ */
++struct wmi_pdev_stats_base {
++	s32 chan_nf;
++	u32 tx_frame_count; /* Cycles spent transmitting frames */
++	u32 rx_frame_count; /* Cycles spent receiving frames */
++	u32 rx_clear_count; /* Total channel busy time, evidently */
++	u32 cycle_count; /* Total on-channel time */
++	u32 phy_err_count;
++	u32 chan_tx_pwr;
++} __packed;
++
++struct wmi_pdev_stats_extra {
++	u32 ack_rx_bad;
++	u32 rts_bad;
++	u32 rts_good;
++	u32 fcs_bad;
++	u32 no_beacons;
++	u32 mib_int_count;
++} __packed;
++
++struct wmi_pdev_stats_tx {
++	/* Num HTT cookies queued to dispatch list */
++	s32 comp_queued;
++
++	/* Num HTT cookies dispatched */
++	s32 comp_delivered;
++
++	/* Num MSDU queued to WAL */
++	s32 msdu_enqued;
++
++	/* Num MPDU queue to WAL */
++	s32 mpdu_enqued;
++
++	/* Num MSDUs dropped by WMM limit */
++	s32 wmm_drop;
++
++	/* Num Local frames queued */
++	s32 local_enqued;
++
++	/* Num Local frames done */
++	s32 local_freed;
++
++	/* Num queued to HW */
++	s32 hw_queued;
++
++	/* Num PPDU reaped from HW */
++	s32 hw_reaped;
++
++	/* Num underruns */
++	s32 underrun;
++
++	/* Num PPDUs cleaned up in TX abort */
++	s32 tx_abort;
++
++	/* Num MPDUs requed by SW */
++	s32 mpdus_requed;
++
++	/* excessive retries */
++	u32 tx_ko;
++
++	/* data hw rate code */
++	u32 data_rc;
++
++	/* Scheduler self triggers */
++	u32 self_triggers;
++
++	/* frames dropped due to excessive sw retries */
++	u32 sw_retry_failure;
++
++	/* illegal rate phy errors  */
++	u32 illgl_rate_phy_err;
++
++	/* wal pdev continuous xretry */
++	u32 pdev_cont_xretry;
++
++	/* wal pdev tx timeouts */
++	u32 pdev_tx_timeout;
++
++	/* wal pdev resets  */
++	u32 pdev_resets;
++
++	/* frames dropped due to non-availability of stateless TIDs */
++	u32 stateless_tid_alloc_failure;
++
++	/* PhY/BB underrun */
++	u32 phy_underrun;
++
++	/* MPDU is more than txop limit */
++	u32 txop_ovf;
++} __packed;
++
++struct wmi_pdev_stats_rx {
++	/* Cnts any change in ring routing mid-ppdu */
++	s32 mid_ppdu_route_change;
++
++	/* Total number of statuses processed */
++	s32 status_rcvd;
++
++	/* Extra frags on rings 0-3 */
++	s32 r0_frags;
++	s32 r1_frags;
++	s32 r2_frags;
++	s32 r3_frags;
++
++	/* MSDUs / MPDUs delivered to HTT */
++	s32 htt_msdus;
++	s32 htt_mpdus;
++
++	/* MSDUs / MPDUs delivered to local stack */
++	s32 loc_msdus;
++	s32 loc_mpdus;
++
++	/* AMSDUs that have more MSDUs than the status ring size */
++	s32 oversize_amsdu;
++
++	/* Number of PHY errors */
++	s32 phy_errs;
++
++	/* Number of PHY errors drops */
++	s32 phy_err_drop;
++
++	/* Number of mpdu errors - FCS, MIC, ENC etc. */
++	s32 mpdu_errs;
++} __packed;
++
++struct wmi_pdev_stats {
++	struct wmi_pdev_stats_base base;
++	struct wmi_pdev_stats_tx tx;
++	struct wmi_pdev_stats_rx rx;
++} __packed;
++
++#define WLAN_MAX_AC 4
++#define MAX_TX_RATE_VALUES 10
++#define MAX_TX_RATE_VALUES 10
++
++struct wmi_vdev_stats {
++	u32 vdev_id;
++	u32 beacon_snr;
++	u32 data_snr;
++	u32 num_tx_frames[WLAN_MAX_AC];
++	u32 num_rx_frames;
++	u32 num_tx_frames_retries[WLAN_MAX_AC];
++	u32 num_tx_frames_failures[WLAN_MAX_AC];
++	u32 num_rts_fail;
++	u32 num_rts_success;
++	u32 num_rx_err;
++	u32 num_rx_discard;
++	u32 num_tx_not_acked;
++	u32 tx_rate_history[MAX_TX_RATE_VALUES];
++	u32 beacon_rssi_history[MAX_TX_RATE_VALUES];
++} __packed;
++
++struct wmi_bcn_stats {
++	u32 vdev_id;
++	u32 tx_bcn_succ_cnt;
++	u32 tx_bcn_outage_cnt;
++} __packed;
++
++struct wmi_stats_event {
++	u32 stats_id;
++	u32 num_pdev_stats;
++	u32 num_vdev_stats;
++	u32 num_peer_stats;
++	u32 num_bcnflt_stats;
++	u32 num_chan_stats;
++	u32 num_mib_stats;
++	u32 pdev_id;
++	u32 num_bcn_stats;
++	u32 num_peer_extd_stats;
++	u32 num_peer_extd2_stats;
++} __packed;
++
++struct wmi_pdev_ctl_failsafe_chk_event {
++	u32 pdev_id;
++	u32 ctl_failsafe_status;
++} __packed;
++
++struct wmi_pdev_csa_switch_ev {
++	u32 pdev_id;
++	u32 current_switch_count;
++	u32 num_vdevs;
++} __packed;
++
++struct wmi_pdev_radar_ev {
++	u32 pdev_id;
++	u32 detection_mode;
++	u32 chan_freq;
++	u32 chan_width;
++	u32 detector_id;
++	u32 segment_id;
++	u32 timestamp;
++	u32 is_chirp;
++	s32 freq_offset;
++	s32 sidx;
++} __packed;
++
++#define WMI_RX_STATUS_OK			0x00
++#define WMI_RX_STATUS_ERR_CRC			0x01
++#define WMI_RX_STATUS_ERR_DECRYPT		0x08
++#define WMI_RX_STATUS_ERR_MIC			0x10
++#define WMI_RX_STATUS_ERR_KEY_CACHE_MISS	0x20
++
++#define WLAN_MGMT_TXRX_HOST_MAX_ANTENNA 4
++
++struct mgmt_rx_event_params {
++	u32 channel;
++	u32 snr;
++	u8 rssi_ctl[WLAN_MGMT_TXRX_HOST_MAX_ANTENNA];
++	u32 rate;
++	enum wmi_phy_mode phy_mode;
++	u32 buf_len;
++	int status;
++	u32 flags;
++	int rssi;
++	u32 tsf_delta;
++	u8 pdev_id;
++};
++
++#define ATH_MAX_ANTENNA 4
++
++struct wmi_mgmt_rx_hdr {
++	u32 channel;
++	u32 snr;
++	u32 rate;
++	u32 phy_mode;
++	u32 buf_len;
++	u32 status;
++	u32 rssi_ctl[ATH_MAX_ANTENNA];
++	u32 flags;
++	int rssi;
++	u32 tsf_delta;
++	u32 rx_tsf_l32;
++	u32 rx_tsf_u32;
++	u32 pdev_id;
++} __packed;
++
++#define MAX_ANTENNA_EIGHT 8
++
++struct wmi_rssi_ctl_ext {
++	u32 tlv_header;
++	u32 rssi_ctl_ext[MAX_ANTENNA_EIGHT - ATH_MAX_ANTENNA];
++};
++
++struct wmi_mgmt_tx_compl_event {
++	u32 desc_id;
++	u32 status;
++	u32 pdev_id;
++} __packed;
++
++struct wmi_scan_event {
++	u32 event_type; /* %WMI_SCAN_EVENT_ */
++	u32 reason; /* %WMI_SCAN_REASON_ */
++	u32 channel_freq; /* only valid for WMI_SCAN_EVENT_FOREIGN_CHANNEL */
++	u32 scan_req_id;
++	u32 scan_id;
++	u32 vdev_id;
++	/* TSF Timestamp when the scan event (%WMI_SCAN_EVENT_) is completed
++	 * In case of AP it is TSF of the AP vdev
++	 * In case of STA connected state, this is the TSF of the AP
++	 * In case of STA not connected, it will be the free running HW timer
++	 */
++	u32 tsf_timestamp;
++} __packed;
++
++struct wmi_peer_sta_kickout_arg {
++	const u8 *mac_addr;
++};
++
++struct wmi_peer_sta_kickout_event {
++	struct wmi_mac_addr peer_macaddr;
++} __packed;
++
++enum wmi_roam_reason {
++	WMI_ROAM_REASON_BETTER_AP = 1,
++	WMI_ROAM_REASON_BEACON_MISS = 2,
++	WMI_ROAM_REASON_LOW_RSSI = 3,
++	WMI_ROAM_REASON_SUITABLE_AP_FOUND = 4,
++	WMI_ROAM_REASON_HO_FAILED = 5,
++
++	/* keep last */
++	WMI_ROAM_REASON_MAX,
++};
++
++struct wmi_roam_event {
++	u32 vdev_id;
++	u32 reason;
++	u32 rssi;
++} __packed;
++
++#define WMI_CHAN_INFO_START_RESP 0
++#define WMI_CHAN_INFO_END_RESP 1
++
++struct wmi_chan_info_event {
++	u32 err_code;
++	u32 freq;
++	u32 cmd_flags;
++	u32 noise_floor;
++	u32 rx_clear_count;
++	u32 cycle_count;
++	u32 chan_tx_pwr_range;
++	u32 chan_tx_pwr_tp;
++	u32 rx_frame_count;
++	u32 my_bss_rx_cycle_count;
++	u32 rx_11b_mode_data_duration;
++	u32 tx_frame_cnt;
++	u32 mac_clk_mhz;
++	u32 vdev_id;
++} __packed;
++
++struct ath11k_targ_cap {
++	u32 phy_capability;
++	u32 max_frag_entry;
++	u32 num_rf_chains;
++	u32 ht_cap_info;
++	u32 vht_cap_info;
++	u32 vht_supp_mcs;
++	u32 hw_min_tx_power;
++	u32 hw_max_tx_power;
++	u32 sys_cap_info;
++	u32 min_pkt_size_enable;
++	u32 max_bcn_ie_size;
++	u32 max_num_scan_channels;
++	u32 max_supported_macs;
++	u32 wmi_fw_sub_feat_caps;
++	u32 txrx_chainmask;
++	u32 default_dbs_hw_mode_index;
++	u32 num_msdu_desc;
++};
++
++enum wmi_vdev_type {
++	WMI_VDEV_TYPE_AP      = 1,
++	WMI_VDEV_TYPE_STA     = 2,
++	WMI_VDEV_TYPE_IBSS    = 3,
++	WMI_VDEV_TYPE_MONITOR = 4,
++};
++
++enum wmi_vdev_subtype {
++	WMI_VDEV_SUBTYPE_NONE,
++	WMI_VDEV_SUBTYPE_P2P_DEVICE,
++	WMI_VDEV_SUBTYPE_P2P_CLIENT,
++	WMI_VDEV_SUBTYPE_P2P_GO,
++	WMI_VDEV_SUBTYPE_PROXY_STA,
++	WMI_VDEV_SUBTYPE_MESH_NON_11S,
++	WMI_VDEV_SUBTYPE_MESH_11S,
++};
++
++enum wmi_sta_powersave_param {
++	WMI_STA_PS_PARAM_RX_WAKE_POLICY = 0,
++	WMI_STA_PS_PARAM_TX_WAKE_THRESHOLD = 1,
++	WMI_STA_PS_PARAM_PSPOLL_COUNT = 2,
++	WMI_STA_PS_PARAM_INACTIVITY_TIME = 3,
++	WMI_STA_PS_PARAM_UAPSD = 4,
++};
++
++#define WMI_UAPSD_AC_TYPE_DELI 0
++#define WMI_UAPSD_AC_TYPE_TRIG 1
++
++#define WMI_UAPSD_AC_BIT_MASK(ac, type) \
++	((type ==  WMI_UAPSD_AC_TYPE_DELI) ? \
++	 (1 << (ac << 1)) : (1 << ((ac << 1) + 1)))
++
++enum wmi_sta_ps_param_uapsd {
++	WMI_STA_PS_UAPSD_AC0_DELIVERY_EN = (1 << 0),
++	WMI_STA_PS_UAPSD_AC0_TRIGGER_EN  = (1 << 1),
++	WMI_STA_PS_UAPSD_AC1_DELIVERY_EN = (1 << 2),
++	WMI_STA_PS_UAPSD_AC1_TRIGGER_EN  = (1 << 3),
++	WMI_STA_PS_UAPSD_AC2_DELIVERY_EN = (1 << 4),
++	WMI_STA_PS_UAPSD_AC2_TRIGGER_EN  = (1 << 5),
++	WMI_STA_PS_UAPSD_AC3_DELIVERY_EN = (1 << 6),
++	WMI_STA_PS_UAPSD_AC3_TRIGGER_EN  = (1 << 7),
++};
++
++#define WMI_STA_UAPSD_MAX_INTERVAL_MSEC UINT_MAX
++
++struct wmi_sta_uapsd_auto_trig_param {
++	u32 wmm_ac;
++	u32 user_priority;
++	u32 service_interval;
++	u32 suspend_interval;
++	u32 delay_interval;
++};
++
++struct wmi_sta_uapsd_auto_trig_cmd_fixed_param {
++	u32 vdev_id;
++	struct wmi_mac_addr peer_macaddr;
++	u32 num_ac;
++};
++
++struct wmi_sta_uapsd_auto_trig_arg {
++	u32 wmm_ac;
++	u32 user_priority;
++	u32 service_interval;
++	u32 suspend_interval;
++	u32 delay_interval;
++};
++
++enum wmi_sta_ps_param_tx_wake_threshold {
++	WMI_STA_PS_TX_WAKE_THRESHOLD_NEVER = 0,
++	WMI_STA_PS_TX_WAKE_THRESHOLD_ALWAYS = 1,
++
++	/* Values greater than one indicate that many TX attempts per beacon
++	 * interval before the STA will wake up
++	 */
++};
++
++/* The maximum number of PS-Poll frames the FW will send in response to
++ * traffic advertised in TIM before waking up (by sending a null frame with PS
++ * = 0). Value 0 has a special meaning: there is no maximum count and the FW
++ * will send as many PS-Poll as are necessary to retrieve buffered BU. This
++ * parameter is used when the RX wake policy is
++ * WMI_STA_PS_RX_WAKE_POLICY_POLL_UAPSD and ignored when the RX wake
++ * policy is WMI_STA_PS_RX_WAKE_POLICY_WAKE.
++ */
++enum wmi_sta_ps_param_pspoll_count {
++	WMI_STA_PS_PSPOLL_COUNT_NO_MAX = 0,
++	/* Values greater than 0 indicate the maximum numer of PS-Poll frames
++	 * FW will send before waking up.
++	 */
++};
++
++/* U-APSD configuration of peer station from (re)assoc request and TSPECs */
++enum wmi_ap_ps_param_uapsd {
++	WMI_AP_PS_UAPSD_AC0_DELIVERY_EN = (1 << 0),
++	WMI_AP_PS_UAPSD_AC0_TRIGGER_EN  = (1 << 1),
++	WMI_AP_PS_UAPSD_AC1_DELIVERY_EN = (1 << 2),
++	WMI_AP_PS_UAPSD_AC1_TRIGGER_EN  = (1 << 3),
++	WMI_AP_PS_UAPSD_AC2_DELIVERY_EN = (1 << 4),
++	WMI_AP_PS_UAPSD_AC2_TRIGGER_EN  = (1 << 5),
++	WMI_AP_PS_UAPSD_AC3_DELIVERY_EN = (1 << 6),
++	WMI_AP_PS_UAPSD_AC3_TRIGGER_EN  = (1 << 7),
++};
++
++/* U-APSD maximum service period of peer station */
++enum wmi_ap_ps_peer_param_max_sp {
++	WMI_AP_PS_PEER_PARAM_MAX_SP_UNLIMITED = 0,
++	WMI_AP_PS_PEER_PARAM_MAX_SP_2 = 1,
++	WMI_AP_PS_PEER_PARAM_MAX_SP_4 = 2,
++	WMI_AP_PS_PEER_PARAM_MAX_SP_6 = 3,
++	MAX_WMI_AP_PS_PEER_PARAM_MAX_SP,
++};
++
++enum wmi_ap_ps_peer_param {
++	/** Set uapsd configuration for a given peer.
++	 *
++	 * This include the delivery and trigger enabled state for each AC.
++	 * The host MLME needs to set this based on AP capability and stations
++	 * request Set in the association request  received from the station.
++	 *
++	 * Lower 8 bits of the value specify the UAPSD configuration.
++	 *
++	 * (see enum wmi_ap_ps_param_uapsd)
++	 * The default value is 0.
++	 */
++	WMI_AP_PS_PEER_PARAM_UAPSD = 0,
++
++	/**
++	 * Set the service period for a UAPSD capable station
++	 *
++	 * The service period from wme ie in the (re)assoc request frame.
++	 *
++	 * (see enum wmi_ap_ps_peer_param_max_sp)
++	 */
++	WMI_AP_PS_PEER_PARAM_MAX_SP = 1,
++
++	/** Time in seconds for aging out buffered frames
++	 * for STA in power save
++	 */
++	WMI_AP_PS_PEER_PARAM_AGEOUT_TIME = 2,
++
++	/** Specify frame types that are considered SIFS
++	 * RESP trigger frame
++	 */
++	WMI_AP_PS_PEER_PARAM_SIFS_RESP_FRMTYPE = 3,
++
++	/** Specifies the trigger state of TID.
++	 * Valid only for UAPSD frame type
++	 */
++	WMI_AP_PS_PEER_PARAM_SIFS_RESP_UAPSD = 4,
++
++	/* Specifies the WNM sleep state of a STA */
++	WMI_AP_PS_PEER_PARAM_WNM_SLEEP = 5,
++};
++
++#define DISABLE_SIFS_RESPONSE_TRIGGER 0
++
++#define WMI_MAX_KEY_INDEX   3
++#define WMI_MAX_KEY_LEN     32
++
++#define WMI_KEY_PAIRWISE 0x00
++#define WMI_KEY_GROUP    0x01
++
++#define WMI_CIPHER_NONE     0x0 /* clear key */
++#define WMI_CIPHER_WEP      0x1
++#define WMI_CIPHER_TKIP     0x2
++#define WMI_CIPHER_AES_OCB  0x3
++#define WMI_CIPHER_AES_CCM  0x4
++#define WMI_CIPHER_WAPI     0x5
++#define WMI_CIPHER_CKIP     0x6
++#define WMI_CIPHER_AES_CMAC 0x7
++#define WMI_CIPHER_ANY      0x8
++#define WMI_CIPHER_AES_GCM  0x9
++#define WMI_CIPHER_AES_GMAC 0xa
++
++/* Value to disable fixed rate setting */
++#define WMI_FIXED_RATE_NONE	(0xffff)
++
++#define ATH11K_RC_VERSION_OFFSET	28
++#define ATH11K_RC_PREAMBLE_OFFSET	8
++#define ATH11K_RC_NSS_OFFSET		5
++
++#define ATH11K_HW_RATE_CODE(rate, nss, preamble)	\
++	((1 << ATH11K_RC_VERSION_OFFSET) |		\
++	 ((nss) << ATH11K_RC_NSS_OFFSET) |		\
++	 ((preamble) << ATH11K_RC_PREAMBLE_OFFSET) |	\
++	 (rate))
++
++/* Preamble types to be used with VDEV fixed rate configuration */
++enum wmi_rate_preamble {
++	WMI_RATE_PREAMBLE_OFDM,
++	WMI_RATE_PREAMBLE_CCK,
++	WMI_RATE_PREAMBLE_HT,
++	WMI_RATE_PREAMBLE_VHT,
++	WMI_RATE_PREAMBLE_HE,
++};
++
++/**
++ * enum wmi_rtscts_prot_mode - Enable/Disable RTS/CTS and CTS2Self Protection.
++ * @WMI_RTS_CTS_DISABLED : RTS/CTS protection is disabled.
++ * @WMI_USE_RTS_CTS : RTS/CTS Enabled.
++ * @WMI_USE_CTS2SELF : CTS to self protection Enabled.
++ */
++enum wmi_rtscts_prot_mode {
++	WMI_RTS_CTS_DISABLED = 0,
++	WMI_USE_RTS_CTS = 1,
++	WMI_USE_CTS2SELF = 2,
++};
++
++/**
++ * enum wmi_rtscts_profile - Selection of RTS CTS profile along with enabling
++ *                           protection mode.
++ * @WMI_RTSCTS_FOR_NO_RATESERIES - Neither of rate-series should use RTS-CTS
++ * @WMI_RTSCTS_FOR_SECOND_RATESERIES - Only second rate-series will use RTS-CTS
++ * @WMI_RTSCTS_ACROSS_SW_RETRIES - Only the second rate-series will use RTS-CTS,
++ *                                 but if there's a sw retry, both the rate
++ *                                 series will use RTS-CTS.
++ * @WMI_RTSCTS_ERP - RTS/CTS used for ERP protection for every PPDU.
++ * @WMI_RTSCTS_FOR_ALL_RATESERIES - Enable RTS-CTS for all rate series.
++ */
++enum wmi_rtscts_profile {
++	WMI_RTSCTS_FOR_NO_RATESERIES = 0,
++	WMI_RTSCTS_FOR_SECOND_RATESERIES = 1,
++	WMI_RTSCTS_ACROSS_SW_RETRIES = 2,
++	WMI_RTSCTS_ERP = 3,
++	WMI_RTSCTS_FOR_ALL_RATESERIES = 4,
++};
++
++struct ath11k_hal_reg_cap {
++	u32 eeprom_rd;
++	u32 eeprom_rd_ext;
++	u32 regcap1;
++	u32 regcap2;
++	u32 wireless_modes;
++	u32 low_2ghz_chan;
++	u32 high_2ghz_chan;
++	u32 low_5ghz_chan;
++	u32 high_5ghz_chan;
++};
++
++struct ath11k_mem_chunk {
++	void *vaddr;
++	dma_addr_t paddr;
++	u32 len;
++	u32 req_id;
++};
++
++#define WMI_SKB_HEADROOM sizeof(struct wmi_cmd_hdr)
++
++enum wmi_sta_ps_param_rx_wake_policy {
++	WMI_STA_PS_RX_WAKE_POLICY_WAKE = 0,
++	WMI_STA_PS_RX_WAKE_POLICY_POLL_UAPSD = 1,
++};
++
++enum ath11k_hw_txrx_mode {
++	ATH11K_HW_TXRX_RAW = 0,
++	ATH11K_HW_TXRX_NATIVE_WIFI = 1,
++	ATH11K_HW_TXRX_ETHERNET = 2,
++};
++
++struct wmi_wmm_params {
++	u32 tlv_header;
++	u32 cwmin;
++	u32 cwmax;
++	u32 aifs;
++	u32 txoplimit;
++	u32 acm;
++	u32 no_ack;
++} __packed;
++
++struct wmi_wmm_params_arg {
++	u8 acm;
++	u8 aifs;
++	u8 cwmin;
++	u8 cwmax;
++	u16 txop;
++	u8 no_ack;
++};
++
++struct wmi_vdev_set_wmm_params_cmd {
++	u32 tlv_header;
++	u32 vdev_id;
++	struct wmi_wmm_params wmm_params[4];
++	u32 wmm_param_type;
++} __packed;
++
++struct wmi_wmm_params_all_arg {
++	struct wmi_wmm_params_arg ac_be;
++	struct wmi_wmm_params_arg ac_bk;
++	struct wmi_wmm_params_arg ac_vi;
++	struct wmi_wmm_params_arg ac_vo;
++};
++
++struct target_resource_config {
++	u32 num_vdevs;
++	u32 num_peers;
++	u32 num_active_peers;
++	u32 num_offload_peers;
++	u32 num_offload_reorder_buffs;
++	u32 num_peer_keys;
++	u32 num_tids;
++	u32 ast_skid_limit;
++	u32 tx_chain_mask;
++	u32 rx_chain_mask;
++	u32 rx_timeout_pri[4];
++	u32 rx_decap_mode;
++	u32 scan_max_pending_req;
++	u32 bmiss_offload_max_vdev;
++	u32 roam_offload_max_vdev;
++	u32 roam_offload_max_ap_profiles;
++	u32 num_mcast_groups;
++	u32 num_mcast_table_elems;
++	u32 mcast2ucast_mode;
++	u32 tx_dbg_log_size;
++	u32 num_wds_entries;
++	u32 dma_burst_size;
++	u32 mac_aggr_delim;
++	u32 rx_skip_defrag_timeout_dup_detection_check;
++	u32 vow_config;
++	u32 gtk_offload_max_vdev;
++	u32 num_msdu_desc;
++	u32 max_frag_entries;
++	u32 max_peer_ext_stats;
++	u32 smart_ant_cap;
++	u32 bk_minfree;
++	u32 be_minfree;
++	u32 vi_minfree;
++	u32 vo_minfree;
++	u32 rx_batchmode;
++	u32 tt_support;
++	u32 atf_config;
++	u32 iphdr_pad_config;
++	u32 qwrap_config:16,
++	    alloc_frag_desc_for_data_pkt:16;
++	u32 num_tdls_vdevs;
++	u32 num_tdls_conn_table_entries;
++	u32 beacon_tx_offload_max_vdev;
++	u32 num_multicast_filter_entries;
++	u32 num_wow_filters;
++	u32 num_keep_alive_pattern;
++	u32 keep_alive_pattern_size;
++	u32 max_tdls_concurrent_sleep_sta;
++	u32 max_tdls_concurrent_buffer_sta;
++	u32 wmi_send_separate;
++	u32 num_ocb_vdevs;
++	u32 num_ocb_channels;
++	u32 num_ocb_schedules;
++	u32 num_ns_ext_tuples_cfg;
++	u32 bpf_instruction_size;
++	u32 max_bssid_rx_filters;
++	u32 use_pdev_id;
++	u32 peer_map_unmap_v2_support;
++};
++
++#define WMI_MAX_MEM_REQS 32
++
++#define MAX_RADIOS 3
++
++#define WMI_SERVICE_READY_TIMEOUT_HZ (5 * HZ)
++#define WMI_SEND_TIMEOUT_HZ (3 * HZ)
++
++struct ath11k_wmi_base {
++	struct ath11k_base *ab;
++	struct ath11k_pdev_wmi wmi[MAX_RADIOS];
++	enum ath11k_htc_ep_id wmi_endpoint_id[MAX_RADIOS];
++	u32 max_msg_len[MAX_RADIOS];
++
++	struct completion service_ready;
++	struct completion unified_ready;
++	DECLARE_BITMAP(svc_map, WMI_MAX_EXT_SERVICE);
++	wait_queue_head_t tx_credits_wq;
++	const struct wmi_peer_flags_map *peer_flags;
++	u32 num_mem_chunks;
++	u32 rx_decap_mode;
++	struct wmi_host_mem_chunk mem_chunks[WMI_MAX_MEM_REQS];
++
++	enum wmi_host_hw_mode_config_type preferred_hw_mode;
++	struct target_resource_config  wlan_resource_config;
++
++	struct ath11k_targ_cap *targ_cap;
++};
++
++int ath11k_wmi_cmd_send(struct ath11k_pdev_wmi *wmi, struct sk_buff *skb,
++			u32 cmd_id);
++struct sk_buff *ath11k_wmi_alloc_skb(struct ath11k_wmi_base *wmi_sc, u32 len);
++int ath11k_wmi_mgmt_send(struct ath11k *ar, u32 vdev_id, u32 buf_id,
++			 struct sk_buff *frame);
++int ath11k_wmi_bcn_tmpl(struct ath11k *ar, u32 vdev_id,
++			struct ieee80211_mutable_offsets *offs,
++			struct sk_buff *bcn);
++int ath11k_wmi_vdev_down(struct ath11k *ar, u8 vdev_id);
++int ath11k_wmi_vdev_up(struct ath11k *ar, u32 vdev_id, u32 aid,
++		       const u8 *bssid);
++int ath11k_wmi_vdev_stop(struct ath11k *ar, u8 vdev_id);
++int ath11k_wmi_vdev_start(struct ath11k *ar, struct wmi_vdev_start_req_arg *arg,
++			  bool restart);
++int ath11k_wmi_set_peer_param(struct ath11k *ar, const u8 *peer_addr,
++			      u32 vdev_id, u32 param_id, u32 param_val);
++int ath11k_wmi_pdev_set_param(struct ath11k *ar, u32 param_id,
++			      u32 param_value, u8 pdev_id);
++int ath11k_wmi_wait_for_unified_ready(struct ath11k_base *ab);
++int ath11k_wmi_cmd_init(struct ath11k_base *ab);
++int ath11k_wmi_wait_for_service_ready(struct ath11k_base *ab);
++int ath11k_wmi_connect(struct ath11k_base *ab);
++int ath11k_wmi_pdev_attach(struct ath11k_base *ab,
++			   u8 pdev_id);
++int ath11k_wmi_attach(struct ath11k_base *ab);
++void ath11k_wmi_detach(struct ath11k_base *ab);
++int ath11k_wmi_vdev_create(struct ath11k *ar, u8 *macaddr,
++			   struct vdev_create_params *param);
++int ath11k_wmi_peer_rx_reorder_queue_setup(struct ath11k *ar, int vdev_id,
++					   const u8 *addr, dma_addr_t paddr,
++					   u8 tid, u8 ba_window_size_valid,
++					   u32 ba_window_size);
++int ath11k_wmi_send_peer_create_cmd(struct ath11k *ar,
++				    struct peer_create_params *param);
++int ath11k_wmi_vdev_set_param_cmd(struct ath11k *ar, u32 vdev_id,
++				  u32 param_id, u32 param_value);
++
++int ath11k_wmi_set_sta_ps_param(struct ath11k *ar, u32 vdev_id,
++				u32 param, u32 param_value);
++int ath11k_wmi_force_fw_hang_cmd(struct ath11k *ar, u32 type, u32 delay_time_ms);
++int ath11k_wmi_send_peer_delete_cmd(struct ath11k *ar,
++				    const u8 *peer_addr, u8 vdev_id);
++int ath11k_wmi_vdev_delete(struct ath11k *ar, u8 vdev_id);
++void ath11k_wmi_start_scan_init(struct ath11k *ar, struct scan_req_params *arg);
++int ath11k_wmi_send_scan_start_cmd(struct ath11k *ar,
++				   struct scan_req_params *params);
++int ath11k_wmi_send_scan_stop_cmd(struct ath11k *ar,
++				  struct scan_cancel_param *param);
++int ath11k_wmi_send_wmm_update_cmd_tlv(struct ath11k *ar, u32 vdev_id,
++				       struct wmi_wmm_params_all_arg *param);
++int ath11k_wmi_pdev_suspend(struct ath11k *ar, u32 suspend_opt,
++			    u32 pdev_id);
++int ath11k_wmi_pdev_resume(struct ath11k *ar, u32 pdev_id);
++
++int ath11k_wmi_send_peer_assoc_cmd(struct ath11k *ar,
++				   struct peer_assoc_params *param);
++int ath11k_wmi_vdev_install_key(struct ath11k *ar,
++				struct wmi_vdev_install_key_arg *arg);
++int ath11k_wmi_pdev_bss_chan_info_request(struct ath11k *ar,
++					  enum wmi_bss_chan_info_req_type type);
++int ath11k_wmi_send_stats_request_cmd(struct ath11k *ar,
++				      struct stats_request_params *param);
++int ath11k_wmi_send_peer_flush_tids_cmd(struct ath11k *ar,
++					u8 peer_addr[ETH_ALEN],
++					struct peer_flush_params *param);
++int ath11k_wmi_send_set_ap_ps_param_cmd(struct ath11k *ar, u8 *peer_addr,
++					struct ap_ps_params *param);
++int ath11k_wmi_send_scan_chan_list_cmd(struct ath11k *ar,
++				       struct scan_chan_list_params *chan_list);
++int ath11k_wmi_send_dfs_phyerr_offload_enable_cmd(struct ath11k *ar,
++						  u32 pdev_id);
++int ath11k_wmi_send_bcn_offload_control_cmd(struct ath11k *ar,
++					    u32 vdev_id, u32 bcn_ctrl_op);
++int
++ath11k_wmi_send_init_country_cmd(struct ath11k *ar,
++				 struct wmi_init_country_params init_cc_param);
++int ath11k_wmi_pdev_pktlog_enable(struct ath11k *ar, u32 pktlog_filter);
++int ath11k_wmi_pdev_pktlog_disable(struct ath11k *ar);
++int ath11k_wmi_pdev_peer_pktlog_filter(struct ath11k *ar, u8 *addr, u8 enable);
++int
++ath11k_wmi_rx_reord_queue_remove(struct ath11k *ar,
++				 struct rx_reorder_queue_remove_params *param);
++int ath11k_wmi_send_pdev_set_regdomain(struct ath11k *ar,
++				       struct pdev_set_regdomain_params *param);
++int ath11k_wmi_pull_fw_stats(struct ath11k_base *ab, struct sk_buff *skb,
++			     struct ath11k_fw_stats *stats);
++size_t ath11k_wmi_fw_stats_num_peers(struct list_head *head);
++size_t ath11k_wmi_fw_stats_num_peers_extd(struct list_head *head);
++size_t ath11k_wmi_fw_stats_num_vdevs(struct list_head *head);
++void ath11k_wmi_fw_stats_fill(struct ath11k *ar,
++			      struct ath11k_fw_stats *fw_stats, u32 stats_id,
++			      char *buf);
++int ath11k_wmi_simulate_radar(struct ath11k *ar);
++#endif
 
