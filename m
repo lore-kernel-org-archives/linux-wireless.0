@@ -4,57 +4,57 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5E2DC43215
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Nov 2019 09:30:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09A04C33C9E
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Nov 2019 09:30:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B75842073A
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Nov 2019 09:30:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CF3EB207FA
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Nov 2019 09:30:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="I4jzqdOB";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="EUDsPOx8"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="C0nGGHDG";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="FU8wfJE6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727401AbfKOJaf (ORCPT
+        id S1727404AbfKOJag (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 15 Nov 2019 04:30:35 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:55426 "EHLO
+        Fri, 15 Nov 2019 04:30:36 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:55394 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727394AbfKOJae (ORCPT
+        with ESMTP id S1726901AbfKOJaf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Nov 2019 04:30:34 -0500
+        Fri, 15 Nov 2019 04:30:35 -0500
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 22BF661459; Fri, 15 Nov 2019 09:30:25 +0000 (UTC)
+        id DFEFA611FB; Fri, 15 Nov 2019 09:29:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
         s=default; t=1573810233;
-        bh=Oq1R1qTwaQUyPpO5oDp2OIM7D6uWby0FNTk2Tr/h+4Q=;
+        bh=X12ckeH65H2FHPOLgUitC9q3dsF5mtsd0odtTEyLS5M=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=I4jzqdOB2p8xeNkrZ0ojsSNTyh1DiD9SzEK/Qs5NGwheB0be8aJmUutSXWkomZIiO
-         WNr9jhzrnYfCur6Uh2EwllW7jVegNxcGRPv0IARWnx0AH80YcrAbVfLUZNd4AK0tsM
-         3tl+L11oKM+6CGH7/Js5NELBf4TdbgtMnzNC0CWk=
+        b=C0nGGHDGYyofmc52mNEoN9CkwjK7Gc/Sud08n+gg4Mo+zstqpcUZhYxM00Q11ZdDB
+         HDkjvhVQRcZO9+oC4/3mv4iZthUANKZ8W/RlRbt+JnMzigyMkorpxIS5IpwlMxXUUm
+         xiJQivAb5h8PjVgLfqytiaB7xDsx/Y05cDiy1jVc=
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id B43356115E;
-        Fri, 15 Nov 2019 09:30:21 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id F41CF61400;
+        Fri, 15 Nov 2019 09:29:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1573810223;
-        bh=Oq1R1qTwaQUyPpO5oDp2OIM7D6uWby0FNTk2Tr/h+4Q=;
+        s=default; t=1573810194;
+        bh=X12ckeH65H2FHPOLgUitC9q3dsF5mtsd0odtTEyLS5M=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=EUDsPOx8hXtF1JTHQfXFrmbOk0BKEyC0QnMFHQMG2PVh1JB6RrTuldH8RzcvEINUN
-         4JeoGJ1lca2/Mjy78KdmgUxThlJVarBUKH4uzz6rNpGNefjzfUq8crgm7m7yR/NuBq
-         sUC0zdu2bK43Pocz7Z6ZAXAAgzyUVTdMhnioh2Vg=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org B43356115E
+        b=FU8wfJE6n/9w/6YtQRWI4Nqp/X4jvOyuZKmmim93k56gsn6toyNfMY/NJtHL7xYgm
+         q32uuiaSI2PmmZH7KkkzOO2/q4g6Xju2pR2uJ+AWTDymhhNivkKsfqPckzenXDokuQ
+         921L0YjiAtL8OyJjpHJVxCAiC4+1NQTrn0tvgXuM=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org F41CF61400
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
 To:     linux-wireless@vger.kernel.org
 Cc:     ath11k@lists.infradead.org, devicetree@vger.kernel.org
-Subject: [PATCH v3 25/49] ath11k: add hal_rx.h
-Date:   Fri, 15 Nov 2019 11:28:49 +0200
-Message-Id: <1573810153-29623-26-git-send-email-kvalo@codeaurora.org>
+Subject: [PATCH v3 15/49] ath11k: add dp.c
+Date:   Fri, 15 Nov 2019 11:28:39 +0200
+Message-Id: <1573810153-29623-16-git-send-email-kvalo@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1573810153-29623-1-git-send-email-kvalo@codeaurora.org>
 References: <1573810153-29623-1-git-send-email-kvalo@codeaurora.org>
@@ -67,365 +67,911 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath11k/hal_rx.h | 352 +++++++++++++++++++++++++++++++
- 1 file changed, 352 insertions(+)
+ drivers/net/wireless/ath/ath11k/dp.c | 898 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 898 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath11k/hal_rx.h b/drivers/net/wireless/ath/ath11k/hal_rx.h
+diff --git a/drivers/net/wireless/ath/ath11k/dp.c b/drivers/net/wireless/ath/ath11k/dp.c
 new file mode 100644
-index 000000000000..96555e4f4ef3
+index 000000000000..aa2b28189cda
 --- /dev/null
-+++ b/drivers/net/wireless/ath/ath11k/hal_rx.h
-@@ -0,0 +1,352 @@
-+/* SPDX-License-Identifier: BSD-3-Clause-Clear */
++++ b/drivers/net/wireless/ath/ath11k/dp.c
+@@ -0,0 +1,898 @@
++// SPDX-License-Identifier: BSD-3-Clause-Clear
 +/*
 + * Copyright (c) 2018-2019 The Linux Foundation. All rights reserved.
 + */
 +
-+#ifndef ATH11K_HAL_RX_H
-+#define ATH11K_HAL_RX_H
++#include <linux/kfifo.h>
++#include "core.h"
++#include "dp_tx.h"
++#include "hal_tx.h"
++#include "debug.h"
++#include "dp_rx.h"
++#include "peer.h"
 +
-+struct hal_rx_mpdu_meta {
-+	u32 peer_meta;
-+	u16 msdu_cnt;
-+	u16 seq_num;
-+	bool frag;
-+	bool retry;
-+	bool ampdu;
-+	bool raw;
-+};
++static void ath11k_dp_htt_htc_tx_complete(struct ath11k_base *ab,
++					  struct sk_buff *skb)
++{
++	dev_kfree_skb_any(skb);
++}
 +
-+struct hal_rx_msdu_meta {
-+	u32 cookie;
-+	u32 msdu_len;
-+	bool first;
-+	bool last;
-+	bool continuation;
-+};
++void ath11k_dp_peer_cleanup(struct ath11k *ar, int vdev_id, const u8 *addr)
++{
++	struct ath11k_base *ab = ar->ab;
++	struct ath11k_peer *peer;
 +
-+struct hal_rx_meta_info {
-+	enum hal_reo_dest_ring_push_reason push_reason;
-+	struct hal_rx_mpdu_meta mpdu_meta;
-+	struct hal_rx_msdu_meta msdu_meta;
-+};
++	/* TODO: Any other peer specific DP cleanup */
 +
-+struct hal_rx_wbm_rel_info {
-+	u32 cookie;
-+	enum hal_wbm_rel_src_module err_rel_src;
-+	enum hal_reo_dest_ring_push_reason push_reason;
-+	u32 err_code;
-+	bool first_msdu;
-+	bool last_msdu;
-+};
++	spin_lock_bh(&ab->base_lock);
++	peer = ath11k_peer_find(ab, vdev_id, addr);
++	if (!peer) {
++		ath11k_warn(ab, "failed to lookup peer %pM on vdev %d\n",
++			    addr, vdev_id);
++		spin_unlock_bh(&ab->base_lock);
++		return;
++	}
 +
-+#define HAL_INVALID_PEERID 0xffff
-+#define VHT_SIG_SU_NSS_MASK 0x7
++	ath11k_peer_rx_tid_cleanup(ar, peer);
++	spin_unlock_bh(&ab->base_lock);
++}
 +
-+#define HAL_RX_MAX_MCS 12
-+#define HAL_RX_MAX_NSS 8
++int ath11k_dp_peer_setup(struct ath11k *ar, int vdev_id, const u8 *addr)
++{
++	struct ath11k_base *ab = ar->ab;
++	u32 reo_dest;
++	int ret;
 +
-+struct hal_rx_mon_status_tlv_hdr {
-+	u32 hdr;
-+	u8 value[0];
-+};
++	/* NOTE: reo_dest ring id starts from 1 unlike mac_id which starts from 0 */
++	reo_dest = ar->dp.mac_id + 1;
++	ret = ath11k_wmi_set_peer_param(ar, addr, vdev_id,
++					WMI_PEER_SET_DEFAULT_ROUTING,
++					DP_RX_HASH_ENABLE | (reo_dest << 1));
 +
-+enum hal_rx_su_mu_coding {
-+	HAL_RX_SU_MU_CODING_BCC,
-+	HAL_RX_SU_MU_CODING_LDPC,
-+	HAL_RX_SU_MU_CODING_MAX,
-+};
++	if (ret) {
++		ath11k_warn(ab, "failed to set default routing %d peer :%pM vdev_id :%d\n",
++			    ret, addr, vdev_id);
++		return ret;
++	}
 +
-+enum hal_rx_gi {
-+	HAL_RX_GI_0_8_US,
-+	HAL_RX_GI_0_4_US,
-+	HAL_RX_GI_1_6_US,
-+	HAL_RX_GI_3_2_US,
-+	HAL_RX_GI_MAX,
-+};
++	ret = ath11k_peer_rx_tid_setup(ar, addr, vdev_id,
++				       HAL_DESC_REO_NON_QOS_TID, 1, 0);
++	if (ret) {
++		ath11k_warn(ab, "failed to setup rxd tid queue for non-qos tid %d\n",
++			    ret);
++		return ret;
++	}
 +
-+enum hal_rx_bw {
-+	HAL_RX_BW_20MHZ,
-+	HAL_RX_BW_40MHZ,
-+	HAL_RX_BW_80MHZ,
-+	HAL_RX_BW_160MHZ,
-+	HAL_RX_BW_MAX,
-+};
++	ret = ath11k_peer_rx_tid_setup(ar, addr, vdev_id, 0, 1, 0);
++	if (ret) {
++		ath11k_warn(ab, "failed to setup rxd tid queue for tid 0 %d\n",
++			    ret);
++		return ret;
++	}
 +
-+enum hal_rx_preamble {
-+	HAL_RX_PREAMBLE_11A,
-+	HAL_RX_PREAMBLE_11B,
-+	HAL_RX_PREAMBLE_11N,
-+	HAL_RX_PREAMBLE_11AC,
-+	HAL_RX_PREAMBLE_11AX,
-+	HAL_RX_PREAMBLE_MAX,
-+};
++	/* TODO: Setup other peer specific resource used in data path */
 +
-+enum hal_rx_reception_type {
-+	HAL_RX_RECEPTION_TYPE_SU,
-+	HAL_RX_RECEPTION_TYPE_MU_MIMO,
-+	HAL_RX_RECEPTION_TYPE_MU_OFDMA,
-+	HAL_RX_RECEPTION_TYPE_MU_OFDMA_MIMO,
-+	HAL_RX_RECEPTION_TYPE_MAX,
-+};
++	return 0;
++}
 +
-+#define HAL_TLV_STATUS_PPDU_NOT_DONE            0
-+#define HAL_TLV_STATUS_PPDU_DONE                1
-+#define HAL_TLV_STATUS_BUF_DONE                 2
-+#define HAL_TLV_STATUS_PPDU_NON_STD_DONE        3
-+#define HAL_RX_FCS_LEN                          4
++void ath11k_dp_srng_cleanup(struct ath11k_base *ab, struct dp_srng *ring)
++{
++	if (!ring->vaddr_unaligned)
++		return;
 +
-+enum hal_rx_mon_status {
-+	HAL_RX_MON_STATUS_PPDU_NOT_DONE,
-+	HAL_RX_MON_STATUS_PPDU_DONE,
-+	HAL_RX_MON_STATUS_BUF_DONE,
-+};
++	dma_free_coherent(ab->dev, ring->size, ring->vaddr_unaligned,
++			  ring->paddr_unaligned);
 +
-+struct hal_rx_mon_ppdu_info {
-+	u32 ppdu_id;
-+	u32 ppdu_ts;
-+	u32 num_mpdu_fcs_ok;
-+	u32 num_mpdu_fcs_err;
-+	u32 preamble_type;
-+	u16 chan_num;
-+	u16 tcp_msdu_count;
-+	u16 tcp_ack_msdu_count;
-+	u16 udp_msdu_count;
-+	u16 other_msdu_count;
-+	u16 peer_id;
-+	u8 rate;
-+	u8 mcs;
-+	u8 nss;
-+	u8 bw;
-+	u8 is_stbc;
-+	u8 gi;
-+	u8 ldpc;
-+	u8 beamformed;
-+	u8 rssi_comb;
-+	u8 tid;
-+	u8 reception_type;
-+	u64 rx_duration;
-+};
++	ring->vaddr_unaligned = NULL;
++}
 +
-+#define HAL_RX_PPDU_START_INFO0_PPDU_ID		GENMASK(15, 0)
++int ath11k_dp_srng_setup(struct ath11k_base *ab, struct dp_srng *ring,
++			 enum hal_ring_type type, int ring_num,
++			 int mac_id, int num_entries)
++{
++	struct hal_srng_params params = { 0 };
++	int entry_sz = ath11k_hal_srng_get_entrysize(type);
++	int max_entries = ath11k_hal_srng_get_max_entries(type);
++	int ret;
 +
-+struct hal_rx_ppdu_start {
-+	__le32 info0;
-+	__le32 chan_num;
-+	__le32 ppdu_start_ts;
-+} __packed;
++	if (max_entries < 0 || entry_sz < 0)
++		return -EINVAL;
 +
-+#define HAL_RX_PPDU_END_USER_STATS_INFO0_MPDU_CNT_FCS_ERR	GENMASK(25, 16)
++	if (num_entries > max_entries)
++		num_entries = max_entries;
 +
-+#define HAL_RX_PPDU_END_USER_STATS_INFO1_MPDU_CNT_FCS_OK	GENMASK(8, 0)
-+#define HAL_RX_PPDU_END_USER_STATS_INFO1_FC_VALID		BIT(9)
-+#define HAL_RX_PPDU_END_USER_STATS_INFO1_QOS_CTRL_VALID		BIT(10)
-+#define HAL_RX_PPDU_END_USER_STATS_INFO1_HT_CTRL_VALID		BIT(11)
-+#define HAL_RX_PPDU_END_USER_STATS_INFO1_PKT_TYPE		GENMASK(23, 20)
++	ring->size = (num_entries * entry_sz) + HAL_RING_BASE_ALIGN - 1;
++	ring->vaddr_unaligned = dma_alloc_coherent(ab->dev, ring->size,
++						   &ring->paddr_unaligned,
++						   GFP_KERNEL);
++	if (!ring->vaddr_unaligned)
++		return -ENOMEM;
 +
-+#define HAL_RX_PPDU_END_USER_STATS_INFO2_AST_INDEX		GENMASK(15, 0)
-+#define HAL_RX_PPDU_END_USER_STATS_INFO2_FRAME_CTRL		GENMASK(31, 16)
++	ring->vaddr = PTR_ALIGN(ring->vaddr_unaligned, HAL_RING_BASE_ALIGN);
++	ring->paddr = ring->paddr_unaligned + ((unsigned long)ring->vaddr -
++		      (unsigned long)ring->vaddr_unaligned);
 +
-+#define HAL_RX_PPDU_END_USER_STATS_INFO3_QOS_CTRL		GENMASK(31, 16)
++	params.ring_base_vaddr = ring->vaddr;
++	params.ring_base_paddr = ring->paddr;
++	params.num_entries = num_entries;
 +
-+#define HAL_RX_PPDU_END_USER_STATS_INFO4_UDP_MSDU_CNT		GENMASK(15, 0)
-+#define HAL_RX_PPDU_END_USER_STATS_INFO4_TCP_MSDU_CNT		GENMASK(31, 16)
++	switch (type) {
++	case HAL_REO_DST:
++		params.intr_batch_cntr_thres_entries =
++					HAL_SRNG_INT_BATCH_THRESHOLD_RX;
++		params.intr_timer_thres_us = HAL_SRNG_INT_TIMER_THRESHOLD_RX;
++		break;
++	case HAL_RXDMA_BUF:
++	case HAL_RXDMA_MONITOR_BUF:
++	case HAL_RXDMA_MONITOR_STATUS:
++		params.low_threshold = num_entries >> 3;
++		params.flags |= HAL_SRNG_FLAGS_LOW_THRESH_INTR_EN;
++		params.intr_batch_cntr_thres_entries = 0;
++		params.intr_timer_thres_us = HAL_SRNG_INT_TIMER_THRESHOLD_RX;
++		break;
++	case HAL_WBM2SW_RELEASE:
++		if (ring_num < 3) {
++			params.intr_batch_cntr_thres_entries =
++					HAL_SRNG_INT_BATCH_THRESHOLD_TX;
++			params.intr_timer_thres_us =
++					HAL_SRNG_INT_TIMER_THRESHOLD_TX;
++			break;
++		}
++		/* follow through when ring_num >= 3 */
++		/* fall through */
++	case HAL_REO_EXCEPTION:
++	case HAL_REO_REINJECT:
++	case HAL_REO_CMD:
++	case HAL_REO_STATUS:
++	case HAL_TCL_DATA:
++	case HAL_TCL_CMD:
++	case HAL_TCL_STATUS:
++	case HAL_WBM_IDLE_LINK:
++	case HAL_SW2WBM_RELEASE:
++	case HAL_RXDMA_DST:
++	case HAL_RXDMA_MONITOR_DST:
++	case HAL_RXDMA_MONITOR_DESC:
++	case HAL_RXDMA_DIR_BUF:
++		params.intr_batch_cntr_thres_entries =
++					HAL_SRNG_INT_BATCH_THRESHOLD_OTHER;
++		params.intr_timer_thres_us = HAL_SRNG_INT_TIMER_THRESHOLD_OTHER;
++		break;
++	default:
++		ath11k_warn(ab, "Not a valid ring type in dp :%d\n", type);
++		return -EINVAL;
++	}
 +
-+#define HAL_RX_PPDU_END_USER_STATS_INFO5_OTHER_MSDU_CNT		GENMASK(15, 0)
-+#define HAL_RX_PPDU_END_USER_STATS_INFO5_TCP_ACK_MSDU_CNT	GENMASK(31, 16)
++	ret = ath11k_hal_srng_setup(ab, type, ring_num, mac_id, &params);
++	if (ret < 0) {
++		ath11k_warn(ab, "failed to setup srng: %d ring_id %d\n",
++			    ret, ring_num);
++		return ret;
++	}
 +
-+#define HAL_RX_PPDU_END_USER_STATS_INFO6_TID_BITMAP		GENMASK(15, 0)
-+#define HAL_RX_PPDU_END_USER_STATS_INFO6_TID_EOSP_BITMAP	GENMASK(31, 16)
++	ring->ring_id = ret;
 +
-+struct hal_rx_ppdu_end_user_stats {
-+	__le32 rsvd0[2];
-+	__le32 info0;
-+	__le32 info1;
-+	__le32 info2;
-+	__le32 info3;
-+	__le32 ht_ctrl;
-+	__le32 rsvd1[2];
-+	__le32 info4;
-+	__le32 info5;
-+	__le32 info6;
-+	__le32 rsvd2[11];
-+} __packed;
++	return 0;
++}
 +
-+#define HAL_RX_HT_SIG_INFO_INFO0_MCS		GENMASK(6, 0)
-+#define HAL_RX_HT_SIG_INFO_INFO0_BW		BIT(7)
++static void ath11k_dp_srng_common_cleanup(struct ath11k_base *ab)
++{
++	struct ath11k_dp *dp = &ab->dp;
++	int i;
 +
-+#define HAL_RX_HT_SIG_INFO_INFO1_STBC		GENMASK(5, 4)
-+#define HAL_RX_HT_SIG_INFO_INFO1_FEC_CODING	BIT(6)
-+#define HAL_RX_HT_SIG_INFO_INFO1_GI		BIT(7)
++	ath11k_dp_srng_cleanup(ab, &dp->wbm_desc_rel_ring);
++	ath11k_dp_srng_cleanup(ab, &dp->tcl_cmd_ring);
++	ath11k_dp_srng_cleanup(ab, &dp->tcl_status_ring);
++	for (i = 0; i < DP_TCL_NUM_RING_MAX; i++) {
++		ath11k_dp_srng_cleanup(ab, &dp->tx_ring[i].tcl_data_ring);
++		ath11k_dp_srng_cleanup(ab, &dp->tx_ring[i].tcl_comp_ring);
++	}
++	ath11k_dp_srng_cleanup(ab, &dp->reo_reinject_ring);
++	ath11k_dp_srng_cleanup(ab, &dp->rx_rel_ring);
++	ath11k_dp_srng_cleanup(ab, &dp->reo_except_ring);
++	ath11k_dp_srng_cleanup(ab, &dp->reo_cmd_ring);
++	ath11k_dp_srng_cleanup(ab, &dp->reo_status_ring);
++}
 +
-+struct hal_rx_ht_sig_info {
-+	__le32 info0;
-+	__le32 info1;
-+} __packed;
++static int ath11k_dp_srng_common_setup(struct ath11k_base *ab)
++{
++	struct ath11k_dp *dp = &ab->dp;
++	struct hal_srng *srng;
++	int i, ret;
 +
-+#define HAL_RX_LSIG_B_INFO_INFO0_RATE	GENMASK(3, 0)
-+#define HAL_RX_LSIG_B_INFO_INFO0_LEN	GENMASK(15, 4)
++	ret = ath11k_dp_srng_setup(ab, &dp->wbm_desc_rel_ring,
++				   HAL_SW2WBM_RELEASE, 0, 0,
++				   DP_WBM_RELEASE_RING_SIZE);
++	if (ret) {
++		ath11k_warn(ab, "failed to set up wbm2sw_release ring :%d\n",
++			    ret);
++		goto err;
++	}
 +
-+struct hal_rx_lsig_b_info {
-+	__le32 info0;
-+} __packed;
++	ret = ath11k_dp_srng_setup(ab, &dp->tcl_cmd_ring, HAL_TCL_CMD, 0, 0,
++				   DP_TCL_CMD_RING_SIZE);
++	if (ret) {
++		ath11k_warn(ab, "failed to set up tcl_cmd ring :%d\n", ret);
++		goto err;
++	}
 +
-+#define HAL_RX_LSIG_A_INFO_INFO0_RATE		GENMASK(3, 0)
-+#define HAL_RX_LSIG_A_INFO_INFO0_LEN		GENMASK(16, 5)
-+#define HAL_RX_LSIG_A_INFO_INFO0_PKT_TYPE	GENMASK(27, 24)
++	ret = ath11k_dp_srng_setup(ab, &dp->tcl_status_ring, HAL_TCL_STATUS,
++				   0, 0, DP_TCL_STATUS_RING_SIZE);
++	if (ret) {
++		ath11k_warn(ab, "failed to set up tcl_status ring :%d\n", ret);
++		goto err;
++	}
 +
-+struct hal_rx_lsig_a_info {
-+	__le32 info0;
-+} __packed;
++	for (i = 0; i < DP_TCL_NUM_RING_MAX; i++) {
++		ret = ath11k_dp_srng_setup(ab, &dp->tx_ring[i].tcl_data_ring,
++					   HAL_TCL_DATA, i, 0,
++					   DP_TCL_DATA_RING_SIZE);
++		if (ret) {
++			ath11k_warn(ab, "failed to set up tcl_data ring (%d) :%d\n",
++				    i, ret);
++			goto err;
++		}
 +
-+#define HAL_RX_VHT_SIG_A_INFO_INFO0_BW		GENMASK(1, 0)
-+#define HAL_RX_VHT_SIG_A_INFO_INFO0_STBC	BIT(3)
-+#define HAL_RX_VHT_SIG_A_INFO_INFO0_GROUP_ID	GENMASK(9, 4)
-+#define HAL_RX_VHT_SIG_A_INFO_INFO0_NSTS	GENMASK(21, 10)
++		ret = ath11k_dp_srng_setup(ab, &dp->tx_ring[i].tcl_comp_ring,
++					   HAL_WBM2SW_RELEASE, i, 0,
++					   DP_TX_COMP_RING_SIZE);
++		if (ret) {
++			ath11k_warn(ab, "failed to set up tcl_comp ring ring (%d) :%d\n",
++				    i, ret);
++			goto err;
++		}
 +
-+#define HAL_RX_VHT_SIG_A_INFO_INFO1_GI_SETTING		GENMASK(1, 0)
-+#define HAL_RX_VHT_SIG_A_INFO_INFO1_SU_MU_CODING	BIT(2)
-+#define HAL_RX_VHT_SIG_A_INFO_INFO1_MCS			GENMASK(7, 4)
-+#define HAL_RX_VHT_SIG_A_INFO_INFO1_BEAMFORMED		BIT(8)
++		srng = &ab->hal.srng_list[dp->tx_ring[i].tcl_data_ring.ring_id];
++		ath11k_hal_tx_init_data_ring(ab, srng);
++	}
 +
-+struct hal_rx_vht_sig_a_info {
-+	__le32 info0;
-+	__le32 info1;
-+} __packed;
++	ret = ath11k_dp_srng_setup(ab, &dp->reo_reinject_ring, HAL_REO_REINJECT,
++				   0, 0, DP_REO_REINJECT_RING_SIZE);
++	if (ret) {
++		ath11k_warn(ab, "failed to set up reo_reinject ring :%d\n",
++			    ret);
++		goto err;
++	}
 +
-+#define HAL_RX_HE_SIG_A_SU_INFO_INFO0_TRANSMIT_MCS	GENMASK(6, 3)
-+#define HAL_RX_HE_SIG_A_SU_INFO_INFO0_DCM		BIT(7)
-+#define HAL_RX_HE_SIG_A_SU_INFO_INFO0_TRANSMIT_BW	GENMASK(20, 19)
-+#define HAL_RX_HE_SIG_A_SU_INFO_INFO0_CP_LTF_SIZE	GENMASK(22, 21)
-+#define HAL_RX_HE_SIG_A_SU_INFO_INFO0_NSTS		GENMASK(25, 23)
++	ret = ath11k_dp_srng_setup(ab, &dp->rx_rel_ring, HAL_WBM2SW_RELEASE,
++				   3, 0, DP_RX_RELEASE_RING_SIZE);
++	if (ret) {
++		ath11k_warn(ab, "failed to set up rx_rel ring :%d\n", ret);
++		goto err;
++	}
 +
-+#define HAL_RX_HE_SIG_A_SU_INFO_INFO1_CODING		BIT(7)
-+#define HAL_RX_HE_SIG_A_SU_INFO_INFO1_STBC		BIT(9)
-+#define HAL_RX_HE_SIG_A_SU_INFO_INFO1_TXBF		BIT(10)
++	ret = ath11k_dp_srng_setup(ab, &dp->reo_except_ring, HAL_REO_EXCEPTION,
++				   0, 0, DP_REO_EXCEPTION_RING_SIZE);
++	if (ret) {
++		ath11k_warn(ab, "failed to set up reo_exception ring :%d\n",
++			    ret);
++		goto err;
++	}
 +
-+struct hal_rx_he_sig_a_su_info {
-+	__le32 info0;
-+	__le32 info1;
-+} __packed;
++	ret = ath11k_dp_srng_setup(ab, &dp->reo_cmd_ring, HAL_REO_CMD,
++				   0, 0, DP_REO_CMD_RING_SIZE);
++	if (ret) {
++		ath11k_warn(ab, "failed to set up reo_cmd ring :%d\n", ret);
++		goto err;
++	}
 +
-+#define HAL_RX_HE_SIG_A_MU_DL_INFO_INFO0_TRANSMIT_BW	GENMASK(17, 15)
-+#define HAL_RX_HE_SIG_A_MU_DL_INFO_INFO0_CP_LTF_SIZE	GENMASK(24, 23)
++	srng = &ab->hal.srng_list[dp->reo_cmd_ring.ring_id];
++	ath11k_hal_reo_init_cmd_ring(ab, srng);
 +
-+#define HAL_RX_HE_SIG_A_MU_DL_INFO_INFO1_STBC		BIT(12)
++	ret = ath11k_dp_srng_setup(ab, &dp->reo_status_ring, HAL_REO_STATUS,
++				   0, 0, DP_REO_STATUS_RING_SIZE);
++	if (ret) {
++		ath11k_warn(ab, "failed to set up reo_status ring :%d\n", ret);
++		goto err;
++	}
 +
-+struct hal_rx_he_sig_a_mu_dl_info {
-+	__le32 info0;
-+	__le32 info1;
-+} __packed;
++	ath11k_hal_reo_hw_setup(ab);
 +
-+#define HAL_RX_HE_SIG_B1_MU_INFO_INFO0_RU_ALLOCATION	GENMASK(7, 0)
++	return 0;
 +
-+struct hal_rx_he_sig_b1_mu_info {
-+	__le32 info0;
-+} __packed;
++err:
++	ath11k_dp_srng_common_cleanup(ab);
 +
-+#define HAL_RX_HE_SIG_B2_MU_INFO_INFO0_STA_MCS		GENMASK(18, 15)
-+#define HAL_RX_HE_SIG_B2_MU_INFO_INFO0_STA_CODING	BIT(20)
-+#define HAL_RX_HE_SIG_B2_MU_INFO_INFO0_STA_NSTS		GENMASK(31, 29)
++	return ret;
++}
 +
-+struct hal_rx_he_sig_b2_mu_info {
-+	__le32 info0;
-+} __packed;
++static void ath11k_dp_scatter_idle_link_desc_cleanup(struct ath11k_base *ab)
++{
++	struct ath11k_dp *dp = &ab->dp;
++	struct hal_wbm_idle_scatter_list *slist = dp->scatter_list;
++	int i;
 +
-+#define HAL_RX_HE_SIG_B2_OFDMA_INFO_INFO0_STA_NSTS	GENMASK(13, 11)
-+#define HAL_RX_HE_SIG_B2_OFDMA_INFO_INFO0_STA_TXBF	BIT(19)
-+#define HAL_RX_HE_SIG_B2_OFDMA_INFO_INFO0_STA_MCS	GENMASK(18, 15)
-+#define HAL_RX_HE_SIG_B2_OFDMA_INFO_INFO0_STA_DCM	BIT(19)
-+#define HAL_RX_HE_SIG_B2_OFDMA_INFO_INFO0_STA_CODING	BIT(20)
++	for (i = 0; i < DP_IDLE_SCATTER_BUFS_MAX; i++) {
++		if (!slist[i].vaddr)
++			continue;
 +
-+struct hal_rx_he_sig_b2_ofdma_info {
-+	__le32 info0;
-+} __packed;
++		dma_free_coherent(ab->dev, HAL_WBM_IDLE_SCATTER_BUF_SIZE_MAX,
++				  slist[i].vaddr, slist[i].paddr);
++		slist[i].vaddr = NULL;
++	}
++}
 +
-+#define HAL_RX_PHYRX_RSSI_LEGACY_INFO_INFO1_RSSI_COMB	GENMASK(15, 8)
++static int ath11k_dp_scatter_idle_link_desc_setup(struct ath11k_base *ab,
++						  int size,
++						  u32 n_link_desc_bank,
++						  u32 n_link_desc,
++						  u32 last_bank_sz)
++{
++	struct ath11k_dp *dp = &ab->dp;
++	struct dp_link_desc_bank *link_desc_banks = dp->link_desc_banks;
++	struct hal_wbm_idle_scatter_list *slist = dp->scatter_list;
++	u32 n_entries_per_buf;
++	int num_scatter_buf, scatter_idx;
++	struct hal_wbm_link_desc *scatter_buf;
++	int align_bytes, n_entries;
++	dma_addr_t paddr;
++	int rem_entries;
++	int i;
++	int ret = 0;
++	u32 end_offset;
 +
-+struct hal_rx_phyrx_rssi_legacy_info {
-+	__le32 rsvd[35];
-+	__le32 info0;
-+} __packed;
++	n_entries_per_buf = HAL_WBM_IDLE_SCATTER_BUF_SIZE /
++			    ath11k_hal_srng_get_entrysize(HAL_WBM_IDLE_LINK);
++	num_scatter_buf = DIV_ROUND_UP(size, HAL_WBM_IDLE_SCATTER_BUF_SIZE);
 +
-+#define HAL_RX_MPDU_INFO_INFO0_PEERID	GENMASK(31, 16)
-+struct hal_rx_mpdu_info {
-+	__le32 rsvd0;
-+	__le32 info0;
-+	__le32 rsvd1[21];
-+} __packed;
++	if (num_scatter_buf > DP_IDLE_SCATTER_BUFS_MAX)
++		return -EINVAL;
 +
-+#define HAL_RX_PPDU_END_DURATION	GENMASK(23, 0)
-+struct hal_rx_ppdu_end_duration {
-+	__le32 rsvd0[9];
-+	__le32 info0;
-+	__le32 rsvd1[4];
-+} __packed;
++	for (i = 0; i < num_scatter_buf; i++) {
++		slist[i].vaddr = dma_alloc_coherent(ab->dev,
++						    HAL_WBM_IDLE_SCATTER_BUF_SIZE_MAX,
++						    &slist[i].paddr, GFP_KERNEL);
++		if (!slist[i].vaddr) {
++			ret = -ENOMEM;
++			goto err;
++		}
++	}
 +
-+struct hal_rx_rxpcu_classification_overview {
-+	u32 rsvd0;
-+} __packed;
++	scatter_idx = 0;
++	scatter_buf = slist[scatter_idx].vaddr;
++	rem_entries = n_entries_per_buf;
 +
-+struct hal_rx_msdu_desc_info {
-+	u32 msdu_flags;
-+	u16 msdu_len; /* 14 bits for length */
-+};
++	for (i = 0; i < n_link_desc_bank; i++) {
++		align_bytes = link_desc_banks[i].vaddr -
++			      link_desc_banks[i].vaddr_unaligned;
++		n_entries = (DP_LINK_DESC_ALLOC_SIZE_THRESH - align_bytes) /
++			     HAL_LINK_DESC_SIZE;
++		paddr = link_desc_banks[i].paddr;
++		while (n_entries) {
++			ath11k_hal_set_link_desc_addr(scatter_buf, i, paddr);
++			n_entries--;
++			paddr += HAL_LINK_DESC_SIZE;
++			if (rem_entries) {
++				rem_entries--;
++				scatter_buf++;
++				continue;
++			}
 +
-+#define HAL_RX_NUM_MSDU_DESC 6
-+struct hal_rx_msdu_list {
-+	struct hal_rx_msdu_desc_info msdu_info[HAL_RX_NUM_MSDU_DESC];
-+	u32 sw_cookie[HAL_RX_NUM_MSDU_DESC];
-+	u8 rbm[HAL_RX_NUM_MSDU_DESC];
-+};
++			rem_entries = n_entries_per_buf;
++			scatter_idx++;
++			scatter_buf = slist[scatter_idx].vaddr;
++		}
++	}
 +
-+void ath11k_hal_reo_status_queue_stats(struct ath11k_base *ab, u32 *reo_desc,
-+				       struct hal_reo_status *status);
-+void ath11k_hal_reo_flush_queue_status(struct ath11k_base *ab, u32 *reo_desc,
-+				       struct hal_reo_status *status);
-+void ath11k_hal_reo_flush_cache_status(struct ath11k_base *ab, u32 *reo_desc,
-+				       struct hal_reo_status *status);
-+void ath11k_hal_reo_flush_cache_status(struct ath11k_base *ab, u32 *reo_desc,
-+				       struct hal_reo_status *status);
-+void ath11k_hal_reo_unblk_cache_status(struct ath11k_base *ab, u32 *reo_desc,
-+				       struct hal_reo_status *status);
-+void ath11k_hal_reo_flush_timeout_list_status(struct ath11k_base *ab,
-+					      u32 *reo_desc,
-+					      struct hal_reo_status *status);
-+void ath11k_hal_reo_desc_thresh_reached_status(struct ath11k_base *ab,
-+					       u32 *reo_desc,
-+					       struct hal_reo_status *status);
-+void ath11k_hal_reo_update_rx_reo_queue_status(struct ath11k_base *ab,
-+					       u32 *reo_desc,
-+					       struct hal_reo_status *status);
-+int ath11k_hal_reo_process_status(u8 *reo_desc, u8 *status);
-+void ath11k_hal_rx_msdu_link_info_get(void *link_desc, u32 *num_msdus,
-+				      struct hal_rx_msdu_meta *meta,
-+				      enum hal_rx_buf_return_buf_manager *rbm);
-+void ath11k_hal_rx_msdu_link_desc_set(struct ath11k_base *ab, void *desc,
-+				      void *link_desc,
-+				      enum hal_wbm_rel_bm_act action);
-+void ath11k_hal_rx_buf_addr_info_set(void *desc, dma_addr_t paddr,
-+				     u32 cookie, u8 manager);
-+void ath11k_hal_rx_buf_addr_info_get(void *desc, dma_addr_t *paddr,
-+				     u32 *cookie, u8 *rbm);
-+int ath11k_hal_desc_reo_parse_err(struct ath11k_base *ab, u32 *rx_desc,
-+				  dma_addr_t *paddr, u32 *desc_bank);
-+void ath11k_hal_rx_parse_dst_ring_desc(struct ath11k_base *ab, u32 *rx_desc,
-+				       struct hal_rx_meta_info *meta_info);
-+int ath11k_hal_wbm_desc_parse_err(struct ath11k_base *ab, void *desc,
-+				  struct hal_rx_wbm_rel_info *rel_info);
-+void ath11k_hal_rx_reo_ent_paddr_get(struct ath11k_base *ab, void *desc,
-+				     dma_addr_t *paddr, u32 *desc_bank);
-+void ath11k_hal_rx_reo_ent_buf_paddr_get(void *rx_desc,
-+					 dma_addr_t *paddr, u32 *sw_cookie,
-+					 void **pp_buf_addr_info,
-+					 u32 *msdu_cnt);
-+enum hal_rx_mon_status
-+ath11k_hal_rx_parse_mon_status(struct ath11k_base *ab,
-+			       struct hal_rx_mon_ppdu_info *ppdu_info,
-+			       struct sk_buff *skb);
-+#define REO_QUEUE_DESC_MAGIC_DEBUG_PATTERN_0 0xDDBEEF
-+#define REO_QUEUE_DESC_MAGIC_DEBUG_PATTERN_1 0xADBEEF
-+#define REO_QUEUE_DESC_MAGIC_DEBUG_PATTERN_2 0xBDBEEF
-+#define REO_QUEUE_DESC_MAGIC_DEBUG_PATTERN_3 0xCDBEEF
-+#endif
++	end_offset = (scatter_buf - slist[scatter_idx].vaddr) *
++		     sizeof(struct hal_wbm_link_desc);
++	ath11k_hal_setup_link_idle_list(ab, slist, num_scatter_buf,
++					n_link_desc, end_offset);
++
++	return 0;
++
++err:
++	ath11k_dp_scatter_idle_link_desc_cleanup(ab);
++
++	return ret;
++}
++
++static void
++ath11k_dp_link_desc_bank_free(struct ath11k_base *ab,
++			      struct dp_link_desc_bank *link_desc_banks)
++{
++	int i;
++
++	for (i = 0; i < DP_LINK_DESC_BANKS_MAX; i++) {
++		if (link_desc_banks[i].vaddr_unaligned) {
++			dma_free_coherent(ab->dev,
++					  link_desc_banks[i].size,
++					  link_desc_banks[i].vaddr_unaligned,
++					  link_desc_banks[i].paddr_unaligned);
++			link_desc_banks[i].vaddr_unaligned = NULL;
++		}
++	}
++}
++
++static int ath11k_dp_link_desc_bank_alloc(struct ath11k_base *ab,
++					  struct dp_link_desc_bank *desc_bank,
++					  int n_link_desc_bank,
++					  int last_bank_sz)
++{
++	struct ath11k_dp *dp = &ab->dp;
++	int i;
++	int ret = 0;
++	int desc_sz = DP_LINK_DESC_ALLOC_SIZE_THRESH;
++
++	for (i = 0; i < n_link_desc_bank; i++) {
++		if (i == (n_link_desc_bank - 1) && last_bank_sz)
++			desc_sz = last_bank_sz;
++
++		desc_bank[i].vaddr_unaligned =
++					dma_alloc_coherent(ab->dev, desc_sz,
++							   &desc_bank[i].paddr_unaligned,
++							   GFP_KERNEL);
++		if (!desc_bank[i].vaddr_unaligned) {
++			ret = -ENOMEM;
++			goto err;
++		}
++
++		desc_bank[i].vaddr = PTR_ALIGN(desc_bank[i].vaddr_unaligned,
++					       HAL_LINK_DESC_ALIGN);
++		desc_bank[i].paddr = desc_bank[i].paddr_unaligned +
++				     ((unsigned long)desc_bank[i].vaddr -
++				      (unsigned long)desc_bank[i].vaddr_unaligned);
++		desc_bank[i].size = desc_sz;
++	}
++
++	return 0;
++
++err:
++	ath11k_dp_link_desc_bank_free(ab, dp->link_desc_banks);
++
++	return ret;
++}
++
++void ath11k_dp_link_desc_cleanup(struct ath11k_base *ab,
++				 struct dp_link_desc_bank *desc_bank,
++				 u32 ring_type, struct dp_srng *ring)
++{
++	ath11k_dp_link_desc_bank_free(ab, desc_bank);
++
++	if (ring_type != HAL_RXDMA_MONITOR_DESC) {
++		ath11k_dp_srng_cleanup(ab, ring);
++		ath11k_dp_scatter_idle_link_desc_cleanup(ab);
++	}
++}
++
++static int ath11k_wbm_idle_ring_setup(struct ath11k_base *ab, u32 *n_link_desc)
++{
++	struct ath11k_dp *dp = &ab->dp;
++	u32 n_mpdu_link_desc, n_mpdu_queue_desc;
++	u32 n_tx_msdu_link_desc, n_rx_msdu_link_desc;
++	int ret = 0;
++
++	n_mpdu_link_desc = (DP_NUM_TIDS_MAX * DP_AVG_MPDUS_PER_TID_MAX) /
++			   HAL_NUM_MPDUS_PER_LINK_DESC;
++
++	n_mpdu_queue_desc = n_mpdu_link_desc /
++			    HAL_NUM_MPDU_LINKS_PER_QUEUE_DESC;
++
++	n_tx_msdu_link_desc = (DP_NUM_TIDS_MAX * DP_AVG_FLOWS_PER_TID *
++			       DP_AVG_MSDUS_PER_FLOW) /
++			      HAL_NUM_TX_MSDUS_PER_LINK_DESC;
++
++	n_rx_msdu_link_desc = (DP_NUM_TIDS_MAX * DP_AVG_MPDUS_PER_TID_MAX *
++			       DP_AVG_MSDUS_PER_MPDU) /
++			      HAL_NUM_RX_MSDUS_PER_LINK_DESC;
++
++	*n_link_desc = n_mpdu_link_desc + n_mpdu_queue_desc +
++		      n_tx_msdu_link_desc + n_rx_msdu_link_desc;
++
++	ret = ath11k_dp_srng_setup(ab, &dp->wbm_idle_ring,
++				   HAL_WBM_IDLE_LINK, 0, 0, *n_link_desc);
++	if (ret) {
++		ath11k_warn(ab, "failed to setup wbm_idle_ring: %d\n", ret);
++		return ret;
++	}
++	return ret;
++}
++
++int ath11k_dp_link_desc_setup(struct ath11k_base *ab,
++			      struct dp_link_desc_bank *link_desc_banks,
++			      u32 ring_type, struct hal_srng *srng,
++			      u32 n_link_desc)
++{
++	u32 tot_mem_sz;
++	u32 n_link_desc_bank, last_bank_sz;
++	u32 entry_sz, align_bytes, n_entries;
++	u32 paddr;
++	u32 *desc;
++	int i, ret;
++
++	if (n_link_desc & (n_link_desc - 1))
++		n_link_desc = 1 << fls(n_link_desc);
++
++	tot_mem_sz = n_link_desc * HAL_LINK_DESC_SIZE;
++	tot_mem_sz += HAL_LINK_DESC_ALIGN;
++
++	if (tot_mem_sz <= DP_LINK_DESC_ALLOC_SIZE_THRESH) {
++		n_link_desc_bank = 1;
++		last_bank_sz = tot_mem_sz;
++	} else {
++		n_link_desc_bank = tot_mem_sz /
++				   (DP_LINK_DESC_ALLOC_SIZE_THRESH -
++				    HAL_LINK_DESC_ALIGN);
++		last_bank_sz = tot_mem_sz %
++			       (DP_LINK_DESC_ALLOC_SIZE_THRESH -
++				HAL_LINK_DESC_ALIGN);
++
++		if (last_bank_sz)
++			n_link_desc_bank += 1;
++	}
++
++	if (n_link_desc_bank > DP_LINK_DESC_BANKS_MAX)
++		return -EINVAL;
++
++	ret = ath11k_dp_link_desc_bank_alloc(ab, link_desc_banks,
++					     n_link_desc_bank, last_bank_sz);
++	if (ret)
++		return ret;
++
++	/* Setup link desc idle list for HW internal usage */
++	entry_sz = ath11k_hal_srng_get_entrysize(ring_type);
++	tot_mem_sz = entry_sz * n_link_desc;
++
++	/* Setup scatter desc list when the total memory requirement is more */
++	if (tot_mem_sz > DP_LINK_DESC_ALLOC_SIZE_THRESH &&
++	    ring_type != HAL_RXDMA_MONITOR_DESC) {
++		ret = ath11k_dp_scatter_idle_link_desc_setup(ab, tot_mem_sz,
++							     n_link_desc_bank,
++							     n_link_desc,
++							     last_bank_sz);
++		if (ret) {
++			ath11k_warn(ab, "failed to setup scatting idle list descriptor :%d\n",
++				    ret);
++			goto fail_desc_bank_free;
++		}
++
++		return 0;
++	}
++
++	spin_lock_bh(&srng->lock);
++
++	ath11k_hal_srng_access_begin(ab, srng);
++
++	for (i = 0; i < n_link_desc_bank; i++) {
++		align_bytes = link_desc_banks[i].vaddr -
++			      link_desc_banks[i].vaddr_unaligned;
++		n_entries = (link_desc_banks[i].size - align_bytes) /
++			    HAL_LINK_DESC_SIZE;
++		paddr = link_desc_banks[i].paddr;
++		while (n_entries &&
++		       (desc = ath11k_hal_srng_src_get_next_entry(ab, srng))) {
++			ath11k_hal_set_link_desc_addr((struct hal_wbm_link_desc *)desc,
++						      i, paddr);
++			n_entries--;
++			paddr += HAL_LINK_DESC_SIZE;
++		}
++	}
++
++	ath11k_hal_srng_access_end(ab, srng);
++
++	spin_unlock_bh(&srng->lock);
++
++	return 0;
++
++fail_desc_bank_free:
++	ath11k_dp_link_desc_bank_free(ab, link_desc_banks);
++
++	return ret;
++}
++
++int ath11k_dp_service_srng(struct ath11k_base *ab,
++			   struct ath11k_ext_irq_grp *irq_grp,
++			   int budget)
++{
++	struct napi_struct *napi = &irq_grp->napi;
++	int grp_id = irq_grp->grp_id;
++	int work_done = 0;
++	int i = 0;
++	int tot_work_done = 0;
++
++	while (ath11k_tx_ring_mask[grp_id] >> i) {
++		if (ath11k_tx_ring_mask[grp_id] & BIT(i))
++			ath11k_dp_tx_completion_handler(ab, i);
++		i++;
++	}
++
++	if (ath11k_rx_err_ring_mask[grp_id]) {
++		work_done = ath11k_dp_process_rx_err(ab, napi, budget);
++		budget -= work_done;
++		tot_work_done += work_done;
++		if (budget <= 0)
++			goto done;
++	}
++
++	if (ath11k_rx_wbm_rel_ring_mask[grp_id]) {
++		work_done = ath11k_dp_rx_process_wbm_err(ab,
++							 napi,
++							 budget);
++		budget -= work_done;
++		tot_work_done += work_done;
++
++		if (budget <= 0)
++			goto done;
++	}
++
++	if (ath11k_rx_ring_mask[grp_id]) {
++		for (i = 0; i <  ab->num_radios; i++) {
++			if (ath11k_rx_ring_mask[grp_id] & BIT(i)) {
++				work_done = ath11k_dp_process_rx(ab, i, napi,
++								 &irq_grp->pending_q,
++								 budget);
++				budget -= work_done;
++				tot_work_done += work_done;
++			}
++			if (budget <= 0)
++				goto done;
++		}
++	}
++
++	if (rx_mon_status_ring_mask[grp_id]) {
++		for (i = 0; i <  ab->num_radios; i++) {
++			if (rx_mon_status_ring_mask[grp_id] & BIT(i)) {
++				work_done =
++				ath11k_dp_rx_process_mon_rings(ab,
++							       i, napi,
++							       budget);
++				budget -= work_done;
++				tot_work_done += work_done;
++			}
++			if (budget <= 0)
++				goto done;
++		}
++	}
++
++	if (ath11k_reo_status_ring_mask[grp_id])
++		ath11k_dp_process_reo_status(ab);
++
++	for (i = 0; i < ab->num_radios; i++) {
++		if (ath11k_rxdma2host_ring_mask[grp_id] & BIT(i)) {
++			work_done = ath11k_dp_process_rxdma_err(ab, i, budget);
++			budget -= work_done;
++			tot_work_done += work_done;
++		}
++
++		if (budget <= 0)
++			goto done;
++
++		if (ath11k_host2rxdma_ring_mask[grp_id] & BIT(i)) {
++			struct ath11k_pdev_dp *dp = &ab->pdevs[i].ar->dp;
++			struct dp_rxdma_ring *rx_ring = &dp->rx_refill_buf_ring;
++
++			ath11k_dp_rxbufs_replenish(ab, i, rx_ring, 0,
++						   HAL_RX_BUF_RBM_SW3_BM,
++						   GFP_ATOMIC);
++		}
++	}
++	/* TODO: Implement handler for other interrupts */
++
++done:
++	return tot_work_done;
++}
++
++void ath11k_dp_pdev_free(struct ath11k_base *ab)
++{
++	struct ath11k *ar;
++	int i;
++
++	for (i = 0; i < ab->num_radios; i++) {
++		ar = ab->pdevs[i].ar;
++		ath11k_dp_rx_pdev_free(ab, i);
++		ath11k_debug_unregister(ar);
++		ath11k_dp_rx_pdev_mon_detach(ar);
++	}
++}
++
++int ath11k_dp_pdev_alloc(struct ath11k_base *ab)
++{
++	struct ath11k *ar;
++	struct ath11k_pdev_dp *dp;
++	int ret;
++	int i;
++
++	for (i = 0; i <  ab->num_radios; i++) {
++		ar = ab->pdevs[i].ar;
++		dp = &ar->dp;
++		dp->mac_id = i;
++		idr_init(&dp->rx_refill_buf_ring.bufs_idr);
++		spin_lock_init(&dp->rx_refill_buf_ring.idr_lock);
++		atomic_set(&dp->num_tx_pending, 0);
++		init_waitqueue_head(&dp->tx_empty_waitq);
++		idr_init(&dp->rx_mon_status_refill_ring.bufs_idr);
++		spin_lock_init(&dp->rx_mon_status_refill_ring.idr_lock);
++		idr_init(&dp->rxdma_mon_buf_ring.bufs_idr);
++		spin_lock_init(&dp->rxdma_mon_buf_ring.idr_lock);
++	}
++
++	/* TODO:Per-pdev rx ring unlike tx ring which is mapped to different AC's */
++	for (i = 0; i < ab->num_radios; i++) {
++		ar = ab->pdevs[i].ar;
++		ret = ath11k_dp_rx_pdev_alloc(ab, i);
++		if (ret) {
++			ath11k_warn(ab, "failed to allocate pdev rx for pdev_id :%d\n",
++				    i);
++			goto err;
++		}
++		ret = ath11k_dp_rx_pdev_mon_attach(ar);
++		if (ret) {
++			ath11k_warn(ab, "failed to initialize mon pdev %d\n",
++				    i);
++			goto err;
++		}
++	}
++
++	return 0;
++
++err:
++	ath11k_dp_pdev_free(ab);
++
++	return ret;
++}
++
++int ath11k_dp_htt_connect(struct ath11k_dp *dp)
++{
++	struct ath11k_htc_svc_conn_req conn_req;
++	struct ath11k_htc_svc_conn_resp conn_resp;
++	int status;
++
++	memset(&conn_req, 0, sizeof(conn_req));
++	memset(&conn_resp, 0, sizeof(conn_resp));
++
++	conn_req.ep_ops.ep_tx_complete = ath11k_dp_htt_htc_tx_complete;
++	conn_req.ep_ops.ep_rx_complete = ath11k_dp_htt_htc_t2h_msg_handler;
++
++	/* connect to control service */
++	conn_req.service_id = ATH11K_HTC_SVC_ID_HTT_DATA_MSG;
++
++	status = ath11k_htc_connect_service(&dp->ab->htc, &conn_req,
++					    &conn_resp);
++
++	if (status)
++		return status;
++
++	dp->eid = conn_resp.eid;
++
++	return 0;
++}
++
++static void ath11k_dp_update_vdev_search(struct ath11k_vif *arvif)
++{
++	/* Enable AddrY (SA based search) for STA mode. All other modes it
++	 * is going to be AddrX (DA based search). For STA mode, set search
++	 * type based on AST value.
++	 */
++	switch (arvif->vdev_type) {
++	case WMI_VDEV_TYPE_STA:
++		arvif->hal_addr_search_flags = HAL_TX_ADDRY_EN;
++		arvif->search_type = HAL_TX_ADDR_SEARCH_INDEX;
++		break;
++	case WMI_VDEV_TYPE_AP:
++	case WMI_VDEV_TYPE_IBSS:
++		arvif->hal_addr_search_flags = HAL_TX_ADDRX_EN;
++		arvif->search_type = HAL_TX_ADDR_SEARCH_DEFAULT;
++		break;
++	case WMI_VDEV_TYPE_MONITOR:
++	default:
++		return;
++	}
++}
++
++void ath11k_dp_vdev_tx_attach(struct ath11k *ar, struct ath11k_vif *arvif)
++{
++	arvif->tcl_metadata |= FIELD_PREP(HTT_TCL_META_DATA_TYPE, 1) |
++			       FIELD_PREP(HTT_TCL_META_DATA_VDEV_ID,
++					  arvif->vdev_id) |
++			       FIELD_PREP(HTT_TCL_META_DATA_PDEV_ID,
++					  ar->pdev->pdev_id);
++
++	/* set HTT extension valid bit to 0 by default */
++	arvif->tcl_metadata &= ~HTT_TCL_META_DATA_VALID_HTT;
++
++	ath11k_dp_update_vdev_search(arvif);
++}
++
++static int ath11k_dp_tx_pending_cleanup(int buf_id, void *skb, void *ctx)
++{
++	struct ath11k_base *ab = (struct ath11k_base *)ctx;
++	struct sk_buff *msdu = skb;
++
++	dma_unmap_single(ab->dev, ATH11K_SKB_CB(msdu)->paddr, msdu->len,
++			 DMA_TO_DEVICE);
++
++	dev_kfree_skb_any(msdu);
++
++	return 0;
++}
++
++void ath11k_dp_free(struct ath11k_base *ab)
++{
++	struct ath11k_dp *dp = &ab->dp;
++	int i;
++
++	ath11k_dp_link_desc_cleanup(ab, dp->link_desc_banks,
++				    HAL_WBM_IDLE_LINK, &dp->wbm_idle_ring);
++
++	ath11k_dp_srng_common_cleanup(ab);
++
++	ath11k_dp_reo_cmd_list_cleanup(ab);
++
++	for (i = 0; i < DP_TCL_NUM_RING_MAX; i++) {
++		spin_lock_bh(&dp->tx_ring[i].tx_idr_lock);
++		idr_for_each(&dp->tx_ring[i].txbuf_idr,
++			     ath11k_dp_tx_pending_cleanup, ab);
++		idr_destroy(&dp->tx_ring[i].txbuf_idr);
++		spin_unlock_bh(&dp->tx_ring[i].tx_idr_lock);
++
++		spin_lock_bh(&dp->tx_ring[i].tx_status_lock);
++		kfifo_free(&dp->tx_ring[i].tx_status_fifo);
++		spin_unlock_bh(&dp->tx_ring[i].tx_status_lock);
++	}
++
++	/* Deinit any SOC level resource */
++}
++
++int ath11k_dp_alloc(struct ath11k_base *ab)
++{
++	struct ath11k_dp *dp = &ab->dp;
++	struct hal_srng *srng = NULL;
++	size_t size = 0;
++	u32 n_link_desc = 0;
++	int ret;
++	int i;
++
++	dp->ab = ab;
++
++	INIT_LIST_HEAD(&dp->reo_cmd_list);
++	INIT_LIST_HEAD(&dp->reo_cmd_cache_flush_list);
++	spin_lock_init(&dp->reo_cmd_lock);
++
++	ret = ath11k_wbm_idle_ring_setup(ab, &n_link_desc);
++	if (ret) {
++		ath11k_warn(ab, "failed to setup wbm_idle_ring: %d\n", ret);
++		return ret;
++	}
++
++	srng = &ab->hal.srng_list[dp->wbm_idle_ring.ring_id];
++
++	ret = ath11k_dp_link_desc_setup(ab, dp->link_desc_banks,
++					HAL_WBM_IDLE_LINK, srng, n_link_desc);
++	if (ret) {
++		ath11k_warn(ab, "failed to setup link desc: %d\n", ret);
++		return ret;
++	}
++
++	ret = ath11k_dp_srng_common_setup(ab);
++	if (ret)
++		goto fail_link_desc_cleanup;
++
++	size = roundup_pow_of_two(DP_TX_COMP_RING_SIZE);
++
++	for (i = 0; i < DP_TCL_NUM_RING_MAX; i++) {
++		idr_init(&dp->tx_ring[i].txbuf_idr);
++		spin_lock_init(&dp->tx_ring[i].tx_idr_lock);
++		dp->tx_ring[i].tcl_data_ring_id = i;
++
++		spin_lock_init(&dp->tx_ring[i].tx_status_lock);
++		ret = kfifo_alloc(&dp->tx_ring[i].tx_status_fifo, size,
++				  GFP_KERNEL);
++		if (ret)
++			goto fail_cmn_srng_cleanup;
++	}
++
++	for (i = 0; i < HAL_DSCP_TID_MAP_TBL_NUM_ENTRIES_MAX; i++)
++		ath11k_hal_tx_set_dscp_tid_map(ab, i);
++
++	/* Init any SOC level resource for DP */
++
++	return 0;
++
++fail_cmn_srng_cleanup:
++	ath11k_dp_srng_common_cleanup(ab);
++
++fail_link_desc_cleanup:
++	ath11k_dp_link_desc_cleanup(ab, dp->link_desc_banks,
++				    HAL_WBM_IDLE_LINK, &dp->wbm_idle_ring);
++
++	return ret;
++}
 
