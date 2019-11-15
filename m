@@ -4,57 +4,57 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B71E0C432C3
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Nov 2019 09:31:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02FB9C33C9B
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Nov 2019 09:31:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8CB012073A
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Nov 2019 09:31:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BC95520733
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Nov 2019 09:31:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="ECErEEfJ";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="c0xzcHdl"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="XlQicUqG";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="gDlO3X4n"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727463AbfKOJbD (ORCPT
+        id S1727443AbfKOJbD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Fri, 15 Nov 2019 04:31:03 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:57516 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:57444 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727059AbfKOJbC (ORCPT
+        with ESMTP id S1726980AbfKOJbC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 15 Nov 2019 04:31:02 -0500
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 19329615BC; Fri, 15 Nov 2019 09:30:43 +0000 (UTC)
+        id 64C70615D5; Fri, 15 Nov 2019 09:30:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1573810261;
-        bh=n1TH14OOke05BEB5V7rTjBgazVntCdJIxU0InuIFfBM=;
+        s=default; t=1573810260;
+        bh=jPh5bMZ78qUafzzg14PtehmE4YxOzUl/eCV5THsWXO4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ECErEEfJFMeLO6NzYnuEdxU92g9z+lctnGlHTEam3CUWAV77ds+cPGVmhGm+8xfF+
-         W6gE5cYira89fELVp5Sd4LZA1F1lUdByrmuYdUJ5TafqJ8fYpkfwXDO7UGeixyfSud
-         /sL2JI/MKSo1H/EHoCq8fFhHhSE9bDBLcKjXb/X4=
+        b=XlQicUqGYaJxhwQtfDyLFtL1990KixfQmWJEMAgxtZOszbdbKAzT9gkQIqCNkk0Db
+         2nJ3ht6MWagi2JVNbCzLp12WsPTrKKukFfQxvwEUzwnDTOtj4nDOBZLXixdQMLKl4O
+         X9qXjwn4LUQRCbVk2sbIGH4V/3FYhq0rzBmFjQPQ=
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 3F99C61626;
-        Fri, 15 Nov 2019 09:30:40 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 1EBB4615E9;
+        Fri, 15 Nov 2019 09:30:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1573810241;
-        bh=n1TH14OOke05BEB5V7rTjBgazVntCdJIxU0InuIFfBM=;
+        s=default; t=1573810228;
+        bh=jPh5bMZ78qUafzzg14PtehmE4YxOzUl/eCV5THsWXO4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=c0xzcHdlXzaUW/THOmseXKd9k/jR0MoBbaIt40nbx9A1IPkCNth9wQx3U0apJXFVE
-         vXzB1jj5mUH6kQtxpEvZRw7xV95nVgzw6bmkayWdPPDvOT8ANXhE5jv0kUbz6z0jQx
-         zDVnVfnQ2YRP7cQv1N56fOtFJfQ+tThZ+fQbdKRg=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 3F99C61626
+        b=gDlO3X4nT63V8IV+YmFn7RgcdGBC74Uy5sqWfF2Hqzi+Abmrwpcgx5AfzlOL3D/fh
+         knhzNXVT8QcXyy7do77Te5OcEJGMYjBI3vPdKus7gJNOF7PNPwH2brCzg7KKveNQ4h
+         i6GhwuS3Ix0jSqMtKVl5moFUUz6l8+geKthNhl/o=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 1EBB4615E9
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
 To:     linux-wireless@vger.kernel.org
 Cc:     ath11k@lists.infradead.org, devicetree@vger.kernel.org
-Subject: [PATCH v3 32/49] ath11k: add mac.h
-Date:   Fri, 15 Nov 2019 11:28:56 +0200
-Message-Id: <1573810153-29623-33-git-send-email-kvalo@codeaurora.org>
+Subject: [PATCH v3 28/49] ath11k: add htc.c
+Date:   Fri, 15 Nov 2019 11:28:52 +0200
+Message-Id: <1573810153-29623-29-git-send-email-kvalo@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1573810153-29623-1-git-send-email-kvalo@codeaurora.org>
 References: <1573810153-29623-1-git-send-email-kvalo@codeaurora.org>
@@ -67,158 +67,786 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath11k/mac.h | 145 ++++++++++++++++++++++++++++++++++
- 1 file changed, 145 insertions(+)
+ drivers/net/wireless/ath/ath11k/htc.c | 773 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 773 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath11k/mac.h b/drivers/net/wireless/ath/ath11k/mac.h
+diff --git a/drivers/net/wireless/ath/ath11k/htc.c b/drivers/net/wireless/ath/ath11k/htc.c
 new file mode 100644
-index 000000000000..f84af1fc4952
+index 000000000000..9d4115f25ceb
 --- /dev/null
-+++ b/drivers/net/wireless/ath/ath11k/mac.h
-@@ -0,0 +1,145 @@
-+/* SPDX-License-Identifier: BSD-3-Clause-Clear */
++++ b/drivers/net/wireless/ath/ath11k/htc.c
+@@ -0,0 +1,773 @@
++// SPDX-License-Identifier: BSD-3-Clause-Clear
 +/*
 + * Copyright (c) 2018-2019 The Linux Foundation. All rights reserved.
 + */
++#include <linux/skbuff.h>
++#include <linux/ctype.h>
 +
-+#ifndef ATH11K_MAC_H
-+#define ATH11K_MAC_H
++#include "ahb.h"
++#include "debug.h"
 +
-+#include <net/mac80211.h>
-+#include <net/cfg80211.h>
++struct sk_buff *ath11k_htc_alloc_skb(struct ath11k_base *ab, int size)
++{
++	struct sk_buff *skb;
 +
-+struct ath11k;
-+struct ath11k_base;
++	skb = dev_alloc_skb(size + sizeof(struct ath11k_htc_hdr));
++	if (!skb)
++		return NULL;
 +
-+struct ath11k_generic_iter {
-+	struct ath11k *ar;
++	skb_reserve(skb, sizeof(struct ath11k_htc_hdr));
++
++	/* FW/HTC requires 4-byte aligned streams */
++	if (!IS_ALIGNED((unsigned long)skb->data, 4))
++		ath11k_warn(ab, "Unaligned HTC tx skb\n");
++
++	return skb;
++}
++
++static void ath11k_htc_control_tx_complete(struct ath11k_base *ab,
++					   struct sk_buff *skb)
++{
++	kfree_skb(skb);
++}
++
++static struct sk_buff *ath11k_htc_build_tx_ctrl_skb(void *ab)
++{
++	struct sk_buff *skb;
++	struct ath11k_skb_cb *skb_cb;
++
++	skb = dev_alloc_skb(ATH11K_HTC_CONTROL_BUFFER_SIZE);
++	if (!skb)
++		return NULL;
++
++	skb_reserve(skb, sizeof(struct ath11k_htc_hdr));
++	WARN_ON_ONCE(!IS_ALIGNED((unsigned long)skb->data, 4));
++
++	skb_cb = ATH11K_SKB_CB(skb);
++	memset(skb_cb, 0, sizeof(*skb_cb));
++
++	ath11k_dbg(ab, ATH11K_DBG_HTC, "%s: skb %pK\n", __func__, skb);
++	return skb;
++}
++
++static inline void ath11k_htc_restore_tx_skb(struct ath11k_htc *htc,
++					     struct sk_buff *skb)
++{
++	struct ath11k_skb_cb *skb_cb = ATH11K_SKB_CB(skb);
++
++	dma_unmap_single(htc->ab->dev, skb_cb->paddr, skb->len, DMA_TO_DEVICE);
++	skb_pull(skb, sizeof(struct ath11k_htc_hdr));
++}
++
++static void ath11k_htc_prepare_tx_skb(struct ath11k_htc_ep *ep,
++				      struct sk_buff *skb)
++{
++	struct ath11k_htc_hdr *hdr;
++
++	hdr = (struct ath11k_htc_hdr *)skb->data;
++
++	memset(hdr, 0, sizeof(*hdr));
++	hdr->htc_info = FIELD_PREP(HTC_HDR_ENDPOINTID, ep->eid) |
++			FIELD_PREP(HTC_HDR_PAYLOADLEN,
++				   (skb->len - sizeof(*hdr))) |
++			FIELD_PREP(HTC_HDR_FLAGS,
++				   ATH11K_HTC_FLAG_NEED_CREDIT_UPDATE);
++
++	spin_lock_bh(&ep->htc->tx_lock);
++	hdr->ctrl_info = FIELD_PREP(HTC_HDR_CONTROLBYTES1, ep->seq_no++);
++	spin_unlock_bh(&ep->htc->tx_lock);
++}
++
++int ath11k_htc_send(struct ath11k_htc *htc,
++		    enum ath11k_htc_ep_id eid,
++		    struct sk_buff *skb)
++{
++	struct ath11k_htc_ep *ep = &htc->endpoint[eid];
++	struct ath11k_skb_cb *skb_cb = ATH11K_SKB_CB(skb);
++	struct device *dev = htc->ab->dev;
++	struct ath11k_base *ab = htc->ab;
++	int credits = 0;
 +	int ret;
-+};
 +
-+/* number of failed packets (20 packets with 16 sw reties each) */
-+#define ATH11K_KICKOUT_THRESHOLD		(20 * 16)
++	if (eid >= ATH11K_HTC_EP_COUNT) {
++		ath11k_warn(ab, "Invalid endpoint id: %d\n", eid);
++		return -ENOENT;
++	}
 +
-+/* Use insanely high numbers to make sure that the firmware implementation
-+ * won't start, we have the same functionality already in hostapd. Unit
-+ * is seconds.
-+ */
-+#define ATH11K_KEEPALIVE_MIN_IDLE		3747
-+#define ATH11K_KEEPALIVE_MAX_IDLE		3895
-+#define ATH11K_KEEPALIVE_MAX_UNRESPONSIVE	3900
++	skb_push(skb, sizeof(struct ath11k_htc_hdr));
 +
-+#define WMI_HOST_RC_DS_FLAG			0x01
-+#define WMI_HOST_RC_CW40_FLAG			0x02
-+#define WMI_HOST_RC_SGI_FLAG			0x04
-+#define WMI_HOST_RC_HT_FLAG			0x08
-+#define WMI_HOST_RC_RTSCTS_FLAG			0x10
-+#define WMI_HOST_RC_TX_STBC_FLAG		0x20
-+#define WMI_HOST_RC_RX_STBC_FLAG		0xC0
-+#define WMI_HOST_RC_RX_STBC_FLAG_S		6
-+#define WMI_HOST_RC_WEP_TKIP_FLAG		0x100
-+#define WMI_HOST_RC_TS_FLAG			0x200
-+#define WMI_HOST_RC_UAPSD_FLAG			0x400
++	if (ep->tx_credit_flow_enabled) {
++		credits = DIV_ROUND_UP(skb->len, htc->target_credit_size);
++		spin_lock_bh(&htc->tx_lock);
++		if (ep->tx_credits < credits) {
++			ath11k_dbg(ab, ATH11K_DBG_HTC,
++				   "htc insufficient credits ep %d required %d available %d\n",
++				   eid, credits, ep->tx_credits);
++			spin_unlock_bh(&htc->tx_lock);
++			ret = -EAGAIN;
++			goto err_pull;
++		}
++		ep->tx_credits -= credits;
++		ath11k_dbg(ab, ATH11K_DBG_HTC,
++			   "htc ep %d consumed %d credits (total %d)\n",
++			   eid, credits, ep->tx_credits);
++		spin_unlock_bh(&htc->tx_lock);
++	}
 +
-+#define WMI_HT_CAP_ENABLED			0x0001
-+#define WMI_HT_CAP_HT20_SGI			0x0002
-+#define WMI_HT_CAP_DYNAMIC_SMPS			0x0004
-+#define WMI_HT_CAP_TX_STBC			0x0008
-+#define WMI_HT_CAP_TX_STBC_MASK_SHIFT		3
-+#define WMI_HT_CAP_RX_STBC			0x0030
-+#define WMI_HT_CAP_RX_STBC_MASK_SHIFT		4
-+#define WMI_HT_CAP_LDPC				0x0040
-+#define WMI_HT_CAP_L_SIG_TXOP_PROT		0x0080
-+#define WMI_HT_CAP_MPDU_DENSITY			0x0700
-+#define WMI_HT_CAP_MPDU_DENSITY_MASK_SHIFT	8
-+#define WMI_HT_CAP_HT40_SGI			0x0800
-+#define WMI_HT_CAP_RX_LDPC			0x1000
-+#define WMI_HT_CAP_TX_LDPC			0x2000
-+#define WMI_HT_CAP_IBF_BFER			0x4000
++	ath11k_htc_prepare_tx_skb(ep, skb);
 +
-+/* These macros should be used when we wish to advertise STBC support for
-+ * only 1SS or 2SS or 3SS.
-+ */
-+#define WMI_HT_CAP_RX_STBC_1SS			0x0010
-+#define WMI_HT_CAP_RX_STBC_2SS			0x0020
-+#define WMI_HT_CAP_RX_STBC_3SS			0x0030
++	skb_cb->eid = eid;
++	skb_cb->paddr = dma_map_single(dev, skb->data, skb->len, DMA_TO_DEVICE);
++	ret = dma_mapping_error(dev, skb_cb->paddr);
++	if (ret) {
++		ret = -EIO;
++		goto err_credits;
++	}
 +
-+#define WMI_HT_CAP_DEFAULT_ALL (WMI_HT_CAP_ENABLED    | \
-+				WMI_HT_CAP_HT20_SGI   | \
-+				WMI_HT_CAP_HT40_SGI   | \
-+				WMI_HT_CAP_TX_STBC    | \
-+				WMI_HT_CAP_RX_STBC    | \
-+				WMI_HT_CAP_LDPC)
++	ret = ath11k_ce_send(htc->ab, skb, ep->ul_pipe_id, ep->eid);
++	if (ret)
++		goto err_unmap;
 +
-+#define WMI_VHT_CAP_MAX_MPDU_LEN_MASK		0x00000003
-+#define WMI_VHT_CAP_RX_LDPC			0x00000010
-+#define WMI_VHT_CAP_SGI_80MHZ			0x00000020
-+#define WMI_VHT_CAP_SGI_160MHZ			0x00000040
-+#define WMI_VHT_CAP_TX_STBC			0x00000080
-+#define WMI_VHT_CAP_RX_STBC_MASK		0x00000300
-+#define WMI_VHT_CAP_RX_STBC_MASK_SHIFT		8
-+#define WMI_VHT_CAP_SU_BFER			0x00000800
-+#define WMI_VHT_CAP_SU_BFEE			0x00001000
-+#define WMI_VHT_CAP_MAX_CS_ANT_MASK		0x0000E000
-+#define WMI_VHT_CAP_MAX_CS_ANT_MASK_SHIFT	13
-+#define WMI_VHT_CAP_MAX_SND_DIM_MASK		0x00070000
-+#define WMI_VHT_CAP_MAX_SND_DIM_MASK_SHIFT	16
-+#define WMI_VHT_CAP_MU_BFER			0x00080000
-+#define WMI_VHT_CAP_MU_BFEE			0x00100000
-+#define WMI_VHT_CAP_MAX_AMPDU_LEN_EXP		0x03800000
-+#define WMI_VHT_CAP_MAX_AMPDU_LEN_EXP_SHIT	23
-+#define WMI_VHT_CAP_RX_FIXED_ANT		0x10000000
-+#define WMI_VHT_CAP_TX_FIXED_ANT		0x20000000
++	return 0;
 +
-+#define WMI_VHT_CAP_MAX_MPDU_LEN_11454		0x00000002
++err_unmap:
++	dma_unmap_single(dev, skb_cb->paddr, skb->len, DMA_TO_DEVICE);
++err_credits:
++	if (ep->tx_credit_flow_enabled) {
++		spin_lock_bh(&htc->tx_lock);
++		ep->tx_credits += credits;
++		ath11k_dbg(ab, ATH11K_DBG_HTC,
++			   "htc ep %d reverted %d credits back (total %d)\n",
++			   eid, credits, ep->tx_credits);
++		spin_unlock_bh(&htc->tx_lock);
 +
-+/* These macros should be used when we wish to advertise STBC support for
-+ * only 1SS or 2SS or 3SS.
-+ */
-+#define WMI_VHT_CAP_RX_STBC_1SS			0x00000100
-+#define WMI_VHT_CAP_RX_STBC_2SS			0x00000200
-+#define WMI_VHT_CAP_RX_STBC_3SS			0x00000300
++		if (ep->ep_ops.ep_tx_credits)
++			ep->ep_ops.ep_tx_credits(htc->ab);
++	}
++err_pull:
++	skb_pull(skb, sizeof(struct ath11k_htc_hdr));
++	return ret;
++}
 +
-+#define WMI_VHT_CAP_DEFAULT_ALL (WMI_VHT_CAP_MAX_MPDU_LEN_11454  | \
-+				 WMI_VHT_CAP_SGI_80MHZ      |       \
-+				 WMI_VHT_CAP_TX_STBC        |       \
-+				 WMI_VHT_CAP_RX_STBC_MASK   |       \
-+				 WMI_VHT_CAP_RX_LDPC        |       \
-+				 WMI_VHT_CAP_MAX_AMPDU_LEN_EXP   |  \
-+				 WMI_VHT_CAP_RX_FIXED_ANT   |       \
-+				 WMI_VHT_CAP_TX_FIXED_ANT)
++static void
++ath11k_htc_process_credit_report(struct ath11k_htc *htc,
++				 const struct ath11k_htc_credit_report *report,
++				 int len,
++				 enum ath11k_htc_ep_id eid)
++{
++	struct ath11k_base *ab = htc->ab;
++	struct ath11k_htc_ep *ep;
++	int i, n_reports;
 +
-+/* FIXME: should these be in ieee80211.h? */
-+#define IEEE80211_VHT_MCS_SUPPORT_0_11_MASK	GENMASK(23, 16)
-+#define IEEE80211_DISABLE_VHT_MCS_SUPPORT_0_11	BIT(24)
++	if (len % sizeof(*report))
++		ath11k_warn(ab, "Uneven credit report len %d", len);
 +
-+#define WMI_MAX_SPATIAL_STREAM			3
++	n_reports = len / sizeof(*report);
 +
-+#define ATH11K_CHAN_WIDTH_NUM			8
++	spin_lock_bh(&htc->tx_lock);
++	for (i = 0; i < n_reports; i++, report++) {
++		if (report->eid >= ATH11K_HTC_EP_COUNT)
++			break;
 +
-+extern const struct htt_rx_ring_tlv_filter ath11k_mac_mon_status_filter_default;
++		ep = &htc->endpoint[report->eid];
++		ep->tx_credits += report->credits;
 +
-+int ath11k_mac_create(struct ath11k_base *ab);
-+void ath11k_mac_destroy(struct ath11k_base *ab);
-+void ath11k_mac_unregister(struct ath11k_base *ab);
-+int ath11k_mac_hw_ratecode_to_legacy_rate(u8 hw_rc, u8 preamble, u8 *rateidx,
-+					  u16 *rate);
-+u8 ath11k_mac_bitrate_to_idx(const struct ieee80211_supported_band *sband,
-+			     u32 bitrate);
-+u8 ath11k_mac_hw_rate_to_idx(const struct ieee80211_supported_band *sband,
-+			     u8 hw_rate, bool cck);
++		ath11k_dbg(ab, ATH11K_DBG_HTC, "htc ep %d got %d credits (total %d)\n",
++			   report->eid, report->credits, ep->tx_credits);
 +
-+void __ath11k_mac_scan_finish(struct ath11k *ar);
-+void ath11k_mac_scan_finish(struct ath11k *ar);
++		if (ep->ep_ops.ep_tx_credits) {
++			spin_unlock_bh(&htc->tx_lock);
++			ep->ep_ops.ep_tx_credits(htc->ab);
++			spin_lock_bh(&htc->tx_lock);
++		}
++	}
++	spin_unlock_bh(&htc->tx_lock);
++}
 +
-+struct ath11k_vif *ath11k_mac_get_arvif(struct ath11k *ar, u32 vdev_id);
-+struct ath11k_vif *ath11k_mac_get_arvif_by_vdev_id(struct ath11k_base *ab,
-+						   u32 vdev_id);
-+struct ath11k *ath11k_mac_get_ar_by_vdev_id(struct ath11k_base *ab, u32 vdev_id);
-+struct ath11k *ath11k_mac_get_ar_by_pdev_id(struct ath11k_base *ab, u32 pdev_id);
-+struct ath11k *ath11k_mac_get_ar_vdev_stop_status(struct ath11k_base *ab,
-+						  u32 vdev_id);
++static int ath11k_htc_process_trailer(struct ath11k_htc *htc,
++				      u8 *buffer,
++				      int length,
++				      enum ath11k_htc_ep_id src_eid)
++{
++	struct ath11k_base *ab = htc->ab;
++	int status = 0;
++	struct ath11k_htc_record *record;
++	size_t len;
 +
-+void ath11k_mac_drain_tx(struct ath11k *ar);
-+void ath11k_mac_peer_cleanup_all(struct ath11k *ar);
-+int ath11k_mac_tx_mgmt_pending_free(int buf_id, void *skb, void *ctx);
-+#endif
++	while (length > 0) {
++		record = (struct ath11k_htc_record *)buffer;
++
++		if (length < sizeof(record->hdr)) {
++			status = -EINVAL;
++			break;
++		}
++
++		if (record->hdr.len > length) {
++			/* no room left in buffer for record */
++			ath11k_warn(ab, "Invalid record length: %d\n",
++				    record->hdr.len);
++			status = -EINVAL;
++			break;
++		}
++
++		switch (record->hdr.id) {
++		case ATH11K_HTC_RECORD_CREDITS:
++			len = sizeof(struct ath11k_htc_credit_report);
++			if (record->hdr.len < len) {
++				ath11k_warn(ab, "Credit report too long\n");
++				status = -EINVAL;
++				break;
++			}
++			ath11k_htc_process_credit_report(htc,
++							 record->credit_report,
++							 record->hdr.len,
++							 src_eid);
++			break;
++		default:
++			ath11k_warn(ab, "Unhandled record: id:%d length:%d\n",
++				    record->hdr.id, record->hdr.len);
++			break;
++		}
++
++		if (status)
++			break;
++
++		/* multiple records may be present in a trailer */
++		buffer += sizeof(record->hdr) + record->hdr.len;
++		length -= sizeof(record->hdr) + record->hdr.len;
++	}
++
++	return status;
++}
++
++void ath11k_htc_rx_completion_handler(struct ath11k_base *ab,
++				      struct sk_buff *skb)
++{
++	int status = 0;
++	struct ath11k_htc *htc = &ab->htc;
++	struct ath11k_htc_hdr *hdr;
++	struct ath11k_htc_ep *ep;
++	u16 payload_len;
++	u32 trailer_len = 0;
++	size_t min_len;
++	u8 eid;
++	bool trailer_present;
++
++	hdr = (struct ath11k_htc_hdr *)skb->data;
++	skb_pull(skb, sizeof(*hdr));
++
++	eid = FIELD_GET(HTC_HDR_ENDPOINTID, hdr->htc_info);
++
++	if (eid >= ATH11K_HTC_EP_COUNT) {
++		ath11k_warn(ab, "HTC Rx: invalid eid %d\n", eid);
++		goto out;
++	}
++
++	ep = &htc->endpoint[eid];
++
++	payload_len = FIELD_GET(HTC_HDR_PAYLOADLEN, hdr->htc_info);
++
++	if (payload_len + sizeof(*hdr) > ATH11K_HTC_MAX_LEN) {
++		ath11k_warn(ab, "HTC rx frame too long, len: %zu\n",
++			    payload_len + sizeof(*hdr));
++		goto out;
++	}
++
++	if (skb->len < payload_len) {
++		ath11k_warn(ab, "HTC Rx: insufficient length, got %d, expected %d\n",
++			    skb->len, payload_len);
++		goto out;
++	}
++
++	/* get flags to check for trailer */
++	trailer_present = (FIELD_GET(HTC_HDR_FLAGS, hdr->htc_info)) &
++			  ATH11K_HTC_FLAG_TRAILER_PRESENT;
++
++	if (trailer_present) {
++		u8 *trailer;
++
++		trailer_len = FIELD_GET(HTC_HDR_CONTROLBYTES0, hdr->ctrl_info);
++		min_len = sizeof(struct ath11k_htc_record_hdr);
++
++		if ((trailer_len < min_len) ||
++		    (trailer_len > payload_len)) {
++			ath11k_warn(ab, "Invalid trailer length: %d\n",
++				    trailer_len);
++			goto out;
++		}
++
++		trailer = (u8 *)hdr;
++		trailer += sizeof(*hdr);
++		trailer += payload_len;
++		trailer -= trailer_len;
++		status = ath11k_htc_process_trailer(htc, trailer,
++						    trailer_len, eid);
++		if (status)
++			goto out;
++
++		skb_trim(skb, skb->len - trailer_len);
++	}
++
++	if (trailer_len >= payload_len)
++		/* zero length packet with trailer data, just drop these */
++		goto out;
++
++	if (eid == ATH11K_HTC_EP_0) {
++		struct ath11k_htc_msg *msg = (struct ath11k_htc_msg *)skb->data;
++
++		switch (FIELD_GET(HTC_MSG_MESSAGEID, msg->msg_svc_id)) {
++		case ATH11K_HTC_MSG_READY_ID:
++		case ATH11K_HTC_MSG_CONNECT_SERVICE_RESP_ID:
++			/* handle HTC control message */
++			if (completion_done(&htc->ctl_resp)) {
++				/* this is a fatal error, target should not be
++				 * sending unsolicited messages on the ep 0
++				 */
++				ath11k_warn(ab, "HTC rx ctrl still processing\n");
++				complete(&htc->ctl_resp);
++				goto out;
++			}
++
++			htc->control_resp_len =
++				min_t(int, skb->len,
++				      ATH11K_HTC_MAX_CTRL_MSG_LEN);
++
++			memcpy(htc->control_resp_buffer, skb->data,
++			       htc->control_resp_len);
++
++			complete(&htc->ctl_resp);
++			break;
++		default:
++			ath11k_warn(ab, "ignoring unsolicited htc ep0 event\n");
++			break;
++		}
++		goto out;
++	}
++
++	ath11k_dbg(ab, ATH11K_DBG_HTC, "htc rx completion ep %d skb %pK\n",
++		   eid, skb);
++	ep->ep_ops.ep_rx_complete(ab, skb);
++
++	/* poll tx completion for interrupt disabled CE's */
++	ath11k_ce_poll_send_completed(ab, ep->ul_pipe_id);
++
++	/* skb is now owned by the rx completion handler */
++	skb = NULL;
++out:
++	kfree_skb(skb);
++}
++
++static void ath11k_htc_control_rx_complete(struct ath11k_base *ab,
++					   struct sk_buff *skb)
++{
++	/* This is unexpected. FW is not supposed to send regular rx on this
++	 * endpoint.
++	 */
++	ath11k_warn(ab, "unexpected htc rx\n");
++	kfree_skb(skb);
++}
++
++static const char *htc_service_name(enum ath11k_htc_svc_id id)
++{
++	switch (id) {
++	case ATH11K_HTC_SVC_ID_RESERVED:
++		return "Reserved";
++	case ATH11K_HTC_SVC_ID_RSVD_CTRL:
++		return "Control";
++	case ATH11K_HTC_SVC_ID_WMI_CONTROL:
++		return "WMI";
++	case ATH11K_HTC_SVC_ID_WMI_DATA_BE:
++		return "DATA BE";
++	case ATH11K_HTC_SVC_ID_WMI_DATA_BK:
++		return "DATA BK";
++	case ATH11K_HTC_SVC_ID_WMI_DATA_VI:
++		return "DATA VI";
++	case ATH11K_HTC_SVC_ID_WMI_DATA_VO:
++		return "DATA VO";
++	case ATH11K_HTC_SVC_ID_WMI_CONTROL_MAC1:
++		return "WMI MAC1";
++	case ATH11K_HTC_SVC_ID_WMI_CONTROL_MAC2:
++		return "WMI MAC2";
++	case ATH11K_HTC_SVC_ID_NMI_CONTROL:
++		return "NMI Control";
++	case ATH11K_HTC_SVC_ID_NMI_DATA:
++		return "NMI Data";
++	case ATH11K_HTC_SVC_ID_HTT_DATA_MSG:
++		return "HTT Data";
++	case ATH11K_HTC_SVC_ID_TEST_RAW_STREAMS:
++		return "RAW";
++	case ATH11K_HTC_SVC_ID_IPA_TX:
++		return "IPA TX";
++	case ATH11K_HTC_SVC_ID_PKT_LOG:
++		return "PKT LOG";
++	}
++
++	return "Unknown";
++}
++
++static void ath11k_htc_reset_endpoint_states(struct ath11k_htc *htc)
++{
++	struct ath11k_htc_ep *ep;
++	int i;
++
++	for (i = ATH11K_HTC_EP_0; i < ATH11K_HTC_EP_COUNT; i++) {
++		ep = &htc->endpoint[i];
++		ep->service_id = ATH11K_HTC_SVC_ID_UNUSED;
++		ep->max_ep_message_len = 0;
++		ep->max_tx_queue_depth = 0;
++		ep->eid = i;
++		ep->htc = htc;
++		ep->tx_credit_flow_enabled = true;
++	}
++}
++
++static u8 ath11k_htc_get_credit_allocation(struct ath11k_htc *htc,
++					   u16 service_id)
++{
++	u8 i, allocation = 0;
++
++	for (i = 0; i < ATH11K_HTC_MAX_SERVICE_ALLOC_ENTRIES; i++) {
++		if (htc->service_alloc_table[i].service_id == service_id) {
++			allocation =
++				htc->service_alloc_table[i].credit_allocation;
++		}
++	}
++
++	return allocation;
++}
++
++static int ath11k_htc_setup_target_buffer_assignments(struct ath11k_htc *htc)
++{
++	struct ath11k_htc_svc_tx_credits *serv_entry;
++	u32 svc_id[] = {
++		ATH11K_HTC_SVC_ID_WMI_CONTROL,
++		ATH11K_HTC_SVC_ID_WMI_CONTROL_MAC1,
++		ATH11K_HTC_SVC_ID_WMI_CONTROL_MAC2,
++	};
++	int i, credits;
++
++	credits =  htc->total_transmit_credits;
++	serv_entry = htc->service_alloc_table;
++
++	if ((htc->wmi_ep_count == 0) ||
++	    (htc->wmi_ep_count > ARRAY_SIZE(svc_id)))
++		return -EINVAL;
++
++	/* Divide credits among number of endpoints for WMI */
++	credits = credits / htc->wmi_ep_count;
++	for (i = 0; i < htc->wmi_ep_count; i++) {
++		serv_entry[i].service_id = svc_id[i];
++		serv_entry[i].credit_allocation = credits;
++	}
++
++	return 0;
++}
++
++int ath11k_htc_wait_target(struct ath11k_htc *htc)
++{
++	int i, status = 0;
++	struct ath11k_base *ab = htc->ab;
++	unsigned long time_left;
++	struct ath11k_htc_ready *ready;
++	u16 message_id;
++	u16 credit_count;
++	u16 credit_size;
++
++	time_left = wait_for_completion_timeout(&htc->ctl_resp,
++						ATH11K_HTC_WAIT_TIMEOUT_HZ);
++	if (!time_left) {
++		ath11k_warn(ab, "failed to receive control response completion, polling..\n");
++
++		for (i = 0; i < CE_COUNT; i++)
++			ath11k_ce_per_engine_service(htc->ab, i);
++
++		time_left =
++			wait_for_completion_timeout(&htc->ctl_resp,
++						    ATH11K_HTC_WAIT_TIMEOUT_HZ);
++
++		if (!time_left)
++			status = -ETIMEDOUT;
++	}
++
++	if (status < 0) {
++		ath11k_warn(ab, "ctl_resp never came in (%d)\n", status);
++		return status;
++	}
++
++	if (htc->control_resp_len < sizeof(*ready)) {
++		ath11k_warn(ab, "Invalid HTC ready msg len:%d\n",
++			    htc->control_resp_len);
++		return -ECOMM;
++	}
++
++	ready = (struct ath11k_htc_ready *)htc->control_resp_buffer;
++	message_id   = FIELD_GET(HTC_MSG_MESSAGEID, ready->id_credit_count);
++	credit_count = FIELD_GET(HTC_READY_MSG_CREDITCOUNT,
++				 ready->id_credit_count);
++	credit_size  = FIELD_GET(HTC_READY_MSG_CREDITSIZE, ready->size_ep);
++
++	if (message_id != ATH11K_HTC_MSG_READY_ID) {
++		ath11k_warn(ab, "Invalid HTC ready msg: 0x%x\n", message_id);
++		return -ECOMM;
++	}
++
++	htc->total_transmit_credits = credit_count;
++	htc->target_credit_size = credit_size;
++
++	ath11k_dbg(ab, ATH11K_DBG_HTC,
++		   "Target ready! transmit resources: %d size:%d\n",
++		   htc->total_transmit_credits, htc->target_credit_size);
++
++	if ((htc->total_transmit_credits == 0) ||
++	    (htc->target_credit_size == 0)) {
++		ath11k_warn(ab, "Invalid credit size received\n");
++		return -ECOMM;
++	}
++
++	ath11k_htc_setup_target_buffer_assignments(htc);
++
++	return 0;
++}
++
++int ath11k_htc_connect_service(struct ath11k_htc *htc,
++			       struct ath11k_htc_svc_conn_req *conn_req,
++			       struct ath11k_htc_svc_conn_resp *conn_resp)
++{
++	struct ath11k_base *ab = htc->ab;
++	struct ath11k_htc_conn_svc *req_msg;
++	struct ath11k_htc_conn_svc_resp resp_msg_dummy;
++	struct ath11k_htc_conn_svc_resp *resp_msg = &resp_msg_dummy;
++	enum ath11k_htc_ep_id assigned_eid = ATH11K_HTC_EP_COUNT;
++	struct ath11k_htc_ep *ep;
++	struct sk_buff *skb;
++	unsigned int max_msg_size = 0;
++	int length, status;
++	unsigned long time_left;
++	bool disable_credit_flow_ctrl = false;
++	u16 message_id, service_id, flags = 0;
++	u8 tx_alloc = 0;
++
++	/* special case for HTC pseudo control service */
++	if (conn_req->service_id == ATH11K_HTC_SVC_ID_RSVD_CTRL) {
++		disable_credit_flow_ctrl = true;
++		assigned_eid = ATH11K_HTC_EP_0;
++		max_msg_size = ATH11K_HTC_MAX_CTRL_MSG_LEN;
++		memset(&resp_msg_dummy, 0, sizeof(resp_msg_dummy));
++		goto setup;
++	}
++
++	tx_alloc = ath11k_htc_get_credit_allocation(htc,
++						    conn_req->service_id);
++	if (!tx_alloc)
++		ath11k_dbg(ab, ATH11K_DBG_BOOT,
++			   "boot htc service %s does not allocate target credits\n",
++			   htc_service_name(conn_req->service_id));
++
++	skb = ath11k_htc_build_tx_ctrl_skb(htc->ab);
++	if (!skb) {
++		ath11k_warn(ab, "Failed to allocate HTC packet\n");
++		return -ENOMEM;
++	}
++
++	length = sizeof(*req_msg);
++	skb_put(skb, length);
++	memset(skb->data, 0, length);
++
++	req_msg = (struct ath11k_htc_conn_svc *)skb->data;
++	req_msg->msg_svc_id = FIELD_PREP(HTC_MSG_MESSAGEID,
++					 ATH11K_HTC_MSG_CONNECT_SERVICE_ID);
++
++	flags |= FIELD_PREP(ATH11K_HTC_CONN_FLAGS_RECV_ALLOC, tx_alloc);
++
++	/* Only enable credit flow control for WMI ctrl service */
++	if (!(conn_req->service_id == ATH11K_HTC_SVC_ID_WMI_CONTROL ||
++	      conn_req->service_id == ATH11K_HTC_SVC_ID_WMI_CONTROL_MAC1 ||
++	      conn_req->service_id == ATH11K_HTC_SVC_ID_WMI_CONTROL_MAC2)) {
++		flags |= ATH11K_HTC_CONN_FLAGS_DISABLE_CREDIT_FLOW_CTRL;
++		disable_credit_flow_ctrl = true;
++	}
++
++	req_msg->flags_len = FIELD_PREP(HTC_SVC_MSG_CONNECTIONFLAGS, flags);
++	req_msg->msg_svc_id |= FIELD_PREP(HTC_SVC_MSG_SERVICE_ID,
++					  conn_req->service_id);
++
++	reinit_completion(&htc->ctl_resp);
++
++	status = ath11k_htc_send(htc, ATH11K_HTC_EP_0, skb);
++	if (status) {
++		kfree_skb(skb);
++		return status;
++	}
++
++	/* wait for response */
++	time_left = wait_for_completion_timeout(&htc->ctl_resp,
++						ATH11K_HTC_CONN_SVC_TIMEOUT_HZ);
++	if (!time_left) {
++		ath11k_err(ab, "Service connect timeout\n");
++		return -ETIMEDOUT;
++	}
++
++	/* we controlled the buffer creation, it's aligned */
++	resp_msg = (struct ath11k_htc_conn_svc_resp *)htc->control_resp_buffer;
++	message_id = FIELD_GET(HTC_MSG_MESSAGEID, resp_msg->msg_svc_id);
++	service_id = FIELD_GET(HTC_SVC_RESP_MSG_SERVICEID,
++			       resp_msg->msg_svc_id);
++
++	if ((message_id != ATH11K_HTC_MSG_CONNECT_SERVICE_RESP_ID) ||
++	    (htc->control_resp_len < sizeof(*resp_msg))) {
++		ath11k_err(ab, "Invalid resp message ID 0x%x", message_id);
++		return -EPROTO;
++	}
++
++	ath11k_dbg(ab, ATH11K_DBG_HTC,
++		   "HTC Service %s connect response: status: 0x%lx, assigned ep: 0x%lx\n",
++		   htc_service_name(service_id),
++		   FIELD_GET(HTC_SVC_RESP_MSG_STATUS, resp_msg->flags_len),
++		   FIELD_GET(HTC_SVC_RESP_MSG_ENDPOINTID, resp_msg->flags_len));
++
++	conn_resp->connect_resp_code = FIELD_GET(HTC_SVC_RESP_MSG_STATUS,
++						 resp_msg->flags_len);
++
++	/* check response status */
++	if (conn_resp->connect_resp_code != ATH11K_HTC_CONN_SVC_STATUS_SUCCESS) {
++		ath11k_err(ab, "HTC Service %s connect request failed: 0x%x)\n",
++			   htc_service_name(service_id),
++		       conn_resp->connect_resp_code);
++		return -EPROTO;
++	}
++
++	assigned_eid = (enum ath11k_htc_ep_id)FIELD_GET(
++						HTC_SVC_RESP_MSG_ENDPOINTID,
++						resp_msg->flags_len);
++
++	max_msg_size = FIELD_GET(HTC_SVC_RESP_MSG_MAXMSGSIZE,
++				 resp_msg->flags_len);
++
++setup:
++
++	if (assigned_eid >= ATH11K_HTC_EP_COUNT)
++		return -EPROTO;
++
++	if (max_msg_size == 0)
++		return -EPROTO;
++
++	ep = &htc->endpoint[assigned_eid];
++	ep->eid = assigned_eid;
++
++	if (ep->service_id != ATH11K_HTC_SVC_ID_UNUSED)
++		return -EPROTO;
++
++	/* return assigned endpoint to caller */
++	conn_resp->eid = assigned_eid;
++	conn_resp->max_msg_len = FIELD_GET(HTC_SVC_RESP_MSG_MAXMSGSIZE,
++					   resp_msg->flags_len);
++
++	/* setup the endpoint */
++	ep->service_id = conn_req->service_id;
++	ep->max_tx_queue_depth = conn_req->max_send_queue_depth;
++	ep->max_ep_message_len = FIELD_GET(HTC_SVC_RESP_MSG_MAXMSGSIZE,
++					   resp_msg->flags_len);
++	ep->tx_credits = tx_alloc;
++
++	/* copy all the callbacks */
++	ep->ep_ops = conn_req->ep_ops;
++
++	status = ath11k_ahb_map_service_to_pipe(htc->ab,
++						ep->service_id,
++						&ep->ul_pipe_id,
++						&ep->dl_pipe_id);
++	if (status)
++		return status;
++
++	ath11k_dbg(ab, ATH11K_DBG_BOOT,
++		   "boot htc service '%s' ul pipe %d dl pipe %d eid %d ready\n",
++		   htc_service_name(ep->service_id), ep->ul_pipe_id,
++		   ep->dl_pipe_id, ep->eid);
++
++	if (disable_credit_flow_ctrl && ep->tx_credit_flow_enabled) {
++		ep->tx_credit_flow_enabled = false;
++		ath11k_dbg(ab, ATH11K_DBG_BOOT,
++			   "boot htc service '%s' eid %d TX flow control disabled\n",
++			   htc_service_name(ep->service_id), assigned_eid);
++	}
++
++	return status;
++}
++
++int ath11k_htc_start(struct ath11k_htc *htc)
++{
++	struct sk_buff *skb;
++	int status = 0;
++	struct ath11k_base *ab = htc->ab;
++	struct ath11k_htc_setup_complete_extended *msg;
++
++	skb = ath11k_htc_build_tx_ctrl_skb(htc->ab);
++	if (!skb)
++		return -ENOMEM;
++
++	skb_put(skb, sizeof(*msg));
++	memset(skb->data, 0, skb->len);
++
++	msg = (struct ath11k_htc_setup_complete_extended *)skb->data;
++	msg->msg_id = FIELD_PREP(HTC_MSG_MESSAGEID,
++				 ATH11K_HTC_MSG_SETUP_COMPLETE_EX_ID);
++
++	ath11k_dbg(ab, ATH11K_DBG_HTC, "HTC is using TX credit flow control\n");
++
++	status = ath11k_htc_send(htc, ATH11K_HTC_EP_0, skb);
++	if (status) {
++		kfree_skb(skb);
++		return status;
++	}
++
++	return 0;
++}
++
++int ath11k_htc_init(struct ath11k_base *ab)
++{
++	struct ath11k_htc *htc = &ab->htc;
++	struct ath11k_htc_svc_conn_req conn_req;
++	struct ath11k_htc_svc_conn_resp conn_resp;
++	int ret;
++
++	spin_lock_init(&htc->tx_lock);
++
++	ath11k_htc_reset_endpoint_states(htc);
++
++	htc->ab = ab;
++
++	switch (ab->wmi_sc.preferred_hw_mode) {
++	case WMI_HOST_HW_MODE_SINGLE:
++		htc->wmi_ep_count = 1;
++		break;
++	case WMI_HOST_HW_MODE_DBS:
++	case WMI_HOST_HW_MODE_DBS_OR_SBS:
++		htc->wmi_ep_count = 2;
++		break;
++	case WMI_HOST_HW_MODE_DBS_SBS:
++		htc->wmi_ep_count = 3;
++		break;
++	default:
++		htc->wmi_ep_count = 3;
++		break;
++	}
++
++	/* setup our pseudo HTC control endpoint connection */
++	memset(&conn_req, 0, sizeof(conn_req));
++	memset(&conn_resp, 0, sizeof(conn_resp));
++	conn_req.ep_ops.ep_tx_complete = ath11k_htc_control_tx_complete;
++	conn_req.ep_ops.ep_rx_complete = ath11k_htc_control_rx_complete;
++	conn_req.max_send_queue_depth = ATH11K_NUM_CONTROL_TX_BUFFERS;
++	conn_req.service_id = ATH11K_HTC_SVC_ID_RSVD_CTRL;
++
++	/* connect fake service */
++	ret = ath11k_htc_connect_service(htc, &conn_req, &conn_resp);
++	if (ret) {
++		ath11k_err(ab, "could not connect to htc service (%d)\n", ret);
++		return ret;
++	}
++
++	init_completion(&htc->ctl_resp);
++
++	return 0;
++}
 
