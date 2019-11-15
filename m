@@ -7,54 +7,54 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BFBAC33C9B
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Nov 2019 09:30:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B21F2C43141
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Nov 2019 09:30:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 64A3B2073A
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Nov 2019 09:30:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8A1AF20733
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Nov 2019 09:30:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="BJJWDH/p";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="ALb6XzVP"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Hg5KvGXd";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="j554QsrI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727376AbfKOJa1 (ORCPT
+        id S1727387AbfKOJab (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 15 Nov 2019 04:30:27 -0500
-Received: from smtp.codeaurora.org ([198.145.29.96]:54798 "EHLO
+        Fri, 15 Nov 2019 04:30:31 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:55148 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727325AbfKOJa1 (ORCPT
+        with ESMTP id S1726901AbfKOJab (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Nov 2019 04:30:27 -0500
+        Fri, 15 Nov 2019 04:30:31 -0500
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id DF3646145C; Fri, 15 Nov 2019 09:29:56 +0000 (UTC)
+        id C964761400; Fri, 15 Nov 2019 09:30:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1573810226;
-        bh=g/jDisnRtGX70xBui3w3bkaqNUY+waURf3s9NoaQQTE=;
+        s=default; t=1573810230;
+        bh=+pOubxnGZnJFd5LgyLKZ/lfsyUtwrMlIk5WgRFFNGbU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=BJJWDH/pLLDbOO5oKiWD735AI1sOFKnqi5kMXm+V1geFN1PjEyhSKYEih3Fe+9zLo
-         8EXNK4Y5X+7Xi16FX+Nrspt7HeN2N+j3FPMTino6UZvoHZVQDKVIUfFyoqq+VpAuYT
-         QeKECWGvmr+8P1LAWiWAw1HMBbEraQ2vctKFC8L0=
+        b=Hg5KvGXdKaO+pVHgGrbZujFRcys5ow2AzsCND+wJN8Pn17OpYPENba4lHxwF6uJfM
+         VZtXDX6Gb7S6gi23lXBfMXHnRTZJusjjtH4Q4FRw2pPwPxheWPug7SJvbCTztxoGZY
+         Dg7uSUMP0b2vxruYGZXdcmuoE+PCwakeEnh3KeLM=
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id C7C4A613C2;
-        Fri, 15 Nov 2019 09:29:49 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id A8354613D1;
+        Fri, 15 Nov 2019 09:30:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1573810191;
-        bh=g/jDisnRtGX70xBui3w3bkaqNUY+waURf3s9NoaQQTE=;
+        s=default; t=1573810204;
+        bh=+pOubxnGZnJFd5LgyLKZ/lfsyUtwrMlIk5WgRFFNGbU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ALb6XzVPDzHOeO/ep+AhTVgYbG9Fc+nU7EYR2rU+FD7C0cgtjY6/2TK8Xx0YhyfTj
-         0JAmF9tbXAIeu2yXzpTtWgPj8K9bXlJZfZKSXTbIlb5sGRLe4VOVJBJTwXZIkmqUkG
-         dTc3zpCpZbrx6IRBdAZszX7/1M0OhLJaFT6wBeeE=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org C7C4A613C2
+        b=j554QsrI/Byu1E/pg4qq6PC+IUIweIptKQhSeyY5OcFyQEaDBRvDBkbV2uL+LMI7f
+         NWTYanqBnFO57NnT0wjWG+5QplCqn4rXHIOUCykf25Pje5YVD2BzK5BgwVWZMYAzlR
+         Xu/6bapUhOrPLyhksNF3LRoTHamnqs49ToCdazk8=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org A8354613D1
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
 To:     linux-wireless@vger.kernel.org
 Cc:     ath11k@lists.infradead.org, devicetree@vger.kernel.org
-Subject: [PATCH v3 14/49] ath11k: add debugfs_sta.c
-Date:   Fri, 15 Nov 2019 11:28:38 +0200
-Message-Id: <1573810153-29623-15-git-send-email-kvalo@codeaurora.org>
+Subject: [PATCH v3 18/49] ath11k: add dp_rx.h
+Date:   Fri, 15 Nov 2019 11:28:42 +0200
+Message-Id: <1573810153-29623-19-git-send-email-kvalo@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1573810153-29623-1-git-send-email-kvalo@codeaurora.org>
 References: <1573810153-29623-1-git-send-email-kvalo@codeaurora.org>
@@ -67,551 +67,97 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath11k/debugfs_sta.c | 538 ++++++++++++++++++++++++++
- 1 file changed, 538 insertions(+)
+ drivers/net/wireless/ath/ath11k/dp_rx.h | 84 +++++++++++++++++++++++++++++++++
+ 1 file changed, 84 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath11k/debugfs_sta.c b/drivers/net/wireless/ath/ath11k/debugfs_sta.c
+diff --git a/drivers/net/wireless/ath/ath11k/dp_rx.h b/drivers/net/wireless/ath/ath11k/dp_rx.h
 new file mode 100644
-index 000000000000..b392117eff3c
+index 000000000000..026820fda568
 --- /dev/null
-+++ b/drivers/net/wireless/ath/ath11k/debugfs_sta.c
-@@ -0,0 +1,538 @@
-+// SPDX-License-Identifier: BSD-3-Clause-Clear
++++ b/drivers/net/wireless/ath/ath11k/dp_rx.h
+@@ -0,0 +1,84 @@
++/* SPDX-License-Identifier: BSD-3-Clause-Clear */
 +/*
 + * Copyright (c) 2018-2019 The Linux Foundation. All rights reserved.
 + */
-+
-+#include <linux/vmalloc.h>
++#ifndef ATH11K_DP_RX_H
++#define ATH11K_DP_RX_H
 +
 +#include "core.h"
-+#include "peer.h"
++#include "rx_desc.h"
 +#include "debug.h"
 +
-+void
-+ath11k_accumulate_per_peer_tx_stats(struct ath11k_sta *arsta,
-+				    struct ath11k_per_peer_tx_stats *peer_stats,
-+				    u8 legacy_rate_idx)
-+{
-+	struct rate_info *txrate = &arsta->txrate;
-+	struct ath11k_htt_tx_stats *tx_stats;
-+	int gi, mcs, bw, nss;
++#define DP_RX_MPDU_ERR_FCS			BIT(0)
++#define DP_RX_MPDU_ERR_DECRYPT			BIT(1)
++#define DP_RX_MPDU_ERR_TKIP_MIC			BIT(2)
++#define DP_RX_MPDU_ERR_AMSDU_ERR		BIT(3)
++#define DP_RX_MPDU_ERR_OVERFLOW			BIT(4)
++#define DP_RX_MPDU_ERR_MSDU_LEN			BIT(5)
++#define DP_RX_MPDU_ERR_MPDU_LEN			BIT(6)
++#define DP_RX_MPDU_ERR_UNENCRYPTED_FRAME	BIT(7)
 +
-+	if (!arsta->tx_stats)
-+		return;
-+
-+	tx_stats = arsta->tx_stats;
-+	gi = FIELD_GET(RATE_INFO_FLAGS_SHORT_GI, arsta->txrate.flags);
-+	mcs = txrate->mcs;
-+	bw = txrate->bw;
-+	nss = txrate->nss - 1;
-+
-+#define STATS_OP_FMT(name) tx_stats->stats[ATH11K_STATS_TYPE_##name]
-+
-+	if (txrate->flags & RATE_INFO_FLAGS_HE_MCS) {
-+		STATS_OP_FMT(SUCC).he[0][mcs] += peer_stats->succ_bytes;
-+		STATS_OP_FMT(SUCC).he[1][mcs] += peer_stats->succ_pkts;
-+		STATS_OP_FMT(FAIL).he[0][mcs] += peer_stats->failed_bytes;
-+		STATS_OP_FMT(FAIL).he[1][mcs] += peer_stats->failed_pkts;
-+		STATS_OP_FMT(RETRY).he[0][mcs] += peer_stats->retry_bytes;
-+		STATS_OP_FMT(RETRY).he[1][mcs] += peer_stats->retry_pkts;
-+	} else if (txrate->flags & RATE_INFO_FLAGS_VHT_MCS) {
-+		STATS_OP_FMT(SUCC).vht[0][mcs] += peer_stats->succ_bytes;
-+		STATS_OP_FMT(SUCC).vht[1][mcs] += peer_stats->succ_pkts;
-+		STATS_OP_FMT(FAIL).vht[0][mcs] += peer_stats->failed_bytes;
-+		STATS_OP_FMT(FAIL).vht[1][mcs] += peer_stats->failed_pkts;
-+		STATS_OP_FMT(RETRY).vht[0][mcs] += peer_stats->retry_bytes;
-+		STATS_OP_FMT(RETRY).vht[1][mcs] += peer_stats->retry_pkts;
-+	} else if (txrate->flags & RATE_INFO_FLAGS_MCS) {
-+		STATS_OP_FMT(SUCC).ht[0][mcs] += peer_stats->succ_bytes;
-+		STATS_OP_FMT(SUCC).ht[1][mcs] += peer_stats->succ_pkts;
-+		STATS_OP_FMT(FAIL).ht[0][mcs] += peer_stats->failed_bytes;
-+		STATS_OP_FMT(FAIL).ht[1][mcs] += peer_stats->failed_pkts;
-+		STATS_OP_FMT(RETRY).ht[0][mcs] += peer_stats->retry_bytes;
-+		STATS_OP_FMT(RETRY).ht[1][mcs] += peer_stats->retry_pkts;
-+	} else {
-+		mcs = legacy_rate_idx;
-+
-+		STATS_OP_FMT(SUCC).legacy[0][mcs] += peer_stats->succ_bytes;
-+		STATS_OP_FMT(SUCC).legacy[1][mcs] += peer_stats->succ_pkts;
-+		STATS_OP_FMT(FAIL).legacy[0][mcs] += peer_stats->failed_bytes;
-+		STATS_OP_FMT(FAIL).legacy[1][mcs] += peer_stats->failed_pkts;
-+		STATS_OP_FMT(RETRY).legacy[0][mcs] += peer_stats->retry_bytes;
-+		STATS_OP_FMT(RETRY).legacy[1][mcs] += peer_stats->retry_pkts;
-+	}
-+
-+	if (peer_stats->is_ampdu) {
-+		tx_stats->ba_fails += peer_stats->ba_fails;
-+
-+		if (txrate->flags & RATE_INFO_FLAGS_HE_MCS) {
-+			STATS_OP_FMT(AMPDU).he[0][mcs] +=
-+			peer_stats->succ_bytes + peer_stats->retry_bytes;
-+			STATS_OP_FMT(AMPDU).he[1][mcs] +=
-+			peer_stats->succ_pkts + peer_stats->retry_pkts;
-+		} else if (txrate->flags & RATE_INFO_FLAGS_MCS) {
-+			STATS_OP_FMT(AMPDU).ht[0][mcs] +=
-+			peer_stats->succ_bytes + peer_stats->retry_bytes;
-+			STATS_OP_FMT(AMPDU).ht[1][mcs] +=
-+			peer_stats->succ_pkts + peer_stats->retry_pkts;
-+		} else {
-+			STATS_OP_FMT(AMPDU).vht[0][mcs] +=
-+			peer_stats->succ_bytes + peer_stats->retry_bytes;
-+			STATS_OP_FMT(AMPDU).vht[1][mcs] +=
-+			peer_stats->succ_pkts + peer_stats->retry_pkts;
-+		}
-+		STATS_OP_FMT(AMPDU).bw[0][bw] +=
-+			peer_stats->succ_bytes + peer_stats->retry_bytes;
-+		STATS_OP_FMT(AMPDU).nss[0][nss] +=
-+			peer_stats->succ_bytes + peer_stats->retry_bytes;
-+		STATS_OP_FMT(AMPDU).gi[0][gi] +=
-+			peer_stats->succ_bytes + peer_stats->retry_bytes;
-+		STATS_OP_FMT(AMPDU).bw[1][bw] +=
-+			peer_stats->succ_pkts + peer_stats->retry_pkts;
-+		STATS_OP_FMT(AMPDU).nss[1][nss] +=
-+			peer_stats->succ_pkts + peer_stats->retry_pkts;
-+		STATS_OP_FMT(AMPDU).gi[1][gi] +=
-+			peer_stats->succ_pkts + peer_stats->retry_pkts;
-+	} else {
-+		tx_stats->ack_fails += peer_stats->ba_fails;
-+	}
-+
-+	STATS_OP_FMT(SUCC).bw[0][bw] += peer_stats->succ_bytes;
-+	STATS_OP_FMT(SUCC).nss[0][nss] += peer_stats->succ_bytes;
-+	STATS_OP_FMT(SUCC).gi[0][gi] += peer_stats->succ_bytes;
-+
-+	STATS_OP_FMT(SUCC).bw[1][bw] += peer_stats->succ_pkts;
-+	STATS_OP_FMT(SUCC).nss[1][nss] += peer_stats->succ_pkts;
-+	STATS_OP_FMT(SUCC).gi[1][gi] += peer_stats->succ_pkts;
-+
-+	STATS_OP_FMT(FAIL).bw[0][bw] += peer_stats->failed_bytes;
-+	STATS_OP_FMT(FAIL).nss[0][nss] += peer_stats->failed_bytes;
-+	STATS_OP_FMT(FAIL).gi[0][gi] += peer_stats->failed_bytes;
-+
-+	STATS_OP_FMT(FAIL).bw[1][bw] += peer_stats->failed_pkts;
-+	STATS_OP_FMT(FAIL).nss[1][nss] += peer_stats->failed_pkts;
-+	STATS_OP_FMT(FAIL).gi[1][gi] += peer_stats->failed_pkts;
-+
-+	STATS_OP_FMT(RETRY).bw[0][bw] += peer_stats->retry_bytes;
-+	STATS_OP_FMT(RETRY).nss[0][nss] += peer_stats->retry_bytes;
-+	STATS_OP_FMT(RETRY).gi[0][gi] += peer_stats->retry_bytes;
-+
-+	STATS_OP_FMT(RETRY).bw[1][bw] += peer_stats->retry_pkts;
-+	STATS_OP_FMT(RETRY).nss[1][nss] += peer_stats->retry_pkts;
-+	STATS_OP_FMT(RETRY).gi[1][gi] += peer_stats->retry_pkts;
-+
-+	tx_stats->tx_duration += peer_stats->duration;
-+}
-+
-+void ath11k_update_per_peer_stats_from_txcompl(struct ath11k *ar,
-+					       struct sk_buff *msdu,
-+					       struct hal_tx_status *ts)
-+{
-+	struct ath11k_base *ab = ar->ab;
-+	struct ath11k_per_peer_tx_stats *peer_stats = &ar->cached_stats;
-+	struct ath11k_peer *peer;
-+	struct ath11k_sta *arsta;
-+	struct ieee80211_sta *sta;
-+	u16 rate;
-+	u8 rate_idx;
-+	int ret;
-+
-+	rcu_read_lock();
-+	spin_lock_bh(&ab->base_lock);
-+	peer = ath11k_peer_find_by_id(ab, ts->peer_id);
-+	if (!peer || !peer->sta) {
-+		ath11k_warn(ab, "failed to find the peer\n");
-+		spin_unlock_bh(&ab->base_lock);
-+		rcu_read_unlock();
-+		return;
-+	}
-+
-+	sta = peer->sta;
-+	arsta = (struct ath11k_sta *)sta->drv_priv;
-+
-+	memset(&arsta->txrate, 0, sizeof(arsta->txrate));
-+
-+	if (ts->pkt_type == HAL_TX_RATE_STATS_PKT_TYPE_11A ||
-+	    ts->pkt_type == HAL_TX_RATE_STATS_PKT_TYPE_11B) {
-+		ret = ath11k_mac_hw_ratecode_to_legacy_rate(ts->mcs,
-+							    ts->pkt_type,
-+							    &rate_idx,
-+							    &rate);
-+		if (ret < 0) {
-+			spin_unlock_bh(&ab->base_lock);
-+			rcu_read_unlock();
-+			return;
-+		}
-+		arsta->txrate.legacy = rate;
-+	} else if (ts->pkt_type == HAL_TX_RATE_STATS_PKT_TYPE_11N) {
-+		if (ts->mcs > 7) {
-+			ath11k_warn(ab, "Invalid HT mcs index %d\n", ts->mcs);
-+			spin_unlock_bh(&ab->base_lock);
-+			rcu_read_unlock();
-+			return;
-+		}
-+
-+		arsta->txrate.mcs = ts->mcs + 8 * (arsta->last_txrate.nss - 1);
-+		arsta->txrate.flags = RATE_INFO_FLAGS_MCS;
-+		if (ts->sgi)
-+			arsta->txrate.flags |= RATE_INFO_FLAGS_SHORT_GI;
-+	} else if (ts->pkt_type == HAL_TX_RATE_STATS_PKT_TYPE_11AC) {
-+		if (ts->mcs > 9) {
-+			ath11k_warn(ab, "Invalid VHT mcs index %d\n", ts->mcs);
-+			spin_unlock_bh(&ab->base_lock);
-+			rcu_read_unlock();
-+			return;
-+		}
-+
-+		arsta->txrate.mcs = ts->mcs;
-+		arsta->txrate.flags = RATE_INFO_FLAGS_VHT_MCS;
-+		if (ts->sgi)
-+			arsta->txrate.flags |= RATE_INFO_FLAGS_SHORT_GI;
-+	} else {
-+		/*TODO: update HE rates */
-+	}
-+
-+	arsta->txrate.nss = arsta->last_txrate.nss;
-+	arsta->txrate.bw = ts->bw;
-+
-+	ath11k_accumulate_per_peer_tx_stats(arsta, peer_stats, rate_idx);
-+	spin_unlock_bh(&ab->base_lock);
-+	rcu_read_unlock();
-+}
-+
-+static ssize_t ath11k_dbg_sta_dump_tx_stats(struct file *file,
-+					    char __user *user_buf,
-+					    size_t count, loff_t *ppos)
-+{
-+	struct ieee80211_sta *sta = file->private_data;
-+	struct ath11k_sta *arsta = (struct ath11k_sta *)sta->drv_priv;
-+	struct ath11k *ar = arsta->arvif->ar;
-+	struct ath11k_htt_data_stats *stats;
-+	static const char *str_name[ATH11K_STATS_TYPE_MAX] = {"succ", "fail",
-+							      "retry", "ampdu"};
-+	static const char *str[ATH11K_COUNTER_TYPE_MAX] = {"bytes", "packets"};
-+	int len = 0, i, j, k, retval = 0;
-+	const int size = 2 * 4096;
-+	char *buf;
-+
-+	buf = kzalloc(size, GFP_KERNEL);
-+	if (!buf)
-+		return -ENOMEM;
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	spin_lock_bh(&ar->data_lock);
-+	for (k = 0; k < ATH11K_STATS_TYPE_MAX; k++) {
-+		for (j = 0; j < ATH11K_COUNTER_TYPE_MAX; j++) {
-+			stats = &arsta->tx_stats->stats[k];
-+			len += scnprintf(buf + len, size - len, "%s_%s\n",
-+					 str_name[k],
-+					 str[j]);
-+			len += scnprintf(buf + len, size - len,
-+					 " HE MCS %s\n",
-+					 str[j]);
-+			for (i = 0; i < ATH11K_HE_MCS_NUM; i++)
-+				len += scnprintf(buf + len, size - len,
-+						 "  %llu ",
-+						 stats->he[j][i]);
-+			len += scnprintf(buf + len, size - len, "\n");
-+			len += scnprintf(buf + len, size - len,
-+					 " VHT MCS %s\n",
-+					 str[j]);
-+			for (i = 0; i < ATH11K_VHT_MCS_NUM; i++)
-+				len += scnprintf(buf + len, size - len,
-+						 "  %llu ",
-+						 stats->vht[j][i]);
-+			len += scnprintf(buf + len, size - len, "\n");
-+			len += scnprintf(buf + len, size - len, " HT MCS %s\n",
-+					 str[j]);
-+			for (i = 0; i < ATH11K_HT_MCS_NUM; i++)
-+				len += scnprintf(buf + len, size - len,
-+						 "  %llu ", stats->ht[j][i]);
-+			len += scnprintf(buf + len, size - len, "\n");
-+			len += scnprintf(buf + len, size - len,
-+					" BW %s (20,40,80,160 MHz)\n", str[j]);
-+			len += scnprintf(buf + len, size - len,
-+					 "  %llu %llu %llu %llu\n",
-+					 stats->bw[j][0], stats->bw[j][1],
-+					 stats->bw[j][2], stats->bw[j][3]);
-+			len += scnprintf(buf + len, size - len,
-+					 " NSS %s (1x1,2x2,3x3,4x4)\n", str[j]);
-+			len += scnprintf(buf + len, size - len,
-+					 "  %llu %llu %llu %llu\n",
-+					 stats->nss[j][0], stats->nss[j][1],
-+					 stats->nss[j][2], stats->nss[j][3]);
-+			len += scnprintf(buf + len, size - len,
-+					 " GI %s (0.4us,0.8us,1.6us,3.2us)\n",
-+					 str[j]);
-+			len += scnprintf(buf + len, size - len,
-+					 "  %llu %llu %llu %llu\n",
-+					 stats->gi[j][0], stats->gi[j][1],
-+					 stats->gi[j][2], stats->gi[j][3]);
-+			len += scnprintf(buf + len, size - len,
-+					 " legacy rate %s (1,2 ... Mbps)\n  ",
-+					 str[j]);
-+			for (i = 0; i < ATH11K_LEGACY_NUM; i++)
-+				len += scnprintf(buf + len, size - len, "%llu ",
-+						 stats->legacy[j][i]);
-+			len += scnprintf(buf + len, size - len, "\n");
-+		}
-+	}
-+
-+	len += scnprintf(buf + len, size - len,
-+			 "\nTX duration\n %llu usecs\n",
-+			 arsta->tx_stats->tx_duration);
-+	len += scnprintf(buf + len, size - len,
-+			"BA fails\n %llu\n", arsta->tx_stats->ba_fails);
-+	len += scnprintf(buf + len, size - len,
-+			"ack fails\n %llu\n", arsta->tx_stats->ack_fails);
-+	spin_unlock_bh(&ar->data_lock);
-+
-+	if (len > size)
-+		len = size;
-+	retval = simple_read_from_buffer(user_buf, count, ppos, buf, len);
-+	kfree(buf);
-+
-+	mutex_unlock(&ar->conf_mutex);
-+	return retval;
-+}
-+
-+static const struct file_operations fops_tx_stats = {
-+	.read = ath11k_dbg_sta_dump_tx_stats,
-+	.open = simple_open,
-+	.owner = THIS_MODULE,
-+	.llseek = default_llseek,
++enum dp_rx_decap_type {
++	DP_RX_DECAP_TYPE_RAW,
++	DP_RX_DECAP_TYPE_NATIVE_WIFI,
++	DP_RX_DECAP_TYPE_ETHERNET2_DIX,
++	DP_RX_DECAP_TYPE_8023,
 +};
 +
-+static ssize_t ath11k_dbg_sta_dump_rx_stats(struct file *file,
-+					    char __user *user_buf,
-+					    size_t count, loff_t *ppos)
-+{
-+	struct ieee80211_sta *sta = file->private_data;
-+	struct ath11k_sta *arsta = (struct ath11k_sta *)sta->drv_priv;
-+	struct ath11k *ar = arsta->arvif->ar;
-+	struct ath11k_rx_peer_stats *rx_stats = arsta->rx_stats;
-+	int len = 0, i, retval = 0;
-+	const int size = 4096;
-+	char *buf;
++struct ath11k_dp_amsdu_subframe_hdr {
++	u8 dst[ETH_ALEN];
++	u8 src[ETH_ALEN];
++	__be16 len;
++} __packed;
 +
-+	if (!rx_stats)
-+		return -ENOENT;
++struct ath11k_dp_rfc1042_hdr {
++	u8 llc_dsap;
++	u8 llc_ssap;
++	u8 llc_ctrl;
++	u8 snap_oui[3];
++	__be16 snap_type;
++} __packed;
 +
-+	buf = kzalloc(size, GFP_KERNEL);
-+	if (!buf)
-+		return -ENOMEM;
++int ath11k_dp_rx_ampdu_start(struct ath11k *ar,
++			     struct ieee80211_ampdu_params *params);
++int ath11k_dp_rx_ampdu_stop(struct ath11k *ar,
++			    struct ieee80211_ampdu_params *params);
++void ath11k_peer_rx_tid_cleanup(struct ath11k *ar, struct ath11k_peer *peer);
++int ath11k_peer_rx_tid_setup(struct ath11k *ar, const u8 *peer_mac, int vdev_id,
++			     u8 tid, u32 ba_win_sz, u16 ssn);
++void ath11k_dp_htt_htc_t2h_msg_handler(struct ath11k_base *ab,
++				       struct sk_buff *skb);
++int ath11k_dp_rx_pdev_alloc(struct ath11k_base *ab, int pdev_idx);
++void ath11k_dp_rx_pdev_free(struct ath11k_base *ab, int pdev_idx);
++void ath11k_dp_reo_cmd_list_cleanup(struct ath11k_base *ab);
++void ath11k_dp_process_reo_status(struct ath11k_base *ab);
++int ath11k_dp_process_rxdma_err(struct ath11k_base *ab, int mac_id, int budget);
++int ath11k_dp_rx_process_wbm_err(struct ath11k_base *ab,
++				 struct napi_struct *napi, int budget);
++int ath11k_dp_process_rx_err(struct ath11k_base *ab, struct napi_struct *napi,
++			     int budget);
++int ath11k_dp_process_rx(struct ath11k_base *ab, int mac_id,
++			 struct napi_struct *napi, struct sk_buff_head *pending_q,
++			 int budget);
++int ath11k_dp_rxbufs_replenish(struct ath11k_base *ab, int mac_id,
++			       struct dp_rxdma_ring *rx_ring,
++			       int req_entries,
++			       enum hal_rx_buf_return_buf_manager mgr,
++			       gfp_t gfp);
++int ath11k_dp_htt_tlv_iter(struct ath11k_base *ab, const void *ptr, size_t len,
++			   int (*iter)(struct ath11k_base *ar, u16 tag, u16 len,
++				       const void *ptr, void *data),
++			   void *data);
++int ath11k_dp_rx_process_mon_rings(struct ath11k_base *ab, int mac_id,
++				   struct napi_struct *napi, int budget);
++int ath11k_dp_rx_process_mon_status(struct ath11k_base *ab, int mac_id,
++				    struct napi_struct *napi, int budget);
++int ath11k_dp_rx_mon_status_bufs_replenish(struct ath11k_base *ab, int mac_id,
++					   struct dp_rxdma_ring *rx_ring,
++					   int req_entries,
++					   enum hal_rx_buf_return_buf_manager mgr,
++					   gfp_t gfp);
++int ath11k_dp_rx_pdev_mon_detach(struct ath11k *ar);
++int ath11k_dp_rx_pdev_mon_attach(struct ath11k *ar);
 +
-+	mutex_lock(&ar->conf_mutex);
-+	spin_lock_bh(&ar->ab->base_lock);
-+
-+	len += scnprintf(buf + len, size - len, "RX peer stats:\n");
-+	len += scnprintf(buf + len, size - len, "Num of MSDUs: %llu\n",
-+			 rx_stats->num_msdu);
-+	len += scnprintf(buf + len, size - len, "Num of MSDUs with TCP L4: %llu\n",
-+			 rx_stats->tcp_msdu_count);
-+	len += scnprintf(buf + len, size - len, "Num of MSDUs with UDP L4: %llu\n",
-+			 rx_stats->udp_msdu_count);
-+	len += scnprintf(buf + len, size - len, "Num of MSDUs part of AMPDU: %llu\n",
-+			 rx_stats->ampdu_msdu_count);
-+	len += scnprintf(buf + len, size - len, "Num of MSDUs not part of AMPDU: %llu\n",
-+			 rx_stats->non_ampdu_msdu_count);
-+	len += scnprintf(buf + len, size - len, "Num of MSDUs using STBC: %llu\n",
-+			 rx_stats->stbc_count);
-+	len += scnprintf(buf + len, size - len, "Num of MSDUs beamformed: %llu\n",
-+			 rx_stats->beamformed_count);
-+	len += scnprintf(buf + len, size - len, "Num of MPDUs with FCS ok: %llu\n",
-+			 rx_stats->num_mpdu_fcs_ok);
-+	len += scnprintf(buf + len, size - len, "Num of MPDUs with FCS error: %llu\n",
-+			 rx_stats->num_mpdu_fcs_err);
-+	len += scnprintf(buf + len, size - len,
-+			 "GI: 0.8us %llu 0.4us %llu 1.6us %llu 3.2us %llu\n",
-+			 rx_stats->gi_count[0], rx_stats->gi_count[1],
-+			 rx_stats->gi_count[2], rx_stats->gi_count[3]);
-+	len += scnprintf(buf + len, size - len,
-+			 "BW: 20Mhz %llu 40Mhz %llu 80Mhz %llu 160Mhz %llu\n",
-+			 rx_stats->bw_count[0], rx_stats->bw_count[1],
-+			 rx_stats->bw_count[2], rx_stats->bw_count[3]);
-+	len += scnprintf(buf + len, size - len, "BCC %llu LDPC %llu\n",
-+			 rx_stats->coding_count[0], rx_stats->coding_count[1]);
-+	len += scnprintf(buf + len, size - len,
-+			 "preamble: 11A %llu 11B %llu 11N %llu 11AC %llu 11AX %llu\n",
-+			 rx_stats->pream_cnt[0], rx_stats->pream_cnt[1],
-+			 rx_stats->pream_cnt[2], rx_stats->pream_cnt[3],
-+			 rx_stats->pream_cnt[4]);
-+	len += scnprintf(buf + len, size - len,
-+			 "reception type: SU %llu MU_MIMO %llu MU_OFDMA %llu MU_OFDMA_MIMO %llu\n",
-+			 rx_stats->reception_type[0], rx_stats->reception_type[1],
-+			 rx_stats->reception_type[2], rx_stats->reception_type[3]);
-+	len += scnprintf(buf + len, size - len, "TID(0-15) Legacy TID(16):");
-+	for (i = 0; i <= IEEE80211_NUM_TIDS; i++)
-+		len += scnprintf(buf + len, size - len, "%llu ", rx_stats->tid_count[i]);
-+	len += scnprintf(buf + len, size - len, "\nMCS(0-11) Legacy MCS(12):");
-+	for (i = 0; i < HAL_RX_MAX_MCS + 1; i++)
-+		len += scnprintf(buf + len, size - len, "%llu ", rx_stats->mcs_count[i]);
-+	len += scnprintf(buf + len, size - len, "\nNSS(1-8):");
-+	for (i = 0; i < HAL_RX_MAX_NSS; i++)
-+		len += scnprintf(buf + len, size - len, "%llu ", rx_stats->nss_count[i]);
-+	len += scnprintf(buf + len, size - len, "\nRX Duration:%llu ",
-+			 rx_stats->rx_duration);
-+	len += scnprintf(buf + len, size - len, "\n");
-+
-+	spin_unlock_bh(&ar->ab->base_lock);
-+
-+	if (len > size)
-+		len = size;
-+	retval = simple_read_from_buffer(user_buf, count, ppos, buf, len);
-+	kfree(buf);
-+
-+	mutex_unlock(&ar->conf_mutex);
-+	return retval;
-+}
-+
-+static const struct file_operations fops_rx_stats = {
-+	.read = ath11k_dbg_sta_dump_rx_stats,
-+	.open = simple_open,
-+	.owner = THIS_MODULE,
-+	.llseek = default_llseek,
-+};
-+
-+static int
-+ath11k_dbg_sta_open_htt_peer_stats(struct inode *inode, struct file *file)
-+{
-+	struct ieee80211_sta *sta = inode->i_private;
-+	struct ath11k_sta *arsta = (struct ath11k_sta *)sta->drv_priv;
-+	struct ath11k *ar = arsta->arvif->ar;
-+	struct debug_htt_stats_req *stats_req;
-+	int ret;
-+
-+	stats_req = vzalloc(sizeof(*stats_req) + ATH11K_HTT_STATS_BUF_SIZE);
-+	if (!stats_req)
-+		return -ENOMEM;
-+
-+	mutex_lock(&ar->conf_mutex);
-+	ar->debug.htt_stats.stats_req = stats_req;
-+	stats_req->type = ATH11K_DBG_HTT_EXT_STATS_PEER_INFO;
-+	memcpy(stats_req->peer_addr, sta->addr, ETH_ALEN);
-+	ret = ath11k_dbg_htt_stats_req(ar);
-+	mutex_unlock(&ar->conf_mutex);
-+	if (ret < 0)
-+		goto out;
-+
-+	file->private_data = stats_req;
-+	return 0;
-+out:
-+	vfree(stats_req);
-+	return ret;
-+}
-+
-+static int
-+ath11k_dbg_sta_release_htt_peer_stats(struct inode *inode, struct file *file)
-+{
-+	vfree(file->private_data);
-+	return 0;
-+}
-+
-+static ssize_t ath11k_dbg_sta_read_htt_peer_stats(struct file *file,
-+						  char __user *user_buf,
-+						  size_t count, loff_t *ppos)
-+{
-+	struct debug_htt_stats_req *stats_req = file->private_data;
-+	char *buf;
-+	u32 length = 0;
-+
-+	buf = stats_req->buf;
-+	length = min_t(u32, stats_req->buf_len, ATH11K_HTT_STATS_BUF_SIZE);
-+	return simple_read_from_buffer(user_buf, count, ppos, buf, length);
-+}
-+
-+static const struct file_operations fops_htt_peer_stats = {
-+	.open = ath11k_dbg_sta_open_htt_peer_stats,
-+	.release = ath11k_dbg_sta_release_htt_peer_stats,
-+	.read = ath11k_dbg_sta_read_htt_peer_stats,
-+	.owner = THIS_MODULE,
-+	.llseek = default_llseek,
-+};
-+
-+static ssize_t ath11k_dbg_sta_write_peer_pktlog(struct file *file,
-+						const char __user *buf,
-+						size_t count, loff_t *ppos)
-+{
-+	struct ieee80211_sta *sta = file->private_data;
-+	struct ath11k_sta *arsta = (struct ath11k_sta *)sta->drv_priv;
-+	struct ath11k *ar = arsta->arvif->ar;
-+	int ret, enable;
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	if (ar->state != ATH11K_STATE_ON) {
-+		ret = -ENETDOWN;
-+		goto out;
-+	}
-+
-+	ret = kstrtoint_from_user(buf, count, 0, &enable);
-+	if (ret)
-+		goto out;
-+
-+	ar->debug.pktlog_peer_valid = enable;
-+	memcpy(ar->debug.pktlog_peer_addr, sta->addr, ETH_ALEN);
-+
-+	/* Send peer based pktlog enable/disable */
-+	ret = ath11k_wmi_pdev_peer_pktlog_filter(ar, sta->addr, enable);
-+	if (ret) {
-+		ath11k_warn(ar->ab, "failed to set peer pktlog filter %pM: %d\n",
-+			    sta->addr, ret);
-+		goto out;
-+	}
-+
-+	ath11k_dbg(ar->ab, ATH11K_DBG_WMI, "peer pktlog filter set to %d\n",
-+		   enable);
-+	ret = count;
-+
-+out:
-+	mutex_unlock(&ar->conf_mutex);
-+	return ret;
-+}
-+
-+static ssize_t ath11k_dbg_sta_read_peer_pktlog(struct file *file,
-+					       char __user *ubuf,
-+					       size_t count, loff_t *ppos)
-+{
-+	struct ieee80211_sta *sta = file->private_data;
-+	struct ath11k_sta *arsta = (struct ath11k_sta *)sta->drv_priv;
-+	struct ath11k *ar = arsta->arvif->ar;
-+	char buf[32] = {0};
-+	int len;
-+
-+	mutex_lock(&ar->conf_mutex);
-+	len = scnprintf(buf, sizeof(buf), "%08x %pM\n",
-+			ar->debug.pktlog_peer_valid,
-+			ar->debug.pktlog_peer_addr);
-+	mutex_unlock(&ar->conf_mutex);
-+
-+	return simple_read_from_buffer(ubuf, count, ppos, buf, len);
-+}
-+
-+static const struct file_operations fops_peer_pktlog = {
-+	.write = ath11k_dbg_sta_write_peer_pktlog,
-+	.read = ath11k_dbg_sta_read_peer_pktlog,
-+	.open = simple_open,
-+	.owner = THIS_MODULE,
-+	.llseek = default_llseek,
-+};
-+
-+void ath11k_sta_add_debugfs(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-+			    struct ieee80211_sta *sta, struct dentry *dir)
-+{
-+	struct ath11k *ar = hw->priv;
-+
-+	if (ath11k_debug_is_extd_tx_stats_enabled(ar))
-+		debugfs_create_file("tx_stats", 0400, dir, sta,
-+				    &fops_tx_stats);
-+	if (ath11k_debug_is_extd_rx_stats_enabled(ar))
-+		debugfs_create_file("rx_stats", 0400, dir, sta,
-+				    &fops_rx_stats);
-+
-+	debugfs_create_file("htt_peer_stats", 0400, dir, sta,
-+			    &fops_htt_peer_stats);
-+
-+	debugfs_create_file("peer_pktlog", 0644, dir, sta,
-+			    &fops_peer_pktlog);
-+}
++#endif /* ATH11K_DP_RX_H */
 
