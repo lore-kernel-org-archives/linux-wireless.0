@@ -2,226 +2,616 @@ Return-Path: <SRS0=1RAM=ZH=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62D3CC43141
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BFBAC33C9B
 	for <linux-wireless@archiver.kernel.org>; Fri, 15 Nov 2019 09:30:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3B3A920830
+	by mail.kernel.org (Postfix) with ESMTP id 64A3B2073A
 	for <linux-wireless@archiver.kernel.org>; Fri, 15 Nov 2019 09:30:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="dms2AT6y"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="BJJWDH/p";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="ALb6XzVP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727372AbfKOJa1 (ORCPT
+        id S1727376AbfKOJa1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Fri, 15 Nov 2019 04:30:27 -0500
-Received: from mail-ua1-f65.google.com ([209.85.222.65]:35709 "EHLO
-        mail-ua1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727357AbfKOJa0 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:54798 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727325AbfKOJa1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Nov 2019 04:30:26 -0500
-Received: by mail-ua1-f65.google.com with SMTP id s14so2818347uad.2
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Nov 2019 01:30:23 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=U0K8GRiXqSgIpN48tBNHcV+jI/oiDgvDhl7ShZIVOhE=;
-        b=dms2AT6yjYIujdBp5vLXzT3QSWBUJdp+Ja/bHoPGCKS84bKo37q9DYAWmQ+OhvnX47
-         wQESQqhFjyBsKxLBW14sJM6Kkxy/Yvicy1Vttr/bmnfFi1qkmbGWwvZC6/I2T2hc0dc4
-         E6e4jsZ8R7HPGQj7VhbAeZXMKd4W+mV9z0NBs1wYV93Cw7drye59WzshJHguKEkNXCPt
-         fHF0ouNrAUlgmAVwGBwpW7V1N92+w5PRrvnambZTbfMnbWUBMJIPHZCBuMz5iDZ3km48
-         QxwxVl+99j/KVNaPgNldx2y1f+snHTdbPP0IYzr0FUgyc31xgzkXkCrLt9Puderh1g1W
-         O9fQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=U0K8GRiXqSgIpN48tBNHcV+jI/oiDgvDhl7ShZIVOhE=;
-        b=Sgcrdw2NpqnxXBDyBckCjtL98NRt4Dhn9K1WwPUqJ1fMKgs4GOJICL8ELtLqhXgPPD
-         xFV+FMFgsPH1YH2IW/gtS9drJkWRnugmlwCdI798WewLB4FJoQn8kmlbS28Hb8OZKpWl
-         8teJpKcKn7fQ8+efZLSReiTAEFJdQ5dAneW4p5AlAqON2NYCVwM4tNb3+EsSx+CCxQuT
-         U4hcUwyHCsi7N3gu36f1P5ByGry/SWL0QdPQ5zKAC18wVTCaaa7kHpctSDk0CQ1GdeSY
-         FohvSdQe7tQZJVHdK2VMlA9FuXLQWAsaba9XGxUXXmhOdH/E51Y1P3d4dpKNM2Ij66hu
-         JaXg==
-X-Gm-Message-State: APjAAAV75NQ4S5KGQFAKV923mvIsfJTBsdyR5Wg77rMW9RQZ74O3Ypjl
-        mfqXsoamYDRUwDrjwAezFrkjN7kg1b5Ji5HPiB9euQ==
-X-Google-Smtp-Source: APXvYqzU6WJnGjb2iLphku/+v8QsaQ8unugsql39hfm0KRqoySp6l08BYKltD9R0v8e99ePYA9xvGwkzshWggfN0FEM=
-X-Received: by 2002:ab0:74cd:: with SMTP id f13mr8348393uaq.104.1573810223324;
- Fri, 15 Nov 2019 01:30:23 -0800 (PST)
-MIME-Version: 1.0
-References: <cover.1573122644.git.hns@goldelico.com> <CAPDyKFrntf2Kd9Zf7uxRCUk_OrKD8B3xOKmvPaf04X21L5HwWA@mail.gmail.com>
- <5F5A5FC0-8F91-4D5B-9EF6-AF36FE38B588@goldelico.com>
-In-Reply-To: <5F5A5FC0-8F91-4D5B-9EF6-AF36FE38B588@goldelico.com>
-From:   Ulf Hansson <ulf.hansson@linaro.org>
-Date:   Fri, 15 Nov 2019 10:29:46 +0100
-Message-ID: <CAPDyKFr=Uk1i0c=3WvuOYCQ__Skpr-9mjVM2Yqst-hd8zY6OeQ@mail.gmail.com>
-Subject: Re: [PATCH v3 00/12] OpenPandora: make wl1251 connected to mmc3 sdio
- port of OpenPandora work again
-To:     "H. Nikolaus Schaller" <hns@goldelico.com>
-Cc:     Mark Rutland <mark.rutland@arm.com>,
-        Kefeng Wang <wangkefeng.wang@huawei.com>,
-        DTML <devicetree@vger.kernel.org>,
-        Tony Lindgren <tony@atomide.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Discussions about the Letux Kernel 
-        <letux-kernel@openphoenux.org>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Russell King <linux@armlinux.org.uk>,
-        Mike Rapoport <rppt@linux.ibm.com>,
-        Yangtao Li <tiny.windzz@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Petr Mladek <pmladek@suse.com>,
-        =?UTF-8?Q?Beno=C3=AEt_Cousson?= <bcousson@baylibre.com>,
-        kernel@pyra-handheld.com,
-        Alexios Zavras <alexios.zavras@intel.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        John Stultz <john.stultz@linaro.org>,
-        David Sterba <dsterba@suse.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        linux-omap <linux-omap@vger.kernel.org>,
-        Allison Randal <allison@lohutok.net>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Sakari Ailus <sakari.ailus@linux.intel.com>,
-        netdev <netdev@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Fri, 15 Nov 2019 04:30:27 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id DF3646145C; Fri, 15 Nov 2019 09:29:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1573810226;
+        bh=g/jDisnRtGX70xBui3w3bkaqNUY+waURf3s9NoaQQTE=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=BJJWDH/pLLDbOO5oKiWD735AI1sOFKnqi5kMXm+V1geFN1PjEyhSKYEih3Fe+9zLo
+         8EXNK4Y5X+7Xi16FX+Nrspt7HeN2N+j3FPMTino6UZvoHZVQDKVIUfFyoqq+VpAuYT
+         QeKECWGvmr+8P1LAWiWAw1HMBbEraQ2vctKFC8L0=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id C7C4A613C2;
+        Fri, 15 Nov 2019 09:29:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1573810191;
+        bh=g/jDisnRtGX70xBui3w3bkaqNUY+waURf3s9NoaQQTE=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=ALb6XzVPDzHOeO/ep+AhTVgYbG9Fc+nU7EYR2rU+FD7C0cgtjY6/2TK8Xx0YhyfTj
+         0JAmF9tbXAIeu2yXzpTtWgPj8K9bXlJZfZKSXTbIlb5sGRLe4VOVJBJTwXZIkmqUkG
+         dTc3zpCpZbrx6IRBdAZszX7/1M0OhLJaFT6wBeeE=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org C7C4A613C2
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     linux-wireless@vger.kernel.org
+Cc:     ath11k@lists.infradead.org, devicetree@vger.kernel.org
+Subject: [PATCH v3 14/49] ath11k: add debugfs_sta.c
+Date:   Fri, 15 Nov 2019 11:28:38 +0200
+Message-Id: <1573810153-29623-15-git-send-email-kvalo@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1573810153-29623-1-git-send-email-kvalo@codeaurora.org>
+References: <1573810153-29623-1-git-send-email-kvalo@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, 14 Nov 2019 at 16:16, H. Nikolaus Schaller <hns@goldelico.com> wrote:
->
-> Hi Ulf,
->
-> > Am 14.11.2019 um 15:18 schrieb Ulf Hansson <ulf.hansson@linaro.org>:
-> >
-> > On Thu, 7 Nov 2019 at 11:31, H. Nikolaus Schaller <hns@goldelico.com> wrote:
-> >>
-> >>
-> >> * add a revisit note for special wl1251 handling code because it should
-> >>  be solved more generic in mmc core - suggested by Ulf Hansson <ulf.hansson@linaro.org>
-> >> * remove init_card callback from platform_data/hsmmc-omap.h - suggested by Ulf Hansson <ulf.hansson@linaro.org>
-> >> * remove obstructive always-on for vwlan regulator - suggested by Ulf Hansson <ulf.hansson@linaro.org>
-> >> * rename DT node - suggested by Rob Herring <robh@kernel.org>
-> >> * fix ARM: dts: subject prefix - suggested by Tony Lindgren <tony@atomide.com>
-> >> * also remove omap2_hsmmc_info and obc-y line in Makefile - suggested by Tony Lindgren <tony@atomide.com>
-> >
-> > No further comments from my side. Let's just agree on how to deal with
-> > the ti,power-gpio, then I can apply this.
->
-> I'd say it can be a separate patch since it does not fix the Pandora
-> issues, but is a new and independent optimization.
->
-> And in case someone complains and uses it for some out-of tree purpose
-> it can be discussed or even be reverted easier if it is a separate patch.
->
-> I can do it in the next days.
+(patches split for easier review, see the cover letter for more)
 
-Okay, that sounds reasonable.
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath11k/debugfs_sta.c | 538 ++++++++++++++++++++++++++
+ 1 file changed, 538 insertions(+)
 
-In the meantime, I have queued up the series on my next branch (for v5.5).
+diff --git a/drivers/net/wireless/ath/ath11k/debugfs_sta.c b/drivers/net/wireless/ath/ath11k/debugfs_sta.c
+new file mode 100644
+index 000000000000..b392117eff3c
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath11k/debugfs_sta.c
+@@ -0,0 +1,538 @@
++// SPDX-License-Identifier: BSD-3-Clause-Clear
++/*
++ * Copyright (c) 2018-2019 The Linux Foundation. All rights reserved.
++ */
++
++#include <linux/vmalloc.h>
++
++#include "core.h"
++#include "peer.h"
++#include "debug.h"
++
++void
++ath11k_accumulate_per_peer_tx_stats(struct ath11k_sta *arsta,
++				    struct ath11k_per_peer_tx_stats *peer_stats,
++				    u8 legacy_rate_idx)
++{
++	struct rate_info *txrate = &arsta->txrate;
++	struct ath11k_htt_tx_stats *tx_stats;
++	int gi, mcs, bw, nss;
++
++	if (!arsta->tx_stats)
++		return;
++
++	tx_stats = arsta->tx_stats;
++	gi = FIELD_GET(RATE_INFO_FLAGS_SHORT_GI, arsta->txrate.flags);
++	mcs = txrate->mcs;
++	bw = txrate->bw;
++	nss = txrate->nss - 1;
++
++#define STATS_OP_FMT(name) tx_stats->stats[ATH11K_STATS_TYPE_##name]
++
++	if (txrate->flags & RATE_INFO_FLAGS_HE_MCS) {
++		STATS_OP_FMT(SUCC).he[0][mcs] += peer_stats->succ_bytes;
++		STATS_OP_FMT(SUCC).he[1][mcs] += peer_stats->succ_pkts;
++		STATS_OP_FMT(FAIL).he[0][mcs] += peer_stats->failed_bytes;
++		STATS_OP_FMT(FAIL).he[1][mcs] += peer_stats->failed_pkts;
++		STATS_OP_FMT(RETRY).he[0][mcs] += peer_stats->retry_bytes;
++		STATS_OP_FMT(RETRY).he[1][mcs] += peer_stats->retry_pkts;
++	} else if (txrate->flags & RATE_INFO_FLAGS_VHT_MCS) {
++		STATS_OP_FMT(SUCC).vht[0][mcs] += peer_stats->succ_bytes;
++		STATS_OP_FMT(SUCC).vht[1][mcs] += peer_stats->succ_pkts;
++		STATS_OP_FMT(FAIL).vht[0][mcs] += peer_stats->failed_bytes;
++		STATS_OP_FMT(FAIL).vht[1][mcs] += peer_stats->failed_pkts;
++		STATS_OP_FMT(RETRY).vht[0][mcs] += peer_stats->retry_bytes;
++		STATS_OP_FMT(RETRY).vht[1][mcs] += peer_stats->retry_pkts;
++	} else if (txrate->flags & RATE_INFO_FLAGS_MCS) {
++		STATS_OP_FMT(SUCC).ht[0][mcs] += peer_stats->succ_bytes;
++		STATS_OP_FMT(SUCC).ht[1][mcs] += peer_stats->succ_pkts;
++		STATS_OP_FMT(FAIL).ht[0][mcs] += peer_stats->failed_bytes;
++		STATS_OP_FMT(FAIL).ht[1][mcs] += peer_stats->failed_pkts;
++		STATS_OP_FMT(RETRY).ht[0][mcs] += peer_stats->retry_bytes;
++		STATS_OP_FMT(RETRY).ht[1][mcs] += peer_stats->retry_pkts;
++	} else {
++		mcs = legacy_rate_idx;
++
++		STATS_OP_FMT(SUCC).legacy[0][mcs] += peer_stats->succ_bytes;
++		STATS_OP_FMT(SUCC).legacy[1][mcs] += peer_stats->succ_pkts;
++		STATS_OP_FMT(FAIL).legacy[0][mcs] += peer_stats->failed_bytes;
++		STATS_OP_FMT(FAIL).legacy[1][mcs] += peer_stats->failed_pkts;
++		STATS_OP_FMT(RETRY).legacy[0][mcs] += peer_stats->retry_bytes;
++		STATS_OP_FMT(RETRY).legacy[1][mcs] += peer_stats->retry_pkts;
++	}
++
++	if (peer_stats->is_ampdu) {
++		tx_stats->ba_fails += peer_stats->ba_fails;
++
++		if (txrate->flags & RATE_INFO_FLAGS_HE_MCS) {
++			STATS_OP_FMT(AMPDU).he[0][mcs] +=
++			peer_stats->succ_bytes + peer_stats->retry_bytes;
++			STATS_OP_FMT(AMPDU).he[1][mcs] +=
++			peer_stats->succ_pkts + peer_stats->retry_pkts;
++		} else if (txrate->flags & RATE_INFO_FLAGS_MCS) {
++			STATS_OP_FMT(AMPDU).ht[0][mcs] +=
++			peer_stats->succ_bytes + peer_stats->retry_bytes;
++			STATS_OP_FMT(AMPDU).ht[1][mcs] +=
++			peer_stats->succ_pkts + peer_stats->retry_pkts;
++		} else {
++			STATS_OP_FMT(AMPDU).vht[0][mcs] +=
++			peer_stats->succ_bytes + peer_stats->retry_bytes;
++			STATS_OP_FMT(AMPDU).vht[1][mcs] +=
++			peer_stats->succ_pkts + peer_stats->retry_pkts;
++		}
++		STATS_OP_FMT(AMPDU).bw[0][bw] +=
++			peer_stats->succ_bytes + peer_stats->retry_bytes;
++		STATS_OP_FMT(AMPDU).nss[0][nss] +=
++			peer_stats->succ_bytes + peer_stats->retry_bytes;
++		STATS_OP_FMT(AMPDU).gi[0][gi] +=
++			peer_stats->succ_bytes + peer_stats->retry_bytes;
++		STATS_OP_FMT(AMPDU).bw[1][bw] +=
++			peer_stats->succ_pkts + peer_stats->retry_pkts;
++		STATS_OP_FMT(AMPDU).nss[1][nss] +=
++			peer_stats->succ_pkts + peer_stats->retry_pkts;
++		STATS_OP_FMT(AMPDU).gi[1][gi] +=
++			peer_stats->succ_pkts + peer_stats->retry_pkts;
++	} else {
++		tx_stats->ack_fails += peer_stats->ba_fails;
++	}
++
++	STATS_OP_FMT(SUCC).bw[0][bw] += peer_stats->succ_bytes;
++	STATS_OP_FMT(SUCC).nss[0][nss] += peer_stats->succ_bytes;
++	STATS_OP_FMT(SUCC).gi[0][gi] += peer_stats->succ_bytes;
++
++	STATS_OP_FMT(SUCC).bw[1][bw] += peer_stats->succ_pkts;
++	STATS_OP_FMT(SUCC).nss[1][nss] += peer_stats->succ_pkts;
++	STATS_OP_FMT(SUCC).gi[1][gi] += peer_stats->succ_pkts;
++
++	STATS_OP_FMT(FAIL).bw[0][bw] += peer_stats->failed_bytes;
++	STATS_OP_FMT(FAIL).nss[0][nss] += peer_stats->failed_bytes;
++	STATS_OP_FMT(FAIL).gi[0][gi] += peer_stats->failed_bytes;
++
++	STATS_OP_FMT(FAIL).bw[1][bw] += peer_stats->failed_pkts;
++	STATS_OP_FMT(FAIL).nss[1][nss] += peer_stats->failed_pkts;
++	STATS_OP_FMT(FAIL).gi[1][gi] += peer_stats->failed_pkts;
++
++	STATS_OP_FMT(RETRY).bw[0][bw] += peer_stats->retry_bytes;
++	STATS_OP_FMT(RETRY).nss[0][nss] += peer_stats->retry_bytes;
++	STATS_OP_FMT(RETRY).gi[0][gi] += peer_stats->retry_bytes;
++
++	STATS_OP_FMT(RETRY).bw[1][bw] += peer_stats->retry_pkts;
++	STATS_OP_FMT(RETRY).nss[1][nss] += peer_stats->retry_pkts;
++	STATS_OP_FMT(RETRY).gi[1][gi] += peer_stats->retry_pkts;
++
++	tx_stats->tx_duration += peer_stats->duration;
++}
++
++void ath11k_update_per_peer_stats_from_txcompl(struct ath11k *ar,
++					       struct sk_buff *msdu,
++					       struct hal_tx_status *ts)
++{
++	struct ath11k_base *ab = ar->ab;
++	struct ath11k_per_peer_tx_stats *peer_stats = &ar->cached_stats;
++	struct ath11k_peer *peer;
++	struct ath11k_sta *arsta;
++	struct ieee80211_sta *sta;
++	u16 rate;
++	u8 rate_idx;
++	int ret;
++
++	rcu_read_lock();
++	spin_lock_bh(&ab->base_lock);
++	peer = ath11k_peer_find_by_id(ab, ts->peer_id);
++	if (!peer || !peer->sta) {
++		ath11k_warn(ab, "failed to find the peer\n");
++		spin_unlock_bh(&ab->base_lock);
++		rcu_read_unlock();
++		return;
++	}
++
++	sta = peer->sta;
++	arsta = (struct ath11k_sta *)sta->drv_priv;
++
++	memset(&arsta->txrate, 0, sizeof(arsta->txrate));
++
++	if (ts->pkt_type == HAL_TX_RATE_STATS_PKT_TYPE_11A ||
++	    ts->pkt_type == HAL_TX_RATE_STATS_PKT_TYPE_11B) {
++		ret = ath11k_mac_hw_ratecode_to_legacy_rate(ts->mcs,
++							    ts->pkt_type,
++							    &rate_idx,
++							    &rate);
++		if (ret < 0) {
++			spin_unlock_bh(&ab->base_lock);
++			rcu_read_unlock();
++			return;
++		}
++		arsta->txrate.legacy = rate;
++	} else if (ts->pkt_type == HAL_TX_RATE_STATS_PKT_TYPE_11N) {
++		if (ts->mcs > 7) {
++			ath11k_warn(ab, "Invalid HT mcs index %d\n", ts->mcs);
++			spin_unlock_bh(&ab->base_lock);
++			rcu_read_unlock();
++			return;
++		}
++
++		arsta->txrate.mcs = ts->mcs + 8 * (arsta->last_txrate.nss - 1);
++		arsta->txrate.flags = RATE_INFO_FLAGS_MCS;
++		if (ts->sgi)
++			arsta->txrate.flags |= RATE_INFO_FLAGS_SHORT_GI;
++	} else if (ts->pkt_type == HAL_TX_RATE_STATS_PKT_TYPE_11AC) {
++		if (ts->mcs > 9) {
++			ath11k_warn(ab, "Invalid VHT mcs index %d\n", ts->mcs);
++			spin_unlock_bh(&ab->base_lock);
++			rcu_read_unlock();
++			return;
++		}
++
++		arsta->txrate.mcs = ts->mcs;
++		arsta->txrate.flags = RATE_INFO_FLAGS_VHT_MCS;
++		if (ts->sgi)
++			arsta->txrate.flags |= RATE_INFO_FLAGS_SHORT_GI;
++	} else {
++		/*TODO: update HE rates */
++	}
++
++	arsta->txrate.nss = arsta->last_txrate.nss;
++	arsta->txrate.bw = ts->bw;
++
++	ath11k_accumulate_per_peer_tx_stats(arsta, peer_stats, rate_idx);
++	spin_unlock_bh(&ab->base_lock);
++	rcu_read_unlock();
++}
++
++static ssize_t ath11k_dbg_sta_dump_tx_stats(struct file *file,
++					    char __user *user_buf,
++					    size_t count, loff_t *ppos)
++{
++	struct ieee80211_sta *sta = file->private_data;
++	struct ath11k_sta *arsta = (struct ath11k_sta *)sta->drv_priv;
++	struct ath11k *ar = arsta->arvif->ar;
++	struct ath11k_htt_data_stats *stats;
++	static const char *str_name[ATH11K_STATS_TYPE_MAX] = {"succ", "fail",
++							      "retry", "ampdu"};
++	static const char *str[ATH11K_COUNTER_TYPE_MAX] = {"bytes", "packets"};
++	int len = 0, i, j, k, retval = 0;
++	const int size = 2 * 4096;
++	char *buf;
++
++	buf = kzalloc(size, GFP_KERNEL);
++	if (!buf)
++		return -ENOMEM;
++
++	mutex_lock(&ar->conf_mutex);
++
++	spin_lock_bh(&ar->data_lock);
++	for (k = 0; k < ATH11K_STATS_TYPE_MAX; k++) {
++		for (j = 0; j < ATH11K_COUNTER_TYPE_MAX; j++) {
++			stats = &arsta->tx_stats->stats[k];
++			len += scnprintf(buf + len, size - len, "%s_%s\n",
++					 str_name[k],
++					 str[j]);
++			len += scnprintf(buf + len, size - len,
++					 " HE MCS %s\n",
++					 str[j]);
++			for (i = 0; i < ATH11K_HE_MCS_NUM; i++)
++				len += scnprintf(buf + len, size - len,
++						 "  %llu ",
++						 stats->he[j][i]);
++			len += scnprintf(buf + len, size - len, "\n");
++			len += scnprintf(buf + len, size - len,
++					 " VHT MCS %s\n",
++					 str[j]);
++			for (i = 0; i < ATH11K_VHT_MCS_NUM; i++)
++				len += scnprintf(buf + len, size - len,
++						 "  %llu ",
++						 stats->vht[j][i]);
++			len += scnprintf(buf + len, size - len, "\n");
++			len += scnprintf(buf + len, size - len, " HT MCS %s\n",
++					 str[j]);
++			for (i = 0; i < ATH11K_HT_MCS_NUM; i++)
++				len += scnprintf(buf + len, size - len,
++						 "  %llu ", stats->ht[j][i]);
++			len += scnprintf(buf + len, size - len, "\n");
++			len += scnprintf(buf + len, size - len,
++					" BW %s (20,40,80,160 MHz)\n", str[j]);
++			len += scnprintf(buf + len, size - len,
++					 "  %llu %llu %llu %llu\n",
++					 stats->bw[j][0], stats->bw[j][1],
++					 stats->bw[j][2], stats->bw[j][3]);
++			len += scnprintf(buf + len, size - len,
++					 " NSS %s (1x1,2x2,3x3,4x4)\n", str[j]);
++			len += scnprintf(buf + len, size - len,
++					 "  %llu %llu %llu %llu\n",
++					 stats->nss[j][0], stats->nss[j][1],
++					 stats->nss[j][2], stats->nss[j][3]);
++			len += scnprintf(buf + len, size - len,
++					 " GI %s (0.4us,0.8us,1.6us,3.2us)\n",
++					 str[j]);
++			len += scnprintf(buf + len, size - len,
++					 "  %llu %llu %llu %llu\n",
++					 stats->gi[j][0], stats->gi[j][1],
++					 stats->gi[j][2], stats->gi[j][3]);
++			len += scnprintf(buf + len, size - len,
++					 " legacy rate %s (1,2 ... Mbps)\n  ",
++					 str[j]);
++			for (i = 0; i < ATH11K_LEGACY_NUM; i++)
++				len += scnprintf(buf + len, size - len, "%llu ",
++						 stats->legacy[j][i]);
++			len += scnprintf(buf + len, size - len, "\n");
++		}
++	}
++
++	len += scnprintf(buf + len, size - len,
++			 "\nTX duration\n %llu usecs\n",
++			 arsta->tx_stats->tx_duration);
++	len += scnprintf(buf + len, size - len,
++			"BA fails\n %llu\n", arsta->tx_stats->ba_fails);
++	len += scnprintf(buf + len, size - len,
++			"ack fails\n %llu\n", arsta->tx_stats->ack_fails);
++	spin_unlock_bh(&ar->data_lock);
++
++	if (len > size)
++		len = size;
++	retval = simple_read_from_buffer(user_buf, count, ppos, buf, len);
++	kfree(buf);
++
++	mutex_unlock(&ar->conf_mutex);
++	return retval;
++}
++
++static const struct file_operations fops_tx_stats = {
++	.read = ath11k_dbg_sta_dump_tx_stats,
++	.open = simple_open,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
++};
++
++static ssize_t ath11k_dbg_sta_dump_rx_stats(struct file *file,
++					    char __user *user_buf,
++					    size_t count, loff_t *ppos)
++{
++	struct ieee80211_sta *sta = file->private_data;
++	struct ath11k_sta *arsta = (struct ath11k_sta *)sta->drv_priv;
++	struct ath11k *ar = arsta->arvif->ar;
++	struct ath11k_rx_peer_stats *rx_stats = arsta->rx_stats;
++	int len = 0, i, retval = 0;
++	const int size = 4096;
++	char *buf;
++
++	if (!rx_stats)
++		return -ENOENT;
++
++	buf = kzalloc(size, GFP_KERNEL);
++	if (!buf)
++		return -ENOMEM;
++
++	mutex_lock(&ar->conf_mutex);
++	spin_lock_bh(&ar->ab->base_lock);
++
++	len += scnprintf(buf + len, size - len, "RX peer stats:\n");
++	len += scnprintf(buf + len, size - len, "Num of MSDUs: %llu\n",
++			 rx_stats->num_msdu);
++	len += scnprintf(buf + len, size - len, "Num of MSDUs with TCP L4: %llu\n",
++			 rx_stats->tcp_msdu_count);
++	len += scnprintf(buf + len, size - len, "Num of MSDUs with UDP L4: %llu\n",
++			 rx_stats->udp_msdu_count);
++	len += scnprintf(buf + len, size - len, "Num of MSDUs part of AMPDU: %llu\n",
++			 rx_stats->ampdu_msdu_count);
++	len += scnprintf(buf + len, size - len, "Num of MSDUs not part of AMPDU: %llu\n",
++			 rx_stats->non_ampdu_msdu_count);
++	len += scnprintf(buf + len, size - len, "Num of MSDUs using STBC: %llu\n",
++			 rx_stats->stbc_count);
++	len += scnprintf(buf + len, size - len, "Num of MSDUs beamformed: %llu\n",
++			 rx_stats->beamformed_count);
++	len += scnprintf(buf + len, size - len, "Num of MPDUs with FCS ok: %llu\n",
++			 rx_stats->num_mpdu_fcs_ok);
++	len += scnprintf(buf + len, size - len, "Num of MPDUs with FCS error: %llu\n",
++			 rx_stats->num_mpdu_fcs_err);
++	len += scnprintf(buf + len, size - len,
++			 "GI: 0.8us %llu 0.4us %llu 1.6us %llu 3.2us %llu\n",
++			 rx_stats->gi_count[0], rx_stats->gi_count[1],
++			 rx_stats->gi_count[2], rx_stats->gi_count[3]);
++	len += scnprintf(buf + len, size - len,
++			 "BW: 20Mhz %llu 40Mhz %llu 80Mhz %llu 160Mhz %llu\n",
++			 rx_stats->bw_count[0], rx_stats->bw_count[1],
++			 rx_stats->bw_count[2], rx_stats->bw_count[3]);
++	len += scnprintf(buf + len, size - len, "BCC %llu LDPC %llu\n",
++			 rx_stats->coding_count[0], rx_stats->coding_count[1]);
++	len += scnprintf(buf + len, size - len,
++			 "preamble: 11A %llu 11B %llu 11N %llu 11AC %llu 11AX %llu\n",
++			 rx_stats->pream_cnt[0], rx_stats->pream_cnt[1],
++			 rx_stats->pream_cnt[2], rx_stats->pream_cnt[3],
++			 rx_stats->pream_cnt[4]);
++	len += scnprintf(buf + len, size - len,
++			 "reception type: SU %llu MU_MIMO %llu MU_OFDMA %llu MU_OFDMA_MIMO %llu\n",
++			 rx_stats->reception_type[0], rx_stats->reception_type[1],
++			 rx_stats->reception_type[2], rx_stats->reception_type[3]);
++	len += scnprintf(buf + len, size - len, "TID(0-15) Legacy TID(16):");
++	for (i = 0; i <= IEEE80211_NUM_TIDS; i++)
++		len += scnprintf(buf + len, size - len, "%llu ", rx_stats->tid_count[i]);
++	len += scnprintf(buf + len, size - len, "\nMCS(0-11) Legacy MCS(12):");
++	for (i = 0; i < HAL_RX_MAX_MCS + 1; i++)
++		len += scnprintf(buf + len, size - len, "%llu ", rx_stats->mcs_count[i]);
++	len += scnprintf(buf + len, size - len, "\nNSS(1-8):");
++	for (i = 0; i < HAL_RX_MAX_NSS; i++)
++		len += scnprintf(buf + len, size - len, "%llu ", rx_stats->nss_count[i]);
++	len += scnprintf(buf + len, size - len, "\nRX Duration:%llu ",
++			 rx_stats->rx_duration);
++	len += scnprintf(buf + len, size - len, "\n");
++
++	spin_unlock_bh(&ar->ab->base_lock);
++
++	if (len > size)
++		len = size;
++	retval = simple_read_from_buffer(user_buf, count, ppos, buf, len);
++	kfree(buf);
++
++	mutex_unlock(&ar->conf_mutex);
++	return retval;
++}
++
++static const struct file_operations fops_rx_stats = {
++	.read = ath11k_dbg_sta_dump_rx_stats,
++	.open = simple_open,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
++};
++
++static int
++ath11k_dbg_sta_open_htt_peer_stats(struct inode *inode, struct file *file)
++{
++	struct ieee80211_sta *sta = inode->i_private;
++	struct ath11k_sta *arsta = (struct ath11k_sta *)sta->drv_priv;
++	struct ath11k *ar = arsta->arvif->ar;
++	struct debug_htt_stats_req *stats_req;
++	int ret;
++
++	stats_req = vzalloc(sizeof(*stats_req) + ATH11K_HTT_STATS_BUF_SIZE);
++	if (!stats_req)
++		return -ENOMEM;
++
++	mutex_lock(&ar->conf_mutex);
++	ar->debug.htt_stats.stats_req = stats_req;
++	stats_req->type = ATH11K_DBG_HTT_EXT_STATS_PEER_INFO;
++	memcpy(stats_req->peer_addr, sta->addr, ETH_ALEN);
++	ret = ath11k_dbg_htt_stats_req(ar);
++	mutex_unlock(&ar->conf_mutex);
++	if (ret < 0)
++		goto out;
++
++	file->private_data = stats_req;
++	return 0;
++out:
++	vfree(stats_req);
++	return ret;
++}
++
++static int
++ath11k_dbg_sta_release_htt_peer_stats(struct inode *inode, struct file *file)
++{
++	vfree(file->private_data);
++	return 0;
++}
++
++static ssize_t ath11k_dbg_sta_read_htt_peer_stats(struct file *file,
++						  char __user *user_buf,
++						  size_t count, loff_t *ppos)
++{
++	struct debug_htt_stats_req *stats_req = file->private_data;
++	char *buf;
++	u32 length = 0;
++
++	buf = stats_req->buf;
++	length = min_t(u32, stats_req->buf_len, ATH11K_HTT_STATS_BUF_SIZE);
++	return simple_read_from_buffer(user_buf, count, ppos, buf, length);
++}
++
++static const struct file_operations fops_htt_peer_stats = {
++	.open = ath11k_dbg_sta_open_htt_peer_stats,
++	.release = ath11k_dbg_sta_release_htt_peer_stats,
++	.read = ath11k_dbg_sta_read_htt_peer_stats,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
++};
++
++static ssize_t ath11k_dbg_sta_write_peer_pktlog(struct file *file,
++						const char __user *buf,
++						size_t count, loff_t *ppos)
++{
++	struct ieee80211_sta *sta = file->private_data;
++	struct ath11k_sta *arsta = (struct ath11k_sta *)sta->drv_priv;
++	struct ath11k *ar = arsta->arvif->ar;
++	int ret, enable;
++
++	mutex_lock(&ar->conf_mutex);
++
++	if (ar->state != ATH11K_STATE_ON) {
++		ret = -ENETDOWN;
++		goto out;
++	}
++
++	ret = kstrtoint_from_user(buf, count, 0, &enable);
++	if (ret)
++		goto out;
++
++	ar->debug.pktlog_peer_valid = enable;
++	memcpy(ar->debug.pktlog_peer_addr, sta->addr, ETH_ALEN);
++
++	/* Send peer based pktlog enable/disable */
++	ret = ath11k_wmi_pdev_peer_pktlog_filter(ar, sta->addr, enable);
++	if (ret) {
++		ath11k_warn(ar->ab, "failed to set peer pktlog filter %pM: %d\n",
++			    sta->addr, ret);
++		goto out;
++	}
++
++	ath11k_dbg(ar->ab, ATH11K_DBG_WMI, "peer pktlog filter set to %d\n",
++		   enable);
++	ret = count;
++
++out:
++	mutex_unlock(&ar->conf_mutex);
++	return ret;
++}
++
++static ssize_t ath11k_dbg_sta_read_peer_pktlog(struct file *file,
++					       char __user *ubuf,
++					       size_t count, loff_t *ppos)
++{
++	struct ieee80211_sta *sta = file->private_data;
++	struct ath11k_sta *arsta = (struct ath11k_sta *)sta->drv_priv;
++	struct ath11k *ar = arsta->arvif->ar;
++	char buf[32] = {0};
++	int len;
++
++	mutex_lock(&ar->conf_mutex);
++	len = scnprintf(buf, sizeof(buf), "%08x %pM\n",
++			ar->debug.pktlog_peer_valid,
++			ar->debug.pktlog_peer_addr);
++	mutex_unlock(&ar->conf_mutex);
++
++	return simple_read_from_buffer(ubuf, count, ppos, buf, len);
++}
++
++static const struct file_operations fops_peer_pktlog = {
++	.write = ath11k_dbg_sta_write_peer_pktlog,
++	.read = ath11k_dbg_sta_read_peer_pktlog,
++	.open = simple_open,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
++};
++
++void ath11k_sta_add_debugfs(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++			    struct ieee80211_sta *sta, struct dentry *dir)
++{
++	struct ath11k *ar = hw->priv;
++
++	if (ath11k_debug_is_extd_tx_stats_enabled(ar))
++		debugfs_create_file("tx_stats", 0400, dir, sta,
++				    &fops_tx_stats);
++	if (ath11k_debug_is_extd_rx_stats_enabled(ar))
++		debugfs_create_file("rx_stats", 0400, dir, sta,
++				    &fops_rx_stats);
++
++	debugfs_create_file("htt_peer_stats", 0400, dir, sta,
++			    &fops_htt_peer_stats);
++
++	debugfs_create_file("peer_pktlog", 0644, dir, sta,
++			    &fops_peer_pktlog);
++}
 
-I fixed up a couple of complaints from checkpatch, and also added
-stable tags for the first two patches in the series, as that what
-missing.
-
-Kind regards
-Uffe
-
-
->
-> > Thanks a lot for fixing all this mess!
->
-> I hope the users also appreciate our work.
->
-> Best regards,
-> Nikolaus
->
-> >
-> > Kind regards
-> > Uffe
-> >
-> >>
-> >> PATCH V2 2019-10-19 20:41:47:
-> >> * added acked-by for wl1251 patches - Kalle Valo <kvalo@codeaurora.org>
-> >> * really removed old pdata-quirks code (not through #if 0)
-> >> * splited out a partial revert of
-> >>        efdfeb079cc3b ("regulator: fixed: Convert to use GPIO descriptor only")
-> >>  because that was introduced after v4.19 and stops the removal of
-> >>  the pdata-quirks patch from cleanly applying to v4.9, v4.14, v4.19
-> >>  - reported by Sasha Levin <sashal@kernel.org>
-> >> * added a new patch to remove old omap hsmmc since pdata quirks
-> >>  were last user - suggested by Tony Lindgren <tony@atomide.com>
-> >>
-> >> PATCH V1 2019-10-18 22:25:39:
-> >> Here we have a set of scattered patches to make the OpenPandora WiFi work again.
-> >>
-> >> v4.7 did break the pdata-quirks which made the mmc3 interface
-> >> fail completely, because some code now assumes device tree
-> >> based instantiation.
-> >>
-> >> Fixes: 81eef6ca9201 ("mmc: omap_hsmmc: Use dma_request_chan() for requesting DMA channel")
-> >>
-> >> v4.11 did break the sdio qirks for wl1251 which made the driver no longer
-> >> load, although the device was found as an sdio client.
-> >>
-> >> Fixes: 884f38607897 ("mmc: core: move some sdio IDs out of quirks file")
-> >>
-> >> To solve these issues:
-> >> * we convert mmc3 and wl1251 initialization from pdata-quirks
-> >>  to device tree
-> >> * we make the wl1251 driver read properties from device tree
-> >> * we fix the mmc core vendor ids and quirks
-> >> * we fix the wl1251 (and wl1271) driver to use only vendor ids
-> >>  from header file instead of (potentially conflicting) local
-> >>  definitions
-> >>
-> >>
-> >> H. Nikolaus Schaller (12):
-> >>  Documentation: dt: wireless: update wl1251 for sdio
-> >>  net: wireless: ti: wl1251 add device tree support
-> >>  ARM: dts: pandora-common: define wl1251 as child node of mmc3
-> >>  mmc: host: omap_hsmmc: add code for special init of wl1251 to get rid
-> >>    of pandora_wl1251_init_card
-> >>  omap: pdata-quirks: revert pandora specific gpiod additions
-> >>  omap: pdata-quirks: remove openpandora quirks for mmc3 and wl1251
-> >>  omap: remove omap2_hsmmc_info in old hsmmc.[ch] and update Makefile
-> >>  mmc: host: omap-hsmmc: remove init_card pdata callback from pdata
-> >>  mmc: sdio: fix wl1251 vendor id
-> >>  mmc: core: fix wl1251 sdio quirks
-> >>  net: wireless: ti: wl1251 use new SDIO_VENDOR_ID_TI_WL1251 definition
-> >>  net: wireless: ti: remove local VENDOR_ID and DEVICE_ID definitions
-> >>
-> >> .../bindings/net/wireless/ti,wl1251.txt       |  26 +++
-> >> arch/arm/boot/dts/omap3-pandora-common.dtsi   |  36 +++-
-> >> arch/arm/mach-omap2/Makefile                  |   3 -
-> >> arch/arm/mach-omap2/common.h                  |   1 -
-> >> arch/arm/mach-omap2/hsmmc.c                   | 171 ------------------
-> >> arch/arm/mach-omap2/hsmmc.h                   |  32 ----
-> >> arch/arm/mach-omap2/pdata-quirks.c            | 105 -----------
-> >> drivers/mmc/core/quirks.h                     |   7 +
-> >> drivers/mmc/host/omap_hsmmc.c                 |  30 ++-
-> >> drivers/net/wireless/ti/wl1251/sdio.c         |  23 ++-
-> >> drivers/net/wireless/ti/wlcore/sdio.c         |   8 -
-> >> include/linux/mmc/sdio_ids.h                  |   2 +
-> >> include/linux/platform_data/hsmmc-omap.h      |   3 -
-> >> 13 files changed, 111 insertions(+), 336 deletions(-)
-> >> delete mode 100644 arch/arm/mach-omap2/hsmmc.c
-> >> delete mode 100644 arch/arm/mach-omap2/hsmmc.h
-> >>
-> >> --
-> >> 2.23.0
-> >>
->
->
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
