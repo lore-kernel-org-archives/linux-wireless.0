@@ -2,248 +2,353 @@ Return-Path: <SRS0=1RAM=ZH=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A3E7C432C3
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Nov 2019 15:06:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52E2DC43141
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Nov 2019 17:18:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 14C2F20674
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 Nov 2019 15:06:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573830361;
-	bh=ldONIwximE4K8HSR9mwXAPode5FvRkA0i6JABWkAUs4=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=ihFvX34nx7vwSB2EEqZEN1M7dEYN+UNCyP5MsSzXohad8sbMUFFc0i3qHjXWSIdB9
-	 lKHULKj7dgHaUaUOjYwe0pCid93Idr8Q2cRT0zwU2rLzm60hSrlphjIlMMpdgSnRA7
-	 QwDoNG+zzYQaOuXVW8Nn3BeS5NtGUfKBppgiJoEE=
+	by mail.kernel.org (Postfix) with ESMTP id 2B38B20733
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 Nov 2019 17:18:59 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="cDJEwgQx";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="L7Wda5ki"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727548AbfKOPGA (ORCPT
+        id S1727629AbfKORS5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 15 Nov 2019 10:06:00 -0500
-Received: from mail.kernel.org ([198.145.29.99]:59218 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727406AbfKOPGA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 Nov 2019 10:06:00 -0500
-Received: from localhost.localdomain.com (unknown [77.139.212.74])
+        Fri, 15 Nov 2019 12:18:57 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:33354 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727531AbfKORS5 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 15 Nov 2019 12:18:57 -0500
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 0F3D060C16; Fri, 15 Nov 2019 17:18:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1573838336;
+        bh=5yRi1Lfa4JK4cFXmB5tAr/2ClxagcLuMBifYCznxQEU=;
+        h=From:Subject:To:Cc:Date:From;
+        b=cDJEwgQx2d7O324pZZE52M3B/t9Tt7VwMoNsLnPQbj9oqtwzQ7d72AYwrnj1gOMyG
+         Npk0VAhBYrtx5MoQguDFTiqdCt80RjMk/F491gfJSJigpuq7JLGn2jhnCNtwzXeFDZ
+         K2Zu+gdWpPRM406oCbmK5YCM49sKMSg3KhOPFuT4=
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 711B620732;
-        Fri, 15 Nov 2019 15:05:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573830359;
-        bh=ldONIwximE4K8HSR9mwXAPode5FvRkA0i6JABWkAUs4=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=czggBMDHIC1ggBXqqi4fVqChWcjsbc4u+Y2oQCW75lvZ9pMPRk1Mqs3g7C+J105E7
-         bg3xVQslAaof5/ePlGhfJGZb3hwS7mGkX5duy8lFllQE/dYTziv/CVXLDNWnXDbx33
-         YfqubvkH6oTQvIHjv+gCW0FG4Xe08V0cnLhGFtME=
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     nbd@nbd.name
-Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
-        ryder.lee@mediatek.com, royluo@google.com
-Subject: [PATCH 3/3] mt76: mt7615: add set_coverage class support
-Date:   Fri, 15 Nov 2019 17:05:26 +0200
-Message-Id: <70a7bf227313579d1d967c9a4c322e21bc673895.1573828743.git.lorenzo@kernel.org>
-X-Mailer: git-send-email 2.21.0
-In-Reply-To: <cover.1573828743.git.lorenzo@kernel.org>
-References: <cover.1573828743.git.lorenzo@kernel.org>
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 85CB560B18;
+        Fri, 15 Nov 2019 17:18:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1573838335;
+        bh=5yRi1Lfa4JK4cFXmB5tAr/2ClxagcLuMBifYCznxQEU=;
+        h=From:Subject:To:Cc:From;
+        b=L7Wda5kiOAMF4cjnjLOmMy75mXksHmGdblWdrpvrBZ0PuWJmyPZVBwyhhgUY8gFNr
+         ytL7GMi0EhZF0rJeqFTHu4561YhnwhMmG4sClyHxtZ6NUAbWbiODqdvLrPGBmFt5Ds
+         s5Zv9S/p2UO3jNAx/kVLLumLjlO/skDXywfZt33Y=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 85CB560B18
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+From:   Kalle Valo <kvalo@codeaurora.org>
+Subject: pull-request: wireless-drivers-next-2019-11-15
+To:     netdev@vger.kernel.org
+Cc:     linux-wireless@vger.kernel.org
+Message-Id: <20191115171856.0F3D060C16@smtp.codeaurora.org>
+Date:   Fri, 15 Nov 2019 17:18:56 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add the capability to configure the acktimeout for mt7615 driver. Moreover
-configure slottime according to the value provided by mac80211
+Hi,
 
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
----
- .../net/wireless/mediatek/mt76/mt7615/init.c  |  1 +
- .../net/wireless/mediatek/mt76/mt7615/mac.c   | 41 +++++++++++++++++++
- .../net/wireless/mediatek/mt76/mt7615/main.c  | 20 +++++++++
- .../wireless/mediatek/mt76/mt7615/mt7615.h    |  4 ++
- .../net/wireless/mediatek/mt76/mt7615/regs.h  | 21 ++++++++++
- 5 files changed, 87 insertions(+)
+here's a pull request to net-next tree, more info below. Please let me know if
+there are any problems.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/init.c b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
-index 553bd4d988f7..54108fbaf1c4 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
-@@ -304,6 +304,7 @@ int mt7615_register_device(struct mt7615_dev *dev)
- 			IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_MASK |
- 			IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160_80PLUS80MHZ;
- 	dev->dfs_state = -1;
-+	dev->mt76.slottime = 9;
- 
- 	ret = mt76_register_device(&dev->mt76, true, mt7615_rates,
- 				   ARRAY_SIZE(mt7615_rates));
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-index c77adc5d2552..809ebe70d196 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-@@ -60,6 +60,47 @@ void mt7615_mac_reset_counters(struct mt7615_dev *dev)
- 	mt76_set(dev, MT_WF_RMAC_MIB_AIRTIME0, MT_WF_RMAC_MIB_RXTIME_CLR);
- }
- 
-+/* XXX: DBDC support */
-+void mt7615_mac_set_timing(struct mt7615_dev *dev)
-+{
-+	u32 cck = FIELD_PREP(MT_TIMEOUT_VAL_PLCP, 231) |
-+		  FIELD_PREP(MT_TIMEOUT_VAL_CCA, 48);
-+	u32 ofdm = FIELD_PREP(MT_TIMEOUT_VAL_PLCP, 60) |
-+		   FIELD_PREP(MT_TIMEOUT_VAL_CCA, 24);
-+	int offset = 3 * dev->mt76.coverage_class;
-+	u32 reg_offset = FIELD_PREP(MT_TIMEOUT_VAL_PLCP, offset) |
-+			 FIELD_PREP(MT_TIMEOUT_VAL_CCA, offset);
-+	int sifs;
-+	u32 val;
-+
-+	if (dev->mt76.chandef.chan->band == NL80211_BAND_5GHZ)
-+		sifs = 16;
-+	else
-+		sifs = 10;
-+
-+	mt76_set(dev, MT_ARB_SCR,
-+		 MT_ARB_SCR_TX0_DISABLE | MT_ARB_SCR_RX0_DISABLE);
-+	udelay(1);
-+
-+	mt76_wr(dev, MT_TMAC_CDTR, cck + reg_offset);
-+	mt76_wr(dev, MT_TMAC_ODTR, ofdm + reg_offset);
-+	mt76_wr(dev, MT_TMAC_ICR0,
-+		FIELD_PREP(MT_IFS_EIFS, 360) |
-+		FIELD_PREP(MT_IFS_RIFS, 2) |
-+		FIELD_PREP(MT_IFS_SIFS, sifs) |
-+		FIELD_PREP(MT_IFS_SLOT, dev->mt76.slottime));
-+
-+	if (dev->mt76.slottime < 20)
-+		val = MT7615_CFEND_RATE_DEFAULT;
-+	else
-+		val = MT7615_CFEND_RATE_11B;
-+
-+	mt76_rmw_field(dev, MT_AGG_ACR0, MT_AGG_ACR_CFEND_RATE, val);
-+
-+	mt76_clear(dev, MT_ARB_SCR,
-+		   MT_ARB_SCR_TX0_DISABLE | MT_ARB_SCR_RX0_DISABLE);
-+}
-+
- int mt7615_mac_fill_rx(struct mt7615_dev *dev, struct sk_buff *skb)
- {
- 	struct mt76_rx_status *status = (struct mt76_rx_status *)skb->cb;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/main.c b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
-index 78bbed7a4645..61df5d1da6c6 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
-@@ -155,6 +155,7 @@ static int mt7615_set_channel(struct mt7615_dev *dev)
- 	if (ret)
- 		goto out;
- 
-+	mt7615_mac_set_timing(dev);
- 	ret = mt7615_dfs_init_radar_detector(dev);
- 	mt7615_mac_cca_stats_reset(dev);
- 	dev->mt76.survey_time = ktime_get_boottime();
-@@ -327,6 +328,15 @@ static void mt7615_bss_info_changed(struct ieee80211_hw *hw,
- 	if (changed & BSS_CHANGED_ASSOC)
- 		mt7615_mcu_set_bss_info(dev, vif, info->assoc);
- 
-+	if (changed & BSS_CHANGED_ERP_SLOT) {
-+		int slottime = info->use_short_slot ? 9 : 20;
-+
-+		if (slottime != dev->mt76.slottime) {
-+			dev->mt76.slottime = slottime;
-+			mt7615_mac_set_timing(dev);
-+		}
-+	}
-+
- 	/* TODO: update beacon content
- 	 * BSS_CHANGED_BEACON
- 	 */
-@@ -520,6 +530,15 @@ mt7615_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	return 0;
- }
- 
-+static void
-+mt7615_set_coverage_class(struct ieee80211_hw *hw, s16 coverage_class)
-+{
-+	struct mt7615_dev *dev = hw->priv;
-+
-+	dev->mt76.coverage_class = coverage_class;
-+	mt7615_mac_set_timing(dev);
-+}
-+
- const struct ieee80211_ops mt7615_ops = {
- 	.tx = mt7615_tx,
- 	.start = mt7615_start,
-@@ -543,4 +562,5 @@ const struct ieee80211_ops mt7615_ops = {
- 	.channel_switch_beacon = mt7615_channel_switch_beacon,
- 	.get_survey = mt76_get_survey,
- 	.get_antenna = mt76_get_antenna,
-+	.set_coverage_class = mt7615_set_coverage_class,
- };
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-index d537f68c5531..3c4a4b3e45d5 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-@@ -36,6 +36,9 @@
- #define MT_FRAC_SCALE		12
- #define MT_FRAC(val, div)	(((val) << MT_FRAC_SCALE) / (div))
- 
-+#define MT7615_CFEND_RATE_DEFAULT	0x69 /* chip default (24M) */
-+#define MT7615_CFEND_RATE_11B		0x03 /* 11B LP, 11M */
-+
- struct mt7615_vif;
- struct mt7615_sta;
- 
-@@ -246,6 +249,7 @@ int mt7615_mac_write_txwi(struct mt7615_dev *dev, __le32 *txwi,
- 			  struct sk_buff *skb, struct mt76_wcid *wcid,
- 			  struct ieee80211_sta *sta, int pid,
- 			  struct ieee80211_key_conf *key);
-+void mt7615_mac_set_timing(struct mt7615_dev *dev);
- int mt7615_mac_fill_rx(struct mt7615_dev *dev, struct sk_buff *skb);
- void mt7615_mac_add_txs(struct mt7615_dev *dev, void *data);
- void mt7615_mac_tx_free(struct mt7615_dev *dev, struct sk_buff *skb);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/regs.h b/drivers/net/wireless/mediatek/mt76/mt7615/regs.h
-index 61a4aa9ac6e6..5ac52758d7b1 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/regs.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/regs.h
-@@ -153,14 +153,35 @@
- #define MT_AGG_SCR			MT_WF_AGG(0x0fc)
- #define MT_AGG_SCR_NLNAV_MID_PTEC_DIS	BIT(3)
- 
-+#define MT_WF_ARB_BASE			0x20c00
-+#define MT_WF_ARB(ofs)			(MT_WF_ARB_BASE + (ofs))
-+
-+#define MT_ARB_SCR			MT_WF_ARB(0x080)
-+#define MT_ARB_SCR_TX0_DISABLE		BIT(8)
-+#define MT_ARB_SCR_RX0_DISABLE		BIT(9)
-+#define MT_ARB_SCR_TX1_DISABLE		BIT(10)
-+#define MT_ARB_SCR_RX1_DISABLE		BIT(11)
-+
- #define MT_WF_TMAC_BASE			0x21000
- #define MT_WF_TMAC(ofs)			(MT_WF_TMAC_BASE + (ofs))
- 
-+#define MT_TMAC_CDTR			MT_WF_TMAC(0x090)
-+#define MT_TMAC_ODTR			MT_WF_TMAC(0x094)
-+#define MT_TIMEOUT_VAL_PLCP		GENMASK(15, 0)
-+#define MT_TIMEOUT_VAL_CCA		GENMASK(31, 16)
-+
- #define MT_TMAC_TRCR0			MT_WF_TMAC(0x09c)
- #define MT_TMAC_TRCR1			MT_WF_TMAC(0x070)
- #define MT_TMAC_TRCR_CCA_SEL		GENMASK(31, 30)
- #define MT_TMAC_TRCR_SEC_CCA_SEL	GENMASK(29, 28)
- 
-+#define MT_TMAC_ICR0			MT_WF_TMAC(0x0a4)
-+#define MT_TMAC_ICR1			MT_WF_TMAC(0x074)
-+#define MT_IFS_EIFS			GENMASK(8, 0)
-+#define MT_IFS_RIFS			GENMASK(14, 10)
-+#define MT_IFS_SIFS			GENMASK(22, 16)
-+#define MT_IFS_SLOT			GENMASK(30, 24)
-+
- #define MT_TMAC_CTCR0			MT_WF_TMAC(0x0f4)
- #define MT_TMAC_CTCR0_INS_DDLMT_REFTIME	GENMASK(5, 0)
- #define MT_TMAC_CTCR0_INS_DDLMT_DENSITY	GENMASK(15, 12)
--- 
-2.21.0
+Kalle
 
+The following changes since commit a3ead21d6eec4d18b48466c7b978566bc9cab676:
+
+  Merge tag 'wireless-drivers-next-2019-11-05' of git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next (2019-11-05 18:36:35 -0800)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git tags/wireless-drivers-next-2019-11-15
+
+for you to fetch changes up to 4f5969c36a4572dbaf8737dd9f486382d4e44b4a:
+
+  rtw88: remove duplicated include from ps.c (2019-11-15 14:24:38 +0200)
+
+----------------------------------------------------------------
+wireless-drivers-next patches for v5.5
+
+Second set of patches for v5.5. Nothing special this time, smaller
+features to various drivers and of course fixes all over.
+
+Major changes:
+
+iwlwifi
+
+* update scan FW API
+
+* bump the supported FW API version
+
+* add debug dump collection on assert in WoWLAN
+
+* enable adaptive dwell on P2P interfaces
+
+ath10k
+
+* request for PM_QOS_CPU_DMA_LATENCY to improve firmware initialisation time
+
+qtnfmac
+
+* add support for getting/setting transmit power
+
+* handle MIC failure event from firmware
+
+rtl8xxxu
+
+* add support for Edimax EW-7611ULB
+
+wil6210
+
+* add SPDX license identifiers
+
+----------------------------------------------------------------
+Abhishek Ambure (1):
+      ath10k: enable transmit data ack RSSI for QCA9884
+
+Bjorn Andersson (3):
+      ath10k: Correct error handling of dma_map_single()
+      ath10k: Revert "ath10k: add cleanup in ath10k_sta_state()"
+      ath10k: qmi: Sleep for a while before assigning MSA memory
+
+Brian Norris (1):
+      rtw88: signal completion even on firmware-request failure
+
+Colin Ian King (2):
+      ath10k: fix null dereference on pointer crash_data
+      iwlwifi: remove redundant assignment to variable bufsz
+
+Daniel Golle (1):
+      rt2800: remove errornous duplicate condition
+
+Eduardo Abinader (3):
+      wcn36xx: remove unecessary return
+      wcn36xx: fix typo
+      brcmsmac: remove unnecessary return
+
+Emmanuel Grumbach (2):
+      iwlwifi: pcie: make iwl_pcie_gen2_update_byte_tbl static
+      iwlwifi: mvm: sync the iwl_mvm_session_prot_notif layout
+
+Haim Dreyfuss (1):
+      iwlwifi: mvm: don't skip mgmt tid when flushing all tids
+
+Hui Peng (1):
+      ath10k: Fix a NULL-ptr-deref bug in ath10k_usb_alloc_urb_from_pipe
+
+Ihab Zhaika (1):
+      iwlwifi: refactor the SAR tables from mvm to acpi
+
+Ikjoon Jang (1):
+      ath10k: disable cpuidle during downloading firmware
+
+Jes Sorensen (1):
+      rtl8xxxu: Add support for Edimax EW-7611ULB
+
+Johannes Berg (4):
+      iwlwifi: FW API: reference enum in docs of modify_mask
+      iwlwifi: remove IWL_DEVICE_22560/IWL_DEVICE_FAMILY_22560
+      iwlwifi: 22000: fix some indentation
+      iwlwifi: mvm: fix non-ACPI function
+
+Kalle Valo (2):
+      Merge ath-next from git://git.kernel.org/.../kvalo/ath.git
+      Merge ath-next from git://git.kernel.org/.../kvalo/ath.git
+
+Larry Finger (3):
+      rtlwifi: rtl8192de: Fix missing code to retrieve RX buffer address
+      rtlwifi: rtl8192de: Fix missing callback that tests for hw release of buffer
+      rtlwifi: rtl8192de: Fix missing enable interrupt flag
+
+Lior David (1):
+      wil6210: add SPDX license identifiers
+
+Luca Coelho (3):
+      iwlwifi: mvm: fix support for single antenna diversity
+      iwlwifi: mvm: remove else-if in iwl_send_phy_cfg_cmd()
+      iwlwifi: bump FW API to 51 for 22000 series
+
+Miaoqing Pan (3):
+      ath10k: fix array out-of-bounds access
+      ath10k: fix memory leak for tpc_stats_final
+      ath10k: fix get invalid tx rate for Mesh metric
+
+Mikhail Karpenko (1):
+      qtnfmac: add support for getting/setting transmit power
+
+Mordechay Goodstein (3):
+      iwlwifi: mvm: in VHT connection use only VHT capabilities
+      iwlwifi: mvm: print rate_n_flags in a pretty format
+      iwlwifi: mvm: start CTDP budget from 2400mA
+
+Ping-Ke Shih (1):
+      rtlwifi: fix memory leak in rtl92c_set_fw_rsvdpagepkt()
+
+Saurav Girepunje (1):
+      ath5k: eeprom: Remove unneeded variable
+
+Sergey Matyukevich (6):
+      qtnfmac: fix using skb after free
+      qtnfmac: fix debugfs support for multiple cards
+      qtnfmac: fix invalid channel information output
+      qtnfmac: modify Rx descriptors queue setup
+      qtnfmac: send EAPOL frames via control path
+      qtnfmac: handle MIC failure event from firmware
+
+Shahar S Matityahu (4):
+      iwlwifi: dbg_ini: support dump collection upon assert during D3
+      iwlwifi: scan: make new scan req versioning flow
+      iwlwifi: scan: support scan req cmd ver 12
+      iwlwifi: mvm: scan: enable adaptive dwell in p2p
+
+Tomislav Požega (1):
+      ath: rename regulatory rules
+
+Tova Mussai (4):
+      iwlwifi: nvm: update iwl_uhb_nvm_channels
+      iwlwifi: scan: create function for scan scheduling params
+      iwlwifi: scan: Create function to build scan cmd
+      iwlwifi: scan: adapt the code to use api ver 11
+
+Wang Xuerui (1):
+      iwlwifi: mvm: fix unaligned read of rx_pkt_status
+
+Yan-Hsuan Chuang (2):
+      rtw88: raise LPS threshold to 50, for less power consumption
+      rtw88: fix potential NULL pointer access for firmware
+
+YueHaibing (4):
+      ath10k: remove unneeded semicolon
+      brcmsmac: remove set but not used variables
+      rtlwifi: rtl8225se: remove some unused const variables
+      rtw88: remove duplicated include from ps.c
+
+Zheng Yongjun (1):
+      rtl8xxxu: Remove set but not used variable 'rsr'
+
+Zhi Chen (1):
+      ath10k: fix potential issue of peer stats allocation
+
+zhong jiang (2):
+      ipw2x00: Remove redundant variable "rc"
+      iwlegacy: Remove redundant variable "ret"
+
+ drivers/net/wireless/ath/ath10k/core.c             |  12 +-
+ drivers/net/wireless/ath/ath10k/debug.c            |   3 +-
+ drivers/net/wireless/ath/ath10k/htt_rx.c           |   2 +-
+ drivers/net/wireless/ath/ath10k/hw.c               |   1 +
+ drivers/net/wireless/ath/ath10k/mac.c              |  11 +-
+ drivers/net/wireless/ath/ath10k/qmi.c              |   7 +
+ drivers/net/wireless/ath/ath10k/snoc.c             |   2 +-
+ drivers/net/wireless/ath/ath10k/txrx.c             |   2 +
+ drivers/net/wireless/ath/ath10k/usb.c              |   8 +
+ drivers/net/wireless/ath/ath10k/wmi.c              |  49 +-
+ drivers/net/wireless/ath/ath5k/eeprom.c            |   4 +-
+ drivers/net/wireless/ath/regd.c                    |  50 +-
+ drivers/net/wireless/ath/wcn36xx/hal.h             |   2 +-
+ drivers/net/wireless/ath/wcn36xx/main.c            |   2 -
+ drivers/net/wireless/ath/wil6210/boot_loader.h     |  13 +-
+ drivers/net/wireless/ath/wil6210/cfg80211.c        |  13 +-
+ drivers/net/wireless/ath/wil6210/debug.c           |  13 +-
+ drivers/net/wireless/ath/wil6210/debugfs.c         |  13 +-
+ drivers/net/wireless/ath/wil6210/ethtool.c         |  13 +-
+ drivers/net/wireless/ath/wil6210/fw.c              |  13 +-
+ drivers/net/wireless/ath/wil6210/fw.h              |  13 +-
+ drivers/net/wireless/ath/wil6210/fw_inc.c          |  13 +-
+ drivers/net/wireless/ath/wil6210/interrupt.c       |  13 +-
+ drivers/net/wireless/ath/wil6210/main.c            |  13 +-
+ drivers/net/wireless/ath/wil6210/netdev.c          |  13 +-
+ drivers/net/wireless/ath/wil6210/p2p.c             |  13 +-
+ drivers/net/wireless/ath/wil6210/pcie_bus.c        |  13 +-
+ drivers/net/wireless/ath/wil6210/pm.c              |  13 +-
+ drivers/net/wireless/ath/wil6210/pmc.c             |  13 +-
+ drivers/net/wireless/ath/wil6210/pmc.h             |  17 +-
+ drivers/net/wireless/ath/wil6210/rx_reorder.c      |  13 +-
+ drivers/net/wireless/ath/wil6210/trace.c           |  13 +-
+ drivers/net/wireless/ath/wil6210/trace.h           |  13 +-
+ drivers/net/wireless/ath/wil6210/txrx.c            |  13 +-
+ drivers/net/wireless/ath/wil6210/txrx.h            |  13 +-
+ drivers/net/wireless/ath/wil6210/txrx_edma.c       |  13 +-
+ drivers/net/wireless/ath/wil6210/txrx_edma.h       |  13 +-
+ drivers/net/wireless/ath/wil6210/wil6210.h         |  13 +-
+ drivers/net/wireless/ath/wil6210/wil_crash_dump.c  |  13 +-
+ drivers/net/wireless/ath/wil6210/wil_platform.c    |  15 +-
+ drivers/net/wireless/ath/wil6210/wil_platform.h    |  13 +-
+ drivers/net/wireless/ath/wil6210/wmi.c             |  13 +-
+ drivers/net/wireless/ath/wil6210/wmi.h             |  13 +-
+ .../wireless/broadcom/brcm80211/brcmsmac/main.c    |  13 +-
+ drivers/net/wireless/intel/ipw2x00/libipw_rx.c     |   4 +-
+ drivers/net/wireless/intel/iwlegacy/4965-mac.c     |   3 +-
+ drivers/net/wireless/intel/iwlwifi/cfg/22000.c     |  52 +-
+ drivers/net/wireless/intel/iwlwifi/fw/acpi.c       | 287 +++++++++++
+ drivers/net/wireless/intel/iwlwifi/fw/acpi.h       |  84 ++++
+ drivers/net/wireless/intel/iwlwifi/fw/api/scan.h   | 208 ++++++++
+ drivers/net/wireless/intel/iwlwifi/fw/api/sta.h    |  10 +-
+ .../net/wireless/intel/iwlwifi/fw/api/time-event.h |   4 +-
+ drivers/net/wireless/intel/iwlwifi/fw/api/tx.h     |   6 +-
+ drivers/net/wireless/intel/iwlwifi/fw/img.h        |  18 +
+ drivers/net/wireless/intel/iwlwifi/fw/runtime.h    |  11 +
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h    |   1 -
+ drivers/net/wireless/intel/iwlwifi/iwl-csr.h       |   2 -
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c       |   2 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-fh.h        |   2 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c |   9 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c        |   2 +
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c   |   7 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c        | 392 +++------------
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  |   2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |  21 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c       |   6 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c     |   8 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c        |   8 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.h        |   2 +
+ drivers/net/wireless/intel/iwlwifi/mvm/rx.c        |   3 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c      |   4 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/scan.c      | 557 ++++++++++++++++++---
+ drivers/net/wireless/intel/iwlwifi/mvm/tt.c        |  43 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c        |   4 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/internal.h |   7 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c       |  53 +-
+ .../net/wireless/intel/iwlwifi/pcie/trans-gen2.c   |   4 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c    |  31 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c  |  18 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c       |   2 +-
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.c  |  41 ++
+ drivers/net/wireless/quantenna/qtnfmac/commands.c  |  71 ++-
+ drivers/net/wireless/quantenna/qtnfmac/commands.h  |   3 +
+ drivers/net/wireless/quantenna/qtnfmac/core.c      |  23 +-
+ drivers/net/wireless/quantenna/qtnfmac/core.h      |   1 -
+ drivers/net/wireless/quantenna/qtnfmac/event.c     |  47 +-
+ drivers/net/wireless/quantenna/qtnfmac/pcie/pcie.c |  12 +-
+ .../wireless/quantenna/qtnfmac/pcie/pcie_priv.h    |   4 +-
+ .../wireless/quantenna/qtnfmac/pcie/pearl_pcie.c   |  36 +-
+ .../wireless/quantenna/qtnfmac/pcie/topaz_pcie.c   |  28 +-
+ drivers/net/wireless/quantenna/qtnfmac/qlink.h     |  57 +++
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c     |   5 +-
+ .../wireless/realtek/rtl818x/rtl8180/rtl8225se.c   |  42 --
+ .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c  |   7 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192cu/hw.c    |   2 +
+ .../net/wireless/realtek/rtlwifi/rtl8192de/hw.c    |   9 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192de/sw.c    |   1 +
+ .../net/wireless/realtek/rtlwifi/rtl8192de/trx.c   |  25 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192de/trx.h   |   2 +
+ drivers/net/wireless/realtek/rtw88/main.c          |   5 +-
+ drivers/net/wireless/realtek/rtw88/ps.c            |   1 -
+ drivers/net/wireless/realtek/rtw88/ps.h            |   2 +-
+ 102 files changed, 1739 insertions(+), 1113 deletions(-)
