@@ -2,41 +2,38 @@ Return-Path: <SRS0=oU4Q=ZI=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8516C432C3
-	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 07:34:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4116FC33C9D
+	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 07:34:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 88B2A206D6
-	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 07:34:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 21BEE206D6
+	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 07:34:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726237AbfKPHeJ (ORCPT
+        id S1726899AbfKPHeU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 16 Nov 2019 02:34:09 -0500
-Received: from szxga04-in.huawei.com ([45.249.212.190]:6684 "EHLO huawei.com"
+        Sat, 16 Nov 2019 02:34:20 -0500
+Received: from szxga04-in.huawei.com ([45.249.212.190]:6683 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726034AbfKPHeJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 16 Nov 2019 02:34:09 -0500
+        id S1726313AbfKPHeU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 16 Nov 2019 02:34:20 -0500
 Received: from DGGEMS414-HUB.china.huawei.com (unknown [172.30.72.58])
-        by Forcepoint Email with ESMTP id 9CB5E6AA3D2E3713EDA0;
+        by Forcepoint Email with ESMTP id 9836EEBD5AF8DA211DA2;
         Sat, 16 Nov 2019 15:34:06 +0800 (CST)
 Received: from huawei.com (10.90.53.225) by DGGEMS414-HUB.china.huawei.com
  (10.3.19.214) with Microsoft SMTP Server id 14.3.439.0; Sat, 16 Nov 2019
- 15:34:00 +0800
+ 15:33:59 +0800
 From:   zhengbin <zhengbin13@huawei.com>
 To:     <stas.yakovlev@gmail.com>, <kvalo@codeaurora.org>,
         <davem@davemloft.net>, <linux-wireless@vger.kernel.org>,
         <netdev@vger.kernel.org>
 CC:     <zhengbin13@huawei.com>
-Subject: [PATCH -next 2/2] ipw2x00: remove set but not used variable 'force_update'
-Date:   Sat, 16 Nov 2019 15:41:23 +0800
-Message-ID: <1573890083-33761-3-git-send-email-zhengbin13@huawei.com>
+Subject: [PATCH -next 0/2] ipw2x00: remove some set but not used variables
+Date:   Sat, 16 Nov 2019 15:41:21 +0800
+Message-ID: <1573890083-33761-1-git-send-email-zhengbin13@huawei.com>
 X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1573890083-33761-1-git-send-email-zhengbin13@huawei.com>
-References: <1573890083-33761-1-git-send-email-zhengbin13@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [10.90.53.225]
@@ -46,41 +43,14 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Fixes gcc '-Wunused-but-set-variable' warning:
+zhengbin (2):
+  ipw2x00: remove set but not used variable 'reason'
+  ipw2x00: remove set but not used variable 'force_update'
 
-drivers/net/wireless/intel/ipw2x00/ipw2100.c: In function shim__set_security:
-drivers/net/wireless/intel/ipw2x00/ipw2100.c:5582:9: warning: variable force_update set but not used [-Wunused-but-set-variable]
-
-It is introduced by commit 367a1092b555 ("ipw2x00:
-move under intel vendor directory"), but never used, so remove it.
-
-Reported-by: Hulk Robot <hulkci@huawei.com>
-Signed-off-by: zhengbin <zhengbin13@huawei.com>
----
  drivers/net/wireless/intel/ipw2x00/ipw2100.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/net/wireless/intel/ipw2x00/ipw2200.c | 3 ---
+ 2 files changed, 1 insertion(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2100.c b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
-index 8dfbaff..c4c83ab 100644
---- a/drivers/net/wireless/intel/ipw2x00/ipw2100.c
-+++ b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
-@@ -5565,7 +5565,7 @@ static void shim__set_security(struct net_device *dev,
- 			       struct libipw_security *sec)
- {
- 	struct ipw2100_priv *priv = libipw_priv(dev);
--	int i, force_update = 0;
-+	int i;
-
- 	mutex_lock(&priv->action_mutex);
- 	if (!(priv->status & STATUS_INITIALIZED))
-@@ -5605,7 +5605,6 @@ static void shim__set_security(struct net_device *dev,
- 		priv->ieee->sec.flags |= SEC_ENABLED;
- 		priv->ieee->sec.enabled = sec->enabled;
- 		priv->status |= STATUS_SECURITY_UPDATED;
--		force_update = 1;
- 	}
-
- 	if (sec->flags & SEC_ENCRYPT)
 --
 2.7.4
 
