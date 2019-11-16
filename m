@@ -7,47 +7,49 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A40FC33C8C
-	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 16:07:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4EF2C432C3
+	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 16:07:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 69AEC21845
-	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 16:07:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7F07421823
+	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 16:07:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573920470;
-	bh=w+q6BL0CoPHRaEY79kEP5MAZuqvdmh1WzmsnEEQrdhw=;
+	s=default; t=1573920477;
+	bh=ZdfIT4acldax/0aBpIDoPq29X7aqh95wXh2ik/TGRMs=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=cyegBpxWurxPzQ1DkhgpXj0SHEf4B32PhnXYAkkIyRLSRD2a8etlKPj5QNhDthNKM
-	 6NJMV42J+X84jZOE0HcFi3cL3cN/J825ny7omcJPdOGha9pi3sbwsiynr9MD1cBfsF
-	 k6+qvFkWv0ixtYyv478Nk0dIouBXW2jTLyGlKKLo=
+	b=N8KMPcuWWIjNkB12d2zVVE4epNLaYLlme3R63caG6wTrku5dNHSJ/TFyNhCdrfapo
+	 ZCdhlr1viVCa+7NlyJG86078iN/SmgcRGlhpnuapAiXd5foQa/6iMDaYR7f8GSZX67
+	 +CBYa0166b8un//M2iHL/NrB74cg1Aoo+za0z1tg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729566AbfKPPuX (ORCPT
+        id S1730893AbfKPQHw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 16 Nov 2019 10:50:23 -0500
-Received: from mail.kernel.org ([198.145.29.99]:58380 "EHLO mail.kernel.org"
+        Sat, 16 Nov 2019 11:07:52 -0500
+Received: from mail.kernel.org ([198.145.29.99]:58318 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730492AbfKPPuW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 16 Nov 2019 10:50:22 -0500
+        id S1730486AbfKPPuU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 16 Nov 2019 10:50:20 -0500
 Received: from sasha-vm.mshome.net (unknown [50.234.116.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 9172E20855;
-        Sat, 16 Nov 2019 15:50:21 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 6AFCB21783;
+        Sat, 16 Nov 2019 15:50:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573919421;
-        bh=w+q6BL0CoPHRaEY79kEP5MAZuqvdmh1WzmsnEEQrdhw=;
+        s=default; t=1573919419;
+        bh=ZdfIT4acldax/0aBpIDoPq29X7aqh95wXh2ik/TGRMs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=FWF5ZH78viL2eZsjspaUY7vW9PcOte73p3xNF3+wKlU05I6ZSKfb+lZEhKXkQNlsa
-         BI3KKmTgg4G30/CQ9NXqCji06jisLJBVH9Bs2RNB/yTd/1/EcK7TArnBUjEWolEqsq
-         q8PGxa2YQGY8ZLh+AZDngHJBtLiUIabnZMINO/84=
+        b=gMlxn9gIUIyRYJ3Oc21pqsMJjn9Sq4KrfL/iJunzISbyRR/kAShXXaq029vnBLKAk
+         Qm6gNEYzIOFjq33TI9VSACyts/LYvS26BqwVmHZtnLfBzfNF9Ij5iALyzEUP9wjE0D
+         BfN33oKqYN6t63kyJaeu9pSwE3i/Ns8XkCQkDHsY=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+Cc:     Lior David <liord@codeaurora.org>,
+        Maya Erez <merez@codeaurora.org>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 121/150] wlcore: Fix the return value in case of error in 'wlcore_vendor_cmd_smart_config_start()'
-Date:   Sat, 16 Nov 2019 10:46:59 -0500
-Message-Id: <20191116154729.9573-121-sashal@kernel.org>
+        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
+        netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.14 120/150] wil6210: fix locking in wmi_call
+Date:   Sat, 16 Nov 2019 10:46:58 -0500
+Message-Id: <20191116154729.9573-120-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191116154729.9573-1-sashal@kernel.org>
 References: <20191116154729.9573-1-sashal@kernel.org>
@@ -60,38 +62,58 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+From: Lior David <liord@codeaurora.org>
 
-[ Upstream commit 3419348a97bcc256238101129d69b600ceb5cc70 ]
+[ Upstream commit dc57731dbd535880fe6ced31c229262c34df7d64 ]
 
-We return 0 unconditionally at the end of
-'wlcore_vendor_cmd_smart_config_start()'.
-However, 'ret' is set to some error codes in several error handling paths
-and we already return some error codes at the beginning of the function.
+Switch from spin_lock to spin_lock_irqsave, because
+wmi_ev_lock is used inside interrupt handler.
 
-Return 'ret' instead to propagate the error code.
-
-Fixes: 80ff8063e87c ("wlcore: handle smart config vendor commands")
-Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Signed-off-by: Lior David <liord@codeaurora.org>
+Signed-off-by: Maya Erez <merez@codeaurora.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ti/wlcore/vendor_cmd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/wil6210/wmi.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/vendor_cmd.c b/drivers/net/wireless/ti/wlcore/vendor_cmd.c
-index 5c0bcb1fe1a1f..e75c3cee0252f 100644
---- a/drivers/net/wireless/ti/wlcore/vendor_cmd.c
-+++ b/drivers/net/wireless/ti/wlcore/vendor_cmd.c
-@@ -66,7 +66,7 @@ wlcore_vendor_cmd_smart_config_start(struct wiphy *wiphy,
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index d63d7c3268018..798516f42f2f9 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -1002,15 +1002,16 @@ int wmi_call(struct wil6210_priv *wil, u16 cmdid, void *buf, u16 len,
+ {
+ 	int rc;
+ 	unsigned long remain;
++	ulong flags;
+ 
+ 	mutex_lock(&wil->wmi_mutex);
+ 
+-	spin_lock(&wil->wmi_ev_lock);
++	spin_lock_irqsave(&wil->wmi_ev_lock, flags);
+ 	wil->reply_id = reply_id;
+ 	wil->reply_buf = reply;
+ 	wil->reply_size = reply_size;
+ 	reinit_completion(&wil->wmi_call);
+-	spin_unlock(&wil->wmi_ev_lock);
++	spin_unlock_irqrestore(&wil->wmi_ev_lock, flags);
+ 
+ 	rc = __wmi_send(wil, cmdid, buf, len);
+ 	if (rc)
+@@ -1030,11 +1031,11 @@ int wmi_call(struct wil6210_priv *wil, u16 cmdid, void *buf, u16 len,
+ 	}
+ 
  out:
- 	mutex_unlock(&wl->mutex);
+-	spin_lock(&wil->wmi_ev_lock);
++	spin_lock_irqsave(&wil->wmi_ev_lock, flags);
+ 	wil->reply_id = 0;
+ 	wil->reply_buf = NULL;
+ 	wil->reply_size = 0;
+-	spin_unlock(&wil->wmi_ev_lock);
++	spin_unlock_irqrestore(&wil->wmi_ev_lock, flags);
  
--	return 0;
-+	return ret;
- }
+ 	mutex_unlock(&wil->wmi_mutex);
  
- static int
 -- 
 2.20.1
 
