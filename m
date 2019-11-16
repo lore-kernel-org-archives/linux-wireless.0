@@ -4,52 +4,51 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2ACDC43141
-	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 16:18:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CCD6AC432C3
+	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 16:18:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9ABEF214DE
-	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 16:18:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A57FF21823
+	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 16:18:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573921097;
-	bh=1EzmoxlhEX6IlHcaaJRCa8HqlvFEPSAV4f3se9ynVhc=;
+	s=default; t=1573921102;
+	bh=K2mUBlq0bWqG4T1h8dGfD3rHxWPBe1z4CoWD4grBUYY=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=c0/rMz6JwPnrEsRja/OsDrvV91CEBKvPs7AdIaqIrBR9M/JOlbF32lW5vAZcQYUT8
-	 XQ+hpHg72FQQ6bNi3cLAdRXNHRNXLjl7TaLnaCw2LMqovfFYphmN0zpM1TeVdvKGyf
-	 ITRpIJNyZtvTS4ZXUDbSsyMb/l0eMa4L/9D2BArk=
+	b=U87aJKdjqxJdYGvYCmFy1X9XKcFlxPxkSJPgTHHjcVkfWocEVlrf3XLrQOnH1yqKK
+	 YPt8auJrm8KDzqzJcb7ssurrj2uVQh7q+pF1rxL4VEmtlH7mzv+oDZMj/EKd35r+F2
+	 4+Sp6PGsYPtJ2myULYJiKZOS0JQStCFalYq3C8bM=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731842AbfKPQSN (ORCPT
+        id S1731598AbfKPQSV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 16 Nov 2019 11:18:13 -0500
-Received: from mail.kernel.org ([198.145.29.99]:52876 "EHLO mail.kernel.org"
+        Sat, 16 Nov 2019 11:18:21 -0500
+Received: from mail.kernel.org ([198.145.29.99]:52836 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729415AbfKPPqb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 16 Nov 2019 10:46:31 -0500
+        id S1729407AbfKPPqa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 16 Nov 2019 10:46:30 -0500
 Received: from sasha-vm.mshome.net (unknown [50.234.116.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id EB9022084D;
+        by mail.kernel.org (Postfix) with ESMTPSA id 1F01E20830;
         Sat, 16 Nov 2019 15:46:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573919190;
-        bh=1EzmoxlhEX6IlHcaaJRCa8HqlvFEPSAV4f3se9ynVhc=;
+        s=default; t=1573919189;
+        bh=K2mUBlq0bWqG4T1h8dGfD3rHxWPBe1z4CoWD4grBUYY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=NaVDqJaakFW+afZbvoAh7cAArTzNxlBY3YGjjY4uPIPGj+Ct4IgvOTR277sjbIK8G
-         a/AGcalzGPgeRZGGjWvUQAMk+e2YXYzkXy55n+dwunlLVsKd8o0KikZOSTVH/dvR6K
-         zw2Bn8q6czlhqsonqTruEd/9rpe1HCBuadHbgprA=
+        b=Y6hwIvRujf8ID2ed8hMruWfET/MhCQbdov+qwxZKqC5TB+vsLPJyuhXXHQ42AWUYD
+         Cf9yIcMjHI/Y4nBVuMGiOij9MjMTmhWjdoRqo6C02ZjEBh2qtNMhDnrkTpesQzYbH8
+         MnCcFY24x41MzIbcHqAL+ivFF8XgLCLb+lF1c4D4=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Lior David <liord@codeaurora.org>,
-        Maya Erez <merez@codeaurora.org>,
+Cc:     Maya Erez <merez@codeaurora.org>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
         netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 199/237] wil6210: fix locking in wmi_call
-Date:   Sat, 16 Nov 2019 10:40:34 -0500
-Message-Id: <20191116154113.7417-199-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 198/237] wil6210: fix RGF_CAF_ICR address for Talyn-MB
+Date:   Sat, 16 Nov 2019 10:40:33 -0500
+Message-Id: <20191116154113.7417-198-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191116154113.7417-1-sashal@kernel.org>
 References: <20191116154113.7417-1-sashal@kernel.org>
@@ -62,60 +61,55 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Lior David <liord@codeaurora.org>
+From: Maya Erez <merez@codeaurora.org>
 
-[ Upstream commit dc57731dbd535880fe6ced31c229262c34df7d64 ]
+[ Upstream commit 7c69709f8ed27197b16aa1c3f9b0744402b2fa02 ]
 
-Switch from spin_lock to spin_lock_irqsave, because
-wmi_ev_lock is used inside interrupt handler.
+RGF_CAF_ICR register location has changed in Talyn-MB.
+Add RGF_CAF_ICR_TALYN_MB to support the new address.
 
-Signed-off-by: Lior David <liord@codeaurora.org>
 Signed-off-by: Maya Erez <merez@codeaurora.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/wil6210/wmi.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/wil6210/main.c    | 11 +++++++++--
+ drivers/net/wireless/ath/wil6210/wil6210.h |  1 +
+ 2 files changed, 10 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index 2010f771478df..8a603432f5317 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -1639,16 +1639,17 @@ int wmi_call(struct wil6210_priv *wil, u16 cmdid, u8 mid, void *buf, u16 len,
- {
- 	int rc;
- 	unsigned long remain;
-+	ulong flags;
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index a0fe8cbad104f..aeed45f127ad6 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -1396,8 +1396,15 @@ static void wil_pre_fw_config(struct wil6210_priv *wil)
+ 	wil6210_clear_irq(wil);
+ 	/* CAF_ICR - clear and mask */
+ 	/* it is W1C, clear by writing back same value */
+-	wil_s(wil, RGF_CAF_ICR + offsetof(struct RGF_ICR, ICR), 0);
+-	wil_w(wil, RGF_CAF_ICR + offsetof(struct RGF_ICR, IMV), ~0);
++	if (wil->hw_version < HW_VER_TALYN_MB) {
++		wil_s(wil, RGF_CAF_ICR + offsetof(struct RGF_ICR, ICR), 0);
++		wil_w(wil, RGF_CAF_ICR + offsetof(struct RGF_ICR, IMV), ~0);
++	} else {
++		wil_s(wil,
++		      RGF_CAF_ICR_TALYN_MB + offsetof(struct RGF_ICR, ICR), 0);
++		wil_w(wil, RGF_CAF_ICR_TALYN_MB +
++		      offsetof(struct RGF_ICR, IMV), ~0);
++	}
+ 	/* clear PAL_UNIT_ICR (potential D0->D3 leftover)
+ 	 * In Talyn-MB host cannot access this register due to
+ 	 * access control, hence PAL_UNIT_ICR is cleared by the FW
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 17c294b1ead13..75fe1a3b70466 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -319,6 +319,7 @@ struct RGF_ICR {
+ /* MAC timer, usec, for packet lifetime */
+ #define RGF_MAC_MTRL_COUNTER_0		(0x886aa8)
  
- 	mutex_lock(&wil->wmi_mutex);
- 
--	spin_lock(&wil->wmi_ev_lock);
-+	spin_lock_irqsave(&wil->wmi_ev_lock, flags);
- 	wil->reply_id = reply_id;
- 	wil->reply_mid = mid;
- 	wil->reply_buf = reply;
- 	wil->reply_size = reply_size;
- 	reinit_completion(&wil->wmi_call);
--	spin_unlock(&wil->wmi_ev_lock);
-+	spin_unlock_irqrestore(&wil->wmi_ev_lock, flags);
- 
- 	rc = __wmi_send(wil, cmdid, mid, buf, len);
- 	if (rc)
-@@ -1668,12 +1669,12 @@ int wmi_call(struct wil6210_priv *wil, u16 cmdid, u8 mid, void *buf, u16 len,
- 	}
- 
- out:
--	spin_lock(&wil->wmi_ev_lock);
-+	spin_lock_irqsave(&wil->wmi_ev_lock, flags);
- 	wil->reply_id = 0;
- 	wil->reply_mid = U8_MAX;
- 	wil->reply_buf = NULL;
- 	wil->reply_size = 0;
--	spin_unlock(&wil->wmi_ev_lock);
-+	spin_unlock_irqrestore(&wil->wmi_ev_lock, flags);
- 
- 	mutex_unlock(&wil->wmi_mutex);
- 
++#define RGF_CAF_ICR_TALYN_MB		(0x8893d4) /* struct RGF_ICR */
+ #define RGF_CAF_ICR			(0x88946c) /* struct RGF_ICR */
+ #define RGF_CAF_OSC_CONTROL		(0x88afa4)
+ 	#define BIT_CAF_OSC_XTAL_EN		BIT(0)
 -- 
 2.20.1
 
