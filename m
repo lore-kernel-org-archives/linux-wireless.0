@@ -2,264 +2,96 @@ Return-Path: <SRS0=oU4Q=ZI=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65CC4C432C3
-	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 12:51:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8A76C43215
+	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 15:46:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2C512206E6
-	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 12:51:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B8C8320803
+	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 15:46:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573908674;
-	bh=efptjQYpiJn/kBolfVMz0jJ6KVAYNij/ucb6qSAq4lM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=Klu+c5uDiBxYRpfTu2rCKYLeDyQsTW4CU0zT045M+NTXKd/aJey7q9iJzO8M93c61
-	 qVqm99RrFY5fFfWTBZ1tBQ+9lNR/ARdSNOJ96vTuky5+BcQFZo9R4M/oOmpRT/YTqa
-	 dtkuKIbVkKshudkllAp35X3RT7gu1j8gA8bIvthk=
+	s=default; t=1573919193;
+	bh=YRIoyCqFbllyk9Rbao0HAflYjxyFvS7VSLfoVAW4XKI=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=AlPTv/sGEOamBQg+wB/PNGMOAsQEnwwiKhfMF2VlJYK5slCFAzZSx/cSNyLxThOY0
+	 gxlyB8K8aOa+2bvTX6U719vh1RoSSzzAyqKueXqU2oxQbIlp4xjMlBWmsc78bsQN5L
+	 wn7QjBf+7/bBlpbMUK53FpMkFfJRCwnrnxLvC3lI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727556AbfKPMvJ (ORCPT
+        id S1729427AbfKPPqc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 16 Nov 2019 07:51:09 -0500
-Received: from mail.kernel.org ([198.145.29.99]:52002 "EHLO mail.kernel.org"
+        Sat, 16 Nov 2019 10:46:32 -0500
+Received: from mail.kernel.org ([198.145.29.99]:52888 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727510AbfKPMvJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 16 Nov 2019 07:51:09 -0500
-Received: from localhost.localdomain (unknown [77.139.212.74])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        id S1729419AbfKPPqb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 16 Nov 2019 10:46:31 -0500
+Received: from sasha-vm.mshome.net (unknown [50.234.116.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 4F76E206E6;
-        Sat, 16 Nov 2019 12:51:06 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id B52C820833;
+        Sat, 16 Nov 2019 15:46:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573908668;
-        bh=efptjQYpiJn/kBolfVMz0jJ6KVAYNij/ucb6qSAq4lM=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=av0YQWrEiklgw1HTH/bGWV/56MTdQz0kQ9Zfwk5KmnwzvxB2pQKYOBarQ33N/uYnG
-         /ILB3oAEIBn5g6K9VXyApG+LJUhptrlZdE2TYihKu6+AolwssiSltJmPoU8jHCoZq9
-         Yi5Z9QPE7vCrCFgF6d0t6PkujyDENmLDbwBT+/BA=
-Date:   Sat, 16 Nov 2019 14:51:02 +0200
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     Markus Theil <markus.theil@tu-ilmenau.de>
-Cc:     nbd@nbd.name, linux-wireless@vger.kernel.org,
-        lorenzo.bianconi@redhat.com,
-        Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: Re: [PATCH 2/4] mt76: mt76x02: split beaconing
-Message-ID: <20191116125102.GF20820@localhost.localdomain>
-References: <20191116111709.4686-1-markus.theil@tu-ilmenau.de>
- <20191116111709.4686-3-markus.theil@tu-ilmenau.de>
+        s=default; t=1573919191;
+        bh=YRIoyCqFbllyk9Rbao0HAflYjxyFvS7VSLfoVAW4XKI=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=Ut1MxyLUNChfpP4BvrP2Xvxu5N7SydHrf6lLioKOmoSsG0n6lIdhUDsTulS7RSZkZ
+         TGUeJmKR6EDHpWpypHG8bSgAuu3vp+6bYTBhlOYW144KeFUI7Ktb3ipECW0Z3ajGtY
+         Tsp9mB+x48+7Wu1EyUEC0tIZU8vSl5ek/QrflQ5M=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Brian Norris <briannorris@chromium.org>,
+        Douglas Anderson <dianders@chromium.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 200/237] ath10k: snoc: fix unbalanced clock error handling
+Date:   Sat, 16 Nov 2019 10:40:35 -0500
+Message-Id: <20191116154113.7417-200-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20191116154113.7417-1-sashal@kernel.org>
+References: <20191116154113.7417-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="cz6wLo+OExbGG7q/"
-Content-Disposition: inline
-In-Reply-To: <20191116111709.4686-3-markus.theil@tu-ilmenau.de>
-User-Agent: Mutt/1.12.1 (2019-06-15)
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+From: Brian Norris <briannorris@chromium.org>
 
---cz6wLo+OExbGG7q/
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+[ Upstream commit 82e60d920e8ad70cd9a280ab156566755f1fe4aa ]
 
-> Sending beacons to the hardware always happens in batches. In order to
-> speed up beacon processing on usb devices, this patch splits out common
-> code an calls it only once (mt76x02_mac_set_beacon_prepare,
-> mt76x02_mac_set_beacon_finish). Making this split breaks beacon
-> enabling/disabling per vif. This is fixed by adding a call to set the
-> bypass mask, if beaconing should be disabled for a vif. Otherwise the
-> beacon is send after the next beacon interval.
->=20
-> The code is also adapted for the mmio part of the driver, but should not
-> have any performance implication there.
->=20
-> Signed-off-by: Markus Theil <markus.theil@tu-ilmenau.de>
-> ---
->  .../wireless/mediatek/mt76/mt76x02_beacon.c   | 53 +++++++++----------
->  .../net/wireless/mediatek/mt76/mt76x02_mac.h  |  2 +
->  .../net/wireless/mediatek/mt76/mt76x02_mmio.c |  4 ++
->  .../wireless/mediatek/mt76/mt76x02_usb_core.c |  4 ++
->  4 files changed, 34 insertions(+), 29 deletions(-)
->=20
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_beacon.c b/driver=
-s/net/wireless/mediatek/mt76/mt76x02_beacon.c
-> index 54fe449f01c9..47207b790bf9 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt76x02_beacon.c
-> +++ b/drivers/net/wireless/mediatek/mt76/mt76x02_beacon.c
-> @@ -47,10 +47,6 @@ __mt76x02_mac_set_beacon(struct mt76x02_dev *dev, u8 b=
-cn_idx,
->  	int beacon_len =3D dev->beacon_ops->slot_size;
->  	int beacon_addr =3D MT_BEACON_BASE + (beacon_len * bcn_idx);
->  	int ret =3D 0;
-> -	int i;
-> -
-> -	/* Prevent corrupt transmissions during update */
-> -	mt76_set(dev, MT_BCN_BYPASS_MASK, BIT(bcn_idx));
-> =20
->  	if (skb) {
->  		ret =3D mt76x02_write_beacon(dev, beacon_addr, skb);
-> @@ -58,41 +54,39 @@ __mt76x02_mac_set_beacon(struct mt76x02_dev *dev, u8 =
-bcn_idx,
->  			dev->beacon_data_mask |=3D BIT(bcn_idx);
->  	}
-> =20
-> -	mt76_wr(dev, MT_BCN_BYPASS_MASK, 0xff00 | ~dev->beacon_data_mask);
-> -
->  	return ret;
->  }
-> =20
-> -int mt76x02_mac_set_beacon(struct mt76x02_dev *dev, u8 vif_idx,
-> -			   struct sk_buff *skb)
-> -{
-> -	bool force_update =3D false;
-> -	int bcn_idx =3D 0;
-> -	int i;
-> +void mt76x02_mac_set_beacon_prepare(struct mt76x02_dev *dev) {
-> +	/* Prevent corrupt transmissions during update */
-> +	mt76_set(dev, MT_BCN_BYPASS_MASK, 0xffff);
+Similar to regulator error handling, we should only start tearing down
+the 'i - 1' clock when clock 'i' fails to enable. Otherwise, we might
+end up with an unbalanced clock, where we never successfully enabled the
+clock, but we try to disable it anyway.
 
-Do we really need it? I guess just call mt76_set(dev, MT_BCN_BYPASS_MASK, 0=
-xffff)
-directly
+Fixes: a6a793f98786 ("ath10k: vote for hardware resources for WCN3990")
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+Reviewed-by: Douglas Anderson <dianders@chromium.org>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/net/wireless/ath/ath10k/snoc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> +}
-> +EXPORT_SYMBOL_GPL(mt76x02_mac_set_beacon_prepare);
-> =20
-> -	for (i =3D 0; i < ARRAY_SIZE(dev->beacons); i++) {
-> -		if (vif_idx =3D=3D i) {
-> -			force_update =3D !!dev->beacons[i] ^ !!skb;
-> -			dev_kfree_skb(dev->beacons[i]);
-> -			dev->beacons[i] =3D skb;
-> -			__mt76x02_mac_set_beacon(dev, bcn_idx, skb);
-> -		} else if (force_update && dev->beacons[i]) {
-> -			__mt76x02_mac_set_beacon(dev, bcn_idx,
-> -						 dev->beacons[i]);
-> -		}
-> +void mt76x02_mac_set_beacon_finish(struct mt76x02_dev *dev) {
-> +	int i;
-> +	int bcn_idx =3D 0;
-> +	int nbeacons =3D hweight8(dev->mt76.beacon_mask);
-> =20
-> +	for(i =3D 0; i < nbeacons; ++i) {
+diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
+index fa1843a7e0fda..e2d78f77edb70 100644
+--- a/drivers/net/wireless/ath/ath10k/snoc.c
++++ b/drivers/net/wireless/ath/ath10k/snoc.c
+@@ -1190,7 +1190,7 @@ static int ath10k_wcn3990_clk_init(struct ath10k *ar)
+ 	return 0;
+ 
+ err_clock_config:
+-	for (; i >= 0; i--) {
++	for (i = i - 1; i >= 0; i--) {
+ 		clk_info = &ar_snoc->clk[i];
+ 
+ 		if (!clk_info->handle)
+-- 
+2.20.1
 
-	for (i =3D 0; i < hweight8(dev->mt76.beacon_mask); i++)
-		bcn_idx +=3D !!dev->beacons[i];
-
->  		bcn_idx +=3D !!dev->beacons[i];
->  	}
-> =20
-> -	for (i =3D bcn_idx; i < ARRAY_SIZE(dev->beacons); i++) {
-> -		if (!(dev->beacon_data_mask & BIT(i)))
-> -			break;
-> -
-> -		__mt76x02_mac_set_beacon(dev, i, NULL);
-> -	}
-> -
->  	mt76_rmw_field(dev, MT_MAC_BSSID_DW1, MT_MAC_BSSID_DW1_MBEACON_N,
->  		       bcn_idx - 1);
-> +
-> +	mt76_wr(dev, MT_BCN_BYPASS_MASK, 0xff00 | ~dev->beacon_data_mask);
-> +}
-> +EXPORT_SYMBOL_GPL(mt76x02_mac_set_beacon_finish);
-> +
-> +int mt76x02_mac_set_beacon(struct mt76x02_dev *dev, u8 vif_idx,
-> +			   struct sk_buff *skb)
-> +{
-> +	dev_kfree_skb(dev->beacons[vif_idx]);
-> +	dev->beacons[vif_idx] =3D skb;
-> +	__mt76x02_mac_set_beacon(dev, vif_idx, skb);
-> +
-> +
->  	return 0;
->  }
->  EXPORT_SYMBOL_GPL(mt76x02_mac_set_beacon);
-> @@ -113,6 +107,7 @@ void mt76x02_mac_set_beacon_enable(struct mt76x02_dev=
- *dev,
->  	} else {
->  		dev->mt76.beacon_mask &=3D ~BIT(mvif->idx);
->  		mt76x02_mac_set_beacon(dev, mvif->idx, NULL);
-> +		mt76_set(dev, MT_BCN_BYPASS_MASK, BIT(mvif->idx));
->  	}
-> =20
->  	if (!!old_mask =3D=3D !!dev->mt76.beacon_mask)
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h b/drivers/n=
-et/wireless/mediatek/mt76/mt76x02_mac.h
-> index efa4ef945e35..4e717640eef6 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h
-> +++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h
-> @@ -197,6 +197,8 @@ int mt76x02_mac_set_beacon(struct mt76x02_dev *dev, u=
-8 vif_idx,
->  			   struct sk_buff *skb);
->  void mt76x02_mac_set_beacon_enable(struct mt76x02_dev *dev,
->  				   struct ieee80211_vif *vif, bool enable);
-> +void mt76x02_mac_set_beacon_prepare(struct mt76x02_dev *dev);
-> +void mt76x02_mac_set_beacon_finish(struct mt76x02_dev *dev);
-> =20
->  void mt76x02_edcca_init(struct mt76x02_dev *dev);
->  #endif
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c b/drivers/=
-net/wireless/mediatek/mt76/mt76x02_mmio.c
-> index dc773070481d..b8b4c6a67d39 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
-> +++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
-> @@ -24,10 +24,14 @@ static void mt76x02_pre_tbtt_tasklet(unsigned long ar=
-g)
-> =20
->  	mt76x02_resync_beacon_timer(dev);
-> =20
-> +	mt76x02_mac_set_beacon_prepare(dev);
-> +
->  	ieee80211_iterate_active_interfaces_atomic(mt76_hw(dev),
->  		IEEE80211_IFACE_ITER_RESUME_ALL,
->  		mt76x02_update_beacon_iter, dev);
-> =20
-> +	mt76x02_mac_set_beacon_finish(dev);
-> +
->  	mt76_csa_check(&dev->mt76);
-> =20
->  	if (dev->mt76.csa_complete)
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c b/driv=
-ers/net/wireless/mediatek/mt76/mt76x02_usb_core.c
-> index 78dfc1e7f27b..aedab4cc8d40 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c
-> +++ b/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c
-> @@ -179,6 +179,8 @@ static void mt76x02u_pre_tbtt_work(struct work_struct=
- *work)
-> =20
->  	mt76x02_resync_beacon_timer(dev);
-> =20
-> +	mt76x02_mac_set_beacon_prepare(dev);
-> +
->  	ieee80211_iterate_active_interfaces(mt76_hw(dev),
->  		IEEE80211_IFACE_ITER_RESUME_ALL,
->  		mt76x02_update_beacon_iter, dev);
-> @@ -191,6 +193,8 @@ static void mt76x02u_pre_tbtt_work(struct work_struct=
- *work)
->  		mt76x02_mac_set_beacon(dev, i, skb);
->  	}
-> =20
-> +	mt76x02_mac_set_beacon_finish(dev);
-> +
->  	mt76x02u_restart_pre_tbtt_timer(dev);
->  }
-> =20
-> --=20
-> 2.24.0
->=20
-
---cz6wLo+OExbGG7q/
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYIAB0WIQTquNwa3Txd3rGGn7Y6cBh0uS2trAUCXc/wswAKCRA6cBh0uS2t
-rCs7AQDxH72PPQU+sVAd0n0zr01VXzcjQ8Z4hxKoROHZUnZYMwEAhN8YGRfOdncb
-uDa9je1jf5DiUPmYGc+k0V69tbwPogA=
-=LfOq
------END PGP SIGNATURE-----
-
---cz6wLo+OExbGG7q/--
