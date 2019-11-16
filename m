@@ -7,51 +7,49 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0537FC33C8C
-	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 16:05:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69B79C432C3
+	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 16:06:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C89BB206C0
-	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 16:05:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 444ED2089D
+	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 16:06:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573920351;
-	bh=pGb1BqwB7ESBJvqdqPLH3dpMcxPSPCZBWyBfFsXlnac=;
+	s=default; t=1573920380;
+	bh=oh0ks+X54M4go9LLQLOV8qujEqe3WNtVIJ2zrYgMEqc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=CbuOhek6d5+2wPChUsHV5FO+5zpczajRM5rKURzk5fCejNepSBQi13is8I7kHDm0x
-	 KpFrwi+u7iL0FHRet5S/uVNpm7Vug6So7qrRWeA3gDJTRq4hURfybOanocy+eoPRTt
-	 8uYXeGYY+9LHMkBrpyVkAnapGhQr6BBpR5g5hzi0=
+	b=T6xB/Dfzb0IMlRJHxpqs8120DJLnGYnGSgRveF+CJTGFQIxPPP29/Auz0KlsiVwIs
+	 AOa5ylXNnHo8SQSkszJvw+lJawwoFarTS83Ha52fDYddPv1Pg5EUhYgU9hWBZSKGyk
+	 387a/UtldGEXIu9zaizdD3DxiLSGTF6YNTfPkQUA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726632AbfKPQFf (ORCPT
+        id S1731260AbfKPQGQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 16 Nov 2019 11:05:35 -0500
-Received: from mail.kernel.org ([198.145.29.99]:59796 "EHLO mail.kernel.org"
+        Sat, 16 Nov 2019 11:06:16 -0500
+Received: from mail.kernel.org ([198.145.29.99]:59242 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730699AbfKPPvP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 16 Nov 2019 10:51:15 -0500
+        id S1730492AbfKPPuv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 16 Nov 2019 10:50:51 -0500
 Received: from sasha-vm.mshome.net (unknown [50.234.116.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 364E221846;
-        Sat, 16 Nov 2019 15:51:14 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 737AD2182A;
+        Sat, 16 Nov 2019 15:50:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573919474;
-        bh=pGb1BqwB7ESBJvqdqPLH3dpMcxPSPCZBWyBfFsXlnac=;
+        s=default; t=1573919450;
+        bh=oh0ks+X54M4go9LLQLOV8qujEqe3WNtVIJ2zrYgMEqc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=RPB2h6KhUe/VfpPlJAWfz1t11ZbIXZIG0wx6ZZzQIvN9Qg879LvQ5ApdKlD68R1/n
-         TO1fglEAPAdvDNQ57B9OEECYQb96QXnvHhPh9ZBIeqCZDinhev7fDiVaI1tDGa3NA+
-         QIEStu9T2CTePZK4el8wbP5eqZfFDNsXOaUH8FYs=
+        b=TlDOMyccMMfzOFDeIHu0jL07O80EUa4AQNf3e+gx0yhRowXFnwzKDX3HUTDASPKn0
+         4DTQnXt3bRrtShDf+OrULKro4rOaBtJrw67JMDqsT0l6nPVO/uoqIXO59BwPnhwP04
+         RCbmGZOYs2/RX6kli3oLYHhoLwFfvJfMvyYs2Kj0=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Carl Huang <cjhuang@codeaurora.org>,
-        Brian Norris <briannorris@chomium.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
+Cc:     Johannes Berg <johannes.berg@intel.com>,
+        Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 08/99] ath10k: allocate small size dma memory in ath10k_pci_diag_write_mem
-Date:   Sat, 16 Nov 2019 10:49:31 -0500
-Message-Id: <20191116155103.10971-8-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 150/150] cfg80211: call disconnect_wk when AP stops
+Date:   Sat, 16 Nov 2019 10:47:28 -0500
+Message-Id: <20191116154729.9573-150-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191116155103.10971-1-sashal@kernel.org>
-References: <20191116155103.10971-1-sashal@kernel.org>
+In-Reply-To: <20191116154729.9573-1-sashal@kernel.org>
+References: <20191116154729.9573-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -61,112 +59,66 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Carl Huang <cjhuang@codeaurora.org>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit 0738b4998c6d1caf9ca2447b946709a7278c70f1 ]
+[ Upstream commit e005bd7ddea06784c1eb91ac5bb6b171a94f3b05 ]
 
-ath10k_pci_diag_write_mem may allocate big size of the dma memory
-based on the parameter nbytes. Take firmware diag download as
-example, the biggest size is about 500K. In some systems, the
-allocation is likely to fail because it can't acquire such a large
-contiguous dma memory.
+Since we now prevent regulatory restore during STA disconnect
+if concurrent AP interfaces are active, we need to reschedule
+this check when the AP state changes. This fixes never doing
+a restore when an AP is the last interface to stop. Or to put
+it another way: we need to re-check after anything we check
+here changes.
 
-The fix is to allocate a small size dma memory. In the loop,
-driver copies the data to the allocated dma memory and writes to
-the destination until all the data is written.
-
-Tested with QCA6174 PCI with
-firmware-6.bin_WLAN.RM.4.4.1-00119-QCARMSWP-1, this also affects
-QCA9377 PCI.
-
-Signed-off-by: Carl Huang <cjhuang@codeaurora.org>
-Reviewed-by: Brian Norris <briannorris@chomium.org>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Cc: stable@vger.kernel.org
+Fixes: 113f3aaa81bd ("cfg80211: Prevent regulatory restore during STA disconnect in concurrent interfaces")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath10k/pci.c | 23 +++++++++++------------
- 1 file changed, 11 insertions(+), 12 deletions(-)
+ net/wireless/ap.c   | 2 ++
+ net/wireless/core.h | 2 ++
+ net/wireless/sme.c  | 2 +-
+ 3 files changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 25b8d501d437e..176cf4fef6296 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -1039,10 +1039,9 @@ int ath10k_pci_diag_write_mem(struct ath10k *ar, u32 address,
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 	int ret = 0;
- 	u32 *buf;
--	unsigned int completed_nbytes, orig_nbytes, remaining_bytes;
-+	unsigned int completed_nbytes, alloc_nbytes, remaining_bytes;
- 	struct ath10k_ce_pipe *ce_diag;
- 	void *data_buf = NULL;
--	u32 ce_data;	/* Host buffer address in CE space */
- 	dma_addr_t ce_data_base = 0;
- 	int i;
+diff --git a/net/wireless/ap.c b/net/wireless/ap.c
+index 63682176c96cb..c4bd3ecef5089 100644
+--- a/net/wireless/ap.c
++++ b/net/wireless/ap.c
+@@ -40,6 +40,8 @@ int __cfg80211_stop_ap(struct cfg80211_registered_device *rdev,
+ 		cfg80211_sched_dfs_chan_update(rdev);
+ 	}
  
-@@ -1056,9 +1055,10 @@ int ath10k_pci_diag_write_mem(struct ath10k *ar, u32 address,
- 	 *   1) 4-byte alignment
- 	 *   2) Buffer in DMA-able space
- 	 */
--	orig_nbytes = nbytes;
-+	alloc_nbytes = min_t(unsigned int, nbytes, DIAG_TRANSFER_LIMIT);
++	schedule_work(&cfg80211_disconnect_work);
 +
- 	data_buf = (unsigned char *)dma_alloc_coherent(ar->dev,
--						       orig_nbytes,
-+						       alloc_nbytes,
- 						       &ce_data_base,
- 						       GFP_ATOMIC);
- 	if (!data_buf) {
-@@ -1066,9 +1066,6 @@ int ath10k_pci_diag_write_mem(struct ath10k *ar, u32 address,
- 		goto done;
- 	}
+ 	return err;
+ }
  
--	/* Copy caller's data to allocated DMA buf */
--	memcpy(data_buf, data, orig_nbytes);
--
- 	/*
- 	 * The address supplied by the caller is in the
- 	 * Target CPU virtual address space.
-@@ -1081,12 +1078,14 @@ int ath10k_pci_diag_write_mem(struct ath10k *ar, u32 address,
- 	 */
- 	address = ath10k_pci_targ_cpu_to_ce_addr(ar, address);
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 90f90c7d8bf9b..507ec6446eb67 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -429,6 +429,8 @@ void cfg80211_process_wdev_events(struct wireless_dev *wdev);
+ bool cfg80211_does_bw_fit_range(const struct ieee80211_freq_range *freq_range,
+ 				u32 center_freq_khz, u32 bw_khz);
  
--	remaining_bytes = orig_nbytes;
--	ce_data = ce_data_base;
-+	remaining_bytes = nbytes;
- 	while (remaining_bytes) {
- 		/* FIXME: check cast */
- 		nbytes = min_t(int, remaining_bytes, DIAG_TRANSFER_LIMIT);
- 
-+		/* Copy caller's data to allocated DMA buf */
-+		memcpy(data_buf, data, nbytes);
++extern struct work_struct cfg80211_disconnect_work;
 +
- 		/* Set up to receive directly into Target(!) address */
- 		ret = __ath10k_ce_rx_post_buf(ce_diag, &address, address);
- 		if (ret != 0)
-@@ -1096,7 +1095,7 @@ int ath10k_pci_diag_write_mem(struct ath10k *ar, u32 address,
- 		 * Request CE to send caller-supplied data that
- 		 * was copied to bounce buffer to Target(!) address.
- 		 */
--		ret = ath10k_ce_send_nolock(ce_diag, NULL, (u32)ce_data,
-+		ret = ath10k_ce_send_nolock(ce_diag, NULL, ce_data_base,
- 					    nbytes, 0, 0);
- 		if (ret != 0)
- 			goto done;
-@@ -1137,12 +1136,12 @@ int ath10k_pci_diag_write_mem(struct ath10k *ar, u32 address,
+ /**
+  * cfg80211_chandef_dfs_usable - checks if chandef is DFS usable
+  * @wiphy: the wiphy to validate against
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index 66cccd16c24af..8344153800e27 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -667,7 +667,7 @@ static void disconnect_work(struct work_struct *work)
+ 	rtnl_unlock();
+ }
  
- 		remaining_bytes -= nbytes;
- 		address += nbytes;
--		ce_data += nbytes;
-+		data += nbytes;
- 	}
+-static DECLARE_WORK(cfg80211_disconnect_work, disconnect_work);
++DECLARE_WORK(cfg80211_disconnect_work, disconnect_work);
  
- done:
- 	if (data_buf) {
--		dma_free_coherent(ar->dev, orig_nbytes, data_buf,
-+		dma_free_coherent(ar->dev, alloc_nbytes, data_buf,
- 				  ce_data_base);
- 	}
  
+ /*
 -- 
 2.20.1
 
