@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C68BCC43141
-	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 15:46:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 94E1CC43141
+	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 15:50:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9634720803
-	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 15:46:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 658A82081E
+	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 15:50:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573919199;
-	bh=/qskU+Rb0nZDn2tSBNtS2ClPWcweMC/WHlCVXemRU+M=;
+	s=default; t=1573919428;
+	bh=JFkH838InWF4Uk6kpUipLTfcZq+Or1Xb9dh4tiaBm7U=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=CBTzErAOgxEWymPuG6OxX71pDNkGOqBaRF20wXRFnZkJLcjrreGA+ZS2j8CUj8PCz
-	 7s8cZz1EdJ1OcpjzjyQ9oBXBaBz+shF5aDXrY8LK4C0sCktrcT3IPZEhGuvVdUN5ZL
-	 viOMnB58FG6aO5fmeU+NjjTL0urV7jlVVUkq0myU=
+	b=nLWHk9FhffM3uOYF4Pt7A9YW6x7IA3LDrksLiPTyqOw9ljbKzAlOXZXipA+9P9JA8
+	 I2oSQn4v28IcljKNc+QjsIMSztTcxNT/XjHf7SUCu2YtNaSJSVZh7P0YwtYmOb/bgM
+	 pDbbd22w5Die+e/ffOgo/b4bfmxWz9uxv1u/r+lE=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729455AbfKPPqi (ORCPT
+        id S1730525AbfKPPu0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 16 Nov 2019 10:46:38 -0500
-Received: from mail.kernel.org ([198.145.29.99]:53028 "EHLO mail.kernel.org"
+        Sat, 16 Nov 2019 10:50:26 -0500
+Received: from mail.kernel.org ([198.145.29.99]:58424 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729445AbfKPPqh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 16 Nov 2019 10:46:37 -0500
+        id S1729581AbfKPPuZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 16 Nov 2019 10:50:25 -0500
 Received: from sasha-vm.mshome.net (unknown [50.234.116.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 2C44A2084E;
-        Sat, 16 Nov 2019 15:46:36 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 39ACA208A1;
+        Sat, 16 Nov 2019 15:50:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573919196;
-        bh=/qskU+Rb0nZDn2tSBNtS2ClPWcweMC/WHlCVXemRU+M=;
+        s=default; t=1573919424;
+        bh=JFkH838InWF4Uk6kpUipLTfcZq+Or1Xb9dh4tiaBm7U=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=oA3jqOl4+3YnaSIJ30E+THgBtmlALltw+E93LkJjBml2cLHq60Whg/UEebsFCFBUN
-         J+5K4Z05hSel1TBjZsFc7/IFJrS1WSqIyBGfxOYvBSExsTLqmc78n9dpZwdW0OLAKb
-         Iufxan+0hkrYa2yUPWlGD3RQ1XfdKycwaIvJYtBQ=
+        b=tyIYieQF5HpazwYdveFlpukoOWmr2U7zTmOk/1bEWIzf7ipfwvAyhU8iVhuzGXeY0
+         0xiAwvEIYU4Y5OW+FB9QO+q/YxNDRQtyIZHyLSkjLxDrNfInsfdsEkyyevPuvHdlrx
+         EmrD68NC16Z1C9c2heNYn5JInFJWC80T76mVgspw=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Ali MJ Al-Nasrawy <alimjalnasrawy@gmail.com>,
@@ -47,12 +47,12 @@ Cc:     Ali MJ Al-Nasrawy <alimjalnasrawy@gmail.com>,
         linux-wireless@vger.kernel.org,
         brcm80211-dev-list.pdl@broadcom.com,
         brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 203/237] brcmsmac: never log "tid x is not agg'able" by default
-Date:   Sat, 16 Nov 2019 10:40:38 -0500
-Message-Id: <20191116154113.7417-203-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 123/150] brcmsmac: never log "tid x is not agg'able" by default
+Date:   Sat, 16 Nov 2019 10:47:01 -0500
+Message-Id: <20191116154729.9573-123-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191116154113.7417-1-sashal@kernel.org>
-References: <20191116154113.7417-1-sashal@kernel.org>
+In-Reply-To: <20191116154729.9573-1-sashal@kernel.org>
+References: <20191116154729.9573-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -79,7 +79,7 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c
-index 23118207b661e..9657b992f90e1 100644
+index 257968fb3111f..66f1f41b13803 100644
 --- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c
 +++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c
 @@ -846,8 +846,8 @@ brcms_ops_ampdu_action(struct ieee80211_hw *hw,
