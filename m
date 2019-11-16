@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 478F7C432C3
-	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 07:15:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8516C432C3
+	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 07:34:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1D391206CC
-	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 07:15:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 88B2A206D6
+	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 07:34:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726197AbfKPHPe (ORCPT
+        id S1726237AbfKPHeJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 16 Nov 2019 02:15:34 -0500
-Received: from szxga07-in.huawei.com ([45.249.212.35]:45606 "EHLO huawei.com"
+        Sat, 16 Nov 2019 02:34:09 -0500
+Received: from szxga04-in.huawei.com ([45.249.212.190]:6684 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726034AbfKPHPe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 16 Nov 2019 02:15:34 -0500
-Received: from DGGEMS414-HUB.china.huawei.com (unknown [172.30.72.59])
-        by Forcepoint Email with ESMTP id 1CA9B7C7B863244442F8;
-        Sat, 16 Nov 2019 15:15:31 +0800 (CST)
+        id S1726034AbfKPHeJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 16 Nov 2019 02:34:09 -0500
+Received: from DGGEMS414-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id 9CB5E6AA3D2E3713EDA0;
+        Sat, 16 Nov 2019 15:34:06 +0800 (CST)
 Received: from huawei.com (10.90.53.225) by DGGEMS414-HUB.china.huawei.com
  (10.3.19.214) with Microsoft SMTP Server id 14.3.439.0; Sat, 16 Nov 2019
- 15:15:23 +0800
+ 15:34:00 +0800
 From:   zhengbin <zhengbin13@huawei.com>
-To:     <arend.vanspriel@broadcom.com>, <franky.lin@broadcom.com>,
-        <kvalo@codeaurora.org>, <davem@davemloft.net>,
-        <linux-wireless@vger.kernel.org>,
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        <brcm80211-dev-list@cypress.com>, <netdev@vger.kernel.org>
+To:     <stas.yakovlev@gmail.com>, <kvalo@codeaurora.org>,
+        <davem@davemloft.net>, <linux-wireless@vger.kernel.org>,
+        <netdev@vger.kernel.org>
 CC:     <zhengbin13@huawei.com>
-Subject: [PATCH -next] brcmfmac: remove set but not used variable 'mpnum','nsp','nmp'
-Date:   Sat, 16 Nov 2019 15:22:47 +0800
-Message-ID: <1573888967-104078-1-git-send-email-zhengbin13@huawei.com>
+Subject: [PATCH -next 2/2] ipw2x00: remove set but not used variable 'force_update'
+Date:   Sat, 16 Nov 2019 15:41:23 +0800
+Message-ID: <1573890083-33761-3-git-send-email-zhengbin13@huawei.com>
 X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1573890083-33761-1-git-send-email-zhengbin13@huawei.com>
+References: <1573890083-33761-1-git-send-email-zhengbin13@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [10.90.53.225]
@@ -48,61 +48,39 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Fixes gcc '-Wunused-but-set-variable' warning:
 
-drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c: In function brcmf_chip_dmp_get_regaddr:
-drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c:790:5: warning: variable mpnum set but not used [-Wunused-but-set-variable]
-drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c: In function brcmf_chip_dmp_erom_scan:
-drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c:866:10: warning: variable nsp set but not used [-Wunused-but-set-variable]
-drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c: In function brcmf_chip_dmp_erom_scan:
-drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c:866:5: warning: variable nmp set but not used [-Wunused-but-set-variable]
+drivers/net/wireless/intel/ipw2x00/ipw2100.c: In function shim__set_security:
+drivers/net/wireless/intel/ipw2x00/ipw2100.c:5582:9: warning: variable force_update set but not used [-Wunused-but-set-variable]
 
-They are introduced by commit 05491d2ccf20 ("brcm80211:
-move under broadcom vendor directory"), but never used,
-so remove them.
+It is introduced by commit 367a1092b555 ("ipw2x00:
+move under intel vendor directory"), but never used, so remove it.
 
 Reported-by: Hulk Robot <hulkci@huawei.com>
 Signed-off-by: zhengbin <zhengbin13@huawei.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c | 6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
+ drivers/net/wireless/intel/ipw2x00/ipw2100.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-index dd586a9..a795d78 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-@@ -778,7 +778,6 @@ static int brcmf_chip_dmp_get_regaddr(struct brcmf_chip_priv *ci, u32 *eromaddr,
+diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2100.c b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
+index 8dfbaff..c4c83ab 100644
+--- a/drivers/net/wireless/intel/ipw2x00/ipw2100.c
++++ b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
+@@ -5565,7 +5565,7 @@ static void shim__set_security(struct net_device *dev,
+ 			       struct libipw_security *sec)
  {
- 	u8 desc;
- 	u32 val, szdesc;
--	u8 mpnum = 0;
- 	u8 stype, sztype, wraptype;
+ 	struct ipw2100_priv *priv = libipw_priv(dev);
+-	int i, force_update = 0;
++	int i;
 
- 	*regbase = 0;
-@@ -786,7 +785,6 @@ static int brcmf_chip_dmp_get_regaddr(struct brcmf_chip_priv *ci, u32 *eromaddr,
+ 	mutex_lock(&priv->action_mutex);
+ 	if (!(priv->status & STATUS_INITIALIZED))
+@@ -5605,7 +5605,6 @@ static void shim__set_security(struct net_device *dev,
+ 		priv->ieee->sec.flags |= SEC_ENABLED;
+ 		priv->ieee->sec.enabled = sec->enabled;
+ 		priv->status |= STATUS_SECURITY_UPDATED;
+-		force_update = 1;
+ 	}
 
- 	val = brcmf_chip_dmp_get_desc(ci, eromaddr, &desc);
- 	if (desc == DMP_DESC_MASTER_PORT) {
--		mpnum = (val & DMP_MASTER_PORT_NUM) >> DMP_MASTER_PORT_NUM_S;
- 		wraptype = DMP_SLAVE_TYPE_MWRAP;
- 	} else if (desc == DMP_DESC_ADDRESS) {
- 		/* revert erom address */
-@@ -854,7 +852,7 @@ int brcmf_chip_dmp_erom_scan(struct brcmf_chip_priv *ci)
- 	u8 desc_type = 0;
- 	u32 val;
- 	u16 id;
--	u8 nmp, nsp, nmw, nsw, rev;
-+	u8 nmw, nsw, rev;
- 	u32 base, wrap;
- 	int err;
-
-@@ -880,8 +878,6 @@ int brcmf_chip_dmp_erom_scan(struct brcmf_chip_priv *ci)
- 			return -EFAULT;
-
- 		/* only look at cores with master port(s) */
--		nmp = (val & DMP_COMP_NUM_MPORT) >> DMP_COMP_NUM_MPORT_S;
--		nsp = (val & DMP_COMP_NUM_SPORT) >> DMP_COMP_NUM_SPORT_S;
- 		nmw = (val & DMP_COMP_NUM_MWRAP) >> DMP_COMP_NUM_MWRAP_S;
- 		nsw = (val & DMP_COMP_NUM_SWRAP) >> DMP_COMP_NUM_SWRAP_S;
- 		rev = (val & DMP_COMP_REVISION) >> DMP_COMP_REVISION_S;
+ 	if (sec->flags & SEC_ENCRYPT)
 --
 2.7.4
 
