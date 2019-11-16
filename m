@@ -4,66 +4,66 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C653C43215
-	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 11:57:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B202C432C3
+	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 11:57:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 55932206D3
-	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 11:57:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F3E40206D3
+	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 11:57:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Rk/Ofw01"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="P52lqKku"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727474AbfKPL5Y (ORCPT
+        id S1727525AbfKPL53 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 16 Nov 2019 06:57:24 -0500
-Received: from us-smtp-1.mimecast.com ([207.211.31.81]:42413 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726794AbfKPL5Y (ORCPT
+        Sat, 16 Nov 2019 06:57:29 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:46464 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727486AbfKPL53 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 16 Nov 2019 06:57:24 -0500
+        Sat, 16 Nov 2019 06:57:29 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1573905443;
+        s=mimecast20190719; t=1573905447;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=YXoS2W5BbZsp09HQfFBXWaQ8N7PlWsSs7THfUeKuQyo=;
-        b=Rk/Ofw01ilidAHxDEbF3CVU5u1j47aBhV9BPoWiB/TuUDJpToPSeH+r8JL4r5OS/orRu4r
-        3+y1nDwm0C1rbTB7O9TMeIzKHOrkJmc112sXUkMdpXbJLkhmWhsm8A8MDCQCvyjYcfjq40
-        uNBvcn/j599rKWosYV2HdsmOZ5l3PZk=
-Received: from mail-lf1-f69.google.com (mail-lf1-f69.google.com
- [209.85.167.69]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-5-RKWHDo-eN4WZzo496X8XSg-1; Sat, 16 Nov 2019 06:57:22 -0500
-Received: by mail-lf1-f69.google.com with SMTP id k30so3979149lfj.5
-        for <linux-wireless@vger.kernel.org>; Sat, 16 Nov 2019 03:57:22 -0800 (PST)
+        bh=ABqX/4+Qx8L4BwRHEbiGEmTlEagYaiFV0Tg8XI1FKEQ=;
+        b=P52lqKkuzzdz88OFktKrD+o3vXebG+6Wava+7LF4ABjJuRTVpP4MZKR5eyN21NAc0e+qE2
+        tJEA9AYKd1NS6c/tyG5ab+QNdMzZA1KeMRMPtYH8HaVulZZFepH6Wuxa/Yi+Q2xtttyeLo
+        19m7dYlxVxO0yYv29s8htwrTZbElerg=
+Received: from mail-lf1-f70.google.com (mail-lf1-f70.google.com
+ [209.85.167.70]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-245-gvc28aR5MNGiDeHn_fQ7FQ-1; Sat, 16 Nov 2019 06:57:24 -0500
+Received: by mail-lf1-f70.google.com with SMTP id q1so3975453lfp.16
+        for <linux-wireless@vger.kernel.org>; Sat, 16 Nov 2019 03:57:24 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:from:to:cc:date:message-id:in-reply-to
          :references:user-agent:mime-version:content-transfer-encoding;
-        bh=x+t/BOQM8F7dbfpj4lBhXe72lJwS1NOF599JEwP8bYk=;
-        b=RIrbk8qt/rUfbPI0Kt9mPe0FftkWljsrwfGoBWi4UxxaQ+tMnhhsxiPXdgjyWEd9iZ
-         rlZrYJCc+HF5tJtm+T92BXPg4N5QlOAVHfRgLYy6vnwnXJRYuJnpH+3puaxbXvCsl8bS
-         yagrbfZggOVkv73kcU5JUxru2PmKs+9l3RZAHesL0ECr6CeyQAicvRUlo4MXIwxTb/sk
-         OR5Qs41HNE7pBtsuMMWhHrNEA6qdAOu+iPZIIJYDWg+S8UImCD7x9rH+/6Unzoyfaxtz
-         yL9+RF+goj24CyD9V3ris+SfuA3KH/ve1BWDb9TUhtd+Q6QoHi9JRQJaGJYMliLH3UN1
-         39hQ==
-X-Gm-Message-State: APjAAAXs9P1oBoFSxNMqvi+bXg/xhSTfY79lN0/dZo8FNSv5r8uhTTX5
-        +p/Qs8JrHbFh/TAylrSUlsigPO2pgrTYEuQoCppVDo/DBorSyBsgD1GQ3iGVhs63rWRQ4GhRhqk
-        LoaEmUUB2lWauaia/jlcx6Z8Iuzg=
-X-Received: by 2002:a2e:9156:: with SMTP id q22mr10462785ljg.166.1573905440929;
-        Sat, 16 Nov 2019 03:57:20 -0800 (PST)
-X-Google-Smtp-Source: APXvYqz0L+POcRH+ZCGceuYnd9tkUS+fm0ri2a2QHKWHz6GQdx5Ehz43kLACA3daj8P4f0JD6MpnUA==
-X-Received: by 2002:a2e:9156:: with SMTP id q22mr10462771ljg.166.1573905440761;
-        Sat, 16 Nov 2019 03:57:20 -0800 (PST)
+        bh=9zAB64m7P+ORU3V1Fb8QxkCq1zL7OXWN/zEiD4RzsPA=;
+        b=NlwNLipQ0m6kQH8pnGL61JQEMvUyTy07l0lcK2os4IYUcFRX2FrwqZxR7NyWTbDe/A
+         GLQiXygi4vNBW0wrZgeb96TSOVLmWjGJMhuLq6muTHngW6RSlbXH6yWW7Rwu54kMwDAJ
+         kHbnyK57vAo4wTvNzKOHte/2vUJfEY6cgMEU6nkdSp7CNfRPWeFmoG17igI2VLqyAVHM
+         2ZLSPwMgJvOkQmng+rqvjys7p9SGTH6wD3Mao2p25OwcQQzNzs1TuVGK5mzE2+H4HbvQ
+         X8uvjtEwQybtiNBttt20R0dYWn7o7vXP8g0Lg8ZQp6lHmGn6VNB/IvXtahiXhBIAiygm
+         s+OA==
+X-Gm-Message-State: APjAAAXrYCcwSfEy0rHXclAQrCbDdBcL4rS0JOPwvlgklGZtGzT7QjRr
+        z8A/cXWP42DnbE5x3oe7gsDKkKvscS8t3G/2N1CKyxjXdsOGEJ9zqvdcCHXNPZzahhUr1Mv8JPh
+        OWTUE+76ZTpDuOdzvZAhHHnws+Ds=
+X-Received: by 2002:a2e:6a19:: with SMTP id f25mr11045012ljc.147.1573905442778;
+        Sat, 16 Nov 2019 03:57:22 -0800 (PST)
+X-Google-Smtp-Source: APXvYqyvQeLwiPod2Ux0s2S+AoR3kiQ73VWoHM3EjqHpfi7+cY2xQl+WljmqeDIkvKoNVjjEg3HJOg==
+X-Received: by 2002:a2e:6a19:: with SMTP id f25mr11044996ljc.147.1573905442382;
+        Sat, 16 Nov 2019 03:57:22 -0800 (PST)
 Received: from alrua-x1.borgediget.toke.dk ([2a00:7660:6da:443::2])
-        by smtp.gmail.com with ESMTPSA id s28sm6071884lfp.92.2019.11.16.03.57.18
+        by smtp.gmail.com with ESMTPSA id z15sm1475941lfg.0.2019.11.16.03.57.20
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 16 Nov 2019 03:57:18 -0800 (PST)
+        Sat, 16 Nov 2019 03:57:20 -0800 (PST)
 Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
-        id 1483C181911; Sat, 16 Nov 2019 12:57:18 +0100 (CET)
-Subject: [PATCH v10 1/4] mac80211: Add new sta_info getter by sta/vif addrs
+        id 44229181916; Sat, 16 Nov 2019 12:57:20 +0100 (CET)
+Subject: [PATCH v10 3/4] mac80211: Implement Airtime-based Queue Limit (AQL)
 From:   =?utf-8?q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
 To:     Johannes Berg <johannes@sipsolutions.net>
 Cc:     linux-wireless@vger.kernel.org,
@@ -73,13 +73,13 @@ Cc:     linux-wireless@vger.kernel.org,
         Felix Fietkau <nbd@nbd.name>, Kan Yan <kyan@google.com>,
         Rajkumar Manoharan <rmanohar@codeaurora.org>,
         Kevin Hayes <kevinhayes@google.com>
-Date:   Sat, 16 Nov 2019 12:57:18 +0100
-Message-ID: <157390543799.662247.14225450732789555896.stgit@toke.dk>
+Date:   Sat, 16 Nov 2019 12:57:20 +0100
+Message-ID: <157390544018.662247.937727760317807167.stgit@toke.dk>
 In-Reply-To: <157390543688.662247.3735146484299260207.stgit@toke.dk>
 References: <157390543688.662247.3735146484299260207.stgit@toke.dk>
 User-Agent: StGit/0.21
 MIME-Version: 1.0
-X-MC-Unique: RKWHDo-eN4WZzo496X8XSg-1
+X-MC-Unique: gvc28aR5MNGiDeHn_fQ7FQ-1
 X-Mimecast-Spam-Score: 0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
@@ -88,92 +88,480 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Toke H=C3=B8iland-J=C3=B8rgensen <toke@redhat.com>
+From: Kan Yan <kyan@google.com>
 
-In ieee80211_tx_status() we don't have an sdata struct when looking up the
-destination sta. Instead, we just do a lookup by the vif addr that is the
-source of the packet being completed. Factor this out into a new sta_info
-getter helper, since we need to use it for accounting AQL as well.
+In order for the Fq_CoDel algorithm integrated in mac80211 layer to operate
+effectively to control excessive queueing latency, the CoDel algorithm
+requires an accurate measure of how long packets stays in the queue, AKA
+sojourn time. The sojourn time measured at the mac80211 layer doesn't
+include queueing latency in the lower layer (firmware/hardware) and CoDel
+expects lower layer to have a short queue. However, most 802.11ac chipsets
+offload tasks such TX aggregation to firmware or hardware, thus have a deep
+lower layer queue.
 
+Without a mechanism to control the lower layer queue size, packets only
+stay in mac80211 layer transiently before being sent to firmware queue.
+As a result, the sojourn time measured by CoDel in the mac80211 layer is
+almost always lower than the CoDel latency target, hence CoDel does little
+to control the latency, even when the lower layer queue causes excessive
+latency.
+
+The Byte Queue Limits (BQL) mechanism is commonly used to address the
+similar issue with wired network interface. However, this method cannot be
+applied directly to the wireless network interface. "Bytes" is not a
+suitable measure of queue depth in the wireless network, as the data rate
+can vary dramatically from station to station in the same network, from a
+few Mbps to over Gbps.
+
+This patch implements an Airtime-based Queue Limit (AQL) to make CoDel work
+effectively with wireless drivers that utilized firmware/hardware
+offloading. AQL allows each txq to release just enough packets to the lower
+layer to form 1-2 large aggregations to keep hardware fully utilized and
+retains the rest of the frames in mac80211 layer to be controlled by the
+CoDel algorithm.
+
+Signed-off-by: Kan Yan <kyan@google.com>
+[ Toke: Keep API to set pending airtime internal, fix nits in commit msg ]
 Signed-off-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@redhat.com>
 ---
- net/mac80211/sta_info.c |   20 ++++++++++++++++++++
- net/mac80211/sta_info.h |    3 +++
- net/mac80211/status.c   |   10 ++--------
- 3 files changed, 25 insertions(+), 8 deletions(-)
+ include/net/cfg80211.h     |    7 ++++
+ include/net/mac80211.h     |   12 ++++++
+ net/mac80211/debugfs.c     |   85 ++++++++++++++++++++++++++++++++++++++++=
+++++
+ net/mac80211/debugfs_sta.c |   43 +++++++++++++++++-----
+ net/mac80211/ieee80211_i.h |    4 ++
+ net/mac80211/main.c        |   10 +++++
+ net/mac80211/sta_info.c    |   38 ++++++++++++++++++++
+ net/mac80211/sta_info.h    |    8 ++++
+ net/mac80211/tx.c          |   47 +++++++++++++++++++++++-
+ 9 files changed, 240 insertions(+), 14 deletions(-)
 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index bd11fef2139f..465d83b13582 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -210,6 +210,26 @@ struct sta_info *sta_info_get_bss(struct ieee80211_sub=
-_if_data *sdata,
- =09return NULL;
- }
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index e309cc826b40..4f75dbdd406a 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -2606,6 +2606,13 @@ enum wiphy_params_flags {
 =20
-+struct sta_info *sta_info_get_by_addrs(struct ieee80211_local *local,
-+=09=09=09=09       const u8 *sta_addr, const u8 *vif_addr)
-+{
-+=09struct rhlist_head *tmp;
-+=09struct sta_info *sta;
+ #define IEEE80211_DEFAULT_AIRTIME_WEIGHT=09256
+=20
++/* The per TXQ device queue limit in airtime */
++#define IEEE80211_DEFAULT_AQL_TXQ_LIMIT_L=094000
++#define IEEE80211_DEFAULT_AQL_TXQ_LIMIT_H=098000
 +
-+=09rcu_read_lock();
-+=09for_each_sta_info(local, sta_addr, sta, tmp) {
-+=09=09if (ether_addr_equal(vif_addr, sta->sdata->vif.addr)) {
-+=09=09=09rcu_read_unlock();
-+=09=09=09/* this is safe as the caller must already hold
-+=09=09=09 * another rcu read section or the mutex
-+=09=09=09 */
-+=09=09=09return sta;
-+=09=09}
-+=09}
-+=09rcu_read_unlock();
-+=09return NULL;
++/* The per interface airtime threshold to switch to lower queue limit */
++#define IEEE80211_AQL_THRESHOLD=09=09=0924000
++
+ /**
+  * struct cfg80211_pmksa - PMK Security Association
+  *
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 6fc26a051ba0..ba3f33cc41ea 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -5565,6 +5565,18 @@ void ieee80211_send_eosp_nullfunc(struct ieee80211_s=
+ta *pubsta, int tid);
+ void ieee80211_sta_register_airtime(struct ieee80211_sta *pubsta, u8 tid,
+ =09=09=09=09    u32 tx_airtime, u32 rx_airtime);
+=20
++/**
++ * ieee80211_txq_airtime_check - check if a txq can send frame to device
++ *
++ * @hw: pointer obtained from ieee80211_alloc_hw()
++ * @txq: pointer obtained from station or virtual interface
++ *
++ * Return true if the AQL's airtime limit has not been reached and the txq=
+ can
++ * continue to send more packets to the device. Otherwise return false.
++ */
++bool
++ieee80211_txq_airtime_check(struct ieee80211_hw *hw, struct ieee80211_txq =
+*txq);
++
+ /**
+  * ieee80211_iter_keys - iterate keys programmed into the device
+  * @hw: pointer obtained from ieee80211_alloc_hw()
+diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+index 568b3b276931..399d4e8b8546 100644
+--- a/net/mac80211/debugfs.c
++++ b/net/mac80211/debugfs.c
+@@ -148,6 +148,87 @@ static const struct file_operations aqm_ops =3D {
+ =09.llseek =3D default_llseek,
+ };
+=20
++static ssize_t aql_txq_limit_read(struct file *file,
++=09=09=09=09  char __user *user_buf,
++=09=09=09=09  size_t count,
++=09=09=09=09  loff_t *ppos)
++{
++=09struct ieee80211_local *local =3D file->private_data;
++=09char buf[400];
++=09int len =3D 0;
++
++=09len =3D scnprintf(buf, sizeof(buf),
++=09=09=09"AC=09AQL limit low=09AQL limit high\n"
++=09=09=09"VO=09%u=09=09%u\n"
++=09=09=09"VI=09%u=09=09%u\n"
++=09=09=09"BE=09%u=09=09%u\n"
++=09=09=09"BK=09%u=09=09%u\n",
++=09=09=09local->aql_txq_limit_low[IEEE80211_AC_VO],
++=09=09=09local->aql_txq_limit_high[IEEE80211_AC_VO],
++=09=09=09local->aql_txq_limit_low[IEEE80211_AC_VI],
++=09=09=09local->aql_txq_limit_high[IEEE80211_AC_VI],
++=09=09=09local->aql_txq_limit_low[IEEE80211_AC_BE],
++=09=09=09local->aql_txq_limit_high[IEEE80211_AC_BE],
++=09=09=09local->aql_txq_limit_low[IEEE80211_AC_BK],
++=09=09=09local->aql_txq_limit_high[IEEE80211_AC_BK]);
++=09return simple_read_from_buffer(user_buf, count, ppos,
++=09=09=09=09       buf, len);
 +}
 +
- struct sta_info *sta_info_get_by_idx(struct ieee80211_sub_if_data *sdata,
- =09=09=09=09     int idx)
++static ssize_t aql_txq_limit_write(struct file *file,
++=09=09=09=09   const char __user *user_buf,
++=09=09=09=09   size_t count,
++=09=09=09=09   loff_t *ppos)
++{
++=09struct ieee80211_local *local =3D file->private_data;
++=09char buf[100];
++=09size_t len;
++=09u32 ac, q_limit_low, q_limit_high, q_limit_low_old, q_limit_high_old;
++=09struct sta_info *sta;
++
++=09if (count > sizeof(buf))
++=09=09return -EINVAL;
++
++=09if (copy_from_user(buf, user_buf, count))
++=09=09return -EFAULT;
++
++=09buf[sizeof(buf) - 1] =3D 0;
++=09len =3D strlen(buf);
++=09if (len > 0 && buf[len - 1] =3D=3D '\n')
++=09=09buf[len - 1] =3D 0;
++
++=09if (sscanf(buf, "%u %u %u", &ac, &q_limit_low, &q_limit_high) !=3D 3)
++=09=09return -EINVAL;
++
++=09if (ac >=3D IEEE80211_NUM_ACS)
++=09=09return -EINVAL;
++
++=09q_limit_low_old =3D local->aql_txq_limit_low[ac];
++=09q_limit_high_old =3D local->aql_txq_limit_high[ac];
++
++=09local->aql_txq_limit_low[ac] =3D q_limit_low;
++=09local->aql_txq_limit_high[ac] =3D q_limit_high;
++
++=09mutex_lock(&local->sta_mtx);
++=09list_for_each_entry(sta, &local->sta_list, list) {
++=09=09/* If a sta has customized queue limits, keep it */
++=09=09if (sta->airtime[ac].aql_limit_low =3D=3D q_limit_low_old &&
++=09=09    sta->airtime[ac].aql_limit_high =3D=3D q_limit_high_old) {
++=09=09=09sta->airtime[ac].aql_limit_low =3D q_limit_low;
++=09=09=09sta->airtime[ac].aql_limit_high =3D q_limit_high;
++=09=09}
++=09}
++=09mutex_unlock(&local->sta_mtx);
++=09return count;
++}
++
++static const struct file_operations aql_txq_limit_ops =3D {
++=09.write =3D aql_txq_limit_write,
++=09.read =3D aql_txq_limit_read,
++=09.open =3D simple_open,
++=09.llseek =3D default_llseek,
++};
++
+ static ssize_t force_tx_status_read(struct file *file,
+ =09=09=09=09    char __user *user_buf,
+ =09=09=09=09    size_t count,
+@@ -441,6 +522,10 @@ void debugfs_hw_add(struct ieee80211_local *local)
+ =09debugfs_create_u16("airtime_flags", 0600,
+ =09=09=09   phyd, &local->airtime_flags);
+=20
++=09DEBUGFS_ADD(aql_txq_limit);
++=09debugfs_create_u32("aql_threshold", 0600,
++=09=09=09   phyd, &local->aql_threshold);
++
+ =09statsd =3D debugfs_create_dir("statistics", phyd);
+=20
+ =09/* if the dir failed, don't put all the other things into the root! */
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+index c8ad20c28c43..0185e6e5e5d1 100644
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -197,10 +197,12 @@ static ssize_t sta_airtime_read(struct file *file, ch=
+ar __user *userbuf,
+ {
+ =09struct sta_info *sta =3D file->private_data;
+ =09struct ieee80211_local *local =3D sta->sdata->local;
+-=09size_t bufsz =3D 200;
++=09size_t bufsz =3D 400;
+ =09char *buf =3D kzalloc(bufsz, GFP_KERNEL), *p =3D buf;
+ =09u64 rx_airtime =3D 0, tx_airtime =3D 0;
+ =09s64 deficit[IEEE80211_NUM_ACS];
++=09u32 q_depth[IEEE80211_NUM_ACS];
++=09u32 q_limit_l[IEEE80211_NUM_ACS], q_limit_h[IEEE80211_NUM_ACS];
+ =09ssize_t rv;
+ =09int ac;
+=20
+@@ -212,19 +214,22 @@ static ssize_t sta_airtime_read(struct file *file, ch=
+ar __user *userbuf,
+ =09=09rx_airtime +=3D sta->airtime[ac].rx_airtime;
+ =09=09tx_airtime +=3D sta->airtime[ac].tx_airtime;
+ =09=09deficit[ac] =3D sta->airtime[ac].deficit;
++=09=09q_limit_l[ac] =3D sta->airtime[ac].aql_limit_low;
++=09=09q_limit_h[ac] =3D sta->airtime[ac].aql_limit_high;
+ =09=09spin_unlock_bh(&local->active_txq_lock[ac]);
++=09=09q_depth[ac] =3D atomic_read(&sta->airtime[ac].aql_tx_pending);
+ =09}
+=20
+ =09p +=3D scnprintf(p, bufsz + buf - p,
+ =09=09"RX: %llu us\nTX: %llu us\nWeight: %u\n"
+-=09=09"Deficit: VO: %lld us VI: %lld us BE: %lld us BK: %lld us\n",
+-=09=09rx_airtime,
+-=09=09tx_airtime,
+-=09=09sta->airtime_weight,
+-=09=09deficit[0],
+-=09=09deficit[1],
+-=09=09deficit[2],
+-=09=09deficit[3]);
++=09=09"Deficit: VO: %lld us VI: %lld us BE: %lld us BK: %lld us\n"
++=09=09"Q depth: VO: %u us VI: %u us BE: %u us BK: %u us\n"
++=09=09"Q limit[low/high]: VO: %u/%u VI: %u/%u BE: %u/%u BK: %u/%u\n",
++=09=09rx_airtime, tx_airtime, sta->airtime_weight,
++=09=09deficit[0], deficit[1], deficit[2], deficit[3],
++=09=09q_depth[0], q_depth[1], q_depth[2], q_depth[3],
++=09=09q_limit_l[0], q_limit_h[0], q_limit_l[1], q_limit_h[1],
++=09=09q_limit_l[2], q_limit_h[2], q_limit_l[3], q_limit_h[3]),
+=20
+ =09rv =3D simple_read_from_buffer(userbuf, count, ppos, buf, p - buf);
+ =09kfree(buf);
+@@ -236,7 +241,25 @@ static ssize_t sta_airtime_write(struct file *file, co=
+nst char __user *userbuf,
+ {
+ =09struct sta_info *sta =3D file->private_data;
+ =09struct ieee80211_local *local =3D sta->sdata->local;
+-=09int ac;
++=09u32 ac, q_limit_l, q_limit_h;
++=09char _buf[100] =3D {}, *buf =3D _buf;
++
++=09if (count > sizeof(_buf))
++=09=09return -EINVAL;
++
++=09if (copy_from_user(buf, userbuf, count))
++=09=09return -EFAULT;
++
++=09buf[sizeof(_buf) - 1] =3D '\0';
++=09if (sscanf(buf, "queue limit %u %u %u", &ac, &q_limit_l, &q_limit_h)
++=09    !=3D 3)
++=09=09return -EINVAL;
++
++=09if (ac >=3D IEEE80211_NUM_ACS)
++=09=09return -EINVAL;
++
++=09sta->airtime[ac].aql_limit_low =3D q_limit_l;
++=09sta->airtime[ac].aql_limit_high =3D q_limit_h;
+=20
+ =09for (ac =3D 0; ac < IEEE80211_NUM_ACS; ac++) {
+ =09=09spin_lock_bh(&local->active_txq_lock[ac]);
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 225ea4e3cd76..ad15b3be8bb3 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1142,6 +1142,10 @@ struct ieee80211_local {
+ =09u16 schedule_round[IEEE80211_NUM_ACS];
+=20
+ =09u16 airtime_flags;
++=09u32 aql_txq_limit_low[IEEE80211_NUM_ACS];
++=09u32 aql_txq_limit_high[IEEE80211_NUM_ACS];
++=09u32 aql_threshold;
++=09atomic_t aql_total_pending_airtime;
+=20
+ =09const struct ieee80211_ops *ops;
+=20
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index aba094b4ccfc..071ea92a3748 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -667,8 +667,16 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv=
+_data_len,
+ =09for (i =3D 0; i < IEEE80211_NUM_ACS; i++) {
+ =09=09INIT_LIST_HEAD(&local->active_txqs[i]);
+ =09=09spin_lock_init(&local->active_txq_lock[i]);
++=09=09local->aql_txq_limit_low[i] =3D IEEE80211_DEFAULT_AQL_TXQ_LIMIT_L;
++=09=09local->aql_txq_limit_high[i] =3D
++=09=09=09IEEE80211_DEFAULT_AQL_TXQ_LIMIT_H;
+ =09}
+-=09local->airtime_flags =3D AIRTIME_USE_TX | AIRTIME_USE_RX;
++
++=09local->airtime_flags =3D AIRTIME_USE_TX |
++=09=09=09       AIRTIME_USE_RX |
++=09=09=09       AIRTIME_USE_AQL;
++=09local->aql_threshold =3D IEEE80211_AQL_THRESHOLD;
++=09atomic_set(&local->aql_total_pending_airtime, 0);
+=20
+ =09INIT_LIST_HEAD(&local->chanctx_list);
+ =09mutex_init(&local->chanctx_mtx);
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 465d83b13582..1fe02022a31a 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -416,6 +416,9 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if=
+_data *sdata,
+ =09=09skb_queue_head_init(&sta->ps_tx_buf[i]);
+ =09=09skb_queue_head_init(&sta->tx_filtered[i]);
+ =09=09sta->airtime[i].deficit =3D sta->airtime_weight;
++=09=09atomic_set(&sta->airtime[i].aql_tx_pending, 0);
++=09=09sta->airtime[i].aql_limit_low =3D local->aql_txq_limit_low[i];
++=09=09sta->airtime[i].aql_limit_high =3D local->aql_txq_limit_high[i];
+ =09}
+=20
+ =09for (i =3D 0; i < IEEE80211_NUM_TIDS; i++)
+@@ -1913,6 +1916,41 @@ void ieee80211_sta_register_airtime(struct ieee80211=
+_sta *pubsta, u8 tid,
+ }
+ EXPORT_SYMBOL(ieee80211_sta_register_airtime);
+=20
++void ieee80211_sta_update_pending_airtime(struct ieee80211_local *local,
++=09=09=09=09=09  struct sta_info *sta, u8 ac,
++=09=09=09=09=09  u16 tx_airtime, bool tx_completed)
++{
++=09int tx_pending;
++
++=09if (!tx_completed) {
++=09=09if (sta)
++=09=09=09atomic_add(tx_airtime,
++=09=09=09=09   &sta->airtime[ac].aql_tx_pending);
++
++=09=09atomic_add(tx_airtime, &local->aql_total_pending_airtime);
++=09=09return;
++=09}
++
++=09if (sta) {
++=09=09tx_pending =3D atomic_sub_return(tx_airtime,
++=09=09=09=09=09       &sta->airtime[ac].aql_tx_pending);
++=09=09if (WARN_ONCE(tx_pending < 0,
++=09=09=09      "STA %pM AC %d txq pending airtime underflow: %u, %u",
++=09=09=09      sta->addr, ac, tx_pending, tx_airtime))
++=09=09=09atomic_cmpxchg(&sta->airtime[ac].aql_tx_pending,
++=09=09=09=09       tx_pending, 0);
++=09}
++
++=09tx_pending =3D atomic_sub_return(tx_airtime,
++=09=09=09=09       &local->aql_total_pending_airtime);
++=09if (WARN_ONCE(tx_pending < 0,
++=09=09      "Device %s AC %d pending airtime underflow: %u, %u",
++=09=09      wiphy_name(local->hw.wiphy), ac, tx_pending,
++=09=09      tx_airtime))
++=09=09atomic_cmpxchg(&local->aql_total_pending_airtime,
++=09=09=09       tx_pending, 0);
++}
++
+ int sta_info_move_state(struct sta_info *sta,
+ =09=09=09enum ieee80211_sta_state new_state)
  {
 diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 369c2dddce52..80e76569144e 100644
+index 80e76569144e..0608d49b3826 100644
 --- a/net/mac80211/sta_info.h
 +++ b/net/mac80211/sta_info.h
-@@ -725,6 +725,9 @@ struct sta_info *sta_info_get(struct ieee80211_sub_if_d=
-ata *sdata,
- struct sta_info *sta_info_get_bss(struct ieee80211_sub_if_data *sdata,
- =09=09=09=09  const u8 *addr);
+@@ -127,13 +127,21 @@ enum ieee80211_agg_stop_reason {
+ /* Debugfs flags to enable/disable use of RX/TX airtime in scheduler */
+ #define AIRTIME_USE_TX=09=09BIT(0)
+ #define AIRTIME_USE_RX=09=09BIT(1)
++#define AIRTIME_USE_AQL=09=09BIT(2)
 =20
-+struct sta_info *sta_info_get_by_addrs(struct ieee80211_local *local,
-+=09=09=09=09       const u8 *sta_addr, const u8 *vif_addr);
+ struct airtime_info {
+ =09u64 rx_airtime;
+ =09u64 tx_airtime;
+ =09s64 deficit;
++=09atomic_t aql_tx_pending; /* Estimated airtime for frames pending */
++=09u32 aql_limit_low;
++=09u32 aql_limit_high;
+ };
+=20
++void ieee80211_sta_update_pending_airtime(struct ieee80211_local *local,
++=09=09=09=09=09  struct sta_info *sta, u8 ac,
++=09=09=09=09=09  u16 tx_airtime, bool tx_completed);
 +
- #define for_each_sta_info(local, _addr, _sta, _tmp)=09=09=09\
- =09rhl_for_each_entry_rcu(_sta, _tmp,=09=09=09=09\
- =09=09=09       sta_info_hash_lookup(local, _addr), hash_node)
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index ab8ba5835ca0..0e51def35b8a 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -1073,19 +1073,13 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, s=
-truct sk_buff *skb)
- =09=09.skb =3D skb,
- =09=09.info =3D IEEE80211_SKB_CB(skb),
- =09};
--=09struct rhlist_head *tmp;
- =09struct sta_info *sta;
+ struct sta_info;
 =20
- =09rcu_read_lock();
+ /**
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index db38be1b75fa..aafc67b562eb 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -3674,7 +3674,8 @@ struct ieee80211_txq *ieee80211_next_txq(struct ieee8=
+0211_hw *hw, u8 ac)
+ {
+ =09struct ieee80211_local *local =3D hw_to_local(hw);
+ =09struct ieee80211_txq *ret =3D NULL;
+-=09struct txq_info *txqi =3D NULL;
++=09struct txq_info *txqi =3D NULL, *head =3D NULL;
++=09bool found_eligible_txq =3D false;
 =20
--=09for_each_sta_info(local, hdr->addr1, sta, tmp) {
--=09=09/* skip wrong virtual interface */
--=09=09if (!ether_addr_equal(hdr->addr2, sta->sdata->vif.addr))
--=09=09=09continue;
--
-+=09sta =3D sta_info_get_by_addrs(local, hdr->addr1, hdr->addr2);
-+=09if (sta)
- =09=09status.sta =3D &sta->sta;
--=09=09break;
--=09}
+ =09spin_lock_bh(&local->active_txq_lock[ac]);
 =20
- =09__ieee80211_tx_status(hw, &status);
- =09rcu_read_unlock();
+@@ -3685,13 +3686,26 @@ struct ieee80211_txq *ieee80211_next_txq(struct iee=
+e80211_hw *hw, u8 ac)
+ =09if (!txqi)
+ =09=09goto out;
+=20
++=09if (txqi =3D=3D head && !found_eligible_txq)
++=09=09goto out;
++
++=09if (!head)
++=09=09head =3D txqi;
++
+ =09if (txqi->txq.sta) {
+ =09=09struct sta_info *sta =3D container_of(txqi->txq.sta,
+-=09=09=09=09=09=09struct sta_info, sta);
++=09=09=09=09=09=09    struct sta_info, sta);
++=09=09bool aql_check =3D ieee80211_txq_airtime_check(hw, &txqi->txq);
++=09=09s64 deficit =3D sta->airtime[txqi->txq.ac].deficit;
++
++=09=09if (aql_check)
++=09=09=09found_eligible_txq =3D true;
+=20
+-=09=09if (sta->airtime[txqi->txq.ac].deficit < 0) {
++=09=09if (deficit < 0)
+ =09=09=09sta->airtime[txqi->txq.ac].deficit +=3D
+ =09=09=09=09sta->airtime_weight;
++
++=09=09if (deficit < 0 || !aql_check) {
+ =09=09=09list_move_tail(&txqi->schedule_order,
+ =09=09=09=09       &local->active_txqs[txqi->txq.ac]);
+ =09=09=09goto begin;
+@@ -3745,6 +3759,33 @@ void __ieee80211_schedule_txq(struct ieee80211_hw *h=
+w,
+ }
+ EXPORT_SYMBOL(__ieee80211_schedule_txq);
+=20
++bool ieee80211_txq_airtime_check(struct ieee80211_hw *hw,
++=09=09=09=09 struct ieee80211_txq *txq)
++{
++=09struct sta_info *sta;
++=09struct ieee80211_local *local =3D hw_to_local(hw);
++
++=09if (!(local->airtime_flags & AIRTIME_USE_AQL))
++=09=09return true;
++
++=09if (!txq->sta)
++=09=09return true;
++
++=09sta =3D container_of(txq->sta, struct sta_info, sta);
++=09if (atomic_read(&sta->airtime[txq->ac].aql_tx_pending) <
++=09    sta->airtime[txq->ac].aql_limit_low)
++=09=09return true;
++
++=09if (atomic_read(&local->aql_total_pending_airtime) <
++=09    local->aql_threshold &&
++=09    atomic_read(&sta->airtime[txq->ac].aql_tx_pending) <
++=09    sta->airtime[txq->ac].aql_limit_high)
++=09=09return true;
++
++=09return false;
++}
++EXPORT_SYMBOL(ieee80211_txq_airtime_check);
++
+ bool ieee80211_txq_may_transmit(struct ieee80211_hw *hw,
+ =09=09=09=09struct ieee80211_txq *txq)
+ {
 
