@@ -7,48 +7,49 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8A76C43215
-	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 15:46:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C68BCC43141
+	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 15:46:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B8C8320803
-	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 15:46:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9634720803
+	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 15:46:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573919193;
-	bh=YRIoyCqFbllyk9Rbao0HAflYjxyFvS7VSLfoVAW4XKI=;
+	s=default; t=1573919199;
+	bh=/qskU+Rb0nZDn2tSBNtS2ClPWcweMC/WHlCVXemRU+M=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=AlPTv/sGEOamBQg+wB/PNGMOAsQEnwwiKhfMF2VlJYK5slCFAzZSx/cSNyLxThOY0
-	 gxlyB8K8aOa+2bvTX6U719vh1RoSSzzAyqKueXqU2oxQbIlp4xjMlBWmsc78bsQN5L
-	 wn7QjBf+7/bBlpbMUK53FpMkFfJRCwnrnxLvC3lI=
+	b=CBTzErAOgxEWymPuG6OxX71pDNkGOqBaRF20wXRFnZkJLcjrreGA+ZS2j8CUj8PCz
+	 7s8cZz1EdJ1OcpjzjyQ9oBXBaBz+shF5aDXrY8LK4C0sCktrcT3IPZEhGuvVdUN5ZL
+	 viOMnB58FG6aO5fmeU+NjjTL0urV7jlVVUkq0myU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729427AbfKPPqc (ORCPT
+        id S1729455AbfKPPqi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 16 Nov 2019 10:46:32 -0500
-Received: from mail.kernel.org ([198.145.29.99]:52888 "EHLO mail.kernel.org"
+        Sat, 16 Nov 2019 10:46:38 -0500
+Received: from mail.kernel.org ([198.145.29.99]:53028 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729419AbfKPPqb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 16 Nov 2019 10:46:31 -0500
+        id S1729445AbfKPPqh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 16 Nov 2019 10:46:37 -0500
 Received: from sasha-vm.mshome.net (unknown [50.234.116.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id B52C820833;
-        Sat, 16 Nov 2019 15:46:30 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 2C44A2084E;
+        Sat, 16 Nov 2019 15:46:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573919191;
-        bh=YRIoyCqFbllyk9Rbao0HAflYjxyFvS7VSLfoVAW4XKI=;
+        s=default; t=1573919196;
+        bh=/qskU+Rb0nZDn2tSBNtS2ClPWcweMC/WHlCVXemRU+M=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Ut1MxyLUNChfpP4BvrP2Xvxu5N7SydHrf6lLioKOmoSsG0n6lIdhUDsTulS7RSZkZ
-         TGUeJmKR6EDHpWpypHG8bSgAuu3vp+6bYTBhlOYW144KeFUI7Ktb3ipECW0Z3ajGtY
-         Tsp9mB+x48+7Wu1EyUEC0tIZU8vSl5ek/QrflQ5M=
+        b=oA3jqOl4+3YnaSIJ30E+THgBtmlALltw+E93LkJjBml2cLHq60Whg/UEebsFCFBUN
+         J+5K4Z05hSel1TBjZsFc7/IFJrS1WSqIyBGfxOYvBSExsTLqmc78n9dpZwdW0OLAKb
+         Iufxan+0hkrYa2yUPWlGD3RQ1XfdKycwaIvJYtBQ=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Brian Norris <briannorris@chromium.org>,
-        Douglas Anderson <dianders@chromium.org>,
+Cc:     Ali MJ Al-Nasrawy <alimjalnasrawy@gmail.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 200/237] ath10k: snoc: fix unbalanced clock error handling
-Date:   Sat, 16 Nov 2019 10:40:35 -0500
-Message-Id: <20191116154113.7417-200-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 203/237] brcmsmac: never log "tid x is not agg'able" by default
+Date:   Sat, 16 Nov 2019 10:40:38 -0500
+Message-Id: <20191116154113.7417-203-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191116154113.7417-1-sashal@kernel.org>
 References: <20191116154113.7417-1-sashal@kernel.org>
@@ -61,37 +62,37 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Brian Norris <briannorris@chromium.org>
+From: Ali MJ Al-Nasrawy <alimjalnasrawy@gmail.com>
 
-[ Upstream commit 82e60d920e8ad70cd9a280ab156566755f1fe4aa ]
+[ Upstream commit 96fca788e5788b7ea3b0050eb35a343637e0a465 ]
 
-Similar to regulator error handling, we should only start tearing down
-the 'i - 1' clock when clock 'i' fails to enable. Otherwise, we might
-end up with an unbalanced clock, where we never successfully enabled the
-clock, but we try to disable it anyway.
+This message greatly spams the log under heavy Tx of frames with BK access
+class which is especially true when operating as AP. It is also not informative
+as the "agg'ablity" of TIDs are set once and never change.
+Fix this by logging only in debug mode.
 
-Fixes: a6a793f98786 ("ath10k: vote for hardware resources for WCN3990")
-Signed-off-by: Brian Norris <briannorris@chromium.org>
-Reviewed-by: Douglas Anderson <dianders@chromium.org>
+Signed-off-by: Ali MJ Al-Nasrawy <alimjalnasrawy@gmail.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath10k/snoc.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ .../net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c    | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
-index fa1843a7e0fda..e2d78f77edb70 100644
---- a/drivers/net/wireless/ath/ath10k/snoc.c
-+++ b/drivers/net/wireless/ath/ath10k/snoc.c
-@@ -1190,7 +1190,7 @@ static int ath10k_wcn3990_clk_init(struct ath10k *ar)
- 	return 0;
- 
- err_clock_config:
--	for (; i >= 0; i--) {
-+	for (i = i - 1; i >= 0; i--) {
- 		clk_info = &ar_snoc->clk[i];
- 
- 		if (!clk_info->handle)
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c
+index 23118207b661e..9657b992f90e1 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c
+@@ -846,8 +846,8 @@ brcms_ops_ampdu_action(struct ieee80211_hw *hw,
+ 		status = brcms_c_aggregatable(wl->wlc, tid);
+ 		spin_unlock_bh(&wl->lock);
+ 		if (!status) {
+-			brcms_err(wl->wlc->hw->d11core,
+-				  "START: tid %d is not agg\'able\n", tid);
++			brcms_dbg_ht(wl->wlc->hw->d11core,
++				     "START: tid %d is not agg\'able\n", tid);
+ 			return -EINVAL;
+ 		}
+ 		ieee80211_start_tx_ba_cb_irqsafe(vif, sta->addr, tid);
 -- 
 2.20.1
 
