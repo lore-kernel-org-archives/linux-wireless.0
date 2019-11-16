@@ -7,48 +7,49 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2DF9C432C3
-	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 16:18:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36D2CC43141
+	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 16:27:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7C44A214DE
-	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 16:18:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0F0F0214DE
+	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 16:27:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573921122;
-	bh=nOskZj0L/b7ymmq40aLThte2XvXczGSoKhi6G9WlnOo=;
+	s=default; t=1573921646;
+	bh=AyTUmJ/PdREZeE/3RwDvKntTI3oiK+VLMX9m0h1ozyc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=S4x1QvgPxYk9TOsSrQ1rmiwvw8+lcgvzxWnbTO2nKa7BcPRVAWt6VeWRiKOKHW+kt
-	 3VCK4liu7sjdj4zm5zjvFO8zpMCVHyA4rGE39+cQFi6ZkoVaMyx8P7dnU+NQaibjmP
-	 ULmhbTsNJ/W8kiqY2HMSEMAqV/opt6+Pilr4e0FY=
+	b=roTuiKpxeuPzSGlvO9phLyQrwDU+LmYZs4POX9d2T/dqSAcIGZJhNQ3YW5zH3tDw+
+	 IPstv2qR1tE+wUDMyegApOhS5dwHZgzPlEcqA6dtT9EQd6Bz3EnbJAJJ4o9Tb527eg
+	 Ft44WKSVrVnxm3BrgnkDy5SsY6hT05nCwcn4Dohw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732024AbfKPQSd (ORCPT
+        id S1727942AbfKPPlh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 16 Nov 2019 11:18:33 -0500
-Received: from mail.kernel.org ([198.145.29.99]:52822 "EHLO mail.kernel.org"
+        Sat, 16 Nov 2019 10:41:37 -0500
+Received: from mail.kernel.org ([198.145.29.99]:44670 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729280AbfKPPq3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 16 Nov 2019 10:46:29 -0500
+        id S1727866AbfKPPle (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 16 Nov 2019 10:41:34 -0500
 Received: from sasha-vm.mshome.net (unknown [50.234.116.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 65B9B2083B;
-        Sat, 16 Nov 2019 15:46:28 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 8E57220718;
+        Sat, 16 Nov 2019 15:41:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573919188;
-        bh=nOskZj0L/b7ymmq40aLThte2XvXczGSoKhi6G9WlnOo=;
+        s=default; t=1573918894;
+        bh=AyTUmJ/PdREZeE/3RwDvKntTI3oiK+VLMX9m0h1ozyc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=mGlWnYCBBIA5NHgiP9+8EHBgGPsBWvG/OIVsMAwuz2ry7CCV9FWTiqcZ/B2Xnj4lt
-         0AOx+ZAYqi6wIrH7Oryhx4lS49s7hYUG1su9kQs38SnQb0iFXO0k18El9e9t7JxeYa
-         0CaX9vJijIFD1kvC8ZiEp7XmxtsGGEuCoaSJHpyk=
+        b=Q740NAToJcLN0mEN6M6ivGVDmBB2DsnzbcgSSMLd3ijuUScA4ZDwr9vQef4vbPPWt
+         7ib/XlKhfoTEEWNxjzmMsO4mGYzo7VP+pW53QWR2ON7CH1t5XunklyMMCdxbgmc2rG
+         zXUG4PdCZBNVPefH/eNyf8JgGqFKzcdQKgcGyg6Q=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Maya Erez <merez@codeaurora.org>,
+Cc:     Ali MJ Al-Nasrawy <alimjalnasrawy@gmail.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
-        netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 197/237] wil6210: fix L2 RX status handling
-Date:   Sat, 16 Nov 2019 10:40:32 -0500
-Message-Id: <20191116154113.7417-197-sashal@kernel.org>
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 018/237] brcmsmac: AP mode: update beacon when TIM changes
+Date:   Sat, 16 Nov 2019 10:37:33 -0500
+Message-Id: <20191116154113.7417-18-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191116154113.7417-1-sashal@kernel.org>
 References: <20191116154113.7417-1-sashal@kernel.org>
@@ -61,62 +62,97 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Maya Erez <merez@codeaurora.org>
+From: Ali MJ Al-Nasrawy <alimjalnasrawy@gmail.com>
 
-[ Upstream commit 04de15010aa42a92add66b159e3ae44b4287390f ]
+[ Upstream commit 2258ee58baa554609a3cc3996276e4276f537b6d ]
 
-L2 RX status errors should not be treated as a bitmap and the actual
-error values should be checked.
-Print L2 errors as wil_err_ratelimited for easier debugging
-when such errors occurs.
+Beacons are not updated to reflect TIM changes. This is not compliant with
+power-saving client stations as the beacons do not have valid TIM and can
+cause the network to stall at random occasions and to have highly variable
+latencies.
+Fix it by updating beacon templates on mac80211 set_tim callback.
 
-Signed-off-by: Maya Erez <merez@codeaurora.org>
+Addresses an issue described in:
+https://marc.info/?i=20180911163534.21312d08%20()%20manjaro
+
+Signed-off-by: Ali MJ Al-Nasrawy <alimjalnasrawy@gmail.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/wil6210/txrx_edma.c | 23 ++++++++++----------
- 1 file changed, 12 insertions(+), 11 deletions(-)
+ .../broadcom/brcm80211/brcmsmac/mac80211_if.c | 26 +++++++++++++++++++
+ .../broadcom/brcm80211/brcmsmac/main.h        |  1 +
+ 2 files changed, 27 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/wil6210/txrx_edma.c b/drivers/net/wireless/ath/wil6210/txrx_edma.c
-index 409a6fa8b6c8f..5fa8d6ad66482 100644
---- a/drivers/net/wireless/ath/wil6210/txrx_edma.c
-+++ b/drivers/net/wireless/ath/wil6210/txrx_edma.c
-@@ -808,23 +808,24 @@ static int wil_rx_error_check_edma(struct wil6210_priv *wil,
- 		wil_dbg_txrx(wil, "L2 RX error, l2_rx_status=0x%x\n",
- 			     l2_rx_status);
- 		/* Due to HW issue, KEY error will trigger a MIC error */
--		if (l2_rx_status & WIL_RX_EDMA_ERROR_MIC) {
--			wil_dbg_txrx(wil,
--				     "L2 MIC/KEY error, dropping packet\n");
-+		if (l2_rx_status == WIL_RX_EDMA_ERROR_MIC) {
-+			wil_err_ratelimited(wil,
-+					    "L2 MIC/KEY error, dropping packet\n");
- 			stats->rx_mic_error++;
- 		}
--		if (l2_rx_status & WIL_RX_EDMA_ERROR_KEY) {
--			wil_dbg_txrx(wil, "L2 KEY error, dropping packet\n");
-+		if (l2_rx_status == WIL_RX_EDMA_ERROR_KEY) {
-+			wil_err_ratelimited(wil,
-+					    "L2 KEY error, dropping packet\n");
- 			stats->rx_key_error++;
- 		}
--		if (l2_rx_status & WIL_RX_EDMA_ERROR_REPLAY) {
--			wil_dbg_txrx(wil,
--				     "L2 REPLAY error, dropping packet\n");
-+		if (l2_rx_status == WIL_RX_EDMA_ERROR_REPLAY) {
-+			wil_err_ratelimited(wil,
-+					    "L2 REPLAY error, dropping packet\n");
- 			stats->rx_replay++;
- 		}
--		if (l2_rx_status & WIL_RX_EDMA_ERROR_AMSDU) {
--			wil_dbg_txrx(wil,
--				     "L2 AMSDU error, dropping packet\n");
-+		if (l2_rx_status == WIL_RX_EDMA_ERROR_AMSDU) {
-+			wil_err_ratelimited(wil,
-+					    "L2 AMSDU error, dropping packet\n");
- 			stats->rx_amsdu_error++;
- 		}
- 		return -EFAULT;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c
+index ecc89e718b9c1..23118207b661e 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c
+@@ -502,6 +502,7 @@ brcms_ops_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ 	}
+ 
+ 	spin_lock_bh(&wl->lock);
++	wl->wlc->vif = vif;
+ 	wl->mute_tx = false;
+ 	brcms_c_mute(wl->wlc, false);
+ 	if (vif->type == NL80211_IFTYPE_STATION)
+@@ -519,6 +520,11 @@ brcms_ops_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ static void
+ brcms_ops_remove_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ {
++	struct brcms_info *wl = hw->priv;
++
++	spin_lock_bh(&wl->lock);
++	wl->wlc->vif = NULL;
++	spin_unlock_bh(&wl->lock);
+ }
+ 
+ static int brcms_ops_config(struct ieee80211_hw *hw, u32 changed)
+@@ -937,6 +943,25 @@ static void brcms_ops_set_tsf(struct ieee80211_hw *hw,
+ 	spin_unlock_bh(&wl->lock);
+ }
+ 
++static int brcms_ops_beacon_set_tim(struct ieee80211_hw *hw,
++				 struct ieee80211_sta *sta, bool set)
++{
++	struct brcms_info *wl = hw->priv;
++	struct sk_buff *beacon = NULL;
++	u16 tim_offset = 0;
++
++	spin_lock_bh(&wl->lock);
++	if (wl->wlc->vif)
++		beacon = ieee80211_beacon_get_tim(hw, wl->wlc->vif,
++						  &tim_offset, NULL);
++	if (beacon)
++		brcms_c_set_new_beacon(wl->wlc, beacon, tim_offset,
++				       wl->wlc->vif->bss_conf.dtim_period);
++	spin_unlock_bh(&wl->lock);
++
++	return 0;
++}
++
+ static const struct ieee80211_ops brcms_ops = {
+ 	.tx = brcms_ops_tx,
+ 	.start = brcms_ops_start,
+@@ -955,6 +980,7 @@ static const struct ieee80211_ops brcms_ops = {
+ 	.flush = brcms_ops_flush,
+ 	.get_tsf = brcms_ops_get_tsf,
+ 	.set_tsf = brcms_ops_set_tsf,
++	.set_tim = brcms_ops_beacon_set_tim,
+ };
+ 
+ void brcms_dpc(unsigned long data)
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.h b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.h
+index c4d135cff04ad..9f76b880814e8 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.h
+@@ -563,6 +563,7 @@ struct brcms_c_info {
+ 
+ 	struct wiphy *wiphy;
+ 	struct scb pri_scb;
++	struct ieee80211_vif *vif;
+ 
+ 	struct sk_buff *beacon;
+ 	u16 beacon_tim_offset;
 -- 
 2.20.1
 
