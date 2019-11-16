@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F391C432C3
-	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 16:07:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CF0FC432C3
+	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 16:07:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DC29120874
-	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 16:07:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3C49F206C0
+	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 16:07:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573920461;
-	bh=v5l74EKbWgA7xuDajmxN81xwZrHg0s9j8HKcj2TwGZo=;
+	s=default; t=1573920467;
+	bh=nkllnDBXf4AfaxLJlPMIAIRxCjsdEuPwlVE+x4bcaHM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=WA+V1Ygh7XkfXHNt05ASYPgQ4S9Ct6X+jfAwLyVg4igMDNKGxq6AMGmpnLa1ZDF2b
-	 0H8U3J5yz/E3qkRE1gmyHR8olfVE7llYskhHEgOymOjIionUA3MjyzIA6ICTDn2oPs
-	 P3PI2U3+hEpVxM8TEDPVAoGiJL2OpxYFz3RLJZAQ=
+	b=VExDvi7irBTYgMFPVTJD1s109xXEQZLjOTQis3W1eJrL/aV8e2jipE7+3WAasTP+N
+	 TIQj1r3RtMgqLgQ8lxzKJxgkcfr99NGZWLIKQvMk9sut1B/4/GlTn7eeqE4qq52ulb
+	 T/0qxdhMXjul5Tr3HFX6QjqtSg+yEc6SZfNKCpP0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731034AbfKPQHh (ORCPT
+        id S1729574AbfKPPuY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 16 Nov 2019 11:07:37 -0500
-Received: from mail.kernel.org ([198.145.29.99]:58456 "EHLO mail.kernel.org"
+        Sat, 16 Nov 2019 10:50:24 -0500
+Received: from mail.kernel.org ([198.145.29.99]:58390 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729123AbfKPPu1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 16 Nov 2019 10:50:27 -0500
+        id S1730495AbfKPPuX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 16 Nov 2019 10:50:23 -0500
 Received: from sasha-vm.mshome.net (unknown [50.234.116.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 68D362083E;
-        Sat, 16 Nov 2019 15:50:26 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 33934208C0;
+        Sat, 16 Nov 2019 15:50:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573919426;
-        bh=v5l74EKbWgA7xuDajmxN81xwZrHg0s9j8HKcj2TwGZo=;
+        s=default; t=1573919422;
+        bh=nkllnDBXf4AfaxLJlPMIAIRxCjsdEuPwlVE+x4bcaHM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=H4Om+k2Dg1Sf8Z21krZhFZh+8CZ+dzzuQg3CNYgf03m81gSgodO8NkRKEm8lBdhP9
-         bxPTsb3JWEczAAfI5aGxpZcOiJyqe5xD3/EgJ+oN565No6dQmXKh72eK1NTmO078Y8
-         kE/vjUNIUrAyfjd30cs/OoIEj05u6SM/7RShC3uk=
+        b=J/rcnoFx1KBERbzQbl8sP6GDxA7ep441KfmxmQPc6MPxVDXB6APw7E6GSd1gkqayO
+         SEGW5fepeYHyjiUOJmVbq5H96aL0qIFCox6+kr77DO4gBEITCppCSGjP8WqEW9zBg3
+         D8j61ECHWnJCArm0uT3mB2fqSRvmZ5LQNe2+347I=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
+Cc:     "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 124/150] wireless: airo: potential buffer overflow in sprintf()
-Date:   Sat, 16 Nov 2019 10:47:02 -0500
-Message-Id: <20191116154729.9573-124-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 122/150] rtl8xxxu: Fix missing break in switch
+Date:   Sat, 16 Nov 2019 10:47:00 -0500
+Message-Id: <20191116154729.9573-122-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191116154729.9573-1-sashal@kernel.org>
 References: <20191116154729.9573-1-sashal@kernel.org>
@@ -60,38 +60,33 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Dan Carpenter <dan.carpenter@oracle.com>
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
 
-[ Upstream commit 3d39e1bb1c88f32820c5f9271f2c8c2fb9a52bac ]
+[ Upstream commit 307b00c5e695857ca92fc6a4b8ab6c48f988a1b1 ]
 
-It looks like we wanted to print a maximum of BSSList_rid.ssidLen bytes
-of the ssid, but we accidentally use "%*s" (width) instead of "%.*s"
-(precision) so if the ssid doesn't have a NUL terminator this could lead
-to an overflow.
+Add missing break statement in order to prevent the code from falling
+through to the default case.
 
-Static analysis.  Not tested.
-
-Fixes: e174961ca1a0 ("net: convert print_mac to %pM")
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Fixes: 26f1fad29ad9 ("New driver: rtl8xxxu (mac80211)")
+Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/cisco/airo.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/cisco/airo.c b/drivers/net/wireless/cisco/airo.c
-index 54201c02fdb8b..fc49255bab009 100644
---- a/drivers/net/wireless/cisco/airo.c
-+++ b/drivers/net/wireless/cisco/airo.c
-@@ -5464,7 +5464,7 @@ static int proc_BSSList_open( struct inode *inode, struct file *file ) {
-            we have to add a spin lock... */
- 	rc = readBSSListRid(ai, doLoseSync, &BSSList_rid);
- 	while(rc == 0 && BSSList_rid.index != cpu_to_le16(0xffff)) {
--		ptr += sprintf(ptr, "%pM %*s rssi = %d",
-+		ptr += sprintf(ptr, "%pM %.*s rssi = %d",
- 			       BSSList_rid.bssid,
- 				(int)BSSList_rid.ssidLen,
- 				BSSList_rid.ssid,
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+index 7806a4d2b1fcd..91b01ca32e752 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+@@ -5691,6 +5691,7 @@ static int rtl8xxxu_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 		break;
+ 	case WLAN_CIPHER_SUITE_TKIP:
+ 		key->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIC;
++		break;
+ 	default:
+ 		return -EOPNOTSUPP;
+ 	}
 -- 
 2.20.1
 
