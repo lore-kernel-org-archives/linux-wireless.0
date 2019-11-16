@@ -7,50 +7,51 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B712DC33C8C
-	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 16:00:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C0137C432C3
+	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 16:01:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 902A421739
-	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 16:00:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9025C21479
+	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 16:01:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573920000;
-	bh=+BzdJ6LDlqS6iccz6NVyrV0+MjE0C9nKxm+/FH2c3oA=;
+	s=default; t=1573920077;
+	bh=rLp7gb1j2MHmariftPs6XDQuELo3II+Ei2W7HIyJeeM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=C/m85x+jOHY2NbUIoo+yRbctEYWqAaYfBKjTHkb298zIGX9ROaxRHiu7VL0DMk+1C
-	 WJK4NPCYzm4EkXPz4QhS3RvAhrTABspVCcFHORyP6+Dg9iSSE2nufsoaSWBrOqfhNx
-	 3qkaDhXG0aE3XGcHZG8fuy4TcxmyuLknIRBocEk0=
+	b=YGbDdOGv07l+7Evt4bvVXCf2zCHhJhg5EGj2WZwBfgtbzQNVEBfTqZ65CjyYvulvJ
+	 GcDy8Ig9xPz4IaIrUbtImdgR02JD6BjKOfF5GfSWirOd9WJsYa29P1BgEnf4PuGnsc
+	 4QCNemsyAi6cqef3O64GDZHeX1aMF2AhGTl4QF1M=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731309AbfKPPxs (ORCPT
+        id S1731193AbfKPPxS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 16 Nov 2019 10:53:48 -0500
-Received: from mail.kernel.org ([198.145.29.99]:35078 "EHLO mail.kernel.org"
+        Sat, 16 Nov 2019 10:53:18 -0500
+Received: from mail.kernel.org ([198.145.29.99]:34284 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729947AbfKPPxs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 16 Nov 2019 10:53:48 -0500
+        id S1731179AbfKPPxQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 16 Nov 2019 10:53:16 -0500
 Received: from sasha-vm.mshome.net (unknown [50.234.116.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 2284E219F9;
-        Sat, 16 Nov 2019 15:53:47 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 8F91120859;
+        Sat, 16 Nov 2019 15:53:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573919627;
-        bh=+BzdJ6LDlqS6iccz6NVyrV0+MjE0C9nKxm+/FH2c3oA=;
+        s=default; t=1573919596;
+        bh=rLp7gb1j2MHmariftPs6XDQuELo3II+Ei2W7HIyJeeM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ms3Jbv5Aam70b3NYyIDlOUuSvBGTx7jmvb5s8VZOPKpZPJKlCC5CY4PfipjPsBccr
-         QbxQFVadn4TyDBS9m3CO0GPKuwKV1TZMMfRJA/ENdbsxq3DSqBKvXzLEcAqSwab5m7
-         hKUXzwMKw83ny0h3k4NEByJu8LjHK6+4qq8eqquA=
+        b=nPSPrErRO/PQu8Z6C2XUc5gavNos5x2VRKYfDcD0sdiBqJSbvvX0n3XUk7SeDFduR
+         M35xo/oFUXH2miXIR3DHTKRIVRqfZB+uUZB1cd372K3FvrVZtbVFDX2trYWYc6OzUT
+         VIslCKdk5ffC0tW9eom9iUZoGQ7ir/3bBZ0IQmWg=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Ali MJ Al-Nasrawy <alimjalnasrawy@gmail.com>,
+Cc:     Shaokun Zhang <zhangshaokun@hisilicon.com>,
+        Ping-Ke Shih <pkshih@realtek.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.4 07/77] brcmsmac: AP mode: update beacon when TIM changes
-Date:   Sat, 16 Nov 2019 10:52:29 -0500
-Message-Id: <20191116155339.11909-7-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 82/99] rtlwifi: rtl8192de: Fix misleading REG_MCUFWDL information
+Date:   Sat, 16 Nov 2019 10:50:45 -0500
+Message-Id: <20191116155103.10971-82-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191116155339.11909-1-sashal@kernel.org>
-References: <20191116155339.11909-1-sashal@kernel.org>
+In-Reply-To: <20191116155103.10971-1-sashal@kernel.org>
+References: <20191116155103.10971-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -60,97 +61,38 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ali MJ Al-Nasrawy <alimjalnasrawy@gmail.com>
+From: Shaokun Zhang <zhangshaokun@hisilicon.com>
 
-[ Upstream commit 2258ee58baa554609a3cc3996276e4276f537b6d ]
+[ Upstream commit 7d129adff3afbd3a449bc3593f2064ac546d58d3 ]
 
-Beacons are not updated to reflect TIM changes. This is not compliant with
-power-saving client stations as the beacons do not have valid TIM and can
-cause the network to stall at random occasions and to have highly variable
-latencies.
-Fix it by updating beacon templates on mac80211 set_tim callback.
+RT_TRACE shows REG_MCUFWDL value as a decimal value with a '0x'
+prefix, which is somewhat misleading.
 
-Addresses an issue described in:
-https://marc.info/?i=20180911163534.21312d08%20()%20manjaro
+Fix it to print hexadecimal, as was intended.
 
-Signed-off-by: Ali MJ Al-Nasrawy <alimjalnasrawy@gmail.com>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Signed-off-by: Shaokun Zhang <zhangshaokun@hisilicon.com>
+Acked-by: Ping-Ke Shih <pkshih@realtek.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- .../wireless/brcm80211/brcmsmac/mac80211_if.c | 26 +++++++++++++++++++
- .../net/wireless/brcm80211/brcmsmac/main.h    |  1 +
- 2 files changed, 27 insertions(+)
+ drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-index 61ae2768132a0..e3b01d804cf24 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-@@ -502,6 +502,7 @@ brcms_ops_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
+index 8de29cc3ced07..a24644f34e650 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
+@@ -234,7 +234,7 @@ static int _rtl92d_fw_init(struct ieee80211_hw *hw)
+ 			 rtl_read_byte(rtlpriv, FW_MAC1_READY));
  	}
- 
- 	spin_lock_bh(&wl->lock);
-+	wl->wlc->vif = vif;
- 	wl->mute_tx = false;
- 	brcms_c_mute(wl->wlc, false);
- 	if (vif->type == NL80211_IFTYPE_STATION)
-@@ -519,6 +520,11 @@ brcms_ops_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
- static void
- brcms_ops_remove_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
- {
-+	struct brcms_info *wl = hw->priv;
-+
-+	spin_lock_bh(&wl->lock);
-+	wl->wlc->vif = NULL;
-+	spin_unlock_bh(&wl->lock);
+ 	RT_TRACE(rtlpriv, COMP_FW, DBG_DMESG,
+-		 "Polling FW ready fail!! REG_MCUFWDL:0x%08ul\n",
++		 "Polling FW ready fail!! REG_MCUFWDL:0x%08x\n",
+ 		 rtl_read_dword(rtlpriv, REG_MCUFWDL));
+ 	return -1;
  }
- 
- static int brcms_ops_config(struct ieee80211_hw *hw, u32 changed)
-@@ -937,6 +943,25 @@ static void brcms_ops_set_tsf(struct ieee80211_hw *hw,
- 	spin_unlock_bh(&wl->lock);
- }
- 
-+static int brcms_ops_beacon_set_tim(struct ieee80211_hw *hw,
-+				 struct ieee80211_sta *sta, bool set)
-+{
-+	struct brcms_info *wl = hw->priv;
-+	struct sk_buff *beacon = NULL;
-+	u16 tim_offset = 0;
-+
-+	spin_lock_bh(&wl->lock);
-+	if (wl->wlc->vif)
-+		beacon = ieee80211_beacon_get_tim(hw, wl->wlc->vif,
-+						  &tim_offset, NULL);
-+	if (beacon)
-+		brcms_c_set_new_beacon(wl->wlc, beacon, tim_offset,
-+				       wl->wlc->vif->bss_conf.dtim_period);
-+	spin_unlock_bh(&wl->lock);
-+
-+	return 0;
-+}
-+
- static const struct ieee80211_ops brcms_ops = {
- 	.tx = brcms_ops_tx,
- 	.start = brcms_ops_start,
-@@ -955,6 +980,7 @@ static const struct ieee80211_ops brcms_ops = {
- 	.flush = brcms_ops_flush,
- 	.get_tsf = brcms_ops_get_tsf,
- 	.set_tsf = brcms_ops_set_tsf,
-+	.set_tim = brcms_ops_beacon_set_tim,
- };
- 
- void brcms_dpc(unsigned long data)
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.h b/drivers/net/wireless/brcm80211/brcmsmac/main.h
-index c4d135cff04ad..9f76b880814e8 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.h
-@@ -563,6 +563,7 @@ struct brcms_c_info {
- 
- 	struct wiphy *wiphy;
- 	struct scb pri_scb;
-+	struct ieee80211_vif *vif;
- 
- 	struct sk_buff *beacon;
- 	u16 beacon_tim_offset;
 -- 
 2.20.1
 
