@@ -7,48 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B6B3C43215
-	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 15:56:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DC09C43141
+	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 15:56:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CFB6221843
-	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 15:56:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2D5E920815
+	for <linux-wireless@archiver.kernel.org>; Sat, 16 Nov 2019 15:56:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573919791;
-	bh=KyCR4irzEfG7n+3FZsoOJ3KbIgEkN2xASgay6KATBSg=;
+	s=default; t=1573919802;
+	bh=tOajLgzf+6n6vOATerHhVPn4sqkI079tnrqMck6Rxzg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=e3AtB3+BFbQAKHHTDtKr7JV2EIIb9g2CeaYwXTQlg+y9A0Xke4kzinqbqaM8qka8Z
-	 E+Mbq+TQaKlvg0LVoUg0qwX/Pn20jv24xZ/+QHn7SEFLhHd0kg08AWnQ2lrHi1qhZA
-	 YyxyKauoF6+9LITO0pyvnOXi9byH2Lz5N9dh+9Wk=
+	b=BgB4Nx7ineygQ7XM1JoSMWi7i5g2WqEj1mSDdyaTtY/u1hEc58iqEtUzec9JTcTBE
+	 Wj3wGdfe7telwlZAHLbZdwAlZqABxP49T43z88+ZXzuZ6hgZOzmwKk1Zp61QffSuXN
+	 l2J8aijdy/sF1JugotnfEZNZ9uMgy/8ViEvEfvlE=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728981AbfKPPz0 (ORCPT
+        id S1731689AbfKPP4l (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 16 Nov 2019 10:55:26 -0500
-Received: from mail.kernel.org ([198.145.29.99]:37490 "EHLO mail.kernel.org"
+        Sat, 16 Nov 2019 10:56:41 -0500
+Received: from mail.kernel.org ([198.145.29.99]:37436 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731600AbfKPPzZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 16 Nov 2019 10:55:25 -0500
+        id S1729128AbfKPPzX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 16 Nov 2019 10:55:23 -0500
 Received: from sasha-vm.mshome.net (unknown [50.234.116.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 0FFA721903;
-        Sat, 16 Nov 2019 15:55:25 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id BAAF321920;
+        Sat, 16 Nov 2019 15:55:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573919725;
-        bh=KyCR4irzEfG7n+3FZsoOJ3KbIgEkN2xASgay6KATBSg=;
+        s=default; t=1573919723;
+        bh=tOajLgzf+6n6vOATerHhVPn4sqkI079tnrqMck6Rxzg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=PaxhJJKopEcQaFsdZLXNNJT6vV305fDaS41iHOxH/ebDsKLEze3toHf4ATKpice02
-         NmuPnXk5etmchN/zmQcL1JcrLJZ7Pe/TaLz3Q5Z2BsSerN/0eCs6DWhkTjqfeJEunj
-         nEGXayahZ/LPHh/TvcGIQAu/fRsmqddq9nRawdhU=
+        b=RLwTOr8MTNboPQY4PgD8Vgm7m6TdYAOwLLPnRQn4zUQYZPs2R/R221LGH/qxIii3B
+         zMuKcH6LCi7zCtvs1hOsb3dgtgLVIshT3Mt4egscMhOgUXaibJa+ZCG+exHdQVsyjU
+         adFbBxNsLTKd/USKNEJ7BDTyoeXS8K+ABMoikBd0=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Shaokun Zhang <zhangshaokun@hisilicon.com>,
-        Ping-Ke Shih <pkshih@realtek.com>,
+Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.4 65/77] rtlwifi: rtl8192de: Fix misleading REG_MCUFWDL information
-Date:   Sat, 16 Nov 2019 10:53:27 -0500
-Message-Id: <20191116155339.11909-65-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 64/77] wireless: airo: potential buffer overflow in sprintf()
+Date:   Sat, 16 Nov 2019 10:53:26 -0500
+Message-Id: <20191116155339.11909-64-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191116155339.11909-1-sashal@kernel.org>
 References: <20191116155339.11909-1-sashal@kernel.org>
@@ -61,38 +60,38 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Shaokun Zhang <zhangshaokun@hisilicon.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
 
-[ Upstream commit 7d129adff3afbd3a449bc3593f2064ac546d58d3 ]
+[ Upstream commit 3d39e1bb1c88f32820c5f9271f2c8c2fb9a52bac ]
 
-RT_TRACE shows REG_MCUFWDL value as a decimal value with a '0x'
-prefix, which is somewhat misleading.
+It looks like we wanted to print a maximum of BSSList_rid.ssidLen bytes
+of the ssid, but we accidentally use "%*s" (width) instead of "%.*s"
+(precision) so if the ssid doesn't have a NUL terminator this could lead
+to an overflow.
 
-Fix it to print hexadecimal, as was intended.
+Static analysis.  Not tested.
 
-Cc: Ping-Ke Shih <pkshih@realtek.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Signed-off-by: Shaokun Zhang <zhangshaokun@hisilicon.com>
-Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+Fixes: e174961ca1a0 ("net: convert print_mac to %pM")
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c | 2 +-
+ drivers/net/wireless/airo.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
-index 62ef8209718f1..5bf3712a4d49d 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
-@@ -234,7 +234,7 @@ static int _rtl92d_fw_init(struct ieee80211_hw *hw)
- 			 rtl_read_byte(rtlpriv, FW_MAC1_READY));
- 	}
- 	RT_TRACE(rtlpriv, COMP_FW, DBG_DMESG,
--		 "Polling FW ready fail!! REG_MCUFWDL:0x%08ul\n",
-+		 "Polling FW ready fail!! REG_MCUFWDL:0x%08x\n",
- 		 rtl_read_dword(rtlpriv, REG_MCUFWDL));
- 	return -1;
- }
+diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
+index 17c40f06f13e5..82d24f2b9c190 100644
+--- a/drivers/net/wireless/airo.c
++++ b/drivers/net/wireless/airo.c
+@@ -5484,7 +5484,7 @@ static int proc_BSSList_open( struct inode *inode, struct file *file ) {
+            we have to add a spin lock... */
+ 	rc = readBSSListRid(ai, doLoseSync, &BSSList_rid);
+ 	while(rc == 0 && BSSList_rid.index != cpu_to_le16(0xffff)) {
+-		ptr += sprintf(ptr, "%pM %*s rssi = %d",
++		ptr += sprintf(ptr, "%pM %.*s rssi = %d",
+ 			       BSSList_rid.bssid,
+ 				(int)BSSList_rid.ssidLen,
+ 				BSSList_rid.ssid,
 -- 
 2.20.1
 
