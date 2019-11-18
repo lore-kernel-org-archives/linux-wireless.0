@@ -2,202 +2,142 @@ Return-Path: <SRS0=8L7/=ZK=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D73F0C432C0
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Nov 2019 11:39:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05F92C43215
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Nov 2019 11:53:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B85F520727
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Nov 2019 11:39:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D158F20748
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Nov 2019 11:53:22 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TOv64kLI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726654AbfKRLj5 (ORCPT
+        id S1726635AbfKRLxW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 18 Nov 2019 06:39:57 -0500
-Received: from smail.rz.tu-ilmenau.de ([141.24.186.67]:37319 "EHLO
-        smail.rz.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726490AbfKRLj5 (ORCPT
+        Mon, 18 Nov 2019 06:53:22 -0500
+Received: from mail-lf1-f68.google.com ([209.85.167.68]:46910 "EHLO
+        mail-lf1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726461AbfKRLxW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Nov 2019 06:39:57 -0500
-Received: from localhost.localdomain (unknown [141.24.212.108])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by smail.rz.tu-ilmenau.de (Postfix) with ESMTPSA id B3A9158007B;
-        Mon, 18 Nov 2019 12:39:54 +0100 (CET)
-From:   Markus Theil <markus.theil@tu-ilmenau.de>
-To:     nbd@nbd.name
-Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
-        Stanislaw Gruszka <sgruszka@redhat.com>,
-        Markus Theil <markus.theil@tu-ilmenau.de>
-Subject: [PATCH v2 2/4] mt76: mt76x02: split beaconing
-Date:   Mon, 18 Nov 2019 12:39:05 +0100
-Message-Id: <20191118113907.9862-3-markus.theil@tu-ilmenau.de>
-X-Mailer: git-send-email 2.24.0
-In-Reply-To: <20191118113907.9862-1-markus.theil@tu-ilmenau.de>
-References: <20191118113907.9862-1-markus.theil@tu-ilmenau.de>
+        Mon, 18 Nov 2019 06:53:22 -0500
+Received: by mail-lf1-f68.google.com with SMTP id o65so13544740lff.13;
+        Mon, 18 Nov 2019 03:53:20 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=iqquGNTbhqooLOOM/Rwf8ZlswYL2DwlmgvFypx4jJAU=;
+        b=TOv64kLIKUZVBo2lZ9CSaI7QQ+wNu9AcpmxAghl90BX3nIOXbMSskJCe0NOCG0EYTw
+         03w/6vj5VgyBiLTT+4kFQ7qv4vKLOoS9vVOAgPrih4wcfwHRCSx5kLj3i1g2SvhR5R+8
+         watzbxx0Z1hR1/nkfvJwkmAo9oD0jpcVhNKlF6gT6lj19wm5QVf5dOPxCvH0rccsNS9j
+         YycKNrnGfdgjPiACpqe8TQDDyv96WQDycx8u3X55wz4PRLHUh0MyU9TEwd4F0qNFbbDz
+         G25XBb2X9i0vAH0uan40n+6zNVapS9ZrIYePBsXK8uVbtIh08Y1XsTVGLDquRREokMXK
+         9ELA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=iqquGNTbhqooLOOM/Rwf8ZlswYL2DwlmgvFypx4jJAU=;
+        b=arUD7SYdDECLY9nGlZ5kV/193OFHsl/UiWfuCcUHz1s7aCQ/n1QSDna2IFq7TtRlxa
+         XGQ/nVz9YJfheK80eHYjZR8c6rD3dECjzs9UFNlP4ZpUYboLpFGIrehf4uHYX/95d87w
+         Nej5+PxGMmL+aYPNIbBe3iIo+XRobnpOljjBNwfZMx2HC5GjcpkP3/4tw8o4FIrQW6Rl
+         GctyeUkORPzvhrRQ8c+J6HTREmix94dYSRnTmkAOGtj/brw7I83uz0FLRcceuYnVs465
+         ob/YJseHiwyCBceIuQ2zp+Rj+J0sBUZqbSZ1X788uD/AXxFOC60q8hiZI4tv4i6agel/
+         Yhcg==
+X-Gm-Message-State: APjAAAWe0K4sWr3Y2P1S5kcUi8CPOdVMecOty1eVKpo7abzoMB/lAkAa
+        cHpdcSyRkH7gKwlnE6INeIQ=
+X-Google-Smtp-Source: APXvYqy9wgGHFC9Jcl7HS6ILoAc//S6FUvYtUqhsVyBY9P0YHnAJK/8TFU3VRV8yLSkuMMiSAAFAgg==
+X-Received: by 2002:ac2:5305:: with SMTP id c5mr16899612lfh.55.1574077999724;
+        Mon, 18 Nov 2019 03:53:19 -0800 (PST)
+Received: from localhost.localdomain (ip-194-187-74-233.konfederacka.maverick.com.pl. [194.187.74.233])
+        by smtp.gmail.com with ESMTPSA id f14sm8046343ljn.105.2019.11.18.03.53.18
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 18 Nov 2019 03:53:19 -0800 (PST)
+From:   =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Winnie Chang <winnie.chang@cypress.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>,
+        stable@vger.kernel.org
+Subject: [PATCH FIX] brcmfmac: disable PCIe interrupts before bus reset
+Date:   Mon, 18 Nov 2019 12:53:08 +0100
+Message-Id: <20191118115308.21963-1-zajec5@gmail.com>
+X-Mailer: git-send-email 2.21.0
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Sending beacons to the hardware always happens in batches. In order to
-speed up beacon processing on usb devices, this patch splits out common
-code an calls it only once (mt76x02_mac_set_beacon_prepare,
-mt76x02_mac_set_beacon_finish). Making this split breaks beacon
-enabling/disabling per vif. This is fixed by adding a call to set the
-bypass mask, if beaconing should be disabled for a vif. Otherwise the
-beacon is send after the next beacon interval.
+From: Rafał Miłecki <rafal@milecki.pl>
 
-The code is also adapted for the mmio part of the driver, but should not
-have any performance implication there.
+Keeping interrupts on could result in brcmfmac freeing some resources
+and then IRQ handlers trying to use them. That was obviously a straight
+path for crashing a kernel.
 
-Signed-off-by: Markus Theil <markus.theil@tu-ilmenau.de>
+Example:
+CPU0                           CPU1
+----                           ----
+brcmf_pcie_reset
+  brcmf_pcie_bus_console_read
+  brcmf_detach
+    ...
+    brcmf_fweh_detach
+    brcmf_proto_detach
+                               brcmf_pcie_isr_thread
+                                 ...
+                                 brcmf_proto_msgbuf_rx_trigger
+                                   ...
+                                   drvr->proto->pd
+    brcmf_pcie_release_irq
+
+[  363.789218] Unable to handle kernel NULL pointer dereference at virtual address 00000038
+[  363.797339] pgd = c0004000
+[  363.800050] [00000038] *pgd=00000000
+[  363.803635] Internal error: Oops: 17 [#1] SMP ARM
+(...)
+[  364.029209] Backtrace:
+[  364.031725] [<bf243838>] (brcmf_proto_msgbuf_rx_trigger [brcmfmac]) from [<bf2471dc>] (brcmf_pcie_isr_thread+0x228/0x274 [brcmfmac])
+[  364.043662]  r7:00000001 r6:c8ca0000 r5:00010000 r4:c7b4f800
+
+Fixes: 4684997d9eea ("brcmfmac: reset PCIe bus on a firmware crash")
+Cc: stable@vger.kernel.org # v5.2+
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
 ---
- .../wireless/mediatek/mt76/mt76x02_beacon.c   | 46 +++++++------------
- .../net/wireless/mediatek/mt76/mt76x02_mac.h  |  1 +
- .../net/wireless/mediatek/mt76/mt76x02_mmio.c |  5 ++
- .../wireless/mediatek/mt76/mt76x02_usb_core.c |  5 ++
- 4 files changed, 28 insertions(+), 29 deletions(-)
+Kalle: if you are planning another pull request for 5.4 you may push
+       this to the wireless-drivers. Otherwise make it
+       wireless-drivers-next and lets have stable maintainers pick it.
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_beacon.c b/drivers/net/wireless/mediatek/mt76/mt76x02_beacon.c
-index 403866496640..faa6de6914a3 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_beacon.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_beacon.c
-@@ -47,10 +47,6 @@ __mt76x02_mac_set_beacon(struct mt76x02_dev *dev, u8 bcn_idx,
- 	int beacon_len = dev->beacon_ops->slot_size;
- 	int beacon_addr = MT_BEACON_BASE + (beacon_len * bcn_idx);
- 	int ret = 0;
--	int i;
--
--	/* Prevent corrupt transmissions during update */
--	mt76_set(dev, MT_BCN_BYPASS_MASK, BIT(bcn_idx));
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+index 3184dab41a5e..f64ce5074a55 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+@@ -1425,6 +1425,8 @@ static int brcmf_pcie_reset(struct device *dev)
+ 	struct brcmf_fw_request *fwreq;
+ 	int err;
  
- 	if (skb) {
- 		ret = mt76x02_write_beacon(dev, beacon_addr, skb);
-@@ -60,41 +56,32 @@ __mt76x02_mac_set_beacon(struct mt76x02_dev *dev, u8 bcn_idx,
- 		dev->beacon_data_mask &= ~BIT(bcn_idx);
- 	}
- 
--	mt76_wr(dev, MT_BCN_BYPASS_MASK, 0xff00 | ~dev->beacon_data_mask);
--
- 	return ret;
- }
- 
--int mt76x02_mac_set_beacon(struct mt76x02_dev *dev, u8 vif_idx,
--			   struct sk_buff *skb)
--{
--	bool force_update = false;
--	int bcn_idx = 0;
-+void mt76x02_mac_set_beacon_finish(struct mt76x02_dev *dev) {
- 	int i;
-+	int bcn_idx = 0;
- 
--	for (i = 0; i < ARRAY_SIZE(dev->beacons); i++) {
--		if (vif_idx == i) {
--			force_update = !!dev->beacons[i] ^ !!skb;
--			dev_kfree_skb(dev->beacons[i]);
--			dev->beacons[i] = skb;
--			__mt76x02_mac_set_beacon(dev, bcn_idx, skb);
--		} else if (force_update && dev->beacons[i]) {
--			__mt76x02_mac_set_beacon(dev, bcn_idx,
--						 dev->beacons[i]);
--		}
--
-+	for(i = 0; i < hweight8(dev->mt76.beacon_mask); ++i) {
- 		bcn_idx += !!dev->beacons[i];
- 	}
- 
--	for (i = bcn_idx; i < ARRAY_SIZE(dev->beacons); i++) {
--		if (!(dev->beacon_data_mask & BIT(i)))
--			break;
--
--		__mt76x02_mac_set_beacon(dev, i, NULL);
--	}
--
- 	mt76_rmw_field(dev, MT_MAC_BSSID_DW1, MT_MAC_BSSID_DW1_MBEACON_N,
- 		       bcn_idx - 1);
++	brcmf_pcie_intr_disable(devinfo);
 +
-+	mt76_wr(dev, MT_BCN_BYPASS_MASK, 0xff00 | ~dev->beacon_data_mask);
-+}
-+EXPORT_SYMBOL_GPL(mt76x02_mac_set_beacon_finish);
-+
-+int mt76x02_mac_set_beacon(struct mt76x02_dev *dev, u8 vif_idx,
-+			   struct sk_buff *skb)
-+{
-+	dev_kfree_skb(dev->beacons[vif_idx]);
-+	dev->beacons[vif_idx] = skb;
-+	__mt76x02_mac_set_beacon(dev, vif_idx, skb);
-+
-+
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(mt76x02_mac_set_beacon);
-@@ -115,6 +102,7 @@ void mt76x02_mac_set_beacon_enable(struct mt76x02_dev *dev,
- 	} else {
- 		dev->mt76.beacon_mask &= ~BIT(mvif->idx);
- 		mt76x02_mac_set_beacon(dev, mvif->idx, NULL);
-+		mt76_set(dev, MT_BCN_BYPASS_MASK, BIT(mvif->idx));
- 	}
+ 	brcmf_pcie_bus_console_read(devinfo, true);
  
- 	if (!!old_mask == !!dev->mt76.beacon_mask)
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h
-index efa4ef945e35..e6e585c72f0d 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h
-@@ -197,6 +197,7 @@ int mt76x02_mac_set_beacon(struct mt76x02_dev *dev, u8 vif_idx,
- 			   struct sk_buff *skb);
- void mt76x02_mac_set_beacon_enable(struct mt76x02_dev *dev,
- 				   struct ieee80211_vif *vif, bool enable);
-+void mt76x02_mac_set_beacon_finish(struct mt76x02_dev *dev);
- 
- void mt76x02_edcca_init(struct mt76x02_dev *dev);
- #endif
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c b/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
-index dc773070481d..73c39d03b7f8 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
-@@ -24,10 +24,15 @@ static void mt76x02_pre_tbtt_tasklet(unsigned long arg)
- 
- 	mt76x02_resync_beacon_timer(dev);
- 
-+	/* Prevent corrupt transmissions during update */
-+	mt76_set(dev, MT_BCN_BYPASS_MASK, 0xffff);
-+
- 	ieee80211_iterate_active_interfaces_atomic(mt76_hw(dev),
- 		IEEE80211_IFACE_ITER_RESUME_ALL,
- 		mt76x02_update_beacon_iter, dev);
- 
-+	mt76x02_mac_set_beacon_finish(dev);
-+
- 	mt76_csa_check(&dev->mt76);
- 
- 	if (dev->mt76.csa_complete)
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c b/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c
-index 78dfc1e7f27b..8a2a90fb5663 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c
-@@ -179,6 +179,9 @@ static void mt76x02u_pre_tbtt_work(struct work_struct *work)
- 
- 	mt76x02_resync_beacon_timer(dev);
- 
-+	/* Prevent corrupt transmissions during update */
-+	mt76_set(dev, MT_BCN_BYPASS_MASK, 0xffff);
-+
- 	ieee80211_iterate_active_interfaces(mt76_hw(dev),
- 		IEEE80211_IFACE_ITER_RESUME_ALL,
- 		mt76x02_update_beacon_iter, dev);
-@@ -191,6 +194,8 @@ static void mt76x02u_pre_tbtt_work(struct work_struct *work)
- 		mt76x02_mac_set_beacon(dev, i, skb);
- 	}
- 
-+	mt76x02_mac_set_beacon_finish(dev);
-+
- 	mt76x02u_restart_pre_tbtt_timer(dev);
- }
- 
+ 	brcmf_detach(dev);
 -- 
-2.24.0
+2.21.0
 
