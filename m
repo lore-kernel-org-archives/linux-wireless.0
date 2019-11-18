@@ -2,138 +2,123 @@ Return-Path: <SRS0=8L7/=ZK=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13EA9C432C0
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Nov 2019 09:54:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42BC7C432C0
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Nov 2019 10:10:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E91392071C
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 Nov 2019 09:54:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 16C8320727
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 Nov 2019 10:10:38 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="T4005Zk9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726518AbfKRJyo (ORCPT
+        id S1726552AbfKRKKh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 18 Nov 2019 04:54:44 -0500
-Received: from rtits2.realtek.com ([211.75.126.72]:40035 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726460AbfKRJyn (ORCPT
+        Mon, 18 Nov 2019 05:10:37 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:59996 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726488AbfKRKKh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Nov 2019 04:54:43 -0500
-Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID xAI9sbHT018251, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (RTITCASV01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id xAI9sbHT018251
-        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
-        Mon, 18 Nov 2019 17:54:37 +0800
-Received: from localhost.localdomain (172.21.68.126) by
- RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
- 14.3.468.0; Mon, 18 Nov 2019 17:54:36 +0800
-From:   <yhchuang@realtek.com>
-To:     <kvalo@codeaurora.org>
-CC:     <linux-wireless@vger.kernel.org>, <briannorris@chromium.org>
-Subject: [PATCH v2 1/4] rtw88: pci: use macros to access PCI DBI/MDIO registers
-Date:   Mon, 18 Nov 2019 17:54:29 +0800
-Message-ID: <20191118095432.4507-2-yhchuang@realtek.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20191118095432.4507-1-yhchuang@realtek.com>
-References: <20191118095432.4507-1-yhchuang@realtek.com>
+        Mon, 18 Nov 2019 05:10:37 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1574071835;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=G45mRJb2R55hTpqWOgmQqio32gnIzC1eCmtGv4EySOk=;
+        b=T4005Zk9b5okSvR7UIrqB8OMKUGFatc+7TMaFuYy4yGfP4rqv/N4cXmpe021/jcbi4UUqS
+        0YGRQy/JodIgBYjeZaEBjytMBFROtLUlYzbmiQJ6XsYSwI1PcT+pJa0S5un/8GXrwB20CQ
+        d5+hvIsnbzRvlOLvH8md6lXC/SBt8QA=
+Received: from mail-lj1-f199.google.com (mail-lj1-f199.google.com
+ [209.85.208.199]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-288-O5AGdHMWMGGmG_KY2qyv8A-1; Mon, 18 Nov 2019 05:10:32 -0500
+Received: by mail-lj1-f199.google.com with SMTP id l12so3134609ljg.21
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Nov 2019 02:10:32 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:in-reply-to:references:date
+         :message-id:mime-version;
+        bh=OIQCTBj1ZZClWzpd5quqOflGEWiO+R0tbK558qeMbh4=;
+        b=BD5V0q5hANewYJZ/8Q46hyTVIvFoFg1zPRPac478yOzrlVHJ9OzNPDp4ZTP2DrsE+8
+         XHSExIN35nKPX3nd1k6XKCFaTO7u/lap3qa28qfU+HAlhcF5gXbNhzN3ayPvyQPxqTiA
+         d1u7VdWcSnUrXWFzsskOTd+VotbgUEJ73XNVyXOz4shqWBafzTFpxRw4yaJlVF5A8wK3
+         Fpq862I+KQcsRSSA7AN70L09zKC5b1C0Io7Ta7K64dz0Ra2/0vvXpmcoSob7WCZBpQU7
+         L3KAoQaoo6vzxeYM7vx74w9jxEapGirXdSSkYbw3q3aWbtoRFI5WDsK4uchs1WtTHbvf
+         rwJQ==
+X-Gm-Message-State: APjAAAVRkF6R202HtZhauTwKCIeR5WD8e9DOOsptJj4cnW2icy0Ch4O8
+        rHgCp+PI4NmMAUhNz4I6LZWBNaoQkV2s1oP5K94/tG/rgyahZWNF+nl5o62ssdwanrTHsQ4Ndsq
+        PaHdKDbyn+zlal7La+QOwcruKKXk=
+X-Received: by 2002:a05:651c:1109:: with SMTP id d9mr20056936ljo.192.1574071831434;
+        Mon, 18 Nov 2019 02:10:31 -0800 (PST)
+X-Google-Smtp-Source: APXvYqyx34G0PV/fe8D53a+QUqfm/vO0wSGhLgSfIKtC5qf0UKXzF5h1YYJhlKi/PARk15AMZvmAJA==
+X-Received: by 2002:a05:651c:1109:: with SMTP id d9mr20056921ljo.192.1574071831296;
+        Mon, 18 Nov 2019 02:10:31 -0800 (PST)
+Received: from alrua-x1.borgediget.toke.dk (borgediget.toke.dk. [85.204.121.218])
+        by smtp.gmail.com with ESMTPSA id o196sm8775203lff.59.2019.11.18.02.10.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 18 Nov 2019 02:10:30 -0800 (PST)
+Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
+        id DF6B118190D; Mon, 18 Nov 2019 11:10:29 +0100 (CET)
+From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
+To:     Kan Yan <kyan@google.com>
+Cc:     Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Make-Wifi-fast <make-wifi-fast@lists.bufferbloat.net>,
+        ath10k@lists.infradead.org, John Crispin <john@phrozen.org>,
+        Lorenzo Bianconi <lorenzo@kernel.org>,
+        Felix Fietkau <nbd@nbd.name>,
+        Rajkumar Manoharan <rmanohar@codeaurora.org>,
+        Kevin Hayes <kevinhayes@google.com>
+Subject: Re: [PATCH v9 4/4] mac80211: Use Airtime-based Queue Limits (AQL) on packet dequeue
+In-Reply-To: <CA+iem5vVhwTsTvAgnC_HF0utMDSfgyLCe2M=gfUOFU2VjjCB8Q@mail.gmail.com>
+References: <157382403672.580235.12525941420808058808.stgit@toke.dk> <157382404118.580235.14216392299709793599.stgit@toke.dk> <CA+iem5tF+TN-osfGxu=EU5Xt1Uq+PcKgBVaoAmZY3a3JzS5JzQ@mail.gmail.com> <87y2wgjas4.fsf@toke.dk> <CA+iem5vVhwTsTvAgnC_HF0utMDSfgyLCe2M=gfUOFU2VjjCB8Q@mail.gmail.com>
+X-Clacks-Overhead: GNU Terry Pratchett
+Date:   Mon, 18 Nov 2019 11:10:29 +0100
+Message-ID: <87muctcx62.fsf@toke.dk>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [172.21.68.126]
+X-MC-Unique: O5AGdHMWMGGmG_KY2qyv8A-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=WINDOWS-1252
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Kan Yan <kyan@google.com> writes:
 
-Add some register and bit macros to access DBI/MDIO register. This
-should not change the logic.
+>> > Given the fact that AQL is only tested in very limited platforms,
+>> > should we set the default to disabled by removing this change in the
+>> > next update?
+>> >
+>> > -       local->airtime_flags =3D AIRTIME_USE_TX | AIRTIME_USE_RX;
+>> > +
+>> > +       local->airtime_flags =3D AIRTIME_USE_TX |
+>> > +                              AIRTIME_USE_RX |
+>> > +                              AIRTIME_USE_AQL;
+>> > +       local->aql_threshold =3D IEEE80211_AQL_THRESHOLD;
+>> > +       atomic_set(&local->aql_total_pending_airtime, 0);
+>> Well, we have the whole -rc series to get more testing in if we merge it
+>> as-is. It's up to the maintainers, of course, but I would be in favour
+>> of merging as-is, then optionally backing out the default before the
+>> final release if problems do turn up. But I would hope that the limits
+>> are sufficiently conservative that it would not result in any problems :=
+)
+>
+> Sounds good. The current default limits are reasonably conservative
+> and are tunable via debugfs.
+>
+> I will give the v10 version of this patch serial a quick test and
+> hopefully we can wrap it up soon.
 
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
----
+Sounds good, thanks! Also, seems we got a 5.4-rc8 yesterday, so we have
+another week before the merge window.
 
-v1 -> v2
- * no change
+Johannes, any chance you'll get a chance to take a look at this sometime
+this week? :)
 
- drivers/net/wireless/realtek/rtw88/pci.c | 21 ++++++++++-----------
- drivers/net/wireless/realtek/rtw88/pci.h | 10 ++++++++++
- 2 files changed, 20 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtw88/pci.c b/drivers/net/wireless/realtek/rtw88/pci.c
-index 17b9cdf9cb05..b158ef8ded17 100644
---- a/drivers/net/wireless/realtek/rtw88/pci.c
-+++ b/drivers/net/wireless/realtek/rtw88/pci.c
-@@ -1060,14 +1060,15 @@ static void rtw_pci_io_unmapping(struct rtw_dev *rtwdev,
- static void rtw_dbi_write8(struct rtw_dev *rtwdev, u16 addr, u8 data)
- {
- 	u16 write_addr;
--	u16 remainder = addr & 0x3;
-+	u16 remainder = addr & ~(BITS_DBI_WREN | BITS_DBI_ADDR_MASK);
- 	u8 flag;
--	u8 cnt = 20;
-+	u8 cnt = RTW_PCI_WR_RETRY_CNT;
- 
--	write_addr = ((addr & 0x0ffc) | (BIT(0) << (remainder + 12)));
-+	write_addr = addr & BITS_DBI_ADDR_MASK;
-+	write_addr |= u16_encode_bits(BIT(remainder), BITS_DBI_WREN);
- 	rtw_write8(rtwdev, REG_DBI_WDATA_V1 + remainder, data);
- 	rtw_write16(rtwdev, REG_DBI_FLAG_V1, write_addr);
--	rtw_write8(rtwdev, REG_DBI_FLAG_V1 + 2, 0x01);
-+	rtw_write8(rtwdev, REG_DBI_FLAG_V1 + 2, BIT_DBI_WFLAG >> 16);
- 
- 	flag = rtw_read8(rtwdev, REG_DBI_FLAG_V1 + 2);
- 	while (flag && (cnt != 0)) {
-@@ -1083,19 +1084,17 @@ static void rtw_mdio_write(struct rtw_dev *rtwdev, u8 addr, u16 data, bool g1)
- {
- 	u8 page;
- 	u8 wflag;
--	u8 cnt;
-+	u8 cnt = RTW_PCI_WR_RETRY_CNT;
- 
- 	rtw_write16(rtwdev, REG_MDIO_V1, data);
- 
--	page = addr < 0x20 ? 0 : 1;
--	page += g1 ? 0 : 2;
--	rtw_write8(rtwdev, REG_PCIE_MIX_CFG, addr & 0x1f);
-+	page = addr < RTW_PCI_MDIO_PG_SZ ? 0 : 1;
-+	page += g1 ? RTW_PCI_MDIO_PG_OFFS_G1 : RTW_PCI_MDIO_PG_OFFS_G2;
-+	rtw_write8(rtwdev, REG_PCIE_MIX_CFG, addr & BITS_MDIO_ADDR_MASK);
- 	rtw_write8(rtwdev, REG_PCIE_MIX_CFG + 3, page);
--
- 	rtw_write32_mask(rtwdev, REG_PCIE_MIX_CFG, BIT_MDIO_WFLAG_V1, 1);
--	wflag = rtw_read32_mask(rtwdev, REG_PCIE_MIX_CFG, BIT_MDIO_WFLAG_V1);
- 
--	cnt = 20;
-+	wflag = rtw_read32_mask(rtwdev, REG_PCIE_MIX_CFG, BIT_MDIO_WFLAG_V1);
- 	while (wflag && (cnt != 0)) {
- 		udelay(10);
- 		wflag = rtw_read32_mask(rtwdev, REG_PCIE_MIX_CFG,
-diff --git a/drivers/net/wireless/realtek/rtw88/pci.h b/drivers/net/wireless/realtek/rtw88/pci.h
-index 87824a4caba9..50aff49738d4 100644
---- a/drivers/net/wireless/realtek/rtw88/pci.h
-+++ b/drivers/net/wireless/realtek/rtw88/pci.h
-@@ -21,9 +21,19 @@
- #define BIT_RX_TAG_EN		BIT(15)
- #define REG_DBI_WDATA_V1	0x03E8
- #define REG_DBI_FLAG_V1		0x03F0
-+#define BIT_DBI_RFLAG		BIT(17)
-+#define BIT_DBI_WFLAG		BIT(16)
-+#define BITS_DBI_WREN		GENMASK(15, 12)
-+#define BITS_DBI_ADDR_MASK	GENMASK(11, 2)
-+
- #define REG_MDIO_V1		0x03F4
- #define REG_PCIE_MIX_CFG	0x03F8
-+#define BITS_MDIO_ADDR_MASK	GENMASK(4, 0)
- #define BIT_MDIO_WFLAG_V1	BIT(5)
-+#define RTW_PCI_MDIO_PG_SZ	BIT(5)
-+#define RTW_PCI_MDIO_PG_OFFS_G1	0
-+#define RTW_PCI_MDIO_PG_OFFS_G2	2
-+#define RTW_PCI_WR_RETRY_CNT	20
- 
- #define BIT_PCI_BCNQ_FLAG	BIT(4)
- #define RTK_PCI_TXBD_DESA_BCNQ	0x308
--- 
-2.17.1
+-Toke
 
