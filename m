@@ -2,136 +2,89 @@ Return-Path: <SRS0=eo9X=ZL=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8AFAC33C8C
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 Nov 2019 03:27:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 346E9C432C3
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 Nov 2019 06:05:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9ADEB208A1
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 Nov 2019 03:27:59 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=endlessm-com.20150623.gappssmtp.com header.i=@endlessm-com.20150623.gappssmtp.com header.b="CRuTq0Je"
+	by mail.kernel.org (Postfix) with ESMTP id 0A5462082F
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 Nov 2019 06:05:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727586AbfKSD16 (ORCPT
+        id S1727721AbfKSGFt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 18 Nov 2019 22:27:58 -0500
-Received: from mail-qt1-f194.google.com ([209.85.160.194]:45303 "EHLO
-        mail-qt1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727018AbfKSD16 (ORCPT
+        Tue, 19 Nov 2019 01:05:49 -0500
+Received: from mail.adapt-ip.com ([173.164.178.19]:43014 "EHLO
+        mail.adapt-ip.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729403AbfKSFfw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 Nov 2019 22:27:58 -0500
-Received: by mail-qt1-f194.google.com with SMTP id 30so22946605qtz.12
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Nov 2019 19:27:56 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=endlessm-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=DVMWJPHKS5b0D789uPoJ9Xa2YJCvazHd/Qt98OC2/JU=;
-        b=CRuTq0JewoxfdZz8Y99vLaSYTr45Ta2V/UgojmbgS8Sz5pLVEmMxUzdrSgIZsoJdB4
-         BoffGkoPm+0W+nPVjU8vUgs50MU5MwZ4PR4So/wWzbMA7GEs1CkhHACtPWy6+mxkUyfp
-         ekLnQCZ8QmjUBC2S/+nwih9Tp7FmERUaPF9YFNdyds+YxwPBa6qNVk5Xq0Qc4S+owyoP
-         OEnb+0khYEAr7islGtx0nH5NwG7R4wk9ke+NMql1pTomaS4BWEMjHT6D3nNHPB9ipCC9
-         axJR2mwMpzlOxn+5bLScKoX2yu6kixxIOS/qxPCZr6P/QyskTql4jguBQLPSjSS3nEJW
-         Z7UA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=DVMWJPHKS5b0D789uPoJ9Xa2YJCvazHd/Qt98OC2/JU=;
-        b=jSAQ4smtX1qr+qvmkwd5RBYeM9cGag7W/b23ZXUDV4amW9+tW7n2erURS2O+NF1k+X
-         ALNTkMwvVcbboEjLWNppZj8d+ZS1tL9fMu0SxS/U3prgbrZeATyYuPVIA7FzsDOKjkFZ
-         WBKG+p53Km1tQ2IQSu8k98QuohzO4FOsHVWoSgYVcaTbN4Wc7zsEZFuSvBKEfA4smc2d
-         UxPijzduMqMLK7GluysiB7njSagjyrfh3OJXsAvFr2pq9gayjqOwEDpd/VpYJYcjPxyO
-         kayVyPawAm1irC/WO7i2RIx885/WloQRX6xQy37ObGZwwBMYfOSEtmIl67637sZxKA7Q
-         ZdAQ==
-X-Gm-Message-State: APjAAAW1yW1kKyRxdkaTlvWNkPwdGYQVhc56cHealizGikt9jh1zz0Lx
-        WKq+AHGOfDI+5y2o6beDHvNHBdiQo+qrRbBrRl2xVA==
-X-Google-Smtp-Source: APXvYqw5qE3tSdNUDhpR0IKDiQkN4t6llCwNKpHqlCQYmtBfEyv17dlcknaQgjDTgE//xnUWJZf+Q9RVKDisBNM1XBE=
-X-Received: by 2002:ac8:721a:: with SMTP id a26mr30490320qtp.208.1574134075348;
- Mon, 18 Nov 2019 19:27:55 -0800 (PST)
+        Tue, 19 Nov 2019 00:35:52 -0500
+Received: from localhost (unknown [127.0.0.1])
+        by mail.adapt-ip.com (Postfix) with ESMTP id 0517B2F03D6;
+        Tue, 19 Nov 2019 05:35:51 +0000 (UTC)
+X-Virus-Scanned: amavisd-new at web.adapt-ip.com
+Received: from mail.adapt-ip.com ([127.0.0.1])
+        by localhost (web.adapt-ip.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id ecBuW9aQtppH; Mon, 18 Nov 2019 21:35:45 -0800 (PST)
+Received: from tractor.ibsgaard.io (c-73-202-5-52.hsd1.ca.comcast.net [73.202.5.52])
+        (using TLSv1.2 with cipher DHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: thomas@adapt-ip.com)
+        by mail.adapt-ip.com (Postfix) with ESMTPSA id F16462F03E6;
+        Mon, 18 Nov 2019 21:35:39 -0800 (PST)
+From:   Thomas Pedersen <thomas@adapt-ip.com>
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     linux-wireless <linux-wireless@vger.kernel.org>,
+        Thomas Pedersen <thomas@adapt-ip.com>
+Subject: [PATCH v2 3/3] mac80211: consider QoS Null frames for STA_NULLFUNC_ACKED
+Date:   Mon, 18 Nov 2019 21:35:38 -0800
+Message-Id: <20191119053538.25979-4-thomas@adapt-ip.com>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20191119053538.25979-1-thomas@adapt-ip.com>
+References: <20191119053538.25979-1-thomas@adapt-ip.com>
 MIME-Version: 1.0
-References: <1574130314-25626-1-git-send-email-zhengbin13@huawei.com>
-In-Reply-To: <1574130314-25626-1-git-send-email-zhengbin13@huawei.com>
-From:   Chris Chiu <chiu@endlessm.com>
-Date:   Tue, 19 Nov 2019 11:27:43 +0800
-Message-ID: <CAB4CAwcwxTPB_VAJyXxWnrcQbDOqxHdJcriSjCU6odgw2ng1Vg@mail.gmail.com>
-Subject: Re: [PATCH -next v2] rtl8xxxu: Remove set but not used variable 'vif','dev','len'
-To:     zhengbin <zhengbin13@huawei.com>
-Cc:     Jes Sorensen <Jes.Sorensen@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        David Miller <davem@davemloft.net>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        netdev <netdev@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, Nov 19, 2019 at 10:18 AM zhengbin <zhengbin13@huawei.com> wrote:
->
-> Fixes gcc '-Wunused-but-set-variable' warning:
->
-> drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c: In function rtl8xxxu_c2hcmd_callback:
-> drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c:5396:24: warning: variable vif set but not used [-Wunused-but-set-variable]
-> drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c: In function rtl8xxxu_c2hcmd_callback:
-> drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c:5397:17: warning: variable dev set but not used [-Wunused-but-set-variable]
-> drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c: In function rtl8xxxu_c2hcmd_callback:
-> drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c:5400:6: warning: variable len set but not used [-Wunused-but-set-variable]
->
-> They are introduced by commit e542e66b7c2e ("rtl8xxxu:
-> add bluetooth co-existence support for single antenna"), but never used,
-> so remove them.
->
-> Reported-by: Hulk Robot <hulkci@huawei.com>
-> Signed-off-by: zhengbin <zhengbin13@huawei.com>
-> ---
-> v1->v2: modify comment, it --> they
-Reviewed-by: Chris Chiu <chiu@endlessm.com>
+Commit 7b6ddeaf27ec ("mac80211: use QoS NDP for AP probing")
+let STAs send QoS Null frames as PS triggers if the AP was
+a QoS STA.  However, the mac80211 PS stack relies on an
+interface flag IEEE80211_STA_NULLFUNC_ACKED for
+determining trigger frame ACK, which was not being set for
+acked non-QoS Null frames. The effect is an inability to
+trigger hardware sleep via IEEE80211_CONF_PS since the QoS
+Null frame was seemingly never acked.
 
->  drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 6 ------
->  1 file changed, 6 deletions(-)
->
-> diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-> index 1d94cab..aa2bb2a 100644
-> --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-> +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-> @@ -5393,18 +5393,13 @@ static void rtl8xxxu_c2hcmd_callback(struct work_struct *work)
->  {
->         struct rtl8xxxu_priv *priv;
->         struct rtl8723bu_c2h *c2h;
-> -       struct ieee80211_vif *vif;
-> -       struct device *dev;
->         struct sk_buff *skb = NULL;
->         unsigned long flags;
-> -       int len;
->         u8 bt_info = 0;
->         struct rtl8xxxu_btcoex *btcoex;
->
->         priv = container_of(work, struct rtl8xxxu_priv, c2hcmd_work);
-> -       vif = priv->vif;
->         btcoex = &priv->bt_coex;
-> -       dev = &priv->udev->dev;
->
->         if (priv->rf_paths > 1)
->                 goto out;
-> @@ -5415,7 +5410,6 @@ static void rtl8xxxu_c2hcmd_callback(struct work_struct *work)
->                 spin_unlock_irqrestore(&priv->c2hcmd_lock, flags);
->
->                 c2h = (struct rtl8723bu_c2h *)skb->data;
-> -               len = skb->len - 2;
->
->                 switch (c2h->id) {
->                 case C2H_8723B_BT_INFO:
-> --
-> 2.7.4
->
+This bug only applies to drivers which set both
+IEEE80211_HW_REPORTS_TX_ACK_STATUS and
+IEEE80211_HW_PS_NULLFUNC_STACK.
 
-Those variables are handled by the derived helper functions
-rtl8723bu_handle_bt_xxx and no longer needed in
-rtl8xxxu_c2hcmd_callback(). Thanks for reporting.
+Detect the acked QoS Null frame to restore STA power save.
 
-Chris
+Fixes: 7b6ddeaf27ec ("mac80211: use QoS NDP for AP probing")
+Signed-off-by: Thomas Pedersen <thomas@adapt-ip.com>
+---
+ net/mac80211/status.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index ab8ba5835ca0..5a3d645fe1bc 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -1030,7 +1030,8 @@ static void __ieee80211_tx_status(struct ieee80211_hw *hw,
+ 			I802_DEBUG_INC(local->dot11FailedCount);
+ 	}
+ 
+-	if (ieee80211_is_nullfunc(fc) && ieee80211_has_pm(fc) &&
++	if ((ieee80211_is_nullfunc(fc) || ieee80211_is_qos_nullfunc(fc)) &&
++	    ieee80211_has_pm(fc) &&
+ 	    ieee80211_hw_check(&local->hw, REPORTS_TX_ACK_STATUS) &&
+ 	    !(info->flags & IEEE80211_TX_CTL_INJECTED) &&
+ 	    local->ps_sdata && !(local->scanning)) {
+-- 
+2.20.1
+
