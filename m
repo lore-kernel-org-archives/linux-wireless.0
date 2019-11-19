@@ -2,38 +2,40 @@ Return-Path: <SRS0=eo9X=ZL=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6FB3C43141
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD15BC432C0
 	for <linux-wireless@archiver.kernel.org>; Tue, 19 Nov 2019 15:48:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BCA53222AB
+	by mail.kernel.org (Postfix) with ESMTP id 9D4FD222A2
 	for <linux-wireless@archiver.kernel.org>; Tue, 19 Nov 2019 15:48:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728419AbfKSPsC (ORCPT
+        id S1728212AbfKSPsF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 19 Nov 2019 10:48:02 -0500
-Received: from smail.rz.tu-ilmenau.de ([141.24.186.67]:43682 "EHLO
+        Tue, 19 Nov 2019 10:48:05 -0500
+Received: from smail.rz.tu-ilmenau.de ([141.24.186.67]:43689 "EHLO
         smail.rz.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727910AbfKSPsC (ORCPT
+        with ESMTP id S1728183AbfKSPsD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 Nov 2019 10:48:02 -0500
+        Tue, 19 Nov 2019 10:48:03 -0500
 Received: from localhost.localdomain (unknown [141.24.207.101])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by smail.rz.tu-ilmenau.de (Postfix) with ESMTPSA id C1511580063;
+        by smail.rz.tu-ilmenau.de (Postfix) with ESMTPSA id E1A9F58007D;
         Tue, 19 Nov 2019 16:48:00 +0100 (CET)
 From:   Markus Theil <markus.theil@tu-ilmenau.de>
 To:     nbd@nbd.name
 Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
         Stanislaw Gruszka <sgruszka@redhat.com>,
         Markus Theil <markus.theil@tu-ilmenau.de>
-Subject: [PATCH v6 0/5] mt76: channel switch support for USB devices
-Date:   Tue, 19 Nov 2019 16:47:41 +0100
-Message-Id: <20191119154746.20821-1-markus.theil@tu-ilmenau.de>
+Subject: [PATCH v6 2/5] mt76: mt76x02: split beaconing
+Date:   Tue, 19 Nov 2019 16:47:43 +0100
+Message-Id: <20191119154746.20821-3-markus.theil@tu-ilmenau.de>
 X-Mailer: git-send-email 2.24.0
+In-Reply-To: <20191119154746.20821-1-markus.theil@tu-ilmenau.de>
+References: <20191119154746.20821-1-markus.theil@tu-ilmenau.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -41,51 +43,159 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This patch series adds channel switch support for mt76 usb interfaces.
-When testing, I noticed that between 5 or 7 consecutive beacons had the
-identical channel switch count set. After some debugging I found out,
-that beacon copying over usb took far too long (up to 700ms for one call
-of mt76x02u_pre_tbtt_work).
+Sending beacons to the hardware always happens in batches. In order to
+speed up beacon processing on usb devices, this patch splits out common
+code an calls it only once (mt76x02_mac_set_beacon_prepare,
+mt76x02_mac_set_beacon_finish). Making this split breaks beacon
+enabling/disabling per vif. This is fixed by adding a call to set the
+bypass mask, if beaconing should be disabled for a vif. Otherwise the
+beacon is send after the next beacon interval.
 
-Therefore the first four patches speed up beacon copying and the last
-patch enables channel switch support also for usb interfaces.
+The code is also adapted for the mmio part of the driver, but should not
+have any performance implication there.
 
-v6:
-* use min_t in mt76u_copy
-* use round_up in mt76u_copy
-* use additional copy for mmio beacon set again
-
-v5 (thanks to Stanislaw):
-* ommit empty mt76x2u_channel_switch_beacon
-* copy txwi into beacon skb
-
-v4:
-* use multiple of 4 len for usb copy again
-
-v3:
-* fixed checkpatch errors
-
-v2 (thanks for the comments Lorenzo):
-* correctly track beacon data mask
-* clean-ups
-* make channel switch fn static (reported by kbuild test robot)
-
-Markus Theil (5):
-  mt76: mt76x02: ommit beacon slot clearing
-  mt76: mt76x02: split beaconing
-  mt76: mt76x02: remove a copy call for usb speedup
-  mt76: speed up usb bulk copy
-  mt76: mt76x02: add channel switch support for usb interfaces
-
- drivers/net/wireless/mediatek/mt76/mt76.h     |  2 +-
- .../wireless/mediatek/mt76/mt76x02_beacon.c   | 72 ++++++++-----------
+Signed-off-by: Markus Theil <markus.theil@tu-ilmenau.de>
+---
+ .../wireless/mediatek/mt76/mt76x02_beacon.c   | 44 +++++++------------
  .../net/wireless/mediatek/mt76/mt76x02_mac.h  |  1 +
- .../net/wireless/mediatek/mt76/mt76x02_mmio.c |  5 ++
- .../wireless/mediatek/mt76/mt76x02_usb_core.c | 12 ++++
- .../net/wireless/mediatek/mt76/mt76x02_util.c |  2 +-
- drivers/net/wireless/mediatek/mt76/usb.c      | 24 +++++--
- 7 files changed, 69 insertions(+), 49 deletions(-)
+ .../net/wireless/mediatek/mt76/mt76x02_mmio.c |  5 +++
+ .../wireless/mediatek/mt76/mt76x02_usb_core.c |  5 +++
+ 4 files changed, 26 insertions(+), 29 deletions(-)
 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_beacon.c b/drivers/net/wireless/mediatek/mt76/mt76x02_beacon.c
+index 403866496640..09013adae854 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_beacon.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_beacon.c
+@@ -47,10 +47,6 @@ __mt76x02_mac_set_beacon(struct mt76x02_dev *dev, u8 bcn_idx,
+ 	int beacon_len = dev->beacon_ops->slot_size;
+ 	int beacon_addr = MT_BEACON_BASE + (beacon_len * bcn_idx);
+ 	int ret = 0;
+-	int i;
+-
+-	/* Prevent corrupt transmissions during update */
+-	mt76_set(dev, MT_BCN_BYPASS_MASK, BIT(bcn_idx));
+ 
+ 	if (skb) {
+ 		ret = mt76x02_write_beacon(dev, beacon_addr, skb);
+@@ -60,41 +56,30 @@ __mt76x02_mac_set_beacon(struct mt76x02_dev *dev, u8 bcn_idx,
+ 		dev->beacon_data_mask &= ~BIT(bcn_idx);
+ 	}
+ 
+-	mt76_wr(dev, MT_BCN_BYPASS_MASK, 0xff00 | ~dev->beacon_data_mask);
+-
+ 	return ret;
+ }
+ 
+-int mt76x02_mac_set_beacon(struct mt76x02_dev *dev, u8 vif_idx,
+-			   struct sk_buff *skb)
++void mt76x02_mac_set_beacon_finish(struct mt76x02_dev *dev)
+ {
+-	bool force_update = false;
+-	int bcn_idx = 0;
+ 	int i;
++	int bcn_idx = 0;
+ 
+-	for (i = 0; i < ARRAY_SIZE(dev->beacons); i++) {
+-		if (vif_idx == i) {
+-			force_update = !!dev->beacons[i] ^ !!skb;
+-			dev_kfree_skb(dev->beacons[i]);
+-			dev->beacons[i] = skb;
+-			__mt76x02_mac_set_beacon(dev, bcn_idx, skb);
+-		} else if (force_update && dev->beacons[i]) {
+-			__mt76x02_mac_set_beacon(dev, bcn_idx,
+-						 dev->beacons[i]);
+-		}
+-
++	for (i = 0; i < hweight8(dev->mt76.beacon_mask); ++i)
+ 		bcn_idx += !!dev->beacons[i];
+-	}
+-
+-	for (i = bcn_idx; i < ARRAY_SIZE(dev->beacons); i++) {
+-		if (!(dev->beacon_data_mask & BIT(i)))
+-			break;
+-
+-		__mt76x02_mac_set_beacon(dev, i, NULL);
+-	}
+ 
+ 	mt76_rmw_field(dev, MT_MAC_BSSID_DW1, MT_MAC_BSSID_DW1_MBEACON_N,
+ 		       bcn_idx - 1);
++
++	mt76_wr(dev, MT_BCN_BYPASS_MASK, 0xff00 | ~dev->beacon_data_mask);
++}
++EXPORT_SYMBOL_GPL(mt76x02_mac_set_beacon_finish);
++
++int mt76x02_mac_set_beacon(struct mt76x02_dev *dev, u8 vif_idx,
++			   struct sk_buff *skb)
++{
++	dev_kfree_skb(dev->beacons[vif_idx]);
++	dev->beacons[vif_idx] = skb;
++	__mt76x02_mac_set_beacon(dev, vif_idx, skb);
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(mt76x02_mac_set_beacon);
+@@ -115,6 +100,7 @@ void mt76x02_mac_set_beacon_enable(struct mt76x02_dev *dev,
+ 	} else {
+ 		dev->mt76.beacon_mask &= ~BIT(mvif->idx);
+ 		mt76x02_mac_set_beacon(dev, mvif->idx, NULL);
++		mt76_set(dev, MT_BCN_BYPASS_MASK, BIT(mvif->idx));
+ 	}
+ 
+ 	if (!!old_mask == !!dev->mt76.beacon_mask)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h
+index efa4ef945e35..e6e585c72f0d 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.h
+@@ -197,6 +197,7 @@ int mt76x02_mac_set_beacon(struct mt76x02_dev *dev, u8 vif_idx,
+ 			   struct sk_buff *skb);
+ void mt76x02_mac_set_beacon_enable(struct mt76x02_dev *dev,
+ 				   struct ieee80211_vif *vif, bool enable);
++void mt76x02_mac_set_beacon_finish(struct mt76x02_dev *dev);
+ 
+ void mt76x02_edcca_init(struct mt76x02_dev *dev);
+ #endif
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c b/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
+index dc773070481d..73c39d03b7f8 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
+@@ -24,10 +24,15 @@ static void mt76x02_pre_tbtt_tasklet(unsigned long arg)
+ 
+ 	mt76x02_resync_beacon_timer(dev);
+ 
++	/* Prevent corrupt transmissions during update */
++	mt76_set(dev, MT_BCN_BYPASS_MASK, 0xffff);
++
+ 	ieee80211_iterate_active_interfaces_atomic(mt76_hw(dev),
+ 		IEEE80211_IFACE_ITER_RESUME_ALL,
+ 		mt76x02_update_beacon_iter, dev);
+ 
++	mt76x02_mac_set_beacon_finish(dev);
++
+ 	mt76_csa_check(&dev->mt76);
+ 
+ 	if (dev->mt76.csa_complete)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c b/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c
+index 78dfc1e7f27b..8a2a90fb5663 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c
+@@ -179,6 +179,9 @@ static void mt76x02u_pre_tbtt_work(struct work_struct *work)
+ 
+ 	mt76x02_resync_beacon_timer(dev);
+ 
++	/* Prevent corrupt transmissions during update */
++	mt76_set(dev, MT_BCN_BYPASS_MASK, 0xffff);
++
+ 	ieee80211_iterate_active_interfaces(mt76_hw(dev),
+ 		IEEE80211_IFACE_ITER_RESUME_ALL,
+ 		mt76x02_update_beacon_iter, dev);
+@@ -191,6 +194,8 @@ static void mt76x02u_pre_tbtt_work(struct work_struct *work)
+ 		mt76x02_mac_set_beacon(dev, i, skb);
+ 	}
+ 
++	mt76x02_mac_set_beacon_finish(dev);
++
+ 	mt76x02u_restart_pre_tbtt_timer(dev);
+ }
+ 
 -- 
 2.24.0
 
