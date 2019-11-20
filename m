@@ -2,84 +2,136 @@ Return-Path: <SRS0=CMgv=ZM=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 447D7C43215
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Nov 2019 06:34:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C83E7C432C0
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Nov 2019 07:10:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1C1912245B
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Nov 2019 06:34:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9C60022365
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Nov 2019 07:10:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Du4p9WLb";
-	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="Rcs/Xm03"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Hf3yJbNl";
+	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="Ods+RkV4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727535AbfKTGec (ORCPT
+        id S1727711AbfKTHKT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 20 Nov 2019 01:34:32 -0500
-Received: from a27-188.smtp-out.us-west-2.amazonses.com ([54.240.27.188]:37664
-        "EHLO a27-188.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725832AbfKTGec (ORCPT
+        Wed, 20 Nov 2019 02:10:19 -0500
+Received: from a27-55.smtp-out.us-west-2.amazonses.com ([54.240.27.55]:49122
+        "EHLO a27-55.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726163AbfKTHKS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Nov 2019 01:34:32 -0500
+        Wed, 20 Nov 2019 02:10:18 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-        s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1574231671;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:Message-ID:MIME-Version:Content-Type;
-        bh=p3O4v1U+XwO0r7HlswHbozlwB2rYAmXkQgj4NLIm5PM=;
-        b=Du4p9WLb4Z8vEP7RNcEeVVpObApzUUK+9R37MHB2ya2c8sPSUxc6CN+4jqg+8D0S
-        7dWdBq/Rl5S5nGYOzKdvzCSU9IrcOuAr3zAQYhu2iXqa5q/3EO1CJzDdGvns4vOw6vL
-        qqngKn1ASK7l3bqBk1zjbrOee3TpnNOYZBS5cA2o=
+        s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1574233817;
+        h=MIME-Version:Content-Type:Content-Transfer-Encoding:Date:From:To:Cc:Subject:In-Reply-To:References:Message-ID;
+        bh=F01WNto9g2WWU8b2YBdoAU11DBHA2jqNmxMqk4unDsI=;
+        b=Hf3yJbNlBUHgjF+fF6d4qiozih0VD1owUoDpG9J2e+AHnWrzptqnOh59jjYqTE9y
+        29kg1SVNwOM2VlOLQjx1OjCFrZfUH63bGLBqoDqH+NdYysbRGhSiPU3gQTMW8kmBary
+        W+KFp6az7a9lpOAHhx0zNNiugGOeVUxUxjCXKn40=
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-        s=gdwg2y3kokkkj5a55z2ilkup5wp5hhxx; d=amazonses.com; t=1574231671;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:Message-ID:MIME-Version:Content-Type:Feedback-ID;
-        bh=p3O4v1U+XwO0r7HlswHbozlwB2rYAmXkQgj4NLIm5PM=;
-        b=Rcs/Xm032md8dHAbnnVR0FBAfeOoW95+5s1/RzVu0WmkAQR1Z/bMLKiNlsiyiSVH
-        RT01p9YkHw/ur07L7XXM2UkClwnPAP21FiZSEcU/C3X+9F2qrZmsdU4SVkXQMheyujB
-        SVY5+LwSd7UE6YdEMZ+s8PaLJRNhNNCHI6PEHGK8=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org ADDACC43383
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     zhengbin <zhengbin13@huawei.com>
-Cc:     <arend.vanspriel@broadcom.com>, <franky.lin@broadcom.com>,
-        <kvalo@codeaurora.org>, <davem@davemloft.net>,
-        <linux-wireless@vger.kernel.org>,
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        <brcm80211-dev-list@cypress.com>, <netdev@vger.kernel.org>
-Subject: Re: [PATCH -next] brcmfmac: remove set but not used variable 'mpnum','nsp','nmp'
-References: <1573888967-104078-1-git-send-email-zhengbin13@huawei.com>
-Date:   Wed, 20 Nov 2019 06:34:31 +0000
-In-Reply-To: <1573888967-104078-1-git-send-email-zhengbin13@huawei.com>
-        (zhengbin's message of "Sat, 16 Nov 2019 15:22:47 +0800")
-Message-ID: <0101016e87850355-969ffdac-7a02-4d1e-af93-99e9c27109d6-000000@us-west-2.amazonses.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
+        s=gdwg2y3kokkkj5a55z2ilkup5wp5hhxx; d=amazonses.com; t=1574233817;
+        h=MIME-Version:Content-Type:Content-Transfer-Encoding:Date:From:To:Cc:Subject:In-Reply-To:References:Message-ID:Feedback-ID;
+        bh=F01WNto9g2WWU8b2YBdoAU11DBHA2jqNmxMqk4unDsI=;
+        b=Ods+RkV4dysBwtH1WlTjTB3ZNzWhAIQPRFcQCWerlbFMJQmWyUYBqHN4NzGtAnPg
+        UNs8pw7lC+j7t8AwQxvZtW2dBSqaBDeQTwGswVkx1/e+zQalNiGqcLVx9WHDMWcxpJV
+        348InsHar2eMbzNy/MeKkvH2UVJUW60ACYEtu44I=
 MIME-Version: 1.0
-Content-Type: text/plain
-X-SES-Outgoing: 2019.11.20-54.240.27.188
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Wed, 20 Nov 2019 07:10:17 +0000
+From:   wgong@codeaurora.org
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     Ulf Hansson <ulf.hansson@linaro.org>,
+        Doug Anderson <dianders@chromium.org>,
+        Linux MMC List <linux-mmc@vger.kernel.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Matthias Kaehlcke <mka@chromium.org>,
+        Tony Lindgren <tony@atomide.com>,
+        Erik Stromdahl <erik.stromdahl@gmail.com>,
+        Eyal Reizer <eyalreizer@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Brian Norris <briannorris@chromium.org>,
+        ath10k@lists.infradead.org
+Subject: Re: [PATCH v2 3/3] mmc: core: Re-work HW reset for SDIO cards
+In-Reply-To: <87zhgr5af6.fsf@codeaurora.org>
+References: <20191109103046.26445-1-ulf.hansson@linaro.org>
+ <20191109103046.26445-4-ulf.hansson@linaro.org>
+ <CAD=FV=VHReD5qnvcQLHvfgKHnHLbfDLZHwXtY-LV5uy_VCYpPA@mail.gmail.com>
+ <CAPDyKFrCyJBz2=RzKPxqn0FSEq500=dEDsTUWYZeoFKWvSRAdA@mail.gmail.com>
+ <87zhgr5af6.fsf@codeaurora.org>
+Message-ID: <0101016e87a5c128-49fdb6eb-a17c-4fe9-8ac5-b521ebd0314f-000000@us-west-2.amazonses.com>
+X-Sender: wgong@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
+X-SES-Outgoing: 2019.11.20-54.240.27.55
 Feedback-ID: 1.us-west-2.CZuq2qbDmUIuT3qdvXlRHZZCpfZqZ4GtG9v3VKgRyF0=:AmazonSES
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-zhengbin <zhengbin13@huawei.com> writes:
-
-> Fixes gcc '-Wunused-but-set-variable' warning:
->
-> drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c: In function brcmf_chip_dmp_get_regaddr:
-> drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c:790:5: warning: variable mpnum set but not used [-Wunused-but-set-variable]
-> drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c: In function brcmf_chip_dmp_erom_scan:
-> drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c:866:10: warning: variable nsp set but not used [-Wunused-but-set-variable]
-> drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c: In function brcmf_chip_dmp_erom_scan:
-> drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c:866:5: warning: variable nmp set but not used [-Wunused-but-set-variable]
->
-> They are introduced by commit 05491d2ccf20 ("brcm80211:
-> move under broadcom vendor directory"), but never used,
-> so remove them.
-
-No they are not, that commit only moved the driver into a different
-directory. I'll remove that sentence when I commit this.
-
--- 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+On 2019-11-20 14:28, Kalle Valo wrote:
+> + wen, ath10k
+> 
+> Ulf Hansson <ulf.hansson@linaro.org> writes:
+> 
+>> On Tue, 12 Nov 2019 at 01:33, Doug Anderson <dianders@chromium.org> 
+>> wrote:
+>>> 
+>>> Hi,
+>>> 
+>>> On Sat, Nov 9, 2019 at 2:31 AM Ulf Hansson <ulf.hansson@linaro.org> 
+>>> wrote:
+>>> >
+>>> > diff --git a/drivers/mmc/core/core.c b/drivers/mmc/core/core.c
+>>> > index 6f8342702c73..abf8f5eb0a1c 100644
+>>> > --- a/drivers/mmc/core/core.c
+>>> > +++ b/drivers/mmc/core/core.c
+>>> > @@ -1469,8 +1469,7 @@ void mmc_detach_bus(struct mmc_host *host)
+>>> >         mmc_bus_put(host);
+>>> >  }
+>>> >
+>>> > -static void _mmc_detect_change(struct mmc_host *host, unsigned long delay,
+>>> > -                               bool cd_irq)
+>>> > +void _mmc_detect_change(struct mmc_host *host, unsigned long delay, bool cd_irq)
+>>> >  {
+>>> >         /*
+>>> >          * If the device is configured as wakeup, we prevent a new sleep for
+>>> > @@ -2129,7 +2128,7 @@ int mmc_hw_reset(struct mmc_host *host)
+>>> >         ret = host->bus_ops->hw_reset(host);
+>>> >         mmc_bus_put(host);
+>>> >
+>>> > -       if (ret)
+>>> > +       if (ret < 0)
+>>> >                 pr_warn("%s: tried to HW reset card, got error %d\n",
+>>> >                         mmc_hostname(host), ret);
+>>> 
+>>> Other callers besides marvell need to be updated?  In theory only 
+>>> SDIO
+>>> should have positive return values so I guess we don't care about the
+>>> caller in drivers/mmc/core/block.c, right?
+>> 
+>> Correct, but maybe I should add some more information about that in a
+>> function header of mmc_hw_reset(). Let me consider doing that as a
+>> change on top.
+>> 
+>>>  What about:
+>>> 
+>>> drivers/net/wireless/ath/ath10k/sdio.c
+>>> 
+>>> ...I guess I don't know if there is more than one function probed
+>>> there.  Maybe there's not and thus we're fine here too?
+>> 
+>> Well, honestly I don't know.
+>> 
+>> In any case, that would mean the driver is broken anyways and needs to
+>> be fixed. At least that's my approach to doing this change.
+> 
+> Wen, does QCA6174 or QCA9377 SDIO devices have other SDIO functions, 
+> for
+> example bluetooth? I'm just wondering how should we handle this in
+> ath10k.
+Hi Kalle,
+it does not have other SDIO functions for QCA6174 or QCA9377.
