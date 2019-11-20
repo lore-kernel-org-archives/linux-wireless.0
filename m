@@ -6,66 +6,66 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98FCAC43215
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Nov 2019 10:27:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB37DC432C0
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Nov 2019 10:27:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6D79422440
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Nov 2019 10:27:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 91B062243E
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Nov 2019 10:27:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728660AbfKTK1C (ORCPT
+        id S1728668AbfKTK1E (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 20 Nov 2019 05:27:02 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:58542 "EHLO
+        Wed, 20 Nov 2019 05:27:04 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:58584 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728148AbfKTK1B (ORCPT
+        with ESMTP id S1728662AbfKTK1D (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Nov 2019 05:27:01 -0500
+        Wed, 20 Nov 2019 05:27:03 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1iXNCN-0001kS-Ag; Wed, 20 Nov 2019 12:26:59 +0200
+        id 1iXNCQ-0001kS-0q; Wed, 20 Nov 2019 12:27:02 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Wed, 20 Nov 2019 12:26:43 +0200
-Message-Id: <20191120102650.514376-6-luca@coelho.fi>
+Date:   Wed, 20 Nov 2019 12:26:46 +0200
+Message-Id: <20191120102650.514376-9-luca@coelho.fi>
 X-Mailer: git-send-email 2.24.0
 In-Reply-To: <20191120102650.514376-1-luca@coelho.fi>
 References: <20191120102650.514376-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 05/12] iwlwifi: mvm: remove left-over non-functional email alias
+Subject: [PATCH 08/12] iwlwifi: dvm: excessive if in rs_bt_update_lq()
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Denis Efremov <efremov@linux.com>
 
-This email alias (ilw@linux.intel.com) hasn't been functional
-for probably closer to a decade than not, remove it. It's not
-really clear to me how this ended up in new code though.
+There is no need to check 'priv->bt_ant_couple_ok' twice in
+rs_bt_update_lq(). The second check is always true. Thus, the
+expression can be simplified.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Denis Efremov <efremov@linux.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 2 +-
+ drivers/net/wireless/intel/iwlwifi/dvm/rs.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index 75a7af5ad7b2..ef99c49247b7 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -23,7 +23,7 @@
-  * in the file called COPYING.
-  *
-  * Contact Information:
-- *  Intel Linux Wireless <ilw@linux.intel.com>
-+ *  Intel Linux Wireless <linuxwifi@intel.com>
-  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
-  *
-  * BSD LICENSE
+diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/rs.c b/drivers/net/wireless/intel/iwlwifi/dvm/rs.c
+index 74229fcb63a9..226165db7dfd 100644
+--- a/drivers/net/wireless/intel/iwlwifi/dvm/rs.c
++++ b/drivers/net/wireless/intel/iwlwifi/dvm/rs.c
+@@ -851,7 +851,7 @@ static void rs_bt_update_lq(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
+ 		 * Is there a need to switch between
+ 		 * full concurrency and 3-wire?
+ 		 */
+-		if (priv->bt_ci_compliance && priv->bt_ant_couple_ok)
++		if (priv->bt_ci_compliance)
+ 			full_concurrent = true;
+ 		else
+ 			full_concurrent = false;
 -- 
 2.24.0
 
