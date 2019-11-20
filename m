@@ -2,108 +2,98 @@ Return-Path: <SRS0=CMgv=ZM=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67CF6C432C0
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Nov 2019 10:26:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72D4FC432C3
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Nov 2019 10:26:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 368CA2243E
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Nov 2019 10:26:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 46DDD2243E
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Nov 2019 10:26:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727952AbfKTK05 (ORCPT
+        id S1728201AbfKTK06 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 20 Nov 2019 05:26:57 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:58502 "EHLO
+        Wed, 20 Nov 2019 05:26:58 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:58508 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726757AbfKTK05 (ORCPT
+        with ESMTP id S1727399AbfKTK06 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Nov 2019 05:26:57 -0500
+        Wed, 20 Nov 2019 05:26:58 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1iXNCJ-0001kS-3U; Wed, 20 Nov 2019 12:26:55 +0200
+        id 1iXNCK-0001kS-3o; Wed, 20 Nov 2019 12:26:56 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Wed, 20 Nov 2019 12:26:38 +0200
-Message-Id: <20191120102650.514376-1-luca@coelho.fi>
+Date:   Wed, 20 Nov 2019 12:26:39 +0200
+Message-Id: <20191120102650.514376-2-luca@coelho.fi>
 X-Mailer: git-send-email 2.24.0
+In-Reply-To: <20191120102650.514376-1-luca@coelho.fi>
+References: <20191120102650.514376-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 00/12] iwlwifi: updates intended for v5.5 2019-11-20
+Subject: [PATCH 01/12] iwlwifi: pcie: fix support for transmitting SKBs with fraglist
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Hi,
+When the implementation of SKBs with fraglist was sent upstream, a
+merge-damage occurred and half the patch was not applied.
 
-Here's the fifth and final set of patches intended for v5.5.  It's the
-usual development, new features, cleanups and bugfixes.
+This causes problems in high-throughput situations with AX200 devices,
+including low throughput and FW crashes.
 
-The changes are:
+Introduce the part that was missing from the original patch.
 
-* Fix a merge damage that causes issues with high-throuput on AX200+;
-* Support TX/RX antennas reporting;
-* Small fix in DVM's BT link-quality code;
-* Bump supported FW API version to 52;
-* Yet another scan FW API update;
-* Some clean-ups;
+Fixes: 0044f1716c4d ("iwlwifi: pcie: support transmitting SKBs with fraglist")
+Cc: stable@vger.kernel.org # 4.20+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+[ This patch was created by me, but the original author of this code
+  is Johannes, so his s-o-b is here and he's marked as the author of
+  the patch. ]
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-As usual, I'm pushing this to a pending branch, for kbuild bot, and
-will send a pull-request later.
-
-Please review.
-
-Cheers,
-Luca.
-
-
-Ben Greear (1):
-  iwlwifi: mvm: Report tx/rx antennas
-
-Denis Efremov (1):
-  iwlwifi: dvm: excessive if in rs_bt_update_lq()
-
-Johannes Berg (8):
-  iwlwifi: pcie: fix support for transmitting SKBs with fraglist
-  iwlwifi: pcie: make some RX functions static
-  iwlwifi: config: remove max_rx_agg_size
-  iwlwifi: mvm: remove left-over non-functional email alias
-  iwlwifi: pcie: rx: use rxq queue_size instead of constant
-  iwlwifi: pcie: trace IOVA for iwlwifi_dev_tx_tb
-  iwlwifi: mvm: remove outdated comment referring to wake lock
-  iwlwifi: check kasprintf() return value
-
-Luca Coelho (1):
-  iwlwifi: bump FW API to 52 for 22000 series
-
-Tova Mussai (1):
-  iwlwifi: scan: support scan req FW API ver 13
-
- .../net/wireless/intel/iwlwifi/cfg/22000.c    |  2 +-
- drivers/net/wireless/intel/iwlwifi/dvm/led.c  |  3 +
- drivers/net/wireless/intel/iwlwifi/dvm/rs.c   |  2 +-
- .../net/wireless/intel/iwlwifi/fw/api/scan.h  | 56 ++++++++++++++++++-
- .../net/wireless/intel/iwlwifi/iwl-config.h   |  2 -
- .../intel/iwlwifi/iwl-devtrace-data.h         |  8 ++-
- drivers/net/wireless/intel/iwlwifi/mvm/led.c  |  3 +
- .../net/wireless/intel/iwlwifi/mvm/mac80211.c | 13 +++++
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c  |  5 +-
- .../net/wireless/intel/iwlwifi/mvm/power.c    |  2 -
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c |  2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/scan.c | 54 +++++++++++++++++-
- .../wireless/intel/iwlwifi/pcie/internal.h    |  2 -
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c  |  6 +-
- .../net/wireless/intel/iwlwifi/pcie/tx-gen2.c | 28 +++++++---
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c  | 14 ++---
- 16 files changed, 161 insertions(+), 41 deletions(-)
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+index 8323fa7c0762..1ca9a7e48c1a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+@@ -468,6 +468,7 @@ iwl_tfh_tfd *iwl_pcie_gen2_build_tx(struct iwl_trans *trans,
+ 	dma_addr_t tb_phys;
+ 	int len, tb1_len, tb2_len;
+ 	void *tb1_addr;
++	struct sk_buff *frag;
+ 
+ 	tb_phys = iwl_pcie_get_first_tb_dma(txq, idx);
+ 
+@@ -516,6 +517,19 @@ iwl_tfh_tfd *iwl_pcie_gen2_build_tx(struct iwl_trans *trans,
+ 	if (iwl_pcie_gen2_tx_add_frags(trans, skb, tfd, out_meta))
+ 		goto out_err;
+ 
++	skb_walk_frags(skb, frag) {
++		tb_phys = dma_map_single(trans->dev, frag->data,
++					 skb_headlen(frag), DMA_TO_DEVICE);
++		if (unlikely(dma_mapping_error(trans->dev, tb_phys)))
++			goto out_err;
++		iwl_pcie_gen2_set_tb(trans, tfd, tb_phys, skb_headlen(frag));
++		trace_iwlwifi_dev_tx_tb(trans->dev, skb,
++					frag->data,
++					skb_headlen(frag));
++		if (iwl_pcie_gen2_tx_add_frags(trans, frag, tfd, out_meta))
++			goto out_err;
++	}
++
+ 	return tfd;
+ 
+ out_err:
 -- 
 2.24.0
 
