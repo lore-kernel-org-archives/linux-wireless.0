@@ -6,36 +6,36 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0ECC8C432C0
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Nov 2019 10:27:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D5AEC432C0
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Nov 2019 10:27:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D5E7D2243E
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 Nov 2019 10:27:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 415352243E
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 Nov 2019 10:27:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728657AbfKTK1C (ORCPT
+        id S1728663AbfKTK1D (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 20 Nov 2019 05:27:02 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:58532 "EHLO
+        Wed, 20 Nov 2019 05:27:03 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:58552 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728361AbfKTK1A (ORCPT
+        with ESMTP id S1727399AbfKTK1C (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Nov 2019 05:27:00 -0500
+        Wed, 20 Nov 2019 05:27:02 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92)
         (envelope-from <luca@coelho.fi>)
-        id 1iXNCM-0001kS-JH; Wed, 20 Nov 2019 12:26:59 +0200
+        id 1iXNCO-0001kS-0B; Wed, 20 Nov 2019 12:27:00 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Wed, 20 Nov 2019 12:26:42 +0200
-Message-Id: <20191120102650.514376-5-luca@coelho.fi>
+Date:   Wed, 20 Nov 2019 12:26:44 +0200
+Message-Id: <20191120102650.514376-7-luca@coelho.fi>
 X-Mailer: git-send-email 2.24.0
 In-Reply-To: <20191120102650.514376-1-luca@coelho.fi>
 References: <20191120102650.514376-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 04/12] iwlwifi: config: remove max_rx_agg_size
+Subject: [PATCH 06/12] iwlwifi: pcie: rx: use rxq queue_size instead of constant
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -43,51 +43,30 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-This field isn't set by any configuration, remove it.
+This is a little less efficient now as it's known to be a
+multiqueue device in this function, but a future patch will
+have to use a variable here anyway, so use rxq->queue_size
+now instead to make it clearer.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-config.h | 2 --
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c    | 5 +----
- 2 files changed, 1 insertion(+), 6 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-index 59bb960b460a..317eac066082 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-@@ -409,7 +409,6 @@ struct iwl_fw_mon_regs {
-  * @mac_addr_from_csr: read HW address from CSR registers
-  * @features: hw features, any combination of feature_whitelist
-  * @pwr_tx_backoffs: translation table between power limits and backoffs
-- * @max_rx_agg_size: max RX aggregation size of the ADDBA request/response
-  * @max_tx_agg_size: max TX aggregation size of the ADDBA request/response
-  * @max_ht_ampdu_factor: the exponent of the max length of A-MPDU that the
-  *	station can receive in HT
-@@ -481,7 +480,6 @@ struct iwl_cfg {
- 	u8 valid_rx_ant;
- 	u8 non_shared_ant;
- 	u8 nvm_hw_section_num;
--	u8 max_rx_agg_size;
- 	u8 max_tx_agg_size;
- 	u8 max_ht_ampdu_exponent;
- 	u8 max_vht_ampdu_exponent;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index 3b0637311e3c..1b07a8e8f069 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -664,10 +664,7 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
- 	if (!hw)
- 		return NULL;
- 
--	if (cfg->max_rx_agg_size)
--		hw->max_rx_aggregation_subframes = cfg->max_rx_agg_size;
--	else
--		hw->max_rx_aggregation_subframes = IEEE80211_MAX_AMPDU_BUF;
-+	hw->max_rx_aggregation_subframes = IEEE80211_MAX_AMPDU_BUF;
- 
- 	if (cfg->max_tx_agg_size)
- 		hw->max_tx_aggregation_subframes = cfg->max_tx_agg_size;
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+index 7f9cc4c84c18..a4d325fcf94a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+@@ -322,7 +322,7 @@ static void iwl_pcie_rxmq_restock(struct iwl_trans *trans,
+ 		WARN_ON(rxb->page_dma & DMA_BIT_MASK(12));
+ 		/* Point to Rx buffer via next RBD in circular buffer */
+ 		iwl_pcie_restock_bd(trans, rxq, rxb);
+-		rxq->write = (rxq->write + 1) & MQ_RX_TABLE_MASK;
++		rxq->write = (rxq->write + 1) & (rxq->queue_size - 1);
+ 		rxq->free_count--;
+ 	}
+ 	spin_unlock(&rxq->lock);
 -- 
 2.24.0
 
