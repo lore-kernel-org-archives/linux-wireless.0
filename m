@@ -2,70 +2,101 @@ Return-Path: <SRS0=bi0l=ZN=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96EACC432C3
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Nov 2019 18:00:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9AD52C432C0
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Nov 2019 18:32:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7A18320672
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Nov 2019 18:00:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7134A2067D
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Nov 2019 18:32:13 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="GP2f+3zM";
+	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="f2H378RP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726822AbfKUSAZ (ORCPT
+        id S1726852AbfKUScM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 21 Nov 2019 13:00:25 -0500
-Received: from smail.rz.tu-ilmenau.de ([141.24.186.67]:53960 "EHLO
-        smail.rz.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726568AbfKUSAZ (ORCPT
+        Thu, 21 Nov 2019 13:32:12 -0500
+Received: from a27-56.smtp-out.us-west-2.amazonses.com ([54.240.27.56]:38258
+        "EHLO a27-56.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726293AbfKUScM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Nov 2019 13:00:25 -0500
-Received: from localhost.localdomain (unknown [141.24.207.101])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by smail.rz.tu-ilmenau.de (Postfix) with ESMTPSA id 061D3580074;
-        Thu, 21 Nov 2019 19:00:24 +0100 (CET)
-From:   Markus Theil <markus.theil@tu-ilmenau.de>
-To:     nbd@nbd.name
-Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
-        Stanislaw Gruszka <sgruszka@redhat.com>,
-        Markus Theil <markus.theil@tu-ilmenau.de>
-Subject: [PATCH v8 3/6] mt76: mt76x02: add check for invalid vif idx
-Date:   Thu, 21 Nov 2019 18:59:58 +0100
-Message-Id: <20191121180001.22451-4-markus.theil@tu-ilmenau.de>
-X-Mailer: git-send-email 2.24.0
-In-Reply-To: <20191121180001.22451-1-markus.theil@tu-ilmenau.de>
-References: <20191121180001.22451-1-markus.theil@tu-ilmenau.de>
+        Thu, 21 Nov 2019 13:32:12 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+        s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1574361131;
+        h=Content-Type:MIME-Version:Content-Transfer-Encoding:Subject:From:In-Reply-To:References:To:Cc:Message-Id:Date;
+        bh=UZWfLHNZyjo0uxwd7HGUaUTR2svfAG+XtuRNNAaT300=;
+        b=GP2f+3zMBdpTBBeNR1WATr6BqUVRtSmV7tgsRy4QEXFz6jkXTDbhaRgutLMi+Ht1
+        zb1w/2/RdMgJ9qx48vch4K6M2IKlVLz1D9XSOykvof3xzIIfRqmI6p+yyx7EYepFtou
+        NwvAJeqYfMfrv3BSbyrYf1XsIGrdWu7X1pTe01RI=
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+        s=gdwg2y3kokkkj5a55z2ilkup5wp5hhxx; d=amazonses.com; t=1574361131;
+        h=Content-Type:MIME-Version:Content-Transfer-Encoding:Subject:From:In-Reply-To:References:To:Cc:Message-Id:Date:Feedback-ID;
+        bh=UZWfLHNZyjo0uxwd7HGUaUTR2svfAG+XtuRNNAaT300=;
+        b=f2H378RPRWUdlnU3vkDTGbjzRxggnhllWj2zF6HnfqxoY9rhYgIiZKBme3dqSxiF
+        eFO02A+w0Tk0zVTdfj+g4s+pnasnFMOKV03LmiGBvV4vE+UNUsEmwPguTfXzqAPDhcq
+        m335ppLW3s2JicL86x8IC2f12xOBdGVRf8uwj54w=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 6000CC447A9
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH] iwlwifi: mvm: don't send the IWL_MVM_RXQ_NSSN_SYNC notif
+ to Rx queues
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20191120132628.30731-1-emmanuel.grumbach@intel.com>
+References: <20191120132628.30731-1-emmanuel.grumbach@intel.com>
+To:     Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc:     linux-wireless@vger.kernel.org, luciano.coelho@intel.com,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        stable@vger.kernel.org
+User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
+Message-ID: <0101016e8f3c686f-049c8c20-4974-4fcd-a0bc-3081de94e65b-000000@us-west-2.amazonses.com>
+Date:   Thu, 21 Nov 2019 18:32:11 +0000
+X-SES-Outgoing: 2019.11.21-54.240.27.56
+Feedback-ID: 1.us-west-2.CZuq2qbDmUIuT3qdvXlRHZZCpfZqZ4GtG9v3VKgRyF0=:AmazonSES
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On adding vifs the idx can become 1 + (7 & 7) = 8 for APs.
-Check against that, as only AP vif idx 0-7 is possible.
+Emmanuel Grumbach <emmanuel.grumbach@intel.com> wrote:
 
-Signed-off-by: Markus Theil <markus.theil@tu-ilmenau.de>
----
- drivers/net/wireless/mediatek/mt76/mt76x02_util.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+> The purpose of this was to keep all the queues updated with
+> the Rx sequence numbers because unlikely yet possible
+> situations where queues can't understand if a specific
+> packet needs to be dropped or not.
+> 
+> Unfortunately, it was reported that this caused issues in
+> our DMA engine. We don't fully understand how this is related,
+> but this is being currently debugged. For now, just don't send
+> this notification to the Rx queues. This de-facto reverts my
+> commit 3c514bf831ac12356b695ff054bef641b9e99593:
+> 
+> iwlwifi: mvm: add a loose synchronization of the NSSN across Rx queues
+> 
+> This issue was reported here:
+> https://bugzilla.kernel.org/show_bug.cgi?id=204873
+> https://bugzilla.kernel.org/show_bug.cgi?id=205001
+> and others maybe.
+> 
+> Fixes: 3c514bf831ac ("iwlwifi: mvm: add a loose synchronization of the NSSN across Rx queues")
+> CC: <stable@vger.kernel.org> # 5.3+
+> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-index bdc83838d346..1142aa39a226 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-@@ -325,7 +325,9 @@ mt76x02_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
- 	if (vif->type == NL80211_IFTYPE_STATION)
- 		idx += 8;
- 
--	if (dev->vif_mask & BIT(idx))
-+	/* vif is already set or idx is 8 for AP/Mesh/... */
-+	if (dev->vif_mask & BIT(idx) ||
-+	    vif->type != NL80211_IFTYPE_STATION && idx > 7)
- 		return -EBUSY;
- 
- 	dev->vif_mask |= BIT(idx);
+New warning:
+
+drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c: In function 'iwl_mvm_sync_nssn':
+drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c:517:32: warning: unused variable 'notif' [-Wunused-variable]
+  struct iwl_mvm_rss_sync_notif notif = {
+                                ^~~~~
+
+Patch set to Changes Requested.
+
 -- 
-2.24.0
+https://patchwork.kernel.org/patch/11253817/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
