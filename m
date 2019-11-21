@@ -2,196 +2,88 @@ Return-Path: <SRS0=bi0l=ZN=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4918C432C0
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Nov 2019 03:52:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E6C0C432C0
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Nov 2019 06:53:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A7880208A1
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Nov 2019 03:52:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 00BF220898
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Nov 2019 06:53:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nBgyuofQ"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="W7xkIpuF";
+	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="XCLsdUAQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726265AbfKUDwr (ORCPT
+        id S1726265AbfKUGxT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 20 Nov 2019 22:52:47 -0500
-Received: from mail-lf1-f67.google.com ([209.85.167.67]:37441 "EHLO
-        mail-lf1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725819AbfKUDwr (ORCPT
+        Thu, 21 Nov 2019 01:53:19 -0500
+Received: from a27-55.smtp-out.us-west-2.amazonses.com ([54.240.27.55]:55532
+        "EHLO a27-55.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725842AbfKUGxT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 Nov 2019 22:52:47 -0500
-Received: by mail-lf1-f67.google.com with SMTP id b20so1378419lfp.4
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Nov 2019 19:52:43 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:subject:from:in-reply-to:date:cc
-         :content-transfer-encoding:message-id:references:to;
-        bh=nD1tqekK7jGCJ092l88MQqyQtjp/BERcKf1sy8U541k=;
-        b=nBgyuofQscFz37P5OserOpazD80c0HXBi0VceI19pmTpQclZ8CnWxadWlyKG76yNdp
-         DJG5uQAT6yLyynHsD2OBwqP8njJIkIOeC6K32dTfgRloU7BEfd58ApwOqrdK7A5YYpaB
-         BxiSyxXOjZVj9iH6H9HzQf+yODI6ENzOyB8/8HeX14jjZvuac3kNgfrAVQpFI9VUitwo
-         K0Kud28kVh9QJMCLrY9UiiXVSF1BW6+0NzSxREv98xS7pzW/MsJOJ/gdBE5SD7wTBkPY
-         UF7PDKYhglkumdsxEEMzHjqW9GbgywbFnfSVtIqtl9WtGLz4f6+GtwAKp2QX1zXVpycm
-         w/6g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:subject:from:in-reply-to:date:cc
-         :content-transfer-encoding:message-id:references:to;
-        bh=nD1tqekK7jGCJ092l88MQqyQtjp/BERcKf1sy8U541k=;
-        b=FmdQYqnLYH1/ZyRTty0uwoxGk3hVrVhgCs++EPFku5lReC9PMclcWqAA5i/rf9UhLz
-         Ep+/b/kfxM1Ud4S4Ge3P38RAQbcqAEmIWHWheMEqMmYaN4RNk1HC6Qbz6NcYY0c7Ikpu
-         n1q+vjOsv68GtF81rDfUd8tvqIKCSWLVC2onr7cnkNj7lrXeTWtATWM86izPi23r6BU4
-         Sv2S1o1ePax4fW6GGJRlA097dKKnH1/bGxKe1jzPtvF3OFUy+CZsosNubZ/avfDe5KMw
-         SFcIi6HhS0pvGhZ1SsqBUnadS25LBIplaEgIClN42zreZW3Xu2QErgDAdgnvYNL81PLi
-         PQkQ==
-X-Gm-Message-State: APjAAAU8etfSf3vsnWY01IRNBiQ0LNKkeqivcq/0TPStDP4T7MwjkWUY
-        5l9AMaQMRuy7ZA9p+Yj/diA=
-X-Google-Smtp-Source: APXvYqz+rb5p3HOB2QsMKMY7WlC0Pbq9XLjUxAPAL2kpL7W3BMmbZHyPcnrgniW4erzqnTg4UN/wjA==
-X-Received: by 2002:ac2:5222:: with SMTP id i2mr5512653lfl.138.1574308363018;
-        Wed, 20 Nov 2019 19:52:43 -0800 (PST)
-Received: from [172.16.20.20] ([87.200.95.144])
-        by smtp.gmail.com with ESMTPSA id 190sm503086ljj.72.2019.11.20.19.52.40
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 20 Nov 2019 19:52:42 -0800 (PST)
-Content-Type: text/plain;
-        charset=utf-8
-Mime-Version: 1.0 (Mac OS X Mail 12.4 \(3445.104.11\))
-Subject: Re: [RESEND] brcmfmac support for BCM4359 sdio on arm64 ??
-From:   Christian Hewitt <christianshewitt@gmail.com>
-In-Reply-To: <db1e6182-d8fe-a68a-e769-b6460c68fab0@broadcom.com>
-Date:   Thu, 21 Nov 2019 07:52:37 +0400
-Cc:     linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, Wright.Feng@cypress.com,
-        Neil Armstrong <narmstrong@baylibre.com>,
-        Christoph Muellner <christoph.muellner@theobroma-systems.com>
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <8CDC4B4E-D131-4590-9A63-DDD87FAE1D79@gmail.com>
-References: <F5C2858A-498E-4AD3-859D-FA9D14BF6B37@gmail.com>
- <37d2964d-1c2b-51bd-ac98-2cc171aa0c9c@broadcom.com>
- <30516339-BAD7-40F4-980B-D30CDF504A08@gmail.com>
- <db1e6182-d8fe-a68a-e769-b6460c68fab0@broadcom.com>
-To:     Arend Van Spriel <arend.vanspriel@broadcom.com>
-X-Mailer: Apple Mail (2.3445.104.11)
+        Thu, 21 Nov 2019 01:53:19 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+        s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1574319198;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:Message-ID:MIME-Version:Content-Type;
+        bh=PdXtZxXNzM09gOAdV88/V32i+22CDDtZzHxwCbfcmoE=;
+        b=W7xkIpuFM6QCFhaC1rK8SgXVqvbm1bzKOoZ3VqZiMFNCuhfmqQPbqcYYrWj3PJxA
+        kIy+gqB5fTJhfytJH93hlkHWA2kc6h4MQDd9IratGGibdlZCCUGJzemgRNfHeSNXyuH
+        t1G2fiIW5ptjJ5vbnUPio3aZDYc9rh8wm44KnE8Q=
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+        s=gdwg2y3kokkkj5a55z2ilkup5wp5hhxx; d=amazonses.com; t=1574319198;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:Message-ID:MIME-Version:Content-Type:Feedback-ID;
+        bh=PdXtZxXNzM09gOAdV88/V32i+22CDDtZzHxwCbfcmoE=;
+        b=XCLsdUAQnC2/FVOZyjJmCVa7aMQdd14CrPPlBW0HJhwC1hglOQjHkLZcabBH06Ik
+        dC1X9ez+wSuC1AJL7L/dbbRygpq6EHv98hwEaVjS7ntIUYF++H8BWZBMapeo0PzqAEK
+        X8YgMs5bmL91PEiO8XjTq4Iheh7gB3DMKdRIgkPE=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 2B01CC43383
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Felix Fietkau <nbd@nbd.name>
+Cc:     Markus Theil <markus.theil@tu-ilmenau.de>,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mt76: fix fix ampdu locking
+References: <20191120200531.11344-1-markus.theil@tu-ilmenau.de>
+        <9413ca21-94c3-857b-1156-e4a949acf390@nbd.name>
+Date:   Thu, 21 Nov 2019 06:53:18 +0000
+In-Reply-To: <9413ca21-94c3-857b-1156-e4a949acf390@nbd.name> (Felix Fietkau's
+        message of "Wed, 20 Nov 2019 21:14:07 +0100")
+Message-ID: <0101016e8cbc907e-e065156e-ccc2-46bd-8e51-45a1494ce723-000000@us-west-2.amazonses.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+MIME-Version: 1.0
+Content-Type: text/plain
+X-SES-Outgoing: 2019.11.21-54.240.27.55
+Feedback-ID: 1.us-west-2.CZuq2qbDmUIuT3qdvXlRHZZCpfZqZ4GtG9v3VKgRyF0=:AmazonSES
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+Felix Fietkau <nbd@nbd.name> writes:
 
-> On 24 Jun 2019, at 11:04 pm, Arend Van Spriel =
-<arend.vanspriel@broadcom.com> wrote:
->=20
-> Hi Christian,
->=20
-> Here it is. Hopefully unmangled this time.
->=20
-> Regards,
-> Arend
-> ---
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c =
-b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-> index ec129864cc9c..7be8064c6dc7 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-> @@ -785,7 +785,8 @@ void brcmf_sdiod_sgtable_alloc(struct =
-brcmf_sdio_dev *sdiodev)
->                      sdiodev->settings->bus.sdio.txglomsz);
->        nents +=3D (nents >> 4) + 1;
->=20
-> -       WARN_ON(nents > sdiodev->max_segment_count);
-> +       WARN(nents > sdiodev->max_segment_count, "max_seg_cnt=3D%u, =
-host_max_seg=3D%u, nents=3D%u\n",
-> +                sdiodev->max_segment_count, host->max_segs, nents);
->=20
->        brcmf_dbg(TRACE, "nents=3D%d\n", nents);
->        err =3D sg_alloc_table(&sdiodev->sgtable, nents, GFP_KERNEL);
+> On 2019-11-20 21:05, Markus Theil wrote:
+>> The current ampdu locking code does not unlock its mutex in the early
+>> return case. This patch fixes it.
+>> 
+>> Signed-off-by: Markus Theil <markus.theil@tu-ilmenau.de>
+>
+> Acked-by: Felix Fietkau <nbd@nbd.name>
+>
+> Kalle, I think this should go on top of my pull request quickly, since
+> it fixes a regression in a commit from that pull request (introduced via
+> rebase on top of Johannes' last change of that code).
+> Do you want me to send another pull request with just this patch, or can
+> you take it directly?
 
-Hello Arend,
+A lot easier to take it directly, so let's do that. I now assigned this
+patch to me on patchwork and I'll try to remember apply it later today.
 
-I=E2=80=99ve resumed testing on 5.4-rc8 with ^ this patch and =
-https://github.com/chewitt/linux/commit/07fd0f25ceb72b15aa8c3fbd149aa41cbc=
-55d035 applied and brcmfmac.debug=3D30 in boot params. Here is more =
-extended output:
+> In the latter case, feel free to also remove one of the two "fix"
+> words in the subject :)
 
-[    6.115132] brcmfmac: brcmfmac_module_init No platform data =
-available.
-[    6.116841] brcmfmac: brcmf_sdio_probe Enter
-[    6.118695] brcmfmac: F1 signature read @0x18000000=3D0x17294359
-[    6.118910] brcmfmac: brcmf_chip_recognition found AXI chip: =
-BCM4359/9
-[    6.120687] brcmfmac: brcmf_chip_cores_check  [1 ] core 0x800:52 base =
-0x18000000 wrap 0x18100000
-[    6.120692] brcmfmac: brcmf_chip_cores_check  [2 ] core 0x812:59 base =
-0x18001000 wrap 0x18101000
-[    6.120695] brcmfmac: brcmf_chip_cores_check  [3 ] core 0x83e:8  base =
-0x18002000 wrap 0x18102000
-[    6.120697] brcmfmac: brcmf_chip_cores_check  [4 ] core 0x83c:21 base =
-0x18003000 wrap 0x18103000
-[    6.120698] brcmfmac: brcmf_chip_cores_check  [5 ] core 0x812:59 base =
-0x18004000 wrap 0x18104000
-[    6.120700] brcmfmac: brcmf_chip_cores_check  [6 ] core 0x829:22 base =
-0x18005000 wrap 0x18105000
-[    6.120702] brcmfmac: brcmf_chip_cores_check  [7 ] core 0x840:5  base =
-0x1800a000 wrap 0x00000000
-[    6.120703] brcmfmac: brcmf_chip_cores_check  [8 ] core 0x135:0  base =
-0x00000000 wrap 0x18109000
-[    6.120704] brcmfmac: brcmf_chip_cores_check  [9 ] core 0x240:0  base =
-0x00000000 wrap 0x00000000
-[    6.120706] brcmfmac: brcmf_chip_set_passive Enter
-[    6.121378] brcmfmac: brcmf_chip_get_raminfo RAM: base=3D0x180000 =
-size=3D917504 (0xe0000) sr=3D0 (0x0)
-[    6.121438] brcmfmac: brcmf_chip_setup ccrev=3D52, pmurev=3D26, =
-pmucaps=3D0x3a0c3f1a
-[    6.121441] brcmfmac: brcmf_get_module_param Enter, bus=3D0, =
-chip=3D17241, rev=3D9
-[    6.121618] brcmfmac: brcmf_sdiod_sgtable_alloc nents=3D35
-[    6.121621] brcmfmac: brcmf_sdio_kso_init Enter
-[    6.121635] brcmfmac: brcmf_sdio_drivestrengthinit No SDIO driver =
-strength init needed for chip BCM4359/9 rev 9 pmurev 26
-[    6.121998] brcmfmac: brcmf_sdio_probe completed!!
-[    6.122003] brcmfmac: brcmf_fw_alloc_request: using =
-brcm/brcmfmac4359-sdio for chip BCM4359/9
-[    6.122008] brcmfmac: brcmf_fw_get_firmwares enter: dev=3Dmmc0:0001:1
-[    6.293561] brcmfmac: brcmf_fw_complete_request firmware =
-brcm/brcmfmac4359-sdio.bin found
-[    6.309769] brcmfmac: brcmf_fw_complete_request firmware =
-brcm/brcmfmac4359-sdio.txt found
-[    6.309772] brcmfmac: brcmf_fw_request_nvram_done enter: =
-dev=3Dmmc0:0001:1
-[    6.309840] brcmfmac: brcmf_fw_request_nvram_done nvram =
-000000007040259b len 3564
-[    6.309843] brcmfmac: brcmf_sdio_firmware_callback Enter: =
-dev=3Dmmc0:0001:1, err=3D0
-[    8.206959] brcmfmac: brcmf_sdio_download_code_file Enter
-[    8.272184] brcmfmac: brcmf_sdio_verifymemory Compare RAM dl & ul at =
-0x00180000; size=3D636647
-[    8.354229] brcmfmac: brcmf_sdio_download_nvram Enter
-[    8.359730] brcmfmac: brcmf_sdio_verifymemory Compare RAM dl & ul at =
-0x0025f214; size=3D3564
-[    8.367550] brcmfmac: brcmf_sdiod_ramrw: membytes transfer failed
-[    8.373550] brcmfmac: brcmf_sdio_verifymemory: error -84 on reading =
-2048 membytes at 0x0025f214
-[    8.382188] brcmfmac: brcmf_sdio_download_firmware: dongle nvram file =
-download failed
-[    8.389982] brcmfmac: brcmf_sdio_firmware_callback failed: =
-dev=3Dmmc0:0001:1, err=3D-5
-[    8.397514] brcmfmac: brcmf_sdio_remove Enter
-[    8.402641] brcmfmac: brcmf_detach Enter
-[    8.434899] brcmfmac: brcmf_chip_set_passive Enter
-[    8.458772] brcmfmac: brcmf_sdio_remove Disconnected
+Ok, will fix (no pun intended ;)
 
-I=E2=80=99m using renamed nvram.txt and fw_bcm4359c0_ag_apsta.bin from =
-the bcmdhd.1.579.77.41.x driver (https://github.com/chewitt/bcmdhd/). In =
-the full dmesg: https://pastebin.com/raw/DUUGSjWw there is some kernel =
-splat starting 6.121488 that appears to be from probing. FWIW, the BT =
-side of the device appears to be working fine.
-
-Any suggestions?
-
-Christian
-
+-- 
+Kalle Valo
