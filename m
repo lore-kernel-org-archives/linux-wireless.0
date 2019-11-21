@@ -7,62 +7,62 @@ X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83F0EC432C0
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Nov 2019 21:55:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61509C432C0
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Nov 2019 21:55:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 597E52068E
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Nov 2019 21:55:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3790F2068E
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Nov 2019 21:55:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fZfhCxH0"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="b1mzT9hY"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726655AbfKUVzW (ORCPT
+        id S1726721AbfKUVzY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 21 Nov 2019 16:55:22 -0500
-Received: from mail-ot1-f66.google.com ([209.85.210.66]:46370 "EHLO
-        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726297AbfKUVzW (ORCPT
+        Thu, 21 Nov 2019 16:55:24 -0500
+Received: from mail-ot1-f67.google.com ([209.85.210.67]:34353 "EHLO
+        mail-ot1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726297AbfKUVzX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Nov 2019 16:55:22 -0500
-Received: by mail-ot1-f66.google.com with SMTP id n23so4344743otr.13
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Nov 2019 13:55:20 -0800 (PST)
+        Thu, 21 Nov 2019 16:55:23 -0500
+Received: by mail-ot1-f67.google.com with SMTP id w11so4424295ote.1
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Nov 2019 13:55:22 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=XpVskNOHPTxwsrVr34yVRyYxarI8mGVzkjpwTzwmlrM=;
-        b=fZfhCxH0fbOkiNxp3tkn613TNqwCjMrlEmru9wSfusO3uvXnE6Hex44XxkTSwj3GSE
-         8jr/dQHYxR5NGarbt+FEax75pxEIoDqp4HuJpPk404d8pqXSITmD6ZrPgKwdW/2pFs8v
-         5u6qrV79lLN274mHSCcrNcTkbkEjaZwU11VHN230lQjCQ3RLPXJasr4Yvr3mvcBK28v4
-         xZFEw/PE/B7/+J+vE95qrrj6muBmLhQq2yT7FyqrEGzGz9mYAWub4Aofe7BcYW6e2zzH
-         Yd++dcQ0GRB4li0oolaxNfNKNn12RdC4N5M/HL4SFkhBiyAJ+1GCl21myHkkd70QpiA3
-         42tQ==
+        bh=ThZIZK0bveD23krnrFt2Kg1A9jjHi+JrVKHaDDEgN8s=;
+        b=b1mzT9hYXtkp3m2FVFSkd8r4DO39klvTc8+S7+sLEl/idIc6fiGjTVFC/W75jR15oq
+         K9Y+IP2nLjGlIvdnAOcFyW68NC9zEi4PpsiHqbIPa6raEeeg1JBxauMhuuiyuP+t8oxX
+         lU4d12Gxgv8tay5JCZrfIpOlecqLKjaN5FueCN+ntJoswDElgB/OvTVfethYuHQZBZAt
+         EWVGUe8uM0oOtJuEfAufEV7Smn9wlkcNza4gUS3ZFVw2pRISQzx+yPS2337rsbCDpE5h
+         I0N+uoJHXwz2drR4TpKOGi8VHosIkak5l+DpV4/cXsZUAryxnvg4NL/5z9TMIS7hObeW
+         KITw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:sender:from:to:cc:subject:date:message-id
          :in-reply-to:references:mime-version:content-transfer-encoding;
-        bh=XpVskNOHPTxwsrVr34yVRyYxarI8mGVzkjpwTzwmlrM=;
-        b=KrSPuE85ZYNBbLqUINfRXPIluU8dZubLp5CotgM5fowDz6k+a/fBhCMdgKpuByaOhA
-         3Txb/rrxkwBIsOw+n9D91yXw86/U+Xa0p0UVw//+Z0dkkOfkkhc3hvimU1KJMqpy36yG
-         9KFEkfVAjw3SI0gw8FpdVSnTm9cAefSyCcOLc9zK/nuHChsqXJwYl3XHX/qNvD5bGT2O
-         xTwPQcLCRADyjwA9yW6IkN3XqWN95U/oqBpf1W3z3rtI2VImRezN6XVzK+zVT6lvb0Gl
-         Cm2QjBZhNzn+ShkWVDnlDF/agcG3FlFWZEfTeO36lbOxsxUZzrRwnjTgxp9tPtLtEEuF
-         tbkA==
-X-Gm-Message-State: APjAAAWuQ42KQ23csC7JacqrZOvsd07o0SACPKt0Ml5JEV0f9MuENMvz
-        aw5ZPfDU9GmdQlGYFzhiwot5igDT
-X-Google-Smtp-Source: APXvYqwk3M36xrwJqYrfweL4f8/vYR1yaRz3itsO+1oBhouWTQCT5Y9h7fS8YOwGIWm49gZTCs4RHQ==
-X-Received: by 2002:a9d:1295:: with SMTP id g21mr8220346otg.301.1574373320059;
-        Thu, 21 Nov 2019 13:55:20 -0800 (PST)
+        bh=ThZIZK0bveD23krnrFt2Kg1A9jjHi+JrVKHaDDEgN8s=;
+        b=dccGidUcIbk3RxkSJ7kAaAXi92/SwyMdrTaeBicNWjrpy3iRiinrStwxGr5UnsyIRL
+         cMOSFK7u8DyUpn0VOEDk1ErxW0Cxt1J6kDJWMP941KtQcr6j9U0D3mrg22e7quo43iBz
+         Sd0vn39QetRfyJXkaIgWweIcuQysOxTieoXw+NRX4rdEKYqBrLoXNJn0pspzfGMrBMrX
+         zt7BW+uWJBchRJdwn9KEQDpGsSZkR3PosgMwbypTn3lNxL1CgIeCVdi1blXHlbVBXikK
+         biv9AgSpNWUf3ZXj7UOTqBwZ1GaZtXra3uxdolDBSfvq9ilvSOwoAUJVuwr2p7jYJDAJ
+         rJHg==
+X-Gm-Message-State: APjAAAXkCRRhVOIQNC5VkatpdeL0cRiRoot88R0mQ3TX0yVxLyusApdz
+        Jeb/ebejENMIQ1Qeju7H/f4=
+X-Google-Smtp-Source: APXvYqycwGQkgIJZYP24F4JN7Lwgb/PMie3lghxixv2PdDlQp5CP1oLX2SQocUzU5U9SLsOrTZuYpg==
+X-Received: by 2002:a9d:7744:: with SMTP id t4mr8422676otl.46.1574373322380;
+        Thu, 21 Nov 2019 13:55:22 -0800 (PST)
 Received: from localhost.localdomain (cpe-24-31-245-230.kc.res.rr.com. [24.31.245.230])
-        by smtp.gmail.com with ESMTPSA id t19sm1448387otr.5.2019.11.21.13.55.19
+        by smtp.gmail.com with ESMTPSA id t19sm1448387otr.5.2019.11.21.13.55.21
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 21 Nov 2019 13:55:19 -0800 (PST)
+        Thu, 21 Nov 2019 13:55:21 -0800 (PST)
 From:   Larry Finger <Larry.Finger@lwfinger.net>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org, pkshih@realtek.com,
         Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH 1/9] rtlwifi: rtl8192de: Remove usage of private bit manipulation macros
-Date:   Thu, 21 Nov 2019 15:55:06 -0600
-Message-Id: <20191121215514.5509-2-Larry.Finger@lwfinger.net>
+Subject: [PATCH 4/9] rtlwifi: Remove dependence on special bit manipulation macros for common driver
+Date:   Thu, 21 Nov 2019 15:55:09 -0600
+Message-Id: <20191121215514.5509-5-Larry.Finger@lwfinger.net>
 X-Mailer: git-send-email 2.24.0
 In-Reply-To: <20191121215514.5509-1-Larry.Finger@lwfinger.net>
 References: <20191121215514.5509-1-Larry.Finger@lwfinger.net>
@@ -73,100 +73,95 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Besides the previously changes macros in trx.h, there are some of these
-local macros in the driver. These are replaced with standard bit
-manipulations. Unused macros are deleted.
+The special macros are used in several places in the base driver.
+These are replaced by standard bit manipulation macros or code.
 
 Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- .../wireless/realtek/rtlwifi/rtl8192de/fw.h   | 61 +++----------------
- 1 file changed, 7 insertions(+), 54 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/base.h |  4 ++--
+ drivers/net/wireless/realtek/rtlwifi/ps.c   | 20 ++++++++++----------
+ 2 files changed, 12 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.h
-index bd8ea6d66dff..7f0a17c1a9ea 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.h
-@@ -16,73 +16,26 @@
- 		(GET_FIRMWARE_HDR_SIGNATURE(_pfwhdr) & 0xFFFF) == 0x92D2 ||  \
- 		(GET_FIRMWARE_HDR_SIGNATURE(_pfwhdr) & 0xFFFF) == 0x92D3)
+diff --git a/drivers/net/wireless/realtek/rtlwifi/base.h b/drivers/net/wireless/realtek/rtlwifi/base.h
+index e4a7e074ae3f..fa92e29fffda 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/base.h
++++ b/drivers/net/wireless/realtek/rtlwifi/base.h
+@@ -61,9 +61,9 @@ enum ap_peer {
+ 	CP_MACADDR((u8 *)(_hdr)+FRAME_OFFSET_ADDRESS3, (u8 *)(_val))
  
--/* Define a macro that takes an le32 word, converts it to host ordering,
-- * right shifts by a specified count, creates a mask of the specified
-- * bit count, and extracts that number of bits.
-- */
--
--#define SHIFT_AND_MASK_LE(__pdesc, __shift, __mask)		\
--	((le32_to_cpu(*(((__le32 *)(__pdesc)))) >> (__shift)) &	\
--	BIT_LEN_MASK_32(__mask))
--
- /* Firmware Header(8-byte alinment required) */
- /* --- LONG WORD 0 ---- */
- #define GET_FIRMWARE_HDR_SIGNATURE(__fwhdr)		\
--	SHIFT_AND_MASK_LE(__fwhdr, 0, 16)
--#define GET_FIRMWARE_HDR_CATEGORY(__fwhdr)		\
--	SHIFT_AND_MASK_LE(__fwhdr, 16, 8)
--#define GET_FIRMWARE_HDR_FUNCTION(__fwhdr)		\
--	SHIFT_AND_MASK_LE(__fwhdr, 24, 8)
-+	le32_get_bits(*(__le32 *)__fwhdr, GENMASK(15, 0))
- #define GET_FIRMWARE_HDR_VERSION(__fwhdr)		\
--	SHIFT_AND_MASK_LE(__fwhdr + 4, 0, 16)
-+	le32_get_bits(*(__le32 *)(__fwhdr + 4), GENMASK(15, 0))
- #define GET_FIRMWARE_HDR_SUB_VER(__fwhdr)		\
--	SHIFT_AND_MASK_LE(__fwhdr + 4, 16, 8)
--#define GET_FIRMWARE_HDR_RSVD1(__fwhdr)			\
--	SHIFT_AND_MASK_LE(__fwhdr + 4, 24, 8)
--
--/* --- LONG WORD 1 ---- */
--#define GET_FIRMWARE_HDR_MONTH(__fwhdr)			\
--	SHIFT_AND_MASK_LE(__fwhdr + 8, 0, 8)
--#define GET_FIRMWARE_HDR_DATE(__fwhdr)			\
--	SHIFT_AND_MASK_LE(__fwhdr + 8, 8, 8)
--#define GET_FIRMWARE_HDR_HOUR(__fwhdr)			\
--	SHIFT_AND_MASK_LE(__fwhdr + 8, 16, 8)
--#define GET_FIRMWARE_HDR_MINUTE(__fwhdr)		\
--	SHIFT_AND_MASK_LE(__fwhdr + 8, 24, 8)
--#define GET_FIRMWARE_HDR_ROMCODE_SIZE(__fwhdr)		\
--	SHIFT_AND_MASK_LE(__fwhdr + 12, 0, 16)
--#define GET_FIRMWARE_HDR_RSVD2(__fwhdr)			\
--	SHIFT_AND_MASK_LE(__fwhdr + 12, 16, 16)
--
--/* --- LONG WORD 2 ---- */
--#define GET_FIRMWARE_HDR_SVN_IDX(__fwhdr)		\
--	SHIFT_AND_MASK_LE(__fwhdr + 16, 0, 32)
--#define GET_FIRMWARE_HDR_RSVD3(__fwhdr)			\
--	SHIFT_AND_MASK_LE(__fwhdr + 20, 0, 32)
--
--/* --- LONG WORD 3 ---- */
--#define GET_FIRMWARE_HDR_RSVD4(__fwhdr)			\
--	SHIFT_AND_MASK_LE(__fwhdr + 24, 0, 32)
--#define GET_FIRMWARE_HDR_RSVD5(__fwhdr)			\
--	SHIFT_AND_MASK_LE(__fwhdr + 28, 0, 32)
-+	le32_get_bits(*(__le32 *)(__fwhdr + 4), GENMASK(23, 16))
+ #define SET_TX_DESC_SPE_RPT(__pdesc, __val)			\
+-	SET_BITS_TO_LE_4BYTE((__pdesc) + 8, 19, 1, __val)
++	le32p_replace_bits((__le32 *)(__pdesc + 8), __val, BIT(19))
+ #define SET_TX_DESC_SW_DEFINE(__pdesc, __val)	\
+-	SET_BITS_TO_LE_4BYTE((__pdesc) + 24, 0, 12, __val)
++	le32p_replace_bits((__le32 *)(__pdesc + 24), __val, GENMASK(11, 0))
  
- #define pagenum_128(_len) \
- 	(u32)(((_len) >> 7) + ((_len) & 0x7F ? 1 : 0))
+ int rtl_init_core(struct ieee80211_hw *hw);
+ void rtl_deinit_core(struct ieee80211_hw *hw);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/ps.c b/drivers/net/wireless/realtek/rtlwifi/ps.c
+index e5e1ec5a41dc..bc0ac96ee615 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/ps.c
++++ b/drivers/net/wireless/realtek/rtlwifi/ps.c
+@@ -737,7 +737,7 @@ static void rtl_p2p_noa_ie(struct ieee80211_hw *hw, void *data,
+ 	find_p2p_ie = true;
+ 	/*to find noa ie*/
+ 	while (ie + 1 < end) {
+-		noa_len = READEF2BYTE((__le16 *)&ie[1]);
++		noa_len = le16_to_cpu(*((__le16 *)&ie[1]));
+ 		if (ie + 3 + ie[1] > end)
+ 			return;
  
--#define SET_H2CCMD_PWRMODE_PARM_MODE(__ph2ccmd, __val)		\
--	SET_BITS_TO_LE_1BYTE(__ph2ccmd, 0, 8, __val)
--#define SET_H2CCMD_PWRMODE_PARM_SMART_PS(__ph2ccmd, __val)	\
--	SET_BITS_TO_LE_1BYTE((__ph2ccmd) + 1, 0, 8, __val)
--#define SET_H2CCMD_PWRMODE_PARM_BCN_PASS_TIME(__ph2ccmd, __val)	\
--	SET_BITS_TO_LE_1BYTE((__ph2ccmd) + 2, 0, 8, __val)
- #define SET_H2CCMD_JOINBSSRPT_PARM_OPMODE(__ph2ccmd, __val)	\
--	SET_BITS_TO_LE_1BYTE(__ph2ccmd, 0, 8, __val)
-+	*(u8 *)__ph2ccmd = __val;
- #define SET_H2CCMD_RSVDPAGE_LOC_PROBE_RSP(__ph2ccmd, __val)	\
--	SET_BITS_TO_LE_1BYTE(__ph2ccmd, 0, 8, __val)
-+	*(u8 *)__ph2ccmd = __val;
- #define SET_H2CCMD_RSVDPAGE_LOC_PSPOLL(__ph2ccmd, __val)	\
--	SET_BITS_TO_LE_1BYTE((__ph2ccmd) + 1, 0, 8, __val)
-+	*(u8 *)(__ph2ccmd + 1) = __val;
- #define SET_H2CCMD_RSVDPAGE_LOC_NULL_DATA(__ph2ccmd, __val)	\
--	SET_BITS_TO_LE_1BYTE((__ph2ccmd) + 2, 0, 8, __val)
-+	*(u8 *)(__ph2ccmd + 2) = __val;
+@@ -766,16 +766,16 @@ static void rtl_p2p_noa_ie(struct ieee80211_hw *hw, void *data,
+ 				index = 5;
+ 				for (i = 0; i < noa_num; i++) {
+ 					p2pinfo->noa_count_type[i] =
+-							READEF1BYTE(ie+index);
++					 *(u8 *)(ie + index);
+ 					index += 1;
+ 					p2pinfo->noa_duration[i] =
+-						 READEF4BYTE((__le32 *)ie+index);
++					 le32_to_cpu(*(__le32 *)ie + index);
+ 					index += 4;
+ 					p2pinfo->noa_interval[i] =
+-						 READEF4BYTE((__le32 *)ie+index);
++					 le32_to_cpu(*(__le32 *)ie + index);
+ 					index += 4;
+ 					p2pinfo->noa_start_time[i] =
+-						 READEF4BYTE((__le32 *)ie+index);
++					 le32_to_cpu(*(__le32 *)ie + index);
+ 					index += 4;
+ 				}
  
- int rtl92d_download_fw(struct ieee80211_hw *hw);
- void rtl92d_fill_h2c_cmd(struct ieee80211_hw *hw, u8 element_id,
+@@ -832,7 +832,7 @@ static void rtl_p2p_action_ie(struct ieee80211_hw *hw, void *data,
+ 	RT_TRACE(rtlpriv, COMP_FW, DBG_LOUD, "action frame find P2P IE.\n");
+ 	/*to find noa ie*/
+ 	while (ie + 1 < end) {
+-		noa_len = READEF2BYTE((__le16 *)&ie[1]);
++		noa_len = le16_to_cpu(*(__le16 *)&ie[1]);
+ 		if (ie + 3 + ie[1] > end)
+ 			return;
+ 
+@@ -861,16 +861,16 @@ static void rtl_p2p_action_ie(struct ieee80211_hw *hw, void *data,
+ 				index = 5;
+ 				for (i = 0; i < noa_num; i++) {
+ 					p2pinfo->noa_count_type[i] =
+-							READEF1BYTE(ie+index);
++					 *(u8 *)(ie + index);
+ 					index += 1;
+ 					p2pinfo->noa_duration[i] =
+-							 READEF4BYTE((__le32 *)ie+index);
++					 le32_to_cpu(*(__le32 *)ie + index);
+ 					index += 4;
+ 					p2pinfo->noa_interval[i] =
+-							 READEF4BYTE((__le32 *)ie+index);
++					 le32_to_cpu(*(__le32 *)ie + index);
+ 					index += 4;
+ 					p2pinfo->noa_start_time[i] =
+-							 READEF4BYTE((__le32 *)ie+index);
++					 le32_to_cpu(*(__le32 *)ie + index);
+ 					index += 4;
+ 				}
+ 
 -- 
 2.24.0
 
