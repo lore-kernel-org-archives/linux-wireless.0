@@ -6,33 +6,33 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF12EC432C0
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Nov 2019 18:00:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96EACC432C3
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Nov 2019 18:00:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9858E2068F
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 Nov 2019 18:00:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7A18320672
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 Nov 2019 18:00:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726968AbfKUSA1 (ORCPT
+        id S1726822AbfKUSAZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 21 Nov 2019 13:00:27 -0500
-Received: from smail.rz.tu-ilmenau.de ([141.24.186.67]:53972 "EHLO
+        Thu, 21 Nov 2019 13:00:25 -0500
+Received: from smail.rz.tu-ilmenau.de ([141.24.186.67]:53960 "EHLO
         smail.rz.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726623AbfKUSA1 (ORCPT
+        with ESMTP id S1726568AbfKUSAZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 Nov 2019 13:00:27 -0500
+        Thu, 21 Nov 2019 13:00:25 -0500
 Received: from localhost.localdomain (unknown [141.24.207.101])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by smail.rz.tu-ilmenau.de (Postfix) with ESMTPSA id 10281580078;
+        by smail.rz.tu-ilmenau.de (Postfix) with ESMTPSA id 061D3580074;
         Thu, 21 Nov 2019 19:00:24 +0100 (CET)
 From:   Markus Theil <markus.theil@tu-ilmenau.de>
 To:     nbd@nbd.name
 Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
         Stanislaw Gruszka <sgruszka@redhat.com>,
         Markus Theil <markus.theil@tu-ilmenau.de>
-Subject: [PATCH v8 5/6] mt76: speed up usb bulk copy
-Date:   Thu, 21 Nov 2019 19:00:00 +0100
-Message-Id: <20191121180001.22451-6-markus.theil@tu-ilmenau.de>
+Subject: [PATCH v8 3/6] mt76: mt76x02: add check for invalid vif idx
+Date:   Thu, 21 Nov 2019 18:59:58 +0100
+Message-Id: <20191121180001.22451-4-markus.theil@tu-ilmenau.de>
 X-Mailer: git-send-email 2.24.0
 In-Reply-To: <20191121180001.22451-1-markus.theil@tu-ilmenau.de>
 References: <20191121180001.22451-1-markus.theil@tu-ilmenau.de>
@@ -43,71 +43,29 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Use larger batches for usb copy to speed this operation up. Otherwise it
-would be too slow for copying new beacons or broadcast frames over usb.
-Assure, that always a multiple of 4 Bytes is copied, as outlined in
-850e8f6fbd "mt76: round up length on mt76_wr_copy" from Felix Fietkau.
+On adding vifs the idx can become 1 + (7 & 7) = 8 for APs.
+Check against that, as only AP vif idx 0-7 is possible.
 
 Signed-off-by: Markus Theil <markus.theil@tu-ilmenau.de>
 ---
- drivers/net/wireless/mediatek/mt76/mt76.h |  2 +-
- drivers/net/wireless/mediatek/mt76/usb.c  | 24 +++++++++++++++++------
- 2 files changed, 19 insertions(+), 7 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt76x02_util.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index fb077760347a..1981912de1f9 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -382,7 +382,7 @@ enum mt76u_out_ep {
- struct mt76_usb {
- 	struct mutex usb_ctrl_mtx;
- 	union {
--		u8 data[32];
-+		u8 data[128];
- 		__le32 reg_val;
- 	};
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
+index bdc83838d346..1142aa39a226 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
+@@ -325,7 +325,9 @@ mt76x02_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ 	if (vif->type == NL80211_IFTYPE_STATION)
+ 		idx += 8;
  
-diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/wireless/mediatek/mt76/usb.c
-index d6d47081e281..97b263ce3872 100644
---- a/drivers/net/wireless/mediatek/mt76/usb.c
-+++ b/drivers/net/wireless/mediatek/mt76/usb.c
-@@ -149,18 +149,30 @@ static void mt76u_copy(struct mt76_dev *dev, u32 offset,
- 		       const void *data, int len)
- {
- 	struct mt76_usb *usb = &dev->usb;
--	const u32 *val = data;
--	int i, ret;
-+	const u8 *val = data;
-+	int ret;
-+	int current_batch_size;
-+	int i = 0;
-+
-+	/* Assure that always a multiple of 4 bytes are copied,
-+	 * otherwise beacons can be corrupted.
-+	 * See: "mt76: round up length on mt76_wr_copy"
-+	 * Commit 850e8f6fbd5d0003b0
-+	 */
-+	len = round_up(len, 4);
+-	if (dev->vif_mask & BIT(idx))
++	/* vif is already set or idx is 8 for AP/Mesh/... */
++	if (dev->vif_mask & BIT(idx) ||
++	    vif->type != NL80211_IFTYPE_STATION && idx > 7)
+ 		return -EBUSY;
  
- 	mutex_lock(&usb->usb_ctrl_mtx);
--	for (i = 0; i < DIV_ROUND_UP(len, 4); i++) {
--		put_unaligned(val[i], (u32 *)usb->data);
-+	while (i < len) {
-+		current_batch_size = min_t(int, sizeof(usb->data), len - i);
-+		memcpy(usb->data, val + i, current_batch_size);
- 		ret = __mt76u_vendor_request(dev, MT_VEND_MULTI_WRITE,
- 					     USB_DIR_OUT | USB_TYPE_VENDOR,
--					     0, offset + i * 4, usb->data,
--					     sizeof(u32));
-+					     0, offset + i, usb->data,
-+					     current_batch_size);
- 		if (ret < 0)
- 			break;
-+
-+		i += current_batch_size;
- 	}
- 	mutex_unlock(&usb->usb_ctrl_mtx);
- }
+ 	dev->vif_mask |= BIT(idx);
 -- 
 2.24.0
 
