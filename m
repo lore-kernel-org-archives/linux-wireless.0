@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05B55C43215
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 06:27:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8B72C43215
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 06:28:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CD2F220409
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 06:27:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 90EEB20409
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 06:28:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1574404072;
-	bh=YxOwail4Tn4iKsO6SwLLJfbsBO8zDbkTETDTiTByHgY=;
+	s=default; t=1574404083;
+	bh=RuXCy8MiSHwkFqpJv3UmmnKuGufeTgueNF/f4E5Vf+I=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=IGdlxzr/HrZwU9smWisZj6w3VBgqEbflh669fU+lesaxKb81uoaPf9nmk/+IVabwn
-	 rMnaDPZRJUDaeP6qRpG5dcwTCyb4RYqtyai6jOWvhwrICpZuPzBMioigkC+bbZZA7N
-	 /KhRBK9LcCCTB+j6i2r6VszpiM3yk04VyunQn0pw=
+	b=suyYg5hFC0yL/1v2C36G9F7VROX6C1o6PPkGVSV9FfRtiVU27Uveri4EamekxFGB4
+	 WZcSpwI5qwJ3dTjILkpFrF6p5KGsQ5AofLcuy66fskrr2274z6VuGMN+EDjoEz7eGt
+	 VThkz8lc0hwPpjIR0m8aBUSQi0DXdWNElTHSzdhs=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727615AbfKVFuU (ORCPT
+        id S1727593AbfKVFuS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 22 Nov 2019 00:50:20 -0500
-Received: from mail.kernel.org ([198.145.29.99]:54828 "EHLO mail.kernel.org"
+        Fri, 22 Nov 2019 00:50:18 -0500
+Received: from mail.kernel.org ([198.145.29.99]:54756 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727602AbfKVFuT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Nov 2019 00:50:19 -0500
+        id S1727576AbfKVFuR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 22 Nov 2019 00:50:17 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id C926320748;
-        Fri, 22 Nov 2019 05:50:17 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 861BA2070A;
+        Fri, 22 Nov 2019 05:50:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1574401818;
-        bh=YxOwail4Tn4iKsO6SwLLJfbsBO8zDbkTETDTiTByHgY=;
+        s=default; t=1574401816;
+        bh=RuXCy8MiSHwkFqpJv3UmmnKuGufeTgueNF/f4E5Vf+I=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=RFeu8rFHfcXcHUekn54E6G3YOKi1nFC18WjaeikesjR9pZetuI7Z2VaI7vBQJlynQ
-         QFHuJLJzUWeNjqRRBXQqjC094X+t2RqTOahCYmwAb9vW9V/uKDF2I/gDBHzaFaGB/J
-         KxyuHExEOTY2vY+rZ22NxE5F6pvmE06HgZfMPiLk=
+        b=wv1rCSupUyREA1pDs6ddxP6Sxu50hafGBrnj82/gW+zHAwiZEjo4EriuiDMOux4H5
+         6+9bQZ22NeB6KN4xAof/A8If9ZDmi6SaQ5j4h27vuaqTeujlRT6yeMC8HMqcJ/vKLQ
+         NlQmXctYUnd3K1S3hb/nUcpe7p+WEtLKpsfSHJGs=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Sara Sharon <sara.sharon@intel.com>,
+Cc:     Avraham Stern <avraham.stern@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 062/219] iwlwifi: pcie: set cmd_len in the correct place
-Date:   Fri, 22 Nov 2019 00:46:34 -0500
-Message-Id: <20191122054911.1750-55-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 060/219] iwlwifi: mvm: force TCM re-evaluation on TCM resume
+Date:   Fri, 22 Nov 2019 00:46:32 -0500
+Message-Id: <20191122054911.1750-53-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191122054911.1750-1-sashal@kernel.org>
 References: <20191122054911.1750-1-sashal@kernel.org>
@@ -60,64 +60,64 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sara Sharon <sara.sharon@intel.com>
+From: Avraham Stern <avraham.stern@intel.com>
 
-[ Upstream commit 956343a61226e1af3d146386f70a059feb567d0c ]
+[ Upstream commit 7bc2468277033e05401d5f8fd48a772f407338c2 ]
 
-command len is set too early in the code, since when building
-AMSDU, the size changes. This causes the byte count table to
-have the wrong size.
+When traffic load is not low or low latency is active, TCM schedules
+re-evaluation work so in case traffic stops TCM will detect that
+traffic load has become low or that low latency is no longer active.
+However, if TCM is paused when the re-evaluation work runs, it does
+not re-evaluate and the re-evaluation work is no longer scheduled.
+As a result, TCM will not indicate that low latency is no longer
+active or that traffic load is low when traffic stops.
 
-Fixes: a0ec0169b7a9 ("iwlwifi: support new tx api")
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Fix this by forcing TCM re-evaluation when TCM is resumed in case
+low latency is active or traffic load is not low.
+
+Signed-off-by: Avraham Stern <avraham.stern@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- .../net/wireless/intel/iwlwifi/pcie/tx-gen2.c | 24 +++++++++----------
- 1 file changed, 12 insertions(+), 12 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-index b99f33ff91230..a9e42f0437ccb 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-@@ -555,18 +555,6 @@ int iwl_trans_pcie_gen2_tx(struct iwl_trans *trans, struct sk_buff *skb,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+index 6a5349401aa99..00712205c05f2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+@@ -1804,6 +1804,7 @@ void iwl_mvm_pause_tcm(struct iwl_mvm *mvm, bool with_cancel)
+ void iwl_mvm_resume_tcm(struct iwl_mvm *mvm)
+ {
+ 	int mac;
++	bool low_latency = false;
  
- 	spin_lock(&txq->lock);
- 
--	if (trans->cfg->device_family >= IWL_DEVICE_FAMILY_22560) {
--		struct iwl_tx_cmd_gen3 *tx_cmd_gen3 =
--			(void *)dev_cmd->payload;
--
--		cmd_len = le16_to_cpu(tx_cmd_gen3->len);
--	} else {
--		struct iwl_tx_cmd_gen2 *tx_cmd_gen2 =
--			(void *)dev_cmd->payload;
--
--		cmd_len = le16_to_cpu(tx_cmd_gen2->len);
--	}
--
- 	if (iwl_queue_space(trans, txq) < txq->high_mark) {
- 		iwl_stop_queue(trans, txq);
- 
-@@ -604,6 +592,18 @@ int iwl_trans_pcie_gen2_tx(struct iwl_trans *trans, struct sk_buff *skb,
- 		return -1;
+ 	spin_lock_bh(&mvm->tcm.lock);
+ 	mvm->tcm.ts = jiffies;
+@@ -1815,10 +1816,23 @@ void iwl_mvm_resume_tcm(struct iwl_mvm *mvm)
+ 		memset(&mdata->tx.pkts, 0, sizeof(mdata->tx.pkts));
+ 		memset(&mdata->rx.airtime, 0, sizeof(mdata->rx.airtime));
+ 		memset(&mdata->tx.airtime, 0, sizeof(mdata->tx.airtime));
++
++		if (mvm->tcm.result.low_latency[mac])
++			low_latency = true;
  	}
+ 	/* The TCM data needs to be reset before "paused" flag changes */
+ 	smp_mb();
+ 	mvm->tcm.paused = false;
++
++	/*
++	 * if the current load is not low or low latency is active, force
++	 * re-evaluation to cover the case of no traffic.
++	 */
++	if (mvm->tcm.result.global_load > IWL_MVM_TRAFFIC_LOW)
++		schedule_delayed_work(&mvm->tcm.work, MVM_TCM_PERIOD);
++	else if (low_latency)
++		schedule_delayed_work(&mvm->tcm.work, MVM_LL_PERIOD);
++
+ 	spin_unlock_bh(&mvm->tcm.lock);
+ }
  
-+	if (trans->cfg->device_family >= IWL_DEVICE_FAMILY_22560) {
-+		struct iwl_tx_cmd_gen3 *tx_cmd_gen3 =
-+			(void *)dev_cmd->payload;
-+
-+		cmd_len = le16_to_cpu(tx_cmd_gen3->len);
-+	} else {
-+		struct iwl_tx_cmd_gen2 *tx_cmd_gen2 =
-+			(void *)dev_cmd->payload;
-+
-+		cmd_len = le16_to_cpu(tx_cmd_gen2->len);
-+	}
-+
- 	/* Set up entry for this TFD in Tx byte-count array */
- 	iwl_pcie_gen2_update_byte_tbl(trans_pcie, txq, cmd_len,
- 				      iwl_pcie_gen2_get_num_tbs(trans, tfd));
 -- 
 2.20.1
 
