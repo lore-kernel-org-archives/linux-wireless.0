@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F515C43215
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 06:06:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DAFEC432C0
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 06:06:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1974B20674
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 06:06:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0BCCB2070B
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 06:06:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1574402783;
-	bh=oyecKgL4JJJNfN/xarrb88sIaFNFCW/ML4rY/gU8oKM=;
+	s=default; t=1574402792;
+	bh=u+OorGplPoo4KPqhEBpJTPq5149qy2NJwf/txWg4fFg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Ou8x9DLij8tnhvHFe0SMdlJ2IikWP8wN9WEpp7CDgqxL9C86xyo/9J/zs4NABAZeI
-	 uxcP9YBEqd3a++NzYEsA7QdQXggbuOM/IGDNqUGV2wIeTWzU8yaa7VgQeT29fojOWe
-	 GerXpRxhABx+UW1fb02YM7PYoL9lgL9F8oNgNhKQ=
+	b=SP+e6Fr4oOSkKxOZziMPFIGoWcYw2MDMjsiTyX0dVHj8j2w6eCaoEr3QyneM3HOMv
+	 UHF+O5Ab6lOh5gt8tLRNOVt/HPL9ZkD9z3ZJA1gejzH85l9dOKB66H7JL4twEK6pgB
+	 2t0ZkhHUwAQ5BQfc5h6m1f7+NfmFGUR4EvyOxHC8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729686AbfKVGCV (ORCPT
+        id S1728756AbfKVGG0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 22 Nov 2019 01:02:21 -0500
-Received: from mail.kernel.org ([198.145.29.99]:40892 "EHLO mail.kernel.org"
+        Fri, 22 Nov 2019 01:06:26 -0500
+Received: from mail.kernel.org ([198.145.29.99]:40874 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726685AbfKVGCU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Nov 2019 01:02:20 -0500
+        id S1729656AbfKVGCS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 22 Nov 2019 01:02:18 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id B60F12068E;
-        Fri, 22 Nov 2019 06:02:18 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 995E72071B;
+        Fri, 22 Nov 2019 06:02:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1574402539;
-        bh=oyecKgL4JJJNfN/xarrb88sIaFNFCW/ML4rY/gU8oKM=;
+        s=default; t=1574402538;
+        bh=u+OorGplPoo4KPqhEBpJTPq5149qy2NJwf/txWg4fFg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=zt2We2FyrrIfq9YYlqxVSElLFktd/udawJCrflpXkp8jPQvSqrLC2MuFgkoZRZQZT
-         P0JcWd43iycFkZ0cIxKctQMYYpi8nUX7DJTQN6KM1lVyczgU3cEEuyGopgQxu1kmmL
-         fYIJLPcEnXBuhTX9IYDbbO1R34sg0Cud/1/rhbYQ=
+        b=WXgJjJ3ruAg+ZnWEG4nlZuu2VwZgRarF3io5WInLGNUH1hUQWk2YxUU0eYS5Bwg0n
+         0JRfy4gVHKwiNnoSjmpKCzfi1Eaw3ryOEKYDNYzj21p3voZW8dPQNWWsIUk9KCjOaL
+         yeE0vTupW9lJEJef2Kjw4nSRoepIH1WcZx/vz14s=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Kyle Roeschley <kyle.roeschley@ni.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 46/91] ath6kl: Fix off by one error in scan completion
-Date:   Fri, 22 Nov 2019 01:00:44 -0500
-Message-Id: <20191122060129.4239-45-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 45/91] ath6kl: Only use match sets when firmware supports it
+Date:   Fri, 22 Nov 2019 01:00:43 -0500
+Message-Id: <20191122060129.4239-44-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191122060129.4239-1-sashal@kernel.org>
 References: <20191122060129.4239-1-sashal@kernel.org>
@@ -62,14 +62,16 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Kyle Roeschley <kyle.roeschley@ni.com>
 
-[ Upstream commit 5803c12816c43bd09e5f4247dd9313c2d9a2c41b ]
+[ Upstream commit fb376a495fbdb886f38cfaf5a3805401b9e46f13 ]
 
-When ath6kl was reworked to share code between regular and scheduled scans
-in commit 3b8ffc6a22ba ("ath6kl: Configure probed SSID list consistently"),
-probed SSID entry changed from 1-index to 0-indexed. However,
-ath6kl_cfg80211_scan_complete_event() was missed in that change. Fix its
-indexing so that we correctly clear out the probed SSID list.
+Commit dd45b7598f1c ("ath6kl: Include match ssid list in scheduled scan")
+merged the probed and matched SSID lists before sending them to the
+firmware. In the process, it assumed match set support is always available
+in ath6kl_set_probed_ssids, which breaks scans for hidden SSIDs. Now, check
+that the firmware supports matching SSIDs in scheduled scans before setting
+MATCH_SSID_FLAG.
 
+Fixes: dd45b7598f1c ("ath6kl: Include match ssid list in scheduled scan")
 Signed-off-by: Kyle Roeschley <kyle.roeschley@ni.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
@@ -78,18 +80,18 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 0cce5a2bca161..650d2f6446a6c 100644
+index b7fe0af4cb240..0cce5a2bca161 100644
 --- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
 +++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -1088,7 +1088,7 @@ void ath6kl_cfg80211_scan_complete_event(struct ath6kl_vif *vif, bool aborted)
- 	if (vif->scan_req->n_ssids && vif->scan_req->ssids[0].ssid_len) {
- 		for (i = 0; i < vif->scan_req->n_ssids; i++) {
- 			ath6kl_wmi_probedssid_cmd(ar->wmi, vif->fw_vif_idx,
--						  i + 1, DISABLE_SSID_FLAG,
-+						  i, DISABLE_SSID_FLAG,
- 						  0, NULL);
- 		}
+@@ -934,7 +934,7 @@ static int ath6kl_set_probed_ssids(struct ath6kl *ar,
+ 		else
+ 			ssid_list[i].flag = ANY_SSID_FLAG;
+ 
+-		if (n_match_ssid == 0)
++		if (ar->wiphy->max_match_sets != 0 && n_match_ssid == 0)
+ 			ssid_list[i].flag |= MATCH_SSID_FLAG;
  	}
+ 
 -- 
 2.20.1
 
