@@ -7,22 +7,22 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5526CC432C0
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 20:52:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34035C432C3
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 20:52:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F0EB820706
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 20:52:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EFC1D20706
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 20:52:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="M5BdCFej"
+	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="DQFUxwD4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726747AbfKVUwH (ORCPT
+        id S1726895AbfKVUwI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 22 Nov 2019 15:52:07 -0500
-Received: from esa2.microchip.iphmx.com ([68.232.149.84]:44168 "EHLO
+        Fri, 22 Nov 2019 15:52:08 -0500
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:44174 "EHLO
         esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726526AbfKVUwG (ORCPT
+        with ESMTP id S1726526AbfKVUwI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Nov 2019 15:52:06 -0500
+        Fri, 22 Nov 2019 15:52:08 -0500
 Received-SPF: Pass (esa2.microchip.iphmx.com: domain of
   Adham.Abozaeid@microchip.com designates 198.175.253.82 as
   permitted sender) identity=mailfrom;
@@ -42,30 +42,30 @@ Received-SPF: None (esa2.microchip.iphmx.com: no sender
   x-sender="postmaster@email.microchip.com";
   x-conformance=spf_only
 Authentication-Results: esa2.microchip.iphmx.com; spf=Pass smtp.mailfrom=Adham.Abozaeid@microchip.com; spf=None smtp.helo=postmaster@email.microchip.com; dkim=pass (signature verified) header.i=@microchiptechnology.onmicrosoft.com; dmarc=pass (p=none dis=none) d=microchip.com
-IronPort-SDR: OJOiQWufm5oLVMdxwsg7fzxHt0/XVWpDN25BUHFqli8htfi/PZklTYNkdOcIgmX9YvqLgqb8RW
- Je47UM3vIVMexaKSEnuDkwD4qTGKg8uQ2eieUNUSmlePS6pBcncxMVSh55NnOkkNve1P2nCfHv
- 6uP49lgLf3e/aT5Pwm2CWKDiYONW6rXbm6V2EorXluQWrBtXrAl6ohn5Zsc4RSR09ah8OxmzQT
- 2fEpz81B7235TT/jJlFF3T/TAidJYpUECU3cgKowjTDOxW75sNDPkkxhZGgv5frhbcyAd9EwpF
- k8I=
+IronPort-SDR: ooSAMffm9sF5B6IsTSTfA2fcPSR6aAhoxAxpqDZNwVVKaGdkPQijN2NlKf7HirFnL7uYv9aoZ0
+ TILchSW4SdzT8m6u8warF/77IFM+NkWDRNG/PnMyx8JAWRL9KQwqjjgf5ye0I0FmM5fikB8TIU
+ 4JqZ4slbSoL9ynUSFdllCkeNzQhwE73a0i/8iG39hNf0ZTIBKIAvn8Tyyo7xeECjYN62ZFsdWw
+ KC6qA4B4UbX7o1z/W9uTYI09o6GFJ4d8wl0DoAZ9IgVxB3jxFCqeDyg6E1/JlB48sK9hfNHnQv
+ WwM=
 X-IronPort-AV: E=Sophos;i="5.69,231,1571727600"; 
-   d="scan'208";a="57656079"
+   d="scan'208";a="57656084"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa2.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 22 Nov 2019 13:52:05 -0700
+  by esa2.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 22 Nov 2019 13:52:06 -0700
 Received: from chn-vm-ex03.mchp-main.com (10.10.85.151) by
  chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1713.5; Fri, 22 Nov 2019 13:52:05 -0700
+ 15.1.1713.5; Fri, 22 Nov 2019 13:52:06 -0700
 Received: from NAM05-DM3-obe.outbound.protection.outlook.com (10.10.215.89) by
  email.microchip.com (10.10.87.152) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5
- via Frontend Transport; Fri, 22 Nov 2019 13:52:05 -0700
+ via Frontend Transport; Fri, 22 Nov 2019 13:52:06 -0700
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Y1yovavYnKV1hXO9HzsTk3Bjm9RMygZNNOqNddBYvlMBVDcbipxQbHTkUDsnKAJIzwIGTtiL2/eVvmEpEAe3Z+BWcTfE0Wd+jPKWi3mHjMi4fP2dVxyynnEQaJnN0gmmt16l3qPL5aZpbehwbPzRNSzXTFx4FDUdymVYBPKigQhTUPNkh9V83T89P3EXPIwPsMkaksHiahE3hyXfSv4FbIOsNg9+Tfdy7335cc25CVaxa25AMmUFppk4pJrngPngXCrzFs7M4GR332Wi9JULaVzNW5jJsjgVh1Yj/uIAvSdivaGQcBdaWTpiSXyZ7xZAnijw0dm4umaSFR90ICQk5g==
+ b=crseTMf8+iqIMiocaab22oH3pLuFdSXNm4V7bpaDiLQedxj/G7ONhotOJmKzViG8knGgczmaOIxtwSabVnKB3Dl+2mARR8wIxtITvo0rKqBf97V6tjNaD2JI8P+MroyRf+wH4DyPAx+mqcWII6YKhZXp41K3/+lSXA4sU6yhqGLYlY+LTRMbk3Nxz32jh2ipkuVXH0ynpVqugHHf+QRocuOYMygiuuHan5/xRi8CXXxukjfpfdV7oB8E+rSA1QiroMyKmFXtu4Ob42FBCkVFIOcegrayeecNmertuUVeC/rVb3tAi0s6JfvBMZb8y5xTb4s6S2PNHetb6g4ogW86Lw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=XcQOXd6HZqhxdYx4Y0YG55oQIuketf/2I5Dz3iybv0Y=;
- b=gIXq6WG+cIVMM2yCIEBtgL/SglKvUC0Q/c8VEIFxMvHipyXg7QNngLkXRzA+8Gqn8OxkEmmaWa7MxTZfQm8dMlgXipfUu6ZhE/zgYVpsvWIonjR4jWcMl+mCvmDfsY9c/k8+6llaSjCwb0Jvp9bxwZdoNolJq1Rx2Ii49oJoGfllqKDI7GPAvoJjQwftQmmjyVQCNnLeBAQLY2Y5fDPdSkvOPPdkffe8jZHybb0oUq+m/T1KleFbN5mOGm8FcAZp7tyRcg47GpNDy+oUZuvaeVgVt41CdqG4DBlEl5ArTwcWJeSwI1l5w5XNhSExJT5w/Jhb43VcWveWwWFgthVTWg==
+ bh=0j1ylFJs6JeAokkedwwu5FNaVN8NDtBAV57EQuWuIkQ=;
+ b=iH4zIILLx/2+U5qpTfe9QX/pktI/+XU0GznOYq9dkM5N3/ZJb0uUniJ6h9S72pUvfj9JPOMy3caebfBqNowsDVxYXQ/IOZXD+zxZXQMtGM+EUcoG8tMNM61LNC1Ug0Czw73BMHQqbD/kThV88Osaa9LfhQ1g21umE8+OCmaaXLDoH3wvDJokJsHCyqB2DJshKrgUd5/jyFFr4ylFOw9+P39U8OsQToINIMKij2ysO+FaGQ7NDp+xJXYJfvZtSd6ay6nk0drTQ6aWsXriyYxhN4HpdWFHe9zR/QF1h3BI3pEUKQPfcFAUuZ8dEsyeHC0ib/l6eWfdF+JMkI6vWA9uSw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=microchip.com; dmarc=pass action=none
  header.from=microchip.com; dkim=pass header.d=microchip.com; arc=none
@@ -73,27 +73,29 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=microchiptechnology.onmicrosoft.com;
  s=selector2-microchiptechnology-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=XcQOXd6HZqhxdYx4Y0YG55oQIuketf/2I5Dz3iybv0Y=;
- b=M5BdCFej02kSB+srW6ty8VJRf4KDXXIxQIYGwSMo5jMwaxuwX3L2cpLLHnVvzXuvoz6rpkGuesoWSn8Iv7kPsApRhVinhXM8fEFDExhhf544LsIiSMIWJ7GPis1A1ByAB9E2e1SAoRAlaN1rYuhXj73pdyFL1Kp19QyhOpTz64Y=
+ bh=0j1ylFJs6JeAokkedwwu5FNaVN8NDtBAV57EQuWuIkQ=;
+ b=DQFUxwD4ZlTD00SmcEQxtu/0OpMFIg3A5dhTa+CaW7YO/cItGaxB5Z6EpSdAw8C0K1aNL/jfx6OuKFG0hkVTeGGMDPT0XhA5dUegdcYKHj5o+WKNdceKygLqoqaO3fKU9fU8wJYaEQFaZ0qlnLSQ2MWrqn72A2RGh9l6/Dp10qc=
 Received: from MWHPR11MB1373.namprd11.prod.outlook.com (10.169.234.141) by
  MWHPR11MB1472.namprd11.prod.outlook.com (10.172.54.144) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2451.22; Fri, 22 Nov 2019 20:52:02 +0000
+ 15.20.2451.22; Fri, 22 Nov 2019 20:52:05 +0000
 Received: from MWHPR11MB1373.namprd11.prod.outlook.com
  ([fe80::fc6d:2ed:d470:fb56]) by MWHPR11MB1373.namprd11.prod.outlook.com
  ([fe80::fc6d:2ed:d470:fb56%8]) with mapi id 15.20.2474.019; Fri, 22 Nov 2019
- 20:52:02 +0000
+ 20:52:05 +0000
 From:   <Adham.Abozaeid@microchip.com>
 To:     <linux-wireless@vger.kernel.org>
 CC:     <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
         <johannes@sipsolutions.net>, <Ajay.Kathat@microchip.com>
-Subject: [PATCH 1/4] staging: wilc1000: use runtime configuration for sdio oob
- interrupt
-Thread-Topic: [PATCH 1/4] staging: wilc1000: use runtime configuration for
- sdio oob interrupt
-Thread-Index: AQHVoXawsACklCtDcEijfkbhUigNzg==
-Date:   Fri, 22 Nov 2019 20:52:02 +0000
-Message-ID: <20191122205153.30723-1-adham.abozaeid@microchip.com>
+Subject: [PATCH 3/4] staging: wilc1000: use kernel provided struct cast to
+ extract mac header
+Thread-Topic: [PATCH 3/4] staging: wilc1000: use kernel provided struct cast
+ to extract mac header
+Thread-Index: AQHVoXayqAQs7Rt5U0akHYwi3cg+sg==
+Date:   Fri, 22 Nov 2019 20:52:04 +0000
+Message-ID: <20191122205153.30723-3-adham.abozaeid@microchip.com>
+References: <20191122205153.30723-1-adham.abozaeid@microchip.com>
+In-Reply-To: <20191122205153.30723-1-adham.abozaeid@microchip.com>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
@@ -105,57 +107,58 @@ x-clientproxiedby: BYAPR03CA0028.namprd03.prod.outlook.com
 x-ms-exchange-messagesentrepresentingtype: 1
 x-mailer: git-send-email 2.17.1
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 5cdaa1e5-201c-4e81-afa5-08d76f8dd360
+x-ms-office365-filtering-correlation-id: 78c4717b-a183-404f-ca98-08d76f8dd49b
 x-ms-traffictypediagnostic: MWHPR11MB1472:
 x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <MWHPR11MB14723FE428090955CDD853478D490@MWHPR11MB1472.namprd11.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:5516;
+x-microsoft-antispam-prvs: <MWHPR11MB1472C7BE7DD9C9F67F5CDEDE8D490@MWHPR11MB1472.namprd11.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:3173;
 x-forefront-prvs: 02296943FF
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(39860400002)(396003)(136003)(346002)(366004)(376002)(189003)(199004)(316002)(66946007)(7736002)(8936002)(107886003)(81156014)(81166006)(186003)(66556008)(6486002)(26005)(66066001)(99286004)(6506007)(5640700003)(4326008)(6436002)(52116002)(71190400001)(71200400001)(1076003)(5660300002)(14454004)(6916009)(2501003)(102836004)(2906002)(386003)(6512007)(25786009)(54906003)(66446008)(50226002)(3846002)(36756003)(66476007)(256004)(64756008)(2351001)(2616005)(8676002)(6116002)(86362001)(478600001)(305945005);DIR:OUT;SFP:1101;SCL:1;SRVR:MWHPR11MB1472;H:MWHPR11MB1373.namprd11.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(39860400002)(396003)(136003)(346002)(366004)(376002)(189003)(199004)(316002)(66946007)(7736002)(8936002)(107886003)(81156014)(81166006)(186003)(66556008)(6486002)(26005)(66066001)(99286004)(6506007)(76176011)(5640700003)(4326008)(6436002)(52116002)(71190400001)(71200400001)(1076003)(5660300002)(14454004)(6916009)(11346002)(2501003)(102836004)(2906002)(386003)(6512007)(446003)(25786009)(54906003)(66446008)(50226002)(3846002)(36756003)(66476007)(256004)(64756008)(2351001)(2616005)(8676002)(6116002)(86362001)(478600001)(305945005);DIR:OUT;SFP:1101;SCL:1;SRVR:MWHPR11MB1472;H:MWHPR11MB1373.namprd11.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
 received-spf: None (protection.outlook.com: microchip.com does not designate
  permitted sender hosts)
 x-ms-exchange-senderadcheck: 1
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: =?iso-8859-1?Q?nJfcbuX00r8r6key/5BPkfSEOGklBPJAGYfl4tzIAX6LYh+ZEM2HMaUK4f?=
- =?iso-8859-1?Q?L3TDwV8QX05U79bkSvy1iDaqqRhayzBs4bAqxVVQkMFpEcQA8al9FPE5Ow?=
- =?iso-8859-1?Q?6WCHwYYENmCVoy38BwIdzTuck4iQ+ZhxYZU6zKWamjBUIp/+jWxOr3d0hG?=
- =?iso-8859-1?Q?p44GQtWFLlMqSUrb8ZaxIAdVSPNDJsKQDY/9O2DwRR3YyM+MSR8lx+IYPL?=
- =?iso-8859-1?Q?ikTE+ii+/PB/gjGfY79AScO2c8JwttzVXLjkDAheRWj0t9SufCuH6sRXS0?=
- =?iso-8859-1?Q?qRRrBL9uxblIgmTpv8wruAAfoeOvGeBe2JB3ZDUl8Z8+mClmFiRlRizdkW?=
- =?iso-8859-1?Q?0ZTf7IRHl1GA5aTTzFsDtUlxA8GCEFnFCUeSBL8QjMRXZb1qv9vrRzbQAJ?=
- =?iso-8859-1?Q?00dEpyBtItJEk+fm60wQlkP+NVa/SZHFWY0pQjn79L06PqweXtz8Qr5fCt?=
- =?iso-8859-1?Q?yFQgFefEHzvRSTbDEb4/2ZGzmg3H0nID0V2j82tIzSdmakAaja96qAMxkT?=
- =?iso-8859-1?Q?ZplVxlTlGHnc60ZKGXNpflX2eoWxW+0AnNlQe7V3t/TBOkSFiWHD43exa+?=
- =?iso-8859-1?Q?V8FQ8qoSQlA8ktonfnTu3JGD7YB8M8rTQBnCHDBFg8CJiSLTY9y1uN7kec?=
- =?iso-8859-1?Q?/4ENH9RxxIcl2d+d+5IRMLri+jMhBVVf71lLLbX9FOhXhqSUHlbhcHJ6J5?=
- =?iso-8859-1?Q?a+Gyr6b0E4kvFd3OqWUHQkzUB8/6GRfsD4K5YUEebZt/0HrDAMiWgc7t3h?=
- =?iso-8859-1?Q?OQnmq89srGBNr/OXlrUkRpvhsSAQxg/scN5Kw7z+jstYJhgtxxk/hUZoBJ?=
- =?iso-8859-1?Q?XDT0if/eTyF+Ny+qizWyPB++L5gCme2bVCOBqnUc1vxRZ6u5lze79pRWvY?=
- =?iso-8859-1?Q?pPsdJd2HvPMsesT269AqX5jgNPoUD21WmBCVH4Qh7IDxhiw4CIp4Z0rCsY?=
- =?iso-8859-1?Q?Vi/JkTqukXmW+V73z14jRfrg1g3GlKOqQ7FCuzYHi1wevm83n4edwY0RXD?=
- =?iso-8859-1?Q?35WSYsY9+QGhuWqdAt6LEXxuirmBHmtykamcrBKcJ4UpuwmL5hVaGTZkNT?=
- =?iso-8859-1?Q?dsdJ+nE6lcXwUY2oGu0sGHM4lXPtjypvytHIxnzkQvXKcJ++iC8AP/ujEa?=
- =?iso-8859-1?Q?VXlPXZzefuPKt7wnr4WpmsRsqFXxaN4b3jAwW4e7Ousy8ZEhy6dqyHUy74?=
- =?iso-8859-1?Q?S6VcSM9+ctpLGWeRg9xzyB5tySWZr5f6PlWEWw3ytjc4nJFuhCrOVm4zqj?=
- =?iso-8859-1?Q?zSlS37eN8MZSuHPsyzoQzErNLeLOYkd1qgMuTwXb5cQtIC9k79CeRCfDQF?=
- =?iso-8859-1?Q?j57n38DnI42vvoXSbdZVVFaj4A6iYSYA0GYcj82zo9lGQ537W9j1bYcta2?=
- =?iso-8859-1?Q?mH9xbIZsIkxxT5xZjgez5MHFYaU8kqYpUDnX39WI6Qd91C5zP2rx76M0sF?=
- =?iso-8859-1?Q?wKG4eluXVulkmCEoWq0nyZpt4eh3A17ckuqhQhCHrBeD6bP7hI4rD5aX8K?=
- =?iso-8859-1?Q?0XlT1kOMeMyLp3BHA0chiz8xa/7OwxEZO//q+3j6SEDQeoNytl3MjefBzr?=
- =?iso-8859-1?Q?nTYDuGUCOb8xDJb2Ya32uZ8yobUP4fqaB+Y6imXtiJKukjaVHMINQRILOx?=
- =?iso-8859-1?Q?9rhvsATehyDfZsQAuGcCx3v+qUWsr9YaYwPg/TJfRQl8QjC3MLv7t9+u73?=
- =?iso-8859-1?Q?Isspn2SAI8pOp+2m7M7MMDPs4bDcuV2YkSyzOTgJNiEGlxF0AIO3Kl2nFJ?=
- =?iso-8859-1?Q?91GA=3D=3D?=
+x-microsoft-antispam-message-info: =?iso-8859-1?Q?kmE8jhnWdM0I+DYIdf6gTbcbag9VteR428UTXW74wqjZomRWpFmGUhSlF7?=
+ =?iso-8859-1?Q?VSYgzSahQdWjtx3xOH2TK8AGZvmGAs/whEAKNjHzornlOdSRlQ/hlK9WUL?=
+ =?iso-8859-1?Q?icUEGHWD2A6RtgeeOpxfj0JCllqIbbqTv3vY6ZtTcjuCsps0C/YcbCL4Qm?=
+ =?iso-8859-1?Q?+QUVvDjz+GNd0Hd+FY7GI7/lWH5bAtyF17Bm0wNbZrrvuvmGPDmlVjREYT?=
+ =?iso-8859-1?Q?Ia5VsmYWJnlq9IV6hv1p32BbsfB/yXURpxys/dW12FKyGIjA5QTmJ7uoGI?=
+ =?iso-8859-1?Q?9Pe6cvImKdwVpQcGy05qeW4nRkcsxlvHF2Xh2nDA8Lx8hlep6pZAXZkd9t?=
+ =?iso-8859-1?Q?zjBzhVRjisWdj1NrGA8tjFAWlshQgJRT+iZnfWsH6G8kOWNlWcDZhNckay?=
+ =?iso-8859-1?Q?taGsdn9k5z7H0dO8LbTEkVxMoA0ssyEzh8aT/f3KnWBXTRhD/X4T3ossOa?=
+ =?iso-8859-1?Q?2sKHYMgMiZvXKAQaEa/Dw5eeaenmSFf5BZtaD3h+SwHDjYs+8WfevRZ1LJ?=
+ =?iso-8859-1?Q?l5ntdAqXyBmComsbaYAh4wVQ4J9xN4PsQjvBDyNMYOavTvXsxwXUUPcQil?=
+ =?iso-8859-1?Q?NOCwb91Wnbk0X5sF+kMRzHEct0sp0DBcViq4X0G1kKnjgy+TUZfFZu8O6b?=
+ =?iso-8859-1?Q?tkCgvC2rJ1uMj+lM3D93pL26Tk4VvxfpNst8YIFYAM9mfCqtoTazE8qJmg?=
+ =?iso-8859-1?Q?L3nkewWKvLGN21W64liEh3/P7EwoEe44qykyPkLy7ZwvtCXRUKMoWp59iH?=
+ =?iso-8859-1?Q?b8+LyBFwKRLkgDL0Qg8DeXzxlNx+kbNvMPBJN+b703kRBdsyisaj59xb6u?=
+ =?iso-8859-1?Q?y1rbUMKDd0ecwCHkMtIPLn5dUvkEciyDGakBhbFXI/9PtJXrT13Rp2BXkY?=
+ =?iso-8859-1?Q?wofe5U1AMSPXPzjzgm8/V4WAD05t+M9uzHL6qzQiKq6Vl5fvZ8VBAjHwxh?=
+ =?iso-8859-1?Q?4hvKKV1ZCVnPXaepau6eooDZGeImfQNZIHKiAKtgIT701W82/coArW9DCO?=
+ =?iso-8859-1?Q?iq61fjKT9w8cRRzU74crLbR1gDV21LW4hMuo0ESxfdolLjG7jgofe6qyvn?=
+ =?iso-8859-1?Q?JgvgIHkohduwnBwOPHH+gnEIDtxQt89/ySbhR/ymXsV6laxYJPsrEEcDZG?=
+ =?iso-8859-1?Q?QORxNCjB9asdOI8rJSxUxSlo7o4L5AUkO6UmCmp30crGP2JcU58xJm9KAF?=
+ =?iso-8859-1?Q?93vutMIru1uciW1eRyLdDpbYhGXi0efHkvWmnOgGRoXa4Cq4vN5NKahTzI?=
+ =?iso-8859-1?Q?6R+3/fIvPKmmieUmXeBCDGg7mV42YPKqqLemBcvtPymTG/QLT1yTba8dXJ?=
+ =?iso-8859-1?Q?xX/a6ZbUUG8Smu8mte2Kw8CQWLFDyKbG0OTJtYpWqH1gqTcpArojM6zQ3I?=
+ =?iso-8859-1?Q?4VEBekQ42/a0GsUZkHMRrjH43jJR7CD6z+Cpi/+t/p0S0638H6YKvpq7Me?=
+ =?iso-8859-1?Q?mAn++/LDl2AE8SRw1QBtv7tZUYFuB3AtkYKX7G3mwynBJy7TTerw0akvv8?=
+ =?iso-8859-1?Q?Vzaf3Fmuew0isIFN5TlX6GoqYhOg6QctMnvAC+Top/ttFUppYRazoS/sUg?=
+ =?iso-8859-1?Q?s6vRhKy/RgOVZbxKDE9d+f2jIMdNnbnsf6k8A4AaA90BSlPvh6aKKQB6wy?=
+ =?iso-8859-1?Q?txlrqlYsrcUmXUaUDyT5einYwoiaV5DKmaGfO+vlscocbQq8tTJZbd0KnW?=
+ =?iso-8859-1?Q?2Wiuzu2pI/7ilN6vpWQOGehV26H351BpetqtuqLahxLY9c3CCaJdDn6Tk9?=
+ =?iso-8859-1?Q?QS+heiKFAaMxNWDU83VnTzJHDs21SK2Q/4crzHGceBj1YyCkwtRELu//84?=
+ =?iso-8859-1?Q?2F+LO7JZMA=3D=3D?=
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5cdaa1e5-201c-4e81-afa5-08d76f8dd360
-X-MS-Exchange-CrossTenant-originalarrivaltime: 22 Nov 2019 20:52:02.5994
+X-MS-Exchange-CrossTenant-Network-Message-Id: 78c4717b-a183-404f-ca98-08d76f8dd49b
+X-MS-Exchange-CrossTenant-originalarrivaltime: 22 Nov 2019 20:52:04.6645
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 3oPdIokbQpXdozG2bOzoeAPor1aDgHX0PYHl6hQPCadNFbk0E+5aNosgzCkFqf8ObEVZybk6GElldVlOvGvw9Xshn3v3YsxZfxfSCCqyC78=
+X-MS-Exchange-CrossTenant-userprincipalname: VnbM+dzgnuxB/6CS0vWbRwe34qrd/SXzLp6EmCNt3GrlmhDjw6+lJ15k9WRblmduiZ+Gdyj09lwZ3kmuR56tNO7P/mL2D2hMdc+FrKMv8ls=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR11MB1472
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
@@ -164,60 +167,45 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ajay Singh <ajay.kathat@microchip.com>
 
-Set SDIO Out-of-band interrupt configuration at run time by passing
-parameter during module load.
+To parse the mac header make use of *struct ieee80211_hdr* instead of
+extracting individual fields separately using pointer operation.
 
 Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/staging/wilc1000/Kconfig | 10 ----------
- drivers/staging/wilc1000/sdio.c  |  7 ++++++-
- 2 files changed, 6 insertions(+), 11 deletions(-)
+ drivers/staging/wilc1000/netdev.c | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/Kconfig b/drivers/staging/wilc1000/Kc=
-onfig
-index 59e58550d139..e556d3c9039b 100644
---- a/drivers/staging/wilc1000/Kconfig
-+++ b/drivers/staging/wilc1000/Kconfig
-@@ -30,13 +30,3 @@ config WILC1000_SPI
- 	  full-duplex slave synchronous serial interface that is available
- 	  immediately following reset when pin 9 (SDIO_SPI_CFG) is tied to
- 	  VDDIO. Select this if your platform is using the SPI bus.
+diff --git a/drivers/staging/wilc1000/netdev.c b/drivers/staging/wilc1000/n=
+etdev.c
+index d2c0b0f7cf63..3fd8e008f733 100644
+--- a/drivers/staging/wilc1000/netdev.c
++++ b/drivers/staging/wilc1000/netdev.c
+@@ -96,21 +96,18 @@ void wilc_mac_indicate(struct wilc *wilc)
+=20
+ static struct net_device *get_if_handler(struct wilc *wilc, u8 *mac_header=
+)
+ {
+-	u8 *bssid, *bssid1;
+ 	struct net_device *ndev =3D NULL;
+ 	struct wilc_vif *vif;
 -
--config WILC1000_HW_OOB_INTR
--	bool "WILC1000 out of band interrupt"
--	depends on WILC1000_SDIO
--	help
--	  This option enables out-of-band interrupt support for the WILC1000
--	  chipset. This OOB interrupt is intended to provide a faster interrupt
--	  mechanism for SDIO host controllers that don't support SDIO interrupt.
--	  Select this option If the SDIO host controller in your platform
--	  doesn't support SDIO time devision interrupt.
-diff --git a/drivers/staging/wilc1000/sdio.c b/drivers/staging/wilc1000/sdi=
-o.c
-index 319e039380b0..098094ab5156 100644
---- a/drivers/staging/wilc1000/sdio.c
-+++ b/drivers/staging/wilc1000/sdio.c
-@@ -11,6 +11,11 @@
- #include "netdev.h"
- #include "cfg80211.h"
+-	bssid =3D mac_header + 10;
+-	bssid1 =3D mac_header + 4;
++	struct ieee80211_hdr *h =3D (struct ieee80211_hdr *)mac_header;
 =20
-+static bool enable_oob_interrupt;
-+module_param(enable_oob_interrupt, bool, 0644);
-+MODULE_PARM_DESC(enable_oob_interrupt,
-+		 "enables sdio out-of-band interrupt support");
-+
- #define SDIO_MODALIAS "wilc1000_sdio"
-=20
- #define SDIO_VENDOR_ID_WILC 0x0296
-@@ -131,7 +136,7 @@ static int wilc_sdio_probe(struct sdio_func *func,
- 	if (!sdio_priv)
- 		return -ENOMEM;
-=20
--	if (IS_ENABLED(CONFIG_WILC1000_HW_OOB_INTR)) {
-+	if (enable_oob_interrupt) {
- 		gpio =3D gpiod_get(&func->dev, "irq", GPIOD_IN);
- 		if (IS_ERR(gpio)) {
- 			/* get the GPIO descriptor from hardcode GPIO number */
+ 	list_for_each_entry_rcu(vif, &wilc->vif_list, list) {
+ 		if (vif->mode =3D=3D WILC_STATION_MODE)
+-			if (ether_addr_equal_unaligned(bssid, vif->bssid)) {
++			if (ether_addr_equal_unaligned(h->addr2, vif->bssid)) {
+ 				ndev =3D vif->ndev;
+ 				goto out;
+ 			}
+ 		if (vif->mode =3D=3D WILC_AP_MODE)
+-			if (ether_addr_equal_unaligned(bssid1, vif->bssid)) {
++			if (ether_addr_equal_unaligned(h->addr1, vif->bssid)) {
+ 				ndev =3D vif->ndev;
+ 				goto out;
+ 			}
 --=20
 2.24.0
 
