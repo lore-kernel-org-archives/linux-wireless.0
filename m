@@ -2,109 +2,147 @@ Return-Path: <SRS0=Y0IC=ZO=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E017C432C0
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 19:20:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 653AAC432C0
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 19:53:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E89072070E
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 19:20:16 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="B++dLgyu"
+	by mail.kernel.org (Postfix) with ESMTP id 3AE1F2072E
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 19:53:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1574452390;
+	bh=o+FcnjAr4l6b6GsIcdrroLJ1V8AgtiMh6PuIpSHnYUw=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=E5/YhsDU82kjdF1qG0Lt4fKwP8tH+oCITKzDdvP4r3RmZwVLjoEJUQCV2b00Y9u9C
+	 mUdFptRgNdlXOe369WLIXhfqhDlMzNbHeJw152SIjqE8AHKUH9sI9ll+3DeIVuN3dj
+	 1WA3SqcMfyHKCUgH3ks/Ve0Vbwy7mAjsfQTclaw4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726747AbfKVTUM (ORCPT
+        id S1727513AbfKVTtj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 22 Nov 2019 14:20:12 -0500
-Received: from mail-io1-f66.google.com ([209.85.166.66]:43276 "EHLO
-        mail-io1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726695AbfKVTUL (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Nov 2019 14:20:11 -0500
-Received: by mail-io1-f66.google.com with SMTP id p12so1922933iog.10;
-        Fri, 22 Nov 2019 11:20:11 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=LUPoVXtEJRriu3gt1A6+ir0p1Bek4hzh1TUla5kFEi4=;
-        b=B++dLgyueJDivQQoLxOkqSMkteMasuevFvh0YY22g0HJXUTPoTQEVXVt4DaEOG1sLi
-         wcA6P+fRoUwNqKPpCUkMmyLa+dQEGG1JQWhE70ME0xaVrT+I9XGhv4IJOpn1i0Z2578t
-         h8VEwse+AN+IulTu+IahMHZoDd5wwJIXLo8FWEtF1TgxwqACvuY0MWoNnKygoR0cSwxw
-         y+C1iBIcTzzX24XaQsh4rfvT12Plq2A4YLWj8gj2PAT1o5ZDRJUA9OkFe366PBEnAC8Z
-         6b7E7JzX98pbqykZ/owIr9kC27tRnGT6yk5D2qHMdBEv6LYDo7uSlxCTKiXbiKLtA7iN
-         mmVA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=LUPoVXtEJRriu3gt1A6+ir0p1Bek4hzh1TUla5kFEi4=;
-        b=Y/3QqUPP0HlaJNXp3o9r8TkbtVYv/bKsg/Xy6bhAkYwqnOHSvkicyUo4QIRha/IW6b
-         YB4kmvmcxGBWRBXeSC5NinnQXgPvo7UacUEpPsof3JXpNHh+ZUkLj4XWAeAJM76DX1aK
-         dXia2hNBMqAfS96R6H6yISOJkZcon3Ew+8zjjicKXx/TCMkay4zSpvnNyGNlAWhm6OAB
-         UJ51DXkzxmRR0FHKm1k17C18HaIeQHelixWfjfOwEne8KjEl1f75RhhsIVO6jPJ33RGf
-         C2gz1o9m/CDH//KgOwFJ3vz2VFJ2nLzhQjVGY0nOsJ+XPNfAByAObbnxPD/j4CPWbcaO
-         HUFQ==
-X-Gm-Message-State: APjAAAVPXYY5iO/jeD/l3B8qvRP/iIiK2v4gy0Dq71KK3Yg7bVsjFNu8
-        vctF99xHXyGPt26GKwiYVqU=
-X-Google-Smtp-Source: APXvYqyUf8IL7jAXQIGJIUESwEj/Iv27BNarP/uWWDgzny2gzQnUZCVpDtO7kbt1exQCfJOlidXNHg==
-X-Received: by 2002:a02:7708:: with SMTP id g8mr5080424jac.9.1574450410698;
-        Fri, 22 Nov 2019 11:20:10 -0800 (PST)
-Received: from cs-dulles.cs.umn.edu (cs-dulles.cs.umn.edu. [128.101.35.54])
-        by smtp.googlemail.com with ESMTPSA id k20sm2647403iol.3.2019.11.22.11.20.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 22 Nov 2019 11:20:10 -0800 (PST)
-From:   Navid Emamdoost <navid.emamdoost@gmail.com>
-To:     Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
+        Fri, 22 Nov 2019 14:49:39 -0500
+Received: from mail.kernel.org ([198.145.29.99]:49554 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727484AbfKVTti (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 22 Nov 2019 14:49:38 -0500
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 34BCB2072D;
+        Fri, 22 Nov 2019 19:49:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1574452177;
+        bh=o+FcnjAr4l6b6GsIcdrroLJ1V8AgtiMh6PuIpSHnYUw=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=L8H8gX9PsKYFim98w7pgmrD1Ieoq6kGvSVZoC7mmCkullhqDbrrrgp1k4F8v5qBCu
+         HWsOZF2aV9GRf6kYW7eWr8+G8YIVYQn3b4mwKL8ocL5pJICkkTT/Ootsus9jL54ctB
+         p9njCZMDadiKRqH8+Exs6yp8qUEXUdfsbkwx/4SU=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Mordechay Goodstein <mordechay.goodstein@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Navid Emamdoost <navid.emamdoost@gmail.com>,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc:     emamd001@umn.edu
-Subject: [PATCH] brcmfmac: Fix memory leak in brcmf_p2p_create_p2pdev()
-Date:   Fri, 22 Nov 2019 13:19:48 -0600
-Message-Id: <20191122191954.17908-1-navid.emamdoost@gmail.com>
-X-Mailer: git-send-email 2.17.1
+        Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.14 04/21] iwlwifi: pcie: don't consider IV len in A-MSDU
+Date:   Fri, 22 Nov 2019 14:49:14 -0500
+Message-Id: <20191122194931.24732-4-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20191122194931.24732-1-sashal@kernel.org>
+References: <20191122194931.24732-1-sashal@kernel.org>
+MIME-Version: 1.0
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-In the implementation of brcmf_p2p_create_p2pdev() the allocated memory
-for p2p_vif is leaked when the mac address is the same as primary
-interface. To fix this, go to error path to release p2p_vif via
-brcmf_free_vif().
+From: Mordechay Goodstein <mordechay.goodstein@intel.com>
 
-Fixes: cb746e47837a ("brcmfmac: check p2pdev mac address uniqueness")
-Signed-off-by: Navid Emamdoost <navid.emamdoost@gmail.com>
+[ Upstream commit cb1a4badf59275eb7221dcec621e8154917eabd1 ]
+
+From gen2 PN is totally offloaded to hardware (also the space for the
+IV isn't part of the skb).  As you can see in mvm/mac80211.c:3545, the
+MAC for cipher types CCMP/GCMP doesn't set
+IEEE80211_KEY_FLAG_PUT_IV_SPACE for gen2 NICs.
+
+This causes all the AMSDU data to be corrupted with cipher enabled.
+
+Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ .../net/wireless/intel/iwlwifi/pcie/tx-gen2.c | 20 +++++++------------
+ 1 file changed, 7 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-index 7ba9f6a68645..1f5deea5a288 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-@@ -2092,7 +2092,8 @@ static struct wireless_dev *brcmf_p2p_create_p2pdev(struct brcmf_p2p_info *p2p,
- 	/* firmware requires unique mac address for p2pdev interface */
- 	if (addr && ether_addr_equal(addr, pri_ifp->mac_addr)) {
- 		bphy_err(drvr, "discovery vif must be different from primary interface\n");
--		return ERR_PTR(-EINVAL);
-+		err = -EINVAL;
-+		goto fail;
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+index 6f45c8148b279..bbb39d6ec2ee3 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+@@ -232,27 +232,23 @@ static int iwl_pcie_gen2_build_amsdu(struct iwl_trans *trans,
+ 	struct ieee80211_hdr *hdr = (void *)skb->data;
+ 	unsigned int snap_ip_tcp_hdrlen, ip_hdrlen, total_len, hdr_room;
+ 	unsigned int mss = skb_shinfo(skb)->gso_size;
+-	u16 length, iv_len, amsdu_pad;
++	u16 length, amsdu_pad;
+ 	u8 *start_hdr;
+ 	struct iwl_tso_hdr_page *hdr_page;
+ 	struct page **page_ptr;
+ 	struct tso_t tso;
+ 
+-	/* if the packet is protected, then it must be CCMP or GCMP */
+-	iv_len = ieee80211_has_protected(hdr->frame_control) ?
+-		IEEE80211_CCMP_HDR_LEN : 0;
+-
+ 	trace_iwlwifi_dev_tx(trans->dev, skb, tfd, sizeof(*tfd),
+ 			     &dev_cmd->hdr, start_len, 0);
+ 
+ 	ip_hdrlen = skb_transport_header(skb) - skb_network_header(skb);
+ 	snap_ip_tcp_hdrlen = 8 + ip_hdrlen + tcp_hdrlen(skb);
+-	total_len = skb->len - snap_ip_tcp_hdrlen - hdr_len - iv_len;
++	total_len = skb->len - snap_ip_tcp_hdrlen - hdr_len;
+ 	amsdu_pad = 0;
+ 
+ 	/* total amount of header we may need for this A-MSDU */
+ 	hdr_room = DIV_ROUND_UP(total_len, mss) *
+-		(3 + snap_ip_tcp_hdrlen + sizeof(struct ethhdr)) + iv_len;
++		(3 + snap_ip_tcp_hdrlen + sizeof(struct ethhdr));
+ 
+ 	/* Our device supports 9 segments at most, it will fit in 1 page */
+ 	hdr_page = get_page_hdr(trans, hdr_room);
+@@ -263,14 +259,12 @@ static int iwl_pcie_gen2_build_amsdu(struct iwl_trans *trans,
+ 	start_hdr = hdr_page->pos;
+ 	page_ptr = (void *)((u8 *)skb->cb + trans_pcie->page_offs);
+ 	*page_ptr = hdr_page->page;
+-	memcpy(hdr_page->pos, skb->data + hdr_len, iv_len);
+-	hdr_page->pos += iv_len;
+ 
+ 	/*
+-	 * Pull the ieee80211 header + IV to be able to use TSO core,
++	 * Pull the ieee80211 header to be able to use TSO core,
+ 	 * we will restore it for the tx_status flow.
+ 	 */
+-	skb_pull(skb, hdr_len + iv_len);
++	skb_pull(skb, hdr_len);
+ 
+ 	/*
+ 	 * Remove the length of all the headers that we don't actually
+@@ -348,8 +342,8 @@ static int iwl_pcie_gen2_build_amsdu(struct iwl_trans *trans,
+ 		}
  	}
  
- 	brcmf_p2p_generate_bss_mac(p2p, addr);
+-	/* re -add the WiFi header and IV */
+-	skb_push(skb, hdr_len + iv_len);
++	/* re -add the WiFi header */
++	skb_push(skb, hdr_len);
+ 
+ 	return 0;
+ 
 -- 
-2.17.1
+2.20.1
 
