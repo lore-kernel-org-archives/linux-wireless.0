@@ -2,125 +2,203 @@ Return-Path: <SRS0=Y0IC=ZO=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B6B1C432C0
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 10:02:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92757C432C0
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 11:14:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E668D20707
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 10:02:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5E0F120721
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 11:14:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Va+53ZzA";
-	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="HWk9NPRZ"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="i8+W8I7D"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726792AbfKVKCh (ORCPT
+        id S1729681AbfKVLOV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 22 Nov 2019 05:02:37 -0500
-Received: from a27-55.smtp-out.us-west-2.amazonses.com ([54.240.27.55]:34066
-        "EHLO a27-55.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726767AbfKVKCg (ORCPT
+        Fri, 22 Nov 2019 06:14:21 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:53030 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729061AbfKVLOU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Nov 2019 05:02:36 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-        s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1574416955;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:Message-ID:MIME-Version:Content-Type:Content-Transfer-Encoding;
-        bh=AlNw6b30Bh8L6QhdL0cnrdZTD8RXiY/LEYyCbwFLZtk=;
-        b=Va+53ZzADMJ9n0k0URDdi0c/9G+2lJgExTq6XX/tywDrSWJ8vQunvaq0bXhWUghg
-        cBdGS4wjW4B5SI7qvOgiazqPDKgvOwYeR647kpOgVo4BDIO6BPjBtmFhr6mc89qnY4O
-        7M9rOL78By/oss54DkLpaQFfAbQuTM2KTLhkO9SA=
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-        s=gdwg2y3kokkkj5a55z2ilkup5wp5hhxx; d=amazonses.com; t=1574416955;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:Message-ID:MIME-Version:Content-Type:Content-Transfer-Encoding:Feedback-ID;
-        bh=AlNw6b30Bh8L6QhdL0cnrdZTD8RXiY/LEYyCbwFLZtk=;
-        b=HWk9NPRZJEKKKixQigN4W0nZDC667vg/yp+V1B6Rk+J7+oyqr1OB+FtX885Xqd4s
-        f/kO3t51G/VfJZuZCdiWMQeQ3ljTRe9HlVHe2Gazu7+lzUjjUGT+FBZWdAYN4BIDZ1P
-        fgWJf6TOptAJn9f/QLALeEcsHNsHoZXtA6WASuLY=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org A76B0C92FED
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Wen Gong <wgong@codeaurora.org>
-Cc:     linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Subject: Re: [PATCH v6 3/3] ath10k: add workqueue for RX path of sdio
-References: <1569402639-31720-1-git-send-email-wgong@codeaurora.org>
-        <1569402639-31720-4-git-send-email-wgong@codeaurora.org>
-        <8736f92sfx.fsf@kamboji.qca.qualcomm.com>
-        <3f3641ad49a2664d346558760e38b404@codeaurora.org>
-        <70f8f208f631a2a2c7337f45b873a16e@codeaurora.org>
-        <87r22ewqi6.fsf@codeaurora.org>
-        <ee6539c50cff626968984df3b511a5a8@codeaurora.org>
-Date:   Fri, 22 Nov 2019 10:02:35 +0000
-In-Reply-To: <ee6539c50cff626968984df3b511a5a8@codeaurora.org> (Wen Gong's
-        message of "Wed, 13 Nov 2019 11:37:57 +0800")
-Message-ID: <0101016e929037fa-4b760ae2-b670-4922-b86e-32a7cd083717-000000@us-west-2.amazonses.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Fri, 22 Nov 2019 06:14:20 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAMBDuZ6133216;
+        Fri, 22 Nov 2019 11:13:56 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=GIxifyYdtbmQt1tL7yec0fFzEwAr/ycRNTaVOVktwxo=;
+ b=i8+W8I7Dcowz2rZWQo/fHzHZmpTHkIEDXHjygLihGuslHKXSd5kV80JnuaPcK3bJO6qj
+ +lR0opwgvd6ZFPHqulpOGZnMfMpllu/ohI4KW3DDRB3ocFDQSB9s0Tl+Jq2333jSPWHT
+ P8ZQQjbofqBc9JIL4u02fgVRfO1vpL9X05ZgPbJ/u76wMXAga7KhWI8dN7dpuU6xyy46
+ CXFeC5DEJHloSVtA3sXpdKTt8diNQwUzTGMwkldz3G4X73nCLR4DHvw2JuupjJ7jh7Uj
+ vyj4+a9P3iWGHAqL1S9Nv7wSOEaSFYibgXJSws6jfuFOgbFze1eN7uUSEDXkBVOY1GWV hg== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 2wa9rr1wj2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 22 Nov 2019 11:13:56 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAMBDotW088000;
+        Fri, 22 Nov 2019 11:13:55 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3030.oracle.com with ESMTP id 2wec28qea1-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 22 Nov 2019 11:13:55 +0000
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xAMBDrK8015571;
+        Fri, 22 Nov 2019 11:13:53 GMT
+Received: from kadam (/41.210.154.155)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 22 Nov 2019 03:13:51 -0800
+Date:   Fri, 22 Nov 2019 14:13:39 +0300
+From:   Dan Carpenter <dan.carpenter@oracle.com>
+To:     qize wang <wangqize888888888@gmail.com>
+Cc:     linux-wireless@vger.kernel.org, amitkarwar <amitkarwar@gmail.com>,
+        nishants <nishants@marvell.com>, gbhat <gbhat@marvell.com>,
+        huxinming820 <huxinming820@gmail.com>,
+        kvalo <kvalo@codeaurora.org>, Greg KH <greg@kroah.com>,
+        security <security@kernel.org>,
+        linux-distros <linux-distros@vs.openwall.org>,
+        Solar Designer <solar@openwall.com>
+Subject: Re: [PATCH] mwifiex: Fix heap overflow in
+ mmwifiex_process_tdls_action_frame()
+Message-ID: <20191122111339.GH617@kadam>
+References: <E40E893E-D9B4-4C63-8139-1DD5E1C2CECB@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-X-SES-Outgoing: 2019.11.22-54.240.27.55
-Feedback-ID: 1.us-west-2.CZuq2qbDmUIuT3qdvXlRHZZCpfZqZ4GtG9v3VKgRyF0=:AmazonSES
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <E40E893E-D9B4-4C63-8139-1DD5E1C2CECB@gmail.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9448 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1911140001 definitions=main-1911220101
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9448 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
+ definitions=main-1911220101
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Wen Gong <wgong@codeaurora.org> writes:
+On Fri, Nov 22, 2019 at 05:43:49PM +0800, qize wang wrote:
+> 		case WLAN_EID_HT_CAPABILITY:
+> -			memcpy((u8 *)&sta_ptr->tdls_cap.ht_capb, pos,
+                                                                ^^^^
+> +			if (pos > end - sizeof(struct ieee80211_ht_cap) - 2)
+> +				return;
+> +			if (pos[1] != sizeof(struct ieee80211_ht_cap))
+> +				return;
+> +			/* copy the ie's value into ht_capb*/
+> +			memcpy((u8 *)&sta_ptr->tdls_cap.ht_capb, pos + 2,
+                                                                 ^^^^^^^
 
-> On 2019-11-11 20:23, Kalle Valo wrote:
->> Wen Gong <wgong@codeaurora.org> writes:
->>
->>> On 2019-11-01 15:42, Wen Gong wrote:
->>>> On 2019-10-31 17:08, Kalle Valo wrote:
->>>> =E3=80=81> I just realised that this is RX path so we should use
->>>> ATH10K_SKB_RXCB()
->>>>> instead. I made the change below to this commit in pending branch:
->>>>>
->>>> I will test with the new patch together with other performance
->>>> patches.
->>> Hi Kalle, I have tested with the patches of pending branch, it is
->>> success.
->>> result is same with the public review which I tested before.
->>>
->>> the patches I tested on pending branch:
->>>
->>> ath10k: enable alt data of TX path for sdio
->>> ath10k: add htt TX bundle for sdio
->>> ath10k: disable TX complete indication of htt for sdio
->>> ath10k: enable napi on RX path for sdio
->>> ath10k: sdio: remove struct ath10k_sdio_rx_data::status
->>> ath10k: sdio: cosmetic cleanup
->>> ath10k: add workqueue for RX path of sdio
->>> ath10k: change max RX bundle size from 8 to 32 for sdio
->>> ath10k: enable RX bundle receive for sdio
->>
->> Very good, thanks for testing.
->
-> this patch will trigger connect fail for PSK mode AP:
-> ath10k: add workqueue for RX path of sdio
->
-> I have sent patch to fix it:
-> ath10k: clear ieee80211_rx_status for sdio
+I don't understand why we changed "pos" to "pos + 2".  Presumably there
+is a reason, but it needs to explained in the commit message.
 
-Good catch! But as this patch is not yet applied I fixed this patch
-instead with this:
 
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -2235,7 +2235,10 @@ static bool ath10k_htt_rx_proc_rx_ind_hl(struct ath1=
-0k_htt *htt,
-=20
-        hdr =3D (struct ieee80211_hdr *)skb->data;
-        qos =3D ieee80211_is_data_qos(hdr->frame_control);
-+
-        rx_status =3D IEEE80211_SKB_RXCB(skb);
-+       memset(rx_status, 0, sizeof(*rx_status));
-+
-        rx_status->chains |=3D BIT(0);
-        if (rx->ppdu.combined_rssi =3D=3D 0) {
-                /* SDIO firmware does not provide signal */
+> 			       sizeof(struct ieee80211_ht_cap));
+> 			sta_ptr->is_11n_enabled = 1;
+> 			break;
+> 		case WLAN_EID_HT_OPERATION:
+> -			memcpy(&sta_ptr->tdls_cap.ht_oper, pos,
+                                                           ^^^
+> +			if (pos > end -
+> +			    sizeof(struct ieee80211_ht_operation) - 2)
+> +				return;
+> +			if (pos[1] != sizeof(struct ieee80211_ht_operation))
+> +				return;
+> +			/* copy the ie's value into ht_oper*/
+> +			memcpy(&sta_ptr->tdls_cap.ht_oper, pos + 2,
+                                                           ^^^^^^^
 
---=20
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatc=
-hes
+> 			       sizeof(struct ieee80211_ht_operation));
+> 			break;
+> 		case WLAN_EID_BSS_COEX_2040:
+> +			if (pos > end - 3)
+> +				return;
+> +			if (pos[1] != 1)
+> +				return;
+> 			sta_ptr->tdls_cap.coex_2040 = pos[2];
+> 			break;
+> 		case WLAN_EID_EXT_CAPABILITY:
+> +			if (pos > end - sizeof(struct ieee_types_header))
+> +				return;
+> +			if (pos[1] < sizeof(struct ieee_types_header))
+> +				return;
+> +			if (pos[1] > 8)
+> +				return;
+> 			memcpy((u8 *)&sta_ptr->tdls_cap.extcap, pos,
+> 			       sizeof(struct ieee_types_header) +
+> 			       min_t(u8, pos[1], 8));
+> 			break;
+> 		case WLAN_EID_RSN:
+> +			if (pos > end - sizeof(struct ieee_types_header))
+> +				return;
+> +			if (pos[1] < sizeof(struct ieee_types_header))
+> +				return;
+> +			if (pos[1] > IEEE_MAX_IE_SIZE -
+> +			    sizeof(struct ieee_types_header))
+> +				return;
+> 			memcpy((u8 *)&sta_ptr->tdls_cap.rsn_ie, pos,
+> 			       sizeof(struct ieee_types_header) +
+> 			       min_t(u8, pos[1], IEEE_MAX_IE_SIZE -
+> 				     sizeof(struct ieee_types_header)));
+> 			break;
+> 		case WLAN_EID_QOS_CAPA:
+> +			if (pos > end - 3)
+> +				return;
+> +			if (pos[1] != 1)
+> +				return;
+> 			sta_ptr->tdls_cap.qos_info = pos[2];
+> 			break;
+> 		case WLAN_EID_VHT_OPERATION:
+> -			if (priv->adapter->is_hw_11ac_capable)
+> -				memcpy(&sta_ptr->tdls_cap.vhtoper, pos,
+                                                                   ^^^
+
+> +			if (priv->adapter->is_hw_11ac_capable) {
+> +				if (pos > end -
+> +				    sizeof(struct ieee80211_vht_operation) - 2)
+> +					return;
+> +				if (pos[1] !=
+> +				    sizeof(struct ieee80211_vht_operation))
+> +					return;
+> +				/* copy the ie's value into vhtoper*/
+> +				memcpy(&sta_ptr->tdls_cap.vhtoper, pos + 2,
+                                                                   ^^^^^^^
+> 				       sizeof(struct ieee80211_vht_operation));
+> +			}
+> 			break;
+> 		case WLAN_EID_VHT_CAPABILITY:
+> 			if (priv->adapter->is_hw_11ac_capable) {
+> -				memcpy((u8 *)&sta_ptr->tdls_cap.vhtcap, pos,
+                                                                        ^^^
+
+> +				if (pos > end -
+> +				    sizeof(struct ieee80211_vht_cap) - 2)
+> +					return;
+> +				if (pos[1] != sizeof(struct ieee80211_vht_cap))
+> +					return;
+> +				/* copy the ie's value into vhtcap*/
+> +				memcpy((u8 *)&sta_ptr->tdls_cap.vhtcap, pos + 2,
+                                                                        ^^^^^^^
+
+> 				       sizeof(struct ieee80211_vht_cap));
+> 				sta_ptr->is_11ac_enabled = 1;
+> 			}
+> 			break;
+
+I was confused by the "- 2" as well in the earlier versions of this
+patch but Marvell approved it so I assumed it was correct.  It would be
+nice if this patch were tested.
+
+regards,
+dan carpenter
+
