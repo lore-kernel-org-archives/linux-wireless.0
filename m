@@ -2,99 +2,134 @@ Return-Path: <SRS0=Y0IC=ZO=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4B20C432C0
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 17:50:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC650C43215
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 17:59:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A12DB2068F
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 17:50:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C71CC2071B
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 17:59:06 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mwWDWXgM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726676AbfKVRuS (ORCPT
+        id S1726686AbfKVR7G (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 22 Nov 2019 12:50:18 -0500
-Received: from s3.sipsolutions.net ([144.76.43.62]:48654 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726046AbfKVRuR (ORCPT
+        Fri, 22 Nov 2019 12:59:06 -0500
+Received: from mail-oi1-f194.google.com ([209.85.167.194]:33201 "EHLO
+        mail-oi1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726046AbfKVR7F (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Nov 2019 12:50:17 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.92.3)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1iYD4R-00028d-U5; Fri, 22 Nov 2019 18:50:16 +0100
-Message-ID: <d6d9eef2a6260fd7b677f137d00c4aa416ba4c3f.camel@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: fix overwriting of qos_ctrl.tid field
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Fredrik Olofsson <fredrik.olofsson@anyfinetworks.com>
-Cc:     linux-wireless@vger.kernel.org
-Date:   Fri, 22 Nov 2019 18:50:13 +0100
-In-Reply-To: <CADiFmNOFfjoZ9ah-_AyrJmKUvVoYjO3EfG9LqozZDFq4tUoZ-Q@mail.gmail.com> (sfid-20191122_160659_482033_F1641F35)
-References: <20191119133451.14711-1-fredrik.olofsson@anyfinetworks.com>
-         <e28361a05a275e999be17eb7ce659423db255497.camel@sipsolutions.net>
-         <CADiFmNOFfjoZ9ah-_AyrJmKUvVoYjO3EfG9LqozZDFq4tUoZ-Q@mail.gmail.com>
-         (sfid-20191122_160659_482033_F1641F35)
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.30.5 (3.30.5-1.fc29) 
+        Fri, 22 Nov 2019 12:59:05 -0500
+Received: by mail-oi1-f194.google.com with SMTP id x21so163024oic.0;
+        Fri, 22 Nov 2019 09:59:03 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=Zt9/WbRpF+in66rAGR5FMaxTYD1kOM2Ez5yax9xrbjU=;
+        b=mwWDWXgM5LRjvON1p+hq4/FN8aeAV6T5zQIHssM3jAciT+GCLD+uWaJI5wq8w7D8En
+         65dzRnQJFNbLsb/cnZ7pqxSmKiNm7pkNIupWiL3WrFU1fc1ooWy/lWXUPW5jt7AU92ZL
+         Esmk6bfF0vDYmZh7z3/yYcrLCbSRRmFLPYpd10ix6zTv8YPkFNx1GVtuCJwUMkgj1BgS
+         OW9b2i1uSp1HJwLqqGYBnuo1YT83MjPl+d7XgdV5FXk5YSUUP6vMaBA04RlGc5GxZyxx
+         d2F/Ja15TSjVQRNQja/qdoqPfF4/z06HSUwDojRXGWhSOSbCFRu/UXCh29e5eWZ8Jj3K
+         EASA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:sender:subject:to:cc:references:from:message-id
+         :date:user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=Zt9/WbRpF+in66rAGR5FMaxTYD1kOM2Ez5yax9xrbjU=;
+        b=tRQ8ZPLNTCR4UdMe4z6voXXbo7LQaZox95+xPqB/USvb/pB2W9qvPj+axMLT6/Nfvi
+         7AsuY+67IiXrtZb75EnHlaWjb49ey1YCvYUhnONAjChTptftN6Vr/3AhGujxKMuH6cpb
+         AlmyVRdfdy9j9MztWJ0Oa7YBpIR2YRtrMg4VE5VN970MDRQ2lAfrEFpbfO+dCkXIq1d4
+         qNjCxITbeSr1RtmYcExB5v6r9h8Nm9fYFttfkDcoRgOv+TeSwBIGURQN0Y4KOhCjlMFQ
+         kxGqPc1WDuMZ5BLlWen0qnkuJ4KwxrnRL//ZzBMElnwrESicfUZwShTno0TMLqQ3rqys
+         P1OQ==
+X-Gm-Message-State: APjAAAV19m9ERYoQnp9O5ATm/bX02BUQvU36P/IUxWnTLoIgJHbstrqc
+        0RbCoUEpzxdUJxZI3h8afKGFqmuX
+X-Google-Smtp-Source: APXvYqwac8KQFpUPDIstpS6f+I9wvIgst8DQs6V3Ro2aaBvH7gB7X9kb/mlsypjVVAxffPQzk1ww7A==
+X-Received: by 2002:aca:f141:: with SMTP id p62mr13059822oih.3.1574445543256;
+        Fri, 22 Nov 2019 09:59:03 -0800 (PST)
+Received: from [192.168.1.112] (cpe-24-31-245-230.kc.res.rr.com. [24.31.245.230])
+        by smtp.gmail.com with ESMTPSA id t10sm2408834otc.65.2019.11.22.09.59.02
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 22 Nov 2019 09:59:02 -0800 (PST)
+Subject: Re: [PATCH 2/3] rtlwifi: rtl8192de: Fix missing callback that tests
+ for hw release of buffer
+To:     Sasha Levin <sashal@kernel.org>, kvalo@codeaurora.org
+Cc:     linux-wireless@vger.kernel.org, pkshih@realtek.com,
+        stable@vger.kernel.org
+References: <20191111194046.26908-3-Larry.Finger@lwfinger.net>
+ <20191122070014.BA0492070A@mail.kernel.org>
+From:   Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <abb85c02-d7f2-7eb0-7522-7616d32de100@lwfinger.net>
+Date:   Fri, 22 Nov 2019 11:59:01 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.2.1
 MIME-Version: 1.0
+In-Reply-To: <20191122070014.BA0492070A@mail.kernel.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, 2019-11-22 at 16:06 +0100, Fredrik Olofsson wrote:
+On 11/22/19 1:00 AM, Sasha Levin wrote:
+> Hi,
+> 
+> [This is an automated email]
+> 
+> This commit has been processed because it contains a "Fixes:" tag,
+> fixing commit: 38506ecefab9 ("rtlwifi: rtl_pci: Start modification for new drivers").
+> 
+> The bot has tested the following trees: v5.3.11, v4.19.84, v4.14.154, v4.9.201, v4.4.201.
+> 
+> v5.3.11: Build OK!
+> v4.19.84: Build OK!
+> v4.14.154: Failed to apply! Possible dependencies:
+>      0c07bd745760 ("rtlwifi: rtl8192ee: Make driver support 64bits DMA.")
+> 
+> v4.9.201: Failed to apply! Possible dependencies:
+>      004a1e167905 ("rtlwifi: rtl8821ae: Remove all instances of DBG_EMERG")
+>      02527a73beb3 ("rtlwifi: rtl8188ee: Remove all instances of DBG_EMERG")
+>      0c07bd745760 ("rtlwifi: rtl8192ee: Make driver support 64bits DMA.")
+>      102e295ed5a4 ("rtlwifi: Redo debugging macros RTPRINT and RT_PRINT_DATA")
+>      2d15acac2354 ("rtlwifi: rtl8192se: Remove all instances of DBG_EMERG")
+>      4e2b4378f9d7 ("rtlwifi: rtl8723be: Remove all instances of DBG_EMERG")
+>      a44f59d60365 ("rtlwifi: rtl8192ee: Remove all instances of DBG_EMERG")
+>      a67005bc46d9 ("rtlwifi: rtl8723ae: Remove all instances of DBG_EMERG")
+>      b8c79f454880 ("rtlwifi: rtl8192de: Remove all instances of DBG_EMERG")
+>      c34df318ec9f ("rtlwifi: Convert COMP_XX entries into a proper debugging mask")
+>      c38af3f06af4 ("rtlwifi: rtl8192cu: Remove all instances of DBG_EMERG")
+>      e40a005652ad ("rtlwifi: rtl8192ce: Remove all instances of DBG_EMERG")
+> 
+> v4.4.201: Failed to apply! Possible dependencies:
+>      02527a73beb3 ("rtlwifi: rtl8188ee: Remove all instances of DBG_EMERG")
+>      0c07bd745760 ("rtlwifi: rtl8192ee: Make driver support 64bits DMA.")
+>      102e295ed5a4 ("rtlwifi: Redo debugging macros RTPRINT and RT_PRINT_DATA")
+>      4713bd1c7407 ("rtlwifi: Add missing newlines to RT_TRACE calls")
+>      5345ea6a4bfb ("rtlwifi: fix error handling in *_read_adapter_info()")
+>      9ce221915a94 ("rtlwifi: Create _rtl_dbg_trace function to reduce RT_TRACE code size")
+>      ad5748893b27 ("rtlwifi: Add switch variable to 'switch case not processed' messages")
+>      b8c79f454880 ("rtlwifi: rtl8192de: Remove all instances of DBG_EMERG")
+>      c34df318ec9f ("rtlwifi: Convert COMP_XX entries into a proper debugging mask")
+>      c38af3f06af4 ("rtlwifi: rtl8192cu: Remove all instances of DBG_EMERG")
+>      e40a005652ad ("rtlwifi: rtl8192ce: Remove all instances of DBG_EMERG")
+> 
+> 
+> NOTE: The patch will not be queued to stable trees until it is upstream.
+> 
+> How should we proceed with this patch?
 
-> > I'm not sure I understand.
-> > 
-> > If the QoS field is overwritten (where, btw?) then wouldn't that still
-> > be done even after this change, and if the frame is pre-encrypted it is
-> > corrupted?
-> 
-> Thanks for your response, and sorry for being too terse.
-> 
-> What we are doing is injecting pre-encrypted frames on the monitor interface.
-> This used to work without issues (prior to the commit I mentioned). But now,
-> the QoS field is overwritten, corrupting the frame. Actually the overwriting
-> happened previously as well, but the QoS.TID field was not changed since it
-> was always overwritten with the same value as it already had. This
-> overwriting with the same value happens after my patch as well.
-> 
-> The simplified call flow for the frame is something like this:
-> 
-> netdev_core_pick_tx()
->   if (dev->real_num_tx_queues != 1) {
->     dev->ndo_select_queue()      <<< really: ieee80211_monitor_select_queue()
->   }
-> 
-> ...
-> 
-> ieee80211_monitor_start_xmit()
->   ieee80211_xmit()
->     ieee80211_set_qos_hdr()      <<< here the tid is overwritten
->     ieee80211_tx()
-> 
-> But after dbd50a851c50, real_num_tx_queues == 1 and
-> ieee80211_monitor_select_queue() is never called. Then when the frame arrives
-> in ieee80211_set_qos_hdr() the qos.tid field is overwritten with the wrong
-> value. My patch makes sure ieee80211_set_qos_hdr() writes the same QoS.TID
-> value as was originally in the frame. Even if ieee80211_monitor_select_queue()
-> is not called.
-> 
-> My suggested patch tries to do the same as what happened before, but it may
-> not be the correct way to do this. Maybe real_num_queues should not be 1?
-> Maybe it would be better to detect the case that the frame is already
-> encrypted, and make sure not to touch any protected fields at all?
+Sasha,
 
-No ... I get it now I think. Will need to think about it correctly
-again.
+The underlying directories were moved from drivers/net/wireless/rtlwifi/ to 
+drivers/net/wireless/realtek/rtlwifi/. I can refactor the patches to account for 
+this change. How should I annotate them, and where should I send them?
 
-What confused me is that you said the field was 'encrypted' but really
-it's not, it's just part of what gets protected during the encryption. I
-paid too much attention to your email vs. remembering how this all works
-and then figured you couldn't write back the value to an encrypted
-field. All good, I'll figure it out :)
-
-johannes
+Larry
 
