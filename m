@@ -7,47 +7,50 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73632C432C3
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 06:24:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10F2CC432C3
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 06:24:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3F67A20409
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 06:24:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DB53F20409
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 06:24:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1574403877;
-	bh=gjGA4RaMSHT64+qS1HoDY2NasMLucSNVblWZNdWGt3U=;
+	s=default; t=1574403895;
+	bh=tGR4MvCBLeI6lQWpNWyqFTW0hb+j4u+7X8UgrF2QNrs=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=pD0wuKgdpSQwPEvKB0gnIC97DkKXdnAdt5Wx04eqsSRJsgLTZ2Y/kPgLIsYLZj3cV
-	 g32aoHuElWZB/gpQ5uFTNwMDq6oO8/vNGelwWcFIVhaG7CM9KDQDoUgXzOlInUsJ4V
-	 /grv+6A2nJgfd7XQqd+8g3Hu2Kqc+4NUYWZddwxA=
+	b=NghnrUrJBtAJiPKveF/9q1s95q0es7kl0be1XPb0MUGjWsS6Qh5Jmr5jr9UBxIVn+
+	 jOThE/dDjyQlPjGOV2dd142jc+/yc023Buw5T8OtiXJf0+q92bH2I2czFluOLah8rE
+	 C9FyR+J3qQVLf2cz1UmZB8iZsvqzPKDo63M5cmzU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728117AbfKVFvZ (ORCPT
+        id S1728920AbfKVGYr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 22 Nov 2019 00:51:25 -0500
-Received: from mail.kernel.org ([198.145.29.99]:56432 "EHLO mail.kernel.org"
+        Fri, 22 Nov 2019 01:24:47 -0500
+Received: from mail.kernel.org ([198.145.29.99]:56352 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728106AbfKVFvY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Nov 2019 00:51:24 -0500
+        id S1728099AbfKVFvV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 22 Nov 2019 00:51:21 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 8134E20730;
-        Fri, 22 Nov 2019 05:51:22 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id F19712068F;
+        Fri, 22 Nov 2019 05:51:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1574401883;
-        bh=gjGA4RaMSHT64+qS1HoDY2NasMLucSNVblWZNdWGt3U=;
+        s=default; t=1574401881;
+        bh=tGR4MvCBLeI6lQWpNWyqFTW0hb+j4u+7X8UgrF2QNrs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=PMoaUNZlFrpuE0iaU3D7r+pSHdJPSLWCSqMmfhrAzzE4K1Kx1AXsTrSFguB0U4KYD
-         cithAVcCPR8F/fXWPPc4ts6GcrZDB+DmzpxwKXGWeGkeyt9wfK0/sFNTXettWWOGFb
-         POXlsFhkChTZtL2SIU3eHS0NFGaZ8X5+mzebTzzs=
+        b=0vgqstSLWxMJzNeJgWkqPY9NvZGpXVeuJM+sqwaAHbuld7/uVKIVliwvCUAtcq4+e
+         OedFiZ4YNN51J7uWrQl+Ij6dUNo7Db+/9bDrwmj/Kg4cT9FKTmTT9rYlXpwFrPXBg9
+         AfYvfGr19YEFh57PLbihAPVuGWzGBcUhtNlGZ5Uw=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Kyle Roeschley <kyle.roeschley@ni.com>,
+Cc:     Stefan Wahren <stefan.wahren@i2se.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 117/219] ath6kl: Fix off by one error in scan completion
-Date:   Fri, 22 Nov 2019 00:47:29 -0500
-Message-Id: <20191122054911.1750-110-sashal@kernel.org>
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 115/219] brcmfmac: Fix access point mode
+Date:   Fri, 22 Nov 2019 00:47:27 -0500
+Message-Id: <20191122054911.1750-108-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191122054911.1750-1-sashal@kernel.org>
 References: <20191122054911.1750-1-sashal@kernel.org>
@@ -60,36 +63,49 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Kyle Roeschley <kyle.roeschley@ni.com>
+From: Stefan Wahren <stefan.wahren@i2se.com>
 
-[ Upstream commit 5803c12816c43bd09e5f4247dd9313c2d9a2c41b ]
+[ Upstream commit 861cb5eb467f5e38dce1aabe4e8db379255bd89b ]
 
-When ath6kl was reworked to share code between regular and scheduled scans
-in commit 3b8ffc6a22ba ("ath6kl: Configure probed SSID list consistently"),
-probed SSID entry changed from 1-index to 0-indexed. However,
-ath6kl_cfg80211_scan_complete_event() was missed in that change. Fix its
-indexing so that we correctly clear out the probed SSID list.
+Since commit 1204aa17f3b4 ("brcmfmac: set WIPHY_FLAG_HAVE_AP_SME flag")
+the Raspberry Pi 3 A+ (BCM43455) isn't able to operate in AP mode with
+hostapd (device_ap_sme=1 use_monitor=0):
 
-Signed-off-by: Kyle Roeschley <kyle.roeschley@ni.com>
+brcmfmac: brcmf_cfg80211_stop_ap: setting AP mode failed -52
+
+So add the missing mgmt_stypes for AP mode to fix this.
+
+Fixes: 1204aa17f3b4 ("brcmfmac: set WIPHY_FLAG_HAVE_AP_SME flag")
+Suggested-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Stefan Wahren <stefan.wahren@i2se.com>
+Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath6kl/cfg80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ .../wireless/broadcom/brcm80211/brcmfmac/cfg80211.c    | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 6c98d7903ffb6..d7c626d9594e1 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -1093,7 +1093,7 @@ void ath6kl_cfg80211_scan_complete_event(struct ath6kl_vif *vif, bool aborted)
- 	if (vif->scan_req->n_ssids && vif->scan_req->ssids[0].ssid_len) {
- 		for (i = 0; i < vif->scan_req->n_ssids; i++) {
- 			ath6kl_wmi_probedssid_cmd(ar->wmi, vif->fw_vif_idx,
--						  i + 1, DISABLE_SSID_FLAG,
-+						  i, DISABLE_SSID_FLAG,
- 						  0, NULL);
- 		}
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index c7c520f327f2b..bbdc6000afb9b 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -6314,6 +6314,16 @@ brcmf_txrx_stypes[NUM_NL80211_IFTYPES] = {
+ 		.tx = 0xffff,
+ 		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
+ 		      BIT(IEEE80211_STYPE_PROBE_REQ >> 4)
++	},
++	[NL80211_IFTYPE_AP] = {
++		.tx = 0xffff,
++		.rx = BIT(IEEE80211_STYPE_ASSOC_REQ >> 4) |
++		      BIT(IEEE80211_STYPE_REASSOC_REQ >> 4) |
++		      BIT(IEEE80211_STYPE_PROBE_REQ >> 4) |
++		      BIT(IEEE80211_STYPE_DISASSOC >> 4) |
++		      BIT(IEEE80211_STYPE_AUTH >> 4) |
++		      BIT(IEEE80211_STYPE_DEAUTH >> 4) |
++		      BIT(IEEE80211_STYPE_ACTION >> 4)
  	}
+ };
+ 
 -- 
 2.20.1
 
