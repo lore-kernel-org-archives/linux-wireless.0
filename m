@@ -7,47 +7,46 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A2ECC432C0
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 06:28:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96576C432C0
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 06:28:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0E2BE2070A
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 06:28:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6089A20409
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 06:28:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1574404089;
-	bh=5S+2wx5oqUm03lHamCIcP+kMhEIrkazAtB5eG8VlA4M=;
+	s=default; t=1574404097;
+	bh=cPUc9BD9WzvMPqJG1za/uFkew6pNIQo4k/jUTu9jzNU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Na9aHptUawXYkMnI8Qs+yhGYhJ7/5JXb/B2HlLEL70wiyBJIJlj0cMWlixQeg71DW
-	 TV9WeipJfA8uGHgzGZc6+nimKh5QY9HeruSjeL7z27Id9l1jdDak2VeekQuMqwbsRH
-	 A6kNs7f1EbHhCiT9rM+hROMf2E5GtLxsu0QqYfHo=
+	b=vNhXYuKJYI+PoqFAjwkSCuZWQT0fRdCDyQIyIwZwQeD4Y03kF0G09sbi2PrBnOkbW
+	 ERKb8i/41Oif9nx86fPO4PfUmwCl+w9rEgjuYquMfhfcyO8uADqav+maaiavc4FsH3
+	 KWgVTUjlDCNWkCjuAWgiYbrlGAbSEO0nEaVjZz+g=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728147AbfKVG2E (ORCPT
+        id S1728436AbfKVG2M (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 22 Nov 2019 01:28:04 -0500
-Received: from mail.kernel.org ([198.145.29.99]:54796 "EHLO mail.kernel.org"
+        Fri, 22 Nov 2019 01:28:12 -0500
+Received: from mail.kernel.org ([198.145.29.99]:54742 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727584AbfKVFuS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Nov 2019 00:50:18 -0500
+        id S1727568AbfKVFuQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 22 Nov 2019 00:50:16 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A7B9520731;
-        Fri, 22 Nov 2019 05:50:16 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 7D6E620731;
+        Fri, 22 Nov 2019 05:50:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1574401817;
-        bh=5S+2wx5oqUm03lHamCIcP+kMhEIrkazAtB5eG8VlA4M=;
+        s=default; t=1574401815;
+        bh=cPUc9BD9WzvMPqJG1za/uFkew6pNIQo4k/jUTu9jzNU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=oJ+Njb5zHmJKTJkIRt3KvXk6AXvX7LmSUnEu8urFQJ8qMhY6o0KSFfQAGVSJlxJLc
-         9YsJA4USi1IinBOOHQKvaVDbi+48kUCwSvLTdlaoRDYGvvXYJ3L0OF5QBHQ78PlvqU
-         fBfYz60Pac/0KEZ+l5ByXRw5ttnPP6VWiP7goIa8=
+        b=ch71PrgV9+31tgrekd47gW/qjBjW1uL3/Uy9OGtl/d8IrMN3Lv/WhhuhdSbXS80ze
+         /W8Pe7arZwOVO+hUVku0aiJPfJ9JMVJNZ9vdVB1f9SfDbN6AY1xafqdY0vfzvNySnn
+         zkA4I04kD8p1GpttRTcsqCF/XrWBmrPj5y7X7HF0=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
+Cc:     Luca Coelho <luciano.coelho@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 061/219] iwlwifi: pcie: fix erroneous print
-Date:   Fri, 22 Nov 2019 00:46:33 -0500
-Message-Id: <20191122054911.1750-54-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 059/219] iwlwifi: move iwl_nvm_check_version() into dvm
+Date:   Fri, 22 Nov 2019 00:46:31 -0500
+Message-Id: <20191122054911.1750-52-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191122054911.1750-1-sashal@kernel.org>
 References: <20191122054911.1750-1-sashal@kernel.org>
@@ -60,53 +59,128 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sara Sharon <sara.sharon@intel.com>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-[ Upstream commit 0916224eaa77bff0fbbc747961d550ff8db45457 ]
+[ Upstream commit 64866e5da1eabd0c52ff45029b245f5465920031 ]
 
-When removing the driver, the following flow can happen:
-1. host command is in progress, for example at index 68.
-2. RX interrupt is received with the response.
-3. Before it is processed, the remove flow kicks in, and
-   calls iwl_pcie_txq_unmap. The function cleans all DMA,
-   and promotes the read pointer to 69.
-4. RX thread proceeds with the processing, and is calling
-   iwl_pcie_cmdq_reclaim, which will print this error:
-   iwl_pcie_cmdq_reclaim: Read index for DMA queue txq id (0),
-   index 4 is out of range [0-256] 69 69.
+This function is only half-used by mvm (i.e. only the nvm_version part
+matters, since the calibration version is irrelevant), so it's
+pointless to export it from iwlwifi.  If mvm uses this function, it
+has the additional complexity of setting the calib version to a bogus
+value on all cfg structs.
 
-Detect this situation, and avoid the print. Change it to
-warning while at it, to make such issues more noticeable
-in the future.
+To avoid this, move the function to dvm and make a simple comparison
+of the nvm_version in mvm instead.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/dvm/main.c | 17 +++++++++++++++++
+ .../wireless/intel/iwlwifi/iwl-eeprom-parse.c | 19 -------------------
+ .../wireless/intel/iwlwifi/iwl-eeprom-parse.h |  5 ++---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c   |  4 +++-
+ 4 files changed, 22 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-index 42fdb7970cfdc..7cba4c37c66fd 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-@@ -1247,11 +1247,11 @@ static void iwl_pcie_cmdq_reclaim(struct iwl_trans *trans, int txq_id, int idx)
+diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/main.c b/drivers/net/wireless/intel/iwlwifi/dvm/main.c
+index 030482b357a3c..06dd4e81b7374 100644
+--- a/drivers/net/wireless/intel/iwlwifi/dvm/main.c
++++ b/drivers/net/wireless/intel/iwlwifi/dvm/main.c
+@@ -1227,6 +1227,23 @@ static int iwl_eeprom_init_hw_params(struct iwl_priv *priv)
+ 	return 0;
+ }
  
- 	if (idx >= trans->cfg->base_params->max_tfd_queue_size ||
- 	    (!iwl_queue_used(txq, idx))) {
--		IWL_ERR(trans,
--			"%s: Read index for DMA queue txq id (%d), index %d is out of range [0-%d] %d %d.\n",
--			__func__, txq_id, idx,
--			trans->cfg->base_params->max_tfd_queue_size,
--			txq->write_ptr, txq->read_ptr);
-+		WARN_ONCE(test_bit(txq_id, trans_pcie->queue_used),
-+			  "%s: Read index for DMA queue txq id (%d), index %d is out of range [0-%d] %d %d.\n",
-+			  __func__, txq_id, idx,
-+			  trans->cfg->base_params->max_tfd_queue_size,
-+			  txq->write_ptr, txq->read_ptr);
- 		return;
- 	}
++static int iwl_nvm_check_version(struct iwl_nvm_data *data,
++				 struct iwl_trans *trans)
++{
++	if (data->nvm_version >= trans->cfg->nvm_ver ||
++	    data->calib_version >= trans->cfg->nvm_calib_ver) {
++		IWL_DEBUG_INFO(trans, "device EEPROM VER=0x%x, CALIB=0x%x\n",
++			       data->nvm_version, data->calib_version);
++		return 0;
++	}
++
++	IWL_ERR(trans,
++		"Unsupported (too old) EEPROM VER=0x%x < 0x%x CALIB=0x%x < 0x%x\n",
++		data->nvm_version, trans->cfg->nvm_ver,
++		data->calib_version,  trans->cfg->nvm_calib_ver);
++	return -EINVAL;
++}
++
+ static struct iwl_op_mode *iwl_op_mode_dvm_start(struct iwl_trans *trans,
+ 						 const struct iwl_cfg *cfg,
+ 						 const struct iwl_fw *fw,
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c
+index a4c96215933ba..a59bab8345f4e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c
+@@ -928,22 +928,3 @@ iwl_parse_eeprom_data(struct device *dev, const struct iwl_cfg *cfg,
+ 	return NULL;
+ }
+ IWL_EXPORT_SYMBOL(iwl_parse_eeprom_data);
+-
+-/* helper functions */
+-int iwl_nvm_check_version(struct iwl_nvm_data *data,
+-			     struct iwl_trans *trans)
+-{
+-	if (data->nvm_version >= trans->cfg->nvm_ver ||
+-	    data->calib_version >= trans->cfg->nvm_calib_ver) {
+-		IWL_DEBUG_INFO(trans, "device EEPROM VER=0x%x, CALIB=0x%x\n",
+-			       data->nvm_version, data->calib_version);
+-		return 0;
+-	}
+-
+-	IWL_ERR(trans,
+-		"Unsupported (too old) EEPROM VER=0x%x < 0x%x CALIB=0x%x < 0x%x\n",
+-		data->nvm_version, trans->cfg->nvm_ver,
+-		data->calib_version,  trans->cfg->nvm_calib_ver);
+-	return -EINVAL;
+-}
+-IWL_EXPORT_SYMBOL(iwl_nvm_check_version);
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.h b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.h
+index 8be50ed12300f..c59dd47cf15d3 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.h
+@@ -7,6 +7,7 @@
+  *
+  * Copyright(c) 2008 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2015 Intel Mobile Communications GmbH
++ * Copyright (C) 2018 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -33,6 +34,7 @@
+  *
+  * Copyright(c) 2005 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2015 Intel Mobile Communications GmbH
++ * Copyright (C) 2018 Intel Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -122,9 +124,6 @@ struct iwl_nvm_data *
+ iwl_parse_eeprom_data(struct device *dev, const struct iwl_cfg *cfg,
+ 		      const u8 *eeprom, size_t eeprom_size);
  
+-int iwl_nvm_check_version(struct iwl_nvm_data *data,
+-			  struct iwl_trans *trans);
+-
+ int iwl_init_sband_channels(struct iwl_nvm_data *data,
+ 			    struct ieee80211_supported_band *sband,
+ 			    int n_channels, enum nl80211_band band);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 2eba6d6f367f8..9808d954dca29 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -547,7 +547,9 @@ int iwl_run_init_mvm_ucode(struct iwl_mvm *mvm, bool read_nvm)
+ 	if (mvm->nvm_file_name)
+ 		iwl_mvm_load_nvm_to_nic(mvm);
+ 
+-	WARN_ON(iwl_nvm_check_version(mvm->nvm_data, mvm->trans));
++	WARN_ONCE(mvm->nvm_data->nvm_version < mvm->trans->cfg->nvm_ver,
++		  "Too old NVM version (0x%0x, required = 0x%0x)",
++		  mvm->nvm_data->nvm_version, mvm->trans->cfg->nvm_ver);
+ 
+ 	/*
+ 	 * abort after reading the nvm in case RF Kill is on, we will complete
 -- 
 2.20.1
 
