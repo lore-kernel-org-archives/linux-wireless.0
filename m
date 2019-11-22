@@ -4,54 +4,53 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BED53C43215
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 05:56:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F515C43215
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 06:06:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8D15A2068F
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 05:56:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1974B20674
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 06:06:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1574402169;
-	bh=nqrDeAiqwjw67y0i2EHRlzpeX2mJIKdZBClni9COesA=;
+	s=default; t=1574402783;
+	bh=oyecKgL4JJJNfN/xarrb88sIaFNFCW/ML4rY/gU8oKM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=LLjsFGcuqj+kep08iBN8K4u+JvkFCvgU4vNoWQjGzpf8PxtP3x4iL+aTQKVF08jRS
-	 yheKYfw60tclngvgn8zVXjMwSX6UgS3bA/TWdXA5QSWNuEiW/oVXTlBGvtU4fj/Bhp
-	 lyT1eHs3Y1OmjeE5IAXwbHxa0q3s7W3T30aFCQac=
+	b=Ou8x9DLij8tnhvHFe0SMdlJ2IikWP8wN9WEpp7CDgqxL9C86xyo/9J/zs4NABAZeI
+	 uxcP9YBEqd3a++NzYEsA7QdQXggbuOM/IGDNqUGV2wIeTWzU8yaa7VgQeT29fojOWe
+	 GerXpRxhABx+UW1fb02YM7PYoL9lgL9F8oNgNhKQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727996AbfKVF4I (ORCPT
+        id S1729686AbfKVGCV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 22 Nov 2019 00:56:08 -0500
-Received: from mail.kernel.org ([198.145.29.99]:33836 "EHLO mail.kernel.org"
+        Fri, 22 Nov 2019 01:02:21 -0500
+Received: from mail.kernel.org ([198.145.29.99]:40892 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729009AbfKVF4H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Nov 2019 00:56:07 -0500
+        id S1726685AbfKVGCU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 22 Nov 2019 01:02:20 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 8B0C220717;
-        Fri, 22 Nov 2019 05:56:05 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id B60F12068E;
+        Fri, 22 Nov 2019 06:02:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1574402166;
-        bh=nqrDeAiqwjw67y0i2EHRlzpeX2mJIKdZBClni9COesA=;
+        s=default; t=1574402539;
+        bh=oyecKgL4JJJNfN/xarrb88sIaFNFCW/ML4rY/gU8oKM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=1Yf8DZNhYDzCTbB7zQOHOcsNMC435pbuKpZbnefXVXGdwUwd/T8sFSPSepSQNkXRn
-         hDYV+cJXdksStHs4EtTGarDdxtM+hB4TKqbYVRGq+cefikqeoAymMWWS6t0SMWcmm6
-         R1vCMDjBf4RIz5ZOhag/8HX2seTgPQ7VUiAldFC8=
+        b=zt2We2FyrrIfq9YYlqxVSElLFktd/udawJCrflpXkp8jPQvSqrLC2MuFgkoZRZQZT
+         P0JcWd43iycFkZ0cIxKctQMYYpi8nUX7DJTQN6KM1lVyczgU3cEEuyGopgQxu1kmmL
+         fYIJLPcEnXBuhTX9IYDbbO1R34sg0Cud/1/rhbYQ=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Pan Bian <bianpan2016@163.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
+Cc:     Kyle Roeschley <kyle.roeschley@ni.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 019/127] rtl818x: fix potential use after free
-Date:   Fri, 22 Nov 2019 00:53:57 -0500
-Message-Id: <20191122055544.3299-18-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 46/91] ath6kl: Fix off by one error in scan completion
+Date:   Fri, 22 Nov 2019 01:00:44 -0500
+Message-Id: <20191122060129.4239-45-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191122055544.3299-1-sashal@kernel.org>
-References: <20191122055544.3299-1-sashal@kernel.org>
+In-Reply-To: <20191122060129.4239-1-sashal@kernel.org>
+References: <20191122060129.4239-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -61,41 +60,36 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Pan Bian <bianpan2016@163.com>
+From: Kyle Roeschley <kyle.roeschley@ni.com>
 
-[ Upstream commit afbb1947db94eacc5a13302eee88a9772fb78935 ]
+[ Upstream commit 5803c12816c43bd09e5f4247dd9313c2d9a2c41b ]
 
-entry is released via usb_put_urb just after calling usb_submit_urb.
-However, entry is used if the submission fails, resulting in a use after
-free bug. The patch fixes this.
+When ath6kl was reworked to share code between regular and scheduled scans
+in commit 3b8ffc6a22ba ("ath6kl: Configure probed SSID list consistently"),
+probed SSID entry changed from 1-index to 0-indexed. However,
+ath6kl_cfg80211_scan_complete_event() was missed in that change. Fix its
+indexing so that we correctly clear out the probed SSID list.
 
-Signed-off-by: Pan Bian <bianpan2016@163.com>
-ACKed-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Kyle Roeschley <kyle.roeschley@ni.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath6kl/cfg80211.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c b/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
-index 9a1d15b3ce453..518caaaf8a987 100644
---- a/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
-+++ b/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
-@@ -444,12 +444,13 @@ static int rtl8187_init_urbs(struct ieee80211_hw *dev)
- 		skb_queue_tail(&priv->rx_queue, skb);
- 		usb_anchor_urb(entry, &priv->anchored);
- 		ret = usb_submit_urb(entry, GFP_KERNEL);
--		usb_put_urb(entry);
- 		if (ret) {
- 			skb_unlink(skb, &priv->rx_queue);
- 			usb_unanchor_urb(entry);
-+			usb_put_urb(entry);
- 			goto err;
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 0cce5a2bca161..650d2f6446a6c 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -1088,7 +1088,7 @@ void ath6kl_cfg80211_scan_complete_event(struct ath6kl_vif *vif, bool aborted)
+ 	if (vif->scan_req->n_ssids && vif->scan_req->ssids[0].ssid_len) {
+ 		for (i = 0; i < vif->scan_req->n_ssids; i++) {
+ 			ath6kl_wmi_probedssid_cmd(ar->wmi, vif->fw_vif_idx,
+-						  i + 1, DISABLE_SSID_FLAG,
++						  i, DISABLE_SSID_FLAG,
+ 						  0, NULL);
  		}
-+		usb_put_urb(entry);
  	}
- 	return ret;
- 
 -- 
 2.20.1
 
