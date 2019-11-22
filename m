@@ -4,50 +4,49 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F4D3C43215
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 06:08:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38EBFC432C0
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 06:08:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5EEEC20707
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 06:08:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 02C742070B
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 06:08:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1574402900;
-	bh=ThoYSDuOyMrEllBnixLtzC0SAlAY938sTf+e4ht6PkE=;
+	s=default; t=1574402916;
+	bh=Blf/Jr/CgoOus8tGQdPdkyE7gdy3r35yHYj1VNTpXjQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=k5c65URrJhgJIxgCOjR7zCrxUl2/PUp3Yoy9QCmPqfTj/3IcLsRqMb6lBA0gQxmAX
-	 w3z7vitD8rDXUfWqOVok894ePagywxcjEyqeCpwVvkmGy9bIAi6ksuFMQ9V4p0Sf/Z
-	 1icsDxn5rOwrDY+uyNg3OgqkpbeSxnL9CSmYWP4Q=
+	b=stJRIGGQ2zc4mWXpPvgRl4t1vfGKYmwXNe378oCsyU9fBHnV4xjBIxmitbG7GPKQe
+	 EiV0cwG/8D5BwgeGqbF0nl/cSETyvqMd/05tQ8QnPpM16oeJwqUMQS5ea6nTKP1zKG
+	 m5rG47OLtBRHK5ohf+7Xpz7xK+eFrQ8IuCAIl9As=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729145AbfKVGBq (ORCPT
+        id S1727687AbfKVGIa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 22 Nov 2019 01:01:46 -0500
-Received: from mail.kernel.org ([198.145.29.99]:39978 "EHLO mail.kernel.org"
+        Fri, 22 Nov 2019 01:08:30 -0500
+Received: from mail.kernel.org ([198.145.29.99]:39970 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729089AbfKVGBn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Nov 2019 01:01:43 -0500
+        id S1727287AbfKVGBm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 22 Nov 2019 01:01:42 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 7E7832070A;
-        Fri, 22 Nov 2019 06:01:42 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 5F1F22070B;
+        Fri, 22 Nov 2019 06:01:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1574402503;
-        bh=ThoYSDuOyMrEllBnixLtzC0SAlAY938sTf+e4ht6PkE=;
+        s=default; t=1574402502;
+        bh=Blf/Jr/CgoOus8tGQdPdkyE7gdy3r35yHYj1VNTpXjQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=t/4TvgBE3VES4oOa268b/4RP4QT7cMxp5uv0hHrikwUzbjeDtYyytrwMkXYkQNlBo
-         nknpxjCCfZYEmavMSYQUQM6j8sRtJVTnJtxiWZa3YS8nDIf4dKjNGU3afgmP+kGP7d
-         JLAdyr43qdlGTK7mpCJ2xjVO9g5opIU2j/ob39d4=
+        b=HmphHVUMTTDWvr4OzDineQYKHhmDe3j3hRfHG13pCb6LYkJfPrXB5Aat85axLsS/Q
+         Dh9sLqAcixkybNfnPwK6gkE+xJPLN3O8MJ7YRQmrdC29VnDw0L79nQJp9jQXKu/mq9
+         Ch1dntUdxoib/CBM+QBGyjdzs88b+uMxNMXhHCGs=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Brian Norris <briannorris@chromium.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Pan Bian <bianpan2016@163.com>, Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 13/91] mwifiex: debugfs: correct histogram spacing, formatting
-Date:   Fri, 22 Nov 2019 01:00:11 -0500
-Message-Id: <20191122060129.4239-12-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 12/91] mwifiex: fix potential NULL dereference and use after free
+Date:   Fri, 22 Nov 2019 01:00:10 -0500
+Message-Id: <20191122060129.4239-11-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191122060129.4239-1-sashal@kernel.org>
 References: <20191122060129.4239-1-sashal@kernel.org>
@@ -60,65 +59,53 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Brian Norris <briannorris@chromium.org>
+From: Pan Bian <bianpan2016@163.com>
 
-[ Upstream commit 4cb777c64e030778c569f605398d7604d8aabc0f ]
+[ Upstream commit 1dcd9429212b98bea87fc6ec92fb50bf5953eb47 ]
 
-Currently, snippets of this file look like:
+There are two defects: (1) passing a NULL bss to
+mwifiex_save_hidden_ssid_channels will result in NULL dereference,
+(2) using bss after dropping the reference to it via cfg80211_put_bss.
+To fix them, the patch moves the buggy code to the branch that bss is
+not NULL and puts it before cfg80211_put_bss.
 
-rx rates (in Mbps): 0=1M   1=2M2=5.5M  3=11M   4=6M   5=9M  6=12M
-7=18M  8=24M  9=36M  10=48M  11=54M12-27=MCS0-15(BW20) 28-43=MCS0-15(BW40)
-44-53=MCS0-9(VHT:BW20)54-63=MCS0-9(VHT:BW40)64-73=MCS0-9(VHT:BW80)
-...
-noise_flr[--96dBm] = 22
-noise_flr[--95dBm] = 149
-noise_flr[--94dBm] = 9
-noise_flr[--93dBm] = 2
-
-We're missing some spaces, and we're adding a minus sign ('-') on values
-that are already negative signed integers.
-
-Signed-off-by: Brian Norris <briannorris@chromium.org>
+Signed-off-by: Pan Bian <bianpan2016@163.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/marvell/mwifiex/debugfs.c | 14 ++++++--------
- 1 file changed, 6 insertions(+), 8 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/scan.c | 18 ++++++++++--------
+ 1 file changed, 10 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/debugfs.c b/drivers/net/wireless/marvell/mwifiex/debugfs.c
-index ae2b69db59940..6eacea28d7ac8 100644
---- a/drivers/net/wireless/marvell/mwifiex/debugfs.c
-+++ b/drivers/net/wireless/marvell/mwifiex/debugfs.c
-@@ -296,15 +296,13 @@ mwifiex_histogram_read(struct file *file, char __user *ubuf,
- 		     "total samples = %d\n",
- 		     atomic_read(&phist_data->num_samples));
+diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
+index 7e96b6a37946a..828c6f5eb83c8 100644
+--- a/drivers/net/wireless/marvell/mwifiex/scan.c
++++ b/drivers/net/wireless/marvell/mwifiex/scan.c
+@@ -1890,15 +1890,17 @@ mwifiex_parse_single_response_buf(struct mwifiex_private *priv, u8 **bss_info,
+ 					    ETH_ALEN))
+ 					mwifiex_update_curr_bss_params(priv,
+ 								       bss);
+-				cfg80211_put_bss(priv->wdev.wiphy, bss);
+-			}
  
--	p += sprintf(p, "rx rates (in Mbps): 0=1M   1=2M");
--	p += sprintf(p, "2=5.5M  3=11M   4=6M   5=9M  6=12M\n");
--	p += sprintf(p, "7=18M  8=24M  9=36M  10=48M  11=54M");
--	p += sprintf(p, "12-27=MCS0-15(BW20) 28-43=MCS0-15(BW40)\n");
-+	p += sprintf(p,
-+		     "rx rates (in Mbps): 0=1M   1=2M 2=5.5M  3=11M   4=6M   5=9M  6=12M\n"
-+		     "7=18M  8=24M  9=36M  10=48M  11=54M 12-27=MCS0-15(BW20) 28-43=MCS0-15(BW40)\n");
- 
- 	if (ISSUPP_11ACENABLED(priv->adapter->fw_cap_info)) {
--		p += sprintf(p, "44-53=MCS0-9(VHT:BW20)");
--		p += sprintf(p, "54-63=MCS0-9(VHT:BW40)");
--		p += sprintf(p, "64-73=MCS0-9(VHT:BW80)\n\n");
-+		p += sprintf(p,
-+			     "44-53=MCS0-9(VHT:BW20) 54-63=MCS0-9(VHT:BW40) 64-73=MCS0-9(VHT:BW80)\n\n");
+-			if ((chan->flags & IEEE80211_CHAN_RADAR) ||
+-			    (chan->flags & IEEE80211_CHAN_NO_IR)) {
+-				mwifiex_dbg(adapter, INFO,
+-					    "radar or passive channel %d\n",
+-					    channel);
+-				mwifiex_save_hidden_ssid_channels(priv, bss);
++				if ((chan->flags & IEEE80211_CHAN_RADAR) ||
++				    (chan->flags & IEEE80211_CHAN_NO_IR)) {
++					mwifiex_dbg(adapter, INFO,
++						    "radar or passive channel %d\n",
++						    channel);
++					mwifiex_save_hidden_ssid_channels(priv,
++									  bss);
++				}
++
++				cfg80211_put_bss(priv->wdev.wiphy, bss);
+ 			}
+ 		}
  	} else {
- 		p += sprintf(p, "\n");
- 	}
-@@ -333,7 +331,7 @@ mwifiex_histogram_read(struct file *file, char __user *ubuf,
- 	for (i = 0; i < MWIFIEX_MAX_NOISE_FLR; i++) {
- 		value = atomic_read(&phist_data->noise_flr[i]);
- 		if (value)
--			p += sprintf(p, "noise_flr[-%02ddBm] = %d\n",
-+			p += sprintf(p, "noise_flr[%02ddBm] = %d\n",
- 				(int)(i-128), value);
- 	}
- 	for (i = 0; i < MWIFIEX_MAX_SIG_STRENGTH; i++) {
 -- 
 2.20.1
 
