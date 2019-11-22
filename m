@@ -2,115 +2,100 @@ Return-Path: <SRS0=Y0IC=ZO=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E5DAC432C0
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 05:29:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BED53C43215
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 05:56:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D6DAF2070B
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 05:29:35 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WaDUta6X"
+	by mail.kernel.org (Postfix) with ESMTP id 8D15A2068F
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 05:56:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1574402169;
+	bh=nqrDeAiqwjw67y0i2EHRlzpeX2mJIKdZBClni9COesA=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=LLjsFGcuqj+kep08iBN8K4u+JvkFCvgU4vNoWQjGzpf8PxtP3x4iL+aTQKVF08jRS
+	 yheKYfw60tclngvgn8zVXjMwSX6UgS3bA/TWdXA5QSWNuEiW/oVXTlBGvtU4fj/Bhp
+	 lyT1eHs3Y1OmjeE5IAXwbHxa0q3s7W3T30aFCQac=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726719AbfKVF3f (ORCPT
+        id S1727996AbfKVF4I (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 22 Nov 2019 00:29:35 -0500
-Received: from mail-pf1-f194.google.com ([209.85.210.194]:43041 "EHLO
-        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726529AbfKVF3e (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Nov 2019 00:29:34 -0500
-Received: by mail-pf1-f194.google.com with SMTP id 3so2912048pfb.10
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Nov 2019 21:29:34 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=9G4UM2vhuEG4TSdFZTVuZ71GTOHLABBI6xxxI/2Oncw=;
-        b=WaDUta6XODn4hzzqR0np+iPcfBChaSE05EpSM8UrALWvgf7x/9f0e8SMvgXTGXaN74
-         Irmx+lKSr5piR/mhpfRO+HVN7bu7ukOSsxCxlNav6kvJn3SG/q0TV9VGoWEKM+8yISrK
-         Bc5MtndhyGLDrWQFgc5fSdMf+/79HC0AWnnavMoEKxnAti/HKBQnIPreGoLnrWIpbhXZ
-         EdU3ei0kxlwAUbNl8/FywUG2qzQeoeh5RranVfooFhbBQ0QfNtx3k3ARWrVdT9uV7QtX
-         pcpYtJsjn94TXL0llHTzpE182eTvmUrzxf89ubigJh+EYnryHC+HUHZoVtjYtbjidWoV
-         I0FQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=9G4UM2vhuEG4TSdFZTVuZ71GTOHLABBI6xxxI/2Oncw=;
-        b=gNC3IOfmB1H65frnsn63mdzaxphxG6xvR0SHEIOJSaWI/Jx9VK+CfnGr+7pOQZ/Pyw
-         wORhpVi6EbFsE7mVKbjlJ7O96hk14FnUKSPVOhl9NH4xXBktd7sJc5Z36N3J6RRv9Cfc
-         gQWPy1otHKeNz1riMgHcbkaiKj3CANpJ6gaAE/R8EjWLXjS7Bw/vBgQSr5WnAVV27Ppw
-         Flrks3Qv8BGkRUCymKArD05r646Fx1ew/FI7oGyKQhxxWJPuv5RoVTGPbAC1unU+zjfN
-         2XNdr1yKKfY4R5S8q49FeHsN5Mb+lmriUPdLPL062UzQ7x/pTzfh3rI9Lf92jMJiJ9/n
-         9zPw==
-X-Gm-Message-State: APjAAAVgSeSrlZfb2Ch2KXDFaNq6RLCJCvq40zW4toublIDi1zh7feyc
-        srNh0xN+iNrBCzEMbsxDKJS2IOoUYXc=
-X-Google-Smtp-Source: APXvYqwPwHZStvNKOZtUBWgPYiEFiNFqEQLMngqNoFN6jFqDKFjISduUPDUYh2y907mFwD+Qn6zs9w==
-X-Received: by 2002:a63:7456:: with SMTP id e22mr14245471pgn.314.1574400573682;
-        Thu, 21 Nov 2019 21:29:33 -0800 (PST)
-Received: from localhost ([38.121.20.202])
-        by smtp.gmail.com with ESMTPSA id x192sm5658165pfd.96.2019.11.21.21.29.32
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 21 Nov 2019 21:29:32 -0800 (PST)
-From:   huangwenabc@gmail.com
-To:     linux-wireless@vger.kernel.org
-Cc:     linux-distros@vs.openwall.org, security@kernel.org,
-        libertas-dev@lists.infradead.org
-Subject: [PATCH] libertas: Fix two buffer overflows at parsing bss descriptor
-Date:   Fri, 22 Nov 2019 13:29:17 +0800
-Message-Id: <20191122052917.11309-1-huangwenabc@gmail.com>
-X-Mailer: git-send-email 2.17.1
+        Fri, 22 Nov 2019 00:56:08 -0500
+Received: from mail.kernel.org ([198.145.29.99]:33836 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729009AbfKVF4H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 22 Nov 2019 00:56:07 -0500
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 8B0C220717;
+        Fri, 22 Nov 2019 05:56:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1574402166;
+        bh=nqrDeAiqwjw67y0i2EHRlzpeX2mJIKdZBClni9COesA=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=1Yf8DZNhYDzCTbB7zQOHOcsNMC435pbuKpZbnefXVXGdwUwd/T8sFSPSepSQNkXRn
+         hDYV+cJXdksStHs4EtTGarDdxtM+hB4TKqbYVRGq+cefikqeoAymMWWS6t0SMWcmm6
+         R1vCMDjBf4RIz5ZOhag/8HX2seTgPQ7VUiAldFC8=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Pan Bian <bianpan2016@163.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.14 019/127] rtl818x: fix potential use after free
+Date:   Fri, 22 Nov 2019 00:53:57 -0500
+Message-Id: <20191122055544.3299-18-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20191122055544.3299-1-sashal@kernel.org>
+References: <20191122055544.3299-1-sashal@kernel.org>
+MIME-Version: 1.0
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Wen Huang <huangwenabc@gmail.com>
+From: Pan Bian <bianpan2016@163.com>
 
-add_ie_rates() copys rates without checking the length 
-in bss descriptor from remote AP.when victim connects to 
-remote attacker, this may trigger buffer overflow.
-lbs_ibss_join_existing() copys rates without checking the length 
-in bss descriptor from remote IBSS node.when victim connects to 
-remote attacker, this may trigger buffer overflow.
-Fix them by putting the length check before performing copy.
+[ Upstream commit afbb1947db94eacc5a13302eee88a9772fb78935 ]
 
-This fix addresses CVE-2019-14896 and CVE-2019-14897.
+entry is released via usb_put_urb just after calling usb_submit_urb.
+However, entry is used if the submission fails, resulting in a use after
+free bug. The patch fixes this.
 
-Signed-off-by: Wen Huang <huangwenabc@gmail.com>
+Signed-off-by: Pan Bian <bianpan2016@163.com>
+ACKed-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/marvell/libertas/cfg.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/marvell/libertas/cfg.c b/drivers/net/wireless/marvell/libertas/cfg.c
-index 57edfada0..290280764 100644
---- a/drivers/net/wireless/marvell/libertas/cfg.c
-+++ b/drivers/net/wireless/marvell/libertas/cfg.c
-@@ -273,6 +273,10 @@ add_ie_rates(u8 *tlv, const u8 *ie, int *nrates)
- 	int hw, ap, ap_max = ie[1];
- 	u8 hw_rate;
+diff --git a/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c b/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
+index 9a1d15b3ce453..518caaaf8a987 100644
+--- a/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
++++ b/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
+@@ -444,12 +444,13 @@ static int rtl8187_init_urbs(struct ieee80211_hw *dev)
+ 		skb_queue_tail(&priv->rx_queue, skb);
+ 		usb_anchor_urb(entry, &priv->anchored);
+ 		ret = usb_submit_urb(entry, GFP_KERNEL);
+-		usb_put_urb(entry);
+ 		if (ret) {
+ 			skb_unlink(skb, &priv->rx_queue);
+ 			usb_unanchor_urb(entry);
++			usb_put_urb(entry);
+ 			goto err;
+ 		}
++		usb_put_urb(entry);
+ 	}
+ 	return ret;
  
-+	if (ap_max > MAX_RATES) {
-+		lbs_deb_assoc("invalid rates\n");
-+		return tlv;
-+	}
- 	/* Advance past IE header */
- 	ie += 2;
- 
-@@ -1777,6 +1781,10 @@ static int lbs_ibss_join_existing(struct lbs_private *priv,
- 	} else {
- 		int hw, i;
- 		u8 rates_max = rates_eid[1];
-+		if (rates_max > MAX_RATES) {
-+			lbs_deb_join("invalid rates");
-+			goto out;
-+		}
- 		u8 *rates = cmd.bss.rates;
- 		for (hw = 0; hw < ARRAY_SIZE(lbs_rates); hw++) {
- 			u8 hw_rate = lbs_rates[hw].bitrate / 5;
 -- 
-2.17.1
+2.20.1
 
