@@ -7,48 +7,51 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 125F4C432C0
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 06:29:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6815C432C0
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 06:29:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D263C20714
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 06:29:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8FA0F204FD
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 06:29:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1574404149;
-	bh=nqrDeAiqwjw67y0i2EHRlzpeX2mJIKdZBClni9COesA=;
+	s=default; t=1574404161;
+	bh=VnSpNutR+HYM6dXHXuOieaAsfuez/ZwHMECRQRp7HeM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=sRV8KjmMide7fBmn5YGVkujXr3tHL7u6urtihKzaubvBXHQcMeY1+6DS0zcCSpCaX
-	 JSz44/FSeEwZGOm1JAJo7Rt5gCC4yyJlnVkB7vy3K3M2Pox/SE+uHBq1WAnk+5USE3
-	 NjsNCDw0Y3f6g7DUR8eAReo12Y99p5nZo6Q4rch4=
+	b=1B7fr/eWRZgsLk05j5w5kyyVCJDW9jW8+jtX16s4Ey9mUgvpmOWcnmlOEGmpWM2Kq
+	 sCUOLukbYlH8zf/0N48XCdV+ju6QCV76YblyMYbbIUoUgc/N1MzWF49h0KPdq9FlD3
+	 M3EJv8qCQBzPjRwfbhQRNXw7o1iFJqJ7KlsXTM2Y=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728137AbfKVG3F (ORCPT
+        id S1728256AbfKVG3P (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 22 Nov 2019 01:29:05 -0500
-Received: from mail.kernel.org ([198.145.29.99]:54440 "EHLO mail.kernel.org"
+        Fri, 22 Nov 2019 01:29:15 -0500
+Received: from mail.kernel.org ([198.145.29.99]:54376 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727478AbfKVFuD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Nov 2019 00:50:03 -0500
+        id S1727322AbfKVFuB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 22 Nov 2019 00:50:01 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3FB302068F;
-        Fri, 22 Nov 2019 05:50:02 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 1B37E20718;
+        Fri, 22 Nov 2019 05:49:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1574401803;
-        bh=nqrDeAiqwjw67y0i2EHRlzpeX2mJIKdZBClni9COesA=;
+        s=default; t=1574401800;
+        bh=VnSpNutR+HYM6dXHXuOieaAsfuez/ZwHMECRQRp7HeM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=NSFVJRX71g5LwIGECMJvZhNQreD3ZGPE2X8iVfN0XXgUuO8Ik+u8oQNzsf+Dep4i1
-         AHTEG38rjtyfcq1q3VvwvF1PNib/GQ09PO0EsN6qw+wIamCXWzBWtNjMPIaloUAXub
-         +j8UGwSw5OOgI4v8rMi6nY17Q6yQIrMO6zpw3OoU=
+        b=S6hdi8XJtw6a8vHR7hsb22TPejm6r3YqxucCGlcbxFgoWKHVmuPAkpoEDAxOZdgEH
+         XRA6BMULnJSwY5LXZiPb2v6uWyN3uzVOP2B0tx+3Gx9DXzYs9bWfImvmaDHt6bEaGn
+         J1aDOTbaRCjpgjc/xp72uah3ODPf/e5+gWR+iJak=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Pan Bian <bianpan2016@163.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
+Cc:     Wright Feng <wright.feng@cypress.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 048/219] rtl818x: fix potential use after free
-Date:   Fri, 22 Nov 2019 00:46:20 -0500
-Message-Id: <20191122054911.1750-41-sashal@kernel.org>
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 046/219] brcmfmac: set F2 watermark to 256 for 4373
+Date:   Fri, 22 Nov 2019 00:46:18 -0500
+Message-Id: <20191122054911.1750-39-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191122054911.1750-1-sashal@kernel.org>
 References: <20191122054911.1750-1-sashal@kernel.org>
@@ -61,41 +64,81 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Pan Bian <bianpan2016@163.com>
+From: Wright Feng <wright.feng@cypress.com>
 
-[ Upstream commit afbb1947db94eacc5a13302eee88a9772fb78935 ]
+[ Upstream commit e1a08730eeb0bad4d82c3bc40e74854872de618d ]
 
-entry is released via usb_put_urb just after calling usb_submit_urb.
-However, entry is used if the submission fails, resulting in a use after
-free bug. The patch fixes this.
+We got SDIO_CRC_ERROR with 4373 on SDR104 when doing bi-directional
+throughput test. Enable watermark to 256 to guarantee the operation
+stability.
 
-Signed-off-by: Pan Bian <bianpan2016@163.com>
-ACKed-by: Larry Finger <Larry.Finger@lwfinger.net>
+Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Wright Feng <wright.feng@cypress.com>
+Signed-off-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ .../broadcom/brcm80211/brcmfmac/sdio.c        | 26 +++++++++++++++++--
+ 1 file changed, 24 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c b/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
-index 9a1d15b3ce453..518caaaf8a987 100644
---- a/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
-+++ b/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
-@@ -444,12 +444,13 @@ static int rtl8187_init_urbs(struct ieee80211_hw *dev)
- 		skb_queue_tail(&priv->rx_queue, skb);
- 		usb_anchor_urb(entry, &priv->anchored);
- 		ret = usb_submit_urb(entry, GFP_KERNEL);
--		usb_put_urb(entry);
- 		if (ret) {
- 			skb_unlink(skb, &priv->rx_queue);
- 			usb_unanchor_urb(entry);
-+			usb_put_urb(entry);
- 			goto err;
- 		}
-+		usb_put_urb(entry);
- 	}
- 	return ret;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index 53e4962ceb8ae..e487dd78cc024 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -49,6 +49,10 @@
+ #define DCMD_RESP_TIMEOUT	msecs_to_jiffies(2500)
+ #define CTL_DONE_TIMEOUT	msecs_to_jiffies(2500)
  
++/* watermark expressed in number of words */
++#define DEFAULT_F2_WATERMARK    0x8
++#define CY_4373_F2_WATERMARK    0x40
++
+ #ifdef DEBUG
+ 
+ #define BRCMF_TRAP_INFO_SIZE	80
+@@ -138,6 +142,8 @@ struct rte_console {
+ /* 1: isolate internal sdio signals, put external pads in tri-state; requires
+  * sdio bus power cycle to clear (rev 9) */
+ #define SBSDIO_DEVCTL_PADS_ISO		0x08
++/* 1: enable F2 Watermark */
++#define SBSDIO_DEVCTL_F2WM_ENAB		0x10
+ /* Force SD->SB reset mapping (rev 11) */
+ #define SBSDIO_DEVCTL_SB_RST_CTL	0x30
+ /*   Determined by CoreControl bit */
+@@ -4060,6 +4066,7 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
+ 	void *nvram;
+ 	u32 nvram_len;
+ 	u8 saveclk;
++	u8 devctl;
+ 
+ 	brcmf_dbg(TRACE, "Enter: dev=%s, err=%d\n", dev_name(dev), err);
+ 
+@@ -4115,8 +4122,23 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
+ 		brcmf_sdiod_writel(sdiod, core->base + SD_REG(hostintmask),
+ 				   bus->hostintmask, NULL);
+ 
+-
+-		brcmf_sdiod_writeb(sdiod, SBSDIO_WATERMARK, 8, &err);
++		switch (sdiod->func1->device) {
++		case SDIO_DEVICE_ID_CYPRESS_4373:
++			brcmf_dbg(INFO, "set F2 watermark to 0x%x*4 bytes\n",
++				  CY_4373_F2_WATERMARK);
++			brcmf_sdiod_writeb(sdiod, SBSDIO_WATERMARK,
++					   CY_4373_F2_WATERMARK, &err);
++			devctl = brcmf_sdiod_readb(sdiod, SBSDIO_DEVICE_CTL,
++						   &err);
++			devctl |= SBSDIO_DEVCTL_F2WM_ENAB;
++			brcmf_sdiod_writeb(sdiod, SBSDIO_DEVICE_CTL, devctl,
++					   &err);
++			break;
++		default:
++			brcmf_sdiod_writeb(sdiod, SBSDIO_WATERMARK,
++					   DEFAULT_F2_WATERMARK, &err);
++			break;
++		}
+ 	} else {
+ 		/* Disable F2 again */
+ 		sdio_disable_func(sdiod->func2);
 -- 
 2.20.1
 
