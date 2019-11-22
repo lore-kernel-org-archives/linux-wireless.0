@@ -2,85 +2,87 @@ Return-Path: <SRS0=Y0IC=ZO=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 591A4C432C0
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 18:01:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 90E92C432C0
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 18:08:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2F81220707
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 18:01:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6A4032070E
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 18:08:07 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gpePcEhk"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726666AbfKVSBV (ORCPT
+        id S1726767AbfKVSID (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 22 Nov 2019 13:01:21 -0500
-Received: from mail.adapt-ip.com ([173.164.178.19]:59752 "EHLO
-        mail.adapt-ip.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726046AbfKVSBV (ORCPT
+        Fri, 22 Nov 2019 13:08:03 -0500
+Received: from mail-lf1-f66.google.com ([209.85.167.66]:44316 "EHLO
+        mail-lf1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726574AbfKVSID (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Nov 2019 13:01:21 -0500
-Received: from localhost (unknown [127.0.0.1])
-        by mail.adapt-ip.com (Postfix) with ESMTP id 859022F04DF;
-        Fri, 22 Nov 2019 18:01:20 +0000 (UTC)
-X-Virus-Scanned: amavisd-new at web.adapt-ip.com
-Received: from mail.adapt-ip.com ([127.0.0.1])
-        by localhost (web.adapt-ip.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id Uyk9Cc9qvoGF; Fri, 22 Nov 2019 10:01:19 -0800 (PST)
-Received: from [10.1.10.171] (vpn.adapt-ip.com [173.164.178.20])
-        (using TLSv1.2 with cipher AES128-SHA (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: thomas@adapt-ip.com)
-        by mail.adapt-ip.com (Postfix) with ESMTPSA id 271532F048D;
-        Fri, 22 Nov 2019 10:01:19 -0800 (PST)
-Subject: Re: [PATCH v2 0/3] fix a STA PS bug and add PS support to
- mac80211_hwsim
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless <linux-wireless@vger.kernel.org>
-References: <20191119053538.25979-1-thomas@adapt-ip.com>
- <85ed0881d0aeecd886b27bd482fa61fa86d96729.camel@sipsolutions.net>
-From:   Thomas Pedersen <thomas@adapt-ip.com>
-Message-ID: <f0ae4c07-d3c3-768f-49c0-1f2a6c5a687d@adapt-ip.com>
-Date:   Fri, 22 Nov 2019 10:01:18 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        Fri, 22 Nov 2019 13:08:03 -0500
+Received: by mail-lf1-f66.google.com with SMTP id v201so5132049lfa.11;
+        Fri, 22 Nov 2019 10:08:00 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=T7/nfHWQBPlTCdPwZsbfc1JI4CJ6zRhYvBPNH/OaKDE=;
+        b=gpePcEhkMiv/zogb3LXutIPpvN7zhiJB5FK3KMarQP8hVubbFEJVoU5bUQQs1z8syN
+         ufFoOrdK04Ue5PlH4SSSnBwgMHJx9v+WC7pcEI3CmJu+nIj5MVt224kiCBVXLyRM/F24
+         H0J4ma17nKYpLcTMXEH07E4ueB2ANLesvdj7VkgQO3vnDAG5wQabqsYgNsVwHfwrlZ4j
+         fsgnyRQ/SkAeKRFLMDiWopZ2wxl2cEIkG752MMLcI10TgCaDTyHZFI0bgzZW0QQYLMiA
+         3p1V4SWy/I1BqKptS95IX/NlRKT4vR5iUFu4CFqPPkpVkRUQcwYkDorMQYxHDtR3l64V
+         JTYQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=T7/nfHWQBPlTCdPwZsbfc1JI4CJ6zRhYvBPNH/OaKDE=;
+        b=hoJ7TAzSvdZ81Z04QQtrwZpN490fd58IelId1qs9LunbJRUA72YYolOU+zPHFJdZBZ
+         kgADgbkvbMsc6whiPIFxwcVnF/rJ0FQ1cQ6TYa13Ltg8WYjG9nW6CdDXawCY8TEhsQ4r
+         yaB7lRsIxG/8tMUE1lNE9woAaNEpa86fwFfykaBHC67DdR5QCBX2zJJX1KGLPvengc/j
+         o2NtElxgevWUdbuv4iwCbfVpxlNbk/c6vvu6AAKmenATllgpiUNtsSMSL5te8MTLtJQQ
+         b8TuMt6plaDH0cPl6eu9rptZSHiaZexVIM4PatRsimb/cprnqrOGgfMqNRBnhR6Y7cbj
+         kj4A==
+X-Gm-Message-State: APjAAAXhRY0P+Y1fCd6CDddTzx03BpJeVjquJjwRe34Zlu4JZ1EZFUi6
+        nRY+stKLCUl1CuY697ybGDxXGztJRKuQWHJcF1s=
+X-Google-Smtp-Source: APXvYqz3ud5QamIZF2mlMJ/cfkLH57ksgQNb7htbHLw1W8fxPUPxWJPlANYEGFhW51mcnlE+P51wBk0UfKJfunfzBQs=
+X-Received: by 2002:ac2:424d:: with SMTP id m13mr668264lfl.13.1574446079536;
+ Fri, 22 Nov 2019 10:07:59 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <85ed0881d0aeecd886b27bd482fa61fa86d96729.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+References: <20191108152013.13418-1-ramonreisfontes@gmail.com>
+ <fe198371577479c1e00a80e9cae6f577ab39ce8e.camel@sipsolutions.net>
+ <CAK8U23amVqf-6YoiPoyk5_za3dhVb4FJmBDvmA2xv2sD43DhQA@mail.gmail.com>
+ <7d43bbc0dfeb040d3e0468155858c4cbe50c0de2.camel@sipsolutions.net>
+ <CAK8U23aL7UDgko4Z2EkQ9r4muBTjNOCq-Erb9h2TFRnxdOmtWg@mail.gmail.com> <175edd72f0cd3bc4d2c0dbd42a4570c7fb47b8fd.camel@sipsolutions.net>
+In-Reply-To: <175edd72f0cd3bc4d2c0dbd42a4570c7fb47b8fd.camel@sipsolutions.net>
+From:   Ramon Fontes <ramonreisfontes@gmail.com>
+Date:   Fri, 22 Nov 2019 15:07:48 -0300
+Message-ID: <CAK8U23bLht3d9B==aZKOxhgP=nhCZqQ0zwcYRevgwof7+MsTdw@mail.gmail.com>
+Subject: Re: [PATCH] mac80211_hwsim: set the maximum EIRP output power for 5GHz
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        kvalo@codeaurora.org, davem@davemloft.net
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 11/22/19 4:38 AM, Johannes Berg wrote:
-> Hi,
-> 
-> On Mon, 2019-11-18 at 21:35 -0800, Thomas Pedersen wrote:
->> This patchset tries to make mac80211 power save testable with the hostap
->> hwsim tests, and fixes a bug in STA power save.
->>
->> Basic tests for AP and STA power save will be submitted to hostap
->> separately.
-> 
-> Cool :)
-> 
-> I was going to apply all of these, but then it turned out that the first
-> one causes a bunch of hwsim tests to fail?
+> If there's some other (physical?) restriction in the driver, sure, maybe
+> it should have one there, but for pure regulatory I'm not sure I see it.
+> That's why the pointer here to ETSI feels so strange to me.
 
-OK. If you point me toward which tests started to fail I can take a
-look.
+Ok. I see. You can change the commit msg then.
 
-> It seems quite possible that this is just a mac80211 bug somewhere, but
-> I'd want to look at this more closely, so I've dropped it back to "Under
-> Review" in patchwork again.
-> 
-> Any thoughts?
-> 
-> johannes
-> 
+> Note that I just sent my final pull request for the current kernel, so
+> this'll probably have to wait some time.
 
+Ok. No problem.
 
--- 
--- thomas
+--
+Ramon
