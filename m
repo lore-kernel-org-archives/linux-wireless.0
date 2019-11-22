@@ -2,68 +2,110 @@ Return-Path: <SRS0=Y0IC=ZO=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65E43C432C0
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 13:00:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EAE01C33C9A
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 13:01:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 44E2220718
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 13:00:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C2FAF2068E
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 13:01:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727261AbfKVNAE (ORCPT
+        id S1727209AbfKVNBs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 22 Nov 2019 08:00:04 -0500
-Received: from s3.sipsolutions.net ([144.76.43.62]:45132 "EHLO
+        Fri, 22 Nov 2019 08:01:48 -0500
+Received: from s3.sipsolutions.net ([144.76.43.62]:45160 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726813AbfKVNAE (ORCPT
+        with ESMTP id S1727781AbfKVNBs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Nov 2019 08:00:04 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        Fri, 22 Nov 2019 08:01:48 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92.3)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1iY8Xa-0003lh-4d; Fri, 22 Nov 2019 14:00:02 +0100
-Message-ID: <dea9da1dd31900306c886c308c555691552290f5.camel@sipsolutions.net>
-Subject: Re: [PATCH v11 2/4] mac80211: Import airtime calculation code from
- mt76
+        id 1iY8ZG-0003pg-QY; Fri, 22 Nov 2019 14:01:46 +0100
 From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@redhat.com>,
-        Kan Yan <kyan@google.com>
-Cc:     linux-wireless@vger.kernel.org,
-        make-wifi-fast@lists.bufferbloat.net, nbd@nbd.name,
-        yiboz@codeaurora.org, john@phrozen.org, lorenzo@kernel.org,
-        rmanohar@codeaurora.org, kevinhayes@google.com
-Date:   Fri, 22 Nov 2019 14:00:01 +0100
-In-Reply-To: <87tv6w3w92.fsf@toke.dk>
-References: <20191119060610.76681-1-kyan@google.com>
-         <20191119060610.76681-3-kyan@google.com>
-         <3e7bea0cc643714ec90978a7999022544a39b118.camel@sipsolutions.net>
-         <87tv6w3w92.fsf@toke.dk>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.30.5 (3.30.5-1.fc29) 
+To:     netdev@vger.kernel.org
+Cc:     linux-wireless@vger.kernel.org
+Subject: pull-request: mac80211-next next-2019-11-22
+Date:   Fri, 22 Nov 2019 14:01:40 +0100
+Message-Id: <20191122130141.18186-1-johannes@sipsolutions.net>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+Hi Dave,
 
-> Well, one calculates bitrates while the other calculates airtime? ;)
+Here's a final pull request for -next. I know I'm cutting it close, but
+the only interesting new thing here is AQL (airtime queue limits) which
+has been under discussion and heavy testing for quite a while, so I
+wanted to still get it in.
 
-:)
+Please pull and let me know if there's any problem.
 
-> But yeah, I get what you mean. I think Felix went through quite some
-> pains to structure this code to avoid divisions in the fast path. I
-> guess that is the main blocker for cfg80211_calculate_bitrate() to be
-> used instead (assuming we do want to consolidate them eventually). Not
-> sure if that can be fixed easily though?
-
-We could also do it the other way around?
-
-Or maybe we should keep both and use them as a sanity check for each
-other :P
-
+Thanks,
 johannes
+
+
+
+The following changes since commit 13baf667fa8e23aed12516776de6e50f7617820a:
+
+  enetc: make enetc_setup_tc_mqprio static (2019-11-21 19:30:11 -0800)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git tags/mac80211-next-for-net-next-2019-11-22
+
+for you to fetch changes up to 7a89233ac50468a3a9636803a85d06c8f907f8ee:
+
+  mac80211: Use Airtime-based Queue Limits (AQL) on packet dequeue (2019-11-22 13:36:25 +0100)
+
+----------------------------------------------------------------
+The interesting new thing here is AQL, the Airtime Queue Limit
+patchset from Kan Yan (Google) and Toke Høiland-Jørgensen (Redhat).
+The effect is intended to eventually be similar to BQL, but byte
+queue limits are not useful in wifi where the actual throughput can
+vary by around 4 orders of magnitude. There are more details in the
+patches themselves.
+
+----------------------------------------------------------------
+Johannes Berg (1):
+      mac80211: add a comment about monitor-to-dev injection
+
+Kan Yan (1):
+      mac80211: Implement Airtime-based Queue Limit (AQL)
+
+Taehee Yoo (1):
+      virt_wifi: fix use-after-free in virt_wifi_newlink()
+
+Thomas Pedersen (2):
+      mac80211: expose HW conf flags through debugfs
+      mac80211: consider QoS Null frames for STA_NULLFUNC_ACKED
+
+Toke Høiland-Jørgensen (3):
+      mac80211: Add new sta_info getter by sta/vif addrs
+      mac80211: Import airtime calculation code from mt76
+      mac80211: Use Airtime-based Queue Limits (AQL) on packet dequeue
+
+ drivers/net/wireless/virt_wifi.c |   4 +-
+ include/net/cfg80211.h           |   7 +
+ include/net/mac80211.h           |  57 ++++
+ net/mac80211/Makefile            |   3 +-
+ net/mac80211/airtime.c           | 597 +++++++++++++++++++++++++++++++++++++++
+ net/mac80211/debugfs.c           |  88 ++++++
+ net/mac80211/debugfs_sta.c       |  43 ++-
+ net/mac80211/ieee80211_i.h       |   8 +
+ net/mac80211/main.c              |  10 +-
+ net/mac80211/sta_info.c          |  52 ++++
+ net/mac80211/sta_info.h          |  12 +
+ net/mac80211/status.c            |  39 ++-
+ net/mac80211/tx.c                |  72 ++++-
+ 13 files changed, 966 insertions(+), 26 deletions(-)
+ create mode 100644 net/mac80211/airtime.c
 
