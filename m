@@ -2,92 +2,64 @@ Return-Path: <SRS0=Y0IC=ZO=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A676C43215
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 17:17:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 597F6C43215
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 17:34:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7402320658
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 17:17:03 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="e8BrkZ8/"
+	by mail.kernel.org (Postfix) with ESMTP id 32F242071F
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 Nov 2019 17:34:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1574444054;
+	bh=irjQEPHQ0B/bBVOw9LXstzMmwaBvkQEk1Zy4mmAlCS4=;
+	h=Date:From:To:Cc:Subject:List-ID:From;
+	b=r4/9VpD6FWkKi9+i0CPIeOjSpNY5g/JzhqxY1mNU1Kb4PDy7qBC104+idMeai5nwC
+	 69jWOKjNuroYyNy4YS3QlUb8qnH813P839t5OPuhObzk/Fin4oAhXgSS/TwDnZ+XX4
+	 tbTVoy6bmQZUfAOZP02rvasHXDkFeCTS4WxstF58=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726784AbfKVRRC (ORCPT
+        id S1726686AbfKVReN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 22 Nov 2019 12:17:02 -0500
-Received: from mail-pg1-f196.google.com ([209.85.215.196]:39538 "EHLO
-        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726704AbfKVRRC (ORCPT
+        Fri, 22 Nov 2019 12:34:13 -0500
+Received: from mail.stusta.mhn.de ([141.84.69.5]:54714 "EHLO
+        mail.stusta.mhn.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726046AbfKVReN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 Nov 2019 12:17:02 -0500
-Received: by mail-pg1-f196.google.com with SMTP id b137so1314956pga.6
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Nov 2019 09:17:00 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=6+LL8qsLHJX2/gsW2qsgwafSTmgjosS9b/ig7Inn4hU=;
-        b=e8BrkZ8/YCsuoD4K1DwERM6hGLEHvmbT6BR3qxdP36+HdJ9mPgnnOtz/TweKJr+JRJ
-         K+ZyKkg31vxIOiDQSAd/E8bcHqeRH9d/kb5yzfH7KKS+tZDAC6T7tdD/iT/5L7xHhh49
-         12CJjBxv+wQhcGjwBVJrTa0eWy4u/4m0YRxcmvYZoRgqOPgKp5GnyUa0OkPjwawxLJr/
-         VXmWXU2ndF+W0FAKDD9mHMkV1RGN8NaXacozpGLTeSk2Nmp1jRlGy5hkvCRmteCTV42a
-         3+ZyN+BE8E1VHodYjS6CM/VKiBjy0+iR1jeCsNtsP2UYNVKZ9JgTL9FCBhEH6YGAu9H7
-         r57g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=6+LL8qsLHJX2/gsW2qsgwafSTmgjosS9b/ig7Inn4hU=;
-        b=jzH+Oziqi4AMqvErZpGTNVMhQSxIK8iQKVtTjnGp9QR4tEermIPmESwxbuftN6FtuQ
-         BAjA7el7R6Ts6S35BKuAKQ7+lALnTiSmkHG1f0HwWD31elx3CyyyleGSF/C6bcjnahNX
-         TYd0TI/9QYVGz2MtF2Mnf/8/Q5gXPo2oxyaqtGyc573qxi/4e7JVbWB/e75IZDLjyGuy
-         ORk8GZqiT1Z2Dh6uqpBHdyBkGq1oPix2x6WKIDiCq15cVeGjImgSZ80CSUGmWRbrNPOw
-         NX1pLcz6uEAFDdK0fIY9pr7Nbl0r7FHvzo9umR1yI5Nf65+HstWlz2QYl5FnLvM9Z64k
-         USTw==
-X-Gm-Message-State: APjAAAVkCATevR3NaHSWJkzpmoVRbGETe1WBGbEttt+ZaxKlMZr5UO8T
-        3W56BlWoB8QQNtcrX5P2lCqlKH7p
-X-Google-Smtp-Source: APXvYqwUsXDBVrO5FFBT3W5HINDTFp8JZ8jbWghJZBTryTMvyHPO093GStiQnvDmMNfUtiMEozrjgA==
-X-Received: by 2002:a65:6081:: with SMTP id t1mr16831267pgu.391.1574443019623;
-        Fri, 22 Nov 2019 09:16:59 -0800 (PST)
-Received: from jprestwo-test.jf.intel.com ([134.134.139.76])
-        by smtp.gmail.com with ESMTPSA id b13sm7406030pgj.28.2019.11.22.09.16.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 22 Nov 2019 09:16:59 -0800 (PST)
-From:   James Prestwood <prestwoj@gmail.com>
-To:     linux-wireless@vger.kernel.org
-Cc:     James Prestwood <prestwoj@gmail.com>
-Subject: [PATCH v3 1/2] mac80211_hwsim: enable parent TSF feature
-Date:   Fri, 22 Nov 2019 09:14:00 -0800
-Message-Id: <20191122171401.8788-1-prestwoj@gmail.com>
-X-Mailer: git-send-email 2.17.1
+        Fri, 22 Nov 2019 12:34:13 -0500
+X-Greylist: delayed 575 seconds by postgrey-1.27 at vger.kernel.org; Fri, 22 Nov 2019 12:34:12 EST
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+        by mail.stusta.mhn.de (Postfix) with ESMTPSA id 47KNb62SwHz4Y;
+        Fri, 22 Nov 2019 18:24:34 +0100 (CET)
+Date:   Fri, 22 Nov 2019 19:24:31 +0200
+From:   Adrian Bunk <bunk@kernel.org>
+To:     netdev@vger.kernel.org
+Cc:     Amitkumar Karwar <amitkarwar@gmail.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Xinming Hu <huxinming820@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, stable@vger.kernel.org
+Subject: Please backport "mwifiex: Fix NL80211_TX_POWER_LIMITED" to stable
+ branches
+Message-ID: <20191122172431.GA24156@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Support for this is already in nl80211, and some code paths in
-mac80211_hwsim already set the rx_status to allow the parent TSF
-value to be sent to user space.
+Please backport commit 65a576e27309120e0621f54d5c81eb9128bd56be
+"mwifiex: Fix NL80211_TX_POWER_LIMITED" to stable branches.
 
-Signed-off-by: James Prestwood <prestwoj@gmail.com>
----
- drivers/net/wireless/mac80211_hwsim.c | 1 +
- 1 file changed, 1 insertion(+)
+It is a non-CVE kind of security issue when a wifi adapter
+exceeds the configured TX power limit.
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 772e54f0696f..e9bc599481d4 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -2825,6 +2825,7 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
- 			       NL80211_FEATURE_DYNAMIC_SMPS |
- 			       NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR;
- 	wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_VHT_IBSS);
-+	wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_BSS_PARENT_TSF);
- 
- 	hw->wiphy->interface_modes = param->iftypes;
- 
--- 
-2.17.1
+The commit applies and builds against all branches from 3.16 to 4.19, 
+confirmed working with 4.14. It is already included in kernel 5.3.
 
+Thanks in advance
+Adrian
