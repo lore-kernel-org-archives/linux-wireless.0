@@ -2,61 +2,61 @@ Return-Path: <SRS0=7RDh=ZQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-14.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5B4DC432C3
-	for <linux-wireless@archiver.kernel.org>; Sun, 24 Nov 2019 09:43:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF76FC43215
+	for <linux-wireless@archiver.kernel.org>; Sun, 24 Nov 2019 09:43:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8DBF520706
-	for <linux-wireless@archiver.kernel.org>; Sun, 24 Nov 2019 09:43:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 96457207FD
+	for <linux-wireless@archiver.kernel.org>; Sun, 24 Nov 2019 09:43:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XQhrEfkl"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="X8dZyNbi"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726803AbfKXJnU (ORCPT
+        id S1727052AbfKXJnb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 24 Nov 2019 04:43:20 -0500
-Received: from mail-pj1-f67.google.com ([209.85.216.67]:36972 "EHLO
-        mail-pj1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726792AbfKXJnU (ORCPT
+        Sun, 24 Nov 2019 04:43:31 -0500
+Received: from mail-pl1-f196.google.com ([209.85.214.196]:42035 "EHLO
+        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727007AbfKXJna (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 24 Nov 2019 04:43:20 -0500
-Received: by mail-pj1-f67.google.com with SMTP id bb19so1552983pjb.4;
-        Sun, 24 Nov 2019 01:43:19 -0800 (PST)
+        Sun, 24 Nov 2019 04:43:30 -0500
+Received: by mail-pl1-f196.google.com with SMTP id j12so5120484plt.9;
+        Sun, 24 Nov 2019 01:43:29 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=cYCl6tCVXRhGzELJNREu4KHA8Cuxy8ZifAK3A3H2TqQ=;
-        b=XQhrEfklswD/dw/KdVMegl8bW0SjyzX+fySRCa+n7O315I3Na7lkxPAcT0/VEHpxtJ
-         7S/WXKvwQkvFqxiT1aeJkK+dW/rrKlPOpwhvn3huQ7lswM8jcFu80S/EL403dqQkxCjg
-         m43i4Gh0TEaZ/zdBAr45GW8en4xxswxbi/BaWRceaBi3bMg9LXoEiPLAuz0BPzPT/dAs
-         R+n0SFhnh7DMcGVJoA4alAiHookTHm0vLTec2C/caj5nU/+P5A1myleHHuJckiH36mMd
-         X8fAwPEXZa1DNg/xyKMd0+v26TYVWX7lleoC520+ZHmWmm6FICX1eMvbX7I6GNI9lYMR
-         0z4Q==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=kKcTzJuC8PJNnzJIm6q83P/GLVLCiZGhOohm6Nds3hc=;
+        b=X8dZyNbi3pl+sJ8jfd2OCmlabAVhWAZlCWuunPrsoKiHbMoH55cymADTddbO3fJ/OC
+         FjLO6PNcC2YgAA3vy4g7maWL+gPrWUJWX8mlwhKRDuoVIw+LafdRH30SolvbZdat0r2S
+         XZd96YHHet9+YyzSCOfxydogbOHD6k9rWOEE50LgsbNlO2QKIA4ZFL+FZyf/aNnu7ndk
+         bFsaGs2UHtadrPeu2cxRcwVAss2vBkPd7m4W4NMWqlRexLQImRlRmcEnmgBdVyO5nFGT
+         QqF6iTNnHtMHN5H8k7weBSsmc21axWhI1TxDBNg20skeR77b19fUvNqP9RdrMrEk2vRl
+         ECzg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=cYCl6tCVXRhGzELJNREu4KHA8Cuxy8ZifAK3A3H2TqQ=;
-        b=NuhT9Ivz3jJDcoZ17KLJTaFyQ3bnPZR4PmGhGTLj0ssAq6xB1Kq+CxBlS/fxwxMX1v
-         xV07hPWgVr+X7aAr0WOsSnK0zUArDLszkRUaTgemfL8a4dIjEQR+9KsrYTENJswyBR2B
-         xJD2Mtk6GM11ph2Tw6MuzMC00xcPpSi43WBwbvfKYO/+nTlMoebonKEv9kuL0NFcXd/u
-         wpfBPj268t+4Ca0iHzxXADBwLVEtct0tdsJaWAVy+hULKfXsj1OdSMuPIoteJRgMpUz7
-         sHJgVZdMbWY8rmZfcN1DcweRoh2qNtSHmAVm2Bxw6YK74G84Z+f0aSZhGGSycBW86b1L
-         JWYQ==
-X-Gm-Message-State: APjAAAXs2mXfuouonk2LIzMmOAZ9Pj0gG9VGuV3F0WEfwXD9ZwQIQtk1
-        RXZGRvPHLT9vocDv2bM+L34=
-X-Google-Smtp-Source: APXvYqyWFjRWaQ8Px/q90nV7G8rnmuF8zHbfQye+twExMG2QCGL8hKvlHs7yLoSiNccpcqEh/H1XgA==
-X-Received: by 2002:a17:902:6802:: with SMTP id h2mr22565940plk.135.1574588598968;
-        Sun, 24 Nov 2019 01:43:18 -0800 (PST)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=kKcTzJuC8PJNnzJIm6q83P/GLVLCiZGhOohm6Nds3hc=;
+        b=dJ3vGUkTeYwlyp2Jytjq3VbneTMbbYo1+raC+sqG0Or54Xe5R0kq8jrtSaBV/mWOzG
+         FTgzbqKjj378QZ5j9rIw+9qECEVP1iWGXor7+uSHZsbtRgE1gcMkzuVCDHPjStjmfEbJ
+         NV3O5n2nZVozLr5ABFFKUKF3Z+aB4tLima3Fkeka2GDhY2mIPiJX+y0stVbQy5tIQ5rC
+         1gwge0D6+zlUMwfkg4y+8R11tmV8rMHN0THC2bBQlfIriGZpr7/gL9TJEmBuIvr4VJTJ
+         Ojy985Pwjieek0aKJEdK1ojeGvegD3Su0zPRcPaYMVs+M722oH4ZvCdULHTXJK8fa0oz
+         k7CQ==
+X-Gm-Message-State: APjAAAXsIebTBMs19cGHDdm/go7nYhbYPUzKe9RnrMsUFvXaqYSn5/6x
+        XftC4Sbwgw5EVBa+AVmdPd0=
+X-Google-Smtp-Source: APXvYqyBvLowC9Q1fNUStc4e4FDdNQIEjGCU3mQc3EYLzwvXZT5VCgknE9UcRP6a4ceXHb32iNwn1Q==
+X-Received: by 2002:a17:90a:be05:: with SMTP id a5mr78858pjs.73.1574588609123;
+        Sun, 24 Nov 2019 01:43:29 -0800 (PST)
 Received: from debian.net.fpt ([2405:4800:58f7:550c:6dad:1b5f:afc6:7758])
-        by smtp.gmail.com with ESMTPSA id c3sm4091213pfi.91.2019.11.24.01.43.15
+        by smtp.gmail.com with ESMTPSA id c3sm4091213pfi.91.2019.11.24.01.43.26
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 24 Nov 2019 01:43:18 -0800 (PST)
+        Sun, 24 Nov 2019 01:43:28 -0800 (PST)
 From:   Phong Tran <tranmanphong@gmail.com>
 To:     davem@davemloft.net, keescook@chromium.org
 Cc:     kvalo@codeaurora.org, saeedm@mellanox.com,
@@ -64,10 +64,12 @@ Cc:     kvalo@codeaurora.org, saeedm@mellanox.com,
         netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
         linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
         Phong Tran <tranmanphong@gmail.com>
-Subject: [PATCH 0/5] Fix -Wcast-function-type net drivers
-Date:   Sun, 24 Nov 2019 16:43:01 +0700
-Message-Id: <20191124094306.21297-1-tranmanphong@gmail.com>
+Subject: [PATCH 3/5] drivers: net: b43legacy: Fix -Wcast-function-type
+Date:   Sun, 24 Nov 2019 16:43:04 +0700
+Message-Id: <20191124094306.21297-4-tranmanphong@gmail.com>
 X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20191124094306.21297-1-tranmanphong@gmail.com>
+References: <20191124094306.21297-1-tranmanphong@gmail.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -75,31 +77,38 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This series is for fixing the compiler warning while enable
--Wcast-function-type.
+correct usage prototype of callback in tasklet_init().
+Report by https://github.com/KSPP/linux/issues/20
 
-Almost is incompatible callback prototype in using tasklet.
-The void (*func)(unsigned long) instead of void (*func)(struct foo*).
+Signed-off-by: Phong Tran <tranmanphong@gmail.com>
+---
+ drivers/net/wireless/broadcom/b43legacy/main.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-Reported by: https://github.com/KSPP/linux/issues/20
-
-Phong Tran (5):
-  drivers: net: hso: Fix -Wcast-function-type
-  drivers: net: usbnet: Fix -Wcast-function-type
-  drivers: net: b43legacy: Fix -Wcast-function-type
-  drivers: net: intel: Fix -Wcast-function-type
-  drivers: net: realtek: Fix -Wcast-function-type
-
- drivers/net/usb/hso.c                          |  5 +++--
- drivers/net/usb/usbnet.c                       |  8 +++++++-
- drivers/net/wireless/broadcom/b43legacy/main.c |  5 +++--
- drivers/net/wireless/intel/ipw2x00/ipw2100.c   |  7 ++++---
- drivers/net/wireless/intel/ipw2x00/ipw2200.c   |  5 +++--
- drivers/net/wireless/intel/iwlegacy/3945-mac.c |  5 +++--
- drivers/net/wireless/intel/iwlegacy/4965-mac.c |  5 +++--
- drivers/net/wireless/realtek/rtlwifi/pci.c     | 10 ++++++----
- 8 files changed, 32 insertions(+), 18 deletions(-)
-
+diff --git a/drivers/net/wireless/broadcom/b43legacy/main.c b/drivers/net/wireless/broadcom/b43legacy/main.c
+index 4325e91736eb..8b6b657c4b85 100644
+--- a/drivers/net/wireless/broadcom/b43legacy/main.c
++++ b/drivers/net/wireless/broadcom/b43legacy/main.c
+@@ -1275,8 +1275,9 @@ static void handle_irq_ucode_debug(struct b43legacy_wldev *dev)
+ }
+ 
+ /* Interrupt handler bottom-half */
+-static void b43legacy_interrupt_tasklet(struct b43legacy_wldev *dev)
++static void b43legacy_interrupt_tasklet(unsigned long data)
+ {
++	struct b43legacy_wldev *dev = (struct b43legacy_wldev *)data;
+ 	u32 reason;
+ 	u32 dma_reason[ARRAY_SIZE(dev->dma_reason)];
+ 	u32 merged_dma_reason = 0;
+@@ -3741,7 +3742,7 @@ static int b43legacy_one_core_attach(struct ssb_device *dev,
+ 	b43legacy_set_status(wldev, B43legacy_STAT_UNINIT);
+ 	wldev->bad_frames_preempt = modparam_bad_frames_preempt;
+ 	tasklet_init(&wldev->isr_tasklet,
+-		     (void (*)(unsigned long))b43legacy_interrupt_tasklet,
++		     b43legacy_interrupt_tasklet,
+ 		     (unsigned long)wldev);
+ 	if (modparam_pio)
+ 		wldev->__using_pio = true;
 -- 
 2.20.1
 
