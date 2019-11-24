@@ -8,55 +8,55 @@ X-Spam-Status: No, score=-14.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF76FC43215
-	for <linux-wireless@archiver.kernel.org>; Sun, 24 Nov 2019 09:43:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB63EC43215
+	for <linux-wireless@archiver.kernel.org>; Sun, 24 Nov 2019 09:43:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 96457207FD
-	for <linux-wireless@archiver.kernel.org>; Sun, 24 Nov 2019 09:43:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 93C04207DD
+	for <linux-wireless@archiver.kernel.org>; Sun, 24 Nov 2019 09:43:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="X8dZyNbi"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="pbZ48E72"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727052AbfKXJnb (ORCPT
+        id S1727141AbfKXJni (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 24 Nov 2019 04:43:31 -0500
-Received: from mail-pl1-f196.google.com ([209.85.214.196]:42035 "EHLO
-        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727007AbfKXJna (ORCPT
+        Sun, 24 Nov 2019 04:43:38 -0500
+Received: from mail-pf1-f194.google.com ([209.85.210.194]:39590 "EHLO
+        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727124AbfKXJng (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 24 Nov 2019 04:43:30 -0500
-Received: by mail-pl1-f196.google.com with SMTP id j12so5120484plt.9;
-        Sun, 24 Nov 2019 01:43:29 -0800 (PST)
+        Sun, 24 Nov 2019 04:43:36 -0500
+Received: by mail-pf1-f194.google.com with SMTP id x28so5812608pfo.6;
+        Sun, 24 Nov 2019 01:43:36 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=kKcTzJuC8PJNnzJIm6q83P/GLVLCiZGhOohm6Nds3hc=;
-        b=X8dZyNbi3pl+sJ8jfd2OCmlabAVhWAZlCWuunPrsoKiHbMoH55cymADTddbO3fJ/OC
-         FjLO6PNcC2YgAA3vy4g7maWL+gPrWUJWX8mlwhKRDuoVIw+LafdRH30SolvbZdat0r2S
-         XZd96YHHet9+YyzSCOfxydogbOHD6k9rWOEE50LgsbNlO2QKIA4ZFL+FZyf/aNnu7ndk
-         bFsaGs2UHtadrPeu2cxRcwVAss2vBkPd7m4W4NMWqlRexLQImRlRmcEnmgBdVyO5nFGT
-         QqF6iTNnHtMHN5H8k7weBSsmc21axWhI1TxDBNg20skeR77b19fUvNqP9RdrMrEk2vRl
-         ECzg==
+        bh=XX2U608hnsjlr3CObVhxW7h8IxFeUeweX4fxE0/OsVM=;
+        b=pbZ48E72WllRYYPjmsEdxnNoMrZOrFp+lMZ659AYkPhUHcQG7NnptIKEfSPw/85fX7
+         PjjXBPMUITuRK4nP2ilp6htpV9nHZC/wit+IO0Y5vsaMapojwHq52HihlGe1BLJGse+7
+         1vatoOIj4FkqjBLH2NVvZS6PMW39NuUmZEshfgZjzcqkUNWSSSstXbuPwEJ9XEqtFIXw
+         pZNOFTrhShdekxUFT5HLUPn59pPcKAqcueuqUCKlVBHPqw7aj4ZFli0yNUf/SR0kdIz5
+         6VrXrnpVC5GRwprCECb1eO84NdF7UlxZJ2ZdtoGs+12OEkLsC8EvjSuj+/+HVORMuoqH
+         Pt8Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=kKcTzJuC8PJNnzJIm6q83P/GLVLCiZGhOohm6Nds3hc=;
-        b=dJ3vGUkTeYwlyp2Jytjq3VbneTMbbYo1+raC+sqG0Or54Xe5R0kq8jrtSaBV/mWOzG
-         FTgzbqKjj378QZ5j9rIw+9qECEVP1iWGXor7+uSHZsbtRgE1gcMkzuVCDHPjStjmfEbJ
-         NV3O5n2nZVozLr5ABFFKUKF3Z+aB4tLima3Fkeka2GDhY2mIPiJX+y0stVbQy5tIQ5rC
-         1gwge0D6+zlUMwfkg4y+8R11tmV8rMHN0THC2bBQlfIriGZpr7/gL9TJEmBuIvr4VJTJ
-         Ojy985Pwjieek0aKJEdK1ojeGvegD3Su0zPRcPaYMVs+M722oH4ZvCdULHTXJK8fa0oz
-         k7CQ==
-X-Gm-Message-State: APjAAAXsIebTBMs19cGHDdm/go7nYhbYPUzKe9RnrMsUFvXaqYSn5/6x
-        XftC4Sbwgw5EVBa+AVmdPd0=
-X-Google-Smtp-Source: APXvYqyBvLowC9Q1fNUStc4e4FDdNQIEjGCU3mQc3EYLzwvXZT5VCgknE9UcRP6a4ceXHb32iNwn1Q==
-X-Received: by 2002:a17:90a:be05:: with SMTP id a5mr78858pjs.73.1574588609123;
-        Sun, 24 Nov 2019 01:43:29 -0800 (PST)
+        bh=XX2U608hnsjlr3CObVhxW7h8IxFeUeweX4fxE0/OsVM=;
+        b=JozxIBtQtHdjOGqWTBrIqRjZaEkwbnNB82YMunLX7hWHL0z1xAeDoytS7j5ce0XvNs
+         lERmn4ikiPD/AaLeY8mm9f4xpD11ubISYj/MNFA2eYjA+/WXph+wJclmKxSYfQ/DOSuL
+         Q9I3VFJ2ntOI9uNF4Qu4j7Gm9NmFul41jmz6msna2mUXkDERJnUnF8/MSEVtAiHePNzv
+         in+lFobJZDJAgJMuBbaoA+7PhVpQGIdBmriFD0sGiUPxhHVCG5qmSzXU2YYs83A/NBWm
+         MfWjvqlvPLEJAHebPeBJkr/MXtkd31klySmEYSXakKIP0dMwlc6QQaO2WSfO8g0nhtOW
+         d5hA==
+X-Gm-Message-State: APjAAAWgv9QN940FsFZ9Wuz3dwWReAt7MpcWgJTUJoB4yosXFA/bnswc
+        qJ4+BP0oVlGhV82fM6ZHkN4=
+X-Google-Smtp-Source: APXvYqyDkLTF+5q1E0Qo6xZzpBxvOTU8cN84a55BpTsA4KJ4YdvSOZHeWg9UbeXT+Vj4T5foApOVlw==
+X-Received: by 2002:aa7:8207:: with SMTP id k7mr29000021pfi.130.1574588615992;
+        Sun, 24 Nov 2019 01:43:35 -0800 (PST)
 Received: from debian.net.fpt ([2405:4800:58f7:550c:6dad:1b5f:afc6:7758])
-        by smtp.gmail.com with ESMTPSA id c3sm4091213pfi.91.2019.11.24.01.43.26
+        by smtp.gmail.com with ESMTPSA id c3sm4091213pfi.91.2019.11.24.01.43.32
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 24 Nov 2019 01:43:28 -0800 (PST)
+        Sun, 24 Nov 2019 01:43:35 -0800 (PST)
 From:   Phong Tran <tranmanphong@gmail.com>
 To:     davem@davemloft.net, keescook@chromium.org
 Cc:     kvalo@codeaurora.org, saeedm@mellanox.com,
@@ -64,9 +64,9 @@ Cc:     kvalo@codeaurora.org, saeedm@mellanox.com,
         netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
         linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
         Phong Tran <tranmanphong@gmail.com>
-Subject: [PATCH 3/5] drivers: net: b43legacy: Fix -Wcast-function-type
-Date:   Sun, 24 Nov 2019 16:43:04 +0700
-Message-Id: <20191124094306.21297-4-tranmanphong@gmail.com>
+Subject: [PATCH 5/5] drivers: net: realtek: Fix -Wcast-function-type
+Date:   Sun, 24 Nov 2019 16:43:06 +0700
+Message-Id: <20191124094306.21297-6-tranmanphong@gmail.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191124094306.21297-1-tranmanphong@gmail.com>
 References: <20191124094306.21297-1-tranmanphong@gmail.com>
@@ -82,33 +82,44 @@ Report by https://github.com/KSPP/linux/issues/20
 
 Signed-off-by: Phong Tran <tranmanphong@gmail.com>
 ---
- drivers/net/wireless/broadcom/b43legacy/main.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/pci.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/b43legacy/main.c b/drivers/net/wireless/broadcom/b43legacy/main.c
-index 4325e91736eb..8b6b657c4b85 100644
---- a/drivers/net/wireless/broadcom/b43legacy/main.c
-+++ b/drivers/net/wireless/broadcom/b43legacy/main.c
-@@ -1275,8 +1275,9 @@ static void handle_irq_ucode_debug(struct b43legacy_wldev *dev)
+diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c b/drivers/net/wireless/realtek/rtlwifi/pci.c
+index f88d26535978..25335bd2873b 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/pci.c
++++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
+@@ -1061,13 +1061,15 @@ static irqreturn_t _rtl_pci_interrupt(int irq, void *dev_id)
+ 	return ret;
  }
  
- /* Interrupt handler bottom-half */
--static void b43legacy_interrupt_tasklet(struct b43legacy_wldev *dev)
-+static void b43legacy_interrupt_tasklet(unsigned long data)
+-static void _rtl_pci_irq_tasklet(struct ieee80211_hw *hw)
++static void _rtl_pci_irq_tasklet(unsigned long data)
  {
-+	struct b43legacy_wldev *dev = (struct b43legacy_wldev *)data;
- 	u32 reason;
- 	u32 dma_reason[ARRAY_SIZE(dev->dma_reason)];
- 	u32 merged_dma_reason = 0;
-@@ -3741,7 +3742,7 @@ static int b43legacy_one_core_attach(struct ssb_device *dev,
- 	b43legacy_set_status(wldev, B43legacy_STAT_UNINIT);
- 	wldev->bad_frames_preempt = modparam_bad_frames_preempt;
- 	tasklet_init(&wldev->isr_tasklet,
--		     (void (*)(unsigned long))b43legacy_interrupt_tasklet,
-+		     b43legacy_interrupt_tasklet,
- 		     (unsigned long)wldev);
- 	if (modparam_pio)
- 		wldev->__using_pio = true;
++	struct ieee80211_hw *hw = (struct ieee80211_hw *)data;
+ 	_rtl_pci_tx_chk_waitq(hw);
+ }
+ 
+-static void _rtl_pci_prepare_bcn_tasklet(struct ieee80211_hw *hw)
++static void _rtl_pci_prepare_bcn_tasklet(unsigned long data)
+ {
++	struct ieee80211_hw *hw = (struct ieee80211_hw *)data;
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+ 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
+@@ -1193,10 +1195,10 @@ static void _rtl_pci_init_struct(struct ieee80211_hw *hw,
+ 
+ 	/*task */
+ 	tasklet_init(&rtlpriv->works.irq_tasklet,
+-		     (void (*)(unsigned long))_rtl_pci_irq_tasklet,
++		     _rtl_pci_irq_tasklet,
+ 		     (unsigned long)hw);
+ 	tasklet_init(&rtlpriv->works.irq_prepare_bcn_tasklet,
+-		     (void (*)(unsigned long))_rtl_pci_prepare_bcn_tasklet,
++		     _rtl_pci_prepare_bcn_tasklet,
+ 		     (unsigned long)hw);
+ 	INIT_WORK(&rtlpriv->works.lps_change_work,
+ 		  rtl_lps_change_work_callback);
 -- 
 2.20.1
 
