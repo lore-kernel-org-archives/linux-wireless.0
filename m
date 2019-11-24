@@ -8,55 +8,55 @@ X-Spam-Status: No, score=-14.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EC5BC432C3
-	for <linux-wireless@archiver.kernel.org>; Sun, 24 Nov 2019 09:43:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C141C432C3
+	for <linux-wireless@archiver.kernel.org>; Sun, 24 Nov 2019 09:43:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D1F7A20637
-	for <linux-wireless@archiver.kernel.org>; Sun, 24 Nov 2019 09:43:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6DAF220637
+	for <linux-wireless@archiver.kernel.org>; Sun, 24 Nov 2019 09:43:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="slL0xsiM"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RX0LhMW0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727110AbfKXJnf (ORCPT
+        id S1726992AbfKXJn1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 24 Nov 2019 04:43:35 -0500
-Received: from mail-pf1-f195.google.com ([209.85.210.195]:39586 "EHLO
-        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727095AbfKXJnd (ORCPT
+        Sun, 24 Nov 2019 04:43:27 -0500
+Received: from mail-pj1-f65.google.com ([209.85.216.65]:35241 "EHLO
+        mail-pj1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726792AbfKXJn0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 24 Nov 2019 04:43:33 -0500
-Received: by mail-pf1-f195.google.com with SMTP id x28so5812562pfo.6;
-        Sun, 24 Nov 2019 01:43:33 -0800 (PST)
+        Sun, 24 Nov 2019 04:43:26 -0500
+Received: by mail-pj1-f65.google.com with SMTP id s8so5106499pji.2;
+        Sun, 24 Nov 2019 01:43:26 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=Fv51DMlGqD9FZ0x4Yb8tL4M0VywmGrWikcN80HTtJdA=;
-        b=slL0xsiM3n9/vMd772IIDIHdEn4ZpMhlEpSEO5kIyWf8N7s2RK9w+IzM1Yhtxhv/HH
-         uGfO6Gj691Hqo6iMzIlW1Kou+qeHT2L8zyqxpQXmuOTNkxQncvsj+TyXfCA+g4tPejpL
-         V9bxGfWndaGYgpEQMUIdLl47/jfItf0diEZM47JSLFteROpCnm2Cq1Ffzc1MHzn/oeER
-         zeSmWdOhxhA2tUgFyCdZB1P8CVP5+eQGK358A/rcJ+J6rZboDtBvT9I3Cp7+ZbYk7bFp
-         vhHdnAJj4+CIl7RyRc/G4ih68roeQBU0kIvt9A5rovy+xTtmbdiuIc3qKawKyPANLEkK
-         gutQ==
+        bh=e4HNvCgeIsWWXZD/Eb73dwrTgcSGPA1KF9adoLiVXgQ=;
+        b=RX0LhMW0c34hZGGERWZdBTSwJLJJLYhk8AMFtl2DdGL3cMAd7SKwDMHT8u/cHh0BlD
+         49ujQVAeHoTVjwjEg7+JsYcLPh6gXUApIWpTecrRZAuBUjltNiKkGPDxpFj39tiTPok4
+         WXsUdaNlAsQwcooR+Gg0Aq0M/rNXZ1shMQzstKLCStpGlsrdPMFF3cpB76i2IxWIN8UZ
+         knhbcdBLXpHOIpY7qY46j3/sfEOkhLCIU6xAu+ecvQdR2VA2bJP0ZUJ1q1r9oUh4ORJy
+         9Ci32TDpY7Excyx21/duoxiUV4ypov4V9Tb1+DsZEsUM+WBAL40/xTPXXxCKOTJZ693f
+         vNdg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=Fv51DMlGqD9FZ0x4Yb8tL4M0VywmGrWikcN80HTtJdA=;
-        b=cESdWpy9Dse23BcCFUTTgxcO16yIvxoxNJ8Uc5slIR7qc2UWT7UzlXlxL9iP25ZDRn
-         DB/YeP0SL/g/wPPlqYgjPKj54L5aCKXJWgvKSTSTZe0DXC82XyIUGIsZUDLIQWQu2ou3
-         l/CrQlP7Yu1Lq7yIlaUywIRyDpjQCads1piAFFJwMrjdngcWF4dlrU24dYrCIcCX8gMr
-         BpIAk1h6fjuTGhnoX/T/gs8akz+HQOzBofBFekASHTWFd2+nYFP/q+PfJP7eft22XMRt
-         jBp2Jv0jscx/vCnhf6e33k2Ys/AJiqEsPMCG17HgvURP5t8LX2xhPkV9mM4ynd4kdMOR
-         IWfQ==
-X-Gm-Message-State: APjAAAVVupFXlPd3A80+xdTxRXwSmnL4nvMGCv5vUUSDU2G8iGhbnrWO
-        518yOSvNRLQElzPAOV0pnK4=
-X-Google-Smtp-Source: APXvYqzC/diuSSTsN1pPS9oOawDgp9RIs5fNmfNpu8RQd1BgRuyGxBIdOvI/ogEqCh9+qvWeTjk0Uw==
-X-Received: by 2002:a63:445c:: with SMTP id t28mr26284435pgk.348.1574588612618;
-        Sun, 24 Nov 2019 01:43:32 -0800 (PST)
+        bh=e4HNvCgeIsWWXZD/Eb73dwrTgcSGPA1KF9adoLiVXgQ=;
+        b=YsbPl52qS0w5HZMfcKdr7wATs/Pi5znBDelaiidVbDG3Ye81VxU5ntI6NfMLo9TgnB
+         zJO3WKsn6QyiNpOQIpzbwTqNVhe0S4gOHYh+TsHzZzEcYyaMgsP5b1uj7SUVRs5a4O4a
+         sRyVh+52xKcYMm2Y0cVfcosmlPQDCRO8HxczYZ8jE/j6yW0R1lIGvXb2MaVXLYI54tJB
+         LZRgh/NFhRnigtoJN1Jqw49ue1qlBK7peKcelRRycbf6I5BroorlcIOBs1hAq0riRGwD
+         /UWi0DJROslBQqyVW9WyJQmEPG3QHI/1jZI8jYsPKO8f2Cr/1284nPK4q1zuDaHC++HZ
+         k7Rg==
+X-Gm-Message-State: APjAAAVmTSaPEf067fK3iKWVh8bpjzHM9KSIo5TVAhP7MR7Ke4zU7h8U
+        QlgRjFXaRpn0mtoRkHUrj18=
+X-Google-Smtp-Source: APXvYqw3R6TUZ4frJfO7zIs+k7QvzozCY9KnMn0pk5y5hemv7TyHcSNwnQY0dSTIac90wNDxouqt6A==
+X-Received: by 2002:a17:90a:e28a:: with SMTP id d10mr32053918pjz.116.1574588605847;
+        Sun, 24 Nov 2019 01:43:25 -0800 (PST)
 Received: from debian.net.fpt ([2405:4800:58f7:550c:6dad:1b5f:afc6:7758])
-        by smtp.gmail.com with ESMTPSA id c3sm4091213pfi.91.2019.11.24.01.43.29
+        by smtp.gmail.com with ESMTPSA id c3sm4091213pfi.91.2019.11.24.01.43.22
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 24 Nov 2019 01:43:31 -0800 (PST)
+        Sun, 24 Nov 2019 01:43:25 -0800 (PST)
 From:   Phong Tran <tranmanphong@gmail.com>
 To:     davem@davemloft.net, keescook@chromium.org
 Cc:     kvalo@codeaurora.org, saeedm@mellanox.com,
@@ -64,9 +64,9 @@ Cc:     kvalo@codeaurora.org, saeedm@mellanox.com,
         netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
         linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
         Phong Tran <tranmanphong@gmail.com>
-Subject: [PATCH 4/5] drivers: net: intel: Fix -Wcast-function-type
-Date:   Sun, 24 Nov 2019 16:43:05 +0700
-Message-Id: <20191124094306.21297-5-tranmanphong@gmail.com>
+Subject: [PATCH 2/5] drivers: net: usbnet: Fix -Wcast-function-type
+Date:   Sun, 24 Nov 2019 16:43:03 +0700
+Message-Id: <20191124094306.21297-3-tranmanphong@gmail.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191124094306.21297-1-tranmanphong@gmail.com>
 References: <20191124094306.21297-1-tranmanphong@gmail.com>
@@ -82,117 +82,35 @@ Report by https://github.com/KSPP/linux/issues/20
 
 Signed-off-by: Phong Tran <tranmanphong@gmail.com>
 ---
- drivers/net/wireless/intel/ipw2x00/ipw2100.c   | 7 ++++---
- drivers/net/wireless/intel/ipw2x00/ipw2200.c   | 5 +++--
- drivers/net/wireless/intel/iwlegacy/3945-mac.c | 5 +++--
- drivers/net/wireless/intel/iwlegacy/4965-mac.c | 5 +++--
- 4 files changed, 13 insertions(+), 9 deletions(-)
+ drivers/net/usb/usbnet.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2100.c b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
-index 8dfbaff2d1fe..a162146a43a7 100644
---- a/drivers/net/wireless/intel/ipw2x00/ipw2100.c
-+++ b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
-@@ -3206,8 +3206,9 @@ static void ipw2100_tx_send_data(struct ipw2100_priv *priv)
+diff --git a/drivers/net/usb/usbnet.c b/drivers/net/usb/usbnet.c
+index dde05e2fdc3e..d10a5e6d0917 100644
+--- a/drivers/net/usb/usbnet.c
++++ b/drivers/net/usb/usbnet.c
+@@ -1573,6 +1573,12 @@ static void usbnet_bh (struct timer_list *t)
  	}
  }
  
--static void ipw2100_irq_tasklet(struct ipw2100_priv *priv)
-+static void ipw2100_irq_tasklet(unsigned long data)
- {
-+	struct ipw2100_priv *priv = (struct ipw2100_priv *)data;
- 	struct net_device *dev = priv->net_dev;
- 	unsigned long flags;
- 	u32 inta, tmp;
-@@ -6007,7 +6008,7 @@ static void ipw2100_rf_kill(struct work_struct *work)
- 	spin_unlock_irqrestore(&priv->low_lock, flags);
- }
++static void usbnet_bh_tasklet (unsigned long data)
++{
++	struct timer_list *t = (struct timer_list *)data;
++	usbnet_bh(t);
++}
++
  
--static void ipw2100_irq_tasklet(struct ipw2100_priv *priv);
-+static void ipw2100_irq_tasklet(unsigned long data);
- 
- static const struct net_device_ops ipw2100_netdev_ops = {
- 	.ndo_open		= ipw2100_open,
-@@ -6137,7 +6138,7 @@ static struct net_device *ipw2100_alloc_device(struct pci_dev *pci_dev,
- 	INIT_DELAYED_WORK(&priv->rf_kill, ipw2100_rf_kill);
- 	INIT_DELAYED_WORK(&priv->scan_event, ipw2100_scan_event);
- 
--	tasklet_init(&priv->irq_tasklet, (void (*)(unsigned long))
-+	tasklet_init(&priv->irq_tasklet,
- 		     ipw2100_irq_tasklet, (unsigned long)priv);
- 
- 	/* NOTE:  We do not start the deferred work for status checks yet */
-diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2200.c b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
-index ed0f06532d5e..ac5f797fb1ad 100644
---- a/drivers/net/wireless/intel/ipw2x00/ipw2200.c
-+++ b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
-@@ -1945,8 +1945,9 @@ static void notify_wx_assoc_event(struct ipw_priv *priv)
- 	wireless_send_event(priv->net_dev, SIOCGIWAP, &wrqu, NULL);
- }
- 
--static void ipw_irq_tasklet(struct ipw_priv *priv)
-+static void ipw_irq_tasklet(unsigned long data)
- {
-+	struct ipw_priv *priv = (struct ipw_priv *)data;
- 	u32 inta, inta_mask, handled = 0;
- 	unsigned long flags;
- 	int rc = 0;
-@@ -10680,7 +10681,7 @@ static int ipw_setup_deferred_work(struct ipw_priv *priv)
- 	INIT_WORK(&priv->qos_activate, ipw_bg_qos_activate);
- #endif				/* CONFIG_IPW2200_QOS */
- 
--	tasklet_init(&priv->irq_tasklet, (void (*)(unsigned long))
-+	tasklet_init(&priv->irq_tasklet,
- 		     ipw_irq_tasklet, (unsigned long)priv);
- 
- 	return ret;
-diff --git a/drivers/net/wireless/intel/iwlegacy/3945-mac.c b/drivers/net/wireless/intel/iwlegacy/3945-mac.c
-index 4fbcc7fba3cc..e2e9c3e8fff5 100644
---- a/drivers/net/wireless/intel/iwlegacy/3945-mac.c
-+++ b/drivers/net/wireless/intel/iwlegacy/3945-mac.c
-@@ -1376,8 +1376,9 @@ il3945_dump_nic_error_log(struct il_priv *il)
- }
- 
- static void
--il3945_irq_tasklet(struct il_priv *il)
-+il3945_irq_tasklet(unsigned long data)
- {
-+	struct il_priv *il = (struct il_priv *)data;
- 	u32 inta, handled = 0;
- 	u32 inta_fh;
- 	unsigned long flags;
-@@ -3403,7 +3404,7 @@ il3945_setup_deferred_work(struct il_priv *il)
- 	timer_setup(&il->watchdog, il_bg_watchdog, 0);
- 
- 	tasklet_init(&il->irq_tasklet,
--		     (void (*)(unsigned long))il3945_irq_tasklet,
-+		     il3945_irq_tasklet,
- 		     (unsigned long)il);
- }
- 
-diff --git a/drivers/net/wireless/intel/iwlegacy/4965-mac.c b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-index ffb705b18fb1..5fe17039a337 100644
---- a/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-@@ -4344,8 +4344,9 @@ il4965_synchronize_irq(struct il_priv *il)
- }
- 
- static void
--il4965_irq_tasklet(struct il_priv *il)
-+il4965_irq_tasklet(unsigned long data)
- {
-+	struct il_priv *il = (struct il_priv *)data;
- 	u32 inta, handled = 0;
- 	u32 inta_fh;
- 	unsigned long flags;
-@@ -6238,7 +6239,7 @@ il4965_setup_deferred_work(struct il_priv *il)
- 	timer_setup(&il->watchdog, il_bg_watchdog, 0);
- 
- 	tasklet_init(&il->irq_tasklet,
--		     (void (*)(unsigned long))il4965_irq_tasklet,
-+		     il4965_irq_tasklet,
- 		     (unsigned long)il);
- }
- 
+ /*-------------------------------------------------------------------------
+  *
+@@ -1700,7 +1706,7 @@ usbnet_probe (struct usb_interface *udev, const struct usb_device_id *prod)
+ 	skb_queue_head_init (&dev->txq);
+ 	skb_queue_head_init (&dev->done);
+ 	skb_queue_head_init(&dev->rxq_pause);
+-	dev->bh.func = (void (*)(unsigned long))usbnet_bh;
++	dev->bh.func = usbnet_bh_tasklet;
+ 	dev->bh.data = (unsigned long)&dev->delay;
+ 	INIT_WORK (&dev->kevent, usbnet_deferred_kevent);
+ 	init_usb_anchor(&dev->deferred);
 -- 
 2.20.1
 
