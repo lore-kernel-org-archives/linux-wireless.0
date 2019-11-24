@@ -2,80 +2,90 @@ Return-Path: <SRS0=7RDh=ZQ=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 832DFC432C0
-	for <linux-wireless@archiver.kernel.org>; Sun, 24 Nov 2019 14:51:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 181D0C432C0
+	for <linux-wireless@archiver.kernel.org>; Sun, 24 Nov 2019 22:39:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 591B220748
-	for <linux-wireless@archiver.kernel.org>; Sun, 24 Nov 2019 14:51:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E27E72080D
+	for <linux-wireless@archiver.kernel.org>; Sun, 24 Nov 2019 22:39:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="fMyw55jB";
-	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="b8g6CSAq"
+	dkim=pass (2048-bit key) header.d=netronome-com.20150623.gappssmtp.com header.i=@netronome-com.20150623.gappssmtp.com header.b="Gj7RiQOK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726976AbfKXOv2 (ORCPT
+        id S1727031AbfKXWj2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 24 Nov 2019 09:51:28 -0500
-Received: from a27-187.smtp-out.us-west-2.amazonses.com ([54.240.27.187]:41114
-        "EHLO a27-187.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726798AbfKXOv2 (ORCPT
+        Sun, 24 Nov 2019 17:39:28 -0500
+Received: from mail-pj1-f65.google.com ([209.85.216.65]:41612 "EHLO
+        mail-pj1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727008AbfKXWj1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 24 Nov 2019 09:51:28 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-        s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1574607087;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:Message-ID:MIME-Version:Content-Type;
-        bh=LFsucqZpUXxs5vCIzQJND0Z+/nHNJejcRZj8IwZAiOA=;
-        b=fMyw55jBGJ3AOJlG7EWv+jxQOv+L3A2ZPHHhQr+2ZEeA4iWZbwpY7s8Qe0w/eC2j
-        7EpQU+JOHd2zg40m/YpnoXRAH+xM/DlslQL7XoVSDqcGMYDyipggTzW7dWtEaWNVANs
-        cWxuYtDZXPK525OEJnasFaYQghwpEkwxy4y2suxo=
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-        s=gdwg2y3kokkkj5a55z2ilkup5wp5hhxx; d=amazonses.com; t=1574607087;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:Message-ID:MIME-Version:Content-Type:Feedback-ID;
-        bh=LFsucqZpUXxs5vCIzQJND0Z+/nHNJejcRZj8IwZAiOA=;
-        b=b8g6CSAqEvvNvyIYcdJedGYvVX/uVKAJYTo5q+kkrN5uPbjbtgR6sOU4Qthlh1VD
-        mAzMnglikY+4guI1qxCVJiVa9Ms+xIJFdZGz830AFTgNYi/fzB1/QPQ6+B0ebeukX/F
-        erS6Zz7HjSMJPhRd4PvSiUc583c1A5ffQKBD+5lI=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 05FAAC43383
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Christian Lamparter <chunkeey@gmail.com>
-Cc:     linux-wireless@vger.kernel.org,
-        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        Hauke Mehrtens <hauke@hauke-m.de>,
-        Mathias Kresin <dev@kresin.me>,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Subject: Re: [PATCH] ath9k: use iowrite32 over __raw_writel
-References: <20191124144059.985102-1-chunkeey@gmail.com>
-Date:   Sun, 24 Nov 2019 14:51:27 +0000
-In-Reply-To: <20191124144059.985102-1-chunkeey@gmail.com> (Christian
-        Lamparter's message of "Sun, 24 Nov 2019 15:40:59 +0100")
-Message-ID: <0101016e9de566b8-1f9bb6ea-6e63-4d1c-9b0f-50c5cbf38226-000000@us-west-2.amazonses.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Sun, 24 Nov 2019 17:39:27 -0500
+Received: by mail-pj1-f65.google.com with SMTP id gc1so5538272pjb.8
+        for <linux-wireless@vger.kernel.org>; Sun, 24 Nov 2019 14:39:27 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=netronome-com.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:in-reply-to:references
+         :organization:mime-version:content-transfer-encoding;
+        bh=mJ03a7hesWJNvR2m6hfpaM5qF0D6avZONNtvx1zsFJc=;
+        b=Gj7RiQOKmCUl7rlYZQVUi2mKCnOg5I0nw9OU8vIyXYd/0QJI7iGZFzb8A/gjk4E+JS
+         xOJdNEEuiSMhWnxlWAyzY3TDGJab6QkRA5Q+e9FeTPuhzQ/AEYUFZFzloPjD3PGACWym
+         SEtEro4s2JPqte8X2Pf+p3nxA+N3yyFlbPqGMcKI8aDGrB0AgcK8nlBEFgq8bE004dIh
+         ycirnv1uJfo4XBMc96OLuvYRyUlFwaYIcnglL6w3TuhledodxCYZZRFQooR3B5aUumvb
+         hEGV7k4M4T8W6jyExL6fLt9Cdlr+RPuD8Cuar7Te9Tl2EzW4Kqj/FvMFbWqiEPCIjWrv
+         +rWw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:in-reply-to
+         :references:organization:mime-version:content-transfer-encoding;
+        bh=mJ03a7hesWJNvR2m6hfpaM5qF0D6avZONNtvx1zsFJc=;
+        b=c0U3MNzsb+yyahTdszJ4av5YZ1LqaA8itGCXIq0IwQzJ1312gMx3LhPIEN+8vxVHsQ
+         ssvXYjqkXTc129W6jDexYnynQW4AiCHUpfHgmhbeO+j8k7pAd+25ZjM/8VEDfSTUGXZz
+         DXJpOHhJHpMcSzo3cQVxrKJLydzPoDMfBe2ZWLY3GLC8RCAHOnaZ45SSVkDzm376QtoP
+         4ZBe1u9Tnr12EsdoaDCmbBHhkh+BdZOjBvAnp+67Dre2mPx9p4QhfDzjxAOyKeOBs/OA
+         QmnwgEH/0dvlbjz60Rrt0AQ1766m2MjeMbgHtq4dFX2Ob4ECT2e9lg7J680pMlWh8ojN
+         jCcg==
+X-Gm-Message-State: APjAAAVLo2OON7Qv7vtIp1aetbG4Vy5g72/48mzA2CjRgLj67vmSr9Sx
+        HDb8lMnRjITCH1rPVne1+RSC6DnOrLc=
+X-Google-Smtp-Source: APXvYqx50D+Wd5N5bU/VCxdp0oBYsPZSpIdT6ez+EmZyigA36yD5gxhbXBGUlO6FDAZGYYvd6plU4Q==
+X-Received: by 2002:a17:902:409:: with SMTP id 9mr26724818ple.25.1574635166883;
+        Sun, 24 Nov 2019 14:39:26 -0800 (PST)
+Received: from cakuba.netronome.com (c-73-202-202-92.hsd1.ca.comcast.net. [73.202.202.92])
+        by smtp.gmail.com with ESMTPSA id y12sm5619986pjy.0.2019.11.24.14.39.25
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 24 Nov 2019 14:39:26 -0800 (PST)
+Date:   Sun, 24 Nov 2019 14:39:19 -0800
+From:   Jakub Kicinski <jakub.kicinski@netronome.com>
+To:     Phong Tran <tranmanphong@gmail.com>
+Cc:     davem@davemloft.net, keescook@chromium.org, kvalo@codeaurora.org,
+        saeedm@mellanox.com, jeffrey.t.kirsher@intel.com,
+        luciano.coelho@intel.com, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 0/5] Fix -Wcast-function-type net drivers
+Message-ID: <20191124143919.63711421@cakuba.netronome.com>
+In-Reply-To: <20191124094306.21297-1-tranmanphong@gmail.com>
+References: <20191124094306.21297-1-tranmanphong@gmail.com>
+Organization: Netronome Systems, Ltd.
 MIME-Version: 1.0
-Content-Type: text/plain
-X-SES-Outgoing: 2019.11.24-54.240.27.187
-Feedback-ID: 1.us-west-2.CZuq2qbDmUIuT3qdvXlRHZZCpfZqZ4GtG9v3VKgRyF0=:AmazonSES
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Christian Lamparter <chunkeey@gmail.com> writes:
+On Sun, 24 Nov 2019 16:43:01 +0700, Phong Tran wrote:
+> This series is for fixing the compiler warning while enable
+> -Wcast-function-type.
+> 
+> Almost is incompatible callback prototype in using tasklet.
+> The void (*func)(unsigned long) instead of void (*func)(struct foo*).
+> 
+> Reported by: https://github.com/KSPP/linux/issues/20
 
-> This patch changes the ath9k_pci_owl_loader to use the
-> same iowrite32 memory accessor that ath9k_pci is using
-> to communicate with the PCI(e) chip.
->
-> This will fix endian issues that came up during testing
-> with loaned AVM Fritz!Box 7360 (Lantiq MIPS SoCs + AR9287).
->
-> Fixes: 5a4f2040fd07 ("ath9k: add loader for AR92XX (and older) pci(e)")
-> Signed-off-by: Christian Lamparter <chunkeey@gmail.com>
+Hi Tran, thanks for the patches. Could you split the series into two -
+the wireless changes and the USB changes?
 
-I'll queue this to v5.5.
-
--- 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Those usually go via slightly different trees.
