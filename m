@@ -6,72 +6,79 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
 	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 293AAC432C0
-	for <linux-wireless@archiver.kernel.org>; Mon, 25 Nov 2019 11:51:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 547F5C432C0
+	for <linux-wireless@archiver.kernel.org>; Mon, 25 Nov 2019 11:52:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E63DA207FD
-	for <linux-wireless@archiver.kernel.org>; Mon, 25 Nov 2019 11:51:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1F4B720836
+	for <linux-wireless@archiver.kernel.org>; Mon, 25 Nov 2019 11:52:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="m7HTmIvq";
-	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="Qm7vv1Hl"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="ZbjQfGbf";
+	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="g09fEv2Z"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727113AbfKYLvK (ORCPT
+        id S1727213AbfKYLwv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 25 Nov 2019 06:51:10 -0500
-Received: from a27-56.smtp-out.us-west-2.amazonses.com ([54.240.27.56]:56438
-        "EHLO a27-56.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725868AbfKYLvK (ORCPT
+        Mon, 25 Nov 2019 06:52:51 -0500
+Received: from a27-21.smtp-out.us-west-2.amazonses.com ([54.240.27.21]:44988
+        "EHLO a27-21.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725828AbfKYLwv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Nov 2019 06:51:10 -0500
+        Mon, 25 Nov 2019 06:52:51 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-        s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1574682669;
+        s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1574682770;
         h=Content-Type:MIME-Version:Content-Transfer-Encoding:Subject:From:In-Reply-To:References:To:Cc:Message-Id:Date;
-        bh=XpjGUJp83UVgBT72TD+mw58jNf4gK89doIdvMQ7q054=;
-        b=m7HTmIvqYvMC4eFyq1uXWeriyVN8T2KJ1MKtpSScmYLfxhHlRdYaK8gHvH6eKbtX
-        DcNZ9KRgrI+6WviNu21ZiMAUMJNOp11Ofx79NnuBJw0lOmlbDnta1zchP3k2aYge6D/
-        8+qDiPzlq0KRDQOMksvNHdXBTd1kCT3BTmY6xH24=
+        bh=uWtxVtS/eSocGqMTSWcaIGLD0hEon0BJRNZIcLgytwk=;
+        b=ZbjQfGbfSCHqpd+2sjw1u1k7exhLF9+ZRTTWH8HYSgKFrulE8W11sbvNIuN6E+Wd
+        k/xPD566mcMEXLmdTJvCdvsHVxGq2q9lAy7dJE1NST3B3mBdcOEfuV6OuOzhS+Puj5A
+        2tcKUoH2MaL4lFeLwDc5D3UXzqZ3lf8s5RWhS51o=
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-        s=gdwg2y3kokkkj5a55z2ilkup5wp5hhxx; d=amazonses.com; t=1574682669;
+        s=gdwg2y3kokkkj5a55z2ilkup5wp5hhxx; d=amazonses.com; t=1574682770;
         h=Content-Type:MIME-Version:Content-Transfer-Encoding:Subject:From:In-Reply-To:References:To:Cc:Message-Id:Date:Feedback-ID;
-        bh=XpjGUJp83UVgBT72TD+mw58jNf4gK89doIdvMQ7q054=;
-        b=Qm7vv1HlZrOGNCRYuTJhYMhK4e1Jyk8Ho9urtHvKvBUo4pXTPxXu2RRAVyQDWsK7
-        atxlbljWK+NJ8hRjDcahSCXPXPlaysR6mFvr6E//2mYe7ce+3HXTdcfZNTbzKd9a9jE
-        uDHNveKux8mjE6+VaAu2sO7Pb9M0tQApBLaL26zk=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org E4E70C43383
+        bh=uWtxVtS/eSocGqMTSWcaIGLD0hEon0BJRNZIcLgytwk=;
+        b=g09fEv2ZMECSkOVKP5YkbwGJP8IemNBMuMLBE00uAdTH/pAuuohp9P21rm1Mcwt0
+        vD9fx3ifd8vP15XEHD/56wqBVTowG7/9uVVFOaiL2MVOBysUCIoeANX+Rqx8puzaEiA
+        AWn0jtgUKUCL2THO6HmxZEYGX7/WcfX22LCKnQV8=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 12F9BC76F44
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH 1/2] ath10k: cosmetic cleanup to sdio files
+Subject: Re: [PATCH] ath10k: correct the tlv len of
+ ath10k_wmi_tlv_op_gen_config_pno_start
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1571910849-11489-1-git-send-email-kvalo@codeaurora.org>
-References: <1571910849-11489-1-git-send-email-kvalo@codeaurora.org>
-To:     Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20191107093031.24131-1-wgong@codeaurora.org>
+References: <20191107093031.24131-1-wgong@codeaurora.org>
+To:     Wen Gong <wgong@codeaurora.org>
 Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
 User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-ID: <0101016ea266b0c8-ff4537a0-bfc2-4f05-9d2b-3e6cc871228c-000000@us-west-2.amazonses.com>
-Date:   Mon, 25 Nov 2019 11:51:09 +0000
-X-SES-Outgoing: 2019.11.25-54.240.27.56
+Message-ID: <0101016ea2683c76-cfe15bc7-275b-42b3-9154-e08e23333db1-000000@us-west-2.amazonses.com>
+Date:   Mon, 25 Nov 2019 11:52:50 +0000
+X-SES-Outgoing: 2019.11.25-54.240.27.21
 Feedback-ID: 1.us-west-2.CZuq2qbDmUIuT3qdvXlRHZZCpfZqZ4GtG9v3VKgRyF0=:AmazonSES
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Kalle Valo <kvalo@codeaurora.org> wrote:
+Wen Gong <wgong@codeaurora.org> wrote:
 
-> Do some cosmetic cleanup while reviewing the files. No functional changes.
+> the tlv len is set to the total len of the wmi cmd, it will trigger
+> firmware crash, correct the tlv len.
 > 
+> Tested with QCA6174 SDIO with firmware
+> WLAN.RMH.4.4.1-00017-QCARMSWP-1 and QCA6174
+> PCIE with firmware WLAN.RM.4.4.1-00110-QCARMSWPZ-1.
+> 
+> Fixes: ce834e280f2f875 ("ath10k: support NET_DETECT WoWLAN feature")
+> Signed-off-by: Wen Gong <wgong@codeaurora.org>
 > Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-2 patches applied to ath-next branch of ath.git, thanks.
+Patch applied to ath-next branch of ath.git, thanks.
 
-efd2f4c5016b ath10k: sdio: cosmetic cleanup
-2246c2156590 ath10k: sdio: remove struct ath10k_sdio_rx_data::status
+e01cc82c4d1e ath10k: correct the tlv len of ath10k_wmi_tlv_op_gen_config_pno_start
 
 -- 
-https://patchwork.kernel.org/patch/11208761/
+https://patchwork.kernel.org/patch/11232379/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
