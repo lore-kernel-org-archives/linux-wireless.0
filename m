@@ -2,105 +2,106 @@ Return-Path: <SRS0=Ysg0=ZR=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D14DC432C0
-	for <linux-wireless@archiver.kernel.org>; Mon, 25 Nov 2019 14:17:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20AD8C432C0
+	for <linux-wireless@archiver.kernel.org>; Mon, 25 Nov 2019 14:22:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 320F220740
-	for <linux-wireless@archiver.kernel.org>; Mon, 25 Nov 2019 14:17:33 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="WeJmum7B";
-	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="afm4SufN"
+	by mail.kernel.org (Postfix) with ESMTP id 00C7A20836
+	for <linux-wireless@archiver.kernel.org>; Mon, 25 Nov 2019 14:22:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728002AbfKYORc (ORCPT
+        id S1727998AbfKYOWu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 25 Nov 2019 09:17:32 -0500
-Received: from a27-185.smtp-out.us-west-2.amazonses.com ([54.240.27.185]:50060
-        "EHLO a27-185.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727958AbfKYORc (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Nov 2019 09:17:32 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-        s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1574691451;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:Message-ID:MIME-Version:Content-Type;
-        bh=d5+U297GSp7xCxvZhele6vkbKgTiQO4K4lr4nuR9UjY=;
-        b=WeJmum7BxDwwge7Bnd9/pllnWQh5NQyE9kuWvkEvSc3TrNoE8ii6PHCgAdNu/Yd5
-        w3U7832KllsRJiPHBSR8LEDrO4DRLxjtMsaz9fHlh2TcFxNLNpfczgrONdfFDKO2Kkg
-        QUK7ZdraHsioJNj7h9/Kyp4gl16M4ddgF1hTRkbY=
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-        s=gdwg2y3kokkkj5a55z2ilkup5wp5hhxx; d=amazonses.com; t=1574691451;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:Message-ID:MIME-Version:Content-Type:Feedback-ID;
-        bh=d5+U297GSp7xCxvZhele6vkbKgTiQO4K4lr4nuR9UjY=;
-        b=afm4SufN1yfFMn6Sk5SbHLGT+7uStDxOLfDSNyc+YOWrJjeT16TJUCplGwLlrjPh
-        aHfUVP/ZW4BVPWoW6sPhhXNTYkTR04BpGhdTxgpHthg49eAu/a8qoXF8USdvF0IMRSi
-        ky0h2c9GvPZAKo3TmiOpNcKpQQGRlJNEaQNbXKD4=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org E56C4C43383
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Lorenzo Bianconi <lorenzo@kernel.org>
-Cc:     nbd@nbd.name, linux-wireless@vger.kernel.org,
-        lorenzo.bianconi@redhat.com, kevin.patrick.schmidt@googlemail.com
-Subject: Re: [PATCH] mt76: eeprom: add support for big endian eeprom partition
-References: <61e89623446ed8914e5969114c7ae8c623f3e3ba.1574502651.git.lorenzo@kernel.org>
-        <87k17o83lk.fsf@tynnyri.adurom.net>
-        <20191125135922.GC3528@localhost.localdomain>
-Date:   Mon, 25 Nov 2019 14:17:31 +0000
-In-Reply-To: <20191125135922.GC3528@localhost.localdomain> (Lorenzo Bianconi's
-        message of "Mon, 25 Nov 2019 15:59:22 +0200")
-Message-ID: <0101016ea2ecb0d7-213a9014-b00d-411c-bdd4-cd0afb89bb42-000000@us-west-2.amazonses.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Mon, 25 Nov 2019 09:22:50 -0500
+Received: from mga14.intel.com ([192.55.52.115]:43303 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727655AbfKYOWt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 25 Nov 2019 09:22:49 -0500
+X-Amp-Result: UNKNOWN
+X-Amp-Original-Verdict: FILE UNKNOWN
+X-Amp-File-Uploaded: False
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 25 Nov 2019 06:22:49 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.69,241,1571727600"; 
+   d="scan'208";a="211038573"
+Received: from pl-dbox.sh.intel.com (HELO intel.com) ([10.239.13.128])
+  by orsmga003.jf.intel.com with ESMTP; 25 Nov 2019 06:22:47 -0800
+Date:   Mon, 25 Nov 2019 22:29:52 +0800
+From:   Philip Li <philip.li@intel.com>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     kbuild test robot <lkp@intel.com>, huangwenabc@gmail.com,
+        kbuild-all@lists.01.org, linux-wireless@vger.kernel.org,
+        linux-distros@vs.openwall.org, security@kernel.org,
+        libertas-dev@lists.infradead.org
+Subject: Re: [kbuild-all] Re: [PATCH] libertas: Fix two buffer overflows at
+ parsing bss descriptor
+Message-ID: <20191125142952.GA4090@intel.com>
+References: <20191122052917.11309-1-huangwenabc@gmail.com>
+ <201911241536.lyRxx5Oc%lkp@intel.com>
+ <0101016ea290854e-f5721fd1-1ca7-49ab-9c10-85277bc46c64-000000@us-west-2.amazonses.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-SES-Outgoing: 2019.11.25-54.240.27.185
-Feedback-ID: 1.us-west-2.CZuq2qbDmUIuT3qdvXlRHZZCpfZqZ4GtG9v3VKgRyF0=:AmazonSES
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <0101016ea290854e-f5721fd1-1ca7-49ab-9c10-85277bc46c64-000000@us-west-2.amazonses.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Lorenzo Bianconi <lorenzo@kernel.org> writes:
+On Mon, Nov 25, 2019 at 12:36:50PM +0000, Kalle Valo wrote:
+> kbuild test robot <lkp@intel.com> writes:
+> 
+> > Thank you for the patch! Perhaps something to improve:
+> >
+> > [auto build test WARNING on wireless-drivers-next/master]
+> > [also build test WARNING on v5.4-rc8 next-20191122]
+> > [if your patch is applied to the wrong git tree, please drop us a note to help
+> > improve the system. BTW, we also suggest to use '--base' option to specify the
+> > base tree in git format-patch, please see https://stackoverflow.com/a/37406982]
+> >
+> > url:    https://github.com/0day-ci/linux/commits/huangwenabc-gmail-com/libertas-Fix-two-buffer-overflows-at-parsing-bss-descriptor/20191124-142236
+> > base:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git master
+> > config: sh-allmodconfig (attached as .config)
+> > compiler: sh4-linux-gcc (GCC) 7.4.0
+> > reproduce:
+> >         wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+> >         chmod +x ~/bin/make.cross
+> >         # save the attached .config to linux build tree
+> >         GCC_VERSION=7.4.0 make.cross ARCH=sh 
+> >
+> > If you fix the issue, kindly add following tag
+> > Reported-by: kbuild test robot <lkp@intel.com>
+> >
+> > All warnings (new ones prefixed by >>):
+> >
+> >    drivers/net/wireless/marvell/libertas/cfg.c: In function 'lbs_ibss_join_existing':
+> >>> drivers/net/wireless/marvell/libertas/cfg.c:1788:3: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+> 
+> I was wondering why I didn't see this mail in patchwork:
+> 
+> https://patchwork.kernel.org/patch/11257187/
+> 
+> And then I noticed this:
+> 
+> X-Patchwork-Hint: ignore
+> 
+> kbuild team, why are you adding that header? It's really bad for a
+thanks for the feedback, early on we received another feedback to suggest
+for adding this, refer to https://gitlab.freedesktop.org/patchwork-fdo/patchwork-fdo/issues/21
+for detail. Since there's no further input regarding this usage, we keep
+that flag. If this is not suitable, we can investigate other way to fullfill
+both requirements.
 
->> Lorenzo Bianconi <lorenzo@kernel.org> writes:
->> 
->> > mt76x0e users reported some devices (e.g TP-Link Archer VR200v) have
->> > been flashed with big endian radio partition. Add the possibility to
->> > specify eeprom endianness using big-endian dts property and in case
->> > covert eeprom data in little endian
->> >
->> > Tested-by: Kevin Schmidt <kevin.patrick.schmidt@googlemail.com>
->> > Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
->> > ---
->> >  drivers/net/wireless/mediatek/mt76/eeprom.c | 10 ++++++++++
->> >  1 file changed, 10 insertions(+)
->> >
->> > diff --git a/drivers/net/wireless/mediatek/mt76/eeprom.c b/drivers/net/wireless/mediatek/mt76/eeprom.c
->> > index 804224e81103..33d992d5662a 100644
->> > --- a/drivers/net/wireless/mediatek/mt76/eeprom.c
->> > +++ b/drivers/net/wireless/mediatek/mt76/eeprom.c
->> > @@ -64,6 +64,16 @@ mt76_get_of_eeprom(struct mt76_dev *dev, int len)
->> >  		goto out_put_node;
->> >  	}
->> >  
->> > +	if (of_property_read_bool(dev->dev->of_node, "big-endian")) {
->> > +		u8 *data = (u8 *)dev->eeprom.data;
->> > +		int i;
->> > +
->> > +		/* convert eeprom data in Little Endian */
->> > +		for (i = 0; i < round_down(len, 2); i += 2)
->> > +			put_unaligned_le16(get_unaligned_be16(&data[i]),
->> > +					   &data[i]);
->> > +	}
->> 
->> What about the bindings documentation? I don't see this "big-endian"
->> documented in the mt76 doc, at least.
->
-> Right, I will fold a patch for it in v2.
-
-And remember to CC the devicetree list, we need an ack from them.
-
--- 
-Kalle Valo
+> maintainer like me who uses patchwork actively, it means that all these
+> important warnings are not visible in patchwork and can be easily missed
+> by the maintainers.
+> 
+> -- 
+> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+> _______________________________________________
+> kbuild-all mailing list -- kbuild-all@lists.01.org
+> To unsubscribe send an email to kbuild-all-leave@lists.01.org
