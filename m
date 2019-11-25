@@ -2,47 +2,65 @@ Return-Path: <SRS0=Ysg0=ZR=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E494CC432C0
-	for <linux-wireless@archiver.kernel.org>; Mon, 25 Nov 2019 13:22:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44B04C432C0
+	for <linux-wireless@archiver.kernel.org>; Mon, 25 Nov 2019 13:40:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C36032075C
-	for <linux-wireless@archiver.kernel.org>; Mon, 25 Nov 2019 13:22:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1E2DF2082F
+	for <linux-wireless@archiver.kernel.org>; Mon, 25 Nov 2019 13:40:14 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=dlink.ru header.i=@dlink.ru header.b="D2hCanD0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727794AbfKYNWG (ORCPT
+        id S1727724AbfKYNkJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 25 Nov 2019 08:22:06 -0500
-Received: from dispatch1-us1.ppe-hosted.com ([148.163.129.52]:37734 "EHLO
-        dispatch1-us1.ppe-hosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725823AbfKYNWG (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Nov 2019 08:22:06 -0500
-X-Virus-Scanned: Proofpoint Essentials engine
-Received: from webmail.solarflare.com (uk.solarflare.com [193.34.186.16])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1-us2.ppe-hosted.com (PPE Hosted ESMTP Server) with ESMTPS id 1BD88700068;
-        Mon, 25 Nov 2019 13:22:03 +0000 (UTC)
-Received: from [10.17.20.203] (10.17.20.203) by ukex01.SolarFlarecom.com
- (10.17.10.4) with Microsoft SMTP Server (TLS) id 15.0.1395.4; Mon, 25 Nov
- 2019 13:21:53 +0000
+        Mon, 25 Nov 2019 08:40:09 -0500
+Received: from mail.dlink.ru ([178.170.168.18]:40630 "EHLO fd.dlink.ru"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725862AbfKYNkJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 25 Nov 2019 08:40:09 -0500
+Received: by fd.dlink.ru (Postfix, from userid 5000)
+        id A43BC1B20153; Mon, 25 Nov 2019 16:40:06 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 fd.dlink.ru A43BC1B20153
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dlink.ru; s=mail;
+        t=1574689206; bh=mUx+/0bX0CiB4xSiEyVtzLFAJqKDHPBseAUT4sDjloA=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References;
+        b=D2hCanD0o5oUPnfhsQ3ZHwy0xXwoz5aiGYNnjjXtNWlahFdhyRsW9wl7cjlV1T0pK
+         5Fzg9etkRMRJ/zWlGSMFIgUgUCXEpJLBpX46OIqqmilwhIbaU1hZpoWb4oFcuW1dtc
+         GdUX53MVAuqlVoLIIiWZnpKLGZDgBaI1gICUk7fo=
+Received: from mail.rzn.dlink.ru (mail.rzn.dlink.ru [178.170.168.13])
+        by fd.dlink.ru (Postfix) with ESMTP id D57261B207E1;
+        Mon, 25 Nov 2019 16:39:55 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 fd.dlink.ru D57261B207E1
+Received: from mail.rzn.dlink.ru (localhost [127.0.0.1])
+        by mail.rzn.dlink.ru (Postfix) with ESMTP id 8D89F1B22662;
+        Mon, 25 Nov 2019 16:39:55 +0300 (MSK)
+Received: from mail.rzn.dlink.ru (localhost [127.0.0.1])
+        by mail.rzn.dlink.ru (Postfix) with ESMTPA;
+        Mon, 25 Nov 2019 16:39:55 +0300 (MSK)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Content-Transfer-Encoding: 8bit
+Date:   Mon, 25 Nov 2019 16:39:55 +0300
+From:   Alexander Lobakin <alobakin@dlink.ru>
+To:     Edward Cree <ecree@solarflare.com>
+Cc:     Paolo Abeni <pabeni@redhat.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>,
+        David Miller <davem@davemloft.net>, jiri@mellanox.com,
+        edumazet@google.com, idosch@mellanox.com, petrm@mellanox.com,
+        sd@queasysnail.net, f.fainelli@gmail.com,
+        jaswinder.singh@linaro.org, ilias.apalodimas@linaro.org,
+        linux-kernel@vger.kernel.org, emmanuel.grumbach@intel.com,
+        luciano.coelho@intel.com, linuxwifi@intel.com,
+        kvalo@codeaurora.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org
 Subject: Re: [PATCH v2 net-next] net: core: use listified Rx for GRO_NORMAL in
  napi_gro_receive()
-To:     Alexander Lobakin <alobakin@dlink.ru>,
-        Paolo Abeni <pabeni@redhat.com>
-CC:     Johannes Berg <johannes@sipsolutions.net>,
-        Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>,
-        David Miller <davem@davemloft.net>, <jiri@mellanox.com>,
-        <edumazet@google.com>, <idosch@mellanox.com>, <petrm@mellanox.com>,
-        <sd@queasysnail.net>, <f.fainelli@gmail.com>,
-        <jaswinder.singh@linaro.org>, <ilias.apalodimas@linaro.org>,
-        <linux-kernel@vger.kernel.org>, <emmanuel.grumbach@intel.com>,
-        <luciano.coelho@intel.com>, <linuxwifi@intel.com>,
-        <kvalo@codeaurora.org>, <netdev@vger.kernel.org>,
-        <linux-wireless@vger.kernel.org>
+In-Reply-To: <e437dc2d-aff3-2893-8d80-6abae4fcb84a@solarflare.com>
 References: <20191014080033.12407-1-alobakin@dlink.ru>
  <20191015.181649.949805234862708186.davem@davemloft.net>
  <7e68da00d7c129a8ce290229743beb3d@dlink.ru>
@@ -55,64 +73,58 @@ References: <20191014080033.12407-1-alobakin@dlink.ru>
  <414288fcac2ba4fcee48a63bdbf28f7b9a5037c6.camel@sipsolutions.net>
  <b4b92c4d066007d9cb77e1645e667715c17834fb.camel@redhat.com>
  <d535d5142e42b8c550f0220200e3779d@dlink.ru>
-From:   Edward Cree <ecree@solarflare.com>
-Message-ID: <e437dc2d-aff3-2893-8d80-6abae4fcb84a@solarflare.com>
-Date:   Mon, 25 Nov 2019 13:21:49 +0000
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.7.0
-MIME-Version: 1.0
-In-Reply-To: <d535d5142e42b8c550f0220200e3779d@dlink.ru>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Content-Language: en-GB
-X-Originating-IP: [10.17.20.203]
-X-ClientProxiedBy: ocex03.SolarFlarecom.com (10.20.40.36) To
- ukex01.SolarFlarecom.com (10.17.10.4)
-X-TM-AS-Product-Ver: SMEX-12.5.0.1300-8.5.1010-25064.003
-X-TM-AS-Result: No-5.287000-8.000000-10
-X-TMASE-MatchedRID: O/y65JfDwwv4ECMHJTM/ufZvT2zYoYOwC/ExpXrHizxQKAQSutQYXKTG
-        zvndj/1xPEoGb8keCDpTvVffeIwvQ1Bbc4CjRSHyPaBTJyy84wXr4zRSn2nRLl7OLL/a8shj5Yn
-        xWopAGWjWsfhGDQA5PSxOtaOcroMgwG9P01lFxWXnzlXMYw4XMAGLeSok4rrZC24oEZ6SpSk6XE
-        E7Yhw4Fp5wSB09cXN2QCZtfbHlpu54jp5HPmPu0F/duMvqpsu6zuXIl1Bx0YydgRgbr8pwokojB
-        pGsa9cji/EsGInbj2bR4t5pWXMyjuL59MzH0po2K2yzo9Rrj9wPoYC35RuihKPUI7hfQSp5eCBc
-        UCG1aJiUTGVAhB5EbQ==
-X-TM-AS-User-Approved-Sender: Yes
-X-TM-AS-User-Blocked-Sender: No
-X-TMASE-Result: 10--5.287000-8.000000
-X-TMASE-Version: SMEX-12.5.0.1300-8.5.1010-25064.003
-X-MDID: 1574688125-yGbiBUDO3EwM
+ <e437dc2d-aff3-2893-8d80-6abae4fcb84a@solarflare.com>
+User-Agent: Roundcube Webmail/1.4.0
+Message-ID: <6ff190a3b00aae0a9b9388f60791528a@dlink.ru>
+X-Sender: alobakin@dlink.ru
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 25/11/2019 12:02, Alexander Lobakin wrote:
-> I'm not very familiar with iwlwifi, but as a work around manual
-> napi_gro_flush() you can also manually flush napi->rx_list to
-> prevent packets from stalling:
->
-> diff -Naur a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-> --- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c    2019-11-25 14:55:03.610355230 +0300
-> +++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c    2019-11-25 14:57:29.399556868 +0300
-> @@ -1526,8 +1526,16 @@
->      if (unlikely(emergency && count))
->          iwl_pcie_rxq_alloc_rbs(trans, GFP_ATOMIC, rxq);
->
-> -    if (rxq->napi.poll)
-> +    if (rxq->napi.poll) {
-> +        if (rxq->napi.rx_count) {
-> +            netif_receive_skb_list(&rxq->napi.rx_list);
-> +
-> +            INIT_LIST_HEAD(&rxq->napi.rx_list);
-> +            rxq->napi.rx_count = 0;
-> +        }
-> +
->          napi_gro_flush(&rxq->napi, false);
-> +    }
->
->      iwl_pcie_rxq_restock(trans, rxq);
->  }
-... or we could export gro_normal_list(), instead of open-coding it
- in the driver?
+Edward Cree wrote 25.11.2019 16:21:
+> On 25/11/2019 12:02, Alexander Lobakin wrote:
+>> I'm not very familiar with iwlwifi, but as a work around manual
+>> napi_gro_flush() you can also manually flush napi->rx_list to
+>> prevent packets from stalling:
+>> 
+>> diff -Naur a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c 
+>> b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+>> --- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c    2019-11-25 
+>> 14:55:03.610355230 +0300
+>> +++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c    2019-11-25 
+>> 14:57:29.399556868 +0300
+>> @@ -1526,8 +1526,16 @@
+>>      if (unlikely(emergency && count))
+>>          iwl_pcie_rxq_alloc_rbs(trans, GFP_ATOMIC, rxq);
+>> 
+>> -    if (rxq->napi.poll)
+>> +    if (rxq->napi.poll) {
+>> +        if (rxq->napi.rx_count) {
+>> +            netif_receive_skb_list(&rxq->napi.rx_list);
+>> +
+>> +            INIT_LIST_HEAD(&rxq->napi.rx_list);
+>> +            rxq->napi.rx_count = 0;
+>> +        }
+>> +
+>>          napi_gro_flush(&rxq->napi, false);
+>> +    }
+>> 
+>>      iwl_pcie_rxq_restock(trans, rxq);
+>>  }
+> ... or we could export gro_normal_list(), instead of open-coding it
+>  in the driver?
 
--Ed
+I thought about this too, but don't like it. This patch is proposed as
+a *very* temporary solution until iwlwifi will get more straightforward
+logic. I wish we could make napi_gro_flush() static in the future and
+keep gro_normal_list() private to:
+
+- prevent them from using in any new drivers;
+- give more opportunity to CC to optimize the core code.
+
+> 
+> -Ed
+
+Regards,
+ᚷ ᛖ ᚢ ᚦ ᚠ ᚱ
