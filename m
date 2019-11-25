@@ -2,97 +2,86 @@ Return-Path: <SRS0=Ysg0=ZR=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EE54C43215
-	for <linux-wireless@archiver.kernel.org>; Mon, 25 Nov 2019 06:54:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54F37C432C0
+	for <linux-wireless@archiver.kernel.org>; Mon, 25 Nov 2019 07:25:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 77A8920815
-	for <linux-wireless@archiver.kernel.org>; Mon, 25 Nov 2019 06:54:45 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="MfCLIu10"
+	by mail.kernel.org (Postfix) with ESMTP id 37B9220823
+	for <linux-wireless@archiver.kernel.org>; Mon, 25 Nov 2019 07:25:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725818AbfKYGyo (ORCPT
+        id S1726498AbfKYHZF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 25 Nov 2019 01:54:44 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:54812 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725535AbfKYGyo (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Nov 2019 01:54:44 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAP6sDEp028057;
-        Mon, 25 Nov 2019 06:54:35 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=l/PZc/dlwG4EAD6FdzK2zvGCN4xk8EscxXrPQL25xkE=;
- b=MfCLIu10rN5rqDV/Cx/Z4560dJqUaaIoGOSdqx+XrO744F2EAUEg2I3cFoflM5cWcSme
- o969klq7bDx9AxK3cIzKRdq8z9vpIROYW/+Vjubit7BNvBRQRtIDDCrzbQI4TTSkZ9Qg
- In3Vt3hJbWnhC5O0c+MLrCzx0EJph29iiSjoPeienOsEjOgw/lpXLBsodHp2A//JcLXv
- x1UwlfEZTi1OZr5pGP236d8ZZfskaBj+ksnpFqaoG7rep0LbV9QrrCF0PP8mGwhJJtf3
- kvz1Eb+QssOLRlM+6t8pKiH/JaQPuDb9U26+DovNvVo4uASYNJAF2YsbFGnIiWZJ+NSh Gg== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 2wev6twj2g-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 25 Nov 2019 06:54:34 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xAP6sDHV016407;
-        Mon, 25 Nov 2019 06:54:34 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 2wfe9dnv8c-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 25 Nov 2019 06:54:33 +0000
-Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xAP6sVvg001498;
-        Mon, 25 Nov 2019 06:54:32 GMT
-Received: from kadam (/129.205.23.165)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sun, 24 Nov 2019 22:54:30 -0800
-Date:   Mon, 25 Nov 2019 09:54:23 +0300
-From:   Dan Carpenter <dan.carpenter@oracle.com>
-To:     Adham.Abozaeid@microchip.com
-Cc:     linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        gregkh@linuxfoundation.org, johannes@sipsolutions.net,
-        Ajay.Kathat@microchip.com
-Subject: Re: [PATCH 1/4] staging: wilc1000: use runtime configuration for
- sdio oob interrupt
-Message-ID: <20191125065423.GA1774@kadam>
-References: <20191122205153.30723-1-adham.abozaeid@microchip.com>
+        Mon, 25 Nov 2019 02:25:05 -0500
+Received: from mga03.intel.com ([134.134.136.65]:8498 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725747AbfKYHZE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 25 Nov 2019 02:25:04 -0500
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by orsmga103.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 24 Nov 2019 23:25:03 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.69,240,1571727600"; 
+   d="scan'208";a="206031621"
+Received: from slehanex-mobl1.ger.corp.intel.com ([10.252.10.177])
+  by fmsmga008.fm.intel.com with ESMTP; 24 Nov 2019 23:24:59 -0800
+Message-ID: <ea75c55485c0d893b15a67462728b45b775921b0.camel@intel.com>
+Subject: Re: iwlwifi: Checking a kmemdup() call in iwl_req_fw_callback()
+From:   Luciano Coelho <luciano.coelho@intel.com>
+To:     Markus Elfring <Markus.Elfring@web.de>,
+        linux-wireless@vger.kernel.org, linuxwifi@intel.com,
+        netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc:     LKML <linux-kernel@vger.kernel.org>,
+        kernel-janitors@vger.kernel.org, Aditya Pakki <pakki001@umn.edu>,
+        Kangjie Lu <kjlu@umn.edu>, Navid Emamdoost <emamd001@umn.edu>,
+        Stephen McCamant <smccaman@umn.edu>
+Date:   Mon, 25 Nov 2019 09:24:58 +0200
+In-Reply-To: <71774617-79f9-1365-4267-a15a47422d10@web.de>
+References: <71774617-79f9-1365-4267-a15a47422d10@web.de>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.34.1-2+b1 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191122205153.30723-1-adham.abozaeid@microchip.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9451 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=697
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-1911250062
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9451 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=1 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=778 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-1911250062
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, Nov 22, 2019 at 08:52:02PM +0000, Adham.Abozaeid@microchip.com wrote:
-> From: Ajay Singh <ajay.kathat@microchip.com>
+On Sat, 2019-10-12 at 19:26 +0200, Markus Elfring wrote:
+> Hello,
 > 
-> Set SDIO Out-of-band interrupt configuration at run time by passing
-> parameter during module load.
+> I tried another script for the semantic patch language out.
+> This source code analysis approach points out that the implementation
+> of the function “iwl_req_fw_callback” contains still an unchecked call
+> of the function “kmemdup”.
+> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/net/wireless/intel/iwlwifi/iwl-drv.c?id=1c0cc5f1ae5ee5a6913704c0d75a6e99604ee30a#n1454
+> https://elixir.bootlin.com/linux/v5.4-rc2/source/drivers/net/wireless/intel/iwlwifi/iwl-drv.c#L1454
 > 
+> Can it be that just an other data structure member should be used
+> for the desired null pointer check at this place?
 
-This is barely an improvement at all...  Why not just make it auto
-detect?
+Hi Markus,
 
-regards,
-dan carpenter
+Sorry for the delay in replying to this.
+
+I've checked this now and you are right.  We are checking the element
+in the array that contains the length of the allocation we requested
+instead of checking the pointer returned by kmemdup().  This was
+probably a typo.
+
+I have fixed this in our internal tree and it will reach the mainline
+following our normal upstreaming process.
+
+Thanks for reporting!
+
+--
+Cheers,
+Luca.
 
