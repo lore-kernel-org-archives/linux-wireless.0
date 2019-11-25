@@ -2,77 +2,92 @@ Return-Path: <SRS0=Ysg0=ZR=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CF1DC432C0
-	for <linux-wireless@archiver.kernel.org>; Mon, 25 Nov 2019 15:36:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D741C432C3
+	for <linux-wireless@archiver.kernel.org>; Mon, 25 Nov 2019 15:50:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 210DF2082F
-	for <linux-wireless@archiver.kernel.org>; Mon, 25 Nov 2019 15:36:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E4B7D20674
+	for <linux-wireless@archiver.kernel.org>; Mon, 25 Nov 2019 15:50:10 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BHsd/WIf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728555AbfKYPgL (ORCPT
+        id S1728661AbfKYPuK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 25 Nov 2019 10:36:11 -0500
-Received: from mta5.iomartcloud.com ([62.128.216.47]:53294 "EHLO
-        mta5.iomartcloud.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728036AbfKYPgL (ORCPT
+        Mon, 25 Nov 2019 10:50:10 -0500
+Received: from us-smtp-2.mimecast.com ([207.211.31.81]:37496 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1728592AbfKYPuK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 Nov 2019 10:36:11 -0500
-X-Greylist: delayed 2044 seconds by postgrey-1.27 at vger.kernel.org; Mon, 25 Nov 2019 10:36:10 EST
-Received: from mailfilter.iomart.com (vmf71.iomartcloud.net [10.52.2.37])
-        by mta5.iomartcloud.com (8.14.4/8.14.4) with SMTP id xAPF23x7009847
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Nov 2019 15:02:03 GMT
-Received: from vs7.iomartcloud.net(localhost[127.0.0.1]) by mailfilter.iomart.com ; Mon, 25 Nov 2019 15:02:03 GMT
-Received: from vs7.iomartcloud.net (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 1D28522034
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Nov 2019 15:02:03 +0000 (GMT)
-Received: from asmtp2.iomartcloud.net (unknown [10.52.1.41])
-        by vs7.iomartcloud.net (Postfix) with ESMTPS id 07DA422032
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Nov 2019 15:02:03 +0000 (GMT)
-Received: from localhost (host-89-240-139-199.as13285.net [89.240.139.199])
-        (authenticated bits=0)
-        by asmtp2.iomartcloud.net (8.14.4/8.14.4) with ESMTP id xAPF221T001607
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO)
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Nov 2019 15:02:02 GMT
-Date:   Mon, 25 Nov 2019 15:04:14 +0000
-From:   Tony Sumner <tony@whittycat.me.uk>
-To:     linux-wireless@vger.kernel.org
-Subject:  wireless firmware for Debian
-Message-ID: <20191125150414.GA1849@Debian>
+        Mon, 25 Nov 2019 10:50:10 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1574697008;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=CKFYMDRZ9s148RvIhLyO1vrx/yx8RURD6GwVRt3ILFE=;
+        b=BHsd/WIfFdrOvXzoqIx2OSVh9K11xaa4GOiYy+Tbpk+wEQTnnxDXsHmZ6shhH6KSKrTnlY
+        OS28S902J8i0lhpWp8lDy0yWyquOAmiCKKht+lrwHOXN2LnVWEgyaIiJa9JT/wGwbHoBqV
+        WO4I5sFAhYu4JJNeRdvNKW7K0C381MQ=
+Received: from mail-lj1-f197.google.com (mail-lj1-f197.google.com
+ [209.85.208.197]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-319-4QWVP0peOYCBlFX_duUTeA-1; Mon, 25 Nov 2019 10:50:05 -0500
+Received: by mail-lj1-f197.google.com with SMTP id o20so3088626ljg.0
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Nov 2019 07:50:05 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:subject:in-reply-to:references:date
+         :message-id:mime-version;
+        bh=20+3zAqTVjwD/q4A9N4YhOCatL9tYt9w48LL6VCgPng=;
+        b=rCJD0pvM8PHIXfaDmL8TvteIcA0z71AJ9A/Z972jffUfE12nhTz+yRZgNWo2Leekhd
+         1vguenxWjSXeqsaEQ9tbO21gBcZPXKYxOkoLk9f7gLLyCIMHLFr6g4Ado6rhdxy6Yv3/
+         HngCbXCKYyIURxQ1HQilLJ4lWeciT7Hy4AGby8WJyLDas1nl5g4huCICQQNqMHqcO1qP
+         Y93CNKDKg5NGGrSr3Aeq6VgFBIEs85HOFgdxqZuuxamS28B8RMKvi7R+9bwDjFRfMmas
+         q3scNX6Fh5bqUgfknw9YTjNCiNu+NC4IlAbBYoBdredr0JThBqFYVJO5Mh8ausGSGMR/
+         aMJg==
+X-Gm-Message-State: APjAAAV7zOCqJT2PxYWYFWXAzniyH+OfQ+uCV66/owI8rWOeIG+o75MU
+        59Kx3I09fau9intwn4bmeUsplvVQc152x3Lxo6ZeBiB0IlcI3pUpqqbu1y0FOEpF991aoXnLRQB
+        UsS6AoCCvITCaqQxpwEUpTQG1SIs=
+X-Received: by 2002:a19:f811:: with SMTP id a17mr20714338lff.132.1574697004077;
+        Mon, 25 Nov 2019 07:50:04 -0800 (PST)
+X-Google-Smtp-Source: APXvYqz+y9yI4DrVotEUSbBjKVVN9P82pcwHk5LJky3C4sS/oGFnSJcfeqnNKyllIZGh5WOjk2/g4w==
+X-Received: by 2002:a19:f811:: with SMTP id a17mr20714330lff.132.1574697003944;
+        Mon, 25 Nov 2019 07:50:03 -0800 (PST)
+Received: from alrua-x1.borgediget.toke.dk ([2a0c:4d80:42:443::2])
+        by smtp.gmail.com with ESMTPSA id a11sm4148037ljm.60.2019.11.25.07.50.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 25 Nov 2019 07:50:03 -0800 (PST)
+Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
+        id 624DC1818BF; Mon, 25 Nov 2019 16:50:02 +0100 (CET)
+From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
+To:     Tony Sumner <tony@whittycat.me.uk>, linux-wireless@vger.kernel.org
+Subject: Re: wireless firmware for Debian
+In-Reply-To: <20191125150414.GA1849@Debian>
+References: <20191125150414.GA1849@Debian>
+X-Clacks-Overhead: GNU Terry Pratchett
+Date:   Mon, 25 Nov 2019 16:50:02 +0100
+Message-ID: <87h82s0xcl.fsf@toke.dk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-User-Agent: Mutt/1.5.23 (2014-03-12)
-X-Originating-IP: 89.240.139.199
-X-Thinkmail-Auth: tony123@phonecoop.coop
-X-TM-AS-GCONF: 11111111
-X-TM-AS-SMTP: 1.0 YXNtdHAyLmlvbWFydGNsb3VkLm5ldA== dG9ueUB3aGl0dHljYXQubWUudWs=
-X-TM-AS-ERS: 10.52.1.41-127.5.254.253
-X-TM-AS-Product-Ver: IMSVA-9.0.0.1623-8.2.0.1013-25064.007
-X-TM-AS-Result: No--3.967-7.0-31-10
-X-imss-scan-details: No--3.967-7.0-31-10;No--3.967-5.0-31-10;No--3.967-4.5-31-10
-X-TMASE-Version: IMSVA-9.0.0.1623-8.2.1013-25064.007
-X-TMASE-Result: 10--3.966600-10.000000
-X-TMASE-MatchedRID: Py9kSK+zk5Jx1XV+/0DNMPbta0OAYFzyHGCrN8swaFH0nlq8x3d7MO5t
-        Cu25FAyi3qMjIETpe1/+9bSXDmubJ1xxDx5qbkR9/sToY2qzpx6+seUCo3wg96YHWG1ypGma7a1
-        x925kg6/dB/CxWTRRu4as+d5/8j56oaJv4yj65Tiab+Y5YqyZ8YdjAwlGxiW+XUFe+PrW+7GzJw
-        yKuFrYB/4VjiSVHVocNJPQQd2DukpFLXqr4cdFW1qI+/4GzPDk
-X-TMASE-SNAP-Result: 1.821001.0001-0-1-12:0,22:0,33:0,34:0-0
-X-NIVirusScan: OK
+X-MC-Unique: 4QWVP0peOYCBlFX_duUTeA-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=WINDOWS-1252
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+Tony Sumner <tony@whittycat.me.uk> writes:
 
-I am installing Debian Linux on a laptop and it says I need to get firmware
-ie thr file ipw2200-bss.fw to start the installation. Does sourceforge
-have this file available?
+> I am installing Debian Linux on a laptop and it says I need to get firmwa=
+re
+> ie thr file ipw2200-bss.fw to start the installation. Does sourceforge
+> have this file available?
 
-Regards,
+You'll need to install the firmware-ipw2x00 package which is in non-free :)
 
-Tony Sumner
-
+-Toke
 
