@@ -2,111 +2,90 @@ Return-Path: <SRS0=dkGe=ZS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 56313C432C3
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Nov 2019 10:45:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4025C432C0
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Nov 2019 11:04:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2EF0C20637
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Nov 2019 10:45:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6F55320722
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Nov 2019 11:04:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fAieNqTw"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="VVXKYsBa";
+	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="bA9o5zhp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727821AbfKZKpB (ORCPT
+        id S1727885AbfKZLEq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 26 Nov 2019 05:45:01 -0500
-Received: from us-smtp-1.mimecast.com ([205.139.110.61]:21022 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727388AbfKZKpB (ORCPT
+        Tue, 26 Nov 2019 06:04:46 -0500
+Received: from a27-187.smtp-out.us-west-2.amazonses.com ([54.240.27.187]:43416
+        "EHLO a27-187.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726672AbfKZLEq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Nov 2019 05:45:01 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1574765100;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=THeWkxhGHlvtqEdZeq+O/q3j/6kvo8OPnFKvF146PTI=;
-        b=fAieNqTwWMgiRqXtT+Fo8MSCGnDM+E70MVf9Aaw52Y6IP5Vc0OiK+0tJIGsufwsGWD2BrD
-        usw4o5ukwNUJl6o8GuTyUeXIJZ1W/DI0cvYNLAjBO+4WDYmXsf/h2wBV6OIcSpaJRxoQfG
-        S59/NyhOf7MNkULOKT41He7F7fSszPs=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-78-QM_tmhTqPRq-rkSEV8dzPA-1; Tue, 26 Nov 2019 05:44:59 -0500
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id ED2311005509;
-        Tue, 26 Nov 2019 10:44:57 +0000 (UTC)
-Received: from localhost (unknown [10.40.205.113])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id EB7B75D9CD;
-        Tue, 26 Nov 2019 10:44:54 +0000 (UTC)
-Date:   Tue, 26 Nov 2019 11:44:54 +0100
-From:   Stanislaw Gruszka <sgruszka@redhat.com>
-To:     Felix Fietkau <nbd@nbd.name>
-Cc:     Markus Theil <markus.theil@tu-ilmenau.de>,
-        linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com
-Subject: Re: [PATCH v8 2/6] mt76: mt76x02: split beaconing
-Message-ID: <20191126104453.GA7944@redhat.com>
-References: <20191121180001.22451-1-markus.theil@tu-ilmenau.de>
- <20191121180001.22451-3-markus.theil@tu-ilmenau.de>
- <20191125130014.GB28102@redhat.com>
- <ec1b9623-2aa1-27c7-abcd-2b39e0d25a0c@tu-ilmenau.de>
- <20191125165932.GB14273@redhat.com>
- <40c52ae5-85d8-8a65-2b4b-1a52bf1b73ab@nbd.name>
-MIME-Version: 1.0
-In-Reply-To: <40c52ae5-85d8-8a65-2b4b-1a52bf1b73ab@nbd.name>
-User-Agent: Mutt/1.11.3 (2019-02-01)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
-X-MC-Unique: QM_tmhTqPRq-rkSEV8dzPA-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+        Tue, 26 Nov 2019 06:04:46 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+        s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1574766285;
+        h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References;
+        bh=Uyeo4iqBPl1KuvYSnL8ekx9nDe/k3v/zyOzdlv+Rtzw=;
+        b=VVXKYsBa1fkU0UQGRbiIq8o3htbobswz5OspRBdC1EGM1ZSAkUy4u+4CHlrm+b/+
+        PpFS1JNwb8m+lgRRjAJ6HmAiWlqPi44RbtIhG/IrPH2r35NxrV2loM6TYzwH+L5cyNd
+        bnyvuh10K6nzfszGTgsyQP9wgkoJwx73Q4pI6K7c=
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+        s=gdwg2y3kokkkj5a55z2ilkup5wp5hhxx; d=amazonses.com; t=1574766285;
+        h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:Feedback-ID;
+        bh=Uyeo4iqBPl1KuvYSnL8ekx9nDe/k3v/zyOzdlv+Rtzw=;
+        b=bA9o5zhp1z0aFgsErHBi4WxkbXjymX4fLUGXBCbN7r8gTK+tGxr2XeTdd3YU7w85
+        ODp3sGbwcphAwy1bfdsGN6ogsBTaFOG7QS+PVhwoE1YDMfVq5ep/o1vEAWM9SeFJ54+
+        wkx1mIjeQIrWj5q66AQdbetHS5qRl9ketdsGUIWc=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org E45E3C433A2
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     linux-wireless@vger.kernel.org
+Cc:     ath11k@lists.infradead.org
+Subject: [PATCH 01/10] ath11k: Fix htt stats sounding info and pdev cca stats
+Date:   Tue, 26 Nov 2019 11:04:45 +0000
+Message-ID: <0101016ea76291c1-5098ab8c-5e07-4a40-a582-6bd9ae513b74-000000@us-west-2.amazonses.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1574766279-13105-1-git-send-email-kvalo@codeaurora.org>
+References: <1574766279-13105-1-git-send-email-kvalo@codeaurora.org>
+X-SES-Outgoing: 2019.11.26-54.240.27.187
+Feedback-ID: 1.us-west-2.CZuq2qbDmUIuT3qdvXlRHZZCpfZqZ4GtG9v3VKgRyF0=:AmazonSES
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, Nov 25, 2019 at 06:12:56PM +0100, Felix Fietkau wrote:
-> On 2019-11-25 17:59, Stanislaw Gruszka wrote:
-> > On Mon, Nov 25, 2019 at 03:07:59PM +0100, Markus Theil wrote:
-> >> On 11/25/19 2:00 PM, Stanislaw Gruszka wrote:
-> >> > On Thu, Nov 21, 2019 at 06:59:57PM +0100, Markus Theil wrote:
-> >> >> +void mt76x02_mac_set_beacon_finish(struct mt76x02_dev *dev)
-> >> >> +{
-> >> >> +=09mt76_wr(dev, MT_BCN_BYPASS_MASK,
-> >> >> +=09=090xff00 | ~bitrev8(dev->beacon_data_mask));
-> >> > Since you arrange beacon slots continues starting from 0
-> >> > (i.e. 0,1,2 instead of "random" vif_idx values like 0,4,6),
-> >> > I think it would make sense to keep
-> >> > MT_MAC_BSSID_DW1_MBEACON_N =3D bcn_idx - 1 and set mask unchanged.
-> >> >
-> >> > But no strong opinion here, code with bitrev8 looks fine too.
-> >> I'd like to keep the bitrev8 code, as it saves a copy over usb for usb
-> >> devices, if MT_MAC_BSSID_DW_BEACON_N is kept constant.
-> >> bitrev8 should be a rather cheap operation compared to a copy over som=
-e
-> >> form of bus.
-> >=20
-> > This make sense. I tested the code on MT7630E and after adding missed
-> > write_txwi function, it works fine. So I think bitrev8 code is ok.
-> I find the use of bitrev8/ffz a bit convoluted. If I understand the code
-> right, wouldn't it be equivalent to keeping beacon_data_count instead of
-> beacon_data_mask and doing:
-> mt76_wr(dev, MT_BCN_BYPASS_MASK,
-> =090xffff & ~((1 << dev->beacon_data_count) - 1));
+From: Ganesh Sesetti <gseset@codeaurora.org>
 
-If we want to keep constatn MT_MAC_BSSID_DW1_MBEACON_N=3D7 , I think
-correct formula would be:
+The Previous configuartion of htt stats sounding info and pdev cca stats
+are invalid due to that getting time out error.
 
-0xff00 | ~(0xff00 >> dev->beacon_data_count)
+Changing htt stats sounding info value from 0xFF to 0x00 and htt pdev cca
+stats from 0x10 to 0x00
 
-Anyway something simpler than bitrev8 can be used to calculate
-bypass mask.
+Signed-off-by: Ganesh Sesetti <gseset@codeaurora.org>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath11k/dp.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Stanislaw=20
+diff --git a/drivers/net/wireless/ath/ath11k/dp.h b/drivers/net/wireless/ath/ath11k/dp.h
+index 4db71173db62..eb0f3df131c5 100644
+--- a/drivers/net/wireless/ath/ath11k/dp.h
++++ b/drivers/net/wireless/ath/ath11k/dp.h
+@@ -1365,8 +1365,8 @@ struct htt_ext_stats_cfg_cmd {
+ #define HTT_STAT_DEFAULT_CFG0_ALL_CMDQS 0xffff
+ #define HTT_STAT_DEFAULT_CFG0_ALL_RINGS 0xffff
+ #define HTT_STAT_DEFAULT_CFG0_ACTIVE_PEERS 0xff
+-#define HTT_STAT_DEFAULT_CFG0_CCA_CUMULATIVE 0x10
+-#define HTT_STAT_DEFAULT_CFG0_ACTIVE_VDEVS 0xff
++#define HTT_STAT_DEFAULT_CFG0_CCA_CUMULATIVE 0x00
++#define HTT_STAT_DEFAULT_CFG0_ACTIVE_VDEVS 0x00
+ 
+ /* HTT_DBG_EXT_STATS_PEER_INFO
+  * PARAMS:
+-- 
+2.7.4
 
