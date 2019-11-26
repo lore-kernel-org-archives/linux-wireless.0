@@ -6,33 +6,33 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 669FFC43215
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Nov 2019 21:47:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72530C33C99
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Nov 2019 21:47:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3A90F20678
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Nov 2019 21:47:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 471CC20678
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Nov 2019 21:47:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727085AbfKZVrW (ORCPT
+        id S1727071AbfKZVrU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 26 Nov 2019 16:47:22 -0500
-Received: from smail.rz.tu-ilmenau.de ([141.24.186.67]:46406 "EHLO
+        Tue, 26 Nov 2019 16:47:20 -0500
+Received: from smail.rz.tu-ilmenau.de ([141.24.186.67]:46400 "EHLO
         smail.rz.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727051AbfKZVrV (ORCPT
+        with ESMTP id S1727016AbfKZVrT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Nov 2019 16:47:21 -0500
+        Tue, 26 Nov 2019 16:47:19 -0500
 Received: from localhost.localdomain (unknown [141.24.207.101])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by smail.rz.tu-ilmenau.de (Postfix) with ESMTPSA id 2AE78580081;
+        by smail.rz.tu-ilmenau.de (Postfix) with ESMTPSA id 0B3FA58007F;
         Tue, 26 Nov 2019 22:47:17 +0100 (CET)
 From:   Markus Theil <markus.theil@tu-ilmenau.de>
 To:     nbd@nbd.name
 Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
         Stanislaw Gruszka <sgruszka@redhat.com>,
         Markus Theil <markus.theil@tu-ilmenau.de>
-Subject: [PATCH v9 6/6] mt76: mt76x02: add channel switch support for usb interfaces
-Date:   Tue, 26 Nov 2019 22:47:04 +0100
-Message-Id: <20191126214704.27297-7-markus.theil@tu-ilmenau.de>
+Subject: [PATCH v9 4/6] mt76: mt76x02: remove a copy call for usb speedup
+Date:   Tue, 26 Nov 2019 22:47:02 +0100
+Message-Id: <20191126214704.27297-5-markus.theil@tu-ilmenau.de>
 X-Mailer: git-send-email 2.24.0
 In-Reply-To: <20191126214704.27297-1-markus.theil@tu-ilmenau.de>
 References: <20191126214704.27297-1-markus.theil@tu-ilmenau.de>
@@ -43,60 +43,56 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This patch enables channel switch support on mt76 usb interfaces.
+This patch removes a mt76_wr_copy call from the beacon path to hw.
+The skb which is used in this place gets therefore build with txwi
+inside its data. For mt76 usb drivers, this saves one synchronuous
+copy call over usb, which lets the beacon work complete faster.
+
+In mmio case, there is not enough headroom to put the txwi into the
+skb, it is therefore using an additional mt76_wr_copy, which is fast
+over mmio. Thanks Stanislaw for pointing this out.
 
 Signed-off-by: Markus Theil <markus.theil@tu-ilmenau.de>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c | 8 ++++++++
- drivers/net/wireless/mediatek/mt76/mt76x02_util.c     | 2 +-
- 2 files changed, 9 insertions(+), 1 deletion(-)
+ .../wireless/mediatek/mt76/mt76x02_beacon.c   | 20 +++++++++++++++----
+ 1 file changed, 16 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c b/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c
-index fca861f10563..3dc3682d585a 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_usb_core.c
-@@ -214,6 +214,13 @@ static void mt76x02u_pre_tbtt_work(struct work_struct *work)
- 		IEEE80211_IFACE_ITER_RESUME_ALL,
- 		mt76x02_update_beacon_iter, dev);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_beacon.c b/drivers/net/wireless/mediatek/mt76/mt76x02_beacon.c
+index 1c4bdf88f712..68a4f512319e 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_beacon.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_beacon.c
+@@ -26,15 +26,27 @@ static int
+ mt76x02_write_beacon(struct mt76x02_dev *dev, int offset, struct sk_buff *skb)
+ {
+ 	int beacon_len = dev->beacon_ops->slot_size;
+-	struct mt76x02_txwi txwi;
  
-+	mt76_csa_check(&dev->mt76);
+ 	if (WARN_ON_ONCE(beacon_len < skb->len + sizeof(struct mt76x02_txwi)))
+ 		return -ENOSPC;
+ 
+-	mt76x02_mac_write_txwi(dev, &txwi, skb, NULL, NULL, skb->len);
++	/* USB devices already reserve enough skb headroom for txwi's. This
++	 * helps to save slow copies over USB.
++	 */
++	if (mt76_is_usb(&dev->mt76)) {
++		struct mt76x02_txwi *txwi;
 +
-+	if (dev->mt76.csa_complete) {
-+		mt76_csa_finish(&dev->mt76);
-+		goto out;
++		mt76_insert_hdr_pad(skb);
++		txwi = (struct mt76x02_txwi *)(skb->data - sizeof(*txwi));
++		mt76x02_mac_write_txwi(dev, txwi, skb, NULL, NULL, skb->len);
++		skb_push(skb, sizeof(*txwi));
++	} else {
++		struct mt76x02_txwi txwi;
+ 
+-	mt76_wr_copy(dev, offset, &txwi, sizeof(txwi));
+-	offset += sizeof(txwi);
++		mt76x02_mac_write_txwi(dev, &txwi, skb, NULL, NULL, skb->len);
++		mt76_wr_copy(dev, offset, &txwi, sizeof(txwi));
++		offset += sizeof(txwi);
 +	}
-+
- 	nbeacons = hweight8(dev->mt76.beacon_mask);
- 	mt76x02_enqueue_buffered_bc(dev, &data, N_BCN_SLOTS - nbeacons);
  
-@@ -222,6 +229,7 @@ static void mt76x02u_pre_tbtt_work(struct work_struct *work)
- 		mt76x02_mac_set_beacon(dev, skb);
- 	}
- 
-+out:
- 	mt76x02_mac_set_beacon_finish(dev);
- 
- 	mt76x02u_restart_pre_tbtt_timer(dev);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-index 6073f8a4a8f6..dbda7fb6dab7 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-@@ -166,7 +166,6 @@ void mt76x02_init_device(struct mt76x02_dev *dev)
- 		wiphy->reg_notifier = mt76x02_regd_notifier;
- 		wiphy->iface_combinations = mt76x02_if_comb;
- 		wiphy->n_iface_combinations = ARRAY_SIZE(mt76x02_if_comb);
--		wiphy->flags |= WIPHY_FLAG_HAS_CHANNEL_SWITCH;
- 
- 		/* init led callbacks */
- 		if (IS_ENABLED(CONFIG_MT76_LEDS)) {
-@@ -176,6 +175,7 @@ void mt76x02_init_device(struct mt76x02_dev *dev)
- 		}
- 	}
- 
-+	wiphy->flags |= WIPHY_FLAG_HAS_CHANNEL_SWITCH;
- 	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_VHT_IBSS);
- 
- 	hw->sta_data_size = sizeof(struct mt76x02_sta);
+ 	mt76_wr_copy(dev, offset, skb->data, skb->len);
+ 	return 0;
 -- 
 2.24.0
 
