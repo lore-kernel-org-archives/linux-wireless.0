@@ -2,108 +2,118 @@ Return-Path: <SRS0=dkGe=ZS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5BBBC432C0
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Nov 2019 17:56:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 928C9C432C0
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Nov 2019 21:04:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8A0A720684
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Nov 2019 17:56:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 60E1E2084B
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Nov 2019 21:04:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OWHmv0rw"
+	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="OLZ8Ck6M"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727165AbfKZRzx (ORCPT
+        id S1726148AbfKZVEH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 26 Nov 2019 12:55:53 -0500
-Received: from mail-pg1-f194.google.com ([209.85.215.194]:38002 "EHLO
-        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726101AbfKZRzw (ORCPT
+        Tue, 26 Nov 2019 16:04:07 -0500
+Received: from mail-pf1-f172.google.com ([209.85.210.172]:45315 "EHLO
+        mail-pf1-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726049AbfKZVEH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Nov 2019 12:55:52 -0500
-Received: by mail-pg1-f194.google.com with SMTP id t3so8925013pgl.5;
-        Tue, 26 Nov 2019 09:55:50 -0800 (PST)
+        Tue, 26 Nov 2019 16:04:07 -0500
+Received: by mail-pf1-f172.google.com with SMTP id z4so9773015pfn.12
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Nov 2019 13:04:05 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=TvvdTSqyYu1UERC53GMtsiAam2mDxhTlJf/JArDCSrQ=;
-        b=OWHmv0rwNliBmYsjj8smIocF1JTsvaq9ItSMbiJn6nyDPUqSmrmj/rnuEL29GILHg/
-         5c2AQ/giRF9hTOccWsp96yMWBot8xnUJKhxJIbs1hpknA+oJPABUjrPrvlf3XekzVB/q
-         HHx3oOD8EzhFuRgGmWqQNa5jlkWi3tlz0ZCzizLTnaxSf/WL2zi9eJ9ixGLncAHmrGa6
-         PCWoqGGTC2YK4TgVADQbwO3BfKKDzvNDZqUZubw+3oOlIEMjSR8pXjm3yHch0dB6yMsl
-         YLYI4byIxjzAHH0IRgFWRaQYwVlfenObZpd16jdE15X3gHc0IjQSc2IkqRJSfw1bpkUu
-         6u+A==
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=from:subject:to:cc:message-id:date:user-agent:mime-version
+         :content-language:content-transfer-encoding;
+        bh=MgDaFYIl+nmxcF1ttpkfkxYZysv26OGhpi/Bg8X3YIc=;
+        b=OLZ8Ck6MXeyMgLph8V4PrhVZphYdAlcs3nof6TdxjUzEqImXbrNxyeFKPg4H/TE5Q/
+         Ja2/a/EBUvP1rS/yVs6LflBwyUaTkgiaU/6uay7k5zVjkq/5IsQkhO2kQI0gmG+gtxom
+         hs2M4LiDx6VzN9W5qYGHflh918vSEoYIFLMKLgtemnPL6OoyNgcX4RIny55Wr/NLAPoi
+         Bbx+CF3faxOr9c07fxpJBowbBToqRsD+FlCjJQjFZ5QzzLr2/Vv89Y2z2DICtjtJyijK
+         h5BnL8HBCBIwSe8QKpFZxwrIKXMYELvy5w1aoLJfRq1xLoYXdihLUkzQA/9cfa+v7jE3
+         rb2g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=TvvdTSqyYu1UERC53GMtsiAam2mDxhTlJf/JArDCSrQ=;
-        b=sH31WfQkpFTLgqda8eyBruqgE3eXik5DlZq6zGeeCAIPa7GT62vtRhFUOyz1C2a4AQ
-         ZVYECAGQ/ua4JUkh5s6vHSWVMxIR2J0pNP+czyboQhEJSnbxYUIsbW6aQ430ftl4uLFE
-         qdnjOyVt8bL2l4ZrKb1XGpuUKjS1t2MQ93GLD2VlvTd09YPKyqL4/DJ2Uk4o7mu7zpyI
-         r2XhGIF1FmrCZPpLGh3oZRL6dRoWukELDmY3mYFIj84+xjwHrghYRCBaNJnlaEMwpIAL
-         lLjGK9O8q9DtsmtHSKm3S8u9iSp5tBYd0MZlz6xTy/H5C3b7/rsvy0oONlKZd7WN/H0y
-         1AvA==
-X-Gm-Message-State: APjAAAWKM9lvHWAf/vS1t+M3j/5bXISiY9WO6ZADM+TLEUx55MlUfG7/
-        AXVPLB9IyJAXjJvM6+qDu/c=
-X-Google-Smtp-Source: APXvYqyOpcmH+LQLNqKMpeT7iy2nxBR7WsUOcR0vrbLmbLTb3Hw+LcDWtk0d4hjF2hFpb5IMctFCHg==
-X-Received: by 2002:a63:5851:: with SMTP id i17mr39852959pgm.181.1574790950285;
-        Tue, 26 Nov 2019 09:55:50 -0800 (PST)
-Received: from debian.net.fpt ([2405:4800:58f7:2f79:ce3b:4b9:a68f:959f])
-        by smtp.gmail.com with ESMTPSA id q6sm781577pfl.140.2019.11.26.09.55.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 26 Nov 2019 09:55:49 -0800 (PST)
-From:   Phong Tran <tranmanphong@gmail.com>
-To:     Larry.Finger@lwfinger.net, jakub.kicinski@netronome.com,
-        kvalo@codeaurora.org
-Cc:     tranmanphong@gmail.com, Wright.Feng@cypress.com,
-        arend.vanspriel@broadcom.com, davem@davemloft.net,
-        emmanuel.grumbach@intel.com, franky.lin@broadcom.com,
-        johannes.berg@intel.com, keescook@chromium.org,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        luciano.coelho@intel.com, netdev@vger.kernel.org,
-        p.figiel@camlintechnologies.com,
-        pieter-paul.giesberts@broadcom.com, pkshih@realtek.com,
-        rafal@milecki.pl, sara.sharon@intel.com,
-        shahar.s.matityahu@intel.com, yhchuang@realtek.com,
-        yuehaibing@huawei.com
-Subject: [Patch v2 0/4] wireless: Fix -Wcast-function-type 
-Date:   Wed, 27 Nov 2019 00:55:25 +0700
-Message-Id: <20191126175529.10909-1-tranmanphong@gmail.com>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191125150215.29263-1-tranmanphong@gmail.com>
-References: <20191125150215.29263-1-tranmanphong@gmail.com>
+        h=x-gm-message-state:from:subject:to:cc:message-id:date:user-agent
+         :mime-version:content-language:content-transfer-encoding;
+        bh=MgDaFYIl+nmxcF1ttpkfkxYZysv26OGhpi/Bg8X3YIc=;
+        b=U9OQiEPuPMlSMi99kiRe/z4464xT49FHo2VDbRY4s2FEQu5eEQZ7M0AIOvdnSzyE2E
+         TAjyg4vWhBl1zWYsIcxpWKf/lMdBs6pPCZwug0p/L+U8Yzo8AlyzQsExp1yls650LxSZ
+         AZm01u+YUlIXvChaoGIAYw7eElhgNOgoVbW/eyr2liQxCP/rEUVGa+RpAA/vyYMtP9JY
+         +m7dXcvu39GnXXP4FSNx0juvhY9RgtVSAGH9dTmVANR3tv4uHmDCAg0OzfEtRx9Vb1M+
+         3tyMKvygLLOdh+kvw0+Ndw13mOzW8uKk5ZgSAso3TvbGr27qduR4aBDZOhVvHflGzVd8
+         WcvQ==
+X-Gm-Message-State: APjAAAV53hu6XL6ePn6b6bVy0JaGAIj9oEpWXjesJ5XJzqbNfWSKd47v
+        4OJfo7/TZmKGob08KnHKUBPPlVjP/rmIbA==
+X-Google-Smtp-Source: APXvYqwUoUt7xXJ4U7rxhpnrlJVIPuCcAfTFSnIOfpQ5FSJHlURR5QVkFi6x5UYg09nTVWJ1CHRbHA==
+X-Received: by 2002:a65:4085:: with SMTP id t5mr489221pgp.335.1574802244799;
+        Tue, 26 Nov 2019 13:04:04 -0800 (PST)
+Received: from [192.168.1.188] ([66.219.217.79])
+        by smtp.gmail.com with ESMTPSA id 16sm13729946pgm.86.2019.11.26.13.04.03
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 26 Nov 2019 13:04:03 -0800 (PST)
+From:   Jens Axboe <axboe@kernel.dk>
+Subject: iwlwifi broken in current -git
+To:     Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Networking <netdev@vger.kernel.org>
+Message-ID: <49461e53-e2fe-8a7a-47a3-7de966cb1298@kernel.dk>
+Date:   Tue, 26 Nov 2019 14:04:01 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Change with v1:
- - align commit subject prefix with review comments.
- - split patch "drivers: net: intel: Fix -Wcast-function-type"
-   into "ipw2x00" and "iwlegacy"
- - update tested by as
-https://lore.kernel.org/linux-wireless/8eb8d6fd-de20-2d04-8210-ad8304d7da9e@lwfinger.net/
+Hi,
 
-Phong Tran (4):
-  b43legacy: Fix -Wcast-function-type
-  ipw2x00: Fix -Wcast-function-type
-  iwlegacy: Fix -Wcast-function-type
-  rtlwifi: rtl_pci: Fix -Wcast-function-type
+Just upgraded my laptop, and iwlwifi won't connect. Not specific to
+the AP, tried a few and no go. Here are the dmesg from loading and
+trying to connect, at some point it just gives up and asks me for
+a password again. v5.4 works just fine.
 
- drivers/net/wireless/broadcom/b43legacy/main.c |  5 +++--
- drivers/net/wireless/intel/ipw2x00/ipw2100.c   |  7 ++++---
- drivers/net/wireless/intel/ipw2x00/ipw2200.c   |  5 +++--
- drivers/net/wireless/intel/iwlegacy/3945-mac.c |  5 +++--
- drivers/net/wireless/intel/iwlegacy/4965-mac.c |  5 +++--
- drivers/net/wireless/realtek/rtlwifi/pci.c     | 10 ++++++----
- 6 files changed, 22 insertions(+), 15 deletions(-)
+The laptop is a gen7 x1 carbon.
+
+[   43.426111] Intel(R) Wireless WiFi driver for Linux
+[   43.426112] Copyright(c) 2003- 2015 Intel Corporation
+[   43.428039] iwlwifi 0000:00:14.3: Found debug destination: EXTERNAL_DRAM
+[   43.428040] iwlwifi 0000:00:14.3: Found debug configuration: 0
+[   43.428222] iwlwifi 0000:00:14.3: loaded firmware version 46.6bf1df06.0 op_mode iwlmvm
+[   43.491333] iwlwifi 0000:00:14.3: Detected Intel(R) Wireless-AC 9560 160MHz, REV=0x318
+[   43.498760] iwlwifi 0000:00:14.3: Applying debug destination EXTERNAL_DRAM
+[   43.498899] iwlwifi 0000:00:14.3: Allocated 0x00400000 bytes for firmware monitor.
+[   43.541238] iwlwifi 0000:00:14.3: base HW address: dc:fb:48:b8:c6:b7
+[   43.609556] ieee80211 phy1: Selected rate control algorithm 'iwl-mvm-rs'
+[   43.610718] thermal thermal_zone6: failed to read out thermal zone (-61)
+[   43.615027] iwlwifi 0000:00:14.3 wlp0s20f3: renamed from wlan0
+[   43.730438] iwlwifi 0000:00:14.3: Applying debug destination EXTERNAL_DRAM
+[   43.843856] iwlwifi 0000:00:14.3: Applying debug destination EXTERNAL_DRAM
+[   43.909456] iwlwifi 0000:00:14.3: FW already configured (0) - re-configuring
+[   47.273349] wlp0s20f3: authenticate with b6:fb:e4:19:db:06
+[   47.279427] wlp0s20f3: send auth to b6:fb:e4:19:db:06 (try 1/3)
+[   47.319107] wlp0s20f3: authenticated
+[   47.328669] wlp0s20f3: associate with b6:fb:e4:19:db:06 (try 1/3)
+[   47.332601] wlp0s20f3: RX AssocResp from b6:fb:e4:19:db:06 (capab=0x1011 status=0 aid=2)
+[   47.334815] wlp0s20f3: associated
+[   51.372005] wlp0s20f3: deauthenticated from b6:fb:e4:19:db:06 (Reason: 2=PREV_AUTH_NOT_VALID)
+[   51.759486] wlp0s20f3: authenticate with fe:ec:da:39:00:eb
+[   51.766866] wlp0s20f3: send auth to fe:ec:da:39:00:eb (try 1/3)
+[   51.812724] wlp0s20f3: authenticated
+[   51.818693] wlp0s20f3: associate with fe:ec:da:39:00:eb (try 1/3)
+[   51.822934] wlp0s20f3: RX AssocResp from fe:ec:da:39:00:eb (capab=0x1411 status=0 aid=2)
+[   51.825218] wlp0s20f3: associated
+[   55.828019] wlp0s20f3: deauthenticated from fe:ec:da:39:00:eb (Reason: 2=PREV_AUTH_NOT_VALID)
 
 -- 
-2.20.1
+Jens Axboe
 
