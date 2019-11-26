@@ -8,55 +8,55 @@ X-Spam-Status: No, score=-14.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15AB8C432C0
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Nov 2019 17:56:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12FA9C432C3
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Nov 2019 17:56:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DD8EC20678
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Nov 2019 17:56:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DAEF420678
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Nov 2019 17:56:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mQvsTYyc"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Hiy7sKkZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727235AbfKZR4D (ORCPT
+        id S1727329AbfKZR4P (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 26 Nov 2019 12:56:03 -0500
-Received: from mail-pg1-f194.google.com ([209.85.215.194]:38019 "EHLO
-        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726101AbfKZR4C (ORCPT
+        Tue, 26 Nov 2019 12:56:15 -0500
+Received: from mail-pg1-f193.google.com ([209.85.215.193]:45861 "EHLO
+        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727154AbfKZR4N (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Nov 2019 12:56:02 -0500
-Received: by mail-pg1-f194.google.com with SMTP id t3so8925225pgl.5;
-        Tue, 26 Nov 2019 09:56:01 -0800 (PST)
+        Tue, 26 Nov 2019 12:56:13 -0500
+Received: by mail-pg1-f193.google.com with SMTP id k1so9343276pgg.12;
+        Tue, 26 Nov 2019 09:56:13 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=/r+BkUfLmBH3CeGijVoAyUPn7ui6aiDwXGoFCaRj4zU=;
-        b=mQvsTYyccYh79x0L8dgi0htAPzlYiCAtixC4wckft7r/7mfyb4LLox8Ws9HIuO8bHJ
-         C+Jdai1uct571FnAEJZDweiuZ385wZmjbnKiqsqTR7Os8lH6reBb0QNkX59mFcJxWZKW
-         uIQL4nCO4BzJmB2FxCodrdQ1stsRZ72hRyqtgUANcSdp2HJi4ceLn+4/Da9fjg/c1L1j
-         W5CC9sapTB5Xdvhnw2YGyVYgvj3IwjRmh1QmE3cpEEPgnNafQDVPLjbDXAd9YdGtHjB5
-         aiNkRBZ95isGeSte1MUDyqGw8tyvOl577mzJ0UCU6rdMFXH88hkv/bUQ37IkcPSHif90
-         exzA==
+        bh=XX2U608hnsjlr3CObVhxW7h8IxFeUeweX4fxE0/OsVM=;
+        b=Hiy7sKkZVG3/9CDo5Cxv9GJFo4F7t8yzz68tEQSopnvhTTDI1JRvwlk4+qu5x9oTKd
+         8D1Q484BdK43q+9RpNoHOLX+C/64hUqCzy3J3LZpjWRsnu359AFLeAJzS/aRE7bNA95O
+         5TG1K3XHRmB/uJUTN2n0gJyuIkRoHAj9bFKNlH3maSjSSwKjCvrxkchL8unJmQ/R+RTZ
+         rO+/FsXecJvDD33dmyVT4B8cGEtswDDNNr8LgN+hgQN27YLRZmdpd8bSxIZQ87Z0lYcd
+         nEmxUenHk77pF72gvpj0XbJP1k5UIP+cbHWQzQlFe8nsy6sj4hPTAwjN2b7+bxOEKXpE
+         MMIg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=/r+BkUfLmBH3CeGijVoAyUPn7ui6aiDwXGoFCaRj4zU=;
-        b=U1I/HRQh8q0I688CrrwpJcfxUkqcwxqzhDd/SFgi+YAztHVROLRvqUEn/WsLum7BHA
-         ASJnIi1NYr+XqFJA1RMgpKLsR0QEqR13tZN6AlR7z2eHsNs7ULFskMnb188uRVgKusIj
-         6U83rOlpGIV1S0XeTRqK24AKohnWJsFdX3tZzAR5QJgnTLWZQmbdBto75FU3cyHfDJur
-         jiWYmHifxzPrmYG6h0b43s1tGbo7WEymOclJ+UzZOLufLi0zREhJ7XP/jSRgH48OBKu2
-         9nauzF62Sbt2/aqJbiysMEx3YsFkd5T0IEdXCRNVtu82d4OUBgZkDlO/LFYcBFJv9LL1
-         tW7w==
-X-Gm-Message-State: APjAAAVn0PPdiOL86XtbSG4lLjprWIRgtNkwSdRK8hiWjUW+uRO/yZef
-        NtHV2UP+KVE6OHIc9MnJ4Hk=
-X-Google-Smtp-Source: APXvYqyr+epTJI3nUteZnOZOJSkivY/g1OL7A3Wf23RyTqON+IyQmqBvJH1mUruiq+wi0WnH247ZxA==
-X-Received: by 2002:a63:1b4e:: with SMTP id b14mr41447886pgm.280.1574790961263;
-        Tue, 26 Nov 2019 09:56:01 -0800 (PST)
+        bh=XX2U608hnsjlr3CObVhxW7h8IxFeUeweX4fxE0/OsVM=;
+        b=IIPZCWdUlc7YbZMoNfOtSdC8Acuc7mrnMOepNojgYk7LoDjRYqTk0QZoBh9NRIJPAJ
+         mIOIff9uJy5jHW8alHfw8tnMmJIVkWXBhgjUlVTEb3b8jDb2TvgumSNNcizWydlEu8q1
+         la4h1Ln5lnuFLiFAm6DvzG79EeXkNUSKq43dF6lnf847pqzDPB0QlT2hllOytaeVkBOg
+         y2dtthhT3dHoqiARFyInsaVdmgKdLA8TDj+dMBZOt2IqQofhT+XUglm5oiv4bDMUmgXW
+         9msi5I7eW/zNb5tT5rTQadLmnyCCib8nY5Zme+PPc3Hi+5KuRF20cZGdB00glFzVnS5Y
+         cYww==
+X-Gm-Message-State: APjAAAXL6s+zfvaAR3pYB5rglLWgneYIYTwXHup4uifTnEv9zbNtmhXp
+        vZzhRx0AgJsiBAe6eh0ck4o6g/qsWxs=
+X-Google-Smtp-Source: APXvYqwoRVvWyIjrQtvMM/Zeg7rUjcKSI9l9DZUN/LtZip4JAqCwXeGSz6ftfryrGBh/LmF65zYm+A==
+X-Received: by 2002:a63:a34b:: with SMTP id v11mr18766550pgn.229.1574790972466;
+        Tue, 26 Nov 2019 09:56:12 -0800 (PST)
 Received: from debian.net.fpt ([2405:4800:58f7:2f79:ce3b:4b9:a68f:959f])
-        by smtp.gmail.com with ESMTPSA id q6sm781577pfl.140.2019.11.26.09.55.56
+        by smtp.gmail.com with ESMTPSA id q6sm781577pfl.140.2019.11.26.09.56.07
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 26 Nov 2019 09:56:00 -0800 (PST)
+        Tue, 26 Nov 2019 09:56:11 -0800 (PST)
 From:   Phong Tran <tranmanphong@gmail.com>
 To:     Larry.Finger@lwfinger.net, jakub.kicinski@netronome.com,
         kvalo@codeaurora.org
@@ -71,9 +71,9 @@ Cc:     tranmanphong@gmail.com, Wright.Feng@cypress.com,
         rafal@milecki.pl, sara.sharon@intel.com,
         shahar.s.matityahu@intel.com, yhchuang@realtek.com,
         yuehaibing@huawei.com
-Subject: [Patch v2 2/4] ipw2x00: Fix -Wcast-function-type
-Date:   Wed, 27 Nov 2019 00:55:27 +0700
-Message-Id: <20191126175529.10909-3-tranmanphong@gmail.com>
+Subject: [Patch v2 4/4] rtlwifi: rtl_pci: Fix -Wcast-function-type
+Date:   Wed, 27 Nov 2019 00:55:29 +0700
+Message-Id: <20191126175529.10909-5-tranmanphong@gmail.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191126175529.10909-1-tranmanphong@gmail.com>
 References: <20191125150215.29263-1-tranmanphong@gmail.com>
@@ -90,67 +90,44 @@ Report by https://github.com/KSPP/linux/issues/20
 
 Signed-off-by: Phong Tran <tranmanphong@gmail.com>
 ---
- drivers/net/wireless/intel/ipw2x00/ipw2100.c | 7 ++++---
- drivers/net/wireless/intel/ipw2x00/ipw2200.c | 5 +++--
- 2 files changed, 7 insertions(+), 5 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/pci.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2100.c b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
-index 8dfbaff2d1fe..a162146a43a7 100644
---- a/drivers/net/wireless/intel/ipw2x00/ipw2100.c
-+++ b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
-@@ -3206,8 +3206,9 @@ static void ipw2100_tx_send_data(struct ipw2100_priv *priv)
- 	}
- }
- 
--static void ipw2100_irq_tasklet(struct ipw2100_priv *priv)
-+static void ipw2100_irq_tasklet(unsigned long data)
- {
-+	struct ipw2100_priv *priv = (struct ipw2100_priv *)data;
- 	struct net_device *dev = priv->net_dev;
- 	unsigned long flags;
- 	u32 inta, tmp;
-@@ -6007,7 +6008,7 @@ static void ipw2100_rf_kill(struct work_struct *work)
- 	spin_unlock_irqrestore(&priv->low_lock, flags);
- }
- 
--static void ipw2100_irq_tasklet(struct ipw2100_priv *priv);
-+static void ipw2100_irq_tasklet(unsigned long data);
- 
- static const struct net_device_ops ipw2100_netdev_ops = {
- 	.ndo_open		= ipw2100_open,
-@@ -6137,7 +6138,7 @@ static struct net_device *ipw2100_alloc_device(struct pci_dev *pci_dev,
- 	INIT_DELAYED_WORK(&priv->rf_kill, ipw2100_rf_kill);
- 	INIT_DELAYED_WORK(&priv->scan_event, ipw2100_scan_event);
- 
--	tasklet_init(&priv->irq_tasklet, (void (*)(unsigned long))
-+	tasklet_init(&priv->irq_tasklet,
- 		     ipw2100_irq_tasklet, (unsigned long)priv);
- 
- 	/* NOTE:  We do not start the deferred work for status checks yet */
-diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2200.c b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
-index ed0f06532d5e..ac5f797fb1ad 100644
---- a/drivers/net/wireless/intel/ipw2x00/ipw2200.c
-+++ b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
-@@ -1945,8 +1945,9 @@ static void notify_wx_assoc_event(struct ipw_priv *priv)
- 	wireless_send_event(priv->net_dev, SIOCGIWAP, &wrqu, NULL);
- }
- 
--static void ipw_irq_tasklet(struct ipw_priv *priv)
-+static void ipw_irq_tasklet(unsigned long data)
- {
-+	struct ipw_priv *priv = (struct ipw_priv *)data;
- 	u32 inta, inta_mask, handled = 0;
- 	unsigned long flags;
- 	int rc = 0;
-@@ -10680,7 +10681,7 @@ static int ipw_setup_deferred_work(struct ipw_priv *priv)
- 	INIT_WORK(&priv->qos_activate, ipw_bg_qos_activate);
- #endif				/* CONFIG_IPW2200_QOS */
- 
--	tasklet_init(&priv->irq_tasklet, (void (*)(unsigned long))
-+	tasklet_init(&priv->irq_tasklet,
- 		     ipw_irq_tasklet, (unsigned long)priv);
- 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c b/drivers/net/wireless/realtek/rtlwifi/pci.c
+index f88d26535978..25335bd2873b 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/pci.c
++++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
+@@ -1061,13 +1061,15 @@ static irqreturn_t _rtl_pci_interrupt(int irq, void *dev_id)
  	return ret;
+ }
+ 
+-static void _rtl_pci_irq_tasklet(struct ieee80211_hw *hw)
++static void _rtl_pci_irq_tasklet(unsigned long data)
+ {
++	struct ieee80211_hw *hw = (struct ieee80211_hw *)data;
+ 	_rtl_pci_tx_chk_waitq(hw);
+ }
+ 
+-static void _rtl_pci_prepare_bcn_tasklet(struct ieee80211_hw *hw)
++static void _rtl_pci_prepare_bcn_tasklet(unsigned long data)
+ {
++	struct ieee80211_hw *hw = (struct ieee80211_hw *)data;
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+ 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
+@@ -1193,10 +1195,10 @@ static void _rtl_pci_init_struct(struct ieee80211_hw *hw,
+ 
+ 	/*task */
+ 	tasklet_init(&rtlpriv->works.irq_tasklet,
+-		     (void (*)(unsigned long))_rtl_pci_irq_tasklet,
++		     _rtl_pci_irq_tasklet,
+ 		     (unsigned long)hw);
+ 	tasklet_init(&rtlpriv->works.irq_prepare_bcn_tasklet,
+-		     (void (*)(unsigned long))_rtl_pci_prepare_bcn_tasklet,
++		     _rtl_pci_prepare_bcn_tasklet,
+ 		     (unsigned long)hw);
+ 	INIT_WORK(&rtlpriv->works.lps_change_work,
+ 		  rtl_lps_change_work_callback);
 -- 
 2.20.1
 
