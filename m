@@ -2,98 +2,122 @@ Return-Path: <SRS0=dkGe=ZS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=0.2 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	TVD_SUBJ_WIPE_DEBT,URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1771C432C3
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Nov 2019 17:43:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1933DC432C3
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Nov 2019 17:56:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B6B4A2073F
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Nov 2019 17:43:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E167320678
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Nov 2019 17:56:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=kemnade.info header.i=@kemnade.info header.b="VKQR+Zj0"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="sN8rMBdF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728771AbfKZRnA (ORCPT
+        id S1727196AbfKZRz5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 26 Nov 2019 12:43:00 -0500
-Received: from mail.andi.de1.cc ([85.214.55.253]:52988 "EHLO mail.andi.de1.cc"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726200AbfKZRm7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Nov 2019 12:42:59 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=kemnade.info; s=20180802; h=Content-Transfer-Encoding:Content-Type:
-        MIME-Version:References:In-Reply-To:Message-ID:Subject:Cc:To:From:Date:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
-        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=UJNRgJYokU+UFBwtU2ynndrvNCEKdJJFP6ze1hNesKA=; b=VKQR+Zj0Q2r4WCNqxVBEMXCJjm
-        RRPVV3THF0fJGtGADLnmC3BHkJB8U1LtDHLaPwPHJlAQBz3ItPNT3J7gDYOaFtND5sNia0Ae0EW1+
-        NYUDqVaIHwiA2ZCjoGEkaup2w7a6HGwXYfTWOgZ30upF+ndNyu9OCENAbVNv71gvbTbQ=;
-Received: from p200300ccff0be6001a3da2fffebfd33a.dip0.t-ipconnect.de ([2003:cc:ff0b:e600:1a3d:a2ff:febf:d33a] helo=aktux)
-        by mail.andi.de1.cc with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.89)
-        (envelope-from <andreas@kemnade.info>)
-        id 1iZerL-0001ZJ-Vf; Tue, 26 Nov 2019 18:42:44 +0100
-Date:   Tue, 26 Nov 2019 18:42:42 +0100
-From:   Andreas Kemnade <andreas@kemnade.info>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     Discussions about the Letux Kernel <letux-kernel@openphoenux.org>,
-        "H. Nikolaus Schaller" <hns@goldelico.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        devicetree@vger.kernel.org, Ulf Hansson <ulf.hansson@linaro.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        kernel@pyra-handheld.com, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Alexios Zavras <alexios.zavras@intel.com>,
-        Rob Herring <robh+dt@kernel.org>, netdev@vger.kernel.org,
-        Thomas Gleixner <tglx@linutronix.de>
-Subject: Re: [Letux-kernel] [PATCH 0/2] net: wireless: ti: wl1251: sdio:
- remove ti, power-gpio
-Message-ID: <20191126184242.365603a2@aktux>
-In-Reply-To: <0101016ea8691109-5beadf07-b3ba-4d31-a516-c7f3015f2316-000000@us-west-2.amazonses.com>
-References: <cover.1574591746.git.hns@goldelico.com>
-        <0101016ea8691109-5beadf07-b3ba-4d31-a516-c7f3015f2316-000000@us-west-2.amazonses.com>
-X-Mailer: Claws Mail 3.17.3 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
+        Tue, 26 Nov 2019 12:55:57 -0500
+Received: from mail-pj1-f66.google.com ([209.85.216.66]:44855 "EHLO
+        mail-pj1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726101AbfKZRz4 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 26 Nov 2019 12:55:56 -0500
+Received: by mail-pj1-f66.google.com with SMTP id w8so8619363pjh.11;
+        Tue, 26 Nov 2019 09:55:56 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=psR0lc9V3Wlfquc+Ru02h/4BIxYapesjG8uBLemW7hI=;
+        b=sN8rMBdFIP6ykaiXexQPhfCmYQ/9qTmtAD0VRlwvbxiR9+ISfJB2y2m3KHsDyRcf0a
+         v7ZSbymfjpsXpyUfbKs5Y6UTicbUi59Yx7JLWLQ+L3cbvLqZDUnrCt+YLsi8MKnARYRP
+         af6osaeEiVghatzOx/ISWnohIoknKNOQXyUvncBuEVpZavn6OSwMQVoQZzqHCYGHnxEU
+         nOB0o0b/J5mMUK22msy5yjj8bYe5Yfhmj8alowlAjuMfUv3dYQXqZb+3kaRdUn8yD2aa
+         k0dIKkQS6kyFzd2o/qylEk4cyqa+KggJ5DfpFOndJqT8DIQJoWGNiFDp73aJZS6zvbMR
+         TSog==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=psR0lc9V3Wlfquc+Ru02h/4BIxYapesjG8uBLemW7hI=;
+        b=RumvShnB9kzadkZs8AvzfWEe0qbUmnH+DGPw/jAsZREtyMBJ3zrrSsbI22FWY9yQ1W
+         4bVZ3iM0yA+j/mXrJMSZDQLXYI+cMXluFDhLJs+ut91XNRS6H58J7GWdLaVaScWR47aH
+         SFhcarc4//NR4GxWNGtFVG9jwHhJKTWgrl394pv1mzYX2Y2ILhc/KlLpZoIND7GGLTLL
+         tJLXqYWhzG34kzwN4fl+RktSLog5pHFF2dfBYNb770Ku/KriPuSeKsNcndSEs4F1qvRU
+         WGuZL7nl2M1Qg+RZcYaYaUTJiRfvOiIE/ZvQBxYuDdPXngGjhHsbL6P0gcfkIrtpstLU
+         gY9g==
+X-Gm-Message-State: APjAAAWYD/2w8x8HsKsERYFq5de8HEbtFJ/sTBEbyl14SzOLeMkx4CS7
+        6BeWRIWd/bVS19HO/P5br5Q=
+X-Google-Smtp-Source: APXvYqzQNjolfc10t1hCAEzbsyosHT+jb6I2ufIehxJMfZz1bV1PZlexX3MQ4+Zdhu8Z3of/UcS5WA==
+X-Received: by 2002:a17:902:b60d:: with SMTP id b13mr36433120pls.145.1574790955800;
+        Tue, 26 Nov 2019 09:55:55 -0800 (PST)
+Received: from debian.net.fpt ([2405:4800:58f7:2f79:ce3b:4b9:a68f:959f])
+        by smtp.gmail.com with ESMTPSA id q6sm781577pfl.140.2019.11.26.09.55.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 26 Nov 2019 09:55:55 -0800 (PST)
+From:   Phong Tran <tranmanphong@gmail.com>
+To:     Larry.Finger@lwfinger.net, jakub.kicinski@netronome.com,
+        kvalo@codeaurora.org
+Cc:     tranmanphong@gmail.com, Wright.Feng@cypress.com,
+        arend.vanspriel@broadcom.com, davem@davemloft.net,
+        emmanuel.grumbach@intel.com, franky.lin@broadcom.com,
+        johannes.berg@intel.com, keescook@chromium.org,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        luciano.coelho@intel.com, netdev@vger.kernel.org,
+        p.figiel@camlintechnologies.com,
+        pieter-paul.giesberts@broadcom.com, pkshih@realtek.com,
+        rafal@milecki.pl, sara.sharon@intel.com,
+        shahar.s.matityahu@intel.com, yhchuang@realtek.com,
+        yuehaibing@huawei.com
+Subject: [Patch v2 1/4] b43legacy: Fix -Wcast-function-type
+Date:   Wed, 27 Nov 2019 00:55:26 +0700
+Message-Id: <20191126175529.10909-2-tranmanphong@gmail.com>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20191126175529.10909-1-tranmanphong@gmail.com>
+References: <20191125150215.29263-1-tranmanphong@gmail.com>
+ <20191126175529.10909-1-tranmanphong@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, 26 Nov 2019 15:51:28 +0000
-Kalle Valo <kvalo@codeaurora.org> wrote:
+correct usage prototype of callback in tasklet_init().
+Report by https://github.com/KSPP/linux/issues/20
 
-> "H. Nikolaus Schaller" <hns@goldelico.com> writes:
-> 
-> > The driver has been updated to use the mmc/sdio core
-> > which does full power control. So we do no longer need
-> > the power control gipo.
-> >
-> > Note that it is still needed for the SPI based interface
-> > (N900).
-> >
-> > Suggested by: Ulf Hansson <ulf.hansson@linaro.org>
-> > Tested by: H. Nikolaus Schaller <hns@goldelico.com> # OpenPandora 600MHz
-> >
-> > H. Nikolaus Schaller (2):
-> >   DTS: bindings: wl1251: mark ti,power-gpio as optional
-> >   net: wireless: ti: wl1251: sdio: remove ti,power-gpio
-> >
-> >  .../bindings/net/wireless/ti,wl1251.txt       |  3 +-
-> >  drivers/net/wireless/ti/wl1251/sdio.c         | 30 -------------------
-> >  2 files changed, 2 insertions(+), 31 deletions(-)  
-> 
-> Via which tree are these planned to go? Please always document that in
-> the cover letter so that maintainers don't need to guess.
-> 
-Hmm, this is about bisect issues and the former misc pandora
-fix/cleanup series now in linux-next that make you doubt it should go
-via wireless/net?
-So the question is whether it depends on that?
+Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Phong Tran <tranmanphong@gmail.com>
+---
+ drivers/net/wireless/broadcom/b43legacy/main.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-Regards,
-Andreas
+diff --git a/drivers/net/wireless/broadcom/b43legacy/main.c b/drivers/net/wireless/broadcom/b43legacy/main.c
+index 4325e91736eb..8b6b657c4b85 100644
+--- a/drivers/net/wireless/broadcom/b43legacy/main.c
++++ b/drivers/net/wireless/broadcom/b43legacy/main.c
+@@ -1275,8 +1275,9 @@ static void handle_irq_ucode_debug(struct b43legacy_wldev *dev)
+ }
+ 
+ /* Interrupt handler bottom-half */
+-static void b43legacy_interrupt_tasklet(struct b43legacy_wldev *dev)
++static void b43legacy_interrupt_tasklet(unsigned long data)
+ {
++	struct b43legacy_wldev *dev = (struct b43legacy_wldev *)data;
+ 	u32 reason;
+ 	u32 dma_reason[ARRAY_SIZE(dev->dma_reason)];
+ 	u32 merged_dma_reason = 0;
+@@ -3741,7 +3742,7 @@ static int b43legacy_one_core_attach(struct ssb_device *dev,
+ 	b43legacy_set_status(wldev, B43legacy_STAT_UNINIT);
+ 	wldev->bad_frames_preempt = modparam_bad_frames_preempt;
+ 	tasklet_init(&wldev->isr_tasklet,
+-		     (void (*)(unsigned long))b43legacy_interrupt_tasklet,
++		     b43legacy_interrupt_tasklet,
+ 		     (unsigned long)wldev);
+ 	if (modparam_pio)
+ 		wldev->__using_pio = true;
+-- 
+2.20.1
+
