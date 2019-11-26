@@ -7,157 +7,123 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0548AC432C3
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F9F4C33CA1
 	for <linux-wireless@archiver.kernel.org>; Tue, 26 Nov 2019 11:05:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D13B520727
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Nov 2019 11:05:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6560E20748
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Nov 2019 11:05:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="mms+ukOS";
-	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="BTlKhx0G"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="eFZhEQr9";
+	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="BLTMFpRC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727907AbfKZLEv (ORCPT
+        id S1727930AbfKZLE5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 26 Nov 2019 06:04:51 -0500
-Received: from a27-187.smtp-out.us-west-2.amazonses.com ([54.240.27.187]:43416
-        "EHLO a27-187.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727897AbfKZLEu (ORCPT
+        Tue, 26 Nov 2019 06:04:57 -0500
+Received: from a27-186.smtp-out.us-west-2.amazonses.com ([54.240.27.186]:49660
+        "EHLO a27-186.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727897AbfKZLE4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Nov 2019 06:04:50 -0500
+        Tue, 26 Nov 2019 06:04:56 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-        s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1574766289;
+        s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1574766295;
         h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References;
-        bh=3m7xIbOXTMmy6R+EoT7kve8bLI5gYaT9eYNnyLaMe/s=;
-        b=mms+ukOSvwAg5O29FeGmUO3ZwYmBRN1+0b+Gw+egQzE/UiAoraF6rcXDtVgQlzFn
-        5UI7Hiy44VDWSHIX+UZSKoJLnXAPKjrBXN0vGZEupRvrFqVtdtvdX/VhZAIUMy3biKI
-        tUcaLWzZNfdpsCBVfW6ui627+P3ZHBRZM6jXIFow=
+        bh=jkynW/q2+cFWecq3LsTGopGApzaLezmtVoJv+R+3Zl8=;
+        b=eFZhEQr9XQe4EkJqZ8a8vv4MffFmheM/d9kF52/BTVqqa0MINX9wcy928OKisYIG
+        CpRzQjynRKAmJ21+PnAg1dIrFoDUtW2MoMm4ybm+CJi8f5JLvLuv6rLwaERC9/LDd1a
+        m8pLyQVrZjMSSOGxBLHbZmyEB8vXHcjMt44IlmYA=
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-        s=gdwg2y3kokkkj5a55z2ilkup5wp5hhxx; d=amazonses.com; t=1574766289;
+        s=gdwg2y3kokkkj5a55z2ilkup5wp5hhxx; d=amazonses.com; t=1574766295;
         h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:Feedback-ID;
-        bh=3m7xIbOXTMmy6R+EoT7kve8bLI5gYaT9eYNnyLaMe/s=;
-        b=BTlKhx0GPTfr3zl/8mrU3Q6hVqLWyU+t4qxyV26CMZoxH1tt5PGlgMxsZfe2LcIq
-        Z6yUmFMGTcNZLMF+EDAM2IZpZ+uM/0aoMovQC0EHLVEuaedAGvfpmF+j0avxxR+/Lkj
-        r5NsHhgNYB/G1tPSH8sR5NHRdrHq0irdaNkgSKqE=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 33F85C447A9
+        bh=jkynW/q2+cFWecq3LsTGopGApzaLezmtVoJv+R+3Zl8=;
+        b=BLTMFpRCjvJPmYcFvuqrFkOlclMHUhaw01PwNhMesjtF16mI8KursL0laYJoOnFh
+        VeDevESWrdW4ihebEH/KoK4ZUVUuFI04wDZmwRnnAZTsRwrNbxukg9opR+lE+Bf2ygf
+        1AriOyakswRGi08axN3F/y6yKMgOUrjdYjB04Aws=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org ABC89C48B03
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
 To:     linux-wireless@vger.kernel.org
 Cc:     ath11k@lists.infradead.org
-Subject: [PATCH 04/10] ath11k: update tcl cmd descriptor parameters for STA mode
-Date:   Tue, 26 Nov 2019 11:04:49 +0000
-Message-ID: <0101016ea762a2e1-bc0f21cf-50dd-4253-886e-863658835374-000000@us-west-2.amazonses.com>
+Subject: [PATCH 07/10] ath11k: remove unused tx ring counters
+Date:   Tue, 26 Nov 2019 11:04:55 +0000
+Message-ID: <0101016ea762b952-f1141b05-ce6b-4329-aa05-d3a4cd8ea911-000000@us-west-2.amazonses.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1574766279-13105-1-git-send-email-kvalo@codeaurora.org>
 References: <1574766279-13105-1-git-send-email-kvalo@codeaurora.org>
-X-SES-Outgoing: 2019.11.26-54.240.27.187
+X-SES-Outgoing: 2019.11.26-54.240.27.186
 Feedback-ID: 1.us-west-2.CZuq2qbDmUIuT3qdvXlRHZZCpfZqZ4GtG9v3VKgRyF0=:AmazonSES
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Anilkumar Kolli <akolli@codeaurora.org>
+From: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
 
-It is observed that ath11k STA mode UL throughput is low.
-This is due to packets delivered to FW from TCL instead of TQM.
-TCL AST search fail causes packet delivered to FW, fix this by
-properly configuring the TCL address search type and ast_hash.
-STA UL throughput is improved 10times with 11AC AP.
+remove unused counter to avoid taking locks inorder to optimize
+cpu load.
 
-Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
+Using Flamegraph, cpu usage of ath11k_dp_tx() observed to be decreased
+from 5.58% to 3.74% with iperf traffic running with 80MHz bandwidth ap
+mode.
+
+Signed-off-by: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath11k/dp.c       | 9 ++++-----
- drivers/net/wireless/ath/ath11k/dp_rx.c    | 2 +-
- drivers/net/wireless/ath/ath11k/hal_desc.h | 5 ++---
- drivers/net/wireless/ath/ath11k/hal_tx.c   | 6 +++---
- drivers/net/wireless/ath/ath11k/hal_tx.h   | 4 ++--
- 5 files changed, 12 insertions(+), 14 deletions(-)
+ drivers/net/wireless/ath/ath11k/dp.h    | 1 -
+ drivers/net/wireless/ath/ath11k/dp_tx.c | 7 -------
+ 2 files changed, 8 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath11k/dp.c b/drivers/net/wireless/ath/ath11k/dp.c
-index aa2b28189cda..ff510e821a29 100644
---- a/drivers/net/wireless/ath/ath11k/dp.c
-+++ b/drivers/net/wireless/ath/ath11k/dp.c
-@@ -758,13 +758,12 @@ int ath11k_dp_htt_connect(struct ath11k_dp *dp)
+diff --git a/drivers/net/wireless/ath/ath11k/dp.h b/drivers/net/wireless/ath/ath11k/dp.h
+index eb0f3df131c5..db216f055c42 100644
+--- a/drivers/net/wireless/ath/ath11k/dp.h
++++ b/drivers/net/wireless/ath/ath11k/dp.h
+@@ -63,7 +63,6 @@ struct dp_tx_ring {
+ 	struct dp_srng tcl_data_ring;
+ 	struct dp_srng tcl_comp_ring;
+ 	struct idr txbuf_idr;
+-	u32 num_tx_pending;
+ 	/* Protects txbuf_idr and num_pending */
+ 	spinlock_t tx_idr_lock;
+ 	DECLARE_KFIFO_PTR(tx_status_fifo, struct hal_wbm_release_ring);
+diff --git a/drivers/net/wireless/ath/ath11k/dp_tx.c b/drivers/net/wireless/ath/ath11k/dp_tx.c
+index 51a02b8e66cc..a8b9557c2346 100644
+--- a/drivers/net/wireless/ath/ath11k/dp_tx.c
++++ b/drivers/net/wireless/ath/ath11k/dp_tx.c
+@@ -196,10 +196,6 @@ int ath11k_dp_tx(struct ath11k *ar, struct ath11k_vif *arvif,
  
- static void ath11k_dp_update_vdev_search(struct ath11k_vif *arvif)
- {
--	/* Enable AddrY (SA based search) for STA mode. All other modes it
--	 * is going to be AddrX (DA based search). For STA mode, set search
--	 * type based on AST value.
--	 */
-+	 /* For STA mode, enable address search index,
-+	  * tcl uses ast_hash value in the descriptor.
-+	  */
- 	switch (arvif->vdev_type) {
- 	case WMI_VDEV_TYPE_STA:
--		arvif->hal_addr_search_flags = HAL_TX_ADDRY_EN;
-+		arvif->hal_addr_search_flags = HAL_TX_ADDRX_EN;
- 		arvif->search_type = HAL_TX_ADDR_SEARCH_INDEX;
- 		break;
- 	case WMI_VDEV_TYPE_AP:
-diff --git a/drivers/net/wireless/ath/ath11k/dp_rx.c b/drivers/net/wireless/ath/ath11k/dp_rx.c
-index 7aade0314e61..396658be6f26 100644
---- a/drivers/net/wireless/ath/ath11k/dp_rx.c
-+++ b/drivers/net/wireless/ath/ath11k/dp_rx.c
-@@ -1312,7 +1312,7 @@ void ath11k_dp_htt_htc_t2h_msg_handler(struct ath11k_base *ab,
- 		ath11k_dp_get_mac_addr(resp->peer_map_ev.mac_addr_l32,
- 				       peer_mac_h16, mac_addr);
- 		ast_hash = FIELD_GET(HTT_T2H_PEER_MAP_INFO2_AST_HASH_VAL,
--				     resp->peer_map_ev.info1);
-+				     resp->peer_map_ev.info2);
- 		ath11k_peer_map_event(ab, vdev_id, peer_id, mac_addr, ast_hash);
- 		break;
- 	case HTT_T2H_MSG_TYPE_PEER_UNMAP:
-diff --git a/drivers/net/wireless/ath/ath11k/hal_desc.h b/drivers/net/wireless/ath/ath11k/hal_desc.h
-index 35e191b77271..5e200380cca4 100644
---- a/drivers/net/wireless/ath/ath11k/hal_desc.h
-+++ b/drivers/net/wireless/ath/ath11k/hal_desc.h
-@@ -934,9 +934,8 @@ struct hal_reo_flush_cache {
- #define HAL_TCL_DATA_CMD_INFO0_ENCRYPT_TYPE	GENMASK(7, 4)
- #define HAL_TCL_DATA_CMD_INFO0_SRC_BUF_SWAP	BIT(8)
- #define HAL_TCL_DATA_CMD_INFO0_LNK_META_SWAP	BIT(9)
--#define HAL_TCL_DATA_CMD_INFO0_SEARCH_TYPE	BIT(12)
--#define HAL_TCL_DATA_CMD_INFO0_ADDRX_EN		BIT(14)
--#define HAL_TCL_DATA_CMD_INFO0_ADDRY_EN		BIT(15)
-+#define HAL_TCL_DATA_CMD_INFO0_SEARCH_TYPE	GENMASK(13, 12)
-+#define HAL_TCL_DATA_CMD_INFO0_ADDR_EN		GENMASK(15, 14)
- #define HAL_TCL_DATA_CMD_INFO0_CMD_NUM		GENMASK(31, 16)
+ 	spin_unlock_bh(&tcl_ring->lock);
  
- #define HAL_TCL_DATA_CMD_INFO1_DATA_LEN		GENMASK(15, 0)
-diff --git a/drivers/net/wireless/ath/ath11k/hal_tx.c b/drivers/net/wireless/ath/ath11k/hal_tx.c
-index bb27591023fe..cbe549798762 100644
---- a/drivers/net/wireless/ath/ath11k/hal_tx.c
-+++ b/drivers/net/wireless/ath/ath11k/hal_tx.c
-@@ -52,9 +52,9 @@ void ath11k_hal_tx_cmd_desc_setup(struct ath11k_base *ab, void *cmd,
- 		FIELD_PREP(HAL_TCL_DATA_CMD_INFO0_ENCAP_TYPE, ti->encap_type) |
- 		FIELD_PREP(HAL_TCL_DATA_CMD_INFO0_ENCRYPT_TYPE,
- 			   ti->encrypt_type) |
--		FIELD_PREP(HAL_TCL_DATA_CMD_INFO0_ADDRX_EN,
--			   ti->addr_search_flags) |
--		FIELD_PREP(HAL_TCL_DATA_CMD_INFO0_ADDRY_EN,
-+		FIELD_PREP(HAL_TCL_DATA_CMD_INFO0_SEARCH_TYPE,
-+			   ti->search_type) |
-+		FIELD_PREP(HAL_TCL_DATA_CMD_INFO0_ADDR_EN,
- 			   ti->addr_search_flags) |
- 		FIELD_PREP(HAL_TCL_DATA_CMD_INFO0_CMD_NUM,
- 			   ti->meta_data_flags);
-diff --git a/drivers/net/wireless/ath/ath11k/hal_tx.h b/drivers/net/wireless/ath/ath11k/hal_tx.h
-index f955070bcf1e..5217eaf9da50 100644
---- a/drivers/net/wireless/ath/ath11k/hal_tx.h
-+++ b/drivers/net/wireless/ath/ath11k/hal_tx.h
-@@ -11,8 +11,8 @@
- #define HAL_TX_ADDRX_EN			1
- #define HAL_TX_ADDRY_EN			2
+-	spin_lock_bh(&tx_ring->tx_idr_lock);
+-	tx_ring->num_tx_pending++;
+-	spin_unlock_bh(&tx_ring->tx_idr_lock);
+-
+ 	atomic_inc(&ar->dp.num_tx_pending);
  
--#define HAL_TX_ADDR_SEARCH_INDEX	0
--#define HAL_TX_ADDR_SEARCH_DEFAULT	1
-+#define HAL_TX_ADDR_SEARCH_DEFAULT	0
-+#define HAL_TX_ADDR_SEARCH_INDEX	1
+ 	return 0;
+@@ -236,7 +232,6 @@ static void ath11k_dp_tx_free_txbuf(struct ath11k_base *ab, u8 mac_id,
+ 	skb_cb = ATH11K_SKB_CB(msdu);
  
- struct hal_tx_info {
- 	u16 meta_data_flags; /* %HAL_TCL_DATA_CMD_INFO0_META_ */
+ 	idr_remove(&tx_ring->txbuf_idr, msdu_id);
+-	tx_ring->num_tx_pending--;
+ 	spin_unlock_bh(&tx_ring->tx_idr_lock);
+ 
+ 	dma_unmap_single(ab->dev, skb_cb->paddr, msdu->len, DMA_TO_DEVICE);
+@@ -272,7 +267,6 @@ ath11k_dp_tx_htt_tx_complete_buf(struct ath11k_base *ab,
+ 	ar = skb_cb->ar;
+ 
+ 	idr_remove(&tx_ring->txbuf_idr, ts->msdu_id);
+-	tx_ring->num_tx_pending--;
+ 	spin_unlock_bh(&tx_ring->tx_idr_lock);
+ 
+ 	if (atomic_dec_and_test(&ar->dp.num_tx_pending))
+@@ -495,7 +489,6 @@ void ath11k_dp_tx_completion_handler(struct ath11k_base *ab, int ring_id)
+ 			continue;
+ 		}
+ 		idr_remove(&tx_ring->txbuf_idr, msdu_id);
+-		tx_ring->num_tx_pending--;
+ 		spin_unlock_bh(&tx_ring->tx_idr_lock);
+ 
+ 		ar = ab->pdevs[mac_id].ar;
 -- 
 2.7.4
 
