@@ -2,40 +2,38 @@ Return-Path: <SRS0=dkGe=ZS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 281FAC432C0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DDF71C43215
 	for <linux-wireless@archiver.kernel.org>; Tue, 26 Nov 2019 21:47:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 00FDD20678
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Nov 2019 21:47:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B3DC42064B
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Nov 2019 21:47:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727047AbfKZVrT (ORCPT
+        id S1727079AbfKZVrU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 26 Nov 2019 16:47:19 -0500
-Received: from smail.rz.tu-ilmenau.de ([141.24.186.67]:46392 "EHLO
+        Tue, 26 Nov 2019 16:47:20 -0500
+Received: from smail.rz.tu-ilmenau.de ([141.24.186.67]:46382 "EHLO
         smail.rz.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726118AbfKZVrT (ORCPT
+        with ESMTP id S1727022AbfKZVrT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 26 Nov 2019 16:47:19 -0500
 Received: from localhost.localdomain (unknown [141.24.207.101])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by smail.rz.tu-ilmenau.de (Postfix) with ESMTPSA id 061E458007E;
-        Tue, 26 Nov 2019 22:47:17 +0100 (CET)
+        by smail.rz.tu-ilmenau.de (Postfix) with ESMTPSA id DB56F580074;
+        Tue, 26 Nov 2019 22:47:16 +0100 (CET)
 From:   Markus Theil <markus.theil@tu-ilmenau.de>
 To:     nbd@nbd.name
 Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
         Stanislaw Gruszka <sgruszka@redhat.com>,
         Markus Theil <markus.theil@tu-ilmenau.de>
-Subject: [PATCH v9 3/6] mt76: mt76x02: add check for invalid vif idx
-Date:   Tue, 26 Nov 2019 22:47:01 +0100
-Message-Id: <20191126214704.27297-4-markus.theil@tu-ilmenau.de>
+Subject: [PATCH v9 0/6] mt76: channel switch support for USB devices
+Date:   Tue, 26 Nov 2019 22:46:58 +0100
+Message-Id: <20191126214704.27297-1-markus.theil@tu-ilmenau.de>
 X-Mailer: git-send-email 2.24.0
-In-Reply-To: <20191126214704.27297-1-markus.theil@tu-ilmenau.de>
-References: <20191126214704.27297-1-markus.theil@tu-ilmenau.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -43,29 +41,74 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On adding vifs the idx can become 1 + (7 & 7) = 8 for APs.
-Check against that, as only AP vif idx 0-7 is possible.
+This patch series adds channel switch support for mt76 usb interfaces.
+When testing, I noticed that between 5 or 7 consecutive beacons had the
+identical channel switch count set. After some debugging I found out,
+that beacon copying over usb took far too long (up to 700ms for one call
+of mt76x02u_pre_tbtt_work).
 
-Signed-off-by: Markus Theil <markus.theil@tu-ilmenau.de>
----
- drivers/net/wireless/mediatek/mt76/mt76x02_util.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Therefore the first five patches speed up beacon copying and provide beaconing
+fixes. The last patch enables channel switch support also for usb interfaces.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-index 889566b36a40..6073f8a4a8f6 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-@@ -325,7 +325,9 @@ mt76x02_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
- 	if (vif->type == NL80211_IFTYPE_STATION)
- 		idx += 8;
- 
--	if (dev->vif_mask & BIT(idx))
-+	/* vif is already set or idx is 8 for AP/Mesh/... */
-+	if (dev->vif_mask & BIT(idx) ||
-+	    (vif->type != NL80211_IFTYPE_STATION && idx > 7))
- 		return -EBUSY;
- 
- 	dev->vif_mask |= BIT(idx);
+Thanks to Stanislaw, Lorenzo and Felix for their help.
+
+v9:
+* use beacon_data_count instead of beacon_data_mask
+* add missing txwi copy again
+* move csa_check for usb under beacon iteration (send beacons and no ps frames
+  in case of finished csa)
+
+v8:
+* fix mbss beaconing
+* fix adding vifs with idx 8
+* fix memory leaks by dropping beacon buffer
+* permanently enable 7 additional bss to save another usb call and make
+  beacon masking easier
+* added beacon_prepare call again, which now also clears beacon_data_mask
+
+v7:
+* fix mbss beacon settings (incorrect try)
+* fix compilation with latest upstream
+
+v6:
+* use min_t in mt76u_copy
+* use round_up in mt76u_copy
+* use additional copy for mmio beacon set again
+
+v5:
+* ommit empty mt76x2u_channel_switch_beacon
+* copy txwi into beacon skb
+
+v4:
+* use multiple of 4 len for usb copy again
+
+v3:
+* fixed checkpatch errors
+
+v2:
+* correctly track beacon data mask
+* clean-ups
+* make channel switch fn static (reported by kbuild test robot)
+
+Markus Theil (6):
+  mt76: mt76x02: ommit beacon slot clearing
+  mt76: mt76x02: split beaconing
+  mt76: mt76x02: add check for invalid vif idx
+  mt76: mt76x02: remove a copy call for usb speedup
+  mt76: speed up usb bulk copy
+  mt76: mt76x02: add channel switch support for usb interfaces
+
+ drivers/net/wireless/mediatek/mt76/mt76.h     |  2 +-
+ drivers/net/wireless/mediatek/mt76/mt76x02.h  |  3 +-
+ .../wireless/mediatek/mt76/mt76x02_beacon.c   | 97 +++++++------------
+ .../net/wireless/mediatek/mt76/mt76x02_mac.c  |  2 +
+ .../net/wireless/mediatek/mt76/mt76x02_mac.h  |  5 +-
+ .../net/wireless/mediatek/mt76/mt76x02_mmio.c |  4 +
+ .../wireless/mediatek/mt76/mt76x02_usb_core.c | 22 +++--
+ .../net/wireless/mediatek/mt76/mt76x02_util.c |  6 +-
+ drivers/net/wireless/mediatek/mt76/usb.c      | 24 +++--
+ 9 files changed, 85 insertions(+), 80 deletions(-)
+
 -- 
 2.24.0
 
