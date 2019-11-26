@@ -2,111 +2,138 @@ Return-Path: <SRS0=dkGe=ZS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BFE54C432C3
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Nov 2019 11:04:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CFD9EC43215
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Nov 2019 11:05:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9995A20727
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Nov 2019 11:04:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9DAAE20748
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Nov 2019 11:05:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="ffYlX2bY";
-	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="hFitOCW9"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="WHFDta6y";
+	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="LPgx+Xpj"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727873AbfKZLEq (ORCPT
+        id S1727905AbfKZLEu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 26 Nov 2019 06:04:46 -0500
-Received: from a27-188.smtp-out.us-west-2.amazonses.com ([54.240.27.188]:48384
-        "EHLO a27-188.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726231AbfKZLEq (ORCPT
+        Tue, 26 Nov 2019 06:04:50 -0500
+Received: from a27-10.smtp-out.us-west-2.amazonses.com ([54.240.27.10]:36996
+        "EHLO a27-10.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726672AbfKZLEt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Nov 2019 06:04:46 -0500
+        Tue, 26 Nov 2019 06:04:49 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-        s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1574766285;
-        h=From:To:Cc:Subject:Date:Message-Id;
-        bh=EKXQcDsPK/bDtyYM/LEcq1mIgnehXkTX0ctPtZH6XMA=;
-        b=ffYlX2bYFDxTJpj7nyrArKPKNeJDweiZ4txHSMS+AA2S0XhLaVGOlTDPeRE2htlw
-        ss/V8HarS8X1XdBYaClVoFVmyazoNmS2+TtPmGfbeyeNuYyL6thBuf5IOtZljpHMWko
-        1APRHmQlFpuhICrXTXnlQB4qYfighaRfSim7O7zc=
+        s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1574766288;
+        h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References;
+        bh=N0KFSViNp6dbv8JN49RBq/u51L+g0F6cC8pD7HsH63o=;
+        b=WHFDta6y6EBM1ldPRHE1tZm5WWP5uggvCk7v1J8jiICy3LXHxCwkwydhSqxwx5hJ
+        RMieYWqPghu5yxPSSGGcEUK6XeALAtD1P+awmm+/E2SRYa0DMebBzlfU4O9ogm4SLKT
+        eZemZhwXTWv/1HWq4jvh9j3Ds6fuUrXTuTQ/vfC0=
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-        s=gdwg2y3kokkkj5a55z2ilkup5wp5hhxx; d=amazonses.com; t=1574766285;
-        h=From:To:Cc:Subject:Date:Message-Id:Feedback-ID;
-        bh=EKXQcDsPK/bDtyYM/LEcq1mIgnehXkTX0ctPtZH6XMA=;
-        b=hFitOCW9fqKzLuMc0LECvKDW+WtLSgzbiXIVK2k/dq0Zxz6TW+DcXGzmK8Z8Uq6W
-        c9AbBuDDWCrRmeyUkBLo8HCHWxiliHg7hEiQrU8CW1HDbdVqqm3m2URvyAJ9pS/CzPV
-        FMG+6hR+ZzTqw8HVMOiKlQF/D3PSLg9asW6By6a4=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 91E01C433CB
+        s=gdwg2y3kokkkj5a55z2ilkup5wp5hhxx; d=amazonses.com; t=1574766288;
+        h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:Feedback-ID;
+        bh=N0KFSViNp6dbv8JN49RBq/u51L+g0F6cC8pD7HsH63o=;
+        b=LPgx+Xpj8wVCOaUor63tKcMjrOBb/o3+TcuCA+UZmVT6Hw8KY2bpn1zQf8ElfRLZ
+        Uqem+8pzyljEDgWkYc/FGgEQj95ku1Egx+ZYDuqT0qeJ7sjBf2Cnd/uSiIHynleQrGw
+        IOXUbhMWbn1Ps18jUC150TFC7I8EYKh1mXdvHH2w=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org CD4E3C447A1
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
 To:     linux-wireless@vger.kernel.org
 Cc:     ath11k@lists.infradead.org
-Subject: [PATCH 00/10] ath11k: second round of post-bringup patches
-Date:   Tue, 26 Nov 2019 11:04:45 +0000
-Message-ID: <0101016ea76290b1-e34a2ab5-b550-4b38-8a3a-d9e249b22f74-000000@us-west-2.amazonses.com>
+Subject: [PATCH 03/10] ath11k: fix wmi service ready ext tlv parsing
+Date:   Tue, 26 Nov 2019 11:04:48 +0000
+Message-ID: <0101016ea7629e86-f417ea8d-3ed3-4794-aa02-5c21b621e022-000000@us-west-2.amazonses.com>
 X-Mailer: git-send-email 2.7.4
-X-SES-Outgoing: 2019.11.26-54.240.27.188
+In-Reply-To: <1574766279-13105-1-git-send-email-kvalo@codeaurora.org>
+References: <1574766279-13105-1-git-send-email-kvalo@codeaurora.org>
+X-SES-Outgoing: 2019.11.26-54.240.27.10
 Feedback-ID: 1.us-west-2.CZuq2qbDmUIuT3qdvXlRHZZCpfZqZ4GtG9v3VKgRyF0=:AmazonSES
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Here's second of round of ath11k patches from ath11k-post-bringup
-branch[1] which got queued while ath11k was in review.
+From: Anilkumar Kolli <akolli@codeaurora.org>
 
-Major features here are support for new firmare version and
-performance improvements.
+The current ath11k driver failed to parse
+wmi_tlv_svc_rdy_ext_parse if there is change in
+wmi_mac_phy_capabilities length with below error.
 
-Please review.
+ath11k c000000.wifi1: failed to extract mac caps, idx :0
+ath11k c000000.wifi1: failed to parse tlv -22
 
-Kalle
+This is needed to get firmware version
+WLAN.HK.2.0.0.1-00240-QCAHKSWPL_SILICONZ-1 working.
 
-[1] https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/log/?h=ath11k-post-bringup
+Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath11k/wmi.c | 14 +++++++++++---
+ drivers/net/wireless/ath/ath11k/wmi.h |  1 -
+ 2 files changed, 11 insertions(+), 4 deletions(-)
 
-Anilkumar Kolli (2):
-  ath11k: fix wmi service ready ext tlv parsing
-  ath11k: update tcl cmd descriptor parameters for STA mode
-
-Ganesh Sesetti (1):
-  ath11k: Fix htt stats sounding info and pdev cca stats
-
-John Crispin (1):
-  ath11k: optimize RX path latency
-
-Karthikeyan Periyasamy (2):
-  ath11k: fix resource leak in ath11k_mac_sta_state
-  ath11k: avoid WMM param truncation
-
-Pradeep Kumar Chitrapu (1):
-  ath11k: remove unused tx ring counters
-
-Sriram R (1):
-  ath11k: Fix skb_panic observed during msdu coalescing
-
-Vasanthakumar Thiagarajan (1):
-  ath11k: Fix target crash due to WBM_IDLE_LINK ring desc shortage
-
-Vikas Patel (1):
-  ath11k: Fixing TLV length issue in peer pktlog WMI command
-
- drivers/net/wireless/ath/ath11k/dp.c       |  15 ++-
- drivers/net/wireless/ath/ath11k/dp.h       |   5 +-
- drivers/net/wireless/ath/ath11k/dp_rx.c    |  71 ++++++++------
- drivers/net/wireless/ath/ath11k/dp_tx.c    |   7 --
- drivers/net/wireless/ath/ath11k/hal_desc.h |   5 +-
- drivers/net/wireless/ath/ath11k/hal_rx.c   |  49 +---------
- drivers/net/wireless/ath/ath11k/hal_rx.h   |  28 +-----
- drivers/net/wireless/ath/ath11k/hal_tx.c   |   6 +-
- drivers/net/wireless/ath/ath11k/hal_tx.h   |   4 +-
- drivers/net/wireless/ath/ath11k/mac.c      | 144 +++++++++++++++++------------
- drivers/net/wireless/ath/ath11k/wmi.c      |  16 +++-
- drivers/net/wireless/ath/ath11k/wmi.h      |   5 +-
- 12 files changed, 162 insertions(+), 193 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
+index 2c3c973f5f7c..ccebf7ce420a 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.c
++++ b/drivers/net/wireless/ath/ath11k/wmi.c
+@@ -310,7 +310,7 @@ ath11k_pull_mac_phy_cap_svc_ready_ext(struct ath11k_pdev_wmi *wmi_handle,
+ 	if (phy_id >= hal_reg_caps->num_phy)
+ 		return -EINVAL;
+ 
+-	mac_phy_caps = &wmi_mac_phy_caps[phy_idx];
++	mac_phy_caps = wmi_mac_phy_caps + phy_idx;
+ 
+ 	pdev->pdev_id = mac_phy_caps->pdev_id;
+ 	pdev_cap->supported_bands = mac_phy_caps->supported_bands;
+@@ -2959,6 +2959,15 @@ static int ath11k_wmi_tlv_mac_phy_caps_parse(struct ath11k_base *soc,
+ 	if (svc_rdy_ext->n_mac_phy_caps >= svc_rdy_ext->tot_phy_id)
+ 		return -ENOBUFS;
+ 
++	len = min_t(u16, len, sizeof(struct wmi_mac_phy_capabilities));
++	if (!svc_rdy_ext->n_mac_phy_caps) {
++		svc_rdy_ext->mac_phy_caps = kzalloc((svc_rdy_ext->tot_phy_id) * len,
++						    GFP_ATOMIC);
++		if (!svc_rdy_ext->mac_phy_caps)
++			return -ENOMEM;
++	}
++
++	memcpy(svc_rdy_ext->mac_phy_caps + svc_rdy_ext->n_mac_phy_caps, ptr, len);
+ 	svc_rdy_ext->n_mac_phy_caps++;
+ 	return 0;
+ }
+@@ -3092,8 +3101,6 @@ static int ath11k_wmi_tlv_svc_rdy_ext_parse(struct ath11k_base *ab,
+ 			svc_rdy_ext->hw_mode_done = true;
+ 		} else if (!svc_rdy_ext->mac_phy_done) {
+ 			svc_rdy_ext->n_mac_phy_caps = 0;
+-			svc_rdy_ext->mac_phy_caps =
+-					(struct wmi_mac_phy_capabilities *)ptr;
+ 			ret = ath11k_wmi_tlv_iter(ab, ptr, len,
+ 						  ath11k_wmi_tlv_mac_phy_caps_parse,
+ 						  svc_rdy_ext);
+@@ -3134,6 +3141,7 @@ static int ath11k_service_ready_ext_event(struct ath11k_base *ab,
+ 		return ret;
+ 	}
+ 
++	kfree(svc_rdy_ext.mac_phy_caps);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.h b/drivers/net/wireless/ath/ath11k/wmi.h
+index 7d5690c65279..6a0468094694 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.h
++++ b/drivers/net/wireless/ath/ath11k/wmi.h
+@@ -2276,7 +2276,6 @@ struct wmi_hw_mode_capabilities {
+ #define WMI_MAX_HECAP_PHY_SIZE                 (3)
+ 
+ struct wmi_mac_phy_capabilities {
+-	u32 tlv_header;
+ 	u32 hw_mode_id;
+ 	u32 pdev_id;
+ 	u32 phy_id;
 -- 
 2.7.4
 
