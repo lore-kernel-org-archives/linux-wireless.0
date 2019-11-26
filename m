@@ -2,61 +2,60 @@ Return-Path: <SRS0=dkGe=ZS=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB36AC432C0
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Nov 2019 17:56:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5BBBC432C0
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Nov 2019 17:56:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8D68020678
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 Nov 2019 17:56:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8A0A720684
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 Nov 2019 17:56:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DhuCaLSM"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OWHmv0rw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727277AbfKZR4J (ORCPT
+        id S1727165AbfKZRzx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 26 Nov 2019 12:56:09 -0500
-Received: from mail-pf1-f193.google.com ([209.85.210.193]:45301 "EHLO
-        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726101AbfKZR4H (ORCPT
+        Tue, 26 Nov 2019 12:55:53 -0500
+Received: from mail-pg1-f194.google.com ([209.85.215.194]:38002 "EHLO
+        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726101AbfKZRzw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 Nov 2019 12:56:07 -0500
-Received: by mail-pf1-f193.google.com with SMTP id z4so9532582pfn.12;
-        Tue, 26 Nov 2019 09:56:07 -0800 (PST)
+        Tue, 26 Nov 2019 12:55:52 -0500
+Received: by mail-pg1-f194.google.com with SMTP id t3so8925013pgl.5;
+        Tue, 26 Nov 2019 09:55:50 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=cimGLUIkJsl8gm8ukuHoHlW7vil473DnKZ8zwyUQQ6Q=;
-        b=DhuCaLSMIWKcX4cbFcFQmm6eNFdgLBBsljbtTfiWCF9CBejP6B4fhMVm8XHThZ62oR
-         IEErrh05KoflnPN8ZtJAPp7+SJ8Kn9h+A2HbggKeHlh7mcqjtu79f5CYZDlXN50RTHFl
-         No8I04EaIVJNiny2yEyVuOmj+AxmbA8tM8TncGWvvOqgUVpH1ELuatijZJMKDDnUNbuW
-         wO4xc7zrYF9Lz/QY9G/Xko1zvUulSioEVxol8WC7+++yErKSNM5Ncjw0u643gdxb0W85
-         uVtBE9y9kHeNMofQhQr0lGqyMrC30KpSjOkk9Pp+Y/ec4SZn3Yj3Pk/xqGfKMHE9zLFf
-         cPig==
+        bh=TvvdTSqyYu1UERC53GMtsiAam2mDxhTlJf/JArDCSrQ=;
+        b=OWHmv0rwNliBmYsjj8smIocF1JTsvaq9ItSMbiJn6nyDPUqSmrmj/rnuEL29GILHg/
+         5c2AQ/giRF9hTOccWsp96yMWBot8xnUJKhxJIbs1hpknA+oJPABUjrPrvlf3XekzVB/q
+         HHx3oOD8EzhFuRgGmWqQNa5jlkWi3tlz0ZCzizLTnaxSf/WL2zi9eJ9ixGLncAHmrGa6
+         PCWoqGGTC2YK4TgVADQbwO3BfKKDzvNDZqUZubw+3oOlIEMjSR8pXjm3yHch0dB6yMsl
+         YLYI4byIxjzAHH0IRgFWRaQYwVlfenObZpd16jdE15X3gHc0IjQSc2IkqRJSfw1bpkUu
+         6u+A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=cimGLUIkJsl8gm8ukuHoHlW7vil473DnKZ8zwyUQQ6Q=;
-        b=XLK51c84ffqd92dZs311jPqZkHKT/ugbP5fOerRohI1Bc2ma7jb6khPefMrY+L7uiQ
-         h4y2tNm0mncHDL+PxTjyQEkXIsZQ9o2g+B5dWyjsgGNWZpO71I1k1e8RJd9juJmp2aQ9
-         FgBRRLBN+BQsjehUHzRfmfg1VzybEj1QjCn0lav5TVG0V8jDD+f8d4ni5/sb1MpfFsSO
-         YoMysRsuyeibeAuJM1/AL/ovrKeSgzADU4vbOyyFBecMXH4KJwi65UBH57WwHtbCpKwu
-         RIjCNhVtUM59lBVSx6ImEMwKIsB8HpisyVRFLwM3J9G8K3awRe/6NVlDTWJjSQFnvdZL
-         LZuQ==
-X-Gm-Message-State: APjAAAX71beiub5ztccfGw47QLVauyzJcM/cvgU+3faOBmmHxblOvfPn
-        QgtDcN0J4x1szx0Z/WSZwRw=
-X-Google-Smtp-Source: APXvYqzUU4WN7h8GDDrp+6bdxlfUTzw51p9KKIWu0zHzB0vdWwmNblZgHUoVXIwnSZFfvUoSjfyUIw==
-X-Received: by 2002:a63:c01:: with SMTP id b1mr25248919pgl.342.1574790967015;
-        Tue, 26 Nov 2019 09:56:07 -0800 (PST)
+        bh=TvvdTSqyYu1UERC53GMtsiAam2mDxhTlJf/JArDCSrQ=;
+        b=sH31WfQkpFTLgqda8eyBruqgE3eXik5DlZq6zGeeCAIPa7GT62vtRhFUOyz1C2a4AQ
+         ZVYECAGQ/ua4JUkh5s6vHSWVMxIR2J0pNP+czyboQhEJSnbxYUIsbW6aQ430ftl4uLFE
+         qdnjOyVt8bL2l4ZrKb1XGpuUKjS1t2MQ93GLD2VlvTd09YPKyqL4/DJ2Uk4o7mu7zpyI
+         r2XhGIF1FmrCZPpLGh3oZRL6dRoWukELDmY3mYFIj84+xjwHrghYRCBaNJnlaEMwpIAL
+         lLjGK9O8q9DtsmtHSKm3S8u9iSp5tBYd0MZlz6xTy/H5C3b7/rsvy0oONlKZd7WN/H0y
+         1AvA==
+X-Gm-Message-State: APjAAAWKM9lvHWAf/vS1t+M3j/5bXISiY9WO6ZADM+TLEUx55MlUfG7/
+        AXVPLB9IyJAXjJvM6+qDu/c=
+X-Google-Smtp-Source: APXvYqyOpcmH+LQLNqKMpeT7iy2nxBR7WsUOcR0vrbLmbLTb3Hw+LcDWtk0d4hjF2hFpb5IMctFCHg==
+X-Received: by 2002:a63:5851:: with SMTP id i17mr39852959pgm.181.1574790950285;
+        Tue, 26 Nov 2019 09:55:50 -0800 (PST)
 Received: from debian.net.fpt ([2405:4800:58f7:2f79:ce3b:4b9:a68f:959f])
-        by smtp.gmail.com with ESMTPSA id q6sm781577pfl.140.2019.11.26.09.56.01
+        by smtp.gmail.com with ESMTPSA id q6sm781577pfl.140.2019.11.26.09.55.44
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 26 Nov 2019 09:56:06 -0800 (PST)
+        Tue, 26 Nov 2019 09:55:49 -0800 (PST)
 From:   Phong Tran <tranmanphong@gmail.com>
 To:     Larry.Finger@lwfinger.net, jakub.kicinski@netronome.com,
         kvalo@codeaurora.org
@@ -71,13 +70,12 @@ Cc:     tranmanphong@gmail.com, Wright.Feng@cypress.com,
         rafal@milecki.pl, sara.sharon@intel.com,
         shahar.s.matityahu@intel.com, yhchuang@realtek.com,
         yuehaibing@huawei.com
-Subject: [Patch v2 3/4] iwlegacy: Fix -Wcast-function-type
-Date:   Wed, 27 Nov 2019 00:55:28 +0700
-Message-Id: <20191126175529.10909-4-tranmanphong@gmail.com>
+Subject: [Patch v2 0/4] wireless: Fix -Wcast-function-type 
+Date:   Wed, 27 Nov 2019 00:55:25 +0700
+Message-Id: <20191126175529.10909-1-tranmanphong@gmail.com>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191126175529.10909-1-tranmanphong@gmail.com>
+In-Reply-To: <20191125150215.29263-1-tranmanphong@gmail.com>
 References: <20191125150215.29263-1-tranmanphong@gmail.com>
- <20191126175529.10909-1-tranmanphong@gmail.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -85,63 +83,27 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-correct usage prototype of callback in tasklet_init().
-Report by https://github.com/KSPP/linux/issues/20
+Change with v1:
+ - align commit subject prefix with review comments.
+ - split patch "drivers: net: intel: Fix -Wcast-function-type"
+   into "ipw2x00" and "iwlegacy"
+ - update tested by as
+https://lore.kernel.org/linux-wireless/8eb8d6fd-de20-2d04-8210-ad8304d7da9e@lwfinger.net/
 
-Signed-off-by: Phong Tran <tranmanphong@gmail.com>
----
- drivers/net/wireless/intel/iwlegacy/3945-mac.c | 5 +++--
- drivers/net/wireless/intel/iwlegacy/4965-mac.c | 5 +++--
- 2 files changed, 6 insertions(+), 4 deletions(-)
+Phong Tran (4):
+  b43legacy: Fix -Wcast-function-type
+  ipw2x00: Fix -Wcast-function-type
+  iwlegacy: Fix -Wcast-function-type
+  rtlwifi: rtl_pci: Fix -Wcast-function-type
 
-diff --git a/drivers/net/wireless/intel/iwlegacy/3945-mac.c b/drivers/net/wireless/intel/iwlegacy/3945-mac.c
-index 4fbcc7fba3cc..e2e9c3e8fff5 100644
---- a/drivers/net/wireless/intel/iwlegacy/3945-mac.c
-+++ b/drivers/net/wireless/intel/iwlegacy/3945-mac.c
-@@ -1376,8 +1376,9 @@ il3945_dump_nic_error_log(struct il_priv *il)
- }
- 
- static void
--il3945_irq_tasklet(struct il_priv *il)
-+il3945_irq_tasklet(unsigned long data)
- {
-+	struct il_priv *il = (struct il_priv *)data;
- 	u32 inta, handled = 0;
- 	u32 inta_fh;
- 	unsigned long flags;
-@@ -3403,7 +3404,7 @@ il3945_setup_deferred_work(struct il_priv *il)
- 	timer_setup(&il->watchdog, il_bg_watchdog, 0);
- 
- 	tasklet_init(&il->irq_tasklet,
--		     (void (*)(unsigned long))il3945_irq_tasklet,
-+		     il3945_irq_tasklet,
- 		     (unsigned long)il);
- }
- 
-diff --git a/drivers/net/wireless/intel/iwlegacy/4965-mac.c b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-index ffb705b18fb1..5fe17039a337 100644
---- a/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-@@ -4344,8 +4344,9 @@ il4965_synchronize_irq(struct il_priv *il)
- }
- 
- static void
--il4965_irq_tasklet(struct il_priv *il)
-+il4965_irq_tasklet(unsigned long data)
- {
-+	struct il_priv *il = (struct il_priv *)data;
- 	u32 inta, handled = 0;
- 	u32 inta_fh;
- 	unsigned long flags;
-@@ -6238,7 +6239,7 @@ il4965_setup_deferred_work(struct il_priv *il)
- 	timer_setup(&il->watchdog, il_bg_watchdog, 0);
- 
- 	tasklet_init(&il->irq_tasklet,
--		     (void (*)(unsigned long))il4965_irq_tasklet,
-+		     il4965_irq_tasklet,
- 		     (unsigned long)il);
- }
- 
+ drivers/net/wireless/broadcom/b43legacy/main.c |  5 +++--
+ drivers/net/wireless/intel/ipw2x00/ipw2100.c   |  7 ++++---
+ drivers/net/wireless/intel/ipw2x00/ipw2200.c   |  5 +++--
+ drivers/net/wireless/intel/iwlegacy/3945-mac.c |  5 +++--
+ drivers/net/wireless/intel/iwlegacy/4965-mac.c |  5 +++--
+ drivers/net/wireless/realtek/rtlwifi/pci.c     | 10 ++++++----
+ 6 files changed, 22 insertions(+), 15 deletions(-)
+
 -- 
 2.20.1
 
