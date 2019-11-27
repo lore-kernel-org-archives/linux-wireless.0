@@ -2,106 +2,85 @@ Return-Path: <SRS0=23TN=ZT=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3E15C432C0
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Nov 2019 14:08:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA06EC43215
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Nov 2019 14:08:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B86372068E
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Nov 2019 14:08:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 98E36206F0
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Nov 2019 14:08:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="hgz5lKve";
-	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="FYK2p8GA"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="o9bL7iac";
+	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="eJbV9lhv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726603AbfK0OIq (ORCPT
+        id S1726696AbfK0OIr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 27 Nov 2019 09:08:46 -0500
-Received: from a27-21.smtp-out.us-west-2.amazonses.com ([54.240.27.21]:34200
-        "EHLO a27-21.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
+        Wed, 27 Nov 2019 09:08:47 -0500
+Received: from a27-56.smtp-out.us-west-2.amazonses.com ([54.240.27.56]:45904
+        "EHLO a27-56.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
         by vger.kernel.org with ESMTP id S1726320AbfK0OIq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 27 Nov 2019 09:08:46 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-        s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1574863725;
-        h=From:To:Cc:Subject:Date:Message-Id;
-        bh=aIj7nzLay9iEOLJMRq4RsRPW9XMEtdFOI6JAYVZMHAs=;
-        b=hgz5lKveQaiikRD7ksbtDAK1l5krrY9AXhJnXy5I9s0nUqbKmdevOW1k4rhjH+FW
-        f1P10Mfbknyi9ue6cT8hfT0Iei3gN5FKCdIhXXqvPFRXGW668WGao6tGRUwc4CekONm
-        MfxJojBz9nMLrK/hCgfsni+17zhX2ebHi3Jt2axo=
+        s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1574863726;
+        h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References;
+        bh=md7/j1QlrNqqav8CI6ERp+evYArBgW9ZjxuEETO7bUg=;
+        b=o9bL7iac6rkeVQvdmWEWGkOCgYPfkXOHShWW8mNLRHx1P5qS7BC9hOJPtfgCQreZ
+        JeW3vmyj5+w0fv5F+OpgkGclCn/gq5SV5yLRSFxytji/tsP3Qnu/6hXtaKneVh1p39g
+        xI4/CZEbCUPYvf5NJ9MyR4kN4eRqHNum5OqYd0aU=
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-        s=gdwg2y3kokkkj5a55z2ilkup5wp5hhxx; d=amazonses.com; t=1574863725;
-        h=From:To:Cc:Subject:Date:Message-Id:Feedback-ID;
-        bh=aIj7nzLay9iEOLJMRq4RsRPW9XMEtdFOI6JAYVZMHAs=;
-        b=FYK2p8GA6LDfTG+6rSKxD+yivz4gkgh2WErNnDmhGdhUjtkhrCoPvtMfq0z8OzEB
-        QNgel+YDjpUFFElq3hMrT6WfdKxQtLWQLVyHz6J9/bAeeZgktpl1swOUJHHvGgxg3xo
-        P3bRFTnueVnloXffYMF+D+vmFXKAqxhee5we7Lno=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 23AFBC433A2
+        s=gdwg2y3kokkkj5a55z2ilkup5wp5hhxx; d=amazonses.com; t=1574863726;
+        h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:Feedback-ID;
+        bh=md7/j1QlrNqqav8CI6ERp+evYArBgW9ZjxuEETO7bUg=;
+        b=eJbV9lhv7Cr0sw4sxnAZhHa0lcM3ikxGqMe65srOcrXQFds+GmV3mDPC2VVsJUeV
+        UBwpbQtYS2V1iJDAHLCUaPFExYfAvhlR0RrO2qV9AtZl1UXeSYnWgWiRKg+V40uTgtr
+        1T8XC8lTkqoS8oNd0hXP5ofVzizrLbL4Txk7leOE=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 76122C447A4
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
 To:     linux-wireless@vger.kernel.org
 Cc:     ath11k@lists.infradead.org
-Subject: [PATCH 00/10] ath11k: third round of post-bringup patches
+Subject: [PATCH 01/10] ath11k: tracing: fix ath11k tracing
 Date:   Wed, 27 Nov 2019 14:08:45 +0000
-Message-ID: <0101016ead3161dc-8576af35-5fd2-4ac5-805e-4791a3f7b65d-000000@us-west-2.amazonses.com>
+Message-ID: <0101016ead3164f5-3135488d-f71b-4fc9-834f-08a735724e15-000000@us-west-2.amazonses.com>
 X-Mailer: git-send-email 2.7.4
-X-SES-Outgoing: 2019.11.27-54.240.27.21
+In-Reply-To: <1574863720-25728-1-git-send-email-kvalo@codeaurora.org>
+References: <1574863720-25728-1-git-send-email-kvalo@codeaurora.org>
+X-SES-Outgoing: 2019.11.27-54.240.27.56
 Feedback-ID: 1.us-west-2.CZuq2qbDmUIuT3qdvXlRHZZCpfZqZ4GtG9v3VKgRyF0=:AmazonSES
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Here's third round of ath11k patches from ath11k-post-bringup
-branch[1] which got queued while ath11k was in review.
+From: Anilkumar Kolli <akolli@codeaurora.org>
 
-Major features here are support for controlling tx power per station
-and fixing tracing.
+Add missing tracing subsystem define.
 
-Please review.
+Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath11k/trace.h | 3 +++
+ 1 file changed, 3 insertions(+)
 
-Kalle
-
-[1] https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/log/?h=ath11k-post-bringup
-
-
-Anilkumar Kolli (4):
-  ath11k: tracing: fix ath11k tracing
-  ath11k: qmi clean up ce and HTC service config update
-  ath11k: qmi clean up in ath11k_qmi_wlanfw_wlan_cfg_send()
-  ath11k: pktlog: fix sending/using the pdev id
-
-Govindaraj Saminathan (1):
-  ath11k: unlock mutex during failure in qmi fw ready
-
-Karthikeyan Periyasamy (2):
-  ath11k: avoid burst time conversion logic
-  ath11k: avoid use_after_free in ath11k_dp_rx_msdu_coalesce API
-
-Maharaja Kennadyrajan (1):
-  ath11k: add support for controlling tx power to a station
-
-Sriram R (1):
-  ath11k: add necessary peer assoc params in wmi dbg
-
-Venkateswara Naralasetty (1):
-  ath11k: update bawindow size in delba process
-
- drivers/net/wireless/ath/ath11k/ahb.c   |  9 +++----
- drivers/net/wireless/ath/ath11k/ce.h    |  9 +++++--
- drivers/net/wireless/ath/ath11k/core.c  |  1 +
- drivers/net/wireless/ath/ath11k/debug.h |  3 +++
- drivers/net/wireless/ath/ath11k/dp_rx.c | 46 +++++++++++++++++++++------------
- drivers/net/wireless/ath/ath11k/mac.c   | 44 ++++++++++++++++++++++++++-----
- drivers/net/wireless/ath/ath11k/qmi.c   | 28 ++++++++++----------
- drivers/net/wireless/ath/ath11k/qmi.h   |  4 +--
- drivers/net/wireless/ath/ath11k/trace.h |  3 +++
- drivers/net/wireless/ath/ath11k/wmi.c   | 19 ++++++++++----
- 10 files changed, 114 insertions(+), 52 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/ath11k/trace.h b/drivers/net/wireless/ath/ath11k/trace.h
+index 400f759568e1..8700a622be7b 100644
+--- a/drivers/net/wireless/ath/ath11k/trace.h
++++ b/drivers/net/wireless/ath/ath11k/trace.h
+@@ -17,6 +17,9 @@
+ static inline void trace_ ## name(proto) {}
+ #endif /* !CONFIG_ATH11K_TRACING || __CHECKER__ */
+ 
++#undef TRACE_SYSTEM
++#define TRACE_SYSTEM ath11k
++
+ TRACE_EVENT(ath11k_htt_pktlog,
+ 	    TP_PROTO(struct ath11k *ar, const void *buf, u16 buf_len),
+ 
 -- 
 2.7.4
 
