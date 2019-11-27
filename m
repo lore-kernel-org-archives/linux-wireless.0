@@ -7,156 +7,136 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF215C432C0
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Nov 2019 14:08:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1431DC432C3
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Nov 2019 14:09:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C0B642068E
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Nov 2019 14:08:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DAF2F2068E
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Nov 2019 14:08:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="B+gk/cCf";
-	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="FQrJxAu/"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="HVzdyK+X";
+	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="X/kjd6HA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727040AbfK0OI6 (ORCPT
+        id S1727060AbfK0OI7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 27 Nov 2019 09:08:58 -0500
-Received: from a27-185.smtp-out.us-west-2.amazonses.com ([54.240.27.185]:41632
-        "EHLO a27-185.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726603AbfK0OI5 (ORCPT
+        Wed, 27 Nov 2019 09:08:59 -0500
+Received: from a27-186.smtp-out.us-west-2.amazonses.com ([54.240.27.186]:60528
+        "EHLO a27-186.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727028AbfK0OI6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 27 Nov 2019 09:08:57 -0500
+        Wed, 27 Nov 2019 09:08:58 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
         s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1574863737;
         h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References;
-        bh=cXdhKXZBus14skFVGOBJQUV52OckLP9J0eoWnT1d3dw=;
-        b=B+gk/cCf+NmX2Dgo/PF2avEbur8BYALtU+5+vn6x4GBP8WwWVksN78W7BmlmEl8w
-        OVjOlUuHjwNXl9WRQVKx4AD7oAv3BTNPc7mKiQC5zonCQoX1lfEKYQjliT0qkFS9MFI
-        podso6JKJW+QogO+SxvHxILPVQx4shq6eicz70fk=
+        bh=CGkP6mfdXMFi153HECcp6YM7zGCP5SXP0zGbtk0+pTU=;
+        b=HVzdyK+X3BP2yz1wF6xh7VerkZRxiwTomlFAAfKFFLDCCqWth8A6X7jxUhsUpSKv
+        KrrYg0RN8YQDabfaTA/UOZaSmXtqL5OAUsPoLBYrddwzj6LYKml5GReclFUNvecMggk
+        PgCVh1R/IegFn/Jw111Jjtjc61t/acMo0J5cR+fE=
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
         s=gdwg2y3kokkkj5a55z2ilkup5wp5hhxx; d=amazonses.com; t=1574863737;
         h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:Feedback-ID;
-        bh=cXdhKXZBus14skFVGOBJQUV52OckLP9J0eoWnT1d3dw=;
-        b=FQrJxAu/konrrpplbcmUYK/HHEOMOlIu7i6ljXQhhH/+EA1wLEzy5TQVRtQfL4yJ
-        efqJxqWkqzJtTmaJ0MSjVUjZpKTgQhEPqIPVU3tHS39liepimdu4I7qpM6y/f71ZCb3
-        62RCBe/RBLhLz64EChJHCjYcRMtt5j20dBqaI/O4=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 3ED85C447B4
+        bh=CGkP6mfdXMFi153HECcp6YM7zGCP5SXP0zGbtk0+pTU=;
+        b=X/kjd6HAQJINb0e0Gm1YviWJRUtEit1aC3pY3z/SC4vOL6IcInZgRNf9M3hA5CvD
+        o5eJHs+7mWrgUz7hzF3PIO6s4/c+AVtscc5NE3QIxUq3zMUaFAYbh82Bkx6cWrIijxO
+        C25kF7AUXYpRF8wvLvI7QAMLDZ6+gBHopqH1aLaU=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org C9F69C48B02
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
 To:     linux-wireless@vger.kernel.org
 Cc:     ath11k@lists.infradead.org
-Subject: [PATCH 08/10] ath11k: add support for controlling tx power to a station
+Subject: [PATCH 07/10] ath11k: update bawindow size in delba process
 Date:   Wed, 27 Nov 2019 14:08:57 +0000
-Message-ID: <0101016ead3190bd-20f4b056-6124-49a6-85d7-3792da0f6ffe-000000@us-west-2.amazonses.com>
+Message-ID: <0101016ead319335-51f84b3b-8c6c-41c9-a1be-18e62aead1b6-000000@us-west-2.amazonses.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1574863720-25728-1-git-send-email-kvalo@codeaurora.org>
 References: <1574863720-25728-1-git-send-email-kvalo@codeaurora.org>
-X-SES-Outgoing: 2019.11.27-54.240.27.185
+X-SES-Outgoing: 2019.11.27-54.240.27.186
 Feedback-ID: 1.us-west-2.CZuq2qbDmUIuT3qdvXlRHZZCpfZqZ4GtG9v3VKgRyF0=:AmazonSES
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Maharaja Kennadyrajan <mkenna@codeaurora.org>
+From: Venkateswara Naralasetty <vnaralas@codeaurora.org>
 
-This patch will add the support to control the transmit power
-for traffic to a station associated with the AP.
+Currenly in delba process calling ath11k_peer_rx_tid_delete() updates
+reo with desc invalid and add tid queue to the flush list. If station
+send data traffic without addba req and before tid flush, hw gives
+those packets as invalid desc reo error. Since we are dropping these
+invalid desc packets results in traffic stall.
 
-Underlying firmware will enforce that the maximum tx power will
-be based on the regulatory requirements. If the user given
-transmit power is greater than the allowed tx power in the given
-channel, then the firmware will use the maximum tx power in the
-same channel.
+This patch fix this issue by updating the reo queue with bawindow size 1
+instead of tid removal in delba process.
 
-Max and Min tx power values will depends on number of tx chain
-masks. The allowed tx power range values are from 6 to 23.
-
-When 0 is sent to the firmware as tx power, it will revert to
-the default tx power for the station.
-
-Signed-off-by: Maharaja Kennadyrajan <mkenna@codeaurora.org>
+Signed-off-by: Venkateswara Naralasetty <vnaralas@codeaurora.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath11k/debug.h |  3 +++
- drivers/net/wireless/ath/ath11k/mac.c   | 37 +++++++++++++++++++++++++++++++++
- 2 files changed, 40 insertions(+)
+ drivers/net/wireless/ath/ath11k/dp_rx.c | 28 +++++++++++++++++++---------
+ 1 file changed, 19 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath11k/debug.h b/drivers/net/wireless/ath/ath11k/debug.h
-index aef33f83c9b1..a317a7bdb9a2 100644
---- a/drivers/net/wireless/ath/ath11k/debug.h
-+++ b/drivers/net/wireless/ath/ath11k/debug.h
-@@ -9,6 +9,9 @@
- #include "hal_tx.h"
- #include "trace.h"
- 
-+#define ATH11K_TX_POWER_MAX_VAL	70
-+#define ATH11K_TX_POWER_MIN_VAL	0
+diff --git a/drivers/net/wireless/ath/ath11k/dp_rx.c b/drivers/net/wireless/ath/ath11k/dp_rx.c
+index f87bd327b082..8c21925a522a 100644
+--- a/drivers/net/wireless/ath/ath11k/dp_rx.c
++++ b/drivers/net/wireless/ath/ath11k/dp_rx.c
+@@ -641,7 +641,8 @@ void ath11k_peer_rx_tid_cleanup(struct ath11k *ar, struct ath11k_peer *peer)
+ static int ath11k_peer_rx_tid_reo_update(struct ath11k *ar,
+ 					 struct ath11k_peer *peer,
+ 					 struct dp_rx_tid *rx_tid,
+-					 u32 ba_win_sz, u16 ssn)
++					 u32 ba_win_sz, u16 ssn,
++					 bool update_ssn)
+ {
+ 	struct ath11k_hal_reo_cmd cmd = {0};
+ 	int ret;
+@@ -649,10 +650,13 @@ static int ath11k_peer_rx_tid_reo_update(struct ath11k *ar,
+ 	cmd.addr_lo = lower_32_bits(rx_tid->paddr);
+ 	cmd.addr_hi = upper_32_bits(rx_tid->paddr);
+ 	cmd.flag = HAL_REO_CMD_FLG_NEED_STATUS;
+-	cmd.upd0 = HAL_REO_CMD_UPD0_BA_WINDOW_SIZE |
+-		   HAL_REO_CMD_UPD0_SSN;
++	cmd.upd0 = HAL_REO_CMD_UPD0_BA_WINDOW_SIZE;
+ 	cmd.ba_window_size = ba_win_sz;
+-	cmd.upd2 = FIELD_PREP(HAL_REO_CMD_UPD2_SSN, ssn);
 +
- enum ath11k_debug_mask {
- 	ATH11K_DBG_AHB		= 0x00000001,
- 	ATH11K_DBG_WMI		= 0x00000002,
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index 412c258143ca..5231c4fa0e38 100644
---- a/drivers/net/wireless/ath/ath11k/mac.c
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -2842,6 +2842,41 @@ static int ath11k_mac_op_sta_state(struct ieee80211_hw *hw,
- 	return ret;
- }
- 
-+static int ath11k_mac_op_sta_set_txpwr(struct ieee80211_hw *hw,
-+				       struct ieee80211_vif *vif,
-+				       struct ieee80211_sta *sta)
-+{
-+	struct ath11k *ar = hw->priv;
-+	struct ath11k_vif *arvif = (void *)vif->drv_priv;
-+	int ret = 0;
-+	s16 txpwr;
-+
-+	if (sta->txpwr.type == NL80211_TX_POWER_AUTOMATIC) {
-+		txpwr = 0;
-+	} else {
-+		txpwr = sta->txpwr.power;
-+		if (!txpwr)
-+			return -EINVAL;
++	if (update_ssn) {
++		cmd.upd0 |= HAL_REO_CMD_UPD0_SSN;
++		cmd.upd2 = FIELD_PREP(HAL_REO_CMD_UPD2_SSN, ssn);
 +	}
-+
-+	if (txpwr > ATH11K_TX_POWER_MAX_VAL || txpwr < ATH11K_TX_POWER_MIN_VAL)
-+		return -EINVAL;
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	ret = ath11k_wmi_set_peer_param(ar, sta->addr, arvif->vdev_id,
-+					WMI_PEER_USE_FIXED_PWR, txpwr);
+ 
+ 	ret = ath11k_dp_tx_send_reo_cmd(ar->ab, rx_tid,
+ 					HAL_REO_CMD_UPDATE_RX_QUEUE, &cmd,
+@@ -722,7 +726,7 @@ int ath11k_peer_rx_tid_setup(struct ath11k *ar, const u8 *peer_mac, int vdev_id,
+ 	if (rx_tid->active) {
+ 		paddr = rx_tid->paddr;
+ 		ret = ath11k_peer_rx_tid_reo_update(ar, peer, rx_tid,
+-						    ba_win_sz, ssn);
++						    ba_win_sz, ssn, true);
+ 		spin_unlock_bh(&ab->base_lock);
+ 		if (ret) {
+ 			ath11k_warn(ab, "failed to update reo for rx tid %d\n", tid);
+@@ -832,12 +836,18 @@ int ath11k_dp_rx_ampdu_stop(struct ath11k *ar,
+ 	paddr = peer->rx_tid[params->tid].paddr;
+ 	active = peer->rx_tid[params->tid].active;
+ 
+-	ath11k_peer_rx_tid_delete(ar, peer, params->tid);
++	if (!active) {
++		spin_unlock_bh(&ab->base_lock);
++		return 0;
++	}
+ 
++	ret = ath11k_peer_rx_tid_reo_update(ar, peer, peer->rx_tid, 1, 0, false);
+ 	spin_unlock_bh(&ab->base_lock);
+-
+-	if (!active)
+-		return 0;
 +	if (ret) {
-+		ath11k_warn(ar->ab, "failed to set tx power for station ret: %d\n",
-+			    ret);
-+		goto out;
++		ath11k_warn(ab, "failed to update reo for rx tid %d: %d\n",
++			    params->tid, ret);
++		return ret;
 +	}
-+
-+out:
-+	mutex_unlock(&ar->conf_mutex);
-+	return ret;
-+}
-+
- static void ath11k_mac_op_sta_rc_update(struct ieee80211_hw *hw,
- 					struct ieee80211_vif *vif,
- 					struct ieee80211_sta *sta,
-@@ -5311,6 +5346,7 @@ static const struct ieee80211_ops ath11k_ops = {
- 	.cancel_hw_scan                 = ath11k_mac_op_cancel_hw_scan,
- 	.set_key                        = ath11k_mac_op_set_key,
- 	.sta_state                      = ath11k_mac_op_sta_state,
-+	.sta_set_txpwr			= ath11k_mac_op_sta_set_txpwr,
- 	.sta_rc_update			= ath11k_mac_op_sta_rc_update,
- 	.conf_tx                        = ath11k_mac_op_conf_tx,
- 	.set_antenna			= ath11k_mac_op_set_antenna,
-@@ -5571,6 +5607,7 @@ static int ath11k_mac_register(struct ath11k *ar)
- 	ar->hw->wiphy->n_iface_combinations = ARRAY_SIZE(ath11k_if_comb);
  
- 	wiphy_ext_feature_set(ar->hw->wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
-+	wiphy_ext_feature_set(ar->hw->wiphy, NL80211_EXT_FEATURE_STA_TX_PWR);
- 
- 	ar->hw->wiphy->cipher_suites = cipher_suites;
- 	ar->hw->wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
+ 	ret = ath11k_wmi_peer_rx_reorder_queue_setup(ar, vdev_id,
+ 						     params->sta->addr, paddr,
 -- 
 2.7.4
 
