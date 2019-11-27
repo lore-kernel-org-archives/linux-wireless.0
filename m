@@ -7,125 +7,87 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5287CC432C3
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Nov 2019 14:08:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8072DC432C0
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Nov 2019 14:08:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2A2932068E
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 Nov 2019 14:08:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 586AE2068E
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 Nov 2019 14:08:54 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="NnlpBor+";
-	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="YRA5tJzY"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="md3w4vCM";
+	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="YyeoowwR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727004AbfK0OIv (ORCPT
+        id S1727016AbfK0OIx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 27 Nov 2019 09:08:51 -0500
-Received: from a27-186.smtp-out.us-west-2.amazonses.com ([54.240.27.186]:60528
-        "EHLO a27-186.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726985AbfK0OIv (ORCPT
+        Wed, 27 Nov 2019 09:08:53 -0500
+Received: from a27-187.smtp-out.us-west-2.amazonses.com ([54.240.27.187]:51462
+        "EHLO a27-187.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726320AbfK0OIw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 27 Nov 2019 09:08:51 -0500
+        Wed, 27 Nov 2019 09:08:52 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-        s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1574863730;
+        s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1574863732;
         h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References;
-        bh=HeqadJXTb/e90a+A5/3KPeCsZUX0H5OR6kAqWpL2A9E=;
-        b=NnlpBor+WuxgDPXzjuPCdnO2A8p8PUFm8nRAr9R0pyYQImjWikvmbhdMrIEAiDe9
-        W9Ji4/xehiqBjvbo5xqipsxMg4FC+CglNmiDbo+wNaIfLS5WCd8EzaxNSgUjIrTbNvh
-        3T/1z4lPu/AiNurXc0+2dA04O3CU+LfqVIEHe/ko=
+        bh=HV4smCB74VYZJ5K875gZdWZLAK/+PVmUbYzdYi4213g=;
+        b=md3w4vCMagpuSVFj8n3TkSgVUeojKuFrj5ddyOkITEbIojVH+M3FXiJI8qucoTNh
+        R/vuUkezPBaU+mYWz+Qwe1DWiK4+Y11jHfxtMVNSPnDF/M9VqMpM7iu19khNMho9ad3
+        79E/D06vPbCxcE/c0P0dsygMvFcx7wwpsucNgzps=
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-        s=gdwg2y3kokkkj5a55z2ilkup5wp5hhxx; d=amazonses.com; t=1574863730;
+        s=gdwg2y3kokkkj5a55z2ilkup5wp5hhxx; d=amazonses.com; t=1574863732;
         h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:Feedback-ID;
-        bh=HeqadJXTb/e90a+A5/3KPeCsZUX0H5OR6kAqWpL2A9E=;
-        b=YRA5tJzYNx66hzpNzkBzgM0lGE0WtVOd3+Sni0juLX4TvobsbW6qabP8Fw5keb35
-        Rw1KldE22wa1xgOsXcly5PXOdCtCsrRtd8CJXKBDMAVcNOedaB5jf95MJdUEgE8+wDx
-        SZmoZVbI9qnJGWXLmYnm1Ia3Z3iAwtsPIJtX/ngw=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 8CC12C447B7
+        bh=HV4smCB74VYZJ5K875gZdWZLAK/+PVmUbYzdYi4213g=;
+        b=YyeoowwREI1frskS5ysfMmyT57wWYDNHoeerVu+foyqK9Sy9QGOF4NC3EofF04VH
+        rQdmc3WOJC94ledJnfK8t7ICdYkPPlYX1Udi+zclXW5BKKty9OFtbWCYM05s/EoipLt
+        /EE+PcUUzjQUCj9zix3pSXR+aoiXOIGtG+kdQZ5E=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org EA7D3C447B4
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
 To:     linux-wireless@vger.kernel.org
 Cc:     ath11k@lists.infradead.org
-Subject: [PATCH 04/10] ath11k: pktlog: fix sending/using the pdev id
-Date:   Wed, 27 Nov 2019 14:08:50 +0000
-Message-ID: <0101016ead3176e9-4ce1305f-5b82-4490-bf38-9caa4ddd9105-000000@us-west-2.amazonses.com>
+Subject: [PATCH 05/10] ath11k: avoid burst time conversion logic
+Date:   Wed, 27 Nov 2019 14:08:52 +0000
+Message-ID: <0101016ead317d3d-cba324be-eca5-4e96-94c1-59aae273bda7-000000@us-west-2.amazonses.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1574863720-25728-1-git-send-email-kvalo@codeaurora.org>
 References: <1574863720-25728-1-git-send-email-kvalo@codeaurora.org>
-X-SES-Outgoing: 2019.11.27-54.240.27.186
+X-SES-Outgoing: 2019.11.27-54.240.27.187
 Feedback-ID: 1.us-west-2.CZuq2qbDmUIuT3qdvXlRHZZCpfZqZ4GtG9v3VKgRyF0=:AmazonSES
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Anilkumar Kolli <akolli@codeaurora.org>
+From: Karthikeyan Periyasamy <periyasa@codeaurora.org>
 
-Fixes sending the pdev id(0,1,2 for mac0, mac1, mac2)
-to FW in wmi cmd pktlog enable/disable.
+WMI_VDEV_SET_WMM_PARAMS commmand expects the txoplimit param in the units of
+32 microseconds. convert the txop unit from 32 microseconds to absolute
+microseconds leads to the higher burst values which is incorrect. so no need
+to convert the txop unit from 32 microseconds to absolute microseconds.
 
-Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
+Signed-off-by: Karthikeyan Periyasamy <periyasa@codeaurora.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath11k/dp_rx.c | 8 +++++---
- drivers/net/wireless/ath/ath11k/wmi.c   | 6 +++---
- 2 files changed, 8 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/ath11k/mac.c | 7 +------
+ 1 file changed, 1 insertion(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath11k/dp_rx.c b/drivers/net/wireless/ath/ath11k/dp_rx.c
-index acad74658e64..67efa247bf65 100644
---- a/drivers/net/wireless/ath/ath11k/dp_rx.c
-+++ b/drivers/net/wireless/ath/ath11k/dp_rx.c
-@@ -1265,7 +1265,6 @@ static void ath11k_htt_pktlog(struct ath11k_base *ab, struct sk_buff *skb)
- 	u8 pdev_id;
- 
- 	len = FIELD_GET(HTT_T2H_PPDU_STATS_INFO_PAYLOAD_SIZE, data->hdr);
+diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+index 6f82fdbbd358..412c258143ca 100644
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -3023,12 +3023,7 @@ static int ath11k_mac_op_conf_tx(struct ieee80211_hw *hw,
+ 	p->cwmin = params->cw_min;
+ 	p->cwmax = params->cw_max;
+ 	p->aifs = params->aifs;
 -
- 	if (len > ATH11K_HTT_PKTLOG_MAX_SIZE) {
- 		ath11k_warn(ab, "htt pktlog buffer size %d, expected < %d\n",
- 			    len,
-@@ -1274,8 +1273,11 @@ static void ath11k_htt_pktlog(struct ath11k_base *ab, struct sk_buff *skb)
- 	}
+-	/* The channel time duration programmed in the HW is in absolute
+-	 * microseconds, while mac80211 gives the txop in units of
+-	 * 32 microseconds.
+-	 */
+-	p->txop = params->txop * 32;
++	p->txop = params->txop;
  
- 	pdev_id = FIELD_GET(HTT_T2H_PPDU_STATS_INFO_PDEV_ID, data->hdr);
--	pdev_id = DP_HW2SW_MACID(pdev_id);
--	ar = ab->pdevs[pdev_id].ar;
-+	ar = ath11k_mac_get_ar_by_pdev_id(ab, pdev_id);
-+	if (!ar) {
-+		ath11k_warn(ab, "invalid pdev id %d on htt pktlog\n", pdev_id);
-+		return;
-+	}
- 
- 	trace_ath11k_htt_pktlog(ar, data->payload, len);
- }
-diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
-index aae6e76330da..f349bf2c1ee8 100644
---- a/drivers/net/wireless/ath/ath11k/wmi.c
-+++ b/drivers/net/wireless/ath/ath11k/wmi.c
-@@ -2321,7 +2321,7 @@ int ath11k_wmi_pdev_peer_pktlog_filter(struct ath11k *ar, u8 *addr, u8 enable)
- 	cmd->tlv_header = FIELD_PREP(WMI_TLV_TAG, WMI_TAG_PDEV_PEER_PKTLOG_FILTER_CMD) |
- 			  FIELD_PREP(WMI_TLV_LEN, sizeof(*cmd) - TLV_HDR_SIZE);
- 
--	cmd->pdev_id = ar->pdev->pdev_id;
-+	cmd->pdev_id = DP_HW2SW_MACID(ar->pdev->pdev_id);
- 	cmd->num_mac = 1;
- 	cmd->enable = enable;
- 
-@@ -2419,7 +2419,7 @@ int ath11k_wmi_pdev_pktlog_enable(struct ath11k *ar, u32 pktlog_filter)
- 	cmd->tlv_header = FIELD_PREP(WMI_TLV_TAG, WMI_TAG_PDEV_PKTLOG_ENABLE_CMD) |
- 			  FIELD_PREP(WMI_TLV_LEN, sizeof(*cmd) - TLV_HDR_SIZE);
- 
--	cmd->pdev_id = ar->pdev->pdev_id;
-+	cmd->pdev_id = DP_HW2SW_MACID(ar->pdev->pdev_id);
- 	cmd->evlist = pktlog_filter;
- 	cmd->enable = ATH11K_WMI_PKTLOG_ENABLE_FORCE;
- 
-@@ -2449,7 +2449,7 @@ int ath11k_wmi_pdev_pktlog_disable(struct ath11k *ar)
- 	cmd->tlv_header = FIELD_PREP(WMI_TLV_TAG, WMI_TAG_PDEV_PKTLOG_DISABLE_CMD) |
- 			  FIELD_PREP(WMI_TLV_LEN, sizeof(*cmd) - TLV_HDR_SIZE);
- 
--	cmd->pdev_id = ar->pdev->pdev_id;
-+	cmd->pdev_id = DP_HW2SW_MACID(ar->pdev->pdev_id);
- 
- 	ret = ath11k_wmi_cmd_send(wmi, skb,
- 				  WMI_PDEV_PKTLOG_DISABLE_CMDID);
+ 	ret = ath11k_wmi_send_wmm_update_cmd_tlv(ar, arvif->vdev_id,
+ 						 &arvif->wmm_params);
 -- 
 2.7.4
 
