@@ -4,55 +4,55 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C064EC432C3
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 Nov 2019 17:25:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B7FCC432C0
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 Nov 2019 17:25:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9A639217D6
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 Nov 2019 17:25:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 64B80216F4
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 Nov 2019 17:25:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1574961916;
-	bh=TJEAl71rmxZeQDQFzQGbQEafJzjNuTW3OiiQLv+5DMw=;
+	s=default; t=1574961921;
+	bh=b4/AmTEV92WrE9X3EffjoPEtgDbvxRWEPGW8xFeckBY=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=iiKcSQiN/bFDATWeI9dX4kUqkwZiq+wIavHN4ZLZJOsLlp+KyMNpvzzS6QuAQSqin
-	 8lOlFObWpb9cDhGWp1rzM0viTtN2Lan69h17zqHPuaRNiCJO6RowMFN41NHWXsLgda
-	 AEJtQpyY5cVgW7b7u+iLEzBEiSZJbbvtcPg0p5Xg=
+	b=BPIEuCogdNeFkqhLx3enlDqTNF6IPzDtdlKBnntt0oNzrhVYEI0InKZznnqr6NidC
+	 myx2S4rIdPVkBt4iqzMB9g6vXknGiXIO0d3OWU3RPo4RSt+QzJVAdgcaVAho3qWS/h
+	 ZSqAqRkqkWqFbdy1BWSRMVTQqk3w4YyrOWUc2hOE=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727126AbfK1RZG (ORCPT
+        id S1726722AbfK1RYp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 28 Nov 2019 12:25:06 -0500
-Received: from mail-lj1-f195.google.com ([209.85.208.195]:45002 "EHLO
-        mail-lj1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726730AbfK1RYq (ORCPT
+        Thu, 28 Nov 2019 12:24:45 -0500
+Received: from mail-lf1-f68.google.com ([209.85.167.68]:42688 "EHLO
+        mail-lf1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726446AbfK1RYo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 Nov 2019 12:24:46 -0500
-Received: by mail-lj1-f195.google.com with SMTP id c19so2244048lji.11;
-        Thu, 28 Nov 2019 09:24:45 -0800 (PST)
+        Thu, 28 Nov 2019 12:24:44 -0500
+Received: by mail-lf1-f68.google.com with SMTP id y19so20572152lfl.9;
+        Thu, 28 Nov 2019 09:24:42 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=zEpgrcz5cY6Ra8WYykk85CUZbzbFys1lSb0pPL5E4ss=;
-        b=IZz51qFvTrq5K8SzBG4uH0UuzRAXCOVzKPEu8hKgjsKa2HYJbbKOi169jss2LnqM9s
-         y/k1cQ1ffTE3qg4KMmjmRZrKh1gfIhc0M9v3LVWM4JTczyrtL3skOfaVofSPUjgY1R3H
-         eXHS/aZDen3NZYhUJTSXIa9Piwvv0Q8sE0rp2trTmTJuzNrVZkEIXloEPtxe3v8aqpwk
-         w2H0I4oPJwdQCp3pcUX6pEm7R3VT7p3QacYOYV4w+M1iK0cBmBjt8F80I5+62c+CjRgc
-         Vzdz7voP0r56W8Qf+aRN3iN46s3K+h0oloBTXGd6kUvZAhS8N8DpP2giaRob/b4CWrtt
-         +JvA==
-X-Gm-Message-State: APjAAAWfZkrTNZITy12z2oAn/zr17OmuCDeHjyWqa7WtMMfQbzmWpHPs
-        GPoJ8GvADPEVRSwXPAv0hjI=
-X-Google-Smtp-Source: APXvYqxD73DK18Dce9vMPPWdSB6pO3ua+Sf+1evEb3MHPpO0BdRfc+0cLAeSf6U6oIO+cPPKHirUYA==
-X-Received: by 2002:a2e:8509:: with SMTP id j9mr33787504lji.247.1574961884451;
-        Thu, 28 Nov 2019 09:24:44 -0800 (PST)
+        bh=trn2oJruIhuwCs6xMuGwp0kYiOcQXsbNZbrdFQNLYJE=;
+        b=QteH4IQ22KTDPseojpdNhFGKl9L1O/chT62Cik94gJLML6M5X7nVARktSDXUmZZ8FL
+         i07qSUjq7mGwrPVXO5ZUPGCQX+DXqenJR4dGvJN4Tq8OQ4WHLP96rBcVtw//+ypwXP+P
+         CYTYtOHRVAL2BJnLMGGL6WkXamiEwomXIZrpr1buPUYnBY5sZ7bUsJagi3qNfZtZhQCp
+         sJp+NivfJCZz8UwZt6mM5A0MT8KFkWidpMR8gIVCb22lgqosMvtxTzCcfrhMW9sTQceg
+         EJOoMC2DVQTgZvCRMeLb3xS0VRq2YaIW4JOSwD4UHCO76LZKhsuc2zVFeof+kMJM8AAX
+         apyg==
+X-Gm-Message-State: APjAAAWUEz9E8kLGd9smY7h2Kz44Loc3ODsNTd4F/9ClQnq511AXYXdM
+        NN93MqYIWloPDAZu8CRt8cc=
+X-Google-Smtp-Source: APXvYqxtH+XIdpH4HnL/JWO08m2iRo/IyYF6xtb7plDsp4uwvtDcMSNpC+r46yKkqLPgibeG4e5ejg==
+X-Received: by 2002:a19:da1a:: with SMTP id r26mr34062739lfg.60.1574961881917;
+        Thu, 28 Nov 2019 09:24:41 -0800 (PST)
 Received: from xi.terra (c-14b8e655.07-184-6d6c6d4.bbcust.telenor.se. [85.230.184.20])
-        by smtp.gmail.com with ESMTPSA id t8sm8786109lfl.51.2019.11.28.09.24.41
+        by smtp.gmail.com with ESMTPSA id 145sm4249850ljj.69.2019.11.28.09.24.41
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 28 Nov 2019 09:24:42 -0800 (PST)
+        Thu, 28 Nov 2019 09:24:41 -0800 (PST)
 Received: from johan by xi.terra with local (Exim 4.92.3)
         (envelope-from <johan@xi.terra>)
-        id 1iaNWz-0006wg-Pg; Thu, 28 Nov 2019 18:24:41 +0100
+        id 1iaNWz-0006wR-HU; Thu, 28 Nov 2019 18:24:41 +0100
 From:   Johan Hovold <johan@kernel.org>
 To:     Amitkumar Karwar <amitkarwar@gmail.com>,
         Siva Rebbagondla <siva8118@gmail.com>,
@@ -60,11 +60,15 @@ To:     Amitkumar Karwar <amitkarwar@gmail.com>,
 Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org,
         Johan Hovold <johan@kernel.org>,
+        syzbot+b563b7f8dbe8223a51e8@syzkaller.appspotmail.com,
         stable <stable@vger.kernel.org>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: [PATCH 4/5] rsi: fix non-atomic allocation in completion handler
-Date:   Thu, 28 Nov 2019 18:22:03 +0100
-Message-Id: <20191128172204.26600-5-johan@kernel.org>
+        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
+        Fariya Fatima <fariyaf@gmail.com>
+Subject: [PATCH 1/5] rsi: fix use-after-free on failed probe and unbind
+Date:   Thu, 28 Nov 2019 18:22:00 +0100
+Message-Id: <20191128172204.26600-2-johan@kernel.org>
 X-Mailer: git-send-email 2.24.0
 In-Reply-To: <20191128172204.26600-1-johan@kernel.org>
 References: <20191128172204.26600-1-johan@kernel.org>
@@ -75,80 +79,68 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-USB completion handlers are called in atomic context and must
-specifically not allocate memory using GFP_KERNEL.
+Make sure to stop both URBs before returning after failed probe as well
+as on disconnect to avoid use-after-free in the completion handler.
 
-Fixes: a1854fae1414 ("rsi: improve RX packet handling in USB interface")
-Cc: stable <stable@vger.kernel.org> # 4.17
+Reported-by: syzbot+b563b7f8dbe8223a51e8@syzkaller.appspotmail.com
+Fixes: a4302bff28e2 ("rsi: add bluetooth rx endpoint")
+Fixes: dad0d04fa7ba ("rsi: Add RS9113 wireless driver")
+Cc: stable <stable@vger.kernel.org>     # 3.15
+Cc: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
 Cc: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Cc: Amitkumar Karwar <amit.karwar@redpinesignals.com>
+Cc: Fariya Fatima <fariyaf@gmail.com>
 Signed-off-by: Johan Hovold <johan@kernel.org>
 ---
- drivers/net/wireless/rsi/rsi_91x_usb.c | 13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
+ drivers/net/wireless/rsi/rsi_91x_usb.c | 18 +++++++++++++++++-
+ 1 file changed, 17 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
-index 2c869df1c62e..ead75574e10a 100644
+index 53f41fc2cadf..30bed719486e 100644
 --- a/drivers/net/wireless/rsi/rsi_91x_usb.c
 +++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
-@@ -16,6 +16,7 @@
-  */
+@@ -292,6 +292,15 @@ static void rsi_rx_done_handler(struct urb *urb)
+ 		dev_kfree_skb(rx_cb->rx_skb);
+ }
  
- #include <linux/module.h>
-+#include <linux/types.h>
- #include <net/rsi_91x.h>
- #include "rsi_usb.h"
- #include "rsi_hal.h"
-@@ -29,7 +30,7 @@ MODULE_PARM_DESC(dev_oper_mode,
- 		 "9[Wi-Fi STA + BT LE], 13[Wi-Fi STA + BT classic + BT LE]\n"
- 		 "6[AP + BT classic], 14[AP + BT classic + BT LE]");
- 
--static int rsi_rx_urb_submit(struct rsi_hw *adapter, u8 ep_num);
-+static int rsi_rx_urb_submit(struct rsi_hw *adapter, u8 ep_num, gfp_t flags);
- 
++static void rsi_rx_urb_kill(struct rsi_hw *adapter, u8 ep_num)
++{
++	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
++	struct rx_usb_ctrl_block *rx_cb = &dev->rx_cb[ep_num - 1];
++	struct urb *urb = rx_cb->rx_urb;
++
++	usb_kill_urb(urb);
++}
++
  /**
-  * rsi_usb_card_write() - This function writes to the USB Card.
-@@ -285,7 +286,7 @@ static void rsi_rx_done_handler(struct urb *urb)
- 	status = 0;
- 
- out:
--	if (rsi_rx_urb_submit(dev->priv, rx_cb->ep_num))
-+	if (rsi_rx_urb_submit(dev->priv, rx_cb->ep_num, GFP_ATOMIC))
- 		rsi_dbg(ERR_ZONE, "%s: Failed in urb submission", __func__);
- 
- 	if (status)
-@@ -307,7 +308,7 @@ static void rsi_rx_urb_kill(struct rsi_hw *adapter, u8 ep_num)
-  *
-  * Return: 0 on success, a negative error code on failure.
-  */
--static int rsi_rx_urb_submit(struct rsi_hw *adapter, u8 ep_num)
-+static int rsi_rx_urb_submit(struct rsi_hw *adapter, u8 ep_num, gfp_t mem_flags)
- {
- 	struct rsi_91x_usbdev *dev = (struct rsi_91x_usbdev *)adapter->rsi_dev;
- 	struct rx_usb_ctrl_block *rx_cb = &dev->rx_cb[ep_num - 1];
-@@ -337,7 +338,7 @@ static int rsi_rx_urb_submit(struct rsi_hw *adapter, u8 ep_num)
- 			  rsi_rx_done_handler,
- 			  rx_cb);
- 
--	status = usb_submit_urb(urb, GFP_KERNEL);
-+	status = usb_submit_urb(urb, mem_flags);
- 	if (status) {
- 		rsi_dbg(ERR_ZONE, "%s: Failed in urb submission\n", __func__);
- 		dev_kfree_skb(skb);
-@@ -827,12 +828,12 @@ static int rsi_probe(struct usb_interface *pfunction,
- 		rsi_dbg(INIT_ZONE, "%s: Device Init Done\n", __func__);
- 	}
- 
--	status = rsi_rx_urb_submit(adapter, WLAN_EP);
-+	status = rsi_rx_urb_submit(adapter, WLAN_EP, GFP_KERNEL);
- 	if (status)
- 		goto err1;
- 
+  * rsi_rx_urb_submit() - This function submits the given URB to the USB stack.
+  * @adapter: Pointer to the adapter structure.
+@@ -823,10 +832,13 @@ static int rsi_probe(struct usb_interface *pfunction,
  	if (adapter->priv->coex_mode > 1) {
--		status = rsi_rx_urb_submit(adapter, BT_EP);
-+		status = rsi_rx_urb_submit(adapter, BT_EP, GFP_KERNEL);
+ 		status = rsi_rx_urb_submit(adapter, BT_EP);
  		if (status)
- 			goto err_kill_wlan_urb;
+-			goto err1;
++			goto err_kill_wlan_urb;
  	}
+ 
+ 	return 0;
++
++err_kill_wlan_urb:
++	rsi_rx_urb_kill(adapter, WLAN_EP);
+ err1:
+ 	rsi_deinit_usb_interface(adapter);
+ err:
+@@ -857,6 +869,10 @@ static void rsi_disconnect(struct usb_interface *pfunction)
+ 		adapter->priv->bt_adapter = NULL;
+ 	}
+ 
++	if (adapter->priv->coex_mode > 1)
++		rsi_rx_urb_kill(adapter, BT_EP);
++	rsi_rx_urb_kill(adapter, WLAN_EP);
++
+ 	rsi_reset_card(adapter);
+ 	rsi_deinit_usb_interface(adapter);
+ 	rsi_91x_deinit(adapter);
 -- 
 2.24.0
 
