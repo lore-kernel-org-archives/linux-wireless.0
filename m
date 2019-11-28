@@ -4,67 +4,65 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 029CAC43215
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 Nov 2019 17:24:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A34BBC43215
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 Nov 2019 17:24:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CE8E121826
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 Nov 2019 17:24:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7BCDD216F4
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 Nov 2019 17:24:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1574961886;
-	bh=RAYe5u89j0gevqYuxVl//afQVDlQK+7EMpuQardxMTM=;
+	s=default; t=1574961897;
+	bh=DT64ke75+N9UfVft8WgVfGGL4ShiWDLpTKcTf07A7mc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Sr6JUzD6L8mDIuLyldcR9zgCL33O+ns/AVZYr3rbUFr2BEcSmrtee38V9oSmux+1i
-	 6sChgdJr1cGusqFsgdSsKmhF33o/7hMk6HPLGb06jiKOQatgE9ZISKGrj63ZccY+PX
-	 Bfn5oXDOgf4NC40DvJ2fap+/QGjMVPsHvcMragMA=
+	b=u4W8K2/0iBKK1h8FyCMYgRH/FSKmEmbidP+rshso7y8xpkuhjuBMOEFKSCXLXuvjI
+	 ydzbKNkrWNNF71Ap0lAgSHLcBAEARb+Uf54LIA5ZUYFJs30q+UAo16ocKYqyGf2PL1
+	 Qzqre/oqjjbkcDANAoJlSXHu2TC23TsxA+lfbLA4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726858AbfK1RYq (ORCPT
+        id S1727084AbfK1RYx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 28 Nov 2019 12:24:46 -0500
-Received: from mail-lj1-f196.google.com ([209.85.208.196]:38285 "EHLO
+        Thu, 28 Nov 2019 12:24:53 -0500
+Received: from mail-lj1-f196.google.com ([209.85.208.196]:32919 "EHLO
         mail-lj1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726634AbfK1RYp (ORCPT
+        with ESMTP id S1726446AbfK1RYr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 Nov 2019 12:24:45 -0500
-Received: by mail-lj1-f196.google.com with SMTP id k8so18720909ljh.5;
-        Thu, 28 Nov 2019 09:24:44 -0800 (PST)
+        Thu, 28 Nov 2019 12:24:47 -0500
+Received: by mail-lj1-f196.google.com with SMTP id t5so29295489ljk.0;
+        Thu, 28 Nov 2019 09:24:45 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=pNXr26dRu/aWo/ZNTMnDAua6PjrBe7AfSoIfHjNsLPE=;
-        b=DijGBPHU15acrYKJtI3L20TQdWuWDnCZSor5ygvTiyRAiiGAEmDvxn0Z5qRNVXt45G
-         zDpfMzKD0N4lgGPT44ht37yOK2PgZPIMx8ry5ygfW836puozD/o4hcVZch/CnuEk66wP
-         Qm4vAZP2bA+TTL5hGlX6uF3JT3PX9L4Iiv1NxuB9k09UuYVTaFFt10KeVQUcndPPFMpb
-         6DLtmkYgydOiI8vkeKWTwFZs3FD3JKKN3CUhqjyaDzP2VXcABZnUAElpRQvqsYHkDeu/
-         KheLYEroZGi4527HwJXR7Xe1YyExRRBy61FO6dxNFnKltJLejcK1RKYBVFm+04/el6OL
-         UFFA==
-X-Gm-Message-State: APjAAAWn437P/sM2CLJ8Fc2Nx8dVMGVbk7YQdWFdooxdvPS2z6Tekjv+
-        vfzWsUvKDFbJIxGweaRlm9c=
-X-Google-Smtp-Source: APXvYqwTGHlPMSUQNTb3ZUCf6aq5gzdY12/WN1GGQebXicNweZ5WxFIrPWT9g4iavEJoZJ+5Nmt4vw==
-X-Received: by 2002:a05:651c:305:: with SMTP id a5mr35814469ljp.144.1574961883728;
-        Thu, 28 Nov 2019 09:24:43 -0800 (PST)
+        bh=ZNDtdmETKvubKODy6INzZo8FVEmBbwko469tiDmk0AM=;
+        b=FbOmGKINtKzawJJ2mUBzCDl0j5Vs/eTV3uife+bK7l0pOl4hZvCspIo0WOI+AKxqHC
+         6FgN3Zu9PDGNZH1yOA26RTz7zu7jg9afo8Ed7+M+OJb78P9gSi3y1K+qtK1sgHOfO79H
+         RtrVNMpgPJAzRn4MIs0QIKNtowiPEUi+bILPwr2WJ39xzkJgdy0FoTiJfZBmiuWpTcm9
+         Md/hntZ78GkHXXV+w6YZgNm0qm5OHAhXMp/I09F7rEYcpCFQO4r0v0CPO2wnivlmHUru
+         eawyNRjBtI5qn5i46X9e79QPJzKKEmcwYgfmdfY6M/CGSNNTr+OJ7DzKngvBcK525H7K
+         CWjQ==
+X-Gm-Message-State: APjAAAWPvSkjr6rF2TqkJaBFZcqXIcc+L3r8HhXRD6EjCOzTC7ayfUvq
+        Yh2VuOvMRf2ZK/+g9FScGPZb/Mb6
+X-Google-Smtp-Source: APXvYqyunx60s7xYwHwsXv+RzmdWsqerfg4cVHpazXff3kOLxlOCkO82Mmc+9EGbretyrTDzA9hiVA==
+X-Received: by 2002:a2e:818e:: with SMTP id e14mr20712822ljg.245.1574961884955;
+        Thu, 28 Nov 2019 09:24:44 -0800 (PST)
 Received: from xi.terra (c-14b8e655.07-184-6d6c6d4.bbcust.telenor.se. [85.230.184.20])
-        by smtp.gmail.com with ESMTPSA id f11sm4733771lfa.9.2019.11.28.09.24.41
+        by smtp.gmail.com with ESMTPSA id u7sm1860356lfn.31.2019.11.28.09.24.41
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 28 Nov 2019 09:24:41 -0800 (PST)
+        Thu, 28 Nov 2019 09:24:43 -0800 (PST)
 Received: from johan by xi.terra with local (Exim 4.92.3)
         (envelope-from <johan@xi.terra>)
-        id 1iaNWz-0006wb-N6; Thu, 28 Nov 2019 18:24:41 +0100
+        id 1iaNWz-0006wk-SD; Thu, 28 Nov 2019 18:24:41 +0100
 From:   Johan Hovold <johan@kernel.org>
 To:     Amitkumar Karwar <amitkarwar@gmail.com>,
         Siva Rebbagondla <siva8118@gmail.com>,
         Kalle Valo <kvalo@codeaurora.org>
 Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org,
-        Johan Hovold <johan@kernel.org>,
-        stable <stable@vger.kernel.org>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: [PATCH 3/5] rsi: fix memory leak on failed URB submission
-Date:   Thu, 28 Nov 2019 18:22:02 +0100
-Message-Id: <20191128172204.26600-4-johan@kernel.org>
+        Johan Hovold <johan@kernel.org>
+Subject: [PATCH 5/5] rsi: add missing endpoint sanity checks
+Date:   Thu, 28 Nov 2019 18:22:04 +0100
+Message-Id: <20191128172204.26600-6-johan@kernel.org>
 X-Mailer: git-send-email 2.24.0
 In-Reply-To: <20191128172204.26600-1-johan@kernel.org>
 References: <20191128172204.26600-1-johan@kernel.org>
@@ -75,32 +73,52 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Make sure to free the skb on failed receive-URB submission (e.g. on
-disconnect or currently also due to a missing endpoint).
+The driver expects at least one bulk-in endpoint when in "wifi-alone"
+operating mode and two bulk-in endpoints otherwise, and would otherwise
+fail to to submit the corresponding bulk URB to the default pipe during
+probe with a somewhat cryptic message:
 
-Fixes: a1854fae1414 ("rsi: improve RX packet handling in USB interface")
-Cc: stable <stable@vger.kernel.org>     # 4.17
-Cc: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+	rsi_91x: rsi_rx_urb_submit: Failed in urb submission
+	rsi_91x: rsi_probe: Failed in probe...Exiting
+	RSI-USB WLAN: probe of 2-2.4:1.0 failed with error -8
+
+The current endpoint sanity check looks broken and would only bail out
+early if there was no bulk-in endpoint but at least one bulk-out
+endpoint.
+
+Tighten this check to always require at least one bulk-in and one
+bulk-out endpoint, and add the missing sanity check for a Bluetooth
+bulk-in endpoint when in a BT operating mode. Also make sure to log an
+informative error message when the expected endpoints are missing.
+
 Signed-off-by: Johan Hovold <johan@kernel.org>
 ---
- drivers/net/wireless/rsi/rsi_91x_usb.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/net/wireless/rsi/rsi_91x_usb.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
-index 30bed719486e..2c869df1c62e 100644
+index ead75574e10a..396b9b81c1cd 100644
 --- a/drivers/net/wireless/rsi/rsi_91x_usb.c
 +++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
-@@ -338,8 +338,10 @@ static int rsi_rx_urb_submit(struct rsi_hw *adapter, u8 ep_num)
- 			  rx_cb);
+@@ -149,9 +149,17 @@ static int rsi_find_bulk_in_and_out_endpoints(struct usb_interface *interface,
+ 			break;
+ 	}
  
- 	status = usb_submit_urb(urb, GFP_KERNEL);
--	if (status)
-+	if (status) {
- 		rsi_dbg(ERR_ZONE, "%s: Failed in urb submission\n", __func__);
-+		dev_kfree_skb(skb);
+-	if (!(dev->bulkin_endpoint_addr[0]) &&
+-	    dev->bulkout_endpoint_addr[0])
++	if (!(dev->bulkin_endpoint_addr[0] && dev->bulkout_endpoint_addr[0])) {
++		dev_err(&interface->dev, "missing wlan bulk endpoints\n");
+ 		return -EINVAL;
++	}
++
++	if (adapter->priv->coex_mode > 1) {
++		if (!dev->bulkin_endpoint_addr[1]) {
++			dev_err(&interface->dev, "missing bt bulk-in endpoint\n");
++			return -EINVAL;
++		}
 +	}
  
- 	return status;
+ 	return 0;
  }
 -- 
 2.24.0
