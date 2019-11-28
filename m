@@ -2,81 +2,96 @@ Return-Path: <SRS0=WqAe=ZU=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D55FC432C0
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 Nov 2019 11:54:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17462C432C3
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 Nov 2019 12:19:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 632E2206BF
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 Nov 2019 11:54:14 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="DneEo8zp";
-	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="hejAHu4D"
+	by mail.kernel.org (Postfix) with ESMTP id DECD2217BA
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 Nov 2019 12:19:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726448AbfK1LyN (ORCPT
+        id S1726800AbfK1MTV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 28 Nov 2019 06:54:13 -0500
-Received: from a27-21.smtp-out.us-west-2.amazonses.com ([54.240.27.21]:54426
-        "EHLO a27-21.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726191AbfK1LyN (ORCPT
+        Thu, 28 Nov 2019 07:19:21 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:59537 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726383AbfK1MTV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 Nov 2019 06:54:13 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-        s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1574942052;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:Message-ID:MIME-Version:Content-Type;
-        bh=6GEjRHiymZz2qpzisceFU6do1VPZDdWVVzA6Rg/sl3c=;
-        b=DneEo8zpCjBV50PSIpqjkEBp6Dn/OYjJqbVSpvE/qUdRHYeengZHKodXE2znQnd5
-        WlXZfOM8bIBhG6CtGvglBFhPOkVD2jvzTBfS1HF7nkzNbRRfc0vVO3qvJLwHiXG2COp
-        W44HLcRmlKrpVoZEkJTEvXL88A0iNIClxVk6H+Nk=
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-        s=gdwg2y3kokkkj5a55z2ilkup5wp5hhxx; d=amazonses.com; t=1574942052;
-        h=From:To:Cc:Subject:References:Date:In-Reply-To:Message-ID:MIME-Version:Content-Type:Feedback-ID;
-        bh=6GEjRHiymZz2qpzisceFU6do1VPZDdWVVzA6Rg/sl3c=;
-        b=hejAHu4DsD5bxBxAXRLLU45ttCuFLLdL9fv+97NWwbNU9dD/+n2W1yKUESF1EI9D
-        yEIkhzRBBo3S/Z5m/+9atuk6u9krFlCOiYiWD47ZJ3vutxRVoiNX6767C2BykhbtgwF
-        pGlhM55vZpslUix2zCx06k4PRxRR2tLYfL9TwZsU=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 5CD2CC447A0
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Wen Huang <huangwenabc@gmail.com>
-Cc:     linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-Subject: Re: [PATCH] libertas: Fix two buffer overflows at parsing bss descriptor
-References: <20191122052917.11309-1-huangwenabc@gmail.com>
-        <0101016eb106d678-62ccf480-a650-47f2-87b3-cb5a03deb013-000000@us-west-2.amazonses.com>
-        <CADt2dQfbnk5WgDk=oeWjE1tziCEem-3fhhA68Pmr_fo0pZ_V=g@mail.gmail.com>
-Date:   Thu, 28 Nov 2019 11:54:12 +0000
-In-Reply-To: <CADt2dQfbnk5WgDk=oeWjE1tziCEem-3fhhA68Pmr_fo0pZ_V=g@mail.gmail.com>
-        (Wen Huang's message of "Thu, 28 Nov 2019 19:03:27 +0800")
-Message-ID: <0101016eb1dc90c4-7d66fb28-a830-4ce7-97a4-cf38262aff44-000000@us-west-2.amazonses.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Thu, 28 Nov 2019 07:19:21 -0500
+Authenticated-By: 
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID xASCJDmo004448, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (RTITCASV01.realtek.com.tw[172.21.6.18])
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id xASCJDmo004448
+        (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
+        Thu, 28 Nov 2019 20:19:13 +0800
+Received: from localhost.localdomain (172.21.68.126) by
+ RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
+ 14.3.468.0; Thu, 28 Nov 2019 20:19:13 +0800
+From:   <yhchuang@realtek.com>
+To:     <kvalo@codeaurora.org>
+CC:     <linux-wireless@vger.kernel.org>, <briannorris@chromium.org>
+Subject: [PATCH 2/6] rtw88: pci: reset dma when reset pci trx ring
+Date:   Thu, 28 Nov 2019 20:19:03 +0800
+Message-ID: <20191128121907.6178-3-yhchuang@realtek.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20191128121907.6178-1-yhchuang@realtek.com>
+References: <20191128121907.6178-1-yhchuang@realtek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-X-SES-Outgoing: 2019.11.28-54.240.27.21
-Feedback-ID: 1.us-west-2.CZuq2qbDmUIuT3qdvXlRHZZCpfZqZ4GtG9v3VKgRyF0=:AmazonSES
+X-Originating-IP: [172.21.68.126]
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Wen Huang <huangwenabc@gmail.com> writes:
+From: Chin-Yen Lee <timlee@realtek.com>
 
-> I have modified the patch and submmit:
-> https://patchwork.kernel.org/patch/11265751/ 
+When pci trx ring is reset, hw dma setting should be reset together.
+Otherswise, the rx_tag of rx flow is not synchronous to hw.
 
-Thanks, but few tips for the future (no need to resend because of
-these):
+Signed-off-by: Chin-Yen Lee <timlee@realtek.com>
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw88/pci.c | 17 ++++++++++-------
+ 1 file changed, 10 insertions(+), 7 deletions(-)
 
-* don't use HTML in email
-
-* use v2, v3 and so on to identify the version of the patch
-
-* do not top post
-
-More info in the link below, I suggest to carefully study that. Better
-chances of getting your patches accepted that way.
-
+diff --git a/drivers/net/wireless/realtek/rtw88/pci.c b/drivers/net/wireless/realtek/rtw88/pci.c
+index 068f1bec88e6..78971cefb948 100644
+--- a/drivers/net/wireless/realtek/rtw88/pci.c
++++ b/drivers/net/wireless/realtek/rtw88/pci.c
+@@ -486,13 +486,6 @@ static void rtw_pci_disable_interrupt(struct rtw_dev *rtwdev,
+ 	rtwpci->irq_enabled = false;
+ }
+ 
+-static int rtw_pci_setup(struct rtw_dev *rtwdev)
+-{
+-	rtw_pci_reset_trx_ring(rtwdev);
+-
+-	return 0;
+-}
+-
+ static void rtw_pci_dma_reset(struct rtw_dev *rtwdev, struct rtw_pci *rtwpci)
+ {
+ 	/* reset dma and rx tag */
+@@ -501,6 +494,16 @@ static void rtw_pci_dma_reset(struct rtw_dev *rtwdev, struct rtw_pci *rtwpci)
+ 	rtwpci->rx_tag = 0;
+ }
+ 
++static int rtw_pci_setup(struct rtw_dev *rtwdev)
++{
++	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
++
++	rtw_pci_reset_trx_ring(rtwdev);
++	rtw_pci_dma_reset(rtwdev, rtwpci);
++
++	return 0;
++}
++
+ static void rtw_pci_dma_release(struct rtw_dev *rtwdev, struct rtw_pci *rtwpci)
+ {
+ 	struct rtw_pci_tx_ring *tx_ring;
 -- 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.17.1
+
