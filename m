@@ -6,53 +6,53 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
 	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C26EC432C0
-	for <linux-wireless@archiver.kernel.org>; Fri, 29 Nov 2019 07:44:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77042C432C0
+	for <linux-wireless@archiver.kernel.org>; Fri, 29 Nov 2019 07:46:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 00CD8215F1
-	for <linux-wireless@archiver.kernel.org>; Fri, 29 Nov 2019 07:44:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 48D6A216F4
+	for <linux-wireless@archiver.kernel.org>; Fri, 29 Nov 2019 07:46:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="WkoQychT";
-	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="eOeK26cf"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="PH16paN1";
+	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="Bydj/Lr4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726780AbfK2Hoh (ORCPT
+        id S1726780AbfK2HqI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 29 Nov 2019 02:44:37 -0500
-Received: from a27-10.smtp-out.us-west-2.amazonses.com ([54.240.27.10]:43162
-        "EHLO a27-10.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726360AbfK2Hoh (ORCPT
+        Fri, 29 Nov 2019 02:46:08 -0500
+Received: from a27-187.smtp-out.us-west-2.amazonses.com ([54.240.27.187]:52050
+        "EHLO a27-187.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726702AbfK2HqI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Nov 2019 02:44:37 -0500
+        Fri, 29 Nov 2019 02:46:08 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-        s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1575013476;
+        s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1575013567;
         h=Content-Type:MIME-Version:Content-Transfer-Encoding:Subject:From:In-Reply-To:References:To:Cc:Message-Id:Date;
-        bh=p+y1rMEnDjbDzSRwv+hNOFPILx85VSeZxDrYtcqO7ag=;
-        b=WkoQychTeTHcgTiXb4VAqcQ9R/kxI2Gb05FuuSgO/THHVfTMPmeUoplJ4ZyR80d5
-        7zhNEvfd+BrSzs2KWsvmiVj5Ius3GK0fq7uI4wIXrC7ObMj1UBRtzg6lnXSAIOl4un7
-        sSmw3A22+4qYrqrrrrJwFaQNfv9UR303QRuObzVE=
+        bh=MfRCxzI4f7H6zs3Yw3n9nDTzabGXNV+6BrfKy40Wsns=;
+        b=PH16paN1fjdNxn44J9LGn0//NQj1WuZ6uRNjPlMBitt2K2pCV6ytCC7ETDgX5EWk
+        Nl6YSupQUmxIj5E5nWhFZNGA74E7dxgx2QyBIawAdGXfni6z8gaaMxoKYNkbhrmJnd2
+        5P1JtTd+5bOOVc7MbTL22wlfkO3mNBTlHS37naKg=
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
-        s=gdwg2y3kokkkj5a55z2ilkup5wp5hhxx; d=amazonses.com; t=1575013476;
+        s=gdwg2y3kokkkj5a55z2ilkup5wp5hhxx; d=amazonses.com; t=1575013567;
         h=Content-Type:MIME-Version:Content-Transfer-Encoding:Subject:From:In-Reply-To:References:To:Cc:Message-Id:Date:Feedback-ID;
-        bh=p+y1rMEnDjbDzSRwv+hNOFPILx85VSeZxDrYtcqO7ag=;
-        b=eOeK26cfRDlXpE7t2UgKrrbvExYK8figy0T/UBa2z1WgEtiQk9hN63yQsLcJCMNX
-        Nq1ovC1TAEnZ17u4n2+aSdGU/rVIHkJLXsutrrCZ38yeytrNGiAuH1tYIdiU4gGQzED
-        9P5tSIPA1iYOU4+F1xKK+QRbWBkVF9E8AXScPKHE=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 5234EC433CB
+        bh=MfRCxzI4f7H6zs3Yw3n9nDTzabGXNV+6BrfKy40Wsns=;
+        b=Bydj/Lr4I6QASSrCwgcLN1tTUn8Wqi3tU+i9ujWS0YBNIzl9TPUMc+s7jcu0m4rf
+        UEGLfnaT0IgrTD0z5bLNUM7q2tOTQSP9mHZOhIx42rsERuuPowRZQiNo6MXGm118jgR
+        OSF2n2lSbrmoPfz5xBwKPsLEjTs/5fKJRQSgh8aY=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 1DA4CC43383
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] ath10k: change log level for mpdu status of sdio chip
+Subject: Re: [PATCH] ath10k: enable wow feature for sdio chip
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <0101016eaaeb8dba-59b83dae-1133-48b3-8aab-a51f765322bf-000000@us-west-2.amazonses.com>
-References: <0101016eaaeb8dba-59b83dae-1133-48b3-8aab-a51f765322bf-000000@us-west-2.amazonses.com>
+In-Reply-To: <0101016eab75c9ce-0fc306b4-0804-4829-bf57-85d803251a00-000000@us-west-2.amazonses.com>
+References: <0101016eab75c9ce-0fc306b4-0804-4829-bf57-85d803251a00-000000@us-west-2.amazonses.com>
 To:     Wen Gong <wgong@codeaurora.org>
 Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
 User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-ID: <0101016eb61e67ed-0234fea9-e7ab-4db3-ac80-d9e57d5c1b0e-000000@us-west-2.amazonses.com>
-Date:   Fri, 29 Nov 2019 07:44:36 +0000
-X-SES-Outgoing: 2019.11.29-54.240.27.10
+Message-ID: <0101016eb61fcb78-8211d755-ce13-4fcd-9fc2-bcff0fb571fa-000000@us-west-2.amazonses.com>
+Date:   Fri, 29 Nov 2019 07:46:07 +0000
+X-SES-Outgoing: 2019.11.29-54.240.27.187
 Feedback-ID: 1.us-west-2.CZuq2qbDmUIuT3qdvXlRHZZCpfZqZ4GtG9v3VKgRyF0=:AmazonSES
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
@@ -61,21 +61,23 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Wen Gong <wgong@codeaurora.org> wrote:
 
-> Change log level from warn to dbg level of mpdu status
-> of sdio chip.
+> sdio does not support wow, this patch is to enable it. When system enter
+> sleep state, if wowlan is enabled, then sdio chip will keep power if
+> platform support keep power, after resume, it will not need to re-load
+> firmware again.
 > 
 > Tested with QCA6174 SDIO with firmware
-> WLAN.RMH.4.4.1-00007-QCARMSWP-1.
+> WLAN.RMH.4.4.1-00029.
 > 
 > Signed-off-by: Wen Gong <wgong@codeaurora.org>
 > Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
 Patch applied to ath-next branch of ath.git, thanks.
 
-5d2467299a17 ath10k: change log level for mpdu status of sdio chip
+7321095ca39c ath10k: enable wow feature for sdio chip
 
 -- 
-https://patchwork.kernel.org/patch/11263361/
+https://patchwork.kernel.org/patch/11263485/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
 
