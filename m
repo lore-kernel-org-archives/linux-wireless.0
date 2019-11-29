@@ -2,92 +2,112 @@ Return-Path: <SRS0=lMj3=ZV=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54C75C432C0
-	for <linux-wireless@archiver.kernel.org>; Fri, 29 Nov 2019 13:06:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8928AC432C0
+	for <linux-wireless@archiver.kernel.org>; Fri, 29 Nov 2019 13:11:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 04259216F4
-	for <linux-wireless@archiver.kernel.org>; Fri, 29 Nov 2019 13:06:40 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="c2WceZ7N"
+	by mail.kernel.org (Postfix) with ESMTP id 5577C217AB
+	for <linux-wireless@archiver.kernel.org>; Fri, 29 Nov 2019 13:11:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1575033096;
+	bh=jrCIprHUTTV/YQQ0X2znnwgtr+4EleukDculIVQIpY0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=k4reTsGbIZ9vkpOwc00BIMUarwBs4RtqXp9jLM+c0pSo5kDd/9EE8DL/X9AJtM0a+
+	 VbnzKvhA0H/pUZQTrNXN5muU1vd4VIxc8LrOsk2QMsFrp1isdzDxr+RW2ghbwnVqWx
+	 2F4pKI48qGBt0Jg+m7smrYD1Vps4TabcApOhztEk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726800AbfK2NGj (ORCPT
+        id S1726819AbfK2NLf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 29 Nov 2019 08:06:39 -0500
-Received: from us-smtp-2.mimecast.com ([205.139.110.61]:58420 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726360AbfK2NGj (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Nov 2019 08:06:39 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1575032797;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=R/wziVUSrBOxmIM8PBrx+WhYxbipUu9ohrnHOyo9ENU=;
-        b=c2WceZ7NPCkqomDzBR0yXbCktbNKUAilatyRQwgkAa3Waj4zWBFjbvhmSEzxUb6XDyn+lq
-        3TQqRuVRTeiagxhTMOPcDDHqYdQiZZndjtjA7qGJij0wxj19F1eF+E1YJ/UJLlTmhXRYzy
-        ORDk+YZn3w1p4fRzwfUncOaXQGMqVoQ=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-250-hPnf9BaWOZOAWHKVnT7eQw-1; Fri, 29 Nov 2019 08:06:34 -0500
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        Fri, 29 Nov 2019 08:11:35 -0500
+Received: from mail.kernel.org ([198.145.29.99]:38712 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726608AbfK2NLf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 29 Nov 2019 08:11:35 -0500
+Received: from localhost.localdomain (unknown [77.139.212.74])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id F110B64A91;
-        Fri, 29 Nov 2019 13:06:32 +0000 (UTC)
-Received: from localhost (unknown [10.43.2.71])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 990485D9E1;
-        Fri, 29 Nov 2019 13:06:32 +0000 (UTC)
-Date:   Fri, 29 Nov 2019 14:06:30 +0100
-From:   Stanislaw Gruszka <sgruszka@redhat.com>
-To:     Lorenzo Bianconi <lorenzo@kernel.org>
+        by mail.kernel.org (Postfix) with ESMTPSA id 2E40E216F4;
+        Fri, 29 Nov 2019 13:11:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1575033094;
+        bh=jrCIprHUTTV/YQQ0X2znnwgtr+4EleukDculIVQIpY0=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=mS2M1BkHw9O6qEJm2bOoU2xPY29iD24meoOuPEhhWlO4Ha5BibzRNtrXY0PzsDSpR
+         PnjyCOyU1TS6faBGiWiklrwuUxLkx9ExVNVKSVJ75HlpX/xXTtd27QlT+WLWR2kT5u
+         4OJJ1QS2Y+nWd+gyyBgLFIhbRTCCQvKpBI0cgS4Y=
+Date:   Fri, 29 Nov 2019 15:11:25 +0200
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     Stanislaw Gruszka <sgruszka@redhat.com>
 Cc:     linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>,
         Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
         Ryder Lee <ryder.lee@mediatek.com>,
         Roy Luo <royluo@google.com>,
         Markus Theil <markus.theil@tu-ilmenau.de>
 Subject: Re: [PATCH 1/3] mt76: usb: use max packet length for m76u_copy
-Message-ID: <20191129130630.GA2497@redhat.com>
+Message-ID: <20191129131125.GF32696@localhost.localdomain>
 References: <1575030748-2218-1-git-send-email-sgruszka@redhat.com>
  <1575030748-2218-2-git-send-email-sgruszka@redhat.com>
  <20191129124744.GE32696@localhost.localdomain>
+ <20191129130630.GA2497@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20191129124744.GE32696@localhost.localdomain>
-User-Agent: Mutt/1.5.21 (2010-09-15)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
-X-MC-Unique: hPnf9BaWOZOAWHKVnT7eQw-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: quoted-printable
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="vA66WO2vHvL/CRSR"
 Content-Disposition: inline
+In-Reply-To: <20191129130630.GA2497@redhat.com>
+User-Agent: Mutt/1.12.1 (2019-06-15)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, Nov 29, 2019 at 02:47:44PM +0200, Lorenzo Bianconi wrote:
-> > +=09usb->data_len =3D usb_maxpacket(udev, usb_sndctrlpipe(udev, 0), 1);
-> > +=09if (usb->data_len < 32)
-> > +=09=09usb->data_len =3D 32;
+
+--vA66WO2vHvL/CRSR
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+> On Fri, Nov 29, 2019 at 02:47:44PM +0200, Lorenzo Bianconi wrote:
+> > > +	usb->data_len =3D usb_maxpacket(udev, usb_sndctrlpipe(udev, 0), 1);
+> > > +	if (usb->data_len < 32)
+> > > +		usb->data_len =3D 32;
+> >=20
+> > Hi Stanislaw,
+> >=20
+> > 	usb->data_len =3D max_t(u16, 32,
+> > 			      usb_maxpacket(udev, usb_sndctrlpipe(udev, 0), 1));
+> >=20
 >=20
-> Hi Stanislaw,
+> Why this is better ?
+
+More readable for my point of view
+
 >=20
-> =09usb->data_len =3D max_t(u16, 32,
-> =09=09=09      usb_maxpacket(udev, usb_sndctrlpipe(udev, 0), 1));
+> > Moreover are you sure using ctrl endpoint 0 is fine for all devices?
+>=20
+> usb_sndctrlpipe(udev, 0) is used in __mt76u_vendor_request() for all=20
+> out requests i.e. on all cases were usb->data is used.
+
+ops, right :) Thx for for pointing this out.
+
+Regards,
+Lorenzo
+
+>=20
+> Stanislaw=20
 >=20
 
-Why this is better ?
+--vA66WO2vHvL/CRSR
+Content-Type: application/pgp-signature; name="signature.asc"
 
-> Moreover are you sure using ctrl endpoint 0 is fine for all devices?
+-----BEGIN PGP SIGNATURE-----
 
-usb_sndctrlpipe(udev, 0) is used in __mt76u_vendor_request() for all=20
-out requests i.e. on all cases were usb->data is used.
+iHUEABYIAB0WIQTquNwa3Txd3rGGn7Y6cBh0uS2trAUCXeEY+gAKCRA6cBh0uS2t
+rBgsAP9r/zVUzE7kuaXvSCHfrbrkKRRz0waUGAz4w6RnyNv83gD9FIwG4H+t0ycI
+Euef/np4w/ZzEOtkDHxG2uSOlrlg6wc=
+=8Dkr
+-----END PGP SIGNATURE-----
 
-Stanislaw=20
-
+--vA66WO2vHvL/CRSR--
