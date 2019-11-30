@@ -7,20 +7,20 @@ X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27DDFC432C0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B1F0C43215
 	for <linux-wireless@archiver.kernel.org>; Sat, 30 Nov 2019 15:30:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CF6612082E
-	for <linux-wireless@archiver.kernel.org>; Sat, 30 Nov 2019 15:30:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1155020833
+	for <linux-wireless@archiver.kernel.org>; Sat, 30 Nov 2019 15:30:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="hGx+4x8k"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="Tl6JZm2W"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727237AbfK3Pat (ORCPT
+        id S1727240AbfK3Pat (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Sat, 30 Nov 2019 10:30:49 -0500
-Received: from nbd.name ([46.4.11.11]:56034 "EHLO nbd.name"
+Received: from nbd.name ([46.4.11.11]:56032 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726981AbfK3Pas (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S1726946AbfK3Pas (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Sat, 30 Nov 2019 10:30:48 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
@@ -28,22 +28,22 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
         Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
         :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
         List-Post:List-Owner:List-Archive;
-        bh=Ka4TaNSQ7wY8alOYkcj7luTGd0Wt2LeXCXIBS5Oa02A=; b=hGx+4x8kSK5nLPvTNBg0+bPSmV
-        9bzfAEy2qoqnAfOSvrfW7GODoDJMZkcRAyaeiw2YVq6I7YJuDilAVFvm9FutHMyHuqO1gJJ5ia4KT
-        WLGLRqfUMiwTUlgMQ052GnzMpCYS3gLkexUsUC4cc6WH5c1goDbNnqg15gyvfmTwOsi0=;
+        bh=/ye1y4/zUs5/Wij2IDSL8opU4tDHXTALnwjI/pNf8Lo=; b=Tl6JZm2Wohv3kebDU75BGB+II1
+        xiPltuQQuk+XebWtWOQqCbnt7WHzBdbRDbaqKUOxIxIs5RtP32Q7pNYPi4Ff0vrYSIJzem4+SEOS5
+        0r+/hQKOQCNsH/G7TKt7Xvq6/4DA/aLWixbAXJEjRFRuT5jtHyJcPqQIM/HEnUOi3RHM=;
 Received: from p5b2067e3.dip0.t-ipconnect.de ([91.32.103.227] helo=maeck.local)
         by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.89)
         (envelope-from <nbd@nbd.name>)
-        id 1ib4hr-0006ha-3h
-        for linux-wireless@vger.kernel.org; Sat, 30 Nov 2019 16:30:47 +0100
+        id 1ib4hq-0006hE-Iu
+        for linux-wireless@vger.kernel.org; Sat, 30 Nov 2019 16:30:46 +0100
 Received: by maeck.local (Postfix, from userid 501)
-        id 077E1721EBDA; Sat, 30 Nov 2019 16:30:45 +0100 (CET)
+        id 05AD9721EBD4; Sat, 30 Nov 2019 16:30:45 +0100 (CET)
 From:   Felix Fietkau <nbd@nbd.name>
 To:     linux-wireless@vger.kernel.org
-Subject: [PATCH 26/29] mt76: mt7615: move radio/mac initialization to .start/stop callbacks
-Date:   Sat, 30 Nov 2019 16:30:42 +0100
-Message-Id: <20191130153045.28105-26-nbd@nbd.name>
+Subject: [PATCH 17/29] mt76: move ampdu_ref from mt76_dev to driver struct
+Date:   Sat, 30 Nov 2019 16:30:33 +0100
+Message-Id: <20191130153045.28105-17-nbd@nbd.name>
 X-Mailer: git-send-email 2.24.0
 In-Reply-To: <20191130153045.28105-1-nbd@nbd.name>
 References: <20191130153045.28105-1-nbd@nbd.name>
@@ -54,116 +54,131 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Run initialization per phy
+It is only used by the driver
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- .../net/wireless/mediatek/mt76/mt7615/init.c  |  3 ---
- .../net/wireless/mediatek/mt76/mt7615/main.c  | 23 ++++++++++++++++++-
- .../net/wireless/mediatek/mt76/mt7615/mcu.c   |  6 ++---
- .../wireless/mediatek/mt76/mt7615/mt7615.h    |  2 +-
- 4 files changed, 26 insertions(+), 8 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt76.h          | 1 -
+ drivers/net/wireless/mediatek/mt76/mt7603/mac.c    | 6 +++---
+ drivers/net/wireless/mediatek/mt76/mt7603/mt7603.h | 1 +
+ drivers/net/wireless/mediatek/mt76/mt7615/mac.c    | 6 +++---
+ drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h | 1 +
+ drivers/net/wireless/mediatek/mt76/mt76x02.h       | 1 +
+ drivers/net/wireless/mediatek/mt76/mt76x02_mac.c   | 6 +++---
+ 7 files changed, 12 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/init.c b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
-index c4dbc635c2c6..78bcdf90ca5e 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
-@@ -56,8 +56,6 @@ static void mt7615_mac_init(struct mt7615_dev *dev)
- 	mt76_rmw(dev, MT_AGG_SCR, MT_AGG_SCR_NLNAV_MID_PTEC_DIS,
- 		 MT_AGG_SCR_NLNAV_MID_PTEC_DIS);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index 62e2ded6a84c..ca71b78535b2 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -502,7 +502,6 @@ struct mt76_dev {
+ 	spinlock_t rx_lock;
+ 	struct napi_struct napi[__MT_RXQ_MAX];
+ 	struct sk_buff_head rx_skb[__MT_RXQ_MAX];
+-	u32 ampdu_ref;
  
--	mt7615_mcu_init_mac(dev);
--
- 	mt76_wr(dev, MT_DMA_DCR0, MT_DMA_DCR0_RX_VEC_DROP |
- 		FIELD_PREP(MT_DMA_DCR0_MAX_RX_LEN, 3072));
+ 	struct list_head txwi_cache;
+ 	struct mt76_sw_queue q_tx[2 * __MT_TXQ_MAX];
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/mac.c b/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
+index ab9ac6e07159..2a384fd0f088 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
+@@ -531,12 +531,12 @@ mt7603_mac_fill_rx(struct mt7603_dev *dev, struct sk_buff *skb)
  
-@@ -132,7 +130,6 @@ static int mt7615_init_hardware(struct mt7615_dev *dev)
- 	mt7615_mcu_set_eeprom(dev);
- 	mt7615_mac_init(dev);
- 	mt7615_phy_init(dev);
--	mt7615_mcu_ctrl_pm_state(dev, 0, 0);
- 	mt7615_mcu_del_wtbl_all(dev);
+ 		/* all subframes of an A-MPDU have the same timestamp */
+ 		if (dev->rx_ampdu_ts != rxd[12]) {
+-			if (!++dev->mt76.ampdu_ref)
+-				dev->mt76.ampdu_ref++;
++			if (!++dev->ampdu_ref)
++				dev->ampdu_ref++;
+ 		}
+ 		dev->rx_ampdu_ts = rxd[12];
  
- 	/* Beacon and mgmt frames should occupy wcid 0 */
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/main.c b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
-index f80fa045f549..a7e1ab22c81c 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
-@@ -33,6 +33,17 @@ static int mt7615_start(struct ieee80211_hw *hw)
- 	mutex_lock(&dev->mt76.mutex);
+-		status->ampdu_ref = dev->mt76.ampdu_ref;
++		status->ampdu_ref = dev->ampdu_ref;
+ 	}
  
- 	running = mt7615_dev_running(dev);
-+
-+	if (!running) {
-+		mt7615_mcu_ctrl_pm_state(dev, 0, 0);
-+		mt7615_mcu_set_mac_enable(dev, 0, true);
-+	}
-+
-+	if (phy != &dev->phy) {
-+		mt7615_mcu_ctrl_pm_state(dev, 1, 0);
-+		mt7615_mcu_set_mac_enable(dev, 1, true);
-+	}
-+
- 	set_bit(MT76_STATE_RUNNING, &phy->mt76->state);
+ 	remove_pad = rxd1 & MT_RXD1_NORMAL_HDR_OFFSET;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/mt7603.h b/drivers/net/wireless/mediatek/mt76/mt7603/mt7603.h
+index 63ec1fa71aba..12fd2db2df10 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7603/mt7603.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7603/mt7603.h
+@@ -118,6 +118,7 @@ struct mt7603_dev {
+ 	u32 false_cca_ofdm, false_cca_cck;
+ 	unsigned long last_cca_adj;
  
- 	if (running)
-@@ -57,9 +68,19 @@ static void mt7615_stop(struct ieee80211_hw *hw)
- 	mutex_lock(&dev->mt76.mutex);
++	u32 ampdu_ref;
+ 	__le32 rx_ampdu_ts;
+ 	u8 rssi_offset[3];
  
- 	clear_bit(MT76_STATE_RUNNING, &phy->mt76->state);
--	if (!mt7615_dev_running(dev))
-+
-+	if (phy != &dev->phy) {
-+		mt7615_mcu_ctrl_pm_state(dev, 1, 1);
-+		mt7615_mcu_set_mac_enable(dev, 1, false);
-+	}
-+
-+	if (!mt7615_dev_running(dev)) {
- 		cancel_delayed_work_sync(&dev->mt76.mac_work);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
+index 38abb3dab549..bf9c8006eb15 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
+@@ -118,12 +118,12 @@ int mt7615_mac_fill_rx(struct mt7615_dev *dev, struct sk_buff *skb)
  
-+		mt7615_mcu_ctrl_pm_state(dev, 0, 1);
-+		mt7615_mcu_set_mac_enable(dev, 0, false);
-+	}
-+
- 	mutex_unlock(&dev->mt76.mutex);
- }
+ 		/* all subframes of an A-MPDU have the same timestamp */
+ 		if (dev->rx_ampdu_ts != rxd[12]) {
+-			if (!++dev->mt76.ampdu_ref)
+-				dev->mt76.ampdu_ref++;
++			if (!++dev->ampdu_ref)
++				dev->ampdu_ref++;
+ 		}
+ 		dev->rx_ampdu_ts = rxd[12];
  
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-index 9b09f2e742df..c08a301d4a62 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-@@ -615,15 +615,15 @@ int mt7615_mcu_set_eeprom(struct mt7615_dev *dev)
- 	return ret;
- }
+-		status->ampdu_ref = dev->mt76.ampdu_ref;
++		status->ampdu_ref = dev->ampdu_ref;
+ 	}
  
--int mt7615_mcu_init_mac(struct mt7615_dev *dev)
-+int mt7615_mcu_set_mac_enable(struct mt7615_dev *dev, int band, bool enable)
- {
- 	struct {
- 		u8 enable;
- 		u8 band;
- 		u8 rsv[2];
- 	} __packed req = {
--		.enable = 1,
--		.band = 0,
-+		.enable = enable,
-+		.band = band,
- 	};
- 
- 	return __mt76_mcu_send_msg(&dev->mt76, MCU_EXT_CMD_MAC_INIT_CTRL,
+ 	remove_pad = rxd1 & MT_RXD1_NORMAL_HDR_OFFSET;
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-index 3323baa7cc0c..2adf3b8a61b8 100644
+index 9c27b355a445..17ec75a2bcfb 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
 +++ b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-@@ -288,7 +288,7 @@ int mt7615_mac_wtbl_set_key(struct mt7615_dev *dev, struct mt76_wcid *wcid,
+@@ -90,6 +90,7 @@ struct mt7615_dev {
+ 	u32 omac_mask;
  
- int mt7615_mcu_set_dbdc(struct mt7615_dev *dev);
- int mt7615_mcu_set_eeprom(struct mt7615_dev *dev);
--int mt7615_mcu_init_mac(struct mt7615_dev *dev);
-+int mt7615_mcu_set_mac_enable(struct mt7615_dev *dev, int band, bool enable);
- int mt7615_mcu_set_rts_thresh(struct mt7615_phy *phy, u32 val);
- int mt7615_mcu_ctrl_pm_state(struct mt7615_dev *dev, int band, int enter);
- int mt7615_mcu_get_temperature(struct mt7615_dev *dev, int index);
+ 	__le32 rx_ampdu_ts;
++	u32 ampdu_ref;
+ 
+ 	struct list_head sta_poll_list;
+ 	spinlock_t sta_poll_lock;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02.h b/drivers/net/wireless/mediatek/mt76/mt76x02.h
+index f00a9a6ee670..ba4c14eea22d 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02.h
+@@ -86,6 +86,7 @@ struct mt76x02_dev {
+ 	DECLARE_KFIFO_PTR(txstatus_fifo, struct mt76x02_tx_status);
+ 	spinlock_t txstatus_fifo_lock;
+ 	u32 tx_airtime;
++	u32 ampdu_ref;
+ 
+ 	struct sk_buff *rx_head;
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
+index 098792b86b73..5b512e4ce6b8 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
+@@ -824,7 +824,7 @@ int mt76x02_mac_process_rx(struct mt76x02_dev *dev, struct sk_buff *skb,
+ 
+ 	if (rxinfo & MT_RXINFO_AMPDU) {
+ 		status->flag |= RX_FLAG_AMPDU_DETAILS;
+-		status->ampdu_ref = dev->mt76.ampdu_ref;
++		status->ampdu_ref = dev->ampdu_ref;
+ 
+ 		/*
+ 		 * When receiving an A-MPDU subframe and RSSI info is not valid,
+@@ -832,8 +832,8 @@ int mt76x02_mac_process_rx(struct mt76x02_dev *dev, struct sk_buff *skb,
+ 		 * are coming. The last one will have valid RSSI info
+ 		 */
+ 		if (rxinfo & MT_RXINFO_RSSI) {
+-			if (!++dev->mt76.ampdu_ref)
+-				dev->mt76.ampdu_ref++;
++			if (!++dev->ampdu_ref)
++				dev->ampdu_ref++;
+ 		}
+ 	}
+ 
 -- 
 2.24.0
 
