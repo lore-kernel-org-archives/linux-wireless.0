@@ -1,111 +1,169 @@
-Return-Path: <SRS0=lMj3=ZV=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=p05y=ZW=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D877C43215
-	for <linux-wireless@archiver.kernel.org>; Fri, 29 Nov 2019 19:59:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27DDFC432C0
+	for <linux-wireless@archiver.kernel.org>; Sat, 30 Nov 2019 15:30:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 020592176D
-	for <linux-wireless@archiver.kernel.org>; Fri, 29 Nov 2019 19:59:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CF6612082E
+	for <linux-wireless@archiver.kernel.org>; Sat, 30 Nov 2019 15:30:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HsGxX0BM"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="hGx+4x8k"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727072AbfK2T7f (ORCPT
+        id S1727237AbfK3Pat (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 29 Nov 2019 14:59:35 -0500
-Received: from mail-oi1-f171.google.com ([209.85.167.171]:40855 "EHLO
-        mail-oi1-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727043AbfK2T7f (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 Nov 2019 14:59:35 -0500
-Received: by mail-oi1-f171.google.com with SMTP id 6so1775714oix.7
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Nov 2019 11:59:33 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=9vH783y5MYTDbU8lZNHgkxq13PJCK1x4eP+gZV1+/4A=;
-        b=HsGxX0BMtb9afJOpO7I9CBN6Hpj4C8zB9Phy+i3PhxeD0j5AfCcpFtlB4QsadvMWDQ
-         0WVL4A58edK1HT6YigiG3HkWIItJjwV16eo87CbhhThIT7iSOMXKd1fDi3ttN3+0GrcC
-         5BCi/x7lqFBNW5aGO+EDo56hIWfw5/G0+50oN/KeTLk6C05tbDAr12RLFT/K/whdfRJy
-         8ma1z/04WeYBe5HfL5RvsOI1PoGkra5hKj0bnW2k+L+kvYgqiHngwsYCbBVuerv8SXLP
-         KFrLO4gXGudo0Xw35XADPgozakdLKURFH9d7AcJ6SjdVux/oM1cyE3VrDLmvvJPpGz4z
-         kE3g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:subject:to:cc:references:from:message-id
-         :date:user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=9vH783y5MYTDbU8lZNHgkxq13PJCK1x4eP+gZV1+/4A=;
-        b=cR93lowvgjuu7Q2s/Gs7DCEq/j7vxLaNP3RHpvwMUOXEOjQPKhFfkwKDdCXsTfyu0/
-         SOg40syrRBRS0NUgYC1pS2/1A9rJKZ0kpb34Kcjh7VIN/OzbUzD+xQotf+R7rla96QqG
-         cKb+DKWe/DoXQlRGrViui3F23ag5zn6i6br/zZGw3+D919aHM1aselieome/0qTBuYLm
-         F/MpmEhC06gpX4VD/s5A5hfwJnsWJSds2WErsOEX2lXNhm9R9s236vQQWLASeJvn47wL
-         WPf2Z3GxGbruIf/yucF5tZv5uv0eIS/NisP33IiYTsjHvYjyUS+981Q1pVRY3iLUgv8/
-         E8jQ==
-X-Gm-Message-State: APjAAAUHjYHZkLN+Z35GLLttSweNPeeflXtr7UMdX1dcKBvrqTmUFUeT
-        GTUJaMpihAwJ0SEu4/Z2Zo4=
-X-Google-Smtp-Source: APXvYqzYVlyq3BGvMjqmFbrsZxBWHefQFTcfL5wVUM3zhrCr5OyU/c+tS75DyD/xeDkdfsGpB3m29A==
-X-Received: by 2002:aca:52c4:: with SMTP id g187mr10856948oib.76.1575057573324;
-        Fri, 29 Nov 2019 11:59:33 -0800 (PST)
-Received: from [192.168.1.112] (cpe-24-31-245-230.kc.res.rr.com. [24.31.245.230])
-        by smtp.gmail.com with ESMTPSA id 11sm1916582otz.3.2019.11.29.11.59.31
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 29 Nov 2019 11:59:32 -0800 (PST)
-Subject: Re: What is the license for linux/lib/math/cordic.c?
-To:     "ambai.masaki@fujitsu.com" <ambai.masaki@fujitsu.com>,
-        "'linux-wireless@vger.kernel.org'" <linux-wireless@vger.kernel.org>
-Cc:     "'brcm80211-dev-list.pdl@broadcom.com'" 
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        "'brcm80211-dev-list@cypress.com'" <brcm80211-dev-list@cypress.com>
-References: <OSBPR01MB21689E8028F2AFDBBA89076C83460@OSBPR01MB2168.jpnprd01.prod.outlook.com>
-From:   Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <afb1b412-a632-f2dc-0b76-52c345c25491@lwfinger.net>
-Date:   Fri, 29 Nov 2019 13:59:31 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.2.2
+        Sat, 30 Nov 2019 10:30:49 -0500
+Received: from nbd.name ([46.4.11.11]:56034 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726981AbfK3Pas (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 30 Nov 2019 10:30:48 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
+        Message-Id:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=Ka4TaNSQ7wY8alOYkcj7luTGd0Wt2LeXCXIBS5Oa02A=; b=hGx+4x8kSK5nLPvTNBg0+bPSmV
+        9bzfAEy2qoqnAfOSvrfW7GODoDJMZkcRAyaeiw2YVq6I7YJuDilAVFvm9FutHMyHuqO1gJJ5ia4KT
+        WLGLRqfUMiwTUlgMQ052GnzMpCYS3gLkexUsUC4cc6WH5c1goDbNnqg15gyvfmTwOsi0=;
+Received: from p5b2067e3.dip0.t-ipconnect.de ([91.32.103.227] helo=maeck.local)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.89)
+        (envelope-from <nbd@nbd.name>)
+        id 1ib4hr-0006ha-3h
+        for linux-wireless@vger.kernel.org; Sat, 30 Nov 2019 16:30:47 +0100
+Received: by maeck.local (Postfix, from userid 501)
+        id 077E1721EBDA; Sat, 30 Nov 2019 16:30:45 +0100 (CET)
+From:   Felix Fietkau <nbd@nbd.name>
+To:     linux-wireless@vger.kernel.org
+Subject: [PATCH 26/29] mt76: mt7615: move radio/mac initialization to .start/stop callbacks
+Date:   Sat, 30 Nov 2019 16:30:42 +0100
+Message-Id: <20191130153045.28105-26-nbd@nbd.name>
+X-Mailer: git-send-email 2.24.0
+In-Reply-To: <20191130153045.28105-1-nbd@nbd.name>
+References: <20191130153045.28105-1-nbd@nbd.name>
 MIME-Version: 1.0
-In-Reply-To: <OSBPR01MB21689E8028F2AFDBBA89076C83460@OSBPR01MB2168.jpnprd01.prod.outlook.com>
-Content-Type: text/plain; charset=iso-2022-jp; format=flowed; delsp=yes
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 11/29/19 4:03 AM, ambai.masaki@fujitsu.com wrote:
-> Hi,
-> 
-> What is the license for linux/lib/math/cordic.c?
-> 
->>   * Copyright (c) 2011 Broadcom Corporation
->>   *
->>   * Permission to use, copy, modify, and/or distribute this software for any
->>   * purpose with or without fee is hereby granted, provided that the above
->>   * copyright notice and this permission notice appear in all copies.
->>   *
->>   * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
->>   * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
->>   * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
->>   * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
->>   * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
->>   * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
->>   * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-> I think this license is an ISC license.
-> 
->> MODULE_LICENSE("Dual BSD/GPL");
-> However, MODULE _ LICENSE declares a different license.
-> I don't know which license is correct.
-> What licenses are declared in this file?
-> 
+Run initialization per phy
 
-I am a little confused. If the author(s) declare the license to be "Dual  
-BSD/GPL", why do you not believe them?
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ .../net/wireless/mediatek/mt76/mt7615/init.c  |  3 ---
+ .../net/wireless/mediatek/mt76/mt7615/main.c  | 23 ++++++++++++++++++-
+ .../net/wireless/mediatek/mt76/mt7615/mcu.c   |  6 ++---
+ .../wireless/mediatek/mt76/mt7615/mt7615.h    |  2 +-
+ 4 files changed, 26 insertions(+), 8 deletions(-)
 
-Larry
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/init.c b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
+index c4dbc635c2c6..78bcdf90ca5e 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
+@@ -56,8 +56,6 @@ static void mt7615_mac_init(struct mt7615_dev *dev)
+ 	mt76_rmw(dev, MT_AGG_SCR, MT_AGG_SCR_NLNAV_MID_PTEC_DIS,
+ 		 MT_AGG_SCR_NLNAV_MID_PTEC_DIS);
+ 
+-	mt7615_mcu_init_mac(dev);
+-
+ 	mt76_wr(dev, MT_DMA_DCR0, MT_DMA_DCR0_RX_VEC_DROP |
+ 		FIELD_PREP(MT_DMA_DCR0_MAX_RX_LEN, 3072));
+ 
+@@ -132,7 +130,6 @@ static int mt7615_init_hardware(struct mt7615_dev *dev)
+ 	mt7615_mcu_set_eeprom(dev);
+ 	mt7615_mac_init(dev);
+ 	mt7615_phy_init(dev);
+-	mt7615_mcu_ctrl_pm_state(dev, 0, 0);
+ 	mt7615_mcu_del_wtbl_all(dev);
+ 
+ 	/* Beacon and mgmt frames should occupy wcid 0 */
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/main.c b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
+index f80fa045f549..a7e1ab22c81c 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
+@@ -33,6 +33,17 @@ static int mt7615_start(struct ieee80211_hw *hw)
+ 	mutex_lock(&dev->mt76.mutex);
+ 
+ 	running = mt7615_dev_running(dev);
++
++	if (!running) {
++		mt7615_mcu_ctrl_pm_state(dev, 0, 0);
++		mt7615_mcu_set_mac_enable(dev, 0, true);
++	}
++
++	if (phy != &dev->phy) {
++		mt7615_mcu_ctrl_pm_state(dev, 1, 0);
++		mt7615_mcu_set_mac_enable(dev, 1, true);
++	}
++
+ 	set_bit(MT76_STATE_RUNNING, &phy->mt76->state);
+ 
+ 	if (running)
+@@ -57,9 +68,19 @@ static void mt7615_stop(struct ieee80211_hw *hw)
+ 	mutex_lock(&dev->mt76.mutex);
+ 
+ 	clear_bit(MT76_STATE_RUNNING, &phy->mt76->state);
+-	if (!mt7615_dev_running(dev))
++
++	if (phy != &dev->phy) {
++		mt7615_mcu_ctrl_pm_state(dev, 1, 1);
++		mt7615_mcu_set_mac_enable(dev, 1, false);
++	}
++
++	if (!mt7615_dev_running(dev)) {
+ 		cancel_delayed_work_sync(&dev->mt76.mac_work);
+ 
++		mt7615_mcu_ctrl_pm_state(dev, 0, 1);
++		mt7615_mcu_set_mac_enable(dev, 0, false);
++	}
++
+ 	mutex_unlock(&dev->mt76.mutex);
+ }
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
+index 9b09f2e742df..c08a301d4a62 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
+@@ -615,15 +615,15 @@ int mt7615_mcu_set_eeprom(struct mt7615_dev *dev)
+ 	return ret;
+ }
+ 
+-int mt7615_mcu_init_mac(struct mt7615_dev *dev)
++int mt7615_mcu_set_mac_enable(struct mt7615_dev *dev, int band, bool enable)
+ {
+ 	struct {
+ 		u8 enable;
+ 		u8 band;
+ 		u8 rsv[2];
+ 	} __packed req = {
+-		.enable = 1,
+-		.band = 0,
++		.enable = enable,
++		.band = band,
+ 	};
+ 
+ 	return __mt76_mcu_send_msg(&dev->mt76, MCU_EXT_CMD_MAC_INIT_CTRL,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
+index 3323baa7cc0c..2adf3b8a61b8 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
+@@ -288,7 +288,7 @@ int mt7615_mac_wtbl_set_key(struct mt7615_dev *dev, struct mt76_wcid *wcid,
+ 
+ int mt7615_mcu_set_dbdc(struct mt7615_dev *dev);
+ int mt7615_mcu_set_eeprom(struct mt7615_dev *dev);
+-int mt7615_mcu_init_mac(struct mt7615_dev *dev);
++int mt7615_mcu_set_mac_enable(struct mt7615_dev *dev, int band, bool enable);
+ int mt7615_mcu_set_rts_thresh(struct mt7615_phy *phy, u32 val);
+ int mt7615_mcu_ctrl_pm_state(struct mt7615_dev *dev, int band, int enter);
+ int mt7615_mcu_get_temperature(struct mt7615_dev *dev, int index);
+-- 
+2.24.0
 
