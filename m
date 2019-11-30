@@ -7,20 +7,20 @@ X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E62EC33CB9
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 314A6C47411
 	for <linux-wireless@archiver.kernel.org>; Sat, 30 Nov 2019 15:30:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 330032082E
+	by mail.kernel.org (Postfix) with ESMTP id 080B720833
 	for <linux-wireless@archiver.kernel.org>; Sat, 30 Nov 2019 15:30:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="BupCxCda"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="i46iGwiR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727301AbfK3Pa4 (ORCPT
+        id S1727297AbfK3Paz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 30 Nov 2019 10:30:56 -0500
-Received: from nbd.name ([46.4.11.11]:56072 "EHLO nbd.name"
+        Sat, 30 Nov 2019 10:30:55 -0500
+Received: from nbd.name ([46.4.11.11]:56046 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727227AbfK3Pat (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S1727103AbfK3Pat (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Sat, 30 Nov 2019 10:30:49 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
@@ -28,22 +28,22 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
         Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
         :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
         List-Post:List-Owner:List-Archive;
-        bh=lmElvg9H9EmcICBbr0GOsqYaI3UmBva7JPFZezbZ5cg=; b=BupCxCdaFqIXzob2ol2NU+1HEq
-        gEwkzjfohYGVnKpM7SQal6x2TZIwh/lT0cTyolcisU3VP1FW9BIjE+oqrhMEzGaJi67NyM/AQqLz3
-        bW6t9LYGPVlkE6OJyXAE/EmPoZqtti4bBNA9Wkhz9LlyYk2AmFM01nin6C/rAuIyI/Qc=;
+        bh=2atdoFOAgNObEsQW1cowgXlt6Qm5hosRNfGb+WFrSq0=; b=i46iGwiRTWJcrnh39KEIQBCzcK
+        Ia6HItNAWHRugOEDJrSKkwH9ycn2hAv4Dn9Yg4/BvOH5EkWLYOgtmktWhs9YNHZTH9L3YacU/OD7S
+        TgN8qmwhUxxUHOFXM7BnEiN83aSBGYK0ROL7sXdUl361hSSKBE6+SfmzWaV/xS3DalJo=;
 Received: from p5b2067e3.dip0.t-ipconnect.de ([91.32.103.227] helo=maeck.local)
         by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.89)
         (envelope-from <nbd@nbd.name>)
-        id 1ib4hr-0006iO-TT
-        for linux-wireless@vger.kernel.org; Sat, 30 Nov 2019 16:30:48 +0100
+        id 1ib4hr-0006hf-5H
+        for linux-wireless@vger.kernel.org; Sat, 30 Nov 2019 16:30:47 +0100
 Received: by maeck.local (Postfix, from userid 501)
-        id 0C0CF721EBE7; Sat, 30 Nov 2019 16:30:45 +0100 (CET)
+        id 09A5C721EBE0; Sat, 30 Nov 2019 16:30:45 +0100 (CET)
 From:   Felix Fietkau <nbd@nbd.name>
 To:     linux-wireless@vger.kernel.org
-Subject: [PATCH 22/29] mt76: mt7615: add multiple wiphy support to the dfs support code
-Date:   Sat, 30 Nov 2019 16:30:38 +0100
-Message-Id: <20191130153045.28105-22-nbd@nbd.name>
+Subject: [PATCH 12/29] mt76: move txpower and antenna mask to struct mt76_phy
+Date:   Sat, 30 Nov 2019 16:30:28 +0100
+Message-Id: <20191130153045.28105-12-nbd@nbd.name>
 X-Mailer: git-send-email 2.24.0
 In-Reply-To: <20191130153045.28105-1-nbd@nbd.name>
 References: <20191130153045.28105-1-nbd@nbd.name>
@@ -54,348 +54,338 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-There are two DFS detectors on the chip. When using 160 MHz channel bandwidth
-(not supported in dual-wiphy mode), both are used. Otherwise, one detector is
-used per wiphy.
-Rework the code to start/stop them separately per phy and to indicate the
-radar event on the right phy based on the detector index
+Adds multiple wiphy support to mt76_get_txpower
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- .../net/wireless/mediatek/mt76/mt7615/init.c  |  9 +--
- .../net/wireless/mediatek/mt76/mt7615/mac.c   | 63 +++++++++++--------
- .../net/wireless/mediatek/mt76/mt7615/main.c  |  5 +-
- .../net/wireless/mediatek/mt76/mt7615/mcu.c   | 18 +++++-
- .../net/wireless/mediatek/mt76/mt7615/mcu.h   | 46 ++++++++++++++
- .../wireless/mediatek/mt76/mt7615/mt7615.h    | 19 ++----
- 6 files changed, 107 insertions(+), 53 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mac80211.c | 19 ++++++++++---------
+ drivers/net/wireless/mediatek/mt76/mt76.h     |  6 +++---
+ .../net/wireless/mediatek/mt76/mt7603/init.c  | 10 +++++-----
+ .../net/wireless/mediatek/mt76/mt7603/mac.c   |  2 +-
+ .../net/wireless/mediatek/mt76/mt7603/mcu.c   |  6 +++---
+ .../wireless/mediatek/mt76/mt7615/eeprom.c    |  2 +-
+ .../net/wireless/mediatek/mt76/mt7615/init.c  |  2 +-
+ .../net/wireless/mediatek/mt76/mt7615/mac.c   |  4 ++--
+ .../net/wireless/mediatek/mt76/mt7615/mcu.c   |  6 +++---
+ .../net/wireless/mediatek/mt76/mt76x0/phy.c   |  2 +-
+ .../net/wireless/mediatek/mt76/mt76x02_util.c |  4 ++--
+ .../wireless/mediatek/mt76/mt76x2/pci_main.c  |  2 +-
+ .../wireless/mediatek/mt76/mt76x2/pci_phy.c   |  2 +-
+ .../net/wireless/mediatek/mt76/mt76x2/phy.c   |  2 +-
+ 14 files changed, 35 insertions(+), 34 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/init.c b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
-index 8d80aaf9723a..c4dbc635c2c6 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
-@@ -248,6 +248,7 @@ mt7615_regd_notifier(struct wiphy *wiphy,
- 	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
- 	struct mt7615_dev *dev = mt7615_hw_dev(hw);
- 	struct mt76_phy *mphy = hw->priv;
-+	struct mt7615_phy *phy = mphy->priv;
- 	struct cfg80211_chan_def *chandef = &mphy->chandef;
- 
- 	dev->mt76.region = request->dfs_region;
-@@ -255,11 +256,7 @@ mt7615_regd_notifier(struct wiphy *wiphy,
- 	if (!(chandef->chan->flags & IEEE80211_CHAN_RADAR))
- 		return;
- 
--	mt7615_dfs_stop_radar_detector(dev);
--	if (request->dfs_region == NL80211_DFS_UNSET)
--		mt7615_mcu_rdd_cmd(dev, RDD_CAC_END, 0, MT_RX_SEL0, 0);
--	else
--		mt7615_dfs_start_radar_detector(dev);
-+	mt7615_dfs_init_radar_detector(phy);
- }
- 
- int mt7615_register_device(struct mt7615_dev *dev)
-@@ -303,7 +300,7 @@ int mt7615_register_device(struct mt7615_dev *dev)
- 			IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_11454 |
- 			IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_MASK |
- 			IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160_80PLUS80MHZ;
--	dev->dfs_state = -1;
-+	dev->phy.dfs_state = -1;
- 
- 	ret = mt76_register_device(&dev->mt76, true, mt7615_rates,
- 				   ARRAY_SIZE(mt7615_rates));
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-index 8223c7fa1c65..89d6a21820ac 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-@@ -1497,19 +1497,14 @@ void mt7615_mac_work(struct work_struct *work)
- 				     MT7615_WATCHDOG_TIME);
- }
- 
--int mt7615_dfs_stop_radar_detector(struct mt7615_dev *dev)
-+static void mt7615_dfs_stop_radar_detector(struct mt7615_phy *phy)
+diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
+index 40a181c941c7..123321a0bc15 100644
+--- a/drivers/net/wireless/mediatek/mt76/mac80211.c
++++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
+@@ -121,7 +121,7 @@ static void mt76_init_stream_cap(struct mt76_dev *dev,
+ 				 bool vht)
  {
--	struct cfg80211_chan_def *chandef = &dev->mphy.chandef;
--	int err;
--
--	err = mt7615_mcu_rdd_cmd(dev, RDD_STOP, 0, MT_RX_SEL0, 0);
--	if (err < 0)
--		return err;
-+	struct mt7615_dev *dev = phy->dev;
+ 	struct ieee80211_sta_ht_cap *ht_cap = &sband->ht_cap;
+-	int i, nstream = hweight8(dev->antenna_mask);
++	int i, nstream = hweight8(dev->phy.antenna_mask);
+ 	struct ieee80211_sta_vht_cap *vht_cap;
+ 	u16 mcs_map = 0;
  
--	if (chandef->width == NL80211_CHAN_WIDTH_160 ||
--	    chandef->width == NL80211_CHAN_WIDTH_80P80)
--		err = mt7615_mcu_rdd_cmd(dev, RDD_STOP, 1, MT_RX_SEL0, 0);
--	return err;
-+	if (phy->rdd_state & BIT(0))
-+		mt7615_mcu_rdd_cmd(dev, RDD_STOP, 0, MT_RX_SEL0, 0);
-+	if (phy->rdd_state & BIT(1))
-+		mt7615_mcu_rdd_cmd(dev, RDD_STOP, 1, MT_RX_SEL0, 0);
- }
+@@ -326,8 +326,8 @@ int mt76_register_device(struct mt76_dev *dev, bool vht,
+ 	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
+ 	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_AIRTIME_FAIRNESS);
  
- static int mt7615_dfs_start_rdd(struct mt7615_dev *dev, int chain)
-@@ -1524,58 +1519,72 @@ static int mt7615_dfs_start_rdd(struct mt7615_dev *dev, int chain)
- 				  MT_RX_SEL0, 1);
- }
+-	wiphy->available_antennas_tx = dev->antenna_mask;
+-	wiphy->available_antennas_rx = dev->antenna_mask;
++	wiphy->available_antennas_tx = dev->phy.antenna_mask;
++	wiphy->available_antennas_rx = dev->phy.antenna_mask;
  
--int mt7615_dfs_start_radar_detector(struct mt7615_dev *dev)
-+static int mt7615_dfs_start_radar_detector(struct mt7615_phy *phy)
+ 	hw->txq_data_size = sizeof(struct mt76_txq);
+ 	hw->max_tx_fragments = 16;
+@@ -940,10 +940,10 @@ EXPORT_SYMBOL_GPL(mt76_sta_state);
+ int mt76_get_txpower(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 		     int *dbm)
  {
--	struct cfg80211_chan_def *chandef = &dev->mphy.chandef;
-+	struct cfg80211_chan_def *chandef = &phy->mt76->chandef;
-+	struct mt7615_dev *dev = phy->dev;
-+	bool ext_phy = phy != &dev->phy;
- 	int err;
+-	struct mt76_dev *dev = hw->priv;
+-	int n_chains = hweight8(dev->antenna_mask);
++	struct mt76_phy *phy = hw->priv;
++	int n_chains = hweight8(phy->antenna_mask);
  
- 	/* start CAC */
--	err = mt7615_mcu_rdd_cmd(dev, RDD_CAC_START, 0, MT_RX_SEL0, 0);
-+	err = mt7615_mcu_rdd_cmd(dev, RDD_CAC_START, ext_phy, MT_RX_SEL0, 0);
- 	if (err < 0)
- 		return err;
+-	*dbm = DIV_ROUND_UP(dev->txpower_cur, 2);
++	*dbm = DIV_ROUND_UP(phy->txpower_cur, 2);
  
--	/* TODO: DBDC support */
--
--	err = mt7615_dfs_start_rdd(dev, 0);
-+	err = mt7615_dfs_start_rdd(dev, ext_phy);
- 	if (err < 0)
- 		return err;
+ 	/* convert from per-chain power to combined
+ 	 * output power
+@@ -1078,11 +1078,12 @@ EXPORT_SYMBOL_GPL(mt76_sw_scan_complete);
  
-+	phy->rdd_state |= BIT(ext_phy);
-+
- 	if (chandef->width == NL80211_CHAN_WIDTH_160 ||
- 	    chandef->width == NL80211_CHAN_WIDTH_80P80) {
- 		err = mt7615_dfs_start_rdd(dev, 1);
- 		if (err < 0)
- 			return err;
-+
-+		phy->rdd_state |= BIT(1);
- 	}
+ int mt76_get_antenna(struct ieee80211_hw *hw, u32 *tx_ant, u32 *rx_ant)
+ {
+-	struct mt76_dev *dev = hw->priv;
++	struct mt76_phy *phy = hw->priv;
++	struct mt76_dev *dev = phy->dev;
+ 
+ 	mutex_lock(&dev->mutex);
+-	*tx_ant = dev->antenna_mask;
+-	*rx_ant = dev->antenna_mask;
++	*tx_ant = phy->antenna_mask;
++	*rx_ant = phy->antenna_mask;
+ 	mutex_unlock(&dev->mutex);
  
  	return 0;
- }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index f870acbd6b87..97baa92242fa 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -468,6 +468,9 @@ struct mt76_phy {
  
--int mt7615_dfs_init_radar_detector(struct mt7615_dev *dev)
-+int mt7615_dfs_init_radar_detector(struct mt7615_phy *phy)
- {
--	struct cfg80211_chan_def *chandef = &dev->mphy.chandef;
-+	struct cfg80211_chan_def *chandef = &phy->mt76->chandef;
-+	struct mt7615_dev *dev = phy->dev;
-+	bool ext_phy = phy != &dev->phy;
- 	int err;
- 
--	if (dev->mt76.region == NL80211_DFS_UNSET)
-+	if (dev->mt76.region == NL80211_DFS_UNSET) {
-+		phy->dfs_state = -1;
-+		if (phy->rdd_state)
-+			goto stop;
+ 	struct mt76_sband sband_2g;
+ 	struct mt76_sband sband_5g;
 +
- 		return 0;
-+	}
++	int txpower_cur;
++	u8 antenna_mask;
+ };
  
--	if (test_bit(MT76_SCANNING, &dev->mphy.state))
-+	if (test_bit(MT76_SCANNING, &phy->mt76->state))
- 		return 0;
+ struct mt76_dev {
+@@ -523,8 +526,6 @@ struct mt76_dev {
  
--	if (dev->dfs_state == chandef->chan->dfs_state)
-+	if (phy->dfs_state == chandef->chan->dfs_state)
- 		return 0;
+ 	u32 aggr_stats[32];
  
--	dev->dfs_state = chandef->chan->dfs_state;
-+	phy->dfs_state = chandef->chan->dfs_state;
+-	u8 antenna_mask;
+-
+ 	struct tasklet_struct pre_tbtt_tasklet;
+ 	int beacon_int;
+ 	u8 beacon_mask;
+@@ -534,7 +535,6 @@ struct mt76_dev {
+ 	struct mt76_hw_cap cap;
  
- 	if (chandef->chan->flags & IEEE80211_CHAN_RADAR) {
- 		if (chandef->chan->dfs_state != NL80211_DFS_AVAILABLE)
--			return mt7615_dfs_start_radar_detector(dev);
-+			return mt7615_dfs_start_radar_detector(phy);
+ 	struct mt76_rate_power rate_power;
+-	int txpower_cur;
  
--		return mt7615_mcu_rdd_cmd(dev, RDD_CAC_END, 0, MT_RX_SEL0, 0);
-+		return mt7615_mcu_rdd_cmd(dev, RDD_CAC_END, ext_phy,
-+					  MT_RX_SEL0, 0);
+ 	enum nl80211_dfs_regions region;
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/init.c b/drivers/net/wireless/mediatek/mt76/mt7603/init.c
+index 2ca07dd4db4b..af346d479258 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7603/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7603/init.c
+@@ -113,7 +113,7 @@ mt7603_dma_sched_init(struct mt7603_dev *dev)
+ static void
+ mt7603_phy_init(struct mt7603_dev *dev)
+ {
+-	int rx_chains = dev->mt76.antenna_mask;
++	int rx_chains = dev->mphy.antenna_mask;
+ 	int tx_chains = hweight8(rx_chains) - 1;
+ 
+ 	mt76_rmw(dev, MT_WF_RMAC_RMCR,
+@@ -493,12 +493,12 @@ mt7603_init_txpower(struct mt7603_dev *dev,
+ 	target_power += max_offset;
+ 
+ 	dev->tx_power_limit = target_power;
+-	dev->mt76.txpower_cur = target_power;
++	dev->mphy.txpower_cur = target_power;
+ 
+ 	target_power = DIV_ROUND_UP(target_power, 2);
+ 
+ 	/* add 3 dBm for 2SS devices (combined output) */
+-	if (dev->mt76.antenna_mask & BIT(1))
++	if (dev->mphy.antenna_mask & BIT(1))
+ 		target_power += 3;
+ 
+ 	for (i = 0; i < sband->n_channels; i++) {
+@@ -535,9 +535,9 @@ int mt7603_register_device(struct mt7603_dev *dev)
+ 		     (unsigned long)dev);
+ 
+ 	/* Check for 7688, which only has 1SS */
+-	dev->mt76.antenna_mask = 3;
++	dev->mphy.antenna_mask = 3;
+ 	if (mt76_rr(dev, MT_EFUSE_BASE + 0x64) & BIT(4))
+-		dev->mt76.antenna_mask = 1;
++		dev->mphy.antenna_mask = 1;
+ 
+ 	dev->slottime = 9;
+ 
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/mac.c b/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
+index 8a41bf118ed8..8cf6c430ef67 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
+@@ -609,7 +609,7 @@ mt7603_mac_fill_rx(struct mt7603_dev *dev, struct sk_buff *skb)
+ 
+ 		status->rate_idx = i;
+ 
+-		status->chains = dev->mt76.antenna_mask;
++		status->chains = dev->mphy.antenna_mask;
+ 		status->chain_signal[0] = FIELD_GET(MT_RXV4_IB_RSSI0, rxdg3) +
+ 					  dev->rssi_offset[0];
+ 		status->chain_signal[1] = FIELD_GET(MT_RXV4_IB_RSSI1, rxdg3) +
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7603/mcu.c
+index 96197205fb82..bec58f567010 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7603/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7603/mcu.c
+@@ -432,7 +432,7 @@ int mt7603_mcu_set_channel(struct mt7603_dev *dev)
+ {
+ 	struct cfg80211_chan_def *chandef = &dev->mphy.chandef;
+ 	struct ieee80211_hw *hw = mt76_hw(dev);
+-	int n_chains = hweight8(dev->mt76.antenna_mask);
++	int n_chains = hweight8(dev->mphy.antenna_mask);
+ 	struct {
+ 		u8 control_chan;
+ 		u8 center_chan;
+@@ -461,11 +461,11 @@ int mt7603_mcu_set_channel(struct mt7603_dev *dev)
  	}
  
--	err = mt7615_mcu_rdd_cmd(dev, RDD_NORMAL_START, 0, MT_RX_SEL0, 0);
-+stop:
-+	err = mt7615_mcu_rdd_cmd(dev, RDD_NORMAL_START, ext_phy, MT_RX_SEL0, 0);
- 	if (err < 0)
- 		return err;
+ 	tx_power = hw->conf.power_level * 2;
+-	if (dev->mt76.antenna_mask == 3)
++	if (dev->mphy.antenna_mask == 3)
+ 		tx_power -= 6;
+ 	tx_power = min(tx_power, dev->tx_power_limit);
  
--	return mt7615_dfs_stop_radar_detector(dev);
-+	mt7615_dfs_stop_radar_detector(phy);
-+	return 0;
+-	dev->mt76.txpower_cur = tx_power;
++	dev->mphy.txpower_cur = tx_power;
+ 
+ 	for (i = 0; i < ARRAY_SIZE(req.txpower); i++)
+ 		req.txpower[i] = tx_power;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
+index 6bf8388410ef..7e540f0ec94d 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
+@@ -125,7 +125,7 @@ static void mt7615_eeprom_parse_hw_cap(struct mt7615_dev *dev)
+ 		tx_mask = max_nss;
+ 
+ 	dev->chainmask = tx_mask << 8 | rx_mask;
+-	dev->mt76.antenna_mask = BIT(tx_mask) - 1;
++	dev->mphy.antenna_mask = BIT(tx_mask) - 1;
  }
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/main.c b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
-index 9b11ca218873..1650b7dfe2ad 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
-@@ -185,15 +185,14 @@ static int mt7615_set_channel(struct mt7615_phy *phy)
- 	mutex_lock(&dev->mt76.mutex);
- 	set_bit(MT76_RESET, &phy->mt76->state);
  
--	mt7615_dfs_check_channel(dev);
--
-+	phy->dfs_state = -1;
- 	mt76_set_channel(phy->mt76);
+ int mt7615_eeprom_get_power_index(struct mt7615_dev *dev,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/init.c b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
+index e071cafe80e4..f4dc756bad4b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
+@@ -203,7 +203,7 @@ static void
+ mt7615_init_txpower(struct mt7615_dev *dev,
+ 		    struct ieee80211_supported_band *sband)
+ {
+-	int i, n_chains = hweight8(dev->mt76.antenna_mask), target_chains;
++	int i, n_chains = hweight8(dev->mphy.antenna_mask), target_chains;
+ 	u8 *eep = (u8 *)dev->mt76.eeprom.data;
+ 	enum nl80211_band band = sband->band;
  
- 	ret = mt7615_mcu_set_channel(phy);
- 	if (ret)
- 		goto out;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
+index 727af49ca666..581cbf52482c 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
+@@ -218,14 +218,14 @@ int mt7615_mac_fill_rx(struct mt7615_dev *dev, struct sk_buff *skb)
  
--	ret = mt7615_dfs_init_radar_detector(dev);
-+	ret = mt7615_dfs_init_radar_detector(phy);
- 	mt7615_mac_cca_stats_reset(phy);
+ 		status->enc_flags |= RX_ENC_FLAG_STBC_MASK * stbc;
  
- 	mt7615_mac_reset_counters(dev);
+-		status->chains = dev->mt76.antenna_mask;
++		status->chains = dev->mphy.antenna_mask;
+ 		status->chain_signal[0] = to_rssi(MT_RXV4_RCPI0, rxdg3);
+ 		status->chain_signal[1] = to_rssi(MT_RXV4_RCPI1, rxdg3);
+ 		status->chain_signal[2] = to_rssi(MT_RXV4_RCPI2, rxdg3);
+ 		status->chain_signal[3] = to_rssi(MT_RXV4_RCPI3, rxdg3);
+ 		status->signal = status->chain_signal[0];
+ 
+-		for (i = 1; i < hweight8(dev->mt76.antenna_mask); i++) {
++		for (i = 1; i < hweight8(dev->mphy.antenna_mask); i++) {
+ 			if (!(status->chains & BIT(i)))
+ 				continue;
+ 
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-index 636496b8b339..dc0d598f5498 100644
+index 3c5922d17e44..04804c87463a 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-@@ -185,6 +185,21 @@ mt7615_mcu_csa_finish(void *priv, u8 *mac, struct ieee80211_vif *vif)
- 		ieee80211_csa_finish(vif);
- }
+@@ -1158,7 +1158,7 @@ int mt7615_mcu_set_bcn(struct mt7615_dev *dev, struct ieee80211_vif *vif,
  
-+static void
-+mt7615_mcu_rx_radar_detected(struct mt7615_dev *dev, struct sk_buff *skb)
-+{
-+	struct mt76_phy *mphy = &dev->mt76.phy;
-+	struct mt7615_mcu_rdd_report *r;
-+
-+	r = (struct mt7615_mcu_rdd_report *)skb->data;
-+
-+	if (r->idx && dev->mt76.phy2)
-+		mphy = dev->mt76.phy2;
-+
-+	ieee80211_radar_detected(mphy->hw);
-+	dev->hw_pattern++;
-+}
-+
- static void
- mt7615_mcu_rx_ext_event(struct mt7615_dev *dev, struct sk_buff *skb)
+ int mt7615_mcu_set_tx_power(struct mt7615_dev *dev)
  {
-@@ -192,8 +207,7 @@ mt7615_mcu_rx_ext_event(struct mt7615_dev *dev, struct sk_buff *skb)
- 
- 	switch (rxd->ext_eid) {
- 	case MCU_EXT_EVENT_RDD_REPORT:
--		ieee80211_radar_detected(dev->mt76.hw);
--		dev->hw_pattern++;
-+		mt7615_mcu_rx_radar_detected(dev, skb);
+-	int i, ret, n_chains = hweight8(dev->mt76.antenna_mask);
++	int i, ret, n_chains = hweight8(dev->mphy.antenna_mask);
+ 	struct cfg80211_chan_def *chandef = &dev->mphy.chandef;
+ 	int freq = chandef->center_freq1, len, target_chains;
+ 	u8 *req, *data, *eep = (u8 *)dev->mt76.eeprom.data;
+@@ -1200,7 +1200,7 @@ int mt7615_mcu_set_tx_power(struct mt7615_dev *dev)
  		break;
- 	case MCU_EXT_EVENT_CSA_NOTIFY:
- 		ieee80211_iterate_active_interfaces_atomic(dev->mt76.hw,
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.h b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.h
-index 1fd7dffa6eef..f4781477fc9b 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.h
-@@ -60,6 +60,52 @@ struct mt7615_mcu_rxd {
- 	u8 s2d_index;
- };
+ 	}
+ 	tx_power = max_t(s8, tx_power, 0);
+-	dev->mt76.txpower_cur = tx_power;
++	dev->mphy.txpower_cur = tx_power;
  
-+struct mt7615_mcu_rdd_report {
-+	struct mt7615_mcu_rxd rxd;
-+
-+	u8 idx;
-+	u8 long_detected;
-+	u8 constant_prf_detected;
-+	u8 staggered_prf_detected;
-+	u8 radar_type_idx;
-+	u8 periodic_pulse_num;
-+	u8 long_pulse_num;
-+	u8 hw_pulse_num;
-+
-+	u8 out_lpn;
-+	u8 out_spn;
-+	u8 out_crpn;
-+	u8 out_crpw;
-+	u8 out_crbn;
-+	u8 out_stgpn;
-+	u8 out_stgpw;
-+
-+	u8 _rsv[2];
-+
-+	__le32 out_pri_const;
-+	__le32 out_pri_stg[3];
-+
-+	struct {
-+		__le32 start;
-+		__le16 pulse_width;
-+		__le16 pulse_power;
-+	} long_pulse[32];
-+
-+	struct {
-+		__le32 start;
-+		__le16 pulse_width;
-+		__le16 pulse_power;
-+	} periodic_pulse[32];
-+
-+	struct {
-+		__le32 start;
-+		__le16 pulse_width;
-+		__le16 pulse_power;
-+		u8 sc_pass;
-+		u8 sw_reset;
-+	} hw_pulse[32];
-+};
-+
- #define MCU_PQ_ID(p, q)		(((p) << 15) | ((q) << 10))
- #define MCU_PKT_ID		0xa0
+ 	target_chains = mt7615_ext_pa_enabled(dev, band) ? 1 : n_chains;
+ 	for (i = 0; i < target_chains; i++) {
+@@ -1300,7 +1300,7 @@ int mt7615_mcu_set_channel(struct mt7615_dev *dev)
+ 		.control_chan = chandef->chan->hw_value,
+ 		.center_chan = ieee80211_frequency_to_channel(freq1),
+ 		.tx_streams = (dev->chainmask >> 8) & 0xf,
+-		.rx_streams_mask = dev->mt76.antenna_mask,
++		.rx_streams_mask = dev->mphy.antenna_mask,
+ 		.center_chan2 = ieee80211_frequency_to_channel(freq2),
+ 	};
+ 	int ret;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
+index 0a10d1ee7553..cc28ad03155d 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x0/phy.c
+@@ -849,7 +849,7 @@ void mt76x0_phy_set_txpower(struct mt76x02_dev *dev)
  
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-index bd9014421b00..3c8d96992b60 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-@@ -89,6 +89,9 @@ struct mt7615_phy {
- 	int false_cca_ofdm, false_cca_cck;
- 	s8 ofdm_sensitivity;
- 	s8 cck_sensitivity;
-+
-+	u8 rdd_state;
-+	int dfs_state;
- };
+ 	mt76x02_add_rate_power_offset(t, info);
+ 	mt76x02_limit_rate_power(t, dev->txpower_conf);
+-	dev->mt76.txpower_cur = mt76x02_get_max_rate_power(t);
++	dev->mphy.txpower_cur = mt76x02_get_max_rate_power(t);
+ 	mt76x02_add_rate_power_offset(t, -info);
  
- struct mt7615_dev {
-@@ -115,7 +118,6 @@ struct mt7615_dev {
- 		s16 power;
- 	} radar_pattern;
- 	u32 hw_pattern;
--	int dfs_state;
- 
- 	u8 mac_work_count;
- 	bool scs_en;
-@@ -243,8 +245,6 @@ void mt7615_mcu_rx_event(struct mt7615_dev *dev, struct sk_buff *skb);
- int mt7615_mcu_rdd_cmd(struct mt7615_dev *dev,
- 		       enum mt7615_rdd_cmd cmd, u8 index,
- 		       u8 rx_sel, u8 val);
--int mt7615_dfs_start_radar_detector(struct mt7615_dev *dev);
--int mt7615_dfs_stop_radar_detector(struct mt7615_dev *dev);
- int mt7615_mcu_rdd_send_pattern(struct mt7615_dev *dev);
- 
- static inline bool is_mt7622(struct mt76_dev *dev)
-@@ -252,17 +252,6 @@ static inline bool is_mt7622(struct mt76_dev *dev)
- 	return mt76_chip(dev) == 0x7622;
+ 	dev->target_power = info;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
+index 846cd75e3e2d..e5685d9534e4 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
+@@ -193,10 +193,10 @@ void mt76x02_init_device(struct mt76x02_dev *dev)
+ 		dev->mphy.sband_5g.sband.ht_cap.cap |=
+ 				IEEE80211_HT_CAP_LDPC_CODING;
+ 		dev->chainmask = 0x202;
+-		dev->mt76.antenna_mask = 3;
++		dev->mphy.antenna_mask = 3;
+ 	} else {
+ 		dev->chainmask = 0x101;
+-		dev->mt76.antenna_mask = 1;
++		dev->mphy.antenna_mask = 1;
+ 	}
  }
+ EXPORT_SYMBOL_GPL(mt76x02_init_device);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c
+index 3f82b9cec89e..dd336f54b8ee 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_main.c
+@@ -125,7 +125,7 @@ static int mt76x2_set_antenna(struct ieee80211_hw *hw, u32 tx_ant,
+ 	mutex_lock(&dev->mt76.mutex);
  
--static inline void mt7615_dfs_check_channel(struct mt7615_dev *dev)
--{
--	enum nl80211_chan_width width = dev->mphy.chandef.width;
--	u32 freq = dev->mphy.chandef.chan->center_freq;
--	struct ieee80211_hw *hw = mt76_hw(dev);
--
--	if (hw->conf.chandef.chan->center_freq != freq ||
--	    hw->conf.chandef.width != width)
--		dev->dfs_state = -1;
--}
--
- static inline void mt7615_irq_enable(struct mt7615_dev *dev, u32 mask)
- {
- 	mt76_set_irq_mask(&dev->mt76, MT_INT_MASK_CSR, 0, mask);
-@@ -319,7 +308,7 @@ void mt7615_mac_work(struct work_struct *work);
- void mt7615_txp_skb_unmap(struct mt76_dev *dev,
- 			  struct mt76_txwi_cache *txwi);
- int mt76_dfs_start_rdd(struct mt7615_dev *dev, bool force);
--int mt7615_dfs_init_radar_detector(struct mt7615_dev *dev);
-+int mt7615_dfs_init_radar_detector(struct mt7615_phy *phy);
+ 	dev->chainmask = (tx_ant == 3) ? 0x202 : 0x101;
+-	dev->mt76.antenna_mask = tx_ant;
++	dev->mphy.antenna_mask = tx_ant;
  
- int mt7615_init_debugfs(struct mt7615_dev *dev);
+ 	mt76_set_stream_caps(&dev->mt76, true);
+ 	mt76x2_phy_set_antenna(dev);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_phy.c b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_phy.c
+index e996b736a690..8831337df23e 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2/pci_phy.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2/pci_phy.c
+@@ -74,7 +74,7 @@ void mt76x2_phy_set_antenna(struct mt76x02_dev *dev)
  
+ 	val = mt76_rr(dev, MT_BBP(AGC, 0));
+ 	val &= ~(BIT(4) | BIT(1));
+-	switch (dev->mt76.antenna_mask) {
++	switch (dev->mphy.antenna_mask) {
+ 	case 1:
+ 		/* disable mac DAC control */
+ 		mt76_clear(dev, MT_BBP(IBI, 9), BIT(11));
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/phy.c b/drivers/net/wireless/mediatek/mt76/mt76x2/phy.c
+index 58f28e4e3952..91ab25c7d5ba 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2/phy.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2/phy.c
+@@ -153,7 +153,7 @@ void mt76x2_phy_set_txpower(struct mt76x02_dev *dev)
+ 	mt76x2_get_rate_power(dev, &t, chan);
+ 	mt76x02_add_rate_power_offset(&t, txp.target_power + delta);
+ 	mt76x02_limit_rate_power(&t, dev->txpower_conf);
+-	dev->mt76.txpower_cur = mt76x02_get_max_rate_power(&t);
++	dev->mphy.txpower_cur = mt76x02_get_max_rate_power(&t);
+ 
+ 	base_power = mt76x2_get_min_rate_power(&t);
+ 	delta = base_power - txp.target_power;
 -- 
 2.24.0
 
