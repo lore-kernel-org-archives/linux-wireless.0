@@ -7,20 +7,20 @@ X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33BECC432C0
-	for <linux-wireless@archiver.kernel.org>; Sat, 30 Nov 2019 15:31:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BB97C33CB5
+	for <linux-wireless@archiver.kernel.org>; Sat, 30 Nov 2019 15:31:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0ABD72072C
-	for <linux-wireless@archiver.kernel.org>; Sat, 30 Nov 2019 15:31:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 72C532072C
+	for <linux-wireless@archiver.kernel.org>; Sat, 30 Nov 2019 15:31:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="uXxBwzpD"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="KXSVTqBR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727313AbfK3PbB (ORCPT
+        id S1727319AbfK3PbE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 30 Nov 2019 10:31:01 -0500
-Received: from nbd.name ([46.4.11.11]:56064 "EHLO nbd.name"
+        Sat, 30 Nov 2019 10:31:04 -0500
+Received: from nbd.name ([46.4.11.11]:56042 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727200AbfK3Pat (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S1727104AbfK3Pat (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Sat, 30 Nov 2019 10:30:49 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
@@ -28,22 +28,22 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
         Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
         :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
         List-Post:List-Owner:List-Archive;
-        bh=QkL0hHKwEU9pWAfErjoUrKx40tQxxLoqdoVZYG7V4og=; b=uXxBwzpDN6Ba7uZwiWJVmKYINd
-        MuXwPXx9V5ubhLH0rSRVZ2PiCrQ8Fb2x8IuFd9cFhbADx6m2B6ePpjXgaLQSNiXisvLDNSHmvtb0D
-        hBOf46A4XRXe8aBvjmjIrVcmX3w3UgZTt5OirBJds+0yTgPjh2Lss6rcU0lP/UuXjL8Y=;
+        bh=/yTGbD6Dl3ALUxwSX1jptkEiWqb5AKGpOm7oJRGI2ac=; b=KXSVTqBRkCOGtHKxw/hwULMqQ5
+        14TxNiL4Rds53/s8k1FOaDB8dPdvf2EdHaKB69pwJKnTchADHt/6EWkGbXQpj44nu/1Xp6ttPxpgm
+        6+NvVNxZ/SoInPplpFhwRkf80xtRKWlKgonLxuZeLeHbP1E12Pc7+TgxS3UWbDGY0Fig=;
 Received: from p5b2067e3.dip0.t-ipconnect.de ([91.32.103.227] helo=maeck.local)
         by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.89)
         (envelope-from <nbd@nbd.name>)
-        id 1ib4hr-0006iM-Qn
-        for linux-wireless@vger.kernel.org; Sat, 30 Nov 2019 16:30:48 +0100
+        id 1ib4hr-0006hg-6X
+        for linux-wireless@vger.kernel.org; Sat, 30 Nov 2019 16:30:47 +0100
 Received: by maeck.local (Postfix, from userid 501)
-        id 0C981721EBE9; Sat, 30 Nov 2019 16:30:45 +0100 (CET)
+        id 06F1B721EBD8; Sat, 30 Nov 2019 16:30:45 +0100 (CET)
 From:   Felix Fietkau <nbd@nbd.name>
 To:     linux-wireless@vger.kernel.org
-Subject: [PATCH 21/29] mt76: mt7615: remove useless MT_HW_RDD0/1 enum
-Date:   Sat, 30 Nov 2019 16:30:37 +0100
-Message-Id: <20191130153045.28105-21-nbd@nbd.name>
+Subject: [PATCH 23/29] mt76: mt7615: rework chainmask handling
+Date:   Sat, 30 Nov 2019 16:30:39 +0100
+Message-Id: <20191130153045.28105-23-nbd@nbd.name>
 X-Mailer: git-send-email 2.24.0
 In-Reply-To: <20191130153045.28105-1-nbd@nbd.name>
 References: <20191130153045.28105-1-nbd@nbd.name>
@@ -54,114 +54,87 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Writing 0/1 is shorter and just as clear
+Move chainmask to struct mt7615_phy and instead of needlessly making the
+format similar to values for older chips, make it refer to the actual chain
+bits used for the rx/tx path.
+This is important for multiple wiphy support, where for a secondary phy,
+antenna_mask will start at 0, and chainmask will start at the chain offset
+(bit 2)
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- .../net/wireless/mediatek/mt76/mt7615/init.c  |  3 +-
- .../net/wireless/mediatek/mt76/mt7615/mac.c   | 29 ++++++++-----------
- .../wireless/mediatek/mt76/mt7615/mt7615.h    |  5 ----
- 3 files changed, 13 insertions(+), 24 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c | 2 +-
+ drivers/net/wireless/mediatek/mt76/mt7615/mcu.c    | 7 +++++--
+ drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h | 3 ++-
+ 3 files changed, 8 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/init.c b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
-index 9dcc3b26ff33..8d80aaf9723a 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
-@@ -257,8 +257,7 @@ mt7615_regd_notifier(struct wiphy *wiphy,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
+index 7e540f0ec94d..61a3fba240ba 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
+@@ -124,8 +124,8 @@ static void mt7615_eeprom_parse_hw_cap(struct mt7615_dev *dev)
+ 	if (!tx_mask || tx_mask > max_nss)
+ 		tx_mask = max_nss;
  
- 	mt7615_dfs_stop_radar_detector(dev);
- 	if (request->dfs_region == NL80211_DFS_UNSET)
--		mt7615_mcu_rdd_cmd(dev, RDD_CAC_END, MT_HW_RDD0,
--				   MT_RX_SEL0, 0);
-+		mt7615_mcu_rdd_cmd(dev, RDD_CAC_END, 0, MT_RX_SEL0, 0);
- 	else
- 		mt7615_dfs_start_radar_detector(dev);
- }
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-index 71b3de5c810c..8223c7fa1c65 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-@@ -1502,15 +1502,13 @@ int mt7615_dfs_stop_radar_detector(struct mt7615_dev *dev)
- 	struct cfg80211_chan_def *chandef = &dev->mphy.chandef;
- 	int err;
- 
--	err = mt7615_mcu_rdd_cmd(dev, RDD_STOP, MT_HW_RDD0,
--				 MT_RX_SEL0, 0);
-+	err = mt7615_mcu_rdd_cmd(dev, RDD_STOP, 0, MT_RX_SEL0, 0);
- 	if (err < 0)
- 		return err;
- 
- 	if (chandef->width == NL80211_CHAN_WIDTH_160 ||
- 	    chandef->width == NL80211_CHAN_WIDTH_80P80)
--		err = mt7615_mcu_rdd_cmd(dev, RDD_STOP, MT_HW_RDD1,
--					 MT_RX_SEL0, 0);
-+		err = mt7615_mcu_rdd_cmd(dev, RDD_STOP, 1, MT_RX_SEL0, 0);
- 	return err;
+-	dev->chainmask = tx_mask << 8 | rx_mask;
+ 	dev->mphy.antenna_mask = BIT(tx_mask) - 1;
++	dev->phy.chainmask = dev->mphy.antenna_mask;
  }
  
-@@ -1532,20 +1530,19 @@ int mt7615_dfs_start_radar_detector(struct mt7615_dev *dev)
- 	int err;
+ int mt7615_eeprom_get_power_index(struct mt7615_dev *dev,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
+index dc0d598f5498..a19c406c2231 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
+@@ -1304,6 +1304,7 @@ int mt7615_mcu_set_channel(struct mt7615_phy *phy)
+ 	struct mt7615_dev *dev = phy->dev;
+ 	struct cfg80211_chan_def *chandef = &phy->mt76->chandef;
+ 	int freq1 = chandef->center_freq1, freq2 = chandef->center_freq2;
++	u8 n_chains = hweight8(phy->mt76->antenna_mask);
+ 	struct {
+ 		u8 control_chan;
+ 		u8 center_chan;
+@@ -1325,8 +1326,8 @@ int mt7615_mcu_set_channel(struct mt7615_phy *phy)
+ 	} req = {
+ 		.control_chan = chandef->chan->hw_value,
+ 		.center_chan = ieee80211_frequency_to_channel(freq1),
+-		.tx_streams = (dev->chainmask >> 8) & 0xf,
+-		.rx_streams_mask = dev->mphy.antenna_mask,
++		.tx_streams = n_chains,
++		.rx_streams_mask = n_chains,
+ 		.center_chan2 = ieee80211_frequency_to_channel(freq2),
+ 	};
+ 	int ret;
+@@ -1373,6 +1374,8 @@ int mt7615_mcu_set_channel(struct mt7615_phy *phy)
+ 	if (ret)
+ 		return ret;
  
- 	/* start CAC */
--	err = mt7615_mcu_rdd_cmd(dev, RDD_CAC_START, MT_HW_RDD0,
--				 MT_RX_SEL0, 0);
-+	err = mt7615_mcu_rdd_cmd(dev, RDD_CAC_START, 0, MT_RX_SEL0, 0);
- 	if (err < 0)
- 		return err;
- 
- 	/* TODO: DBDC support */
- 
--	err = mt7615_dfs_start_rdd(dev, MT_HW_RDD0);
-+	err = mt7615_dfs_start_rdd(dev, 0);
- 	if (err < 0)
- 		return err;
- 
- 	if (chandef->width == NL80211_CHAN_WIDTH_160 ||
- 	    chandef->width == NL80211_CHAN_WIDTH_80P80) {
--		err = mt7615_dfs_start_rdd(dev, MT_HW_RDD1);
-+		err = mt7615_dfs_start_rdd(dev, 1);
- 		if (err < 0)
- 			return err;
- 	}
-@@ -1572,15 +1569,13 @@ int mt7615_dfs_init_radar_detector(struct mt7615_dev *dev)
- 	if (chandef->chan->flags & IEEE80211_CHAN_RADAR) {
- 		if (chandef->chan->dfs_state != NL80211_DFS_AVAILABLE)
- 			return mt7615_dfs_start_radar_detector(dev);
--		else
--			return mt7615_mcu_rdd_cmd(dev, RDD_CAC_END, MT_HW_RDD0,
--						  MT_RX_SEL0, 0);
--	} else {
--		err = mt7615_mcu_rdd_cmd(dev, RDD_NORMAL_START,
--					 MT_HW_RDD0, MT_RX_SEL0, 0);
--		if (err < 0)
--			return err;
- 
--		return mt7615_dfs_stop_radar_detector(dev);
-+		return mt7615_mcu_rdd_cmd(dev, RDD_CAC_END, 0, MT_RX_SEL0, 0);
- 	}
++	req.rx_streams_mask = phy->chainmask;
 +
-+	err = mt7615_mcu_rdd_cmd(dev, RDD_NORMAL_START, 0, MT_RX_SEL0, 0);
-+	if (err < 0)
-+		return err;
-+
-+	return mt7615_dfs_stop_radar_detector(dev);
+ 	return __mt76_mcu_send_msg(&dev->mt76, MCU_EXT_CMD_SET_RX_PATH,
+ 				   &req, sizeof(req), true);
  }
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-index 88e903324f07..bd9014421b00 100644
+index 3c8d96992b60..37d3b0971292 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
 +++ b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-@@ -149,11 +149,6 @@ enum {
- 	EXT_BSSID_END
- };
+@@ -90,6 +90,8 @@ struct mt7615_phy {
+ 	s8 ofdm_sensitivity;
+ 	s8 cck_sensitivity;
  
--enum {
--	MT_HW_RDD0,
--	MT_HW_RDD1,
--};
--
- enum {
- 	MT_RX_SEL0,
- 	MT_RX_SEL1,
++	u16 chainmask;
++
+ 	u8 rdd_state;
+ 	int dfs_state;
+ };
+@@ -101,7 +103,6 @@ struct mt7615_dev {
+ 	};
+ 
+ 	struct mt7615_phy phy;
+-	u16 chainmask;
+ 	u32 vif_mask;
+ 	u32 omac_mask;
+ 
 -- 
 2.24.0
 
