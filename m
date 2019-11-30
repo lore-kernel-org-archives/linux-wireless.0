@@ -7,20 +7,20 @@ X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5367CC33CBB
-	for <linux-wireless@archiver.kernel.org>; Sat, 30 Nov 2019 15:30:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33BECC432C0
+	for <linux-wireless@archiver.kernel.org>; Sat, 30 Nov 2019 15:31:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2ABF62082E
-	for <linux-wireless@archiver.kernel.org>; Sat, 30 Nov 2019 15:30:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0ABD72072C
+	for <linux-wireless@archiver.kernel.org>; Sat, 30 Nov 2019 15:31:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="JC/TjW3+"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="uXxBwzpD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727252AbfK3Pat (ORCPT
+        id S1727313AbfK3PbB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 30 Nov 2019 10:30:49 -0500
-Received: from nbd.name ([46.4.11.11]:56068 "EHLO nbd.name"
+        Sat, 30 Nov 2019 10:31:01 -0500
+Received: from nbd.name ([46.4.11.11]:56064 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727219AbfK3Pat (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S1727200AbfK3Pat (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Sat, 30 Nov 2019 10:30:49 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
@@ -28,22 +28,22 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
         Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
         :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
         List-Post:List-Owner:List-Archive;
-        bh=NaRZAaGEN/3w6ORA9NBtgPNVaRuUfhTm2Lfz7BG5Gws=; b=JC/TjW3+HnznOR/ZCTjyij4Lm6
-        phBxPNBl29P6NwMojTnQmMOc2loZBk455VBDDY0mwWwOBlycJs2vn4qgtyVkmBKNi/lGqsRKearke
-        PR1YWW2TGwsoEj4x/QTndHKIXSZM9LCZbenseVRfDNmOF8crpoKFdTJh/MtTtijXay2c=;
+        bh=QkL0hHKwEU9pWAfErjoUrKx40tQxxLoqdoVZYG7V4og=; b=uXxBwzpDN6Ba7uZwiWJVmKYINd
+        MuXwPXx9V5ubhLH0rSRVZ2PiCrQ8Fb2x8IuFd9cFhbADx6m2B6ePpjXgaLQSNiXisvLDNSHmvtb0D
+        hBOf46A4XRXe8aBvjmjIrVcmX3w3UgZTt5OirBJds+0yTgPjh2Lss6rcU0lP/UuXjL8Y=;
 Received: from p5b2067e3.dip0.t-ipconnect.de ([91.32.103.227] helo=maeck.local)
         by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.89)
         (envelope-from <nbd@nbd.name>)
-        id 1ib4hr-0006iP-RV
+        id 1ib4hr-0006iM-Qn
         for linux-wireless@vger.kernel.org; Sat, 30 Nov 2019 16:30:48 +0100
 Received: by maeck.local (Postfix, from userid 501)
-        id 0D293721EBEB; Sat, 30 Nov 2019 16:30:45 +0100 (CET)
+        id 0C981721EBE9; Sat, 30 Nov 2019 16:30:45 +0100 (CET)
 From:   Felix Fietkau <nbd@nbd.name>
 To:     linux-wireless@vger.kernel.org
-Subject: [PATCH 06/29] mt76: add support for an extra wiphy in mt76_sta_state()
-Date:   Sat, 30 Nov 2019 16:30:22 +0100
-Message-Id: <20191130153045.28105-6-nbd@nbd.name>
+Subject: [PATCH 21/29] mt76: mt7615: remove useless MT_HW_RDD0/1 enum
+Date:   Sat, 30 Nov 2019 16:30:37 +0100
+Message-Id: <20191130153045.28105-21-nbd@nbd.name>
 X-Mailer: git-send-email 2.24.0
 In-Reply-To: <20191130153045.28105-1-nbd@nbd.name>
 References: <20191130153045.28105-1-nbd@nbd.name>
@@ -54,119 +54,114 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This is preparation for supporting multiple wiphys per device to support the
-concurrent dual-band feature of MT7615D
+Writing 0/1 is shorter and just as clear
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/mediatek/mt76/mac80211.c | 13 +++++++++----
- drivers/net/wireless/mediatek/mt76/mt76.h     | 11 +++++++++++
- drivers/net/wireless/mediatek/mt76/util.h     | 14 +++++++++++++-
- 3 files changed, 33 insertions(+), 5 deletions(-)
+ .../net/wireless/mediatek/mt76/mt7615/init.c  |  3 +-
+ .../net/wireless/mediatek/mt76/mt7615/mac.c   | 29 ++++++++-----------
+ .../wireless/mediatek/mt76/mt7615/mt7615.h    |  5 ----
+ 3 files changed, 13 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
-index 0c2a11172203..8cd378666c6e 100644
---- a/drivers/net/wireless/mediatek/mt76/mac80211.c
-+++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
-@@ -828,7 +828,7 @@ EXPORT_SYMBOL_GPL(mt76_rx_poll_complete);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/init.c b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
+index 9dcc3b26ff33..8d80aaf9723a 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
+@@ -257,8 +257,7 @@ mt7615_regd_notifier(struct wiphy *wiphy,
  
- static int
- mt76_sta_add(struct mt76_dev *dev, struct ieee80211_vif *vif,
--	     struct ieee80211_sta *sta)
-+	     struct ieee80211_sta *sta, bool ext_phy)
- {
- 	struct mt76_wcid *wcid = (struct mt76_wcid *)sta->drv_priv;
- 	int ret;
-@@ -853,6 +853,8 @@ mt76_sta_add(struct mt76_dev *dev, struct ieee80211_vif *vif,
+ 	mt7615_dfs_stop_radar_detector(dev);
+ 	if (request->dfs_region == NL80211_DFS_UNSET)
+-		mt7615_mcu_rdd_cmd(dev, RDD_CAC_END, MT_HW_RDD0,
+-				   MT_RX_SEL0, 0);
++		mt7615_mcu_rdd_cmd(dev, RDD_CAC_END, 0, MT_RX_SEL0, 0);
+ 	else
+ 		mt7615_dfs_start_radar_detector(dev);
+ }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
+index 71b3de5c810c..8223c7fa1c65 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
+@@ -1502,15 +1502,13 @@ int mt7615_dfs_stop_radar_detector(struct mt7615_dev *dev)
+ 	struct cfg80211_chan_def *chandef = &dev->mphy.chandef;
+ 	int err;
+ 
+-	err = mt7615_mcu_rdd_cmd(dev, RDD_STOP, MT_HW_RDD0,
+-				 MT_RX_SEL0, 0);
++	err = mt7615_mcu_rdd_cmd(dev, RDD_STOP, 0, MT_RX_SEL0, 0);
+ 	if (err < 0)
+ 		return err;
+ 
+ 	if (chandef->width == NL80211_CHAN_WIDTH_160 ||
+ 	    chandef->width == NL80211_CHAN_WIDTH_80P80)
+-		err = mt7615_mcu_rdd_cmd(dev, RDD_STOP, MT_HW_RDD1,
+-					 MT_RX_SEL0, 0);
++		err = mt7615_mcu_rdd_cmd(dev, RDD_STOP, 1, MT_RX_SEL0, 0);
+ 	return err;
+ }
+ 
+@@ -1532,20 +1530,19 @@ int mt7615_dfs_start_radar_detector(struct mt7615_dev *dev)
+ 	int err;
+ 
+ 	/* start CAC */
+-	err = mt7615_mcu_rdd_cmd(dev, RDD_CAC_START, MT_HW_RDD0,
+-				 MT_RX_SEL0, 0);
++	err = mt7615_mcu_rdd_cmd(dev, RDD_CAC_START, 0, MT_RX_SEL0, 0);
+ 	if (err < 0)
+ 		return err;
+ 
+ 	/* TODO: DBDC support */
+ 
+-	err = mt7615_dfs_start_rdd(dev, MT_HW_RDD0);
++	err = mt7615_dfs_start_rdd(dev, 0);
+ 	if (err < 0)
+ 		return err;
+ 
+ 	if (chandef->width == NL80211_CHAN_WIDTH_160 ||
+ 	    chandef->width == NL80211_CHAN_WIDTH_80P80) {
+-		err = mt7615_dfs_start_rdd(dev, MT_HW_RDD1);
++		err = mt7615_dfs_start_rdd(dev, 1);
+ 		if (err < 0)
+ 			return err;
  	}
+@@ -1572,15 +1569,13 @@ int mt7615_dfs_init_radar_detector(struct mt7615_dev *dev)
+ 	if (chandef->chan->flags & IEEE80211_CHAN_RADAR) {
+ 		if (chandef->chan->dfs_state != NL80211_DFS_AVAILABLE)
+ 			return mt7615_dfs_start_radar_detector(dev);
+-		else
+-			return mt7615_mcu_rdd_cmd(dev, RDD_CAC_END, MT_HW_RDD0,
+-						  MT_RX_SEL0, 0);
+-	} else {
+-		err = mt7615_mcu_rdd_cmd(dev, RDD_NORMAL_START,
+-					 MT_HW_RDD0, MT_RX_SEL0, 0);
+-		if (err < 0)
+-			return err;
  
- 	ewma_signal_init(&wcid->rssi);
-+	if (ext_phy)
-+		mt76_wcid_mask_set(dev->wcid_phy_mask, wcid->idx);
- 	rcu_assign_pointer(dev->wcid[wcid->idx], wcid);
- 
- out:
-@@ -879,7 +881,8 @@ void __mt76_sta_remove(struct mt76_dev *dev, struct ieee80211_vif *vif,
- 	mt76_tx_status_check(dev, wcid, true);
- 	for (i = 0; i < ARRAY_SIZE(sta->txq); i++)
- 		mt76_txq_remove(dev, sta->txq[i]);
--	mt76_wcid_free(dev->wcid_mask, idx);
-+	mt76_wcid_mask_clear(dev->wcid_mask, idx);
-+	mt76_wcid_mask_clear(dev->wcid_phy_mask, idx);
+-		return mt7615_dfs_stop_radar_detector(dev);
++		return mt7615_mcu_rdd_cmd(dev, RDD_CAC_END, 0, MT_RX_SEL0, 0);
+ 	}
++
++	err = mt7615_mcu_rdd_cmd(dev, RDD_NORMAL_START, 0, MT_RX_SEL0, 0);
++	if (err < 0)
++		return err;
++
++	return mt7615_dfs_stop_radar_detector(dev);
  }
- EXPORT_SYMBOL_GPL(__mt76_sta_remove);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
+index 88e903324f07..bd9014421b00 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
+@@ -149,11 +149,6 @@ enum {
+ 	EXT_BSSID_END
+ };
  
-@@ -897,11 +900,13 @@ int mt76_sta_state(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		   enum ieee80211_sta_state old_state,
- 		   enum ieee80211_sta_state new_state)
- {
--	struct mt76_dev *dev = hw->priv;
-+	struct mt76_phy *phy = hw->priv;
-+	struct mt76_dev *dev = phy->dev;
-+	bool ext_phy = phy != &dev->phy;
- 
- 	if (old_state == IEEE80211_STA_NOTEXIST &&
- 	    new_state == IEEE80211_STA_NONE)
--		return mt76_sta_add(dev, vif, sta);
-+		return mt76_sta_add(dev, vif, sta, ext_phy);
- 
- 	if (old_state == IEEE80211_STA_AUTH &&
- 	    new_state == IEEE80211_STA_ASSOC &&
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index 4c0fe88155e5..8be709e1c8c3 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -504,6 +504,7 @@ struct mt76_dev {
- 	struct sk_buff_head status_list;
- 
- 	unsigned long wcid_mask[MT76_N_WCIDS / BITS_PER_LONG];
-+	unsigned long wcid_phy_mask[MT76_N_WCIDS / BITS_PER_LONG];
- 
- 	struct mt76_wcid global_wcid;
- 	struct mt76_wcid __rcu *wcid[MT76_N_WCIDS];
-@@ -596,6 +597,16 @@ enum mt76_phy_type {
- 
- #define mt76_hw(dev) (dev)->mphy.hw
- 
-+static inline struct ieee80211_hw *
-+mt76_wcid_hw(struct mt76_dev *dev, u8 wcid)
-+{
-+	if (wcid <= MT76_N_WCIDS &&
-+	    mt76_wcid_mask_test(dev->wcid_phy_mask, wcid))
-+		return dev->phy2->hw;
-+
-+	return dev->phy.hw;
-+}
-+
- bool __mt76_poll(struct mt76_dev *dev, u32 offset, u32 mask, u32 val,
- 		 int timeout);
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/util.h b/drivers/net/wireless/mediatek/mt76/util.h
-index fe3479c8e561..48a71e7479e5 100644
---- a/drivers/net/wireless/mediatek/mt76/util.h
-+++ b/drivers/net/wireless/mediatek/mt76/util.h
-@@ -16,8 +16,20 @@
- 
- int mt76_wcid_alloc(unsigned long *mask, int size);
- 
-+static inline bool
-+mt76_wcid_mask_test(unsigned long *mask, int idx)
-+{
-+	return mask[idx / BITS_PER_LONG] & BIT(idx % BITS_PER_LONG);
-+}
-+
-+static inline void
-+mt76_wcid_mask_set(unsigned long *mask, int idx)
-+{
-+	mask[idx / BITS_PER_LONG] |= BIT(idx % BITS_PER_LONG);
-+}
-+
- static inline void
--mt76_wcid_free(unsigned long *mask, int idx)
-+mt76_wcid_mask_clear(unsigned long *mask, int idx)
- {
- 	mask[idx / BITS_PER_LONG] &= ~BIT(idx % BITS_PER_LONG);
- }
+-enum {
+-	MT_HW_RDD0,
+-	MT_HW_RDD1,
+-};
+-
+ enum {
+ 	MT_RX_SEL0,
+ 	MT_RX_SEL1,
 -- 
 2.24.0
 
