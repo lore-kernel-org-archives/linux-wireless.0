@@ -7,43 +7,43 @@ X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CAD88C432C0
-	for <linux-wireless@archiver.kernel.org>; Sat, 30 Nov 2019 15:31:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27EE2C432C3
+	for <linux-wireless@archiver.kernel.org>; Sat, 30 Nov 2019 15:31:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A17A72072C
-	for <linux-wireless@archiver.kernel.org>; Sat, 30 Nov 2019 15:31:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E5BF52072C
+	for <linux-wireless@archiver.kernel.org>; Sat, 30 Nov 2019 15:31:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="VLXwbqBx"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="JEi9cFPi"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727327AbfK3PbI (ORCPT
+        id S1727322AbfK3PbI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Sat, 30 Nov 2019 10:31:08 -0500
-Received: from nbd.name ([46.4.11.11]:56048 "EHLO nbd.name"
+Received: from nbd.name ([46.4.11.11]:56044 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727027AbfK3Pas (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 30 Nov 2019 10:30:48 -0500
+        id S1727101AbfK3Pat (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 30 Nov 2019 10:30:49 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
         Message-Id:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
         Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
         :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
         List-Post:List-Owner:List-Archive;
-        bh=cwkOnXREUXHBy3U0Put0iCVmVll7pzgH8uQhezK3NwQ=; b=VLXwbqBxdwhaTDGfcpIHZsaht9
-        SvO8tvJYyxqFa1/oEcimLTM7bQ8W1G5nfmP71m7wCJSFukcfF8dhWKbeMp8lyhX6GgbJmwOa5J/co
-        TgINkctkcbBBzruD3AJqPbT5pKtdQve4sF5K1RHc8S1REorCWXrfph54saLhhO7jLg9Y=;
+        bh=w7+8OOt0k42kRldcEbETy2T+P23PokvHvXuK0E8j5sg=; b=JEi9cFPirPz4Iu0k+oIorOOXKT
+        WEHwfirQXImo6WmsaxXaJl20oKl5lz5g/XOh89HerDmouYJYu0hmLElefwDDsbwxbcPH0s2U7S5QW
+        jJGFwNgc0iXJABmRHLBwcC7WzcU2uqYnvOQ4XKsg9NjxOjwUe/0lTVGfGYBn3Nhx1apo=;
 Received: from p5b2067e3.dip0.t-ipconnect.de ([91.32.103.227] helo=maeck.local)
         by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.89)
         (envelope-from <nbd@nbd.name>)
-        id 1ib4hr-0006hc-6Q
+        id 1ib4hr-0006hd-6k
         for linux-wireless@vger.kernel.org; Sat, 30 Nov 2019 16:30:47 +0100
 Received: by maeck.local (Postfix, from userid 501)
-        id 0829C721EBDC; Sat, 30 Nov 2019 16:30:45 +0100 (CET)
+        id 08816721EBDD; Sat, 30 Nov 2019 16:30:45 +0100 (CET)
 From:   Felix Fietkau <nbd@nbd.name>
 To:     linux-wireless@vger.kernel.org
-Subject: [PATCH 08/29] mt76: keep a set of software tx queues per phy
-Date:   Sat, 30 Nov 2019 16:30:24 +0100
-Message-Id: <20191130153045.28105-8-nbd@nbd.name>
+Subject: [PATCH 28/29] mt76: mt7615: add support for registering a second wiphy via debugfs
+Date:   Sat, 30 Nov 2019 16:30:44 +0100
+Message-Id: <20191130153045.28105-28-nbd@nbd.name>
 X-Mailer: git-send-email 2.24.0
 In-Reply-To: <20191130153045.28105-1-nbd@nbd.name>
 References: <20191130153045.28105-1-nbd@nbd.name>
@@ -54,163 +54,256 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Allows tracking tx scheduling separately per phy
+This is only used for testing for now. In the future it will be possible to
+enable the second PHY through an proper API via device tree
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/mediatek/mt76/debugfs.c      |  2 +-
- drivers/net/wireless/mediatek/mt76/dma.c          | 12 ++++++++++--
- drivers/net/wireless/mediatek/mt76/mac80211.c     | 13 ++++++++-----
- drivers/net/wireless/mediatek/mt76/mt76.h         |  4 ++--
- drivers/net/wireless/mediatek/mt76/mt7603/mac.c   |  2 +-
- drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c |  2 +-
- drivers/net/wireless/mediatek/mt76/usb.c          |  2 +-
- 7 files changed, 24 insertions(+), 13 deletions(-)
+ .../wireless/mediatek/mt76/mt7615/debugfs.c   |  27 ++++
+ .../wireless/mediatek/mt76/mt7615/eeprom.c    |   5 +-
+ .../net/wireless/mediatek/mt76/mt7615/init.c  | 118 +++++++++++++++---
+ .../wireless/mediatek/mt76/mt7615/mt7615.h    |   4 +
+ 4 files changed, 133 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/debugfs.c b/drivers/net/wireless/mediatek/mt76/debugfs.c
-index d2202acb8dc6..2567c5d6945f 100644
---- a/drivers/net/wireless/mediatek/mt76/debugfs.c
-+++ b/drivers/net/wireless/mediatek/mt76/debugfs.c
-@@ -30,7 +30,7 @@ int mt76_queues_read(struct seq_file *s, void *data)
- 	struct mt76_dev *dev = dev_get_drvdata(s->private);
- 	int i;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/debugfs.c b/drivers/net/wireless/mediatek/mt76/mt7615/debugfs.c
+index 05a0172b32ce..f75b3f66cdb4 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/debugfs.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/debugfs.c
+@@ -36,6 +36,32 @@ mt7615_scs_get(void *data, u64 *val)
+ DEFINE_DEBUGFS_ATTRIBUTE(fops_scs, mt7615_scs_get,
+ 			 mt7615_scs_set, "%lld\n");
  
--	for (i = 0; i < ARRAY_SIZE(dev->q_tx); i++) {
-+	for (i = 0; i < __MT_TXQ_MAX; i++) {
- 		struct mt76_sw_queue *q = &dev->q_tx[i];
- 
- 		if (!q->q)
-diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
-index 67d10099cb71..f88d017ff987 100644
---- a/drivers/net/wireless/mediatek/mt76/dma.c
-+++ b/drivers/net/wireless/mediatek/mt76/dma.c
-@@ -141,7 +141,7 @@ mt76_dma_tx_cleanup(struct mt76_dev *dev, enum mt76_txq_id qid, bool flush)
- 	struct mt76_sw_queue *sq = &dev->q_tx[qid];
- 	struct mt76_queue *q = sq->q;
- 	struct mt76_queue_entry entry;
--	unsigned int n_swq_queued[4] = {};
-+	unsigned int n_swq_queued[8] = {};
- 	unsigned int n_queued = 0;
- 	bool wake = false;
- 	int i, last;
-@@ -178,13 +178,21 @@ mt76_dma_tx_cleanup(struct mt76_dev *dev, enum mt76_txq_id qid, bool flush)
- 	spin_lock_bh(&q->lock);
- 
- 	q->queued -= n_queued;
--	for (i = 0; i < ARRAY_SIZE(n_swq_queued); i++) {
-+	for (i = 0; i < 4; i++) {
- 		if (!n_swq_queued[i])
- 			continue;
- 
- 		dev->q_tx[i].swq_queued -= n_swq_queued[i];
- 	}
- 
-+	/* ext PHY */
-+	for (i = 0; i < 4; i++) {
-+		if (!n_swq_queued[i])
-+			continue;
++static int
++mt7615_dbdc_set(void *data, u64 val)
++{
++	struct mt7615_dev *dev = data;
 +
-+		dev->q_tx[__MT_TXQ_MAX + i].swq_queued -= n_swq_queued[4 + i];
-+	}
++	if (val)
++		mt7615_register_ext_phy(dev);
++	else
++		mt7615_unregister_ext_phy(dev);
 +
- 	if (flush)
- 		mt76_dma_sync_idx(dev, q);
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
-index ca408bddd491..da2d072cd0ea 100644
---- a/drivers/net/wireless/mediatek/mt76/mac80211.c
-+++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
-@@ -411,13 +411,16 @@ void mt76_rx(struct mt76_dev *dev, enum mt76_rxq_id q, struct sk_buff *skb)
- }
- EXPORT_SYMBOL_GPL(mt76_rx);
- 
--bool mt76_has_tx_pending(struct mt76_dev *dev)
-+bool mt76_has_tx_pending(struct mt76_phy *phy)
++	return 0;
++}
++
++static int
++mt7615_dbdc_get(void *data, u64 *val)
++{
++	struct mt7615_dev *dev = data;
++
++	*val = !!mt7615_ext_phy(dev);
++
++	return 0;
++}
++
++DEFINE_DEBUGFS_ATTRIBUTE(fops_dbdc, mt7615_dbdc_get,
++			 mt7615_dbdc_set, "%lld\n");
++
+ static int
+ mt7615_ampdu_stat_read(struct seq_file *file, void *data)
  {
-+	struct mt76_dev *dev = phy->dev;
- 	struct mt76_queue *q;
--	int i;
-+	int i, offset;
+@@ -183,6 +209,7 @@ int mt7615_init_debugfs(struct mt7615_dev *dev)
+ 				    mt7615_queues_acq);
+ 	debugfs_create_file("ampdu_stat", 0400, dir, dev, &fops_ampdu_stat);
+ 	debugfs_create_file("scs", 0600, dir, dev, &fops_scs);
++	debugfs_create_file("dbdc", 0600, dir, dev, &fops_dbdc);
+ 	debugfs_create_devm_seqfile(dev->mt76.dev, "radio", dir,
+ 				    mt7615_radio_read);
+ 	debugfs_create_u32("dfs_hw_pattern", 0400, dir, &dev->hw_pattern);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
+index 61a3fba240ba..e4dcfa531a24 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
+@@ -124,8 +124,9 @@ static void mt7615_eeprom_parse_hw_cap(struct mt7615_dev *dev)
+ 	if (!tx_mask || tx_mask > max_nss)
+ 		tx_mask = max_nss;
+ 
+-	dev->mphy.antenna_mask = BIT(tx_mask) - 1;
+-	dev->phy.chainmask = dev->mphy.antenna_mask;
++	dev->chainmask = BIT(tx_mask) - 1;
++	dev->mphy.antenna_mask = dev->chainmask;
++	dev->phy.chainmask = dev->chainmask;
+ }
+ 
+ int mt7615_eeprom_get_power_index(struct mt7615_dev *dev,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/init.c b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
+index 78bcdf90ca5e..a37562965f41 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
+@@ -256,22 +256,10 @@ mt7615_regd_notifier(struct wiphy *wiphy,
+ 	mt7615_dfs_init_radar_detector(phy);
+ }
+ 
+-int mt7615_register_device(struct mt7615_dev *dev)
++static void
++mt7615_init_wiphy(struct ieee80211_hw *hw)
+ {
+-	struct ieee80211_hw *hw = mt76_hw(dev);
+ 	struct wiphy *wiphy = hw->wiphy;
+-	int ret;
+-
+-	dev->phy.dev = dev;
+-	dev->phy.mt76 = &dev->mt76.phy;
+-	dev->mt76.phy.priv = &dev->phy;
+-	INIT_DELAYED_WORK(&dev->mt76.mac_work, mt7615_mac_work);
+-	INIT_LIST_HEAD(&dev->sta_poll_list);
+-	spin_lock_init(&dev->sta_poll_lock);
+-
+-	ret = mt7615_init_hardware(dev);
+-	if (ret)
+-		return ret;
+ 
+ 	hw->queues = 4;
+ 	hw->max_rates = 3;
+@@ -290,13 +278,106 @@ int mt7615_register_device(struct mt7615_dev *dev)
+ 
+ 	ieee80211_hw_set(hw, TX_STATUS_NO_AMPDU_LEN);
+ 
++	hw->max_tx_fragments = MT_TXP_MAX_BUF_NUM;
++}
 +
-+	offset = __MT_TXQ_MAX * (phy != &dev->phy);
++static void
++mt7615_cap_dbdc_enable(struct mt7615_dev *dev)
++{
++	dev->mphy.sband_5g.sband.vht_cap.cap &=
++			~(IEEE80211_VHT_CAP_SHORT_GI_160 |
++			  IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160_80PLUS80MHZ);
++	if (dev->chainmask == 0xf)
++		dev->mphy.antenna_mask = dev->chainmask >> 2;
++	else
++		dev->mphy.antenna_mask = dev->chainmask >> 1;
++	dev->phy.chainmask = dev->mphy.antenna_mask;
++	mt76_set_stream_caps(&dev->mt76, true);
++}
++
++static void
++mt7615_cap_dbdc_disable(struct mt7615_dev *dev)
++{
++	dev->mphy.sband_5g.sband.vht_cap.cap |=
++			IEEE80211_VHT_CAP_SHORT_GI_160 |
++			IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160_80PLUS80MHZ;
++	dev->mphy.antenna_mask = dev->chainmask;
++	dev->phy.chainmask = dev->chainmask;
++	mt76_set_stream_caps(&dev->mt76, true);
++}
++
++int mt7615_register_ext_phy(struct mt7615_dev *dev)
++{
++	struct mt7615_phy *phy = mt7615_ext_phy(dev);
++	struct mt76_phy *mphy;
++	int ret;
++
++	if (test_bit(MT76_STATE_RUNNING, &dev->mphy.state))
++		return -EINVAL;
++
++	if (phy)
++		return 0;
++
++	mt7615_cap_dbdc_enable(dev);
++	mphy = mt76_alloc_phy(&dev->mt76, sizeof(*phy), &mt7615_ops);
++	if (!mphy)
++		return -ENOMEM;
++
++	phy = mphy->priv;
++	phy->dev = dev;
++	phy->mt76 = mphy;
++	phy->chainmask = dev->chainmask & ~dev->phy.chainmask;
++	mphy->antenna_mask = BIT(hweight8(phy->chainmask)) - 1;
++	mt7615_init_wiphy(mphy->hw);
++
++	/* second phy can only handle 5 GHz */
++	mphy->sband_2g.sband.n_channels = 0;
++	mphy->hw->wiphy->bands[NL80211_BAND_2GHZ] = NULL;
++
++	ret = mt76_register_phy(mphy);
++	if (ret)
++		ieee80211_free_hw(mphy->hw);
++
++	return ret;
++}
++
++void mt7615_unregister_ext_phy(struct mt7615_dev *dev)
++{
++	struct mt7615_phy *phy = mt7615_ext_phy(dev);
++	struct mt76_phy *mphy = dev->mt76.phy2;
++
++	if (!phy)
++		return;
++
++	mt7615_cap_dbdc_disable(dev);
++	mt76_unregister_phy(mphy);
++	ieee80211_free_hw(mphy->hw);
++}
++
++
++int mt7615_register_device(struct mt7615_dev *dev)
++{
++	struct ieee80211_hw *hw = mt76_hw(dev);
++	int ret;
++
++	dev->phy.dev = dev;
++	dev->phy.mt76 = &dev->mt76.phy;
++	dev->mt76.phy.priv = &dev->phy;
++	INIT_DELAYED_WORK(&dev->mt76.mac_work, mt7615_mac_work);
++	INIT_LIST_HEAD(&dev->sta_poll_list);
++	spin_lock_init(&dev->sta_poll_lock);
++
++	ret = mt7615_init_hardware(dev);
++	if (ret)
++		return ret;
++
++	mt7615_init_wiphy(hw);
+ 	dev->mphy.sband_2g.sband.ht_cap.cap |= IEEE80211_HT_CAP_LDPC_CODING;
+ 	dev->mphy.sband_5g.sband.ht_cap.cap |= IEEE80211_HT_CAP_LDPC_CODING;
+ 	dev->mphy.sband_5g.sband.vht_cap.cap |=
+-			IEEE80211_VHT_CAP_SHORT_GI_160 |
+ 			IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_11454 |
+-			IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_MASK |
+-			IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160_80PLUS80MHZ;
++			IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_MASK;
++	mt7615_cap_dbdc_disable(dev);
+ 	dev->phy.dfs_state = -1;
  
--	for (i = 0; i < ARRAY_SIZE(dev->q_tx); i++) {
--		q = dev->q_tx[i].q;
-+	for (i = 0; i < __MT_TXQ_MAX; i++) {
-+		q = dev->q_tx[offset + i].q;
- 		if (q && q->queued)
- 			return true;
- 	}
-@@ -485,7 +488,7 @@ void mt76_set_channel(struct mt76_phy *phy)
- 	bool offchannel = hw->conf.flags & IEEE80211_CONF_OFFCHANNEL;
- 	int timeout = HZ / 5;
+ 	ret = mt76_register_device(&dev->mt76, true, mt7615_rates,
+@@ -307,8 +388,6 @@ int mt7615_register_device(struct mt7615_dev *dev)
+ 	mt7615_init_txpower(dev, &dev->mphy.sband_2g.sband);
+ 	mt7615_init_txpower(dev, &dev->mphy.sband_5g.sband);
  
--	wait_event_timeout(dev->tx_wait, !mt76_has_tx_pending(dev), timeout);
-+	wait_event_timeout(dev->tx_wait, !mt76_has_tx_pending(phy), timeout);
- 	mt76_update_survey(dev);
+-	hw->max_tx_fragments = MT_TXP_MAX_BUF_NUM;
+-
+ 	return mt7615_init_debugfs(dev);
+ }
  
- 	phy->chandef = *chandef;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index 547d9a29afa7..a522c7a5e294 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -498,7 +498,7 @@ struct mt76_dev {
- 	u32 ampdu_ref;
+@@ -317,6 +396,7 @@ void mt7615_unregister_device(struct mt7615_dev *dev)
+ 	struct mt76_txwi_cache *txwi;
+ 	int id;
  
- 	struct list_head txwi_cache;
--	struct mt76_sw_queue q_tx[__MT_TXQ_MAX];
-+	struct mt76_sw_queue q_tx[2 * __MT_TXQ_MAX];
- 	struct mt76_queue q_rx[__MT_RXQ_MAX];
- 	const struct mt76_queue_ops *queue_ops;
- 	int tx_dma_idx[4];
-@@ -752,7 +752,7 @@ void mt76_release_buffered_frames(struct ieee80211_hw *hw,
- 				  u16 tids, int nframes,
- 				  enum ieee80211_frame_release_type reason,
- 				  bool more_data);
--bool mt76_has_tx_pending(struct mt76_dev *dev);
-+bool mt76_has_tx_pending(struct mt76_phy *phy);
- void mt76_set_channel(struct mt76_phy *phy);
- void mt76_update_survey(struct mt76_dev *dev);
- int mt76_get_survey(struct ieee80211_hw *hw, int idx,
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/mac.c b/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
-index 8aefadd6278e..588b21694ea3 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
-@@ -1426,7 +1426,7 @@ static void mt7603_mac_watchdog_reset(struct mt7603_dev *dev)
++	mt7615_unregister_ext_phy(dev);
+ 	mt76_unregister_device(&dev->mt76);
+ 	mt7615_mcu_exit(dev);
+ 	mt7615_dma_cleanup(dev);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
+index 2adf3b8a61b8..32f23f5fdd58 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
+@@ -115,6 +115,8 @@ struct mt7615_dev {
+ 	u32 vif_mask;
+ 	u32 omac_mask;
  
- 	mt7603_pse_client_reset(dev);
++	u16 chainmask;
++
+ 	struct list_head sta_poll_list;
+ 	spinlock_t sta_poll_lock;
  
--	for (i = 0; i < ARRAY_SIZE(dev->mt76.q_tx); i++)
-+	for (i = 0; i < __MT_TXQ_MAX; i++)
- 		mt76_queue_tx_cleanup(dev, i, true);
+@@ -211,6 +213,8 @@ u32 mt7615_reg_map(struct mt7615_dev *dev, u32 addr);
  
- 	for (i = 0; i < ARRAY_SIZE(dev->mt76.q_rx); i++)
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c b/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
-index 6006c831c0a2..7d463f7bc87f 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
-@@ -476,7 +476,7 @@ static void mt76x02_watchdog_reset(struct mt76x02_dev *dev)
- 	if (restart)
- 		mt76_mcu_restart(dev);
- 
--	for (i = 0; i < ARRAY_SIZE(dev->mt76.q_tx); i++)
-+	for (i = 0; i < __MT_TXQ_MAX; i++)
- 		mt76_queue_tx_cleanup(dev, i, true);
- 
- 	for (i = 0; i < ARRAY_SIZE(dev->mt76.q_rx); i++)
-diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/wireless/mediatek/mt76/usb.c
-index ea5eeaf2dd04..3478cff9ab9a 100644
---- a/drivers/net/wireless/mediatek/mt76/usb.c
-+++ b/drivers/net/wireless/mediatek/mt76/usb.c
-@@ -872,7 +872,7 @@ void mt76u_stop_tx(struct mt76_dev *dev)
- 	struct mt76_queue *q;
- 	int i, j, ret;
- 
--	ret = wait_event_timeout(dev->tx_wait, !mt76_has_tx_pending(dev),
-+	ret = wait_event_timeout(dev->tx_wait, !mt76_has_tx_pending(&dev->phy),
- 				 HZ / 5);
- 	if (!ret) {
- 		dev_err(dev->dev, "timed out waiting for pending tx\n");
+ int mt7615_register_device(struct mt7615_dev *dev);
+ void mt7615_unregister_device(struct mt7615_dev *dev);
++int mt7615_register_ext_phy(struct mt7615_dev *dev);
++void mt7615_unregister_ext_phy(struct mt7615_dev *dev);
+ int mt7615_eeprom_init(struct mt7615_dev *dev);
+ int mt7615_eeprom_get_power_index(struct mt7615_dev *dev,
+ 				  struct ieee80211_channel *chan,
 -- 
 2.24.0
 
