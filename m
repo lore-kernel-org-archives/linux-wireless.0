@@ -2,80 +2,126 @@ Return-Path: <SRS0=eHb9=ZY=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73496C43215
-	for <linux-wireless@archiver.kernel.org>; Mon,  2 Dec 2019 11:10:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C987C43215
+	for <linux-wireless@archiver.kernel.org>; Mon,  2 Dec 2019 14:43:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 48AA320748
-	for <linux-wireless@archiver.kernel.org>; Mon,  2 Dec 2019 11:10:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5332D2146E
+	for <linux-wireless@archiver.kernel.org>; Mon,  2 Dec 2019 14:43:55 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="QWy9JQfK";
+	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="AUw2IPj2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727491AbfLBLKZ (ORCPT
+        id S1727417AbfLBOny (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 2 Dec 2019 06:10:25 -0500
-Received: from hostingweb31-40.netsons.net ([89.40.174.40]:43264 "EHLO
-        hostingweb31-40.netsons.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726330AbfLBLKY (ORCPT
+        Mon, 2 Dec 2019 09:43:54 -0500
+Received: from a27-185.smtp-out.us-west-2.amazonses.com ([54.240.27.185]:41624
+        "EHLO a27-185.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727362AbfLBOny (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Dec 2019 06:10:24 -0500
-X-Greylist: delayed 3393 seconds by postgrey-1.27 at vger.kernel.org; Mon, 02 Dec 2019 06:10:23 EST
-Received: from [109.168.11.45] (port=52414 helo=pc-ceresoli.dev.aim)
-        by hostingweb31.netsons.net with esmtpa (Exim 4.92)
-        (envelope-from <luca@lucaceresoli.net>)
-        id 1ibiiB-0026XW-Su; Mon, 02 Dec 2019 11:13:47 +0100
-From:   Luca Ceresoli <luca@lucaceresoli.net>
-To:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc:     Luca Ceresoli <luca@lucaceresoli.net>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] iwlwifi: fix config variable name in comment
-Date:   Mon,  2 Dec 2019 11:13:39 +0100
-Message-Id: <20191202101339.24265-1-luca@lucaceresoli.net>
-X-Mailer: git-send-email 2.24.0
+        Mon, 2 Dec 2019 09:43:54 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+        s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1575297833;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:Message-ID:MIME-Version:Content-Type;
+        bh=k8Wup7nSmRIURO4EvCuG/wmi68K7xElFpr1WstQPgW0=;
+        b=QWy9JQfKumvvDnOAWxwt8y6QZQY43HCVaGm/U6/5WEh6zJB9jcA6e26/RjnoG2c/
+        IhIphWCjH5rOnKy7HtQigdfXdGZVjcMTyXe9vZfLMgrB3Xg9LRslN4pqeUgwwBRgytM
+        1O3wUFYuWZqngLlW3MJwn9XvAmNPbjcQ2hdd1ijg=
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+        s=gdwg2y3kokkkj5a55z2ilkup5wp5hhxx; d=amazonses.com; t=1575297833;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:Message-ID:MIME-Version:Content-Type:Feedback-ID;
+        bh=k8Wup7nSmRIURO4EvCuG/wmi68K7xElFpr1WstQPgW0=;
+        b=AUw2IPj2isXAXEQsGXEZSnctrWak4HYEBNJGFuQzxG6PwhPljHVx/U/DGiQsMsv4
+        v5UmA8IQtd44Wc0Wq6IedHtCWAzXOTTOiRbtyQTT54a73R6Ygh/nIGgdQlV9+oDdgji
+        25n6OQs4dGRtRG/BZuPFmP2rb3+liAdnlFkJLKl8=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org E5585C433CB
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc:     linux-wireless@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH v2] iwlwifi: mvm: don't send the IWL_MVM_RXQ_NSSN_SYNC notif to Rx queues
+References: <20191120132628.30731-1-emmanuel.grumbach@intel.com>
+        <20191121184530.5393-1-emmanuel.grumbach@intel.com>
+Date:   Mon, 2 Dec 2019 14:43:53 +0000
+In-Reply-To: <20191121184530.5393-1-emmanuel.grumbach@intel.com> (Emmanuel
+        Grumbach's message of "Thu, 21 Nov 2019 20:45:30 +0200")
+Message-ID: <0101016ec711594b-f0e8e2cc-29f2-45ad-aa61-abd47dfc511c-000000@us-west-2.amazonses.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - hostingweb31.netsons.net
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
-X-AntiAbuse: Sender Address Domain - lucaceresoli.net
-X-Get-Message-Sender-Via: hostingweb31.netsons.net: authenticated_id: luca+lucaceresoli.net/only user confirmed/virtual account not confirmed
-X-Authenticated-Sender: hostingweb31.netsons.net: luca@lucaceresoli.net
-X-Source: 
-X-Source-Args: 
-X-Source-Dir: 
+Content-Type: text/plain
+X-SES-Outgoing: 2019.12.02-54.240.27.185
+Feedback-ID: 1.us-west-2.CZuq2qbDmUIuT3qdvXlRHZZCpfZqZ4GtG9v3VKgRyF0=:AmazonSES
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The correct variable name was replaced here by mistake.
+Emmanuel Grumbach <emmanuel.grumbach@intel.com> writes:
 
-Fixes: ab27926d9e4a ("iwlwifi: fix devices with PCI Device ID 0x34F0 and 11ac RF modules")
-Signed-off-by: Luca Ceresoli <luca@lucaceresoli.net>
----
- drivers/net/wireless/intel/iwlwifi/iwl-config.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> The purpose of this was to keep all the queues updated with
+> the Rx sequence numbers because unlikely yet possible
+> situations where queues can't understand if a specific
+> packet needs to be dropped or not.
+>
+> Unfortunately, it was reported that this caused issues in
+> our DMA engine. We don't fully understand how this is related,
+> but this is being currently debugged. For now, just don't send
+> this notification to the Rx queues. This de-facto reverts my
+> commit 3c514bf831ac12356b695ff054bef641b9e99593:
+>
+> iwlwifi: mvm: add a loose synchronization of the NSSN across Rx queues
+>
+> This issue was reported here:
+> https://bugzilla.kernel.org/show_bug.cgi?id=204873
+> https://bugzilla.kernel.org/show_bug.cgi?id=205001
+> and others maybe.
+>
+> Fixes: 3c514bf831ac ("iwlwifi: mvm: add a loose synchronization of the NSSN across Rx queues")
+> CC: <stable@vger.kernel.org> # 5.3+
+> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> ---
+> v2: avoid the unused variable warning
+> ---
+>  drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 22 ++++++++++++-------
+>  1 file changed, 14 insertions(+), 8 deletions(-)
+>
+> diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+> index 75a7af5ad7b2..392bfa4b496c 100644
+> --- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+> +++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+> @@ -514,14 +514,20 @@ static bool iwl_mvm_is_sn_less(u16 sn1, u16 sn2, u16 buffer_size)
+>  
+>  static void iwl_mvm_sync_nssn(struct iwl_mvm *mvm, u8 baid, u16 nssn)
+>  {
+> -	struct iwl_mvm_rss_sync_notif notif = {
+> -		.metadata.type = IWL_MVM_RXQ_NSSN_SYNC,
+> -		.metadata.sync = 0,
+> -		.nssn_sync.baid = baid,
+> -		.nssn_sync.nssn = nssn,
+> -	};
+> -
+> -	iwl_mvm_sync_rx_queues_internal(mvm, (void *)&notif, sizeof(notif));
+> +	/*
+> +	 * This allow to synchronize the queues, but it has been reported
+> +	 * to cause FH issues. Don't send the notification for now.
+> +	 *
+> +	 * struct iwl_mvm_rss_sync_notif notif = {
+> +	 *	.metadata.type = IWL_MVM_RXQ_NSSN_SYNC,
+> +	 *	.metadata.sync = 0,
+> +	 *	.nssn_sync.baid = baid,
+> +	 *	.nssn_sync.nssn = nssn,
+> +	 * };
+> +	 *
+> +	 *
+> +	 * iwl_mvm_sync_rx_queues_internal(mvm, (void *)&notif, sizeof(notif));
+> +	 */
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-index 317eac066082..fb6838527e28 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-@@ -636,6 +636,6 @@ extern const struct iwl_cfg iwlax210_2ax_cfg_so_hr_a0;
- extern const struct iwl_cfg iwlax211_2ax_cfg_so_gf_a0;
- extern const struct iwl_cfg iwlax210_2ax_cfg_ty_gf_a0;
- extern const struct iwl_cfg iwlax411_2ax_cfg_so_gf4_a0;
--#endif /* CPTCFG_IWLMVM || CPTCFG_IWLFMAC */
-+#endif /* CONFIG_IWLMVM */
- 
- #endif /* __IWL_CONFIG_H__ */
+Please don't comment out code, instead remove entirely. You can find the
+old code from the git history anyway.
+
 -- 
-2.24.0
-
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
