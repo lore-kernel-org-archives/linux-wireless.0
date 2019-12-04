@@ -2,35 +2,37 @@ Return-Path: <SRS0=KylO=Z2=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA1D1C43603
-	for <linux-wireless@archiver.kernel.org>; Wed,  4 Dec 2019 18:17:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DCDEAC2BD09
+	for <linux-wireless@archiver.kernel.org>; Wed,  4 Dec 2019 18:17:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9008920675
-	for <linux-wireless@archiver.kernel.org>; Wed,  4 Dec 2019 18:17:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BC8B42073B
+	for <linux-wireless@archiver.kernel.org>; Wed,  4 Dec 2019 18:17:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731671AbfLDSR6 (ORCPT
+        id S1731780AbfLDSR6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Wed, 4 Dec 2019 13:17:58 -0500
-Received: from nbd.name ([46.4.11.11]:40912 "EHLO nbd.name"
+Received: from nbd.name ([46.4.11.11]:40920 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728738AbfLDSR5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S1729024AbfLDSR5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 4 Dec 2019 13:17:57 -0500
 Received: from p5dcfb666.dip0.t-ipconnect.de ([93.207.182.102] helo=bertha.datto.lan)
         by ds12 with esmtpa (Exim 4.89)
         (envelope-from <john@phrozen.org>)
-        id 1icZDj-0005Od-VP; Wed, 04 Dec 2019 19:17:52 +0100
+        id 1icZDl-0005Od-4w; Wed, 04 Dec 2019 19:17:53 +0100
 From:   John Crispin <john@phrozen.org>
 To:     Kalle Valo <kvalo@codeaurora.org>
 Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
         John Crispin <john@phrozen.org>
-Subject: [PATCH V2 0/9] ath11k: resend pending patches
-Date:   Wed,  4 Dec 2019 19:17:36 +0100
-Message-Id: <20191204181745.27297-1-john@phrozen.org>
+Subject: [PATCH V2 2/9] ath11k: disable PS for STA interfaces by default upon bringup
+Date:   Wed,  4 Dec 2019 19:17:38 +0100
+Message-Id: <20191204181745.27297-3-john@phrozen.org>
 X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20191204181745.27297-1-john@phrozen.org>
+References: <20191204181745.27297-1-john@phrozen.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -38,41 +40,32 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Kalle merged ath11k into his next tree and then applied the huge backlog
-from patchwork. This is a resend of pending patches that no longer apply
-due to merge order conflicts.
+After applying this setting the TX performance issue of STA interfaces is
+gone and we can see TX performance go up to ~900mbit on HE80.
 
-Changes in V2:
-* fix up the comments from Vassant
+Signed-off-by: John Crispin <john@phrozen.org>
+---
+ drivers/net/wireless/ath/ath11k/mac.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-John Crispin (9):
-  ath11k: add wmi helper for turning STA PS on/off
-  ath11k: disable PS for STA interfaces by default upon bringup
-  ath11k: drop memset when setting up a tx cmd desc
-  ath11k: rename ath11k_wmi_base instances from wmi_sc to wmi_ab
-  ath11k: add WMI calls to manually add/del/pause/resume TWT dialogs
-  ath11k: add debugfs for TWT debug calls
-  ath11k: move some tx_status parsing to debugfs code
-  ath11k: optimise ath11k_dp_tx_completion_handler
-  ath11k: optimize ath11k_hal_tx_status_parse
-
- drivers/net/wireless/ath/ath11k/core.c        |   4 +-
- drivers/net/wireless/ath/ath11k/core.h        |   3 +-
- drivers/net/wireless/ath/ath11k/debug.c       | 197 +++++++++
- drivers/net/wireless/ath/ath11k/debug.h       |   8 +
- drivers/net/wireless/ath/ath11k/debugfs_sta.c |  66 +--
- drivers/net/wireless/ath/ath11k/dp.c          |  16 +-
- drivers/net/wireless/ath/ath11k/dp.h          |  11 +-
- drivers/net/wireless/ath/ath11k/dp_tx.c       |  81 ++--
- drivers/net/wireless/ath/ath11k/hal_tx.c      |  74 +---
- drivers/net/wireless/ath/ath11k/hal_tx.h      |  13 +-
- drivers/net/wireless/ath/ath11k/htc.c         |   2 +-
- drivers/net/wireless/ath/ath11k/mac.c         |  15 +-
- drivers/net/wireless/ath/ath11k/testmode.c    |   2 +-
- drivers/net/wireless/ath/ath11k/wmi.c         | 407 ++++++++++++++----
- drivers/net/wireless/ath/ath11k/wmi.h         | 123 +++++-
- 15 files changed, 771 insertions(+), 251 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+index 978d8768d68a..d9b4c95019e5 100644
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -4097,6 +4097,13 @@ static int ath11k_mac_op_add_interface(struct ieee80211_hw *hw,
+ 				    arvif->vdev_id, ret);
+ 			goto err_peer_del;
+ 		}
++
++		ret = ath11k_wmi_pdev_set_ps_mode(ar, arvif->vdev_id, false);
++		if (ret) {
++			ath11k_warn(ar->ab, "failed to disable vdev %d ps mode: %d\n",
++				    arvif->vdev_id, ret);
++			goto err_peer_del;
++		}
+ 		break;
+ 	default:
+ 		break;
 -- 
 2.20.1
 
