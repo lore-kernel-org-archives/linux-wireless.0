@@ -6,30 +6,30 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0C7EC2BC73
-	for <linux-wireless@archiver.kernel.org>; Wed,  4 Dec 2019 18:18:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23B97C2BD09
+	for <linux-wireless@archiver.kernel.org>; Wed,  4 Dec 2019 18:18:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A9A6C2073B
-	for <linux-wireless@archiver.kernel.org>; Wed,  4 Dec 2019 18:18:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EA7E420675
+	for <linux-wireless@archiver.kernel.org>; Wed,  4 Dec 2019 18:18:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731462AbfLDSSB (ORCPT
+        id S1731930AbfLDSSE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 4 Dec 2019 13:18:01 -0500
-Received: from nbd.name ([46.4.11.11]:40950 "EHLO nbd.name"
+        Wed, 4 Dec 2019 13:18:04 -0500
+Received: from nbd.name ([46.4.11.11]:40966 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731478AbfLDSSA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Dec 2019 13:18:00 -0500
+        id S1731842AbfLDSSC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 4 Dec 2019 13:18:02 -0500
 Received: from p5dcfb666.dip0.t-ipconnect.de ([93.207.182.102] helo=bertha.datto.lan)
         by ds12 with esmtpa (Exim 4.89)
         (envelope-from <john@phrozen.org>)
-        id 1icZDn-0005Od-QU; Wed, 04 Dec 2019 19:17:56 +0100
+        id 1icZDp-0005Od-Fc; Wed, 04 Dec 2019 19:17:57 +0100
 From:   John Crispin <john@phrozen.org>
 To:     Kalle Valo <kvalo@codeaurora.org>
 Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
         John Crispin <john@phrozen.org>
-Subject: [PATCH V2 6/9] ath11k: add debugfs for TWT debug calls
-Date:   Wed,  4 Dec 2019 19:17:42 +0100
-Message-Id: <20191204181745.27297-7-john@phrozen.org>
+Subject: [PATCH V2 8/9] ath11k: optimise ath11k_dp_tx_completion_handler
+Date:   Wed,  4 Dec 2019 19:17:44 +0100
+Message-Id: <20191204181745.27297-9-john@phrozen.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191204181745.27297-1-john@phrozen.org>
 References: <20191204181745.27297-1-john@phrozen.org>
@@ -40,286 +40,255 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-These new debugfs files allow us to manually add/del/pause/resume TWT
-dialogs for test/debug purposes.
+the current code does 4 memcpys for each completion frame.
+1) duplicate the desc
+2 + 3) inside kfifo insertion
+4) kfifo remove
 
-The debugfs files expect the following parameters
-add_dialog	- mac dialog_id wake_intvl_us wake_intvl_mantis
-		  wake_dura_us sp_offset_us twt_cmd flag_bcast
-		  flag_trigger flag_flow_type flag_protection
-del_dialog	- mac dialog_id
-pause_dialog	- mac dialog_id
-resume_dialog	- mac dialog_id sp_offset_us next_twt_size
+The code simply drops the kfifo and uses a trivial ring buffer. This
+requires a single memcpy for insertion. There is no removal needed as
+we can simply use the inserted data for processing. As the code runs
+inside the NAPI context it is atomic and there is no need for most of
+the locking.
 
 Signed-off-by: John Crispin <john@phrozen.org>
 ---
- drivers/net/wireless/ath/ath11k/core.h  |   1 +
- drivers/net/wireless/ath/ath11k/debug.c | 197 ++++++++++++++++++++++++
- drivers/net/wireless/ath/ath11k/debug.h |   8 +
- drivers/net/wireless/ath/ath11k/mac.c   |   4 +
- 4 files changed, 210 insertions(+)
+ drivers/net/wireless/ath/ath11k/dp.c     | 16 ++++-----
+ drivers/net/wireless/ath/ath11k/dp.h     | 11 +++----
+ drivers/net/wireless/ath/ath11k/dp_tx.c  | 41 +++++++++---------------
+ drivers/net/wireless/ath/ath11k/hal_tx.c | 13 --------
+ drivers/net/wireless/ath/ath11k/hal_tx.h |  2 --
+ 5 files changed, 27 insertions(+), 56 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
-index 25cdcf71d0c4..65d8684364dd 100644
---- a/drivers/net/wireless/ath/ath11k/core.h
-+++ b/drivers/net/wireless/ath/ath11k/core.h
-@@ -216,6 +216,7 @@ struct ath11k_vif {
- 	int num_legacy_stations;
- 	int rtscts_prot_mode;
- 	int txpower;
-+	struct dentry *debugfs_twt;
- };
+diff --git a/drivers/net/wireless/ath/ath11k/dp.c b/drivers/net/wireless/ath/ath11k/dp.c
+index b966a16a930f..ef989795e985 100644
+--- a/drivers/net/wireless/ath/ath11k/dp.c
++++ b/drivers/net/wireless/ath/ath11k/dp.c
+@@ -3,7 +3,6 @@
+  * Copyright (c) 2018-2019 The Linux Foundation. All rights reserved.
+  */
  
- struct ath11k_vif_iter {
-diff --git a/drivers/net/wireless/ath/ath11k/debug.c b/drivers/net/wireless/ath/ath11k/debug.c
-index c27fffd13a5d..bcae14e5de9f 100644
---- a/drivers/net/wireless/ath/ath11k/debug.c
-+++ b/drivers/net/wireless/ath/ath11k/debug.c
-@@ -104,6 +104,203 @@ void ath11k_dbg_dump(struct ath11k_base *ab,
- 
- #endif
- 
-+#ifdef CONFIG_MAC80211_DEBUGFS
-+static ssize_t ath11k_write_twt_add_dialog(struct file *file,
-+					   const char __user *ubuf,
-+					   size_t count, loff_t *ppos)
-+{
-+	struct ath11k_vif *arvif = file->private_data;
-+	struct wmi_twt_add_dialog_params params = { 0 };
-+	u8 buf[128] = {0};
-+	int ret;
-+
-+	ret = simple_write_to_buffer(buf, sizeof(buf) - 1, ppos, ubuf, count);
-+	if (ret < 0)
-+		return ret;
-+
-+	buf[ret] = '\0';
-+	ret = sscanf(buf, "%02hhx:%02hhx:%02hhx:%02hhx:%02hhx:%02hhx %u %u %u %u %u %hhu %hhu %hhu %hhu %hhu",
-+		     &params.peer_macaddr[0],
-+		     &params.peer_macaddr[1],
-+		     &params.peer_macaddr[2],
-+		     &params.peer_macaddr[3],
-+		     &params.peer_macaddr[4],
-+		     &params.peer_macaddr[5],
-+		     &params.dialog_id,
-+		     &params.wake_intvl_us,
-+		     &params.wake_intvl_mantis,
-+		     &params.wake_dura_us,
-+		     &params.sp_offset_us,
-+		     &params.twt_cmd,
-+		     &params.flag_bcast,
-+		     &params.flag_trigger,
-+		     &params.flag_flow_type,
-+		     &params.flag_protection);
-+	if (ret != 16)
-+		return -EINVAL;
-+
-+	params.vdev_id = arvif->vdev_id;
-+
-+	ret = ath11k_wmi_send_twt_add_dialog_cmd(arvif->ar, &params);
-+
-+	return ret ? ret : count;
-+}
-+
-+static ssize_t ath11k_write_twt_del_dialog(struct file *file,
-+					   const char __user *ubuf,
-+					   size_t count, loff_t *ppos)
-+{
-+	struct ath11k_vif *arvif = file->private_data;
-+	struct wmi_twt_del_dialog_params params = { 0 };
-+	u8 buf[64] = {0};
-+	int ret;
-+
-+	ret = simple_write_to_buffer(buf, sizeof(buf) - 1, ppos, ubuf, count);
-+	if (ret < 0)
-+		return ret;
-+
-+	buf[ret] = '\0';
-+	ret = sscanf(buf, "%02hhx:%02hhx:%02hhx:%02hhx:%02hhx:%02hhx %u",
-+		     &params.peer_macaddr[0],
-+		     &params.peer_macaddr[1],
-+		     &params.peer_macaddr[2],
-+		     &params.peer_macaddr[3],
-+		     &params.peer_macaddr[4],
-+		     &params.peer_macaddr[5],
-+		     &params.dialog_id);
-+	if (ret != 7)
-+		return -EINVAL;
-+
-+	params.vdev_id = arvif->vdev_id;
-+
-+	ret = ath11k_wmi_send_twt_del_dialog_cmd(arvif->ar, &params);
-+
-+	return ret ? ret : count;
-+}
-+
-+static ssize_t ath11k_write_twt_pause_dialog(struct file *file,
-+					     const char __user *ubuf,
-+					     size_t count, loff_t *ppos)
-+{
-+	struct ath11k_vif *arvif = file->private_data;
-+	struct wmi_twt_pause_dialog_params params = { 0 };
-+	u8 buf[64] = {0};
-+	int ret;
-+
-+	ret = simple_write_to_buffer(buf, sizeof(buf) - 1, ppos, ubuf, count);
-+	if (ret < 0)
-+		return ret;
-+
-+	buf[ret] = '\0';
-+	ret = sscanf(buf, "%02hhx:%02hhx:%02hhx:%02hhx:%02hhx:%02hhx %u",
-+		     &params.peer_macaddr[0],
-+		     &params.peer_macaddr[1],
-+		     &params.peer_macaddr[2],
-+		     &params.peer_macaddr[3],
-+		     &params.peer_macaddr[4],
-+		     &params.peer_macaddr[5],
-+		     &params.dialog_id);
-+	if (ret != 7)
-+		return -EINVAL;
-+
-+	params.vdev_id = arvif->vdev_id;
-+
-+	ret = ath11k_wmi_send_twt_pause_dialog_cmd(arvif->ar, &params);
-+
-+	return ret ? ret : count;
-+}
-+
-+static ssize_t ath11k_write_twt_resume_dialog(struct file *file,
-+					      const char __user *ubuf,
-+					      size_t count, loff_t *ppos)
-+{
-+	struct ath11k_vif *arvif = file->private_data;
-+	struct wmi_twt_resume_dialog_params params = { 0 };
-+	u8 buf[64] = {0};
-+	int ret;
-+
-+	ret = simple_write_to_buffer(buf, sizeof(buf) - 1, ppos, ubuf, count);
-+	if (ret < 0)
-+		return ret;
-+	buf[ret] = '\0';
-+	ret = sscanf(buf, "%02hhx:%02hhx:%02hhx:%02hhx:%02hhx:%02hhx %u %u %u",
-+		     &params.peer_macaddr[0],
-+		     &params.peer_macaddr[1],
-+		     &params.peer_macaddr[2],
-+		     &params.peer_macaddr[3],
-+		     &params.peer_macaddr[4],
-+		     &params.peer_macaddr[5],
-+		     &params.dialog_id,
-+		     &params.sp_offset_us,
-+		     &params.next_twt_size);
-+	if (ret != 9)
-+		return -EINVAL;
-+
-+	params.vdev_id = arvif->vdev_id;
-+
-+	ret = ath11k_wmi_send_twt_resume_dialog_cmd(arvif->ar, &params);
-+
-+	return ret ? ret : count;
-+}
-+
-+static const struct file_operations ath11k_fops_twt_add_dialog = {
-+	.write = ath11k_write_twt_add_dialog,
-+	.open = simple_open
-+};
-+
-+static const struct file_operations ath11k_fops_twt_del_dialog = {
-+	.write = ath11k_write_twt_del_dialog,
-+	.open = simple_open
-+};
-+
-+static const struct file_operations ath11k_fops_twt_pause_dialog = {
-+	.write = ath11k_write_twt_pause_dialog,
-+	.open = simple_open
-+};
-+
-+static const struct file_operations ath11k_fops_twt_resume_dialog = {
-+	.write = ath11k_write_twt_resume_dialog,
-+	.open = simple_open
-+};
-+
-+void ath11k_debugfs_twt(struct ath11k_vif *arvif, bool enable)
-+{
-+	if (!enable && arvif->debugfs_twt) {
-+		debugfs_remove_recursive(arvif->debugfs_twt);
-+		arvif->debugfs_twt = NULL;
-+		return;
-+	}
-+
-+	if (arvif->debugfs_twt)
-+		return;
-+
-+	arvif->debugfs_twt = debugfs_create_dir("twt", arvif->vif->debugfs_dir);
-+	if (IS_ERR_OR_NULL(arvif->debugfs_twt)) {
-+		ath11k_warn(arvif->ar->ab,
-+			    "failed to create twt debugfs: %p\n",
-+			    arvif->debugfs_twt);
-+		arvif->debugfs_twt = NULL;
-+		return;
-+	}
-+
-+	debugfs_create_file("add_dialog", 0200,
-+			    arvif->debugfs_twt, arvif,
-+			    &ath11k_fops_twt_add_dialog);
-+
-+	debugfs_create_file("del_dialog", 0200,
-+			    arvif->debugfs_twt, arvif,
-+			    &ath11k_fops_twt_del_dialog);
-+
-+	debugfs_create_file("pause_dialog", 0200,
-+			    arvif->debugfs_twt, arvif,
-+			    &ath11k_fops_twt_pause_dialog);
-+
-+	debugfs_create_file("resume_dialog", 0200,
-+			    arvif->debugfs_twt, arvif,
-+			    &ath11k_fops_twt_resume_dialog);
-+}
-+#endif
-+
- #ifdef CONFIG_ATH11K_DEBUGFS
- static void ath11k_fw_stats_pdevs_free(struct list_head *head)
- {
-diff --git a/drivers/net/wireless/ath/ath11k/debug.h b/drivers/net/wireless/ath/ath11k/debug.h
-index a317a7bdb9a2..805e30c07e14 100644
---- a/drivers/net/wireless/ath/ath11k/debug.h
-+++ b/drivers/net/wireless/ath/ath11k/debug.h
-@@ -133,6 +133,14 @@ static inline void ath11k_dbg_dump(struct ath11k_base *ab,
- }
- #endif /* CONFIG_ATH11K_DEBUG */
- 
-+#ifdef CONFIG_MAC80211_DEBUGFS
-+void ath11k_debugfs_twt(struct ath11k_vif *arvif, bool enable);
-+#else
-+static inline void ath11k_debugfs_twt(struct ath11k_vif *arvif, bool enable)
-+{
-+}
-+#endif
-+
- #ifdef CONFIG_ATH11K_DEBUGFS
- int ath11k_debug_soc_create(struct ath11k_base *ab);
- void ath11k_debug_soc_destroy(struct ath11k_base *ab);
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index a2c8a52b8621..6a8c1c3b8da2 100644
---- a/drivers/net/wireless/ath/ath11k/mac.c
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -1920,6 +1920,8 @@ static void ath11k_mac_op_bss_info_changed(struct ieee80211_hw *hw,
- 			ath11k_wmi_send_twt_enable_cmd(ar, ar->pdev_idx);
- 		else
- 			ath11k_wmi_send_twt_disable_cmd(ar, ar->pdev_idx);
-+		if (vif->type == NL80211_IFTYPE_AP)
-+			ath11k_debugfs_twt(arvif, info->twt_requester);
+-#include <linux/kfifo.h>
+ #include "core.h"
+ #include "dp_tx.h"
+ #include "hal_tx.h"
+@@ -828,10 +827,7 @@ void ath11k_dp_free(struct ath11k_base *ab)
+ 			     ath11k_dp_tx_pending_cleanup, ab);
+ 		idr_destroy(&dp->tx_ring[i].txbuf_idr);
+ 		spin_unlock_bh(&dp->tx_ring[i].tx_idr_lock);
+-
+-		spin_lock_bh(&dp->tx_ring[i].tx_status_lock);
+-		kfifo_free(&dp->tx_ring[i].tx_status_fifo);
+-		spin_unlock_bh(&dp->tx_ring[i].tx_status_lock);
++		kfree(&dp->tx_ring[i].tx_status);
  	}
  
- 	if (changed & BSS_CHANGED_HE_OBSS_PD)
-@@ -4217,6 +4219,8 @@ static void ath11k_mac_op_remove_interface(struct ieee80211_hw *hw,
+ 	/* Deinit any SOC level resource */
+@@ -871,17 +867,17 @@ int ath11k_dp_alloc(struct ath11k_base *ab)
+ 	if (ret)
+ 		goto fail_link_desc_cleanup;
  
- 	/* TODO: recal traffic pause state based on the available vdevs */
+-	size = roundup_pow_of_two(DP_TX_COMP_RING_SIZE);
++	size = sizeof(struct hal_wbm_release_ring) * DP_TX_COMP_RING_SIZE;
  
-+	debugfs_remove_recursive(arvif->debugfs_twt);
-+	arvif->debugfs_twt = NULL;
- 	mutex_unlock(&ar->conf_mutex);
+ 	for (i = 0; i < DP_TCL_NUM_RING_MAX; i++) {
+ 		idr_init(&dp->tx_ring[i].txbuf_idr);
+ 		spin_lock_init(&dp->tx_ring[i].tx_idr_lock);
+ 		dp->tx_ring[i].tcl_data_ring_id = i;
+ 
+-		spin_lock_init(&dp->tx_ring[i].tx_status_lock);
+-		ret = kfifo_alloc(&dp->tx_ring[i].tx_status_fifo, size,
+-				  GFP_KERNEL);
+-		if (ret)
++		dp->tx_ring[i].tx_status_head = 0;
++		dp->tx_ring[i].tx_status_tail = DP_TX_COMP_RING_SIZE - 1;
++		dp->tx_ring[i].tx_status = kmalloc(size, GFP_KERNEL);
++		if (!dp->tx_ring[i].tx_status)
+ 			goto fail_cmn_srng_cleanup;
+ 	}
+ 
+diff --git a/drivers/net/wireless/ath/ath11k/dp.h b/drivers/net/wireless/ath/ath11k/dp.h
+index f7e53509ae07..d4011f902930 100644
+--- a/drivers/net/wireless/ath/ath11k/dp.h
++++ b/drivers/net/wireless/ath/ath11k/dp.h
+@@ -6,7 +6,6 @@
+ #ifndef ATH11K_DP_H
+ #define ATH11K_DP_H
+ 
+-#include <linux/kfifo.h>
+ #include "hal_rx.h"
+ 
+ struct ath11k_base;
+@@ -58,6 +57,8 @@ struct dp_rxdma_ring {
+ 	int bufs_max;
+ };
+ 
++#define ATH11K_TX_COMPL_NEXT(x)	((x + 1) % DP_TX_COMP_RING_SIZE)
++
+ struct dp_tx_ring {
+ 	u8 tcl_data_ring_id;
+ 	struct dp_srng tcl_data_ring;
+@@ -65,11 +66,9 @@ struct dp_tx_ring {
+ 	struct idr txbuf_idr;
+ 	/* Protects txbuf_idr and num_pending */
+ 	spinlock_t tx_idr_lock;
+-	DECLARE_KFIFO_PTR(tx_status_fifo, struct hal_wbm_release_ring);
+-	/* lock to protect tx_status_fifo because tx_status_fifo can be
+-	 * accessed concurrently.
+-	 */
+-	spinlock_t tx_status_lock;
++	struct hal_wbm_release_ring *tx_status;
++	int tx_status_head;
++	int tx_status_tail;
+ };
+ 
+ struct ath11k_pdev_mon_stats {
+diff --git a/drivers/net/wireless/ath/ath11k/dp_tx.c b/drivers/net/wireless/ath/ath11k/dp_tx.c
+index 28ebc414533e..5d6403cf99ab 100644
+--- a/drivers/net/wireless/ath/ath11k/dp_tx.c
++++ b/drivers/net/wireless/ath/ath11k/dp_tx.c
+@@ -79,7 +79,6 @@ int ath11k_dp_tx(struct ath11k *ar, struct ath11k_vif *arvif,
+ 	struct hal_srng *tcl_ring;
+ 	struct ieee80211_hdr *hdr = (void *)skb->data;
+ 	struct dp_tx_ring *tx_ring;
+-	u8 cached_desc[HAL_TCL_DESC_LEN];
+ 	void *hal_tcl_desc;
+ 	u8 pool_id;
+ 	u8 hal_ring_id;
+@@ -167,8 +166,6 @@ int ath11k_dp_tx(struct ath11k *ar, struct ath11k_vif *arvif,
+ 	skb_cb->vif = arvif->vif;
+ 	skb_cb->ar = ar;
+ 
+-	ath11k_hal_tx_cmd_desc_setup(ab, cached_desc, &ti);
+-
+ 	hal_ring_id = tx_ring->tcl_data_ring.ring_id;
+ 	tcl_ring = &ab->hal.srng_list[hal_ring_id];
+ 
+@@ -188,7 +185,8 @@ int ath11k_dp_tx(struct ath11k *ar, struct ath11k_vif *arvif,
+ 		goto fail_unmap_dma;
+ 	}
+ 
+-	ath11k_hal_tx_desc_sync(cached_desc, hal_tcl_desc);
++	ath11k_hal_tx_cmd_desc_setup(ab, hal_tcl_desc +
++					 sizeof(struct hal_tlv_hdr), &ti);
+ 
+ 	ath11k_hal_srng_access_end(ab, tcl_ring);
+ 
+@@ -432,47 +430,44 @@ void ath11k_dp_tx_completion_handler(struct ath11k_base *ab, int ring_id)
+ 	int hal_ring_id = dp->tx_ring[ring_id].tcl_comp_ring.ring_id;
+ 	struct hal_srng *status_ring = &ab->hal.srng_list[hal_ring_id];
+ 	struct sk_buff *msdu;
+-	struct hal_wbm_release_ring tx_status;
+ 	struct hal_tx_status ts;
+ 	struct dp_tx_ring *tx_ring = &dp->tx_ring[ring_id];
+ 	u32 *desc;
+ 	u32 msdu_id;
+ 	u8 mac_id;
+ 
+-	spin_lock_bh(&status_ring->lock);
+-
+ 	ath11k_hal_srng_access_begin(ab, status_ring);
+ 
+-	spin_lock_bh(&tx_ring->tx_status_lock);
+-	while (!kfifo_is_full(&tx_ring->tx_status_fifo) &&
++	while ((ATH11K_TX_COMPL_NEXT(tx_ring->tx_status_head) != tx_ring->tx_status_tail) &&
+ 	       (desc = ath11k_hal_srng_dst_get_next_entry(ab, status_ring))) {
+-		ath11k_hal_tx_status_desc_sync((void *)desc,
+-					       (void *)&tx_status);
+-		kfifo_put(&tx_ring->tx_status_fifo, tx_status);
++		memcpy(&tx_ring->tx_status[tx_ring->tx_status_head],
++		       desc, sizeof(struct hal_wbm_release_ring));
++		tx_ring->tx_status_head =
++			ATH11K_TX_COMPL_NEXT(tx_ring->tx_status_head);
+ 	}
+ 
+ 	if ((ath11k_hal_srng_dst_peek(ab, status_ring) != NULL) &&
+-	    kfifo_is_full(&tx_ring->tx_status_fifo)) {
++	    (ATH11K_TX_COMPL_NEXT(tx_ring->tx_status_head) == tx_ring->tx_status_tail)) {
+ 		/* TODO: Process pending tx_status messages when kfifo_is_full() */
+ 		ath11k_warn(ab, "Unable to process some of the tx_status ring desc because status_fifo is full\n");
+ 	}
+ 
+-	spin_unlock_bh(&tx_ring->tx_status_lock);
+-
+ 	ath11k_hal_srng_access_end(ab, status_ring);
+-	spin_unlock_bh(&status_ring->lock);
+ 
+-	spin_lock_bh(&tx_ring->tx_status_lock);
+-	while (kfifo_get(&tx_ring->tx_status_fifo, &tx_status)) {
+-		memset(&ts, 0, sizeof(ts));
+-		ath11k_hal_tx_status_parse(ab, &tx_status, &ts);
++	while (ATH11K_TX_COMPL_NEXT(tx_ring->tx_status_tail) != tx_ring->tx_status_head) {
++		struct hal_wbm_release_ring *tx_status;
++
++		tx_ring->tx_status_tail =
++			ATH11K_TX_COMPL_NEXT(tx_ring->tx_status_tail);
++		tx_status = &tx_ring->tx_status[tx_ring->tx_status_tail];
++		ath11k_hal_tx_status_parse(ab, tx_status, &ts);
+ 
+ 		mac_id = FIELD_GET(DP_TX_DESC_ID_MAC_ID, ts.desc_id);
+ 		msdu_id = FIELD_GET(DP_TX_DESC_ID_MSDU_ID, ts.desc_id);
+ 
+ 		if (ts.buf_rel_source == HAL_WBM_REL_SRC_MODULE_FW) {
+ 			ath11k_dp_tx_process_htt_tx_complete(ab,
+-							     (void *)&tx_status,
++							     (void *)tx_status,
+ 							     mac_id, msdu_id,
+ 							     tx_ring);
+ 			continue;
+@@ -494,12 +489,8 @@ void ath11k_dp_tx_completion_handler(struct ath11k_base *ab, int ring_id)
+ 		if (atomic_dec_and_test(&ar->dp.num_tx_pending))
+ 			wake_up(&ar->dp.tx_empty_waitq);
+ 
+-		/* TODO: Locking optimization so that tx_completion for an msdu
+-		 * is not called with tx_status_lock acquired
+-		 */
+ 		ath11k_dp_tx_complete_msdu(ar, msdu, &ts);
+ 	}
+-	spin_unlock_bh(&tx_ring->tx_status_lock);
  }
  
+ int ath11k_dp_tx_send_reo_cmd(struct ath11k_base *ab, struct dp_rx_tid *rx_tid,
+diff --git a/drivers/net/wireless/ath/ath11k/hal_tx.c b/drivers/net/wireless/ath/ath11k/hal_tx.c
+index c2a3a9d2e534..e8710bbbbc3a 100644
+--- a/drivers/net/wireless/ath/ath11k/hal_tx.c
++++ b/drivers/net/wireless/ath/ath11k/hal_tx.c
+@@ -74,19 +74,6 @@ void ath11k_hal_tx_cmd_desc_setup(struct ath11k_base *ab, void *cmd,
+ 	tcl_cmd->info4 = 0;
+ }
+ 
+-/* Commit the descriptor to hardware */
+-void ath11k_hal_tx_desc_sync(void *tx_desc_cached, void *hw_desc)
+-{
+-	memcpy(hw_desc + sizeof(struct hal_tlv_hdr), tx_desc_cached,
+-	       sizeof(struct hal_tcl_data_cmd));
+-}
+-
+-/* Get the descriptor status from hardware */
+-void ath11k_hal_tx_status_desc_sync(void *hw_desc, void *local_desc)
+-{
+-	memcpy(local_desc, hw_desc, HAL_TX_STATUS_DESC_LEN);
+-}
+-
+ void ath11k_hal_tx_status_parse(struct ath11k_base *ab,
+ 				struct hal_wbm_release_ring *desc,
+ 				struct hal_tx_status *ts)
+diff --git a/drivers/net/wireless/ath/ath11k/hal_tx.h b/drivers/net/wireless/ath/ath11k/hal_tx.h
+index cf99e2b31f9f..5fe89b729a6e 100644
+--- a/drivers/net/wireless/ath/ath11k/hal_tx.h
++++ b/drivers/net/wireless/ath/ath11k/hal_tx.h
+@@ -61,11 +61,9 @@ struct hal_tx_status {
+ 
+ void ath11k_hal_tx_cmd_desc_setup(struct ath11k_base *ab, void *cmd,
+ 				  struct hal_tx_info *ti);
+-void ath11k_hal_tx_desc_sync(void *tx_desc_cached, void *hw_desc);
+ void ath11k_hal_tx_status_parse(struct ath11k_base *ab,
+ 				struct hal_wbm_release_ring *desc,
+ 				struct hal_tx_status *ts);
+-void ath11k_hal_tx_status_desc_sync(void *hw_desc, void *local_desc);
+ void ath11k_hal_tx_set_dscp_tid_map(struct ath11k_base *ab, int id);
+ int ath11k_hal_reo_cmd_send(struct ath11k_base *ab, struct hal_srng *srng,
+ 			    enum hal_reo_cmd_type type,
 -- 
 2.20.1
 
