@@ -2,62 +2,102 @@ Return-Path: <SRS0=SQ8t=Z3=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EDB41C2D0BF
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Dec 2019 16:52:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE652C43603
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Dec 2019 16:57:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CBAB321835
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Dec 2019 16:52:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8018D21835
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Dec 2019 16:57:39 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="h97OGLcK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729993AbfLEQv6 (ORCPT
+        id S1729430AbfLEQ5i (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 5 Dec 2019 11:51:58 -0500
-Received: from s3.sipsolutions.net ([144.76.43.62]:58260 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729860AbfLEQv6 (ORCPT
+        Thu, 5 Dec 2019 11:57:38 -0500
+Received: from mail2.candelatech.com ([208.74.158.173]:38130 "EHLO
+        mail3.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726028AbfLEQ5i (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Dec 2019 11:51:58 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.92.3)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1icuM6-004CRl-C5; Thu, 05 Dec 2019 17:51:54 +0100
-Message-ID: <78d99dc334c880a12d15717c496a1b3c36b0c370.camel@sipsolutions.net>
+        Thu, 5 Dec 2019 11:57:38 -0500
+Received: from [192.168.100.195] (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail3.candelatech.com (Postfix) with ESMTPSA id A5EF3137531;
+        Thu,  5 Dec 2019 08:57:37 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com A5EF3137531
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
+        s=default; t=1575565057;
+        bh=GT3Kfq28O8/jytxcmj3IIENh+6oLIrfoYN9hxhL1ZHs=;
+        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
+        b=h97OGLcKYPCRqG/zq1UgY6wVsSt79+lvv11iRcMkNGBKe5JE8Mo16t7PP6+4ju/CB
+         zbzHK7xO2pn8/Fk5fHLBw2Tky8zB4vKkpWbTC6Z8QrqX49zLF1v95SmDFqXzJB3B7C
+         V7bzjlhVhYyyW6SOTHTM+NwnpGId4tuSr3A2wSMo=
 Subject: Re: debugging TXQs being empty
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Ben Greear <greearb@candelatech.com>,
-        Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@redhat.com>
+To:     Johannes Berg <johannes@sipsolutions.net>,
+        =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@redhat.com>
 Cc:     linux-wireless@vger.kernel.org
-Date:   Thu, 05 Dec 2019 17:51:52 +0100
-In-Reply-To: <2e01fb1d5b8ff3335220231251f893c01c6c22d3.camel@sipsolutions.net> (sfid-20191205_174955_112616_B3AB68D5)
 References: <bbc516f28782175b27ac5e19dcdeac13cd6ee76a.camel@sipsolutions.net>
-         <49288397-55b3-f49a-e277-5197d7c1bea3@candelatech.com>
-         <2e01fb1d5b8ff3335220231251f893c01c6c22d3.camel@sipsolutions.net>
-         (sfid-20191205_174955_112616_B3AB68D5)
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.34.2 (3.34.2-1.fc31) 
+ <49288397-55b3-f49a-e277-5197d7c1bea3@candelatech.com>
+ <2e01fb1d5b8ff3335220231251f893c01c6c22d3.camel@sipsolutions.net>
+From:   Ben Greear <greearb@candelatech.com>
+Organization: Candela Technologies
+Message-ID: <64a6ae15-b7be-8c27-4e60-4cb3d253f3dc@candelatech.com>
+Date:   Thu, 5 Dec 2019 08:57:37 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.1
 MIME-Version: 1.0
+In-Reply-To: <2e01fb1d5b8ff3335220231251f893c01c6c22d3.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, 2019-12-05 at 17:49 +0100, Johannes Berg wrote:
+On 12/5/19 8:49 AM, Johannes Berg wrote:
 > On Thu, 2019-12-05 at 08:37 -0800, Ben Greear wrote:
 > 
-> > > All this seems to mean that the TCP stack isn't feeding us fast enough,
-> > > but is that really possible?
-> > 
-> > Does UDP work better?
+>>> All this seems to mean that the TCP stack isn't feeding us fast enough,
+>>> but is that really possible?
+>>
+>> Does UDP work better?
 > 
 > Somewhat, I get about 1020-1030 Mbps. But still a TON of "TXQ of STA ...
 > is now empty" messages. Say this run got about 15 per second of those.
 
-That actually pegged a CPU in the test tool, so not sure I'm doing that
-correctly ...
+It would seem that it is not some issue with TCP stack then?
 
-johannes
+In general, UDP uses more CPU to send from user-space than TCP
+because of TSO, etc.  Sendmmsg can help a bit, but it is a bit painful
+to code against so things like iperf do not use it, at least ones I've
+looked at.
+
+Can you provide some details on how you are generating this load?
+
+For what it's worth, we've seen about 1.9Gbps download goodput
+when using ax200 as a station receiving traffic from 160Mhz AP.
+I don't have any reports of > 1Gbps of upload performance though,
+not sure our user with the fast AP has done much upload testing...
+
+>> or pktgen?
+> 
+> I haven't really tried, the setup is a bit complicated ... and it's
+> nowhere near me either :)
+
+Yeah, it will likely crash your system unless you apply years-old patches I posted
+too :)
+
+But, at least with pktgen, you can be quite sure it is not some slowdown farther up
+the stack that is causing the problem.
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
