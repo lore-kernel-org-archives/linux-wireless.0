@@ -2,155 +2,78 @@ Return-Path: <SRS0=SQ8t=Z3=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C634C43603
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Dec 2019 07:04:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97E4DC43603
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Dec 2019 07:24:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5BE1D2077B
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Dec 2019 07:04:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5F3C1224F8
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Dec 2019 07:24:12 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="YrcQIBDG";
+	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="UfHWYtGL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725953AbfLEHEC (ORCPT
+        id S1726257AbfLEHYL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 5 Dec 2019 02:04:02 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:50496 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725867AbfLEHEC (ORCPT
+        Thu, 5 Dec 2019 02:24:11 -0500
+Received: from a27-56.smtp-out.us-west-2.amazonses.com ([54.240.27.56]:53602
+        "EHLO a27-56.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726028AbfLEHYL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Dec 2019 02:04:02 -0500
-Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
-        by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.92.2)
-        (envelope-from <luca@coelho.fi>)
-        id 1iclB9-00069j-F9; Thu, 05 Dec 2019 09:04:00 +0200
-From:   Luca Coelho <luca@coelho.fi>
-To:     kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org
-Date:   Thu,  5 Dec 2019 09:03:54 +0200
-Message-Id: <20191205070354.231246-1-luca@coelho.fi>
-X-Mailer: git-send-email 2.24.0
+        Thu, 5 Dec 2019 02:24:11 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+        s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1575530650;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:Message-ID:MIME-Version:Content-Type;
+        bh=YvHv2rQuZhCxiYugQZfdChPHWBQ40vbZEq3TjWabN4w=;
+        b=YrcQIBDG/7YKCk0/HFYcU3IPpbcgY8RZ8PPLtkNJW3WwttZ8ApoVaw6+/msuM2rX
+        Ds7jeNpbqGottiQFUY1lMGH+j9fyBpsV7Bbh77M1iXCJrb+LvulI3R+eGAAE/7edEPi
+        TrgecyCPD/SMKnG9vLclkHO6N8Pg1TvM+oUwWuMk=
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+        s=gdwg2y3kokkkj5a55z2ilkup5wp5hhxx; d=amazonses.com; t=1575530650;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:Message-ID:MIME-Version:Content-Type:Feedback-ID;
+        bh=YvHv2rQuZhCxiYugQZfdChPHWBQ40vbZEq3TjWabN4w=;
+        b=UfHWYtGLUgyWDOEooimtgM966+k+SsZtbGSf8Ftb5q3LO9k6SBCzXizF0kPUNzAm
+        U4moOQPEz2xhpAH047YpeiLczZQilbFfsM2OeXFvaSO93XaP8EfBbJ4RHwsPdl2AQl/
+        YQk4lnjLfko1X95r3KiIAFGscmHcsVEOAu9EEL20=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 78FC3C447AD
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Eduardo Abinader <eduardoabinader@gmail.com>
+Cc:     wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] wcn36xx: disconnect timeout
+References: <20191205061922.1801-1-eduardoabinader@gmail.com>
+Date:   Thu, 5 Dec 2019 07:24:10 +0000
+In-Reply-To: <20191205061922.1801-1-eduardoabinader@gmail.com> (Eduardo
+        Abinader's message of "Thu, 5 Dec 2019 07:19:22 +0100")
+Message-ID: <0101016ed4f1db83-1f877afd-836b-4ba5-9190-4e71846e0853-000000@us-west-2.amazonses.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: [PATCH v5.5] iwlwifi: pcie: move power gating workaround earlier in the flow
+Content-Type: text/plain
+X-SES-Outgoing: 2019.12.05-54.240.27.56
+Feedback-ID: 1.us-west-2.CZuq2qbDmUIuT3qdvXlRHZZCpfZqZ4GtG9v3VKgRyF0=:AmazonSES
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Luca Coelho <luciano.coelho@intel.com>
+Eduardo Abinader <eduardoabinader@gmail.com> writes:
 
-We need to reset the NIC after setting the bits to enable power
-gating and that cannot be done too late in the flow otherwise it
-cleans other registers and things that were already configured,
-causing initialization to fail.
+> Whenever the signal stregth decays smoothly and physical connnection
+> is already gone and no deauth has arrived, the qcom soc is not
+> able to indicate neither WCN36XX_HAL_MISSED_BEACON_IND nor
+> WCN36XX_HAL_MISSED_BEACON_IND. It was noticed that such situation gets
+> even more reproducible, when the driver fails to enter bmps mode - which is
+> highly likely to occur. Thus, in order to provide proper disconnection
+> of the connected STA, a disconnection timeout based on last time seen
+> bss beacon is here given.
+>
+> Signed-off-by: Eduardo Abinader <eduardoabinader@gmail.com>
 
-In order to fix this, move the function to the common code in trans.c
-so it can be called directly from there at an earlier point, just
-after the reset we already do during initialization.
+Wouldn't it be better to disable IEEE80211_HW_CONNECTION_MONITOR and let
+mac80211 handle it entirely?
 
-Fixes: 9a47cb988338 ("iwlwifi: pcie: add workaround for power gating in integrated 22000")
-Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=205719
-Cc: stable@ver.kernel.org # 5.4+
-Reported-by: Anders Kaseorg <andersk@mit.edu>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- .../wireless/intel/iwlwifi/pcie/trans-gen2.c  | 25 ----------------
- .../net/wireless/intel/iwlwifi/pcie/trans.c   | 30 +++++++++++++++++++
- 2 files changed, 30 insertions(+), 25 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-index 0252716c0b24..0d8b2a8ffa5d 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-@@ -57,24 +57,6 @@
- #include "internal.h"
- #include "fw/dbg.h"
- 
--static int iwl_pcie_gen2_force_power_gating(struct iwl_trans *trans)
--{
--	iwl_set_bits_prph(trans, HPM_HIPM_GEN_CFG,
--			  HPM_HIPM_GEN_CFG_CR_FORCE_ACTIVE);
--	udelay(20);
--	iwl_set_bits_prph(trans, HPM_HIPM_GEN_CFG,
--			  HPM_HIPM_GEN_CFG_CR_PG_EN |
--			  HPM_HIPM_GEN_CFG_CR_SLP_EN);
--	udelay(20);
--	iwl_clear_bits_prph(trans, HPM_HIPM_GEN_CFG,
--			    HPM_HIPM_GEN_CFG_CR_FORCE_ACTIVE);
--
--	iwl_trans_sw_reset(trans);
--	iwl_clear_bit(trans, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
--
--	return 0;
--}
--
- /*
-  * Start up NIC's basic functionality after it has been reset
-  * (e.g. after platform boot, or shutdown via iwl_pcie_apm_stop())
-@@ -110,13 +92,6 @@ int iwl_pcie_gen2_apm_init(struct iwl_trans *trans)
- 
- 	iwl_pcie_apm_config(trans);
- 
--	if (trans->trans_cfg->device_family == IWL_DEVICE_FAMILY_22000 &&
--	    trans->cfg->integrated) {
--		ret = iwl_pcie_gen2_force_power_gating(trans);
--		if (ret)
--			return ret;
--	}
--
- 	ret = iwl_finish_nic_init(trans, trans->trans_cfg);
- 	if (ret)
- 		return ret;
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index af9bc6b64542..a0677131634d 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -1783,6 +1783,29 @@ static int iwl_trans_pcie_clear_persistence_bit(struct iwl_trans *trans)
- 	return 0;
- }
- 
-+static int iwl_pcie_gen2_force_power_gating(struct iwl_trans *trans)
-+{
-+	int ret;
-+
-+	ret = iwl_finish_nic_init(trans, trans->trans_cfg);
-+	if (ret < 0)
-+		return ret;
-+
-+	iwl_set_bits_prph(trans, HPM_HIPM_GEN_CFG,
-+			  HPM_HIPM_GEN_CFG_CR_FORCE_ACTIVE);
-+	udelay(20);
-+	iwl_set_bits_prph(trans, HPM_HIPM_GEN_CFG,
-+			  HPM_HIPM_GEN_CFG_CR_PG_EN |
-+			  HPM_HIPM_GEN_CFG_CR_SLP_EN);
-+	udelay(20);
-+	iwl_clear_bits_prph(trans, HPM_HIPM_GEN_CFG,
-+			    HPM_HIPM_GEN_CFG_CR_FORCE_ACTIVE);
-+
-+	iwl_trans_pcie_sw_reset(trans);
-+
-+	return 0;
-+}
-+
- static int _iwl_trans_pcie_start_hw(struct iwl_trans *trans)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-@@ -1802,6 +1825,13 @@ static int _iwl_trans_pcie_start_hw(struct iwl_trans *trans)
- 
- 	iwl_trans_pcie_sw_reset(trans);
- 
-+	if (trans->trans_cfg->device_family == IWL_DEVICE_FAMILY_22000 &&
-+	    trans->cfg->integrated) {
-+		err = iwl_pcie_gen2_force_power_gating(trans);
-+		if (err)
-+			return err;
-+	}
-+
- 	err = iwl_pcie_apm_init(trans);
- 	if (err)
- 		return err;
 -- 
-2.24.0
-
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
