@@ -6,54 +6,133 @@ X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EADE0C43603
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Dec 2019 18:22:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 231FAC43603
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Dec 2019 18:34:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CD5A224651
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Dec 2019 18:22:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F2C6222525
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Dec 2019 18:34:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729855AbfLESWj (ORCPT
+        id S1729187AbfLESeh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 5 Dec 2019 13:22:39 -0500
-Received: from s3.sipsolutions.net ([144.76.43.62]:59734 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726028AbfLESWi (ORCPT
+        Thu, 5 Dec 2019 13:34:37 -0500
+Received: from wp063.webpack.hosteurope.de ([80.237.132.70]:38224 "EHLO
+        wp063.webpack.hosteurope.de" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726028AbfLESeh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Dec 2019 13:22:38 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.92.3)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1icvlt-004OBP-3x; Thu, 05 Dec 2019 19:22:37 +0100
-Message-ID: <5ee08008c0cc631be52cc6986708c8437556265f.camel@sipsolutions.net>
-Subject: Re: debugging TXQs being empty
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@redhat.com>
-Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date:   Thu, 05 Dec 2019 19:22:36 +0100
-In-Reply-To: <d8a745a7b0658c65b7e1beb12a9e2e1918cc77c7.camel@sipsolutions.net> (sfid-20191205_190901_620536_8019A905)
-References: <bbc516f28782175b27ac5e19dcdeac13cd6ee76a.camel@sipsolutions.net>
-         <CAPB2EAong6X2_gazqJUxs968Kb9EG3Eob2TcSJwCcuMP2p9-7w@mail.gmail.com>
-         <d8a745a7b0658c65b7e1beb12a9e2e1918cc77c7.camel@sipsolutions.net>
-         (sfid-20191205_190901_620536_8019A905)
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.34.2 (3.34.2-1.fc31) 
+        Thu, 5 Dec 2019 13:34:37 -0500
+Received: from processor.work ([89.163.132.190] helo=webmail.richenhagen.gl); authenticated
+        by wp063.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        id 1icvxR-0002s0-R5; Thu, 05 Dec 2019 19:34:33 +0100
 MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
+Date:   Thu, 05 Dec 2019 19:34:33 +0100
+From:   <linux@jusic.net>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     Tony Chuang <yhchuang@realtek.com>, linux-wireless@vger.kernel.org
+Subject: Re: RTL8822CE IPv6 autoconfiguration not working
+In-Reply-To: <0101016ed53008cc-fedb047e-381d-46da-b972-ac7bc84056a3-000000@us-west-2.amazonses.com>
+References: <f0aac1e559c2a3fa1e7eb8398ed58d46@jusic.net>
+ <e58983606ddb4d3c81f4d8bb27171da8@realtek.com>
+ <0101016ed53008cc-fedb047e-381d-46da-b972-ac7bc84056a3-000000@us-west-2.amazonses.com>
+User-Agent: Roundcube Webmail/1.4.0
+Message-ID: <7c0fc01aff5ad6bc7d65eeea50709a73@jusic.net>
+X-Sender: linux@jusic.net
+X-bounce-key: webpack.hosteurope.de;linux@jusic.net;1575570875;6896fd7b;
+X-HE-SMSGID: 1icvxR-0002s0-R5
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, 2019-12-05 at 19:08 +0100, Johannes Berg wrote:
+Am 2019-12-05 09:32, schrieb Kalle Valo:
+> Tony Chuang <yhchuang@realtek.com> writes:
+> 
+>>> Subject: RTL8822CE IPv6 autoconfiguration not working
+>>> 
+>>> Hello,
+>>> 
+>>> I just bought a new laptop with an Realtek RTL8822CE wireless card
+>>> buildin. I'm using NetworkManager with its internal DHCP client. I 
+>>> have
+>>> working IPv6 autoconfiguration support in my home network with 7 
+>>> devices
+>>> with different operating systems. When I plug a USB network card into
+>>> the laptop IPv6 is configured sucessfully. But with the wireless card
+>>> IPv6 autoconfiguration doesn't work. When I manually add an IPv6 with
+>>> "sudo ip -6 addr add <address>/64 dev wlp1s0" I can ping IPv6 
+>>> targets.
+>>> So there seems to be an bug either in the driver or maybe in
+>>> NetworkManager which prevents autoconfiguration from working, can
+>>> sombody look into this? I'm glad to help and provide further
+>>> informations or test things out.
+>>> 
+>>> Kind Regards
+>>> Joshua
+>>> 
+>>> 
+>>> ip addr
+>>> 1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state
+>>> UNKNOWN
+>>> group default qlen 1000
+>>>      link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+>>>      inet 127.0.0.1/8 scope host lo
+>>>         valid_lft forever preferred_lft forever
+>>>      inet6 ::1/128 scope host
+>>>         valid_lft forever preferred_lft forever
+>>> 2: wlp1s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq
+>>> state UP
+>>> group default qlen 1000
+>>>      link/ether 40:5b:d8:1a:7a:a9 brd ff:ff:ff:ff:ff:ff
+>>>      inet 192.168.178.25/24 brd 192.168.178.255 scope global dynamic
+>>> noprefixroute wlp1s0
+>>>         valid_lft 863798sec preferred_lft 863798sec
+>>>      inet6 fe80::1b8b:8c3a:b569:a882/64 scope link noprefixroute
+>>>         valid_lft forever preferred_lft forever
+>>> 
+>>> lspci -v
+>>> 01:00.0 Network controller: Realtek Semiconductor Co., Ltd. Device 
+>>> c822
+>>> 	Subsystem: Electronics & Telecommunications RSH Device 1e25
+>>> 	Flags: bus master, fast devsel, latency 0, IRQ 71
+>>> 	I/O ports at 2000 [size=256]
+>>> 	Memory at c0700000 (64-bit, non-prefetchable) [size=64K]
+>>> 	Capabilities: <access denied>
+>>> 	Kernel driver in use: rtw_pci
+>>> 	Kernel modules: rtwpci
+>>> 
+>> 
+>> I am not sure if this is driver-related problem, but I think you can 
+>> try to
+>> tcpdump and see where the autoconfiguration failed.
+>> And I am not an expert of IPv6, but if there is any issue with the 
+>> driver I
+>> can help you.
+> 
+> My first guess would be some kind of multicast problem with power save
+> mode. I would first try disabling the power save mode on the driver and
+> see if that helps.
 
-> Hmm. Actually, I wonder why I'm not seeing TSO, something to check
-> tomorrow.
+Disable power save with iw:
 
-No, I confused myself, of course we're seeing TSO, was looking at the
-UDP log :)
+iw dev wlp1s0 get power_save
+Power save: off
 
-Now though why don't we build A-MSDUs for UDP here? But I'm not really
-looking at UDP right now :)
+or in tlp:
 
-johannes
+# WiFi power saving mode: on=enable, off=disable; not supported by all 
+adapters.
+# Default: <none>
+WIFI_PWR_ON_AC=off
+WIFI_PWR_ON_BAT=off
 
+or  on NetworkManager:
+
+# File to be place under /etc/NetworkManager/conf.d
+[connection]
+# Values are 0 (use default), 1 (ignore/don't touch), 2 (disable) or 3 
+(enable).
+wifi.powersave = 2
+
+Did not help, where else could this be configured?
