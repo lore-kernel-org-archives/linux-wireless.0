@@ -7,45 +7,45 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B588DC43603
-	for <linux-wireless@archiver.kernel.org>; Fri,  6 Dec 2019 05:46:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A114BC43603
+	for <linux-wireless@archiver.kernel.org>; Fri,  6 Dec 2019 05:46:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7ACB424679
-	for <linux-wireless@archiver.kernel.org>; Fri,  6 Dec 2019 05:46:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7372224679
+	for <linux-wireless@archiver.kernel.org>; Fri,  6 Dec 2019 05:46:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1575611204;
-	bh=NbyMFdydPyQZ8sKK8V513pthoqEO+HVIpvJWYGKnsrY=;
+	s=default; t=1575611209;
+	bh=O69Fxb/T1nD5MHaIqAu7eFbU05WFEHFnEb33Wkauyl8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=ATNtEVOadzCcQ+tgSr42yVeKYZnr2fkN2/69YrMjRxwb9XhIn+xVxPbokjIRvzWWJ
-	 H4j5bn07nwzVpE+ukYxV5TlXKtPvFbp1uafAobGkn1znhbPiYORGuD6reqLPn9PS6l
-	 dH6lu9Xs6MATr6p4JY+/VxoGQGw8l47or73pDa1I=
+	b=iEeMKxNvtxXtG0I6GthsCO9TH2T2QanTYYZ0lVxWkVH6Sz1e1sNhF899fffYzkhyB
+	 HKpXHf/OfsedidCxW9YUTCDBdN/6jvr/6SpdY5Vzr0QyWCFarZSsgoeVG9nl5iOCYV
+	 LP2YzCvccprnvQSMv362hxTg60kagMquPNHKywdY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726214AbfLFFqo (ORCPT
+        id S1726312AbfLFFqr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 6 Dec 2019 00:46:44 -0500
-Received: from mail.kernel.org ([198.145.29.99]:34662 "EHLO mail.kernel.org"
+        Fri, 6 Dec 2019 00:46:47 -0500
+Received: from mail.kernel.org ([198.145.29.99]:34694 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726043AbfLFFqn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Dec 2019 00:46:43 -0500
+        id S1726043AbfLFFqr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 6 Dec 2019 00:46:47 -0500
 Received: from localhost.localdomain (unknown [37.26.146.204])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 6803524677;
-        Fri,  6 Dec 2019 05:46:40 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 23C0E2245C;
+        Fri,  6 Dec 2019 05:46:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1575611202;
-        bh=NbyMFdydPyQZ8sKK8V513pthoqEO+HVIpvJWYGKnsrY=;
+        s=default; t=1575611206;
+        bh=O69Fxb/T1nD5MHaIqAu7eFbU05WFEHFnEb33Wkauyl8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=zh6H0XwmT2GRguzmyMkt2OO9CaGGMKctywNmj8kxfjEOgB4iU1DN8oXqI+uBKCmNN
-         jLtF4IY/ZZLszleVeiXQtz+HJFP2KAzdpOVYKzIL1tYICRbzO20awrdTHyZP3DHEZY
-         5PKI4yQlBhYaEf4GQo/sdwkYt6XS22wmffVGXCMU=
+        b=W5KdrGeoaD4bC9hUt93N43wuvdfLZUXO8vDzmJiMrgIk63KfFNJXw1+nKXPtarvXD
+         2UbJAE5Ckli0KfjrmBl7qIhPdAYUsUtvczC+OmJ7gBC9ELjKRSnJ4uHxz+bg31EF1P
+         0iUCeLaFJd15695B1hPBwlY92AFjmC/KkJAbsKE4=
 From:   Lorenzo Bianconi <lorenzo@kernel.org>
 To:     nbd@nbd.name
 Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
         ryder.lee@mediatek.com, royluo@google.com
-Subject: [PATCH v3 1/3] mt76: mt76x02: fix coverage_class type
-Date:   Fri,  6 Dec 2019 07:46:23 +0200
-Message-Id: <c1470293c00670906c95d02dbf5b89e36e7bc1dd.1575609821.git.lorenzo@kernel.org>
+Subject: [PATCH v3 2/3] mt76: mt7603: set 0 as min coverage_class value
+Date:   Fri,  6 Dec 2019 07:46:24 +0200
+Message-Id: <05b58f0ab71a285ea628791bec8d0e3f59e58a4f.1575609821.git.lorenzo@kernel.org>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <cover.1575609821.git.lorenzo@kernel.org>
 References: <cover.1575609821.git.lorenzo@kernel.org>
@@ -56,43 +56,27 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Fix coverage_class type in mt76x02_dev data structure since
-coverage_class can be negative to enable dynack (just supported by
-ath9k). Set 0 as minimum value for coverage_class
+Set 0 as minimum configurable value for coverage_class since mt76 does
+not support dynack
 
-Fixes: 7bc04215a66b ("mt76: add driver code for MT76x2e")
 Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x02.h      | 2 +-
- drivers/net/wireless/mediatek/mt76/mt76x02_util.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7603/main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02.h b/drivers/net/wireless/mediatek/mt76/mt76x02.h
-index ba4c14eea22d..57665516d00e 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02.h
-@@ -116,7 +116,7 @@ struct mt76x02_dev {
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/main.c b/drivers/net/wireless/mediatek/mt76/mt7603/main.c
+index 6da7caaaade1..5b2f354ba845 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7603/main.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7603/main.c
+@@ -642,7 +642,7 @@ mt7603_set_coverage_class(struct ieee80211_hw *hw, s16 coverage_class)
+ {
+ 	struct mt7603_dev *dev = hw->priv;
  
- 	bool no_2ghz;
- 
--	u8 coverage_class;
-+	s16 coverage_class;
- 	u8 slottime;
- 
- 	struct mt76x02_dfs_pattern_detector dfs_pd;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-index e5685d9534e4..ab717d82d771 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_util.c
-@@ -545,7 +545,7 @@ void mt76x02_set_coverage_class(struct ieee80211_hw *hw,
- 	struct mt76x02_dev *dev = hw->priv;
- 
- 	mutex_lock(&dev->mt76.mutex);
 -	dev->coverage_class = coverage_class;
 +	dev->coverage_class = max_t(s16, coverage_class, 0);
- 	mt76x02_set_tx_ackto(dev);
- 	mutex_unlock(&dev->mt76.mutex);
+ 	mt7603_mac_set_timing(dev);
  }
+ 
 -- 
 2.21.0
 
