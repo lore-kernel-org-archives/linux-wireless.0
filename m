@@ -6,40 +6,38 @@ X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CD3DC43603
-	for <linux-wireless@archiver.kernel.org>; Fri,  6 Dec 2019 10:23:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3298EC43603
+	for <linux-wireless@archiver.kernel.org>; Fri,  6 Dec 2019 11:49:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0DD9F2173E
-	for <linux-wireless@archiver.kernel.org>; Fri,  6 Dec 2019 10:23:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 06FEE2464E
+	for <linux-wireless@archiver.kernel.org>; Fri,  6 Dec 2019 11:49:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726193AbfLFKXe (ORCPT
+        id S1726234AbfLFLt3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 6 Dec 2019 05:23:34 -0500
-Received: from s3.sipsolutions.net ([144.76.43.62]:56866 "EHLO
+        Fri, 6 Dec 2019 06:49:29 -0500
+Received: from s3.sipsolutions.net ([144.76.43.62]:58026 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726070AbfLFKXe (ORCPT
+        with ESMTP id S1726134AbfLFLt3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Dec 2019 05:23:34 -0500
+        Fri, 6 Dec 2019 06:49:29 -0500
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92.3)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1idAln-006N3f-Ra; Fri, 06 Dec 2019 11:23:31 +0100
-Message-ID: <f78dea61807e7816810254225d1c15429419972f.camel@sipsolutions.net>
+        id 1idC6w-006XuJ-0Z; Fri, 06 Dec 2019 12:49:26 +0100
+Message-ID: <9bcbab4b562669b96198c632f476b1b74956ca09.camel@sipsolutions.net>
 Subject: Re: debugging TXQs being empty
 From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Koen Vandeputte <koen.vandeputte@ncentric.com>,
-        Kan Yan <kyan@google.com>
+To:     Kan Yan <kyan@google.com>
 Cc:     Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@redhat.com>,
         linux-wireless <linux-wireless@vger.kernel.org>
-Date:   Fri, 06 Dec 2019 11:23:28 +0100
-In-Reply-To: <a4895e13-5d18-f151-e558-a3be1ed065ce@ncentric.com> (sfid-20191206_112230_306814_E54E6328)
+Date:   Fri, 06 Dec 2019 12:49:24 +0100
+In-Reply-To: <bf0cced86a1466285f74eb845e73fbaea1dff1c0.camel@sipsolutions.net> (sfid-20191206_101305_773178_ACF584A9)
 References: <bbc516f28782175b27ac5e19dcdeac13cd6ee76a.camel@sipsolutions.net>
          <fd23a26dea59128ede8c1c4d02fb2f3514ffb5e9.camel@sipsolutions.net>
          <CA+iem5tjTpO_2MKL_pEu7enTa-8=g5vY3=2WJKjg9f=JA2eCEw@mail.gmail.com>
-         <9b89b3b294295063aec045b9e863a44ad20b8782.camel@sipsolutions.net>
-         <bf0cced86a1466285f74eb845e73fbaea1dff1c0.camel@sipsolutions.net>
-         <a4895e13-5d18-f151-e558-a3be1ed065ce@ncentric.com>
-         (sfid-20191206_112230_306814_E54E6328)
+         (sfid-20191206_020554_916514_C4D7D41E) <9b89b3b294295063aec045b9e863a44ad20b8782.camel@sipsolutions.net>
+         (sfid-20191206_094144_773877_4A5AF79B) <bf0cced86a1466285f74eb845e73fbaea1dff1c0.camel@sipsolutions.net>
+         (sfid-20191206_101305_773178_ACF584A9)
 Content-Type: text/plain; charset="UTF-8"
 User-Agent: Evolution 3.34.2 (3.34.2-1.fc31) 
 MIME-Version: 1.0
@@ -49,18 +47,36 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, 2019-12-06 at 11:22 +0100, Koen Vandeputte wrote:
+On Fri, 2019-12-06 at 10:12 +0100, Johannes Berg wrote:
+> On Fri, 2019-12-06 at 09:41 +0100, Johannes Berg wrote:
+> > Maybe somehow TSO is interacting badly with the TXQs and the tracking
+> > here, since TSO makes the traffic *very* bursty? A 64k packet in the
+> > driver will typically expand to 9 or 10 A-MSDUs I think?
 > 
-> > No, that all seems well. Without TSO (with the trivial mac80211 patch to
-> > let me turn it off with ethtool) I get about 890Mbps, so about 5% less.
-> > That's not actually *that* bad, I guess due to software A-MSDU in
-> > mac80211, but it's not really the right direction :)
-> If you try this test again while setting coverage class higher (20000m 
-> or so), you *will* notice the difference a *lot* more (>50%) :-)
-> Even when the actual devices are only a few meters apart.
+> No, that all seems well. Without TSO (with the trivial mac80211 patch to
+> let me turn it off with ethtool) I get about 890Mbps, so about 5% less.
+> That's not actually *that* bad, I guess due to software A-MSDU in
+> mac80211, but it's not really the right direction :)
+> 
+> Changing wmem_max/tcp_mem to outrageous values also didn't really make
+> any difference.
+> 
+> I guess it's time to see if I can poke into the TCP stack to figure out
+> what's going on...
 
-Heh, yeah, I guess that makes some sense. Our device doesn't let you set
-that though, I think.
+Sadly no functioning kprobes on the system ... bpftrace -l lists them,
+but can't actually use them.
+
+If I also change net.ipv4.tcp_limit_output_bytes to an outrageous value
+(10x) I can recover a bit more than half of the performance loss with
+TSO disabled, but it makes no real difference with TSO enabled.
+
+Either way, what bothers me somewhat is that the backlog fluctuates so
+much. Sometimes I see a backlock of 2MB or more, while it *still*
+manages to go completely empty.
+
+Shouldn't I expect the steady state to have a somewhat even backlog? Why
+does this vary so much?
 
 johannes
 
