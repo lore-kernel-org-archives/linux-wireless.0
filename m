@@ -1,129 +1,163 @@
-Return-Path: <SRS0=TB3F=Z6=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=UTNx=Z7=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A2EAC43603
-	for <linux-wireless@archiver.kernel.org>; Sun,  8 Dec 2019 17:26:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40C5AC43603
+	for <linux-wireless@archiver.kernel.org>; Mon,  9 Dec 2019 04:33:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DBAC2206C3
-	for <linux-wireless@archiver.kernel.org>; Sun,  8 Dec 2019 17:26:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EF2F7206D3
+	for <linux-wireless@archiver.kernel.org>; Mon,  9 Dec 2019 04:33:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="S/sn0sBW"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Xvq1E/aR";
+	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="EKE7MkGQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726476AbfLHR0m (ORCPT
+        id S1726960AbfLIEd3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 8 Dec 2019 12:26:42 -0500
-Received: from mail2.candelatech.com ([208.74.158.173]:56398 "EHLO
-        mail3.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726472AbfLHR0l (ORCPT
+        Sun, 8 Dec 2019 23:33:29 -0500
+Received: from a27-10.smtp-out.us-west-2.amazonses.com ([54.240.27.10]:44652
+        "EHLO a27-10.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726826AbfLIEd3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 8 Dec 2019 12:26:41 -0500
-Received: from [192.168.1.47] (unknown [50.34.171.50])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail3.candelatech.com (Postfix) with ESMTPSA id 5A4EB137531;
-        Sun,  8 Dec 2019 09:26:40 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 5A4EB137531
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-        s=default; t=1575826001;
-        bh=HgELKjbbZATAnBgNbHxbmwenRadf0P0DGiSuXm6It8s=;
-        h=Subject:To:References:Cc:From:Date:In-Reply-To:From;
-        b=S/sn0sBW+8lMaQzbuf7raRyCFySzsq3IAu2E4e/Q8jNc0dcKetUxhimkLrp2zNI+2
-         yZ3eXpGW829I4oW64tWnzVouhrniiC1gGZFXLzifIPgzAtE8KTmDLyibu8+TpLHTA/
-         adGwFs+mNeBpbwnH7cQ9sC6fEpb1Q8tyyl2MWfiQ=
-Subject: Re: debugging TXQs being empty
-To:     Johannes Berg <johannes@sipsolutions.net>,
-        Kan Yan <kyan@google.com>
-References: <bbc516f28782175b27ac5e19dcdeac13cd6ee76a.camel@sipsolutions.net>
- <fd23a26dea59128ede8c1c4d02fb2f3514ffb5e9.camel@sipsolutions.net>
- <CA+iem5tjTpO_2MKL_pEu7enTa-8=g5vY3=2WJKjg9f=JA2eCEw@mail.gmail.com>
- <9b89b3b294295063aec045b9e863a44ad20b8782.camel@sipsolutions.net>
- <bf0cced86a1466285f74eb845e73fbaea1dff1c0.camel@sipsolutions.net>
- <9bcbab4b562669b96198c632f476b1b74956ca09.camel@sipsolutions.net>
- <336996e4-d9fe-bf3a-72fb-6919bd0adcbf@candelatech.com>
- <c2004c4d9defd9c391e072b2703a845185bd395e.camel@sipsolutions.net>
-Cc:     =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@redhat.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-From:   Ben Greear <greearb@candelatech.com>
-Message-ID: <ed9ae122-7573-a15e-7c42-7ae1fe3d123d@candelatech.com>
-Date:   Sun, 8 Dec 2019 09:26:39 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:45.0) Gecko/20100101
- Thunderbird/45.8.0
+        Sun, 8 Dec 2019 23:33:29 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+        s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1575866008;
+        h=MIME-Version:Content-Type:Content-Transfer-Encoding:Date:From:To:Cc:Subject:In-Reply-To:References:Message-ID;
+        bh=KQpRpRQoaMEDukK1IeBPBcM+8J7tLI1yFUGS9m9HLnQ=;
+        b=Xvq1E/aRxj4+UhkfopTyYFjhJP2zDsopZY7EIVdA6iV/oLnX1N8CPzBX0y9Fxv7p
+        LfkqakBQGSi5ODDroXg/wIE175e4Vlo0XGWQlPHfCqUfeIBTxE3lUnBUnRanI0ThCfN
+        sT1ZTWeQxgZqJZDwBjlRErQDnhBfnRsc5H3YcP14=
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+        s=gdwg2y3kokkkj5a55z2ilkup5wp5hhxx; d=amazonses.com; t=1575866008;
+        h=MIME-Version:Content-Type:Content-Transfer-Encoding:Date:From:To:Cc:Subject:In-Reply-To:References:Message-ID:Feedback-ID;
+        bh=KQpRpRQoaMEDukK1IeBPBcM+8J7tLI1yFUGS9m9HLnQ=;
+        b=EKE7MkGQ8OZyR7tI9YXub4m7ybxO9Mqzm7sE87LE4Xz8o+d0oRkMfJOhzw4x5Ugj
+        sAn9kKtQ0b8/PvE3C9j/AvvtXt+vjIoi744hk9lAwOxkbmqENLTq4Lxfsh2DsmPfgGF
+        Nwk2C/ZB9m65qGP2zFRjiYKLH78wEx1Q3ej3iQRM=
 MIME-Version: 1.0
-In-Reply-To: <c2004c4d9defd9c391e072b2703a845185bd395e.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
+Date:   Mon, 9 Dec 2019 04:33:28 +0000
+From:   vthiagar@codeaurora.org
+To:     John Crispin <john@phrozen.org>
+Cc:     Johannes Berg <johannes@sipsolutions.net>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, ath11k@lists.infradead.org
+Subject: Re: [PATCH 6/7] ath11k: add WMI calls required for handling BSS color
+In-Reply-To: <20191206143401.4080-6-john@phrozen.org>
+References: <20191206143401.4080-1-john@phrozen.org>
+ <20191206143401.4080-6-john@phrozen.org>
+Message-ID: <0101016ee8ef01a3-a48ae67a-693f-4656-ae5e-0bc0cc63fe7a-000000@us-west-2.amazonses.com>
+X-Sender: vthiagar@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
+X-SES-Outgoing: 2019.12.09-54.240.27.10
+Feedback-ID: 1.us-west-2.CZuq2qbDmUIuT3qdvXlRHZZCpfZqZ4GtG9v3VKgRyF0=:AmazonSES
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+On 2019-12-06 20:04, John Crispin wrote:
+> If the he_operation field of the beacon sets a BSS color, we need to 
+> inform
+> the FW of the settings. This patch adds the WMI command handlers 
+> required
+> to do so.
+> 
+> Signed-off-by: John Crispin <john@phrozen.org>
+> ---
+>  drivers/net/wireless/ath/ath11k/wmi.c | 67 +++++++++++++++++++++++++++
+>  drivers/net/wireless/ath/ath11k/wmi.h | 31 +++++++++++++
+>  2 files changed, 98 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/ath/ath11k/wmi.c
+> b/drivers/net/wireless/ath/ath11k/wmi.c
+> index 8cf7220a95f9..5d9276db9a85 100644
+> --- a/drivers/net/wireless/ath/ath11k/wmi.c
+> +++ b/drivers/net/wireless/ath/ath11k/wmi.c
+> @@ -2789,6 +2789,73 @@ ath11k_wmi_send_obss_spr_cmd(struct ath11k *ar,
+> u32 vdev_id,
+>  	return ret;
+>  }
+> 
+> +int
+> +ath11k_wmi_send_obss_color_collision_cfg_cmd(struct ath11k *ar, u32 
+> vdev_id,
+> +					     u8 bss_color, u32 period,
+> +					     bool enable)
+> +{
+> +	struct ath11k_pdev_wmi *wmi = ar->wmi;
+> +	struct ath11k_base *ab = wmi->wmi_ab->ab;
+> +	struct wmi_obss_color_collision_cfg_params_cmd *cmd;
+> +	struct sk_buff *skb;
+> +	int ret, len;
+> +
+> +	len = sizeof(*cmd);
+> +
+> +	skb = ath11k_wmi_alloc_skb(wmi->wmi_ab, len);
+> +	if (!skb)
+> +		return -ENOMEM;
+> +
+> +	cmd = (struct wmi_obss_color_collision_cfg_params_cmd *)skb->data;
+> +	cmd->tlv_header = FIELD_PREP(WMI_TLV_TAG,
+> WMI_TAG_OBSS_COLOR_COLLISION_DET_CONFIG) |
+> +			  FIELD_PREP(WMI_TLV_LEN, len - TLV_HDR_SIZE);
+> +	cmd->vdev_id = vdev_id;
+> +	cmd->evt_type = enable ? ATH11K_OBSS_COLOR_COLLISION_DETECTION :
+> +				 ATH11K_OBSS_COLOR_COLLISION_DETECTION_DISABLE;
+> +	cmd->current_bss_color = bss_color;
+> +	cmd->detection_period_ms = period;
+> +	cmd->scan_period_ms = ATH11K_BSS_COLOR_COLLISION_SCAN_PERIOD_MS;
+> +	cmd->free_slot_expiry_time_ms = 0;
+> +	cmd->flags = 0;
+> +
+> +	ret = ath11k_wmi_cmd_send(wmi, skb,
+> +				  WMI_OBSS_COLOR_COLLISION_DET_CONFIG_CMDID);
+> +	if (ret) {
+> +		ath11k_warn(ab, "Failed to send 
+> WMI_OBSS_COLOR_COLLISION_DET_CONFIG_CMDID");
+> +		dev_kfree_skb(skb);
+> +	}
+
+WMI debug log please.
+
+> +	return ret;
+> +}
+> +
+> +int ath11k_wmi_send_bss_color_change_enable_cmd(struct ath11k *ar,
+> u32 vdev_id, bool enable)
+> +{
+> +	struct ath11k_pdev_wmi *wmi = ar->wmi;
+> +	struct ath11k_base *ab = wmi->wmi_ab->ab;
+> +	struct wmi_bss_color_change_enable_params_cmd *cmd;
+> +	struct sk_buff *skb;
+> +	int ret, len;
+> +
+> +	len = sizeof(*cmd);
+> +
+> +	skb = ath11k_wmi_alloc_skb(wmi->wmi_ab, len);
+> +	if (!skb)
+> +		return -ENOMEM;
+> +
+> +	cmd = (struct wmi_bss_color_change_enable_params_cmd *)skb->data;
+> +	cmd->tlv_header = FIELD_PREP(WMI_TLV_TAG, 
+> WMI_TAG_BSS_COLOR_CHANGE_ENABLE) |
+> +			  FIELD_PREP(WMI_TLV_LEN, len - TLV_HDR_SIZE);
+> +	cmd->vdev_id = vdev_id;
+> +	cmd->enable = enable ? 1 : 0;
+> +
+> +	ret = ath11k_wmi_cmd_send(wmi, skb,
+> +				  WMI_BSS_COLOR_CHANGE_ENABLE_CMDID);
+> +	if (ret) {
+> +		ath11k_warn(ab, "Failed to send WMI_TWT_DIeABLE_CMDID");
+> +		dev_kfree_skb(skb);
+> +	}
+
+Same here.
 
 
-On 12/07/2019 12:09 PM, Johannes Berg wrote:
-> On Fri, 2019-12-06 at 15:44 -0800, Ben Greear wrote:
->> I did some tests today:
->>
->> kernel is 5.2.21+, with the fix for ax200 upload corruption bug.
->> AP is QCA 9984 based PC (i5 processor) running ath10k-ct firmware/driver, configured for 2x2 160Mhz
->> STA is PC (i5 processor) with AX200
->> OTA, about 5 feet apart
->> AP reports STA is sending at MCS-9 160Mhz (AX200 STA does not report tx rate it seems)
->
-> Yeah, that was an oversight for HE, it should work for HT/VHT. I have a
-> patch in the works to report the TX rate properly in iw.
-
-I'm connecting to an /AC AP, so it should only be using VHT rates.  I'm on 5.2-ish
-kernel, so maybe it is already fixed in more recent ones?
-
->
->> Our LANforge tool is traffic generator, running directly on AP and STA machine.
->>
->> Download UDP, I see about 697Mbps goodput
->> Upload UDP, I see about 120Mbps goodput
->>
->> TCP download, about 660Mbps
->> TCP upload, about 99Mbps
->>
->> Our hacked version of pktgen, bps includes down to Ethernet frame:
->> Download: 740Mbps
->> Upload: 129Mbps
->
-> Uh, wow, that's not good. I guess after I'm done with this bug, I should
-> look at upstream ...
->
->> I changed AP to 80Mhz mode, and re-ran the UDP tests:
->>
->> Upload 137Mbps
->> Download 689Mbps
->>
->> Though not confirmed today, one of us reports about 1.7Gbps download on AX200 against an enterprise /AX AP,
->> and only abuot 600Mbps upload in that same system.  That is in isolation chamber and such.
->>
->> So, for whatever reason(s), we see consistent poor upload performance on AX200.
->>
->> For reference, we have previously seen about 1.1Gbps upload between QCA9984 station and 4x4 /AC APs
->> (and about 1.3Gbps download goodput), so in general, wifi upload can run faster.
->
-> Yes, for sure it can. Would be interesting to find out what the limiting
-> factor is for you.
->
-> Then again, I doubt we've released updated firmware recently - what
-> version are you using?
-
-It is 48-something, whatever comes with Fedora-30.  We'd be happy to test more
-recent firmware...maybe you could make them available somewhere?
-
-And if you can provide release notes for the firmware, you get +1 damage vs QCA :P
-
-Thanks,
-Ben
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Vasanth
