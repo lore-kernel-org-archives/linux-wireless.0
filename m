@@ -2,139 +2,133 @@ Return-Path: <SRS0=UTNx=Z7=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 496AAC43603
-	for <linux-wireless@archiver.kernel.org>; Mon,  9 Dec 2019 21:17:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 315E3C00454
+	for <linux-wireless@archiver.kernel.org>; Mon,  9 Dec 2019 22:38:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 22D7B206D5
-	for <linux-wireless@archiver.kernel.org>; Mon,  9 Dec 2019 21:17:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 082EF2071E
+	for <linux-wireless@archiver.kernel.org>; Mon,  9 Dec 2019 22:38:49 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=web.de header.i=@web.de header.b="JBqoF1NY"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726642AbfLIVRO (ORCPT
+        id S1727194AbfLIWio (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 9 Dec 2019 16:17:14 -0500
-Received: from smail.rz.tu-ilmenau.de ([141.24.186.67]:41535 "EHLO
-        smail.rz.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726483AbfLIVRO (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Dec 2019 16:17:14 -0500
-Received: from isengard.fritz.box (unknown [92.195.99.143])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by smail.rz.tu-ilmenau.de (Postfix) with ESMTPSA id 964F8580074;
-        Mon,  9 Dec 2019 22:17:11 +0100 (CET)
-From:   Markus Theil <markus.theil@tu-ilmenau.de>
-To:     nbd@nbd.name
-Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
-        Stanislaw Gruszka <stf_xl@wp.pl>,
-        Markus Theil <markus.theil@tu-ilmenau.de>
-Subject: [PATCH] mt76: use AC specific reorder timeout
-Date:   Mon,  9 Dec 2019 22:15:27 +0100
-Message-Id: <20191209211527.13977-1-markus.theil@tu-ilmenau.de>
-X-Mailer: git-send-email 2.24.0
+        Mon, 9 Dec 2019 17:38:44 -0500
+Received: from mout.web.de ([212.227.15.4]:59763 "EHLO mout.web.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727168AbfLIWin (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 9 Dec 2019 17:38:43 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=web.de;
+        s=dbaedf251592; t=1575931115;
+        bh=SSeAMdCB1BI0vkLB1ST1678SOkLJZQ2JmPrRyeRBBYc=;
+        h=X-UI-Sender-Class:From:To:Cc:Subject:Date:In-Reply-To:References;
+        b=JBqoF1NY8KbCvHeRBd7aa1W4xBStxE6LbZPWng5vycoBbLoHUv0kPZyte5F+U3xQ0
+         7PUCkm8ByPmlCV9mo3dNc9IDGcULYX6HMb690G92+egAEvRO80bXiRDQT0c0gMXypO
+         3h+NWQhBte154UPkdf/PGY1H+pScE55xQaIyQNAM=
+X-UI-Sender-Class: c548c8c5-30a9-4db5-a2e7-cb6cb037b8f9
+Received: from localhost.localdomain ([89.204.137.56]) by smtp.web.de
+ (mrweb004 [213.165.67.108]) with ESMTPSA (Nemesis) id
+ 0MEIQq-1iXt9n0pUe-00FTnj; Mon, 09 Dec 2019 23:38:35 +0100
+From:   Soeren Moch <smoch@web.de>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     Soeren Moch <smoch@web.de>, Wright Feng <wright.feng@cypress.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 7/8] brcmfmac: not set mbss in vif if firmware does not support MBSS
+Date:   Mon,  9 Dec 2019 23:38:21 +0100
+Message-Id: <20191209223822.27236-7-smoch@web.de>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20191209223822.27236-1-smoch@web.de>
+References: <20191209223822.27236-1-smoch@web.de>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: quoted-printable
+X-Provags-ID: V03:K1:6++YHmrTlcLgclZZagPILW3aNmSthZq6p58mEA5GH9f4DaqT0Rn
+ p5kid7pqxc18d7WLWHprDHWEGzQXEUI3eFfXmpfrzqx5xmqA4KmM1JiUYPCKHFOf0iInnkE
+ mgx38oZ9otELobLVHZkQHDP4fBwfvN+slStAWaH8JjV6+nDXp8S3omcZfMKJv+holEvA0Mj
+ HSMjJjHm8pdg+zsxIWCRA==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:PpPtRcmL2Dk=:ZxRx6iZ+89cT/TEvSSrbyC
+ kdcHHvouNJ+4QThb/cU6xXEGhulP2X8j3VN3dLCmPcQ7dI/OGha7lWuBWFZsIqWAFokl+TX1w
+ ns2mdTrdcbpia41YU43F3mliYwpMWqpxXqZzTtvu5/+WGnXVVm/Eq80mW//DPqL058NTsOONl
+ fN1BsocRYLCBzvUpBrBTtLfaiT8nG5wIVFWDh+YyGOmFRwpp/NkkUXHtNmRTDlMvxVe1uSQcH
+ zQrsjE77kY6ZKrSAgvlDRBnuVKX2YbkoNre+/POOSnC/9SCvniZJXe2W5hywoRVaEdoBakKVD
+ GoZ5nwQAwYwViKKlKlKgVD4sLObmqdpqd7o8Y0in5yb7vaVMN4C2ZU7ZUHDvX83sjqnSlaHG0
+ bv17Zrsro+woqoH+QXTcFtsIxUNZnV30yD5skNY5Hfu8Vqufi2iSMq9obR65C/ajyFieRESyz
+ bhbUxErjqLBVA5dzq/VopQ27kcS7Z9UgHu726Oha0Gf/X94MZ1wbcFMpCvqWG7AkqvaJY6tpm
+ l+X3TZ2B1LdZ8J95uWtDSxlDHXGomjv6fqIu2wnLCy9vrEYws6IsjlU9bvvLlUBFjpMIrcNGH
+ lr6N3gp30ZPzhiFzgrRhnAlGm7NqhP2Rzc1wxEkbuVEBaGslr3yR494XO6rYQS/NKhHaPmUFd
+ 3v5VyogWCwXOreg/M/zjsXebk9cjHKGfK2BoQHRgAhnpGTj1AErMpXKNHC89GbquF8MDcBkb0
+ 80f5JQk+e7p1zmRHC3j2CQ75ILZz33XTqdm1kzIRC32/twPN/HwGuQa5zMGf9ZazgRrY8Ck2I
+ y7m0CCY5ffQMFjteiGryoh/srNsPbDhgX2io1/dGX66XujH4FCpWUUnYNilFtYYwjE0agZAD9
+ y275EANsY567Oy8k2ncmNUc7aypkCbPYPqbbAenLYMUvRvrz5ERQvrf57QZDqMHq9hUEp0yc7
+ o33UsTkNgNN1u4saJG05Pfi7NzmtNpeA5QVvOg+bXWBFTWCKKTVvf40ffsiKkZID5+/B5ptP2
+ 9teLY7Q7Kx5+AGeYlD1zTMmMCvzP4o6ENV3BufqsBlTdgegQ82xReWvIHyvxMpFmy+7uLpecD
+ N+V3hOrA4Qt6CfxjfpQHX27WQmrYztGuAeHLZ+SW4D5QVj3YDRUB36UhMSPYx/1YF+hs4fopL
+ vi5nAxIYKzOE8Sot5uOgaAmDEHMsdxpo8ADy3Dpcwn22YIv/4rV3j84nImPidl1oF6PLQoScz
+ D73qSg4WnqOs4thD1rKRPMHwchZ1eCgB1VgP8Bw==
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Before this patch, mt76 handled rx traffic for all TIDs  equally,
-when released from reorder buffer early. This patch uses an AC specific
-reorder timeout, in order to release partial aggregated frames for voice
-or video ACs earlier. For example, ath10k also uses AC specific reorder
-timeouts (reported by firmware in that case).
+From: Wright Feng <wright.feng@cypress.com>
 
-Signed-off-by: Markus Theil <markus.theil@tu-ilmenau.de>
----
- drivers/net/wireless/mediatek/mt76/agg-rx.c | 30 ++++++++++++++++++---
- drivers/net/wireless/mediatek/mt76/mt76.h   |  2 ++
- 2 files changed, 28 insertions(+), 4 deletions(-)
+With RSDB mode, FMAC and firmware are able to create 2 or more AP,
+so we should not set mbss in vif structure if firmware does not
+support MBSS feature.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/agg-rx.c b/drivers/net/wireless/mediatek/mt76/agg-rx.c
-index 53b5a4b2dcc5..3832be7d14f3 100644
---- a/drivers/net/wireless/mediatek/mt76/agg-rx.c
-+++ b/drivers/net/wireless/mediatek/mt76/agg-rx.c
-@@ -4,7 +4,27 @@
-  */
- #include "mt76.h"
- 
--#define REORDER_TIMEOUT (HZ / 10)
-+static unsigned long mt76_aggr_tid_to_timeo(u8 tidno)
-+{
-+	const int ieee802_1d_to_ac[8] = {
-+		IEEE80211_AC_BE,
-+		IEEE80211_AC_BK,
-+		IEEE80211_AC_BK,
-+		IEEE80211_AC_BE,
-+		IEEE80211_AC_VI,
-+		IEEE80211_AC_VI,
-+		IEEE80211_AC_VO,
-+		IEEE80211_AC_VO
-+	};
-+	const int ac_to_timeout[] = {
-+		[IEEE80211_AC_VO] = HZ / 30,
-+		[IEEE80211_AC_VI] = HZ / 25,
-+		[IEEE80211_AC_BE] = HZ / 10,
-+		[IEEE80211_AC_BK] = HZ / 10
-+	};
-+
-+	return ac_to_timeout[ieee802_1d_to_ac[tidno & 7]];
-+}
- 
- static void
- mt76_aggr_release(struct mt76_rx_tid *tid, struct sk_buff_head *frames, int idx)
-@@ -71,7 +91,8 @@ mt76_rx_aggr_check_release(struct mt76_rx_tid *tid, struct sk_buff_head *frames)
- 		nframes--;
- 		status = (struct mt76_rx_status *)skb->cb;
- 		if (!time_after(jiffies,
--				status->reorder_time + REORDER_TIMEOUT))
-+				status->reorder_time +
-+				mt76_aggr_tid_to_timeo(tid->num)))
- 			continue;
- 
- 		mt76_rx_aggr_release_frames(tid, frames, status->seqno);
-@@ -101,7 +122,7 @@ mt76_rx_aggr_reorder_work(struct work_struct *work)
- 
- 	if (nframes)
- 		ieee80211_queue_delayed_work(tid->dev->hw, &tid->reorder_work,
--					     REORDER_TIMEOUT);
-+					     mt76_aggr_tid_to_timeo(tid->num));
- 	mt76_rx_complete(dev, &frames, NULL);
- 
- 	rcu_read_unlock();
-@@ -225,7 +246,7 @@ void mt76_rx_aggr_reorder(struct sk_buff *skb, struct sk_buff_head *frames)
- 	mt76_rx_aggr_release_head(tid, frames);
- 
- 	ieee80211_queue_delayed_work(tid->dev->hw, &tid->reorder_work,
--				     REORDER_TIMEOUT);
-+				     mt76_aggr_tid_to_timeo(tid->num));
- 
- out:
- 	spin_unlock_bh(&tid->lock);
-@@ -245,6 +266,7 @@ int mt76_rx_aggr_start(struct mt76_dev *dev, struct mt76_wcid *wcid, u8 tidno,
- 	tid->dev = dev;
- 	tid->head = ssn;
- 	tid->size = size;
-+	tid->num = tidno;
- 	INIT_DELAYED_WORK(&tid->reorder_work, mt76_rx_aggr_reorder_work);
- 	spin_lock_init(&tid->lock);
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index c268c3d76b3d..b604d8d5f0bc 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -237,6 +237,8 @@ struct mt76_rx_tid {
- 	u8 size;
- 	u8 nframes;
- 
-+	u8 num;
-+
- 	u8 started:1, stopped:1, timer_pending:1;
- 
- 	struct sk_buff *reorder_buf[];
--- 
-2.24.0
+Signed-off-by: Wright Feng <wright.feng@cypress.com>
+=2D--
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Franky Lin <franky.lin@broadcom.com>
+Cc: Hante Meuleman <hante.meuleman@broadcom.com>
+Cc: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+Cc: Wright Feng <wright.feng@cypress.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: brcm80211-dev-list.pdl@broadcom.com
+Cc: brcm80211-dev-list@cypress.com
+Cc: netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+=2D--
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b=
+/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 9d9dc9195e9e..6eb3064c3721 100644
+=2D-- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -5363,6 +5363,7 @@ struct brcmf_cfg80211_vif *brcmf_alloc_vif(struct br=
+cmf_cfg80211_info *cfg,
+ 	struct brcmf_cfg80211_vif *vif_walk;
+ 	struct brcmf_cfg80211_vif *vif;
+ 	bool mbss;
++	struct brcmf_if *ifp =3D brcmf_get_ifp(cfg->pub, 0);
+
+ 	brcmf_dbg(TRACE, "allocating virtual interface (size=3D%zu)\n",
+ 		  sizeof(*vif));
+@@ -5375,7 +5376,8 @@ struct brcmf_cfg80211_vif *brcmf_alloc_vif(struct br=
+cmf_cfg80211_info *cfg,
+
+ 	brcmf_init_prof(&vif->profile);
+
+-	if (type =3D=3D NL80211_IFTYPE_AP) {
++	if (type =3D=3D NL80211_IFTYPE_AP &&
++	    brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MBSS)) {
+ 		mbss =3D false;
+ 		list_for_each_entry(vif_walk, &cfg->vif_list, list) {
+ 			if (vif_walk->wdev.iftype =3D=3D NL80211_IFTYPE_AP) {
+=2D-
+2.17.1
 
