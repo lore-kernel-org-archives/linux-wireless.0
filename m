@@ -2,87 +2,79 @@ Return-Path: <SRS0=UTNx=Z7=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68AA8C00454
-	for <linux-wireless@archiver.kernel.org>; Mon,  9 Dec 2019 10:28:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44C94C43603
+	for <linux-wireless@archiver.kernel.org>; Mon,  9 Dec 2019 10:50:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3C788207FD
-	for <linux-wireless@archiver.kernel.org>; Mon,  9 Dec 2019 10:28:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1B16320828
+	for <linux-wireless@archiver.kernel.org>; Mon,  9 Dec 2019 10:50:56 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="c/XSp4/q";
+	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="XHdXBigL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727466AbfLIK2x (ORCPT
+        id S1727581AbfLIKuz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 9 Dec 2019 05:28:53 -0500
-Received: from mout.kundenserver.de ([217.72.192.75]:49049 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727143AbfLIK2x (ORCPT
+        Mon, 9 Dec 2019 05:50:55 -0500
+Received: from a27-21.smtp-out.us-west-2.amazonses.com ([54.240.27.21]:58726
+        "EHLO a27-21.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727347AbfLIKuy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Dec 2019 05:28:53 -0500
-Received: from evilbit.green-communications.fr ([92.154.77.116]) by
- mrelayeu.kundenserver.de (mreue108 [212.227.15.184]) with ESMTPSA (Nemesis)
- id 1MXGzQ-1iETnT00pa-00YhTa; Mon, 09 Dec 2019 11:28:49 +0100
-From:   Nicolas Cavallari <nicolas.cavallari@green-communications.fr>
-To:     =?UTF-8?q?Krzysztof=20Ha=C5=82asa?= <khalasa@piap.pl>,
-        Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>
-Subject: [RFC PATCH v1 2/4] brcmfmac: Do not allow deleting station in IBSS mode.
-Date:   Mon,  9 Dec 2019 11:28:07 +0100
-Message-Id: <20191209102808.12014-3-nicolas.cavallari@green-communications.fr>
-X-Mailer: git-send-email 2.24.0
-In-Reply-To: <m34l02mh71.fsf@t19.piap.pl>
-References: <m34l02mh71.fsf@t19.piap.pl>
+        Mon, 9 Dec 2019 05:50:54 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+        s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1575888654;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:Message-ID:MIME-Version:Content-Type;
+        bh=5OgJrbBPzFfmVnI+vT491gjd0jnCl2RbAg05uA8CcE8=;
+        b=c/XSp4/qoX7i97Mx7JbYx0TlPY4BuNKL/0TyRloLiaAXTtpaUtxwAiIK9S5bHq1b
+        k2XjQUpsulL6JxiLmZ/Wwj5jyxjj/eb4r3sFfmRPftuSP8pDiZj3vai1sUyZ5fYiivC
+        1ejsO/iUMxJL8b7FciooIjIn9x3HpYPHaEE1Bgmc=
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+        s=gdwg2y3kokkkj5a55z2ilkup5wp5hhxx; d=amazonses.com; t=1575888653;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:Message-ID:MIME-Version:Content-Type:Feedback-ID;
+        bh=5OgJrbBPzFfmVnI+vT491gjd0jnCl2RbAg05uA8CcE8=;
+        b=XHdXBigLveXmsGucp7ezYpWabK+mAPV1/OE9ua6m3qRyMDUyl4mMPveWoEjhzw3Y
+        jwl+c3mWGq8EyLtPjzNHpYnTA/niKym5psy72lB50hLPsZkGm1YvA6h706JK41aR0p1
+        hdPj9Ms9TVAljuNKJMmf8UaDK/fFpKlpMTr0OBzg=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org AB1B8C3480B
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Hari Nagalla <hnagalla@gmail.com>
+Cc:     johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+        maitalm@ti.com
+Subject: Re: [[PATCH wireless-drivers] 1/1] wlcore: mesh: Add support for RX Boradcast Key
+References: <20191208132058.5588-1-hnagalla@gmail.com>
+Date:   Mon, 9 Dec 2019 10:50:53 +0000
+In-Reply-To: <20191208132058.5588-1-hnagalla@gmail.com> (Hari Nagalla's
+        message of "Sun, 8 Dec 2019 07:20:57 -0600")
+Message-ID: <0101016eea488d3a-64ccb68a-991f-427c-871f-984df06040fb-000000@us-west-2.amazonses.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Provags-ID: V03:K1:prXbdW76TtwtqcADBuYpY6/a331iqmlHWd9SZDw51+h9foZvEvo
- yIAw9xdMo3xDG2lTOT5JoPCZI276sWQTJfEG4g1n+Bv8QSUhpDdrdKiu/PMaSFe6tlEm6Zh
- qTj6vJ6AUia2u6p99DREJEdu+viIr66m4T1Q7/ufIRXNMs6CNiGqiODGgVEd5+XcSGh/st9
- x+7Dfwstg7+eADeysV79A==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:EoeZKTix3h8=:hQlJd2lxRdhE8kLtsTHK6D
- 0ATu+qRJNaQak8ROixqrus0fgGKmGkPC/C0Qm9AzegtAY5f3p8XJqMY4xdtsWHgyQh/f2Mzme
- /qom1nPj4p8aBhIKKLqXJBngC0K0kF9ChPqdCuYbgOytNVPsneFm534k6HXbOWAZCa277uA1r
- 2XBmp5+f33GVp9caieXCDQ5WeU6zAmRqJvz8wB8blPvObQ7M7ME5wtBVUTQDFWwuZ9zJMOu/m
- ww4tRG1W+Dqc66ZJ5ls4vmL5fxC/XIgZShcth3MYmKWY6CRt+oHvdW0K98qsGpTfPglO5SBS7
- T3jCigPTJMHPs16yLUa6bJJBUPRmfRGBrI+hln06g8qz/Ou6BGQLbGYQ11dCsB7ba19qoccJc
- zxvQMFpiYV9Gor5s7AyoXb+NtW7IEGZXxRpBIYq49ysLyX4adU+OdqItkS8Kvy4iVhPSJ/9U2
- ScnCkUfqzqGDRsTpG95bzGvqUuZWNQmTD3/dLe1m/zTJmkSAF2TfBJB35T2+wg8U8pyiqO4zg
- XWtRW1wwKYr8so1eLHeDSZQ/jmhI+eXhWRWvIo/orwgkVPUmSPMiTLepX8EIkvDgYpiLTQvm9
- 6I0jR5nJ5ieYCJUxLcMnI/OW9TeE7uSNHwMmUYIZKIDwk0Nyjq6mVSZvn99+xJCzo/IUKO6VJ
- JJU9lV+dyyiEXurXC88YtK1L8ZISkfxatVjVmXbrCuh8UhmqDVS4+LYABjpHCE+izQoZpXomZ
- 5uyS1xvdwzNWgy4GyT9MtoPRLsvIb+NC/XQJeIoWus4uUe5Tuh2h+E1tM+RvNmg0Z78mzsyIx
- w1K7HUSmyzlIPoGIAWipCn2F9VMUwvvHvKCXJ/XuUtdulopaX17WnP59KHBOsR2M8krQUM7y3
- x5m8blQ/DmgGnH4dPDd5TSssVxhJYNP5rPz2cU1m9GArbUdzpJQTyizffuaZir
+Content-Type: text/plain
+X-SES-Outgoing: 2019.12.09-54.240.27.21
+Feedback-ID: 1.us-west-2.CZuq2qbDmUIuT3qdvXlRHZZCpfZqZ4GtG9v3VKgRyF0=:AmazonSES
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-In preparation of allowing userspace to explicitly reset station state
-in IBSS mode, reject attempts to delete stations in IBSS mode with error
-EOPNOTSUPP.
+Hari Nagalla <hnagalla@gmail.com> writes:
 
-Signed-off-by: Nicolas Cavallari <nicolas.cavallari@green-communications.fr>
---
-I do not know if the driver could possibly support this, so take the
-safe route and reject it.
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 2 ++
- 1 file changed, 2 insertions(+)
+> From: Maital Hahn <maitalm@ti.com>
+>
+> In order to support authentication of equals peers,
+> need to save RX Broadcast key per peer (on top of 1 TX broadcast key
+> and unicast key per peer).
+>
+>
+> Signed-off-by: Maital Hahn <maitalm@ti.com>
+> Acked-by: Guy Mishol <guym@ti.com>
+> Signed-off-by: Hari Nagalla <hnagalla@gmail.com>
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 5598bbd09b62..5436ffd74ecb 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -4848,6 +4848,8 @@ brcmf_cfg80211_del_station(struct wiphy *wiphy, struct net_device *ndev,
- 
- 	if (!params->mac)
- 		return -EFAULT;
-+	if (!brcmf_is_apmode(ifp->vif))
-+		return -EOPNOTSUPP;
- 
- 	brcmf_dbg(TRACE, "Enter %pM\n", params->mac);
- 
+As this a new feature, and not fixing a serious issue, I think this
+should go to wireles-drivers-next, not wireless-drivers. Agree?
+
 -- 
-2.24.0
-
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
