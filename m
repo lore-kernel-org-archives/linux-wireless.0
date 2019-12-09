@@ -6,53 +6,53 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28DE0C43603
-	for <linux-wireless@archiver.kernel.org>; Mon,  9 Dec 2019 10:28:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BB8CC00454
+	for <linux-wireless@archiver.kernel.org>; Mon,  9 Dec 2019 10:28:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EEECA2077B
-	for <linux-wireless@archiver.kernel.org>; Mon,  9 Dec 2019 10:28:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0E6662077B
+	for <linux-wireless@archiver.kernel.org>; Mon,  9 Dec 2019 10:28:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727468AbfLIK2x (ORCPT
+        id S1727476AbfLIK2y (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 9 Dec 2019 05:28:53 -0500
-Received: from mout.kundenserver.de ([217.72.192.75]:34405 "EHLO
+        Mon, 9 Dec 2019 05:28:54 -0500
+Received: from mout.kundenserver.de ([212.227.17.13]:38603 "EHLO
         mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727326AbfLIK2x (ORCPT
+        with ESMTP id S1727359AbfLIK2x (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Mon, 9 Dec 2019 05:28:53 -0500
 Received: from evilbit.green-communications.fr ([92.154.77.116]) by
  mrelayeu.kundenserver.de (mreue108 [212.227.15.184]) with ESMTPSA (Nemesis)
- id 1N95qT-1hhsrn3N2t-0167Lz; Mon, 09 Dec 2019 11:28:48 +0100
+ id 1MMoT4-1iLdTB0m6G-00Ii7g; Mon, 09 Dec 2019 11:28:49 +0100
 From:   Nicolas Cavallari <nicolas.cavallari@green-communications.fr>
 To:     =?UTF-8?q?Krzysztof=20Ha=C5=82asa?= <khalasa@piap.pl>,
         Johannes Berg <johannes@sipsolutions.net>
 Cc:     linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>
-Subject: [RFC PATCH v1 1/4] ath6kl: Do not allow deleting station in IBSS mode.
-Date:   Mon,  9 Dec 2019 11:28:06 +0100
-Message-Id: <20191209102808.12014-2-nicolas.cavallari@green-communications.fr>
+Subject: [RFC PATCH v1 3/4] mwifiex: Do not allow deleting station in IBSS mode.
+Date:   Mon,  9 Dec 2019 11:28:08 +0100
+Message-Id: <20191209102808.12014-4-nicolas.cavallari@green-communications.fr>
 X-Mailer: git-send-email 2.24.0
 In-Reply-To: <m34l02mh71.fsf@t19.piap.pl>
 References: <m34l02mh71.fsf@t19.piap.pl>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Provags-ID: V03:K1:44MY0Sp46rDjtXOtTpT3qFrHig2wcJD4BT0LJ73tWT6AP+ZUG+e
- Mt3UFMd5VTUqCZWbUg/uuazV/b7FksrEktqB+oK7AIKgf268JONcVLHeSaxQ2t+aZq3T1QO
- cIrlNpWxLBb3diiEYw19E4Ue877mhTemgTfMFP40VDQPJkH7BNQpVSsSL4q8NTgXralc4lM
- E+gAFhILdiKOFUdIfN0eQ==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:2V0qm49HZUM=:YkZtfDARt7pzAVYngAd1Wo
- jM/XTXaNYTLUSAQspTqDOQCVz+jLCX4Qhh3OT4uKgLYstchCCwRIvxMgOxYtANzaxPfmXZbRU
- s6O/qL9K8tlkObHF+vHyBb0q4wJ0q83UoCdOWskpP1rQV1NvZaL0t9XZ43fognhw7Tg5nlIgJ
- 1Dpw6LKi5MAuwA3IDHLXAfkW6+BPQRVBoWwfjY/412bKMuS9SOBeaDBNZcQWti9j/jsOApsN9
- +67iUhM1vqkcUDpCsxCqL1HojysA7lRbuXnmasgITF9ZaOE4/POYtV8U+Ksb4FErCqCe0AoAC
- AK65OeMhdEpD0i6GFoosxf7mLbwrAGAEvyT/fBiG8XduKSVG3Ovl7VMhzf5UHXUI5l9QGydIV
- m8AUkJ/2zMKI98hPIgzizT1uElqVJQ6Uas/AHh1wTmWYiwMUTPqz88lrjGCAs1uKysNcKPgBk
- JwahQadqo6Fijv7F6c8gCV03oKSGOwimQNDjIOLkZ3QKNnumV8DaD/e0dMGlb17waDYIVLaFC
- Cuxe3NHjoqI5vQqwQSx1TAC/JbQazk13l8TMir834VHr8WZv3Ly3Tootqzyg/m8Y2kdHbNXeZ
- PmRKazNr1u2az85VnWTu+DkDKB9NJ4su/tzzep7NW7UgPkdRxhsbSFiT/MPOr8p2qAdnEJbAJ
- e5b1I+1ojoKjYQ8hxVFwK9d/i0a6xJZwU7ZhAeXYFfBniCtYQvNinq00rCIHytFqZBVjY1Hkv
- 1hsBATn1jIUcByESxe+kPM/Xv+P2udHY2514qy5stbFFvmfwsr4MOlYMMl3vlGff3TXrnlusp
- ohmn8ZPV9N69vZK+ZEs564LnNEJaURJ1Yt2AKDaV/AOviz2RFpsdTYopxjgdg83h9MlOet8N0
- k3Hmryq87+1eD/LTJZzXOKbhTrIuM6Z8UTFXBw7vgafVduzti9u3fmR1XX34Cl
+X-Provags-ID: V03:K1:WtLVDy6lCBGKrcXQRP5BsZitH8ttNG6uNOaehXYGA394tggpcHi
+ U+2R57f4fT1/Sq86ECjvsSXnkXuMIfb9WmV1yKxgDhpour1KX0IBPNbu9cN5zeyFhn7bmiM
+ 1X6g4Rc6lGvJI230pzQhpY57B53KkGNXfrN4MuPGRIWNIsNDezqK7hCCF5rg4X+ZICfKObz
+ 1x4rrR6OSvMHGYHWkIVkA==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:30NEgQLZr9Q=:kr5PCpUtHZip8R9LEZQhDv
+ x44JIa9OxOIPYzlipXl4bAytvsRgB/gC18NzxUpeV6ArufuDUMI/DYdpvE37yLuaF5l4HhW5X
+ NoYZYE1vUg9sL/uKTUUsIeulqMnL4hXX3pJyJXd0TfndKTweOrmhhvvfRPlVz0gDzQ7AQUq5B
+ aRtnlptnKCKZ8AjaV+778zxDrvI0FwFaJnx21f/5rbutdK0+N/qfc01JhtMgWx+RTFSwnaQGc
+ ydFORU2PXXLqUz01OUbWV82j1a2BPnWB3nLb9l+BaXe/gmRNW4SqJj76nFOcC5SdfWYvScdaM
+ tnDa33+/OwnQnVVDC093g4DyVISU9LR+SRqSDi65UxdcXMF1/VUfKccd8M/1ODpgxEHxLrIDX
+ 9hZLbAS++CVvmRl7CtHiTLujtFmMLIHNMvanrAF8HzzeEdn1ib3RJruMnOVTJL0V9SV3Lr3Wh
+ E2DgRm8X5BlW7cTfBzffh0BUXNjifamBTZifCAtXQjKJED2vv9QQKNYX+E04WuRx9iGMfKDAf
+ +7FLmAfMyHvY3dRnJfr01zlF1fBOcKhZGP7MEnUwGxbfFXRjm3HO/+cVrboNnuvB1is80ylmT
+ 7c8HQF6ydfMa6fdM6TefFW09KdmNSlYKemeu5Xmf6pi/QdMcJGyqt7HrsbU5OcX9MVc3ccsm5
+ GL9Y+Q6t/uAnhq/0aTKLUihYa9h+oLHU0xuMzA3BDF1YdNQ9cWZ91+MoNscLbkjz1PV/VmYNv
+ PgMtnE9e9BXl3VTU/W2XHqLA2saPHRDOE0IHi0GqykOk0ZWzCSVsg0gaSwbWYEW7bYSBdoYLH
+ CFJ98X0GXwxcQaPHHFTj1bk/TT3SM9F0ENrxkgU+Ch5pxYrMIJu2wxCIlgM5iCCDC3KDH0D20
+ w85aOZS5HJfqpQS8+pdG8pjhKUjyjF7YMxZBtADukQetTx//jPXxDSGZLT50/6
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -67,23 +67,24 @@ Signed-off-by: Nicolas Cavallari <nicolas.cavallari@green-communications.fr>
 I do not know if the driver could possibly support this, so take the
 safe route and reject it.
 ---
- drivers/net/wireless/ath/ath6kl/cfg80211.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 37cf602d8adf..c894b9756605 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -2993,6 +2993,9 @@ static int ath6kl_del_station(struct wiphy *wiphy, struct net_device *dev,
- 	struct ath6kl *ar = ath6kl_priv(dev);
- 	struct ath6kl_vif *vif = netdev_priv(dev);
- 	const u8 *addr = params->mac ? params->mac : bcast_addr;
-+	if (vif->wdev.iftype != NL80211_IFTYPE_AP &&
-+	    vif->wdev.iftype != NL80211_IFTYPE_P2P_GO)
-+		return -ENOTSUPP;
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+index d89684168500..9135fc6d5a70 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+@@ -1828,6 +1828,10 @@ mwifiex_cfg80211_del_station(struct wiphy *wiphy, struct net_device *dev,
+ 	struct mwifiex_sta_node *sta_node;
+ 	u8 deauth_mac[ETH_ALEN];
  
- 	return ath6kl_wmi_ap_set_mlme(ar->wmi, vif->fw_vif_idx, WMI_AP_DEAUTH,
- 				      addr, WLAN_REASON_PREV_AUTH_NOT_VALID);
++	if (priv->bss_mode != NL80211_IFTYPE_AP &&
++	    priv->bss_mode != NL80211_IFTYPE_P2P_GO)
++		return -ENOTSUPP;
++
+ 	if (!priv->bss_started && priv->wdev.cac_started) {
+ 		mwifiex_dbg(priv->adapter, INFO, "%s: abort CAC!\n", __func__);
+ 		mwifiex_abort_cac(priv);
 -- 
 2.24.0
 
