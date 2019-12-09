@@ -2,226 +2,129 @@ Return-Path: <SRS0=UTNx=Z7=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D34FC43603
-	for <linux-wireless@archiver.kernel.org>; Mon,  9 Dec 2019 22:39:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83596C43603
+	for <linux-wireless@archiver.kernel.org>; Mon,  9 Dec 2019 23:08:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 56567206E0
-	for <linux-wireless@archiver.kernel.org>; Mon,  9 Dec 2019 22:39:31 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=web.de header.i=@web.de header.b="rHPlgvWb"
+	by mail.kernel.org (Postfix) with ESMTP id 65A0520726
+	for <linux-wireless@archiver.kernel.org>; Mon,  9 Dec 2019 23:08:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726957AbfLIWig (ORCPT
+        id S1727066AbfLIXIs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 9 Dec 2019 17:38:36 -0500
-Received: from mout.web.de ([212.227.15.3]:51455 "EHLO mout.web.de"
+        Mon, 9 Dec 2019 18:08:48 -0500
+Received: from gloria.sntech.de ([185.11.138.130]:51516 "EHLO gloria.sntech.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726207AbfLIWif (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Dec 2019 17:38:35 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=web.de;
-        s=dbaedf251592; t=1575931108;
-        bh=hipcHuvDt9eDEE26o9CyI1wXasjR+ofQXYS0BLuJXas=;
-        h=X-UI-Sender-Class:From:To:Cc:Subject:Date;
-        b=rHPlgvWbhxhUejXaRk8saa7RjP1QPMIOGleFPpYq33v/HcFG/kqwrK1b02POQ1S6E
-         qr05IPU6OM2m/PkPf7lBONO0ifNeO6Ph1/GUE8cOkjudKnTahwWjOIEWVAFCQiG6K3
-         aupBoQeoFxvciAStVZy1y3DXGSuiR032sZCo5+Xg=
-X-UI-Sender-Class: c548c8c5-30a9-4db5-a2e7-cb6cb037b8f9
-Received: from localhost.localdomain ([89.204.137.56]) by smtp.web.de
- (mrweb004 [213.165.67.108]) with ESMTPSA (Nemesis) id
- 0MhOpG-1iQe9J3DDG-00MaZJ; Mon, 09 Dec 2019 23:38:28 +0100
-From:   Soeren Moch <smoch@web.de>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     Soeren Moch <smoch@web.de>, Wright Feng <wright.feng@cypress.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        linux-wireless@vger.kernel.org,
+        id S1726362AbfLIXIs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 9 Dec 2019 18:08:48 -0500
+Received: from ip5f5a6266.dynamic.kabel-deutschland.de ([95.90.98.102] helo=diego.localnet)
+        by gloria.sntech.de with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.89)
+        (envelope-from <heiko@sntech.de>)
+        id 1ieS8r-0003WX-Uy; Tue, 10 Dec 2019 00:08:37 +0100
+From:   Heiko =?ISO-8859-1?Q?St=FCbner?= <heiko@sntech.de>
+To:     Soeren Moch <smoch@web.de>
+Cc:     Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
         brcm80211-dev-list.pdl@broadcom.com,
         brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 1/8] brcmfmac: reset two D11 cores if chip has two D11 cores
-Date:   Mon,  9 Dec 2019 23:38:15 +0100
-Message-Id: <20191209223822.27236-1-smoch@web.de>
-X-Mailer: git-send-email 2.17.1
+        linux-arm-kernel@lists.infradead.org,
+        linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 8/8] arm64: dts: rockchip: RockPro64: enable wifi module at sdio0
+Date:   Tue, 10 Dec 2019 00:08:37 +0100
+Message-ID: <2668270.pdtvSLGib8@diego>
+In-Reply-To: <20191209223822.27236-8-smoch@web.de>
+References: <20191209223822.27236-1-smoch@web.de> <20191209223822.27236-8-smoch@web.de>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:nMh6JTYQgSoTNLi0I6d+FrTc32tAPA/d8LYaIo5bLuzoFr8EVbX
- 50FUXuYTk81yWWwn0OYXUMREg/zwoqjvZz943AaZtJfrWm1vedqiP+VbBuV5nCz3uopjFjc
- UglSbpTRW27/f28QeRqRe5kOzkvzn9yFr9FykLWx3vAqsWST6TQrpYzoacjrmFnXCkcMRRa
- w+tjNwWhxr4iH7OfgWlsA==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:KV2RewuW+xc=:kyETITqTRSM7xyFhz4LSJ2
- 4bV5x0wwWvANPB7nRHyipSpS8FWhqwskj5sRxI+bwF8NKXjoUAfSDg/eXD1zCTwzG/IQQboCN
- UTMa1MQLLdd9heehcjoHlq3g/5NEnsEcZASFWBx092OG9ppgQ0f2m/fVEkTtlNIWgY8W/bkXa
- +cIq00xKeA/YRGQW1vDX4P6a6R0FKsyM6t4gA1lLgRZ04RRHYVXZBn3gvVygWJq0O7CI3mHuf
- aS2Dirsio2o51zX7Xc9c8EjC9qTloD2UCJcoSb2R7e3gnVMMa0c91jmgm+Kqmw07Mt5TzzUGv
- aX0bqThsF74uvXjLUnuq38yXw7n62T3Rh1w/dRE9+woVHb7myfHr9IQMCqFI+D4rCBN8M0deo
- k7ZaVgncBAnZVQd1gvvPcisKUitE6zuMaEkxnaxSlASKk7S1bTP+IDcC8qBAymPyYi3wg8R6P
- bocwovn9FIDVoQ0UuEC5wTszCsjkMrbF2lml5VoYDpXckSDr0yJoU9ed8whTBpOzBYmlExvZT
- TnlIkAL6qh9+1d0hYH/h13fAzJUyphfc29PvFkWcwopW5WxX4baVpriA2xtB4IJQqgwVJ/nxB
- GdXrd2bC2HAMGz4L2joWjdnVy7+iCjYUezUq+uCjuZi62mutDyJ1RpiMwI52t4e2fknnER0Kt
- FcYS7fIiN4wWDl0ASChSK3v0Zoejg5RaLMOZz5Tufj1D1PgBp+DplMpnIQB7sNrSp4VRMoFyD
- BI6Dz1POCvCJFAX8+/dvQpwuyqnPZvX5Nv9MZuKZ1rFbs4PZ9j1S/oguzAVJraplEe1QLPF2w
- hs3qRQcWDIn4svERK8SEe87RZc4BpbY1i+WEnZjovIOFzW5f0i4hxURtuNB6x3GfARikpsq13
- NQWudv2hHXohFZSIIoU8qTacMF+G6ZWmeF2QPHW5jKdzUSE7rDX3EQQbJwmbI7mBrEDB0brF9
- BtkIwKcU5dQ+oaFBV7WR4RD0dm6nEUoMdhPMuM7roCTyr+HLMuUVHo3jTsic39c41UfsgIBLS
- zC/6NeF6S1/G54v2xP6OMIo1uMhNwsfcc8TILa1+HG8KcdMPjJWaGI/VNmKwgvseI70JSU0Cs
- wwdcz+dUzxiKpcAlVpPzD8fJVWf9eQAKYV9GgP8yeOka8qDCmiHXRPFp4/gGLcHYJgX1u8xfN
- pShVwTNZ0bGCMBsn2UbNmg4XcVECgao9xdEekMlemqFGLdyXLxSh99RzfGzd6sYsRMVb1qZfD
- z3ZWlU1ilrq/EOHfJLFFccM4easMqond20lEJzQ==
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Wright Feng <wright.feng@cypress.com>
+Hi Soeren,
 
-There are two D11 cores in RSDB chips like 4359. We have to reset two
-D11 cores simutaneously before firmware download, or the firmware may
-not be initialized correctly and cause "fw initialized failed" error.
+Am Montag, 9. Dezember 2019, 23:38:22 CET schrieb Soeren Moch:
+> RockPro64 supports an Ampak AP6359SA based wifi/bt combo module.
+> The BCM4359/9 wifi controller in this module is connected to sdio0,
+> enable this interface.
+> 
+> Signed-off-by: Soeren Moch <smoch@web.de>
+> ---
+> Not sure where to place exactly the sdio0 node in the dts because
+> existing sd nodes are not sorted alphabetically.
+> 
+> This last patch in this brcmfmac patch series probably should be picked
+> up by Heiko independently of the rest of this series. It was sent together
+> to show how this brcmfmac extension for 4359-sdio support with RSDB is
+> used and tested.
 
-Signed-off-by: Wright Feng <wright.feng@cypress.com>
-=2D--
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Franky Lin <franky.lin@broadcom.com>
-Cc: Hante Meuleman <hante.meuleman@broadcom.com>
-Cc: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
-Cc: Wright Feng <wright.feng@cypress.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: brcm80211-dev-list.pdl@broadcom.com
-Cc: brcm80211-dev-list@cypress.com
-Cc: netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-=2D--
- .../broadcom/brcm80211/brcmfmac/chip.c        | 50 +++++++++++++++++++
- .../broadcom/brcm80211/brcmfmac/chip.h        |  1 +
- .../broadcom/brcm80211/brcmfmac/pcie.c        |  2 +-
- 3 files changed, 52 insertions(+), 1 deletion(-)
+node placement looks good so I can apply it, just a general questions
+I only got patch 8/8 are patches 1-7 relevant for this one and what are they?
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/dri=
-vers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-index a795d781b4c5..0b5fbe5d8270 100644
-=2D-- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-@@ -433,11 +433,25 @@ static void brcmf_chip_ai_resetcore(struct brcmf_cor=
-e_priv *core, u32 prereset,
- {
- 	struct brcmf_chip_priv *ci;
- 	int count;
-+	struct brcmf_core *d11core2 =3D NULL;
-+	struct brcmf_core_priv *d11priv2 =3D NULL;
+Thanks
+Heiko
 
- 	ci =3D core->chip;
 
-+	/* special handle two D11 cores reset */
-+	if (core->pub.id =3D=3D BCMA_CORE_80211) {
-+		d11core2 =3D brcmf_chip_get_d11core(&ci->pub, 1);
-+		if (d11core2) {
-+			brcmf_dbg(INFO, "found two d11 cores, reset both\n");
-+			d11priv2 =3D container_of(d11core2,
-+						struct brcmf_core_priv, pub);
-+		}
-+	}
-+
- 	/* must disable first to work for arbitrary current core state */
- 	brcmf_chip_ai_coredisable(core, prereset, reset);
-+	if (d11priv2)
-+		brcmf_chip_ai_coredisable(d11priv2, prereset, reset);
+> 
+> Cc: Heiko Stuebner <heiko@sntech.de>
+> Cc: Kalle Valo <kvalo@codeaurora.org>
+> Cc: linux-wireless@vger.kernel.org
+> Cc: brcm80211-dev-list.pdl@broadcom.com
+> Cc: brcm80211-dev-list@cypress.com
+> Cc: netdev@vger.kernel.org
+> Cc: linux-arm-kernel@lists.infradead.org
+> Cc: linux-rockchip@lists.infradead.org
+> Cc: linux-kernel@vger.kernel.org
+> ---
+>  .../boot/dts/rockchip/rk3399-rockpro64.dts    | 21 ++++++++++++-------
+>  1 file changed, 14 insertions(+), 7 deletions(-)
+> 
+> diff --git a/arch/arm64/boot/dts/rockchip/rk3399-rockpro64.dts b/arch/arm64/boot/dts/rockchip/rk3399-rockpro64.dts
+> index 7f4b2eba31d4..9fa92790d6e0 100644
+> --- a/arch/arm64/boot/dts/rockchip/rk3399-rockpro64.dts
+> +++ b/arch/arm64/boot/dts/rockchip/rk3399-rockpro64.dts
+> @@ -71,13 +71,6 @@
+>  		clock-names = "ext_clock";
+>  		pinctrl-names = "default";
+>  		pinctrl-0 = <&wifi_enable_h>;
+> -
+> -		/*
+> -		 * On the module itself this is one of these (depending
+> -		 * on the actual card populated):
+> -		 * - SDIO_RESET_L_WL_REG_ON
+> -		 * - PDN (power down when low)
+> -		 */
+>  		reset-gpios = <&gpio0 RK_PB2 GPIO_ACTIVE_LOW>;
+>  	};
+> 
+> @@ -650,6 +643,20 @@
+>  	status = "okay";
+>  };
+> 
+> +&sdio0 {
+> +	bus-width = <4>;
+> +	cap-sd-highspeed;
+> +	cap-sdio-irq;
+> +	disable-wp;
+> +	keep-power-in-suspend;
+> +	mmc-pwrseq = <&sdio_pwrseq>;
+> +	non-removable;
+> +	pinctrl-names = "default";
+> +	pinctrl-0 = <&sdio0_bus4 &sdio0_cmd &sdio0_clk>;
+> +	sd-uhs-sdr104;
+> +	status = "okay";
+> +};
+> +
+>  &sdmmc {
+>  	bus-width = <4>;
+>  	cap-sd-highspeed;
+> --
+> 2.17.1
+> 
 
- 	count =3D 0;
- 	while (ci->ops->read32(ci->ctx, core->wrapbase + BCMA_RESET_CTL) &
-@@ -449,9 +463,30 @@ static void brcmf_chip_ai_resetcore(struct brcmf_core=
-_priv *core, u32 prereset,
- 		usleep_range(40, 60);
- 	}
 
-+	if (d11priv2) {
-+		count =3D 0;
-+		while (ci->ops->read32(ci->ctx,
-+				       d11priv2->wrapbase + BCMA_RESET_CTL) &
-+				       BCMA_RESET_CTL_RESET) {
-+			ci->ops->write32(ci->ctx,
-+					 d11priv2->wrapbase + BCMA_RESET_CTL,
-+					 0);
-+			count++;
-+			if (count > 50)
-+				break;
-+			usleep_range(40, 60);
-+		}
-+	}
-+
- 	ci->ops->write32(ci->ctx, core->wrapbase + BCMA_IOCTL,
- 			 postreset | BCMA_IOCTL_CLK);
- 	ci->ops->read32(ci->ctx, core->wrapbase + BCMA_IOCTL);
-+
-+	if (d11priv2) {
-+		ci->ops->write32(ci->ctx, d11priv2->wrapbase + BCMA_IOCTL,
-+				 postreset | BCMA_IOCTL_CLK);
-+		ci->ops->read32(ci->ctx, d11priv2->wrapbase + BCMA_IOCTL);
-+	}
- }
 
- char *brcmf_chip_name(u32 id, u32 rev, char *buf, uint len)
-@@ -1109,6 +1144,21 @@ void brcmf_chip_detach(struct brcmf_chip *pub)
- 	kfree(chip);
- }
-
-+struct brcmf_core *brcmf_chip_get_d11core(struct brcmf_chip *pub, u8 unit=
-)
-+{
-+	struct brcmf_chip_priv *chip;
-+	struct brcmf_core_priv *core;
-+
-+	chip =3D container_of(pub, struct brcmf_chip_priv, pub);
-+	list_for_each_entry(core, &chip->cores, list) {
-+		if (core->pub.id =3D=3D BCMA_CORE_80211) {
-+			if (unit-- =3D=3D 0)
-+				return &core->pub;
-+		}
-+	}
-+	return NULL;
-+}
-+
- struct brcmf_core *brcmf_chip_get_core(struct brcmf_chip *pub, u16 coreid=
-)
- {
- 	struct brcmf_chip_priv *chip;
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.h b/dri=
-vers/net/wireless/broadcom/brcm80211/brcmfmac/chip.h
-index 7b00f6a59e89..8fa38658e727 100644
-=2D-- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.h
-@@ -74,6 +74,7 @@ struct brcmf_chip *brcmf_chip_attach(void *ctx,
- 				     const struct brcmf_buscore_ops *ops);
- void brcmf_chip_detach(struct brcmf_chip *chip);
- struct brcmf_core *brcmf_chip_get_core(struct brcmf_chip *chip, u16 corei=
-d);
-+struct brcmf_core *brcmf_chip_get_d11core(struct brcmf_chip *pub, u8 unit=
-);
- struct brcmf_core *brcmf_chip_get_chipcommon(struct brcmf_chip *chip);
- struct brcmf_core *brcmf_chip_get_pmu(struct brcmf_chip *pub);
- bool brcmf_chip_iscoreup(struct brcmf_core *core);
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/dri=
-vers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-index f64ce5074a55..7ac72804e285 100644
-=2D-- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-@@ -78,7 +78,7 @@ static const struct brcmf_firmware_mapping brcmf_pcie_fw=
-names[] =3D {
- 	BRCMF_FW_ENTRY(BRCM_CC_4371_CHIP_ID, 0xFFFFFFFF, 4371),
- };
-
--#define BRCMF_PCIE_FW_UP_TIMEOUT		2000 /* msec */
-+#define BRCMF_PCIE_FW_UP_TIMEOUT		5000 /* msec */
-
- #define BRCMF_PCIE_REG_MAP_SIZE			(32 * 1024)
-
-=2D-
-2.17.1
 
