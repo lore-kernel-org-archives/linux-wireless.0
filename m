@@ -7,47 +7,48 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC261C2D0BF
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 22:03:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F3B5C43603
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 22:04:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 978DD214D8
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 22:03:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5F3E7208C3
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 22:04:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576015398;
-	bh=ZUlJGIDI5VNbIPTVi9gHwZ0Ezq8GX+d8+q+KM1qcd6o=;
+	s=default; t=1576015452;
+	bh=WQUmKw110NB9JpZMyTvISK/CN0wm7Sz1NdrAJ6v6Gvc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=TN+yD1AoK428Y4Ja93uQlJ4+Awj3r3X+eaHHWq7i5KC3omu5bvHwwb3LEqrso4v3O
-	 Vz6ElJODcNo8JAHTwnVhvmESWQy+m8e+HkUDCD/NOKOgx9WtyBCCNr0ecdVLfWSPKM
-	 9N9plkG464hM9qcRvon/wAVw10CbRPMu6la8m1gw=
+	b=brrlf0etqJh0Cou3P9UCkWqAvexYdio1LCn3WAPFiGc1Ka4hGNWrwgLOGAE6POkTo
+	 uc2pN9FXEForJAPr53PdHj5A4vIKfVqgAUVIz/IpA9pDkOEjA+/wq6jjdexFNjbn62
+	 amZAlXQK7oqq0iZgQU7qrKqUAwZECHolNnIzwtjU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727517AbfLJWDS (ORCPT
+        id S1728583AbfLJWEL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 10 Dec 2019 17:03:18 -0500
-Received: from mail.kernel.org ([198.145.29.99]:33174 "EHLO mail.kernel.org"
+        Tue, 10 Dec 2019 17:04:11 -0500
+Received: from mail.kernel.org ([198.145.29.99]:34756 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727351AbfLJWDN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Dec 2019 17:03:13 -0500
+        id S1728541AbfLJWEJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 10 Dec 2019 17:04:09 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 7720020828;
-        Tue, 10 Dec 2019 22:03:12 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 284462053B;
+        Tue, 10 Dec 2019 22:04:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576015393;
-        bh=ZUlJGIDI5VNbIPTVi9gHwZ0Ezq8GX+d8+q+KM1qcd6o=;
+        s=default; t=1576015449;
+        bh=WQUmKw110NB9JpZMyTvISK/CN0wm7Sz1NdrAJ6v6Gvc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=uPZsGf1oJYHp0y/grUIwXHpfDaOpuIj5Ibd0rSWOxCjHO7khU/B0nQmnmLvFvYl+x
-         7pvm2u26yqpiMjsNUgvlDDJLt3IRBCg/9KkNVEXKyjAT7b3dv1cUYCCuxeVditxBOd
-         GEpBfhp3oPE8YJXSDKazSdQoJILD+cjeGe9tQNrk=
+        b=0OBmG9hbOVt08noGgj18QIYcEedINQeGaYUgmEewkYqKvJH/A4fcSiHXDnltJVuXW
+         qY67IdXS+SLub79Kw741E9wN/13OKgr2UikldRZF0UiGfWcUo4+EvVd7T+B+5OSUod
+         GxOiN+Rdztm1ioYt0hqA8oFvYJmpDjcZKGqrjbqY=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Navid Emamdoost <navid.emamdoost@gmail.com>,
+Cc:     Chris Chiu <chiu@endlessm.com>,
+        Jes Sorensen <Jes.Sorensen@gmail.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 009/130] rtlwifi: prevent memory leak in rtl_usb_probe
-Date:   Tue, 10 Dec 2019 17:01:00 -0500
-Message-Id: <20191210220301.13262-9-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 056/130] rtl8xxxu: fix RTL8723BU connection failure issue after warm reboot
+Date:   Tue, 10 Dec 2019 17:01:47 -0500
+Message-Id: <20191210220301.13262-56-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191210220301.13262-1-sashal@kernel.org>
 References: <20191210220301.13262-1-sashal@kernel.org>
@@ -60,45 +61,71 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Navid Emamdoost <navid.emamdoost@gmail.com>
+From: Chris Chiu <chiu@endlessm.com>
 
-[ Upstream commit 3f93616951138a598d930dcaec40f2bfd9ce43bb ]
+[ Upstream commit 0eeb91ade90ce06d2fa1e2fcb55e3316b64c203c ]
 
-In rtl_usb_probe if allocation for usb_data fails the allocated hw
-should be released. In addition the allocated rtlpriv->usb_data should
-be released on error handling path.
+The RTL8723BU has problems connecting to AP after each warm reboot.
+Sometimes it returns no scan result, and in most cases, it fails
+the authentication for unknown reason. However, it works totally
+fine after cold reboot.
 
-Signed-off-by: Navid Emamdoost <navid.emamdoost@gmail.com>
+Compare the value of register SYS_CR and SYS_CLK_MAC_CLK_ENABLE
+for cold reboot and warm reboot, the registers imply that the MAC
+is already powered and thus some procedures are skipped during
+driver initialization. Double checked the vendor driver, it reads
+the SYS_CR and SYS_CLK_MAC_CLK_ENABLE also but doesn't skip any
+during initialization based on them. This commit only tells the
+RTL8723BU to do full initialization without checking MAC status.
+
+Signed-off-by: Chris Chiu <chiu@endlessm.com>
+Signed-off-by: Jes Sorensen <Jes.Sorensen@gmail.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/realtek/rtlwifi/usb.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h       | 1 +
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c | 1 +
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c  | 3 +++
+ 3 files changed, 5 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/usb.c b/drivers/net/wireless/realtek/rtlwifi/usb.c
-index 2401c8bdb211e..93eda23f01239 100644
---- a/drivers/net/wireless/realtek/rtlwifi/usb.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/usb.c
-@@ -1068,8 +1068,10 @@ int rtl_usb_probe(struct usb_interface *intf,
- 	rtlpriv->hw = hw;
- 	rtlpriv->usb_data = kzalloc(RTL_USB_MAX_RX_COUNT * sizeof(u32),
- 				    GFP_KERNEL);
--	if (!rtlpriv->usb_data)
-+	if (!rtlpriv->usb_data) {
-+		ieee80211_free_hw(hw);
- 		return -ENOMEM;
-+	}
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+index 95e3993d8a331..a895b6fd6f858 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+@@ -1349,6 +1349,7 @@ struct rtl8xxxu_fileops {
+ 	u8 has_s0s1:1;
+ 	u8 has_tx_report:1;
+ 	u8 gen2_thermal_meter:1;
++	u8 needs_full_init:1;
+ 	u32 adda_1t_init;
+ 	u32 adda_1t_path_on;
+ 	u32 adda_2t_path_on_a;
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c
+index c4b86a84a721d..27e97df996c73 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c
+@@ -1673,6 +1673,7 @@ struct rtl8xxxu_fileops rtl8723bu_fops = {
+ 	.has_s0s1 = 1,
+ 	.has_tx_report = 1,
+ 	.gen2_thermal_meter = 1,
++	.needs_full_init = 1,
+ 	.adda_1t_init = 0x01c00014,
+ 	.adda_1t_path_on = 0x01c00014,
+ 	.adda_2t_path_on_a = 0x01c00014,
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+index 91b01ca32e752..b58bf8e2cad2f 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+@@ -3905,6 +3905,9 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
+ 	else
+ 		macpower = true;
  
- 	/* this spin lock must be initialized early */
- 	spin_lock_init(&rtlpriv->locks.usb_lock);
-@@ -1130,6 +1132,7 @@ int rtl_usb_probe(struct usb_interface *intf,
- 	_rtl_usb_io_handler_release(hw);
- 	usb_put_dev(udev);
- 	complete(&rtlpriv->firmware_loading_complete);
-+	kfree(rtlpriv->usb_data);
- 	return -ENODEV;
- }
- EXPORT_SYMBOL(rtl_usb_probe);
++	if (fops->needs_full_init)
++		macpower = false;
++
+ 	ret = fops->power_on(priv);
+ 	if (ret < 0) {
+ 		dev_warn(dev, "%s: Failed power on\n", __func__);
 -- 
 2.20.1
 
