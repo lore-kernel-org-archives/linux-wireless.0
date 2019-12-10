@@ -2,118 +2,115 @@ Return-Path: <SRS0=GVYC=2A=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8FCBC2D0BF
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 11:36:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99007C00454
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 11:44:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7A7C9207FF
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 11:36:08 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="E0IPWnBy"
+	by mail.kernel.org (Postfix) with ESMTP id 6A5E72073D
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 11:44:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1575978293;
+	bh=fdlzGZUtU2XiWRM/+oZVZ81jIqcjYgrX+MflMMtnQsU=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=AiGzrsiXq4qzfml1Xdv2Z+ttspAJTzZ+58sdyl1+WefomceYki8JNIAd/1LKCtxNj
+	 GZLfXyitESHIa5R4eDOdgjT0TN4Cg1z/Z+KfpTBogvykuZ61Fog5W1me2gIVC5/+YO
+	 XGJfXuQ9K6SK+wzmYTH44aiiEy+h8pqRqzH+2FAA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727238AbfLJLgH (ORCPT
+        id S1727777AbfLJLox (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 10 Dec 2019 06:36:07 -0500
-Received: from mail-lf1-f67.google.com ([209.85.167.67]:44624 "EHLO
-        mail-lf1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727149AbfLJLgH (ORCPT
+        Tue, 10 Dec 2019 06:44:53 -0500
+Received: from mail-lj1-f195.google.com ([209.85.208.195]:37418 "EHLO
+        mail-lj1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727750AbfLJLot (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Dec 2019 06:36:07 -0500
-Received: by mail-lf1-f67.google.com with SMTP id v201so13392848lfa.11;
-        Tue, 10 Dec 2019 03:36:05 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=XY8c6o1ZDn8cLZbnNzZSfgpKdfWpT+q9NlTDas4NADs=;
-        b=E0IPWnBysw7r8g+PXtBwBKHNMugbTCeASem8y+wRRw3YT+VThZupd4ntxO+BuZvEQB
-         cDstpy4Zk6rOK9PuSiBauARQHJ0mS5NaMXniVSOF0HO3xFiS7/PM3YjUjmFlo6WHyDuH
-         8Myq9KsDrCn3RuRYWBigmIxPfl6bj3qFx6FGurE6NdT755P9DpqSln90fnflXRxLjg8I
-         1VHhYU9dC24VkjAkfrDFUYOv9Ra0J0FASrq+BFNlcGW6LRyG2uA5T1J5uJkUL8bZuq2U
-         /xepSdSt5WJpoMKTyPnqwNGMLpyKJVpwfnPPai1RMeOEvV9j6nuN7w03PqPUanGTtCzW
-         t0Yw==
+        Tue, 10 Dec 2019 06:44:49 -0500
+Received: by mail-lj1-f195.google.com with SMTP id u17so19512504lja.4;
+        Tue, 10 Dec 2019 03:44:47 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=XY8c6o1ZDn8cLZbnNzZSfgpKdfWpT+q9NlTDas4NADs=;
-        b=frQPJvV+JYLoSaD0TTIfwVyaiwzqgnqoXn9GwGCV3fVdT5BVBejfkLKXcgFaLQGfHG
-         dph962/gwrsiCEcCH/FR9Cl5C9WN4VY9NnNYG1QbxztNXZyJSbHrKWcDZuzRrCJz78oV
-         23dzWJl+NLJuvRmRxGEWWVy7VJ6xBDXE9F607OBXzaDA7SBhWV3i9Z5PkI105TXbN3+l
-         9bhE4+QrSjNVaNnZV2hGeIwvJTocFX7+/XPF0vDPZvgrP4RkWcrLtVU6TTMvaRaHvmyx
-         ITxxJMFAHf6ugiidx/dv+d/YzC4s0kK4I8rELBn01Rp+NVLeW1fq/hRcRh+1u1OcLd54
-         vIDQ==
-X-Gm-Message-State: APjAAAXiYkk0VTcVSfr1MPJITQ1m9h0W6r8fs2QTYY3meGZA7fuMlbpy
-        sIl7bz25NC2Ax4rH9rmWx7XPNssH
-X-Google-Smtp-Source: APXvYqwZTeTw9gdCAOj+K3A+HpOHJgHhLsv0iGFMi1WxC/9xPxcNI/uPw/rXyFJXuLapEACmz4u9vA==
-X-Received: by 2002:ac2:4849:: with SMTP id 9mr18286682lfy.11.1575977764751;
-        Tue, 10 Dec 2019 03:36:04 -0800 (PST)
-Received: from localhost.localdomain (ip-194-187-74-233.konfederacka.maverick.com.pl. [194.187.74.233])
-        by smtp.gmail.com with ESMTPSA id j10sm1595496ljc.76.2019.12.10.03.36.03
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 10 Dec 2019 03:36:04 -0800 (PST)
-From:   =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=mVv+98+Q/wUUkUyC3i7eT9Xaj/qNxPXqvi+D40LBxA8=;
+        b=AT516+M1D0z38nsihUQaSLomQPXc7jErJf1yTvIh7l1jB3NGdeLF+f5TO7+vhAno/t
+         AgLWcVqM2Pb4+ltOXx/s6I9mpcaLJsLgu1ES7eG1mYFZ0YIdYo9jSxGKpLZTmWEh1qVq
+         hVJYlK4CGfgsK073vpNc/Jp6sWCXVGV9meXsEidAC2V/23dZOj/5xRXhXQUYw/54I/N9
+         X6dkxDZQtVs4pMkP90FOsqa5e0eeeB2bkMsE+8VgClVeRm5RVPyj9eGEz4m+mO5kUwmG
+         U36PedmtIxZLJCAC+nmqgrZbP5c0kg03Nap2MCbrpDiJ3LTCPU8R4Zv3vLT336S7OLKN
+         lIyQ==
+X-Gm-Message-State: APjAAAWrTyXnc0S7MhZ/Tu9pPZ+ssPEoGch+eOXV2MN2mbFZse6aU6AD
+        M0X1nxd9VYMg1ShGP55x1m0=
+X-Google-Smtp-Source: APXvYqzNFa+fn53W1Aqp5M1Cpv1wJ6sddSRmDkbQiSSYG/sew6XIoKADsYtUfOLhzdKYpYDnENl+pw==
+X-Received: by 2002:a2e:3a13:: with SMTP id h19mr20770639lja.16.1575978287183;
+        Tue, 10 Dec 2019 03:44:47 -0800 (PST)
+Received: from xi.terra (c-14b8e655.07-184-6d6c6d4.bbcust.telenor.se. [85.230.184.20])
+        by smtp.gmail.com with ESMTPSA id q10sm1583883ljj.60.2019.12.10.03.44.42
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 10 Dec 2019 03:44:43 -0800 (PST)
+Received: from johan by xi.terra with local (Exim 4.92.3)
+        (envelope-from <johan@xi.terra>)
+        id 1iedwa-0001ID-QQ; Tue, 10 Dec 2019 12:44:44 +0100
+From:   Johan Hovold <johan@kernel.org>
 To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     Arend van Spriel <arend.vanspriel@broadcom.com>,
+Cc:     QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        Arend van Spriel <arend@broadcom.com>,
         Franky Lin <franky.lin@broadcom.com>,
         Hante Meuleman <hante.meuleman@broadcom.com>,
         Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
         Wright Feng <wright.feng@cypress.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Winnie Chang <winnie.chang@cypress.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: [PATCH] brcmfmac: set interface carrier to off by default
-Date:   Tue, 10 Dec 2019 12:35:55 +0100
-Message-Id: <20191210113555.1868-1-zajec5@gmail.com>
-X-Mailer: git-send-email 2.21.0
+        Jes Sorensen <Jes.Sorensen@redhat.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Siva Rebbagondla <siva8118@gmail.com>,
+        Daniel Drake <dsd@gentoo.org>,
+        Ulrich Kunitz <kune@deine-taler.de>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Johan Hovold <johan@kernel.org>,
+        stable <stable@vger.kernel.org>,
+        Fariya Fatima <fariyaf@gmail.com>
+Subject: [PATCH 6/7] rsi_91x_usb: fix interface sanity check
+Date:   Tue, 10 Dec 2019 12:44:25 +0100
+Message-Id: <20191210114426.4713-7-johan@kernel.org>
+X-Mailer: git-send-email 2.24.0
+In-Reply-To: <20191210114426.4713-1-johan@kernel.org>
+References: <20191210114426.4713-1-johan@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Rafał Miłecki <rafal@milecki.pl>
+Make sure to use the current alternate setting when verifying the
+interface descriptors to avoid binding to an invalid interface.
 
-It's important as brcmfmac creates one main interface for each PHY and
-doesn't allow deleting it. Not setting carrier could result in other
-subsystems misbehaving (e.g. LEDs "netdev" trigger turning LED on).
+Failing to do so could cause the driver to misbehave or trigger a WARN()
+in usb_submit_urb() that kernels with panic_on_warn set would choke on.
 
-Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+Fixes: dad0d04fa7ba ("rsi: Add RS9113 wireless driver")
+Cc: stable <stable@vger.kernel.org>     # 3.15
+Cc: Fariya Fatima <fariyaf@gmail.com>
+Signed-off-by: Johan Hovold <johan@kernel.org>
 ---
-I noticed this problem when using "netdev" LED trigger with "wlan0" set
-as "device_name". While my interface was down (unused) the "netdev"
-trigger was checking it with netif_carrier_ok() and assuming it's up.
+ drivers/net/wireless/rsi/rsi_91x_usb.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-This solution affects initial state of all brcmfmac interfaces (not
-only the first non-removable one) but I think it should be fine. Later
-on brcmfmac takes care of updating carrier as needed.
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index 85cf96461dde..d3ddd97fe768 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -661,6 +661,8 @@ int brcmf_net_attach(struct brcmf_if *ifp, bool rtnl_locked)
- 		goto fail;
- 	}
+diff --git a/drivers/net/wireless/rsi/rsi_91x_usb.c b/drivers/net/wireless/rsi/rsi_91x_usb.c
+index a37a436df5fb..c3ba38ed0dd0 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_usb.c
++++ b/drivers/net/wireless/rsi/rsi_91x_usb.c
+@@ -117,7 +117,7 @@ static int rsi_find_bulk_in_and_out_endpoints(struct usb_interface *interface,
+ 	__le16 buffer_size;
+ 	int ii, bin_found = 0, bout_found = 0;
  
-+	netif_carrier_off(ndev);
-+
- 	ndev->priv_destructor = brcmf_cfg80211_free_netdev;
- 	brcmf_dbg(INFO, "%s: Broadcom Dongle Host Driver\n", ndev->name);
- 	return 0;
+-	iface_desc = &(interface->altsetting[0]);
++	iface_desc = interface->cur_altsetting;
+ 
+ 	for (ii = 0; ii < iface_desc->desc.bNumEndpoints; ++ii) {
+ 		endpoint = &(iface_desc->endpoint[ii].desc);
 -- 
-2.21.0
+2.24.0
 
