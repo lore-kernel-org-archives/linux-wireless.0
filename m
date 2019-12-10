@@ -4,50 +4,51 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C23EAC43603
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:19:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF2F5C43603
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:23:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 869A5205C9
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:19:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 94EA12073B
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:23:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576012749;
-	bh=gO0zIpFJKpquYQof+OSOD6WGuHnTuW3L0PQvOK9w3vU=;
+	s=default; t=1576013004;
+	bh=SkTpDhtXqufuxeik1UVHi8WJkRl2WkftahDwl0qFXbo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=kfZJI2DYBeTi6hByHtbumk/8ROK8WRis5bcyFLD1gN0ZsEwCyQoxipSPtahZaiKKT
-	 OG2Nh+zEoN3cS11aQlV/X4f6eByQ0l/UYBONMxLPhj9VJeYJYP5A+0SI/D8WhjmOhg
-	 b0kOBOLZFhJrKAugXO8K1ApJFF2OOgu3QOAOhz1c=
+	b=PBaqia9ZVGLmLWCFkM1EeBneoIuGVGEYViDeFlaoELV6cw7kqHX90aj95m9oq0X1c
+	 6epmWJxsXgE4t5nNDdKSm4Lc/4/EkrZQN+Bh67PYuExlJr6Ry5+BznTL4SFbAzotB9
+	 hneGhF2qHfCXnZh5ACQUNRPRVCzGs7KyWf+gPZ7w=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728307AbfLJVTJ (ORCPT
+        id S1728730AbfLJVLO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 10 Dec 2019 16:19:09 -0500
-Received: from mail.kernel.org ([198.145.29.99]:36802 "EHLO mail.kernel.org"
+        Tue, 10 Dec 2019 16:11:14 -0500
+Received: from mail.kernel.org ([198.145.29.99]:33638 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729000AbfLJVMc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Dec 2019 16:12:32 -0500
+        id S1728230AbfLJVLN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 10 Dec 2019 16:11:13 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id EBC1020838;
-        Tue, 10 Dec 2019 21:12:30 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id C5147246A2;
+        Tue, 10 Dec 2019 21:11:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576012351;
-        bh=gO0zIpFJKpquYQof+OSOD6WGuHnTuW3L0PQvOK9w3vU=;
+        s=default; t=1576012272;
+        bh=SkTpDhtXqufuxeik1UVHi8WJkRl2WkftahDwl0qFXbo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=JnInmXfCiiDXmzFRd0ixsXY+9G3P9hiMXncAhv8D8fBO2RavcAOTcm+GFIMGxUljs
-         YxBFrdvuCECbvl2KhsXZKSg9YNwcEhVgzgt5rvhqsmkFnju6/wAwxvPkAOGntXGpke
-         HekwjO4R+//l4lW/N0SMcazMnyxFe2SUb3ZgFt9c=
+        b=yqHXEZIn69BXwIIW7HCpYDWPyjQVAJzfC4Ya9YKRTttMeiQ9esDg59cVnGNAJzcw5
+         N6BaST6JfO5JScrAndbxC54fPra8QPoL9/yuGbHUhS2RrECdK6pY1aWuDQIfu94OzE
+         Uw3MVReYTGL5Gi2uqNn7vSOv2vascI59p19y3wYE=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>,
+Cc:     Ping-Ke Shih <pkshih@realtek.com>,
+        Stefan Wahren <wahrenst@gmx.net>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 281/350] qtnfmac: fix debugfs support for multiple cards
-Date:   Tue, 10 Dec 2019 16:06:26 -0500
-Message-Id: <20191210210735.9077-242-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 217/350] rtlwifi: fix memory leak in rtl92c_set_fw_rsvdpagepkt()
+Date:   Tue, 10 Dec 2019 16:05:22 -0500
+Message-Id: <20191210210735.9077-178-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191210210735.9077-1-sashal@kernel.org>
 References: <20191210210735.9077-1-sashal@kernel.org>
@@ -60,45 +61,62 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-[ Upstream commit dd4c2260dab04f5ae7bdb79b9470e7da56f48145 ]
+[ Upstream commit 5174f1e41074b5186608badc2e89441d021e8c08 ]
 
-Fix merge artifact for commit 0b68fe10b8e8 ("qtnfmac: modify debugfs
-to support multiple cards") and finally add debugfs support
-for multiple qtnfmac wireless cards.
+This leak was found by testing the EDIMAX EW-7612 on Raspberry Pi 3B+ with
+Linux 5.4-rc5 (multi_v7_defconfig + rtlwifi + kmemleak) and noticed a
+single memory leak during probe:
 
-Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+unreferenced object 0xec13ee40 (size 176):
+  comm "kworker/u8:1", pid 36, jiffies 4294939321 (age 5580.790s)
+  hex dump (first 32 bytes):
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  backtrace:
+    [<fc1bbb3e>] __netdev_alloc_skb+0x9c/0x164
+    [<863dfa6e>] rtl92c_set_fw_rsvdpagepkt+0x254/0x340 [rtl8192c_common]
+    [<9572be0d>] rtl92cu_set_hw_reg+0xf48/0xfa4 [rtl8192cu]
+    [<116df4d8>] rtl_op_bss_info_changed+0x234/0x96c [rtlwifi]
+    [<8933575f>] ieee80211_bss_info_change_notify+0xb8/0x264 [mac80211]
+    [<d4061e86>] ieee80211_assoc_success+0x934/0x1798 [mac80211]
+    [<e55adb56>] ieee80211_rx_mgmt_assoc_resp+0x174/0x314 [mac80211]
+    [<5974629e>] ieee80211_sta_rx_queued_mgmt+0x3f4/0x7f0 [mac80211]
+    [<d91091c6>] ieee80211_iface_work+0x208/0x318 [mac80211]
+    [<ac5fcae4>] process_one_work+0x22c/0x564
+    [<f5e6d3b6>] worker_thread+0x44/0x5d8
+    [<82c7b073>] kthread+0x150/0x154
+    [<b43e1b7d>] ret_from_fork+0x14/0x2c
+    [<794dff30>] 0x0
+
+It is because 8192cu doesn't implement usb_cmd_send_packet(), and this
+patch just frees the skb within the function to resolve memleak problem
+by now. Since 8192cu doesn't turn on fwctrl_lps that needs to download
+command packet for firmware via the function, applying this patch doesn't
+affect driver behavior.
+
+Reported-by: Stefan Wahren <wahrenst@gmx.net>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/quantenna/qtnfmac/pcie/pcie.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/pcie/pcie.c b/drivers/net/wireless/quantenna/qtnfmac/pcie/pcie.c
-index 8ae318b5fe546..4824be0c6231e 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/pcie/pcie.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/pcie/pcie.c
-@@ -130,6 +130,8 @@ static int qtnf_dbg_shm_stats(struct seq_file *s, void *data)
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
+index 56cc3bc308608..f070f25bb735a 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
+@@ -1540,6 +1540,8 @@ static bool usb_cmd_send_packet(struct ieee80211_hw *hw, struct sk_buff *skb)
+    * This is maybe necessary:
+    * rtlpriv->cfg->ops->fill_tx_cmddesc(hw, buffer, 1, 1, skb);
+    */
++	dev_kfree_skb(skb);
++
+ 	return true;
+ }
  
- int qtnf_pcie_fw_boot_done(struct qtnf_bus *bus)
- {
-+	struct qtnf_pcie_bus_priv *priv = get_bus_priv(bus);
-+	char card_id[64];
- 	int ret;
- 
- 	bus->fw_state = QTNF_FW_STATE_BOOT_DONE;
-@@ -137,7 +139,9 @@ int qtnf_pcie_fw_boot_done(struct qtnf_bus *bus)
- 	if (ret) {
- 		pr_err("failed to attach core\n");
- 	} else {
--		qtnf_debugfs_init(bus, DRV_NAME);
-+		snprintf(card_id, sizeof(card_id), "%s:%s",
-+			 DRV_NAME, pci_name(priv->pdev));
-+		qtnf_debugfs_init(bus, card_id);
- 		qtnf_debugfs_add_entry(bus, "mps", qtnf_dbg_mps_show);
- 		qtnf_debugfs_add_entry(bus, "msi_enabled", qtnf_dbg_msi_show);
- 		qtnf_debugfs_add_entry(bus, "shm_stats", qtnf_dbg_shm_stats);
 -- 
 2.20.1
 
