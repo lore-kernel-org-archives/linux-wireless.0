@@ -7,48 +7,48 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C652C2D0BF
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:48:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5420C2D0C4
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:51:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EABDC2073B
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:48:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B0E872073B
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:51:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576014505;
-	bh=n8jM/pM/933dPhgHxARs3z0hJiHmUnRkMko2CIIqKa0=;
+	s=default; t=1576014691;
+	bh=G2t14PKQErttC9S3UQM9Sagfp/s0I+3TuRwqFsKUQZk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=GSIf1P21jBY3q9fpivKyo37bdmjHDDInCWsvtCASFXaKYOzDarCQxZDl4HuTzrxsS
-	 LhQWmHd1S/sPLn3Hd70CtLT28hYA2yYlRGgk3rM6h9wKjDCVgKiWpXz3qqz+OReHRl
-	 CMR7iHCLbMNPTdyjxrxIQdE0qrlWAnDrHL1p/mt8=
+	b=iyXin/jEgvG4Zr9WZ1WR5meu5vSXpsDwEdsUmrckMGphUiGmuSfsdKCtpLbihIrzm
+	 31AbkuKhdPgsBMGtesbPC8bcu3MTkw1U2S0VllhvRzVcdtOUj2CfQjPkHsu1hCCcF6
+	 MmZdCb96rum88IK8lh+BfDb7hJ/o0t88RUE9sRT8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729648AbfLJVsR (ORCPT
+        id S1727764AbfLJVID (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 10 Dec 2019 16:48:17 -0500
-Received: from mail.kernel.org ([198.145.29.99]:57000 "EHLO mail.kernel.org"
+        Tue, 10 Dec 2019 16:08:03 -0500
+Received: from mail.kernel.org ([198.145.29.99]:54918 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727211AbfLJVJB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Dec 2019 16:09:01 -0500
+        id S1727742AbfLJVIB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 10 Dec 2019 16:08:01 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3FCD0246A0;
-        Tue, 10 Dec 2019 21:09:00 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id F013924697;
+        Tue, 10 Dec 2019 21:07:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576012141;
-        bh=n8jM/pM/933dPhgHxARs3z0hJiHmUnRkMko2CIIqKa0=;
+        s=default; t=1576012080;
+        bh=G2t14PKQErttC9S3UQM9Sagfp/s0I+3TuRwqFsKUQZk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=pZztRpgRNHJyx6AJqFdRafcyMWrQZzL5k1TJ6G71HTU0d6Ek9EkI10TlcxYMVPoLI
-         XMwrTIlpiLgn2g4znViceRu2YlgFGBGVdafkjvfFXwV+m0Meunu71D2AOjN3TUEbom
-         oO7G9MYk8j4Z1E9JMIq2ETQ+q9b/7dg6225YpE5U=
+        b=uhO9hmBq2KlhTpoiTwuu5GLlvs9KStOqzW01Usv4kBCEbHjCyuTrwuR5DMHxdYBCe
+         w2J7aIB//Q+YQ92VZFIdVJXq0tapH3Luj0VchJCmmtAbQbpyh5kgficVQfHnnP/cBl
+         d4nnz/zrj8CuH+ijZaFF1mbmfDXV2XUYxtAyCyYU=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Niklas Cassel <niklas.cassel@linaro.org>,
+Cc:     Ping-Ke Shih <pkshih@realtek.com>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
+        Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 106/350] ath10k: Correct error handling of dma_map_single()
-Date:   Tue, 10 Dec 2019 16:03:31 -0500
-Message-Id: <20191210210735.9077-67-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 059/350] rtw88: fix NSS of hw_cap
+Date:   Tue, 10 Dec 2019 16:02:44 -0500
+Message-Id: <20191210210735.9077-20-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191210210735.9077-1-sashal@kernel.org>
 References: <20191210210735.9077-1-sashal@kernel.org>
@@ -61,42 +61,41 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-[ Upstream commit d43810b2c1808ac865aa1a2a2c291644bf95345c ]
+[ Upstream commit 4f5bb7ff8b8d4bafd91243fc969ed240e67aa1ca ]
 
-The return value of dma_map_single() should be checked for errors using
-dma_mapping_error() and the skb has been dequeued so it needs to be
-freed.
+8822C is a 2x2 11ac chip, and then NSS must be less or equal to 2. However,
+current nss of hw cap is 3, likes
+	hw cap: hci=0x0f, bw=0x07, ptcl=0x03, ant_num=7, nss=3
 
-This was found when enabling CONFIG_DMA_API_DEBUG and it warned about the
-missing dma_mapping_error() call.
+This commit adds constraint to make sure NSS <= rf_path_num, and result
+looks like
+	hw cap: hci=0x0f, bw=0x07, ptcl=0x03, ant_num=7, nss=2
 
-Fixes: 1807da49733e ("ath10k: wmi: add management tx by reference support over wmi")
-Reported-by: Niklas Cassel <niklas.cassel@linaro.org>
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+Fixes: e3037485c68e ("rtw88: new Realtek 802.11ac driver")
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtw88/main.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index a40e1a998f4cd..2b53ea6ca2057 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3903,8 +3903,10 @@ void ath10k_mgmt_over_wmi_tx_work(struct work_struct *work)
- 			     ar->running_fw->fw_file.fw_features)) {
- 			paddr = dma_map_single(ar->dev, skb->data,
- 					       skb->len, DMA_TO_DEVICE);
--			if (!paddr)
-+			if (dma_mapping_error(ar->dev, paddr)) {
-+				ieee80211_free_txskb(ar->hw, skb);
- 				continue;
-+			}
- 			ret = ath10k_wmi_mgmt_tx_send(ar, skb, paddr);
- 			if (ret) {
- 				ath10k_warn(ar, "failed to transmit management frame by ref via WMI: %d\n",
+diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
+index 6dd457741b15d..7a3a4911bde2a 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.c
++++ b/drivers/net/wireless/realtek/rtw88/main.c
+@@ -1020,7 +1020,8 @@ static int rtw_dump_hw_feature(struct rtw_dev *rtwdev)
+ 
+ 	rtw_hw_config_rf_ant_num(rtwdev, efuse->hw_cap.ant_num);
+ 
+-	if (efuse->hw_cap.nss == EFUSE_HW_CAP_IGNORE)
++	if (efuse->hw_cap.nss == EFUSE_HW_CAP_IGNORE ||
++	    efuse->hw_cap.nss > rtwdev->hal.rf_path_num)
+ 		efuse->hw_cap.nss = rtwdev->hal.rf_path_num;
+ 
+ 	rtw_dbg(rtwdev, RTW_DBG_EFUSE,
 -- 
 2.20.1
 
