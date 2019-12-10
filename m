@@ -7,51 +7,50 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6056EC2D0BF
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 22:13:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA404C2D0BF
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 22:35:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2B55E20637
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 22:13:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B60EE2073D
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 22:35:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576016024;
-	bh=mUD4W3Tq67ujXQHClMBqvBDuxNP3dbUk+hPXASdErHY=;
+	s=default; t=1576017330;
+	bh=KVELWriR2M1QbPsog9zvcEmalOdJbCRZm84jFAznJBQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=TZJnfrwn75ZepqsM7uE3UKRhCw99l+VmeEU+kTUh6paUtCs93W2aQ54rPaoTE58lG
-	 Bnjq5H00rOHQY8HP0NNS9C/rPsaWpGQFzixzpKoMJAiFkQl317Vz2oHUyi1JhvdJHh
-	 Dk6Smp61vG3cBIK23JineL07Pkr+6SHPMHyaJn/A=
+	b=y96GfIX/2lbJtEszSrm2becUIVgJ/9h7TXSS00A755bY4k093TLpTsI08dpb12KGx
+	 E5a/HBnTiommZR2sbpdIZazah5gFqA9aRq/eHxCQqDmwTbjbEPL8+BddZuUQO7164g
+	 S2NRalpPB9Iiv33FAkb7Ytes/gl+htJtaP21w+Pg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727482AbfLJWDR (ORCPT
+        id S1730403AbfLJWee (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 10 Dec 2019 17:03:17 -0500
-Received: from mail.kernel.org ([198.145.29.99]:33208 "EHLO mail.kernel.org"
+        Tue, 10 Dec 2019 17:34:34 -0500
+Received: from mail.kernel.org ([198.145.29.99]:56072 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727425AbfLJWDP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Dec 2019 17:03:15 -0500
+        id S1730380AbfLJWed (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 10 Dec 2019 17:34:33 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 91E3320637;
-        Tue, 10 Dec 2019 22:03:13 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 2527820828;
+        Tue, 10 Dec 2019 22:34:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576015394;
-        bh=mUD4W3Tq67ujXQHClMBqvBDuxNP3dbUk+hPXASdErHY=;
+        s=default; t=1576017272;
+        bh=KVELWriR2M1QbPsog9zvcEmalOdJbCRZm84jFAznJBQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Lmxe9W3cgDZQaX2n3hnW69veS9hBQm1BdVwOLqE9hqNETu+7bWlmPWAPc30C2vMO8
-         2Go1L2t/TRmtQMHGm6fCMFcZZI/aFYvpfHSBVbgmRZsgA/hzuVcxJb+lYmjCuTU68I
-         vxgrmfmbBsCDzccA6U74Z0TCbtJK6G3rYMS7RAK4=
+        b=0TIcZJN+cVE5+3j9ChNbBsg9P1oialFuC7PGFMwwn79T98eem/YAPox30Y/Kp13b5
+         KROr0Ceo9TP0JvTadfd20CuwEvrkGDQeikLwgYr2I6TUArHesIiFvgLBkQCTPyTByo
+         ofnGpMdur82v6lVd9G7zTu5+++YcAA6RyDQ1sY8o=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Allen Pais <allen.pais@oracle.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
         Sasha Levin <sashal@kernel.org>,
-        libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 010/130] libertas: fix a potential NULL pointer dereference
-Date:   Tue, 10 Dec 2019 17:01:01 -0500
-Message-Id: <20191210220301.13262-10-sashal@kernel.org>
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.4 64/71] iwlwifi: check kasprintf() return value
+Date:   Tue, 10 Dec 2019 17:33:09 -0500
+Message-Id: <20191210223316.14988-64-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191210220301.13262-1-sashal@kernel.org>
-References: <20191210220301.13262-1-sashal@kernel.org>
+In-Reply-To: <20191210223316.14988-1-sashal@kernel.org>
+References: <20191210223316.14988-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -61,43 +60,50 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Allen Pais <allen.pais@oracle.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit 7da413a18583baaf35dd4a8eb414fa410367d7f2 ]
+[ Upstream commit 5974fbb5e10b018fdbe3c3b81cb4cc54e1105ab9 ]
 
-alloc_workqueue is not checked for errors and as a result,
-a potential NULL dereference could occur.
+kasprintf() can fail, we should check the return value.
 
-Signed-off-by: Allen Pais <allen.pais@oracle.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Fixes: 5ed540aecc2a ("iwlwifi: use mac80211 throughput trigger")
+Fixes: 8ca151b568b6 ("iwlwifi: add the MVM driver")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/marvell/libertas/if_sdio.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/net/wireless/iwlwifi/dvm/led.c | 3 +++
+ drivers/net/wireless/iwlwifi/mvm/led.c | 3 +++
+ 2 files changed, 6 insertions(+)
 
-diff --git a/drivers/net/wireless/marvell/libertas/if_sdio.c b/drivers/net/wireless/marvell/libertas/if_sdio.c
-index 39bf85d0ade0e..c7f8a29d2606b 100644
---- a/drivers/net/wireless/marvell/libertas/if_sdio.c
-+++ b/drivers/net/wireless/marvell/libertas/if_sdio.c
-@@ -1183,6 +1183,10 @@ static int if_sdio_probe(struct sdio_func *func,
+diff --git a/drivers/net/wireless/iwlwifi/dvm/led.c b/drivers/net/wireless/iwlwifi/dvm/led.c
+index ca4d6692cc4eb..47e5fa70483d1 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/led.c
++++ b/drivers/net/wireless/iwlwifi/dvm/led.c
+@@ -184,6 +184,9 @@ void iwl_leds_init(struct iwl_priv *priv)
  
- 	spin_lock_init(&card->lock);
- 	card->workqueue = alloc_workqueue("libertas_sdio", WQ_MEM_RECLAIM, 0);
-+	if (unlikely(!card->workqueue)) {
-+		ret = -ENOMEM;
-+		goto err_queue;
-+	}
- 	INIT_WORK(&card->packet_worker, if_sdio_host_to_card_worker);
- 	init_waitqueue_head(&card->pwron_waitq);
+ 	priv->led.name = kasprintf(GFP_KERNEL, "%s-led",
+ 				   wiphy_name(priv->hw->wiphy));
++	if (!priv->led.name)
++		return;
++
+ 	priv->led.brightness_set = iwl_led_brightness_set;
+ 	priv->led.blink_set = iwl_led_blink_set;
+ 	priv->led.max_brightness = 1;
+diff --git a/drivers/net/wireless/iwlwifi/mvm/led.c b/drivers/net/wireless/iwlwifi/mvm/led.c
+index e3b3cf4dbd77a..948be43e4d266 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/led.c
++++ b/drivers/net/wireless/iwlwifi/mvm/led.c
+@@ -109,6 +109,9 @@ int iwl_mvm_leds_init(struct iwl_mvm *mvm)
  
-@@ -1234,6 +1238,7 @@ static int if_sdio_probe(struct sdio_func *func,
- 	lbs_remove_card(priv);
- free:
- 	destroy_workqueue(card->workqueue);
-+err_queue:
- 	while (card->packets) {
- 		packet = card->packets;
- 		card->packets = card->packets->next;
+ 	mvm->led.name = kasprintf(GFP_KERNEL, "%s-led",
+ 				   wiphy_name(mvm->hw->wiphy));
++	if (!mvm->led.name)
++		return -ENOMEM;
++
+ 	mvm->led.brightness_set = iwl_led_brightness_set;
+ 	mvm->led.max_brightness = 1;
+ 
 -- 
 2.20.1
 
