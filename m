@@ -2,137 +2,184 @@ Return-Path: <SRS0=GVYC=2A=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3E28C43603
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 03:05:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BDACC43603
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 03:37:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 996802073D
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 03:05:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4FCB020692
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 03:37:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=endlessm-com.20150623.gappssmtp.com header.i=@endlessm-com.20150623.gappssmtp.com header.b="fb6wAlfB"
+	dkim=pass (1024-bit key) header.d=cypress.com header.i=@cypress.com header.b="a1ShOyID"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726619AbfLJDFS (ORCPT
+        id S1726930AbfLJDhL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 9 Dec 2019 22:05:18 -0500
-Received: from mail-qv1-f67.google.com ([209.85.219.67]:34936 "EHLO
-        mail-qv1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726602AbfLJDFS (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Dec 2019 22:05:18 -0500
-Received: by mail-qv1-f67.google.com with SMTP id d17so3605732qvs.2
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Dec 2019 19:05:18 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=endlessm-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=f3giDwDeC6cFrb5tnzxmVe/3PcTDv/YyjRzIsUh0/m0=;
-        b=fb6wAlfBN9S5OqrA8G8R+GZh3sUmQ8hpXCtJxP43NbH/caw7lt+9HHbrAUmUUdxWAf
-         5cxxgSFIxwctPRQPbtTYdKO6tZpfIw5Cqgh7e/nenw+PvLhuqYxHxvUONwQ3NWaiks0T
-         cv13srMxykkgEs5oWw1XnMZoRGjC6+HrtEG0PaCPhTsmi3trOv2uMBJD9sT84oif9TbQ
-         /nQ78LHqi2JANImrr3Ovt5xsqn6xI/texDM2b+cVHL2egfRBJP+DkKtLhgi/lgAAeoiQ
-         g2VRNj2uwldWvWOv1qUjryd+40QdvVEu7m4iZul8QPPytSQ7oB2v3LonuaH4bE4LE2AX
-         zfMg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=f3giDwDeC6cFrb5tnzxmVe/3PcTDv/YyjRzIsUh0/m0=;
-        b=VJyZcYj7Nh30bC4fNZcuRKyTQpZAD4ylm1L8AkrJcdVZBmkcl3CoDwLp54BTf20Hwb
-         ToQxYvArQffOwEF6zhAorQ1bX6/8xsHKqFvk3ywKPL+NbutKzTMy/CMS2OhosR6RqT8L
-         3/J7gqhdM1JB1o3zi3JeWOoguBqICcks5Ofcc8s/ifa3TwFnkzfiq07GQpY0s5+fBmJM
-         JfaK5VoHULEfxvX9/rSlxv3QAYNSXe0rkHfSKts69PdQO5aLkqnJTfrJIov1R2fQeeUC
-         BEuh0IhHBO6BFYKJBehlKQ/8x+hcCYeqDbE+O0O9MCqfD0zTe81vhq8EvczPIVJVQl8K
-         cALQ==
-X-Gm-Message-State: APjAAAWkZVgj1xzGCVT7LBRl7IA2TarcU0g1Se+VyqIn0j9nTJfPog8O
-        X9hja8WofyqJfR6HgU8AMb5163Fe418hlF1PqpCubA==
-X-Google-Smtp-Source: APXvYqxfJeeKA0eXKA5CNUY00PO9XUzDRkF4LKfapwPKJPnY0IpI13h+Bhmc7x5uDIfXBnfzuDfKUDkt3Ss6NnmilSE=
-X-Received: by 2002:a0c:a563:: with SMTP id y90mr27397803qvy.234.1575947117318;
- Mon, 09 Dec 2019 19:05:17 -0800 (PST)
+        Mon, 9 Dec 2019 22:37:11 -0500
+Received: from mail-eopbgr760131.outbound.protection.outlook.com ([40.107.76.131]:2742
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726890AbfLJDhJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 9 Dec 2019 22:37:09 -0500
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=S+Vbuz5mgbk7JTcPtK7BZ1WKaPqEubAyYz5NI4cbZYxsD4QguR7WgcEhituIeAATg44johrKGo+7wCAPgecNPQReynw0QB3wpdAPsUWeQ9dioL31t/gZRvAC2MshSHtI8FE4dDdfue4Goy353MVH/zy455zOdIm/6XxtYoBhjVx/Xqx5BHswJg1rg455cVhX0QP7Q8+ZW83o2V5LMW5A4TfAqNmy4wZ6cLt5Lgk1HlWDStZsr0p4WWUQousZ4nVhW1X1yK5Zl5yKy+Al8vpBg0ahSFkgtvTlmUderYNpzl08Zvt+HeOt2veq/4LkPfaKPx6JLTj22Z/gE4lEIFeStw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=gps5WYXhjtM/NfSp8Qhiu1bY6vFbcv6mKm+oXz2H+UQ=;
+ b=JBhhUN5pxdYzsWDcCXsx2Rc4WUHuI6gfw8gWZiTU1MryDQbqc57QuGqQWhjjvX2YF9rIEhGa5hCL4gUwU9ePvLSUiOyoZ/yP4P6QQRiJkkwIPaz7DW/fSpjZH/AsPqeULXkuEutpS/OagwlJYgjqOn3PIOr/HfbP1Mdc5kSSMHSEyZiASGT1a427jhj2n76uAGKJHlG8A1+QtlbbqT/RHfOX02DrBdOpPpM4KlYch4GCfVhegziqcnLtWsuNAfe2TGDfWLdz3pqylPvyE2rjRHhl2MT7diPw8UhJPlZS+BN/oA4mTBaTjJagXvPnI6QScL7YU/okTk77kOmfsJyOfQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=cypress.com; dmarc=pass action=none header.from=cypress.com;
+ dkim=pass header.d=cypress.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cypress.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=gps5WYXhjtM/NfSp8Qhiu1bY6vFbcv6mKm+oXz2H+UQ=;
+ b=a1ShOyIDwXmc4B/MCrwVnd1qUIQIETvXhmaz8XG+YWEHebhCzR1aOHlicru4DHbb6Vua9maAT5tQM1DoJlK7Y0u/XVr25kVeLDKy7zG9VnwheFNrDhrM2S5uFjE6EYYA5JRPwsEA1ou6nQnGCYzPd86LsC6KY0PZVbz1fLFr3+o=
+Received: from CY4PR06MB2342.namprd06.prod.outlook.com (10.169.185.149) by
+ CY4PR06MB2646.namprd06.prod.outlook.com (10.173.39.140) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2516.12; Tue, 10 Dec 2019 03:37:07 +0000
+Received: from CY4PR06MB2342.namprd06.prod.outlook.com
+ ([fe80::4930:d9e2:2f15:868d]) by CY4PR06MB2342.namprd06.prod.outlook.com
+ ([fe80::4930:d9e2:2f15:868d%3]) with mapi id 15.20.2538.012; Tue, 10 Dec 2019
+ 03:37:07 +0000
+From:   Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>
+To:     Soeren Moch <smoch@web.de>, Kalle Valo <kvalo@codeaurora.org>
+CC:     Stanley Hsu <Stanley.Hsu@cypress.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Wright Feng <Wright.Feng@cypress.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "brcm80211-dev-list.pdl@broadcom.com" 
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        brcm80211-dev-list <brcm80211-dev-list@cypress.com>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 2/8] brcmfmac: set F2 blocksize and watermark for 4359
+Thread-Topic: [PATCH 2/8] brcmfmac: set F2 blocksize and watermark for 4359
+Thread-Index: AQHVruFjv3ucH6ysDkuWKeHilwQoR6eyuGeA
+Date:   Tue, 10 Dec 2019 03:37:07 +0000
+Message-ID: <541616d9-78ca-81b2-d785-5ec389265bd1@cypress.com>
+References: <20191209223822.27236-1-smoch@web.de>
+ <20191209223822.27236-2-smoch@web.de>
+In-Reply-To: <20191209223822.27236-2-smoch@web.de>
+Reply-To: Chi-Hsien Lin <Chi-Hsien.Lin@cypress.com>
+Accept-Language: en-US, zh-TW
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [61.222.14.99]
+user-agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:52.0) Gecko/20100101
+ Thunderbird/52.9.1
+x-clientproxiedby: BYAPR06CA0014.namprd06.prod.outlook.com
+ (2603:10b6:a03:d4::27) To CY4PR06MB2342.namprd06.prod.outlook.com
+ (2603:10b6:903:13::21)
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=Chi-Hsien.Lin@cypress.com; 
+x-ms-exchange-messagesentrepresentingtype: 1
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: ce09ed2a-b304-4d9a-9c0a-08d77d223ae3
+x-ms-traffictypediagnostic: CY4PR06MB2646:|CY4PR06MB2646:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <CY4PR06MB26469A46C2A521BEAC8740DABB5B0@CY4PR06MB2646.namprd06.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:5516;
+x-forefront-prvs: 02475B2A01
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(396003)(366004)(346002)(376002)(39860400002)(136003)(189003)(199004)(8936002)(36756003)(6512007)(316002)(2906002)(2616005)(3450700001)(305945005)(31696002)(81166006)(4326008)(81156014)(66446008)(186003)(31686004)(8676002)(64756008)(53546011)(66556008)(66476007)(66946007)(6506007)(478600001)(54906003)(52116002)(26005)(110136005)(229853002)(86362001)(6486002)(5660300002)(71200400001)(71190400001);DIR:OUT;SFP:1102;SCL:1;SRVR:CY4PR06MB2646;H:CY4PR06MB2342.namprd06.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+received-spf: None (protection.outlook.com: cypress.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: h6HmoWeK+CGG+F3Wg3iTM+lknJNBfVsITyb0cdfJHa22YnQkhY2/CgWbI6+R3FLwT05L7coEoI2S9Yn0IWdt6kJpBHJXS2y0HA+6oZla5BNTxTc0Oegi0gpte04pc3Ef8wFaQFwQIULK+1Z1VJZGtZ5aABbaHGESpxSaqJRw9ZGBSy6rEEyL8yVi+TeOXp5dW1BMHCpbWWADaZq/J0L+T7hK0sVU6BQpAjcKbgb97UCU+qID+RVFBUNPQSR27yeJa2a6HnZlYJmwJDijZtyS7WYnT4YjLskNV1PHHs/6NM+g6CRnTQjLWzte3E7ZF0Fne7jHm/kXYI0E7euQyMJzc2cTcc7MYuiDvJ2W+N2rPSu0fkyEYbgmeOIi4yN4YKr7Z7UGfg8zEk3i59CEYBnBtsz/bl4Vyfs4L/YYH+DS66/UnTMyRmPDktMSyMSnZvCd
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <D352CDE1AA4FFB48AA702BA45DBA288F@namprd06.prod.outlook.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-References: <20191209072139.26068-1-yhchuang@realtek.com> <20191209072139.26068-3-yhchuang@realtek.com>
-In-Reply-To: <20191209072139.26068-3-yhchuang@realtek.com>
-From:   Chris Chiu <chiu@endlessm.com>
-Date:   Tue, 10 Dec 2019 11:05:06 +0800
-Message-ID: <CAB4CAwfUQ1M0vbaXw7Hc05nvHU7fN-_Z6Ykmbq4b+DebV5ATzg@mail.gmail.com>
-Subject: Re: [PATCH v2 2/6] rtw88: pci: reset dma when reset pci trx ring
-To:     Tony Chuang <yhchuang@realtek.com>
-Cc:     Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Brian Norris <briannorris@chromium.org>
-Content-Type: text/plain; charset="UTF-8"
+X-OriginatorOrg: cypress.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: ce09ed2a-b304-4d9a-9c0a-08d77d223ae3
+X-MS-Exchange-CrossTenant-originalarrivaltime: 10 Dec 2019 03:37:07.1577
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 011addfc-2c09-450d-8938-e0bbc2dd2376
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: Qoy8STYyUeiygFuyN5soMm2HEkDnv0WhVMGHC1q4eD9H/05INbaDZ9YQDnmTgmOxCg85KCGpeAVqIiZmyDNpxg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR06MB2646
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, Dec 9, 2019 at 3:21 PM <yhchuang@realtek.com> wrote:
->
-> From: Chin-Yen Lee <timlee@realtek.com>
->
-> When PCI trx rings are reset, the DMA engine should also be reset.
-> Otherswise, the rx_tag of rx flow is not synchronous to hw.
->
-> Remove DMA reset when rtw_pci_start() as we added it in
-> rtw_pci_setup().
->
-> Signed-off-by: Chin-Yen Lee <timlee@realtek.com>
-> Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-> ---
-Reviewed-by: Chris Chiu <chiu@endlessm.com>
->
-> v1 -> v2
->  * remove duplicated rtw_pci_dma_reset()
->
->  drivers/net/wireless/realtek/rtw88/pci.c | 19 ++++++++++---------
->  1 file changed, 10 insertions(+), 9 deletions(-)
->
-> diff --git a/drivers/net/wireless/realtek/rtw88/pci.c b/drivers/net/wireless/realtek/rtw88/pci.c
-> index 068f1bec88e6..c394df494c95 100644
-> --- a/drivers/net/wireless/realtek/rtw88/pci.c
-> +++ b/drivers/net/wireless/realtek/rtw88/pci.c
-> @@ -486,13 +486,6 @@ static void rtw_pci_disable_interrupt(struct rtw_dev *rtwdev,
->         rtwpci->irq_enabled = false;
->  }
->
-> -static int rtw_pci_setup(struct rtw_dev *rtwdev)
-> -{
-> -       rtw_pci_reset_trx_ring(rtwdev);
-> -
-> -       return 0;
-> -}
-> -
->  static void rtw_pci_dma_reset(struct rtw_dev *rtwdev, struct rtw_pci *rtwpci)
->  {
->         /* reset dma and rx tag */
-> @@ -501,6 +494,16 @@ static void rtw_pci_dma_reset(struct rtw_dev *rtwdev, struct rtw_pci *rtwpci)
->         rtwpci->rx_tag = 0;
->  }
->
-> +static int rtw_pci_setup(struct rtw_dev *rtwdev)
-> +{
-> +       struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
-> +
-> +       rtw_pci_reset_trx_ring(rtwdev);
-> +       rtw_pci_dma_reset(rtwdev, rtwpci);
-> +
-> +       return 0;
-> +}
-> +
->  static void rtw_pci_dma_release(struct rtw_dev *rtwdev, struct rtw_pci *rtwpci)
->  {
->         struct rtw_pci_tx_ring *tx_ring;
-> @@ -518,8 +521,6 @@ static int rtw_pci_start(struct rtw_dev *rtwdev)
->         struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
->         unsigned long flags;
->
-> -       rtw_pci_dma_reset(rtwdev, rtwpci);
-> -
->         spin_lock_irqsave(&rtwpci->irq_lock, flags);
->         rtw_pci_enable_interrupt(rtwdev, rtwpci);
->         spin_unlock_irqrestore(&rtwpci->irq_lock, flags);
-> --
-> 2.17.1
->
+DQoNCk9uIDEyLzEwLzIwMTkgNjozOCwgU29lcmVuIE1vY2ggd3JvdGU6DQo+IEZyb206IENodW5n
+LUhzaWVuIEhzdSA8c3RhbmxleS5oc3VAY3lwcmVzcy5jb20+DQo+IA0KPiBTZXQgRjIgYmxvY2tz
+aXplIHRvIDI1NiBieXRlcyBhbmQgd2F0ZXJtYXJrIHRvIDB4NDAgZm9yIDQzNTkuIEFsc28NCj4g
+ZW5hYmxlIGFuZCBjb25maWd1cmUgRjEgTWVzQnVzeUN0cmwuIEl0IGZpeGVzIERNQSBlcnJvciB3
+aGlsZSBoYXZpbmcNCj4gVURQIGJpLWRpcmVjdGlvbmFsIHRyYWZmaWMuDQo+IA0KPiBTaWduZWQt
+b2ZmLWJ5OiBDaHVuZy1Ic2llbiBIc3UgPHN0YW5sZXkuaHN1QGN5cHJlc3MuY29tPg0KPiBbc2xp
+Z2h0bHkgYWRhcHRlZCBmb3IgcmViYXNlIG9uIG1haW5saW5lIGxpbnV4XQ0KPiBTaWduZWQtb2Zm
+LWJ5OiBTb2VyZW4gTW9jaCA8c21vY2hAd2ViLmRlPg0KUmV2aWV3ZWQtYnk6IENoaS1Ic2llbiBM
+aW4gPGNoaS1oc2llbi5saW5AY3lwcmVzcy5jb20+DQoNCj4gLS0tDQo+IENjOiBLYWxsZSBWYWxv
+IDxrdmFsb0Bjb2RlYXVyb3JhLm9yZz4NCj4gQ2M6IEFyZW5kIHZhbiBTcHJpZWwgPGFyZW5kLnZh
+bnNwcmllbEBicm9hZGNvbS5jb20+DQo+IENjOiBGcmFua3kgTGluIDxmcmFua3kubGluQGJyb2Fk
+Y29tLmNvbT4NCj4gQ2M6IEhhbnRlIE1ldWxlbWFuIDxoYW50ZS5tZXVsZW1hbkBicm9hZGNvbS5j
+b20+DQo+IENjOiBDaGktSHNpZW4gTGluIDxjaGktaHNpZW4ubGluQGN5cHJlc3MuY29tPg0KPiBD
+YzogV3JpZ2h0IEZlbmcgPHdyaWdodC5mZW5nQGN5cHJlc3MuY29tPg0KPiBDYzogbGludXgtd2ly
+ZWxlc3NAdmdlci5rZXJuZWwub3JnDQo+IENjOiBicmNtODAyMTEtZGV2LWxpc3QucGRsQGJyb2Fk
+Y29tLmNvbQ0KPiBDYzogYnJjbTgwMjExLWRldi1saXN0QGN5cHJlc3MuY29tDQo+IENjOiBuZXRk
+ZXZAdmdlci5rZXJuZWwub3JnDQo+IENjOiBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnDQo+
+IC0tLQ0KPiAgIC4uLi93aXJlbGVzcy9icm9hZGNvbS9icmNtODAyMTEvYnJjbWZtYWMvYmNtc2Ro
+LmMgfCAgNiArKysrKy0NCj4gICAuLi4vd2lyZWxlc3MvYnJvYWRjb20vYnJjbTgwMjExL2JyY21m
+bWFjL3NkaW8uYyAgIHwgMTUgKysrKysrKysrKysrKysrDQo+ICAgMiBmaWxlcyBjaGFuZ2VkLCAy
+MCBpbnNlcnRpb25zKCspLCAxIGRlbGV0aW9uKC0pDQo+IA0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVy
+cy9uZXQvd2lyZWxlc3MvYnJvYWRjb20vYnJjbTgwMjExL2JyY21mbWFjL2JjbXNkaC5jIGIvZHJp
+dmVycy9uZXQvd2lyZWxlc3MvYnJvYWRjb20vYnJjbTgwMjExL2JyY21mbWFjL2JjbXNkaC5jDQo+
+IGluZGV4IDk2ZmQ4ZTJiZjc3My4uNjhiYWYwMTg5MzA1IDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJz
+L25ldC93aXJlbGVzcy9icm9hZGNvbS9icmNtODAyMTEvYnJjbWZtYWMvYmNtc2RoLmMNCj4gKysr
+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvYnJvYWRjb20vYnJjbTgwMjExL2JyY21mbWFjL2JjbXNk
+aC5jDQo+IEBAIC00Myw2ICs0Myw3IEBADQo+IA0KPiAgICNkZWZpbmUgU0RJT19GVU5DMV9CTE9D
+S1NJWkUJCTY0DQo+ICAgI2RlZmluZSBTRElPX0ZVTkMyX0JMT0NLU0laRQkJNTEyDQo+ICsjZGVm
+aW5lIFNESU9fNDM1OV9GVU5DMl9CTE9DS1NJWkUJMjU2DQo+ICAgLyogTWF4aW11bSBtaWxsaXNl
+Y29uZHMgdG8gd2FpdCBmb3IgRjIgdG8gY29tZSB1cCAqLw0KPiAgICNkZWZpbmUgU0RJT19XQUlU
+X0YyUkRZCTMwMDANCj4gDQo+IEBAIC05MDMsNiArOTA0LDcgQEAgc3RhdGljIHZvaWQgYnJjbWZf
+c2Rpb2RfaG9zdF9maXh1cChzdHJ1Y3QgbW1jX2hvc3QgKmhvc3QpDQo+ICAgc3RhdGljIGludCBi
+cmNtZl9zZGlvZF9wcm9iZShzdHJ1Y3QgYnJjbWZfc2Rpb19kZXYgKnNkaW9kZXYpDQo+ICAgew0K
+PiAgIAlpbnQgcmV0ID0gMDsNCj4gKwl1bnNpZ25lZCBpbnQgZjJfYmxrc3ogPSBTRElPX0ZVTkMy
+X0JMT0NLU0laRTsNCj4gDQo+ICAgCXNkaW9fY2xhaW1faG9zdChzZGlvZGV2LT5mdW5jMSk7DQo+
+IA0KPiBAQCAtOTEyLDcgKzkxNCw5IEBAIHN0YXRpYyBpbnQgYnJjbWZfc2Rpb2RfcHJvYmUoc3Ry
+dWN0IGJyY21mX3NkaW9fZGV2ICpzZGlvZGV2KQ0KPiAgIAkJc2Rpb19yZWxlYXNlX2hvc3Qoc2Rp
+b2Rldi0+ZnVuYzEpOw0KPiAgIAkJZ290byBvdXQ7DQo+ICAgCX0NCj4gLQlyZXQgPSBzZGlvX3Nl
+dF9ibG9ja19zaXplKHNkaW9kZXYtPmZ1bmMyLCBTRElPX0ZVTkMyX0JMT0NLU0laRSk7DQo+ICsJ
+aWYgKHNkaW9kZXYtPmZ1bmMyLT5kZXZpY2UgPT0gU0RJT19ERVZJQ0VfSURfQlJPQURDT01fNDM1
+OSkNCj4gKwkJZjJfYmxrc3ogPSBTRElPXzQzNTlfRlVOQzJfQkxPQ0tTSVpFOw0KPiArCXJldCA9
+IHNkaW9fc2V0X2Jsb2NrX3NpemUoc2Rpb2Rldi0+ZnVuYzIsIGYyX2Jsa3N6KTsNCj4gICAJaWYg
+KHJldCkgew0KPiAgIAkJYnJjbWZfZXJyKCJGYWlsZWQgdG8gc2V0IEYyIGJsb2Nrc2l6ZVxuIik7
+DQo+ICAgCQlzZGlvX3JlbGVhc2VfaG9zdChzZGlvZGV2LT5mdW5jMSk7DQo+IGRpZmYgLS1naXQg
+YS9kcml2ZXJzL25ldC93aXJlbGVzcy9icm9hZGNvbS9icmNtODAyMTEvYnJjbWZtYWMvc2Rpby5j
+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvYnJvYWRjb20vYnJjbTgwMjExL2JyY21mbWFjL3NkaW8u
+Yw0KPiBpbmRleCAyNjRhZDYzMjMyZjguLjIxZTUzNTA3MmYzZiAxMDA2NDQNCj4gLS0tIGEvZHJp
+dmVycy9uZXQvd2lyZWxlc3MvYnJvYWRjb20vYnJjbTgwMjExL2JyY21mbWFjL3NkaW8uYw0KPiAr
+KysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9icm9hZGNvbS9icmNtODAyMTEvYnJjbWZtYWMvc2Rp
+by5jDQo+IEBAIC00Miw2ICs0Miw4IEBADQo+ICAgI2RlZmluZSBERUZBVUxUX0YyX1dBVEVSTUFS
+SyAgICAweDgNCj4gICAjZGVmaW5lIENZXzQzNzNfRjJfV0FURVJNQVJLICAgIDB4NDANCj4gICAj
+ZGVmaW5lIENZXzQzMDEyX0YyX1dBVEVSTUFSSyAgICAweDYwDQo+ICsjZGVmaW5lIENZXzQzNTlf
+RjJfV0FURVJNQVJLCTB4NDANCj4gKyNkZWZpbmUgQ1lfNDM1OV9GMV9NRVNCVVNZQ1RSTAkoQ1lf
+NDM1OV9GMl9XQVRFUk1BUksgfCBTQlNESU9fTUVTQlVTWUNUUkxfRU5BQikNCj4gDQo+ICAgI2lm
+ZGVmIERFQlVHDQo+IA0KPiBAQCAtNDIwNSw2ICs0MjA3LDE5IEBAIHN0YXRpYyB2b2lkIGJyY21m
+X3NkaW9fZmlybXdhcmVfY2FsbGJhY2soc3RydWN0IGRldmljZSAqZGV2LCBpbnQgZXJyLA0KPiAg
+IAkJCWJyY21mX3NkaW9kX3dyaXRlYihzZGlvZCwgU0JTRElPX0RFVklDRV9DVEwsIGRldmN0bCwN
+Cj4gICAJCQkJCSAgICZlcnIpOw0KPiAgIAkJCWJyZWFrOw0KPiArCQljYXNlIFNESU9fREVWSUNF
+X0lEX0JST0FEQ09NXzQzNTk6DQo+ICsJCQlicmNtZl9kYmcoSU5GTywgInNldCBGMiB3YXRlcm1h
+cmsgdG8gMHgleCo0IGJ5dGVzXG4iLA0KPiArCQkJCSAgQ1lfNDM1OV9GMl9XQVRFUk1BUkspOw0K
+PiArCQkJYnJjbWZfc2Rpb2Rfd3JpdGViKHNkaW9kLCBTQlNESU9fV0FURVJNQVJLLA0KPiArCQkJ
+CQkgICBDWV80MzU5X0YyX1dBVEVSTUFSSywgJmVycik7DQo+ICsJCQlkZXZjdGwgPSBicmNtZl9z
+ZGlvZF9yZWFkYihzZGlvZCwgU0JTRElPX0RFVklDRV9DVEwsDQo+ICsJCQkJCQkgICAmZXJyKTsN
+Cj4gKwkJCWRldmN0bCB8PSBTQlNESU9fREVWQ1RMX0YyV01fRU5BQjsNCj4gKwkJCWJyY21mX3Nk
+aW9kX3dyaXRlYihzZGlvZCwgU0JTRElPX0RFVklDRV9DVEwsIGRldmN0bCwNCj4gKwkJCQkJICAg
+JmVycik7DQo+ICsJCQlicmNtZl9zZGlvZF93cml0ZWIoc2Rpb2QsIFNCU0RJT19GVU5DMV9NRVNC
+VVNZQ1RSTCwNCj4gKwkJCQkJICAgQ1lfNDM1OV9GMV9NRVNCVVNZQ1RSTCwgJmVycik7DQo+ICsJ
+CQlicmVhazsNCj4gICAJCWRlZmF1bHQ6DQo+ICAgCQkJYnJjbWZfc2Rpb2Rfd3JpdGViKHNkaW9k
+LCBTQlNESU9fV0FURVJNQVJLLA0KPiAgIAkJCQkJICAgREVGQVVMVF9GMl9XQVRFUk1BUkssICZl
+cnIpOw0KPiAtLQ0KPiAyLjE3LjENCj4gDQo+IC4NCj4gDQo=
