@@ -4,53 +4,53 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0603AC00454
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:23:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B69AC2D0C4
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:25:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CBC6F206D5
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:23:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E4D2E21556
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:25:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576013026;
-	bh=SiUpEET3u+eXnAzJ/9n1WjoyrMjKh998f7eWCTivKz0=;
+	s=default; t=1576013138;
+	bh=VHxZDyY8sXHksc8JW4Mr8xSTSRPOIlR7iviooLOpbtI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=DfsS+/WuYa+f7v1XzqIcMjNZ+kSiN7j8rqPvkYKydW3Frk/tstZO0iYGOKtmCzM9V
-	 HqJAIoXIGYz6vgmOEu+7CInanBNK+gMp9Q7POShhOgy8cyQB1FoKZKlBETvBMCqHqN
-	 PfVVVnIPlcCN3heZ34CA2wBqvxmjxlXuZV/dnAp0=
+	b=c/WKIRtBWR8vin2MGyeZQ3Q5DKc4wAng6EoBHvs33TydKBJ+efqrH9QLbqi3XXTAt
+	 jW/hDm3DxJFZdBUah+0HED87LoHQ2yzdN/cXWivLlKldvPxcz+vgpUVZV+p8RD2nhT
+	 5ZGU83Awrr89+WmVuwg9r7nF6Wy9ppT92xl5k2cc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728689AbfLJVLH (ORCPT
+        id S1729545AbfLJVZh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 10 Dec 2019 16:11:07 -0500
-Received: from mail.kernel.org ([198.145.29.99]:33480 "EHLO mail.kernel.org"
+        Tue, 10 Dec 2019 16:25:37 -0500
+Received: from mail.kernel.org ([198.145.29.99]:56832 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728358AbfLJVLG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Dec 2019 16:11:06 -0500
+        id S1729534AbfLJVZg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 10 Dec 2019 16:25:36 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 60266246A2;
-        Tue, 10 Dec 2019 21:11:05 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 5E27F20836;
+        Tue, 10 Dec 2019 21:25:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576012266;
-        bh=SiUpEET3u+eXnAzJ/9n1WjoyrMjKh998f7eWCTivKz0=;
+        s=default; t=1576013136;
+        bh=VHxZDyY8sXHksc8JW4Mr8xSTSRPOIlR7iviooLOpbtI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=pz941lXcXFdTminYKZyNg1q0sow0yaAcuWsX/6ednGo0+sfdzYahP9xyq9T1MCSWQ
-         wkTjpBeR3U033tLccO2nWUecLFiGyW4MNYUimhb5qFqE/VbgUfA3Btifx1CNLV//m3
-         qfw4hJfPtQ4i4AbvDfWl4+ZkX14ZMqucAMLwK0bg=
+        b=PSH4vs/GcQDXb0oX/gsqle6EZ+1dHWm/1nFL37I1gz/p8/7o/lOnbbkoO3rbQewAn
+         IsBTmGT70cH0zMMO4TG4pgJWWytbxdG/PACEceADRsrQO1wz51Rmrzu/JhdqT9oLcu
+         QJWTyyG2xI94V4VSqWrscdRs+SVGBGE33gZeoOVQ=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Marcel Holtmann <marcel@holtmann.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+Cc:     Navid Emamdoost <navid.emamdoost@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 211/350] rfkill: allocate static minor
-Date:   Tue, 10 Dec 2019 16:05:16 -0500
-Message-Id: <20191210210735.9077-172-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.3 020/292] rtlwifi: prevent memory leak in rtl_usb_probe
+Date:   Tue, 10 Dec 2019 16:20:39 -0500
+Message-Id: <20191210212511.11392-20-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191210210735.9077-1-sashal@kernel.org>
-References: <20191210210735.9077-1-sashal@kernel.org>
+In-Reply-To: <20191210212511.11392-1-sashal@kernel.org>
+References: <20191210212511.11392-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -60,66 +60,45 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Marcel Holtmann <marcel@holtmann.org>
+From: Navid Emamdoost <navid.emamdoost@gmail.com>
 
-[ Upstream commit 8670b2b8b029a6650d133486be9d2ace146fd29a ]
+[ Upstream commit 3f93616951138a598d930dcaec40f2bfd9ce43bb ]
 
-udev has a feature of creating /dev/<node> device-nodes if it finds
-a devnode:<node> modalias. This allows for auto-loading of modules that
-provide the node. This requires to use a statically allocated minor
-number for misc character devices.
+In rtl_usb_probe if allocation for usb_data fails the allocated hw
+should be released. In addition the allocated rtlpriv->usb_data should
+be released on error handling path.
 
-However, rfkill uses dynamic minor numbers and prevents auto-loading
-of the module. So allocate the next static misc minor number and use
-it for rfkill.
-
-Signed-off-by: Marcel Holtmann <marcel@holtmann.org>
-Link: https://lore.kernel.org/r/20191024174042.19851-1-marcel@holtmann.org
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Navid Emamdoost <navid.emamdoost@gmail.com>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- include/linux/miscdevice.h | 1 +
- net/rfkill/core.c          | 9 +++++++--
- 2 files changed, 8 insertions(+), 2 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/usb.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/include/linux/miscdevice.h b/include/linux/miscdevice.h
-index 3247a3dc79348..b06b75776a32f 100644
---- a/include/linux/miscdevice.h
-+++ b/include/linux/miscdevice.h
-@@ -57,6 +57,7 @@
- #define UHID_MINOR		239
- #define USERIO_MINOR		240
- #define VHOST_VSOCK_MINOR	241
-+#define RFKILL_MINOR		242
- #define MISC_DYNAMIC_MINOR	255
+diff --git a/drivers/net/wireless/realtek/rtlwifi/usb.c b/drivers/net/wireless/realtek/rtlwifi/usb.c
+index 34d68dbf4b4ce..de770bbc3aa27 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/usb.c
++++ b/drivers/net/wireless/realtek/rtlwifi/usb.c
+@@ -1033,8 +1033,10 @@ int rtl_usb_probe(struct usb_interface *intf,
+ 	rtlpriv->hw = hw;
+ 	rtlpriv->usb_data = kcalloc(RTL_USB_MAX_RX_COUNT, sizeof(u32),
+ 				    GFP_KERNEL);
+-	if (!rtlpriv->usb_data)
++	if (!rtlpriv->usb_data) {
++		ieee80211_free_hw(hw);
+ 		return -ENOMEM;
++	}
  
- struct device;
-diff --git a/net/rfkill/core.c b/net/rfkill/core.c
-index f9b08a6d8dbe4..0bf9bf1ceb8f0 100644
---- a/net/rfkill/core.c
-+++ b/net/rfkill/core.c
-@@ -1316,10 +1316,12 @@ static const struct file_operations rfkill_fops = {
- 	.llseek		= no_llseek,
- };
- 
-+#define RFKILL_NAME "rfkill"
-+
- static struct miscdevice rfkill_miscdev = {
--	.name	= "rfkill",
- 	.fops	= &rfkill_fops,
--	.minor	= MISC_DYNAMIC_MINOR,
-+	.name	= RFKILL_NAME,
-+	.minor	= RFKILL_MINOR,
- };
- 
- static int __init rfkill_init(void)
-@@ -1371,3 +1373,6 @@ static void __exit rfkill_exit(void)
- 	class_unregister(&rfkill_class);
+ 	/* this spin lock must be initialized early */
+ 	spin_lock_init(&rtlpriv->locks.usb_lock);
+@@ -1095,6 +1097,7 @@ int rtl_usb_probe(struct usb_interface *intf,
+ 	_rtl_usb_io_handler_release(hw);
+ 	usb_put_dev(udev);
+ 	complete(&rtlpriv->firmware_loading_complete);
++	kfree(rtlpriv->usb_data);
+ 	return -ENODEV;
  }
- module_exit(rfkill_exit);
-+
-+MODULE_ALIAS_MISCDEV(RFKILL_MINOR);
-+MODULE_ALIAS("devname:" RFKILL_NAME);
+ EXPORT_SYMBOL(rtl_usb_probe);
 -- 
 2.20.1
 
