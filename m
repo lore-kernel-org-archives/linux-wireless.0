@@ -7,48 +7,49 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3D1EC00454
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 22:40:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD3ABC00454
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 22:41:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9032520828
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 22:40:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9EE662053B
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 22:41:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576017636;
-	bh=+A2phvID+gqjmzb3uCb5NALuzM4a0PEWBErOw+JcLQo=;
+	s=default; t=1576017672;
+	bh=lvHBPWoie1iqEQILYGYz/XYy4woY7NXJWDRrkOsRvTU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Dqr7WxhpVsjcgilF2WC2F6tsP7OKcolKRDVQr7stCy9bZm9M6EEFm39KYrEvlK4EX
-	 uoT5ZYw1CLHaM8cnkMDX8l6m23VuhbjAS67E3gEZB2l5SNyVe6Zkjw8I97ySs+S9l+
-	 rTYNNk69iXj6OjudVcAvEkpEX5GEjVp4r/RsecwU=
+	b=e57HzBJwxi5tfpvwLstA5hOmNiGXkvyHJicCa6hoII1XbydTVCKTqUVQ/zJ+g74nm
+	 IetQaoVZ+0yfdn1Mm3jXxHGkPdTl9wxv9U51AbODGIxe2e/PJaQWthk5r9fLY01NrL
+	 OZKfOTujHMCTyYvI/2aUNGOIw2giAtMD44TolAss=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729918AbfLJWk2 (ORCPT
+        id S1728979AbfLJWbx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 10 Dec 2019 17:40:28 -0500
-Received: from mail.kernel.org ([198.145.29.99]:52452 "EHLO mail.kernel.org"
+        Tue, 10 Dec 2019 17:31:53 -0500
+Received: from mail.kernel.org ([198.145.29.99]:52062 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729175AbfLJWcG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Dec 2019 17:32:06 -0500
+        id S1728942AbfLJWbw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 10 Dec 2019 17:31:52 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 9C49D21D7D;
-        Tue, 10 Dec 2019 22:32:05 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 993602467A;
+        Tue, 10 Dec 2019 22:31:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576017126;
-        bh=+A2phvID+gqjmzb3uCb5NALuzM4a0PEWBErOw+JcLQo=;
+        s=default; t=1576017111;
+        bh=lvHBPWoie1iqEQILYGYz/XYy4woY7NXJWDRrkOsRvTU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=DK+ErQLAUb4Z7XeXRxdEIzL6ALkCDAwGX9M4qdI3XGIp9aZVGN1BuyhB+s2Szb/TE
-         nveBSkl1jwPi41wCbx093IJ8n2T+hh+imVhzw6wpP1nsK0KgmciwHcQc7BhIvukt7o
-         I80vzMVLFoMKhlvgF0tp56eKRB+4V+2m24G6hLAI=
+        b=Pa1L6KzbKwB/xS+O5OiWccC/+R2eHKGQIETOSx+G7v28dEczSEh0MkkgoUieb5Kfo
+         EceZOajtat1CchnNXPwo+xZx29fD0RQW98dtKnhAs55mP8UT4XOA9dhoyCh6H7eb5L
+         ANV8v4KOEG6z6bdOpOBgEQmmE8+dDcR27lc9AdFs=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Wang Xuerui <wangxuerui@qiniu.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
+Cc:     Miaoqing Pan <miaoqing@codeaurora.org>,
+        Hou Bao Hou <houbao@codeaurora.org>,
+        Anilkumar Kolli <akolli@codeaurora.org>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>,
+        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 76/91] iwlwifi: mvm: fix unaligned read of rx_pkt_status
-Date:   Tue, 10 Dec 2019 17:30:20 -0500
-Message-Id: <20191210223035.14270-76-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 64/91] ath10k: fix get invalid tx rate for Mesh metric
+Date:   Tue, 10 Dec 2019 17:30:08 -0500
+Message-Id: <20191210223035.14270-64-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191210223035.14270-1-sashal@kernel.org>
 References: <20191210223035.14270-1-sashal@kernel.org>
@@ -61,48 +62,40 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Wang Xuerui <wangxuerui@qiniu.com>
+From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-[ Upstream commit c5aaa8be29b25dfe1731e9a8b19fd91b7b789ee3 ]
+[ Upstream commit 05a11003a56507023f18d3249a4d4d119c0a3e9c ]
 
-This is present since the introduction of iwlmvm.
-Example stack trace on MIPS:
+ath10k does not provide transmit rate info per MSDU
+in tx completion, mark that as -1 so mac80211
+will ignore the rates. This fixes mac80211 update Mesh
+link metric with invalid transmit rate info.
 
-[<ffffffffc0789328>] iwl_mvm_rx_rx_mpdu+0xa8/0xb88 [iwlmvm]
-[<ffffffffc0632b40>] iwl_pcie_rx_handle+0x420/0xc48 [iwlwifi]
+Tested HW: QCA9984
+Tested FW: 10.4-3.9.0.2-00035
 
-Tested with a Wireless AC 7265 for ~6 months, confirmed to fix the
-problem. No other unaligned accesses are spotted yet.
-
-Signed-off-by: Wang Xuerui <wangxuerui@qiniu.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Hou Bao Hou <houbao@codeaurora.org>
+Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
+Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/rx.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/txrx.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
-index b78e60eb600f1..d0aa4d0a5537e 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
-@@ -62,6 +62,7 @@
-  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-  *****************************************************************************/
-+#include <asm/unaligned.h>
- #include <linux/etherdevice.h>
- #include <linux/skbuff.h>
- #include "iwl-trans.h"
-@@ -289,7 +290,7 @@ void iwl_mvm_rx_rx_mpdu(struct iwl_mvm *mvm, struct napi_struct *napi,
- 	rx_res = (struct iwl_rx_mpdu_res_start *)pkt->data;
- 	hdr = (struct ieee80211_hdr *)(pkt->data + sizeof(*rx_res));
- 	len = le16_to_cpu(rx_res->byte_count);
--	rx_pkt_status = le32_to_cpup((__le32 *)
-+	rx_pkt_status = get_unaligned_le32((__le32 *)
- 		(pkt->data + sizeof(*rx_res) + len));
+diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
+index 9852c5d51139e..beeb6be06939b 100644
+--- a/drivers/net/wireless/ath/ath10k/txrx.c
++++ b/drivers/net/wireless/ath/ath10k/txrx.c
+@@ -99,6 +99,8 @@ int ath10k_txrx_tx_unref(struct ath10k_htt *htt,
  
- 	/* Dont use dev_alloc_skb(), we'll have enough headroom once
+ 	info = IEEE80211_SKB_CB(msdu);
+ 	memset(&info->status, 0, sizeof(info->status));
++	info->status.rates[0].idx = -1;
++
+ 	trace_ath10k_txrx_tx_unref(ar, tx_done->msdu_id);
+ 
+ 	if (tx_done->status == HTT_TX_COMPL_STATE_DISCARD) {
 -- 
 2.20.1
 
