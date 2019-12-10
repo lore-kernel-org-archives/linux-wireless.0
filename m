@@ -7,48 +7,48 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F3B5C43603
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 22:04:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA714C43603
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 22:04:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5F3E7208C3
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 22:04:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BFE932053B
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 22:04:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576015452;
-	bh=WQUmKw110NB9JpZMyTvISK/CN0wm7Sz1NdrAJ6v6Gvc=;
+	s=default; t=1576015478;
+	bh=P2JgUGrer2yYD0WPqYpwYVQcjrDbWfI66tP4Kc5bkUQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=brrlf0etqJh0Cou3P9UCkWqAvexYdio1LCn3WAPFiGc1Ka4hGNWrwgLOGAE6POkTo
-	 uc2pN9FXEForJAPr53PdHj5A4vIKfVqgAUVIz/IpA9pDkOEjA+/wq6jjdexFNjbn62
-	 amZAlXQK7oqq0iZgQU7qrKqUAwZECHolNnIzwtjU=
+	b=Ape9phi8ydCoavOFBhvb3E8xziNORIZzWYS8yaahGT3axhYpBnNVwiRDBN1IH0jWe
+	 /bLKpVQqDQGk/1nt6lMfHClSL/xSWDsstZ6aIEFC0+StNtoFyM2viriOnFV1vERGab
+	 hXZw1w8TdGrbXUt/GP6k7871fbA7cJlcgyL66lJg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728583AbfLJWEL (ORCPT
+        id S1728818AbfLJWEi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 10 Dec 2019 17:04:11 -0500
-Received: from mail.kernel.org ([198.145.29.99]:34756 "EHLO mail.kernel.org"
+        Tue, 10 Dec 2019 17:04:38 -0500
+Received: from mail.kernel.org ([198.145.29.99]:35570 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728541AbfLJWEJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Dec 2019 17:04:09 -0500
+        id S1727161AbfLJWEh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 10 Dec 2019 17:04:37 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 284462053B;
-        Tue, 10 Dec 2019 22:04:08 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 1081F20828;
+        Tue, 10 Dec 2019 22:04:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576015449;
-        bh=WQUmKw110NB9JpZMyTvISK/CN0wm7Sz1NdrAJ6v6Gvc=;
+        s=default; t=1576015476;
+        bh=P2JgUGrer2yYD0WPqYpwYVQcjrDbWfI66tP4Kc5bkUQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=0OBmG9hbOVt08noGgj18QIYcEedINQeGaYUgmEewkYqKvJH/A4fcSiHXDnltJVuXW
-         qY67IdXS+SLub79Kw741E9wN/13OKgr2UikldRZF0UiGfWcUo4+EvVd7T+B+5OSUod
-         GxOiN+Rdztm1ioYt0hqA8oFvYJmpDjcZKGqrjbqY=
+        b=gpA0mMyb4Uv81yGawCBV1duoF3wXebgXmvWINQmssNBO5Yxy34EQ8N0MDQgCiALmm
+         C/39MWL5JJ6kU2AP+BkOsZly+r2GYZcRwN4ywnRBEgd1uXAr4meuBmJBiCROdh78c0
+         1gy4tY70e3z4cODPXFVOeObqAi7XWogpDYwJkKiU=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Chris Chiu <chiu@endlessm.com>,
-        Jes Sorensen <Jes.Sorensen@gmail.com>,
+Cc:     Ping-Ke Shih <pkshih@realtek.com>,
+        Stefan Wahren <wahrenst@gmx.net>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 056/130] rtl8xxxu: fix RTL8723BU connection failure issue after warm reboot
-Date:   Tue, 10 Dec 2019 17:01:47 -0500
-Message-Id: <20191210220301.13262-56-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 081/130] rtlwifi: fix memory leak in rtl92c_set_fw_rsvdpagepkt()
+Date:   Tue, 10 Dec 2019 17:02:12 -0500
+Message-Id: <20191210220301.13262-81-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191210220301.13262-1-sashal@kernel.org>
 References: <20191210220301.13262-1-sashal@kernel.org>
@@ -61,71 +61,62 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Chris Chiu <chiu@endlessm.com>
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-[ Upstream commit 0eeb91ade90ce06d2fa1e2fcb55e3316b64c203c ]
+[ Upstream commit 5174f1e41074b5186608badc2e89441d021e8c08 ]
 
-The RTL8723BU has problems connecting to AP after each warm reboot.
-Sometimes it returns no scan result, and in most cases, it fails
-the authentication for unknown reason. However, it works totally
-fine after cold reboot.
+This leak was found by testing the EDIMAX EW-7612 on Raspberry Pi 3B+ with
+Linux 5.4-rc5 (multi_v7_defconfig + rtlwifi + kmemleak) and noticed a
+single memory leak during probe:
 
-Compare the value of register SYS_CR and SYS_CLK_MAC_CLK_ENABLE
-for cold reboot and warm reboot, the registers imply that the MAC
-is already powered and thus some procedures are skipped during
-driver initialization. Double checked the vendor driver, it reads
-the SYS_CR and SYS_CLK_MAC_CLK_ENABLE also but doesn't skip any
-during initialization based on them. This commit only tells the
-RTL8723BU to do full initialization without checking MAC status.
+unreferenced object 0xec13ee40 (size 176):
+  comm "kworker/u8:1", pid 36, jiffies 4294939321 (age 5580.790s)
+  hex dump (first 32 bytes):
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  backtrace:
+    [<fc1bbb3e>] __netdev_alloc_skb+0x9c/0x164
+    [<863dfa6e>] rtl92c_set_fw_rsvdpagepkt+0x254/0x340 [rtl8192c_common]
+    [<9572be0d>] rtl92cu_set_hw_reg+0xf48/0xfa4 [rtl8192cu]
+    [<116df4d8>] rtl_op_bss_info_changed+0x234/0x96c [rtlwifi]
+    [<8933575f>] ieee80211_bss_info_change_notify+0xb8/0x264 [mac80211]
+    [<d4061e86>] ieee80211_assoc_success+0x934/0x1798 [mac80211]
+    [<e55adb56>] ieee80211_rx_mgmt_assoc_resp+0x174/0x314 [mac80211]
+    [<5974629e>] ieee80211_sta_rx_queued_mgmt+0x3f4/0x7f0 [mac80211]
+    [<d91091c6>] ieee80211_iface_work+0x208/0x318 [mac80211]
+    [<ac5fcae4>] process_one_work+0x22c/0x564
+    [<f5e6d3b6>] worker_thread+0x44/0x5d8
+    [<82c7b073>] kthread+0x150/0x154
+    [<b43e1b7d>] ret_from_fork+0x14/0x2c
+    [<794dff30>] 0x0
 
-Signed-off-by: Chris Chiu <chiu@endlessm.com>
-Signed-off-by: Jes Sorensen <Jes.Sorensen@gmail.com>
+It is because 8192cu doesn't implement usb_cmd_send_packet(), and this
+patch just frees the skb within the function to resolve memleak problem
+by now. Since 8192cu doesn't turn on fwctrl_lps that needs to download
+command packet for firmware via the function, applying this patch doesn't
+affect driver behavior.
+
+Reported-by: Stefan Wahren <wahrenst@gmx.net>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h       | 1 +
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c | 1 +
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c  | 3 +++
- 3 files changed, 5 insertions(+)
+ drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-index 95e3993d8a331..a895b6fd6f858 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-@@ -1349,6 +1349,7 @@ struct rtl8xxxu_fileops {
- 	u8 has_s0s1:1;
- 	u8 has_tx_report:1;
- 	u8 gen2_thermal_meter:1;
-+	u8 needs_full_init:1;
- 	u32 adda_1t_init;
- 	u32 adda_1t_path_on;
- 	u32 adda_2t_path_on_a;
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c
-index c4b86a84a721d..27e97df996c73 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c
-@@ -1673,6 +1673,7 @@ struct rtl8xxxu_fileops rtl8723bu_fops = {
- 	.has_s0s1 = 1,
- 	.has_tx_report = 1,
- 	.gen2_thermal_meter = 1,
-+	.needs_full_init = 1,
- 	.adda_1t_init = 0x01c00014,
- 	.adda_1t_path_on = 0x01c00014,
- 	.adda_2t_path_on_a = 0x01c00014,
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index 91b01ca32e752..b58bf8e2cad2f 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -3905,6 +3905,9 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
- 	else
- 		macpower = true;
- 
-+	if (fops->needs_full_init)
-+		macpower = false;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
+index 530e80f0ef0b7..1ee7f796113bc 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
+@@ -1556,6 +1556,8 @@ static bool usb_cmd_send_packet(struct ieee80211_hw *hw, struct sk_buff *skb)
+    * This is maybe necessary:
+    * rtlpriv->cfg->ops->fill_tx_cmddesc(hw, buffer, 1, 1, skb);
+    */
++	dev_kfree_skb(skb);
 +
- 	ret = fops->power_on(priv);
- 	if (ret < 0) {
- 		dev_warn(dev, "%s: Failed power on\n", __func__);
+ 	return true;
+ }
+ 
 -- 
 2.20.1
 
