@@ -7,47 +7,48 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 965E8C2D0BF
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 22:40:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3D1EC00454
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 22:40:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 61D2720836
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 22:40:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9032520828
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 22:40:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576017602;
-	bh=ULxTam2otNaaWonWynVrKqVV4XDC6Gwut0SBXgEKT84=;
+	s=default; t=1576017636;
+	bh=+A2phvID+gqjmzb3uCb5NALuzM4a0PEWBErOw+JcLQo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=vlIwejg5Obsu54Iq1pRL18mrvkUCyiXljwUFOSl2/CBANt4ULrMKrcheTJ4pK+16z
-	 QFDYBgjxe7RQ6xgD7+I3s9mqPIX85tbmbhwvbLremUwhWTeuMBTVuFmynGEJ3hpbvJ
-	 EVZnSbDVN5S6+Xf02h5WcZrduhOPQGCGzJqiq0sg=
+	b=Dqr7WxhpVsjcgilF2WC2F6tsP7OKcolKRDVQr7stCy9bZm9M6EEFm39KYrEvlK4EX
+	 uoT5ZYw1CLHaM8cnkMDX8l6m23VuhbjAS67E3gEZB2l5SNyVe6Zkjw8I97ySs+S9l+
+	 rTYNNk69iXj6OjudVcAvEkpEX5GEjVp4r/RsecwU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730482AbfLJWjx (ORCPT
+        id S1729918AbfLJWk2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 10 Dec 2019 17:39:53 -0500
-Received: from mail.kernel.org ([198.145.29.99]:52654 "EHLO mail.kernel.org"
+        Tue, 10 Dec 2019 17:40:28 -0500
+Received: from mail.kernel.org ([198.145.29.99]:52452 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727790AbfLJWcQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Dec 2019 17:32:16 -0500
+        id S1729175AbfLJWcG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 10 Dec 2019 17:32:06 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 8C91920836;
-        Tue, 10 Dec 2019 22:32:14 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 9C49D21D7D;
+        Tue, 10 Dec 2019 22:32:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576017135;
-        bh=ULxTam2otNaaWonWynVrKqVV4XDC6Gwut0SBXgEKT84=;
+        s=default; t=1576017126;
+        bh=+A2phvID+gqjmzb3uCb5NALuzM4a0PEWBErOw+JcLQo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=NNfQybjW3euwMeFk6+mYi0MhFQwHsLBt24Kqzwmf5MXLL6UoPnTcKBd5TCX6F52tR
-         OfQYQxfD09i32N1JXygo9Ckonb+nDxjBV4qROsojmKgXaDfkv3lBCYEJzYHD2v+Ke7
-         6TP42AQn5fpi7bsZN88DuYtasd2zLzDzvBJB4nis=
+        b=DK+ErQLAUb4Z7XeXRxdEIzL6ALkCDAwGX9M4qdI3XGIp9aZVGN1BuyhB+s2Szb/TE
+         nveBSkl1jwPi41wCbx093IJ8n2T+hh+imVhzw6wpP1nsK0KgmciwHcQc7BhIvukt7o
+         I80vzMVLFoMKhlvgF0tp56eKRB+4V+2m24G6hLAI=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>,
+Cc:     Wang Xuerui <wangxuerui@qiniu.com>,
         Luca Coelho <luciano.coelho@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 83/91] iwlwifi: check kasprintf() return value
-Date:   Tue, 10 Dec 2019 17:30:27 -0500
-Message-Id: <20191210223035.14270-83-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 76/91] iwlwifi: mvm: fix unaligned read of rx_pkt_status
+Date:   Tue, 10 Dec 2019 17:30:20 -0500
+Message-Id: <20191210223035.14270-76-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191210223035.14270-1-sashal@kernel.org>
 References: <20191210223035.14270-1-sashal@kernel.org>
@@ -60,50 +61,48 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Wang Xuerui <wangxuerui@qiniu.com>
 
-[ Upstream commit 5974fbb5e10b018fdbe3c3b81cb4cc54e1105ab9 ]
+[ Upstream commit c5aaa8be29b25dfe1731e9a8b19fd91b7b789ee3 ]
 
-kasprintf() can fail, we should check the return value.
+This is present since the introduction of iwlmvm.
+Example stack trace on MIPS:
 
-Fixes: 5ed540aecc2a ("iwlwifi: use mac80211 throughput trigger")
-Fixes: 8ca151b568b6 ("iwlwifi: add the MVM driver")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+[<ffffffffc0789328>] iwl_mvm_rx_rx_mpdu+0xa8/0xb88 [iwlmvm]
+[<ffffffffc0632b40>] iwl_pcie_rx_handle+0x420/0xc48 [iwlwifi]
+
+Tested with a Wireless AC 7265 for ~6 months, confirmed to fix the
+problem. No other unaligned accesses are spotted yet.
+
+Signed-off-by: Wang Xuerui <wangxuerui@qiniu.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/dvm/led.c | 3 +++
- drivers/net/wireless/intel/iwlwifi/mvm/led.c | 3 +++
- 2 files changed, 6 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/mvm/rx.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/led.c b/drivers/net/wireless/intel/iwlwifi/dvm/led.c
-index 1bbd17ada9747..20e16c4239901 100644
---- a/drivers/net/wireless/intel/iwlwifi/dvm/led.c
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/led.c
-@@ -185,6 +185,9 @@ void iwl_leds_init(struct iwl_priv *priv)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
+index b78e60eb600f1..d0aa4d0a5537e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
+@@ -62,6 +62,7 @@
+  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  *****************************************************************************/
++#include <asm/unaligned.h>
+ #include <linux/etherdevice.h>
+ #include <linux/skbuff.h>
+ #include "iwl-trans.h"
+@@ -289,7 +290,7 @@ void iwl_mvm_rx_rx_mpdu(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 	rx_res = (struct iwl_rx_mpdu_res_start *)pkt->data;
+ 	hdr = (struct ieee80211_hdr *)(pkt->data + sizeof(*rx_res));
+ 	len = le16_to_cpu(rx_res->byte_count);
+-	rx_pkt_status = le32_to_cpup((__le32 *)
++	rx_pkt_status = get_unaligned_le32((__le32 *)
+ 		(pkt->data + sizeof(*rx_res) + len));
  
- 	priv->led.name = kasprintf(GFP_KERNEL, "%s-led",
- 				   wiphy_name(priv->hw->wiphy));
-+	if (!priv->led.name)
-+		return;
-+
- 	priv->led.brightness_set = iwl_led_brightness_set;
- 	priv->led.blink_set = iwl_led_blink_set;
- 	priv->led.max_brightness = 1;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/led.c b/drivers/net/wireless/intel/iwlwifi/mvm/led.c
-index 1e51fbe95f7c9..73c351a641875 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/led.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/led.c
-@@ -109,6 +109,9 @@ int iwl_mvm_leds_init(struct iwl_mvm *mvm)
- 
- 	mvm->led.name = kasprintf(GFP_KERNEL, "%s-led",
- 				   wiphy_name(mvm->hw->wiphy));
-+	if (!mvm->led.name)
-+		return -ENOMEM;
-+
- 	mvm->led.brightness_set = iwl_led_brightness_set;
- 	mvm->led.max_brightness = 1;
- 
+ 	/* Dont use dev_alloc_skb(), we'll have enough headroom once
 -- 
 2.20.1
 
