@@ -4,51 +4,50 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89243C43603
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 22:44:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DF34C43603
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 22:45:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5E6412077B
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 22:44:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 53B4020836
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 22:45:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576017898;
-	bh=Tot2xLvEJNbuTrMWA9fOxewwcqxG3Aa/rywOJS1Vi6w=;
+	s=default; t=1576017907;
+	bh=mqw6PVPrz8aX7WywNznPus2DoQhmJUuGlFdhOu5qNBk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=GZcl3WUJ6GLmAabj/kSeTwoJhKQYgXG7S0+HiNyXrYtoQ/SQmuAajLWr6jDUvXqnQ
-	 5Vs7CrHuzDF9GbokJEJChFC4cczUUBBkpl62wQMM7mAtpon8ph4l1r+0TG4qRagPMA
-	 io/svIQDomd+HmHZUGrEzSIGZDR0BIZFoUfHM+w8=
+	b=xSUZXbRp5Ss6b8Jnr2q7LrJwQ1x+S3kl9o8UqR+9FgSr+J9Zq6dKpsYjRZ36tOVta
+	 7PkV5IzWp6PprlP/RdMXl55NCBI+vwHTt3uLJ4O+KMLbNxomqgwkVF10Cx0IRMIfcb
+	 wF2ZK+Ib6UMll4bDir93swpcZtCRCAajXjhNYsVs=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727451AbfLJWox (ORCPT
+        id S1726532AbfLJWpG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 10 Dec 2019 17:44:53 -0500
-Received: from mail.kernel.org ([198.145.29.99]:50602 "EHLO mail.kernel.org"
+        Tue, 10 Dec 2019 17:45:06 -0500
+Received: from mail.kernel.org ([198.145.29.99]:50574 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727300AbfLJWas (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Dec 2019 17:30:48 -0500
+        id S1726841AbfLJWar (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 10 Dec 2019 17:30:47 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 601BD208C3;
-        Tue, 10 Dec 2019 22:30:47 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 407AC2077B;
+        Tue, 10 Dec 2019 22:30:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576017048;
-        bh=Tot2xLvEJNbuTrMWA9fOxewwcqxG3Aa/rywOJS1Vi6w=;
+        s=default; t=1576017047;
+        bh=mqw6PVPrz8aX7WywNznPus2DoQhmJUuGlFdhOu5qNBk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=OfmdakgJa6gqHY9RHKxYw1YZJsMvaQJ4UbPQIvKLic8DXyXbrKZUlpN7P87vt7pGm
-         v9ypPWxgemroBPjob9X+D/VV7UTaPE3UBEXZr1RA1hskcrlyoqh9DOrMzKGGLSUudi
-         RYUYSLHcIJooH6qpeVqzfK5ftz+E9Uv3n1SHMCSM=
+        b=0phECtdvk9z1ympaCRw6VDGMJGZg4UumL5fWyPKfbXji5lgTneLKklk2FZRw1T2sd
+         PPTU/qJolJk2jAzVdWYtSHNKkVVUH3Nd33MSSSRtasdJ4LFUPeAogHsm71ykK4AbkV
+         af2zE3Ssy3m7mMOsXSup0t72dTFNlAhehqQhU3z0=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Allen Pais <allen.pais@oracle.com>,
+Cc:     Navid Emamdoost <navid.emamdoost@gmail.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
-        libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 10/91] libertas: fix a potential NULL pointer dereference
-Date:   Tue, 10 Dec 2019 17:29:14 -0500
-Message-Id: <20191210223035.14270-10-sashal@kernel.org>
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.9 09/91] rtlwifi: prevent memory leak in rtl_usb_probe
+Date:   Tue, 10 Dec 2019 17:29:13 -0500
+Message-Id: <20191210223035.14270-9-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191210223035.14270-1-sashal@kernel.org>
 References: <20191210223035.14270-1-sashal@kernel.org>
@@ -61,43 +60,45 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Allen Pais <allen.pais@oracle.com>
+From: Navid Emamdoost <navid.emamdoost@gmail.com>
 
-[ Upstream commit 7da413a18583baaf35dd4a8eb414fa410367d7f2 ]
+[ Upstream commit 3f93616951138a598d930dcaec40f2bfd9ce43bb ]
 
-alloc_workqueue is not checked for errors and as a result,
-a potential NULL dereference could occur.
+In rtl_usb_probe if allocation for usb_data fails the allocated hw
+should be released. In addition the allocated rtlpriv->usb_data should
+be released on error handling path.
 
-Signed-off-by: Allen Pais <allen.pais@oracle.com>
+Signed-off-by: Navid Emamdoost <navid.emamdoost@gmail.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/marvell/libertas/if_sdio.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/net/wireless/realtek/rtlwifi/usb.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/marvell/libertas/if_sdio.c b/drivers/net/wireless/marvell/libertas/if_sdio.c
-index 06a57c7089920..44da911c9a1a8 100644
---- a/drivers/net/wireless/marvell/libertas/if_sdio.c
-+++ b/drivers/net/wireless/marvell/libertas/if_sdio.c
-@@ -1229,6 +1229,10 @@ static int if_sdio_probe(struct sdio_func *func,
- 
- 	spin_lock_init(&card->lock);
- 	card->workqueue = alloc_workqueue("libertas_sdio", WQ_MEM_RECLAIM, 0);
-+	if (unlikely(!card->workqueue)) {
-+		ret = -ENOMEM;
-+		goto err_queue;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/usb.c b/drivers/net/wireless/realtek/rtlwifi/usb.c
+index ae0c48f3c2bc0..1f02461de261c 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/usb.c
++++ b/drivers/net/wireless/realtek/rtlwifi/usb.c
+@@ -1088,8 +1088,10 @@ int rtl_usb_probe(struct usb_interface *intf,
+ 	rtlpriv->hw = hw;
+ 	rtlpriv->usb_data = kzalloc(RTL_USB_MAX_RX_COUNT * sizeof(u32),
+ 				    GFP_KERNEL);
+-	if (!rtlpriv->usb_data)
++	if (!rtlpriv->usb_data) {
++		ieee80211_free_hw(hw);
+ 		return -ENOMEM;
 +	}
- 	INIT_WORK(&card->packet_worker, if_sdio_host_to_card_worker);
- 	init_waitqueue_head(&card->pwron_waitq);
  
-@@ -1282,6 +1286,7 @@ static int if_sdio_probe(struct sdio_func *func,
- 	lbs_remove_card(priv);
- free:
- 	destroy_workqueue(card->workqueue);
-+err_queue:
- 	while (card->packets) {
- 		packet = card->packets;
- 		card->packets = card->packets->next;
+ 	/* this spin lock must be initialized early */
+ 	spin_lock_init(&rtlpriv->locks.usb_lock);
+@@ -1152,6 +1154,7 @@ int rtl_usb_probe(struct usb_interface *intf,
+ 	_rtl_usb_io_handler_release(hw);
+ 	usb_put_dev(udev);
+ 	complete(&rtlpriv->firmware_loading_complete);
++	kfree(rtlpriv->usb_data);
+ 	return -ENODEV;
+ }
+ EXPORT_SYMBOL(rtl_usb_probe);
 -- 
 2.20.1
 
