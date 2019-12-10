@@ -7,48 +7,48 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14DA0C00454
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:44:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23A72C43603
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:45:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D74FE20637
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:44:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E25E7205C9
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:45:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576014247;
-	bh=Zmqhn+gLHF4HZ1l6ptap/Srkv2xAvfXDEkW1pu0VASY=;
+	s=default; t=1576014301;
+	bh=6dDZlLJabpaFWVavo13WgD21iX5wDRXvM127fEcD6vg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=0Xqx94BPj+iSuZLmipYxibfrKOBHI94p+LD+t/qCXWhD+bfYbJwFYAi4NykFi+u0T
-	 MUxy5FDDi/ilU3e4XbvMp90Zql1YyNMhWsJezDVgA75ZXJb3Eh1iaSroypQ954cfan
-	 uSjTb2cFiYFKYUcW4aghY2v2+K1WjgAjs5xAtfis=
+	b=TAZM242XqN0YMfkhw4L6Ue2+NNipZtBD1D+U5zp0yIuqMtlwYBxUkP2hi+yRE0V01
+	 G3byU026kQY0cfISMlwRYqKKQH3AuSq1m+VsNwZvQUvkztLwNbe+3zTfEGHez6yJLa
+	 1BvQ3G3eJuNm+PgNqM9nKQYSWIVYFFiM2/sO0S4c=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729833AbfLJVoD (ORCPT
+        id S1729647AbfLJVdJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 10 Dec 2019 16:44:03 -0500
-Received: from mail.kernel.org ([198.145.29.99]:37804 "EHLO mail.kernel.org"
+        Tue, 10 Dec 2019 16:33:09 -0500
+Received: from mail.kernel.org ([198.145.29.99]:37156 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728196AbfLJVd2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Dec 2019 16:33:28 -0500
+        id S1728126AbfLJVdH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 10 Dec 2019 16:33:07 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 09A2A24655;
-        Tue, 10 Dec 2019 21:33:26 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 620CD214D8;
+        Tue, 10 Dec 2019 21:33:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576013607;
-        bh=Zmqhn+gLHF4HZ1l6ptap/Srkv2xAvfXDEkW1pu0VASY=;
+        s=default; t=1576013587;
+        bh=6dDZlLJabpaFWVavo13WgD21iX5wDRXvM127fEcD6vg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=XhH1yKWIe7HbPDIZHXBcQVglSmsN1tR+G6G5i2kk1QcXGKIDhpTE7PfliqpGDCUe+
-         2YGfpDszWC3wvOUrgmAevVzSm+EIt0ig1gZI/u3p5jxka7jhMtV6diTdUAt0QnGqke
-         GH9YzQBtdT87B0/nXQBvIGUe5mBie334QIGvtvxM=
+        b=dMJjqLigtjro3cRUxyb/rfqCug96DZSxzvleF73JlpHeCHmKfRWWSfXoMSB/O+q5r
+         Fv/TrVSuCHBxnj3UPY3HvLPpEdfPryr+M7CUHGDk6Nto3DUQ+c1cwaSeE4HrF6DRUk
+         DMHXoZT+0zuGtDpZIfFyB83um75JHkJvJ2oj/W0k=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Niklas Cassel <niklas.cassel@linaro.org>,
+Cc:     Navid Emamdoost <navid.emamdoost@gmail.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
+        Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 054/177] ath10k: Correct error handling of dma_map_single()
-Date:   Tue, 10 Dec 2019 16:30:18 -0500
-Message-Id: <20191210213221.11921-54-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 038/177] mwifiex: pcie: Fix memory leak in mwifiex_pcie_init_evt_ring
+Date:   Tue, 10 Dec 2019 16:30:02 -0500
+Message-Id: <20191210213221.11921-38-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191210213221.11921-1-sashal@kernel.org>
 References: <20191210213221.11921-1-sashal@kernel.org>
@@ -61,42 +61,40 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
+From: Navid Emamdoost <navid.emamdoost@gmail.com>
 
-[ Upstream commit d43810b2c1808ac865aa1a2a2c291644bf95345c ]
+[ Upstream commit d10dcb615c8e29d403a24d35f8310a7a53e3050c ]
 
-The return value of dma_map_single() should be checked for errors using
-dma_mapping_error() and the skb has been dequeued so it needs to be
-freed.
+In mwifiex_pcie_init_evt_ring, a new skb is allocated which should be
+released if mwifiex_map_pci_memory() fails. The release for skb and
+card->evtbd_ring_vbase is added.
 
-This was found when enabling CONFIG_DMA_API_DEBUG and it warned about the
-missing dma_mapping_error() call.
-
-Fixes: 1807da49733e ("ath10k: wmi: add management tx by reference support over wmi")
-Reported-by: Niklas Cassel <niklas.cassel@linaro.org>
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+Fixes: 0732484b47b5 ("mwifiex: separate ring initialization and ring creation routines")
+Signed-off-by: Navid Emamdoost <navid.emamdoost@gmail.com>
+Acked-by: Ganapathi Bhat <gbhat@marvell.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 174e0ce31c42b..448e3a8c33a6d 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3844,8 +3844,10 @@ void ath10k_mgmt_over_wmi_tx_work(struct work_struct *work)
- 			     ar->running_fw->fw_file.fw_features)) {
- 			paddr = dma_map_single(ar->dev, skb->data,
- 					       skb->len, DMA_TO_DEVICE);
--			if (!paddr)
-+			if (dma_mapping_error(ar->dev, paddr)) {
-+				ieee80211_free_txskb(ar->hw, skb);
- 				continue;
-+			}
- 			ret = ath10k_wmi_mgmt_tx_send(ar, skb, paddr);
- 			if (ret) {
- 				ath10k_warn(ar, "failed to transmit management frame by ref via WMI: %d\n",
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index 3fe81b2a929ac..918c699365402 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -691,8 +691,11 @@ static int mwifiex_pcie_init_evt_ring(struct mwifiex_adapter *adapter)
+ 		skb_put(skb, MAX_EVENT_SIZE);
+ 
+ 		if (mwifiex_map_pci_memory(adapter, skb, MAX_EVENT_SIZE,
+-					   PCI_DMA_FROMDEVICE))
++					   PCI_DMA_FROMDEVICE)) {
++			kfree_skb(skb);
++			kfree(card->evtbd_ring_vbase);
+ 			return -1;
++		}
+ 
+ 		buf_pa = MWIFIEX_SKB_DMA_ADDR(skb);
+ 
 -- 
 2.20.1
 
