@@ -7,50 +7,51 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E278C43603
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:46:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33F96C3F68F
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:48:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 686A920836
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:46:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0938F205C9
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:48:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576014412;
-	bh=cYhdYbZ2C62QFsCV3vUPORDRy2TMMCi6obS4+mAyaXU=;
+	s=default; t=1576014491;
+	bh=DpWi6ezc5UrqjllVnRmWxaAxXBRUJq+N0u534sJ4NT4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=FME2Rz9BcOVMqVAZzskmupMEohI5QwK9OjGzyLqkFshl8v0G8MphWuin9arVKFCM3
-	 pnld8W5Of1z27cBzRVdFiXwhbukxOKrZx5/i39xq+rycpJhGswoMCDVqnwgx8z8L04
-	 rOOwstMLjBbfMfSYW9Mf2CFK4NCONZOUG3LgHSJw=
+	b=gcwpFoBpQC6JlPzOOvBSdFRVfZM8hE0wkv3p9scv0UvnFIOjzJ/FlibFLgdndig2n
+	 rzuosKf8CsMFkJND8bDSV8utFhTgupHJR9qmJu/Kl4iqoClI426JeOJhwgApJlf86n
+	 /Gpd2tWbxcjT/YFn8BrT6UcAEHzCgyd164kyywg8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729037AbfLJVcg (ORCPT
+        id S1728036AbfLJVJF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 10 Dec 2019 16:32:36 -0500
-Received: from mail.kernel.org ([198.145.29.99]:36206 "EHLO mail.kernel.org"
+        Tue, 10 Dec 2019 16:09:05 -0500
+Received: from mail.kernel.org ([198.145.29.99]:57038 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727865AbfLJVcg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Dec 2019 16:32:36 -0500
+        id S1727555AbfLJVJD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 10 Dec 2019 16:09:03 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 854FA207FF;
-        Tue, 10 Dec 2019 21:32:34 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 91C0A2469E;
+        Tue, 10 Dec 2019 21:09:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576013555;
-        bh=cYhdYbZ2C62QFsCV3vUPORDRy2TMMCi6obS4+mAyaXU=;
+        s=default; t=1576012142;
+        bh=DpWi6ezc5UrqjllVnRmWxaAxXBRUJq+N0u534sJ4NT4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=X6Uxk2m6LE3ARTcRyUIGE/JDp7McbXwd7MnfgwWoFFqeDWJRviSn9ZtciPO/16kQX
-         WN7q9P/gFTU6SqSD+Nd82IVNXJVygEb3zYGOTH+JGD15jVy9m3gSuchQ4+DbnCigod
-         6d0MZYZeosom3ZvQoO+3bk2T80iPrjPAvyycZByo=
+        b=DhKitbBzyZfIWkq4nG3dHl/RYY0iN43FzIlPyBMkIGkX8ytsRJZLd1mi+c7J1DLAI
+         0mJvocEd8AqULRXClo3wA2KgMPugoNTy2rEqDLzdMEuu3x6qmmPU5zqnovBPVF6vqk
+         FBIvWgg0NMA22wibg+D0MxjCQzuOpnRYiagpxYKs=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Navid Emamdoost <navid.emamdoost@gmail.com>,
+Cc:     Ping-Ke Shih <pkshih@realtek.com>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 011/177] rtlwifi: prevent memory leak in rtl_usb_probe
-Date:   Tue, 10 Dec 2019 16:29:35 -0500
-Message-Id: <20191210213221.11921-11-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 107/350] rtw88: coex: Set 4 slot mode for A2DP
+Date:   Tue, 10 Dec 2019 16:03:32 -0500
+Message-Id: <20191210210735.9077-68-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191210213221.11921-1-sashal@kernel.org>
-References: <20191210213221.11921-1-sashal@kernel.org>
+In-Reply-To: <20191210210735.9077-1-sashal@kernel.org>
+References: <20191210210735.9077-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -60,45 +61,125 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Navid Emamdoost <navid.emamdoost@gmail.com>
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-[ Upstream commit 3f93616951138a598d930dcaec40f2bfd9ce43bb ]
+[ Upstream commit 12078aae453556a88fb46777b7cc5fc97f867b7c ]
 
-In rtl_usb_probe if allocation for usb_data fails the allocated hw
-should be released. In addition the allocated rtlpriv->usb_data should
-be released on error handling path.
+With shallow buffer size, certain BT devices have active
+A2DP flow control to fill buffer frequently. If the slot
+is not at BT side, data can't be sent successfully to BT
+devices, and will cause audio glitch.
 
-Signed-off-by: Navid Emamdoost <navid.emamdoost@gmail.com>
+To resolve this issue, this commit splits TUs into 4-slots
+instead of 2-slot for all of the A2DP related coexistence
+strategies. That makes BT have higher opportunity to fill
+the A2DP buffer in time, and the audio quality could be
+more stable and smooth.
+
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/realtek/rtlwifi/usb.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtw88/coex.c | 24 ++++++++++++++---------
+ 1 file changed, 15 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/usb.c b/drivers/net/wireless/realtek/rtlwifi/usb.c
-index 5adb939afee88..1181b725f5033 100644
---- a/drivers/net/wireless/realtek/rtlwifi/usb.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/usb.c
-@@ -1050,8 +1050,10 @@ int rtl_usb_probe(struct usb_interface *intf,
- 	rtlpriv->hw = hw;
- 	rtlpriv->usb_data = kcalloc(RTL_USB_MAX_RX_COUNT, sizeof(u32),
- 				    GFP_KERNEL);
--	if (!rtlpriv->usb_data)
-+	if (!rtlpriv->usb_data) {
-+		ieee80211_free_hw(hw);
- 		return -ENOMEM;
-+	}
+diff --git a/drivers/net/wireless/realtek/rtw88/coex.c b/drivers/net/wireless/realtek/rtw88/coex.c
+index 793b40bdbf7cc..3e95ad1989123 100644
+--- a/drivers/net/wireless/realtek/rtw88/coex.c
++++ b/drivers/net/wireless/realtek/rtw88/coex.c
+@@ -1308,6 +1308,7 @@ static void rtw_coex_action_bt_inquiry(struct rtw_dev *rtwdev)
+ 	struct rtw_chip_info *chip = rtwdev->chip;
+ 	bool wl_hi_pri = false;
+ 	u8 table_case, tdma_case;
++	u32 slot_type = 0;
  
- 	/* this spin lock must be initialized early */
- 	spin_lock_init(&rtlpriv->locks.usb_lock);
-@@ -1112,6 +1114,7 @@ int rtl_usb_probe(struct usb_interface *intf,
- 	_rtl_usb_io_handler_release(hw);
- 	usb_put_dev(udev);
- 	complete(&rtlpriv->firmware_loading_complete);
-+	kfree(rtlpriv->usb_data);
- 	return -ENODEV;
+ 	if (coex_stat->wl_linkscan_proc || coex_stat->wl_hi_pri_task1 ||
+ 	    coex_stat->wl_hi_pri_task2)
+@@ -1318,14 +1319,16 @@ static void rtw_coex_action_bt_inquiry(struct rtw_dev *rtwdev)
+ 		if (wl_hi_pri) {
+ 			table_case = 15;
+ 			if (coex_stat->bt_a2dp_exist &&
+-			    !coex_stat->bt_pan_exist)
++			    !coex_stat->bt_pan_exist) {
++				slot_type = TDMA_4SLOT;
+ 				tdma_case = 11;
+-			else if (coex_stat->wl_hi_pri_task1)
++			} else if (coex_stat->wl_hi_pri_task1) {
+ 				tdma_case = 6;
+-			else if (!coex_stat->bt_page)
++			} else if (!coex_stat->bt_page) {
+ 				tdma_case = 8;
+-			else
++			} else {
+ 				tdma_case = 9;
++			}
+ 		} else if (coex_stat->wl_connected) {
+ 			table_case = 10;
+ 			tdma_case = 10;
+@@ -1361,7 +1364,7 @@ static void rtw_coex_action_bt_inquiry(struct rtw_dev *rtwdev)
+ 	rtw_coex_set_ant_path(rtwdev, false, COEX_SET_ANT_2G);
+ 	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
+ 	rtw_coex_table(rtwdev, table_case);
+-	rtw_coex_tdma(rtwdev, false, tdma_case);
++	rtw_coex_tdma(rtwdev, false, tdma_case | slot_type);
  }
- EXPORT_SYMBOL(rtl_usb_probe);
+ 
+ static void rtw_coex_action_bt_hfp(struct rtw_dev *rtwdev)
+@@ -1475,13 +1478,13 @@ static void rtw_coex_action_bt_a2dp(struct rtw_dev *rtwdev)
+ 
+ 	if (efuse->share_ant) {
+ 		/* Shared-Ant */
++		slot_type = TDMA_4SLOT;
++
+ 		if (coex_stat->wl_gl_busy && coex_stat->wl_noisy_level == 0)
+ 			table_case = 10;
+ 		else
+ 			table_case = 9;
+ 
+-		slot_type = TDMA_4SLOT;
+-
+ 		if (coex_stat->wl_gl_busy)
+ 			tdma_case = 13;
+ 		else
+@@ -1585,13 +1588,14 @@ static void rtw_coex_action_bt_a2dp_hid(struct rtw_dev *rtwdev)
+ 
+ 	if (efuse->share_ant) {
+ 		/* Shared-Ant */
++		slot_type = TDMA_4SLOT;
++
+ 		if (coex_stat->bt_ble_exist)
+ 			table_case = 26;
+ 		else
+ 			table_case = 9;
+ 
+ 		if (coex_stat->wl_gl_busy) {
+-			slot_type = TDMA_4SLOT;
+ 			tdma_case = 13;
+ 		} else {
+ 			tdma_case = 14;
+@@ -1794,10 +1798,12 @@ static void rtw_coex_action_wl_linkscan(struct rtw_dev *rtwdev)
+ 	struct rtw_efuse *efuse = &rtwdev->efuse;
+ 	struct rtw_chip_info *chip = rtwdev->chip;
+ 	u8 table_case, tdma_case;
++	u32 slot_type = 0;
+ 
+ 	if (efuse->share_ant) {
+ 		/* Shared-Ant */
+ 		if (coex_stat->bt_a2dp_exist) {
++			slot_type = TDMA_4SLOT;
+ 			table_case = 9;
+ 			tdma_case = 11;
+ 		} else {
+@@ -1818,7 +1824,7 @@ static void rtw_coex_action_wl_linkscan(struct rtw_dev *rtwdev)
+ 	rtw_coex_set_ant_path(rtwdev, true, COEX_SET_ANT_2G);
+ 	rtw_coex_set_rf_para(rtwdev, chip->wl_rf_para_rx[0]);
+ 	rtw_coex_table(rtwdev, table_case);
+-	rtw_coex_tdma(rtwdev, false, tdma_case);
++	rtw_coex_tdma(rtwdev, false, tdma_case | slot_type);
+ }
+ 
+ static void rtw_coex_action_wl_not_connected(struct rtw_dev *rtwdev)
 -- 
 2.20.1
 
