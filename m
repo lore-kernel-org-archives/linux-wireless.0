@@ -6,35 +6,33 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D16EC43603
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 14:22:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2279AC00454
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 14:22:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2F1EB2073B
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 14:22:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 02CD02073B
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 14:22:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727359AbfLJOWy (ORCPT
+        id S1727345AbfLJOWy (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Tue, 10 Dec 2019 09:22:54 -0500
-Received: from smail.rz.tu-ilmenau.de ([141.24.186.67]:44890 "EHLO
+Received: from smail.rz.tu-ilmenau.de ([141.24.186.67]:44887 "EHLO
         smail.rz.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727295AbfLJOWy (ORCPT
+        with ESMTP id S1727178AbfLJOWy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 10 Dec 2019 09:22:54 -0500
 Received: from isengard.tu-ilmenau.de (unknown [141.24.207.101])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by smail.rz.tu-ilmenau.de (Postfix) with ESMTPSA id C6077580073;
+        by smail.rz.tu-ilmenau.de (Postfix) with ESMTPSA id B68B158006E;
         Tue, 10 Dec 2019 15:22:52 +0100 (CET)
 From:   Markus Theil <markus.theil@tu-ilmenau.de>
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
         Markus Theil <markus.theil@tu-ilmenau.de>
-Subject: [PATCH 2/2] iw: event: add set interface command
-Date:   Tue, 10 Dec 2019 15:22:45 +0100
-Message-Id: <20191210142245.13972-2-markus.theil@tu-ilmenau.de>
+Subject: [PATCH 1/2] iw: event: add new peer candidate command
+Date:   Tue, 10 Dec 2019 15:22:44 +0100
+Message-Id: <20191210142245.13972-1-markus.theil@tu-ilmenau.de>
 X-Mailer: git-send-email 2.24.0
-In-Reply-To: <20191210142245.13972-1-markus.theil@tu-ilmenau.de>
-References: <20191210142245.13972-1-markus.theil@tu-ilmenau.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -42,57 +40,34 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This patch adds support for CMD_SET_INTERFACE which is called
-when switching to mesh or ap mode.
+This patch prints information about mesh peering candidates.
 
 Signed-off-by: Markus Theil <markus.theil@tu-ilmenau.de>
 ---
- event.c | 44 ++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 44 insertions(+)
+ event.c | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
 
 diff --git a/event.c b/event.c
-index f17e78e..0cedeb9 100644
+index 4a932d1..f17e78e 100644
 --- a/event.c
 +++ b/event.c
-@@ -668,6 +668,46 @@ static void parse_new_peer_candidate(struct nlattr **attrs)
+@@ -650,6 +650,24 @@ static void parse_nan_match(struct nlattr **attrs)
  	printf("\n");
  }
  
-+static void parse_set_interface(struct nlattr **attrs)
++static void parse_new_peer_candidate(struct nlattr **attrs)
 +{
-+	printf("set interface");
++	char macbuf[ETH_ALEN * 3];
++	int32_t sig_dbm;
 +
-+	if (attrs[NL80211_ATTR_IFTYPE]) {
-+		printf(" type ");
-+		switch (nla_get_u32(attrs[NL80211_ATTR_IFTYPE])) {
-+		case NL80211_IFTYPE_STATION:
-+			printf("station");
-+			break;
-+		case NL80211_IFTYPE_AP:
-+			printf("access point");
-+			break;
-+		case NL80211_IFTYPE_MESH_POINT:
-+			printf("mesh point");
-+			break;
-+		case NL80211_IFTYPE_ADHOC:
-+			printf("ad-hoc");
-+			break;
-+		case NL80211_IFTYPE_MONITOR:
-+			printf("monitor");
-+			break;
-+		default:
-+			printf("unknown");
-+		}
++	printf("new peer candidate");
++	if (attrs[NL80211_ATTR_MAC]) {
++		mac_addr_n2a(macbuf, nla_data(attrs[NL80211_ATTR_MAC]));
++		printf(" %s", macbuf);
 +	}
-+
-+	if (attrs[NL80211_ATTR_MESH_ID]) {
-+		printf(" meshid ");
-+		print_ssid_escaped(nla_len(attrs[NL80211_ATTR_MESH_ID]),
-+				   nla_data(attrs[NL80211_ATTR_MESH_ID]));
-+	}
-+
-+	if (attrs[NL80211_ATTR_4ADDR]) {
-+		printf(" use 4addr %i", nla_get_u8(attrs[NL80211_ATTR_4ADDR]));
++	if (attrs[NL80211_ATTR_RX_SIGNAL_DBM]) {
++		sig_dbm = nla_get_u32(attrs[NL80211_ATTR_RX_SIGNAL_DBM]);
++		printf(" %i dBm", sig_dbm);
 +	}
 +
 +	printf("\n");
@@ -101,12 +76,12 @@ index f17e78e..0cedeb9 100644
  static int print_event(struct nl_msg *msg, void *arg)
  {
  	struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));
-@@ -1011,6 +1051,10 @@ static int print_event(struct nl_msg *msg, void *arg)
- 		parse_new_peer_candidate(tb);
+@@ -989,6 +1007,10 @@ static int print_event(struct nl_msg *msg, void *arg)
+ 		parse_nan_match(tb);
  		break;
  	}
-+	case NL80211_CMD_SET_INTERFACE: {
-+		parse_set_interface(tb);
++	case NL80211_CMD_NEW_PEER_CANDIDATE: {
++		parse_new_peer_candidate(tb);
 +		break;
 +	}
  	default:
