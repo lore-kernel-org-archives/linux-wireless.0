@@ -7,49 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62309C43603
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 22:07:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46653C00454
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 22:09:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2C71520838
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 22:07:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1C49A207FF
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 22:09:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576015679;
-	bh=bUapwW9hxA9yG13dhWbibDtVoEwpmtvoM5yQzER5YyQ=;
+	s=default; t=1576015751;
+	bh=49bS9orNd3ZL4raZ9exAir3QWp/udIrIFkNDQ3sgHVk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Fp1ezNtGhH84zxyuaQIHgyXfI5XzMQVz4URgGxV64O/F1LWdYXxwz2hw3WigY/+w+
-	 PGUE4KNld+IC4xnWdl4WaWbZrxBlzFrIXSvgEjypna1bwE+gS9U4Wre4WYQ4K+NiFp
-	 lsIpM0RY3TPylfdekYhf5C5CIJEh/b8tyfWfQE/Y=
+	b=DKUWPMjr43CI03/UquLKkCnRbY0Ogoq0H03a6jPAZ+hplBIw/YCwdUpEC9ArmJTsB
+	 4wDbn6LlHirLo077/gBIkTEiUNV8QTOb4iWkgeuZkjGdANFbUx8r6WSnfkPyb9/FYX
+	 0Rrqpd7Y91VzaWHWmY+BctzKgkbxXqWI2maTZ2FU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729294AbfLJWE7 (ORCPT
+        id S1728972AbfLJWJG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 10 Dec 2019 17:04:59 -0500
-Received: from mail.kernel.org ([198.145.29.99]:36076 "EHLO mail.kernel.org"
+        Tue, 10 Dec 2019 17:09:06 -0500
+Received: from mail.kernel.org ([198.145.29.99]:35488 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729262AbfLJWE5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Dec 2019 17:04:57 -0500
+        id S1728925AbfLJWEd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 10 Dec 2019 17:04:33 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3330622B48;
-        Tue, 10 Dec 2019 22:04:56 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id C72F621D7D;
+        Tue, 10 Dec 2019 22:04:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576015497;
-        bh=bUapwW9hxA9yG13dhWbibDtVoEwpmtvoM5yQzER5YyQ=;
+        s=default; t=1576015472;
+        bh=49bS9orNd3ZL4raZ9exAir3QWp/udIrIFkNDQ3sgHVk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=YNbm2k1Lq9k0015M3DX8Me4Y/mBfil00atsH1qIzv9jg0tpVooqlDmIIRJPdVx3Mz
-         s0JzBP0PtfpNCmJimfI0py4YPEicn2O5csEqCwkRvWdfqNoO/BNJT/CW1VlLpOCGpL
-         RrSI31T/g0guPdzkM8T+apLL7JxuyoOmyetkuiW4=
+        b=lKLkdBdzibz5F27Y6USdiTR9LU+EU0wXgVMJp2t9ZCfb9eEs1oRb7CBEwIDHouSL/
+         h4tkGfvN50kF/xRhUSfA/QvVkr7gAtCBQaXw+Xur/DMOitzjL1QuWW64eyc+pP091J
+         5MHo9ZpRyQzJUNYH4fV7vrfN6RJ+wYSA5n++MN4U=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Miaoqing Pan <miaoqing@codeaurora.org>,
-        Hou Bao Hou <houbao@codeaurora.org>,
-        Anilkumar Kolli <akolli@codeaurora.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
+Cc:     Marcel Holtmann <marcel@holtmann.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 097/130] ath10k: fix get invalid tx rate for Mesh metric
-Date:   Tue, 10 Dec 2019 17:02:28 -0500
-Message-Id: <20191210220301.13262-97-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 077/130] rfkill: allocate static minor
+Date:   Tue, 10 Dec 2019 17:02:08 -0500
+Message-Id: <20191210220301.13262-77-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191210220301.13262-1-sashal@kernel.org>
 References: <20191210220301.13262-1-sashal@kernel.org>
@@ -62,40 +60,66 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Miaoqing Pan <miaoqing@codeaurora.org>
+From: Marcel Holtmann <marcel@holtmann.org>
 
-[ Upstream commit 05a11003a56507023f18d3249a4d4d119c0a3e9c ]
+[ Upstream commit 8670b2b8b029a6650d133486be9d2ace146fd29a ]
 
-ath10k does not provide transmit rate info per MSDU
-in tx completion, mark that as -1 so mac80211
-will ignore the rates. This fixes mac80211 update Mesh
-link metric with invalid transmit rate info.
+udev has a feature of creating /dev/<node> device-nodes if it finds
+a devnode:<node> modalias. This allows for auto-loading of modules that
+provide the node. This requires to use a statically allocated minor
+number for misc character devices.
 
-Tested HW: QCA9984
-Tested FW: 10.4-3.9.0.2-00035
+However, rfkill uses dynamic minor numbers and prevents auto-loading
+of the module. So allocate the next static misc minor number and use
+it for rfkill.
 
-Signed-off-by: Hou Bao Hou <houbao@codeaurora.org>
-Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
-Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Signed-off-by: Marcel Holtmann <marcel@holtmann.org>
+Link: https://lore.kernel.org/r/20191024174042.19851-1-marcel@holtmann.org
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath10k/txrx.c | 2 ++
- 1 file changed, 2 insertions(+)
+ include/linux/miscdevice.h | 1 +
+ net/rfkill/core.c          | 9 +++++++--
+ 2 files changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
-index d4986f626c35c..9999c8c40269d 100644
---- a/drivers/net/wireless/ath/ath10k/txrx.c
-+++ b/drivers/net/wireless/ath/ath10k/txrx.c
-@@ -100,6 +100,8 @@ int ath10k_txrx_tx_unref(struct ath10k_htt *htt,
+diff --git a/include/linux/miscdevice.h b/include/linux/miscdevice.h
+index 4de703d9e21f0..5e1e50b8f8c47 100644
+--- a/include/linux/miscdevice.h
++++ b/include/linux/miscdevice.h
+@@ -56,6 +56,7 @@
+ #define UHID_MINOR		239
+ #define USERIO_MINOR		240
+ #define VHOST_VSOCK_MINOR	241
++#define RFKILL_MINOR		242
+ #define MISC_DYNAMIC_MINOR	255
  
- 	info = IEEE80211_SKB_CB(msdu);
- 	memset(&info->status, 0, sizeof(info->status));
-+	info->status.rates[0].idx = -1;
+ struct device;
+diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+index 2064c3a35ef84..99a2e55b01cf3 100644
+--- a/net/rfkill/core.c
++++ b/net/rfkill/core.c
+@@ -1312,10 +1312,12 @@ static const struct file_operations rfkill_fops = {
+ 	.llseek		= no_llseek,
+ };
+ 
++#define RFKILL_NAME "rfkill"
 +
- 	trace_ath10k_txrx_tx_unref(ar, tx_done->msdu_id);
+ static struct miscdevice rfkill_miscdev = {
+-	.name	= "rfkill",
+ 	.fops	= &rfkill_fops,
+-	.minor	= MISC_DYNAMIC_MINOR,
++	.name	= RFKILL_NAME,
++	.minor	= RFKILL_MINOR,
+ };
  
- 	if (tx_done->status == HTT_TX_COMPL_STATE_DISCARD) {
+ static int __init rfkill_init(void)
+@@ -1367,3 +1369,6 @@ static void __exit rfkill_exit(void)
+ 	class_unregister(&rfkill_class);
+ }
+ module_exit(rfkill_exit);
++
++MODULE_ALIAS_MISCDEV(RFKILL_MINOR);
++MODULE_ALIAS("devname:" RFKILL_NAME);
 -- 
 2.20.1
 
