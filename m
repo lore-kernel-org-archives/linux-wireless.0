@@ -4,51 +4,51 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E651C2D0BF
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:08:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20933C43603
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:10:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0AC9C24697
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:08:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E0517246AC
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:10:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576012105;
-	bh=5RDcdL9nP4ljtIUpcSkmNi+8pSen4AGvp7wTQ7l28bs=;
+	s=default; t=1576012206;
+	bh=jTpiUlKsyB/ccCAr0py+oekD/sHAUrfYfWldZKhQytQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=hawpebGnp6RDezQrlENsgGh/+i5Ht7a7n80SJPQqqCKAnKYmkxEHb6oXBlKfBpLR8
-	 wzSolXZ33MCebJVguPO1t3aP394wxGjXwi0eWr9KGiJU71O6lDt8p2evvjmZ8y54tm
-	 TZRdGIcsHd8ZNnxHru4oynBeI+ivt7800dLtTWvs=
+	b=kYNNwmfOozIugE8SWB7+feA9QT9b2QMGW36s8+ERmH5XtsuQR7KkDb78rVPkMcFyW
+	 5Mw+FDvPp2HzVdlcbau0w2JkE+xCdwmem+4W6ISvv2KbsP/E+DXBGaAMxZQWDE9hts
+	 U+r4/3vmx8R648BnlWpKsC90II5FKdjUvrkJ5gH0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727848AbfLJVIY (ORCPT
+        id S1728357AbfLJVKE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 10 Dec 2019 16:08:24 -0500
-Received: from mail.kernel.org ([198.145.29.99]:55724 "EHLO mail.kernel.org"
+        Tue, 10 Dec 2019 16:10:04 -0500
+Received: from mail.kernel.org ([198.145.29.99]:59370 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727113AbfLJVIW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Dec 2019 16:08:22 -0500
+        id S1728351AbfLJVKD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 10 Dec 2019 16:10:03 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 67CFF24697;
-        Tue, 10 Dec 2019 21:08:21 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 72327246A4;
+        Tue, 10 Dec 2019 21:10:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576012102;
-        bh=5RDcdL9nP4ljtIUpcSkmNi+8pSen4AGvp7wTQ7l28bs=;
+        s=default; t=1576012202;
+        bh=jTpiUlKsyB/ccCAr0py+oekD/sHAUrfYfWldZKhQytQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=L9Mnw09RG5K2zAwYTuUund79gwKyOgr/oToDiBmptS+3Fu2djfutIISLyiffs3++D
-         n+EMFiBkwI1PdFzgVOacbxLjdjW/Tjx/zntZV2FsFZUwvXJFhl4Bi00j89bdAjqx02
-         jhPNB/kgsCJfOxr0KcKoVgoG0f1f+go7Pzruu2qM=
+        b=S5S6Vkbrfe3foMZUaOFNqxo9GIRqiEZ5yUoqdjT7hADF4BXuQtRzo5xohxd7+PQR9
+         K4bALqV3/3ERnXl8+g4jbZuFjGq6YgWMGTih+Vp+8Z606ey0sRV4+ahkmBdqx7lMQy
+         +jnCDpqEovf/grBGJ8Osl3hquoA+Njx+tNjBdoC8=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Navid Emamdoost <navid.emamdoost@gmail.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
+        Adham Abozaeid <adham.abozaeid@microchip.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 077/350] mwifiex: pcie: Fix memory leak in mwifiex_pcie_init_evt_ring
-Date:   Tue, 10 Dec 2019 16:03:02 -0500
-Message-Id: <20191210210735.9077-38-sashal@kernel.org>
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
+Subject: [PATCH AUTOSEL 5.4 155/350] staging: wilc1000: potential corruption in wilc_parse_join_bss_param()
+Date:   Tue, 10 Dec 2019 16:04:20 -0500
+Message-Id: <20191210210735.9077-116-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191210210735.9077-1-sashal@kernel.org>
 References: <20191210210735.9077-1-sashal@kernel.org>
@@ -61,40 +61,36 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Navid Emamdoost <navid.emamdoost@gmail.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
 
-[ Upstream commit d10dcb615c8e29d403a24d35f8310a7a53e3050c ]
+[ Upstream commit d59dc92f1bccd5acde793aebdbb4f7121cf3f9af ]
 
-In mwifiex_pcie_init_evt_ring, a new skb is allocated which should be
-released if mwifiex_map_pci_memory() fails. The release for skb and
-card->evtbd_ring_vbase is added.
+The "rates_len" value needs to be capped so that the memcpy() doesn't
+copy beyond the end of the array.
 
-Fixes: 0732484b47b5 ("mwifiex: separate ring initialization and ring creation routines")
-Signed-off-by: Navid Emamdoost <navid.emamdoost@gmail.com>
-Acked-by: Ganapathi Bhat <gbhat@marvell.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Fixes: c5c77ba18ea6 ("staging: wilc1000: Add SDIO/SPI 802.11 driver")
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Reviewed-by: Adham Abozaeid <adham.abozaeid@microchip.com>
+Link: https://lore.kernel.org/r/20191017091832.GB31278@mwanda
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/marvell/mwifiex/pcie.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/staging/wilc1000/wilc_hif.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index eff06d59e9dfc..096334e941a1a 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -687,8 +687,11 @@ static int mwifiex_pcie_init_evt_ring(struct mwifiex_adapter *adapter)
- 		skb_put(skb, MAX_EVENT_SIZE);
- 
- 		if (mwifiex_map_pci_memory(adapter, skb, MAX_EVENT_SIZE,
--					   PCI_DMA_FROMDEVICE))
-+					   PCI_DMA_FROMDEVICE)) {
-+			kfree_skb(skb);
-+			kfree(card->evtbd_ring_vbase);
- 			return -1;
-+		}
- 
- 		buf_pa = MWIFIEX_SKB_DMA_ADDR(skb);
- 
+diff --git a/drivers/staging/wilc1000/wilc_hif.c b/drivers/staging/wilc1000/wilc_hif.c
+index d3d9ea284816a..77d0732f451be 100644
+--- a/drivers/staging/wilc1000/wilc_hif.c
++++ b/drivers/staging/wilc1000/wilc_hif.c
+@@ -473,6 +473,8 @@ void *wilc_parse_join_bss_param(struct cfg80211_bss *bss,
+ 	rates_ie = cfg80211_find_ie(WLAN_EID_SUPP_RATES, ies->data, ies->len);
+ 	if (rates_ie) {
+ 		rates_len = rates_ie[1];
++		if (rates_len > WILC_MAX_RATES_SUPPORTED)
++			rates_len = WILC_MAX_RATES_SUPPORTED;
+ 		param->supp_rates[0] = rates_len;
+ 		memcpy(&param->supp_rates[1], rates_ie + 2, rates_len);
+ 	}
 -- 
 2.20.1
 
