@@ -4,51 +4,50 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA714C43603
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 22:04:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89BF1C43603
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 22:06:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BFE932053B
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 22:04:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 55CB22077B
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 22:06:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576015478;
-	bh=P2JgUGrer2yYD0WPqYpwYVQcjrDbWfI66tP4Kc5bkUQ=;
+	s=default; t=1576015582;
+	bh=7SAPay+TN/a34snZhU7wchwB4MT68Av7EF7AyI3gTxg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Ape9phi8ydCoavOFBhvb3E8xziNORIZzWYS8yaahGT3axhYpBnNVwiRDBN1IH0jWe
-	 /bLKpVQqDQGk/1nt6lMfHClSL/xSWDsstZ6aIEFC0+StNtoFyM2viriOnFV1vERGab
-	 hXZw1w8TdGrbXUt/GP6k7871fbA7cJlcgyL66lJg=
+	b=nwL/jC4Xj6pON/Bs8uEjllQOoZJPKq6BOZbUXCcGMfizV00auXTxZ9H7/PC/fmzRI
+	 +VOescZjDU3WJ3PllEBKX/dMuxY5Xm4sv6wpg+30WQ53QXO5eZ2H932nYnRg0Fg31d
+	 ZZEgjtxBA3F1gUndzFt5s/wOJN+ag5QX+N+E685Y=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728818AbfLJWEi (ORCPT
+        id S1727640AbfLJWFb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 10 Dec 2019 17:04:38 -0500
-Received: from mail.kernel.org ([198.145.29.99]:35570 "EHLO mail.kernel.org"
+        Tue, 10 Dec 2019 17:05:31 -0500
+Received: from mail.kernel.org ([198.145.29.99]:37046 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727161AbfLJWEh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Dec 2019 17:04:37 -0500
+        id S1729721AbfLJWFa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 10 Dec 2019 17:05:30 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 1081F20828;
-        Tue, 10 Dec 2019 22:04:35 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id D4821214AF;
+        Tue, 10 Dec 2019 22:05:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576015476;
-        bh=P2JgUGrer2yYD0WPqYpwYVQcjrDbWfI66tP4Kc5bkUQ=;
+        s=default; t=1576015529;
+        bh=7SAPay+TN/a34snZhU7wchwB4MT68Av7EF7AyI3gTxg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=gpA0mMyb4Uv81yGawCBV1duoF3wXebgXmvWINQmssNBO5Yxy34EQ8N0MDQgCiALmm
-         C/39MWL5JJ6kU2AP+BkOsZly+r2GYZcRwN4ywnRBEgd1uXAr4meuBmJBiCROdh78c0
-         1gy4tY70e3z4cODPXFVOeObqAi7XWogpDYwJkKiU=
+        b=d5NuHh4dUOro9HZte59mqSwUsfXtM3t6vVuDt/tbtsHKHHPK4vBGMvEgMhlcLugQe
+         K2ua+7DaMfLQGc+Bm3Z4MbSfMBOcdZNerlp97uIIx0ieDVVJyh1ES3Xkb4YrLDqzLO
+         ogI8C+f+66bEVY+3agABrdb8MjvA0wze+Wh/goAE=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Ping-Ke Shih <pkshih@realtek.com>,
-        Stefan Wahren <wahrenst@gmx.net>,
-        Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Thomas Pedersen <thomas@adapt-ip.com>,
+        Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 081/130] rtlwifi: fix memory leak in rtl92c_set_fw_rsvdpagepkt()
-Date:   Tue, 10 Dec 2019 17:02:12 -0500
-Message-Id: <20191210220301.13262-81-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 124/130] mac80211: consider QoS Null frames for STA_NULLFUNC_ACKED
+Date:   Tue, 10 Dec 2019 17:02:55 -0500
+Message-Id: <20191210220301.13262-124-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191210220301.13262-1-sashal@kernel.org>
 References: <20191210220301.13262-1-sashal@kernel.org>
@@ -61,62 +60,48 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+From: Thomas Pedersen <thomas@adapt-ip.com>
 
-[ Upstream commit 5174f1e41074b5186608badc2e89441d021e8c08 ]
+[ Upstream commit 08a5bdde3812993cb8eb7aa9124703df0de28e4b ]
 
-This leak was found by testing the EDIMAX EW-7612 on Raspberry Pi 3B+ with
-Linux 5.4-rc5 (multi_v7_defconfig + rtlwifi + kmemleak) and noticed a
-single memory leak during probe:
+Commit 7b6ddeaf27ec ("mac80211: use QoS NDP for AP probing")
+let STAs send QoS Null frames as PS triggers if the AP was
+a QoS STA.  However, the mac80211 PS stack relies on an
+interface flag IEEE80211_STA_NULLFUNC_ACKED for
+determining trigger frame ACK, which was not being set for
+acked non-QoS Null frames. The effect is an inability to
+trigger hardware sleep via IEEE80211_CONF_PS since the QoS
+Null frame was seemingly never acked.
 
-unreferenced object 0xec13ee40 (size 176):
-  comm "kworker/u8:1", pid 36, jiffies 4294939321 (age 5580.790s)
-  hex dump (first 32 bytes):
-    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-  backtrace:
-    [<fc1bbb3e>] __netdev_alloc_skb+0x9c/0x164
-    [<863dfa6e>] rtl92c_set_fw_rsvdpagepkt+0x254/0x340 [rtl8192c_common]
-    [<9572be0d>] rtl92cu_set_hw_reg+0xf48/0xfa4 [rtl8192cu]
-    [<116df4d8>] rtl_op_bss_info_changed+0x234/0x96c [rtlwifi]
-    [<8933575f>] ieee80211_bss_info_change_notify+0xb8/0x264 [mac80211]
-    [<d4061e86>] ieee80211_assoc_success+0x934/0x1798 [mac80211]
-    [<e55adb56>] ieee80211_rx_mgmt_assoc_resp+0x174/0x314 [mac80211]
-    [<5974629e>] ieee80211_sta_rx_queued_mgmt+0x3f4/0x7f0 [mac80211]
-    [<d91091c6>] ieee80211_iface_work+0x208/0x318 [mac80211]
-    [<ac5fcae4>] process_one_work+0x22c/0x564
-    [<f5e6d3b6>] worker_thread+0x44/0x5d8
-    [<82c7b073>] kthread+0x150/0x154
-    [<b43e1b7d>] ret_from_fork+0x14/0x2c
-    [<794dff30>] 0x0
+This bug only applies to drivers which set both
+IEEE80211_HW_REPORTS_TX_ACK_STATUS and
+IEEE80211_HW_PS_NULLFUNC_STACK.
 
-It is because 8192cu doesn't implement usb_cmd_send_packet(), and this
-patch just frees the skb within the function to resolve memleak problem
-by now. Since 8192cu doesn't turn on fwctrl_lps that needs to download
-command packet for firmware via the function, applying this patch doesn't
-affect driver behavior.
+Detect the acked QoS Null frame to restore STA power save.
 
-Reported-by: Stefan Wahren <wahrenst@gmx.net>
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Fixes: 7b6ddeaf27ec ("mac80211: use QoS NDP for AP probing")
+Signed-off-by: Thomas Pedersen <thomas@adapt-ip.com>
+Link: https://lore.kernel.org/r/20191119053538.25979-4-thomas@adapt-ip.com
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c | 2 ++
- 1 file changed, 2 insertions(+)
+ net/mac80211/status.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
-index 530e80f0ef0b7..1ee7f796113bc 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
-@@ -1556,6 +1556,8 @@ static bool usb_cmd_send_packet(struct ieee80211_hw *hw, struct sk_buff *skb)
-    * This is maybe necessary:
-    * rtlpriv->cfg->ops->fill_tx_cmddesc(hw, buffer, 1, 1, skb);
-    */
-+	dev_kfree_skb(skb);
-+
- 	return true;
- }
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index b18466cf466c5..fbe7354aeac7b 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -856,7 +856,8 @@ static void __ieee80211_tx_status(struct ieee80211_hw *hw,
+ 			I802_DEBUG_INC(local->dot11FailedCount);
+ 	}
  
+-	if (ieee80211_is_nullfunc(fc) && ieee80211_has_pm(fc) &&
++	if ((ieee80211_is_nullfunc(fc) || ieee80211_is_qos_nullfunc(fc)) &&
++	    ieee80211_has_pm(fc) &&
+ 	    ieee80211_hw_check(&local->hw, REPORTS_TX_ACK_STATUS) &&
+ 	    !(info->flags & IEEE80211_TX_CTL_INJECTED) &&
+ 	    local->ps_sdata && !(local->scanning)) {
 -- 
 2.20.1
 
