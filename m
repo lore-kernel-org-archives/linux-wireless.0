@@ -7,49 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 202CCC2D0BF
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:11:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98689C2D0BF
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:12:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E0A8A246C5
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:11:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 61AEC2077B
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:12:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576012316;
-	bh=pzi1vL0hkyrXR2jUHZDlNfMMLNo4U5WbuJLOK4qOVfw=;
+	s=default; t=1576012355;
+	bh=MI13WdruNkQxoyQuvMsnulcUQpenwMohsKZ7fBvKQJA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=zQZPrVftGyjIzqubpEj4TtagtCtwCTylwkWr1LHBLPJGl/GHcDwJsbj3ZFkAhmt5F
-	 xJHy1PzmLDB7ujGKipITC7cTNBPemeo/mieiSaqJL2vNEY2AZG9nR5rIWtCHFCEjHN
-	 CO9WaVfepKsqJldfnxLzLneHL8+tVTE+qX676ITs=
+	b=Jtj2sXEMBH/P662Y1aK3wZw79lBqkTbyzcTwGbDKnj9MO19cqMciq2cbvB/ZAnuZS
+	 qI0bEceC4CBReOsJma1o8lcCALYPlUbj++zPshgsrPAps/ZDuPYUlT3Oxal6vWWNsW
+	 Qk8KCS6M/pKTg8TsgupWIrju1EP0pKFjATg5/0OM=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728872AbfLJVLz (ORCPT
+        id S1729010AbfLJVMe (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 10 Dec 2019 16:11:55 -0500
-Received: from mail.kernel.org ([198.145.29.99]:35162 "EHLO mail.kernel.org"
+        Tue, 10 Dec 2019 16:12:34 -0500
+Received: from mail.kernel.org ([198.145.29.99]:36884 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728864AbfLJVLy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Dec 2019 16:11:54 -0500
+        id S1729003AbfLJVMd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 10 Dec 2019 16:12:33 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id B09D9246BF;
-        Tue, 10 Dec 2019 21:11:52 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 1255B2077B;
+        Tue, 10 Dec 2019 21:12:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576012313;
-        bh=pzi1vL0hkyrXR2jUHZDlNfMMLNo4U5WbuJLOK4qOVfw=;
+        s=default; t=1576012352;
+        bh=MI13WdruNkQxoyQuvMsnulcUQpenwMohsKZ7fBvKQJA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=esn3ofl/WfHJUCnGFeucCapm5mWIK0ldB6s9/QfYZrJgtCoZsQ8tdU+Nq4UiAh8b0
-         BTLoRESN5+gOa8buzIdtQ+XnnXyFHfvgIdVhDJa7SK72CBmDWO5wHC6tMqh9d3bdGq
-         4NElyXXtp2vISOTVQDRkmCcrQm3qulaXgxcpzMr8=
+        b=kQoTKO08ouX7/FvlXYcat5m/fh4liNgUne3T3G82NanT98mzt0CEx+aY8Lorb00r3
+         kJU3FReOXws43LU4H2ANx3Pvm0VPmYsqWkAHg8Aj4SGB7pp14llWO8ZvVJkuL1K50V
+         TXIM0GJ4yeQzMMzz1k9esW9syerY7lbtExNVQg0o=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Miaoqing Pan <miaoqing@codeaurora.org>,
-        Hou Bao Hou <houbao@codeaurora.org>,
-        Anilkumar Kolli <akolli@codeaurora.org>,
+Cc:     Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
+        Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 248/350] ath10k: fix get invalid tx rate for Mesh metric
-Date:   Tue, 10 Dec 2019 16:05:53 -0500
-Message-Id: <20191210210735.9077-209-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 282/350] qtnfmac: fix invalid channel information output
+Date:   Tue, 10 Dec 2019 16:06:27 -0500
+Message-Id: <20191210210735.9077-243-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191210210735.9077-1-sashal@kernel.org>
 References: <20191210210735.9077-1-sashal@kernel.org>
@@ -62,40 +60,45 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Miaoqing Pan <miaoqing@codeaurora.org>
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 
-[ Upstream commit 05a11003a56507023f18d3249a4d4d119c0a3e9c ]
+[ Upstream commit 24227a9e956a7c9913a7e6e7199a9ae3f540fe88 ]
 
-ath10k does not provide transmit rate info per MSDU
-in tx completion, mark that as -1 so mac80211
-will ignore the rates. This fixes mac80211 update Mesh
-link metric with invalid transmit rate info.
+Do not attempt to print frequency for an invalid channel
+provided by firmware. That channel may simply not exist.
 
-Tested HW: QCA9984
-Tested FW: 10.4-3.9.0.2-00035
-
-Signed-off-by: Hou Bao Hou <houbao@codeaurora.org>
-Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
-Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
+Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath10k/txrx.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/net/wireless/quantenna/qtnfmac/event.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
-index 4102df0169311..39abf8b129035 100644
---- a/drivers/net/wireless/ath/ath10k/txrx.c
-+++ b/drivers/net/wireless/ath/ath10k/txrx.c
-@@ -95,6 +95,8 @@ int ath10k_txrx_tx_unref(struct ath10k_htt *htt,
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/event.c b/drivers/net/wireless/quantenna/qtnfmac/event.c
+index b57c8c18a8d01..7846383c88283 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/event.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/event.c
+@@ -171,8 +171,9 @@ qtnf_event_handle_bss_join(struct qtnf_vif *vif,
+ 		return -EPROTO;
+ 	}
  
- 	info = IEEE80211_SKB_CB(msdu);
- 	memset(&info->status, 0, sizeof(info->status));
-+	info->status.rates[0].idx = -1;
-+
- 	trace_ath10k_txrx_tx_unref(ar, tx_done->msdu_id);
+-	pr_debug("VIF%u.%u: BSSID:%pM status:%u\n",
+-		 vif->mac->macid, vif->vifid, join_info->bssid, status);
++	pr_debug("VIF%u.%u: BSSID:%pM chan:%u status:%u\n",
++		 vif->mac->macid, vif->vifid, join_info->bssid,
++		 le16_to_cpu(join_info->chan.chan.center_freq), status);
  
- 	if (!(info->flags & IEEE80211_TX_CTL_NO_ACK))
+ 	if (status != WLAN_STATUS_SUCCESS)
+ 		goto done;
+@@ -181,7 +182,7 @@ qtnf_event_handle_bss_join(struct qtnf_vif *vif,
+ 	if (!cfg80211_chandef_valid(&chandef)) {
+ 		pr_warn("MAC%u.%u: bad channel freq=%u cf1=%u cf2=%u bw=%u\n",
+ 			vif->mac->macid, vif->vifid,
+-			chandef.chan->center_freq,
++			chandef.chan ? chandef.chan->center_freq : 0,
+ 			chandef.center_freq1,
+ 			chandef.center_freq2,
+ 			chandef.width);
 -- 
 2.20.1
 
