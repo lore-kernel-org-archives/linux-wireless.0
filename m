@@ -4,51 +4,52 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20933C43603
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:10:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 202CCC2D0BF
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:11:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E0517246AC
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:10:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E0A8A246C5
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:11:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576012206;
-	bh=jTpiUlKsyB/ccCAr0py+oekD/sHAUrfYfWldZKhQytQ=;
+	s=default; t=1576012316;
+	bh=pzi1vL0hkyrXR2jUHZDlNfMMLNo4U5WbuJLOK4qOVfw=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=kYNNwmfOozIugE8SWB7+feA9QT9b2QMGW36s8+ERmH5XtsuQR7KkDb78rVPkMcFyW
-	 5Mw+FDvPp2HzVdlcbau0w2JkE+xCdwmem+4W6ISvv2KbsP/E+DXBGaAMxZQWDE9hts
-	 U+r4/3vmx8R648BnlWpKsC90II5FKdjUvrkJ5gH0=
+	b=zQZPrVftGyjIzqubpEj4TtagtCtwCTylwkWr1LHBLPJGl/GHcDwJsbj3ZFkAhmt5F
+	 xJHy1PzmLDB7ujGKipITC7cTNBPemeo/mieiSaqJL2vNEY2AZG9nR5rIWtCHFCEjHN
+	 CO9WaVfepKsqJldfnxLzLneHL8+tVTE+qX676ITs=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728357AbfLJVKE (ORCPT
+        id S1728872AbfLJVLz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 10 Dec 2019 16:10:04 -0500
-Received: from mail.kernel.org ([198.145.29.99]:59370 "EHLO mail.kernel.org"
+        Tue, 10 Dec 2019 16:11:55 -0500
+Received: from mail.kernel.org ([198.145.29.99]:35162 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728351AbfLJVKD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Dec 2019 16:10:03 -0500
+        id S1728864AbfLJVLy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 10 Dec 2019 16:11:54 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 72327246A4;
-        Tue, 10 Dec 2019 21:10:01 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id B09D9246BF;
+        Tue, 10 Dec 2019 21:11:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576012202;
-        bh=jTpiUlKsyB/ccCAr0py+oekD/sHAUrfYfWldZKhQytQ=;
+        s=default; t=1576012313;
+        bh=pzi1vL0hkyrXR2jUHZDlNfMMLNo4U5WbuJLOK4qOVfw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=S5S6Vkbrfe3foMZUaOFNqxo9GIRqiEZ5yUoqdjT7hADF4BXuQtRzo5xohxd7+PQR9
-         K4bALqV3/3ERnXl8+g4jbZuFjGq6YgWMGTih+Vp+8Z606ey0sRV4+ahkmBdqx7lMQy
-         +jnCDpqEovf/grBGJ8Osl3hquoA+Njx+tNjBdoC8=
+        b=esn3ofl/WfHJUCnGFeucCapm5mWIK0ldB6s9/QfYZrJgtCoZsQ8tdU+Nq4UiAh8b0
+         BTLoRESN5+gOa8buzIdtQ+XnnXyFHfvgIdVhDJa7SK72CBmDWO5wHC6tMqh9d3bdGq
+         4NElyXXtp2vISOTVQDRkmCcrQm3qulaXgxcpzMr8=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
-        Adham Abozaeid <adham.abozaeid@microchip.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
-Subject: [PATCH AUTOSEL 5.4 155/350] staging: wilc1000: potential corruption in wilc_parse_join_bss_param()
-Date:   Tue, 10 Dec 2019 16:04:20 -0500
-Message-Id: <20191210210735.9077-116-sashal@kernel.org>
+Cc:     Miaoqing Pan <miaoqing@codeaurora.org>,
+        Hou Bao Hou <houbao@codeaurora.org>,
+        Anilkumar Kolli <akolli@codeaurora.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 248/350] ath10k: fix get invalid tx rate for Mesh metric
+Date:   Tue, 10 Dec 2019 16:05:53 -0500
+Message-Id: <20191210210735.9077-209-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191210210735.9077-1-sashal@kernel.org>
 References: <20191210210735.9077-1-sashal@kernel.org>
@@ -61,36 +62,40 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Dan Carpenter <dan.carpenter@oracle.com>
+From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-[ Upstream commit d59dc92f1bccd5acde793aebdbb4f7121cf3f9af ]
+[ Upstream commit 05a11003a56507023f18d3249a4d4d119c0a3e9c ]
 
-The "rates_len" value needs to be capped so that the memcpy() doesn't
-copy beyond the end of the array.
+ath10k does not provide transmit rate info per MSDU
+in tx completion, mark that as -1 so mac80211
+will ignore the rates. This fixes mac80211 update Mesh
+link metric with invalid transmit rate info.
 
-Fixes: c5c77ba18ea6 ("staging: wilc1000: Add SDIO/SPI 802.11 driver")
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-Reviewed-by: Adham Abozaeid <adham.abozaeid@microchip.com>
-Link: https://lore.kernel.org/r/20191017091832.GB31278@mwanda
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Tested HW: QCA9984
+Tested FW: 10.4-3.9.0.2-00035
+
+Signed-off-by: Hou Bao Hou <houbao@codeaurora.org>
+Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
+Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/staging/wilc1000/wilc_hif.c | 2 ++
+ drivers/net/wireless/ath/ath10k/txrx.c | 2 ++
  1 file changed, 2 insertions(+)
 
-diff --git a/drivers/staging/wilc1000/wilc_hif.c b/drivers/staging/wilc1000/wilc_hif.c
-index d3d9ea284816a..77d0732f451be 100644
---- a/drivers/staging/wilc1000/wilc_hif.c
-+++ b/drivers/staging/wilc1000/wilc_hif.c
-@@ -473,6 +473,8 @@ void *wilc_parse_join_bss_param(struct cfg80211_bss *bss,
- 	rates_ie = cfg80211_find_ie(WLAN_EID_SUPP_RATES, ies->data, ies->len);
- 	if (rates_ie) {
- 		rates_len = rates_ie[1];
-+		if (rates_len > WILC_MAX_RATES_SUPPORTED)
-+			rates_len = WILC_MAX_RATES_SUPPORTED;
- 		param->supp_rates[0] = rates_len;
- 		memcpy(&param->supp_rates[1], rates_ie + 2, rates_len);
- 	}
+diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
+index 4102df0169311..39abf8b129035 100644
+--- a/drivers/net/wireless/ath/ath10k/txrx.c
++++ b/drivers/net/wireless/ath/ath10k/txrx.c
+@@ -95,6 +95,8 @@ int ath10k_txrx_tx_unref(struct ath10k_htt *htt,
+ 
+ 	info = IEEE80211_SKB_CB(msdu);
+ 	memset(&info->status, 0, sizeof(info->status));
++	info->status.rates[0].idx = -1;
++
+ 	trace_ath10k_txrx_tx_unref(ar, tx_done->msdu_id);
+ 
+ 	if (!(info->flags & IEEE80211_TX_CTL_NO_ACK))
 -- 
 2.20.1
 
