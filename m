@@ -7,49 +7,50 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AEB4C43603
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:27:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9700CC43603
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:28:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D7225205C9
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:27:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6B20A2073B
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:28:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576013229;
-	bh=WpJKZ77KkU6LuN525tuDHMcfMpyu27p2kTC9Qz4HNkU=;
+	s=default; t=1576013311;
+	bh=pDb99hDHnLaIQT5+IsVMp+MuY1aORJ5mKqZBYwYdPOI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=kQOjJZlr6b9dPtaUvPgM8Yakxw9/Qby+zdZSX9EManmJE1b4mGj2n1pdYKgPRYeNg
-	 /WNfF+uKcwY1XSYWfk7GUUd8XfS4vT7PFscCx1iqNCSfFVqlVRuPsw6UfmQkzAvo1n
-	 LCqn893ycj/ScGCDVOgk26Argk7EWgjtXYvMM0Rc=
+	b=quFqiv1iEuas4umc0UJ66xe6KM7o3TGDwfbt/ucxf2gNPAEnk7rnQr9t6TNgFdN1M
+	 XR7wzeIqGZzUeaTazAzEbExW4skPDHgEcrgZL30spox4rOSGJvUu64KiDGFiMPWXc2
+	 6Qa9fCFSDespc7ts9etT7i0vbgsQfgNyF64npvUE=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729493AbfLJVZ2 (ORCPT
+        id S1728554AbfLJV21 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 10 Dec 2019 16:25:28 -0500
-Received: from mail.kernel.org ([198.145.29.99]:56392 "EHLO mail.kernel.org"
+        Tue, 10 Dec 2019 16:28:27 -0500
+Received: from mail.kernel.org ([198.145.29.99]:60306 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729488AbfLJVZ1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Dec 2019 16:25:27 -0500
+        id S1728484AbfLJVK0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 10 Dec 2019 16:10:26 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id B48A2214D8;
-        Tue, 10 Dec 2019 21:25:25 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id B60172077B;
+        Tue, 10 Dec 2019 21:10:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576013126;
-        bh=WpJKZ77KkU6LuN525tuDHMcfMpyu27p2kTC9Qz4HNkU=;
+        s=default; t=1576012225;
+        bh=pDb99hDHnLaIQT5+IsVMp+MuY1aORJ5mKqZBYwYdPOI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=n6iGR2XoKFij5NbPTRNNSyHOYRMg1wGTXcUaHzLSv9epB6HnTxiL44biZ5pnCdb9n
-         8/RodwcGHvTfvyCkZqb7rUwBBcSY5rja6dpvikD9s7nW/Wrgw3vZHNXbINaI2bYQB2
-         N0Mm1sEot+jxCKkVUkt6z1kzgTAdK0mnkxrI5X+k=
+        b=tK+H1tzd2f6QJYRM10FV0BQOWxIdCa7PcB1bzzSFEpmYwTSfc6axC4OM95bUezzQK
+         fyqFwGIfavKx+e9C2OIFh0IPoL50INauhb3uCtmI2q3YapMpZm6NUQmmKl5iE4D8Ya
+         zEpCDpthwRU/np4F62og/ObXsb4at2Q2WGC9egA0=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Wenwen Wang <wenwen@cs.uga.edu>, Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.3 012/292] ath10k: add cleanup in ath10k_sta_state()
-Date:   Tue, 10 Dec 2019 16:20:31 -0500
-Message-Id: <20191210212511.11392-12-sashal@kernel.org>
+Cc:     Adham Abozaeid <adham.abozaeid@microchip.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
+Subject: [PATCH AUTOSEL 5.4 175/350] staging: wilc1000: check if device is initialzied before changing vif
+Date:   Tue, 10 Dec 2019 16:04:40 -0500
+Message-Id: <20191210210735.9077-136-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191210212511.11392-1-sashal@kernel.org>
-References: <20191210212511.11392-1-sashal@kernel.org>
+In-Reply-To: <20191210210735.9077-1-sashal@kernel.org>
+References: <20191210210735.9077-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -59,39 +60,66 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Wenwen Wang <wenwen@cs.uga.edu>
+From: Adham Abozaeid <adham.abozaeid@microchip.com>
 
-[ Upstream commit 334f5b61a6f29834e881923b98d1e27e5ce9620d ]
+[ Upstream commit 6df6f3849bb8f317bf2d52711aacea4292237ede ]
 
-If 'sta->tdls' is false, no cleanup is executed, leading to memory/resource
-leaks, e.g., 'arsta->tx_stats'. To fix this issue, perform cleanup before
-go to the 'exit' label.
+When killing hostapd, the interface is closed which deinitializes the
+device, then change virtual interface is called.
+This change checks if the device is initialized before sending the
+interface change command to the device
 
-Signed-off-by: Wenwen Wang <wenwen@cs.uga.edu>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Signed-off-by: Adham Abozaeid <adham.abozaeid@microchip.com>
+Link: https://lore.kernel.org/r/20191028184019.31194-1-adham.abozaeid@microchip.com
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ .../staging/wilc1000/wilc_wfi_cfgoperations.c  | 18 ++++++++++++------
+ 1 file changed, 12 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 0606416dc9712..f99e6d22f6224 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -6548,8 +6548,12 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 22f21831649bd..c3cd6f389a989 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1419,8 +1419,10 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+ 		if (vif->iftype == WILC_AP_MODE || vif->iftype == WILC_GO_MODE)
+ 			wilc_wfi_deinit_mon_interface(wl, true);
+ 		vif->iftype = WILC_STATION_MODE;
+-		wilc_set_operation_mode(vif, wilc_get_vif_idx(vif),
+-					WILC_STATION_MODE, vif->idx);
++
++		if (wl->initialized)
++			wilc_set_operation_mode(vif, wilc_get_vif_idx(vif),
++						WILC_STATION_MODE, vif->idx);
  
- 		spin_unlock_bh(&ar->data_lock);
+ 		memset(priv->assoc_stainfo.sta_associated_bss, 0,
+ 		       WILC_MAX_NUM_STA * ETH_ALEN);
+@@ -1432,8 +1434,10 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+ 		priv->wdev.iftype = type;
+ 		vif->monitor_flag = 0;
+ 		vif->iftype = WILC_CLIENT_MODE;
+-		wilc_set_operation_mode(vif, wilc_get_vif_idx(vif),
+-					WILC_STATION_MODE, vif->idx);
++
++		if (wl->initialized)
++			wilc_set_operation_mode(vif, wilc_get_vif_idx(vif),
++						WILC_STATION_MODE, vif->idx);
+ 		break;
  
--		if (!sta->tdls)
-+		if (!sta->tdls) {
-+			ath10k_peer_delete(ar, arvif->vdev_id, sta->addr);
-+			ath10k_mac_dec_num_stations(arvif, sta);
-+			kfree(arsta->tx_stats);
- 			goto exit;
-+		}
+ 	case NL80211_IFTYPE_AP:
+@@ -1450,8 +1454,10 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+ 		dev->ieee80211_ptr->iftype = type;
+ 		priv->wdev.iftype = type;
+ 		vif->iftype = WILC_GO_MODE;
+-		wilc_set_operation_mode(vif, wilc_get_vif_idx(vif),
+-					WILC_AP_MODE, vif->idx);
++
++		if (wl->initialized)
++			wilc_set_operation_mode(vif, wilc_get_vif_idx(vif),
++						WILC_AP_MODE, vif->idx);
+ 		break;
  
- 		ret = ath10k_wmi_update_fw_tdls_state(ar, arvif->vdev_id,
- 						      WMI_TDLS_ENABLE_ACTIVE);
+ 	default:
 -- 
 2.20.1
 
