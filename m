@@ -7,48 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23A72C43603
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:45:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08FA6C43603
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:46:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E25E7205C9
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:45:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D15502073B
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:46:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576014301;
-	bh=6dDZlLJabpaFWVavo13WgD21iX5wDRXvM127fEcD6vg=;
+	s=default; t=1576014401;
+	bh=IcOno1mqnFSoa4NxvV+ES7nTKiGmjKuk/TyPFW6PQyo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=TAZM242XqN0YMfkhw4L6Ue2+NNipZtBD1D+U5zp0yIuqMtlwYBxUkP2hi+yRE0V01
-	 G3byU026kQY0cfISMlwRYqKKQH3AuSq1m+VsNwZvQUvkztLwNbe+3zTfEGHez6yJLa
-	 1BvQ3G3eJuNm+PgNqM9nKQYSWIVYFFiM2/sO0S4c=
+	b=lvB75tjHlN9aSQ9FHGJ2tDRH412Sa5nhJv4qILU28XsQxZYo0ekdy9/Qs8bEQNkVr
+	 1f03bETpBrFCFLBj/WBtsKk1wmu2G/Ny1tgfNmWXGabDFwsVgfDjvYVGf0ipTD1lTa
+	 AWIHuFBVS65oAPPzGuQioKOp4Qz/3wGNRccRV9wo=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729647AbfLJVdJ (ORCPT
+        id S1727483AbfLJVcj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 10 Dec 2019 16:33:09 -0500
-Received: from mail.kernel.org ([198.145.29.99]:37156 "EHLO mail.kernel.org"
+        Tue, 10 Dec 2019 16:32:39 -0500
+Received: from mail.kernel.org ([198.145.29.99]:36260 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728126AbfLJVdH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Dec 2019 16:33:07 -0500
+        id S1729103AbfLJVci (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 10 Dec 2019 16:32:38 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 620CD214D8;
-        Tue, 10 Dec 2019 21:33:06 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id CFE1B214AF;
+        Tue, 10 Dec 2019 21:32:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576013587;
-        bh=6dDZlLJabpaFWVavo13WgD21iX5wDRXvM127fEcD6vg=;
+        s=default; t=1576013557;
+        bh=IcOno1mqnFSoa4NxvV+ES7nTKiGmjKuk/TyPFW6PQyo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=dMJjqLigtjro3cRUxyb/rfqCug96DZSxzvleF73JlpHeCHmKfRWWSfXoMSB/O+q5r
-         Fv/TrVSuCHBxnj3UPY3HvLPpEdfPryr+M7CUHGDk6Nto3DUQ+c1cwaSeE4HrF6DRUk
-         DMHXoZT+0zuGtDpZIfFyB83um75JHkJvJ2oj/W0k=
+        b=uTEqePgAuF8YrUhvv7877BOqocP7sXnBEBCukKboLcvhoVbEkWfw9WZP1wooLCuV0
+         Z5296jc7ydHiWQbEkmjBCC8faM7khlQqOAhAAi/UvOoVUaWjUn2DIrALif28mBIrsz
+         ZzgOoVgn435crdsGvvDn3Vo9QTg4P5eCu5yoPkoU=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Navid Emamdoost <navid.emamdoost@gmail.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
+Cc:     Anilkumar Kolli <akolli@codeaurora.org>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>,
+        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 038/177] mwifiex: pcie: Fix memory leak in mwifiex_pcie_init_evt_ring
-Date:   Tue, 10 Dec 2019 16:30:02 -0500
-Message-Id: <20191210213221.11921-38-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 013/177] ath10k: fix backtrace on coredump
+Date:   Tue, 10 Dec 2019 16:29:37 -0500
+Message-Id: <20191210213221.11921-13-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191210213221.11921-1-sashal@kernel.org>
 References: <20191210213221.11921-1-sashal@kernel.org>
@@ -61,40 +60,72 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Navid Emamdoost <navid.emamdoost@gmail.com>
+From: Anilkumar Kolli <akolli@codeaurora.org>
 
-[ Upstream commit d10dcb615c8e29d403a24d35f8310a7a53e3050c ]
+[ Upstream commit d98ddae85a4a57124f87960047b1b6419312147f ]
 
-In mwifiex_pcie_init_evt_ring, a new skb is allocated which should be
-released if mwifiex_map_pci_memory() fails. The release for skb and
-card->evtbd_ring_vbase is added.
+In a multiradio board with one QCA9984 and one AR9987
+after enabling the crashdump with module parameter
+coredump_mask=7, below backtrace is seen.
 
-Fixes: 0732484b47b5 ("mwifiex: separate ring initialization and ring creation routines")
-Signed-off-by: Navid Emamdoost <navid.emamdoost@gmail.com>
-Acked-by: Ganapathi Bhat <gbhat@marvell.com>
+vmalloc: allocation failure: 0 bytes
+ kworker/u4:0: page allocation failure: order:0, mode:0x80d2
+ CPU: 0 PID: 6 Comm: kworker/u4:0 Not tainted 3.14.77 #130
+ Workqueue: ath10k_wq ath10k_core_register_work [ath10k_core]
+ (unwind_backtrace) from [<c021abf8>] (show_stack+0x10/0x14)
+ (dump_stack+0x80/0xa0)
+ (warn_alloc_failed+0xd0/0xfc)
+ (__vmalloc_node_range+0x1b4/0x1d8)
+ (__vmalloc_node+0x34/0x40)
+ (vzalloc+0x24/0x30)
+ (ath10k_coredump_register+0x6c/0x88 [ath10k_core])
+ (ath10k_core_register_work+0x350/0xb34 [ath10k_core])
+ (process_one_work+0x20c/0x32c)
+ (worker_thread+0x228/0x360)
+
+This is due to ath10k_hw_mem_layout is not defined for AR9987.
+For coredump undefined hw ramdump_size is 0.
+Check for the ramdump_size before allocation memory.
+
+Tested on: AR9987, QCA9984
+FW version: 10.4-3.9.0.2-00044
+
+Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/marvell/mwifiex/pcie.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/coredump.c | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index 3fe81b2a929ac..918c699365402 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -691,8 +691,11 @@ static int mwifiex_pcie_init_evt_ring(struct mwifiex_adapter *adapter)
- 		skb_put(skb, MAX_EVENT_SIZE);
- 
- 		if (mwifiex_map_pci_memory(adapter, skb, MAX_EVENT_SIZE,
--					   PCI_DMA_FROMDEVICE))
-+					   PCI_DMA_FROMDEVICE)) {
-+			kfree_skb(skb);
-+			kfree(card->evtbd_ring_vbase);
- 			return -1;
+diff --git a/drivers/net/wireless/ath/ath10k/coredump.c b/drivers/net/wireless/ath/ath10k/coredump.c
+index 4d28063052fec..385b84f24322d 100644
+--- a/drivers/net/wireless/ath/ath10k/coredump.c
++++ b/drivers/net/wireless/ath/ath10k/coredump.c
+@@ -1105,9 +1105,11 @@ static struct ath10k_dump_file_data *ath10k_coredump_build(struct ath10k *ar)
+ 		dump_tlv = (struct ath10k_tlv_dump_data *)(buf + sofar);
+ 		dump_tlv->type = cpu_to_le32(ATH10K_FW_CRASH_DUMP_RAM_DATA);
+ 		dump_tlv->tlv_len = cpu_to_le32(crash_data->ramdump_buf_len);
+-		memcpy(dump_tlv->tlv_data, crash_data->ramdump_buf,
+-		       crash_data->ramdump_buf_len);
+-		sofar += sizeof(*dump_tlv) + crash_data->ramdump_buf_len;
++		if (crash_data->ramdump_buf_len) {
++			memcpy(dump_tlv->tlv_data, crash_data->ramdump_buf,
++			       crash_data->ramdump_buf_len);
++			sofar += sizeof(*dump_tlv) + crash_data->ramdump_buf_len;
 +		}
+ 	}
  
- 		buf_pa = MWIFIEX_SKB_DMA_ADDR(skb);
+ 	spin_unlock_bh(&ar->data_lock);
+@@ -1154,6 +1156,9 @@ int ath10k_coredump_register(struct ath10k *ar)
+ 	if (test_bit(ATH10K_FW_CRASH_DUMP_RAM_DATA, &ath10k_coredump_mask)) {
+ 		crash_data->ramdump_buf_len = ath10k_coredump_get_ramdump_size(ar);
  
++		if (!crash_data->ramdump_buf_len)
++			return 0;
++
+ 		crash_data->ramdump_buf = vzalloc(crash_data->ramdump_buf_len);
+ 		if (!crash_data->ramdump_buf)
+ 			return -ENOMEM;
 -- 
 2.20.1
 
