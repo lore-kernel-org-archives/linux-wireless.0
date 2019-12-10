@@ -4,54 +4,53 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB66FC43603
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:52:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC261C2D0BF
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 22:03:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A14062053B
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:52:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 978DD214D8
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 22:03:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576014744;
-	bh=haEPsc2yk+K9gE7Q79DHnfLRnG8eqSnhALg/2VZ68rs=;
+	s=default; t=1576015398;
+	bh=ZUlJGIDI5VNbIPTVi9gHwZ0Ezq8GX+d8+q+KM1qcd6o=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=0p3gOS4rqyW/j7TBkEr4bjkFmGj6B6zZ6MSsiqb3WJOKgSuk7xr+I7TI7jT98x2MU
-	 DYhzCnLun1qBYI7nT8jh2FvadP9gTlb75ZKp7Ep+SaMj2DRW4R0ei5LQSwE6UaNZPA
-	 iFrJQDViip89gPpbBxlXqPLEk5aM6yKoXXxk6O7s=
+	b=TN+yD1AoK428Y4Ja93uQlJ4+Awj3r3X+eaHHWq7i5KC3omu5bvHwwb3LEqrso4v3O
+	 Vz6ElJODcNo8JAHTwnVhvmESWQy+m8e+HkUDCD/NOKOgx9WtyBCCNr0ecdVLfWSPKM
+	 9N9plkG464hM9qcRvon/wAVw10CbRPMu6la8m1gw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729211AbfLJVwI (ORCPT
+        id S1727517AbfLJWDS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 10 Dec 2019 16:52:08 -0500
-Received: from mail.kernel.org ([198.145.29.99]:54362 "EHLO mail.kernel.org"
+        Tue, 10 Dec 2019 17:03:18 -0500
+Received: from mail.kernel.org ([198.145.29.99]:33174 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727549AbfLJVHs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Dec 2019 16:07:48 -0500
+        id S1727351AbfLJWDN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 10 Dec 2019 17:03:13 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 29E0724687;
-        Tue, 10 Dec 2019 21:07:46 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 7720020828;
+        Tue, 10 Dec 2019 22:03:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576012067;
-        bh=haEPsc2yk+K9gE7Q79DHnfLRnG8eqSnhALg/2VZ68rs=;
+        s=default; t=1576015393;
+        bh=ZUlJGIDI5VNbIPTVi9gHwZ0Ezq8GX+d8+q+KM1qcd6o=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=gDSbtHDcb5PUAx59sI1U+1ftHFouuLji+F9FdnMLwOl8k05sPzJaQwH8RM+iDvJsg
-         HQy2A+hF6qZQQubYshddlfW1TjBc6uSQFmSbelVF5P2op3AzU8b8jRdqd0rsz1fHjJ
-         1WbxoZq/F2Vtji1H3ITwbLMFdKXzqlYJ9+BEL8xM=
+        b=uPZsGf1oJYHp0y/grUIwXHpfDaOpuIj5Ibd0rSWOxCjHO7khU/B0nQmnmLvFvYl+x
+         7pvm2u26yqpiMjsNUgvlDDJLt3IRBCg/9KkNVEXKyjAT7b3dv1cUYCCuxeVditxBOd
+         GEpBfhp3oPE8YJXSDKazSdQoJILD+cjeGe9tQNrk=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Ben Greear <greearb@candelatech.com>,
-        Antonio Quartulli <antonio.quartulli@kaiwoo.ai>,
+Cc:     Navid Emamdoost <navid.emamdoost@gmail.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
+        Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 048/350] ath10k: fix offchannel tx failure when no ath10k_mac_tx_frm_has_freq
-Date:   Tue, 10 Dec 2019 16:02:33 -0500
-Message-Id: <20191210210735.9077-9-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 009/130] rtlwifi: prevent memory leak in rtl_usb_probe
+Date:   Tue, 10 Dec 2019 17:01:00 -0500
+Message-Id: <20191210220301.13262-9-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191210210735.9077-1-sashal@kernel.org>
-References: <20191210210735.9077-1-sashal@kernel.org>
+In-Reply-To: <20191210220301.13262-1-sashal@kernel.org>
+References: <20191210220301.13262-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -61,118 +60,45 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ben Greear <greearb@candelatech.com>
+From: Navid Emamdoost <navid.emamdoost@gmail.com>
 
-[ Upstream commit cc6df017e55764ffef9819dd9554053182535ffd ]
+[ Upstream commit 3f93616951138a598d930dcaec40f2bfd9ce43bb ]
 
-Offchannel management frames were failing:
+In rtl_usb_probe if allocation for usb_data fails the allocated hw
+should be released. In addition the allocated rtlpriv->usb_data should
+be released on error handling path.
 
-[18099.253732] ath10k_pci 0000:01:00.0: timed out waiting for offchannel skb cf0e3780
-[18102.293686] ath10k_pci 0000:01:00.0: timed out waiting for offchannel skb cf0e3780
-[18105.333653] ath10k_pci 0000:01:00.0: timed out waiting for offchannel skb cf0e3780
-[18108.373712] ath10k_pci 0000:01:00.0: timed out waiting for offchannel skb cf0e3780
-[18111.413687] ath10k_pci 0000:01:00.0: timed out waiting for offchannel skb cf0e36c0
-[18114.453726] ath10k_pci 0000:01:00.0: timed out waiting for offchannel skb cf0e3f00
-[18117.493773] ath10k_pci 0000:01:00.0: timed out waiting for offchannel skb cf0e36c0
-[18120.533631] ath10k_pci 0000:01:00.0: timed out waiting for offchannel skb cf0e3f00
-
-This bug appears to have been added between 4.0 (which works for us),
-and 4.4, which does not work.
-
-I think this is because the tx-offchannel logic gets in a loop when
-ath10k_mac_tx_frm_has_freq(ar) is false, so pkt is never actually
-sent to the firmware for transmit.
-
-This patch fixes the problem on 4.9 for me, and now HS20 clients
-can work again with my firmware.
-
-Antonio: tested with 10.4-3.5.3-00057 on QCA4019 and QCA9888
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
-Tested-by: Antonio Quartulli <antonio.quartulli@kaiwoo.ai>
-[kvalo@codeaurora.org: improve commit log, remove unneeded parenthesis]
+Signed-off-by: Navid Emamdoost <navid.emamdoost@gmail.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 22 +++++++++++-----------
- 1 file changed, 11 insertions(+), 11 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/usb.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 40889b79fc70d..a40e1a998f4cd 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3708,7 +3708,7 @@ static int ath10k_mac_tx(struct ath10k *ar,
- 			 struct ieee80211_vif *vif,
- 			 enum ath10k_hw_txrx_mode txmode,
- 			 enum ath10k_mac_tx_path txpath,
--			 struct sk_buff *skb)
-+			 struct sk_buff *skb, bool noque_offchan)
- {
- 	struct ieee80211_hw *hw = ar->hw;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-@@ -3738,10 +3738,10 @@ static int ath10k_mac_tx(struct ath10k *ar,
- 		}
- 	}
+diff --git a/drivers/net/wireless/realtek/rtlwifi/usb.c b/drivers/net/wireless/realtek/rtlwifi/usb.c
+index 2401c8bdb211e..93eda23f01239 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/usb.c
++++ b/drivers/net/wireless/realtek/rtlwifi/usb.c
+@@ -1068,8 +1068,10 @@ int rtl_usb_probe(struct usb_interface *intf,
+ 	rtlpriv->hw = hw;
+ 	rtlpriv->usb_data = kzalloc(RTL_USB_MAX_RX_COUNT * sizeof(u32),
+ 				    GFP_KERNEL);
+-	if (!rtlpriv->usb_data)
++	if (!rtlpriv->usb_data) {
++		ieee80211_free_hw(hw);
+ 		return -ENOMEM;
++	}
  
--	if (info->flags & IEEE80211_TX_CTL_TX_OFFCHAN) {
-+	if (!noque_offchan && info->flags & IEEE80211_TX_CTL_TX_OFFCHAN) {
- 		if (!ath10k_mac_tx_frm_has_freq(ar)) {
--			ath10k_dbg(ar, ATH10K_DBG_MAC, "queued offchannel skb %pK\n",
--				   skb);
-+			ath10k_dbg(ar, ATH10K_DBG_MAC, "mac queued offchannel skb %pK len %d\n",
-+				   skb, skb->len);
- 
- 			skb_queue_tail(&ar->offchan_tx_queue, skb);
- 			ieee80211_queue_work(hw, &ar->offchan_tx_work);
-@@ -3803,8 +3803,8 @@ void ath10k_offchan_tx_work(struct work_struct *work)
- 
- 		mutex_lock(&ar->conf_mutex);
- 
--		ath10k_dbg(ar, ATH10K_DBG_MAC, "mac offchannel skb %pK\n",
--			   skb);
-+		ath10k_dbg(ar, ATH10K_DBG_MAC, "mac offchannel skb %pK len %d\n",
-+			   skb, skb->len);
- 
- 		hdr = (struct ieee80211_hdr *)skb->data;
- 		peer_addr = ieee80211_get_DA(hdr);
-@@ -3850,7 +3850,7 @@ void ath10k_offchan_tx_work(struct work_struct *work)
- 		txmode = ath10k_mac_tx_h_get_txmode(ar, vif, sta, skb);
- 		txpath = ath10k_mac_tx_h_get_txpath(ar, skb, txmode);
- 
--		ret = ath10k_mac_tx(ar, vif, txmode, txpath, skb);
-+		ret = ath10k_mac_tx(ar, vif, txmode, txpath, skb, true);
- 		if (ret) {
- 			ath10k_warn(ar, "failed to transmit offchannel frame: %d\n",
- 				    ret);
-@@ -3860,8 +3860,8 @@ void ath10k_offchan_tx_work(struct work_struct *work)
- 		time_left =
- 		wait_for_completion_timeout(&ar->offchan_tx_completed, 3 * HZ);
- 		if (time_left == 0)
--			ath10k_warn(ar, "timed out waiting for offchannel skb %pK\n",
--				    skb);
-+			ath10k_warn(ar, "timed out waiting for offchannel skb %pK, len: %d\n",
-+				    skb, skb->len);
- 
- 		if (!peer && tmp_peer_created) {
- 			ret = ath10k_peer_delete(ar, vdev_id, peer_addr);
-@@ -4097,7 +4097,7 @@ int ath10k_mac_tx_push_txq(struct ieee80211_hw *hw,
- 		spin_unlock_bh(&ar->htt.tx_lock);
- 	}
- 
--	ret = ath10k_mac_tx(ar, vif, txmode, txpath, skb);
-+	ret = ath10k_mac_tx(ar, vif, txmode, txpath, skb, false);
- 	if (unlikely(ret)) {
- 		ath10k_warn(ar, "failed to push frame: %d\n", ret);
- 
-@@ -4378,7 +4378,7 @@ static void ath10k_mac_op_tx(struct ieee80211_hw *hw,
- 		spin_unlock_bh(&ar->htt.tx_lock);
- 	}
- 
--	ret = ath10k_mac_tx(ar, vif, txmode, txpath, skb);
-+	ret = ath10k_mac_tx(ar, vif, txmode, txpath, skb, false);
- 	if (ret) {
- 		ath10k_warn(ar, "failed to transmit frame: %d\n", ret);
- 		if (is_htt) {
+ 	/* this spin lock must be initialized early */
+ 	spin_lock_init(&rtlpriv->locks.usb_lock);
+@@ -1130,6 +1132,7 @@ int rtl_usb_probe(struct usb_interface *intf,
+ 	_rtl_usb_io_handler_release(hw);
+ 	usb_put_dev(udev);
+ 	complete(&rtlpriv->firmware_loading_complete);
++	kfree(rtlpriv->usb_data);
+ 	return -ENODEV;
+ }
+ EXPORT_SYMBOL(rtl_usb_probe);
 -- 
 2.20.1
 
