@@ -7,47 +7,48 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9700CC43603
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:28:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B935FC2D0BF
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:30:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6B20A2073B
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:28:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8DA99206D5
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:30:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576013311;
-	bh=pDb99hDHnLaIQT5+IsVMp+MuY1aORJ5mKqZBYwYdPOI=;
+	s=default; t=1576013448;
+	bh=796UophT8NjBbk/E9gRtRL1R6ZdTfcJ7TBT6/Hu9NoE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=quFqiv1iEuas4umc0UJ66xe6KM7o3TGDwfbt/ucxf2gNPAEnk7rnQr9t6TNgFdN1M
-	 XR7wzeIqGZzUeaTazAzEbExW4skPDHgEcrgZL30spox4rOSGJvUu64KiDGFiMPWXc2
-	 6Qa9fCFSDespc7ts9etT7i0vbgsQfgNyF64npvUE=
+	b=CoUYIUllKt7HKhTSGkQM3O5a4x0lpDzTelGMuQheDbjwtL/vZNObErn6yaaCNw7a6
+	 OfaOi3S5lJkJKj2TvXWe+xAkr02s01rOILRwHF4IzJqnYTzsok4Dn6xE12ixOhytfx
+	 4gxN1fwQVteYuZMlE5WrVZsiGKv9/KFrXRLZhNSY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728554AbfLJV21 (ORCPT
+        id S1728264AbfLJVJn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 10 Dec 2019 16:28:27 -0500
-Received: from mail.kernel.org ([198.145.29.99]:60306 "EHLO mail.kernel.org"
+        Tue, 10 Dec 2019 16:09:43 -0500
+Received: from mail.kernel.org ([198.145.29.99]:58592 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728484AbfLJVK0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Dec 2019 16:10:26 -0500
+        id S1728256AbfLJVJm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 10 Dec 2019 16:09:42 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id B60172077B;
-        Tue, 10 Dec 2019 21:10:24 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 2C5D4246BA;
+        Tue, 10 Dec 2019 21:09:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576012225;
-        bh=pDb99hDHnLaIQT5+IsVMp+MuY1aORJ5mKqZBYwYdPOI=;
+        s=default; t=1576012182;
+        bh=796UophT8NjBbk/E9gRtRL1R6ZdTfcJ7TBT6/Hu9NoE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=tK+H1tzd2f6QJYRM10FV0BQOWxIdCa7PcB1bzzSFEpmYwTSfc6axC4OM95bUezzQK
-         fyqFwGIfavKx+e9C2OIFh0IPoL50INauhb3uCtmI2q3YapMpZm6NUQmmKl5iE4D8Ya
-         zEpCDpthwRU/np4F62og/ObXsb4at2Q2WGC9egA0=
+        b=1hidc3VzjsmiVaG6wRKYIOHUo59wMRM5M1rrfhYW78YF3e7JOdYqRY2+HdHKdvM2w
+         77tfDQusKyXT7ZVsUgRTBl3gHqOklH4C2d3a+U6PVOotnhYiFXuNAE1Hf2uD6VsubT
+         TqAUyJp8Uqv2vt7A8QHW0HCq122JxeApLE125djQ=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Adham Abozaeid <adham.abozaeid@microchip.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+Cc:     Chris Chiu <chiu@endlessm.com>,
+        Jes Sorensen <Jes.Sorensen@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
-Subject: [PATCH AUTOSEL 5.4 175/350] staging: wilc1000: check if device is initialzied before changing vif
-Date:   Tue, 10 Dec 2019 16:04:40 -0500
-Message-Id: <20191210210735.9077-136-sashal@kernel.org>
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 139/350] rtl8xxxu: fix RTL8723BU connection failure issue after warm reboot
+Date:   Tue, 10 Dec 2019 16:04:04 -0500
+Message-Id: <20191210210735.9077-100-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191210210735.9077-1-sashal@kernel.org>
 References: <20191210210735.9077-1-sashal@kernel.org>
@@ -60,66 +61,71 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Adham Abozaeid <adham.abozaeid@microchip.com>
+From: Chris Chiu <chiu@endlessm.com>
 
-[ Upstream commit 6df6f3849bb8f317bf2d52711aacea4292237ede ]
+[ Upstream commit 0eeb91ade90ce06d2fa1e2fcb55e3316b64c203c ]
 
-When killing hostapd, the interface is closed which deinitializes the
-device, then change virtual interface is called.
-This change checks if the device is initialized before sending the
-interface change command to the device
+The RTL8723BU has problems connecting to AP after each warm reboot.
+Sometimes it returns no scan result, and in most cases, it fails
+the authentication for unknown reason. However, it works totally
+fine after cold reboot.
 
-Signed-off-by: Adham Abozaeid <adham.abozaeid@microchip.com>
-Link: https://lore.kernel.org/r/20191028184019.31194-1-adham.abozaeid@microchip.com
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Compare the value of register SYS_CR and SYS_CLK_MAC_CLK_ENABLE
+for cold reboot and warm reboot, the registers imply that the MAC
+is already powered and thus some procedures are skipped during
+driver initialization. Double checked the vendor driver, it reads
+the SYS_CR and SYS_CLK_MAC_CLK_ENABLE also but doesn't skip any
+during initialization based on them. This commit only tells the
+RTL8723BU to do full initialization without checking MAC status.
+
+Signed-off-by: Chris Chiu <chiu@endlessm.com>
+Signed-off-by: Jes Sorensen <Jes.Sorensen@gmail.com>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- .../staging/wilc1000/wilc_wfi_cfgoperations.c  | 18 ++++++++++++------
- 1 file changed, 12 insertions(+), 6 deletions(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h       | 1 +
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c | 1 +
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c  | 3 +++
+ 3 files changed, 5 insertions(+)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 22f21831649bd..c3cd6f389a989 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -1419,8 +1419,10 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
- 		if (vif->iftype == WILC_AP_MODE || vif->iftype == WILC_GO_MODE)
- 			wilc_wfi_deinit_mon_interface(wl, true);
- 		vif->iftype = WILC_STATION_MODE;
--		wilc_set_operation_mode(vif, wilc_get_vif_idx(vif),
--					WILC_STATION_MODE, vif->idx);
-+
-+		if (wl->initialized)
-+			wilc_set_operation_mode(vif, wilc_get_vif_idx(vif),
-+						WILC_STATION_MODE, vif->idx);
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+index ade057d868f7e..5e9ce03067de2 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+@@ -1341,6 +1341,7 @@ struct rtl8xxxu_fileops {
+ 	u8 has_s0s1:1;
+ 	u8 has_tx_report:1;
+ 	u8 gen2_thermal_meter:1;
++	u8 needs_full_init:1;
+ 	u32 adda_1t_init;
+ 	u32 adda_1t_path_on;
+ 	u32 adda_2t_path_on_a;
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c
+index ceffe05bd65b2..f3cd314d1a9cf 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c
+@@ -1670,6 +1670,7 @@ struct rtl8xxxu_fileops rtl8723bu_fops = {
+ 	.has_s0s1 = 1,
+ 	.has_tx_report = 1,
+ 	.gen2_thermal_meter = 1,
++	.needs_full_init = 1,
+ 	.adda_1t_init = 0x01c00014,
+ 	.adda_1t_path_on = 0x01c00014,
+ 	.adda_2t_path_on_a = 0x01c00014,
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+index c6c41fb962ffc..361248e975687 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+@@ -3902,6 +3902,9 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
+ 	else
+ 		macpower = true;
  
- 		memset(priv->assoc_stainfo.sta_associated_bss, 0,
- 		       WILC_MAX_NUM_STA * ETH_ALEN);
-@@ -1432,8 +1434,10 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
- 		priv->wdev.iftype = type;
- 		vif->monitor_flag = 0;
- 		vif->iftype = WILC_CLIENT_MODE;
--		wilc_set_operation_mode(vif, wilc_get_vif_idx(vif),
--					WILC_STATION_MODE, vif->idx);
++	if (fops->needs_full_init)
++		macpower = false;
 +
-+		if (wl->initialized)
-+			wilc_set_operation_mode(vif, wilc_get_vif_idx(vif),
-+						WILC_STATION_MODE, vif->idx);
- 		break;
- 
- 	case NL80211_IFTYPE_AP:
-@@ -1450,8 +1454,10 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
- 		dev->ieee80211_ptr->iftype = type;
- 		priv->wdev.iftype = type;
- 		vif->iftype = WILC_GO_MODE;
--		wilc_set_operation_mode(vif, wilc_get_vif_idx(vif),
--					WILC_AP_MODE, vif->idx);
-+
-+		if (wl->initialized)
-+			wilc_set_operation_mode(vif, wilc_get_vif_idx(vif),
-+						WILC_AP_MODE, vif->idx);
- 		break;
- 
- 	default:
+ 	ret = fops->power_on(priv);
+ 	if (ret < 0) {
+ 		dev_warn(dev, "%s: Failed power on\n", __func__);
 -- 
 2.20.1
 
