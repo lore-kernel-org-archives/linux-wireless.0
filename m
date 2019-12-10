@@ -2,117 +2,81 @@ Return-Path: <SRS0=GVYC=2A=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15511C2D0C4
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 17:19:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4ECCC43603
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 17:35:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DB5222073B
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 17:19:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9F8E8207FF
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 17:35:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jpauiryt"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="kOQvA5wy";
+	dkim=pass (1024-bit key) header.d=amazonses.com header.i=@amazonses.com header.b="ANO0ysNB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727822AbfLJRTc (ORCPT
+        id S1727598AbfLJRfM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 10 Dec 2019 12:19:32 -0500
-Received: from mail-qt1-f175.google.com ([209.85.160.175]:40053 "EHLO
-        mail-qt1-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727494AbfLJRTb (ORCPT
+        Tue, 10 Dec 2019 12:35:12 -0500
+Received: from a27-187.smtp-out.us-west-2.amazonses.com ([54.240.27.187]:47706
+        "EHLO a27-187.smtp-out.us-west-2.amazonses.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727211AbfLJRfL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Dec 2019 12:19:31 -0500
-Received: by mail-qt1-f175.google.com with SMTP id t17so3457260qtr.7
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Dec 2019 09:19:30 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=IVrotsx1YBPveLTsbNS8819hoTM6uUWmk0jV45c+Dcs=;
-        b=jpauirytvZFwSZPwOrG0eo9Iiznuco2p1dJEWkDX5sUUz5AlxeR1ejzLETzR5px0mR
-         eur47Xnaw6NSJWXuZpYVWh5eEmXGOwPJ2NrNgvGk+AT4LaAS4SPY+ryb7yyC1q7zcAEL
-         3qUHj1Ht2JUbMsjmV0NQMmEm560z+Ue1ipEcGk/cLjzHSAwmpgtgj+I2qURnNbkSjXTd
-         PhtyflZbIst4e/E0qhFetpWMXQqtbmpK7SoJbZvvvotvnjCy5SgXZ4JIhD5XSpcORrVV
-         lwhqgOxV1GkrO3E5iu1cD+xsGYkbxaGVNJLqHbTyqBS9YzE5kqSeB8j1f9mSdy4Mj/VW
-         bnjQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=IVrotsx1YBPveLTsbNS8819hoTM6uUWmk0jV45c+Dcs=;
-        b=YBaumSKloN98H1ddsrWVIg7xBzu3Ba/qHa7aI9r6WEEcyBK2KD/eVwXCR1XrZpG6LK
-         xYtXMwcqDnvBmLpHKEKAs53HsjvzazN52dnyY2s1hXTWL1q/iERAWL0ruKUkKk9DHvH4
-         snbDp7pK/teflvQuuhzS15EhxnT9HAnoLnl85XtCTJZh6eCexBlTyDyJNOUKwxPaSr5p
-         L30cdzEBlwSCp75EH1rEN8o9UoIHMxuPJeR6as6vSZkpH7U5hZZObhsTn2lfIyIbvRSP
-         N+BAoUCxyLLBuyziIprcOSCHX1qXSc36tP+OgjhAwjz2GGVyjHxqAcbmKUZN8KcvQDsY
-         1mdQ==
-X-Gm-Message-State: APjAAAWIkwEsHt4y5XEsF8cu/ZLCrbDpG3DU12BBU2G7Sq6eJb2GhfIb
-        2V1KHPCRb8HYBwiTV5NaF/JT+LNZ3JSQGa1qqSqvNQ==
-X-Google-Smtp-Source: APXvYqwdX81vOQMBGh9s09VF0mg5+bENQz36VVJpEh6+LZhJEfDbaABcLw7kMzdRVxspgHNQxRNIJdtXNE4ATA+XLaE=
-X-Received: by 2002:ac8:5156:: with SMTP id h22mr1762273qtn.233.1575998370410;
- Tue, 10 Dec 2019 09:19:30 -0800 (PST)
+        Tue, 10 Dec 2019 12:35:11 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+        s=zsmsymrwgfyinv5wlfyidntwsjeeldzt; d=codeaurora.org; t=1575999311;
+        h=Content-Type:MIME-Version:Content-Transfer-Encoding:Subject:From:In-Reply-To:References:To:Cc:Message-Id:Date;
+        bh=oycRlNWmJnPdKVyTXm9AfUk/t8Y7MIC2KSkQIAG0qh4=;
+        b=kOQvA5wyys6QVTT2G73af5+WAOKFSDkkaFF/d2VSjwvj7BOGMBj6PwpFTjYDKbBd
+        O3qDWExUsVOe+n/zuyGBJ1meeoeTnEZZWbGKciVrATKFWk7Z5mOx5iDEow0K1Xxq9YK
+        5h5IJ9MhuBie//JNP/mVSdkSasLJVZ1FLp912Faw=
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+        s=gdwg2y3kokkkj5a55z2ilkup5wp5hhxx; d=amazonses.com; t=1575999311;
+        h=Content-Type:MIME-Version:Content-Transfer-Encoding:Subject:From:In-Reply-To:References:To:Cc:Message-Id:Date:Feedback-ID;
+        bh=oycRlNWmJnPdKVyTXm9AfUk/t8Y7MIC2KSkQIAG0qh4=;
+        b=ANO0ysNBMuuWjFmSBhxl2wpOWC1izftLLGNdmhI/d4BRrAVAR9PjC7527yjHyKZz
+        U4VHU3ALTUxZskwtwSmVae24ggQwpI6Q3/7OPVWZkQbbIAeTrMnYmL8r9Adp4jSPbYt
+        jCUlrtWkSRvUvww8TKNg6tT7FK8RNhrapSR0vbcY=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org D32CFC447A1
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-References: <CAFED-jmt5BjTNQ=oQsSpTZRY115BsukCdhXTz-f-bBtin1PP7Q@mail.gmail.com>
- <283f52f854eb895b7da9d68a665b9679ba006d47.camel@sipsolutions.net>
-In-Reply-To: <283f52f854eb895b7da9d68a665b9679ba006d47.camel@sipsolutions.net>
-From:   Janusz Dziedzic <janusz.dziedzic@gmail.com>
-Date:   Tue, 10 Dec 2019 18:19:19 +0100
-Message-ID: <CAFED-j=QDEwi1Y4LqCPHuVavGssGQ7ha=Bk6S+9E9DPVYHLWPQ@mail.gmail.com>
-Subject: Re: iw - set freq regression
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
+Subject: Re: [RESEND 1/9] ath11k: add wmi helper for turning STA PS on/off
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20191204053713.3064-2-john@phrozen.org>
+References: <20191204053713.3064-2-john@phrozen.org>
+To:     John Crispin <john@phrozen.org>
+Cc:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
+        John Crispin <john@phrozen.org>
+User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
+Message-ID: <0101016ef0e10c73-a684c43b-a9f3-4115-a3c2-142e74aa25ea-000000@us-west-2.amazonses.com>
+Date:   Tue, 10 Dec 2019 17:35:11 +0000
+X-SES-Outgoing: 2019.12.10-54.240.27.187
+Feedback-ID: 1.us-west-2.CZuq2qbDmUIuT3qdvXlRHZZCpfZqZ4GtG9v3VKgRyF0=:AmazonSES
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-pon., 9 gru 2019 o 20:49 Johannes Berg <johannes@sipsolutions.net> napisa=
-=C5=82(a):
->
-> On Mon, 2019-12-09 at 20:43 +0100, Janusz Dziedzic wrote:
-> > Hello,
-> >
-> > For v4.9 this command works correctly:
-> > ./iw wlp1s0 set freq 5220 20 5220 0
-> > ./iw wlp1s0 set freq 5180 40 5190 0
-> >
-> > With latest master this fail with err msg:
-> > Usage:    ./iw [options] dev <devname> set freq <freq> [NOHT|HT20|HT40+=
-|HT40-|5MHz|10MHz|80MHz]
-> >     dev <devname> set freq <control freq> [5|10|20|40|80|80+80|160] [<c=
-enter1_freq> [<center2_freq>]]
-> > Options:
-> >     --debug        enable netlink debugging
-> >
-> > After bisection and revert this one, works as before:
-> > 4871fcf iw: parse_freqs: check how many center frequencies to expect
-> >
-> > I know we don't need to set this all arguments and finally I can change=
- my script (don't set cf1/cf2).
-> > Anyway report this.
->
-> Thanks. Hmm. So ... dunno. It seems a bit more user-friendly to not have
-> the center_freq2, but OTOH having it as 0 at least won't really matter?
->
-> I think we needed this for e.g. handle_start_ap() to not be (quite as)
-> ambiguous since the chandef is followed by the beacon interval. If the
-> center2_freq is _always_ consumed by the chandef, then a beacon interval
-> of 200 would be like 200 MHz, and the result would fail here ...
->
-> So not really sure. I guess we could add another argument or check if
-> the last arg ('parsed') is non-NULL to change the behaviour, but is it
-> worth it?
->
-I think, no. Lets leave this as is.
+John Crispin <john@phrozen.org> wrote:
 
-BR
-Janusz
-> johannes
->
+> Add a WMI call helper to set the powersave mode of a STA interface.
+> 
+> Signed-off-by: John Crispin <john@phrozen.org>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
+There were few new warnings:
 
---=20
-Janusz Dziedzic
+drivers/net/wireless/ath/ath11k/debugfs_sta.c: In function 'ath11k_update_per_peer_stats_from_txcompl':
+drivers/net/wireless/ath/ath11k/debugfs_sta.c:138:6: warning: variable 'num_tones_in_ru' set but not used [-Wunused-but-set-variable]
+drivers/net/wireless/ath/ath11k/debug.c:122: line over 90 characters
+drivers/net/wireless/ath/ath11k/dp_tx.c:472: line over 90 characters
+drivers/net/wireless/ath/ath11k/wmi.c:5669: char * array declaration might be better as static const
+
+-- 
+https://patchwork.kernel.org/patch/11272115/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+
