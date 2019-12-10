@@ -7,50 +7,48 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BD16C2D0C5
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:14:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49093C2D0BF
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:16:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 51A85205C9
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:14:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1D5CB214AF
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:16:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576012462;
-	bh=IuYOpPvSdHmvCmlPfdxsAUVModI75wSqdZHZvJ1mZGQ=;
+	s=default; t=1576012561;
+	bh=qLpA8Hj/Bemhj0QN8KheWl81yCIKzadDZCnWM+wT4+o=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=s8R/VFlLzPwsrY9umGON+u7KAXnAA5vs+LfthPk6DCcO+bjX4dUQM8NHUzIglTfYd
-	 lb7UWTKA2EbabKeHEDUnuq5mu5A/eExjPObe0H9xRv11bdvTvRI8p50DgN8Hu+MeOR
-	 vdwYZxznEcLZX2/CE5dRNIY9qqhtE1Da25OzAi7k=
+	b=Xp8PlvBNUOPjS/tOI9yfa9BeMAjeaSiAKN7Ql4azyHAIbuYWe16OIhe+14iW9BbZa
+	 awj0pQGAe/Uo+jlz/GGYcxT182FQkJ/606X0tFMFEhyCtyOAzPdeTQJBF6FOgq5cRf
+	 8iLrM7Hqj0ZyHG2iMkWi6zOjbAOMtuMKe9mGY0VE=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728864AbfLJVOR (ORCPT
+        id S1729321AbfLJVN1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 10 Dec 2019 16:14:17 -0500
-Received: from mail.kernel.org ([198.145.29.99]:40958 "EHLO mail.kernel.org"
+        Tue, 10 Dec 2019 16:13:27 -0500
+Received: from mail.kernel.org ([198.145.29.99]:39688 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728844AbfLJVN6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Dec 2019 16:13:58 -0500
+        id S1729311AbfLJVN0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 10 Dec 2019 16:13:26 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 98428208C3;
-        Tue, 10 Dec 2019 21:13:56 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id F2110214AF;
+        Tue, 10 Dec 2019 21:13:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576012437;
-        bh=IuYOpPvSdHmvCmlPfdxsAUVModI75wSqdZHZvJ1mZGQ=;
+        s=default; t=1576012405;
+        bh=qLpA8Hj/Bemhj0QN8KheWl81yCIKzadDZCnWM+wT4+o=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=mWJOgr2oWaOQE+/kCxf9tm87GMUUGBi8Eb/YgLul1IYduDLUs7FWyhZLDUD9guVoG
-         GawsH8HPNYUbyOaK99uAwy3twleBXXjTL6LAyzc0YKt5SXPCTymA+NCvqN7lxEwpAF
-         dgjczuEApEw490qFFAXt7vIUV/NCO3Y0co4AIfLU=
+        b=YWTPuRBRL9oqkiZsne/R6P40FbVQJsAhf44cR38Ypa/s9F6PzUnC+jmbnIp0ExGjU
+         YjU/YQFBwb5zWE5P3e6Uj7bs1w6zrftrePRgAGUhEs2vwV0R5b5WTptKTwNqXJRPFo
+         khOH5MrfjQ686J8ltzFHiEPiOO3HGTT285+1tRzE=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Alexander Lobakin <alobakin@dlink.ru>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>,
-        Edward Cree <ecree@solarflare.com>,
-        "David S . Miller" <davem@davemloft.net>,
-        Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 349/350] net: wireless: intel: iwlwifi: fix GRO_NORMAL packet stalling
-Date:   Tue, 10 Dec 2019 16:07:34 -0500
-Message-Id: <20191210210735.9077-310-sashal@kernel.org>
+Cc:     Lorenzo Bianconi <lorenzo@kernel.org>,
+        Felix Fietkau <nbd@nbd.name>, Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH AUTOSEL 5.4 324/350] mt76: fix possible out-of-bound access in mt7615_fill_txs/mt7603_fill_txs
+Date:   Tue, 10 Dec 2019 16:07:09 -0500
+Message-Id: <20191210210735.9077-285-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191210210735.9077-1-sashal@kernel.org>
 References: <20191210210735.9077-1-sashal@kernel.org>
@@ -63,79 +61,55 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Alexander Lobakin <alobakin@dlink.ru>
+From: Lorenzo Bianconi <lorenzo@kernel.org>
 
-[ Upstream commit b167191e2a851cb2e4c6ef8b91c83ff73ef41872 ]
+[ Upstream commit e8b970c8e367e85fab9b8ac4f36080e5d653c38e ]
 
-Commit 6570bc79c0df ("net: core: use listified Rx for GRO_NORMAL in
-napi_gro_receive()") has applied batched GRO_NORMAL packets processing
-to all napi_gro_receive() users, including mac80211-based drivers.
+Fix possible out-of-bound access of status rates array in
+mt7615_fill_txs/mt7603_fill_txs routines
 
-However, this change has led to a regression in iwlwifi driver [1][2] as
-it is required for NAPI users to call napi_complete_done() or
-napi_complete() and the end of every polling iteration, whilst iwlwifi
-doesn't use NAPI scheduling at all and just calls napi_gro_flush().
-In that particular case, packets which have not been already flushed
-from napi->rx_list stall in it until at least next Rx cycle.
-
-Fix this by adding a manual flushing of the list to iwlwifi driver right
-before napi_gro_flush() call to mimic napi_complete() logics.
-
-I prefer to open-code gro_normal_list() rather than exporting it for 2
-reasons:
-* to prevent from using it and napi_gro_flush() in any new drivers,
-  as it is the *really* bad way to use NAPI that should be avoided;
-* to keep gro_normal_list() static and don't lose any CC optimizations.
-
-I also don't add the "Fixes:" tag as the mentioned commit was only a
-trigger that only exposed an improper usage of NAPI in this particular
-driver.
-
-[1] https://lore.kernel.org/netdev/PSXP216MB04388962C411CD0B17A86F47804A0@PSXP216MB0438.KORP216.PROD.OUTLOOK.COM
-[2] https://bugzilla.kernel.org/show_bug.cgi?id=205647
-
-Signed-off-by: Alexander Lobakin <alobakin@dlink.ru>
-Acked-by: Luca Coelho <luciano.coelho@intel.com>
-Reported-by: Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>
-Tested-by: Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>
-Reviewed-by: Edward Cree <ecree@solarflare.com>
-Signed-off-by: David S. Miller <davem@davemloft.net>
+Fixes: c5211e997eca ("mt76: mt7603: rework and fix tx status reporting")
+Fixes: 4af81f02b49c ("mt76: mt7615: sync with mt7603 rate control changes")
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c | 13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7603/mac.c | 4 +++-
+ drivers/net/wireless/mediatek/mt76/mt7615/mac.c | 4 +++-
+ 2 files changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-index 19dd075f2f636..041dd75ac72bc 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-@@ -1429,6 +1429,7 @@ static struct iwl_rx_mem_buffer *iwl_pcie_get_rxb(struct iwl_trans *trans,
- static void iwl_pcie_rx_handle(struct iwl_trans *trans, int queue)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-+	struct napi_struct *napi;
- 	struct iwl_rxq *rxq;
- 	u32 r, i, count = 0;
- 	bool emergency = false;
-@@ -1534,8 +1535,16 @@ static void iwl_pcie_rx_handle(struct iwl_trans *trans, int queue)
- 	if (unlikely(emergency && count))
- 		iwl_pcie_rxq_alloc_rbs(trans, GFP_ATOMIC, rxq);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/mac.c b/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
+index c328192307c48..ff3f3d98b6252 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
+@@ -1032,8 +1032,10 @@ mt7603_fill_txs(struct mt7603_dev *dev, struct mt7603_sta *sta,
+ 		if (idx && (cur_rate->idx != info->status.rates[i].idx ||
+ 			    cur_rate->flags != info->status.rates[i].flags)) {
+ 			i++;
+-			if (i == ARRAY_SIZE(info->status.rates))
++			if (i == ARRAY_SIZE(info->status.rates)) {
++				i--;
+ 				break;
++			}
  
--	if (rxq->napi.poll)
--		napi_gro_flush(&rxq->napi, false);
-+	napi = &rxq->napi;
-+	if (napi->poll) {
-+		if (napi->rx_count) {
-+			netif_receive_skb_list(&napi->rx_list);
-+			INIT_LIST_HEAD(&napi->rx_list);
-+			napi->rx_count = 0;
-+		}
-+
-+		napi_gro_flush(napi, false);
-+	}
+ 			info->status.rates[i] = *cur_rate;
+ 			info->status.rates[i].count = 0;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
+index e07ce2c100133..111e38ff954a2 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
+@@ -914,8 +914,10 @@ static bool mt7615_fill_txs(struct mt7615_dev *dev, struct mt7615_sta *sta,
+ 		if (idx && (cur_rate->idx != info->status.rates[i].idx ||
+ 			    cur_rate->flags != info->status.rates[i].flags)) {
+ 			i++;
+-			if (i == ARRAY_SIZE(info->status.rates))
++			if (i == ARRAY_SIZE(info->status.rates)) {
++				i--;
+ 				break;
++			}
  
- 	iwl_pcie_rxq_restock(trans, rxq);
- }
+ 			info->status.rates[i] = *cur_rate;
+ 			info->status.rates[i].count = 0;
 -- 
 2.20.1
 
