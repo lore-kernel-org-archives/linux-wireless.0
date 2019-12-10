@@ -4,50 +4,50 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B69AC2D0C4
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:25:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A2D8C43603
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:26:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E4D2E21556
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:25:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2E37820836
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:26:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576013138;
-	bh=VHxZDyY8sXHksc8JW4Mr8xSTSRPOIlR7iviooLOpbtI=;
+	s=default; t=1576013166;
+	bh=Q4VBBcVHLUBqiODns1zyQG5zfK8ZHI0uDaGYoWiea0U=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=c/WKIRtBWR8vin2MGyeZQ3Q5DKc4wAng6EoBHvs33TydKBJ+efqrH9QLbqi3XXTAt
-	 jW/hDm3DxJFZdBUah+0HED87LoHQ2yzdN/cXWivLlKldvPxcz+vgpUVZV+p8RD2nhT
-	 5ZGU83Awrr89+WmVuwg9r7nF6Wy9ppT92xl5k2cc=
+	b=Ht/WnFSUy/rIolMtWedutp5ryVCGp1jb+2OiyjBjRAWdgVasQw1aR2Ki2EE1yPX8+
+	 25DFwOKqFEB5MXKnLeiFHmmoEqTWRkey/IFJGWv5MheU23BK3Ter2O6y9yfZAtgpBn
+	 bPzIEZFfgzNoUsphWa/KP9v/NsN8KgBUKEPLIqGA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729545AbfLJVZh (ORCPT
+        id S1729573AbfLJVZn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 10 Dec 2019 16:25:37 -0500
-Received: from mail.kernel.org ([198.145.29.99]:56832 "EHLO mail.kernel.org"
+        Tue, 10 Dec 2019 16:25:43 -0500
+Received: from mail.kernel.org ([198.145.29.99]:56994 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729534AbfLJVZg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Dec 2019 16:25:36 -0500
+        id S1727975AbfLJVZm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 10 Dec 2019 16:25:42 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 5E27F20836;
-        Tue, 10 Dec 2019 21:25:35 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id E74D5206D5;
+        Tue, 10 Dec 2019 21:25:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576013136;
-        bh=VHxZDyY8sXHksc8JW4Mr8xSTSRPOIlR7iviooLOpbtI=;
+        s=default; t=1576013140;
+        bh=Q4VBBcVHLUBqiODns1zyQG5zfK8ZHI0uDaGYoWiea0U=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=PSH4vs/GcQDXb0oX/gsqle6EZ+1dHWm/1nFL37I1gz/p8/7o/lOnbbkoO3rbQewAn
-         IsBTmGT70cH0zMMO4TG4pgJWWytbxdG/PACEceADRsrQO1wz51Rmrzu/JhdqT9oLcu
-         QJWTyyG2xI94V4VSqWrscdRs+SVGBGE33gZeoOVQ=
+        b=UdEUMuPg9WmufsAXN1hqd8kJYBmRurF2o3kez5RXpv/IEBai9AYIoTCpaTZd0zWKk
+         z8mHWKHUEbFJdTKHDUVwAnPRFoNlNmlO3H35tFD40UAtQJCk4kKBA8pJA8vQzILFlg
+         DZ7aja27mGZOGVm7f53dsZrSjccCvDLQaVBnjegw=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Navid Emamdoost <navid.emamdoost@gmail.com>,
+Cc:     Anilkumar Kolli <akolli@codeaurora.org>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>,
+        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.3 020/292] rtlwifi: prevent memory leak in rtl_usb_probe
-Date:   Tue, 10 Dec 2019 16:20:39 -0500
-Message-Id: <20191210212511.11392-20-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.3 024/292] ath10k: fix backtrace on coredump
+Date:   Tue, 10 Dec 2019 16:20:43 -0500
+Message-Id: <20191210212511.11392-24-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191210212511.11392-1-sashal@kernel.org>
 References: <20191210212511.11392-1-sashal@kernel.org>
@@ -60,45 +60,72 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Navid Emamdoost <navid.emamdoost@gmail.com>
+From: Anilkumar Kolli <akolli@codeaurora.org>
 
-[ Upstream commit 3f93616951138a598d930dcaec40f2bfd9ce43bb ]
+[ Upstream commit d98ddae85a4a57124f87960047b1b6419312147f ]
 
-In rtl_usb_probe if allocation for usb_data fails the allocated hw
-should be released. In addition the allocated rtlpriv->usb_data should
-be released on error handling path.
+In a multiradio board with one QCA9984 and one AR9987
+after enabling the crashdump with module parameter
+coredump_mask=7, below backtrace is seen.
 
-Signed-off-by: Navid Emamdoost <navid.emamdoost@gmail.com>
+vmalloc: allocation failure: 0 bytes
+ kworker/u4:0: page allocation failure: order:0, mode:0x80d2
+ CPU: 0 PID: 6 Comm: kworker/u4:0 Not tainted 3.14.77 #130
+ Workqueue: ath10k_wq ath10k_core_register_work [ath10k_core]
+ (unwind_backtrace) from [<c021abf8>] (show_stack+0x10/0x14)
+ (dump_stack+0x80/0xa0)
+ (warn_alloc_failed+0xd0/0xfc)
+ (__vmalloc_node_range+0x1b4/0x1d8)
+ (__vmalloc_node+0x34/0x40)
+ (vzalloc+0x24/0x30)
+ (ath10k_coredump_register+0x6c/0x88 [ath10k_core])
+ (ath10k_core_register_work+0x350/0xb34 [ath10k_core])
+ (process_one_work+0x20c/0x32c)
+ (worker_thread+0x228/0x360)
+
+This is due to ath10k_hw_mem_layout is not defined for AR9987.
+For coredump undefined hw ramdump_size is 0.
+Check for the ramdump_size before allocation memory.
+
+Tested on: AR9987, QCA9984
+FW version: 10.4-3.9.0.2-00044
+
+Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/realtek/rtlwifi/usb.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/coredump.c | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/usb.c b/drivers/net/wireless/realtek/rtlwifi/usb.c
-index 34d68dbf4b4ce..de770bbc3aa27 100644
---- a/drivers/net/wireless/realtek/rtlwifi/usb.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/usb.c
-@@ -1033,8 +1033,10 @@ int rtl_usb_probe(struct usb_interface *intf,
- 	rtlpriv->hw = hw;
- 	rtlpriv->usb_data = kcalloc(RTL_USB_MAX_RX_COUNT, sizeof(u32),
- 				    GFP_KERNEL);
--	if (!rtlpriv->usb_data)
-+	if (!rtlpriv->usb_data) {
-+		ieee80211_free_hw(hw);
- 		return -ENOMEM;
-+	}
+diff --git a/drivers/net/wireless/ath/ath10k/coredump.c b/drivers/net/wireless/ath/ath10k/coredump.c
+index b6d2932383cf6..1cfe75a2d0c3a 100644
+--- a/drivers/net/wireless/ath/ath10k/coredump.c
++++ b/drivers/net/wireless/ath/ath10k/coredump.c
+@@ -1208,9 +1208,11 @@ static struct ath10k_dump_file_data *ath10k_coredump_build(struct ath10k *ar)
+ 		dump_tlv = (struct ath10k_tlv_dump_data *)(buf + sofar);
+ 		dump_tlv->type = cpu_to_le32(ATH10K_FW_CRASH_DUMP_RAM_DATA);
+ 		dump_tlv->tlv_len = cpu_to_le32(crash_data->ramdump_buf_len);
+-		memcpy(dump_tlv->tlv_data, crash_data->ramdump_buf,
+-		       crash_data->ramdump_buf_len);
+-		sofar += sizeof(*dump_tlv) + crash_data->ramdump_buf_len;
++		if (crash_data->ramdump_buf_len) {
++			memcpy(dump_tlv->tlv_data, crash_data->ramdump_buf,
++			       crash_data->ramdump_buf_len);
++			sofar += sizeof(*dump_tlv) + crash_data->ramdump_buf_len;
++		}
+ 	}
  
- 	/* this spin lock must be initialized early */
- 	spin_lock_init(&rtlpriv->locks.usb_lock);
-@@ -1095,6 +1097,7 @@ int rtl_usb_probe(struct usb_interface *intf,
- 	_rtl_usb_io_handler_release(hw);
- 	usb_put_dev(udev);
- 	complete(&rtlpriv->firmware_loading_complete);
-+	kfree(rtlpriv->usb_data);
- 	return -ENODEV;
- }
- EXPORT_SYMBOL(rtl_usb_probe);
+ 	mutex_unlock(&ar->dump_mutex);
+@@ -1257,6 +1259,9 @@ int ath10k_coredump_register(struct ath10k *ar)
+ 	if (test_bit(ATH10K_FW_CRASH_DUMP_RAM_DATA, &ath10k_coredump_mask)) {
+ 		crash_data->ramdump_buf_len = ath10k_coredump_get_ramdump_size(ar);
+ 
++		if (!crash_data->ramdump_buf_len)
++			return 0;
++
+ 		crash_data->ramdump_buf = vzalloc(crash_data->ramdump_buf_len);
+ 		if (!crash_data->ramdump_buf)
+ 			return -ENOMEM;
 -- 
 2.20.1
 
