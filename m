@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B518CC43603
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:12:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 785C6C2D0BF
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:13:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 87C90214D8
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:12:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4216B2464B
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 21:13:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576012358;
-	bh=t4qaAVhrByK3X7sketG15UMMUfKrub3CkV0rdYVJWzE=;
+	s=default; t=1576012418;
+	bh=+YSyb2QmbD3Aue6El/+OQIogkyDtkEzEmidpgoS5ErI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=GpHfTwJTMPVXyjrR7wi+mvqSbMVxJ5I5Fe6OAeY3OW3bh1aCFLGuyHbBoIlufZdPj
-	 h9P+nguy45jWtxeY9X/9DEJb/dwgjPd2DduEJBb0co4pAbJSNBKwpAHk2aB43J0Ktk
-	 ajpEiZyW407GQtjtdcX6c9nhsFSthf+VjubfkVaQ=
+	b=xvZFX+4h6k2L4T45Wz5HVfocnzgxz50xcsx3/1VQkW9xgULo40UtNwZsp7Twb60dl
+	 H6Nh1oahG6k2mJEhOFFrgljEpnNYaKcT2kRdejHPyVlRj0/Za3/eKpmOyKYTPGC1VB
+	 UC9QPqh06r/GEwBFbG70tIt8MEuU7xnBFeSHc5VY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729030AbfLJVMh (ORCPT
+        id S1729387AbfLJVNh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 10 Dec 2019 16:12:37 -0500
-Received: from mail.kernel.org ([198.145.29.99]:37196 "EHLO mail.kernel.org"
+        Tue, 10 Dec 2019 16:13:37 -0500
+Received: from mail.kernel.org ([198.145.29.99]:40128 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727145AbfLJVMg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Dec 2019 16:12:36 -0500
+        id S1728771AbfLJVNg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 10 Dec 2019 16:13:36 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 601682073D;
-        Tue, 10 Dec 2019 21:12:35 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 526662077B;
+        Tue, 10 Dec 2019 21:13:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576012356;
-        bh=t4qaAVhrByK3X7sketG15UMMUfKrub3CkV0rdYVJWzE=;
+        s=default; t=1576012416;
+        bh=+YSyb2QmbD3Aue6El/+OQIogkyDtkEzEmidpgoS5ErI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=dsgXqwolKRFzZ1P9HoAsD+gzzqFmcupfgABvGx2SH8BExsMpva8aes38UpRtJKGhw
-         iuixVJgZVV5PgaXRnZwAcaqjroEtsl0eAIeoYYpLUUpHdlC2h2U5JL0Kiy8jhmlZQi
-         5w1EWaXL0rVHE+sXQiC2JpaKCdM0Gkm4Z1yhT8fM=
+        b=dhswmEETVFyEfYPseSksGgGs6YWUqcx+BKDAY863+UJIitZsEUjuKpFFX+p2pMr00
+         NhFgkGArsmkQMFOFFnNXvJvDGTz4g2UI+kjIxOYQkD7Ove0mW++J6c7nUn26cJvG7G
+         hVx2C/hcn4sPMi/HymacqEoZ0naI6WfnKPV25gTM=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Thomas Pedersen <thomas@adapt-ip.com>,
+        Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 284/350] qtnfmac: fix using skb after free
-Date:   Tue, 10 Dec 2019 16:06:29 -0500
-Message-Id: <20191210210735.9077-245-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 332/350] mac80211: consider QoS Null frames for STA_NULLFUNC_ACKED
+Date:   Tue, 10 Dec 2019 16:07:17 -0500
+Message-Id: <20191210210735.9077-293-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191210210735.9077-1-sashal@kernel.org>
 References: <20191210210735.9077-1-sashal@kernel.org>
@@ -60,58 +60,48 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+From: Thomas Pedersen <thomas@adapt-ip.com>
 
-[ Upstream commit 4a33f21cef84b1b933958c99ed5dac1726214b35 ]
+[ Upstream commit 08a5bdde3812993cb8eb7aa9124703df0de28e4b ]
 
-KASAN reported use-after-free error:
+Commit 7b6ddeaf27ec ("mac80211: use QoS NDP for AP probing")
+let STAs send QoS Null frames as PS triggers if the AP was
+a QoS STA.  However, the mac80211 PS stack relies on an
+interface flag IEEE80211_STA_NULLFUNC_ACKED for
+determining trigger frame ACK, which was not being set for
+acked non-QoS Null frames. The effect is an inability to
+trigger hardware sleep via IEEE80211_CONF_PS since the QoS
+Null frame was seemingly never acked.
 
-[  995.220767] BUG: KASAN: use-after-free in qtnf_cmd_send_with_reply+0x169/0x3e0 [qtnfmac]
-[  995.221098] Read of size 2 at addr ffff888213d1ded0 by task kworker/1:1/71
+This bug only applies to drivers which set both
+IEEE80211_HW_REPORTS_TX_ACK_STATUS and
+IEEE80211_HW_PS_NULLFUNC_STACK.
 
-The issue in qtnf_cmd_send_with_reply impacts all the commands that do
-not need response other then return code. For such commands, consume_skb
-is used for response skb and right after that return code in response
-skb is accessed.
+Detect the acked QoS Null frame to restore STA power save.
 
-Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Fixes: 7b6ddeaf27ec ("mac80211: use QoS NDP for AP probing")
+Signed-off-by: Thomas Pedersen <thomas@adapt-ip.com>
+Link: https://lore.kernel.org/r/20191119053538.25979-4-thomas@adapt-ip.com
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/quantenna/qtnfmac/commands.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ net/mac80211/status.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-index dc0c7244b60e3..c0c32805fb8de 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-@@ -83,6 +83,7 @@ static int qtnf_cmd_send_with_reply(struct qtnf_bus *bus,
- 	struct qlink_cmd *cmd;
- 	struct qlink_resp *resp = NULL;
- 	struct sk_buff *resp_skb = NULL;
-+	int resp_res = 0;
- 	u16 cmd_id;
- 	u8 mac_id;
- 	u8 vif_id;
-@@ -113,6 +114,7 @@ static int qtnf_cmd_send_with_reply(struct qtnf_bus *bus,
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index ab8ba5835ca09..5a3d645fe1bc2 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -1030,7 +1030,8 @@ static void __ieee80211_tx_status(struct ieee80211_hw *hw,
+ 			I802_DEBUG_INC(local->dot11FailedCount);
  	}
  
- 	resp = (struct qlink_resp *)resp_skb->data;
-+	resp_res = le16_to_cpu(resp->result);
- 	ret = qtnf_cmd_check_reply_header(resp, cmd_id, mac_id, vif_id,
- 					  const_resp_size);
- 	if (ret)
-@@ -128,8 +130,8 @@ static int qtnf_cmd_send_with_reply(struct qtnf_bus *bus,
- 	else
- 		consume_skb(resp_skb);
- 
--	if (!ret && resp)
--		return qtnf_cmd_resp_result_decode(le16_to_cpu(resp->result));
-+	if (!ret)
-+		return qtnf_cmd_resp_result_decode(resp_res);
- 
- 	pr_warn("VIF%u.%u: cmd 0x%.4X failed: %d\n",
- 		mac_id, vif_id, cmd_id, ret);
+-	if (ieee80211_is_nullfunc(fc) && ieee80211_has_pm(fc) &&
++	if ((ieee80211_is_nullfunc(fc) || ieee80211_is_qos_nullfunc(fc)) &&
++	    ieee80211_has_pm(fc) &&
+ 	    ieee80211_hw_check(&local->hw, REPORTS_TX_ACK_STATUS) &&
+ 	    !(info->flags & IEEE80211_TX_CTL_INJECTED) &&
+ 	    local->ps_sdata && !(local->scanning)) {
 -- 
 2.20.1
 
