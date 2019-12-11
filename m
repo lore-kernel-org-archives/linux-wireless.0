@@ -2,116 +2,121 @@ Return-Path: <SRS0=yvfE=2B=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94143C00454
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 14:55:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C495C3F68F
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 15:31:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 634E6214AF
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 14:55:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D5F9622B48
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 15:31:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="QWOaYmZc"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="j5C0uyFc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729753AbfLKOzY (ORCPT
+        id S2387998AbfLKPay (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 11 Dec 2019 09:55:24 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:50450 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1729701AbfLKOzX (ORCPT
+        Wed, 11 Dec 2019 10:30:54 -0500
+Received: from mail-pj1-f67.google.com ([209.85.216.67]:46182 "EHLO
+        mail-pj1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387867AbfLKP3X (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Dec 2019 09:55:23 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1576076122;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=/xRV6BaNRtqgbV4uBsZ9UxoINqOvZn7cXzR7XnrwTAM=;
-        b=QWOaYmZcE0hurDxqADHs42hamU0SC8MUmNIda6sh6gXRAHz0e7cAILzTL19dsDAXpXmjEB
-        iZtLSlz9R6cHJYbiAgXFZQ4Ud9/4NdXq7IBYWjFMcnsZdV5da3soJFysT2/uZHcWfWSMzB
-        Wgdg0ZgP1IXeGPMylG2OEKbuMjSRz30=
-Received: from mail-lj1-f199.google.com (mail-lj1-f199.google.com
- [209.85.208.199]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-48-Nvkse2TwOxye6sfMxuobtw-1; Wed, 11 Dec 2019 09:55:17 -0500
-Received: by mail-lj1-f199.google.com with SMTP id b12so4465251ljo.11
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Dec 2019 06:55:17 -0800 (PST)
+        Wed, 11 Dec 2019 10:29:23 -0500
+Received: by mail-pj1-f67.google.com with SMTP id z21so9041500pjq.13;
+        Wed, 11 Dec 2019 07:29:22 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=pfDhDYFuoXDrqHRE8i/08ZQEyfFGj50C9cMmD8Jy2MA=;
+        b=j5C0uyFcwXKjxMT2bhJ14CbB+fZCEQxShkK6p3Cf93qQ6BpSTKh005B5VD2g3OiyqF
+         /wNRFMf+eDpSe4TXNqE6yRjbz6RybfTWfb6JvF2sgW3j1ebFqzHfH+knhZW5LWMcLU9Q
+         PPkMZlifZ3WANqTGfezf8poByuNPftyfj2T8ipV3B9YeSB8ICKW5MsA6kddHfyed3zGU
+         vic5lX9Flai49PViVVxoFnEQJ1pk/ccakyFpoYFqPpU1m9xHZDAyiQ7nU9kNfJZthfG6
+         7ElzzegodjoKVuaP+P5wut6UEuDXichyFzp4GyPgvDzsqKx4ZybnxVzEt/Nh+yrpsJgq
+         kRqw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:in-reply-to:references:date
-         :message-id:mime-version:content-transfer-encoding;
-        bh=9ucwElWdgkQaEklwem1iDH2kvuF3LSBSdbIgBouf/AM=;
-        b=VrGqP3uShRR3vVdaRygPiUNlnOyRjEGtPiKGXCwDvtMNsRZw0RMqbm9hJVcyY9TzQz
-         ixhK2ln4k0cC7+xMwOVDsV1WsxBTIZpYh30q9gporm8xJIxfdgEdPP5OUxkDzwoBMR/0
-         A3zviwRSmI63Ugl+l1s++kceXCnG+7q4Dbtj51RtGf7m6CqKSqB9Le2C3l7g6evc5Eci
-         IRvgqJSblq8yONBIGY2V+rD06XtAVif5/ch5LAtOWCDuqj2hHyil1H9zcUAfeBZFU1km
-         Hs6t3GsPvWHds6HEOwUHztL790SLmAI/jpFpIcMczwNMadrNery+tufSfEgXM6rqeVEQ
-         CNjw==
-X-Gm-Message-State: APjAAAVsLPVXd7IOTzDfguEv7EJHTDRBQpBso+zC8lVYOLf1tzDJlVs5
-        BNJ+Tkzil9NMk1opitAQ8lZ/LGUoGXBDO4gbgDBLijUeSsnjBHvWLstSitnVoo8tCpqYFm4WqAo
-        nhkmgNanj2zeaQJqZFxH9+Svon+Y=
-X-Received: by 2002:a2e:9f52:: with SMTP id v18mr2122640ljk.30.1576076115911;
-        Wed, 11 Dec 2019 06:55:15 -0800 (PST)
-X-Google-Smtp-Source: APXvYqz6Nr+91aIAs23LlUXWGoq9CZxbo/71kgTRBTc7tB10BzoTuzW+r9oMxAtPOzr8tsV54UPBpg==
-X-Received: by 2002:a2e:9f52:: with SMTP id v18mr2122628ljk.30.1576076115767;
-        Wed, 11 Dec 2019 06:55:15 -0800 (PST)
-Received: from alrua-x1.borgediget.toke.dk ([45.145.92.2])
-        by smtp.gmail.com with ESMTPSA id e12sm1324145ljj.17.2019.12.11.06.55.15
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 11 Dec 2019 06:55:15 -0800 (PST)
-Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
-        id 896F318033F; Wed, 11 Dec 2019 15:55:14 +0100 (CET)
-From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
-To:     Johannes Berg <johannes@sipsolutions.net>,
-        Jens Axboe <axboe@kernel.dk>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        "Jason A. Donenfeld" <Jason@zx2c4.com>,
-        Steve French <smfrench@gmail.com>
-Cc:     "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Networking <netdev@vger.kernel.org>
-Subject: Re: iwlwifi warnings in 5.5-rc1
-In-Reply-To: <e65574ac1bb414c9feb3d51e5cbd643c2907b221.camel@sipsolutions.net>
-References: <ceb74ea2-6a1b-4cef-8749-db21a2ee4311@kernel.dk> <d4a48cbdc4b0db7b07b8776a1ee70b140e8a9bbf.camel@sipsolutions.net> <87o8wfeyx5.fsf@toke.dk> <e65574ac1bb414c9feb3d51e5cbd643c2907b221.camel@sipsolutions.net>
-X-Clacks-Overhead: GNU Terry Pratchett
-Date:   Wed, 11 Dec 2019 15:55:14 +0100
-Message-ID: <87d0cugbe5.fsf@toke.dk>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=pfDhDYFuoXDrqHRE8i/08ZQEyfFGj50C9cMmD8Jy2MA=;
+        b=oAp9Da0cQAxIH33xtPRmHHU7hXcNi2uBWg1Og5bnOhBOKc+hnHLVtlcYxFnwXbX6zF
+         GEAaDkOqYoCsnjDS7bBWqirQhwVzj3p5jhoz5pUi3vNFcmz6OmMvfPehP1gwtNkj/FpT
+         3z3ypD6JonJ5HP91wt3V+mi5Gijz7NOU3juy/RKKTpDlY2pn7/Po+PHgd0kGvbEAGgXe
+         mIA42Asn90P5z94ZdBFE/amZfAWQw9qJf/c+w5LheJuK4rW2BZ+nyJjdkdZV1XmA+VBP
+         Wl6qpuDs65zuO7ZGQ45BENZByisPuxDaop07kTF9tryPX0BH4JedGPDxS5qhAqjTERnc
+         FSBQ==
+X-Gm-Message-State: APjAAAWG8fEtXNby/te4Lw1NUEZdGAC01iU/5E+FSAUQshH+DOm7Ksp/
+        6G6y8LdeLPeY7Putejvd+94YB7/nGUFqXoZE64E=
+X-Google-Smtp-Source: APXvYqwlR/tF5FA23iHp/eaMoUPuaCaCPBgDqm77FVGRFefN3YELGs3EmpG2NGeQvAJUc/yD31OEVyNePT/dpDkApsU=
+X-Received: by 2002:a17:90a:b10b:: with SMTP id z11mr4272497pjq.132.1576078162498;
+ Wed, 11 Dec 2019 07:29:22 -0800 (PST)
 MIME-Version: 1.0
-X-MC-Unique: Nvkse2TwOxye6sfMxuobtw-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+References: <1576075099-3441-1-git-send-email-akinobu.mita@gmail.com> <1576075099-3441-3-git-send-email-akinobu.mita@gmail.com>
+In-Reply-To: <1576075099-3441-3-git-send-email-akinobu.mita@gmail.com>
+From:   Andy Shevchenko <andy.shevchenko@gmail.com>
+Date:   Wed, 11 Dec 2019 17:29:12 +0200
+Message-ID: <CAHp75Vfq4KqNAGY4ivveR7D0Z1fA1EOFT+oL9+f+Ak2jikCTVg@mail.gmail.com>
+Subject: Re: [PATCH v3 02/12] ACPI: thermal: switch to use <linux/units.h> helpers
+To:     Akinobu Mita <akinobu.mita@gmail.com>
+Cc:     Linux NVMe Mailinglist <linux-nvme@lists.infradead.org>,
+        linux-hwmon@vger.kernel.org, Linux PM <linux-pm@vger.kernel.org>,
+        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
+        linux-iio <linux-iio@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Sujith Thomas <sujith.thomas@intel.com>,
+        Darren Hart <dvhart@infradead.org>,
+        Andy Shevchenko <andy@infradead.org>,
+        Zhang Rui <rui.zhang@intel.com>,
+        Daniel Lezcano <daniel.lezcano@linaro.org>,
+        Amit Kucheria <amit.kucheria@verdurent.com>,
+        Jean Delvare <jdelvare@suse.com>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Keith Busch <kbusch@kernel.org>, Jens Axboe <axboe@fb.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Sagi Grimberg <sagi@grimberg.me>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Johannes Berg <johannes@sipsolutions.net> writes:
-
-> On Wed, 2019-12-11 at 15:09 +0100, Toke H=C3=B8iland-J=C3=B8rgensen wrote=
-:
->>=20
->> If we're doing this on a per-driver basis, let's make it a proper
->> NL80211_EXT_FEATURE and expose it to userspace; that way users can at
->> least discover if it's supported on their device. I can send a patch
->> adding that...
+On Wed, Dec 11, 2019 at 4:39 PM Akinobu Mita <akinobu.mita@gmail.com> wrote:
 >
-> Sure. Just didn't get to that yet, but if you want to send a patch
-> that's very welcome. I have to run out now, will be back in the evening
-> at most.
-
-Patch here (for those not following linux-wireless):
-https://patchwork.kernel.org/project/linux-wireless/list/?series=3D215107
-
->> Maybe we should untangle this from airtime_flags completely, since if we
->> just use the flags people could conceivably end up disabling it by
->> mistake, couldn't they?
+> This switches the ACPI thermal zone driver to use celsius_to_deci_kelvin(),
+> deci_kelvin_to_celsius(), and deci_kelvin_to_millicelsius_with_offset() in
+> <linux/units.h> instead of helpers in <linux/thermal.h>.
 >
-> Yes, that sounds like a good plan, now I was wondering why it's there
-> anyway.
+> This is preparation for centralizing the kelvin to/from Celsius conversion
+> helpers in <linux/units.h>.
 
-Convenience, I think :)
+>  #include <linux/reboot.h>
+>  #include <linux/device.h>
+>  #include <linux/thermal.h>
 
--Toke
+> +#include <linux/units.h>
 
+Can we try to keep *some* order, i.e. put this after acpi.h below?
+
+>  #include <linux/acpi.h>
+>  #include <linux/workqueue.h>
+>  #include <linux/uaccess.h>
+
+>                         } else if (crt > 0) {
+> -                               unsigned long crt_k = CELSIUS_TO_DECI_KELVIN(crt);
+> +                               unsigned long crt_k =
+> +                                       celsius_to_deci_kelvin(crt);
+
+It used to be one line, why do two?
+
+>         pr_info(PREFIX "%s [%s] (%ld C)\n", acpi_device_name(device),
+> -               acpi_device_bid(device), DECI_KELVIN_TO_CELSIUS(tz->temperature));
+> +               acpi_device_bid(device),
+> +               deci_kelvin_to_celsius(tz->temperature));
+
+Ditto.
+
+-- 
+With Best Regards,
+Andy Shevchenko
