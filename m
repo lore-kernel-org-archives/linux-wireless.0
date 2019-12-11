@@ -2,128 +2,249 @@ Return-Path: <SRS0=yvfE=2B=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-13.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 148E3C43603
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 15:49:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BCC68C43603
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 15:51:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DA3932073D
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 15:49:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8887B2073B
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 15:51:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="K+IhQdX6"
+	dkim=pass (1024-bit key) header.d=web.de header.i=@web.de header.b="lMZl+kIo"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388649AbfLKPtX (ORCPT
+        id S2388732AbfLKPvM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 11 Dec 2019 10:49:23 -0500
-Received: from mail-wr1-f66.google.com ([209.85.221.66]:40856 "EHLO
-        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732393AbfLKPsd (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Dec 2019 10:48:33 -0500
-Received: by mail-wr1-f66.google.com with SMTP id c14so24544040wrn.7;
-        Wed, 11 Dec 2019 07:48:32 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=IGE1EZUwmuYxZ2Mr6HgxG/3CVQcz/FGb9rzGPe/Zmdw=;
-        b=K+IhQdX61p0DNtryFjvI+O95fa02XCaX+fJS84QR58V9gaWJRhRI9ixClf2eV6teDl
-         bkJRGQtmGKWOhr97rTwTPQ4EJhJjeKurhIVIUacxn1w2p7X61WykKpWbS4GJ5n7lK6I8
-         p5TpUwBxe3yjKHtbYGmnlo0Rxu8dN8v7fnnWYVoRjwsPPuP/rQnTgP1FVZ17DLSx9mWy
-         raZ16oh3Qu3idCPSlSqdLWo+TSuXqVlisK55iB4lqeOoEf74BjPJ3feoBT36oa35jMWM
-         L26CFs389pitsobSshnEcVXzhUTUaMrqZmp0JnTh4X3o//5mzkc5qqCuEnr72ru7FH+v
-         jPwQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=IGE1EZUwmuYxZ2Mr6HgxG/3CVQcz/FGb9rzGPe/Zmdw=;
-        b=NzB+cBFq7svBrMJQB25xXvBBoV9R/lYJig+F6ZVAoGfosBXq6GhssO/JDer9dhrhWD
-         6i1qeIVYsbXlvFVXvUSXGTnhwX5m/mg3T95X+/RWciMSv8SXqZTc/poA14GwZ2eRq/ag
-         Wxa7TydIGGd6nP7qsIL9Gh4BcCpKUbl44/xWC7fCHipd3VGhomuhrHfhOGXR7TE4HMHu
-         WM4+rz3UWD5HNrubADQ5ksKeWsBZOpsGkpWwVDijl+7A60OV4wK6ZHjV/F4khHDIPG04
-         SV11SqG2XgG4Ta1z8+cGOC55oNQsQ8vY42WQL8ByjXjQj+ZBFQB21qp/fwdFvkYIyUJC
-         5fAA==
-X-Gm-Message-State: APjAAAUtW8Tmb4S0RwXrxd4SHMQx1eVDWPBYAoqiuAONoM2MDtaK7KAj
-        bH8L33sg8dssCVIS4s1wl8Q=
-X-Google-Smtp-Source: APXvYqxtnLcKlpVW5V/2bsbKm53q/msqRT+C1dVoFjS8gzd0jI835avZh2s7fMaA3YMf0+DkjJ1BJA==
-X-Received: by 2002:a5d:49c3:: with SMTP id t3mr462740wrs.113.1576079312153;
-        Wed, 11 Dec 2019 07:48:32 -0800 (PST)
-Received: from localhost.localdomain (dslb-002-204-142-082.002.204.pools.vodafone-ip.de. [2.204.142.82])
-        by smtp.gmail.com with ESMTPSA id n16sm2677388wro.88.2019.12.11.07.48.31
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 11 Dec 2019 07:48:31 -0800 (PST)
-From:   Michael Straube <straube.linux@gmail.com>
-To:     pkshih@realtek.com
-Cc:     kvalo@codeaurora.org, davem@davemloft.net,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Michael Straube <straube.linux@gmail.com>
-Subject: [PATCH 1/6] rtlwifi: rtl8192ce: use generic rtl_query_rxpwrpercentage
-Date:   Wed, 11 Dec 2019 16:47:50 +0100
-Message-Id: <20191211154755.15012-2-straube.linux@gmail.com>
-X-Mailer: git-send-email 2.24.0
-In-Reply-To: <20191211154755.15012-1-straube.linux@gmail.com>
-References: <20191211154755.15012-1-straube.linux@gmail.com>
+        Wed, 11 Dec 2019 10:51:12 -0500
+Received: from mout.web.de ([212.227.15.4]:49279 "EHLO mout.web.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1732606AbfLKPvL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 11 Dec 2019 10:51:11 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=web.de;
+        s=dbaedf251592; t=1576079456;
+        bh=2vt6H9m6gvHEi1nJRDosEC6muzmSbOBdj9rDjM1l1RA=;
+        h=X-UI-Sender-Class:Subject:From:To:Cc:References:Date:In-Reply-To;
+        b=lMZl+kIoPaYLEgDwg7FkfY/A94edm93wzNwY31JVJL9mJ59RwugPR7R9LE4vc7Ur8
+         iBiKKfHtfa01y0PnOzM6Adn98eyP45gTW9PCpXTAwThOKnWgfVyoaaaHTpk2MOpju4
+         TwGciCpeCeN56jPE+/2waJvVQ5JFRtRghbCH5GY4=
+X-UI-Sender-Class: c548c8c5-30a9-4db5-a2e7-cb6cb037b8f9
+Received: from [192.168.43.108] ([89.204.138.97]) by smtp.web.de (mrweb004
+ [213.165.67.108]) with ESMTPSA (Nemesis) id 0MHuv7-1ii6fC1BvR-003hlf; Wed, 11
+ Dec 2019 16:50:56 +0100
+Subject: Re: [PATCH 8/8] arm64: dts: rockchip: RockPro64: enable wifi module
+ at sdio0
+From:   Soeren Moch <smoch@web.de>
+To:     =?UTF-8?Q?Heiko_St=c3=bcbner?= <heiko@sntech.de>
+Cc:     Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org
+References: <20191209223822.27236-1-smoch@web.de> <6162240.GiEx4hqPFh@diego>
+ <d0cece6c-9f90-c691-eb68-a25547532f68@web.de> <3170826.NpdqLUR24W@diego>
+ <5d3bde69-9102-cc81-c1d2-d71b60258906@web.de>
+Message-ID: <4b98437b-0d6f-6cc3-b601-f273441db93b@web.de>
+Date:   Wed, 11 Dec 2019 16:50:51 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.2.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <5d3bde69-9102-cc81-c1d2-d71b60258906@web.de>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Content-Language: en-GB
+X-Provags-ID: V03:K1:dFFyJ6iSHcoJx7Qh+68lCT8QQNP6FUWWUe9MP+9m/blQKF9T574
+ tFfixMpTR2sAppfICTHWK6VA7KRK0dGSLSc1xifVMlUdZhJd5Qxw4mFwj/yXnEJO8avbllC
+ jV85pQdoktREurcgt5K3JrlP9hif51zLdGDBxcGhc9jOoQjwcq7JpVCqvSh2kS3NKMtdmhQ
+ f4684ea+mLx/qar9jeLgA==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:lcTU9Hyg27Q=:kuXpUEu4NzA5u4RnHeC0ZO
+ 4j2m0tsrdcBVM9I1uILruzVFI+10E/Iu/jicWzIUOgyF+/U1t26o79R/8AzL5SAzX+5wdzFmw
+ MzpcDbJfO245gdnM9yDtQ4M2LeCu2uUVhXF1FJtEMpxAc0FoWEel9IOagVQ4CeQISDt8U7VRM
+ 2yJ3oZ7+NeNak09PDzhTa0jckZqdRCvStr5gxU4La7hp6wGNcQPEl7MKQvCUYDadM8zX7Ogaa
+ 3DD+YU90cjyjGTtFwB2mVgLhUdrRuu/k2m5TWM6Zy9g0klHEQ4wLK1h8xMrjRL6E63WiDUBaj
+ kTRzDeMM4hxKpaKF0ah3wmYM7IG+U/JlqU37TmaeGjQv+Y3hDtaEChVKtvXWdkjE8XIS48uCX
+ HyURc3hSU9tSAgoN/oEbFBilnLnxsALgFwpwDRrTcHbkj/fMhDBLwo+6o9IZx8y6BNrDVfRGp
+ NllLm5rcjY27dnntUt/K2GsyX3sdEbKkYQ457iKbsI2kj9Yyf1Rn8qLNFruVv7s0++b+gvwIk
+ QHai3B+1xLf8Xx9ZFtfhWsOJM3X0/ZZ5Cop57bhKdn4AWW0CmSv+EXCFzMdoBymlygIHq+k6p
+ K3Ooc8uB9XeRC0hnk5729MgEk5wXpkZf2JtZtyu9XUk9QSQ2Q9JAKXxtk6VXJshFT0+Df0Ij7
+ FQKjomRAGIeOfd1zA8mLa5NU5Y7/ae8XISkDg4Qa1cVpGBBsUjTEe1iCORyqz8QIptfn503jS
+ rCb1PyVsgJXeljdetFMOoYDBIvTX78nS6fuNqNSyCBdz7fQeoL7QL6Op6o8uTU23vD/ASRaIA
+ 2H6jUwxbjd/7kPlGBpq+PUCosK/4awixla60Ttm9RQi2wMvzrs0XSCs0e9st7xIo1a8PicQO1
+ Vk96VloQylkSvdTKPkhWlVeGMus1bwDboKYvdoTTCBkgO6GEngCZ/t+SEBWleqo/o1RHqy5gH
+ 5+X2LyegYkRfbsvPxAHZC3DirVFcsQFHA2Y19iZBpQE2xcFRzU2qA9eoxfKZHcF7vJArNkkwZ
+ 2VIRyqsW5K8ubsPfdf6YeMD6WnwJQCYLIk9Dx/rzRxNh5wdJ2OT/t6n+CTzdwgNhFCOcEZbTN
+ /w4Up/x6QDkCh8cGn0IVxj7uIV0VrJMQo58S7HEuRYi70Hk7gRMaZzvluCX+Eo4dTnACpgvCI
+ NsbGEfvfNpEL8zu4tFi1SJBXE1Hy/zAF2707Dq0GHtGbm6h8R40J5mx9Ee77SM7fgVnr0MXg7
+ RmBOykj9C4/SHUhg/egzPae+kDqGq7f7hSFiqhePbwcBq3G0zUMv1z5EABXo=
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Function _rtl92c_query_rxpwrpercentage is identical to the generic
-version rtl_query_rxpwrpercentage. Remove _rtl92c_query_rxpwrpercentage
-and use the generic function.
+re-send as plain text for mailing lists, sorry.
 
-Signed-off-by: Michael Straube <straube.linux@gmail.com>
----
- .../net/wireless/realtek/rtlwifi/rtl8192ce/trx.c   | 14 ++------------
- 1 file changed, 2 insertions(+), 12 deletions(-)
+Soeren
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/trx.c
-index fc9a3aae047f..dec66b3ac365 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/trx.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/trx.c
-@@ -23,16 +23,6 @@ static u8 _rtl92ce_map_hwqueue_to_fwqueue(struct sk_buff *skb, u8 hw_queue)
- 	return skb->priority;
- }
- 
--static u8 _rtl92c_query_rxpwrpercentage(s8 antpower)
--{
--	if ((antpower <= -100) || (antpower >= 20))
--		return 0;
--	else if (antpower >= 0)
--		return 100;
--	else
--		return 100 + antpower;
--}
--
- static long _rtl92ce_signal_scale_mapping(struct ieee80211_hw *hw,
- 		long currsig)
- {
-@@ -194,7 +184,7 @@ static void _rtl92ce_query_rxphystatus(struct ieee80211_hw *hw,
- 			rx_pwr[i] =
- 			    ((p_drvinfo->gain_trsw[i] & 0x3f) * 2) - 110;
- 			/* Translate DBM to percentage. */
--			rssi = _rtl92c_query_rxpwrpercentage(rx_pwr[i]);
-+			rssi = rtl_query_rxpwrpercentage(rx_pwr[i]);
- 			total_rssi += rssi;
- 			/* Get Rx snr value in DB */
- 			rtlpriv->stats.rx_snr_db[i] =
-@@ -209,7 +199,7 @@ static void _rtl92ce_query_rxphystatus(struct ieee80211_hw *hw,
- 		 * hardware (for rate adaptive)
- 		 */
- 		rx_pwr_all = ((p_drvinfo->pwdb_all >> 1) & 0x7f) - 110;
--		pwdb_all = _rtl92c_query_rxpwrpercentage(rx_pwr_all);
-+		pwdb_all = rtl_query_rxpwrpercentage(rx_pwr_all);
- 		pstats->rx_pwdb_all = pwdb_all;
- 		pstats->rxpower = rx_pwr_all;
- 		pstats->recvsignalpower = rx_pwr_all;
--- 
-2.24.0
+On 11.12.19 16:43, Soeren Moch wrote:
+>
+>
+> On 10.12.19 11:13, Heiko St=C3=BCbner wrote:
+>> Am Dienstag, 10. Dezember 2019, 11:08:18 CET schrieb Soeren Moch:
+>>> Hi Heiko,
+>>>
+>>> On 10.12.19 02:18, Heiko St=C3=BCbner wrote:
+>>>> Hi Soeren,
+>>>>
+>>>> Am Dienstag, 10. Dezember 2019, 00:29:21 CET schrieb Soeren Moch:
+>>>>> On 10.12.19 00:08, Heiko St=C3=BCbner wrote:
+>>>>>> Am Montag, 9. Dezember 2019, 23:38:22 CET schrieb Soeren Moch:
+>>>>>>> RockPro64 supports an Ampak AP6359SA based wifi/bt combo module.
+>>>>>>> The BCM4359/9 wifi controller in this module is connected to sdio0=
+,
+>>>>>>> enable this interface.
+>>>>>>>
+>>>>>>> Signed-off-by: Soeren Moch <smoch@web.de>
+>>>>>>> ---
+>>>>>>> Not sure where to place exactly the sdio0 node in the dts because
+>>>>>>> existing sd nodes are not sorted alphabetically.
+>>>>>>>
+>>>>>>> This last patch in this brcmfmac patch series probably should be p=
+icked
+>>>>>>> up by Heiko independently of the rest of this series. It was sent =
+together
+>>>>>>> to show how this brcmfmac extension for 4359-sdio support with RSD=
+B is
+>>>>>>> used and tested.
+>>>>>> node placement looks good so I can apply it, just a general questio=
+ns
+>>>>>> I only got patch 8/8 are patches 1-7 relevant for this one and what=
+ are they?
+>>>>> Patches 1-7 are the patches to support the BCM4359 chipset with SDIO
+>>>>> interface in the linux brcmfmac net-wireless driver, see [1].
+>>>>>
+>>>>> So this patch series has 2 parts:
+>>>>> patches 1-7: add support for the wifi chipset in the wireless driver=
+,
+>>>>> this has to go through net-wireless
+>>>>> patch 8: enable the wifi module with this chipset on RockPro64, this=
+ patch
+>>>> Thanks for the clarification :-) .
+>>>>
+>>>> As patch 8 "only" does the core sdio node, it doesn't really depend o=
+n the
+>>>> earlier ones and you can submit any uart-hooks for bluetooth once the
+>>>> other patches land I guess.
+>>> The uart part for bluetooth already is in: uart0.
+>>> However, I haven't tested if it really works.
+>> In the new world there is now also a way to actually hook the bt-uart t=
+o
+>> the wifi driver without userspace intervention, and you might want to h=
+ook
+>> up the interrupt as well for sdio?
+>>  For example look at the rock960:
+> Thanks for the examples.
+>> sdio-interrupt: https://git.kernel.org/pub/scm/linux/kernel/git/torvald=
+s/linux.git/tree/arch/arm64/boot/dts/rockchip/rk3399-rock960.dtsi#n510
+> The signal name wifi_host_wake_l suggests that this is an active-low
+> wake-up signal, probably used for wake-on-wifi. But in fact this is
+> the active-high out-of-band sdio interrupt and can also be used as
+> such on RockPro64 when following your example.
+> However, with this external interrupt enabled=C2=A0 wifi runs unstable,
+> maybe because board designers (probably confused by their own naming
+> style) mixed in the PCI-Express-WAKE# signal to route this to the same
+> GPIO.
+>
+> So I want to use the in-band sdio interrupt instead on RockPro64,
+> which works perfectly fine.
+> ||||
+>> uart-magic: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/li=
+nux.git/tree/arch/arm64/boot/dts/rockchip/rk3399-rock960.dtsi#n557
+> OK, people probably like to see Bluetooth support. I will add it.
+>
+> Soeren
+>> Heiko
+>>
+>>>>> If this was confusing, what would be the ideal way to post such seri=
+es?
+>>>> I think every maintainer has some slightly different perspective on t=
+his,
+>>>> but personally I like getting the whole series to follow the discussi=
+on but
+>>>> also to just see when the driver-side changes get merged, as the dts-=
+parts
+>>>> need to wait for that in a lot of cases.
+>>> OK, thanks.
+>>> I will add you for the whole series when sending a v2.
+>>>
+>>> Soeren
+>>>> Heiko
+>>>>
+>>>>
+>>>>> [1] https://patchwork.kernel.org/project/linux-wireless/list/?series=
+=3D213951
+>>>>>> Thanks
+>>>>>> Heiko
+>>>>>>
+>>>>>>
+>>>>>>> Cc: Heiko Stuebner <heiko@sntech.de>
+>>>>>>> Cc: Kalle Valo <kvalo@codeaurora.org>
+>>>>>>> Cc: linux-wireless@vger.kernel.org
+>>>>>>> Cc: brcm80211-dev-list.pdl@broadcom.com
+>>>>>>> Cc: brcm80211-dev-list@cypress.com
+>>>>>>> Cc: netdev@vger.kernel.org
+>>>>>>> Cc: linux-arm-kernel@lists.infradead.org
+>>>>>>> Cc: linux-rockchip@lists.infradead.org
+>>>>>>> Cc: linux-kernel@vger.kernel.org
+>>>>>>> ---
+>>>>>>>  .../boot/dts/rockchip/rk3399-rockpro64.dts    | 21 ++++++++++++--=
+-----
+>>>>>>>  1 file changed, 14 insertions(+), 7 deletions(-)
+>>>>>>>
+>>>>>>> diff --git a/arch/arm64/boot/dts/rockchip/rk3399-rockpro64.dts b/a=
+rch/arm64/boot/dts/rockchip/rk3399-rockpro64.dts
+>>>>>>> index 7f4b2eba31d4..9fa92790d6e0 100644
+>>>>>>> --- a/arch/arm64/boot/dts/rockchip/rk3399-rockpro64.dts
+>>>>>>> +++ b/arch/arm64/boot/dts/rockchip/rk3399-rockpro64.dts
+>>>>>>> @@ -71,13 +71,6 @@
+>>>>>>>  		clock-names =3D "ext_clock";
+>>>>>>>  		pinctrl-names =3D "default";
+>>>>>>>  		pinctrl-0 =3D <&wifi_enable_h>;
+>>>>>>> -
+>>>>>>> -		/*
+>>>>>>> -		 * On the module itself this is one of these (depending
+>>>>>>> -		 * on the actual card populated):
+>>>>>>> -		 * - SDIO_RESET_L_WL_REG_ON
+>>>>>>> -		 * - PDN (power down when low)
+>>>>>>> -		 */
+>>>>>>>  		reset-gpios =3D <&gpio0 RK_PB2 GPIO_ACTIVE_LOW>;
+>>>>>>>  	};
+>>>>>>>
+>>>>>>> @@ -650,6 +643,20 @@
+>>>>>>>  	status =3D "okay";
+>>>>>>>  };
+>>>>>>>
+>>>>>>> +&sdio0 {
+>>>>>>> +	bus-width =3D <4>;
+>>>>>>> +	cap-sd-highspeed;
+>>>>>>> +	cap-sdio-irq;
+>>>>>>> +	disable-wp;
+>>>>>>> +	keep-power-in-suspend;
+>>>>>>> +	mmc-pwrseq =3D <&sdio_pwrseq>;
+>>>>>>> +	non-removable;
+>>>>>>> +	pinctrl-names =3D "default";
+>>>>>>> +	pinctrl-0 =3D <&sdio0_bus4 &sdio0_cmd &sdio0_clk>;
+>>>>>>> +	sd-uhs-sdr104;
+>>>>>>> +	status =3D "okay";
+>>>>>>> +};
+>>>>>>> +
+>>>>>>>  &sdmmc {
+>>>>>>>  	bus-width =3D <4>;
+>>>>>>>  	cap-sd-highspeed;
+>>>>>>> --
+>>>>>>> 2.17.1
+>>>>>>>
+>>
+>
 
