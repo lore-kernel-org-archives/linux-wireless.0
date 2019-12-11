@@ -8,36 +8,35 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AB6F9C2D0C6
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 23:53:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0373CC43603
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 23:53:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7664A2173E
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 23:53:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CE26020578
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 23:53:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=web.de header.i=@web.de header.b="QHfjrJCv"
+	dkim=pass (1024-bit key) header.d=web.de header.i=@web.de header.b="fC+reDFW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727335AbfLKXxq (ORCPT
+        id S1727267AbfLKXxa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 11 Dec 2019 18:53:46 -0500
-Received: from mout.web.de ([212.227.17.11]:36427 "EHLO mout.web.de"
+        Wed, 11 Dec 2019 18:53:30 -0500
+Received: from mout.web.de ([212.227.17.12]:40639 "EHLO mout.web.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727226AbfLKXxb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Dec 2019 18:53:31 -0500
+        id S1727202AbfLKXx3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 11 Dec 2019 18:53:29 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=web.de;
-        s=dbaedf251592; t=1576108389;
-        bh=Jw3d/3FG5d2fs3pbP5cmR9tz+imTkB9FfgldNiz16/M=;
+        s=dbaedf251592; t=1576108392;
+        bh=UNWwBy4HvMp8NS5BHLEVj6k8eNrJ1QW+53Ygqx3ikyQ=;
         h=X-UI-Sender-Class:From:To:Cc:Subject:Date:In-Reply-To:References;
-        b=QHfjrJCvhmuCCnSf1F/RiTE3u7NdGsOyiro4sUDoDIQ+BV6PzAODPhHh1Cl7rbGB8
-         8g2zq0CxIlQxFOZ0mVoVjj+Q1dN150ZDpr5DsCsqGUV2gw/Iy4detaBikD0SXnkeal
-         jfU6VBuWfOIv7zxNJOfScJziWrGpu8ob2L2xUIF0=
+        b=fC+reDFWWXrCC1oVsGw4DQ2cGfkh72ux9rGAVkcaHPaAqvApQhggsnIfFOGYk32jb
+         6EBEjgep0F9A+dEEHivoHe44RLKCJ+3fsNEZeNO0CLe+pnvi3zalkX/PDYrUan0NZG
+         uuwRvwgNSI8U/goq1XXnv0LUBDjbA5OpR7WhU9Zk=
 X-UI-Sender-Class: c548c8c5-30a9-4db5-a2e7-cb6cb037b8f9
 Received: from localhost.localdomain ([89.204.139.166]) by smtp.web.de
  (mrweb101 [213.165.67.124]) with ESMTPSA (Nemesis) id
- 0Mhlmh-1iJYJC0mhf-00MwBd; Thu, 12 Dec 2019 00:53:09 +0100
+ 0MNcV4-1idZEQ0uXy-007BYG; Thu, 12 Dec 2019 00:53:12 +0100
 From:   Soeren Moch <smoch@web.de>
 To:     Kalle Valo <kvalo@codeaurora.org>, Heiko Stuebner <heiko@sntech.de>
-Cc:     Chung-Hsien Hsu <stanley.hsu@cypress.com>,
-        Soeren Moch <smoch@web.de>,
+Cc:     Soeren Moch <smoch@web.de>,
         Arend van Spriel <arend.vanspriel@broadcom.com>,
         Franky Lin <franky.lin@broadcom.com>,
         Hante Meuleman <hante.meuleman@broadcom.com>,
@@ -48,55 +47,50 @@ Cc:     Chung-Hsien Hsu <stanley.hsu@cypress.com>,
         brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org,
         linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 2/9] brcmfmac: set F2 blocksize and watermark for 4359
-Date:   Thu, 12 Dec 2019 00:52:46 +0100
-Message-Id: <20191211235253.2539-3-smoch@web.de>
+Subject: [PATCH v2 4/9] brcmfmac: make errors when setting roaming parameters non-fatal
+Date:   Thu, 12 Dec 2019 00:52:48 +0100
+Message-Id: <20191211235253.2539-5-smoch@web.de>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20191211235253.2539-1-smoch@web.de>
 References: <20191211235253.2539-1-smoch@web.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:vMAckOgNBxG6cLi2IX3dVxNnAjzrN9nQcd36iOgEGjn7lSyOXK0
- nMmPQF96FpuS9n/OnUjpHNPcWxW8ctz5fO3ibNoNVUPj3EW+6zvheCwlxSOOoWs2gDf+gmY
- p4EirClUV1rcJdk7pgxNeOvTWz8mX1eiqcst5vCJFqdAHlgxEYhaMFLTEBK2i2tiRaxBzO3
- pyg4nxvbZPxpAHrGgvnZQ==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:Jm6PikBj8do=:bhZOh8ji0Cm3PXLd8vpAhB
- c7KTXi1ITKNxCijfIlhgJKvVQDYDAgkGWFdQSKy8WVmVRRXjzTWL5dkSRcpZbYZT/kCdMcv5E
- cNSQdgYK9OoY0+QUPV9M6+5lAymFlzhjrWU0y/umHkgscJK/l68t/ge+xV3POxR16m3yKl7gd
- T0AU3Mgz18RmHQkB4gvRZQFaVjhOpjZSkEALjU6Iy7ZaupVXQdtoVYtU7YSe/9KFNOlYkj/Qe
- O3mcXMoWArV1bPPx17Q3cKaW2i6ChTMC/jQ72Yvi6YRe0EhXtioF3tmX/LSJ39ooaE4pAImRG
- ndHMqmA/IRXkgv3jlUo15fPBeexloNFrLg3B5pbHm93CtWSEHTVAcBzKAltK62RA5mMEr4+cO
- Y4BXPf/v13ZlWDcYmg1w82o7cNvdfTY8EFaOBLDjqK1jJUescVSc8NRlVyhsoJIPvUcXOzfmU
- WzR3GUagJ3/fyh7xa9+SNFjYsFJHVcQHB3nidL3DRYLpLXFYNKR/n4YJU5ijEFPDW7xkN7t1l
- DWfMyWI1bptx9yK9LIxdqp0fFTQN8cD/qhsYm8bhpwK5Pn6FRvDdGpat8Waa63I0pwwcopikT
- cAsvWGN4c1iPzgGFNE/qOtxMMrqL/l3Hls/oPoSnV4uixQnBxq/Sr5iLaFUiv2pP8z1H88nmb
- AarpNGmk52LtFUOR0qKhO+BbhVIWbXCbb5ZGHxF9GA5nDR3dcRXWmNiUvxCTUYEoU6hFIw8jQ
- 8TvU7ShRQGjZP+vkv2XBVSzzui4MdrIRyLF8OZh0UgLbWB9tZY+inDhGDa9InOmK6Zn5mCzKs
- kDs4RY/KRp/OvNeOSDgnGuP3yGa06aWA08lfMkhnGYrbLdRRNvcrXLc2RjcbtD/T1WAGZdD3L
- LFYaaq+YmEHK8+AnSb8rmAbor0ynGp0bLYpo02c3kKEVKToJ4QvjbzROrOmiNYn/bhdxIn2ML
- ku8R3r/eRwZzOMVfVoAR/soNZiV2eXN5VWj5aPvRwpCKiy0Xieo30PYkIvapF8asgJ/IoD9bQ
- 1ho9MkOstO/z4yfARCHWHePoYq2FaymEsO0tKpr+J5FMbsC7lPoPoVKvq3FfHUFDbWfyz/j08
- YcpsQ05Po3tDeao9xyk0cO2kZ2kA25ic2TeifPRDQow9ogTTTSYhJCrREBtQ3wljTE9g0MG0L
- 9N2Rw16Oitu46gwY4aR3zUIlM6itQMAuZF1Imj1Zrbj2dk1Ha00y/U9Id/PqaUSR1JB4ifYan
- N5MNtNk3cmZwBbpmRKtsp9azFnviVwGUl/Yy3vw==
+X-Provags-ID: V03:K1:iWY6io2UQ6RIkm2j/nioDi8y8IvMaEyrFJN80SKzmn5lD3C51Hk
+ h3/+agnrE46TIzUUZIsWNSG7+jxo/QOQNpX56dWjEcTw05Yp4UChy+Ww/3ueKnCCJ59PoZ5
+ tpmmXvLM1lnsJnGCnIzDOkWqJc6SlNH4eAwRxCh7GQEMLIlOvB2HQMc4gcfS5RhSBBlLfIK
+ 5+/LmDbh3Gx55YpFdC45Q==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:pNccthOUpKw=:z9QcLBPdXM4E7dbreh5KhI
+ LbeK3P1yhdftZzuhI+R0FUJFoGiC4b6ano7oqYIsLK/N2nEj6o6crBfkW1A0kW4MzGvnEkkGO
+ T4/Yj7rQh0lwFjY+PAHk11lU7gWKYy3dzF9ykEzUfYFPCWCLlFGsxlT1P7Qptk12Qp46FhixQ
+ vQtI4x1hJB+scZ+MlFV/T1Eq26ClwCRwd2/FNm125HU+fNFXw39nDEtrEqZiARo5wMEwwYz/M
+ 3Z9bhcOEIftDTWukSx0LqRymqCjT14szC29OgLXyZqjNAopuF1aD1w0ArLlVpRJzrXWrjTJr/
+ QAygyLWbky6ZFgyi8oiqzquFk67bVFjQn/qjswICugFTVrJGmTXUKxtPZ4OnNcWMy8tm75OLP
+ z/cYpvtRR64hXUJT7Zii9IKPW8GxxwOnEf7mTJU76JTiUTHbhKPezaF2ykto81DU6Vuc9L0j9
+ UyudOga5QCRSlCtyDXQTK2UWSFSC+fgRYA43fkhrdKukQIFM2Dr9f4SiuK3/x7vrS+OWi1T5f
+ sW7nA8fSrOrjynGIBPd68jPqGxlpUULc47flahXzMVRPM+frWVoYjDz94MT5fRO9xbvuN9HxB
+ guWKwE8k7m3dAUiFx3Y5qD2I0dULfY+WsTtedJk1d6QLAs7ie42tUVeQ0PB7+QLqu5cTftePA
+ NQsl28wrGYf0XsJbsrmMxRKvc/rvLOXG/lGm0i2NZu07XRfBpinmjnUrZULzaP8mrNhurml+6
+ EGv9SJZYfsvvYfSW9q671TjElYEld5L3IJlK7cQqfYdFWBKVbxfXqM+HTvU9yKAS6XFYC7QWx
+ ck6BnF8QaZW9rL63mQ4qmOFqcU7jNLQ2Hmpu6cibJAakOBJVZNTYbQAVMK5K67MUz/6XcaxdB
+ mIABZMCdTkF8CV9QJIp1ZHahsRIvYhonr1LhVWLRgE5f1UGO6WfLY04NkoanJIq9FwWQwE7VO
+ JPMibERe+SINR2JjvQ+X2rr0xCjeWL990Z91mGxswVqExzYVmCvi0DZEfXHN7axO0PLRcNx5D
+ NoGw4gxFqB4fcx4P0BcERfC5Lis0/fixa2MuA8RIQsXP7S8JReCrHqT7jLH+5FHDW5PnYsZQ+
+ 122BqIJ6oQuH0V8FHCqZg5cN47nQahH+zmj8WvL6tS530j81e0dCqIJZ3GP3m3iINXeHwonFZ
+ hHMSM8QtDpTSGMwvSMlfczDxG13IzN4ystrcIrQGXACqC5eA8wJ4qr3UsiRxYorMxm5B5VMA3
+ a2scy3jluKvcVFP3w9UQ8co1zL8aS82pC9JqSSg==
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Chung-Hsien Hsu <stanley.hsu@cypress.com>
+4359 dongles do not support setting roaming parameters (error -52).
+Do not fail the 80211 configuration in this case.
 
-Set F2 blocksize to 256 bytes and watermark to 0x40 for 4359. Also
-enable and configure F1 MesBusyCtrl. It fixes DMA error while having
-UDP bi-directional traffic.
-
-Signed-off-by: Chung-Hsien Hsu <stanley.hsu@cypress.com>
-[slightly adapted for rebase on mainline linux]
 Signed-off-by: Soeren Moch <smoch@web.de>
-Reviewed-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+Acked-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
 =2D--
 changes in v2:
-- add review tag received for v1
+- add ack tag received for v1
 
 Cc: Kalle Valo <kvalo@codeaurora.org>
 Cc: Heiko Stuebner <heiko@sntech.de>
@@ -113,80 +107,38 @@ Cc: linux-arm-kernel@lists.infradead.org
 Cc: linux-rockchip@lists.infradead.org
 Cc: linux-kernel@vger.kernel.org
 =2D--
- .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c |  6 +++++-
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.c   | 15 +++++++++++++++
- 2 files changed, 20 insertions(+), 1 deletion(-)
+ .../wireless/broadcom/brcm80211/brcmfmac/cfg80211.c    | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/d=
-rivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index 96fd8e2bf773..68baf0189305 100644
-=2D-- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -43,6 +43,7 @@
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b=
+/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 5598bbd09b62..0cf13cea1dbe 100644
+=2D-- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -6012,19 +6012,17 @@ static s32 brcmf_dongle_roam(struct brcmf_if *ifp)
+ 	roamtrigger[1] =3D cpu_to_le32(BRCM_BAND_ALL);
+ 	err =3D brcmf_fil_cmd_data_set(ifp, BRCMF_C_SET_ROAM_TRIGGER,
+ 				     (void *)roamtrigger, sizeof(roamtrigger));
+-	if (err) {
++	if (err)
+ 		bphy_err(drvr, "WLC_SET_ROAM_TRIGGER error (%d)\n", err);
+-		goto roam_setup_done;
+-	}
 
- #define SDIO_FUNC1_BLOCKSIZE		64
- #define SDIO_FUNC2_BLOCKSIZE		512
-+#define SDIO_4359_FUNC2_BLOCKSIZE	256
- /* Maximum milliseconds to wait for F2 to come up */
- #define SDIO_WAIT_F2RDY	3000
+ 	roam_delta[0] =3D cpu_to_le32(WL_ROAM_DELTA);
+ 	roam_delta[1] =3D cpu_to_le32(BRCM_BAND_ALL);
+ 	err =3D brcmf_fil_cmd_data_set(ifp, BRCMF_C_SET_ROAM_DELTA,
+ 				     (void *)roam_delta, sizeof(roam_delta));
+-	if (err) {
++	if (err)
+ 		bphy_err(drvr, "WLC_SET_ROAM_DELTA error (%d)\n", err);
+-		goto roam_setup_done;
+-	}
++
++	return 0;
 
-@@ -903,6 +904,7 @@ static void brcmf_sdiod_host_fixup(struct mmc_host *ho=
-st)
- static int brcmf_sdiod_probe(struct brcmf_sdio_dev *sdiodev)
- {
- 	int ret =3D 0;
-+	unsigned int f2_blksz =3D SDIO_FUNC2_BLOCKSIZE;
-
- 	sdio_claim_host(sdiodev->func1);
-
-@@ -912,7 +914,9 @@ static int brcmf_sdiod_probe(struct brcmf_sdio_dev *sd=
-iodev)
- 		sdio_release_host(sdiodev->func1);
- 		goto out;
- 	}
--	ret =3D sdio_set_block_size(sdiodev->func2, SDIO_FUNC2_BLOCKSIZE);
-+	if (sdiodev->func2->device =3D=3D SDIO_DEVICE_ID_BROADCOM_4359)
-+		f2_blksz =3D SDIO_4359_FUNC2_BLOCKSIZE;
-+	ret =3D sdio_set_block_size(sdiodev->func2, f2_blksz);
- 	if (ret) {
- 		brcmf_err("Failed to set F2 blocksize\n");
- 		sdio_release_host(sdiodev->func1);
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/dri=
-vers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 264ad63232f8..21e535072f3f 100644
-=2D-- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -42,6 +42,8 @@
- #define DEFAULT_F2_WATERMARK    0x8
- #define CY_4373_F2_WATERMARK    0x40
- #define CY_43012_F2_WATERMARK    0x60
-+#define CY_4359_F2_WATERMARK	0x40
-+#define CY_4359_F1_MESBUSYCTRL	(CY_4359_F2_WATERMARK | SBSDIO_MESBUSYCTRL=
-_ENAB)
-
- #ifdef DEBUG
-
-@@ -4205,6 +4207,19 @@ static void brcmf_sdio_firmware_callback(struct dev=
-ice *dev, int err,
- 			brcmf_sdiod_writeb(sdiod, SBSDIO_DEVICE_CTL, devctl,
- 					   &err);
- 			break;
-+		case SDIO_DEVICE_ID_BROADCOM_4359:
-+			brcmf_dbg(INFO, "set F2 watermark to 0x%x*4 bytes\n",
-+				  CY_4359_F2_WATERMARK);
-+			brcmf_sdiod_writeb(sdiod, SBSDIO_WATERMARK,
-+					   CY_4359_F2_WATERMARK, &err);
-+			devctl =3D brcmf_sdiod_readb(sdiod, SBSDIO_DEVICE_CTL,
-+						   &err);
-+			devctl |=3D SBSDIO_DEVCTL_F2WM_ENAB;
-+			brcmf_sdiod_writeb(sdiod, SBSDIO_DEVICE_CTL, devctl,
-+					   &err);
-+			brcmf_sdiod_writeb(sdiod, SBSDIO_FUNC1_MESBUSYCTRL,
-+					   CY_4359_F1_MESBUSYCTRL, &err);
-+			break;
- 		default:
- 			brcmf_sdiod_writeb(sdiod, SBSDIO_WATERMARK,
- 					   DEFAULT_F2_WATERMARK, &err);
+ roam_setup_done:
+ 	return err;
 =2D-
 2.17.1
 
