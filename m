@@ -5,67 +5,68 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1BEEC2D0C6
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 14:39:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7957CC2D0C6
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 14:39:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 776BE2467A
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 14:39:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4B3DA214D8
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 14:39:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TtEhDw9m"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GfB0dMl6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730167AbfLKOjl (ORCPT
+        id S1730202AbfLKOjr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 11 Dec 2019 09:39:41 -0500
-Received: from mail-pj1-f66.google.com ([209.85.216.66]:34941 "EHLO
-        mail-pj1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729654AbfLKOjj (ORCPT
+        Wed, 11 Dec 2019 09:39:47 -0500
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:37583 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730192AbfLKOjq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Dec 2019 09:39:39 -0500
-Received: by mail-pj1-f66.google.com with SMTP id w23so9029136pjd.2;
-        Wed, 11 Dec 2019 06:39:38 -0800 (PST)
+        Wed, 11 Dec 2019 09:39:46 -0500
+Received: by mail-pg1-f195.google.com with SMTP id q127so10877412pga.4;
+        Wed, 11 Dec 2019 06:39:46 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=K3UxPRzFZME10fkLXtCYqjJd0IRSW438IJ8inomPhFc=;
-        b=TtEhDw9mXoygh60t0P8tM7vAJ0ws8yOzln/xfqEuvUZQ+gxs9TGtjoWk4ijx+7Lhgj
-         m/RjMwumNojsGy04ahZTfQNCqOSGq61vGvkvIu6125xhrZqtF4UylwsJXCgFrAe2H8df
-         FxtqiaZyqXH6Pfs4MpJadnetPyQHFsOXN2WR9XEJnxurlElV4LEZ/QiIMDuEjbKxq8bG
-         Flftq8QdH5Afm2rmNfaA0N9ZNxJCmfCMXEmJ0kzufwBpTx8PtSQrTRzrVLUIqZszZh5e
-         fuhvH5Y8abqa1VpwIVVuvvijRYmXugdPHrEsG6aKfZ8rC5OWbcD4s8FVIZ3GyErGjt9B
-         a7YA==
+        bh=GhXVAnhaL3dF2Pk0jAZjmHL842tdRou+nNjmrun5mDI=;
+        b=GfB0dMl66LMji7iSDluDDgU95hFyrbLyBDa8g9R6tZQrYvzznr7sbD0EI+zx9PZa2a
+         UPcDzuUIfU+mXjTqpj1nB/cZRBTziPKDINSxpV160A8qKLUskV7icNyoDpzGtFJ/W4WG
+         2iBDG2uBtjRDggXzegIdkZ21vawseCOf6qaPFh0AlPaij/VqPMZ1PrqwB4igUsER3fw9
+         MGwC4Bw2o1XiM61vnkvQn/3OuFljldg0RPznpVhmrQCbj2V20rgrMUe4mQ5FtASiBaVH
+         t8gKx1S12ypjJZhGV6bC07NGCq71O6eQQkdVJ3Dpwjy0E0oVLRZkOjg1ya4ol/N4tXPC
+         gHUA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=K3UxPRzFZME10fkLXtCYqjJd0IRSW438IJ8inomPhFc=;
-        b=G5YuALKAJX76zaXrHJgeJl1gALMOneNl+zZNroWTbSsXFwG79FU1qd1hhuzHsKRBsb
-         uqKIycQd27tln3kuoMnxuMlmqilkDhF0Mb/7gqtSzfGHwT3ZDlhyO1kvo7csZZTVLXK0
-         ZRncOpA3YKrnXfUhj1xAbR+e7BFKx0C+I+wXzAq3QSiSG8gEbhe/yKoYVwDJ878ezLj6
-         VfK/VisPxVn7spCp0qS6FHgdzfQu2wriMqMrvxOH+pt9p4b8H/XwmJxYSKZGdoSUou/V
-         n2icsD2iv86npnFHKguyBzTaganNzWeWfgkOumx9iFBbSFotc7F8lu0vQLk+mjRGITXw
-         vkHw==
-X-Gm-Message-State: APjAAAV/D2I8LzTxHzw7GHIpTsMArz87zDn5dGC9L/YMvyx8/ZPWYsaY
-        MT+RKjO2827fZfKIZyoqz7E=
-X-Google-Smtp-Source: APXvYqwzmKMUAxLD4W5Ax2MVMn7w223/0E+Cw8F33tmd3OWRq8B/HavfEb1OCpln/HaQH8iOvd8Onw==
-X-Received: by 2002:a17:90a:cf07:: with SMTP id h7mr3878015pju.66.1576075178437;
-        Wed, 11 Dec 2019 06:39:38 -0800 (PST)
+        bh=GhXVAnhaL3dF2Pk0jAZjmHL842tdRou+nNjmrun5mDI=;
+        b=OYgwxc51CziZLzIjPtIP3tiFKoA+eSppIzupd9iGkYcQsYKTMSYNEBXllHqMJN1wgD
+         U0LUmk2RSEHZnoPy0kGzF9wTQ2TM6R72ax3YqduEO4/10uzyh+ZOzEl9wY7cWUuZuT6A
+         dGmUQMbNByDE6DllEyauP2d+aSY4sct18JTwe0ynYNkfg1cmWZ1+XUAo2sMqVZfp9f5D
+         F7yqPD/RVwVMJr3gATwbJY8yT4zEoECAPgLhjrn/ikxfwM65YfWQci6xDICQZhkrZykz
+         6MzfiWD7U/2RnXlNLRr9hP0uO/29vRY0+EYok5PFz+X2sl2hPoVEzWnP2h/hQeBRuu+N
+         pgUQ==
+X-Gm-Message-State: APjAAAVoAA2Ph83XsPeZ5PMuwkoVbTX2VFdpbbLIw8kPFct03rEYLcpn
+        2UCnhjjii+YOW/v99i4K2V8=
+X-Google-Smtp-Source: APXvYqwSkDQsttnam5DXc1gmHwbz0oD5Nrbbl83FHdZwnnYrsoV2z/G3N/ntf8aYY+yXSPtKkfWXnQ==
+X-Received: by 2002:a62:1883:: with SMTP id 125mr4054521pfy.166.1576075186342;
+        Wed, 11 Dec 2019 06:39:46 -0800 (PST)
 Received: from localhost.localdomain ([240f:34:212d:1:368e:e048:68f1:84e7])
-        by smtp.gmail.com with ESMTPSA id q11sm3444239pff.111.2019.12.11.06.39.34
+        by smtp.gmail.com with ESMTPSA id q11sm3444239pff.111.2019.12.11.06.39.42
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Wed, 11 Dec 2019 06:39:37 -0800 (PST)
+        Wed, 11 Dec 2019 06:39:45 -0800 (PST)
 From:   Akinobu Mita <akinobu.mita@gmail.com>
 To:     linux-nvme@lists.infradead.org, linux-hwmon@vger.kernel.org,
         linux-pm@vger.kernel.org, linux-wireless@vger.kernel.org,
         linux-iio@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc:     Akinobu Mita <akinobu.mita@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH v3 09/12] wireless: iwlegacy: use <linux/units.h> helpers
-Date:   Wed, 11 Dec 2019 23:38:16 +0900
-Message-Id: <1576075099-3441-10-git-send-email-akinobu.mita@gmail.com>
+        Zhang Rui <rui.zhang@intel.com>,
+        Daniel Lezcano <daniel.lezcano@linaro.org>,
+        Amit Kucheria <amit.kucheria@verdurent.com>
+Subject: [PATCH v3 11/12] thermal: armada: remove unused TO_MCELSIUS macro
+Date:   Wed, 11 Dec 2019 23:38:18 +0900
+Message-Id: <1576075099-3441-12-git-send-email-akinobu.mita@gmail.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1576075099-3441-1-git-send-email-akinobu.mita@gmail.com>
 References: <1576075099-3441-1-git-send-email-akinobu.mita@gmail.com>
@@ -74,100 +75,31 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This switches the iwlegacy driver to use celsius_to_kelvin() and
-kelvin_to_celsius() in <linux/units.h>.
+This removes unused TO_MCELSIUS() macro.
 
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Zhang Rui <rui.zhang@intel.com>
+Cc: Daniel Lezcano <daniel.lezcano@linaro.org>
+Cc: Amit Kucheria <amit.kucheria@verdurent.com>
 Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
 ---
 * New patch from v3
 
- drivers/net/wireless/intel/iwlegacy/4965-mac.c |  3 ++-
- drivers/net/wireless/intel/iwlegacy/4965.c     | 11 ++++++-----
- drivers/net/wireless/intel/iwlegacy/common.h   |  3 ---
- 3 files changed, 8 insertions(+), 9 deletions(-)
+ drivers/thermal/armada_thermal.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlegacy/4965-mac.c b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-index 3664f56..d6766eb 100644
---- a/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-@@ -27,6 +27,7 @@
- #include <linux/firmware.h>
- #include <linux/etherdevice.h>
- #include <linux/if_arp.h>
-+#include <linux/units.h>
+diff --git a/drivers/thermal/armada_thermal.c b/drivers/thermal/armada_thermal.c
+index 709a22f..fc6dc10 100644
+--- a/drivers/thermal/armada_thermal.c
++++ b/drivers/thermal/armada_thermal.c
+@@ -21,8 +21,6 @@
  
- #include <net/mac80211.h>
+ #include "thermal_core.h"
  
-@@ -6467,7 +6468,7 @@ il4965_set_hw_params(struct il_priv *il)
- 	il->hw_params.valid_rx_ant = il->cfg->valid_rx_ant;
- 
- 	il->hw_params.ct_kill_threshold =
--	   CELSIUS_TO_KELVIN(CT_KILL_THRESHOLD_LEGACY);
-+	   celsius_to_kelvin(CT_KILL_THRESHOLD_LEGACY);
- 
- 	il->hw_params.sens = &il4965_sensitivity;
- 	il->hw_params.beacon_time_tsf_bits = IL4965_EXT_BEACON_TIME_POS;
-diff --git a/drivers/net/wireless/intel/iwlegacy/4965.c b/drivers/net/wireless/intel/iwlegacy/4965.c
-index 32699b6..31b346c 100644
---- a/drivers/net/wireless/intel/iwlegacy/4965.c
-+++ b/drivers/net/wireless/intel/iwlegacy/4965.c
-@@ -17,6 +17,7 @@
- #include <linux/sched.h>
- #include <linux/skbuff.h>
- #include <linux/netdevice.h>
-+#include <linux/units.h>
- #include <net/mac80211.h>
- #include <linux/etherdevice.h>
- #include <asm/unaligned.h>
-@@ -1104,7 +1105,7 @@ il4965_fill_txpower_tbl(struct il_priv *il, u8 band, u16 channel, u8 is_ht40,
- 	/* get current temperature (Celsius) */
- 	current_temp = max(il->temperature, IL_TX_POWER_TEMPERATURE_MIN);
- 	current_temp = min(il->temperature, IL_TX_POWER_TEMPERATURE_MAX);
--	current_temp = KELVIN_TO_CELSIUS(current_temp);
-+	current_temp = kelvin_to_celsius(current_temp);
- 
- 	/* select thermal txpower adjustment params, based on channel group
- 	 *   (same frequency group used for mimo txatten adjustment) */
-@@ -1611,7 +1612,7 @@ il4965_hw_get_temperature(struct il_priv *il)
- 	    (temperature * 97) / 100 + TEMPERATURE_CALIB_KELVIN_OFFSET;
- 
- 	D_TEMP("Calibrated temperature: %dK, %dC\n", temperature,
--	       KELVIN_TO_CELSIUS(temperature));
-+	       kelvin_to_celsius(temperature));
- 
- 	return temperature;
- }
-@@ -1671,11 +1672,11 @@ il4965_temperature_calib(struct il_priv *il)
- 	if (il->temperature != temp) {
- 		if (il->temperature)
- 			D_TEMP("Temperature changed " "from %dC to %dC\n",
--			       KELVIN_TO_CELSIUS(il->temperature),
--			       KELVIN_TO_CELSIUS(temp));
-+			       kelvin_to_celsius(il->temperature),
-+			       kelvin_to_celsius(temp));
- 		else
- 			D_TEMP("Temperature " "initialized to %dC\n",
--			       KELVIN_TO_CELSIUS(temp));
-+			       kelvin_to_celsius(temp));
- 	}
- 
- 	il->temperature = temp;
-diff --git a/drivers/net/wireless/intel/iwlegacy/common.h b/drivers/net/wireless/intel/iwlegacy/common.h
-index e7fb8e6..bc9cd7e 100644
---- a/drivers/net/wireless/intel/iwlegacy/common.h
-+++ b/drivers/net/wireless/intel/iwlegacy/common.h
-@@ -779,9 +779,6 @@ struct il_sensitivity_ranges {
- 	u16 nrg_th_cca;
- };
- 
--#define KELVIN_TO_CELSIUS(x) ((x)-273)
--#define CELSIUS_TO_KELVIN(x) ((x)+273)
+-#define TO_MCELSIUS(c)			((c) * 1000)
 -
- /**
-  * struct il_hw_params
-  * @bcast_id: f/w broadcast station ID
+ /* Thermal Manager Control and Status Register */
+ #define PMU_TDC0_SW_RST_MASK		(0x1 << 1)
+ #define PMU_TM_DISABLE_OFFS		0
 -- 
 2.7.4
 
