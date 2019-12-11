@@ -8,87 +8,101 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87813C2D0C7
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 23:53:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10390C00454
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 23:54:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 59E2C20578
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 23:53:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CFC8320578
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 23:54:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=web.de header.i=@web.de header.b="BzrHW2OM"
+	dkim=pass (1024-bit key) header.d=web.de header.i=@web.de header.b="OZLDxo+Y"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727352AbfLKXxx (ORCPT
+        id S1727238AbfLKXx3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 11 Dec 2019 18:53:53 -0500
-Received: from mout.web.de ([212.227.17.12]:43363 "EHLO mout.web.de"
+        Wed, 11 Dec 2019 18:53:29 -0500
+Received: from mout.web.de ([217.72.192.78]:59813 "EHLO mout.web.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727230AbfLKXxa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Dec 2019 18:53:30 -0500
+        id S1727199AbfLKXx1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 11 Dec 2019 18:53:27 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=web.de;
-        s=dbaedf251592; t=1576108399;
-        bh=vpmcxnQM8xeIOrgf/nLMbY75MJAw3JLGxT3wkvLPkbo=;
+        s=dbaedf251592; t=1576108388;
+        bh=QrCQqilrTouTgYj7yPQjXnTFJOK16++5KJ6q9dqCzuQ=;
         h=X-UI-Sender-Class:From:To:Cc:Subject:Date:In-Reply-To:References;
-        b=BzrHW2OM7bnwDihbgxHzNh8UPyn71b0KWUeLA7jUPedIlK3QHYVlS0idBZM47pmbx
-         u/s2Oorz8KhTT7wAZjxE29vQzv+lZoxVuVp4hoCqQLSOFesdNtpM70cAoxjkN8VesG
-         2tWns90UzykDW0PtQzGz1+jRSE3N5Me3UUJVdcqs=
+        b=OZLDxo+YhfcGWOq2ZjW1XGmkZRwtMEa9B9St7EgXLEOMeHEizbtlijhXFLk/N0qoz
+         1+fJdbnjKSi2k+kVhlRJ+Ddd/mmBmYMibz10dF+1OBg6WKTPhoSbiod9KOofyA948D
+         emoZkjekJmVExY4VLQIVrf0OqIDqpZSxTWz1g1NQ=
 X-UI-Sender-Class: c548c8c5-30a9-4db5-a2e7-cb6cb037b8f9
 Received: from localhost.localdomain ([89.204.139.166]) by smtp.web.de
  (mrweb101 [213.165.67.124]) with ESMTPSA (Nemesis) id
- 0LmLoU-1i6PGv079u-00Zwng; Thu, 12 Dec 2019 00:53:19 +0100
+ 0MRl5x-1iGpH02iS1-00SxXf; Thu, 12 Dec 2019 00:53:07 +0100
 From:   Soeren Moch <smoch@web.de>
 To:     Kalle Valo <kvalo@codeaurora.org>, Heiko Stuebner <heiko@sntech.de>
-Cc:     Soeren Moch <smoch@web.de>, linux-wireless@vger.kernel.org,
+Cc:     Wright Feng <wright.feng@cypress.com>, Soeren Moch <smoch@web.de>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        linux-wireless@vger.kernel.org,
         brcm80211-dev-list.pdl@broadcom.com,
         brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org,
         linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 9/9] arm64: dts: rockchip: RockPro64: hook up bluetooth at uart0
-Date:   Thu, 12 Dec 2019 00:52:53 +0100
-Message-Id: <20191211235253.2539-10-smoch@web.de>
+Subject: [PATCH v2 1/9] brcmfmac: reset two D11 cores if chip has two D11 cores
+Date:   Thu, 12 Dec 2019 00:52:45 +0100
+Message-Id: <20191211235253.2539-2-smoch@web.de>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20191211235253.2539-1-smoch@web.de>
 References: <20191211235253.2539-1-smoch@web.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:5PDFH2F0gjxlcHEJO1q+UhhYMk5qrPh+R32KnEj09Ga2cRHNb6a
- WRvTk6+wPGns5t79V6A5yoGWG8mUNT8/17s9oA0//bPLHcW6hDWVFW/oVkXNIt2bhpPEv0K
- lJgNfkZq5I4mKhPg5g5ld/AlrjfJATF9j+BESdBC3KhzSqzdzaYD6z9e2CNWxmPy1A8KAmw
- LisOj0yPMWY6dMp/VuCwA==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:tpVInoJ1RDg=:TY0Y8jY4BRFGaskvGFkBNh
- jwQgF+B6L5pOwcYFelXXSOSs3JUoLAzMJmi3lQHZG3zagTYa5ec3EmFKy2zWyjjkqDUYmfbxM
- SklKG+S9WrhxwukxqP48U1AB/c/nkv8Ff2Xxxxb/v4YznBy5PI9OANBHdeperFGLIG2D117rG
- RKU4govznHCUe4vzIx50qc3MBAAnQ4k2axKbCjCdQU0KZy+HjR1nMtaVUrRwb1ea0HyzBwg0v
- 2oCg2XkNnBcaXqHeWTlqOG+FGoqnL19Syz4pKB+6GznH9jaSzQ49pjSd0q5JW5aw0gpCIqDdB
- q9HHB2tBJnKWHpvNmU7FfDZLZfcQPmWdK9owN/pIZOECF3V5KEXziEn6mZqordxnGDC/EInQq
- Lc4ISJgfJXU01ERmUroP2kb44G08JMtDG/qID9OWX9Gl74/gmZYYw8gCDf+xFPfg7ne6iZAqC
- nac05Sz6FjuQUc3H2J4BQcykdjrcBmF8s5qPACTOr5o86gvN90J8gCo87hR1QOGBaw1o/hHXh
- C20wpBWRlzCZSb81nOVbKt8H387nsw9GoYEnXJ3Ib3laZ4zoX1Zuk81CECo4zINJuY1ZTzkVb
- DHyJrRg5Tizk1YhMJ6y4BK+AgXsuWHS/7hG65fBo1U9e2+rWKIdrPb0ik4QJfDN01a1Ze9IpZ
- lZiM5ydyw6NLK9fS4k8cOWwAEE68qFwCMz5otMcDMUqA35FbAGlyfa12OmyhuNpOH8bNZfuCU
- S7kgGnpZm3AvTqOyKfJRic/h9o8vQtE5hSm7PAePDr8nPLp3PttDhdzcURTllw1Nhm77lMKTk
- q8h8HiV8VS7tg4nviLnyDNvrXDnDmiBB0fGzrRCyEjLQlg4wNk8r+WEXd64pLBrrYZYLr5UKy
- gFlIeqT6utsFoLYYGvAEkLXzJgj3ByToaly7FQr1YJej5cze5QoWGV3qAAfUBCnwXk8cBurre
- Il3LMG4GJKHlRMmtui9X93CJgjPhpYIwZ3FjYfOkDvlTs6Jz9IrOM7Dyd7gXPNGtpHxY8ZRPZ
- wZYfDyXjuZ7Ttli5eXTV6CgECOYT3ldVewSf8S96IRRbruiTZ43w8oe7R04a0mxVwh30YbRTS
- EZBwgktnaiZGCVaau1310BTCnvJMj0zHgswDCshOMY/l8q6kzKyWK4+ZSNbj25ChQuw5CBa6N
- W8cppyIDzVq9kBEvrDAiEUoq3h94zApYs2Lgs2Rb3fUbwaQqcf4n0XEpjL8FdAxA6sYX4gwGK
- viCgHHeD+54tWUevFFwkG18p6Ilf+g0GP4UA1Mw==
+X-Provags-ID: V03:K1:Us4gcuk0RbKR4HQNOPkL/oiRL4tAdmkHERdAxq/8Wll6xa5unY6
+ vc4ERbkOO1hBhlxdSovkzPZ9KF6ywGdKRjYa7y55CjUt/ifWRWTIps60cr3cl9ahlVyaxpL
+ Nq2iiB7gOeo62Y4PROt4/1e7GCvb4gO+errOwi4IcUJX42eqY0n9VdPINUEI8dW7lXJf2ye
+ Y8lk7+vzq15It0JcqoSFg==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:+88Ev/9dDg4=:z2IeWqdpeb4UiDzDXawSBY
+ aGmsNDovtHG8mwxFuNhrq9OyZ/gUQOmAMlwyeiqOiyPVeKvbYpHS2WclK7O062I6pN8MQ9Sx1
+ Lrk3EG8jTIo6Ba5x7E6hFNkE2JUhdwQ7Z1K6ymRWvLcUK3ANocVW7z3dP2ejwLfzA45hgoPi1
+ F5Wokbc3wTCW/W8+HsaYOBz3Ik7EAtpcfFYqyqRrw/kCb/L9nI91b407JafIRdnt/duekI6sq
+ X8mHk07N6xi3McZ/dWZUilbZtNjFx0/B7kVt5RqhTrci+V0fPZDqr8BJf9VjhzIDNFRW1PGYt
+ b2HGNFBGluMKTldZNDT8phfSSIss1QfXdyMarIlZmMgXGvA/MLeQWfNQXlf6g5MFc5ve4TFnI
+ QeAToxom+TMk/gj8D243yCeDGpIIdWvOvDqYhoJDlR+ibB8bpwy47rlVufYIB1yWm+iV7UlYZ
+ RvcSS72+FN7QSNP4EkU0CKuSv9btbKC1tqWm2jgTeqWQAnQnCwX26MoPvjI9+vB/FFYclzVkM
+ MksltDd3e6/MIHxNMPSVwHBomyucLipRt2jgMSgL8gUifILepUSLN9oDAUIudTOfMb3b1p2oM
+ U5n8Z8Lh8ABCnFlb+6CG0miBqC2HrSTgvmaM2onU5MRHSCUopNuiyk83DdU9CCkgYT639e0O7
+ L8XcjRvSa0TxsUu3h+0JdOu1BDpD4ZlckIvTXU+5UmEFCUokIeoRN4scySgqaINUOlAk5kB8+
+ Q9BKn/9VgwWMfQYAwBdcsR/SpqdspfkCT7b5SarpkvQzHU3x7npAHgQZ2bIy37vf/d32lDufe
+ dLPvVjb5ZhulNO5nTrWfe6jIvNdxBXCMR24ODnJ85EXh0RHJy1sV2j5zf8VXeh/2e7i34Gw4U
+ 2R4jE3mwPBIKKZp6mUa5dE1DVyCGE7Pw10cVbAe2a4c5vhd/I24f7w55RFChaNLGEhXG7J/Bq
+ lRsI+1yABHbXTL28NG8zSLRboH9GN9gpfZreuzSZEPThPKv2QW9lzUs6gN3sNHYxdIs/rYpte
+ nsCQ4rY5l9gAslr1HMDnnbPujEkpM3/bBS5aJ9TChVjVs/BNfDv6mCB5IJ2KCggfoIPRhQRFG
+ uqCE/eToDktOZ1czy6n/wQyM3yTWFH5zu0gr54Gu5MHpHv4hx3A0M+uVM+9lzeLaHI9ore98M
+ fDZU3r2s0muCJ7UC1rNn+e+zQ5ZQAPnzrQUADrdWJaJdtexNlcig2I+VuvRxnFLfTwFgXq1t9
+ di3sCBWONCqTgyshjaj1kaT2cFCc/oDCh/9NYVQ==
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-With enabled wifi support (required for firmware loading) for the
-Ampak AP6359SA based wifi/bt combo module we now also can enable
-the bluetooth part.
+From: Wright Feng <wright.feng@cypress.com>
 
-Suggested-by: Heiko Stuebner <heiko@sntech.de>
+There are two D11 cores in RSDB chips like 4359. We have to reset two
+D11 cores simutaneously before firmware download, or the firmware may
+not be initialized correctly and cause "fw initialized failed" error.
+
+Signed-off-by: Wright Feng <wright.feng@cypress.com>
 Signed-off-by: Soeren Moch <smoch@web.de>
+Reviewed-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
 =2D--
 changes in v2:
-- new patch
+- add missing s-o-b
+- add review tag received for v1
 
-Cc: Heiko Stuebner <heiko@sntech.de>
 Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: Heiko Stuebner <heiko@sntech.de>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Franky Lin <franky.lin@broadcom.com>
+Cc: Hante Meuleman <hante.meuleman@broadcom.com>
+Cc: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+Cc: Wright Feng <wright.feng@cypress.com>
 Cc: linux-wireless@vger.kernel.org
 Cc: brcm80211-dev-list.pdl@broadcom.com
 Cc: brcm80211-dev-list@cypress.com
@@ -97,58 +111,129 @@ Cc: linux-arm-kernel@lists.infradead.org
 Cc: linux-rockchip@lists.infradead.org
 Cc: linux-kernel@vger.kernel.org
 =2D--
- .../boot/dts/rockchip/rk3399-rockpro64.dts    | 29 ++++++++++++++++++-
- 1 file changed, 28 insertions(+), 1 deletion(-)
+ .../broadcom/brcm80211/brcmfmac/chip.c        | 50 +++++++++++++++++++
+ .../broadcom/brcm80211/brcmfmac/chip.h        |  1 +
+ .../broadcom/brcm80211/brcmfmac/pcie.c        |  2 +-
+ 3 files changed, 52 insertions(+), 1 deletion(-)
 
-diff --git a/arch/arm64/boot/dts/rockchip/rk3399-rockpro64.dts b/arch/arm6=
-4/boot/dts/rockchip/rk3399-rockpro64.dts
-index 9fa92790d6e0..94cc462e234d 100644
-=2D-- a/arch/arm64/boot/dts/rockchip/rk3399-rockpro64.dts
-+++ b/arch/arm64/boot/dts/rockchip/rk3399-rockpro64.dts
-@@ -561,6 +561,20 @@
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/dri=
+vers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
+index a795d781b4c5..0b5fbe5d8270 100644
+=2D-- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
+@@ -433,11 +433,25 @@ static void brcmf_chip_ai_resetcore(struct brcmf_cor=
+e_priv *core, u32 prereset,
+ {
+ 	struct brcmf_chip_priv *ci;
+ 	int count;
++	struct brcmf_core *d11core2 =3D NULL;
++	struct brcmf_core_priv *d11priv2 =3D NULL;
+
+ 	ci =3D core->chip;
+
++	/* special handle two D11 cores reset */
++	if (core->pub.id =3D=3D BCMA_CORE_80211) {
++		d11core2 =3D brcmf_chip_get_d11core(&ci->pub, 1);
++		if (d11core2) {
++			brcmf_dbg(INFO, "found two d11 cores, reset both\n");
++			d11priv2 =3D container_of(d11core2,
++						struct brcmf_core_priv, pub);
++		}
++	}
++
+ 	/* must disable first to work for arbitrary current core state */
+ 	brcmf_chip_ai_coredisable(core, prereset, reset);
++	if (d11priv2)
++		brcmf_chip_ai_coredisable(d11priv2, prereset, reset);
+
+ 	count =3D 0;
+ 	while (ci->ops->read32(ci->ctx, core->wrapbase + BCMA_RESET_CTL) &
+@@ -449,9 +463,30 @@ static void brcmf_chip_ai_resetcore(struct brcmf_core=
+_priv *core, u32 prereset,
+ 		usleep_range(40, 60);
+ 	}
+
++	if (d11priv2) {
++		count =3D 0;
++		while (ci->ops->read32(ci->ctx,
++				       d11priv2->wrapbase + BCMA_RESET_CTL) &
++				       BCMA_RESET_CTL_RESET) {
++			ci->ops->write32(ci->ctx,
++					 d11priv2->wrapbase + BCMA_RESET_CTL,
++					 0);
++			count++;
++			if (count > 50)
++				break;
++			usleep_range(40, 60);
++		}
++	}
++
+ 	ci->ops->write32(ci->ctx, core->wrapbase + BCMA_IOCTL,
+ 			 postreset | BCMA_IOCTL_CLK);
+ 	ci->ops->read32(ci->ctx, core->wrapbase + BCMA_IOCTL);
++
++	if (d11priv2) {
++		ci->ops->write32(ci->ctx, d11priv2->wrapbase + BCMA_IOCTL,
++				 postreset | BCMA_IOCTL_CLK);
++		ci->ops->read32(ci->ctx, d11priv2->wrapbase + BCMA_IOCTL);
++	}
+ }
+
+ char *brcmf_chip_name(u32 id, u32 rev, char *buf, uint len)
+@@ -1109,6 +1144,21 @@ void brcmf_chip_detach(struct brcmf_chip *pub)
+ 	kfree(chip);
+ }
+
++struct brcmf_core *brcmf_chip_get_d11core(struct brcmf_chip *pub, u8 unit=
+)
++{
++	struct brcmf_chip_priv *chip;
++	struct brcmf_core_priv *core;
++
++	chip =3D container_of(pub, struct brcmf_chip_priv, pub);
++	list_for_each_entry(core, &chip->cores, list) {
++		if (core->pub.id =3D=3D BCMA_CORE_80211) {
++			if (unit-- =3D=3D 0)
++				return &core->pub;
++		}
++	}
++	return NULL;
++}
++
+ struct brcmf_core *brcmf_chip_get_core(struct brcmf_chip *pub, u16 coreid=
+)
+ {
+ 	struct brcmf_chip_priv *chip;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.h b/dri=
+vers/net/wireless/broadcom/brcm80211/brcmfmac/chip.h
+index 7b00f6a59e89..8fa38658e727 100644
+=2D-- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.h
+@@ -74,6 +74,7 @@ struct brcmf_chip *brcmf_chip_attach(void *ctx,
+ 				     const struct brcmf_buscore_ops *ops);
+ void brcmf_chip_detach(struct brcmf_chip *chip);
+ struct brcmf_core *brcmf_chip_get_core(struct brcmf_chip *chip, u16 corei=
+d);
++struct brcmf_core *brcmf_chip_get_d11core(struct brcmf_chip *pub, u8 unit=
+);
+ struct brcmf_core *brcmf_chip_get_chipcommon(struct brcmf_chip *chip);
+ struct brcmf_core *brcmf_chip_get_pmu(struct brcmf_chip *pub);
+ bool brcmf_chip_iscoreup(struct brcmf_core *core);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/dri=
+vers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+index f64ce5074a55..7ac72804e285 100644
+=2D-- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+@@ -78,7 +78,7 @@ static const struct brcmf_firmware_mapping brcmf_pcie_fw=
+names[] =3D {
+ 	BRCMF_FW_ENTRY(BRCM_CC_4371_CHIP_ID, 0xFFFFFFFF, 4371),
  };
 
- &pinctrl {
-+	bt {
-+		bt_enable_h: bt-enable-h {
-+			rockchip,pins =3D <0 RK_PB1 RK_FUNC_GPIO &pcfg_pull_none>;
-+		};
-+
-+		bt_host_wake_l: bt-host-wake-l {
-+			rockchip,pins =3D <0 RK_PA4 RK_FUNC_GPIO &pcfg_pull_down>;
-+		};
-+
-+		bt_wake_l: bt-wake-l {
-+			rockchip,pins =3D <2 RK_PD3 RK_FUNC_GPIO &pcfg_pull_none>;
-+		};
-+	};
-+
- 	buttons {
- 		pwrbtn: pwrbtn {
- 			rockchip,pins =3D <0 RK_PA5 RK_FUNC_GPIO &pcfg_pull_up>;
-@@ -729,8 +743,21 @@
+-#define BRCMF_PCIE_FW_UP_TIMEOUT		2000 /* msec */
++#define BRCMF_PCIE_FW_UP_TIMEOUT		5000 /* msec */
 
- &uart0 {
- 	pinctrl-names =3D "default";
--	pinctrl-0 =3D <&uart0_xfer &uart0_cts>;
-+	pinctrl-0 =3D <&uart0_xfer &uart0_cts &uart0_rts>;
- 	status =3D "okay";
-+
-+	bluetooth {
-+		compatible =3D "brcm,bcm43438-bt";
-+		clocks =3D <&rk808 1>;
-+		clock-names =3D "extclk";
-+		device-wakeup-gpios =3D <&gpio2 RK_PD3 GPIO_ACTIVE_HIGH>;
-+		host-wakeup-gpios =3D <&gpio0 RK_PA4 GPIO_ACTIVE_HIGH>;
-+		shutdown-gpios =3D <&gpio0 RK_PB1 GPIO_ACTIVE_HIGH>;
-+		pinctrl-names =3D "default";
-+		pinctrl-0 =3D <&bt_host_wake_l &bt_wake_l &bt_enable_h>;
-+		vbat-supply =3D <&vcc3v3_sys>;
-+		vddio-supply =3D <&vcc_1v8>;
-+	};
- };
+ #define BRCMF_PCIE_REG_MAP_SIZE			(32 * 1024)
 
- &uart2 {
 =2D-
 2.17.1
 
