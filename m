@@ -8,64 +8,64 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D965EC2D0C6
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 15:48:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D9FCC43603
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 15:48:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id ADD5E2173E
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 15:48:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 637982073D
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 15:48:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GLl7OYdy"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GVBh/bVB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733183AbfLKPsm (ORCPT
+        id S2388223AbfLKPsl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 11 Dec 2019 10:48:42 -0500
-Received: from mail-wm1-f67.google.com ([209.85.128.67]:39732 "EHLO
+        Wed, 11 Dec 2019 10:48:41 -0500
+Received: from mail-wm1-f67.google.com ([209.85.128.67]:55244 "EHLO
         mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387787AbfLKPsj (ORCPT
+        with ESMTP id S1733285AbfLKPsh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Dec 2019 10:48:39 -0500
-Received: by mail-wm1-f67.google.com with SMTP id d5so5948992wmb.4;
-        Wed, 11 Dec 2019 07:48:37 -0800 (PST)
+        Wed, 11 Dec 2019 10:48:37 -0500
+Received: by mail-wm1-f67.google.com with SMTP id b11so7637503wmj.4;
+        Wed, 11 Dec 2019 07:48:35 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=M7WbKpVa7YBzu+uEMBm4uH2YlentzYifl+jvtz9sZI8=;
-        b=GLl7OYdyVOqJOXdJdJDBBBMF/qIehkMWMoR8aTWr59HCkn466SyzTBdRATzuRwi23X
-         dbe5d2X4ZRY/gucvweNPVDvvu7zIx1sma/roGCFeaJpLhZo5N5Mu8cK1/n5Q2+R+Bwit
-         PMR68JfRDKbqnKd8MabQzV0lEgOCUgcSPO5qF6c3fbgf+FX5WUOYx/O00+f79QxEwmaq
-         Rts+gEukwH4fhmLhWSDINWVKBI/t0Wgr6+NNBnr1sM4PkoowtStgS3fsLhPcKjvsqBJj
-         F/vn05BcstTTHZVAGqZra9682LHWyf+9GwBNcgHfbPIdHWi7l35Zm7tZUisTl3e1nL4P
-         J3qg==
+        bh=75Og2PgxTcMUhS7+nyHAmRRnlhdiala21Qw5AEaCLOU=;
+        b=GVBh/bVBnOXig14DsIcX0JQX0jmfwGWLA4DfBfEzlU/ONm/GMm2CtBowHCdUmGZSzp
+         mUw8u8jJOZBtqXgX1EnnzEdvF4oTqZ8LCw4X2t3/90+cuVzirPcZqq6bF3zcVZOFYM1/
+         wC5FT05uAJl7QtNxZZO978r2tmBgjbrQkdw1ZXfpRh3mwHwb5+HCaP/CmuYvO8d2jmgU
+         z4z4vcjgzKfF0mrJ3xB6sGHeBEAw+qE49NgKO5mYzNyFW7TY+V1a6J3YmmZ/u0Mm7SE4
+         f00qw8RPWB+VH+LXnHr+HQJC5wVkbQFqGMkYP0pbMvzh51AVfNW4omp9zpvrzmvbyoow
+         PUnA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=M7WbKpVa7YBzu+uEMBm4uH2YlentzYifl+jvtz9sZI8=;
-        b=WNWnlgwyyz3QyYYMN14G59GDtFqLb6yyDv4ha0M6xCuUfTir6DkmbIMwuajhikbIcu
-         6yblTAwI1qQBqhWM/cJtqRzeNJjGTpLw18nDSX47CLCyFGJU2oYA5fvh/+iJnfiuCsQQ
-         Z5iSCIXGAzcrSYSqNeepPJgDLRIQaQXLqfvN24uB4C61Jwfy4P++UZSzCb3EQqdO8Cwy
-         NpKYlcu2fqwsnLLpBM2D/H1tfPIQ90p3sE5WHrdtICFQGS5JsEsXv0p2DNONa39FzE0b
-         p3M3hKzkRVxMqSos8TYSlze92eW0BpiKaHILVWL7whNHTs7Vz6uzJmX7nBPI7UnsTWCt
-         j3hA==
-X-Gm-Message-State: APjAAAWMGG0+6sKIUr2NgEsYm2C3nFB1RwKK1pigcUy+++gtv1KCTOqf
-        p5Ph5/Et8OLln8O3FuIKv3jA3SwB
-X-Google-Smtp-Source: APXvYqwyidIIr1JaTp9lVcN9cl+wvViecMLVjOQXQQr02X2ZWDqSMLFmsgVyaQQD8dQWmP2RLfFfWg==
-X-Received: by 2002:a7b:c1cc:: with SMTP id a12mr466879wmj.53.1576079316572;
-        Wed, 11 Dec 2019 07:48:36 -0800 (PST)
+        bh=75Og2PgxTcMUhS7+nyHAmRRnlhdiala21Qw5AEaCLOU=;
+        b=a/jfd6tsYr3LqrJgw3B5j8mpQpBs+8oTnHN0Ws8d1bPlcLuYld1clFGykQYxZHOlL3
+         ysAKPHG4vel6Ne6RIu5QbuwPO2iAFeGX9QkGxJvjhnuaEcBi7OE2KLr6Jh/J14CTHsHM
+         23HD20lZIH35Spe4yH36pW87EUNVp46xVTq2ba8fKi8LXGD3MHKfhrlKtuxWzk5+vDBg
+         U969sjI20p1wFETvCEfu8caxnQQ3ObknqU0lLbLFLJZVeGPnH9BnLtRA68B/kzAoj+ja
+         9i8BHhORL4GlQn3mBoSmIoMROOSJKPNaEwqcDiisQ2NEWONaGELL4lq5AU5xEiiOuNd/
+         P13Q==
+X-Gm-Message-State: APjAAAUymSfxLDiMQWjo064fDnHqSAX+fQ4eHfAq/OIRKz0NurUz2H1b
+        RDrgkqOtVN2UGJCLFWLnvrQ=
+X-Google-Smtp-Source: APXvYqz8MitotPjFdulow2qRETyIjAHEcrSmEewJj51115gA898L1NOuqch/mbKBXpkxm/o62FWORQ==
+X-Received: by 2002:a1c:7419:: with SMTP id p25mr444983wmc.129.1576079314633;
+        Wed, 11 Dec 2019 07:48:34 -0800 (PST)
 Received: from localhost.localdomain (dslb-002-204-142-082.002.204.pools.vodafone-ip.de. [2.204.142.82])
-        by smtp.gmail.com with ESMTPSA id n16sm2677388wro.88.2019.12.11.07.48.35
+        by smtp.gmail.com with ESMTPSA id n16sm2677388wro.88.2019.12.11.07.48.33
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 11 Dec 2019 07:48:36 -0800 (PST)
+        Wed, 11 Dec 2019 07:48:34 -0800 (PST)
 From:   Michael Straube <straube.linux@gmail.com>
 To:     pkshih@realtek.com
 Cc:     kvalo@codeaurora.org, davem@davemloft.net,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org,
         Michael Straube <straube.linux@gmail.com>
-Subject: [PATCH 5/6] rtlwifi: rtl8192cu: use generic rtl_signal_scale_mapping
-Date:   Wed, 11 Dec 2019 16:47:54 +0100
-Message-Id: <20191211154755.15012-6-straube.linux@gmail.com>
+Subject: [PATCH 3/6] rtlwifi: rtl8192de: use generic rtl_query_rxpwrpercentage
+Date:   Wed, 11 Dec 2019 16:47:52 +0100
+Message-Id: <20191211154755.15012-4-straube.linux@gmail.com>
 X-Mailer: git-send-email 2.24.0
 In-Reply-To: <20191211154755.15012-1-straube.linux@gmail.com>
 References: <20191211154755.15012-1-straube.linux@gmail.com>
@@ -76,68 +76,63 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Function _rtl92c_signal_scale_mapping is identical to the generic
-version rtl_signal_scale_mapping. Remove _rtl92c_signal_scale_mapping
+Function _rtl92d_query_rxpwrpercentage is identical to the generic
+version rtl_query_rxpwrpercentage. Remove _rtl92d_query_rxpwrpercentage
 and use the generic function.
 
 Signed-off-by: Michael Straube <straube.linux@gmail.com>
 ---
- .../wireless/realtek/rtlwifi/rtl8192cu/mac.c  | 33 ++-----------------
- 1 file changed, 2 insertions(+), 31 deletions(-)
+ .../net/wireless/realtek/rtlwifi/rtl8192de/trx.c | 16 +++-------------
+ 1 file changed, 3 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c
-index c8652283a516..b4b67341dc83 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c
-@@ -567,34 +567,6 @@ void rtl92c_set_min_space(struct ieee80211_hw *hw, bool is2T)
- 
- /*==============================================================*/
- 
--static long _rtl92c_signal_scale_mapping(struct ieee80211_hw *hw,
--		long currsig)
--{
--	long retsig;
--
--	if (currsig >= 61 && currsig <= 100)
--		retsig = 90 + ((currsig - 60) / 4);
--	else if (currsig >= 41 && currsig <= 60)
--		retsig = 78 + ((currsig - 40) / 2);
--	else if (currsig >= 31 && currsig <= 40)
--		retsig = 66 + (currsig - 30);
--	else if (currsig >= 21 && currsig <= 30)
--		retsig = 54 + (currsig - 20);
--	else if (currsig >= 5 && currsig <= 20)
--		retsig = 42 + (((currsig - 5) * 2) / 3);
--	else if (currsig == 4)
--		retsig = 36;
--	else if (currsig == 3)
--		retsig = 27;
--	else if (currsig == 2)
--		retsig = 18;
--	else if (currsig == 1)
--		retsig = 9;
--	else
--		retsig = currsig;
--	return retsig;
--}
--
- static void _rtl92c_query_rxphystatus(struct ieee80211_hw *hw,
- 				      struct rtl_stats *pstats,
- 				      struct rx_desc_92c *p_desc,
-@@ -729,11 +701,10 @@ static void _rtl92c_query_rxphystatus(struct ieee80211_hw *hw,
- 	}
- 	if (is_cck_rate)
- 		pstats->signalstrength =
--		    (u8) (_rtl92c_signal_scale_mapping(hw, pwdb_all));
-+		    (u8)(rtl_signal_scale_mapping(hw, pwdb_all));
- 	else if (rf_rx_num != 0)
- 		pstats->signalstrength =
--		    (u8) (_rtl92c_signal_scale_mapping
--			  (hw, total_rssi /= rf_rx_num));
-+		    (u8)(rtl_signal_scale_mapping(hw, total_rssi /= rf_rx_num));
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/trx.c
+index 92c9fb45f800..abb35d33cf69 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/trx.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/trx.c
+@@ -23,16 +23,6 @@ static u8 _rtl92de_map_hwqueue_to_fwqueue(struct sk_buff *skb, u8 hw_queue)
+ 	return skb->priority;
  }
  
- void rtl92c_translate_rx_signal_stuff(struct ieee80211_hw *hw,
+-static u8 _rtl92d_query_rxpwrpercentage(s8 antpower)
+-{
+-	if ((antpower <= -100) || (antpower >= 20))
+-		return 0;
+-	else if (antpower >= 0)
+-		return 100;
+-	else
+-		return 100 + antpower;
+-}
+-
+ static long _rtl92de_translate_todbm(struct ieee80211_hw *hw,
+ 				     u8 signal_strength_index)
+ {
+@@ -141,7 +131,7 @@ static void _rtl92de_query_rxphystatus(struct ieee80211_hw *hw,
+ 				break;
+ 			}
+ 		}
+-		pwdb_all = _rtl92d_query_rxpwrpercentage(rx_pwr_all);
++		pwdb_all = rtl_query_rxpwrpercentage(rx_pwr_all);
+ 		/* CCK gain is smaller than OFDM/MCS gain,  */
+ 		/* so we add gain diff by experiences, the val is 6 */
+ 		pwdb_all += 6;
+@@ -183,7 +173,7 @@ static void _rtl92de_query_rxphystatus(struct ieee80211_hw *hw,
+ 				rf_rx_num++;
+ 			rx_pwr[i] = ((p_drvinfo->gain_trsw[i] & 0x3f) * 2)
+ 				    - 110;
+-			rssi = _rtl92d_query_rxpwrpercentage(rx_pwr[i]);
++			rssi = rtl_query_rxpwrpercentage(rx_pwr[i]);
+ 			total_rssi += rssi;
+ 			rtlpriv->stats.rx_snr_db[i] =
+ 					 (long)(p_drvinfo->rxsnr[i] / 2);
+@@ -191,7 +181,7 @@ static void _rtl92de_query_rxphystatus(struct ieee80211_hw *hw,
+ 				pstats->rx_mimo_signalstrength[i] = (u8) rssi;
+ 		}
+ 		rx_pwr_all = ((p_drvinfo->pwdb_all >> 1) & 0x7f) - 106;
+-		pwdb_all = _rtl92d_query_rxpwrpercentage(rx_pwr_all);
++		pwdb_all = rtl_query_rxpwrpercentage(rx_pwr_all);
+ 		pstats->rx_pwdb_all = pwdb_all;
+ 		pstats->rxpower = rx_pwr_all;
+ 		pstats->recvsignalpower = rx_pwr_all;
 -- 
 2.24.0
 
