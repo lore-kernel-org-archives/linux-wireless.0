@@ -2,109 +2,113 @@ Return-Path: <SRS0=yvfE=2B=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BD89AC00454
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 23:54:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28422C2D0C6
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 23:54:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 85EFE20836
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 23:54:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ED9FA21655
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 23:54:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=web.de header.i=@web.de header.b="LrNnwQUq"
+	dkim=pass (1024-bit key) header.d=web.de header.i=@web.de header.b="aIqzyFzw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727417AbfLKXyM (ORCPT
+        id S1727161AbfLKXxZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 11 Dec 2019 18:54:12 -0500
-Received: from mout.web.de ([217.72.192.78]:51263 "EHLO mout.web.de"
+        Wed, 11 Dec 2019 18:53:25 -0500
+Received: from mout.web.de ([217.72.192.78]:51499 "EHLO mout.web.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727198AbfLKXx2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Dec 2019 18:53:28 -0500
+        id S1726932AbfLKXxY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 11 Dec 2019 18:53:24 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=web.de;
-        s=dbaedf251592; t=1576108395;
-        bh=bqrfzn03Wk5A81+Bxtr6JafRDf0LDppSY0FopstiOWU=;
-        h=X-UI-Sender-Class:From:To:Cc:Subject:Date:In-Reply-To:References;
-        b=LrNnwQUqQrR0y8v6QbdwFWGQreRkC4UnLS5vcVMOJWqrggruA85WPRuDtsut44XCJ
-         yEqnecDjdVWTJLbeEBdKSRro6bhl4HlystbX32DXbG0J+16xNcdgo0pzXbUjQ/Rumx
-         VmqU5cVabbZFYa0qgNLQtUwVMzEIAshhpw5rpgtU=
+        s=dbaedf251592; t=1576108386;
+        bh=SHwEKS5HfPBsQhvwUPeNKlfOw3SLEczu2hmisG7j3I0=;
+        h=X-UI-Sender-Class:From:To:Cc:Subject:Date;
+        b=aIqzyFzwBvAIkbawHJWO72Fzh/mqzDnJ47gjo+yrZ0emK3xg0COqzKQvdofPbG6W1
+         d7UTORKsKVPB8mlcfk9JMtDGKMUW+dFPP6LlKDo6mwJFdQ55GLNRf73sIIj++11RuN
+         PlgBQIehl0VmRhZV/cTxU5lHqFlyVkQsgnPN7mnU=
 X-UI-Sender-Class: c548c8c5-30a9-4db5-a2e7-cb6cb037b8f9
 Received: from localhost.localdomain ([89.204.139.166]) by smtp.web.de
  (mrweb101 [213.165.67.124]) with ESMTPSA (Nemesis) id
- 0M6E6g-1hmhaz0h0k-00yBkG; Thu, 12 Dec 2019 00:53:15 +0100
+ 0LhNjo-1hshso0mnI-00mXj0; Thu, 12 Dec 2019 00:53:06 +0100
 From:   Soeren Moch <smoch@web.de>
 To:     Kalle Valo <kvalo@codeaurora.org>, Heiko Stuebner <heiko@sntech.de>
-Cc:     Wright Feng <wright.feng@cypress.com>, Soeren Moch <smoch@web.de>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        linux-wireless@vger.kernel.org,
+Cc:     Soeren Moch <smoch@web.de>, linux-wireless@vger.kernel.org,
         brcm80211-dev-list.pdl@broadcom.com,
         brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org,
         linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 6/9] brcmfmac: add RSDB condition when setting interface combinations
-Date:   Thu, 12 Dec 2019 00:52:50 +0100
-Message-Id: <20191211235253.2539-7-smoch@web.de>
+Subject: [PATCH v2 0/9] brcmfmac: add support for BCM4359 SDIO chipset
+Date:   Thu, 12 Dec 2019 00:52:44 +0100
+Message-Id: <20191211235253.2539-1-smoch@web.de>
 X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20191211235253.2539-1-smoch@web.de>
-References: <20191211235253.2539-1-smoch@web.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:sObgus2FDRoa5HGMYXoHjJ8dLBCTgL7OufE2JZLV/N7PtqNDME2
- YuQXbzzDjKtPnQsO7f8f9MzJSbdmoMqCb/6c4H24QSLEbLJ8AUwZUsdhGOh3NKpytNJMIhG
- hXxgebyZByKXqYQJn7hWvI2FVd66BOnDCk39Fi8sBq+VoW4dZHw85R6jVOnpy5jpfvCvUlo
- Tx1C7zBeV/t96cuCIyhhA==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:l+RZ/qB1OXc=:NPKGOTlEvEQpnntq6ydHAz
- fHl0SEXZuE6K9NBqv4Lht5uPB32IkQoru8VRv4/YD+JhRqRzu+tcMxC2gZ5IB67lWwyUdySCm
- uBnJwQR+zq8SQmwMwXiVtWbbYaPtxcQ0OPwiJgkN35EtVWAdo18b1j2o3Y6eiXAgb+yTDfEO4
- QPc4Xh7ZV7/Ozn0gxYjPVXPBRJV+m5jNdO0gT+LKNmb/axMJrSIBvPmuqB+IXexqXIFAxwPhO
- DdJ49akvIGJuQq/h7m3KcOo0bUrki08Pi9KFUo6INuqAEup9RxYJZjrRH4K5fZ18kZOuiIfx7
- Jtjz0ht7DMIP7XJ0gbAdp+aFbgq9mieu/1OzKTp4r15FJLEwXbY+x+VFvN7YuMruvhAlgDN/f
- uydFFv0xu0FTYf0XcqEWIsTOrwK18uAoRBDUb36QwOqZJq3+XAFsCuy6P9Y6IWqnGE4lHlav+
- 4yBD7vYaRJWj1eNLqmi8QqSLSaYQ+kNKY40IK+eiTiyjwCumX2WEdTlTpPsvD3REp6CyYJgHt
- wVKBHcBh0uGmpU+PjdLDvaLjeXLSS9NTMXZHTmywifF9gbLon8IKH2GfjUjbfpio0uItVKhOp
- +qKdcNo33fS1f+dpD7kGF0KSy1XTMgfbblzY4yDs4twfxdRxU5RWo0kGPsdf4NxT3XV7gZWMD
- 76dZ6dQ0cQxRxmWS6Ebl6SXx/kNq2ih0ox1/gK6awP7WmV5bZP4XwMiRmvVLtwsKtv4BuvMWv
- 0JfZf0gFBagGgAEVGPPd0nlodPWZ8OlHGbxBThsTUdS51d265/UdnYQkKigcGBPY3JnBxDis3
- UwLBb5gwrG+zDOOdAAwxZuS7qdnmFlUniQXAFFOf+/JTYJ4X8WdMX1JxCLMzSEhxlWCKELgLK
- 4zcMN76iTCWG/YWMnUtvX7w4zL1r/adcNOG4vs4TTum2DsZEkwEWP3bB/b6TyaNGzQhIWwSUN
- yiQrAwsPKj06psAXb7PTg2pinbvSX3REtejpZkkJZJRtYE75gKujsDDaEkaUtXYeSH7LzBSK0
- S9XH6EFM0BNYJ3o8DS7HpcYPyi5Lt8TBZ5V70l/aHBAIHVCfvN9gqXoQQt+7nLCq68jMwQpDC
- r0JrD16e3CTTvuHUKgb4rtUf2H3PGBDRcU/BrKAV4gZPgXqqjS93FL5H7bBWm7EZOGa/K34Uk
- 4B+zsViWMt89PTi2nQ0qlYivNwmqGEkMQivWWOSNzkk5qg+vpBFP7lxMoMi8XdZ+Qu3oa1zNw
- tPGbo/eu0kB/3JzBN69//WDdupLb2MjoLAududA==
+X-Provags-ID: V03:K1:wlune+MBVxnnPbtH/WJuKIHVW5Kt4Bh3x2TSi6jf84eE1oZeOVU
+ dmIZckdKvEOp6T4MOEtvJQgRx77JwjPoOcGEySs5ql5yqY1cwslVBk26J6vh1rviiwMAuad
+ k1NAwnKUmVgu/TQ6URsFElTL0U9+2DgdvYs6zDvLSawYziqCa9ESz6goH4pbemoW/JI1hWJ
+ z0wb2ZsezZhRj/yGPwUfQ==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:5h+qvYh+xgc=:yPWTesPFkaFZunR1Eod+lF
+ 2qKdRZ6DCppLTdhLkqMCYqcFmh8UYXKNnRvrmKane6YZKwhFfqgEOFl/wkxwBd6/7wBoIqRGy
+ M5W26qWzPxoBqkP1917hy1u72p+UuZdttRBNGM2iV/+xPXJ7XxnSQycad14nt73x6LMKLapY7
+ SdsLP60IVD7h6kuu2E4pEXaI1kByLxetc3+DUaVkkYA8grZLbAp7faZZbFKO1TVIzS5aUAxeY
+ eFgmLd4U4re5UZLqyd9YgKHj5x5KISZl8Me2v5CB9dvUeYmpHU5/YDkpdDUpThQ4CoeuzS+5g
+ UMWMcGM1g7uNZd1t5QtF7nqf40zxtEukWAaPj4v2sUNAja7dryceVeaFddB9THb6/jx8rvDCv
+ DWu/9wXZFD877mjmALV3pAWCH793Yf4DBwlSdszpRTiJC8IysS1FIA8NPLfhpD01VKk480Hc6
+ M1XB/ydwHTCHMUOZeVHBNQ93h+9XBCkyri+v3ciXp09Z7h42XFiwkqZ874Iva0xa7Qr+o2w4k
+ iYOweRTYoSsnKn8CaguvO+qrguwzvSm9ltwA9fyFctTLQv4yBW8WHBxVwPoZBky0qjGWwZDHB
+ kACE+SY9SyxUUL+2Lc7SHZB3uenG7XO1A+8U/LGLdvT0O2NTw5J2coJNUONG2KLEwVjaCCy2Q
+ +pBQbiKvDiKhUGfv6nUTtkbr9Xn9rfiI5yU7FadQKcnCpKudCGGqFcE4WzkGHLS0+RshMKfhi
+ 60qRJZKqUe3/iQzBamiZmg8b4dpXKgil74k/F9tJcNTrLFbMh5sI6lBu0PHP5Pq5mUKR0i/nM
+ f2/T/YeZmT9cmtduo6fhV719mFpRLw63HL2VLYsXT1nYkDFKa3aL/UF8gUETQWazXe0SqYEgv
+ 1ojGnYZs7WH6VEwQRtDMMcOCxOk+lxKU8EI/TaazwCfDYtUl6W8ecsTta9ZHlNCnyITs2O55O
+ C/34cfSS94RetB76ivOVnf/QPCDOHC15FSjuMjHfL4QyjsaQH2ntkqh91NsAb1rM0aiQ8zYzO
+ h+n05fHcVMzuByU/O94zRRwLjgHKjvD1PbNT4e5WWazigCvn1NBbA1yOkOkhknZ7QDJR0dNYF
+ nYckdKT5YEsrgvE+3Wl5fb9II3K9SLV45+YjpNHQR6/WltwL8ceJ2ZGHXPQO6tmg6Sn7ZOIyD
+ Hcu79rZlBnFVFLxRz1X6kWQbSkBool9oS21KSLY1AT637q30RFrPBmZUwe5Bc7+xMnZfPMAlz
+ grHTBdSenszURSwg2PPqMcX8zA22rNMMdZ/RAzA==
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Wright Feng <wright.feng@cypress.com>
+Add support for the BCM4359 chipset with SDIO interface and RSDB support
+to the brcmfmac wireless network driver in patches 1-7.
 
-With firmware RSDB feature
-1. The maximum support interface is four.
-2. The maximum difference channel is two.
-3. The maximum interfaces of {station/p2p client/AP} are two.
-4. The maximum interface of p2p device is one.
+Enhance devicetree of the RockPro64 arm64/rockchip board to use an
+AP6359SA based wifi/bt combo module with this chipset in patches 8-9.
 
-Signed-off-by: Wright Feng <wright.feng@cypress.com>
-Signed-off-by: Soeren Moch <smoch@web.de>
-Reviewed-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+
+Chung-Hsien Hsu (1):
+  brcmfmac: set F2 blocksize and watermark for 4359
+
+Soeren Moch (5):
+  brcmfmac: fix rambase for 4359/9
+  brcmfmac: make errors when setting roaming parameters non-fatal
+  brcmfmac: add support for BCM4359 SDIO chipset
+  arm64: dts: rockchip: RockPro64: enable wifi module at sdio0
+  arm64: dts: rockchip: RockPro64: hook up bluetooth at uart0
+
+Wright Feng (3):
+  brcmfmac: reset two D11 cores if chip has two D11 cores
+  brcmfmac: add RSDB condition when setting interface combinations
+  brcmfmac: not set mbss in vif if firmware does not support MBSS
+
+ .../boot/dts/rockchip/rk3399-rockpro64.dts    | 50 +++++++++++---
+ .../broadcom/brcm80211/brcmfmac/bcmsdh.c      |  8 ++-
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c    | 68 +++++++++++++++----
+ .../broadcom/brcm80211/brcmfmac/chip.c        | 54 ++++++++++++++-
+ .../broadcom/brcm80211/brcmfmac/chip.h        |  1 +
+ .../broadcom/brcm80211/brcmfmac/pcie.c        |  2 +-
+ .../broadcom/brcm80211/brcmfmac/sdio.c        | 17 +++++
+ include/linux/mmc/sdio_ids.h                  |  2 +
+ 8 files changed, 176 insertions(+), 26 deletions(-)
+
 =2D--
-changes in v2:
-- add missing s-o-b
-- add review tag received for v1
-
 Cc: Kalle Valo <kvalo@codeaurora.org>
 Cc: Heiko Stuebner <heiko@sntech.de>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Franky Lin <franky.lin@broadcom.com>
-Cc: Hante Meuleman <hante.meuleman@broadcom.com>
-Cc: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
-Cc: Wright Feng <wright.feng@cypress.com>
 Cc: linux-wireless@vger.kernel.org
 Cc: brcm80211-dev-list.pdl@broadcom.com
 Cc: brcm80211-dev-list@cypress.com
@@ -112,129 +116,7 @@ Cc: netdev@vger.kernel.org
 Cc: linux-arm-kernel@lists.infradead.org
 Cc: linux-rockchip@lists.infradead.org
 Cc: linux-kernel@vger.kernel.org
-=2D--
- .../broadcom/brcm80211/brcmfmac/cfg80211.c    | 54 ++++++++++++++++---
- 1 file changed, 46 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b=
-/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 0cf13cea1dbe..9d9dc9195e9e 100644
-=2D-- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -6520,6 +6520,9 @@ brcmf_txrx_stypes[NUM_NL80211_IFTYPES] =3D {
-  *	#STA <=3D 1, #AP <=3D 1, channels =3D 1, 2 total
-  *	#AP <=3D 4, matching BI, channels =3D 1, 4 total
-  *
-+ * no p2p and rsdb:
-+ *	#STA <=3D 2, #AP <=3D 2, channels =3D 2, 4 total
-+ *
-  * p2p, no mchan, and mbss:
-  *
-  *	#STA <=3D 1, #P2P-DEV <=3D 1, #{P2P-CL, P2P-GO} <=3D 1, channels =3D 1=
-, 3 total
-@@ -6531,6 +6534,10 @@ brcmf_txrx_stypes[NUM_NL80211_IFTYPES] =3D {
-  *	#STA <=3D 1, #P2P-DEV <=3D 1, #{P2P-CL, P2P-GO} <=3D 1, channels =3D 2=
-, 3 total
-  *	#STA <=3D 1, #P2P-DEV <=3D 1, #AP <=3D 1, #P2P-CL <=3D 1, channels =3D=
- 1, 4 total
-  *	#AP <=3D 4, matching BI, channels =3D 1, 4 total
-+ *
-+ * p2p, rsdb, and no mbss:
-+ *	#STA <=3D 2, #P2P-DEV <=3D 1, #{P2P-CL, P2P-GO} <=3D 2, AP <=3D 2,
-+ *	 channels =3D 2, 4 total
-  */
- static int brcmf_setup_ifmodes(struct wiphy *wiphy, struct brcmf_if *ifp)
- {
-@@ -6538,13 +6545,14 @@ static int brcmf_setup_ifmodes(struct wiphy *wiphy=
-, struct brcmf_if *ifp)
- 	struct ieee80211_iface_limit *c0_limits =3D NULL;
- 	struct ieee80211_iface_limit *p2p_limits =3D NULL;
- 	struct ieee80211_iface_limit *mbss_limits =3D NULL;
--	bool mbss, p2p;
-+	bool mbss, p2p, rsdb;
- 	int i, c, n_combos;
-
- 	mbss =3D brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MBSS);
- 	p2p =3D brcmf_feat_is_enabled(ifp, BRCMF_FEAT_P2P);
-+	rsdb =3D brcmf_feat_is_enabled(ifp, BRCMF_FEAT_RSDB);
-
--	n_combos =3D 1 + !!p2p + !!mbss;
-+	n_combos =3D 1 + !!(p2p && !rsdb) + !!mbss;
- 	combo =3D kcalloc(n_combos, sizeof(*combo), GFP_KERNEL);
- 	if (!combo)
- 		goto err;
-@@ -6555,16 +6563,36 @@ static int brcmf_setup_ifmodes(struct wiphy *wiphy=
-, struct brcmf_if *ifp)
-
- 	c =3D 0;
- 	i =3D 0;
--	c0_limits =3D kcalloc(p2p ? 3 : 2, sizeof(*c0_limits), GFP_KERNEL);
-+	if (p2p && rsdb)
-+		c0_limits =3D kcalloc(4, sizeof(*c0_limits), GFP_KERNEL);
-+	else if (p2p)
-+		c0_limits =3D kcalloc(3, sizeof(*c0_limits), GFP_KERNEL);
-+	else
-+		c0_limits =3D kcalloc(2, sizeof(*c0_limits), GFP_KERNEL);
- 	if (!c0_limits)
- 		goto err;
--	c0_limits[i].max =3D 1;
--	c0_limits[i++].types =3D BIT(NL80211_IFTYPE_STATION);
--	if (p2p) {
-+	if (p2p && rsdb) {
-+		combo[c].num_different_channels =3D 2;
-+		wiphy->interface_modes |=3D BIT(NL80211_IFTYPE_P2P_CLIENT) |
-+					  BIT(NL80211_IFTYPE_P2P_GO) |
-+					  BIT(NL80211_IFTYPE_P2P_DEVICE);
-+		c0_limits[i].max =3D 2;
-+		c0_limits[i++].types =3D BIT(NL80211_IFTYPE_STATION);
-+		c0_limits[i].max =3D 1;
-+		c0_limits[i++].types =3D BIT(NL80211_IFTYPE_P2P_DEVICE);
-+		c0_limits[i].max =3D 2;
-+		c0_limits[i++].types =3D BIT(NL80211_IFTYPE_P2P_CLIENT) |
-+				       BIT(NL80211_IFTYPE_P2P_GO);
-+		c0_limits[i].max =3D 2;
-+		c0_limits[i++].types =3D BIT(NL80211_IFTYPE_AP);
-+		combo[c].max_interfaces =3D 5;
-+	} else if (p2p) {
- 		if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MCHAN))
- 			combo[c].num_different_channels =3D 2;
- 		else
- 			combo[c].num_different_channels =3D 1;
-+		c0_limits[i].max =3D 1;
-+		c0_limits[i++].types =3D BIT(NL80211_IFTYPE_STATION);
- 		wiphy->interface_modes |=3D BIT(NL80211_IFTYPE_P2P_CLIENT) |
- 					  BIT(NL80211_IFTYPE_P2P_GO) |
- 					  BIT(NL80211_IFTYPE_P2P_DEVICE);
-@@ -6573,16 +6601,26 @@ static int brcmf_setup_ifmodes(struct wiphy *wiphy=
-, struct brcmf_if *ifp)
- 		c0_limits[i].max =3D 1;
- 		c0_limits[i++].types =3D BIT(NL80211_IFTYPE_P2P_CLIENT) |
- 				       BIT(NL80211_IFTYPE_P2P_GO);
-+		combo[c].max_interfaces =3D i;
-+	} else if (rsdb) {
-+		combo[c].num_different_channels =3D 2;
-+		c0_limits[i].max =3D 2;
-+		c0_limits[i++].types =3D BIT(NL80211_IFTYPE_STATION);
-+		c0_limits[i].max =3D 2;
-+		c0_limits[i++].types =3D BIT(NL80211_IFTYPE_AP);
-+		combo[c].max_interfaces =3D 3;
- 	} else {
- 		combo[c].num_different_channels =3D 1;
- 		c0_limits[i].max =3D 1;
-+		c0_limits[i++].types =3D BIT(NL80211_IFTYPE_STATION);
-+		c0_limits[i].max =3D 1;
- 		c0_limits[i++].types =3D BIT(NL80211_IFTYPE_AP);
-+		combo[c].max_interfaces =3D i;
- 	}
--	combo[c].max_interfaces =3D i;
- 	combo[c].n_limits =3D i;
- 	combo[c].limits =3D c0_limits;
-
--	if (p2p) {
-+	if (p2p && !rsdb) {
- 		c++;
- 		i =3D 0;
- 		p2p_limits =3D kcalloc(4, sizeof(*p2p_limits), GFP_KERNEL);
 =2D-
 2.17.1
 
