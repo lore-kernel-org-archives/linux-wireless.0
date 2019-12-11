@@ -2,144 +2,140 @@ Return-Path: <SRS0=yvfE=2B=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BB3EC43603
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 14:40:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6796FC00454
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 14:47:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EF630222C4
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 14:40:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3DFBD2173E
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 14:47:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RyG5UBz1"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="XYf6iYdV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730183AbfLKOjp (ORCPT
+        id S1730094AbfLKOrP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 11 Dec 2019 09:39:45 -0500
-Received: from mail-pl1-f193.google.com ([209.85.214.193]:46248 "EHLO
-        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729654AbfLKOjn (ORCPT
+        Wed, 11 Dec 2019 09:47:15 -0500
+Received: from us-smtp-2.mimecast.com ([205.139.110.61]:52993 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1730078AbfLKOrP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Dec 2019 09:39:43 -0500
-Received: by mail-pl1-f193.google.com with SMTP id k20so1484478pll.13;
-        Wed, 11 Dec 2019 06:39:43 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=IcdhyyyraLVUQAQ3HHOSQ6YNvDlkdwwrUN22Ki1UdWw=;
-        b=RyG5UBz1cZHPGUqtMFB5YXFkkEdKKMiMwMxa8vnkNtXJSn70Zzja6yk3iTI/el/Ji7
-         7mdXDBMNf7s4VWETE4BQOzat3pRp4cFbQRhjZmJDg1kzg1dpKHj7axOgJOv1it0xkTtv
-         64qDc3ri9DQ3B9rGjNLH/xQ8bXwKOeK2yQtzcOL6fP1uiZBFCyaE/HbYfL64wN2sj/FP
-         PXfUm8e3jVXPvOw7YquFCs42UtzcocoIDPdohQ/cW8UE9pEGu+OHFwa8hg2C+DL9l5p0
-         qGq7WkaPaYNYdqhKGd+Ea8oh+Bst+ULZgi+wmIadHtyeeZnEDTEaNlXWHo4VcdmjIp+3
-         ZtzQ==
+        Wed, 11 Dec 2019 09:47:15 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1576075633;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=uirOhgSvjq4DT4EarKgWh3oOvWR/NL1lmoArYsaFvfU=;
+        b=XYf6iYdVDT4VPrsX6WrA/nWXGMlz37X59Dzc7pxkdyXfVADN/6apgP9xak83VCzZIocjuT
+        KlRxFFPJHKt2Q4jq6LzTp/B0pgDncskuUsROp/ZX2Si+yVxTohZCuhGDi+arRALBK523NH
+        /JyewvcEE6RYAwuMKuXupE/Q0PnjHmw=
+Received: from mail-lj1-f197.google.com (mail-lj1-f197.google.com
+ [209.85.208.197]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-342-ijGJlVgYOuS7qzmpRjSVgw-1; Wed, 11 Dec 2019 09:47:12 -0500
+Received: by mail-lj1-f197.google.com with SMTP id 140so2138661ljj.3
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Dec 2019 06:47:12 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=IcdhyyyraLVUQAQ3HHOSQ6YNvDlkdwwrUN22Ki1UdWw=;
-        b=nDKmJyxZYaJzue73y3YCBpUlVNZuvu4fIcWFJ7zdnnC0OeudT9EolMxUA65VfwDzPn
-         DvVlxeSAT9xX13e52zPgoxFF8R+zrGhVf1gX3VawSSXUz9faIw5wEP223tqburaiMf8x
-         F8NHB4893NU0jB05XQh9VbnGvGyxKw2G3aL1Dzcd6NSRyubzceSciKcltlcuPlCv1oiR
-         wejQh+lAzjj91oTdL/E7mDwHEdJPUu+YQu1lLyaYOON5Ye9rN4TFEv7Xfbp2dFkuDqd8
-         XRuLFSJozh0m9t5zI2UBpNptQPqitZMjwZaaF7B3TqdLL9LSJzBvBncCA9IN69OniEaM
-         U6HA==
-X-Gm-Message-State: APjAAAX9dRVCfOltzL7NZLksvf+63UgPgLkk56gJw0ilVthCQPF/3vCA
-        jd3MQDSl2AG+PHBL4n+dQnU=
-X-Google-Smtp-Source: APXvYqxp6M46sXtPZT2HvGlWuv1Os2BTC76wIST3HLZF+6k8rsAvHXrRSJFlwIPCfdqDACr2l48xrw==
-X-Received: by 2002:a17:902:968b:: with SMTP id n11mr3347664plp.120.1576075182587;
-        Wed, 11 Dec 2019 06:39:42 -0800 (PST)
-Received: from localhost.localdomain ([240f:34:212d:1:368e:e048:68f1:84e7])
-        by smtp.gmail.com with ESMTPSA id q11sm3444239pff.111.2019.12.11.06.39.38
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Wed, 11 Dec 2019 06:39:41 -0800 (PST)
-From:   Akinobu Mita <akinobu.mita@gmail.com>
-To:     linux-nvme@lists.infradead.org, linux-hwmon@vger.kernel.org,
-        linux-pm@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-iio@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     Akinobu Mita <akinobu.mita@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Johannes Berg <johannes.berg@intel.com>,
+        h=x-gm-message-state:from:to:cc:subject:in-reply-to:references:date
+         :message-id:mime-version:content-transfer-encoding;
+        bh=DrlMxGv0pYjq5Gdk23gjEZddH1IAa/lFb9hEecJndV4=;
+        b=Lji4yuH5T7gnFKwuV/kZv8qW/Xk2kaYYoIwZaTUYUrqZGUkoOrWZfhsqbAHNOPA3Iw
+         +47vd9JIClV73M1Y7m440oZ0UzYbhkegONgJDalHbnaG5mlYpqu48oyvMNMSDLxenoXL
+         ZQZbLQFNKDG6QpjWwqNC2YKLRxo5qK98UO5Kfl+LALWVCSLE/oHtO+baxo2hohqUfGJk
+         Tn59UM5x1X3pWRkSeiTnQKydlMvbUUKWh9gho+nzf7rpXuhP3/EBPIzH7lG9Al1BhdDH
+         g9Ur6RHFYVLQhHRj5pVv/2o4RanT20wYsacFrRrt/wBuFxFLgnCc3Cc0Sl14MIr7rF8w
+         O6mA==
+X-Gm-Message-State: APjAAAUKX+Mqs/NgvLCf7lV9gpOsxkQTxT3KklOf89t1oekFbE51EygT
+        GTpyaqL3lZ8t6uayyWpvT74dsZ7SOKTt5oLiaVY+UWNKYDsTKHBgCzxo9GgEoLM8SgJE+DpdPvu
+        rwgbtmv6yRQciCB41achbIM6oPdc=
+X-Received: by 2002:a2e:99d0:: with SMTP id l16mr2374137ljj.1.1576075630891;
+        Wed, 11 Dec 2019 06:47:10 -0800 (PST)
+X-Google-Smtp-Source: APXvYqzV4TVbG7SBbl7pnNaA6hSPeBIeHzeUKgWyTtLqludm96u74ZEBRobOs16/al35Shb/4+N+TA==
+X-Received: by 2002:a2e:99d0:: with SMTP id l16mr2374126ljj.1.1576075630705;
+        Wed, 11 Dec 2019 06:47:10 -0800 (PST)
+Received: from alrua-x1.borgediget.toke.dk ([2a0c:4d80:42:443::2])
+        by smtp.gmail.com with ESMTPSA id c189sm1312552lfg.75.2019.12.11.06.47.09
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 11 Dec 2019 06:47:10 -0800 (PST)
+Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
+        id 4F04418033F; Wed, 11 Dec 2019 15:47:08 +0100 (CET)
+From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
+To:     Johannes Berg <johannes@sipsolutions.net>,
+        Jens Axboe <axboe@kernel.dk>,
         Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>
-Subject: [PATCH v3 10/12] wireless: iwlwifi: use <linux/units.h> helpers
-Date:   Wed, 11 Dec 2019 23:38:17 +0900
-Message-Id: <1576075099-3441-11-git-send-email-akinobu.mita@gmail.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1576075099-3441-1-git-send-email-akinobu.mita@gmail.com>
-References: <1576075099-3441-1-git-send-email-akinobu.mita@gmail.com>
+        Luca Coelho <luciano.coelho@intel.com>
+Cc:     "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Networking <netdev@vger.kernel.org>
+Subject: Re: iwlwifi warnings in 5.5-rc1
+In-Reply-To: <b14519e81b6d2335bd0cb7dcf074f0d1a4eec707.camel@sipsolutions.net>
+References: <ceb74ea2-6a1b-4cef-8749-db21a2ee4311@kernel.dk> <9727368004ceef03f72d259b0779c2cf401432e1.camel@sipsolutions.net> <878snjgs5l.fsf@toke.dk> <3420d73e667b01ec64bf0cc9da6232b41e862860.camel@sipsolutions.net> <875zingnzt.fsf@toke.dk> <bfab4987668990ea8d86a98f3e87c3fa31403745.camel@sipsolutions.net> <14bbfcc8408500704c46701251546e7ff65c6fd0.camel@sipsolutions.net> <87r21bez5g.fsf@toke.dk> <b14519e81b6d2335bd0cb7dcf074f0d1a4eec707.camel@sipsolutions.net>
+X-Clacks-Overhead: GNU Terry Pratchett
+Date:   Wed, 11 Dec 2019 15:47:08 +0100
+Message-ID: <87k172gbrn.fsf@toke.dk>
+MIME-Version: 1.0
+X-MC-Unique: ijGJlVgYOuS7qzmpRjSVgw-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This switches the iwlwifi driver to use celsius_to_kelvin() and
-kelvin_to_celsius() in <linux/units.h>.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: Johannes Berg <johannes.berg@intel.com>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: Luca Coelho <luciano.coelho@intel.com>
-Cc: Intel Linux Wireless <linuxwifi@intel.com>
-Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
----
-* New patch from v3
+> On Wed, 2019-12-11 at 15:04 +0100, Toke H=C3=B8iland-J=C3=B8rgensen wrote=
+:
+>> Johannes Berg <johannes@sipsolutions.net> writes:
+>>=20
+>> > Btw, there's *another* issue. You said in the commit log:
+>> >=20
+>> >     This patch does *not* include any mechanism to wake a throttled TX=
+Q again,
+>> >     on the assumption that this will happen anyway as a side effect of=
+ whatever
+>> >     freed the skb (most commonly a TX completion).
+>> >=20
+>> > Thinking about this some more, I'm not convinced that this assumption
+>> > holds. You could have been stopped due to the global limit, and now yo=
+u
+>> > wake some queue but the TXQ is empty - now you should reschedule some
+>> > *other* TXQ since the global limit had kicked in, not the per-TXQ limi=
+t,
+>> > and prevented dequeuing, no?
+>>=20
+>> Well if you hit the global limit that means you have 24ms worth of data
+>> queued in the hardware; those should be completed in turn, and enable
+>> more to be dequeued, no?
+>
+> Yes, but on which queues?
+>
+> Say you have some queues - some (Q1-Qn) got a LOT of traffic, and
+> another (Q0) just has some interactive traffic.
+>
+> You could then end up in a situation where you have 24ms queued up on
+> Q1-Qn (with n high enough to not have hit the per-queue AQL limit),
+> right?
+>
+> Say also the last frame on Q0 was dequeued by the hardware, but the
+> tx_dequeue() got NULL because of the AQL limit having been eaten up by
+> all the packets on Q1-Qn.
+>
+> Now you'll no longer get a new dequeue attempt on Q0 (it was already
+> empty last time, so no hardware reclaim to trigger new dequeues), and a
+> new dequeue on the *other* queues will not do anything for this queue.
 
- drivers/net/wireless/intel/iwlwifi/dvm/dev.h     | 5 -----
- drivers/net/wireless/intel/iwlwifi/dvm/devices.c | 6 ++++--
- 2 files changed, 4 insertions(+), 7 deletions(-)
+Oh, right, I see; yeah, that could probably happen. I guess we could
+either kick all available queues whenever the global limit goes from
+"above" to "below"; or we could remove the "return NULL" logic from
+tx_dequeue() and rely on next_txq() to throttle. I think the latter is
+probably simpler, but I'm a little worried that the throttling will
+become too lax (because the driver can keep dequeueing in the same
+scheduling round)...
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/dev.h b/drivers/net/wireless/intel/iwlwifi/dvm/dev.h
-index be5ef4c..8d83800 100644
---- a/drivers/net/wireless/intel/iwlwifi/dvm/dev.h
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/dev.h
-@@ -237,11 +237,6 @@ struct iwl_sensitivity_ranges {
- 	u16 nrg_th_cca;
- };
- 
--
--#define KELVIN_TO_CELSIUS(x) ((x)-273)
--#define CELSIUS_TO_KELVIN(x) ((x)+273)
--
--
- /******************************************************************************
-  *
-  * Functions implemented in core module which are forward declared here
-diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/devices.c b/drivers/net/wireless/intel/iwlwifi/dvm/devices.c
-index dc3f197..d42bc46 100644
---- a/drivers/net/wireless/intel/iwlwifi/dvm/devices.c
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/devices.c
-@@ -10,6 +10,8 @@
-  *
-  *****************************************************************************/
- 
-+#include <linux/units.h>
-+
- /*
-  * DVM device-specific data & functions
-  */
-@@ -345,7 +347,7 @@ static s32 iwl_temp_calib_to_offset(struct iwl_priv *priv)
- static void iwl5150_set_ct_threshold(struct iwl_priv *priv)
- {
- 	const s32 volt2temp_coef = IWL_5150_VOLTAGE_TO_TEMPERATURE_COEFF;
--	s32 threshold = (s32)CELSIUS_TO_KELVIN(CT_KILL_THRESHOLD_LEGACY) -
-+	s32 threshold = (s32)celsius_to_kelvin(CT_KILL_THRESHOLD_LEGACY) -
- 			iwl_temp_calib_to_offset(priv);
- 
- 	priv->hw_params.ct_kill_threshold = threshold * volt2temp_coef;
-@@ -381,7 +383,7 @@ static void iwl5150_temperature(struct iwl_priv *priv)
- 	vt = le32_to_cpu(priv->statistics.common.temperature);
- 	vt = vt / IWL_5150_VOLTAGE_TO_TEMPERATURE_COEFF + offset;
- 	/* now vt hold the temperature in Kelvin */
--	priv->temperature = KELVIN_TO_CELSIUS(vt);
-+	priv->temperature = kelvin_to_celsius(vt);
- 	iwl_tt_handler(priv);
- }
- 
--- 
-2.7.4
+-Toke
 
