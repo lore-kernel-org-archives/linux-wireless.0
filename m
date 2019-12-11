@@ -5,38 +5,39 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23741C43603
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 23:53:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB6F9C2D0C6
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 23:53:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E47AA20836
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 23:53:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7664A2173E
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 23:53:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=web.de header.i=@web.de header.b="k+FurcGv"
+	dkim=pass (1024-bit key) header.d=web.de header.i=@web.de header.b="QHfjrJCv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727297AbfLKXxc (ORCPT
+        id S1727335AbfLKXxq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 11 Dec 2019 18:53:32 -0500
-Received: from mout.web.de ([212.227.17.12]:58215 "EHLO mout.web.de"
+        Wed, 11 Dec 2019 18:53:46 -0500
+Received: from mout.web.de ([212.227.17.11]:36427 "EHLO mout.web.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727223AbfLKXxa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Dec 2019 18:53:30 -0500
+        id S1727226AbfLKXxb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 11 Dec 2019 18:53:31 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=web.de;
-        s=dbaedf251592; t=1576108394;
-        bh=UIfQ1uEbBM7aRcsCELoWupsxNBU1uTnrfPC1GXuP4k0=;
+        s=dbaedf251592; t=1576108389;
+        bh=Jw3d/3FG5d2fs3pbP5cmR9tz+imTkB9FfgldNiz16/M=;
         h=X-UI-Sender-Class:From:To:Cc:Subject:Date:In-Reply-To:References;
-        b=k+FurcGv4TqMLZ609jRprB6gFKo66ccff7+ww9DBPhQA3+MY2E9cemTMAeF/mQc/D
-         W6mrMnD79QAA2/sbWWE2G2YVn6SF27stpEQioQHz7idLthLgPOqFKLURomtcw4zBW6
-         A0dwfZFmfTDMlWbvEf+eQ+ZgKgNxW2vyvlTXLj8o=
+        b=QHfjrJCvhmuCCnSf1F/RiTE3u7NdGsOyiro4sUDoDIQ+BV6PzAODPhHh1Cl7rbGB8
+         8g2zq0CxIlQxFOZ0mVoVjj+Q1dN150ZDpr5DsCsqGUV2gw/Iy4detaBikD0SXnkeal
+         jfU6VBuWfOIv7zxNJOfScJziWrGpu8ob2L2xUIF0=
 X-UI-Sender-Class: c548c8c5-30a9-4db5-a2e7-cb6cb037b8f9
 Received: from localhost.localdomain ([89.204.139.166]) by smtp.web.de
  (mrweb101 [213.165.67.124]) with ESMTPSA (Nemesis) id
- 0LopiJ-1i3xMg2sFn-00gnU9; Thu, 12 Dec 2019 00:53:13 +0100
+ 0Mhlmh-1iJYJC0mhf-00MwBd; Thu, 12 Dec 2019 00:53:09 +0100
 From:   Soeren Moch <smoch@web.de>
 To:     Kalle Valo <kvalo@codeaurora.org>, Heiko Stuebner <heiko@sntech.de>
-Cc:     Soeren Moch <smoch@web.de>,
+Cc:     Chung-Hsien Hsu <stanley.hsu@cypress.com>,
+        Soeren Moch <smoch@web.de>,
         Arend van Spriel <arend.vanspriel@broadcom.com>,
         Franky Lin <franky.lin@broadcom.com>,
         Hante Meuleman <hante.meuleman@broadcom.com>,
@@ -47,52 +48,55 @@ Cc:     Soeren Moch <smoch@web.de>,
         brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org,
         linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 5/9] brcmfmac: add support for BCM4359 SDIO chipset
-Date:   Thu, 12 Dec 2019 00:52:49 +0100
-Message-Id: <20191211235253.2539-6-smoch@web.de>
+Subject: [PATCH v2 2/9] brcmfmac: set F2 blocksize and watermark for 4359
+Date:   Thu, 12 Dec 2019 00:52:46 +0100
+Message-Id: <20191211235253.2539-3-smoch@web.de>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20191211235253.2539-1-smoch@web.de>
 References: <20191211235253.2539-1-smoch@web.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:fbFLsfS9zJn7W1W+geLYLgL2xgrwq0iSOy4xXpjyJpvWZaUoD4E
- Y0N/HgtLWYoCW//RMA1C56H/2QGtRXUt7FI3e+QfgKv7AbY7WZfIYaL0vqoEDdrNw1A7fou
- Bda7+OfEDfs76gdEzVQB+VO+mAGdy7KGqTxlpNipT/MSTqPXjhnbcFMvToySJY3i9bvbqSG
- zaec0MLD5YciT9kes7SPg==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:QcQIpKAkuMw=:9dXi2isuR2bE8ZA7lkpXK3
- JHnpknUmYgsJHS5jpFZlGrfzeS79/ygdKCK4CMI6KkJ+cVRcXPzAUWkAB9l3jho2xXKh28c1x
- 2la10ALczojxXFDuCCWb6G02C5ESFJzE02HTX6oTcZnhVabr7HU96rtlUN6spKEZ9Bd7My17/
- RRZ7KSsMH9JlQ80JiNuKsD/tLHHTwi5PzmmrcUfmv9yTWf2/ZBE8J20R2S7YOBu6xecdLVR2Y
- IA17+ZWAzHh/GkSAmMHPiBInLGgT2yx1UvbY0MOFTC7RserBpyOBRle8UPkdaqNy88G3M/7aZ
- oGtNIxEQ4t9lRgFZNZHI0S2yPi+CJHroCCxriCTfwj1QIlLaNhXDVWjLqARRywmd8y1r2B+Lv
- cmWYt+sGIETyVYvpMZdyHY/fw8R5KB4QhcaCe3iQCDO7rxU+XEuDQMZiqkMD4z+pPygugXB8Y
- ulCRhlEO0rqXz7FmPUll2EB2WOLRSc6UM/D8Hlv7enz7jA/Pdaf7C+rK4dbygEYmeJ/ccjvbc
- RfsTH4pxCBAdm7K4MPdyMbiDXQwJLFt9fQokHZC/54Ie8ksTJBkFRpAUp4lXmnOYgtVQ1DJk2
- HXmMuxF14xwckRovEh1YrUooaKUKZxP9euxJndIiOj6mIiO7A1kay3hTsw3iHIJXbokxFamWm
- MPLyy0lWyGeaRaceNUnEhJRx6MKPHg0dagULvbAW5U2i+I6I5weUdMgrl7khiQoGUtuh+FQQf
- nPJ+YDQXQqJsCY/uJxA57bCiWSMdcpJP+SzhHnMEA31M1pHw3R+wY0RQ+N4a+4JRxS+JX5Gkj
- i77aPu5fIUgq44nCPD0yAdlz0ynMseQ2+TXC/YcxvBuFuVXIxG1PYaLmgsf3UHapxiFtJxQ0t
- xDOdJsSgozVtIoGS+hbAFeDBEHIXbbwMfoQ5lxaSdhw1pl1aCtHMO/4tywzCB96nrpcsz/y+S
- o44ZdGQOPgQvu5D8ynByIHNb6wsTTFUoHLPm5oLV54KoWXgD7R3ZVZynCwJsPMd8E3oHfMgI7
- 0ziSq7RMTogMHgJSJfUOEJPJJscLHXoNWBAb79IyhFi6gxNAf072nSSDJJC/pd1NPCabwiL3g
- E9gtYKllSBhDz6qQdMn1S7pTrXincYqaWcTS8efzUSMV6aG/Djcza10dAmR7ulFD9cqj4qtF4
- 1Ud9C6FJxZYLebDfwFMc+hCGGyZJel9btqgRw27Pej+UBZ5LR5DOPU8kHhD3U01yDQmOMUdV1
- RSQtIOcuYrpDFvTyIO46ZygLtElFl8ANvmhoupA==
+X-Provags-ID: V03:K1:vMAckOgNBxG6cLi2IX3dVxNnAjzrN9nQcd36iOgEGjn7lSyOXK0
+ nMmPQF96FpuS9n/OnUjpHNPcWxW8ctz5fO3ibNoNVUPj3EW+6zvheCwlxSOOoWs2gDf+gmY
+ p4EirClUV1rcJdk7pgxNeOvTWz8mX1eiqcst5vCJFqdAHlgxEYhaMFLTEBK2i2tiRaxBzO3
+ pyg4nxvbZPxpAHrGgvnZQ==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:Jm6PikBj8do=:bhZOh8ji0Cm3PXLd8vpAhB
+ c7KTXi1ITKNxCijfIlhgJKvVQDYDAgkGWFdQSKy8WVmVRRXjzTWL5dkSRcpZbYZT/kCdMcv5E
+ cNSQdgYK9OoY0+QUPV9M6+5lAymFlzhjrWU0y/umHkgscJK/l68t/ge+xV3POxR16m3yKl7gd
+ T0AU3Mgz18RmHQkB4gvRZQFaVjhOpjZSkEALjU6Iy7ZaupVXQdtoVYtU7YSe/9KFNOlYkj/Qe
+ O3mcXMoWArV1bPPx17Q3cKaW2i6ChTMC/jQ72Yvi6YRe0EhXtioF3tmX/LSJ39ooaE4pAImRG
+ ndHMqmA/IRXkgv3jlUo15fPBeexloNFrLg3B5pbHm93CtWSEHTVAcBzKAltK62RA5mMEr4+cO
+ Y4BXPf/v13ZlWDcYmg1w82o7cNvdfTY8EFaOBLDjqK1jJUescVSc8NRlVyhsoJIPvUcXOzfmU
+ WzR3GUagJ3/fyh7xa9+SNFjYsFJHVcQHB3nidL3DRYLpLXFYNKR/n4YJU5ijEFPDW7xkN7t1l
+ DWfMyWI1bptx9yK9LIxdqp0fFTQN8cD/qhsYm8bhpwK5Pn6FRvDdGpat8Waa63I0pwwcopikT
+ cAsvWGN4c1iPzgGFNE/qOtxMMrqL/l3Hls/oPoSnV4uixQnBxq/Sr5iLaFUiv2pP8z1H88nmb
+ AarpNGmk52LtFUOR0qKhO+BbhVIWbXCbb5ZGHxF9GA5nDR3dcRXWmNiUvxCTUYEoU6hFIw8jQ
+ 8TvU7ShRQGjZP+vkv2XBVSzzui4MdrIRyLF8OZh0UgLbWB9tZY+inDhGDa9InOmK6Zn5mCzKs
+ kDs4RY/KRp/OvNeOSDgnGuP3yGa06aWA08lfMkhnGYrbLdRRNvcrXLc2RjcbtD/T1WAGZdD3L
+ LFYaaq+YmEHK8+AnSb8rmAbor0ynGp0bLYpo02c3kKEVKToJ4QvjbzROrOmiNYn/bhdxIn2ML
+ ku8R3r/eRwZzOMVfVoAR/soNZiV2eXN5VWj5aPvRwpCKiy0Xieo30PYkIvapF8asgJ/IoD9bQ
+ 1ho9MkOstO/z4yfARCHWHePoYq2FaymEsO0tKpr+J5FMbsC7lPoPoVKvq3FfHUFDbWfyz/j08
+ YcpsQ05Po3tDeao9xyk0cO2kZ2kA25ic2TeifPRDQow9ogTTTSYhJCrREBtQ3wljTE9g0MG0L
+ 9N2Rw16Oitu46gwY4aR3zUIlM6itQMAuZF1Imj1Zrbj2dk1Ha00y/U9Id/PqaUSR1JB4ifYan
+ N5MNtNk3cmZwBbpmRKtsp9azFnviVwGUl/Yy3vw==
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-BCM4359 is a 2x2 802.11 abgn+ac Dual-Band HT80 combo chip and it
-supports Real Simultaneous Dual Band feature.
+From: Chung-Hsien Hsu <stanley.hsu@cypress.com>
 
-Based on a similar patch by: Wright Feng <wright.feng@cypress.com>
+Set F2 blocksize to 256 bytes and watermark to 0x40 for 4359. Also
+enable and configure F1 MesBusyCtrl. It fixes DMA error while having
+UDP bi-directional traffic.
 
+Signed-off-by: Chung-Hsien Hsu <stanley.hsu@cypress.com>
+[slightly adapted for rebase on mainline linux]
 Signed-off-by: Soeren Moch <smoch@web.de>
+Reviewed-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
 =2D--
 changes in v2:
-- add SDIO_DEVICE_ID_CYPRESS_89359 as requested
-  by Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+- add review tag received for v1
 
 Cc: Kalle Valo <kvalo@codeaurora.org>
 Cc: Heiko Stuebner <heiko@sntech.de>
@@ -109,79 +113,80 @@ Cc: linux-arm-kernel@lists.infradead.org
 Cc: linux-rockchip@lists.infradead.org
 Cc: linux-kernel@vger.kernel.org
 =2D--
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 2 ++
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c   | 1 +
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c   | 2 ++
- include/linux/mmc/sdio_ids.h                              | 2 ++
- 4 files changed, 7 insertions(+)
+ .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c |  6 +++++-
+ .../wireless/broadcom/brcm80211/brcmfmac/sdio.c   | 15 +++++++++++++++
+ 2 files changed, 20 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/d=
 rivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index 68baf0189305..f4c53ab46058 100644
+index 96fd8e2bf773..68baf0189305 100644
 =2D-- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
 +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -973,8 +973,10 @@ static const struct sdio_device_id brcmf_sdmmc_ids[] =
-=3D {
- 	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_43455),
- 	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_4354),
- 	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_4356),
-+	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_4359),
- 	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_CYPRESS_4373),
- 	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_CYPRESS_43012),
-+	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_CYPRESS_89359),
- 	{ /* end: all zeroes */ }
- };
- MODULE_DEVICE_TABLE(sdio, brcmf_sdmmc_ids);
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/dri=
-vers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-index baf72e3984fc..282d0bc14e8e 100644
-=2D-- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-@@ -1408,6 +1408,7 @@ bool brcmf_chip_sr_capable(struct brcmf_chip *pub)
- 		addr =3D CORE_CC_REG(base, sr_control0);
- 		reg =3D chip->ops->read32(chip->ctx, addr);
- 		return (reg & CC_SR_CTL0_ENABLE_MASK) !=3D 0;
-+	case BRCM_CC_4359_CHIP_ID:
- 	case CY_CC_43012_CHIP_ID:
- 		addr =3D CORE_CC_REG(pmu->base, retention_ctl);
- 		reg =3D chip->ops->read32(chip->ctx, addr);
+@@ -43,6 +43,7 @@
+
+ #define SDIO_FUNC1_BLOCKSIZE		64
+ #define SDIO_FUNC2_BLOCKSIZE		512
++#define SDIO_4359_FUNC2_BLOCKSIZE	256
+ /* Maximum milliseconds to wait for F2 to come up */
+ #define SDIO_WAIT_F2RDY	3000
+
+@@ -903,6 +904,7 @@ static void brcmf_sdiod_host_fixup(struct mmc_host *ho=
+st)
+ static int brcmf_sdiod_probe(struct brcmf_sdio_dev *sdiodev)
+ {
+ 	int ret =3D 0;
++	unsigned int f2_blksz =3D SDIO_FUNC2_BLOCKSIZE;
+
+ 	sdio_claim_host(sdiodev->func1);
+
+@@ -912,7 +914,9 @@ static int brcmf_sdiod_probe(struct brcmf_sdio_dev *sd=
+iodev)
+ 		sdio_release_host(sdiodev->func1);
+ 		goto out;
+ 	}
+-	ret =3D sdio_set_block_size(sdiodev->func2, SDIO_FUNC2_BLOCKSIZE);
++	if (sdiodev->func2->device =3D=3D SDIO_DEVICE_ID_BROADCOM_4359)
++		f2_blksz =3D SDIO_4359_FUNC2_BLOCKSIZE;
++	ret =3D sdio_set_block_size(sdiodev->func2, f2_blksz);
+ 	if (ret) {
+ 		brcmf_err("Failed to set F2 blocksize\n");
+ 		sdio_release_host(sdiodev->func1);
 diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/dri=
 vers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 21e535072f3f..c4012ed58b9c 100644
+index 264ad63232f8..21e535072f3f 100644
 =2D-- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
 +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -616,6 +616,7 @@ BRCMF_FW_DEF(43455, "brcmfmac43455-sdio");
- BRCMF_FW_DEF(43456, "brcmfmac43456-sdio");
- BRCMF_FW_DEF(4354, "brcmfmac4354-sdio");
- BRCMF_FW_DEF(4356, "brcmfmac4356-sdio");
-+BRCMF_FW_DEF(4359, "brcmfmac4359-sdio");
- BRCMF_FW_DEF(4373, "brcmfmac4373-sdio");
- BRCMF_FW_DEF(43012, "brcmfmac43012-sdio");
+@@ -42,6 +42,8 @@
+ #define DEFAULT_F2_WATERMARK    0x8
+ #define CY_4373_F2_WATERMARK    0x40
+ #define CY_43012_F2_WATERMARK    0x60
++#define CY_4359_F2_WATERMARK	0x40
++#define CY_4359_F1_MESBUSYCTRL	(CY_4359_F2_WATERMARK | SBSDIO_MESBUSYCTRL=
+_ENAB)
 
-@@ -638,6 +639,7 @@ static const struct brcmf_firmware_mapping brcmf_sdio_=
-fwnames[] =3D {
- 	BRCMF_FW_ENTRY(BRCM_CC_4345_CHIP_ID, 0xFFFFFDC0, 43455),
- 	BRCMF_FW_ENTRY(BRCM_CC_4354_CHIP_ID, 0xFFFFFFFF, 4354),
- 	BRCMF_FW_ENTRY(BRCM_CC_4356_CHIP_ID, 0xFFFFFFFF, 4356),
-+	BRCMF_FW_ENTRY(BRCM_CC_4359_CHIP_ID, 0xFFFFFFFF, 4359),
- 	BRCMF_FW_ENTRY(CY_CC_4373_CHIP_ID, 0xFFFFFFFF, 4373),
- 	BRCMF_FW_ENTRY(CY_CC_43012_CHIP_ID, 0xFFFFFFFF, 43012)
- };
-diff --git a/include/linux/mmc/sdio_ids.h b/include/linux/mmc/sdio_ids.h
-index 08b25c02b5a1..2e9a6e4634eb 100644
-=2D-- a/include/linux/mmc/sdio_ids.h
-+++ b/include/linux/mmc/sdio_ids.h
-@@ -41,8 +41,10 @@
- #define SDIO_DEVICE_ID_BROADCOM_43455		0xa9bf
- #define SDIO_DEVICE_ID_BROADCOM_4354		0x4354
- #define SDIO_DEVICE_ID_BROADCOM_4356		0x4356
-+#define SDIO_DEVICE_ID_BROADCOM_4359		0x4359
- #define SDIO_DEVICE_ID_CYPRESS_4373		0x4373
- #define SDIO_DEVICE_ID_CYPRESS_43012		43012
-+#define SDIO_DEVICE_ID_CYPRESS_89359		0x4355
+ #ifdef DEBUG
 
- #define SDIO_VENDOR_ID_INTEL			0x0089
- #define SDIO_DEVICE_ID_INTEL_IWMC3200WIMAX	0x1402
+@@ -4205,6 +4207,19 @@ static void brcmf_sdio_firmware_callback(struct dev=
+ice *dev, int err,
+ 			brcmf_sdiod_writeb(sdiod, SBSDIO_DEVICE_CTL, devctl,
+ 					   &err);
+ 			break;
++		case SDIO_DEVICE_ID_BROADCOM_4359:
++			brcmf_dbg(INFO, "set F2 watermark to 0x%x*4 bytes\n",
++				  CY_4359_F2_WATERMARK);
++			brcmf_sdiod_writeb(sdiod, SBSDIO_WATERMARK,
++					   CY_4359_F2_WATERMARK, &err);
++			devctl =3D brcmf_sdiod_readb(sdiod, SBSDIO_DEVICE_CTL,
++						   &err);
++			devctl |=3D SBSDIO_DEVCTL_F2WM_ENAB;
++			brcmf_sdiod_writeb(sdiod, SBSDIO_DEVICE_CTL, devctl,
++					   &err);
++			brcmf_sdiod_writeb(sdiod, SBSDIO_FUNC1_MESBUSYCTRL,
++					   CY_4359_F1_MESBUSYCTRL, &err);
++			break;
+ 		default:
+ 			brcmf_sdiod_writeb(sdiod, SBSDIO_WATERMARK,
+ 					   DEFAULT_F2_WATERMARK, &err);
 =2D-
 2.17.1
 
