@@ -8,32 +8,32 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 10390C00454
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 23:54:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44EB7C2D0C7
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 23:54:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CFC8320578
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 23:54:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1C37320578
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 23:54:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=web.de header.i=@web.de header.b="OZLDxo+Y"
+	dkim=pass (1024-bit key) header.d=web.de header.i=@web.de header.b="I1puRLyA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727238AbfLKXx3 (ORCPT
+        id S1727387AbfLKXyB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 11 Dec 2019 18:53:29 -0500
-Received: from mout.web.de ([217.72.192.78]:59813 "EHLO mout.web.de"
+        Wed, 11 Dec 2019 18:54:01 -0500
+Received: from mout.web.de ([212.227.17.11]:54749 "EHLO mout.web.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727199AbfLKXx1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Dec 2019 18:53:27 -0500
+        id S1727221AbfLKXxa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 11 Dec 2019 18:53:30 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=web.de;
-        s=dbaedf251592; t=1576108388;
-        bh=QrCQqilrTouTgYj7yPQjXnTFJOK16++5KJ6q9dqCzuQ=;
+        s=dbaedf251592; t=1576108397;
+        bh=7pQcYbT5CQoEEaxvWi8Uu1MkcuZw52tCD3i8PVSaiP0=;
         h=X-UI-Sender-Class:From:To:Cc:Subject:Date:In-Reply-To:References;
-        b=OZLDxo+YhfcGWOq2ZjW1XGmkZRwtMEa9B9St7EgXLEOMeHEizbtlijhXFLk/N0qoz
-         1+fJdbnjKSi2k+kVhlRJ+Ddd/mmBmYMibz10dF+1OBg6WKTPhoSbiod9KOofyA948D
-         emoZkjekJmVExY4VLQIVrf0OqIDqpZSxTWz1g1NQ=
+        b=I1puRLyA2WAJfJ1s8no6Dyz/jMFM+Lhw0Yx5hubaBqNqiwHsTWgCgpNOCLNtJUz3I
+         6oJ7nJlRK7wbGM8oNxFcsDCeGR7ejZMiKbnFVUXtQ4ewro+e0C0/C/yABfrYPgycVx
+         fp3PUyp8b1Jkp2x4M55FxOxPfxmUfBQAIXdq0Tek=
 X-UI-Sender-Class: c548c8c5-30a9-4db5-a2e7-cb6cb037b8f9
 Received: from localhost.localdomain ([89.204.139.166]) by smtp.web.de
  (mrweb101 [213.165.67.124]) with ESMTPSA (Nemesis) id
- 0MRl5x-1iGpH02iS1-00SxXf; Thu, 12 Dec 2019 00:53:07 +0100
+ 0MRCrb-1iITxr2kut-00UcEf; Thu, 12 Dec 2019 00:53:16 +0100
 From:   Soeren Moch <smoch@web.de>
 To:     Kalle Valo <kvalo@codeaurora.org>, Heiko Stuebner <heiko@sntech.de>
 Cc:     Wright Feng <wright.feng@cypress.com>, Soeren Moch <smoch@web.de>,
@@ -46,37 +46,37 @@ Cc:     Wright Feng <wright.feng@cypress.com>, Soeren Moch <smoch@web.de>,
         brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org,
         linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 1/9] brcmfmac: reset two D11 cores if chip has two D11 cores
-Date:   Thu, 12 Dec 2019 00:52:45 +0100
-Message-Id: <20191211235253.2539-2-smoch@web.de>
+Subject: [PATCH v2 7/9] brcmfmac: not set mbss in vif if firmware does not support MBSS
+Date:   Thu, 12 Dec 2019 00:52:51 +0100
+Message-Id: <20191211235253.2539-8-smoch@web.de>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20191211235253.2539-1-smoch@web.de>
 References: <20191211235253.2539-1-smoch@web.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:Us4gcuk0RbKR4HQNOPkL/oiRL4tAdmkHERdAxq/8Wll6xa5unY6
- vc4ERbkOO1hBhlxdSovkzPZ9KF6ywGdKRjYa7y55CjUt/ifWRWTIps60cr3cl9ahlVyaxpL
- Nq2iiB7gOeo62Y4PROt4/1e7GCvb4gO+errOwi4IcUJX42eqY0n9VdPINUEI8dW7lXJf2ye
- Y8lk7+vzq15It0JcqoSFg==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:+88Ev/9dDg4=:z2IeWqdpeb4UiDzDXawSBY
- aGmsNDovtHG8mwxFuNhrq9OyZ/gUQOmAMlwyeiqOiyPVeKvbYpHS2WclK7O062I6pN8MQ9Sx1
- Lrk3EG8jTIo6Ba5x7E6hFNkE2JUhdwQ7Z1K6ymRWvLcUK3ANocVW7z3dP2ejwLfzA45hgoPi1
- F5Wokbc3wTCW/W8+HsaYOBz3Ik7EAtpcfFYqyqRrw/kCb/L9nI91b407JafIRdnt/duekI6sq
- X8mHk07N6xi3McZ/dWZUilbZtNjFx0/B7kVt5RqhTrci+V0fPZDqr8BJf9VjhzIDNFRW1PGYt
- b2HGNFBGluMKTldZNDT8phfSSIss1QfXdyMarIlZmMgXGvA/MLeQWfNQXlf6g5MFc5ve4TFnI
- QeAToxom+TMk/gj8D243yCeDGpIIdWvOvDqYhoJDlR+ibB8bpwy47rlVufYIB1yWm+iV7UlYZ
- RvcSS72+FN7QSNP4EkU0CKuSv9btbKC1tqWm2jgTeqWQAnQnCwX26MoPvjI9+vB/FFYclzVkM
- MksltDd3e6/MIHxNMPSVwHBomyucLipRt2jgMSgL8gUifILepUSLN9oDAUIudTOfMb3b1p2oM
- U5n8Z8Lh8ABCnFlb+6CG0miBqC2HrSTgvmaM2onU5MRHSCUopNuiyk83DdU9CCkgYT639e0O7
- L8XcjRvSa0TxsUu3h+0JdOu1BDpD4ZlckIvTXU+5UmEFCUokIeoRN4scySgqaINUOlAk5kB8+
- Q9BKn/9VgwWMfQYAwBdcsR/SpqdspfkCT7b5SarpkvQzHU3x7npAHgQZ2bIy37vf/d32lDufe
- dLPvVjb5ZhulNO5nTrWfe6jIvNdxBXCMR24ODnJ85EXh0RHJy1sV2j5zf8VXeh/2e7i34Gw4U
- 2R4jE3mwPBIKKZp6mUa5dE1DVyCGE7Pw10cVbAe2a4c5vhd/I24f7w55RFChaNLGEhXG7J/Bq
- lRsI+1yABHbXTL28NG8zSLRboH9GN9gpfZreuzSZEPThPKv2QW9lzUs6gN3sNHYxdIs/rYpte
- nsCQ4rY5l9gAslr1HMDnnbPujEkpM3/bBS5aJ9TChVjVs/BNfDv6mCB5IJ2KCggfoIPRhQRFG
- uqCE/eToDktOZ1czy6n/wQyM3yTWFH5zu0gr54Gu5MHpHv4hx3A0M+uVM+9lzeLaHI9ore98M
- fDZU3r2s0muCJ7UC1rNn+e+zQ5ZQAPnzrQUADrdWJaJdtexNlcig2I+VuvRxnFLfTwFgXq1t9
- di3sCBWONCqTgyshjaj1kaT2cFCc/oDCh/9NYVQ==
+X-Provags-ID: V03:K1:ydPMbbLZaxGnMRPj9cpe5yDs3Qub8wc2zlvo+FhzRwhJe6CeWja
+ ZCPy1SNdvscy7jaRyoNSIbG0RsFSe4egx9rjGpNd4NoevT6JFdb0HCGhS/NAjXoMCF6AAa2
+ l6pycAH9BIM/H8KcH/tuyLXVKriNd7KDDiap0vDs/ScJ/nWDZEKMQTAQ8Y5WtbY572+Bhwp
+ ba2aIIocLz3hJIpxei3IQ==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:qEBdN5KF0nw=:kNLWSGjSFVvCh01f/tAcNY
+ kahsPKtuaZhGgyIZphgzN4umulzK0+fS5Le5P/s5u9RF5rt4s65qL7VnedHmG/i3QIIZWEe6h
+ +osDYMfBrw1iybaSyArv9Zy0MT4YOx1Td89/Pd2lrlriCRngPupTyOtbdhARFyaybX0Fg88OJ
+ 6VVvQ6Y3I7znaxSmWHwWpLJmUG8jfsP0zJ1uqBrvj6FOAzEDSkeZfFAMWv+KyHao8Ji+gigVX
+ +d8/rfpv/rkJdxdBuCzN712HEwZk79aWJBG6Xq98PE1ajcMla310phwE8rnNBcFrUB2qCfiMF
+ eGe99wPA57fWWQTFRAD4mAr+IXbk7uQ+gCcPQgnTwXEEDk2GrdEmII4C0jpSrdNLKUI0+CL9e
+ SgV9td71GBhk+qGgd7eJcionSoFe0Zi7XqzGSDDqjSDpc8Rgy7oRgPv82V8W/AsxRBVyXRhEO
+ 2e2Pi9H6Qe93MRW8yKNfkhg8A7vsmw25tYKO1j6myN3TS5DMQM4hhpmDRQHsECNlzWXcS3RT/
+ ep6JgYFDxyw+gnyJofAjOIr3oaFUz6ZnZJQIZmFO8NQBtVVGL4MOADYbZMAWEWlpiohd0bcip
+ 58r+0QNJPD97PRjF9iQYc4sDZRgkMDifIcYXKT7QEUxn3Dcq0vwQDcdbX5r8i4JuLBEIkFvIT
+ F1XWKbMI7hyV8ZS3HWO3LtHzmUAMFhZWEq8c3BjULmhrf1l3LEcW6uvQ/Dzh879nk5JrMvs44
+ IoUJFeJg6XvgoFPGbeNM1GpzUGO9O0ibNmkWTi+gRozt/AEe8GyyD06MXFRowoCtrMDppgaFO
+ OErSrflt0SmeP9utL30vMPxlB3i3xH9z8DfsmbMnTNWn/EDLEntHvFdstbvQdWXCsStEzU/VU
+ LjC/hPwxJEbOCc0Ea8TXZt/wW0LZFZ4aPQDc66dNvmw/d0XhwXfwILiu/Wvv735rWvDJ4wosq
+ 4G+tuzIvIMcOjyyd3E3EEjxoaQVmWL60mqCAmIHJzqjOflePGVFKI8iwPIfGHfGcktM3HEfyD
+ dptsq6dZd/9ieqUmruWSe8e5jFYuyzjbrkFIIUP6s8pftUBBkySVwG+gzxXoL4nQPAdQtC+qF
+ uDbm+nDCX8qQ3Fh35Hjdxco14pF+z36eaWgcTlGoNtiouAYOT2tmfyquPtyM1UV3bPgCWEvHq
+ xu3Sfub7wRdxohQvE2VLLnjRhqzcUI05JrvH4un3wvdSJGY5G5uWKfKgaIiuACjDY2EfR6s52
+ cZ0ft2+k7BfFKOVcpPrzBN+FoITLSodCaik3LpQ==
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -84,9 +84,9 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Wright Feng <wright.feng@cypress.com>
 
-There are two D11 cores in RSDB chips like 4359. We have to reset two
-D11 cores simutaneously before firmware download, or the firmware may
-not be initialized correctly and cause "fw initialized failed" error.
+With RSDB mode, FMAC and firmware are able to create 2 or more AP,
+so we should not set mbss in vif structure if firmware does not
+support MBSS feature.
 
 Signed-off-by: Wright Feng <wright.feng@cypress.com>
 Signed-off-by: Soeren Moch <smoch@web.de>
@@ -111,129 +111,34 @@ Cc: linux-arm-kernel@lists.infradead.org
 Cc: linux-rockchip@lists.infradead.org
 Cc: linux-kernel@vger.kernel.org
 =2D--
- .../broadcom/brcm80211/brcmfmac/chip.c        | 50 +++++++++++++++++++
- .../broadcom/brcm80211/brcmfmac/chip.h        |  1 +
- .../broadcom/brcm80211/brcmfmac/pcie.c        |  2 +-
- 3 files changed, 52 insertions(+), 1 deletion(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/dri=
-vers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-index a795d781b4c5..0b5fbe5d8270 100644
-=2D-- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-@@ -433,11 +433,25 @@ static void brcmf_chip_ai_resetcore(struct brcmf_cor=
-e_priv *core, u32 prereset,
- {
- 	struct brcmf_chip_priv *ci;
- 	int count;
-+	struct brcmf_core *d11core2 =3D NULL;
-+	struct brcmf_core_priv *d11priv2 =3D NULL;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b=
+/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 9d9dc9195e9e..6eb3064c3721 100644
+=2D-- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -5363,6 +5363,7 @@ struct brcmf_cfg80211_vif *brcmf_alloc_vif(struct br=
+cmf_cfg80211_info *cfg,
+ 	struct brcmf_cfg80211_vif *vif_walk;
+ 	struct brcmf_cfg80211_vif *vif;
+ 	bool mbss;
++	struct brcmf_if *ifp =3D brcmf_get_ifp(cfg->pub, 0);
 
- 	ci =3D core->chip;
+ 	brcmf_dbg(TRACE, "allocating virtual interface (size=3D%zu)\n",
+ 		  sizeof(*vif));
+@@ -5375,7 +5376,8 @@ struct brcmf_cfg80211_vif *brcmf_alloc_vif(struct br=
+cmf_cfg80211_info *cfg,
 
-+	/* special handle two D11 cores reset */
-+	if (core->pub.id =3D=3D BCMA_CORE_80211) {
-+		d11core2 =3D brcmf_chip_get_d11core(&ci->pub, 1);
-+		if (d11core2) {
-+			brcmf_dbg(INFO, "found two d11 cores, reset both\n");
-+			d11priv2 =3D container_of(d11core2,
-+						struct brcmf_core_priv, pub);
-+		}
-+	}
-+
- 	/* must disable first to work for arbitrary current core state */
- 	brcmf_chip_ai_coredisable(core, prereset, reset);
-+	if (d11priv2)
-+		brcmf_chip_ai_coredisable(d11priv2, prereset, reset);
+ 	brcmf_init_prof(&vif->profile);
 
- 	count =3D 0;
- 	while (ci->ops->read32(ci->ctx, core->wrapbase + BCMA_RESET_CTL) &
-@@ -449,9 +463,30 @@ static void brcmf_chip_ai_resetcore(struct brcmf_core=
-_priv *core, u32 prereset,
- 		usleep_range(40, 60);
- 	}
-
-+	if (d11priv2) {
-+		count =3D 0;
-+		while (ci->ops->read32(ci->ctx,
-+				       d11priv2->wrapbase + BCMA_RESET_CTL) &
-+				       BCMA_RESET_CTL_RESET) {
-+			ci->ops->write32(ci->ctx,
-+					 d11priv2->wrapbase + BCMA_RESET_CTL,
-+					 0);
-+			count++;
-+			if (count > 50)
-+				break;
-+			usleep_range(40, 60);
-+		}
-+	}
-+
- 	ci->ops->write32(ci->ctx, core->wrapbase + BCMA_IOCTL,
- 			 postreset | BCMA_IOCTL_CLK);
- 	ci->ops->read32(ci->ctx, core->wrapbase + BCMA_IOCTL);
-+
-+	if (d11priv2) {
-+		ci->ops->write32(ci->ctx, d11priv2->wrapbase + BCMA_IOCTL,
-+				 postreset | BCMA_IOCTL_CLK);
-+		ci->ops->read32(ci->ctx, d11priv2->wrapbase + BCMA_IOCTL);
-+	}
- }
-
- char *brcmf_chip_name(u32 id, u32 rev, char *buf, uint len)
-@@ -1109,6 +1144,21 @@ void brcmf_chip_detach(struct brcmf_chip *pub)
- 	kfree(chip);
- }
-
-+struct brcmf_core *brcmf_chip_get_d11core(struct brcmf_chip *pub, u8 unit=
-)
-+{
-+	struct brcmf_chip_priv *chip;
-+	struct brcmf_core_priv *core;
-+
-+	chip =3D container_of(pub, struct brcmf_chip_priv, pub);
-+	list_for_each_entry(core, &chip->cores, list) {
-+		if (core->pub.id =3D=3D BCMA_CORE_80211) {
-+			if (unit-- =3D=3D 0)
-+				return &core->pub;
-+		}
-+	}
-+	return NULL;
-+}
-+
- struct brcmf_core *brcmf_chip_get_core(struct brcmf_chip *pub, u16 coreid=
-)
- {
- 	struct brcmf_chip_priv *chip;
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.h b/dri=
-vers/net/wireless/broadcom/brcm80211/brcmfmac/chip.h
-index 7b00f6a59e89..8fa38658e727 100644
-=2D-- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.h
-@@ -74,6 +74,7 @@ struct brcmf_chip *brcmf_chip_attach(void *ctx,
- 				     const struct brcmf_buscore_ops *ops);
- void brcmf_chip_detach(struct brcmf_chip *chip);
- struct brcmf_core *brcmf_chip_get_core(struct brcmf_chip *chip, u16 corei=
-d);
-+struct brcmf_core *brcmf_chip_get_d11core(struct brcmf_chip *pub, u8 unit=
-);
- struct brcmf_core *brcmf_chip_get_chipcommon(struct brcmf_chip *chip);
- struct brcmf_core *brcmf_chip_get_pmu(struct brcmf_chip *pub);
- bool brcmf_chip_iscoreup(struct brcmf_core *core);
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/dri=
-vers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-index f64ce5074a55..7ac72804e285 100644
-=2D-- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-@@ -78,7 +78,7 @@ static const struct brcmf_firmware_mapping brcmf_pcie_fw=
-names[] =3D {
- 	BRCMF_FW_ENTRY(BRCM_CC_4371_CHIP_ID, 0xFFFFFFFF, 4371),
- };
-
--#define BRCMF_PCIE_FW_UP_TIMEOUT		2000 /* msec */
-+#define BRCMF_PCIE_FW_UP_TIMEOUT		5000 /* msec */
-
- #define BRCMF_PCIE_REG_MAP_SIZE			(32 * 1024)
-
+-	if (type =3D=3D NL80211_IFTYPE_AP) {
++	if (type =3D=3D NL80211_IFTYPE_AP &&
++	    brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MBSS)) {
+ 		mbss =3D false;
+ 		list_for_each_entry(vif_walk, &cfg->vif_list, list) {
+ 			if (vif_walk->wdev.iftype =3D=3D NL80211_IFTYPE_AP) {
 =2D-
 2.17.1
 
