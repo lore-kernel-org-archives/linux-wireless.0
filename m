@@ -1,104 +1,84 @@
-Return-Path: <SRS0=GVYC=2A=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=yvfE=2B=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.3 required=3.0 tests=DKIM_ADSP_CUSTOM_MED,
+	DKIM_INVALID,DKIM_SIGNED,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DF34C43603
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 22:45:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 989AEC43603
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 05:20:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 53B4020836
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Dec 2019 22:45:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576017907;
-	bh=mqw6PVPrz8aX7WywNznPus2DoQhmJUuGlFdhOu5qNBk=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=xSUZXbRp5Ss6b8Jnr2q7LrJwQ1x+S3kl9o8UqR+9FgSr+J9Zq6dKpsYjRZ36tOVta
-	 7PkV5IzWp6PprlP/RdMXl55NCBI+vwHTt3uLJ4O+KMLbNxomqgwkVF10Cx0IRMIfcb
-	 wF2ZK+Ib6UMll4bDir93swpcZtCRCAajXjhNYsVs=
+	by mail.kernel.org (Postfix) with ESMTP id 6E77F2077B
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 05:20:56 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="s5CVPKVs"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726532AbfLJWpG (ORCPT
+        id S1726687AbfLKFUx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 10 Dec 2019 17:45:06 -0500
-Received: from mail.kernel.org ([198.145.29.99]:50574 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726841AbfLJWar (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Dec 2019 17:30:47 -0500
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 407AC2077B;
-        Tue, 10 Dec 2019 22:30:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576017047;
-        bh=mqw6PVPrz8aX7WywNznPus2DoQhmJUuGlFdhOu5qNBk=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=0phECtdvk9z1ympaCRw6VDGMJGZg4UumL5fWyPKfbXji5lgTneLKklk2FZRw1T2sd
-         PPTU/qJolJk2jAzVdWYtSHNKkVVUH3Nd33MSSSRtasdJ4LFUPeAogHsm71ykK4AbkV
-         af2zE3Ssy3m7mMOsXSup0t72dTFNlAhehqQhU3z0=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Navid Emamdoost <navid.emamdoost@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 09/91] rtlwifi: prevent memory leak in rtl_usb_probe
-Date:   Tue, 10 Dec 2019 17:29:13 -0500
-Message-Id: <20191210223035.14270-9-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191210223035.14270-1-sashal@kernel.org>
-References: <20191210223035.14270-1-sashal@kernel.org>
+        Wed, 11 Dec 2019 00:20:53 -0500
+Received: from mail-qk1-f171.google.com ([209.85.222.171]:37354 "EHLO
+        mail-qk1-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725768AbfLKFUw (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 11 Dec 2019 00:20:52 -0500
+Received: by mail-qk1-f171.google.com with SMTP id m188so18659831qkc.4;
+        Tue, 10 Dec 2019 21:20:52 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:disposition-notification-to:return-receipt-to:user-agent
+         :in-reply-to:references:mime-version:content-transfer-encoding
+         :subject:to:cc:from:message-id;
+        bh=i4HREvJEfUsHx/079OShSuaJBOAcThcz3a4tZvIC3mI=;
+        b=s5CVPKVsTt3PcnMFYzYSztnCQ3s+B+3GsKvu37KlTBjG00M0+4xSCvySFUfj9F0Xx3
+         ipCYrKMLL9UbGsmIVQXgHePtDe4RyC/IWb8QHEJRY75887mrLPOKjI2XXnYSeOibTG/W
+         L922iga2n12nxEPiTYNK2lEmh4DFaN4xpYDSLYaxuxAC6ZQlSrgAleP+oZaRoTFQ4wqo
+         m2jq4DhBe+GCta8dAwbayQHNQh6eIVE5jRL0r5reoXc0cjW/r8nBMhVx2P4ecau9Eizb
+         C0KNRwKEs86gyqAQB6T2tVoGj+1Jwb0UEOcGj8iLMhzFnCmJd9XWT5VX2n4GWY02p9d0
+         whPw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:disposition-notification-to
+         :return-receipt-to:user-agent:in-reply-to:references:mime-version
+         :content-transfer-encoding:subject:to:cc:from:message-id;
+        bh=i4HREvJEfUsHx/079OShSuaJBOAcThcz3a4tZvIC3mI=;
+        b=nFzpeo7EG3Hm9VysVxpdlYvP3QBqmlYFbiT0iAPf538YQboadzu7y/RkegasnO9PgF
+         fzrFDA2ef6UDR3IDu7OE0Lvr/SAOKOaur3UnXMpgNxOt+YN3Ux59lreT9lhy7US6OGwU
+         ytJ0TP8PvXw5PDuGRyFmQ0vSehsumPP/SxjGvPYsDNhTW+L2yUCuwdcAz+dS+Wn4uXEc
+         750Q9bmo//S6EO+fonAZHmp0TC1EWBiTcjRiQU+2KBmg1YNnzHg8GYKBSTciXffSh9NO
+         eoDfRnpzcSm7MMnGya66xul55biiJJxqFOLeRkJkwzZ54vneKfnzet//1Bvumx7tgot2
+         3wLQ==
+X-Gm-Message-State: APjAAAVwz6uJdqs91uagyrZIveFVZFXmOhE2w/wTUQP8jx2qJEBOTNzD
+        L5lAbmZJH5WsXO2vm2IdQQkS07Ap
+X-Google-Smtp-Source: APXvYqyHkqU2kva1jgmKXR5IVyHDluXUeTGp5sRHeoZEctdRJ0WbeNPd6rkX9MgybPDrM5kuaTqvFw==
+X-Received: by 2002:a37:6543:: with SMTP id z64mr1291143qkb.389.1576041651867;
+        Tue, 10 Dec 2019 21:20:51 -0800 (PST)
+Received: from [192.168.1.171] (pool-68-133-6-220.bflony.fios.verizon.net. [68.133.6.220])
+        by smtp.gmail.com with ESMTPSA id t73sm333348qke.71.2019.12.10.21.20.51
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 10 Dec 2019 21:20:51 -0800 (PST)
+Date:   Wed, 11 Dec 2019 00:20:49 -0500
+User-Agent: K-9 Mail for Android
+In-Reply-To: <20191208203810.GA2920@system76-pc.localdomain>
+References: <20190817041258.GA1641@chirva-slack.chirva-slack> <20191208203810.GA2920@system76-pc.localdomain>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain;
+ charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+Subject: Re: PROBLEM: iwlwifi in 5.4 does not load firmware for
+To:     Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+CC:     kernel list <linux-kernel@vger.kernel.org>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        linux-wireless@vger.kernel.org
+From:   "A.C." <achirvasub@gmail.com>
+Message-ID: <92F8571A-5CA6-4867-BB55-8D0B0A13732D@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Navid Emamdoost <navid.emamdoost@gmail.com>
-
-[ Upstream commit 3f93616951138a598d930dcaec40f2bfd9ce43bb ]
-
-In rtl_usb_probe if allocation for usb_data fails the allocated hw
-should be released. In addition the allocated rtlpriv->usb_data should
-be released on error handling path.
-
-Signed-off-by: Navid Emamdoost <navid.emamdoost@gmail.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/net/wireless/realtek/rtlwifi/usb.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/usb.c b/drivers/net/wireless/realtek/rtlwifi/usb.c
-index ae0c48f3c2bc0..1f02461de261c 100644
---- a/drivers/net/wireless/realtek/rtlwifi/usb.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/usb.c
-@@ -1088,8 +1088,10 @@ int rtl_usb_probe(struct usb_interface *intf,
- 	rtlpriv->hw = hw;
- 	rtlpriv->usb_data = kzalloc(RTL_USB_MAX_RX_COUNT * sizeof(u32),
- 				    GFP_KERNEL);
--	if (!rtlpriv->usb_data)
-+	if (!rtlpriv->usb_data) {
-+		ieee80211_free_hw(hw);
- 		return -ENOMEM;
-+	}
- 
- 	/* this spin lock must be initialized early */
- 	spin_lock_init(&rtlpriv->locks.usb_lock);
-@@ -1152,6 +1154,7 @@ int rtl_usb_probe(struct usb_interface *intf,
- 	_rtl_usb_io_handler_release(hw);
- 	usb_put_dev(udev);
- 	complete(&rtlpriv->firmware_loading_complete);
-+	kfree(rtlpriv->usb_data);
- 	return -ENODEV;
- }
- EXPORT_SYMBOL(rtl_usb_probe);
--- 
-2.20.1
-
+The problem persists with the new 5=2E5-rc1 compiled just now, again copyin=
+g over the =2Econfig file and making 'oldconfig'=2E
