@@ -8,97 +8,87 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0373CC43603
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 23:53:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87813C2D0C7
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 23:53:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CE26020578
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 23:53:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 59E2C20578
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 23:53:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=web.de header.i=@web.de header.b="fC+reDFW"
+	dkim=pass (1024-bit key) header.d=web.de header.i=@web.de header.b="BzrHW2OM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727267AbfLKXxa (ORCPT
+        id S1727352AbfLKXxx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 11 Dec 2019 18:53:30 -0500
-Received: from mout.web.de ([212.227.17.12]:40639 "EHLO mout.web.de"
+        Wed, 11 Dec 2019 18:53:53 -0500
+Received: from mout.web.de ([212.227.17.12]:43363 "EHLO mout.web.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727202AbfLKXx3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Dec 2019 18:53:29 -0500
+        id S1727230AbfLKXxa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 11 Dec 2019 18:53:30 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=web.de;
-        s=dbaedf251592; t=1576108392;
-        bh=UNWwBy4HvMp8NS5BHLEVj6k8eNrJ1QW+53Ygqx3ikyQ=;
+        s=dbaedf251592; t=1576108399;
+        bh=vpmcxnQM8xeIOrgf/nLMbY75MJAw3JLGxT3wkvLPkbo=;
         h=X-UI-Sender-Class:From:To:Cc:Subject:Date:In-Reply-To:References;
-        b=fC+reDFWWXrCC1oVsGw4DQ2cGfkh72ux9rGAVkcaHPaAqvApQhggsnIfFOGYk32jb
-         6EBEjgep0F9A+dEEHivoHe44RLKCJ+3fsNEZeNO0CLe+pnvi3zalkX/PDYrUan0NZG
-         uuwRvwgNSI8U/goq1XXnv0LUBDjbA5OpR7WhU9Zk=
+        b=BzrHW2OM7bnwDihbgxHzNh8UPyn71b0KWUeLA7jUPedIlK3QHYVlS0idBZM47pmbx
+         u/s2Oorz8KhTT7wAZjxE29vQzv+lZoxVuVp4hoCqQLSOFesdNtpM70cAoxjkN8VesG
+         2tWns90UzykDW0PtQzGz1+jRSE3N5Me3UUJVdcqs=
 X-UI-Sender-Class: c548c8c5-30a9-4db5-a2e7-cb6cb037b8f9
 Received: from localhost.localdomain ([89.204.139.166]) by smtp.web.de
  (mrweb101 [213.165.67.124]) with ESMTPSA (Nemesis) id
- 0MNcV4-1idZEQ0uXy-007BYG; Thu, 12 Dec 2019 00:53:12 +0100
+ 0LmLoU-1i6PGv079u-00Zwng; Thu, 12 Dec 2019 00:53:19 +0100
 From:   Soeren Moch <smoch@web.de>
 To:     Kalle Valo <kvalo@codeaurora.org>, Heiko Stuebner <heiko@sntech.de>
-Cc:     Soeren Moch <smoch@web.de>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        linux-wireless@vger.kernel.org,
+Cc:     Soeren Moch <smoch@web.de>, linux-wireless@vger.kernel.org,
         brcm80211-dev-list.pdl@broadcom.com,
         brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org,
         linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 4/9] brcmfmac: make errors when setting roaming parameters non-fatal
-Date:   Thu, 12 Dec 2019 00:52:48 +0100
-Message-Id: <20191211235253.2539-5-smoch@web.de>
+Subject: [PATCH v2 9/9] arm64: dts: rockchip: RockPro64: hook up bluetooth at uart0
+Date:   Thu, 12 Dec 2019 00:52:53 +0100
+Message-Id: <20191211235253.2539-10-smoch@web.de>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20191211235253.2539-1-smoch@web.de>
 References: <20191211235253.2539-1-smoch@web.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:iWY6io2UQ6RIkm2j/nioDi8y8IvMaEyrFJN80SKzmn5lD3C51Hk
- h3/+agnrE46TIzUUZIsWNSG7+jxo/QOQNpX56dWjEcTw05Yp4UChy+Ww/3ueKnCCJ59PoZ5
- tpmmXvLM1lnsJnGCnIzDOkWqJc6SlNH4eAwRxCh7GQEMLIlOvB2HQMc4gcfS5RhSBBlLfIK
- 5+/LmDbh3Gx55YpFdC45Q==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:pNccthOUpKw=:z9QcLBPdXM4E7dbreh5KhI
- LbeK3P1yhdftZzuhI+R0FUJFoGiC4b6ano7oqYIsLK/N2nEj6o6crBfkW1A0kW4MzGvnEkkGO
- T4/Yj7rQh0lwFjY+PAHk11lU7gWKYy3dzF9ykEzUfYFPCWCLlFGsxlT1P7Qptk12Qp46FhixQ
- vQtI4x1hJB+scZ+MlFV/T1Eq26ClwCRwd2/FNm125HU+fNFXw39nDEtrEqZiARo5wMEwwYz/M
- 3Z9bhcOEIftDTWukSx0LqRymqCjT14szC29OgLXyZqjNAopuF1aD1w0ArLlVpRJzrXWrjTJr/
- QAygyLWbky6ZFgyi8oiqzquFk67bVFjQn/qjswICugFTVrJGmTXUKxtPZ4OnNcWMy8tm75OLP
- z/cYpvtRR64hXUJT7Zii9IKPW8GxxwOnEf7mTJU76JTiUTHbhKPezaF2ykto81DU6Vuc9L0j9
- UyudOga5QCRSlCtyDXQTK2UWSFSC+fgRYA43fkhrdKukQIFM2Dr9f4SiuK3/x7vrS+OWi1T5f
- sW7nA8fSrOrjynGIBPd68jPqGxlpUULc47flahXzMVRPM+frWVoYjDz94MT5fRO9xbvuN9HxB
- guWKwE8k7m3dAUiFx3Y5qD2I0dULfY+WsTtedJk1d6QLAs7ie42tUVeQ0PB7+QLqu5cTftePA
- NQsl28wrGYf0XsJbsrmMxRKvc/rvLOXG/lGm0i2NZu07XRfBpinmjnUrZULzaP8mrNhurml+6
- EGv9SJZYfsvvYfSW9q671TjElYEld5L3IJlK7cQqfYdFWBKVbxfXqM+HTvU9yKAS6XFYC7QWx
- ck6BnF8QaZW9rL63mQ4qmOFqcU7jNLQ2Hmpu6cibJAakOBJVZNTYbQAVMK5K67MUz/6XcaxdB
- mIABZMCdTkF8CV9QJIp1ZHahsRIvYhonr1LhVWLRgE5f1UGO6WfLY04NkoanJIq9FwWQwE7VO
- JPMibERe+SINR2JjvQ+X2rr0xCjeWL990Z91mGxswVqExzYVmCvi0DZEfXHN7axO0PLRcNx5D
- NoGw4gxFqB4fcx4P0BcERfC5Lis0/fixa2MuA8RIQsXP7S8JReCrHqT7jLH+5FHDW5PnYsZQ+
- 122BqIJ6oQuH0V8FHCqZg5cN47nQahH+zmj8WvL6tS530j81e0dCqIJZ3GP3m3iINXeHwonFZ
- hHMSM8QtDpTSGMwvSMlfczDxG13IzN4ystrcIrQGXACqC5eA8wJ4qr3UsiRxYorMxm5B5VMA3
- a2scy3jluKvcVFP3w9UQ8co1zL8aS82pC9JqSSg==
+X-Provags-ID: V03:K1:5PDFH2F0gjxlcHEJO1q+UhhYMk5qrPh+R32KnEj09Ga2cRHNb6a
+ WRvTk6+wPGns5t79V6A5yoGWG8mUNT8/17s9oA0//bPLHcW6hDWVFW/oVkXNIt2bhpPEv0K
+ lJgNfkZq5I4mKhPg5g5ld/AlrjfJATF9j+BESdBC3KhzSqzdzaYD6z9e2CNWxmPy1A8KAmw
+ LisOj0yPMWY6dMp/VuCwA==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:tpVInoJ1RDg=:TY0Y8jY4BRFGaskvGFkBNh
+ jwQgF+B6L5pOwcYFelXXSOSs3JUoLAzMJmi3lQHZG3zagTYa5ec3EmFKy2zWyjjkqDUYmfbxM
+ SklKG+S9WrhxwukxqP48U1AB/c/nkv8Ff2Xxxxb/v4YznBy5PI9OANBHdeperFGLIG2D117rG
+ RKU4govznHCUe4vzIx50qc3MBAAnQ4k2axKbCjCdQU0KZy+HjR1nMtaVUrRwb1ea0HyzBwg0v
+ 2oCg2XkNnBcaXqHeWTlqOG+FGoqnL19Syz4pKB+6GznH9jaSzQ49pjSd0q5JW5aw0gpCIqDdB
+ q9HHB2tBJnKWHpvNmU7FfDZLZfcQPmWdK9owN/pIZOECF3V5KEXziEn6mZqordxnGDC/EInQq
+ Lc4ISJgfJXU01ERmUroP2kb44G08JMtDG/qID9OWX9Gl74/gmZYYw8gCDf+xFPfg7ne6iZAqC
+ nac05Sz6FjuQUc3H2J4BQcykdjrcBmF8s5qPACTOr5o86gvN90J8gCo87hR1QOGBaw1o/hHXh
+ C20wpBWRlzCZSb81nOVbKt8H387nsw9GoYEnXJ3Ib3laZ4zoX1Zuk81CECo4zINJuY1ZTzkVb
+ DHyJrRg5Tizk1YhMJ6y4BK+AgXsuWHS/7hG65fBo1U9e2+rWKIdrPb0ik4QJfDN01a1Ze9IpZ
+ lZiM5ydyw6NLK9fS4k8cOWwAEE68qFwCMz5otMcDMUqA35FbAGlyfa12OmyhuNpOH8bNZfuCU
+ S7kgGnpZm3AvTqOyKfJRic/h9o8vQtE5hSm7PAePDr8nPLp3PttDhdzcURTllw1Nhm77lMKTk
+ q8h8HiV8VS7tg4nviLnyDNvrXDnDmiBB0fGzrRCyEjLQlg4wNk8r+WEXd64pLBrrYZYLr5UKy
+ gFlIeqT6utsFoLYYGvAEkLXzJgj3ByToaly7FQr1YJej5cze5QoWGV3qAAfUBCnwXk8cBurre
+ Il3LMG4GJKHlRMmtui9X93CJgjPhpYIwZ3FjYfOkDvlTs6Jz9IrOM7Dyd7gXPNGtpHxY8ZRPZ
+ wZYfDyXjuZ7Ttli5eXTV6CgECOYT3ldVewSf8S96IRRbruiTZ43w8oe7R04a0mxVwh30YbRTS
+ EZBwgktnaiZGCVaau1310BTCnvJMj0zHgswDCshOMY/l8q6kzKyWK4+ZSNbj25ChQuw5CBa6N
+ W8cppyIDzVq9kBEvrDAiEUoq3h94zApYs2Lgs2Rb3fUbwaQqcf4n0XEpjL8FdAxA6sYX4gwGK
+ viCgHHeD+54tWUevFFwkG18p6Ilf+g0GP4UA1Mw==
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-4359 dongles do not support setting roaming parameters (error -52).
-Do not fail the 80211 configuration in this case.
+With enabled wifi support (required for firmware loading) for the
+Ampak AP6359SA based wifi/bt combo module we now also can enable
+the bluetooth part.
 
+Suggested-by: Heiko Stuebner <heiko@sntech.de>
 Signed-off-by: Soeren Moch <smoch@web.de>
-Acked-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
 =2D--
 changes in v2:
-- add ack tag received for v1
+- new patch
 
-Cc: Kalle Valo <kvalo@codeaurora.org>
 Cc: Heiko Stuebner <heiko@sntech.de>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Franky Lin <franky.lin@broadcom.com>
-Cc: Hante Meuleman <hante.meuleman@broadcom.com>
-Cc: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
-Cc: Wright Feng <wright.feng@cypress.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>
 Cc: linux-wireless@vger.kernel.org
 Cc: brcm80211-dev-list.pdl@broadcom.com
 Cc: brcm80211-dev-list@cypress.com
@@ -107,38 +97,58 @@ Cc: linux-arm-kernel@lists.infradead.org
 Cc: linux-rockchip@lists.infradead.org
 Cc: linux-kernel@vger.kernel.org
 =2D--
- .../wireless/broadcom/brcm80211/brcmfmac/cfg80211.c    | 10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
+ .../boot/dts/rockchip/rk3399-rockpro64.dts    | 29 ++++++++++++++++++-
+ 1 file changed, 28 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b=
-/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 5598bbd09b62..0cf13cea1dbe 100644
-=2D-- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -6012,19 +6012,17 @@ static s32 brcmf_dongle_roam(struct brcmf_if *ifp)
- 	roamtrigger[1] =3D cpu_to_le32(BRCM_BAND_ALL);
- 	err =3D brcmf_fil_cmd_data_set(ifp, BRCMF_C_SET_ROAM_TRIGGER,
- 				     (void *)roamtrigger, sizeof(roamtrigger));
--	if (err) {
-+	if (err)
- 		bphy_err(drvr, "WLC_SET_ROAM_TRIGGER error (%d)\n", err);
--		goto roam_setup_done;
--	}
+diff --git a/arch/arm64/boot/dts/rockchip/rk3399-rockpro64.dts b/arch/arm6=
+4/boot/dts/rockchip/rk3399-rockpro64.dts
+index 9fa92790d6e0..94cc462e234d 100644
+=2D-- a/arch/arm64/boot/dts/rockchip/rk3399-rockpro64.dts
++++ b/arch/arm64/boot/dts/rockchip/rk3399-rockpro64.dts
+@@ -561,6 +561,20 @@
+ };
 
- 	roam_delta[0] =3D cpu_to_le32(WL_ROAM_DELTA);
- 	roam_delta[1] =3D cpu_to_le32(BRCM_BAND_ALL);
- 	err =3D brcmf_fil_cmd_data_set(ifp, BRCMF_C_SET_ROAM_DELTA,
- 				     (void *)roam_delta, sizeof(roam_delta));
--	if (err) {
-+	if (err)
- 		bphy_err(drvr, "WLC_SET_ROAM_DELTA error (%d)\n", err);
--		goto roam_setup_done;
--	}
+ &pinctrl {
++	bt {
++		bt_enable_h: bt-enable-h {
++			rockchip,pins =3D <0 RK_PB1 RK_FUNC_GPIO &pcfg_pull_none>;
++		};
 +
-+	return 0;
++		bt_host_wake_l: bt-host-wake-l {
++			rockchip,pins =3D <0 RK_PA4 RK_FUNC_GPIO &pcfg_pull_down>;
++		};
++
++		bt_wake_l: bt-wake-l {
++			rockchip,pins =3D <2 RK_PD3 RK_FUNC_GPIO &pcfg_pull_none>;
++		};
++	};
++
+ 	buttons {
+ 		pwrbtn: pwrbtn {
+ 			rockchip,pins =3D <0 RK_PA5 RK_FUNC_GPIO &pcfg_pull_up>;
+@@ -729,8 +743,21 @@
 
- roam_setup_done:
- 	return err;
+ &uart0 {
+ 	pinctrl-names =3D "default";
+-	pinctrl-0 =3D <&uart0_xfer &uart0_cts>;
++	pinctrl-0 =3D <&uart0_xfer &uart0_cts &uart0_rts>;
+ 	status =3D "okay";
++
++	bluetooth {
++		compatible =3D "brcm,bcm43438-bt";
++		clocks =3D <&rk808 1>;
++		clock-names =3D "extclk";
++		device-wakeup-gpios =3D <&gpio2 RK_PD3 GPIO_ACTIVE_HIGH>;
++		host-wakeup-gpios =3D <&gpio0 RK_PA4 GPIO_ACTIVE_HIGH>;
++		shutdown-gpios =3D <&gpio0 RK_PB1 GPIO_ACTIVE_HIGH>;
++		pinctrl-names =3D "default";
++		pinctrl-0 =3D <&bt_host_wake_l &bt_wake_l &bt_enable_h>;
++		vbat-supply =3D <&vcc3v3_sys>;
++		vddio-supply =3D <&vcc_1v8>;
++	};
+ };
+
+ &uart2 {
 =2D-
 2.17.1
 
