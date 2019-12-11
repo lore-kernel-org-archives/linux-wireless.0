@@ -2,140 +2,108 @@ Return-Path: <SRS0=yvfE=2B=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6796FC00454
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 14:47:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06308C43603
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 14:52:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3DFBD2173E
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 14:47:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CF0AA214AF
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 14:52:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="XYf6iYdV"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="LWbJLKNl"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730094AbfLKOrP (ORCPT
+        id S1729828AbfLKOwn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 11 Dec 2019 09:47:15 -0500
-Received: from us-smtp-2.mimecast.com ([205.139.110.61]:52993 "EHLO
+        Wed, 11 Dec 2019 09:52:43 -0500
+Received: from us-smtp-1.mimecast.com ([205.139.110.61]:35067 "EHLO
         us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1730078AbfLKOrP (ORCPT
+        by vger.kernel.org with ESMTP id S1729443AbfLKOwm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Dec 2019 09:47:15 -0500
+        Wed, 11 Dec 2019 09:52:42 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1576075633;
+        s=mimecast20190719; t=1576075961;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=uirOhgSvjq4DT4EarKgWh3oOvWR/NL1lmoArYsaFvfU=;
-        b=XYf6iYdVDT4VPrsX6WrA/nWXGMlz37X59Dzc7pxkdyXfVADN/6apgP9xak83VCzZIocjuT
-        KlRxFFPJHKt2Q4jq6LzTp/B0pgDncskuUsROp/ZX2Si+yVxTohZCuhGDi+arRALBK523NH
-        /JyewvcEE6RYAwuMKuXupE/Q0PnjHmw=
-Received: from mail-lj1-f197.google.com (mail-lj1-f197.google.com
- [209.85.208.197]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-342-ijGJlVgYOuS7qzmpRjSVgw-1; Wed, 11 Dec 2019 09:47:12 -0500
-Received: by mail-lj1-f197.google.com with SMTP id 140so2138661ljj.3
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Dec 2019 06:47:12 -0800 (PST)
+        bh=BVrOd/AtKqQ+3lFnZdZPMqGZp03aa4R8EHaG4AvYl98=;
+        b=LWbJLKNl45QNmCYvk9U4VCnQi8aSag8gt1n6Yt1GXjlQQdb7flOttbSsS6/jaSrxHie3eH
+        2/KffTDk+92rdzbzO5DxJ1lYTDwzEH6sG3aLJWjO7rVVh1Epb95AHoXIEL80sBBm2WYQVs
+        Ujd1kgZ0M2PC682v0NFCYo3HVDE1TJI=
+Received: from mail-lj1-f200.google.com (mail-lj1-f200.google.com
+ [209.85.208.200]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-150-lOex7PSkMkGn0wJ018lm8Q-1; Wed, 11 Dec 2019 09:52:40 -0500
+Received: by mail-lj1-f200.google.com with SMTP id y15so4463735lji.1
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Dec 2019 06:52:39 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:in-reply-to:references:date
-         :message-id:mime-version:content-transfer-encoding;
-        bh=DrlMxGv0pYjq5Gdk23gjEZddH1IAa/lFb9hEecJndV4=;
-        b=Lji4yuH5T7gnFKwuV/kZv8qW/Xk2kaYYoIwZaTUYUrqZGUkoOrWZfhsqbAHNOPA3Iw
-         +47vd9JIClV73M1Y7m440oZ0UzYbhkegONgJDalHbnaG5mlYpqu48oyvMNMSDLxenoXL
-         ZQZbLQFNKDG6QpjWwqNC2YKLRxo5qK98UO5Kfl+LALWVCSLE/oHtO+baxo2hohqUfGJk
-         Tn59UM5x1X3pWRkSeiTnQKydlMvbUUKWh9gho+nzf7rpXuhP3/EBPIzH7lG9Al1BhdDH
-         g9Ur6RHFYVLQhHRj5pVv/2o4RanT20wYsacFrRrt/wBuFxFLgnCc3Cc0Sl14MIr7rF8w
-         O6mA==
-X-Gm-Message-State: APjAAAUKX+Mqs/NgvLCf7lV9gpOsxkQTxT3KklOf89t1oekFbE51EygT
-        GTpyaqL3lZ8t6uayyWpvT74dsZ7SOKTt5oLiaVY+UWNKYDsTKHBgCzxo9GgEoLM8SgJE+DpdPvu
-        rwgbtmv6yRQciCB41achbIM6oPdc=
-X-Received: by 2002:a2e:99d0:: with SMTP id l16mr2374137ljj.1.1576075630891;
-        Wed, 11 Dec 2019 06:47:10 -0800 (PST)
-X-Google-Smtp-Source: APXvYqzV4TVbG7SBbl7pnNaA6hSPeBIeHzeUKgWyTtLqludm96u74ZEBRobOs16/al35Shb/4+N+TA==
-X-Received: by 2002:a2e:99d0:: with SMTP id l16mr2374126ljj.1.1576075630705;
-        Wed, 11 Dec 2019 06:47:10 -0800 (PST)
-Received: from alrua-x1.borgediget.toke.dk ([2a0c:4d80:42:443::2])
-        by smtp.gmail.com with ESMTPSA id c189sm1312552lfg.75.2019.12.11.06.47.09
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=IIYEceArm89vofCcGEEI9GrhNXUHVHygOyvktxjEWNY=;
+        b=VfMmmBv/GRAfrFUINI3suEAFo6MQxxyEdXUVKHKlk9VGBYb+QtNbPPPNe/QrxxW2G4
+         rBxej8hWAr/vM7nWR2B8y+WYTQEvar19DBYMzKrnrMeCNyuDcj1UtadZ7uZ9thtGD9bf
+         4+wqBXZlHXuQxpKPdz2tAxi+slMbZSs5H3sbU9iBvUHuSKBy9r8rvsgWtI0mNjq4MtG5
+         wvUBcX/mzKSrSnpwO3ufCem/T3Ieyeg8uCDnX+GktoqwN+ky6dwcvWCjdfiaOVuvCQhD
+         zQiV4aZwKWkGH7g/NhQWJck7zXsM75rd+rSbomDpyRDQWskCAkVswPmrifeP3Qb9Ar96
+         Fqkg==
+X-Gm-Message-State: APjAAAUNQUIAYB5duzYLobf0BEz4qsulkKLaMieHqrF7GVFPBJ5V7SY9
+        ZSGZTzVOHhanI8rtcBj+pgt14rLINYyh56xe5yfuh/LS/U1/LY+tVPUXCgrSliFwNWylHjrVK6l
+        NCrwsJTt8AYZ/i+QwPdNnRrUyp74=
+X-Received: by 2002:a19:cb54:: with SMTP id b81mr2437667lfg.188.1576075958313;
+        Wed, 11 Dec 2019 06:52:38 -0800 (PST)
+X-Google-Smtp-Source: APXvYqzGKqvuy2l7mj+RCSF8XYczhurX2wqsTb4Gc0yCsqsDpPAv6ARGJUyjUxBB8qGIP34AKTL1LA==
+X-Received: by 2002:a19:cb54:: with SMTP id b81mr2437659lfg.188.1576075958149;
+        Wed, 11 Dec 2019 06:52:38 -0800 (PST)
+Received: from alrua-x1.borgediget.toke.dk ([45.145.92.2])
+        by smtp.gmail.com with ESMTPSA id e21sm1487004lfc.63.2019.12.11.06.52.37
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 11 Dec 2019 06:47:10 -0800 (PST)
+        Wed, 11 Dec 2019 06:52:37 -0800 (PST)
 Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
-        id 4F04418033F; Wed, 11 Dec 2019 15:47:08 +0100 (CET)
-From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
-To:     Johannes Berg <johannes@sipsolutions.net>,
-        Jens Axboe <axboe@kernel.dk>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Cc:     "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Networking <netdev@vger.kernel.org>
-Subject: Re: iwlwifi warnings in 5.5-rc1
-In-Reply-To: <b14519e81b6d2335bd0cb7dcf074f0d1a4eec707.camel@sipsolutions.net>
-References: <ceb74ea2-6a1b-4cef-8749-db21a2ee4311@kernel.dk> <9727368004ceef03f72d259b0779c2cf401432e1.camel@sipsolutions.net> <878snjgs5l.fsf@toke.dk> <3420d73e667b01ec64bf0cc9da6232b41e862860.camel@sipsolutions.net> <875zingnzt.fsf@toke.dk> <bfab4987668990ea8d86a98f3e87c3fa31403745.camel@sipsolutions.net> <14bbfcc8408500704c46701251546e7ff65c6fd0.camel@sipsolutions.net> <87r21bez5g.fsf@toke.dk> <b14519e81b6d2335bd0cb7dcf074f0d1a4eec707.camel@sipsolutions.net>
-X-Clacks-Overhead: GNU Terry Pratchett
-Date:   Wed, 11 Dec 2019 15:47:08 +0100
-Message-ID: <87k172gbrn.fsf@toke.dk>
+        id DCD9A181A44; Wed, 11 Dec 2019 15:52:35 +0100 (CET)
+From:   =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
+To:     linux-wireless@vger.kernel.org
+Cc:     =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
+Subject: [PATCH 2/2] ath10k: Enable Airtime Queue Limits feature
+Date:   Wed, 11 Dec 2019 15:52:30 +0100
+Message-Id: <20191211145230.200132-3-toke@redhat.com>
+X-Mailer: git-send-email 2.24.0
+In-Reply-To: <20191211145230.200132-1-toke@redhat.com>
+References: <20191211145230.200132-1-toke@redhat.com>
 MIME-Version: 1.0
-X-MC-Unique: ijGJlVgYOuS7qzmpRjSVgw-1
+X-MC-Unique: lOex7PSkMkGn0wJ018lm8Q-1
 X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+Since AQL is now a feature flag drivers have to set for the feature to be
+enabled, set this for ath10k.
 
-> On Wed, 2019-12-11 at 15:04 +0100, Toke H=C3=B8iland-J=C3=B8rgensen wrote=
-:
->> Johannes Berg <johannes@sipsolutions.net> writes:
->>=20
->> > Btw, there's *another* issue. You said in the commit log:
->> >=20
->> >     This patch does *not* include any mechanism to wake a throttled TX=
-Q again,
->> >     on the assumption that this will happen anyway as a side effect of=
- whatever
->> >     freed the skb (most commonly a TX completion).
->> >=20
->> > Thinking about this some more, I'm not convinced that this assumption
->> > holds. You could have been stopped due to the global limit, and now yo=
-u
->> > wake some queue but the TXQ is empty - now you should reschedule some
->> > *other* TXQ since the global limit had kicked in, not the per-TXQ limi=
-t,
->> > and prevented dequeuing, no?
->>=20
->> Well if you hit the global limit that means you have 24ms worth of data
->> queued in the hardware; those should be completed in turn, and enable
->> more to be dequeued, no?
->
-> Yes, but on which queues?
->
-> Say you have some queues - some (Q1-Qn) got a LOT of traffic, and
-> another (Q0) just has some interactive traffic.
->
-> You could then end up in a situation where you have 24ms queued up on
-> Q1-Qn (with n high enough to not have hit the per-queue AQL limit),
-> right?
->
-> Say also the last frame on Q0 was dequeued by the hardware, but the
-> tx_dequeue() got NULL because of the AQL limit having been eaten up by
-> all the packets on Q1-Qn.
->
-> Now you'll no longer get a new dequeue attempt on Q0 (it was already
-> empty last time, so no hardware reclaim to trigger new dequeues), and a
-> new dequeue on the *other* queues will not do anything for this queue.
+Signed-off-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@redhat.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Oh, right, I see; yeah, that could probably happen. I guess we could
-either kick all available queues whenever the global limit goes from
-"above" to "below"; or we could remove the "return NULL" logic from
-tx_dequeue() and rely on next_txq() to throttle. I think the latter is
-probably simpler, but I'm a little worried that the throttling will
-become too lax (because the driver can keep dequeueing in the same
-scheduling round)...
-
--Toke
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/a=
+th/ath10k/mac.c
+index 83cc8778ca1e..978f0037ed52 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -8958,6 +8958,7 @@ int ath10k_mac_register(struct ath10k *ar)
+ =09wiphy_ext_feature_set(ar->hw->wiphy, NL80211_EXT_FEATURE_VHT_IBSS);
+ =09wiphy_ext_feature_set(ar->hw->wiphy,
+ =09=09=09      NL80211_EXT_FEATURE_SET_SCAN_DWELL);
++=09wiphy_ext_feature_set(ar->hw->wiphy, NL80211_EXT_FEATURE_AQL);
+=20
+ =09if (test_bit(WMI_SERVICE_TX_DATA_ACK_RSSI, ar->wmi.svc_map) ||
+ =09    test_bit(WMI_SERVICE_HTT_MGMT_TX_COMP_VALID_FLAGS, ar->wmi.svc_map)=
+)
+--=20
+2.24.0
 
