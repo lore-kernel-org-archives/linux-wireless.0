@@ -2,113 +2,101 @@ Return-Path: <SRS0=yvfE=2B=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28422C2D0C6
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 23:54:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0A6EC2D0C6
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 23:54:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id ED9FA21655
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 23:54:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AFAFA21655
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Dec 2019 23:54:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=web.de header.i=@web.de header.b="aIqzyFzw"
+	dkim=pass (1024-bit key) header.d=web.de header.i=@web.de header.b="Gu0wgLpK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727161AbfLKXxZ (ORCPT
+        id S1727101AbfLKXxZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Wed, 11 Dec 2019 18:53:25 -0500
-Received: from mout.web.de ([217.72.192.78]:51499 "EHLO mout.web.de"
+Received: from mout.web.de ([217.72.192.78]:57387 "EHLO mout.web.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726932AbfLKXxY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S1726673AbfLKXxY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 11 Dec 2019 18:53:24 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=web.de;
-        s=dbaedf251592; t=1576108386;
-        bh=SHwEKS5HfPBsQhvwUPeNKlfOw3SLEczu2hmisG7j3I0=;
-        h=X-UI-Sender-Class:From:To:Cc:Subject:Date;
-        b=aIqzyFzwBvAIkbawHJWO72Fzh/mqzDnJ47gjo+yrZ0emK3xg0COqzKQvdofPbG6W1
-         d7UTORKsKVPB8mlcfk9JMtDGKMUW+dFPP6LlKDo6mwJFdQ55GLNRf73sIIj++11RuN
-         PlgBQIehl0VmRhZV/cTxU5lHqFlyVkQsgnPN7mnU=
+        s=dbaedf251592; t=1576108391;
+        bh=4up7UPdrXKf7f4RHv1AgVYW/yVkK9as9YFQa80qMoKU=;
+        h=X-UI-Sender-Class:From:To:Cc:Subject:Date:In-Reply-To:References;
+        b=Gu0wgLpKWDiMw/KjGhRNXZ9fgdBWNCo60e8XriKrwIng+KPeNqpb/kEhnfL61n8xU
+         y5uala2/lTNOlXb13l0+YYMpnYRQXNnxT+eF5/UJuF6VzvntIVODJG/yru99dgUhdx
+         grgsKlgO5zws0iRjvX+lUFlh/JJwtKWBbhs5reT0=
 X-UI-Sender-Class: c548c8c5-30a9-4db5-a2e7-cb6cb037b8f9
 Received: from localhost.localdomain ([89.204.139.166]) by smtp.web.de
  (mrweb101 [213.165.67.124]) with ESMTPSA (Nemesis) id
- 0LhNjo-1hshso0mnI-00mXj0; Thu, 12 Dec 2019 00:53:06 +0100
+ 0M5fsK-1hm9Ms2iPg-00xdVy; Thu, 12 Dec 2019 00:53:10 +0100
 From:   Soeren Moch <smoch@web.de>
 To:     Kalle Valo <kvalo@codeaurora.org>, Heiko Stuebner <heiko@sntech.de>
-Cc:     Soeren Moch <smoch@web.de>, linux-wireless@vger.kernel.org,
+Cc:     Soeren Moch <smoch@web.de>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        linux-wireless@vger.kernel.org,
         brcm80211-dev-list.pdl@broadcom.com,
         brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org,
         linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 0/9] brcmfmac: add support for BCM4359 SDIO chipset
-Date:   Thu, 12 Dec 2019 00:52:44 +0100
-Message-Id: <20191211235253.2539-1-smoch@web.de>
+Subject: [PATCH v2 3/9] brcmfmac: fix rambase for 4359/9
+Date:   Thu, 12 Dec 2019 00:52:47 +0100
+Message-Id: <20191211235253.2539-4-smoch@web.de>
 X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20191211235253.2539-1-smoch@web.de>
+References: <20191211235253.2539-1-smoch@web.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:wlune+MBVxnnPbtH/WJuKIHVW5Kt4Bh3x2TSi6jf84eE1oZeOVU
- dmIZckdKvEOp6T4MOEtvJQgRx77JwjPoOcGEySs5ql5yqY1cwslVBk26J6vh1rviiwMAuad
- k1NAwnKUmVgu/TQ6URsFElTL0U9+2DgdvYs6zDvLSawYziqCa9ESz6goH4pbemoW/JI1hWJ
- z0wb2ZsezZhRj/yGPwUfQ==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:5h+qvYh+xgc=:yPWTesPFkaFZunR1Eod+lF
- 2qKdRZ6DCppLTdhLkqMCYqcFmh8UYXKNnRvrmKane6YZKwhFfqgEOFl/wkxwBd6/7wBoIqRGy
- M5W26qWzPxoBqkP1917hy1u72p+UuZdttRBNGM2iV/+xPXJ7XxnSQycad14nt73x6LMKLapY7
- SdsLP60IVD7h6kuu2E4pEXaI1kByLxetc3+DUaVkkYA8grZLbAp7faZZbFKO1TVIzS5aUAxeY
- eFgmLd4U4re5UZLqyd9YgKHj5x5KISZl8Me2v5CB9dvUeYmpHU5/YDkpdDUpThQ4CoeuzS+5g
- UMWMcGM1g7uNZd1t5QtF7nqf40zxtEukWAaPj4v2sUNAja7dryceVeaFddB9THb6/jx8rvDCv
- DWu/9wXZFD877mjmALV3pAWCH793Yf4DBwlSdszpRTiJC8IysS1FIA8NPLfhpD01VKk480Hc6
- M1XB/ydwHTCHMUOZeVHBNQ93h+9XBCkyri+v3ciXp09Z7h42XFiwkqZ874Iva0xa7Qr+o2w4k
- iYOweRTYoSsnKn8CaguvO+qrguwzvSm9ltwA9fyFctTLQv4yBW8WHBxVwPoZBky0qjGWwZDHB
- kACE+SY9SyxUUL+2Lc7SHZB3uenG7XO1A+8U/LGLdvT0O2NTw5J2coJNUONG2KLEwVjaCCy2Q
- +pBQbiKvDiKhUGfv6nUTtkbr9Xn9rfiI5yU7FadQKcnCpKudCGGqFcE4WzkGHLS0+RshMKfhi
- 60qRJZKqUe3/iQzBamiZmg8b4dpXKgil74k/F9tJcNTrLFbMh5sI6lBu0PHP5Pq5mUKR0i/nM
- f2/T/YeZmT9cmtduo6fhV719mFpRLw63HL2VLYsXT1nYkDFKa3aL/UF8gUETQWazXe0SqYEgv
- 1ojGnYZs7WH6VEwQRtDMMcOCxOk+lxKU8EI/TaazwCfDYtUl6W8ecsTta9ZHlNCnyITs2O55O
- C/34cfSS94RetB76ivOVnf/QPCDOHC15FSjuMjHfL4QyjsaQH2ntkqh91NsAb1rM0aiQ8zYzO
- h+n05fHcVMzuByU/O94zRRwLjgHKjvD1PbNT4e5WWazigCvn1NBbA1yOkOkhknZ7QDJR0dNYF
- nYckdKT5YEsrgvE+3Wl5fb9II3K9SLV45+YjpNHQR6/WltwL8ceJ2ZGHXPQO6tmg6Sn7ZOIyD
- Hcu79rZlBnFVFLxRz1X6kWQbSkBool9oS21KSLY1AT637q30RFrPBmZUwe5Bc7+xMnZfPMAlz
- grHTBdSenszURSwg2PPqMcX8zA22rNMMdZ/RAzA==
+X-Provags-ID: V03:K1:J+qJb/2Nw7OkPT3SxGUR8foewlU/Godf2lJr2WJR7yAVKyzHMHD
+ qqJRwEwFwDhjVM4go/USRgAOn7yIJ7hgH0ExeEB8svnzBOJMvZm9v/oljINQkZksxz9yNOA
+ nZNEOx3OYiAWZsAF9XCEJRfKHyQj1eGGSJYFqKM4drCj450VoEt1a3CZfYDmSsgUY/TjIq9
+ kDe/TDllVqMrz07yDQuvA==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:eZTTKvKqCQQ=:6Ufks9S8uTxW4FlPFgpy0Q
+ 71OY5XEmQ3puqHczlBr9G3y68a7jVmC4MRrtYw/khbu/oi4xTOfBxnEuLUSNqWDo5NuVfk6YQ
+ WapEexeYcScN7aZ1zXFZbAu1f7Z7M4qtsmXLA6jGSufrsxzQfVP3IN1pf3GaPnizWcWf/bNIj
+ O4Gh2od3tRllFMrzAJdr8VKhEJMr2Ct1LUDHAzGpmpxDF3l68Ma2mGBWlo0wvsOitYg04hQal
+ mO8Eo9Rt9R1xJyzlXy/2jXuQ1/jDClhLabD+H4vfdQUJinP2q5mmcYFYQwq1EqczeTe71+v6+
+ k4z9DtxSPIgIGV2ONgBvabwQz3Vw/fpTi22AkUNPF3f6FqsafoDnyMVBPfkQC99sjZ7TEAhHZ
+ VUNXg92gOV7gPf8vWr8Kv6y/szKOGKrnYTDqPN2DVdrE4uSwNUTSxE/Hz11G+iAtBhVew+wH6
+ I1sgG0LtAVJ+nN18k5MePHtETVFCploNouuXpHmwfChr55+hQG1KbUPh2vQdp7dvJtCiLjzGv
+ kXsh0eKa3Sdv11WGjk4jads0yY5UjX9LYzYVJ+P4Kcn6i/0yhRVIYpY1b7J/QsENZy1TOr/XW
+ VNiHhyOYcy7SzHKPMbtVaQF4W0V/377BbepKwymrnartfDkj9XPp/W62Hp9wG+hMKwigsg3Sb
+ ifpkVeyAMdTzFM5xL+EgqNgKXkW/AsS+pa7dPhrINbc1vsd9gVCSk7pNPAh0JSGogpsic3+i8
+ VKiKUU7PunL1Lpji2UjNO6nt9vgFFkPbD981hlsERwu2nxMtAfydLD6YhcP8qR5rHqB7eYeyV
+ JJX3v7lJfobutiPHvkc1n9f9ePG1U0pU8LNfQ8f6CY93mp3RZEuM+wuyLDoMxncbmz7mhXStd
+ ru1xsPWf+ZgsEnGCFQL+aH7X0JgJjXDPVg6x3vc0Zbr4WJw2MMqfC7qsFscAx7sqoyfMPPn06
+ Nil6mLEGhUEM/W6x1H43WXV9MBqFoN6p+FWFm0N/MyfAeE+PqKqKL1CH75ZtoZ6LYDbQFFqq9
+ 9zSDIiIkd9pWD7Nsbr4Qu2MzWw0a0YIQXBXDh2btzsroEe34y0fvhfHrsdeeuIk8nHdlRsKx5
+ cHHk+V8QTPrsRo4NowK3YbQDhTB+mNQo2qu7m7l9MWj+m5Jbm7LJyS7+jDLP4KJaDER5YPpCV
+ I5QlQfPw7W77CbOXYX/IbQEl1hswoCQ0UwhOKTml+ue5HgLic42YIXpinn1+Sdh/oCLZdFPsM
+ ayYpBwmhI8hqkatdtbKb/ugFIcs9ed3ldOf+M2Q==
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add support for the BCM4359 chipset with SDIO interface and RSDB support
-to the brcmfmac wireless network driver in patches 1-7.
+Newer 4359 chip revisions need a different rambase address.
+This fixes firmware download on such devices which fails otherwise.
 
-Enhance devicetree of the RockPro64 arm64/rockchip board to use an
-AP6359SA based wifi/bt combo module with this chipset in patches 8-9.
-
-
-Chung-Hsien Hsu (1):
-  brcmfmac: set F2 blocksize and watermark for 4359
-
-Soeren Moch (5):
-  brcmfmac: fix rambase for 4359/9
-  brcmfmac: make errors when setting roaming parameters non-fatal
-  brcmfmac: add support for BCM4359 SDIO chipset
-  arm64: dts: rockchip: RockPro64: enable wifi module at sdio0
-  arm64: dts: rockchip: RockPro64: hook up bluetooth at uart0
-
-Wright Feng (3):
-  brcmfmac: reset two D11 cores if chip has two D11 cores
-  brcmfmac: add RSDB condition when setting interface combinations
-  brcmfmac: not set mbss in vif if firmware does not support MBSS
-
- .../boot/dts/rockchip/rk3399-rockpro64.dts    | 50 +++++++++++---
- .../broadcom/brcm80211/brcmfmac/bcmsdh.c      |  8 ++-
- .../broadcom/brcm80211/brcmfmac/cfg80211.c    | 68 +++++++++++++++----
- .../broadcom/brcm80211/brcmfmac/chip.c        | 54 ++++++++++++++-
- .../broadcom/brcm80211/brcmfmac/chip.h        |  1 +
- .../broadcom/brcm80211/brcmfmac/pcie.c        |  2 +-
- .../broadcom/brcm80211/brcmfmac/sdio.c        | 17 +++++
- include/linux/mmc/sdio_ids.h                  |  2 +
- 8 files changed, 176 insertions(+), 26 deletions(-)
-
+Signed-off-by: Soeren Moch <smoch@web.de>
 =2D--
+changes in v2: none
+
 Cc: Kalle Valo <kvalo@codeaurora.org>
 Cc: Heiko Stuebner <heiko@sntech.de>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Franky Lin <franky.lin@broadcom.com>
+Cc: Hante Meuleman <hante.meuleman@broadcom.com>
+Cc: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+Cc: Wright Feng <wright.feng@cypress.com>
 Cc: linux-wireless@vger.kernel.org
 Cc: brcm80211-dev-list.pdl@broadcom.com
 Cc: brcm80211-dev-list@cypress.com
@@ -116,7 +104,34 @@ Cc: netdev@vger.kernel.org
 Cc: linux-arm-kernel@lists.infradead.org
 Cc: linux-rockchip@lists.infradead.org
 Cc: linux-kernel@vger.kernel.org
+=2D--
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/dri=
+vers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
+index 0b5fbe5d8270..baf72e3984fc 100644
+=2D-- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
+@@ -712,7 +712,6 @@ static u32 brcmf_chip_tcm_rambase(struct brcmf_chip_pr=
+iv *ci)
+ 	case BRCM_CC_43569_CHIP_ID:
+ 	case BRCM_CC_43570_CHIP_ID:
+ 	case BRCM_CC_4358_CHIP_ID:
+-	case BRCM_CC_4359_CHIP_ID:
+ 	case BRCM_CC_43602_CHIP_ID:
+ 	case BRCM_CC_4371_CHIP_ID:
+ 		return 0x180000;
+@@ -722,6 +721,8 @@ static u32 brcmf_chip_tcm_rambase(struct brcmf_chip_pr=
+iv *ci)
+ 	case BRCM_CC_4366_CHIP_ID:
+ 	case BRCM_CC_43664_CHIP_ID:
+ 		return 0x200000;
++	case BRCM_CC_4359_CHIP_ID:
++		return (ci->pub.chiprev < 9) ? 0x180000 : 0x160000;
+ 	case CY_CC_4373_CHIP_ID:
+ 		return 0x160000;
+ 	default:
 =2D-
 2.17.1
 
