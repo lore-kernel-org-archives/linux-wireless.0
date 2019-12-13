@@ -6,31 +6,31 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33DBCC5ED70
-	for <linux-wireless@archiver.kernel.org>; Fri, 13 Dec 2019 20:38:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE55DC5ED71
+	for <linux-wireless@archiver.kernel.org>; Fri, 13 Dec 2019 20:38:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7347A24728
+	by mail.kernel.org (Postfix) with ESMTP id 19247246B1
 	for <linux-wireless@archiver.kernel.org>; Fri, 13 Dec 2019 20:38:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728069AbfLMP6S (ORCPT
+        id S1728064AbfLMP6P (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 13 Dec 2019 10:58:18 -0500
-Received: from nbd.name ([46.4.11.11]:56236 "EHLO nbd.name"
+        Fri, 13 Dec 2019 10:58:15 -0500
+Received: from nbd.name ([46.4.11.11]:56208 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728018AbfLMP6O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S1727970AbfLMP6O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 13 Dec 2019 10:58:14 -0500
 Received: from pd95fd344.dip0.t-ipconnect.de ([217.95.211.68] helo=bertha.fritz.box)
         by ds12 with esmtpa (Exim 4.89)
         (envelope-from <john@phrozen.org>)
-        id 1ifnKW-00073u-Ii; Fri, 13 Dec 2019 16:58:12 +0100
+        id 1ifnKU-00073u-4w; Fri, 13 Dec 2019 16:58:10 +0100
 From:   John Crispin <john@phrozen.org>
 To:     Johannes Berg <johannes@sipsolutions.net>,
         Kalle Valo <kvalo@codeaurora.org>
 Cc:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
         John Crispin <john@phrozen.org>
-Subject: [PATCH v2 7/7] ath11k: add handling for BSS color
-Date:   Fri, 13 Dec 2019 16:58:02 +0100
-Message-Id: <20191213155802.25491-7-john@phrozen.org>
+Subject: [PATCH v2 3/7] mac80211: add handling for BSS color
+Date:   Fri, 13 Dec 2019 16:57:58 +0100
+Message-Id: <20191213155802.25491-3-john@phrozen.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191213155802.25491-1-john@phrozen.org>
 References: <20191213155802.25491-1-john@phrozen.org>
@@ -41,56 +41,82 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This patch adds code to handle the BSS_CHANGED_BSS_COLOR flag. It will
-trigger the propagation of BSS color settings into the FW. Handling is
-slightly different between AP and STA interfaces.
+It is now possible to propagate BSS color settings into the subsystem. Lets
+make mac80211 also handle them so that we can send them further down the
+stack into the drivers. We continue to populate the old bss_color field
+until all users have been updated to use the new he_bss_color struct.
 
 Signed-off-by: John Crispin <john@phrozen.org>
-
-Changes in V2
-* handle return codes
 ---
- drivers/net/wireless/ath/ath11k/mac.c | 27 +++++++++++++++++++++++++++
- 1 file changed, 27 insertions(+)
+ include/net/mac80211.h | 2 ++
+ net/mac80211/cfg.c     | 5 ++++-
+ net/mac80211/mlme.c    | 8 ++++++++
+ 3 files changed, 14 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index 6a8c1c3b8da2..fec268b9b711 100644
---- a/drivers/net/wireless/ath/ath11k/mac.c
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -1928,6 +1928,33 @@ static void ath11k_mac_op_bss_info_changed(struct ieee80211_hw *hw,
- 		ath11k_wmi_send_obss_spr_cmd(ar, arvif->vdev_id,
- 					     &info->he_obss_pd);
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 16a5525ddab1..994686443553 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -316,6 +316,7 @@ struct ieee80211_vif_chanctx_switch {
+  *	functionality changed for this BSS (AP mode).
+  * @BSS_CHANGED_TWT: TWT status changed
+  * @BSS_CHANGED_HE_OBSS_PD: OBSS Packet Detection status changed.
++ * @BSS_CHANGED_HE_BSS_COLOR: BSS Color has changed
+  *
+  */
+ enum ieee80211_bss_change {
+@@ -348,6 +349,7 @@ enum ieee80211_bss_change {
+ 	BSS_CHANGED_FTM_RESPONDER	= 1<<26,
+ 	BSS_CHANGED_TWT			= 1<<27,
+ 	BSS_CHANGED_HE_OBSS_PD		= 1<<28,
++	BSS_CHANGED_HE_BSS_COLOR	= 1<<29,
  
-+	if (changed & BSS_CHANGED_HE_BSS_COLOR) {
-+		if (vif->type == NL80211_IFTYPE_AP) {
-+			ret = ath11k_wmi_send_obss_color_collision_cfg_cmd(
-+				ar, arvif->vdev_id, info->he_bss_color.color,
-+				ATH11K_BSS_COLOR_COLLISION_DETECTION_AP_PERIOD_MS,
-+				!info->he_bss_color.disabled);
-+			if (ret)
-+				ath11k_warn(ar->ab,
-+				    "failed to set bss color collision on vdev %i: %d\n",
-+				    arvif->vdev_id,  ret);
-+		} else if (vif->type == NL80211_IFTYPE_STATION) {
-+			ret = ath11k_wmi_send_bss_color_change_enable_cmd(ar,
-+								arvif->vdev_id, 1);
-+			if (ret)
-+				ath11k_warn(ar->ab,
-+				    "failed to enable bss color change on vdev %i: %d\n",
-+				    arvif->vdev_id,  ret);
-+			ret = ath11k_wmi_send_obss_color_collision_cfg_cmd(
-+				ar, arvif->vdev_id, 0,
-+				ATH11K_BSS_COLOR_COLLISION_DETECTION_STA_PERIOD_MS, 1);
-+			if (ret)
-+				ath11k_warn(ar->ab,
-+				    "failed to set bss color collision on vdev %i: %d\n",
-+				    arvif->vdev_id,  ret);
-+}
-+	}
-+
- 	mutex_unlock(&ar->conf_mutex);
- }
+ 	/* when adding here, make sure to change ieee80211_reconfig */
+ };
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index ed56b0c6fe19..e109b47c4219 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -981,7 +981,8 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 		      BSS_CHANGED_P2P_PS |
+ 		      BSS_CHANGED_TXPOWER |
+ 		      BSS_CHANGED_TWT |
+-		      BSS_CHANGED_HE_OBSS_PD;
++		      BSS_CHANGED_HE_OBSS_PD |
++		      BSS_CHANGED_HE_BSS_COLOR;
+ 	int err;
+ 	int prev_beacon_int;
  
+@@ -1054,6 +1055,8 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 	sdata->vif.bss_conf.twt_responder = params->twt_responder;
+ 	memcpy(&sdata->vif.bss_conf.he_obss_pd, &params->he_obss_pd,
+ 	       sizeof(struct ieee80211_he_obss_pd));
++	memcpy(&sdata->vif.bss_conf.he_bss_color, &params->he_bss_color,
++	       sizeof(struct ieee80211_he_bss_color));
+ 
+ 	sdata->vif.bss_conf.ssid_len = params->ssid_len;
+ 	if (params->ssid_len)
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 641876982ab9..319d43f4082b 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3372,8 +3372,16 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
+ 
+ 	if (bss_conf->he_support) {
+ 		bss_conf->bss_color =
++		bss_conf->he_bss_color.color =
+ 			le32_get_bits(elems.he_operation->he_oper_params,
+ 				      IEEE80211_HE_OPERATION_BSS_COLOR_MASK);
++		bss_conf->he_bss_color.partial =
++			le32_get_bits(elems.he_operation->he_oper_params,
++				      IEEE80211_HE_OPERATION_PARTIAL_BSS_COLOR);
++		bss_conf->he_bss_color.disabled =
++			le32_get_bits(elems.he_operation->he_oper_params,
++				      IEEE80211_HE_OPERATION_BSS_COLOR_DISABLED);
++		changed |= BSS_CHANGED_HE_BSS_COLOR;
+ 
+ 		bss_conf->htc_trig_based_pkt_ext =
+ 			le32_get_bits(elems.he_operation->he_oper_params,
 -- 
 2.20.1
 
