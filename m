@@ -2,200 +2,123 @@ Return-Path: <SRS0=3oid=2D=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 616E2C5ED73
-	for <linux-wireless@archiver.kernel.org>; Fri, 13 Dec 2019 20:38:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01961C3436C
+	for <linux-wireless@archiver.kernel.org>; Fri, 13 Dec 2019 20:40:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A08E024728
-	for <linux-wireless@archiver.kernel.org>; Fri, 13 Dec 2019 20:38:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 350BD24718
+	for <linux-wireless@archiver.kernel.org>; Fri, 13 Dec 2019 20:40:47 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="by25lE7P"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728071AbfLMP6T (ORCPT
+        id S1728595AbfLMSvJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 13 Dec 2019 10:58:19 -0500
-Received: from nbd.name ([46.4.11.11]:56234 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727974AbfLMP6O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Dec 2019 10:58:14 -0500
-Received: from pd95fd344.dip0.t-ipconnect.de ([217.95.211.68] helo=bertha.fritz.box)
-        by ds12 with esmtpa (Exim 4.89)
-        (envelope-from <john@phrozen.org>)
-        id 1ifnKV-00073u-T4; Fri, 13 Dec 2019 16:58:12 +0100
-From:   John Crispin <john@phrozen.org>
-To:     Johannes Berg <johannes@sipsolutions.net>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
-        John Crispin <john@phrozen.org>
-Subject: [PATCH v2 6/7] ath11k: add WMI calls required for handling BSS color
-Date:   Fri, 13 Dec 2019 16:58:01 +0100
-Message-Id: <20191213155802.25491-6-john@phrozen.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191213155802.25491-1-john@phrozen.org>
-References: <20191213155802.25491-1-john@phrozen.org>
+        Fri, 13 Dec 2019 13:51:09 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:54602 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728489AbfLMSvJ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 13 Dec 2019 13:51:09 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBDIiSiO187214;
+        Fri, 13 Dec 2019 18:51:00 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : mime-version : content-type; s=corp-2019-08-05;
+ bh=OHdV8pT7zAW4ljzAh7kGrjCK8SyrDdk1D8mSHJct65s=;
+ b=by25lE7Pa3vr6Wr3ZMDaPNxZkoKmR1Uh67/9Uf0F+sxbN1bNqn2E4CPKEp0J/LoA+aVa
+ FhjFN50tBY0WK/R8yqv0GBpJIfwDSPyPwg3b7+d4glAJsPLnOKBy4z/EMcOOMbfoyPRs
+ +C7W1SRIQhWXv2u0Jtn1iJSxB9NV0Y0kfFBwLeuGBESBIqqLAyCi0HbYhBXWgW1rtwXA
+ sdNUj9EJWOE1JmHv4nzljOtu9TlOExPQxnKOyfiyHcEKw7TBQsp3n5a4vs2QD7dsFOJI
+ /bYc86Y5eAX6SzdzMpWYzuuFPXkv3GfXjsN7W9IWtYt/13+kp4jsmOaE3dyZCo68Q06H ng== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 2wr41qts65-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 13 Dec 2019 18:51:00 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBDImZEr013240;
+        Fri, 13 Dec 2019 18:50:59 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3020.oracle.com with ESMTP id 2wvdwq9f79-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 13 Dec 2019 18:50:59 +0000
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xBDIowPB029384;
+        Fri, 13 Dec 2019 18:50:58 GMT
+Received: from kili.mountain (/129.205.23.165)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 13 Dec 2019 10:50:57 -0800
+Date:   Fri, 13 Dec 2019 21:50:50 +0300
+From:   Dan Carpenter <dan.carpenter@oracle.com>
+To:     ulf.hansson@linaro.org
+Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: [bug report] mmc: core: Re-work HW reset for SDIO cards
+Message-ID: <20191213185050.m6iku7defq44syrl@kili.mountain>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+User-Agent: NeoMutt/20170113 (1.7.2)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9470 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=689
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1911140001 definitions=main-1912130145
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9470 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=1 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=751 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
+ definitions=main-1912130145
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-If the he_operation field of the beacon sets a BSS color, we need to inform
-the FW of the settings. This patch adds the WMI command handlers required
-to do so.
+Hello Ulf Hansson,
 
-Signed-off-by: John Crispin <john@phrozen.org>
+The patch 2ac55d5e5ec9: "mmc: core: Re-work HW reset for SDIO cards"
+from Oct 17, 2019, leads to the following static checker warning:
 
-Changes in V2
-* add WMI debug log
----
- drivers/net/wireless/ath/ath11k/wmi.c | 77 +++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath11k/wmi.h | 31 +++++++++++
- 2 files changed, 108 insertions(+)
+	drivers/net/wireless/ath/ath10k/sdio.c:1521 ath10k_sdio_hif_power_down()
+	warn: 'ret' can be either negative or positive
 
-diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
-index 5b3dc9e4c6c1..ba2cc6fac809 100644
---- a/drivers/net/wireless/ath/ath11k/wmi.c
-+++ b/drivers/net/wireless/ath/ath11k/wmi.c
-@@ -2790,6 +2790,83 @@ ath11k_wmi_send_obss_spr_cmd(struct ath11k *ar, u32 vdev_id,
- 	return ret;
- }
- 
-+int
-+ath11k_wmi_send_obss_color_collision_cfg_cmd(struct ath11k *ar, u32 vdev_id,
-+					     u8 bss_color, u32 period,
-+					     bool enable)
-+{
-+	struct ath11k_pdev_wmi *wmi = ar->wmi;
-+	struct ath11k_base *ab = wmi->wmi_ab->ab;
-+	struct wmi_obss_color_collision_cfg_params_cmd *cmd;
-+	struct sk_buff *skb;
-+	int ret, len;
-+
-+	len = sizeof(*cmd);
-+
-+	skb = ath11k_wmi_alloc_skb(wmi->wmi_ab, len);
-+	if (!skb)
-+		return -ENOMEM;
-+
-+	cmd = (struct wmi_obss_color_collision_cfg_params_cmd *)skb->data;
-+	cmd->tlv_header = FIELD_PREP(WMI_TLV_TAG, WMI_TAG_OBSS_COLOR_COLLISION_DET_CONFIG) |
-+			  FIELD_PREP(WMI_TLV_LEN, len - TLV_HDR_SIZE);
-+	cmd->vdev_id = vdev_id;
-+	cmd->evt_type = enable ? ATH11K_OBSS_COLOR_COLLISION_DETECTION :
-+				 ATH11K_OBSS_COLOR_COLLISION_DETECTION_DISABLE;
-+	cmd->current_bss_color = bss_color;
-+	cmd->detection_period_ms = period;
-+	cmd->scan_period_ms = ATH11K_BSS_COLOR_COLLISION_SCAN_PERIOD_MS;
-+	cmd->free_slot_expiry_time_ms = 0;
-+	cmd->flags = 0;
-+
-+	ath11k_dbg(ar->ab, ATH11K_DBG_WMI,
-+		   "wmi_send_obss_color_collision_cfg id %d type %d "
-+		   "bss_color %d detect_period %d scan_period %d\n",
-+		   cmd->vdev_id, cmd->evt_type, cmd->current_bss_color,
-+		   cmd->detection_period_ms, cmd->scan_period_ms);
-+
-+	ret = ath11k_wmi_cmd_send(wmi, skb,
-+				  WMI_OBSS_COLOR_COLLISION_DET_CONFIG_CMDID);
-+	if (ret) {
-+		ath11k_warn(ab, "Failed to send WMI_OBSS_COLOR_COLLISION_DET_CONFIG_CMDID");
-+		dev_kfree_skb(skb);
-+	}
-+	return ret;
-+}
-+
-+int ath11k_wmi_send_bss_color_change_enable_cmd(struct ath11k *ar, u32 vdev_id, bool enable)
-+{
-+	struct ath11k_pdev_wmi *wmi = ar->wmi;
-+	struct ath11k_base *ab = wmi->wmi_ab->ab;
-+	struct wmi_bss_color_change_enable_params_cmd *cmd;
-+	struct sk_buff *skb;
-+	int ret, len;
-+
-+	len = sizeof(*cmd);
-+
-+	skb = ath11k_wmi_alloc_skb(wmi->wmi_ab, len);
-+	if (!skb)
-+		return -ENOMEM;
-+
-+	cmd = (struct wmi_bss_color_change_enable_params_cmd *)skb->data;
-+	cmd->tlv_header = FIELD_PREP(WMI_TLV_TAG, WMI_TAG_BSS_COLOR_CHANGE_ENABLE) |
-+			  FIELD_PREP(WMI_TLV_LEN, len - TLV_HDR_SIZE);
-+	cmd->vdev_id = vdev_id;
-+	cmd->enable = enable ? 1 : 0;
-+
-+	ath11k_dbg(ar->ab, ATH11K_DBG_WMI,
-+		   "wmi_send_bss_color_change_enable id %d enable %d\n",
-+		   cmd->vdev_id, cmd->enable);
-+
-+	ret = ath11k_wmi_cmd_send(wmi, skb,
-+				  WMI_BSS_COLOR_CHANGE_ENABLE_CMDID);
-+	if (ret) {
-+		ath11k_warn(ab, "Failed to send WMI_TWT_DIeABLE_CMDID");
-+		dev_kfree_skb(skb);
-+	}
-+	return ret;
-+}
-+
- static void
- ath11k_fill_band_to_mac_param(struct ath11k_base  *soc,
- 			      struct wmi_host_pdev_band_to_mac *band_to_mac)
-diff --git a/drivers/net/wireless/ath/ath11k/wmi.h b/drivers/net/wireless/ath/ath11k/wmi.h
-index 4dbcb9dc0f8d..f62f796305aa 100644
---- a/drivers/net/wireless/ath/ath11k/wmi.h
-+++ b/drivers/net/wireless/ath/ath11k/wmi.h
-@@ -483,6 +483,7 @@ enum wmi_tlv_cmd_id {
- 	WMI_SAR_LIMITS_CMDID,
- 	WMI_OBSS_SCAN_ENABLE_CMDID = WMI_TLV_CMD(WMI_GRP_OBSS_OFL),
- 	WMI_OBSS_SCAN_DISABLE_CMDID,
-+	WMI_OBSS_COLOR_COLLISION_DET_CONFIG_CMDID,
- 	WMI_LPI_MGMT_SNOOPING_CONFIG_CMDID = WMI_TLV_CMD(WMI_GRP_LPI),
- 	WMI_LPI_START_SCAN_CMDID,
- 	WMI_LPI_STOP_SCAN_CMDID,
-@@ -4694,6 +4695,30 @@ struct wmi_peer_oper_mode_change_event {
- 	u32 new_disablemu;
- } __packed;
- 
-+#define ATH11K_BSS_COLOR_COLLISION_SCAN_PERIOD_MS		200
-+#define ATH11K_OBSS_COLOR_COLLISION_DETECTION_DISABLE		0
-+#define ATH11K_OBSS_COLOR_COLLISION_DETECTION			1
-+
-+#define ATH11K_BSS_COLOR_COLLISION_DETECTION_STA_PERIOD_MS	10000
-+#define ATH11K_BSS_COLOR_COLLISION_DETECTION_AP_PERIOD_MS	5000
-+
-+struct wmi_obss_color_collision_cfg_params_cmd {
-+	u32 tlv_header;
-+	u32 vdev_id;
-+	u32 flags;
-+	u32 evt_type;
-+	u32 current_bss_color;
-+	u32 detection_period_ms;
-+	u32 scan_period_ms;
-+	u32 free_slot_expiry_time_ms;
-+} __packed;
-+
-+struct wmi_bss_color_change_enable_params_cmd {
-+	u32 tlv_header;
-+	u32 vdev_id;
-+	u32 enable;
-+} __packed;
-+
- struct target_resource_config {
- 	u32 num_vdevs;
- 	u32 num_peers;
-@@ -4892,4 +4917,10 @@ int ath11k_wmi_send_twt_resume_dialog_cmd(struct ath11k *ar,
- 					  struct wmi_twt_resume_dialog_params *params);
- int ath11k_wmi_send_obss_spr_cmd(struct ath11k *ar, u32 vdev_id,
- 				 struct ieee80211_he_obss_pd *he_obss_pd);
-+int ath11k_wmi_send_obss_color_collision_cfg_cmd(struct ath11k *ar, u32 vdev_id,
-+						 u8 bss_color, u32 period,
-+						 bool enable);
-+int ath11k_wmi_send_bss_color_change_enable_cmd(struct ath11k *ar, u32 vdev_id,
-+						bool enable);
-+
- #endif
--- 
-2.20.1
+drivers/net/wireless/ath/ath10k/sdio.c
+  1495  static void ath10k_sdio_hif_power_down(struct ath10k *ar)
+  1496  {
+  1497          struct ath10k_sdio *ar_sdio = ath10k_sdio_priv(ar);
+  1498          int ret;
+  1499  
+  1500          if (ar_sdio->is_disabled)
+  1501                  return;
+  1502  
+  1503          ath10k_dbg(ar, ATH10K_DBG_BOOT, "sdio power off\n");
+  1504  
+  1505          /* Disable the card */
+  1506          sdio_claim_host(ar_sdio->func);
+  1507  
+  1508          ret = sdio_disable_func(ar_sdio->func);
+  1509          if (ret) {
+  1510                  ath10k_warn(ar, "unable to disable sdio function: %d\n", ret);
+  1511                  sdio_release_host(ar_sdio->func);
+  1512                  return;
+  1513          }
+  1514  
+  1515          ret = mmc_hw_reset(ar_sdio->func->card->host);
+  1516          if (ret)
 
+It used to be that mmc_hw_reset() return negative error codes or zero
+but now it returns 1 on certain success paths.
+
+  1517                  ath10k_warn(ar, "unable to reset sdio: %d\n", ret);
+  1518  
+  1519          sdio_release_host(ar_sdio->func);
+  1520  
+  1521          ar_sdio->is_disabled = true;
+  1522  }
+
+
+regards,
+dan carpenter
