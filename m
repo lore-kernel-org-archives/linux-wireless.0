@@ -2,116 +2,102 @@ Return-Path: <SRS0=3oid=2D=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 630F7C3498E
-	for <linux-wireless@archiver.kernel.org>; Fri, 13 Dec 2019 20:36:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6B7AC341A3
+	for <linux-wireless@archiver.kernel.org>; Fri, 13 Dec 2019 20:38:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 991ED24725
-	for <linux-wireless@archiver.kernel.org>; Fri, 13 Dec 2019 20:36:31 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ntCYo4fm"
+	by mail.kernel.org (Postfix) with ESMTP id 01172246B1
+	for <linux-wireless@archiver.kernel.org>; Fri, 13 Dec 2019 20:38:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726803AbfLMLqk (ORCPT
+        id S1727913AbfLMPfN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 13 Dec 2019 06:46:40 -0500
-Received: from mail-wr1-f67.google.com ([209.85.221.67]:38350 "EHLO
-        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725980AbfLMLqj (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Dec 2019 06:46:39 -0500
-Received: by mail-wr1-f67.google.com with SMTP id y17so6325048wrh.5;
-        Fri, 13 Dec 2019 03:46:37 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=HCgiaWMI/x6U67hIPPycQp/x3zK3ZvfDXctut3Mj0H8=;
-        b=ntCYo4fm2d/zzZ4lTMIHE2k18++eeMkvDoPsZ2tVIeLuOwZKRH3Xl0/iqsxYzseV32
-         9JtOFz1k8zwhM7rcEfbl4Ul3T7p2HVGhxihyrWvvbKJ9c8Ti9MqToNwSmdA1M4cTmY4g
-         FE4K278750sNT48xziH/Hxs6RpB4M7bQuLqunBAH8s3sO8vnCqtvZeG+a+zC7r+HAqW2
-         KMRmPH93e5UhTfshDBVhWpsVneNuClqdHMb/bI1GEB4bmHsAed3iODeq1gPJxb+S2IfL
-         Xg7AzfAEQOGD6GGdnskwH/MkDQnpX1HilwhQvVmxk2Otg1pDMOCSx9jdIDda6roJYSko
-         TN4w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=HCgiaWMI/x6U67hIPPycQp/x3zK3ZvfDXctut3Mj0H8=;
-        b=srnIf4YEVAB/826wJhFwKBUkJ6HZLjlkdvI2EJo2hRt2fg/knN3lWA07ZCb+cbiDB6
-         l/eE4YpqtV46Wtv0AG5CEfoR2ri0ySz/69uMeEFQwAXjqER4N6etzF3aVmSjJd8vGZ3f
-         gIGEE2pLvdbqrBDLJGohrMUnWhUexMHoyKrlxc5gYgg61tVitOTBYoZyndsNN72q6gLF
-         yVqRYeZ0JPpJbabsIlvqcD9MJB9Bd3xeOeirENfubOtH11iOPYgZXrASeo/H98qZrEst
-         2VCNWsppQwtquvPX6f64fx68WRxfXbqoQRc9rIUia/ycu9643YQDejM1Sn8Qqkiny5UW
-         xrcw==
-X-Gm-Message-State: APjAAAUMZHxIoNsf7wIF63BUMZTpytENzQpEaHTLme08Z6K5hEIIr1kP
-        u66nbvkMc2kTI+EipK2sNB8xdvhB
-X-Google-Smtp-Source: APXvYqwijV//FwSD6ZdUbelYpMbehqqqYrxwCr2pcHvthrmHzwmG+JKUW2lWiTI9HuHu8NHjX/ZVbQ==
-X-Received: by 2002:adf:f6c1:: with SMTP id y1mr13203522wrp.17.1576237596862;
-        Fri, 13 Dec 2019 03:46:36 -0800 (PST)
-Received: from [192.168.178.26] (ipservice-092-219-207-064.092.219.pools.vodafone-ip.de. [92.219.207.64])
-        by smtp.gmail.com with ESMTPSA id a184sm10170022wmf.29.2019.12.13.03.46.35
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 13 Dec 2019 03:46:36 -0800 (PST)
-Subject: Re: [PATCH 0/6] rtlwifi: convert rtl8192{ce,cu,de} to use generic
- functions
-To:     Pkshih <pkshih@realtek.com>
-Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "davem@davemloft.net" <davem@davemloft.net>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <20191211154755.15012-1-straube.linux@gmail.com>
- <1576115241.2733.1.camel@realtek.com>
-From:   Michael Straube <straube.linux@gmail.com>
-Message-ID: <84f3ec5e-eda7-c955-2705-482263eb1ee6@gmail.com>
-Date:   Fri, 13 Dec 2019 12:46:21 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.2.2
+        Fri, 13 Dec 2019 10:35:13 -0500
+Received: from nbd.name ([46.4.11.11]:54636 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727862AbfLMPfM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 13 Dec 2019 10:35:12 -0500
+Received: from pd95fd344.dip0.t-ipconnect.de ([217.95.211.68] helo=bertha.fritz.box)
+        by ds12 with esmtpa (Exim 4.89)
+        (envelope-from <john@phrozen.org>)
+        id 1ifmyE-0005ee-8r; Fri, 13 Dec 2019 16:35:10 +0100
+From:   John Crispin <john@phrozen.org>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
+        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>,
+        John Crispin <john@phrozen.org>
+Subject: [PATCH V2 2/2] ath11k: set the BA buffer size to 256 when HE is enabled
+Date:   Fri, 13 Dec 2019 16:34:57 +0100
+Message-Id: <20191213153457.11946-2-john@phrozen.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20191213153457.11946-1-john@phrozen.org>
+References: <20191213153457.11946-1-john@phrozen.org>
 MIME-Version: 1.0
-In-Reply-To: <1576115241.2733.1.camel@realtek.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2019-12-12 02:47, Pkshih wrote:
-> On Wed, 2019-12-11 at 16:47 +0100, Michael Straube wrote:
->> This series converts the drivers rtl8192{ce,cu,de} to use the generic
->> functions rtl_query_rxpwrpercentage and rtl_signal_scale_mapping.
->>
->> Michael Straube (6):
->>    rtlwifi: rtl8192ce: use generic rtl_query_rxpwrpercentage
->>    rtlwifi: rtl8192cu: use generic rtl_query_rxpwrpercentage
->>    rtlwifi: rtl8192de: use generic rtl_query_rxpwrpercentage
->>    rtlwifi: rtl8192ce: use generic rtl_signal_scale_mapping
->>    rtlwifi: rtl8192cu: use generic rtl_signal_scale_mapping
->>    rtlwifi: rtl8192de: use generic rtl_signal_scale_mapping
->>
->>   .../wireless/realtek/rtlwifi/rtl8192ce/trx.c  | 48 ++----------------
->>   .../wireless/realtek/rtlwifi/rtl8192cu/mac.c  | 49 ++-----------------
->>   .../wireless/realtek/rtlwifi/rtl8192de/trx.c  | 47 ++----------------
->>   3 files changed, 14 insertions(+), 130 deletions(-)
->>
-> 
-> For all patches:
-> Acked-by: Ping-Ke Shih <pkshih@realtek.com>
-> 
+From: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
 
-Thanks.
+This patch sets the correct BA buffer size when we are in HE mode.
+Without this change we are not able to receive 256 bitmapped BA frames.
 
-> Curiously. How can you find these function are identical?
-> 
-While sending cleanup patches for some staging wifi drivers I noticed
-that these functions are used in many of the realtek drivers and all
-looked very similar. Then used grep and diff to verify.
+Signed-off-by: John Crispin <john@phrozen.org>
+Signed-off-by: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath11k/mac.c | 14 ++++++++++++++
+ drivers/net/wireless/ath/ath11k/wmi.h |  2 ++
+ 2 files changed, 16 insertions(+)
 
-Michael
+diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+index b229b0b3e0bd..82df8af57369 100644
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -1758,6 +1758,20 @@ static void ath11k_mac_op_bss_info_changed(struct ieee80211_hw *hw,
+ 		if (ret)
+ 			ath11k_warn(ar->ab, "failed to update bcn template: %d\n",
+ 				    ret);
++
++		if (vif->bss_conf.he_support) {
++			ret = ath11k_wmi_vdev_set_param_cmd(ar, arvif->vdev_id,
++							    WMI_VDEV_PARAM_BA_MODE,
++							    WMI_BA_MODE_BUFFER_SIZE_256);
++			if (ret)
++				ath11k_warn(ar->ab,
++					    "failed to set BA BUFFER SIZE 256 for vdev: %d\n",
++					    arvif->vdev_id);
++			else
++				ath11k_dbg(ar->ab, ATH11K_DBG_MAC,
++					   "Set BA BUFFER SIZE 256 for VDEV: %d\n",
++					   arvif->vdev_id);
++		}
+ 	}
+ 
+ 	if (changed & (BSS_CHANGED_BEACON_INFO | BSS_CHANGED_BEACON)) {
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.h b/drivers/net/wireless/ath/ath11k/wmi.h
+index f62f796305aa..284794dadd87 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.h
++++ b/drivers/net/wireless/ath/ath11k/wmi.h
+@@ -54,6 +54,7 @@ struct wmi_tlv {
+ #define WLAN_SCAN_PARAMS_MAX_BSSID   4
+ #define WLAN_SCAN_PARAMS_MAX_IE_LEN  256
+ 
++#define WMI_BA_MODE_BUFFER_SIZE_256  3
+ /*
+  * HW mode config type replicated from FW header
+  * @WMI_HOST_HW_MODE_SINGLE: Only one PHY is active.
+@@ -1004,6 +1005,7 @@ enum wmi_tlv_vdev_param {
+ 	WMI_VDEV_PARAM_HE_RANGE_EXT,
+ 	WMI_VDEV_PARAM_ENABLE_BCAST_PROBE_RESPONSE,
+ 	WMI_VDEV_PARAM_FILS_MAX_CHANNEL_GUARD_TIME,
++	WMI_VDEV_PARAM_BA_MODE = 0x7e,
+ 	WMI_VDEV_PARAM_SET_HE_SOUNDING_MODE = 0x87,
+ 	WMI_VDEV_PARAM_PROTOTYPE = 0x8000,
+ 	WMI_VDEV_PARAM_BSS_COLOR,
+-- 
+2.20.1
 
