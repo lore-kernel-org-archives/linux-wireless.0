@@ -2,35 +2,34 @@ Return-Path: <SRS0=3oid=2D=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89345C3B1A8
-	for <linux-wireless@archiver.kernel.org>; Fri, 13 Dec 2019 20:38:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0B7EC3B1B9
+	for <linux-wireless@archiver.kernel.org>; Fri, 13 Dec 2019 20:38:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C7F3A246B1
-	for <linux-wireless@archiver.kernel.org>; Fri, 13 Dec 2019 20:38:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2B0C5246D0
+	for <linux-wireless@archiver.kernel.org>; Fri, 13 Dec 2019 20:38:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727906AbfLMPfM (ORCPT
+        id S1727965AbfLMPim (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 13 Dec 2019 10:35:12 -0500
-Received: from nbd.name ([46.4.11.11]:54632 "EHLO nbd.name"
+        Fri, 13 Dec 2019 10:38:42 -0500
+Received: from nbd.name ([46.4.11.11]:54802 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727831AbfLMPfL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Dec 2019 10:35:11 -0500
+        id S1727796AbfLMPim (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 13 Dec 2019 10:38:42 -0500
 Received: from pd95fd344.dip0.t-ipconnect.de ([217.95.211.68] helo=bertha.fritz.box)
         by ds12 with esmtpa (Exim 4.89)
         (envelope-from <john@phrozen.org>)
-        id 1ifmyD-0005ee-Qm; Fri, 13 Dec 2019 16:35:09 +0100
+        id 1ifn1d-0005pC-0s; Fri, 13 Dec 2019 16:38:41 +0100
 From:   John Crispin <john@phrozen.org>
 To:     Kalle Valo <kvalo@codeaurora.org>
 Cc:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
-        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>,
         John Crispin <john@phrozen.org>
-Subject: [PATCH V2 1/2] ath11k: fix pdev when invoking ath11k_wmi_send_twt_enable_cmd()
-Date:   Fri, 13 Dec 2019 16:34:56 +0100
-Message-Id: <20191213153457.11946-1-john@phrozen.org>
+Subject: [PATCH V3 0/9] ath11k: resend pending patches
+Date:   Fri, 13 Dec 2019 16:38:30 +0100
+Message-Id: <20191213153839.12372-1-john@phrozen.org>
 X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -39,34 +38,38 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+Kalle merged ath11k into his next tree and then applied the huge backlog
+from patchwork. This is a resend of pending patches that no longer apply
+due to merge order conflicts.
 
-The code currently uses the wrong pdev id when enabling TWT. Fix this by
-using the correct ones.
+John Crispin (9):
+  ath11k: add wmi helper for turning STA PS on/off
+  ath11k: disable PS for STA interfaces by default upon bringup
+  ath11k: drop memset when setting up a tx cmd desc
+  ath11k: rename ath11k_wmi_base instances from wmi_sc to wmi_ab
+  ath11k: add WMI calls to manually add/del/pause/resume TWT dialogs
+  ath11k: add debugfs for TWT debug calls
+  ath11k: move some tx_status parsing to debugfs code
+  ath11k: optimise ath11k_dp_tx_completion_handler
+  ath11k: optimize ath11k_hal_tx_status_parse
 
-Fixes: e65a616f4e74 ("ath11k: add TWT support")
-Signed-off-by: John Crispin <john@phrozen.org>
-Signed-off-by: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
----
- drivers/net/wireless/ath/ath11k/mac.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath11k/core.c        |   4 +-
+ drivers/net/wireless/ath/ath11k/core.h        |   3 +-
+ drivers/net/wireless/ath/ath11k/debug.c       | 198 +++++++++
+ drivers/net/wireless/ath/ath11k/debug.h       |   8 +
+ drivers/net/wireless/ath/ath11k/debugfs_sta.c |  66 +--
+ drivers/net/wireless/ath/ath11k/dp.c          |  16 +-
+ drivers/net/wireless/ath/ath11k/dp.h          |  11 +-
+ drivers/net/wireless/ath/ath11k/dp_tx.c       |  81 ++--
+ drivers/net/wireless/ath/ath11k/hal_tx.c      |  74 +---
+ drivers/net/wireless/ath/ath11k/hal_tx.h      |  13 +-
+ drivers/net/wireless/ath/ath11k/htc.c         |   2 +-
+ drivers/net/wireless/ath/ath11k/mac.c         |  15 +-
+ drivers/net/wireless/ath/ath11k/testmode.c    |   2 +-
+ drivers/net/wireless/ath/ath11k/wmi.c         | 408 ++++++++++++++----
+ drivers/net/wireless/ath/ath11k/wmi.h         | 123 +++++-
+ 15 files changed, 773 insertions(+), 251 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index fec268b9b711..b229b0b3e0bd 100644
---- a/drivers/net/wireless/ath/ath11k/mac.c
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -1917,9 +1917,9 @@ static void ath11k_mac_op_bss_info_changed(struct ieee80211_hw *hw,
- 
- 	if (changed & BSS_CHANGED_TWT) {
- 		if (info->twt_requester || info->twt_responder)
--			ath11k_wmi_send_twt_enable_cmd(ar, ar->pdev_idx);
-+			ath11k_wmi_send_twt_enable_cmd(ar, ar->pdev->pdev_id);
- 		else
--			ath11k_wmi_send_twt_disable_cmd(ar, ar->pdev_idx);
-+			ath11k_wmi_send_twt_disable_cmd(ar, ar->pdev->pdev_id);
- 		if (vif->type == NL80211_IFTYPE_AP)
- 			ath11k_debugfs_twt(arvif, info->twt_requester);
- 	}
 -- 
 2.20.1
 
