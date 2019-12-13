@@ -6,30 +6,30 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46AA1C341C1
-	for <linux-wireless@archiver.kernel.org>; Fri, 13 Dec 2019 20:38:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24AA5C341C4
+	for <linux-wireless@archiver.kernel.org>; Fri, 13 Dec 2019 20:38:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8538D2473C
-	for <linux-wireless@archiver.kernel.org>; Fri, 13 Dec 2019 20:38:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 63415247BD
+	for <linux-wireless@archiver.kernel.org>; Fri, 13 Dec 2019 20:38:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727981AbfLMPio (ORCPT
+        id S1727996AbfLMPir (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 13 Dec 2019 10:38:44 -0500
-Received: from nbd.name ([46.4.11.11]:54822 "EHLO nbd.name"
+        Fri, 13 Dec 2019 10:38:47 -0500
+Received: from nbd.name ([46.4.11.11]:54852 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727967AbfLMPio (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Dec 2019 10:38:44 -0500
+        id S1727982AbfLMPiq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 13 Dec 2019 10:38:46 -0500
 Received: from pd95fd344.dip0.t-ipconnect.de ([217.95.211.68] helo=bertha.fritz.box)
         by ds12 with esmtpa (Exim 4.89)
         (envelope-from <john@phrozen.org>)
-        id 1ifn1e-0005pC-FD; Fri, 13 Dec 2019 16:38:42 +0100
+        id 1ifn1g-0005pC-1h; Fri, 13 Dec 2019 16:38:44 +0100
 From:   John Crispin <john@phrozen.org>
 To:     Kalle Valo <kvalo@codeaurora.org>
 Cc:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
         John Crispin <john@phrozen.org>
-Subject: [PATCH V3 3/9] ath11k: drop memset when setting up a tx cmd desc
-Date:   Fri, 13 Dec 2019 16:38:33 +0100
-Message-Id: <20191213153839.12372-4-john@phrozen.org>
+Subject: [PATCH V3 6/9] ath11k: add debugfs for TWT debug calls
+Date:   Fri, 13 Dec 2019 16:38:36 +0100
+Message-Id: <20191213153839.12372-7-john@phrozen.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191213153839.12372-1-john@phrozen.org>
 References: <20191213153839.12372-1-john@phrozen.org>
@@ -40,40 +40,290 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-There is no point in zero'ing out the structure if we set all values in the
-following line.
+These new debugfs files allow us to manually add/del/pause/resume TWT
+dialogs for test/debug purposes.
+
+The debugfs files expect the following parameters
+add_dialog	- mac dialog_id wake_intvl_us wake_intvl_mantis
+		  wake_dura_us sp_offset_us twt_cmd flag_bcast
+		  flag_trigger flag_flow_type flag_protection
+del_dialog	- mac dialog_id
+pause_dialog	- mac dialog_id
+resume_dialog	- mac dialog_id sp_offset_us next_twt_size
 
 Signed-off-by: John Crispin <john@phrozen.org>
 ---
- drivers/net/wireless/ath/ath11k/dp_tx.c  | 2 --
- drivers/net/wireless/ath/ath11k/hal_tx.c | 1 +
- 2 files changed, 1 insertion(+), 2 deletions(-)
+Changes in V2
+* add a better patch description
 
-diff --git a/drivers/net/wireless/ath/ath11k/dp_tx.c b/drivers/net/wireless/ath/ath11k/dp_tx.c
-index a8b9557c2346..28ebc414533e 100644
---- a/drivers/net/wireless/ath/ath11k/dp_tx.c
-+++ b/drivers/net/wireless/ath/ath11k/dp_tx.c
-@@ -167,8 +167,6 @@ int ath11k_dp_tx(struct ath11k *ar, struct ath11k_vif *arvif,
- 	skb_cb->vif = arvif->vif;
- 	skb_cb->ar = ar;
+ drivers/net/wireless/ath/ath11k/core.h  |   1 +
+ drivers/net/wireless/ath/ath11k/debug.c | 198 ++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath11k/debug.h |   8 +
+ drivers/net/wireless/ath/ath11k/mac.c   |   4 +
+ 4 files changed, 211 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
+index 25cdcf71d0c4..65d8684364dd 100644
+--- a/drivers/net/wireless/ath/ath11k/core.h
++++ b/drivers/net/wireless/ath/ath11k/core.h
+@@ -216,6 +216,7 @@ struct ath11k_vif {
+ 	int num_legacy_stations;
+ 	int rtscts_prot_mode;
+ 	int txpower;
++	struct dentry *debugfs_twt;
+ };
  
--	memset(cached_desc, 0, HAL_TCL_DESC_LEN);
--
- 	ath11k_hal_tx_cmd_desc_setup(ab, cached_desc, &ti);
+ struct ath11k_vif_iter {
+diff --git a/drivers/net/wireless/ath/ath11k/debug.c b/drivers/net/wireless/ath/ath11k/debug.c
+index c27fffd13a5d..2311e08d0889 100644
+--- a/drivers/net/wireless/ath/ath11k/debug.c
++++ b/drivers/net/wireless/ath/ath11k/debug.c
+@@ -104,6 +104,204 @@ void ath11k_dbg_dump(struct ath11k_base *ab,
  
- 	hal_ring_id = tx_ring->tcl_data_ring.ring_id;
-diff --git a/drivers/net/wireless/ath/ath11k/hal_tx.c b/drivers/net/wireless/ath/ath11k/hal_tx.c
-index cbe549798762..72a51ed65a51 100644
---- a/drivers/net/wireless/ath/ath11k/hal_tx.c
-+++ b/drivers/net/wireless/ath/ath11k/hal_tx.c
-@@ -71,6 +71,7 @@ void ath11k_hal_tx_cmd_desc_setup(struct ath11k_base *ab, void *cmd,
- 				    ti->dscp_tid_tbl_idx) |
- 			 FIELD_PREP(HAL_TCL_DATA_CMD_INFO3_SEARCH_INDEX,
- 				    ti->bss_ast_hash);
-+	tcl_cmd->info4 = 0;
+ #endif
+ 
++#ifdef CONFIG_MAC80211_DEBUGFS
++static ssize_t ath11k_write_twt_add_dialog(struct file *file,
++					   const char __user *ubuf,
++					   size_t count, loff_t *ppos)
++{
++	struct ath11k_vif *arvif = file->private_data;
++	struct wmi_twt_add_dialog_params params = { 0 };
++	u8 buf[128] = {0};
++	int ret;
++
++	ret = simple_write_to_buffer(buf, sizeof(buf) - 1, ppos, ubuf, count);
++	if (ret < 0)
++		return ret;
++
++	buf[ret] = '\0';
++	ret = sscanf(buf, "%02hhx:%02hhx:%02hhx:%02hhx:%02hhx:%02hhx %u %u "
++		     "%u %u %u %hhu %hhu %hhu %hhu %hhu",
++		     &params.peer_macaddr[0],
++		     &params.peer_macaddr[1],
++		     &params.peer_macaddr[2],
++		     &params.peer_macaddr[3],
++		     &params.peer_macaddr[4],
++		     &params.peer_macaddr[5],
++		     &params.dialog_id,
++		     &params.wake_intvl_us,
++		     &params.wake_intvl_mantis,
++		     &params.wake_dura_us,
++		     &params.sp_offset_us,
++		     &params.twt_cmd,
++		     &params.flag_bcast,
++		     &params.flag_trigger,
++		     &params.flag_flow_type,
++		     &params.flag_protection);
++	if (ret != 16)
++		return -EINVAL;
++
++	params.vdev_id = arvif->vdev_id;
++
++	ret = ath11k_wmi_send_twt_add_dialog_cmd(arvif->ar, &params);
++
++	return ret ? ret : count;
++}
++
++static ssize_t ath11k_write_twt_del_dialog(struct file *file,
++					   const char __user *ubuf,
++					   size_t count, loff_t *ppos)
++{
++	struct ath11k_vif *arvif = file->private_data;
++	struct wmi_twt_del_dialog_params params = { 0 };
++	u8 buf[64] = {0};
++	int ret;
++
++	ret = simple_write_to_buffer(buf, sizeof(buf) - 1, ppos, ubuf, count);
++	if (ret < 0)
++		return ret;
++
++	buf[ret] = '\0';
++	ret = sscanf(buf, "%02hhx:%02hhx:%02hhx:%02hhx:%02hhx:%02hhx %u",
++		     &params.peer_macaddr[0],
++		     &params.peer_macaddr[1],
++		     &params.peer_macaddr[2],
++		     &params.peer_macaddr[3],
++		     &params.peer_macaddr[4],
++		     &params.peer_macaddr[5],
++		     &params.dialog_id);
++	if (ret != 7)
++		return -EINVAL;
++
++	params.vdev_id = arvif->vdev_id;
++
++	ret = ath11k_wmi_send_twt_del_dialog_cmd(arvif->ar, &params);
++
++	return ret ? ret : count;
++}
++
++static ssize_t ath11k_write_twt_pause_dialog(struct file *file,
++					     const char __user *ubuf,
++					     size_t count, loff_t *ppos)
++{
++	struct ath11k_vif *arvif = file->private_data;
++	struct wmi_twt_pause_dialog_params params = { 0 };
++	u8 buf[64] = {0};
++	int ret;
++
++	ret = simple_write_to_buffer(buf, sizeof(buf) - 1, ppos, ubuf, count);
++	if (ret < 0)
++		return ret;
++
++	buf[ret] = '\0';
++	ret = sscanf(buf, "%02hhx:%02hhx:%02hhx:%02hhx:%02hhx:%02hhx %u",
++		     &params.peer_macaddr[0],
++		     &params.peer_macaddr[1],
++		     &params.peer_macaddr[2],
++		     &params.peer_macaddr[3],
++		     &params.peer_macaddr[4],
++		     &params.peer_macaddr[5],
++		     &params.dialog_id);
++	if (ret != 7)
++		return -EINVAL;
++
++	params.vdev_id = arvif->vdev_id;
++
++	ret = ath11k_wmi_send_twt_pause_dialog_cmd(arvif->ar, &params);
++
++	return ret ? ret : count;
++}
++
++static ssize_t ath11k_write_twt_resume_dialog(struct file *file,
++					      const char __user *ubuf,
++					      size_t count, loff_t *ppos)
++{
++	struct ath11k_vif *arvif = file->private_data;
++	struct wmi_twt_resume_dialog_params params = { 0 };
++	u8 buf[64] = {0};
++	int ret;
++
++	ret = simple_write_to_buffer(buf, sizeof(buf) - 1, ppos, ubuf, count);
++	if (ret < 0)
++		return ret;
++	buf[ret] = '\0';
++	ret = sscanf(buf, "%02hhx:%02hhx:%02hhx:%02hhx:%02hhx:%02hhx %u %u %u",
++		     &params.peer_macaddr[0],
++		     &params.peer_macaddr[1],
++		     &params.peer_macaddr[2],
++		     &params.peer_macaddr[3],
++		     &params.peer_macaddr[4],
++		     &params.peer_macaddr[5],
++		     &params.dialog_id,
++		     &params.sp_offset_us,
++		     &params.next_twt_size);
++	if (ret != 9)
++		return -EINVAL;
++
++	params.vdev_id = arvif->vdev_id;
++
++	ret = ath11k_wmi_send_twt_resume_dialog_cmd(arvif->ar, &params);
++
++	return ret ? ret : count;
++}
++
++static const struct file_operations ath11k_fops_twt_add_dialog = {
++	.write = ath11k_write_twt_add_dialog,
++	.open = simple_open
++};
++
++static const struct file_operations ath11k_fops_twt_del_dialog = {
++	.write = ath11k_write_twt_del_dialog,
++	.open = simple_open
++};
++
++static const struct file_operations ath11k_fops_twt_pause_dialog = {
++	.write = ath11k_write_twt_pause_dialog,
++	.open = simple_open
++};
++
++static const struct file_operations ath11k_fops_twt_resume_dialog = {
++	.write = ath11k_write_twt_resume_dialog,
++	.open = simple_open
++};
++
++void ath11k_debugfs_twt(struct ath11k_vif *arvif, bool enable)
++{
++	if (!enable && arvif->debugfs_twt) {
++		debugfs_remove_recursive(arvif->debugfs_twt);
++		arvif->debugfs_twt = NULL;
++		return;
++	}
++
++	if (arvif->debugfs_twt)
++		return;
++
++	arvif->debugfs_twt = debugfs_create_dir("twt", arvif->vif->debugfs_dir);
++	if (IS_ERR_OR_NULL(arvif->debugfs_twt)) {
++		ath11k_warn(arvif->ar->ab,
++			    "failed to create twt debugfs: %p\n",
++			    arvif->debugfs_twt);
++		arvif->debugfs_twt = NULL;
++		return;
++	}
++
++	debugfs_create_file("add_dialog", 0200,
++			    arvif->debugfs_twt, arvif,
++			    &ath11k_fops_twt_add_dialog);
++
++	debugfs_create_file("del_dialog", 0200,
++			    arvif->debugfs_twt, arvif,
++			    &ath11k_fops_twt_del_dialog);
++
++	debugfs_create_file("pause_dialog", 0200,
++			    arvif->debugfs_twt, arvif,
++			    &ath11k_fops_twt_pause_dialog);
++
++	debugfs_create_file("resume_dialog", 0200,
++			    arvif->debugfs_twt, arvif,
++			    &ath11k_fops_twt_resume_dialog);
++}
++#endif
++
+ #ifdef CONFIG_ATH11K_DEBUGFS
+ static void ath11k_fw_stats_pdevs_free(struct list_head *head)
+ {
+diff --git a/drivers/net/wireless/ath/ath11k/debug.h b/drivers/net/wireless/ath/ath11k/debug.h
+index a317a7bdb9a2..805e30c07e14 100644
+--- a/drivers/net/wireless/ath/ath11k/debug.h
++++ b/drivers/net/wireless/ath/ath11k/debug.h
+@@ -133,6 +133,14 @@ static inline void ath11k_dbg_dump(struct ath11k_base *ab,
+ }
+ #endif /* CONFIG_ATH11K_DEBUG */
+ 
++#ifdef CONFIG_MAC80211_DEBUGFS
++void ath11k_debugfs_twt(struct ath11k_vif *arvif, bool enable);
++#else
++static inline void ath11k_debugfs_twt(struct ath11k_vif *arvif, bool enable)
++{
++}
++#endif
++
+ #ifdef CONFIG_ATH11K_DEBUGFS
+ int ath11k_debug_soc_create(struct ath11k_base *ab);
+ void ath11k_debug_soc_destroy(struct ath11k_base *ab);
+diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+index a2c8a52b8621..6a8c1c3b8da2 100644
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -1920,6 +1920,8 @@ static void ath11k_mac_op_bss_info_changed(struct ieee80211_hw *hw,
+ 			ath11k_wmi_send_twt_enable_cmd(ar, ar->pdev_idx);
+ 		else
+ 			ath11k_wmi_send_twt_disable_cmd(ar, ar->pdev_idx);
++		if (vif->type == NL80211_IFTYPE_AP)
++			ath11k_debugfs_twt(arvif, info->twt_requester);
+ 	}
+ 
+ 	if (changed & BSS_CHANGED_HE_OBSS_PD)
+@@ -4217,6 +4219,8 @@ static void ath11k_mac_op_remove_interface(struct ieee80211_hw *hw,
+ 
+ 	/* TODO: recal traffic pause state based on the available vdevs */
+ 
++	debugfs_remove_recursive(arvif->debugfs_twt);
++	arvif->debugfs_twt = NULL;
+ 	mutex_unlock(&ar->conf_mutex);
  }
  
- /* Commit the descriptor to hardware */
 -- 
 2.20.1
 
