@@ -8,68 +8,67 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA5F2C2D0CB
-	for <linux-wireless@archiver.kernel.org>; Sun, 15 Dec 2019 05:17:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B3A0C43603
+	for <linux-wireless@archiver.kernel.org>; Sun, 15 Dec 2019 05:17:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 804252253D
-	for <linux-wireless@archiver.kernel.org>; Sun, 15 Dec 2019 05:17:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D21FC2253D
+	for <linux-wireless@archiver.kernel.org>; Sun, 15 Dec 2019 05:17:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="erojmZQu"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PrmuGguM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726942AbfLOFRk (ORCPT
+        id S1727020AbfLOFRt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 15 Dec 2019 00:17:40 -0500
-Received: from mail-pf1-f194.google.com ([209.85.210.194]:32815 "EHLO
-        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726865AbfLOFRj (ORCPT
+        Sun, 15 Dec 2019 00:17:49 -0500
+Received: from mail-pg1-f193.google.com ([209.85.215.193]:45563 "EHLO
+        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726992AbfLOFRr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 15 Dec 2019 00:17:39 -0500
-Received: by mail-pf1-f194.google.com with SMTP id y206so3773767pfb.0;
-        Sat, 14 Dec 2019 21:17:38 -0800 (PST)
+        Sun, 15 Dec 2019 00:17:47 -0500
+Received: by mail-pg1-f193.google.com with SMTP id b9so1707582pgk.12;
+        Sat, 14 Dec 2019 21:17:46 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=o0nAQcnsb+T5h9bhgeYIzbak+OeGPv1PHTKsTeCIoXY=;
-        b=erojmZQu2yIt3sG10pk8q7D162SAcRjxoBKbUaHuIhQ9qCS8Ovsrir9CSC6ymhCozZ
-         FqJbFyL+b7YifQFa/0j7JxpknZq8Q2X9TeL1mjAJCnQEZo0ZaUgUDC3SmpcLnC97qrcz
-         6+zdTV3ejXQXKXZW4bWUv3pwgL4xdnBcdl4GiSkW2HOo6e+sUTG07tQiiOZOVyEKlvGZ
-         8LWNoxfJfejbBmxVEhjyX3vtC9aLJQopm1lxsyysNlSrJnFGkIcEn/CigYEybtUr7B++
-         WTxENH/IzJk+aDB4t8OozPOkKfLmn3HRsMt9cVmg1exjUHP4KQqCK1sXC5J6ExTdjFWA
-         aPRw==
+        bh=rs+ph61PgowUB2wxJYFFkBstw61v/JyioJPVFcT1dTo=;
+        b=PrmuGguMd8I2icLDPcfOnUjhxgAkYI89eucLm58rL6pWLvQL2jZxJTUV6iNRcYSoQ2
+         sKk2OHbbVJPQZZq8MT2heyABgtzLtkONYwt26Zk+TkTkAYRNziB7w4K8Q5suhmYOXkR3
+         POykAo/0yD/76gVPmRSp7biObXx0ma7YjYqyoVxlPQ1JTyhH6KpJ6H6Jnz94BeV/15du
+         cwtfk9+BTmygl5heycnwix988ik+j1JV7n6H5L4OTWXP+GKoFXjVCQy4x2NB/4vNQaOA
+         eoYdoyMlUaHLlo+pSFsk56d5j/vVEZ5cSa73TgiJO85GCfq+XhKbVxnbyPrRf8JLKn9b
+         /OUw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=o0nAQcnsb+T5h9bhgeYIzbak+OeGPv1PHTKsTeCIoXY=;
-        b=gJxgYzzKjQdG5b50t6ibHdYqQda8tbwwL++OY8pSECbwjdAqIlYPfoOi+p/0jarzqx
-         8IMb1iEGqaL0R9EkiQ0fSRC3NHMbGAT8dtGi1tTf/oYFCowqAw9zKa9YyzFw9ibDFxE1
-         y+mhQF4wDaqQ/AR5Sj0LuDSNSt3VFQli7j19q3Xc0qEJWhQtbyvWDMIONneccr1B+xcS
-         igU7Qdx4SOF+R6L4lo/9QWmbtrp3JP6mK0VtMuJxXFE4b1riW0KugrcEf3mQTmkhFT9S
-         Osw2KXOkaZq4mdIZ3VYjVkus62Bj0/K+MfgYHh2rj6rHFgdVNwcB+RFgs328zGhNWLRT
-         L/gw==
-X-Gm-Message-State: APjAAAUNl9+bPoQ2q71wXpXOtLkmPARHsfw57GzaDctc0NBRFEBuWGh0
-        4j96MUvnWsbbOnq7ynCbU2Q=
-X-Google-Smtp-Source: APXvYqxoUa7OEVWIs7gSylEoHGyOHkaN4si8hTmYB1eDQDWpbT6CBXJiWnAxrimODPovU2iUuCMwpg==
-X-Received: by 2002:a63:7705:: with SMTP id s5mr9996843pgc.379.1576387058498;
-        Sat, 14 Dec 2019 21:17:38 -0800 (PST)
+        bh=rs+ph61PgowUB2wxJYFFkBstw61v/JyioJPVFcT1dTo=;
+        b=qWb+Y6dN2mIreYPFr1ecn8zetJA+4a/dEgeET+hVxH00DoEhfYknGvlobLI8J2un67
+         YQsS2GEJiUMXYJ53PM7MoWZ3l/GhkvboKRapq/EJbsAWqhGC7+EAet4QlChOEogBpcpt
+         3LvPeOOsOjwRiCWwLkzpcpfDWQEJKHyRtk5UtHt/D/HJTd8P8WrQV4GCHD0UaDVXrUo5
+         d+ubOxA+y0WO/Ap9ytxmj+2hjPiLr0rdvGzeTLRJdaIjW7IkWQbYg6Qbbln472ZiAFtQ
+         CIXkh4b5RvuPMSPyx7VprSmgjPuHN6FEssjOPtId4CZj8aTcyrcXMaGFRINlqjWlZnAG
+         lCWg==
+X-Gm-Message-State: APjAAAXgeEUMGY930CoFBQuhhPkZfL4PPPS8vw5m0qc9Zx/GYzZ8LBq0
+        mT6xAF5YGJNa7M8ScB9tWU4=
+X-Google-Smtp-Source: APXvYqyz2b9p5as0HpR/8ZvYU3LMjgqtKZ/4OlUPaESNc9g0DwHCBTVHwRTYyxlafrFwiY2Ib4eY4g==
+X-Received: by 2002:a63:3104:: with SMTP id x4mr9984060pgx.369.1576387066555;
+        Sat, 14 Dec 2019 21:17:46 -0800 (PST)
 Received: from localhost.localdomain ([240f:34:212d:1:368e:e048:68f1:84e7])
-        by smtp.gmail.com with ESMTPSA id u10sm16596528pgg.41.2019.12.14.21.17.34
+        by smtp.gmail.com with ESMTPSA id u10sm16596528pgg.41.2019.12.14.21.17.42
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Sat, 14 Dec 2019 21:17:37 -0800 (PST)
+        Sat, 14 Dec 2019 21:17:45 -0800 (PST)
 From:   Akinobu Mita <akinobu.mita@gmail.com>
 To:     linux-nvme@lists.infradead.org, linux-hwmon@vger.kernel.org,
         linux-pm@vger.kernel.org, linux-wireless@vger.kernel.org,
         linux-iio@vger.kernel.org, linux-kernel@vger.kernel.org,
         akpm@linux-foundation.org
 Cc:     Akinobu Mita <akinobu.mita@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>
-Subject: [PATCH v4 10/12] iwlwifi: use <linux/units.h> helpers
-Date:   Sun, 15 Dec 2019 14:16:13 +0900
-Message-Id: <1576386975-7941-11-git-send-email-akinobu.mita@gmail.com>
+        Jonathan Cameron <jic23@kernel.org>,
+        Hartmut Knaack <knaack.h@gmx.de>,
+        Lars-Peter Clausen <lars@metafoo.de>,
+        Peter Meerwald-Stadler <pmeerw@pmeerw.net>
+Subject: [PATCH v4 12/12] iio: adc: qcom-vadc-common: use <linux/units.h> helpers
+Date:   Sun, 15 Dec 2019 14:16:15 +0900
+Message-Id: <1576386975-7941-13-git-send-email-akinobu.mita@gmail.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1576386975-7941-1-git-send-email-akinobu.mita@gmail.com>
 References: <1576386975-7941-1-git-send-email-akinobu.mita@gmail.com>
@@ -78,73 +77,66 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This switches the iwlwifi driver to use celsius_to_kelvin() and
-kelvin_to_celsius() in <linux/units.h>.
+This switches the qcom-vadc-common to use milli_kelvin_to_millicelsius()
+in <linux/units.h>.
 
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: Johannes Berg <johannes.berg@intel.com>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: Luca Coelho <luciano.coelho@intel.com>
-Cc: Intel Linux Wireless <linuxwifi@intel.com>
+Cc: Jonathan Cameron <jic23@kernel.org>
+Cc: Hartmut Knaack <knaack.h@gmx.de>
+Cc: Lars-Peter Clausen <lars@metafoo.de>
+Cc: Peter Meerwald-Stadler <pmeerw@pmeerw.net>
 Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
-Acked-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
 ---
 * v4
-- add Reviewed-by and Acked-by tags
-- remove "wireless: " in the title
+- add Reviewed-by tag
 
- drivers/net/wireless/intel/iwlwifi/dvm/dev.h     | 5 -----
- drivers/net/wireless/intel/iwlwifi/dvm/devices.c | 6 ++++--
- 2 files changed, 4 insertions(+), 7 deletions(-)
+ drivers/iio/adc/qcom-vadc-common.c | 6 +++---
+ drivers/iio/adc/qcom-vadc-common.h | 1 -
+ 2 files changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/dev.h b/drivers/net/wireless/intel/iwlwifi/dvm/dev.h
-index be5ef4c..8d83800 100644
---- a/drivers/net/wireless/intel/iwlwifi/dvm/dev.h
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/dev.h
-@@ -237,11 +237,6 @@ struct iwl_sensitivity_ranges {
- 	u16 nrg_th_cca;
- };
- 
--
--#define KELVIN_TO_CELSIUS(x) ((x)-273)
--#define CELSIUS_TO_KELVIN(x) ((x)+273)
--
--
- /******************************************************************************
-  *
-  * Functions implemented in core module which are forward declared here
-diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/devices.c b/drivers/net/wireless/intel/iwlwifi/dvm/devices.c
-index dc3f197..d42bc46 100644
---- a/drivers/net/wireless/intel/iwlwifi/dvm/devices.c
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/devices.c
-@@ -10,6 +10,8 @@
-  *
-  *****************************************************************************/
- 
+diff --git a/drivers/iio/adc/qcom-vadc-common.c b/drivers/iio/adc/qcom-vadc-common.c
+index dcd7fb5..2bb78d1 100644
+--- a/drivers/iio/adc/qcom-vadc-common.c
++++ b/drivers/iio/adc/qcom-vadc-common.c
+@@ -6,6 +6,7 @@
+ #include <linux/log2.h>
+ #include <linux/err.h>
+ #include <linux/module.h>
 +#include <linux/units.h>
-+
- /*
-  * DVM device-specific data & functions
-  */
-@@ -345,7 +347,7 @@ static s32 iwl_temp_calib_to_offset(struct iwl_priv *priv)
- static void iwl5150_set_ct_threshold(struct iwl_priv *priv)
- {
- 	const s32 volt2temp_coef = IWL_5150_VOLTAGE_TO_TEMPERATURE_COEFF;
--	s32 threshold = (s32)CELSIUS_TO_KELVIN(CT_KILL_THRESHOLD_LEGACY) -
-+	s32 threshold = (s32)celsius_to_kelvin(CT_KILL_THRESHOLD_LEGACY) -
- 			iwl_temp_calib_to_offset(priv);
  
- 	priv->hw_params.ct_kill_threshold = threshold * volt2temp_coef;
-@@ -381,7 +383,7 @@ static void iwl5150_temperature(struct iwl_priv *priv)
- 	vt = le32_to_cpu(priv->statistics.common.temperature);
- 	vt = vt / IWL_5150_VOLTAGE_TO_TEMPERATURE_COEFF + offset;
- 	/* now vt hold the temperature in Kelvin */
--	priv->temperature = KELVIN_TO_CELSIUS(vt);
-+	priv->temperature = kelvin_to_celsius(vt);
- 	iwl_tt_handler(priv);
+ #include "qcom-vadc-common.h"
+ 
+@@ -236,8 +237,7 @@ static int qcom_vadc_scale_die_temp(const struct vadc_linear_graph *calib_graph,
+ 		voltage = 0;
+ 	}
+ 
+-	voltage -= KELVINMIL_CELSIUSMIL;
+-	*result_mdec = voltage;
++	*result_mdec = milli_kelvin_to_millicelsius(voltage);
+ 
+ 	return 0;
  }
+@@ -325,7 +325,7 @@ static int qcom_vadc_scale_hw_calib_die_temp(
+ {
+ 	*result_mdec = qcom_vadc_scale_code_voltage_factor(adc_code,
+ 				prescale, data, 2);
+-	*result_mdec -= KELVINMIL_CELSIUSMIL;
++	*result_mdec = milli_kelvin_to_millicelsius(*result_mdec);
  
+ 	return 0;
+ }
+diff --git a/drivers/iio/adc/qcom-vadc-common.h b/drivers/iio/adc/qcom-vadc-common.h
+index bbb1fa0..e074902a 100644
+--- a/drivers/iio/adc/qcom-vadc-common.h
++++ b/drivers/iio/adc/qcom-vadc-common.h
+@@ -38,7 +38,6 @@
+ #define VADC_AVG_SAMPLES_MAX			512
+ #define ADC5_AVG_SAMPLES_MAX			16
+ 
+-#define KELVINMIL_CELSIUSMIL			273150
+ #define PMIC5_CHG_TEMP_SCALE_FACTOR		377500
+ #define PMIC5_SMB_TEMP_CONSTANT			419400
+ #define PMIC5_SMB_TEMP_SCALE_FACTOR		356
 -- 
 2.7.4
 
