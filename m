@@ -2,107 +2,180 @@ Return-Path: <SRS0=Eim6=2F=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CD35C2D0C8
-	for <linux-wireless@archiver.kernel.org>; Sun, 15 Dec 2019 05:17:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 947C8C43603
+	for <linux-wireless@archiver.kernel.org>; Sun, 15 Dec 2019 08:37:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 236952253D
-	for <linux-wireless@archiver.kernel.org>; Sun, 15 Dec 2019 05:17:54 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Id8NfdTF"
+	by mail.kernel.org (Postfix) with ESMTP id 570B42253D
+	for <linux-wireless@archiver.kernel.org>; Sun, 15 Dec 2019 08:37:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1576399077;
+	bh=VI+HFVTEhleyaOpNr7kWYk57SVaTbaThvuHGzJZ51og=;
+	h=From:To:Cc:Subject:Date:List-ID:From;
+	b=rzetUlqR/UVgmFYR7iRG+73scP4/BaIHullE84YnrjpkscCERrS2/mPIJBpPXbG63
+	 cZl1rTAiQq3BDEet1emVQprs5g5o0ezXDFRgC3ZRugoOyKscPCFVfrbLOZ18c/eaQM
+	 yw81h3OjJLG1PoPs5Z4fdXDFxrtrlsBZany/wxIo=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726969AbfLOFRp (ORCPT
+        id S1726052AbfLOIh4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 15 Dec 2019 00:17:45 -0500
-Received: from mail-pj1-f68.google.com ([209.85.216.68]:33858 "EHLO
-        mail-pj1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725990AbfLOFRn (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 15 Dec 2019 00:17:43 -0500
-Received: by mail-pj1-f68.google.com with SMTP id j11so1532808pjs.1;
-        Sat, 14 Dec 2019 21:17:42 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=iJPFiDdoTrBrSdqjTpE+VPFHmC8ax0pLThG7IGKangk=;
-        b=Id8NfdTFPUPB+fc7GWUtnaZycNxT1n/743f1r4mmprU8vigdUiO+qwV5Rrz9bb5cvS
-         JFpw4kpX7F7iUhfnq57t+ScMl4f95d3tqi8LeBRCdyGMExAcUz/W8rfHTPc1pfSrXXti
-         PMZTllluPehaVveLsU7xboTHQ5CkDcPhifUoApxdDmxQ0gAQqd5oYjDFsEAUunFDK7mP
-         TgcWBy3rf9x/fCIN+Yd/BB4jRXSBr+guHfyatZ7v7cIomD3n8NclP80repjcNSP2ECzf
-         CQnlPaqXdr5iEeQn0VfsxWvGaI4UFf1hAQLbeaaVRYg/4hB/8zQGjBw3kzQd6RWBhlRU
-         G1hQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=iJPFiDdoTrBrSdqjTpE+VPFHmC8ax0pLThG7IGKangk=;
-        b=Yxuw4TE52sHPoJf2HuP820He3Ll3M6Y31MXPV8EFu/4tSjBr2t0Yg/Kheiytcj1p4X
-         8gRI65q0JzPXvr+cuedFdX0sXDiImNa7haKlmE4z4Y0MomGjIvuEIy2V4E1Z9C5Wq9lL
-         xh8Icbyd3MS7jyTBz8FiwheBTcHxo/9OEr1Wjl8IrpO5HoFhJWTwpw95SUUDeO8VPo0P
-         l77SMG38d7Q+aRnPk56WNV81DeofkCoQ93V5WR81GvxD1zOYqTMZbp4WZxn9j2C48mcn
-         jgJlUbgdTYVEUxOl+yJ9AGWFnFmZ7O62QzskqON84QIMhPZHmnftwCafTI3y2CARS6S9
-         9Bxg==
-X-Gm-Message-State: APjAAAVQQeiIsp22nEXdysvI/55P8smopliF2C8WEfdJQTe6V35DNXd+
-        P1AwiGSRV36nFz38wRQkYHY=
-X-Google-Smtp-Source: APXvYqxTG4dxeNv2aoSLu1cumiV7gAuV9hcPKvGjbWfymM/Tqr7q01DvKziXiVpBQtLaPO5sHG9+HQ==
-X-Received: by 2002:a17:902:bd8e:: with SMTP id q14mr9152361pls.199.1576387062386;
-        Sat, 14 Dec 2019 21:17:42 -0800 (PST)
-Received: from localhost.localdomain ([240f:34:212d:1:368e:e048:68f1:84e7])
-        by smtp.gmail.com with ESMTPSA id u10sm16596528pgg.41.2019.12.14.21.17.38
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Sat, 14 Dec 2019 21:17:41 -0800 (PST)
-From:   Akinobu Mita <akinobu.mita@gmail.com>
-To:     linux-nvme@lists.infradead.org, linux-hwmon@vger.kernel.org,
-        linux-pm@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-iio@vger.kernel.org, linux-kernel@vger.kernel.org,
-        akpm@linux-foundation.org
-Cc:     Akinobu Mita <akinobu.mita@gmail.com>,
-        Zhang Rui <rui.zhang@intel.com>,
-        Daniel Lezcano <daniel.lezcano@linaro.org>,
-        Amit Kucheria <amit.kucheria@verdurent.com>
-Subject: [PATCH v4 11/12] thermal: armada: remove unused TO_MCELSIUS macro
-Date:   Sun, 15 Dec 2019 14:16:14 +0900
-Message-Id: <1576386975-7941-12-git-send-email-akinobu.mita@gmail.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1576386975-7941-1-git-send-email-akinobu.mita@gmail.com>
-References: <1576386975-7941-1-git-send-email-akinobu.mita@gmail.com>
+        Sun, 15 Dec 2019 03:37:56 -0500
+Received: from mail.kernel.org ([198.145.29.99]:36504 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726039AbfLOIh4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 15 Dec 2019 03:37:56 -0500
+Received: from localhost.localdomain (unknown [151.66.51.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 84D3A21D7E;
+        Sun, 15 Dec 2019 08:37:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1576399075;
+        bh=VI+HFVTEhleyaOpNr7kWYk57SVaTbaThvuHGzJZ51og=;
+        h=From:To:Cc:Subject:Date:From;
+        b=JuSuYLP4HMhVKQ/M8pIPldMKc6gmjolGKzAH28mUE3m1ufCSUmNdrqALX1BGyKO7j
+         7+o4KLZyizJHj0a+D9V4T5yls/OzJPYS4o+5Tb8QkHmj9rGzPsHvNpOuTZLK/jYSHJ
+         BBQgHtecPfq0FZc2/Mh0nGJkfzhMtrLtcVy/uhY0=
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     nbd@nbd.name
+Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
+        ryder.lee@mediatek.com
+Subject: [PATCH v2] mt76: mt7615: introduce LED support
+Date:   Sun, 15 Dec 2019 09:37:44 +0100
+Message-Id: <3da29a645e10093ca8de8e7442643ab629da4621.1576398903.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.21.0
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This removes unused TO_MCELSIUS() macro.
+Initialize brightness_set and blink_set callbacks to
+mt7615_led_set_brightness and mt7615_led_set_blink in order to enable
+LED support in mt7615 driver
 
-Cc: Zhang Rui <rui.zhang@intel.com>
-Cc: Daniel Lezcano <daniel.lezcano@linaro.org>
-Cc: Amit Kucheria <amit.kucheria@verdurent.com>
-Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
-Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+Tested-by: Deng Qingfang <dengqf6@mail2.sysu.edu.cn>
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
-* v4
-- add Reviewed-by tag
+Changes since v1:
+- rely on FIELD_PREP for LED register definitions
+---
+ .../net/wireless/mediatek/mt76/mt7615/init.c  | 58 +++++++++++++++++++
+ .../net/wireless/mediatek/mt76/mt7615/regs.h  | 21 +++++++
+ 2 files changed, 79 insertions(+)
 
- drivers/thermal/armada_thermal.c | 2 --
- 1 file changed, 2 deletions(-)
-
-diff --git a/drivers/thermal/armada_thermal.c b/drivers/thermal/armada_thermal.c
-index 709a22f..fc6dc10 100644
---- a/drivers/thermal/armada_thermal.c
-+++ b/drivers/thermal/armada_thermal.c
-@@ -21,8 +21,6 @@
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/init.c b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
+index eb7c6b9e3d4d..c25ba5fc3cdc 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
+@@ -196,6 +196,58 @@ static const struct ieee80211_iface_combination if_comb[] = {
+ 	}
+ };
  
- #include "thermal_core.h"
++static void
++mt7615_led_set_config(struct led_classdev *led_cdev,
++		      u8 delay_on, u8 delay_off)
++{
++	struct mt7615_dev *dev;
++	struct mt76_dev *mt76;
++	u32 val, addr;
++
++	mt76 = container_of(led_cdev, struct mt76_dev, led_cdev);
++	dev = container_of(mt76, struct mt7615_dev, mt76);
++	val = MT_LED_STATUS_DURATION(0xffff) |
++	      MT_LED_STATUS_OFF(delay_off) |
++	      MT_LED_STATUS_ON(delay_on);
++
++	addr = mt7615_reg_map(dev, MT_LED_STATUS_0(mt76->led_pin));
++	mt76_wr(dev, addr, val);
++	addr = mt7615_reg_map(dev, MT_LED_STATUS_1(mt76->led_pin));
++	mt76_wr(dev, addr, val);
++
++	val = MT_LED_CTRL_REPLAY(mt76->led_pin) |
++	      MT_LED_CTRL_KICK(mt76->led_pin);
++	if (mt76->led_al)
++		val |= MT_LED_CTRL_POLARITY(mt76->led_pin);
++	addr = mt7615_reg_map(dev, MT_LED_CTRL);
++	mt76_wr(dev, addr, val);
++}
++
++static int
++mt7615_led_set_blink(struct led_classdev *led_cdev,
++		     unsigned long *delay_on,
++		     unsigned long *delay_off)
++{
++	u8 delta_on, delta_off;
++
++	delta_off = max_t(u8, *delay_off / 10, 1);
++	delta_on = max_t(u8, *delay_on / 10, 1);
++
++	mt7615_led_set_config(led_cdev, delta_on, delta_off);
++
++	return 0;
++}
++
++static void
++mt7615_led_set_brightness(struct led_classdev *led_cdev,
++			  enum led_brightness brightness)
++{
++	if (!brightness)
++		mt7615_led_set_config(led_cdev, 0, 0xff);
++	else
++		mt7615_led_set_config(led_cdev, 0xff, 0);
++}
++
+ static void
+ mt7615_init_txpower(struct mt7615_dev *dev,
+ 		    struct ieee80211_supported_band *sband)
+@@ -383,6 +435,12 @@ int mt7615_register_device(struct mt7615_dev *dev)
+ 	mt7615_cap_dbdc_disable(dev);
+ 	dev->phy.dfs_state = -1;
  
--#define TO_MCELSIUS(c)			((c) * 1000)
--
- /* Thermal Manager Control and Status Register */
- #define PMU_TDC0_SW_RST_MASK		(0x1 << 1)
- #define PMU_TM_DISABLE_OFFS		0
++	/* init led callbacks */
++	if (IS_ENABLED(CONFIG_MT76_LEDS)) {
++		dev->mt76.led_cdev.brightness_set = mt7615_led_set_brightness;
++		dev->mt76.led_cdev.blink_set = mt7615_led_set_blink;
++	}
++
+ 	ret = mt76_register_device(&dev->mt76, true, mt7615_rates,
+ 				   ARRAY_SIZE(mt7615_rates));
+ 	if (ret)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/regs.h b/drivers/net/wireless/mediatek/mt76/mt7615/regs.h
+index 26d121646787..0d76a3391567 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/regs.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/regs.h
+@@ -345,6 +345,27 @@
+ 
+ #define MT_TX_AGG_CNT(n)		MT_WF_MIB(0xa8 + ((n) << 2))
+ 
++#define MT_LED_BASE_PHYS		0x80024000
++#define MT_LED_PHYS(_n)			(MT_LED_BASE_PHYS + (_n))
++
++#define MT_LED_CTRL			MT_LED_PHYS(0x00)
++
++#define MT_LED_CTRL_REPLAY(_n)		BIT(0 + (8 * (_n)))
++#define MT_LED_CTRL_POLARITY(_n)	BIT(1 + (8 * (_n)))
++#define MT_LED_CTRL_TX_BLINK_MODE(_n)	BIT(2 + (8 * (_n)))
++#define MT_LED_CTRL_TX_MANUAL_BLINK(_n)	BIT(3 + (8 * (_n)))
++#define MT_LED_CTRL_TX_OVER_BLINK(_n)	BIT(5 + (8 * (_n)))
++#define MT_LED_CTRL_KICK(_n)		BIT(7 + (8 * (_n)))
++
++#define MT_LED_STATUS_0(_n)		MT_LED_PHYS(0x10 + ((_n) * 8))
++#define MT_LED_STATUS_1(_n)		MT_LED_PHYS(0x14 + ((_n) * 8))
++#define MT_LED_STATUS_OFF_MASK		GENMASK(31, 24)
++#define MT_LED_STATUS_OFF(_v)		FIELD_PREP(MT_LED_STATUS_OFF_MASK, (_v))
++#define MT_LED_STATUS_ON_MASK		GENMASK(23, 16)
++#define MT_LED_STATUS_ON(_v)		FIELD_PREP(MT_LED_STATUS_ON_MASK, (_v))
++#define MT_LED_STATUS_DURATION_MASK	GENMASK(15, 0)
++#define MT_LED_STATUS_DURATION(_v)	FIELD_PREP(MT_LED_STATUS_DURATION_MASK, (_v))
++
+ #define MT_EFUSE_BASE			0x81070000
+ #define MT_EFUSE_BASE_CTRL		0x000
+ #define MT_EFUSE_BASE_CTRL_EMPTY	BIT(30)
 -- 
-2.7.4
+2.21.0
 
