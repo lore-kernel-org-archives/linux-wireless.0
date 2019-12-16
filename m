@@ -2,223 +2,179 @@ Return-Path: <SRS0=mHGl=2G=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A58C0C2D0C0
-	for <linux-wireless@archiver.kernel.org>; Mon, 16 Dec 2019 11:42:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0064CC43603
+	for <linux-wireless@archiver.kernel.org>; Mon, 16 Dec 2019 13:05:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 77B012166E
-	for <linux-wireless@archiver.kernel.org>; Mon, 16 Dec 2019 11:42:13 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="E/DLkFF9"
+	by mail.kernel.org (Postfix) with ESMTP id C895F20717
+	for <linux-wireless@archiver.kernel.org>; Mon, 16 Dec 2019 13:05:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1576501518;
+	bh=upTQzzBmJZihfHoCrF3kyF8fKekcfVTlcKwQi0NcJzM=;
+	h=From:To:Cc:Subject:Date:List-ID:From;
+	b=JYjIVsPIUT5Aj6kohHuDHQ70xM9l45kc49tOR/fiG1LGu/ewVJ7zgANVJDNn/R37a
+	 Qk/i7xqGHk56yuV4h51qoAuPQNuIJjVBG+YoeO8Nu2knrYK4ldTw+6bNzu2XUW0ByY
+	 ltpS8xoCnmxKK/rpYtE5kLgBTuMRnmCzQFBX98uo=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727467AbfLPLmN (ORCPT
+        id S1727730AbfLPNFS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 16 Dec 2019 06:42:13 -0500
-Received: from mail26.static.mailgun.info ([104.130.122.26]:25582 "EHLO
-        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727427AbfLPLmM (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Dec 2019 06:42:12 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1576496532; h=References: In-Reply-To: Message-Id: Date:
- Subject: Cc: To: From: Sender;
- bh=cCAbvx8d76X6UnOOZeIMAnfSmKqs+7sEPAPeeSxg55o=; b=E/DLkFF9/6Ncex7QW1mXwkWLpITtsHjaIarN/C6c/rX1II3KyvV06wfCUAwZ148RhsC6nyL1
- 0KssNL/Mx8+S56Q0ZT/B9s3x8US4WfNqh4MRDpQxM7/EhuU2R2hML/odjWooXxhofzO2ZgBt
- LAEjr8NG3jSES7JabSrcf/qZphQ=
-X-Mailgun-Sending-Ip: 104.130.122.26
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5df76d90.7f94a41c46c0-smtp-out-n01;
- Mon, 16 Dec 2019 11:42:08 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id E9810C43383; Mon, 16 Dec 2019 11:42:08 +0000 (UTC)
-Received: from cheath10p342229-lin.qca.qualcomm.com (blr-c-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.19.19])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        Mon, 16 Dec 2019 08:05:18 -0500
+Received: from mail.kernel.org ([198.145.29.99]:58840 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727553AbfLPNFR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 16 Dec 2019 08:05:17 -0500
+Received: from localhost.localdomain.com (nat-pool-mxp-t.redhat.com [149.6.153.186])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: tamizhr)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id E4B91C433A2;
-        Mon, 16 Dec 2019 11:42:05 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org E4B91C433A2
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=tamizhr@codeaurora.org
-From:   Tamizh Chelvam <tamizhr@codeaurora.org>
-To:     ath10k@lists.infradead.org
-Cc:     devicetree@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Tamizh Chelvam <tamizhr@codeaurora.org>
-Subject: [PATCH 2/2] ath10k: Add support to read btcoex related data from DT
-Date:   Mon, 16 Dec 2019 17:10:15 +0530
-Message-Id: <1576496415-23064-2-git-send-email-tamizhr@codeaurora.org>
-X-Mailer: git-send-email 1.9.1
-In-Reply-To: <1576496415-23064-1-git-send-email-tamizhr@codeaurora.org>
-References: <1576496415-23064-1-git-send-email-tamizhr@codeaurora.org>
+        by mail.kernel.org (Postfix) with ESMTPSA id 0BB9E206CB;
+        Mon, 16 Dec 2019 13:05:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1576501517;
+        bh=upTQzzBmJZihfHoCrF3kyF8fKekcfVTlcKwQi0NcJzM=;
+        h=From:To:Cc:Subject:Date:From;
+        b=BEPnC1wt5BPYBqxrR6SiPEUnOAh2096lIBmUneATCo3qPuLnKHO/Q2lviaNyiBSAI
+         +nybFW7jObRfvHkR+OzPABgjQ9kzFx8i8/J1jqDhhVP4hDCZh0rW8bpXuslMb0N8j5
+         IVcYJKJGQ8id2cmKFagHdJqZ3VR7U6NA1JUwiZHg=
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     nbd@nbd.name
+Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
+        ryder.lee@mediatek.com
+Subject: [PATCH v3] mt76: mt7615: introduce LED support
+Date:   Mon, 16 Dec 2019 14:05:05 +0100
+Message-Id: <8c365ff2b1603b7fef6bf544820df9a0f176f232.1576501084.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.21.0
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-BTCOEX feature is not supported by all QCA4019 chipsets.
-Since btcoex enabled by default in firmware, host needs to
-enable COEX support depends on the hardware. Enabling it
-by default in unsupported hardware will cause some
-feature disabled in hardware.
-This patch will read btcoex_support flag and
-wlan priority gpio pin number from DT. Depends on the
-btcoex_support flag value host will expose BTCOEX support
-and wlan priority gpio pin number to target.
+Initialize brightness_set and blink_set callbacks to
+mt7615_led_set_brightness and mt7615_led_set_blink in order to enable
+LED support in mt7615 driver
 
-Testing:
-	* Tested HW : QCA4019
-	* Tested FW : 10.4-3.2.1.1-00017
-
-Signed-off-by: Tamizh Chelvam <tamizhr@codeaurora.org>
+Tested-by: Deng Qingfang <dengqf6@mail2.sysu.edu.cn>
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
- drivers/net/wireless/ath/ath10k/core.c  | 44 ++++++++++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath10k/core.h  |  9 +++++++
- drivers/net/wireless/ath/ath10k/debug.c |  3 +++
- drivers/net/wireless/ath/ath10k/mac.c   |  3 ++-
- drivers/net/wireless/ath/ath10k/wmi.c   |  2 +-
- 5 files changed, 58 insertions(+), 3 deletions(-)
+Changes since v2:
+- remove _MASK suffix from register definitions and move the code in init.c
+Changes since v1:
+- rely on FIELD_PREP for LED register definitions
+---
+ .../net/wireless/mediatek/mt76/mt7615/init.c  | 58 +++++++++++++++++++
+ .../net/wireless/mediatek/mt76/mt7615/regs.h  | 18 ++++++
+ 2 files changed, 76 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 5ec16ce..f9434bc 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -2119,6 +2119,40 @@ static int ath10k_download_cal_data(struct ath10k *ar)
- 	return 0;
- }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/init.c b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
+index eb7c6b9e3d4d..a3fd68452377 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/init.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
+@@ -196,6 +196,58 @@ static const struct ieee80211_iface_combination if_comb[] = {
+ 	}
+ };
  
-+static void ath10k_core_fetch_btcoex_dt(struct ath10k *ar)
++static void
++mt7615_led_set_config(struct led_classdev *led_cdev,
++		      u8 delay_on, u8 delay_off)
 +{
-+	struct device_node *node;
-+	u32 coex_support = 0;
-+	int ret;
++	struct mt7615_dev *dev;
++	struct mt76_dev *mt76;
++	u32 val, addr;
 +
-+	node = ar->dev->of_node;
-+	if (!node)
-+		goto out;
++	mt76 = container_of(led_cdev, struct mt76_dev, led_cdev);
++	dev = container_of(mt76, struct mt7615_dev, mt76);
++	val = FIELD_PREP(MT_LED_STATUS_DURATION, 0xffff) |
++	      FIELD_PREP(MT_LED_STATUS_OFF, delay_off) |
++	      FIELD_PREP(MT_LED_STATUS_ON, delay_on);
 +
-+	ret = of_property_read_u32(node, "qcom,coexist-support", &coex_support);
-+	if (ret) {
-+		ar->coex_support = ATH10K_DT_COEX_NOT_FOUND;
-+		goto out;
-+	}
++	addr = mt7615_reg_map(dev, MT_LED_STATUS_0(mt76->led_pin));
++	mt76_wr(dev, addr, val);
++	addr = mt7615_reg_map(dev, MT_LED_STATUS_1(mt76->led_pin));
++	mt76_wr(dev, addr, val);
 +
-+	if (coex_support) {
-+		ar->coex_support = ATH10K_DT_COEX_SUPPORTED;
-+	} else {
-+		ar->coex_support = ATH10K_DT_COEX_NOT_SUPPORTED;
-+		ar->coex_gpio_pin = -1;
-+		goto out;
-+	}
-+
-+	ret = of_property_read_u32(node, "qcom,coexist-gpio-pin",
-+				   &ar->coex_gpio_pin);
-+	if (ret)
-+		ar->coex_gpio_pin = -1;
-+
-+out:
-+	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot coex_support %d coex_gpio_pin %d\n",
-+		   ar->coex_support, ar->coex_gpio_pin);
++	val = MT_LED_CTRL_REPLAY(mt76->led_pin) |
++	      MT_LED_CTRL_KICK(mt76->led_pin);
++	if (mt76->led_al)
++		val |= MT_LED_CTRL_POLARITY(mt76->led_pin);
++	addr = mt7615_reg_map(dev, MT_LED_CTRL);
++	mt76_wr(dev, addr, val);
 +}
 +
- static int ath10k_init_uart(struct ath10k *ar)
- {
- 	int ret;
-@@ -2696,14 +2730,22 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode,
- 		if (test_bit(WMI_SERVICE_BSS_CHANNEL_INFO_64, ar->wmi.svc_map))
- 			val |= WMI_10_4_BSS_CHANNEL_INFO_64;
- 
-+		ath10k_core_fetch_btcoex_dt(ar);
++static int
++mt7615_led_set_blink(struct led_classdev *led_cdev,
++		     unsigned long *delay_on,
++		     unsigned long *delay_off)
++{
++	u8 delta_on, delta_off;
 +
- 		/* 10.4 firmware supports BT-Coex without reloading firmware
- 		 * via pdev param. To support Bluetooth coexistence pdev param,
- 		 * WMI_COEX_GPIO_SUPPORT of extended resource config should be
- 		 * enabled always.
-+		 *
-+		 * We can still enable BTCOEX if firmware has the support
-+		 * eventhough btceox_support value is
-+		 * ATH10K_DT_BTCOEX_NOT_FOUND
- 		 */
++	delta_off = max_t(u8, *delay_off / 10, 1);
++	delta_on = max_t(u8, *delay_on / 10, 1);
 +
- 		if (test_bit(WMI_SERVICE_COEX_GPIO, ar->wmi.svc_map) &&
- 		    test_bit(ATH10K_FW_FEATURE_BTCOEX_PARAM,
--			     ar->running_fw->fw_file.fw_features))
-+			     ar->running_fw->fw_file.fw_features) &&
-+		    ar->coex_support != ATH10K_DT_COEX_NOT_SUPPORTED)
- 			val |= WMI_10_4_COEX_GPIO_SUPPORT;
- 
- 		if (test_bit(WMI_SERVICE_TDLS_EXPLICIT_MODE_ONLY,
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 5101bf2..90f437a 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -875,6 +875,12 @@ enum ath10k_tx_pause_reason {
- 	ATH10K_TX_PAUSE_MAX,
- };
- 
-+enum ath10k_dt_coex_support_flag {
-+	ATH10K_DT_COEX_NOT_FOUND,
-+	ATH10K_DT_COEX_SUPPORTED,
-+	ATH10K_DT_COEX_NOT_SUPPORTED,
-+};
++	mt7615_led_set_config(led_cdev, delta_on, delta_off);
 +
- struct ath10k_fw_file {
- 	const struct firmware *firmware;
- 
-@@ -1222,6 +1228,9 @@ struct ath10k {
- 	struct ath10k_bus_params bus_param;
- 	struct completion peer_delete_done;
- 
-+	enum ath10k_dt_coex_support_flag coex_support;
-+	int coex_gpio_pin;
++	return 0;
++}
 +
- 	/* must be last */
- 	u8 drv_priv[0] __aligned(sizeof(void *));
- };
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index e000677..bb452a1 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -1978,6 +1978,9 @@ static ssize_t ath10k_write_btcoex(struct file *file,
- 	if (strtobool(buf, &val) != 0)
- 		return -EINVAL;
- 
-+	if (ar->coex_support == ATH10K_DT_COEX_NOT_SUPPORTED)
-+		return -EOPNOTSUPP;
++static void
++mt7615_led_set_brightness(struct led_classdev *led_cdev,
++			  enum led_brightness brightness)
++{
++	if (!brightness)
++		mt7615_led_set_config(led_cdev, 0, 0xff);
++	else
++		mt7615_led_set_config(led_cdev, 0xff, 0);
++}
 +
- 	mutex_lock(&ar->conf_mutex);
+ static void
+ mt7615_init_txpower(struct mt7615_dev *dev,
+ 		    struct ieee80211_supported_band *sband)
+@@ -383,6 +435,12 @@ int mt7615_register_device(struct mt7615_dev *dev)
+ 	mt7615_cap_dbdc_disable(dev);
+ 	dev->phy.dfs_state = -1;
  
- 	if (ar->state != ATH10K_STATE_ON &&
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 767c7bf..63c22653 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -4982,7 +4982,8 @@ static int ath10k_start(struct ieee80211_hw *hw)
- 	param = ar->wmi.pdev_param->enable_btcoex;
- 	if (test_bit(WMI_SERVICE_COEX_GPIO, ar->wmi.svc_map) &&
- 	    test_bit(ATH10K_FW_FEATURE_BTCOEX_PARAM,
--		     ar->running_fw->fw_file.fw_features)) {
-+		     ar->running_fw->fw_file.fw_features) &&
-+	    ar->coex_support != ATH10K_DT_COEX_NOT_SUPPORTED) {
- 		ret = ath10k_wmi_pdev_set_param(ar, param, 0);
- 		if (ret) {
- 			ath10k_warn(ar,
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 13f7531..4684aa75 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -8787,7 +8787,7 @@ static int ath10k_wmi_10_4_op_get_vdev_subtype(struct ath10k *ar,
- 	cmd = (struct wmi_ext_resource_config_10_4_cmd *)skb->data;
- 	cmd->host_platform_config = __cpu_to_le32(type);
- 	cmd->fw_feature_bitmap = __cpu_to_le32(fw_feature_bitmap);
--	cmd->wlan_gpio_priority = __cpu_to_le32(-1);
-+	cmd->wlan_gpio_priority = __cpu_to_le32(ar->coex_gpio_pin);
- 	cmd->coex_version = __cpu_to_le32(WMI_NO_COEX_VERSION_SUPPORT);
- 	cmd->coex_gpio_pin1 = __cpu_to_le32(-1);
- 	cmd->coex_gpio_pin2 = __cpu_to_le32(-1);
++	/* init led callbacks */
++	if (IS_ENABLED(CONFIG_MT76_LEDS)) {
++		dev->mt76.led_cdev.brightness_set = mt7615_led_set_brightness;
++		dev->mt76.led_cdev.blink_set = mt7615_led_set_blink;
++	}
++
+ 	ret = mt76_register_device(&dev->mt76, true, mt7615_rates,
+ 				   ARRAY_SIZE(mt7615_rates));
+ 	if (ret)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/regs.h b/drivers/net/wireless/mediatek/mt76/mt7615/regs.h
+index 26d121646787..ad58c02220af 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/regs.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/regs.h
+@@ -345,6 +345,24 @@
+ 
+ #define MT_TX_AGG_CNT(n)		MT_WF_MIB(0xa8 + ((n) << 2))
+ 
++#define MT_LED_BASE_PHYS		0x80024000
++#define MT_LED_PHYS(_n)			(MT_LED_BASE_PHYS + (_n))
++
++#define MT_LED_CTRL			MT_LED_PHYS(0x00)
++
++#define MT_LED_CTRL_REPLAY(_n)		BIT(0 + (8 * (_n)))
++#define MT_LED_CTRL_POLARITY(_n)	BIT(1 + (8 * (_n)))
++#define MT_LED_CTRL_TX_BLINK_MODE(_n)	BIT(2 + (8 * (_n)))
++#define MT_LED_CTRL_TX_MANUAL_BLINK(_n)	BIT(3 + (8 * (_n)))
++#define MT_LED_CTRL_TX_OVER_BLINK(_n)	BIT(5 + (8 * (_n)))
++#define MT_LED_CTRL_KICK(_n)		BIT(7 + (8 * (_n)))
++
++#define MT_LED_STATUS_0(_n)		MT_LED_PHYS(0x10 + ((_n) * 8))
++#define MT_LED_STATUS_1(_n)		MT_LED_PHYS(0x14 + ((_n) * 8))
++#define MT_LED_STATUS_OFF		GENMASK(31, 24)
++#define MT_LED_STATUS_ON		GENMASK(23, 16)
++#define MT_LED_STATUS_DURATION		GENMASK(15, 0)
++
+ #define MT_EFUSE_BASE			0x81070000
+ #define MT_EFUSE_BASE_CTRL		0x000
+ #define MT_EFUSE_BASE_CTRL_EMPTY	BIT(30)
 -- 
-1.9.1
+2.21.0
+
