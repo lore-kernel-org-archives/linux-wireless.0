@@ -2,82 +2,75 @@ Return-Path: <SRS0=mHGl=2G=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 10845C2D0BF
-	for <linux-wireless@archiver.kernel.org>; Mon, 16 Dec 2019 18:34:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 609CBC2D0C3
+	for <linux-wireless@archiver.kernel.org>; Mon, 16 Dec 2019 19:20:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DE088207FF
-	for <linux-wireless@archiver.kernel.org>; Mon, 16 Dec 2019 18:34:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 32AB62082E
+	for <linux-wireless@archiver.kernel.org>; Mon, 16 Dec 2019 19:20:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="sTxC35+k"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="toOIdg6d"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729808AbfLPSIx (ORCPT
+        id S1727235AbfLPTUI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 16 Dec 2019 13:08:53 -0500
-Received: from nbd.name ([46.4.11.11]:35344 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730322AbfLPSIu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Dec 2019 13:08:50 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
-        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=RUMFaI4CEo7DlvBHv1ccL8MoXo+yyDJGppBym2tES8I=; b=sTxC35+kOxbi3fl8lfAhb/fJwu
-        l22U++CgSUDV6mUyQpM1bu6Kpz5wQyXSZjtgD63qW6Z4wLsdYkQmr25+kk6tjoIP86nNNKeM3Rtfc
-        vYnhn7BCXf/iX1+SGUsm7ceaB6nclikYm1FUkrH26lxx1VmDMfsKnN0SbAcYuUgYx+/w=;
-Received: from p4ff13e83.dip0.t-ipconnect.de ([79.241.62.131] helo=nf.local)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.89)
-        (envelope-from <nbd@nbd.name>)
-        id 1igunQ-0000HK-Ad; Mon, 16 Dec 2019 19:08:40 +0100
-Subject: Re: [PATCH 07/55] staging: wfx: ensure that retry policy always
- fallbacks to MCS0 / 1Mbps
-To:     =?UTF-8?B?SsOpcsO0bWUgUG91aWxsZXI=?= <Jerome.Pouiller@silabs.com>,
-        "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc:     "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S . Miller" <davem@davemloft.net>
-References: <20191216170302.29543-1-Jerome.Pouiller@silabs.com>
- <20191216170302.29543-8-Jerome.Pouiller@silabs.com>
-From:   Felix Fietkau <nbd@nbd.name>
-Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
- xsDiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
- ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
- Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
- AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
- vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
- wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
- TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
- l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwc0cRmVsaXggRmll
- dGthdSA8bmJkQG5iZC5uYW1lPsJgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
- HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
- VrwYTIThkTlQzsFNBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
- CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
- VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
- Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
- DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
- wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
- f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
- aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
- FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
- TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
- GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
- RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <0777ef33-e1f4-148a-40cb-cfe7b42d5364@nbd.name>
-Date:   Mon, 16 Dec 2019 19:08:39 +0100
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:68.0)
- Gecko/20100101 Thunderbird/68.3.0
+        Mon, 16 Dec 2019 14:20:08 -0500
+Received: from mail-pf1-f175.google.com ([209.85.210.175]:42730 "EHLO
+        mail-pf1-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726191AbfLPTUH (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 16 Dec 2019 14:20:07 -0500
+Received: by mail-pf1-f175.google.com with SMTP id 4so6124438pfz.9;
+        Mon, 16 Dec 2019 11:20:07 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=pfOv1lQoi+q268iMK7gTa2TnPvnr8S8hwCiLEnPHWh4=;
+        b=toOIdg6dhNu82nmf911KFp9vg1ejc4YILG59m5qOsy4CqbGouNmru/5LCjrqInMKPf
+         IA7xDdOs9MIuInx44BfQXFInAN0wDN3n+UCoNK0oBM6W6jjgzc/T4L3z4ehmzG5QaPN2
+         8wafhu2wphVJROdRjCNL3XZhH4SFiAW4x5VvUzWW04juSgftkvXnNl6MRNbrUfwfjZXl
+         XiaK3lLEcEvWN9AvjerWNVIHZPERap2LbnN5XlqFdsmep1Y4GHoo9ltR+13DlG+GvMCF
+         30wXlHw/xc0feQe/t+B06zqtM7DukF4zR63mVx84mw0Y7lZ8iu3j2ruQak2LkN3xEYIl
+         mwJw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=pfOv1lQoi+q268iMK7gTa2TnPvnr8S8hwCiLEnPHWh4=;
+        b=hZxP+RYiKWVP89ToW/hMW/JVOv2XnvJ1jnP4RzqdbW4zT4D5S/Aqk6oPFCSnOeuFDc
+         C16Ns820HvAtpQr9dw0I4iTcdilL9lNe8DvOpgkc0M81WHscQ9vMVzmxwwdzw+yC/7ao
+         4cUSAehdR9d4wfKthDkBp5B8zEdhAhd5Rm5GaRhKD45epN996JS/5+GyZgDQocyblRT0
+         2895/6UYt0nWpTtvZFaVO9MlxB2xfRoJmWlb/tPlyNOmqXpSmmq1Wf2Yb+LxGTuNNVDu
+         SXn9aW1QpxfSR/YBUN8YMuI1wE0urwVuTt7twe6/dKd9V8+MsC3EOUkIZmo1W4j58C/G
+         roUA==
+X-Gm-Message-State: APjAAAX2iqb8D6Xz1dDvg4yOAN/D8gOtQNxe2a38YTLrqxNhrGSs5U+7
+        v/SphFXvObx7xE1K0/5Hklc=
+X-Google-Smtp-Source: APXvYqyj549w92CUiv/GQQqV0RLnCOj7dq+R/ttPkAduDIJpN3FqY558oHQ9VYV+3FCkaDvx/yYDPg==
+X-Received: by 2002:a63:d94b:: with SMTP id e11mr20129287pgj.79.1576524007072;
+        Mon, 16 Dec 2019 11:20:07 -0800 (PST)
+Received: from ?IPv6:2620:15c:2c1:200:55c7:81e6:c7d8:94b? ([2620:15c:2c1:200:55c7:81e6:c7d8:94b])
+        by smtp.gmail.com with ESMTPSA id c18sm23731190pgj.24.2019.12.16.11.20.05
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 16 Dec 2019 11:20:06 -0800 (PST)
+Subject: Re: debugging TCP stalls on high-speed wifi
+To:     Simon Barber <simon@superduper.net>,
+        Eric Dumazet <eric.dumazet@gmail.com>
+Cc:     Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org, ncardwell@google.com,
+        netdev@vger.kernel.org, toke@redhat.com
+References: <80B44318-C66D-4585-BCE3-C926076E8FF8@superduper.net>
+From:   Eric Dumazet <eric.dumazet@gmail.com>
+Message-ID: <6e1b5c34-9353-de1d-015b-68d6b20db390@gmail.com>
+Date:   Mon, 16 Dec 2019 11:20:04 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.2.2
 MIME-Version: 1.0
-In-Reply-To: <20191216170302.29543-8-Jerome.Pouiller@silabs.com>
+In-Reply-To: <80B44318-C66D-4585-BCE3-C926076E8FF8@superduper.net>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -86,16 +79,21 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2019-12-16 18:03, Jérôme Pouiller wrote:
-> From: Jérôme Pouiller <jerome.pouiller@silabs.com>
-> 
-> When not using HT mode, minstrel always includes 1Mbps as fallback rate.
-> But, when using HT mode, this fallback is not included. Yet, it seems
-> that it could save some frames. So, this patch add it unconditionally.
-> 
-> Signed-off-by: Jérôme Pouiller <jerome.pouiller@silabs.com>
-Are you sure that's a good idea? Sometimes a little packet loss can be
-preferable over a larger amount of airtime wasted through using really
-low rates. Especially when you consider bufferbloat.
 
-- Felix
+
+On 12/16/19 10:14 AM, Simon Barber wrote:
+> I see Macbook wifi clients seemingly randomly switch in and out of using GRO (I’ve not yet figured out a pattern to it), and the packet rate when they are doing GRO (on a download) is much lower, due to ACKing one in 8 packets instead of every other data packet. This has a big impact on performance.
+> 
+> Simon
+> 
+
+
+GRO has been added to linux back in 2008.
+LRO might have been supported on NICs even earlier.
+
+Modern network speeds need GRO/TSO, even if this means software stacks need some changes.
+
+If some stacks still rely on the old rule of having one ACK per two mss,
+they might not have the best experience.
+
+RFC3449 might be a good starting point.
