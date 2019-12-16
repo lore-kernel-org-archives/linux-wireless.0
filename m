@@ -6,71 +6,88 @@ X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
 	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 527FEC43603
-	for <linux-wireless@archiver.kernel.org>; Mon, 16 Dec 2019 11:36:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F70FC2D0BF
+	for <linux-wireless@archiver.kernel.org>; Mon, 16 Dec 2019 11:41:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 192BF206D3
-	for <linux-wireless@archiver.kernel.org>; Mon, 16 Dec 2019 11:36:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 12FF4206EC
+	for <linux-wireless@archiver.kernel.org>; Mon, 16 Dec 2019 11:41:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="e7yJ42R7"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="NwCzXezs"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727316AbfLPLgD (ORCPT
+        id S1727517AbfLPLlO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 16 Dec 2019 06:36:03 -0500
-Received: from mail26.static.mailgun.info ([104.130.122.26]:64131 "EHLO
-        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727265AbfLPLgD (ORCPT
+        Mon, 16 Dec 2019 06:41:14 -0500
+Received: from mail25.static.mailgun.info ([104.130.122.25]:33930 "EHLO
+        mail25.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727276AbfLPLlO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Dec 2019 06:36:03 -0500
-X-Greylist: delayed 304 seconds by postgrey-1.27 at vger.kernel.org; Mon, 16 Dec 2019 06:36:01 EST
+        Mon, 16 Dec 2019 06:41:14 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1576496162; h=Content-Type: MIME-Version: Message-ID:
- In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
- bh=tJLXZyC37vyxc6Od1K7ezQ5nMKEs5qndAu5izHZMRrA=; b=e7yJ42R7hPTKuioqpplZxE64pnTQeDBmA0MLWB5DE3U9DxGvpEZEDZTdCMHLzglrBkPBFFxU
- s0EGpzgUjpIU1Q/0oQJ9Bs0KMKmk5xmfMBPOp1tkjIL4XtFM2WcrYlDg3htwSwNWViqwJci/
- sL0Of7WaAk7bKZwx8jX/jY7v8c8=
-X-Mailgun-Sending-Ip: 104.130.122.26
+ s=smtp; t=1576496473; h=Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Message-ID: In-Reply-To: Date: References: Subject: Cc:
+ To: From: Sender; bh=Z30igGNUdrFHS9qpIwYJruR2OxAGXIzzkvS7S6WcmPU=; b=NwCzXezs1RZBu6MUPg+w5myDXgJEhJohqv7RahelhzgCtt1MZ2Ql6e+BRqxq8nwiw2HhmI3t
+ bgHuUvHuWo05/IYBJ/Qh4TSw41cxfHoefJ1/J3FoSOxxUbA0TfXDxoBuPiciTK6kY1exUu53
+ KQzbY52ko0PvjE0HXGgfMmKRCW4=
+X-Mailgun-Sending-Ip: 104.130.122.25
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5df76aeb.7f39d2214c38-smtp-out-n01;
- Mon, 16 Dec 2019 11:30:51 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5df76d56.7fc4b3d000a0-smtp-out-n01;
+ Mon, 16 Dec 2019 11:41:10 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 65F0EC433CB; Mon, 16 Dec 2019 11:30:51 +0000 (UTC)
+        id 2FA32C43383; Mon, 16 Dec 2019 11:41:10 +0000 (UTC)
 Received: from tynnyri.adurom.net (tynnyri.adurom.net [51.15.11.48])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 43664C43383;
-        Mon, 16 Dec 2019 11:30:50 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 43664C43383
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 1FCA7C433CB;
+        Mon, 16 Dec 2019 11:41:07 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 1FCA7C433CB
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Felix Fietkau <nbd@nbd.name>
+To:     Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
 Cc:     linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 28/29] mt76: mt7615: add support for registering a second wiphy via debugfs
-References: <20191130153045.28105-1-nbd@nbd.name>
-        <20191130153045.28105-28-nbd@nbd.name>
-Date:   Mon, 16 Dec 2019 13:30:48 +0200
-In-Reply-To: <20191130153045.28105-28-nbd@nbd.name> (Felix Fietkau's message
-        of "Sat, 30 Nov 2019 16:30:44 +0100")
-Message-ID: <87k16w4idz.fsf@tynnyri.adurom.net>
+Subject: Re: [PATCH v2] mac80211: Turn AQL into an NL80211_EXT_FEATURE
+References: <20191212111437.224294-1-toke@redhat.com>
+Date:   Mon, 16 Dec 2019 13:41:06 +0200
+In-Reply-To: <20191212111437.224294-1-toke@redhat.com> ("Toke
+        \=\?utf-8\?Q\?H\=C3\=B8iland-J\=C3\=B8rgensen\=22's\?\= message of "Thu, 12 Dec 2019
+ 12:14:37 +0100")
+Message-ID: <87fthk4hwt.fsf@tynnyri.adurom.net>
 User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Felix Fietkau <nbd@nbd.name> writes:
+Toke H=C3=B8iland-J=C3=B8rgensen <toke@redhat.com> writes:
 
-> This is only used for testing for now. In the future it will be possible to
-> enable the second PHY through an proper API via device tree
+> Instead of just having an airtime flag in debugfs, turn AQL into a proper
+> NL80211_EXT_FEATURE, so drivers can turn it on when they are ready, and so
+> we also expose the presence of the feature to userspace.
 >
-> Signed-off-by: Felix Fietkau <nbd@nbd.name>
+> This also has the effect of flipping the default, so drivers have to opt =
+in
+> to using AQL instead of getting it by default with TXQs. To keep
+> functionality the same as pre-patch, we set this feature for ath10k (which
+> is where it is needed the most).
+>
+> While we're at it, split out the debugfs interface so AQL gets its own
+> per-station debugfs file instead of using the 'airtime' file.
+>
+> Signed-off-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@redhat.com>
+> ---
+> v2:
+>   - Squash into a single patch
+>   - Add kernel doc for NL80211_EXT_FEATURE_AQL
+>
+>  drivers/net/wireless/ath/ath10k/mac.c |  1 +
 
-An example how to use the debugfs file would be nice.
+Acked-by: Kalle Valo <kvalo@codeaurora.org>
 
--- 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+--=20
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatc=
+hes
