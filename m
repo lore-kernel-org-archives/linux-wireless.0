@@ -2,97 +2,97 @@ Return-Path: <SRS0=hdaX=2H=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B7AEC2D0CD
-	for <linux-wireless@archiver.kernel.org>; Tue, 17 Dec 2019 18:35:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87412C43603
+	for <linux-wireless@archiver.kernel.org>; Tue, 17 Dec 2019 20:19:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 089532072D
-	for <linux-wireless@archiver.kernel.org>; Tue, 17 Dec 2019 18:35:40 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="CqiAxKb9"
+	by mail.kernel.org (Postfix) with ESMTP id 5457B206D8
+	for <linux-wireless@archiver.kernel.org>; Tue, 17 Dec 2019 20:19:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728101AbfLQSfi (ORCPT
+        id S1727820AbfLQUTS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 17 Dec 2019 13:35:38 -0500
-Received: from mail2.candelatech.com ([208.74.158.173]:42834 "EHLO
-        mail3.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726874AbfLQSfi (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Dec 2019 13:35:38 -0500
-Received: from [192.168.100.195] (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail3.candelatech.com (Postfix) with ESMTPSA id B269313C283;
-        Tue, 17 Dec 2019 10:35:37 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com B269313C283
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-        s=default; t=1576607737;
-        bh=IrNiNk6UmF7VdwueTHkCEP89UuBxQFPbO7T5qQSqFgI=;
-        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
-        b=CqiAxKb9u914mCYGaOB9gRORYIrI3ChJGrVah6IVIHyChUynnqf0lPgsbubpZKZZG
-         cXTMrvXnCw/RvY5x3m2I0Hw5FIQB9vwuHUp1xgIQO6KrQ3+OXv+H5aqKxKYlQniWBl
-         Jc1U3VXeBsMz92CbVQAZRi66T+Ef26Mj9/lX6xlU=
-Subject: Re: [PATCH] ath10k: Per-chain rssi should sum the secondary channels
-To:     Tom Psyborg <pozega.tomislav@gmail.com>
-Cc:     Justin Capella <justincapella@gmail.com>,
-        Sebastian Gottschall <s.gottschall@newmedia-net.de>,
-        linux-wireless@vger.kernel.org, ath10k <ath10k@lists.infradead.org>
-References: <20191216220747.887-1-greearb@candelatech.com>
- <a2af03e9-8b53-b297-467b-d0f07b8a002b@newmedia-net.de>
- <b5d63d96-4ba6-bbab-bf1c-a61c6c437f37@newmedia-net.de>
- <80700614-679a-336e-bd9a-e88622e75c9a@candelatech.com>
- <4775d91a-9719-46f8-b0f2-979b8d86cf9f@newmedia-net.de>
- <CAMrEMU-vGB8uR-JZbD2vj4vXgWNHfFqcbsqB=gOqBBDZWGkzQA@mail.gmail.com>
- <11290a30-46e8-638e-4110-86e6b2eb3d3f@candelatech.com>
- <CAKR_QV+xNbAzzw12x3Ku49bHnERTxYRAK8AfUSwp_uOgNMbY4Q@mail.gmail.com>
-From:   Ben Greear <greearb@candelatech.com>
-Organization: Candela Technologies
-Message-ID: <a95e7f6d-1cb8-3188-aea4-233dce6f9330@candelatech.com>
-Date:   Tue, 17 Dec 2019 10:35:37 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.1
+        Tue, 17 Dec 2019 15:19:18 -0500
+Received: from nbd.name ([46.4.11.11]:37058 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727036AbfLQUTS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 17 Dec 2019 15:19:18 -0500
+Received: from pd95fd66b.dip0.t-ipconnect.de ([217.95.214.107] helo=bertha.fritz.box)
+        by ds12 with esmtpa (Exim 4.89)
+        (envelope-from <john@phrozen.org>)
+        id 1ihJJL-0000ls-Sk; Tue, 17 Dec 2019 21:19:16 +0100
+From:   John Crispin <john@phrozen.org>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
+        John Crispin <john@phrozen.org>
+Subject: [RESEND 3/3] ath11k: switch to using ieee80211_tx_status_ext()
+Date:   Tue, 17 Dec 2019 21:19:09 +0100
+Message-Id: <20191217201909.27420-3-john@phrozen.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20191217201909.27420-1-john@phrozen.org>
+References: <20191217201909.27420-1-john@phrozen.org>
 MIME-Version: 1.0
-In-Reply-To: <CAKR_QV+xNbAzzw12x3Ku49bHnERTxYRAK8AfUSwp_uOgNMbY4Q@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 12/17/19 10:29 AM, Tom Psyborg wrote:
-> On 17/12/2019, Ben Greear <greearb@candelatech.com> wrote:
->> On 12/17/19 8:23 AM, Justin Capella wrote:
->>> I believe someone recently submitted a patch that defined noise floors
->>> per band (2/5).
->>
->> I looked at using the real noise floor.  Our radio was reporting a noise
->> floor of around -102,
->> where the hard-coded default is -95.  This of course would make the reported
->> RSSI lower by 7db
->> in that case.  I am not sure that is correct.
->>
-> 
-> Hi
-> 
-> I am getting similar NF values with all my ath10k devices, I thought
-> default was changed since ath9k from -95 to -115 just like in the
-> vendor driver? There were some discussions about it on mailing list.
-> On some channels (5Ghz) the value goes down to about -107, even saw
-> -110 once.
-> 
+This allows us to pass HE rates down into the stack.
 
-If you use ath9k and ath10k on same channel/environment, do you see similar
-RSSI reported (especially with the ath10k patch I just posted)?
+Signed-off-by: John Crispin <john@phrozen.org>
+---
+ drivers/net/wireless/ath/ath11k/dp_tx.c | 24 +++++++++++++++++++-----
+ 1 file changed, 19 insertions(+), 5 deletions(-)
 
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/ath/ath11k/dp_tx.c b/drivers/net/wireless/ath/ath11k/dp_tx.c
+index 0c93b291305c..d4be307f2eba 100644
+--- a/drivers/net/wireless/ath/ath11k/dp_tx.c
++++ b/drivers/net/wireless/ath/ath11k/dp_tx.c
+@@ -361,9 +361,12 @@ static void ath11k_dp_tx_complete_msdu(struct ath11k *ar,
+ 				       struct sk_buff *msdu,
+ 				       struct hal_tx_status *ts)
+ {
++	struct ieee80211_tx_status status = { 0 };
+ 	struct ath11k_base *ab = ar->ab;
+ 	struct ieee80211_tx_info *info;
+ 	struct ath11k_skb_cb *skb_cb;
++	struct ath11k_peer *peer;
++	struct ath11k_sta *arsta;
+ 
+ 	if (WARN_ON_ONCE(ts->buf_rel_source != HAL_WBM_REL_SRC_MODULE_TQM)) {
+ 		/* Must not happen */
+@@ -427,12 +430,23 @@ static void ath11k_dp_tx_complete_msdu(struct ath11k *ar,
+ 		ath11k_dp_tx_cache_peer_stats(ar, msdu, ts);
+ 	}
+ 
+-	/* NOTE: Tx rate status reporting. Tx completion status does not have
+-	 * necessary information (for example nss) to build the tx rate.
+-	 * Might end up reporting it out-of-band from HTT stats.
+-	 */
+ 
+-	ieee80211_tx_status(ar->hw, msdu);
++	spin_lock_bh(&ab->base_lock);
++	peer = ath11k_peer_find_by_id(ab, ts->peer_id);
++	if (peer) {
++		arsta = (struct ath11k_sta *)peer->sta->drv_priv;
++		status.sta = peer->sta;
++		status.skb = msdu;
++		status.info = info;
++		status.rate = &arsta->last_txrate;
++	}
++	rcu_read_unlock();
++	if (peer)
++		ieee80211_tx_status_ext(ar->hw, &status);
++	else
++		dev_kfree_skb_any(msdu);
++	spin_unlock_bh(&ab->base_lock);
++	return;
+ 
+ exit:
+ 	rcu_read_unlock();
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.20.1
 
