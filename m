@@ -2,139 +2,56 @@ Return-Path: <SRS0=hdaX=2H=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92D41C43603
-	for <linux-wireless@archiver.kernel.org>; Tue, 17 Dec 2019 07:55:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 275D3C43603
+	for <linux-wireless@archiver.kernel.org>; Tue, 17 Dec 2019 07:57:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 68B412072B
-	for <linux-wireless@archiver.kernel.org>; Tue, 17 Dec 2019 07:55:25 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="cqxUCS1G"
+	by mail.kernel.org (Postfix) with ESMTP id 04AEE20733
+	for <linux-wireless@archiver.kernel.org>; Tue, 17 Dec 2019 07:57:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726656AbfLQHzY (ORCPT
+        id S1726569AbfLQH5M (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 17 Dec 2019 02:55:24 -0500
-Received: from mail-ua1-f65.google.com ([209.85.222.65]:43789 "EHLO
-        mail-ua1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725794AbfLQHzY (ORCPT
+        Tue, 17 Dec 2019 02:57:12 -0500
+Received: from s3.sipsolutions.net ([144.76.43.62]:43136 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726072AbfLQH5M (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Dec 2019 02:55:24 -0500
-Received: by mail-ua1-f65.google.com with SMTP id o42so3088377uad.10
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Dec 2019 23:55:24 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=D/G4kabHjV1Lusdqw/G6dw2FBJ3uTWRu8cTEqrGadRc=;
-        b=cqxUCS1G7IVlmZvkGltrHuDvw87/5/pLpJM73tDzujFsINJejRbYX9BIQK4bK0qEpd
-         aL7ZT7jEZvO2i8XPmtx7M81MjiuXlETZubVw6VAs5B8NlxJw2TUhLzUyj3DNJbtM2vzb
-         dOt8lrato+QsLoDXAErMfix5j883CUoviYZGphX3bOkKf1ZKQUFsNt/DYI16E2F5uY5h
-         v7Zz5FgP+hD/MvfaOZM6pPeguCJ6VYy0wvSfTwUXfItg6v7iUKVdJM0jemddjHzambNe
-         i2wsgCghSxNeJdd/rqzolcrVeYq8mXslcPymPufh+L4n2eaivAXpE9TLdvkG+eZr8z29
-         /20Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=D/G4kabHjV1Lusdqw/G6dw2FBJ3uTWRu8cTEqrGadRc=;
-        b=JW77wV7pTDTZdga068D4VoqgDEPyYh5+bj4PJLEGsAbE2s1EnWdN5zJ/xAG7wcT3PP
-         3Lhg62hiuCx+LBBZbLh5n95cBnflD+Pd/QZnElPXROHX3XQ90zw1UZKd6aWNFSRlertK
-         8tRB0ANfp5Vn8CPTSIHsQncSzXFdg8eZstXGoHAUOLzQ+fquMt6gv7Nhj2bfdYCrxpFf
-         DFlBdKrQD5QDEbA+ICV/054EGZAp28pQk8plXT3whb52nGcXNQPmXXo/3S6DB/btLyEI
-         4yc7Ly5KgkhZjg/fpIHr48lNgixkNrvIKnsArUNNKPIXbU++iZvCnyAf2a7G/n4fMbDx
-         Iqmw==
-X-Gm-Message-State: APjAAAX1Z44ABsCFRiw+w526O88VpLN+5XAew8g4GnbKxTRUnYv9WkMf
-        b8HuDNN0QdQir63N+8Z+vqMdqeZtisM0Y5LQoxGyvw==
-X-Google-Smtp-Source: APXvYqxzdVAw5xWowo76mTkKJL0/jmHoaluvjaRWrMwjM/D4pyKtGc5/nZ36l5Vnq7j6h5fqJ/4pYZyi9KnoEW68OJc=
-X-Received: by 2002:ab0:5510:: with SMTP id t16mr2491529uaa.15.1576569323481;
- Mon, 16 Dec 2019 23:55:23 -0800 (PST)
-MIME-Version: 1.0
-References: <20191213185050.m6iku7defq44syrl@kili.mountain>
-In-Reply-To: <20191213185050.m6iku7defq44syrl@kili.mountain>
-From:   Ulf Hansson <ulf.hansson@linaro.org>
-Date:   Tue, 17 Dec 2019 08:54:47 +0100
-Message-ID: <CAPDyKFoKvhGDuQ+C0Sp2N3==CXiMWfpcrT28+dQ2+Nq_UPaXYQ@mail.gmail.com>
-Subject: Re: [bug report] mmc: core: Re-work HW reset for SDIO cards
-To:     Dan Carpenter <dan.carpenter@oracle.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc:     ath10k@lists.infradead.org,
-        linux-wireless <linux-wireless@vger.kernel.org>
+        Tue, 17 Dec 2019 02:57:12 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.92.3)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1ih7jA-004FGq-R1; Tue, 17 Dec 2019 08:57:08 +0100
+Message-ID: <9ff2afcfb6590e92d8e73656e657414ec2c71b3d.camel@sipsolutions.net>
+Subject: Re: [RFC] mac80211:  Fix setting txpower to zero.
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     greearb@candelatech.com, linux-wireless@vger.kernel.org
+Date:   Tue, 17 Dec 2019 08:57:07 +0100
+In-Reply-To: <20191213230334.27631-1-greearb@candelatech.com> (sfid-20191214_000347_234159_5F7C9357)
+References: <20191213230334.27631-1-greearb@candelatech.com>
+         (sfid-20191214_000347_234159_5F7C9357)
 Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.34.2 (3.34.2-1.fc31) 
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-+ Kalle
+On Fri, 2019-12-13 at 15:03 -0800, greearb@candelatech.com wrote:
+> 
+> So, instead initialize the txpower to -1 in mac80211, and let drivers know that
+> means the power has not been set and so should be ignored.
 
-On Fri, 13 Dec 2019 at 19:51, Dan Carpenter <dan.carpenter@oracle.com> wrote:
->
-> Hello Ulf Hansson,
->
-> The patch 2ac55d5e5ec9: "mmc: core: Re-work HW reset for SDIO cards"
-> from Oct 17, 2019, leads to the following static checker warning:
->
->         drivers/net/wireless/ath/ath10k/sdio.c:1521 ath10k_sdio_hif_power_down()
->         warn: 'ret' can be either negative or positive
+Technically (or maybe just physically?), even -1 is a sort of valid TX
+power.
 
-Thanks for reporting!
+I know all of this is pretty messed up, but wouldn't it make more sense
+to go with some kind of tx_power_valid bit, or perhaps something that
+certainly will never make sense like MIN_INT instead of -1?
 
->
-> drivers/net/wireless/ath/ath10k/sdio.c
->   1495  static void ath10k_sdio_hif_power_down(struct ath10k *ar)
->   1496  {
->   1497          struct ath10k_sdio *ar_sdio = ath10k_sdio_priv(ar);
->   1498          int ret;
->   1499
->   1500          if (ar_sdio->is_disabled)
->   1501                  return;
->   1502
->   1503          ath10k_dbg(ar, ATH10K_DBG_BOOT, "sdio power off\n");
->   1504
->   1505          /* Disable the card */
->   1506          sdio_claim_host(ar_sdio->func);
->   1507
->   1508          ret = sdio_disable_func(ar_sdio->func);
->   1509          if (ret) {
->   1510                  ath10k_warn(ar, "unable to disable sdio function: %d\n", ret);
->   1511                  sdio_release_host(ar_sdio->func);
->   1512                  return;
->   1513          }
->   1514
->   1515          ret = mmc_hw_reset(ar_sdio->func->card->host);
->   1516          if (ret)
->
-> It used to be that mmc_hw_reset() return negative error codes or zero
-> but now it returns 1 on certain success paths.
+johannes
 
-Correct.
-
-I was actually looking into this while changing the behaviour of
-mmc_hw_reset(). However I decided to leave this as is.
-
-The main reason is, that mmc_hw_reset() is not going to power down the
-card. It's hard power cycle, so I am kind of surprised that is being
-used at all in this path. This in combination of expecting the value
-from mmc_hw_reset() to never be 1 here, seemed like a good idea to
-preserve the logging of the warning message.
-
-To silent the static checker tool from warning, we could check
-explicitly for "1". Is that something you want me to do?
-
->
->   1517                  ath10k_warn(ar, "unable to reset sdio: %d\n", ret);
->   1518
->   1519          sdio_release_host(ar_sdio->func);
->   1520
->   1521          ar_sdio->is_disabled = true;
->   1522  }
->
->
-> regards,
-> dan carpenter
-
-Kind regards
-Uffe
