@@ -6,33 +6,31 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87412C43603
-	for <linux-wireless@archiver.kernel.org>; Tue, 17 Dec 2019 20:19:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22FB3C2D0CD
+	for <linux-wireless@archiver.kernel.org>; Tue, 17 Dec 2019 20:19:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5457B206D8
-	for <linux-wireless@archiver.kernel.org>; Tue, 17 Dec 2019 20:19:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 009E8206D8
+	for <linux-wireless@archiver.kernel.org>; Tue, 17 Dec 2019 20:19:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727820AbfLQUTS (ORCPT
+        id S1727987AbfLQUTT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 17 Dec 2019 15:19:18 -0500
-Received: from nbd.name ([46.4.11.11]:37058 "EHLO nbd.name"
+        Tue, 17 Dec 2019 15:19:19 -0500
+Received: from nbd.name ([46.4.11.11]:37062 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727036AbfLQUTS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S1727711AbfLQUTS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 17 Dec 2019 15:19:18 -0500
 Received: from pd95fd66b.dip0.t-ipconnect.de ([217.95.214.107] helo=bertha.fritz.box)
         by ds12 with esmtpa (Exim 4.89)
         (envelope-from <john@phrozen.org>)
-        id 1ihJJL-0000ls-Sk; Tue, 17 Dec 2019 21:19:16 +0100
+        id 1ihJJK-0000ls-JQ; Tue, 17 Dec 2019 21:19:14 +0100
 From:   John Crispin <john@phrozen.org>
 To:     Kalle Valo <kvalo@codeaurora.org>
 Cc:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
         John Crispin <john@phrozen.org>
-Subject: [RESEND 3/3] ath11k: switch to using ieee80211_tx_status_ext()
-Date:   Tue, 17 Dec 2019 21:19:09 +0100
-Message-Id: <20191217201909.27420-3-john@phrozen.org>
+Subject: [RESEND 1/3] ath11k: drop tx_info from ath11k_sta
+Date:   Tue, 17 Dec 2019 21:19:07 +0100
+Message-Id: <20191217201909.27420-1-john@phrozen.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191217201909.27420-1-john@phrozen.org>
-References: <20191217201909.27420-1-john@phrozen.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -40,59 +38,129 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This allows us to pass HE rates down into the stack.
+We will start using ieee80211_tx_status_ext() so we do not need to track
+tx rates inside a struct ieee80211_tx_info. It is currently not possible
+to populate that struct with HE rate info anyhow.
 
 Signed-off-by: John Crispin <john@phrozen.org>
 ---
- drivers/net/wireless/ath/ath11k/dp_tx.c | 24 +++++++++++++++++++-----
- 1 file changed, 19 insertions(+), 5 deletions(-)
+ drivers/net/wireless/ath/ath11k/core.h  |  1 -
+ drivers/net/wireless/ath/ath11k/dp_rx.c | 51 +------------------------
+ 2 files changed, 2 insertions(+), 50 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath11k/dp_tx.c b/drivers/net/wireless/ath/ath11k/dp_tx.c
-index 0c93b291305c..d4be307f2eba 100644
---- a/drivers/net/wireless/ath/ath11k/dp_tx.c
-+++ b/drivers/net/wireless/ath/ath11k/dp_tx.c
-@@ -361,9 +361,12 @@ static void ath11k_dp_tx_complete_msdu(struct ath11k *ar,
- 				       struct sk_buff *msdu,
- 				       struct hal_tx_status *ts)
- {
-+	struct ieee80211_tx_status status = { 0 };
- 	struct ath11k_base *ab = ar->ab;
- 	struct ieee80211_tx_info *info;
- 	struct ath11k_skb_cb *skb_cb;
-+	struct ath11k_peer *peer;
-+	struct ath11k_sta *arsta;
+diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
+index 64ebda171a9b..2c5eed29333c 100644
+--- a/drivers/net/wireless/ath/ath11k/core.h
++++ b/drivers/net/wireless/ath/ath11k/core.h
+@@ -347,7 +347,6 @@ struct ath11k_sta {
+ 	enum hal_pn_type pn_type;
  
- 	if (WARN_ON_ONCE(ts->buf_rel_source != HAL_WBM_REL_SRC_MODULE_TQM)) {
- 		/* Must not happen */
-@@ -427,12 +430,23 @@ static void ath11k_dp_tx_complete_msdu(struct ath11k *ar,
- 		ath11k_dp_tx_cache_peer_stats(ar, msdu, ts);
+ 	struct work_struct update_wk;
+-	struct ieee80211_tx_info tx_info;
+ 	struct rate_info txrate;
+ 	struct rate_info last_txrate;
+ 	u64 rx_duration;
+diff --git a/drivers/net/wireless/ath/ath11k/dp_rx.c b/drivers/net/wireless/ath/ath11k/dp_rx.c
+index 15bf18447464..47f9414ee921 100644
+--- a/drivers/net/wireless/ath/ath11k/dp_rx.c
++++ b/drivers/net/wireless/ath/ath11k/dp_rx.c
+@@ -1217,25 +1217,6 @@ int ath11k_dp_htt_tlv_iter(struct ath11k_base *ab, const void *ptr, size_t len,
+ 	return 0;
+ }
+ 
+-static u32 ath11k_bw_to_mac80211_bwflags(u8 bw)
+-{
+-	u32 bwflags = 0;
+-
+-	switch (bw) {
+-	case ATH11K_BW_40:
+-		bwflags = IEEE80211_TX_RC_40_MHZ_WIDTH;
+-		break;
+-	case ATH11K_BW_80:
+-		bwflags = IEEE80211_TX_RC_80_MHZ_WIDTH;
+-		break;
+-	case ATH11K_BW_160:
+-		bwflags = IEEE80211_TX_RC_160_MHZ_WIDTH;
+-		break;
+-	}
+-
+-	return bwflags;
+-}
+-
+ static void
+ ath11k_update_per_peer_tx_stats(struct ath11k *ar,
+ 				struct htt_ppdu_stats *ppdu_stats, u8 user)
+@@ -1245,7 +1226,6 @@ ath11k_update_per_peer_tx_stats(struct ath11k *ar,
+ 	struct ieee80211_sta *sta;
+ 	struct ath11k_sta *arsta;
+ 	struct htt_ppdu_stats_user_rate *user_rate;
+-	struct ieee80211_chanctx_conf *conf = NULL;
+ 	struct ath11k_per_peer_tx_stats *peer_stats = &ar->peer_tx_stats;
+ 	struct htt_ppdu_user_stats *usr_stats = &ppdu_stats->user_stats[user];
+ 	struct htt_ppdu_stats_common *common = &ppdu_stats->common;
+@@ -1325,60 +1305,33 @@ ath11k_update_per_peer_tx_stats(struct ath11k *ar,
+ 	arsta = (struct ath11k_sta *)sta->drv_priv;
+ 
+ 	memset(&arsta->txrate, 0, sizeof(arsta->txrate));
+-	memset(&arsta->tx_info.status, 0, sizeof(arsta->tx_info.status));
+ 
+ 	switch (flags) {
+ 	case WMI_RATE_PREAMBLE_OFDM:
+ 		arsta->txrate.legacy = rate;
+-		if (arsta->arvif && arsta->arvif->vif)
+-			conf = rcu_dereference(arsta->arvif->vif->chanctx_conf);
+-		if (conf && conf->def.chan->band == NL80211_BAND_5GHZ)
+-			arsta->tx_info.status.rates[0].idx = rate_idx - 4;
+ 		break;
+ 	case WMI_RATE_PREAMBLE_CCK:
+ 		arsta->txrate.legacy = rate;
+-		arsta->tx_info.status.rates[0].idx = rate_idx;
+-		if (mcs > ATH11K_HW_RATE_CCK_LP_1M &&
+-		    mcs <= ATH11K_HW_RATE_CCK_SP_2M)
+-			arsta->tx_info.status.rates[0].flags |=
+-					IEEE80211_TX_RC_USE_SHORT_PREAMBLE;
+ 		break;
+ 	case WMI_RATE_PREAMBLE_HT:
+ 		arsta->txrate.mcs = mcs + 8 * (nss - 1);
+-		arsta->tx_info.status.rates[0].idx = arsta->txrate.mcs;
+ 		arsta->txrate.flags = RATE_INFO_FLAGS_MCS;
+-		arsta->tx_info.status.rates[0].flags |= IEEE80211_TX_RC_MCS;
+-		if (sgi) {
++		if (sgi)
+ 			arsta->txrate.flags |= RATE_INFO_FLAGS_SHORT_GI;
+-			arsta->tx_info.status.rates[0].flags |=
+-					IEEE80211_TX_RC_SHORT_GI;
+-		}
+ 		break;
+ 	case WMI_RATE_PREAMBLE_VHT:
+ 		arsta->txrate.mcs = mcs;
+-		ieee80211_rate_set_vht(&arsta->tx_info.status.rates[0], mcs, nss);
+ 		arsta->txrate.flags = RATE_INFO_FLAGS_VHT_MCS;
+-		arsta->tx_info.status.rates[0].flags |= IEEE80211_TX_RC_VHT_MCS;
+-		if (sgi) {
++		if (sgi)
+ 			arsta->txrate.flags |= RATE_INFO_FLAGS_SHORT_GI;
+-			arsta->tx_info.status.rates[0].flags |=
+-						IEEE80211_TX_RC_SHORT_GI;
+-		}
+ 		break;
  	}
  
--	/* NOTE: Tx rate status reporting. Tx completion status does not have
--	 * necessary information (for example nss) to build the tx rate.
--	 * Might end up reporting it out-of-band from HTT stats.
--	 */
+ 	arsta->txrate.nss = nss;
+ 	arsta->txrate.bw = ath11k_mac_bw_to_mac80211_bw(bw);
+-	arsta->tx_info.status.rates[0].flags |= ath11k_bw_to_mac80211_bwflags(bw);
+ 	arsta->tx_duration += tx_duration;
+ 	memcpy(&arsta->last_txrate, &arsta->txrate, sizeof(struct rate_info));
  
--	ieee80211_tx_status(ar->hw, msdu);
-+	spin_lock_bh(&ab->base_lock);
-+	peer = ath11k_peer_find_by_id(ab, ts->peer_id);
-+	if (peer) {
-+		arsta = (struct ath11k_sta *)peer->sta->drv_priv;
-+		status.sta = peer->sta;
-+		status.skb = msdu;
-+		status.info = info;
-+		status.rate = &arsta->last_txrate;
-+	}
-+	rcu_read_unlock();
-+	if (peer)
-+		ieee80211_tx_status_ext(ar->hw, &status);
-+	else
-+		dev_kfree_skb_any(msdu);
-+	spin_unlock_bh(&ab->base_lock);
-+	return;
- 
- exit:
- 	rcu_read_unlock();
+-	if (succ_pkts) {
+-		arsta->tx_info.flags = IEEE80211_TX_STAT_ACK;
+-		arsta->tx_info.status.rates[0].count = 1;
+-		ieee80211_tx_rate_update(ar->hw, sta, &arsta->tx_info);
+-	}
+-
+ 	/* PPDU stats reported for mgmt packet doesn't have valid tx bytes.
+ 	 * So skip peer stats update for mgmt packets.
+ 	 */
 -- 
 2.20.1
 
