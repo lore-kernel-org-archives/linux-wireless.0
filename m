@@ -2,105 +2,121 @@ Return-Path: <SRS0=hdaX=2H=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59AE2C2D0D1
-	for <linux-wireless@archiver.kernel.org>; Tue, 17 Dec 2019 16:05:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FC1AC2D0BF
+	for <linux-wireless@archiver.kernel.org>; Tue, 17 Dec 2019 16:14:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2EDC0206B7
-	for <linux-wireless@archiver.kernel.org>; Tue, 17 Dec 2019 16:05:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 591BC21835
+	for <linux-wireless@archiver.kernel.org>; Tue, 17 Dec 2019 16:14:54 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=silabs.onmicrosoft.com header.i=@silabs.onmicrosoft.com header.b="piWa2k2M"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728097AbfLQQFI (ORCPT
+        id S1728589AbfLQQOx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 17 Dec 2019 11:05:08 -0500
-Received: from nbd.name ([46.4.11.11]:48386 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727736AbfLQQFH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Dec 2019 11:05:07 -0500
-Received: from pd95fd66b.dip0.t-ipconnect.de ([217.95.214.107] helo=bertha.fritz.box)
-        by ds12 with esmtpa (Exim 4.89)
-        (envelope-from <john@phrozen.org>)
-        id 1ihFLM-0002Ku-9l; Tue, 17 Dec 2019 17:05:04 +0100
-From:   John Crispin <john@phrozen.org>
-To:     Johannes Berg <johannes@sipsolutions.net>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
-        Miles Hu <milehu@codeaurora.org>,
-        John Crispin <john@phrozen.org>
-Subject: [PATCH 2/3] mac80211: add support for setting fixed HE rate/gi/ltf
-Date:   Tue, 17 Dec 2019 17:04:54 +0100
-Message-Id: <20191217160455.311-2-john@phrozen.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191217160455.311-1-john@phrozen.org>
-References: <20191217160455.311-1-john@phrozen.org>
+        Tue, 17 Dec 2019 11:14:53 -0500
+Received: from mail-eopbgr770085.outbound.protection.outlook.com ([40.107.77.85]:54665
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728562AbfLQQOw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 17 Dec 2019 11:14:52 -0500
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=O9YyL0umP8eXsBm6DeKSmPSNwQaNP6/4LMuD6eck9nS6xrOoAIQJui8gICBVcB+fAcT3/mw3W6OonPqvIHdFeUNjeYuFOBTL/GHswLE+/f+Stsim7uvZKOCai4kXkIP8HxWvC5XkvdJkIGPc5O57IvjSToOL9DY7USttf4ZezcALmn7+NPNZyNGH9WiamCVqVk7AJI1UUhRHqhdF/3arzMlTS97eXP/oollo4KhyBGNSR9TQUgcBMix8P30l7HCtO046komsVKtmhJAAJulFghMKHBrOvhmRdCNxlNZ+k6GQx5JoalOtNcq/reTUJL4+JNZFo9QGluAJt0mshdQADg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=YTZ2mHQAOdzhtudBdg9k79F/qN3A9xgRWs5Gtagwc+o=;
+ b=Apcv8yEXJ5clOcxl00VVz1pe07PtC5tNX87LLm3emCyzyd0yngIs4GQHL/WWQSAFErzrqHfYZIwydI/K00BDAnVemkcjGmUC/NKWldjlyYjkQGW0dkvGzrSdj9n2lEVTl0HdqUTyqf8VmU61XyZqprgYkDAd2AS1WZMbm6RzYU8XBoDkw1IPwEKEjgqkilcfLaXz+Sr3DlSZPSPNWC6OUvJbXLMqzz2cFyzdTXQkL3z2RqWjDtaqpXKY/Vosl/Ns50jB6636ugO5UvkmaBdUXdiFrMuWNowGxz6zBhX2ZCJznlLP0HcJI3xD+i+TKIJyP4i/X9lhiavH0UuYLOiwUw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=silabs.com; dmarc=pass action=none header.from=silabs.com;
+ dkim=pass header.d=silabs.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=silabs.onmicrosoft.com; s=selector2-silabs-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=YTZ2mHQAOdzhtudBdg9k79F/qN3A9xgRWs5Gtagwc+o=;
+ b=piWa2k2MOdZDWxbbFnW98taVevwWoHD8syzugx2ogpRwmDeJ3F1p56eioJrMcWZUBrv0ws/x/4pStHM+G/gA3VDUS5wiFOrTt4h78diMey6SpddYQD3D0yfG6kKr5tjlhcAG9OKvZarU+yakeP6mBsqWBvpW8FMt+joPv9uSORQ=
+Received: from MN2PR11MB4063.namprd11.prod.outlook.com (10.255.180.22) by
+ MN2PR11MB3678.namprd11.prod.outlook.com (20.178.254.11) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2538.16; Tue, 17 Dec 2019 16:14:50 +0000
+Received: from MN2PR11MB4063.namprd11.prod.outlook.com
+ ([fe80::f46c:e5b4:2a85:f0bf]) by MN2PR11MB4063.namprd11.prod.outlook.com
+ ([fe80::f46c:e5b4:2a85:f0bf%4]) with mapi id 15.20.2538.019; Tue, 17 Dec 2019
+ 16:14:49 +0000
+From:   =?utf-8?B?SsOpcsO0bWUgUG91aWxsZXI=?= <Jerome.Pouiller@silabs.com>
+To:     "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC:     "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        =?utf-8?B?SsOpcsO0bWUgUG91aWxsZXI=?= <Jerome.Pouiller@silabs.com>
+Subject: [PATCH v2 15/55] staging: wfx: take advantage of IS_ERR_OR_NULL()
+Thread-Topic: [PATCH v2 15/55] staging: wfx: take advantage of
+ IS_ERR_OR_NULL()
+Thread-Index: AQHVtPUaVu3WG5LOh0qy2MRcQq8tLg==
+Date:   Tue, 17 Dec 2019 16:14:48 +0000
+Message-ID: <20191217161318.31402-16-Jerome.Pouiller@silabs.com>
+References: <20191217161318.31402-1-Jerome.Pouiller@silabs.com>
+In-Reply-To: <20191217161318.31402-1-Jerome.Pouiller@silabs.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-clientproxiedby: PR0P264CA0174.FRAP264.PROD.OUTLOOK.COM
+ (2603:10a6:100:1c::18) To MN2PR11MB4063.namprd11.prod.outlook.com
+ (2603:10b6:208:13f::22)
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=Jerome.Pouiller@silabs.com; 
+x-ms-exchange-messagesentrepresentingtype: 1
+x-mailer: git-send-email 2.24.0
+x-originating-ip: [37.71.187.125]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: bbfdf93d-df18-4ed4-ca78-08d7830c3c70
+x-ms-traffictypediagnostic: MN2PR11MB3678:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <MN2PR11MB3678A516D3CB1EE3FFE2000193500@MN2PR11MB3678.namprd11.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:257;
+x-forefront-prvs: 02543CD7CD
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(376002)(346002)(396003)(366004)(39860400002)(136003)(199004)(189003)(6512007)(66574012)(1076003)(4744005)(478600001)(86362001)(8936002)(110136005)(316002)(2616005)(26005)(6506007)(5660300002)(36756003)(6486002)(66946007)(66476007)(66556008)(64756008)(66446008)(71200400001)(52116002)(85182001)(81166006)(81156014)(8676002)(54906003)(107886003)(2906002)(4326008)(186003)(85202003);DIR:OUT;SFP:1101;SCL:1;SRVR:MN2PR11MB3678;H:MN2PR11MB4063.namprd11.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+received-spf: None (protection.outlook.com: silabs.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: Fpdou2V8nGI1bBriUaUXEmHqtrjOrSCr9WF8qv2THZWElxfnFfUA1zmpLPN/zFlQEcSfqxbpFHdiFmODXDjwymo2xfcbGH0zGzDGQx7OeM56GDjLlmuEpH5i5ypbDcAivd05HC10G0aAMh5aXLUEfrCPqypM+aWFaAKopQhnk8HgC1L4kAhIzqgR2DZ7taODKD0CG8P8PJN4SI1K6LDgrEKYnGr6e4piW46AzIGiNKuCEamlDLHHtu+JNmS9HAYS6Tz4aTDjZH9XWXMF+GijkRUOp2rwj4UUVDIoyRc+8cFrvA6KRT+Vu+La7sWDUlxGuKlk32o0KgJ+DQXS0k0iQQr/RIDYNeXJ50O7s21AeMYytwQxGdPcWzSmrTntlWrlWpasoU2ujhaZ9JDSsJsi/CkK+5Ua50FVBgLr1c5z/a0IKHZ32J7f+akQ4UBA0+q2
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <0E738CADD67D264EBBB70178CC175465@namprd11.prod.outlook.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-OriginatorOrg: silabs.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: bbfdf93d-df18-4ed4-ca78-08d7830c3c70
+X-MS-Exchange-CrossTenant-originalarrivaltime: 17 Dec 2019 16:14:49.0296
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 54dbd822-5231-4b20-944d-6f4abcd541fb
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: qZg7BUnnSR73qQaL+duV7rxSMLP8+8ePOMyG4Xyqepqun8W/CXtp2vs7J3pSy1dIkPdiHFh7mqiKKP9xFDbw/Q==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR11MB3678
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Miles Hu <milehu@codeaurora.org>
-
-With nl80211 now able to receive fixed HE rate/gi/ltf settings we want to
-propagate these further down the stack into the mac80211 drivers. This
-patch copies the values into the sdata struct.
-
-Signed-off-by: John Crispin <john@phrozen.org>
-Signed-off-by: Miles Hu <milehu@codeaurora.org>
----
- net/mac80211/cfg.c         | 11 +++++++++++
- net/mac80211/ieee80211_i.h |  3 +++
- 2 files changed, 14 insertions(+)
-
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index e109b47c4219..463eef8aae3e 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2905,9 +2905,13 @@ static int ieee80211_set_bitrate_mask(struct wiphy *wiphy,
- 		memcpy(sdata->rc_rateidx_vht_mcs_mask[i],
- 		       mask->control[i].vht_mcs,
- 		       sizeof(mask->control[i].vht_mcs));
-+		memcpy(sdata->rc_rateidx_he_mcs_mask[i],
-+		       mask->control[i].he_mcs,
-+		       sizeof(mask->control[i].he_mcs));
- 
- 		sdata->rc_has_mcs_mask[i] = false;
- 		sdata->rc_has_vht_mcs_mask[i] = false;
-+		sdata->rc_has_he_mcs_mask[i] = false;
- 		if (!sband)
- 			continue;
- 
-@@ -2924,6 +2928,13 @@ static int ieee80211_set_bitrate_mask(struct wiphy *wiphy,
- 				break;
- 			}
- 		}
-+
-+		for (j = 0; j < NL80211_HE_NSS_MAX; j++) {
-+			if (~sdata->rc_rateidx_he_mcs_mask[i][j]) {
-+				sdata->rc_has_he_mcs_mask[i] = true;
-+				break;
-+			}
-+		}
- 	}
- 
- 	return 0;
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 791ce58d0f09..6cc6637cec96 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -963,6 +963,9 @@ struct ieee80211_sub_if_data {
- 	bool rc_has_vht_mcs_mask[NUM_NL80211_BANDS];
- 	u16 rc_rateidx_vht_mcs_mask[NUM_NL80211_BANDS][NL80211_VHT_NSS_MAX];
- 
-+	bool rc_has_he_mcs_mask[NUM_NL80211_BANDS];
-+	u16 rc_rateidx_he_mcs_mask[NUM_NL80211_BANDS][NL80211_HE_NSS_MAX];
-+
- 	union {
- 		struct ieee80211_if_ap ap;
- 		struct ieee80211_if_wds wds;
--- 
-2.20.1
-
+RnJvbTogSsOpcsO0bWUgUG91aWxsZXIgPGplcm9tZS5wb3VpbGxlckBzaWxhYnMuY29tPgoKT2J2
+aW91c2x5LCBjdXJyZW50IGNvZGUgY2FuIGJlIHJlcGxhY2VkIGJ5IElTX0VSUl9PUl9OVUxMKCku
+CgpTaWduZWQtb2ZmLWJ5OiBKw6lyw7RtZSBQb3VpbGxlciA8amVyb21lLnBvdWlsbGVyQHNpbGFi
+cy5jb20+Ci0tLQogZHJpdmVycy9zdGFnaW5nL3dmeC9tYWluLmMgfCAyICstCiAxIGZpbGUgY2hh
+bmdlZCwgMSBpbnNlcnRpb24oKyksIDEgZGVsZXRpb24oLSkKCmRpZmYgLS1naXQgYS9kcml2ZXJz
+L3N0YWdpbmcvd2Z4L21haW4uYyBiL2RyaXZlcnMvc3RhZ2luZy93ZngvbWFpbi5jCmluZGV4IDNi
+NDdiNmMyMWVhMS4uY2Y0YmNiMTRhMTJkIDEwMDY0NAotLS0gYS9kcml2ZXJzL3N0YWdpbmcvd2Z4
+L21haW4uYworKysgYi9kcml2ZXJzL3N0YWdpbmcvd2Z4L21haW4uYwpAQCAtMTgyLDcgKzE4Miw3
+IEBAIHN0cnVjdCBncGlvX2Rlc2MgKndmeF9nZXRfZ3BpbyhzdHJ1Y3QgZGV2aWNlICpkZXYsIGlu
+dCBvdmVycmlkZSwKIAl9IGVsc2UgewogCQlyZXQgPSBkZXZtX2dwaW9kX2dldChkZXYsIGxhYmVs
+LCBHUElPRF9PVVRfTE9XKTsKIAl9Ci0JaWYgKElTX0VSUihyZXQpIHx8ICFyZXQpIHsKKwlpZiAo
+SVNfRVJSX09SX05VTEwocmV0KSkgewogCQlpZiAoIXJldCB8fCBQVFJfRVJSKHJldCkgPT0gLUVO
+T0VOVCkKIAkJCWRldl93YXJuKGRldiwgImdwaW8gJXMgaXMgbm90IGRlZmluZWRcbiIsIGxhYmVs
+KTsKIAkJZWxzZQotLSAKMi4yNC4wCgo=
