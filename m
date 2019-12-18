@@ -6,33 +6,33 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63EBAC2D0CD
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Dec 2019 16:08:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 441F5C2D0BF
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Dec 2019 16:08:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3A5532176D
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Dec 2019 16:08:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1B1782072B
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Dec 2019 16:08:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727487AbfLRQIy (ORCPT
+        id S1727444AbfLRQIy (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Wed, 18 Dec 2019 11:08:54 -0500
-Received: from smail.rz.tu-ilmenau.de ([141.24.186.67]:51426 "EHLO
+Received: from smail.rz.tu-ilmenau.de ([141.24.186.67]:51405 "EHLO
         smail.rz.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727323AbfLRQIy (ORCPT
+        with ESMTP id S1727185AbfLRQIx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Dec 2019 11:08:54 -0500
+        Wed, 18 Dec 2019 11:08:53 -0500
 Received: from isengard.tu-ilmenau.de (unknown [141.24.207.101])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by smail.rz.tu-ilmenau.de (Postfix) with ESMTPSA id 3DBB458007B;
+        by smail.rz.tu-ilmenau.de (Postfix) with ESMTPSA id 13753580075;
         Wed, 18 Dec 2019 17:08:52 +0100 (CET)
 From:   Markus Theil <markus.theil@tu-ilmenau.de>
 To:     nbd@nbd.name
 Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
         Stanislaw Gruszka <stf_xl@wp.pl>, kvalo@codeaurora.org,
         Markus Theil <markus.theil@tu-ilmenau.de>
-Subject: [PATCH v10 4/6] mt76: mt76x02: remove a copy call for usb speedup
-Date:   Wed, 18 Dec 2019 17:07:52 +0100
-Message-Id: <20191218160754.24111-5-markus.theil@tu-ilmenau.de>
+Subject: [PATCH v10 1/6] mt76: mt76x02: ommit beacon slot clearing
+Date:   Wed, 18 Dec 2019 17:07:49 +0100
+Message-Id: <20191218160754.24111-2-markus.theil@tu-ilmenau.de>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20191218160754.24111-1-markus.theil@tu-ilmenau.de>
 References: <20191218160754.24111-1-markus.theil@tu-ilmenau.de>
@@ -43,55 +43,48 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This patch removes a mt76_wr_copy call from the beacon path to hw.
-The skb which is used in this place gets therefore build with txwi
-inside its data. For mt76 usb drivers, this saves one synchronuous
-copy call over usb, which lets the beacon work complete faster.
-
-In mmio case, there is not enough headroom to put the txwi into the
-skb, it is therefore using an additional mt76_wr_copy, which is fast
-over mmio. Thanks Stanislaw for pointing this out.
+mt76 hw does not send beacons from beacon slots, if the corresponding
+bitmask is set accordingly. Therefore we can ommit clearing the beacon
+memory. Clearing uses many usb calls, if usb drivers are used. These
+calls unnecessarily slow down the beacon tasklet. Thanks to Stanislaw
+Gruzska for pointing this out.
 
 Signed-off-by: Markus Theil <markus.theil@tu-ilmenau.de>
 ---
- .../wireless/mediatek/mt76/mt76x02_beacon.c   | 19 +++++++++++++++----
- 1 file changed, 15 insertions(+), 4 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt76x02_beacon.c | 8 --------
+ 1 file changed, 8 deletions(-)
 
 diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_beacon.c b/drivers/net/wireless/mediatek/mt76/mt76x02_beacon.c
-index c93e2e8749f0..3d0d3f6d28eb 100644
+index 4209209ac940..403866496640 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt76x02_beacon.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt76x02_beacon.c
-@@ -26,15 +26,26 @@ static int
- mt76x02_write_beacon(struct mt76x02_dev *dev, int offset, struct sk_buff *skb)
+@@ -58,8 +58,6 @@ __mt76x02_mac_set_beacon(struct mt76x02_dev *dev, u8 bcn_idx,
+ 			dev->beacon_data_mask |= BIT(bcn_idx);
+ 	} else {
+ 		dev->beacon_data_mask &= ~BIT(bcn_idx);
+-		for (i = 0; i < beacon_len; i += 4)
+-			mt76_wr(dev, beacon_addr + i, 0);
+ 	}
+ 
+ 	mt76_wr(dev, MT_BCN_BYPASS_MASK, 0xff00 | ~dev->beacon_data_mask);
+@@ -241,17 +239,11 @@ EXPORT_SYMBOL_GPL(mt76x02_enqueue_buffered_bc);
+ 
+ void mt76x02_init_beacon_config(struct mt76x02_dev *dev)
  {
- 	int beacon_len = dev->beacon_ops->slot_size;
--	struct mt76x02_txwi txwi;
- 
- 	if (WARN_ON_ONCE(beacon_len < skb->len + sizeof(struct mt76x02_txwi)))
- 		return -ENOSPC;
- 
--	mt76x02_mac_write_txwi(dev, &txwi, skb, NULL, NULL, skb->len);
-+	/* USB devices already reserve enough skb headroom for txwi's. This
-+	 * helps to save slow copies over USB.
-+	 */
-+	if (mt76_is_usb(&dev->mt76)) {
-+		struct mt76x02_txwi *txwi;
-+
-+		txwi = (struct mt76x02_txwi *)(skb->data - sizeof(*txwi));
-+		mt76x02_mac_write_txwi(dev, txwi, skb, NULL, NULL, skb->len);
-+		skb_push(skb, sizeof(*txwi));
-+	} else {
-+		struct mt76x02_txwi txwi;
- 
--	mt76_wr_copy(dev, offset, &txwi, sizeof(txwi));
--	offset += sizeof(txwi);
-+		mt76x02_mac_write_txwi(dev, &txwi, skb, NULL, NULL, skb->len);
-+		mt76_wr_copy(dev, offset, &txwi, sizeof(txwi));
-+		offset += sizeof(txwi);
-+	}
- 
- 	mt76_wr_copy(dev, offset, skb->data, skb->len);
- 	return 0;
+-	int i;
+-
+ 	mt76_clear(dev, MT_BEACON_TIME_CFG, (MT_BEACON_TIME_CFG_TIMER_EN |
+ 					     MT_BEACON_TIME_CFG_TBTT_EN |
+ 					     MT_BEACON_TIME_CFG_BEACON_TX));
+ 	mt76_set(dev, MT_BEACON_TIME_CFG, MT_BEACON_TIME_CFG_SYNC_MODE);
+ 	mt76_wr(dev, MT_BCN_BYPASS_MASK, 0xffff);
+-
+-	for (i = 0; i < 8; i++)
+-		mt76x02_mac_set_beacon(dev, i, NULL);
+-
+ 	mt76x02_set_beacon_offsets(dev);
+ }
+ EXPORT_SYMBOL_GPL(mt76x02_init_beacon_config);
 -- 
 2.24.1
 
