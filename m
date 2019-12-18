@@ -2,93 +2,64 @@ Return-Path: <SRS0=gBLi=2I=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82A5DC43603
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Dec 2019 10:12:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 655A0C43603
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Dec 2019 10:18:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 52BE924650
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Dec 2019 10:12:36 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="gDsVpmZD"
+	by mail.kernel.org (Postfix) with ESMTP id 3FE6B21D7D
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Dec 2019 10:18:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726676AbfLRKMf (ORCPT
+        id S1726545AbfLRKSz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 18 Dec 2019 05:12:35 -0500
-Received: from mail25.static.mailgun.info ([104.130.122.25]:62582 "EHLO
-        mail25.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725799AbfLRKMf (ORCPT
+        Wed, 18 Dec 2019 05:18:55 -0500
+Received: from s3.sipsolutions.net ([144.76.43.62]:38774 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726698AbfLRKSy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Dec 2019 05:12:35 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1576663955; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=MYBjK0EB6uxWlrDf2EdJWdB3BIabJ0S3eRvn7HHYhLA=;
- b=gDsVpmZDYUPVaVu01AyWqLJj2Q8i+9xrApOUjgDayB6lKqa8bqpB1Cr8OV0qD5yeyZJGl+I4
- WuL3yXa4Jxq/7VTJwjGtSEtmdkfaDihGccj49Oehhb+gAAzBO6VaN4VxsfLjlK/XZpZbtwP8
- sGw1cBtz+aa2dy7ltyuV4E829zA=
-X-Mailgun-Sending-Ip: 104.130.122.25
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5df9fb91.7f7a4dd94ed8-smtp-out-n01;
- Wed, 18 Dec 2019 10:12:33 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id C12EFC4479F; Wed, 18 Dec 2019 10:12:32 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: yiboz)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 60A4FC4479C;
-        Wed, 18 Dec 2019 10:12:32 +0000 (UTC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Content-Transfer-Encoding: 8bit
-Date:   Wed, 18 Dec 2019 18:12:32 +0800
-From:   yiboz@codeaurora.org
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+        Wed, 18 Dec 2019 05:18:54 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.92.3)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1ihWPs-007ote-MF; Wed, 18 Dec 2019 11:18:52 +0100
+Message-ID: <c126d2ff0866faf9ac50b12920f0497b03b031f7.camel@sipsolutions.net>
 Subject: Re: [PATCH 2/4] mac80211: fix issue in loop scenario
-In-Reply-To: <94471b2381bee394f9708eae8ba47129f3facd03.camel@sipsolutions.net>
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     yiboz@codeaurora.org
+Cc:     linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Date:   Wed, 18 Dec 2019 11:18:51 +0100
+In-Reply-To: <6f092bd44cfc581a219bd0f0506cc636@codeaurora.org>
 References: <1576221593-1086-1-git-send-email-yiboz@codeaurora.org>
- <1576221593-1086-3-git-send-email-yiboz@codeaurora.org>
- (sfid-20191213_082426_564220_0827923D)
- <94471b2381bee394f9708eae8ba47129f3facd03.camel@sipsolutions.net>
-Message-ID: <6f092bd44cfc581a219bd0f0506cc636@codeaurora.org>
-X-Sender: yiboz@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+         <1576221593-1086-3-git-send-email-yiboz@codeaurora.org>
+         (sfid-20191213_082426_564220_0827923D) <94471b2381bee394f9708eae8ba47129f3facd03.camel@sipsolutions.net>
+         <6f092bd44cfc581a219bd0f0506cc636@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.34.2 (3.34.2-1.fc31) 
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-在 2019-12-13 17:56，Johannes Berg 写道：
-> On Fri, 2019-12-13 at 15:19 +0800, Yibo Zhao wrote:
->> In a loop txqs dequeue scenario, if the first txq in the rbtree gets
->> removed from rbtree immediately in the ieee80211_return_txq(), the
->> loop will break soon in the ieee80211_next_txq() due to schedule_pos
->> not leading to the second txq in the rbtree. Thus update schedule_pos
->> to previous node once the node of schedule_pos is either removed from
->> rbtree or move to other location in rbtree due to airtime update.
+On Wed, 2019-12-18 at 18:12 +0800, yiboz@codeaurora.org wrote:
 > 
-> For my understanding - this is a fix to the first patch in the series?
-> 
-> I guess you didn't squash it because that's Toke's patch or something?
-> 
-> I tend to think you still should, and annotate the changes, but I 
-> wanted
-> to understand it first.
+> Yes, this is a fix to the first patch. Actually, the rest of two patches 
+> are also serve the same. So, are you suggesting to merge them to the 
+> first patch?
 
-Hi Johannes,
+Yes.
 
-Yes, this is a fix to the first patch. Actually, the rest of two patches 
-are also serve the same. So, are you suggesting to merge them to the 
-first patch?
+> Previouly, I had added Toke's signature in this patch but Toke advised 
+> to delete it. I feel a little bit confused about how to handle it. 
+> Appreciate any detail guide.
 
-Previouly, I had added Toke's signature in this patch but Toke advised 
-to delete it. I feel a little bit confused about how to handle it. 
-Appreciate any detail guide.
-> 
-> johannes
+I guess that you have to discuss that with Toke, how he wants to handle
+it ... If he gave you a patch with his signed-off-by, then you should
+probably keep it? There's also "Co-developed-by" tag to give some sort
+of non-author developer credits.
+
+johannes
+
