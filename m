@@ -6,77 +6,79 @@ X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
 	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86FE0C43603
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Dec 2019 17:56:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 884D1C2D0CD
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Dec 2019 17:58:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5C8942064B
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Dec 2019 17:56:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 59F502064B
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Dec 2019 17:58:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="Y487yi9B"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="guhSW6Kw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727177AbfLRR4z (ORCPT
+        id S1727121AbfLRR6H (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 18 Dec 2019 12:56:55 -0500
-Received: from mail26.static.mailgun.info ([104.130.122.26]:49682 "EHLO
+        Wed, 18 Dec 2019 12:58:07 -0500
+Received: from mail26.static.mailgun.info ([104.130.122.26]:14482 "EHLO
         mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727031AbfLRR4z (ORCPT
+        by vger.kernel.org with ESMTP id S1726985AbfLRR6H (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Dec 2019 12:56:55 -0500
+        Wed, 18 Dec 2019 12:58:07 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1576691815; h=Date: Message-Id: Cc: To: References:
+ s=smtp; t=1576691886; h=Date: Message-Id: Cc: To: References:
  In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=N9aK8LRxFPBgc6cxwY6aP4KXf0PlA7ijFAJHfblzt+g=;
- b=Y487yi9BEbI4Oh2dNt2ZrnqbRFAhHRTkTnaoeLKOJQlBbtuqVPsbpVAijTeMKYEIwl8md0GZ
- Zew3tXNnE3+mBuxasP33k0XAGBepYbkqhpU7poGgnuXUw0XZlZkRT3iAf5l2P2bh1dnxOHrC
- e9sYlfptHHYB9kIUqqVjk7jsHoI=
+ Content-Type: Sender; bh=XATO/2i4+RoO3T2w4ywW0/HEU6/U0hKCX2qixqYVUaU=;
+ b=guhSW6Kw0NgB+g33i6IHAVe5H1HvxQphiK1YsP8MHBV6pqLu12zTnWBUte98bpZHl/mFkFPo
+ rSfO7m+d0CrSmWePNXnRtQQGyKhNl//ci+JNI15kXraNPp0gmQjtOvteEKXkNIBQq/VRVYUl
+ 64OmdD40UGjgZi0f+trppKJIXL8=
 X-Mailgun-Sending-Ip: 104.130.122.26
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5dfa6862.7f684f01e8b8-smtp-out-n02;
- Wed, 18 Dec 2019 17:56:50 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5dfa68ab.7f8b47e76148-smtp-out-n01;
+ Wed, 18 Dec 2019 17:58:03 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 44196C4479C; Wed, 18 Dec 2019 17:56:50 +0000 (UTC)
+        id 21072C433A2; Wed, 18 Dec 2019 17:58:02 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id F0D92C433CB;
-        Wed, 18 Dec 2019 17:56:48 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org F0D92C433CB
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id C0C36C433CB;
+        Wed, 18 Dec 2019 17:57:59 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org C0C36C433CB
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] ath11k: remove an unneeded NULL check
+Subject: Re: [PATCH -next] ath11k: Remove unneeded semicolon
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20191213105219.qbpng7eut5zgty2p@kili.mountain>
-References: <20191213105219.qbpng7eut5zgty2p@kili.mountain>
-To:     Dan Carpenter <dan.carpenter@oracle.com>
-Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        kernel-janitors@vger.kernel.org
+In-Reply-To: <1576318954-40658-1-git-send-email-zhengbin13@huawei.com>
+References: <1576318954-40658-1-git-send-email-zhengbin13@huawei.com>
+To:     zhengbin <zhengbin13@huawei.com>
+Cc:     <davem@davemloft.net>, <ath11k@lists.infradead.org>,
+        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <zhengbin13@huawei.com>
 User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20191218175650.44196C4479C@smtp.codeaurora.org>
-Date:   Wed, 18 Dec 2019 17:56:50 +0000 (UTC)
+Message-Id: <20191218175802.21072C433A2@smtp.codeaurora.org>
+Date:   Wed, 18 Dec 2019 17:58:02 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Dan Carpenter <dan.carpenter@oracle.com> wrote:
+zhengbin <zhengbin13@huawei.com> wrote:
 
-> The list iterator is always non-NULL so it doesn't need to be checked.
-> I also removed the unnecessary initializer because the list iterator is
-> always initialized.
+> Fixes coccicheck warning:
 > 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> drivers/net/wireless/ath/ath11k/wmi.h:2570:2-3: Unneeded semicolon
+> 
+> Reported-by: Hulk Robot <hulkci@huawei.com>
+> Signed-off-by: zhengbin <zhengbin13@huawei.com>
 > Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
 Patch applied to ath-next branch of ath.git, thanks.
 
-269663f18474 ath11k: remove an unneeded NULL check
+d1389e19e682 ath11k: Remove unneeded semicolon
 
 -- 
-https://patchwork.kernel.org/patch/11290433/
+https://patchwork.kernel.org/patch/11292181/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
