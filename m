@@ -6,32 +6,33 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43B5BC2D0CD
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Dec 2019 14:06:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64FBAC2D0C3
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Dec 2019 14:06:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 19919218AC
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Dec 2019 14:06:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 45343218AC
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Dec 2019 14:06:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727184AbfLROGG (ORCPT
+        id S1727181AbfLROGF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 18 Dec 2019 09:06:06 -0500
-Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:4869 "EHLO
+        Wed, 18 Dec 2019 09:06:05 -0500
+Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:54572 "EHLO
         alexa-out-ams-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727137AbfLROGG (ORCPT
+        by vger.kernel.org with ESMTP id S1727125AbfLROGE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Dec 2019 09:06:06 -0500
+        Wed, 18 Dec 2019 09:06:04 -0500
+X-Greylist: delayed 365 seconds by postgrey-1.27 at vger.kernel.org; Wed, 18 Dec 2019 09:06:00 EST
 Received: from ironmsg03-ams.qualcomm.com ([10.251.56.4])
   by alexa-out-ams-02.qualcomm.com with ESMTP; 18 Dec 2019 14:59:55 +0100
 Received: from lx-merez2.mea.qualcomm.com ([10.18.173.102])
-  by ironmsg03-ams.qualcomm.com with ESMTP; 18 Dec 2019 14:59:51 +0100
+  by ironmsg03-ams.qualcomm.com with ESMTP; 18 Dec 2019 14:59:54 +0100
 From:   Maya Erez <merez@codeaurora.org>
 To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     Alexei Avshalom Lazar <ailizaro@codeaurora.org>,
+Cc:     Ahmad Masri <amasri@codeaurora.org>,
         linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
         Maya Erez <merez@codeaurora.org>
-Subject: [PATCH 2/8] wil6210: minimize the time that mem_lock is held
-Date:   Wed, 18 Dec 2019 15:59:41 +0200
-Message-Id: <20191218135947.5903-3-merez@codeaurora.org>
+Subject: [PATCH 7/8] wil6210: support set_multicast_to_unicast cfg80211 operation
+Date:   Wed, 18 Dec 2019 15:59:46 +0200
+Message-Id: <20191218135947.5903-8-merez@codeaurora.org>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20191218135947.5903-1-merez@codeaurora.org>
 References: <20191218135947.5903-1-merez@codeaurora.org>
@@ -42,76 +43,133 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Alexei Avshalom Lazar <ailizaro@codeaurora.org>
+From: Ahmad Masri <amasri@codeaurora.org>
 
-mem_lock is taken for the entire wil_reset().
-Optimize this by taking mem_lock just before device is
-being reset and release the lock after FW download.
+Wil6210 AP has a separate ring for transmitting multicast packets,
+multicast packets are transmitted without an ack from the receiver side.
+Therefore, 802.11 spec defines some low MCS rates for multicat packets.
+However, there is no guarantee that these packets were really received
+and handled on the client side.
 
-Signed-off-by: Alexei Avshalom Lazar <ailizaro@codeaurora.org>
+Some applications that rely on multicast packets, may prefer to
+transmit these packets as a unicast to ensure reliability, and also
+to ensure better performance with high MCS rates.
+multicast to unicast is done by duplicating multicast packets to all
+clients and changing the DA (multicast) to the MAC address of the
+client.
+see NL80211_CMD_SET_MULTICAST_TO_UNICAST for more info.
+
+Signed-off-by: Ahmad Masri <amasri@codeaurora.org>
 Signed-off-by: Maya Erez <merez@codeaurora.org>
 ---
- drivers/net/wireless/ath/wil6210/main.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 16 +++++++++++
+ drivers/net/wireless/ath/wil6210/txrx.c     | 32 ++++++++++++++++++++-
+ drivers/net/wireless/ath/wil6210/wil6210.h  |  1 +
+ 3 files changed, 48 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 06091d8a9e23..6d39547e20fd 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -1654,6 +1654,8 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
- 	/* Disable device led before reset*/
- 	wmi_led_cfg(wil, false);
- 
-+	down_write(&wil->mem_lock);
-+
- 	/* prevent NAPI from being scheduled and prevent wmi commands */
- 	mutex_lock(&wil->wmi_mutex);
- 	if (test_bit(wil_status_suspending, wil->status))
-@@ -1702,6 +1704,7 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
- 
- 		if  (wil->secured_boot) {
- 			wil_err(wil, "secured boot is not supported\n");
-+			up_write(&wil->mem_lock);
- 			return -ENOTSUPP;
- 		}
- 
-@@ -1737,6 +1740,8 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
- 
- 	clear_bit(wil_status_resetting, wil->status);
- 
-+	up_write(&wil->mem_lock);
-+
- 	if (load_fw) {
- 		wil_unmask_irq(wil);
- 
-@@ -1786,6 +1791,7 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
- 	return rc;
- 
- out:
-+	up_write(&wil->mem_lock);
- 	clear_bit(wil_status_resetting, wil->status);
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index 7d6f14420855..5a3aff131472 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -2579,6 +2579,21 @@ wil_cfg80211_update_ft_ies(struct wiphy *wiphy, struct net_device *dev,
  	return rc;
  }
-@@ -1811,9 +1817,7 @@ int __wil_up(struct wil6210_priv *wil)
  
- 	WARN_ON(!mutex_is_locked(&wil->mutex));
++static int wil_cfg80211_set_multicast_to_unicast(struct wiphy *wiphy,
++						 struct net_device *dev,
++						 const bool enabled)
++{
++	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
++
++	if (wil->multicast_to_unicast == enabled)
++		return 0;
++
++	wil_info(wil, "set multicast to unicast, enabled=%d\n", enabled);
++	wil->multicast_to_unicast = enabled;
++
++	return 0;
++}
++
+ static const struct cfg80211_ops wil_cfg80211_ops = {
+ 	.add_virtual_intf = wil_cfg80211_add_iface,
+ 	.del_virtual_intf = wil_cfg80211_del_iface,
+@@ -2615,6 +2630,7 @@ static const struct cfg80211_ops wil_cfg80211_ops = {
+ 	.sched_scan_start = wil_cfg80211_sched_scan_start,
+ 	.sched_scan_stop = wil_cfg80211_sched_scan_stop,
+ 	.update_ft_ies = wil_cfg80211_update_ft_ies,
++	.set_multicast_to_unicast = wil_cfg80211_set_multicast_to_unicast,
+ };
  
--	down_write(&wil->mem_lock);
- 	rc = wil_reset(wil, true);
--	up_write(&wil->mem_lock);
- 	if (rc)
- 		return rc;
+ static void wil_wiphy_init(struct wiphy *wiphy)
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index 8ebc6d59aa74..17118d643d7e 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -10,6 +10,7 @@
+ #include <linux/moduleparam.h>
+ #include <linux/ip.h>
+ #include <linux/ipv6.h>
++#include <linux/if_vlan.h>
+ #include <net/ipv6.h>
+ #include <linux/prefetch.h>
  
-@@ -1905,9 +1909,7 @@ int __wil_down(struct wil6210_priv *wil)
- 	wil_abort_scan_all_vifs(wil, false);
- 	mutex_unlock(&wil->vif_mutex);
- 
--	down_write(&wil->mem_lock);
- 	rc = wil_reset(wil, false);
--	up_write(&wil->mem_lock);
- 
- 	return rc;
+@@ -1529,6 +1530,35 @@ static struct wil_ring *wil_find_tx_bcast_1(struct wil6210_priv *wil,
+ 	return v;
  }
+ 
++/* apply multicast to unicast only for ARP and IP packets
++ * (see NL80211_CMD_SET_MULTICAST_TO_UNICAST for more info)
++ */
++static bool wil_check_multicast_to_unicast(struct wil6210_priv *wil,
++					   struct sk_buff *skb)
++{
++	const struct ethhdr *eth = (void *)skb->data;
++	const struct vlan_ethhdr *ethvlan = (void *)skb->data;
++	__be16 ethertype;
++
++	if (!wil->multicast_to_unicast)
++		return false;
++
++	/* multicast to unicast conversion only for some payload */
++	ethertype = eth->h_proto;
++	if (ethertype == htons(ETH_P_8021Q) && skb->len >= VLAN_ETH_HLEN)
++		ethertype = ethvlan->h_vlan_encapsulated_proto;
++	switch (ethertype) {
++	case htons(ETH_P_ARP):
++	case htons(ETH_P_IP):
++	case htons(ETH_P_IPV6):
++		break;
++	default:
++		return false;
++	}
++
++	return true;
++}
++
+ static void wil_set_da_for_vring(struct wil6210_priv *wil,
+ 				 struct sk_buff *skb, int vring_index)
+ {
+@@ -2336,7 +2366,7 @@ netdev_tx_t wil_start_xmit(struct sk_buff *skb, struct net_device *ndev)
+ 		/* in STA mode (ESS), all to same VRING (to AP) */
+ 		ring = wil_find_tx_ring_sta(wil, vif, skb);
+ 	} else if (bcast) {
+-		if (vif->pbss)
++		if (vif->pbss || wil_check_multicast_to_unicast(wil, skb))
+ 			/* in pbss, no bcast VRING - duplicate skb in
+ 			 * all stations VRINGs
+ 			 */
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index bf00f0693a3d..21399ced2a5d 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -1059,6 +1059,7 @@ struct wil6210_priv {
+ 
+ 	u32 max_agg_wsize;
+ 	u32 max_ampdu_size;
++	u8 multicast_to_unicast;
+ };
+ 
+ #define wil_to_wiphy(i) (i->wiphy)
 -- 
 2.23.0
 
