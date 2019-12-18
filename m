@@ -2,82 +2,88 @@ Return-Path: <SRS0=gBLi=2I=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA369C2D0C3
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Dec 2019 15:05:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28C25C43603
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Dec 2019 15:48:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A587120684
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Dec 2019 15:05:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576681501;
-	bh=/Xwy0EYDAWm9IUmqarXi6RASHE7DRX2pjkg+940R3xc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=1XqtkFYO1tmddQ67OQ2NJB3dmdr9hFE0Tprpe/s/6H9sB4heTevJe+O+qi+9/qcv/
-	 xaIfZ9hY2aZlfYcvBcBeVzi4/TvKwXshwJpMjokL+iVQtZmlTL0sKtfTcHO1CEzmgW
-	 k/UvBN7UHlV3Bj159J6hK4ny6Z+sRDbOPxZGawQQ=
+	by mail.kernel.org (Postfix) with ESMTP id EEA8820684
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Dec 2019 15:48:38 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="O8NkgSvS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727181AbfLRPE4 (ORCPT
+        id S1727217AbfLRPsi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 18 Dec 2019 10:04:56 -0500
-Received: from mail.kernel.org ([198.145.29.99]:51318 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727114AbfLRPE4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Dec 2019 10:04:56 -0500
-Received: from localhost (83-86-89-107.cable.dynamic.v4.ziggo.nl [83.86.89.107])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        Wed, 18 Dec 2019 10:48:38 -0500
+Received: from mail26.static.mailgun.info ([104.130.122.26]:58046 "EHLO
+        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726987AbfLRPsi (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 18 Dec 2019 10:48:38 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1576684117; h=Message-Id: Date: Subject: Cc: To: From:
+ Sender; bh=3XuAEDloRVK23m2ic5Oe8G0vXeXlaOQXqVMsLND1wYo=; b=O8NkgSvSHyNV95qE78Gu7KgMDexj0IHppWjNT2Y3v1VCm47gv8an+i0Htqv00D0u0lCmmLZk
+ 5IdMSxmsW+7bUAa6PYj3n6teVtp+2Mr2+04GPBqq5Y8KcN8CSl2usEllwlEUFfjvxPxxV7Ev
+ rHTbPJ0HFnNUtRx3EJasXITxjcw=
+X-Mailgun-Sending-Ip: 104.130.122.26
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
+ by mxa.mailgun.org with ESMTP id 5dfa4a52.7fd7d9039bc8-smtp-out-n02;
+ Wed, 18 Dec 2019 15:48:34 -0000 (UTC)
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 30DCAC43383; Wed, 18 Dec 2019 15:48:33 +0000 (UTC)
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 79E8820684;
-        Wed, 18 Dec 2019 15:04:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576681496;
-        bh=/Xwy0EYDAWm9IUmqarXi6RASHE7DRX2pjkg+940R3xc=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=TjnG36vCL53/t2504//iSgiNAM2/Nb8XGdqdkMkqNuLbwx0OAbgmdvZwdVXhj5B0y
-         vNhc3zZjTbwHJZFlgrL4vdbLoSBKNy2CmrhB/0ecaApmQg2RnmRwWyYPEubtpUK3y8
-         7JDRqjgC1xASB3MQ27ehzPSYiHnGPa+1EJU+BN0k=
-Date:   Wed, 18 Dec 2019 16:03:46 +0100
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     =?iso-8859-1?B?Suly9G1l?= Pouiller <Jerome.Pouiller@silabs.com>
-Cc:     "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        Kalle Valo <kvalo@codeaurora.org>
-Subject: Re: [PATCH v2 00/55] Improve wfx driver
-Message-ID: <20191218150346.GA431628@kroah.com>
-References: <20191217161318.31402-1-Jerome.Pouiller@silabs.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20191217161318.31402-1-Jerome.Pouiller@silabs.com>
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 273A6C433CB;
+        Wed, 18 Dec 2019 15:48:31 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 273A6C433CB
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     ath10k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org
+Subject: [PATCH 0/2] ath10k: SAR power limit vendor command
+Date:   Wed, 18 Dec 2019 17:48:26 +0200
+Message-Id: <1576684108-30177-1-git-send-email-kvalo@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, Dec 17, 2019 at 04:14:26PM +0000, Jérôme Pouiller wrote:
-> From: Jérôme Pouiller <jerome.pouiller@silabs.com>
-> 
-> Hello all,
-> 
-> This pull request continue to clean up the wfx driver. It can be more or
-> less divided in four parts:
->   - 0001 to 0009 fix some issues (should be included in 5.5?)
->   - 0010 to 0028 mostly contains cosmetics changes
+Hi,
 
-I took the first 10 to staging-linus to get into 5.5-final.
+here's a patchset adding dynamic SAR power limit vendor command to
+ath10k. This follows the new process documented in the wiki:
 
->   - 0029 to 0043 re-work power save (in station mode) and QoS
->   - 0044 to 0054 re-work the scan process
+https://wireless.wiki.kernel.org/en/developers/documentation/nl80211#vendor-specific_api
 
-all the rest of these I've queued up "normally" in staging-next.
+Please review.
 
-And thanks for fixing up the mime issue, these applied with no problems
-at all.
+Kalle
 
-greg k-h
+Wen Gong (2):
+  nl80211: vendor-cmd: qca: add dynamic SAR power limits
+  ath10k: allow dynamic SAR power limits to be configured
+
+ drivers/net/wireless/ath/ath10k/Makefile |   1 +
+ drivers/net/wireless/ath/ath10k/core.c   |   2 +
+ drivers/net/wireless/ath/ath10k/core.h   |   2 +
+ drivers/net/wireless/ath/ath10k/hw.h     |   3 +
+ drivers/net/wireless/ath/ath10k/mac.c    |  64 +++++++++++++++++
+ drivers/net/wireless/ath/ath10k/mac.h    |   2 +-
+ drivers/net/wireless/ath/ath10k/vendor.c | 114 +++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/vendor.h |  13 ++++
+ drivers/net/wireless/ath/ath10k/wmi.h    |   6 ++
+ include/uapi/nl80211-vnd-qca.h           |  68 ++++++++++++++++++
+ 10 files changed, 274 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/net/wireless/ath/ath10k/vendor.c
+ create mode 100644 drivers/net/wireless/ath/ath10k/vendor.h
+ create mode 100644 include/uapi/nl80211-vnd-qca.h
+
+-- 
+2.7.4
