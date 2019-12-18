@@ -6,32 +6,32 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDEB5C43603
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Dec 2019 14:06:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 43B5BC2D0CD
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Dec 2019 14:06:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A341D2176D
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Dec 2019 14:06:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 19919218AC
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Dec 2019 14:06:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727124AbfLROGD (ORCPT
+        id S1727184AbfLROGG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 18 Dec 2019 09:06:03 -0500
+        Wed, 18 Dec 2019 09:06:06 -0500
 Received: from alexa-out-ams-02.qualcomm.com ([185.23.61.163]:4869 "EHLO
         alexa-out-ams-02.qualcomm.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726984AbfLROGC (ORCPT
+        by vger.kernel.org with ESMTP id S1727137AbfLROGG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Dec 2019 09:06:02 -0500
+        Wed, 18 Dec 2019 09:06:06 -0500
 Received: from ironmsg03-ams.qualcomm.com ([10.251.56.4])
   by alexa-out-ams-02.qualcomm.com with ESMTP; 18 Dec 2019 14:59:55 +0100
 Received: from lx-merez2.mea.qualcomm.com ([10.18.173.102])
-  by ironmsg03-ams.qualcomm.com with ESMTP; 18 Dec 2019 14:59:53 +0100
+  by ironmsg03-ams.qualcomm.com with ESMTP; 18 Dec 2019 14:59:51 +0100
 From:   Maya Erez <merez@codeaurora.org>
 To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     Dedy Lansky <dlansky@codeaurora.org>,
+Cc:     Alexei Avshalom Lazar <ailizaro@codeaurora.org>,
         linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
         Maya Erez <merez@codeaurora.org>
-Subject: [PATCH 6/8] wil6210: fix MID valid bits in Rx status message
-Date:   Wed, 18 Dec 2019 15:59:45 +0200
-Message-Id: <20191218135947.5903-7-merez@codeaurora.org>
+Subject: [PATCH 2/8] wil6210: minimize the time that mem_lock is held
+Date:   Wed, 18 Dec 2019 15:59:41 +0200
+Message-Id: <20191218135947.5903-3-merez@codeaurora.org>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20191218135947.5903-1-merez@codeaurora.org>
 References: <20191218135947.5903-1-merez@codeaurora.org>
@@ -42,49 +42,76 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Dedy Lansky <dlansky@codeaurora.org>
+From: Alexei Avshalom Lazar <ailizaro@codeaurora.org>
 
-Fix incorrect definitions of MAC ID bits inside Rx status message.
+mem_lock is taken for the entire wil_reset().
+Optimize this by taking mem_lock just before device is
+being reset and release the lock after FW download.
 
-Signed-off-by: Dedy Lansky <dlansky@codeaurora.org>
+Signed-off-by: Alexei Avshalom Lazar <ailizaro@codeaurora.org>
 Signed-off-by: Maya Erez <merez@codeaurora.org>
 ---
- drivers/net/wireless/ath/wil6210/txrx_edma.h | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/wil6210/main.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/txrx_edma.h b/drivers/net/wireless/ath/wil6210/txrx_edma.h
-index c744c65225da..c736f7413a35 100644
---- a/drivers/net/wireless/ath/wil6210/txrx_edma.h
-+++ b/drivers/net/wireless/ath/wil6210/txrx_edma.h
-@@ -46,7 +46,7 @@
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index 06091d8a9e23..6d39547e20fd 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -1654,6 +1654,8 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
+ 	/* Disable device led before reset*/
+ 	wmi_led_cfg(wil, false);
  
- #define WIL_RX_EDMA_DLPF_LU_MISS_TID_POS	5
++	down_write(&wil->mem_lock);
++
+ 	/* prevent NAPI from being scheduled and prevent wmi commands */
+ 	mutex_lock(&wil->wmi_mutex);
+ 	if (test_bit(wil_status_suspending, wil->status))
+@@ -1702,6 +1704,7 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
  
--#define WIL_RX_EDMA_MID_VALID_BIT		BIT(22)
-+#define WIL_RX_EDMA_MID_VALID_BIT		BIT(20)
+ 		if  (wil->secured_boot) {
+ 			wil_err(wil, "secured boot is not supported\n");
++			up_write(&wil->mem_lock);
+ 			return -ENOTSUPP;
+ 		}
  
- #define WIL_EDMA_DESC_TX_MAC_CFG_0_QID_POS 16
- #define WIL_EDMA_DESC_TX_MAC_CFG_0_QID_LEN 6
-@@ -244,8 +244,8 @@ struct wil_ring_tx_status {
-  *		     calculated, Bit1- L4Err - TCP/UDP Checksum Error
-  *	bit      7 : Reserved:1
-  *	bit  8..19 : Flow ID:12 - MSDU flow ID
-- *	bit 20..21 : MID:2 - The MAC ID
-- *	bit     22 : MID_V:1 - The MAC ID field is valid
-+ *	bit     20 : MID_V:1 - The MAC ID field is valid
-+ *	bit 21..22 : MID:2 - The MAC ID
-  *	bit     23 : L3T:1 - IP types: 0-IPv6, 1-IPv4
-  *	bit     24 : L4T:1 - Layer 4 Type: 0-UDP, 1-TCP
-  *	bit     25 : BC:1 - The received MPDU is broadcast
-@@ -479,7 +479,7 @@ static inline int wil_rx_status_get_mid(void *msg)
- 		return 0; /* use the default MID */
+@@ -1737,6 +1740,8 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
  
- 	return WIL_GET_BITS(((struct wil_rx_status_compressed *)msg)->d0,
--			    20, 21);
-+			    21, 22);
+ 	clear_bit(wil_status_resetting, wil->status);
+ 
++	up_write(&wil->mem_lock);
++
+ 	if (load_fw) {
+ 		wil_unmask_irq(wil);
+ 
+@@ -1786,6 +1791,7 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
+ 	return rc;
+ 
+ out:
++	up_write(&wil->mem_lock);
+ 	clear_bit(wil_status_resetting, wil->status);
+ 	return rc;
  }
+@@ -1811,9 +1817,7 @@ int __wil_up(struct wil6210_priv *wil)
  
- static inline int wil_rx_status_get_error(void *msg)
+ 	WARN_ON(!mutex_is_locked(&wil->mutex));
+ 
+-	down_write(&wil->mem_lock);
+ 	rc = wil_reset(wil, true);
+-	up_write(&wil->mem_lock);
+ 	if (rc)
+ 		return rc;
+ 
+@@ -1905,9 +1909,7 @@ int __wil_down(struct wil6210_priv *wil)
+ 	wil_abort_scan_all_vifs(wil, false);
+ 	mutex_unlock(&wil->vif_mutex);
+ 
+-	down_write(&wil->mem_lock);
+ 	rc = wil_reset(wil, false);
+-	up_write(&wil->mem_lock);
+ 
+ 	return rc;
+ }
 -- 
 2.23.0
 
