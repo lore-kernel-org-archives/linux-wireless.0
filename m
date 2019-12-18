@@ -6,96 +6,92 @@ X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
 	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5797C43603
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Dec 2019 18:58:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C364C43603
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Dec 2019 18:58:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8B22A21D7D
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Dec 2019 18:58:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 105202082E
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Dec 2019 18:58:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="mTX8BnRq"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="Ye0tSf1B"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727150AbfLRS6A (ORCPT
+        id S1727205AbfLRS6d (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 18 Dec 2019 13:58:00 -0500
-Received: from mail26.static.mailgun.info ([104.130.122.26]:22882 "EHLO
+        Wed, 18 Dec 2019 13:58:33 -0500
+Received: from mail26.static.mailgun.info ([104.130.122.26]:61797 "EHLO
         mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727120AbfLRS57 (ORCPT
+        by vger.kernel.org with ESMTP id S1727120AbfLRS6d (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Dec 2019 13:57:59 -0500
+        Wed, 18 Dec 2019 13:58:33 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1576695478; h=Date: Message-Id: Cc: To: References:
+ s=smtp; t=1576695512; h=Date: Message-Id: Cc: To: References:
  In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=zTaMZ3kQXu+Ya8E5RyL/aG69wJByyfY1IdXqZNDCwxM=;
- b=mTX8BnRq67TAxiJySoJ2sZXaxVfP77Gn7JGq6X8146oA4X0mLl6BHKT/wecDrJ/Bl/Mui923
- zUCazVNwu6flaFoMnebLnUL9CDZ/f8ryWfKf54F4gESeHRNemNP+kiA0514K529unMinsEEC
- d7lM5SjoA1pR1Oo2/01VfGBpPvs=
+ Content-Type: Sender; bh=3C5mvevNz9A0VbgTQX/fgHixrc51/NX8lScWfWySnQ8=;
+ b=Ye0tSf1BeFgk/WqS7nwVGfDW40up+EA0niOPlUIew7jnI4Z4xzTHrzT9PthppBpMqoVr2NoW
+ guXprEVWrCFc35qlNrx3lEdNMLXuFp07vHfmdwOVn4kMhWvomp8f/oF1bVy0DE5xULC3YpAa
+ MuZpkCpaW4iBS6Rzdtv4Lgr9vTg=
 X-Mailgun-Sending-Ip: 104.130.122.26
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5dfa76b3.7faa08d38228-smtp-out-n02;
- Wed, 18 Dec 2019 18:57:55 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5dfa76d7.7f01658e8df8-smtp-out-n02;
+ Wed, 18 Dec 2019 18:58:31 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 0D780C4479F; Wed, 18 Dec 2019 18:57:55 +0000 (UTC)
+        id 613F4C447A0; Wed, 18 Dec 2019 18:58:30 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 6DAFFC433CB;
-        Wed, 18 Dec 2019 18:57:51 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 6DAFFC433CB
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id CD57BC433A2;
+        Wed, 18 Dec 2019 18:58:26 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org CD57BC433A2
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH 1/5] rsi: fix use-after-free on failed probe and unbind
+Subject: Re: [PATCH] brcmfmac: Fix use after free in brcmf_sdio_readframes()
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20191128172204.26600-2-johan@kernel.org>
-References: <20191128172204.26600-2-johan@kernel.org>
-To:     Johan Hovold <johan@kernel.org>
-Cc:     Amitkumar Karwar <amitkarwar@gmail.com>,
-        Siva Rebbagondla <siva8118@gmail.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org,
-        Johan Hovold <johan@kernel.org>,
-        syzbot+b563b7f8dbe8223a51e8@syzkaller.appspotmail.com,
-        stable <stable@vger.kernel.org>,
-        Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        Amitkumar Karwar <amit.karwar@redpinesignals.com>,
-        Fariya Fatima <fariyaf@gmail.com>
+In-Reply-To: <20191203095855.c4fradmsixgbq7mc@kili.mountain>
+References: <20191203095855.c4fradmsixgbq7mc@kili.mountain>
+To:     Dan Carpenter <dan.carpenter@oracle.com>
+Cc:     Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Douglas Anderson <dianders@chromium.org>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        =?utf-8?b?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
+        Naveen Gupta <naveen.gupta@cypress.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, kernel-janitors@vger.kernel.org
 User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20191218185755.0D780C4479F@smtp.codeaurora.org>
-Date:   Wed, 18 Dec 2019 18:57:55 +0000 (UTC)
+Message-Id: <20191218185830.613F4C447A0@smtp.codeaurora.org>
+Date:   Wed, 18 Dec 2019 18:58:30 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Johan Hovold <johan@kernel.org> wrote:
+Dan Carpenter <dan.carpenter@oracle.com> wrote:
 
-> Make sure to stop both URBs before returning after failed probe as well
-> as on disconnect to avoid use-after-free in the completion handler.
+> The brcmu_pkt_buf_free_skb() function frees "pkt" so it leads to a
+> static checker warning:
 > 
-> Reported-by: syzbot+b563b7f8dbe8223a51e8@syzkaller.appspotmail.com
-> Fixes: a4302bff28e2 ("rsi: add bluetooth rx endpoint")
-> Fixes: dad0d04fa7ba ("rsi: Add RS9113 wireless driver")
-> Cc: stable <stable@vger.kernel.org>     # 3.15
-> Cc: Siva Rebbagondla <siva.rebbagondla@redpinesignals.com>
-> Cc: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-> Cc: Amitkumar Karwar <amit.karwar@redpinesignals.com>
-> Cc: Fariya Fatima <fariyaf@gmail.com>
-> Signed-off-by: Johan Hovold <johan@kernel.org>
+>     drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c:1974 brcmf_sdio_readframes()
+>     error: dereferencing freed memory 'pkt'
+> 
+> It looks like there was supposed to be a continue after we free "pkt".
+> 
+> Fixes: 4754fceeb9a6 ("brcmfmac: streamline SDIO read frame routine")
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> Acked-by: Franky Lin <franky.lin@broadcom.com>
 
-5 patches applied to wireless-drivers-next.git, thanks.
+Patch applied to wireless-drivers-next.git, thanks.
 
-e93cd35101b6 rsi: fix use-after-free on failed probe and unbind
-92aafe77123a rsi: fix use-after-free on probe errors
-477682974811 rsi: fix memory leak on failed URB submission
-b9b9f9fea218 rsi: fix non-atomic allocation in completion handler
-960da557f435 rsi: add missing endpoint sanity checks
+216b44000ada brcmfmac: Fix use after free in brcmf_sdio_readframes()
 
 -- 
-https://patchwork.kernel.org/patch/11266455/
+https://patchwork.kernel.org/patch/11270885/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
