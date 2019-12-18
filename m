@@ -6,89 +6,79 @@ X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
 	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4EA2C43603
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Dec 2019 18:21:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8CDDC43603
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Dec 2019 18:22:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BE24C20716
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Dec 2019 18:21:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9B43820716
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Dec 2019 18:22:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="r+mlrrxQ"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="NmzVG1DI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727185AbfLRSV2 (ORCPT
+        id S1727346AbfLRSWI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 18 Dec 2019 13:21:28 -0500
-Received: from mail25.static.mailgun.info ([104.130.122.25]:39321 "EHLO
-        mail25.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726996AbfLRSV2 (ORCPT
+        Wed, 18 Dec 2019 13:22:08 -0500
+Received: from mail26.static.mailgun.info ([104.130.122.26]:32971 "EHLO
+        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727063AbfLRSWI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Dec 2019 13:21:28 -0500
+        Wed, 18 Dec 2019 13:22:08 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1576693288; h=Date: Message-Id: Cc: To: References:
+ s=smtp; t=1576693328; h=Date: Message-Id: Cc: To: References:
  In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=+5Pv1R0kaD+FemmvbyyxeDs/uy0M6YYIQq+GWtL5W2c=;
- b=r+mlrrxQhDTLoJz4pyPD/VBCDQakKsU9NpR6tjToQ8qKinJUAql8+Hir39L7tpsqE2SCmFjW
- jTWIi47/KN6q5Q67S24WZHY4HJSuSsOv4xNacDUaymz62aTjwDHo4Ocqg/iiglJccfzWe21f
- fbayjhX/oTV0SJRXMRML0IKdnj0=
-X-Mailgun-Sending-Ip: 104.130.122.25
+ Content-Type: Sender; bh=Ft0r9gFjIspzCYSzCwsv5fgMEUGGAawnep5akQbIAj4=;
+ b=NmzVG1DIDQZEw5X9Skf0balFVKBqp8p3OMDUh8dkhnb9ib4ybnCpluwCtDkscMNSxJV9owgf
+ vCIk7gQuixv5Jk2SkeLRbAxPcwPO/OOBQC+qFPe2rlfsvfRrlG0U37uqqItN+NJnwyJRc/l1
+ cgU8UNTdaKNdMKLX3vKWhx85g34=
+X-Mailgun-Sending-Ip: 104.130.122.26
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5dfa6e26.7efbe1cef3b0-smtp-out-n01;
- Wed, 18 Dec 2019 18:21:26 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5dfa6e4c.7f6fc44fd030-smtp-out-n02;
+ Wed, 18 Dec 2019 18:22:04 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 6BA9AC447A3; Wed, 18 Dec 2019 18:21:24 +0000 (UTC)
+        id 49E65C447A0; Wed, 18 Dec 2019 18:22:03 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 4761DC433A2;
-        Wed, 18 Dec 2019 18:21:20 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 4761DC433A2
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id AB8C4C433A2;
+        Wed, 18 Dec 2019 18:22:01 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org AB8C4C433A2
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] brcmfmac: Fix memory leak in brcmf_p2p_create_p2pdev()
+Subject: Re: [PATCH v2 1/4] rtlwifi: rtl8192de: Remove unused GET_XXX and
+ SET_XXX macros
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20191122191954.17908-1-navid.emamdoost@gmail.com>
-References: <20191122191954.17908-1-navid.emamdoost@gmail.com>
-To:     Navid Emamdoost <navid.emamdoost@gmail.com>
-Cc:     Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Navid Emamdoost <navid.emamdoost@gmail.com>,
-        =?utf-8?b?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, emamd001@umn.edu
+In-Reply-To: <20191125183229.19063-2-Larry.Finger@lwfinger.net>
+References: <20191125183229.19063-2-Larry.Finger@lwfinger.net>
+To:     Larry Finger <Larry.Finger@lwfinger.net>
+Cc:     linux-wireless@vger.kernel.org, pkshih@realtek.com,
+        Larry Finger <Larry.Finger@lwfinger.net>
 User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20191218182124.6BA9AC447A3@smtp.codeaurora.org>
-Date:   Wed, 18 Dec 2019 18:21:24 +0000 (UTC)
+Message-Id: <20191218182203.49E65C447A0@smtp.codeaurora.org>
+Date:   Wed, 18 Dec 2019 18:22:03 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Navid Emamdoost <navid.emamdoost@gmail.com> wrote:
+Larry Finger <Larry.Finger@lwfinger.net> wrote:
 
-> In the implementation of brcmf_p2p_create_p2pdev() the allocated memory
-> for p2p_vif is leaked when the mac address is the same as primary
-> interface. To fix this, go to error path to release p2p_vif via
-> brcmf_free_vif().
+> As the first step in converting from macros that get/set information
+> in the RX and TX descriptors, unused macros are being removed.
 > 
-> Fixes: cb746e47837a ("brcmfmac: check p2pdev mac address uniqueness")
-> Signed-off-by: Navid Emamdoost <navid.emamdoost@gmail.com>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Patch applied to wireless-drivers-next.git, thanks.
+4 patches applied to wireless-drivers-next.git, thanks.
 
-5cc509aa83c6 brcmfmac: Fix memory leak in brcmf_p2p_create_p2pdev()
+b8e1ada81fb7 rtlwifi: rtl8192de: Remove unused GET_XXX and SET_XXX macros
+08f6ef39bc3d rtlwifi: rtl8192de: Replace local bit manipulation macros
+fa2b36a344f5 rtlwifi: rtl8192de: Convert macros that set descriptor
+96c21a254053 rtlwifi: rtl8192de: Convert inline routines to little-endian words
 
 -- 
-https://patchwork.kernel.org/patch/11258373/
+https://patchwork.kernel.org/patch/11260753/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
