@@ -6,35 +6,35 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D5B8C3F68F
-	for <linux-wireless@archiver.kernel.org>; Fri, 20 Dec 2019 09:22:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A52D8C2D0C0
+	for <linux-wireless@archiver.kernel.org>; Fri, 20 Dec 2019 09:22:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 65E1C2467F
-	for <linux-wireless@archiver.kernel.org>; Fri, 20 Dec 2019 09:22:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 812092467F
+	for <linux-wireless@archiver.kernel.org>; Fri, 20 Dec 2019 09:22:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727401AbfLTJWe (ORCPT
+        id S1727414AbfLTJWi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 20 Dec 2019 04:22:34 -0500
-Received: from rtits2.realtek.com ([211.75.126.72]:47442 "EHLO
+        Fri, 20 Dec 2019 04:22:38 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:47443 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727397AbfLTJWd (ORCPT
+        with ESMTP id S1727391AbfLTJWe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Dec 2019 04:22:33 -0500
+        Fri, 20 Dec 2019 04:22:34 -0500
 Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID xBK9MR8o025729, This message is accepted by code: ctloc85258
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID xBK9MQWK025725, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (RTITCASV01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id xBK9MR8o025729
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id xBK9MQWK025725
         (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
-        Fri, 20 Dec 2019 17:22:27 +0800
+        Fri, 20 Dec 2019 17:22:26 +0800
 Received: from localhost.localdomain (172.21.68.126) by
  RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
  14.3.468.0; Fri, 20 Dec 2019 17:22:26 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>, <briannorris@chromium.org>
-Subject: [PATCH 08/11] rtw88: remove unused vif pointer in struct rtw_vif
-Date:   Fri, 20 Dec 2019 17:21:53 +0800
-Message-ID: <20191220092156.13443-9-yhchuang@realtek.com>
+Subject: [PATCH 07/11] rtw88: remove unused variable 'in_lps'
+Date:   Fri, 20 Dec 2019 17:21:52 +0800
+Message-ID: <20191220092156.13443-8-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20191220092156.13443-1-yhchuang@realtek.com>
 References: <20191220092156.13443-1-yhchuang@realtek.com>
@@ -48,8 +48,9 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-As driver can easily get vif with container_of(), we can
-just remove it.
+Unused, will not be used neither, because the hardware/firmware
+can only support one vif for LPS currnetly. If there's more than
+one vif, than driver will never enter LPS. So remove it.
 
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
@@ -58,29 +59,29 @@ Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
  2 files changed, 2 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtw88/mac80211.c b/drivers/net/wireless/realtek/rtw88/mac80211.c
-index ddde3b855893..76f85640ff0d 100644
+index 34a1c3b53cd4..ddde3b855893 100644
 --- a/drivers/net/wireless/realtek/rtw88/mac80211.c
 +++ b/drivers/net/wireless/realtek/rtw88/mac80211.c
-@@ -152,7 +152,6 @@ static int rtw_ops_add_interface(struct ieee80211_hw *hw,
- 	u8 bcn_ctrl = 0;
- 
- 	rtwvif->port = port;
--	rtwvif->vif = vif;
- 	rtwvif->stats.tx_unicast = 0;
+@@ -157,7 +157,6 @@ static int rtw_ops_add_interface(struct ieee80211_hw *hw,
  	rtwvif->stats.rx_unicast = 0;
  	rtwvif->stats.tx_cnt = 0;
+ 	rtwvif->stats.rx_cnt = 0;
+-	rtwvif->in_lps = false;
+ 	memset(&rtwvif->bfee, 0, sizeof(struct rtw_bfee));
+ 	rtwvif->conf = &rtw_vif_port[port];
+ 	rtw_txq_init(rtwdev, vif->txq);
 diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
-index a80fa38fb404..760192442198 100644
+index b2cc7479d49b..a80fa38fb404 100644
 --- a/drivers/net/wireless/realtek/rtw88/main.h
 +++ b/drivers/net/wireless/realtek/rtw88/main.h
-@@ -726,7 +726,6 @@ struct rtw_bf_info {
- };
+@@ -737,7 +737,6 @@ struct rtw_vif {
+ 	const struct rtw_vif_port *conf;
  
- struct rtw_vif {
--	struct ieee80211_vif *vif;
- 	enum rtw_net_type net_type;
- 	u16 aid;
- 	u8 mac_addr[ETH_ALEN];
+ 	struct rtw_traffic_stats stats;
+-	bool in_lps;
+ 
+ 	struct rtw_bfee bfee;
+ };
 -- 
 2.17.1
 
