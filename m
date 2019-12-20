@@ -6,213 +6,198 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EBAAAC43603
-	for <linux-wireless@archiver.kernel.org>; Fri, 20 Dec 2019 12:51:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E42AC2D0C0
+	for <linux-wireless@archiver.kernel.org>; Fri, 20 Dec 2019 12:51:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C262B2146E
-	for <linux-wireless@archiver.kernel.org>; Fri, 20 Dec 2019 12:51:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1F61C2146E
+	for <linux-wireless@archiver.kernel.org>; Fri, 20 Dec 2019 12:51:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727403AbfLTMve (ORCPT
+        id S1727414AbfLTMvg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 20 Dec 2019 07:51:34 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:54040 "EHLO
+        Fri, 20 Dec 2019 07:51:36 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:54054 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727370AbfLTMve (ORCPT
+        with ESMTP id S1727394AbfLTMvf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Dec 2019 07:51:34 -0500
+        Fri, 20 Dec 2019 07:51:35 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92.2)
         (envelope-from <luca@coelho.fi>)
-        id 1iiHkg-0007lx-UD; Fri, 20 Dec 2019 14:51:31 +0200
+        id 1iiHki-0007lx-N2; Fri, 20 Dec 2019 14:51:33 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Fri, 20 Dec 2019 14:51:14 +0200
-Message-Id: <20191220125124.1315679-2-luca@coelho.fi>
+Date:   Fri, 20 Dec 2019 14:51:16 +0200
+Message-Id: <20191220125124.1315679-4-luca@coelho.fi>
 X-Mailer: git-send-email 2.24.0
 In-Reply-To: <20191220125124.1315679-1-luca@coelho.fi>
 References: <20191220125124.1315679-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 01/11] iwlwifi: mvm: update powersave correctly for D3
+Subject: [PATCH 03/11] iwlwifi: scan: remove support for fw scan api v11
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Tova Mussai <tova.mussai@intel.com>
 
-This fixes a long-standing bug - we haven't been able to check the
-firmware image that was loaded for D3/not-D3 since the introduction
-of the unified image...
+The fw already support scan api v12,
+v11 is not needed anymore.
 
-Fix this by keeping a status flag for D3 instead of checking for
-the firmware image that's loaded.
-
-This reduces occurrences of checks for IWL_UCODE_WOWLAN to just the
-code that actually loads the image or deals with it in other ways.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Tova Mussai <tova.mussai@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c   |  6 +++++
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |  2 ++
- .../net/wireless/intel/iwlwifi/mvm/power.c    | 27 +++++++++----------
- 3 files changed, 20 insertions(+), 15 deletions(-)
+ .../net/wireless/intel/iwlwifi/fw/api/scan.h  | 41 ----------------
+ drivers/net/wireless/intel/iwlwifi/mvm/scan.c | 47 -------------------
+ 2 files changed, 88 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-index 43ebb2149b63..8878409d2f07 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-@@ -989,6 +989,8 @@ static int __iwl_mvm_suspend(struct ieee80211_hw *hw,
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h b/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
+index 408798f351c6..1b2b5fa56e19 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
+@@ -921,21 +921,6 @@ struct iwl_scan_probe_params_v4 {
  
- 	mutex_lock(&mvm->mutex);
+ #define SCAN_MAX_NUM_CHANS_V3 67
  
-+	set_bit(IWL_MVM_STATUS_IN_D3, &mvm->status);
-+
- 	vif = iwl_mvm_get_bss_vif(mvm);
- 	if (IS_ERR_OR_NULL(vif)) {
- 		ret = 1;
-@@ -1083,6 +1085,8 @@ static int __iwl_mvm_suspend(struct ieee80211_hw *hw,
- 				ieee80211_restart_hw(mvm->hw);
- 			}
- 		}
-+
-+		clear_bit(IWL_MVM_STATUS_IN_D3, &mvm->status);
- 	}
-  out_noreset:
- 	mutex_unlock(&mvm->mutex);
-@@ -1929,6 +1933,8 @@ static int __iwl_mvm_resume(struct iwl_mvm *mvm, bool test)
+-/**
+- * struct iwl_scan_channel_params_v3
+- * @flags: channel flags &enum iwl_scan_channel_flags
+- * @count: num of channels in scan request
+- * @reserved: for future use and alignment
+- * @channel_config: array of explicit channel configurations
+- *                  for 2.4Ghz and 5.2Ghz bands
+- */
+-struct iwl_scan_channel_params_v3 {
+-	u8 flags;
+-	u8 count;
+-	__le16 reserved;
+-	struct iwl_scan_channel_cfg_umac channel_config[SCAN_MAX_NUM_CHANS_V3];
+-} __packed; /* SCAN_CHANNEL_PARAMS_API_S_VER_3 */
+-
+ /**
+  * struct iwl_scan_channel_params_v4
+  * @flags: channel flags &enum iwl_scan_channel_flags
+@@ -1010,20 +995,6 @@ struct iwl_scan_periodic_parms_v1 {
+ 	__le16 reserved;
+ } __packed; /* SCAN_PERIODIC_PARAMS_API_S_VER_1 */
  
- 	mutex_lock(&mvm->mutex);
+-/**
+- * struct iwl_scan_req_params_v11
+- * @general_params: &struct iwl_scan_general_params_v10
+- * @channel_params: &struct iwl_scan_channel_params_v3
+- * @periodic_params: &struct iwl_scan_periodic_parms_v1
+- * @probe_params: &struct iwl_scan_probe_params_v3
+- */
+-struct iwl_scan_req_params_v11 {
+-	struct iwl_scan_general_params_v10 general_params;
+-	struct iwl_scan_channel_params_v3 channel_params;
+-	struct iwl_scan_periodic_parms_v1 periodic_params;
+-	struct iwl_scan_probe_params_v3 probe_params;
+-} __packed; /* SCAN_REQUEST_PARAMS_API_S_VER_11 */
+-
+ /**
+  * struct iwl_scan_req_params_v12
+  * @general_params: &struct iwl_scan_general_params_v10
+@@ -1052,18 +1023,6 @@ struct iwl_scan_req_params_v13 {
+ 	struct iwl_scan_probe_params_v4 probe_params;
+ } __packed; /* SCAN_REQUEST_PARAMS_API_S_VER_13 */
  
-+	clear_bit(IWL_MVM_STATUS_IN_D3, &mvm->status);
-+
- 	/* get the BSS vif pointer again */
- 	vif = iwl_mvm_get_bss_vif(mvm);
- 	if (IS_ERR_OR_NULL(vif))
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 3ec8de00f3aa..3571b71fc51e 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1160,6 +1160,7 @@ struct iwl_mvm {
-  * @IWL_MVM_STATUS_ROC_AUX_RUNNING: AUX remain-on-channel is running
-  * @IWL_MVM_STATUS_FIRMWARE_RUNNING: firmware is running
-  * @IWL_MVM_STATUS_NEED_FLUSH_P2P: need to flush P2P bcast STA
-+ * @IWL_MVM_STATUS_IN_D3: in D3 (or at least about to go into it)
-  */
- enum iwl_mvm_status {
- 	IWL_MVM_STATUS_HW_RFKILL,
-@@ -1170,6 +1171,7 @@ enum iwl_mvm_status {
- 	IWL_MVM_STATUS_ROC_AUX_RUNNING,
- 	IWL_MVM_STATUS_FIRMWARE_RUNNING,
- 	IWL_MVM_STATUS_NEED_FLUSH_P2P,
-+	IWL_MVM_STATUS_IN_D3,
+-/**
+- * struct iwl_scan_req_umac_v11
+- * @uid: scan id, &enum iwl_umac_scan_uid_offsets
+- * @ooc_priority: out of channel priority - &enum iwl_scan_priority
+- * @scan_params: scan parameters
+- */
+-struct iwl_scan_req_umac_v11 {
+-	__le32 uid;
+-	__le32 ooc_priority;
+-	struct iwl_scan_req_params_v11 scan_params;
+-} __packed; /* SCAN_REQUEST_CMD_UMAC_API_S_VER_11 */
+-
+ /**
+  * struct iwl_scan_req_umac_v12
+  * @uid: scan id, &enum iwl_umac_scan_uid_offsets
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
+index a046ac9fa852..c0c89d460700 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
+@@ -1906,20 +1906,6 @@ iwl_mvm_scan_umac_fill_probe_p_v4(struct iwl_mvm_scan_params *params,
+ 	iwl_scan_build_ssids(params, pp->direct_scan, bitmap_ssid);
+ }
+ 
+-static void
+-iwl_mvm_scan_umac_fill_ch_p_v3(struct iwl_mvm *mvm,
+-			       struct iwl_mvm_scan_params *params,
+-			       struct ieee80211_vif *vif,
+-			       struct iwl_scan_channel_params_v3 *cp)
+-{
+-	cp->flags = iwl_mvm_scan_umac_chan_flags_v2(mvm, params, vif);
+-	cp->count = params->n_channels;
+-
+-	iwl_mvm_umac_scan_cfg_channels(mvm, params->channels,
+-				       params->n_channels, 0,
+-				       cp->channel_config);
+-}
+-
+ static void
+ iwl_mvm_scan_umac_fill_ch_p_v4(struct iwl_mvm *mvm,
+ 			       struct iwl_mvm_scan_params *params,
+@@ -1937,37 +1923,6 @@ iwl_mvm_scan_umac_fill_ch_p_v4(struct iwl_mvm *mvm,
+ 					  vif->type);
+ }
+ 
+-static int iwl_mvm_scan_umac_v11(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+-				 struct iwl_mvm_scan_params *params, int type,
+-				 int uid)
+-{
+-	struct iwl_scan_req_umac_v11 *cmd = mvm->scan_cmd;
+-	struct iwl_scan_req_params_v11 *scan_p = &cmd->scan_params;
+-	int ret;
+-	u16 gen_flags;
+-
+-	mvm->scan_uid_status[uid] = type;
+-
+-	cmd->ooc_priority = cpu_to_le32(iwl_mvm_scan_umac_ooc_priority(params));
+-	cmd->uid = cpu_to_le32(uid);
+-
+-	gen_flags = iwl_mvm_scan_umac_flags_v2(mvm, params, vif, type);
+-	iwl_mvm_scan_umac_fill_general_p_v10(mvm, params, vif,
+-					     &scan_p->general_params,
+-					     gen_flags);
+-
+-	 ret = iwl_mvm_fill_scan_sched_params(params,
+-					      scan_p->periodic_params.schedule,
+-					      &scan_p->periodic_params.delay);
+-	if (ret)
+-		return ret;
+-
+-	iwl_mvm_scan_umac_fill_probe_p_v3(params, &scan_p->probe_params);
+-	iwl_mvm_scan_umac_fill_ch_p_v3(mvm, params, vif,
+-				       &scan_p->channel_params);
+-
+-	return 0;
+-}
+ 
+ static int iwl_mvm_scan_umac_v12(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 				 struct iwl_mvm_scan_params *params, int type,
+@@ -2152,7 +2107,6 @@ static const struct iwl_scan_umac_handler iwl_scan_umac_handlers[] = {
+ 	/* set the newest version first to shorten the list traverse time */
+ 	IWL_SCAN_UMAC_HANDLER(13),
+ 	IWL_SCAN_UMAC_HANDLER(12),
+-	IWL_SCAN_UMAC_HANDLER(11),
  };
  
- /* Keep track of completed init configuration */
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/power.c b/drivers/net/wireless/intel/iwlwifi/mvm/power.c
-index 25d7faea1c62..c146303ec73b 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/power.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/power.c
-@@ -198,7 +198,7 @@ static void iwl_mvm_power_configure_uapsd(struct iwl_mvm *mvm,
- 		if (!mvmvif->queue_params[ac].uapsd)
- 			continue;
- 
--		if (mvm->fwrt.cur_fw_img != IWL_UCODE_WOWLAN)
-+		if (!test_bit(IWL_MVM_STATUS_IN_D3, &mvm->status))
- 			cmd->flags |=
- 				cpu_to_le16(POWER_FLAGS_ADVANCE_PM_ENA_MSK);
- 
-@@ -233,15 +233,15 @@ static void iwl_mvm_power_configure_uapsd(struct iwl_mvm *mvm,
- 		cmd->flags |= cpu_to_le16(POWER_FLAGS_SNOOZE_ENA_MSK);
- 		cmd->snooze_interval = cpu_to_le16(IWL_MVM_PS_SNOOZE_INTERVAL);
- 		cmd->snooze_window =
--			(mvm->fwrt.cur_fw_img == IWL_UCODE_WOWLAN) ?
-+			test_bit(IWL_MVM_STATUS_IN_D3, &mvm->status) ?
- 				cpu_to_le16(IWL_MVM_WOWLAN_PS_SNOOZE_WINDOW) :
- 				cpu_to_le16(IWL_MVM_PS_SNOOZE_WINDOW);
+ static int iwl_mvm_build_scan_cmd(struct iwl_mvm *mvm,
+@@ -2511,7 +2465,6 @@ static int iwl_scan_req_umac_get_size(u8 scan_ver)
+ 	switch (scan_ver) {
+ 		IWL_SCAN_REQ_UMAC_HANDLE_SIZE(13);
+ 		IWL_SCAN_REQ_UMAC_HANDLE_SIZE(12);
+-		IWL_SCAN_REQ_UMAC_HANDLE_SIZE(11);
  	}
  
- 	cmd->uapsd_max_sp = mvm->hw->uapsd_max_sp_len;
- 
--	if (mvm->fwrt.cur_fw_img == IWL_UCODE_WOWLAN || cmd->flags &
--	    cpu_to_le16(POWER_FLAGS_SNOOZE_ENA_MSK)) {
-+	if (test_bit(IWL_MVM_STATUS_IN_D3, &mvm->status) ||
-+	    cmd->flags & cpu_to_le16(POWER_FLAGS_SNOOZE_ENA_MSK)) {
- 		cmd->rx_data_timeout_uapsd =
- 			cpu_to_le32(IWL_MVM_WOWLAN_PS_RX_DATA_TIMEOUT);
- 		cmd->tx_data_timeout_uapsd =
-@@ -354,8 +354,7 @@ static bool iwl_mvm_power_is_radar(struct ieee80211_vif *vif)
- 
- static void iwl_mvm_power_config_skip_dtim(struct iwl_mvm *mvm,
- 					   struct ieee80211_vif *vif,
--					   struct iwl_mac_power_cmd *cmd,
--					   bool host_awake)
-+					   struct iwl_mac_power_cmd *cmd)
- {
- 	int dtimper = vif->bss_conf.dtim_period ?: 1;
- 	int skip;
-@@ -370,7 +369,7 @@ static void iwl_mvm_power_config_skip_dtim(struct iwl_mvm *mvm,
- 	if (dtimper >= 10)
- 		return;
- 
--	if (host_awake) {
-+	if (!test_bit(IWL_MVM_STATUS_IN_D3, &mvm->status)) {
- 		if (iwlmvm_mod_params.power_scheme != IWL_POWER_SCHEME_LP)
- 			return;
- 		skip = 2;
-@@ -390,8 +389,7 @@ static void iwl_mvm_power_config_skip_dtim(struct iwl_mvm *mvm,
- 
- static void iwl_mvm_power_build_cmd(struct iwl_mvm *mvm,
- 				    struct ieee80211_vif *vif,
--				    struct iwl_mac_power_cmd *cmd,
--				    bool host_awake)
-+				    struct iwl_mac_power_cmd *cmd)
- {
- 	int dtimper, bi;
- 	int keep_alive;
-@@ -437,9 +435,9 @@ static void iwl_mvm_power_build_cmd(struct iwl_mvm *mvm,
- 		cmd->lprx_rssi_threshold = POWER_LPRX_RSSI_THRESHOLD;
- 	}
- 
--	iwl_mvm_power_config_skip_dtim(mvm, vif, cmd, host_awake);
-+	iwl_mvm_power_config_skip_dtim(mvm, vif, cmd);
- 
--	if (!host_awake) {
-+	if (test_bit(IWL_MVM_STATUS_IN_D3, &mvm->status)) {
- 		cmd->rx_data_timeout =
- 			cpu_to_le32(IWL_MVM_WOWLAN_PS_RX_DATA_TIMEOUT);
- 		cmd->tx_data_timeout =
-@@ -512,8 +510,7 @@ static int iwl_mvm_power_send_cmd(struct iwl_mvm *mvm,
- {
- 	struct iwl_mac_power_cmd cmd = {};
- 
--	iwl_mvm_power_build_cmd(mvm, vif, &cmd,
--				mvm->fwrt.cur_fw_img != IWL_UCODE_WOWLAN);
-+	iwl_mvm_power_build_cmd(mvm, vif, &cmd);
- 	iwl_mvm_power_log(mvm, &cmd);
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- 	memcpy(&iwl_mvm_vif_from_mac80211(vif)->mac_pwr_cmd, &cmd, sizeof(cmd));
-@@ -536,7 +533,7 @@ int iwl_mvm_power_update_device(struct iwl_mvm *mvm)
- 		cmd.flags |= cpu_to_le16(DEVICE_POWER_FLAGS_POWER_SAVE_ENA_MSK);
- 
- #ifdef CONFIG_IWLWIFI_DEBUGFS
--	if ((mvm->fwrt.cur_fw_img == IWL_UCODE_WOWLAN) ?
-+	if (test_bit(IWL_MVM_STATUS_IN_D3, &mvm->status) ?
- 			mvm->disable_power_off_d3 : mvm->disable_power_off)
- 		cmd.flags &=
- 			cpu_to_le16(~DEVICE_POWER_FLAGS_POWER_SAVE_ENA_MSK);
-@@ -943,7 +940,7 @@ static int iwl_mvm_power_set_ba(struct iwl_mvm *mvm,
- 	if (!mvmvif->bf_data.bf_enabled)
- 		return 0;
- 
--	if (mvm->fwrt.cur_fw_img == IWL_UCODE_WOWLAN)
-+	if (test_bit(IWL_MVM_STATUS_IN_D3, &mvm->status))
- 		cmd.ba_escape_timer = cpu_to_le32(IWL_BA_ESCAPE_TIMER_D3);
- 
- 	mvmvif->bf_data.ba_enabled = !(!mvmvif->pm_enabled ||
+ 	return 0;
 -- 
 2.24.0
 
