@@ -6,35 +6,35 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5376AC43603
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0538C2D0D3
 	for <linux-wireless@archiver.kernel.org>; Fri, 20 Dec 2019 09:22:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2F2CF20716
+	by mail.kernel.org (Postfix) with ESMTP id A6D5F20716
 	for <linux-wireless@archiver.kernel.org>; Fri, 20 Dec 2019 09:22:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727216AbfLTJWf (ORCPT
+        id S1727413AbfLTJWg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 20 Dec 2019 04:22:35 -0500
-Received: from rtits2.realtek.com ([211.75.126.72]:47429 "EHLO
+        Fri, 20 Dec 2019 04:22:36 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:47445 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727177AbfLTJWa (ORCPT
+        with ESMTP id S1727404AbfLTJWf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Dec 2019 04:22:30 -0500
+        Fri, 20 Dec 2019 04:22:35 -0500
 Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID xBK9MMWV025702, This message is accepted by code: ctloc85258
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID xBK9MSXZ025738, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (RTITCASV01.realtek.com.tw[172.21.6.18])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id xBK9MMWV025702
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id xBK9MSXZ025738
         (version=TLSv1 cipher=DHE-RSA-AES256-SHA bits=256 verify=NOT);
-        Fri, 20 Dec 2019 17:22:23 +0800
+        Fri, 20 Dec 2019 17:22:28 +0800
 Received: from localhost.localdomain (172.21.68.126) by
  RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
- 14.3.468.0; Fri, 20 Dec 2019 17:22:22 +0800
+ 14.3.468.0; Fri, 20 Dec 2019 17:22:28 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>, <briannorris@chromium.org>
-Subject: [PATCH 02/11] rtw88: fix TX secondary channel offset of 40M if current bw is 20M or 40M
-Date:   Fri, 20 Dec 2019 17:21:47 +0800
-Message-ID: <20191220092156.13443-3-yhchuang@realtek.com>
+Subject: [PATCH 10/11] rtw88: assign NULL to skb after being kfree()'ed
+Date:   Fri, 20 Dec 2019 17:21:55 +0800
+Message-ID: <20191220092156.13443-11-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20191220092156.13443-1-yhchuang@realtek.com>
 References: <20191220092156.13443-1-yhchuang@realtek.com>
@@ -46,39 +46,41 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-TX secondary channel offset is valid only if current bandwidth is 80M,
-otherwise leave this value as zero. The wrong value of txsc40 causes
-MAC unpredictable behavior.
+Should assign NULL to skb after kfree(), in case of driver
+trying to free the same skb again.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+This could happen if driver failed to allocate an skb when
+building reserved page.
+
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/mac.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+ drivers/net/wireless/realtek/rtw88/fw.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/mac.c b/drivers/net/wireless/realtek/rtw88/mac.c
-index 507970387b2a..ed9bb427ba60 100644
---- a/drivers/net/wireless/realtek/rtw88/mac.c
-+++ b/drivers/net/wireless/realtek/rtw88/mac.c
-@@ -16,10 +16,12 @@ void rtw_set_channel_mac(struct rtw_dev *rtwdev, u8 channel, u8 bw,
- 	u8 value8;
+diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wireless/realtek/rtw88/fw.c
+index b8c581161f61..92cefb79e09b 100644
+--- a/drivers/net/wireless/realtek/rtw88/fw.c
++++ b/drivers/net/wireless/realtek/rtw88/fw.c
+@@ -857,13 +857,16 @@ static u8 *rtw_build_rsvd_page(struct rtw_dev *rtwdev,
+ 			page += rtw_len_to_page(rsvd_pkt->skb->len, page_size);
  
- 	txsc20 = primary_ch_idx;
--	if (txsc20 == 1 || txsc20 == 3)
--		txsc40 = 9;
--	else
--		txsc40 = 10;
-+	if (bw == RTW_CHANNEL_WIDTH_80) {
-+		if (txsc20 == 1 || txsc20 == 3)
-+			txsc40 = 9;
-+		else
-+			txsc40 = 10;
+ 		kfree_skb(rsvd_pkt->skb);
++		rsvd_pkt->skb = NULL;
+ 	}
+ 
+ 	return buf;
+ 
+ release_skb:
+-	list_for_each_entry(rsvd_pkt, &rtwdev->rsvd_page_list, list)
++	list_for_each_entry(rsvd_pkt, &rtwdev->rsvd_page_list, list) {
+ 		kfree_skb(rsvd_pkt->skb);
++		rsvd_pkt->skb = NULL;
 +	}
- 	rtw_write8(rtwdev, REG_DATA_SC,
- 		   BIT_TXSC_20M(txsc20) | BIT_TXSC_40M(txsc40));
  
+ 	return NULL;
+ }
 -- 
 2.17.1
 
