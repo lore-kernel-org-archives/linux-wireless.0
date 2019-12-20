@@ -2,38 +2,40 @@ Return-Path: <SRS0=W7N3=2K=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D6AFC3F68F
-	for <linux-wireless@archiver.kernel.org>; Fri, 20 Dec 2019 12:51:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13490C2D0C0
+	for <linux-wireless@archiver.kernel.org>; Fri, 20 Dec 2019 12:51:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7D1612467F
-	for <linux-wireless@archiver.kernel.org>; Fri, 20 Dec 2019 12:51:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E706A2467F
+	for <linux-wireless@archiver.kernel.org>; Fri, 20 Dec 2019 12:51:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727390AbfLTMvc (ORCPT
+        id S1727407AbfLTMve (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 20 Dec 2019 07:51:32 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:54036 "EHLO
+        Fri, 20 Dec 2019 07:51:34 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:54048 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727341AbfLTMvc (ORCPT
+        with ESMTP id S1727341AbfLTMve (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Dec 2019 07:51:32 -0500
+        Fri, 20 Dec 2019 07:51:34 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92.2)
         (envelope-from <luca@coelho.fi>)
-        id 1iiHkf-0007lx-Ta; Fri, 20 Dec 2019 14:51:30 +0200
+        id 1iiHkh-0007lx-Ub; Fri, 20 Dec 2019 14:51:32 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Fri, 20 Dec 2019 14:51:13 +0200
-Message-Id: <20191220125124.1315679-1-luca@coelho.fi>
+Date:   Fri, 20 Dec 2019 14:51:15 +0200
+Message-Id: <20191220125124.1315679-3-luca@coelho.fi>
 X-Mailer: git-send-email 2.24.0
+In-Reply-To: <20191220125124.1315679-1-luca@coelho.fi>
+References: <20191220125124.1315679-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 00/11] iwlwifi: updates intended for v5.6 2019-11-20
+Subject: [PATCH 02/11] iwlwifi: dbg_ini: don't skip a TX FIFO when dumping
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -41,82 +43,36 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Luca Coelho <luciano.coelho@intel.com>
 
-Hi,
+Before we start looping over the internal TX FIFOs increase the fifo
+number, but that's incorrect and causes a FIFO to be skipped.  This is
+probably due to a copy and paste from the previous loop.
 
-Here's the first and final set of patches intended for v5.6.  It's the
-usual development, new features, cleanups and bugfixes.
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-The changes are:
-
-* Support new versions of the FTM FW APIs;
-* Fix an old bug in D3 (WoWLAN);
-* A couple of fixes/improvements in the receive-buffers code;
-* Fix in the debugging where we were skipping one TXQ;
-* Some clean-ups;
-
-As usual, I'm pushing this to a pending branch, for kbuild bot, and
-will send a pull-request later.
-
-Please review.
-
-Cheers,
-Luca.
-
-
-Avraham Stern (2):
-  iwlwifi: mvm: add support for location range request version 8
-  iwlwifi: mvm: add support for responder config command version 7
-
-Johannes Berg (5):
-  iwlwifi: mvm: update powersave correctly for D3
-  iwlwifi: allocate more receive buffers for HE devices
-  iwlwifi: pcie: map only used part of RX buffers
-  iwlwifi: pcie: use partial pages if applicable
-  iwlwifi: pcie: validate queue ID before array deref/bit ops
-
-Luca Coelho (3):
-  iwlwifi: dbg_ini: don't skip a TX FIFO when dumping
-  iwlwifi: remove some outdated iwl22000 configurations
-  iwlwifi: remove CSR registers abstraction
-
-Tova Mussai (1):
-  iwlwifi: scan: remove support for fw scan api v11
-
- drivers/net/wireless/intel/iwlwifi/cfg/1000.c |   6 +-
- drivers/net/wireless/intel/iwlwifi/cfg/2000.c |  12 +-
- .../net/wireless/intel/iwlwifi/cfg/22000.c    |  71 ++++--
- drivers/net/wireless/intel/iwlwifi/cfg/5000.c |   7 +-
- drivers/net/wireless/intel/iwlwifi/cfg/6000.c |  19 +-
- drivers/net/wireless/intel/iwlwifi/cfg/7000.c |   3 +-
- drivers/net/wireless/intel/iwlwifi/cfg/8000.c |   3 +-
- drivers/net/wireless/intel/iwlwifi/cfg/9000.c |   2 +-
- .../wireless/intel/iwlwifi/fw/api/location.h  | 144 ++++++++++-
- .../net/wireless/intel/iwlwifi/fw/api/scan.h  |  41 ---
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c   |   4 +-
- .../net/wireless/intel/iwlwifi/iwl-config.h   |  56 +----
- .../wireless/intel/iwlwifi/iwl-context-info.h |  20 +-
- drivers/net/wireless/intel/iwlwifi/iwl-csr.h  |  27 +-
- drivers/net/wireless/intel/iwlwifi/iwl-fh.h   |   5 +-
- drivers/net/wireless/intel/iwlwifi/iwl-io.c   |  37 +--
- .../wireless/intel/iwlwifi/iwl-nvm-parse.c    |  14 +-
- .../net/wireless/intel/iwlwifi/iwl-trans.h    |  18 ++
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c   |   6 +
- .../intel/iwlwifi/mvm/ftm-initiator.c         | 238 ++++++++++++++----
- .../intel/iwlwifi/mvm/ftm-responder.c         |  95 +++++--
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |   2 +
- .../net/wireless/intel/iwlwifi/mvm/power.c    |  27 +-
- drivers/net/wireless/intel/iwlwifi/mvm/scan.c |  47 ----
- .../intel/iwlwifi/pcie/ctxt-info-gen3.c       |   2 +-
- .../wireless/intel/iwlwifi/pcie/ctxt-info.c   |  11 +-
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c |  25 +-
- .../wireless/intel/iwlwifi/pcie/internal.h    |  21 +-
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c  | 108 +++++---
- .../wireless/intel/iwlwifi/pcie/trans-gen2.c  |   5 +-
- .../net/wireless/intel/iwlwifi/pcie/trans.c   |  51 ++--
- .../net/wireless/intel/iwlwifi/pcie/tx-gen2.c |  16 +-
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c  |  12 +-
- 33 files changed, 725 insertions(+), 430 deletions(-)
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+index ed90dd104366..c8bc6b9b53a4 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+@@ -1230,13 +1230,15 @@ static bool iwl_ini_txf_iter(struct iwl_fw_runtime *fwrt,
+ 			iter->lmac = 0;
+ 	}
+ 
+-	if (!iter->internal_txf)
++	if (!iter->internal_txf) {
+ 		for (iter->fifo++; iter->fifo < txf_num; iter->fifo++) {
+ 			iter->fifo_size =
+ 				cfg->lmac[iter->lmac].txfifo_size[iter->fifo];
+ 			if (iter->fifo_size && (lmac_bitmap & BIT(iter->fifo)))
+ 				return true;
+ 		}
++		iter->fifo--;
++	}
+ 
+ 	iter->internal_txf = 1;
+ 
 -- 
 2.24.0
 
