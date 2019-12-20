@@ -6,76 +6,78 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 007DCC2D0C0
-	for <linux-wireless@archiver.kernel.org>; Fri, 20 Dec 2019 11:56:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DCE4C43603
+	for <linux-wireless@archiver.kernel.org>; Fri, 20 Dec 2019 11:56:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C85FA24680
-	for <linux-wireless@archiver.kernel.org>; Fri, 20 Dec 2019 11:56:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 23ED524679
+	for <linux-wireless@archiver.kernel.org>; Fri, 20 Dec 2019 11:56:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727381AbfLTL4u (ORCPT
+        id S1727388AbfLTL4v (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 20 Dec 2019 06:56:50 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:53970 "EHLO
+        Fri, 20 Dec 2019 06:56:51 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:53986 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727177AbfLTL4t (ORCPT
+        with ESMTP id S1727177AbfLTL4v (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Dec 2019 06:56:49 -0500
+        Fri, 20 Dec 2019 06:56:51 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92.2)
         (envelope-from <luca@coelho.fi>)
-        id 1iiGti-0007ip-HI; Fri, 20 Dec 2019 13:56:47 +0200
+        id 1iiGtl-0007ip-62; Fri, 20 Dec 2019 13:56:49 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Fri, 20 Dec 2019 13:56:32 +0200
-Message-Id: <20191220115638.1299888-5-luca@coelho.fi>
+Date:   Fri, 20 Dec 2019 13:56:34 +0200
+Message-Id: <20191220115638.1299888-7-luca@coelho.fi>
 X-Mailer: git-send-email 2.24.0
 In-Reply-To: <20191220115638.1299888-1-luca@coelho.fi>
 References: <20191220115638.1299888-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH v5.5 04/10] iwlwifi: pcie: detect the DMA bug and warn if it happens
+Subject: [PATCH v5.5 06/10] iwlwifi: fix TLV fragment allocation loop
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Warn if the DMA bug is going to happen. We don't have a good
-way of actually aborting in this case and we have workarounds
-in place for the cases where it happens, but in order to not
-be surprised add a safety-check and warn.
+In the allocation loop, "pages" will never become zero (because of the
+DIV_ROUND_UP), so if we can't allocate any size and pages becomes 1,
+we will keep trying to allocate 1 page until it succeeds.  And in that
+case, as coverity reported, block will never be NULL.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Reported-by: coverity-bot <keescook+coverity-bot@chromium.org>
+Addresses-Coverity-ID: 1487402 ("Control flow issues")
+Fixes: 14124b25780d ("iwlwifi: dbg_ini: implement monitor allocation flow")
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Fixes: 14124b25780d ("iwlwifi: dbg_ini: implement monitor allocation flow")
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-index b2a3a1c18bec..090c1156bc21 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-@@ -231,6 +231,17 @@ static int iwl_pcie_gen2_set_tb(struct iwl_trans *trans,
- 	int idx = iwl_pcie_gen2_get_num_tbs(trans, tfd);
- 	struct iwl_tfh_tb *tb;
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
+index f266647dc08c..ce8f248c33ea 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
+@@ -480,7 +480,14 @@ static int iwl_dbg_tlv_alloc_fragment(struct iwl_fw_runtime *fwrt,
+ 	if (!frag || frag->size || !pages)
+ 		return -EIO;
  
+-	while (pages) {
 +	/*
-+	 * Only WARN here so we know about the issue, but we mess up our
-+	 * unmap path because not every place currently checks for errors
-+	 * returned from this function - it can only return an error if
-+	 * there's no more space, and so when we know there is enough we
-+	 * don't always check ...
++	 * We try to allocate as many pages as we can, starting with
++	 * the requested amount and going down until we can allocate
++	 * something.  Because of DIV_ROUND_UP(), pages will never go
++	 * down to 0 and stop the loop, so stop when pages reaches 1,
++	 * which is too small anyway.
 +	 */
-+	WARN(crosses_4g_boundary(addr, len),
-+	     "possible DMA problem with iova:0x%llx, len:%d\n",
-+	     (unsigned long long)addr, len);
-+
- 	if (WARN_ON(idx >= IWL_TFH_NUM_TBS))
- 		return -EINVAL;
- 	tb = &tfd->tbs[idx];
++	while (pages > 1) {
+ 		block = dma_alloc_coherent(fwrt->dev, pages * PAGE_SIZE,
+ 					   &physical,
+ 					   GFP_KERNEL | __GFP_NOWARN);
 -- 
 2.24.0
 
