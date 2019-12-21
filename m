@@ -2,53 +2,89 @@ Return-Path: <SRS0=a9MN=2L=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MIME_BASE64_TEXT,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE1A5C2D0C0
-	for <linux-wireless@archiver.kernel.org>; Sat, 21 Dec 2019 05:55:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D08B0C2D0D2
+	for <linux-wireless@archiver.kernel.org>; Sat, 21 Dec 2019 07:17:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AD9A321927
-	for <linux-wireless@archiver.kernel.org>; Sat, 21 Dec 2019 05:55:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A728E21927
+	for <linux-wireless@archiver.kernel.org>; Sat, 21 Dec 2019 07:17:15 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="cqqFjOcc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726131AbfLUFz2 (ORCPT
+        id S1726057AbfLUHRN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 21 Dec 2019 00:55:28 -0500
-Received: from shards.monkeyblade.net ([23.128.96.9]:57102 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725838AbfLUFz2 (ORCPT
+        Sat, 21 Dec 2019 02:17:13 -0500
+Received: from mailgw01.mediatek.com ([210.61.82.183]:64701 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1725774AbfLUHRN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 21 Dec 2019 00:55:28 -0500
-Received: from localhost (unknown [IPv6:2601:601:9f00:1c3::3d5])
-        (using TLSv1 with cipher AES256-SHA (256/256 bits))
-        (Client did not present a certificate)
-        (Authenticated sender: davem-davemloft)
-        by shards.monkeyblade.net (Postfix) with ESMTPSA id 9BCE5153DA525;
-        Fri, 20 Dec 2019 21:55:27 -0800 (PST)
-Date:   Fri, 20 Dec 2019 21:55:27 -0800 (PST)
-Message-Id: <20191220.215527.647762875412658989.davem@davemloft.net>
-To:     kvalo@codeaurora.org
-Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull-request: wireless-drivers-next-2019-12-20
-From:   David Miller <davem@davemloft.net>
-In-Reply-To: <20191220152207.8EBF5C433A2@smtp.codeaurora.org>
-References: <20191220152207.8EBF5C433A2@smtp.codeaurora.org>
-X-Mailer: Mew version 6.8 on Emacs 26.1
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-X-Greylist: Sender succeeded SMTP AUTH, not delayed by milter-greylist-4.5.12 (shards.monkeyblade.net [149.20.54.216]); Fri, 20 Dec 2019 21:55:27 -0800 (PST)
+        Sat, 21 Dec 2019 02:17:13 -0500
+X-UUID: bbd62af5328e47f8bcbaee64d092f4f0-20191221
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=6a1RKfO0AH2bkibQkHqHEE9QU8OujxhL2WQH1gq5fq4=;
+        b=cqqFjOccVxh6YQ/wcKv4ytO37RDX6T1qtnzbbrv3V7O3rKPnpQcI1Wwk32mnJxB49Qz3O4gZYIPflkviRyX2WvBBIoACxK/WgHJqctcqBbid4Dl4I3/dJOR6HebBcJw3gNsar9+hRCGy/Gx+x9aQlDe7Pj4chpn1PdFERl06pLw=;
+X-UUID: bbd62af5328e47f8bcbaee64d092f4f0-20191221
+Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw01.mediatek.com
+        (envelope-from <ryder.lee@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
+        with ESMTP id 367908377; Sat, 21 Dec 2019 15:17:04 +0800
+Received: from mtkcas07.mediatek.inc (172.21.101.84) by
+ mtkmbs08n1.mediatek.inc (172.21.101.55) with Microsoft SMTP Server (TLS) id
+ 15.0.1395.4; Sat, 21 Dec 2019 15:17:07 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas07.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
+ Transport; Sat, 21 Dec 2019 15:16:20 +0800
+From:   Ryder Lee <ryder.lee@mediatek.com>
+To:     Felix Fietkau <nbd@nbd.name>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+CC:     <linux-wireless@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, Ryder Lee <ryder.lee@mediatek.com>
+Subject: [PATCH] mt76: mt7615: fix MT7615_CFEND_RATE_DEFAULT value
+Date:   Sat, 21 Dec 2019 15:17:00 +0800
+Message-ID: <373ef6c1a4a0252cc21dde3f08e618a62629ba38.1576911997.git.ryder.lee@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+MIME-Version: 1.0
+Content-Type: text/plain
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Kalle Valo <kvalo@codeaurora.org>
-Date: Fri, 20 Dec 2019 15:22:07 +0000 (UTC)
-
-> here's a pull request to net-next tree, more info below. Please let me know if
-> there are any problems.
-
-Pulled, thanks Kalle.
+Rml4IGRlZnVhbHQgQ0ZFTkRfUkFURSBhbmQgcmVwbGFjZSBoYXJkY29kZSB2YWx1ZXMuDQoNClNp
+Z25lZC1vZmYtYnk6IFJ5ZGVyIExlZSA8cnlkZXIubGVlQG1lZGlhdGVrLmNvbT4NCi0tLQ0KIGRy
+aXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3NjE1L2luaXQuYyAgIHwgNCArKy0t
+DQogZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc2MTUvbXQ3NjE1LmggfCAz
+ICsrLQ0KIDIgZmlsZXMgY2hhbmdlZCwgNCBpbnNlcnRpb25zKCspLCAzIGRlbGV0aW9ucygtKQ0K
+DQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc2MTUv
+aW5pdC5jIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc2MTUvaW5pdC5j
+DQppbmRleCA0NDI3MzZjZWFiZTUuLjk0YTBkYzhiZmEyOCAxMDA2NDQNCi0tLSBhL2RyaXZlcnMv
+bmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3NjE1L2luaXQuYw0KKysrIGIvZHJpdmVycy9u
+ZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc2MTUvaW5pdC5jDQpAQCAtMzUsOCArMzUsOCBA
+QCBzdGF0aWMgdm9pZCBtdDc2MTVfbWFjX2luaXQoc3RydWN0IG10NzYxNV9kZXYgKmRldikNCiAJ
+bXQ3Nl93cihkZXYsIE1UX1RNQUNfVFJDUjEsIHZhbCk7DQogDQogCXZhbCA9IE1UX0FHR19BQ1Jf
+UEtUX1RJTUVfRU4gfCBNVF9BR0dfQUNSX05PX0JBX0FSX1JVTEUgfA0KLQkgICAgICBGSUVMRF9Q
+UkVQKE1UX0FHR19BQ1JfQ0ZFTkRfUkFURSwgMHg0OSkgfCAvKiAyNE0gKi8NCi0JICAgICAgRklF
+TERfUFJFUChNVF9BR0dfQUNSX0JBUl9SQVRFLCAweDRiKTsgLyogNk0gKi8NCisJICAgICAgRklF
+TERfUFJFUChNVF9BR0dfQUNSX0NGRU5EX1JBVEUsIE1UNzYxNV9DRkVORF9SQVRFX0RFRkFVTFQp
+IHwNCisJICAgICAgRklFTERfUFJFUChNVF9BR0dfQUNSX0JBUl9SQVRFLCBNVDc2MTVfQkFSX1JB
+VEVfREVGQVVMVCk7DQogCW10NzZfd3IoZGV2LCBNVF9BR0dfQUNSMCwgdmFsKTsNCiAJbXQ3Nl93
+cihkZXYsIE1UX0FHR19BQ1IxLCB2YWwpOw0KIA0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dp
+cmVsZXNzL21lZGlhdGVrL210NzYvbXQ3NjE1L210NzYxNS5oIGIvZHJpdmVycy9uZXQvd2lyZWxl
+c3MvbWVkaWF0ZWsvbXQ3Ni9tdDc2MTUvbXQ3NjE1LmgNCmluZGV4IDU1NGJkMDRkNmQ4MS4uNDg4
+MTBlZGExY2Q2IDEwMDY0NA0KLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3
+Ni9tdDc2MTUvbXQ3NjE1LmgNCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210
+NzYvbXQ3NjE1L210NzYxNS5oDQpAQCAtNDAsNyArNDAsOCBAQA0KICNkZWZpbmUgTVRfQ0hGUkVR
+X0RCRENfSURYCUJJVCg2KQ0KICNkZWZpbmUgTVRfQ0hGUkVRX1NFUQkJR0VOTUFTSyg1LCAwKQ0K
+IA0KLSNkZWZpbmUgTVQ3NjE1X0NGRU5EX1JBVEVfREVGQVVMVAkweDY5IC8qIGNoaXAgZGVmYXVs
+dCAoMjRNKSAqLw0KKyNkZWZpbmUgTVQ3NjE1X0JBUl9SQVRFX0RFRkFVTFQJCTB4NGIgLyogT0ZE
+TSA2TSAqLw0KKyNkZWZpbmUgTVQ3NjE1X0NGRU5EX1JBVEVfREVGQVVMVAkweDQ5IC8qIE9GRE0g
+MjRNICovDQogI2RlZmluZSBNVDc2MTVfQ0ZFTkRfUkFURV8xMUIJCTB4MDMgLyogMTFCIExQLCAx
+MU0gKi8NCiANCiBzdHJ1Y3QgbXQ3NjE1X3ZpZjsNCi0tIA0KMi4xOC4wDQo=
 
