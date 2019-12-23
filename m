@@ -2,44 +2,44 @@ Return-Path: <SRS0=Izt1=2N=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69C04C2D0D5
-	for <linux-wireless@archiver.kernel.org>; Mon, 23 Dec 2019 13:31:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA967C2D0C0
+	for <linux-wireless@archiver.kernel.org>; Mon, 23 Dec 2019 13:36:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4042120709
-	for <linux-wireless@archiver.kernel.org>; Mon, 23 Dec 2019 13:31:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BFDFD206CB
+	for <linux-wireless@archiver.kernel.org>; Mon, 23 Dec 2019 13:36:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=asmblr.net header.i=@asmblr.net header.b="TClo9OT2"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=asmblr.net header.i=@asmblr.net header.b="L3iVEpM+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726936AbfLWNbu (ORCPT
+        id S1726754AbfLWNgx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 23 Dec 2019 08:31:50 -0500
-Received: from srv2.anyservers.com ([77.79.239.202]:35586 "EHLO
+        Mon, 23 Dec 2019 08:36:53 -0500
+Received: from srv2.anyservers.com ([77.79.239.202]:42888 "EHLO
         srv2.anyservers.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726680AbfLWNbt (ORCPT
+        with ESMTP id S1726676AbfLWNgx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Dec 2019 08:31:49 -0500
+        Mon, 23 Dec 2019 08:36:53 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=asmblr.net;
          s=default; h=Content-Transfer-Encoding:Content-Type:MIME-Version:References:
         In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-ID:
         Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
         :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
         List-Post:List-Owner:List-Archive;
-        bh=SUrMh+BHIOC24ZAm0n+NADsw/cuWmXCc+FgBPXPbD4Y=; b=TClo9OT2jIrZGlaK67Yi396Uun
-        2yOfamIZ273XsqGc0S0vdku3Vcv4k8dGZLuRBjpPxD/tP3TAD6AaqyUFHcHdTPx4nYAkh0gKFfH8L
-        OVCrvsEtpRLbMLmuqoPd/enqMhcunbXPOWaBbdIPLnaezNwTAtbueaxLtGg3b1t/q9v2gUMHfltjI
-        0B5rT4nuHx/idmjvQuSIKn92ehP2vYzhVL3vvwaa0hIrIQbld2CiZLHyijiEiQD8xoZycLvjEqlQo
-        mLi0Nwj706sm2G2WW0k00YoEcKLczhKm56vqJEtbnHN3m/ocDRKmeXmkjR/+3mGkoOIdpw5hKZQ3T
-        dSlT8JcQ==;
+        bh=l61DeGK3BkqjzGKNaOFYIoM8Y8lsebt3uRDkDKao42Y=; b=L3iVEpM+RKzR6Uwd1ZhDln1HZi
+        WQzJMupsvPta3z6aB7OaLPSHEQVWlZdRJD9M28P8nfnYOvs6k8c76jgWQ6rUtS5oG2qxvhtteOUaj
+        GEqOS0weYng6dJojs/QvpBJCRorhHJiM7fQsDOzlMnBDm/O3ZReHiMrHNiJFsO/S5qGmn0yXqTmrx
+        TKPMG8g/awzniR5zolKZHrN4Q+aa66Q1ASd5zQ6SXay5US62rAzc0urqW2F4xqOfISwYU7drC9R+4
+        0sZzcRRowK7SYA5lLqwiCKlHRMuZCRqBlEGxDuRPY23oXl3qqQtejKKSdW82xlVc3R1v+pxszRK/M
+        PxcxhpjQ==;
 Received: from 89-64-37-27.dynamic.chello.pl ([89.64.37.27]:49046 helo=milkyway.galaxy)
         by srv2.anyservers.com with esmtpsa (TLSv1.2:ECDHE-RSA-AES128-GCM-SHA256:128)
         (Exim 4.92)
         (envelope-from <amade@asmblr.net>)
-        id 1ijMxQ-00Gi5o-0n; Mon, 23 Dec 2019 13:37:08 +0100
+        id 1ijMxQ-00Gi5o-Nv; Mon, 23 Dec 2019 13:37:08 +0100
 From:   =?UTF-8?q?Amadeusz=20S=C5=82awi=C5=84ski?= <amade@asmblr.net>
 To:     Ping-Ke Shih <pkshih@realtek.com>,
         Kalle Valo <kvalo@codeaurora.org>
@@ -48,9 +48,9 @@ Cc:     "David S . Miller" <davem@davemloft.net>,
         linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org,
         =?UTF-8?q?Amadeusz=20S=C5=82awi=C5=84ski?= <amade@asmblr.net>
-Subject: [PATCH 4/9] rtlwifi: rtl8192cu: Remove sw.h header
-Date:   Mon, 23 Dec 2019 13:37:10 +0100
-Message-Id: <20191223123715.7177-5-amade@asmblr.net>
+Subject: [PATCH 7/9] rtlwifi: rtl8723ae: Make functions static & rm sw.h
+Date:   Mon, 23 Dec 2019 13:37:13 +0100
+Message-Id: <20191223123715.7177-8-amade@asmblr.net>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20191223123715.7177-1-amade@asmblr.net>
 References: <20191223123715.7177-1-amade@asmblr.net>
@@ -69,61 +69,72 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-It has one define, which is already defined in include from reg.h.
-All functions are declared in their own headers and included in *.c
-files belonging to them.
-This makes sw.h unnecessary, so we can remove it.
+Some of functions which were exposed in sw.h, are only used in sw.c, so
+just make them static. This makes sw.h unnecessary, so remove it.
 
 Signed-off-by: Amadeusz Sławiński <amade@asmblr.net>
 ---
- .../wireless/realtek/rtlwifi/rtl8192cu/sw.c   |  1 -
- .../wireless/realtek/rtlwifi/rtl8192cu/sw.h   | 27 -------------------
- 2 files changed, 28 deletions(-)
- delete mode 100644 drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.h
+ drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c |  7 +++----
+ drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.h | 13 -------------
+ 2 files changed, 3 insertions(+), 17 deletions(-)
+ delete mode 100644 drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.h
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c
-index 6b954059e830..b53daf1b29f7 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c
-@@ -12,7 +12,6 @@
- #include "mac.h"
- #include "dm.h"
- #include "rf.h"
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c
+index 5702ac6deebf..ea86d5bf33d2 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c
+@@ -11,7 +11,6 @@
+ #include "fw.h"
+ #include "../rtl8723com/fw_common.h"
+ #include "hw.h"
 -#include "sw.h"
  #include "trx.h"
  #include "led.h"
- #include "hw.h"
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.h
+ #include "table.h"
+@@ -67,7 +66,7 @@ static void rtl8723e_init_aspm_vars(struct ieee80211_hw *hw)
+ 	rtlpci->const_support_pciaspm = rtlpriv->cfg->mod_params->aspm_support;
+ }
+ 
+-int rtl8723e_init_sw_vars(struct ieee80211_hw *hw)
++static int rtl8723e_init_sw_vars(struct ieee80211_hw *hw)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+@@ -166,7 +165,7 @@ int rtl8723e_init_sw_vars(struct ieee80211_hw *hw)
+ 	return 0;
+ }
+ 
+-void rtl8723e_deinit_sw_vars(struct ieee80211_hw *hw)
++static void rtl8723e_deinit_sw_vars(struct ieee80211_hw *hw)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 
+@@ -177,7 +176,7 @@ void rtl8723e_deinit_sw_vars(struct ieee80211_hw *hw)
+ }
+ 
+ /* get bt coexist status */
+-bool rtl8723e_get_btc_status(void)
++static bool rtl8723e_get_btc_status(void)
+ {
+ 	return true;
+ }
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.h b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.h
 deleted file mode 100644
-index 662440c4cdc9..000000000000
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.h
+index 200ce39a0dd7..000000000000
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.h
 +++ /dev/null
-@@ -1,27 +0,0 @@
+@@ -1,13 +0,0 @@
 -/* SPDX-License-Identifier: GPL-2.0 */
 -/* Copyright(c) 2009-2012  Realtek Corporation.*/
 -
--#ifndef __RTL92CU_SW_H__
--#define __RTL92CU_SW_H__
+-#ifndef __RTL8723E_SW_H__
+-#define __RTL8723E_SW_H__
 -
--#define EFUSE_MAX_SECTION	16
+-int rtl8723e_init_sw_vars(struct ieee80211_hw *hw);
+-void rtl8723e_deinit_sw_vars(struct ieee80211_hw *hw);
+-void rtl8723e_init_var_map(struct ieee80211_hw *hw);
+-bool rtl8723e_get_btc_status(void);
 -
--void rtl92cu_phy_rf6052_set_cck_txpower(struct ieee80211_hw *hw,
--					u8 *powerlevel);
--void rtl92cu_phy_rf6052_set_ofdm_txpower(struct ieee80211_hw *hw,
--					u8 *ppowerlevel, u8 channel);
--bool _rtl92cu_phy_config_bb_with_headerfile(struct ieee80211_hw *hw,
--					    u8 configtype);
--bool _rtl92cu_phy_config_bb_with_pgheaderfile(struct ieee80211_hw *hw,
--						    u8 configtype);
--void _rtl92cu_phy_lc_calibrate(struct ieee80211_hw *hw, bool is2t);
--void rtl92cu_phy_set_rf_reg(struct ieee80211_hw *hw,
--			   enum radio_path rfpath,
--			   u32 regaddr, u32 bitmask, u32 data);
--bool rtl92cu_phy_set_rf_power_state(struct ieee80211_hw *hw,
--				   enum rf_pwrstate rfpwr_state);
--u32 rtl92cu_phy_query_rf_reg(struct ieee80211_hw *hw,
--			    enum radio_path rfpath, u32 regaddr, u32 bitmask);
--void rtl92cu_phy_set_bw_mode_callback(struct ieee80211_hw *hw);
 -
 -#endif
 -- 
