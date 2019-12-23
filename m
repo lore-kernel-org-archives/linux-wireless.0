@@ -2,97 +2,75 @@ Return-Path: <SRS0=Izt1=2N=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B61FC3F68F
-	for <linux-wireless@archiver.kernel.org>; Mon, 23 Dec 2019 12:56:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 611D5C2D0C0
+	for <linux-wireless@archiver.kernel.org>; Mon, 23 Dec 2019 13:01:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0B73D20828
-	for <linux-wireless@archiver.kernel.org>; Mon, 23 Dec 2019 12:56:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 41494206CB
+	for <linux-wireless@archiver.kernel.org>; Mon, 23 Dec 2019 13:01:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726709AbfLWM4U (ORCPT
+        id S1726756AbfLWNBU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 23 Dec 2019 07:56:20 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:54590 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726257AbfLWM4U (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Dec 2019 07:56:20 -0500
-Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
-        by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.92.2)
-        (envelope-from <luca@coelho.fi>)
-        id 1ijNFv-0000nB-HE; Mon, 23 Dec 2019 14:56:18 +0200
-From:   Luca Coelho <luca@coelho.fi>
-To:     stable@vger.kernel.org
-Cc:     linux-wireless@vger.kernel.org
-Date:   Mon, 23 Dec 2019 14:56:12 +0200
-Message-Id: <20191223125612.1475700-1-luca@coelho.fi>
-X-Mailer: git-send-email 2.24.0
+        Mon, 23 Dec 2019 08:01:20 -0500
+Received: from mga11.intel.com ([192.55.52.93]:54442 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726680AbfLWNBT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 23 Dec 2019 08:01:19 -0500
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga004.jf.intel.com ([10.7.209.38])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 23 Dec 2019 05:01:19 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.69,347,1571727600"; 
+   d="scan'208";a="367054476"
+Received: from tblake-mobl2.ger.corp.intel.com ([10.252.4.201])
+  by orsmga004.jf.intel.com with ESMTP; 23 Dec 2019 05:01:16 -0800
+Message-ID: <16647dbe5d9c8431060dcf6169c12c3267d67d0d.camel@intel.com>
+Subject: Re: PROBLEM: iwlwifi in 5.4 does not load firmware for Intel device
+ 9560
+From:   Luciano Coelho <luciano.coelho@intel.com>
+To:     Stuart Little <achirvasub@gmail.com>
+Cc:     Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        kernel list <linux-kernel@vger.kernel.org>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        linux-wireless@vger.kernel.org
+Date:   Mon, 23 Dec 2019 15:01:16 +0200
+In-Reply-To: <20191223125742.GA2586@system76-pc.localdomain>
+References: <20190817041258.GA1641@chirva-slack.chirva-slack>
+         <20191208203810.GA2920@system76-pc.localdomain>
+         <20191222224207.GA2408@system76-pc.localdomain>
+         <ec9092a28196f24c39051b89f9dc87b40942b6de.camel@intel.com>
+         <20191223125742.GA2586@system76-pc.localdomain>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.34.1-2+b1 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: [PATCH v5.4] Revert "iwlwifi: assign directly to iwl_trans->cfg in QuZ detection"
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Anders Kaseorg <andersk@mit.edu>
+On Mon, 2019-12-23 at 07:57 -0500, Stuart Little wrote:
+> On Mon, Dec 23, 2019 at 02:52:11PM +0200, Luciano Coelho wrote:
+> > Hi,
+> > 
+> > The fix for this is already in v5.5-rc3:
+> > 
+> > https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=db5cce1afc8d2475d2c1c37c2a8267dd0e151526
+> > 
+> 
+> I was actually going to write just now to report this: I've checked
+> that the very latest 5.5.0-rc3 works fine on this machine.
 
-This reverts commit 968dcfb4905245dc64d65312c0d17692fa087b99.
+Great! Thanks for letting me know.  I have now sent the patch to v5.4
+stable, hopefully it will be picked up soon.
 
-Both that commit and commit 809805a820c6445f7a701ded24fdc6bbc841d1e4
-attempted to fix the same bug (dead assignments to the local variable
-cfg), but they did so in incompatible ways. When they were both merged,
-independently of each other, the combination actually caused the bug to
-reappear, leading to a firmware crash on boot for some cards.
-
-https://bugzilla.kernel.org/show_bug.cgi?id=205719
-
-Signed-off-by: Anders Kaseorg <andersk@mit.edu>
-Acked-by: Luca Coelho <luciano.coelho@intel.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
----
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 24 +++++++++----------
- 1 file changed, 12 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index 040cec17d3ad..b0b7eca1754e 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -1111,18 +1111,18 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- 	/* same thing for QuZ... */
- 	if (iwl_trans->hw_rev == CSR_HW_REV_TYPE_QUZ) {
--		if (iwl_trans->cfg == &iwl_ax101_cfg_qu_hr)
--			iwl_trans->cfg = &iwl_ax101_cfg_quz_hr;
--		else if (iwl_trans->cfg == &iwl_ax201_cfg_qu_hr)
--			iwl_trans->cfg = &iwl_ax201_cfg_quz_hr;
--		else if (iwl_trans->cfg == &iwl9461_2ac_cfg_qu_b0_jf_b0)
--			iwl_trans->cfg = &iwl9461_2ac_cfg_quz_a0_jf_b0_soc;
--		else if (iwl_trans->cfg == &iwl9462_2ac_cfg_qu_b0_jf_b0)
--			iwl_trans->cfg = &iwl9462_2ac_cfg_quz_a0_jf_b0_soc;
--		else if (iwl_trans->cfg == &iwl9560_2ac_cfg_qu_b0_jf_b0)
--			iwl_trans->cfg = &iwl9560_2ac_cfg_quz_a0_jf_b0_soc;
--		else if (iwl_trans->cfg == &iwl9560_2ac_160_cfg_qu_b0_jf_b0)
--			iwl_trans->cfg = &iwl9560_2ac_160_cfg_quz_a0_jf_b0_soc;
-+		if (cfg == &iwl_ax101_cfg_qu_hr)
-+			cfg = &iwl_ax101_cfg_quz_hr;
-+		else if (cfg == &iwl_ax201_cfg_qu_hr)
-+			cfg = &iwl_ax201_cfg_quz_hr;
-+		else if (cfg == &iwl9461_2ac_cfg_qu_b0_jf_b0)
-+			cfg = &iwl9461_2ac_cfg_quz_a0_jf_b0_soc;
-+		else if (cfg == &iwl9462_2ac_cfg_qu_b0_jf_b0)
-+			cfg = &iwl9462_2ac_cfg_quz_a0_jf_b0_soc;
-+		else if (cfg == &iwl9560_2ac_cfg_qu_b0_jf_b0)
-+			cfg = &iwl9560_2ac_cfg_quz_a0_jf_b0_soc;
-+		else if (cfg == &iwl9560_2ac_160_cfg_qu_b0_jf_b0)
-+			cfg = &iwl9560_2ac_160_cfg_quz_a0_jf_b0_soc;
- 	}
- 
- #endif
--- 
-2.24.0
+--
+Cheers,
+Luca.
 
