@@ -2,111 +2,110 @@ Return-Path: <SRS0=Izt1=2N=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF6DFC2D0C0
-	for <linux-wireless@archiver.kernel.org>; Mon, 23 Dec 2019 13:07:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C159CC2D0D0
+	for <linux-wireless@archiver.kernel.org>; Mon, 23 Dec 2019 13:09:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A6F1720409
-	for <linux-wireless@archiver.kernel.org>; Mon, 23 Dec 2019 13:07:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 98F4720409
+	for <linux-wireless@archiver.kernel.org>; Mon, 23 Dec 2019 13:09:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="N7FN0ncL"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=asmblr.net header.i=@asmblr.net header.b="cti+0k7n"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726834AbfLWNHy (ORCPT
+        id S1726918AbfLWNJ1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 23 Dec 2019 08:07:54 -0500
-Received: from mail-lf1-f65.google.com ([209.85.167.65]:34613 "EHLO
-        mail-lf1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726680AbfLWNHy (ORCPT
+        Mon, 23 Dec 2019 08:09:27 -0500
+Received: from srv2.anyservers.com ([77.79.239.202]:55552 "EHLO
+        srv2.anyservers.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726709AbfLWNJ1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Dec 2019 08:07:54 -0500
-Received: by mail-lf1-f65.google.com with SMTP id l18so4409015lfc.1;
-        Mon, 23 Dec 2019 05:07:52 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=5eJH2So2Y3KqY/K1ixMNRpaPpKx0b38bhcNlkypecC0=;
-        b=N7FN0ncLXb065P3FN14ZDLucMWMpNKGbWPL84vdRLA17Kc3XtT8pnSKLjbseUPj918
-         b9yDdgKBeG55jltDFLk9cDzyCHWPNVXrw4qoKL0NK/RoO24MAp8q04nFdEJcZpgaT5BF
-         Q15J2JBVrmMrQx4zFr9FLZw/VeElcbpyV3hIkGOi1aH3of4W5V7Pz5pv99zVfEeU/F0K
-         SoqCCo4ejdPWZ5XPiDBHIxGsbm8jsgy1f4YZ0a2rDR8r1ttquMOBRfzWSCRjKNS9W/oB
-         PELHjv9r8rJchpunfS3Od1m02nbafGGlA5trUX/4PLKhVRONJM6uv5xUiPD//ox37mFL
-         dK4w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=5eJH2So2Y3KqY/K1ixMNRpaPpKx0b38bhcNlkypecC0=;
-        b=PWdt69KWzpEnD7AY/7sODWcRHrQjmvZQqUo9v3BCfB6qr7YNZvk+29EOm3Ua821tJ+
-         BE+CG8YXe1VVGx4DVPZli06E/rRWBmmnwsaAxsQZ1q5xtOeYGMTKVfQ1tmsa9NQRTy87
-         vQuEIQCuS1XP+lSHNQ7L43sgNayRHsqrRkOTgPbeaznDsnfADIDpq45myeI49hpL5F2f
-         yjvW73cZ63P8XXcYS/SeFSjXVyIoU363G60MdJ7Yt0EHX0ejCpAjW3cM5tYpHyUhvXsC
-         3wah0m5ZeFz/yKZxJ+QknTvg/tCMwJ5qBnPmvwEkElYfYYy5XBaJBZzCW11U4TjLykvl
-         FtFA==
-X-Gm-Message-State: APjAAAVvB1MMveyg0c/S7qajWwsCOm8QX/dEnxbxul/mgvRJvqaX4ssi
-        8/Ov7Gy+lrdjfOVWPfsLNz4FAomiyjRseJKc2Wo=
-X-Google-Smtp-Source: APXvYqx35NtG2msl9BoMH2SPDevhyYA9MZsbmqBAxBohTRg/NXhM9CHIaYC1N0ZR9f0Dh28z9OhNSEDQtt4irLWQGH0=
-X-Received: by 2002:ac2:4a89:: with SMTP id l9mr16617018lfp.121.1577106471345;
- Mon, 23 Dec 2019 05:07:51 -0800 (PST)
+        Mon, 23 Dec 2019 08:09:27 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=asmblr.net;
+         s=default; h=Content-Transfer-Encoding:Content-Type:MIME-Version:Message-Id:
+        Date:Subject:Cc:To:From:Sender:Reply-To:Content-ID:Content-Description:
+        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
+        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=1VfAtSnfC0X6/JPIbkqWGYWSuuV0dWBdbVRT2SXp/Aw=; b=cti+0k7ncAQQd4Mn50+HZX5x5H
+        XMFtc4vfNd3NZ8NOnNkbUiijq8uxcz4ObdA4kY1PuClEdoNkJuYnuzfsE1K96E2UYx8CFH5r9r5SA
+        vAc4IQSRfVlSBDXURLNtJs7U/oK6QR6FtumEGEpQWSOF2c0AcY6aSZUGGjxp4Z1Xfdblj0idxbqQ5
+        b9zvmpwBxzfFNhXD9g1nDDPtRn0p88PQng7tfrG0jTjnFKDfuBsb+wqK2LuwXTOIw2fQ/bwdBCVTT
+        PnfXpkEfxy3qfv25gc30zn3te8cyZQ6ee2jlMbMpidKiQxtfbRFMHokx4Uj1mPzSt2M2NHqCF+Bmn
+        lkLO7rng==;
+Received: from 89-64-37-27.dynamic.chello.pl ([89.64.37.27]:49046 helo=milkyway.galaxy)
+        by srv2.anyservers.com with esmtpsa (TLSv1.2:ECDHE-RSA-AES128-GCM-SHA256:128)
+        (Exim 4.92)
+        (envelope-from <amade@asmblr.net>)
+        id 1ijMxO-00Gi5o-Ul; Mon, 23 Dec 2019 13:37:06 +0100
+From:   =?UTF-8?q?Amadeusz=20S=C5=82awi=C5=84ski?= <amade@asmblr.net>
+To:     Ping-Ke Shih <pkshih@realtek.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc:     "David S . Miller" <davem@davemloft.net>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org,
+        =?UTF-8?q?Amadeusz=20S=C5=82awi=C5=84ski?= <amade@asmblr.net>
+Subject: [PATCH 0/9] rtlwifi: Cleanups
+Date:   Mon, 23 Dec 2019 13:37:06 +0100
+Message-Id: <20191223123715.7177-1-amade@asmblr.net>
+X-Mailer: git-send-email 2.24.1
 MIME-Version: 1.0
-References: <1576386975-7941-1-git-send-email-akinobu.mita@gmail.com>
-In-Reply-To: <1576386975-7941-1-git-send-email-akinobu.mita@gmail.com>
-From:   Akinobu Mita <akinobu.mita@gmail.com>
-Date:   Mon, 23 Dec 2019 22:07:39 +0900
-Message-ID: <CAC5umygqpmb0s8zHC+TFEFffQmsU4N1hUs_XWGDLtqkJEccfBw@mail.gmail.com>
-Subject: Re: [PATCH v4 00/12] add header file for kelvin to/from Celsius
- conversion helpers
-To:     Linux NVMe Mailinglist <linux-nvme@lists.infradead.org>,
-        linux-hwmon@vger.kernel.org, Linux PM <linux-pm@vger.kernel.org>,
-        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
-        linux-iio <linux-iio@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Andrew Morton <akpm@linux-foundation.org>
-Cc:     Sujith Thomas <sujith.thomas@intel.com>,
-        Darren Hart <dvhart@infradead.org>,
-        Andy Shevchenko <andy@infradead.org>,
-        Zhang Rui <rui.zhang@intel.com>,
-        Daniel Lezcano <daniel.lezcano@linaro.org>,
-        Amit Kucheria <amit.kucheria@verdurent.com>,
-        Jean Delvare <jdelvare@suse.com>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Keith Busch <kbusch@kernel.org>, Jens Axboe <axboe@fb.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Stanislaw Gruszka <sgruszka@redhat.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Jonathan Cameron <jic23@kernel.org>,
-        Hartmut Knaack <knaack.h@gmx.de>,
-        Lars-Peter Clausen <lars@metafoo.de>,
-        Peter Meerwald-Stadler <pmeerw@pmeerw.net>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - srv2.anyservers.com
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - asmblr.net
+X-Get-Message-Sender-Via: srv2.anyservers.com: authenticated_id: amade@asmblr.net
+X-Authenticated-Sender: srv2.anyservers.com: amade@asmblr.net
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Andrew,
+Start from fixing a typo error, then move onto making series of
+functions static and removing unnecessary header.
 
-Could you take a look at this series, and consider including into -mm tree?
+Amadeusz Sławiński (9):
+  rtlwifi: rtl8192cu: Fix typo
+  rtlwifi: rtl8188ee: Make functions static & rm sw.h
+  rtlwifi: rtl8192ce: Make functions static & rm sw.h
+  rtlwifi: rtl8192cu: Remove sw.h header
+  rtlwifi: rtl8192ee: Make functions static & rm sw.h
+  rtlwifi: rtl8192se: Remove sw.h header
+  rtlwifi: rtl8723ae: Make functions static & rm sw.h
+  rtlwifi: rtl8723be: Make functions static & rm sw.h
+  rtlwifi: rtl8821ae: Make functions static & rm sw.h
 
-2019=E5=B9=B412=E6=9C=8815=E6=97=A5(=E6=97=A5) 14:16 Akinobu Mita <akinobu.=
-mita@gmail.com>:
->
-> There are several helper macros to convert kelvin to/from Celsius in
-> <linux/thermal.h> for thermal drivers.  These are useful for any other
-> drivers or subsystems, but it's odd to include <linux/thermal.h> just for
-> the helpers.
->
-> This adds a new <linux/units.h> that provides the equivalent inline
-> functions for any drivers or subsystems, and switches all the users of
-> conversion helpers in <linux/thermal.h> to use <linux/units.h>
-> helpers.
+ .../wireless/realtek/rtlwifi/rtl8188ee/sw.c   |  7 ++--
+ .../wireless/realtek/rtlwifi/rtl8188ee/sw.h   | 12 -------
+ .../wireless/realtek/rtlwifi/rtl8192ce/sw.c   |  5 ++-
+ .../wireless/realtek/rtlwifi/rtl8192ce/sw.h   | 15 --------
+ .../wireless/realtek/rtlwifi/rtl8192cu/sw.c   | 35 +++++++++----------
+ .../wireless/realtek/rtlwifi/rtl8192cu/sw.h   | 27 --------------
+ .../wireless/realtek/rtlwifi/rtl8192ee/sw.c   |  7 ++--
+ .../wireless/realtek/rtlwifi/rtl8192ee/sw.h   | 11 ------
+ .../wireless/realtek/rtlwifi/rtl8192se/sw.c   |  1 -
+ .../wireless/realtek/rtlwifi/rtl8192se/sw.h   | 13 -------
+ .../wireless/realtek/rtlwifi/rtl8723ae/sw.c   |  7 ++--
+ .../wireless/realtek/rtlwifi/rtl8723ae/sw.h   | 13 -------
+ .../wireless/realtek/rtlwifi/rtl8723be/sw.c   |  7 ++--
+ .../wireless/realtek/rtlwifi/rtl8723be/sw.h   | 13 -------
+ .../wireless/realtek/rtlwifi/rtl8821ae/sw.c   |  7 ++--
+ .../wireless/realtek/rtlwifi/rtl8821ae/sw.h   | 12 -------
+ 16 files changed, 34 insertions(+), 158 deletions(-)
+ delete mode 100644 drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.h
+ delete mode 100644 drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.h
+ delete mode 100644 drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.h
+ delete mode 100644 drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.h
+ delete mode 100644 drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.h
+ delete mode 100644 drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.h
+ delete mode 100644 drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.h
+ delete mode 100644 drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.h
+
+-- 
+2.24.1
+
