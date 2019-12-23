@@ -2,43 +2,44 @@ Return-Path: <SRS0=Izt1=2N=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C159CC2D0D0
-	for <linux-wireless@archiver.kernel.org>; Mon, 23 Dec 2019 13:09:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF24EC2D0C0
+	for <linux-wireless@archiver.kernel.org>; Mon, 23 Dec 2019 13:09:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 98F4720409
-	for <linux-wireless@archiver.kernel.org>; Mon, 23 Dec 2019 13:09:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A59C020409
+	for <linux-wireless@archiver.kernel.org>; Mon, 23 Dec 2019 13:09:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=asmblr.net header.i=@asmblr.net header.b="cti+0k7n"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=asmblr.net header.i=@asmblr.net header.b="eM3ytUQZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726918AbfLWNJ1 (ORCPT
+        id S1726960AbfLWNJw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 23 Dec 2019 08:09:27 -0500
-Received: from srv2.anyservers.com ([77.79.239.202]:55552 "EHLO
+        Mon, 23 Dec 2019 08:09:52 -0500
+Received: from srv2.anyservers.com ([77.79.239.202]:56196 "EHLO
         srv2.anyservers.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726709AbfLWNJ1 (ORCPT
+        with ESMTP id S1726709AbfLWNJw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Dec 2019 08:09:27 -0500
+        Mon, 23 Dec 2019 08:09:52 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=asmblr.net;
-         s=default; h=Content-Transfer-Encoding:Content-Type:MIME-Version:Message-Id:
-        Date:Subject:Cc:To:From:Sender:Reply-To:Content-ID:Content-Description:
-        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+         s=default; h=Content-Transfer-Encoding:Content-Type:MIME-Version:References:
+        In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
         List-Post:List-Owner:List-Archive;
-        bh=1VfAtSnfC0X6/JPIbkqWGYWSuuV0dWBdbVRT2SXp/Aw=; b=cti+0k7ncAQQd4Mn50+HZX5x5H
-        XMFtc4vfNd3NZ8NOnNkbUiijq8uxcz4ObdA4kY1PuClEdoNkJuYnuzfsE1K96E2UYx8CFH5r9r5SA
-        vAc4IQSRfVlSBDXURLNtJs7U/oK6QR6FtumEGEpQWSOF2c0AcY6aSZUGGjxp4Z1Xfdblj0idxbqQ5
-        b9zvmpwBxzfFNhXD9g1nDDPtRn0p88PQng7tfrG0jTjnFKDfuBsb+wqK2LuwXTOIw2fQ/bwdBCVTT
-        PnfXpkEfxy3qfv25gc30zn3te8cyZQ6ee2jlMbMpidKiQxtfbRFMHokx4Uj1mPzSt2M2NHqCF+Bmn
-        lkLO7rng==;
+        bh=n7GtaCKJbQxPZo28gDx6RScAysfknWdat5EWVpSMU6c=; b=eM3ytUQZXDAfeZe1IibVV7YOgs
+        IrcUTwWH5lJu4Ws8VerFRJcMSdcNR7wQDKdzTA1/laOGvbOli/GuXXM7KjsopBgrfEKdKgQDxd+Iq
+        ZxlLUz7kESGV4s9MRLqiDIQkMYh5tdcy5+LW0mlOpXiIjWP5HdPaYXBjVSAwSCcSuBv+tELjvHvSh
+        thsAW7Vh1c8yTWzVrdYrLN/OnqomKTsiEYYXIABXYdI7rn1Sk2EBJrggc33eZJwjKqIqlOjWwo/zz
+        q0IdWZR+8n89P9CkIujwCyih7/g5VjidIw0c1lmMHqLC6BwV4ks05PkK6jZTmLrwDxXWzx85WZAvq
+        IA1GVNUA==;
 Received: from 89-64-37-27.dynamic.chello.pl ([89.64.37.27]:49046 helo=milkyway.galaxy)
         by srv2.anyservers.com with esmtpsa (TLSv1.2:ECDHE-RSA-AES128-GCM-SHA256:128)
         (Exim 4.92)
         (envelope-from <amade@asmblr.net>)
-        id 1ijMxO-00Gi5o-Ul; Mon, 23 Dec 2019 13:37:06 +0100
+        id 1ijMxR-00Gi5o-BW; Mon, 23 Dec 2019 13:37:09 +0100
 From:   =?UTF-8?q?Amadeusz=20S=C5=82awi=C5=84ski?= <amade@asmblr.net>
 To:     Ping-Ke Shih <pkshih@realtek.com>,
         Kalle Valo <kvalo@codeaurora.org>
@@ -47,10 +48,12 @@ Cc:     "David S . Miller" <davem@davemloft.net>,
         linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org,
         =?UTF-8?q?Amadeusz=20S=C5=82awi=C5=84ski?= <amade@asmblr.net>
-Subject: [PATCH 0/9] rtlwifi: Cleanups
-Date:   Mon, 23 Dec 2019 13:37:06 +0100
-Message-Id: <20191223123715.7177-1-amade@asmblr.net>
+Subject: [PATCH 9/9] rtlwifi: rtl8821ae: Make functions static & rm sw.h
+Date:   Mon, 23 Dec 2019 13:37:15 +0100
+Message-Id: <20191223123715.7177-10-amade@asmblr.net>
 X-Mailer: git-send-email 2.24.1
+In-Reply-To: <20191223123715.7177-1-amade@asmblr.net>
+References: <20191223123715.7177-1-amade@asmblr.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -66,46 +69,73 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Start from fixing a typo error, then move onto making series of
-functions static and removing unnecessary header.
+Some of functions which were exposed in sw.h, are only used in sw.c, so
+just make them static. This makes sw.h unnecessary, so remove it.
 
-Amadeusz Sławiński (9):
-  rtlwifi: rtl8192cu: Fix typo
-  rtlwifi: rtl8188ee: Make functions static & rm sw.h
-  rtlwifi: rtl8192ce: Make functions static & rm sw.h
-  rtlwifi: rtl8192cu: Remove sw.h header
-  rtlwifi: rtl8192ee: Make functions static & rm sw.h
-  rtlwifi: rtl8192se: Remove sw.h header
-  rtlwifi: rtl8723ae: Make functions static & rm sw.h
-  rtlwifi: rtl8723be: Make functions static & rm sw.h
-  rtlwifi: rtl8821ae: Make functions static & rm sw.h
-
- .../wireless/realtek/rtlwifi/rtl8188ee/sw.c   |  7 ++--
- .../wireless/realtek/rtlwifi/rtl8188ee/sw.h   | 12 -------
- .../wireless/realtek/rtlwifi/rtl8192ce/sw.c   |  5 ++-
- .../wireless/realtek/rtlwifi/rtl8192ce/sw.h   | 15 --------
- .../wireless/realtek/rtlwifi/rtl8192cu/sw.c   | 35 +++++++++----------
- .../wireless/realtek/rtlwifi/rtl8192cu/sw.h   | 27 --------------
- .../wireless/realtek/rtlwifi/rtl8192ee/sw.c   |  7 ++--
- .../wireless/realtek/rtlwifi/rtl8192ee/sw.h   | 11 ------
- .../wireless/realtek/rtlwifi/rtl8192se/sw.c   |  1 -
- .../wireless/realtek/rtlwifi/rtl8192se/sw.h   | 13 -------
- .../wireless/realtek/rtlwifi/rtl8723ae/sw.c   |  7 ++--
- .../wireless/realtek/rtlwifi/rtl8723ae/sw.h   | 13 -------
- .../wireless/realtek/rtlwifi/rtl8723be/sw.c   |  7 ++--
- .../wireless/realtek/rtlwifi/rtl8723be/sw.h   | 13 -------
- .../wireless/realtek/rtlwifi/rtl8821ae/sw.c   |  7 ++--
- .../wireless/realtek/rtlwifi/rtl8821ae/sw.h   | 12 -------
- 16 files changed, 34 insertions(+), 158 deletions(-)
- delete mode 100644 drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.h
- delete mode 100644 drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.h
- delete mode 100644 drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.h
- delete mode 100644 drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.h
- delete mode 100644 drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.h
- delete mode 100644 drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.h
- delete mode 100644 drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.h
+Signed-off-by: Amadeusz Sławiński <amade@asmblr.net>
+---
+ drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c |  7 +++----
+ drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.h | 12 ------------
+ 2 files changed, 3 insertions(+), 16 deletions(-)
  delete mode 100644 drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.h
 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
+index 3def6a2b3450..d8df816753cb 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
+@@ -10,7 +10,6 @@
+ #include "dm.h"
+ #include "hw.h"
+ #include "fw.h"
+-#include "sw.h"
+ #include "trx.h"
+ #include "led.h"
+ #include "table.h"
+@@ -65,7 +64,7 @@ static void rtl8821ae_init_aspm_vars(struct ieee80211_hw *hw)
+ }
+ 
+ /*InitializeVariables8812E*/
+-int rtl8821ae_init_sw_vars(struct ieee80211_hw *hw)
++static int rtl8821ae_init_sw_vars(struct ieee80211_hw *hw)
+ {
+ 	int err = 0;
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+@@ -211,7 +210,7 @@ int rtl8821ae_init_sw_vars(struct ieee80211_hw *hw)
+ 	return 0;
+ }
+ 
+-void rtl8821ae_deinit_sw_vars(struct ieee80211_hw *hw)
++static void rtl8821ae_deinit_sw_vars(struct ieee80211_hw *hw)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 
+@@ -228,7 +227,7 @@ void rtl8821ae_deinit_sw_vars(struct ieee80211_hw *hw)
+ }
+ 
+ /* get bt coexist status */
+-bool rtl8821ae_get_btc_status(void)
++static bool rtl8821ae_get_btc_status(void)
+ {
+ 	return true;
+ }
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.h b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.h
+deleted file mode 100644
+index 9d7610f84b20..000000000000
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.h
++++ /dev/null
+@@ -1,12 +0,0 @@
+-/* SPDX-License-Identifier: GPL-2.0 */
+-/* Copyright(c) 2009-2010  Realtek Corporation.*/
+-
+-#ifndef __RTL8821AE_SW_H__
+-#define __RTL8821AE_SW_H__
+-
+-int rtl8821ae_init_sw_vars(struct ieee80211_hw *hw);
+-void rtl8821ae_deinit_sw_vars(struct ieee80211_hw *hw);
+-void rtl8821ae_init_var_map(struct ieee80211_hw *hw);
+-bool rtl8821ae_get_btc_status(void);
+-
+-#endif
 -- 
 2.24.1
 
