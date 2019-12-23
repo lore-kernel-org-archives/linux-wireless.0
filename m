@@ -2,75 +2,73 @@ Return-Path: <SRS0=Izt1=2N=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99DBAC2D0D5
-	for <linux-wireless@archiver.kernel.org>; Mon, 23 Dec 2019 05:49:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF402C2D0D6
+	for <linux-wireless@archiver.kernel.org>; Mon, 23 Dec 2019 05:49:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6F275206B7
-	for <linux-wireless@archiver.kernel.org>; Mon, 23 Dec 2019 05:49:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B5B132084D
+	for <linux-wireless@archiver.kernel.org>; Mon, 23 Dec 2019 05:49:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="kG4Voaia"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="P+iJV5pb"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726744AbfLWFtg (ORCPT
+        id S1726027AbfLWFt3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 23 Dec 2019 00:49:36 -0500
-Received: from mail-pf1-f196.google.com ([209.85.210.196]:42937 "EHLO
-        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726645AbfLWFtb (ORCPT
+        Mon, 23 Dec 2019 00:49:29 -0500
+Received: from mail-pj1-f65.google.com ([209.85.216.65]:36506 "EHLO
+        mail-pj1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725822AbfLWFt2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Dec 2019 00:49:31 -0500
-Received: by mail-pf1-f196.google.com with SMTP id 4so8624262pfz.9
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Dec 2019 21:49:31 -0800 (PST)
+        Mon, 23 Dec 2019 00:49:28 -0500
+Received: by mail-pj1-f65.google.com with SMTP id n59so6993821pjb.1
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Dec 2019 21:49:28 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=1TAbfRw81wKjdlTK4DIpia8dPfGxXFTyTxBsBiwwkkI=;
-        b=kG4VoaiaWW1vD5ps1J4P+FfDOHsHkXtmjijWd4hvkskVttky6HDYPqWh67j5RsN1Pn
-         tiW1BqPJcpvZ9hJ48esmhbOViZZtsrE/qTw5GClQSiw3gSVUdTtKCVGzmpbjYT5vq0Ne
-         gY2Uvv/3+BfdXj2uaAJ9BA72SMu7mVJ59cClzrJfp2MwMSWEmoJabVRl2uqL4N71GHfq
-         UzNh8Sdjkbu7GcvVNm2uZWhlHQkJVrp27DcBpQkKxNI1UfApVheLQ0JDrfhOl4Qh0Ywj
-         0MJaMlG3OpwPIVYzwNW9Ft60xrlKy8q75gxSiSf+0+56sUe363slVJsofYp4rghVRfAq
-         uDTg==
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=1XUacwVg6UtA8MchmvXuh03DJHAG9CnuImbIcloSG5k=;
+        b=P+iJV5pbry18PLZyr669o+IPKh7QicKAILliFehkugV8ZOKOxqSVcVXCmVSgYN9xrj
+         xPe/xyLltPJI0X9rQ5GMwIfto/S4RT67Q3m7djdZY1OI6uYLvGqoHUhK+AGCiiojEPLm
+         zvsrB/SWV0NUhLbE2cPom+DB22t5tcs8k0dhTICX6mSFxKzyzMegfjldRBFkbD/PA23q
+         /7U/8X+5JVjimI1Q24WalhGe91L1whzdSfg6ro0rNYPBfCCiKVfg6vC3RmjDE9Zhon/S
+         TiNnGD7+dIqmKWYJuX7UXloGM21mecV56nSdh2yFlLZPDfGvWj+zzjQSW6+QbV0LY3dd
+         afFQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=1TAbfRw81wKjdlTK4DIpia8dPfGxXFTyTxBsBiwwkkI=;
-        b=Doi6kPZ1brJGdqbB4dwwhJWXfZrpEpeHGiyK/5FmUQkDfdlM7d8GJaAnLPD3jKxLHK
-         yssYvEIN6s8oZrvgEMtIa8sJrjmSx37hGKAIgzKIU+vcQQ9KxDOasLSKSR+m3vfm9swI
-         UN9izrhbpFchEYdnQOqvFNytIFEqFx/S0n4LYRkk5ud4U8wpJyA+AFHjdjzwdUZRs6pK
-         9GG2EOwMg5U31gnaONCtFIJRY4B4Eh7qgAutf+bAP6O+GLd8C8SUu2TIK2I0ds/ZgnTI
-         NaOwDb1o+fq6VbGXvzDw7ynGnTI+Da5QahRuur4uSpDlDAiRvVeAhtXr/nsM7jVcme4a
-         6fKw==
-X-Gm-Message-State: APjAAAV/YSgyyYHvnmXgtYJWlAj9MO9ZKBwgvlbQyR1vPbSTyVKAZL6u
-        nMFM0vteR22Rx4sjtyO+N/XvSw==
-X-Google-Smtp-Source: APXvYqxy4LnU/4UbJSEnuIjt2lbosN4Qr2FWETJStKyhLrZ1sLKFbK2FAuxj/bEHT6NhZ0QILwBT2w==
-X-Received: by 2002:a63:fd43:: with SMTP id m3mr29595462pgj.164.1577080170792;
-        Sun, 22 Dec 2019 21:49:30 -0800 (PST)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=1XUacwVg6UtA8MchmvXuh03DJHAG9CnuImbIcloSG5k=;
+        b=aF1yI+ZKn+llpc/sY1uhfmLzKdOR4VPf+kluFMxgjBF5x33e9BbKDcBro517LX3NZj
+         uKzmk2NnIDnBQhYJBNd/TH/EdND21sKHovV3OW9jOPawxl4DRNYumLWsknnnMHYOnqxh
+         8QO1sbq52cJOToDlbdXyG2VkOnapAPWRBBt9wlHt97wf+L3hLhYbCUEE2jkR8KIuWFOL
+         M+IRDCm+akE7OBE/lUcdyBwVBwqoI7vjuidhzXLubQeB+r4UEzrG2gFlXiw2BZLTpOK3
+         Jy5Yrgz5sm+3eAzY/aVw4HBsknc5YHmnNk9zIQh01dcxZKo1QSqSdDyuKMH9Cm29xX2s
+         Cdgw==
+X-Gm-Message-State: APjAAAXAI09clQpsVThRwKV3N9NXI0V5VSHXe+YK1VNOJv7DQKBB5UZi
+        xAOklzLN4sAS0kvkYh3Fpp9odw==
+X-Google-Smtp-Source: APXvYqw+lXD6B//G6RmvqL6dzbQ+OHOTBYMX7tSL/CHI+FnUJbP04tPOj2vJTeE6aVXU6tCj3fxQmQ==
+X-Received: by 2002:a17:90a:b392:: with SMTP id e18mr25820505pjr.118.1577080168070;
+        Sun, 22 Dec 2019 21:49:28 -0800 (PST)
 Received: from localhost.localdomain (104-188-17-28.lightspeed.sndgca.sbcglobal.net. [104.188.17.28])
-        by smtp.gmail.com with ESMTPSA id l14sm19731779pgt.42.2019.12.22.21.49.29
+        by smtp.gmail.com with ESMTPSA id l14sm19731779pgt.42.2019.12.22.21.49.26
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 22 Dec 2019 21:49:30 -0800 (PST)
+        Sun, 22 Dec 2019 21:49:27 -0800 (PST)
 From:   Bjorn Andersson <bjorn.andersson@linaro.org>
-To:     Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>
-Cc:     Kalle Valo <kvalo@codeaurora.org>,
+To:     Kalle Valo <kvalo@codeaurora.org>,
         "David S. Miller" <davem@davemloft.net>,
-        Andy Gross <agross@kernel.org>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        ath10k@lists.infradead.org
-Subject: [PATCH 2/2] arm64: dts: qcom: sm8150: Specify qdss clock for wifi
-Date:   Sun, 22 Dec 2019 21:48:55 -0800
-Message-Id: <20191223054855.3020665-3-bjorn.andersson@linaro.org>
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, ath10k@lists.infradead.org
+Subject: [PATCH 0/2] ath10k: Enable QDSS clock on sm8150
+Date:   Sun, 22 Dec 2019 21:48:53 -0800
+Message-Id: <20191223054855.3020665-1-bjorn.andersson@linaro.org>
 X-Mailer: git-send-email 2.24.0
-In-Reply-To: <20191223054855.3020665-1-bjorn.andersson@linaro.org>
-References: <20191223054855.3020665-1-bjorn.andersson@linaro.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -78,29 +76,19 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The WiFi firmware on SM8150 requires the QDSS clock to be ticking, so
-specify this clock for the wifi node.
+On SM8150 the WiFi firmware depends on the QDSS clock ticking, or the system
+will reset due to an NoC error. So this adds an optional clock to the ath10k
+binding and makes sure it's enabled while the WiFi firmware needs it.
 
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
----
- arch/arm64/boot/dts/qcom/sm8150.dtsi | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Bjorn Andersson (2):
+  ath10k: Add optional qdss clk
+  arm64: dts: qcom: sm8150: Specify qdss clock for wifi
 
-diff --git a/arch/arm64/boot/dts/qcom/sm8150.dtsi b/arch/arm64/boot/dts/qcom/sm8150.dtsi
-index 373fa098ebb2..0f0c9db3d484 100644
---- a/arch/arm64/boot/dts/qcom/sm8150.dtsi
-+++ b/arch/arm64/boot/dts/qcom/sm8150.dtsi
-@@ -929,8 +929,8 @@ wifi: wifi@18800000 {
- 			reg = <0 0x18800000 0 0x800000>;
- 			reg-names = "membase";
- 			memory-region = <&wlan_mem>;
--			clock-names = "cxo_ref_clk_pin";
--			clocks = <&rpmhcc RPMH_RF_CLK2>;
-+			clock-names = "cxo_ref_clk_pin", "qdss";
-+			clocks = <&rpmhcc RPMH_RF_CLK2>, <&aoss_qmp>;
- 			interrupts = <GIC_SPI 414 IRQ_TYPE_LEVEL_HIGH>,
- 				     <GIC_SPI 415 IRQ_TYPE_LEVEL_HIGH>,
- 				     <GIC_SPI 416 IRQ_TYPE_LEVEL_HIGH>,
+ .../devicetree/bindings/net/wireless/qcom,ath10k.txt          | 2 +-
+ arch/arm64/boot/dts/qcom/sm8150.dtsi                          | 4 ++--
+ drivers/net/wireless/ath/ath10k/snoc.c                        | 2 +-
+ 3 files changed, 4 insertions(+), 4 deletions(-)
+
 -- 
 2.24.0
 
