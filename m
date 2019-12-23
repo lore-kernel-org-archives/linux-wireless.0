@@ -2,93 +2,101 @@ Return-Path: <SRS0=Izt1=2N=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF402C2D0D6
-	for <linux-wireless@archiver.kernel.org>; Mon, 23 Dec 2019 05:49:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F514C2D0D3
+	for <linux-wireless@archiver.kernel.org>; Mon, 23 Dec 2019 09:30:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B5B132084D
-	for <linux-wireless@archiver.kernel.org>; Mon, 23 Dec 2019 05:49:48 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="P+iJV5pb"
+	by mail.kernel.org (Postfix) with ESMTP id 21EF4206B7
+	for <linux-wireless@archiver.kernel.org>; Mon, 23 Dec 2019 09:30:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726027AbfLWFt3 (ORCPT
+        id S1726384AbfLWJag (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 23 Dec 2019 00:49:29 -0500
-Received: from mail-pj1-f65.google.com ([209.85.216.65]:36506 "EHLO
-        mail-pj1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725822AbfLWFt2 (ORCPT
+        Mon, 23 Dec 2019 04:30:36 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:54538 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726096AbfLWJag (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Dec 2019 00:49:28 -0500
-Received: by mail-pj1-f65.google.com with SMTP id n59so6993821pjb.1
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Dec 2019 21:49:28 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=1XUacwVg6UtA8MchmvXuh03DJHAG9CnuImbIcloSG5k=;
-        b=P+iJV5pbry18PLZyr669o+IPKh7QicKAILliFehkugV8ZOKOxqSVcVXCmVSgYN9xrj
-         xPe/xyLltPJI0X9rQ5GMwIfto/S4RT67Q3m7djdZY1OI6uYLvGqoHUhK+AGCiiojEPLm
-         zvsrB/SWV0NUhLbE2cPom+DB22t5tcs8k0dhTICX6mSFxKzyzMegfjldRBFkbD/PA23q
-         /7U/8X+5JVjimI1Q24WalhGe91L1whzdSfg6ro0rNYPBfCCiKVfg6vC3RmjDE9Zhon/S
-         TiNnGD7+dIqmKWYJuX7UXloGM21mecV56nSdh2yFlLZPDfGvWj+zzjQSW6+QbV0LY3dd
-         afFQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=1XUacwVg6UtA8MchmvXuh03DJHAG9CnuImbIcloSG5k=;
-        b=aF1yI+ZKn+llpc/sY1uhfmLzKdOR4VPf+kluFMxgjBF5x33e9BbKDcBro517LX3NZj
-         uKzmk2NnIDnBQhYJBNd/TH/EdND21sKHovV3OW9jOPawxl4DRNYumLWsknnnMHYOnqxh
-         8QO1sbq52cJOToDlbdXyG2VkOnapAPWRBBt9wlHt97wf+L3hLhYbCUEE2jkR8KIuWFOL
-         M+IRDCm+akE7OBE/lUcdyBwVBwqoI7vjuidhzXLubQeB+r4UEzrG2gFlXiw2BZLTpOK3
-         Jy5Yrgz5sm+3eAzY/aVw4HBsknc5YHmnNk9zIQh01dcxZKo1QSqSdDyuKMH9Cm29xX2s
-         Cdgw==
-X-Gm-Message-State: APjAAAXAI09clQpsVThRwKV3N9NXI0V5VSHXe+YK1VNOJv7DQKBB5UZi
-        xAOklzLN4sAS0kvkYh3Fpp9odw==
-X-Google-Smtp-Source: APXvYqw+lXD6B//G6RmvqL6dzbQ+OHOTBYMX7tSL/CHI+FnUJbP04tPOj2vJTeE6aVXU6tCj3fxQmQ==
-X-Received: by 2002:a17:90a:b392:: with SMTP id e18mr25820505pjr.118.1577080168070;
-        Sun, 22 Dec 2019 21:49:28 -0800 (PST)
-Received: from localhost.localdomain (104-188-17-28.lightspeed.sndgca.sbcglobal.net. [104.188.17.28])
-        by smtp.gmail.com with ESMTPSA id l14sm19731779pgt.42.2019.12.22.21.49.26
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 22 Dec 2019 21:49:27 -0800 (PST)
-From:   Bjorn Andersson <bjorn.andersson@linaro.org>
-To:     Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, ath10k@lists.infradead.org
-Subject: [PATCH 0/2] ath10k: Enable QDSS clock on sm8150
-Date:   Sun, 22 Dec 2019 21:48:53 -0800
-Message-Id: <20191223054855.3020665-1-bjorn.andersson@linaro.org>
-X-Mailer: git-send-email 2.24.0
+        Mon, 23 Dec 2019 04:30:36 -0500
+Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa)
+        by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.92.2)
+        (envelope-from <luca@coelho.fi>)
+        id 1ijK2r-0000iJ-DI; Mon, 23 Dec 2019 11:30:34 +0200
+Message-ID: <7ed0aa2b95ab0df7f85e6201bb1861620f4d0cd1.camel@coelho.fi>
+From:   Luca Coelho <luca@coelho.fi>
+To:     Steve French <smfrench@gmail.com>, linux-wireless@vger.kernel.org,
+        LKML <linux-kernel@vger.kernel.org>
+Date:   Mon, 23 Dec 2019 11:30:31 +0200
+In-Reply-To: <CAH2r5mu5NC+QxAuECihhFdMgJjZVeoOqj1aQv+RR+kscHYH_hw@mail.gmail.com>
+References: <CAH2r5mu5NC+QxAuECihhFdMgJjZVeoOqj1aQv+RR+kscHYH_hw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.34.1-2+b1 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
+Subject: Re: Oops in ieee80211 driver on 5.5-rc2
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On SM8150 the WiFi firmware depends on the QDSS clock ticking, or the system
-will reset due to an NoC error. So this adds an optional clock to the ath10k
-binding and makes sure it's enabled while the WiFi firmware needs it.
+On Sat, 2019-12-21 at 16:58 -0600, Steve French wrote:
+> I saw this oops again in the ieee80211 driver again today when the
+> laptop was started at a connecting to a new WiFi in different location
+> (in a fast food restaurant instead of at home or work).  I hadn't seen
+> it connecting to Wifi at home for a while.
+> 
+> .x86_64 #1
+> [   66.632041] Hardware name: LENOVO 20MAS08500/20MAS08500, BIOS
+> N2CET48W (1.31 ) 11/04/2019
+> [   66.632047] RIP:
+> 0010:ieee80211_sta_update_pending_airtime+0xed/0x120 [mac80211]
+> [   66.632048] Code: 8b b2 90 01 00 00 48 85 f6 75 07 48 8b b2 40 01
+> 00 00 41 89 e8 89 c1 44 89 ea 48 c7 c7 58 3d 08 c1 89 44 24 04 e8 e5
+> 6c 0d ef <0f> 0b 8b 44 24 04 eb 9d 48 83 c6 40 41 89 e8 89 c1 48 c7 c7
+> 20 3d
+> [   66.632049] RSP: 0018:ffffb0ef40c53ba8 EFLAGS: 00010286
+> [   66.632049] RAX: 0000000000000000 RBX: 00000000ffffffb0 RCX: 0000000000000000
+> [   66.632049] RDX: 000000000000003a RSI: ffffffffb215047a RDI: 0000000000000246
+> [   66.632050] RBP: 0000000000000050 R08: 0000000f839398c6 R09: 000000000000003a
+> [   66.632050] R10: 0000000000000001 R11: 00000000b2150446 R12: ffff9d76f2db87c0
+> [   66.632051] R13: 0000000000000002 R14: ffff9d76a2c5a5c8 R15: ffff9d76f0833d00
+> [   66.632051] FS:  0000000000000000(0000) GS:ffff9d76fbcc0000(0000)
+> knlGS:0000000000000000
+> [   66.632052] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> [   66.632052] CR2: 00001cab696ac008 CR3: 000000081492e006 CR4: 00000000003606e0
+> [   66.632052] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+> [   66.632053] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+> [   66.632053] Call Trace:
+> [   66.632060]  __ieee80211_tx_status+0x720/0x900 [mac80211]
+> [   66.632066]  ieee80211_tx_status+0x6a/0x90 [mac80211]
+> [   66.632070]  iwl_mvm_tx_reclaim+0x2a2/0x3c0 [iwlmvm]
+> [   66.632074]  iwl_mvm_rx_ba_notif+0xff/0x2e0 [iwlmvm]
+> [   66.632076]  ? __switch_to_asm+0x40/0x70
+> [   66.632079]  iwl_mvm_rx_common+0xdd/0x2c0 [iwlmvm]
+> [   66.632083]  iwl_pcie_rx_handle+0x3af/0x9c0 [iwlwifi]
+> [   66.632085]  ? irq_finalize_oneshot.part.0+0xf0/0xf0
+> [   66.632088]  iwl_pcie_irq_rx_msix_handler+0x45/0x80 [iwlwifi]
+> [   66.632089]  irq_thread_fn+0x20/0x60
+> [   66.632090]  irq_thread+0xdc/0x170
+> [   66.632091]  ? irq_forced_thread_fn+0x80/0x80
+> [   66.632092]  kthread+0xf9/0x130
+> [   66.632093]  ? irq_thread_check_affinity+0xf0/0xf0
+> [   66.632094]  ? kthread_park+0x90/0x90
+> [   66.632095]  ret_from_fork+0x35/0x40
+> [   66.632096] ---[ end trace 9f6b29cb2168e61f ]---
 
-Bjorn Andersson (2):
-  ath10k: Add optional qdss clk
-  arm64: dts: qcom: sm8150: Specify qdss clock for wifi
+Hi Steve,
 
- .../devicetree/bindings/net/wireless/qcom,ath10k.txt          | 2 +-
- arch/arm64/boot/dts/qcom/sm8150.dtsi                          | 4 ++--
- drivers/net/wireless/ath/ath10k/snoc.c                        | 2 +-
- 3 files changed, 4 insertions(+), 4 deletions(-)
+This is fixed in v5.5-rc3.  This is the commit that fixes it:
 
--- 
-2.24.0
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=911bde0fe5ccd7e55760be9d6dcc67a8850fcc12
+
+HTH.
+
+--
+Cheers,
+Luca.
 
