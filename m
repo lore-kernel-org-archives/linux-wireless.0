@@ -1,136 +1,120 @@
-Return-Path: <SRS0=74Mc=2M=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=Izt1=2N=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MIME_BASE64_TEXT,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA540C2D0D4
-	for <linux-wireless@archiver.kernel.org>; Sun, 22 Dec 2019 20:11:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF794C2D0D4
+	for <linux-wireless@archiver.kernel.org>; Mon, 23 Dec 2019 05:49:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AF1A8205C9
-	for <linux-wireless@archiver.kernel.org>; Sun, 22 Dec 2019 20:11:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 95D4B2073A
+	for <linux-wireless@archiver.kernel.org>; Mon, 23 Dec 2019 05:49:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="i2+Bb54o"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="bdRC6gCo"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726777AbfLVULz (ORCPT
+        id S1726623AbfLWFta (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 22 Dec 2019 15:11:55 -0500
-Received: from mailgw02.mediatek.com ([210.61.82.184]:48471 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725951AbfLVULz (ORCPT
+        Mon, 23 Dec 2019 00:49:30 -0500
+Received: from mail-pf1-f194.google.com ([209.85.210.194]:42933 "EHLO
+        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726209AbfLWFta (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 22 Dec 2019 15:11:55 -0500
-X-UUID: a72950ab0d3f4d32b3219b6bd3bea13e-20191223
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=snNLFpI6iD8KtzouGrFPprybGRM2xQ+mm0t3hSBGidE=;
-        b=i2+Bb54ojTGwYYLziYsEEQ7jKyUOoN5k1KZU2T8nMysfls3UjEDX3n5xjtwWqPR2+61FmJEjWd4N/dMjwlbEzijmo7kEyZb2Oqkghz1bb6BbvG6qn20hxiBr7w3PLbMJGM68qWsB/jlOF2M+GpCeEnotIY8MohTA2we8qFbLZic=;
-X-UUID: a72950ab0d3f4d32b3219b6bd3bea13e-20191223
-Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw02.mediatek.com
-        (envelope-from <ryder.lee@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
-        with ESMTP id 2087857733; Mon, 23 Dec 2019 04:11:43 +0800
-Received: from mtkcas07.mediatek.inc (172.21.101.84) by
- mtkmbs08n2.mediatek.inc (172.21.101.56) with Microsoft SMTP Server (TLS) id
- 15.0.1395.4; Mon, 23 Dec 2019 04:11:16 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas07.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Mon, 23 Dec 2019 04:10:50 +0800
-From:   Ryder Lee <ryder.lee@mediatek.com>
-To:     Felix Fietkau <nbd@nbd.name>,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-CC:     <linux-wireless@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, Ryder Lee <ryder.lee@mediatek.com>
-Subject: [PATCH v1 1/2] mt76: mt7615: rework set_channel function
-Date:   Mon, 23 Dec 2019 04:11:38 +0800
-Message-ID: <9a37e1340cc8c546587d7cf99d6c4d92e12e1a7d.1577044827.git.ryder.lee@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+        Mon, 23 Dec 2019 00:49:30 -0500
+Received: by mail-pf1-f194.google.com with SMTP id 4so8624230pfz.9
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Dec 2019 21:49:29 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=iumy1PBiJpZgzq+fMy5WNqZile1hZxg6rvR6lEmVeXg=;
+        b=bdRC6gCocAk80rA1xbTl2p/ncFNdXB1ojFpp0JkL3K/81G3P//yEdsNnpzsTtfZsPf
+         3YyU0Nsh/r9PJjv/AzfM7A3D+yYzf5u0BxlxQ8gLYhOzCR+5VkfCh4dpELTXWloWB/RZ
+         xEw0nYFKEpzJ74Bqfh6KuIgaKyMMaJYH0WK27MRXLAYw4BAb1VbRbLchJ7aPwqqONQ/U
+         4HpP293tKl5NmXsZtEcnpb1w7oE44FZg/+73qGoUtANehnUuY+ZPs641yIhmRZ9Mp8Pe
+         sVNmmOF0zrhyeQms2fuNTit47iQhqaP6Ss5h4Frxw+5ND9NlufPH9VSoFHeBSr2i2miZ
+         HtWg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=iumy1PBiJpZgzq+fMy5WNqZile1hZxg6rvR6lEmVeXg=;
+        b=NVGnNMeu6qG8v3I20Vh41kVny3ENyou9AuUANAmA6Wf976TtDyYk9GiX6Wi37zHYTf
+         A+YvHVdMwsL3ItMmZZmjiWFIpPoeG/HvaV7Ypcf1eGTvKScoJsdJjHmY2RQ8s949lkmm
+         nI9Fk/DkDe5sYJevM7pHCgXNLker9SAcLOtXF5fqW6j8jN4OqOdGXcs5DoT3bQFnsh41
+         hy9ACXd7I7VnxvkM8TYeXPUmSY4kj8gRkoLlxYbcVmnkyQuPQ10j6ReXqLvL/GecM03T
+         uMGBAr0+p7Esrlmgo9KsKrms2ZK9TzJZ+bAMZ5EXfAEiOepbRqK3CRsgY2nRIkQzq5GH
+         VIsw==
+X-Gm-Message-State: APjAAAUKMcLCsIJRRf9MeVlzpngn1MA1QXGIc5qVO4t/C8c2Ku9xY//y
+        /JDipEyZnLtDKBsggnHse9yK+Q==
+X-Google-Smtp-Source: APXvYqzEhqEiHcIOvRTWeex5QbVNVUAfTErekI8OsTPZn9rtRwW9Q326fkVGONQjLmBd3RETwbCgWQ==
+X-Received: by 2002:a63:d94b:: with SMTP id e11mr29475446pgj.79.1577080169416;
+        Sun, 22 Dec 2019 21:49:29 -0800 (PST)
+Received: from localhost.localdomain (104-188-17-28.lightspeed.sndgca.sbcglobal.net. [104.188.17.28])
+        by smtp.gmail.com with ESMTPSA id l14sm19731779pgt.42.2019.12.22.21.49.28
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 22 Dec 2019 21:49:28 -0800 (PST)
+From:   Bjorn Andersson <bjorn.andersson@linaro.org>
+To:     Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>
+Cc:     Andy Gross <agross@kernel.org>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        ath10k@lists.infradead.org
+Subject: [PATCH 1/2] ath10k: Add optional qdss clk
+Date:   Sun, 22 Dec 2019 21:48:54 -0800
+Message-Id: <20191223054855.3020665-2-bjorn.andersson@linaro.org>
+X-Mailer: git-send-email 2.24.0
+In-Reply-To: <20191223054855.3020665-1-bjorn.andersson@linaro.org>
+References: <20191223054855.3020665-1-bjorn.andersson@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-TM-SNTS-SMTP: 61A9F353F740679A2FA70EC917627447E2E9DB04B5870975D8AE200DC81804D42000:8
-X-MTK:  N
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Tm8gbmVlZCB0byBzZW5kIGJvdGggTUNVX0VYVF9DTURfU0VUX1JYX1BBVEggYW5kIE1DVV9FWFRf
-Q01EX0NIQU5ORUxfU1dJVENIDQp0b2dldGhlciB0byBNQ1UuDQoNClNwbGl0IHRoZW0gb3V0IGJ5
-IHBhc3NpbmcgdGhlIHByb3BlciBjb21tYW5kIGluIHRoZSBjb3JyZXNwb25kaW5nIGZsb3cuDQoN
-ClNpZ25lZC1vZmYtYnk6IFJ5ZGVyIExlZSA8cnlkZXIubGVlQG1lZGlhdGVrLmNvbT4NCi0tLQ0K
-Q2hhbmdlcyBzaW5jZSB2MToNCi0gYWRkIE1DVV9FWFRfQ01EX1NFVF9SWF9QQVRIIHRvIGF2b2lk
-IGNyZWF0aW5nIGEgcmVncmVzc2lvbg0KLS0tDQogLi4uL25ldC93aXJlbGVzcy9tZWRpYXRlay9t
-dDc2L210NzYxNS9tYWluLmMgICB8ICA1ICsrKystDQogLi4uL25ldC93aXJlbGVzcy9tZWRpYXRl
-ay9tdDc2L210NzYxNS9tY3UuYyAgICB8IDE4ICsrKystLS0tLS0tLS0tLS0tLQ0KIC4uLi9uZXQv
-d2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc2MTUvbXQ3NjE1LmggfCAgMiArLQ0KIDMgZmlsZXMg
-Y2hhbmdlZCwgOSBpbnNlcnRpb25zKCspLCAxNiBkZWxldGlvbnMoLSkNCg0KZGlmZiAtLWdpdCBh
-L2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3NjE1L21haW4uYyBiL2RyaXZl
-cnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3NjE1L21haW4uYw0KaW5kZXggNGZmYTky
-MGQ0ZjRkLi45MGM0ZTc4NWExYTMgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9t
-ZWRpYXRlay9tdDc2L210NzYxNS9tYWluLmMNCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21l
-ZGlhdGVrL210NzYvbXQ3NjE1L21haW4uYw0KQEAgLTExLDYgKzExLDcgQEANCiAjaW5jbHVkZSA8
-bGludXgvcGNpLmg+DQogI2luY2x1ZGUgPGxpbnV4L21vZHVsZS5oPg0KICNpbmNsdWRlICJtdDc2
-MTUuaCINCisjaW5jbHVkZSAibWN1LmgiDQogDQogc3RhdGljIGJvb2wgbXQ3NjE1X2Rldl9ydW5u
-aW5nKHN0cnVjdCBtdDc2MTVfZGV2ICpkZXYpDQogew0KQEAgLTQ3LDYgKzQ4LDggQEAgc3RhdGlj
-IGludCBtdDc2MTVfc3RhcnQoc3RydWN0IGllZWU4MDIxMV9odyAqaHcpDQogCQltdDc2MTVfbWN1
-X3NldF9tYWNfZW5hYmxlKGRldiwgMSwgdHJ1ZSk7DQogCX0NCiANCisJbXQ3NjE1X21jdV9zZXRf
-Y2hhbl9pbmZvKHBoeSwgTUNVX0VYVF9DTURfU0VUX1JYX1BBVEgpOw0KKw0KIAlzZXRfYml0KE1U
-NzZfU1RBVEVfUlVOTklORywgJnBoeS0+bXQ3Ni0+c3RhdGUpOw0KIA0KIAlpZiAocnVubmluZykN
-CkBAIC0yMjQsNyArMjI3LDcgQEAgc3RhdGljIGludCBtdDc2MTVfc2V0X2NoYW5uZWwoc3RydWN0
-IG10NzYxNV9waHkgKnBoeSkNCiAJcGh5LT5kZnNfc3RhdGUgPSAtMTsNCiAJbXQ3Nl9zZXRfY2hh
-bm5lbChwaHktPm10NzYpOw0KIA0KLQlyZXQgPSBtdDc2MTVfbWN1X3NldF9jaGFubmVsKHBoeSk7
-DQorCXJldCA9IG10NzYxNV9tY3Vfc2V0X2NoYW5faW5mbyhwaHksIE1DVV9FWFRfQ01EX0NIQU5O
-RUxfU1dJVENIKTsNCiAJaWYgKHJldCkNCiAJCWdvdG8gb3V0Ow0KIA0KZGlmZiAtLWdpdCBhL2Ry
-aXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3NjE1L21jdS5jIGIvZHJpdmVycy9u
-ZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc2MTUvbWN1LmMNCmluZGV4IGZjMDkxMjc4ZDll
-NS4uZmZkMDljODY3MGQ0IDEwMDY0NA0KLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0
-ZWsvbXQ3Ni9tdDc2MTUvbWN1LmMNCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVr
-L210NzYvbXQ3NjE1L21jdS5jDQpAQCAtMTM2NCwxMiArMTM2NCwxMSBAQCBpbnQgbXQ3NjE1X21j
-dV9yZGRfc2VuZF9wYXR0ZXJuKHN0cnVjdCBtdDc2MTVfZGV2ICpkZXYpDQogCQkJCSAgICZyZXEs
-IHNpemVvZihyZXEpLCBmYWxzZSk7DQogfQ0KIA0KLWludCBtdDc2MTVfbWN1X3NldF9jaGFubmVs
-KHN0cnVjdCBtdDc2MTVfcGh5ICpwaHkpDQoraW50IG10NzYxNV9tY3Vfc2V0X2NoYW5faW5mbyhz
-dHJ1Y3QgbXQ3NjE1X3BoeSAqcGh5LCBpbnQgY21kKQ0KIHsNCiAJc3RydWN0IG10NzYxNV9kZXYg
-KmRldiA9IHBoeS0+ZGV2Ow0KIAlzdHJ1Y3QgY2ZnODAyMTFfY2hhbl9kZWYgKmNoYW5kZWYgPSAm
-cGh5LT5tdDc2LT5jaGFuZGVmOw0KIAlpbnQgZnJlcTEgPSBjaGFuZGVmLT5jZW50ZXJfZnJlcTEs
-IGZyZXEyID0gY2hhbmRlZi0+Y2VudGVyX2ZyZXEyOw0KLQl1OCBuX2NoYWlucyA9IGh3ZWlnaHQ4
-KHBoeS0+bXQ3Ni0+YW50ZW5uYV9tYXNrKTsNCiAJc3RydWN0IHsNCiAJCXU4IGNvbnRyb2xfY2hh
-bjsNCiAJCXU4IGNlbnRlcl9jaGFuOw0KQEAgLTEzOTEsMTEgKzEzOTAsMTAgQEAgaW50IG10NzYx
-NV9tY3Vfc2V0X2NoYW5uZWwoc3RydWN0IG10NzYxNV9waHkgKnBoeSkNCiAJfSByZXEgPSB7DQog
-CQkuY29udHJvbF9jaGFuID0gY2hhbmRlZi0+Y2hhbi0+aHdfdmFsdWUsDQogCQkuY2VudGVyX2No
-YW4gPSBpZWVlODAyMTFfZnJlcXVlbmN5X3RvX2NoYW5uZWwoZnJlcTEpLA0KLQkJLnR4X3N0cmVh
-bXMgPSBuX2NoYWlucywNCi0JCS5yeF9zdHJlYW1zX21hc2sgPSBuX2NoYWlucywNCisJCS50eF9z
-dHJlYW1zID0gaHdlaWdodDgocGh5LT5tdDc2LT5hbnRlbm5hX21hc2spLA0KKwkJLnJ4X3N0cmVh
-bXNfbWFzayA9IHBoeS0+Y2hhaW5tYXNrLA0KIAkJLmNlbnRlcl9jaGFuMiA9IGllZWU4MDIxMV9m
-cmVxdWVuY3lfdG9fY2hhbm5lbChmcmVxMiksDQogCX07DQotCWludCByZXQ7DQogDQogCWlmIChk
-ZXYtPm10NzYuaHctPmNvbmYuZmxhZ3MgJiBJRUVFODAyMTFfQ09ORl9PRkZDSEFOTkVMKQ0KIAkJ
-cmVxLnN3aXRjaF9yZWFzb24gPSBDSF9TV0lUQ0hfU0NBTl9CWVBBU1NfRFBEOw0KQEAgLTE0MzQs
-MTUgKzE0MzIsNyBAQCBpbnQgbXQ3NjE1X21jdV9zZXRfY2hhbm5lbChzdHJ1Y3QgbXQ3NjE1X3Bo
-eSAqcGh5KQ0KIAl9DQogCW1lbXNldChyZXEudHhwb3dlcl9za3UsIDB4M2YsIDQ5KTsNCiANCi0J
-cmV0ID0gX19tdDc2X21jdV9zZW5kX21zZygmZGV2LT5tdDc2LCBNQ1VfRVhUX0NNRF9DSEFOTkVM
-X1NXSVRDSCwNCi0JCQkJICAmcmVxLCBzaXplb2YocmVxKSwgdHJ1ZSk7DQotCWlmIChyZXQpDQot
-CQlyZXR1cm4gcmV0Ow0KLQ0KLQlyZXEucnhfc3RyZWFtc19tYXNrID0gcGh5LT5jaGFpbm1hc2s7
-DQotDQotCXJldHVybiBfX210NzZfbWN1X3NlbmRfbXNnKCZkZXYtPm10NzYsIE1DVV9FWFRfQ01E
-X1NFVF9SWF9QQVRILA0KLQkJCQkgICAmcmVxLCBzaXplb2YocmVxKSwgdHJ1ZSk7DQorCXJldHVy
-biBfX210NzZfbWN1X3NlbmRfbXNnKCZkZXYtPm10NzYsIGNtZCwgJnJlcSwgc2l6ZW9mKHJlcSks
-IHRydWUpOw0KIH0NCiANCiBpbnQgbXQ3NjE1X21jdV9zZXRfaHRfY2FwKHN0cnVjdCBtdDc2MTVf
-ZGV2ICpkZXYsIHN0cnVjdCBpZWVlODAyMTFfdmlmICp2aWYsDQpkaWZmIC0tZ2l0IGEvZHJpdmVy
-cy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc2MTUvbXQ3NjE1LmggYi9kcml2ZXJzL25l
-dC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210NzYxNS9tdDc2MTUuaA0KaW5kZXggNDg4MTBlZGEx
-Y2Q2Li5mYjQ2MWU3NjFkNTkgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9tZWRp
-YXRlay9tdDc2L210NzYxNS9tdDc2MTUuaA0KKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVk
-aWF0ZWsvbXQ3Ni9tdDc2MTUvbXQ3NjE1LmgNCkBAIC0yNTEsNyArMjUxLDcgQEAgaW50IG10NzYx
-NV9tY3Vfc2V0X3N0YV9yZWMoc3RydWN0IG10NzYxNV9kZXYgKmRldiwgc3RydWN0IGllZWU4MDIx
-MV92aWYgKnZpZiwNCiAJCQkgICBzdHJ1Y3QgaWVlZTgwMjExX3N0YSAqc3RhLCBib29sIGVuKTsN
-CiBpbnQgbXQ3NjE1X21jdV9zZXRfYmNuKHN0cnVjdCBpZWVlODAyMTFfaHcgKmh3LCBzdHJ1Y3Qg
-aWVlZTgwMjExX3ZpZiAqdmlmLA0KIAkJICAgICAgIGludCBlbik7DQotaW50IG10NzYxNV9tY3Vf
-c2V0X2NoYW5uZWwoc3RydWN0IG10NzYxNV9waHkgKnBoeSk7DQoraW50IG10NzYxNV9tY3Vfc2V0
-X2NoYW5faW5mbyhzdHJ1Y3QgbXQ3NjE1X3BoeSAqcGh5LCBpbnQgY21kKTsNCiBpbnQgbXQ3NjE1
-X21jdV9zZXRfd21tKHN0cnVjdCBtdDc2MTVfZGV2ICpkZXYsIHU4IHF1ZXVlLA0KIAkJICAgICAg
-IGNvbnN0IHN0cnVjdCBpZWVlODAyMTFfdHhfcXVldWVfcGFyYW1zICpwYXJhbXMpOw0KIGludCBt
-dDc2MTVfbWN1X3NldF90eF9iYShzdHJ1Y3QgbXQ3NjE1X2RldiAqZGV2LA0KLS0gDQoyLjE4LjAN
-Cg==
+The WiFi firmware found on sm8150 requires that the QDSS clock is
+ticking in order to operate, so add an optional clock to the binding to
+allow this to be specified in the sm8150 dts and add the clock to the
+list of clocks in the driver.
+
+Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+---
+ Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt | 2 +-
+ drivers/net/wireless/ath/ath10k/snoc.c                         | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+index 017128394a3e..3fc2cce4626b 100644
+--- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
++++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+@@ -50,7 +50,7 @@ Optional properties:
+           entry in clock-names.
+ - clock-names: Should contain the clock names "wifi_wcss_cmd", "wifi_wcss_ref",
+ 	       "wifi_wcss_rtc" for "qcom,ipq4019-wifi" compatible target and
+-	       "cxo_ref_clk_pin" for "qcom,wcn3990-wifi"
++	       "cxo_ref_clk_pin" and optionally "qdss" for "qcom,wcn3990-wifi"
+ 	       compatible target.
+ - qcom,msi_addr: MSI interrupt address.
+ - qcom,msi_base: Base value to add before writing MSI data into
+diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
+index 7e85c4916e7f..aeb4cca92c35 100644
+--- a/drivers/net/wireless/ath/ath10k/snoc.c
++++ b/drivers/net/wireless/ath/ath10k/snoc.c
+@@ -46,7 +46,7 @@ static const char * const ath10k_regulators[] = {
+ };
+ 
+ static const char * const ath10k_clocks[] = {
+-	"cxo_ref_clk_pin",
++	"cxo_ref_clk_pin", "qdss",
+ };
+ 
+ static void ath10k_snoc_htc_tx_cb(struct ath10k_ce_pipe *ce_state);
+-- 
+2.24.0
 
