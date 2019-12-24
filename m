@@ -6,21 +6,21 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7195AC2D0D2
-	for <linux-wireless@archiver.kernel.org>; Tue, 24 Dec 2019 14:09:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B730C2D0CF
+	for <linux-wireless@archiver.kernel.org>; Tue, 24 Dec 2019 14:09:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 45CDE206D3
-	for <linux-wireless@archiver.kernel.org>; Tue, 24 Dec 2019 14:09:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 27FC520643
+	for <linux-wireless@archiver.kernel.org>; Tue, 24 Dec 2019 14:09:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726298AbfLXOI6 (ORCPT
+        id S1726250AbfLXOI5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 24 Dec 2019 09:08:58 -0500
-Received: from szxga07-in.huawei.com ([45.249.212.35]:50202 "EHLO huawei.com"
+        Tue, 24 Dec 2019 09:08:57 -0500
+Received: from szxga06-in.huawei.com ([45.249.212.32]:46946 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726140AbfLXOI5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S1726178AbfLXOI5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 24 Dec 2019 09:08:57 -0500
 Received: from DGGEMS413-HUB.china.huawei.com (unknown [172.30.72.60])
-        by Forcepoint Email with ESMTP id A1AA36F143AE94FC769C;
+        by Forcepoint Email with ESMTP id 7A9EF298E3E114F5D836;
         Tue, 24 Dec 2019 22:08:55 +0800 (CST)
 Received: from huawei.com (10.90.53.225) by DGGEMS413-HUB.china.huawei.com
  (10.3.19.213) with Microsoft SMTP Server id 14.3.439.0; Tue, 24 Dec 2019
@@ -30,9 +30,9 @@ To:     <yhchuang@realtek.com>, <kvalo@codeaurora.org>,
         <davem@davemloft.net>, <linux-wireless@vger.kernel.org>,
         <netdev@vger.kernel.org>
 CC:     <zhengbin13@huawei.com>
-Subject: [PATCH -next 6/6] brcmfmac: use true,false for bool variable
-Date:   Tue, 24 Dec 2019 22:16:06 +0800
-Message-ID: <1577196966-84926-7-git-send-email-zhengbin13@huawei.com>
+Subject: [PATCH -next 4/6] ath10k: use true,false for bool variable
+Date:   Tue, 24 Dec 2019 22:16:04 +0800
+Message-ID: <1577196966-84926-5-git-send-email-zhengbin13@huawei.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1577196966-84926-1-git-send-email-zhengbin13@huawei.com>
 References: <1577196966-84926-1-git-send-email-zhengbin13@huawei.com>
@@ -47,27 +47,27 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Fixes coccicheck warning:
 
-drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c:911:2-24: WARNING: Assignment of 0/1 to bool variable
+drivers/net/wireless/ath/ath10k/htt_rx.c:2143:2-31: WARNING: Assignment of 0/1 to bool variable
 
 Reported-by: Hulk Robot <hulkci@huawei.com>
 Signed-off-by: zhengbin <zhengbin13@huawei.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c | 2 +-
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
-index 2bd892d..5e1a11c 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
-@@ -908,7 +908,7 @@ static u8 brcmf_fws_hdrpush(struct brcmf_fws_info *fws, struct sk_buff *skb)
- 	wlh += wlh[1] + 2;
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 7fb1518..38a5814 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -2140,7 +2140,7 @@ static bool ath10k_htt_rx_pn_check_replay_hl(struct ath10k *ar,
+ 	if (last_pn_valid)
+ 		pn_invalid = ath10k_htt_rx_pn_cmp48(&new_pn, last_pn);
+ 	else
+-		peer->tids_last_pn_valid[tid] = 1;
++		peer->tids_last_pn_valid[tid] = true;
 
- 	if (entry->send_tim_signal) {
--		entry->send_tim_signal = 0;
-+		entry->send_tim_signal = false;
- 		wlh[0] = BRCMF_FWS_TYPE_PENDING_TRAFFIC_BMP;
- 		wlh[1] = BRCMF_FWS_TYPE_PENDING_TRAFFIC_BMP_LEN;
- 		wlh[2] = entry->mac_handle;
+ 	if (!pn_invalid)
+ 		last_pn->pn48 = new_pn.pn48;
 --
 2.7.4
 
