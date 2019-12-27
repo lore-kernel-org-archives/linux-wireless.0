@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B298DC2D0DA
-	for <linux-wireless@archiver.kernel.org>; Fri, 27 Dec 2019 17:51:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21C6BC2D0DA
+	for <linux-wireless@archiver.kernel.org>; Fri, 27 Dec 2019 17:53:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8739B2176D
-	for <linux-wireless@archiver.kernel.org>; Fri, 27 Dec 2019 17:51:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0176920CC7
+	for <linux-wireless@archiver.kernel.org>; Fri, 27 Dec 2019 17:53:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1577469104;
-	bh=h5NfLAMahDeyBWLnNDHOkNGkRzHip58O6rBMQh4p7X4=;
+	s=default; t=1577469226;
+	bh=2m/b3YaV30WQP7EmUHqtvR2SDpsnEF7V/wpRmsP9GRw=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=ryBHCczLi8ElbwGOdMnTutWEjH+QSXfD7jnDNq8E6DEx8J3kFuUIMqUdCWa1QeMD2
-	 opPbA7WMH3lO8uLPU2QDTNWeaZBmdRVhkFUiiLzGyWaxZ7EXEogQQKaCEda07Hm9dH
-	 4XUTdG3g/YSFy2xHLt3zDdpVRzI9yM6zj3P/pNfY=
+	b=tQWQCC6QIJBBAhWGVjFNDI0hrT8OPW1WbatZXA064PRzkkos+JDq0M+9QqWys9eVV
+	 0qGc9sYlEPpvPMVNrpNV5gofeEGuuuu5iN3NsZlGP92lpE3H/mcbQsyrvqgDc6J9dZ
+	 jndRyOLzMrmLUvkeVPJSwYjO2Ujnm1egyBdkioA0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727988AbfL0Rvk (ORCPT
+        id S1727976AbfL0Rmr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 27 Dec 2019 12:51:40 -0500
-Received: from mail.kernel.org ([198.145.29.99]:40822 "EHLO mail.kernel.org"
+        Fri, 27 Dec 2019 12:42:47 -0500
+Received: from mail.kernel.org ([198.145.29.99]:39878 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728212AbfL0RnW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Dec 2019 12:43:22 -0500
+        id S1727965AbfL0Rmp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 27 Dec 2019 12:42:45 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id DBA4121927;
-        Fri, 27 Dec 2019 17:43:20 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 7064820CC7;
+        Fri, 27 Dec 2019 17:42:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1577468601;
-        bh=h5NfLAMahDeyBWLnNDHOkNGkRzHip58O6rBMQh4p7X4=;
+        s=default; t=1577468565;
+        bh=2m/b3YaV30WQP7EmUHqtvR2SDpsnEF7V/wpRmsP9GRw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=eZiBodEslWwXooQoAL+GORGsHxKD6a8vMljZJXWB8g/Tdc44xN55207ag91jj/vAz
-         VYO1jyETIJpAd27F70kp9ew28HjzR6kBXtHxW/BHYDbe4UeXR4M4ZkG1xY0/PVbIJ0
-         MRbGrYpXMNzpBS7A2APH3wob3/KGpiiWdRg86IvM=
+        b=iQH5xtv/RBtjysZbBeFwn+eqBUqmgy/mYSKNHHZB96vtayuNbc8yf4KnrLmQ181/O
+         /kEAaAwQRMsKv/L8wAwlJrtyDGJmH7WYGqdhd2QGQxfqG85ZLHd0mIvCzs5LYBZtL2
+         g5AZCr0+qHu+RKabSUtogPaw3DVllBFGp0i4k3k0=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Aditya Pakki <pakki001@umn.edu>,
+Cc:     Fredrik Olofsson <fredrik.olofsson@anyfinetworks.com>,
         Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 122/187] rfkill: Fix incorrect check to avoid NULL pointer dereference
-Date:   Fri, 27 Dec 2019 12:39:50 -0500
-Message-Id: <20191227174055.4923-122-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 090/187] mac80211: fix TID field in monitor mode transmit
+Date:   Fri, 27 Dec 2019 12:39:18 -0500
+Message-Id: <20191227174055.4923-90-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191227174055.4923-1-sashal@kernel.org>
 References: <20191227174055.4923-1-sashal@kernel.org>
@@ -60,42 +60,55 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Aditya Pakki <pakki001@umn.edu>
+From: Fredrik Olofsson <fredrik.olofsson@anyfinetworks.com>
 
-[ Upstream commit 6fc232db9e8cd50b9b83534de9cd91ace711b2d7 ]
+[ Upstream commit 753ffad3d6243303994227854d951ff5c70fa9e0 ]
 
-In rfkill_register, the struct rfkill pointer is first derefernced
-and then checked for NULL. This patch removes the BUG_ON and returns
-an error to the caller in case rfkill is NULL.
+Fix overwriting of the qos_ctrl.tid field for encrypted frames injected on
+a monitor interface. While qos_ctrl.tid is not encrypted, it's used as an
+input into the encryption algorithm so it's protected, and thus cannot be
+modified after encryption. For injected frames, the encryption may already
+have been done in userspace, so we cannot change any fields.
 
-Signed-off-by: Aditya Pakki <pakki001@umn.edu>
-Link: https://lore.kernel.org/r/20191215153409.21696-1-pakki001@umn.edu
+Before passing the frame to the driver, the qos_ctrl.tid field is updated
+from skb->priority. Prior to dbd50a851c50 skb->priority was updated in
+ieee80211_select_queue_80211(), but this function is no longer always
+called.
+
+Update skb->priority in ieee80211_monitor_start_xmit() so that the value
+is stored, and when later code 'modifies' the TID it really sets it to
+the same value as before, preserving the encryption.
+
+Fixes: dbd50a851c50 ("mac80211: only allocate one queue when using iTXQs")
+Signed-off-by: Fredrik Olofsson <fredrik.olofsson@anyfinetworks.com>
+Link: https://lore.kernel.org/r/20191119133451.14711-1-fredrik.olofsson@anyfinetworks.com
+[rewrite commit message based on our discussion]
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/rfkill/core.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ net/mac80211/tx.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/net/rfkill/core.c b/net/rfkill/core.c
-index 0bf9bf1ceb8f..6c089320ae4f 100644
---- a/net/rfkill/core.c
-+++ b/net/rfkill/core.c
-@@ -1002,10 +1002,13 @@ static void rfkill_sync_work(struct work_struct *work)
- int __must_check rfkill_register(struct rfkill *rfkill)
- {
- 	static unsigned long rfkill_no;
--	struct device *dev = &rfkill->dev;
-+	struct device *dev;
- 	int error;
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 1fa422782905..cbd273c0b275 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2263,6 +2263,15 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
+ 						    payload[7]);
+ 	}
  
--	BUG_ON(!rfkill);
-+	if (!rfkill)
-+		return -EINVAL;
++	/*
++	 * Initialize skb->priority for QoS frames. This is put in the TID field
++	 * of the frame before passing it to the driver.
++	 */
++	if (ieee80211_is_data_qos(hdr->frame_control)) {
++		u8 *p = ieee80211_get_qos_ctl(hdr);
++		skb->priority = *p & IEEE80211_QOS_CTL_TAG1D_MASK;
++	}
 +
-+	dev = &rfkill->dev;
+ 	memset(info, 0, sizeof(*info));
  
- 	mutex_lock(&rfkill_global_mutex);
- 
+ 	info->flags = IEEE80211_TX_CTL_REQ_TX_STATUS |
 -- 
 2.20.1
 
