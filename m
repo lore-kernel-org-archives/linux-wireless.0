@@ -7,52 +7,52 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DBE6C2D0C6
-	for <linux-wireless@archiver.kernel.org>; Fri, 27 Dec 2019 17:56:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9816C2D0C6
+	for <linux-wireless@archiver.kernel.org>; Fri, 27 Dec 2019 17:58:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6B50E206CB
-	for <linux-wireless@archiver.kernel.org>; Fri, 27 Dec 2019 17:56:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7AFF2206CB
+	for <linux-wireless@archiver.kernel.org>; Fri, 27 Dec 2019 17:58:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1577469372;
-	bh=TQYSuAZJRaCzizmp6PoJ4JqrQQooRARmD8G+/wehoZo=;
+	s=default; t=1577469516;
+	bh=M01gu7MziXp8+VKh5qcZFPlH1fqzm0ZSof5dqte4qCE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=cfuBgZGc0wO6YuwzDXgDgs/gPzuqEoIN2+o2rcqgzQxXP1q/8VMR/F6IUKEr7c7lB
-	 5AiLS1umZbfnz8UlYfnjczyW+9lBdhSzvcJtdcaFgKoq6URj3hVe+qKztMeehdhGHE
-	 7EJPhDj7B/enNmazUotI1Snq4ncbE/57rClJ91SU=
+	b=XhalQBOOhoayHaZ9l18tpny3kTA73HTT+ZlyEaryukiMHPa1LsoF+I/pjFpM0Vs1t
+	 j4cyeJjslduj8DYZxodyvPSC8+ACdMa5FHb7EfMHZB+jggI52ZYRE8zy72WUOr9l7a
+	 GiDC75D36yrMNFbKAJd6oWtReE65ZG439ZkV5iQI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728023AbfL0R4H (ORCPT
+        id S1728003AbfL0R6b (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 27 Dec 2019 12:56:07 -0500
-Received: from mail.kernel.org ([198.145.29.99]:38792 "EHLO mail.kernel.org"
+        Fri, 27 Dec 2019 12:58:31 -0500
+Received: from mail.kernel.org ([198.145.29.99]:37464 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727165AbfL0RmH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Dec 2019 12:42:07 -0500
+        id S1727389AbfL0RlU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 27 Dec 2019 12:41:20 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 9AA9F21D7E;
-        Fri, 27 Dec 2019 17:42:05 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 95E042464B;
+        Fri, 27 Dec 2019 17:41:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1577468526;
-        bh=TQYSuAZJRaCzizmp6PoJ4JqrQQooRARmD8G+/wehoZo=;
+        s=default; t=1577468479;
+        bh=M01gu7MziXp8+VKh5qcZFPlH1fqzm0ZSof5dqte4qCE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=LSO/zpSJzA+k/8EMcBaonvzaahYWvdzusf5cI51mgpmKjMBYlr31RPoGtCEE/1wFR
-         5tERXo0h9pRtgOIobqhvatpxq0i9CqJunI7zxMcdMgsyZLrJCuYRzyJA1daYE6ig78
-         CUaAdvc74xmeCodwd0yd/1XP9rheL50eH2hU4sm4=
+        b=OMekIddiVYDtLYnRfVHGb9iOiXo7a197OJmVR+PjaPAlklHDg9obUWQY0cXSldoDV
+         qgF7uQoD+f1WoCEdh4e1kttsikTM9dqj3FaiiudBjBbzdfxRs2eCJSA/QouokWn26Y
+         +zdRAIyr4Wv1xT/YbnSIBDPNO83nxdA7Ouf+e2Rw=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Luca Coelho <luciano.coelho@intel.com>, stable@ver.kernel.org,
-        Anders Kaseorg <andersk@mit.edu>,
+Cc:     qize wang <wangqize888888888@gmail.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 057/187] iwlwifi: pcie: move power gating workaround earlier in the flow
-Date:   Fri, 27 Dec 2019 12:38:45 -0500
-Message-Id: <20191227174055.4923-57-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 018/187] mwifiex: Fix heap overflow in mmwifiex_process_tdls_action_frame()
+Date:   Fri, 27 Dec 2019 12:38:06 -0500
+Message-Id: <20191227174055.4923-18-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191227174055.4923-1-sashal@kernel.org>
 References: <20191227174055.4923-1-sashal@kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
@@ -61,122 +61,160 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: qize wang <wangqize888888888@gmail.com>
 
-[ Upstream commit 0df36b90c47d93295b7e393da2d961b2f3b6cde4 ]
+[ Upstream commit 1e58252e334dc3f3756f424a157d1b7484464c40 ]
 
-We need to reset the NIC after setting the bits to enable power
-gating and that cannot be done too late in the flow otherwise it
-cleans other registers and things that were already configured,
-causing initialization to fail.
+mwifiex_process_tdls_action_frame() without checking
+the incoming tdls infomation element's vality before use it,
+this may cause multi heap buffer overflows.
 
-In order to fix this, move the function to the common code in trans.c
-so it can be called directly from there at an earlier point, just
-after the reset we already do during initialization.
+Fix them by putting vality check before use it.
 
-Fixes: 9a47cb988338 ("iwlwifi: pcie: add workaround for power gating in integrated 22000")
-Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=205719
-Cc: stable@ver.kernel.org # 5.4+
-Reported-by: Anders Kaseorg <andersk@mit.edu>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+IE is TLV struct, but ht_cap and  ht_oper aren’t TLV struct.
+the origin marvell driver code is wrong:
+
+memcpy(&sta_ptr->tdls_cap.ht_oper, pos,....
+memcpy((u8 *)&sta_ptr->tdls_cap.ht_capb, pos,...
+
+Fix the bug by changing pos(the address of IE) to
+pos+2 ( the address of IE value ).
+
+Signed-off-by: qize wang <wangqize888888888@gmail.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- .../wireless/intel/iwlwifi/pcie/trans-gen2.c  | 25 ----------------
- .../net/wireless/intel/iwlwifi/pcie/trans.c   | 30 +++++++++++++++++++
- 2 files changed, 30 insertions(+), 25 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/tdls.c | 70 +++++++++++++++++++--
+ 1 file changed, 64 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-index ca3bb4d65b00..df8455f14e4d 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.c
-@@ -57,24 +57,6 @@
- #include "internal.h"
- #include "fw/dbg.h"
+diff --git a/drivers/net/wireless/marvell/mwifiex/tdls.c b/drivers/net/wireless/marvell/mwifiex/tdls.c
+index 09313047beed..7caf1d26124a 100644
+--- a/drivers/net/wireless/marvell/mwifiex/tdls.c
++++ b/drivers/net/wireless/marvell/mwifiex/tdls.c
+@@ -953,59 +953,117 @@ void mwifiex_process_tdls_action_frame(struct mwifiex_private *priv,
  
--static int iwl_pcie_gen2_force_power_gating(struct iwl_trans *trans)
--{
--	iwl_set_bits_prph(trans, HPM_HIPM_GEN_CFG,
--			  HPM_HIPM_GEN_CFG_CR_FORCE_ACTIVE);
--	udelay(20);
--	iwl_set_bits_prph(trans, HPM_HIPM_GEN_CFG,
--			  HPM_HIPM_GEN_CFG_CR_PG_EN |
--			  HPM_HIPM_GEN_CFG_CR_SLP_EN);
--	udelay(20);
--	iwl_clear_bits_prph(trans, HPM_HIPM_GEN_CFG,
--			    HPM_HIPM_GEN_CFG_CR_FORCE_ACTIVE);
--
--	iwl_trans_sw_reset(trans);
--	iwl_clear_bit(trans, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
--
--	return 0;
--}
--
- /*
-  * Start up NIC's basic functionality after it has been reset
-  * (e.g. after platform boot, or shutdown via iwl_pcie_apm_stop())
-@@ -110,13 +92,6 @@ int iwl_pcie_gen2_apm_init(struct iwl_trans *trans)
+ 		switch (*pos) {
+ 		case WLAN_EID_SUPP_RATES:
++			if (pos[1] > 32)
++				return;
+ 			sta_ptr->tdls_cap.rates_len = pos[1];
+ 			for (i = 0; i < pos[1]; i++)
+ 				sta_ptr->tdls_cap.rates[i] = pos[i + 2];
+ 			break;
  
- 	iwl_pcie_apm_config(trans);
- 
--	if (trans->trans_cfg->device_family == IWL_DEVICE_FAMILY_22000 &&
--	    trans->cfg->integrated) {
--		ret = iwl_pcie_gen2_force_power_gating(trans);
--		if (ret)
--			return ret;
--	}
--
- 	ret = iwl_finish_nic_init(trans, trans->trans_cfg);
- 	if (ret)
- 		return ret;
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 6961f00ff812..d3db38c3095b 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -1783,6 +1783,29 @@ static int iwl_trans_pcie_clear_persistence_bit(struct iwl_trans *trans)
- 	return 0;
- }
- 
-+static int iwl_pcie_gen2_force_power_gating(struct iwl_trans *trans)
-+{
-+	int ret;
-+
-+	ret = iwl_finish_nic_init(trans, trans->trans_cfg);
-+	if (ret < 0)
-+		return ret;
-+
-+	iwl_set_bits_prph(trans, HPM_HIPM_GEN_CFG,
-+			  HPM_HIPM_GEN_CFG_CR_FORCE_ACTIVE);
-+	udelay(20);
-+	iwl_set_bits_prph(trans, HPM_HIPM_GEN_CFG,
-+			  HPM_HIPM_GEN_CFG_CR_PG_EN |
-+			  HPM_HIPM_GEN_CFG_CR_SLP_EN);
-+	udelay(20);
-+	iwl_clear_bits_prph(trans, HPM_HIPM_GEN_CFG,
-+			    HPM_HIPM_GEN_CFG_CR_FORCE_ACTIVE);
-+
-+	iwl_trans_pcie_sw_reset(trans);
-+
-+	return 0;
-+}
-+
- static int _iwl_trans_pcie_start_hw(struct iwl_trans *trans)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-@@ -1802,6 +1825,13 @@ static int _iwl_trans_pcie_start_hw(struct iwl_trans *trans)
- 
- 	iwl_trans_pcie_sw_reset(trans);
- 
-+	if (trans->trans_cfg->device_family == IWL_DEVICE_FAMILY_22000 &&
-+	    trans->cfg->integrated) {
-+		err = iwl_pcie_gen2_force_power_gating(trans);
-+		if (err)
-+			return err;
-+	}
-+
- 	err = iwl_pcie_apm_init(trans);
- 	if (err)
- 		return err;
+ 		case WLAN_EID_EXT_SUPP_RATES:
++			if (pos[1] > 32)
++				return;
+ 			basic = sta_ptr->tdls_cap.rates_len;
++			if (pos[1] > 32 - basic)
++				return;
+ 			for (i = 0; i < pos[1]; i++)
+ 				sta_ptr->tdls_cap.rates[basic + i] = pos[i + 2];
+ 			sta_ptr->tdls_cap.rates_len += pos[1];
+ 			break;
+ 		case WLAN_EID_HT_CAPABILITY:
+-			memcpy((u8 *)&sta_ptr->tdls_cap.ht_capb, pos,
++			if (pos > end - sizeof(struct ieee80211_ht_cap) - 2)
++				return;
++			if (pos[1] != sizeof(struct ieee80211_ht_cap))
++				return;
++			/* copy the ie's value into ht_capb*/
++			memcpy((u8 *)&sta_ptr->tdls_cap.ht_capb, pos + 2,
+ 			       sizeof(struct ieee80211_ht_cap));
+ 			sta_ptr->is_11n_enabled = 1;
+ 			break;
+ 		case WLAN_EID_HT_OPERATION:
+-			memcpy(&sta_ptr->tdls_cap.ht_oper, pos,
++			if (pos > end -
++			    sizeof(struct ieee80211_ht_operation) - 2)
++				return;
++			if (pos[1] != sizeof(struct ieee80211_ht_operation))
++				return;
++			/* copy the ie's value into ht_oper*/
++			memcpy(&sta_ptr->tdls_cap.ht_oper, pos + 2,
+ 			       sizeof(struct ieee80211_ht_operation));
+ 			break;
+ 		case WLAN_EID_BSS_COEX_2040:
++			if (pos > end - 3)
++				return;
++			if (pos[1] != 1)
++				return;
+ 			sta_ptr->tdls_cap.coex_2040 = pos[2];
+ 			break;
+ 		case WLAN_EID_EXT_CAPABILITY:
++			if (pos > end - sizeof(struct ieee_types_header))
++				return;
++			if (pos[1] < sizeof(struct ieee_types_header))
++				return;
++			if (pos[1] > 8)
++				return;
+ 			memcpy((u8 *)&sta_ptr->tdls_cap.extcap, pos,
+ 			       sizeof(struct ieee_types_header) +
+ 			       min_t(u8, pos[1], 8));
+ 			break;
+ 		case WLAN_EID_RSN:
++			if (pos > end - sizeof(struct ieee_types_header))
++				return;
++			if (pos[1] < sizeof(struct ieee_types_header))
++				return;
++			if (pos[1] > IEEE_MAX_IE_SIZE -
++			    sizeof(struct ieee_types_header))
++				return;
+ 			memcpy((u8 *)&sta_ptr->tdls_cap.rsn_ie, pos,
+ 			       sizeof(struct ieee_types_header) +
+ 			       min_t(u8, pos[1], IEEE_MAX_IE_SIZE -
+ 				     sizeof(struct ieee_types_header)));
+ 			break;
+ 		case WLAN_EID_QOS_CAPA:
++			if (pos > end - 3)
++				return;
++			if (pos[1] != 1)
++				return;
+ 			sta_ptr->tdls_cap.qos_info = pos[2];
+ 			break;
+ 		case WLAN_EID_VHT_OPERATION:
+-			if (priv->adapter->is_hw_11ac_capable)
+-				memcpy(&sta_ptr->tdls_cap.vhtoper, pos,
++			if (priv->adapter->is_hw_11ac_capable) {
++				if (pos > end -
++				    sizeof(struct ieee80211_vht_operation) - 2)
++					return;
++				if (pos[1] !=
++				    sizeof(struct ieee80211_vht_operation))
++					return;
++				/* copy the ie's value into vhtoper*/
++				memcpy(&sta_ptr->tdls_cap.vhtoper, pos + 2,
+ 				       sizeof(struct ieee80211_vht_operation));
++			}
+ 			break;
+ 		case WLAN_EID_VHT_CAPABILITY:
+ 			if (priv->adapter->is_hw_11ac_capable) {
+-				memcpy((u8 *)&sta_ptr->tdls_cap.vhtcap, pos,
++				if (pos > end -
++				    sizeof(struct ieee80211_vht_cap) - 2)
++					return;
++				if (pos[1] != sizeof(struct ieee80211_vht_cap))
++					return;
++				/* copy the ie's value into vhtcap*/
++				memcpy((u8 *)&sta_ptr->tdls_cap.vhtcap, pos + 2,
+ 				       sizeof(struct ieee80211_vht_cap));
+ 				sta_ptr->is_11ac_enabled = 1;
+ 			}
+ 			break;
+ 		case WLAN_EID_AID:
+-			if (priv->adapter->is_hw_11ac_capable)
++			if (priv->adapter->is_hw_11ac_capable) {
++				if (pos > end - 4)
++					return;
++				if (pos[1] != 2)
++					return;
+ 				sta_ptr->tdls_cap.aid =
+ 					get_unaligned_le16((pos + 2));
++			}
++			break;
+ 		default:
+ 			break;
+ 		}
 -- 
 2.20.1
 
