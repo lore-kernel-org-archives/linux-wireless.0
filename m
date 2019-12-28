@@ -1,121 +1,121 @@
-Return-Path: <SRS0=Wd/x=2R=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=L9iT=2S=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68CB2C2D0C6
-	for <linux-wireless@archiver.kernel.org>; Fri, 27 Dec 2019 18:20:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF04CC3F68F
+	for <linux-wireless@archiver.kernel.org>; Sat, 28 Dec 2019 01:48:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 38DD720722
-	for <linux-wireless@archiver.kernel.org>; Fri, 27 Dec 2019 18:20:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1577470807;
-	bh=htFu0h7MnxuTbn86aRRG0Y/vLwjJXBBQsUNcpcYgA8E=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=ObKpJfrp4oeZN6aC9SK+ec+HbgtdSTz68C6UzkIWYF1Ggdr7GD8m0wElKOuwekQaW
-	 3hEFZvODbGVbEJ1NUZTVg+5joxrJk4hmH6Q5inlh74UiXZ4nc9qzsGWo0pyfP/rMVw
-	 DjU43+hk7KPkBuzn26xLF0X81UxZ9bohax4EvrP0=
+	by mail.kernel.org (Postfix) with ESMTP id C5C4921582
+	for <linux-wireless@archiver.kernel.org>; Sat, 28 Dec 2019 01:48:13 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Qz9dvRXj"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727100AbfL0SOi (ORCPT
+        id S1726502AbfL1BsL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 27 Dec 2019 13:14:38 -0500
-Received: from mail.kernel.org ([198.145.29.99]:38782 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726495AbfL0SOi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Dec 2019 13:14:38 -0500
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A512820722;
-        Fri, 27 Dec 2019 18:14:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1577470477;
-        bh=htFu0h7MnxuTbn86aRRG0Y/vLwjJXBBQsUNcpcYgA8E=;
-        h=From:To:Cc:Subject:Date:From;
-        b=dsaYOgPYcxRA00fQHIPa9oliYdHQVTJYQJ9dZg5UYZxrfUKSnEB2pNjzlVhU+Vgv8
-         UG15a+RMlh/aTWdh7BGhIunAWGEFB3AT4oGu3zVbZUNJlavzwjsT11EsZuWg4UxswN
-         oCaV8khsGJF9q87JYPlH+QCoBFwaK+AMH0TvfmTQ=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Ganapathi Bhat <gbhat@marvell.com>,
-        huangwen <huangwenabc@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 01/38] mwifiex: fix possible heap overflow in mwifiex_process_country_ie()
-Date:   Fri, 27 Dec 2019 13:13:58 -0500
-Message-Id: <20191227181435.7644-1-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
+        Fri, 27 Dec 2019 20:48:11 -0500
+Received: from mail-ot1-f68.google.com ([209.85.210.68]:39949 "EHLO
+        mail-ot1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726407AbfL1BsK (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 27 Dec 2019 20:48:10 -0500
+Received: by mail-ot1-f68.google.com with SMTP id w21so30641727otj.7;
+        Fri, 27 Dec 2019 17:48:10 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=BUwswIF58DB1KtJ+ICQ6+QTX6MPDBcPHFeXQK9tbzOo=;
+        b=Qz9dvRXj5xcgAHNUogdzsS/jQFiXWvqDrC0UFX+jIRAuiUvIi02X585sT03KNfExmk
+         ME8lkirSI3tdcOfDwt6g/v22cTkNnr3TgK7szL2haJoZBLWazRdPqJzpKr6KlEiUt8MC
+         gXDJ+rL3pf9Y9VBdR33I5ziV/W1rmtlLBxHyXD/fVBT6pLyef2O2bFzGXAk8ZTuAReLa
+         0NbxNNdHD1DKjy77hjk2Mc/sO9Hhq2flLFdz5wtfTyhL8fFAdQ78fcunm0AOpTa4wJPr
+         sQUcm5Wc3YjdkVRbbU8mHPz2dK1S/UCd3rXfW6mnCOAkzOyhE+0mh0lJ7Qcaz6MpfeRp
+         RDmw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=BUwswIF58DB1KtJ+ICQ6+QTX6MPDBcPHFeXQK9tbzOo=;
+        b=o/fUGSY4wrJWNLxPYEfV316vW3hOwlCbU5gAQKM9eIqQv1EC2eq2BIgrdWaArkbldc
+         hB8k3k6ZggVWhw9vZaB0puv8I6yZl97SfIPLQ6+14KIR3AI1Vi824dsM2M0QnRShYrDg
+         hMAMr90aScA8iiiJigvGKsfY153gHrjmrjABPSP5F3LlwEaoqkB3mOLBFKXKdgg6v3jw
+         O6C4ZesP7V5gcFlqfBwckVEGeewf5p9oCkS6GEcEsSANc+F6dyedqpoTY6fRYBkfjzDq
+         NuYtUPRET1e7FujYpeV0kJwkGPw/UA64slJpR9+CRHz+qwFHcbvLGkuki5VOcKtMMgSG
+         qk+A==
+X-Gm-Message-State: APjAAAVxOYTVd/+YHQRsq3do60FB1Q5HkBjLg3N9Gf+c/u72hOvWhAo6
+        oLup1Q/+QYjfuHMy9oFfL2VlDfPFsgQ6U9ujs/LxtaaBFsl/bA==
+X-Google-Smtp-Source: APXvYqyotEoh+bvefljfUU8znWCWq/Ba+F6QeyxHQfB4vhuphKIJ17iG60Mlrf3hwMRsFAvCE64bmzO5z7MST6LPrH8=
+X-Received: by 2002:a05:6830:159a:: with SMTP id i26mr60947634otr.3.1577497689532;
+ Fri, 27 Dec 2019 17:48:09 -0800 (PST)
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+References: <20191227181435.7644-1-sashal@kernel.org> <20191227181435.7644-25-sashal@kernel.org>
+In-Reply-To: <20191227181435.7644-25-sashal@kernel.org>
+From:   Justin Capella <justincapella@gmail.com>
+Date:   Fri, 27 Dec 2019 17:48:39 -0800
+Message-ID: <CAMrEMU_QfP2fyh6HHf-QXAY=2GktQRaf1z0HPEX=TUcZQoY0Jw@mail.gmail.com>
+Subject: Re: [PATCH AUTOSEL 4.9 25/38] rfkill: Fix incorrect check to avoid
+ NULL pointer dereference
+To:     Sasha Levin <sashal@kernel.org>, Aditya Pakki <pakki001@umn.edu>
+Cc:     LKML <linux-kernel@vger.kernel.org>, stable@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ganapathi Bhat <gbhat@marvell.com>
+Should the mutex be held during this check? Do you know if any of the
+users need changing to IS_ERR_OR_NULL or should the dev member also be
+checked?
 
-[ Upstream commit 3d94a4a8373bf5f45cf5f939e88b8354dbf2311b ]
+I'm not sure if this is true of the BUG_ON macros but I have seen
+implementations of similar macros that are used in the conditional
+avoiding the need for a 2nd check.
 
-mwifiex_process_country_ie() function parse elements of bss
-descriptor in beacon packet. When processing WLAN_EID_COUNTRY
-element, there is no upper limit check for country_ie_len before
-calling memcpy. The destination buffer domain_info->triplet is an
-array of length MWIFIEX_MAX_TRIPLET_802_11D(83). The remote
-attacker can build a fake AP with the same ssid as real AP, and
-send malicous beacon packet with long WLAN_EID_COUNTRY elemen
-(country_ie_len > 83). Attacker can  force STA connect to fake AP
-on a different channel. When the victim STA connects to fake AP,
-will trigger the heap buffer overflow. Fix this by checking for
-length and if found invalid, don not connect to the AP.
-
-This fix addresses CVE-2019-14895.
-
-Reported-by: huangwen <huangwenabc@gmail.com>
-Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/net/wireless/marvell/mwifiex/sta_ioctl.c | 13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-index 478885afb6c6..be3be7a63cf0 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-@@ -271,6 +271,14 @@ static int mwifiex_process_country_ie(struct mwifiex_private *priv,
- 			    "11D: skip setting domain info in FW\n");
- 		return 0;
- 	}
-+
-+	if (country_ie_len >
-+	    (IEEE80211_COUNTRY_STRING_LEN + MWIFIEX_MAX_TRIPLET_802_11D)) {
-+		mwifiex_dbg(priv->adapter, ERROR,
-+			    "11D: country_ie_len overflow!, deauth AP\n");
-+		return -EINVAL;
-+	}
-+
- 	memcpy(priv->adapter->country_code, &country_ie[2], 2);
- 
- 	domain_info->country_code[0] = country_ie[2];
-@@ -314,8 +322,9 @@ int mwifiex_bss_start(struct mwifiex_private *priv, struct cfg80211_bss *bss,
- 	priv->scan_block = false;
- 
- 	if (bss) {
--		if (adapter->region_code == 0x00)
--			mwifiex_process_country_ie(priv, bss);
-+		if (adapter->region_code == 0x00 &&
-+		    mwifiex_process_country_ie(priv, bss))
-+			return -EINVAL;
- 
- 		/* Allocate and fill new bss descriptor */
- 		bss_desc = kzalloc(sizeof(struct mwifiex_bssdescriptor),
--- 
-2.20.1
-
+On Fri, Dec 27, 2019 at 10:18 AM Sasha Levin <sashal@kernel.org> wrote:
+>
+> From: Aditya Pakki <pakki001@umn.edu>
+>
+> [ Upstream commit 6fc232db9e8cd50b9b83534de9cd91ace711b2d7 ]
+>
+> In rfkill_register, the struct rfkill pointer is first derefernced
+> and then checked for NULL. This patch removes the BUG_ON and returns
+> an error to the caller in case rfkill is NULL.
+>
+> Signed-off-by: Aditya Pakki <pakki001@umn.edu>
+> Link: https://lore.kernel.org/r/20191215153409.21696-1-pakki001@umn.edu
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> Signed-off-by: Sasha Levin <sashal@kernel.org>
+> ---
+>  net/rfkill/core.c | 7 +++++--
+>  1 file changed, 5 insertions(+), 2 deletions(-)
+>
+> diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+> index 884027f62783..87c35844d7d9 100644
+> --- a/net/rfkill/core.c
+> +++ b/net/rfkill/core.c
+> @@ -940,10 +940,13 @@ static void rfkill_sync_work(struct work_struct *work)
+>  int __must_check rfkill_register(struct rfkill *rfkill)
+>  {
+>         static unsigned long rfkill_no;
+> -       struct device *dev = &rfkill->dev;
+> +       struct device *dev;
+>         int error;
+>
+> -       BUG_ON(!rfkill);
+> +       if (!rfkill)
+> +               return -EINVAL;
+> +
+> +       dev = &rfkill->dev;
+>
+>         mutex_lock(&rfkill_global_mutex);
+>
+> --
+> 2.20.1
+>
