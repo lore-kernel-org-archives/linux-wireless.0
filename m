@@ -7,51 +7,53 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A17F1C2D0C2
-	for <linux-wireless@archiver.kernel.org>; Tue, 31 Dec 2019 09:27:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8ED47C2D0C2
+	for <linux-wireless@archiver.kernel.org>; Tue, 31 Dec 2019 09:28:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5FEB1206DB
-	for <linux-wireless@archiver.kernel.org>; Tue, 31 Dec 2019 09:27:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5D012206DB
+	for <linux-wireless@archiver.kernel.org>; Tue, 31 Dec 2019 09:28:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="I5QjrFsD"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="AlHgZzp5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726308AbfLaJ1W (ORCPT
+        id S1726413AbfLaJ2T (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 31 Dec 2019 04:27:22 -0500
-Received: from mail25.static.mailgun.info ([104.130.122.25]:14945 "EHLO
-        mail25.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725770AbfLaJ1W (ORCPT
+        Tue, 31 Dec 2019 04:28:19 -0500
+Received: from mail26.static.mailgun.info ([104.130.122.26]:13947 "EHLO
+        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725770AbfLaJ2T (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Dec 2019 04:27:22 -0500
+        Tue, 31 Dec 2019 04:28:19 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1577784441; h=Content-Transfer-Encoding: MIME-Version:
- Message-Id: Date: Subject: Cc: To: From: Sender;
- bh=tW8Kr4b49G8QQb0Dc+pICMwIFXSYwKADVDgcVJxqh2k=; b=I5QjrFsDO2Ta7ldF70Zd62zRIUX8XC/jnGw1zBHnQLk4+xXjC9qi4otErJ9UZNajMoOyx7os
- YlZzOr7NgqxVNQdM9974XwkCSKCQGCcr3EuLQd6XfyOwrFJ5yKUrHx6Ar42dDWI/rED1rXAx
- AaoEQX+L4OY030aaEo+cPTRspDk=
-X-Mailgun-Sending-Ip: 104.130.122.25
+ s=smtp; t=1577784498; h=Content-Transfer-Encoding: MIME-Version:
+ References: In-Reply-To: Message-Id: Date: Subject: Cc: To: From:
+ Sender; bh=6OnxIaY/89F6bOipfAHJuWOXROI71sCyvwXMZk88A9M=; b=AlHgZzp5t0PojAPi5Q9teKxfUVjfJMNyV13pldCrohdIpQ5VZYzcGT2ExIOpH9fqk6KVPDlH
+ +Dbv8+6HuHXTlo8e4ZDsxnP43su+EUVqQ92LQgCGZe7/WTajdrvQH/I2nCyiYPsGQNTcZisz
+ Mdsn1jrgkS77gy+myOvAT7vdEhk=
+X-Mailgun-Sending-Ip: 104.130.122.26
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e0b1473.7f132e3cd8b8-smtp-out-n01;
- Tue, 31 Dec 2019 09:27:15 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5e0b14b1.7f3279dfffb8-smtp-out-n03;
+ Tue, 31 Dec 2019 09:28:17 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id D51EAC4479C; Tue, 31 Dec 2019 09:27:15 +0000 (UTC)
+        id 62453C4479C; Tue, 31 Dec 2019 09:28:16 +0000 (UTC)
 Received: from wgong-HP-Z240-SFF-Workstation.qca.qualcomm.com (unknown [180.166.53.21])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: wgong)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 95A06C43383;
-        Tue, 31 Dec 2019 09:27:14 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 95A06C43383
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 68BCBC43383;
+        Tue, 31 Dec 2019 09:28:14 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 68BCBC43383
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=wgong@codeaurora.org
 From:   Wen Gong <wgong@codeaurora.org>
 To:     ath10k@lists.infradead.org
 Cc:     linux-wireless@vger.kernel.org
-Subject: [PATCH v2] ath10k: drop RX skb with invalid length for sdio
-Date:   Tue, 31 Dec 2019 17:27:06 +0800
-Message-Id: <20191231092706.6136-1-wgong@codeaurora.org>
+Subject: [PATCH v3 1/2] ath10k: add refcount for ath10k_core_restart
+Date:   Tue, 31 Dec 2019 17:28:05 +0800
+Message-Id: <20191231092806.6247-2-wgong@codeaurora.org>
 X-Mailer: git-send-email 2.23.0
+In-Reply-To: <20191231092806.6247-1-wgong@codeaurora.org>
+References: <20191231092806.6247-1-wgong@codeaurora.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -59,141 +61,65 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-When simulate random transfer fail for sdio write and read, it crash
-sometimes.
+When it has more than one restart_work queued meanwhile, the 2nd
+restart_work is very esay to break the 1st restart work and lead
+recovery fail.
 
-Test steps:
-1. Add config and update kernel:
-CONFIG_FAIL_MMC_REQUEST=y
-CONFIG_FAULT_INJECTION=y
-CONFIG_FAULT_INJECTION_DEBUG_FS=y
-
-2. run simulate fail:
-cd /sys/kernel/debug/mmc1/fail_mmc_request
-echo 10 > probability
-echo 10 > times # repeat until hitting issues
-
-3. it crash, the act len of ath10k_htc_hdr is higher than allocate len, it cause panic:
-[   99.723482] skbuff: skb_over_panic: text:00000000caa0f780 len:57013 put:57013 head:000000004116f24a data:0000000019ecb4dc tail:0xdef5 end:0x640 dev:<NULL>
-[   99.737697] ------------[ cut here ]------------
-[   99.742327] kernel BUG at /mnt/host/source/src/third_party/kernel/v4.19/net/core/skbuff.c:104!
-[   99.750937] Internal error: Oops - BUG: 0 [#1] PREEMPT SMP
-[   99.831154] Process kworker/0:2 (pid: 151, stack limit = 0x00000000728010bf)
-[   99.838200] CPU: 0 PID: 151 Comm: kworker/0:2 Tainted: G W 4.19.85 #48
-[   99.846022] Hardware name: MediaTek krane sku0 board (DT)
-[   99.851429] Workqueue: events sdio_irq_work
-[   99.855614] pstate: 60000005 (nZCv daif -PAN -UAO)
-[   99.860402] pc : skb_panic+0x64/0x68
-[   99.863974] lr : skb_panic+0x64/0x68
-[   99.867542] sp : ffffff8008833a90
-[   99.870850] x29: ffffff8008833ac0 x28: ffffffe52e337370
-[   99.876159] x27: ffffffe52e328a90 x26: 000000000000e0d0
-[   99.881469] x25: ffffffe52e336b60 x24: 000000000000deb5
-[   99.886779] x23: ffffffe52e340680 x22: ffffffe4efd47e00
-[   99.892088] x21: 000000000000deb5 x20: ffffffa516d85b4c
-[   99.897397] x19: ffffffa526928037 x18: 0000000000000000
-[   99.902706] x17: 000000000000003c x16: ffffffa5265b6c80
-[   99.908015] x15: 0000000000000006 x14: 3a76656420303436
-[   99.913325] x13: 0000000000029bf0 x12: 0000000000000000
-[   99.918634] x11: 0000000000000000 x10: 0000000000000000
-[   99.923943] x9 : a3b907e4b2783000 x8 : a3b907e4b2783000
-[   99.929253] x7 : 0000000000000000 x6 : ffffffa526f66d76
-[   99.934563] x5 : 0000000000000000 x4 : 0000000000000000
-[   99.939872] x3 : 000000000002a5ab x2 : ffffffe53feed918
-[   99.945182] x1 : ffffffe53fee4a08 x0 : 000000000000008e
-[   99.950491] Call trace:
-[   99.952937]  skb_panic+0x64/0x68
-[   99.956165]  skb_put+0x7c/0x84
-[   99.959224]  ath10k_sdio_irq_handler+0x740/0xbb8 [ath10k_sdio]
-[   99.965055]  process_sdio_pending_irqs+0x58/0x1a4
-[   99.969758]  sdio_run_irqs+0x34/0x60
-[   99.973329]  sdio_irq_work+0x1c/0x28
-[   99.974930] cros-ec-spi spi2.0: SPI transfer timed out
-[   99.976904]  process_one_work+0x210/0x410
-[   99.976911]  worker_thread+0x234/0x3dc
-[   99.976923]  kthread+0x120/0x130
-[   99.982090] cros-ec-spi spi2.0: spi transfer failed: -110
-[   99.986054]  ret_from_fork+0x10/0x18
-[   99.986063] Code: aa1403e2 2a1503e4 a90023e9 97e37d1a (d4210000)
-[   99.986068] ---[ end trace cb6d948c5a0fd6c7 ]---
-[  100.017250] Kernel panic - not syncing: Fatal exception
-[  100.018879] cros-ec-spi spi2.0: Command xfer error (err:-110)
-[  100.023659] SMP: stopping secondary CPUs
-[  100.023703] Kernel Offset: 0x251dc00000 from 0xffffff8008000000
-[  100.023707] CPU features: 0x0,2188200c
-[  100.023709] Memory Limit: none
-
-The simulate fail of sdio is not a real sdio transter fail, it only
-set an error status in mmc_should_fail_request after the transfer end,
-actually the transfer is success, then sdio_io_rw_ext_helper will
-return error status and stop transfer the left data. For example,
-the really RX len is 286 bytes, then it will split to 2 blocks in
-sdio_io_rw_ext_helper, one is 256 bytes, left is 30 bytes, if the
-first 256 bytes get an error status by mmc_should_fail_request,then
-the left 30 bytes will not read in this RX operation. Then when the
-next RX arrive, the left 30 bytes will be considered as the header
-of the read, the top 8 bytes will be considered as ath10k_htc_hdr,
-but actually the 8 bytes is not the ath10k_htc_hdr, so the act_len
-from this ath10k_htc_hdr is not correct, if it is a big value, such
-as 57013, it will trigger skb_panic.
-
-Drop the skb with invalid length will be reasonable.
-
-This patch only effect sdio chips.
+Add a ref count to allow only one restart work running untill
+device successfully recovered.
 
 Tested with QCA6174 SDIO with firmware WLAN.RMH.4.4.1-00029.
 
 Signed-off-by: Wen Gong <wgong@codeaurora.org>
 ---
-v2: change to drop the skb for invalid length.
- drivers/net/wireless/ath/ath10k/sdio.c | 24 ++++++++++++++++++------
- 1 file changed, 18 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.c | 8 ++++++++
+ drivers/net/wireless/ath/ath10k/core.h | 2 ++
+ drivers/net/wireless/ath/ath10k/mac.c  | 1 +
+ 3 files changed, 11 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
-index 7b894dcaad2e..a94237ccf1be 100644
---- a/drivers/net/wireless/ath/ath10k/sdio.c
-+++ b/drivers/net/wireless/ath/ath10k/sdio.c
-@@ -642,16 +642,23 @@ static int ath10k_sdio_mbox_rx_fetch(struct ath10k *ar)
- 
- 	ret = ath10k_sdio_readsb(ar, ar_sdio->mbox_info.htc_addr,
- 				 skb->data, pkt->alloc_len);
--
--	if (ret) {
--		ar_sdio->n_rx_pkts = 0;
--		ath10k_sdio_mbox_free_rx_pkt(pkt);
--		return ret;
--	}
-+	if (ret)
-+		goto err;
- 
- 	htc_hdr = (struct ath10k_htc_hdr *)skb->data;
- 	pkt->act_len = le16_to_cpu(htc_hdr->len) + sizeof(*htc_hdr);
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 91f131b87efc..9439e575ec63 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -2199,6 +2199,14 @@ static void ath10k_core_restart(struct work_struct *work)
+ {
+ 	struct ath10k *ar = container_of(work, struct ath10k, restart_work);
+ 	int ret;
++	int restart_count;
 +
-+	if (pkt->act_len > pkt->alloc_len) {
-+		ret = -EINVAL;
-+		goto err;
++	restart_count = atomic_add_return(1, &ar->restart_count);
++	if (restart_count > 1) {
++		ath10k_warn(ar, "can not restart, count: %d\n", restart_count);
++		atomic_dec(&ar->restart_count);
++		return;
 +	}
-+
- 	skb_put(skb, pkt->act_len);
-+	return 0;
-+
-+err:
-+	ar_sdio->n_rx_pkts = 0;
-+	ath10k_sdio_mbox_free_rx_pkt(pkt);
  
- 	return ret;
- }
-@@ -687,6 +694,11 @@ static int ath10k_sdio_mbox_rx_fetch_bundle(struct ath10k *ar)
- 		htc_hdr = (struct ath10k_htc_hdr *)(ar_sdio->vsg_buffer + pkt_offset);
- 		pkt->act_len = le16_to_cpu(htc_hdr->len) + sizeof(*htc_hdr);
+ 	set_bit(ATH10K_FLAG_CRASH_FLUSH, &ar->dev_flags);
  
-+		if (pkt->act_len > pkt->alloc_len ) {
-+			ret = -EINVAL;
-+			goto err;
-+		}
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index e57b2e7235e3..810c99f2dc0e 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -982,6 +982,8 @@ struct ath10k {
+ 	/* protected by conf_mutex */
+ 	u8 ps_state_enable;
+ 
++	atomic_t restart_count;
 +
- 		skb_put_data(pkt->skb, htc_hdr, pkt->act_len);
- 		pkt_offset += pkt->alloc_len;
+ 	bool nlo_enabled;
+ 	bool p2p;
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 3856edba7915..bc1574145e66 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -7208,6 +7208,7 @@ static void ath10k_reconfig_complete(struct ieee80211_hw *hw,
+ 		ath10k_info(ar, "device successfully recovered\n");
+ 		ar->state = ATH10K_STATE_ON;
+ 		ieee80211_wake_queues(ar->hw);
++		atomic_dec(&ar->restart_count);
  	}
+ 
+ 	mutex_unlock(&ar->conf_mutex);
 -- 
 2.23.0
