@@ -2,96 +2,90 @@ Return-Path: <SRS0=AjYM=2X=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C99D4C2D0DF
-	for <linux-wireless@archiver.kernel.org>; Thu,  2 Jan 2020 02:50:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3D43C2D0DE
+	for <linux-wireless@archiver.kernel.org>; Thu,  2 Jan 2020 03:10:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A0922215A4
-	for <linux-wireless@archiver.kernel.org>; Thu,  2 Jan 2020 02:50:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7245A20863
+	for <linux-wireless@archiver.kernel.org>; Thu,  2 Jan 2020 03:10:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Kyc0ib+r"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LWWLqL07"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727569AbgABCuH (ORCPT
+        id S1727601AbgABDKZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 1 Jan 2020 21:50:07 -0500
-Received: from mail-pf1-f193.google.com ([209.85.210.193]:45954 "EHLO
-        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727516AbgABCuH (ORCPT
+        Wed, 1 Jan 2020 22:10:25 -0500
+Received: from mail-ot1-f65.google.com ([209.85.210.65]:36800 "EHLO
+        mail-ot1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727525AbgABDKZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Jan 2020 21:50:07 -0500
-Received: by mail-pf1-f193.google.com with SMTP id 2so21382091pfg.12
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Jan 2020 18:50:07 -0800 (PST)
+        Wed, 1 Jan 2020 22:10:25 -0500
+Received: by mail-ot1-f65.google.com with SMTP id 19so42744967otz.3
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Jan 2020 19:10:24 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=zVd40d6mMStuYAtkdWEGqAp6oRjkuiyCK1HTnRYaNNU=;
-        b=Kyc0ib+rwFivG2sn/pnZhn7JF4Ci7nxXbMZtnEBd5bC04fAd3/vUAPuOR2wXHfazss
-         S+/lH9BD/xwoHrAFeCq7squLzKpBZjJh/w4QoTg65MHNz3N4Ybf1Nt6thig7vN8jLTH0
-         dQglp2lQc5ntKdqS6wjNEiZAccolabp0YZ+WTDTcCprGpXMfiDq/pPJbEEXlG9ND/VrV
-         anCw0DCsCc9iTxi3EQo+J3JOxBshsCmbil7GlVSk4L2wugLDqUJo7xb2/UOY6yn5nuaq
-         dkrfgbnF1gEt5JrZPBYqS+r/vu2boLzh/YD5WTetXJpOYnXmtKs2VQgKVqnluyND8Yb4
-         D+HA==
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=aIasqch99l8yTjEyV8QMiDGU+MfzGAS5V5xiGOoV6rI=;
+        b=LWWLqL07KXfRCjBMo4n2mLxcE6WGIvBK4CO1fwS3Ri1nL6MgoXiXo50j5uikJPxEc4
+         Els0i37FJZp4kgBIkn3fCzkWf8pHB1W/rg663kA5m90lV0lFl7pibDXQ524xTyWj8UDu
+         pdmNf0mfmxoNukWXwuJ8HyTSy0wwoxgo/D3iaU9iESjj4R0Zb6dliz8oovimqRFhf2io
+         d6ylHDKyevccpU94rqT9PfTJCk3CWU4r0yWAQudgA8A0+q/2fLmqe+TE9NwxC6Sy/Hqv
+         o2pm6ZosDABXi+WfiMBOL7VmmrHrMuajL5gn4TEUsUA7mg6PGxcGqshJng67fxNI4689
+         HGAQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=zVd40d6mMStuYAtkdWEGqAp6oRjkuiyCK1HTnRYaNNU=;
-        b=dIJsP7XvL6SmusxSCag9hS+XjmpaYlnhX5Kbq81pfwBszXBJV/WQiUUTFjl7Lef/yK
-         VnLyXDRZBSAEjdQqYqfVQuZpAW3BXfF+E8HP4jG6vBc/sX2gn8q4fM+z0s6sI6qfB5cY
-         nLyFetOOKSX6OhTvrZ9I1bmt9Fstkcl/XGYGJj4x/OMa3tsD/Ml5udK70SZC8nZjk061
-         3JKRYyq4jHcvfSob02C32vNlmaZ74hY7tVTp029jPC/DNUFyJHm7eILQuBXVMZPI8183
-         hrEEOa7OWig9re8HLZE5HCordQ9O9ip6nuL9yLpY+nu2CdTxUnO16+T5EwESmc+7YYti
-         +VFg==
-X-Gm-Message-State: APjAAAUbynzYxxU13lJluiS1OOPshGwLmhsm3Wx3Xe/UhuO04JUFGJ3F
-        WoOlVv8ot5uFDe62Bg3oB4MAp6dnK0Q=
-X-Google-Smtp-Source: APXvYqwLOlWCtVU8mAgD5kDv3fO4Gay4frd/A7ujg508JIMTF+rrp+ALgdYjyHBzfC8qsMhI4bFCTw==
-X-Received: by 2002:a62:1783:: with SMTP id 125mr67603410pfx.189.1577933406839;
-        Wed, 01 Jan 2020 18:50:06 -0800 (PST)
-Received: from localhost (172.96.199.36.16clouds.com. [172.96.199.36])
-        by smtp.gmail.com with ESMTPSA id h26sm65744603pfr.9.2020.01.01.18.50.05
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Wed, 01 Jan 2020 18:50:06 -0800 (PST)
-From:   m1s5p6688@gmail.com
-To:     linux-wireless@vger.kernel.org
-Cc:     johannes.berg@intel.com, emmanuel.grumbach@intel.com,
-        luciano.coelho@intel.com, linuxwifi@intel.com
-Subject: [PATCH] iwlwifi: fix possible potential NULL pointer dereference
-Date:   Thu,  2 Jan 2020 10:49:59 +0800
-Message-Id: <20200102024959.5199-1-m1s5p6688@gmail.com>
-X-Mailer: git-send-email 2.17.1
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=aIasqch99l8yTjEyV8QMiDGU+MfzGAS5V5xiGOoV6rI=;
+        b=Lyk41gAuMm0OQ1oTcz4Jdz4N6N3nk4yMWmw4azawcoy+2k8Q2huamlLcFoXSSn8FLD
+         wcsdC1lytTSozyCfO8MmEWjH/JMn8VZtKlm7rVCg/Xj6R/cNl7lwX/PlDSrDctdtIODE
+         XBhqv10qwGWxW45w+GrC6RAqQfR8JGiWQP5FB/tU3Fewup94MyJ7i+7Oq5wWOOfAZ1I9
+         Hl0jWfOM9ya37yEP6t5OIeEPUIoL3A2Tcd6daoleITc0YO7YMhaNrMQO9PALy1a3FHDe
+         YBgpTTLhP9c+wEO3FLfK/AsIz+c53AKQR3XORyh30TVLTGIQT+2EJUufIJRzwq8FAWPD
+         jxNw==
+X-Gm-Message-State: APjAAAWtKDS4nBer8kgwZQ9IKq9IomflxxL02ie8mLtEfuXXcec4Ep2H
+        DGWjWBj93XKwE3hD4Flcfx8FSM0nTEKL1h5lgHw=
+X-Google-Smtp-Source: APXvYqz7UCTyYhrUAl4Ky4z7wXUXiP6hfcnFLVD07rtvwHDPSOl0LFsKbDU7QilW1KZ/Sqcclmz+SwQlMakS8c4zOd0=
+X-Received: by 2002:a05:6830:1515:: with SMTP id k21mr73047367otp.177.1577934624441;
+ Wed, 01 Jan 2020 19:10:24 -0800 (PST)
+MIME-Version: 1.0
+References: <20191225120002.11163-1-wgong@codeaurora.org> <20191225120002.11163-2-wgong@codeaurora.org>
+ <CAMrEMU-p3+HRZYW6TzXwZSwhxj9oJ9JW1Rg=ZysJ3fr0rm45Ng@mail.gmail.com> <5f6eb95de0f877b86b90d0c32d458d43@codeaurora.org>
+In-Reply-To: <5f6eb95de0f877b86b90d0c32d458d43@codeaurora.org>
+From:   Justin Capella <justincapella@gmail.com>
+Date:   Wed, 1 Jan 2020 19:10:13 -0800
+Message-ID: <CAMrEMU_eLfD6=7esrYJA4GnU=CcWgBey1QZL+-=RVoRUUcfZKw@mail.gmail.com>
+Subject: Re: [PATCH v2 1/2] ath10k: add refcount for ath10k_core_restart
+To:     Wen Gong <wgong@codeaurora.org>
+Cc:     ath10k <ath10k@lists.infradead.org>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Qing Xu <m1s5p6688@gmail.com>
+Instead of the atomic restart count, can the state be updated to
+ATH10K_STATE_RESTARTING while holding
+     mutex_unlock(&ar->conf_mutex);
 
-iwl_req_fw_callback() check the wrong kmemdup return value, leading 
-to a NULL pointer dereference. 
-Fix it by replacing the wrong value with the correct.
+I don't understand the bundles, but I wonder about the case when there
+are multiple packets (n_rx_pkts) and if pkt_bundle_len might be the
+one to check. Also if there needs to be a check that the len > sizeof
+HTC HDR.
 
-Signed-off-by: Qing Xu <m1s5p6688@gmail.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-index 4096ccf58..68c9b7157 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-@@ -1455,7 +1455,7 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
- 				kmemdup(pieces->dbg_conf_tlv[i],
- 					pieces->dbg_conf_tlv_len[i],
- 					GFP_KERNEL);
--			if (!pieces->dbg_conf_tlv_len[i])
-+			if (!drv->fw.dbg.conf_tlv[i])
- 				goto out_free_fw;
- 		}
- 	}
--- 
-2.17.1
-
+On Tue, Dec 31, 2019 at 1:37 AM <wgong@codeaurora.org> wrote:
+>
+> On 2019-12-25 23:14, Justin Capella wrote:
+> > This does not only effect SDIO.
+> >
+> > Why a semaphore / count? Could the conf_mutex be held earlier, or
+> > perhaps change the state to ATH10K_STATE_RESTARTING first?
+> > ath10k_reconfig_complete is also called in mac.c when channel is
+> > changed so
+> patch v2:
+> https://patchwork.kernel.org/patch/11313853/
+> https://patchwork.kernel.org/patch/11313859/
