@@ -1,158 +1,90 @@
-Return-Path: <SRS0=JSZL=2Y=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=UGvU=2Z=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 399C0C00523
-	for <linux-wireless@archiver.kernel.org>; Fri,  3 Jan 2020 21:42:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AE24C00523
+	for <linux-wireless@archiver.kernel.org>; Sat,  4 Jan 2020 01:00:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E32E1215A4
-	for <linux-wireless@archiver.kernel.org>; Fri,  3 Jan 2020 21:42:16 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="a3zHd1dl"
+	by mail.kernel.org (Postfix) with ESMTP id 1CC2D21835
+	for <linux-wireless@archiver.kernel.org>; Sat,  4 Jan 2020 01:00:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1578099604;
+	bh=CkS7KDb6XHDSfjfPpDrnwvtUxcp32wuD/+tFDkY4bNI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=rotiqnZsMtnfTIZhmkKfInkxftz5bvOwJvcdNcZPmId4/a/SSFOhXPqINRr8OoMgd
+	 IFlPlwKeGs1Dk6lEDlpnNK4/LaL65UKhzTv+J+xXBEmFeyXgzQS85JcpVZKkj/w7Wa
+	 OlHCw/Lg4546vJGUiaCj7aO74XGeZCBn4j91ZOgk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728664AbgACVkb (ORCPT
+        id S1727175AbgADBAD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 3 Jan 2020 16:40:31 -0500
-Received: from mail2.candelatech.com ([208.74.158.173]:41342 "EHLO
-        mail3.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728631AbgACVkb (ORCPT
+        Fri, 3 Jan 2020 20:00:03 -0500
+Received: from mail-io1-f66.google.com ([209.85.166.66]:43710 "EHLO
+        mail-io1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727149AbgADBAC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 3 Jan 2020 16:40:31 -0500
-Received: from [192.168.100.195] (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail3.candelatech.com (Postfix) with ESMTPSA id DE8DC13C340
-        for <linux-wireless@vger.kernel.org>; Fri,  3 Jan 2020 13:40:29 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com DE8DC13C340
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-        s=default; t=1578087629;
-        bh=SUSR+3QeOT7Ok6XS8sPwQAvGD+QBLLpA2BGpfKgfW48=;
-        h=To:From:Subject:Date:From;
-        b=a3zHd1dlGTZmCt8ZEcnN4IRjw2F3p19R34RDvf2+QEoD/dMvETsAfCTsHOuj9B1BH
-         MVApiZ5tBP6HFrm9XFp/2cDKPk6PJBLmaD7ItDgAP3kG1+9R/WxWIEM20S4Ypx8k+S
-         dH+S9rBXN7rIp3hwOd7REulegr9DU6ZW2JbHyw4A=
-To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From:   Ben Greear <greearb@candelatech.com>
-Subject: ax200 crash, status 0x00000080
-Organization: Candela Technologies
-Message-ID: <d0336d37-ccb9-f7c9-b9f6-71dfcfa34bc5@candelatech.com>
-Date:   Fri, 3 Jan 2020 13:40:29 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.1
+        Fri, 3 Jan 2020 20:00:02 -0500
+Received: by mail-io1-f66.google.com with SMTP id n21so41580877ioo.10
+        for <linux-wireless@vger.kernel.org>; Fri, 03 Jan 2020 17:00:02 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=I+/EbHTtG3XdToYbfWwK52tIPgUdmxs5X56AS9/kYW4=;
+        b=MZJO/S4zZVJWcRpkraNSIyTYU0+8x8vh4fZfQ9jCrvDEIkOmI+f1In5zG/fV1vm6v1
+         7cRrq/JkNTTsOV3RsKsqj4NanM9nSf7I4tjC0um9vw5mDoYbJ205S0mxXgJZEY4GZNep
+         PcjF10moabKheDWppQcbXYq4nStURTbOc8DJyGWGB22qmwEgaa8EHXKFfl9m5R7Ky++0
+         BSQjiKjYTnwW0siQEDF2iL2Ait9XUye4tBaWYi6UUKiWx9ySjHhPNfrj3/QOcdR1K57P
+         xc+cGb3kP9++C7zcGnsYUrEdzZkXW5r2w6OVp9pIxjXAfNiLHviCzlvae4ImFG/4G0YP
+         qBdw==
+X-Gm-Message-State: APjAAAXxIerKzGE3IKGqW70I94JaNE07pXTR8/cs0HQ1DXMolvbickmF
+        y6/uaimbxFE8abAJSYMosUrUGIw=
+X-Google-Smtp-Source: APXvYqyUQbFIsoiCJpvqSEp4qqwhQw7fGoN4YQB16/OcCDQ/ZJYfURbKQj9K1gvi6eOKGMPchcGcPA==
+X-Received: by 2002:a5d:8cda:: with SMTP id k26mr36880773iot.26.1578099601929;
+        Fri, 03 Jan 2020 17:00:01 -0800 (PST)
+Received: from rob-hp-laptop ([64.188.179.251])
+        by smtp.gmail.com with ESMTPSA id j26sm15256715iok.3.2020.01.03.17.00.00
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 03 Jan 2020 17:00:01 -0800 (PST)
+Received: from rob (uid 1000)
+        (envelope-from rob@rob-hp-laptop)
+        id 2219b7
+        by rob-hp-laptop (DragonFly Mail Agent v0.11);
+        Fri, 03 Jan 2020 17:59:59 -0700
+Date:   Fri, 3 Jan 2020 17:59:59 -0700
+From:   Rob Herring <robh@kernel.org>
+To:     Govind Singh <govinds@codeaurora.org>
+Cc:     robh@kernel.org, devicetree@vger.kernel.org,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Govind Singh <govinds@codeaurora.org>
+Subject: Re: [PATCH v3 1/2] dt: bindings: add dt entry flag to skip SCM call
+ for msa region
+Message-ID: <20200104005959.GA15965@bogus>
+References: <20200103134414.15457-1-govinds@codeaurora.org>
+ <20200103134414.15457-2-govinds@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200103134414.15457-2-govinds@codeaurora.org>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-NOTE:  This same info is in bugzilla:  https://bugzilla.kernel.org/show_bug.cgi?id=206067
+On Fri,  3 Jan 2020 19:14:13 +0530, Govind Singh wrote:
+> Add boolean context flag to disable SCM call for statically
+> mapped msa region.
+> 
+> Signed-off-by: Govind Singh <govinds@codeaurora.org>
+> ---
+>  .../devicetree/bindings/net/wireless/qcom,ath10k.txt          | 4 ++++
+>  1 file changed, 4 insertions(+)
+> 
 
-Our test team reported this problem.  The hardware is Intel x86-64 with pcie to mini-pcie to m.2 adapter boards and 8 total AX200 radios in one system.
-
-Notes on the AX crashes:
-
-- When the crash happens, the station does not seem to make a full recovery. There are many duplicate rx packets on the UDP download side. The upload direction 
-is normal with no duplicate packets.
-
-- Traffic is fixed after resetting the station.
-
-- Sometimes traffic just stops completely for both sides and cannot resume until resetting the station.
-
-- I've found a way to reproduce a crash fairly reliably.
-
-- To reproduce the crash, I ran UDP upload traffic at 100 Mbps on one radio (wiphy1). Then I brought up a second station on another radio (wiphy0). The station 
-on wiphy0 will then crash as it comes up. If there is no traffic flowing on the wiphy1 radio, or if it is only doing 30Mbps upload, the station doesn't crash.
-
-- Traffic is over the air and not encrypted. I'm using our LANforge virtual AP on channel 36.
-
-- I was also able to get a crash with an Asus AX6000 AP. My earlier method of reproducing the crash did not work. Basically I got it to crash running 160 Mbps 
-UDP upload on one AX station then resetting 7 other stations (each on their own AX radio).
-
-Representative firmware crash log:
-
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: Microcode SW error detected. Restarting 0x0.
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: Start IWL Error Log Dump:
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: Status: 0x00000080, count: 6
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: Loaded firmware version: 48.4fa0041f.0
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x00000942 | ADVANCED_SYSASSERT
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x00A0A2F0 | trm_hw_status0
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x00000000 | trm_hw_status1
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x004F8E3C | branchlink2
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x00000E26 | interruptlink1
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x00000E26 | interruptlink2
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0xFFEFFFFC | data1
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x26010101 | data2
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x040C0605 | data3
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0xBB01867B | beacon time
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x92BDF98E | tsf low
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x0000000F | tsf hi
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x00000000 | time gp1
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x0AF4D781 | time gp2
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x00000001 | uCode revision type
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x00000030 | uCode version major
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x4FA0041F | uCode version minor
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x00000340 | hw version
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x00C89000 | board version
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x807BFD06 | hcmd
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0xE7821000 | isr0
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x00040000 | isr1
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x08F00002 | isr2
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x00C1871D | isr3
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x00000000 | isr4
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x0016019C | last cmd Id
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x004EB8B4 | wait_event
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x00000000 | l2p_control
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x00000000 | l2p_duration
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x000000BF | l2p_mhvalid
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x0000000E | l2p_addr_match
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x00000009 | lmpm_pmg_sel
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x00000000 | timestamp
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x0000B0D0 | flow_handler
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: Start IWL Error Log Dump:
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: Status: 0x00000080, count: 7
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x20000070 | NMI_INTERRUPT_LMAC_FATAL
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x00000000 | umac branchlink1
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0xC008CC3C | umac branchlink2
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x8048D0E6 | umac interruptlink1
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x8048D0E6 | umac interruptlink2
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x00000400 | umac data1
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x8048D0E6 | umac data2
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x00000000 | umac data3
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x00000030 | umac major
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x4FA0041F | umac minor
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x0AF4D791 | frame pointer
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0xC0886284 | stack pointer
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x0017010C | last host cmd
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x00000000 | isr status reg
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: Fseq Registers:
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0xE0000000 | FSEQ_ERROR_CODE
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x80290001 | FSEQ_TOP_INIT_VERSION
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x80050008 | FSEQ_CNVIO_INIT_VERSION
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x0000A503 | FSEQ_OTP_VERSION
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x80000003 | FSEQ_TOP_CONTENT_VERSION
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x4552414E | FSEQ_ALIVE_TOKEN
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x00100530 | FSEQ_CNVI_ID
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x00000532 | FSEQ_CNVR_ID
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x00100530 | CNVI_AUX_MISC_CHIP
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x00000532 | CNVR_AUX_MISC_CHIP
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x05B0905B | CNVR_SCU_SD_REGS_SD_REG_DIG_DCDC_VTRIM
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: 0x0000025B | CNVR_SCU_SD_REGS_SD_REG_ACTIVE_VDIG_MIRROR
-Jan  3 05:38:55 localhost kernel: iwlwifi 0000:0e:00.0: Collecting data: trigger 2 fired.
-Jan  3 05:38:55 localhost kernel: ieee80211 wiphy5: Hardware restart was requested
-
-We also have binary crash files available, but they are too big to attach to bugzilla.  Let me know if there is someplace helpful that I can send them.
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Acked-by: Rob Herring <robh@kernel.org>
