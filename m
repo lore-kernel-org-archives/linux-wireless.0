@@ -7,45 +7,45 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28631C33C8C
-	for <linux-wireless@archiver.kernel.org>; Sun,  5 Jan 2020 12:22:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B8E1C33C8C
+	for <linux-wireless@archiver.kernel.org>; Sun,  5 Jan 2020 12:22:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DF124215A4
-	for <linux-wireless@archiver.kernel.org>; Sun,  5 Jan 2020 12:22:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 249C6218AC
+	for <linux-wireless@archiver.kernel.org>; Sun,  5 Jan 2020 12:22:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1578226954;
-	bh=6uXMwNokyj+aFN4iwBL8z+AHoKtNdrs6oFdd3beYa4M=;
+	s=default; t=1578226962;
+	bh=aelira7b9zEQiju9PVPk3DnHxbR1mw+Sj96KyayHPNc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=L/KyWuG3BkBmGy334bFZuaBKGth2mQW0orGy6lL6jXzR1xtTidqkvbSYwmqa85cRP
-	 s9U5j4FIXlE5CayvfqUi5ApUWPTa4LBngGIsNdA9hCFswBsV0bAnWfRvxmHXagl11j
-	 IqOCu7TXMqeDfhvVKd028J2tdYnYQm5s87xbLYDQ=
+	b=srMbrv9GsKd8Aw8zW4bFWJamiJWrG5keCYwFRPVYmOa8D7HitF1/oQxKFh5p244Q2
+	 snW905XHq6GBiNafrs2D9+pO6NoYwQh1CA2VhELfaQgX20HLzs6UXS0Lq75TSnQJX6
+	 DWRtFa+qU8+xmLVP/2uqXmaAYHNCuVG+M5G14C20=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726092AbgAEMWU (ORCPT
+        id S1726192AbgAEMWl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 5 Jan 2020 07:22:20 -0500
-Received: from mail.kernel.org ([198.145.29.99]:46566 "EHLO mail.kernel.org"
+        Sun, 5 Jan 2020 07:22:41 -0500
+Received: from mail.kernel.org ([198.145.29.99]:46878 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725897AbgAEMWU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 5 Jan 2020 07:22:20 -0500
+        id S1725897AbgAEMWl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 5 Jan 2020 07:22:41 -0500
 Received: from new-host-5.station (net-2-42-61-77.cust.vodafonedsl.it [2.42.61.77])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 114CD217F4;
-        Sun,  5 Jan 2020 12:22:17 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 65453215A4;
+        Sun,  5 Jan 2020 12:22:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1578226939;
-        bh=6uXMwNokyj+aFN4iwBL8z+AHoKtNdrs6oFdd3beYa4M=;
+        s=default; t=1578226959;
+        bh=aelira7b9zEQiju9PVPk3DnHxbR1mw+Sj96KyayHPNc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=2GCPPmIKVX2HUj52/BU8Y0s5bWPQgrm88et84GrV2/S/E3wyi4W4aA78o32rlH4rI
-         y+LmyYKoRjHU1Zj7J1qBzqUC9NlB+fOTlXtu7Elz7csyZVqql3CwJFIQClUFC3J03b
-         UwaQCLCz2lNkQFdH+/o8ok5IOWGkdF4mN4tbWiR0=
+        b=HpglUg/yA5KbzmP6MiQoy1gpPiTKkEuDapraVZSehoJgHuKJglNgSedd7YXH9XatG
+         yYW50Xy4EE5dgDQME/QWZZHlMfBWSBeP8o1mN0nC/JZ2QtXlAdsOTfU2KNUJVngb4X
+         8Ur7CrtlIDaf5yf5xUJzyIFveu2pqqlvfFjLSRFQ=
 From:   Lorenzo Bianconi <lorenzo@kernel.org>
 To:     nbd@nbd.name
 Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org,
         Sean.Wang@mediatek.com
-Subject: [PATCH v2 01/18] mt76: mt76u: check tx_status_data pointer in mt76u_tx_tasklet
-Date:   Sun,  5 Jan 2020 13:21:39 +0100
-Message-Id: <abcddd40dcf003980e1d095d6cbd40b22ac98a43.1578226544.git.lorenzo@kernel.org>
+Subject: [PATCH v2 02/18] mt76: mt76u: add mt76u_process_rx_queue utility routine
+Date:   Sun,  5 Jan 2020 13:21:40 +0100
+Message-Id: <c92912e76ffb5f16a809ebb6703e4aec57c4adf8.1578226544.git.lorenzo@kernel.org>
 X-Mailer: git-send-email 2.21.1
 In-Reply-To: <cover.1578226544.git.lorenzo@kernel.org>
 References: <cover.1578226544.git.lorenzo@kernel.org>
@@ -56,30 +56,96 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-New devices (e.g. mt7663u) do not rely on stats workqueue to load tx
-statistics but will be reported by the firmware. Check tx_status_data
-pointer in mt76u_tx_tasklet in order to reuse tx tasklet for new devices
+Introduce mt76u_process_rx_queue routine to process rx hw queue.
+This is a preliminary patch to support new devices (e.g. mt7663u) that
+rely on a hw queue for mcu messages
 
 Signed-off-by: Sean Wang <sean.wang@mediatek.com>
 Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/usb.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/mediatek/mt76/usb.c | 30 +++++++++++++++---------
+ 1 file changed, 19 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/wireless/mediatek/mt76/usb.c
-index 22dacf040123..fbc4c0bb0102 100644
+index fbc4c0bb0102..9b0a4104ec0e 100644
 --- a/drivers/net/wireless/mediatek/mt76/usb.c
 +++ b/drivers/net/wireless/mediatek/mt76/usb.c
-@@ -708,7 +708,8 @@ static void mt76u_tx_tasklet(unsigned long data)
+@@ -468,9 +468,9 @@ mt76u_build_rx_skb(void *data, int len, int buf_size)
+ }
  
- 		mt76_txq_schedule(&dev->phy, i);
+ static int
+-mt76u_process_rx_entry(struct mt76_dev *dev, struct urb *urb)
++mt76u_process_rx_entry(struct mt76_dev *dev, struct urb *urb,
++		       int buf_size)
+ {
+-	struct mt76_queue *q = &dev->q_rx[MT_RXQ_MAIN];
+ 	u8 *data = urb->num_sgs ? sg_virt(&urb->sg[0]) : urb->transfer_buffer;
+ 	int data_len = urb->num_sgs ? urb->sg[0].length : urb->actual_length;
+ 	int len, nsgs = 1;
+@@ -484,7 +484,7 @@ mt76u_process_rx_entry(struct mt76_dev *dev, struct urb *urb)
+ 		return 0;
  
--		if (!test_and_set_bit(MT76_READING_STATS, &dev->phy.state))
-+		if (dev->drv->tx_status_data &&
-+		    !test_and_set_bit(MT76_READING_STATS, &dev->phy.state))
- 			queue_work(dev->usb.stat_wq, &dev->usb.stat_work);
- 		if (wake)
- 			ieee80211_wake_queue(dev->hw, i);
+ 	data_len = min_t(int, len, data_len - MT_DMA_HDR_LEN);
+-	skb = mt76u_build_rx_skb(data, data_len, q->buf_size);
++	skb = mt76u_build_rx_skb(data, data_len, buf_size);
+ 	if (!skb)
+ 		return 0;
+ 
+@@ -493,8 +493,8 @@ mt76u_process_rx_entry(struct mt76_dev *dev, struct urb *urb)
+ 		data_len = min_t(int, len, urb->sg[nsgs].length);
+ 		skb_add_rx_frag(skb, skb_shinfo(skb)->nr_frags,
+ 				sg_page(&urb->sg[nsgs]),
+-				urb->sg[nsgs].offset,
+-				data_len, q->buf_size);
++				urb->sg[nsgs].offset, data_len,
++				buf_size);
+ 		len -= data_len;
+ 		nsgs++;
+ 	}
+@@ -545,20 +545,19 @@ mt76u_submit_rx_buf(struct mt76_dev *dev, struct urb *urb)
+ 	return usb_submit_urb(urb, GFP_ATOMIC);
+ }
+ 
+-static void mt76u_rx_tasklet(unsigned long data)
++static void
++mt76u_process_rx_queue(struct mt76_dev *dev, struct mt76_queue *q)
+ {
+-	struct mt76_dev *dev = (struct mt76_dev *)data;
++	int qid = q - &dev->q_rx[MT_RXQ_MAIN];
+ 	struct urb *urb;
+ 	int err, count;
+ 
+-	rcu_read_lock();
+-
+ 	while (true) {
+ 		urb = mt76u_get_next_rx_entry(dev);
+ 		if (!urb)
+ 			break;
+ 
+-		count = mt76u_process_rx_entry(dev, urb);
++		count = mt76u_process_rx_entry(dev, urb, q->buf_size);
+ 		if (count > 0) {
+ 			err = mt76u_refill_rx(dev, urb, count, GFP_ATOMIC);
+ 			if (err < 0)
+@@ -566,8 +565,17 @@ static void mt76u_rx_tasklet(unsigned long data)
+ 		}
+ 		mt76u_submit_rx_buf(dev, urb);
+ 	}
+-	mt76_rx_poll_complete(dev, MT_RXQ_MAIN, NULL);
++	if (qid == MT_RXQ_MAIN)
++		mt76_rx_poll_complete(dev, MT_RXQ_MAIN, NULL);
++}
+ 
++static void mt76u_rx_tasklet(unsigned long data)
++{
++	struct mt76_dev *dev = (struct mt76_dev *)data;
++	struct mt76_queue *q = &dev->q_rx[MT_RXQ_MAIN];
++
++	rcu_read_lock();
++	mt76u_process_rx_queue(dev, q);
+ 	rcu_read_unlock();
+ }
+ 
 -- 
 2.21.1
 
