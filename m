@@ -2,119 +2,84 @@ Return-Path: <SRS0=kXDB=22=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A51AFC33C8C
-	for <linux-wireless@archiver.kernel.org>; Sun,  5 Jan 2020 21:17:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E753C33C9B
+	for <linux-wireless@archiver.kernel.org>; Sun,  5 Jan 2020 22:08:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7AEF32072C
-	for <linux-wireless@archiver.kernel.org>; Sun,  5 Jan 2020 21:17:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 14E6F21582
+	for <linux-wireless@archiver.kernel.org>; Sun,  5 Jan 2020 22:08:50 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=lunn.ch header.i=@lunn.ch header.b="idZIs0K6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727127AbgAEVRK (ORCPT
+        id S1727171AbgAEWIq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 5 Jan 2020 16:17:10 -0500
-Received: from mx2.suse.de ([195.135.220.15]:50066 "EHLO mx2.suse.de"
+        Sun, 5 Jan 2020 17:08:46 -0500
+Received: from vps0.lunn.ch ([185.16.172.187]:48182 "EHLO vps0.lunn.ch"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726792AbgAEVRJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 5 Jan 2020 16:17:09 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 4078AB15D;
-        Sun,  5 Jan 2020 21:17:07 +0000 (UTC)
-Received: by unicorn.suse.cz (Postfix, from userid 1000)
-        id E7E4CE048B; Sun,  5 Jan 2020 22:17:06 +0100 (CET)
-Message-Id: <f7f3ec1f5e97bd40f6427ce554c3e4d9e0adb63d.1578257976.git.mkubecek@suse.cz>
-In-Reply-To: <cover.1578257976.git.mkubecek@suse.cz>
-References: <cover.1578257976.git.mkubecek@suse.cz>
-From:   Michal Kubecek <mkubecek@suse.cz>
-Subject: [PATCH net-next 2/3] via-velocity: allow nesting of ethtool_ops
- begin() and complete()
-To:     "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org
-Cc:     Maya Erez <merez@codeaurora.org>,
+        id S1726851AbgAEWIq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 5 Jan 2020 17:08:46 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=lunn.ch;
+        s=20171124; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:
+        Subject:Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=aEHWEEo6XrkuQmxbIi/VOLDO1KN+ijDmrPx0ATskWBA=; b=idZIs0K6tVwGiyWJKDRknZN0An
+        cRoK7GkFfUEADbdBu9CL598ESka2Oin0LiGpIE4vWlU5iTY9VUTiavkoUe/iUb7Cbzm9MGMQv1lig
+        XWKrMnskOLwxGWAliUaeS1KKZGFf94dkS4jFTQzTGVNZcgco3owQkWJkj/kCgA8ESaYc=;
+Received: from andrew by vps0.lunn.ch with local (Exim 4.93)
+        (envelope-from <andrew@lunn.ch>)
+        id 1ioE4W-0000rJ-HB; Sun, 05 Jan 2020 23:08:32 +0100
+Date:   Sun, 5 Jan 2020 23:08:32 +0100
+From:   Andrew Lunn <andrew@lunn.ch>
+To:     Michal Kubecek <mkubecek@suse.cz>
+Cc:     "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+        Maya Erez <merez@codeaurora.org>,
         Kalle Valo <kvalo@codeaurora.org>,
         linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
         Francois Romieu <romieu@fr.zoreil.com>,
-        linux-kernel@vger.kernel.org, Andrew Lunn <andrew@lunn.ch>,
+        linux-kernel@vger.kernel.org,
         Florian Fainelli <f.fainelli@gmail.com>
-Date:   Sun,  5 Jan 2020 22:17:06 +0100 (CET)
+Subject: Re: [PATCH net-next 3/3] epic100: allow nesting of ethtool_ops
+ begin() and complete()
+Message-ID: <20200105220832.GA21914@lunn.ch>
+References: <cover.1578257976.git.mkubecek@suse.cz>
+ <146ace9856b8576eea83a1a5dc6329315831c44e.1578257976.git.mkubecek@suse.cz>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <146ace9856b8576eea83a1a5dc6329315831c44e.1578257976.git.mkubecek@suse.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Unlike most networking drivers using begin() and complete() ethtool_ops
-callbacks to resume a device which is down and suspend it again when done,
-via-velocity does not use standard refcounted infrastructure but sets
-device sleep state directly.
+> @@ -1435,8 +1436,10 @@ static int ethtool_begin(struct net_device *dev)
+>  	struct epic_private *ep = netdev_priv(dev);
+>  	void __iomem *ioaddr = ep->ioaddr;
+>  
+> +	if (ep->ethtool_ops_nesting == U32_MAX)
+> +		return -EBUSY;
+>  	/* power-up, if interface is down */
+> -	if (!netif_running(dev)) {
+> +	if (ep->ethtool_ops_nesting++ && !netif_running(dev)) {
+>  		ew32(GENCTL, 0x0200);
+>  		ew32(NVCTL, (er32(NVCTL) & ~0x003c) | 0x4800);
+>  	}
 
-With the introduction of netlink ethtool interface, we may have nested
-begin-complete blocks so that inner complete() would put the device back to
-sleep for the rest of the outer block.
+Hi Michal
 
-To avoid rewriting an old and not very actively developed driver, just add
-a nesting counter and only perform resume and suspend on the outermost
-level.
+In the via-velocity you added:
 
-Signed-off-by: Michal Kubecek <mkubecek@suse.cz>
----
- drivers/net/ethernet/via/via-velocity.c | 14 ++++++++++----
- drivers/net/ethernet/via/via-velocity.h |  1 +
- 2 files changed, 11 insertions(+), 4 deletions(-)
++       if (vptr->ethtool_ops_nesting == U32_MAX)
++               return -EBUSY;
++       if (!vptr->ethtool_ops_nesting++ && !netif_running(dev))
+                velocity_set_power_state(vptr, PCI_D0);
+        return 0;
 
-diff --git a/drivers/net/ethernet/via/via-velocity.c b/drivers/net/ethernet/via/via-velocity.c
-index 346e44115c4e..4b556b74541a 100644
---- a/drivers/net/ethernet/via/via-velocity.c
-+++ b/drivers/net/ethernet/via/via-velocity.c
-@@ -3257,12 +3257,16 @@ static struct platform_driver velocity_platform_driver = {
-  *	@dev: network device
-  *
-  *	Called before an ethtool operation. We need to make sure the
-- *	chip is out of D3 state before we poke at it.
-+ *	chip is out of D3 state before we poke at it. In case of ethtool
-+ *	ops nesting, only wake the device up in the outermost block.
-  */
- static int velocity_ethtool_up(struct net_device *dev)
- {
- 	struct velocity_info *vptr = netdev_priv(dev);
--	if (!netif_running(dev))
-+
-+	if (vptr->ethtool_ops_nesting == U32_MAX)
-+		return -EBUSY;
-+	if (!vptr->ethtool_ops_nesting++ && !netif_running(dev))
- 		velocity_set_power_state(vptr, PCI_D0);
- 	return 0;
- }
-@@ -3272,12 +3276,14 @@ static int velocity_ethtool_up(struct net_device *dev)
-  *	@dev: network device
-  *
-  *	Called after an ethtool operation. Restore the chip back to D3
-- *	state if it isn't running.
-+ *	state if it isn't running. In case of ethtool ops nesting, only
-+ *	put the device to sleep in the outermost block.
-  */
- static void velocity_ethtool_down(struct net_device *dev)
- {
- 	struct velocity_info *vptr = netdev_priv(dev);
--	if (!netif_running(dev))
-+
-+	if (!--vptr->ethtool_ops_nesting && !netif_running(dev))
- 		velocity_set_power_state(vptr, PCI_D3hot);
- }
- 
-diff --git a/drivers/net/ethernet/via/via-velocity.h b/drivers/net/ethernet/via/via-velocity.h
-index cdfe7809e3c1..f196e71d2c04 100644
---- a/drivers/net/ethernet/via/via-velocity.h
-+++ b/drivers/net/ethernet/via/via-velocity.h
-@@ -1483,6 +1483,7 @@ struct velocity_info {
- 	struct velocity_context context;
- 
- 	u32 ticks;
-+	u32 ethtool_ops_nesting;
- 
- 	u8 rev_id;
- 
--- 
-2.24.1
+These two fragments differ by a ! . Is that correct?
 
+      Andrew
