@@ -6,31 +6,31 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B15DEC33C8C
-	for <linux-wireless@archiver.kernel.org>; Sun,  5 Jan 2020 21:17:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45647C33C99
+	for <linux-wireless@archiver.kernel.org>; Sun,  5 Jan 2020 21:17:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8541A2072C
-	for <linux-wireless@archiver.kernel.org>; Sun,  5 Jan 2020 21:17:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 17B0F20866
+	for <linux-wireless@archiver.kernel.org>; Sun,  5 Jan 2020 21:17:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727001AbgAEVRF (ORCPT
+        id S1727161AbgAEVRP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 5 Jan 2020 16:17:05 -0500
-Received: from mx2.suse.de ([195.135.220.15]:50038 "EHLO mx2.suse.de"
+        Sun, 5 Jan 2020 16:17:15 -0500
+Received: from mx2.suse.de ([195.135.220.15]:50100 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726792AbgAEVRE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 5 Jan 2020 16:17:04 -0500
+        id S1727149AbgAEVRO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 5 Jan 2020 16:17:14 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 448BAAEF8;
-        Sun,  5 Jan 2020 21:17:02 +0000 (UTC)
+        by mx2.suse.de (Postfix) with ESMTP id 463D2B1AB;
+        Sun,  5 Jan 2020 21:17:12 +0000 (UTC)
 Received: by unicorn.suse.cz (Postfix, from userid 1000)
-        id E160FE048B; Sun,  5 Jan 2020 22:17:01 +0100 (CET)
-Message-Id: <b7d5e3d374f30b6452c2e92644e085d1ae7ff787.1578257976.git.mkubecek@suse.cz>
+        id EE930E048B; Sun,  5 Jan 2020 22:17:11 +0100 (CET)
+Message-Id: <146ace9856b8576eea83a1a5dc6329315831c44e.1578257976.git.mkubecek@suse.cz>
 In-Reply-To: <cover.1578257976.git.mkubecek@suse.cz>
 References: <cover.1578257976.git.mkubecek@suse.cz>
 From:   Michal Kubecek <mkubecek@suse.cz>
-Subject: [PATCH net-next 1/3] wil6210: get rid of begin() and complete()
- ethtool_ops
+Subject: [PATCH net-next 3/3] epic100: allow nesting of ethtool_ops begin()
+ and complete()
 To:     "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org
 Cc:     Maya Erez <merez@codeaurora.org>,
         Kalle Valo <kvalo@codeaurora.org>,
@@ -38,133 +38,63 @@ Cc:     Maya Erez <merez@codeaurora.org>,
         Francois Romieu <romieu@fr.zoreil.com>,
         linux-kernel@vger.kernel.org, Andrew Lunn <andrew@lunn.ch>,
         Florian Fainelli <f.fainelli@gmail.com>
-Date:   Sun,  5 Jan 2020 22:17:01 +0100 (CET)
+Date:   Sun,  5 Jan 2020 22:17:11 +0100 (CET)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The wil6210 driver locks a mutex in begin() ethtool_ops callback and
-unlocks it in complete() so that all ethtool requests are serialized. This
-is not going to work correctly with netlink interface; e.g. when ioctl
-triggers a netlink notification, netlink code would call begin() again
-while the mutex taken by ioctl code is still held by the same task.
+Unlike most networking drivers using begin() and complete() ethtool_ops
+callbacks to resume a device which is down and suspend it again when done,
+epic100 does not use standard refcounted infrastructure but sets device
+sleep state directly.
 
-Let's get rid of the begin() and complete() callbacks and move the mutex
-locking into the remaining ethtool_ops handlers except get_drvinfo which
-only copies strings that are not changing so that there is no need for
-serialization.
+With the introduction of netlink ethtool interface, we may have nested
+begin-complete blocks so that inner complete() would put the device back to
+sleep for the rest of the outer block.
+
+To avoid rewriting an old and not very actively developed driver, just add
+a nesting counter and only perform resume and suspend on the outermost
+level.
 
 Signed-off-by: Michal Kubecek <mkubecek@suse.cz>
 ---
- drivers/net/wireless/ath/wil6210/ethtool.c | 43 ++++++++--------------
- 1 file changed, 16 insertions(+), 27 deletions(-)
+ drivers/net/ethernet/smsc/epic100.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/ethtool.c b/drivers/net/wireless/ath/wil6210/ethtool.c
-index 912c4eaf017b..fef10886ca4a 100644
---- a/drivers/net/wireless/ath/wil6210/ethtool.c
-+++ b/drivers/net/wireless/ath/wil6210/ethtool.c
-@@ -11,26 +11,6 @@
+diff --git a/drivers/net/ethernet/smsc/epic100.c b/drivers/net/ethernet/smsc/epic100.c
+index 912760e8514c..b9915645412c 100644
+--- a/drivers/net/ethernet/smsc/epic100.c
++++ b/drivers/net/ethernet/smsc/epic100.c
+@@ -280,6 +280,7 @@ struct epic_private {
+ 	signed char phys[4];				/* MII device addresses. */
+ 	u16 advertising;					/* NWay media advertisement */
+ 	int mii_phy_cnt;
++	u32 ethtool_ops_nesting;
+ 	struct mii_if_info mii;
+ 	unsigned int tx_full:1;				/* The Tx queue is full. */
+ 	unsigned int default_port:4;		/* Last dev->if_port value. */
+@@ -1435,8 +1436,10 @@ static int ethtool_begin(struct net_device *dev)
+ 	struct epic_private *ep = netdev_priv(dev);
+ 	void __iomem *ioaddr = ep->ioaddr;
  
- #include "wil6210.h"
- 
--static int wil_ethtoolops_begin(struct net_device *ndev)
--{
--	struct wil6210_priv *wil = ndev_to_wil(ndev);
--
--	mutex_lock(&wil->mutex);
--
--	wil_dbg_misc(wil, "ethtoolops_begin\n");
--
--	return 0;
--}
--
--static void wil_ethtoolops_complete(struct net_device *ndev)
--{
--	struct wil6210_priv *wil = ndev_to_wil(ndev);
--
--	wil_dbg_misc(wil, "ethtoolops_complete\n");
--
--	mutex_unlock(&wil->mutex);
--}
--
- static int wil_ethtoolops_get_coalesce(struct net_device *ndev,
- 				       struct ethtool_coalesce *cp)
- {
-@@ -39,11 +19,12 @@ static int wil_ethtoolops_get_coalesce(struct net_device *ndev,
- 	u32 rx_itr_en, rx_itr_val = 0;
- 	int ret;
- 
-+	mutex_lock(&wil->mutex);
- 	wil_dbg_misc(wil, "ethtoolops_get_coalesce\n");
- 
- 	ret = wil_pm_runtime_get(wil);
- 	if (ret < 0)
--		return ret;
-+		goto out;
- 
- 	tx_itr_en = wil_r(wil, RGF_DMA_ITR_TX_CNT_CTL);
- 	if (tx_itr_en & BIT_DMA_ITR_TX_CNT_CTL_EN)
-@@ -57,7 +38,11 @@ static int wil_ethtoolops_get_coalesce(struct net_device *ndev,
- 
- 	cp->tx_coalesce_usecs = tx_itr_val;
- 	cp->rx_coalesce_usecs = rx_itr_val;
--	return 0;
-+	ret = 0;
-+
-+out:
-+	mutex_unlock(&wil->mutex);
-+	return ret;
- }
- 
- static int wil_ethtoolops_set_coalesce(struct net_device *ndev,
-@@ -67,12 +52,14 @@ static int wil_ethtoolops_set_coalesce(struct net_device *ndev,
- 	struct wireless_dev *wdev = ndev->ieee80211_ptr;
- 	int ret;
- 
-+	mutex_lock(&wil->mutex);
- 	wil_dbg_misc(wil, "ethtoolops_set_coalesce: rx %d usec, tx %d usec\n",
- 		     cp->rx_coalesce_usecs, cp->tx_coalesce_usecs);
- 
- 	if (wdev->iftype == NL80211_IFTYPE_MONITOR) {
- 		wil_dbg_misc(wil, "No IRQ coalescing in monitor mode\n");
--		return -EINVAL;
-+		ret = -EINVAL;
-+		goto out;
++	if (ep->ethtool_ops_nesting == U32_MAX)
++		return -EBUSY;
+ 	/* power-up, if interface is down */
+-	if (!netif_running(dev)) {
++	if (ep->ethtool_ops_nesting++ && !netif_running(dev)) {
+ 		ew32(GENCTL, 0x0200);
+ 		ew32(NVCTL, (er32(NVCTL) & ~0x003c) | 0x4800);
  	}
+@@ -1449,7 +1452,7 @@ static void ethtool_complete(struct net_device *dev)
+ 	void __iomem *ioaddr = ep->ioaddr;
  
- 	/* only @rx_coalesce_usecs and @tx_coalesce_usecs supported,
-@@ -88,24 +75,26 @@ static int wil_ethtoolops_set_coalesce(struct net_device *ndev,
- 
- 	ret = wil_pm_runtime_get(wil);
- 	if (ret < 0)
--		return ret;
-+		goto out;
- 
- 	wil->txrx_ops.configure_interrupt_moderation(wil);
- 
- 	wil_pm_runtime_put(wil);
-+	ret = 0;
- 
--	return 0;
-+out:
-+	mutex_unlock(&wil->mutex);
-+	return ret;
- 
- out_bad:
- 	wil_dbg_misc(wil, "Unsupported coalescing params. Raw command:\n");
- 	print_hex_dump_debug("DBG[MISC] coal ", DUMP_PREFIX_OFFSET, 16, 4,
- 			     cp, sizeof(*cp), false);
-+	mutex_unlock(&wil->mutex);
- 	return -EINVAL;
- }
- 
- static const struct ethtool_ops wil_ethtool_ops = {
--	.begin		= wil_ethtoolops_begin,
--	.complete	= wil_ethtoolops_complete,
- 	.get_drvinfo	= cfg80211_get_drvinfo,
- 	.get_coalesce	= wil_ethtoolops_get_coalesce,
- 	.set_coalesce	= wil_ethtoolops_set_coalesce,
+ 	/* power-down, if interface is down */
+-	if (!netif_running(dev)) {
++	if (!--ep->ethtool_ops_nesting && !netif_running(dev)) {
+ 		ew32(GENCTL, 0x0008);
+ 		ew32(NVCTL, (er32(NVCTL) & ~0x483c) | 0x0000);
+ 	}
 -- 
 2.24.1
 
