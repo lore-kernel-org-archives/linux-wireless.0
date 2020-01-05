@@ -6,31 +6,31 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45647C33C99
-	for <linux-wireless@archiver.kernel.org>; Sun,  5 Jan 2020 21:17:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A51AFC33C8C
+	for <linux-wireless@archiver.kernel.org>; Sun,  5 Jan 2020 21:17:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 17B0F20866
-	for <linux-wireless@archiver.kernel.org>; Sun,  5 Jan 2020 21:17:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7AEF32072C
+	for <linux-wireless@archiver.kernel.org>; Sun,  5 Jan 2020 21:17:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727161AbgAEVRP (ORCPT
+        id S1727127AbgAEVRK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 5 Jan 2020 16:17:15 -0500
-Received: from mx2.suse.de ([195.135.220.15]:50100 "EHLO mx2.suse.de"
+        Sun, 5 Jan 2020 16:17:10 -0500
+Received: from mx2.suse.de ([195.135.220.15]:50066 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727149AbgAEVRO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 5 Jan 2020 16:17:14 -0500
+        id S1726792AbgAEVRJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 5 Jan 2020 16:17:09 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 463D2B1AB;
-        Sun,  5 Jan 2020 21:17:12 +0000 (UTC)
+        by mx2.suse.de (Postfix) with ESMTP id 4078AB15D;
+        Sun,  5 Jan 2020 21:17:07 +0000 (UTC)
 Received: by unicorn.suse.cz (Postfix, from userid 1000)
-        id EE930E048B; Sun,  5 Jan 2020 22:17:11 +0100 (CET)
-Message-Id: <146ace9856b8576eea83a1a5dc6329315831c44e.1578257976.git.mkubecek@suse.cz>
+        id E7E4CE048B; Sun,  5 Jan 2020 22:17:06 +0100 (CET)
+Message-Id: <f7f3ec1f5e97bd40f6427ce554c3e4d9e0adb63d.1578257976.git.mkubecek@suse.cz>
 In-Reply-To: <cover.1578257976.git.mkubecek@suse.cz>
 References: <cover.1578257976.git.mkubecek@suse.cz>
 From:   Michal Kubecek <mkubecek@suse.cz>
-Subject: [PATCH net-next 3/3] epic100: allow nesting of ethtool_ops begin()
- and complete()
+Subject: [PATCH net-next 2/3] via-velocity: allow nesting of ethtool_ops
+ begin() and complete()
 To:     "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org
 Cc:     Maya Erez <merez@codeaurora.org>,
         Kalle Valo <kvalo@codeaurora.org>,
@@ -38,7 +38,7 @@ Cc:     Maya Erez <merez@codeaurora.org>,
         Francois Romieu <romieu@fr.zoreil.com>,
         linux-kernel@vger.kernel.org, Andrew Lunn <andrew@lunn.ch>,
         Florian Fainelli <f.fainelli@gmail.com>
-Date:   Sun,  5 Jan 2020 22:17:11 +0100 (CET)
+Date:   Sun,  5 Jan 2020 22:17:06 +0100 (CET)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -46,8 +46,8 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Unlike most networking drivers using begin() and complete() ethtool_ops
 callbacks to resume a device which is down and suspend it again when done,
-epic100 does not use standard refcounted infrastructure but sets device
-sleep state directly.
+via-velocity does not use standard refcounted infrastructure but sets
+device sleep state directly.
 
 With the introduction of netlink ethtool interface, we may have nested
 begin-complete blocks so that inner complete() would put the device back to
@@ -59,42 +59,62 @@ level.
 
 Signed-off-by: Michal Kubecek <mkubecek@suse.cz>
 ---
- drivers/net/ethernet/smsc/epic100.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ drivers/net/ethernet/via/via-velocity.c | 14 ++++++++++----
+ drivers/net/ethernet/via/via-velocity.h |  1 +
+ 2 files changed, 11 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/ethernet/smsc/epic100.c b/drivers/net/ethernet/smsc/epic100.c
-index 912760e8514c..b9915645412c 100644
---- a/drivers/net/ethernet/smsc/epic100.c
-+++ b/drivers/net/ethernet/smsc/epic100.c
-@@ -280,6 +280,7 @@ struct epic_private {
- 	signed char phys[4];				/* MII device addresses. */
- 	u16 advertising;					/* NWay media advertisement */
- 	int mii_phy_cnt;
-+	u32 ethtool_ops_nesting;
- 	struct mii_if_info mii;
- 	unsigned int tx_full:1;				/* The Tx queue is full. */
- 	unsigned int default_port:4;		/* Last dev->if_port value. */
-@@ -1435,8 +1436,10 @@ static int ethtool_begin(struct net_device *dev)
- 	struct epic_private *ep = netdev_priv(dev);
- 	void __iomem *ioaddr = ep->ioaddr;
- 
-+	if (ep->ethtool_ops_nesting == U32_MAX)
+diff --git a/drivers/net/ethernet/via/via-velocity.c b/drivers/net/ethernet/via/via-velocity.c
+index 346e44115c4e..4b556b74541a 100644
+--- a/drivers/net/ethernet/via/via-velocity.c
++++ b/drivers/net/ethernet/via/via-velocity.c
+@@ -3257,12 +3257,16 @@ static struct platform_driver velocity_platform_driver = {
+  *	@dev: network device
+  *
+  *	Called before an ethtool operation. We need to make sure the
+- *	chip is out of D3 state before we poke at it.
++ *	chip is out of D3 state before we poke at it. In case of ethtool
++ *	ops nesting, only wake the device up in the outermost block.
+  */
+ static int velocity_ethtool_up(struct net_device *dev)
+ {
+ 	struct velocity_info *vptr = netdev_priv(dev);
+-	if (!netif_running(dev))
++
++	if (vptr->ethtool_ops_nesting == U32_MAX)
 +		return -EBUSY;
- 	/* power-up, if interface is down */
--	if (!netif_running(dev)) {
-+	if (ep->ethtool_ops_nesting++ && !netif_running(dev)) {
- 		ew32(GENCTL, 0x0200);
- 		ew32(NVCTL, (er32(NVCTL) & ~0x003c) | 0x4800);
- 	}
-@@ -1449,7 +1452,7 @@ static void ethtool_complete(struct net_device *dev)
- 	void __iomem *ioaddr = ep->ioaddr;
++	if (!vptr->ethtool_ops_nesting++ && !netif_running(dev))
+ 		velocity_set_power_state(vptr, PCI_D0);
+ 	return 0;
+ }
+@@ -3272,12 +3276,14 @@ static int velocity_ethtool_up(struct net_device *dev)
+  *	@dev: network device
+  *
+  *	Called after an ethtool operation. Restore the chip back to D3
+- *	state if it isn't running.
++ *	state if it isn't running. In case of ethtool ops nesting, only
++ *	put the device to sleep in the outermost block.
+  */
+ static void velocity_ethtool_down(struct net_device *dev)
+ {
+ 	struct velocity_info *vptr = netdev_priv(dev);
+-	if (!netif_running(dev))
++
++	if (!--vptr->ethtool_ops_nesting && !netif_running(dev))
+ 		velocity_set_power_state(vptr, PCI_D3hot);
+ }
  
- 	/* power-down, if interface is down */
--	if (!netif_running(dev)) {
-+	if (!--ep->ethtool_ops_nesting && !netif_running(dev)) {
- 		ew32(GENCTL, 0x0008);
- 		ew32(NVCTL, (er32(NVCTL) & ~0x483c) | 0x0000);
- 	}
+diff --git a/drivers/net/ethernet/via/via-velocity.h b/drivers/net/ethernet/via/via-velocity.h
+index cdfe7809e3c1..f196e71d2c04 100644
+--- a/drivers/net/ethernet/via/via-velocity.h
++++ b/drivers/net/ethernet/via/via-velocity.h
+@@ -1483,6 +1483,7 @@ struct velocity_info {
+ 	struct velocity_context context;
+ 
+ 	u32 ticks;
++	u32 ethtool_ops_nesting;
+ 
+ 	u8 rev_id;
+ 
 -- 
 2.24.1
 
