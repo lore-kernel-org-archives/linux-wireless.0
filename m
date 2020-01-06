@@ -2,38 +2,40 @@ Return-Path: <SRS0=OLg+=23=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C363C32771
-	for <linux-wireless@archiver.kernel.org>; Mon,  6 Jan 2020 08:55:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C810C33C9B
+	for <linux-wireless@archiver.kernel.org>; Mon,  6 Jan 2020 08:55:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 24C6720848
-	for <linux-wireless@archiver.kernel.org>; Mon,  6 Jan 2020 08:55:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6B7A820848
+	for <linux-wireless@archiver.kernel.org>; Mon,  6 Jan 2020 08:55:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725908AbgAFIzK (ORCPT
+        id S1726264AbgAFIzM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 6 Jan 2020 03:55:10 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:51346 "EHLO
+        Mon, 6 Jan 2020 03:55:12 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:51358 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725446AbgAFIzK (ORCPT
+        with ESMTP id S1725446AbgAFIzM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Jan 2020 03:55:10 -0500
+        Mon, 6 Jan 2020 03:55:12 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92.2)
         (envelope-from <luca@coelho.fi>)
-        id 1ioOAG-0007qa-6B; Mon, 06 Jan 2020 10:55:08 +0200
+        id 1ioOAI-0007qa-36; Mon, 06 Jan 2020 10:55:10 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Mon,  6 Jan 2020 10:54:50 +0200
-Message-Id: <20200106085502.363205-1-luca@coelho.fi>
+Date:   Mon,  6 Jan 2020 10:54:52 +0200
+Message-Id: <20200106085502.363205-3-luca@coelho.fi>
 X-Mailer: git-send-email 2.24.1
+In-Reply-To: <20200106085502.363205-1-luca@coelho.fi>
+References: <20200106085502.363205-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 00/12] iwlwifi: updates intended for v5.6 2020-01-06
+Subject: [PATCH 02/12] iwlwifi: yoyo: don't allow changing the domain via debugfs
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -41,70 +43,97 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Luca Coelho <luciano.coelho@intel.com>
 
-Hi,
+We don't want to allow changing the domain via debugfs so that we can
+apply the domain to all TLV types more easily (doing some at runtime
+is difficult due to buffer allocations etc.).  Change the
+fw_dbg_domain debugfs file to be read-only and remove the write
+function.
 
-Here's the second set of patches intended for v5.6.  It's the usual
-development, new features, cleanups and bugfixes.
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ .../net/wireless/intel/iwlwifi/fw/debugfs.c   | 29 ++-----------------
+ .../net/wireless/intel/iwlwifi/iwl-dbg-tlv.c  |  3 +-
+ .../net/wireless/intel/iwlwifi/iwl-dbg-tlv.h  |  1 -
+ 3 files changed, 4 insertions(+), 29 deletions(-)
 
-The changes are:
-
-* Support new version of the beacon template FW API;
-* Print some extra information when the driver is loaded;
-* Some debugging infrastructure (aka. yoyo) updates;
-* Support for a new HW version;
-* Second phase of device configuration work started;
-* Some clean-ups;
-
-As usual, I'm pushing this to a pending branch, for kbuild bot, and
-will send a pull-request later.
-
-Please review.
-
-Cheers,
-Luca.
-
-
-Andrei Otcheretianski (1):
-  iwlwifi: mvm: Update BEACON_TEMPLATE_CMD firmware API
-
-Johannes Berg (3):
-  iwlwifi: incorporate firmware filename into version
-  iwlwifi: mvm: print out extended secboot status before dump
-  iwlwifi: prph: remove some unused register definitions
-
-Luca Coelho (7):
-  iwlwifi: yoyo: don't allow changing the domain via debugfs
-  iwlwifi: yoyo: remove unnecessary active triggers status flag
-  iwlwifi: yoyo: remove the iwl_dbg_tlv_gen_active_trigs() function
-  iwlwifi: yoyo: check for the domain on all TLV types during init
-  iwlwifi: assume the driver_data is a trans_cfg, but allow full cfg
-  iwlwifi: implement a new device configuration table
-  iwlwifi: add device name to device_info
-
-Oren Givon (1):
-  iwlwifi: add new iwlax411 struct for type SoSnj
-
- .../net/wireless/intel/iwlwifi/cfg/22000.c    |  10 ++
- drivers/net/wireless/intel/iwlwifi/cfg/9000.c |  10 +-
- drivers/net/wireless/intel/iwlwifi/dvm/main.c |   4 +-
- .../net/wireless/intel/iwlwifi/fw/api/tx.h    |   7 +-
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c   |   5 +-
- .../net/wireless/intel/iwlwifi/fw/debugfs.c   |  29 +---
- drivers/net/wireless/intel/iwlwifi/fw/img.h   |   2 +-
- .../net/wireless/intel/iwlwifi/fw/runtime.h   |  13 +-
- .../net/wireless/intel/iwlwifi/iwl-config.h   |  14 ++
- .../net/wireless/intel/iwlwifi/iwl-dbg-tlv.c  |  65 +++-----
- .../net/wireless/intel/iwlwifi/iwl-dbg-tlv.h  |   1 -
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c  |  26 ++-
- drivers/net/wireless/intel/iwlwifi/iwl-prph.h |  10 +-
- .../net/wireless/intel/iwlwifi/iwl-trans.h    |   4 +
- .../net/wireless/intel/iwlwifi/mvm/debugfs.c  |   2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c   |  27 ++-
- drivers/net/wireless/intel/iwlwifi/mvm/nvm.c  |   2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c  |   2 +-
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 156 ++++++++++++------
- 19 files changed, 217 insertions(+), 172 deletions(-)
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/debugfs.c b/drivers/net/wireless/intel/iwlwifi/fw/debugfs.c
+index ca3b1a461dea..89f74116569d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/debugfs.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/debugfs.c
+@@ -320,31 +320,6 @@ static ssize_t iwl_dbgfs_send_hcmd_write(struct iwl_fw_runtime *fwrt, char *buf,
+ 
+ FWRT_DEBUGFS_WRITE_FILE_OPS(send_hcmd, 512);
+ 
+-static ssize_t iwl_dbgfs_fw_dbg_domain_write(struct iwl_fw_runtime *fwrt,
+-					     char *buf, size_t count)
+-{
+-	u32 new_domain;
+-	int ret;
+-
+-	if (!iwl_trans_fw_running(fwrt->trans))
+-		return -EIO;
+-
+-	ret = kstrtou32(buf, 0, &new_domain);
+-	if (ret)
+-		return ret;
+-
+-	if (new_domain != fwrt->trans->dbg.domains_bitmap) {
+-		ret = iwl_dbg_tlv_gen_active_trigs(fwrt, new_domain);
+-		if (ret)
+-			return ret;
+-
+-		iwl_dbg_tlv_time_point(fwrt, IWL_FW_INI_TIME_POINT_PERIODIC,
+-				       NULL);
+-	}
+-
+-	return count;
+-}
+-
+ static ssize_t iwl_dbgfs_fw_dbg_domain_read(struct iwl_fw_runtime *fwrt,
+ 					    size_t size, char *buf)
+ {
+@@ -352,7 +327,7 @@ static ssize_t iwl_dbgfs_fw_dbg_domain_read(struct iwl_fw_runtime *fwrt,
+ 			 fwrt->trans->dbg.domains_bitmap);
+ }
+ 
+-FWRT_DEBUGFS_READ_WRITE_FILE_OPS(fw_dbg_domain, 20);
++FWRT_DEBUGFS_READ_FILE_OPS(fw_dbg_domain, 20);
+ 
+ void iwl_fwrt_dbgfs_register(struct iwl_fw_runtime *fwrt,
+ 			    struct dentry *dbgfs_dir)
+@@ -360,5 +335,5 @@ void iwl_fwrt_dbgfs_register(struct iwl_fw_runtime *fwrt,
+ 	INIT_DELAYED_WORK(&fwrt->timestamp.wk, iwl_fw_timestamp_marker_wk);
+ 	FWRT_DEBUGFS_ADD_FILE(timestamp_marker, dbgfs_dir, 0200);
+ 	FWRT_DEBUGFS_ADD_FILE(send_hcmd, dbgfs_dir, 0200);
+-	FWRT_DEBUGFS_ADD_FILE(fw_dbg_domain, dbgfs_dir, 0600);
++	FWRT_DEBUGFS_ADD_FILE(fw_dbg_domain, dbgfs_dir, 0400);
+ }
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
+index f266647dc08c..79c8c8057c2d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
+@@ -913,7 +913,8 @@ iwl_dbg_tlv_gen_active_trig_list(struct iwl_fw_runtime *fwrt,
+ 	}
+ }
+ 
+-int iwl_dbg_tlv_gen_active_trigs(struct iwl_fw_runtime *fwrt, u32 new_domain)
++static int iwl_dbg_tlv_gen_active_trigs(struct iwl_fw_runtime *fwrt,
++					u32 new_domain)
+ {
+ 	int i;
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.h b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.h
+index f18946872569..1360676b3b21 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.h
+@@ -105,7 +105,6 @@ void iwl_dbg_tlv_init(struct iwl_trans *trans);
+ void iwl_dbg_tlv_time_point(struct iwl_fw_runtime *fwrt,
+ 			    enum iwl_fw_ini_time_point tp_id,
+ 			    union iwl_dbg_tlv_tp_data *tp_data);
+-int iwl_dbg_tlv_gen_active_trigs(struct iwl_fw_runtime *fwrt, u32 new_domain);
+ void iwl_dbg_tlv_del_timers(struct iwl_trans *trans);
+ 
+ #endif /* __iwl_dbg_tlv_h__*/
 -- 
 2.24.1
 
