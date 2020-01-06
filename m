@@ -6,32 +6,32 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12E3FC33C9B
-	for <linux-wireless@archiver.kernel.org>; Mon,  6 Jan 2020 15:10:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00469C33CA1
+	for <linux-wireless@archiver.kernel.org>; Mon,  6 Jan 2020 15:10:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DE1D92072E
-	for <linux-wireless@archiver.kernel.org>; Mon,  6 Jan 2020 15:10:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CF34B2072E
+	for <linux-wireless@archiver.kernel.org>; Mon,  6 Jan 2020 15:10:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726515AbgAFPKc (ORCPT
+        id S1726560AbgAFPKd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 6 Jan 2020 10:10:32 -0500
-Received: from smail.rz.tu-ilmenau.de ([141.24.186.67]:41875 "EHLO
+        Mon, 6 Jan 2020 10:10:33 -0500
+Received: from smail.rz.tu-ilmenau.de ([141.24.186.67]:41881 "EHLO
         smail.rz.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726427AbgAFPKb (ORCPT
+        with ESMTP id S1726437AbgAFPKb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Mon, 6 Jan 2020 10:10:31 -0500
 Received: from localhost.localdomain (unknown [141.24.207.101])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by smail.rz.tu-ilmenau.de (Postfix) with ESMTPSA id DC43258006C;
+        by smail.rz.tu-ilmenau.de (Postfix) with ESMTPSA id F12DC580073;
         Mon,  6 Jan 2020 16:10:29 +0100 (CET)
 From:   Markus Theil <markus.theil@tu-ilmenau.de>
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
         Markus Theil <markus.theil@tu-ilmenau.de>
-Subject: [PATCH 1/4] iw: event: handle interface add/del
-Date:   Mon,  6 Jan 2020 16:10:21 +0100
-Message-Id: <20200106151024.124315-2-markus.theil@tu-ilmenau.de>
+Subject: [PATCH 3/4] update nl80211.h
+Date:   Mon,  6 Jan 2020 16:10:23 +0100
+Message-Id: <20200106151024.124315-4-markus.theil@tu-ilmenau.de>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200106151024.124315-1-markus.theil@tu-ilmenau.de>
 References: <20200106151024.124315-1-markus.theil@tu-ilmenau.de>
@@ -44,64 +44,94 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Signed-off-by: Markus Theil <markus.theil@tu-ilmenau.de>
 ---
- event.c | 28 +++++++++++++++++++++++-----
- 1 file changed, 23 insertions(+), 5 deletions(-)
+ nl80211.h | 39 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 39 insertions(+)
 
-diff --git a/event.c b/event.c
-index 2a12ca6..baeafae 100644
---- a/event.c
-+++ b/event.c
-@@ -668,9 +668,22 @@ static void parse_new_peer_candidate(struct nlattr **attrs)
- 	printf("\n");
- }
+diff --git a/nl80211.h b/nl80211.h
+index beee59c..5eab191 100644
+--- a/nl80211.h
++++ b/nl80211.h
+@@ -248,6 +248,22 @@
+  * %NL80211_ATTR_SAE_PASSWORD.
+  */
  
--static void parse_set_interface(struct nlattr **attrs)
-+static void parse_recv_interface(struct nlattr **attrs, int command)
- {
--	printf("set interface");
-+	switch (command) {
-+	case NL80211_CMD_NEW_INTERFACE:
-+		printf("new interface");
-+		break;
-+	case NL80211_CMD_DEL_INTERFACE:
-+		printf("del interface");
-+		break;
-+	case NL80211_CMD_SET_INTERFACE:
-+		printf("set interface");
-+		break;
-+	default:
-+		printf("unknown interface command (%i) received\n", command);
-+		return;
-+	}
++/**
++ * DOC: VLAN offload support for setting group keys and binding STAs to VLANs
++ *
++ * By setting @NL80211_EXT_FEATURE_VLAN_OFFLOAD flag drivers can indicate they
++ * support offloading VLAN functionality in a manner where the driver exposes a
++ * single netdev that uses VLAN tagged frames and separate VLAN-specific netdevs
++ * can then be added using RTM_NEWLINK/IFLA_VLAN_ID similarly to the Ethernet
++ * case. Frames received from stations that are not assigned to any VLAN are
++ * delivered on the main netdev and frames to such stations can be sent through
++ * that main netdev.
++ *
++ * %NL80211_CMD_NEW_KEY (for group keys), %NL80211_CMD_NEW_STATION, and
++ * %NL80211_CMD_SET_STATION will optionally specify vlan_id using
++ * %NL80211_ATTR_VLAN_ID.
++ */
++
+ /**
+  * enum nl80211_commands - supported nl80211 commands
+  *
+@@ -571,6 +587,14 @@
+  *	set of BSSID,frequency parameters is used (i.e., either the enforcing
+  *	%NL80211_ATTR_MAC,%NL80211_ATTR_WIPHY_FREQ or the less strict
+  *	%NL80211_ATTR_MAC_HINT and %NL80211_ATTR_WIPHY_FREQ_HINT).
++ *	Driver shall not modify the IEs specified through %NL80211_ATTR_IE if
++ *	%NL80211_ATTR_MAC is included. However, if %NL80211_ATTR_MAC_HINT is
++ *	included, these IEs through %NL80211_ATTR_IE are specified by the user
++ *	space based on the best possible BSS selected. Thus, if the driver ends
++ *	up selecting a different BSS, it can modify these IEs accordingly (e.g.
++ *	userspace asks the driver to perform PMKSA caching with BSS1 and the
++ *	driver ends up selecting BSS2 with different PMKSA cache entry; RSNIE
++ *	has to get updated with the apt PMKID).
+  *	%NL80211_ATTR_PREV_BSSID can be used to request a reassociation within
+  *	the ESS in case the device is already associated and an association with
+  *	a different BSS is desired.
+@@ -2373,6 +2397,9 @@ enum nl80211_commands {
+  *	the allowed channel bandwidth configurations. (u8 attribute)
+  *	Defined by IEEE P802.11ay/D4.0 section 9.4.2.251, Table 13.
+  *
++ * @NL80211_ATTR_VLAN_ID: VLAN ID (1..4094) for the station and VLAN group key
++ *	(u16).
++ *
+  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+@@ -2835,6 +2862,8 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_WIPHY_EDMG_CHANNELS,
+ 	NL80211_ATTR_WIPHY_EDMG_BW_CONFIG,
  
- 	if (attrs[NL80211_ATTR_IFTYPE]) {
- 		printf(" type ");
-@@ -787,8 +800,11 @@ static int print_event(struct nl_msg *msg, void *arg)
- 		  genlmsg_attrlen(gnlh, 0), NULL);
++	NL80211_ATTR_VLAN_ID,
++
+ 	/* add attributes here, update the policy in nl80211.c */
  
- 	if (tb[NL80211_ATTR_IFINDEX] && tb[NL80211_ATTR_WIPHY]) {
--		if_indextoname(nla_get_u32(tb[NL80211_ATTR_IFINDEX]), ifname);
--		printf("%s (phy #%d): ", ifname, nla_get_u32(tb[NL80211_ATTR_WIPHY]));
-+		/* if_indextoname may fails on delete interface/wiphy event */
-+		if(if_indextoname(nla_get_u32(tb[NL80211_ATTR_IFINDEX]), ifname))
-+			printf("%s (phy #%d): ", ifname, nla_get_u32(tb[NL80211_ATTR_WIPHY]));
-+		else
-+			printf("phy #%d: ", nla_get_u32(tb[NL80211_ATTR_WIPHY]));
- 	} else if (tb[NL80211_ATTR_WDEV] && tb[NL80211_ATTR_WIPHY]) {
- 		printf("wdev 0x%llx (phy #%d): ",
- 			(unsigned long long)nla_get_u64(tb[NL80211_ATTR_WDEV]),
-@@ -1095,8 +1111,10 @@ static int print_event(struct nl_msg *msg, void *arg)
- 	case NL80211_CMD_NEW_PEER_CANDIDATE:
- 		parse_new_peer_candidate(tb);
- 		break;
-+	case NL80211_CMD_NEW_INTERFACE:
- 	case NL80211_CMD_SET_INTERFACE:
--		parse_set_interface(tb);
-+	case NL80211_CMD_DEL_INTERFACE:
-+		parse_recv_interface(tb, gnlh->cmd);
- 		break;
- 	case NL80211_CMD_STA_OPMODE_CHANGED:
- 		parse_sta_opmode_changed(tb);
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -5484,6 +5513,14 @@ enum nl80211_feature_flags {
+  * @NL80211_EXT_FEATURE_SAE_OFFLOAD: Device wants to do SAE authentication in
+  *	station mode (SAE password is passed as part of the connect command).
+  *
++ * @NL80211_EXT_FEATURE_VLAN_OFFLOAD: The driver supports a single netdev
++ *	with VLAN tagged frames and separate VLAN-specific netdevs added using
++ *	vconfig similarly to the Ethernet case.
++ *
++ * @NL80211_EXT_FEATURE_AQL: The driver supports the Airtime Queue Limit (AQL)
++ *	feature, which prevents bufferbloat by using the expected transmission
++ *	time to limit the amount of data buffered in the hardware.
++ *
+  * @NUM_NL80211_EXT_FEATURES: number of extended features.
+  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
+  */
+@@ -5529,6 +5566,8 @@ enum nl80211_ext_feature_index {
+ 	NL80211_EXT_FEATURE_EXT_KEY_ID,
+ 	NL80211_EXT_FEATURE_STA_TX_PWR,
+ 	NL80211_EXT_FEATURE_SAE_OFFLOAD,
++	NL80211_EXT_FEATURE_VLAN_OFFLOAD,
++	NL80211_EXT_FEATURE_AQL,
+ 
+ 	/* add new features before the definition below */
+ 	NUM_NL80211_EXT_FEATURES,
 -- 
 2.24.1
 
