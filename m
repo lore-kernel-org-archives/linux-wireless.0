@@ -6,36 +6,36 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD10DC32771
-	for <linux-wireless@archiver.kernel.org>; Mon,  6 Jan 2020 08:55:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C72BC32771
+	for <linux-wireless@archiver.kernel.org>; Mon,  6 Jan 2020 08:55:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BD4EE20848
-	for <linux-wireless@archiver.kernel.org>; Mon,  6 Jan 2020 08:55:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F3A7D20848
+	for <linux-wireless@archiver.kernel.org>; Mon,  6 Jan 2020 08:55:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726382AbgAFIzQ (ORCPT
+        id S1726436AbgAFIzV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 6 Jan 2020 03:55:16 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:51386 "EHLO
+        Mon, 6 Jan 2020 03:55:21 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:51422 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725821AbgAFIzP (ORCPT
+        with ESMTP id S1726360AbgAFIzV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Jan 2020 03:55:15 -0500
+        Mon, 6 Jan 2020 03:55:21 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92.2)
         (envelope-from <luca@coelho.fi>)
-        id 1ioOAL-0007qa-16; Mon, 06 Jan 2020 10:55:13 +0200
+        id 1ioOAO-0007qa-CC; Mon, 06 Jan 2020 10:55:17 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Mon,  6 Jan 2020 10:54:56 +0200
-Message-Id: <20200106085502.363205-7-luca@coelho.fi>
+Date:   Mon,  6 Jan 2020 10:55:00 +0200
+Message-Id: <20200106085502.363205-11-luca@coelho.fi>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200106085502.363205-1-luca@coelho.fi>
 References: <20200106085502.363205-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 06/12] iwlwifi: yoyo: check for the domain on all TLV types during init
+Subject: [PATCH 10/12] iwlwifi: assume the driver_data is a trans_cfg, but allow full cfg
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -43,123 +43,198 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Luca Coelho <luciano.coelho@intel.com>
 
-Now that we don't have dynamically changing domains anymore, we can
-simply skip all the TLVs with domains that are not enabled.  To do so,
-remove the checks from the functions that handle the TLVs when a
-timepoint is reached to the top allocation function.
+With the new concept of separating the trans-specific (trans_cfg) data
+from the rest of the cfg, we will start mapping only the trans_cfg
+part to the PCI device ID/subsystem device ID.  So we can assume that
+the data passed to the probe function contains the trans_cfg, but
+since the full cfg still contains the trans_cfg at the beginning, we
+can allow a full cfg to be passed as well.  This makes it easier to
+convert the existing tables one by one.
 
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../net/wireless/intel/iwlwifi/fw/runtime.h   |  2 +-
- .../net/wireless/intel/iwlwifi/iwl-dbg-tlv.c  | 22 ++++++++-----------
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c  |  2 ++
- .../net/wireless/intel/iwlwifi/iwl-trans.h    |  2 ++
- 4 files changed, 14 insertions(+), 14 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 90 +++++++++++--------
+ 1 file changed, 55 insertions(+), 35 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-index 1b4bca717e79..f8c6ed823bc5 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-@@ -69,7 +69,7 @@
- #include "iwl-eeprom-parse.h"
- #include "fw/acpi.h"
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index 79c24c696c8f..5eb528d2111f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -991,21 +991,32 @@ MODULE_DEVICE_TABLE(pci, iwl_hw_card_ids);
  
--#define IWL_FW_DBG_DOMAIN		IWL_FW_INI_DOMAIN_ALWAYS_ON
-+#define IWL_FW_DBG_DOMAIN		IWL_TRANS_FW_DBG_DOMAIN(fwrt->trans)
- 
- struct iwl_fw_runtime_ops {
- 	int (*dump_start)(void *ctx);
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
-index 31a0e885faf6..eaf64ca3a134 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
-@@ -290,10 +290,19 @@ void iwl_dbg_tlv_alloc(struct iwl_trans *trans, struct iwl_ucode_tlv *tlv,
- 	struct iwl_fw_ini_header *hdr = (void *)&tlv->data[0];
- 	u32 type = le32_to_cpu(tlv->type);
- 	u32 tlv_idx = type - IWL_UCODE_TLV_DEBUG_BASE;
-+	u32 domain = le32_to_cpu(hdr->domain);
- 	enum iwl_ini_cfg_state *cfg_state = ext ?
- 		&trans->dbg.external_ini_cfg : &trans->dbg.internal_ini_cfg;
+ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ {
+-	const struct iwl_cfg *cfg = (struct iwl_cfg *)(ent->driver_data);
++	const struct iwl_cfg_trans_params *trans =
++		(struct iwl_cfg_trans_params *)(ent->driver_data);
+ 	const struct iwl_cfg *cfg_7265d __maybe_unused = NULL;
+ 	struct iwl_trans *iwl_trans;
+ 	struct iwl_trans_pcie *trans_pcie;
+ 	unsigned long flags;
  	int ret;
++	/*
++	 * This is needed for backwards compatibility with the old
++	 * tables, so we don't need to change all the config structs
++	 * at the same time.  The cfg is used to compare with the old
++	 * full cfg structs.
++	 */
++	const struct iwl_cfg *cfg = (struct iwl_cfg *)(ent->driver_data);
  
-+	if (domain != IWL_FW_INI_DOMAIN_ALWAYS_ON &&
-+	    !(domain & trans->dbg.domains_bitmap)) {
-+		IWL_DEBUG_FW(trans,
-+			     "WRT: Skipping TLV with disabled domain 0x%0x (0x%0x)\n",
-+			     domain, trans->dbg.domains_bitmap);
-+		return;
-+	}
+-	iwl_trans = iwl_trans_pcie_alloc(pdev, ent, &cfg->trans);
++	/* make sure trans is the first element in iwl_cfg */
++	BUILD_BUG_ON(offsetof(struct iwl_cfg, trans));
 +
- 	if (tlv_idx >= ARRAY_SIZE(dbg_tlv_alloc) || !dbg_tlv_alloc[tlv_idx]) {
- 		IWL_ERR(trans, "WRT: Unsupported TLV type 0x%x\n", type);
- 		goto out_err;
-@@ -660,7 +669,6 @@ static void iwl_dbg_tlv_send_hcmds(struct iwl_fw_runtime *fwrt,
- 	list_for_each_entry(node, hcmd_list, list) {
- 		struct iwl_fw_ini_hcmd_tlv *hcmd = (void *)node->tlv.data;
- 		struct iwl_fw_ini_hcmd *hcmd_data = &hcmd->hcmd;
--		u32 domain = le32_to_cpu(hcmd->hdr.domain);
- 		u16 hcmd_len = le32_to_cpu(node->tlv.length) - sizeof(*hcmd);
- 		struct iwl_host_cmd cmd = {
- 			.id = WIDE_ID(hcmd_data->group, hcmd_data->id),
-@@ -668,10 +676,6 @@ static void iwl_dbg_tlv_send_hcmds(struct iwl_fw_runtime *fwrt,
- 			.data = { hcmd_data->data, },
- 		};
++	iwl_trans = iwl_trans_pcie_alloc(pdev, ent, trans);
+ 	if (IS_ERR(iwl_trans))
+ 		return PTR_ERR(iwl_trans);
  
--		if (domain != IWL_FW_INI_DOMAIN_ALWAYS_ON &&
--		    !(domain & fwrt->trans->dbg.domains_bitmap))
--			continue;
--
- 		iwl_trans_send_cmd(fwrt->trans, &cmd);
+ 	trans_pcie = IWL_TRANS_GET_PCIE_TRANS(iwl_trans);
+ 
+ 	/* the trans_cfg should never change, so set it now */
+-	iwl_trans->trans_cfg = &cfg->trans;
++	iwl_trans->trans_cfg = trans;
+ 
+ #if IS_ENABLED(CONFIG_IWLMVM)
+ 	/*
+@@ -1023,22 +1034,22 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		cfg_7265d = &iwl7265d_n_cfg;
+ 	if (cfg_7265d &&
+ 	    (iwl_trans->hw_rev & CSR_HW_REV_TYPE_MSK) == CSR_HW_REV_TYPE_7265D)
+-		cfg = cfg_7265d;
++		iwl_trans->cfg = cfg_7265d;
+ 
+ 	iwl_trans->hw_rf_id = iwl_read32(iwl_trans, CSR_HW_RF_ID);
+ 
+ 	if (cfg == &iwlax210_2ax_cfg_so_hr_a0) {
+ 		if (iwl_trans->hw_rev == CSR_HW_REV_TYPE_TY) {
+-			cfg = &iwlax210_2ax_cfg_ty_gf_a0;
++			iwl_trans->cfg = &iwlax210_2ax_cfg_ty_gf_a0;
+ 		} else if (CSR_HW_RF_ID_TYPE_CHIP_ID(iwl_trans->hw_rf_id) ==
+ 			   CSR_HW_RF_ID_TYPE_CHIP_ID(CSR_HW_RF_ID_TYPE_JF)) {
+-			cfg = &iwlax210_2ax_cfg_so_jf_a0;
++			iwl_trans->cfg = &iwlax210_2ax_cfg_so_jf_a0;
+ 		} else if (CSR_HW_RF_ID_TYPE_CHIP_ID(iwl_trans->hw_rf_id) ==
+ 			   CSR_HW_RF_ID_TYPE_CHIP_ID(CSR_HW_RF_ID_TYPE_GF)) {
+-			cfg = &iwlax211_2ax_cfg_so_gf_a0;
++			iwl_trans->cfg = &iwlax211_2ax_cfg_so_gf_a0;
+ 		} else if (CSR_HW_RF_ID_TYPE_CHIP_ID(iwl_trans->hw_rf_id) ==
+ 			   CSR_HW_RF_ID_TYPE_CHIP_ID(CSR_HW_RF_ID_TYPE_GF4)) {
+-			cfg = &iwlax411_2ax_cfg_so_gf4_a0;
++			iwl_trans->cfg = &iwlax411_2ax_cfg_so_gf4_a0;
+ 		}
+ 	} else if (cfg == &iwl_ax101_cfg_qu_hr) {
+ 		if ((CSR_HW_RF_ID_TYPE_CHIP_ID(iwl_trans->hw_rf_id) ==
+@@ -1046,13 +1057,17 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		     iwl_trans->hw_rev == CSR_HW_REV_TYPE_QNJ_B0) ||
+ 		    (CSR_HW_RF_ID_TYPE_CHIP_ID(iwl_trans->hw_rf_id) ==
+ 		     CSR_HW_RF_ID_TYPE_CHIP_ID(CSR_HW_RF_ID_TYPE_HR1))) {
+-			cfg = &iwl22000_2ax_cfg_qnj_hr_b0;
++			iwl_trans->cfg = &iwl22000_2ax_cfg_qnj_hr_b0;
++		} else if (CSR_HW_RF_ID_TYPE_CHIP_ID(iwl_trans->hw_rf_id) ==
++		    CSR_HW_RF_ID_TYPE_CHIP_ID(CSR_HW_RF_ID_TYPE_HR) &&
++		    iwl_trans->hw_rev == CSR_HW_REV_TYPE_QUZ) {
++			iwl_trans->cfg = &iwl_ax101_cfg_quz_hr;
+ 		} else if (CSR_HW_RF_ID_TYPE_CHIP_ID(iwl_trans->hw_rf_id) ==
+ 			   CSR_HW_RF_ID_TYPE_CHIP_ID(CSR_HW_RF_ID_TYPE_HR)) {
+-			cfg = &iwl_ax101_cfg_qu_hr;
++			iwl_trans->cfg = &iwl_ax101_cfg_qu_hr;
+ 		} else if (CSR_HW_RF_ID_TYPE_CHIP_ID(iwl_trans->hw_rf_id) ==
+ 			   CSR_HW_RF_ID_TYPE_CHIP_ID(CSR_HW_RF_ID_TYPE_JF)) {
+-			cfg = &iwl22000_2ax_cfg_jf;
++			iwl_trans->cfg = &iwl22000_2ax_cfg_jf;
+ 		} else if (CSR_HW_RF_ID_TYPE_CHIP_ID(iwl_trans->hw_rf_id) ==
+ 			   CSR_HW_RF_ID_TYPE_CHIP_ID(CSR_HW_RF_ID_TYPE_HRCDB)) {
+ 			IWL_ERR(iwl_trans, "RF ID HRCDB is not supported\n");
+@@ -1069,14 +1084,11 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 		hw_status = iwl_read_prph(iwl_trans, UMAG_GEN_HW_STATUS);
+ 		if (CSR_HW_RF_STEP(iwl_trans->hw_rf_id) == SILICON_B_STEP)
+-			/*
+-			 * b step fw is the same for physical card and fpga
+-			 */
+-			cfg = &iwl22000_2ax_cfg_qnj_hr_b0;
++			iwl_trans->cfg = &iwl22000_2ax_cfg_qnj_hr_b0;
+ 		else if ((hw_status & UMAG_GEN_HW_IS_FPGA) &&
+-			 CSR_HW_RF_STEP(iwl_trans->hw_rf_id) == SILICON_A_STEP) {
+-			cfg = &iwl22000_2ax_cfg_qnj_hr_a0_f0;
+-		}
++			 CSR_HW_RF_STEP(iwl_trans->hw_rf_id) ==
++			 SILICON_A_STEP)
++			iwl_trans->cfg = &iwl22000_2ax_cfg_qnj_hr_a0_f0;
  	}
- }
-@@ -897,12 +901,6 @@ iwl_dbg_tlv_gen_active_trig_list(struct iwl_fw_runtime *fwrt,
  
- 	list_for_each_entry(node, trig_list, list) {
- 		struct iwl_ucode_tlv *tlv = &node->tlv;
--		struct iwl_fw_ini_trigger_tlv *trig = (void *)tlv->data;
--		u32 domain = le32_to_cpu(trig->hdr.domain);
--
--		if (domain != IWL_FW_INI_DOMAIN_ALWAYS_ON &&
--		    !(domain & fwrt->trans->dbg.domains_bitmap))
--			continue;
- 
- 		iwl_dbg_tlv_add_active_trigger(fwrt, active_trig_list, tlv);
+ 	/*
+@@ -1087,45 +1099,53 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	 */
+ 	if (iwl_trans->hw_rev == CSR_HW_REV_TYPE_QU_C0) {
+ 		if (cfg == &iwl_ax101_cfg_qu_hr)
+-			cfg = &iwl_ax101_cfg_qu_c0_hr_b0;
++			iwl_trans->cfg = &iwl_ax101_cfg_qu_c0_hr_b0;
+ 		else if (cfg == &iwl_ax201_cfg_qu_hr)
+-			cfg = &iwl_ax201_cfg_qu_c0_hr_b0;
++			iwl_trans->cfg = &iwl_ax201_cfg_qu_c0_hr_b0;
+ 		else if (cfg == &iwl9461_2ac_cfg_qu_b0_jf_b0)
+-			cfg = &iwl9461_2ac_cfg_qu_c0_jf_b0;
++			iwl_trans->cfg = &iwl9461_2ac_cfg_qu_c0_jf_b0;
+ 		else if (cfg == &iwl9462_2ac_cfg_qu_b0_jf_b0)
+-			cfg = &iwl9462_2ac_cfg_qu_c0_jf_b0;
++			iwl_trans->cfg = &iwl9462_2ac_cfg_qu_c0_jf_b0;
+ 		else if (cfg == &iwl9560_2ac_cfg_qu_b0_jf_b0)
+-			cfg = &iwl9560_2ac_cfg_qu_c0_jf_b0;
++			iwl_trans->cfg = &iwl9560_2ac_cfg_qu_c0_jf_b0;
+ 		else if (cfg == &iwl9560_2ac_160_cfg_qu_b0_jf_b0)
+-			cfg = &iwl9560_2ac_160_cfg_qu_c0_jf_b0;
++			iwl_trans->cfg = &iwl9560_2ac_160_cfg_qu_c0_jf_b0;
++		else if (cfg == &killer1650s_2ax_cfg_qu_b0_hr_b0)
++			iwl_trans->cfg = &killer1650s_2ax_cfg_qu_c0_hr_b0;
++		else if (cfg == &killer1650i_2ax_cfg_qu_b0_hr_b0)
++			iwl_trans->cfg = &killer1650i_2ax_cfg_qu_c0_hr_b0;
  	}
-@@ -981,8 +979,6 @@ static void iwl_dbg_tlv_init_cfg(struct iwl_fw_runtime *fwrt)
- 	enum iwl_fw_ini_buffer_location *ini_dest = &fwrt->trans->dbg.ini_dest;
- 	int ret, i;
  
--	fwrt->trans->dbg.domains_bitmap = IWL_FW_DBG_DOMAIN;
--
- 	IWL_DEBUG_FW(fwrt,
- 		     "WRT: Generating active triggers list, domain 0x%x\n",
- 		     fwrt->trans->dbg.domains_bitmap);
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-index 4096ccf58b07..c6cb5e1a1bd9 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-@@ -1647,6 +1647,8 @@ struct iwl_drv *iwl_drv_start(struct iwl_trans *trans)
- 	drv->trans->dbgfs_dir = debugfs_create_dir("trans", drv->dbgfs_drv);
+ 	/* same thing for QuZ... */
+ 	if (iwl_trans->hw_rev == CSR_HW_REV_TYPE_QUZ) {
+-		if (iwl_trans->cfg == &iwl_ax101_cfg_qu_hr)
++		if (cfg == &iwl_ax101_cfg_qu_hr)
+ 			iwl_trans->cfg = &iwl_ax101_cfg_quz_hr;
+-		else if (iwl_trans->cfg == &iwl_ax201_cfg_qu_hr)
++		else if (cfg == &iwl_ax201_cfg_qu_hr)
+ 			iwl_trans->cfg = &iwl_ax201_cfg_quz_hr;
+-		else if (iwl_trans->cfg == &iwl9461_2ac_cfg_qu_b0_jf_b0)
++		else if (cfg == &iwl9461_2ac_cfg_qu_b0_jf_b0)
+ 			iwl_trans->cfg = &iwl9461_2ac_cfg_quz_a0_jf_b0_soc;
+-		else if (iwl_trans->cfg == &iwl9462_2ac_cfg_qu_b0_jf_b0)
++		else if (cfg == &iwl9462_2ac_cfg_qu_b0_jf_b0)
+ 			iwl_trans->cfg = &iwl9462_2ac_cfg_quz_a0_jf_b0_soc;
+-		else if (iwl_trans->cfg == &iwl9560_2ac_cfg_qu_b0_jf_b0)
++		else if (cfg == &iwl9560_2ac_cfg_qu_b0_jf_b0)
+ 			iwl_trans->cfg = &iwl9560_2ac_cfg_quz_a0_jf_b0_soc;
+-		else if (iwl_trans->cfg == &iwl9560_2ac_160_cfg_qu_b0_jf_b0)
++		else if (cfg == &iwl9560_2ac_160_cfg_qu_b0_jf_b0)
+ 			iwl_trans->cfg = &iwl9560_2ac_160_cfg_quz_a0_jf_b0_soc;
+ 	}
+ 
  #endif
+-	/* now set the real cfg we decided to use */
+-	iwl_trans->cfg = cfg;
++	/*
++	 * If we didn't set the cfg yet, assume the trans is actually
++	 * a full cfg from the old tables.
++	 */
++	if (!iwl_trans->cfg)
++		iwl_trans->cfg = cfg;
  
-+	drv->trans->dbg.domains_bitmap = IWL_TRANS_FW_DBG_DOMAIN(drv->trans);
-+
- 	ret = iwl_request_firmware(drv, true);
- 	if (ret) {
- 		IWL_ERR(trans, "Couldn't request the fw\n");
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-index 872cda2be0f6..58bee4442e20 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-@@ -112,6 +112,8 @@
-  *	6) Eventually, the free function will be called.
-  */
- 
-+#define IWL_TRANS_FW_DBG_DOMAIN(trans)	IWL_FW_INI_DOMAIN_ALWAYS_ON
-+
- #define FH_RSCSR_FRAME_SIZE_MSK		0x00003FFF	/* bits 0-13 */
- #define FH_RSCSR_FRAME_INVALID		0x55550000
- #define FH_RSCSR_FRAME_ALIGN		0x40
+-	if (cfg->trans.mq_rx_supported) {
+-		if (WARN_ON(!cfg->num_rbds)) {
++	if (iwl_trans->trans_cfg->mq_rx_supported) {
++		if (WARN_ON(!iwl_trans->cfg->num_rbds)) {
+ 			ret = -EINVAL;
+ 			goto out_free_trans;
+ 		}
+-		trans_pcie->num_rx_bufs = cfg->num_rbds;
++		trans_pcie->num_rx_bufs = iwl_trans->cfg->num_rbds;
+ 	} else {
+ 		trans_pcie->num_rx_bufs = RX_QUEUE_SIZE;
+ 	}
 -- 
 2.24.1
 
