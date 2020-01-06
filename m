@@ -6,69 +6,160 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86B47C47409
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD10DC32771
 	for <linux-wireless@archiver.kernel.org>; Mon,  6 Jan 2020 08:55:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6869F21775
+	by mail.kernel.org (Postfix) with ESMTP id BD4EE20848
 	for <linux-wireless@archiver.kernel.org>; Mon,  6 Jan 2020 08:55:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725908AbgAFIzS (ORCPT
+        id S1726382AbgAFIzQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 6 Jan 2020 03:55:18 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:51406 "EHLO
+        Mon, 6 Jan 2020 03:55:16 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:51386 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726368AbgAFIzR (ORCPT
+        with ESMTP id S1725821AbgAFIzP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Jan 2020 03:55:17 -0500
+        Mon, 6 Jan 2020 03:55:15 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92.2)
         (envelope-from <luca@coelho.fi>)
-        id 1ioOAN-0007qa-Jq; Mon, 06 Jan 2020 10:55:16 +0200
+        id 1ioOAL-0007qa-16; Mon, 06 Jan 2020 10:55:13 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Mon,  6 Jan 2020 10:54:59 +0200
-Message-Id: <20200106085502.363205-10-luca@coelho.fi>
+Date:   Mon,  6 Jan 2020 10:54:56 +0200
+Message-Id: <20200106085502.363205-7-luca@coelho.fi>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200106085502.363205-1-luca@coelho.fi>
 References: <20200106085502.363205-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 09/12] iwlwifi: prph: remove some unused register definitions
+Subject: [PATCH 06/12] iwlwifi: yoyo: check for the domain on all TLV types during init
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-There are some unused register definitions, remove them.
+Now that we don't have dynamically changing domains anymore, we can
+simply skip all the TLVs with domains that are not enabled.  To do so,
+remove the checks from the functions that handle the TLVs when a
+timepoint is reached to the top allocation function.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-prph.h | 7 -------
- 1 file changed, 7 deletions(-)
+ .../net/wireless/intel/iwlwifi/fw/runtime.h   |  2 +-
+ .../net/wireless/intel/iwlwifi/iwl-dbg-tlv.c  | 22 ++++++++-----------
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c  |  2 ++
+ .../net/wireless/intel/iwlwifi/iwl-trans.h    |  2 ++
+ 4 files changed, 14 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-index c21d99418af9..1136d9784f9d 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-@@ -411,13 +411,6 @@ enum {
- 	HW_STEP_LOCATION_BITS = 24,
- };
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
+index 1b4bca717e79..f8c6ed823bc5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
++++ b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
+@@ -69,7 +69,7 @@
+ #include "iwl-eeprom-parse.h"
+ #include "fw/acpi.h"
  
--#define AUX_MISC_MASTER1_EN		0xA20818
--enum aux_misc_master1_en {
--	AUX_MISC_MASTER1_EN_SBE_MSK	= 0x1,
--};
+-#define IWL_FW_DBG_DOMAIN		IWL_FW_INI_DOMAIN_ALWAYS_ON
++#define IWL_FW_DBG_DOMAIN		IWL_TRANS_FW_DBG_DOMAIN(fwrt->trans)
+ 
+ struct iwl_fw_runtime_ops {
+ 	int (*dump_start)(void *ctx);
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
+index 31a0e885faf6..eaf64ca3a134 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c
+@@ -290,10 +290,19 @@ void iwl_dbg_tlv_alloc(struct iwl_trans *trans, struct iwl_ucode_tlv *tlv,
+ 	struct iwl_fw_ini_header *hdr = (void *)&tlv->data[0];
+ 	u32 type = le32_to_cpu(tlv->type);
+ 	u32 tlv_idx = type - IWL_UCODE_TLV_DEBUG_BASE;
++	u32 domain = le32_to_cpu(hdr->domain);
+ 	enum iwl_ini_cfg_state *cfg_state = ext ?
+ 		&trans->dbg.external_ini_cfg : &trans->dbg.internal_ini_cfg;
+ 	int ret;
+ 
++	if (domain != IWL_FW_INI_DOMAIN_ALWAYS_ON &&
++	    !(domain & trans->dbg.domains_bitmap)) {
++		IWL_DEBUG_FW(trans,
++			     "WRT: Skipping TLV with disabled domain 0x%0x (0x%0x)\n",
++			     domain, trans->dbg.domains_bitmap);
++		return;
++	}
++
+ 	if (tlv_idx >= ARRAY_SIZE(dbg_tlv_alloc) || !dbg_tlv_alloc[tlv_idx]) {
+ 		IWL_ERR(trans, "WRT: Unsupported TLV type 0x%x\n", type);
+ 		goto out_err;
+@@ -660,7 +669,6 @@ static void iwl_dbg_tlv_send_hcmds(struct iwl_fw_runtime *fwrt,
+ 	list_for_each_entry(node, hcmd_list, list) {
+ 		struct iwl_fw_ini_hcmd_tlv *hcmd = (void *)node->tlv.data;
+ 		struct iwl_fw_ini_hcmd *hcmd_data = &hcmd->hcmd;
+-		u32 domain = le32_to_cpu(hcmd->hdr.domain);
+ 		u16 hcmd_len = le32_to_cpu(node->tlv.length) - sizeof(*hcmd);
+ 		struct iwl_host_cmd cmd = {
+ 			.id = WIDE_ID(hcmd_data->group, hcmd_data->id),
+@@ -668,10 +676,6 @@ static void iwl_dbg_tlv_send_hcmds(struct iwl_fw_runtime *fwrt,
+ 			.data = { hcmd_data->data, },
+ 		};
+ 
+-		if (domain != IWL_FW_INI_DOMAIN_ALWAYS_ON &&
+-		    !(domain & fwrt->trans->dbg.domains_bitmap))
+-			continue;
 -
--#define AUX_MISC_MASTER1_SMPHR_STATUS	0xA20800
--#define RSA_ENABLE			0xA24B08
- #define PREG_AUX_BUS_WPROT_0		0xA04CC0
+ 		iwl_trans_send_cmd(fwrt->trans, &cmd);
+ 	}
+ }
+@@ -897,12 +901,6 @@ iwl_dbg_tlv_gen_active_trig_list(struct iwl_fw_runtime *fwrt,
  
- /* device family 9000 WPROT register */
+ 	list_for_each_entry(node, trig_list, list) {
+ 		struct iwl_ucode_tlv *tlv = &node->tlv;
+-		struct iwl_fw_ini_trigger_tlv *trig = (void *)tlv->data;
+-		u32 domain = le32_to_cpu(trig->hdr.domain);
+-
+-		if (domain != IWL_FW_INI_DOMAIN_ALWAYS_ON &&
+-		    !(domain & fwrt->trans->dbg.domains_bitmap))
+-			continue;
+ 
+ 		iwl_dbg_tlv_add_active_trigger(fwrt, active_trig_list, tlv);
+ 	}
+@@ -981,8 +979,6 @@ static void iwl_dbg_tlv_init_cfg(struct iwl_fw_runtime *fwrt)
+ 	enum iwl_fw_ini_buffer_location *ini_dest = &fwrt->trans->dbg.ini_dest;
+ 	int ret, i;
+ 
+-	fwrt->trans->dbg.domains_bitmap = IWL_FW_DBG_DOMAIN;
+-
+ 	IWL_DEBUG_FW(fwrt,
+ 		     "WRT: Generating active triggers list, domain 0x%x\n",
+ 		     fwrt->trans->dbg.domains_bitmap);
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+index 4096ccf58b07..c6cb5e1a1bd9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+@@ -1647,6 +1647,8 @@ struct iwl_drv *iwl_drv_start(struct iwl_trans *trans)
+ 	drv->trans->dbgfs_dir = debugfs_create_dir("trans", drv->dbgfs_drv);
+ #endif
+ 
++	drv->trans->dbg.domains_bitmap = IWL_TRANS_FW_DBG_DOMAIN(drv->trans);
++
+ 	ret = iwl_request_firmware(drv, true);
+ 	if (ret) {
+ 		IWL_ERR(trans, "Couldn't request the fw\n");
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index 872cda2be0f6..58bee4442e20 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@ -112,6 +112,8 @@
+  *	6) Eventually, the free function will be called.
+  */
+ 
++#define IWL_TRANS_FW_DBG_DOMAIN(trans)	IWL_FW_INI_DOMAIN_ALWAYS_ON
++
+ #define FH_RSCSR_FRAME_SIZE_MSK		0x00003FFF	/* bits 0-13 */
+ #define FH_RSCSR_FRAME_INVALID		0x55550000
+ #define FH_RSCSR_FRAME_ALIGN		0x40
 -- 
 2.24.1
 
