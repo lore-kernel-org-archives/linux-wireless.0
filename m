@@ -2,130 +2,102 @@ Return-Path: <SRS0=QmZi=24=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61138C33C8C
-	for <linux-wireless@archiver.kernel.org>; Tue,  7 Jan 2020 16:55:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F679C33C9B
+	for <linux-wireless@archiver.kernel.org>; Tue,  7 Jan 2020 20:04:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3757A206DB
-	for <linux-wireless@archiver.kernel.org>; Tue,  7 Jan 2020 16:55:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1578416149;
-	bh=zdByYEGMS3ESVQ5qOHN1kIYsWdU38BLlIlo+0ZPdrE4=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=kbuTL+dYLQ6cv8SkDSkgVXlnx/B/8ufr16zQkKyB6FhFaAiMTkYXA08asB1KAUfPv
-	 8uuwowycATYskRNGJNY7FRsq5C0kyV01DEtLAOu4kJSY7AH4KCTqsAuOHrT8o4zi9k
-	 fFPjLQHbWgXtqixS9aLgmFpxNIZd9XiMMI93WWHg=
+	by mail.kernel.org (Postfix) with ESMTP id 4650C206DB
+	for <linux-wireless@archiver.kernel.org>; Tue,  7 Jan 2020 20:04:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728794AbgAGQzo (ORCPT
+        id S1728727AbgAGUEI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 7 Jan 2020 11:55:44 -0500
-Received: from mail.kernel.org ([198.145.29.99]:44234 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728391AbgAGQzn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Jan 2020 11:55:43 -0500
-Received: from PC-kkoz.proceq.com (unknown [213.160.61.66])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 4236B2467F;
-        Tue,  7 Jan 2020 16:55:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1578416142;
-        bh=zdByYEGMS3ESVQ5qOHN1kIYsWdU38BLlIlo+0ZPdrE4=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=B9XX5z37aO9kO6TkoMZBWRljecz6mxaLsnUJweo1Opz89I73sTah4aguq2M+qbAtk
-         jJqm5ERlXNfIDH66LmWHTiUD9ISWyzlIjrcT5hLgLk+5mFBneKkY4HBIjWPl8jboDN
-         drdv6nwNwT+gPU/NfUpzBRq4v5bgiFQUyIlD1qE4=
-From:   Krzysztof Kozlowski <krzk@kernel.org>
-To:     Richard Henderson <rth@twiddle.net>,
-        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-        Matt Turner <mattst88@gmail.com>,
-        Alexey Brodkin <abrodkin@synopsys.com>,
-        Vineet Gupta <vgupta@synopsys.com>,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        Helge Deller <deller@gmx.de>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Paul Mackerras <paulus@samba.org>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Yoshinori Sato <ysato@users.sourceforge.jp>,
-        Rich Felker <dalias@libc.org>,
-        Dave Airlie <airlied@redhat.com>,
-        David Airlie <airlied@linux.ie>,
-        Daniel Vetter <daniel@ffwll.ch>,
-        Ben Skeggs <bskeggs@redhat.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Jiri Slaby <jirislaby@gmail.com>,
-        Nick Kossifidis <mickflemm@gmail.com>,
-        Luis Chamberlain <mcgrof@kernel.org>,
+        Tue, 7 Jan 2020 15:04:08 -0500
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:36058 "EHLO
+        shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728358AbgAGUEI (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 7 Jan 2020 15:04:08 -0500
+Received: from [167.98.27.226] (helo=deadeye)
+        by shadbolt.decadent.org.uk with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.89)
+        (envelope-from <ben@decadent.org.uk>)
+        id 1iov59-0002jq-C1; Tue, 07 Jan 2020 20:04:03 +0000
+Received: from ben by deadeye with local (Exim 4.93)
+        (envelope-from <ben@decadent.org.uk>)
+        id 1iov58-006ywd-Bs; Tue, 07 Jan 2020 20:04:02 +0000
+Message-ID: <bc4aa741a1da2e4929af072c93566c20729eb687.camel@decadent.org.uk>
+Subject: Re: Please backport "mwifiex: Fix NL80211_TX_POWER_LIMITED" to
+ stable branches
+From:   Ben Hutchings <ben@decadent.org.uk>
+To:     Adrian Bunk <bunk@kernel.org>, netdev@vger.kernel.org
+Cc:     Amitkumar Karwar <amitkarwar@gmail.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Xinming Hu <huxinming820@gmail.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Jon Mason <jdmason@kudzu.us>, Allen Hubbe <allenbh@gmail.com>,
-        "Michael S. Tsirkin" <mst@redhat.com>,
-        Jason Wang <jasowang@redhat.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        linux-alpha@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-snps-arc@lists.infradead.org, linux-parisc@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, linux-sh@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, nouveau@lists.freedesktop.org,
-        linux-media@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-ntb@googlegroups.com,
-        virtualization@lists.linux-foundation.org,
-        linux-arch@vger.kernel.org
-Cc:     Krzysztof Kozlowski <krzk@kernel.org>
-Subject: [RFT 13/13] virtio: pci: Constify ioreadX() iomem argument (as in generic implementation)
-Date:   Tue,  7 Jan 2020 17:53:12 +0100
-Message-Id: <1578415992-24054-16-git-send-email-krzk@kernel.org>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1578415992-24054-1-git-send-email-krzk@kernel.org>
-References: <1578415992-24054-1-git-send-email-krzk@kernel.org>
+        linux-wireless@vger.kernel.org, stable@vger.kernel.org
+Date:   Tue, 07 Jan 2020 20:04:01 +0000
+In-Reply-To: <20191122172431.GA24156@localhost>
+References: <20191122172431.GA24156@localhost>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+        protocol="application/pgp-signature"; boundary="=-74YX61Llp/MokHE9JvDf"
+User-Agent: Evolution 3.34.1-2+b1 
+MIME-Version: 1.0
+X-SA-Exim-Connect-IP: 167.98.27.226
+X-SA-Exim-Mail-From: ben@decadent.org.uk
+X-SA-Exim-Scanned: No (on shadbolt.decadent.org.uk); SAEximRunCond expanded to false
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The ioreadX() helpers have inconsistent interface.  On some architectures
-void *__iomem address argument is a pointer to const, on some not.
 
-Implementations of ioreadX() do not modify the memory under the address
-so they can be converted to a "const" version for const-safety and
-consistency among architectures.
+--=-74YX61Llp/MokHE9JvDf
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Krzysztof Kozlowski <krzk@kernel.org>
----
- drivers/virtio/virtio_pci_modern.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+On Fri, 2019-11-22 at 19:24 +0200, Adrian Bunk wrote:
+> Please backport commit 65a576e27309120e0621f54d5c81eb9128bd56be
+> "mwifiex: Fix NL80211_TX_POWER_LIMITED" to stable branches.
+>=20
+> It is a non-CVE kind of security issue when a wifi adapter
+> exceeds the configured TX power limit.
+>=20
+> The commit applies and builds against all branches from 3.16 to 4.19,=20
+> confirmed working with 4.14. It is already included in kernel 5.3.
 
-diff --git a/drivers/virtio/virtio_pci_modern.c b/drivers/virtio/virtio_pci_modern.c
-index 7abcc50838b8..fc58db4ab6c3 100644
---- a/drivers/virtio/virtio_pci_modern.c
-+++ b/drivers/virtio/virtio_pci_modern.c
-@@ -26,16 +26,16 @@
-  * method, i.e. 32-bit accesses for 32-bit fields, 16-bit accesses
-  * for 16-bit fields and 8-bit accesses for 8-bit fields.
-  */
--static inline u8 vp_ioread8(u8 __iomem *addr)
-+static inline u8 vp_ioread8(const u8 __iomem *addr)
- {
- 	return ioread8(addr);
- }
--static inline u16 vp_ioread16 (__le16 __iomem *addr)
-+static inline u16 vp_ioread16 (const __le16 __iomem *addr)
- {
- 	return ioread16(addr);
- }
- 
--static inline u32 vp_ioread32(__le32 __iomem *addr)
-+static inline u32 vp_ioread32(const __le32 __iomem *addr)
- {
- 	return ioread32(addr);
- }
--- 
-2.7.4
+Queued up for 3.16, thanks.
 
+Ben.
+
+--=20
+Ben Hutchings
+Larkinson's Law: All laws are basically false.
+
+
+
+--=-74YX61Llp/MokHE9JvDf
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEErCspvTSmr92z9o8157/I7JWGEQkFAl4U5DEACgkQ57/I7JWG
+EQk2dxAAmPYtcxPbw0b9aGdDzzHzY6kP+toPYhl9H01J+fy+0zqENAKzTrSKm0Rp
+JEiLmSF2y/HRCvy1CKAvZjpfa/32yo9HWyeyYemQkLCJChNP8An4CUoQQKaf+EF0
+yIq3ZNDpJLv6fL1EeyWMSmBVRSJmFbDpJt2R6OiO1UlnaCgpGRbyW1GgyRf2Iy0a
+d5NujUUrFU6PNNHaP1aUUvVl7cEPQsxg9glmURz9dGZ6I2vAjZAHksYThJ9Cp/EQ
+5N5QeYaAP+VPFIwrHD8PbBt3QqaB/qN6mKVYJQ0jon5WmN4v+3+Ps9oVy/d3hv0L
+IARiS+Z0G4MzZJzgfebA2HvhCgAcars6iWWdHKd3a+Xa/cr/lscLfSh5LUZWL8Dw
+lNk7jUPjZJMGHKu+e3hX9QxJS7NIik83W2noHHezCwneVpKZrB+1ACqT61AlZ6+c
+Hrs2zAODLqx9Iu2zi8lyRUDVmqBx8rsuVjayGBTd/ulMoOJrA9+t5DyyAPGKOTB8
+e/Z8iP8qBhxMGU/ddLlImeXdOx0nfTpEIuvPMQIbpYYLdxes+Epfr+o3OY+k8R59
+ZMvCvPcXMknXbOajYCWG7I6k0eForw8oI6zjQgQ/PWg9fPfi1lEfgcIG5MjIh/iq
+kJlNb2lpDOcuPM3ULqIEbwCDtI4DnEXGgw7BoA+G5qvvG+ShR74=
+=sTMY
+-----END PGP SIGNATURE-----
+
+--=-74YX61Llp/MokHE9JvDf--
