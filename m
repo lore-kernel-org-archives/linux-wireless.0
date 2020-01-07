@@ -2,117 +2,80 @@ Return-Path: <SRS0=QmZi=24=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.4 required=3.0 tests=FROM_LOCAL_HEX,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85596C33C99
-	for <linux-wireless@archiver.kernel.org>; Tue,  7 Jan 2020 09:52:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07D44C33C99
+	for <linux-wireless@archiver.kernel.org>; Tue,  7 Jan 2020 10:12:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 60C8D2081E
-	for <linux-wireless@archiver.kernel.org>; Tue,  7 Jan 2020 09:52:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D0DF920678
+	for <linux-wireless@archiver.kernel.org>; Tue,  7 Jan 2020 10:12:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727211AbgAGJwF (ORCPT
+        id S1727736AbgAGKMC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 7 Jan 2020 04:52:05 -0500
-Received: from relay7-d.mail.gandi.net ([217.70.183.200]:37901 "EHLO
-        relay7-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726558AbgAGJwF (ORCPT
+        Tue, 7 Jan 2020 05:12:02 -0500
+Received: from mail-io1-f70.google.com ([209.85.166.70]:51832 "EHLO
+        mail-io1-f70.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727084AbgAGKMC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 7 Jan 2020 04:52:05 -0500
-X-Originating-IP: 83.155.44.161
-Received: from classic (mon69-7-83-155-44-161.fbx.proxad.net [83.155.44.161])
-        (Authenticated sender: hadess@hadess.net)
-        by relay7-d.mail.gandi.net (Postfix) with ESMTPSA id 2DBA02000F;
-        Tue,  7 Jan 2020 09:52:02 +0000 (UTC)
-Message-ID: <d96a7108ce72bd00c58a07fbed529ab4b1702466.camel@hadess.net>
-Subject: [PATCH] rtl8188eu: Add rtw_led_enable module parameter
-From:   Bastien Nocera <hadess@hadess.net>
-To:     Larry Finger <Larry.Finger@lwfinger.net>
-Cc:     linux-wireless@vger.kernel.org
-Date:   Tue, 07 Jan 2020 10:52:02 +0100
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.34.2 (3.34.2-1.fc31) 
+        Tue, 7 Jan 2020 05:12:02 -0500
+Received: by mail-io1-f70.google.com with SMTP id t18so32693334iob.18
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Jan 2020 02:12:01 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:date:in-reply-to:message-id:subject
+         :from:to;
+        bh=uY0IMSD0dpLD3QQHBJ18OrMq7eBYbFB7tHn+vZdbCpU=;
+        b=Q0ZfB4/JKWvUGARaDL4PGttlzBOELFXVmnYZYfM6rdhITDgv3302FF3PVXrbGHO/Qn
+         VSAMq9bdwrALw+tnQc77qb2BDB8XtqxarD9zVrO64ijOEnk5Mzb+0sPZM3XEthSr0yEE
+         T0ZrCwS1eXqhdh6z7a/lc+DMpyMVMhPyq2mlQY+0uMPCWe5E0fEP1uzAde42YK4szEUz
+         sagQyGeJmQVQjcOsapk1WhOatI7yaqe1fd+0wTtEV5rN8AoCDhv0lXKYoyb8FYOPQzGW
+         yz+z6q09Rk3NVEv20YEEObx6VaVAX4654ompu7HuM3tS286pgditzUomwWDaM1TxfIwL
+         7SbQ==
+X-Gm-Message-State: APjAAAWa1b4bO+sSCxYwgyZGzGsiy11sfLUVTup6K0mnRoooHp2Oe/Xy
+        bfU9UWOJ6wEyvfwZVOlwd8rHR4tIMLmVf9/xaFF6f/FGIvW7
+X-Google-Smtp-Source: APXvYqwv0/OkCF9+faxbADAvRTX3QIb9FKZF7SgcrbkDTc9kexfy5mcSiu6q64gZKoVVyGS18zybmgeFYRrHU+aAiI+B41Zqko2l
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+X-Received: by 2002:a5d:8cda:: with SMTP id k26mr48129317iot.26.1578391921440;
+ Tue, 07 Jan 2020 02:12:01 -0800 (PST)
+Date:   Tue, 07 Jan 2020 02:12:01 -0800
+In-Reply-To: <0000000000004ceb27059b868b57@google.com>
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <000000000000cb3c3c059b8a01e3@google.com>
+Subject: Re: BUG: unable to handle kernel NULL pointer dereference in cfg80211_wext_siwfrag
+From:   syzbot <syzbot+e8a797964a4180eb57d5@syzkaller.appspotmail.com>
+To:     astrachan@google.com, davem@davemloft.net, ghartman@google.com,
+        johannes.berg@intel.com, johannes@sipsolutions.net,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        muntsinger@google.com, netdev@vger.kernel.org,
+        schuffelen@google.com, syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"; format=flowed; delsp=yes
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Make it possible to disable the LED, as it can be pretty annoying
-depending on where it's located.
+syzbot has bisected this bug to:
 
-Signed-off-by: Bastien Nocera <hadess@hadess.net>
+commit c7cdba31ed8b87526db978976392802d3f93110c
+Author: Cody Schuffelen <schuffelen@google.com>
+Date:   Wed Nov 21 03:14:49 2018 +0000
 
----
- drivers/staging/rtl8188eu/core/rtw_led.c      | 6 ++++++
- drivers/staging/rtl8188eu/include/drv_types.h | 2 ++
- drivers/staging/rtl8188eu/os_dep/os_intfs.c   | 5 +++++
- 3 files changed, 13 insertions(+)
+     mac80211-next: rtnetlink wifi simulation device
 
-diff --git a/drivers/staging/rtl8188eu/core/rtw_led.c b/drivers/staging/rtl8188eu/core/rtw_led.c
-index d1406cc99768..75a859accb7e 100644
---- a/drivers/staging/rtl8188eu/core/rtw_led.c
-+++ b/drivers/staging/rtl8188eu/core/rtw_led.c
-@@ -467,10 +467,16 @@ void blink_handler(struct LED_871x *pLed)
- 
- void led_control_8188eu(struct adapter *padapter, enum LED_CTL_MODE LedAction)
- {
-+	struct registry_priv *registry_par;
-+
- 	if (padapter->bSurpriseRemoved || padapter->bDriverStopped ||
- 	    !padapter->hw_init_completed)
- 		return;
- 
-+	registry_par = &padapter->registrypriv;
-+	if (!registry_par->led_enable)
-+		return;
-+
- 	if ((padapter->pwrctrlpriv.rf_pwrstate != rf_on &&
- 	     padapter->pwrctrlpriv.rfoff_reason > RF_CHANGE_BY_PS) &&
- 	    (LedAction == LED_CTL_TX || LedAction == LED_CTL_RX ||
-diff --git a/drivers/staging/rtl8188eu/include/drv_types.h b/drivers/staging/rtl8188eu/include/drv_types.h
-index 35c0946bc65d..4ca828141d3f 100644
---- a/drivers/staging/rtl8188eu/include/drv_types.h
-+++ b/drivers/staging/rtl8188eu/include/drv_types.h
-@@ -67,6 +67,8 @@ struct registry_priv {
- 	u8	wmm_enable;
- 	u8	uapsd_enable;
- 
-+	u8	led_enable;
-+
- 	struct wlan_bssid_ex    dev_network;
- 
- 	u8	ht_enable;
-diff --git a/drivers/staging/rtl8188eu/os_dep/os_intfs.c b/drivers/staging/rtl8188eu/os_dep/os_intfs.c
-index 8907bf6bb7ff..ba55ae741215 100644
---- a/drivers/staging/rtl8188eu/os_dep/os_intfs.c
-+++ b/drivers/staging/rtl8188eu/os_dep/os_intfs.c
-@@ -47,6 +47,8 @@ static int rtw_acm_method;/*  0:By SW 1:By HW. */
- static int rtw_wmm_enable = 1;/*  default is set to enable the wmm. */
- static int rtw_uapsd_enable;
- 
-+static int rtw_led_enable = 1;
-+
- static int rtw_ht_enable = 1;
- /* 0 :disable, bit(0): enable 2.4g, bit(1): enable 5g */
- static int rtw_cbw40_enable = 3;
-@@ -98,6 +100,7 @@ module_param(rtw_channel, int, 0644);
- module_param(rtw_wmm_enable, int, 0644);
- module_param(rtw_vrtl_carrier_sense, int, 0644);
- module_param(rtw_vcs_type, int, 0644);
-+module_param(rtw_led_enable, int, 0644);
- module_param(rtw_ht_enable, int, 0644);
- module_param(rtw_cbw40_enable, int, 0644);
- module_param(rtw_ampdu_enable, int, 0644);
-@@ -162,6 +165,8 @@ static void loadparam(struct adapter *padapter, struct net_device *pnetdev)
- 	registry_par->wmm_enable = (u8)rtw_wmm_enable;
- 	registry_par->uapsd_enable = (u8)rtw_uapsd_enable;
- 
-+	registry_par->led_enable = (u8)rtw_led_enable;
-+
- 	registry_par->ht_enable = (u8)rtw_ht_enable;
- 	registry_par->cbw40_enable = (u8)rtw_cbw40_enable;
- 	registry_par->ampdu_enable = (u8)rtw_ampdu_enable;
+bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=11cf6885e00000
+start commit:   d89091a4 macb: Don't unregister clks unconditionally
+git tree:       net
+final crash:    https://syzkaller.appspot.com/x/report.txt?x=13cf6885e00000
+console output: https://syzkaller.appspot.com/x/log.txt?x=15cf6885e00000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=f2f3ef188b7e16cf
+dashboard link: https://syzkaller.appspot.com/bug?extid=e8a797964a4180eb57d5
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=15c85915e00000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=11c02bc1e00000
 
+Reported-by: syzbot+e8a797964a4180eb57d5@syzkaller.appspotmail.com
+Fixes: c7cdba31ed8b ("mac80211-next: rtnetlink wifi simulation device")
+
+For information about bisection process see: https://goo.gl/tpsmEJ#bisection
