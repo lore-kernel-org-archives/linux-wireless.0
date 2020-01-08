@@ -2,79 +2,74 @@ Return-Path: <SRS0=curT=25=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50E42C33CA2
-	for <linux-wireless@archiver.kernel.org>; Wed,  8 Jan 2020 17:06:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 989FCC282DD
+	for <linux-wireless@archiver.kernel.org>; Wed,  8 Jan 2020 17:54:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1F7192067D
-	for <linux-wireless@archiver.kernel.org>; Wed,  8 Jan 2020 17:06:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 67C5E20705
+	for <linux-wireless@archiver.kernel.org>; Wed,  8 Jan 2020 17:54:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="MbVAnA1X"
+	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="WxkdEKRf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729638AbgAHRGd (ORCPT
+        id S1728437AbgAHRyt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 8 Jan 2020 12:06:33 -0500
-Received: from nbd.name ([46.4.11.11]:36458 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729544AbgAHRGd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Jan 2020 12:06:33 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
-        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=YHvMwTEucT6PMku9udp5ErJhGFDrBf/G1+2ch4qbZ7I=; b=MbVAnA1XOWMwnFAoe+kF9xs8HH
-        k+XDVfLvtVSHv+nitawHe5NWu2UG+Up3NnR57/fKTOPl74B2vmEqfY4XmQNg+tQM33UqAprmQwQwX
-        TeRvjE5sZlu444ZMFRf8hFg42QxsLInyRpMOnABw18pX9qkkbxP838hIFrvzE70exWz4=;
-Received: from [217.114.218.21] (helo=maeck.local)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.89)
-        (envelope-from <nbd@nbd.name>)
-        id 1ipEmt-0008CP-Os; Wed, 08 Jan 2020 18:06:31 +0100
-Received: by maeck.local (Postfix, from userid 501)
-        id 0105B770B711; Wed,  8 Jan 2020 18:06:30 +0100 (CET)
-From:   Felix Fietkau <nbd@nbd.name>
-To:     linux-wireless@vger.kernel.org
-Cc:     johannes@sipsolutions.net
-Subject: [PATCH 5.5 2/2] cfg80211: fix memory leak in cfg80211_cqm_rssi_update
-Date:   Wed,  8 Jan 2020 18:06:30 +0100
-Message-Id: <20200108170630.33680-2-nbd@nbd.name>
-X-Mailer: git-send-email 2.24.0
-In-Reply-To: <20200108170630.33680-1-nbd@nbd.name>
-References: <20200108170630.33680-1-nbd@nbd.name>
+        Wed, 8 Jan 2020 12:54:49 -0500
+Received: from mail2.candelatech.com ([208.74.158.173]:47128 "EHLO
+        mail3.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727358AbgAHRyt (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 8 Jan 2020 12:54:49 -0500
+Received: from [192.168.100.195] (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail3.candelatech.com (Postfix) with ESMTPSA id C45DF13C340
+        for <linux-wireless@vger.kernel.org>; Wed,  8 Jan 2020 09:54:48 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com C45DF13C340
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
+        s=default; t=1578506088;
+        bh=zGanaNGSpfMubaMAL7C+H8kveJA9BkkHMFGXf7s+CcI=;
+        h=To:From:Subject:Date:From;
+        b=WxkdEKRfxlyqG0CcacSfAeHBjH3q18LAasEBcR53FHvyfoHeTus0zpgc5AwRtFCTc
+         TDLAB4FrWwzfhwK3Ar2+7u2WJcpMr18XriHTexPmV9OIjYCLHyqYGIOmD0SKSdDDoO
+         H2u5BhL7Md6yGA/TID6gBNV4SHhc7oI16LLwc2Sg=
+To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From:   Ben Greear <greearb@candelatech.com>
+Subject: Does ath10k firmware need to do congestion control?
+Organization: Candela Technologies
+Message-ID: <20d8f9cf-1b5c-6617-f0a6-4f0083c6d64c@candelatech.com>
+Date:   Wed, 8 Jan 2020 09:54:48 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.2.2
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The per-tid statistics need to be released after the call to rdev_get_station
+Hello,
 
-Cc: stable@vger.kernel.org
-Fixes: 8689c051a201 ("cfg80211: dynamically allocate per-tid stats for station info")
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- net/wireless/nl80211.c | 1 +
- 1 file changed, 1 insertion(+)
+While debugging some packet drops in the tx path with ath10k-ct wave-2 stuff,
+we found that the firmware congestion control was causing packets to be discarded.  The congestion
+control tries to reserve a certain number of descriptors for higher priority packets,
+so the driver never applies any real back pressure since it will have some tx descriptors
+available (though firmware will immediately drop them).
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 73e1430c7ac5..1e97ac5435b2 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -10843,6 +10843,7 @@ static int cfg80211_cqm_rssi_update(struct cfg80211_registered_device *rdev,
- 		if (err)
- 			return err;
- 
-+		cfg80211_sinfo_release_content(&sinfo);
- 		if (sinfo.filled & BIT_ULL(NL80211_STA_INFO_BEACON_SIGNAL_AVG))
- 			wdev->cqm_config->last_rssi_event_value =
- 				(s8) sinfo.rx_beacon_signal_avg;
+If the upper stacks are already doing QoS/WMM type logic, then there should be little use
+of leaving the congestion control compiled into the firmware.
+
+So question is:  What is the state of the upper stack with regard to QoS/WMM congestion
+control and throttling?
+
+Thanks,
+Ben
+
 -- 
-2.24.0
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
