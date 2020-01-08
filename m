@@ -2,95 +2,78 @@ Return-Path: <SRS0=curT=25=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BDBDC33CA1
-	for <linux-wireless@archiver.kernel.org>; Wed,  8 Jan 2020 16:25:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E888CC282DD
+	for <linux-wireless@archiver.kernel.org>; Wed,  8 Jan 2020 17:06:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CC20E2072A
-	for <linux-wireless@archiver.kernel.org>; Wed,  8 Jan 2020 16:25:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1578500726;
-	bh=1wADvEiqa9qIsC7lGv534Zmj9LZwtYZ8+g3o5ggAR6A=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=HvJfxhRpd3VgV4Z6sxT4mqXxtrOmObqM+aaupdxWHGQv5TAi404cYiUFR6tybYxnZ
-	 WXCYeodheERbMvPyMzlxFdj1Zdyz52k20yfNdMEMU3PNIsHmxhXEulmUFUqPrXtwMr
-	 I/HeE+y3qPGodutz0flEUDGpeSwdNFUkINJJhBjs=
+	by mail.kernel.org (Postfix) with ESMTP id 8EEF720705
+	for <linux-wireless@archiver.kernel.org>; Wed,  8 Jan 2020 17:06:34 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="Y62P9UaK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728589AbgAHQZZ (ORCPT
+        id S1729640AbgAHRGe (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 8 Jan 2020 11:25:25 -0500
-Received: from mail-oi1-f196.google.com ([209.85.167.196]:42359 "EHLO
-        mail-oi1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727334AbgAHQZY (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 8 Jan 2020 11:25:24 -0500
-Received: by mail-oi1-f196.google.com with SMTP id 18so3105453oin.9
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Jan 2020 08:25:24 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=Yz35zFP2aSNw0+gIRfSaZMhcsEm+gudXf2tyLjffdvY=;
-        b=PQK9KX5s7JOef8i5kPnKg+xx0pOlWJlVg1omYqnQCFHSKhOWphJgnRDPSxXMsGQ61U
-         gUg7djgA+ZDe9OEmGnfEmUX7/TRgSD5YIEtzcseeSHcfgBpa0V/2bD2pC1/TLpqjyUD8
-         KoygiRPvrV3Db9Zlc418c17/wk0EEuWLfq2vjkO19rXHmuNSzoTAoBB1Xcuz09XslMxH
-         oxUNFfJIHkc6LUxJNLN9ARsBk39dAbkwqIgu9+i7HA3HWM7AD1DPA3ZdguuJetVgP0fx
-         kXpd79S1io5pNUqkr6ZgqYNsWxD2npjm2if1+TZWqq4JJ6aEZTd3znZxLFN7b/CGTn15
-         dLig==
-X-Gm-Message-State: APjAAAXKRLevFg4taqvEAOLgLCWRFDPzSBHgrK1eLF2BTQx/qN1rhhLS
-        sBmHvIj6HFZ/HqiKyddgLC1HJ0g=
-X-Google-Smtp-Source: APXvYqxyM3rm1T6uoV5fIaMzlwsncL4aiyUY098pUPxy/D/rCP7vToxoXpZ2H0qViGcDg5YqaVQ7NQ==
-X-Received: by 2002:a05:6808:c:: with SMTP id u12mr3797554oic.107.1578500723502;
-        Wed, 08 Jan 2020 08:25:23 -0800 (PST)
-Received: from rob-hp-laptop (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
-        by smtp.gmail.com with ESMTPSA id m3sm1253315otf.13.2020.01.08.08.25.22
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 08 Jan 2020 08:25:22 -0800 (PST)
-Received: from rob (uid 1000)
-        (envelope-from rob@rob-hp-laptop)
-        id 220333
-        by rob-hp-laptop (DragonFly Mail Agent v0.11);
-        Wed, 08 Jan 2020 10:25:21 -0600
-Date:   Wed, 8 Jan 2020 10:25:21 -0600
-From:   Rob Herring <robh@kernel.org>
-To:     Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc:     Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Andy Gross <agross@kernel.org>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        ath10k@lists.infradead.org
-Subject: Re: [PATCH 1/2] ath10k: Add optional qdss clk
-Message-ID: <20200108162521.GA23484@bogus>
-References: <20191223054855.3020665-1-bjorn.andersson@linaro.org>
- <20191223054855.3020665-2-bjorn.andersson@linaro.org>
+        Wed, 8 Jan 2020 12:06:34 -0500
+Received: from nbd.name ([46.4.11.11]:36460 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729625AbgAHRGd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 8 Jan 2020 12:06:33 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-Id:Date:Subject
+        :Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:Content-Description:
+        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
+        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=38SI0OWwuUqT0gGsBOu+go89uE3cghIj39aRp31c7Ic=; b=Y62P9UaK8x62GUPQ0D6MOVUqR/
+        1TKbxPW0mJAfoJC9jveJE6+Qek28jf7RbzhrrQ7+Ydxu84jJi3s2e5f30hTfUGtty1HPUvJXLGGBP
+        YCykpV9wSGmuFWVXv2vVhOGfENXx4jWT55MgsdANYUUQK3UHRoICqZgeYhpPt2EujeTE=;
+Received: from [217.114.218.21] (helo=maeck.local)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.89)
+        (envelope-from <nbd@nbd.name>)
+        id 1ipEmt-0008CQ-Or; Wed, 08 Jan 2020 18:06:31 +0100
+Received: by maeck.local (Postfix, from userid 501)
+        id 05C33770B712; Wed,  8 Jan 2020 18:06:30 +0100 (CET)
+From:   Felix Fietkau <nbd@nbd.name>
+To:     linux-wireless@vger.kernel.org
+Cc:     johannes@sipsolutions.net
+Subject: [PATCH 5.5 1/2] cfg80211: fix memory leak in nl80211_probe_mesh_link
+Date:   Wed,  8 Jan 2020 18:06:29 +0100
+Message-Id: <20200108170630.33680-1-nbd@nbd.name>
+X-Mailer: git-send-email 2.24.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191223054855.3020665-2-bjorn.andersson@linaro.org>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Sun, 22 Dec 2019 21:48:54 -0800, Bjorn Andersson wrote:
-> The WiFi firmware found on sm8150 requires that the QDSS clock is
-> ticking in order to operate, so add an optional clock to the binding to
-> allow this to be specified in the sm8150 dts and add the clock to the
-> list of clocks in the driver.
-> 
-> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
-> ---
->  Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt | 2 +-
->  drivers/net/wireless/ath/ath10k/snoc.c                         | 2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
-> 
+The per-tid statistics need to be released after the call to rdev_get_station
 
-Acked-by: Rob Herring <robh@kernel.org>
+Cc: stable@vger.kernel.org
+Fixes: 5ab92e7fe49a ("cfg80211: add support to probe unexercised mesh link")
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ net/wireless/nl80211.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index da5262b2298b..73e1430c7ac5 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -13796,6 +13796,8 @@ static int nl80211_probe_mesh_link(struct sk_buff *skb, struct genl_info *info)
+ 	if (err)
+ 		return err;
+ 
++	cfg80211_sinfo_release_content(&sinfo);
++
+ 	return rdev_probe_mesh_link(rdev, dev, dest, buf, len);
+ }
+ 
+-- 
+2.24.0
+
