@@ -2,152 +2,80 @@ Return-Path: <SRS0=g5AP=26=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MSGID_FROM_MTA_HEADER,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EBE5AC282DD
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Jan 2020 13:19:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C0A93C282DD
+	for <linux-wireless@archiver.kernel.org>; Thu,  9 Jan 2020 13:27:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B44102077C
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Jan 2020 13:19:08 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=quantenna.com header.i=@quantenna.com header.b="a9ew6H4S"
+	by mail.kernel.org (Postfix) with ESMTP id 91A6F206ED
+	for <linux-wireless@archiver.kernel.org>; Thu,  9 Jan 2020 13:27:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1578576429;
+	bh=5Dutj5SPgZdkqUE2Bxk1qhUQSr/44SA549RFqckrHbM=;
+	h=From:To:Cc:Subject:Date:List-ID:From;
+	b=l2fUE8W/MrpRqO9RaLB7AFL+4MG4iwe9mHJpP398pCC8dhXfj8nyrW3+PscrUYZNF
+	 c1f8hybnEaA0QF9fkC3mK3FE47z/lmPOkC6bZJJ4Utkb6Hrct+Y5NyYCGBg6LCSH8M
+	 m626SY8SKOGU9/6ZHQrT3J2ICvBYohGOXc3JVr5M=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731027AbgAINTI (ORCPT
+        id S1729905AbgAIN1I (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 9 Jan 2020 08:19:08 -0500
-Received: from mx0a-00183b01.pphosted.com ([67.231.149.44]:42774 "EHLO
-        mx0a-00183b01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730916AbgAINTH (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Jan 2020 08:19:07 -0500
-Received: from pps.filterd (m0059812.ppops.net [127.0.0.1])
-        by m0059812.ppops.net (8.16.0.42/8.16.0.42) with SMTP id 009DBojk030668
-        for <linux-wireless@vger.kernel.org>; Thu, 9 Jan 2020 06:19:06 -0700
-Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11lp2172.outbound.protection.outlook.com [104.47.56.172])
-        by m0059812.ppops.net with ESMTP id 2xap4wwh1j-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Jan 2020 06:19:06 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=cOqnrIjRq29Bdl2MkCBpwiwZAg7viv/CcoMiyAUFWKn/YRdC0KvzyergUkDm/hZIW1UJ1PHaTD+dh5Np1jBfAXICDCZ+X3e1kBBUt1c/l0i1xivR7BFADfLUkRqhpR7xR/5GEgEMa2HZP/fYspcThMfIamL4kJNjwSB6VncMV2MhETps69Fl21zwVw790l6QRAbKk6LjY64p4vdbU5yvsXiCGklWBzC9bZZp1WUs6E/NyhcfYm4lOyIi/USA9YhSSoKgFaQp2okckeg+EnWZh+OJS9XBBk6m+mQ1xGGkNccfYazq9/e/jzbDQtC9+huzmpRQ9DWEA1xGRaNr4QDkVQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=NCfV2qyprWmWuSjbPDOi6dG2OWq6h7VzAj1Oq4a8NcA=;
- b=DcNuPugL/qpXcmVMUff3MekGTJyggJJUdWQRGxDJIe/nlDdNyHhDmDrW6Gj4h+V1wl4jQJqSyVv8b73aeXThhuAPE8jCVgzQswnb3amQ0Y8QCwC45RQOB3/poP+XKofV7kWjJoiJe/DA0hyiXo+Q2Sp2gIW3ESIrRyriOtktxiv21WSYAwbrQ/BFvIcBuYUG1Fp4DgJy2RzBFZA3920B3M/VFFase/4iFjbEQtknPM8+eHbDQHNFmsRN6+hUaLr2kPWOTJM8tZu33LpCBLy0rU0mn6x6cHPk9iSfg3A8i3lAs//wVGmfn/N3x/ARRf3I/ABIFPjUbN/oVX+Vnzp4GA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=quantenna.com; dmarc=pass action=none
- header.from=quantenna.com; dkim=pass header.d=quantenna.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quantenna.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=NCfV2qyprWmWuSjbPDOi6dG2OWq6h7VzAj1Oq4a8NcA=;
- b=a9ew6H4SztjAikPFLtVXi/utQwN1m2lH9ZSDZvNs/Ve5vp82eBcs6vsX1pNow6I7yxyvFa/FCsGHeZD0hMSGqqmEFpuaK53ogroPpWVvMAbwURcAWtaAPowclamAp7TvbjOroRGJalVBuNETVEyaGGvdM+MrvTAd7BlS/+ln0OE=
-Received: from DM5PR0501MB3718.namprd05.prod.outlook.com (10.167.107.143) by
- DM5PR0501MB3735.namprd05.prod.outlook.com (10.167.107.148) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2644.5; Thu, 9 Jan 2020 13:19:05 +0000
-Received: from DM5PR0501MB3718.namprd05.prod.outlook.com
- ([fe80::c0dc:d81b:b815:afc9]) by DM5PR0501MB3718.namprd05.prod.outlook.com
- ([fe80::c0dc:d81b:b815:afc9%6]) with mapi id 15.20.2623.008; Thu, 9 Jan 2020
- 13:19:02 +0000
-Received: from SN6PR05MB4928.namprd05.prod.outlook.com (52.135.117.74) by
- SN6PR05MB4637.namprd05.prod.outlook.com (52.135.114.154) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2644.6; Thu, 9 Jan 2020 13:18:12 +0000
-Received: from SN6PR05MB4928.namprd05.prod.outlook.com
- ([fe80::2956:4ff3:7d5b:333c]) by SN6PR05MB4928.namprd05.prod.outlook.com
- ([fe80::2956:4ff3:7d5b:333c%5]) with mapi id 15.20.2623.010; Thu, 9 Jan 2020
- 13:18:12 +0000
-From:   Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To:     linux-wireless@vger.kernel.org
-CC:     Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Mikhail Karpenko <mkarpenko@quantenna.com>,
-        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Subject: [PATCH 4/5] qtnfmac: add support for STA HE rates
-Date:   Thu,  9 Jan 2020 16:17:54 +0300
-Message-ID: <20200109131755.7729-5-sergey.matyukevich.os@quantenna.com>
-X-Mailer: git-send-email 2.11.0
-In-Reply-To: <20200109131755.7729-1-sergey.matyukevich.os@quantenna.com>
-References: <20200109131755.7729-1-sergey.matyukevich.os@quantenna.com>
-Content-Type: text/plain
-X-ClientProxiedBy: HE1PR0901CA0053.eurprd09.prod.outlook.com
- (2603:10a6:3:45::21) To SN6PR05MB4928.namprd05.prod.outlook.com
- (2603:10b6:805:9d::10)
+        Thu, 9 Jan 2020 08:27:08 -0500
+Received: from mail.kernel.org ([198.145.29.99]:51180 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727861AbgAIN1I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 9 Jan 2020 08:27:08 -0500
+Received: from localhost.localdomain.com (mob-176-246-50-46.net.vodafone.it [176.246.50.46])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id D609320661;
+        Thu,  9 Jan 2020 13:27:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1578576427;
+        bh=5Dutj5SPgZdkqUE2Bxk1qhUQSr/44SA549RFqckrHbM=;
+        h=From:To:Cc:Subject:Date:From;
+        b=pLY4Kd37SM6Aigh14jddXrmGQ1bZWdDZRr1SyHlCg9+WmjE045ay6FuUYdfPFQcz1
+         1Sc3NsaL7mstdCaxi8pAeRspWcqkkgAKXkAFkIoKTW8XWLmRod59fWPRZmQSRszIXi
+         3JoPoy/5rYEu6HSawcS5DY5i58HZ1+QwuzzVXl6Y=
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     nbd@nbd.name
+Cc:     lorenzo.bianconi@redhat.com, ryder.lee@mediatek.com,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH] mt76: mt7615: remove leftover routine declaration
+Date:   Thu,  9 Jan 2020 14:26:53 +0100
+Message-Id: <d3c445a6de21fd2d02e4ba8e1b972148140b0043.1578576181.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.21.1
 MIME-Version: 1.0
-Received: from bars.quantenna.com (195.182.157.78) by HE1PR0901CA0053.eurprd09.prod.outlook.com (2603:10a6:3:45::21) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2623.8 via Frontend Transport; Thu, 9 Jan 2020 13:18:10 +0000
-X-Mailer: git-send-email 2.11.0
-X-Originating-IP: [195.182.157.78]
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 706dc147-f2d7-47cb-3f44-08d79506609a
-X-MS-TrafficTypeDiagnostic: SN6PR05MB4637:|DM5PR0501MB3735:
-X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <SN6PR05MB4637172A791A9009CC517E31A3390@SN6PR05MB4637.namprd05.prod.outlook.com>
-X-Moderation-Data: 1/9/2020 1:18:59 PM
-X-MS-Oob-TLC-OOBClassifiers: OLM:106;
-X-Forefront-PRVS: 02778BF158
-X-Forefront-Antispam-Report: SFV:NSPM;SFS:(10009020)(136003)(39850400004)(346002)(366004)(396003)(376002)(199004)(189003)(16526019)(107886003)(26005)(956004)(103116003)(8676002)(186003)(66476007)(5660300002)(2616005)(4326008)(66556008)(6486002)(6666004)(66946007)(478600001)(6916009)(2906002)(1076003)(86362001)(81166006)(36756003)(81156014)(316002)(8936002)(52116002)(7696005)(54906003);DIR:OUT;SFP:1101;SCL:1;SRVR:DM5PR0501MB3735;H:DM5PR0501MB3718.namprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-Received-SPF: None (protection.outlook.com: quantenna.com does not designate
- permitted sender hosts)
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: GzenDb3NcuB3hRSIikw6RrwcuGh0tj3BQBsB9Ejpv2DccKED+krnzSFDhLcGt5f0GsJkHDjSJQ+JAvs+HIGABWinxDDdVRhRO15fE8nGgoJ9yTmuso9dFpM5pqaHQWCUiQmVXTRxq852fzBPLB8xQIqo9RiK4d3ez4UTVAS/OQv3JxNCqrVOnWINpY3UAsvkwRHc+l6Vmqlm7+M43Ej7YyIrwVhjJpOfkQz91bcepcCuSRsqV1bitT70XCUp8lzjSRC+DQLZNW8wE+HzDYeDpokz7//B1dbVKFGom7oPAX7tBoTAzlHotDm/3GdeXEzQGVaouWZevQ0xBBNO35cpf0kSNQtP1t/QqVRfCDKG8bwspW+BSaUiYpRwS5FthFtlMgLw1nvvSgapdMMm5VkOCm0xCgO8+ORuK663qnynC7Wm3LmtMHSqcZBaOgoGMI5E
-X-OriginatorOrg: quantenna.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 706dc147-f2d7-47cb-3f44-08d79506609a
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: a355dbce-62b4-4789-9446-c1d5582180ff
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 3yP8qjct8STJCNY4k+nb71sv4re0jfbwm8blK2quBYJTAMfxgtiGYZWma0vWZfN15jSrxq1fDt2e48Y2drbzt2TtUlv1AShPftsdKybpvNT7N9CHzyju1CPvvfRWfVV4fv09e+rNZjHDgNAR9W4J0Mgd/662XXyA89d0+7kJGr+pEWZIDxNHxhUmpAsTaVD5mwXA4akyr2Vd78FFh7nRZU3RRGoGijdMpO7pydYP2Bc=
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Jan 2020 13:19:02.7786
- (UTC)
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR0501MB3735
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.572
- definitions=2020-01-09_02:2020-01-09,2020-01-09 signatures=0
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxscore=0 spamscore=0
- bulkscore=0 lowpriorityscore=0 suspectscore=1 clxscore=1015
- mlxlogscore=690 phishscore=0 adultscore=0 impostorscore=0
- priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-1910280000 definitions=main-2001090117
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add HE rates into STA info. Report HE Rx/Tx MCS if STA supports them.
+Get rid of mt76_dfs_start_rdd unused declaration
 
-Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
- drivers/net/wireless/quantenna/qtnfmac/commands.c | 2 ++
- drivers/net/wireless/quantenna/qtnfmac/qlink.h    | 1 +
- 2 files changed, 3 insertions(+)
+This patch is based on "mt76: mt7615: initialize radar specs from host driver"
+https://patchwork.kernel.org/patch/11314021/
+---
+ drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-index fbeff01f902a..fa932f771856 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-@@ -510,6 +510,8 @@ qtnf_sta_info_parse_rate(struct rate_info *rate_dst,
- 		rate_dst->flags |= RATE_INFO_FLAGS_MCS;
- 	else if (rate_src->flags & QLINK_STA_INFO_RATE_FLAG_VHT_MCS)
- 		rate_dst->flags |= RATE_INFO_FLAGS_VHT_MCS;
-+	else if (rate_src->flags & QLINK_STA_INFO_RATE_FLAG_HE_MCS)
-+		rate_dst->flags |= RATE_INFO_FLAGS_HE_MCS;
- 
- 	if (rate_src->flags & QLINK_STA_INFO_RATE_FLAG_SHORT_GI)
- 		rate_dst->flags |= RATE_INFO_FLAGS_SHORT_GI;
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink.h b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-index 799c622a160d..19e432b28de5 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-@@ -949,6 +949,7 @@ enum qlink_sta_info_rate_flags {
- 	QLINK_STA_INFO_RATE_FLAG_VHT_MCS	= BIT(1),
- 	QLINK_STA_INFO_RATE_FLAG_SHORT_GI	= BIT(2),
- 	QLINK_STA_INFO_RATE_FLAG_60G		= BIT(3),
-+	QLINK_STA_INFO_RATE_FLAG_HE_MCS		= BIT(4),
- };
- 
- /**
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
+index 963aa421c719..59059b7b66bb 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
+@@ -333,7 +333,6 @@ void mt7615_mac_sta_remove(struct mt76_dev *mdev, struct ieee80211_vif *vif,
+ void mt7615_mac_work(struct work_struct *work);
+ void mt7615_txp_skb_unmap(struct mt76_dev *dev,
+ 			  struct mt76_txwi_cache *txwi);
+-int mt76_dfs_start_rdd(struct mt7615_dev *dev, bool force);
+ int mt7615_mcu_set_fcc5_lpn(struct mt7615_dev *dev, int val);
+ int mt7615_mcu_set_pulse_th(struct mt7615_dev *dev,
+ 			    const struct mt7615_dfs_pulse *pulse);
 -- 
-2.11.0
+2.21.1
 
