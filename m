@@ -2,118 +2,88 @@ Return-Path: <SRS0=iTRP=27=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA427C33CA2
-	for <linux-wireless@archiver.kernel.org>; Fri, 10 Jan 2020 11:39:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34C5AC33CA6
+	for <linux-wireless@archiver.kernel.org>; Fri, 10 Jan 2020 13:16:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9D0CC2077C
-	for <linux-wireless@archiver.kernel.org>; Fri, 10 Jan 2020 11:39:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0C4B320842
+	for <linux-wireless@archiver.kernel.org>; Fri, 10 Jan 2020 13:16:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="j+dYtAD7"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="uaDpsRB7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727714AbgAJLjL (ORCPT
+        id S1727864AbgAJNQa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 10 Jan 2020 06:39:11 -0500
-Received: from mail-ot1-f68.google.com ([209.85.210.68]:36913 "EHLO
-        mail-ot1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727457AbgAJLjK (ORCPT
+        Fri, 10 Jan 2020 08:16:30 -0500
+Received: from mail25.static.mailgun.info ([104.130.122.25]:52689 "EHLO
+        mail25.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727806AbgAJNQ0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Jan 2020 06:39:10 -0500
-Received: by mail-ot1-f68.google.com with SMTP id k14so1644993otn.4
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Jan 2020 03:39:10 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=N5q315f9LjOiYAZl8Osbhhg/nIGipOca4U1i12aQxzg=;
-        b=j+dYtAD7VSmuHXSKuI074QT6Q74r/OEJBeXmrI/wL8hQxkIo67if/LXhfTEH5899sZ
-         I5bglopMnHe+dU/0ZSEsg3PzbIEouzrePgkYSMX66SWenJcFeO+ACrMLSRFnqffm83Mz
-         tyM1Emseujcpl6wzSqT9Ie097arY/q2G++tr7w/LT3ZYowfXkQ1xgpnhQ3ADHslfHSr+
-         Zmc3XjY8NYD9y3DQzIpyd+IJ0qPaBOBrsKWvxnH9ofGxtx4bO4Nr2f9vEq/FHYL0Zjtd
-         C8Of7sIRWulJqQePqmMn5TE6cRg0M75niotcVidxZRbuiaC+mgF3+K/e03GjRx0DLLgr
-         lZRA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=N5q315f9LjOiYAZl8Osbhhg/nIGipOca4U1i12aQxzg=;
-        b=iqoEHnELYzL022ZaHhT0byfZWRSYGJLXT6HFNlInQU1Heb/EJveZ3Yf1J/6k4DEqj1
-         kOE5SJjFHIjtioEvHHbHlHapDb6kvkR9yewdZKZnAuNObiCAnYLgBuybZj1o7VfRgvm/
-         TkB0YNaOaC+xGl3M1addXRIqpZLuO3F2wZqovm1nbrbNx5/fj1ae+Q+eVdpIg84kr3Yu
-         onQ9YCpozb1L3C8dDd74YHObi0vfYybqCT710l/w9zBIJHcoRKrUkHtr0F5KQDTkLOZ+
-         gtk5UOl00rQ8Ue2ZATpptOhEO8wlpdLPnsvt0uCGC+JUlBFAxUOKCXLY8br8KhSAgo3m
-         c35Q==
-X-Gm-Message-State: APjAAAVXJLq0LI9AAFrKQwcV3n5aLYGI3OChj8UGw1arRzAhdt0Ne5AX
-        y8nd8U5nt+JKHgqpnwfVm4Jy4znuKIVX9XVQ+oe+zw==
-X-Google-Smtp-Source: APXvYqx7/Xicuqkr3xFcewvf0l1V57IutpgM/5oHx85hOJJ9Acnu00CD6cuJnfEFEIVcEH6X5LcaIWyN04cnLjrgVf0=
-X-Received: by 2002:a05:6830:ce:: with SMTP id x14mr2100394oto.289.1578656350008;
- Fri, 10 Jan 2020 03:39:10 -0800 (PST)
+        Fri, 10 Jan 2020 08:16:26 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1578662186; h=Content-Type: MIME-Version: Message-ID:
+ In-Reply-To: Date: References: Subject: Cc: From: Sender;
+ bh=i+FSacw/oKHPosASdYmNACUkHU9zjbv90HutOF8oZS0=; b=uaDpsRB7BIS/DcVe6uXRkyGmZGRM/3auRooFwVdRgk+5ZrkcwxDwKL7Ng28euEXYxM4v0muB
+ UflWsjrc1xxYYXH2a3W1/4Ls5DndqhguamFGweHzH01liX9ZrZwpLUow6Z7aP3WPA7s5+eJr
+ RzXduaFWCnehYtxW3vBhpTjVdx4=
+X-Mailgun-Sending-Ip: 104.130.122.25
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
+ by mxa.mailgun.org with ESMTP id 5e187928.7f556634fa08-smtp-out-n03;
+ Fri, 10 Jan 2020 13:16:24 -0000 (UTC)
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 49E1EC447A5; Fri, 10 Jan 2020 13:16:24 +0000 (UTC)
+Received: from x230.qca.qualcomm.com (unknown [83.145.195.18])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 8EFE4C447A4;
+        Fri, 10 Jan 2020 13:16:21 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 8EFE4C447A4
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+Cc:     linux-kernel@vger.kernel.org, akpm@linux-foundation.org,
+        linux-next@vger.kernel.org, sfr@canb.auug.org.au,
+        Stanislaw Gruszka <stf_xl@wp.pl>,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] iwlwifi: fix build warnings with format string
+References: <20200106171452.201c3b4c@canb.auug.org.au>
+        <1578322389-13716-1-git-send-email-akinobu.mita@gmail.com>
+nTo:    Akinobu Mita <akinobu.mita@gmail.com>
+Date:   Fri, 10 Jan 2020 15:16:18 +0200
+In-Reply-To: <1578322389-13716-1-git-send-email-akinobu.mita@gmail.com>
+        (Akinobu Mita's message of "Mon, 6 Jan 2020 23:53:09 +0900")
+Message-ID: <87muavsb8d.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-References: <CAKoLU8M+QU-96vnfet-759nnXyxxJmsf1Csba4FgNas8ZVOnOQ@mail.gmail.com>
- <87v9pjsom7.fsf@codeaurora.org>
-In-Reply-To: <87v9pjsom7.fsf@codeaurora.org>
-From:   Denis Kalashnikov <denis281089@gmail.com>
-Date:   Fri, 10 Jan 2020 14:37:23 +0300
-Message-ID: <CAKoLU8Oft1Lu1fQx2wRyO8nfOuynu6Ns5=xdq+j2X-wyyzYV9w@mail.gmail.com>
-Subject: Re: [PATCH 1/1] ath9k: fix firmware bug in some of Mikrotik
- R11e-2HPnD cards
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
+To:     unlisted-recipients:; (no To-header on input)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-You are right, it is possible. I will fix my patch and resend. Thank you.
+(please cc linux-wireless on all wireless patches)
 
-=D0=BF=D1=82, 10 =D1=8F=D0=BD=D0=B2. 2020 =D0=B3. =D0=B2 11:27, Kalle Valo =
-<kvalo@codeaurora.org>:
+Akinobu Mita <akinobu.mita@gmail.com> writes:
+
+> This fixes build warnings introduced by commit "iwlegacy: use
+> <linux/units.h> helpers" (iwlegacy-use-linux-unitsh-helpers.patch in -mm)
 >
-> Denis Kalashnikov <denis281089@gmail.com> writes:
+> The format '%d' has to be changed to '%ld' because the return type of
+> kelvin_to_celsius() is 'long'.
 >
-> > Some of the Mikrotik R11e-2HPnD cards have EEPROM where is
-> > flashed that a card has 3 chains, but actually all this cards
-> > have only 2. This leads ath9k to write periodically into the logs:
-> > 'ath: phy0: Unable to reset channel, reset status -5' and
-> > stations don't see that AP.
-> >
-> > Mikrotik R11e-2HPnD is based on AR9582 chip.
-> >
-> > Signed-off-by: Denis Kalashnikov <denis281089@gmail.com>
-> > ---
-> >  drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 9 +++++++++
-> >  1 file changed, 9 insertions(+)
-> >
-> > diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-> > b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-> > index b4885a700296..554a81400648 100644
-> > --- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-> > +++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-> > @@ -3373,6 +3373,15 @@ static int
-> > ar9300_eeprom_restore_internal(struct ath_hw *ah,
-> >                 cptr -=3D (COMP_HDR_LEN + osize + COMP_CKSUM_LEN);
-> >         }
-> >
-> > +       /**
-> > +        * Fix firmware bug of some Mikrotik R11e-2HPnD cards (based on=
- AR9582)
-> > +        * that claim that they have 3 chains, but actually have only 2=
-.
-> > +        */
-> > +       if (AR_SREV_9580(ah)) {
-> > +               eep =3D (struct ar9300_eeprom *)mptr;
-> > +               eep->baseEepHeader.txrxMask &=3D 0x33;
-> > +       }
->
-> What about 9580 devices which really have 3 chains, doesn't this broke
-> those? Or is such setup impossible?
->
-> --
-> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpa=
-tches
+> Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
+> Link: https://lore.kernel.org/r/20200106171452.201c3b4c@canb.auug.org.au
+> Cc: Kalle Valo <kvalo@codeaurora.org>
+> Cc: Stanislaw Gruszka <stf_xl@wp.pl>
+> Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+
+I don't know what's Andrew's workflow, but shouldn't the original patch
+be fixed instead?
+
+-- 
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
