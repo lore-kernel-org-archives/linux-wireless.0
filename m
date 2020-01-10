@@ -2,150 +2,120 @@ Return-Path: <SRS0=iTRP=27=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C91CEC33CA2
-	for <linux-wireless@archiver.kernel.org>; Fri, 10 Jan 2020 10:29:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2287BC33CA2
+	for <linux-wireless@archiver.kernel.org>; Fri, 10 Jan 2020 11:38:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9BAA620721
-	for <linux-wireless@archiver.kernel.org>; Fri, 10 Jan 2020 10:29:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EA6372077C
+	for <linux-wireless@archiver.kernel.org>; Fri, 10 Jan 2020 11:38:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="JrFHgdSF"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="qeijmgoX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727412AbgAJK3i (ORCPT
+        id S1727807AbgAJLih (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 10 Jan 2020 05:29:38 -0500
-Received: from mail26.static.mailgun.info ([104.130.122.26]:42074 "EHLO
-        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727339AbgAJK3h (ORCPT
+        Fri, 10 Jan 2020 06:38:37 -0500
+Received: from mail-oi1-f196.google.com ([209.85.167.196]:42865 "EHLO
+        mail-oi1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727714AbgAJLig (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Jan 2020 05:29:37 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1578652177; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=IytsLbM1pR0Qzs157gZv5EoAroYoP4LB4watZpuwJso=;
- b=JrFHgdSFAyGQHrPd8F/BVK76f2Mb/GZYG50RPpOlm6sQgfqi03hfZNJ+SaxpAoX4/bEwm3Ro
- MsoszPob5W5SHsFpCPSLPgFSFVY9O+qHJ2kT/dWu7IXFUhaLxHnZLBBl3M2Nnssou9d/5B0w
- +zAwbHe1L5T7Zlhmo9I959h6qPQ=
-X-Mailgun-Sending-Ip: 104.130.122.26
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e185210.7f29dee6b228-smtp-out-n02;
- Fri, 10 Jan 2020 10:29:36 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 1313FC433A2; Fri, 10 Jan 2020 10:29:35 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: wgong)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 93091C433CB;
-        Fri, 10 Jan 2020 10:29:34 +0000 (UTC)
+        Fri, 10 Jan 2020 06:38:36 -0500
+Received: by mail-oi1-f196.google.com with SMTP id 18so1569320oin.9
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Jan 2020 03:38:36 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=OEIFJr+GmGk8WocgujnwIkVDO/F3Z6l/Md+EkF8+Kno=;
+        b=qeijmgoXDNEHwPlrB6+Bgzs5L7Qx/4Hm+g2oqEwNOTaTea6Z08blR0WKvaHynSGY7U
+         UGNnmekcq8ENuEXwJSqgyS4IZZQeqpfknwc5fY9/Gn8cFbWqNRbWWCapXNG5rxyoX4/b
+         uGUy5i4x5V5hLoXvwWod2UX6xTkkhfoiRUfCPYp8gaCvL/o7a9q9jqNTRPDqPx76jrAb
+         XdVdKZczehlxva2j3vv6mFI0f1NhfV+RpbUOPADoxVHSpGQOz2U4E4KOZiKW0QmzPFrp
+         gd6BToJqrV1hSGF331+28CAdCTuSz9RdyyEfJwuquJohUP1mu4hB/A5qZEFKIiEmSqS6
+         ccAw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:in-reply-to:references:from:date
+         :message-id:subject:to:cc;
+        bh=OEIFJr+GmGk8WocgujnwIkVDO/F3Z6l/Md+EkF8+Kno=;
+        b=soMKy/yDG0jTeOsLkitpPvBUuKTKAguxi215EF3p+VakxJ2s5KgUKm7YYF6PS+ivG8
+         425FN/5ubFL0AKCYoluslaWIyTWtESaGpTIsob9aN8Mgl89536XuzBDZU/WNgAzAGtlk
+         VMBU3U4yKRx5iP2z5i9SKE3oIKaoeZDNKRhoUD5JYIed3uMSKjwtPrfKeeqCdEPBZAmB
+         CpbkXmGn3St2kga3jHWcZUlo4MR8mA/84bXvpivDLc6KjuK9A/esj/ikr3wzuNP64WSN
+         V/MDNjkG5DpqZYKB4siHI//7zpNjBQZivv4XgyG6TYfjlqQjqM+gl6H0M3NkkKuv3mwx
+         Fi3Q==
+X-Gm-Message-State: APjAAAX5A2jEhuDdaOGQpgGnshVLpLuGooUvLbbo9CB7m3q7GRaRRTcl
+        3JGfG2vP9Nvh1Ya1w0a1wpAjYWB53xKLZZ+xDwk=
+X-Google-Smtp-Source: APXvYqwEjEjH2uDXh1QSrp0qpNWq44L+0Q93LINVxh3wSi9AMY7JwcRY17Dr4pvkQ6dx9vaRNPsPU/z3ZbmyxG3hXJ0=
+X-Received: by 2002:a05:6808:319:: with SMTP id i25mr1965720oie.128.1578656316349;
+ Fri, 10 Jan 2020 03:38:36 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Fri, 10 Jan 2020 18:29:34 +0800
-From:   Wen Gong <wgong@codeaurora.org>
-To:     Justin Capella <justincapella@gmail.com>
-Cc:     ath10k <ath10k@lists.infradead.org>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v4 1/2] ath10k: add refcount for ath10k_core_restart
-In-Reply-To: <CAMrEMU-UTtxJ-eMoNEBONXJCTpaZCcGc8Mu34wqQNXkpVz=gJA@mail.gmail.com>
-References: <20200108031957.22308-1-wgong@codeaurora.org>
- <20200108031957.22308-2-wgong@codeaurora.org>
- <CAMrEMU-UTtxJ-eMoNEBONXJCTpaZCcGc8Mu34wqQNXkpVz=gJA@mail.gmail.com>
-Message-ID: <55ab2d64e78d51a9da587f276899e08b@codeaurora.org>
-X-Sender: wgong@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+Received: by 2002:a9d:362:0:0:0:0:0 with HTTP; Fri, 10 Jan 2020 03:38:35 -0800 (PST)
+In-Reply-To: <87v9pjsom7.fsf@codeaurora.org>
+References: <CAKoLU8M+QU-96vnfet-759nnXyxxJmsf1Csba4FgNas8ZVOnOQ@mail.gmail.com>
+ <87v9pjsom7.fsf@codeaurora.org>
+From:   Tom Psyborg <pozega.tomislav@gmail.com>
+Date:   Fri, 10 Jan 2020 12:38:35 +0100
+Message-ID: <CAKR_QVLBuW-FhRVdm6h2prRqSwoSpyt1GF=cUtXd_KPJjU5V+g@mail.gmail.com>
+Subject: Re: [PATCH 1/1] ath9k: fix firmware bug in some of Mikrotik
+ R11e-2HPnD cards
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     Denis Kalashnikov <denis281089@gmail.com>,
+        linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2020-01-08 20:02, Justin Capella wrote:
-> I think this might break the "wedged" state.
-> 
-> Would simply not taking action unless STATE ON avoid the problems with
-> multiple calls to _restart? ie:
-> 
+On 10/01/2020, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Denis Kalashnikov <denis281089@gmail.com> writes:
+>
+>> Some of the Mikrotik R11e-2HPnD cards have EEPROM where is
+>> flashed that a card has 3 chains, but actually all this cards
+>> have only 2. This leads ath9k to write periodically into the logs:
+>> 'ath: phy0: Unable to reset channel, reset status -5' and
+>> stations don't see that AP.
+>>
+>> Mikrotik R11e-2HPnD is based on AR9582 chip.
+>>
+>> Signed-off-by: Denis Kalashnikov <denis281089@gmail.com>
+>> ---
+>>  drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 9 +++++++++
+>>  1 file changed, 9 insertions(+)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+>> b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+>> index b4885a700296..554a81400648 100644
+>> --- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+>> +++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+>> @@ -3373,6 +3373,15 @@ static int
+>> ar9300_eeprom_restore_internal(struct ath_hw *ah,
+>>                 cptr -= (COMP_HDR_LEN + osize + COMP_CKSUM_LEN);
+>>         }
+>>
+>> +       /**
+>> +        * Fix firmware bug of some Mikrotik R11e-2HPnD cards (based on
+>> AR9582)
+>> +        * that claim that they have 3 chains, but actually have only 2.
+>> +        */
+>> +       if (AR_SREV_9580(ah)) {
+>> +               eep = (struct ar9300_eeprom *)mptr;
+>> +               eep->baseEepHeader.txrxMask &= 0x33;
+>> +       }
+>
+> What about 9580 devices which really have 3 chains, doesn't this broke
+> those? Or is such setup impossible?
+>
+> --
+> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+>
 
-ath10k_core_restart is one part of the recovery process,
-after ath10k_core_restart, it has other things do in mac80211/ath10k...,
-it need to make sure all the recovery 
-finished(ath10k_reconfig_complete),
-then the next recovery can start from ath10k_core_restart.
+See this:
+https://openwrt.org/_media/media/tplink/tl-wdr4310/tl-wdr4310_11.jpg
 
-so it can not simply change like below.
-> diff --git a/drivers/net/wireless/ath/ath10k/core.c
-> b/drivers/net/wireless/ath/ath10k/core.c
-> index 5ec16ce19b69..a6c11b2bc97c 100644
-> --- a/drivers/net/wireless/ath/ath10k/core.c
-> +++ b/drivers/net/wireless/ath/ath10k/core.c
-> @@ -2198,11 +2198,8 @@ static int ath10k_init_hw_params(struct ath10k 
-> *ar)
->   return 0;
->  }
-> 
-> -static void ath10k_core_restart(struct work_struct *work)
-> +static void inline _ath10k_core_restart(struct ath10k *ar)
->  {
-> - struct ath10k *ar = container_of(work, struct ath10k, restart_work);
-> - int ret;
-> -
->   set_bit(ATH10K_FLAG_CRASH_FLUSH, &ar->dev_flags);
-> 
->   /* Place a barrier to make sure the compiler doesn't reorder
-> @@ -2232,14 +2229,28 @@ static void ath10k_core_restart(struct
-> work_struct *work)
->   */
->   cancel_work_sync(&ar->set_coverage_class_work);
-> 
-> + ath10k_halt(ar);
-> + ath10k_scan_finish(ar);
-> + ieee80211_restart_hw(ar->hw);
-> +
-> + ret = ath10k_coredump_submit(ar);
-> + if (ret)
-> + ath10k_warn(ar, "failed to send firmware crash dump via devcoredump:
-> %d", ret);
-> +
-> + complete(&ar->driver_recovery);
-> +}
-> +
-> +static void ath10k_core_restart(struct work_struct *work)
-> +{
-> + struct ath10k *ar = container_of(work, struct ath10k, restart_work);
-> + int ret;
-> +
->   mutex_lock(&ar->conf_mutex);
-> 
->   switch (ar->state) {
->   case ATH10K_STATE_ON:
->   ar->state = ATH10K_STATE_RESTARTING;
-> - ath10k_halt(ar);
-> - ath10k_scan_finish(ar);
-> - ieee80211_restart_hw(ar->hw);
-> + _ath10k_core_restart(ar);
->   break;
->   case ATH10K_STATE_OFF:
->   /* this can happen if driver is being unloaded
-> @@ -2262,13 +2273,6 @@ static void ath10k_core_restart(struct 
-> work_struct *work)
->   }
-> 
->   mutex_unlock(&ar->conf_mutex);
-> -
-> - ret = ath10k_coredump_submit(ar);
-> - if (ret)
-> - ath10k_warn(ar, "failed to send firmware crash dump via devcoredump: 
-> %d",
-> -     ret);
-> -
-> - complete(&ar->driver_recovery);
->  }
-> 
->  static void ath10k_core_set_coverage_class_work(struct work_struct 
-> *work)
-> 
-> On Tue, Jan 7, 2020 at 7:20 PM Wen Gong <wgong@codeaurora.org> wrote:
+This commit would definitely break it. The fix should involve PCI sub
+id of the miktrotik card
