@@ -1,106 +1,96 @@
-Return-Path: <SRS0=u+hL=3A=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=uji4=3B=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8411C33CA7
-	for <linux-wireless@archiver.kernel.org>; Sat, 11 Jan 2020 23:38:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59868C33CA7
+	for <linux-wireless@archiver.kernel.org>; Sun, 12 Jan 2020 00:56:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 99BBD20866
-	for <linux-wireless@archiver.kernel.org>; Sat, 11 Jan 2020 23:38:45 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CUzzXi3u"
+	by mail.kernel.org (Postfix) with ESMTP id 2AD892084D
+	for <linux-wireless@archiver.kernel.org>; Sun, 12 Jan 2020 00:56:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731717AbgAKXic (ORCPT
+        id S1731827AbgALA4p (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 11 Jan 2020 18:38:32 -0500
-Received: from mail-oi1-f194.google.com ([209.85.167.194]:46380 "EHLO
-        mail-oi1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731674AbgAKXib (ORCPT
+        Sat, 11 Jan 2020 19:56:45 -0500
+Received: from mail3.iservicesmail.com ([217.130.24.75]:13411 "EHLO
+        mail3.iservicesmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731822AbgALA4o (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 11 Jan 2020 18:38:31 -0500
-Received: by mail-oi1-f194.google.com with SMTP id 13so5133123oij.13;
-        Sat, 11 Jan 2020 15:38:31 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=c7HFrOGQ3phE12eoMeyUfOtwv87GN61OlvlGebweSPE=;
-        b=CUzzXi3uv6xXm/4UnggMbWvrrN2Up+aCdXgbjG6cA1RSh2Hsl7MaJGyUzdoMoTmd4R
-         ZrHmzvSIQzS9GFymrJPYSFUJoVbzF0PJ/iecYAh4HGcrfH/zwmd4F6x9nsoOeailYobC
-         MujffRFXqGvkpsurYLOjgR9qmZoZeeEk+kwuIIysdTEHyy0eM0MPpC10Mh0InyVmHn1v
-         5FsP+pOKLqj3MpjEbbWZWOZEilHIuIlxKrmee02exZm69I3xF9XolTxJTNhKMd4CPNUr
-         7TK8yRsQode2rHqJa9VpU78VxSiyf+Oi7TyRFsjn5WlXmrtjazYZe5Wjb+yrJwuo7Mdn
-         THlQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=c7HFrOGQ3phE12eoMeyUfOtwv87GN61OlvlGebweSPE=;
-        b=bxv7pUmTisUVgD+MUMFJzRwz7jTOyA95aKv2lnmdVyt683eTmk5lOAk+hHrc00fyEm
-         JUWSbjqtcPd5xfgOj9EORmlXwwrxOssY2VVyKUH3msazCFtTjFMiuU30JXwJqadflaph
-         KXec1c4uiPvqEWkdHI/U8P9CzU8yYNnKbvo0bgXQVU6DrrI8C/MmKfPJ3frpcuDB5v9O
-         Ys3q2nykxV1MWh4/XZ0Pjvt5KeWrUxmlmMbN2zUnWDGGY0C2uc3MH/e/QKqjRWgCJCk/
-         GSY5WdUcFAtZMyXyoOPjcfx98yjYQ6IWFabZhUna3F8IvdTTPWcuDTtW6qIpikE+ZtV7
-         cgmg==
-X-Gm-Message-State: APjAAAVyKkpUTAaea+nQZ/TAFNaaBgpNZUiwcxk0mtGSWA5TElDm34Vv
-        0BfM0CJQRD2yQe6Jj0oweVsYgg368fs77blTbaE=
-X-Google-Smtp-Source: APXvYqzdwu5h+fnSlpdGrTkZ59bgP9nPDYS+jBNWRgOtKGV1J84qw+h5nryOcSbFDC8q8K7HsV9LDhKqwf7dQGAQUsU=
-X-Received: by 2002:aca:1e11:: with SMTP id m17mr7953939oic.5.1578785910973;
- Sat, 11 Jan 2020 15:38:30 -0800 (PST)
+        Sat, 11 Jan 2020 19:56:44 -0500
+X-Greylist: delayed 302 seconds by postgrey-1.27 at vger.kernel.org; Sat, 11 Jan 2020 19:56:43 EST
+IronPort-SDR: 7wDC7xHyIhGHqLHNA8zkNj0SEdSAj7UcmGv9X16p27qqsVJVQvB/Z6VeCBnANV1+OF4tRvNKx4
+ i5zwEA+slR/w==
+IronPort-PHdr: =?us-ascii?q?9a23=3AZxpQLRM9LnwyTrWLiyMl6mtUPXoX/o7sNwtQ0K?=
+ =?us-ascii?q?IMzox0I/z5rarrMEGX3/hxlliBBdydt6sfzbCI7eu6ByQp2tWoiDg6aptCVh?=
+ =?us-ascii?q?sI2409vjcLJ4q7M3D9N+PgdCcgHc5PBxdP9nC/NlVJSo6lPwWB6nK94iQPFR?=
+ =?us-ascii?q?rhKAF7Ovr6GpLIj8Swyuu+54Dfbx9HiTagb75+Ngu6oATQu8UZn4dvK7s6xw?=
+ =?us-ascii?q?fUrHdPZ+lY335jK0iJnxb76Mew/Zpj/DpVtvk86cNOUrj0crohQ7BAAzsoL2?=
+ =?us-ascii?q?465MvwtRneVgSP/WcTUn8XkhVTHQfI6gzxU4rrvSv7sup93zSaPdHzQLspVz?=
+ =?us-ascii?q?mu87tnRRn1gysBMDI37X3YhdZ1jKNbuR6suRt/w5TMYIGSLvpxZL/dcs0DSW?=
+ =?us-ascii?q?VfWMZdTjBMAp+gb4QVE+UBPfhXr4zjqFsIsRuyHBejBOX2xjFPgX/227M10u?=
+ =?us-ascii?q?Q4HQ7Y2gwrAtYCvXrIoNnpMasfV/2+wqvVwjXZd/5Y1zfz6JLWfB4ivP+DUq?=
+ =?us-ascii?q?5/f8XKxEkzFQ7KkkmcpZD5Mz+L0OkGrmiV7/BnVeKqk2MpsR9+oiSxycc2l4?=
+ =?us-ascii?q?LGhoUVylbL9S5kx4s1PcO3SFJlbt6+HppQsCeaN4RtT8MiWGFnozo1xqcatp?=
+ =?us-ascii?q?68eSgG0pQnxx3GZvGBboOG4QrjWf6PLTtlhn9pYq+zihiu/US61OHxWdO43V?=
+ =?us-ascii?q?hKoydDj9LCrGoC1wbJ5ciCUvZ9+0Ch1iuR2A3L8eFEJFw0lbLcK5483r48jp?=
+ =?us-ascii?q?oTvlrHHi/xgEj2ibWZdkQg+uiy9evnZqnqq5CGO49qjQHxL74hmsK4AeQ+LA?=
+ =?us-ascii?q?cCRXaU+f+k2L3i+032XqlKg+UonqXEsp3WP9kXq6ClDwNPzIou5AyzAjmm3d?=
+ =?us-ascii?q?gAmHkINlNFeBaJj4jzPFHOJej1De+hjFSwjjhr3f7HPrrnApXCNXXDkKzhcq?=
+ =?us-ascii?q?1h5EJG1AUzytVf64hUCrECOP7zQFP+tMTEDh8lNAy52+LnCNR71oMDVmODG6?=
+ =?us-ascii?q?GYMKLIsVCW4uIgPfKMZJQOtTbjJPgq+eTugWU6mVADZ6mp24UYaHSiEvRhOU?=
+ =?us-ascii?q?WZbimkvtBUFWYMoxp7U+3whVmPSiV7eXm/ReQ/6ys9BYbgCp3MFbqgmLiQ4C?=
+ =?us-ascii?q?DuJpBKa3oONVeKHj+8b4iYVu0TbySdItRrmTwHfbekQo4lkxqpsVmp5aBgK7?=
+ =?us-ascii?q?/s9zEVr9rc0956r7nLmA0/7yNzCcu103qHRCd/mWZORzxgj/M3mlB01lrWiP?=
+ =?us-ascii?q?swuPdfD9EGvKsRXw=3D=3D?=
+X-IronPort-Anti-Spam-Filtered: true
+X-IronPort-Anti-Spam-Result: =?us-ascii?q?A2HVAQAHbRpelyMYgtlMGBoBAQEBAQE?=
+ =?us-ascii?q?BAQEDAQEBAREBAQECAgEBAQGBaAQBAQEBCwEBGwQBgSmBTVIgEpNQgU0fg0O?=
+ =?us-ascii?q?LY4EAgx4VhgcUDIFbDQEBAQEBNQIBAYRATgEXgQ8kNQgOAgMNAQEFAQEBAQE?=
+ =?us-ascii?q?FBAEBAhABAQEBAQYYBoVzgh0MHgEEAQEBAQMDAwEBDAGDXQcZDzlKTAEOAVO?=
+ =?us-ascii?q?DBIJLAQEznXUBjQQNDQKFHYJJBAqBCYEaI4E2AYwYGoFBP4EjIYIrCAGCAYJ?=
+ =?us-ascii?q?/ARIBbIJIglkEjUISIYEHiCmYF4JBBHaJTIwCgjcBD4gBhDEDEIJFD4EJiAO?=
+ =?us-ascii?q?EToF9ozdXdAGBHnEzGoImGoEgTxgNiBuOLUCBFhACT4xbgjIBAQ?=
+X-IPAS-Result: =?us-ascii?q?A2HVAQAHbRpelyMYgtlMGBoBAQEBAQEBAQEDAQEBAREBA?=
+ =?us-ascii?q?QECAgEBAQGBaAQBAQEBCwEBGwQBgSmBTVIgEpNQgU0fg0OLY4EAgx4VhgcUD?=
+ =?us-ascii?q?IFbDQEBAQEBNQIBAYRATgEXgQ8kNQgOAgMNAQEFAQEBAQEFBAEBAhABAQEBA?=
+ =?us-ascii?q?QYYBoVzgh0MHgEEAQEBAQMDAwEBDAGDXQcZDzlKTAEOAVODBIJLAQEznXUBj?=
+ =?us-ascii?q?QQNDQKFHYJJBAqBCYEaI4E2AYwYGoFBP4EjIYIrCAGCAYJ/ARIBbIJIglkEj?=
+ =?us-ascii?q?UISIYEHiCmYF4JBBHaJTIwCgjcBD4gBhDEDEIJFD4EJiAOEToF9ozdXdAGBH?=
+ =?us-ascii?q?nEzGoImGoEgTxgNiBuOLUCBFhACT4xbgjIBAQ?=
+X-IronPort-AV: E=Sophos;i="5.69,423,1571695200"; 
+   d="scan'208";a="303831339"
+Received: from mailrel04.vodafone.es ([217.130.24.35])
+  by mail01.vodafone.es with ESMTP; 12 Jan 2020 01:51:40 +0100
+Received: (qmail 8456 invoked from network); 11 Jan 2020 23:46:32 -0000
+Received: from unknown (HELO 192.168.1.3) (quesosbelda@[217.217.179.17])
+          (envelope-sender <peterwong@hsbc.com.hk>)
+          by mailrel04.vodafone.es (qmail-ldap-1.03) with SMTP
+          for <linux-wireless@vger.kernel.org>; 11 Jan 2020 23:46:32 -0000
+Date:   Sun, 12 Jan 2020 00:46:30 +0100 (CET)
+From:   Peter Wong <peterwong@hsbc.com.hk>
+Reply-To: Peter Wong <peterwonghsbchk@gmail.com>
+To:     linux-wireless@vger.kernel.org
+Message-ID: <32735613.172072.1578786391869.JavaMail.cash@217.130.24.55>
+Subject: Investment opportunity
 MIME-Version: 1.0
-References: <000000000000a06985059be4002e@google.com>
-In-Reply-To: <000000000000a06985059be4002e@google.com>
-From:   Cong Wang <xiyou.wangcong@gmail.com>
-Date:   Sat, 11 Jan 2020 15:38:19 -0800
-Message-ID: <CAM_iQpWN-SKjjrG_7EQ-x+7UMiu6foaNWMJuwQuwN0BGmayB+A@mail.gmail.com>
-Subject: Re: WARNING: bad unlock balance in __dev_queue_xmit
-To:     syzbot <syzbot+ad4ea1dd5d26131a58a6@syzkaller.appspotmail.com>
-Cc:     a@unstable.cc, Alexander Aring <alex.aring@gmail.com>,
-        allison@lohutok.net, andrew@lunn.ch,
-        Andy Gospodarek <andy@greyhouse.net>,
-        Taehee Yoo <ap420073@gmail.com>, ast@domdv.de,
-        b.a.t.m.a.n@lists.open-mesh.org, bridge@lists.linux-foundation.org,
-        cleech@redhat.com, Daniel Borkmann <daniel@iogearbox.net>,
-        David Miller <davem@davemloft.net>,
-        David Ahern <dsa@cumulusnetworks.com>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        Florian Westphal <fw@strlen.de>,
-        Greg KH <gregkh@linuxfoundation.org>, gustavo@embeddedor.com,
-        haiyangz@microsoft.com, info@metux.net,
-        Jay Vosburgh <j.vosburgh@gmail.com>, j@w1.fi,
-        Jakub Kicinski <jakub.kicinski@netronome.com>,
-        Jamal Hadi Salim <jhs@mojatatu.com>,
-        Jiri Pirko <jiri@resnulli.us>,
-        Johan Hedberg <johan.hedberg@gmail.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        John Hurley <john.hurley@netronome.com>, jwi@linux.ibm.com,
-        Kate Stewart <kstewart@linuxfoundation.org>,
-        Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
-        Kalle Valo <kvalo@codeaurora.org>, kys@microsoft.com,
-        linmiaohe@huawei.com,
-        linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-        linux-hams <linux-hams@vger.kernel.org>,
-        linux-hyperv@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-        linux-ppp@vger.kernel.org,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        linux-wpan@vger.kernel.org, Hangbin Liu <liuhangbin@gmail.com>,
-        Marcel Holtmann <marcel@holtmann.org>,
-        Marek Lindner <mareklindner@neomailbox.ch>,
-        Michal Kubecek <mkubecek@suse.cz>,
-        mmanning@vyatta.att-mail.com,
-        Linux Kernel Network Developers <netdev@vger.kernel.org>,
-        Nikolay Aleksandrov <nikolay@cumulusnetworks.com>,
-        oss-drivers@netronome.com, Paolo Abeni <pabeni@redhat.com>,
-        Paul Mackerras <paulus@samba.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-#syz dup: WARNING: bad unlock balance in sch_direct_xmit
+Greetings,
+Please read the attached investment proposal and reply for more details.
+Are you interested in loan?
+Sincerely: Peter Wong
+
+
+
+
+----------------------------------------------------
+This email was sent by the shareware version of Postman Professional.
+
