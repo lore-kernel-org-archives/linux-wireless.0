@@ -1,96 +1,103 @@
-Return-Path: <SRS0=uji4=3B=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=vpNd=3C=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59868C33CA7
-	for <linux-wireless@archiver.kernel.org>; Sun, 12 Jan 2020 00:56:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 985FAC33CAE
+	for <linux-wireless@archiver.kernel.org>; Mon, 13 Jan 2020 07:17:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2AD892084D
-	for <linux-wireless@archiver.kernel.org>; Sun, 12 Jan 2020 00:56:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6A050207FF
+	for <linux-wireless@archiver.kernel.org>; Mon, 13 Jan 2020 07:17:42 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="QmZW/qV5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731827AbgALA4p (ORCPT
+        id S1728714AbgAMHRl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 11 Jan 2020 19:56:45 -0500
-Received: from mail3.iservicesmail.com ([217.130.24.75]:13411 "EHLO
-        mail3.iservicesmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731822AbgALA4o (ORCPT
+        Mon, 13 Jan 2020 02:17:41 -0500
+Received: from mail25.static.mailgun.info ([104.130.122.25]:48756 "EHLO
+        mail25.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728665AbgAMHRl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 11 Jan 2020 19:56:44 -0500
-X-Greylist: delayed 302 seconds by postgrey-1.27 at vger.kernel.org; Sat, 11 Jan 2020 19:56:43 EST
-IronPort-SDR: 7wDC7xHyIhGHqLHNA8zkNj0SEdSAj7UcmGv9X16p27qqsVJVQvB/Z6VeCBnANV1+OF4tRvNKx4
- i5zwEA+slR/w==
-IronPort-PHdr: =?us-ascii?q?9a23=3AZxpQLRM9LnwyTrWLiyMl6mtUPXoX/o7sNwtQ0K?=
- =?us-ascii?q?IMzox0I/z5rarrMEGX3/hxlliBBdydt6sfzbCI7eu6ByQp2tWoiDg6aptCVh?=
- =?us-ascii?q?sI2409vjcLJ4q7M3D9N+PgdCcgHc5PBxdP9nC/NlVJSo6lPwWB6nK94iQPFR?=
- =?us-ascii?q?rhKAF7Ovr6GpLIj8Swyuu+54Dfbx9HiTagb75+Ngu6oATQu8UZn4dvK7s6xw?=
- =?us-ascii?q?fUrHdPZ+lY335jK0iJnxb76Mew/Zpj/DpVtvk86cNOUrj0crohQ7BAAzsoL2?=
- =?us-ascii?q?465MvwtRneVgSP/WcTUn8XkhVTHQfI6gzxU4rrvSv7sup93zSaPdHzQLspVz?=
- =?us-ascii?q?mu87tnRRn1gysBMDI37X3YhdZ1jKNbuR6suRt/w5TMYIGSLvpxZL/dcs0DSW?=
- =?us-ascii?q?VfWMZdTjBMAp+gb4QVE+UBPfhXr4zjqFsIsRuyHBejBOX2xjFPgX/227M10u?=
- =?us-ascii?q?Q4HQ7Y2gwrAtYCvXrIoNnpMasfV/2+wqvVwjXZd/5Y1zfz6JLWfB4ivP+DUq?=
- =?us-ascii?q?5/f8XKxEkzFQ7KkkmcpZD5Mz+L0OkGrmiV7/BnVeKqk2MpsR9+oiSxycc2l4?=
- =?us-ascii?q?LGhoUVylbL9S5kx4s1PcO3SFJlbt6+HppQsCeaN4RtT8MiWGFnozo1xqcatp?=
- =?us-ascii?q?68eSgG0pQnxx3GZvGBboOG4QrjWf6PLTtlhn9pYq+zihiu/US61OHxWdO43V?=
- =?us-ascii?q?hKoydDj9LCrGoC1wbJ5ciCUvZ9+0Ch1iuR2A3L8eFEJFw0lbLcK5483r48jp?=
- =?us-ascii?q?oTvlrHHi/xgEj2ibWZdkQg+uiy9evnZqnqq5CGO49qjQHxL74hmsK4AeQ+LA?=
- =?us-ascii?q?cCRXaU+f+k2L3i+032XqlKg+UonqXEsp3WP9kXq6ClDwNPzIou5AyzAjmm3d?=
- =?us-ascii?q?gAmHkINlNFeBaJj4jzPFHOJej1De+hjFSwjjhr3f7HPrrnApXCNXXDkKzhcq?=
- =?us-ascii?q?1h5EJG1AUzytVf64hUCrECOP7zQFP+tMTEDh8lNAy52+LnCNR71oMDVmODG6?=
- =?us-ascii?q?GYMKLIsVCW4uIgPfKMZJQOtTbjJPgq+eTugWU6mVADZ6mp24UYaHSiEvRhOU?=
- =?us-ascii?q?WZbimkvtBUFWYMoxp7U+3whVmPSiV7eXm/ReQ/6ys9BYbgCp3MFbqgmLiQ4C?=
- =?us-ascii?q?DuJpBKa3oONVeKHj+8b4iYVu0TbySdItRrmTwHfbekQo4lkxqpsVmp5aBgK7?=
- =?us-ascii?q?/s9zEVr9rc0956r7nLmA0/7yNzCcu103qHRCd/mWZORzxgj/M3mlB01lrWiP?=
- =?us-ascii?q?swuPdfD9EGvKsRXw=3D=3D?=
-X-IronPort-Anti-Spam-Filtered: true
-X-IronPort-Anti-Spam-Result: =?us-ascii?q?A2HVAQAHbRpelyMYgtlMGBoBAQEBAQE?=
- =?us-ascii?q?BAQEDAQEBAREBAQECAgEBAQGBaAQBAQEBCwEBGwQBgSmBTVIgEpNQgU0fg0O?=
- =?us-ascii?q?LY4EAgx4VhgcUDIFbDQEBAQEBNQIBAYRATgEXgQ8kNQgOAgMNAQEFAQEBAQE?=
- =?us-ascii?q?FBAEBAhABAQEBAQYYBoVzgh0MHgEEAQEBAQMDAwEBDAGDXQcZDzlKTAEOAVO?=
- =?us-ascii?q?DBIJLAQEznXUBjQQNDQKFHYJJBAqBCYEaI4E2AYwYGoFBP4EjIYIrCAGCAYJ?=
- =?us-ascii?q?/ARIBbIJIglkEjUISIYEHiCmYF4JBBHaJTIwCgjcBD4gBhDEDEIJFD4EJiAO?=
- =?us-ascii?q?EToF9ozdXdAGBHnEzGoImGoEgTxgNiBuOLUCBFhACT4xbgjIBAQ?=
-X-IPAS-Result: =?us-ascii?q?A2HVAQAHbRpelyMYgtlMGBoBAQEBAQEBAQEDAQEBAREBA?=
- =?us-ascii?q?QECAgEBAQGBaAQBAQEBCwEBGwQBgSmBTVIgEpNQgU0fg0OLY4EAgx4VhgcUD?=
- =?us-ascii?q?IFbDQEBAQEBNQIBAYRATgEXgQ8kNQgOAgMNAQEFAQEBAQEFBAEBAhABAQEBA?=
- =?us-ascii?q?QYYBoVzgh0MHgEEAQEBAQMDAwEBDAGDXQcZDzlKTAEOAVODBIJLAQEznXUBj?=
- =?us-ascii?q?QQNDQKFHYJJBAqBCYEaI4E2AYwYGoFBP4EjIYIrCAGCAYJ/ARIBbIJIglkEj?=
- =?us-ascii?q?UISIYEHiCmYF4JBBHaJTIwCgjcBD4gBhDEDEIJFD4EJiAOEToF9ozdXdAGBH?=
- =?us-ascii?q?nEzGoImGoEgTxgNiBuOLUCBFhACT4xbgjIBAQ?=
-X-IronPort-AV: E=Sophos;i="5.69,423,1571695200"; 
-   d="scan'208";a="303831339"
-Received: from mailrel04.vodafone.es ([217.130.24.35])
-  by mail01.vodafone.es with ESMTP; 12 Jan 2020 01:51:40 +0100
-Received: (qmail 8456 invoked from network); 11 Jan 2020 23:46:32 -0000
-Received: from unknown (HELO 192.168.1.3) (quesosbelda@[217.217.179.17])
-          (envelope-sender <peterwong@hsbc.com.hk>)
-          by mailrel04.vodafone.es (qmail-ldap-1.03) with SMTP
-          for <linux-wireless@vger.kernel.org>; 11 Jan 2020 23:46:32 -0000
-Date:   Sun, 12 Jan 2020 00:46:30 +0100 (CET)
-From:   Peter Wong <peterwong@hsbc.com.hk>
-Reply-To: Peter Wong <peterwonghsbchk@gmail.com>
-To:     linux-wireless@vger.kernel.org
-Message-ID: <32735613.172072.1578786391869.JavaMail.cash@217.130.24.55>
-Subject: Investment opportunity
+        Mon, 13 Jan 2020 02:17:41 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1578899861; h=Content-Type: MIME-Version: Message-ID:
+ In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
+ bh=PHpcWydMf81SX9BI3zK7atci8ZDAip52kbaK4/vTAKM=; b=QmZW/qV5NfimtI5ij1K4pQSrSdDmVImTvXzC6vCwnGs0kxtg1jJdv8ETFxYJVOloQeZWvN1z
+ GeBy+odk178Ua9G+oTzg5Rt2+AUNxGHfN8P8itT3kgEB+sgB+gKDn7jBEXq9khOIySwR0R9p
+ KfuwZBvGHqxrO6G16kLCBlSJ5eQ=
+X-Mailgun-Sending-Ip: 104.130.122.25
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
+ by mxa.mailgun.org with ESMTP id 5e1c1991.7f8189d6d6c0-smtp-out-n02;
+ Mon, 13 Jan 2020 07:17:37 -0000 (UTC)
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 77C56C4479C; Mon, 13 Jan 2020 07:17:37 +0000 (UTC)
+Received: from x230.qca.qualcomm.com (dsl-hkibng32-54f84f-238.dhcp.inet.fi [84.248.79.238])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id A0D18C433CB;
+        Mon, 13 Jan 2020 07:17:35 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org A0D18C433CB
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Jia-Ju Bai <baijiaju1990@gmail.com>
+Cc:     ath9k-devel@qca.qualcomm.com, davem@davemloft.net,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] ath9k: Fix possible data races in ath_set_channel()
+References: <20200111171528.7053-1-baijiaju1990@gmail.com>
+Date:   Mon, 13 Jan 2020 09:17:28 +0200
+In-Reply-To: <20200111171528.7053-1-baijiaju1990@gmail.com> (Jia-Ju Bai's
+        message of "Sun, 12 Jan 2020 01:15:28 +0800")
+Message-ID: <87a76rsu47.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Greetings,
-Please read the attached investment proposal and reply for more details.
-Are you interested in loan?
-Sincerely: Peter Wong
+Jia-Ju Bai <baijiaju1990@gmail.com> writes:
 
+> The functions ath9k_config() and ath_ani_calibrate() may be concurrently
+> executed.
+>
+> A variable survey->filled is accessed with holding a spinlock
+> common->cc_lock, through:
+> ath_ani_calibrate()
+>     spin_lock_irqsave(&common->cc_lock, flags);
+>     ath_update_survey_stats()
+>         ath_update_survey_nf()
+>             survey->filled |= SURVEY_INFO_NOISE_DBM;
+>
+> The identical variables sc->cur_survey->filled and 
+> sc->survey[pos].filled is accessed without holding this lock, through:
+> ath9k_config()
+>     ath_chanctx_set_channel()
+>         ath_set_channel()
+>             sc->cur_survey->filled &= ~SURVEY_INFO_IN_USE;
+>             sc->cur_survey->filled |= SURVEY_INFO_IN_USE;
+>             else if (!(sc->survey[pos].filled & SURVEY_INFO_IN_USE))
+>             ath_update_survey_nf
+>                 survey->filled |= SURVEY_INFO_NOISE_DBM;
+>
+> Thus, possible data races may occur.
+>
+> To fix these data races, in ath_set_channel(), these variables are
+> accessed with holding the spinlock common->cc_lock.
+>
+> These data races are found by the runtime testing of our tool DILP-2.
+>
+> Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
 
+I need a detailed review from somone familiar with ath9k before I can
+consider applying this.
 
-
-----------------------------------------------------
-This email was sent by the shareware version of Postman Professional.
-
+-- 
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
