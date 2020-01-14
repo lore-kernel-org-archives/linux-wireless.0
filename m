@@ -6,42 +6,42 @@ X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BA5AC33CB1
-	for <linux-wireless@archiver.kernel.org>; Tue, 14 Jan 2020 13:43:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DD48C33CB1
+	for <linux-wireless@archiver.kernel.org>; Tue, 14 Jan 2020 13:44:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E1D5724679
-	for <linux-wireless@archiver.kernel.org>; Tue, 14 Jan 2020 13:43:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 645862187F
+	for <linux-wireless@archiver.kernel.org>; Tue, 14 Jan 2020 13:44:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="oXIs0DFP"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="LziO/rPA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726133AbgANNnw (ORCPT
+        id S1728810AbgANNol (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 14 Jan 2020 08:43:52 -0500
+        Tue, 14 Jan 2020 08:44:41 -0500
 Received: from mail25.static.mailgun.info ([104.130.122.25]:17560 "EHLO
         mail25.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725904AbgANNnv (ORCPT
+        by vger.kernel.org with ESMTP id S1728876AbgANNoj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Jan 2020 08:43:51 -0500
+        Tue, 14 Jan 2020 08:44:39 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1579009431; h=Content-Type: MIME-Version: Message-ID:
+ s=smtp; t=1579009479; h=Content-Type: MIME-Version: Message-ID:
  In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
- bh=grv067apNIcUdGejucgF9bWSVoDiljz0jVxYhGB3g5c=; b=oXIs0DFPTsMV5jM4PNZijRfmGycZb7dz9ht9F9vqLMPy6XQL3UEUsjjLWpzcmMGqg67kjNNU
- mgXYE7azefxSeCYcj7NwDDrWpa9325tNCLoeY1YOPqKHp+ZgMiJWwGh8EdApTGefmXoXSLLV
- 8mCdf1i2qdteC66IF31bWlnEg5k=
+ bh=xVs39pFzdxC0AYVqKrc2ELfrFrxwiZjTOESKySUWCss=; b=LziO/rPAMeiVL0LfHuD5nnizigmLRJ+sMS0WJNssFWCVMU5sdo5odX/6gJ97slyfe/i8a5iz
+ /uBdyuqdsHAdjovPeTeCR2wKq4YZlREypMK1JtIKTlD1eGGF2DMI3zIwfzRpRffLhV0XZQ/v
+ 5ZxFfs9DsPH7s9h2Qp0T2kIJSRY=
 X-Mailgun-Sending-Ip: 104.130.122.25
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e1dc593.7fd7a435b500-smtp-out-n02;
- Tue, 14 Jan 2020 13:43:47 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5e1dc5c3.7f48b9847810-smtp-out-n03;
+ Tue, 14 Jan 2020 13:44:35 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id B23A4C4479C; Tue, 14 Jan 2020 13:43:47 +0000 (UTC)
+        id 73359C4479F; Tue, 14 Jan 2020 13:44:35 +0000 (UTC)
 Received: from x230.qca.qualcomm.com (85-76-19-103-nat.elisa-mobile.fi [85.76.19.103])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id D95ECC43383;
-        Tue, 14 Jan 2020 13:43:44 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org D95ECC43383
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id A70ECC433CB;
+        Tue, 14 Jan 2020 13:44:32 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org A70ECC433CB
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
@@ -51,13 +51,13 @@ Cc:     "David S. Miller" <davem@davemloft.net>,
         libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
         Takashi Iwai <tiwai@suse.de>, Miroslav Benes <mbenes@suse.cz>
-Subject: Re: [PATCH 1/2] libertas: don't exit from lbs_ibss_join_existing() with RCU read lock held
+Subject: Re: [PATCH 2/2] libertas: make lbs_ibss_join_existing() return error code on rates overflow
 References: <87woa04t2v.fsf@suse.de> <20200114103903.2336-1-nstange@suse.de>
-        <20200114103903.2336-2-nstange@suse.de>
-Date:   Tue, 14 Jan 2020 15:43:42 +0200
-In-Reply-To: <20200114103903.2336-2-nstange@suse.de> (Nicolai Stange's message
-        of "Tue, 14 Jan 2020 11:39:02 +0100")
-Message-ID: <87o8v6qhkh.fsf@codeaurora.org>
+        <20200114103903.2336-3-nstange@suse.de>
+Date:   Tue, 14 Jan 2020 15:44:30 +0200
+In-Reply-To: <20200114103903.2336-3-nstange@suse.de> (Nicolai Stange's message
+        of "Tue, 14 Jan 2020 11:39:03 +0100")
+Message-ID: <87k15uqhj5.fsf@codeaurora.org>
 User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
 Content-Type: text/plain
@@ -70,10 +70,14 @@ Nicolai Stange <nstange@suse.de> writes:
 
 > Commit e5e884b42639 ("libertas: Fix two buffer overflows at parsing bss
 > descriptor") introduced a bounds check on the number of supplied rates to
-> lbs_ibss_join_existing().
+> lbs_ibss_join_existing() and made it to return on overflow.
 >
-> Unfortunately, it introduced a return path from within a RCU read side
-> critical section without a corresponding rcu_read_unlock(). Fix this.
+> However, the aforementioned commit doesn't set the return value accordingly
+> and thus, lbs_ibss_join_existing() would return with zero even though it
+> failed.
+>
+> Make lbs_ibss_join_existing return -EINVAL in case the bounds check on the
+> number of supplied rates fails.
 >
 > Fixes: e5e884b42639 ("libertas: Fix two buffer overflows at parsing bss
 >                       descriptor")
