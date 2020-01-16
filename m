@@ -7,48 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DADAAC33CAF
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 17:00:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57575C33CB3
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 17:00:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9EF0122525
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 17:00:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2EBD22073A
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 17:00:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579194014;
-	bh=CFG0zw8xGFG5ueKpnGzhAA1T+6jpreofWYPOdc1r7rI=;
+	s=default; t=1579194046;
+	bh=3cn6uR4r1i3Inhwez/LWbQO5x28qjVfQFjlcdDRYWq4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=mRKr74Rhx56DpUKKfJBF9g0Pa0LNe2BHdBQgxR199i+EZAEc0mCqmXy6H0uCy+YIs
-	 xqPNtAdmB02MXEcfRqHLK4RY0iJGSAjWpDReWSWnR5HnfirMQvoi5YjFcjmY/9rrMs
-	 8aPGzC3WafEv/s3GCGvN1JsKv/clt3MqYNnVO9M4=
+	b=WpbA9ykLY/tp+Gy/XBXjCrZVkB/lh/os9S/AEtEGSU1e4IFhg8w25DSuR8F2ItTAC
+	 or9vcpnVwbERQ+iSKDrjd8gPfOMoEQQN1GAz1gsHFt2+C/uEKQkq8mlyljNpwB1G4U
+	 ub1gk3SxpHJQ4puRPjkrkwtuK69/9YzpZOG52JWE=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387714AbgAPRAO (ORCPT
+        id S2387885AbgAPRAp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 16 Jan 2020 12:00:14 -0500
-Received: from mail.kernel.org ([198.145.29.99]:49652 "EHLO mail.kernel.org"
+        Thu, 16 Jan 2020 12:00:45 -0500
+Received: from mail.kernel.org ([198.145.29.99]:50668 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387702AbgAPRAN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Jan 2020 12:00:13 -0500
+        id S1732881AbgAPRAo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 16 Jan 2020 12:00:44 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A455F22525;
-        Thu, 16 Jan 2020 17:00:11 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 1208920730;
+        Thu, 16 Jan 2020 17:00:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579194012;
-        bh=CFG0zw8xGFG5ueKpnGzhAA1T+6jpreofWYPOdc1r7rI=;
+        s=default; t=1579194043;
+        bh=3cn6uR4r1i3Inhwez/LWbQO5x28qjVfQFjlcdDRYWq4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Co6IPM50TBIo6LPt5479+u7+ySRP9LRatGghBWrgDJ7CgX1aTu6LFNTQf4VRVhYrA
-         XNnPoLDZHcz4gAtBCBeheyo4THVJz9Jph/w/hmAZube8Fng+j6QjtJtNdrB4efYVuI
-         mJqy6OEFj1c3Zpx6VPzHF1otkkmd0c3NDmMAUYOA=
+        b=atkAS5eoehYQRQQHpygFLgSvaOn3leanfnQnA9ufpm+49ztezcaq8w/sA9axWTzuH
+         wGpqfy90AzIHqBU6fOXLS5FQ9VANZawpUwGqXZQ2yG72n9sC27+cAt86C+8xID8NSX
+         Z7xvh9QCP+/jgaVTqJLA+d7hq3tiVF+4VZLTkBV0=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>,
-        Danny Alexander <danny.alexander@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Sasha Levin <sashal@kernel.org>,
+Cc:     Rakesh Pillai <pillair@codeaurora.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 136/671] iwlwifi: mvm: fix A-MPDU reference assignment
-Date:   Thu, 16 Jan 2020 11:50:45 -0500
-Message-Id: <20200116165940.10720-19-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 159/671] ath10k: fix dma unmap direction for management frames
+Date:   Thu, 16 Jan 2020 11:51:08 -0500
+Message-Id: <20200116165940.10720-42-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200116165940.10720-1-sashal@kernel.org>
 References: <20200116165940.10720-1-sashal@kernel.org>
@@ -61,50 +60,73 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Rakesh Pillai <pillair@codeaurora.org>
 
-[ Upstream commit 1f7698abedeeb3fef3cbcf78e16f925df675a179 ]
+[ Upstream commit 6e8a8991e2103dcb6a9cff28f460390e8e360848 ]
 
-The current code assigns the reference, and then goes to increment
-it if the toggle bit has changed. That way, we get
+The management frames transmitted are dma mapped with
+direction TO_DEVICE, but incorrectly mapped with
+direction FROM_DEVICE during tx complete and error cases.
 
-Toggle  0  0  0  0  1  1  1  1
-ID      1  1  1  1  1  2  2  2
+Fix the direction of dma during dma unmap of the
+transmitted management frames.
 
-Fix that by assigning the post-toggle ID to get
+Tested HW: WCN3990
+Tested FW: WLAN.HL.2.0-01188-QCAHLSWMTPLZ-1
 
-Toggle  0  0  0  0  1  1  1  1
-ID      1  1  1  1  2  2  2  2
-
-Reported-by: Danny Alexander <danny.alexander@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Fixes: fbe4112791b8 ("iwlwifi: mvm: update mpdu metadata API")
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Fixes: 38a1390e02b7 ("ath10k: dma unmap mgmt tx buffer if wmi cmd send fails")
+Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/mac.c | 4 ++--
+ drivers/net/wireless/ath/ath10k/wmi.c | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index 036d1d82d93e..77e369453642 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -1077,7 +1077,6 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
- 			he_phy_data = le64_to_cpu(desc->v1.he_phy_data);
- 
- 		rx_status->flag |= RX_FLAG_AMPDU_DETAILS;
--		rx_status->ampdu_reference = mvm->ampdu_ref;
- 		/* toggle is switched whenever new aggregation starts */
- 		if (toggle_bit != mvm->ampdu_toggle) {
- 			mvm->ampdu_ref++;
-@@ -1092,6 +1091,7 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
- 						RX_FLAG_AMPDU_EOF_BIT;
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 448e3a8c33a6..a09d7a07e90a 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -1,7 +1,7 @@
+ /*
+  * Copyright (c) 2005-2011 Atheros Communications Inc.
+  * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
+- * Copyright (c) 2018, The Linux Foundation. All rights reserved.
++ * Copyright (c) 2018-2019, The Linux Foundation. All rights reserved.
+  *
+  * Permission to use, copy, modify, and/or distribute this software for any
+  * purpose with or without fee is hereby granted, provided that the above
+@@ -3853,7 +3853,7 @@ void ath10k_mgmt_over_wmi_tx_work(struct work_struct *work)
+ 				ath10k_warn(ar, "failed to transmit management frame by ref via WMI: %d\n",
+ 					    ret);
+ 				dma_unmap_single(ar->dev, paddr, skb->len,
+-						 DMA_FROM_DEVICE);
++						 DMA_TO_DEVICE);
+ 				ieee80211_free_txskb(ar->hw, skb);
  			}
- 		}
-+		rx_status->ampdu_reference = mvm->ampdu_ref;
- 	}
+ 		} else {
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index aefc92d2c09b..0f6ff7a78e49 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -1,7 +1,7 @@
+ /*
+  * Copyright (c) 2005-2011 Atheros Communications Inc.
+  * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
+- * Copyright (c) 2018, The Linux Foundation. All rights reserved.
++ * Copyright (c) 2018-2019, The Linux Foundation. All rights reserved.
+  *
+  * Permission to use, copy, modify, and/or distribute this software for any
+  * purpose with or without fee is hereby granted, provided that the above
+@@ -2340,7 +2340,7 @@ static int wmi_process_mgmt_tx_comp(struct ath10k *ar, u32 desc_id,
  
- 	rcu_read_lock();
+ 	msdu = pkt_addr->vaddr;
+ 	dma_unmap_single(ar->dev, pkt_addr->paddr,
+-			 msdu->len, DMA_FROM_DEVICE);
++			 msdu->len, DMA_TO_DEVICE);
+ 	info = IEEE80211_SKB_CB(msdu);
+ 
+ 	if (status)
 -- 
 2.20.1
 
