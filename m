@@ -7,53 +7,50 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26AA2C33CAF
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 19:01:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C640C33CAF
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 19:04:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id ED71E2053B
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 19:01:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3B780206D7
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 19:04:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579201298;
-	bh=O1gW2xHsT7KaiHvrJKm6nT3L0TVBbK/KXOUm2+acMbQ=;
+	s=default; t=1579201482;
+	bh=rOBWmBUqsRKtqSJgMsVu02iSM9VhORwgoCJfqubhHAY=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=mAEPtyxYv3XYbNHrgXkEkRq0tQdkcXVlwRwXinOkp82qxJ3XzniIjulAfCRNF7W1w
-	 MAR1LaFZZQuJRbhjZEBoWF+QSYJiC3BfikdC+jMMBO3pnFgYJlnExD8LT9U2Y/7yy1
-	 wTevj02QkeSVLzBvP3BBenena1YZyu4yh5Q2XPzs=
+	b=mdWDpyjLxJuFCdJ9Q9G0EuvzuIlqoM/VB2FrL04jG5ITy0uDXSMXL1iCYnLeiEodc
+	 Kb8laDsyMI7/pAETmi57zZqMZnom4D/H8KPOxr2e8nnaSUldQNjBO5kyojDs5SMD7d
+	 JuqoywB2I7vx9wD19UxA74MjZSFBLqb+HCfANkP0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388791AbgAPRFv (ORCPT
+        id S2388319AbgAPRCR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 16 Jan 2020 12:05:51 -0500
-Received: from mail.kernel.org ([198.145.29.99]:35264 "EHLO mail.kernel.org"
+        Thu, 16 Jan 2020 12:02:17 -0500
+Received: from mail.kernel.org ([198.145.29.99]:54748 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388782AbgAPRFu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Jan 2020 12:05:50 -0500
+        id S2388308AbgAPRCQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 16 Jan 2020 12:02:16 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 10E122192A;
-        Thu, 16 Jan 2020 17:05:48 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id BD34E2087E;
+        Thu, 16 Jan 2020 17:02:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579194350;
-        bh=O1gW2xHsT7KaiHvrJKm6nT3L0TVBbK/KXOUm2+acMbQ=;
+        s=default; t=1579194135;
+        bh=rOBWmBUqsRKtqSJgMsVu02iSM9VhORwgoCJfqubhHAY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=B3GwyvOAj9UNB4FflPr+LajT6Wo4n8p+8WbBk3bznxObKNARx7pA7Y3tYKJtjEo6g
-         SU2NwpTbJvx0nDOvJuWT+6mNjvzGQ5t9UG3585jK1I0npTqTJKMtKrwCSh1gcWR2ZW
-         feq2FL3pi0Uhp/cP4QRmTvyAC17X9hTXf/UM8lh0=
+        b=pON7C8X6geuB9UDERestAlQt29G+rIfXWcLm9aIWec8DSEAJukXIjoXUO86cnuFDO
+         pYqJo01yF+Ay9J9tv+lFX9uGFo1MTl+rJDNDK483h4EzBZqo9ExGADmGg93KcW0+mG
+         YNvNxaxkS6whAResfPjCgigqeKuXQBZCWgXG3o70=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Colin Ian King <colin.king@canonical.com>,
-        Mukesh Ojha <mojha@codeaurora.org>,
+Cc:     Surabhi Vishnoi <svishnoi@codeaurora.org>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 290/671] brcmfmac: fix leak of mypkt on error return path
-Date:   Thu, 16 Jan 2020 11:58:48 -0500
-Message-Id: <20200116170509.12787-27-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 224/671] ath10k: Fix length of wmi tlv command for protected mgmt frames
+Date:   Thu, 16 Jan 2020 11:52:13 -0500
+Message-Id: <20200116165940.10720-107-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200116170509.12787-1-sashal@kernel.org>
-References: <20200116170509.12787-1-sashal@kernel.org>
+In-Reply-To: <20200116165940.10720-1-sashal@kernel.org>
+References: <20200116165940.10720-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -63,49 +60,47 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+From: Surabhi Vishnoi <svishnoi@codeaurora.org>
 
-[ Upstream commit a927e8d8ab57e696800e20cf09a72b7dfe3bbebb ]
+[ Upstream commit 761156ff573d1002983416e4fd1fe8d3489c4bd8 ]
 
-Currently if the call to brcmf_sdiod_set_backplane_window fails then
-error return path leaks mypkt. Fix this by returning by a new
-error path labelled 'out' that calls brcmu_pkt_buf_free_skb to free
-mypkt.  Also remove redundant check on err before calling
-brcmf_sdiod_skbuff_write.
+The length of wmi tlv command for management tx send is calculated
+incorrectly in case of protected management frames as there is addition
+of IEEE80211_CCMP_MIC_LEN twice. This leads to improper behaviour of
+firmware as the wmi tlv mgmt tx send command for protected mgmt frames
+is formed wrongly.
 
-Addresses-Coverity: ("Resource Leak")
-Fixes: a7c3aa1509e2 ("brcmfmac: Remove brcmf_sdiod_addrprep()")
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
-Reviewed-by: Mukesh Ojha <mojha@codeaurora.org>
+Fix the length calculation of wmi tlv command for mgmt tx send in case
+of protected management frames by adding the IEEE80211_CCMP_MIC_LEN only
+once.
+
+Tested HW: WCN3990
+Tested FW: WLAN.HL.3.1-00784-QCAHLSWMTPLZ-1
+
+Fixes: 1807da49733e "ath10k: wmi: add management tx by reference support over wmi"
+Signed-off-by: Surabhi Vishnoi <svishnoi@codeaurora.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index d2f788d88668..710dc59c5d34 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -617,15 +617,13 @@ int brcmf_sdiod_send_buf(struct brcmf_sdio_dev *sdiodev, u8 *buf, uint nbytes)
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index cdc1e64d52ad..a90990b8008d 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -2692,10 +2692,8 @@ ath10k_wmi_tlv_op_gen_mgmt_tx_send(struct ath10k *ar, struct sk_buff *msdu,
+ 	if ((ieee80211_is_action(hdr->frame_control) ||
+ 	     ieee80211_is_deauth(hdr->frame_control) ||
+ 	     ieee80211_is_disassoc(hdr->frame_control)) &&
+-	     ieee80211_has_protected(hdr->frame_control)) {
+-		len += IEEE80211_CCMP_MIC_LEN;
++	     ieee80211_has_protected(hdr->frame_control))
+ 		buf_len += IEEE80211_CCMP_MIC_LEN;
+-	}
  
- 	err = brcmf_sdiod_set_backplane_window(sdiodev, addr);
- 	if (err)
--		return err;
-+		goto out;
- 
- 	addr &= SBSDIO_SB_OFT_ADDR_MASK;
- 	addr |= SBSDIO_SB_ACCESS_2_4B_FLAG;
- 
--	if (!err)
--		err = brcmf_sdiod_skbuff_write(sdiodev, sdiodev->func2, addr,
--					       mypkt);
--
-+	err = brcmf_sdiod_skbuff_write(sdiodev, sdiodev->func2, addr, mypkt);
-+out:
- 	brcmu_pkt_buf_free_skb(mypkt);
- 
- 	return err;
+ 	buf_len = min_t(u32, buf_len, WMI_TLV_MGMT_TX_FRAME_MAX_LEN);
+ 	buf_len = round_up(buf_len, 4);
 -- 
 2.20.1
 
