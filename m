@@ -2,62 +2,99 @@ Return-Path: <SRS0=LENq=3F=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D6C8C3F68F
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 07:54:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C59DC33CB1
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 08:50:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 29431207FF
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 07:54:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CA9922073A
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 08:50:31 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=newmedia-net.de header.i=@newmedia-net.de header.b="qHk0x//b"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730255AbgAPHyy (ORCPT
+        id S1731323AbgAPIub (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 16 Jan 2020 02:54:54 -0500
-Received: from s3.sipsolutions.net ([144.76.43.62]:48182 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726369AbgAPHyy (ORCPT
+        Thu, 16 Jan 2020 03:50:31 -0500
+Received: from webmail.newmedia-net.de ([185.84.6.166]:53210 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727009AbgAPIua (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Jan 2020 02:54:54 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.93)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1irzzQ-00BVLo-EK; Thu, 16 Jan 2020 08:54:52 +0100
-Message-ID: <4c2d7cc81e83238512360903f38e12be16c16ed5.camel@sipsolutions.net>
-Subject: Re: [PATCH v2 0/3] fix a STA PS bug and add PS support to
- mac80211_hwsim
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     thomas@adapt-ip.com
-Cc:     linux-wireless <linux-wireless@vger.kernel.org>
-Date:   Thu, 16 Jan 2020 08:54:51 +0100
-In-Reply-To: <2b07e86b-9be7-4fc3-ae92-a4f831e585ef@email.android.com>
-References: <2b07e86b-9be7-4fc3-ae92-a4f831e585ef@email.android.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.34.2 (3.34.2-1.fc31) 
+        Thu, 16 Jan 2020 03:50:30 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=newmedia-net.de; s=mikd;
+        h=Content-Transfer-Encoding:Content-Type:In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:Subject; bh=xqvVau9hnLqRJMeswcL86IvudpSzTVxpRTfWX80hO1g=;
+        b=qHk0x//bh7ixqAKt8Tbog1b8ODKKqKt2moIjyuy/xLvT0MgBLJnhguFjbAfAHaxuYXCgUOO3XWRZpB9rstBgcDMDezzF9nJpnrjk2VxpeSW1KmOY7hWS/H98cUNvequpwcbFahGA5KG1KDBkT7GhFxm5D2FKlEQTpHXYHnVoEv4=;
+Subject: Re: [PATCH v3] ath9k: fix firmware bug in some Mikrotik R11e-2HPnD
+ cards
+To:     Tom Psyborg <pozega.tomislav@gmail.com>
+Cc:     Denis Kalashnikov <denis281089@gmail.com>,
+        Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <20200110132142.7737-1-denis281089@gmail.com>
+ <aab66c75-49ae-0955-03a8-f817685b0925@nbd.name>
+ <CAKoLU8P3MyauCUevcRHtzMj8HSZQLD-hYyEaZyRH9OfLye6knQ@mail.gmail.com>
+ <CAKR_QVKb21WWbUup-O9nsDvfVO7-c_+Kpxx3n8=b1e4X5pkmkw@mail.gmail.com>
+ <CAKoLU8MRzBaB9AS0--vCG01hKhBrdzB8=42A+vMv9X39ZAPZLQ@mail.gmail.com>
+ <28f78f20-b415-4046-674f-070ad6c43f44@newmedia-net.de>
+ <CAKR_QV++azTZKi0dodYXDEgXbkUcUhBqezzMtGc0=dh_ngOqOQ@mail.gmail.com>
+ <18634217-2e93-83fd-ec40-9b2a1bf28f56@newmedia-net.de>
+ <CAKR_QVLXTYsBztSH2wU3FDfwV5vaaUa0JzN=aQtMGd+CeEKE-w@mail.gmail.com>
+From:   Sebastian Gottschall <s.gottschall@newmedia-net.de>
+Message-ID: <324ec6fe-4212-a78a-dd48-8e08566719c6@newmedia-net.de>
+Date:   Thu, 16 Jan 2020 09:50:26 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101
+ Thunderbird/68.3.1
 MIME-Version: 1.0
+In-Reply-To: <CAKR_QVLXTYsBztSH2wU3FDfwV5vaaUa0JzN=aQtMGd+CeEKE-w@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
+X-Received:  from [2003:c9:3f10:df00:34e8:ca65:edfc:6be9]
+        by webmail.newmedia-net.de with esmtpsa (TLSv1:AES128-SHA:128)
+        (Exim 4.72)
+        (envelope-from <s.gottschall@newmedia-net.de>)
+        id 1is0pN-0000gC-Kk; Thu, 16 Jan 2020 09:48:33 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, 2020-01-15 at 23:53 -0800, thomas@adapt-ip.com wrote:
-> 
-> > FWIW, I applied your patches yesterday. There was one issue remaining 
-> > uncovered by them, but it wasn't actually related to your patches, just 
-> > related to the test sending too many frames. I sent a workaround to the 
-> > hostap list and also the "mac80211: use more bits for ack_frame_id" to 
-> > the kernel to fix that. 
-> > 
-> 
-> But in the v3, no frames should actually be buffered unless power save
-> is explicitly enabled on the STA side. Or is this some rrm specific
-> behavior?
 
-I didn't check whether or not powersave got enabled by default now, I
-sort of assumed it did? But that isn't really bad, almost all real
-devices will have it enabled by default too.
+Am 16.01.2020 um 08:46 schrieb Tom Psyborg:
+> On 16/01/2020, Sebastian Gottschall <s.gottschall@newmedia-net.de> wrote:
+>>>> checking subvendor and subdevice id is usefull. mikrotik has special
+>>>> values here
+>>>>
+>>>> the R11e-2HPnD card has
+>>>>
+>>>> subvendor 0x19b6
+>>>>
+>>>> subdevice 0xd016
+>>>>
+>>>>
+>>> that i already suggested but it appears his units have zeroed sub fields
+>> if it has zero subfields it has no original eeprom but a modified one.
+>> all mikrotik cards with no exception have the subvendor and subdevice id
+>> set.
+>> the subvendor and subdevice is is stored in the eeprom. or the eeprom
+>> could be also broke, but in this case the values should be 0xffff
+>> i have several original mikrotik cards of this type and this is where i
+>> got these values from. are you sure that your card is no immitation?
+>> can he send me a picture of this card?
+>>
+> oh really? probably some fools then tampered with his cards and tried
+> to screw him. your units work without this patch, and tx/rx chain
+> reads out 0x3 ?
+yes. i have about 20 - 25 of them in use and the chaininfo is correct 
+and also the subdevice and subvendor id
+is correct but i'm highly interesting finding out more about this case 
+here. so do we have just have
+a fake mikrotik card here of a known chinese marketplace or is it a real 
+one. and more interesting
 
-johannes
+if you install this card on a mikrotik board, what does routeros show
 
+Sebastian
+
+>   
+>
