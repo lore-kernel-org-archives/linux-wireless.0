@@ -2,94 +2,79 @@ Return-Path: <SRS0=LENq=3F=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC734C33CB3
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 17:52:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E78FC33CAF
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 17:54:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AF78B2077C
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 17:52:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579197126;
-	bh=8uzYNrqH8MT9BOmy4okEgOHTDg+zucgYcIhzOp4c0oU=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=O4Ntyq0QDTfis9Ai5mnajw805+V1aD9VQqvosHu7KT2At5a6wmKU2xD09rV3nM1iE
-	 S8Wp47jCcqDjWdjcoLfdvbbPXxbdtA5g0ZdT84FtcewmIxNgsFXZ3h95GNmgkTG7No
-	 LdDWyEzjcEogb50laMfUIXYKdr/9vLM0P0y99M1g=
+	by mail.kernel.org (Postfix) with ESMTP id 4480124699
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 17:54:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2406212AbgAPRp2 (ORCPT
+        id S2394450AbgAPRyH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 16 Jan 2020 12:45:28 -0500
-Received: from mail.kernel.org ([198.145.29.99]:37174 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2406200AbgAPRp1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Jan 2020 12:45:27 -0500
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        Thu, 16 Jan 2020 12:54:07 -0500
+Received: from mail.adapt-ip.com ([173.164.178.19]:53824 "EHLO
+        mail.adapt-ip.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1733250AbgAPRyG (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 16 Jan 2020 12:54:06 -0500
+Received: from localhost (unknown [127.0.0.1])
+        by mail.adapt-ip.com (Postfix) with ESMTP id 3C7152F1649;
+        Thu, 16 Jan 2020 17:54:05 +0000 (UTC)
+X-Virus-Scanned: amavisd-new at web.adapt-ip.com
+Received: from mail.adapt-ip.com ([127.0.0.1])
+        by localhost (web.adapt-ip.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id veuEyXMcWkfo; Thu, 16 Jan 2020 09:54:03 -0800 (PST)
+Received: from [10.1.10.44] (vpn.adapt-ip.com [173.164.178.20])
+        (using TLSv1.2 with cipher AES128-SHA (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A5CEF2477B;
-        Thu, 16 Jan 2020 17:45:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579196726;
-        bh=8uzYNrqH8MT9BOmy4okEgOHTDg+zucgYcIhzOp4c0oU=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=l5zWjx884Qcz6fFvZz8jhCtyguo5w5EkHXJXBHpHbgEbYpOnqEUaKgAI2+W2ZAGv4
-         P9anBELoSv6ctkjZ1y9paYgxjYx5Cd/EKeqPUnbQLaJGWnPRdnOBI8ahiGifnqXL2n
-         6dR294SkaVQAapHGEuzz2mg99YTvzh5UTAiBOYlk=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     YueHaibing <yuehaibing@huawei.com>, Hulk Robot <hulkci@huawei.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.4 111/174] libertas_tf: Use correct channel range in lbtf_geo_init
-Date:   Thu, 16 Jan 2020 12:41:48 -0500
-Message-Id: <20200116174251.24326-111-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200116174251.24326-1-sashal@kernel.org>
-References: <20200116174251.24326-1-sashal@kernel.org>
+        (Authenticated sender: thomas@adapt-ip.com)
+        by mail.adapt-ip.com (Postfix) with ESMTPSA id 685982F1646;
+        Thu, 16 Jan 2020 09:54:03 -0800 (PST)
+Subject: Re: [PATCH v2 0/3] fix a STA PS bug and add PS support to
+ mac80211_hwsim
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     linux-wireless <linux-wireless@vger.kernel.org>
+References: <2b07e86b-9be7-4fc3-ae92-a4f831e585ef@email.android.com>
+ <4c2d7cc81e83238512360903f38e12be16c16ed5.camel@sipsolutions.net>
+From:   Thomas Pedersen <thomas@adapt-ip.com>
+Message-ID: <bd9d68d2-114d-7e7a-000b-d2bf40658e74@adapt-ip.com>
+Date:   Thu, 16 Jan 2020 09:54:03 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <4c2d7cc81e83238512360903f38e12be16c16ed5.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: YueHaibing <yuehaibing@huawei.com>
+On 1/15/20 11:54 PM, Johannes Berg wrote:
+> On Wed, 2020-01-15 at 23:53 -0800, thomas@adapt-ip.com wrote:
+>>
+>>> FWIW, I applied your patches yesterday. There was one issue remaining 
+>>> uncovered by them, but it wasn't actually related to your patches, just 
+>>> related to the test sending too many frames. I sent a workaround to the 
+>>> hostap list and also the "mac80211: use more bits for ack_frame_id" to 
+>>> the kernel to fix that. 
+>>>
+>>
+>> But in the v3, no frames should actually be buffered unless power save
+>> is explicitly enabled on the STA side. Or is this some rrm specific
+>> behavior?
+> 
+> I didn't check whether or not powersave got enabled by default now, I
+> sort of assumed it did? But that isn't really bad, almost all real
+> devices will have it enabled by default too.
 
-[ Upstream commit 2ec4ad49b98e4a14147d04f914717135eca7c8b1 ]
+In v2 powersave was enabled by default, but that broke some test
+assumptions (and p2p stuff I don't really understand), so v3 disables it
+by default: https://lore.kernel.org/linux-wireless/20200114055940.18502-2-thomas@adapt-ip.com/T/#u
 
-It seems we should use 'range' instead of 'priv->range'
-in lbtf_geo_init(), because 'range' is the corret one
-related to current regioncode.
-
-Reported-by: Hulk Robot <hulkci@huawei.com>
-Fixes: 691cdb49388b ("libertas_tf: command helper functions for libertas_tf")
-Signed-off-by: YueHaibing <yuehaibing@huawei.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/net/wireless/libertas_tf/cmd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/libertas_tf/cmd.c b/drivers/net/wireless/libertas_tf/cmd.c
-index 909ac3685010..2b193f1257a5 100644
---- a/drivers/net/wireless/libertas_tf/cmd.c
-+++ b/drivers/net/wireless/libertas_tf/cmd.c
-@@ -69,7 +69,7 @@ static void lbtf_geo_init(struct lbtf_private *priv)
- 			break;
- 		}
- 
--	for (ch = priv->range.start; ch < priv->range.end; ch++)
-+	for (ch = range->start; ch < range->end; ch++)
- 		priv->channels[CHAN_TO_IDX(ch)].flags = 0;
- }
- 
 -- 
-2.20.1
-
+-- thomas
