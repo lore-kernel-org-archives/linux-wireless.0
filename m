@@ -2,53 +2,54 @@ Return-Path: <SRS0=LENq=3F=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D4E1C33CB3
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 18:01:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F5A6C33CAF
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 18:01:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5A221217F4
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 18:01:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7690E217F4
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 18:01:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579197694;
-	bh=0NI5eg90uq0zouBTqhJBrfGAOMmaxF1zTGm0KwDIzGE=;
+	s=default; t=1579197705;
+	bh=Lr6Bj4/TyC+oAE4CYiw02LFvCpPbnBN1dY4qg7FKstg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=TcvqzyK24hoW2QqCdgQ5M0M1HP2LfuYe2WwIgF0I+ZjLEkisr1X4HtDScuA2TfOTG
-	 QL4NF/tMkdQ8qB8EyBqP0/ZgcgoLtpBdCjsRGLvXKelrZuz4F+/bfQCcRKa8acORNi
-	 a0RRqlUJBXvmT7A+vJ0TQSVrEiD18zork75XTjXg=
+	b=yi8sF5YH3oMuf649UbxSRq5lRsjjn8cT/fBA/2ejOF0dBvjICRJz3Df4L22APTTje
+	 t2XONoQgQIgqB81TwIsEoiQWhalngvTUlRYycExg4bDDGRfnm+HkDzCynWFUaf7wjN
+	 j0HokWb9DQR3YwSxLd5UZbEbm6+q/Thlky5Tnsw0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2404962AbgAPRl1 (ORCPT
+        id S2405657AbgAPRlZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 16 Jan 2020 12:41:27 -0500
-Received: from mail.kernel.org ([198.145.29.99]:57710 "EHLO mail.kernel.org"
+        Thu, 16 Jan 2020 12:41:25 -0500
+Received: from mail.kernel.org ([198.145.29.99]:59032 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2405475AbgAPRka (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Jan 2020 12:40:30 -0500
+        id S2393786AbgAPRlY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 16 Jan 2020 12:41:24 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 2F40F24706;
-        Thu, 16 Jan 2020 17:40:28 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 5791D246E0;
+        Thu, 16 Jan 2020 17:41:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579196429;
-        bh=0NI5eg90uq0zouBTqhJBrfGAOMmaxF1zTGm0KwDIzGE=;
+        s=default; t=1579196484;
+        bh=Lr6Bj4/TyC+oAE4CYiw02LFvCpPbnBN1dY4qg7FKstg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=CzHMqM7rrsf9504ClzzZdjmXLampR6Z8EU8s7Kz/uTd823Cp5lNpkMJDjXeRRR6bq
-         BOr06q4K6eUKGZCbwVlMyo4RFOpPw4YS+Jhp7lXXsvvfGyrhVYnmIOVlKcU04OEQ2l
-         imcbXszFnLkokMdIppsiD1p91GnGeuVs9g6icl+0=
+        b=A5i47zp4mH5cUNJbYp773ugLW4F3sExzpXrQWZbN0iWN8pO5Kdyx7CcD4Q0RN6h9t
+         lV6wtNlnX964dxrC7m7nTWdDLICUKve1z3dvmg3L6mn1eYqRlAULHknUmNRPk7TkoF
+         SaBV7lWwPa/rDXDTmmJJ29HtXByMhzvYsqIoZb1g=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Lorenzo Bianconi <lorenzo@kernel.org>,
-        Koen Vandeputte <koen.vandeputte@ncentric.com>,
+Cc:     Nathan Chancellor <natechancellor@gmail.com>,
+        Ping-Ke Shih <pkshih@realtek.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 196/251] ath9k: dynack: fix possible deadlock in ath_dynack_node_{de}init
-Date:   Thu, 16 Jan 2020 12:35:45 -0500
-Message-Id: <20200116173641.22137-156-sashal@kernel.org>
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        clang-built-linux@googlegroups.com
+Subject: [PATCH AUTOSEL 4.9 230/251] rtlwifi: Remove unnecessary NULL check in rtl_regd_init
+Date:   Thu, 16 Jan 2020 12:36:19 -0500
+Message-Id: <20200116173641.22137-190-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200116173641.22137-1-sashal@kernel.org>
 References: <20200116173641.22137-1-sashal@kernel.org>
@@ -61,134 +62,53 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Lorenzo Bianconi <lorenzo@kernel.org>
+From: Nathan Chancellor <natechancellor@gmail.com>
 
-[ Upstream commit e1aa1a1db3b01c9890e82cf065cee99962ba1ed9 ]
+[ Upstream commit 091c6e9c083f7ebaff00b37ad13562d51464d175 ]
 
-Fix following lockdep warning disabling bh in
-ath_dynack_node_init/ath_dynack_node_deinit
+When building with Clang + -Wtautological-pointer-compare:
 
-[   75.955878] --------------------------------
-[   75.955880] inconsistent {SOFTIRQ-ON-W} -> {IN-SOFTIRQ-W} usage.
-[   75.955884] swapper/0/0 [HC0[0]:SC1[3]:HE1:SE0] takes:
-[   75.955888] 00000000792a7ee0 (&(&da->qlock)->rlock){+.?.}, at: ath_dynack_sample_ack_ts+0x4d/0xa0 [ath9k_hw]
-[   75.955905] {SOFTIRQ-ON-W} state was registered at:
-[   75.955912]   lock_acquire+0x9a/0x160
-[   75.955917]   _raw_spin_lock+0x2c/0x70
-[   75.955927]   ath_dynack_node_init+0x2a/0x60 [ath9k_hw]
-[   75.955934]   ath9k_sta_state+0xec/0x160 [ath9k]
-[   75.955976]   drv_sta_state+0xb2/0x740 [mac80211]
-[   75.956008]   sta_info_insert_finish+0x21a/0x420 [mac80211]
-[   75.956039]   sta_info_insert_rcu+0x12b/0x2c0 [mac80211]
-[   75.956069]   sta_info_insert+0x7/0x70 [mac80211]
-[   75.956093]   ieee80211_prep_connection+0x42e/0x730 [mac80211]
-[   75.956120]   ieee80211_mgd_auth.cold+0xb9/0x15c [mac80211]
-[   75.956152]   cfg80211_mlme_auth+0x143/0x350 [cfg80211]
-[   75.956169]   nl80211_authenticate+0x25e/0x2b0 [cfg80211]
-[   75.956172]   genl_family_rcv_msg+0x198/0x400
-[   75.956174]   genl_rcv_msg+0x42/0x90
-[   75.956176]   netlink_rcv_skb+0x35/0xf0
-[   75.956178]   genl_rcv+0x1f/0x30
-[   75.956180]   netlink_unicast+0x154/0x200
-[   75.956182]   netlink_sendmsg+0x1bf/0x3d0
-[   75.956186]   ___sys_sendmsg+0x2c2/0x2f0
-[   75.956187]   __sys_sendmsg+0x44/0x80
-[   75.956190]   do_syscall_64+0x55/0x1a0
-[   75.956192]   entry_SYSCALL_64_after_hwframe+0x49/0xbe
-[   75.956194] irq event stamp: 2357092
-[   75.956196] hardirqs last  enabled at (2357092): [<ffffffff818c62de>] _raw_spin_unlock_irqrestore+0x3e/0x50
-[   75.956199] hardirqs last disabled at (2357091): [<ffffffff818c60b1>] _raw_spin_lock_irqsave+0x11/0x80
-[   75.956202] softirqs last  enabled at (2357072): [<ffffffff8106dc09>] irq_enter+0x59/0x60
-[   75.956204] softirqs last disabled at (2357073): [<ffffffff8106dcbe>] irq_exit+0xae/0xc0
-[   75.956206]
-               other info that might help us debug this:
-[   75.956207]  Possible unsafe locking scenario:
+drivers/net/wireless/realtek/rtlwifi/regd.c:389:33: warning: comparison
+of address of 'rtlpriv->regd' equal to a null pointer is always false
+[-Wtautological-pointer-compare]
+        if (wiphy == NULL || &rtlpriv->regd == NULL)
+                              ~~~~~~~~~^~~~    ~~~~
+1 warning generated.
 
-[   75.956208]        CPU0
-[   75.956209]        ----
-[   75.956210]   lock(&(&da->qlock)->rlock);
-[   75.956213]   <Interrupt>
-[   75.956214]     lock(&(&da->qlock)->rlock);
-[   75.956216]
-                *** DEADLOCK ***
+The address of an array member is never NULL unless it is the first
+struct member so remove the unnecessary check. This was addressed in
+the staging version of the driver in commit f986978b32b3 ("Staging:
+rtlwifi: remove unnecessary NULL check").
 
-[   75.956217] 1 lock held by swapper/0/0:
-[   75.956219]  #0: 000000003bb5675c (&(&sc->sc_pcu_lock)->rlock){+.-.}, at: ath9k_tasklet+0x55/0x240 [ath9k]
-[   75.956225]
-               stack backtrace:
-[   75.956228] CPU: 0 PID: 0 Comm: swapper/0 Not tainted 5.3.0-rc1-wdn+ #13
-[   75.956229] Hardware name: Dell Inc. Studio XPS 1340/0K183D, BIOS A11 09/08/2009
-[   75.956231] Call Trace:
-[   75.956233]  <IRQ>
-[   75.956236]  dump_stack+0x67/0x90
-[   75.956239]  mark_lock+0x4c1/0x640
-[   75.956242]  ? check_usage_backwards+0x130/0x130
-[   75.956245]  ? sched_clock_local+0x12/0x80
-[   75.956247]  __lock_acquire+0x484/0x7a0
-[   75.956250]  ? __lock_acquire+0x3b9/0x7a0
-[   75.956252]  lock_acquire+0x9a/0x160
-[   75.956259]  ? ath_dynack_sample_ack_ts+0x4d/0xa0 [ath9k_hw]
-[   75.956262]  _raw_spin_lock_bh+0x34/0x80
-[   75.956268]  ? ath_dynack_sample_ack_ts+0x4d/0xa0 [ath9k_hw]
-[   75.956275]  ath_dynack_sample_ack_ts+0x4d/0xa0 [ath9k_hw]
-[   75.956280]  ath_rx_tasklet+0xd09/0xe90 [ath9k]
-[   75.956286]  ath9k_tasklet+0x102/0x240 [ath9k]
-[   75.956288]  tasklet_action_common.isra.0+0x6d/0x170
-[   75.956291]  __do_softirq+0xcc/0x425
-[   75.956294]  irq_exit+0xae/0xc0
-[   75.956296]  do_IRQ+0x8a/0x110
-[   75.956298]  common_interrupt+0xf/0xf
-[   75.956300]  </IRQ>
-[   75.956303] RIP: 0010:cpuidle_enter_state+0xb2/0x400
-[   75.956308] RSP: 0018:ffffffff82203e70 EFLAGS: 00000202 ORIG_RAX: ffffffffffffffd7
-[   75.956310] RAX: ffffffff82219800 RBX: ffffffff822bd0a0 RCX: 0000000000000000
-[   75.956312] RDX: 0000000000000046 RSI: 0000000000000006 RDI: ffffffff82219800
-[   75.956314] RBP: ffff888155a01c00 R08: 00000011af51aabe R09: 0000000000000000
-[   75.956315] R10: 0000000000000000 R11: 0000000000000000 R12: 0000000000000002
-[   75.956317] R13: 00000011af51aabe R14: 0000000000000003 R15: ffffffff82219800
-[   75.956321]  cpuidle_enter+0x24/0x40
-[   75.956323]  do_idle+0x1ac/0x220
-[   75.956326]  cpu_startup_entry+0x14/0x20
-[   75.956329]  start_kernel+0x482/0x489
-[   75.956332]  secondary_startup_64+0xa4/0xb0
+While we are here, fix the following checkpatch warning:
 
-Fixes: c774d57fd47c ("ath9k: add dynamic ACK timeout estimation")
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
-Tested-by: Koen Vandeputte <koen.vandeputte@ncentric.com>
+CHECK: Comparison to NULL could be written "!wiphy"
+35: FILE: drivers/net/wireless/realtek/rtlwifi/regd.c:389:
++       if (wiphy == NULL)
+
+Fixes: 0c8173385e54 ("rtl8192ce: Add new driver")
+Link:https://github.com/ClangBuiltLinux/linux/issues/750
+Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+Acked-by: Ping-Ke Shih <pkshih@realtek.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath9k/dynack.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/regd.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/dynack.c b/drivers/net/wireless/ath/ath9k/dynack.c
-index 6e236a485431..71b4888b30e7 100644
---- a/drivers/net/wireless/ath/ath9k/dynack.c
-+++ b/drivers/net/wireless/ath/ath9k/dynack.c
-@@ -300,9 +300,9 @@ void ath_dynack_node_init(struct ath_hw *ah, struct ath_node *an)
+diff --git a/drivers/net/wireless/realtek/rtlwifi/regd.c b/drivers/net/wireless/realtek/rtlwifi/regd.c
+index 6ee6bf8e7eaf..ab53cf42cf42 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/regd.c
++++ b/drivers/net/wireless/realtek/rtlwifi/regd.c
+@@ -427,7 +427,7 @@ int rtl_regd_init(struct ieee80211_hw *hw,
+ 	struct wiphy *wiphy = hw->wiphy;
+ 	struct country_code_to_enum_rd *country = NULL;
  
- 	an->ackto = ackto;
+-	if (wiphy == NULL || &rtlpriv->regd == NULL)
++	if (!wiphy)
+ 		return -EINVAL;
  
--	spin_lock(&da->qlock);
-+	spin_lock_bh(&da->qlock);
- 	list_add_tail(&an->list, &da->nodes);
--	spin_unlock(&da->qlock);
-+	spin_unlock_bh(&da->qlock);
- }
- EXPORT_SYMBOL(ath_dynack_node_init);
- 
-@@ -316,9 +316,9 @@ void ath_dynack_node_deinit(struct ath_hw *ah, struct ath_node *an)
- {
- 	struct ath_dynack *da = &ah->dynack;
- 
--	spin_lock(&da->qlock);
-+	spin_lock_bh(&da->qlock);
- 	list_del(&an->list);
--	spin_unlock(&da->qlock);
-+	spin_unlock_bh(&da->qlock);
- }
- EXPORT_SYMBOL(ath_dynack_node_deinit);
- 
+ 	/* init country_code from efuse channel plan */
 -- 
 2.20.1
 
