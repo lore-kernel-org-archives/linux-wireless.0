@@ -4,54 +4,53 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6250C33CB6
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 17:01:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 90DBFC33CB6
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 17:07:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7A91421582
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 17:01:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4598B24686
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 17:07:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579194086;
-	bh=hyqnidKUhr5IO7828ua1HHV6ukySUvw9Gad4wTAK1DE=;
+	s=default; t=1579194421;
+	bh=9LdsUBp7qfC8M7hIx4I1cjSoYSEPj8Dn1kYaez5MelE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=xnrG0IG7QLJDSAq3bKIKkwnYAGOKMscjk7naDy3J4Usc0UBmZwQlThzqt/3fDoXFL
-	 PqjwF+aR3Jt9BvvyW3r100ySOugfTJPdSt0i3GPVGipZgEKuRib9sl9vMNxMVfbMub
-	 sjz3S2Rug0pFCOwoKdiq+ANokgDTmrUgkOF/fxyo=
+	b=EmJ7ZzVUKybk3tE+k3GtTG/jMUFDFrvK3FaN/fPOBeaYVJu5SKA7w4GLMku6DCbnd
+	 g7q6qf16bSA7eH5SBQcFoiLHSgIsfKkDSm2IWYOlYHoJIaM6JCRf5BszmUnmY4wOlf
+	 AJI4t1At0BD1SkvQWDlJrCrpZKskLlkDwNBh2FZQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387686AbgAPRBZ (ORCPT
+        id S2389051AbgAPRG7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 16 Jan 2020 12:01:25 -0500
-Received: from mail.kernel.org ([198.145.29.99]:52370 "EHLO mail.kernel.org"
+        Thu, 16 Jan 2020 12:06:59 -0500
+Received: from mail.kernel.org ([198.145.29.99]:38020 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388078AbgAPRBW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Jan 2020 12:01:22 -0500
+        id S2389044AbgAPRG6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 16 Jan 2020 12:06:58 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 35AE520730;
-        Thu, 16 Jan 2020 17:01:21 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 6650A2081E;
+        Thu, 16 Jan 2020 17:06:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579194082;
-        bh=hyqnidKUhr5IO7828ua1HHV6ukySUvw9Gad4wTAK1DE=;
+        s=default; t=1579194417;
+        bh=9LdsUBp7qfC8M7hIx4I1cjSoYSEPj8Dn1kYaez5MelE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=zggOnGeCZI/EA26jG4oEv6sh3FOEnUmDJdbScRBHtN81CbU0F7jAhANQARL5d0hSU
-         +ZJC6X6/o00Eu/RuspxeEGruweQl0VKLA+mkCA1DzmI27VpDhNI28YFv7XCBsyH/vp
-         6C1oqoQU9pH/YW2cVmemwzQ6BGPk7wNsKLKCFJa0=
+        b=Yu2aVTu9KuYd2slD/1/jbgFdFzLhTrdsN9MQpu6gcYsu8orlCjCMjbQ1gmOobxPgI
+         +BAe2Tap+ksQqFkB38jazEBg2kidEtJ8Sl/4207Vuh3kAt4hOzlC0tjbJEEINR5dn7
+         G4lIKUX7pzp2hoIxUoXMem+C/CPdv1g+YkhCSBvw=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Felix Fietkau <nbd@nbd.name>, Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 4.19 187/671] mt76: usb: fix possible memory leak in mt76u_buf_free
-Date:   Thu, 16 Jan 2020 11:51:36 -0500
-Message-Id: <20200116165940.10720-70-sashal@kernel.org>
+Cc:     Rakesh Pillai <pillair@codeaurora.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 338/671] ath10k: Fix encoding for protected management frames
+Date:   Thu, 16 Jan 2020 11:59:36 -0500
+Message-Id: <20200116170509.12787-75-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200116165940.10720-1-sashal@kernel.org>
-References: <20200116165940.10720-1-sashal@kernel.org>
+In-Reply-To: <20200116170509.12787-1-sashal@kernel.org>
+References: <20200116170509.12787-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -61,63 +60,46 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+From: Rakesh Pillai <pillair@codeaurora.org>
 
-[ Upstream commit cb83585e1121bd6d6c039cf09fa32380bf8b6258 ]
+[ Upstream commit 42f1bc43e6a97b9ddbe976eba9bd05306c990c75 ]
 
-Move q->ndesc initialization before the for loop in mt76u_alloc_rx
-since otherwise allocated urbs will not be freed in mt76u_buf_free
-Double-check scatterlist pointer in mt76u_buf_free
+Currently the protected management frames are
+not appended with the MIC_LEN which results in
+the protected management frames being encoded
+incorrectly.
 
-Fixes: b40b15e1521f ("mt76: add usb support to mt76 layer")
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Add the extra space at the end of the protected
+management frames to fix this encoding error for
+the protected management frames.
+
+Tested HW: WCN3990
+Tested FW: WLAN.HL.3.1-00784-QCAHLSWMTPLZ-1
+
+Fixes: 1807da49733e ("ath10k: wmi: add management tx by reference support over wmi")
+Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/usb.c | 14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/wireless/mediatek/mt76/usb.c
-index 8d40e92fb6f2..dcf927de65f3 100644
---- a/drivers/net/wireless/mediatek/mt76/usb.c
-+++ b/drivers/net/wireless/mediatek/mt76/usb.c
-@@ -273,10 +273,16 @@ EXPORT_SYMBOL_GPL(mt76u_buf_alloc);
- void mt76u_buf_free(struct mt76u_buf *buf)
- {
- 	struct urb *urb = buf->urb;
-+	struct scatterlist *sg;
- 	int i;
- 
--	for (i = 0; i < urb->num_sgs; i++)
--		skb_free_frag(sg_virt(&urb->sg[i]));
-+	for (i = 0; i < urb->num_sgs; i++) {
-+		sg = &urb->sg[i];
-+		if (!sg)
-+			continue;
-+
-+		skb_free_frag(sg_virt(sg));
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index a90990b8008d..248decb494c2 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -2692,8 +2692,10 @@ ath10k_wmi_tlv_op_gen_mgmt_tx_send(struct ath10k *ar, struct sk_buff *msdu,
+ 	if ((ieee80211_is_action(hdr->frame_control) ||
+ 	     ieee80211_is_deauth(hdr->frame_control) ||
+ 	     ieee80211_is_disassoc(hdr->frame_control)) &&
+-	     ieee80211_has_protected(hdr->frame_control))
++	     ieee80211_has_protected(hdr->frame_control)) {
++		skb_put(msdu, IEEE80211_CCMP_MIC_LEN);
+ 		buf_len += IEEE80211_CCMP_MIC_LEN;
 +	}
- 	usb_free_urb(buf->urb);
- }
- EXPORT_SYMBOL_GPL(mt76u_buf_free);
-@@ -478,7 +484,8 @@ static int mt76u_alloc_rx(struct mt76_dev *dev)
- 		nsgs = 1;
- 	}
  
--	for (i = 0; i < MT_NUM_RX_ENTRIES; i++) {
-+	q->ndesc = MT_NUM_RX_ENTRIES;
-+	for (i = 0; i < q->ndesc; i++) {
- 		err = mt76u_buf_alloc(dev, &q->entry[i].ubuf,
- 				      nsgs, q->buf_size,
- 				      SKB_WITH_OVERHEAD(q->buf_size),
-@@ -486,7 +493,6 @@ static int mt76u_alloc_rx(struct mt76_dev *dev)
- 		if (err < 0)
- 			return err;
- 	}
--	q->ndesc = MT_NUM_RX_ENTRIES;
- 
- 	return mt76u_submit_rx_buffers(dev);
- }
+ 	buf_len = min_t(u32, buf_len, WMI_TLV_MGMT_TX_FRAME_MAX_LEN);
+ 	buf_len = round_up(buf_len, 4);
 -- 
 2.20.1
 
