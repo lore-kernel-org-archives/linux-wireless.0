@@ -7,46 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03BC5C33CAF
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 17:45:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C12C7C33CB3
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 17:46:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CE364246B9
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 17:45:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 927E9246F3
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 17:46:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579196757;
-	bh=JYnzlzmlOi8zxfkZ3gNkyag99DW/iJIorNEPxenw/wA=;
+	s=default; t=1579196774;
+	bh=YOIE4NNw0fteHkmepF0f7B4QZv5cJzxsWkK7m3/I6zQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=VTiFwwQ+DORxihvgdtpqZqNxeJw9LndarE6ky4tpK49j0WpBHJin5pCDIBZycVmdg
-	 VbmydisYMu+HzqWXT5DSzRglR7l73HDB5S3EDhaVGjOLqtScfJYHXuyGJbyzuRpJx6
-	 Iz7TIJCCDvZPRkE6swCYihp6efPlS9sJUIYnzc6M=
+	b=RdbX7MCJszPd8q5+FMXwVlz7NK3rJHnWyoPFB11ZdS9K54eMb7JgzWLgcOiNac4zr
+	 Vk+FvYt7hYEwZbtY/3E8gP1d8nrzOHWIDTnnNrYiWK/ZEM2e0qEdN821USHHbBJvj+
+	 j1BDRa7WCdh+XmQPxbKn48ozogsBDLQbg1cBJj/Y=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2406567AbgAPRp5 (ORCPT
+        id S2406604AbgAPRqN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 16 Jan 2020 12:45:57 -0500
-Received: from mail.kernel.org ([198.145.29.99]:38316 "EHLO mail.kernel.org"
+        Thu, 16 Jan 2020 12:46:13 -0500
+Received: from mail.kernel.org ([198.145.29.99]:38734 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2406558AbgAPRp4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Jan 2020 12:45:56 -0500
+        id S2406584AbgAPRqM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 16 Jan 2020 12:46:12 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 83147246B9;
-        Thu, 16 Jan 2020 17:45:55 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 78D23246DB;
+        Thu, 16 Jan 2020 17:46:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579196756;
-        bh=JYnzlzmlOi8zxfkZ3gNkyag99DW/iJIorNEPxenw/wA=;
+        s=default; t=1579196772;
+        bh=YOIE4NNw0fteHkmepF0f7B4QZv5cJzxsWkK7m3/I6zQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=FcZZKOAmn2QhOAkbRTas0K1XfUQkyADmngnefqoG54B9mAPg7ox2EsbEUjCYSvxjZ
-         meSP+YXAlLTX4KLJB5woVh4o8ao+LQLy4SOaRxMefJVYTRPlZajlzswa2TthZv3HJH
-         u/aEtLf6UXCYhyV/6XCTZsPQeUNoBZXeW7lMwiCo=
+        b=WIy2oMHHRsivfAaWL3d29+UxuwrlVDv+fAnxWb+9Zlu+9vKpUuhiEDuP7qDtdk77r
+         CZez3125JD+IhXlA/GRic1gykM/FwZN+i+JwI2MP41W3COKQnohBBB1XKR84F5ptim
+         27wtzw56OnhBuHw5GgpnrUNvlSHI5AK6gDSBHMUI=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Colin Ian King <colin.king@canonical.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>, linux-wireless@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.4 131/174] bcma: fix incorrect update of BCMA_CORE_PCI_MDIO_DATA
-Date:   Thu, 16 Jan 2020 12:42:08 -0500
-Message-Id: <20200116174251.24326-131-sashal@kernel.org>
+Cc:     Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.4 143/174] mac80211: accept deauth frames in IBSS mode
+Date:   Thu, 16 Jan 2020 12:42:20 -0500
+Message-Id: <20200116174251.24326-143-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200116174251.24326-1-sashal@kernel.org>
 References: <20200116174251.24326-1-sashal@kernel.org>
@@ -59,46 +60,47 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit 420c20be08a4597404d272ae9793b642401146eb ]
+[ Upstream commit 95697f9907bfe3eab0ef20265a766b22e27dde64 ]
 
-An earlier commit re-worked the setting of the bitmask and is now
-assigning v with some bit flags rather than bitwise or-ing them
-into v, consequently the earlier bit-settings of v are being lost.
-Fix this by replacing an assignment with the bitwise or instead.
+We can process deauth frames and all, but we drop them very
+early in the RX path today - this could never have worked.
 
-Addresses-Coverity: ("Unused value")
-Fixes: 2be25cac8402 ("bcma: add constants for PCI and use them")
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Fixes: 2cc59e784b54 ("mac80211: reply to AUTH with DEAUTH if sta allocation fails in IBSS")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Link: https://lore.kernel.org/r/20191004123706.15768-2-luca@coelho.fi
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/bcma/driver_pci.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ net/mac80211/rx.c | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/bcma/driver_pci.c b/drivers/bcma/driver_pci.c
-index f499a469e66d..12b2cc9a3fbe 100644
---- a/drivers/bcma/driver_pci.c
-+++ b/drivers/bcma/driver_pci.c
-@@ -78,7 +78,7 @@ static u16 bcma_pcie_mdio_read(struct bcma_drv_pci *pc, u16 device, u8 address)
- 		v |= (address << BCMA_CORE_PCI_MDIODATA_REGADDR_SHF_OLD);
- 	}
- 
--	v = BCMA_CORE_PCI_MDIODATA_START;
-+	v |= BCMA_CORE_PCI_MDIODATA_START;
- 	v |= BCMA_CORE_PCI_MDIODATA_READ;
- 	v |= BCMA_CORE_PCI_MDIODATA_TA;
- 
-@@ -121,7 +121,7 @@ static void bcma_pcie_mdio_write(struct bcma_drv_pci *pc, u16 device,
- 		v |= (address << BCMA_CORE_PCI_MDIODATA_REGADDR_SHF_OLD);
- 	}
- 
--	v = BCMA_CORE_PCI_MDIODATA_START;
-+	v |= BCMA_CORE_PCI_MDIODATA_START;
- 	v |= BCMA_CORE_PCI_MDIODATA_WRITE;
- 	v |= BCMA_CORE_PCI_MDIODATA_TA;
- 	v |= data;
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 3b8e2f97d815..2b7975c4dac7 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -3040,9 +3040,18 @@ ieee80211_rx_h_mgmt(struct ieee80211_rx_data *rx)
+ 	case cpu_to_le16(IEEE80211_STYPE_PROBE_RESP):
+ 		/* process for all: mesh, mlme, ibss */
+ 		break;
++	case cpu_to_le16(IEEE80211_STYPE_DEAUTH):
++		if (is_multicast_ether_addr(mgmt->da) &&
++		    !is_broadcast_ether_addr(mgmt->da))
++			return RX_DROP_MONITOR;
++
++		/* process only for station/IBSS */
++		if (sdata->vif.type != NL80211_IFTYPE_STATION &&
++		    sdata->vif.type != NL80211_IFTYPE_ADHOC)
++			return RX_DROP_MONITOR;
++		break;
+ 	case cpu_to_le16(IEEE80211_STYPE_ASSOC_RESP):
+ 	case cpu_to_le16(IEEE80211_STYPE_REASSOC_RESP):
+-	case cpu_to_le16(IEEE80211_STYPE_DEAUTH):
+ 	case cpu_to_le16(IEEE80211_STYPE_DISASSOC):
+ 		if (is_multicast_ether_addr(mgmt->da) &&
+ 		    !is_broadcast_ether_addr(mgmt->da))
 -- 
 2.20.1
 
