@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20A10C33CAF
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 18:19:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6ED7CC33CB3
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 18:34:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EEEC720730
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 18:19:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 41E56206D7
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 18:34:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579198781;
-	bh=9jFjZ5bu+tsaBRyIe6orZnczu0wyPfyxbPpkonaWPQQ=;
+	s=default; t=1579199684;
+	bh=zh/nQzK4rhPcEdCNNJRcqVr+AghfOqS52DMQnXrB+/s=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=W0O53bUV29gujLzPflEXcD84a7oJspyI6Og56Htr9QgpmkFNoi7wbpOIeXJ8ulFX7
-	 XGMJPB63W1tcg7j2XHExFr/Z9fc+SRPe3HPFv4wKt0ksGchve1JTigh8yT4Eh0KqMJ
-	 DTnChGvtf5tCCUHDzqGKGRwNZhLQ8Vn5j6HDDdss=
+	b=fs7ECq7wn3Xkqko6CW5rwSjRbYIj/Q3bA3eedS/ATkvFfI+gnLAeTkve0skbg2wWY
+	 vP5tn2ldsIuvoIB27B+k5aGfCpfZE42i7E0BwK5WxZBJdYfMW5xNcKikRwp1q6d+JT
+	 yEglD4010cFHyCVQP7BuxM+iraVizyVaLERtxHo8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392560AbgAPR20 (ORCPT
+        id S2436786AbgAPSeg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 16 Jan 2020 12:28:26 -0500
-Received: from mail.kernel.org ([198.145.29.99]:39450 "EHLO mail.kernel.org"
+        Thu, 16 Jan 2020 13:34:36 -0500
+Received: from mail.kernel.org ([198.145.29.99]:59348 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2404213AbgAPR2Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Jan 2020 12:28:24 -0500
+        id S2391666AbgAPRYf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 16 Jan 2020 12:24:35 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E00BB246D3;
-        Thu, 16 Jan 2020 17:28:22 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id A367D2469F;
+        Thu, 16 Jan 2020 17:24:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579195704;
-        bh=9jFjZ5bu+tsaBRyIe6orZnczu0wyPfyxbPpkonaWPQQ=;
+        s=default; t=1579195474;
+        bh=zh/nQzK4rhPcEdCNNJRcqVr+AghfOqS52DMQnXrB+/s=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=iW9/3SYbmECG92M9oSb8Ys1mfai3SOD4mrS2z8/gBbxWHoTzOXJ6rnqMR/WYGgrHu
-         byGtGimaVw8ZoMXTwIQrNX0g/kgcx9TC7dItuvjAnMHF/rhw+Fs2Aogn4kKtzKfXFM
-         dc5vusEknMG8z7cvW9IaNrYJQ+J49s6Tqeecre/Q=
+        b=jKiXJwlymw/XHq0A6bXcbwKrFJAqBs2xBiugKixCluE/NDhSGQKXmw+9ZWy+gDzUL
+         FJkvevy+/lkZKJQ0L51AqasUyt1IO74y644FbZPVBLUmRHtC4uHkZKhfi+CQHjzYZp
+         L5R7zFvspa090R3GY9nRYU5m6ry96pitJLVPTFig=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     YueHaibing <yuehaibing@huawei.com>, Hulk Robot <hulkci@huawei.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 251/371] libertas_tf: Use correct channel range in lbtf_geo_init
-Date:   Thu, 16 Jan 2020 12:22:03 -0500
-Message-Id: <20200116172403.18149-194-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 080/371] iwlwifi: mvm: fix RSS config command
+Date:   Thu, 16 Jan 2020 12:19:12 -0500
+Message-Id: <20200116172403.18149-23-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200116172403.18149-1-sashal@kernel.org>
 References: <20200116172403.18149-1-sashal@kernel.org>
@@ -60,36 +60,44 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: YueHaibing <yuehaibing@huawei.com>
+From: Sara Sharon <sara.sharon@intel.com>
 
-[ Upstream commit 2ec4ad49b98e4a14147d04f914717135eca7c8b1 ]
+[ Upstream commit 608dce95db10b8ee1a26dbce3f60204bb69812a5 ]
 
-It seems we should use 'range' instead of 'priv->range'
-in lbtf_geo_init(), because 'range' is the corret one
-related to current regioncode.
+The hash mask is a bitmap, so we should use BIT() on
+the enum values.
 
-Reported-by: Hulk Robot <hulkci@huawei.com>
-Fixes: 691cdb49388b ("libertas_tf: command helper functions for libertas_tf")
-Signed-off-by: YueHaibing <yuehaibing@huawei.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Fixes: 43413a975d06 ("iwlwifi: mvm: support rss queues configuration command")
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/marvell/libertas_tf/cmd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/libertas_tf/cmd.c b/drivers/net/wireless/marvell/libertas_tf/cmd.c
-index 909ac3685010..2b193f1257a5 100644
---- a/drivers/net/wireless/marvell/libertas_tf/cmd.c
-+++ b/drivers/net/wireless/marvell/libertas_tf/cmd.c
-@@ -69,7 +69,7 @@ static void lbtf_geo_init(struct lbtf_private *priv)
- 			break;
- 		}
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 78228f870f8f..754dcc1c1f40 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -107,12 +107,12 @@ static int iwl_send_rss_cfg_cmd(struct iwl_mvm *mvm)
+ 	int i;
+ 	struct iwl_rss_config_cmd cmd = {
+ 		.flags = cpu_to_le32(IWL_RSS_ENABLE),
+-		.hash_mask = IWL_RSS_HASH_TYPE_IPV4_TCP |
+-			     IWL_RSS_HASH_TYPE_IPV4_UDP |
+-			     IWL_RSS_HASH_TYPE_IPV4_PAYLOAD |
+-			     IWL_RSS_HASH_TYPE_IPV6_TCP |
+-			     IWL_RSS_HASH_TYPE_IPV6_UDP |
+-			     IWL_RSS_HASH_TYPE_IPV6_PAYLOAD,
++		.hash_mask = BIT(IWL_RSS_HASH_TYPE_IPV4_TCP) |
++			     BIT(IWL_RSS_HASH_TYPE_IPV4_UDP) |
++			     BIT(IWL_RSS_HASH_TYPE_IPV4_PAYLOAD) |
++			     BIT(IWL_RSS_HASH_TYPE_IPV6_TCP) |
++			     BIT(IWL_RSS_HASH_TYPE_IPV6_UDP) |
++			     BIT(IWL_RSS_HASH_TYPE_IPV6_PAYLOAD),
+ 	};
  
--	for (ch = priv->range.start; ch < priv->range.end; ch++)
-+	for (ch = range->start; ch < range->end; ch++)
- 		priv->channels[CHAN_TO_IDX(ch)].flags = 0;
- }
- 
+ 	if (mvm->trans->num_rx_queues == 1)
 -- 
 2.20.1
 
