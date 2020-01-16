@@ -7,50 +7,46 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DEFAC33CB3
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 18:02:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A9CCC33CB3
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 18:04:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 61762214AF
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 18:02:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5F1BE214AF
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 18:04:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579197727;
-	bh=uCIp6mD10XteebAJ2I2AXoP9KgVklKyDJoPbZYmlV6I=;
+	s=default; t=1579197866;
+	bh=JYnzlzmlOi8zxfkZ3gNkyag99DW/iJIorNEPxenw/wA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=p1XiW5qTbydpLQTWWwbBxoirxxxNlQbsZ1BLBDt1NWpLkoNSZbkbvGtSE9mTqwW4l
-	 DKyKRPvcLv/MiljWkTSdoOlmoKqTu55FPYZiufFA1XGvbmkfjwF45DZUQOaxokagpz
-	 +WbryOvOMQyFO+7EetKl3vk/eFlmLdixqZc7Jt6M=
+	b=g/yZLQ4EsGcE7+MVtT53CxD6YoyTkZlo55TY1rcfV3/8GZwi+j68AVQ9gmFWsg82u
+	 KUY9UajzQGg7JFhK8Cem0zxvAZUaEbF0Ppu4JrBWOeOTHxJoFLk297m20bP3RubAaK
+	 pD0KEjnI6U1dsiJ1Ck/VJEkgR/7xz40rvOt3jVHY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405625AbgAPRlS (ORCPT
+        id S1730602AbgAPRkd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 16 Jan 2020 12:41:18 -0500
-Received: from mail.kernel.org ([198.145.29.99]:58836 "EHLO mail.kernel.org"
+        Thu, 16 Jan 2020 12:40:33 -0500
+Received: from mail.kernel.org ([198.145.29.99]:57646 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388438AbgAPRlQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Jan 2020 12:41:16 -0500
+        id S2393631AbgAPRk1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 16 Jan 2020 12:40:27 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id CEB202467C;
-        Thu, 16 Jan 2020 17:41:14 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 29C5824706;
+        Thu, 16 Jan 2020 17:40:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579196476;
-        bh=uCIp6mD10XteebAJ2I2AXoP9KgVklKyDJoPbZYmlV6I=;
+        s=default; t=1579196426;
+        bh=JYnzlzmlOi8zxfkZ3gNkyag99DW/iJIorNEPxenw/wA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=e0l4BfVvRGzZLA6Cp597VU4/vUFgtFonh9FF0XvAtC9o7ZfTSDAi/5eg5q2KzMxTI
-         5m9PUQ/OPw+uF6ahLrnWw+/hLM4asMkKHsCoR8/+/SVFbW9PXjFeoF8lp5nnGOGiOy
-         hsxYif7O34qtmDdeeBs2UfSjJwvMXD/rehJFKgr4=
+        b=OTm/JWrayqGvdPmtLyHS4MK+ir6W1ltpGy3Zmm7HQPsSpY1HYxhLb5uQ81t9MqCND
+         GaADprurAwCDhEWpuK2oEGZLIX0jjYwXtMYgzNQNGyx5VvXzW2+w1+mb/jqvSvCHI0
+         cGmmpvn/YdU/JndxiMBaYYRopk8nOStJJvtbhZpI=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Lorenzo Bianconi <lorenzo@kernel.org>,
-        Jakub Kicinski <kubakici@wp.pl>,
+Cc:     Colin Ian King <colin.king@canonical.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 4.9 224/251] mt7601u: fix bbp version check in mt7601u_wait_bbp_ready
-Date:   Thu, 16 Jan 2020 12:36:13 -0500
-Message-Id: <20200116173641.22137-184-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-wireless@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.9 194/251] bcma: fix incorrect update of BCMA_CORE_PCI_MDIO_DATA
+Date:   Thu, 16 Jan 2020 12:35:43 -0500
+Message-Id: <20200116173641.22137-154-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200116173641.22137-1-sashal@kernel.org>
 References: <20200116173641.22137-1-sashal@kernel.org>
@@ -63,40 +59,46 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Lorenzo Bianconi <lorenzo@kernel.org>
+From: Colin Ian King <colin.king@canonical.com>
 
-[ Upstream commit 15e14f76f85f4f0eab3b8146e1cd3c58ce272823 ]
+[ Upstream commit 420c20be08a4597404d272ae9793b642401146eb ]
 
-Fix bbp ready check in mt7601u_wait_bbp_ready. The issue is reported by
-coverity with the following error:
+An earlier commit re-worked the setting of the bitmask and is now
+assigning v with some bit flags rather than bitwise or-ing them
+into v, consequently the earlier bit-settings of v are being lost.
+Fix this by replacing an assignment with the bitwise or instead.
 
-Logical vs. bitwise operator
-The expression's value does not depend on the operands; inadvertent use
-of the wrong operator is a likely logic error.
-
-Addresses-Coverity-ID: 1309441 ("Logical vs. bitwise operator")
-Fixes: c869f77d6abb ("add mt7601u driver")
-Acked-by: Jakub Kicinski <kubakici@wp.pl>
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+Addresses-Coverity: ("Unused value")
+Fixes: 2be25cac8402 ("bcma: add constants for PCI and use them")
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt7601u/phy.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/bcma/driver_pci.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt7601u/phy.c b/drivers/net/wireless/mediatek/mt7601u/phy.c
-index ca09a5d4305e..71a47459bf8a 100644
---- a/drivers/net/wireless/mediatek/mt7601u/phy.c
-+++ b/drivers/net/wireless/mediatek/mt7601u/phy.c
-@@ -221,7 +221,7 @@ int mt7601u_wait_bbp_ready(struct mt7601u_dev *dev)
+diff --git a/drivers/bcma/driver_pci.c b/drivers/bcma/driver_pci.c
+index f499a469e66d..12b2cc9a3fbe 100644
+--- a/drivers/bcma/driver_pci.c
++++ b/drivers/bcma/driver_pci.c
+@@ -78,7 +78,7 @@ static u16 bcma_pcie_mdio_read(struct bcma_drv_pci *pc, u16 device, u8 address)
+ 		v |= (address << BCMA_CORE_PCI_MDIODATA_REGADDR_SHF_OLD);
+ 	}
  
- 	do {
- 		val = mt7601u_bbp_rr(dev, MT_BBP_REG_VERSION);
--		if (val && ~val)
-+		if (val && val != 0xff)
- 			break;
- 	} while (--i);
+-	v = BCMA_CORE_PCI_MDIODATA_START;
++	v |= BCMA_CORE_PCI_MDIODATA_START;
+ 	v |= BCMA_CORE_PCI_MDIODATA_READ;
+ 	v |= BCMA_CORE_PCI_MDIODATA_TA;
  
+@@ -121,7 +121,7 @@ static void bcma_pcie_mdio_write(struct bcma_drv_pci *pc, u16 device,
+ 		v |= (address << BCMA_CORE_PCI_MDIODATA_REGADDR_SHF_OLD);
+ 	}
+ 
+-	v = BCMA_CORE_PCI_MDIODATA_START;
++	v |= BCMA_CORE_PCI_MDIODATA_START;
+ 	v |= BCMA_CORE_PCI_MDIODATA_WRITE;
+ 	v |= BCMA_CORE_PCI_MDIODATA_TA;
+ 	v |= data;
 -- 
 2.20.1
 
