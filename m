@@ -2,54 +2,52 @@ Return-Path: <SRS0=LENq=3F=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F5A6C33CAF
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 18:01:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9566C33CAF
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 18:01:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7690E217F4
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 18:01:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7D8C7214AF
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 18:01:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579197705;
-	bh=Lr6Bj4/TyC+oAE4CYiw02LFvCpPbnBN1dY4qg7FKstg=;
+	s=default; t=1579197713;
+	bh=wMgQC9Nxeaz0aIRTUtqD2m4QS3kZMLRfFhrPVF3c2AM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=yi8sF5YH3oMuf649UbxSRq5lRsjjn8cT/fBA/2ejOF0dBvjICRJz3Df4L22APTTje
-	 t2XONoQgQIgqB81TwIsEoiQWhalngvTUlRYycExg4bDDGRfnm+HkDzCynWFUaf7wjN
-	 j0HokWb9DQR3YwSxLd5UZbEbm6+q/Thlky5Tnsw0=
+	b=V7KDT3B8zL2LiRknq+gcI2vKzrwUe5X7L6MywRrMY2Us4rDexb2xydSJ70HHwFapv
+	 DC4ZyD19IUhKKTaMBmRCxosKfmoiDWdUJBhLZGH0NGBnHAj7QGVsFmPZJ4PVEGp4hn
+	 AW4dBUllnWnQH4LMON8C0TzwnjZwVnEnF6yi8Up4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405657AbgAPRlZ (ORCPT
+        id S2393769AbgAPRlW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 16 Jan 2020 12:41:25 -0500
-Received: from mail.kernel.org ([198.145.29.99]:59032 "EHLO mail.kernel.org"
+        Thu, 16 Jan 2020 12:41:22 -0500
+Received: from mail.kernel.org ([198.145.29.99]:58970 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2393786AbgAPRlY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Jan 2020 12:41:24 -0500
+        id S2405649AbgAPRlW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 16 Jan 2020 12:41:22 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 5791D246E0;
-        Thu, 16 Jan 2020 17:41:23 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 66E6C24695;
+        Thu, 16 Jan 2020 17:41:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579196484;
-        bh=Lr6Bj4/TyC+oAE4CYiw02LFvCpPbnBN1dY4qg7FKstg=;
+        s=default; t=1579196481;
+        bh=wMgQC9Nxeaz0aIRTUtqD2m4QS3kZMLRfFhrPVF3c2AM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=A5i47zp4mH5cUNJbYp773ugLW4F3sExzpXrQWZbN0iWN8pO5Kdyx7CcD4Q0RN6h9t
-         lV6wtNlnX964dxrC7m7nTWdDLICUKve1z3dvmg3L6mn1eYqRlAULHknUmNRPk7TkoF
-         SaBV7lWwPa/rDXDTmmJJ29HtXByMhzvYsqIoZb1g=
+        b=tct32E98bDL0uUIjnDyhM1LSIyUzcaoTrbAX7KVWaW2C1Th47quMA2bK2N403Kxgw
+         mhlNhJ4ti03zvioLoCtrboC1Muj1EN+5gsazk61IuNY1Pm/0hx7/CaD3pzKiDfDtTz
+         Z3ulfiv7Ium5VfaRrrxIBM0au1S3QQnu6T1GuVEo=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Nathan Chancellor <natechancellor@gmail.com>,
-        Ping-Ke Shih <pkshih@realtek.com>,
+Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        clang-built-linux@googlegroups.com
-Subject: [PATCH AUTOSEL 4.9 230/251] rtlwifi: Remove unnecessary NULL check in rtl_regd_init
-Date:   Thu, 16 Jan 2020 12:36:19 -0500
-Message-Id: <20200116173641.22137-190-sashal@kernel.org>
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.9 228/251] cw1200: Fix a signedness bug in cw1200_load_firmware()
+Date:   Thu, 16 Jan 2020 12:36:17 -0500
+Message-Id: <20200116173641.22137-188-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200116173641.22137-1-sashal@kernel.org>
 References: <20200116173641.22137-1-sashal@kernel.org>
@@ -62,53 +60,41 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Nathan Chancellor <natechancellor@gmail.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
 
-[ Upstream commit 091c6e9c083f7ebaff00b37ad13562d51464d175 ]
+[ Upstream commit 4a50d454502f1401171ff061a5424583f91266db ]
 
-When building with Clang + -Wtautological-pointer-compare:
+The "priv->hw_type" is an enum and in this context GCC will treat it
+as an unsigned int so the error handling will never trigger.
 
-drivers/net/wireless/realtek/rtlwifi/regd.c:389:33: warning: comparison
-of address of 'rtlpriv->regd' equal to a null pointer is always false
-[-Wtautological-pointer-compare]
-        if (wiphy == NULL || &rtlpriv->regd == NULL)
-                              ~~~~~~~~~^~~~    ~~~~
-1 warning generated.
-
-The address of an array member is never NULL unless it is the first
-struct member so remove the unnecessary check. This was addressed in
-the staging version of the driver in commit f986978b32b3 ("Staging:
-rtlwifi: remove unnecessary NULL check").
-
-While we are here, fix the following checkpatch warning:
-
-CHECK: Comparison to NULL could be written "!wiphy"
-35: FILE: drivers/net/wireless/realtek/rtlwifi/regd.c:389:
-+       if (wiphy == NULL)
-
-Fixes: 0c8173385e54 ("rtl8192ce: Add new driver")
-Link:https://github.com/ClangBuiltLinux/linux/issues/750
-Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
-Acked-by: Ping-Ke Shih <pkshih@realtek.com>
+Fixes: a910e4a94f69 ("cw1200: add driver for the ST-E CW1100 & CW1200 WLAN chipsets")
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/realtek/rtlwifi/regd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/st/cw1200/fwio.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/regd.c b/drivers/net/wireless/realtek/rtlwifi/regd.c
-index 6ee6bf8e7eaf..ab53cf42cf42 100644
---- a/drivers/net/wireless/realtek/rtlwifi/regd.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/regd.c
-@@ -427,7 +427,7 @@ int rtl_regd_init(struct ieee80211_hw *hw,
- 	struct wiphy *wiphy = hw->wiphy;
- 	struct country_code_to_enum_rd *country = NULL;
+diff --git a/drivers/net/wireless/st/cw1200/fwio.c b/drivers/net/wireless/st/cw1200/fwio.c
+index 30e7646d04af..16be7fa82a23 100644
+--- a/drivers/net/wireless/st/cw1200/fwio.c
++++ b/drivers/net/wireless/st/cw1200/fwio.c
+@@ -323,12 +323,12 @@ int cw1200_load_firmware(struct cw1200_common *priv)
+ 		goto out;
+ 	}
  
--	if (wiphy == NULL || &rtlpriv->regd == NULL)
-+	if (!wiphy)
- 		return -EINVAL;
+-	priv->hw_type = cw1200_get_hw_type(val32, &major_revision);
+-	if (priv->hw_type < 0) {
++	ret = cw1200_get_hw_type(val32, &major_revision);
++	if (ret < 0) {
+ 		pr_err("Can't deduce hardware type.\n");
+-		ret = -ENOTSUPP;
+ 		goto out;
+ 	}
++	priv->hw_type = ret;
  
- 	/* init country_code from efuse channel plan */
+ 	/* Set DPLL Reg value, and read back to confirm writes work */
+ 	ret = cw1200_reg_write_32(priv, ST90TDS_TSET_GEN_R_W_REG_ID,
 -- 
 2.20.1
 
