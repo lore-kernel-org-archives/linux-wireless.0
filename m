@@ -4,52 +4,54 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A289C33CB7
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 19:17:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 700BEC33CAF
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 19:19:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4A9EB2077C
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 19:17:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 47D462077B
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 19:19:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579202226;
-	bh=eq4V5fWRWUv3qEIk4JJVlBSpyfCfuRrIIjYJ1RW9xb0=;
+	s=default; t=1579202389;
+	bh=OzFODw4fgcmPhpz8E8cgdKYNHhUMu9ketHJs8OPWZQA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=ZKy4x3Sll2y+wk5oVcy/yrDmpqOMHIXJH6oX/ZB2KG7+AM3LEmSkojvH10OK7g/sv
-	 2A5CmETR1MCMZLJ4QLIK10kg1ESUHjb4zWvnUGWHibLw++ENHATFKZfs3KAyIT6wLv
-	 Y1ERaZ67vzLitwwFSXyDBdCzevBbKE4h/wOXwJe8=
+	b=lOG0C9lBS6sdJ56vru4HS7tUSiLjOffLNw2TCUgMs5yhyVEGR5xqJBw/wwfy7C4Tm
+	 GYOj+D0Yedo9pUj44GmrurWS01sVkRajkB/T8L9JzaERqnw08JEes/zJartc0utBq+
+	 j/9C2157rtu5aMhTPb6ES/OxbJELnLjqAVZg4OWI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733024AbgAPQze (ORCPT
+        id S2407351AbgAPTTs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 16 Jan 2020 11:55:34 -0500
-Received: from mail.kernel.org ([198.145.29.99]:40860 "EHLO mail.kernel.org"
+        Thu, 16 Jan 2020 14:19:48 -0500
+Received: from mail.kernel.org ([198.145.29.99]:38578 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728890AbgAPQzc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Jan 2020 11:55:32 -0500
+        id S1731611AbgAPQyM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 16 Jan 2020 11:54:12 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id F33152467C;
-        Thu, 16 Jan 2020 16:55:30 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id E86812176D;
+        Thu, 16 Jan 2020 16:54:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579193731;
-        bh=eq4V5fWRWUv3qEIk4JJVlBSpyfCfuRrIIjYJ1RW9xb0=;
+        s=default; t=1579193651;
+        bh=OzFODw4fgcmPhpz8E8cgdKYNHhUMu9ketHJs8OPWZQA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=qrqzuh17heWZLcRbrZSplidfpuKusQH8UV6gya78hxuY0H5LbyzTmPsSZjLYmE0FC
-         zJGFcpfxXC91TQZ5YEPVvnFq5kN3j3eRdggS3NK7pYIRjs5ZmbQ9GtnIu5ZQL6QD/X
-         yzQnu1SwVY9XeK4AWL2M7w5KfkY2E8WsCGSs+obQ=
+        b=b7ifsK/NcQq8eYKGbGo/0xDU7rp/wLTiVeRLW/B0Ofg6KoujqKPNzFGY/3z9vSM3R
+         eR6gxRXOEin3hNHlb95Ykf3xySSkexWancXvfpJQ3j8nF4W4YDYCUKbmAOKskOrlR7
+         5CoKFzUR1aQn+Sq8EMvlY+Zik2MpPySEY1txYZso=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>,
+Cc:     Christian Lamparter <chunkeey@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 024/671] cfg80211: regulatory: make initialization more robust
-Date:   Thu, 16 Jan 2020 11:44:15 -0500
-Message-Id: <20200116165502.8838-24-sashal@kernel.org>
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH AUTOSEL 5.4 181/205] ath9k: use iowrite32 over __raw_writel
+Date:   Thu, 16 Jan 2020 11:42:36 -0500
+Message-Id: <20200116164300.6705-181-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200116165502.8838-1-sashal@kernel.org>
-References: <20200116165502.8838-1-sashal@kernel.org>
+In-Reply-To: <20200116164300.6705-1-sashal@kernel.org>
+References: <20200116164300.6705-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -59,42 +61,38 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Christian Lamparter <chunkeey@gmail.com>
 
-[ Upstream commit 71e5e886806ee3f8e0c44ed945eb2e4d6659c6e3 ]
+[ Upstream commit 22d0d5ae7a089967e9295a06694aa3e8a812b15e ]
 
-Since my change to split out the regulatory init to occur later,
-any issues during earlier cfg80211_init() or errors during the
-platform device allocation would lead to crashes later. Make this
-more robust by checking that the earlier initialization succeeded.
+This patch changes the ath9k_pci_owl_loader to use the
+same iowrite32 memory accessor that ath9k_pci is using
+to communicate with the PCI(e) chip.
 
-Fixes: d7be102f2945 ("cfg80211: initialize regulatory keys/database later")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+This will fix endian issues that came up during testing
+with loaned AVM Fritz!Box 7360 (Lantiq MIPS SoCs + AR9287).
+
+Fixes: 5a4f2040fd07 ("ath9k: add loader for AR92XX (and older) pci(e)")
+Signed-off-by: Christian Lamparter <chunkeey@gmail.com>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/wireless/reg.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ drivers/net/wireless/ath/ath9k/ath9k_pci_owl_loader.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 64841238df85..5643bdee7198 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -3870,6 +3870,15 @@ static int __init regulatory_init_db(void)
- {
- 	int err;
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k_pci_owl_loader.c b/drivers/net/wireless/ath/ath9k/ath9k_pci_owl_loader.c
+index 159490f5a111..60731e07f681 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k_pci_owl_loader.c
++++ b/drivers/net/wireless/ath/ath9k/ath9k_pci_owl_loader.c
+@@ -84,7 +84,7 @@ static int ath9k_pci_fixup(struct pci_dev *pdev, const u16 *cal_data,
+ 			val = swahb32(val);
+ 		}
  
-+	/*
-+	 * It's possible that - due to other bugs/issues - cfg80211
-+	 * never called regulatory_init() below, or that it failed;
-+	 * in that case, don't try to do any further work here as
-+	 * it's doomed to lead to crashes.
-+	 */
-+	if (IS_ERR_OR_NULL(reg_pdev))
-+		return -EINVAL;
-+
- 	err = load_builtin_regdb_keys();
- 	if (err)
- 		return err;
+-		__raw_writel(val, mem + reg);
++		iowrite32(val, mem + reg);
+ 		usleep_range(100, 120);
+ 	}
+ 
 -- 
 2.20.1
 
