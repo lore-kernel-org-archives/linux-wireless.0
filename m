@@ -2,211 +2,158 @@ Return-Path: <SRS0=LENq=3F=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98CE7C33CAF
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 18:15:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 985B1C33CB6
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 18:16:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 743BF2073A
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 18:15:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 75ECE22522
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 18:16:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1579198565;
+	bh=RIjjSlgXFljZ+ANBVrJotX5XLZbHnKiqcXVztCjBkvM=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=aJ42acVQ7WIaXOPZ5H+dBS3RYWVvQCoRSG96497RCKSQwG75X7eGTTlVU3JzX7CZ9
+	 tSgqLUvCJtu+Lsf+vuYbOgm4ZCay7TbR8AlHWJwLMc5QgtUhh0l5CI0KO7gmFy1IT3
+	 sugZgib8qKaySK0uEfRw6RYqIoC5UNJ6V/m6Enrw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390233AbgAPSPL (ORCPT
+        id S2392764AbgAPR3e (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 16 Jan 2020 13:15:11 -0500
-Received: from mga09.intel.com ([134.134.136.24]:15738 "EHLO mga09.intel.com"
+        Thu, 16 Jan 2020 12:29:34 -0500
+Received: from mail.kernel.org ([198.145.29.99]:41474 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387909AbgAPSPJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Jan 2020 13:15:09 -0500
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by orsmga102.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 16 Jan 2020 10:15:08 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.70,327,1574150400"; 
-   d="scan'208";a="248904997"
-Received: from lkp-server01.sh.intel.com (HELO lkp-server01) ([10.239.97.150])
-  by fmsmga004.fm.intel.com with ESMTP; 16 Jan 2020 10:15:07 -0800
-Received: from kbuild by lkp-server01 with local (Exim 4.89)
-        (envelope-from <lkp@intel.com>)
-        id 1is9ff-0003IN-DZ; Fri, 17 Jan 2020 02:15:07 +0800
-Date:   Fri, 17 Jan 2020 02:14:04 +0800
-From:   kbuild test robot <lkp@intel.com>
-To:     Johannes Berg <johannes.berg@intel.com>
-Cc:     linux-wireless@vger.kernel.org
-Subject: [mac80211-next:master] BUILD SUCCESS
- 30b2f0be23fb40e58d0ad2caf8702c2a44cda2e1
-Message-ID: <5e20a7ec.jre7RCRVWVb+uFO7%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        id S2392752AbgAPR3e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 16 Jan 2020 12:29:34 -0500
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 7785024724;
+        Thu, 16 Jan 2020 17:29:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1579195773;
+        bh=RIjjSlgXFljZ+ANBVrJotX5XLZbHnKiqcXVztCjBkvM=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=Z+HQbpTDiyrmLJXlUaiqVCAyikJ7dBR+hDIbSQ0lf8Kxa9gGonCiVMq9oOgRVfY5L
+         JBPSdfw5MYJNZbhcZgSSOBV0fGxGJWOZ1d8bwBpnGUsk4QCl+I5Oy51mv69PhPc4pU
+         7btsQ2K+lTLf3o4JqCQ9aQBuW1IOMBqkSNx/mbA0=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Nicolas Boichat <drinkcat@chromium.org>,
+        Wen Gong <wgong@codeaurora.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.14 299/371] ath10k: adjust skb length in ath10k_sdio_mbox_rx_packet
+Date:   Thu, 16 Jan 2020 12:22:51 -0500
+Message-Id: <20200116172403.18149-242-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20200116172403.18149-1-sashal@kernel.org>
+References: <20200116172403.18149-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git  master
-branch HEAD: 30b2f0be23fb40e58d0ad2caf8702c2a44cda2e1  mac80211: add ieee80211_is_any_nullfunc()
+From: Nicolas Boichat <drinkcat@chromium.org>
 
-elapsed time: 763m
+[ Upstream commit b7139960832eb56fa15d390a4b5c8c5739bd0d1a ]
 
-configs tested: 148
-configs skipped: 0
+When the FW bundles multiple packets, pkt->act_len may be incorrect
+as it refers to the first packet only (however, the FW will only
+bundle packets that fit into the same pkt->alloc_len).
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Before this patch, the skb length would be set (incorrectly) to
+pkt->act_len in ath10k_sdio_mbox_rx_packet, and then later manually
+adjusted in ath10k_sdio_mbox_rx_process_packet.
 
-parisc                            allnoconfig
-parisc                            allyesonfig
-parisc                         b180_defconfig
-parisc                        c3000_defconfig
-parisc                              defconfig
-um                                  defconfig
-um                             i386_defconfig
-um                           x86_64_defconfig
-alpha                               defconfig
-csky                                defconfig
-nds32                             allnoconfig
-nds32                               defconfig
-mips                           32r2_defconfig
-mips                         64r6el_defconfig
-mips                             allmodconfig
-mips                              allnoconfig
-mips                             allyesconfig
-mips                      fuloong2e_defconfig
-mips                      malta_kvm_defconfig
-x86_64               randconfig-b001-20200116
-x86_64               randconfig-b002-20200116
-x86_64               randconfig-b003-20200116
-i386                 randconfig-b001-20200116
-i386                 randconfig-b002-20200116
-i386                 randconfig-b003-20200116
-h8300                     edosk2674_defconfig
-h8300                    h8300h-sim_defconfig
-h8300                       h8s-sim_defconfig
-m68k                             allmodconfig
-m68k                       m5475evb_defconfig
-m68k                          multi_defconfig
-m68k                           sun3_defconfig
-sh                               allmodconfig
-sh                                allnoconfig
-sh                          rsk7269_defconfig
-sh                  sh7785lcr_32bit_defconfig
-sh                            titan_defconfig
-arc                              allyesconfig
-arc                                 defconfig
-microblaze                      mmu_defconfig
-microblaze                    nommu_defconfig
-powerpc                           allnoconfig
-powerpc                             defconfig
-powerpc                       ppc64_defconfig
-powerpc                          rhel-kconfig
-x86_64                              fedora-25
-x86_64                                  kexec
-x86_64                                    lkp
-x86_64                                   rhel
-x86_64                               rhel-7.6
-c6x                              allyesconfig
-c6x                        evmc6678_defconfig
-nios2                         10m50_defconfig
-nios2                         3c120_defconfig
-openrisc                    or1ksim_defconfig
-openrisc                 simple_smp_defconfig
-xtensa                       common_defconfig
-xtensa                          iss_defconfig
-alpha                randconfig-a001-20200116
-m68k                 randconfig-a001-20200116
-mips                 randconfig-a001-20200116
-nds32                randconfig-a001-20200116
-parisc               randconfig-a001-20200116
-riscv                randconfig-a001-20200116
-arc                  randconfig-a001-20200116
-arm                  randconfig-a001-20200116
-arm64                randconfig-a001-20200116
-ia64                 randconfig-a001-20200116
-powerpc              randconfig-a001-20200116
-sparc                randconfig-a001-20200116
-s390                             alldefconfig
-s390                             allmodconfig
-s390                              allnoconfig
-s390                             allyesconfig
-s390                          debug_defconfig
-s390                                defconfig
-s390                       zfcpdump_defconfig
-sparc                            allyesconfig
-sparc                               defconfig
-sparc64                          allmodconfig
-sparc64                           allnoconfig
-sparc64                          allyesconfig
-sparc64                             defconfig
-ia64                                defconfig
-riscv                            allmodconfig
-riscv                             allnoconfig
-riscv                            allyesconfig
-riscv                               defconfig
-riscv                    nommu_virt_defconfig
-riscv                          rv32_defconfig
-i386                             alldefconfig
-i386                              allnoconfig
-i386                             allyesconfig
-i386                                defconfig
-x86_64               randconfig-d001-20200116
-x86_64               randconfig-d002-20200116
-x86_64               randconfig-d003-20200116
-i386                 randconfig-d001-20200116
-i386                 randconfig-d002-20200116
-i386                 randconfig-d003-20200116
-ia64                             alldefconfig
-ia64                             allmodconfig
-ia64                              allnoconfig
-ia64                             allyesconfig
-x86_64               randconfig-a001-20200116
-x86_64               randconfig-a002-20200116
-x86_64               randconfig-a003-20200116
-i386                 randconfig-a001-20200116
-i386                 randconfig-a002-20200116
-i386                 randconfig-a003-20200116
-arc                  randconfig-a001-20200117
-arm                  randconfig-a001-20200117
-arm64                randconfig-a001-20200117
-ia64                 randconfig-a001-20200117
-powerpc              randconfig-a001-20200117
-sparc                randconfig-a001-20200117
-arm                              allmodconfig
-arm                               allnoconfig
-arm                              allyesconfig
-arm                         at91_dt_defconfig
-arm                           efm32_defconfig
-arm                          exynos_defconfig
-arm                        multi_v5_defconfig
-arm                        multi_v7_defconfig
-arm                        shmobile_defconfig
-arm                           sunxi_defconfig
-arm64                            allmodconfig
-arm64                             allnoconfig
-arm64                            allyesconfig
-arm64                               defconfig
-x86_64               randconfig-d001-20200117
-x86_64               randconfig-d002-20200117
-x86_64               randconfig-d003-20200117
-i386                 randconfig-d001-20200117
-i386                 randconfig-d002-20200117
-i386                 randconfig-d003-20200117
-alpha                randconfig-a001-20200117
-m68k                 randconfig-a001-20200117
-mips                 randconfig-a001-20200117
-nds32                randconfig-a001-20200117
-parisc               randconfig-a001-20200117
-riscv                randconfig-a001-20200117
-x86_64               randconfig-e001-20200117
-x86_64               randconfig-e002-20200117
-x86_64               randconfig-e003-20200117
-i386                 randconfig-e001-20200117
-i386                 randconfig-e002-20200117
-i386                 randconfig-e003-20200117
+The first problem is that ath10k_sdio_mbox_rx_process_packet does not
+use proper skb_put commands to adjust the length (it directly changes
+skb->len), so we end up with a mismatch between skb->head + skb->tail
+and skb->data + skb->len. This is quite serious, and causes corruptions
+in the TCP stack, as the stack tries to coalesce packets, and relies
+on skb->tail being correct (that is, skb_tail_pointer must point to
+the first byte_after_ the data).
 
+Instead of re-adjusting the size in ath10k_sdio_mbox_rx_process_packet,
+this moves the code to ath10k_sdio_mbox_rx_packet, and also add a
+bounds check, as skb_put would crash the kernel if not enough space is
+available.
+
+Tested with QCA6174 SDIO with firmware
+WLAN.RMH.4.4.1-00007-QCARMSWP-1.
+
+Fixes: 8530b4e7b22bc3b ("ath10k: sdio: set skb len for all rx packets")
+Signed-off-by: Nicolas Boichat <drinkcat@chromium.org>
+Signed-off-by: Wen Gong <wgong@codeaurora.org>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
-0-DAY kernel test infrastructure                 Open Source Technology Center
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org Intel Corporation
+ drivers/net/wireless/ath/ath10k/sdio.c | 29 +++++++++++++++++++-------
+ 1 file changed, 21 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
+index 0a1248ebccf5..f49b21b137c1 100644
+--- a/drivers/net/wireless/ath/ath10k/sdio.c
++++ b/drivers/net/wireless/ath/ath10k/sdio.c
+@@ -392,16 +392,11 @@ static int ath10k_sdio_mbox_rx_process_packet(struct ath10k *ar,
+ 	struct ath10k_htc_hdr *htc_hdr = (struct ath10k_htc_hdr *)skb->data;
+ 	bool trailer_present = htc_hdr->flags & ATH10K_HTC_FLAG_TRAILER_PRESENT;
+ 	enum ath10k_htc_ep_id eid;
+-	u16 payload_len;
+ 	u8 *trailer;
+ 	int ret;
+ 
+-	payload_len = le16_to_cpu(htc_hdr->len);
+-	skb->len = payload_len + sizeof(struct ath10k_htc_hdr);
+-
+ 	if (trailer_present) {
+-		trailer = skb->data + sizeof(*htc_hdr) +
+-			  payload_len - htc_hdr->trailer_len;
++		trailer = skb->data + skb->len - htc_hdr->trailer_len;
+ 
+ 		eid = pipe_id_to_eid(htc_hdr->eid);
+ 
+@@ -635,13 +630,31 @@ static int ath10k_sdio_mbox_rx_packet(struct ath10k *ar,
+ {
+ 	struct ath10k_sdio *ar_sdio = ath10k_sdio_priv(ar);
+ 	struct sk_buff *skb = pkt->skb;
++	struct ath10k_htc_hdr *htc_hdr;
+ 	int ret;
+ 
+ 	ret = ath10k_sdio_readsb(ar, ar_sdio->mbox_info.htc_addr,
+ 				 skb->data, pkt->alloc_len);
++	if (ret)
++		goto out;
++
++	/* Update actual length. The original length may be incorrect,
++	 * as the FW will bundle multiple packets as long as their sizes
++	 * fit within the same aligned length (pkt->alloc_len).
++	 */
++	htc_hdr = (struct ath10k_htc_hdr *)skb->data;
++	pkt->act_len = le16_to_cpu(htc_hdr->len) + sizeof(*htc_hdr);
++	if (pkt->act_len > pkt->alloc_len) {
++		ath10k_warn(ar, "rx packet too large (%zu > %zu)\n",
++			    pkt->act_len, pkt->alloc_len);
++		ret = -EMSGSIZE;
++		goto out;
++	}
++
++	skb_put(skb, pkt->act_len);
++
++out:
+ 	pkt->status = ret;
+-	if (!ret)
+-		skb_put(skb, pkt->act_len);
+ 
+ 	return ret;
+ }
+-- 
+2.20.1
+
