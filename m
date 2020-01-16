@@ -4,53 +4,54 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42A71C33CB6
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 16:50:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DADAAC33CAF
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 17:00:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0EB1520663
-	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 16:50:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9EF0122525
+	for <linux-wireless@archiver.kernel.org>; Thu, 16 Jan 2020 17:00:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579193451;
-	bh=TSXjTyQ4h4NkAXVk284+NyPmah9vtkAuJPfgQh24lB8=;
+	s=default; t=1579194014;
+	bh=CFG0zw8xGFG5ueKpnGzhAA1T+6jpreofWYPOdc1r7rI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=VBybA0c0BwxP5tqfZHr2edPXdTVOsA6H0wnX+XixHbjVUJs3yBMxFq98rNfHMyCwF
-	 i0J2Povmy9NwE2LhcrmzWUWr0JA9V3sylHQ0XlZiQGUpL4r/2jFrud5+H4+cC8p4nl
-	 kkS0XcLCcVQT484I5wOJ7R6ZvaiX16sZxZLEbv5Q=
+	b=mRKr74Rhx56DpUKKfJBF9g0Pa0LNe2BHdBQgxR199i+EZAEc0mCqmXy6H0uCy+YIs
+	 xqPNtAdmB02MXEcfRqHLK4RY0iJGSAjWpDReWSWnR5HnfirMQvoi5YjFcjmY/9rrMs
+	 8aPGzC3WafEv/s3GCGvN1JsKv/clt3MqYNnVO9M4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729346AbgAPQob (ORCPT
+        id S2387714AbgAPRAO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 16 Jan 2020 11:44:31 -0500
-Received: from mail.kernel.org ([198.145.29.99]:52654 "EHLO mail.kernel.org"
+        Thu, 16 Jan 2020 12:00:14 -0500
+Received: from mail.kernel.org ([198.145.29.99]:49652 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728903AbgAPQob (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 16 Jan 2020 11:44:31 -0500
+        id S2387702AbgAPRAN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 16 Jan 2020 12:00:13 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 7B27E2073A;
-        Thu, 16 Jan 2020 16:44:26 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id A455F22525;
+        Thu, 16 Jan 2020 17:00:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579193070;
-        bh=TSXjTyQ4h4NkAXVk284+NyPmah9vtkAuJPfgQh24lB8=;
+        s=default; t=1579194012;
+        bh=CFG0zw8xGFG5ueKpnGzhAA1T+6jpreofWYPOdc1r7rI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=DmE7/KQP9iZ/JsR3Gxnrwfrbfd+w98Pzb6Mk+bYIT3n8RynjD6CT55NJ+NfX4u2Hb
-         liVY8fbVGoQmO6lgGCUrkgzr7HDeUJe6pezFlIQLd4lk62hwumzPhlfFdWZXqswyhO
-         WubgYpk4s7lvNEadxw2hlvTwqke0MW9OeDV8KUy4=
+        b=Co6IPM50TBIo6LPt5479+u7+ySRP9LRatGghBWrgDJ7CgX1aTu6LFNTQf4VRVhYrA
+         XNnPoLDZHcz4gAtBCBeheyo4THVJz9Jph/w/hmAZube8Fng+j6QjtJtNdrB4efYVuI
+         mJqy6OEFj1c3Zpx6VPzHF1otkkmd0c3NDmMAUYOA=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Johannes Berg <johannes.berg@intel.com>,
+        Danny Alexander <danny.alexander@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 018/205] cw1200: Fix a signedness bug in cw1200_load_firmware()
-Date:   Thu, 16 Jan 2020 11:39:53 -0500
-Message-Id: <20200116164300.6705-18-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 136/671] iwlwifi: mvm: fix A-MPDU reference assignment
+Date:   Thu, 16 Jan 2020 11:50:45 -0500
+Message-Id: <20200116165940.10720-19-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200116164300.6705-1-sashal@kernel.org>
-References: <20200116164300.6705-1-sashal@kernel.org>
+In-Reply-To: <20200116165940.10720-1-sashal@kernel.org>
+References: <20200116165940.10720-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -60,41 +61,50 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Dan Carpenter <dan.carpenter@oracle.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit 4a50d454502f1401171ff061a5424583f91266db ]
+[ Upstream commit 1f7698abedeeb3fef3cbcf78e16f925df675a179 ]
 
-The "priv->hw_type" is an enum and in this context GCC will treat it
-as an unsigned int so the error handling will never trigger.
+The current code assigns the reference, and then goes to increment
+it if the toggle bit has changed. That way, we get
 
-Fixes: a910e4a94f69 ("cw1200: add driver for the ST-E CW1100 & CW1200 WLAN chipsets")
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Toggle  0  0  0  0  1  1  1  1
+ID      1  1  1  1  1  2  2  2
+
+Fix that by assigning the post-toggle ID to get
+
+Toggle  0  0  0  0  1  1  1  1
+ID      1  1  1  1  2  2  2  2
+
+Reported-by: Danny Alexander <danny.alexander@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Fixes: fbe4112791b8 ("iwlwifi: mvm: update mpdu metadata API")
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/st/cw1200/fwio.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/st/cw1200/fwio.c b/drivers/net/wireless/st/cw1200/fwio.c
-index 6574e78e05ea..2a03dc533b6a 100644
---- a/drivers/net/wireless/st/cw1200/fwio.c
-+++ b/drivers/net/wireless/st/cw1200/fwio.c
-@@ -320,12 +320,12 @@ int cw1200_load_firmware(struct cw1200_common *priv)
- 		goto out;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index 036d1d82d93e..77e369453642 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -1077,7 +1077,6 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 			he_phy_data = le64_to_cpu(desc->v1.he_phy_data);
+ 
+ 		rx_status->flag |= RX_FLAG_AMPDU_DETAILS;
+-		rx_status->ampdu_reference = mvm->ampdu_ref;
+ 		/* toggle is switched whenever new aggregation starts */
+ 		if (toggle_bit != mvm->ampdu_toggle) {
+ 			mvm->ampdu_ref++;
+@@ -1092,6 +1091,7 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 						RX_FLAG_AMPDU_EOF_BIT;
+ 			}
+ 		}
++		rx_status->ampdu_reference = mvm->ampdu_ref;
  	}
  
--	priv->hw_type = cw1200_get_hw_type(val32, &major_revision);
--	if (priv->hw_type < 0) {
-+	ret = cw1200_get_hw_type(val32, &major_revision);
-+	if (ret < 0) {
- 		pr_err("Can't deduce hardware type.\n");
--		ret = -ENOTSUPP;
- 		goto out;
- 	}
-+	priv->hw_type = ret;
- 
- 	/* Set DPLL Reg value, and read back to confirm writes work */
- 	ret = cw1200_reg_write_32(priv, ST90TDS_TSET_GEN_R_W_REG_ID,
+ 	rcu_read_lock();
 -- 
 2.20.1
 
