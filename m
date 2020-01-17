@@ -2,306 +2,467 @@ Return-Path: <SRS0=4hjn=3G=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94E4AC33CB1
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Jan 2020 08:36:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CFE8BC33CB1
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Jan 2020 10:31:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4389420748
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Jan 2020 08:36:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3296E2082F
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Jan 2020 10:31:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="izAOY2bP"
+	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="lmPDsA8V"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729691AbgAQIgk (ORCPT
+        id S1726689AbgAQKb3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 17 Jan 2020 03:36:40 -0500
-Received: from mail26.static.mailgun.info ([104.130.122.26]:19399 "EHLO
-        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727002AbgAQIgk (ORCPT
+        Fri, 17 Jan 2020 05:31:29 -0500
+Received: from esa5.microchip.iphmx.com ([216.71.150.166]:2848 "EHLO
+        esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726362AbgAQKb3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Jan 2020 03:36:40 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1579250199; h=Content-Transfer-Encoding: MIME-Version:
- Message-Id: Date: Subject: Cc: To: From: Sender;
- bh=sSOGb9oeqliyoQWqyTB1FFLcvbcN7JdYJ8iDGaPKgvQ=; b=izAOY2bP2avBUN4fyaNjH834Xamw3NeWUtH8f0c+YcaABzAhM02bWM+zClX+bXxDr94dt/GV
- XLWjJu36hjFWxuJcso5TsDh4vK5m4PlfMTbcU4fER9hfn3CuChb26ynQJIzM1cvHGIg0+sLZ
- MXbWPrM6B9nRfKSOaS0O0lWO610=
-X-Mailgun-Sending-Ip: 104.130.122.26
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e217214.7efd8b8e1420-smtp-out-n03;
- Fri, 17 Jan 2020 08:36:36 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 0B428C4479C; Fri, 17 Jan 2020 08:36:35 +0000 (UTC)
-Received: from wgong-HP-Z240-SFF-Workstation.qca.qualcomm.com (unknown [180.166.53.21])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: wgong)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id A18F1C433A2;
-        Fri, 17 Jan 2020 08:36:33 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org A18F1C433A2
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=wgong@codeaurora.org
-From:   Wen Gong <wgong@codeaurora.org>
-To:     ath10k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org, wgong@codeaurora.org
-Subject: [PATCH] ath10k: add retry mechanism for ath10k_start
-Date:   Fri, 17 Jan 2020 16:36:05 +0800
-Message-Id: <20200117083605.392-1-wgong@codeaurora.org>
-X-Mailer: git-send-email 2.23.0
+        Fri, 17 Jan 2020 05:31:29 -0500
+Received-SPF: Pass (esa5.microchip.iphmx.com: domain of
+  Ajay.Kathat@microchip.com designates 198.175.253.82 as
+  permitted sender) identity=mailfrom;
+  client-ip=198.175.253.82; receiver=esa5.microchip.iphmx.com;
+  envelope-from="Ajay.Kathat@microchip.com";
+  x-sender="Ajay.Kathat@microchip.com"; x-conformance=spf_only;
+  x-record-type="v=spf1"; x-record-text="v=spf1 mx
+  a:ushub1.microchip.com a:smtpout.microchip.com
+  -exists:%{i}.spf.microchip.iphmx.com include:servers.mcsv.net
+  include:mktomail.com include:spf.protection.outlook.com ~all"
+Received-SPF: None (esa5.microchip.iphmx.com: no sender
+  authenticity information available from domain of
+  postmaster@email.microchip.com) identity=helo;
+  client-ip=198.175.253.82; receiver=esa5.microchip.iphmx.com;
+  envelope-from="Ajay.Kathat@microchip.com";
+  x-sender="postmaster@email.microchip.com";
+  x-conformance=spf_only
+Authentication-Results: esa5.microchip.iphmx.com; spf=Pass smtp.mailfrom=Ajay.Kathat@microchip.com; spf=None smtp.helo=postmaster@email.microchip.com; dkim=pass (signature verified) header.i=@microchiptechnology.onmicrosoft.com; dmarc=pass (p=none dis=none) d=microchip.com
+IronPort-SDR: Yow9O1h+N7raD/EczN45TYPh9TlmuQRRkhKU4Z7IX1pj7VgaWV6pwB+VSTJxWWh+3ldwG/XjGU
+ QtlXy5nGMUTtLRsl1psv8vSuKQoa8gCLL1ncDS1oPUY262EXgfFruz4bkm7d8BFwMN9E4ryY1L
+ LDrND3hm9HwFpPSd3Q5LowSZE9U/3zvQ27KEdsF8OJbvV5JV90+NRjnCVH8mlXxOJEAFQw1tz0
+ SERqBFu+ULn2vTQd6gPenK4Qh5uGmtBjM/ebfvPSgNOZmJz8RKnUVlwz01YBcClK2TJtAW1ukG
+ Mic=
+X-IronPort-AV: E=Sophos;i="5.70,329,1574146800"; 
+   d="scan'208";a="62264555"
+Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
+  by esa5.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 17 Jan 2020 03:31:29 -0700
+Received: from chn-vm-ex02.mchp-main.com (10.10.87.72) by
+ chn-vm-ex02.mchp-main.com (10.10.87.72) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1713.5; Fri, 17 Jan 2020 03:31:26 -0700
+Received: from NAM12-BN8-obe.outbound.protection.outlook.com (10.10.215.89) by
+ email.microchip.com (10.10.87.72) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5 via Frontend
+ Transport; Fri, 17 Jan 2020 03:31:26 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=BQUTt8TLOhfxniEQyNENuNOZNMeCwZ5skQxq6KY7Ij2QH7SdNmQ4f2wfnkyiaCT7F8fskqU+sogFWc4wEqm/8ySB4SNqo6uRRy2VOENof6sOkcI7tMkOoYgaFu5RYsUxKfmk7RwEstY3sHqOOKifoJjhE9iylfmADIdJFIH+Dai6AVyPpHXWXbweUEwD9nhD2bo/9G/BJjCDyBNmietW8kc4yDN8NyMbK1aCVARbsfq8/3GcQiPXcoJOhEP6kSiBo1ANCX3VCXo4lEkEZ8jC8ptVtZ+3QwWMX8Ck7kiingQWPNRVjCh2m2ucuCrRUJxDhR/oqnqkAMDjBPd1mRycRw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=EfgWzpRFGgji9ThLLnQuNckw2tiAw6dT5i9rtxJLgsw=;
+ b=he6hc2F1OwSlzbOxvsZ5iVpQQG9muG3UcJGS26FjsQHF+KxA+mHmswQLhZbIRBy5rL7NnWRnVi3TrJexV8l8wuAwaJcZ01q/JdmAXpnBZ0O887vpWQ1dm9hDUwxFIAdrZ1U13ufgyGakpeHDI7zm2XlKW8xU58yhHrWDhhPnzE/2hKg3EOjnxO2AtqUKuRPa64y7o4tX5rTB6jybit1F0ulwnYyY/ebBjlj3+bseYb97IiYekmgd+CvhjAqifkBvNF0klZdQcaZhN/Dsb3z2ushNFmS29WTTKtsNxTjze2yZwX8WGDCVPYnfPXsGcpbsJaLUWmDouNMzOu+yPZAn7A==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=microchip.com; dmarc=pass action=none
+ header.from=microchip.com; dkim=pass header.d=microchip.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=microchiptechnology.onmicrosoft.com;
+ s=selector2-microchiptechnology-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=EfgWzpRFGgji9ThLLnQuNckw2tiAw6dT5i9rtxJLgsw=;
+ b=lmPDsA8VbVXpDEvU//KjuerxIZL402grG8GtStv8NyMwGnmr+D4D+i1Be3evxlnFxyWAqxmKuGBuIuQzmrrVZ2R5jiEpgL5UKQ0DjCWTLQjtm8YWPikH8jyHYRdLxrFDnS9i1Wo3b7D3nl1RkAPiQcVofftu2kXarFRfZojMYxw=
+Received: from DM6PR11MB3996.namprd11.prod.outlook.com (20.176.125.206) by
+ DM6PR11MB2907.namprd11.prod.outlook.com (20.177.217.33) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2644.20; Fri, 17 Jan 2020 10:31:25 +0000
+Received: from DM6PR11MB3996.namprd11.prod.outlook.com
+ ([fe80::75b4:bb0c:c245:4392]) by DM6PR11MB3996.namprd11.prod.outlook.com
+ ([fe80::75b4:bb0c:c245:4392%5]) with mapi id 15.20.2623.018; Fri, 17 Jan 2020
+ 10:31:25 +0000
+From:   <Ajay.Kathat@microchip.com>
+To:     <linux-wireless@vger.kernel.org>
+CC:     <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <Adham.Abozaeid@microchip.com>, <johannes@sipsolutions.net>,
+        <Ajay.Kathat@microchip.com>
+Subject: [PATCH 2/4] staging: wilc1000: move firmware API struct's to separate
+ header file
+Thread-Topic: [PATCH 2/4] staging: wilc1000: move firmware API struct's to
+ separate header file
+Thread-Index: AQHVzSFEHS1Yrl/GPkS/Rb+ODnC2zg==
+Date:   Fri, 17 Jan 2020 10:31:25 +0000
+Message-ID: <20200117160157.8706-3-ajay.kathat@microchip.com>
+References: <20200117160157.8706-1-ajay.kathat@microchip.com>
+In-Reply-To: <20200117160157.8706-1-ajay.kathat@microchip.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-mailer: git-send-email 2.17.1
+x-originating-ip: [121.244.27.38]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: ae769b65-8d6c-4666-8f24-08d79b386771
+x-ms-traffictypediagnostic: DM6PR11MB2907:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <DM6PR11MB2907CADEBCE2FB357BABF9E7E3310@DM6PR11MB2907.namprd11.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:5797;
+x-forefront-prvs: 0285201563
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(136003)(366004)(39860400002)(396003)(376002)(346002)(189003)(199004)(8936002)(6916009)(5660300002)(6486002)(81166006)(478600001)(26005)(76116006)(91956017)(8676002)(81156014)(66946007)(66476007)(66446008)(64756008)(66556008)(36756003)(4326008)(2906002)(86362001)(316002)(6506007)(2616005)(107886003)(71200400001)(1076003)(6512007)(186003)(54906003);DIR:OUT;SFP:1101;SCL:1;SRVR:DM6PR11MB2907;H:DM6PR11MB3996.namprd11.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+received-spf: None (protection.outlook.com: microchip.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: bcacPRPXI46za5+Txr3u+IECcmlYnOaSm0r3dgsp5ycpdeCz2OWYnZi3/NPVG/Fg5OzHBp7Xu6GXSWshfTEVaUT/FjkcXnjXrC+k+V6a1ISwHGmkyUpXjkDSYeEOjAFbH4avErU2+tlcqQcpaEvx01franYCc5S591zWRZh2wOKP469oWM3LF4ec38zs2fwtjffeTYUOOro3HICKFCvUgy3NrA91kJl7SqtZAtrChbmmGxnwocvWH84s+Fw6tZLU+94iM4iMGwwTsszbkDB6L3C3jbs9jXRmXfT9STMC4aA3NfpncORtbP/0ZapgN6l6K9Ef1QzGybUGL2oHhtLcy+xOKYvlBgWR5RQCiA6gqatQS7li8nVtxXWO+MX+tLz7vTiu132pqps9VwdG8XJr5vlawhIpcsuZ9LIKJu3KKje6BGJaiopnqvyw78KGRa6J
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-MS-Exchange-CrossTenant-Network-Message-Id: ae769b65-8d6c-4666-8f24-08d79b386771
+X-MS-Exchange-CrossTenant-originalarrivaltime: 17 Jan 2020 10:31:25.0734
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: YO5bhfWenUuWXSL3+UwkG/jzmKNIUKfuHGXlRuxYhdq0hr3FWPac2s8R1kwhy+3TU8DIIoAFxcHUco67boK2DMe6om6JQBEKoN3P2sbwvTU=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR11MB2907
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-When simulate random transfer fail for sdio write and read, it happened
-"Could not init core: -110" and then wlan up fail.
+From: Ajay Singh <ajay.kathat@microchip.com>
 
-Test steps:
-1. Add config and update kernel:
-CONFIG_FAIL_MMC_REQUEST=y
-CONFIG_FAULT_INJECTION=y
-CONFIG_FAULT_INJECTION_DEBUG_FS=y
+It's recommended to keep the 'struct' used for passing data to firmware
+in separate header file. So added 'fw.h' header file to keep struct's
+used to pass data to firmware.
 
-2. Run simulate fail:
-cd /sys/kernel/debug/mmc1/fail_mmc_request
-echo 100 > probability
-echo 1000 > interval
-echo 1 > times && enter system suspend
-press power button to wakeup system
-
-3. It happened Could not init core: -110.
-[   66.432068] ath10k_sdio mmc1:0001:1: unable to send the bmi data to the device: -110
-[   66.440012] ath10k_sdio mmc1:0001:1: unable to write to the device
-[   66.453375] ath10k_sdio mmc1:0001:1: Could not init core: -110
-[   66.653371] Hardware became unavailable upon resume. This could be a software issue prior to suspend or a hardware issue.
-[   66.999651] Workqueue: events_unbound async_run_entry_fn
-[   67.004965] pstate: 60000005 (nZCv daif -PAN -UAO)
-[   67.009799] pc : ieee80211_reconfig+0x630/0x19a4 [mac80211]
-[   67.015413] lr : ieee80211_reconfig+0x630/0x19a4 [mac80211]
-[   67.020979] sp : ffffff800d593bb0
-[   67.024290] x29: ffffff800d593c30 x28: ffffff9169a11f80
-[   67.029602] x27: ffffff91696d2018 x26: 0000000000000001
-[   67.034915] x25: 00000000ffffff92 x24: ffffff9169a11f80
-[   67.040228] x23: 0000000000000010 x22: ffffff91696d2018
-[   67.045540] x21: ffffff9169a11f80 x20: 0000000000000000
-[   67.050853] x19: ffffffc9aeaa0800 x18: 0000000000000000
-[   67.056165] x17: 000000000000003c x16: ffffff91691b970c
-[   67.061477] x15: 0000000000000006 x14: ffff001000000600
-[   67.066790] x13: 000000000001a28e x12: 0000000000000000
-[   67.072102] x11: 0000000000000000 x10: 0000000000000000
-[   67.077415] x9 : c7b378ecef004f00 x8 : c7b378ecef004f00
-[   67.082728] x7 : 0000000000000000 x6 : ffffff9169b66d2a
-[   67.088041] x5 : 0000000000000000 x4 : 0000000000000000
-[   67.093353] x3 : 00000000000188a2 x2 : ffffffc9bff05918
-[   67.098666] x1 : ffffffc9bfefca08 x0 : 000000000000006d
-[   67.103979] Call trace:
-[   67.106470]  ieee80211_reconfig+0x630/0x19a4 [mac80211]
-[   67.111736]  ieee80211_resume+0x34/0x68 [mac80211]
-[   67.116586]  wiphy_resume+0x118/0x1d4 [cfg80211]
-[   67.121205]  dpm_run_callback+0xe8/0x1e4
-[   67.125128]  device_resume+0x1f4/0x228
-[   67.128876]  async_resume+0x28/0x58
-[   67.132362]  async_run_entry_fn+0x48/0xf8
-[   67.136374]  process_one_work+0x210/0x410
-[   67.140382]  worker_thread+0x234/0x3dc
-[   67.144132]  kthread+0x120/0x130
-[   67.147361]  ret_from_fork+0x10/0x18
-[   67.150933] ---[ end trace 65dc48ed6f2300f6 ]---
-[   67.156216] ------------[ cut here ]------------
-[   67.160881] wlan0:  Failed check-sdata-in-driver check, flags: 0x0
-[   67.167222] WARNING: CPU: 5 PID: 991 at /mnt/host/source/src/third_party/kernel/v4.19/net/mac80211/driver-ops.h:19 drv_remove_interface+0x1a8/0x1c0 [mac80211]
-[   67.251884]  zram cfg80211 joydev
-[   67.255206] CPU: 5 PID: 991 Comm: kworker/u16:3 Tainted: G        W         4.19.86 #67
-[   67.263201] Hardware name: MediaTek krane sku0 board (DT)
-[   67.268606] Workqueue: events_unbound async_run_entry_fn
-[   67.273914] pstate: 60000005 (nZCv daif -PAN -UAO)
-[   67.278720] pc : drv_remove_interface+0x1a8/0x1c0 [mac80211]
-[   67.284394] lr : drv_remove_interface+0x1a8/0x1c0 [mac80211]
-[   67.290045] sp : ffffff800d593990
-[   67.293353] x29: ffffff800d5939c0 x28: 0000000000000030
-[   67.298660] x27: ffffffc9ae8fd4a8 x26: 0000000000000000
-[   67.303967] x25: 0000000000000000 x24: ffffffc9aeaa0c48
-[   67.309274] x23: 0000000000000000 x22: ffffffc9aeaa1348
-[   67.314581] x21: ffffffc9aeaa07a0 x20: ffffffc9ae8fc900
-[   67.319887] x19: ffffffc9aeaa0800 x18: 0000000000000000
-[   67.325194] x17: 000000000000003c x16: ffffff91691b970c
-[   67.330501] x15: 0000000000000006 x14: ffff001000000600
-[   67.335808] x13: 000000000001a2bc x12: 0000000000000000
-[   67.341114] x11: 0000000000000000 x10: 0000000000000000
-[   67.346420] x9 : c7b378ecef004f00 x8 : c7b378ecef004f00
-[   67.351727] x7 : 0000000000000000 x6 : ffffff9169b66d1e
-[   67.357033] x5 : 0000000000000000 x4 : 0000000000000000
-[   67.362339] x3 : 0000000000017285 x2 : ffffffc9bff65918
-[   67.367645] x1 : ffffffc9bff5ca08 x0 : 0000000000000036
-[   67.372953] Call trace:
-[   67.375417]  drv_remove_interface+0x1a8/0x1c0 [mac80211]
-[   67.380749]  ieee80211_do_stop+0x620/0x6f8 [mac80211]
-[   67.385822]  ieee80211_stop+0x20/0x30 [mac80211]
-[   67.390439]  __dev_close_many+0xb8/0x11c
-[   67.394357]  dev_close_many+0x70/0x100
-[   67.398101]  dev_close+0x4c/0x80
-[   67.401354]  cfg80211_shutdown_all_interfaces+0x50/0xcc [cfg80211]
-[   67.407554]  ieee80211_handle_reconfig_failure+0x90/0x9c [mac80211]
-[   67.413839]  ieee80211_reconfig+0x18dc/0x19a4 [mac80211]
-[   67.419171]  ieee80211_resume+0x34/0x68 [mac80211]
-[   67.423974]  wiphy_resume+0x118/0x1d4 [cfg80211]
-[   67.428590]  dpm_run_callback+0xe8/0x1e4
-[   67.432509]  device_resume+0x1f4/0x228
-[   67.436253]  async_resume+0x28/0x58
-[   67.439735]  async_run_entry_fn+0x48/0xf8
-[   67.443742]  process_one_work+0x210/0x410
-[   67.447746]  worker_thread+0x234/0x3dc
-[   67.451489]  kthread+0x120/0x130
-[   67.454716]  ret_from_fork+0x10/0x18
-[   67.458286] ---[ end trace 65dc48ed6f2300f7 ]---
-[   67.462952] ------------[ cut here ]------------
-[   67.467648] WARNING: CPU: 5 PID: 991 at /mnt/host/source/src/third_party/kernel/v4.19/net/mac80211/driver-ops.c:39 drv_stop+0x1cc/0x1e4 [mac80211]
-[   67.554573] CPU: 5 PID: 991 Comm: kworker/u16:3 Tainted: G        W         4.19.86 #67
-[   67.562566] Hardware name: MediaTek krane sku0 board (DT)
-[   67.567959] Workqueue: events_unbound async_run_entry_fn
-[   67.573266] pstate: 60000005 (nZCv daif -PAN -UAO)
-[   67.578071] pc : drv_stop+0x1cc/0x1e4 [mac80211]
-[   67.582704] lr : drv_stop+0x1cc/0x1e4 [mac80211]
-[   67.587313] sp : ffffff800d593970
-[   67.590620] x29: ffffff800d5939a0 x28: 0000000000000030
-[   67.595927] x27: ffffffc9ae8fd4a8 x26: 0000000000000000
-[   67.601233] x25: 0000000000000000 x24: ffffffc9aeaa0c48
-[   67.606540] x23: 0000000000000000 x22: ffffffc9aeaa1348
-[   67.611846] x21: ffffffc9aeaa07a0 x20: ffffffc9ae8fc900
-[   67.617153] x19: ffffffc9aeaa0800 x18: 0000000000000000
-[   67.622460] x17: 000000000000003c x16: ffffff91691b970c
-[   67.627767] x15: 0000000000000006 x14: ffff001000000600
-[   67.633074] x13: 000000000001a358 x12: 0000000000000000
-[   67.638380] x11: 0000000000000000 x10: 0000000000000000
-[   67.643686] x9 : c7b378ecef004f00 x8 : c7b378ecef004f00
-[   67.648992] x7 : 0000000000000000 x6 : ffffff9169b66d0c
-[   67.654300] x5 : 0000000000000000 x4 : 0000000000000000
-[   67.659606] x3 : 0000000000016529 x2 : ffffffc9bff65918
-[   67.664913] x1 : ffffffc9bff5ca08 x0 : 0000000000000024
-[   67.670219] Call trace:
-[   67.672681]  drv_stop+0x1cc/0x1e4 [mac80211]
-[   67.676971]  ieee80211_stop_device+0x48/0x54 [mac80211]
-[   67.682215]  ieee80211_do_stop+0x678/0x6f8 [mac80211]
-[   67.687286]  ieee80211_stop+0x20/0x30 [mac80211]
-[   67.691898]  __dev_close_many+0xb8/0x11c
-[   67.695816]  dev_close_many+0x70/0x100
-[   67.699559]  dev_close+0x4c/0x80
-[   67.702798]  cfg80211_shutdown_all_interfaces+0x50/0xcc [cfg80211]
-[   67.708997]  ieee80211_handle_reconfig_failure+0x90/0x9c [mac80211]
-[   67.715283]  ieee80211_reconfig+0x18dc/0x19a4 [mac80211]
-[   67.720615]  ieee80211_resume+0x34/0x68 [mac80211]
-[   67.725417]  wiphy_resume+0x118/0x1d4 [cfg80211]
-[   67.730030]  dpm_run_callback+0xe8/0x1e4
-[   67.733947]  device_resume+0x1f4/0x228
-[   67.737690]  async_resume+0x28/0x58
-[   67.741173]  async_run_entry_fn+0x48/0xf8
-[   67.745178]  process_one_work+0x210/0x410
-[   67.749183]  worker_thread+0x234/0x3dc
-[   67.752925]  kthread+0x120/0x130
-[   67.756149]  ret_from_fork+0x10/0x18
-[   67.759717] ---[ end trace 65dc48ed6f2300f8 ]---
-[   67.767629] dpm_run_callback(): wiphy_resume+0x0/0x1d4 [cfg80211] returns -110
-[   67.774896] ieee80211 phy0: wiphy_resume+0x0/0x1d4 [cfg80211] returned -110 after 1777898 usecs
-
-Add retry mechanism for ath10k_start to make sure wlan up success.
-
-Tested with QCA6174 SDIO with firmware WLAN.RMH.4.4.1-00029.
-Tested with QCA6174 PCIe with firmware WLAN.RM.4.4.1-00110-QCARMSWP-1.
-Tested with QCA9984 PCIe with firmware 10.4-3.9.0.2-00046.
-Tested with QCA9988 PCIe with firmware 10.4-3.9.0.2-00070.
-
-Signed-off-by: Wen Gong <wgong@codeaurora.org>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/net/wireless/ath/ath10k/core.c |  1 +
- drivers/net/wireless/ath/ath10k/core.h |  2 ++
- drivers/net/wireless/ath/ath10k/hw.h   |  2 ++
- drivers/net/wireless/ath/ath10k/mac.c  | 23 ++++++++++++++++++++++-
- 4 files changed, 27 insertions(+), 1 deletion(-)
+ drivers/staging/wilc1000/fw.h      | 119 +++++++++++++++++++++++++++++
+ drivers/staging/wilc1000/hif.c     |  88 ---------------------
+ drivers/staging/wilc1000/hif.h     |  19 -----
+ drivers/staging/wilc1000/netdev.h  |   1 -
+ drivers/staging/wilc1000/wlan_if.h |   1 +
+ 5 files changed, 120 insertions(+), 108 deletions(-)
+ create mode 100644 drivers/staging/wilc1000/fw.h
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 91f131b87efc..59c9b850aa44 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -190,6 +190,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.uart_pin_workaround = true,
- 		.tx_stats_over_pktlog = false,
- 		.bmi_large_size_download = true,
-+		.start_retry = ATH10K_START_RETRY,
- 	},
- 	{
- 		.id = QCA6174_HW_2_1_VERSION,
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index e57b2e7235e3..2b55bec0dc6a 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -82,6 +82,8 @@
- /* Default Airtime weight multipler (Tuned for multiclient performance) */
- #define ATH10K_AIRTIME_WEIGHT_MULTIPLIER  4
- 
-+#define ATH10K_START_RETRY 10
+diff --git a/drivers/staging/wilc1000/fw.h b/drivers/staging/wilc1000/fw.h
+new file mode 100644
+index 000000000000..21d71a9e8b47
+--- /dev/null
++++ b/drivers/staging/wilc1000/fw.h
+@@ -0,0 +1,119 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ * Copyright (c) 2012 - 2018 Microchip Technology Inc., and its subsidiari=
+es.
++ * All rights reserved.
++ */
 +
- struct ath10k;
- 
- static inline const char *ath10k_bus_str(enum ath10k_bus bus)
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 54176a0c0479..7615a9212e7c 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -623,6 +623,8 @@ struct ath10k_hw_params {
- 
- 	/* tx stats support over pktlog */
- 	bool tx_stats_over_pktlog;
++#ifndef WILC_FW_H
++#define WILC_FW_H
 +
-+	u32 start_retry;
++#include <linux/ieee80211.h>
++
++#define WILC_MAX_NUM_STA			9
++#define WILC_MAX_RATES_SUPPORTED		12
++#define WILC_MAX_NUM_PMKIDS			16
++#define WILC_MAX_NUM_SCANNED_CH			14
++
++struct assoc_resp {
++	__le16 capab_info;
++	__le16 status_code;
++	__le16 aid;
++} __packed;
++
++struct wilc_pmkid {
++	u8 bssid[ETH_ALEN];
++	u8 pmkid[WLAN_PMKID_LEN];
++} __packed;
++
++struct wilc_pmkid_attr {
++	u8 numpmkid;
++	struct wilc_pmkid pmkidlist[WILC_MAX_NUM_PMKIDS];
++} __packed;
++
++struct wilc_reg_frame {
++	u8 reg;
++	u8 reg_id;
++	__le16 frame_type;
++} __packed;
++
++struct wilc_drv_handler {
++	__le32 handler;
++	u8 mode;
++} __packed;
++
++struct wilc_wep_key {
++	u8 index;
++	u8 key_len;
++	u8 key[0];
++} __packed;
++
++struct wilc_sta_wpa_ptk {
++	u8 mac_addr[ETH_ALEN];
++	u8 key_len;
++	u8 key[0];
++} __packed;
++
++struct wilc_ap_wpa_ptk {
++	u8 mac_addr[ETH_ALEN];
++	u8 index;
++	u8 key_len;
++	u8 key[0];
++} __packed;
++
++struct wilc_gtk_key {
++	u8 mac_addr[ETH_ALEN];
++	u8 rsc[8];
++	u8 index;
++	u8 key_len;
++	u8 key[0];
++} __packed;
++
++struct wilc_op_mode {
++	__le32 mode;
++} __packed;
++
++struct wilc_noa_opp_enable {
++	u8 ct_window;
++	u8 cnt;
++	__le32 duration;
++	__le32 interval;
++	__le32 start_time;
++} __packed;
++
++struct wilc_noa_opp_disable {
++	u8 cnt;
++	__le32 duration;
++	__le32 interval;
++	__le32 start_time;
++} __packed;
++
++struct wilc_join_bss_param {
++	char ssid[IEEE80211_MAX_SSID_LEN];
++	u8 ssid_terminator;
++	u8 bss_type;
++	u8 ch;
++	__le16 cap_info;
++	u8 sa[ETH_ALEN];
++	u8 bssid[ETH_ALEN];
++	__le16 beacon_period;
++	u8 dtim_period;
++	u8 supp_rates[WILC_MAX_RATES_SUPPORTED + 1];
++	u8 wmm_cap;
++	u8 uapsd_cap;
++	u8 ht_capable;
++	u8 rsn_found;
++	u8 rsn_grp_policy;
++	u8 mode_802_11i;
++	u8 p_suites[3];
++	u8 akm_suites[3];
++	u8 rsn_cap[2];
++	u8 noa_enabled;
++	__le32 tsf_lo;
++	u8 idx;
++	u8 opp_enabled;
++	union {
++		struct wilc_noa_opp_disable opp_dis;
++		struct wilc_noa_opp_enable opp_en;
++	};
++} __packed;
++#endif
+diff --git a/drivers/staging/wilc1000/hif.c b/drivers/staging/wilc1000/hif.=
+c
+index 349e45d58ec9..1ee3d7274bd6 100644
+--- a/drivers/staging/wilc1000/hif.c
++++ b/drivers/staging/wilc1000/hif.c
+@@ -10,7 +10,6 @@
+ #define WILC_HIF_CONNECT_TIMEOUT_MS             9500
+=20
+ #define WILC_FALSE_FRMWR_CHANNEL		100
+-#define WILC_MAX_RATES_SUPPORTED		12
+=20
+ struct wilc_rcvd_mac_info {
+ 	u8 status;
+@@ -27,48 +26,6 @@ struct wilc_del_all_sta {
+ 	u8 mac[WILC_MAX_NUM_STA][ETH_ALEN];
  };
- 
- struct htt_rx_desc;
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 3856edba7915..96afd813367b 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -4814,7 +4814,7 @@ int ath10k_mac_rfkill_enable_radio(struct ath10k *ar, bool enable)
- 	return 0;
- }
- 
--static int ath10k_start(struct ieee80211_hw *hw)
-+static int __ath10k_start(struct ieee80211_hw *hw)
- {
- 	struct ath10k *ar = hw->priv;
- 	u32 param;
-@@ -5030,6 +5030,27 @@ static int ath10k_start(struct ieee80211_hw *hw)
- 	return ret;
- }
- 
-+static int ath10k_start(struct ieee80211_hw *hw)
-+{
-+	struct ath10k *ar = hw->priv;
-+	int ret, loop = ar->hw_params.start_retry + 1;
-+	enum ath10k_state state = ar->state;
-+
-+	while (loop != 0) {
-+		ar->state = state;
-+		ret = __ath10k_start(hw);
-+		loop--;
-+
-+		if (ret)
-+			ath10k_warn(ar, "failed to start, loops: %d, ret: %d\n",
-+				    loop, ret);
-+		else
-+			break;
-+	}
-+
-+	return ret;
-+}
-+
- static void ath10k_stop(struct ieee80211_hw *hw)
- {
- 	struct ath10k *ar = hw->priv;
--- 
-2.23.0
+=20
+-struct wilc_op_mode {
+-	__le32 mode;
+-};
+-
+-struct wilc_reg_frame {
+-	u8 reg;
+-	u8 reg_id;
+-	__le16 frame_type;
+-} __packed;
+-
+-struct wilc_drv_handler {
+-	__le32 handler;
+-	u8 mode;
+-} __packed;
+-
+-struct wilc_wep_key {
+-	u8 index;
+-	u8 key_len;
+-	u8 key[0];
+-} __packed;
+-
+-struct wilc_sta_wpa_ptk {
+-	u8 mac_addr[ETH_ALEN];
+-	u8 key_len;
+-	u8 key[0];
+-} __packed;
+-
+-struct wilc_ap_wpa_ptk {
+-	u8 mac_addr[ETH_ALEN];
+-	u8 index;
+-	u8 key_len;
+-	u8 key[0];
+-} __packed;
+-
+-struct wilc_gtk_key {
+-	u8 mac_addr[ETH_ALEN];
+-	u8 rsc[8];
+-	u8 index;
+-	u8 key_len;
+-	u8 key[0];
+-} __packed;
+-
+ union wilc_message_body {
+ 	struct wilc_rcvd_net_info net_info;
+ 	struct wilc_rcvd_mac_info mac_info;
+@@ -86,51 +43,6 @@ struct host_if_msg {
+ 	bool is_sync;
+ };
+=20
+-struct wilc_noa_opp_enable {
+-	u8 ct_window;
+-	u8 cnt;
+-	__le32 duration;
+-	__le32 interval;
+-	__le32 start_time;
+-} __packed;
+-
+-struct wilc_noa_opp_disable {
+-	u8 cnt;
+-	__le32 duration;
+-	__le32 interval;
+-	__le32 start_time;
+-} __packed;
+-
+-struct wilc_join_bss_param {
+-	char ssid[IEEE80211_MAX_SSID_LEN];
+-	u8 ssid_terminator;
+-	u8 bss_type;
+-	u8 ch;
+-	__le16 cap_info;
+-	u8 sa[ETH_ALEN];
+-	u8 bssid[ETH_ALEN];
+-	__le16 beacon_period;
+-	u8 dtim_period;
+-	u8 supp_rates[WILC_MAX_RATES_SUPPORTED + 1];
+-	u8 wmm_cap;
+-	u8 uapsd_cap;
+-	u8 ht_capable;
+-	u8 rsn_found;
+-	u8 rsn_grp_policy;
+-	u8 mode_802_11i;
+-	u8 p_suites[3];
+-	u8 akm_suites[3];
+-	u8 rsn_cap[2];
+-	u8 noa_enabled;
+-	__le32 tsf_lo;
+-	u8 idx;
+-	u8 opp_enabled;
+-	union {
+-		struct wilc_noa_opp_disable opp_dis;
+-		struct wilc_noa_opp_enable opp_en;
+-	};
+-} __packed;
+-
+ /* 'msg' should be free by the caller for syc */
+ static struct host_if_msg*
+ wilc_alloc_work(struct wilc_vif *vif, void (*work_fun)(struct work_struct =
+*),
+diff --git a/drivers/staging/wilc1000/hif.h b/drivers/staging/wilc1000/hif.=
+h
+index 22ee6fffd599..db9179171f05 100644
+--- a/drivers/staging/wilc1000/hif.h
++++ b/drivers/staging/wilc1000/hif.h
+@@ -17,14 +17,11 @@ enum {
+ 	WILC_CLIENT_MODE =3D 0x4
+ };
+=20
+-#define WILC_MAX_NUM_STA			9
+-#define WILC_MAX_NUM_SCANNED_CH			14
+ #define WILC_MAX_NUM_PROBED_SSID		10
+=20
+ #define WILC_TX_MIC_KEY_LEN			8
+ #define WILC_RX_MIC_KEY_LEN			8
+=20
+-#define WILC_MAX_NUM_PMKIDS			16
+ #define WILC_ADD_STA_LENGTH			40
+ #define WILC_NUM_CONCURRENT_IFC			2
+=20
+@@ -35,12 +32,6 @@ enum {
+=20
+ #define WILC_MAX_ASSOC_RESP_FRAME_SIZE   256
+=20
+-struct assoc_resp {
+-	__le16 capab_info;
+-	__le16 status_code;
+-	__le16 aid;
+-} __packed;
+-
+ struct rf_info {
+ 	u8 link_speed;
+ 	s8 rssi;
+@@ -59,16 +50,6 @@ enum host_if_state {
+ 	HOST_IF_FORCE_32BIT		=3D 0xFFFFFFFF
+ };
+=20
+-struct wilc_pmkid {
+-	u8 bssid[ETH_ALEN];
+-	u8 pmkid[WLAN_PMKID_LEN];
+-} __packed;
+-
+-struct wilc_pmkid_attr {
+-	u8 numpmkid;
+-	struct wilc_pmkid pmkidlist[WILC_MAX_NUM_PMKIDS];
+-} __packed;
+-
+ struct cfg_param_attr {
+ 	u32 flag;
+ 	u16 short_retry_limit;
+diff --git a/drivers/staging/wilc1000/netdev.h b/drivers/staging/wilc1000/n=
+etdev.h
+index cd8f0d72caaa..d5f7a6037fbc 100644
+--- a/drivers/staging/wilc1000/netdev.h
++++ b/drivers/staging/wilc1000/netdev.h
+@@ -21,7 +21,6 @@
+ #define FLOW_CONTROL_LOWER_THRESHOLD		128
+ #define FLOW_CONTROL_UPPER_THRESHOLD		256
+=20
+-#define WILC_MAX_NUM_PMKIDS			16
+ #define PMKID_FOUND				1
+ #define NUM_STA_ASSOCIATED			8
+=20
+diff --git a/drivers/staging/wilc1000/wlan_if.h b/drivers/staging/wilc1000/=
+wlan_if.h
+index 7c7ee66c35f5..f85fd575136d 100644
+--- a/drivers/staging/wilc1000/wlan_if.h
++++ b/drivers/staging/wilc1000/wlan_if.h
+@@ -8,6 +8,7 @@
+ #define WILC_WLAN_IF_H
+=20
+ #include <linux/netdevice.h>
++#include "fw.h"
+=20
+ /********************************************
+  *
+--=20
+2.24.0
