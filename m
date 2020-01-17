@@ -2,173 +2,80 @@ Return-Path: <SRS0=4hjn=3G=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94ED2C33CB1
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Jan 2020 10:31:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 435E0C33CB1
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Jan 2020 11:33:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5DDA32083E
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Jan 2020 10:31:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0E3082073A
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Jan 2020 11:33:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="gJSvKjI+"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="FHWO4xa3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726982AbgAQKbf (ORCPT
+        id S1726864AbgAQLdt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 17 Jan 2020 05:31:35 -0500
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:23235 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726362AbgAQKbf (ORCPT
+        Fri, 17 Jan 2020 06:33:49 -0500
+Received: from mail25.static.mailgun.info ([104.130.122.25]:23554 "EHLO
+        mail25.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726371AbgAQLdt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Jan 2020 05:31:35 -0500
-Received-SPF: Pass (esa1.microchip.iphmx.com: domain of
-  Ajay.Kathat@microchip.com designates 198.175.253.82 as
-  permitted sender) identity=mailfrom;
-  client-ip=198.175.253.82; receiver=esa1.microchip.iphmx.com;
-  envelope-from="Ajay.Kathat@microchip.com";
-  x-sender="Ajay.Kathat@microchip.com"; x-conformance=spf_only;
-  x-record-type="v=spf1"; x-record-text="v=spf1 mx
-  a:ushub1.microchip.com a:smtpout.microchip.com
-  -exists:%{i}.spf.microchip.iphmx.com include:servers.mcsv.net
-  include:mktomail.com include:spf.protection.outlook.com ~all"
-Received-SPF: None (esa1.microchip.iphmx.com: no sender
-  authenticity information available from domain of
-  postmaster@email.microchip.com) identity=helo;
-  client-ip=198.175.253.82; receiver=esa1.microchip.iphmx.com;
-  envelope-from="Ajay.Kathat@microchip.com";
-  x-sender="postmaster@email.microchip.com";
-  x-conformance=spf_only
-Authentication-Results: esa1.microchip.iphmx.com; spf=Pass smtp.mailfrom=Ajay.Kathat@microchip.com; spf=None smtp.helo=postmaster@email.microchip.com; dkim=pass (signature verified) header.i=@microchiptechnology.onmicrosoft.com; dmarc=pass (p=none dis=none) d=microchip.com
-IronPort-SDR: qdUSGLrBaAkCuWHaBojHLbJoAXcv8IfPmo5+ken92KMqWI1xEKhHDO/0t84GMrncQOScSr9Off
- O+AtSaYP6ht2Xg+zrZVErGPjw6hv7WRNtkA8ssCWwMpim9i6wQtHQTKniCdhXlwiXr40V1/0ww
- NriU+a9Db6obVnZiDd8rJ9WD6d8gIKS07HjzK9AZT9745EEUo0NFOXfegyOa2Dksx8LhS+YSOf
- JJOcfaZ1sKp0v8VJAHr+XKSmsqsnZ7xPsfasIIZMaUzlUTvebuRU1V9JezQKba3heZUhfXNpFf
- Fkg=
-X-IronPort-AV: E=Sophos;i="5.70,329,1574146800"; 
-   d="scan'208";a="65077360"
-Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa1.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 17 Jan 2020 03:31:34 -0700
-Received: from chn-vm-ex02.mchp-main.com (10.10.85.144) by
- chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1713.5; Fri, 17 Jan 2020 03:31:27 -0700
-Received: from NAM12-BN8-obe.outbound.protection.outlook.com (10.10.215.89) by
- email.microchip.com (10.10.87.72) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5 via Frontend
- Transport; Fri, 17 Jan 2020 03:31:26 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=gsTi5sV4B3NQtNnrsQcLq4n3Ggf9C6HFA3mH4hY/NOoeCe/kUBh03mQQXMpURj5r5a42coWW/XYQtkSS2NcpKBA7cYGTQNuVBtdVpX1q35D/wn00+vDN4WaMAZxQbZcBaUjbLset58IZw61UZOo7ZEwEoxH/Kd3bQOHLy8bW+tkAZxhv3Y1ieXTSZN51b5ZbMMoJUKweSowwMoCpNtsgGe/+WmBavAlaBuFnhLcenR3pqjfvWNdqaz/sKodfulci0X5S/3GinDE/gPkcyUDKupAD/GOhbtMYJKjy7eEwyG1n7Q4hPxOCavoE0T1Fmxzt3VgntVUCqBSUJOskQhUAGg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=9+zKjjAlC2k7d3vs1sFCBgtDTG8IvLrabnAyvvP9JRo=;
- b=ZEIkEqdjVo29qD84dSprSIRTCgfsd6DCulJ/l0RMjhkJY4ntzxUe71RRjNSftQc7J+AC+KjGvIqkWlDP1t3Ec9zUaSvxuH2EMmKjXkLlx71KcA25kUnIJNmVzzsVCyrFPRpFlIhg/BcznSkn8Ncwu3wfKfYfhB7rjxzGHG6lmlefYX2OKcRl1Ia1pDzkCYudGwO3QItajjHd/pATP0slAXmctF8gkJePhJ7zV6L1ng75bxUz5An8GS5XyOaLl3q2s0WT4ys8/YzdKTdFcuhuL6XST243gxCBcoPF0GzhBUNYN3u78zmeExPbGJP4rFZ7uLY2Y79Z3aYYej2c6VjWdQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microchip.com; dmarc=pass action=none
- header.from=microchip.com; dkim=pass header.d=microchip.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=microchiptechnology.onmicrosoft.com;
- s=selector2-microchiptechnology-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=9+zKjjAlC2k7d3vs1sFCBgtDTG8IvLrabnAyvvP9JRo=;
- b=gJSvKjI+zkkt2mORH6qA56EqI18A7jDfTPJt+ra6LGGVV67wNklrEzpvOAYxW1HfB37zFyyKWvdB/bXRprfErskRzONP/jR7aak76l7R9LopYN+3yzVVSOPX03pwxfPEqgiE8fuVS+xrrghAJlKBX+gzrv08dxaV4zg46wfVR1Q=
-Received: from DM6PR11MB3996.namprd11.prod.outlook.com (20.176.125.206) by
- DM6PR11MB2907.namprd11.prod.outlook.com (20.177.217.33) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2644.20; Fri, 17 Jan 2020 10:31:26 +0000
-Received: from DM6PR11MB3996.namprd11.prod.outlook.com
- ([fe80::75b4:bb0c:c245:4392]) by DM6PR11MB3996.namprd11.prod.outlook.com
- ([fe80::75b4:bb0c:c245:4392%5]) with mapi id 15.20.2623.018; Fri, 17 Jan 2020
- 10:31:26 +0000
-From:   <Ajay.Kathat@microchip.com>
-To:     <linux-wireless@vger.kernel.org>
-CC:     <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <Adham.Abozaeid@microchip.com>, <johannes@sipsolutions.net>,
-        <Ajay.Kathat@microchip.com>
-Subject: [PATCH 3/4] staging: wilc1000: added 'wilc_' prefix for 'struct
- assoc_resp' name
-Thread-Topic: [PATCH 3/4] staging: wilc1000: added 'wilc_' prefix for 'struct
- assoc_resp' name
-Thread-Index: AQHVzSFFjPGjT3ZT2USKGRbjiG4W5g==
-Date:   Fri, 17 Jan 2020 10:31:26 +0000
-Message-ID: <20200117160157.8706-4-ajay.kathat@microchip.com>
-References: <20200117160157.8706-1-ajay.kathat@microchip.com>
-In-Reply-To: <20200117160157.8706-1-ajay.kathat@microchip.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-mailer: git-send-email 2.17.1
-x-originating-ip: [121.244.27.38]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 040f77f7-723c-4aa2-f089-08d79b386842
-x-ms-traffictypediagnostic: DM6PR11MB2907:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <DM6PR11MB2907B8C240B58B63EC827C0BE3310@DM6PR11MB2907.namprd11.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:2331;
-x-forefront-prvs: 0285201563
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(136003)(366004)(39860400002)(396003)(376002)(346002)(189003)(199004)(8936002)(6916009)(5660300002)(6486002)(81166006)(478600001)(26005)(76116006)(91956017)(8676002)(81156014)(66946007)(66476007)(66446008)(64756008)(66556008)(36756003)(4326008)(2906002)(86362001)(316002)(6506007)(2616005)(107886003)(71200400001)(1076003)(6512007)(186003)(54906003);DIR:OUT;SFP:1101;SCL:1;SRVR:DM6PR11MB2907;H:DM6PR11MB3996.namprd11.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
-received-spf: None (protection.outlook.com: microchip.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: B3s1Sn1kjLUwRs768yLMgYFlCYntSPEzErz3f3mmBgR7DXdku/naor6utsLI90JLxfNBxNwXXxB3dFjWp5tYaXV/TktLSt+QZB0AapPQyPVMTI3IYYKbOoq6eKiqVhoLLF7YlxIwTCcqwZ2M227IlzUgOIeKmk9d0g3ZV87MNnAi9dlCYEpey1/1KVZ4obo9LCBw7ZpoEOJ6+3oAhKuB7SbmqdqYqeqho/GCZuACMbKZn6Icoeqz+3uyxx12Ibdijbi2aCk7s80/fInEDQkVN7JCciE66G6ZRPROY+hses2FZUqqI/aGY62FTKrsSkRnxvv4xqL1y9OvjSMuTQTgjZjL+MMcdoHUkIzY7mly7rDi1P/jhpxNp+8pXzlg7ana2nHB6t8ZArv7k2myIlZhTIJjs678wU/bTwX3XyEV4KJgGQda1x3VS4nKxT50xH9u
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+        Fri, 17 Jan 2020 06:33:49 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1579260828; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=Z8+3qloo3rLEuH13odRJ1spLCuP0K9ycA0JSMC8xg1Q=;
+ b=FHWO4xa3RMtd5YKcXoLbTRTS6FR85yBzjWhhg7NAJ5TJGkm8I2er7K7bwHJ6q4sq8cwQGfjd
+ YbXXIBFJlwZwCyF1oa+8fuhK7kDwQwbQYI3pHtHcEpPn4gbtmrvW4LHO5HmPaIFDg4VrqyqR
+ A3oR8SO7jQObY4Hn9W5VOPM8/F8=
+X-Mailgun-Sending-Ip: 104.130.122.25
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
+ by mxa.mailgun.org with ESMTP id 5e219b99.7f9647035228-smtp-out-n01;
+ Fri, 17 Jan 2020 11:33:45 -0000 (UTC)
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 99BEDC433CB; Fri, 17 Jan 2020 11:33:45 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: vjakkam)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 6DFD8C43383;
+        Fri, 17 Jan 2020 11:33:45 +0000 (UTC)
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-Network-Message-Id: 040f77f7-723c-4aa2-f089-08d79b386842
-X-MS-Exchange-CrossTenant-originalarrivaltime: 17 Jan 2020 10:31:26.4466
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: FuTQG/jL9n/HT1d8+W83IdTf8TYwZN2PAQAUKrkVPtoksCq1usqGbIvgbsNemDHokPUhxp1hBfdDf90GvM3kpMoNmnNadlJQytKz0LbCm48=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR11MB2907
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Fri, 17 Jan 2020 17:03:45 +0530
+From:   vjakkam@codeaurora.org
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] cfg80211: Enhance the AKM advertizement to support per
+ interface.
+In-Reply-To: <de5fdc38a085de022f75a23883d9e498e5123e88.camel@sipsolutions.net>
+References: <20191223185255.1009-1-vjakkam@codeaurora.org>
+ (sfid-20191223_195313_440449_C90A4A92)
+ <de5fdc38a085de022f75a23883d9e498e5123e88.camel@sipsolutions.net>
+Message-ID: <59798c5a3489b4b2254e04c93104a6d2@codeaurora.org>
+X-Sender: vjakkam@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ajay Singh <ajay.kathat@microchip.com>
+On 2020-01-02 19:15, Johannes Berg wrote:
+> On Tue, 2019-12-24 at 00:22 +0530, Veerendranath Jakkam wrote:
+>> 
+>> @@ -4587,9 +4598,6 @@ struct wiphy {
+>>  	int n_cipher_suites;
+>>  	const u32 *cipher_suites;
+>> 
+>> -	int n_akm_suites;
+>> -	const u32 *akm_suites;
+> 
+> Certainly this also breaks compiling a large number of drivers... ???
+> 
+> johannes
 
-Use 'wilc_' prefix for 'assoc_resp' struct to have proper naming
-convention.
-
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/fw.h  | 2 +-
- drivers/staging/wilc1000/hif.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/fw.h b/drivers/staging/wilc1000/fw.h
-index 21d71a9e8b47..a76e1dea4345 100644
---- a/drivers/staging/wilc1000/fw.h
-+++ b/drivers/staging/wilc1000/fw.h
-@@ -14,7 +14,7 @@
- #define WILC_MAX_NUM_PMKIDS			16
- #define WILC_MAX_NUM_SCANNED_CH			14
-=20
--struct assoc_resp {
-+struct wilc_assoc_resp {
- 	__le16 capab_info;
- 	__le16 status_code;
- 	__le16 aid;
-diff --git a/drivers/staging/wilc1000/hif.c b/drivers/staging/wilc1000/hif.=
-c
-index 1ee3d7274bd6..658790bd465b 100644
---- a/drivers/staging/wilc1000/hif.c
-+++ b/drivers/staging/wilc1000/hif.c
-@@ -552,7 +552,7 @@ static s32 wilc_parse_assoc_resp_info(u8 *buffer, u32 b=
-uffer_len,
- {
- 	u8 *ies;
- 	u16 ies_len;
--	struct assoc_resp *res =3D (struct assoc_resp *)buffer;
-+	struct wilc_assoc_resp *res =3D (struct wilc_assoc_resp *)buffer;
-=20
- 	ret_conn_info->status =3D le16_to_cpu(res->status_code);
- 	if (ret_conn_info->status =3D=3D WLAN_STATUS_SUCCESS) {
---=20
-2.24.0
+Thanks, I will correct in v2
