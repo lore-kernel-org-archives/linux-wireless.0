@@ -2,26 +2,27 @@ Return-Path: <SRS0=4hjn=3G=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6730C33CB3
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Jan 2020 10:31:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51769C33CB7
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Jan 2020 10:31:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7501F2082F
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Jan 2020 10:31:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1D9312082F
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Jan 2020 10:31:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="KB7riHqC"
+	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="XwYB2HLn"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726596AbgAQKb3 (ORCPT
+        id S1726915AbgAQKbb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 17 Jan 2020 05:31:29 -0500
+        Fri, 17 Jan 2020 05:31:31 -0500
 Received: from esa4.microchip.iphmx.com ([68.232.154.123]:55340 "EHLO
         esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726085AbgAQKb3 (ORCPT
+        with ESMTP id S1726362AbgAQKba (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Jan 2020 05:31:29 -0500
+        Fri, 17 Jan 2020 05:31:30 -0500
 Received-SPF: Pass (esa4.microchip.iphmx.com: domain of
   Ajay.Kathat@microchip.com designates 198.175.253.82 as
   permitted sender) identity=mailfrom;
@@ -40,30 +41,30 @@ Received-SPF: None (esa4.microchip.iphmx.com: no sender
   x-sender="postmaster@email.microchip.com";
   x-conformance=spf_only
 Authentication-Results: esa4.microchip.iphmx.com; spf=Pass smtp.mailfrom=Ajay.Kathat@microchip.com; spf=None smtp.helo=postmaster@email.microchip.com; dkim=pass (signature verified) header.i=@microchiptechnology.onmicrosoft.com; dmarc=pass (p=none dis=none) d=microchip.com
-IronPort-SDR: xGEV0in1bqOPoRSFb+lx6Pkc+iyD0l+UoozPbCo7UYmrHW8uY/3PX/K1ueVEOwR7OGFwXNg2lo
- MKX/wzSK/+AA87g6YW163xz7m0kNwsActy7BxeD51Kk1iiMDlF9D5dmayPWrd6FisfHiYXRk4g
- h3OWaXz4HRsoNrHrspJ2fMMXGFBOEy/eRTJlbRrAHczSGdVGecSn6FR49BOnYwC2jvbby2Mt9a
- tYW8tgk66zhh+ROXL1oqL3n2gzpeUEr8l/6FOlXDl1gKms3GKAYDdZX4KqDzlGLefFqjmFy/Y1
- izI=
+IronPort-SDR: k3ri91OHfHldoW61f821T7S20ZTDSywePNhHDV5L/bBp0HaVk442V+jxJKIACsVn7RdLXHVj4T
+ 4sIeLXO5XEw5/GqaVOHkhebsViMYD16EwLzUZPscLcZcj/uD7+lSazdsXmJxhIfuuGYD/zKirQ
+ pOW3xX+UhMWoOQZjUbIcCZQNHDbOdEPzTX1WRj8e5pOatV5ycGhxY9+bVgu1G7YKEsNaOczRO8
+ GKnXoKjDC90MiVCw3Xp+oFGDZpPM3KYn8vENXlidFvsUj9cRWYA7wV7AEEO/A9IIyHGJ30yVB6
+ 9Fc=
 X-IronPort-AV: E=Sophos;i="5.70,329,1574146800"; 
-   d="scan'208";a="61369406"
+   d="scan'208";a="61369414"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa4.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 17 Jan 2020 03:31:27 -0700
+  by esa4.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 17 Jan 2020 03:31:29 -0700
 Received: from chn-vm-ex02.mchp-main.com (10.10.85.144) by
  chn-vm-ex01.mchp-main.com (10.10.85.143) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1713.5; Fri, 17 Jan 2020 03:31:27 -0700
+ 15.1.1713.5; Fri, 17 Jan 2020 03:31:29 -0700
 Received: from NAM12-BN8-obe.outbound.protection.outlook.com (10.10.215.89) by
  email.microchip.com (10.10.87.72) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5 via Frontend
- Transport; Fri, 17 Jan 2020 03:31:26 -0700
+ Transport; Fri, 17 Jan 2020 03:31:27 -0700
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=XCaLBT483kcx4KCBDapeZUZTvbIzcSQCo91EfmauFXaTfzaKrKXLJbYdbINkrpotgZjR+KynH01wDUrwZGrsarrZr+SyL+BKbYrQTAe4tuNWrstXUl7UG7VgFJi1EsMdwIFoQod9EjOSO7MO5A9AF2l/zfkbS6uv5wqkESnFnVnE6VsQiVntRAAc+uJRep0sPxSSTq8+Gli1ZX5oO6gxU9mMm7dai7pvcrx4YHzM02Qkz+2Q9ml/aSHa697XSb3lJyAoKR5vTyA6pO6edcTVI7j3s5sQO99B3RjyOl8cKU+XXLqeNdcbUQScgZPvUoSwKdnkg/OGq8gqKlVY57SqFg==
+ b=GileH9ucLOZ0WmMbsJx/WXWLVGCMePxq9DoX06SjO0aUdzz98JP/kKMFlwMoYNpdVVDNG++EtNPBOkBncJ+7R/enymwv8ZBWBLcGVQzCv9BScv5n7/5W2MFH4hgsuE1hWfzNyBrzgNUGfVH9e/1ptxSX43AWSFYQOg+ICO/apmjqLC1IyL5x5kXRRTDF4xzJY2B5KdyJrMBrH9SlHIV6+RxlPgeXF8cHjOrHrEnOvrNeULFQBBB2yw/9WRPo5puglF/aH6rKblajPkkWXRUQg08ImGjtCgRhpt2c3W16qOlX6+2r9M7XQX+XKhkNJiGq+Hb5f+udkydQXtSD5jpJXQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=w/Iop/xxspo1QhZeajF9rHmSJmYOM+ZOsLimDiHKJu4=;
- b=Bvx0xcVYdVm90132HsgSZtKjIURyvCYmH9RaAm2+2xkPIyxiQ9jMbgDyqJe89r93UTWB/8kVyAYlOok0wB0XU1hi0UbbeRX1S9PsyHA7cKS4a6W3LJ84UZT7OL3i/CRsd8cmOTxMVBAG/+KwsYBFhFaksFE32hkILqM4sPi+awhV5e5r8u1kZ+R64Ed6J3U9cekF01RbV8muhS67O1qvEVosgdrTqF0ztym61T52skw1M/WDEoEZcI97fMjJ4yb4ypFhp7QuTE1Lcv2NWegP/IxsZkc2Gn8g9B8+nuDNCm88ZF7d2quGYhizdBAOMjRMb13rnAedwAfGxeuqH7ksKg==
+ bh=Z4sDtNbwx6vkaUI3w0nWsSCdnCCsvGh82TQsgrYmvxM=;
+ b=Ww5xSgQeDhjNT6dV3ejpQChtci0xZOo/bT1u0Y72fJjegcy460lsigOg8U2kD6bF97f4xxpjhATwYhuGkMlTEzif7Dyi3f5FSrQpT92jwxFhYk1zDladmOFs6/daXWOJb6lKFFR5lX4eYZi/EADXSSpO9cJrW+9SKqLEM9rZvpkXG8enmlhDP50gveqd/MRmBnrh0wf2bx8yr1jGlcK9ySzSpkPRDvoVOst1D/0F4nVio8l85A9BX8i7zEKoSlfNLRjjnVVxDddf4SeoZolO6EDkGveNxl6t7vVpxUMMEDMz322Gpmke9hC+FCqir6M0iVkHARJFsyjvHaWNROUC5A==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=microchip.com; dmarc=pass action=none
  header.from=microchip.com; dkim=pass header.d=microchip.com; arc=none
@@ -71,27 +72,30 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=microchiptechnology.onmicrosoft.com;
  s=selector2-microchiptechnology-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=w/Iop/xxspo1QhZeajF9rHmSJmYOM+ZOsLimDiHKJu4=;
- b=KB7riHqCeOt3ue/WX3zt74fuyQXxgqCfvPk+VwAa8LR24fUT0UUP4nRyRAkeT3RHmxoM/CtmLH5v6SB72kOlCqRaZom6Z8K2/gLA4qrUFxOZiJuZraHUwnOGXJxidsYKTHcoqBCo1TdREQ4oLdBNBY42DcHBH+Uzj+DS//LTVVM=
+ bh=Z4sDtNbwx6vkaUI3w0nWsSCdnCCsvGh82TQsgrYmvxM=;
+ b=XwYB2HLnSruiVRghr45G/VsQI70kPQqCpUoQcZn0uWeeMEUOQJ8nR+L0U2YohzqQpec8BIcvLrB9+9mzqQ1WFDcBhbSryvv30KTe6XSIlqZUWYj9Ym623sVizOXa5M+Qt4yNjdrZne6METYq1wyKDbyuJo7da1QIUbSfiBd/3mU=
 Received: from DM6PR11MB3996.namprd11.prod.outlook.com (20.176.125.206) by
  DM6PR11MB2907.namprd11.prod.outlook.com (20.177.217.33) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2644.20; Fri, 17 Jan 2020 10:31:22 +0000
+ 15.20.2644.20; Fri, 17 Jan 2020 10:31:28 +0000
 Received: from DM6PR11MB3996.namprd11.prod.outlook.com
  ([fe80::75b4:bb0c:c245:4392]) by DM6PR11MB3996.namprd11.prod.outlook.com
  ([fe80::75b4:bb0c:c245:4392%5]) with mapi id 15.20.2623.018; Fri, 17 Jan 2020
- 10:31:22 +0000
+ 10:31:28 +0000
 From:   <Ajay.Kathat@microchip.com>
 To:     <linux-wireless@vger.kernel.org>
 CC:     <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
         <Adham.Abozaeid@microchip.com>, <johannes@sipsolutions.net>,
         <Ajay.Kathat@microchip.com>
-Subject: [PATCH 0/4] staging: wilc1000: handle few full driver review comments
-Thread-Topic: [PATCH 0/4] staging: wilc1000: handle few full driver review
- comments
-Thread-Index: AQHVzSFD4w3i7j1Q7USvtOou1UL1dA==
-Date:   Fri, 17 Jan 2020 10:31:22 +0000
-Message-ID: <20200117160157.8706-1-ajay.kathat@microchip.com>
+Subject: [PATCH 4/4] staging: wilc1000: remove unused code prior to throughput
+ enhancement in SPI
+Thread-Topic: [PATCH 4/4] staging: wilc1000: remove unused code prior to
+ throughput enhancement in SPI
+Thread-Index: AQHVzSFG90oHFZftCU++AJhMAvfi1w==
+Date:   Fri, 17 Jan 2020 10:31:27 +0000
+Message-ID: <20200117160157.8706-5-ajay.kathat@microchip.com>
+References: <20200117160157.8706-1-ajay.kathat@microchip.com>
+In-Reply-To: <20200117160157.8706-1-ajay.kathat@microchip.com>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
@@ -99,28 +103,28 @@ X-MS-TNEF-Correlator:
 x-mailer: git-send-email 2.17.1
 x-originating-ip: [121.244.27.38]
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: bf1a7109-c5dd-40f9-54c9-08d79b3865b5
+x-ms-office365-filtering-correlation-id: ebf2e9b7-92e9-47f0-5470-08d79b38692d
 x-ms-traffictypediagnostic: DM6PR11MB2907:
 x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <DM6PR11MB29072ECC0061390755E9E4E3E3310@DM6PR11MB2907.namprd11.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:6430;
+x-microsoft-antispam-prvs: <DM6PR11MB29077BD4C98349D84CF17F8CE3310@DM6PR11MB2907.namprd11.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:7691;
 x-forefront-prvs: 0285201563
 x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(136003)(366004)(39860400002)(396003)(376002)(346002)(189003)(199004)(8936002)(6916009)(5660300002)(6486002)(81166006)(478600001)(26005)(76116006)(91956017)(8676002)(81156014)(66946007)(66476007)(66446008)(64756008)(66556008)(36756003)(4326008)(2906002)(86362001)(316002)(6506007)(2616005)(107886003)(71200400001)(1076003)(6512007)(186003)(54906003);DIR:OUT;SFP:1101;SCL:1;SRVR:DM6PR11MB2907;H:DM6PR11MB3996.namprd11.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
 received-spf: None (protection.outlook.com: microchip.com does not designate
  permitted sender hosts)
 x-ms-exchange-senderadcheck: 1
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: DaaGLE3maKDkQLuK346UVWhbIx2X3WrjMFey5GaLLtW8xW5a0Fm0K2upI5+4+EOOuF8gmcYWfQObMMZU/kU7fhKdKW/5cIWmOEpzyu5nEnhtOQcg4K4TIkdWdO1x6PRR3jOlE6ySHUr7ZIHfZYOlsBNkUgSFUnHHVDWAN6ZydtfHOJzKGbX0HTEbkhlovGYz5HT5PMpmt2n7cvHWV6SXYHA/WyT/p6JJGjicZZdft/jexOxW1G2Xh095diAa7yja6RoR+botD67BMxriYs1wq07FH409HwiDJ/gRFCCEsb6YIjjOVxjRskrGcAxp269kiTjBbDORLBDsrK7XNlRm4RZZIQVxdcu9nYmzM6YI1WB6PKpFTPunlUnN2DQVozWtEY8/IhdpQlw8E4W/9CFWOi7vAVApKSU9MSNHPXLFMHk77f0BhpLbub3DrOyEnYIE
+x-microsoft-antispam-message-info: symNvoeiv2GXwonW1xpPwU0Yu4M/VwcAAjXu+WG7q2clSGjj7CcSfuAvWMGK0GbATABCV9iZJbL80DNYDDTSFMNQlPMaO8HZNyqi1KISf5lw3O93eYrPtASbSnaYuhE+YDYfWPv7pCyqJCv/Tw2M2ZOcZSlLPgiU2z3/qhh+PpF0MdWvxkRpcHXml311L4IWGtUzmAQmbUaFxGOB1xUooQUYX5CmG6DQUzR/DEoFiAN0SAfWpqGMhfpx8mXYkNLBCBF5DeJjAwaDGToUYYoVAZW7QFgAB0SU5hWh3Jy7U5kKee+yWXYhZhTI1Y7SV14u6505/x2ZenVUZnv7vnlvgsPSaexu3Ah5at/e785za+w+rKHaqxtIuU4ZX2U1PyRyQZHlHtAkbYQwd5AeB+nlosPkzC4AqQPmGt0YPSysm76Prs1NtjEP+ZlfBNj5+0hW
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-Network-Message-Id: bf1a7109-c5dd-40f9-54c9-08d79b3865b5
-X-MS-Exchange-CrossTenant-originalarrivaltime: 17 Jan 2020 10:31:22.2051
+X-MS-Exchange-CrossTenant-Network-Message-Id: ebf2e9b7-92e9-47f0-5470-08d79b38692d
+X-MS-Exchange-CrossTenant-originalarrivaltime: 17 Jan 2020 10:31:27.9957
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: Zjxq7Yczqt6nC8kFpUh5qRuPmi1/+wIrZfKNvkYWZ/8oP7R+3NCPUGM/9uekmzfDOf1GWwk+8nO8O6GnlA6KhHCcKVmmaGmpt2hnZXFzPrE=
+X-MS-Exchange-CrossTenant-userprincipalname: O83qTsPnmlWAWung21bc2Sbhp4wK6RP8ipv6mbmEOxu0uKWvHfgvmjZGCnL9QKIwcYpdJU796Ja87r31XVtjx7AGtpsMmEAT16AGN8TZhy8=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR11MB2907
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
@@ -129,31 +133,197 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ajay Singh <ajay.kathat@microchip.com>
 
-The patch series contains changes to address the below code review
-comments -
+The firmware now uses throughput enhancement code by default for SPI so
+remove the previous implementation as its not used anymore. Removed the
+use of 'has_thrpt_enh' element as its always true.
 
- 1/ Avoid use of infinite loops.
- 2/ Use separate header file to keep firmware related 'struct'.
- 3/ Remove unused code.
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/spi.c | 143 +--------------------------------
+ 1 file changed, 4 insertions(+), 139 deletions(-)
 
-Ajay Singh (4):
-  staging: wilc1000: remove use of infinite loop conditions
-  staging: wilc1000: move firmware API struct's to separate header file
-  staging: wilc1000: added 'wilc_' prefix for 'struct assoc_resp' name
-  staging: wilc1000: remove unused code prior to throughput enhancement
-    in SPI
-
- drivers/staging/wilc1000/fw.h       | 119 +++++++++++++++++++++++
- drivers/staging/wilc1000/hif.c      |  90 +----------------
- drivers/staging/wilc1000/hif.h      |  19 ----
- drivers/staging/wilc1000/netdev.c   |   7 +-
- drivers/staging/wilc1000/netdev.h   |   1 -
- drivers/staging/wilc1000/spi.c      | 143 +--------------------------
- drivers/staging/wilc1000/wlan.c     |  79 ++++++---------
- drivers/staging/wilc1000/wlan_cfg.c | 144 ++++++++++------------------
- drivers/staging/wilc1000/wlan_if.h  |   1 +
- 9 files changed, 209 insertions(+), 394 deletions(-)
- create mode 100644 drivers/staging/wilc1000/fw.h
-
+diff --git a/drivers/staging/wilc1000/spi.c b/drivers/staging/wilc1000/spi.=
+c
+index 8694ab5fcb22..4b883a933b44 100644
+--- a/drivers/staging/wilc1000/spi.c
++++ b/drivers/staging/wilc1000/spi.c
+@@ -13,7 +13,6 @@
+ struct wilc_spi {
+ 	int crc_off;
+ 	int nint;
+-	int has_thrpt_enh;
+ };
+=20
+ static const struct wilc_hif_func wilc_hif_spi;
+@@ -897,8 +896,6 @@ static int wilc_spi_init(struct wilc *wilc, bool resume=
+)
+ 		return 0;
+ 	}
+=20
+-	spi_priv->has_thrpt_enh =3D 1;
+-
+ 	isinit =3D 1;
+=20
+ 	return 1;
+@@ -906,154 +903,22 @@ static int wilc_spi_init(struct wilc *wilc, bool res=
+ume)
+=20
+ static int wilc_spi_read_size(struct wilc *wilc, u32 *size)
+ {
+-	struct spi_device *spi =3D to_spi_device(wilc->dev);
+-	struct wilc_spi *spi_priv =3D wilc->bus_data;
+ 	int ret;
+=20
+-	if (spi_priv->has_thrpt_enh) {
+-		ret =3D spi_internal_read(wilc, 0xe840 - WILC_SPI_REG_BASE,
+-					size);
+-		*size =3D *size  & IRQ_DMA_WD_CNT_MASK;
+-	} else {
+-		u32 tmp;
+-		u32 byte_cnt;
+-
+-		ret =3D wilc_spi_read_reg(wilc, WILC_VMM_TO_HOST_SIZE,
+-					&byte_cnt);
+-		if (!ret) {
+-			dev_err(&spi->dev,
+-				"Failed read WILC_VMM_TO_HOST_SIZE ...\n");
+-			return ret;
+-		}
+-		tmp =3D (byte_cnt >> 2) & IRQ_DMA_WD_CNT_MASK;
+-		*size =3D tmp;
+-	}
++	ret =3D spi_internal_read(wilc, 0xe840 - WILC_SPI_REG_BASE, size);
++	*size =3D *size & IRQ_DMA_WD_CNT_MASK;
+=20
+ 	return ret;
+ }
+=20
+ static int wilc_spi_read_int(struct wilc *wilc, u32 *int_status)
+ {
+-	struct spi_device *spi =3D to_spi_device(wilc->dev);
+-	struct wilc_spi *spi_priv =3D wilc->bus_data;
+-	int ret;
+-	u32 tmp;
+-	u32 byte_cnt;
+-	bool unexpected_irq;
+-	int j;
+-	u32 unknown_mask;
+-	u32 irq_flags;
+-	int k =3D IRG_FLAGS_OFFSET + 5;
+-
+-	if (spi_priv->has_thrpt_enh)
+-		return spi_internal_read(wilc, 0xe840 - WILC_SPI_REG_BASE,
+-					 int_status);
+-	ret =3D wilc_spi_read_reg(wilc, WILC_VMM_TO_HOST_SIZE, &byte_cnt);
+-	if (!ret) {
+-		dev_err(&spi->dev,
+-			"Failed read WILC_VMM_TO_HOST_SIZE ...\n");
+-		return ret;
+-	}
+-	tmp =3D (byte_cnt >> 2) & IRQ_DMA_WD_CNT_MASK;
+-
+-	j =3D 0;
+-	do {
+-		wilc_spi_read_reg(wilc, 0x1a90, &irq_flags);
+-		tmp |=3D ((irq_flags >> 27) << IRG_FLAGS_OFFSET);
+-
+-		if (spi_priv->nint > 5) {
+-			wilc_spi_read_reg(wilc, 0x1a94, &irq_flags);
+-			tmp |=3D (((irq_flags >> 0) & 0x7) << k);
+-		}
+-
+-		unknown_mask =3D ~((1ul << spi_priv->nint) - 1);
+-
+-		unexpected_irq =3D (tmp >> IRG_FLAGS_OFFSET) & unknown_mask;
+-		if (unexpected_irq) {
+-			dev_err(&spi->dev,
+-				"Unexpected interrupt(2):j=3D%d,tmp=3D%x,mask=3D%x\n",
+-				j, tmp, unknown_mask);
+-		}
+-
+-		j++;
+-	} while (unexpected_irq);
+-
+-	*int_status =3D tmp;
+-
+-	return ret;
++	return spi_internal_read(wilc, 0xe840 - WILC_SPI_REG_BASE, int_status);
+ }
+=20
+ static int wilc_spi_clear_int_ext(struct wilc *wilc, u32 val)
+ {
+-	struct spi_device *spi =3D to_spi_device(wilc->dev);
+-	struct wilc_spi *spi_priv =3D wilc->bus_data;
+-	int ret;
+-	u32 flags;
+-	u32 tbl_ctl;
+-
+-	if (spi_priv->has_thrpt_enh) {
+-		return spi_internal_write(wilc, 0xe844 - WILC_SPI_REG_BASE,
+-					  val);
+-	}
+-
+-	flags =3D val & (BIT(MAX_NUM_INT) - 1);
+-	if (flags) {
+-		int i;
+-
+-		ret =3D 1;
+-		for (i =3D 0; i < spi_priv->nint; i++) {
+-			/*
+-			 * No matter what you write 1 or 0,
+-			 * it will clear interrupt.
+-			 */
+-			if (flags & 1)
+-				ret =3D wilc_spi_write_reg(wilc,
+-							 0x10c8 + i * 4, 1);
+-			if (!ret)
+-				break;
+-			flags >>=3D 1;
+-		}
+-		if (!ret) {
+-			dev_err(&spi->dev,
+-				"Failed wilc_spi_write_reg, set reg %x ...\n",
+-				0x10c8 + i * 4);
+-			return ret;
+-		}
+-		for (i =3D spi_priv->nint; i < MAX_NUM_INT; i++) {
+-			if (flags & 1)
+-				dev_err(&spi->dev,
+-					"Unexpected interrupt cleared %d...\n",
+-					i);
+-			flags >>=3D 1;
+-		}
+-	}
+-
+-	tbl_ctl =3D 0;
+-	/* select VMM table 0 */
+-	if (val & SEL_VMM_TBL0)
+-		tbl_ctl |=3D BIT(0);
+-	/* select VMM table 1 */
+-	if (val & SEL_VMM_TBL1)
+-		tbl_ctl |=3D BIT(1);
+-
+-	ret =3D wilc_spi_write_reg(wilc, WILC_VMM_TBL_CTL, tbl_ctl);
+-	if (!ret) {
+-		dev_err(&spi->dev, "fail write reg vmm_tbl_ctl...\n");
+-		return ret;
+-	}
+-
+-	if (val & EN_VMM) {
+-		/*
+-		 * enable vmm transfer.
+-		 */
+-		ret =3D wilc_spi_write_reg(wilc, WILC_VMM_CORE_CTL, 1);
+-		if (!ret) {
+-			dev_err(&spi->dev, "fail write reg vmm_core_ctl...\n");
+-			return ret;
+-		}
+-	}
+-
+-	return ret;
++	return spi_internal_write(wilc, 0xe844 - WILC_SPI_REG_BASE, val);
+ }
+=20
+ static int wilc_spi_sync_ext(struct wilc *wilc, int nint)
 --=20
 2.24.0
