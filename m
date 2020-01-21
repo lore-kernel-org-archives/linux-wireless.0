@@ -2,144 +2,109 @@ Return-Path: <SRS0=p1B+=3K=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MIME_BASE64_TEXT,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80F80C2D0DB
-	for <linux-wireless@archiver.kernel.org>; Tue, 21 Jan 2020 08:12:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B067C3F68F
+	for <linux-wireless@archiver.kernel.org>; Tue, 21 Jan 2020 14:13:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5DA7D21734
-	for <linux-wireless@archiver.kernel.org>; Tue, 21 Jan 2020 08:12:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 35E14217F4
+	for <linux-wireless@archiver.kernel.org>; Tue, 21 Jan 2020 14:13:58 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="M7dOuynC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726729AbgAUIMV (ORCPT
+        id S1729346AbgAUON5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 21 Jan 2020 03:12:21 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:54422 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725789AbgAUIMV (ORCPT
+        Tue, 21 Jan 2020 09:13:57 -0500
+Received: from mailgw01.mediatek.com ([210.61.82.183]:52943 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1729300AbgAUON4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Jan 2020 03:12:21 -0500
-Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
-        by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.92.2)
-        (envelope-from <luca@coelho.fi>)
-        id 1itoe1-0003Py-MT; Tue, 21 Jan 2020 10:12:18 +0200
-From:   Luca Coelho <luca@coelho.fi>
-To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org
-Date:   Tue, 21 Jan 2020 10:12:13 +0200
-Message-Id: <20200121081213.733757-1-luca@coelho.fi>
-X-Mailer: git-send-email 2.24.1
+        Tue, 21 Jan 2020 09:13:56 -0500
+X-UUID: cc872b21e6974122a7c1faed90e62134-20200121
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=v+wcGDsO7LzhLYd0t7yY8jTM7GyhTanF/p5aGuMf2uY=;
+        b=M7dOuynClHVnt635uLeS5o8Mfj1VwIESUyTXExnKPoaZoIA+EwCPnTJza3URKsFqOoRWwddCXI0vL60920Aiw7VCqGXRLU2HCX9yPagb5WgF29S4MVuA9iwpu1AF+QkvRdHTBJic1w6uvpuiwoH7i6qqcEWHxwq/4zb2+rJSoqM=;
+X-UUID: cc872b21e6974122a7c1faed90e62134-20200121
+Received: from mtkcas08.mediatek.inc [(172.21.101.126)] by mailgw01.mediatek.com
+        (envelope-from <ryder.lee@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
+        with ESMTP id 386455802; Tue, 21 Jan 2020 22:13:51 +0800
+Received: from mtkcas08.mediatek.inc (172.21.101.126) by
+ mtkmbs08n2.mediatek.inc (172.21.101.56) with Microsoft SMTP Server (TLS) id
+ 15.0.1395.4; Tue, 21 Jan 2020 22:12:18 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas08.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
+ Transport; Tue, 21 Jan 2020 22:13:30 +0800
+From:   Ryder Lee <ryder.lee@mediatek.com>
+To:     Felix Fietkau <nbd@nbd.name>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+CC:     Shayne Chen <shayne.chen@mediatek.com>,
+        Roy Luo <royluo@google.com>,
+        Sean Wang <sean.wang@mediatek.com>,
+        <linux-wireless@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>,
+        Ryder Lee <ryder.lee@mediatek.com>
+Subject: [PATCH 4/7] mt76: mt7615: adjust command flow for firmware v2
+Date:   Tue, 21 Jan 2020 22:13:39 +0800
+Message-ID: <48e1baba8a4d87dc6c081189034f78447d65bf14.1579237414.git.ryder.lee@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <ae72dd289f8a26a2c0f42de1f940bb8b6d1f2c29.1579237414.git.ryder.lee@mediatek.com>
+References: <ae72dd289f8a26a2c0f42de1f940bb8b6d1f2c29.1579237414.git.ryder.lee@mediatek.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: [PATCH] cfg80211: add no HE indication to the channel flag
+Content-Type: text/plain
+X-TM-SNTS-SMTP: 2B03C0DA28A1CC07F7DDAEF4D85FBDFC6E7BE8B28A39E7767ABA05FED6B601882000:8
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Haim Dreyfuss <haim.dreyfuss@intel.com>
-
-The regulatory domain might forbid HE operation.  Certain regulatory
-domains may restrict it for specific channels whereas others may do it
-for the whole regulatory domain.
-
-Add an option to indicate it in the channel flag.
-
-Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- include/net/cfg80211.h       | 2 ++
- include/uapi/linux/nl80211.h | 5 +++++
- net/wireless/nl80211.c       | 3 +++
- net/wireless/reg.c           | 2 ++
- 4 files changed, 12 insertions(+)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index fa027d0d031b..40f2a3a30e3d 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -95,6 +95,7 @@ struct wiphy;
-  *	on this channel.
-  * @IEEE80211_CHAN_NO_10MHZ: 10 MHz bandwidth is not permitted
-  *	on this channel.
-+ * @IEEE80211_CHAN_NO_HE: HE operation is not permitted on this channel.
-  *
-  */
- enum ieee80211_channel_flags {
-@@ -111,6 +112,7 @@ enum ieee80211_channel_flags {
- 	IEEE80211_CHAN_IR_CONCURRENT	= 1<<10,
- 	IEEE80211_CHAN_NO_20MHZ		= 1<<11,
- 	IEEE80211_CHAN_NO_10MHZ		= 1<<12,
-+	IEEE80211_CHAN_NO_HE		= 1<<13,
- };
- 
- #define IEEE80211_CHAN_NO_HT40 \
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 809ef9165684..d996bac97e9d 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -3587,6 +3587,8 @@ enum nl80211_wmm_rule {
-  * @NL80211_FREQUENCY_ATTR_WMM: this channel has wmm limitations.
-  *	This is a nested attribute that contains the wmm limitation per AC.
-  *	(see &enum nl80211_wmm_rule)
-+ * @NL80211_FREQUENCY_ATTR_NO_HE: HE operation is not allowed on this channel
-+ *	in current regulatory domain.
-  * @NL80211_FREQUENCY_ATTR_MAX: highest frequency attribute number
-  *	currently defined
-  * @__NL80211_FREQUENCY_ATTR_AFTER_LAST: internal use
-@@ -3616,6 +3618,7 @@ enum nl80211_frequency_attr {
- 	NL80211_FREQUENCY_ATTR_NO_20MHZ,
- 	NL80211_FREQUENCY_ATTR_NO_10MHZ,
- 	NL80211_FREQUENCY_ATTR_WMM,
-+	NL80211_FREQUENCY_ATTR_NO_HE,
- 
- 	/* keep last */
- 	__NL80211_FREQUENCY_ATTR_AFTER_LAST,
-@@ -3813,6 +3816,7 @@ enum nl80211_sched_scan_match_attr {
-  * @NL80211_RRF_NO_HT40PLUS: channels can't be used in HT40+ operation
-  * @NL80211_RRF_NO_80MHZ: 80MHz operation not allowed
-  * @NL80211_RRF_NO_160MHZ: 160MHz operation not allowed
-+ * @NL80211_RRF_NO_HE: HE operation not allowed
-  */
- enum nl80211_reg_rule_flags {
- 	NL80211_RRF_NO_OFDM		= 1<<0,
-@@ -3830,6 +3834,7 @@ enum nl80211_reg_rule_flags {
- 	NL80211_RRF_NO_HT40PLUS		= 1<<14,
- 	NL80211_RRF_NO_80MHZ		= 1<<15,
- 	NL80211_RRF_NO_160MHZ		= 1<<16,
-+	NL80211_RRF_NO_HE		= 1<<17,
- };
- 
- #define NL80211_RRF_PASSIVE_SCAN	NL80211_RRF_NO_IR
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 00f24d4c623e..d8cdbf07aeec 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -972,6 +972,9 @@ static int nl80211_msg_put_channel(struct sk_buff *msg, struct wiphy *wiphy,
- 		if ((chan->flags & IEEE80211_CHAN_NO_10MHZ) &&
- 		    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_NO_10MHZ))
- 			goto nla_put_failure;
-+		if ((chan->flags & IEEE80211_CHAN_NO_HE) &&
-+		    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_NO_HE))
-+			goto nla_put_failure;
- 	}
- 
- 	if (nla_put_u32(msg, NL80211_FREQUENCY_ATTR_MAX_TX_POWER,
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 446c76d44e65..ea7bc5652a41 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1569,6 +1569,8 @@ static u32 map_regdom_flags(u32 rd_flags)
- 		channel_flags |= IEEE80211_CHAN_NO_80MHZ;
- 	if (rd_flags & NL80211_RRF_NO_160MHZ)
- 		channel_flags |= IEEE80211_CHAN_NO_160MHZ;
-+	if (rd_flags & NL80211_RRF_NO_HE)
-+		channel_flags |= IEEE80211_CHAN_NO_HE;
- 	return channel_flags;
- }
- 
--- 
-2.24.1
+QWRkIGZ3X3ZlcnNpb24gaW4gbXQ3NjE1X2RldiB0byBhZGFwdCBuZXcgZmlybXdhcmUgdmVyc2lv
+bi4NCg0KU2lnbmVkLW9mZi1ieTogUnlkZXIgTGVlIDxyeWRlci5sZWVAbWVkaWF0ZWsuY29tPg0K
+U2lnbmVkLW9mZi1ieTogU2hheW5lIENoZW4gPHNoYXluZS5jaGVuQG1lZGlhdGVrLmNvbT4NClRl
+c3RlZC1ieTogU2VhbiBXYW5nIDxzZWFuLndhbmdAbWVkaWF0ZWsuY29tPg0KLS0tDQogZHJpdmVy
+cy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc2MTUvbWN1LmMgIHwgMTYgKysrKysrKysr
+KysrLS0tLQ0KIC4uLi9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc2MTUvbXQ3NjE1Lmgg
+ICB8ICA1ICsrKysrDQogMiBmaWxlcyBjaGFuZ2VkLCAxNyBpbnNlcnRpb25zKCspLCA0IGRlbGV0
+aW9ucygtKQ0KDQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3
+Ni9tdDc2MTUvbWN1LmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210NzYx
+NS9tY3UuYw0KaW5kZXggNmJlZjBkY2I4M2I3Li5jMDU1OTQ5YjI4OWMgMTAwNjQ0DQotLS0gYS9k
+cml2ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210NzYxNS9tY3UuYw0KKysrIGIvZHJp
+dmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc2MTUvbWN1LmMNCkBAIC00OTEsNiAr
+NDkxLDExIEBAIHN0YXRpYyBpbnQgbXQ3NjE1X2xvYWRfcmFtKHN0cnVjdCBtdDc2MTVfZGV2ICpk
+ZXYpDQogCQlnb3RvIG91dDsNCiAJfQ0KIA0KKwlpZiAoIXN0cm5jbXAoaGRyLT5md192ZXIsICJt
+dGtfdjIiLCA2KSkNCisJCWRldi0+ZndfdmVyID0gTVQ3NjE1X0ZJUk1XQVJFX1YyOw0KKwllbHNl
+DQorCQlkZXYtPmZ3X3ZlciA9IE1UNzYxNV9GSVJNV0FSRV9WMTsNCisNCiAJcmVsZWFzZV9maXJt
+d2FyZShmdyk7DQogDQogCXJldCA9IHJlcXVlc3RfZmlybXdhcmUoJmZ3LCBNVDc2MTVfRklSTVdB
+UkVfQ1I0LCBkZXYtPm10NzYuZGV2KTsNCkBAIC05OTIsMTggKzk5NywyMSBAQCBzdGF0aWMgaW50
+DQogbXQ3NjE1X21jdV9zZW5kX3N0YV9yZWMoc3RydWN0IG10NzYxNV9kZXYgKmRldiwgdTggKnJl
+cSwgdTggKndyZXEsDQogCQkJdTggd2xlbiwgYm9vbCBlbmFibGUpDQogew0KLQl1MzIgc2xlbiA9
+IHdyZXEgLSByZXE7DQorCWJvb2wgaXNfdjEgPSAoZGV2LT5md192ZXIgPT0gTVQ3NjE1X0ZJUk1X
+QVJFX1YxKSA/IHRydWUgOiBmYWxzZTsNCisJdTMyIHNsZW4gPSBpc192MSA/IHdyZXEgLSByZXEg
+OiB3cmVxIC0gcmVxICsgd2xlbjsNCiANCi0JaWYgKCFlbmFibGUpIHsNCisJaWYgKGlzX3YxICYm
+ICFlbmFibGUpIHsNCiAJCV9fbXQ3Nl9tY3Vfc2VuZF9tc2coJmRldi0+bXQ3NiwgTUNVX0VYVF9D
+TURfU1RBX1JFQ19VUERBVEUsDQogCQkJCSAgICByZXEsIHNsZW4sIHRydWUpOw0KIA0KIAkJcmV0
+dXJuIF9fbXQ3Nl9tY3Vfc2VuZF9tc2coJmRldi0+bXQ3NiwgTUNVX0VYVF9DTURfV1RCTF9VUERB
+VEUsDQogCQkJCQkgICB3cmVxLCB3bGVuLCB0cnVlKTsNCisNCiAJfQ0KIA0KLQlfX210NzZfbWN1
+X3NlbmRfbXNnKCZkZXYtPm10NzYsIE1DVV9FWFRfQ01EX1dUQkxfVVBEQVRFLCB3cmVxLA0KLQkJ
+CSAgICB3bGVuLCB0cnVlKTsNCisJaWYgKGlzX3YxKQ0KKwkJX19tdDc2X21jdV9zZW5kX21zZygm
+ZGV2LT5tdDc2LCBNQ1VfRVhUX0NNRF9XVEJMX1VQREFURSwNCisJCQkJICAgIHdyZXEsIHdsZW4s
+IHRydWUpOw0KIA0KIAlyZXR1cm4gX19tdDc2X21jdV9zZW5kX21zZygmZGV2LT5tdDc2LCBNQ1Vf
+RVhUX0NNRF9TVEFfUkVDX1VQREFURSwNCiAJCQkJICAgcmVxLCBzbGVuLCB0cnVlKTsNCmRpZmYg
+LS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210NzYxNS9tdDc2MTUu
+aCBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3NjE1L210NzYxNS5oDQpp
+bmRleCA5YmQ5MjZkNjk2M2YuLmZhMzk2MzJjZDJiZCAxMDA2NDQNCi0tLSBhL2RyaXZlcnMvbmV0
+L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3NjE1L210NzYxNS5oDQorKysgYi9kcml2ZXJzL25l
+dC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210NzYxNS9tdDc2MTUuaA0KQEAgLTMwLDYgKzMwLDkg
+QEANCiAjZGVmaW5lIE1UNzYxNV9GSVJNV0FSRV9OOQkJIm1lZGlhdGVrL210NzYxNV9uOS5iaW4i
+DQogI2RlZmluZSBNVDc2MTVfUk9NX1BBVENICQkibWVkaWF0ZWsvbXQ3NjE1X3JvbV9wYXRjaC5i
+aW4iDQogDQorI2RlZmluZSBNVDc2MTVfRklSTVdBUkVfVjEJCTENCisjZGVmaW5lIE1UNzYxNV9G
+SVJNV0FSRV9WMgkJMg0KKw0KICNkZWZpbmUgTVQ3NjE1X0VFUFJPTV9TSVpFCQkxMDI0DQogI2Rl
+ZmluZSBNVDc2MTVfVE9LRU5fU0laRQkJNDA5Ng0KIA0KQEAgLTE0NCw2ICsxNDcsOCBAQCBzdHJ1
+Y3QgbXQ3NjE1X2RldiB7DQogDQogCXNwaW5sb2NrX3QgdG9rZW5fbG9jazsNCiAJc3RydWN0IGlk
+ciB0b2tlbjsNCisNCisJdTggZndfdmVyOw0KIH07DQogDQogZW51bSB7DQotLSANCjIuMTguMA0K
 
