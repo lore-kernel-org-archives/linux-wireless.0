@@ -1,107 +1,194 @@
-Return-Path: <SRS0=h6Hj=3J=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=p1B+=3K=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42E7AC3F68F
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 Jan 2020 15:37:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7311C32771
+	for <linux-wireless@archiver.kernel.org>; Tue, 21 Jan 2020 02:11:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 16E51217F4
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 Jan 2020 15:37:53 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="AHd+J4/3"
+	by mail.kernel.org (Postfix) with ESMTP id B796224125
+	for <linux-wireless@archiver.kernel.org>; Tue, 21 Jan 2020 02:11:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729008AbgATPhw (ORCPT
+        id S1728988AbgAUCLg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 20 Jan 2020 10:37:52 -0500
-Received: from mail-ot1-f65.google.com ([209.85.210.65]:34849 "EHLO
-        mail-ot1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728712AbgATPhv (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Jan 2020 10:37:51 -0500
-Received: by mail-ot1-f65.google.com with SMTP id i15so129512oto.2
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Jan 2020 07:37:51 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=J+zkONziERjkHD7k3oYFXBXc05D/2+MxZQ4nSI7z3qk=;
-        b=AHd+J4/3/7JacS9+SI6MIPMtosg9dAAmykNTi8KMxtIQ/ZKUIYvJo19iydRznddI57
-         eDmxdC+hBiCQ6DIes+yUW0kYfOAdQ69Arcvkh6O4StLJodJlljGhuLN0Inz+svml6jDY
-         CdioQy0uTCh3i4MhfiCdoa2CCfHAT0AZpFDozghLrxgWdKegz3UVFGnSu2oMvjKYQWkH
-         Q6hmyoyFGoEH8rhud76+orkFhzwgOo60dO8rHe6OUtjw2X8fXnukWqSWC6V4jGNTBbTW
-         DNAjx/2jql2pLB4K/bJjFhPQx6Cwf1Nw4ypkjFUwVbV2zjgKato26yoW7SrYVspoD5UL
-         M0QQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=J+zkONziERjkHD7k3oYFXBXc05D/2+MxZQ4nSI7z3qk=;
-        b=mp+AL0J5n6Y7EmqVHAn2SLAAXIkcvDDymBcgEuXIhz2/CSizSKxVYgcY+4BEW9Z/es
-         UcE9rOiswnFw08GMhmoOg/CbtSPkWKcTcSUG8utcud9b77eIsHTJQd6UWe1wHsabki1X
-         4T3YrsAfTr33Cs4nRKC387bBWU46hbrJwWp69bkI7Z8NRaIrY9coKpts/IoDmnCqE+39
-         oBCpz7jKdmYdqBfB0yz1pZ9HgKOcfe+OScAAgyuJXE6CCHFKHVv4l2DSLGX8I5SmElWB
-         sspvJkQbhuiw2MOfWJIKbfAY5V0x8Y4c2UNjYgZS3/MIvHZ3LefRefVfFTIN/3FWXO/F
-         aJbQ==
-X-Gm-Message-State: APjAAAW/fJQw2VyJcGgiyYyDfLEYtESYPxOxjcSJ+IroDnjGyiHvsbyy
-        OWolhmuucFCtx3eMZn2IDRqjhPBV2hEP0Jgs51E=
-X-Google-Smtp-Source: APXvYqwu5mz6B9vSsztKWgBDqwfEReavjCw3dBtvZ76trPgreHoSv7P0QzJSKSAbE5ouumLLtljuV3VJuM1vF6PNTkI=
-X-Received: by 2002:a05:6830:1515:: with SMTP id k21mr15658844otp.177.1579534671064;
- Mon, 20 Jan 2020 07:37:51 -0800 (PST)
+        Mon, 20 Jan 2020 21:11:36 -0500
+Received: from szxga05-in.huawei.com ([45.249.212.191]:9223 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726890AbgAUCLg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 20 Jan 2020 21:11:36 -0500
+Received: from DGGEMS413-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id AB7ED5D8A0920FDB57A4;
+        Tue, 21 Jan 2020 10:11:33 +0800 (CST)
+Received: from localhost (10.173.223.234) by DGGEMS413-HUB.china.huawei.com
+ (10.3.19.213) with Microsoft SMTP Server id 14.3.439.0; Tue, 21 Jan 2020
+ 10:11:23 +0800
+From:   YueHaibing <yuehaibing@huawei.com>
+To:     <pkshih@realtek.com>, <kvalo@codeaurora.org>,
+        <davem@davemloft.net>, <Larry.Finger@lwfinger.net>,
+        <yuehaibing@huawei.com>
+CC:     <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: [PATCH] rtlwifi: rtl8821ae: remove unused variables
+Date:   Tue, 21 Jan 2020 10:09:58 +0800
+Message-ID: <20200121020958.27548-1-yuehaibing@huawei.com>
+X-Mailer: git-send-email 2.10.2.windows.1
 MIME-Version: 1.0
-References: <20200108031957.22308-1-wgong@codeaurora.org> <20200108031957.22308-2-wgong@codeaurora.org>
- <CAMrEMU-UTtxJ-eMoNEBONXJCTpaZCcGc8Mu34wqQNXkpVz=gJA@mail.gmail.com>
- <55ab2d64e78d51a9da587f276899e08b@codeaurora.org> <a1950ee2cb8dd9fc10e7d31bf18c9c95@codeaurora.org>
- <CAMrEMU8DmXBGGU-WNd9bQAVVkHF6SCO7c_wv+dyH9D7KFOB8jw@mail.gmail.com> <7ad4db8ea256a823778edf89b2a1b2fc@codeaurora.org>
-In-Reply-To: <7ad4db8ea256a823778edf89b2a1b2fc@codeaurora.org>
-From:   Justin Capella <justincapella@gmail.com>
-Date:   Mon, 20 Jan 2020 07:37:39 -0800
-Message-ID: <CAMrEMU98aMAfJdxECYPfLgqLC-zp1rA4K+DkWz=v3bTehMaoiA@mail.gmail.com>
-Subject: Re: [PATCH v4 1/2] ath10k: add refcount for ath10k_core_restart
-To:     Wen Gong <wgong@codeaurora.org>
-Cc:     ath10k <ath10k@lists.infradead.org>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
+X-Originating-IP: [10.173.223.234]
+X-CFilter-Loop: Reflected
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Sorry, that response was intended for the start retries.
+drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c:142:17:
+ warning: cckswing_table_ch1ch13 defined but not used [-Wunused-const-variable=]
+drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c:178:17:
+ warning: cckswing_table_ch14 defined but not used [-Wunused-const-variable=]
+drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c:96:18:
+ warning: ofdmswing_table defined but not used [-Wunused-const-variable=]
 
-On Mon, Jan 20, 2020 at 5:34 AM Wen Gong <wgong@codeaurora.org> wrote:
->
-> On 2020-01-20 17:38, Justin Capella wrote:
-> > Ok thanks. I am still trying to familiarize myself with ath10k. A
-> > couple things come to mind:
-> >
-> > firstly recently there was a patch that set stations back to
-> > associated during recovery, do you know if the branch you're working
-> > against includes that? I will try to figure that out myself but it's
-> > at least worth considering.
-> >
-> can you give the patch link or patch?
->
-> > If I remember correctly, the sdio rx involves peeking and checking to
-> > see if the frame/packet continues/has more. In the case of firmware
-> > recovery/reconfig I think current code enables all sorts of debug
-> > pktlog stuff, historically it was maybe used as a hack to check for hw
-> > changes... But I mention it because I think what might be happening in
-> > some cases is fw crash follows a frame that would continue/extend,
-> > which is messing with the content and act_len (maybe?)
-> does it have relation with this patch?
-> >
-> > I also noticed that with aggregation I wind up getting a
-> > deauth/dissasoc followed by mlme delete sta/peer/key.
-> >
-> does it have relation with this patch?
-> > I think a retry count could be useful but what do you think of maybe
-> > using an event / timeout?
-> >
-> does it have relation with this patch?
->
-> >
-> >
+These variable is never used, so remove them.
+
+Reported-by: Hulk Robot <hulkci@huawei.com>
+Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+---
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/dm.c    | 118 ---------------------
+ 1 file changed, 118 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c
+index b542304..f57e879 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c
+@@ -93,124 +93,6 @@ static const u32 rtl8821ae_txscaling_table[TXSCALE_TABLE_SIZE] = {
+ 	0x3FE  /* 36, +6.0dB */
+ };
+ 
+-static const u32 ofdmswing_table[] = {
+-	0x0b40002d, /* 0, -15.0dB */
+-	0x0c000030, /* 1, -14.5dB */
+-	0x0cc00033, /* 2, -14.0dB */
+-	0x0d800036, /* 3, -13.5dB */
+-	0x0e400039, /* 4, -13.0dB */
+-	0x0f00003c, /* 5, -12.5dB */
+-	0x10000040, /* 6, -12.0dB */
+-	0x11000044, /* 7, -11.5dB */
+-	0x12000048, /* 8, -11.0dB */
+-	0x1300004c, /* 9, -10.5dB */
+-	0x14400051, /* 10, -10.0dB */
+-	0x15800056, /* 11, -9.5dB */
+-	0x16c0005b, /* 12, -9.0dB */
+-	0x18000060, /* 13, -8.5dB */
+-	0x19800066, /* 14, -8.0dB */
+-	0x1b00006c, /* 15, -7.5dB */
+-	0x1c800072, /* 16, -7.0dB */
+-	0x1e400079, /* 17, -6.5dB */
+-	0x20000080, /* 18, -6.0dB */
+-	0x22000088, /* 19, -5.5dB */
+-	0x24000090, /* 20, -5.0dB */
+-	0x26000098, /* 21, -4.5dB */
+-	0x288000a2, /* 22, -4.0dB */
+-	0x2ac000ab, /* 23, -3.5dB */
+-	0x2d4000b5, /* 24, -3.0dB */
+-	0x300000c0, /* 25, -2.5dB */
+-	0x32c000cb, /* 26, -2.0dB */
+-	0x35c000d7, /* 27, -1.5dB */
+-	0x390000e4, /* 28, -1.0dB */
+-	0x3c8000f2, /* 29, -0.5dB */
+-	0x40000100, /* 30, +0dB */
+-	0x43c0010f, /* 31, +0.5dB */
+-	0x47c0011f, /* 32, +1.0dB */
+-	0x4c000130, /* 33, +1.5dB */
+-	0x50800142, /* 34, +2.0dB */
+-	0x55400155, /* 35, +2.5dB */
+-	0x5a400169, /* 36, +3.0dB */
+-	0x5fc0017f, /* 37, +3.5dB */
+-	0x65400195, /* 38, +4.0dB */
+-	0x6b8001ae, /* 39, +4.5dB */
+-	0x71c001c7, /* 40, +5.0dB */
+-	0x788001e2, /* 41, +5.5dB */
+-	0x7f8001fe  /* 42, +6.0dB */
+-};
+-
+-static const u8 cckswing_table_ch1ch13[CCK_TABLE_SIZE][8] = {
+-	{0x09, 0x08, 0x07, 0x06, 0x04, 0x03, 0x01, 0x01}, /* 0, -16.0dB */
+-	{0x09, 0x09, 0x08, 0x06, 0x05, 0x03, 0x01, 0x01}, /* 1, -15.5dB */
+-	{0x0a, 0x09, 0x08, 0x07, 0x05, 0x03, 0x02, 0x01}, /* 2, -15.0dB */
+-	{0x0a, 0x0a, 0x09, 0x07, 0x05, 0x03, 0x02, 0x01}, /* 3, -14.5dB */
+-	{0x0b, 0x0a, 0x09, 0x08, 0x06, 0x04, 0x02, 0x01}, /* 4, -14.0dB */
+-	{0x0b, 0x0b, 0x0a, 0x08, 0x06, 0x04, 0x02, 0x01}, /* 5, -13.5dB */
+-	{0x0c, 0x0c, 0x0a, 0x09, 0x06, 0x04, 0x02, 0x01}, /* 6, -13.0dB */
+-	{0x0d, 0x0c, 0x0b, 0x09, 0x07, 0x04, 0x02, 0x01}, /* 7, -12.5dB */
+-	{0x0d, 0x0d, 0x0c, 0x0a, 0x07, 0x05, 0x02, 0x01}, /* 8, -12.0dB */
+-	{0x0e, 0x0e, 0x0c, 0x0a, 0x08, 0x05, 0x02, 0x01}, /* 9, -11.5dB */
+-	{0x0f, 0x0f, 0x0d, 0x0b, 0x08, 0x05, 0x03, 0x01}, /* 10, -11.0dB */
+-	{0x10, 0x10, 0x0e, 0x0b, 0x08, 0x05, 0x03, 0x01}, /* 11, -10.5dB */
+-	{0x11, 0x11, 0x0f, 0x0c, 0x09, 0x06, 0x03, 0x01}, /* 12, -10.0dB */
+-	{0x12, 0x12, 0x0f, 0x0c, 0x09, 0x06, 0x03, 0x01}, /* 13, -9.5dB */
+-	{0x13, 0x13, 0x10, 0x0d, 0x0a, 0x06, 0x03, 0x01}, /* 14, -9.0dB */
+-	{0x14, 0x14, 0x11, 0x0e, 0x0b, 0x07, 0x03, 0x02}, /* 15, -8.5dB */
+-	{0x16, 0x15, 0x12, 0x0f, 0x0b, 0x07, 0x04, 0x01}, /* 16, -8.0dB */
+-	{0x17, 0x16, 0x13, 0x10, 0x0c, 0x08, 0x04, 0x02}, /* 17, -7.5dB */
+-	{0x18, 0x17, 0x15, 0x11, 0x0c, 0x08, 0x04, 0x02}, /* 18, -7.0dB */
+-	{0x1a, 0x19, 0x16, 0x12, 0x0d, 0x09, 0x04, 0x02}, /* 19, -6.5dB */
+-	{0x1b, 0x1a, 0x17, 0x13, 0x0e, 0x09, 0x04, 0x02}, /* 20, -6.0dB */
+-	{0x1d, 0x1c, 0x18, 0x14, 0x0f, 0x0a, 0x05, 0x02}, /* 21, -5.5dB */
+-	{0x1f, 0x1e, 0x1a, 0x15, 0x10, 0x0a, 0x05, 0x02}, /* 22, -5.0dB */
+-	{0x20, 0x20, 0x1b, 0x16, 0x11, 0x08, 0x05, 0x02}, /* 23, -4.5dB */
+-	{0x22, 0x21, 0x1d, 0x18, 0x11, 0x0b, 0x06, 0x02}, /* 24, -4.0dB */
+-	{0x24, 0x23, 0x1f, 0x19, 0x13, 0x0c, 0x06, 0x03}, /* 25, -3.5dB */
+-	{0x26, 0x25, 0x21, 0x1b, 0x14, 0x0d, 0x06, 0x03}, /* 26, -3.0dB */
+-	{0x28, 0x28, 0x22, 0x1c, 0x15, 0x0d, 0x07, 0x03}, /* 27, -2.5dB */
+-	{0x2b, 0x2a, 0x25, 0x1e, 0x16, 0x0e, 0x07, 0x03}, /* 28, -2.0dB */
+-	{0x2d, 0x2d, 0x27, 0x1f, 0x18, 0x0f, 0x08, 0x03}, /* 29, -1.5dB */
+-	{0x30, 0x2f, 0x29, 0x21, 0x19, 0x10, 0x08, 0x03}, /* 30, -1.0dB */
+-	{0x33, 0x32, 0x2b, 0x23, 0x1a, 0x11, 0x08, 0x04}, /* 31, -0.5dB */
+-	{0x36, 0x35, 0x2e, 0x25, 0x1c, 0x12, 0x09, 0x04} /* 32, +0dB */
+-};
+-
+-static const u8 cckswing_table_ch14[CCK_TABLE_SIZE][8] = {
+-	{0x09, 0x08, 0x07, 0x04, 0x00, 0x00, 0x00, 0x00}, /* 0, -16.0dB */
+-	{0x09, 0x09, 0x08, 0x05, 0x00, 0x00, 0x00, 0x00}, /* 1, -15.5dB */
+-	{0x0a, 0x09, 0x08, 0x05, 0x00, 0x00, 0x00, 0x00}, /* 2, -15.0dB */
+-	{0x0a, 0x0a, 0x09, 0x05, 0x00, 0x00, 0x00, 0x00}, /* 3, -14.5dB */
+-	{0x0b, 0x0a, 0x09, 0x05, 0x00, 0x00, 0x00, 0x00}, /* 4, -14.0dB */
+-	{0x0b, 0x0b, 0x0a, 0x06, 0x00, 0x00, 0x00, 0x00}, /* 5, -13.5dB */
+-	{0x0c, 0x0c, 0x0a, 0x06, 0x00, 0x00, 0x00, 0x00}, /* 6, -13.0dB */
+-	{0x0d, 0x0c, 0x0b, 0x06, 0x00, 0x00, 0x00, 0x00}, /* 7, -12.5dB */
+-	{0x0d, 0x0d, 0x0c, 0x07, 0x00, 0x00, 0x00, 0x00}, /* 8, -12.0dB */
+-	{0x0e, 0x0e, 0x0c, 0x07, 0x00, 0x00, 0x00, 0x00}, /* 9, -11.5dB */
+-	{0x0f, 0x0f, 0x0d, 0x08, 0x00, 0x00, 0x00, 0x00}, /* 10, -11.0dB */
+-	{0x10, 0x10, 0x0e, 0x08, 0x00, 0x00, 0x00, 0x00}, /* 11, -10.5dB */
+-	{0x11, 0x11, 0x0f, 0x09, 0x00, 0x00, 0x00, 0x00}, /* 12, -10.0dB */
+-	{0x12, 0x12, 0x0f, 0x09, 0x00, 0x00, 0x00, 0x00}, /* 13, -9.5dB */
+-	{0x13, 0x13, 0x10, 0x0a, 0x00, 0x00, 0x00, 0x00}, /* 14, -9.0dB */
+-	{0x14, 0x14, 0x11, 0x0a, 0x00, 0x00, 0x00, 0x00}, /* 15, -8.5dB */
+-	{0x16, 0x15, 0x12, 0x0b, 0x00, 0x00, 0x00, 0x00}, /* 16, -8.0dB */
+-	{0x17, 0x16, 0x13, 0x0b, 0x00, 0x00, 0x00, 0x00}, /* 17, -7.5dB */
+-	{0x18, 0x17, 0x15, 0x0c, 0x00, 0x00, 0x00, 0x00}, /* 18, -7.0dB */
+-	{0x1a, 0x19, 0x16, 0x0d, 0x00, 0x00, 0x00, 0x00}, /* 19, -6.5dB */
+-	{0x1b, 0x1a, 0x17, 0x0e, 0x00, 0x00, 0x00, 0x00}, /* 20, -6.0dB */
+-	{0x1d, 0x1c, 0x18, 0x0e, 0x00, 0x00, 0x00, 0x00}, /* 21, -5.5dB */
+-	{0x1f, 0x1e, 0x1a, 0x0f, 0x00, 0x00, 0x00, 0x00}, /* 22, -5.0dB */
+-	{0x20, 0x20, 0x1b, 0x10, 0x00, 0x00, 0x00, 0x00}, /* 23, -4.5dB */
+-	{0x22, 0x21, 0x1d, 0x11, 0x00, 0x00, 0x00, 0x00}, /* 24, -4.0dB */
+-	{0x24, 0x23, 0x1f, 0x12, 0x00, 0x00, 0x00, 0x00}, /* 25, -3.5dB */
+-	{0x26, 0x25, 0x21, 0x13, 0x00, 0x00, 0x00, 0x00}, /* 26, -3.0dB */
+-	{0x28, 0x28, 0x24, 0x14, 0x00, 0x00, 0x00, 0x00}, /* 27, -2.5dB */
+-	{0x2b, 0x2a, 0x25, 0x15, 0x00, 0x00, 0x00, 0x00}, /* 28, -2.0dB */
+-	{0x2d, 0x2d, 0x17, 0x17, 0x00, 0x00, 0x00, 0x00}, /* 29, -1.5dB */
+-	{0x30, 0x2f, 0x29, 0x18, 0x00, 0x00, 0x00, 0x00}, /* 30, -1.0dB */
+-	{0x33, 0x32, 0x2b, 0x19, 0x00, 0x00, 0x00, 0x00}, /* 31, -0.5dB */
+-	{0x36, 0x35, 0x2e, 0x1b, 0x00, 0x00, 0x00, 0x00} /* 32, +0dB */
+-};
+-
+ static const u32 edca_setting_dl[PEER_MAX] = {
+ 	0xa44f,		/* 0 UNKNOWN */
+ 	0x5ea44f,	/* 1 REALTEK_90 */
+-- 
+2.7.4
+
+
