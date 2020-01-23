@@ -2,66 +2,111 @@ Return-Path: <SRS0=i23v=3M=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE852C33CAA
-	for <linux-wireless@archiver.kernel.org>; Thu, 23 Jan 2020 21:40:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F89AC35240
+	for <linux-wireless@archiver.kernel.org>; Thu, 23 Jan 2020 23:25:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 926A7207FF
-	for <linux-wireless@archiver.kernel.org>; Thu, 23 Jan 2020 21:40:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6E83B218AC
+	for <linux-wireless@archiver.kernel.org>; Thu, 23 Jan 2020 23:25:04 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="fIOS/1qV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729043AbgAWVkF (ORCPT
+        id S1729690AbgAWXY7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 23 Jan 2020 16:40:05 -0500
-Received: from s3.sipsolutions.net ([144.76.43.62]:41674 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726191AbgAWVkE (ORCPT
+        Thu, 23 Jan 2020 18:24:59 -0500
+Received: from mail-pl1-f196.google.com ([209.85.214.196]:41087 "EHLO
+        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729191AbgAWXY6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Jan 2020 16:40:04 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.93)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1iukCo-00GxJW-EJ; Thu, 23 Jan 2020 22:40:02 +0100
-Message-ID: <70df55a1da3e8a99c6d2fc3a479c9c0eed3b71a0.camel@sipsolutions.net>
-Subject: REMINDER: wireless workshop at netdevconf 0x14, registration now
- open
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     linux-wireless@vger.kernel.org
-Cc:     Kalle Valo <kvalo@codeaurora.org>
-Date:   Thu, 23 Jan 2020 22:40:00 +0100
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.34.2 (3.34.2-1.fc31) 
+        Thu, 23 Jan 2020 18:24:58 -0500
+Received: by mail-pl1-f196.google.com with SMTP id t14so2023608plr.8
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Jan 2020 15:24:58 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=4aX5l/dML5eau8GIuNAKI55XbIc1iZhh7nAnGo45frU=;
+        b=fIOS/1qVRkjNyhx3V73sope4wo1BXA5gIGf2pMh9gjTD90sZUTga2GQxpqKojDByNR
+         vM8uII6xaga31QKDa3gsfws/qchBWSUnFcIjCytJoWPwM9JAsYPeQtvJLyZ1m/iYGg8D
+         i5H8kY81G1W1AyK1MldthNgzwsAaLJemjl1wM=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=4aX5l/dML5eau8GIuNAKI55XbIc1iZhh7nAnGo45frU=;
+        b=RKwyWw77CkyofCQWXIqg2blNgfdVqFt+BhpTKR9LQhuOPOWInxfLgEjG2XrB1ACjhb
+         q1GbCZzg/n3PIqOfNLItRuXx4YlK+DTbg9PyMaolMMI8oKaiOzA8MkwU8XBo7kcZfQD0
+         dCBQibm0JjC+gzAC6A2gMZQ/a2GXH7ZJK61UpYKw+KA86dIOZEsBZyWuQvZPlK6Q7yfx
+         alc6HyHUVHhZFxU4dZNnfIEOPNyRHXeIhJ1VV4SuKccD+LPe2gHvnhh1pMh9DVGUIT+o
+         vi+ycYHvtxvQNaD8JXztjiebDi9I9pIXzCCJ13yeCq95o8z5tFPumdwESGrIpsPuoyuO
+         Et/Q==
+X-Gm-Message-State: APjAAAVSKXs2xw6n45Pp9LHYCSbqba/MOTi9guCJk6g5Os7NBCrIXNTC
+        WfOH+KkmdOO5CMvrkFWrm7pbag==
+X-Google-Smtp-Source: APXvYqzyIxhJ9N7AmSY8hYmSpeu53DPs0ZzjqEnLgPK9rcHArpPdcPqUrGEPOiU5PX5ysoAwh/+z1g==
+X-Received: by 2002:a17:902:aa41:: with SMTP id c1mr568850plr.105.1579821898215;
+        Thu, 23 Jan 2020 15:24:58 -0800 (PST)
+Received: from smtp.gmail.com ([2620:15c:202:1:fa53:7765:582b:82b9])
+        by smtp.gmail.com with ESMTPSA id c19sm4085849pfc.144.2020.01.23.15.24.57
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 23 Jan 2020 15:24:57 -0800 (PST)
+From:   Stephen Boyd <swboyd@chromium.org>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     linux-kernel@vger.kernel.org, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH] ath10k: Add newlines to printk messages
+Date:   Thu, 23 Jan 2020 15:24:56 -0800
+Message-Id: <20200123232456.36197-1-swboyd@chromium.org>
+X-Mailer: git-send-email 2.25.0.341.g760bfbb309-goog
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi all,
+Some printks in here don't have newlines at the end, meaning the log
+will be sort of hard to read. Add newlines.
 
-Just a reminder. We will be having a wireless workshop at netdevconf
-0x14 in Vancouver, BC. As far as I know, it's scheduled for day 1, i.e.
-March 17th.
+Signed-off-by: Stephen Boyd <swboyd@chromium.org>
+---
+ drivers/net/wireless/ath/ath10k/snoc.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-https://netdevconf.info/0x14/
-
-Since some people have asked: In order to attend the wireless workshop
-you only need to be registered for the conference, there are no other
-restrictions.
-
-If you have anything you'd like to present or any topics to suggest, let
-Kalle or myself know!
-
-Registration just opened today, and is early bird (CAD 100 off) until
-February 17th.
-
-Note that the conference hotel was already fully booked some time ago
-but they have a list of nearby alternative hotels on the website.
-
-Hope to see you there!
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
+index 7e85c4916e7f..19a4d053d1de 100644
+--- a/drivers/net/wireless/ath/ath10k/snoc.c
++++ b/drivers/net/wireless/ath/ath10k/snoc.c
+@@ -582,7 +582,7 @@ static void ath10k_snoc_process_rx_cb(struct ath10k_ce_pipe *ce_state,
+ 				 max_nbytes, DMA_FROM_DEVICE);
+ 
+ 		if (unlikely(max_nbytes < nbytes)) {
+-			ath10k_warn(ar, "rxed more than expected (nbytes %d, max %d)",
++			ath10k_warn(ar, "rxed more than expected (nbytes %d, max %d)\n",
+ 				    nbytes, max_nbytes);
+ 			dev_kfree_skb_any(skb);
+ 			continue;
+@@ -1201,7 +1201,7 @@ static int ath10k_snoc_request_irq(struct ath10k *ar)
+ 				  irqflags, ce_name[id], ar);
+ 		if (ret) {
+ 			ath10k_err(ar,
+-				   "failed to register IRQ handler for CE %d: %d",
++				   "failed to register IRQ handler for CE %d: %d\n",
+ 				   id, ret);
+ 			goto err_irq;
+ 		}
+@@ -1485,7 +1485,7 @@ static int ath10k_snoc_probe(struct platform_device *pdev)
+ 
+ 	ret = dma_set_mask_and_coherent(dev, drv_data->dma_mask);
+ 	if (ret) {
+-		dev_err(dev, "failed to set dma mask: %d", ret);
++		dev_err(dev, "failed to set dma mask: %d\n", ret);
+ 		return ret;
+ 	}
+ 
+-- 
+Sent by a computer, using git, on the internet
 
