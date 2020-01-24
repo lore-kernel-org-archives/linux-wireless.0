@@ -2,108 +2,88 @@ Return-Path: <SRS0=oqKg=3N=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,FSL_HELO_FAKE,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E67D8C35243
-	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jan 2020 04:34:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26C59C2D0CE
+	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jan 2020 08:46:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B81022075D
-	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jan 2020 04:34:46 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VybEWHw4"
+	by mail.kernel.org (Postfix) with ESMTP id ED7592070A
+	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jan 2020 08:46:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730247AbgAXEen (ORCPT
+        id S1729679AbgAXIqe (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 23 Jan 2020 23:34:43 -0500
-Received: from mail-pj1-f66.google.com ([209.85.216.66]:36824 "EHLO
-        mail-pj1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728799AbgAXEen (ORCPT
+        Fri, 24 Jan 2020 03:46:34 -0500
+Received: from hostingweb31-40.netsons.net ([89.40.174.40]:52023 "EHLO
+        hostingweb31-40.netsons.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729604AbgAXIqd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Jan 2020 23:34:43 -0500
-Received: by mail-pj1-f66.google.com with SMTP id gv17so242331pjb.1;
-        Thu, 23 Jan 2020 20:34:42 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:mime-version:content-disposition
-         :user-agent;
-        bh=slaKvzH5vQEl55keAvrBKgGVpQ4RBWEB5cwMnx6Pme4=;
-        b=VybEWHw4xyxxvRIZISN0/Cxmn+9as/TDFmdhVj2TLkFlgOPIT3y4mZXrwFacxNd4ms
-         qEE1wNonid1KEcI18FWUbHfwUN9jd+s2vlK7JJC/0UFCKM5w5ofGjA9oyqqneJLjQVVw
-         G1QEBxLQkudxLrKqeQGRk2eih8w8UZ9wVO5CrdFwTDDLzaFotzNvk5f4EM7PVh0Nweqx
-         whMPyEDxACinCyJJTLyk9+v5v52h1dnW2ecHHt8KZ1g4SPoW7sYdDfVmLmoisiNkHs3R
-         j2LGLespV2gJ63aTGq8dDOCGR5cYwPgrLBl4ArcMOQn75Z6WaDBq7nfVOZY0gSNcGDB+
-         mEtg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:mime-version
-         :content-disposition:user-agent;
-        bh=slaKvzH5vQEl55keAvrBKgGVpQ4RBWEB5cwMnx6Pme4=;
-        b=CPEARsSY/E+aJ76tLm8sXdACv4PzXAPn/GG8ZZSZAo0mN3dw4X0UoCGbPjtUAVTWXH
-         fXd0T5OQnj0K4i8B3toN4VyM3vpOaZB4C/mVNZQierLzgiNvCvtRu0DNPwawvYT3y4HH
-         slTqc9+ujhwRIZTEJXHYWNMEtm8Dl5S5VvqQRxxxXRvHu9OalvpD8Z8w5AjfaWcY0eCZ
-         oUhrBbQjBF/pQz8ogRJNlwdINlR68rsM92JAuCpdkXuqdm+HcAMQON3DULgTxIWaxNO0
-         3ertsX3mp/fZj5hUNfhDx/5lbvNPH9UwIwiFmJWhS9pDvQTpK8FtQTlKgmdXD3XJ35Wl
-         dQZQ==
-X-Gm-Message-State: APjAAAW19Za3H7uqTfOjHT3krvtWsetljvBvxULtDK2g+8oqLdpw/Zd6
-        RXpOVpSEgZXukKn+2aTlWvg=
-X-Google-Smtp-Source: APXvYqzQcZRkU0QraWfKb9QtgdwqU0GN0/ZJHa/SD87sHtzFuRJqNGn31wFmKx+UNcy33LBo7GEFbQ==
-X-Received: by 2002:a17:902:7b94:: with SMTP id w20mr1649872pll.257.1579840482165;
-        Thu, 23 Jan 2020 20:34:42 -0800 (PST)
-Received: from google.com ([123.201.77.6])
-        by smtp.gmail.com with ESMTPSA id z26sm4356895pfa.90.2020.01.23.20.34.39
-        (version=TLS1_2 cipher=AES128-SHA bits=128/128);
-        Thu, 23 Jan 2020 20:34:41 -0800 (PST)
-Date:   Fri, 24 Jan 2020 10:04:33 +0530
-From:   Saurav Girepunje <saurav.girepunje@gmail.com>
-To:     pkshih@realtek.com, kvalo@codeaurora.org, davem@davemloft.net,
-        Larry.Finger@lwfinger.net, saurav.girepunje@gmail.com,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Fri, 24 Jan 2020 03:46:33 -0500
+Received: from [109.168.11.45] (port=51208 helo=[192.168.101.73])
+        by hostingweb31.netsons.net with esmtpsa (TLSv1.2:ECDHE-RSA-AES128-GCM-SHA256:128)
+        (Exim 4.92)
+        (envelope-from <luca@lucaceresoli.net>)
+        id 1iuubk-0004bC-SO; Fri, 24 Jan 2020 09:46:28 +0100
+Subject: Re: [PATCH] iwlwifi: fix config variable name in comment
+To:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc:     Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
         linux-kernel@vger.kernel.org
-Cc:     saurav.girepunje@hotmail.com
-Subject: [PATCH] net: wireless: realtek: rtlwifi: fix spelling mistake
-Message-ID: <20200124043433.GA3024@google.com>
+References: <20191202101339.24265-1-luca@lucaceresoli.net>
+From:   Luca Ceresoli <luca@lucaceresoli.net>
+Message-ID: <bcf538ea-cfbd-c6b7-5fbe-dd647b6a7e9c@lucaceresoli.net>
+Date:   Fri, 24 Jan 2020 09:46:28 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.2.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Disposition: inline
-User-Agent: Mutt/1.6.2-neo (NetBSD/sparc64)
+In-Reply-To: <20191202101339.24265-1-luca@lucaceresoli.net>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - hostingweb31.netsons.net
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - lucaceresoli.net
+X-Get-Message-Sender-Via: hostingweb31.netsons.net: authenticated_id: luca+lucaceresoli.net/only user confirmed/virtual account not confirmed
+X-Authenticated-Sender: hostingweb31.netsons.net: luca@lucaceresoli.net
+X-Source: 
+X-Source-Args: 
+X-Source-Dir: 
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-fix spelling mistake reported by checkpatch in trx.c .
+Hi,
 
-Signed-off-by: Saurav Girepunje <saurav.girepunje@gmail.com>
----
-  drivers/net/wireless/realtek/rtlwifi/rtl8192se/trx.c | 4 ++--
-  1 file changed, 2 insertions(+), 2 deletions(-)
+On 02/12/19 11:13, Luca Ceresoli wrote:
+> The correct variable name was replaced here by mistake.
+> 
+> Fixes: ab27926d9e4a ("iwlwifi: fix devices with PCI Device ID 0x34F0 and 11ac RF modules")
+> Signed-off-by: Luca Ceresoli <luca@lucaceresoli.net>
+> ---
+>  drivers/net/wireless/intel/iwlwifi/iwl-config.h | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+> index 317eac066082..fb6838527e28 100644
+> --- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+> +++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+> @@ -636,6 +636,6 @@ extern const struct iwl_cfg iwlax210_2ax_cfg_so_hr_a0;
+>  extern const struct iwl_cfg iwlax211_2ax_cfg_so_gf_a0;
+>  extern const struct iwl_cfg iwlax210_2ax_cfg_ty_gf_a0;
+>  extern const struct iwl_cfg iwlax411_2ax_cfg_so_gf4_a0;
+> -#endif /* CPTCFG_IWLMVM || CPTCFG_IWLFMAC */
+> +#endif /* CONFIG_IWLMVM */
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/trx.c
-index 9eaa534..cad4c9f 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/trx.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/trx.c
-@@ -276,7 +276,7 @@ bool rtl92se_rx_query_desc(struct ieee80211_hw *hw, struct rtl_stats *stats,
-  
-  	/* hw will set stats->decrypted true, if it finds the
-  	 * frame is open data frame or mgmt frame,
--	 * hw will not decrypt robust managment frame
-+	 * hw will not decrypt robust management frame
-  	 * for IEEE80211w but still set stats->decrypted
-  	 * true, so here we should set it back to undecrypted
-  	 * for IEEE80211w frame, and mac80211 sw will help
-@@ -466,7 +466,7 @@ void rtl92se_tx_fill_desc(struct ieee80211_hw *hw,
-  		/* Alwasy enable all rate fallback range */
-  		set_tx_desc_data_rate_fb_limit(pdesc, 0x1F);
-  
--		/* Fix: I don't kown why hw use 6.5M to tx when set it */
-+		/* Fix: I don't know why hw use 6.5M to tx when set it */
-  		set_tx_desc_user_rate(pdesc,
-  				      ptcb_desc->use_driver_rate ? 1 : 0);
-  
+A gentle ping about this patch.
+
+Thanks,
 -- 
-1.9.1
-
+Luca
