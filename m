@@ -4,51 +4,50 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BB69C35242
-	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jan 2020 14:35:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BEF87C32771
+	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jan 2020 14:35:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 420512077C
-	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jan 2020 14:35:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8B3BB206F0
+	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jan 2020 14:35:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579876523;
-	bh=jQ+TaHHThZHA3Y8tm3ijmMsa/OkFMve527Jlx5shKTc=;
+	s=default; t=1579876542;
+	bh=QFIDya6ivalEWjHBowgAtT7ZFFosbE3XxUDc3fLxS0M=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=IC5i9puTNFGKj9CNvPZEUxLORFZuzVRwNmGQYZFpJTbCL9owxKdXwbNG9/0xGjeFE
-	 cyBlLeoYRtU4dMvsPRqENu6S/H6E+GiUe2PXczCeP51wO/wX6z1UBxQJsbeJznCX0E
-	 0ZxOxhSml5tJajKdOuZC7RYDqM4GAUWdR1O3mtWY=
+	b=h6UVCC0HzeHpeqfMSr0e1XkvLMqp2TIP2B1MMKUvZRzuWJTt/5c9Jd5B2yqxQSCOI
+	 uRWxbQGmJveudL8nXk/AvDJ1E22a3cVhz5JCcsKpGx9y3CZ8i3Jk32EIQKiRhmg681
+	 FQSYi4gXCYclEarQotfG0zgcFW0iwhHGk1/rt/OM=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391607AbgAXOfS (ORCPT
+        id S2392071AbgAXOfl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 24 Jan 2020 09:35:18 -0500
-Received: from mail.kernel.org ([198.145.29.99]:40070 "EHLO mail.kernel.org"
+        Fri, 24 Jan 2020 09:35:41 -0500
+Received: from mail.kernel.org ([198.145.29.99]:39856 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2404039AbgAXOTh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Jan 2020 09:19:37 -0500
+        id S2391715AbgAXOTa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 24 Jan 2020 09:19:30 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id C8BB9208C4;
-        Fri, 24 Jan 2020 14:19:35 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id BB9EB22522;
+        Fri, 24 Jan 2020 14:19:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579875576;
-        bh=jQ+TaHHThZHA3Y8tm3ijmMsa/OkFMve527Jlx5shKTc=;
+        s=default; t=1579875569;
+        bh=QFIDya6ivalEWjHBowgAtT7ZFFosbE3XxUDc3fLxS0M=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=cUwMMU5PaFALncXKoZj3mSKIqAXNwes7sYxYTa/+8qWJNvGsdmgHfS0GifJgNltGP
-         hUXja7SdkKJ8yjMk8sMsFHGtdabbdwYIxO/g0hU+7cdPfQ2Q0GgJisyi5P0aACswrO
-         enu2OyeODtiWJ941DqP0Jo0sKsoP/WagsvO4fKzs=
+        b=gFlju4nnIDoFDyU9DrxA7yzDclo1/Tll8jCvY/8S++KHzfFHKBNPFfWtLubE7L4R4
+         n1+CvCn2IJAEWUkQiqdWpu2nucAchZdxWNdcD+kS6jc5GhkjcIPXfZaevlfYbKLvYT
+         D714tjoT2HH7uA7uvg0mNj912WIr3lDgontLyTVk=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Ganapathi Bhat <ganapathi.bhat@nxp.com>,
-        Cathy Luo <xiaohua.luo@nxp.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 068/107] wireless: fix enabling channel 12 for custom regulatory domain
-Date:   Fri, 24 Jan 2020 09:17:38 -0500
-Message-Id: <20200124141817.28793-68-sashal@kernel.org>
+Cc:     Johan Hovold <johan@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Sasha Levin <sashal@kernel.org>, linux-wireless@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 062/107] NFC: pn533: fix bulk-message timeout
+Date:   Fri, 24 Jan 2020 09:17:32 -0500
+Message-Id: <20200124141817.28793-62-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200124141817.28793-1-sashal@kernel.org>
 References: <20200124141817.28793-1-sashal@kernel.org>
@@ -61,63 +60,40 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ganapathi Bhat <ganapathi.bhat@nxp.com>
+From: Johan Hovold <johan@kernel.org>
 
-[ Upstream commit c4b9d655e445a8be0bff624aedea190606b5ebbc ]
+[ Upstream commit a112adafcb47760feff959ee1ecd10b74d2c5467 ]
 
-Commit e33e2241e272 ("Revert "cfg80211: Use 5MHz bandwidth by
-default when checking usable channels"") fixed a broken
-regulatory (leaving channel 12 open for AP where not permitted).
-Apply a similar fix to custom regulatory domain processing.
+The driver was doing a synchronous uninterruptible bulk-transfer without
+using a timeout. This could lead to the driver hanging on probe due to a
+malfunctioning (or malicious) device until the device is physically
+disconnected. While sleeping in probe the driver prevents other devices
+connected to the same hub from being added to (or removed from) the bus.
 
-Signed-off-by: Cathy Luo <xiaohua.luo@nxp.com>
-Signed-off-by: Ganapathi Bhat <ganapathi.bhat@nxp.com>
-Link: https://lore.kernel.org/r/1576836859-8945-1-git-send-email-ganapathi.bhat@nxp.com
-[reword commit message, fix coding style, add a comment]
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+An arbitrary limit of five seconds should be more than enough.
+
+Fixes: dbafc28955fa ("NFC: pn533: don't send USB data off of the stack")
+Signed-off-by: Johan Hovold <johan@kernel.org>
+Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Jakub Kicinski <kuba@kernel.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/wireless/reg.c | 13 ++++++++++---
- 1 file changed, 10 insertions(+), 3 deletions(-)
+ drivers/nfc/pn533/usb.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 446c76d44e65a..3c2070040277d 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -2261,14 +2261,15 @@ static void update_all_wiphy_regulatory(enum nl80211_reg_initiator initiator)
+diff --git a/drivers/nfc/pn533/usb.c b/drivers/nfc/pn533/usb.c
+index e897e4d768ef7..d7a355d053687 100644
+--- a/drivers/nfc/pn533/usb.c
++++ b/drivers/nfc/pn533/usb.c
+@@ -391,7 +391,7 @@ static int pn533_acr122_poweron_rdr(struct pn533_usb_phy *phy)
+ 		       cmd, sizeof(cmd), false);
  
- static void handle_channel_custom(struct wiphy *wiphy,
- 				  struct ieee80211_channel *chan,
--				  const struct ieee80211_regdomain *regd)
-+				  const struct ieee80211_regdomain *regd,
-+				  u32 min_bw)
- {
- 	u32 bw_flags = 0;
- 	const struct ieee80211_reg_rule *reg_rule = NULL;
- 	const struct ieee80211_power_rule *power_rule = NULL;
- 	u32 bw;
- 
--	for (bw = MHZ_TO_KHZ(20); bw >= MHZ_TO_KHZ(5); bw = bw / 2) {
-+	for (bw = MHZ_TO_KHZ(20); bw >= min_bw; bw = bw / 2) {
- 		reg_rule = freq_reg_info_regd(MHZ_TO_KHZ(chan->center_freq),
- 					      regd, bw);
- 		if (!IS_ERR(reg_rule))
-@@ -2324,8 +2325,14 @@ static void handle_band_custom(struct wiphy *wiphy,
- 	if (!sband)
- 		return;
- 
-+	/*
-+	 * We currently assume that you always want at least 20 MHz,
-+	 * otherwise channel 12 might get enabled if this rule is
-+	 * compatible to US, which permits 2402 - 2472 MHz.
-+	 */
- 	for (i = 0; i < sband->n_channels; i++)
--		handle_channel_custom(wiphy, &sband->channels[i], regd);
-+		handle_channel_custom(wiphy, &sband->channels[i], regd,
-+				      MHZ_TO_KHZ(20));
- }
- 
- /* Used by drivers prior to wiphy registration */
+ 	rc = usb_bulk_msg(phy->udev, phy->out_urb->pipe, buffer, sizeof(cmd),
+-			  &transferred, 0);
++			  &transferred, 5000);
+ 	kfree(buffer);
+ 	if (rc || (transferred != sizeof(cmd))) {
+ 		nfc_err(&phy->udev->dev,
 -- 
 2.20.1
 
