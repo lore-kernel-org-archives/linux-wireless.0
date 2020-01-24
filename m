@@ -7,50 +7,51 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 698DCC2D0DB
-	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jan 2020 14:26:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E277C2D0DB
+	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jan 2020 14:29:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3458D20838
-	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jan 2020 14:26:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CCBFD2077C
+	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jan 2020 14:29:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579875991;
-	bh=EPmA2zirvc5Pz7HNThNXC1RSd9j2S88QrrFYdgTC6bA=;
+	s=default; t=1579876154;
+	bh=Le2GyrE1tocvcCAb0URGRUi/5wyXZGjo2SaBa3UdYrs=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=cYNYVGC5tJ/PWjiTix2tdSB/nUOGN8i4gcvlj2q6w/pCuez8PQ0Qqa0qPKBPfBD0R
-	 QXbAE9LC/8Z7aCo4ThOGeUCuozLFqXHTGmfiGd0+w7zS1OP+rXCB6LmSOBo6vkONXF
-	 /G1gHQJXmEcMSISAscEut0dXG2xUIBHWrjDepf90=
+	b=0NWqeik5tB8sONcpXsYmSyLyvxZ9XEZxPb+xOknGRhujBMlaxEl1ocfdZbYaU7Ab8
+	 6U83cDUiQQBnliN8RLOqAU3AFskLSIxDAG2dzsGn0gZVc22BEq4xRQzXkg0gls0608
+	 /Ay9mfXH+QwfrN/SCtubQBuez8HjabP/A44ChSY8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390020AbgAXO00 (ORCPT
+        id S2391037AbgAXO3C (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 24 Jan 2020 09:26:26 -0500
-Received: from mail.kernel.org ([198.145.29.99]:43594 "EHLO mail.kernel.org"
+        Fri, 24 Jan 2020 09:29:02 -0500
+Received: from mail.kernel.org ([198.145.29.99]:42430 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2405365AbgAXOVk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Jan 2020 09:21:40 -0500
+        id S2392165AbgAXOVB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 24 Jan 2020 09:21:01 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A95C224682;
-        Fri, 24 Jan 2020 14:21:38 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id E496B2087E;
+        Fri, 24 Jan 2020 14:20:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579875699;
-        bh=EPmA2zirvc5Pz7HNThNXC1RSd9j2S88QrrFYdgTC6bA=;
+        s=default; t=1579875660;
+        bh=Le2GyrE1tocvcCAb0URGRUi/5wyXZGjo2SaBa3UdYrs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=VxtULot+6qY9p3kedech8zVOJjOrMSRGHkZf0uPy3gjwpS9QA+ufv0O/T+5DdrJBf
-         thTI0XqX+G8DSG1NLx7Z+bA5ZAGrs+6bJ2FgUAYvmyMh35AhjwUChqGwRC5woipi/L
-         FFyNuJoGkoR1WKwwg/L3CxoAhgksHlycfaphzP8U=
+        b=dwQviSC/bMjWep0Q8i62Z2OxO35skdVTFYgId82ID0tBYvLY41g2H2jn66MABFS68
+         Ple5qvOoJ1IV01CYKk0SUmdWH9TQ+kMaIXRuqzcah7fMbxDrVYOkbtUquOlLD2+JXR
+         Fga39KKb5lSquSnX37Q3Uxe+U1YCxJJk+KVuJiMY=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Johan Hovold <johan@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Sasha Levin <sashal@kernel.org>, linux-wireless@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 17/32] NFC: pn533: fix bulk-message timeout
-Date:   Fri, 24 Jan 2020 09:21:04 -0500
-Message-Id: <20200124142119.30484-17-sashal@kernel.org>
+Cc:     Johannes Berg <johannes.berg@intel.com>,
+        syzbot+e8a797964a4180eb57d5@syzkaller.appspotmail.com,
+        syzbot+34b582cf32c1db008f8e@syzkaller.appspotmail.com,
+        Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 41/56] cfg80211: check for set_wiphy_params
+Date:   Fri, 24 Jan 2020 09:19:57 -0500
+Message-Id: <20200124142012.29752-41-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200124142119.30484-1-sashal@kernel.org>
-References: <20200124142119.30484-1-sashal@kernel.org>
+In-Reply-To: <20200124142012.29752-1-sashal@kernel.org>
+References: <20200124142012.29752-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -60,40 +61,39 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johan Hovold <johan@kernel.org>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit a112adafcb47760feff959ee1ecd10b74d2c5467 ]
+[ Upstream commit 24953de0a5e31dcca7e82c8a3c79abc2dfe8fb6e ]
 
-The driver was doing a synchronous uninterruptible bulk-transfer without
-using a timeout. This could lead to the driver hanging on probe due to a
-malfunctioning (or malicious) device until the device is physically
-disconnected. While sleeping in probe the driver prevents other devices
-connected to the same hub from being added to (or removed from) the bus.
+Check if set_wiphy_params is assigned and return an error if not,
+some drivers (e.g. virt_wifi where syzbot reported it) don't have
+it.
 
-An arbitrary limit of five seconds should be more than enough.
-
-Fixes: dbafc28955fa ("NFC: pn533: don't send USB data off of the stack")
-Signed-off-by: Johan Hovold <johan@kernel.org>
-Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+Reported-by: syzbot+e8a797964a4180eb57d5@syzkaller.appspotmail.com
+Reported-by: syzbot+34b582cf32c1db008f8e@syzkaller.appspotmail.com
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Link: https://lore.kernel.org/r/20200113125358.ac07f276efff.Ibd85ee1b12e47b9efb00a2adc5cd3fac50da791a@changeid
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/nfc/pn533/usb.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/wireless/rdev-ops.h | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/nfc/pn533/usb.c b/drivers/nfc/pn533/usb.c
-index fcb57d64d97e6..a2c9b3f3bc232 100644
---- a/drivers/nfc/pn533/usb.c
-+++ b/drivers/nfc/pn533/usb.c
-@@ -403,7 +403,7 @@ static int pn533_acr122_poweron_rdr(struct pn533_usb_phy *phy)
- 		       cmd, sizeof(cmd), false);
- 
- 	rc = usb_bulk_msg(phy->udev, phy->out_urb->pipe, buffer, sizeof(cmd),
--			  &transferred, 0);
-+			  &transferred, 5000);
- 	kfree(buffer);
- 	if (rc || (transferred != sizeof(cmd))) {
- 		nfc_err(&phy->udev->dev,
+diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
+index 16dad14aabd7c..a8c58aeb9dde9 100644
+--- a/net/wireless/rdev-ops.h
++++ b/net/wireless/rdev-ops.h
+@@ -537,6 +537,10 @@ static inline int
+ rdev_set_wiphy_params(struct cfg80211_registered_device *rdev, u32 changed)
+ {
+ 	int ret;
++
++	if (!rdev->ops->set_wiphy_params)
++		return -EOPNOTSUPP;
++
+ 	trace_rdev_set_wiphy_params(&rdev->wiphy, changed);
+ 	ret = rdev->ops->set_wiphy_params(&rdev->wiphy, changed);
+ 	trace_rdev_return_int(&rdev->wiphy, ret);
 -- 
 2.20.1
 
