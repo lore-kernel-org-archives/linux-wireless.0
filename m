@@ -2,111 +2,120 @@ Return-Path: <SRS0=oqKg=3N=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 10381C32771
-	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jan 2020 14:38:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D87CAC35242
+	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jan 2020 14:39:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DA9252071A
-	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jan 2020 14:38:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579876707;
-	bh=qVSo41/s7T8HG9ndWY0t08ZWXbSoREZ6+XJRms8b+Lw=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=lavLO1940DED4HOg5JdVTIyi/O+XT7yVwWUUP6GG/cq4oZa0900cWV9V/3VkXNDN/
-	 p7gfBOmSCV/oATfMr/UjIz9xeTNZsauDcxfG8DzuO/jye3lvvjoA5Xe8sP7ZaCFy97
-	 YIhQ3da7r8FmRciZIge/6UC0B8y8TmJzxP2l0OkU=
+	by mail.kernel.org (Postfix) with ESMTP id AEB4F206F0
+	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jan 2020 14:39:49 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="H7Q9hSN8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388476AbgAXOiT (ORCPT
+        id S2389477AbgAXOjq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 24 Jan 2020 09:38:19 -0500
-Received: from mail.kernel.org ([198.145.29.99]:38640 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2389176AbgAXOSr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Jan 2020 09:18:47 -0500
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        Fri, 24 Jan 2020 09:39:46 -0500
+Received: from mail25.static.mailgun.info ([104.130.122.25]:63861 "EHLO
+        mail25.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2387910AbgAXOjp (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 24 Jan 2020 09:39:45 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1579876784; h=Content-Type: MIME-Version: Message-ID:
+ In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
+ bh=q3fU8N9SoAUyGtvSleUTmZmK00aSXdDlqy8V7OzuVp8=; b=H7Q9hSN8G40LjyBdiYkXsACVedXb6RI0xSAfK+3I979LXJ5dGKfJCfegk3zWPUZSVq4nSI0m
+ hGNJf/Foa5R6+TOXWuj9SwgyxQKOCRqDyxlgtuaOZbCYtAQRZyvIeFIxDjmvdmJTLxblnUOS
+ GJbLiRhbFwFdLkR1RZotUnOvcFM=
+X-Mailgun-Sending-Ip: 104.130.122.25
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
+ by mxa.mailgun.org with ESMTP id 5e2b01ac.7f018919e0a0-smtp-out-n02;
+ Fri, 24 Jan 2020 14:39:40 -0000 (UTC)
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 5E109C447A4; Fri, 24 Jan 2020 14:39:39 +0000 (UTC)
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3BA0722527;
-        Fri, 24 Jan 2020 14:18:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579875527;
-        bh=qVSo41/s7T8HG9ndWY0t08ZWXbSoREZ6+XJRms8b+Lw=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=yRrDN2qc5rZuPdOl/hcOzoZvJaUMxf/qSttT5miHDVuLjyituOVErNZqZTFptkYSG
-         7l6HbnrHNyZxMYgZRem0imRT4xlv5txFAJ0hU4dfMV8asZqeld/P6V4ts0IRfQN82B
-         M6b1JsWyjkLtQuhAEe8xxgTsM6HNfFlWhkbyYUIo=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Markus Theil <markus.theil@tu-ilmenau.de>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 025/107] mac80211: mesh: restrict airtime metric to peered established plinks
-Date:   Fri, 24 Jan 2020 09:16:55 -0500
-Message-Id: <20200124141817.28793-25-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200124141817.28793-1-sashal@kernel.org>
-References: <20200124141817.28793-1-sashal@kernel.org>
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 0FC52C447B0;
+        Fri, 24 Jan 2020 14:39:35 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 0FC52C447B0
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Luca Coelho <luca@coelho.fi>
+Cc:     linux-wireless@vger.kernel.org, linuxwifi@intel.com,
+        david.e.box@intel.com, joe.konno@intel.com
+Subject: Re: pull-request: iwlwifi-next 2020-01-11
+References: <f548bee28a2ef4700a024e33c02b62893af498c7.camel@coelho.fi>
+Date:   Fri, 24 Jan 2020 16:39:33 +0200
+In-Reply-To: <f548bee28a2ef4700a024e33c02b62893af498c7.camel@coelho.fi> (Luca
+        Coelho's message of "Sat, 11 Jan 2020 11:51:28 +0200")
+Message-ID: <87eevoex5m.fsf@kamboji.qca.qualcomm.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Markus Theil <markus.theil@tu-ilmenau.de>
+Luca Coelho <luca@coelho.fi> writes:
 
-[ Upstream commit 02a614499600af836137c3fbc4404cd96365fff2 ]
+> Here's the fist batch of patches intended for v5.6.  This includes
+> the last two patchsets I sent out.  Usual development work.  More
+> details about the contents in the tag description.
+>
+> I pushed these patches to my pending branch, but it was just now, so I
+> didn't get the results from kbuildbot yet.
+>
+> Please let me know if there are any issues.
+>
+> Cheers,
+> Luca.
+>
+>
+> The following changes since commit ae0a723c4cfd89dad31ce238f47ccfbe81b35b84:
+>
+>   Merge ath-next from git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git (2019-12-19 18:27:36 +0200)
+>
+> are available in the Git repository at:
+>
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git tags/iwlwifi-next-for-kalle-2020-01-11
+>
+> for you to fetch changes up to 0b295a1eb81f37dc7d4f4f2ee9ef375fb36ab5d8:
+>
+>   iwlwifi: add device name to device_info (2020-01-04 12:48:41 +0200)
+>
+> ----------------------------------------------------------------
+> First set of patches intended for v5.6
+>
+> * Support new versions of the FTM FW APIs;
+> * Fix an old bug in D3 (WoWLAN);
+> * A couple of fixes/improvements in the receive-buffers code;
+> * Fix in the debugging where we were skipping one TXQ;
+> * Support new version of the beacon template FW API;
+> * Print some extra information when the driver is loaded;
+> * Some debugging infrastructure (aka. yoyo) updates;
+> * Support for a new HW version;
+> * Second phase of device configuration work started;
+> * Some clean-ups;
+>
+> ----------------------------------------------------------------
 
-The following warning is triggered every time an unestablished mesh peer
-gets dumped. Checks if a peer link is established before retrieving the
-airtime link metric.
+There was a conflict in pcie/drv.c due to this commit:
 
-[ 9563.022567] WARNING: CPU: 0 PID: 6287 at net/mac80211/mesh_hwmp.c:345
-               airtime_link_metric_get+0xa2/0xb0 [mac80211]
-[ 9563.022697] Hardware name: PC Engines apu2/apu2, BIOS v4.10.0.3
-[ 9563.022756] RIP: 0010:airtime_link_metric_get+0xa2/0xb0 [mac80211]
-[ 9563.022838] Call Trace:
-[ 9563.022897]  sta_set_sinfo+0x936/0xa10 [mac80211]
-[ 9563.022964]  ieee80211_dump_station+0x6d/0x90 [mac80211]
-[ 9563.023062]  nl80211_dump_station+0x154/0x2a0 [cfg80211]
-[ 9563.023120]  netlink_dump+0x17b/0x370
-[ 9563.023130]  netlink_recvmsg+0x2a4/0x480
-[ 9563.023140]  ____sys_recvmsg+0xa6/0x160
-[ 9563.023154]  ___sys_recvmsg+0x93/0xe0
-[ 9563.023169]  __sys_recvmsg+0x7e/0xd0
-[ 9563.023210]  do_syscall_64+0x4e/0x140
-[ 9563.023217]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+db5cce1afc8d Revert "iwlwifi: assign directly to iwl_trans->cfg in QuZ detection"
 
-Signed-off-by: Markus Theil <markus.theil@tu-ilmenau.de>
-Link: https://lore.kernel.org/r/20191203180644.70653-1-markus.theil@tu-ilmenau.de
-[rewrite commit message]
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- net/mac80211/mesh_hwmp.c | 3 +++
- 1 file changed, 3 insertions(+)
+Please double check my resolution in the pending branch:
 
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index 68af623063858..d699833703819 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -328,6 +328,9 @@ u32 airtime_link_metric_get(struct ieee80211_local *local,
- 	unsigned long fail_avg =
- 		ewma_mesh_fail_avg_read(&sta->mesh->fail_avg);
- 
-+	if (sta->mesh->plink_state != NL80211_PLINK_ESTAB)
-+		return MAX_METRIC;
-+
- 	/* Try to get rate based on HW/SW RC algorithm.
- 	 * Rate is returned in units of Kbps, correct this
- 	 * to comply with airtime calculation units
+https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git/commit/?h=pending&id=5e01e8338c9d741dbf473a56f753b9c12344432d
+
+I just took the hunk from commit db5cce1afc8d and didn't do any other
+changes.
+
 -- 
-2.20.1
-
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
