@@ -2,70 +2,122 @@ Return-Path: <SRS0=oqKg=3N=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02281C2D0DB
-	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jan 2020 10:34:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A14B7C2D0DB
+	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jan 2020 14:20:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D56672070A
-	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jan 2020 10:34:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 77D342087E
+	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jan 2020 14:20:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1579875658;
+	bh=R2mYXU5XIepe7c65jwPquZLjVF8fJ9TLK0oRVgWXGsE=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=TWmMX7DE632JIf6nRNaYZKGkW01HJpTfOhNu2PCMqHVQWZ0QhoRGKmhBqiLVo/OT/
+	 bFSFOzy2g+9Nn11Db2bNHAI4izBtVy32zTzNt3KNlQumxRkUyzMIH92zo0tGF+fTZG
+	 fXtMiuST62YCX02e+n0GOR0cB+0bzqSZbsCzdJ14=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729992AbgAXKeh (ORCPT
+        id S2405135AbgAXOU5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 24 Jan 2020 05:34:37 -0500
-Received: from s3.sipsolutions.net ([144.76.43.62]:38080 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726293AbgAXKeh (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Jan 2020 05:34:37 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.93)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1iuwIK-0011ZT-Cz; Fri, 24 Jan 2020 11:34:32 +0100
-Message-ID: <ef348261c1edd9892b09ed017a59be23aa2be688.camel@sipsolutions.net>
-Subject: Re: debugging TCP stalls on high-speed wifi
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Cc:     Eric Dumazet <eric.dumazet@gmail.com>,
-        Neal Cardwell <ncardwell@google.com>,
-        Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@redhat.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Netdev <netdev@vger.kernel.org>
-Date:   Fri, 24 Jan 2020 11:34:31 +0100
-In-Reply-To: <CABPxzYJZLHBvtjN7=-hPiUK1XU_b60m8Wpw4tHsT7zOQwZWRVw@mail.gmail.com> (sfid-20191213_101015_988941_7C64060E)
-References: <14cedbb9300f887fecc399ebcdb70c153955f876.camel@sipsolutions.net>
-         <CADVnQym_CNktZ917q0-9dVY9dhtiJVRRotGTrPNdZUpkjd3vyw@mail.gmail.com>
-         <f4670ce0f4399fe82e7168fb9c491d8eb718e8d8.camel@sipsolutions.net>
-         <99748db5-7898-534b-d407-ed819f07f939@gmail.com>
-         <ff6b35ad589d7cf0710cb9fca4c799538da2e653.camel@sipsolutions.net>
-         <CABPxzYJZLHBvtjN7=-hPiUK1XU_b60m8Wpw4tHsT7zOQwZWRVw@mail.gmail.com>
-         (sfid-20191213_101015_988941_7C64060E)
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.34.2 (3.34.2-1.fc31) 
+        Fri, 24 Jan 2020 09:20:57 -0500
+Received: from mail.kernel.org ([198.145.29.99]:42322 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2405124AbgAXOU4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 24 Jan 2020 09:20:56 -0500
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 4838321734;
+        Fri, 24 Jan 2020 14:20:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1579875656;
+        bh=R2mYXU5XIepe7c65jwPquZLjVF8fJ9TLK0oRVgWXGsE=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=Vse0ANh+ufv9EgjHvcQHVYMA3Xr09+nBOj0AkP1GZ99R1dobCZDXUl699S/BxvdtE
+         sq2+6bWLCx8eOhoxr7Yh8f2h0SznHHFtDBFb07PpNAYVGyys8+cLsSi86Jst+S+ArL
+         N8BOus6nS+W5z5QMzZpHkS6OBrv3YM+VxSE0hHic=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Ganapathi Bhat <ganapathi.bhat@nxp.com>,
+        Cathy Luo <xiaohua.luo@nxp.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 37/56] wireless: fix enabling channel 12 for custom regulatory domain
+Date:   Fri, 24 Jan 2020 09:19:53 -0500
+Message-Id: <20200124142012.29752-37-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20200124142012.29752-1-sashal@kernel.org>
+References: <20200124142012.29752-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, 2019-12-13 at 14:40 +0530, Krishna Chaitanya wrote:
-> 
-> Maybe try 'reno' instead of 'cubic' to see if congestion control is
-> being too careful?
+From: Ganapathi Bhat <ganapathi.bhat@nxp.com>
 
-I played around with this a bit now, but apart from a few outliers, the
-congestion control algorithm doesn't have much effect. The outliers are
+[ Upstream commit c4b9d655e445a8be0bff624aedea190606b5ebbc ]
 
- * vegas with ~120 Mbps
- * nv with ~300 Mbps
- * cdg with ~600 Mbps
+Commit e33e2241e272 ("Revert "cfg80211: Use 5MHz bandwidth by
+default when checking usable channels"") fixed a broken
+regulatory (leaving channel 12 open for AP where not permitted).
+Apply a similar fix to custom regulatory domain processing.
 
-All the others from my list (reno cubic bbr bic cdg dctcp highspeed htcp
-hybla illinois lp nv scalable vegas veno westwood yeah) are within 50
-Mbps or so from each other (around 1.45Gbps).
+Signed-off-by: Cathy Luo <xiaohua.luo@nxp.com>
+Signed-off-by: Ganapathi Bhat <ganapathi.bhat@nxp.com>
+Link: https://lore.kernel.org/r/1576836859-8945-1-git-send-email-ganapathi.bhat@nxp.com
+[reword commit message, fix coding style, add a comment]
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ net/wireless/reg.c | 13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
 
-johannes
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 64841238df855..417a5c64c7789 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -2254,14 +2254,15 @@ static void update_all_wiphy_regulatory(enum nl80211_reg_initiator initiator)
+ 
+ static void handle_channel_custom(struct wiphy *wiphy,
+ 				  struct ieee80211_channel *chan,
+-				  const struct ieee80211_regdomain *regd)
++				  const struct ieee80211_regdomain *regd,
++				  u32 min_bw)
+ {
+ 	u32 bw_flags = 0;
+ 	const struct ieee80211_reg_rule *reg_rule = NULL;
+ 	const struct ieee80211_power_rule *power_rule = NULL;
+ 	u32 bw;
+ 
+-	for (bw = MHZ_TO_KHZ(20); bw >= MHZ_TO_KHZ(5); bw = bw / 2) {
++	for (bw = MHZ_TO_KHZ(20); bw >= min_bw; bw = bw / 2) {
+ 		reg_rule = freq_reg_info_regd(MHZ_TO_KHZ(chan->center_freq),
+ 					      regd, bw);
+ 		if (!IS_ERR(reg_rule))
+@@ -2317,8 +2318,14 @@ static void handle_band_custom(struct wiphy *wiphy,
+ 	if (!sband)
+ 		return;
+ 
++	/*
++	 * We currently assume that you always want at least 20 MHz,
++	 * otherwise channel 12 might get enabled if this rule is
++	 * compatible to US, which permits 2402 - 2472 MHz.
++	 */
+ 	for (i = 0; i < sband->n_channels; i++)
+-		handle_channel_custom(wiphy, &sband->channels[i], regd);
++		handle_channel_custom(wiphy, &sband->channels[i], regd,
++				      MHZ_TO_KHZ(20));
+ }
+ 
+ /* Used by drivers prior to wiphy registration */
+-- 
+2.20.1
 
