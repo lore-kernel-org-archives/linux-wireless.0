@@ -7,49 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75579C2D0DB
-	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jan 2020 14:25:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 698DCC2D0DB
+	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jan 2020 14:26:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 42570206F0
-	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jan 2020 14:25:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3458D20838
+	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jan 2020 14:26:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579875946;
-	bh=rGZCgt3WGgJwoEyFbmvWJrawYJcjyNi8TN0vwpWGSjM=;
+	s=default; t=1579875991;
+	bh=EPmA2zirvc5Pz7HNThNXC1RSd9j2S88QrrFYdgTC6bA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=s9Q6g/VGcmouMjWdLqghz5ae/v3vyrKQL5bKCu9OBSB0TkIEkIUAESRip469eTBc3
-	 xy7Vsl9WBrCoa2BUq9hAnm1pegqxBowDjlWNsVTrKrUR0rsSToOyl5jx5+C0hmYW0+
-	 LD7iuipSHteWsWr1Ju4Epwu/aWthfBhrJm0DrgOE=
+	b=cYNYVGC5tJ/PWjiTix2tdSB/nUOGN8i4gcvlj2q6w/pCuez8PQ0Qqa0qPKBPfBD0R
+	 QXbAE9LC/8Z7aCo4ThOGeUCuozLFqXHTGmfiGd0+w7zS1OP+rXCB6LmSOBo6vkONXF
+	 /G1gHQJXmEcMSISAscEut0dXG2xUIBHWrjDepf90=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392233AbgAXOZg (ORCPT
+        id S2390020AbgAXO00 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 24 Jan 2020 09:25:36 -0500
-Received: from mail.kernel.org ([198.145.29.99]:43718 "EHLO mail.kernel.org"
+        Fri, 24 Jan 2020 09:26:26 -0500
+Received: from mail.kernel.org ([198.145.29.99]:43594 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2392222AbgAXOVr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Jan 2020 09:21:47 -0500
+        id S2405365AbgAXOVk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 24 Jan 2020 09:21:40 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 235DF21734;
-        Fri, 24 Jan 2020 14:21:45 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id A95C224682;
+        Fri, 24 Jan 2020 14:21:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579875706;
-        bh=rGZCgt3WGgJwoEyFbmvWJrawYJcjyNi8TN0vwpWGSjM=;
+        s=default; t=1579875699;
+        bh=EPmA2zirvc5Pz7HNThNXC1RSd9j2S88QrrFYdgTC6bA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=TZCr7nwbtEv4MMPDxFVhyl0PDGtjlWrWcjSkHffECHpeCJ/J4Fkhxhv/7wExGXD/2
-         vo32bBplIjwqteED4R9u/n89EIcUGU+Mxn3UJL8y/jrAzOzV9SLpM8o67EOw+5yT0M
-         danHfKxvNf8EOmAxgbOiRs5VdFpWYeCEmYkUZKmM=
+        b=VxtULot+6qY9p3kedech8zVOJjOrMSRGHkZf0uPy3gjwpS9QA+ufv0O/T+5DdrJBf
+         thTI0XqX+G8DSG1NLx7Z+bA5ZAGrs+6bJ2FgUAYvmyMh35AhjwUChqGwRC5woipi/L
+         FFyNuJoGkoR1WKwwg/L3CxoAhgksHlycfaphzP8U=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Orr Mazor <orr.mazor@tandemg.com>,
-        Orr Mazor <Orr.Mazor@tandemg.com>,
-        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 22/32] cfg80211: Fix radar event during another phy CAC
-Date:   Fri, 24 Jan 2020 09:21:09 -0500
-Message-Id: <20200124142119.30484-22-sashal@kernel.org>
+Cc:     Johan Hovold <johan@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Sasha Levin <sashal@kernel.org>, linux-wireless@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.14 17/32] NFC: pn533: fix bulk-message timeout
+Date:   Fri, 24 Jan 2020 09:21:04 -0500
+Message-Id: <20200124142119.30484-17-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200124142119.30484-1-sashal@kernel.org>
 References: <20200124142119.30484-1-sashal@kernel.org>
@@ -62,184 +60,40 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Orr Mazor <orr.mazor@tandemg.com>
+From: Johan Hovold <johan@kernel.org>
 
-[ Upstream commit 26ec17a1dc5ecdd8d91aba63ead6f8b5ad5dea0d ]
+[ Upstream commit a112adafcb47760feff959ee1ecd10b74d2c5467 ]
 
-In case a radar event of CAC_FINISHED or RADAR_DETECTED
-happens during another phy is during CAC we might need
-to cancel that CAC.
+The driver was doing a synchronous uninterruptible bulk-transfer without
+using a timeout. This could lead to the driver hanging on probe due to a
+malfunctioning (or malicious) device until the device is physically
+disconnected. While sleeping in probe the driver prevents other devices
+connected to the same hub from being added to (or removed from) the bus.
 
-If we got a radar in a channel that another phy is now
-doing CAC on then the CAC should be canceled there.
+An arbitrary limit of five seconds should be more than enough.
 
-If, for example, 2 phys doing CAC on the same channels,
-or on comptable channels, once on of them will finish his
-CAC the other might need to cancel his CAC, since it is no
-longer relevant.
-
-To fix that the commit adds an callback and implement it in
-mac80211 to end CAC.
-This commit also adds a call to said callback if after a radar
-event we see the CAC is no longer relevant
-
-Signed-off-by: Orr Mazor <Orr.Mazor@tandemg.com>
-Reviewed-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Link: https://lore.kernel.org/r/20191222145449.15792-1-Orr.Mazor@tandemg.com
-[slightly reformat/reword commit message]
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Fixes: dbafc28955fa ("NFC: pn533: don't send USB data off of the stack")
+Signed-off-by: Johan Hovold <johan@kernel.org>
+Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Jakub Kicinski <kuba@kernel.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- include/net/cfg80211.h  |  5 +++++
- net/mac80211/cfg.c      | 23 +++++++++++++++++++++++
- net/wireless/rdev-ops.h | 10 ++++++++++
- net/wireless/reg.c      | 23 ++++++++++++++++++++++-
- net/wireless/trace.h    |  5 +++++
- 5 files changed, 65 insertions(+), 1 deletion(-)
+ drivers/nfc/pn533/usb.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index a4c8e9d7dd063..030eea38f2581 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2843,6 +2843,9 @@ struct cfg80211_pmk_conf {
-  *
-  * @start_radar_detection: Start radar detection in the driver.
-  *
-+ * @end_cac: End running CAC, probably because a related CAC
-+ *	was finished on another phy.
-+ *
-  * @update_ft_ies: Provide updated Fast BSS Transition information to the
-  *	driver. If the SME is in the driver/firmware, this information can be
-  *	used in building Authentication and Reassociation Request frames.
-@@ -3148,6 +3151,8 @@ struct cfg80211_ops {
- 					 struct net_device *dev,
- 					 struct cfg80211_chan_def *chandef,
- 					 u32 cac_time_ms);
-+	void	(*end_cac)(struct wiphy *wiphy,
-+				struct net_device *dev);
- 	int	(*update_ft_ies)(struct wiphy *wiphy, struct net_device *dev,
- 				 struct cfg80211_update_ft_ies_params *ftie);
- 	int	(*crit_proto_start)(struct wiphy *wiphy,
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index d437007b15bb2..b1484b8316e87 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2800,6 +2800,28 @@ static int ieee80211_start_radar_detection(struct wiphy *wiphy,
- 	return err;
- }
+diff --git a/drivers/nfc/pn533/usb.c b/drivers/nfc/pn533/usb.c
+index fcb57d64d97e6..a2c9b3f3bc232 100644
+--- a/drivers/nfc/pn533/usb.c
++++ b/drivers/nfc/pn533/usb.c
+@@ -403,7 +403,7 @@ static int pn533_acr122_poweron_rdr(struct pn533_usb_phy *phy)
+ 		       cmd, sizeof(cmd), false);
  
-+static void ieee80211_end_cac(struct wiphy *wiphy,
-+			      struct net_device *dev)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_local *local = sdata->local;
-+
-+	mutex_lock(&local->mtx);
-+	list_for_each_entry(sdata, &local->interfaces, list) {
-+		/* it might be waiting for the local->mtx, but then
-+		 * by the time it gets it, sdata->wdev.cac_started
-+		 * will no longer be true
-+		 */
-+		cancel_delayed_work(&sdata->dfs_cac_timer_work);
-+
-+		if (sdata->wdev.cac_started) {
-+			ieee80211_vif_release_channel(sdata);
-+			sdata->wdev.cac_started = false;
-+		}
-+	}
-+	mutex_unlock(&local->mtx);
-+}
-+
- static struct cfg80211_beacon_data *
- cfg80211_beacon_dup(struct cfg80211_beacon_data *beacon)
- {
-@@ -3730,6 +3752,7 @@ const struct cfg80211_ops mac80211_config_ops = {
- #endif
- 	.get_channel = ieee80211_cfg_get_channel,
- 	.start_radar_detection = ieee80211_start_radar_detection,
-+	.end_cac = ieee80211_end_cac,
- 	.channel_switch = ieee80211_channel_switch,
- 	.set_qos_map = ieee80211_set_qos_map,
- 	.set_ap_chanwidth = ieee80211_set_ap_chanwidth,
-diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
-index 0c06240d25afc..96849357dd907 100644
---- a/net/wireless/rdev-ops.h
-+++ b/net/wireless/rdev-ops.h
-@@ -1139,6 +1139,16 @@ rdev_start_radar_detection(struct cfg80211_registered_device *rdev,
- 	return ret;
- }
- 
-+static inline void
-+rdev_end_cac(struct cfg80211_registered_device *rdev,
-+	     struct net_device *dev)
-+{
-+	trace_rdev_end_cac(&rdev->wiphy, dev);
-+	if (rdev->ops->end_cac)
-+		rdev->ops->end_cac(&rdev->wiphy, dev);
-+	trace_rdev_return_void(&rdev->wiphy);
-+}
-+
- static inline int
- rdev_set_mcast_rate(struct cfg80211_registered_device *rdev,
- 		    struct net_device *dev,
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index e60a7dedfbf1b..a520f433d4765 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -3303,6 +3303,25 @@ bool regulatory_pre_cac_allowed(struct wiphy *wiphy)
- 	return pre_cac_allowed;
- }
- 
-+static void cfg80211_check_and_end_cac(struct cfg80211_registered_device *rdev)
-+{
-+	struct wireless_dev *wdev;
-+	/* If we finished CAC or received radar, we should end any
-+	 * CAC running on the same channels.
-+	 * the check !cfg80211_chandef_dfs_usable contain 2 options:
-+	 * either all channels are available - those the CAC_FINISHED
-+	 * event has effected another wdev state, or there is a channel
-+	 * in unavailable state in wdev chandef - those the RADAR_DETECTED
-+	 * event has effected another wdev state.
-+	 * In both cases we should end the CAC on the wdev.
-+	 */
-+	list_for_each_entry(wdev, &rdev->wiphy.wdev_list, list) {
-+		if (wdev->cac_started &&
-+		    !cfg80211_chandef_dfs_usable(&rdev->wiphy, &wdev->chandef))
-+			rdev_end_cac(rdev, wdev->netdev);
-+	}
-+}
-+
- void regulatory_propagate_dfs_state(struct wiphy *wiphy,
- 				    struct cfg80211_chan_def *chandef,
- 				    enum nl80211_dfs_state dfs_state,
-@@ -3329,8 +3348,10 @@ void regulatory_propagate_dfs_state(struct wiphy *wiphy,
- 		cfg80211_set_dfs_state(&rdev->wiphy, chandef, dfs_state);
- 
- 		if (event == NL80211_RADAR_DETECTED ||
--		    event == NL80211_RADAR_CAC_FINISHED)
-+		    event == NL80211_RADAR_CAC_FINISHED) {
- 			cfg80211_sched_dfs_chan_update(rdev);
-+			cfg80211_check_and_end_cac(rdev);
-+		}
- 
- 		nl80211_radar_notify(rdev, chandef, event, NULL, GFP_KERNEL);
- 	}
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index f3353fe5b35b8..cd0a1c7c185d4 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -607,6 +607,11 @@ DEFINE_EVENT(wiphy_netdev_evt, rdev_flush_pmksa,
- 	TP_ARGS(wiphy, netdev)
- );
- 
-+DEFINE_EVENT(wiphy_netdev_evt, rdev_end_cac,
-+	     TP_PROTO(struct wiphy *wiphy, struct net_device *netdev),
-+	     TP_ARGS(wiphy, netdev)
-+);
-+
- DECLARE_EVENT_CLASS(station_add_change,
- 	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev, u8 *mac,
- 		 struct station_parameters *params),
+ 	rc = usb_bulk_msg(phy->udev, phy->out_urb->pipe, buffer, sizeof(cmd),
+-			  &transferred, 0);
++			  &transferred, 5000);
+ 	kfree(buffer);
+ 	if (rc || (transferred != sizeof(cmd))) {
+ 		nfc_err(&phy->udev->dev,
 -- 
 2.20.1
 
