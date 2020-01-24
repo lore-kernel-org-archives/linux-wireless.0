@@ -7,51 +7,51 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F6FEC35242
-	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jan 2020 14:21:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2CA5C32771
+	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jan 2020 14:22:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 064A62087E
-	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jan 2020 14:21:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6FF4B2087E
+	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jan 2020 14:22:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579875707;
-	bh=IJCDwsZ4sqrojp7q6Ut5B996TTxXGw4vFPVQ02U1p58=;
+	s=default; t=1579875754;
+	bh=f5G9M2bfRPENqIZETu+WJru2mS490joqvuuJ5DRGrxU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=FcYer6zB20CdrwVoKkOL5it2bbbfeLn9stNtgaTa+FpwYroRNdpzsTTaQO1D19Jf4
-	 dm8EXUqxc5hEIvSPA2mqnwHc45i9kuumckhDGAoXhig9kYB610klEZoI0biDKEnvFS
-	 b3Mcq2RvfRkOQsFQJJc6mb46qxOV6UmqLKA9ezPo=
+	b=hrsYkUl1ySxRmZ9yIQekCj5H5pf1q284A2OnmH5DrZV3IBOvXa2rLw58Hk5ZBgr2k
+	 nqmTYGjOCOEUPNPGhABTZ2Dgb/LCJkFC3LJdcB6vld0GFXIRtggu0QLhEV5/ozNl9M
+	 1drkDhuJB5ORpgeemoELjRsD3bSiHNRRqTXNk42I=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392217AbgAXOVp (ORCPT
+        id S2405453AbgAXOWd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 24 Jan 2020 09:21:45 -0500
-Received: from mail.kernel.org ([198.145.29.99]:43700 "EHLO mail.kernel.org"
+        Fri, 24 Jan 2020 09:22:33 -0500
+Received: from mail.kernel.org ([198.145.29.99]:44668 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2390595AbgAXOVp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Jan 2020 09:21:45 -0500
+        id S2387708AbgAXOWc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 24 Jan 2020 09:22:32 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 921F524682;
-        Fri, 24 Jan 2020 14:21:43 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 8841824682;
+        Fri, 24 Jan 2020 14:22:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579875704;
-        bh=IJCDwsZ4sqrojp7q6Ut5B996TTxXGw4vFPVQ02U1p58=;
+        s=default; t=1579875751;
+        bh=f5G9M2bfRPENqIZETu+WJru2mS490joqvuuJ5DRGrxU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=sS4/aS9td+4dpmUy55nDiZKeifk8Bsmkioos9hJyQ6Fqu4ZDtebA1O3J1K9F9OVUB
-         f2GtnMceT1Uez0ZeBj2Q3voMJ6Xwt3r7pa7oZ1bHbbPmx3uPX4XkLDezJ53EQ06X5d
-         wSsXocCf3J3zyFQ+Lr6C+h5O8+fVJ2SmIzlpi8QY=
+        b=Yl+KTiTmhu3WvqVJ5Nd3jWq8WSIm+O4m6U45g4LxdhEMZJW/lArEXwQQJifJimoXT
+         wiG888BLz0E9dGaWeTvSpfjxkZrD8bIci2zW/ogfxdNvVH0iFsK6VsYeM6QPwuJaqy
+         cOLCtl6y4sZSdrhgaOgu1iGtk1bELn9rmMd1Nwts=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Ganapathi Bhat <ganapathi.bhat@nxp.com>,
-        Cathy Luo <xiaohua.luo@nxp.com>,
-        Johannes Berg <johannes.berg@intel.com>,
+Cc:     Johannes Berg <johannes.berg@intel.com>,
+        syzbot+e8a797964a4180eb57d5@syzkaller.appspotmail.com,
+        syzbot+34b582cf32c1db008f8e@syzkaller.appspotmail.com,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 21/32] wireless: fix enabling channel 12 for custom regulatory domain
-Date:   Fri, 24 Jan 2020 09:21:08 -0500
-Message-Id: <20200124142119.30484-21-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 8/9] cfg80211: check for set_wiphy_params
+Date:   Fri, 24 Jan 2020 09:22:20 -0500
+Message-Id: <20200124142221.31201-8-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200124142119.30484-1-sashal@kernel.org>
-References: <20200124142119.30484-1-sashal@kernel.org>
+In-Reply-To: <20200124142221.31201-1-sashal@kernel.org>
+References: <20200124142221.31201-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -61,63 +61,39 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ganapathi Bhat <ganapathi.bhat@nxp.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit c4b9d655e445a8be0bff624aedea190606b5ebbc ]
+[ Upstream commit 24953de0a5e31dcca7e82c8a3c79abc2dfe8fb6e ]
 
-Commit e33e2241e272 ("Revert "cfg80211: Use 5MHz bandwidth by
-default when checking usable channels"") fixed a broken
-regulatory (leaving channel 12 open for AP where not permitted).
-Apply a similar fix to custom regulatory domain processing.
+Check if set_wiphy_params is assigned and return an error if not,
+some drivers (e.g. virt_wifi where syzbot reported it) don't have
+it.
 
-Signed-off-by: Cathy Luo <xiaohua.luo@nxp.com>
-Signed-off-by: Ganapathi Bhat <ganapathi.bhat@nxp.com>
-Link: https://lore.kernel.org/r/1576836859-8945-1-git-send-email-ganapathi.bhat@nxp.com
-[reword commit message, fix coding style, add a comment]
+Reported-by: syzbot+e8a797964a4180eb57d5@syzkaller.appspotmail.com
+Reported-by: syzbot+34b582cf32c1db008f8e@syzkaller.appspotmail.com
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Link: https://lore.kernel.org/r/20200113125358.ac07f276efff.Ibd85ee1b12e47b9efb00a2adc5cd3fac50da791a@changeid
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/wireless/reg.c | 13 ++++++++++---
- 1 file changed, 10 insertions(+), 3 deletions(-)
+ net/wireless/rdev-ops.h | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 804eac073b6b9..e60a7dedfbf1b 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1718,14 +1718,15 @@ static void update_all_wiphy_regulatory(enum nl80211_reg_initiator initiator)
- 
- static void handle_channel_custom(struct wiphy *wiphy,
- 				  struct ieee80211_channel *chan,
--				  const struct ieee80211_regdomain *regd)
-+				  const struct ieee80211_regdomain *regd,
-+				  u32 min_bw)
+diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
+index c23516d0f8079..b3a60c3e19341 100644
+--- a/net/wireless/rdev-ops.h
++++ b/net/wireless/rdev-ops.h
+@@ -517,6 +517,10 @@ static inline int
+ rdev_set_wiphy_params(struct cfg80211_registered_device *rdev, u32 changed)
  {
- 	u32 bw_flags = 0;
- 	const struct ieee80211_reg_rule *reg_rule = NULL;
- 	const struct ieee80211_power_rule *power_rule = NULL;
- 	u32 bw;
- 
--	for (bw = MHZ_TO_KHZ(20); bw >= MHZ_TO_KHZ(5); bw = bw / 2) {
-+	for (bw = MHZ_TO_KHZ(20); bw >= min_bw; bw = bw / 2) {
- 		reg_rule = freq_reg_info_regd(MHZ_TO_KHZ(chan->center_freq),
- 					      regd, bw);
- 		if (!IS_ERR(reg_rule))
-@@ -1781,8 +1782,14 @@ static void handle_band_custom(struct wiphy *wiphy,
- 	if (!sband)
- 		return;
- 
-+	/*
-+	 * We currently assume that you always want at least 20 MHz,
-+	 * otherwise channel 12 might get enabled if this rule is
-+	 * compatible to US, which permits 2402 - 2472 MHz.
-+	 */
- 	for (i = 0; i < sband->n_channels; i++)
--		handle_channel_custom(wiphy, &sband->channels[i], regd);
-+		handle_channel_custom(wiphy, &sband->channels[i], regd,
-+				      MHZ_TO_KHZ(20));
- }
- 
- /* Used by drivers prior to wiphy registration */
+ 	int ret;
++
++	if (!rdev->ops->set_wiphy_params)
++		return -EOPNOTSUPP;
++
+ 	trace_rdev_set_wiphy_params(&rdev->wiphy, changed);
+ 	ret = rdev->ops->set_wiphy_params(&rdev->wiphy, changed);
+ 	trace_rdev_return_int(&rdev->wiphy, ret);
 -- 
 2.20.1
 
