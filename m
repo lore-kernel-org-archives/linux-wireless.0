@@ -2,98 +2,105 @@ Return-Path: <SRS0=oqKg=3N=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BEF87C32771
-	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jan 2020 14:35:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FCE0C2D0DB
+	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jan 2020 14:36:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8B3BB206F0
-	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jan 2020 14:35:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579876542;
-	bh=QFIDya6ivalEWjHBowgAtT7ZFFosbE3XxUDc3fLxS0M=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=h6UVCC0HzeHpeqfMSr0e1XkvLMqp2TIP2B1MMKUvZRzuWJTt/5c9Jd5B2yqxQSCOI
-	 uRWxbQGmJveudL8nXk/AvDJ1E22a3cVhz5JCcsKpGx9y3CZ8i3Jk32EIQKiRhmg681
-	 FQSYi4gXCYclEarQotfG0zgcFW0iwhHGk1/rt/OM=
+	by mail.kernel.org (Postfix) with ESMTP id 02B2F206F0
+	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jan 2020 14:36:31 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="M7fhiPcm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392071AbgAXOfl (ORCPT
+        id S2387611AbgAXOg3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 24 Jan 2020 09:35:41 -0500
-Received: from mail.kernel.org ([198.145.29.99]:39856 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2391715AbgAXOTa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Jan 2020 09:19:30 -0500
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id BB9EB22522;
-        Fri, 24 Jan 2020 14:19:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579875569;
-        bh=QFIDya6ivalEWjHBowgAtT7ZFFosbE3XxUDc3fLxS0M=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=gFlju4nnIDoFDyU9DrxA7yzDclo1/Tll8jCvY/8S++KHzfFHKBNPFfWtLubE7L4R4
-         n1+CvCn2IJAEWUkQiqdWpu2nucAchZdxWNdcD+kS6jc5GhkjcIPXfZaevlfYbKLvYT
-         D714tjoT2HH7uA7uvg0mNj912WIr3lDgontLyTVk=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Johan Hovold <johan@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Sasha Levin <sashal@kernel.org>, linux-wireless@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 062/107] NFC: pn533: fix bulk-message timeout
-Date:   Fri, 24 Jan 2020 09:17:32 -0500
-Message-Id: <20200124141817.28793-62-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200124141817.28793-1-sashal@kernel.org>
-References: <20200124141817.28793-1-sashal@kernel.org>
+        Fri, 24 Jan 2020 09:36:29 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:52878 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S2387432AbgAXOg2 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 24 Jan 2020 09:36:28 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1579876587;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=Wj/1Np6tPiIHIdRkmXqH+0Q7Vx47Fnaoj8U+49DUvSE=;
+        b=M7fhiPcm49PZ7LeJoVrRNwU/fe4LDai30qHF2bw0aF32jRGI4pzJ/NEqOqVtzQrAGxoymW
+        RYroOKeC1kWKmmTqfZHmm+PdMFJ6yozI+fyM1mJc8opqUcIvxIje7pk54MCBozMNebVFTu
+        er35tE+dygcwdKx/1COgUJwVmX6AgSU=
+Received: from mail-lj1-f200.google.com (mail-lj1-f200.google.com
+ [209.85.208.200]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-362-k3VuTjwfNSOHMDMD9f7JqA-1; Fri, 24 Jan 2020 09:36:25 -0500
+X-MC-Unique: k3VuTjwfNSOHMDMD9f7JqA-1
+Received: by mail-lj1-f200.google.com with SMTP id v1so709561lja.21
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Jan 2020 06:36:25 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:in-reply-to:references:date
+         :message-id:mime-version;
+        bh=Wj/1Np6tPiIHIdRkmXqH+0Q7Vx47Fnaoj8U+49DUvSE=;
+        b=hy4dZpbjwEb4fO2K78JAma8B5xkKrtyKg6nR7jd0bxvwXDutuW/t5KSpXEPe+Ccmif
+         KCB79sFSX1E8u1CSIsRoMFS97f/cYCVXh+WzEMKV2qKIN2CgWaJ1GIwwUiR645reksZ8
+         5sO4EEuzzk9D+F/z8etoJBcAlUez3uPkZnLoJ6NOZugKxMTbsnMuEGkORfRh+1nQ+ek6
+         /S4FLUxzqj8jNU1v+ySHrWrccm9pGWdilXiR9sT5hGqz16+b9M5xgRxclI49xwocX2O4
+         y56+E0eBHkrlw02MbiLjHTsz6bRRs5BAT37VLPEXh2xO19qQVt7THc/40N6wMzVlHtWh
+         gaag==
+X-Gm-Message-State: APjAAAXQVIo3CGJyId+VjLYog2zQpLKAi0bxSK86+QVp5CcEGenr0/Y0
+        OJO1gumoW/Ml4HVej+GF5iJJQbF+mmxCzsazSSZLM8/hAZpZ73SS72mmvbA2NzDqjYLd4aSwzEj
+        25+qsEra7HMH1+8n2HqEFGMowDio=
+X-Received: by 2002:a19:94d:: with SMTP id 74mr1465832lfj.144.1579876583878;
+        Fri, 24 Jan 2020 06:36:23 -0800 (PST)
+X-Google-Smtp-Source: APXvYqznCkM+SnfubCMRf3++pc/n1dVTMwKmIt4aEhx4XEEmHCTRW135YSQE1CXbO/PlbROKBeBGGA==
+X-Received: by 2002:a19:94d:: with SMTP id 74mr1465821lfj.144.1579876583661;
+        Fri, 24 Jan 2020 06:36:23 -0800 (PST)
+Received: from alrua-x1.borgediget.toke.dk ([85.204.121.218])
+        by smtp.gmail.com with ESMTPSA id v5sm3136380ljk.67.2020.01.24.06.36.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 24 Jan 2020 06:36:23 -0800 (PST)
+Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
+        id 41623180073; Fri, 24 Jan 2020 15:36:22 +0100 (CET)
+From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
+To:     Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+Cc:     Kalle Valo <kvalo@codeaurora.org>
+Subject: Re: REMINDER: wireless workshop at netdevconf 0x14, registration now open
+In-Reply-To: <70df55a1da3e8a99c6d2fc3a479c9c0eed3b71a0.camel@sipsolutions.net>
+References: <70df55a1da3e8a99c6d2fc3a479c9c0eed3b71a0.camel@sipsolutions.net>
+X-Clacks-Overhead: GNU Terry Pratchett
+Date:   Fri, 24 Jan 2020 15:36:22 +0100
+Message-ID: <87zhecgbvd.fsf@toke.dk>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johan Hovold <johan@kernel.org>
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-[ Upstream commit a112adafcb47760feff959ee1ecd10b74d2c5467 ]
+> Hi all,
+>
+> Just a reminder. We will be having a wireless workshop at netdevconf
+> 0x14 in Vancouver, BC. As far as I know, it's scheduled for day 1, i.e.
+> March 17th.
+>
+> https://netdevconf.info/0x14/
+>
+> Since some people have asked: In order to attend the wireless workshop
+> you only need to be registered for the conference, there are no other
+> restrictions.
+>
+> If you have anything you'd like to present or any topics to suggest, let
+> Kalle or myself know!
 
-The driver was doing a synchronous uninterruptible bulk-transfer without
-using a timeout. This could lead to the driver hanging on probe due to a
-malfunctioning (or malicious) device until the device is physically
-disconnected. While sleeping in probe the driver prevents other devices
-connected to the same hub from being added to (or removed from) the bus.
+Won't be able to make it to Vancouver myself, unfortunately, but you
+guys have fun!
 
-An arbitrary limit of five seconds should be more than enough.
+Topics - Maybe trying to Tom Sawyer someone into finally porting the
+regular mac80211 TX path to go via TXQs? :)
 
-Fixes: dbafc28955fa ("NFC: pn533: don't send USB data off of the stack")
-Signed-off-by: Johan Hovold <johan@kernel.org>
-Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Signed-off-by: Jakub Kicinski <kuba@kernel.org>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/nfc/pn533/usb.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/nfc/pn533/usb.c b/drivers/nfc/pn533/usb.c
-index e897e4d768ef7..d7a355d053687 100644
---- a/drivers/nfc/pn533/usb.c
-+++ b/drivers/nfc/pn533/usb.c
-@@ -391,7 +391,7 @@ static int pn533_acr122_poweron_rdr(struct pn533_usb_phy *phy)
- 		       cmd, sizeof(cmd), false);
- 
- 	rc = usb_bulk_msg(phy->udev, phy->out_urb->pipe, buffer, sizeof(cmd),
--			  &transferred, 0);
-+			  &transferred, 5000);
- 	kfree(buffer);
- 	if (rc || (transferred != sizeof(cmd))) {
- 		nfc_err(&phy->udev->dev,
--- 
-2.20.1
+-Toke
 
