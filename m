@@ -4,54 +4,53 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A14B7C2D0DB
-	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jan 2020 14:20:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12161C35243
+	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jan 2020 14:21:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 77D342087E
-	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jan 2020 14:20:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DE30E2072C
+	for <linux-wireless@archiver.kernel.org>; Fri, 24 Jan 2020 14:21:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579875658;
-	bh=R2mYXU5XIepe7c65jwPquZLjVF8fJ9TLK0oRVgWXGsE=;
+	s=default; t=1579875690;
+	bh=9xxOYi/YEdFwBEYSfI0Cp6t4PmZf83zOIdobzxHARN4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=TWmMX7DE632JIf6nRNaYZKGkW01HJpTfOhNu2PCMqHVQWZ0QhoRGKmhBqiLVo/OT/
-	 bFSFOzy2g+9Nn11Db2bNHAI4izBtVy32zTzNt3KNlQumxRkUyzMIH92zo0tGF+fTZG
-	 fXtMiuST62YCX02e+n0GOR0cB+0bzqSZbsCzdJ14=
+	b=gsfVWwav2A0z1Q8UESl7xQXslJp6+PMo8iPeLjJ2bdXchRN9KhoRbmSoIjso2IwIB
+	 S8ur638nHOG3kRi2b5n76AxCbKpUpHLmAx5DrhpX+QAZyK88uLCIWBjQUsVn+wQp64
+	 hYW4944hICXs3ahkd1Ax42zOv2PHqSeSP+34p8HI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405135AbgAXOU5 (ORCPT
+        id S2405290AbgAXOVa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 24 Jan 2020 09:20:57 -0500
-Received: from mail.kernel.org ([198.145.29.99]:42322 "EHLO mail.kernel.org"
+        Fri, 24 Jan 2020 09:21:30 -0500
+Received: from mail.kernel.org ([198.145.29.99]:43166 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2405124AbgAXOU4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Jan 2020 09:20:56 -0500
+        id S2392203AbgAXOV2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 24 Jan 2020 09:21:28 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 4838321734;
-        Fri, 24 Jan 2020 14:20:55 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 0D93D2087E;
+        Fri, 24 Jan 2020 14:21:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579875656;
-        bh=R2mYXU5XIepe7c65jwPquZLjVF8fJ9TLK0oRVgWXGsE=;
+        s=default; t=1579875687;
+        bh=9xxOYi/YEdFwBEYSfI0Cp6t4PmZf83zOIdobzxHARN4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Vse0ANh+ufv9EgjHvcQHVYMA3Xr09+nBOj0AkP1GZ99R1dobCZDXUl699S/BxvdtE
-         sq2+6bWLCx8eOhoxr7Yh8f2h0SznHHFtDBFb07PpNAYVGyys8+cLsSi86Jst+S+ArL
-         N8BOus6nS+W5z5QMzZpHkS6OBrv3YM+VxSE0hHic=
+        b=ZVtn35Z5qG6eg6mh5VHaYOWSkEIJQza5JaIMPT9Vk71sH2T+6s2Ur6iznuGNe0GQg
+         0o0Bpt9GxEFBjk1FgjSEVpHsCg0AhAAXuz1+YONi9isfIggXJlmMaidzMl+wFyFbQ3
+         n1Nnt9h1Ul1g/I2fVxKfOm4vvcmr/ABEmmoXJEiM=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Ganapathi Bhat <ganapathi.bhat@nxp.com>,
-        Cathy Luo <xiaohua.luo@nxp.com>,
+Cc:     Markus Theil <markus.theil@tu-ilmenau.de>,
         Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 37/56] wireless: fix enabling channel 12 for custom regulatory domain
-Date:   Fri, 24 Jan 2020 09:19:53 -0500
-Message-Id: <20200124142012.29752-37-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 07/32] mac80211: mesh: restrict airtime metric to peered established plinks
+Date:   Fri, 24 Jan 2020 09:20:54 -0500
+Message-Id: <20200124142119.30484-7-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200124142012.29752-1-sashal@kernel.org>
-References: <20200124142012.29752-1-sashal@kernel.org>
+In-Reply-To: <20200124142119.30484-1-sashal@kernel.org>
+References: <20200124142119.30484-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -61,63 +60,53 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ganapathi Bhat <ganapathi.bhat@nxp.com>
+From: Markus Theil <markus.theil@tu-ilmenau.de>
 
-[ Upstream commit c4b9d655e445a8be0bff624aedea190606b5ebbc ]
+[ Upstream commit 02a614499600af836137c3fbc4404cd96365fff2 ]
 
-Commit e33e2241e272 ("Revert "cfg80211: Use 5MHz bandwidth by
-default when checking usable channels"") fixed a broken
-regulatory (leaving channel 12 open for AP where not permitted).
-Apply a similar fix to custom regulatory domain processing.
+The following warning is triggered every time an unestablished mesh peer
+gets dumped. Checks if a peer link is established before retrieving the
+airtime link metric.
 
-Signed-off-by: Cathy Luo <xiaohua.luo@nxp.com>
-Signed-off-by: Ganapathi Bhat <ganapathi.bhat@nxp.com>
-Link: https://lore.kernel.org/r/1576836859-8945-1-git-send-email-ganapathi.bhat@nxp.com
-[reword commit message, fix coding style, add a comment]
+[ 9563.022567] WARNING: CPU: 0 PID: 6287 at net/mac80211/mesh_hwmp.c:345
+               airtime_link_metric_get+0xa2/0xb0 [mac80211]
+[ 9563.022697] Hardware name: PC Engines apu2/apu2, BIOS v4.10.0.3
+[ 9563.022756] RIP: 0010:airtime_link_metric_get+0xa2/0xb0 [mac80211]
+[ 9563.022838] Call Trace:
+[ 9563.022897]  sta_set_sinfo+0x936/0xa10 [mac80211]
+[ 9563.022964]  ieee80211_dump_station+0x6d/0x90 [mac80211]
+[ 9563.023062]  nl80211_dump_station+0x154/0x2a0 [cfg80211]
+[ 9563.023120]  netlink_dump+0x17b/0x370
+[ 9563.023130]  netlink_recvmsg+0x2a4/0x480
+[ 9563.023140]  ____sys_recvmsg+0xa6/0x160
+[ 9563.023154]  ___sys_recvmsg+0x93/0xe0
+[ 9563.023169]  __sys_recvmsg+0x7e/0xd0
+[ 9563.023210]  do_syscall_64+0x4e/0x140
+[ 9563.023217]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+
+Signed-off-by: Markus Theil <markus.theil@tu-ilmenau.de>
+Link: https://lore.kernel.org/r/20191203180644.70653-1-markus.theil@tu-ilmenau.de
+[rewrite commit message]
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/wireless/reg.c | 13 ++++++++++---
- 1 file changed, 10 insertions(+), 3 deletions(-)
+ net/mac80211/mesh_hwmp.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 64841238df855..417a5c64c7789 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -2254,14 +2254,15 @@ static void update_all_wiphy_regulatory(enum nl80211_reg_initiator initiator)
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index fab0764c315fe..994dde6e5f9d9 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -326,6 +326,9 @@ static u32 airtime_link_metric_get(struct ieee80211_local *local,
+ 	unsigned long fail_avg =
+ 		ewma_mesh_fail_avg_read(&sta->mesh->fail_avg);
  
- static void handle_channel_custom(struct wiphy *wiphy,
- 				  struct ieee80211_channel *chan,
--				  const struct ieee80211_regdomain *regd)
-+				  const struct ieee80211_regdomain *regd,
-+				  u32 min_bw)
- {
- 	u32 bw_flags = 0;
- 	const struct ieee80211_reg_rule *reg_rule = NULL;
- 	const struct ieee80211_power_rule *power_rule = NULL;
- 	u32 bw;
- 
--	for (bw = MHZ_TO_KHZ(20); bw >= MHZ_TO_KHZ(5); bw = bw / 2) {
-+	for (bw = MHZ_TO_KHZ(20); bw >= min_bw; bw = bw / 2) {
- 		reg_rule = freq_reg_info_regd(MHZ_TO_KHZ(chan->center_freq),
- 					      regd, bw);
- 		if (!IS_ERR(reg_rule))
-@@ -2317,8 +2318,14 @@ static void handle_band_custom(struct wiphy *wiphy,
- 	if (!sband)
- 		return;
- 
-+	/*
-+	 * We currently assume that you always want at least 20 MHz,
-+	 * otherwise channel 12 might get enabled if this rule is
-+	 * compatible to US, which permits 2402 - 2472 MHz.
-+	 */
- 	for (i = 0; i < sband->n_channels; i++)
--		handle_channel_custom(wiphy, &sband->channels[i], regd);
-+		handle_channel_custom(wiphy, &sband->channels[i], regd,
-+				      MHZ_TO_KHZ(20));
- }
- 
- /* Used by drivers prior to wiphy registration */
++	if (sta->mesh->plink_state != NL80211_PLINK_ESTAB)
++		return MAX_METRIC;
++
+ 	/* Try to get rate based on HW/SW RC algorithm.
+ 	 * Rate is returned in units of Kbps, correct this
+ 	 * to comply with airtime calculation units
 -- 
 2.20.1
 
