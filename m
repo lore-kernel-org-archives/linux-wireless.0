@@ -2,98 +2,145 @@ Return-Path: <SRS0=/TLA=3P=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DEE3EC2D0DB
-	for <linux-wireless@archiver.kernel.org>; Sun, 26 Jan 2020 21:12:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3185C2D0DB
+	for <linux-wireless@archiver.kernel.org>; Sun, 26 Jan 2020 23:00:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A57BA20716
-	for <linux-wireless@archiver.kernel.org>; Sun, 26 Jan 2020 21:12:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AFD5F206F0
+	for <linux-wireless@archiver.kernel.org>; Sun, 26 Jan 2020 23:00:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="CkcXexux"
+	dkim=pass (3072-bit key) header.d=crustytoothpaste.net header.i=@crustytoothpaste.net header.b="GD1tC3Z1"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726294AbgAZVME (ORCPT
+        id S1726743AbgAZXAg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 26 Jan 2020 16:12:04 -0500
-Received: from mail-wr1-f68.google.com ([209.85.221.68]:42548 "EHLO
-        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726144AbgAZVME (ORCPT
+        Sun, 26 Jan 2020 18:00:36 -0500
+Received: from injection.crustytoothpaste.net ([192.241.140.119]:47656 "EHLO
+        injection.crustytoothpaste.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726443AbgAZXAg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 26 Jan 2020 16:12:04 -0500
-Received: by mail-wr1-f68.google.com with SMTP id q6so8552784wro.9
-        for <linux-wireless@vger.kernel.org>; Sun, 26 Jan 2020 13:12:03 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=from:to:cc:date:message-id:in-reply-to:references:user-agent
-         :subject:mime-version:content-transfer-encoding;
-        bh=WAHPhjncLqhI8arfSYYGqzR8Ij3uFjcEoo0Veaj+1Ys=;
-        b=CkcXexuxy0qhvjUJX75L4ba0otYVO34CVzb0DKCCQ034Pcpyc2+8wmGPR+OXNzZR+0
-         LoEwGfJ0Lc3ydmbUs3GbrwNWf+6RcwNcuNDu0QArP+F3VU6VbGvgDQD38lJ2ksaB4VYn
-         S1zfF0op5dQonf17V1miBwbjLq+e7X2L5yeIg=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:date:message-id:in-reply-to
-         :references:user-agent:subject:mime-version
-         :content-transfer-encoding;
-        bh=WAHPhjncLqhI8arfSYYGqzR8Ij3uFjcEoo0Veaj+1Ys=;
-        b=ClJUb4ohtxgITxUXjg8mlFXWpKyc2qcRpMIGRIaI5YOzSX9m/hxS9lfV51yQA+lTot
-         OhnKS6CkZiZHUHuMP3yhmk0dQsqs4nHDPSZUTW9oo4GwiTJDHK7rOjBge/492zart454
-         BASaYKoT9RFik4YbEvETnaCPn6lvI6hDIV2xDGs1NwnReMC9P1KpL7UZviI2IOFGqnSU
-         ehiCp23Em6aYzO0vj+A0pKwi+4b0/PXY2GjQ9uSg63iDllvhC26zTyoMCkiYY9CBWCVB
-         gK/GaTcyvbJzJfrHTiEO1pkVY7gfoSW18/abws7GfVeI+UTzkeis2nzK1aoMHzLuRxPV
-         GKsg==
-X-Gm-Message-State: APjAAAWa9jbutgyOv9OCv5GWW8CMKBxblwl1plXOEJXHUomnV6uJYSWW
-        OdzmY0wIIiNFdUpV9Qd+HwwQNg==
-X-Google-Smtp-Source: APXvYqyGbunozuK/LtyfMkeVCl7JA2p9+80Suc7S49tXZ92Xa7xJg00DSNlZbuwhHlMoczkJinF+nQ==
-X-Received: by 2002:adf:d0c1:: with SMTP id z1mr18629473wrh.371.1580073122719;
-        Sun, 26 Jan 2020 13:12:02 -0800 (PST)
-Received: from [192.168.178.38] (f140230.upc-f.chello.nl. [80.56.140.230])
-        by smtp.gmail.com with ESMTPSA id q10sm6847382wme.16.2020.01.26.13.12.01
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Sun, 26 Jan 2020 13:12:01 -0800 (PST)
-From:   Arend Van Spriel <arend.vanspriel@broadcom.com>
-To:     "brian m. carlson" <sandals@crustytoothpaste.net>,
-        <linux-wireless@vger.kernel.org>,
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        <brcm80211-dev-list@cypress.com>
-CC:     Franky Lin <franky.lin@broadcom.com>,
+        Sun, 26 Jan 2020 18:00:36 -0500
+Received: from camp.crustytoothpaste.net (unknown [IPv6:2001:470:b978:101:b610:a2f0:36c1:12e3])
+        (using TLSv1.2 with cipher ECDHE-RSA-CHACHA20-POLY1305 (256/256 bits))
+        (No client certificate requested)
+        by injection.crustytoothpaste.net (Postfix) with ESMTPSA id 2ADB96044F;
+        Sun, 26 Jan 2020 23:00:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=crustytoothpaste.net;
+        s=default; t=1580079635;
+        bh=jPHvpsFb5iIpr03nA8BbdnRf1GWh3y+ijCWCjrYA2/o=;
+        h=Date:From:To:Cc:Subject:References:Content-Type:
+         Content-Disposition:In-Reply-To:From:Reply-To:Subject:Date:To:CC:
+         Resent-Date:Resent-From:Resent-To:Resent-Cc:In-Reply-To:References:
+         Content-Type:Content-Disposition;
+        b=GD1tC3Z15VwY0xqKPaTBIzpIhRfk5oLopUhlV6g6zxDEe1/bz75fSiwLwnsq5O8Ms
+         /xLSsRwbRsOkq9hvz3dLwGscSSEVp17zJ+Q0pTjbOnIqb7iYcQTsGQAxHFCQvz2WSc
+         /uHZFuzti3+YnueTwPm07PVH23B/jLalhynxqCUwfAk0JkTdxziLw8ZUttcgQdtz7W
+         T5MwwLdxYvwBTqb8Bkfn+Q2VNeOLH0Zw/aevxN8O3P+E+RkGzJc+DtJgMQ3OpLV8gw
+         o73VvFUvlTYYh1HzUVntDe2K32at7FrC0KGVU3/oaBDRw6exPfJDoY7Dpchu4p2DAJ
+         0YMMT0+oqZYwHSVJ3KYtWQLGCph5qKKep51h2PbhH3HW7RkkS70ea8sL4I+j/aW97b
+         7qfoADK1gxrPTyjtkYBhggBj4i/FtQ+vfPee32W+V01FmQaJ2q5KDnHCTdqlALdH9e
+         J/VxVu0hsTe/7duPhKNk7Fg7hI/vsOL4O65TgdGvLhbGlAFw+9k
+Date:   Sun, 26 Jan 2020 23:00:29 +0000
+From:   "brian m. carlson" <sandals@crustytoothpaste.net>
+To:     Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc:     linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        Franky Lin <franky.lin@broadcom.com>,
         Hante Meuleman <hante.meuleman@broadcom.com>,
-        "Chi-Hsien Lin" <chi-hsien.lin@cypress.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
         Wright Feng <wright.feng@cypress.com>
-Date:   Sun, 26 Jan 2020 22:12:02 +0100
-Message-ID: <16fe3b278d0.279b.9b12b7fc0a3841636cfb5e919b41b954@broadcom.com>
-In-Reply-To: <20200126193339.167346-1-sandals@crustytoothpaste.net>
+Subject: Re: [PATCH v2] brcmfmac: add the BRCM 4364 found in MacBook Pro 15,2
+Message-ID: <20200126230029.GI4113372@camp.crustytoothpaste.net>
 References: <20200126155108.7DDD7C433CB@smtp.codeaurora.org>
  <20200126193339.167346-1-sandals@crustytoothpaste.net>
-User-Agent: AquaMail/1.22.0-1511 (build: 102200004)
-Subject: Re: [PATCH v2] brcmfmac: add the BRCM 4364 found in MacBook Pro 15,2
+ <16fe3b278d0.279b.9b12b7fc0a3841636cfb5e919b41b954@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; format=flowed; charset="us-ascii"
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="CNK/L7dwKXQ4Ub8J"
+Content-Disposition: inline
+In-Reply-To: <16fe3b278d0.279b.9b12b7fc0a3841636cfb5e919b41b954@broadcom.com>
+X-Machine: Running on camp using GNU/Linux on x86_64 (Linux kernel
+ 5.3.0-3-amd64)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On January 26, 2020 8:34:18 PM "brian m. carlson" 
-<sandals@crustytoothpaste.net> wrote:
 
-> The 2018 13" MacBook Pro (MacBookPro15,2) has a Broadcom chip, the 4364.
-> This chip appears to be specific to Apple and is not found in other
-> hardware.
->
-> Add this chip to the brcmfmac driver so that it can be recognized
-> automatically.  Note that the PCI device id is 4464 even though the chip
-> is referred to as the 4364.
+--CNK/L7dwKXQ4Ub8J
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-So what is the plan regarding firmware. In the previous patch you mentioned 
-it can be copied from macos, but I am not sure if that is acceptable from 
-legal perspective. At least Linux distributions will have problem with that 
-for sure.
+On 2020-01-26 at 21:12:02, Arend Van Spriel wrote:
+> On January 26, 2020 8:34:18 PM "brian m. carlson"
+> <sandals@crustytoothpaste.net> wrote:
+>=20
+> > The 2018 13" MacBook Pro (MacBookPro15,2) has a Broadcom chip, the 4364.
+> > This chip appears to be specific to Apple and is not found in other
+> > hardware.
+> >=20
+> > Add this chip to the brcmfmac driver so that it can be recognized
+> > automatically.  Note that the PCI device id is 4464 even though the chip
+> > is referred to as the 4364.
+>=20
+> So what is the plan regarding firmware. In the previous patch you mention=
+ed
+> it can be copied from macos, but I am not sure if that is acceptable from
+> legal perspective. At least Linux distributions will have problem with th=
+at
+> for sure.
 
-Regards,
-Arend
+I don't have a way to solve that problem.  The firmware copyright
+presumably belongs to Broadcom and they would be able to grant that
+permission or ship firmware through the normal channels.
 
+As far as I know, this chip only comes with Apple systems, so users will
+acquire the system with macOS.  I'm not aware of any legal reason that a
+user cannot copy the firmware from one location on their hard disk to
+another, so users will probably be able to legally use the firmware,
+even if it's not shipped with distros.
 
+There is also precedent for users acquiring firmware themselves via the
+b43 and b43legacy drivers, where users have to use a script to extract
+the firmware from other drivers.
+
+I wish I had a better answer to this, but I don't work for Broadcom or
+anyone associated with it and am just trying to get the Mac I was given
+for $DAYJOB to work with Linux.  Perhaps since you do you'd be willing
+to ask them to release the firmware.
+
+The alternative is that the chip doesn't work at all (and can't be added
+via the new_id sysfs entry because of the rambase setting) and users
+have to compile a custom patched kernel to make their wireless card work
+at all.  I'd really prefer to avoid that if possible, since it's
+a strictly worse experience in every way.
+--=20
+brian m. carlson: Houston, Texas, US
+OpenPGP: https://keybase.io/bk2204
+
+--CNK/L7dwKXQ4Ub8J
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.2.19 (GNU/Linux)
+
+iQIzBAABCgAdFiEEX8OngXdrJt+H9ww3v1NdgR9S9osFAl4uGg0ACgkQv1NdgR9S
+9osoRhAAsAMjTYBIENYFnQ+z1qi5v4aJrxoW01vQo+bOktFu9n7j07E0y8Xe5vBM
+av36ZazqbqvThFUS3qfJoW8+kqFP95mnrKSEy7jdKNz63S7NlvNY0omadAIl1/TX
+czMV0qvcNnEHqfdYq/F1eixZiAKTbKXItNirkBdcqGyFnfpkBnkl5Jj+NvR/oV5Z
+gvppaGKsh9mXk+UGOycwggC5pGS8wlo0UdvqOOlJSxTQYsrU5LgSuaWJAXZhhzZa
+Bt0cyFTkWn4HF9Z/AhqiWsSkzcOmsP+CcVvrYdo2Pkh8UVmtiMYqLhpHAmpaBh11
+q2C6iN+M/A5syJcGH8IKj+U+bD5ciLFhnXVkKXs7TWh+wbAqOxSAtrL08XzabsrH
+Zrb82enS5GWyBRgiaJHBgYe35NPUssoJdefgiRSFE2kP2bQZUrpvkoOKdgDxW9Wk
+/zu2tUDOtcDoDaGsHZ/B0KqZwfhI98J39OmRUaVv0YqBu4uVsvUfhYj15yzspk3g
+T2KvBmdh2l1AoSSMfMWCtDJHQwpxWydcW7EXD+3VyxqxxXaSkCLso3v4kGZALAYo
+GGwMyVoJJ4DnEi164FFToABmh8oZ5Uja7W79Q5LkW6WzLWThGhLN3FhnDLLpOR7T
+zfFHFBaSoVg+LSRKEW0HDKOMVxhiSJtk1STk3smpp3qamSiW5nY=
+=cYDC
+-----END PGP SIGNATURE-----
+
+--CNK/L7dwKXQ4Ub8J--
