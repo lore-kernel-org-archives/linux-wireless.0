@@ -2,107 +2,99 @@ Return-Path: <SRS0=/TLA=3P=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA495C2D0DB
-	for <linux-wireless@archiver.kernel.org>; Sun, 26 Jan 2020 19:59:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C65E5C35247
+	for <linux-wireless@archiver.kernel.org>; Sun, 26 Jan 2020 20:06:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9E781206F0
-	for <linux-wireless@archiver.kernel.org>; Sun, 26 Jan 2020 19:59:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 99A76206F0
+	for <linux-wireless@archiver.kernel.org>; Sun, 26 Jan 2020 20:06:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=goldelico.com header.i=@goldelico.com header.b="NUwScCdM"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=goldelico.com header.i=@goldelico.com header.b="V2jmTReD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726294AbgAZT7s (ORCPT
+        id S1726548AbgAZUGW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 26 Jan 2020 14:59:48 -0500
-Received: from mo4-p01-ob.smtp.rzone.de ([85.215.255.53]:23807 "EHLO
-        mo4-p01-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726087AbgAZT7s (ORCPT
+        Sun, 26 Jan 2020 15:06:22 -0500
+Received: from mo4-p02-ob.smtp.rzone.de ([85.215.255.83]:9570 "EHLO
+        mo4-p02-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726087AbgAZUGV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 26 Jan 2020 14:59:48 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1580068786;
+        Sun, 26 Jan 2020 15:06:21 -0500
+X-Greylist: delayed 356 seconds by postgrey-1.27 at vger.kernel.org; Sun, 26 Jan 2020 15:06:20 EST
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1580069180;
         s=strato-dkim-0002; d=goldelico.com;
-        h=To:References:Message-Id:Cc:Date:In-Reply-To:From:Subject:
+        h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
         X-RZG-CLASS-ID:X-RZG-AUTH:From:Subject:Sender;
-        bh=7eEvDm1iNo2636JssuRLJw4y+Cbk2kdvSN2z9mnSGN4=;
-        b=NUwScCdM2vibQTdhvfrAxu045vpk5lLCJvH4BL/HZFo+Ei+fI+IsExGoQ8+ivXwbg/
-        8RnWOW4qsRkD8I3ySfgmiv9SskYBsYewuc2DzLt81sY1K8/tF+jnFpcvr0YJzw3wY3o+
-        VgwnQGlvQgv4XmAbENOxFcRS2dfYcUS+mhHuibkL8MdheqwUpYoc1I7eenpD3fTOZw5p
-        oDGhi5dCOkxlc2DLvOKbeuMGBxqBFnw22amt3iNXgJYTPaImGYgoAd19FdNU4ugfNXlc
-        Q5+iJQbXX5zRaJYl4DOLCrHYv9urpbDzZNQ6ZEhHwShzS5GAuYdMqFaF4F3JDn+ZrxKm
-        DFtA==
-X-RZG-AUTH: ":JGIXVUS7cutRB/49FwqZ7WcJeFKiMgPgp8VKxflSZ1P34KBj7wpz8NMGHPrrwDuiNA=="
+        bh=FOKRqZKiYN4ZS+sSz57FNY4af5eAANqrgGGZiRiCefI=;
+        b=V2jmTReDWG/WEPXfmXfGzrhorXm38C9891WkNBKR0D27ZyJ2+YVIp8lJ9E/WT3sxSu
+        dCFVwKNs5MFuIyFQ7hSGQS4aTvHN8xlkqmy4ZZt2dkfdTPhSsf4n/DvTYmCVka94R+Ck
+        DdxVmTWkwifQrSAn4Bsx6b24B0zm+wDUoU3pttvtiu22tUC4HjSBgy3ghyeMeW3VzbqE
+        ePuYVmbInVMluIkqciVF+920OrevmDcWXqhEgHZ85bFy+YZkt1iZp0GSlW1LCgeuQLjB
+        LqMpSGqJq2L93PEXKGcedIzeaAslfACP3SgeKvzsRT9Qpv5ZkGQP9DhwvxjElz9eA7dv
+        pEEw==
+X-RZG-AUTH: ":JGIXVUS7cutRB/49FwqZ7WcJeFKiMhflhwDubTJ9o1OAA2UNf2AyPQjcv7w="
 X-RZG-CLASS-ID: mo00
-Received: from imac.fritz.box
+Received: from iMac.fritz.box
         by smtp.strato.de (RZmta 46.1.7 DYNA|AUTH)
-        with ESMTPSA id k0645aw0QJxYF28
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (curve X9_62_prime256v1 with 256 ECDH bits, eq. 3072 bits RSA))
+        with ESMTPSA id k0645aw0QK0EF2F
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
         (Client did not present a certificate);
-        Sun, 26 Jan 2020 20:59:34 +0100 (CET)
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 9.3 \(3124\))
-Subject: Re: ***UNCHECKED*** Re: [PATCH v2 1/2] DTS: bindings: wl1251: mark ti, power-gpio as optional
+        Sun, 26 Jan 2020 21:00:14 +0100 (CET)
 From:   "H. Nikolaus Schaller" <hns@goldelico.com>
-In-Reply-To: <87ftg2chwh.fsf@kamboji.qca.qualcomm.com>
-Date:   Sun, 26 Jan 2020 20:59:34 +0100
-Cc:     Ulf Hansson <ulf.hansson@linaro.org>,
+To:     Kalle Valo <kvalo@codeaurora.org>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
         Rob Herring <robh+dt@kernel.org>,
         Mark Rutland <mark.rutland@arm.com>,
+        "H. Nikolaus Schaller" <hns@goldelico.com>,
         Thomas Gleixner <tglx@linutronix.de>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Alexios Zavras <alexios.zavras@intel.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Alexios Zavras <alexios.zavras@intel.com>
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
         letux-kernel@openphoenux.org, kernel@pyra-handheld.com
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <74D71976-B2C8-4B4A-AF9A-F32A42BA72D8@goldelico.com>
-References: <de42cdd5c5d2c46978c15cd2f27b49fa144ae6a7.1576606020.git.hns@goldelico.com> <20200126153116.2E6E8C433A2@smtp.codeaurora.org> <8FB64063-5DE1-4C13-8647-F3C5B0D3E999@goldelico.com> <87ftg2chwh.fsf@kamboji.qca.qualcomm.com>
-To:     Kalle Valo <kvalo@codeaurora.org>
-X-Mailer: Apple Mail (2.3124)
+Subject: [PATCH v3 1/2] DTS: bindings: wl1251: mark ti,power-gpio as optional
+Date:   Sun, 26 Jan 2020 21:00:13 +0100
+Message-Id: <d34183026b1a46a082f73ab3d0888c92cf6286ec.1580068813.git.hns@goldelico.com>
+X-Mailer: git-send-email 2.23.0
+In-Reply-To: <cover.1580068813.git.hns@goldelico.com>
+References: <cover.1580068813.git.hns@goldelico.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Kalle,
+It is now only useful for SPI interface.
+Power control of SDIO mode is done through mmc core.
 
-> Am 26.01.2020 um 17:16 schrieb Kalle Valo <kvalo@codeaurora.org>:
->=20
-> "H. Nikolaus Schaller" <hns@goldelico.com> writes:
->=20
->> Hi,
->>=20
->>> Am 26.01.2020 um 16:31 schrieb Kalle Valo <kvalo@codeaurora.org>:
->>>=20
->>> "H. Nikolaus Schaller" <hns@goldelico.com> wrote:
->>>=20
->>>> It is now only useful for SPI interface.
->>>> Power control of SDIO mode is done through mmc core.
->>>>=20
->>>> Suggested by: Ulf Hansson <ulf.hansson@linaro.org>
->>>> Acked-by: Rob Herring <robh@kernel.org>
->>>> Signed-off-by: H. Nikolaus Schaller <hns@goldelico.com>
->>>=20
->>> Failed to apply to wireless-drivers-next, please rebase and resend.
->>=20
->> On which commit and/or tree do you want to apply it?
->=20
-> I said it above, wireless-drivers-next:
->=20
-> =
-https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-nex=
-t.git/
+Suggested by: Ulf Hansson <ulf.hansson@linaro.org>
+Signed-off-by: H. Nikolaus Schaller <hns@goldelico.com>
+---
+ Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Ah, sorry. I did overlook it.
-
-I could easily cherry pick it so I think that the guard lines of the =
-original submission did not match.
-
-v3 (rebased on tag wireless-drivers-next-2020-01-26) coming immediately.
-
-BR and thanks,
-Nikolaus
+diff --git a/Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt b/Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt
+index f38950560982..88fd28d15eac 100644
+--- a/Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt
++++ b/Documentation/devicetree/bindings/net/wireless/ti,wl1251.txt
+@@ -9,11 +9,12 @@ Required properties:
+ - spi-max-frequency : Maximum SPI clocking speed of device in Hz
+ - interrupts :        Should contain interrupt line
+ - vio-supply :        phandle to regulator providing VIO
+-- ti,power-gpio :     GPIO connected to chip's PMEN pin
+ 
+ Optional properties:
+ - ti,wl1251-has-eeprom : boolean, the wl1251 has an eeprom connected, which
+                          provides configuration data (calibration, MAC, ...)
++- ti,power-gpio :	 GPIO connected to chip's PMEN pin if operated in
++			 SPI mode
+ - Please consult Documentation/devicetree/bindings/spi/spi-bus.txt
+   for optional SPI connection related properties,
+ 
+-- 
+2.23.0
 
