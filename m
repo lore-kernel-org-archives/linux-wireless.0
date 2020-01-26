@@ -6,43 +6,43 @@ X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
 	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2412AC2D0DB
-	for <linux-wireless@archiver.kernel.org>; Sun, 26 Jan 2020 15:34:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41225C2D0DB
+	for <linux-wireless@archiver.kernel.org>; Sun, 26 Jan 2020 15:35:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DACD720720
-	for <linux-wireless@archiver.kernel.org>; Sun, 26 Jan 2020 15:34:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1384A20674
+	for <linux-wireless@archiver.kernel.org>; Sun, 26 Jan 2020 15:35:54 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="nO84hQbJ"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="IzJVQDSV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726294AbgAZPeS (ORCPT
+        id S1726252AbgAZPfx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 26 Jan 2020 10:34:18 -0500
-Received: from mail26.static.mailgun.info ([104.130.122.26]:64872 "EHLO
-        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725907AbgAZPeR (ORCPT
+        Sun, 26 Jan 2020 10:35:53 -0500
+Received: from mail25.static.mailgun.info ([104.130.122.25]:42750 "EHLO
+        mail25.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725838AbgAZPfx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 26 Jan 2020 10:34:17 -0500
+        Sun, 26 Jan 2020 10:35:53 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1580052857; h=Date: Message-Id: Cc: To: References:
+ s=smtp; t=1580052952; h=Date: Message-Id: Cc: To: References:
  In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=1gQyC1rfazrpNX6/BX62FITRwONug1muuMvvNB+5Z14=;
- b=nO84hQbJ/sPvR/CP1nxHgAoM6E+fpG3cwIvI5LsoMBDRDiIeedgKiSwqrIMZPZEGA4wFIdy+
- D0Nff2SNpdULlF5bPyjfGiGa7ZfHTNqj9p7ea3YwfzzUxT0xIrAgPZ4vN2IWiaznOyrsoZvO
- 5pW1IsM9o3ocaUZqRkl+cRhAR/w=
-X-Mailgun-Sending-Ip: 104.130.122.26
+ Content-Type: Sender; bh=qMnja45+flMm1zuskmceWDwyBDiSxWej9g6UdHAmhSw=;
+ b=IzJVQDSVZKntHGzduBreVVuRmbhHUN2VyjNXw9ARloolAgnTJk7zwHilW5Kuv3+71hqioU1R
+ iBwjn2yhwfMUX7AXpKZ5CwP2qUt+oK2jQQ5j9CUrsDQrVsry9JUlkkO1FiKAEu4vRqNkHhcl
+ lzucx700uM57VRnilO+WaL1bAIg=
+X-Mailgun-Sending-Ip: 104.130.122.25
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e2db178.7f7055e30bc8-smtp-out-n02;
- Sun, 26 Jan 2020 15:34:16 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5e2db1d4.7fbb1c37bd50-smtp-out-n02;
+ Sun, 26 Jan 2020 15:35:48 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 91B4DC4479C; Sun, 26 Jan 2020 15:34:16 +0000 (UTC)
+        id CEE1BC433CB; Sun, 26 Jan 2020 15:35:48 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 1D32BC433CB;
-        Sun, 26 Jan 2020 15:34:14 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 1D32BC433CB
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 7C0A3C433A2;
+        Sun, 26 Jan 2020 15:35:46 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 7C0A3C433A2
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
@@ -56,8 +56,8 @@ References: <20200116143353.7541-2-hnagalla@gmail.com>
 To:     Hari Nagalla <hnagalla@gmail.com>
 Cc:     linux-wireless@vger.kernel.org, mailtalm@ti.com, hnagalla@gmail.com
 User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20200126153416.91B4DC4479C@smtp.codeaurora.org>
-Date:   Sun, 26 Jan 2020 15:34:16 +0000 (UTC)
+Message-Id: <20200126153548.CEE1BC433CB@smtp.codeaurora.org>
+Date:   Sun, 26 Jan 2020 15:35:48 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -75,9 +75,11 @@ Hari Nagalla <hnagalla@gmail.com> wrote:
 > Acked-by: Guy Mishol <guym@ti.com>
 > Signed-off-by: Hari Nagalla <hnagalla@gmail.com>
 
-Patch applied to wireless-drivers-next.git, thanks.
+The subject was broken and I had to manually fix it. It should look like this:
 
-cf33a7728bf2 wlcore: mesh: Add support for RX Broadcast Key
+Subject: [PATCH wireless-drivers-next 1/1] wlcore: mesh: Add support for RX Boradcast Key
+
+Please check this in the future patches, thanks.
 
 -- 
 https://patchwork.kernel.org/patch/11337165/
