@@ -1,99 +1,95 @@
-Return-Path: <SRS0=Oerz=3Q=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=9Z4r=3R=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F059AC33CB7
-	for <linux-wireless@archiver.kernel.org>; Mon, 27 Jan 2020 23:42:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 940F8C33CB3
+	for <linux-wireless@archiver.kernel.org>; Tue, 28 Jan 2020 09:20:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C7CCA2467C
-	for <linux-wireless@archiver.kernel.org>; Mon, 27 Jan 2020 23:42:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5B5BB2467E
+	for <linux-wireless@archiver.kernel.org>; Tue, 28 Jan 2020 09:20:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="KEEfsaPz"
+	dkim=pass (2048-bit key) header.d=me.com header.i=@me.com header.b="g905ABIi"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726590AbgA0Xm1 (ORCPT
+        id S1725920AbgA1JUP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 27 Jan 2020 18:42:27 -0500
-Received: from mail-pl1-f194.google.com ([209.85.214.194]:38082 "EHLO
-        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726267AbgA0Xm1 (ORCPT
+        Tue, 28 Jan 2020 04:20:15 -0500
+Received: from mr85p00im-ztdg06011801.me.com ([17.58.23.199]:47625 "EHLO
+        mr85p00im-ztdg06011801.me.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725879AbgA1JUP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 27 Jan 2020 18:42:27 -0500
-Received: by mail-pl1-f194.google.com with SMTP id t6so4350749plj.5
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Jan 2020 15:42:27 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=4jR3NEZ7x+Jvx3U2TQ49TKGsznRacov85tgmCkWAaLs=;
-        b=KEEfsaPzSnHMeqMLqqLF/rKhOnk1MsLgBr28dnqCs8OF9PTkJ+kGeggRfhXfPW8AdM
-         5ignS2E0kGnVhslgsBP8y2I9j5uYqsgB/RjhpdR6fqQN3cHxjGgEp3OwCIYullOj2y5g
-         x1loPleyzV88AC/BVEIpNRNXMByZ94VY3QKAjX6PPGnMgCchseaNbLqYu9raH41h6jxu
-         qxpD3/1hqBM5jHPTxqKIHNdcOObFQsr7HrQo6E8lr2n1h2riX6kKDEq+FcaDAZLdUIYd
-         BGbZf2NJM0rhl/BD/e5neNmcLeRSrbC4bnz9hgkuxwxL4j2O4bk1WtwRxabeG082RSm9
-         ZDuA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=4jR3NEZ7x+Jvx3U2TQ49TKGsznRacov85tgmCkWAaLs=;
-        b=FltS9oRJqd2eu0DKqrSdFWk+1nSmRuOfosOO+dHB+53d3MParRwX/vu1IhBB3IRMqF
-         nxN9S5Y01AjHBe0kcjH6OXmH3k6pkFUO0gWESnmqvw3k2P7rbXRh1LOl5JJByLpcf+O3
-         uWMBfd/akoPv6m67sCvUG+OTKo/wXZ9iFQ6f2VseqlzcSG9/+zfcPnRxRRE3qe9eaCHz
-         3fik5N3Fmhn3fCAKuslc8gHWf3gMV8S6REj7cpE3ED9Pe1Jgljq3WphL/v9iELm8L5/C
-         DVZziyWTfDzP7/txMXmYr3J2RlVzt8601gfHEmSnYslvwcSTDNexLU2UQOnnMPAYpMi6
-         g6UQ==
-X-Gm-Message-State: APjAAAUy4t5h2vz9WZ3b2bHKcWj7ugZPuQopBtFATF5ht9t5kefkZIP4
-        uxLgrXaanlJFIem0ttbQ4yjw+A==
-X-Google-Smtp-Source: APXvYqz6tLIUsXV5Wb/Oi6Sc3Ql3UOYy6wK2oscK/U9I/+KHFO2ncIizEywoPt17c47xcms2lkjbpA==
-X-Received: by 2002:a17:90a:3aaf:: with SMTP id b44mr1344980pjc.9.1580168546572;
-        Mon, 27 Jan 2020 15:42:26 -0800 (PST)
-Received: from yoga (pat_11.qualcomm.com. [192.35.156.11])
-        by smtp.gmail.com with ESMTPSA id p18sm325420pjo.3.2020.01.27.15.42.25
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 27 Jan 2020 15:42:26 -0800 (PST)
-Date:   Mon, 27 Jan 2020 15:42:23 -0800
-From:   Bjorn Andersson <bjorn.andersson@linaro.org>
-To:     Stephen Boyd <sboyd@kernel.org>
-Cc:     Andy Gross <agross@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, ath10k@lists.infradead.org
-Subject: Re: [PATCH 0/2] ath10k: Enable QDSS clock on sm8150
-Message-ID: <20200127234223.GA202699@yoga>
-References: <20191223054855.3020665-1-bjorn.andersson@linaro.org>
- <20200127184037.3BFB620CC7@mail.kernel.org>
+        Tue, 28 Jan 2020 04:20:15 -0500
+X-Greylist: delayed 566 seconds by postgrey-1.27 at vger.kernel.org; Tue, 28 Jan 2020 04:20:15 EST
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=me.com; s=1a1hai;
+        t=1580202648; bh=V0acQkFtVBEhicZNBgiCSt96A7INB6wqYehf/lJnTmw=;
+        h=From:To:Subject:Date:Message-Id;
+        b=g905ABIiULL1SM7JbILnK9mN3owG+upmmeXjOutodiEdDTUfdIWROUJwQ+6VUAhL8
+         cDJdWIU69K26hjiuIYpBVerlirwidLpwTxc/hJ3ACGOycIwyFl18MF1+3FGTohYG7u
+         zgC+JMHBl4elVFBT3a85ytKY0hBjsS1oQ30pUM31Hk2toHPoy0hEzfdvm4I9WnRrgZ
+         I0q5faPYEsiEsy5FUywLBCQiyMwNRWuZPgE+WvZDoH8mJKGcfc0YJWLLUNXE9FQACT
+         a33KnW40F3W0mrfWSFxVF4qzhNKVrhVTpO+B8H8bYmDGai3wS2napZ8Wj2nvRuxvBO
+         6o7sFX18DXPJA==
+Received: from stitch.danm.net (c-73-98-236-45.hsd1.ut.comcast.net [73.98.236.45])
+        by mr85p00im-ztdg06011801.me.com (Postfix) with ESMTPSA id 529DBC092E;
+        Tue, 28 Jan 2020 09:10:48 +0000 (UTC)
+From:   Dan Moulding <dmoulding@me.com>
+To:     linux-wireless@vger.kernel.org
+Cc:     johannes.berg@intel.com, emmanuel.grumbach@intel.com,
+        luciano.coelho@intel.com, linuxwifi@intel.com,
+        Dan Moulding <dmoulding@me.com>
+Subject: [PATCH 5.5] iwlwifi: mvm: Do not require PHY_SKU NVM section for 3168 devices
+Date:   Tue, 28 Jan 2020 02:10:22 -0700
+Message-Id: <20200128091022.9202-1-dmoulding@me.com>
+X-Mailer: git-send-email 2.24.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200127184037.3BFB620CC7@mail.kernel.org>
-User-Agent: Mutt/1.12.2 (2019-09-21)
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2020-01-28_02:,,
+ signatures=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 clxscore=1011 mlxscore=0
+ mlxlogscore=999 adultscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.0.1-1908290000 definitions=main-2001280076
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon 27 Jan 10:40 PST 2020, Stephen Boyd wrote:
+The logic for checking required NVM sections was recently fixed in
+commit b3f20e098293 ("iwlwifi: mvm: Do not require PHY_SKU NVM section
+for 3168 devices"). However, with that fixed the else is now taken for
+3168 devices and within the else clause there is a mandatory check for
+the PHY_SKU section. This causes the parsing to fail for 3168 devices.
 
-> Quoting Bjorn Andersson (2019-12-22 21:48:53)
-> > On SM8150 the WiFi firmware depends on the QDSS clock ticking, or the system
-> > will reset due to an NoC error. So this adds an optional clock to the ath10k
-> > binding and makes sure it's enabled while the WiFi firmware needs it.
-> 
-> Hopefully this isn't a requirement in production firmware? Seems
-> wasteful to keep the debug clk enabled in the field when nobody is
-> debugging anything.
-> 
+The PHY_SKU section is really only mandatory for the IWL_NVM_EXT
+layout (the phy_sku parameter of iwl_parse_nvm_data is only used when
+the NVM type is IWL_NVM_EXT). So this changes the PHY_SKU section
+check so that it's only mandatory for IWL_NVM_EXT.
 
-I'm confused about this as well, but I'm told that it was fixed
-post-8150.
+Fixes: b3f20e098293 ("iwlwifi: mvm: Do not require PHY_SKU NVM section for 3168 devices")
+Signed-off-by: Dan Moulding <dmoulding@me.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/nvm.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Regards,
-Bjorn
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
+index 46128a2a9c6e..e98ce380c7b9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
+@@ -308,7 +308,8 @@ iwl_parse_nvm_sections(struct iwl_mvm *mvm)
+ 		}
+ 
+ 		/* PHY_SKU section is mandatory in B0 */
+-		if (!mvm->nvm_sections[NVM_SECTION_TYPE_PHY_SKU].data) {
++		if (mvm->trans->cfg->nvm_type == IWL_NVM_EXT &&
++		    !mvm->nvm_sections[NVM_SECTION_TYPE_PHY_SKU].data) {
+ 			IWL_ERR(mvm,
+ 				"Can't parse phy_sku in B0, empty sections\n");
+ 			return NULL;
+-- 
+2.24.1
+
