@@ -7,43 +7,43 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF905C33CB3
-	for <linux-wireless@archiver.kernel.org>; Thu, 30 Jan 2020 14:47:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD6EFC35240
+	for <linux-wireless@archiver.kernel.org>; Thu, 30 Jan 2020 14:47:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AFA99214AF
-	for <linux-wireless@archiver.kernel.org>; Thu, 30 Jan 2020 14:47:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 99719214AF
+	for <linux-wireless@archiver.kernel.org>; Thu, 30 Jan 2020 14:47:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="CT8ykGhW"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="b+oboRtm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727346AbgA3Or0 (ORCPT
+        id S1727348AbgA3Or1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 30 Jan 2020 09:47:26 -0500
-Received: from nbd.name ([46.4.11.11]:57448 "EHLO nbd.name"
+        Thu, 30 Jan 2020 09:47:27 -0500
+Received: from nbd.name ([46.4.11.11]:57474 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727263AbgA3OrW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 30 Jan 2020 09:47:22 -0500
+        id S1727186AbgA3Or1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 30 Jan 2020 09:47:27 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
         Message-Id:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
         Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
         :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
         List-Post:List-Owner:List-Archive;
-        bh=MzMtSuJdT+mp6u132QBZeSGfkmn+kvDDEAbc7SCMzIg=; b=CT8ykGhWSu96TqY5AjGPcBhBhs
-        KCZYWiAZ5FHigDLNUJ956xC0+jffeS1bfSgtR7M6ytOB+wgwjpO9t+OjjesSF8cKvezNg/dmxiT6Y
-        uWFFXMgFRDoVYDhKtFU8IyYZqodSjHjWvkNIApz+tFXWf8HIb7jDXj+arOIcpnZ2wuxI=;
+        bh=rqtNqZZYcXgcYy/9ids+XvioO4bn1OSwu6Q6yjabXwk=; b=b+oboRtmiTccc2OFXsvnZ8c159
+        KrowsDMeFv/yuRCZSLphrVR9rLv2ccH73Ta/U+4FNpIvxtyR63l3nS7hshaLmMiNxKgmUBhF1S35O
+        /CWmkIsAuGqgxZ4XGOX+JqVRsWtqR3T+MCwUoCcFy77LCIAAj6ZRRIquf+bMg5W6Uv7k=;
 Received: from [178.162.209.135] (helo=maeck.local)
         by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.89)
         (envelope-from <nbd@nbd.name>)
-        id 1ixB6G-0001Vl-JN
-        for linux-wireless@vger.kernel.org; Thu, 30 Jan 2020 15:47:20 +0100
+        id 1ixB6L-0001Vm-Jc
+        for linux-wireless@vger.kernel.org; Thu, 30 Jan 2020 15:47:25 +0100
 Received: by maeck.local (Postfix, from userid 501)
-        id EEA7C7AE4694; Thu, 30 Jan 2020 15:47:18 +0100 (CET)
+        id EEEEA7AE4695; Thu, 30 Jan 2020 15:47:18 +0100 (CET)
 From:   Felix Fietkau <nbd@nbd.name>
 To:     linux-wireless@vger.kernel.org
-Subject: [PATCH 08/15] mt76: mt7615: add eeprom support for MT7622
-Date:   Thu, 30 Jan 2020 15:47:11 +0100
-Message-Id: <20200130144718.14298-8-nbd@nbd.name>
+Subject: [PATCH 10/15] mt76: mt7615: disable 5 GHz on MT7622
+Date:   Thu, 30 Jan 2020 15:47:13 +0100
+Message-Id: <20200130144718.14298-10-nbd@nbd.name>
 X-Mailer: git-send-email 2.24.0
 In-Reply-To: <20200130144718.14298-1-nbd@nbd.name>
 References: <20200130144718.14298-1-nbd@nbd.name>
@@ -54,92 +54,28 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-When sending EEPROM data to the MCU, MT7622 uses a longer buffer
+It is not supported by the chip, so avoid issues with potentially wrong
+EEPROM configurations.
 
-Co-developed-by: Shayne Chen <shayne.chen@mediatek.com>
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- .../net/wireless/mediatek/mt76/mt7615/eeprom.c  |  1 +
- .../net/wireless/mediatek/mt76/mt7615/eeprom.h  |  3 ++-
- drivers/net/wireless/mediatek/mt76/mt7615/mcu.c | 17 +++++++++++------
- 3 files changed, 14 insertions(+), 7 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
-index e4dcfa531a24..3c3570332366 100644
+index 0008e4584537..49d8ae091190 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
-@@ -84,6 +84,7 @@ static int mt7615_check_eeprom(struct mt76_dev *dev)
- 
- 	switch (val) {
- 	case 0x7615:
-+	case 0x7622:
- 		return 0;
- 	default:
- 		return -EINVAL;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.h b/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.h
-index c3bc69ac210e..18c7301521b7 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.h
-@@ -21,7 +21,8 @@ enum mt7615_eeprom_field {
- 	MT_EE_TX2_5G_G0_TARGET_POWER =		0x142,
- 	MT_EE_TX3_5G_G0_TARGET_POWER =		0x16a,
- 
--	__MT_EE_MAX =				0x3bf
-+	MT7615_EE_MAX =				0x3bf,
-+	MT7622_EE_MAX =				0x3db,
- };
- 
- #define MT_EE_NIC_CONF_TX_MASK			GENMASK(7, 4)
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-index 2352e7687790..e51e584bf81f 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-@@ -621,18 +621,23 @@ int mt7615_mcu_set_eeprom(struct mt7615_dev *dev)
- 		__le16 len;
- 	} __packed req_hdr = {
- 		.buffer_mode = 1,
--		.len = cpu_to_le16(__MT_EE_MAX - MT_EE_NIC_CONF_0),
- 	};
--	int ret, len = sizeof(req_hdr) + __MT_EE_MAX - MT_EE_NIC_CONF_0;
-+	int ret, len, eep_len;
- 	u8 *req, *eep = (u8 *)dev->mt76.eeprom.data;
+@@ -111,6 +111,9 @@ static void mt7615_eeprom_parse_hw_cap(struct mt7615_dev *dev)
+ 		break;
+ 	}
  
 +	if (is_mt7622(&dev->mt76))
-+		eep_len = MT7622_EE_MAX - MT_EE_NIC_CONF_0;
-+	else
-+		eep_len = MT7615_EE_MAX - MT_EE_NIC_CONF_0;
++		dev->mt76.cap.has_5ghz = false;
 +
-+	len = sizeof(req_hdr) + eep_len;
- 	req = kzalloc(len, GFP_KERNEL);
- 	if (!req)
- 		return -ENOMEM;
- 
-+	req_hdr.len = cpu_to_le16(eep_len);
- 	memcpy(req, &req_hdr, sizeof(req_hdr));
--	memcpy(req + sizeof(req_hdr), eep + MT_EE_NIC_CONF_0,
--	       __MT_EE_MAX - MT_EE_NIC_CONF_0);
-+	memcpy(req + sizeof(req_hdr), eep + MT_EE_NIC_CONF_0, eep_len);
- 
- 	ret = __mt76_mcu_send_msg(&dev->mt76, MCU_EXT_CMD_EFUSE_BUFFER_MODE,
- 				  req, len, true);
-@@ -1285,7 +1290,7 @@ int mt7615_mcu_set_tx_power(struct mt7615_phy *phy)
- 	};
- 	s8 tx_power;
- 
--	len = sizeof(req_hdr) + __MT_EE_MAX - MT_EE_NIC_CONF_0;
-+	len = sizeof(req_hdr) + MT7615_EE_MAX - MT_EE_NIC_CONF_0;
- 	req = kzalloc(len, GFP_KERNEL);
- 	if (!req)
- 		return -ENOMEM;
-@@ -1293,7 +1298,7 @@ int mt7615_mcu_set_tx_power(struct mt7615_phy *phy)
- 	memcpy(req, &req_hdr, sizeof(req_hdr));
- 	data = req + sizeof(req_hdr);
- 	memcpy(data, eep + MT_EE_NIC_CONF_0,
--	       __MT_EE_MAX - MT_EE_NIC_CONF_0);
-+	       MT7615_EE_MAX - MT_EE_NIC_CONF_0);
- 
- 	tx_power = hw->conf.power_level * 2;
- 	switch (n_chains) {
+ 	/* read tx-rx mask from eeprom */
+ 	val = mt76_rr(dev, MT_TOP_STRAP_STA);
+ 	max_nss = val & MT_TOP_3NSS ? 3 : 4;
 -- 
 2.24.0
 
