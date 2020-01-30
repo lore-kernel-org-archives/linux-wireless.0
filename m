@@ -2,116 +2,181 @@ Return-Path: <SRS0=/tVN=3T=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 954ECC33CB7
-	for <linux-wireless@archiver.kernel.org>; Thu, 30 Jan 2020 01:59:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D33F0C33C9E
+	for <linux-wireless@archiver.kernel.org>; Thu, 30 Jan 2020 05:31:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 66A0A2070E
-	for <linux-wireless@archiver.kernel.org>; Thu, 30 Jan 2020 01:59:14 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FVzpVYqB"
+	by mail.kernel.org (Postfix) with ESMTP id A423B2082E
+	for <linux-wireless@archiver.kernel.org>; Thu, 30 Jan 2020 05:31:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726742AbgA3B7L (ORCPT
+        id S1726415AbgA3Fb0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 29 Jan 2020 20:59:11 -0500
-Received: from mail-ot1-f66.google.com ([209.85.210.66]:33501 "EHLO
-        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726632AbgA3B7L (ORCPT
+        Thu, 30 Jan 2020 00:31:26 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:57770 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725935AbgA3Fb0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Jan 2020 20:59:11 -0500
-Received: by mail-ot1-f66.google.com with SMTP id b18so1695480otp.0;
-        Wed, 29 Jan 2020 17:59:10 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=i88Mz1HHfHLRjCoXJjYlUuVlF7tVe72iHNwcP0Yi878=;
-        b=FVzpVYqBOkYJARKHKHz9NHlb+5/d7Vt+y/cLQ9kbw3/DGLgrZUfmFvhTPbXxBB40ev
-         oE1abXhHnNBgzBj1j3EOAabKBgjxt1eRdkKZBx4HjFUjZyq3ytVXrVOzPkZ5YBJTKnRT
-         kcDOi9OglnDClR0mdlIcNuZH7M/LoORTZphTZy+gLkKsXsNZutbn8GS0av34/GlQ2MdA
-         c+TjAOf7/GCrZgxK9twfKuDfelQJ30hPK4IVMFksBOmDMIk0mihHjq5lv90Y4lztsRAx
-         evEW3LpbForUZMEVfuyWogpNsH3eiuFWc/IPpUDlf6zj4hyJko7j4fbrvrPMMq+a7acZ
-         fsDA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=i88Mz1HHfHLRjCoXJjYlUuVlF7tVe72iHNwcP0Yi878=;
-        b=ExnGDzs8EqYn973RGjETx9Cno+OFLSuBhxd7y0rsTZoyeaLqeYw0WFgrnwYmNnryNm
-         6pRp0OFFCcIb+S05qmxX/i8u6zPzKsD0L0avroWiKFt24eKC8xM1VwYA82Cora+ou6OC
-         EG0QWCFwsYG6rO3bO8BQjfUeYvPOaeGLVEz7hbl6Np8RK9Jyjg5OzIaOOmWH90uUOimK
-         7eQszoYdNuXSffvbjcXbdrMKT7TcNG1cEfjV1Clf30mWNn5OBhb2h4aOk7s5YwZSDLym
-         0HMlGgyQWf7b4rNZ1iAfYvsN9I8V+nDjDuDsk+fUkAGyHOIhrQwqwJw39Q1LI96pVo38
-         CPLQ==
-X-Gm-Message-State: APjAAAXXCx1YDUeY+S72oF0fszQ8FJydBjwf3bJ2/XgrhlSaao2uO8Kw
-        ip96s7+rjKABDoUAfH3D8j8=
-X-Google-Smtp-Source: APXvYqwf3Y2XAi7u2qNJRKRkKDQV20c+PEuElI0yUCGY1S8JLzS4wxhZN5rjfaR7wsnHeHMBXU6t5g==
-X-Received: by 2002:a05:6830:4cd:: with SMTP id s13mr1710548otd.181.1580349550068;
-        Wed, 29 Jan 2020 17:59:10 -0800 (PST)
-Received: from localhost.localdomain ([2604:1380:4111:8b00::1])
-        by smtp.gmail.com with ESMTPSA id r13sm1216891oic.52.2020.01.29.17.59.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 29 Jan 2020 17:59:09 -0800 (PST)
-From:   Nathan Chancellor <natechancellor@gmail.com>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        clang-built-linux@googlegroups.com,
-        Nathan Chancellor <natechancellor@gmail.com>,
-        ci_notify@linaro.org
-Subject: [PATCH] ath11k: Silence clang -Wsometimes-uninitialized in ath11k_update_per_peer_stats_from_txcompl
-Date:   Wed, 29 Jan 2020 18:59:05 -0700
-Message-Id: <20200130015905.18610-1-natechancellor@gmail.com>
-X-Mailer: git-send-email 2.25.0
+        Thu, 30 Jan 2020 00:31:26 -0500
+Authenticated-By: 
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID 00U5VGoJ004151, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (RTEXMB06.realtek.com.tw[172.21.6.99])
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id 00U5VGoJ004151
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 30 Jan 2020 13:31:17 +0800
+Received: from RTEXDAG01.realtek.com.tw (172.21.6.100) by
+ RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1779.2; Thu, 30 Jan 2020 13:31:16 +0800
+Received: from RTEXMB06.realtek.com.tw (172.21.6.99) by
+ RTEXDAG01.realtek.com.tw (172.21.6.100) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1779.2; Thu, 30 Jan 2020 13:31:16 +0800
+Received: from RTITCASV01.realtek.com.tw (172.21.6.18) by
+ RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
+ (version=TLS1_0, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.1.1779.2
+ via Frontend Transport; Thu, 30 Jan 2020 13:31:16 +0800
+Received: from localhost.localdomain (172.21.68.128) by
+ RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
+ 14.3.468.0; Thu, 30 Jan 2020 13:31:15 +0800
+From:   <yhchuang@realtek.com>
+To:     <kvalo@codeaurora.org>
+CC:     <linux-wireless@vger.kernel.org>, <briannorris@chromium.org>,
+        <chiu@endlessm.com>
+Subject: [PATCH v2 2/2] rtw88: 8822c: modify rf protection setting
+Date:   Thu, 30 Jan 2020 13:31:12 +0800
+Message-ID: <20200130053112.28162-3-yhchuang@realtek.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20200130053112.28162-1-yhchuang@realtek.com>
+References: <20200130053112.28162-1-yhchuang@realtek.com>
 MIME-Version: 1.0
-X-Patchwork-Bot: notify
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [172.21.68.128]
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Clang warns a few times (trimmed for brevity):
+From: Chien-Hsun Liao <ben.liao@realtek.com>
 
-../drivers/net/wireless/ath/ath11k/debugfs_sta.c:185:7: warning:
-variable 'rate_idx' is used uninitialized whenever 'if' condition is
-false [-Wsometimes-uninitialized]
+According to some experiments, the original RF register protection
+setting of 8822c cannot perfectly make sure that there is no hardware
+PI write (direct) during direct write. Modify the setting so that the
+hardware block of PI would be turned off via rtw8822c_rstb_3wire()
+during the direct write, to avoid RF register racing.
 
-It is not wrong, rate_idx is only initialized in the first if block.
-However, this is not necessarily an issue in practice because rate_idx
-will only be used when initialized because
-ath11k_accumulate_per_peer_tx_stats only uses rate_idx when flags is not
-set to RATE_INFO_FLAGS_HE_MCS, RATE_INFO_FLAGS_VHT_MCS, or
-RATE_INFO_FLAGS_MCS. Still, it is not good to stick uninitialized values
-into another function so initialize it to zero to prevent any issues
-down the line.
+Note that 8822b uses SIPI write (indirect), so 8822b does not
+have such problem.
 
-Fixes: d5c65159f289 ("ath11k: driver for Qualcomm IEEE 802.11ax devices")
-Link: https://github.com/ClangBuiltLinux/linux/issues/832
-Reported-by: ci_notify@linaro.org
-Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+Signed-off-by: Chien-Hsun Liao <ben.liao@realtek.com>
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- drivers/net/wireless/ath/ath11k/debugfs_sta.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath11k/debugfs_sta.c b/drivers/net/wireless/ath/ath11k/debugfs_sta.c
-index 743760c9bcae..a5bdd16d6d46 100644
---- a/drivers/net/wireless/ath/ath11k/debugfs_sta.c
-+++ b/drivers/net/wireless/ath/ath11k/debugfs_sta.c
-@@ -136,7 +136,7 @@ void ath11k_update_per_peer_stats_from_txcompl(struct ath11k *ar,
- 	struct ath11k_sta *arsta;
- 	struct ieee80211_sta *sta;
- 	u16 rate;
--	u8 rate_idx;
-+	u8 rate_idx = 0;
- 	int ret;
- 	u8 mcs;
+v1 -> v2
+ * Add more descriptions
+
+ drivers/net/wireless/realtek/rtw88/phy.c      | 10 ----------
+ drivers/net/wireless/realtek/rtw88/rtw8822c.c | 15 +++++++++++++++
+ drivers/net/wireless/realtek/rtw88/rtw8822c.h |  5 +++++
+ 3 files changed, 20 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtw88/phy.c b/drivers/net/wireless/realtek/rtw88/phy.c
+index eea9d888fbf1..8793dd22188f 100644
+--- a/drivers/net/wireless/realtek/rtw88/phy.c
++++ b/drivers/net/wireless/realtek/rtw88/phy.c
+@@ -749,20 +749,10 @@ bool rtw_phy_write_rf_reg(struct rtw_dev *rtwdev, enum rtw_rf_path rf_path,
+ 	direct_addr = base_addr[rf_path] + (addr << 2);
+ 	mask &= RFREG_MASK;
  
+-	if (addr == RF_CFGCH) {
+-		rtw_write32_mask(rtwdev, REG_RSV_CTRL, BITS_RFC_DIRECT, DISABLE_PI);
+-		rtw_write32_mask(rtwdev, REG_WLRF1, BITS_RFC_DIRECT, DISABLE_PI);
+-	}
+-
+ 	rtw_write32_mask(rtwdev, direct_addr, mask, data);
+ 
+ 	udelay(1);
+ 
+-	if (addr == RF_CFGCH) {
+-		rtw_write32_mask(rtwdev, REG_RSV_CTRL, BITS_RFC_DIRECT, ENABLE_PI);
+-		rtw_write32_mask(rtwdev, REG_WLRF1, BITS_RFC_DIRECT, ENABLE_PI);
+-	}
+-
+ 	return true;
+ }
+ 
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+index 4c416d603b33..fb621881fbd1 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+@@ -1289,6 +1289,17 @@ static int rtw8822c_mac_init(struct rtw_dev *rtwdev)
+ 	return 0;
+ }
+ 
++static void rtw8822c_rstb_3wire(struct rtw_dev *rtwdev, bool enable)
++{
++	if (enable) {
++		rtw_write32_mask(rtwdev, REG_RSTB, BIT_RSTB_3WIRE, 0x1);
++		rtw_write32_mask(rtwdev, REG_ANAPAR_A, BIT_ANAPAR_UPDATE, 0x1);
++		rtw_write32_mask(rtwdev, REG_ANAPAR_B, BIT_ANAPAR_UPDATE, 0x1);
++	} else {
++		rtw_write32_mask(rtwdev, REG_RSTB, BIT_RSTB_3WIRE, 0x0);
++	}
++}
++
+ static void rtw8822c_set_channel_rf(struct rtw_dev *rtwdev, u8 channel, u8 bw)
+ {
+ #define RF18_BAND_MASK		(BIT(16) | BIT(9) | BIT(8))
+@@ -1337,6 +1348,8 @@ static void rtw8822c_set_channel_rf(struct rtw_dev *rtwdev, u8 channel, u8 bw)
+ 		break;
+ 	}
+ 
++	rtw8822c_rstb_3wire(rtwdev, false);
++
+ 	rtw_write_rf(rtwdev, RF_PATH_A, RF_LUTWE2, 0x04, 0x01);
+ 	rtw_write_rf(rtwdev, RF_PATH_A, RF_LUTWA, 0x1f, 0x12);
+ 	rtw_write_rf(rtwdev, RF_PATH_A, RF_LUTWD0, 0xfffff, rf_rxbb);
+@@ -1349,6 +1362,8 @@ static void rtw8822c_set_channel_rf(struct rtw_dev *rtwdev, u8 channel, u8 bw)
+ 
+ 	rtw_write_rf(rtwdev, RF_PATH_A, RF_CFGCH, RFREG_MASK, rf_reg18);
+ 	rtw_write_rf(rtwdev, RF_PATH_B, RF_CFGCH, RFREG_MASK, rf_reg18);
++
++	rtw8822c_rstb_3wire(rtwdev, true);
+ }
+ 
+ static void rtw8822c_toggle_igi(struct rtw_dev *rtwdev)
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.h b/drivers/net/wireless/realtek/rtw88/rtw8822c.h
+index abd9f300bedd..dfd8662a0c0e 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822c.h
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.h
+@@ -190,6 +190,8 @@ const struct rtw_table name ## _tbl = {			\
+ #define BIT_3WIRE_TX_EN		BIT(0)
+ #define BIT_3WIRE_RX_EN		BIT(1)
+ #define BIT_3WIRE_PI_ON		BIT(28)
++#define REG_ANAPAR_A	0x1830
++#define BIT_ANAPAR_UPDATE	BIT(29)
+ #define REG_RXAGCCTL0	0x18ac
+ #define BITS_RXAGC_CCK		GENMASK(15, 12)
+ #define BITS_RXAGC_OFDM		GENMASK(8, 4)
+@@ -223,6 +225,8 @@ const struct rtw_table name ## _tbl = {			\
+ #define BIT_CCK_BLK_EN		BIT(1)
+ #define BIT_CCK_OFDM_BLK_EN	(BIT(0) | BIT(1))
+ #define REG_CCAMSK	0x1c80
++#define REG_RSTB	0x1c90
++#define BIT_RSTB_3WIRE		BIT(8)
+ #define REG_RX_BREAK	0x1d2c
+ #define BIT_COM_RX_GCK_EN	BIT(31)
+ #define REG_RXFNCTL	0x1d30
+@@ -243,6 +247,7 @@ const struct rtw_table name ## _tbl = {			\
+ #define REG_OFDM_TXCNT	0x2de0
+ #define REG_ORITXCODE2	0x4100
+ #define REG_3WIRE2	0x410c
++#define REG_ANAPAR_B	0x4130
+ #define REG_RXAGCCTL	0x41ac
+ #define REG_DCKB_I_0	0x41bc
+ #define REG_DCKB_I_1	0x41c0
 -- 
-2.25.0
+2.17.1
 
