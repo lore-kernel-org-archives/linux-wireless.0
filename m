@@ -7,20 +7,20 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0B47C33CB3
-	for <linux-wireless@archiver.kernel.org>; Thu, 30 Jan 2020 14:47:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15A79C35240
+	for <linux-wireless@archiver.kernel.org>; Thu, 30 Jan 2020 14:47:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 69162214AF
+	by mail.kernel.org (Postfix) with ESMTP id D1109214AF
 	for <linux-wireless@archiver.kernel.org>; Thu, 30 Jan 2020 14:47:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="V9NNZu4k"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="NL4YF5oi"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727319AbgA3OrY (ORCPT
+        id S1727328AbgA3OrZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 30 Jan 2020 09:47:24 -0500
-Received: from nbd.name ([46.4.11.11]:57442 "EHLO nbd.name"
+        Thu, 30 Jan 2020 09:47:25 -0500
+Received: from nbd.name ([46.4.11.11]:57440 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727235AbgA3OrW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S1727227AbgA3OrW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 30 Jan 2020 09:47:22 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
@@ -28,22 +28,22 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
         Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
         :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
         List-Post:List-Owner:List-Archive;
-        bh=KxgAELrbWifHChymz7VCJj5aEFJbPCi9k5N6+/p4uO8=; b=V9NNZu4kg8NrBKNB8PtCxPxksZ
-        sTKQvtrvYUXz9P8mGeuQ/x7LnIKzX2fGrRJqLRgqE2Jzg4yn+SzqcCjA8SFtJiongZgNUADWCrM//
-        mTK/PTN5GbjC0u2cYgcQ0DDDckDTPKF0Y+X33dJU1ZTYWZejK39GX61sdW39GdyU0UDE=;
+        bh=zO4DxtnSS75mXxwXEXEiPN17tuKiKc7EbcX7NGORWX0=; b=NL4YF5oiVIEQ9/SrLIqm7fsnBo
+        t4Kc3iR3WMCe0FDp4wNkFV5/V3iNMvBhNM7+gngipav+I5j2MmEt+KpIOAGmZD1bjTaQyKpo3G1y0
+        Ix+3WWWHhhi56XynA4ZQNGREyvewcmzzFXeL9YnhR3GCkEMv9HWOisWOzK8VRTLFXXOM=;
 Received: from [178.162.209.135] (helo=maeck.local)
         by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.89)
         (envelope-from <nbd@nbd.name>)
-        id 1ixB6G-0001Vj-Ho
+        id 1ixB6G-0001Vk-IN
         for linux-wireless@vger.kernel.org; Thu, 30 Jan 2020 15:47:20 +0100
 Received: by maeck.local (Postfix, from userid 501)
-        id EDF5A7AE4692; Thu, 30 Jan 2020 15:47:18 +0100 (CET)
+        id EE6827AE4693; Thu, 30 Jan 2020 15:47:18 +0100 (CET)
 From:   Felix Fietkau <nbd@nbd.name>
 To:     linux-wireless@vger.kernel.org
-Subject: [PATCH 05/15] mt76: mt7615: store N9 firmware version instead of CR4
-Date:   Thu, 30 Jan 2020 15:47:08 +0100
-Message-Id: <20200130144718.14298-5-nbd@nbd.name>
+Subject: [PATCH 13/15] mt76: mt7615: decrease rx ring size for MT7622
+Date:   Thu, 30 Jan 2020 15:47:16 +0100
+Message-Id: <20200130144718.14298-13-nbd@nbd.name>
 X-Mailer: git-send-email 2.24.0
 In-Reply-To: <20200130144718.14298-1-nbd@nbd.name>
 References: <20200130144718.14298-1-nbd@nbd.name>
@@ -54,38 +54,38 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-CR4 is used very little, N9 is the main firmware that the driver interacts with
+Since it's 2.4 GHz only, it needs fewer buffers
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/mediatek/mt76/mt7615/mcu.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7615/dma.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-index 097d3fc365f7..2352e7687790 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-@@ -491,6 +491,10 @@ static int mt7615_load_n9(struct mt7615_dev *dev, const char *name)
- 		goto out;
- 	}
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/dma.c b/drivers/net/wireless/mediatek/mt76/mt7615/dma.c
+index 41dea1aa58db..aeccb35e14f3 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/dma.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/dma.c
+@@ -188,6 +188,7 @@ static void mt7622_dma_sched_init(struct mt7615_dev *dev)
  
-+	snprintf(dev->mt76.hw->wiphy->fw_version,
-+		 sizeof(dev->mt76.hw->wiphy->fw_version),
-+		 "%.10s-%.15s", hdr->fw_ver, hdr->build_date);
+ int mt7615_dma_init(struct mt7615_dev *dev)
+ {
++	int rx_ring_size = MT7615_RX_RING_SIZE;
+ 	int ret;
+ 
+ 	mt76_dma_attach(&dev->mt76);
+@@ -236,9 +237,11 @@ int mt7615_dma_init(struct mt7615_dev *dev)
+ 	if (ret)
+ 		return ret;
+ 
++	if (!is_mt7615(&dev->mt76))
++	    rx_ring_size /= 2;
 +
- out:
- 	release_firmware(fw);
- 	return ret;
-@@ -528,10 +532,6 @@ static int mt7615_load_cr4(struct mt7615_dev *dev, const char *name)
- 		goto out;
- 	}
- 
--	snprintf(dev->mt76.hw->wiphy->fw_version,
--		 sizeof(dev->mt76.hw->wiphy->fw_version),
--		 "%.10s-%.15s", hdr->fw_ver, hdr->build_date);
--
- out:
- 	release_firmware(fw);
+ 	ret = mt76_queue_alloc(dev, &dev->mt76.q_rx[MT_RXQ_MAIN], 0,
+-			       MT7615_RX_RING_SIZE, MT_RX_BUF_SIZE,
+-			       MT_RX_RING_BASE);
++			       rx_ring_size, MT_RX_BUF_SIZE, MT_RX_RING_BASE);
+ 	if (ret)
+ 		return ret;
  
 -- 
 2.24.0
