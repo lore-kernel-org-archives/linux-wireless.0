@@ -6,96 +6,95 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1D26C33CB2
-	for <linux-wireless@archiver.kernel.org>; Fri, 31 Jan 2020 11:25:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80497C33CB2
+	for <linux-wireless@archiver.kernel.org>; Fri, 31 Jan 2020 11:27:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A2AD6206F0
-	for <linux-wireless@archiver.kernel.org>; Fri, 31 Jan 2020 11:25:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 50E6A206F0
+	for <linux-wireless@archiver.kernel.org>; Fri, 31 Jan 2020 11:27:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728438AbgAaLZW (ORCPT
+        id S1728406AbgAaL1C (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 31 Jan 2020 06:25:22 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:55914 "EHLO
+        Fri, 31 Jan 2020 06:27:02 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:55922 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728395AbgAaLZV (ORCPT
+        with ESMTP id S1728374AbgAaL1C (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Jan 2020 06:25:21 -0500
+        Fri, 31 Jan 2020 06:27:02 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92.2)
         (envelope-from <luca@coelho.fi>)
-        id 1ixUEp-0002GC-LD; Fri, 31 Jan 2020 13:13:28 +0200
+        id 1ixUEf-0002GC-EI; Fri, 31 Jan 2020 13:13:20 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org
-Date:   Fri, 31 Jan 2020 13:13:00 +0200
-Message-Id: <20200131111300.891737-24-luca@coelho.fi>
+Date:   Fri, 31 Jan 2020 13:12:51 +0200
+Message-Id: <20200131111300.891737-15-luca@coelho.fi>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200131111300.891737-1-luca@coelho.fi>
 References: <20200131111300.891737-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 23/23] mac80211: Properly set the SMPS mode for 6GHz station
+Subject: [PATCH 14/23] mac80211: fix quiet mode activation in action frames
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Shaul Triebitz <shaul.triebitz@intel.com>
+From: Sara Sharon <sara.sharon@intel.com>
 
-The managed interface SMPS mode was not set in the HE 6GHz
-capabilities IE. Set it.
+Previously I intended to ignore quiet mode in probe response, however
+I ended up ignoring it instead for action frames. As a matter of fact,
+this path isn't invoked for probe responses to start with. Just revert
+this patch.
 
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Fixes: 7976b1e9e3bf ("mac80211: ignore quiet mode in probe")
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- include/net/mac80211.h |  2 ++
- net/mac80211/mlme.c    | 10 +++++++++-
- 2 files changed, 11 insertions(+), 1 deletion(-)
+ net/mac80211/mlme.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 6d4ea71523d2..a930cc710e70 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -508,6 +508,7 @@ struct ieee80211_ftm_responder_params {
-  *	mode only, set if the AP advertises TWT responder role)
-  * @twt_responder: does this BSS support TWT requester (relevant for managed
-  *	mode only, set if the AP advertises TWT responder role)
-+ * @twt_protected: does this BSS support protected TWT frames
-  * @assoc: association status
-  * @ibss_joined: indicates whether this station is part of an IBSS
-  *	or not
-@@ -618,6 +619,7 @@ struct ieee80211_bss_conf {
- 	bool he_support;
- 	bool twt_requester;
- 	bool twt_responder;
-+	bool twt_protected;
- 	/* association related data */
- 	bool assoc, ibss_joined;
- 	bool ibss_creator;
 diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 9ab0842a7c37..34fe500df687 100644
+index 92efc3676c70..f78e7aa67991 100644
 --- a/net/mac80211/mlme.c
 +++ b/net/mac80211/mlme.c
-@@ -3389,9 +3389,17 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
+@@ -8,7 +8,7 @@
+  * Copyright 2007, Michael Wu <flamingice@sourmilk.net>
+  * Copyright 2013-2014  Intel Mobile Communications GmbH
+  * Copyright (C) 2015 - 2017 Intel Deutschland GmbH
+- * Copyright (C) 2018 - 2019 Intel Corporation
++ * Copyright (C) 2018 - 2020 Intel Corporation
+  */
  
- 		bss_conf->he_support = sta->sta.he_cap.has_he;
- 		changed |= ieee80211_recalc_twt_req(sdata, sta, elems);
--	} else {
-+		if (elems->rsnx && elems->rsnx_len &&
-+		    (elems->rsnx[0] & WLAN_RSNX_CAPA_PROTECTED_TWT) &&
-+		    wiphy_ext_feature_isset(local->hw.wiphy,
-+					    NL80211_EXT_FEATURE_PROTECTED_TWT))
-+			bss_conf->twt_protected = true;
-+		else
-+			bss_conf->twt_protected = false;
-+} else {
- 		bss_conf->he_support = false;
- 		bss_conf->twt_requester = false;
-+		bss_conf->twt_protected = false;
- 	}
+ #include <linux/delay.h>
+@@ -1338,7 +1338,7 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 	if (!res) {
+ 		ch_switch.timestamp = timestamp;
+ 		ch_switch.device_timestamp = device_timestamp;
+-		ch_switch.block_tx =  beacon ? csa_ie.mode : 0;
++		ch_switch.block_tx = csa_ie.mode;
+ 		ch_switch.chandef = csa_ie.chandef;
+ 		ch_switch.count = csa_ie.count;
+ 		ch_switch.delay = csa_ie.max_switch_time;
+@@ -1431,7 +1431,7 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
  
- 	if (bss_conf->he_support) {
+ 	sdata->vif.csa_active = true;
+ 	sdata->csa_chandef = csa_ie.chandef;
+-	sdata->csa_block_tx = ch_switch.block_tx;
++	sdata->csa_block_tx = csa_ie.mode;
+ 	ifmgd->csa_ignored_same_chan = false;
+ 
+ 	if (sdata->csa_block_tx)
+@@ -1465,7 +1465,7 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 	 * reset when the disconnection worker runs.
+ 	 */
+ 	sdata->vif.csa_active = true;
+-	sdata->csa_block_tx = ch_switch.block_tx;
++	sdata->csa_block_tx = csa_ie.mode;
+ 
+ 	ieee80211_queue_work(&local->hw, &ifmgd->csa_connection_drop_work);
+ 	mutex_unlock(&local->chanctx_mtx);
 -- 
 2.24.1
 
