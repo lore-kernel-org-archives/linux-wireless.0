@@ -6,129 +6,93 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DE16C33CB7
-	for <linux-wireless@archiver.kernel.org>; Fri, 31 Jan 2020 13:45:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61651C35246
+	for <linux-wireless@archiver.kernel.org>; Fri, 31 Jan 2020 13:45:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3E30620CC7
-	for <linux-wireless@archiver.kernel.org>; Fri, 31 Jan 2020 13:45:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3695620705
+	for <linux-wireless@archiver.kernel.org>; Fri, 31 Jan 2020 13:45:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728814AbgAaNpp (ORCPT
+        id S1728727AbgAaNpl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 31 Jan 2020 08:45:45 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:56016 "EHLO
+        Fri, 31 Jan 2020 08:45:41 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:55980 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728793AbgAaNpo (ORCPT
+        with ESMTP id S1728696AbgAaNpl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Jan 2020 08:45:44 -0500
+        Fri, 31 Jan 2020 08:45:41 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92.2)
         (envelope-from <luca@coelho.fi>)
-        id 1ixWcA-0002Nv-Rh; Fri, 31 Jan 2020 15:45:43 +0200
+        id 1ixWc6-0002Nv-C7; Fri, 31 Jan 2020 15:45:39 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Fri, 31 Jan 2020 15:45:30 +0200
-Message-Id: <20200131134530.931641-8-luca@coelho.fi>
+Date:   Fri, 31 Jan 2020 15:45:24 +0200
+Message-Id: <20200131134530.931641-2-luca@coelho.fi>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200131134530.931641-1-luca@coelho.fi>
 References: <20200131134530.931641-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH v5.6 7/7] iwlwifi: d3: read all FW CPUs error info
+Subject: [PATCH v5.6 1/7] iwlwifi: mvm: Fix thermal zone registration
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Mordechay Goodstein <mordechay.goodstein@intel.com>
+From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
 
-Continue the wakeup flow only if no FW CPUs have an error
+Use a unique name when registering a thermal zone. Otherwise, with
+multiple NICS, we hit the following warning during the unregistration.
 
-If we don't check for error in all FW CPUs the driver can think
-based on one CPU that the FW is operational and try to access
-and send commands.
+WARNING: CPU: 2 PID: 3525 at fs/sysfs/group.c:255
+ RIP: 0010:sysfs_remove_group+0x80/0x90
+ Call Trace:
+  dpm_sysfs_remove+0x57/0x60
+  device_del+0x5a/0x350
+  ? sscanf+0x4e/0x70
+  device_unregister+0x1a/0x60
+  hwmon_device_unregister+0x4a/0xa0
+  thermal_remove_hwmon_sysfs+0x175/0x1d0
+  thermal_zone_device_unregister+0x188/0x1e0
+  iwl_mvm_thermal_exit+0xe7/0x100 [iwlmvm]
+  iwl_op_mode_mvm_stop+0x27/0x180 [iwlmvm]
+  _iwl_op_mode_stop.isra.3+0x2b/0x50 [iwlwifi]
+  iwl_opmode_deregister+0x90/0xa0 [iwlwifi]
+  __exit_compat+0x10/0x2c7 [iwlmvm]
+  __x64_sys_delete_module+0x13f/0x270
+  do_syscall_64+0x5a/0x110
+  entry_SYSCALL_64_after_hwframe+0x44/0xa9
 
-Also, handle the error_id endianness correctly as le32
-
-Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
+Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c | 52 ++++++++++++++++-----
- 1 file changed, 40 insertions(+), 12 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/tt.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-index 8878409d2f07..22a32eb10f01 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-@@ -1897,27 +1897,55 @@ static void iwl_mvm_d3_disconnect_iter(void *data, u8 *mac,
- 		ieee80211_resume_disconnect(vif);
- }
- 
--static int iwl_mvm_check_rt_status(struct iwl_mvm *mvm,
--				   struct ieee80211_vif *vif)
-+static bool iwl_mvm_rt_status(struct iwl_trans *trans, u32 base, u32 *err_id)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
+index b5a16f00bada..fcad25ffd811 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
+@@ -734,7 +734,8 @@ static  struct thermal_zone_device_ops tzone_ops = {
+ static void iwl_mvm_thermal_zone_register(struct iwl_mvm *mvm)
  {
--	u32 base = mvm->trans->dbg.lmac_error_event_table[0];
- 	struct error_table_start {
- 		/* cf. struct iwl_error_event_table */
- 		u32 valid;
--		u32 error_id;
-+		__le32 err_id;
- 	} err_info;
+ 	int i;
+-	char name[] = "iwlwifi";
++	char name[16];
++	static atomic_t counter = ATOMIC_INIT(0);
  
--	iwl_trans_read_mem_bytes(mvm->trans, base,
-+	if (!base)
-+		return false;
-+
-+	iwl_trans_read_mem_bytes(trans, base,
- 				 &err_info, sizeof(err_info));
-+	if (err_info.valid && err_id)
-+		*err_id = le32_to_cpu(err_info.err_id);
+ 	if (!iwl_mvm_is_tt_in_fw(mvm)) {
+ 		mvm->tz_device.tzone = NULL;
+@@ -744,6 +745,7 @@ static void iwl_mvm_thermal_zone_register(struct iwl_mvm *mvm)
  
--	if (err_info.valid &&
--	    err_info.error_id == RF_KILL_INDICATOR_FOR_WOWLAN) {
--		struct cfg80211_wowlan_wakeup wakeup = {
--			.rfkill_release = true,
--		};
--		ieee80211_report_wowlan_wakeup(vif, &wakeup, GFP_KERNEL);
-+	return !!err_info.valid;
-+}
-+
-+static bool iwl_mvm_check_rt_status(struct iwl_mvm *mvm,
-+				   struct ieee80211_vif *vif)
-+{
-+	u32 err_id;
-+
-+	/* check for lmac1 error */
-+	if (iwl_mvm_rt_status(mvm->trans,
-+			      mvm->trans->dbg.lmac_error_event_table[0],
-+			      &err_id)) {
-+		if (err_id == RF_KILL_INDICATOR_FOR_WOWLAN) {
-+			struct cfg80211_wowlan_wakeup wakeup = {
-+				.rfkill_release = true,
-+			};
-+			ieee80211_report_wowlan_wakeup(vif, &wakeup,
-+						       GFP_KERNEL);
-+		}
-+		return true;
- 	}
--	return err_info.valid;
-+
-+	/* check if we have lmac2 set and check for error */
-+	if (iwl_mvm_rt_status(mvm->trans,
-+			      mvm->trans->dbg.lmac_error_event_table[1], NULL))
-+		return true;
-+
-+	/* check for umac error */
-+	if (iwl_mvm_rt_status(mvm->trans,
-+			      mvm->trans->dbg.umac_error_event_table, NULL))
-+		return true;
-+
-+	return false;
- }
+ 	BUILD_BUG_ON(ARRAY_SIZE(name) >= THERMAL_NAME_LENGTH);
  
- static int __iwl_mvm_resume(struct iwl_mvm *mvm, bool test)
++	sprintf(name, "iwlwifi_%u", atomic_inc_return(&counter) & 0xFF);
+ 	mvm->tz_device.tzone = thermal_zone_device_register(name,
+ 							IWL_MAX_DTS_TRIPS,
+ 							IWL_WRITABLE_TRIPS_MSK,
 -- 
 2.24.1
 
