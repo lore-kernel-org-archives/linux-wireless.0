@@ -2,93 +2,108 @@ Return-Path: <SRS0=91MJ=3U=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 381E7C2D0DB
-	for <linux-wireless@archiver.kernel.org>; Fri, 31 Jan 2020 13:45:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D96E2C2D0DB
+	for <linux-wireless@archiver.kernel.org>; Fri, 31 Jan 2020 18:17:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0F64F20705
-	for <linux-wireless@archiver.kernel.org>; Fri, 31 Jan 2020 13:45:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9154A20CC7
+	for <linux-wireless@archiver.kernel.org>; Fri, 31 Jan 2020 18:17:11 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="WUtmJR+v"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728696AbgAaNpu (ORCPT
+        id S1726104AbgAaSRL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 31 Jan 2020 08:45:50 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:55984 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728659AbgAaNpl (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Jan 2020 08:45:41 -0500
-Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
-        by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.92.2)
-        (envelope-from <luca@coelho.fi>)
-        id 1ixWc7-0002Nv-99; Fri, 31 Jan 2020 15:45:39 +0200
-From:   Luca Coelho <luca@coelho.fi>
-To:     kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org
-Date:   Fri, 31 Jan 2020 15:45:25 +0200
-Message-Id: <20200131134530.931641-3-luca@coelho.fi>
-X-Mailer: git-send-email 2.24.1
-In-Reply-To: <20200131134530.931641-1-luca@coelho.fi>
-References: <20200131134530.931641-1-luca@coelho.fi>
+        Fri, 31 Jan 2020 13:17:11 -0500
+Received: from nbd.name ([46.4.11.11]:59404 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726074AbgAaSRK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 31 Jan 2020 13:17:10 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
+        Message-Id:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=E+N0W7UmTxn8pR4Xbg6gHyLUy3Ys2fGDHcQ/zrfcsxM=; b=WUtmJR+vI+hTAF2SlD2kueDQFF
+        5bc+UMAzbAp9KPusw523QIvddlnZXx9iTcvsDBZq7Q+yrUA274dWNH+02gQBJYW0skBNMDarI/JQM
+        HnUYJUWzI/VQtSPczoU+Sd1kLuC3GKcmkz7EYuNaCvlXqYnzvF4UNzJ5VU/7GRi1ap34=;
+Received: from [80.255.7.125] (helo=maeck.local)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.89)
+        (envelope-from <nbd@nbd.name>)
+        id 1ixaqr-0001G5-BY
+        for linux-wireless@vger.kernel.org; Fri, 31 Jan 2020 19:17:09 +0100
+Received: by maeck.local (Postfix, from userid 501)
+        id 615007AFF3AB; Fri, 31 Jan 2020 19:17:08 +0100 (CET)
+From:   Felix Fietkau <nbd@nbd.name>
+To:     linux-wireless@vger.kernel.org
+Subject: [PATCH 2/2] mt76: mt7615: add support for testing hardware reset
+Date:   Fri, 31 Jan 2020 19:17:08 +0100
+Message-Id: <20200131181708.62698-2-nbd@nbd.name>
+X-Mailer: git-send-email 2.24.0
+In-Reply-To: <20200131181708.62698-1-nbd@nbd.name>
+References: <20200131181708.62698-1-nbd@nbd.name>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH v5.6 2/7] iwlwifi: don't throw error when trying to remove IGTK
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Luca Coelho <luciano.coelho@intel.com>
+Send an undersized corrupt packet to the DMA queue, which causes the
+firmware to issue a full chip reset
 
-The IGTK keys are only removed by mac80211 after it has already
-removed the AP station.  This causes the driver to throw an error
-because mac80211 is trying to remove the IGTK when the station doesn't
-exist anymore.
-
-The firmware is aware that the station has been removed and can deal
-with it the next time we try to add an IGTK for a station, so we
-shouldn't try to remove the key if the station ID is
-IWL_MVM_INVALID_STA.  Do this by removing the check for mvm_sta before
-calling iwl_mvm_send_sta_igtk() and check return from that function
-gracefully if the station ID is invalid.
-
-Cc: stable@vger.kernel.org # 4.12+
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+ .../wireless/mediatek/mt76/mt7615/debugfs.c   | 24 +++++++++++++++++++
+ 1 file changed, 24 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index 7b35f416404c..64ef3f3ba23b 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -3320,6 +3320,10 @@ static int iwl_mvm_send_sta_igtk(struct iwl_mvm *mvm,
- 	igtk_cmd.sta_id = cpu_to_le32(sta_id);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/debugfs.c b/drivers/net/wireless/mediatek/mt76/mt7615/debugfs.c
+index 158c0c183e9c..7d8e53ac51ef 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/debugfs.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/debugfs.c
+@@ -98,6 +98,28 @@ mt7615_fw_debug_get(void *data, u64 *val)
+ DEFINE_DEBUGFS_ATTRIBUTE(fops_fw_debug, mt7615_fw_debug_get,
+ 			 mt7615_fw_debug_set, "%lld\n");
  
- 	if (remove_key) {
-+		/* This is a valid situation for IGTK */
-+		if (sta_id == IWL_MVM_INVALID_STA)
-+			return 0;
++static int
++mt7615_reset_test_set(void *data, u64 val)
++{
++	struct mt7615_dev *dev = data;
++	struct sk_buff *skb;
 +
- 		igtk_cmd.ctrl_flags |= cpu_to_le32(STA_KEY_NOT_VALID);
- 	} else {
- 		struct ieee80211_key_seq seq;
-@@ -3574,9 +3578,9 @@ int iwl_mvm_remove_sta_key(struct iwl_mvm *mvm,
- 	IWL_DEBUG_WEP(mvm, "mvm remove dynamic key: idx=%d sta=%d\n",
- 		      keyconf->keyidx, sta_id);
++	if (!mt7615_wait_for_mcu_init(dev))
++		return 0;
++
++	skb = alloc_skb(1, GFP_KERNEL);
++	if (!skb)
++		return -ENOMEM;
++
++	skb_put(skb, 1);
++	mt76_tx_queue_skb_raw(dev, 0, skb, 0);
++
++	return 0;
++}
++
++DEFINE_DEBUGFS_ATTRIBUTE(fops_reset_test, NULL,
++			 mt7615_reset_test_set, "%lld\n");
++
+ static int
+ mt7615_ampdu_stat_read(struct seq_file *file, void *data)
+ {
+@@ -264,6 +286,8 @@ int mt7615_init_debugfs(struct mt7615_dev *dev)
+ 			   &dev->radar_pattern.power);
+ 	debugfs_create_file("radar_trigger", 0200, dir, dev,
+ 			    &fops_radar_pattern);
++	debugfs_create_file("reset_test", 0200, dir, dev,
++			    &fops_reset_test);
+ 	debugfs_create_devm_seqfile(dev->mt76.dev, "temperature", dir,
+ 				    mt7615_read_temperature);
  
--	if (mvm_sta && (keyconf->cipher == WLAN_CIPHER_SUITE_AES_CMAC ||
--			keyconf->cipher == WLAN_CIPHER_SUITE_BIP_GMAC_128 ||
--			keyconf->cipher == WLAN_CIPHER_SUITE_BIP_GMAC_256))
-+	if (keyconf->cipher == WLAN_CIPHER_SUITE_AES_CMAC ||
-+	    keyconf->cipher == WLAN_CIPHER_SUITE_BIP_GMAC_128 ||
-+	    keyconf->cipher == WLAN_CIPHER_SUITE_BIP_GMAC_256)
- 		return iwl_mvm_send_sta_igtk(mvm, keyconf, sta_id, true);
- 
- 	if (!__test_and_clear_bit(keyconf->hw_key_idx, mvm->fw_key_table)) {
 -- 
-2.24.1
+2.24.0
 
