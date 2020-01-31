@@ -6,36 +6,36 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8716FC33CB2
-	for <linux-wireless@archiver.kernel.org>; Fri, 31 Jan 2020 11:18:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54AA9C33CB2
+	for <linux-wireless@archiver.kernel.org>; Fri, 31 Jan 2020 11:20:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5D33020CC7
-	for <linux-wireless@archiver.kernel.org>; Fri, 31 Jan 2020 11:18:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2EB8720CC7
+	for <linux-wireless@archiver.kernel.org>; Fri, 31 Jan 2020 11:20:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728395AbgAaLS2 (ORCPT
+        id S1728383AbgAaLUJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 31 Jan 2020 06:18:28 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:55882 "EHLO
+        Fri, 31 Jan 2020 06:20:09 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:55888 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728268AbgAaLS2 (ORCPT
+        with ESMTP id S1728268AbgAaLUJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Jan 2020 06:18:28 -0500
+        Fri, 31 Jan 2020 06:20:09 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92.2)
         (envelope-from <luca@coelho.fi>)
-        id 1ixUEd-0002GC-Vo; Fri, 31 Jan 2020 13:13:16 +0200
+        id 1ixUEj-0002GC-11; Fri, 31 Jan 2020 13:13:22 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org
-Date:   Fri, 31 Jan 2020 13:12:49 +0200
-Message-Id: <20200131111300.891737-13-luca@coelho.fi>
+Date:   Fri, 31 Jan 2020 13:12:53 +0200
+Message-Id: <20200131111300.891737-17-luca@coelho.fi>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200131111300.891737-1-luca@coelho.fi>
 References: <20200131111300.891737-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 12/23] cfg80211: Limit the registration for authentication frames
+Subject: [PATCH 16/23] mac80211: Handle SMPS mode changes only in AP mode
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -43,121 +43,124 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ilan Peer <ilan.peer@intel.com>
 
-Commit 87e1e12c3b94 ("mac80211: Allow user space to register for
-station Rx authentication") enabled registration for authentication
-frames to allow PASN flows. However, since some versions of the user
-space daemons wrongly register to all types of authentication frames
-(which might result in unexpected behavior) allow such registration
-if the request is for a specific authentication algorithm number.
+According to IEEE802.11 specifications the SM power save field
+in the HT capability IE and the HE extended capability IE is valid
+only in (re)association frames and should be ignored otherwise.
+Remove code paths that handled this also for non AP modes.
 
 Signed-off-by: Ilan Peer <ilan.peer@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- net/wireless/core.h    |  2 +-
- net/wireless/mlme.c    | 33 +++++++++++++++++++++++++++++----
- net/wireless/nl80211.c |  5 +++--
- 3 files changed, 33 insertions(+), 7 deletions(-)
+ net/mac80211/he.c |  2 +-
+ net/mac80211/ht.c | 42 ++++++++++++++++++++++++------------------
+ net/mac80211/rx.c |  6 +++++-
+ 3 files changed, 30 insertions(+), 20 deletions(-)
 
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index ed487e324571..bb897a803ffe 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -385,7 +385,7 @@ void cfg80211_mlme_down(struct cfg80211_registered_device *rdev,
- 			struct net_device *dev);
- int cfg80211_mlme_register_mgmt(struct wireless_dev *wdev, u32 snd_pid,
- 				u16 frame_type, const u8 *match_data,
--				int match_len);
-+				int match_len, struct netlink_ext_ack *extack);
- void cfg80211_mlme_unreg_wk(struct work_struct *wk);
- void cfg80211_mlme_unregister_socket(struct wireless_dev *wdev, u32 nlpid);
- void cfg80211_mlme_purge_registrations(struct wireless_dev *wdev);
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index f9462010575f..e4805a3bd310 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -4,6 +4,7 @@
+diff --git a/net/mac80211/he.c b/net/mac80211/he.c
+index 5245c19f39bf..1087f715338b 100644
+--- a/net/mac80211/he.c
++++ b/net/mac80211/he.c
+@@ -3,7 +3,7 @@
+  * HE handling
   *
-  * Copyright (c) 2009, Jouni Malinen <j@w1.fi>
-  * Copyright (c) 2015		Intel Deutschland GmbH
-+ * Copyright (C) 2019 Intel Corporation
+  * Copyright(c) 2017 Intel Deutschland GmbH
+- * Copyright(c) 2019 Intel Corporation
++ * Copyright(c) 2019 - 2020 Intel Corporation
   */
  
- #include <linux/kernel.h>
-@@ -470,7 +471,7 @@ void cfg80211_mlme_unreg_wk(struct work_struct *wk)
+ #include "ieee80211_i.h"
+diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
+index a2e4d6b8fd98..a8e144fd02f1 100644
+--- a/net/mac80211/ht.c
++++ b/net/mac80211/ht.c
+@@ -9,6 +9,7 @@
+  * Copyright 2007, Michael Wu <flamingice@sourmilk.net>
+  * Copyright 2007-2010, Intel Corporation
+  * Copyright 2017	Intel Deutschland GmbH
++ * Copyright(c) 2020 Intel Corporation
+  */
  
- int cfg80211_mlme_register_mgmt(struct wireless_dev *wdev, u32 snd_portid,
- 				u16 frame_type, const u8 *match_data,
--				int match_len)
-+				int match_len, struct netlink_ext_ack *extack)
- {
- 	struct wiphy *wiphy = wdev->wiphy;
- 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
-@@ -481,15 +482,38 @@ int cfg80211_mlme_register_mgmt(struct wireless_dev *wdev, u32 snd_portid,
- 	if (!wdev->wiphy->mgmt_stypes)
- 		return -EOPNOTSUPP;
+ #include <linux/ieee80211.h>
+@@ -144,7 +145,6 @@ bool ieee80211_ht_cap_ie_to_sta_ht_cap(struct ieee80211_sub_if_data *sdata,
+ 	int i, max_tx_streams;
+ 	bool changed;
+ 	enum ieee80211_sta_rx_bandwidth bw;
+-	enum ieee80211_smps_mode smps_mode;
  
--	if ((frame_type & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_MGMT)
-+	if ((frame_type & IEEE80211_FCTL_FTYPE) != IEEE80211_FTYPE_MGMT) {
-+		NL_SET_ERR_MSG(extack, "frame type not management");
- 		return -EINVAL;
-+	}
+ 	memset(&ht_cap, 0, sizeof(ht_cap));
  
--	if (frame_type & ~(IEEE80211_FCTL_FTYPE | IEEE80211_FCTL_STYPE))
-+	if (frame_type & ~(IEEE80211_FCTL_FTYPE | IEEE80211_FCTL_STYPE)) {
-+		NL_SET_ERR_MSG(extack, "Invalid frame type");
- 		return -EINVAL;
-+	}
+@@ -270,24 +270,30 @@ bool ieee80211_ht_cap_ie_to_sta_ht_cap(struct ieee80211_sub_if_data *sdata,
+ 		ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40 ?
+ 				IEEE80211_STA_RX_BW_40 : IEEE80211_STA_RX_BW_20;
  
- 	mgmt_type = (frame_type & IEEE80211_FCTL_STYPE) >> 4;
--	if (!(wdev->wiphy->mgmt_stypes[wdev->iftype].rx & BIT(mgmt_type)))
-+	if (!(wdev->wiphy->mgmt_stypes[wdev->iftype].rx & BIT(mgmt_type))) {
-+		NL_SET_ERR_MSG(extack,
-+			       "Registration to specific type not supported");
-+		return -EINVAL;
-+	}
+-	switch ((ht_cap.cap & IEEE80211_HT_CAP_SM_PS)
+-			>> IEEE80211_HT_CAP_SM_PS_SHIFT) {
+-	case WLAN_HT_CAP_SM_PS_INVALID:
+-	case WLAN_HT_CAP_SM_PS_STATIC:
+-		smps_mode = IEEE80211_SMPS_STATIC;
+-		break;
+-	case WLAN_HT_CAP_SM_PS_DYNAMIC:
+-		smps_mode = IEEE80211_SMPS_DYNAMIC;
+-		break;
+-	case WLAN_HT_CAP_SM_PS_DISABLED:
+-		smps_mode = IEEE80211_SMPS_OFF;
+-		break;
+-	}
+-
+-	if (smps_mode != sta->sta.smps_mode)
+-		changed = true;
+-	sta->sta.smps_mode = smps_mode;
++	if (sta->sdata->vif.type == NL80211_IFTYPE_AP ||
++	    sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN) {
++		enum ieee80211_smps_mode smps_mode;
 +
-+	/*
-+	 * To support Pre Association Security Negotiation (PASN), registration
-+	 * for authentication frames should be supported. However, as some
-+	 * versions of the user space daemons wrongly register to all types of
-+	 * authentication frames (which might result in unexpected behavior)
-+	 * allow such registration if the request is for a specific
-+	 * authentication algorithm number.
-+	 */
-+	if (wdev->iftype == NL80211_IFTYPE_STATION &&
-+	    (frame_type & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_AUTH &&
-+	    !(match_data && match_len >= 2)) {
-+		NL_SET_ERR_MSG(extack,
-+			       "Authentication algorithm number required");
- 		return -EINVAL;
++		switch ((ht_cap.cap & IEEE80211_HT_CAP_SM_PS)
++				>> IEEE80211_HT_CAP_SM_PS_SHIFT) {
++		case WLAN_HT_CAP_SM_PS_INVALID:
++		case WLAN_HT_CAP_SM_PS_STATIC:
++			smps_mode = IEEE80211_SMPS_STATIC;
++			break;
++		case WLAN_HT_CAP_SM_PS_DYNAMIC:
++			smps_mode = IEEE80211_SMPS_DYNAMIC;
++			break;
++		case WLAN_HT_CAP_SM_PS_DISABLED:
++			smps_mode = IEEE80211_SMPS_OFF;
++			break;
++		}
+ 
++		if (smps_mode != sta->sta.smps_mode)
++			changed = true;
++		sta->sta.smps_mode = smps_mode;
++	} else {
++		sta->sta.smps_mode = IEEE80211_SMPS_OFF;
 +	}
- 
- 	nreg = kzalloc(sizeof(*reg) + match_len, GFP_KERNEL);
- 	if (!nreg)
-@@ -504,6 +528,7 @@ int cfg80211_mlme_register_mgmt(struct wireless_dev *wdev, u32 snd_portid,
- 			continue;
- 
- 		if (memcmp(reg->match, match_data, mlen) == 0) {
-+			NL_SET_ERR_MSG(extack, "Match already configured");
- 			err = -EALREADY;
- 			break;
- 		}
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 4ac21cf5ffc1..25e9c936289b 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -10589,8 +10589,9 @@ static int nl80211_register_mgmt(struct sk_buff *skb, struct genl_info *info)
- 		return -EOPNOTSUPP;
- 
- 	return cfg80211_mlme_register_mgmt(wdev, info->snd_portid, frame_type,
--			nla_data(info->attrs[NL80211_ATTR_FRAME_MATCH]),
--			nla_len(info->attrs[NL80211_ATTR_FRAME_MATCH]));
-+					   nla_data(info->attrs[NL80211_ATTR_FRAME_MATCH]),
-+					   nla_len(info->attrs[NL80211_ATTR_FRAME_MATCH]),
-+					   info->extack);
+ 	return changed;
  }
  
- static int nl80211_tx_mgmt(struct sk_buff *skb, struct genl_info *info)
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 619c223f1cde..ec3a04a1db20 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -6,7 +6,7 @@
+  * Copyright 2007-2010	Johannes Berg <johannes@sipsolutions.net>
+  * Copyright 2013-2014  Intel Mobile Communications GmbH
+  * Copyright(c) 2015 - 2017 Intel Deutschland GmbH
+- * Copyright (C) 2018-2019 Intel Corporation
++ * Copyright (C) 2018-2020 Intel Corporation
+  */
+ 
+ #include <linux/jiffies.h>
+@@ -3082,6 +3082,10 @@ ieee80211_rx_h_action(struct ieee80211_rx_data *rx)
+ 			enum ieee80211_smps_mode smps_mode;
+ 			struct sta_opmode_info sta_opmode = {};
+ 
++			if (sdata->vif.type != NL80211_IFTYPE_AP &&
++			    sdata->vif.type != NL80211_IFTYPE_AP_VLAN)
++				goto handled;
++
+ 			/* convert to HT capability */
+ 			switch (mgmt->u.action.u.ht_smps.smps_control) {
+ 			case WLAN_HT_SMPS_CONTROL_DISABLED:
 -- 
 2.24.1
 
