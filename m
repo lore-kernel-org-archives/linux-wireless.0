@@ -1,361 +1,92 @@
-Return-Path: <SRS0=91MJ=3U=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=cHPN=3V=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85350C35240
-	for <linux-wireless@archiver.kernel.org>; Fri, 31 Jan 2020 18:17:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1C57C35246
+	for <linux-wireless@archiver.kernel.org>; Sat,  1 Feb 2020 12:58:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4914020CC7
-	for <linux-wireless@archiver.kernel.org>; Fri, 31 Jan 2020 18:17:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C76A0206E3
+	for <linux-wireless@archiver.kernel.org>; Sat,  1 Feb 2020 12:58:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="kGRNMnO5"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Q5qRgiBq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726139AbgAaSRL (ORCPT
+        id S1726518AbgBAM6n (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 31 Jan 2020 13:17:11 -0500
-Received: from nbd.name ([46.4.11.11]:59406 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725268AbgAaSRL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 31 Jan 2020 13:17:11 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-Id:Date:Subject
-        :To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:Content-Description:
-        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=022cjndfusktEnAtwNv7KPkrKvPAzM6MYI7iRQTgQ44=; b=kGRNMnO5Rw3PRKtksqP6wKDxKc
-        FpuqhHuXKLJGnj/6byjf8CowiQwIXZxHopNCWb06bokiQ9yiveXgX7hqdNh+HrReHU2ZGKDQYmd7Z
-        W2tm3btoQxxWNHbXTJJHaSSDGwab0AugVAcJTH9S5wRV9PcpR1zzsr232XIC8npn7khM=;
-Received: from [80.255.7.125] (helo=maeck.local)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.89)
-        (envelope-from <nbd@nbd.name>)
-        id 1ixaqr-0001G4-BY
-        for linux-wireless@vger.kernel.org; Fri, 31 Jan 2020 19:17:09 +0100
-Received: by maeck.local (Postfix, from userid 501)
-        id 66E857AFF3AC; Fri, 31 Jan 2020 19:17:08 +0100 (CET)
-From:   Felix Fietkau <nbd@nbd.name>
-To:     linux-wireless@vger.kernel.org
-Subject: [PATCH 1/2] mt76: mt7615: implement hardware reset support
-Date:   Fri, 31 Jan 2020 19:17:07 +0100
-Message-Id: <20200131181708.62698-1-nbd@nbd.name>
-X-Mailer: git-send-email 2.24.0
+        Sat, 1 Feb 2020 07:58:43 -0500
+Received: from us-smtp-1.mimecast.com ([207.211.31.81]:55337 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726297AbgBAM6m (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 1 Feb 2020 07:58:42 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1580561921;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=o0Icocazkr7fGvThFR2+DwDJx6Tjm7Bl4s6ULVOoWQ8=;
+        b=Q5qRgiBqeiFdeSQKLlRihv6J9tXcVPER2Y9aNY64e/L45kFWP4hHPLz96rmhvrjOLlbFV0
+        9ClV2Pb30aXXVLXZRkEWk012WoE142ddq0RV1BeE9m8c5WSyKihAJZF5tIKj7SR2TjS42H
+        AqnpEtGQkgea4hZIPFAONF5lj4MbGf8=
+Received: from mail-lj1-f199.google.com (mail-lj1-f199.google.com
+ [209.85.208.199]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-349-rj2OCMGtP4OYkmmbRCr83g-1; Sat, 01 Feb 2020 07:58:39 -0500
+X-MC-Unique: rj2OCMGtP4OYkmmbRCr83g-1
+Received: by mail-lj1-f199.google.com with SMTP id d14so2447209ljg.17
+        for <linux-wireless@vger.kernel.org>; Sat, 01 Feb 2020 04:58:38 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:subject:in-reply-to:references:date
+         :message-id:mime-version:content-transfer-encoding;
+        bh=o0Icocazkr7fGvThFR2+DwDJx6Tjm7Bl4s6ULVOoWQ8=;
+        b=m04X0ynCWtem18sLTieSTIPSFISWMwEa53GVIFJa0IeFSzTVu7kojT3H+BSZwl2T9A
+         mS4fvsYhIrFjElgxHnhXLIf619zuJ/+BO0wd44koLkK/uhaJ2M9GDNSAZHMatQlsacTR
+         mxSNwh7IgsboAiA6F7VdI5vJbmoNVMMUhAeX23Rw6E4e5uDswaIae2GWkCqW+eqjrhmJ
+         PxCvUs8gFDY7C7uAbrs0g2rQgcCSSdf3Lc7ZVcecr7sGl0XFVfn9ePHUGg4TD3gqaoLz
+         qi0JrJphTzwe6WTPiZ4DkyT4TQBUGnQbLX6HDMCr1fCcyQ3y0CpgMBJYSbeRwKdMfeEb
+         38wQ==
+X-Gm-Message-State: APjAAAXgd1j5kr4Kbc6BWqR7oA4eOtKrNM/eYE4ax2x+qXl6BYhT751/
+        Re1awqyom478U+aWZt1pDijjDcUYVZOfrKz80nJ4eln+uhUpJw8oeGr2iiHl/UIpaAn5OeFJdjL
+        GYSNZ8URxaVFsK4r93l8tFMrqDmc=
+X-Received: by 2002:ac2:523c:: with SMTP id i28mr7758558lfl.104.1580561917677;
+        Sat, 01 Feb 2020 04:58:37 -0800 (PST)
+X-Google-Smtp-Source: APXvYqxr1RpS5ihMCBTE/ENagRS/wac/StuWa9qld+9sNiDq1xYn1UeLJ5ctEvsprVEVJosnSoTMYw==
+X-Received: by 2002:ac2:523c:: with SMTP id i28mr7758553lfl.104.1580561917456;
+        Sat, 01 Feb 2020 04:58:37 -0800 (PST)
+Received: from alrua-x1.borgediget.toke.dk ([85.204.121.218])
+        by smtp.gmail.com with ESMTPSA id l16sm5992670lfh.74.2020.02.01.04.58.36
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 01 Feb 2020 04:58:36 -0800 (PST)
+Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
+        id B65D7180082; Sat,  1 Feb 2020 13:58:33 +0100 (CET)
+From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
+To:     Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 5/5] mt76: enable Airtime Queue Limit support
+In-Reply-To: <20200127181754.2810-5-nbd@nbd.name>
+References: <20200127181754.2810-1-nbd@nbd.name> <20200127181754.2810-5-nbd@nbd.name>
+X-Clacks-Overhead: GNU Terry Pratchett
+Date:   Sat, 01 Feb 2020 13:58:33 +0100
+Message-ID: <875zgqfoqu.fsf@toke.dk>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-When the firmware detects a problem, it needs the host to stop/reset DMA and
-resume it again when the hardware state has been reset.
+Felix Fietkau <nbd@nbd.name> writes:
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- drivers/net/wireless/mediatek/mt76/mcu.c      |   3 +-
- drivers/net/wireless/mediatek/mt76/mt76.h     |   1 +
- .../net/wireless/mediatek/mt76/mt7615/dma.c   |   3 +-
- .../net/wireless/mediatek/mt76/mt7615/init.c  |   2 +
- .../net/wireless/mediatek/mt76/mt7615/mac.c   | 125 ++++++++++++++++++
- .../net/wireless/mediatek/mt76/mt7615/mmio.c  |  10 ++
- .../wireless/mediatek/mt76/mt7615/mt7615.h    |   6 +
- .../net/wireless/mediatek/mt76/mt7615/regs.h  |  23 ++++
- 8 files changed, 171 insertions(+), 2 deletions(-)
+> It is supported by all drivers
+>
+> Signed-off-by: Felix Fietkau <nbd@nbd.name>
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mcu.c b/drivers/net/wireless/mediatek/mt76/mcu.c
-index 2a976688804d..b0fb0830c9e1 100644
---- a/drivers/net/wireless/mediatek/mt76/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mcu.c
-@@ -35,7 +35,8 @@ struct sk_buff *mt76_mcu_get_response(struct mt76_dev *dev,
- 
- 	timeout = expires - jiffies;
- 	wait_event_timeout(dev->mmio.mcu.wait,
--			   !skb_queue_empty(&dev->mmio.mcu.res_q),
-+			   (!skb_queue_empty(&dev->mmio.mcu.res_q) ||
-+			    test_bit(MT76_MCU_RESET, &dev->phy.state)),
- 			   timeout);
- 	return skb_dequeue(&dev->mmio.mcu.res_q);
- }
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
-index 560f9ec9c39c..0956785ad6f8 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-@@ -274,6 +274,7 @@ enum {
- 	MT76_STATE_MCU_RUNNING,
- 	MT76_SCANNING,
- 	MT76_RESET,
-+	MT76_MCU_RESET,
- 	MT76_REMOVED,
- 	MT76_READING_STATS,
- };
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/dma.c b/drivers/net/wireless/mediatek/mt76/mt7615/dma.c
-index aeccb35e14f3..1bc71f5081ce 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/dma.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/dma.c
-@@ -265,7 +265,8 @@ int mt7615_dma_init(struct mt7615_dev *dev)
- 		 MT_WPDMA_GLO_CFG_RX_DMA_EN);
- 
- 	/* enable interrupts for TX/RX rings */
--	mt7615_irq_enable(dev, MT_INT_RX_DONE_ALL | MT_INT_TX_DONE_ALL);
-+	mt7615_irq_enable(dev, MT_INT_RX_DONE_ALL | MT_INT_TX_DONE_ALL |
-+			       MT_INT_MCU_CMD);
- 
- 	if (is_mt7622(&dev->mt76))
- 		mt7622_dma_sched_init(dev);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/init.c b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
-index 2f6ad2b24464..e7f251957fca 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
-@@ -447,6 +447,8 @@ int mt7615_register_device(struct mt7615_dev *dev)
- 	INIT_DELAYED_WORK(&dev->mt76.mac_work, mt7615_mac_work);
- 	INIT_LIST_HEAD(&dev->sta_poll_list);
- 	spin_lock_init(&dev->sta_poll_lock);
-+	init_waitqueue_head(&dev->reset_wait);
-+	INIT_WORK(&dev->reset_work, mt7615_mac_reset_work);
- 
- 	ret = mt7622_wmac_init(dev);
- 	if (ret)
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-index c4fea7227cee..f98ae0be1b03 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-@@ -1782,6 +1782,131 @@ void mt7615_mac_work(struct work_struct *work)
- 				     MT7615_WATCHDOG_TIME);
- }
- 
-+static bool
-+mt7615_wait_reset_state(struct mt7615_dev *dev, u32 state)
-+{
-+	bool ret;
-+
-+	ret = wait_event_timeout(dev->reset_wait,
-+				 (READ_ONCE(dev->reset_state) & state),
-+				 MT7615_RESET_TIMEOUT);
-+	WARN(!ret, "Timeout waiting for MCU reset state %x\n", state);
-+	return ret;
-+}
-+
-+static void
-+mt7615_update_vif_beacon(void *priv, u8 *mac, struct ieee80211_vif *vif)
-+{
-+	struct ieee80211_hw *hw = priv;
-+
-+	mt7615_mcu_set_bcn(hw, vif, vif->bss_conf.enable_beacon);
-+}
-+
-+static void
-+mt7615_update_beacons(struct mt7615_dev *dev)
-+{
-+	ieee80211_iterate_active_interfaces(dev->mt76.hw,
-+		IEEE80211_IFACE_ITER_RESUME_ALL,
-+		mt7615_update_vif_beacon, dev->mt76.hw);
-+
-+	if (!dev->mt76.phy2)
-+		return;
-+
-+	ieee80211_iterate_active_interfaces(dev->mt76.phy2->hw,
-+		IEEE80211_IFACE_ITER_RESUME_ALL,
-+		mt7615_update_vif_beacon, dev->mt76.phy2->hw);
-+}
-+
-+static void
-+mt7615_dma_reset(struct mt7615_dev *dev)
-+{
-+	int i;
-+
-+	mt76_clear(dev, MT_WPDMA_GLO_CFG,
-+		   MT_WPDMA_GLO_CFG_RX_DMA_EN | MT_WPDMA_GLO_CFG_TX_DMA_EN |
-+		   MT_WPDMA_GLO_CFG_TX_WRITEBACK_DONE);
-+	usleep_range(1000, 2000);
-+
-+	for (i = 0; i < __MT_TXQ_MAX; i++)
-+		mt76_queue_tx_cleanup(dev, i, true);
-+
-+	for (i = 0; i < ARRAY_SIZE(dev->mt76.q_rx); i++)
-+		mt76_queue_rx_reset(dev, i);
-+
-+	mt76_set(dev, MT_WPDMA_GLO_CFG,
-+		 MT_WPDMA_GLO_CFG_RX_DMA_EN | MT_WPDMA_GLO_CFG_TX_DMA_EN |
-+		 MT_WPDMA_GLO_CFG_TX_WRITEBACK_DONE);
-+}
-+
-+void mt7615_mac_reset_work(struct work_struct *work)
-+{
-+	struct mt7615_dev *dev;
-+
-+	dev = container_of(work, struct mt7615_dev, reset_work);
-+
-+	if (!(READ_ONCE(dev->reset_state) & MT_MCU_CMD_STOP_PDMA))
-+		return;
-+
-+	ieee80211_stop_queues(mt76_hw(dev));
-+	if (dev->mt76.phy2)
-+		ieee80211_stop_queues(dev->mt76.phy2->hw);
-+
-+	set_bit(MT76_RESET, &dev->mphy.state);
-+	set_bit(MT76_MCU_RESET, &dev->mphy.state);
-+	wake_up(&dev->mt76.mmio.mcu.wait);
-+	cancel_delayed_work_sync(&dev->mt76.mac_work);
-+
-+	/* lock/unlock all queues to ensure that no tx is pending */
-+	mt76_txq_schedule_all(&dev->mphy);
-+	if (dev->mt76.phy2)
-+		mt76_txq_schedule_all(dev->mt76.phy2);
-+
-+	tasklet_disable(&dev->mt76.tx_tasklet);
-+	napi_disable(&dev->mt76.napi[0]);
-+	napi_disable(&dev->mt76.napi[1]);
-+	napi_disable(&dev->mt76.tx_napi);
-+
-+	mutex_lock(&dev->mt76.mutex);
-+
-+	mt76_wr(dev, MT_MCU_INT_EVENT, MT_MCU_INT_EVENT_PDMA_STOPPED);
-+
-+	if (mt7615_wait_reset_state(dev, MT_MCU_CMD_RESET_DONE)) {
-+		mt7615_dma_reset(dev);
-+
-+		mt76_wr(dev, MT_WPDMA_MEM_RNG_ERR, 0);
-+
-+		mt76_wr(dev, MT_MCU_INT_EVENT, MT_MCU_INT_EVENT_PDMA_INIT);
-+		mt7615_wait_reset_state(dev, MT_MCU_CMD_RECOVERY_DONE);
-+	}
-+
-+	clear_bit(MT76_MCU_RESET, &dev->mphy.state);
-+	clear_bit(MT76_RESET, &dev->mphy.state);
-+
-+	tasklet_enable(&dev->mt76.tx_tasklet);
-+	napi_enable(&dev->mt76.tx_napi);
-+	napi_schedule(&dev->mt76.tx_napi);
-+
-+	napi_enable(&dev->mt76.napi[0]);
-+	napi_schedule(&dev->mt76.napi[0]);
-+
-+	napi_enable(&dev->mt76.napi[1]);
-+	napi_schedule(&dev->mt76.napi[1]);
-+
-+	ieee80211_wake_queues(mt76_hw(dev));
-+	if (dev->mt76.phy2)
-+		ieee80211_wake_queues(dev->mt76.phy2->hw);
-+
-+	mt76_wr(dev, MT_MCU_INT_EVENT, MT_MCU_INT_EVENT_RESET_DONE);
-+	mt7615_wait_reset_state(dev, MT_MCU_CMD_NORMAL_STATE);
-+
-+	mutex_unlock(&dev->mt76.mutex);
-+
-+	mt7615_update_beacons(dev);
-+
-+	ieee80211_queue_delayed_work(mt76_hw(dev), &dev->mt76.mac_work,
-+				     MT7615_WATCHDOG_TIME);
-+}
-+
- static void mt7615_dfs_stop_radar_detector(struct mt7615_phy *phy)
- {
- 	struct mt7615_dev *dev = phy->dev;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mmio.c b/drivers/net/wireless/mediatek/mt76/mt7615/mmio.c
-index fcd8a8b4e816..0b445471b6e8 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mmio.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mmio.c
-@@ -53,6 +53,16 @@ static irqreturn_t mt7615_irq_handler(int irq, void *dev_instance)
- 		napi_schedule(&dev->mt76.napi[1]);
- 	}
- 
-+	if (intr & MT_INT_MCU_CMD) {
-+		u32 val = mt76_rr(dev, MT_MCU_CMD);
-+
-+		if (val & MT_MCU_CMD_ERROR_MASK) {
-+			dev->reset_state = val;
-+			ieee80211_queue_work(mt76_hw(dev), &dev->reset_work);
-+			wake_up(&dev->reset_wait);
-+		}
-+	}
-+
- 	return IRQ_HANDLED;
- }
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-index b4748cf079b1..95973e49c4a9 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-@@ -18,6 +18,7 @@
- 					 MT7615_MAX_INTERFACES)
- 
- #define MT7615_WATCHDOG_TIME		(HZ / 10)
-+#define MT7615_RESET_TIMEOUT		(30 * HZ)
- #define MT7615_RATE_RETRY		2
- 
- #define MT7615_TX_RING_SIZE		1024
-@@ -156,6 +157,10 @@ struct mt7615_dev {
- 
- 	struct work_struct mcu_work;
- 
-+	struct work_struct reset_work;
-+	wait_queue_head_t reset_wait;
-+	u32 reset_state;
-+
- 	struct list_head sta_poll_list;
- 	spinlock_t sta_poll_lock;
- 
-@@ -352,6 +357,7 @@ void mt7615_mac_tx_free(struct mt7615_dev *dev, struct sk_buff *skb);
- int mt7615_mac_wtbl_set_key(struct mt7615_dev *dev, struct mt76_wcid *wcid,
- 			    struct ieee80211_key_conf *key,
- 			    enum set_key_cmd cmd);
-+void mt7615_mac_reset_work(struct work_struct *work);
- 
- int mt7615_mcu_set_dbdc(struct mt7615_dev *dev);
- int mt7615_mcu_set_eeprom(struct mt7615_dev *dev);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/regs.h b/drivers/net/wireless/mediatek/mt76/mt7615/regs.h
-index abecb3bfbc4b..fe68f6b2cbf8 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/regs.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/regs.h
-@@ -35,6 +35,12 @@
- #define MT_CFG_LPCR_HOST_FW_OWN		BIT(0)
- #define MT_CFG_LPCR_HOST_DRV_OWN	BIT(1)
- 
-+#define MT_MCU_INT_EVENT		MT_HIF(0x1f8)
-+#define MT_MCU_INT_EVENT_PDMA_STOPPED	BIT(0)
-+#define MT_MCU_INT_EVENT_PDMA_INIT	BIT(1)
-+#define MT_MCU_INT_EVENT_SER_TRIGGER	BIT(2)
-+#define MT_MCU_INT_EVENT_RESET_DONE	BIT(3)
-+
- #define MT_INT_SOURCE_CSR		MT_HIF(0x200)
- #define MT_INT_MASK_CSR			MT_HIF(0x204)
- #define MT_DELAY_INT_CFG		MT_HIF(0x210)
-@@ -43,6 +49,7 @@
- #define MT_INT_RX_DONE_ALL		GENMASK(1, 0)
- #define MT_INT_TX_DONE_ALL		GENMASK(19, 4)
- #define MT_INT_TX_DONE(_n)		BIT((_n) + 4)
-+#define MT_INT_MCU_CMD			BIT(30)
- 
- #define MT_WPDMA_GLO_CFG		MT_HIF(0x208)
- #define MT_WPDMA_GLO_CFG_TX_DMA_EN	BIT(0)
-@@ -63,6 +70,22 @@
- 
- #define MT_WPDMA_RST_IDX		MT_HIF(0x20c)
- 
-+#define MT_WPDMA_MEM_RNG_ERR		MT_HIF(0x224)
-+
-+#define MT_MCU_CMD			MT_HIF(0x234)
-+#define MT_MCU_CMD_CLEAR_FW_OWN		BIT(0)
-+#define MT_MCU_CMD_STOP_PDMA_FW_RELOAD	BIT(1)
-+#define MT_MCU_CMD_STOP_PDMA		BIT(2)
-+#define MT_MCU_CMD_RESET_DONE		BIT(3)
-+#define MT_MCU_CMD_RECOVERY_DONE	BIT(4)
-+#define MT_MCU_CMD_NORMAL_STATE		BIT(5)
-+#define MT_MCU_CMD_LMAC_ERROR		BIT(24)
-+#define MT_MCU_CMD_PSE_ERROR		BIT(25)
-+#define MT_MCU_CMD_PLE_ERROR		BIT(26)
-+#define MT_MCU_CMD_PDMA_ERROR		BIT(27)
-+#define MT_MCU_CMD_PCIE_ERROR		BIT(28)
-+#define MT_MCU_CMD_ERROR_MASK		(GENMASK(5, 1) | GENMASK(28, 24))
-+
- #define MT_TX_RING_BASE			MT_HIF(0x300)
- #define MT_RX_RING_BASE			MT_HIF(0x400)
- 
--- 
-2.24.0
+Nice!
+
+Acked-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@redhat.com>
 
