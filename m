@@ -1,123 +1,83 @@
-Return-Path: <SRS0=U5kn=3Z=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=zIvl=3Y=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=0.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,PDS_TONAME_EQ_TOLOCAL_SHORT,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32515C35249
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 Feb 2020 08:35:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E54EC3524A
+	for <linux-wireless@archiver.kernel.org>; Tue,  4 Feb 2020 04:42:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id ED1D220730
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 Feb 2020 08:35:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 30CE62087E
+	for <linux-wireless@archiver.kernel.org>; Tue,  4 Feb 2020 04:42:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="RTIfo0m/"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fuvODWxs"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728012AbgBEIfl (ORCPT
+        id S1727201AbgBDEmb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 5 Feb 2020 03:35:41 -0500
-Received: from mail26.static.mailgun.info ([104.130.122.26]:54462 "EHLO
-        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727068AbgBEIfl (ORCPT
+        Mon, 3 Feb 2020 23:42:31 -0500
+Received: from mail-il1-f177.google.com ([209.85.166.177]:45976 "EHLO
+        mail-il1-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726924AbgBDEmb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Feb 2020 03:35:41 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1580891740; h=Message-Id: Date: Subject: Cc: To: From:
- Sender; bh=lj4f+MD9H6ancfUR5vhoNmQMx4d6fdDWJ54DZFxbXqw=; b=RTIfo0m/YpzVIQV99epJhaFiwYjXM3Zc55k7K4ermuU8E3ipj3cWdviRUEGbhs2GbJjeK1I9
- RphFjF4HypPqNd4c9bUGw+0QRI2O6rX9RwqBeJJXhB/wjHWUxCV/WOfOBYNqosiib5fc4beW
- fDhjVo8PnrHt8JfRK7T9L5ILljQ=
-X-Mailgun-Sending-Ip: 104.130.122.26
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e3a7e5b.7f20da47aab0-smtp-out-n02;
- Wed, 05 Feb 2020 08:35:39 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 551FEC433A2; Wed,  5 Feb 2020 08:35:38 +0000 (UTC)
-Received: from vnaralas-linux.qualcomm.com (blr-c-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.19.19])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: vnaralas)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 782AEC43383;
-        Wed,  5 Feb 2020 08:35:36 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 782AEC43383
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=vnaralas@codeaurora.org
-From:   Venkateswara Rao Naralasetty <vnaralas@codeaurora.org>
-To:     ath11k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org,
-        Venkateswara Naralasetty <vnaralas@codeaurora.org>
-Subject: [PATCH] ath11k: fix incorrect peer stats counters update
-Date:   Wed,  5 Feb 2020 14:05:30 +0530
-Message-Id: <1580891730-23868-1-git-send-email-vnaralas@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
+        Mon, 3 Feb 2020 23:42:31 -0500
+Received: by mail-il1-f177.google.com with SMTP id p8so14692624iln.12
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Feb 2020 20:42:30 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:from:date:message-id:subject:to:cc;
+        bh=q0qFMAPlpIif/WUzkvX+0vWo8RAka1cyW/tA0f1CbCk=;
+        b=fuvODWxspwX6QN0Ji6snZD4cM2tiTmsGEakE6/d4oQpZGutRu8cyOSIdGrf1acT9wT
+         m69fAJF/1ViJOUltNXdnFtCQxj7XjkbZkP/8Ad5LH1112dkqrNQDrTcY5GnBHomPwpwp
+         mLkMB0iCluhMjaqk4C56j8dr0qS9BKNeX75M6IRPs7o68qqDhP4P78q06FSkysw4JGDW
+         +UChtvs8UY++Rw1nmg5+NnO8vB9ESpOHKNX2fYXdnsRknCBWscjwITBcgBSw8ALh6QlH
+         YeiBoJWEBdgHrJeX/sBLXgbjFQmQc3BpNFNFc8wcsemenjfc2gD03QrxAcud67XnxoSI
+         Nlfg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc;
+        bh=q0qFMAPlpIif/WUzkvX+0vWo8RAka1cyW/tA0f1CbCk=;
+        b=n6vItmJglrtdu0DGLWsGBp/01hkBERnh+V5RT3Av835khrHaDMZc3JXDXWAb7BwfYj
+         j1DSVbiaKcXHi/CsMrY0nMEvjQdBQqPfQr/2wuhSafsEeXvVKAg2T+KUpy/ZbfOYy8Kt
+         NEa3o/gQ6qlhJD3MM0/J8T4oqkJ4VJ2tHdIJPha+gbAvBxNXJsUM8XDmSObVF/fkDe6X
+         taUSUsfktnCQ7DL0joUMvurc2m60Xb1WAz/BMumoJmp6eXDoerMnj32uhPSVh8OMd95A
+         Jez3NpHqzONP5FcaXBvJ6ililkP3bh0wWeSO1kcmSStSy6cwRNpb2t1SyUrMMiWSKZGs
+         MY6w==
+X-Gm-Message-State: APjAAAVNjiB5YLe1QawVv8/ddS4yP45an+17ZoxfjOBVRVwr+V66O70u
+        8xSiI/yeX6uncKZQTisjGbxuakG9TROslMrhcsLb2DMK0Ts=
+X-Google-Smtp-Source: APXvYqxNenXES/xcoAwPNtNGrJpwU9ozyAeMVxrYnEGD1wlVEsQ20p38ePYzyPV/38fAIaIgbImc38CkTWQHb5EbkkU=
+X-Received: by 2002:a92:d5cf:: with SMTP id d15mr17943555ilq.306.1580791350294;
+ Mon, 03 Feb 2020 20:42:30 -0800 (PST)
+MIME-Version: 1.0
+Received: by 2002:ad5:5d0d:0:0:0:0:0 with HTTP; Mon, 3 Feb 2020 20:42:29 -0800 (PST)
+From:   JH <jupiter.hce@gmail.com>
+Date:   Tue, 4 Feb 2020 15:42:29 +1100
+Message-ID: <CAA=hcWQo-NhePgyFhQ-OxP-7xTdM+zVf+cWN+Owpjfk+Mgs6dA@mail.gmail.com>
+Subject: 
+To:     linux-wireless <linux-wireless@vger.kernel.org>
+Cc:     connman <connman@lists.01.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Venkateswara Naralasetty <vnaralas@codeaurora.org>
+Hi,
 
-Convert mac80211 bw to ath11k bw before updating peer stats
-bw counters, which fixes incorrect peer stats counters update.
+I am running kernel 4.19.75 on iMX6, the WiFi was working most of
+time, but from time to time, the connman could not get WiFi be
+connected due to following error:
 
-Signed-off-by: Venkateswara Naralasetty <vnaralas@codeaurora.org>
----
- drivers/net/wireless/ath/ath11k/debugfs_sta.c |  2 +-
- drivers/net/wireless/ath/ath11k/mac.c         | 16 ++++++++++++++++
- drivers/net/wireless/ath/ath11k/mac.h         |  1 +
- 3 files changed, 18 insertions(+), 1 deletion(-)
+[23703.958751] ieee80211 phy0: mwifiex_cfg80211_sched_scan_start :
+Invalid Sched_scan parameters
 
-diff --git a/drivers/net/wireless/ath/ath11k/debugfs_sta.c b/drivers/net/wireless/ath/ath11k/debugfs_sta.c
-index 743760c..8e8f2a8 100644
---- a/drivers/net/wireless/ath/ath11k/debugfs_sta.c
-+++ b/drivers/net/wireless/ath/ath11k/debugfs_sta.c
-@@ -24,7 +24,7 @@ ath11k_accumulate_per_peer_tx_stats(struct ath11k_sta *arsta,
- 	tx_stats = arsta->tx_stats;
- 	gi = FIELD_GET(RATE_INFO_FLAGS_SHORT_GI, arsta->txrate.flags);
- 	mcs = txrate->mcs;
--	bw = txrate->bw;
-+	bw = ath11k_mac_mac80211_bw_to_ath11k_bw(txrate->bw);
- 	nss = txrate->nss - 1;
- 
- #define STATS_OP_FMT(name) tx_stats->stats[ATH11K_STATS_TYPE_##name]
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index 6640662..da117e1 100644
---- a/drivers/net/wireless/ath/ath11k/mac.c
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -178,6 +178,22 @@ u8 ath11k_mac_bw_to_mac80211_bw(u8 bw)
- 	return ret;
- }
- 
-+enum ath11k_supported_bw ath11k_mac_mac80211_bw_to_ath11k_bw(enum rate_info_bw bw)
-+{
-+	switch (bw) {
-+	case RATE_INFO_BW_20:
-+		return ATH11K_BW_20;
-+	case RATE_INFO_BW_40:
-+		return ATH11K_BW_40;
-+	case RATE_INFO_BW_80:
-+		return ATH11K_BW_80;
-+	case RATE_INFO_BW_160:
-+		return ATH11K_BW_160;
-+	default:
-+		return ATH11K_BW_20;
-+	}
-+}
-+
- int ath11k_mac_hw_ratecode_to_legacy_rate(u8 hw_rc, u8 preamble, u8 *rateidx,
- 					  u16 *rate)
- {
-diff --git a/drivers/net/wireless/ath/ath11k/mac.h b/drivers/net/wireless/ath/ath11k/mac.h
-index f286531..f4937a0 100644
---- a/drivers/net/wireless/ath/ath11k/mac.h
-+++ b/drivers/net/wireless/ath/ath11k/mac.h
-@@ -144,4 +144,5 @@ void ath11k_mac_drain_tx(struct ath11k *ar);
- void ath11k_mac_peer_cleanup_all(struct ath11k *ar);
- int ath11k_mac_tx_mgmt_pending_free(int buf_id, void *skb, void *ctx);
- u8 ath11k_mac_bw_to_mac80211_bw(u8 bw);
-+enum ath11k_supported_bw ath11k_mac_mac80211_bw_to_ath11k_bw(enum rate_info_bw bw);
- #endif
--- 
-2.7.4
+What does that error means, in which circumstance it occurred? How can
+we prevent it?
+
+Thank you.
+
+Kind regards,
+
+- jh
