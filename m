@@ -2,78 +2,99 @@ Return-Path: <SRS0=U5kn=3Z=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MIME_BASE64_TEXT,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF9DEC35247
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 Feb 2020 18:31:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66DBCC352A2
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 Feb 2020 19:21:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A49FC21741
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 Feb 2020 18:31:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 33A6C2072B
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 Feb 2020 19:21:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="oVpRXewE"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=c0d3.blue header.i=@c0d3.blue header.b="f2/oKsD4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727452AbgBESbx (ORCPT
+        id S1727307AbgBETVf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 5 Feb 2020 13:31:53 -0500
-Received: from mailgw02.mediatek.com ([210.61.82.184]:16639 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727309AbgBESbx (ORCPT
+        Wed, 5 Feb 2020 14:21:35 -0500
+Received: from mail.aperture-lab.de ([138.201.29.205]:46520 "EHLO
+        mail.aperture-lab.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727116AbgBETVf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Feb 2020 13:31:53 -0500
-X-UUID: d94d3524aa2e478aa8d6672e92ac9058-20200206
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=xxlgbnU5pSZKUH3JfH939pFWVo6iRlJ+wxus9Y1Vfak=;
-        b=oVpRXewEMkQmz2lTlwRsfnqfUx21siz6lK1fuRA3uB+rqi2tmsBsmWWk7OUhpLPzfYtDHE05OLFxmls5ljN1MTUs9ZprC/LuzgUHMDgoPQgIgchJie9kB7F6EI+5CVSelUT+jqgjPchNvJqh0VNpBoTH2zRg6NfePbjM39fCLvc=;
-X-UUID: d94d3524aa2e478aa8d6672e92ac9058-20200206
-Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw02.mediatek.com
-        (envelope-from <ryder.lee@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
-        with ESMTP id 2026006206; Thu, 06 Feb 2020 02:31:48 +0800
-Received: from mtkcas08.mediatek.inc (172.21.101.126) by
- mtkmbs08n1.mediatek.inc (172.21.101.55) with Microsoft SMTP Server (TLS) id
- 15.0.1395.4; Thu, 6 Feb 2020 02:32:46 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas08.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Thu, 6 Feb 2020 02:31:22 +0800
-From:   Ryder Lee <ryder.lee@mediatek.com>
-To:     Felix Fietkau <nbd@nbd.name>,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-CC:     Shayne Chen <shayne.chen@mediatek.com>,
-        Sean Wang <sean.wang@mediatek.com>,
-        Evelyn Tsai <evelyn.tsai@mediatek.com>,
-        Chih-Min Chen <chih-min.chen@mediatek.com>,
-        <linux-wireless@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>,
-        Ryder Lee <ryder.lee@mediatek.com>
-Subject: [PATCH v2] mt76: mt7615: set proper length in strncmp
-Date:   Thu, 6 Feb 2020 02:31:19 +0800
-Message-ID: <06da8143b6baa77295abaf70907fb8e345e15e0e.1580927122.git.ryder.lee@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+        Wed, 5 Feb 2020 14:21:35 -0500
+X-Greylist: delayed 613 seconds by postgrey-1.27 at vger.kernel.org; Wed, 05 Feb 2020 14:21:34 EST
+From:   =?UTF-8?q?Linus=20L=C3=BCssing?= <linus.luessing@c0d3.blue>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=c0d3.blue; s=2018;
+        t=1580929879;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=oR8zVIyJPPLtcbIaEesyxlzKUGtwe37C23vEgBL6VjQ=;
+        b=f2/oKsD4u8CWbuveyA+cr1Cn3MuN6+uYKh6gv0Nm07gzKgM/MtcCWQnbFIJFD2IxP/XjUd
+        PIAUqa2WGyb1TD4CIaiLYWX6g7erH1gWMuPB2gj6USmG3GyKOJZDUxObIqpIEh7NzciYm+
+        vNKiq04a4eUoRcbQTzDbgmjwoicaozyZ/YUrgrMiCKcfLZBdwjyWPrYtDTutj6F/7LM4fT
+        aLVvuS6RSoBiQQEpUM5o8gKk3d+duyqJDfwfsp01aieu7AHNA7x+61wPfewyTfqgbWsESM
+        lu9byc5nx1ai+ELzeE6iUYnVYG5/LF001YWdEICVhkKe/l7YvG/ZhW6wldblDg==
+To:     ath10k@lists.infradead.org
+Cc:     Kalle Valo <kvalo@codeaurora.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        Ben Greear <greearb@candelatech.com>,
+        Simon Wunderlich <sw@simonwunderlich.de>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        =?UTF-8?q?Linus=20L=C3=BCssing?= <ll@simonwunderlich.de>
+Subject: [PATCH] ath10k: increase rx buffer size to 2048
+Date:   Wed,  5 Feb 2020 20:10:43 +0100
+Message-Id: <20200205191043.21913-1-linus.luessing@c0d3.blue>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+Authentication-Results: ORIGINATING;
+        auth=pass smtp.auth=linus.luessing@c0d3.blue smtp.mailfrom=linus.luessing@c0d3.blue
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-VXNlIHNpemVvZihoZHItPmZ3X3ZlcikgYXMgbWF4IGxlbi4NCg0KU2lnbmVkLW9mZi1ieTogUnlk
-ZXIgTGVlIDxyeWRlci5sZWVAbWVkaWF0ZWsuY29tPg0KLS0tDQpjaGFuZ2VzIHNpbmNlIHYyIC0g
-dXNlIHNpemVvZigpIGluc3RlYWQuDQotLS0NCiBkcml2ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRl
-ay9tdDc2L210NzYxNS9tY3UuYyB8IDIgKy0NCiAxIGZpbGUgY2hhbmdlZCwgMSBpbnNlcnRpb24o
-KyksIDEgZGVsZXRpb24oLSkNCg0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21l
-ZGlhdGVrL210NzYvbXQ3NjE1L21jdS5jIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsv
-bXQ3Ni9tdDc2MTUvbWN1LmMNCmluZGV4IDY2MzlmOTI5MTcyMS4uYzNjMDFlMDk1OTI2IDEwMDY0
-NA0KLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc2MTUvbWN1LmMN
-CisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3NjE1L21jdS5jDQpA
-QCAtNDkxLDcgKzQ5MSw3IEBAIHN0YXRpYyBpbnQgbXQ3NjE1X2xvYWRfcmFtKHN0cnVjdCBtdDc2
-MTVfZGV2ICpkZXYpDQogCQlnb3RvIG91dDsNCiAJfQ0KIA0KLQlpZiAoIXN0cm5jbXAoaGRyLT5m
-d192ZXIsICIyLjAiLCA2KSkNCisJaWYgKCFzdHJuY21wKGhkci0+ZndfdmVyLCAiMi4wIiwgc2l6
-ZW9mKGhkci0+ZndfdmVyKSkpDQogCQlkZXYtPmZ3X3ZlciA9IE1UNzYxNV9GSVJNV0FSRV9WMjsN
-CiAJZWxzZQ0KIAkJZGV2LT5md192ZXIgPSBNVDc2MTVfRklSTVdBUkVfVjE7DQotLSANCjIuMTgu
-MA0K
+From: Linus Lüssing <ll@simonwunderlich.de>
+
+Before, only frames with a maximum size of 1528 bytes could be
+transmitted between two 802.11s nodes.
+
+For batman-adv for instance, which adds its own header to each frame,
+we typically need an MTU of at least 1532 bytes to be able to transmit
+without fragmentation.
+
+This patch now increases the maxmimum frame size from 1528 to 1656
+bytes.
+
+Tested with two ath10k devices in 802.11s mode, as well as with
+batman-adv on top of 802.11s with forwarding disabled.
+
+Fix originally found and developed by Ben Greear.
+
+Link: https://github.com/greearb/ath10k-ct/issues/89
+Link: https://github.com/greearb/ath10k-ct/commit/9e5ab25027e0971fa24ccf93373324c08c4e992d
+Cc: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Linus Lüssing <ll@simonwunderlich.de>
+---
+ drivers/net/wireless/ath/ath10k/htt.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index 4a12564fc30e..6a2b5e10e568 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -2220,7 +2220,7 @@ struct htt_rx_chan_info {
+  * Should be: sizeof(struct htt_host_rx_desc) + max rx MSDU size,
+  * rounded up to a cache line size.
+  */
+-#define HTT_RX_BUF_SIZE 1920
++#define HTT_RX_BUF_SIZE 2048
+ #define HTT_RX_MSDU_SIZE (HTT_RX_BUF_SIZE - (int)sizeof(struct htt_rx_desc))
+ 
+ /* Refill a bunch of RX buffers for each refill round so that FW/HW can handle
+-- 
+2.25.0
 
