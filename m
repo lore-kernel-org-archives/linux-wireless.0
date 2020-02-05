@@ -2,75 +2,109 @@ Return-Path: <SRS0=U5kn=3Z=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MIME_BASE64_TEXT,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 160DBC35249
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 Feb 2020 03:47:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B75D2C35249
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 Feb 2020 07:09:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CFB99217BA
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 Feb 2020 03:47:07 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="C8/L7eWe"
+	by mail.kernel.org (Postfix) with ESMTP id 836A32085B
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 Feb 2020 07:09:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727836AbgBEDrG (ORCPT
+        id S1727861AbgBEHJK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 4 Feb 2020 22:47:06 -0500
-Received: from mailgw01.mediatek.com ([210.61.82.183]:49657 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727792AbgBEDrG (ORCPT
+        Wed, 5 Feb 2020 02:09:10 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:49341 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726838AbgBEHJK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Feb 2020 22:47:06 -0500
-X-UUID: 03a792a462a845d5ba9f81c332988a16-20200205
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=jz7BtOn/G8LT4mRItKKrIs0A5WhRRkjr2DQoea+nrDY=;
-        b=C8/L7eWez7bOK7N4a1RyxMHK9c3kyXxeNf27NgmhSrou12Ei4OYlO32IrnN/GaMtRAsRJMsI6xH2iKX1HfxTMY21a+6F+QCGDN2t/lkgckOSQLSPtY1N/1BrFjOXZBDcn8G6UATm/06YlUoxlknKnV/1CFmcLzADgJltp9Omzf8=;
-X-UUID: 03a792a462a845d5ba9f81c332988a16-20200205
-Received: from mtkcas06.mediatek.inc [(172.21.101.30)] by mailgw01.mediatek.com
-        (envelope-from <ryder.lee@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
-        with ESMTP id 991039202; Wed, 05 Feb 2020 11:46:59 +0800
-Received: from mtkcas07.mediatek.inc (172.21.101.84) by
- mtkmbs08n1.mediatek.inc (172.21.101.55) with Microsoft SMTP Server (TLS) id
- 15.0.1395.4; Wed, 5 Feb 2020 11:47:59 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas07.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Wed, 5 Feb 2020 11:46:33 +0800
-From:   Ryder Lee <ryder.lee@mediatek.com>
-To:     Felix Fietkau <nbd@nbd.name>,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-CC:     Shayne Chen <shayne.chen@mediatek.com>,
-        Sean Wang <sean.wang@mediatek.com>,
-        Josh Boyer <jwboyer@kernel.org>,
-        <linux-wireless@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>,
-        Ryder Lee <ryder.lee@mediatek.com>
-Subject: [PATCH] mt76: mt7615: fix wrong length in strncmp
-Date:   Wed, 5 Feb 2020 11:46:54 +0800
-Message-ID: <cee34bac9d6041784a92c5fdbf667c367dc7f968.1580874252.git.ryder.lee@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+        Wed, 5 Feb 2020 02:09:10 -0500
+Authenticated-By: 
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID 0157952T008609, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (RTEXMB06.realtek.com.tw[172.21.6.99])
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id 0157952T008609
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 5 Feb 2020 15:09:05 +0800
+Received: from RTEXDAG01.realtek.com.tw (172.21.6.100) by
+ RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1779.2; Wed, 5 Feb 2020 15:09:05 +0800
+Received: from RTEXMB06.realtek.com.tw (172.21.6.99) by
+ RTEXDAG01.realtek.com.tw (172.21.6.100) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1779.2; Wed, 5 Feb 2020 15:09:05 +0800
+Received: from RTITCASV01.realtek.com.tw (172.21.6.18) by
+ RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
+ (version=TLS1_0, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.1.1779.2
+ via Frontend Transport; Wed, 5 Feb 2020 15:09:04 +0800
+Received: from localhost.localdomain (172.21.69.117) by
+ RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
+ 14.3.468.0; Wed, 5 Feb 2020 15:09:04 +0800
+From:   <yhchuang@realtek.com>
+To:     <kvalo@codeaurora.org>
+CC:     <linux-wireless@vger.kernel.org>, <briannorris@chromium.org>
+Subject: [PATCH 3/7] rtw88: pci: 8822c should set clock delay to zero
+Date:   Wed, 5 Feb 2020 15:08:54 +0800
+Message-ID: <20200205070858.15386-4-yhchuang@realtek.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20200205070858.15386-1-yhchuang@realtek.com>
+References: <20200205070858.15386-1-yhchuang@realtek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-X-MTK:  N
-Content-Transfer-Encoding: base64
+X-Originating-IP: [172.21.69.117]
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Rml4IGl0IHRvIHByb3BlciBsZW5ndGguDQoNClNpZ25lZC1vZmYtYnk6IFJ5ZGVyIExlZSA8cnlk
-ZXIubGVlQG1lZGlhdGVrLmNvbT4NCi0tLQ0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVr
-L210NzYvbXQ3NjE1L21jdS5jIHwgMiArLQ0KIDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigr
-KSwgMSBkZWxldGlvbigtKQ0KDQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVk
-aWF0ZWsvbXQ3Ni9tdDc2MTUvbWN1LmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRlay9t
-dDc2L210NzYxNS9tY3UuYw0KaW5kZXggNjYzOWY5MjkxNzIxLi5mYmRhNTYzNDJkMTEgMTAwNjQ0
-DQotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210NzYxNS9tY3UuYw0K
-KysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc2MTUvbWN1LmMNCkBA
-IC00OTEsNyArNDkxLDcgQEAgc3RhdGljIGludCBtdDc2MTVfbG9hZF9yYW0oc3RydWN0IG10NzYx
-NV9kZXYgKmRldikNCiAJCWdvdG8gb3V0Ow0KIAl9DQogDQotCWlmICghc3RybmNtcChoZHItPmZ3
-X3ZlciwgIjIuMCIsIDYpKQ0KKwlpZiAoIXN0cm5jbXAoaGRyLT5md192ZXIsICIyLjAiLCAzKSkN
-CiAJCWRldi0+ZndfdmVyID0gTVQ3NjE1X0ZJUk1XQVJFX1YyOw0KIAllbHNlDQogCQlkZXYtPmZ3
-X3ZlciA9IE1UNzYxNV9GSVJNV0FSRV9WMTsNCi0tIA0KMi4xOC4wDQo=
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+
+Since RTL8822CE has enabled reference clock auto calibration,
+there is no need to add any clock delay for covering the timing
+gap of the reference clock.
+
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw88/pci.c | 7 +++++++
+ drivers/net/wireless/realtek/rtw88/pci.h | 1 +
+ 2 files changed, 8 insertions(+)
+
+diff --git a/drivers/net/wireless/realtek/rtw88/pci.c b/drivers/net/wireless/realtek/rtw88/pci.c
+index 1fbc14c149ec..9ac77aef708d 100644
+--- a/drivers/net/wireless/realtek/rtw88/pci.c
++++ b/drivers/net/wireless/realtek/rtw88/pci.c
+@@ -1197,11 +1197,18 @@ static void rtw_pci_link_ps(struct rtw_dev *rtwdev, bool enter)
+ 
+ static void rtw_pci_link_cfg(struct rtw_dev *rtwdev)
+ {
++	struct rtw_chip_info *chip = rtwdev->chip;
+ 	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
+ 	struct pci_dev *pdev = rtwpci->pdev;
+ 	u16 link_ctrl;
+ 	int ret;
+ 
++	/* RTL8822CE has enabled REFCLK auto calibration, it does not need
++	 * to add clock delay to cover the REFCLK timing gap.
++	 */
++	if (chip->id == RTW_CHIP_TYPE_8822C)
++		rtw_dbi_write8(rtwdev, RTK_PCIE_CLKDLY_CTRL, 0);
++
+ 	/* Though there is standard PCIE configuration space to set the
+ 	 * link control register, but by Realtek's design, driver should
+ 	 * check if host supports CLKREQ/ASPM to enable the HW module.
+diff --git a/drivers/net/wireless/realtek/rtw88/pci.h b/drivers/net/wireless/realtek/rtw88/pci.h
+index 1580cfc57361..cd4fcd064cdb 100644
+--- a/drivers/net/wireless/realtek/rtw88/pci.h
++++ b/drivers/net/wireless/realtek/rtw88/pci.h
+@@ -39,6 +39,7 @@
+ #define RTK_PCIE_LINK_CFG	0x0719
+ #define BIT_CLKREQ_SW_EN	BIT(4)
+ #define BIT_L1_SW_EN		BIT(3)
++#define RTK_PCIE_CLKDLY_CTRL	0x0725
+ 
+ #define BIT_PCI_BCNQ_FLAG	BIT(4)
+ #define RTK_PCI_TXBD_DESA_BCNQ	0x308
+-- 
+2.17.1
 
