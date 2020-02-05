@@ -6,47 +6,47 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01EAAC35249
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A365C3524D
 	for <linux-wireless@archiver.kernel.org>; Wed,  5 Feb 2020 07:09:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BCE282085B
-	for <linux-wireless@archiver.kernel.org>; Wed,  5 Feb 2020 07:09:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 42A8B21741
+	for <linux-wireless@archiver.kernel.org>; Wed,  5 Feb 2020 07:09:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727991AbgBEHJQ (ORCPT
+        id S1727986AbgBEHJP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 5 Feb 2020 02:09:16 -0500
-Received: from rtits2.realtek.com ([211.75.126.72]:49351 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727963AbgBEHJP (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 5 Feb 2020 02:09:15 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:49349 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726838AbgBEHJO (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 5 Feb 2020 02:09:14 -0500
 Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID 015797Cl008636, This message is accepted by code: ctloc85258
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID 015797MA008632, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (RTEXMB06.realtek.com.tw[172.21.6.99])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id 015797Cl008636
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id 015797MA008632
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT);
         Wed, 5 Feb 2020 15:09:07 +0800
-Received: from RTEXMB03.realtek.com.tw (172.21.6.96) by
+Received: from RTEXDAG01.realtek.com.tw (172.21.6.100) by
  RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
  15.1.1779.2; Wed, 5 Feb 2020 15:09:07 +0800
 Received: from RTEXMB06.realtek.com.tw (172.21.6.99) by
- RTEXMB03.realtek.com.tw (172.21.6.96) with Microsoft SMTP Server
+ RTEXDAG01.realtek.com.tw (172.21.6.100) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Wed, 5 Feb 2020 15:09:07 +0800
+ 15.1.1779.2; Wed, 5 Feb 2020 15:09:06 +0800
 Received: from RTITCASV01.realtek.com.tw (172.21.6.18) by
  RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
  (version=TLS1_0, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.1.1779.2
- via Frontend Transport; Wed, 5 Feb 2020 15:09:07 +0800
+ via Frontend Transport; Wed, 5 Feb 2020 15:09:06 +0800
 Received: from localhost.localdomain (172.21.69.117) by
  RTITCASV01.realtek.com.tw (172.21.6.18) with Microsoft SMTP Server id
  14.3.468.0; Wed, 5 Feb 2020 15:09:06 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>, <briannorris@chromium.org>
-Subject: [PATCH 7/7] rtw88: 8822c: update power sequence to v16
-Date:   Wed, 5 Feb 2020 15:08:58 +0800
-Message-ID: <20200205070858.15386-8-yhchuang@realtek.com>
+Subject: [PATCH 6/7] rtw88: add ciphers to suppress error message
+Date:   Wed, 5 Feb 2020 15:08:57 +0800
+Message-ID: <20200205070858.15386-7-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200205070858.15386-1-yhchuang@realtek.com>
 References: <20200205070858.15386-1-yhchuang@realtek.com>
@@ -58,32 +58,35 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Tzu-En Huang <tehuang@realtek.com>
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Fix switching xtal mode leads to BT USB error issue.
+Though hardware isn't implement CCMP-256, GCMP and GCMP-256, it's possible
+to fallback to use software de-/en-cryption implemented by mac80211.
 
-Signed-off-by: Tzu-En Huang <tehuang@realtek.com>
+Without adding these chipers, kernel log will show something if we connect
+to a WPA3 enterprise AP, likes
+  wlan0: failed to set key (1, ff:ff:ff:ff:ff:ff) to hardware (-524)
+
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/rtw8822c.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/net/wireless/realtek/rtw88/mac80211.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-index 3865097696d4..d49c8b697e4f 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-@@ -3544,6 +3544,11 @@ static struct rtw_pwr_seq_cmd trans_cardemu_to_act_8822c[] = {
- 	 RTW_PWR_INTF_ALL_MSK,
- 	 RTW_PWR_ADDR_MAC,
- 	 RTW_PWR_CMD_WRITE, BIT(2), BIT(2)},
-+	{0x1064,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(1), BIT(1)},
- 	{0xFFFF,
- 	 RTW_PWR_CUT_ALL_MSK,
- 	 RTW_PWR_INTF_ALL_MSK,
+diff --git a/drivers/net/wireless/realtek/rtw88/mac80211.c b/drivers/net/wireless/realtek/rtw88/mac80211.c
+index 8742b3f2b5c1..0190ec6fa090 100644
+--- a/drivers/net/wireless/realtek/rtw88/mac80211.c
++++ b/drivers/net/wireless/realtek/rtw88/mac80211.c
+@@ -515,6 +515,9 @@ static int rtw_ops_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 	case WLAN_CIPHER_SUITE_BIP_CMAC_256:
+ 	case WLAN_CIPHER_SUITE_BIP_GMAC_128:
+ 	case WLAN_CIPHER_SUITE_BIP_GMAC_256:
++	case WLAN_CIPHER_SUITE_CCMP_256:
++	case WLAN_CIPHER_SUITE_GCMP:
++	case WLAN_CIPHER_SUITE_GCMP_256:
+ 		/* suppress error messages */
+ 		return -EOPNOTSUPP;
+ 	default:
 -- 
 2.17.1
 
