@@ -6,73 +6,115 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 498F5C352A3
-	for <linux-wireless@archiver.kernel.org>; Mon, 10 Feb 2020 12:06:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E83FC352A5
+	for <linux-wireless@archiver.kernel.org>; Mon, 10 Feb 2020 13:07:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2A1072082F
-	for <linux-wireless@archiver.kernel.org>; Mon, 10 Feb 2020 12:06:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 405212070A
+	for <linux-wireless@archiver.kernel.org>; Mon, 10 Feb 2020 13:07:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727347AbgBJMGl (ORCPT
+        id S1730718AbgBJNHz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 10 Feb 2020 07:06:41 -0500
-Received: from smail.rz.tu-ilmenau.de ([141.24.186.67]:52864 "EHLO
-        smail.rz.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727061AbgBJMGl (ORCPT
+        Mon, 10 Feb 2020 08:07:55 -0500
+Received: from mail-wm1-f65.google.com ([209.85.128.65]:40905 "EHLO
+        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729406AbgBJNHz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Feb 2020 07:06:41 -0500
-Received: from localhost.localdomain (unknown [109.41.129.64])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by smail.rz.tu-ilmenau.de (Postfix) with ESMTPSA id 3CEBD580074;
-        Mon, 10 Feb 2020 13:06:39 +0100 (CET)
-From:   Markus Theil <markus.theil@tu-ilmenau.de>
+        Mon, 10 Feb 2020 08:07:55 -0500
+Received: by mail-wm1-f65.google.com with SMTP id t14so202947wmi.5
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Feb 2020 05:07:53 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=iIBeftxXtx+X6uYg4/4ODPsk3DXx8AQwwhZfIfKz87s=;
+        b=fY7FC0OvFHWPe8qSyhNggxlOBk2GZRWSDEFksQ0UkZrYbb43XbDrxNnm4YM6A/+y1v
+         Ffq5jI9FUYno32W5I2RwukRyNQQ+P1fgOr3I9pwAtV9Mhh4IPCh+hvkHeHAyU7IgMTV3
+         RbuzYeQ0t3HMq/SQ9aPPV8IW7z3FA+/eaKm+Qew/vLeVGH6+k8qAmeDT3W6BrfonsjcT
+         BziiWXN1I5sWe0WA3uymIPqtlJh8+9ZbYp9cvq64tROtdnDsWe0sNb4FwnHEm/WGRWN9
+         5OeDojV3ePInwiC2Y5eXzpUhsdmP0VUbrmMeY5RAqfhF9T4gqWOmvumMMKWKZ79WTKYf
+         JwvQ==
+X-Gm-Message-State: APjAAAW4VTFPezFo290tWWEhr4Aa3ltZNpdW//QyUW22ShXfY+EMCV97
+        2j9PcosgGpIsaqwTqhzMmKO4sMGO
+X-Google-Smtp-Source: APXvYqw5GdGR+ghnvAFuyf34MFW+dQZqDUB9FKQVf46exxlMw85YktTqOZFtZS49CJQ9mGNa8qLu4Q==
+X-Received: by 2002:a05:600c:22d3:: with SMTP id 19mr15836516wmg.92.1581340073238;
+        Mon, 10 Feb 2020 05:07:53 -0800 (PST)
+Received: from localhost.localdomain ([87.71.82.22])
+        by smtp.gmail.com with ESMTPSA id d204sm517989wmd.30.2020.02.10.05.07.51
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 10 Feb 2020 05:07:52 -0800 (PST)
+From:   Shay Bar <shay.bar@celeno.com>
 To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org,
-        Markus Theil <markus.theil@tu-ilmenau.de>
-Subject: [PATCH] iw: scan: more length checks for print_wifi_wps()
-Date:   Mon, 10 Feb 2020 13:06:35 +0100
-Message-Id: <20200210120635.498188-1-markus.theil@tu-ilmenau.de>
-X-Mailer: git-send-email 2.25.0
+Cc:     linux-wireless@vger.kernel.org, shay.bar@celeno.com,
+        aviad.brikman@celeno.com
+Subject: [PATCH] [PATCH] mac80211: fix wrong 160/80+80 Mhz setting
+Date:   Mon, 10 Feb 2020 15:07:28 +0200
+Message-Id: <20200210130728.23674-1-shay.bar@celeno.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20200209152818.4630-1-shay.bar@celeno.com>
+References: <20200209152818.4630-1-shay.bar@celeno.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Signed-off-by: Markus Theil <markus.theil@tu-ilmenau.de>
----
- scan.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+Before this patch, STA's would set new width of 160/80+80 Mhz based on AP capability only.
+This is wrong because STA may not support > 80Mhz BW.
+Fix is to verify STA has 160/80+80 Mhz capability before increasing its width to > 80Mhz.
 
-diff --git a/scan.c b/scan.c
-index dbfe44c..2dedd64 100644
---- a/scan.c
-+++ b/scan.c
-@@ -1878,6 +1878,11 @@ static void print_wifi_wps(const uint8_t type, uint8_t len, const uint8_t *data,
- 			break;
- 		}
- 		case 0x103c: {
-+			if (sublen < 1) {
-+				printf("\t * RF Bands: (invalid "
-+				       "length %d)\n", sublen);
-+				break;
-+			}
- 			__u8 val = data[4];
- 			tab_on_first(&first);
- 			printf("\t * RF Bands: 0x%x\n", val);
-@@ -1941,6 +1946,11 @@ static void print_wifi_wps(const uint8_t type, uint8_t len, const uint8_t *data,
- 			break;
- 		}
- 		case 0x1057: {
-+			if (sublen < 1) {
-+				printf("\t * AP setup locked: (invalid "
-+				       "length %d)\n", sublen);
-+				break;
-+			}
- 			__u8 val = data[4];
- 			tab_on_first(&first);
- 			printf("\t * AP setup locked: 0x%.2x\n", val);
+The "support_80_80" and "support_160" setting is based on:
+"Table 9-272 — Setting of the Supported Channel Width Set subfield and Extended NSS BW
+Support subfield at a STA transmitting the VHT Capabilities Information field"
+From "Draft P802.11REVmd_D3.0.pdf"
+
+Signed-off-by: Aviad Brikman <aviad.brikman@celeno.com>
+Signed-off-by: Shay Bar <shay.bar@celeno.com>
+---
+ net/mac80211/util.c | 16 ++++++++++++++--
+ 1 file changed, 14 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 32a7a53833c0..950fa4741d98 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -2987,10 +2987,22 @@ bool ieee80211_chandef_vht_oper(struct ieee80211_hw *hw,
+ 	int cf0, cf1;
+ 	int ccfs0, ccfs1, ccfs2;
+ 	int ccf0, ccf1;
++	u32 vht_cap;
++	bool support_80_80 = false;
++	bool support_160 = false;
+ 
+ 	if (!oper || !htop)
+ 		return false;
+ 
++	vht_cap = hw->wiphy->bands[chandef->chan->band]->vht_cap.cap;
++	support_160 = (vht_cap & (IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK |
++				  IEEE80211_VHT_CAP_EXT_NSS_BW_MASK));
++	support_80_80 = ((vht_cap &
++			 IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160_80PLUS80MHZ) ||
++			(vht_cap & IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160MHZ &&
++			 vht_cap & IEEE80211_VHT_CAP_EXT_NSS_BW_MASK) ||
++			((vht_cap & IEEE80211_VHT_CAP_EXT_NSS_BW_MASK) >>
++				    IEEE80211_VHT_CAP_EXT_NSS_BW_SHIFT > 1));
+ 	ccfs0 = oper->center_freq_seg0_idx;
+ 	ccfs1 = oper->center_freq_seg1_idx;
+ 	ccfs2 = (le16_to_cpu(htop->operation_mode) &
+@@ -3018,10 +3030,10 @@ bool ieee80211_chandef_vht_oper(struct ieee80211_hw *hw,
+ 			unsigned int diff;
+ 
+ 			diff = abs(ccf1 - ccf0);
+-			if (diff == 8) {
++			if ((diff == 8) && support_160) {
+ 				new.width = NL80211_CHAN_WIDTH_160;
+ 				new.center_freq1 = cf1;
+-			} else if (diff > 8) {
++			} else if ((diff > 8) && support_80_80) {
+ 				new.width = NL80211_CHAN_WIDTH_80P80;
+ 				new.center_freq2 = cf1;
+ 			}
 -- 
-2.25.0
+2.17.1
 
