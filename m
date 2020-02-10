@@ -6,33 +6,35 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8165AC3B185
-	for <linux-wireless@archiver.kernel.org>; Mon, 10 Feb 2020 08:14:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DAC6C352A4
+	for <linux-wireless@archiver.kernel.org>; Mon, 10 Feb 2020 08:14:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 652732080C
-	for <linux-wireless@archiver.kernel.org>; Mon, 10 Feb 2020 08:14:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5144D2080C
+	for <linux-wireless@archiver.kernel.org>; Mon, 10 Feb 2020 08:14:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727628AbgBJIOB (ORCPT
+        id S1727649AbgBJIOC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 10 Feb 2020 03:14:01 -0500
-Received: from smail.rz.tu-ilmenau.de ([141.24.186.67]:51523 "EHLO
+        Mon, 10 Feb 2020 03:14:02 -0500
+Received: from smail.rz.tu-ilmenau.de ([141.24.186.67]:51526 "EHLO
         smail.rz.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727516AbgBJIOB (ORCPT
+        with ESMTP id S1727600AbgBJIOB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Mon, 10 Feb 2020 03:14:01 -0500
 Received: from isengard.fritz.box (unknown [84.174.247.41])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by smail.rz.tu-ilmenau.de (Postfix) with ESMTPSA id 91A62580068;
+        by smail.rz.tu-ilmenau.de (Postfix) with ESMTPSA id DC1A0580075;
         Mon, 10 Feb 2020 09:13:59 +0100 (CET)
 From:   Markus Theil <markus.theil@tu-ilmenau.de>
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org,
         Markus Theil <markus.theil@tu-ilmenau.de>
-Subject: [PATCH 1/2] iw: scan: fix if scope for print_measurement_pilot_tx()
-Date:   Mon, 10 Feb 2020 09:13:53 +0100
-Message-Id: <20200210081354.10390-1-markus.theil@tu-ilmenau.de>
+Subject: [PATCH 2/2] iw: scan: fix some format string warnings found by clang
+Date:   Mon, 10 Feb 2020 09:13:54 +0100
+Message-Id: <20200210081354.10390-2-markus.theil@tu-ilmenau.de>
 X-Mailer: git-send-email 2.25.0
+In-Reply-To: <20200210081354.10390-1-markus.theil@tu-ilmenau.de>
+References: <20200210081354.10390-1-markus.theil@tu-ilmenau.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -42,25 +44,53 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 Signed-off-by: Markus Theil <markus.theil@tu-ilmenau.de>
 ---
- scan.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ scan.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
 diff --git a/scan.c b/scan.c
-index 8f8d8ba..7155cdf 100644
+index 7155cdf..98c5c10 100644
 --- a/scan.c
 +++ b/scan.c
-@@ -1561,9 +1561,10 @@ static void print_measurement_pilot_tx(const uint8_t type, uint8_t len,
- 			p[0], p[1], p[2]);
- 		len_remaining -= 3;
+@@ -1131,10 +1131,10 @@ static void print_interworking(const uint8_t type, uint8_t len,
+ 		printf("\t\tVenue Type: %i\n", (int)(data[2]));
+ 	}
+ 	if (len == 9)
+-		printf("\t\tHESSID: %02hx:%02hx:%02hx:%02hx:%02hx:%02hx\n",
++		printf("\t\tHESSID: %02hhx:%02hhx:%02hhx:%02hhx:%02hhx:%02hhx\n",
+ 		       data[3], data[4], data[5], data[6], data[7], data[8]);
+ 	else if (len == 7)
+-		printf("\t\tHESSID: %02hx:%02hx:%02hx:%02hx:%02hx:%02hx\n",
++		printf("\t\tHESSID: %02hhx:%02hhx:%02hhx:%02hhx:%02hhx:%02hhx\n",
+ 		       data[1], data[2], data[3], data[4], data[5], data[6]);
+ }
  
--		if (len > len_remaining)
-+		if (len > len_remaining) {
- 			printf(" <Parse error, element too short>\n");
- 			return;
-+		}
- 
- 		while (p < p + len)
- 			printf(" %.2x", *p);
+@@ -1193,7 +1193,7 @@ static void print_11u_rcon(const uint8_t type, uint8_t len, const uint8_t *data,
+ 			printf("Invalid IE length.\n");
+ 		} else {
+ 			for (idx = 0; idx < ln0; idx++) {
+-				printf("%02hx", data[2 + idx]);
++				printf("%02hhx", data[2 + idx]);
+ 			}
+ 			printf("\n");
+ 		}
+@@ -1205,7 +1205,7 @@ static void print_11u_rcon(const uint8_t type, uint8_t len, const uint8_t *data,
+ 			printf("Invalid IE length.\n");
+ 		} else {
+ 			for (idx = 0; idx < ln1; idx++) {
+-				printf("%02hx", data[2 + ln0 + idx]);
++				printf("%02hhx", data[2 + ln0 + idx]);
+ 			}
+ 			printf("\n");
+ 		}
+@@ -1217,7 +1217,7 @@ static void print_11u_rcon(const uint8_t type, uint8_t len, const uint8_t *data,
+ 			printf("Invalid IE length.\n");
+ 		} else {
+ 			for (idx = 0; idx < ln2; idx++) {
+-				printf("%02hx", data[2 + ln0 + ln1 + idx]);
++				printf("%02hhx", data[2 + ln0 + ln1 + idx]);
+ 			}
+ 			printf("\n");
+ 		}
 -- 
 2.25.0
 
