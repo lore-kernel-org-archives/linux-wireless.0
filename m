@@ -6,88 +6,77 @@ X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
 	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6927CC352A3
-	for <linux-wireless@archiver.kernel.org>; Tue, 11 Feb 2020 13:49:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2797EC352A3
+	for <linux-wireless@archiver.kernel.org>; Tue, 11 Feb 2020 14:21:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3F95820848
-	for <linux-wireless@archiver.kernel.org>; Tue, 11 Feb 2020 13:49:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DD65520675
+	for <linux-wireless@archiver.kernel.org>; Tue, 11 Feb 2020 14:21:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="Ii/rKPLT"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="HjDeYox4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728386AbgBKNtb (ORCPT
+        id S1730094AbgBKOVV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 11 Feb 2020 08:49:31 -0500
-Received: from mail25.static.mailgun.info ([104.130.122.25]:20716 "EHLO
-        mail25.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728230AbgBKNtb (ORCPT
+        Tue, 11 Feb 2020 09:21:21 -0500
+Received: from mail26.static.mailgun.info ([104.130.122.26]:51637 "EHLO
+        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729924AbgBKOVU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Feb 2020 08:49:31 -0500
+        Tue, 11 Feb 2020 09:21:20 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1581428970; h=Content-Type: MIME-Version: Message-ID:
- In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
- bh=M3E9jVc+u0x29OA3gVofI6T4rbWAfdr3DnZ52s7PAwM=; b=Ii/rKPLTboyLVDTCqg8kZjE74X89UXfLLKXvRohz4Orcimcuyw12vOPf1rWTDsDsviB0VBDO
- 2g01+7iEktf4UzpzumUIBUwB1QoaZjbB4njEmpl1fs+/1zUYYyJl5xwQ21cRDPjhQCvMcT37
- UmeLN0qYEufXW7JuZduI0MHK9LM=
-X-Mailgun-Sending-Ip: 104.130.122.25
+ s=smtp; t=1581430880; h=Date: Message-Id: Cc: To: References:
+ In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
+ Content-Type: Sender; bh=qM5SKJxSg1XIlNtdRw4IanLcv+dOPm/En7bKG7Wq5Y8=;
+ b=HjDeYox4hcft5E7tIM0odybZVkOMJwP6wHbztBPdR4npHIxgnT2ZZQL4gBCuFlGSHbmBiLuw
+ g2fjUmzC5+BNhcTR9ljmnLW6ndigbcuc64XPG5XmWB7Se/ZefcXxQhx9wOorQmfACDHnYnGz
+ XgYKHydxPTNdA/X5GwrCeUu4vg8=
+X-Mailgun-Sending-Ip: 104.130.122.26
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e42b0e3.7f51eaff43b0-smtp-out-n01;
- Tue, 11 Feb 2020 13:49:23 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5e42b85c.7f37be216ed8-smtp-out-n01;
+ Tue, 11 Feb 2020 14:21:16 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id BF23AC4479D; Tue, 11 Feb 2020 13:49:23 +0000 (UTC)
+        id 09D0FC4479F; Tue, 11 Feb 2020 14:21:16 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 38003C43383;
-        Tue, 11 Feb 2020 13:49:22 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 38003C43383
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id C69E8C43383;
+        Tue, 11 Feb 2020 14:21:14 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org C69E8C43383
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/2] ath11k: add thermal sensor device support
-References: <1580860830-12696-1-git-send-email-pradeepc@codeaurora.org>
-        <1580860830-12696-2-git-send-email-pradeepc@codeaurora.org>
-Date:   Tue, 11 Feb 2020 15:49:19 +0200
-In-Reply-To: <1580860830-12696-2-git-send-email-pradeepc@codeaurora.org>
-        (Pradeep Kumar Chitrapu's message of "Wed, 5 Feb 2020 05:30:30 +0530")
-Message-ID: <87zhdpw7xc.fsf@kamboji.qca.qualcomm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH] ath10k: fix few checkpatch warnings
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1581411578-26388-1-git-send-email-kvalo@codeaurora.org>
+References: <1581411578-26388-1-git-send-email-kvalo@codeaurora.org>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
+Message-Id: <20200211142116.09D0FC4479F@smtp.codeaurora.org>
+Date:   Tue, 11 Feb 2020 14:21:16 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Pradeep Kumar Chitrapu <pradeepc@codeaurora.org> writes:
+Kalle Valo <kvalo@codeaurora.org> wrote:
 
-> Temperature sensor generates electrical analog voltage from temperature
-> of each chain. The analog voltage is converted to digital value through
-> ADC. For reading temperature values fom user space, hw monitoring device
-> is used.
->
-> Whenever the user requests for current temperature, the driver sends WMI
-> command and wait for response. For reading temperature,
->
-> cat /sys/class/ieee80211/phy*/device/hwmon/hwmon2/temp1_input
->
-> Signed-off-by: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+> Fix warnings which were recently introduced:
+> 
+> drivers/net/wireless/ath/ath10k/ahb.c:462: Alignment should match open parenthesis
+> drivers/net/wireless/ath/ath10k/ahb.c:470: Alignment should match open parenthesis
+> drivers/net/wireless/ath/ath10k/sdio.c:697: space prohibited before that close parenthesis ')'
+> 
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-Multiple warnings, please fix those and resend the whole series.
+Patch applied to ath-next branch of ath.git, thanks.
 
-drivers/net/wireless/ath/ath11k/wmi.c: In function 'ath11k_wmi_tlv_op_rx':
-drivers/net/wireless/ath/ath11k/wmi.c:5651:7: warning: 'pdev_id' may be used uninitialized in this function [-Wmaybe-uninitialized]
-drivers/net/wireless/ath/ath11k/wmi.c:5641:6: note: 'pdev_id' was declared here
-drivers/net/wireless/ath/ath11k/wmi.c:5657:2: warning: 'temp' may be used uninitialized in this function [-Wmaybe-uninitialized]
-drivers/net/wireless/ath/ath11k/wmi.c:5640:6: note: 'temp' was declared here
-drivers/net/wireless/ath/ath11k/wmi.c: In function 'ath11k_wmi_tlv_op_rx':
-drivers/net/wireless/ath/ath11k/wmi.c:5651:7: warning: 'pdev_id' may be used uninitialized in this function [-Wmaybe-uninitialized]
-drivers/net/wireless/ath/ath11k/wmi.c:5641:6: note: 'pdev_id' was declared here
-drivers/net/wireless/ath/ath11k/wmi.c:5657:2: warning: 'temp' may be used uninitialized in this function [-Wmaybe-uninitialized]
-drivers/net/wireless/ath/ath11k/wmi.c:5640:6: note: 'temp' was declared here
+9a5fccc1e807 ath10k: fix few checkpatch warnings
 
 -- 
+https://patchwork.kernel.org/patch/11375089/
+
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
