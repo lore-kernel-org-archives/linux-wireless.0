@@ -6,33 +6,34 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4196DC3F68F
-	for <linux-wireless@archiver.kernel.org>; Tue, 11 Feb 2020 11:45:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60FF7C352A3
+	for <linux-wireless@archiver.kernel.org>; Tue, 11 Feb 2020 12:26:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 24F5020842
-	for <linux-wireless@archiver.kernel.org>; Tue, 11 Feb 2020 11:45:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 38FBE20714
+	for <linux-wireless@archiver.kernel.org>; Tue, 11 Feb 2020 12:26:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728616AbgBKLpM (ORCPT
+        id S1728454AbgBKM0R (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 11 Feb 2020 06:45:12 -0500
-Received: from smail.rz.tu-ilmenau.de ([141.24.186.67]:58102 "EHLO
-        smail.rz.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727865AbgBKLpM (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Feb 2020 06:45:12 -0500
-Received: from isengard.tu-ilmenau.de (unknown [141.24.111.225])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by smail.rz.tu-ilmenau.de (Postfix) with ESMTPSA id EBC8258006E;
-        Tue, 11 Feb 2020 12:45:09 +0100 (CET)
-From:   Markus Theil <markus.theil@tu-ilmenau.de>
-To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org,
-        Markus Theil <markus.theil@tu-ilmenau.de>
-Subject: [RFC PATCH] iw: add clang-based fuzzer for scan IEs
-Date:   Tue, 11 Feb 2020 12:45:02 +0100
-Message-Id: <20200211114502.4250-1-markus.theil@tu-ilmenau.de>
-X-Mailer: git-send-email 2.25.0
+        Tue, 11 Feb 2020 07:26:17 -0500
+Received: from nbd.name ([46.4.11.11]:59474 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728288AbgBKM0R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 11 Feb 2020 07:26:17 -0500
+Received: from [46.59.221.152] (helo=bertha.fritz.box)
+        by ds12 with esmtpa (Exim 4.89)
+        (envelope-from <john@phrozen.org>)
+        id 1j1UcH-000356-8p; Tue, 11 Feb 2020 13:26:13 +0100
+From:   John Crispin <john@phrozen.org>
+To:     Johannes Berg <johannes@sipsolutions.net>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
+        John Crispin <john@phrozen.org>
+Subject: [PATCH 2/2] ath11k: set queue_len to 4096
+Date:   Tue, 11 Feb 2020 13:26:05 +0100
+Message-Id: <20200211122605.13002-2-john@phrozen.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20200211122605.13002-1-john@phrozen.org>
+References: <20200211122605.13002-1-john@phrozen.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -40,110 +41,40 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This patch is not ready for inclusion into the repo, but only useful for
-testing purposes.
+The driver currently does not use wake_txq_queue. This leads to the
+tx_queue_len being defaulted to 1000. Setting this parameter will
+change the queue_len to 4096 which is more fitting for HE.
 
-Signed-off-by: Markus Theil <markus.theil@tu-ilmenau.de>
+Signed-off-by: John Crispin <john@phrozen.org>
 ---
- Makefile    | 24 ++++++++++++++++++++----
- fuzz.sh     |  5 +++++
- fuzz_scan.c |  6 ++++++
- iw.c        |  4 ++++
- 4 files changed, 35 insertions(+), 4 deletions(-)
- create mode 100755 fuzz.sh
- create mode 100644 fuzz_scan.c
+ drivers/net/wireless/ath/ath11k/hw.h  | 1 +
+ drivers/net/wireless/ath/ath11k/mac.c | 1 +
+ 2 files changed, 2 insertions(+)
 
-diff --git a/Makefile b/Makefile
-index 90f2251..4ba2daf 100644
---- a/Makefile
-+++ b/Makefile
-@@ -16,9 +16,9 @@ CFLAGS_EVAL := $(call cc-option,-Wstringop-overflow=4)
- CFLAGS ?= -O2 -g
- CFLAGS += -Wall -Wextra -Wundef -Wstrict-prototypes -Wno-trigraphs -fno-strict-aliasing -fno-common \
- 	  -Werror-implicit-function-declaration -Wsign-compare -Wno-unused-parameter \
--	  $(CFLAGS_EVAL)
-+	  $(CFLAGS_EVAL) $(EXTRA_CFLAGS)
+diff --git a/drivers/net/wireless/ath/ath11k/hw.h b/drivers/net/wireless/ath/ath11k/hw.h
+index dd39333ec0ea..9973477ae373 100644
+--- a/drivers/net/wireless/ath/ath11k/hw.h
++++ b/drivers/net/wireless/ath/ath11k/hw.h
+@@ -62,6 +62,7 @@
+ #define TARGET_RX_BATCHMODE		1
  
--_OBJS := $(sort $(patsubst %.c,%.o,$(wildcard *.c)))
-+_OBJS := $(filter-out iw.o fuzz_scan.o, $(sort $(patsubst %.c,%.o,$(wildcard *.c))))
- VERSION_OBJS := $(filter-out version.o, $(_OBJS))
- OBJS := $(VERSION_OBJS) version.o
+ #define ATH11K_HW_MAX_QUEUES		4
++#define ATH11K_QUEUE_LEN		4096
  
-@@ -102,12 +102,28 @@ nl80211-commands.inc: nl80211.h
- 	@$(NQ) ' CC  ' $@
- 	$(Q)$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
+ #define ATH11k_HW_RATECODE_CCK_SHORT_PREAM_MASK  0x4
  
-+iw_main.o: iw.c iw.h nl80211.h nl80211-commands.inc
-+	@$(NQ) ' CC  ' $@
-+	$(Q)$(CC) $(CFLAGS) -DIW_MAIN=1 $(CPPFLAGS) -c -o $@ $<
-+
-+iw_no_main.o: iw.c iw.h nl80211.h nl80211-commands.inc
-+	@$(NQ) ' CC  ' $@
-+	$(Q)$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
-+
- ifeq ($(IW_ANDROID_BUILD),)
--iw:	$(OBJS)
-+iw:	$(OBJS) iw_main.o
- 	@$(NQ) ' CC  ' iw
--	$(Q)$(CC) $(LDFLAGS) $(OBJS) $(LIBS) -o iw
-+	$(Q)$(CC) $(LDFLAGS) $(OBJS) iw_main.o $(LIBS) -o iw
- endif
+diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+index 139ecbcf0179..c0606e4a8967 100644
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -6025,6 +6025,7 @@ static int __ath11k_mac_register(struct ath11k *ar)
+ 	ar->hw->wiphy->max_ap_assoc_sta = ar->max_num_stations;
  
-+fuzz_scan.o: fuzz_scan.c iw.h
-+	@$(NQ) ' CC  ' $@
-+	$(Q)$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
-+
-+fuzz_scan: fuzz_scan.o $(OBJS) iw_no_main.o
-+	@$(NQ) ' CC  ' fuzz_scan
-+	$(Q)$(CC) $(LDFLAGS) $(OBJS) iw_no_main.o fuzz_scan.o $(LIBS) -o fuzz_scan
-+
- check:
- 	$(Q)$(MAKE) all CC="REAL_CC=$(CC) CHECK=\"sparse -Wall\" cgcc"
+ 	ar->hw->queues = ATH11K_HW_MAX_QUEUES;
++	ar->hw->wiphy->tx_queue_len = ATH11K_QUEUE_LEN;
+ 	ar->hw->offchannel_tx_hw_queue = ATH11K_HW_MAX_QUEUES - 1;
+ 	ar->hw->max_rx_aggregation_subframes = IEEE80211_MAX_AMPDU_BUF;
  
-diff --git a/fuzz.sh b/fuzz.sh
-new file mode 100755
-index 0000000..b98fecb
---- /dev/null
-+++ b/fuzz.sh
-@@ -0,0 +1,5 @@
-+#!/bin/bash
-+
-+make V=1 CC=clang EXTRA_CFLAGS="-fsanitize=address,undefined,fuzzer" LDFLAGS="-fsanitize=fuzzer,address,undefined" fuzz_scan
-+mkdir -p fuzz_corpus
-+./fuzz_scan fuzz_corpus/ -max_len=512 -timeout=5 > /dev/null
-diff --git a/fuzz_scan.c b/fuzz_scan.c
-new file mode 100644
-index 0000000..ed9da4f
---- /dev/null
-+++ b/fuzz_scan.c
-@@ -0,0 +1,6 @@
-+#include "iw.h"
-+
-+int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
-+	print_ies((unsigned char *)data, size, size % 2, PRINT_SCAN);
-+	return 0;
-+}
-\ No newline at end of file
-diff --git a/iw.c b/iw.c
-index da71617..1563543 100644
---- a/iw.c
-+++ b/iw.c
-@@ -562,6 +562,8 @@ int handle_cmd(struct nl80211_state *state, enum id_input idby,
- static struct cmd sizer1 __attribute__((section("__sizer"))) = {};
- static struct cmd sizer2 __attribute__((section("__sizer"))) = {};
- 
-+#ifdef IW_MAIN
-+
- int main(int argc, char **argv)
- {
- 	struct nl80211_state nlstate;
-@@ -638,3 +640,5 @@ int main(int argc, char **argv)
- 
- 	return err;
- }
-+
-+#endif
-\ No newline at end of file
 -- 
-2.25.0
+2.20.1
 
