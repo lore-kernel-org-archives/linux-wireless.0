@@ -2,142 +2,125 @@ Return-Path: <SRS0=QfV8=4B=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CEEC4C2BA83
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Feb 2020 07:39:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63291C2BA83
+	for <linux-wireless@archiver.kernel.org>; Thu, 13 Feb 2020 08:45:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 85F6C20873
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Feb 2020 07:39:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 26AE9217F4
+	for <linux-wireless@archiver.kernel.org>; Thu, 13 Feb 2020 08:45:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=intel.onmicrosoft.com header.i=@intel.onmicrosoft.com header.b="wMn7MA/X"
+	dkim=pass (1024-bit key) header.d=cypress.com header.i=@cypress.com header.b="IUFiLd0y"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729757AbgBMHji (ORCPT
+        id S1729659AbgBMIpS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 13 Feb 2020 02:39:38 -0500
-Received: from mga12.intel.com ([192.55.52.136]:27246 "EHLO mga12.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729728AbgBMHjh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Feb 2020 02:39:37 -0500
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 12 Feb 2020 23:39:36 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.70,436,1574150400"; 
-   d="scan'208";a="237958101"
-Received: from fmsmsx108.amr.corp.intel.com ([10.18.124.206])
-  by orsmga006.jf.intel.com with ESMTP; 12 Feb 2020 23:39:36 -0800
-Received: from FMSEDG002.ED.cps.intel.com (10.1.192.134) by
- FMSMSX108.amr.corp.intel.com (10.18.124.206) with Microsoft SMTP Server (TLS)
- id 14.3.439.0; Wed, 12 Feb 2020 23:39:35 -0800
-Received: from NAM11-DM6-obe.outbound.protection.outlook.com (104.47.57.168)
- by edgegateway.intel.com (192.55.55.69) with Microsoft SMTP Server (TLS) id
- 14.3.439.0; Wed, 12 Feb 2020 23:39:36 -0800
+        Thu, 13 Feb 2020 03:45:18 -0500
+Received: from mail-bn8nam11on2105.outbound.protection.outlook.com ([40.107.236.105]:59328
+        "EHLO NAM11-BN8-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1729406AbgBMIpS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 13 Feb 2020 03:45:18 -0500
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=aWo7CchKQi+TpDldrA8TnwSoOTzFY/4AMCr77lt0opDKwLocZh3cnux1s9bRJ0wR0RLE0SVqleOaXSUwcY/+7KG8GjgP0Mox5o7z/8OkKu3M6eUb4axjKwTYESw4VfcllcFziR8Qktq6B3/uuKJpSF4g5cv/T/gmc5iAEvME7Cd6vjCbRAB0UqjdOMMRC48CbXgzZ0tQ/fAa9lGRPXVJola6yatjmtrRL5am3KMOaOlb+T/sIydGV/6eXkbEryurSptOk8cOQ1s77q3TPX7+oIgBB8J76jjX9r/hZhd83KX54x5VtcTvGqiSHSJnU1hXqbzNx2DtQgHftOkVxzpr9w==
+ b=m/gkg4Y/+mZ9WqxmVm9oKa2nVlp3t6NO0DdeByfy58GBcah4sQlgtypzTVFy0cYMtbt2w9memApJesQcVm+4mx5Ig8KSh0PoO7k7sxHa7dvtxeWokOk6SycyKRpCFguMXDwB5cWt+DiGLl6dnG4tJd7ayxVGCbx1UR5Xj+QdPpp+Yqb7BMnATi+PpRhuomqpj+EHhgc5KKIlB5StLkgwgOR8S24TgTLfPzy9WpkGme1tjgEH8Qws61Ql/c+PH/9T+ZGUEKvNPNVLoaC671nUvYhrJGArW8Dy71lEbc42Qn3yL3IOoM4y2+alDyk+JUG7BWWCwG8Zrc/EQkyTNndxGw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=6h+q2EjM+HqDu9pS6awbBMGZ0FimwTeXwEVLmFBqtkc=;
- b=VOFTrFWCuBKpC6C8Ik7wtDrt6BbxLBH97xGjO3m4yGQmmYwpBWGaFb9eFHkEI5HYVuVeDya70eEm8GPYEh7kJlLzkFPQIo4KPeHN+tRAxu1kCyNqcA/tUCczGOT9Kealnfs9vj8QAhDJABosoZzJevbViejXLuiJT9YvWIAtzRveXYMqmv9W2XjHRt4JMIr4AWRglrpOOb/7PpMhNcR4WgZkiVbdS4pN573OC3ZKirbyL8hlSDmO0u05n/DszA0u3/2oAIpyphwWx+H9h92sUSuvQ/DOFZHsQDVjA+IdiFXjbnSOKrIWjU7iTV/oECFAuEZk7ohVdGJNUY6ayYpdEA==
+ bh=UVUFsuMx9Jb+PSE5hixRxB+b6ztt9C1M4XixdIVvdUU=;
+ b=hVCo2TrmnalsO7x9YWKA70lUNW/VWkcILFVt/88zBh2U8ncGQP4gMN7w8RRF9si5ZZ+01dbKnsNjamr5OQYGBYDBJ3tYDdEKn5kBkex1UsLvlFHolnNcBR7iW8Ja+FC67RNyZEJCaHuiKq8dXSOA95JJJTnouTPzl/lpsLoWSxZLMJeazwmVgpbaS4EXr8yU/9wEB2XoGOIE/sVHEv0+mSYKeHTQIWQqakY1Evp03JRKR9kwXiy6Z9E9qEnLcXd3HlnXBIXfGpJG8IvDkrrdc7vzriQ8wAB2zpkGBkh+x/KCRQxLpJBBZQixEIcI1bS7Rnrru8TTjrzTvZ9CJY5IjQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
- dkim=pass header.d=intel.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=intel.onmicrosoft.com;
- s=selector2-intel-onmicrosoft-com;
+ smtp.mailfrom=cypress.com; dmarc=pass action=none header.from=cypress.com;
+ dkim=pass header.d=cypress.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cypress.com;
+ s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=6h+q2EjM+HqDu9pS6awbBMGZ0FimwTeXwEVLmFBqtkc=;
- b=wMn7MA/XIXHcaD9XHn5R7zHfNcLkvkJTMv2Tuk02VXLcgzZQziFYfAk/UixpGHCnGOoYug0uoPznSibLHtDD8QioOOYGZERg136bvU1lxXBqHfxf/etSQr06OuBsW+PDmHC1W4boDB6ijUx1it32C5iuAbwnakyxZOlfpkm32HQ=
-Received: from SN6PR11MB2976.namprd11.prod.outlook.com (52.135.126.86) by
- SN6PR11MB3136.namprd11.prod.outlook.com (52.135.127.158) with Microsoft SMTP
+ bh=UVUFsuMx9Jb+PSE5hixRxB+b6ztt9C1M4XixdIVvdUU=;
+ b=IUFiLd0yWGY0tSB3NoYll49BvMLKhAWui6HZKM1suJ9TeFe3+0gdRJ66ZLeEu1hJFPItREWFh4FyH1C4FESmulHZMEblj6O1e0zsFYIUBAmRPCzhRLnE1mk33I2+aynThJ8p+odQzOY96Ig3StoLTITYdwBCO7xTZ0jPn+2CzZE=
+Authentication-Results: spf=none (sender IP is )
+ smtp.mailfrom=Chi-Hsien.Lin@cypress.com; 
+Received: from BYAPR06MB4901.namprd06.prod.outlook.com (20.177.184.30) by
+ BYAPR06MB5623.namprd06.prod.outlook.com (20.178.196.20) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2729.22; Thu, 13 Feb 2020 07:39:33 +0000
-Received: from SN6PR11MB2976.namprd11.prod.outlook.com
- ([fe80::ca9:91ae:e6ae:781c]) by SN6PR11MB2976.namprd11.prod.outlook.com
- ([fe80::ca9:91ae:e6ae:781c%7]) with mapi id 15.20.2707.030; Thu, 13 Feb 2020
- 07:39:33 +0000
-From:   "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To:     "dmoulding@me.com" <dmoulding@me.com>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>
-CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        linuxwifi <linuxwifi@intel.com>,
-        "Coelho, Luciano" <luciano.coelho@intel.com>,
-        "Berg, Johannes" <johannes.berg@intel.com>
-Subject: Re: [PATCH v2 5.5] iwlwifi: mvm: Do not require PHY_SKU NVM section
- for 3168 devices
-Thread-Topic: [PATCH v2 5.5] iwlwifi: mvm: Do not require PHY_SKU NVM section
- for 3168 devices
-Thread-Index: AQHV1b3MoNaVXOoKuk+2wK2BAZ9U9qgWRBUAgAF50yuAARgPAA==
-Date:   Thu, 13 Feb 2020 07:39:33 +0000
-Message-ID: <eb6c6e1ff0e1c8c6b202e534262778a729923bc6.camel@intel.com>
-References: <20200128093107.9740-1-dmoulding@me.com>
-         <20200211162450.2493-1-dmoulding@me.com>
-         <87d0ajx3r2.fsf@tynnyri.adurom.net>
-In-Reply-To: <87d0ajx3r2.fsf@tynnyri.adurom.net>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=emmanuel.grumbach@intel.com; 
-x-originating-ip: [134.191.233.106]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: b4363518-1cf0-4fed-cd4c-08d7b057de5a
-x-ms-traffictypediagnostic: SN6PR11MB3136:
-x-ld-processed: 46c98d88-e344-4ed4-8496-4ed7712e255d,ExtAddr
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <SN6PR11MB31360186F0A7D2F1CCED3C62F21A0@SN6PR11MB3136.namprd11.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:10000;
-x-forefront-prvs: 031257FE13
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(346002)(39860400002)(376002)(366004)(136003)(396003)(199004)(189003)(4326008)(91956017)(36756003)(66446008)(76116006)(6506007)(71200400001)(16799955002)(5660300002)(86362001)(478600001)(6512007)(81166006)(8676002)(316002)(26005)(2616005)(8936002)(64756008)(66556008)(186003)(54906003)(6486002)(81156014)(2906002)(966005)(110136005)(66946007)(66476007);DIR:OUT;SFP:1102;SCL:1;SRVR:SN6PR11MB3136;H:SN6PR11MB2976.namprd11.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: UyyisyH3dHBgB2544xlPtYyQ9NUXJIrDCcDs0IEjnf5Y+8qI06DXIgc9EKF16BGxRY1Az59oLS1YL0OZXoBWjY/qgmFpDt28CY/HkdqMYWdceGjDhDLzINwxyF5QI3bR9+CnjfNpqx6ab1xlUdJRAGpYMz5BpJb/shlntegkhApkPwDbJLrKwJaEW8V/xepnF7S9ce57Vomd6LuewatgEuAHC3yLkUZlWTU12bvqeeXzmCIQlJGmEvnTRN8ul2I3uQZna/GELwD6MY8GCCKH4oS47ooaxV6pOE8ye5662TXVpoWl0bQ6cuFkJTc5zlJ4PNLFNzu+kk62voiwDozk231iB7jqc+Wpx+7gpooNc3eJfB6FVM9kTosIeS5ZjpI5qP/trHq3SnQNGjRsAJbCmN7becwMednD0TGDGI4XVd4G/H1eS5SpYvRtoH/aSVqcdBPtHMkKtER70MHzVOjvEkE0jWT81Ks+W+Dm2qJ081UUlVOrYnse4pvqXys1QhcSIt/k8UCp0j+Tz3DJQlxUwg==
-x-ms-exchange-antispam-messagedata: y+HiN8Pgbi+eBwquWRp/JDY5aCLDGuJx7C+vbFvJZGy0L/oZlVdVVOSJH6DG4XrYQEr5aPSpkQiOzea91Ic/R7AlDqke4BbKGliIaUWGch06LjMKZzaiBrz18uq8/osiYcrQhAYBaEWwX9Neslf5gg==
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <D478C79D442005478187BD8801085EAE@namprd11.prod.outlook.com>
-Content-Transfer-Encoding: base64
+ 15.20.2707.29; Thu, 13 Feb 2020 08:45:15 +0000
+Received: from BYAPR06MB4901.namprd06.prod.outlook.com
+ ([fe80::61cf:307a:df0a:c031]) by BYAPR06MB4901.namprd06.prod.outlook.com
+ ([fe80::61cf:307a:df0a:c031%3]) with mapi id 15.20.2707.030; Thu, 13 Feb 2020
+ 08:45:15 +0000
+From:   Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+To:     linux-wireless@vger.kernel.org
+Cc:     brcm80211-dev-list@broadcom.com, brcm80211-dev-list@cypress.com,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+Subject: [PATCH 0/6] brcmfmac: USB change series
+Date:   Thu, 13 Feb 2020 02:44:30 -0600
+Message-Id: <1581583476-60155-1-git-send-email-chi-hsien.lin@cypress.com>
+X-Mailer: git-send-email 2.1.0
+Content-Type: text/plain
+X-ClientProxiedBy: BYAPR02CA0050.namprd02.prod.outlook.com
+ (2603:10b6:a03:54::27) To BYAPR06MB4901.namprd06.prod.outlook.com
+ (2603:10b6:a03:7a::30)
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-Network-Message-Id: b4363518-1cf0-4fed-cd4c-08d7b057de5a
-X-MS-Exchange-CrossTenant-originalarrivaltime: 13 Feb 2020 07:39:33.1912
+Received: from aremote02.aus.cypress.com (12.110.209.245) by BYAPR02CA0050.namprd02.prod.outlook.com (2603:10b6:a03:54::27) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2707.29 via Frontend Transport; Thu, 13 Feb 2020 08:45:14 +0000
+X-Mailer: git-send-email 2.1.0
+X-Originating-IP: [12.110.209.245]
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-HT: Tenant
+X-MS-Office365-Filtering-Correlation-Id: fd0d5f93-9bf8-4d62-0b21-08d7b0610b66
+X-MS-TrafficTypeDiagnostic: BYAPR06MB5623:|BYAPR06MB5623:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <BYAPR06MB56238E9C85A91B824EEC561FBB1A0@BYAPR06MB5623.namprd06.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:7219;
+X-Forefront-PRVS: 031257FE13
+X-Forefront-Antispam-Report: SFV:NSPM;SFS:(10019020)(39860400002)(136003)(346002)(376002)(396003)(366004)(189003)(199004)(4744005)(16526019)(478600001)(2906002)(186003)(4326008)(2616005)(316002)(26005)(5660300002)(36756003)(956004)(86362001)(6666004)(8676002)(54906003)(8936002)(66556008)(52116002)(107886003)(66476007)(81166006)(81156014)(6486002)(6916009)(7696005)(66946007);DIR:OUT;SFP:1102;SCL:1;SRVR:BYAPR06MB5623;H:BYAPR06MB4901.namprd06.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+Received-SPF: None (protection.outlook.com: cypress.com does not designate
+ permitted sender hosts)
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: Sib4A4hcivAYszWN5QS3xbyv1e8pfhKWaw/XnYEyIA0Y7zgQSGwG1/2Fwb5xdLktGpUS18gqJPTJcrd07Wwx1tt/r1ofQ294bBHTgow8f+PsnM9eoIRlgL3n4Xh4PcsAnG3NQztdr9uVs3eX33sdvCzF/014GxRCuV3cX7bCV8mjrlmron8r/7YLq+uAFN7w4X0p24IRjtU6eRe5Iw9KJ8oTG4Mvk43DOqe9bViCMjFfqMMwrkq0NVpbuDpwlpoBEq+AOxc+7hwTJzUkzifxvaVobWRwpesO4S58GyLwN7ROR3ICPDqdhRFrrbHghR6xIROCM8uajSPgysTd/OEVUu6Aw/vbzR/jOHOZZwrifRBtssRmX3ZvWhn5VlazvDL6oeAkGoYhXQI7aWGoSF1z2Fjk+7ipyksNB6AehLlb2g/aoDNdfWSg31fwx60A/PQf
+X-MS-Exchange-AntiSpam-MessageData: 19e1EeKxOfZWMXvtrvlIsD42ZaSSB56sBBIUPPc5WnHtKCxPLQ42ey4OzgyefTDhKANLUh7mJP5Ts4qUwutrX13dDxdBngUazs3dmGzzDxpqX87Pi63jgTR+6vnVVtjCedLIOj13Uzm+ra4uckocuw==
+X-OriginatorOrg: cypress.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: fd0d5f93-9bf8-4d62-0b21-08d7b0610b66
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Feb 2020 08:45:15.1124
  (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 46c98d88-e344-4ed4-8496-4ed7712e255d
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: w76q0PC5nChByhSH72+cDPlPuRQBZ11Q+ovPmbBTGkXOvg41nTxB7MBNo+iCLOchNyKwZx7oJzMVz+fFmrmAskDIfRqxk2+bmS8TOhAWWpM=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR11MB3136
-X-OriginatorOrg: intel.com
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 011addfc-2c09-450d-8938-e0bbc2dd2376
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: XkFJ6FuyrQVr6IPwh07GdbTEY0vu6fglwCbYfCYScFpmw1tYBC3QxpEmwdDU2P8mobhInisSV75gzc5fPX9UKA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR06MB5623
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-SGkgS2FsbGUgYW5kIERhbiwNCg0KT24gV2VkLCAyMDIwLTAyLTEyIGF0IDE2OjQ2ICswMjAwLCBL
-YWxsZSBWYWxvIHdyb3RlOg0KPiBEYW4gTW91bGRpbmcgPGRtb3VsZGluZ0BtZS5jb20+IHdyaXRl
-czoNCj4gDQo+ID4gVGhpcyBpcyBqdXN0IGEgZnJpZW5kbHkgcmVtaW5kZXIgdGhhdCB0aGlzIHBh
-dGNoIGhhcyBiZWVuDQo+ID4gc3VibWl0dGVkLA0KPiA+IGZvciB3aGF0IGxvb2tzIGxpa2UgYSBm
-YWlybHkgbWFqb3IgcmVncmVzc2lvbiBpbiBpd2x3aWZpIHRoYXQNCj4gPiBpbXBhY3RzDQo+ID4g
-KGFzIGZhciBhcyBJIGNhbiB0ZWxsKSAqYWxsKiAzMTY4IGRldmljZXMuIFRoZSByZWdyZXNzaW9u
-IGlzIGluIHRoZQ0KPiA+IHY1LjUueCBzZXJpZXMgYW5kIHdhcyBmb3IgYSB3aGlsZSBiYWNrLXBv
-cnRlZCB0byB0aGUgc3RhYmxlIHRyZWVzLA0KPiA+IGJ1dA0KPiA+IGx1Y2tpbHkgd2FzIG5vdGlj
-ZWQgYmVmb3JlIHRoZSByZWxlYXNlcyB3ZXJlIG1hZGUuDQo+ID4gDQo+ID4gVGhlcmUgYXJlIGF0
-IGxlYXN0IGEgZmV3IGJ1ZyByZXBvcnRzIGZvciB0aGlzIHJlZ3Jlc3Npb246DQo+ID4gDQo+ID4g
-aHR0cHM6Ly9idWd6aWxsYS5rZXJuZWwub3JnL3Nob3dfYnVnLmNnaT9pZD0yMDYzMjkNCj4gPiBo
-dHRwczovL2J1Z3MuZ2VudG9vLm9yZy83MDY4MTANCj4gPiBodHRwczovL2xrbWwub3JnL2xrbWwv
-MjAyMC8yLzcvODExDQo+ID4gaHR0cHM6Ly9iYnMuYXJjaGxpbnV4Lm9yZy92aWV3dG9waWMucGhw
-P2lkPTI1MjYwMw0KPiA+IA0KPiA+IFRoZSBHZW50b28gbWFpbnRhaW5lcnMgaGF2ZSBhbHJlYWR5
-IGFwcGxpZWQgdGhpcyBwYXRjaCB0byB0aGVpcg0KPiA+IExpbnV4DQo+ID4gc291cmNlcyBhbmQg
-bWFya2VkIHRoZWlyIGJ1ZyByZXBvcnQgImZpeGVkIi4gQnV0IGl0IHdvdWxkIGJlIHJlYWxseQ0K
-PiA+IG5pY2UgaWYgd2UgY291bGQgZ2V0IHRoaXMgcmVncmVzc2lvbiBmaXhlZCBpbiB0aGUgbmV4
-dCBzdGFibGUNCj4gPiB2NS41LngNCj4gPiByZWxlYXNlLg0KPiANCj4gSSdsbCBxdWV1ZSB0aGlz
-IGRpcmVjdGx5IHRvIHdpcmVsZXNzLWRyaXZlcnMuIEludGVsIGZvbGtzLCBhcmUgeW91IG9rDQo+
-IHdpdGggdGhpcz8NCj4gDQoNClRoZSBvbmx5IHBlcnNvbiB3aG8gcmVhbGx5IHVuZGVyc3RhbmQg
-d2hhdCBnb2VzIG9uIGhlcmUgaXMgTHVjYSwgaGUgaXMNCmFsc28gdGhlIG9uZSB3aG8gdG91Y2hl
-ZCB0aGlzIGFyZWEgSSB0aGluay4gTHVjYSBpcyBPT08gYW5kIHNob3VsZCBiZQ0KYmFjayBuZXh0
-IHdlZWsgSSBiZWxpZXZlLg0KVGhlIHBhdGNoIGxvb2tzIHNhbmUgYW5kIGl0IGZpeGVzIGlzc3Vl
-cyBmb3IgcGVvcGxlLCBzbyBnbyBhaGVhZCBhbmQNCm1lcmdlIGl0IHBsZWFzZS4gSWYgTHVjYSB3
-YW50cyB0byBtYWtlIGNoYW5nZXMgb24gdG9wIG9mIHRoaXMsIGhlIGNhbg0KYXNrIHRvIGRvIHRo
-b3NlIGNoYW5nZXMgb24gdG9wIG9mIHRoYXQgcGF0Y2guDQoNClRoYW5rcy4gDQo=
+USB runtime PM and console print support added, alone with several of bug fixes for usb devices.
+
+Madhan Mohan R (1):
+  brcmfmac: increase max hanger slots from 1K to 3K in fws layer
+
+Raveendran Somu (4):
+  brcmfmac: Fix driver crash on USB control transfer timeout
+  brcmfmac: Fix double freeing in the fmac usb data path
+  brcmfmac: fix the incorrect return value in brcmf_inform_single_bss().
+  brcmfmac: To support printing USB console messages
+
+Wright Feng (1):
+  brcmfmac: add USB autosuspend feature support
+
+ .../net/wireless/broadcom/brcm80211/brcmfmac/bus.h |   1 +
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         |   2 +-
+ .../wireless/broadcom/brcm80211/brcmfmac/core.c    |   8 ++
+ .../wireless/broadcom/brcm80211/brcmfmac/debug.c   |  82 ++++++++++++
+ .../wireless/broadcom/brcm80211/brcmfmac/debug.h   |  24 ++++
+ .../broadcom/brcm80211/brcmfmac/fwsignal.c         |   5 +-
+ .../net/wireless/broadcom/brcm80211/brcmfmac/usb.c | 141 +++++++++++++--------
+ 7 files changed, 207 insertions(+), 56 deletions(-)
+
+-- 
+2.1.0
+
