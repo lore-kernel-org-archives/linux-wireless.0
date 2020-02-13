@@ -7,69 +7,71 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A22CC2BA83
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Feb 2020 11:46:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8F61C2BA83
+	for <linux-wireless@archiver.kernel.org>; Thu, 13 Feb 2020 11:46:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1CC83217F4
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Feb 2020 11:46:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A56AD217F4
+	for <linux-wireless@archiver.kernel.org>; Thu, 13 Feb 2020 11:46:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=quantenna.com header.i=@quantenna.com header.b="OO2PGvYT"
+	dkim=pass (1024-bit key) header.d=quantenna.com header.i=@quantenna.com header.b="BX/9CzwC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729872AbgBMLqJ (ORCPT
+        id S1729893AbgBMLqO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 13 Feb 2020 06:46:09 -0500
-Received: from mx0a-00183b01.pphosted.com ([67.231.149.44]:60652 "EHLO
-        mx0a-00183b01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729511AbgBMLqJ (ORCPT
+        Thu, 13 Feb 2020 06:46:14 -0500
+Received: from mx0b-00183b01.pphosted.com ([67.231.157.42]:30078 "EHLO
+        mx0a-00183b01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1729511AbgBMLqN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Feb 2020 06:46:09 -0500
-Received: from pps.filterd (m0048105.ppops.net [127.0.0.1])
-        by mx0a-00183b01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 01DBh9lZ010055
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Feb 2020 04:46:08 -0700
-Received: from nam11-dm6-obe.outbound.protection.outlook.com (mail-dm6nam11lp2175.outbound.protection.outlook.com [104.47.57.175])
-        by mx0a-00183b01.pphosted.com with ESMTP id 2y1ufxerh1-1
+        Thu, 13 Feb 2020 06:46:13 -0500
+Received: from pps.filterd (m0059811.ppops.net [127.0.0.1])
+        by mx0b-00183b01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 01DBgx8I005138
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Feb 2020 04:46:12 -0700
+Received: from nam10-mw2-obe.outbound.protection.outlook.com (mail-mw2nam10lp2105.outbound.protection.outlook.com [104.47.55.105])
+        by mx0b-00183b01.pphosted.com with ESMTP id 2y1u7fc5ys-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Feb 2020 04:46:08 -0700
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Feb 2020 04:46:12 -0700
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=g7vLqPIC6ODoGKvNusuH0ugosEguvcK7oRkXgdJJvow7GrTlQC8xRZQM+KHVLIFoCxSz+z9aFtSUO1P0H0j9rtOpp5Qtg0Z0HHSvP0P9DNfo+SLXlgYHfjndTyNDvhJ/yQ85zgaxTbtmzNkBGwORMOCMoTlZcAHH+9jhjUQW+o3frFI5NTVK9WkcNMEpbru437Mo5T22DOjKTpa1QIiZBnhyiZsPtGt42uQxNLL8paL3Yn1QFY2sHLXLNhlKzt9SyTq8kJyrPE5OBrTsOUYo4T3iCOBc/VT3KyecfjSRCk0iJGWQGaTN72aJrKxpj4aFgMNDXFfsnW94v/CEgUcgPw==
+ b=fHI1FX+2PO3VvpgQYVqhGn3FOJh8+cJNa+P3YwPU07FsEhUi1ztrF+Lyrp6YzgbL7GF24YjNVXhjQxw4h8ndJgq2dg0ofSxjr0W/gLz+l0o/rn7V/Zj9Y6bJm4fW6PIvbS7CsfiVR6gJXiav2gEwF+x7e5OcnUjyjO5xEB0ELBVpVjcXGFDIUPOmRcEshO4PNp63z/vnUJBe4G8d8dUosQip8u2BBW+yiou/sDaCdFbcAnHkdfFxITNQXD4BVRJ6H5GAy5KiwqoJgiFrY59vlZUOa5aeDxxKHSLXOUvRfVzxNTTdivA8nKmNEwfQwec4mmMJ3EPHTiKIj4VSP/O6EQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=5blg9/oW9eT7WvvePOqZm6F5uKC6acr5xwktSAq2KSw=;
- b=lW7DJeqCoRrjyd2Djd1W1aCa+hNmg5rLiGZR+q8d1mwHc346/YdYrqexCWf36+j7X8pwteBdKjtJYCVLqMWs9kJsoE5lo9/2TLFvw8qZc7Vqku0uK5Y7wdrBjuxBLSm8VacOJX4xwsM62RZ+AMG43mOSwWd6fWSBFUh8C2ojbdockmNWbGNYV6CbqMm+WlSL99hXZKsxMKVIJm9cl1p3yqNQA0pbHaP0oDQQ7mvNBWeLE1LQY39ofQDegcQMenaQz8IGVr1FNgtPWQkorsuexs66bAFx60730EHHFoZrT/sp31mkToEC/t8BpP4IVpd7uQOlwl72FhFEMSlQb5IMPA==
+ bh=LmfCGkq31scRroXJnt2yI+gDaIyg78GPeC+5BpF9yFw=;
+ b=CVFjAbCHHQgO34ZThKTPQ/CNbp0CrwwVs3dQnC8jFtiIQqeGidScVaML1l+6BHQfNbR7aO77zRSn6tbUHP3lIEYRRoiNmzFjWprJQxUYKxb23m0il6R21kelsFWToPvX+QKzcebadbWfHiaWWau09Alo/WmoAXe+SzWwMcouUl5dY9r6/xswqsblHOqjqYo/6KGypjqUZIdHEYxMjJD9CcSyPp4w3/lrY2M4E3WfvQo2MgwytJQxnbwpS9l2WkcF/zMOVzOzPTAjS4516zsMPsj58pp9TmHRybIGHBd8j9jVjqh2Enwm8c21k9+rJYOvhStJ298L2OrhxMubK3X9uw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=quantenna.com; dmarc=pass action=none
  header.from=quantenna.com; dkim=pass header.d=quantenna.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quantenna.com;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=5blg9/oW9eT7WvvePOqZm6F5uKC6acr5xwktSAq2KSw=;
- b=OO2PGvYTtb4S74q90Z1Pnn/lgB+ajp7xFFdpEFBHS5srCnL6vWUX2qcQ8bka7QSyZWzQgtV2D+Lwey3g2XwTIlRc5RR+JCG+d52p6Ea4BRU80CcM10Er3mjy3Lz82vdIW7eqQFccXeBYaW3n4PApLQP010cxk+/oe5nXpmP2bzs=
-Received: from CY4PR0501MB3779.namprd05.prod.outlook.com (52.132.101.18) by
- CY4PR0501MB3841.namprd05.prod.outlook.com (52.132.100.141) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2729.14; Thu, 13 Feb 2020 11:46:05 +0000
-Received: from CY4PR0501MB3779.namprd05.prod.outlook.com
- ([fe80::11cd:7387:5fdc:2f7a]) by CY4PR0501MB3779.namprd05.prod.outlook.com
- ([fe80::11cd:7387:5fdc:2f7a%6]) with mapi id 15.20.2729.021; Thu, 13 Feb 2020
- 11:46:05 +0000
+ bh=LmfCGkq31scRroXJnt2yI+gDaIyg78GPeC+5BpF9yFw=;
+ b=BX/9CzwCExr5UCXCS6yrpFZQDHx+HtS1R0BniRU3Zy68wqPyTh22b1zug6XzDw2FIx+bM+YvhpzFuIeSR+Dxdp6sHBeF5PvF3h0gmDPymdfgUtjD88XQpRKlitoW391lrepaTkQPrT6DNC8wFbV4Jkze/N2sUjfaEw2s5B0zRzw=
+Received: from DM6PR05MB6890.namprd05.prod.outlook.com (52.132.248.88) by
+ DM6PR05MB4585.namprd05.prod.outlook.com (20.176.79.150) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2729.16; Thu, 13 Feb 2020 11:46:10 +0000
+Received: from DM6PR05MB6890.namprd05.prod.outlook.com
+ ([fe80::a8ea:6419:e3c5:ae00]) by DM6PR05MB6890.namprd05.prod.outlook.com
+ ([fe80::a8ea:6419:e3c5:ae00%5]) with mapi id 15.20.2750.007; Thu, 13 Feb 2020
+ 11:46:10 +0000
 Received: from SN6PR05MB4928.namprd05.prod.outlook.com (52.135.117.74) by
  SN6PR05MB5597.namprd05.prod.outlook.com (52.135.111.89) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2729.16; Thu, 13 Feb 2020 11:45:29 +0000
+ 15.20.2729.16; Thu, 13 Feb 2020 11:45:31 +0000
 Received: from SN6PR05MB4928.namprd05.prod.outlook.com
  ([fe80::25b7:98a0:c066:1a9]) by SN6PR05MB4928.namprd05.prod.outlook.com
  ([fe80::25b7:98a0:c066:1a9%6]) with mapi id 15.20.2729.021; Thu, 13 Feb 2020
- 11:45:29 +0000
-Received: from bars.quantenna.com (195.182.157.78) by HE1PR05CA0129.eurprd05.prod.outlook.com (2603:10a6:7:28::16) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2729.25 via Frontend Transport; Thu, 13 Feb 2020 11:45:28 +0000
+ 11:45:31 +0000
+Received: from bars.quantenna.com (195.182.157.78) by HE1PR05CA0129.eurprd05.prod.outlook.com (2603:10a6:7:28::16) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2729.25 via Frontend Transport; Thu, 13 Feb 2020 11:45:30 +0000
 From:   Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 CC:     Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Subject: [PATCH 2/5] qtnfmac: support WPA3 OWE in AP mode
-Thread-Topic: [PATCH 2/5] qtnfmac: support WPA3 OWE in AP mode
-Thread-Index: AQHV4mMWiyW5CBbo+EifJhfDrmMz+A==
-Date:   Thu, 13 Feb 2020 11:45:29 +0000
-Message-ID: <20200213114518.4415-3-sergey.matyukevich.os@quantenna.com>
+Subject: [PATCH 4/5] qtnfmac: assign each wiphy to its own virtual platform
+ device
+Thread-Topic: [PATCH 4/5] qtnfmac: assign each wiphy to its own virtual
+ platform device
+Thread-Index: AQHV4mMYRBFgSK3BiESW42L3aWadlw==
+Date:   Thu, 13 Feb 2020 11:45:31 +0000
+Message-ID: <20200213114518.4415-5-sergey.matyukevich.os@quantenna.com>
 References: <20200213114518.4415-1-sergey.matyukevich.os@quantenna.com>
 In-Reply-To: <20200213114518.4415-1-sergey.matyukevich.os@quantenna.com>
 Accept-Language: en-US
@@ -83,306 +85,192 @@ x-ms-exchange-messagesentrepresentingtype: 1
 x-mailer: git-send-email 2.11.0
 x-originating-ip: [195.182.157.78]
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: cfb0ba5c-1733-4058-fd2d-08d7b07a3956
-x-ms-traffictypediagnostic: SN6PR05MB5597:|CY4PR0501MB3841:
+x-ms-office365-filtering-correlation-id: 835a532c-ee5d-4b42-d4fb-08d7b07a3aa2
+x-ms-traffictypediagnostic: SN6PR05MB5597:|DM6PR05MB4585:
 x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <SN6PR05MB5597C645F6A726F8DDB0DD90A31A0@SN6PR05MB5597.namprd05.prod.outlook.com>
-x-moderation-data: 2/13/2020 11:46:01 AM
-x-ms-oob-tlc-oobclassifiers: OLM:8882;
+x-microsoft-antispam-prvs: <SN6PR05MB559705164DF75558B32343A2A31A0@SN6PR05MB5597.namprd05.prod.outlook.com>
+x-moderation-data: 2/13/2020 11:46:07 AM
+x-ms-oob-tlc-oobclassifiers: OLM:3631;
 x-forefront-prvs: 031257FE13
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(396003)(346002)(376002)(136003)(39850400004)(366004)(189003)(199004)(52116002)(7696005)(26005)(71200400001)(186003)(16526019)(81156014)(478600001)(36756003)(86362001)(6486002)(316002)(4326008)(2906002)(81166006)(8676002)(66476007)(107886003)(103116003)(956004)(2616005)(5660300002)(1076003)(66946007)(6916009)(64756008)(66556008)(8936002)(66446008);DIR:OUT;SFP:1101;SCL:1;SRVR:CY4PR0501MB3841;H:CY4PR0501MB3779.namprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:3;
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(396003)(136003)(376002)(346002)(39850400004)(366004)(189003)(199004)(7696005)(5660300002)(8936002)(86362001)(52116002)(26005)(81156014)(956004)(81166006)(2616005)(66446008)(66556008)(66946007)(8676002)(186003)(16526019)(66476007)(64756008)(2906002)(6916009)(4326008)(6486002)(316002)(36756003)(1076003)(107886003)(478600001)(71200400001)(103116003);DIR:OUT;SFP:1101;SCL:1;SRVR:DM6PR05MB4585;H:DM6PR05MB6890.namprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
 received-spf: None (protection.outlook.com: quantenna.com does not designate
  permitted sender hosts)
 x-ms-exchange-senderadcheck: 1
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: TwAe0q2LvcDPm6BjLr9MT6SMufSyngjCMHDwF810tqSoKMzcBrZFOHbYlLbaBuvX07u/PBG3UtCpQRUgg2dcfxEGpQiTPB0ENj+a/YZ5fg/N18C86ApMOvINxFLmx50B26WOc4Oz3HoGs5CzvPYMivJgzyn6hTr2Lrog8Io0yg/pgzgx/N1iQUdjkIktBScR1REib07TEbTJmZ6wWVVrnB/YC2Lrigt+6KXYdHaFVwNUxz2ZmwHmu3/U5yg9PsGXpSl+dI4LLdNiGkjeYLZcy2F3kq8bUr3wi/5nAlCE41Ody/tpcGKn9w6Ny0S8GqZLBsit3moDn5vY09r2yfqaxd93JUm6me4ZGoa/1UH7gM7xipalf88om3gz3fAuBL6PkZ5LeYUL8VJ0oRtMQ2hhmHhkNbWlnD4q/eS7vdblymFghKDB2wKzFh8x9judAHdk
-x-ms-exchange-antispam-messagedata: fVGNPAnDY6TydYdEHDRfFjpvXiy7MbKN2ywrQFeYlsMSEpknyRyuESwCmFTzyXNvzcxUrx9HjVTRPLst8xOmix2RicIK3GTqWvG9gH08GtjNtFOEwoLy14P6yE65db57w+fCgzBOAnqm2XPtTmR18Q==
+x-microsoft-antispam-message-info: vRH+6PhzyYndwm15pRgBpWnP3XeIzCfhoH18JDbitGUtR6UsBnL+G6KRZ/ISn5j5nHbgcxCJXocOJz0L4X/RgxisGX5VsBtzT+RY9igQDwzYbwNjb8GzNlv3DUdPa493u90KSv+hnpBy1jSzAFvLw8MvEdN0Q4to6MAL1pHyMcFGUi93TByKxlx01pTrR272pjB3gjW44R3AMnkxTntyVw6wk/cXM3lCIh6C+9d9RkYarLcNMjTwPhaiyLkj9EqmSvUWQnzVuuG7SmUomTGIWK7UA0t+DQD4E9HRwDG6/f7rnhwLU2ktfXEuStxFA/VzXWRg8s/w2Lq5o5K8HrXyPz7IIl0fS2QhD4jaqGhZZiDeBvI5cITF+iYw5XBubPrT0+jp5LAwKmA82SK08K7BKTSXH6jxRtr+0jcLLbBGWI6x8DhIuUzD4s77tlqCwwDj
+x-ms-exchange-antispam-messagedata: ezKSxA/5d6HZmomRPNLNTIAeVKDqg1owDoQGKyzMLaJLEm96XuQlSo1TiNx/FAkY3msF4Qs2ciiCWV1Fzd7gQNeEqSRZxxe5MNSnn+62SvTQhc6vRXmpNjlRs9z11ClpmKLpbQTRDvMHVnvrC25Tnw==
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: quantenna.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: cfb0ba5c-1733-4058-fd2d-08d7b07a3956
+X-MS-Exchange-CrossTenant-Network-Message-Id: 835a532c-ee5d-4b42-d4fb-08d7b07a3aa2
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: a355dbce-62b4-4789-9446-c1d5582180ff
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: AsWuO0GcOrBBe75xp+TAnmjr05vpYQmrEXKN0O8yjC3nP60YXL5foXuvjNbZyyJI+u+Ok6E7tsupwj+nU8fRDEAvOYdrtKrZPKK+AT8EJIzqbezrA/GNL0HzOoWva4V0YQ53hWfjPfg22VUyzs1tRQwkDILMu0B0UJ31Tkxezi+ciUqtyvExYN3hxF1TQBnCXGDWweNiSFmW1eZGxmCJmMR1QYjY356ggIR4BCxindk=
-X-MS-Exchange-CrossTenant-originalarrivaltime: 13 Feb 2020 11:46:05.2666
+X-MS-Exchange-CrossTenant-userprincipalname: Zgwjaqi42+dKlIQDo22vj5p4DHUhUgWUeIfzybrYWlSgXDLLzQGwpL4qbtsealKp6ttlP4Vsb72BCZdD+3oSlDNsJttOrVs2joiIrxBkh1QuM9nE1c/oQPeAB/Ec85+UL3nfiHyjS9iM6bPsFuO98ZIm15f9m+fcK0Vg3lMuopbioSqaMffxQ4oAj1duDLT/7Cg4yds8BRQa8o4MRaHGCd20Sr8UqNPqy7gcg7waQkQ=
+X-MS-Exchange-CrossTenant-originalarrivaltime: 13 Feb 2020 11:46:10.6969
  (UTC)
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR0501MB3841
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR05MB4585
 X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.572
  definitions=2020-02-13_03:2020-02-12,2020-02-13 signatures=0
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 spamscore=0 malwarescore=0
- mlxscore=0 impostorscore=0 phishscore=0 bulkscore=0 suspectscore=0
- mlxlogscore=999 lowpriorityscore=0 priorityscore=1501 clxscore=1015
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2002130093
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 clxscore=1015
+ adultscore=0 lowpriorityscore=0 mlxlogscore=999 phishscore=0
+ malwarescore=0 spamscore=0 mlxscore=0 bulkscore=0 impostorscore=0
+ priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2001150001 definitions=main-2002130093
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Enable WPA3 OWE support in AP mode. Driver currently supports cards that
-offload OWE processing to userspace. This patch adds all the required
-tools for such offloading. Firmware requests OWE processing sending new
-UPDATE_OWE event to driver, which uses cfg80211_update_owe_info_event to
-notify userspace software. After OWE processing is completed, userspace
-sends calculated IEs to firmware using update_owe_info cfg80211 callback.
+Quantenna Pearl device exposes multiple (up to 3) radio interfaces under
+single PCIe function. So far all the wiphy devices were attached to the
+same pcie device. As a result, all different wireless network devices
+were reported under the same sysfs directory for pcie device, e.g.:
+
+$ ls  /sys/class/net/wlan0/device/net/
+  wlan0 wlan1
+
+It turns out that such behavior may confuse various users of wireless
+subsystem. For instance, it turned out to be the case for:
+- Linux init systems, e.g. for renaming based on parent device
+- OpenWRT configuration scripts
+
+Suggested solution is to add an intermediate virtual platform device
+for each radio interface.
 
 Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 ---
- drivers/net/wireless/quantenna/qtnfmac/cfg80211.c | 21 ++++++++++
- drivers/net/wireless/quantenna/qtnfmac/commands.c | 36 +++++++++++++++++
- drivers/net/wireless/quantenna/qtnfmac/commands.h |  2 +
- drivers/net/wireless/quantenna/qtnfmac/event.c    | 48 +++++++++++++++++++=
-++++
- drivers/net/wireless/quantenna/qtnfmac/qlink.h    | 31 ++++++++++++++-
- 5 files changed, 137 insertions(+), 1 deletion(-)
+ drivers/net/wireless/quantenna/qtnfmac/cfg80211.c |  8 ++++++--
+ drivers/net/wireless/quantenna/qtnfmac/core.c     | 18 ++++++++++++++----
+ drivers/net/wireless/quantenna/qtnfmac/core.h     |  5 ++++-
+ 3 files changed, 24 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c b/drivers/ne=
 t/wireless/quantenna/qtnfmac/cfg80211.c
-index a5ab1270add1..722d5caefe3c 100644
+index 722d5caefe3c..018d3ed75fda 100644
 --- a/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
 +++ b/drivers/net/wireless/quantenna/qtnfmac/cfg80211.c
-@@ -908,6 +908,26 @@ static int qtnf_set_tx_power(struct wiphy *wiphy, stru=
-ct wireless_dev *wdev,
- 	return ret;
+@@ -1061,7 +1061,8 @@ static void qtnf_cfg80211_reg_notifier(struct wiphy *=
+wiphy,
+ 	}
  }
 =20
-+static int qtnf_update_owe_info(struct wiphy *wiphy, struct net_device *de=
-v,
-+				struct cfg80211_update_owe_info *owe_info)
-+{
-+	struct qtnf_vif *vif =3D qtnf_netdev_get_priv(dev);
-+	int ret;
-+
-+	if (vif->wdev.iftype !=3D NL80211_IFTYPE_AP)
-+		return -EOPNOTSUPP;
-+
-+	ret =3D qtnf_cmd_send_update_owe(vif, owe_info);
-+	if (ret) {
-+		pr_err("VIF%u.%u: failed to update owe info\n",
-+		       vif->mac->macid, vif->vifid);
-+		goto out;
-+	}
-+
-+out:
-+	return ret;
-+}
-+
- #ifdef CONFIG_PM
- static int qtnf_suspend(struct wiphy *wiphy, struct cfg80211_wowlan *wowla=
-n)
+-struct wiphy *qtnf_wiphy_allocate(struct qtnf_bus *bus)
++struct wiphy *qtnf_wiphy_allocate(struct qtnf_bus *bus,
++				  struct platform_device *pdev)
  {
-@@ -1004,6 +1024,7 @@ static struct cfg80211_ops qtn_cfg80211_ops =3D {
- 	.set_power_mgmt		=3D qtnf_set_power_mgmt,
- 	.get_tx_power		=3D qtnf_get_tx_power,
- 	.set_tx_power		=3D qtnf_set_tx_power,
-+	.update_owe_info	=3D qtnf_update_owe_info,
- #ifdef CONFIG_PM
- 	.suspend		=3D qtnf_suspend,
- 	.resume			=3D qtnf_resume,
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.c b/drivers/ne=
-t/wireless/quantenna/qtnfmac/commands.c
-index 4a4c213fe9f1..f40d8c3c3d9e 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/commands.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/commands.c
-@@ -2791,3 +2791,39 @@ int qtnf_cmd_netdev_changeupper(const struct qtnf_vi=
-f *vif, int br_domain)
+ 	struct wiphy *wiphy;
 =20
- 	return ret;
+@@ -1076,7 +1077,10 @@ struct wiphy *qtnf_wiphy_allocate(struct qtnf_bus *b=
+us)
+ 	if (!wiphy)
+ 		return NULL;
+=20
+-	set_wiphy_dev(wiphy, bus->dev);
++	if (pdev)
++		set_wiphy_dev(wiphy, &pdev->dev);
++	else
++		set_wiphy_dev(wiphy, bus->dev);
+=20
+ 	return wiphy;
  }
-+
-+int qtnf_cmd_send_update_owe(struct qtnf_vif *vif,
-+			     struct cfg80211_update_owe_info *owe)
-+{
-+	struct qlink_cmd_update_owe *cmd;
-+	struct sk_buff *cmd_skb;
-+	int ret;
-+
-+	if (sizeof(*cmd) + owe->ie_len > QTNF_MAX_CMD_BUF_SIZE) {
-+		pr_warn("VIF%u.%u: OWE update IEs too big: %zu\n",
-+			vif->mac->macid, vif->vifid, owe->ie_len);
-+		return -E2BIG;
-+	}
-+
-+	cmd_skb =3D qtnf_cmd_alloc_new_cmdskb(vif->mac->macid, vif->vifid,
-+					    QLINK_CMD_UPDATE_OWE,
-+					    sizeof(*cmd));
-+	if (!cmd_skb)
-+		return -ENOMEM;
-+
-+	cmd =3D (struct qlink_cmd_update_owe *)cmd_skb->data;
-+	ether_addr_copy(cmd->peer, owe->peer);
-+	cmd->status =3D cpu_to_le16(owe->status);
-+	if (owe->ie_len && owe->ie)
-+		qtnf_cmd_skb_put_buffer(cmd_skb, owe->ie, owe->ie_len);
-+
-+	qtnf_bus_lock(vif->mac->bus);
-+	ret =3D qtnf_cmd_send(vif->mac->bus, cmd_skb);
-+	if (ret)
-+		goto out;
-+
-+out:
-+	qtnf_bus_unlock(vif->mac->bus);
-+
-+	return ret;
-+}
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/commands.h b/drivers/ne=
-t/wireless/quantenna/qtnfmac/commands.h
-index 9db695101d28..72ad6ae5c750 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/commands.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/commands.h
-@@ -76,5 +76,7 @@ int qtnf_cmd_set_tx_power(const struct qtnf_vif *vif,
- int qtnf_cmd_send_wowlan_set(const struct qtnf_vif *vif,
- 			     const struct cfg80211_wowlan *wowl);
- int qtnf_cmd_netdev_changeupper(const struct qtnf_vif *vif, int br_domain)=
-;
-+int qtnf_cmd_send_update_owe(struct qtnf_vif *vif,
-+			     struct cfg80211_update_owe_info *owe);
-=20
- #endif /* QLINK_COMMANDS_H_ */
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/event.c b/drivers/net/w=
-ireless/quantenna/qtnfmac/event.c
-index cb610a7864ea..c775c177933b 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/event.c
-+++ b/drivers/net/wireless/quantenna/qtnfmac/event.c
-@@ -625,6 +625,50 @@ qtnf_event_handle_mic_failure(struct qtnf_vif *vif,
- 	return 0;
- }
-=20
-+static int
-+qtnf_event_handle_update_owe(struct qtnf_vif *vif,
-+			     const struct qlink_event_update_owe *owe_ev,
-+			     u16 len)
-+{
-+	struct wiphy *wiphy =3D priv_to_wiphy(vif->mac);
-+	struct cfg80211_update_owe_info owe_info =3D {};
-+	const u16 ie_len =3D len - sizeof(*owe_ev);
-+	u8 *ie;
-+
-+	if (len < sizeof(*owe_ev)) {
-+		pr_err("VIF%u.%u: payload is too short (%u < %zu)\n",
-+		       vif->mac->macid, vif->vifid, len,
-+		       sizeof(struct qlink_event_update_owe));
-+		return -EINVAL;
-+	}
-+
-+	if (!wiphy->registered || !vif->netdev)
-+		return 0;
-+
-+	if (vif->wdev.iftype !=3D NL80211_IFTYPE_AP) {
-+		pr_err("VIF%u.%u: UPDATE_OWE event when not in AP mode\n",
-+		       vif->mac->macid, vif->vifid);
-+		return -EPROTO;
-+	}
-+
-+	ie =3D kzalloc(ie_len, GFP_KERNEL);
-+	if (!ie)
-+		return -ENOMEM;
-+
-+	memcpy(owe_info.peer, owe_ev->peer, ETH_ALEN);
-+	memcpy(ie, owe_ev->ies, ie_len);
-+	owe_info.ie_len =3D ie_len;
-+	owe_info.ie =3D ie;
-+
-+	pr_info("%s: external OWE processing: peer=3D%pM\n",
-+		vif->netdev->name, owe_ev->peer);
-+
-+	cfg80211_update_owe_info_event(vif->netdev, &owe_info, GFP_KERNEL);
-+	kfree(ie);
-+
-+	return 0;
-+}
-+
- static int qtnf_event_parse(struct qtnf_wmac *mac,
- 			    const struct sk_buff *event_skb)
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.c b/drivers/net/wi=
+reless/quantenna/qtnfmac/core.c
+index 9e666fac8b5f..eea777f8acea 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/core.c
++++ b/drivers/net/wireless/quantenna/qtnfmac/core.c
+@@ -431,18 +431,28 @@ static void qtnf_vif_send_data_high_pri(struct work_s=
+truct *work)
+ static struct qtnf_wmac *qtnf_core_mac_alloc(struct qtnf_bus *bus,
+ 					     unsigned int macid)
  {
-@@ -693,6 +737,10 @@ static int qtnf_event_parse(struct qtnf_wmac *mac,
- 		ret =3D qtnf_event_handle_mic_failure(vif, (const void *)event,
- 						    event_len);
- 		break;
-+	case QLINK_EVENT_UPDATE_OWE:
-+		ret =3D qtnf_event_handle_update_owe(vif, (const void *)event,
-+						   event_len);
-+		break;
- 	default:
- 		pr_warn("unknown event type: %x\n", event_id);
- 		break;
-diff --git a/drivers/net/wireless/quantenna/qtnfmac/qlink.h b/drivers/net/w=
-ireless/quantenna/qtnfmac/qlink.h
-index 5e9254f8fa8a..4d22a54c034f 100644
---- a/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-+++ b/drivers/net/wireless/quantenna/qtnfmac/qlink.h
-@@ -15,7 +15,7 @@
- #define QLINK_VER(_maj, _min)	(((_maj) << QLINK_PROTO_VER_MAJOR_S) | (_min=
-))
++	struct platform_device *pdev =3D NULL;
++	struct qtnf_wmac *mac;
+ 	struct qtnf_vif *vif;
+ 	struct wiphy *wiphy;
+-	struct qtnf_wmac *mac;
+ 	unsigned int i;
 =20
- #define QLINK_PROTO_VER_MAJOR		18
--#define QLINK_PROTO_VER_MINOR		0
-+#define QLINK_PROTO_VER_MINOR		1
- #define QLINK_PROTO_VER		\
- 	QLINK_VER(QLINK_PROTO_VER_MAJOR, QLINK_PROTO_VER_MINOR)
+-	wiphy =3D qtnf_wiphy_allocate(bus);
++	if (bus->hw_info.num_mac > 1) {
++		pdev =3D platform_device_register_data(bus->dev,
++						     dev_name(bus->dev),
++						     macid, NULL, 0);
++		if (IS_ERR(pdev))
++			return ERR_PTR(-EINVAL);
++	}
++
++	wiphy =3D qtnf_wiphy_allocate(bus, pdev);
+ 	if (!wiphy)
+ 		return ERR_PTR(-ENOMEM);
 =20
-@@ -322,6 +322,7 @@ enum qlink_cmd_type {
- 	QLINK_CMD_WOWLAN_SET		=3D 0x0063,
- 	QLINK_CMD_EXTERNAL_AUTH		=3D 0x0066,
- 	QLINK_CMD_TXPWR			=3D 0x0067,
-+	QLINK_CMD_UPDATE_OWE		=3D 0x0068,
+ 	mac =3D wiphy_priv(wiphy);
+=20
+ 	mac->macid =3D macid;
++	mac->pdev =3D pdev;
+ 	mac->bus =3D bus;
+ 	mutex_init(&mac->mac_lock);
+ 	INIT_DELAYED_WORK(&mac->scan_timeout, qtnf_mac_scan_timeout);
+@@ -493,7 +503,6 @@ int qtnf_core_net_attach(struct qtnf_wmac *mac, struct =
+qtnf_vif *vif,
+ 	dev_net_set(dev, wiphy_net(wiphy));
+ 	dev->ieee80211_ptr =3D &vif->wdev;
+ 	ether_addr_copy(dev->dev_addr, vif->mac_addr);
+-	SET_NETDEV_DEV(dev, wiphy_dev(wiphy));
+ 	dev->flags |=3D IFF_BROADCAST | IFF_MULTICAST;
+ 	dev->watchdog_timeo =3D QTNF_DEF_WDOG_TIMEOUT;
+ 	dev->tx_queue_len =3D 100;
+@@ -505,7 +514,7 @@ int qtnf_core_net_attach(struct qtnf_wmac *mac, struct =
+qtnf_vif *vif,
+ 	qdev_vif =3D netdev_priv(dev);
+ 	*((void **)qdev_vif) =3D vif;
+=20
+-	SET_NETDEV_DEV(dev, mac->bus->dev);
++	SET_NETDEV_DEV(dev, wiphy_dev(wiphy));
+=20
+ 	ret =3D register_netdevice(dev);
+ 	if (ret) {
+@@ -561,6 +570,7 @@ static void qtnf_core_mac_detach(struct qtnf_bus *bus, =
+unsigned int macid)
+ 		wiphy->bands[band] =3D NULL;
+ 	}
+=20
++	platform_device_unregister(mac->pdev);
+ 	qtnf_mac_iface_comb_free(mac);
+ 	qtnf_mac_ext_caps_free(mac);
+ 	kfree(mac->macinfo.wowlan);
+diff --git a/drivers/net/wireless/quantenna/qtnfmac/core.h b/drivers/net/wi=
+reless/quantenna/qtnfmac/core.h
+index b993f9ca14c5..269ce12cf8bf 100644
+--- a/drivers/net/wireless/quantenna/qtnfmac/core.h
++++ b/drivers/net/wireless/quantenna/qtnfmac/core.h
+@@ -20,6 +20,7 @@
+ #include <linux/ctype.h>
+ #include <linux/workqueue.h>
+ #include <linux/slab.h>
++#include <linux/platform_device.h>
+=20
+ #include "qlink.h"
+ #include "trans.h"
+@@ -107,6 +108,7 @@ struct qtnf_wmac {
+ 	struct mutex mac_lock;	/* lock during wmac speicific ops */
+ 	struct delayed_work scan_timeout;
+ 	struct ieee80211_regdomain *rd;
++	struct platform_device *pdev;
  };
 =20
- /**
-@@ -960,6 +961,20 @@ struct qlink_cmd_scan {
- 	u8 var_info[0];
- } __packed;
-=20
-+/**
-+ * struct qlink_cmd_update_owe - data for QLINK_CMD_UPDATE_OWE_INFO comman=
-d
-+ *
-+ * @peer: MAC of the peer device for which OWE processing has been complet=
-ed
-+ * @status: OWE external processing status code
-+ * @ies: IEs for the peer constructed by the user space
-+ */
-+struct qlink_cmd_update_owe {
-+	struct qlink_cmd chdr;
-+	u8 peer[ETH_ALEN];
-+	__le16 status;
-+	u8 ies[0];
-+} __packed;
-+
- /* QLINK Command Responses messages related definitions
-  */
-=20
-@@ -1222,6 +1237,7 @@ enum qlink_event_type {
- 	QLINK_EVENT_RADAR		=3D 0x0029,
- 	QLINK_EVENT_EXTERNAL_AUTH	=3D 0x0030,
- 	QLINK_EVENT_MIC_FAILURE		=3D 0x0031,
-+	QLINK_EVENT_UPDATE_OWE		=3D 0x0032,
- };
-=20
- /**
-@@ -1430,6 +1446,19 @@ struct qlink_event_mic_failure {
- 	u8 pairwise;
- } __packed;
-=20
-+/**
-+ * struct qlink_event_update_owe - data for QLINK_EVENT_UPDATE_OWE event
-+ *
-+ * @peer: MAC addr of the peer device for which OWE processing needs to be=
- done
-+ * @ies: IEs from the peer
-+ */
-+struct qlink_event_update_owe {
-+	struct qlink_event ehdr;
-+	u8 peer[ETH_ALEN];
-+	u8 rsvd[2];
-+	u8 ies[0];
-+} __packed;
-+
- /* QLINK TLVs (Type-Length Values) definitions
-  */
-=20
+ struct qtnf_hw_info {
+@@ -127,7 +129,8 @@ void qtnf_mac_iface_comb_free(struct qtnf_wmac *mac);
+ void qtnf_mac_ext_caps_free(struct qtnf_wmac *mac);
+ bool qtnf_slave_radar_get(void);
+ bool qtnf_dfs_offload_get(void);
+-struct wiphy *qtnf_wiphy_allocate(struct qtnf_bus *bus);
++struct wiphy *qtnf_wiphy_allocate(struct qtnf_bus *bus,
++				  struct platform_device *pdev);
+ int qtnf_core_net_attach(struct qtnf_wmac *mac, struct qtnf_vif *priv,
+ 			 const char *name, unsigned char name_assign_type);
+ void qtnf_main_work_queue(struct work_struct *work);
 --=20
 2.11.0
 
