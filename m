@@ -2,74 +2,77 @@ Return-Path: <SRS0=QfV8=4B=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E8B7C2BA83
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Feb 2020 13:17:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E63BC2BA83
+	for <linux-wireless@archiver.kernel.org>; Thu, 13 Feb 2020 13:17:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 05DC22168B
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Feb 2020 13:17:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DCC45218AC
+	for <linux-wireless@archiver.kernel.org>; Thu, 13 Feb 2020 13:17:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=quantenna.com header.i=@quantenna.com header.b="pjaJ1ZdM"
+	dkim=pass (1024-bit key) header.d=quantenna.com header.i=@quantenna.com header.b="Ij0TmHOJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729901AbgBMNRF (ORCPT
+        id S1729944AbgBMNRX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 13 Feb 2020 08:17:05 -0500
-Received: from mx0a-00183b01.pphosted.com ([67.231.149.44]:39400 "EHLO
+        Thu, 13 Feb 2020 08:17:23 -0500
+Received: from mx0a-00183b01.pphosted.com ([67.231.149.44]:55092 "EHLO
         mx0a-00183b01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729557AbgBMNRF (ORCPT
+        by vger.kernel.org with ESMTP id S1729557AbgBMNRX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Feb 2020 08:17:05 -0500
+        Thu, 13 Feb 2020 08:17:23 -0500
 Received: from pps.filterd (m0048105.ppops.net [127.0.0.1])
-        by mx0a-00183b01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 01DDDDnu000530;
-        Thu, 13 Feb 2020 06:17:01 -0700
-Received: from nam04-co1-obe.outbound.protection.outlook.com (mail-co1nam04lp2059.outbound.protection.outlook.com [104.47.45.59])
-        by mx0a-00183b01.pphosted.com with ESMTP id 2y1ufxey1b-1
+        by mx0a-00183b01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 01DDD1HJ000487;
+        Thu, 13 Feb 2020 06:17:19 -0700
+Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2170.outbound.protection.outlook.com [104.47.59.170])
+        by mx0a-00183b01.pphosted.com with ESMTP id 2y1ufxey1s-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 13 Feb 2020 06:17:01 -0700
+        Thu, 13 Feb 2020 06:17:19 -0700
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=DmNU33Hhp5Ddq6wuf6jPMKza7LFUY40gtSDQL5sPAsuVmFWXaokkQrU0wLPfuXJl5l1fT+oI6mHX1F793uzEh6x1QQ5OVGfa4rqy45y3JGQzmA5tk/ZZFUesrYAe30c6rI9uOv7BfPBAZqnYfZ/8oa9Dnxy0didRTY4gtWSCdbVQtZ8AoW5J/XG2dyCedPR15LrNZl9LxmiSb/urB3CSFzR3YMbh8/GUNrseAKf3W2+qgD+qXG3KKZ0xCaKfopKzXh+dUWjd1iAVNBROa27JR1LubBlK5ZuwcoLkOLehUt/ILDdJSoQ8hwuXoSwagZOjYtEz0Whvom0tC4j4EAENMQ==
+ b=APw3F493vH9z3Jbb8Khb+2pXGnJzSAnx9m5tQiKZpXJryeuSATOF7oJ6m2VZAb8LePn10zH0MOCTitzkAC26IrLNJD47tbFGlqSAGREs3II7jS7in/vLft35oSlF9iPQqQv04xYXhGGhJ6ygOs5kV2a6r9FsFSqQ8sCe0SD87WU51oj2iEXwEh7zwPKtaAnO+ZgCDwETgkCm1NufbCyAnJylENKGnMGSN5JK6p4kN3uMOnpchPheZnOrFoDtz8y9qbP2xehTNgkmAQUUGtwrwVUNve0NQyRQFyG55C/KcdGBSZbGD9lp7H7NVzTUuDmDO7ZbUf6OVJbTRWxipVGgsw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=CMr8PgUwBmPdQkiiIe7OBNd7oHd8SYQxHPnHLaZMR3s=;
- b=ZsX3PuJrLaX8ezwO9gyov5ZHQj281aPwE6v77Ky1Df9bHAOoyti9EOmmfPcb4BTnqczLo2i6254e0ipjhtsYAhPWa8xdQMi23uvwM1fBmb4XoJWwVutdHdqrO5y6nr8Rjhq0n4VkljgQP1CzMTbDwtc4cfTO6HrveSG9XqYkEd59AMupVpdadcP61s7ykRozjfqJZwtxjcO1WofAOAnzU3uZX57UZ0GO2PhLiTPsjVcedKU04cMtxbEPeGiXQvwNS9poXsKo3CphgsnmKcEgn9rU76CEOiTfngWINzi+/1z5ja0rNvGu1K627Z17KjiwVmfCua872zGloi1cjmHB6A==
+ bh=8i0oWeLRg/edy0hONDerwAdLhyc7cr3EqvXaoQmIk7U=;
+ b=j8dIkaDSkK4wuhilM3Bl1AuO9abhd8Zk5s4m9dJRJVxPcyOuGzi94Ceua/Sss8fOgtOrDGO7V0Z2boOs1Aco4WnOCKD6ulXhf5so+tA9YLR6EXgLzXhqB8ZUYDAPZyx3KzLpWj1/67UkVEEIQtQKoGppxfaxdCrKUTz5q26Fm5+6ZIUhSjrC83hr/Z1eVtq3IGAN7tB/Qwz9WUfFFeOxPEqdtyaJlkcl6zcERMjJEiDpmFx6fnCND4nRQHeIWX3VoTL0LDJoEj6q1fPXG3H1DMexleq0LHOV3Lu3oZCHaSNOZgXBuCn0a1DPXxmDWlX/jLuiaizp6J6NHBxeSK//dw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=quantenna.com; dmarc=pass action=none
  header.from=quantenna.com; dkim=pass header.d=quantenna.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quantenna.com;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=CMr8PgUwBmPdQkiiIe7OBNd7oHd8SYQxHPnHLaZMR3s=;
- b=pjaJ1ZdM9kVdwXM8nl5klDHqYCVdkCJH/iyXCI32YJP9P26xEKZyxu6vvYmxZviqDQ1g2/+2gyqfPYyms4vAVQX5DQqbNexHG60k4TfP9c36HjMH80Ge4RiF1V4lp9l3V5y44TP6Je3gF2DzNGL4ljMuI5F0pWd49OA9aQqFUZo=
-Received: from SN4PR0501MB3822.namprd05.prod.outlook.com (10.167.141.33) by
- SN4PR0501MB3725.namprd05.prod.outlook.com (10.167.150.142) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2729.16; Thu, 13 Feb 2020 13:16:59 +0000
-Received: from SN4PR0501MB3822.namprd05.prod.outlook.com
- ([fe80::71ce:3d1a:a816:a7b5]) by SN4PR0501MB3822.namprd05.prod.outlook.com
- ([fe80::71ce:3d1a:a816:a7b5%6]) with mapi id 15.20.2729.021; Thu, 13 Feb 2020
- 13:16:59 +0000
+ bh=8i0oWeLRg/edy0hONDerwAdLhyc7cr3EqvXaoQmIk7U=;
+ b=Ij0TmHOJhVqEaCafuOy+pXn/b8Pby2NHHFOXWgKmff3VxAfD4Zf5kQXxsKmVenWpUw/hAoS2T+K8jLpdsrKZx6/12+DIDZw7KWEw9w2GUGBuKBnlpMfgHjKdP0b5eTNrTB64SXwOQbAbAgCBZnIxxvkmeq4Ev31WYOhYiuk20io=
+Received: from DM5PR05MB3465.namprd05.prod.outlook.com (10.174.240.140) by
+ DM5PR05MB3099.namprd05.prod.outlook.com (10.173.221.147) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2750.8; Thu, 13 Feb 2020 13:17:17 +0000
+Received: from DM5PR05MB3465.namprd05.prod.outlook.com
+ ([fe80::89d2:a3a7:297f:5a29]) by DM5PR05MB3465.namprd05.prod.outlook.com
+ ([fe80::89d2:a3a7:297f:5a29%3]) with mapi id 15.20.2729.021; Thu, 13 Feb 2020
+ 13:17:16 +0000
 Received: from SN6PR05MB4928.namprd05.prod.outlook.com (52.135.117.74) by
  SN6PR05MB5152.namprd05.prod.outlook.com (20.177.248.154) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2750.6; Thu, 13 Feb 2020 13:16:15 +0000
+ 15.20.2750.6; Thu, 13 Feb 2020 13:16:17 +0000
 Received: from SN6PR05MB4928.namprd05.prod.outlook.com
  ([fe80::25b7:98a0:c066:1a9]) by SN6PR05MB4928.namprd05.prod.outlook.com
  ([fe80::25b7:98a0:c066:1a9%6]) with mapi id 15.20.2729.021; Thu, 13 Feb 2020
- 13:16:15 +0000
-Received: from bars.quantenna.com (195.182.157.78) by LO2P265CA0472.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:a2::28) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2729.22 via Frontend Transport; Thu, 13 Feb 2020 13:16:13 +0000
+ 13:16:17 +0000
+Received: from bars.quantenna.com (195.182.157.78) by LO2P265CA0472.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:a2::28) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2729.22 via Frontend Transport; Thu, 13 Feb 2020 13:16:16 +0000
 From:   Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 CC:     Johannes Berg <johannes@sipsolutions.net>,
         Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Subject: [PATCH 0/2] cfg80211: minor updates for WPA3 OWE support
-Thread-Topic: [PATCH 0/2] cfg80211: minor updates for WPA3 OWE support
-Thread-Index: AQHV4m/EgktByQbQIUG5k5thXdlW9g==
-Date:   Thu, 13 Feb 2020 13:16:14 +0000
-Message-ID: <20200213131608.10541-1-sergey.matyukevich.os@quantenna.com>
+Subject: [PATCH 2/2] ieee80211: add WPA3 OWE AKM suite selector
+Thread-Topic: [PATCH 2/2] ieee80211: add WPA3 OWE AKM suite selector
+Thread-Index: AQHV4m/G84XoEsGPIkK2eU8SwVwqog==
+Date:   Thu, 13 Feb 2020 13:16:17 +0000
+Message-ID: <20200213131608.10541-3-sergey.matyukevich.os@quantenna.com>
+References: <20200213131608.10541-1-sergey.matyukevich.os@quantenna.com>
+In-Reply-To: <20200213131608.10541-1-sergey.matyukevich.os@quantenna.com>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
@@ -81,59 +84,63 @@ x-ms-exchange-messagesentrepresentingtype: 1
 x-mailer: git-send-email 2.11.0
 x-originating-ip: [195.182.157.78]
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 08a6c600-4d08-44be-3afb-08d7b086e71e
-x-ms-traffictypediagnostic: SN6PR05MB5152:|SN4PR0501MB3725:
+x-ms-office365-filtering-correlation-id: c5ff3adb-2a29-421b-df1e-08d7b086e8c5
+x-ms-traffictypediagnostic: SN6PR05MB5152:|DM5PR05MB3099:
 x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <SN6PR05MB51525D4DB3AE68A04167A60CA31A0@SN6PR05MB5152.namprd05.prod.outlook.com>
-x-moderation-data: 2/13/2020 1:16:56 PM
-x-ms-oob-tlc-oobclassifiers: OLM:2512;
+x-microsoft-antispam-prvs: <SN6PR05MB5152D07E3A5A4C6113135B36A31A0@SN6PR05MB5152.namprd05.prod.outlook.com>
+x-moderation-data: 2/13/2020 1:17:13 PM
+x-ms-oob-tlc-oobclassifiers: OLM:2449;
 x-forefront-prvs: 031257FE13
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(136003)(39840400004)(366004)(396003)(376002)(346002)(199004)(189003)(7696005)(103116003)(5660300002)(4326008)(16526019)(107886003)(66446008)(36756003)(66476007)(64756008)(66556008)(2616005)(956004)(26005)(186003)(4744005)(66946007)(54906003)(52116002)(478600001)(81166006)(6916009)(6486002)(316002)(8936002)(86362001)(1076003)(2906002)(81156014)(8676002)(71200400001);DIR:OUT;SFP:1101;SCL:1;SRVR:SN4PR0501MB3725;H:SN4PR0501MB3822.namprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(376002)(346002)(39850400004)(396003)(366004)(136003)(189003)(199004)(316002)(54906003)(478600001)(103116003)(52116002)(36756003)(7696005)(186003)(16526019)(2906002)(5660300002)(26005)(71200400001)(1076003)(4326008)(4744005)(6486002)(2616005)(6916009)(66476007)(66946007)(81156014)(8936002)(81166006)(107886003)(66446008)(66556008)(956004)(64756008)(86362001)(8676002);DIR:OUT;SFP:1101;SCL:1;SRVR:DM5PR05MB3099;H:DM5PR05MB3465.namprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
 received-spf: None (protection.outlook.com: quantenna.com does not designate
  permitted sender hosts)
 x-ms-exchange-senderadcheck: 1
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 12Ucd5Wr0eYUFJYBTqVV3U+wQhcZ47eTGCUO+SquChC/8//NSW2pd3s04LbE0lKsJ2ma6LvDrWWXCSrXHCX2J/LVW8Si5BXhhfttPiTBkN8Adn5evpvlqlLqj1uMYlyOlOjlmsypczpD0j6dD6kuXOKJWnxZ4wZbNTqVxZ9sMagbg5N1A0o5yuUqVcUB8wPWMAustjOTfQHAS+0PUrQfOZiweG8uXnD5oQ3zPRuZHwd9ha25W6rw6A01MY0BYcF3HBu1sLc+4LIXVzepUeW7kGLOJL4xgy5iZ9ZS0gcHHYXHK5ViTg19KDRW3Ow4NtMRRNGu2lzd/YgEeseNZDiiZojQnsnzGK9Czfy29lHjGc8LNpeSTuEuj3PuwuuFIjzLzvSftl78uqBJlwWhEdVHbx0iENvb1UUNOxrP8mInhbnrrMBXzv/RqhTvonEgXijH
-x-ms-exchange-antispam-messagedata: DrOMW2eFUjtanp/dlMRGPhrXWt2OyMtEh7Sz41qvF2SzGm40ft5A7QIkjDXL030lasHgoSS8+E6xVu4WkL47Q6BSloecYT4dRipK5F9VTRzBkxCXOY0fccwhFpeCZelMP/g9Un4O/Db1buA13PQ74w==
+x-microsoft-antispam-message-info: FK5Ppx/n75Q3nVFvPONr5oEfrvJP7SctP7adkj5pvTtNjj7qlu1jmTtSUpYHR7g5CVpLrAFnOZrukgR472P3/HSlSghvA5jUwkthmIgp2UQBVkc6VjY8kMGCAYUMdSg4waqhAiffZVIvJcNUlFofdadDorNWIIH8m1CGTSXXnECc/wCnDmuI+rnx+2nFoi34+kgrChP4YFKO6jEJttMQLJ/I4mGUnZ8vH5AL7HrH5JXs92fICFcrTRvrhXgS36SzCJ/smmii9Un2v1b03/bWhsxVpxKgPB8K4TRpxvCG/V1f/dT3ykznqjO3ubZDwLg2yAzbyJ8nkdiSRzCkmRrXgnRPZtVkmiVmsxMGR7WtFu2TN8KGpEoJValETIANJDyFBzd6NjtDvMpSr7RstwFzUmXaeheet39gJ34EguUftAXHAedRPTRYZ9wdhxNe1D3c
+x-ms-exchange-antispam-messagedata: VN2BtYhfwybrLQcOwKLrmbnA5sRz1kAVF8L5/zQg8kagzbrd1mvZ/t0rclRPqrWABePYP3o/pb6I9dps+IE8okrCZlU1CiYdnZdG93qqEbM5L5l7J8Yzillhvak2RcNriaRbNn6kc5QvxXfgjM92Hg==
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: quantenna.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 08a6c600-4d08-44be-3afb-08d7b086e71e
+X-MS-Exchange-CrossTenant-Network-Message-Id: c5ff3adb-2a29-421b-df1e-08d7b086e8c5
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: a355dbce-62b4-4789-9446-c1d5582180ff
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: Icr3j1zez9Huvw3pMGlcjlSm8NbTv/6LxWWkWTEA4S9qK5znNP5aLLFDQjVNs5BowXE+Z1S0FCMKqm2uREz7YXgyEHV8nU/XElEKVx0JEtZXJmlKxnzhY+3R1HYVlIz3s0XM/hcEGtNicUkw0Bxq+/HRuxQuTVkDX4O0pq7iuL/P+HxHB2bLgUCdqw6O7emeudEgpnQtz2LEothrGtP3rOsdz1TISbOkKEawJ0kS4CE=
-X-MS-Exchange-CrossTenant-originalarrivaltime: 13 Feb 2020 13:16:59.3550
+X-MS-Exchange-CrossTenant-userprincipalname: YfHKHIM9X7nveSD15fZRDuPq7JHonsML0LkUqixj3eAa5GXFeObZctY8qS/vnBGqXYp4J6jpFMLTlb3ZDiuS5jDW2SY91t9Ho4xrU0MPLVhwaekUYVdFHqdTlZtnUzyOjxz27DWOPK/XHQ68Yc36E1Trm64aFCowh9ptqAGNZHwzek8J2ctNcoqpqvGvMl+msKJA7Gy3SHWvBE/r9zhhNIyYtpUWPDP84D4KZ1XNxmM=
+X-MS-Exchange-CrossTenant-originalarrivaltime: 13 Feb 2020 13:17:16.6457
  (UTC)
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN4PR0501MB3725
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR05MB3099
 X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.572
  definitions=2020-02-13_04:2020-02-12,2020-02-13 signatures=0
-X-Proofpoint-Spam-Reason: safe
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 spamscore=0 malwarescore=0
+ mlxscore=0 impostorscore=0 phishscore=0 bulkscore=0 suspectscore=0
+ mlxlogscore=999 lowpriorityscore=0 priorityscore=1501 clxscore=1015
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
+ definitions=main-2002130105
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello Johannes and all,
+Add the definition for Opportunistic Wireless Encryption AKM selector.
 
-This patch series suggests a couple of minor changes related to WPA3 OWE.
-One patch adds definition for OWE AKM suite. Another patch adds missing
-validation policy for NL80211_ATTR_STATUS_CODE.
-
-Validation policy patch fixes hostapd OWE offload for SME-enabled drivers.
-
-Regards,
-Sergey
-
-Sergey Matyukevich (2):
-  cfg80211: add missing policy for NL80211_ATTR_STATUS_CODE
-  ieee80211: add WPA3 OWE AKM suite selector
-
+Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+---
  include/linux/ieee80211.h | 1 +
- net/wireless/nl80211.c    | 1 +
- 2 files changed, 2 insertions(+)
+ 1 file changed, 1 insertion(+)
 
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 6f3e7c5c600a..33d907eec0b6 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -3044,6 +3044,7 @@ struct ieee80211_multiple_bssid_configuration {
+ #define WLAN_AKM_SUITE_FILS_SHA384		SUITE(0x000FAC, 15)
+ #define WLAN_AKM_SUITE_FT_FILS_SHA256		SUITE(0x000FAC, 16)
+ #define WLAN_AKM_SUITE_FT_FILS_SHA384		SUITE(0x000FAC, 17)
++#define WLAN_AKM_SUITE_OWE			SUITE(0x000FAC, 18)
+=20
+ #define WLAN_MAX_KEY_LEN		32
+=20
 --=20
 2.11.0
 
