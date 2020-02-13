@@ -2,149 +2,87 @@ Return-Path: <SRS0=QfV8=4B=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23728C2BA83
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Feb 2020 13:18:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89019C2BA83
+	for <linux-wireless@archiver.kernel.org>; Thu, 13 Feb 2020 14:09:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E09372168B
-	for <linux-wireless@archiver.kernel.org>; Thu, 13 Feb 2020 13:18:49 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=quantenna.com header.i=@quantenna.com header.b="EfDDlhrM"
+	by mail.kernel.org (Postfix) with ESMTP id 5CC8120873
+	for <linux-wireless@archiver.kernel.org>; Thu, 13 Feb 2020 14:09:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729971AbgBMNSt (ORCPT
+        id S1730060AbgBMOJC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 13 Feb 2020 08:18:49 -0500
-Received: from mx0b-00183b01.pphosted.com ([67.231.157.42]:59942 "EHLO
-        mx0a-00183b01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1729966AbgBMNSt (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Feb 2020 08:18:49 -0500
-Received: from pps.filterd (m0048103.ppops.net [127.0.0.1])
-        by mx0b-00183b01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 01DDH5Xi017879;
-        Thu, 13 Feb 2020 06:17:05 -0700
-Received: from nam10-mw2-obe.outbound.protection.outlook.com (mail-mw2nam10lp2108.outbound.protection.outlook.com [104.47.55.108])
-        by mx0b-00183b01.pphosted.com with ESMTP id 2y1u4wmbxf-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 13 Feb 2020 06:17:05 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=aKD+TEh5Sul6XKF5bePLiiTMbhvaM1mb+YVenp9I5z/A4stRCcROzESMcVesDx/a56M+TBFVpvM1RmyONydCDvXMGQqJr9KNXvFIAiV9W/Wc3cwAlhiI1RlrdZRire0s0JXbYNY8kPHRiVy22VL5r0F0i138vzu7SRbtjRbrpgYR9pi89gsUzYQJND1WgGyI48i1m3cNVEcmDtU9GrQGV2Mnd8mxto1NspdkF7wXIBIL0qmqVRTLGzdNO31wl/1tif6jj+wLLNfuoRxNQ7KOAKmJTEuK/8btLpFndUbXBtGAK5yneuwKt01t7fxCyUwrdZQDwx5co+udfJapTgSGnQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=cIFA60SJzNO0xdyXlXpDgpaWW7RjTjMKtnJoXovI9BQ=;
- b=PLZ1mbI0/BFwPvarM0dlbGCd/81/sSIs4+RNSPo+ihWB6HtHc0si/Fbbdy0hDpeoifxsEZ+WXgXZ9HkRmic28sthjEWA5PCdZoc6VL7WVvBnMTqVg9oJ/+l5iFRcvO758qcJlaAzdXbKj2L2q85oypybJ3q1hA9KwX3s+FWwmJntKGJXCm1t7bmekNOzahPlE1CHYw5FgcwwD4D5WNv4UYIBcfpAIjtf8PiyYr04+JBvkBBGqI8YoaR9LNXt7CRQCVaON6DjXm60bzeHsgKWwYvEzTaVP8nxuYh6L4VedpFkU3POM8hK0UWrEoT9sNMCfxZz8ufzdnA633GLqSbN4w==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=quantenna.com; dmarc=pass action=none
- header.from=quantenna.com; dkim=pass header.d=quantenna.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quantenna.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=cIFA60SJzNO0xdyXlXpDgpaWW7RjTjMKtnJoXovI9BQ=;
- b=EfDDlhrMFBhqGZ3Tqp0TamHy+D2igVMxdgwjdbcf4NcpSpMFxaLmi2S2QSCdS4JfNLDloe+YuqT90LxyDBAECLOYUIWv9yBuhpIKBhi5dAdg0+Sqn1a65PdNTFPFHkORVioTxFT03dBHNUHmnkssVKyUtpNgcKJBmkfaqDT6XiM=
-Received: from MWHPR05MB3567.namprd05.prod.outlook.com (10.174.249.155) by
- MWHPR05MB3055.namprd05.prod.outlook.com (10.173.232.151) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2729.14; Thu, 13 Feb 2020 13:17:03 +0000
-Received: from MWHPR05MB3567.namprd05.prod.outlook.com
- ([fe80::bcfd:f431:63fd:5841]) by MWHPR05MB3567.namprd05.prod.outlook.com
- ([fe80::bcfd:f431:63fd:5841%3]) with mapi id 15.20.2750.007; Thu, 13 Feb 2020
- 13:17:03 +0000
-Received: from SN6PR05MB4928.namprd05.prod.outlook.com (52.135.117.74) by
- SN6PR05MB5152.namprd05.prod.outlook.com (20.177.248.154) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2750.6; Thu, 13 Feb 2020 13:16:16 +0000
-Received: from SN6PR05MB4928.namprd05.prod.outlook.com
- ([fe80::25b7:98a0:c066:1a9]) by SN6PR05MB4928.namprd05.prod.outlook.com
- ([fe80::25b7:98a0:c066:1a9%6]) with mapi id 15.20.2729.021; Thu, 13 Feb 2020
- 13:16:16 +0000
-Received: from bars.quantenna.com (195.182.157.78) by LO2P265CA0472.GBRP265.PROD.OUTLOOK.COM (2603:10a6:600:a2::28) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2729.22 via Frontend Transport; Thu, 13 Feb 2020 13:16:15 +0000
-From:   Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC:     Johannes Berg <johannes@sipsolutions.net>,
-        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Subject: [PATCH 1/2] cfg80211: add missing policy for NL80211_ATTR_STATUS_CODE
-Thread-Topic: [PATCH 1/2] cfg80211: add missing policy for
- NL80211_ATTR_STATUS_CODE
-Thread-Index: AQHV4m/F+RkyWzjWdEiMJxzwTxqaXw==
-Date:   Thu, 13 Feb 2020 13:16:16 +0000
-Message-ID: <20200213131608.10541-2-sergey.matyukevich.os@quantenna.com>
-References: <20200213131608.10541-1-sergey.matyukevich.os@quantenna.com>
-In-Reply-To: <20200213131608.10541-1-sergey.matyukevich.os@quantenna.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-clientproxiedby: LO2P265CA0472.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:a2::28) To SN6PR05MB4928.namprd05.prod.outlook.com
- (2603:10b6:805:9d::10)
-x-ms-exchange-messagesentrepresentingtype: 1
-x-mailer: git-send-email 2.11.0
-x-originating-ip: [195.182.157.78]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 67200da2-5d9f-4df8-2ef1-08d7b086e7fd
-x-ms-traffictypediagnostic: SN6PR05MB5152:|MWHPR05MB3055:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <SN6PR05MB5152E6085468E611487CB6E0A31A0@SN6PR05MB5152.namprd05.prod.outlook.com>
-x-moderation-data: 2/13/2020 1:16:59 PM
-x-ms-oob-tlc-oobclassifiers: OLM:4502;
-x-forefront-prvs: 031257FE13
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(136003)(376002)(396003)(39850400004)(366004)(346002)(189003)(199004)(52116002)(66946007)(66556008)(66476007)(66446008)(64756008)(7696005)(4744005)(26005)(5660300002)(103116003)(2616005)(956004)(71200400001)(4326008)(36756003)(86362001)(2906002)(54906003)(1076003)(186003)(6916009)(16526019)(6486002)(478600001)(316002)(81156014)(81166006)(8936002)(8676002)(107886003);DIR:OUT;SFP:1101;SCL:1;SRVR:MWHPR05MB3055;H:MWHPR05MB3567.namprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
-received-spf: None (protection.outlook.com: quantenna.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: xLgbNAV5ARRkWFjC86ehRjonqA4r6/cRpXIlcYO616ZFsyXVvWtgutkmKKLN/e/hHtnqv84mjQa593hdIKpvXy/pyhflnHHovZnw5qX6wqoJE6itm28cTZ13oMfFV303W4iuIR7wXRLAA7nvcfoZfdUEJ4vwa1F/16Au7O2R+bjNSfU9Wbnq0w+Tp8UcHAmUIStf36oTInQ6CqtfTSPEu2OuM2Q5agwFbt8h3yDhZDmdstIihcYFemePo6KyMsMx1F8WAL9AJqLpMr3/DN2eYV+MY3yZ64RcUsxoL1/VaVHdipIJGlVEU8cdwx9szwwBGMhmZkhYCs3QZzHrG+7+p2QkPlyZH7OSeZ/YXkp6PAGZShiap2GumJQFAudBd2C1MtLZUr+YpnjLXRQQOax2WhwZUr9bddgiIB6MKwS+qGhGDANZmiYcdaWahgC02hCj
-x-ms-exchange-antispam-messagedata: S91HiYYJQ5sgIgmBZKPPEVli+lah7KBlg8WShHiPPmeGC1v8Vu53HBXMwPjpdPj06deDw5UzhMw6LnYUYpQaSul7G+TIh9WTcA+qb8JbwPeOZ3ml+DZbd/QmS/v8+yZs5dhfa7YlcD9T2MzFRL2Dqg==
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+        Thu, 13 Feb 2020 09:09:02 -0500
+Received: from mail.bitwise.fi ([109.204.228.163]:48348 "EHLO mail.bitwise.fi"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729957AbgBMOJC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 13 Feb 2020 09:09:02 -0500
+Received: from localhost (localhost [127.0.0.1])
+        by mail.bitwise.fi (Postfix) with ESMTP id 2392060084;
+        Thu, 13 Feb 2020 16:09:00 +0200 (EET)
+X-Virus-Scanned: Debian amavisd-new at mail.bitwise.fi
+Received: from mail.bitwise.fi ([127.0.0.1])
+        by localhost (mail.bitwise.fi [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id c6A4FDPQcPQt; Thu, 13 Feb 2020 16:08:57 +0200 (EET)
+Received: from [192.168.5.238] (fw1.dmz.bitwise.fi [192.168.69.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES128-SHA (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: anssiha)
+        by mail.bitwise.fi (Postfix) with ESMTPSA id 126266001C;
+        Thu, 13 Feb 2020 16:08:57 +0200 (EET)
+Subject: Re: rtl8xxxu does not handle ampdu_action properly
+From:   Anssi Hannula <anssi.hannula@bitwise.fi>
+To:     Jes Sorensen <jes.sorensen@gmail.com>
+Cc:     linux-wireless@vger.kernel.org
+References: <4c668c56-1c77-102e-2e33-8ea77f9dc57c@bitwise.fi>
+Message-ID: <a58eedd2-3bea-0783-f7ba-cda8f92dd6c7@bitwise.fi>
+Date:   Thu, 13 Feb 2020 16:08:56 +0200
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.4.2
 MIME-Version: 1.0
-X-OriginatorOrg: quantenna.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 67200da2-5d9f-4df8-2ef1-08d7b086e7fd
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: a355dbce-62b4-4789-9446-c1d5582180ff
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 0ZqKo0uVlOkBB5DtQuZfKV8fgwA5WPg+G4leYUDFu94fiUus9nVwt9PnOL7HDjHoggEbCA6hPyOOVboX1+M9vPH+9ahkRGpIluRKtaC8PPnKbYJj79Y0e/JD5MSAs091Wsq2iWL4twJMO+Z5rQRoVPIPbk9qD0Y6fIeS8JgjGjwbx+ro2zEDBBrY3xn2h9cxAO9tPGD2BfXxuL3B1Yz2Q3FescGRunY5iZDRW0ijcCQ=
-X-MS-Exchange-CrossTenant-originalarrivaltime: 13 Feb 2020 13:17:03.5805
- (UTC)
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR05MB3055
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.572
- definitions=2020-02-13_04:2020-02-12,2020-02-13 signatures=0
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 priorityscore=1501
- bulkscore=0 suspectscore=0 malwarescore=0 mlxlogscore=999 mlxscore=0
- adultscore=0 impostorscore=0 spamscore=0 phishscore=0 clxscore=1015
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2001150001
- definitions=main-2002130105
+In-Reply-To: <4c668c56-1c77-102e-2e33-8ea77f9dc57c@bitwise.fi>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Content-Language: en-GB
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The nl80211_policy is missing for NL80211_ATTR_STATUS_CODE attribute.
-As a result, for strictly validated commands, it's assumed to not be
-supported.
+On 13.2.2020 12.41, Anssi Hannula wrote:
+> Hi!
+>
+> Just a quick note that I noticed that rtl8xxxu does not seem to handle
+> ampdu_action properly.
+>
+> The driver should react to a IEEE80211_AMPDU_TX_START by either calling
+> ieee80211_start_tx_ba_cb_irqsafe() or by returning
+> IEEE80211_AMPDU_TX_START_IMMEDIATE [1] or by just returning a failure
+> (ath10k, ath11k, wlcore do so for "fw-managed" case), but rtl8xxxu
+> simply sets ampdu_factor and ampdu_density via register writes and then
+> returns 0.
+> I didn't look through the agg-tx code thoroughly on what the end effect
+> of this is but looks like at least ieee80211_agg_tx_operational() will
+> never be called.
 
-Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
----
- net/wireless/nl80211.c | 1 +
- 1 file changed, 1 insertion(+)
+Looking slightly further, there is a commented-out check for
+(tx_info->flags & IEEE80211_TX_CTL_AMPDU) in rtl8xxxu_tx(). Commenting
+that out may be working around (by always enabling ampdu?) the issue of
+ieee80211_agg_tx_operational() call never having been made.
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 33fe6ac1c242..6b2bac002b03 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -444,6 +444,7 @@ const struct nla_policy nl80211_policy[NUM_NL80211_ATTR=
-] =3D {
- 	[NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT] =3D { .type =3D NLA_FLAG },
- 	[NL80211_ATTR_CONTROL_PORT_OVER_NL80211] =3D { .type =3D NLA_FLAG },
- 	[NL80211_ATTR_PRIVACY] =3D { .type =3D NLA_FLAG },
-+	[NL80211_ATTR_STATUS_CODE] =3D { .type =3D NLA_U16 },
- 	[NL80211_ATTR_CIPHER_SUITE_GROUP] =3D { .type =3D NLA_U32 },
- 	[NL80211_ATTR_WPA_VERSIONS] =3D { .type =3D NLA_U32 },
- 	[NL80211_ATTR_PID] =3D { .type =3D NLA_U32 },
---=20
-2.11.0
+> There is a similar issue with IEEE80211_AMPDU_TX_STOP_CONT and
+> ieee80211_stop_tx_ba_cb_irqsafe().
+>
+> Quick grepping suggests all other drivers handle these properly.
+>
+> [1]
+> https://www.kernel.org/doc/html/latest/driver-api/80211/mac80211-advanced.html?highlight=mac80211#c.ieee80211_ampdu_mlme_action
+>
+
+
+-- 
+Anssi Hannula / Bitwise Oy
++358 503803997
 
