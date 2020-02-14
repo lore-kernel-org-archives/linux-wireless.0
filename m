@@ -6,34 +6,34 @@ X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A02BAC2BA83
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 08:54:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F20A3C3B18F
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 09:03:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 80BAF222C2
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 08:54:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C71BC20873
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 09:03:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728997AbgBNIyI (ORCPT
+        id S1728911AbgBNJDm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Feb 2020 03:54:08 -0500
-Received: from s3.sipsolutions.net ([144.76.43.62]:38790 "EHLO
+        Fri, 14 Feb 2020 04:03:42 -0500
+Received: from s3.sipsolutions.net ([144.76.43.62]:38960 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726004AbgBNIyI (ORCPT
+        with ESMTP id S1726179AbgBNJDl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Feb 2020 03:54:08 -0500
+        Fri, 14 Feb 2020 04:03:41 -0500
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.93)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1j2WjX-00BBhB-E8; Fri, 14 Feb 2020 09:53:59 +0100
-Message-ID: <57a23c8b569ff0c9268252f93902c81c0b90a21c.camel@sipsolutions.net>
-Subject: Re: [PATCH] [PATCH] mac80211: fix wrong 160/80+80 Mhz setting
+        id 1j2Wst-00BCvZ-HS; Fri, 14 Feb 2020 10:03:39 +0100
+Message-ID: <d6fdf3419a323bdf5008bcd51c36b92977f5b872.camel@sipsolutions.net>
+Subject: Re: [PATCH V2 1/3] nl80211: add support for setting fixed HE
+ rate/gi/ltf
 From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Shay Bar <shay.bar@celeno.com>
-Cc:     linux-wireless@vger.kernel.org, aviad.brikman@celeno.com
-Date:   Fri, 14 Feb 2020 09:53:58 +0100
-In-Reply-To: <20200210130728.23674-1-shay.bar@celeno.com> (sfid-20200210_140754_468849_45E94991)
-References: <20200209152818.4630-1-shay.bar@celeno.com>
-         <20200210130728.23674-1-shay.bar@celeno.com>
-         (sfid-20200210_140754_468849_45E94991)
+To:     John Crispin <john@phrozen.org>, Kalle Valo <kvalo@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
+        Miles Hu <milehu@codeaurora.org>
+Date:   Fri, 14 Feb 2020 10:03:38 +0100
+In-Reply-To: <20200204103514.18111-1-john@phrozen.org>
+References: <20200204103514.18111-1-john@phrozen.org>
 Content-Type: text/plain; charset="UTF-8"
 User-Agent: Evolution 3.34.2 (3.34.2-1.fc31) 
 MIME-Version: 1.0
@@ -43,20 +43,64 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
+On Tue, 2020-02-04 at 11:35 +0100, John Crispin wrote:
+> 
+> +	[NL80211_TXRATE_HE] = {
+> +		.type = NLA_EXACT_LEN,
+> +		.len = sizeof(struct nl80211_txrate_he),
+> +	},
+> +	[NL80211_TXRATE_HE_GI] =  NLA_POLICY_RANGE(NLA_U8,
+> +						   NL80211_RATE_INFO_HE_GI_0_8,
+> +						   NL80211_RATE_INFO_HE_GI_3_2),
+> +	[NL80211_TXRATE_HE_LTF] = NLA_POLICY_RANGE(NLA_U8,
+> +						   NL80211_RATE_INFO_HE_1XLTF,
+> +						   NL80211_RATE_INFO_HE_4XLTF),
+>  };
 
-On Mon, 2020-02-10 at 15:07 +0200, Shay Bar wrote:
-> Before this patch, STA's would set new width of 160/80+80 Mhz based on AP capability only.
-> This is wrong because STA may not support > 80Mhz BW.
-> Fix is to verify STA has 160/80+80 Mhz capability before increasing its width to > 80Mhz.
+Thanks for this :-)
 
-Oh, good catch.
+> +		if (tb[NL80211_TXRATE_HE]) {
+> +			if (!he_set_mcs_mask(info, sband, nla_data(tb[NL80211_TXRATE_HE]),
+> +					     mask->control[band].he_mcs))
+> +				return -EINVAL;
 
-> +	vht_cap = hw->wiphy->bands[chandef->chan->band]->vht_cap.cap;
+Maybe unify these into a single condition?
 
-But I think this is possibly wrong, we might have VHT capa overrides?
+if (tb[...] &&
+    he_set_...
+	return -EINVAL;
 
-Anyway, I've applied this as a fix now - we can fix it more later.
+Seems nicer to me. Especially with the lines already being so long.
+
+> +		}
+> +		if (tb[NL80211_TXRATE_HE_GI]) {
+> +			mask->control[band].he_gi =
+> +				nla_get_u8(tb[NL80211_TXRATE_HE_GI]);
+> +			if (mask->control[band].he_gi > NL80211_RATE_INFO_HE_GI_3_2)
+> +				return -EINVAL;
+
+This is not needed with the policy, is it?
+
+> +		}
+> +		if (tb[NL80211_TXRATE_HE_LTF]) {
+> +			mask->control[band].he_ltf =
+> +				nla_get_u8(tb[NL80211_TXRATE_HE_LTF]);
+> +			if (mask->control[band].he_ltf > NL80211_RATE_INFO_HE_4XLTF)
+> +				return -EINVAL;
+
+Same here.
+
+>  			if (!(rdev->wiphy.bands[band]->ht_cap.ht_supported ||
+> -			      rdev->wiphy.bands[band]->vht_cap.vht_supported))
+> +			      rdev->wiphy.bands[band]->vht_cap.vht_supported ||
+> +			      (rdev->wiphy.bands[band]->iftype_data &&
+> +			       rdev->wiphy.bands[band]->iftype_data->he_cap.has_he)))
+>  				return -EINVAL;
+
+And now we get to why I replied at all and didn't just fix it up ;-)
+
+That can't be right, iftype_data is an array of pointers, you're
+basically always taking the first one?
 
 johannes
 
