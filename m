@@ -7,47 +7,49 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32ED3C2BA83
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 16:01:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3490AC3B19F
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 16:02:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F1A3F206CC
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 16:01:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0EBED206CC
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 16:02:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1581696118;
-	bh=ySzhj8c70C8x5NMMk9F+nbbW1KMpZZRpt6qN/z686dI=;
+	s=default; t=1581696140;
+	bh=iuyIbYzgZDi9u7sIMIx8Fd9TnuJLfU1RqCaPaTF+SmE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=nfL/EqAVEXAtkGzrg7uf1c1vFc+qHi0+t5iw29C9hZ5SZZrU+tP0BVQkMUnRBolpI
-	 GGX7o6JYjNCA71bX52I/VkRZnpzzmeU/qGtB6F01anlYd2DKXs5g6S774Dh55kNGNt
-	 9tyydKvDDe+brh34s7sBmZsWZ12jKqGJ+CVD8RPQ=
+	b=OyTGH7dXtuXLJ/0wRzgPeEEH1IyTBvURuuTnUzU4a35UUbh6aAmUW1VWaBY0MRPZq
+	 wBWUXNY+eQ0cB4VSpfrSDzYa+821H2Ta5BCs3/WBITWo3yqNnYICNFgn+taue2hA8/
+	 pqv+tpUCpfTAqFFjYTcwZhtlb6Iva7ojRVDrKkpk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389207AbgBNQB4 (ORCPT
+        id S2389308AbgBNQCT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Feb 2020 11:01:56 -0500
-Received: from mail.kernel.org ([198.145.29.99]:47730 "EHLO mail.kernel.org"
+        Fri, 14 Feb 2020 11:02:19 -0500
+Received: from mail.kernel.org ([198.145.29.99]:48562 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2389195AbgBNQBy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Feb 2020 11:01:54 -0500
+        id S2389297AbgBNQCS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 14 Feb 2020 11:02:18 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 52EBE2082F;
-        Fri, 14 Feb 2020 16:01:53 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 177BD206CC;
+        Fri, 14 Feb 2020 16:02:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1581696114;
-        bh=ySzhj8c70C8x5NMMk9F+nbbW1KMpZZRpt6qN/z686dI=;
+        s=default; t=1581696138;
+        bh=iuyIbYzgZDi9u7sIMIx8Fd9TnuJLfU1RqCaPaTF+SmE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=vjjmxWS0WM+UDHCKvFJyuJWQ8lJLarjIXji39xY9CHGIcGCctAP7/iYXv9bTEdupT
-         EbYAVgHq1zSjnQ3uUASpMMlO3CUtxEPraM4un+hV/A75ZAtp4YpO77SGhzFPNX6ln+
-         ydk0Vikj5xFW2j7hkWB3Idok35CL7QpLFdZ6p0VI=
+        b=IcbUZAkTQQpRHQ/lg1xTU4ST5QWLvQNsspfHIAhGDrIO7mEfN4lCdu7CGmIR1sgu5
+         Rr6M0j20U49MatjSgcHNltroa3JTX/sKNwlqyDg8fbuNXvKTo7BJ5LrkdcuO22r50B
+         EzA+Ow2oAByzH38awFN4fLecFOZjJrAfsUWa2CFg=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Jeffrey Hugo <jeffrey.l.hugo@gmail.com>,
+Cc:     Navid Emamdoost <navid.emamdoost@gmail.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 003/459] ath10k: Fix qmi init error handling
-Date:   Fri, 14 Feb 2020 10:54:13 -0500
-Message-Id: <20200214160149.11681-3-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 020/459] brcmfmac: Fix memory leak in brcmf_p2p_create_p2pdev()
+Date:   Fri, 14 Feb 2020 10:54:30 -0500
+Message-Id: <20200214160149.11681-20-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200214160149.11681-1-sashal@kernel.org>
 References: <20200214160149.11681-1-sashal@kernel.org>
@@ -60,47 +62,37 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Jeffrey Hugo <jeffrey.l.hugo@gmail.com>
+From: Navid Emamdoost <navid.emamdoost@gmail.com>
 
-[ Upstream commit f8a595a87e93a33a10879f4b856be818d2f53c84 ]
+[ Upstream commit 5cc509aa83c6acd2c5cd94f99065c39d2bd0a490 ]
 
-When ath10k_qmi_init() fails, the error handling does not free the irq
-resources, which causes an issue if we EPROBE_DEFER as we'll attempt to
-(re-)register irqs which are already registered.
+In the implementation of brcmf_p2p_create_p2pdev() the allocated memory
+for p2p_vif is leaked when the mac address is the same as primary
+interface. To fix this, go to error path to release p2p_vif via
+brcmf_free_vif().
 
-Fix this by doing a power off since we just powered on the hardware, and
-freeing the irqs as error handling.
-
-Fixes: ba94c753ccb4 ("ath10k: add QMI message handshake for wcn3990 client")
-Signed-off-by: Jeffrey Hugo <jeffrey.l.hugo@gmail.com>
+Fixes: cb746e47837a ("brcmfmac: check p2pdev mac address uniqueness")
+Signed-off-by: Navid Emamdoost <navid.emamdoost@gmail.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath10k/snoc.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
-index fc15a0037f0e6..63607c3b8e818 100644
---- a/drivers/net/wireless/ath/ath10k/snoc.c
-+++ b/drivers/net/wireless/ath/ath10k/snoc.c
-@@ -1729,13 +1729,16 @@ static int ath10k_snoc_probe(struct platform_device *pdev)
- 	ret = ath10k_qmi_init(ar, msa_size);
- 	if (ret) {
- 		ath10k_warn(ar, "failed to register wlfw qmi client: %d\n", ret);
--		goto err_core_destroy;
-+		goto err_power_off;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+index 7ba9f6a686459..1f5deea5a288e 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+@@ -2092,7 +2092,8 @@ static struct wireless_dev *brcmf_p2p_create_p2pdev(struct brcmf_p2p_info *p2p,
+ 	/* firmware requires unique mac address for p2pdev interface */
+ 	if (addr && ether_addr_equal(addr, pri_ifp->mac_addr)) {
+ 		bphy_err(drvr, "discovery vif must be different from primary interface\n");
+-		return ERR_PTR(-EINVAL);
++		err = -EINVAL;
++		goto fail;
  	}
  
- 	ath10k_dbg(ar, ATH10K_DBG_SNOC, "snoc probe\n");
- 
- 	return 0;
- 
-+err_power_off:
-+	ath10k_hw_power_off(ar);
-+
- err_free_irq:
- 	ath10k_snoc_free_irq(ar);
- 
+ 	brcmf_p2p_generate_bss_mac(p2p, addr);
 -- 
 2.20.1
 
