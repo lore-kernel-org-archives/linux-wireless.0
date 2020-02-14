@@ -7,48 +7,50 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 541ADC2BA83
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 18:17:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06E78C3B1B5
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 18:17:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1EA1C222C2
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 18:17:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D1DAE222C2
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 18:17:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1581704222;
-	bh=laid7J5sQfr4zc5dfFYayIFp5SqBhYxHplp0Qg+Sfbc=;
+	s=default; t=1581704223;
+	bh=a/JbiaU6A10GtmsEI/rx+V/8XXumfKNN7zGs8yipPCQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=R2XBlSRzUfb1+XvUM0BHjiYzzNZFIkeM4QrTAuNLNJznvjrmAjQtsBeO/gDBZ/7KQ
-	 LfnIohhAAE4m33wIQuuwFV41+CerY/mre6lYqD+CciWrcXqghdSP6l+04Xp2rX38+a
-	 qNv1WrQ5ye1ZckPnunr4TsNaJvpT1fOEl/Biq9K4=
+	b=DZRbGInkpyG2X4YtWufjqkNrhB/z4N9A6eFfOOCd4WlfRt4KG2KRfz6aMppXbbuKQ
+	 SrXO+pdjR4wbfSqazWpU76+o8DWzK+gLMr/khSKZtq68RU2wC8ZxOr9tY883b0L8cM
+	 WoTDd4w0wLYLfM3MJ+w/iCIptWi0sqbKHApQ78T8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730248AbgBNPvW (ORCPT
+        id S1730740AbgBNPvU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Feb 2020 10:51:22 -0500
-Received: from mail.kernel.org ([198.145.29.99]:56198 "EHLO mail.kernel.org"
+        Fri, 14 Feb 2020 10:51:20 -0500
+Received: from mail.kernel.org ([198.145.29.99]:56130 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729475AbgBNPvV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Feb 2020 10:51:21 -0500
+        id S1730729AbgBNPvS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 14 Feb 2020 10:51:18 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 6322B2168B;
-        Fri, 14 Feb 2020 15:51:19 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 890CB2168B;
+        Fri, 14 Feb 2020 15:51:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1581695480;
-        bh=laid7J5sQfr4zc5dfFYayIFp5SqBhYxHplp0Qg+Sfbc=;
+        s=default; t=1581695477;
+        bh=a/JbiaU6A10GtmsEI/rx+V/8XXumfKNN7zGs8yipPCQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=PoYc5f5R4gKbFNrsMMnMyd1Psdf/6tJ25XhN5wCNqfQDspxO8FBkito9wpEw0rOXq
-         oyveqnC2uit7y5FUjs3HfZ1muha7TdhKk/m7ElmK7Lq6aogllFB1nxa1FzMhGNRElR
-         FmLbOFMqgRRGpuba9NYnUoqWX3fCQXuBrXQdVoHc=
+        b=wNO1mdywvv4ZtQ8+g4yT4e/9eZJk1dXv6qgUUYDrBu/me1neYILUI+FRXtwdKj7Q4
+         ALZbOSI78oV/ni+oRxPNyT9J+HJzlZr/T1RMcH2BoFbXJxcKZsL54vIE22n9+37bIu
+         gHS1YDHJi5WL5JVzAuIK86VjHzTOwkhMzkTzmP9s=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Nicolai Stange <nstange@suse.de>,
+Cc:     Jean-Philippe Brucker <jean-philippe@linaro.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
-        libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.5 112/542] libertas: make lbs_ibss_join_existing() return error code on rates overflow
-Date:   Fri, 14 Feb 2020 10:41:44 -0500
-Message-Id: <20200214154854.6746-112-sashal@kernel.org>
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.5 110/542] brcmfmac: sdio: Fix OOB interrupt initialization on brcm43362
+Date:   Fri, 14 Feb 2020 10:41:42 -0500
+Message-Id: <20200214154854.6746-110-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200214154854.6746-1-sashal@kernel.org>
 References: <20200214154854.6746-1-sashal@kernel.org>
@@ -61,41 +63,65 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Nicolai Stange <nstange@suse.de>
+From: Jean-Philippe Brucker <jean-philippe@linaro.org>
 
-[ Upstream commit 1754c4f60aaf1e17d886afefee97e94d7f27b4cb ]
+[ Upstream commit 8c8e60fb86a90a30721bbd797f58f96b3980dcc1 ]
 
-Commit e5e884b42639 ("libertas: Fix two buffer overflows at parsing bss
-descriptor") introduced a bounds check on the number of supplied rates to
-lbs_ibss_join_existing() and made it to return on overflow.
+Commit 262f2b53f679 ("brcmfmac: call brcmf_attach() just before calling
+brcmf_bus_started()") changed the initialization order of the brcmfmac
+SDIO driver. Unfortunately since brcmf_sdiod_intr_register() is now
+called before the sdiodev->bus_if initialization, it reads the wrong
+chip ID and fails to initialize the GPIO on brcm43362. Thus the chip
+cannot send interrupts and fails to probe:
 
-However, the aforementioned commit doesn't set the return value accordingly
-and thus, lbs_ibss_join_existing() would return with zero even though it
-failed.
+[   12.517023] brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
+[   12.531214] ieee80211 phy0: brcmf_bus_started: failed: -110
+[   12.536976] ieee80211 phy0: brcmf_attach: dongle is not responding: err=-110
+[   12.566467] brcmfmac: brcmf_sdio_firmware_callback: brcmf_attach failed
 
-Make lbs_ibss_join_existing return -EINVAL in case the bounds check on the
-number of supplied rates fails.
+Initialize the bus interface earlier to ensure that
+brcmf_sdiod_intr_register() properly sets up the OOB interrupt.
 
-Fixes: e5e884b42639 ("libertas: Fix two buffer overflows at parsing bss descriptor")
-Signed-off-by: Nicolai Stange <nstange@suse.de>
+BugLink: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=908438
+Fixes: 262f2b53f679 ("brcmfmac: call brcmf_attach() just before calling brcmf_bus_started()")
+Signed-off-by: Jean-Philippe Brucker <jean-philippe@linaro.org>
+Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/marvell/libertas/cfg.c | 1 +
- 1 file changed, 1 insertion(+)
+ .../net/wireless/broadcom/brcm80211/brcmfmac/sdio.c  | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/libertas/cfg.c b/drivers/net/wireless/marvell/libertas/cfg.c
-index 68985d7663491..4e3de684928bf 100644
---- a/drivers/net/wireless/marvell/libertas/cfg.c
-+++ b/drivers/net/wireless/marvell/libertas/cfg.c
-@@ -1786,6 +1786,7 @@ static int lbs_ibss_join_existing(struct lbs_private *priv,
- 		if (rates_max > MAX_RATES) {
- 			lbs_deb_join("invalid rates");
- 			rcu_read_unlock();
-+			ret = -EINVAL;
- 			goto out;
- 		}
- 		rates = cmd.bss.rates;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index 1dea0178832ea..a935993a3c514 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -4226,6 +4226,12 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
+ 	}
+ 
+ 	if (err == 0) {
++		/* Assign bus interface call back */
++		sdiod->bus_if->dev = sdiod->dev;
++		sdiod->bus_if->ops = &brcmf_sdio_bus_ops;
++		sdiod->bus_if->chip = bus->ci->chip;
++		sdiod->bus_if->chiprev = bus->ci->chiprev;
++
+ 		/* Allow full data communication using DPC from now on. */
+ 		brcmf_sdiod_change_state(bus->sdiodev, BRCMF_SDIOD_DATA);
+ 
+@@ -4242,12 +4248,6 @@ static void brcmf_sdio_firmware_callback(struct device *dev, int err,
+ 
+ 	sdio_release_host(sdiod->func1);
+ 
+-	/* Assign bus interface call back */
+-	sdiod->bus_if->dev = sdiod->dev;
+-	sdiod->bus_if->ops = &brcmf_sdio_bus_ops;
+-	sdiod->bus_if->chip = bus->ci->chip;
+-	sdiod->bus_if->chiprev = bus->ci->chiprev;
+-
+ 	err = brcmf_alloc(sdiod->dev, sdiod->settings);
+ 	if (err) {
+ 		brcmf_err("brcmf_alloc failed\n");
 -- 
 2.20.1
 
