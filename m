@@ -2,54 +2,51 @@ Return-Path: <SRS0=dpF5=4C=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A076C2BA83
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 16:10:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CF3DC47409
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 16:10:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 137AF24686
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 16:10:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 75CE5246A6
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 16:10:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1581696628;
-	bh=Ryr712IRyEGx3V2UFQBgJGfJ7BJcj/Aea1W03uMesHg=;
+	s=default; t=1581696652;
+	bh=XNDD2meNX5BtVFSvRvL9MggIIc57XvcHUhfEtjDcsms=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=FlyBR/IZJpUdzP6OR+jteOLfcbgSzCZBEyeZZ2LnCvAUflg4Cmc1oLe7FeGZfwZah
-	 tXxU5Cko9bknaBoIPU3Vmfr7BL22S/JLMcr6zuK4nzgQirzsVipWvXGrT8ewbU45UW
-	 Qf3I7kWzAZT5/7WzdKOfVC6IQvl0388MtzM6SWjk=
+	b=YgyOYW8wrmgpgjG+0IIlXBXp2OghzEVPvt0UqzSE8IhB1nqJKyswzfbFqGObhFa4h
+	 X6nenlpT28Bz/gKPZGe9bnIPhq1U8YTri6i4oK67nZ9WSqUWkTLyOjQj0WK3lO1cSn
+	 ykZCn5Z6zLyngnkHasw5SvfybwkhHBJF6XWAlnb4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391493AbgBNQK1 (ORCPT
+        id S2391640AbgBNQKt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Feb 2020 11:10:27 -0500
-Received: from mail.kernel.org ([198.145.29.99]:35990 "EHLO mail.kernel.org"
+        Fri, 14 Feb 2020 11:10:49 -0500
+Received: from mail.kernel.org ([198.145.29.99]:36432 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2391480AbgBNQK0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Feb 2020 11:10:26 -0500
+        id S2391577AbgBNQKs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 14 Feb 2020 11:10:48 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 183522467E;
-        Fri, 14 Feb 2020 16:10:25 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 561F1222C2;
+        Fri, 14 Feb 2020 16:10:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1581696626;
-        bh=Ryr712IRyEGx3V2UFQBgJGfJ7BJcj/Aea1W03uMesHg=;
+        s=default; t=1581696641;
+        bh=XNDD2meNX5BtVFSvRvL9MggIIc57XvcHUhfEtjDcsms=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=mqZcgRedjAmFRXnpC4/n/csWilf0bRt/TQMUgh8yTNLkx7ios3rtopXUv/pX5DXhs
-         nCzPirOBkE3/6BVjKowUZ3N7Lopp90XvDLpsFpw77ACkXtV44kSHG2yknDKCp+dVWe
-         YegUXiID4zcs9dJ6jjMIs4/v2w2txBBj/iYp3uX0=
+        b=qSrn1tQy82VBaD5pC/zaQ9cF+q9TCh9c/JQ2lDnEExCBiiCp1hGiv7UCPop4T/PyC
+         qmeCKghIXtsrAn3FZ42KmT3YTAaqdBZlRSKxboCZwM3s2bgGl1N+Dkxy4NvQk9Zb3k
+         gMKXPsxa48uGunVlsBlh5YzHH0B6HO4sxOr0MB4k=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Nathan Chancellor <natechancellor@gmail.com>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Qing Xu <m1s5p6688@gmail.com>, Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        clang-built-linux@googlegroups.com
-Subject: [PATCH AUTOSEL 5.4 406/459] hostap: Adjust indentation in prism2_hostapd_add_sta
-Date:   Fri, 14 Feb 2020 11:00:56 -0500
-Message-Id: <20200214160149.11681-406-sashal@kernel.org>
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 418/459] mwifiex: Fix possible buffer overflows in mwifiex_cmd_append_vsie_tlv()
+Date:   Fri, 14 Feb 2020 11:01:08 -0500
+Message-Id: <20200214160149.11681-418-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200214160149.11681-1-sashal@kernel.org>
 References: <20200214160149.11681-1-sashal@kernel.org>
@@ -62,50 +59,41 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Nathan Chancellor <natechancellor@gmail.com>
+From: Qing Xu <m1s5p6688@gmail.com>
 
-[ Upstream commit b61156fba74f659d0bc2de8f2dbf5bad9f4b8faf ]
+[ Upstream commit b70261a288ea4d2f4ac7cd04be08a9f0f2de4f4d ]
 
-Clang warns:
+mwifiex_cmd_append_vsie_tlv() calls memcpy() without checking
+the destination size may trigger a buffer overflower,
+which a local user could use to cause denial of service
+or the execution of arbitrary code.
+Fix it by putting the length check before calling memcpy().
 
-../drivers/net/wireless/intersil/hostap/hostap_ap.c:2511:3: warning:
-misleading indentation; statement is not part of the previous 'if'
-[-Wmisleading-indentation]
-        if (sta->tx_supp_rates & WLAN_RATE_5M5)
-        ^
-../drivers/net/wireless/intersil/hostap/hostap_ap.c:2509:2: note:
-previous statement is here
-        if (sta->tx_supp_rates & WLAN_RATE_2M)
-        ^
-1 warning generated.
-
-This warning occurs because there is a space before the tab on this
-line. Remove it so that the indentation is consistent with the Linux
-kernel coding style and clang no longer warns.
-
-Fixes: ff1d2767d5a4 ("Add HostAP wireless driver.")
-Link: https://github.com/ClangBuiltLinux/linux/issues/813
-Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
-Reviewed-by: Nick Desaulniers <ndesaulniers@google.com>
+Signed-off-by: Qing Xu <m1s5p6688@gmail.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intersil/hostap/hostap_ap.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/marvell/mwifiex/scan.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/net/wireless/intersil/hostap/hostap_ap.c b/drivers/net/wireless/intersil/hostap/hostap_ap.c
-index 0094b1d2b5770..3ec46f48cfde1 100644
---- a/drivers/net/wireless/intersil/hostap/hostap_ap.c
-+++ b/drivers/net/wireless/intersil/hostap/hostap_ap.c
-@@ -2508,7 +2508,7 @@ static int prism2_hostapd_add_sta(struct ap_data *ap,
- 		sta->supported_rates[0] = 2;
- 	if (sta->tx_supp_rates & WLAN_RATE_2M)
- 		sta->supported_rates[1] = 4;
-- 	if (sta->tx_supp_rates & WLAN_RATE_5M5)
-+	if (sta->tx_supp_rates & WLAN_RATE_5M5)
- 		sta->supported_rates[2] = 11;
- 	if (sta->tx_supp_rates & WLAN_RATE_11M)
- 		sta->supported_rates[3] = 22;
+diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
+index 593c594982cb3..59f0651d148bb 100644
+--- a/drivers/net/wireless/marvell/mwifiex/scan.c
++++ b/drivers/net/wireless/marvell/mwifiex/scan.c
+@@ -2886,6 +2886,13 @@ mwifiex_cmd_append_vsie_tlv(struct mwifiex_private *priv,
+ 			vs_param_set->header.len =
+ 				cpu_to_le16((((u16) priv->vs_ie[id].ie[1])
+ 				& 0x00FF) + 2);
++			if (le16_to_cpu(vs_param_set->header.len) >
++				MWIFIEX_MAX_VSIE_LEN) {
++				mwifiex_dbg(priv->adapter, ERROR,
++					    "Invalid param length!\n");
++				break;
++			}
++
+ 			memcpy(vs_param_set->ie, priv->vs_ie[id].ie,
+ 			       le16_to_cpu(vs_param_set->header.len));
+ 			*buffer += le16_to_cpu(vs_param_set->header.len) +
 -- 
 2.20.1
 
