@@ -7,50 +7,50 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 742E5C3B1B4
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 18:09:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BE3CC3F68F
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 18:09:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4B2DE222C2
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 18:09:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 274212187F
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 18:09:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1581703780;
-	bh=rdGmPaki1ElFzGaOnd9b88/M3GCEzkQ+yBkwLLBl2mc=;
+	s=default; t=1581703787;
+	bh=3gwgFUqvJ8N/VlvUVeaLWqEWpiO5LJUZARXPEDPwzPU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=yvHyIave92fiLutju5/vm/wvPiddMuaq1d0AhgXm0kHOSupRQukRS00Jr+HRbcD/p
-	 zipla+CcjK/XTUWIIJ9Mhw3dIHZQWztQe0v+49zwf2/MacZLlR44TkA3a7b0zugGNh
-	 6FRdLncSoCpUb1tJyPsuLXddymqTMT3E8BK5IGBE=
+	b=QH9+IHKZO/iyh00h+57QVN3B3i9waomYJsFxnIRb8GgIjERMFCnsD58/Ce4aqegWi
+	 +vRr0ccdtqQ4+JxQO+VU1viu6UiDZE0Oln/poVIEFtfiJd13AUaohUWSXkjkIm71et
+	 TP+cXQJRNBaWNvm6I7clt0NU4L1Z63ILh/2Bc6Q0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731370AbgBNPxz (ORCPT
+        id S2392916AbgBNSJn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Feb 2020 10:53:55 -0500
-Received: from mail.kernel.org ([198.145.29.99]:33448 "EHLO mail.kernel.org"
+        Fri, 14 Feb 2020 13:09:43 -0500
+Received: from mail.kernel.org ([198.145.29.99]:33432 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731364AbgBNPxz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Feb 2020 10:53:55 -0500
+        id S1731351AbgBNPxy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 14 Feb 2020 10:53:54 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id D053724673;
-        Fri, 14 Feb 2020 15:53:53 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id C2C7124649;
+        Fri, 14 Feb 2020 15:53:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1581695634;
-        bh=rdGmPaki1ElFzGaOnd9b88/M3GCEzkQ+yBkwLLBl2mc=;
+        s=default; t=1581695633;
+        bh=3gwgFUqvJ8N/VlvUVeaLWqEWpiO5LJUZARXPEDPwzPU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=qFNxKFAXOwjsZhW2QFM+JkJVrSVVSE3eFXc+pUhYTqVQbX+ZKC0YUGgwuXuSCPgSJ
-         1ZzG6o/C/wqv+a/B2bgxbXFRl1/UKGss/tbJNRtXDFBgqWIAieamHwGYqQ0vzGyGDB
-         ztjN30TitA2sazykLG2egVMASsQirWVAqN9sLN2k=
+        b=r9OT6xpddjE4WdVUxI0deQMBo1FGHNF7vRyRpi64t0HnrwEsZ7U7nNtOljJPGfNav
+         yfrUSPMN7Afazv/4SGj61AB4J+ood6ELVhLN1qE6PDC3IuaFfQsBkjOWOJkvG7bPO4
+         vmtGaeXMtJiiR322XoVaMdghfVIBVoAClcIkdRYs=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Aditya Pakki <pakki001@umn.edu>, Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.5 231/542] orinoco: avoid assertion in case of NULL pointer
-Date:   Fri, 14 Feb 2020 10:43:43 -0500
-Message-Id: <20200214154854.6746-231-sashal@kernel.org>
+Cc:     yu kuai <yukuai3@huawei.com>, Kalle Valo <kvalo@codeaurora.org>,
+        Sasha Levin <sashal@kernel.org>, linux-wireless@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.5 230/542] bcma: remove set but not used variable 'sizel'
+Date:   Fri, 14 Feb 2020 10:43:42 -0500
+Message-Id: <20200214154854.6746-230-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200214154854.6746-1-sashal@kernel.org>
 References: <20200214154854.6746-1-sashal@kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
@@ -59,35 +59,54 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Aditya Pakki <pakki001@umn.edu>
+From: yu kuai <yukuai3@huawei.com>
 
-[ Upstream commit c705f9fc6a1736dcf6ec01f8206707c108dca824 ]
+[ Upstream commit f427939391f290cbeabe0231eb8a116429d823f0 ]
 
-In ezusb_init, if upriv is NULL, the code crashes. However, the caller
-in ezusb_probe can handle the error and print the failure message.
-The patch replaces the BUG_ON call to error return.
+Fixes gcc '-Wunused-but-set-variable' warning:
 
-Signed-off-by: Aditya Pakki <pakki001@umn.edu>
+drivers/bcma/scan.c: In function ‘bcma_erom_get_addr_desc’:
+
+drivers/bcma/scan.c:222:20: warning: variable ‘sizel’ set but
+not used [-Wunused-but-set-variable]
+
+It is never used, and so can be removed.
+
+Fixes: 8369ae33b705 ("bcma: add Broadcom specific AMBA bus driver")
+Signed-off-by: yu kuai <yukuai3@huawei.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intersil/orinoco/orinoco_usb.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/bcma/scan.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/intersil/orinoco/orinoco_usb.c b/drivers/net/wireless/intersil/orinoco/orinoco_usb.c
-index 8c79b963bcffb..e753f43e0162f 100644
---- a/drivers/net/wireless/intersil/orinoco/orinoco_usb.c
-+++ b/drivers/net/wireless/intersil/orinoco/orinoco_usb.c
-@@ -1361,7 +1361,8 @@ static int ezusb_init(struct hermes *hw)
- 	int retval;
+diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
+index 4a2d1b235fb5a..1f2de714b4017 100644
+--- a/drivers/bcma/scan.c
++++ b/drivers/bcma/scan.c
+@@ -219,7 +219,7 @@ static s32 bcma_erom_get_mst_port(struct bcma_bus *bus, u32 __iomem **eromptr)
+ static u32 bcma_erom_get_addr_desc(struct bcma_bus *bus, u32 __iomem **eromptr,
+ 				  u32 type, u8 port)
+ {
+-	u32 addrl, addrh, sizel, sizeh = 0;
++	u32 addrl, addrh, sizeh = 0;
+ 	u32 size;
  
- 	BUG_ON(in_interrupt());
--	BUG_ON(!upriv);
-+	if (!upriv)
-+		return -EINVAL;
+ 	u32 ent = bcma_erom_get_ent(bus, eromptr);
+@@ -239,12 +239,9 @@ static u32 bcma_erom_get_addr_desc(struct bcma_bus *bus, u32 __iomem **eromptr,
  
- 	upriv->reply_count = 0;
- 	/* Write the MAGIC number on the simulated registers to keep
+ 	if ((ent & SCAN_ADDR_SZ) == SCAN_ADDR_SZ_SZD) {
+ 		size = bcma_erom_get_ent(bus, eromptr);
+-		sizel = size & SCAN_SIZE_SZ;
+ 		if (size & SCAN_SIZE_SG32)
+ 			sizeh = bcma_erom_get_ent(bus, eromptr);
+-	} else
+-		sizel = SCAN_ADDR_SZ_BASE <<
+-				((ent & SCAN_ADDR_SZ) >> SCAN_ADDR_SZ_SHIFT);
++	}
+ 
+ 	return addrl;
+ }
 -- 
 2.20.1
 
