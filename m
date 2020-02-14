@@ -4,50 +4,49 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03C37C2BA83
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 16:48:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70D5FC3B1A5
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 16:53:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CA22424650
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 16:48:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3C68E20656
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 16:53:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1581698918;
-	bh=5FRd71oVD6hWmNodwRihjT9f1mZ0J2MgFff2dq0Vzjw=;
+	s=default; t=1581699191;
+	bh=5ZhS83xKSd69Gd6diFUVn9rulU3syIPi3/tE+VyKn6o=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=V8+zhpV3yQAtFCTBxVM1esqjC56+ID38KlR5dzAdODCNjeSENTX02LIp4Z61Ipdsu
-	 YXmUvIsliNM0qKxZ/4xDZRWrDdyjFGZ/J77rFJ3jNtW0XEXJxWkbnK9/aj2XXgw5kV
-	 BECeMMMCiuO32VoHkQetn1faaAAXBFGN8mjWLNNw=
+	b=YAbHTyuxusg0HLhkUqgCJCKNKa3LNmwtPYAK32T4ptpE4AUrrhRUq5XgKqujO9n9n
+	 kXxCq3vcWMpTSdd0TnLp9/15KHxtI9twL8Wtn6K8ivms40BBiFs9HDN0CZfQZOCxVA
+	 0Vql5btyfutomLvZwy1ilFdtHeDje8i9T707+D2M=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405275AbgBNQsh (ORCPT
+        id S2404932AbgBNQTE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Feb 2020 11:48:37 -0500
-Received: from mail.kernel.org ([198.145.29.99]:54706 "EHLO mail.kernel.org"
+        Fri, 14 Feb 2020 11:19:04 -0500
+Received: from mail.kernel.org ([198.145.29.99]:52036 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2392882AbgBNQUp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Feb 2020 11:20:45 -0500
+        id S2404922AbgBNQTD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 14 Feb 2020 11:19:03 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id C0C6B2473A;
-        Fri, 14 Feb 2020 16:20:43 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 24EB124709;
+        Fri, 14 Feb 2020 16:19:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1581697244;
-        bh=5FRd71oVD6hWmNodwRihjT9f1mZ0J2MgFff2dq0Vzjw=;
+        s=default; t=1581697142;
+        bh=5ZhS83xKSd69Gd6diFUVn9rulU3syIPi3/tE+VyKn6o=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ryjclMbph4souA71aTqaFyC4zIMZrbaPHVru7ZPCOPJfd9pabbxDVcHzXNsN4jzm2
-         XOrbh5YYGZ2AZj6VVD6GqR6BScXkKcwP6gorQ38xWWS2DNP1LkmnXRrGpCkrhhmCoB
-         d9v7BpX4sdTer/LgOfFHwpxiln/3+exu2TomxbfQ=
+        b=l0o7HKWseF90c1/VyH/Al4+l6Ib0DLpPxpYwXTzGS49tCSCkK4ZAkViR19YqWuXXc
+         p8UNOkndzmr7Jd0CkJQhSB6nRsozCYekbuJcxytBXxzOJimbmi+h8RDB0QEeMGffmY
+         2fc4GJ2Sm54GN1Nvlxbv8409+WQMM0+/UYOg6LZA=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     YueHaibing <yuehaibing@huawei.com>, Hulk Robot <hulkci@huawei.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Aditya Pakki <pakki001@umn.edu>, Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 163/186] rtlwifi: rtl8723ae: remove unused variables
-Date:   Fri, 14 Feb 2020 11:16:52 -0500
-Message-Id: <20200214161715.18113-163-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 083/186] orinoco: avoid assertion in case of NULL pointer
+Date:   Fri, 14 Feb 2020 11:15:32 -0500
+Message-Id: <20200214161715.18113-83-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200214161715.18113-1-sashal@kernel.org>
 References: <20200214161715.18113-1-sashal@kernel.org>
@@ -60,150 +59,35 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: YueHaibing <yuehaibing@huawei.com>
+From: Aditya Pakki <pakki001@umn.edu>
 
-[ Upstream commit c5f9852411098474ab21f5d7b1b84e5cdd59ca5a ]
+[ Upstream commit c705f9fc6a1736dcf6ec01f8206707c108dca824 ]
 
-drivers/net/wireless/realtek/rtlwifi/rtl8723ae/dm.c:16:18:
- warning: ofdmswing_table defined but not used [-Wunused-const-variable=]
-drivers/net/wireless/realtek/rtlwifi/rtl8723ae/dm.c:56:17:
- warning: cckswing_table_ch1ch13 defined but not used [-Wunused-const-variable=]
-drivers/net/wireless/realtek/rtlwifi/rtl8723ae/dm.c:92:17:
- warning: cckswing_table_ch14 defined but not used [-Wunused-const-variable=]
+In ezusb_init, if upriv is NULL, the code crashes. However, the caller
+in ezusb_probe can handle the error and print the failure message.
+The patch replaces the BUG_ON call to error return.
 
-These variable is never used, so remove them.
-
-Reported-by: Hulk Robot <hulkci@huawei.com>
-Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+Signed-off-by: Aditya Pakki <pakki001@umn.edu>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- .../wireless/realtek/rtlwifi/rtl8723ae/dm.c   | 112 ------------------
- 1 file changed, 112 deletions(-)
+ drivers/net/wireless/intersil/orinoco/orinoco_usb.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/dm.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/dm.c
-index 42a6fba90ba91..ec41cfa8876e6 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/dm.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/dm.c
-@@ -35,118 +35,6 @@
- #include "fw.h"
- #include "hal_btc.h"
+diff --git a/drivers/net/wireless/intersil/orinoco/orinoco_usb.c b/drivers/net/wireless/intersil/orinoco/orinoco_usb.c
+index 95015d74b1c0e..5a64674a5c8da 100644
+--- a/drivers/net/wireless/intersil/orinoco/orinoco_usb.c
++++ b/drivers/net/wireless/intersil/orinoco/orinoco_usb.c
+@@ -1364,7 +1364,8 @@ static int ezusb_init(struct hermes *hw)
+ 	int retval;
  
--static const u32 ofdmswing_table[OFDM_TABLE_SIZE] = {
--	0x7f8001fe,
--	0x788001e2,
--	0x71c001c7,
--	0x6b8001ae,
--	0x65400195,
--	0x5fc0017f,
--	0x5a400169,
--	0x55400155,
--	0x50800142,
--	0x4c000130,
--	0x47c0011f,
--	0x43c0010f,
--	0x40000100,
--	0x3c8000f2,
--	0x390000e4,
--	0x35c000d7,
--	0x32c000cb,
--	0x300000c0,
--	0x2d4000b5,
--	0x2ac000ab,
--	0x288000a2,
--	0x26000098,
--	0x24000090,
--	0x22000088,
--	0x20000080,
--	0x1e400079,
--	0x1c800072,
--	0x1b00006c,
--	0x19800066,
--	0x18000060,
--	0x16c0005b,
--	0x15800056,
--	0x14400051,
--	0x1300004c,
--	0x12000048,
--	0x11000044,
--	0x10000040,
--};
--
--static const u8 cckswing_table_ch1ch13[CCK_TABLE_SIZE][8] = {
--	{0x36, 0x35, 0x2e, 0x25, 0x1c, 0x12, 0x09, 0x04},
--	{0x33, 0x32, 0x2b, 0x23, 0x1a, 0x11, 0x08, 0x04},
--	{0x30, 0x2f, 0x29, 0x21, 0x19, 0x10, 0x08, 0x03},
--	{0x2d, 0x2d, 0x27, 0x1f, 0x18, 0x0f, 0x08, 0x03},
--	{0x2b, 0x2a, 0x25, 0x1e, 0x16, 0x0e, 0x07, 0x03},
--	{0x28, 0x28, 0x22, 0x1c, 0x15, 0x0d, 0x07, 0x03},
--	{0x26, 0x25, 0x21, 0x1b, 0x14, 0x0d, 0x06, 0x03},
--	{0x24, 0x23, 0x1f, 0x19, 0x13, 0x0c, 0x06, 0x03},
--	{0x22, 0x21, 0x1d, 0x18, 0x11, 0x0b, 0x06, 0x02},
--	{0x20, 0x20, 0x1b, 0x16, 0x11, 0x08, 0x05, 0x02},
--	{0x1f, 0x1e, 0x1a, 0x15, 0x10, 0x0a, 0x05, 0x02},
--	{0x1d, 0x1c, 0x18, 0x14, 0x0f, 0x0a, 0x05, 0x02},
--	{0x1b, 0x1a, 0x17, 0x13, 0x0e, 0x09, 0x04, 0x02},
--	{0x1a, 0x19, 0x16, 0x12, 0x0d, 0x09, 0x04, 0x02},
--	{0x18, 0x17, 0x15, 0x11, 0x0c, 0x08, 0x04, 0x02},
--	{0x17, 0x16, 0x13, 0x10, 0x0c, 0x08, 0x04, 0x02},
--	{0x16, 0x15, 0x12, 0x0f, 0x0b, 0x07, 0x04, 0x01},
--	{0x14, 0x14, 0x11, 0x0e, 0x0b, 0x07, 0x03, 0x02},
--	{0x13, 0x13, 0x10, 0x0d, 0x0a, 0x06, 0x03, 0x01},
--	{0x12, 0x12, 0x0f, 0x0c, 0x09, 0x06, 0x03, 0x01},
--	{0x11, 0x11, 0x0f, 0x0c, 0x09, 0x06, 0x03, 0x01},
--	{0x10, 0x10, 0x0e, 0x0b, 0x08, 0x05, 0x03, 0x01},
--	{0x0f, 0x0f, 0x0d, 0x0b, 0x08, 0x05, 0x03, 0x01},
--	{0x0e, 0x0e, 0x0c, 0x0a, 0x08, 0x05, 0x02, 0x01},
--	{0x0d, 0x0d, 0x0c, 0x0a, 0x07, 0x05, 0x02, 0x01},
--	{0x0d, 0x0c, 0x0b, 0x09, 0x07, 0x04, 0x02, 0x01},
--	{0x0c, 0x0c, 0x0a, 0x09, 0x06, 0x04, 0x02, 0x01},
--	{0x0b, 0x0b, 0x0a, 0x08, 0x06, 0x04, 0x02, 0x01},
--	{0x0b, 0x0a, 0x09, 0x08, 0x06, 0x04, 0x02, 0x01},
--	{0x0a, 0x0a, 0x09, 0x07, 0x05, 0x03, 0x02, 0x01},
--	{0x0a, 0x09, 0x08, 0x07, 0x05, 0x03, 0x02, 0x01},
--	{0x09, 0x09, 0x08, 0x06, 0x05, 0x03, 0x01, 0x01},
--	{0x09, 0x08, 0x07, 0x06, 0x04, 0x03, 0x01, 0x01}
--};
--
--static const u8 cckswing_table_ch14[CCK_TABLE_SIZE][8] = {
--	{0x36, 0x35, 0x2e, 0x1b, 0x00, 0x00, 0x00, 0x00},
--	{0x33, 0x32, 0x2b, 0x19, 0x00, 0x00, 0x00, 0x00},
--	{0x30, 0x2f, 0x29, 0x18, 0x00, 0x00, 0x00, 0x00},
--	{0x2d, 0x2d, 0x17, 0x17, 0x00, 0x00, 0x00, 0x00},
--	{0x2b, 0x2a, 0x25, 0x15, 0x00, 0x00, 0x00, 0x00},
--	{0x28, 0x28, 0x24, 0x14, 0x00, 0x00, 0x00, 0x00},
--	{0x26, 0x25, 0x21, 0x13, 0x00, 0x00, 0x00, 0x00},
--	{0x24, 0x23, 0x1f, 0x12, 0x00, 0x00, 0x00, 0x00},
--	{0x22, 0x21, 0x1d, 0x11, 0x00, 0x00, 0x00, 0x00},
--	{0x20, 0x20, 0x1b, 0x10, 0x00, 0x00, 0x00, 0x00},
--	{0x1f, 0x1e, 0x1a, 0x0f, 0x00, 0x00, 0x00, 0x00},
--	{0x1d, 0x1c, 0x18, 0x0e, 0x00, 0x00, 0x00, 0x00},
--	{0x1b, 0x1a, 0x17, 0x0e, 0x00, 0x00, 0x00, 0x00},
--	{0x1a, 0x19, 0x16, 0x0d, 0x00, 0x00, 0x00, 0x00},
--	{0x18, 0x17, 0x15, 0x0c, 0x00, 0x00, 0x00, 0x00},
--	{0x17, 0x16, 0x13, 0x0b, 0x00, 0x00, 0x00, 0x00},
--	{0x16, 0x15, 0x12, 0x0b, 0x00, 0x00, 0x00, 0x00},
--	{0x14, 0x14, 0x11, 0x0a, 0x00, 0x00, 0x00, 0x00},
--	{0x13, 0x13, 0x10, 0x0a, 0x00, 0x00, 0x00, 0x00},
--	{0x12, 0x12, 0x0f, 0x09, 0x00, 0x00, 0x00, 0x00},
--	{0x11, 0x11, 0x0f, 0x09, 0x00, 0x00, 0x00, 0x00},
--	{0x10, 0x10, 0x0e, 0x08, 0x00, 0x00, 0x00, 0x00},
--	{0x0f, 0x0f, 0x0d, 0x08, 0x00, 0x00, 0x00, 0x00},
--	{0x0e, 0x0e, 0x0c, 0x07, 0x00, 0x00, 0x00, 0x00},
--	{0x0d, 0x0d, 0x0c, 0x07, 0x00, 0x00, 0x00, 0x00},
--	{0x0d, 0x0c, 0x0b, 0x06, 0x00, 0x00, 0x00, 0x00},
--	{0x0c, 0x0c, 0x0a, 0x06, 0x00, 0x00, 0x00, 0x00},
--	{0x0b, 0x0b, 0x0a, 0x06, 0x00, 0x00, 0x00, 0x00},
--	{0x0b, 0x0a, 0x09, 0x05, 0x00, 0x00, 0x00, 0x00},
--	{0x0a, 0x0a, 0x09, 0x05, 0x00, 0x00, 0x00, 0x00},
--	{0x0a, 0x09, 0x08, 0x05, 0x00, 0x00, 0x00, 0x00},
--	{0x09, 0x09, 0x08, 0x05, 0x00, 0x00, 0x00, 0x00},
--	{0x09, 0x08, 0x07, 0x04, 0x00, 0x00, 0x00, 0x00}
--};
--
- static u8 rtl8723e_dm_initial_gain_min_pwdb(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	BUG_ON(in_interrupt());
+-	BUG_ON(!upriv);
++	if (!upriv)
++		return -EINVAL;
+ 
+ 	upriv->reply_count = 0;
+ 	/* Write the MAGIC number on the simulated registers to keep
 -- 
 2.20.1
 
