@@ -2,120 +2,100 @@ Return-Path: <SRS0=dpF5=4C=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EDD4DC3B1B0
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 17:45:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF427C3B1B2
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 17:46:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D4195206B6
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 17:45:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 918DD206D7
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 17:46:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1581702391;
+	bh=l0hZUeH00gU3OBzjLve5jeLfpNyZ2VtodXzuUbsTYv8=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=yNS16iafCwdg+dql4pakqntD2efOHP+tWDc8kudPlnGmfdCF8TkjuUSh+XUJJgo7d
+	 Hb1izwyBlHJs9YrjvK1l3Nqr7fJyTZUq+Hu76sTXMPkhPbHg6RTHj4WFQKfhy3ScUT
+	 wq4sgm5FmY75+WTxFg8NMqbBhsTchqN0Nn47TdM4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389870AbgBNRpy (ORCPT
+        id S2389326AbgBNQCW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Feb 2020 12:45:54 -0500
-Received: from muru.com ([72.249.23.125]:55312 "EHLO muru.com"
+        Fri, 14 Feb 2020 11:02:22 -0500
+Received: from mail.kernel.org ([198.145.29.99]:48590 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2389513AbgBNRpw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Feb 2020 12:45:52 -0500
-Received: from atomide.com (localhost [127.0.0.1])
-        by muru.com (Postfix) with ESMTPS id 4AF4780E7;
-        Fri, 14 Feb 2020 17:46:35 +0000 (UTC)
-Date:   Fri, 14 Feb 2020 09:45:48 -0800
-From:   Tony Lindgren <tony@atomide.com>
-To:     Sebastian Reichel <sre@kernel.org>
-Cc:     "Arthur D." <spinal.by@gmail.com>, linux-bluetooth@vger.kernel.org,
-        linux-omap@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: Droid 4 WiFi firmware loading error
-Message-ID: <20200214174548.GC64767@atomide.com>
-References: <20200211232425.GE16391@atomide.com>
- <op.0fu85owhhxa7s4@supervisor.net28>
- <20200212150722.GF16391@atomide.com>
- <20200212162131.GI16391@atomide.com>
- <op.0fwkyxvihxa7s4@supervisor.net28>
- <20200213041112.GL16391@atomide.com>
- <op.0fw0oas5hxa7s4@supervisor.net28>
- <20200213161157.GN16391@atomide.com>
- <op.0fx4hozhhxa7s4@supervisor.net28>
- <20200214161100.b7aqb6wwsrxmx4ab@earth.universe>
+        id S2389315AbgBNQCU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 14 Feb 2020 11:02:20 -0500
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 84AE724654;
+        Fri, 14 Feb 2020 16:02:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1581696139;
+        bh=l0hZUeH00gU3OBzjLve5jeLfpNyZ2VtodXzuUbsTYv8=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=fs9yzkMJyqRtTFIYG91Pg369PFRar4DqMrr/8JBVNV6w65msbdfgBPipygNM6Loqq
+         sVo/kYlX9hsDXAj9gyS9qcwozE4Kv9SHNh7aXeExW2wReuDQPb8iMVuGXmBX5YaGG/
+         F9uwt0lMkaGseaGxC76Ce8TGx+z6kICXSiVcDakc=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 021/459] brcmfmac: Fix use after free in brcmf_sdio_readframes()
+Date:   Fri, 14 Feb 2020 10:54:31 -0500
+Message-Id: <20200214160149.11681-21-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20200214160149.11681-1-sashal@kernel.org>
+References: <20200214160149.11681-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200214161100.b7aqb6wwsrxmx4ab@earth.universe>
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-* Sebastian Reichel <sre@kernel.org> [200214 17:20]:
-> Hi,
-> 
-> WTF :(
-> 
-> Right now the BT driver and the WiFi driver are no aware of
-> each other. Actually the kernel is not even aware, that both
-> drivers are using the same chip. Unfortunately this will be
-> tricky to solve properly. Since a system may have two WiLink
-> devices, the only solution coming to my mind would be adding
-> a link from the BT device to the WiFi device in device tree.
-> Additionally we would need something in the WiLink driver to
-> check if driver has been initialized properly for a given DT
-> node.
+From: Dan Carpenter <dan.carpenter@oracle.com>
 
-Yeah exactly.. I think the best way would be to export something
-like wlcore_register_bt/wlcore_unregister_bt.. And then have
-wlcore_register_bt return -EAGAIN until wlcore is up.
+[ Upstream commit 216b44000ada87a63891a8214c347e05a4aea8fe ]
 
-> On Fri, Feb 14, 2020 at 12:54:50AM +0300, Arthur D. wrote:
-> > Hello.
-> > 
-> > Some users have reported that they have issues with WiFi firmware
-> > loading on Droid 4. The fragment of dmesg for the issue follows
-> > at the bottom of this mail.
-> > 
-> > With the help of Tony Lindgren I have found that the root of the
-> > issue was Bluetooth firmware loaded before WiFi driver (wlcore).
-> > 
-> > Now we need to change the kernel to make it load Bluetooth firmware
-> > only after WiFi firmware is loaded. So the bug will not be triggered.
-> > 
-> > Any ideas on how it should be done?
-> > 
-> > P.S. When I do "rmmod hci_uart" on Droid 4 device, I get something
-> > like endless loop of error reporting from kernel. The fragment of
-> > dmesg can be downloaded from https://dropmefiles.com/wCPMF
-> > I'm not sure where to report this one.
+The brcmu_pkt_buf_free_skb() function frees "pkt" so it leads to a
+static checker warning:
 
-Yup I've seen rmmod hci_uart produce kernel oops, but I just tried
-to reproduce it again on v5.5 and it just took a long time to rmmod
-with no oops.
+    drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c:1974 brcmf_sdio_readframes()
+    error: dereferencing freed memory 'pkt'
 
-Regards,
+It looks like there was supposed to be a continue after we free "pkt".
 
-Tony
+Fixes: 4754fceeb9a6 ("brcmfmac: streamline SDIO read frame routine")
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Acked-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-8< ---------------
-# dmesg -C; modprobe hci_uart; sleep 5; rmmod hci_uart; dmesg -c
-[  616.926422] Bluetooth: HCI UART driver ver 2.3
-[  616.926422] Bluetooth: HCI UART protocol H4 registered
-[  616.926422] Bluetooth: HCI UART protocol BCSP registered
-[  616.926513] Bluetooth: HCI UART protocol LL registered
-[  616.926635] Bluetooth: HCI UART protocol Three-wire (H5) registered
-[  616.927185] Bluetooth: HCI UART protocol Broadcom registered
-[  616.927764] hci-ti serial1-0: GPIO lookup for consumer enable
-[  616.927764] hci-ti serial1-0: using device tree for GPIO lookup
-[  616.927856] of_get_named_gpiod_flags: parsed 'enable-gpios' property of node '/ocp/interconnect@48000000/segment@0/target-module@6e000/serial@0/bluetooth[0]' - status (0)
-[  616.927886] gpio gpiochip6: Persistence not supported for GPIO 14
-[  624.002838] Bluetooth: hci0: command 0xff05 tx timeout
-[  632.572662] Bluetooth: hci0: send command failed
-[  632.572814] Bluetooth: hci0: download firmware failed, retrying...
-[  634.722991] Bluetooth: hci0: command 0x1001 tx timeout
-[  642.812652] Bluetooth: hci0: Reading TI version information failed (-110)
-[  642.812652] Bluetooth: hci0: download firmware failed, retrying...
-[  644.962707] Bluetooth: hci0: command 0x1001 tx timeout
-[  653.043151] Bluetooth: hci0: Reading TI version information failed (-110)
-[  653.043182] Bluetooth: hci0: download firmware failed, retrying...
-[  655.203582] Bluetooth: hci0: command 0x1001 tx timeout
-[  663.294372] Bluetooth: hci0: Reading TI version information failed (-110)
-[  663.294464] Bluetooth: hci0: download firmware failed, retrying...
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index 264ad63232f87..1dea0178832ea 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -1935,6 +1935,7 @@ static uint brcmf_sdio_readframes(struct brcmf_sdio *bus, uint maxframes)
+ 					       BRCMF_SDIO_FT_NORMAL)) {
+ 				rd->len = 0;
+ 				brcmu_pkt_buf_free_skb(pkt);
++				continue;
+ 			}
+ 			bus->sdcnt.rx_readahead_cnt++;
+ 			if (rd->len != roundup(rd_new.len, 16)) {
+-- 
+2.20.1
+
