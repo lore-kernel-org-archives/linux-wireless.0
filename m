@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8551C3B1A4
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 16:55:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15A96C3B1A5
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 16:56:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 97C4B2467B
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 16:55:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DA6F620656
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 16:56:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1581699355;
-	bh=YYpj46OO3np4FzI1K5N6Xqbh3os/OSIAwwP3Y0ox7UI=;
+	s=default; t=1581699362;
+	bh=ybrmC2rHhdfkY7gVnF0IU5j4QPB1DHBHoIR7OzmC2is=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=N7Lhb3Ugt/ysfpE5t4BFFeemQkcVdsh+89+gQDR3eL+Pg2+FLaIk89GgBC9eH7mIL
-	 mRjugvPL3Hws+BSOaXC4I7TwtP7mexHQ+ZouCpe4N4hH+PZINu3ro4V4UJEw4kCtum
-	 IyjG7j4xC1yEN5h7MpBslVb+rxWsBQgzYWGE0MOg=
+	b=2Y/wTJfRZV91YRX5O9Mek0gt+fqCeCwf0zs5D2+bHCSVfNSLfiH0n2hq18zDmpTxg
+	 FP1wvamyYNDp1rRiF23+TDX01w30lwvtQAxusf0VnX5dBcqtTGU4pLzxa+nXDV958Z
+	 SDaY2DnWLTkHhJzRX2JcVqDh0ygmNK2bOwyS/8do=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2404646AbgBNQSL (ORCPT
+        id S2404630AbgBNQSJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Feb 2020 11:18:11 -0500
-Received: from mail.kernel.org ([198.145.29.99]:49946 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2404632AbgBNQSJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 14 Feb 2020 11:18:09 -0500
+Received: from mail.kernel.org ([198.145.29.99]:49930 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2392729AbgBNQSI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 14 Feb 2020 11:18:08 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id D9F1E246F8;
-        Fri, 14 Feb 2020 16:18:07 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 988FC2470A;
+        Fri, 14 Feb 2020 16:18:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1581697088;
-        bh=YYpj46OO3np4FzI1K5N6Xqbh3os/OSIAwwP3Y0ox7UI=;
+        s=default; t=1581697087;
+        bh=ybrmC2rHhdfkY7gVnF0IU5j4QPB1DHBHoIR7OzmC2is=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=FLqeCrXMTR20Oe94o+Bl5wUNkMsLm3C/yk/qY3IcjM1oXAyjAKJdm1ZOBiLoGtdC/
-         OCp9eKiwUTWZTISevdwBF16FCb+P1pUTf9ELpsUdmWikW42JShEokEMDnlqs+rhm5S
-         o8dn9wSNqJvxeVfxjBl4onuQ0W9EqNMboprfSxRI=
+        b=PQAtDq4sj9cuPW3pppWEL4QpF2nciZpqYZVOAyGwJBgiFKAp6VwXcyupwK3XL4Hg9
+         c7fNTkhCJQRF4/0ql7qK1l2qHbZlSIXSYUzgFhGPjKGmXP9ojHIBC3nv+J/5cwRDEF
+         a75FSU78KRh/qe/3WPHxByjwbeFYryGMnXk5fV1Y=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Nicolai Stange <nstange@suse.de>,
@@ -46,9 +46,9 @@ Cc:     Nicolai Stange <nstange@suse.de>,
         Sasha Levin <sashal@kernel.org>,
         libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 041/186] libertas: make lbs_ibss_join_existing() return error code on rates overflow
-Date:   Fri, 14 Feb 2020 11:14:50 -0500
-Message-Id: <20200214161715.18113-41-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 040/186] libertas: don't exit from lbs_ibss_join_existing() with RCU read lock held
+Date:   Fri, 14 Feb 2020 11:14:49 -0500
+Message-Id: <20200214161715.18113-40-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200214161715.18113-1-sashal@kernel.org>
 References: <20200214161715.18113-1-sashal@kernel.org>
@@ -63,18 +63,14 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Nicolai Stange <nstange@suse.de>
 
-[ Upstream commit 1754c4f60aaf1e17d886afefee97e94d7f27b4cb ]
+[ Upstream commit c7bf1fb7ddca331780b9a733ae308737b39f1ad4 ]
 
 Commit e5e884b42639 ("libertas: Fix two buffer overflows at parsing bss
 descriptor") introduced a bounds check on the number of supplied rates to
-lbs_ibss_join_existing() and made it to return on overflow.
+lbs_ibss_join_existing().
 
-However, the aforementioned commit doesn't set the return value accordingly
-and thus, lbs_ibss_join_existing() would return with zero even though it
-failed.
-
-Make lbs_ibss_join_existing return -EINVAL in case the bounds check on the
-number of supplied rates fails.
+Unfortunately, it introduced a return path from within a RCU read side
+critical section without a corresponding rcu_read_unlock(). Fix this.
 
 Fixes: e5e884b42639 ("libertas: Fix two buffer overflows at parsing bss descriptor")
 Signed-off-by: Nicolai Stange <nstange@suse.de>
@@ -85,14 +81,14 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+)
 
 diff --git a/drivers/net/wireless/marvell/libertas/cfg.c b/drivers/net/wireless/marvell/libertas/cfg.c
-index a2874f111d122..fbeb12018c3d6 100644
+index 4ffc188d2ffd3..a2874f111d122 100644
 --- a/drivers/net/wireless/marvell/libertas/cfg.c
 +++ b/drivers/net/wireless/marvell/libertas/cfg.c
-@@ -1789,6 +1789,7 @@ static int lbs_ibss_join_existing(struct lbs_private *priv,
+@@ -1788,6 +1788,7 @@ static int lbs_ibss_join_existing(struct lbs_private *priv,
+ 		rates_max = rates_eid[1];
  		if (rates_max > MAX_RATES) {
  			lbs_deb_join("invalid rates");
- 			rcu_read_unlock();
-+			ret = -EINVAL;
++			rcu_read_unlock();
  			goto out;
  		}
  		rates = cmd.bss.rates;
