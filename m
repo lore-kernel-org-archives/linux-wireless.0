@@ -4,51 +4,52 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73A84C3B1B7
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 18:17:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2839DC3B1B5
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 18:17:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 372B522314
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 18:17:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EDAC32168B
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 18:17:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1581704226;
-	bh=sOWt88WVkaqu6GMzTtpvWwwMB224frFvtLxOEicCWVI=;
+	s=default; t=1581704243;
+	bh=j5FNwqbiDd3zQGbUoiAPV81bz+Jo7tUnvf567ZMQT54=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=RbKczRW/DGmPc32RzuxDalNABPjRbCEhl/a2ripdsAbJ73PDU01nkzKWyRlO/0AJM
-	 vpu+qdjhJxk8v6vQUPEecyzvQn5S4iSMPpFWXdBVLrsY64vvPDdOxIu+6ILwsxtZn5
-	 qe42FEmAzlcCVwULeG5Kef1lzm2J8Jy21JnSOHNQ=
+	b=NEP03uMgQNUWrjh8vqnJ2ZuVkC5181RUt5LAF7nAHDp37LqKOwdjyR88SZy6Bs2u2
+	 LRz3eBrPiIefIxP/biO4qt2NSjDP/wIeenJfhkxVRrG/Ra2ilnWfJ0zn72v0rRGrGz
+	 fIZTsTsGOEdRds+tIhbuXCpJA8C0fO0TfU0uKWtQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405050AbgBNSRF (ORCPT
+        id S2405067AbgBNSRO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Feb 2020 13:17:05 -0500
-Received: from mail.kernel.org ([198.145.29.99]:56178 "EHLO mail.kernel.org"
+        Fri, 14 Feb 2020 13:17:14 -0500
+Received: from mail.kernel.org ([198.145.29.99]:56096 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730727AbgBNPvT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Feb 2020 10:51:19 -0500
+        id S1730720AbgBNPvQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 14 Feb 2020 10:51:16 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 100F124649;
-        Fri, 14 Feb 2020 15:51:17 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 29EC424685;
+        Fri, 14 Feb 2020 15:51:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1581695478;
-        bh=sOWt88WVkaqu6GMzTtpvWwwMB224frFvtLxOEicCWVI=;
+        s=default; t=1581695476;
+        bh=j5FNwqbiDd3zQGbUoiAPV81bz+Jo7tUnvf567ZMQT54=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=RHOLBxujQosx3eOlgNu8wqaYwg5tOKZ6wE5XYyzbNtJc6Aw5qsRbmI+s2nlOtb70p
-         LntM+8AiAj5mjjAqI4rtVoxN7RqN3evErV5m0swrJ8iH4AnbzQxXZ1XEHjYLOALGjD
-         Vx0vzkw7rT13KgSazhhtlIs8uA1fBLOPDmLQBPwc=
+        b=ETAf4PFWiyWjXzXBnKuRk+fpe6213TB0r+ArtLgTz/2H8yHGrERDiU1zusvI46aBG
+         iQb6iXMW+5hmRj20lBr+xKogVphqx6YEdPChERGENRq8LM00gKtTSuNg1KWiWFHTHv
+         q6y2DpB/JenkMgo9Q3SFVxNkMjvLUGFXB3WEeE94=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Nicolai Stange <nstange@suse.de>,
+Cc:     Ping-Ke Shih <pkshih@realtek.com>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Chris Chiu <chiu@endlessm.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
-        libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.5 111/542] libertas: don't exit from lbs_ibss_join_existing() with RCU read lock held
-Date:   Fri, 14 Feb 2020 10:41:43 -0500
-Message-Id: <20200214154854.6746-111-sashal@kernel.org>
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.5 109/542] rtw88: fix rate mask for 1SS chip
+Date:   Fri, 14 Feb 2020 10:41:41 -0500
+Message-Id: <20200214154854.6746-109-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200214154854.6746-1-sashal@kernel.org>
 References: <20200214154854.6746-1-sashal@kernel.org>
@@ -61,37 +62,66 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Nicolai Stange <nstange@suse.de>
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-[ Upstream commit c7bf1fb7ddca331780b9a733ae308737b39f1ad4 ]
+[ Upstream commit 35a68fa5f96a80797e11b6952a47c5a84939a7bf ]
 
-Commit e5e884b42639 ("libertas: Fix two buffer overflows at parsing bss
-descriptor") introduced a bounds check on the number of supplied rates to
-lbs_ibss_join_existing().
+The rate mask is used to tell firmware the supported rate depends on
+negotiation. We loop 2 times for all VHT/HT 2SS rate mask first, and then
+only keep the part according to chip's NSS.
 
-Unfortunately, it introduced a return path from within a RCU read side
-critical section without a corresponding rcu_read_unlock(). Fix this.
+This commit fixes the logic error of '&' operations for VHT/HT rate, and
+we should run this logic before adding legacy rate.
 
-Fixes: e5e884b42639 ("libertas: Fix two buffer overflows at parsing bss descriptor")
-Signed-off-by: Nicolai Stange <nstange@suse.de>
+To access HT MCS map, index 0/1 represent MCS 0-7/8-15 respectively. Use
+NL80211_BAND_xxx is incorrect, so fix it as well.
+
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Reviewed-by: Chris Chiu <chiu@endlessm.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/marvell/libertas/cfg.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/realtek/rtw88/main.c | 12 +++++-------
+ 1 file changed, 5 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/libertas/cfg.c b/drivers/net/wireless/marvell/libertas/cfg.c
-index c9401c121a14e..68985d7663491 100644
---- a/drivers/net/wireless/marvell/libertas/cfg.c
-+++ b/drivers/net/wireless/marvell/libertas/cfg.c
-@@ -1785,6 +1785,7 @@ static int lbs_ibss_join_existing(struct lbs_private *priv,
- 		rates_max = rates_eid[1];
- 		if (rates_max > MAX_RATES) {
- 			lbs_deb_join("invalid rates");
-+			rcu_read_unlock();
- 			goto out;
- 		}
- 		rates = cmd.bss.rates;
+diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
+index ae61415e16654..f369ddca953af 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.c
++++ b/drivers/net/wireless/realtek/rtw88/main.c
+@@ -706,8 +706,8 @@ void rtw_update_sta_info(struct rtw_dev *rtwdev, struct rtw_sta_info *si)
+ 		if (sta->vht_cap.cap & IEEE80211_VHT_CAP_SHORT_GI_80)
+ 			is_support_sgi = true;
+ 	} else if (sta->ht_cap.ht_supported) {
+-		ra_mask |= (sta->ht_cap.mcs.rx_mask[NL80211_BAND_5GHZ] << 20) |
+-			   (sta->ht_cap.mcs.rx_mask[NL80211_BAND_2GHZ] << 12);
++		ra_mask |= (sta->ht_cap.mcs.rx_mask[1] << 20) |
++			   (sta->ht_cap.mcs.rx_mask[0] << 12);
+ 		if (sta->ht_cap.cap & IEEE80211_HT_CAP_RX_STBC)
+ 			stbc_en = HT_STBC_EN;
+ 		if (sta->ht_cap.cap & IEEE80211_HT_CAP_LDPC_CODING)
+@@ -717,6 +717,9 @@ void rtw_update_sta_info(struct rtw_dev *rtwdev, struct rtw_sta_info *si)
+ 			is_support_sgi = true;
+ 	}
+ 
++	if (efuse->hw_cap.nss == 1)
++		ra_mask &= RA_MASK_VHT_RATES_1SS | RA_MASK_HT_RATES_1SS;
++
+ 	if (hal->current_band_type == RTW_BAND_5G) {
+ 		ra_mask |= (u64)sta->supp_rates[NL80211_BAND_5GHZ] << 4;
+ 		if (sta->vht_cap.vht_supported) {
+@@ -750,11 +753,6 @@ void rtw_update_sta_info(struct rtw_dev *rtwdev, struct rtw_sta_info *si)
+ 		wireless_set = 0;
+ 	}
+ 
+-	if (efuse->hw_cap.nss == 1) {
+-		ra_mask &= RA_MASK_VHT_RATES_1SS;
+-		ra_mask &= RA_MASK_HT_RATES_1SS;
+-	}
+-
+ 	switch (sta->bandwidth) {
+ 	case IEEE80211_STA_RX_BW_80:
+ 		bw_mode = RTW_CHANNEL_WIDTH_80;
 -- 
 2.20.1
 
