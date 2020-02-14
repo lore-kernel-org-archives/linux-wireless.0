@@ -2,54 +2,51 @@ Return-Path: <SRS0=dpF5=4C=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2C2AC3B1A2
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 16:37:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A51AC2BA83
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 16:40:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7BAD124670
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 16:37:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0393724650
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 16:40:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1581698261;
-	bh=8uQNylXb2cMPa/IAvoG1yr4KCjozPlMUbaqb0vdw3D8=;
+	s=default; t=1581698443;
+	bh=NQhSwyYXRqDIefeJAhsB5HufY4DubhhD3WurtJ5yuNs=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Rz19zJQUGYOT2SptC5NA6RbYHnuJ5xq7skuW4JY3zSTt/NbCmjVE/ji4tei8p2LfQ
-	 NDNGxbvCb8oJsK6GKfJcKdnZTAO45jXaTqzERnYJJXylbVnkbo2Y2HyXonXFdrgvPx
-	 S2/BnopkTVYKcfaZok5nz+G4dyv5xH+NP2spQ8YI=
+	b=Nqtq5+I3w9RV9Hl7jfOUffAWSlSQWowwQ5ZHECwh9XwLdE2V3bHq7czx8YKdXRoeY
+	 bkGq5DGTh2uD6vfryr0QBgKLWzBJr0nTLr39WWL1pCTYdF3ZM7ojH+6L4DJ4Av+/Dm
+	 UojTYv1SLct/r2j8ZtaApTxHymLav8P6KJ+hu3ys=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405737AbgBNQXw (ORCPT
+        id S2393242AbgBNQWs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Feb 2020 11:23:52 -0500
-Received: from mail.kernel.org ([198.145.29.99]:60390 "EHLO mail.kernel.org"
+        Fri, 14 Feb 2020 11:22:48 -0500
+Received: from mail.kernel.org ([198.145.29.99]:58644 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2405727AbgBNQXv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Feb 2020 11:23:51 -0500
+        id S2387583AbgBNQWr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 14 Feb 2020 11:22:47 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 33F7424779;
-        Fri, 14 Feb 2020 16:23:49 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id DBF0F24758;
+        Fri, 14 Feb 2020 16:22:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1581697430;
-        bh=8uQNylXb2cMPa/IAvoG1yr4KCjozPlMUbaqb0vdw3D8=;
+        s=default; t=1581697366;
+        bh=NQhSwyYXRqDIefeJAhsB5HufY4DubhhD3WurtJ5yuNs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=KXhRKrvInW9bPdXN7UKZYr1SM6FcOGCQJ5bfq+T7KNcbfYtQ37PwNvylPrNTV7UUQ
-         2qEJA3zAW6uMoVmaUCuZbwgagUEH7cgXpOjW8VXGt1pTP/XoHAtbt9vomD2IFWTRFU
-         ckKQiICchviGyN2NTUrX9C1lw2oYEKPJHEiVdir8=
+        b=2je1zYD6dBD+jaM/oMEPYaRw0+OiNgGJGMyCN+rw2gJvEMGJudKu8k5Yzw1gITIfm
+         lCpq/BkHdb+glGb5rFeAX394mroINaAG+te33pVOc7VW5POYoWrbtVCRw2DkaUkrKA
+         u3Cg66Xvcn7CtN2pN3psR2HO3ldh2LWPzJQ93ijE=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Nathan Chancellor <natechancellor@gmail.com>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
+Cc:     Aditya Pakki <pakki001@umn.edu>, Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        clang-built-linux@googlegroups.com
-Subject: [PATCH AUTOSEL 4.9 118/141] hostap: Adjust indentation in prism2_hostapd_add_sta
-Date:   Fri, 14 Feb 2020 11:20:58 -0500
-Message-Id: <20200214162122.19794-118-sashal@kernel.org>
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.9 066/141] orinoco: avoid assertion in case of NULL pointer
+Date:   Fri, 14 Feb 2020 11:20:06 -0500
+Message-Id: <20200214162122.19794-66-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200214162122.19794-1-sashal@kernel.org>
 References: <20200214162122.19794-1-sashal@kernel.org>
@@ -62,50 +59,35 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Nathan Chancellor <natechancellor@gmail.com>
+From: Aditya Pakki <pakki001@umn.edu>
 
-[ Upstream commit b61156fba74f659d0bc2de8f2dbf5bad9f4b8faf ]
+[ Upstream commit c705f9fc6a1736dcf6ec01f8206707c108dca824 ]
 
-Clang warns:
+In ezusb_init, if upriv is NULL, the code crashes. However, the caller
+in ezusb_probe can handle the error and print the failure message.
+The patch replaces the BUG_ON call to error return.
 
-../drivers/net/wireless/intersil/hostap/hostap_ap.c:2511:3: warning:
-misleading indentation; statement is not part of the previous 'if'
-[-Wmisleading-indentation]
-        if (sta->tx_supp_rates & WLAN_RATE_5M5)
-        ^
-../drivers/net/wireless/intersil/hostap/hostap_ap.c:2509:2: note:
-previous statement is here
-        if (sta->tx_supp_rates & WLAN_RATE_2M)
-        ^
-1 warning generated.
-
-This warning occurs because there is a space before the tab on this
-line. Remove it so that the indentation is consistent with the Linux
-kernel coding style and clang no longer warns.
-
-Fixes: ff1d2767d5a4 ("Add HostAP wireless driver.")
-Link: https://github.com/ClangBuiltLinux/linux/issues/813
-Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
-Reviewed-by: Nick Desaulniers <ndesaulniers@google.com>
+Signed-off-by: Aditya Pakki <pakki001@umn.edu>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intersil/hostap/hostap_ap.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/intersil/orinoco/orinoco_usb.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intersil/hostap/hostap_ap.c b/drivers/net/wireless/intersil/hostap/hostap_ap.c
-index c995ace153ee6..30171d4c47187 100644
---- a/drivers/net/wireless/intersil/hostap/hostap_ap.c
-+++ b/drivers/net/wireless/intersil/hostap/hostap_ap.c
-@@ -2570,7 +2570,7 @@ static int prism2_hostapd_add_sta(struct ap_data *ap,
- 		sta->supported_rates[0] = 2;
- 	if (sta->tx_supp_rates & WLAN_RATE_2M)
- 		sta->supported_rates[1] = 4;
-- 	if (sta->tx_supp_rates & WLAN_RATE_5M5)
-+	if (sta->tx_supp_rates & WLAN_RATE_5M5)
- 		sta->supported_rates[2] = 11;
- 	if (sta->tx_supp_rates & WLAN_RATE_11M)
- 		sta->supported_rates[3] = 22;
+diff --git a/drivers/net/wireless/intersil/orinoco/orinoco_usb.c b/drivers/net/wireless/intersil/orinoco/orinoco_usb.c
+index 8244d82629511..4e91c74fcfad9 100644
+--- a/drivers/net/wireless/intersil/orinoco/orinoco_usb.c
++++ b/drivers/net/wireless/intersil/orinoco/orinoco_usb.c
+@@ -1351,7 +1351,8 @@ static int ezusb_init(struct hermes *hw)
+ 	int retval;
+ 
+ 	BUG_ON(in_interrupt());
+-	BUG_ON(!upriv);
++	if (!upriv)
++		return -EINVAL;
+ 
+ 	upriv->reply_count = 0;
+ 	/* Write the MAGIC number on the simulated registers to keep
 -- 
 2.20.1
 
