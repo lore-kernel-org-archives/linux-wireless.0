@@ -7,47 +7,48 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E87B0C2BA83
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 16:35:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4D73C3B1A1
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 16:36:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B745124696
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 16:35:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 82BD4217F4
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 16:36:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1581698126;
-	bh=uWRAqrrz8QGRmZbaK0xqB+Wr/NpuVq0kBoEB4W7u2Og=;
+	s=default; t=1581698170;
+	bh=kqobUzNIK0zbxE3SOKiTCuJq60wEzhM2JkGtXbIxiek=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=I9sngjMSrQk80dojZmoRXwj8PFzRCOVHI2ZWGfA6VdGa3ZChSgbpbUMkHAhGJ9NF4
-	 F/mlX8UCHi3g24XLLB7GVMRAgK5ZJRC7Vkt2qUaLKk2VMnIXIvEEQUWTjMokS8oJ3V
-	 awjpc5DLD6nBZqv77t28PGNSV45j6Hk10hihe3XI=
+	b=I1RkKFhs+u1aNBErObRbbVX6Ty0bCAGnDsOYLk6PFBwqQFIiuL3G1vhkFcOWnKLPd
+	 Y0lP1KQfSsaXrI67h+ETrKnaitAApu+sV9e1C4vtdUV9uTUb1srzahxaJ6r0oYSrpN
+	 9iXMmN4thocQ/YKgle2Xua41hIIpB21j71sqFDPc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2393540AbgBNQfP (ORCPT
+        id S2393686AbgBNQgG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Feb 2020 11:35:15 -0500
-Received: from mail.kernel.org ([198.145.29.99]:33666 "EHLO mail.kernel.org"
+        Fri, 14 Feb 2020 11:36:06 -0500
+Received: from mail.kernel.org ([198.145.29.99]:33098 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2405979AbgBNQYt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Feb 2020 11:24:49 -0500
+        id S2405888AbgBNQYa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 14 Feb 2020 11:24:30 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 50003247A6;
-        Fri, 14 Feb 2020 16:24:47 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id B4F622479D;
+        Fri, 14 Feb 2020 16:24:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1581697488;
-        bh=uWRAqrrz8QGRmZbaK0xqB+Wr/NpuVq0kBoEB4W7u2Og=;
+        s=default; t=1581697469;
+        bh=kqobUzNIK0zbxE3SOKiTCuJq60wEzhM2JkGtXbIxiek=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=LhkDQqHOXKMBPpMgtETTlOl+QWY6rRILOWtGDgOefi6cz+hGQOZTJOR0Rb9vvxhXy
-         zCeeqL6+K4OaZzCXop6QvhzjH6mYDG6yuKsTv1OEJftYsWlilXPAKIviiuMub3IGUS
-         teIH6018GUVPxJeRjFOhw0519a2dt4mS7XMw+vGk=
+        b=Z2LOYZeMAOHfrw9UFGk/V2BL4VCqP43CuRPFJ+gnyp3I6lZ78hdc6+ZE3pPpE+kZX
+         nY7BLEQqE7ftQ6rCRnsXe4nnhfGvDpe+WcD/1DX01yevAMrT9d/nZ0MF+w1kt3p+4F
+         aRA34Om0lFGzMyTaNvGlYEV4SmFufS/jU4tCR9Lk=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Nicolai Stange <nstange@suse.de>,
+Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
+        Franky Lin <franky.lin@broadcom.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.4 018/100] libertas: make lbs_ibss_join_existing() return error code on rates overflow
-Date:   Fri, 14 Feb 2020 11:23:02 -0500
-Message-Id: <20200214162425.21071-18-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 003/100] brcmfmac: Fix use after free in brcmf_sdio_readframes()
+Date:   Fri, 14 Feb 2020 11:22:47 -0500
+Message-Id: <20200214162425.21071-3-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200214162425.21071-1-sashal@kernel.org>
 References: <20200214162425.21071-1-sashal@kernel.org>
@@ -60,41 +61,39 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Nicolai Stange <nstange@suse.de>
+From: Dan Carpenter <dan.carpenter@oracle.com>
 
-[ Upstream commit 1754c4f60aaf1e17d886afefee97e94d7f27b4cb ]
+[ Upstream commit 216b44000ada87a63891a8214c347e05a4aea8fe ]
 
-Commit e5e884b42639 ("libertas: Fix two buffer overflows at parsing bss
-descriptor") introduced a bounds check on the number of supplied rates to
-lbs_ibss_join_existing() and made it to return on overflow.
+The brcmu_pkt_buf_free_skb() function frees "pkt" so it leads to a
+static checker warning:
 
-However, the aforementioned commit doesn't set the return value accordingly
-and thus, lbs_ibss_join_existing() would return with zero even though it
-failed.
+    drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c:1974 brcmf_sdio_readframes()
+    error: dereferencing freed memory 'pkt'
 
-Make lbs_ibss_join_existing return -EINVAL in case the bounds check on the
-number of supplied rates fails.
+It looks like there was supposed to be a continue after we free "pkt".
 
-Fixes: e5e884b42639 ("libertas: Fix two buffer overflows at parsing bss descriptor")
-Signed-off-by: Nicolai Stange <nstange@suse.de>
+Fixes: 4754fceeb9a6 ("brcmfmac: streamline SDIO read frame routine")
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Acked-by: Franky Lin <franky.lin@broadcom.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/libertas/cfg.c | 1 +
+ drivers/net/wireless/brcm80211/brcmfmac/sdio.c | 1 +
  1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/libertas/cfg.c b/drivers/net/wireless/libertas/cfg.c
-index 803684eed142c..7d55de21b1903 100644
---- a/drivers/net/wireless/libertas/cfg.c
-+++ b/drivers/net/wireless/libertas/cfg.c
-@@ -1854,6 +1854,7 @@ static int lbs_ibss_join_existing(struct lbs_private *priv,
- 		if (rates_max > MAX_RATES) {
- 			lbs_deb_join("invalid rates");
- 			rcu_read_unlock();
-+			ret = -EINVAL;
- 			goto out;
- 		}
- 		rates = cmd.bss.rates;
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+index 9954e641c943d..8bb028f740fd8 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+@@ -2027,6 +2027,7 @@ static uint brcmf_sdio_readframes(struct brcmf_sdio *bus, uint maxframes)
+ 					       BRCMF_SDIO_FT_NORMAL)) {
+ 				rd->len = 0;
+ 				brcmu_pkt_buf_free_skb(pkt);
++				continue;
+ 			}
+ 			bus->sdcnt.rx_readahead_cnt++;
+ 			if (rd->len != roundup(rd_new.len, 16)) {
 -- 
 2.20.1
 
