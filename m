@@ -7,50 +7,49 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99C90C2BA83
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 18:22:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5FA9C2BA83
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 18:22:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 64D732086A
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 18:22:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9C9D32086A
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 18:22:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1581704528;
-	bh=l0hZUeH00gU3OBzjLve5jeLfpNyZ2VtodXzuUbsTYv8=;
+	s=default; t=1581704571;
+	bh=iuyIbYzgZDi9u7sIMIx8Fd9TnuJLfU1RqCaPaTF+SmE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Qc63dU6u1WG+GFZCv7+EfdhYtfAywhBkMtqBckJW1e1C43r2/Qs5snbPG6ecVgX7E
-	 9mOhuj72v7oFhHXELkV4u6DwGQwAycRqU/3wnNp8Rs92wPdztM2EcAW/zhtOj4PLNr
-	 xPPgDYO+iLQfAEkILEqJmIQulaKrwNRx+P0/blA0=
+	b=aDCvmYdlklBi/15dmY4mk38HMfI6FA24fNnZ9bq5ftVzdvUkUBBBtN3yBeEMX82Di
+	 2OXe2FHO40CWAkxABF5uYIXMdyxGSI7N9j8TQLs3RlUvbHZPrdZEtevgODYSJeT4kn
+	 3aX9AgVFPJhpzx/lHxPDtrCHHLKKagFaQvIWFABU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2394887AbgBNSWG (ORCPT
+        id S1729966AbgBNPta (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Feb 2020 13:22:06 -0500
-Received: from mail.kernel.org ([198.145.29.99]:52450 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729969AbgBNPta (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 14 Feb 2020 10:49:30 -0500
+Received: from mail.kernel.org ([198.145.29.99]:52410 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729953AbgBNPt3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 14 Feb 2020 10:49:29 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 2EC162086A;
-        Fri, 14 Feb 2020 15:49:29 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id BBF0224687;
+        Fri, 14 Feb 2020 15:49:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1581695370;
-        bh=l0hZUeH00gU3OBzjLve5jeLfpNyZ2VtodXzuUbsTYv8=;
+        s=default; t=1581695368;
+        bh=iuyIbYzgZDi9u7sIMIx8Fd9TnuJLfU1RqCaPaTF+SmE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=EjyzwnmSYYGFWd6PpNN7yWq0CBeEmFTB9lXthi8w1cBnD42xYWWUcFOfJSaT93aJg
-         GQOr6tGJ4ujaVTqEi386InkxeAlQ2p780tSfRLmG8IHIrUyWOXZgzkCZBdIyMyN6lY
-         IUh2KXOB7GXGQwtV+dkq6/ahn0PSwwhj55CQrmN0=
+        b=ORHK1QJVabjLDsbGFSl0uk+bWOwMCMruSJIX23aDOoRrh0Os4DQss7KiLSqGPP8MB
+         kbLCa3zbfeDDXOEVWkdr3hpYd3m+VW5FoMclQV2Wrhb7vcy5Tzdql0HN85gPjhho4r
+         A0R77pDk3Gk8IEHtcO2O3Bf3+CiA3fm9LyzHgoRI=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
-        Franky Lin <franky.lin@broadcom.com>,
+Cc:     Navid Emamdoost <navid.emamdoost@gmail.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org,
         brcm80211-dev-list.pdl@broadcom.com,
         brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.5 027/542] brcmfmac: Fix use after free in brcmf_sdio_readframes()
-Date:   Fri, 14 Feb 2020 10:40:19 -0500
-Message-Id: <20200214154854.6746-27-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.5 026/542] brcmfmac: Fix memory leak in brcmf_p2p_create_p2pdev()
+Date:   Fri, 14 Feb 2020 10:40:18 -0500
+Message-Id: <20200214154854.6746-26-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200214154854.6746-1-sashal@kernel.org>
 References: <20200214154854.6746-1-sashal@kernel.org>
@@ -63,39 +62,37 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Dan Carpenter <dan.carpenter@oracle.com>
+From: Navid Emamdoost <navid.emamdoost@gmail.com>
 
-[ Upstream commit 216b44000ada87a63891a8214c347e05a4aea8fe ]
+[ Upstream commit 5cc509aa83c6acd2c5cd94f99065c39d2bd0a490 ]
 
-The brcmu_pkt_buf_free_skb() function frees "pkt" so it leads to a
-static checker warning:
+In the implementation of brcmf_p2p_create_p2pdev() the allocated memory
+for p2p_vif is leaked when the mac address is the same as primary
+interface. To fix this, go to error path to release p2p_vif via
+brcmf_free_vif().
 
-    drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c:1974 brcmf_sdio_readframes()
-    error: dereferencing freed memory 'pkt'
-
-It looks like there was supposed to be a continue after we free "pkt".
-
-Fixes: 4754fceeb9a6 ("brcmfmac: streamline SDIO read frame routine")
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-Acked-by: Franky Lin <franky.lin@broadcom.com>
+Fixes: cb746e47837a ("brcmfmac: check p2pdev mac address uniqueness")
+Signed-off-by: Navid Emamdoost <navid.emamdoost@gmail.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 264ad63232f87..1dea0178832ea 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -1935,6 +1935,7 @@ static uint brcmf_sdio_readframes(struct brcmf_sdio *bus, uint maxframes)
- 					       BRCMF_SDIO_FT_NORMAL)) {
- 				rd->len = 0;
- 				brcmu_pkt_buf_free_skb(pkt);
-+				continue;
- 			}
- 			bus->sdcnt.rx_readahead_cnt++;
- 			if (rd->len != roundup(rd_new.len, 16)) {
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+index 7ba9f6a686459..1f5deea5a288e 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+@@ -2092,7 +2092,8 @@ static struct wireless_dev *brcmf_p2p_create_p2pdev(struct brcmf_p2p_info *p2p,
+ 	/* firmware requires unique mac address for p2pdev interface */
+ 	if (addr && ether_addr_equal(addr, pri_ifp->mac_addr)) {
+ 		bphy_err(drvr, "discovery vif must be different from primary interface\n");
+-		return ERR_PTR(-EINVAL);
++		err = -EINVAL;
++		goto fail;
+ 	}
+ 
+ 	brcmf_p2p_generate_bss_mac(p2p, addr);
 -- 
 2.20.1
 
