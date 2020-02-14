@@ -7,50 +7,49 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF427C3B1B2
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 17:46:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D8B8C2BA83
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 17:47:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 918DD206D7
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 17:46:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 057EB206D7
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 17:47:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1581702391;
-	bh=l0hZUeH00gU3OBzjLve5jeLfpNyZ2VtodXzuUbsTYv8=;
+	s=default; t=1581702435;
+	bh=D16FOP0LatLu1py7M1wt/ReSX/H32Uopazlzwfr6bX0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=yNS16iafCwdg+dql4pakqntD2efOHP+tWDc8kudPlnGmfdCF8TkjuUSh+XUJJgo7d
-	 Hb1izwyBlHJs9YrjvK1l3Nqr7fJyTZUq+Hu76sTXMPkhPbHg6RTHj4WFQKfhy3ScUT
-	 wq4sgm5FmY75+WTxFg8NMqbBhsTchqN0Nn47TdM4=
+	b=Q/e+BIOJUZgyZO88isAWo9kMW3dMFMm30WfYe/tDkHba1bPkqMiXcQjDbGFG0PPx/
+	 T++kMea+4Ha48DrYeINzQIWHvMTr2x/6G/mAPxYr3ZZGhmJCjKxbPFcvOViXeG5wBu
+	 B4HuakfM/hiH8ariLeBFgGr9MIgVoHYWbskDQrA8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389326AbgBNQCW (ORCPT
+        id S2389217AbgBNQB6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Feb 2020 11:02:22 -0500
-Received: from mail.kernel.org ([198.145.29.99]:48590 "EHLO mail.kernel.org"
+        Fri, 14 Feb 2020 11:01:58 -0500
+Received: from mail.kernel.org ([198.145.29.99]:47788 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2389315AbgBNQCU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Feb 2020 11:02:20 -0500
+        id S2389204AbgBNQB4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 14 Feb 2020 11:01:56 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 84AE724654;
-        Fri, 14 Feb 2020 16:02:18 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 9C2BB2467D;
+        Fri, 14 Feb 2020 16:01:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1581696139;
-        bh=l0hZUeH00gU3OBzjLve5jeLfpNyZ2VtodXzuUbsTYv8=;
+        s=default; t=1581696115;
+        bh=D16FOP0LatLu1py7M1wt/ReSX/H32Uopazlzwfr6bX0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=fs9yzkMJyqRtTFIYG91Pg369PFRar4DqMrr/8JBVNV6w65msbdfgBPipygNM6Loqq
-         sVo/kYlX9hsDXAj9gyS9qcwozE4Kv9SHNh7aXeExW2wReuDQPb8iMVuGXmBX5YaGG/
-         F9uwt0lMkaGseaGxC76Ce8TGx+z6kICXSiVcDakc=
+        b=eiyRfK3mCp2axTQgSO1JgUHnUrmSUYgTVr47syi7TY5dgJQfazPbUrpcpZz2PgCno
+         rS5S0JshSeAVIJToWXWXYvFhDGJXZxi25Xi/djaEaZxcDPbDpX27+1ICPufpDL9MA9
+         6U/UkxIcDlc1EYOIZGgHGTcg1+DHw0KmSpAN2gFU=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
-        Franky Lin <franky.lin@broadcom.com>,
+Cc:     Colin Ian King <colin.king@canonical.com>,
+        Maya Erez <merez@codeaurora.org>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 021/459] brcmfmac: Fix use after free in brcmf_sdio_readframes()
-Date:   Fri, 14 Feb 2020 10:54:31 -0500
-Message-Id: <20200214160149.11681-21-sashal@kernel.org>
+        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
+        netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 004/459] wil6210: fix break that is never reached because of zero'ing of a retry counter
+Date:   Fri, 14 Feb 2020 10:54:14 -0500
+Message-Id: <20200214160149.11681-4-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200214160149.11681-1-sashal@kernel.org>
 References: <20200214160149.11681-1-sashal@kernel.org>
@@ -63,39 +62,48 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Dan Carpenter <dan.carpenter@oracle.com>
+From: Colin Ian King <colin.king@canonical.com>
 
-[ Upstream commit 216b44000ada87a63891a8214c347e05a4aea8fe ]
+[ Upstream commit 5b1413f00b5beb9f5fed94e43ea0c497d5db9633 ]
 
-The brcmu_pkt_buf_free_skb() function frees "pkt" so it leads to a
-static checker warning:
+There is a check on the retry counter invalid_buf_id_retry that is always
+false because invalid_buf_id_retry is initialized to zero on each iteration
+of a while-loop.  Fix this by initializing the retry counter before the
+while-loop starts.
 
-    drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c:1974 brcmf_sdio_readframes()
-    error: dereferencing freed memory 'pkt'
-
-It looks like there was supposed to be a continue after we free "pkt".
-
-Fixes: 4754fceeb9a6 ("brcmfmac: streamline SDIO read frame routine")
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-Acked-by: Franky Lin <franky.lin@broadcom.com>
+Addresses-Coverity: ("Logically dead code")
+Fixes: b4a967b7d0f5 ("wil6210: reset buff id in status message after completion")
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Reviewed-by: Maya Erez <merez@codeaurora.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/ath/wil6210/txrx_edma.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 264ad63232f87..1dea0178832ea 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -1935,6 +1935,7 @@ static uint brcmf_sdio_readframes(struct brcmf_sdio *bus, uint maxframes)
- 					       BRCMF_SDIO_FT_NORMAL)) {
- 				rd->len = 0;
- 				brcmu_pkt_buf_free_skb(pkt);
-+				continue;
- 			}
- 			bus->sdcnt.rx_readahead_cnt++;
- 			if (rd->len != roundup(rd_new.len, 16)) {
+diff --git a/drivers/net/wireless/ath/wil6210/txrx_edma.c b/drivers/net/wireless/ath/wil6210/txrx_edma.c
+index 04d576deae72c..6cb0d7bcfe765 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx_edma.c
++++ b/drivers/net/wireless/ath/wil6210/txrx_edma.c
+@@ -880,6 +880,7 @@ static struct sk_buff *wil_sring_reap_rx_edma(struct wil6210_priv *wil,
+ 	u8 data_offset;
+ 	struct wil_rx_status_extended *s;
+ 	u16 sring_idx = sring - wil->srings;
++	int invalid_buff_id_retry;
+ 
+ 	BUILD_BUG_ON(sizeof(struct wil_rx_status_extended) > sizeof(skb->cb));
+ 
+@@ -893,9 +894,9 @@ static struct sk_buff *wil_sring_reap_rx_edma(struct wil6210_priv *wil,
+ 	/* Extract the buffer ID from the status message */
+ 	buff_id = le16_to_cpu(wil_rx_status_get_buff_id(msg));
+ 
++	invalid_buff_id_retry = 0;
+ 	while (!buff_id) {
+ 		struct wil_rx_status_extended *s;
+-		int invalid_buff_id_retry = 0;
+ 
+ 		wil_dbg_txrx(wil,
+ 			     "buff_id is not updated yet by HW, (swhead 0x%x)\n",
 -- 
 2.20.1
 
