@@ -2,55 +2,57 @@ Return-Path: <SRS0=dpF5=4C=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0818AC2BA83
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 17:34:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F728C3B1A6
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 17:34:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D6E7B222C4
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 17:34:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DE67C222C4
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 17:34:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1581701645;
-	bh=3gwgFUqvJ8N/VlvUVeaLWqEWpiO5LJUZARXPEDPwzPU=;
+	s=default; t=1581701650;
+	bh=6bg20xgzmssxyeH7ivBMhEcUxrLYmmoh21+Gie1Fxxc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=mBpmbxiaPwKICKGO+3H8Q0U9Ifv9GnhwstUuTBQMesXNZZcRhbFC45A2QBOddkkLh
-	 qjmGpZ2lq8S+S/wYHPMH4S4oRTT23DyMl9qBPcjF7ygeUdOZgyDg5OweujwA0lQA/5
-	 vfmRzLusYSA+XmQ9sBuKH2pI8sZlpYyOmhJDrLEo=
+	b=oSVBPFj7rDDbp14wpstnDRomEGQrXO1h9wkzMHmnujX7wVSVnyamQMVcHpogd3c4C
+	 54b8NxrHpoIti5Sxh2ecWJuuS3TxJyzdPPEbijygl/TMSgn8wGdYOrN298thBsE4Vo
+	 KBR6rhVvjtI5y5rocUsN4lg+l9dsuwi0bMw16adc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390865AbgBNReC (ORCPT
+        id S2391847AbgBNReK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Feb 2020 12:34:02 -0500
-Received: from mail.kernel.org ([198.145.29.99]:56578 "EHLO mail.kernel.org"
+        Fri, 14 Feb 2020 12:34:10 -0500
+Received: from mail.kernel.org ([198.145.29.99]:56496 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2390349AbgBNQGN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Feb 2020 11:06:13 -0500
+        id S2390337AbgBNQGL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 14 Feb 2020 11:06:11 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 686D0206D7;
-        Fri, 14 Feb 2020 16:06:12 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id DE60F217F4;
+        Fri, 14 Feb 2020 16:06:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1581696373;
-        bh=3gwgFUqvJ8N/VlvUVeaLWqEWpiO5LJUZARXPEDPwzPU=;
+        s=default; t=1581696370;
+        bh=6bg20xgzmssxyeH7ivBMhEcUxrLYmmoh21+Gie1Fxxc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Au94Gvp/99kComdz1wDTto/2QUYOB1VX9439vRvMDJDWl2Jvxcplk1dCSsxl/0MRi
-         zJk0sbydqC92lw8rnZCEOjW3X9QadvdwrJiIfOlM/Zpa1oPyeC0cV69mZGvCeP9qE0
-         ml48EfoT3nINsah1wIH+LhoakEZzTAeemknbf2wI=
+        b=lRSW0i7FrkMaocFYtey9j3OWn9GfmPKfSytl1pjFx2Ieu82gXqhtQW0ReOEyk50Gv
+         XfUKibieNCCB6rWLp82K8HgHam4OU2Mlwcow+dKzcLDknIB+lh/xUksf/dog0WIaI3
+         pg5U9YVVjWGqVVzraUjqtIRyrtuAWkvUMUTdofcA=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     yu kuai <yukuai3@huawei.com>, Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>, linux-wireless@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 202/459] bcma: remove set but not used variable 'sizel'
-Date:   Fri, 14 Feb 2020 10:57:32 -0500
-Message-Id: <20200214160149.11681-202-sashal@kernel.org>
+Cc:     Phong Tran <tranmanphong@gmail.com>,
+        Kees Cook <keescook@chromium.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 200/459] iwlegacy: Fix -Wcast-function-type
+Date:   Fri, 14 Feb 2020 10:57:30 -0500
+Message-Id: <20200214160149.11681-200-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200214160149.11681-1-sashal@kernel.org>
 References: <20200214160149.11681-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
@@ -59,54 +61,70 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: yu kuai <yukuai3@huawei.com>
+From: Phong Tran <tranmanphong@gmail.com>
 
-[ Upstream commit f427939391f290cbeabe0231eb8a116429d823f0 ]
+[ Upstream commit da5e57e8a6a3e69dac2937ba63fa86355628fbb2 ]
 
-Fixes gcc '-Wunused-but-set-variable' warning:
+correct usage prototype of callback in tasklet_init().
+Report by https://github.com/KSPP/linux/issues/20
 
-drivers/bcma/scan.c: In function ‘bcma_erom_get_addr_desc’:
-
-drivers/bcma/scan.c:222:20: warning: variable ‘sizel’ set but
-not used [-Wunused-but-set-variable]
-
-It is never used, and so can be removed.
-
-Fixes: 8369ae33b705 ("bcma: add Broadcom specific AMBA bus driver")
-Signed-off-by: yu kuai <yukuai3@huawei.com>
+Signed-off-by: Phong Tran <tranmanphong@gmail.com>
+Reviewed-by: Kees Cook <keescook@chromium.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/bcma/scan.c | 7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
+ drivers/net/wireless/intel/iwlegacy/3945-mac.c | 5 +++--
+ drivers/net/wireless/intel/iwlegacy/4965-mac.c | 5 +++--
+ 2 files changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
-index 4a2d1b235fb5a..1f2de714b4017 100644
---- a/drivers/bcma/scan.c
-+++ b/drivers/bcma/scan.c
-@@ -219,7 +219,7 @@ static s32 bcma_erom_get_mst_port(struct bcma_bus *bus, u32 __iomem **eromptr)
- static u32 bcma_erom_get_addr_desc(struct bcma_bus *bus, u32 __iomem **eromptr,
- 				  u32 type, u8 port)
- {
--	u32 addrl, addrh, sizel, sizeh = 0;
-+	u32 addrl, addrh, sizeh = 0;
- 	u32 size;
- 
- 	u32 ent = bcma_erom_get_ent(bus, eromptr);
-@@ -239,12 +239,9 @@ static u32 bcma_erom_get_addr_desc(struct bcma_bus *bus, u32 __iomem **eromptr,
- 
- 	if ((ent & SCAN_ADDR_SZ) == SCAN_ADDR_SZ_SZD) {
- 		size = bcma_erom_get_ent(bus, eromptr);
--		sizel = size & SCAN_SIZE_SZ;
- 		if (size & SCAN_SIZE_SG32)
- 			sizeh = bcma_erom_get_ent(bus, eromptr);
--	} else
--		sizel = SCAN_ADDR_SZ_BASE <<
--				((ent & SCAN_ADDR_SZ) >> SCAN_ADDR_SZ_SHIFT);
-+	}
- 
- 	return addrl;
+diff --git a/drivers/net/wireless/intel/iwlegacy/3945-mac.c b/drivers/net/wireless/intel/iwlegacy/3945-mac.c
+index 4fbcc7fba3cc1..e2e9c3e8fff51 100644
+--- a/drivers/net/wireless/intel/iwlegacy/3945-mac.c
++++ b/drivers/net/wireless/intel/iwlegacy/3945-mac.c
+@@ -1376,8 +1376,9 @@ il3945_dump_nic_error_log(struct il_priv *il)
  }
+ 
+ static void
+-il3945_irq_tasklet(struct il_priv *il)
++il3945_irq_tasklet(unsigned long data)
+ {
++	struct il_priv *il = (struct il_priv *)data;
+ 	u32 inta, handled = 0;
+ 	u32 inta_fh;
+ 	unsigned long flags;
+@@ -3403,7 +3404,7 @@ il3945_setup_deferred_work(struct il_priv *il)
+ 	timer_setup(&il->watchdog, il_bg_watchdog, 0);
+ 
+ 	tasklet_init(&il->irq_tasklet,
+-		     (void (*)(unsigned long))il3945_irq_tasklet,
++		     il3945_irq_tasklet,
+ 		     (unsigned long)il);
+ }
+ 
+diff --git a/drivers/net/wireless/intel/iwlegacy/4965-mac.c b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
+index ffb705b18fb13..5fe17039a3375 100644
+--- a/drivers/net/wireless/intel/iwlegacy/4965-mac.c
++++ b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
+@@ -4344,8 +4344,9 @@ il4965_synchronize_irq(struct il_priv *il)
+ }
+ 
+ static void
+-il4965_irq_tasklet(struct il_priv *il)
++il4965_irq_tasklet(unsigned long data)
+ {
++	struct il_priv *il = (struct il_priv *)data;
+ 	u32 inta, handled = 0;
+ 	u32 inta_fh;
+ 	unsigned long flags;
+@@ -6238,7 +6239,7 @@ il4965_setup_deferred_work(struct il_priv *il)
+ 	timer_setup(&il->watchdog, il_bg_watchdog, 0);
+ 
+ 	tasklet_init(&il->irq_tasklet,
+-		     (void (*)(unsigned long))il4965_irq_tasklet,
++		     il4965_irq_tasklet,
+ 		     (unsigned long)il);
+ }
+ 
 -- 
 2.20.1
 
