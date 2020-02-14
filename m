@@ -7,64 +7,64 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01666C3B197
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB334C3F68F
 	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 11:52:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C1DD22187F
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 11:52:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B6AAC2187F
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 11:52:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="LBwZesNU"
+	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="ZqMZ+YDL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729007AbgBNLw1 (ORCPT
+        id S1729032AbgBNLw1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Fri, 14 Feb 2020 06:52:27 -0500
-Received: from esa6.microchip.iphmx.com ([216.71.154.253]:38153 "EHLO
-        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728427AbgBNLwZ (ORCPT
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:12309 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728595AbgBNLwZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 14 Feb 2020 06:52:25 -0500
-Received-SPF: Pass (esa6.microchip.iphmx.com: domain of
+Received-SPF: Pass (esa3.microchip.iphmx.com: domain of
   Ajay.Kathat@microchip.com designates 198.175.253.82 as
   permitted sender) identity=mailfrom;
-  client-ip=198.175.253.82; receiver=esa6.microchip.iphmx.com;
+  client-ip=198.175.253.82; receiver=esa3.microchip.iphmx.com;
   envelope-from="Ajay.Kathat@microchip.com";
   x-sender="Ajay.Kathat@microchip.com"; x-conformance=spf_only;
   x-record-type="v=spf1"; x-record-text="v=spf1 mx
   a:ushub1.microchip.com a:smtpout.microchip.com
   -exists:%{i}.spf.microchip.iphmx.com include:servers.mcsv.net
   include:mktomail.com include:spf.protection.outlook.com ~all"
-Received-SPF: None (esa6.microchip.iphmx.com: no sender
+Received-SPF: None (esa3.microchip.iphmx.com: no sender
   authenticity information available from domain of
   postmaster@email.microchip.com) identity=helo;
-  client-ip=198.175.253.82; receiver=esa6.microchip.iphmx.com;
+  client-ip=198.175.253.82; receiver=esa3.microchip.iphmx.com;
   envelope-from="Ajay.Kathat@microchip.com";
   x-sender="postmaster@email.microchip.com";
   x-conformance=spf_only
-Authentication-Results: esa6.microchip.iphmx.com; spf=Pass smtp.mailfrom=Ajay.Kathat@microchip.com; spf=None smtp.helo=postmaster@email.microchip.com; dmarc=pass (p=none dis=none) d=microchip.com
-IronPort-SDR: kFrWksIESHNHWy58kc+J788uewWR83V4KIoHxkGZw77O0gTwbnthhBZJz3uCZrmeUEI9QN9Kai
- sRR+Rq6etqiShyJdqq/77QpQoS14LWlnPSqLWk/WGzkMvGtJkQb/XcxPjS7mdR28Tr2CVSZgMh
- e3Op2AMl3kwkNkE+6YXm8dbS3UkrhBZSKKIjTo2yDtQl913eaX0kSy0UcFVoLonhIEzcvZpMN2
- 9hbAGT/U9X3vudHHKwziMcWaPCOPFA+L2Tqtf5AeK6zUIt6GB3b5HSeeJ7QXG0BPHjjvpGvR8c
- 7lI=
+Authentication-Results: esa3.microchip.iphmx.com; spf=Pass smtp.mailfrom=Ajay.Kathat@microchip.com; spf=None smtp.helo=postmaster@email.microchip.com; dmarc=pass (p=none dis=none) d=microchip.com
+IronPort-SDR: 9mQBf00YgoWVBEC/SVAy1cTTA8uP1EJm1mwssT2HaC10Iibu8ns/Z+br5+1JfBplIpTrDpXPpL
+ J+N329TI03+nLiBztdNVVaBK+r5jdYTjOqq0GjK8ePr/sHn0nBnts+AoMThocIQvf2QRPm7D4p
+ ciMjkqb5efKGlrdZCWR8nXajgOHz+G5RlUJ6Cv8kd7qTutf3RG7wOTrqudblKgmScrLXGQntW4
+ BbDavhR3xbe5aYIqd1fA6G29N1IwnDye2L6LCQX8RFWx7Utkp0rC+w2xsg25oBmopvUy9y55OG
+ 9ug=
 X-IronPort-AV: E=Sophos;i="5.70,440,1574146800"; 
-   d="scan'208";a="2407530"
+   d="scan'208";a="66696566"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa6.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 14 Feb 2020 04:52:24 -0700
-Received: from chn-vm-ex02.mchp-main.com (10.10.85.144) by
- chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server
+  by esa3.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 14 Feb 2020 04:52:22 -0700
+Received: from chn-vm-ex01.mchp-main.com (10.10.85.143) by
+ chn-vm-ex04.mchp-main.com (10.10.85.152) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1713.5; Fri, 14 Feb 2020 04:52:24 -0700
+ 15.1.1713.5; Fri, 14 Feb 2020 04:52:21 -0700
 Received: from NAM12-DM6-obe.outbound.protection.outlook.com (10.10.215.89) by
- email.microchip.com (10.10.87.72) with Microsoft SMTP Server (version=TLS1_2,
+ email.microchip.com (10.10.87.71) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5 via Frontend
- Transport; Fri, 14 Feb 2020 04:52:26 -0700
+ Transport; Fri, 14 Feb 2020 04:52:18 -0700
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=kpKxN1a+xj00F1i5Yh4xFsHtlYloc8nlXZGGM1MX261HfsxBXJbXTUGnx6aIlTPDKHs/eHCsE1ZWw8Z3d7sDNq9n6zsKKyvCIAWzbJUvyv9gaBdpR01KHG6FDn/OfThyASGuNusiKlReqd62eittTatwg5apU0l7w3eMnq38QIORbmOO/tJ2zZbtfuMcG9sTsnL5UedrCv+hw4IsDuRaLYT71DdGbliy567X5FWMAcl8PKKWol1EqZHouNnBgQ0dOd1Ag4c8akaD+hH1T/D1+8fB3LFe1+yTEjz2dm+O3JcLRvdsc9aiQoiQgbEkqugHW1jxBepXm/+SW3YOWA4/NA==
+ b=bujOsUU1sJVn4tpNl6DdGNC8J3YBJbr2ec6oP5U8kofRMBQ14eLikPdKnAEzU0W7vKUqB6EFbXB9bLK2XwAf4PyOUD731RmA7jnGVSuu0GpaJ1Y2GjABmNhnVser2Ht5/3bnudVRfR2q2Y1H8ydhcqFOw4UFjmdKKxC2kaKA7aR3ax2DNXVjXlCCqySn7YmcRzTsTipnqttcEngPaJtK5F0T1sizJ3h5NY2ydxJyOqBPeWX+JN+PaX521UjuQrAfK8I0NU2KYTuOcfzxQrp6tvoe5Z8FOQIerBY+Uh17NuApSzkqkQo0ADyyWZ5f7n+kUCwW67+01w+x6HvNWX41YA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=JWlBmo6jxY/3TKM5si9sreXGoVrjbUsBaxMKlnx0ZF4=;
- b=kiXVMnoUdvJjfJW5Lor6zX5tLO7+T1vgFLMDxLFqS8YoMnY9vPsiuYcTP2/RBkq4iI3lQghshfVvwQRUN3hDmhC9AfP397f0RzcjE9YYR28t0n08+APAwTIgePzxFnVqKpLvnisaUq33uzS5RKIK+xeI5zt9jaH8P42QrbCL3GSqgF0AIIDawLbyJcDOuQ59DJOzmVwAYyT8RTg8aHiXnwr9IW/rFWJQ+TG9+BzjswUdSrRpUUxoE4XdxExKOgHOerT8Bffzs716extPpBjqPmwdJpUjV+mShIsXEyUOpd7r44hAdTrU1SzPCZdi8epd8FUzW9VWMQccGmYiXaqL4w==
+ bh=gTsTwpXVCcc/XEMlj+i3yx9evQXL+2DOj8hdRoHOWX4=;
+ b=mwoDfktbzBAQaRLa7oQdFfXJwc3PqmE5eIBr3EPs/r6FP7NtUUJGl5VSSFZws9KsdzoHzuWJisi0/xLTraL3yGyGUJsYQ7AA2Feqi6nXdSgctV9g3MEe2QRdjnAinhv69iQQC+M6eIINjujKOpquaCLG5dlAyRHpei/COSEQK2tX7h5hTZ9lRURDZJ5ICWqvGMOoomSPyaztSjUrFGxYa0Hn6mhcxe7h/kguMnpxpa0PwXqpmI53a5RdYxyuLI4382iF3kaK60wd0GML86nO2fXPknXIQ0qAa6JFKTCERm+SuVSWOPvbLtVB35FLNoWTiXKsA5/8m+UGXw3oRvTlKA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=microchip.com; dmarc=pass action=none
  header.from=microchip.com; dkim=pass header.d=microchip.com; arc=none
@@ -72,28 +72,28 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=microchiptechnology.onmicrosoft.com;
  s=selector2-microchiptechnology-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=JWlBmo6jxY/3TKM5si9sreXGoVrjbUsBaxMKlnx0ZF4=;
- b=LBwZesNUBOA0/dI9ISXfAZD+bsK+y56WRCDrkP9iyDONs6149+9fzFOjg2Vn8Z2V3y93U63p3nb9giYgazUtg1yxNWmG8OXVEB1rPHmTRkzCR7qDIMGFuqbKnw3H3F6gjiZFfburdwMd+l0MABlUuRcdoThiPcDpjfzxRQypCfQ=
+ bh=gTsTwpXVCcc/XEMlj+i3yx9evQXL+2DOj8hdRoHOWX4=;
+ b=ZqMZ+YDLU1a2COZU7tGm7OX3zfI8+kASOkWPSfD42rESsLqxkUz31Tvh1Pp9or0opIJBLMLoAEqL1Foxe5KDfUdtSxaC4bPSjfCizKKQnNyyDNV+Xq5WVTCvc1WtuGxH8lg3jAIcdVZjRF1/6h+1fFr2RLcpB+UXMmqRkyXXizY=
 Received: from BN6PR11MB3985.namprd11.prod.outlook.com (10.255.129.78) by
  BN6PR11MB1652.namprd11.prod.outlook.com (10.172.24.13) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2729.25; Fri, 14 Feb 2020 11:52:22 +0000
+ 15.20.2729.25; Fri, 14 Feb 2020 11:52:20 +0000
 Received: from BN6PR11MB3985.namprd11.prod.outlook.com
  ([fe80::ec62:e7fd:f17c:dfd4]) by BN6PR11MB3985.namprd11.prod.outlook.com
  ([fe80::ec62:e7fd:f17c:dfd4%3]) with mapi id 15.20.2729.027; Fri, 14 Feb 2020
- 11:52:22 +0000
+ 11:52:20 +0000
 From:   <Ajay.Kathat@microchip.com>
 To:     <linux-wireless@vger.kernel.org>
 CC:     <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
         <Adham.Abozaeid@microchip.com>, <johannes@sipsolutions.net>,
         <Ajay.Kathat@microchip.com>
-Subject: [PATCH 7/8] staging: wilc1000: use short name for hif local variable
- in chip_wakeup()
-Thread-Topic: [PATCH 7/8] staging: wilc1000: use short name for hif local
- variable in chip_wakeup()
-Thread-Index: AQHV4y03I2fF2LfS3US2FIJ4hO+iQQ==
-Date:   Fri, 14 Feb 2020 11:52:22 +0000
-Message-ID: <20200214172250.13026-8-ajay.kathat@microchip.com>
+Subject: [PATCH 5/8] staging: wilc1000: use commmon function to set SDIO block
+ size
+Thread-Topic: [PATCH 5/8] staging: wilc1000: use commmon function to set SDIO
+ block size
+Thread-Index: AQHV4y023xTLXituAkSbMSiOMiI3jA==
+Date:   Fri, 14 Feb 2020 11:52:20 +0000
+Message-ID: <20200214172250.13026-6-ajay.kathat@microchip.com>
 References: <20200214172250.13026-1-ajay.kathat@microchip.com>
 In-Reply-To: <20200214172250.13026-1-ajay.kathat@microchip.com>
 Accept-Language: en-US
@@ -103,29 +103,29 @@ X-MS-TNEF-Correlator:
 x-mailer: git-send-email 2.17.1
 x-originating-ip: [121.244.27.38]
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 1d2c1f2d-c696-40be-87d1-08d7b1445a52
+x-ms-office365-filtering-correlation-id: fdc85ade-116c-4853-2a01-08d7b14458da
 x-ms-traffictypediagnostic: BN6PR11MB1652:
 x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <BN6PR11MB16523BD71A9066DF3D8C3603E3150@BN6PR11MB1652.namprd11.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:3968;
+x-microsoft-antispam-prvs: <BN6PR11MB1652906AFB6B5816E2F7FD37E3150@BN6PR11MB1652.namprd11.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:65;
 x-forefront-prvs: 03137AC81E
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(396003)(376002)(346002)(366004)(39850400004)(136003)(189003)(199004)(6506007)(2906002)(26005)(6512007)(2616005)(107886003)(6486002)(5660300002)(186003)(316002)(54906003)(4326008)(81156014)(81166006)(86362001)(64756008)(66476007)(66446008)(66556008)(8936002)(8676002)(76116006)(91956017)(66946007)(478600001)(36756003)(6916009)(71200400001)(1076003);DIR:OUT;SFP:1101;SCL:1;SRVR:BN6PR11MB1652;H:BN6PR11MB3985.namprd11.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(396003)(376002)(346002)(366004)(39850400004)(136003)(189003)(199004)(6506007)(2906002)(26005)(6512007)(2616005)(107886003)(6486002)(5660300002)(186003)(316002)(54906003)(4326008)(81156014)(81166006)(86362001)(64756008)(66476007)(66446008)(66556008)(8936002)(8676002)(76116006)(91956017)(66946007)(478600001)(36756003)(6916009)(71200400001)(1076003)(49343001);DIR:OUT;SFP:1101;SCL:1;SRVR:BN6PR11MB1652;H:BN6PR11MB3985.namprd11.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
 received-spf: None (protection.outlook.com: microchip.com does not designate
  permitted sender hosts)
 x-ms-exchange-senderadcheck: 1
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: jux6EI+BodbxUo338Wdw3xJh5RgdVd36XMHb9l0ipGbbrBRoBwUL4hhDlsWWmvOV4cG8nUpPiWmW3aTft9p54p/mK8DoPmf/emoiYGidGcZrB38jcr7e6Z45F9oqhUv5sY6E3MAD6G4eylvOztklRouQNnFys1wzuLBUg6PMdVvPOns1BwmwxR80sRgunpHOqZqTMj/todPmW5qRhirp5xyIR0H1QrOkJO0JBwptkoScklaSL7YPEMtvWkVs/9eOKgXPN5KFuqh1fF/hL8aYoPM+MAM03C2LfvQZjfal4e7SIgqHRxIlb0oqKRyDVvXv0wXiDQ2dughdpqlIPyZ6qfWspiBfhlLiLBK1AgKsx4UnYmL8vDihfrg0nU4BcL4dMcUQVomldOf6z9dR9sKkAtCOM6DCfmWZOdxTegEaYtUVd/W8QP4FVtLhNhBhfH0N
-x-ms-exchange-antispam-messagedata: slNiZihQq8sO0kl6m++Jo5OSL46hVv2+mYnR24f45e08DApYMVWGhAr/grCMj5DWjaAwTS5js5P8Q5CO6PFM2Zcm6tTKX3JiH9Pqj737g67L56PbJDkbfz3Gh9JSo7phJVmjTXhfPp7hWVhUkCgYgQ==
+x-microsoft-antispam-message-info: L2s0vk1PF+w0IcT9kTGP9yAd7prl7xRE7Mhxwmx4kks0E/QFi05X2rzLQCtSoKXRDyN9M1OoUMOr+FR7Fl93gmseeqTn3t73qu26w5VtwVbJnATUCE/Ht3dsCNxSgUyxkonIxuMoNCUtkLVAAfYumR9l1OrL1uBRHkINd/jmkmnO1V/4t3B4TTJ0HsXiqYtZMaCPn+AyJ5ifqRAeI+S+3HzQw8hC9WUA6HABUrcTKVn0f4udoPVClou+MyG//cTqrHZhKx91BWNoaz9XkSreaJTDtWIp4cKzqjiT7KXciUvhwbD8mqUolAc0wQLGaG9hESllQiaX5tCt28lANU7lsP0GYl1Rk9SL97Ab47uxbKfPO2dmiAnyiZ9dnVOUtZPFN164s/GyPNNJgayF4GZR+nT59mhEjxLL9OIb2Fzpkr7XSFm3U/3p4O6fhBWNI3vErs8PSnG0eitdf0X9ATgYbdRaX4RVUSEHEWlouTT7nPcEsf2Zwz7AW/Y+cGyEphpQ
+x-ms-exchange-antispam-messagedata: 9sDqqrvGeBKUeyu1ldUldDEj8QMS6qo0JmJsOHSE7xFSUjF2k0mOkVWeN2Ey6QQRI2rcqy0Hb6uPoDryZU7Vw3AFkNkNyPReGt78cpEYU6J1o9v+HdcCD4VHNy72rldZeF8HNKwFrfhG0mv98251lg==
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-Network-Message-Id: 1d2c1f2d-c696-40be-87d1-08d7b1445a52
-X-MS-Exchange-CrossTenant-originalarrivaltime: 14 Feb 2020 11:52:22.5486
+X-MS-Exchange-CrossTenant-Network-Message-Id: fdc85ade-116c-4853-2a01-08d7b14458da
+X-MS-Exchange-CrossTenant-originalarrivaltime: 14 Feb 2020 11:52:20.0241
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: JMy3YtgD+jJeIHOwwYsFOpeStfJ7bjByLIjxKS0ebRlaRviBrn/c7ovTutNCiKXbpKdMa+2+CHjZOb7XjRz0A1Xpp6ECu91a5ZHz54Tqs44=
+X-MS-Exchange-CrossTenant-userprincipalname: fIVZwi8cdpm+ykHslP+/sjWW+o127SPe0pdMht9Ncr3yEh7AtdqLSrMbNhWZT/FwisfYSSZbTj1fQp5tyXa9YykDoyK8xKefdODP5O+YxVk=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN6PR11MB1652
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
@@ -134,87 +134,119 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ajay Singh <ajay.kathat@microchip.com>
 
-Make use of a shorter name for 'hif' variable to avoid possible 80
-character checkpatch warning while the replacing hardcoded value with
-macros in chip_wakeup().
+Use common function wilc_sdio_set_block_size() to set the block size for
+SDIO.
 
 Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- drivers/staging/wilc1000/wlan.c | 35 +++++++++++++++------------------
- 1 file changed, 16 insertions(+), 19 deletions(-)
+ drivers/staging/wilc1000/sdio.c | 51 +++++++--------------------------
+ 1 file changed, 11 insertions(+), 40 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wlan.c b/drivers/staging/wilc1000/wla=
-n.c
-index db4ef175ccee..31f424efe01d 100644
---- a/drivers/staging/wilc1000/wlan.c
-+++ b/drivers/staging/wilc1000/wlan.c
-@@ -403,37 +403,34 @@ EXPORT_SYMBOL_GPL(chip_allow_sleep);
- void chip_wakeup(struct wilc *wilc)
+diff --git a/drivers/staging/wilc1000/sdio.c b/drivers/staging/wilc1000/sdi=
+o.c
+index 212affc4b9c1..57c0e8415bc9 100644
+--- a/drivers/staging/wilc1000/sdio.c
++++ b/drivers/staging/wilc1000/sdio.c
+@@ -7,6 +7,7 @@
+ #include <linux/clk.h>
+ #include <linux/mmc/sdio_func.h>
+ #include <linux/mmc/host.h>
++#include <linux/mmc/sdio.h>
+=20
+ #include "netdev.h"
+ #include "cfg80211.h"
+@@ -292,7 +293,8 @@ static int wilc_sdio_set_func0_csa_address(struct wilc =
+*wilc, u32 adr)
+ 	return 0;
+ }
+=20
+-static int wilc_sdio_set_func0_block_size(struct wilc *wilc, u32 block_siz=
+e)
++static int wilc_sdio_set_block_size(struct wilc *wilc, u8 func_num,
++				    u32 block_size)
  {
- 	u32 reg, clk_status_reg;
-+	const struct wilc_hif_func *h =3D wilc->hif_func;
-=20
--	if ((wilc->io_type & 0x1) =3D=3D WILC_HIF_SPI) {
-+	if (wilc->io_type =3D=3D WILC_HIF_SPI) {
- 		do {
--			wilc->hif_func->hif_read_reg(wilc, 1, &reg);
--			wilc->hif_func->hif_write_reg(wilc, 1, reg | BIT(1));
--			wilc->hif_func->hif_write_reg(wilc, 1, reg & ~BIT(1));
-+			h->hif_read_reg(wilc, 1, &reg);
-+			h->hif_write_reg(wilc, 1, reg | BIT(1));
-+			h->hif_write_reg(wilc, 1, reg & ~BIT(1));
-=20
- 			do {
- 				usleep_range(2000, 2500);
- 				wilc_get_chipid(wilc, true);
- 			} while (wilc_get_chipid(wilc, true) =3D=3D 0);
- 		} while (wilc_get_chipid(wilc, true) =3D=3D 0);
--	} else if ((wilc->io_type & 0x1) =3D=3D WILC_HIF_SDIO) {
--		wilc->hif_func->hif_write_reg(wilc, 0xfa, 1);
-+	} else if (wilc->io_type =3D=3D WILC_HIF_SDIO) {
-+		h->hif_write_reg(wilc, 0xfa, 1);
- 		usleep_range(200, 400);
--		wilc->hif_func->hif_read_reg(wilc, 0xf0, &reg);
-+		h->hif_read_reg(wilc, 0xf0, &reg);
- 		do {
--			wilc->hif_func->hif_write_reg(wilc, 0xf0,
--						      reg | BIT(0));
--			wilc->hif_func->hif_read_reg(wilc, 0xf1,
--						     &clk_status_reg);
-+			h->hif_write_reg(wilc, 0xf0, reg | BIT(0));
-+			h->hif_read_reg(wilc, 0xf1, &clk_status_reg);
-=20
- 			while ((clk_status_reg & 0x1) =3D=3D 0) {
- 				usleep_range(2000, 2500);
-=20
--				wilc->hif_func->hif_read_reg(wilc, 0xf1,
--							     &clk_status_reg);
-+				h->hif_read_reg(wilc, 0xf1, &clk_status_reg);
- 			}
- 			if ((clk_status_reg & 0x1) =3D=3D 0) {
--				wilc->hif_func->hif_write_reg(wilc, 0xf0,
--							      reg & (~BIT(0)));
-+				h->hif_write_reg(wilc, 0xf0, reg & (~BIT(0)));
- 			}
- 		} while ((clk_status_reg & 0x1) =3D=3D 0);
+ 	struct sdio_func *func =3D dev_to_sdio_func(wilc->dev);
+ 	struct sdio_cmd52 cmd;
+@@ -301,52 +303,21 @@ static int wilc_sdio_set_func0_block_size(struct wilc=
+ *wilc, u32 block_size)
+ 	cmd.read_write =3D 1;
+ 	cmd.function =3D 0;
+ 	cmd.raw =3D 0;
+-	cmd.address =3D 0x10;
++	cmd.address =3D SDIO_FBR_BASE(func_num) + SDIO_CCCR_BLKSIZE;
+ 	cmd.data =3D (u8)block_size;
+ 	ret =3D wilc_sdio_cmd52(wilc, &cmd);
+ 	if (ret) {
+-		dev_err(&func->dev, "Failed cmd52, set 0x10 data...\n");
++		dev_err(&func->dev, "Failed cmd52, set %04x data...\n",
++			cmd.address);
+ 		return ret;
  	}
-@@ -442,13 +439,13 @@ void chip_wakeup(struct wilc *wilc)
- 		if (wilc_get_chipid(wilc, false) < 0x1002b0) {
- 			u32 val32;
 =20
--			wilc->hif_func->hif_read_reg(wilc, 0x1e1c, &val32);
-+			h->hif_read_reg(wilc, 0x1e1c, &val32);
- 			val32 |=3D BIT(6);
--			wilc->hif_func->hif_write_reg(wilc, 0x1e1c, val32);
-+			h->hif_write_reg(wilc, 0x1e1c, val32);
-=20
--			wilc->hif_func->hif_read_reg(wilc, 0x1e9c, &val32);
-+			h->hif_read_reg(wilc, 0x1e9c, &val32);
- 			val32 |=3D BIT(6);
--			wilc->hif_func->hif_write_reg(wilc, 0x1e9c, val32);
-+			h->hif_write_reg(wilc, 0x1e9c, val32);
- 		}
+-	cmd.address =3D 0x11;
++	cmd.address =3D SDIO_FBR_BASE(func_num) + SDIO_CCCR_BLKSIZE +  1;
+ 	cmd.data =3D (u8)(block_size >> 8);
+ 	ret =3D wilc_sdio_cmd52(wilc, &cmd);
+ 	if (ret) {
+-		dev_err(&func->dev, "Failed cmd52, set 0x11 data...\n");
+-		return ret;
+-	}
+-
+-	return 0;
+-}
+-
+-/********************************************
+- *
+- *      Function 1
+- *
+- ********************************************/
+-
+-static int wilc_sdio_set_func1_block_size(struct wilc *wilc, u32 block_siz=
+e)
+-{
+-	struct sdio_func *func =3D dev_to_sdio_func(wilc->dev);
+-	struct sdio_cmd52 cmd;
+-	int ret;
+-
+-	cmd.read_write =3D 1;
+-	cmd.function =3D 0;
+-	cmd.raw =3D 0;
+-	cmd.address =3D 0x110;
+-	cmd.data =3D (u8)block_size;
+-	ret =3D wilc_sdio_cmd52(wilc, &cmd);
+-	if (ret) {
+-		dev_err(&func->dev, "Failed cmd52, set 0x110 data...\n");
+-		return ret;
+-	}
+-	cmd.address =3D 0x111;
+-	cmd.data =3D (u8)(block_size >> 8);
+-	ret =3D wilc_sdio_cmd52(wilc, &cmd);
+-	if (ret) {
+-		dev_err(&func->dev, "Failed cmd52, set 0x111 data...\n");
++		dev_err(&func->dev, "Failed cmd52, set %04x data...\n",
++			cmd.address);
+ 		return ret;
  	}
- 	wilc->chip_ps_state =3D WILC_CHIP_WAKEDUP;
+=20
+@@ -638,7 +609,7 @@ static int wilc_sdio_init(struct wilc *wilc, bool resum=
+e)
+ 	/**
+ 	 *      function 0 block size
+ 	 **/
+-	ret =3D wilc_sdio_set_func0_block_size(wilc, WILC_SDIO_BLOCK_SIZE);
++	ret =3D wilc_sdio_set_block_size(wilc, 0, WILC_SDIO_BLOCK_SIZE);
+ 	if (ret) {
+ 		dev_err(&func->dev, "Fail cmd 52, set func 0 block size...\n");
+ 		return ret;
+@@ -688,7 +659,7 @@ static int wilc_sdio_init(struct wilc *wilc, bool resum=
+e)
+ 	/**
+ 	 *      func 1 is ready, set func 1 block size
+ 	 **/
+-	ret =3D wilc_sdio_set_func1_block_size(wilc, WILC_SDIO_BLOCK_SIZE);
++	ret =3D wilc_sdio_set_block_size(wilc, 1, WILC_SDIO_BLOCK_SIZE);
+ 	if (ret) {
+ 		dev_err(&func->dev, "Fail set func 1 block size...\n");
+ 		return ret;
 --=20
 2.24.0
