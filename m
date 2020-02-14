@@ -2,55 +2,51 @@ Return-Path: <SRS0=dpF5=4C=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4E75C2BA83
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 17:34:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C274C2BA83
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 17:38:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9F070222C4
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 17:34:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 218C020873
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 17:38:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1581701675;
-	bh=JjKT3jkmYWo+VH1cMi7pE58cT6ZhUpPjOMoPMHW4uHA=;
+	s=default; t=1581701882;
+	bh=vwGKyhXHR/VC6+b9YGNFulZZs4DD0OXFatVpw++SAo0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=mYny5FTLQe+vuCgkxA6BFczIwMLO1NGynU3xwgaU+Yn/kLC5VDC1kTSN5SAcI4KJW
-	 3IHiGYV1/5Us3fbHKICUdGWw1ZqdjxAQWeoTMonaKrbNPLbiPBFx7JjWNUpCuKzvgY
-	 j3Yh1eehMtTqhHKRhzWqjLFeHdwYp928PFdN/JQU=
+	b=lmyABuNIx9sw6mjVgXfHFPZl1M2ZDmyjnxLzL2i5UYjFKp1cn6mT5m2qTiSJ1uCUw
+	 fZtq3bE94xWQqsVol4enHsa1SeLFkaPUhODSyqf1cm/+xRGlJneprsILQ+otg3azkD
+	 xJMw1IfZbagclT85vuI9AQ1JkPwJ3uaIZw0h/ZSQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2394745AbgBNRee (ORCPT
+        id S2393484AbgBNRiB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Feb 2020 12:34:34 -0500
-Received: from mail.kernel.org ([198.145.29.99]:56422 "EHLO mail.kernel.org"
+        Fri, 14 Feb 2020 12:38:01 -0500
+Received: from mail.kernel.org ([198.145.29.99]:54094 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2390326AbgBNQGI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Feb 2020 11:06:08 -0500
+        id S2390055AbgBNQFB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 14 Feb 2020 11:05:01 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 0D0C524680;
-        Fri, 14 Feb 2020 16:06:06 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 1A8A52468C;
+        Fri, 14 Feb 2020 16:04:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1581696368;
-        bh=JjKT3jkmYWo+VH1cMi7pE58cT6ZhUpPjOMoPMHW4uHA=;
+        s=default; t=1581696300;
+        bh=vwGKyhXHR/VC6+b9YGNFulZZs4DD0OXFatVpw++SAo0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=BtiGyvs1zTt9mfVT2qEgwWcLicSiN/lyRscvmaOGU1hIxmY9wr2CKdY0yALXeDvg0
-         gDYppxZSEFut5g8cftcGeBmMfuVfFlV4adYDC7HL2Ic4dWywe8DTgFufejp6xng/ea
-         FXoB3qNSugGQUpe9i11OsuA550z2c7EW2Yfb7zb0=
+        b=b+Eps1WzhUBEJtWcRVhI7l8D+jCUaNsk6xVCjhEJhFbrBL2aEhCrToGIfry2LPGKR
+         ggZuw/MwpW9u5yTeOKg7xvc6ni8S+D1H+YkLQ5TGOxJvi6FqNyHlE7waK6lJi0tspr
+         NAizNEM7AKaisisl8LmVv2aNovyHtOW+dkz/UwdE=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Phong Tran <tranmanphong@gmail.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Kees Cook <keescook@chromium.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-        netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 198/459] b43legacy: Fix -Wcast-function-type
-Date:   Fri, 14 Feb 2020 10:57:28 -0500
-Message-Id: <20200214160149.11681-198-sashal@kernel.org>
+Cc:     Wen Gong <wgong@codeaurora.org>, Kalle Valo <kvalo@codeaurora.org>,
+        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 145/459] ath10k: correct the tlv len of ath10k_wmi_tlv_op_gen_config_pno_start
+Date:   Fri, 14 Feb 2020 10:56:35 -0500
+Message-Id: <20200214160149.11681-145-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200214160149.11681-1-sashal@kernel.org>
 References: <20200214160149.11681-1-sashal@kernel.org>
@@ -63,46 +59,51 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Phong Tran <tranmanphong@gmail.com>
+From: Wen Gong <wgong@codeaurora.org>
 
-[ Upstream commit 475eec112e4267232d10f4afe2f939a241692b6c ]
+[ Upstream commit e01cc82c4d1ec3bddcbb7cd991cf5dc0131ed9a1 ]
 
-correct usage prototype of callback in tasklet_init().
-Report by https://github.com/KSPP/linux/issues/20
+the tlv len is set to the total len of the wmi cmd, it will trigger
+firmware crash, correct the tlv len.
 
-Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
-Signed-off-by: Phong Tran <tranmanphong@gmail.com>
-Reviewed-by: Kees Cook <keescook@chromium.org>
+Tested with QCA6174 SDIO with firmware
+WLAN.RMH.4.4.1-00017-QCARMSWP-1 and QCA6174
+PCIE with firmware WLAN.RM.4.4.1-00110-QCARMSWPZ-1.
+
+Fixes: ce834e280f2f875 ("ath10k: support NET_DETECT WoWLAN feature")
+Signed-off-by: Wen Gong <wgong@codeaurora.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/broadcom/b43legacy/main.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/b43legacy/main.c b/drivers/net/wireless/broadcom/b43legacy/main.c
-index 4325e91736eb3..8b6b657c4b85b 100644
---- a/drivers/net/wireless/broadcom/b43legacy/main.c
-+++ b/drivers/net/wireless/broadcom/b43legacy/main.c
-@@ -1275,8 +1275,9 @@ static void handle_irq_ucode_debug(struct b43legacy_wldev *dev)
- }
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index 4d5d10c010645..eb0c963d9fd51 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -3650,6 +3650,7 @@ ath10k_wmi_tlv_op_gen_config_pno_start(struct ath10k *ar,
+ 	struct wmi_tlv *tlv;
+ 	struct sk_buff *skb;
+ 	__le32 *channel_list;
++	u16 tlv_len;
+ 	size_t len;
+ 	void *ptr;
+ 	u32 i;
+@@ -3707,10 +3708,12 @@ ath10k_wmi_tlv_op_gen_config_pno_start(struct ath10k *ar,
+ 	/* nlo_configured_parameters(nlo_list) */
+ 	cmd->no_of_ssids = __cpu_to_le32(min_t(u8, pno->uc_networks_count,
+ 					       WMI_NLO_MAX_SSIDS));
++	tlv_len = __le32_to_cpu(cmd->no_of_ssids) *
++		sizeof(struct nlo_configured_parameters);
  
- /* Interrupt handler bottom-half */
--static void b43legacy_interrupt_tasklet(struct b43legacy_wldev *dev)
-+static void b43legacy_interrupt_tasklet(unsigned long data)
- {
-+	struct b43legacy_wldev *dev = (struct b43legacy_wldev *)data;
- 	u32 reason;
- 	u32 dma_reason[ARRAY_SIZE(dev->dma_reason)];
- 	u32 merged_dma_reason = 0;
-@@ -3741,7 +3742,7 @@ static int b43legacy_one_core_attach(struct ssb_device *dev,
- 	b43legacy_set_status(wldev, B43legacy_STAT_UNINIT);
- 	wldev->bad_frames_preempt = modparam_bad_frames_preempt;
- 	tasklet_init(&wldev->isr_tasklet,
--		     (void (*)(unsigned long))b43legacy_interrupt_tasklet,
-+		     b43legacy_interrupt_tasklet,
- 		     (unsigned long)wldev);
- 	if (modparam_pio)
- 		wldev->__using_pio = true;
+ 	tlv = ptr;
+ 	tlv->tag = __cpu_to_le16(WMI_TLV_TAG_ARRAY_STRUCT);
+-	tlv->len = __cpu_to_le16(len);
++	tlv->len = __cpu_to_le16(tlv_len);
+ 
+ 	ptr += sizeof(*tlv);
+ 	nlo_list = ptr;
 -- 
 2.20.1
 
