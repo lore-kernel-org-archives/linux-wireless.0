@@ -2,52 +2,53 @@ Return-Path: <SRS0=dpF5=4C=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-15.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F949C2BA83
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 16:24:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5BEAC4741C
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 16:25:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0DB622478D
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 16:24:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7AFAA247C8
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 16:25:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1581697490;
-	bh=cfIgvVj7qHISRaX4GDxNbcsuJ+CNHbeT9hRhvwyQMEo=;
+	s=default; t=1581697522;
+	bh=iFoKa7kI58lF4drk+uYfJAPj4+6ZzqFP9qh9SqAvIOU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=OFJh/8ODHSbkGz0D9lVatZMupIcCLEKtFQaechl7LU0kpnJHyEmE0w01cJA5xCc9k
-	 q8j2O81IUaDiijlUYF5VIeF8riRtKsyUuldssfeZ44F8FygxhejnLwnGpgCzfcRPfP
-	 bErwO3OJUApeomDnwJIkBXIH5yY/EjC1lUf51hWY=
+	b=JZIYpKrQifdzPcHpKLPe/ia8ADTu5zhSb0jFekR+QrcTpizuVGusqn6lQs8upNEwx
+	 F/Uq8v5tnfLuNHibKNY9DZXg4ySQQ+Wv+ZtibYXiI1K2QTfI7IjYNnnJp/EcuGq+UU
+	 AS5q+oFqM11Ey+xB3on7T+0JO/fS6yX+VZKltViw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405988AbgBNQYt (ORCPT
+        id S2406066AbgBNQZV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Feb 2020 11:24:49 -0500
-Received: from mail.kernel.org ([198.145.29.99]:33652 "EHLO mail.kernel.org"
+        Fri, 14 Feb 2020 11:25:21 -0500
+Received: from mail.kernel.org ([198.145.29.99]:34802 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2405974AbgBNQYr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Feb 2020 11:24:47 -0500
+        id S2406050AbgBNQZV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 14 Feb 2020 11:25:21 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 24568247AC;
-        Fri, 14 Feb 2020 16:24:46 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 3A53B2472B;
+        Fri, 14 Feb 2020 16:25:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1581697486;
-        bh=cfIgvVj7qHISRaX4GDxNbcsuJ+CNHbeT9hRhvwyQMEo=;
+        s=default; t=1581697520;
+        bh=iFoKa7kI58lF4drk+uYfJAPj4+6ZzqFP9qh9SqAvIOU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=cp0dqvMyeAGBYWfQF7n+JsG/wHk6h8xviWfacRQ8W3pqA4J5WmXoaHgfKJdgSpJe8
-         WVi3nuac6LSrHkYuHOUIGW2uNh8Ab7M7kRckw0DtEPp+y8dLy8LFgK3eopT0rvtTN1
-         4GLokVjQnL1EqCNuDtLj7NTZx+1Mp8TS19nE5Evw=
+        b=eBJJUEI0IKvvnWKuxCh7bsWavFtTyt5cVFq+eeziuNg4/7lUwmjOkZkl6B0KpCATI
+         j7BEXa5K1SqzTlH2Rh8ucAAVpzlL8I4MXm7RQRKp1NjPa1TXdlx2a7uL6n1mqXhGql
+         YriBpd4gDMdpxGc/76MoVj/juOKYglSPi1GMf1VY=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Nicolai Stange <nstange@suse.de>,
+Cc:     Phong Tran <tranmanphong@gmail.com>,
+        Kees Cook <keescook@chromium.org>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.4 017/100] libertas: don't exit from lbs_ibss_join_existing() with RCU read lock held
-Date:   Fri, 14 Feb 2020 11:23:01 -0500
-Message-Id: <20200214162425.21071-17-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 044/100] ipw2x00: Fix -Wcast-function-type
+Date:   Fri, 14 Feb 2020 11:23:28 -0500
+Message-Id: <20200214162425.21071-44-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200214162425.21071-1-sashal@kernel.org>
 References: <20200214162425.21071-1-sashal@kernel.org>
@@ -60,37 +61,79 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Nicolai Stange <nstange@suse.de>
+From: Phong Tran <tranmanphong@gmail.com>
 
-[ Upstream commit c7bf1fb7ddca331780b9a733ae308737b39f1ad4 ]
+[ Upstream commit ebd77feb27e91bb5fe35a7818b7c13ea7435fb98 ]
 
-Commit e5e884b42639 ("libertas: Fix two buffer overflows at parsing bss
-descriptor") introduced a bounds check on the number of supplied rates to
-lbs_ibss_join_existing().
+correct usage prototype of callback in tasklet_init().
+Report by https://github.com/KSPP/linux/issues/20
 
-Unfortunately, it introduced a return path from within a RCU read side
-critical section without a corresponding rcu_read_unlock(). Fix this.
-
-Fixes: e5e884b42639 ("libertas: Fix two buffer overflows at parsing bss descriptor")
-Signed-off-by: Nicolai Stange <nstange@suse.de>
+Signed-off-by: Phong Tran <tranmanphong@gmail.com>
+Reviewed-by: Kees Cook <keescook@chromium.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/libertas/cfg.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/ipw2x00/ipw2100.c | 7 ++++---
+ drivers/net/wireless/ipw2x00/ipw2200.c | 5 +++--
+ 2 files changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/cfg.c b/drivers/net/wireless/libertas/cfg.c
-index 0824697c3dca0..803684eed142c 100644
---- a/drivers/net/wireless/libertas/cfg.c
-+++ b/drivers/net/wireless/libertas/cfg.c
-@@ -1853,6 +1853,7 @@ static int lbs_ibss_join_existing(struct lbs_private *priv,
- 		rates_max = rates_eid[1];
- 		if (rates_max > MAX_RATES) {
- 			lbs_deb_join("invalid rates");
-+			rcu_read_unlock();
- 			goto out;
- 		}
- 		rates = cmd.bss.rates;
+diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
+index 36818c7f30b96..11cfc5822eb03 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2100.c
++++ b/drivers/net/wireless/ipw2x00/ipw2100.c
+@@ -3213,8 +3213,9 @@ static void ipw2100_tx_send_data(struct ipw2100_priv *priv)
+ 	}
+ }
+ 
+-static void ipw2100_irq_tasklet(struct ipw2100_priv *priv)
++static void ipw2100_irq_tasklet(unsigned long data)
+ {
++	struct ipw2100_priv *priv = (struct ipw2100_priv *)data;
+ 	struct net_device *dev = priv->net_dev;
+ 	unsigned long flags;
+ 	u32 inta, tmp;
+@@ -6022,7 +6023,7 @@ static void ipw2100_rf_kill(struct work_struct *work)
+ 	spin_unlock_irqrestore(&priv->low_lock, flags);
+ }
+ 
+-static void ipw2100_irq_tasklet(struct ipw2100_priv *priv);
++static void ipw2100_irq_tasklet(unsigned long data);
+ 
+ static const struct net_device_ops ipw2100_netdev_ops = {
+ 	.ndo_open		= ipw2100_open,
+@@ -6151,7 +6152,7 @@ static struct net_device *ipw2100_alloc_device(struct pci_dev *pci_dev,
+ 	INIT_DELAYED_WORK(&priv->rf_kill, ipw2100_rf_kill);
+ 	INIT_DELAYED_WORK(&priv->scan_event, ipw2100_scan_event);
+ 
+-	tasklet_init(&priv->irq_tasklet, (void (*)(unsigned long))
++	tasklet_init(&priv->irq_tasklet,
+ 		     ipw2100_irq_tasklet, (unsigned long)priv);
+ 
+ 	/* NOTE:  We do not start the deferred work for status checks yet */
+diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
+index ed0adaf1eec44..1e08f94dc4da3 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2200.c
++++ b/drivers/net/wireless/ipw2x00/ipw2200.c
+@@ -1968,8 +1968,9 @@ static void notify_wx_assoc_event(struct ipw_priv *priv)
+ 	wireless_send_event(priv->net_dev, SIOCGIWAP, &wrqu, NULL);
+ }
+ 
+-static void ipw_irq_tasklet(struct ipw_priv *priv)
++static void ipw_irq_tasklet(unsigned long data)
+ {
++	struct ipw_priv *priv = (struct ipw_priv *)data;
+ 	u32 inta, inta_mask, handled = 0;
+ 	unsigned long flags;
+ 	int rc = 0;
+@@ -10705,7 +10706,7 @@ static int ipw_setup_deferred_work(struct ipw_priv *priv)
+ 	INIT_WORK(&priv->qos_activate, ipw_bg_qos_activate);
+ #endif				/* CONFIG_IPW2200_QOS */
+ 
+-	tasklet_init(&priv->irq_tasklet, (void (*)(unsigned long))
++	tasklet_init(&priv->irq_tasklet,
+ 		     ipw_irq_tasklet, (unsigned long)priv);
+ 
+ 	return ret;
 -- 
 2.20.1
 
