@@ -2,105 +2,81 @@ Return-Path: <SRS0=dpF5=4C=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F20A3C3B18F
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 09:03:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C035C3B195
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 09:04:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C71BC20873
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 09:03:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 109E220873
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 09:04:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728911AbgBNJDm (ORCPT
+        id S1729048AbgBNJEA (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Feb 2020 04:03:42 -0500
-Received: from s3.sipsolutions.net ([144.76.43.62]:38960 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726179AbgBNJDl (ORCPT
+        Fri, 14 Feb 2020 04:04:00 -0500
+Received: from rtits2.realtek.com ([211.75.126.72]:35655 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726179AbgBNJEA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Feb 2020 04:03:41 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.93)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1j2Wst-00BCvZ-HS; Fri, 14 Feb 2020 10:03:39 +0100
-Message-ID: <d6fdf3419a323bdf5008bcd51c36b92977f5b872.camel@sipsolutions.net>
-Subject: Re: [PATCH V2 1/3] nl80211: add support for setting fixed HE
- rate/gi/ltf
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     John Crispin <john@phrozen.org>, Kalle Valo <kvalo@codeaurora.org>
-Cc:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
-        Miles Hu <milehu@codeaurora.org>
-Date:   Fri, 14 Feb 2020 10:03:38 +0100
-In-Reply-To: <20200204103514.18111-1-john@phrozen.org>
-References: <20200204103514.18111-1-john@phrozen.org>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.34.2 (3.34.2-1.fc31) 
+        Fri, 14 Feb 2020 04:04:00 -0500
+Authenticated-By: 
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID 01E93p2c032383, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (RTEXMB06.realtek.com.tw[172.21.6.99])
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id 01E93p2c032383
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 14 Feb 2020 17:03:51 +0800
+Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
+ RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1779.2; Fri, 14 Feb 2020 17:03:51 +0800
+Received: from localhost.localdomain (172.21.68.128) by
+ RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1779.2; Fri, 14 Feb 2020 17:03:51 +0800
+From:   <yhchuang@realtek.com>
+To:     <kvalo@codeaurora.org>
+CC:     <linux-wireless@vger.kernel.org>, <briannorris@chromium.org>
+Subject: [PATCH 0/2] rtw88: add coex related debugfs
+Date:   Fri, 14 Feb 2020 17:03:32 +0800
+Message-ID: <20200214090334.330-1-yhchuang@realtek.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-Originating-IP: [172.21.68.128]
+X-ClientProxiedBy: RTEXMB03.realtek.com.tw (172.21.6.96) To
+ RTEXMB04.realtek.com.tw (172.21.6.97)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, 2020-02-04 at 11:35 +0100, John Crispin wrote:
-> 
-> +	[NL80211_TXRATE_HE] = {
-> +		.type = NLA_EXACT_LEN,
-> +		.len = sizeof(struct nl80211_txrate_he),
-> +	},
-> +	[NL80211_TXRATE_HE_GI] =  NLA_POLICY_RANGE(NLA_U8,
-> +						   NL80211_RATE_INFO_HE_GI_0_8,
-> +						   NL80211_RATE_INFO_HE_GI_3_2),
-> +	[NL80211_TXRATE_HE_LTF] = NLA_POLICY_RANGE(NLA_U8,
-> +						   NL80211_RATE_INFO_HE_1XLTF,
-> +						   NL80211_RATE_INFO_HE_4XLTF),
->  };
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-Thanks for this :-)
+Sometimes WiFi/BT coexistence problems are difficult to debug. There
+are many factors that can influence the coex. Such the different
+scenarios of BT's profile, or the environment. So it is very useful
+to have some tools to know the current status for WiFi and BT, so that
+we can check if the decision made by the coex mechanism is good for
+the current situation.
 
-> +		if (tb[NL80211_TXRATE_HE]) {
-> +			if (!he_set_mcs_mask(info, sband, nla_data(tb[NL80211_TXRATE_HE]),
-> +					     mask->control[band].he_mcs))
-> +				return -EINVAL;
+Also we can stop the coex mechanism to stop making any decisions, and
+send some commands through user space, to help us check that specific
+strategies are good for the current situation.
 
-Maybe unify these into a single condition?
 
-if (tb[...] &&
-    he_set_...
-	return -EINVAL;
+Yan-Hsuan Chuang (2):
+  rtw88: add a debugfs entry to dump coex's info
+  rtw88: add a debugfs entry to enable/disable coex mechanism
 
-Seems nicer to me. Especially with the lines already being so long.
+ drivers/net/wireless/realtek/rtw88/coex.c     | 497 ++++++++++++++++++
+ drivers/net/wireless/realtek/rtw88/coex.h     |  10 +
+ drivers/net/wireless/realtek/rtw88/debug.c    |  63 +++
+ drivers/net/wireless/realtek/rtw88/main.h     |  18 +
+ drivers/net/wireless/realtek/rtw88/rtw8822b.c |  30 ++
+ drivers/net/wireless/realtek/rtw88/rtw8822c.c |  28 +
+ 6 files changed, 646 insertions(+)
 
-> +		}
-> +		if (tb[NL80211_TXRATE_HE_GI]) {
-> +			mask->control[band].he_gi =
-> +				nla_get_u8(tb[NL80211_TXRATE_HE_GI]);
-> +			if (mask->control[band].he_gi > NL80211_RATE_INFO_HE_GI_3_2)
-> +				return -EINVAL;
-
-This is not needed with the policy, is it?
-
-> +		}
-> +		if (tb[NL80211_TXRATE_HE_LTF]) {
-> +			mask->control[band].he_ltf =
-> +				nla_get_u8(tb[NL80211_TXRATE_HE_LTF]);
-> +			if (mask->control[band].he_ltf > NL80211_RATE_INFO_HE_4XLTF)
-> +				return -EINVAL;
-
-Same here.
-
->  			if (!(rdev->wiphy.bands[band]->ht_cap.ht_supported ||
-> -			      rdev->wiphy.bands[band]->vht_cap.vht_supported))
-> +			      rdev->wiphy.bands[band]->vht_cap.vht_supported ||
-> +			      (rdev->wiphy.bands[band]->iftype_data &&
-> +			       rdev->wiphy.bands[band]->iftype_data->he_cap.has_he)))
->  				return -EINVAL;
-
-And now we get to why I replied at all and didn't just fix it up ;-)
-
-That can't be right, iftype_data is an array of pointers, you're
-basically always taking the first one?
-
-johannes
+-- 
+2.17.1
 
