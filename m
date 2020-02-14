@@ -2,54 +2,54 @@ Return-Path: <SRS0=dpF5=4C=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-15.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3490AC3B19F
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 16:02:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A076C2BA83
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 16:10:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0EBED206CC
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 16:02:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 137AF24686
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 16:10:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1581696140;
-	bh=iuyIbYzgZDi9u7sIMIx8Fd9TnuJLfU1RqCaPaTF+SmE=;
+	s=default; t=1581696628;
+	bh=Ryr712IRyEGx3V2UFQBgJGfJ7BJcj/Aea1W03uMesHg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=OyTGH7dXtuXLJ/0wRzgPeEEH1IyTBvURuuTnUzU4a35UUbh6aAmUW1VWaBY0MRPZq
-	 wBWUXNY+eQ0cB4VSpfrSDzYa+821H2Ta5BCs3/WBITWo3yqNnYICNFgn+taue2hA8/
-	 pqv+tpUCpfTAqFFjYTcwZhtlb6Iva7ojRVDrKkpk=
+	b=FlyBR/IZJpUdzP6OR+jteOLfcbgSzCZBEyeZZ2LnCvAUflg4Cmc1oLe7FeGZfwZah
+	 tXxU5Cko9bknaBoIPU3Vmfr7BL22S/JLMcr6zuK4nzgQirzsVipWvXGrT8ewbU45UW
+	 Qf3I7kWzAZT5/7WzdKOfVC6IQvl0388MtzM6SWjk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389308AbgBNQCT (ORCPT
+        id S2391493AbgBNQK1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Feb 2020 11:02:19 -0500
-Received: from mail.kernel.org ([198.145.29.99]:48562 "EHLO mail.kernel.org"
+        Fri, 14 Feb 2020 11:10:27 -0500
+Received: from mail.kernel.org ([198.145.29.99]:35990 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2389297AbgBNQCS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Feb 2020 11:02:18 -0500
+        id S2391480AbgBNQK0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 14 Feb 2020 11:10:26 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 177BD206CC;
-        Fri, 14 Feb 2020 16:02:16 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 183522467E;
+        Fri, 14 Feb 2020 16:10:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1581696138;
-        bh=iuyIbYzgZDi9u7sIMIx8Fd9TnuJLfU1RqCaPaTF+SmE=;
+        s=default; t=1581696626;
+        bh=Ryr712IRyEGx3V2UFQBgJGfJ7BJcj/Aea1W03uMesHg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=IcbUZAkTQQpRHQ/lg1xTU4ST5QWLvQNsspfHIAhGDrIO7mEfN4lCdu7CGmIR1sgu5
-         Rr6M0j20U49MatjSgcHNltroa3JTX/sKNwlqyDg8fbuNXvKTo7BJ5LrkdcuO22r50B
-         EzA+Ow2oAByzH38awFN4fLecFOZjJrAfsUWa2CFg=
+        b=mqZcgRedjAmFRXnpC4/n/csWilf0bRt/TQMUgh8yTNLkx7ios3rtopXUv/pX5DXhs
+         nCzPirOBkE3/6BVjKowUZ3N7Lopp90XvDLpsFpw77ACkXtV44kSHG2yknDKCp+dVWe
+         YegUXiID4zcs9dJ6jjMIs4/v2w2txBBj/iYp3uX0=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Navid Emamdoost <navid.emamdoost@gmail.com>,
+Cc:     Nathan Chancellor <natechancellor@gmail.com>,
+        Nick Desaulniers <ndesaulniers@google.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 020/459] brcmfmac: Fix memory leak in brcmf_p2p_create_p2pdev()
-Date:   Fri, 14 Feb 2020 10:54:30 -0500
-Message-Id: <20200214160149.11681-20-sashal@kernel.org>
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        clang-built-linux@googlegroups.com
+Subject: [PATCH AUTOSEL 5.4 406/459] hostap: Adjust indentation in prism2_hostapd_add_sta
+Date:   Fri, 14 Feb 2020 11:00:56 -0500
+Message-Id: <20200214160149.11681-406-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200214160149.11681-1-sashal@kernel.org>
 References: <20200214160149.11681-1-sashal@kernel.org>
@@ -62,37 +62,50 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Navid Emamdoost <navid.emamdoost@gmail.com>
+From: Nathan Chancellor <natechancellor@gmail.com>
 
-[ Upstream commit 5cc509aa83c6acd2c5cd94f99065c39d2bd0a490 ]
+[ Upstream commit b61156fba74f659d0bc2de8f2dbf5bad9f4b8faf ]
 
-In the implementation of brcmf_p2p_create_p2pdev() the allocated memory
-for p2p_vif is leaked when the mac address is the same as primary
-interface. To fix this, go to error path to release p2p_vif via
-brcmf_free_vif().
+Clang warns:
 
-Fixes: cb746e47837a ("brcmfmac: check p2pdev mac address uniqueness")
-Signed-off-by: Navid Emamdoost <navid.emamdoost@gmail.com>
+../drivers/net/wireless/intersil/hostap/hostap_ap.c:2511:3: warning:
+misleading indentation; statement is not part of the previous 'if'
+[-Wmisleading-indentation]
+        if (sta->tx_supp_rates & WLAN_RATE_5M5)
+        ^
+../drivers/net/wireless/intersil/hostap/hostap_ap.c:2509:2: note:
+previous statement is here
+        if (sta->tx_supp_rates & WLAN_RATE_2M)
+        ^
+1 warning generated.
+
+This warning occurs because there is a space before the tab on this
+line. Remove it so that the indentation is consistent with the Linux
+kernel coding style and clang no longer warns.
+
+Fixes: ff1d2767d5a4 ("Add HostAP wireless driver.")
+Link: https://github.com/ClangBuiltLinux/linux/issues/813
+Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+Reviewed-by: Nick Desaulniers <ndesaulniers@google.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intersil/hostap/hostap_ap.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-index 7ba9f6a686459..1f5deea5a288e 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-@@ -2092,7 +2092,8 @@ static struct wireless_dev *brcmf_p2p_create_p2pdev(struct brcmf_p2p_info *p2p,
- 	/* firmware requires unique mac address for p2pdev interface */
- 	if (addr && ether_addr_equal(addr, pri_ifp->mac_addr)) {
- 		bphy_err(drvr, "discovery vif must be different from primary interface\n");
--		return ERR_PTR(-EINVAL);
-+		err = -EINVAL;
-+		goto fail;
- 	}
- 
- 	brcmf_p2p_generate_bss_mac(p2p, addr);
+diff --git a/drivers/net/wireless/intersil/hostap/hostap_ap.c b/drivers/net/wireless/intersil/hostap/hostap_ap.c
+index 0094b1d2b5770..3ec46f48cfde1 100644
+--- a/drivers/net/wireless/intersil/hostap/hostap_ap.c
++++ b/drivers/net/wireless/intersil/hostap/hostap_ap.c
+@@ -2508,7 +2508,7 @@ static int prism2_hostapd_add_sta(struct ap_data *ap,
+ 		sta->supported_rates[0] = 2;
+ 	if (sta->tx_supp_rates & WLAN_RATE_2M)
+ 		sta->supported_rates[1] = 4;
+- 	if (sta->tx_supp_rates & WLAN_RATE_5M5)
++	if (sta->tx_supp_rates & WLAN_RATE_5M5)
+ 		sta->supported_rates[2] = 11;
+ 	if (sta->tx_supp_rates & WLAN_RATE_11M)
+ 		sta->supported_rates[3] = 22;
 -- 
 2.20.1
 
