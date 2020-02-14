@@ -4,50 +4,53 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8547AC2BA83
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 18:17:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99C90C2BA83
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 18:22:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 53E7F2168B
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 18:17:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 64D732086A
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 18:22:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1581704254;
-	bh=I6NtYLAPNib460xwCVxXUT8qx07WuH0UxST/BdX8blg=;
+	s=default; t=1581704528;
+	bh=l0hZUeH00gU3OBzjLve5jeLfpNyZ2VtodXzuUbsTYv8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=D2dcaeebK9k2u1NUHSWOobtqW4pqZ1Yh0BP40/auPSP1mdthSNDJekEGd9bAq0N1P
-	 Ok2QXl0HbQS/hWhd8azqr20xLSB2aY6/YRaTQ9XOkiseLcI/mP8F1SPkfvESlM5mdw
-	 QvViSh7ty2L1JuukdXF1P5b4ZCT8nBe2m4oQUr+8=
+	b=Qc63dU6u1WG+GFZCv7+EfdhYtfAywhBkMtqBckJW1e1C43r2/Qs5snbPG6ecVgX7E
+	 9mOhuj72v7oFhHXELkV4u6DwGQwAycRqU/3wnNp8Rs92wPdztM2EcAW/zhtOj4PLNr
+	 xPPgDYO+iLQfAEkILEqJmIQulaKrwNRx+P0/blA0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405151AbgBNSRb (ORCPT
+        id S2394887AbgBNSWG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Feb 2020 13:17:31 -0500
-Received: from mail.kernel.org ([198.145.29.99]:56062 "EHLO mail.kernel.org"
+        Fri, 14 Feb 2020 13:22:06 -0500
+Received: from mail.kernel.org ([198.145.29.99]:52450 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730700AbgBNPvN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Feb 2020 10:51:13 -0500
+        id S1729969AbgBNPta (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 14 Feb 2020 10:49:30 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 7BBCF24684;
-        Fri, 14 Feb 2020 15:51:12 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 2EC162086A;
+        Fri, 14 Feb 2020 15:49:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1581695473;
-        bh=I6NtYLAPNib460xwCVxXUT8qx07WuH0UxST/BdX8blg=;
+        s=default; t=1581695370;
+        bh=l0hZUeH00gU3OBzjLve5jeLfpNyZ2VtodXzuUbsTYv8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=H8bzkUKMdm/fuQu++Vl81Opck01ZU1FFKRnhjHPcg8rL1Ev7LHvI4lIk40/gFoV7L
-         WzNk9Ab73ZuftL+dk6OFfTESmMSegiD32bfYyq2Ui5vsyQ2qsG6KYi1g0CQmns9wOG
-         0fDxqCXcsGLNDOycvgAJqo+l0MgUfoIOUbGcC32c=
+        b=EjyzwnmSYYGFWd6PpNN7yWq0CBeEmFTB9lXthi8w1cBnD42xYWWUcFOfJSaT93aJg
+         GQOr6tGJ4ujaVTqEi386InkxeAlQ2p780tSfRLmG8IHIrUyWOXZgzkCZBdIyMyN6lY
+         IUh2KXOB7GXGQwtV+dkq6/ahn0PSwwhj55CQrmN0=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Rakesh Pillai <pillair@codeaurora.org>,
+Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
+        Franky Lin <franky.lin@broadcom.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.5 107/542] ath10k: Correct the DMA direction for management tx buffers
-Date:   Fri, 14 Feb 2020 10:41:39 -0500
-Message-Id: <20200214154854.6746-107-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.5 027/542] brcmfmac: Fix use after free in brcmf_sdio_readframes()
+Date:   Fri, 14 Feb 2020 10:40:19 -0500
+Message-Id: <20200214154854.6746-27-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200214154854.6746-1-sashal@kernel.org>
 References: <20200214154854.6746-1-sashal@kernel.org>
@@ -60,55 +63,39 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Rakesh Pillai <pillair@codeaurora.org>
+From: Dan Carpenter <dan.carpenter@oracle.com>
 
-[ Upstream commit 6ba8b3b6bd772f575f7736c8fd893c6981fcce16 ]
+[ Upstream commit 216b44000ada87a63891a8214c347e05a4aea8fe ]
 
-The management packets, send to firmware via WMI, are
-mapped using the direction DMA_TO_DEVICE. Currently in
-case of wmi cleanup, these buffers are being unmapped
-using an incorrect DMA direction. This can cause unwanted
-behavior when the host driver is handling a restart
-of the wlan firmware.
+The brcmu_pkt_buf_free_skb() function frees "pkt" so it leads to a
+static checker warning:
 
-We might see a trace like below
+    drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c:1974 brcmf_sdio_readframes()
+    error: dereferencing freed memory 'pkt'
 
-[<ffffff8008098b18>] __dma_inv_area+0x28/0x58
-[<ffffff8001176734>] ath10k_wmi_mgmt_tx_clean_up_pending+0x60/0xb0 [ath10k_core]
-[<ffffff80088c7c50>] idr_for_each+0x78/0xe4
-[<ffffff80011766a4>] ath10k_wmi_detach+0x4c/0x7c [ath10k_core]
-[<ffffff8001163d7c>] ath10k_core_stop+0x58/0x68 [ath10k_core]
-[<ffffff800114fb74>] ath10k_halt+0xec/0x13c [ath10k_core]
-[<ffffff8001165110>] ath10k_core_restart+0x11c/0x1a8 [ath10k_core]
-[<ffffff80080c36bc>] process_one_work+0x16c/0x31c
+It looks like there was supposed to be a continue after we free "pkt".
 
-Fix the incorrect DMA direction during the wmi
-management tx buffer cleanup.
-
-Tested HW: WCN3990
-Tested FW: WLAN.HL.3.1-00784-QCAHLSWMTPLZ-1
-
-Fixes: dc405152bb6 ("ath10k: handle mgmt tx completion event")
-Signed-off-by: Rakesh Pillai <pillair@codeaurora.org>
+Fixes: 4754fceeb9a6 ("brcmfmac: streamline SDIO read frame routine")
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Acked-by: Franky Lin <franky.lin@broadcom.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath10k/wmi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 9f564e2b7a148..214d65108b294 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -9476,7 +9476,7 @@ static int ath10k_wmi_mgmt_tx_clean_up_pending(int msdu_id, void *ptr,
- 
- 	msdu = pkt_addr->vaddr;
- 	dma_unmap_single(ar->dev, pkt_addr->paddr,
--			 msdu->len, DMA_FROM_DEVICE);
-+			 msdu->len, DMA_TO_DEVICE);
- 	ieee80211_free_txskb(ar->hw, msdu);
- 
- 	return 0;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index 264ad63232f87..1dea0178832ea 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -1935,6 +1935,7 @@ static uint brcmf_sdio_readframes(struct brcmf_sdio *bus, uint maxframes)
+ 					       BRCMF_SDIO_FT_NORMAL)) {
+ 				rd->len = 0;
+ 				brcmu_pkt_buf_free_skb(pkt);
++				continue;
+ 			}
+ 			bus->sdcnt.rx_readahead_cnt++;
+ 			if (rd->len != roundup(rd_new.len, 16)) {
 -- 
 2.20.1
 
