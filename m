@@ -7,46 +7,46 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2A2AC3B19F
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 16:47:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E48BC3B1A1
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 16:48:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8EFFA24650
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 16:47:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6BAA824650
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 16:48:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1581698865;
-	bh=ZDuLrSCJOFSSpKWX6MNOS1abnctVLaODKY4DGqUkhfY=;
+	s=default; t=1581698881;
+	bh=Zi/+svdB314w3vuCLrXRPBgVaAAgjY+wKkxhPngHbGM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=0ihu1Aw2wnCbi91n+KVyzzXq5s7yRmQ5PmbfxjynwV8lDJn+v4/3L3VMQZ2QfV7qL
-	 OFe3u0dTMIO9jQ9ns3DOarYQ4w1y5D5vgWTIc0O6XInEXjfZeuylRufFXzb1+YAFOc
-	 qgk2MyPuOFqDtORAL1ZuL+APK5eMjvXneejjw2hk=
+	b=MuI7wktU7ayfs7U8RBaOiyZdIynmtJxK2MknXTV8U2z0oAR2LThtTDGKXyfsdl5/C
+	 2bSVWfLUFGZsOPbJ7kNSl0FuAHroGUb5dmOBJ85Gq64JF/ZspylsH+ea5+GsYtILXJ
+	 BpQZaifFM3DSzpEbY+MHLhb3K9q5seHKGZ7CIBHg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392911AbgBNQUv (ORCPT
+        id S2392334AbgBNQsA (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Feb 2020 11:20:51 -0500
-Received: from mail.kernel.org ([198.145.29.99]:54846 "EHLO mail.kernel.org"
+        Fri, 14 Feb 2020 11:48:00 -0500
+Received: from mail.kernel.org ([198.145.29.99]:54828 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2392806AbgBNQUu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Feb 2020 11:20:50 -0500
+        id S2392898AbgBNQUt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 14 Feb 2020 11:20:49 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E82812473D;
-        Fri, 14 Feb 2020 16:20:48 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id C7D4224747;
+        Fri, 14 Feb 2020 16:20:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1581697249;
-        bh=ZDuLrSCJOFSSpKWX6MNOS1abnctVLaODKY4DGqUkhfY=;
+        s=default; t=1581697248;
+        bh=Zi/+svdB314w3vuCLrXRPBgVaAAgjY+wKkxhPngHbGM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=kigJa74ND/u7HPje7YkDhhu4gyi+qNzlsaoBs0lT6RiCC9O1BfG41v+mcsZjb3b4H
-         alLRXdd7KSVTKvAfI/io9LpnnZt0OifqF+Miqe77b4VSMfD058M8HBlYbM83g6OGSQ
-         ZiirxU8TguwBWrIo3hlmQefB5bXB7AzpCHXFfcZ8=
+        b=K//hA1Qyo0iRBaAocu7p2hw2gGPSFSAJMg02H1zmny7ftIuS0t7sP6KOuuj6AFsQC
+         06aDnZn7ZmAhusAg0hYxyidlEF9K09EBs8oozfFc4sMxi+lwxyT4bGLK5X6s9vHard
+         QKJZFAc0Ph9Ldw6NY9mUmWsXJdZUDzCJJxiQBl1M=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Qing Xu <m1s5p6688@gmail.com>, Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 167/186] mwifiex: Fix possible buffer overflows in mwifiex_cmd_append_vsie_tlv()
-Date:   Fri, 14 Feb 2020 11:16:56 -0500
-Message-Id: <20200214161715.18113-167-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 166/186] mwifiex: Fix possible buffer overflows in mwifiex_ret_wmm_get_status()
+Date:   Fri, 14 Feb 2020 11:16:55 -0500
+Message-Id: <20200214161715.18113-166-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200214161715.18113-1-sashal@kernel.org>
 References: <20200214161715.18113-1-sashal@kernel.org>
@@ -61,39 +61,36 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Qing Xu <m1s5p6688@gmail.com>
 
-[ Upstream commit b70261a288ea4d2f4ac7cd04be08a9f0f2de4f4d ]
+[ Upstream commit 3a9b153c5591548612c3955c9600a98150c81875 ]
 
-mwifiex_cmd_append_vsie_tlv() calls memcpy() without checking
-the destination size may trigger a buffer overflower,
-which a local user could use to cause denial of service
-or the execution of arbitrary code.
+mwifiex_ret_wmm_get_status() calls memcpy() without checking the
+destination size.Since the source is given from remote AP which
+contains illegal wmm elements , this may trigger a heap buffer
+overflow.
 Fix it by putting the length check before calling memcpy().
 
 Signed-off-by: Qing Xu <m1s5p6688@gmail.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/marvell/mwifiex/scan.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/net/wireless/marvell/mwifiex/wmm.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
-index c013c94fbf15f..0071c40afe81b 100644
---- a/drivers/net/wireless/marvell/mwifiex/scan.c
-+++ b/drivers/net/wireless/marvell/mwifiex/scan.c
-@@ -2890,6 +2890,13 @@ mwifiex_cmd_append_vsie_tlv(struct mwifiex_private *priv,
- 			vs_param_set->header.len =
- 				cpu_to_le16((((u16) priv->vs_ie[id].ie[1])
- 				& 0x00FF) + 2);
-+			if (le16_to_cpu(vs_param_set->header.len) >
-+				MWIFIEX_MAX_VSIE_LEN) {
-+				mwifiex_dbg(priv->adapter, ERROR,
-+					    "Invalid param length!\n");
+diff --git a/drivers/net/wireless/marvell/mwifiex/wmm.c b/drivers/net/wireless/marvell/mwifiex/wmm.c
+index 7fba4d940131c..a13b05ec8fc03 100644
+--- a/drivers/net/wireless/marvell/mwifiex/wmm.c
++++ b/drivers/net/wireless/marvell/mwifiex/wmm.c
+@@ -976,6 +976,10 @@ int mwifiex_ret_wmm_get_status(struct mwifiex_private *priv,
+ 				    "WMM Parameter Set Count: %d\n",
+ 				    wmm_param_ie->qos_info_bitmap & mask);
+ 
++			if (wmm_param_ie->vend_hdr.len + 2 >
++				sizeof(struct ieee_types_wmm_parameter))
 +				break;
-+			}
 +
- 			memcpy(vs_param_set->ie, priv->vs_ie[id].ie,
- 			       le16_to_cpu(vs_param_set->header.len));
- 			*buffer += le16_to_cpu(vs_param_set->header.len) +
+ 			memcpy((u8 *) &priv->curr_bss_params.bss_descriptor.
+ 			       wmm_ie, wmm_param_ie,
+ 			       wmm_param_ie->vend_hdr.len + 2);
 -- 
 2.20.1
 
