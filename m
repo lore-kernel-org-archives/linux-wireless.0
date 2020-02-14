@@ -2,77 +2,108 @@ Return-Path: <SRS0=dpF5=4C=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55040C2BA83
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 18:23:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BAE8C3B1B5
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 18:26:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2C12B2086A
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 18:23:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D36FB2086A
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 18:26:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1581704771;
+	bh=RgAX4s5PvLf12O0Wh0R3zX85TiTmkInjzwWw9mxZ/6Y=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=jzAL67v2HifKcz+p2QTIsixkxy+xHuY7wJBVzsrlpioY0iAHpkOGHf70vB54JYcuF
+	 /2zrbK/vAzZmCP+xVvu8g35cgVJYPDI4YOHUOfWIyQ37lM55jRPLZRdwp74hYEEr6L
+	 bvWYvMMUZjeWqEad5FM5yhtPuWfboEyLReSOCa8o=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405300AbgBNSXV convert rfc822-to-8bit (ORCPT
+        id S2395014AbgBNS0G (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Feb 2020 13:23:21 -0500
-Received: from coyote.holtmann.net ([212.227.132.17]:57282 "EHLO
-        mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390047AbgBNSXP (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Feb 2020 13:23:15 -0500
-Received: from marcel-macbook.fritz.box (p4FEFC5A7.dip0.t-ipconnect.de [79.239.197.167])
-        by mail.holtmann.org (Postfix) with ESMTPSA id 1A29FCECEA;
-        Fri, 14 Feb 2020 19:32:37 +0100 (CET)
-Content-Type: text/plain;
-        charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 13.0 \(3608.60.0.2.5\))
-Subject: Re: Droid 4 WiFi firmware loading error
-From:   Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <20200214174548.GC64767@atomide.com>
-Date:   Fri, 14 Feb 2020 19:23:12 +0100
-Cc:     Sebastian Reichel <sre@kernel.org>,
-        "Arthur D." <spinal.by@gmail.com>,
-        Bluez mailing list <linux-bluetooth@vger.kernel.org>,
-        linux-omap@vger.kernel.org, linux-wireless@vger.kernel.org
-Content-Transfer-Encoding: 8BIT
-Message-Id: <3D50CC42-1201-4067-ACDE-E9B9F0DC5653@holtmann.org>
-References: <20200211232425.GE16391@atomide.com>
- <op.0fu85owhhxa7s4@supervisor.net28> <20200212150722.GF16391@atomide.com>
- <20200212162131.GI16391@atomide.com> <op.0fwkyxvihxa7s4@supervisor.net28>
- <20200213041112.GL16391@atomide.com> <op.0fw0oas5hxa7s4@supervisor.net28>
- <20200213161157.GN16391@atomide.com> <op.0fx4hozhhxa7s4@supervisor.net28>
- <20200214161100.b7aqb6wwsrxmx4ab@earth.universe>
- <20200214174548.GC64767@atomide.com>
-To:     Tony Lindgren <tony@atomide.com>
-X-Mailer: Apple Mail (2.3608.60.0.2.5)
+        Fri, 14 Feb 2020 13:26:06 -0500
+Received: from mail.kernel.org ([198.145.29.99]:51342 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729659AbgBNPtC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 14 Feb 2020 10:49:02 -0500
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 6C54F24680;
+        Fri, 14 Feb 2020 15:49:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1581695341;
+        bh=RgAX4s5PvLf12O0Wh0R3zX85TiTmkInjzwWw9mxZ/6Y=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=Mu6zXySW9Q86wbK6Yy19eLGdRVmARK1UngenWfpDk89ZH846dzGLpf5m6zp9VJe66
+         DOkUa9r9+IQhMviF+Sm4r1jUXS4PN4V4tSmgWhTt2HXbtxTjybvqtcnPmoJsWglpUv
+         wdwpS6UZmQB/85DOS8ApICAfeXvOJGCt+p3cCVA8=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Colin Ian King <colin.king@canonical.com>,
+        Maya Erez <merez@codeaurora.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org, wil6210@qti.qualcomm.com,
+        netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.5 005/542] wil6210: fix break that is never reached because of zero'ing of a retry counter
+Date:   Fri, 14 Feb 2020 10:39:57 -0500
+Message-Id: <20200214154854.6746-5-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20200214154854.6746-1-sashal@kernel.org>
+References: <20200214154854.6746-1-sashal@kernel.org>
+MIME-Version: 1.0
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Tony,
+From: Colin Ian King <colin.king@canonical.com>
 
->> WTF :(
->> 
->> Right now the BT driver and the WiFi driver are no aware of
->> each other. Actually the kernel is not even aware, that both
->> drivers are using the same chip. Unfortunately this will be
->> tricky to solve properly. Since a system may have two WiLink
->> devices, the only solution coming to my mind would be adding
->> a link from the BT device to the WiFi device in device tree.
->> Additionally we would need something in the WiLink driver to
->> check if driver has been initialized properly for a given DT
->> node.
-> 
-> Yeah exactly.. I think the best way would be to export something
-> like wlcore_register_bt/wlcore_unregister_bt.. And then have
-> wlcore_register_bt return -EAGAIN until wlcore is up.
+[ Upstream commit 5b1413f00b5beb9f5fed94e43ea0c497d5db9633 ]
 
-actually NO.
+There is a check on the retry counter invalid_buf_id_retry that is always
+false because invalid_buf_id_retry is initialized to zero on each iteration
+of a while-loop.  Fix this by initializing the retry counter before the
+while-loop starts.
 
-We have rejected this many times for all hardware manufacturers. Please fix the firmware instead.
+Addresses-Coverity: ("Logically dead code")
+Fixes: b4a967b7d0f5 ("wil6210: reset buff id in status message after completion")
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Reviewed-by: Maya Erez <merez@codeaurora.org>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/net/wireless/ath/wil6210/txrx_edma.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Regards
-
-Marcel
+diff --git a/drivers/net/wireless/ath/wil6210/txrx_edma.c b/drivers/net/wireless/ath/wil6210/txrx_edma.c
+index 778b63be6a9a4..02548d40253c7 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx_edma.c
++++ b/drivers/net/wireless/ath/wil6210/txrx_edma.c
+@@ -869,6 +869,7 @@ static struct sk_buff *wil_sring_reap_rx_edma(struct wil6210_priv *wil,
+ 	u8 data_offset;
+ 	struct wil_rx_status_extended *s;
+ 	u16 sring_idx = sring - wil->srings;
++	int invalid_buff_id_retry;
+ 
+ 	BUILD_BUG_ON(sizeof(struct wil_rx_status_extended) > sizeof(skb->cb));
+ 
+@@ -882,9 +883,9 @@ static struct sk_buff *wil_sring_reap_rx_edma(struct wil6210_priv *wil,
+ 	/* Extract the buffer ID from the status message */
+ 	buff_id = le16_to_cpu(wil_rx_status_get_buff_id(msg));
+ 
++	invalid_buff_id_retry = 0;
+ 	while (!buff_id) {
+ 		struct wil_rx_status_extended *s;
+-		int invalid_buff_id_retry = 0;
+ 
+ 		wil_dbg_txrx(wil,
+ 			     "buff_id is not updated yet by HW, (swhead 0x%x)\n",
+-- 
+2.20.1
 
