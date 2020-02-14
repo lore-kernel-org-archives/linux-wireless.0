@@ -2,186 +2,334 @@ Return-Path: <SRS0=dpF5=4C=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0
-	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5017C3B18F
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 11:19:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C8AFC47409
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 11:52:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 975B72187F
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 11:19:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0024B2187F
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 11:52:18 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="EHRx8tuC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729122AbgBNLTz (ORCPT
+        id S1728264AbgBNLwS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Feb 2020 06:19:55 -0500
-Received: from s3.sipsolutions.net ([144.76.43.62]:43012 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728864AbgBNLTz (ORCPT
+        Fri, 14 Feb 2020 06:52:18 -0500
+Received: from esa4.microchip.iphmx.com ([68.232.154.123]:44336 "EHLO
+        esa4.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727805AbgBNLwS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Feb 2020 06:19:55 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.93)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1j2Z0i-00BUEg-PQ; Fri, 14 Feb 2020 12:19:52 +0100
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     netdev@vger.kernel.org
-Cc:     linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211-next next-2020-02-14
-Date:   Fri, 14 Feb 2020 12:19:46 +0100
-Message-Id: <20200214111947.55727-1-johannes@sipsolutions.net>
-X-Mailer: git-send-email 2.24.1
+        Fri, 14 Feb 2020 06:52:18 -0500
+Received-SPF: Pass (esa4.microchip.iphmx.com: domain of
+  Ajay.Kathat@microchip.com designates 198.175.253.82 as
+  permitted sender) identity=mailfrom;
+  client-ip=198.175.253.82; receiver=esa4.microchip.iphmx.com;
+  envelope-from="Ajay.Kathat@microchip.com";
+  x-sender="Ajay.Kathat@microchip.com"; x-conformance=spf_only;
+  x-record-type="v=spf1"; x-record-text="v=spf1 mx
+  a:ushub1.microchip.com a:smtpout.microchip.com
+  -exists:%{i}.spf.microchip.iphmx.com include:servers.mcsv.net
+  include:mktomail.com include:spf.protection.outlook.com ~all"
+Received-SPF: None (esa4.microchip.iphmx.com: no sender
+  authenticity information available from domain of
+  postmaster@email.microchip.com) identity=helo;
+  client-ip=198.175.253.82; receiver=esa4.microchip.iphmx.com;
+  envelope-from="Ajay.Kathat@microchip.com";
+  x-sender="postmaster@email.microchip.com";
+  x-conformance=spf_only
+Authentication-Results: esa4.microchip.iphmx.com; spf=Pass smtp.mailfrom=Ajay.Kathat@microchip.com; spf=None smtp.helo=postmaster@email.microchip.com; dmarc=pass (p=none dis=none) d=microchip.com
+IronPort-SDR: TBF+hzJdIOLvmtFgrepvVYmXswrQrdmRiTugeK6tdMgH8lIfdo+olP25Zd7ym4ebeP0m5rGjnO
+ YgiFvSfRQYAhqahuBcQvd7bcFJGGYlsxnAXDZyskyWbmfNLVemNtEU6rvF15XSTvvxD5srAzJE
+ J4vrc0228o2DLsWtQOeNocKAuyC+Dr/foG3lVa8mgHbHaHH+xHzeJ6pAnm0sGMvGMuRSlTaSEU
+ RqlNpCG30tM6Tgr7ZV9OxdHuq4waaB9HxGtPdhwvMkHJGllUBjzyT2Hkz+iaKM0YdY9tZfe7su
+ H9s=
+X-IronPort-AV: E=Sophos;i="5.70,440,1574146800"; 
+   d="scan'208";a="64197884"
+Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
+  by esa4.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 14 Feb 2020 04:52:17 -0700
+Received: from chn-vm-ex02.mchp-main.com (10.10.87.72) by
+ chn-vm-ex02.mchp-main.com (10.10.87.72) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1713.5; Fri, 14 Feb 2020 04:52:19 -0700
+Received: from NAM12-DM6-obe.outbound.protection.outlook.com (10.10.215.89) by
+ email.microchip.com (10.10.87.72) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5 via Frontend
+ Transport; Fri, 14 Feb 2020 04:52:19 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=MrlfWRVHdecF4KOE5YddKOgrpXWnVVYlhRDZZ/k9goeA53rcLxOK+xBVuftjqqxADb5p2FjBAUsCZU2S1x5hv2Y/QrThOImgfEnc55pkLdIAL2iRRE+bvZnKCI9PmM7tsrcSe1Gl0wTuA/1yqp16rbqNuLRnkT1Y7UykwoKUcWiJs/atzF8v+NxJPy42LgaNdQG3ecbfxl4V16z3e3xPNRkhzw+v2tVKCi8DdPKLF94/9lc2ay/aOSVIYdZDdClIVWQkExacQn71StPak2zi+k0imengfMG1JaaYRn6Z6C8YkVrh5xiCC/RlRoEF5m8kb5FLhC+zXgFND6SDfn845Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Q4T5Y6SGXu1kugvEHjbw/UIMbc7W1MnLPH2atAaWFfo=;
+ b=feFF3RQSOthyK9MwfA8qMaq+uGMQMnvGXY10pPIaGmDtIUDFWv57rGLslhe5qAL0KQRDSdOLUP/aR383mIC2U+6hhV47293eCQJ5+L7Od2MO/8S+KktDCTMW7WcA6LVtE1WZ86NJmz7K16ikhVLw7tdPN6q9I1RuxIcrmkOr7vl9Ug6cZu8PgDZvQXkfJgZKVsUE+Fuefo5TL/5WsiVCoACVWiYT3HASakHOjWB4dyv+RsmizIgB9farj5rTpRAuSoibLz/JiD5+hulCLWvRji0ffwbuPl6DOj0iHRPt1TmJeMVLBOP0E0Bky4yCF7JmxBJ4fDLzqDcRlJunX4a/Fw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=microchip.com; dmarc=pass action=none
+ header.from=microchip.com; dkim=pass header.d=microchip.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=microchiptechnology.onmicrosoft.com;
+ s=selector2-microchiptechnology-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Q4T5Y6SGXu1kugvEHjbw/UIMbc7W1MnLPH2atAaWFfo=;
+ b=EHRx8tuCvmes2sTCUlfC1HhhOCXQDab1yqz7H7X4Oq1bpFI/z6cYA0NLb6EuTEsfjsnZuglSjPutOzalHXNU6/RzcJoxrvspJVUzMKQS8qLrt6Uf08o69z/zbP+RBs+xDwmHLKWLHHDI40HZA5z8V/DFQ1f/uZ/uNf0+bQ/u9ro=
+Received: from BN6PR11MB3985.namprd11.prod.outlook.com (10.255.129.78) by
+ BN6PR11MB1652.namprd11.prod.outlook.com (10.172.24.13) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2729.25; Fri, 14 Feb 2020 11:52:15 +0000
+Received: from BN6PR11MB3985.namprd11.prod.outlook.com
+ ([fe80::ec62:e7fd:f17c:dfd4]) by BN6PR11MB3985.namprd11.prod.outlook.com
+ ([fe80::ec62:e7fd:f17c:dfd4%3]) with mapi id 15.20.2729.027; Fri, 14 Feb 2020
+ 11:52:15 +0000
+From:   <Ajay.Kathat@microchip.com>
+To:     <linux-wireless@vger.kernel.org>
+CC:     <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
+        <Adham.Abozaeid@microchip.com>, <johannes@sipsolutions.net>,
+        <Ajay.Kathat@microchip.com>
+Subject: [PATCH 1/8] staging: wilc1000: make use of FIELD_GET/_PREP macro
+Thread-Topic: [PATCH 1/8] staging: wilc1000: make use of FIELD_GET/_PREP macro
+Thread-Index: AQHV4y0zpLk4/0zZ5UOS9u/6UMd/gg==
+Date:   Fri, 14 Feb 2020 11:52:15 +0000
+Message-ID: <20200214172250.13026-2-ajay.kathat@microchip.com>
+References: <20200214172250.13026-1-ajay.kathat@microchip.com>
+In-Reply-To: <20200214172250.13026-1-ajay.kathat@microchip.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-mailer: git-send-email 2.17.1
+x-originating-ip: [121.244.27.38]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: a3db65d6-e1c1-4526-84db-08d7b14455df
+x-ms-traffictypediagnostic: BN6PR11MB1652:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <BN6PR11MB1652D5981F04450E368EAEA2E3150@BN6PR11MB1652.namprd11.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:335;
+x-forefront-prvs: 03137AC81E
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(396003)(376002)(346002)(366004)(39850400004)(136003)(189003)(199004)(6506007)(2906002)(26005)(6512007)(2616005)(107886003)(6486002)(5660300002)(186003)(316002)(54906003)(4326008)(81156014)(81166006)(86362001)(64756008)(66476007)(66446008)(66556008)(8936002)(8676002)(76116006)(91956017)(66946007)(478600001)(36756003)(6916009)(71200400001)(1076003);DIR:OUT;SFP:1101;SCL:1;SRVR:BN6PR11MB1652;H:BN6PR11MB3985.namprd11.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+received-spf: None (protection.outlook.com: microchip.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: 30/jYRV4YLrTF+C60Jd4A9uboPzIEiKo9uUMuaYM96U3MoLS0oUA008bXDKMKeXvycqnl6R01n+wwZmEyDWKYi9iyOQPQ2yIA0kmUIM45JFqF+HbjIW0dRhJluN29cVfZPQ64spvJzctYRlYtocXqr9wdHzolI32FCGf1mTHn6RFDvwyInwV9N6A8Drlj4jaV/cPlw+ddltU52ps6L1FNV6rS0VQoFDAQtB6KEF9JA1u2vnfQZ8WtpcmmPun1DOuh4aYRVRZGBXbb5g8A56FIzBcsn3oX1kjproTJHlCL5Ok3TsZ93pEENSp2UKZJ7d7IOGoYX+OIujhIPyGWn+HVYSsgoYbH+/p2evCRbR4rwQJRozOd7+J+0jFiQJXID/AByiDo5lSdcELI1UaCZlxzdBsixR7rcke94BL9S4espVodZ/dppJ2MSQiU1tYNrul
+x-ms-exchange-antispam-messagedata: hy1ZeMDE2b6aNSa9F5A06jdZwVtouTo2TW8kjjQNmjFDVaWyXu1p69i9D5O7yPD6prJK7B3qMKfEY4k/dF7rsnFjYGKUm1pTtMXkzKUHzAnoW3rqTir2vvuyPIQY2Wp/8R4j8V+Ayjzoj2o6k3bQgQ==
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+X-MS-Exchange-CrossTenant-Network-Message-Id: a3db65d6-e1c1-4526-84db-08d7b14455df
+X-MS-Exchange-CrossTenant-originalarrivaltime: 14 Feb 2020 11:52:15.0959
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: wk+07f2cBmFn/XaDD2uTzP7P59xsl2HnshCp39Y0u+KciudxAbjOA4TNyEnFceRs4jATGH1ryWG1KBn7g9ixNNPz2cOpTufBh6djexIaUAk=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN6PR11MB1652
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
+From: Ajay Singh <ajay.kathat@microchip.com>
 
-And also for net-next, some updates. I have more in the
-queue, but want to get these in first, then forward my
-tree, and then get the others to avoid conflicts etc.
+Simplified the code by making use of FIELD_GET/_PREP bitfield macro.
 
-Please pull and let me know if there's any problem.
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+---
+ drivers/staging/wilc1000/cfg80211.c |  2 +-
+ drivers/staging/wilc1000/mon.c      |  2 +-
+ drivers/staging/wilc1000/netdev.h   |  2 --
+ drivers/staging/wilc1000/spi.c      |  2 +-
+ drivers/staging/wilc1000/wlan.c     | 32 +++++++++++++++--------------
+ drivers/staging/wilc1000/wlan.h     | 20 +++++++++++++++++-
+ 6 files changed, 39 insertions(+), 21 deletions(-)
 
-Thanks,
-johannes
-
-
-
-The following changes since commit fe23d63422c83cd7c8154dc7faef6af97be4b948:
-
-  Merge branch '1GbE' of git://git.kernel.org/pub/scm/linux/kernel/git/jkirsher/next-queue (2019-12-31 21:43:31 -0800)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git tags/mac80211-next-for-net-next-2020-02-14
-
-for you to fetch changes up to 1f6e0baa703d31002c312c3e423c108b04325df0:
-
-  mac80211: allow setting queue_len for drivers not using wake_tx_queue (2020-02-14 09:59:35 +0100)
-
-----------------------------------------------------------------
-A few big new things:
- * 802.11 frame encapsulation offload support
- * more HE (802.11ax) support, including some for 6 GHz band
- * powersave in hwsim, for better testing
-
-Of course as usual there are various cleanups and small fixes.
-
-----------------------------------------------------------------
-Aditya Pakki (1):
-      mac80211: Remove redundant assertion
-
-Andrei Otcheretianski (1):
-      mac80211: Accept broadcast probe responses on 6GHz band
-
-Ben Greear (1):
-      mac80211: Fix setting txpower to zero
-
-Daniel Gabay (1):
-      mac80211: update condition for HE disablement
-
-Haim Dreyfuss (2):
-      cfg80211: add no HE indication to the channel flag
-      mac80211: check whether HE connection is allowed by the reg domain
-
-Ilan Peer (3):
-      mac80211: Handle SMPS mode changes only in AP mode
-      mac80211: Remove support for changing AP SMPS mode
-      cfg80211/mac80211: Allow user space to register for station Rx authentication
-
-Johannes Berg (7):
-      Merge remote-tracking branch 'net-next/master' into mac80211-next
-      mac80211_hwsim: remove maximum TX power
-      mac80211: simplify and improve HT/VHT/HE disable code
-      mac80211: refactor extended element parsing
-      mac80211: allow changing TX-related netdev features
-      mac80211: remove supported channels element in 6 GHz if ECSA support
-      mac80211: set station bandwidth from HE capability
-
-John Crispin (6):
-      trivial: mac80211: fix indentation
-      mac80211: add 802.11 encapsulation offloading support
-      nl80211: add handling for BSS color
-      mac80211: add handling for BSS color
-      mac80211: fix 11w when using encapsulation offloading
-      mac80211: allow setting queue_len for drivers not using wake_tx_queue
-
-Lorenzo Bianconi (1):
-      mac80211: debugfs: improve airtime_flags handler readability
-
-Luca Coelho (1):
-      mac80211: make ieee80211_wep_init() return void
-
-Markus Theil (3):
-      mac80211: fix tx status for no ack cases
-      nl80211: add src and dst addr attributes for control port tx/rx
-      mac80211: support NL80211_EXT_FEATURE_CONTROL_PORT_OVER_NL80211_MAC_ADDRS
-
-Pi-Hsun Shih (1):
-      wireless: Use offsetof instead of custom macro.
-
-Sergey Matyukevich (1):
-      ieee80211: add WPA3 OWE AKM suite selector
-
-Shaul Triebitz (1):
-      mac80211: parse also the RSNXE IE
-
-Thomas Pedersen (2):
-      mac80211_hwsim: add power save support
-      mac80211: add ieee80211_is_any_nullfunc()
-
-Toke Høiland-Jørgensen (1):
-      mac80211: Always show airtime debugfs file when TXQs are enabled
-
-Tova Mussai (1):
-      mac80211: HE: set RX NSS
-
-Veerendranath Jakkam (1):
-      cfg80211: Enhance the AKM advertizement to support per interface.
-
-Zvika Yehudai (1):
-      ieee80211: fix 'the' doubling in comments
-
- drivers/net/wireless/ath/ath10k/mac.c             |   3 +-
- drivers/net/wireless/ath/ath9k/main.c             |   3 +
- drivers/net/wireless/ath/ath9k/xmit.c             |   7 +-
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c |   2 +-
- drivers/net/wireless/mac80211_hwsim.c             |  11 +-
- include/linux/ieee80211.h                         |  26 +++-
- include/net/cfg80211.h                            |  63 +++++++-
- include/net/mac80211.h                            |  40 ++++-
- include/uapi/linux/nl80211.h                      |  80 +++++++++-
- include/uapi/linux/wireless.h                     |   5 +-
- net/mac80211/cfg.c                                | 106 +------------
- net/mac80211/debugfs.c                            |  56 ++++++-
- net/mac80211/debugfs_netdev.c                     |  13 +-
- net/mac80211/debugfs_sta.c                        |   6 +-
- net/mac80211/he.c                                 |   4 +
- net/mac80211/ht.c                                 |  64 +++-----
- net/mac80211/ieee80211_i.h                        |  28 +++-
- net/mac80211/iface.c                              |  82 +++++++++-
- net/mac80211/key.c                                |  19 ++-
- net/mac80211/main.c                               |  33 ++--
- net/mac80211/mlme.c                               | 139 +++++++++++------
- net/mac80211/rx.c                                 |  14 +-
- net/mac80211/sta_info.c                           |  16 +-
- net/mac80211/status.c                             |  91 ++++++++++-
- net/mac80211/tx.c                                 | 177 +++++++++++++++++++++-
- net/mac80211/util.c                               |  83 ++++++----
- net/mac80211/vht.c                                |  58 ++++++-
- net/mac80211/wep.c                                |   4 +-
- net/mac80211/wep.h                                |   2 +-
- net/wireless/core.h                               |   2 +-
- net/wireless/mlme.c                               |  33 +++-
- net/wireless/nl80211.c                            | 109 ++++++++++++-
- net/wireless/rdev-ops.h                           |   8 +-
- net/wireless/reg.c                                |   2 +
- net/wireless/trace.h                              |  27 ++--
- 35 files changed, 1078 insertions(+), 338 deletions(-)
-
+diff --git a/drivers/staging/wilc1000/cfg80211.c b/drivers/staging/wilc1000=
+/cfg80211.c
+index d9c7bed2e6fb..995b1f306807 100644
+--- a/drivers/staging/wilc1000/cfg80211.c
++++ b/drivers/staging/wilc1000/cfg80211.c
+@@ -988,7 +988,7 @@ void wilc_wfi_p2p_rx(struct wilc_vif *vif, u8 *buff, u3=
+2 size)
+ 	s32 freq;
+=20
+ 	header =3D get_unaligned_le32(buff - HOST_HDR_OFFSET);
+-	pkt_offset =3D GET_PKT_OFFSET(header);
++	pkt_offset =3D FIELD_GET(WILC_PKT_HDR_OFFSET_FIELD, header);
+=20
+ 	if (pkt_offset & IS_MANAGMEMENT_CALLBACK) {
+ 		bool ack =3D false;
+diff --git a/drivers/staging/wilc1000/mon.c b/drivers/staging/wilc1000/mon.=
+c
+index 48ac33f06f63..60331417bd98 100644
+--- a/drivers/staging/wilc1000/mon.c
++++ b/drivers/staging/wilc1000/mon.c
+@@ -40,7 +40,7 @@ void wilc_wfi_monitor_rx(struct net_device *mon_dev, u8 *=
+buff, u32 size)
+ 	 * The packet offset field contain info about what type of management
+ 	 * the frame we are dealing with and ack status
+ 	 */
+-	pkt_offset =3D GET_PKT_OFFSET(header);
++	pkt_offset =3D FIELD_GET(WILC_PKT_HDR_OFFSET_FIELD, header);
+=20
+ 	if (pkt_offset & IS_MANAGMEMENT_CALLBACK) {
+ 		/* hostapd callback mgmt frame */
+diff --git a/drivers/staging/wilc1000/netdev.h b/drivers/staging/wilc1000/n=
+etdev.h
+index c475e78e3a69..e3689e2a4abb 100644
+--- a/drivers/staging/wilc1000/netdev.h
++++ b/drivers/staging/wilc1000/netdev.h
+@@ -29,8 +29,6 @@
+ #define TCP_ACK_FILTER_LINK_SPEED_THRESH	54
+ #define DEFAULT_LINK_SPEED			72
+=20
+-#define GET_PKT_OFFSET(a) (((a) >> 22) & 0x1ff)
+-
+ struct wilc_wfi_stats {
+ 	unsigned long rx_packets;
+ 	unsigned long tx_packets;
+diff --git a/drivers/staging/wilc1000/spi.c b/drivers/staging/wilc1000/spi.=
+c
+index 9a9f3624e158..300c5c832572 100644
+--- a/drivers/staging/wilc1000/spi.c
++++ b/drivers/staging/wilc1000/spi.c
+@@ -898,7 +898,7 @@ static int wilc_spi_read_size(struct wilc *wilc, u32 *s=
+ize)
+ 	int ret;
+=20
+ 	ret =3D spi_internal_read(wilc, 0xe840 - WILC_SPI_REG_BASE, size);
+-	*size =3D *size & IRQ_DMA_WD_CNT_MASK;
++	*size =3D FIELD_GET(IRQ_DMA_WD_CNT_MASK, *size);
+=20
+ 	return ret;
+ }
+diff --git a/drivers/staging/wilc1000/wlan.c b/drivers/staging/wilc1000/wla=
+n.c
+index 601e4d1345d2..9dfabd1af4e7 100644
+--- a/drivers/staging/wilc1000/wlan.c
++++ b/drivers/staging/wilc1000/wlan.c
+@@ -568,8 +568,8 @@ int wilc_wlan_handle_txq(struct wilc *wilc, u32 *txq_co=
+unt)
+ 			ret =3D func->hif_read_reg(wilc, WILC_HOST_VMM_CTL, &reg);
+ 			if (ret)
+ 				break;
+-			if ((reg >> 2) & 0x1) {
+-				entries =3D ((reg >> 3) & 0x3f);
++			if (FIELD_GET(WILC_VMM_ENTRY_AVAILABLE, reg)) {
++				entries =3D FIELD_GET(WILC_VMM_ENTRY_COUNT, reg);
+ 				break;
+ 			}
+ 			release_bus(wilc, WILC_BUS_RELEASE_ALLOW_SLEEP);
+@@ -610,6 +610,7 @@ int wilc_wlan_handle_txq(struct wilc *wilc, u32 *txq_co=
+unt)
+ 	do {
+ 		u32 header, buffer_offset;
+ 		char *bssid;
++		u8 mgmt_ptk =3D 0;
+=20
+ 		tqe =3D wilc_wlan_txq_remove_from_head(dev);
+ 		if (!tqe)
+@@ -620,15 +621,16 @@ int wilc_wlan_handle_txq(struct wilc *wilc, u32 *txq_=
+count)
+ 			break;
+=20
+ 		le32_to_cpus(&vmm_table[i]);
+-		vmm_sz =3D (vmm_table[i] & 0x3ff);
++		vmm_sz =3D FIELD_GET(WILC_VMM_BUFFER_SIZE, vmm_table[i]);
+ 		vmm_sz *=3D 4;
+-		header =3D (tqe->type << 31) |
+-			 (tqe->buffer_size << 15) |
+-			 vmm_sz;
++
+ 		if (tqe->type =3D=3D WILC_MGMT_PKT)
+-			header |=3D BIT(30);
+-		else
+-			header &=3D ~BIT(30);
++			mgmt_ptk =3D 1;
++
++		header =3D (FIELD_PREP(WILC_VMM_HDR_TYPE, tqe->type) |
++			  FIELD_PREP(WILC_VMM_HDR_MGMT_FIELD, mgmt_ptk) |
++			  FIELD_PREP(WILC_VMM_HDR_PKT_SIZE, tqe->buffer_size) |
++			  FIELD_PREP(WILC_VMM_HDR_BUFF_SIZE, vmm_sz));
+=20
+ 		cpu_to_le32s(&header);
+ 		memcpy(&txb[offset], &header, 4);
+@@ -686,10 +688,10 @@ static void wilc_wlan_handle_rx_buff(struct wilc *wil=
+c, u8 *buffer, int size)
+ 		buff_ptr =3D buffer + offset;
+ 		header =3D get_unaligned_le32(buff_ptr);
+=20
+-		is_cfg_packet =3D (header >> 31) & 0x1;
+-		pkt_offset =3D (header >> 22) & 0x1ff;
+-		tp_len =3D (header >> 11) & 0x7ff;
+-		pkt_len =3D header & 0x7ff;
++		is_cfg_packet =3D FIELD_GET(WILC_PKT_HDR_CONFIG_FIELD, header);
++		pkt_offset =3D FIELD_GET(WILC_PKT_HDR_OFFSET_FIELD, header);
++		tp_len =3D FIELD_GET(WILC_PKT_HDR_TOTAL_LEN_FIELD, header);
++		pkt_len =3D FIELD_GET(WILC_PKT_HDR_LEN_FIELD, header);
+=20
+ 		if (pkt_len =3D=3D 0 || tp_len =3D=3D 0)
+ 			break;
+@@ -758,11 +760,11 @@ static void wilc_wlan_handle_isr_ext(struct wilc *wil=
+c, u32 int_status)
+ 	int ret =3D 0;
+ 	struct rxq_entry_t *rqe;
+=20
+-	size =3D (int_status & 0x7fff) << 2;
++	size =3D FIELD_GET(WILC_INTERRUPT_DATA_SIZE, int_status) << 2;
+=20
+ 	while (!size && retries < 10) {
+ 		wilc->hif_func->hif_read_size(wilc, &size);
+-		size =3D (size & 0x7fff) << 2;
++		size =3D FIELD_GET(WILC_INTERRUPT_DATA_SIZE, size) << 2;
+ 		retries++;
+ 	}
+=20
+diff --git a/drivers/staging/wilc1000/wlan.h b/drivers/staging/wilc1000/wla=
+n.h
+index 8c4634262adb..d3e822c374eb 100644
+--- a/drivers/staging/wilc1000/wlan.h
++++ b/drivers/staging/wilc1000/wlan.h
+@@ -8,6 +8,7 @@
+ #define WILC_WLAN_H
+=20
+ #include <linux/types.h>
++#include <linux/bitfield.h>
+=20
+ /********************************************
+  *
+@@ -135,6 +136,23 @@
+=20
+ #define MODALIAS		"WILC_SPI"
+ #define GPIO_NUM		0x44
++
++#define WILC_PKT_HDR_CONFIG_FIELD	BIT(31)
++#define WILC_PKT_HDR_OFFSET_FIELD	GENMASK(30, 22)
++#define WILC_PKT_HDR_TOTAL_LEN_FIELD	GENMASK(21, 11)
++#define WILC_PKT_HDR_LEN_FIELD		GENMASK(10, 0)
++
++#define WILC_INTERRUPT_DATA_SIZE	GENMASK(14, 0)
++
++#define WILC_VMM_BUFFER_SIZE		GENMASK(9, 0)
++
++#define WILC_VMM_HDR_TYPE		BIT(31)
++#define WILC_VMM_HDR_MGMT_FIELD		BIT(30)
++#define WILC_VMM_HDR_PKT_SIZE		GENMASK(29, 15)
++#define WILC_VMM_HDR_BUFF_SIZE		GENMASK(14, 0)
++
++#define WILC_VMM_ENTRY_COUNT		GENMASK(8, 3)
++#define WILC_VMM_ENTRY_AVAILABLE	BIT(2)
+ /*******************************************/
+ /*        E0 and later Interrupt flags.    */
+ /*******************************************/
+@@ -150,7 +168,7 @@
+ /* 21: INT5 flag                           */
+ /*******************************************/
+ #define IRG_FLAGS_OFFSET	16
+-#define IRQ_DMA_WD_CNT_MASK	((1ul << IRG_FLAGS_OFFSET) - 1)
++#define IRQ_DMA_WD_CNT_MASK	GENMASK(IRG_FLAGS_OFFSET - 1, 0)
+ #define INT_0			BIT(IRG_FLAGS_OFFSET)
+ #define INT_1			BIT(IRG_FLAGS_OFFSET + 1)
+ #define INT_2			BIT(IRG_FLAGS_OFFSET + 2)
+--=20
+2.24.0
