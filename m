@@ -5,40 +5,40 @@ X-Spam-Level:
 X-Spam-Status: No, score=-15.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EE02C2BA83
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 16:53:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AAFAC2BA83
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 16:53:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1741224650
-	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 16:53:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 03BC624650
+	for <linux-wireless@archiver.kernel.org>; Fri, 14 Feb 2020 16:53:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1581699209;
-	bh=aWR6Zu59hi5VElOSxItFdgqNPM+v1/JlONAk1/B1yCk=;
+	s=default; t=1581699213;
+	bh=ZdKXL16m2JRHOwk/RKDSsE4rc/2dosS1CDBQNxazXCw=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=RIOtxMd6XjbOqLfAxjEjdg+k7tr2pVZFpVaVbIVlp5uzf62cXb6qBrr1/QhDjQFy4
-	 ivZTCfztFRMn405+XOHqJMAvloTGjxaEB/9KQqjJM5x+C0LIXPd2fK8U33xWwa4gM5
-	 4uyWYjenOZypgMrfukD3JzB+6XUYgxrZ9lEAQljs=
+	b=0zAs8MIbdjhS3xJTNuf+13i3JUUrzk/sGsnH/t37MhyJEScIhZ6MwRRoTR7mL8BBQ
+	 gpqY6meDstqTCMTBc55nUQSaFv4tYPi01J9saHwPookrH2A0cjQaj7DLoODsZzLDJU
+	 xu8Fy2rujTQz+D2oSCjAhdDnv7Zc+7oPYb2Z5eAs=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2404898AbgBNQTA (ORCPT
+        id S2405184AbgBNQxc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Feb 2020 11:19:00 -0500
-Received: from mail.kernel.org ([198.145.29.99]:51956 "EHLO mail.kernel.org"
+        Fri, 14 Feb 2020 11:53:32 -0500
+Received: from mail.kernel.org ([198.145.29.99]:51926 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2404888AbgBNQS7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S2404883AbgBNQS7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 14 Feb 2020 11:18:59 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 6DEAE2470C;
-        Fri, 14 Feb 2020 16:18:58 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 0312824681;
+        Fri, 14 Feb 2020 16:18:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1581697139;
-        bh=aWR6Zu59hi5VElOSxItFdgqNPM+v1/JlONAk1/B1yCk=;
+        s=default; t=1581697138;
+        bh=ZdKXL16m2JRHOwk/RKDSsE4rc/2dosS1CDBQNxazXCw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=oWf/Rp40x4wLvftYFcq00uueZ9ngDjx7SML9JVkWKJH+2wq005Dj7WET1BfnLZRAF
-         rXVinVxT37E3h6P7xzabjn9aFqbag03c5Qjs7cS3yPCayyIxEue9y8+ZLFq2IwyJIk
-         XvcIFtBiMlAzR0QZpV/yuS2fOn6Jz830sOI3wdBo=
+        b=WEWuppgIM7gMGh/AMlYoKbX7RZSl4l+WR7DxSX7geRqzaoT4J/dsOoXrg7+VIU+nu
+         Gw5JOSKHax6brU3pf3+raKLKntbPsVgImvq5tYHmWiz5g0GB86ERuLumWxdFMv7ChE
+         sqzEvYm0xCMKI+BZC0RDeKSn8PcSXET7MaFd8fCg=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Phong Tran <tranmanphong@gmail.com>,
@@ -46,9 +46,9 @@ Cc:     Phong Tran <tranmanphong@gmail.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 080/186] iwlegacy: Fix -Wcast-function-type
-Date:   Fri, 14 Feb 2020 11:15:29 -0500
-Message-Id: <20200214161715.18113-80-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 079/186] ipw2x00: Fix -Wcast-function-type
+Date:   Fri, 14 Feb 2020 11:15:28 -0500
+Message-Id: <20200214161715.18113-79-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200214161715.18113-1-sashal@kernel.org>
 References: <20200214161715.18113-1-sashal@kernel.org>
@@ -63,7 +63,7 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Phong Tran <tranmanphong@gmail.com>
 
-[ Upstream commit da5e57e8a6a3e69dac2937ba63fa86355628fbb2 ]
+[ Upstream commit ebd77feb27e91bb5fe35a7818b7c13ea7435fb98 ]
 
 correct usage prototype of callback in tasklet_init().
 Report by https://github.com/KSPP/linux/issues/20
@@ -73,58 +73,67 @@ Reviewed-by: Kees Cook <keescook@chromium.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlegacy/3945-mac.c | 5 +++--
- drivers/net/wireless/intel/iwlegacy/4965-mac.c | 5 +++--
- 2 files changed, 6 insertions(+), 4 deletions(-)
+ drivers/net/wireless/intel/ipw2x00/ipw2100.c | 7 ++++---
+ drivers/net/wireless/intel/ipw2x00/ipw2200.c | 5 +++--
+ 2 files changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlegacy/3945-mac.c b/drivers/net/wireless/intel/iwlegacy/3945-mac.c
-index 329f3a63dadd6..0fb81151a1327 100644
---- a/drivers/net/wireless/intel/iwlegacy/3945-mac.c
-+++ b/drivers/net/wireless/intel/iwlegacy/3945-mac.c
-@@ -1399,8 +1399,9 @@ il3945_dump_nic_error_log(struct il_priv *il)
+diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2100.c b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
+index 19c442cb93e4a..8fbdd7d4fd0c2 100644
+--- a/drivers/net/wireless/intel/ipw2x00/ipw2100.c
++++ b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
+@@ -3220,8 +3220,9 @@ static void ipw2100_tx_send_data(struct ipw2100_priv *priv)
+ 	}
  }
  
- static void
--il3945_irq_tasklet(struct il_priv *il)
-+il3945_irq_tasklet(unsigned long data)
+-static void ipw2100_irq_tasklet(struct ipw2100_priv *priv)
++static void ipw2100_irq_tasklet(unsigned long data)
  {
-+	struct il_priv *il = (struct il_priv *)data;
- 	u32 inta, handled = 0;
- 	u32 inta_fh;
++	struct ipw2100_priv *priv = (struct ipw2100_priv *)data;
+ 	struct net_device *dev = priv->net_dev;
  	unsigned long flags;
-@@ -3432,7 +3433,7 @@ il3945_setup_deferred_work(struct il_priv *il)
- 	setup_timer(&il->watchdog, il_bg_watchdog, (unsigned long)il);
- 
- 	tasklet_init(&il->irq_tasklet,
--		     (void (*)(unsigned long))il3945_irq_tasklet,
-+		     il3945_irq_tasklet,
- 		     (unsigned long)il);
+ 	u32 inta, tmp;
+@@ -6027,7 +6028,7 @@ static void ipw2100_rf_kill(struct work_struct *work)
+ 	spin_unlock_irqrestore(&priv->low_lock, flags);
  }
  
-diff --git a/drivers/net/wireless/intel/iwlegacy/4965-mac.c b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-index de9b6522c43f5..665e82effb03d 100644
---- a/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-@@ -4363,8 +4363,9 @@ il4965_synchronize_irq(struct il_priv *il)
+-static void ipw2100_irq_tasklet(struct ipw2100_priv *priv);
++static void ipw2100_irq_tasklet(unsigned long data);
+ 
+ static const struct net_device_ops ipw2100_netdev_ops = {
+ 	.ndo_open		= ipw2100_open,
+@@ -6157,7 +6158,7 @@ static struct net_device *ipw2100_alloc_device(struct pci_dev *pci_dev,
+ 	INIT_DELAYED_WORK(&priv->rf_kill, ipw2100_rf_kill);
+ 	INIT_DELAYED_WORK(&priv->scan_event, ipw2100_scan_event);
+ 
+-	tasklet_init(&priv->irq_tasklet, (void (*)(unsigned long))
++	tasklet_init(&priv->irq_tasklet,
+ 		     ipw2100_irq_tasklet, (unsigned long)priv);
+ 
+ 	/* NOTE:  We do not start the deferred work for status checks yet */
+diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2200.c b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
+index 8da87496cb587..2d0734ab3f747 100644
+--- a/drivers/net/wireless/intel/ipw2x00/ipw2200.c
++++ b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
+@@ -1966,8 +1966,9 @@ static void notify_wx_assoc_event(struct ipw_priv *priv)
+ 	wireless_send_event(priv->net_dev, SIOCGIWAP, &wrqu, NULL);
  }
  
- static void
--il4965_irq_tasklet(struct il_priv *il)
-+il4965_irq_tasklet(unsigned long data)
+-static void ipw_irq_tasklet(struct ipw_priv *priv)
++static void ipw_irq_tasklet(unsigned long data)
  {
-+	struct il_priv *il = (struct il_priv *)data;
- 	u32 inta, handled = 0;
- 	u32 inta_fh;
++	struct ipw_priv *priv = (struct ipw_priv *)data;
+ 	u32 inta, inta_mask, handled = 0;
  	unsigned long flags;
-@@ -6264,7 +6265,7 @@ il4965_setup_deferred_work(struct il_priv *il)
- 	setup_timer(&il->watchdog, il_bg_watchdog, (unsigned long)il);
+ 	int rc = 0;
+@@ -10702,7 +10703,7 @@ static int ipw_setup_deferred_work(struct ipw_priv *priv)
+ 	INIT_WORK(&priv->qos_activate, ipw_bg_qos_activate);
+ #endif				/* CONFIG_IPW2200_QOS */
  
- 	tasklet_init(&il->irq_tasklet,
--		     (void (*)(unsigned long))il4965_irq_tasklet,
-+		     il4965_irq_tasklet,
- 		     (unsigned long)il);
- }
+-	tasklet_init(&priv->irq_tasklet, (void (*)(unsigned long))
++	tasklet_init(&priv->irq_tasklet,
+ 		     ipw_irq_tasklet, (unsigned long)priv);
  
+ 	return ret;
 -- 
 2.20.1
 
