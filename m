@@ -2,49 +2,89 @@ Return-Path: <SRS0=sGgU=4D=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.5 required=3.0 tests=FREEMAIL_REPLYTO_END_DIGIT,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 259E1C35242
-	for <linux-wireless@archiver.kernel.org>; Sat, 15 Feb 2020 01:45:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DCEF6C2BA83
+	for <linux-wireless@archiver.kernel.org>; Sat, 15 Feb 2020 10:31:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 041142073A
-	for <linux-wireless@archiver.kernel.org>; Sat, 15 Feb 2020 01:45:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ACC4D2083B
+	for <linux-wireless@archiver.kernel.org>; Sat, 15 Feb 2020 10:31:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1581762712;
+	bh=aEbYe6PJRsQmJsofXlmH5NsgC9Vo1q6sNwaoq6ZaSe4=;
+	h=From:To:Cc:Subject:Date:List-ID:From;
+	b=Mf3juab65VKZae2x6XyU7GNMPTo2bJ2MGg157aasaQa2T3/dzTI5ckRSdJVytn3SO
+	 rTn4v3geZEWoywYcy2mQqzxigW6aknwAjAdDvxOd30zvsGMMGSz9WeZPgj3EbkXi7P
+	 v8NhYZBp14t8ZLjMnwVEiDvzrVXDbSWrLv+qCD8I=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727833AbgBOBpt convert rfc822-to-8bit (ORCPT
+        id S1725974AbgBOKbw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 14 Feb 2020 20:45:49 -0500
-Received: from l37-192-35-170.novotelecom.ru ([37.192.35.170]:23653 "EHLO
-        glpak.ru" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727790AbgBOBpt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Feb 2020 20:45:49 -0500
-Received: from alex.glpak.ru (localhost [127.0.0.1])
-        by glpak.ru (Postfix) with ESMTP id 3E42BA3DCA9
-        for <linux-wireless@vger.kernel.org>; Sat, 15 Feb 2020 08:08:07 +0700 (NOVT)
-X-Virus-Scanned: amavisd-new at glpak.ru
-Received: from glpak.ru ([127.0.0.1])
-        by alex.glpak.ru (glpak.ru [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id Vopnq5HAYM2D for <linux-wireless@vger.kernel.org>;
-        Sat, 15 Feb 2020 08:08:07 +0700 (NOVT)
-Received: from [192.168.88.250] (unknown [185.248.13.181])
-        by glpak.ru (Postfix) with ESMTPA id 7C450A3DCA6
-        for <linux-wireless@vger.kernel.org>; Sat, 15 Feb 2020 08:08:06 +0700 (NOVT)
-Content-Type: text/plain; charset="iso-8859-1"
+        Sat, 15 Feb 2020 05:31:52 -0500
+Received: from mail.kernel.org ([198.145.29.99]:55172 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725937AbgBOKbv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 15 Feb 2020 05:31:51 -0500
+Received: from localhost.lan (unknown [151.48.137.85])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 5AD702067D;
+        Sat, 15 Feb 2020 10:31:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1581762711;
+        bh=aEbYe6PJRsQmJsofXlmH5NsgC9Vo1q6sNwaoq6ZaSe4=;
+        h=From:To:Cc:Subject:Date:From;
+        b=wv3sMl3V8VTRQ0Nq688i15P+PDZ7j80Gxp0ldXWm82zg+JuB0C7OxPn6CISt7CcWd
+         YQq4rgS0hhp2tgRk/3W68LFmYKDmM3GxFapzfhSrL+/uThbCfBGdKdFipIO6Lk+9/Z
+         D0/qG3jVQQrEH/eUx8QFuIGJ2FcKCWCgI+Sh6jT8=
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     nbd@nbd.name
+Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org
+Subject: [PATCH] mt76: mt76u: loop over all possible rx queues in mt76u_rx_tasklet
+Date:   Sat, 15 Feb 2020 11:31:31 +0100
+Message-Id: <4333bba5fbac33d1df33032bb851bcef41b806c2.1581762346.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.24.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8BIT
-Content-Description: Mail message body
-Subject: zionitld3@gmail.com
-To:     linux-wireless@vger.kernel.org
-From:   anna@glpak.ru
-Date:   Fri, 14 Feb 2020 17:09:51 -0800
-Reply-To: zionitld3@gmail.com
-X-Antivirus: Avast (VPS 200214-0, 02/14/2020), Outbound message
-X-Antivirus-Status: Clean
-Message-Id: <20200215010807.3E42BA3DCA9@glpak.ru>
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello, We from Zion Finance Group currently offers loans to customers at a low interest rate of 3%. This is an opportunity that you cannot miss. We have a few questions to ask; Do you have debts? Do you want to pay off your debts? Do you want to be financially equipped? If so, request a loan today from Zion Finance Group. Interested, customers are expected to contact zionitld3@gmail.com for more information. We wish to assist you with a loan. Greetings, Mr. Bernard.
+Loop over all possible hw rx queues in mt76u_rx_tasklet since new
+devices will report mcu events through mcu hw queue
+
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+---
+ drivers/net/wireless/mediatek/mt76/usb.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/wireless/mediatek/mt76/usb.c
+index 36ba81d63f12..fffa12cbb3e3 100644
+--- a/drivers/net/wireless/mediatek/mt76/usb.c
++++ b/drivers/net/wireless/mediatek/mt76/usb.c
+@@ -672,10 +672,17 @@ mt76u_process_rx_queue(struct mt76_dev *dev, struct mt76_queue *q)
+ static void mt76u_rx_tasklet(unsigned long data)
+ {
+ 	struct mt76_dev *dev = (struct mt76_dev *)data;
+-	struct mt76_queue *q = &dev->q_rx[MT_RXQ_MAIN];
++	struct mt76_queue *q;
++	int i;
+ 
+ 	rcu_read_lock();
+-	mt76u_process_rx_queue(dev, q);
++	for (i = 0; i < __MT_RXQ_MAX; i++) {
++		q = &dev->q_rx[i];
++		if (!q->ndesc)
++			continue;
++
++		mt76u_process_rx_queue(dev, q);
++	}
+ 	rcu_read_unlock();
+ }
+ 
+-- 
+2.24.1
+
