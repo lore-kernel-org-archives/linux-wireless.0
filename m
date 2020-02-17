@@ -2,82 +2,76 @@ Return-Path: <SRS0=IRMg=4F=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EBE0C761A4
-	for <linux-wireless@archiver.kernel.org>; Mon, 17 Feb 2020 12:25:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59608C35254
+	for <linux-wireless@archiver.kernel.org>; Mon, 17 Feb 2020 13:31:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3C376206F4
-	for <linux-wireless@archiver.kernel.org>; Mon, 17 Feb 2020 12:25:16 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="gRcKBU1R"
+	by mail.kernel.org (Postfix) with ESMTP id 2F97D2070B
+	for <linux-wireless@archiver.kernel.org>; Mon, 17 Feb 2020 13:31:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727107AbgBQMZP (ORCPT
+        id S1728859AbgBQNbx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 17 Feb 2020 07:25:15 -0500
-Received: from mail27.static.mailgun.info ([104.130.122.27]:38607 "EHLO
-        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726528AbgBQMZP (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Feb 2020 07:25:15 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1581942311; h=Message-Id: Date: Subject: Cc: To: From:
- Sender; bh=iy9oYEyotI4KDaCwraKjGKVN+q5C/hmY7Nguh9S2LVs=; b=gRcKBU1RP3ugvadHoQJ1bXroBd7sVFW+AQs4aPUFRSWnYLLrh/A5ReGv6mfm0AiqjfY+3Avy
- /HQFcaDTsUEtFczJgrsZkmLtAFV20wHJrpK3ocKmoB0rSXbRmcdITU9OmunCMavm6sbSC7G1
- blFiVH4Fat3SheEqVOfdotBIP0w=
-X-Mailgun-Sending-Ip: 104.130.122.27
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e4a861d.7f8e83ea7260-smtp-out-n02;
- Mon, 17 Feb 2020 12:25:01 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 79CBDC4479F; Mon, 17 Feb 2020 12:25:00 +0000 (UTC)
-Received: from vnaralas-linux.qualcomm.com (blr-c-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.19.19])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: mpubbise)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id CDCBBC43383;
-        Mon, 17 Feb 2020 12:24:58 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org CDCBBC43383
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=mpubbise@codeaurora.org
-From:   Manikanta Pubbisetty <mpubbise@codeaurora.org>
-To:     ath11k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org,
-        Manikanta Pubbisetty <mpubbise@codeaurora.org>
-Subject: [RFC 0/2] add 802.11 decapsulation offload support
-Date:   Mon, 17 Feb 2020 17:54:35 +0530
-Message-Id: <1581942277-585-1-git-send-email-mpubbise@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
+        Mon, 17 Feb 2020 08:31:53 -0500
+Received: from nbd.name ([46.4.11.11]:39202 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728614AbgBQNbx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 17 Feb 2020 08:31:53 -0500
+Received: from [2a04:4540:1402:1700:ea7:b5ad:8453:f004]
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.89)
+        (envelope-from <john@phrozen.org>)
+        id 1j3gV6-0006Jp-1j; Mon, 17 Feb 2020 14:31:52 +0100
+Subject: Re: [RFC 0/2] add 802.11 decapsulation offload support
+To:     Manikanta Pubbisetty <mpubbise@codeaurora.org>,
+        ath11k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org
+References: <1581942277-585-1-git-send-email-mpubbise@codeaurora.org>
+From:   John Crispin <john@phrozen.org>
+Message-ID: <eb504840-dd76-5278-e2ac-973548f31ba0@phrozen.org>
+Date:   Mon, 17 Feb 2020 14:31:51 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.7.2
+MIME-Version: 1.0
+In-Reply-To: <1581942277-585-1-git-send-email-mpubbise@codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Adding support for offloading 802.11 decapsulation to the HW.
-This reduces the CPU cycles spent on host CPU for doing the 
-conversion from 802.11 format to ethernet format and thereby
-improving the performance of the device.
+On 17/02/2020 13:24, Manikanta Pubbisetty wrote:
+> Adding support for offloading 802.11 decapsulation to the HW.
+> This reduces the CPU cycles spent on host CPU for doing the
+> conversion from 802.11 format to ethernet format and thereby
+> improving the performance of the device.
+> 
+> Note:
+> Ath11k patch in this patchset depends on PN offload series
+> and the multi reo patchset with the following name.
+> "Support hash based reo destination ring selection"
+> 
 
-Note:
-Ath11k patch in this patchset depends on PN offload series
-and the multi reo patchset with the following name.
-"Support hash based reo destination ring selection"
+Hi,
+you need to also Cc: this to linux-wireless
+	John
 
-Manikanta Pubbisetty (2):
-  mac80211: add receive path for ethernet frame format
-  ath11k: add rx hw 802.11 decapsulation offloading support
 
- drivers/net/wireless/ath/ath11k/core.c     |   4 +
- drivers/net/wireless/ath/ath11k/core.h     |   3 +
- drivers/net/wireless/ath/ath11k/dp_rx.c    | 184 ++++++++++++++----------
- drivers/net/wireless/ath/ath11k/hal_desc.h |   2 +
- drivers/net/wireless/ath/ath11k/mac.c      |  21 +++
- include/net/mac80211.h                     |  20 +++
- net/mac80211/rx.c                          | 215 ++++++++++++++++++++++++++++-
- 7 files changed, 370 insertions(+), 79 deletions(-)
+> Manikanta Pubbisetty (2):
+>    mac80211: add receive path for ethernet frame format
+>    ath11k: add rx hw 802.11 decapsulation offloading support
+> 
+>   drivers/net/wireless/ath/ath11k/core.c     |   4 +
+>   drivers/net/wireless/ath/ath11k/core.h     |   3 +
+>   drivers/net/wireless/ath/ath11k/dp_rx.c    | 184 ++++++++++++++----------
+>   drivers/net/wireless/ath/ath11k/hal_desc.h |   2 +
+>   drivers/net/wireless/ath/ath11k/mac.c      |  21 +++
+>   include/net/mac80211.h                     |  20 +++
+>   net/mac80211/rx.c                          | 215 ++++++++++++++++++++++++++++-
+>   7 files changed, 370 insertions(+), 79 deletions(-)
+> 
 
--- 
-2.7.4
