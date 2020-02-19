@@ -4,41 +4,41 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72E54C34056
-	for <linux-wireless@archiver.kernel.org>; Wed, 19 Feb 2020 17:52:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82F59C18DF4
+	for <linux-wireless@archiver.kernel.org>; Wed, 19 Feb 2020 17:52:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 50C2B24656
-	for <linux-wireless@archiver.kernel.org>; Wed, 19 Feb 2020 17:52:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5F70E24670
+	for <linux-wireless@archiver.kernel.org>; Wed, 19 Feb 2020 17:52:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1582134760;
-	bh=HDn1c+OCg4Fxwj0uJTYLgnTqOgR4bEcc2OImuEKXcQg=;
+	s=default; t=1582134773;
+	bh=p4+U61rOL8UqXw+zdGS8TsO+9JmLa5Y9WBdlRelZRu8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=zoTJkmDtRRFykPu/WmLGokfZfVj+4RHzDhE7+cLYTx9lFMcIJWA6OAEfkLseauztu
-	 peKlhBEyeCDfDQoDQ5NTQJaneajV0MZsHxnTqkAfte7zrRCRyXL07CPE/TnLbFmSbi
-	 eKT80nZFf3NkHjaLVIB+vsk7Spb2C/XIriOT31/s=
+	b=VmBnLq5HmWmwYEG6gXSJcesObdKhnRWWHFUWkH90z+ZjCRaj9ov1agxFG2U7CLbED
+	 DV0rfhJf9t+g/lOgSBHWKfHq3kTcCEpNHZb228TyTbym5hFs8FT8HwC+SXsmW/LGFK
+	 67k5nUhHX/s4ErMmQQ0QHhL0JmJ7pCC9ZI8ajKsY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727503AbgBSRwf (ORCPT
+        id S1727206AbgBSRwu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 19 Feb 2020 12:52:35 -0500
-Received: from mail.kernel.org ([198.145.29.99]:51852 "EHLO mail.kernel.org"
+        Wed, 19 Feb 2020 12:52:50 -0500
+Received: from mail.kernel.org ([198.145.29.99]:52088 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726539AbgBSRwf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Feb 2020 12:52:35 -0500
+        id S1726558AbgBSRwt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 19 Feb 2020 12:52:49 -0500
 Received: from localhost.localdomain (unknown [194.230.155.125])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 6BEF824672;
-        Wed, 19 Feb 2020 17:52:23 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id AB78B2467A;
+        Wed, 19 Feb 2020 17:52:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1582134754;
-        bh=HDn1c+OCg4Fxwj0uJTYLgnTqOgR4bEcc2OImuEKXcQg=;
+        s=default; t=1582134768;
+        bh=p4+U61rOL8UqXw+zdGS8TsO+9JmLa5Y9WBdlRelZRu8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=mWeABfyOQaHBfM1Tl4Rl2aedyBAE8jc2SywErFB4jyNFhmM9UdvOiGm3LE3U1nkFc
-         873iQ9IusUp84dBz6YY/fHsHUBu//dBjjVwQQwc5Wp4QlJOHXM0h8vQp7TnxMb2yLh
-         vk6aSGDTtV8yJjISbJPkkW9wkktuJxNSCdZTdaOY=
+        b=O8OazZxyMRidM7JJBXHHLPQaABxyydxjwKdDR5AfvFme3mNglX8t8m7XQbcjO7Q80
+         fuLH1inydzj4U4OQuJz8BKePXKeLovvgITXtVLPQwS8S3JtPQlrzu0nrehc1XwUIv9
+         FR3oL176lbNuZt7akF7YTj7Kw+33X2n8/AiGORiM=
 From:   Krzysztof Kozlowski <krzk@kernel.org>
 To:     Richard Henderson <rth@twiddle.net>,
         Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
@@ -79,9 +79,9 @@ To:     Richard Henderson <rth@twiddle.net>,
         virtualization@lists.linux-foundation.org,
         linux-arch@vger.kernel.org
 Cc:     Krzysztof Kozlowski <krzk@kernel.org>
-Subject: [RESEND PATCH v2 8/9] media: fsl-viu: Constify ioreadX() iomem argument (as in generic implementation)
-Date:   Wed, 19 Feb 2020 18:50:06 +0100
-Message-Id: <20200219175007.13627-9-krzk@kernel.org>
+Subject: [RESEND PATCH v2 9/9] ath5k: Constify ioreadX() iomem argument (as in generic implementation)
+Date:   Wed, 19 Feb 2020 18:50:07 +0100
+Message-Id: <20200219175007.13627-10-krzk@kernel.org>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200219175007.13627-1-krzk@kernel.org>
 References: <20200219175007.13627-1-krzk@kernel.org>
@@ -98,23 +98,52 @@ so they can be converted to a "const" version for const-safety and
 consistency among architectures.
 
 Signed-off-by: Krzysztof Kozlowski <krzk@kernel.org>
+Acked-by: Kalle Valo <kvalo@codeaurora.org>
 ---
- drivers/media/platform/fsl-viu.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath5k/ahb.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/media/platform/fsl-viu.c b/drivers/media/platform/fsl-viu.c
-index 81a8faedbba6..991d9dc82749 100644
---- a/drivers/media/platform/fsl-viu.c
-+++ b/drivers/media/platform/fsl-viu.c
-@@ -34,7 +34,7 @@
- /* Allow building this driver with COMPILE_TEST */
- #if !defined(CONFIG_PPC) && !defined(CONFIG_MICROBLAZE)
- #define out_be32(v, a)	iowrite32be(a, (void __iomem *)v)
--#define in_be32(a)	ioread32be((void __iomem *)a)
-+#define in_be32(a)	ioread32be((const void __iomem *)a)
- #endif
+diff --git a/drivers/net/wireless/ath/ath5k/ahb.c b/drivers/net/wireless/ath/ath5k/ahb.c
+index 2c9cec8b53d9..8bd01df369fb 100644
+--- a/drivers/net/wireless/ath/ath5k/ahb.c
++++ b/drivers/net/wireless/ath/ath5k/ahb.c
+@@ -138,18 +138,18 @@ static int ath_ahb_probe(struct platform_device *pdev)
  
- #define BUFFER_TIMEOUT		msecs_to_jiffies(500)  /* 0.5 seconds */
+ 	if (bcfg->devid >= AR5K_SREV_AR2315_R6) {
+ 		/* Enable WMAC AHB arbitration */
+-		reg = ioread32((void __iomem *) AR5K_AR2315_AHB_ARB_CTL);
++		reg = ioread32((const void __iomem *) AR5K_AR2315_AHB_ARB_CTL);
+ 		reg |= AR5K_AR2315_AHB_ARB_CTL_WLAN;
+ 		iowrite32(reg, (void __iomem *) AR5K_AR2315_AHB_ARB_CTL);
+ 
+ 		/* Enable global WMAC swapping */
+-		reg = ioread32((void __iomem *) AR5K_AR2315_BYTESWAP);
++		reg = ioread32((const void __iomem *) AR5K_AR2315_BYTESWAP);
+ 		reg |= AR5K_AR2315_BYTESWAP_WMAC;
+ 		iowrite32(reg, (void __iomem *) AR5K_AR2315_BYTESWAP);
+ 	} else {
+ 		/* Enable WMAC DMA access (assuming 5312 or 231x*/
+ 		/* TODO: check other platforms */
+-		reg = ioread32((void __iomem *) AR5K_AR5312_ENABLE);
++		reg = ioread32((const void __iomem *) AR5K_AR5312_ENABLE);
+ 		if (to_platform_device(ah->dev)->id == 0)
+ 			reg |= AR5K_AR5312_ENABLE_WLAN0;
+ 		else
+@@ -202,12 +202,12 @@ static int ath_ahb_remove(struct platform_device *pdev)
+ 
+ 	if (bcfg->devid >= AR5K_SREV_AR2315_R6) {
+ 		/* Disable WMAC AHB arbitration */
+-		reg = ioread32((void __iomem *) AR5K_AR2315_AHB_ARB_CTL);
++		reg = ioread32((const void __iomem *) AR5K_AR2315_AHB_ARB_CTL);
+ 		reg &= ~AR5K_AR2315_AHB_ARB_CTL_WLAN;
+ 		iowrite32(reg, (void __iomem *) AR5K_AR2315_AHB_ARB_CTL);
+ 	} else {
+ 		/*Stop DMA access */
+-		reg = ioread32((void __iomem *) AR5K_AR5312_ENABLE);
++		reg = ioread32((const void __iomem *) AR5K_AR5312_ENABLE);
+ 		if (to_platform_device(ah->dev)->id == 0)
+ 			reg &= ~AR5K_AR5312_ENABLE_WLAN0;
+ 		else
 -- 
 2.17.1
 
