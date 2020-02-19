@@ -2,90 +2,197 @@ Return-Path: <SRS0=bBvh=4H=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30970C34047
-	for <linux-wireless@archiver.kernel.org>; Wed, 19 Feb 2020 17:07:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7A90C34047
+	for <linux-wireless@archiver.kernel.org>; Wed, 19 Feb 2020 17:21:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EFBA524656
-	for <linux-wireless@archiver.kernel.org>; Wed, 19 Feb 2020 17:07:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 86DF620578
+	for <linux-wireless@archiver.kernel.org>; Wed, 19 Feb 2020 17:21:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=dd-wrt.com header.i=@dd-wrt.com header.b="JQMzAeGV"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZL0wo2E7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726582AbgBSRHh (ORCPT
+        id S1726645AbgBSRVh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 19 Feb 2020 12:07:37 -0500
-Received: from webmail.newmedia-net.de ([185.84.6.166]:44246 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726539AbgBSRHh (ORCPT
+        Wed, 19 Feb 2020 12:21:37 -0500
+Received: from mail-pf1-f195.google.com ([209.85.210.195]:40746 "EHLO
+        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726518AbgBSRVg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Feb 2020 12:07:37 -0500
-X-Greylist: delayed 1032 seconds by postgrey-1.27 at vger.kernel.org; Wed, 19 Feb 2020 12:07:36 EST
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=dd-wrt.com; s=mikd;
-        h=Content-Transfer-Encoding:Content-Type:In-Reply-To:MIME-Version:Date:Message-ID:From:References:To:Subject; bh=jfq8UvnZJuTZ8vevahCGDMf60ZB6TPKgjdk5IIPKZCM=;
-        b=JQMzAeGVRfANsFfYYi1Nkydb7aBbbIp4kqNccEeTGs8IQhTsCeeyM8R6koLWBMmnTFHUd9BqLYapTzLV99VrfchJQsvw39vQLLOghoNjw3tNLQKR/ucoO8CVvD3RKEERd9HvVqpt7TNDExljBg9cyS/QGjkMmdv99o1QJZBOnRI=;
-Subject: Re: [PATCH 5/5] mt76: enable Airtime Queue Limit support
-To:     =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@redhat.com>,
-        Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
-References: <20200127181754.2810-1-nbd@nbd.name>
- <20200127181754.2810-5-nbd@nbd.name> <875zgqfoqu.fsf@toke.dk>
-From:   Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Message-ID: <aca37dcb-c76d-d239-0d0e-61b73afc5d8f@dd-wrt.com>
-Date:   Wed, 19 Feb 2020 17:50:21 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101
+        Wed, 19 Feb 2020 12:21:36 -0500
+Received: by mail-pf1-f195.google.com with SMTP id b185so382828pfb.7
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Feb 2020 09:21:36 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=reply-to:subject:from:to:references:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=KYEZ4MbknLv5iTf+an/G8/X9viBPaQav3+JngX0l2Kc=;
+        b=ZL0wo2E7pIkAE0fTURvHCqEdoclpKhBaSK6d4uhBVqA2CMWxoW8Q7rTpikwKKOIo0v
+         VAYBGu7lQOARumRulFn4jJWz5EWUfItSAgjDPjzeIkt9k/QPNIl8uM2F7NgjZc+JxKAB
+         aHoucoJ1ryXUOSmiviapJjff87ficfEWXC+wYQLT5KS3fPJEBA89GAUlMDfDL1t4szqx
+         4vADZ7XhfFE6R/HOX6vpz6gM6RzR1JfZRY0r2lzJ9e35J3gFZPRxoAnQfOuRs5lbrxKH
+         s/22W0A4Y/jF5ppXkpzk13gn0HWQufUAelgoUR3m8v9rcFgV9wqaEjQ+EtSdeSK0+4Et
+         pMqg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:reply-to:subject:from:to:references:message-id
+         :date:user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=KYEZ4MbknLv5iTf+an/G8/X9viBPaQav3+JngX0l2Kc=;
+        b=oTNs5Gmq62qw8SpmQEQtX9XyYU7fiDlgnVgeMewrKbVt1yXEJ1yotnn5nMncU9z0Q2
+         HQSEgQhzGrWhpqx2k1Tewoa6Mttuj3HojDME+9LCtpvTARQ/toX9WpmaoTf6oIf+QVTh
+         A5lb96H6cmJR9z3EoIlx4aOBtE4/SKvF5d2D4yyzLy3Ry8Miu81jSUq7YuIRDvkoyLQK
+         aEKsGDt7xpx3Dh7dt3sj2mDycxG6c8/vsgxRrvln4rnhWExONItxmq197vjlY7dVCXRc
+         h8ndZndiZ53xp0awYx8K0w+Yh76cfm4KfVn3vr2RKmFpgt9w1fQRaVl7WbK1j5om+Ies
+         ED0Q==
+X-Gm-Message-State: APjAAAVdYZ9zLC0rd0TzIPabxNbLKzTMt4sfoRfIfz8aGYlTTO9KY2rz
+        UEQWS2cUSjfjZQtTYmUWG4BfBpL7
+X-Google-Smtp-Source: APXvYqx9yh41kb4OCQ6Uate6nX65MZnTYDeiyMoR9FoAjOJFVdUA79wkeIHEIqUykToCv810fT2EJA==
+X-Received: by 2002:a65:621a:: with SMTP id d26mr28099927pgv.151.1582132895531;
+        Wed, 19 Feb 2020 09:21:35 -0800 (PST)
+Received: from mua.localhost (99-7-172-215.lightspeed.snmtca.sbcglobal.net. [99.7.172.215])
+        by smtp.gmail.com with ESMTPSA id x4sm185714pff.143.2020.02.19.09.21.34
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 19 Feb 2020 09:21:34 -0800 (PST)
+Reply-To: pgnet.dev@gmail.com
+Subject: Re: unable to explicitly set wifi regulatory domain = US; defaults to
+ =CN ?
+From:   PGNet Dev <pgnet.dev@gmail.com>
+To:     linux-wireless@vger.kernel.org
+References: <584c4f03-a904-fdf1-5f42-5e3c1c0bde71@gmail.com>
+Message-ID: <efad195f-fd67-d645-600a-a9ec936f5058@gmail.com>
+Date:   Wed, 19 Feb 2020 09:21:33 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.5.0
 MIME-Version: 1.0
-In-Reply-To: <875zgqfoqu.fsf@toke.dk>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Received:  from [2a01:7700:8040:a100:bc98:54af:e24d:41b5]
-        by webmail.newmedia-net.de with esmtpsa (TLSv1:AES128-SHA:128)
-        (Exim 4.72)
-        (envelope-from <s.gottschall@dd-wrt.com>)
-        id 1j4SVq-00077O-6h; Wed, 19 Feb 2020 17:47:50 +0100
+In-Reply-To: <584c4f03-a904-fdf1-5f42-5e3c1c0bde71@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-nope (iperf3 with 32 parallel streams after 5 seconds of running)
+Anyone with some guidance on this?
+Or, is there a more appropriate forum for this question?
 
-STA 30:24:32💿f9:c4 AC 2 txq pending airtime underflow: 4294967208, 88
-Modules linked in: fast_classifier mt7615e mt76 mac80211 compat
-CPU: 3 PID: 1890 Comm: hostapd Not tainted 4.14.171 #187
-Stack : 00000000 00000001 00000040 8007e454 80490000 8048bc8c 80610000 
-805aee78
-         8058850c 8770b864 870f289c 805f07a7 80582204 00000001 8770b808 
-805f60a8
-         00000000 00000000 80650000 00000000 81147bb8 0000011e 00000007 
-00000000
-         00000000 80660000 80660000 68203a6d 80000000 80610000 00000000 
-873079ec
-         873a4654 00000775 00000000 00000001 00000000 80230b88 0000000c 
-8065000c
-         ...
-Call Trace:
-[<800153a0>] show_stack+0x58/0x100
-[<80438c54>] dump_stack+0xa4/0xe0
-[<80035050>] __warn+0xe4/0x144
-[<80034c8c>] warn_slowpath_fmt+0x30/0x3c
-[<873079ec>] _616+0x110/0x214 [mac80211]
-[<87301ce0>] _535+0x15c/0x4f8 [mac80211]
-[<804224f0>] br_handle_frame_finish+0x4e0/0x524
-[<873d5160>] _49+0x50/0xa4 [mt76]
-[<87606e30>] _61+0x1e8/0x224 [mt7615e]
 
-Am 01.02.2020 um 13:58 schrieb Toke Høiland-Jørgensen:
-> Felix Fietkau <nbd@nbd.name> writes:
->
->> It is supported by all drivers
->>
->> Signed-off-by: Felix Fietkau <nbd@nbd.name>
-> Nice!
->
-> Acked-by: Toke Høiland-Jørgensen <toke@redhat.com>
->
->
+On 2/9/20 10:42 AM, PGNet Dev wrote:
+> on
+> 
+> 	uname -rm
+> 		5.5.2-25.g994cf1f-default x86_64
+> 
+> i'm trying to set my wifi's regulatory domain.
+> 
+> currently, with
+> 
+> 	cat /etc/modprobe.d/wifi.conf
+> 		options iwlwifi lar_disable=1
+> 		softdep ath pre: cfg80211
+> 		options cfg80211 ieee80211_regdom=US
+> 
+> 	cat /etc/modules-load.d/wifi.conf
+> 		iwlwifi
+> 		ath
+> 		cfg80211
+> 
+> 	lsmod | egrep "ath|cfg"
+> 		ath9k_htc              81920  0
+> 		ath9k_common           20480  1 ath9k_htc
+> 		ath9k_hw              499712  2 ath9k_htc,ath9k_common
+> 		mac80211              991232  4 ath9k_htc,rt2x00lib,rt2x00usb,rt2800lib
+> 		usbcore               315392  6 ath9k_htc,xhci_hcd,rt2800usb,usbhid,xhci_pci,rt2x00usb
+> 		ath                    36864  3 ath9k_htc,ath9k_common,ath9k_hw
+> 		cfg80211              835584  6 ath9k_htc,ath9k_common,rt2x00lib,ath,iwlwifi,mac80211
+> 		rfkill                 28672  6 rfkill_gpio,cfg80211
+> 
+> it's
+> 
+> 	iw reg get
+> 		global
+> 		country 00: DFS-UNSET
+> 		        (2402 - 2472 @ 40), (6, 20), (N/A)
+> 		        (2457 - 2482 @ 20), (6, 20), (N/A), AUTO-BW, PASSIVE-SCAN
+> 		        (2474 - 2494 @ 20), (6, 20), (N/A), NO-OFDM, PASSIVE-SCAN
+> 		        (5170 - 5250 @ 80), (6, 20), (N/A), AUTO-BW, PASSIVE-SCAN
+> 		        (5250 - 5330 @ 80), (6, 20), (0 ms), DFS, AUTO-BW, PASSIVE-SCAN
+> 		        (5490 - 5730 @ 160), (6, 20), (0 ms), DFS, PASSIVE-SCAN
+> 		        (5735 - 5835 @ 80), (6, 20), (N/A), PASSIVE-SCAN
+> 		        (57240 - 63720 @ 2160), (N/A, 0), (N/A)
+> 
+> i want to set it explicitly to = US
+> 
+> crda's apparently no longer the method,
+> 
+> 	git clone git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/crda.git
+> 	cat crda/README
+> 		...
+> 		CRDA is no longer needed as of kernel v4.15 since commit 007f6c5e6eb45
+> 		("cfg80211: support loading regulatory database as firmware file") added
+> 		support to use the kernel's firmware request API which looks for the
+> 		firmware on /lib/firmware. Because of this CRDA is legacy software for
+> 		older kernels. It will continue to be maintained.
+> 		...
+> 
+> attempt to SET with `iw` fails
+> 
+> 	iw reg set --debug US
+> 		not a valid ISO/IEC 3166-1 alpha2
+> 		Special non-alpha2 usable entries:
+> 		        00      World Regulatory domain
+> 
+> boot logs show,
+> 
+> 	dmesg | egrep "cfg|ath|wlp|wlan|iwl"
+> 		[    6.817013] cfg80211: Loading compiled-in X.509 certificates for regulatory database
+> 		[    6.817976] cfg80211: Loaded X.509 cert 'sforshee: 00b28ddf47aef9cea7'
+> 		[    6.818043] cfg80211: failed to load regulatory.db
+> 		[    6.835635] iwlwifi: unknown parameter 'lar_disable' ignored
+> 		[    6.835967] systemd-modules-load[221]: Inserted module 'iwlwifi'
+> 		[    6.838745] systemd-modules-load[221]: Inserted module 'ath'
+> 		[   15.210473] usb 1-1.2: ath9k_htc: Firmware ath9k_htc/htc_9271-1.4.0.fw requested
+> 		[   15.210661] usbcore: registered new interface driver ath9k_htc
+> 		[   15.401056] rt2800usb 1-1.1:1.0 wlp0s20u1u1: renamed from wlan0
+> 		[   15.705527] usb 1-1.2: ath9k_htc: Transferred FW: ath9k_htc/htc_9271-1.4.0.fw, size: 51008
+> 		[   15.957604] ath9k_htc 1-1.2:1.0: ath9k_htc: HTC initialized with 33 credits
+> 		[   16.240624] ath9k_htc 1-1.2:1.0: ath9k_htc: FW Version: 1.4
+> 		[   16.240630] ath9k_htc 1-1.2:1.0: FW RMW support: On
+> 		[   16.240634] ath: EEPROM regdomain: 0x809c
+> 		[   16.240635] ath: EEPROM indicates we should expect a country code
+> 		[   16.240637] ath: doing EEPROM country->regdmn map search
+> 		[   16.240640] ath: country maps to regdmn code: 0x52
+> 		[   16.240642] ath: Country alpha2 being used: CN
+> 		[   16.240644] ath: Regpair used: 0x52
+> 		[   16.253506] ath9k_htc 1-1.2:1.0 wlp0s20u1u2: renamed from wlan0
+> 		[  177.266555] ath: phy1: Short RX data len, dropping (dlen: 4)
+> 		[  403.015547] ath: phy1: Short RX data len, dropping (dlen: 9)
+> 		[  456.510042] ath: phy1: Short RX data len, dropping (dlen: 4)
+> 		[  466.037072] ath: phy1: Short RX data len, dropping (dlen: 4)
+> 		[  764.111764] ath: phy1: Short RX data len, dropping (dlen: 4)
+> 		[  916.805596] ath: phy1: Short RX data len, dropping (dlen: 4)
+> 		[  944.127381] ath: phy1: Short RX data len, dropping (dlen: 4)
+> 
+> 
+> note,
+> 
+> there's discussion here
+> 
+> 	https://bugzilla.kernel.org/show_bug.cgi?id=205695
+> 
+> about rm'ing lar_disable options 'vs' being unable to set the reg dom,
+> 
+> 	https://unix.stackexchange.com/questions/286258/intel-wireless-7265d-iw-shows-wrong-regulatory-information
+> 
+> not clear what to _do_ abt that, here.
+> 
+> what's the correct/current config+method for setting the wifi intfc's reg domain?
+> 
+> 
+
