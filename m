@@ -2,82 +2,112 @@ Return-Path: <SRS0=bBvh=4H=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA267C3404D
-	for <linux-wireless@archiver.kernel.org>; Wed, 19 Feb 2020 12:47:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B94BC34047
+	for <linux-wireless@archiver.kernel.org>; Wed, 19 Feb 2020 17:01:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 738FE24654
-	for <linux-wireless@archiver.kernel.org>; Wed, 19 Feb 2020 12:47:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1582116438;
-	bh=78L7q3X7/Zxk9esBo61a/shxQzMYU6nTCnPnkYfB+2E=;
-	h=Date:From:To:Cc:Subject:Reply-To:References:In-Reply-To:List-ID:
-	 From;
-	b=Nuv9nSYEp9SNFWQCFD+D6zs6WcWgAD+zTj02b8exDxLMZlEXibxeBXblTK5ixUvet
-	 nTrcHyCjnOhHyWc4swi6OMzgsEjQYItYmooHoud8IZM7lNjZwrVhOeG2jc0F0ooCvc
-	 +XhZ0lPzmsEyCe7h3sDiCnz6a+49LFA61CkfKHfU=
+	by mail.kernel.org (Postfix) with ESMTP id 210F12467B
+	for <linux-wireless@archiver.kernel.org>; Wed, 19 Feb 2020 17:01:37 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jwzeu1Tl"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727525AbgBSMrO (ORCPT
+        id S1726799AbgBSRBg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 19 Feb 2020 07:47:14 -0500
-Received: from mail.kernel.org ([198.145.29.99]:50220 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726491AbgBSMrN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Feb 2020 07:47:13 -0500
-Received: from paulmck-ThinkPad-P72.home (50-39-105-78.bvtn.or.frontiernet.net [50.39.105.78])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 454C024654;
-        Wed, 19 Feb 2020 12:47:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1582116433;
-        bh=78L7q3X7/Zxk9esBo61a/shxQzMYU6nTCnPnkYfB+2E=;
-        h=Date:From:To:Cc:Subject:Reply-To:References:In-Reply-To:From;
-        b=hdwT7jwDCL5ZqQeaRjVdSYu3jP9wC7ywHEszxyECjNhODNCOWO/jdTrdN/TGO8Kw/
-         iNKq3SBrMzxKe4QcElRQHoD8SJkqLj6UKXd0KzIZM+iwcWfLUOy2jOAHx9O46Ma8Ny
-         OcmmNN29hL1xJorshLjE+GHcL7gPtAHmxirgx1EY=
-Received: by paulmck-ThinkPad-P72.home (Postfix, from userid 1000)
-        id 1E9FE35229ED; Wed, 19 Feb 2020 04:47:13 -0800 (PST)
-Date:   Wed, 19 Feb 2020 04:47:13 -0800
-From:   "Paul E. McKenney" <paulmck@kernel.org>
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     Amol Grover <frextrite@gmail.com>,
-        "David S . Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        linux-kernel-mentees@lists.linuxfoundation.org,
-        Joel Fernandes <joel@joelfernandes.org>,
-        Madhuparna Bhowmik <madhuparnabhowmik10@gmail.com>
-Subject: Re: [PATCH] cfg80211: Pass lockdep expression to RCU lists
-Message-ID: <20200219124713.GU2935@paulmck-ThinkPad-P72>
-Reply-To: paulmck@kernel.org
-References: <20200219091102.10709-1-frextrite@gmail.com>
- <ff8a005c68e512cb3f338b7381853e6b3a3ab293.camel@sipsolutions.net>
+        Wed, 19 Feb 2020 12:01:36 -0500
+Received: from mail-ot1-f67.google.com ([209.85.210.67]:35143 "EHLO
+        mail-ot1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726648AbgBSRBg (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 19 Feb 2020 12:01:36 -0500
+Received: by mail-ot1-f67.google.com with SMTP id r16so834493otd.2
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Feb 2020 09:01:34 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:subject:to:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=CJIEAXu3uuCQa/23055X/0OthDS4Ab6Y2cXkBTLK9Mc=;
+        b=jwzeu1TlYNhB8mWTM1Brue85uAQhigrrfoPK8w7n3z7gdwUe4gWsYa/vQVNjbfM3oy
+         FTuGmjO+Hb46jsAktaBrro343K/MHYlFFZ7uWF0LIvTGS5LSTqFspY2YWSrVB2rl5IK+
+         VOO/y8LLPdKW3H7jdNvXEAZVNYwcQpyInN8Gif77rbigNqWjkoksxVoEQ55eNGmhtC+K
+         mt7g3yAMme9sUnmxa/nbmRhPA6biiDYpEaA2n0yRVcWzCJ1eSEfIN9RAGmRw/T/iYqop
+         6byVOz2kVkY1zMP/I2+ujfmIgMJNIsH1nD/oo7jIUA7wZHZdbSv8RWNeFid/aX4Cbmy6
+         ELhQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:sender:subject:to:references:from:message-id
+         :date:user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=CJIEAXu3uuCQa/23055X/0OthDS4Ab6Y2cXkBTLK9Mc=;
+        b=G60qZZc/eGsOLueQ8OsSUDzxhvOi3STXmn0JptCBTxJQE4RUs6RV93JGxwLGWzkIXz
+         21VUKYFmsfxy47reUizvOTJH2VC9x5HZdMwWZ7IsH/doTDvYc6Qf+/8palIwAC+Y3IGH
+         cFieQ/2laYPRLlU64WudCaXeDJisGOhuWdZfZNiE9rFjPxOvxxjEmNecGd0QrA9oBCTS
+         Hd/7Qnd+3W84UOtsrZajt/IhscXcfn9/6WoWlVErWj42ACvLgncV9qtrdnoZWWgWoPsy
+         qf1utmApfJ7WI7mwDMu7wGep0kaR6Z7JsAQXvc4Gn74E8jck94Gnm/2NWce0wBeYYZGK
+         oNOw==
+X-Gm-Message-State: APjAAAUSQSfHbzn47uibkUPZnLSyCFcPq95r8ctplhrt7fiEI9bjzxxh
+        L+3J8x4Gn5c/wYzyy3jrEik8gniL
+X-Google-Smtp-Source: APXvYqzaPqEyo5PiaEAgW5QguIjMRggAQf3Ijx73I3nAnskq1EPV1bKB2F5RQFJupzdk8mARZT/Kxg==
+X-Received: by 2002:a9d:4110:: with SMTP id o16mr20471920ote.101.1582131693583;
+        Wed, 19 Feb 2020 09:01:33 -0800 (PST)
+Received: from [192.168.1.120] (cpe-24-31-245-230.kc.res.rr.com. [24.31.245.230])
+        by smtp.gmail.com with ESMTPSA id n17sm96028otq.46.2020.02.19.09.01.32
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 19 Feb 2020 09:01:32 -0800 (PST)
+Subject: Re: Commit d1d1a96 in rtl8188ee module causes issues when connecting
+ to my institute's wifi
+To:     Ashish <ashishkumar.yadav@students.iiserpune.ac.in>,
+        linux-wireless@vger.kernel.org
+References: <4830c992-1a09-9989-ab29-ea403b910551@students.iiserpune.ac.in>
+From:   Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <d36d4847-8e01-e8f0-bf22-9fb53de5861c@lwfinger.net>
+Date:   Wed, 19 Feb 2020 11:01:32 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.5.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ff8a005c68e512cb3f338b7381853e6b3a3ab293.camel@sipsolutions.net>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+In-Reply-To: <4830c992-1a09-9989-ab29-ea403b910551@students.iiserpune.ac.in>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, Feb 19, 2020 at 10:13:36AM +0100, Johannes Berg wrote:
-> On Wed, 2020-02-19 at 14:41 +0530, Amol Grover wrote:
-> >  
-> > -	WARN_ON_ONCE(!rcu_read_lock_held() && !lockdep_rtnl_is_held());
-> > -
-> > -	list_for_each_entry_rcu(pos, &rdev->sched_scan_req_list, list) {
-> > +	list_for_each_entry_rcu(pos, &rdev->sched_scan_req_list, list,
-> > +				lockdep_rtnl_is_held()) {
+On 2/19/20 2:55 AM, Ashish wrote:
+> The commit d1d1a96 (at 
+> https://github.com/torvalds/linux/commit/d1d1a96bdb4408d02e2bfcb32b71aba165458a80?diff=unified) 
+> in rtl8188ee module causes problems while connecting to my institute's wifi. I 
+> am not able to connect to that wifi after this commit. The journalctl output is 
+> at http://ix.io/28IX (look for "AP off, try to reconnect now").
 > 
-> Huh, I didn't even know you _could_ do that :)
+> The problem is with removal of the struct. Adding the struct back in trx.h 
+> solves the issue.
+> 
 
-It is a fairly recent addition, courtesy of Joel Fernandes.  ;-)
+As I have discussed with you in the other venues, that struct was never used, 
+and the only way it could have caused any effect is if the alignment of struct 
+phy_status_rpt is  critical in some way I do not understand.
 
-							Thanx, Paul
+Please try the patch below and report back. That will restore the alignment 
+without all that mumbo-jumbo about little- vs big-endian.
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.h 
+b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.h
+index 917729807514..e17f70b4d199 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.h
+@@ -561,6 +561,7 @@ static inline void clear_pci_tx_desc_content(__le32 
+*__pdesc, int _size)
+          rxmcs == DESC92C_RATE11M)
+
+  struct phy_status_rpt {
++       u8      padding[2];
+         u8      ch_corr[2];
+         u8      cck_sig_qual_ofdm_pwdb_all;
+         u8      cck_agc_rpt_ofdm_cfosho_a;
+
+Larry
