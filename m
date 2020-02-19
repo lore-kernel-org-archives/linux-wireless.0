@@ -1,108 +1,106 @@
-Return-Path: <SRS0=Gxg0=4G=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=bBvh=4H=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67AABC34047
-	for <linux-wireless@archiver.kernel.org>; Tue, 18 Feb 2020 18:17:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33A50C34022
+	for <linux-wireless@archiver.kernel.org>; Wed, 19 Feb 2020 04:16:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 37912208C4
-	for <linux-wireless@archiver.kernel.org>; Tue, 18 Feb 2020 18:17:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1582049863;
-	bh=yYDMjp5/cDBIY1sRGi3LckFsgTfaXqAJLGyXpqe7DkY=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=WeT4BUaLe12L0dkkmcFr3GtNQy3HtNRcQUg7fgFtwqsB3AEeou5J/bJqTvLxTsMCy
-	 b1FrSalwZoGCdJRYqG0r3C/e89nAaqfudQd/lIUSMmvpr5JEuuOKZ/7s0XbgC9g5aN
-	 ohR/bHNxNtToPozXJPIcTXKaEwNfMLvHgNXgYsD4=
+	by mail.kernel.org (Postfix) with ESMTP id 0591E24656
+	for <linux-wireless@archiver.kernel.org>; Wed, 19 Feb 2020 04:16:06 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="sXaNni8h"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726444AbgBRSRm (ORCPT
+        id S1726477AbgBSEQF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 18 Feb 2020 13:17:42 -0500
-Received: from mail.kernel.org ([198.145.29.99]:46480 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726401AbgBRSRm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Feb 2020 13:17:42 -0500
-Received: from localhost.localdomain (unknown [151.48.137.85])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 008CD21D56;
-        Tue, 18 Feb 2020 18:17:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1582049861;
-        bh=yYDMjp5/cDBIY1sRGi3LckFsgTfaXqAJLGyXpqe7DkY=;
-        h=From:To:Cc:Subject:Date:From;
-        b=EIxa0kWpnZOLNnWA9UZan6r/vH48Jr10BNLZWLEL2RZKSkF1d7vSLCeV/YdMtznfA
-         vMbjHS2t8pNCgVdch0YDWsch2rfJKyB2mZz6adbOY2ovqqGMOs/sKGLiZf7nlc3aBW
-         9M1JA+IalfKS6lRdZc9+uNbBMvOUk334oAGVFW6M=
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     nbd@nbd.name
-Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org
-Subject: [PATCH] mt76: mt76u: fix a possible memory leak in mt76u_init
-Date:   Tue, 18 Feb 2020 19:17:12 +0100
-Message-Id: <44f06c31962adb2e451aa220711ad4e957beeab9.1582049726.git.lorenzo@kernel.org>
-X-Mailer: git-send-email 2.24.1
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        Tue, 18 Feb 2020 23:16:05 -0500
+Received: from mail-pl1-f196.google.com ([209.85.214.196]:45654 "EHLO
+        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726439AbgBSEQF (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 18 Feb 2020 23:16:05 -0500
+Received: by mail-pl1-f196.google.com with SMTP id b22so8987821pls.12
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Feb 2020 20:16:04 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=H5s84nZe09LEygazx+9zYHkBioooKXZ48/ls3AZTwNo=;
+        b=sXaNni8hNvrlu2JabbxBr+U2UvIQCh/uJTUDTlriUSPs5hnN1ZiU3F+gNTn8rh8anX
+         U7MKjCjKjLxdYUUeivIa7H5T8OsyjinlUCKaCqo4eUSh3vOpO4iRsfwa0H9tzahAL5+R
+         pYIdtfahHGVvUm+g53tiLTgjAYY8Ws94wjGhRBMAOv5vLedb9Dgl8Fu8XjaOp/XM45b4
+         yVdLXEqexgtLIsejKJQy0ShG8n8Mfmsurh3eCEb7NcJj/w74ug31e0dbUHOP401Gwq9q
+         rcIocFOzMHzfF+K6GUOBJkb80YFfbcJ1dKYVHZx3CGYyq3jpuP6wGHyU8R92ye83WIvU
+         dlgQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=H5s84nZe09LEygazx+9zYHkBioooKXZ48/ls3AZTwNo=;
+        b=VDerCLvcBFfboUf/Pfr8AdgtwIW01jAIT+E3t5CnIZ/gwoTaJug6wB1F6uYmCvlYld
+         Q9HlgMT5AnXtY47xiNBkjXkbzXg1i4q39r3ECvoSQXAUZAOGXyGdS5CcZQeUeKBxl7le
+         FAWfbEWDZ+hvYB14RFOG8BdrHZQEde2FswT7NoPVJzl3QHEtgWhFJjuDFaPhqtgJ7XyQ
+         QPs/suZo8TiHtIAgFUAUTXW82nc4pylSylc6QqlM1M5gOQvL5mVAWWiwbg6nhwMt8qg4
+         vky0/dESM/hzfytTJ457ogWg4SBgVjcv6MIv5eOaLeIm8Pvdqpn0YsCUUa+FvsOPC3XM
+         meRA==
+X-Gm-Message-State: APjAAAXftH5AAyWNEc1DM3Q4fykAFdW+qz1QX+xsRmPWp2ZnZouF4Lv4
+        OrPYYD7W2JoYVC5YvQXB0z0=
+X-Google-Smtp-Source: APXvYqyky4/vFL+WsbTkF+tGUtZqVgC52PrW/+DgGiIICaiq8pZbX5zw1WTPwenoUorf5FE9Kj8Qlg==
+X-Received: by 2002:a17:90a:804a:: with SMTP id e10mr6853463pjw.41.1582085764323;
+        Tue, 18 Feb 2020 20:16:04 -0800 (PST)
+Received: from localhost ([43.224.245.179])
+        by smtp.gmail.com with ESMTPSA id m12sm465947pjf.25.2020.02.18.20.16.03
+        (version=TLS1_2 cipher=AES128-SHA bits=128/128);
+        Tue, 18 Feb 2020 20:16:03 -0800 (PST)
+From:   qiwuchen55@gmail.com
+To:     Larry.Finger@lwfinger.net, kvalo@codeaurora.org,
+        davem@davemloft.net
+Cc:     linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+        chenqiwu <chenqiwu@xiaomi.com>
+Subject: [PATCH] b43legacy/sysfs.c: replace simple_strtol() with kstrtoint()
+Date:   Wed, 19 Feb 2020 12:15:59 +0800
+Message-Id: <1582085759-17998-1-git-send-email-qiwuchen55@gmail.com>
+X-Mailer: git-send-email 1.9.1
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Remove usb workqueue if mt76u_set_endpoints fails.
+From: chenqiwu <chenqiwu@xiaomi.com>
 
-Fixes: 284efb473ef5 ("mt76: mt76u: rely on a dedicated stats workqueue")
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+The simple_strtol() function is deprecated since it does not
+check for the range overflow. Use kstrtoint() instead.
+
+Signed-off-by: chenqiwu <chenqiwu@xiaomi.com>
 ---
- drivers/net/wireless/mediatek/mt76/usb.c | 17 ++++++++++++-----
- 1 file changed, 12 insertions(+), 5 deletions(-)
+ drivers/net/wireless/broadcom/b43legacy/sysfs.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/wireless/mediatek/mt76/usb.c
-index 36ba81d63f12..2c0dbc36f9aa 100644
---- a/drivers/net/wireless/mediatek/mt76/usb.c
-+++ b/drivers/net/wireless/mediatek/mt76/usb.c
-@@ -1150,6 +1150,7 @@ int mt76u_init(struct mt76_dev *dev,
- 	};
- 	struct usb_device *udev = interface_to_usbdev(intf);
- 	struct mt76_usb *usb = &dev->usb;
-+	int err = -ENOMEM;
+diff --git a/drivers/net/wireless/broadcom/b43legacy/sysfs.c b/drivers/net/wireless/broadcom/b43legacy/sysfs.c
+index 9312c1d..eec087c 100644
+--- a/drivers/net/wireless/broadcom/b43legacy/sysfs.c
++++ b/drivers/net/wireless/broadcom/b43legacy/sysfs.c
+@@ -25,13 +25,15 @@
+ static int get_integer(const char *buf, size_t count)
+ {
+ 	char tmp[10 + 1] = { 0 };
+-	int ret = -EINVAL;
++	int ret = -EINVAL, res;
  
- 	mt76u_ops.rr = ext ? mt76u_rr_ext : mt76u_rr;
- 	mt76u_ops.wr = ext ? mt76u_wr_ext : mt76u_wr;
-@@ -1169,10 +1170,8 @@ int mt76u_init(struct mt76_dev *dev,
- 		usb->data_len = 32;
- 
- 	usb->data = devm_kmalloc(dev->dev, usb->data_len, GFP_KERNEL);
--	if (!usb->data) {
--		mt76u_deinit(dev);
--		return -ENOMEM;
--	}
-+	if (!usb->data)
-+		goto error;
- 
- 	mutex_init(&usb->usb_ctrl_mtx);
- 	dev->bus = &mt76u_ops;
-@@ -1182,7 +1181,15 @@ int mt76u_init(struct mt76_dev *dev,
- 
- 	usb->sg_en = mt76u_check_sg(dev);
- 
--	return mt76u_set_endpoints(intf, usb);
-+	err = mt76u_set_endpoints(intf, usb);
-+	if (err < 0)
-+		goto error;
-+
-+	return 0;
-+
-+error:
-+	mt76u_deinit(dev);
-+	return err;
+ 	if (count == 0)
+ 		goto out;
+ 	count = min_t(size_t, count, 10);
+ 	memcpy(tmp, buf, count);
+-	ret = simple_strtol(tmp, NULL, 10);
++	ret = kstrtoint(tmp, 10, &res);
++	if (!ret)
++		return res;
+ out:
+ 	return ret;
  }
- EXPORT_SYMBOL_GPL(mt76u_init);
- 
 -- 
-2.24.1
+1.9.1
 
