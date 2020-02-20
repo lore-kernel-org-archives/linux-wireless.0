@@ -2,49 +2,51 @@ Return-Path: <SRS0=UygI=4I=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,LOTS_OF_MONEY,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 437E7C11D04
-	for <linux-wireless@archiver.kernel.org>; Thu, 20 Feb 2020 11:41:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 90602C11D04
+	for <linux-wireless@archiver.kernel.org>; Thu, 20 Feb 2020 13:32:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F1646208C4
-	for <linux-wireless@archiver.kernel.org>; Thu, 20 Feb 2020 11:41:42 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="KyTEzFR0"
+	by mail.kernel.org (Postfix) with ESMTP id 64C7D208C4
+	for <linux-wireless@archiver.kernel.org>; Thu, 20 Feb 2020 13:32:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1582205522;
+	bh=p3779NFQbJ5IeaDqGaAZYI8EXDFcNZzvXvtP1m8rAKs=;
+	h=From:To:Cc:Subject:Date:List-ID:From;
+	b=InxahhHroj/MI8ArNqbukJraAV2hhCfjW7X8/pKMFqWwIjnlXAKq1VnNVIkOQjU6C
+	 Qy4+KsQMP87ms4Rimn+MiFNo4YRHEFCk1cMlLodkTNkFQpbeEuz7jxS2Dqk46lY3WN
+	 IeQKdpCEwmnrvFoDmcA4h1yoiKA+uqZT2giKoV4s=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727705AbgBTLlm (ORCPT
+        id S1728162AbgBTNcB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 20 Feb 2020 06:41:42 -0500
-Received: from nbd.name ([46.4.11.11]:55068 "EHLO nbd.name"
+        Thu, 20 Feb 2020 08:32:01 -0500
+Received: from mail.kernel.org ([198.145.29.99]:57520 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726882AbgBTLlm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Feb 2020 06:41:42 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-Id:Date:Subject
-        :Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:Content-Description:
-        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=QmGrF9CoFgVUhqNJ0kmrFs4wsbbx9jdjenAphQiCtk4=; b=KyTEzFR0eIZU8BJkWkVttAE/K6
-        jblo1l90aY4jYymoDG6rQ+Kse8KacbqeUj7yXiSqFtQBP7Dm1iSPaTHq/vh25rMLPV2jrYhZdPqqM
-        jnzReGZ6eMkhnWYsDGLX4cL2YkihJzd/VOhLlSEmxIlJ9Xo/2hoKdH6lbLIKWbO4o32M=;
-Received: from [80.255.7.124] (helo=maeck.local)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.89)
-        (envelope-from <nbd@nbd.name>)
-        id 1j4kD6-000544-KI; Thu, 20 Feb 2020 12:41:40 +0100
-Received: by maeck.local (Postfix, from userid 501)
-        id 9F2B87CE7105; Thu, 20 Feb 2020 12:41:39 +0100 (CET)
-From:   Felix Fietkau <nbd@nbd.name>
-To:     linux-wireless@vger.kernel.org
-Cc:     kvalo@codeaurora.org, stable@vger.kernel.org
-Subject: [PATCH 5.6] mt76: fix array overflow on receiving too many fragments for a packet
-Date:   Thu, 20 Feb 2020 12:41:39 +0100
-Message-Id: <20200220114139.46508-1-nbd@nbd.name>
-X-Mailer: git-send-email 2.24.0
+        id S1727951AbgBTNcB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 20 Feb 2020 08:32:01 -0500
+Received: from localhost.localdomain (unknown [151.48.137.85])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id A20FF206E2;
+        Thu, 20 Feb 2020 13:31:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1582205520;
+        bh=p3779NFQbJ5IeaDqGaAZYI8EXDFcNZzvXvtP1m8rAKs=;
+        h=From:To:Cc:Subject:Date:From;
+        b=P7LKNSKsZME4V0zve8aSoetlgUOVu2d70fGnz5do6FIozvbRrmEzto9k1IDCvtA/Z
+         Dm3e0QpLusOdl4vJ7lz+V3QWJrE9fPj8lGCUtJ5Dr0dU6RF4e9QaPfEfk/+dKRxc/v
+         ojObJ/zPnekGyVAL2QtbJgqWdg4kW9oQrzkojxr0=
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     nbd@nbd.name
+Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org,
+        stf_xl@wp.pl
+Subject: [PATCH] mt76: mt76u: rely only on data buffer for usb control messagges
+Date:   Thu, 20 Feb 2020 14:31:51 +0100
+Message-Id: <bfe28ce082e6d97f6785d9ecbb93952431e3db9e.1582205223.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.24.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -52,38 +54,98 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-If the hardware receives an oversized packet with too many rx fragments,
-skb_shinfo(skb)->frags can overflow and corrupt memory of adjacent pages.
-This becomes especially visible if it corrupts the freelist pointer of
-a slab page.
+Starting from commit 'a6bfb6d13f33 ("mt76: usb: use max packet length
+for m76u_copy")' reg_val does not share memory with usb data buffer.
+On non-coherent devices this approach can corrupt data pointer since data
+and reg_val share the same cache-line, resulting in the following crash:
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+[  371.544901] CPU 0 Unable to handle kernel paging request at virtual address 00000000, epc == 8042fbb0
+[  371.558521] CPU: 0 PID: 11 Comm: kworker/u2:2 Not tainted 4.14.160 #0
+[  371.565204] Workqueue: mt76u mt76u_deinit [mt76_usb]
+[  371.570331] task: 83823ac0 task.stack: 8386c000
+[  371.575004] $ 0   : 00000000 80590000 00000000 00000000
+[  371.580407] $ 4   : 82edaad0 00000002 83823ac0 fffffff8
+[  371.585810] $ 8   : fffffffd 0000fc00 8052da00 00000000
+[  371.591212] $12   : 000b2285 ae53a1a9 00108845 89da44c4
+[  371.596615] $16   : 82edaad0 82ed9d20 00001798 832edf00
+[  371.602019] $20   : 00000000 8386dda8 80530000 fffffffe
+[  371.607421] $24   : 8051d040 76274d1b
+[  371.612824] $28   : 8386c000 8386dd88 82edaad4 830d4d50
+[  371.618228] Hi    : 000000f7
+[  371.621203] Lo    : 33333371
+[  371.624196] epc   : 8042fbb0 __mutex_lock.isra.2+0x134/0x378
+[  371.630043] ra    : 830d4d50 mt76u_deinit+0x418/0xa6c [mt76_usb]
+[  371.636237] Status: 1000fc03KERNEL EXL IE
+[  371.640557] Cause : 0080000c (ExcCode 03)
+[  371.644696] BadVA : 00000000
+[  371.647671] PrId  : 00019374 (MIPS 24Kc)
+[  371.726123]  usbcore nls_base usb_common
+[  371.730180] Process kworker/u2:2 (pid: 11, threadinfo=8386c000, task=83823ac0, tls=00000000)
+[  371.738884] Stack : 833d009c 83210b4c 82ed8bc0 8386ddac 000001ff 8008ac50 8386ddac 83b74b00
+[  371.747519]         82edaad4 00000000 83b74b48 83210c38 82edaad0 82ed9d20 00001798 832edf00
+[  371.756157]         00000000 00000000 80530000 fffffffe 80530000 830d4d50 00000040 8389d850
+[  371.764794]         8052d9d8 8389d850 8386de30 82ed9d20 8386de5f 831c27bc 833d48ec 8052d9d8
+[  371.773431]         83823ac0 83823af0 82edab00 82ed9d20 8386de5f 831c5c30 00000000 8052d9a8
+[  371.782069]         ...
+[  371.784598] Call Trace:
+[  371.787130] [<8042fbb0>] __mutex_lock.isra.2+0x134/0x378
+[  371.792622] [<830d4d50>] mt76u_deinit+0x418/0xa6c [mt76_usb]
+[  371.808546]
+[  371.810920] ---[ end trace c62f0601f6730eb0 ]---
+[  371.818101] Kernel panic - not syncing: Fatal exception
+[  371.824420] Rebooting in 3 seconds..
+
+Fix the issue relying only on data buffer to send/receive usb control messages
+
+Fixes: a6bfb6d13f33 ("mt76: usb: use max packet length for m76u_copy")
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/dma.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt76.h | 1 -
+ drivers/net/wireless/mediatek/mt76/usb.c  | 8 ++++----
+ 2 files changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
-index 6173c80189ba..1847f55e199b 100644
---- a/drivers/net/wireless/mediatek/mt76/dma.c
-+++ b/drivers/net/wireless/mediatek/mt76/dma.c
-@@ -447,10 +447,13 @@ mt76_add_fragment(struct mt76_dev *dev, struct mt76_queue *q, void *data,
- 	struct page *page = virt_to_head_page(data);
- 	int offset = data - page_address(page);
- 	struct sk_buff *skb = q->rx_head;
-+	struct skb_shared_info *shinfo = skb_shinfo(skb);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index 2e57e7c6bd29..aca477434858 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -403,7 +403,6 @@ struct mt76_mcu {
+ #define MCU_RESP_URB_SIZE	1024
+ struct mt76_usb {
+ 	struct mutex usb_ctrl_mtx;
+-	__le32 reg_val;
+ 	u8 *data;
+ 	u16 data_len;
  
--	offset += q->buf_offset;
--	skb_add_rx_frag(skb, skb_shinfo(skb)->nr_frags, page, offset, len,
--			q->buf_size);
-+	if (shinfo->nr_frags < ARRAY_SIZE(shinfo->frags)) {
-+		offset += q->buf_offset;
-+		skb_add_rx_frag(skb, shinfo->nr_frags, page, offset, len,
-+				q->buf_size);
-+	}
+diff --git a/drivers/net/wireless/mediatek/mt76/usb.c b/drivers/net/wireless/mediatek/mt76/usb.c
+index 2c0dbc36f9aa..3535577db1c6 100644
+--- a/drivers/net/wireless/mediatek/mt76/usb.c
++++ b/drivers/net/wireless/mediatek/mt76/usb.c
+@@ -70,10 +70,10 @@ static u32 ___mt76u_rr(struct mt76_dev *dev, u8 req, u32 addr)
  
- 	if (more)
- 		return;
+ 	ret = __mt76u_vendor_request(dev, req,
+ 				     USB_DIR_IN | USB_TYPE_VENDOR,
+-				     addr >> 16, addr, &usb->reg_val,
++				     addr >> 16, addr, usb->data,
+ 				     sizeof(__le32));
+ 	if (ret == sizeof(__le32))
+-		data = le32_to_cpu(usb->reg_val);
++		data = get_unaligned_le32(usb->data);
+ 	trace_usb_reg_rr(dev, addr, data);
+ 
+ 	return data;
+@@ -125,10 +125,10 @@ static void ___mt76u_wr(struct mt76_dev *dev, u8 req,
+ {
+ 	struct mt76_usb *usb = &dev->usb;
+ 
+-	usb->reg_val = cpu_to_le32(val);
++	put_unaligned_le32(val, usb->data);
+ 	__mt76u_vendor_request(dev, req,
+ 			       USB_DIR_OUT | USB_TYPE_VENDOR,
+-			       addr >> 16, addr, &usb->reg_val,
++			       addr >> 16, addr, usb->data,
+ 			       sizeof(__le32));
+ 	trace_usb_reg_wr(dev, addr, val);
+ }
 -- 
-2.24.0
+2.24.1
 
