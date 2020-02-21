@@ -3,164 +3,119 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MSGID_FROM_MTA_HEADER,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F1ACC35646
-	for <linux-wireless@archiver.kernel.org>; Fri, 21 Feb 2020 11:30:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DD25C35657
+	for <linux-wireless@archiver.kernel.org>; Fri, 21 Feb 2020 11:56:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 29567208C4
-	for <linux-wireless@archiver.kernel.org>; Fri, 21 Feb 2020 11:30:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D752324650
+	for <linux-wireless@archiver.kernel.org>; Fri, 21 Feb 2020 11:56:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="fYnOIxBJ"
+	dkim=pass (1024-bit key) header.d=silabs.onmicrosoft.com header.i=@silabs.onmicrosoft.com header.b="RdtMXtPw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727077AbgBULa4 (ORCPT
+        id S1728147AbgBUL4Z (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 21 Feb 2020 06:30:56 -0500
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:41831 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726100AbgBULa4 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Feb 2020 06:30:56 -0500
-Received-SPF: Pass (esa1.microchip.iphmx.com: domain of
-  Ajay.Kathat@microchip.com designates 198.175.253.82 as
-  permitted sender) identity=mailfrom;
-  client-ip=198.175.253.82; receiver=esa1.microchip.iphmx.com;
-  envelope-from="Ajay.Kathat@microchip.com";
-  x-sender="Ajay.Kathat@microchip.com"; x-conformance=spf_only;
-  x-record-type="v=spf1"; x-record-text="v=spf1 mx
-  a:ushub1.microchip.com a:smtpout.microchip.com
-  -exists:%{i}.spf.microchip.iphmx.com include:servers.mcsv.net
-  include:mktomail.com include:spf.protection.outlook.com ~all"
-Received-SPF: None (esa1.microchip.iphmx.com: no sender
-  authenticity information available from domain of
-  postmaster@email.microchip.com) identity=helo;
-  client-ip=198.175.253.82; receiver=esa1.microchip.iphmx.com;
-  envelope-from="Ajay.Kathat@microchip.com";
-  x-sender="postmaster@email.microchip.com";
-  x-conformance=spf_only
-Authentication-Results: esa1.microchip.iphmx.com; spf=Pass smtp.mailfrom=Ajay.Kathat@microchip.com; spf=None smtp.helo=postmaster@email.microchip.com; dmarc=pass (p=none dis=none) d=microchip.com
-IronPort-SDR: AlwehkzjSqdMyyv2PrWR4jDQwODJvbdfYrqxncW2N44JQ5KfMy/3/htnYHaEgFffF9HqhlRK4j
- sAOF/SWff4vC7PQ8uO68EIDZ9eip4ny6ij7FuFTTybS6zLZdg4JDXx8W5U4z68Gj1/52PP49k+
- EzU4MyZQrRjMkZQouirF/7vT5ru30yWXmHZso6Rm6IdE35Fzq81e2pZBBQVJDHwp3xFOZXveVD
- lWUroJ06H6FWlOJ16dhNC2Jh2u/Ao2/Wsr7oBUJPiSkpTmkrbWbAwrxBn0Don63NwY0O41jM1r
- Qrg=
-X-IronPort-AV: E=Sophos;i="5.70,468,1574146800"; 
-   d="scan'208";a="69321499"
-Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa1.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 21 Feb 2020 04:30:34 -0700
-Received: from chn-vm-ex03.mchp-main.com (10.10.85.151) by
- chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1713.5; Fri, 21 Feb 2020 04:30:25 -0700
-Received: from NAM10-MW2-obe.outbound.protection.outlook.com (10.10.215.89) by
- email.microchip.com (10.10.87.152) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5
- via Frontend Transport; Fri, 21 Feb 2020 04:30:24 -0700
+        Fri, 21 Feb 2020 06:56:25 -0500
+Received: from mail-eopbgr760043.outbound.protection.outlook.com ([40.107.76.43]:28579
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726909AbgBUL4X (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 21 Feb 2020 06:56:23 -0500
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=UNaSUmz3WExfhU5D2n3bR/OEx/I6wV3smK/HlH+GHKA79wkgTJLfLpSK8DusUULEA+y2JipKTdxgpq/XUG9HcKnByufo7nvrzhNWhP67m5L3p4pylBxv6PeA1hFDtnAJAXj6CwYpLje+v33kiloQU+xrOWj7WtQlpe8IGMuoQwYlA/8CBWCMbWbqjuyTC1+QZkwxlEZEBK7OyzlSKFf/Ys8niClGEzu6iNASrzMeO0AW56xs7nCHKizpBJvZwULpnPPayvISg4wQVkghxxfKhMl+kq+PE4P2Nh1HgCg5IITyBWgWSwQr7i6z1u0Zn/isXlz+iWgvgPU/p7aK1za08w==
+ b=WlZCVA3IMiAQ+ALQvYxCWKXsy/TAImKDL/3oQ5luAoSUS+1lyVSZ8CNOg6L3ryNeM71MexwWe3S0MjRLlZzHNIt8/r/baPMsrRMGWhOqkGljIRucffzv4t+6/CLty0i1e6J8WbQaPU9Y1mOyO+HaT5qF6u77RYAP/fMU6MKL9/K/JEQnMMv3B8W63AXwBWnIyC9I5Lj6Yy0Du/qZVJTYoBH8gFQH7rR0NbdXXqkJYSlXhv5Wtr93WqZz5xx2ZWkwUWBBRl4oq8e25a9fd/hP+56CferlV6RsRrQQwsQDZzn6MSBT8+5ULuWuJC8yYpL1k8th1sRyPAsqKbuK2WQx5g==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=2lLUkzgZhlDTHnk7grjsIT8e2/sAEFD0DHpKN3Y+85Q=;
- b=Cb2X3M2r+1SVsI0aP3Vr5kCFLtWpFN23aBkh2XapRp5pgPxeJC77GbPAaZHP5YUe4HrifXwPdntUurPxO74UrN7tpQH3lBdgy8LPj6TA2QhN/6Xw8/pss+gcx+onlpckovzduflh/DnMKYwTqZE7VWzxv6wcx8TB0HKIB6nLZjHY72rvJCOpWj6W140pvwaKx5iHVx6T/lV8XQsj2KnZy7igocAWFKI/y8Si71S2pwT0f8PVKM4bkTiOnyAUtIsTUYqYFyj4HiQryqF7+YMkcE1dNuQoqrp77D8OgVBBrueAoFF/DJkisedRJTggHzdyciiDL7WuopIcM42L9Is3Vg==
+ bh=pLEnjwXZoVoAdWhmJ1clKYImsMJSGE/7M/sQNQ2JmhU=;
+ b=aKjrgYlIt2IuKyBaKv90Dr4l91p8EPdzWR1FdFGnejh6p7GiMIk7CidD76QAO9R7UliKNrx5ycVsRZ0lyyFpFfb+s8+eZP3odrUTRQiN9/RhBbe0XVNdCI8F8KQd09KLlfqEsXz9joMlavH3GgsSluyVdQIAJiJzVZyqzFslSxPlZDaneRoX+mqk/9sfjpWch+xYAHoDGVD0koYps83Frs/qC2AMciNOvckqp6vMVKme/ajyXchR9SBYSfB8SOazAEwHIGdoNufJKK1mvAtPFqK3/ypmKdACDL6svgrIomwY6ZmAa9Wk+9Pj9Kxme8VgMWisC3QDlcnxXAcMxgGS7w==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microchip.com; dmarc=pass action=none
- header.from=microchip.com; dkim=pass header.d=microchip.com; arc=none
+ smtp.mailfrom=silabs.com; dmarc=pass action=none header.from=silabs.com;
+ dkim=pass header.d=silabs.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=microchiptechnology.onmicrosoft.com;
- s=selector2-microchiptechnology-onmicrosoft-com;
+ d=silabs.onmicrosoft.com; s=selector2-silabs-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=2lLUkzgZhlDTHnk7grjsIT8e2/sAEFD0DHpKN3Y+85Q=;
- b=fYnOIxBJ7NV6PVU3XbpsPhWQ4JlFJJEjVCtyPsP+puHtc1RliaTwhc90skepHJ+6xDds3sbxuBiIJjcKo2Sj7qYu/HpUGPw6eKGVY1z1+JBEIHOaz+HUJ3Z791ASursZVC92OtTZfLhWtMlzcZR6ToidoUFygGluhFNJc98nFrE=
-Received: from BY5PR11MB3989.namprd11.prod.outlook.com (2603:10b6:a03:191::17)
- by BY5PR11MB4151.namprd11.prod.outlook.com (2603:10b6:a03:18f::22) with
+ bh=pLEnjwXZoVoAdWhmJ1clKYImsMJSGE/7M/sQNQ2JmhU=;
+ b=RdtMXtPwiiF+qIorWBeAoO+jZW5jLmQeenRV5SXQk//vDLf0M//SgMQbVbMX6RLndTdDKAydg5jj93Pm6aXtLJGGgmhBOMnrS5c84dUmUvUgWC9FvbcorA7x3mZbbZgnEYPDMzsHCtG6NUhZxegwkW74R6IjJuFdqiuAN+Et5Ao=
+Authentication-Results: spf=none (sender IP is )
+ smtp.mailfrom=Jerome.Pouiller@silabs.com; 
+Received: from MN2PR11MB4063.namprd11.prod.outlook.com (2603:10b6:208:13f::22)
+ by MN2PR11MB4662.namprd11.prod.outlook.com (2603:10b6:208:263::10) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2750.17; Fri, 21 Feb
- 2020 11:30:21 +0000
-Received: from BY5PR11MB3989.namprd11.prod.outlook.com
- ([fe80::c69:bf40:f4b7:e62f]) by BY5PR11MB3989.namprd11.prod.outlook.com
- ([fe80::c69:bf40:f4b7:e62f%6]) with mapi id 15.20.2729.033; Fri, 21 Feb 2020
- 11:30:21 +0000
-From:   <Ajay.Kathat@microchip.com>
-To:     <linux-wireless@vger.kernel.org>
-CC:     <devel@driverdev.osuosl.org>, <gregkh@linuxfoundation.org>,
-        <Adham.Abozaeid@microchip.com>, <johannes@sipsolutions.net>,
-        <Ajay.Kathat@microchip.com>
-Subject: [PATCH] staging: wilc1000: avoid double unlocking of 'wilc->hif_cs'
- mutex
-Thread-Topic: [PATCH] staging: wilc1000: avoid double unlocking of
- 'wilc->hif_cs' mutex
-Thread-Index: AQHV6KpMhXZfgCJaNUWE+Dn1HLC0EQ==
-Date:   Fri, 21 Feb 2020 11:30:20 +0000
-Message-ID: <20200221170120.15739-1-ajay.kathat@microchip.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-mailer: git-send-email 2.17.1
-x-originating-ip: [183.82.19.162]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 01b38dd2-f54a-4b92-2a7e-08d7b6c16f7c
-x-ms-traffictypediagnostic: BY5PR11MB4151:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <BY5PR11MB415194C26FDEDD1FB7CF6247E3120@BY5PR11MB4151.namprd11.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:252;
-x-forefront-prvs: 0320B28BE1
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(39860400002)(376002)(346002)(396003)(136003)(366004)(189003)(199004)(2906002)(1076003)(6512007)(5660300002)(186003)(54906003)(316002)(26005)(6916009)(8936002)(6506007)(81166006)(66946007)(8676002)(81156014)(71200400001)(36756003)(91956017)(76116006)(64756008)(66556008)(66446008)(966005)(107886003)(66476007)(6486002)(86362001)(478600001)(4326008)(2616005);DIR:OUT;SFP:1101;SCL:1;SRVR:BY5PR11MB4151;H:BY5PR11MB3989.namprd11.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
-received-spf: None (protection.outlook.com: microchip.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: /AKEum/G9Z5qpeox+C512OebnhdXKzYCkZiDg1Cn0x89iyKsNQ6hNOmCMFlfHmg4oB+tkHslquzETlH636XCVhIiAe9BhK0CGfMJW/p+5My9jHJlu7G859I5jgQomABt2aD8jKD5buI3YgY0fNy+BSDPPw9rF3hyG0okqctKSRZhtmPfcAHeq+YyjfhaY491JKp57Xeyzq4KSHdMrZtU8sXdibBrs1cKeQWZZcsXIQGLHiDIYSIUStahRHAcEmO0IkVi3T1jA3RZAKDYCPyZm76SFWPY0oYyKkl4WxusOEqbxipSrer+cGS+hrKTnAZvBAMw/HT6dt9ze9xWogoQqGnA2wlGQReF76ml+3XyTFforVw/2iOc+5+L6zBEEa8DspnhAaoIQdcpZuMzf6BkPw+tIsc1I8m82umMZBSbUD78WS9c1U1d+iAAIPTbxdFsGpjGssW7gAbbpNFCAWr2yOPQQskXxNMYRzVIUhHYbx2DK6JrLH2+9xECD3CnN3s0XuqO/b+yuP/Nxy+tI9lmBA==
-x-ms-exchange-antispam-messagedata: x8FjZopKOX5drn3tIwcuJnYnInaNRgJdDpdkRMyGBTqmK/flxBuONdvWrE5jU3/BTqbfXWDBByDmfEPTBiQKt6wrzpHjLzu267iWtoxg5s+robDqgwaf4lvDabIRqwmz0/DUssovTrWA2qNc9CquiA==
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+ 2020 11:56:20 +0000
+Received: from MN2PR11MB4063.namprd11.prod.outlook.com
+ ([fe80::ade4:5702:1c8b:a2b3]) by MN2PR11MB4063.namprd11.prod.outlook.com
+ ([fe80::ade4:5702:1c8b:a2b3%7]) with mapi id 15.20.2729.033; Fri, 21 Feb 2020
+ 11:56:20 +0000
+From:   Jerome Pouiller <Jerome.Pouiller@silabs.com>
+To:     linux-wireless@vger.kernel.org
+Cc:     netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Jakub Kicinski <kuba@kernel.org>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        "David S . Miller" <davem@davemloft.net>,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Pouiller?= 
+        <jerome.pouiller@silabs.com>
+Subject: [PATCH 02/10] cfg80211: drop duplicated documentation of field "privid"
+Date:   Fri, 21 Feb 2020 12:55:56 +0100
+Message-Id: <20200221115604.594035-2-Jerome.Pouiller@silabs.com>
+X-Mailer: git-send-email 2.25.0
+In-Reply-To: <20200221115604.594035-1-Jerome.Pouiller@silabs.com>
+References: <20200221115604.594035-1-Jerome.Pouiller@silabs.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: base64
+X-ClientProxiedBy: PR0P264CA0137.FRAP264.PROD.OUTLOOK.COM
+ (2603:10a6:100:1a::29) To MN2PR11MB4063.namprd11.prod.outlook.com
+ (2603:10b6:208:13f::22)
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-Network-Message-Id: 01b38dd2-f54a-4b92-2a7e-08d7b6c16f7c
-X-MS-Exchange-CrossTenant-originalarrivaltime: 21 Feb 2020 11:30:21.0386
+Received: from pc-42.silabs.com (37.71.187.125) by PR0P264CA0137.FRAP264.PROD.OUTLOOK.COM (2603:10a6:100:1a::29) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2750.18 via Frontend Transport; Fri, 21 Feb 2020 11:56:19 +0000
+X-Mailer: git-send-email 2.25.0
+X-Originating-IP: [37.71.187.125]
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: a23d5ddf-1557-4c07-9530-08d7b6c51102
+X-MS-TrafficTypeDiagnostic: MN2PR11MB4662:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <MN2PR11MB46623241D469E387F305D88393120@MN2PR11MB4662.namprd11.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:2331;
+X-Forefront-PRVS: 0320B28BE1
+X-Forefront-Antispam-Report: SFV:NSPM;SFS:(10009020)(396003)(346002)(39860400002)(366004)(136003)(376002)(199004)(189003)(36756003)(86362001)(8676002)(81156014)(478600001)(8936002)(81166006)(7696005)(52116002)(66946007)(2906002)(4326008)(107886003)(6916009)(1076003)(66556008)(6486002)(66476007)(6666004)(5660300002)(956004)(54906003)(316002)(2616005)(186003)(16526019)(26005);DIR:OUT;SFP:1101;SCL:1;SRVR:MN2PR11MB4662;H:MN2PR11MB4063.namprd11.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+Received-SPF: None (protection.outlook.com: silabs.com does not designate
+ permitted sender hosts)
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: Eu4V+4ZsvCSWnB7QbnkB1PELu5gYyEZlBZwwFE3uVIX0Mu9pOEoy5bN5K2RTpXgZgomfhSd9qzqSSeMKy01F6IyveawLxji/Qo3g+1fbT4dcdlMZkKblfZbwhYghv8iyKUwEtI/G7H4hujtlJI0YhEpfOrl5v2mNV4f2KGB7me2+8KWJFOCo8qvlvhARYq6uL3epPl2ya9zgAjFAV0vScZcEqIzk0x/+cuGTYhMyeU/joiElutvYVFpS6TdKelUJniBwvTgmZ4rT5R+S9fXKRFOGwHYAjAagM7H9/Hr4iRvl1zhs1UOwSWoFlAuM2yOwdT5sWWTRpsk+nNEQVo4rOVo1DzN3mb5aJVyaI6ndP2IH72z2cytJrCDMrv6ww+hvLU/m+O3rumbJ4xcVWK0vtwdAC/GlV83OzMCpziL9QkrcRI1v5SihC9cg2eGPSueK
+X-MS-Exchange-AntiSpam-MessageData: z8Dr+ZL7PAGDpsT0hDIS2xnzHd9AH5IVGLg+f+G00yuh8Jt5OayyEBlPWdZYHq3fsnFhl9si3CBo5H3/7G9FbJNfzyScpJw7eGZ+exmIRAVFCsvG4pQKaxUQjbauzD4cc8wKXXjixLZ+A3P0n37NWw==
+X-OriginatorOrg: silabs.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: a23d5ddf-1557-4c07-9530-08d7b6c51102
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Feb 2020 11:56:20.8227
  (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 7NNxcnfVzN6Z/ZeMRsgyBqU9tT+LtqVu8JrORidw7NtNotJO4CR1mhCHOzUfuUuntI6fM8FsFpDHO5gBXv4jVDjW9Uyu/foDJv351I5hRBc=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR11MB4151
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 54dbd822-5231-4b20-944d-6f4abcd541fb
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: lR5TcrBaGSeWnYEtQqGbYwP8os1CGfvEQf/oMPTjHzt7Zmc/X5Ps6yuAq7bxS9/behLLX2ceCTnD9ZDLwXGJqw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR11MB4662
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ajay Singh <ajay.kathat@microchip.com>
-
-Possible double unlocking of 'wilc->hif_cs' mutex was identified by
-smatch [1]. Removed the extra call to release_bus() in
-wilc_wlan_handle_txq() which was missed in earlier commit fdc2ac1aafc6
-("staging: wilc1000: support suspend/resume functionality").
-
-[1]. https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org/thread/NO=
-EVW7C3GV74EWXJO3XX6VT2NKVB2HMT/
-
-Reported-by: kbuild test robot <lkp@intel.com>
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
----
- drivers/staging/wilc1000/wlan.c | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/drivers/staging/wilc1000/wlan.c b/drivers/staging/wilc1000/wla=
-n.c
-index f633c6b9f0a9..3aeca882f431 100644
---- a/drivers/staging/wilc1000/wlan.c
-+++ b/drivers/staging/wilc1000/wlan.c
-@@ -575,7 +575,6 @@ int wilc_wlan_handle_txq(struct wilc *wilc, u32 *txq_co=
-unt)
- 				entries =3D FIELD_GET(WILC_VMM_ENTRY_COUNT, reg);
- 				break;
- 			}
--			release_bus(wilc, WILC_BUS_RELEASE_ALLOW_SLEEP);
- 		} while (--timeout);
- 		if (timeout <=3D 0) {
- 			ret =3D func->hif_write_reg(wilc, WILC_HOST_VMM_CTL, 0x0);
---=20
-2.24.0
+RnJvbTogSsOpcsO0bWUgUG91aWxsZXIgPGplcm9tZS5wb3VpbGxlckBzaWxhYnMuY29tPgoKVGhl
+IGZpZWxkICJwcml2aWQiIHdhcyBhbHJlYWR5IGRvY3VtZW50ZWQgYWJvdmUgdGhlIGRlZmluaXRp
+b24gb2Ygc3RydWN0CndpcGh5LiBDb21tZW50cyB3ZXJlIG5vdCBpZGVudGljYWwsIGJ1dCB0aGV5
+IHNhaWQgbW9yZSBvciBsZXNzIHRoZSBzYW1lCnRoaW5nLgoKU2lnbmVkLW9mZi1ieTogSsOpcsO0
+bWUgUG91aWxsZXIgPGplcm9tZS5wb3VpbGxlckBzaWxhYnMuY29tPgotLS0KIGluY2x1ZGUvbmV0
+L2NmZzgwMjExLmggfCA1IC0tLS0tCiAxIGZpbGUgY2hhbmdlZCwgNSBkZWxldGlvbnMoLSkKCmRp
+ZmYgLS1naXQgYS9pbmNsdWRlL25ldC9jZmc4MDIxMS5oIGIvaW5jbHVkZS9uZXQvY2ZnODAyMTEu
+aAppbmRleCAwMmVmZWE1MmEyNzYuLjI5Mjg3MWFlOTgyOCAxMDA2NDQKLS0tIGEvaW5jbHVkZS9u
+ZXQvY2ZnODAyMTEuaAorKysgYi9pbmNsdWRlL25ldC9jZmc4MDIxMS5oCkBAIC00NjI0LDExICs0
+NjI0LDYgQEAgc3RydWN0IHdpcGh5IHsKIAljb25zdCBzdHJ1Y3Qgd2lwaHlfaWZ0eXBlX2V4dF9j
+YXBhYiAqaWZ0eXBlX2V4dF9jYXBhYjsKIAl1bnNpZ25lZCBpbnQgbnVtX2lmdHlwZV9leHRfY2Fw
+YWI7CiAKLQkvKiBJZiBtdWx0aXBsZSB3aXBoeXMgYXJlIHJlZ2lzdGVyZWQgYW5kIHlvdSdyZSBo
+YW5kZWQgZS5nLgotCSAqIGEgcmVndWxhciBuZXRkZXYgd2l0aCBhc3NpZ25lZCBpZWVlODAyMTFf
+cHRyLCB5b3Ugd29uJ3QKLQkgKiBrbm93IHdoZXRoZXIgaXQgcG9pbnRzIHRvIGEgd2lwaHkgeW91
+ciBkcml2ZXIgaGFzIHJlZ2lzdGVyZWQKLQkgKiBvciBub3QuIEFzc2lnbiB0aGlzIHRvIHNvbWV0
+aGluZyBnbG9iYWwgdG8geW91ciBkcml2ZXIgdG8KLQkgKiBoZWxwIGRldGVybWluZSB3aGV0aGVy
+IHlvdSBvd24gdGhpcyB3aXBoeSBvciBub3QuICovCiAJY29uc3Qgdm9pZCAqcHJpdmlkOwogCiAJ
+c3RydWN0IGllZWU4MDIxMV9zdXBwb3J0ZWRfYmFuZCAqYmFuZHNbTlVNX05MODAyMTFfQkFORFNd
+OwotLSAKMi4yNS4wCgo=
