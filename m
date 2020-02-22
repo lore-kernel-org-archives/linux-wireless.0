@@ -2,347 +2,151 @@ Return-Path: <SRS0=zMdj=4K=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 893D8C35671
-	for <linux-wireless@archiver.kernel.org>; Sat, 22 Feb 2020 13:27:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C650C35666
+	for <linux-wireless@archiver.kernel.org>; Sat, 22 Feb 2020 13:39:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3A9C220659
-	for <linux-wireless@archiver.kernel.org>; Sat, 22 Feb 2020 13:27:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 03A6420702
+	for <linux-wireless@archiver.kernel.org>; Sat, 22 Feb 2020 13:39:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="GevwgBRI"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GXLKlRfc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727463AbgBVN1m (ORCPT
+        id S1727401AbgBVNjj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 22 Feb 2020 08:27:42 -0500
-Received: from mail26.static.mailgun.info ([104.130.122.26]:36803 "EHLO
-        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727401AbgBVN1m (ORCPT
+        Sat, 22 Feb 2020 08:39:39 -0500
+Received: from mail-pf1-f194.google.com ([209.85.210.194]:33470 "EHLO
+        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727046AbgBVNji (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 22 Feb 2020 08:27:42 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1582378061; h=Content-Transfer-Encoding: MIME-Version:
- References: In-Reply-To: Message-Id: Date: Subject: Cc: To: From:
- Sender; bh=cPl53wEd6yCKVIWeCDPnkkIzu9leCzZm3wE8M8yaHOo=; b=GevwgBRIOM292Ol574/rJ1tn5tRSUV27dBWHwt/prWi8NxOq/Lufw6dFgwVlTM1cW3oQtLIx
- ktSbdXr/DXVLbfl13GaatNjpxz7Ki4VMlGNlS8+TpSa94vJjFhBFS3qlQMvWKiws7++ooRwg
- CXClLZKPhIpD/LjQnyWSn3ZNnr0=
-X-Mailgun-Sending-Ip: 104.130.122.26
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e512c31.7fd7564681b8-smtp-out-n01;
- Sat, 22 Feb 2020 13:27:13 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id B46B5C43383; Sat, 22 Feb 2020 13:27:12 +0000 (UTC)
-Received: from jouni.codeaurora.org (176-93-35-56.bb.dnainternet.fi [176.93.35.56])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: jouni)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 12CEFC4479C;
-        Sat, 22 Feb 2020 13:27:10 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 12CEFC4479C
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=jouni@codeaurora.org
-From:   Jouni Malinen <jouni@codeaurora.org>
+        Sat, 22 Feb 2020 08:39:38 -0500
+Received: by mail-pf1-f194.google.com with SMTP id n7so2839381pfn.0;
+        Sat, 22 Feb 2020 05:39:36 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:date:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=vpxT9jClDrKoKxPt0kmgtgiiuZoHxIxpAJPkebvXON0=;
+        b=GXLKlRfcHhBTYgl1ilH4o6mibl1xTvcNCPXZFQNec8/NOTrpQtsfA1JP8KaNs3aYYg
+         IKfHktkagA44VixY1m/yaksXVZI5mnnwvskjvQ1JJWZKSVnvNsI/JcinID87RR5f7yjq
+         rHGb0hKXst4/I4k0njMJlneWTL1tuJdQbyMx/seEwj0Zf3U4AsBFvjnM2hGQyFL6APOV
+         TtrndIYAHC20+ueeYgIK9XVKf6e1xpCSPWecjH8LXHahEI3yc98+initYn99IdzOFo27
+         yid+lJqWR0oJoKtaGJcH7Tp8DfuMUG4Vdg6vkiq9v8McSlvmfVPiknC3XDMcYiyKlgA6
+         ASdQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:date:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=vpxT9jClDrKoKxPt0kmgtgiiuZoHxIxpAJPkebvXON0=;
+        b=mr+7nvDcu/+zJwSEOSpAms3QJdZJ4/bXNBfYJf5Ne5yrHhuKxFEF/U0zgz5/fv67uC
+         2uAv05UOdF7hyFPUc9p1Bs+jWCtKguincnNl8ZSsJfHfU1cQ+P5DBG96AqzKndc3da7i
+         9CC4EkRo7KzDGM8cUBMzsmdhLJp7YFmpzNWr+5SO76X3NGHnR+vxt0x5gqjX7zFg09r4
+         vFq7wbKjB4lJ7BpigwXOARjmp75wOS19vVYuceTxFNtXtiSqTKVhYbGuaspB+wAOugBe
+         XQyUfXTIs7NhrqRTp0A9LclFU/SBmNUjfaCMJKc97xWEU+aCMhnkMXlLH8CLG9RNrtmu
+         AGeg==
+X-Gm-Message-State: APjAAAUkLars2E33PNLm6aqvtFeiAaXMNdhJe2Qhm8OtPa1dRqpXlsHN
+        FdtjVXS92p6ayZPgYhPT3Q==
+X-Google-Smtp-Source: APXvYqwEKQ41EVLj6CR4+LTHf/M95sWALC35qShHEDBl/TpwOUcje2MB0Kb3HNksVa1H25ZDOgRBJg==
+X-Received: by 2002:a62:f243:: with SMTP id y3mr43858640pfl.146.1582378776499;
+        Sat, 22 Feb 2020 05:39:36 -0800 (PST)
+Received: from madhuparna-HP-Notebook ([42.109.145.199])
+        by smtp.gmail.com with ESMTPSA id b12sm6517235pfr.26.2020.02.22.05.39.31
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Sat, 22 Feb 2020 05:39:35 -0800 (PST)
+From:   Madhuparna Bhowmik <madhuparnabhowmik10@gmail.com>
+X-Google-Original-From: Madhuparna Bhowmik <change_this_user_name@gmail.com>
+Date:   Sat, 22 Feb 2020 19:09:28 +0530
 To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless@vger.kernel.org,
-        Jouni Malinen <jouni@codeaurora.org>
-Subject: [PATCH 3/7] mac80211: Support BIGTK configuration for Beacon protection
-Date:   Sat, 22 Feb 2020 15:25:44 +0200
-Message-Id: <20200222132548.20835-3-jouni@codeaurora.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200222132548.20835-1-jouni@codeaurora.org>
-References: <20200222132548.20835-1-jouni@codeaurora.org>
+Cc:     madhuparnabhowmik10@gmail.com, davem@davemloft.net,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, joel@joelfernandes.org,
+        frextrite@gmail.com,
+        linux-kernel-mentees@lists.linuxfoundation.org, paulmck@kernel.org
+Subject: Re: [PATCH] net: mac80211: rx.c: Use built-in RCU list checking
+Message-ID: <20200222133928.GA10397@madhuparna-HP-Notebook>
+References: <20200222101831.8001-1-madhuparnabhowmik10@gmail.com>
+ <f1913847671d0b7e19aaa9bef1e1eb89febfa942.camel@sipsolutions.net>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <f1913847671d0b7e19aaa9bef1e1eb89febfa942.camel@sipsolutions.net>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Extend mac80211 key configuration to support the new BIGTK with key
-index values 6 and 7. Support for actually protecting Beacon frames
-(adding the MME in AP mode and checking it in STA mode) is covered in
-separate commits.
+On Sat, Feb 22, 2020 at 01:53:25PM +0100, Johannes Berg wrote:
+> On Sat, 2020-02-22 at 15:48 +0530, madhuparnabhowmik10@gmail.com wrote:
+> > From: Madhuparna Bhowmik <madhuparnabhowmik10@gmail.com>
+> > 
+> > list_for_each_entry_rcu() has built-in RCU and lock checking.
+> > 
+> > Pass cond argument to list_for_each_entry_rcu() to silence
+> > false lockdep warning when CONFIG_PROVE_RCU_LIST is enabled
+> > by default.
+> 
+> Umm. What warning?
+>
+If list_for_each_entry_rcu() is called from non rcu protection
+i.e without holding rcu_read_lock, but under the protection of
+a different lock then we can pass that as the condition for lockdep checking
+because otherwise lockdep will complain if list_for_each_entry_rcu()
+is used without rcu protection. So, if we do not pass this argument
+(cond) it may lead to false lockdep warnings.
 
-Signed-off-by: Jouni Malinen <jouni@codeaurora.org>
----
- net/mac80211/cfg.c         | 15 +++++++++++++-
- net/mac80211/debugfs_key.c | 31 +++++++++++++++++++++++++++++
- net/mac80211/debugfs_key.h | 10 ++++++++++
- net/mac80211/ieee80211_i.h |  6 +++++-
- net/mac80211/key.c         | 40 ++++++++++++++++++++++++++++++++++++--
- net/mac80211/key.h         |  3 +++
- net/mac80211/sta_info.h    |  4 +++-
- 7 files changed, 104 insertions(+), 5 deletions(-)
+> > +++ b/net/mac80211/rx.c
+> > @@ -3547,7 +3547,8 @@ static void ieee80211_rx_cooked_monitor(struct ieee80211_rx_data *rx,
+> >  	skb->pkt_type = PACKET_OTHERHOST;
+> >  	skb->protocol = htons(ETH_P_802_2);
+> >  
+> > -	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+> > +	list_for_each_entry_rcu(sdata, &local->interfaces, list,
+> > +				lockdep_is_held(&rx->local->rx_path_lock)) {
+> >  		if (!ieee80211_sdata_running(sdata))
+> >  			continue;
+> 
+> This is not related at all.
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index a66eff1ee26a..a762ba6e4c5d 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -568,7 +568,8 @@ static int ieee80211_get_key(struct wiphy *wiphy, struct net_device *dev,
- 		if (pairwise && key_idx < NUM_DEFAULT_KEYS)
- 			key = rcu_dereference(sta->ptk[key_idx]);
- 		else if (!pairwise &&
--			 key_idx < NUM_DEFAULT_KEYS + NUM_DEFAULT_MGMT_KEYS)
-+			 key_idx < NUM_DEFAULT_KEYS + NUM_DEFAULT_MGMT_KEYS +
-+			 NUM_DEFAULT_BEACON_KEYS)
- 			key = rcu_dereference(sta->gtk[key_idx]);
- 	} else
- 		key = rcu_dereference(sdata->keys[key_idx]);
-@@ -680,6 +681,17 @@ static int ieee80211_config_default_mgmt_key(struct wiphy *wiphy,
- 	return 0;
- }
- 
-+static int ieee80211_config_default_beacon_key(struct wiphy *wiphy,
-+					       struct net_device *dev,
-+					       u8 key_idx)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+
-+	ieee80211_set_default_beacon_key(sdata, key_idx);
-+
-+	return 0;
-+}
-+
- void sta_set_rate_info_tx(struct sta_info *sta,
- 			  const struct ieee80211_tx_rate *rate,
- 			  struct rate_info *rinfo)
-@@ -3885,6 +3897,7 @@ const struct cfg80211_ops mac80211_config_ops = {
- 	.get_key = ieee80211_get_key,
- 	.set_default_key = ieee80211_config_default_key,
- 	.set_default_mgmt_key = ieee80211_config_default_mgmt_key,
-+	.set_default_beacon_key = ieee80211_config_default_beacon_key,
- 	.start_ap = ieee80211_start_ap,
- 	.change_beacon = ieee80211_change_beacon,
- 	.stop_ap = ieee80211_stop_ap,
-diff --git a/net/mac80211/debugfs_key.c b/net/mac80211/debugfs_key.c
-index 7b8735ced2a1..98a713475e0f 100644
---- a/net/mac80211/debugfs_key.c
-+++ b/net/mac80211/debugfs_key.c
-@@ -433,6 +433,37 @@ void ieee80211_debugfs_key_remove_mgmt_default(struct ieee80211_sub_if_data *sda
- 	sdata->debugfs.default_mgmt_key = NULL;
- }
- 
-+void
-+ieee80211_debugfs_key_add_beacon_default(struct ieee80211_sub_if_data *sdata)
-+{
-+	char buf[50];
-+	struct ieee80211_key *key;
-+
-+	if (!sdata->vif.debugfs_dir)
-+		return;
-+
-+	key = key_mtx_dereference(sdata->local,
-+				  sdata->default_beacon_key);
-+	if (key) {
-+		sprintf(buf, "../keys/%d", key->debugfs.cnt);
-+		sdata->debugfs.default_beacon_key =
-+			debugfs_create_symlink("default_beacon_key",
-+					       sdata->vif.debugfs_dir, buf);
-+	} else {
-+		ieee80211_debugfs_key_remove_beacon_default(sdata);
-+	}
-+}
-+
-+void
-+ieee80211_debugfs_key_remove_beacon_default(struct ieee80211_sub_if_data *sdata)
-+{
-+	if (!sdata)
-+		return;
-+
-+	debugfs_remove(sdata->debugfs.default_beacon_key);
-+	sdata->debugfs.default_beacon_key = NULL;
-+}
-+
- void ieee80211_debugfs_key_sta_del(struct ieee80211_key *key,
- 				   struct sta_info *sta)
- {
-diff --git a/net/mac80211/debugfs_key.h b/net/mac80211/debugfs_key.h
-index 1cd7b8bff56c..af7cf495f8d1 100644
---- a/net/mac80211/debugfs_key.h
-+++ b/net/mac80211/debugfs_key.h
-@@ -10,6 +10,10 @@ void ieee80211_debugfs_key_add_mgmt_default(
- 	struct ieee80211_sub_if_data *sdata);
- void ieee80211_debugfs_key_remove_mgmt_default(
- 	struct ieee80211_sub_if_data *sdata);
-+void ieee80211_debugfs_key_add_beacon_default(
-+	struct ieee80211_sub_if_data *sdata);
-+void ieee80211_debugfs_key_remove_beacon_default(
-+	struct ieee80211_sub_if_data *sdata);
- void ieee80211_debugfs_key_sta_del(struct ieee80211_key *key,
- 				   struct sta_info *sta);
- #else
-@@ -26,6 +30,12 @@ static inline void ieee80211_debugfs_key_add_mgmt_default(
- static inline void ieee80211_debugfs_key_remove_mgmt_default(
- 	struct ieee80211_sub_if_data *sdata)
- {}
-+static inline void ieee80211_debugfs_key_add_beacon_default(
-+	struct ieee80211_sub_if_data *sdata)
-+{}
-+static inline void ieee80211_debugfs_key_remove_beacon_default(
-+	struct ieee80211_sub_if_data *sdata)
-+{}
- static inline void ieee80211_debugfs_key_sta_del(struct ieee80211_key *key,
- 						 struct sta_info *sta)
- {}
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index da9eaa9ee37e..46f9e8e5b4d7 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -901,10 +901,13 @@ struct ieee80211_sub_if_data {
- 	/* bit field of ACM bits (BIT(802.1D tag)) */
- 	u8 wmm_acm;
- 
--	struct ieee80211_key __rcu *keys[NUM_DEFAULT_KEYS + NUM_DEFAULT_MGMT_KEYS];
-+	struct ieee80211_key __rcu *keys[NUM_DEFAULT_KEYS +
-+					 NUM_DEFAULT_MGMT_KEYS +
-+					 NUM_DEFAULT_BEACON_KEYS];
- 	struct ieee80211_key __rcu *default_unicast_key;
- 	struct ieee80211_key __rcu *default_multicast_key;
- 	struct ieee80211_key __rcu *default_mgmt_key;
-+	struct ieee80211_key __rcu *default_beacon_key;
- 
- 	u16 sequence_number;
- 	__be16 control_port_protocol;
-@@ -978,6 +981,7 @@ struct ieee80211_sub_if_data {
- 		struct dentry *default_unicast_key;
- 		struct dentry *default_multicast_key;
- 		struct dentry *default_mgmt_key;
-+		struct dentry *default_beacon_key;
- 	} debugfs;
- #endif
- 
-diff --git a/net/mac80211/key.c b/net/mac80211/key.c
-index 54934eff4ac1..6354491c5a09 100644
---- a/net/mac80211/key.c
-+++ b/net/mac80211/key.c
-@@ -407,6 +407,31 @@ void ieee80211_set_default_mgmt_key(struct ieee80211_sub_if_data *sdata,
- 	mutex_unlock(&sdata->local->key_mtx);
- }
- 
-+static void
-+__ieee80211_set_default_beacon_key(struct ieee80211_sub_if_data *sdata, int idx)
-+{
-+	struct ieee80211_key *key = NULL;
-+
-+	assert_key_lock(sdata->local);
-+
-+	if (idx >= NUM_DEFAULT_KEYS + NUM_DEFAULT_MGMT_KEYS &&
-+	    idx < NUM_DEFAULT_KEYS + NUM_DEFAULT_MGMT_KEYS +
-+	    NUM_DEFAULT_BEACON_KEYS)
-+		key = key_mtx_dereference(sdata->local, sdata->keys[idx]);
-+
-+	rcu_assign_pointer(sdata->default_beacon_key, key);
-+
-+	ieee80211_debugfs_key_update_default(sdata);
-+}
-+
-+void ieee80211_set_default_beacon_key(struct ieee80211_sub_if_data *sdata,
-+				      int idx)
-+{
-+	mutex_lock(&sdata->local->key_mtx);
-+	__ieee80211_set_default_beacon_key(sdata, idx);
-+	mutex_unlock(&sdata->local->key_mtx);
-+}
-+
- static int ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
- 				  struct sta_info *sta,
- 				  bool pairwise,
-@@ -415,7 +440,7 @@ static int ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
- {
- 	int idx;
- 	int ret = 0;
--	bool defunikey, defmultikey, defmgmtkey;
-+	bool defunikey, defmultikey, defmgmtkey, defbeaconkey;
- 
- 	/* caller must provide at least one old/new */
- 	if (WARN_ON(!new && !old))
-@@ -480,6 +505,9 @@ static int ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
- 		defmgmtkey = old &&
- 			old == key_mtx_dereference(sdata->local,
- 						sdata->default_mgmt_key);
-+		defbeaconkey = old &&
-+			old == key_mtx_dereference(sdata->local,
-+						   sdata->default_beacon_key);
- 
- 		if (defunikey && !new)
- 			__ieee80211_set_default_key(sdata, -1, true, false);
-@@ -487,6 +515,8 @@ static int ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
- 			__ieee80211_set_default_key(sdata, -1, false, true);
- 		if (defmgmtkey && !new)
- 			__ieee80211_set_default_mgmt_key(sdata, -1);
-+		if (defbeaconkey && !new)
-+			__ieee80211_set_default_beacon_key(sdata, -1);
- 
- 		rcu_assign_pointer(sdata->keys[idx], new);
- 		if (defunikey && new)
-@@ -498,6 +528,9 @@ static int ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
- 		if (defmgmtkey && new)
- 			__ieee80211_set_default_mgmt_key(sdata,
- 							 new->conf.keyidx);
-+		if (defbeaconkey && new)
-+			__ieee80211_set_default_beacon_key(sdata,
-+							   new->conf.keyidx);
- 	}
- 
- 	if (old)
-@@ -515,7 +548,9 @@ ieee80211_key_alloc(u32 cipher, int idx, size_t key_len,
- 	struct ieee80211_key *key;
- 	int i, j, err;
- 
--	if (WARN_ON(idx < 0 || idx >= NUM_DEFAULT_KEYS + NUM_DEFAULT_MGMT_KEYS))
-+	if (WARN_ON(idx < 0 ||
-+		    idx >= NUM_DEFAULT_KEYS + NUM_DEFAULT_MGMT_KEYS +
-+		    NUM_DEFAULT_BEACON_KEYS))
- 		return ERR_PTR(-EINVAL);
- 
- 	key = kzalloc(sizeof(struct ieee80211_key) + key_len, GFP_KERNEL);
-@@ -978,6 +1013,7 @@ static void ieee80211_free_keys_iface(struct ieee80211_sub_if_data *sdata,
- 	sdata->crypto_tx_tailroom_pending_dec = 0;
- 
- 	ieee80211_debugfs_key_remove_mgmt_default(sdata);
-+	ieee80211_debugfs_key_remove_beacon_default(sdata);
- 
- 	list_for_each_entry_safe(key, tmp, &sdata->key_list, list) {
- 		ieee80211_key_replace(key->sdata, key->sta,
-diff --git a/net/mac80211/key.h b/net/mac80211/key.h
-index d6d6e89cf7dd..7ad72e9b4991 100644
---- a/net/mac80211/key.h
-+++ b/net/mac80211/key.h
-@@ -17,6 +17,7 @@
- 
- #define NUM_DEFAULT_KEYS 4
- #define NUM_DEFAULT_MGMT_KEYS 2
-+#define NUM_DEFAULT_BEACON_KEYS 2
- #define INVALID_PTK_KEYIDX 2 /* Keyidx always pointing to a NULL key for PTK */
- 
- struct ieee80211_local;
-@@ -153,6 +154,8 @@ void ieee80211_set_default_key(struct ieee80211_sub_if_data *sdata, int idx,
- 			       bool uni, bool multi);
- void ieee80211_set_default_mgmt_key(struct ieee80211_sub_if_data *sdata,
- 				    int idx);
-+void ieee80211_set_default_beacon_key(struct ieee80211_sub_if_data *sdata,
-+				      int idx);
- void ieee80211_free_keys(struct ieee80211_sub_if_data *sdata,
- 			 bool force_synchronize);
- void ieee80211_free_sta_keys(struct ieee80211_local *local,
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index c00e28585f9d..364a35414d05 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -533,7 +533,9 @@ struct sta_info {
- 	u8 addr[ETH_ALEN];
- 	struct ieee80211_local *local;
- 	struct ieee80211_sub_if_data *sdata;
--	struct ieee80211_key __rcu *gtk[NUM_DEFAULT_KEYS + NUM_DEFAULT_MGMT_KEYS];
-+	struct ieee80211_key __rcu *gtk[NUM_DEFAULT_KEYS +
-+					NUM_DEFAULT_MGMT_KEYS +
-+					NUM_DEFAULT_BEACON_KEYS];
- 	struct ieee80211_key __rcu *ptk[NUM_DEFAULT_KEYS];
- 	u8 ptk_idx;
- 	struct rate_control_ref *rate_ctrl;
--- 
-2.20.1
+I analysed the following traces:
+ieee80211_rx_handlers() -> ieee80211_rx_handlers_result() -> ieee80211_rx_cooked_monitor()
+
+here ieee80211_rx_handlers() is holding the rx->local->rx_path_lock and
+therefore I used this for the cond argument.
+
+ If this is not right, can you help me in figuring out that which other
+ lock is held?
+
+and 
+__ieee80211_rx_handle_packet() -> ieee80211_prepare_and_rx_handle() -> ieee80211_invoke_rx_handlers() -> 
+ieee80211_rx_handlers_result() -> ieee80211_rx_cooked_monitor()
+
+Here __ieee80211_rx_handle_packet() should be called under
+rcu_read_lock protection.
+So this trace seems okay and no need to pass any cond.
+
+I may have missed something, please correct me in that case.
+
+> > @@ -4114,7 +4115,8 @@ void __ieee80211_check_fast_rx_iface(struct ieee80211_sub_if_data *sdata)
+> >  
+> >  	lockdep_assert_held(&local->sta_mtx);
+> >  
+> > -	list_for_each_entry_rcu(sta, &local->sta_list, list) {
+> > +	list_for_each_entry_rcu(sta, &local->sta_list, list,
+> > +				lockdep_is_held(&local->sta_mtx)) {
+> 
+> And this isn't even a real RCU iteration, since we _must_ hold the mutex
+> here.
+>
+Yeah exactly, dropping _rcu (use list_for_each_entry()) would be a good option in this case.
+Let me know if that is alright and I will send a new patch with all the
+changes required.
+
+Thank you,
+Madhuparna
+
+> johannes
+> 
