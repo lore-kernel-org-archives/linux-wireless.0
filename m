@@ -7,51 +7,51 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8032DC35672
-	for <linux-wireless@archiver.kernel.org>; Sat, 22 Feb 2020 13:27:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34F02C35666
+	for <linux-wireless@archiver.kernel.org>; Sat, 22 Feb 2020 13:27:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 42B5F20659
-	for <linux-wireless@archiver.kernel.org>; Sat, 22 Feb 2020 13:27:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0714020659
+	for <linux-wireless@archiver.kernel.org>; Sat, 22 Feb 2020 13:27:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="PHtucN2x"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="cKUV5zVw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727378AbgBVN1d (ORCPT
+        id S1727423AbgBVN1h (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 22 Feb 2020 08:27:33 -0500
+        Sat, 22 Feb 2020 08:27:37 -0500
 Received: from mail26.static.mailgun.info ([104.130.122.26]:36803 "EHLO
         mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727115AbgBVN1d (ORCPT
+        by vger.kernel.org with ESMTP id S1727115AbgBVN1h (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 22 Feb 2020 08:27:33 -0500
+        Sat, 22 Feb 2020 08:27:37 -0500
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1582378052; h=Content-Transfer-Encoding: MIME-Version:
+ s=smtp; t=1582378056; h=Content-Transfer-Encoding: MIME-Version:
  References: In-Reply-To: Message-Id: Date: Subject: Cc: To: From:
- Sender; bh=rFbaqFqXgjEfkRN06hF6RG/GVZYvW2ceLxQsVqfewpA=; b=PHtucN2xs//HLeSMa6KbJnswOPQ5xyNUHcheW+CLWtUrk0k+ldYZsMCzw3F5YkNnvQRnMUUs
- 1MKTXgeFmKYqzDLijhuO23s7v4Owi400Ov7EXyWwRDrJJsvL6pdA6K2Cc0EZoagyGTq/bs6M
- Ds/5oQ2N3lAah3YQxAiJTKpydPQ=
+ Sender; bh=nb9/8W2YjFYWjNwCsyVWAjad0xesyLCLtCKuitI24/0=; b=cKUV5zVwzyhnZt+htzvZMTb0bYLekO1xoLHZL384F9vbe+oF//W+E/iZNzqiXeKTJbNqzScx
+ zH3XV/QvY2n5c60lg24lddLqnVis17ypY+xkHzUA3wQjeBOP5iq26AUCou/hWsTNh/0bqwKz
+ QPhMiMbOkjyZuOnrusTZRlZQgcw=
 X-Mailgun-Sending-Ip: 104.130.122.26
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e512c39.7fee97fb0810-smtp-out-n01;
- Sat, 22 Feb 2020 13:27:21 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5e512c34.7ffa0e204e30-smtp-out-n02;
+ Sat, 22 Feb 2020 13:27:16 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 991E4C433A2; Sat, 22 Feb 2020 13:27:20 +0000 (UTC)
+        id 1088AC4479D; Sat, 22 Feb 2020 13:27:16 +0000 (UTC)
 Received: from jouni.codeaurora.org (176-93-35-56.bb.dnainternet.fi [176.93.35.56])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: jouni)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 0F233C43383;
-        Sat, 22 Feb 2020 13:27:18 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 0F233C43383
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 3EC5DC433A2;
+        Sat, 22 Feb 2020 13:27:13 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 3EC5DC433A2
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=jouni@codeaurora.org
 From:   Jouni Malinen <jouni@codeaurora.org>
 To:     Johannes Berg <johannes@sipsolutions.net>
 Cc:     linux-wireless@vger.kernel.org,
         Jouni Malinen <jouni@codeaurora.org>
-Subject: [PATCH 6/7] mac80211: Beacon protection using the new BIGTK (STA)
-Date:   Sat, 22 Feb 2020 15:25:47 +0200
-Message-Id: <20200222132548.20835-6-jouni@codeaurora.org>
+Subject: [PATCH 4/7] mac80211: Update BIP to support Beacon frames
+Date:   Sat, 22 Feb 2020 15:25:45 +0200
+Message-Id: <20200222132548.20835-4-jouni@codeaurora.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200222132548.20835-1-jouni@codeaurora.org>
 References: <20200222132548.20835-1-jouni@codeaurora.org>
@@ -62,153 +62,109 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This adds support for mac80211 to verify that received Beacon frames
-have a valid MME in station mode when a BIGTK is configured.
+When BIP is used to protect Beacon frames, the Timestamp field is masked
+to zero. Otherwise, the BIP processing is identical to the way it was
+already used with group-addressed Robust Management frames.
 
 Signed-off-by: Jouni Malinen <jouni@codeaurora.org>
 ---
- net/mac80211/rx.c | 79 ++++++++++++++++++++++++++++++++++++++++-------
- 1 file changed, 67 insertions(+), 12 deletions(-)
+ net/mac80211/aes_cmac.c | 21 +++++++++++++++++++--
+ net/mac80211/aes_gmac.c | 24 ++++++++++++++++++------
+ 2 files changed, 37 insertions(+), 8 deletions(-)
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index ec3a04a1db20..6bd24123456d 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -983,7 +983,8 @@ static int ieee80211_get_mmie_keyidx(struct sk_buff *skb)
- 	if (skb->len < 24 + sizeof(*mmie) || !is_multicast_ether_addr(hdr->da))
- 		return -1;
- 
--	if (!ieee80211_is_robust_mgmt_frame(skb))
-+	if (!ieee80211_is_robust_mgmt_frame(skb) &&
-+	    !ieee80211_is_beacon(hdr->frame_control))
- 		return -1; /* not a robust management frame */
- 
- 	mmie = (struct ieee80211_mmie *)
-@@ -1868,6 +1869,41 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
- 	return RX_CONTINUE;
- } /* ieee80211_rx_h_sta_process */
- 
-+static struct ieee80211_key *
-+ieee80211_rx_get_bigtk(struct ieee80211_rx_data *rx, int idx)
-+{
-+	struct ieee80211_key *key = NULL;
-+	struct ieee80211_sub_if_data *sdata = rx->sdata;
-+	int idx2;
-+
-+	/* Make sure key gets set if either BIGTK key index is set so that
-+	 * ieee80211_drop_unencrypted_mgmt() can properly drop both unprotected
-+	 * Beacon frames and Beacon frames that claim to use another BIGTK key
-+	 * index (i.e., a key that we do not have).
-+	 */
-+
-+	if (idx < 0) {
-+		idx = NUM_DEFAULT_KEYS + NUM_DEFAULT_MGMT_KEYS;
-+		idx2 = idx + 1;
-+	} else {
-+		if (idx == NUM_DEFAULT_KEYS + NUM_DEFAULT_MGMT_KEYS)
-+			idx2 = idx + 1;
-+		else
-+			idx2 = idx - 1;
-+	}
-+
-+	if (rx->sta)
-+		key = rcu_dereference(rx->sta->gtk[idx]);
-+	if (!key)
-+		key = rcu_dereference(sdata->keys[idx]);
-+	if (!key && rx->sta)
-+		key = rcu_dereference(rx->sta->gtk[idx2]);
-+	if (!key)
-+		key = rcu_dereference(sdata->keys[idx2]);
-+
-+	return key;
-+}
-+
- static ieee80211_rx_result debug_noinline
- ieee80211_rx_h_decrypt(struct ieee80211_rx_data *rx)
+diff --git a/net/mac80211/aes_cmac.c b/net/mac80211/aes_cmac.c
+index 57748cab0e28..b31f1021ad9c 100644
+--- a/net/mac80211/aes_cmac.c
++++ b/net/mac80211/aes_cmac.c
+@@ -26,12 +26,20 @@ void ieee80211_aes_cmac(struct crypto_shash *tfm, const u8 *aad,
  {
-@@ -1885,17 +1921,18 @@ ieee80211_rx_h_decrypt(struct ieee80211_rx_data *rx)
- 	/*
- 	 * Key selection 101
- 	 *
--	 * There are four types of keys:
-+	 * There are five types of keys:
- 	 *  - GTK (group keys)
- 	 *  - IGTK (group keys for management frames)
-+	 *  - BIGTK (group keys for Beacon frames)
- 	 *  - PTK (pairwise keys)
- 	 *  - STK (station-to-station pairwise keys)
- 	 *
- 	 * When selecting a key, we have to distinguish between multicast
- 	 * (including broadcast) and unicast frames, the latter can only
--	 * use PTKs and STKs while the former always use GTKs and IGTKs.
--	 * Unless, of course, actual WEP keys ("pre-RSNA") are used, then
--	 * unicast frames can also use key indices like GTKs. Hence, if we
-+	 * use PTKs and STKs while the former always use GTKs, IGTKs, and
-+	 * BIGTKs. Unless, of course, actual WEP keys ("pre-RSNA") are used,
-+	 * then unicast frames can also use key indices like GTKs. Hence, if we
- 	 * don't have a PTK/STK we check the key index for a WEP key.
- 	 *
- 	 * Note that in a regular BSS, multicast frames are sent by the
-@@ -1939,6 +1976,20 @@ ieee80211_rx_h_decrypt(struct ieee80211_rx_data *rx)
- 		/* Skip decryption if the frame is not protected. */
- 		if (!ieee80211_has_protected(fc))
- 			return RX_CONTINUE;
-+	} else if (mmie_keyidx >= 0 && ieee80211_is_beacon(fc)) {
-+		/* Broadcast/multicast robust management frame / BIP */
-+		if ((status->flag & RX_FLAG_DECRYPTED) &&
-+		    (status->flag & RX_FLAG_IV_STRIPPED))
-+			return RX_CONTINUE;
-+
-+		if (mmie_keyidx < NUM_DEFAULT_KEYS + NUM_DEFAULT_MGMT_KEYS ||
-+		    mmie_keyidx >= NUM_DEFAULT_KEYS + NUM_DEFAULT_MGMT_KEYS +
-+		    NUM_DEFAULT_BEACON_KEYS)
-+			return RX_DROP_MONITOR; /* unexpected BIP keyidx */
-+
-+		rx->key = ieee80211_rx_get_bigtk(rx, mmie_keyidx);
-+		if (!rx->key)
-+			return RX_CONTINUE; /* Beacon protection not in use */
- 	} else if (mmie_keyidx >= 0) {
- 		/* Broadcast/multicast robust management frame / BIP */
- 		if ((status->flag & RX_FLAG_DECRYPTED) &&
-@@ -1968,11 +2019,12 @@ ieee80211_rx_h_decrypt(struct ieee80211_rx_data *rx)
- 		struct ieee80211_sub_if_data *sdata = rx->sdata;
- 		int i;
+ 	SHASH_DESC_ON_STACK(desc, tfm);
+ 	u8 out[AES_BLOCK_SIZE];
++	const __le16 *fc;
  
--		if (ieee80211_is_mgmt(fc) &&
--		    is_multicast_ether_addr(hdr->addr1) &&
--		    (key = rcu_dereference(rx->sdata->default_mgmt_key)))
--			rx->key = key;
--		else {
-+		if (ieee80211_is_beacon(fc)) {
-+			key = ieee80211_rx_get_bigtk(rx, -1);
-+		} else if (ieee80211_is_mgmt(fc) &&
-+			   is_multicast_ether_addr(hdr->addr1)) {
-+			key = rcu_dereference(rx->sdata->default_mgmt_key);
-+		} else {
- 			if (rx->sta) {
- 				for (i = 0; i < NUM_DEFAULT_KEYS; i++) {
- 					key = rcu_dereference(rx->sta->gtk[i]);
-@@ -1987,9 +2039,9 @@ ieee80211_rx_h_decrypt(struct ieee80211_rx_data *rx)
- 						break;
- 				}
- 			}
--			if (key)
--				rx->key = key;
- 		}
-+		if (key)
-+			rx->key = key;
- 		return RX_CONTINUE;
- 	} else {
- 		/*
-@@ -2358,6 +2410,9 @@ static int ieee80211_drop_unencrypted_mgmt(struct ieee80211_rx_data *rx)
- 							     rx->skb->len);
- 			return -EACCES;
- 		}
-+		if (unlikely(ieee80211_is_beacon(fc) && rx->key &&
-+			     ieee80211_get_mmie_keyidx(rx->skb) < 0))
-+			return -EACCES;
- 		/*
- 		 * When using MFP, Action frames are not allowed prior to
- 		 * having configured keys.
+ 	desc->tfm = tfm;
+ 
+ 	crypto_shash_init(desc);
+ 	crypto_shash_update(desc, aad, AAD_LEN);
+-	crypto_shash_update(desc, data, data_len - CMAC_TLEN);
++	fc = (const __le16 *)aad;
++	if (ieee80211_is_beacon(*fc)) {
++		/* mask Timestamp field to zero */
++		crypto_shash_update(desc, zero, 8);
++		crypto_shash_update(desc, data + 8, data_len - 8 - CMAC_TLEN);
++	} else {
++		crypto_shash_update(desc, data, data_len - CMAC_TLEN);
++	}
+ 	crypto_shash_finup(desc, zero, CMAC_TLEN, out);
+ 
+ 	memcpy(mic, out, CMAC_TLEN);
+@@ -41,12 +49,21 @@ void ieee80211_aes_cmac_256(struct crypto_shash *tfm, const u8 *aad,
+ 			    const u8 *data, size_t data_len, u8 *mic)
+ {
+ 	SHASH_DESC_ON_STACK(desc, tfm);
++	const __le16 *fc;
+ 
+ 	desc->tfm = tfm;
+ 
+ 	crypto_shash_init(desc);
+ 	crypto_shash_update(desc, aad, AAD_LEN);
+-	crypto_shash_update(desc, data, data_len - CMAC_TLEN_256);
++	fc = (const __le16 *)aad;
++	if (ieee80211_is_beacon(*fc)) {
++		/* mask Timestamp field to zero */
++		crypto_shash_update(desc, zero, 8);
++		crypto_shash_update(desc, data + 8,
++				    data_len - 8 - CMAC_TLEN_256);
++	} else {
++		crypto_shash_update(desc, data, data_len - CMAC_TLEN_256);
++	}
+ 	crypto_shash_finup(desc, zero, CMAC_TLEN_256, mic);
+ }
+ 
+diff --git a/net/mac80211/aes_gmac.c b/net/mac80211/aes_gmac.c
+index 363ad1c1dc0c..16ba09cb5def 100644
+--- a/net/mac80211/aes_gmac.c
++++ b/net/mac80211/aes_gmac.c
+@@ -17,10 +17,11 @@
+ int ieee80211_aes_gmac(struct crypto_aead *tfm, const u8 *aad, u8 *nonce,
+ 		       const u8 *data, size_t data_len, u8 *mic)
+ {
+-	struct scatterlist sg[4];
++	struct scatterlist sg[5];
+ 	u8 *zero, *__aad, iv[AES_BLOCK_SIZE];
+ 	struct aead_request *aead_req;
+ 	int reqsize = sizeof(*aead_req) + crypto_aead_reqsize(tfm);
++	const __le16 *fc;
+ 
+ 	if (data_len < GMAC_MIC_LEN)
+ 		return -EINVAL;
+@@ -33,11 +34,22 @@ int ieee80211_aes_gmac(struct crypto_aead *tfm, const u8 *aad, u8 *nonce,
+ 	__aad = zero + GMAC_MIC_LEN;
+ 	memcpy(__aad, aad, GMAC_AAD_LEN);
+ 
+-	sg_init_table(sg, 4);
+-	sg_set_buf(&sg[0], __aad, GMAC_AAD_LEN);
+-	sg_set_buf(&sg[1], data, data_len - GMAC_MIC_LEN);
+-	sg_set_buf(&sg[2], zero, GMAC_MIC_LEN);
+-	sg_set_buf(&sg[3], mic, GMAC_MIC_LEN);
++	fc = (const __le16 *)aad;
++	if (ieee80211_is_beacon(*fc)) {
++		/* mask Timestamp field to zero */
++		sg_init_table(sg, 5);
++		sg_set_buf(&sg[0], __aad, GMAC_AAD_LEN);
++		sg_set_buf(&sg[1], zero, 8);
++		sg_set_buf(&sg[2], data + 8, data_len - 8 - GMAC_MIC_LEN);
++		sg_set_buf(&sg[3], zero, GMAC_MIC_LEN);
++		sg_set_buf(&sg[4], mic, GMAC_MIC_LEN);
++	} else {
++		sg_init_table(sg, 4);
++		sg_set_buf(&sg[0], __aad, GMAC_AAD_LEN);
++		sg_set_buf(&sg[1], data, data_len - GMAC_MIC_LEN);
++		sg_set_buf(&sg[2], zero, GMAC_MIC_LEN);
++		sg_set_buf(&sg[3], mic, GMAC_MIC_LEN);
++	}
+ 
+ 	memcpy(iv, nonce, GMAC_NONCE_LEN);
+ 	memset(iv + GMAC_NONCE_LEN, 0, sizeof(iv) - GMAC_NONCE_LEN);
 -- 
 2.20.1
