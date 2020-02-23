@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78AFCC35669
-	for <linux-wireless@archiver.kernel.org>; Sun, 23 Feb 2020 02:27:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5FCEC35669
+	for <linux-wireless@archiver.kernel.org>; Sun, 23 Feb 2020 02:28:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4770B20659
-	for <linux-wireless@archiver.kernel.org>; Sun, 23 Feb 2020 02:27:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B42BF21741
+	for <linux-wireless@archiver.kernel.org>; Sun, 23 Feb 2020 02:28:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1582424839;
-	bh=m65JZ9mK93qhBxdLSAzmYWdLfohdHHV76K5hV4I/JvQ=;
+	s=default; t=1582424918;
+	bh=9O5ymUWpNt3jhqdPiucuIYgwSShPohd5ByDTUrD1C6E=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=vMnrp3eCFN5vzdCTTUcfbyhS47+anUN3pCAIVp+fUzpDaYseCflrP7dFdFavA0xtk
-	 KmKTgrys3i3o3jOyuVi1ujDR50TdVfjHFed7SX7Q2tsr8pO8WIODz7prQ3ID1O7yLD
-	 AvDZvn4FtGlA8z4OKOHEXN+sQxwvuvRMBJWu5aZs=
+	b=o1EuXg/d3rGp4JWJtX975Vod3ufX91Ei6evOzMDEugEc1Ip0TO18NAt77JJt7xvMH
+	 qvQNxjV0qc/deU4Tf1HzkB33uDDXf+ADLrWwv0pEuVDlTp0tjOh+zh8wkVBd1syZZX
+	 7y47kyNpGHnoRfMMGBg5JLq5s2RLa0yaPgWvKAmU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727854AbgBWCYj (ORCPT
+        id S1729162AbgBWCYT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 22 Feb 2020 21:24:39 -0500
-Received: from mail.kernel.org ([198.145.29.99]:54720 "EHLO mail.kernel.org"
+        Sat, 22 Feb 2020 21:24:19 -0500
+Received: from mail.kernel.org ([198.145.29.99]:54276 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729349AbgBWCYi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 22 Feb 2020 21:24:38 -0500
+        id S1729139AbgBWCYT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 22 Feb 2020 21:24:19 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 65DF02465D;
-        Sun, 23 Feb 2020 02:24:36 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id AFD402467A;
+        Sun, 23 Feb 2020 02:24:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1582424677;
-        bh=m65JZ9mK93qhBxdLSAzmYWdLfohdHHV76K5hV4I/JvQ=;
+        s=default; t=1582424658;
+        bh=9O5ymUWpNt3jhqdPiucuIYgwSShPohd5ByDTUrD1C6E=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=rW5CY7b7mMuv7kZ0UIZrfhYd5i/bMPIH0lecTiB9TWlMFE9apZdAwxdwbwry+CdXR
-         y+lHWvO2vp7W4Ifvb5S12HzETLzljfWb1xEFCuEborR1gOL+jHXELAHUlvc2hIE1Di
-         U7QSHk33MdTx3k3gDExD1p5y/xuWIS7o/1sVqDVA=
+        b=wOhJYsBhJx5Wm7XK9vxs6+sBYX1rBvQC4GCmazF2I5fWLuEjEHFvMbO0jWtc2GPq1
+         tIAX9LSQ2jpGDTWuv9LvawcMpmmnZ1gbkTYXYFtb+ZtAzBBTajYgNS91subGlqwd8b
+         rtFalh3dsRknnCd+EnQw6LR71F8JFJW/UCnSLvj4=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>,
         Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 21/21] cfg80211: add missing policy for NL80211_ATTR_STATUS_CODE
-Date:   Sat, 22 Feb 2020 21:24:11 -0500
-Message-Id: <20200223022411.2159-21-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 05/21] cfg80211: check wiphy driver existence for drvinfo report
+Date:   Sat, 22 Feb 2020 21:23:55 -0500
+Message-Id: <20200223022411.2159-5-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200223022411.2159-1-sashal@kernel.org>
 References: <20200223022411.2159-1-sashal@kernel.org>
@@ -62,32 +62,40 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 
-[ Upstream commit ea75080110a4c1fa011b0a73cb8f42227143ee3e ]
+[ Upstream commit bfb7bac3a8f47100ebe7961bd14e924c96e21ca7 ]
 
-The nl80211_policy is missing for NL80211_ATTR_STATUS_CODE attribute.
-As a result, for strictly validated commands, it's assumed to not be
-supported.
+When preparing ethtool drvinfo, check if wiphy driver is defined
+before dereferencing it. Driver may not exist, e.g. if wiphy is
+attached to a virtual platform device.
 
 Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
-Link: https://lore.kernel.org/r/20200213131608.10541-2-sergey.matyukevich.os@quantenna.com
+Link: https://lore.kernel.org/r/20200203105644.28875-1-sergey.matyukevich.os@quantenna.com
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/wireless/nl80211.c | 1 +
- 1 file changed, 1 insertion(+)
+ net/wireless/ethtool.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index df8c5312f26ad..b248578aeb7bc 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -321,6 +321,7 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
- 	[NL80211_ATTR_CONTROL_PORT_ETHERTYPE] = { .type = NLA_U16 },
- 	[NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT] = { .type = NLA_FLAG },
- 	[NL80211_ATTR_PRIVACY] = { .type = NLA_FLAG },
-+	[NL80211_ATTR_STATUS_CODE] = { .type = NLA_U16 },
- 	[NL80211_ATTR_CIPHER_SUITE_GROUP] = { .type = NLA_U32 },
- 	[NL80211_ATTR_WPA_VERSIONS] = { .type = NLA_U32 },
- 	[NL80211_ATTR_PID] = { .type = NLA_U32 },
+diff --git a/net/wireless/ethtool.c b/net/wireless/ethtool.c
+index a9c0f368db5d2..24e18405cdb48 100644
+--- a/net/wireless/ethtool.c
++++ b/net/wireless/ethtool.c
+@@ -7,9 +7,13 @@
+ void cfg80211_get_drvinfo(struct net_device *dev, struct ethtool_drvinfo *info)
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	struct device *pdev = wiphy_dev(wdev->wiphy);
+ 
+-	strlcpy(info->driver, wiphy_dev(wdev->wiphy)->driver->name,
+-		sizeof(info->driver));
++	if (pdev->driver)
++		strlcpy(info->driver, pdev->driver->name,
++			sizeof(info->driver));
++	else
++		strlcpy(info->driver, "N/A", sizeof(info->driver));
+ 
+ 	strlcpy(info->version, init_utsname()->release, sizeof(info->version));
+ 
 -- 
 2.20.1
 
