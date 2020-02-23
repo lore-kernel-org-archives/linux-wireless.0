@@ -4,56 +4,54 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F4C5C35669
-	for <linux-wireless@archiver.kernel.org>; Sun, 23 Feb 2020 02:31:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA836C35669
+	for <linux-wireless@archiver.kernel.org>; Sun, 23 Feb 2020 02:31:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 64A982067D
-	for <linux-wireless@archiver.kernel.org>; Sun, 23 Feb 2020 02:31:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B89862067D
+	for <linux-wireless@archiver.kernel.org>; Sun, 23 Feb 2020 02:31:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1582425061;
-	bh=PtriBsXyW8kGTAqXSDy7UYBdHikaU5JTUnz/W1iCUdQ=;
+	s=default; t=1582425065;
+	bh=8ITaZFZgUihDSQO1mZwt+UkaagCefQ1Nx1g4etIaBuU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=GPZf0a1ctelC0eevp7QJ3jPuijflLnRzaivZbM34E2QF2Piots19Tm+FhC5u4d80X
-	 auP/eq6Bg75rItfbKgc1Jw6l/aJ7mBT/hnTABX5dYTN94P5K041mWW+B5jSU/U0Me1
-	 aOEoHYTcu8OcBRZt5M+QolV3eutCaRGcxiDWeg1A=
+	b=mJTSJiANACtc1HCPlwLYzFPjSrlFw4SVh5coMKvb8/UO8Jzum2rTkLyGntxOv/3TZ
+	 EEyIM1HSgBk/7+yIF/+5UY3BBTqvhERsCQkUG8UjKYToocwUngtysWzClRWIodQ10/
+	 FNmS3O7cc4THRncZcGfAPcKNm+h3ImqNymTsjqvE=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728704AbgBWCXc (ORCPT
+        id S1728683AbgBWCbF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 22 Feb 2020 21:23:32 -0500
-Received: from mail.kernel.org ([198.145.29.99]:53064 "EHLO mail.kernel.org"
+        Sat, 22 Feb 2020 21:31:05 -0500
+Received: from mail.kernel.org ([198.145.29.99]:53030 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728002AbgBWCXb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 22 Feb 2020 21:23:31 -0500
+        id S1728684AbgBWCXa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 22 Feb 2020 21:23:30 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E561221D56;
-        Sun, 23 Feb 2020 02:23:29 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id ADC702071E;
+        Sun, 23 Feb 2020 02:23:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1582424610;
-        bh=PtriBsXyW8kGTAqXSDy7UYBdHikaU5JTUnz/W1iCUdQ=;
+        s=default; t=1582424609;
+        bh=8ITaZFZgUihDSQO1mZwt+UkaagCefQ1Nx1g4etIaBuU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=fzp7kC+kU2UnuVJjIq6os+Ue2DKOyY265IbI6KbWrzIfzQZ01nE65zFwWdkvnYBNm
-         19jxuJPH9qXk2Gx44pgzU3Ku6xPe0kb+rpeQc47agn1v284yFGwd8CWuJNyUD6UO1a
-         HOMPMVXqPXd/7+4ARf/Zi4fQWoRpg1XiezbzA3zE=
+        b=QXeIZGu3od7hsQclm5tn0+c0LBNMsOYLCGNQOjsA95RRa5HwEnNJzb3ECCrWaK+t1
+         +0x+MIiuP1UNJGC/yY7kKd6KGlSs3L2x9h0D+ISvEleZxsWBC3hzH2r/zDzJlZq20V
+         he5KZ30XN76L8WQWGqHGcjX31qyfEdO5wuxzEluc=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Shay Bar <shay.bar@celeno.com>,
-        Aviad Brikman <aviad.brikman@celeno.com>,
+Cc:     Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>,
         Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 45/50] mac80211: fix wrong 160/80+80 MHz setting
-Date:   Sat, 22 Feb 2020 21:22:30 -0500
-Message-Id: <20200223022235.1404-45-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 44/50] cfg80211: add missing policy for NL80211_ATTR_STATUS_CODE
+Date:   Sat, 22 Feb 2020 21:22:29 -0500
+Message-Id: <20200223022235.1404-44-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200223022235.1404-1-sashal@kernel.org>
 References: <20200223022235.1404-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
@@ -62,68 +60,34 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Shay Bar <shay.bar@celeno.com>
+From: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 
-[ Upstream commit 33181ea7f5a62a17fbe55f0f73428ecb5e686be8 ]
+[ Upstream commit ea75080110a4c1fa011b0a73cb8f42227143ee3e ]
 
-Before this patch, STA's would set new width of 160/80+80 MHz based on AP capability only.
-This is wrong because STA may not support > 80MHz BW.
-Fix is to verify STA has 160/80+80 MHz capability before increasing its width to > 80MHz.
+The nl80211_policy is missing for NL80211_ATTR_STATUS_CODE attribute.
+As a result, for strictly validated commands, it's assumed to not be
+supported.
 
-The "support_80_80" and "support_160" setting is based on:
-"Table 9-272 — Setting of the Supported Channel Width Set subfield and Extended NSS BW
-Support subfield at a STA transmitting the VHT Capabilities Information field"
-From "Draft P802.11REVmd_D3.0.pdf"
-
-Signed-off-by: Aviad Brikman <aviad.brikman@celeno.com>
-Signed-off-by: Shay Bar <shay.bar@celeno.com>
-Link: https://lore.kernel.org/r/20200210130728.23674-1-shay.bar@celeno.com
+Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Link: https://lore.kernel.org/r/20200213131608.10541-2-sergey.matyukevich.os@quantenna.com
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/mac80211/util.c | 16 ++++++++++++++--
- 1 file changed, 14 insertions(+), 2 deletions(-)
+ net/wireless/nl80211.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 739e90555d8b9..decd46b383938 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -2993,10 +2993,22 @@ bool ieee80211_chandef_vht_oper(struct ieee80211_hw *hw,
- 	int cf0, cf1;
- 	int ccfs0, ccfs1, ccfs2;
- 	int ccf0, ccf1;
-+	u32 vht_cap;
-+	bool support_80_80 = false;
-+	bool support_160 = false;
- 
- 	if (!oper || !htop)
- 		return false;
- 
-+	vht_cap = hw->wiphy->bands[chandef->chan->band]->vht_cap.cap;
-+	support_160 = (vht_cap & (IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK |
-+				  IEEE80211_VHT_CAP_EXT_NSS_BW_MASK));
-+	support_80_80 = ((vht_cap &
-+			 IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160_80PLUS80MHZ) ||
-+			(vht_cap & IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160MHZ &&
-+			 vht_cap & IEEE80211_VHT_CAP_EXT_NSS_BW_MASK) ||
-+			((vht_cap & IEEE80211_VHT_CAP_EXT_NSS_BW_MASK) >>
-+				    IEEE80211_VHT_CAP_EXT_NSS_BW_SHIFT > 1));
- 	ccfs0 = oper->center_freq_seg0_idx;
- 	ccfs1 = oper->center_freq_seg1_idx;
- 	ccfs2 = (le16_to_cpu(htop->operation_mode) &
-@@ -3024,10 +3036,10 @@ bool ieee80211_chandef_vht_oper(struct ieee80211_hw *hw,
- 			unsigned int diff;
- 
- 			diff = abs(ccf1 - ccf0);
--			if (diff == 8) {
-+			if ((diff == 8) && support_160) {
- 				new.width = NL80211_CHAN_WIDTH_160;
- 				new.center_freq1 = cf1;
--			} else if (diff > 8) {
-+			} else if ((diff > 8) && support_80_80) {
- 				new.width = NL80211_CHAN_WIDTH_80P80;
- 				new.center_freq2 = cf1;
- 			}
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index c74646b7a751f..1930513f541e1 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -437,6 +437,7 @@ const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
+ 	[NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_CONTROL_PORT_OVER_NL80211] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_PRIVACY] = { .type = NLA_FLAG },
++	[NL80211_ATTR_STATUS_CODE] = { .type = NLA_U16 },
+ 	[NL80211_ATTR_CIPHER_SUITE_GROUP] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_WPA_VERSIONS] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_PID] = { .type = NLA_U32 },
 -- 
 2.20.1
 
