@@ -2,124 +2,101 @@ Return-Path: <SRS0=gp58=4L=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79835C35673
-	for <linux-wireless@archiver.kernel.org>; Sun, 23 Feb 2020 02:37:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C82FDC35673
+	for <linux-wireless@archiver.kernel.org>; Sun, 23 Feb 2020 14:33:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 51A6520659
-	for <linux-wireless@archiver.kernel.org>; Sun, 23 Feb 2020 02:37:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1582425477;
-	bh=fh/0xdOoh175PJRRkgF0SxozxLY14ZyoQVxKq3XrrVU=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=rSKduyM0iLQuTsck+C5qTIx4uy3meg8tlJSn/F3NXE2ujDDYMqyjqQD9oRag3JP0p
-	 SslYT/v8XB5BMfengDFiMTpW4TI2+cMkVpV/9SHETJr69VzX9siMuO2+93WwGg2+x1
-	 csNsyZrBjnYtX5Nghw5bu6SmxkFiH62/QKLV3JTk=
+	by mail.kernel.org (Postfix) with ESMTP id A040A206E0
+	for <linux-wireless@archiver.kernel.org>; Sun, 23 Feb 2020 14:33:48 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Tzd5nWYA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727272AbgBWCVa (ORCPT
+        id S1727064AbgBWOdj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 22 Feb 2020 21:21:30 -0500
-Received: from mail.kernel.org ([198.145.29.99]:49808 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727249AbgBWCV3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 22 Feb 2020 21:21:29 -0500
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 0D91A208C4;
-        Sun, 23 Feb 2020 02:21:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1582424488;
-        bh=fh/0xdOoh175PJRRkgF0SxozxLY14ZyoQVxKq3XrrVU=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=mZ3CdHkboD94sGsOCETwnBsa3YTlT0cyuid1zLhr29cq9Q7PgvVxHgGRw8shdiclk
-         hyynf6RZaO6BtbKdSaeLqHXHt9adbe/yT2o2HFLSj+uq1Hz1X0Im+WhH+HstZQv1T+
-         aBd8z9sJ55dYtM1WoFRRPEMepNknSbazdUIKvPE4=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.5 07/58] mac80211: consider more elements in parsing CRC
-Date:   Sat, 22 Feb 2020 21:20:28 -0500
-Message-Id: <20200223022119.707-7-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200223022119.707-1-sashal@kernel.org>
-References: <20200223022119.707-1-sashal@kernel.org>
-MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+        Sun, 23 Feb 2020 09:33:39 -0500
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:37123 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726490AbgBWOdi (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 23 Feb 2020 09:33:38 -0500
+Received: by mail-pg1-f195.google.com with SMTP id z12so3634809pgl.4;
+        Sun, 23 Feb 2020 06:33:38 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=69Yk8P/qFbghht4lzUdI2eecmMcH8qqFHN3OCd/EKwg=;
+        b=Tzd5nWYAGM+SEbceVpNuxrtzJNBo6OWJtbzTWSSb8B6JOQDE7q1k4sST0MYxVD2+xs
+         2iK7yNmaAAJtAzhb1bgTlS1WZ4XjfBFpo3NlirNP4b0eRhFmiCw1NxM4QfbzBmSqlZJk
+         Nb0HQa24AlWfm19Z0ZNXNxlXn4yHYtK0VCGI+gDXvCsvN25LlU0CiYt8OawGL8tWGWmT
+         M7XkNiOBJMZ2MQ84PWQPVccL31kGSP1XWGwUHPD+wiVQt9FzCkCaujuYVdGiM3r4q0ea
+         B9Ywz1Kd2d2Q1ub9oZJDGE2XXcwTXdv5KNtSN+iXmrFEYuY0VFFFLCQU6qGRlaoLSvgE
+         4HAQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=69Yk8P/qFbghht4lzUdI2eecmMcH8qqFHN3OCd/EKwg=;
+        b=S/lSxKBKN4AdSf9gH1zgGt629mnIBGyf7fPu+tyFdPMLpuGLrDJcGz6xfsfyBKxO/L
+         LS3FAzdQ2cpPh8jDBej+hyalI4K1/ZeZeX+qg895ptGu3giLS6q/9P95o9V0O2IAbLuD
+         prm4PhQK5uUQvkUyApVlWyHgZZDHU4sfJQ4anMc7xXwKUHlwSHYyrm2kk104hMemgbZD
+         2QUyfRxwe35HoE0Ax/nU8HGpIr4XUUMA62OuscdUk1ISttKtZaiJsBCleFV4Am26kLwT
+         vxaJla8RTfSrNVJPE7pKq4s1sHOI9eufNq1/w30fMN1izwCZjz9dH7vjryvjuX9DWyUT
+         7S6w==
+X-Gm-Message-State: APjAAAXhRwX9Eta+EG26aCaXHqROEV5mIUImfwmb89NDiJ5cf4k9AJJM
+        EdeXJ0FywbyR9x1lNXmIIg==
+X-Google-Smtp-Source: APXvYqyuMpfNWCcshVyT4hEGm5SAscjVG1tHFK7wvKEg/Dned1vNx6tuY0HjyvEZJtwbMpUFvuJAVg==
+X-Received: by 2002:a62:7945:: with SMTP id u66mr47940144pfc.82.1582468418248;
+        Sun, 23 Feb 2020 06:33:38 -0800 (PST)
+Received: from madhuparna-HP-Notebook.nitk.ac.in ([2402:3a80:1ee1:fa2c:caf:386d:b081:f71d])
+        by smtp.gmail.com with ESMTPSA id y2sm9576879pff.139.2020.02.23.06.33.31
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 23 Feb 2020 06:33:37 -0800 (PST)
+From:   madhuparnabhowmik10@gmail.com
+To:     johannes@sipsolutions.net, davem@davemloft.net
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, joel@joelfernandes.org,
+        linux-kernel-mentees@lists.linuxfoundation.org,
+        frextrite@gmail.com,
+        Madhuparna Bhowmik <madhuparnabhowmik10@gmail.com>
+Subject: [PATCH] net: mac80211: rx.c: Avoid RCU list traversal under mutex
+Date:   Sun, 23 Feb 2020 20:03:02 +0530
+Message-Id: <20200223143302.15390-1-madhuparnabhowmik10@gmail.com>
+X-Mailer: git-send-email 2.17.1
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Madhuparna Bhowmik <madhuparnabhowmik10@gmail.com>
 
-[ Upstream commit a04564c99bb4a92f805a58e56b2d22cc4978f152 ]
+local->sta_mtx is held in __ieee80211_check_fast_rx_iface().
+No need to use list_for_each_entry_rcu() as it also requires
+a cond argument to avoid false lockdep warnings when not used in
+RCU read-side section (with CONFIG_PROVE_RCU_LIST).
+Therefore use list_for_each_entry();
 
-We only use the parsing CRC for checking if a beacon changed,
-and elements with an ID > 63 cannot be represented in the
-filter. Thus, like we did before with WMM and Cisco vendor
-elements, just statically add these forgotten items to the
-CRC:
- - WLAN_EID_VHT_OPERATION
- - WLAN_EID_OPMODE_NOTIF
-
-I guess that in most cases when VHT/HE operation change, the HT
-operation also changed, and so the change was picked up, but we
-did notice that pure operating mode notification changes were
-ignored.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/20200131111300.891737-22-luca@coelho.fi
-[restrict to VHT for the mac80211 branch]
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Madhuparna Bhowmik <madhuparnabhowmik10@gmail.com>
 ---
- net/mac80211/util.c | 18 ++++++++++++------
- 1 file changed, 12 insertions(+), 6 deletions(-)
+ net/mac80211/rx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 32a7a53833c01..739e90555d8b9 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1063,16 +1063,22 @@ _ieee802_11_parse_elems_crc(const u8 *start, size_t len, bool action,
- 				elem_parse_failed = true;
- 			break;
- 		case WLAN_EID_VHT_OPERATION:
--			if (elen >= sizeof(struct ieee80211_vht_operation))
-+			if (elen >= sizeof(struct ieee80211_vht_operation)) {
- 				elems->vht_operation = (void *)pos;
--			else
--				elem_parse_failed = true;
-+				if (calc_crc)
-+					crc = crc32_be(crc, pos - 2, elen + 2);
-+				break;
-+			}
-+			elem_parse_failed = true;
- 			break;
- 		case WLAN_EID_OPMODE_NOTIF:
--			if (elen > 0)
-+			if (elen > 0) {
- 				elems->opmode_notif = pos;
--			else
--				elem_parse_failed = true;
-+				if (calc_crc)
-+					crc = crc32_be(crc, pos - 2, elen + 2);
-+				break;
-+			}
-+			elem_parse_failed = true;
- 			break;
- 		case WLAN_EID_MESH_ID:
- 			elems->mesh_id = pos;
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 0e05ff037672..0ba98ad9bc85 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -4114,7 +4114,7 @@ void __ieee80211_check_fast_rx_iface(struct ieee80211_sub_if_data *sdata)
+ 
+ 	lockdep_assert_held(&local->sta_mtx);
+ 
+-	list_for_each_entry_rcu(sta, &local->sta_list, list) {
++	list_for_each_entry(sta, &local->sta_list, list) {
+ 		if (sdata != sta->sdata &&
+ 		    (!sta->sdata->bss || sta->sdata->bss != sdata->bss))
+ 			continue;
 -- 
-2.20.1
+2.17.1
 
