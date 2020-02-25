@@ -4,67 +4,67 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F21CBC35DFD
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Feb 2020 07:41:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 270DAC35E07
+	for <linux-wireless@archiver.kernel.org>; Tue, 25 Feb 2020 07:41:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AB94B21744
-	for <linux-wireless@archiver.kernel.org>; Tue, 25 Feb 2020 07:41:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BFD3821744
+	for <linux-wireless@archiver.kernel.org>; Tue, 25 Feb 2020 07:41:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="nYvIQori"
+	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="X1Z5BKXa"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729665AbgBYHle (ORCPT
+        id S1729654AbgBYHl2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 25 Feb 2020 02:41:34 -0500
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:25139 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729606AbgBYHlS (ORCPT
+        Tue, 25 Feb 2020 02:41:28 -0500
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:53466 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729607AbgBYHlX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Feb 2020 02:41:18 -0500
-Received-SPF: Pass (esa1.microchip.iphmx.com: domain of
+        Tue, 25 Feb 2020 02:41:23 -0500
+Received-SPF: Pass (esa2.microchip.iphmx.com: domain of
   Ajay.Kathat@microchip.com designates 198.175.253.82 as
   permitted sender) identity=mailfrom;
-  client-ip=198.175.253.82; receiver=esa1.microchip.iphmx.com;
+  client-ip=198.175.253.82; receiver=esa2.microchip.iphmx.com;
   envelope-from="Ajay.Kathat@microchip.com";
   x-sender="Ajay.Kathat@microchip.com"; x-conformance=spf_only;
   x-record-type="v=spf1"; x-record-text="v=spf1 mx
   a:ushub1.microchip.com a:smtpout.microchip.com
   -exists:%{i}.spf.microchip.iphmx.com include:servers.mcsv.net
   include:mktomail.com include:spf.protection.outlook.com ~all"
-Received-SPF: None (esa1.microchip.iphmx.com: no sender
+Received-SPF: None (esa2.microchip.iphmx.com: no sender
   authenticity information available from domain of
   postmaster@email.microchip.com) identity=helo;
-  client-ip=198.175.253.82; receiver=esa1.microchip.iphmx.com;
+  client-ip=198.175.253.82; receiver=esa2.microchip.iphmx.com;
   envelope-from="Ajay.Kathat@microchip.com";
   x-sender="postmaster@email.microchip.com";
   x-conformance=spf_only
-Authentication-Results: esa1.microchip.iphmx.com; spf=Pass smtp.mailfrom=Ajay.Kathat@microchip.com; spf=None smtp.helo=postmaster@email.microchip.com; dmarc=pass (p=none dis=none) d=microchip.com
-IronPort-SDR: FOkNz2rWa3k0qfM8e/33rWb6/OwdvQuii9zva526eG7Kfi4oqP8yQl3kI9bIYBUdVy5kukrBVF
- v5lVPY+N+gR6T9EYDJgTchkQzWwVidsiROlDhVnS41MJSLjzj/bPNLS3fsEb3NdT5lw/NsoHtt
- +FcvciylkAvbEn3vBKhaf1Ksvg/cYltWBgsTQarGMNIUYDWr8iTv6lnSS/ZFHjQ6ihAEgzEuS7
- ysX9To0AHpbDY3AXZOJtP8EXi0KV7Nb2MTewKAY6h7fWe6kMLRi3UqidvPButHU/IhoCW7qvr6
- E9A=
+Authentication-Results: esa2.microchip.iphmx.com; spf=Pass smtp.mailfrom=Ajay.Kathat@microchip.com; spf=None smtp.helo=postmaster@email.microchip.com; dmarc=pass (p=none dis=none) d=microchip.com
+IronPort-SDR: RltjYbZllT+EluewcWDarZHw07K9JpWshr4qH5Fz7M5KJbSusIBGtQ0ynBLZC6VtgThQMtEef/
+ 74WPZq2cBqNw5FrvQFrj2f2LdNM43440XZUZ48Fnal1gLdwAjjwY+Iqx/ihZHvL+KW7uJ1iCw5
+ QFySmQa7jQWj7MWztjKZvoE3tFBXJtwmNIWtShQ02p/BRjGXHKbkGs15WxDgldvC6bqetlnAGA
+ hywwB8xEQCrSqD2OjBP/SdUqn9Yuf8Qj+MiHhlSkSo5feBgNi2+ysHTF29b9lZE/yrs9KLGs5c
+ eCs=
 X-IronPort-AV: E=Sophos;i="5.70,483,1574146800"; 
-   d="scan'208";a="69675567"
+   d="scan'208";a="66951728"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa1.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 25 Feb 2020 00:41:17 -0700
-Received: from chn-vm-ex03.mchp-main.com (10.10.85.151) by
- chn-vm-ex02.mchp-main.com (10.10.85.144) with Microsoft SMTP Server
+  by esa2.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 25 Feb 2020 00:41:21 -0700
+Received: from chn-vm-ex04.mchp-main.com (10.10.85.152) by
+ chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1713.5; Tue, 25 Feb 2020 00:41:25 -0700
+ 15.1.1713.5; Tue, 25 Feb 2020 00:41:20 -0700
 Received: from NAM12-BN8-obe.outbound.protection.outlook.com (10.10.215.89) by
- email.microchip.com (10.10.87.152) with Microsoft SMTP Server
+ email.microchip.com (10.10.87.151) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5
- via Frontend Transport; Tue, 25 Feb 2020 00:41:14 -0700
+ via Frontend Transport; Tue, 25 Feb 2020 00:41:20 -0700
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=dMB3HviI6rRdbOwmbwcsjcDm/zBh6SpgyiQ5jwteNJCwhhZcLqoumzVCw8/q11N+ocwXXWIJ/S3YF3ZSKQtlQifLrc50gbdK2Akflldyv3ypu37vAQWOPzKMSUgBokChQHEz819qtq8LNdqXmXAUZN/OdKNm6XhKrjDvEqIo1IWI9E2P3K2+BWNU0SSWegFAD+ffR+MUzZXSAUePeCLFbj0xExXenoJhW1Lfhe2rw/8sMV5iBL/iq4ewcUoxd153vOsnLtwKzdLTrbe0VBML7ADPr+Nj+voakuX+QC8GYzU1+imnPsA6qHy5ESvkr2ZUJdCYybgoQQ752ekyVblb/A==
+ b=Pgd0U3MLQp9wSDLTtSQwxIEKNsUIFn+N84ARzPheSwPXjpKNPLZW+7LdoljgWqfbGAaRZkVrQquWhdmr0pqGmuQGHEM6edZz/D4b1ujwLWFUtH8X48Qx9mc0B5ekZAv3lhv/NeSB3FW6RFd5uaCMoeCNgljr7jVIkqMCTEK1G4w0wL/ZvTbbq9TmKYyxl7p+N7zAaDBzR7du5CK4p+y6q58/gXuv+FbrV1qDgG1MjSO0jBsRtwMYprNssaLl/u6+y8FD2rbJNJeJmsDdwZW353hKOBnU6Ot8q60HEQk45PorEjBb5aREN9SPnnTxXoFrYarhI1EwSYuQukV+oQZrew==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=R2hyFijpSxD8B1vp9pfBnZgARrhmzsNY8CIUqsPqbr4=;
- b=m6qHupbca6PtRRUCCooyexnKRCNsOsUKGUb51uPY0VKqhshHuK/LhwOMuR81Gilkd1HYp/ieI60Yvh41jHh0Hn+IIYWAL4jd2YYu4H47lwVhI1W7ofBfAVONeN+gPydr0nViCbdwW/h8GOEaQhXAvTNDEAuIPuBEf/rXZNJnhJ5EzBBmORDRxNvTLuTGkWHBsCTjxrcUdW5AX3+TrIwWpUzrgyjQCv5Zxs+JadNFlhHevxq5cmLp17IjkCwE8c3QitJkzOHqIbxkQHEUhN5t0Gdwe56uMUTdhtnFnwSKVV/pXNYE2aaYRIK9qQ+f6zCkVDfRhQ9pF3eDyhMN97rvQA==
+ bh=pRkUXf2HbX3kB4mb1M4pWtxQPnwvKJvglXD2F7BbESE=;
+ b=TNMhjTRM8HqsmCB6Cj6vVsYYPKOUMu1oQ1yCtr0uidS3dSb2p0DMJSGMYKUDbQCQXuhJKTerf7VsUrSCX7Fxc+HOdn3ABs3t2/e0+X4Om8r02A0Rt5b5PM4FnMlTDzsxMWy6H5f3v9cwYuhH9Dp1ZMbxpVTuMkPTws+QyYl9QgitQZraQJC3q3fO9bhyRphqi99ny7rQGMHfn82xH2nlqM0LYgU6+igIQ85FNJFu/LhX2X5xFno7nx6UVUQY5TKZ2XlM0dEUlDldKR8/rauEKuKkH7aJbOq3gf8JrCZ8t+qosiLzKddNREDqXwAHTfurwmiFbeXLwWprEzTexiaUBg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=microchip.com; dmarc=pass action=none
  header.from=microchip.com; dkim=pass header.d=microchip.com; arc=none
@@ -72,17 +72,17 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=microchiptechnology.onmicrosoft.com;
  s=selector2-microchiptechnology-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=R2hyFijpSxD8B1vp9pfBnZgARrhmzsNY8CIUqsPqbr4=;
- b=nYvIQorigl7Gt2TPloolNRPAZKL2lgUy9Tr/MfPFi2Beybk/MPrzol9I5iY5Bp1pF7CroYC4zwn8v6wHuOtvZJlmNWsj9pSVBEZ5rGpCUNHGKVgyb6WoTvq5hgeTaY4zxKKOKtw+IbeE/0QwXO8iqYJxLzBuoGWijH7TkFXftKg=
+ bh=pRkUXf2HbX3kB4mb1M4pWtxQPnwvKJvglXD2F7BbESE=;
+ b=X1Z5BKXagPEjOumEks8u2iZ0/crpdDg+ILyECtufTZPeBQb0sXvcgaGz/oAqSuAdGnsXR1vHhpeCptz0YVMgxdBJDgHMBMPn6YoPnPrVhkePo2Q8ZTqZouvTUoa1CJ9I8BZ28SJMQZQJBcc8jO9I14gbdz5+v3c/4nws3wtre1k=
 Received: from BN6PR11MB3985.namprd11.prod.outlook.com (2603:10b6:405:7b::14)
  by BN6PR11MB1875.namprd11.prod.outlook.com (2603:10b6:404:104::11) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2750.17; Tue, 25 Feb
- 2020 07:41:12 +0000
+ 2020 07:41:18 +0000
 Received: from BN6PR11MB3985.namprd11.prod.outlook.com
  ([fe80::ec62:e7fd:f17c:dfd4]) by BN6PR11MB3985.namprd11.prod.outlook.com
  ([fe80::ec62:e7fd:f17c:dfd4%3]) with mapi id 15.20.2750.021; Tue, 25 Feb 2020
- 07:41:12 +0000
+ 07:41:18 +0000
 From:   <Ajay.Kathat@microchip.com>
 To:     <linux-wireless@vger.kernel.org>
 CC:     <devel@driverdev.osuosl.org>, <devicetree@vger.kernel.org>,
@@ -90,11 +90,11 @@ CC:     <devel@driverdev.osuosl.org>, <devicetree@vger.kernel.org>,
         <Adham.Abozaeid@microchip.com>, <Nicolas.Ferre@microchip.com>,
         <Claudiu.Beznea@microchip.com>, <Venkateswara.Kaja@microchip.com>,
         <Ajay.Kathat@microchip.com>
-Subject: [PATCH v3 03/18] wilc1000: add wlan_if.h
-Thread-Topic: [PATCH v3 03/18] wilc1000: add wlan_if.h
-Thread-Index: AQHV667zb02YvUDMCkSDD/rPiGJzfA==
-Date:   Tue, 25 Feb 2020 07:41:11 +0000
-Message-ID: <20200225074105.7740-4-ajay.kathat@microchip.com>
+Subject: [PATCH v3 13/18] wilc1000: add wlan.c
+Thread-Topic: [PATCH v3 13/18] wilc1000: add wlan.c
+Thread-Index: AQHV6673LZ1HXcwYf0+f/lbsuOEDng==
+Date:   Tue, 25 Feb 2020 07:41:18 +0000
+Message-ID: <20200225074105.7740-14-ajay.kathat@microchip.com>
 References: <20200225074105.7740-1-ajay.kathat@microchip.com>
 In-Reply-To: <20200225074105.7740-1-ajay.kathat@microchip.com>
 Accept-Language: en-US
@@ -104,29 +104,29 @@ X-MS-TNEF-Correlator:
 x-mailer: git-send-email 2.17.1
 x-originating-ip: [121.244.27.38]
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 4cc9ada5-5ba8-4ee8-604b-08d7b9c61613
+x-ms-office365-filtering-correlation-id: cd43317a-69e2-4206-522a-08d7b9c619e9
 x-ms-traffictypediagnostic: BN6PR11MB1875:
 x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <BN6PR11MB1875631544EB67DDE326735BE3ED0@BN6PR11MB1875.namprd11.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:5797;
+x-microsoft-antispam-prvs: <BN6PR11MB1875C53CF1FAEB56139CC2DEE3ED0@BN6PR11MB1875.namprd11.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:15;
 x-forefront-prvs: 0324C2C0E2
 x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(39860400002)(376002)(136003)(396003)(366004)(346002)(199004)(189003)(2906002)(316002)(2616005)(54906003)(86362001)(1076003)(66556008)(30864003)(76116006)(66476007)(66946007)(91956017)(64756008)(36756003)(66446008)(186003)(8936002)(26005)(81156014)(478600001)(6512007)(5660300002)(71200400001)(4326008)(81166006)(107886003)(6916009)(8676002)(6506007)(6486002)(559001)(579004);DIR:OUT;SFP:1101;SCL:1;SRVR:BN6PR11MB1875;H:BN6PR11MB3985.namprd11.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
 received-spf: None (protection.outlook.com: microchip.com does not designate
  permitted sender hosts)
 x-ms-exchange-senderadcheck: 1
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 8mk2cHWcC15jR1rChWqW2l4+FV7H3pKFksQmgUidwqdgYmughsl7QV/FNhdCApy6Km59YHoG1RZP2PZlSc71iVN6IuGwjA4UIHaAFaJEhQPjftsPy+vTKsIjDdBfhuFatA6FrgNWESFLlZU5SGjB6Bu1tIG4pI/4OpV+DIvWnnleljM0vdui9/QrIi0UxUpYQr2f3UD69nYVp+qQT4bSVbsRthvaB0mTbL4HuS5w9wSxTM40O9g55mjHpjTt+Xeso7SBMSbyEmAHpneQQ4xWKbwY8PWgI9UuYl0S7u0WOdKa6GkSbAq+nF3QdDksVz1AbfKqxBypeeFsKxexCB8UxXmk7ie/EMZr3TJTydCzI3L2T/UD7hB9RtrbTfT7Z8x+HcAC3DlWjp6qlh12km9doOzbCtZo6NDX3u6ra3heSlHPPKLtrpYscO53PefwsW4D
-x-ms-exchange-antispam-messagedata: bIbrRGehnWGgAS30zu9C2yzk52/KBukC/j6a88K7/oGxVmVOZ43uVU68eVDCdRBgB5WYxgU2ipJtM5HlOLK/TauA6vqwL8zibNZA12iqcYqqpl70FbLgMf0poY0Os5h0QkDdBgaSvbNG7/1Gix9BRQ==
+x-microsoft-antispam-message-info: hZEYRkvQ0xmQ6Dvzp0oqgQoaf0ebf+nI0ldgTybNBk1cQAWtD0LPsy6TEfTjUDYhYYGnvgXruqVBm3O5ZBOTPWKJF48rZMdczYpT3h7AbisqXb3kf1kIKMa2P4mIanYTBphqdCGXsS4EItgKR45ZhLhu5FsdycWSFDkb7cvsqXwyum+AGfQQbDSfhHIXlv93VeKWVr0bOs2kEvoW7+t5R36qhcpbP2YXyBb26F+JRXukGGLucyTbdSRNBy29oZZCPksjBARitzPFwlyP0QINq07gISV3fSt55xm6HoLVx5dPQt9yTMOZK9KfnbFB/NZNzBkDb5LNCNhoInYbJeIdf+kzFrtCwW983QlPfPUvBv+Dx/abWcq9D20N+pUxkEQd+rcq10+Sp/Vv7O9cuutPvuqRpZHRb1us0W0YMQoZHGjn7HlxkIdXehAGBv/ulLmY
+x-ms-exchange-antispam-messagedata: fdj3aSXumsf8MBKDj8x3toDmWOEheGKSDh9b71SPXauPrTtbecp7nMXU++SX7aFx27uGg8BuH7AmMBqI5MqinkvtLSO+qi/fYFygDMQMZzcLzX9z6PXqinN1qG60VRJj0mAEeivoPir7RpRrvSK34Q==
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4cc9ada5-5ba8-4ee8-604b-08d7b9c61613
-X-MS-Exchange-CrossTenant-originalarrivaltime: 25 Feb 2020 07:41:11.9897
+X-MS-Exchange-CrossTenant-Network-Message-Id: cd43317a-69e2-4206-522a-08d7b9c619e9
+X-MS-Exchange-CrossTenant-originalarrivaltime: 25 Feb 2020 07:41:18.1151
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: AyvMYTjfPY43FWadh8TqaaUBQQ9LeQcIDhABZehqQUvXlj5eWnN8MwUHmx93Vqq6tV2T7sE8DeoUruRwfC2d4wNrNdAnlSXEVDQIo48O8xw=
+X-MS-Exchange-CrossTenant-userprincipalname: hqLJxneeL5dt6rg4VXth/L/KHaMj1d4OtAUtp8YHAlWUuXTcU8Q/mB9rYC6Ia67dr018bzuoTpElDasrJ/yAopSeN6onkLMtFrQ32a/IEyI=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN6PR11MB1875
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
@@ -135,825 +135,1272 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ajay Singh <ajay.kathat@microchip.com>
 
-Moved 'drivers/staging/wilc1000/wlan_if.h' to
-'drivers/net/wireless/microchip/wilc1000/wlan_if.h'.
+Moved 'drivers/staging/wilc1000/wlan.c' to
+'drivers/net/wireless/microchip/wilc1000/wlan.c'.
 
 Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- .../net/wireless/microchip/wilc1000/wlan_if.h | 803 ++++++++++++++++++
- 1 file changed, 803 insertions(+)
- create mode 100644 drivers/net/wireless/microchip/wilc1000/wlan_if.h
+ .../net/wireless/microchip/wilc1000/wlan.c    | 1240 +++++++++++++++++
+ 1 file changed, 1240 insertions(+)
+ create mode 100644 drivers/net/wireless/microchip/wilc1000/wlan.c
 
-diff --git a/drivers/net/wireless/microchip/wilc1000/wlan_if.h b/drivers/ne=
-t/wireless/microchip/wilc1000/wlan_if.h
+diff --git a/drivers/net/wireless/microchip/wilc1000/wlan.c b/drivers/net/w=
+ireless/microchip/wilc1000/wlan.c
 new file mode 100644
-index 000000000000..f85fd575136d
+index 000000000000..3aeca882f431
 --- /dev/null
-+++ b/drivers/net/wireless/microchip/wilc1000/wlan_if.h
-@@ -0,0 +1,803 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
++++ b/drivers/net/wireless/microchip/wilc1000/wlan.c
+@@ -0,0 +1,1240 @@
++// SPDX-License-Identifier: GPL-2.0
 +/*
 + * Copyright (c) 2012 - 2018 Microchip Technology Inc., and its subsidiari=
 es.
 + * All rights reserved.
 + */
 +
-+#ifndef WILC_WLAN_IF_H
-+#define WILC_WLAN_IF_H
-+
-+#include <linux/netdevice.h>
-+#include "fw.h"
-+
-+/********************************************
-+ *
-+ *      Wlan Configuration ID
-+ *
-+ ********************************************/
-+
-+enum bss_types {
-+	WILC_FW_BSS_TYPE_INFRA =3D 0,
-+	WILC_FW_BSS_TYPE_INDEPENDENT,
-+	WILC_FW_BSS_TYPE_AP,
-+};
-+
-+enum {
-+	WILC_FW_OPER_MODE_B_ONLY =3D 0,	 /* 1, 2 M, otherwise 5, 11 M */
-+	WILC_FW_OPER_MODE_G_ONLY,	 /* 6,12,24 otherwise 9,18,36,48,54 */
-+	WILC_FW_OPER_MODE_G_MIXED_11B_1, /* 1,2,5.5,11 otherwise all on */
-+	WILC_FW_OPER_MODE_G_MIXED_11B_2, /* 1,2,5,11,6,12,24 otherwise all on */
-+};
-+
-+enum {
-+	WILC_FW_PREAMBLE_SHORT =3D 0,	/* Short Preamble */
-+	WILC_FW_PREAMBLE_LONG =3D 1,	/* Long Preamble */
-+	WILC_FW_PREAMBLE_AUTO =3D 2,	/* Auto Preamble Selection */
-+};
-+
-+enum {
-+	WILC_FW_PASSIVE_SCAN =3D 0,
-+	WILC_FW_ACTIVE_SCAN =3D 1,
-+};
-+
-+enum {
-+	WILC_FW_NO_POWERSAVE =3D 0,
-+	WILC_FW_MIN_FAST_PS =3D 1,
-+	WILC_FW_MAX_FAST_PS =3D 2,
-+	WILC_FW_MIN_PSPOLL_PS =3D 3,
-+	WILC_FW_MAX_PSPOLL_PS =3D 4
-+};
-+
-+enum chip_ps_states {
-+	WILC_CHIP_WAKEDUP =3D 0,
-+	WILC_CHIP_SLEEPING_AUTO =3D 1,
-+	WILC_CHIP_SLEEPING_MANUAL =3D 2
-+};
-+
-+enum bus_acquire {
-+	WILC_BUS_ACQUIRE_ONLY =3D 0,
-+	WILC_BUS_ACQUIRE_AND_WAKEUP =3D 1,
-+};
-+
-+enum bus_release {
-+	WILC_BUS_RELEASE_ONLY =3D 0,
-+	WILC_BUS_RELEASE_ALLOW_SLEEP =3D 1,
-+};
-+
-+enum {
-+	WILC_FW_NO_ENCRYPT =3D 0,
-+	WILC_FW_ENCRYPT_ENABLED =3D BIT(0),
-+	WILC_FW_WEP =3D BIT(1),
-+	WILC_FW_WEP_EXTENDED =3D BIT(2),
-+	WILC_FW_WPA =3D BIT(3),
-+	WILC_FW_WPA2 =3D BIT(4),
-+	WILC_FW_AES =3D BIT(5),
-+	WILC_FW_TKIP =3D BIT(6)
-+};
-+
-+enum {
-+	WILC_FW_SEC_NO =3D WILC_FW_NO_ENCRYPT,
-+	WILC_FW_SEC_WEP =3D WILC_FW_WEP | WILC_FW_ENCRYPT_ENABLED,
-+	WILC_FW_SEC_WEP_EXTENDED =3D WILC_FW_WEP_EXTENDED | WILC_FW_SEC_WEP,
-+	WILC_FW_SEC_WPA =3D WILC_FW_WPA | WILC_FW_ENCRYPT_ENABLED,
-+	WILC_FW_SEC_WPA_AES =3D WILC_FW_AES | WILC_FW_SEC_WPA,
-+	WILC_FW_SEC_WPA_TKIP =3D WILC_FW_TKIP | WILC_FW_SEC_WPA,
-+	WILC_FW_SEC_WPA2 =3D WILC_FW_WPA2 | WILC_FW_ENCRYPT_ENABLED,
-+	WILC_FW_SEC_WPA2_AES =3D WILC_FW_AES | WILC_FW_SEC_WPA2,
-+	WILC_FW_SEC_WPA2_TKIP =3D WILC_FW_TKIP | WILC_FW_SEC_WPA2
-+};
-+
-+enum authtype {
-+	WILC_FW_AUTH_OPEN_SYSTEM =3D 1,
-+	WILC_FW_AUTH_SHARED_KEY =3D 2,
-+	WILC_FW_AUTH_ANY =3D 3,
-+	WILC_FW_AUTH_IEEE8021 =3D 5
-+};
-+
-+enum site_survey {
-+	WILC_FW_SITE_SURVEY_1CH =3D 0,
-+	WILC_FW_SITE_SURVEY_ALL_CH =3D 1,
-+	WILC_FW_SITE_SURVEY_OFF =3D 2
-+};
-+
-+enum {
-+	WILC_FW_ACK_POLICY_NORMAL =3D 0,
-+	WILC_FW_ACK_NO_POLICY,
-+};
-+
-+enum {
-+	WILC_FW_REKEY_POLICY_DISABLE =3D 1,
-+	WILC_FW_REKEY_POLICY_TIME_BASE,
-+	WILC_FW_REKEY_POLICY_PKT_BASE,
-+	WILC_FW_REKEY_POLICY_TIME_PKT_BASE
-+};
-+
-+enum {
-+	WILC_FW_FILTER_NO =3D 0x00,
-+	WILC_FW_FILTER_AP_ONLY =3D 0x01,
-+	WILC_FW_FILTER_STA_ONLY =3D 0x02
-+};
-+
-+enum {
-+	WILC_FW_11N_PROT_AUTO =3D 0,	/* Auto */
-+	WILC_FW_11N_NO_PROT,		/* Do not use any protection */
-+	WILC_FW_11N_PROT_ERP,		/* Protect all ERP frame exchanges */
-+	WILC_FW_11N_PROT_HT,		/* Protect all HT frame exchanges  */
-+	WILC_FW_11N_PROT_GF		/* Protect all GF frame exchanges  */
-+};
-+
-+enum {
-+	WILC_FW_ERP_PROT_SELF_CTS,
-+	WILC_FW_ERP_PROT_RTS_CTS,
-+};
-+
-+enum {
-+	WILC_FW_11N_OP_MODE_HT_MIXED =3D 1,
-+	WILC_FW_11N_OP_MODE_HT_ONLY_20MHZ,
-+	WILC_FW_11N_OP_MODE_HT_ONLY_20_40MHZ,
-+};
-+
-+enum {
-+	WILC_FW_OBBS_NONHT_NO_DETECT =3D 0,
-+	WILC_FW_OBBS_NONHT_DETECT_ONLY =3D 1,
-+	WILC_FW_OBBS_NONHT_DETECT_PROTECT =3D 2,
-+	WILC_FW_OBBS_NONHT_DETECT_PROTECT_REPORT =3D 3,
-+};
-+
-+enum {
-+	WILC_FW_HT_PROT_RTS_CTS_NONHT =3D 0,  /* RTS-CTS at non-HT rate */
-+	WILC_FW_HT_PROT_FIRST_FRAME_NONHT,  /* First frame at non-HT rate */
-+	WILC_FW_HT_PROT_LSIG_TXOP,	    /* LSIG TXOP Protection */
-+	WILC_FW_HT_PROT_FIRST_FRAME_MIXED,  /* First frame at Mixed format */
-+};
-+
-+enum {
-+	WILC_FW_SMPS_MODE_STATIC =3D 1,
-+	WILC_FW_SMPS_MODE_DYNAMIC =3D 2,
-+	WILC_FW_SMPS_MODE_MIMO =3D 3,	/* power save disable */
-+};
-+
-+enum {
-+	WILC_FW_TX_RATE_AUTO =3D 0,
-+	WILC_FW_TX_RATE_MBPS_1 =3D 1,
-+	WILC_FW_TX_RATE_MBPS_2 =3D 2,
-+	WILC_FW_TX_RATE_MBPS_5_5 =3D 5,
-+	WILC_FW_TX_RATE_MBPS_11 =3D 11,
-+	WILC_FW_TX_RATE_MBPS_6 =3D 6,
-+	WILC_FW_TX_RATE_MBPS_9 =3D 9,
-+	WILC_FW_TX_RATE_MBPS_12 =3D 12,
-+	WILC_FW_TX_RATE_MBPS_18 =3D 18,
-+	WILC_FW_TX_RATE_MBPS_24 =3D 24,
-+	WILC_FW_TX_RATE_MBPS_36 =3D 36,
-+	WILC_FW_TX_RATE_MBPS_48 =3D 48,
-+	WILC_FW_TX_RATE_MBPS_54 =3D 54
-+};
-+
-+enum {
-+	WILC_FW_DEFAULT_SCAN =3D 0,
-+	WILC_FW_USER_SCAN =3D BIT(0),
-+	WILC_FW_OBSS_PERIODIC_SCAN =3D BIT(1),
-+	WILC_FW_OBSS_ONETIME_SCAN =3D BIT(2)
-+};
-+
-+enum {
-+	WILC_FW_ACTION_FRM_IDX =3D 0,
-+	WILC_FW_PROBE_REQ_IDX =3D 1
-+};
-+
-+enum wid_type {
-+	WID_CHAR		=3D 0,
-+	WID_SHORT		=3D 1,
-+	WID_INT			=3D 2,
-+	WID_STR			=3D 3,
-+	WID_BIN_DATA		=3D 4,
-+	WID_BIN			=3D 5,
-+};
-+
-+struct wid {
-+	u16 id;
-+	enum wid_type type;
-+	s32 size;
-+	s8 *val;
-+};
-+
-+enum {
-+	WID_NIL				=3D 0xffff,
-+
-+	/*
-+	 *  BSS Type
-+	 *  -----------------------------------------------------------
-+	 *  Configuration : Infrastructure   Independent   Access Point
-+	 *  Values to set :         0               1            2
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_BSS_TYPE			=3D 0x0000,
-+
-+	/*
-+	 *  Transmit Rate
-+	 *  -----------------------------------------------------------
-+	 *  Configuration : 1  2  5.5  11  6  9  12  18  24  36  48  54
-+	 *  Values to set : 1  2    5  11  6  9  12  18  24  36  48  54
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_CURRENT_TX_RATE		=3D 0x0001,
-+
-+	/*
-+	 *  Channel
-+	 *  -----------------------------------------------------------
-+	 *  Configuration(g) : 1  2  3  4  5  6  7  8  9 10 11 12 13 14
-+	 *  Values to set    : 1  2  3  4  5  6  7  8  9 10 11 12 13 14
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_CURRENT_CHANNEL		=3D 0x0002,
-+
-+	/*
-+	 *  Preamble
-+	 *  -----------------------------------------------------------
-+	 *  Configuration :    short    long      Auto
-+	 *  Values to set :       0       1         2
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_PREAMBLE			=3D 0x0003,
-+
-+	/*
-+	 * 11g operating mode (ignored if 11g not present)
-+	 *  -----------------------------------------------------------
-+	 *  Configuration :   HighPerf  Compat(RSet #1) Compat(RSet #2)
-+	 *  Values to set :          1               2               3
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_11G_OPERATING_MODE		=3D 0x0004,
-+
-+	/*
-+	 *  Mac status (response only)
-+	 *  -----------------------------------------------------------
-+	 *  Configuration :   disconnect  connect
-+	 *  Values to get :          0       1
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_STATUS			=3D 0x0005,
-+
-+	/*
-+	 *  Scan type
-+	 *  -----------------------------------------------------------
-+	 *  Configuration :   Passive Scanning   Active Scanning
-+	 *  Values to set :                  0                 1
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_SCAN_TYPE			=3D 0x0007,
-+
-+	/*
-+	 *  Key Id (WEP default key Id)
-+	 *  -----------------------------------------------------------
-+	 *  Configuration :   Any value between 0 to 3
-+	 *  Values to set :   Same value. Default is 0
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_KEY_ID			=3D 0x0009,
-+
-+	/*
-+	 *  QoS Enable
-+	 *  -----------------------------------------------------------
-+	 *  Configuration :   QoS Disable   WMM Enable
-+	 *  Values to set :   0             1
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_QOS_ENABLE			=3D 0x000A,
-+
-+	/*
-+	 *  Power Management
-+	 *  -----------------------------------------------------------
-+	 *  Configuration : NO_POWERSAVE MIN_POWERSAVE MAX_POWERSAVE
-+	 *  Values to set : 0            1             2
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_POWER_MANAGEMENT		=3D 0x000B,
-+
-+	/*
-+	 *  WEP/802 11I Configuration
-+	 *  -----------------------------------------------------------
-+	 *  Configuration:Disable WP40 WP104 WPA-AES WPA-TKIP RSN-AES RSN-TKIP
-+	 *  Values (0x)  :   00     03   07     29       49       31      51
-+	 *  Configuration:WPA-AES+TKIP RSN-AES+TKIP
-+	 *  Values (0x)  :      69        71
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_11I_MODE			=3D 0x000C,
-+
-+	/*
-+	 *  WEP Configuration: Used in BSS STA mode only when WEP is enabled
-+	 *  -----------------------------------------------------------
-+	 *  Configuration : Open System Shared Key Any Type | 802.1x Auth
-+	 *  Values (0x)   :    01             02         03 |    BIT2
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_AUTH_TYPE			=3D 0x000D,
-+
-+	/*
-+	 *  Site Survey Type
-+	 *  -----------------------------------------------------------
-+	 *  Configuration       :  Values to set
-+	 *  Survey 1 Channel    :  0
-+	 *  survey all Channels :  1
-+	 *  Disable Site Survey :  2
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_SITE_SURVEY			=3D 0x000E,
-+
-+	/*
-+	 *  Listen Interval
-+	 *  -----------------------------------------------------------
-+	 *  Configuration :   Any value between 1 to 255
-+	 *  Values to set :   Same value. Default is 3
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_LISTEN_INTERVAL		=3D 0x000F,
-+
-+	/*
-+	 *  DTIM Period
-+	 *  -----------------------------------------------------------
-+	 *  Configuration :   Any value between 1 to 255
-+	 *  Values to set :   Same value. Default is 3
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_DTIM_PERIOD			=3D 0x0010,
-+
-+	/*
-+	 *  ACK Policy
-+	 *  -----------------------------------------------------------
-+	 *  Configuration :   Normal Ack            No Ack
-+	 *  Values to set :       0                   1
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_ACK_POLICY			=3D 0x0011,
-+
-+	/*
-+	 *  Reset MAC (Set only)
-+	 *  -----------------------------------------------------------
-+	 *  Configuration :   Don't Reset	Reset	No Request
-+	 *  Values to set :       0               1	    2
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_RESET			=3D 0x0012,
-+
-+	/*
-+	 *  Broadcast SSID Option: Setting this will adhere to "" SSID element
-+	 *  -----------------------------------------------------------
-+	 *  Configuration :   Enable             Disable
-+	 *  Values to set :   1                  0
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_BCAST_SSID			=3D 0x0015,
-+
-+	/*
-+	 *  Disconnect (Station)
-+	 *  -----------------------------------------------------------
-+	 *  Configuration :   Association ID
-+	 *  Values to set :   Association ID
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_DISCONNECT			=3D 0x0016,
-+
-+	/*
-+	 *  11a Tx Power Level
-+	 *  -----------------------------------------------------------
-+	 *  Configuration : Sets TX Power (Higher the value greater the power)
-+	 *  Values to set : Any value between 0 and 63 (inclusive Default 48)
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_TX_POWER_LEVEL_11A		=3D 0x0018,
-+
-+	/*
-+	 *  Group Key Update Policy Selection
-+	 *  -----------------------------------------------------------
-+	 *  Configuration : Disabled timeBased packetBased timePacketBased
-+	 *  Values to set :   1            2          3              4
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_REKEY_POLICY		=3D 0x0019,
-+
-+	/*
-+	 *  Allow Short Slot
-+	 *  -----------------------------------------------------------
-+	 *  Configuration : Disallow Short Slot      Allow Short Slot
-+	 *          (Enable Only Long Slot) (Enable Short Slot if applicable)
-+	 *  Values to set :    0         1
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_SHORT_SLOT_ALLOWED		=3D 0x001A,
-+
-+	WID_PHY_ACTIVE_REG		=3D 0x001B,
-+
-+	/*
-+	 *  11b Tx Power Level
-+	 *  -----------------------------------------------------------
-+	 *  Configuration : Sets TX Power (Higher the value greater the power)
-+	 *  Values to set : Any value between 0 and 63 (inclusive Default 48)
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_TX_POWER_LEVEL_11B		=3D 0x001D,
-+
-+	/*
-+	 *  Scan Request
-+	 *  -----------------------------------------------------------
-+	 *  Configuration : Request default scan
-+	 *  Values to set : 0
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_START_SCAN_REQ		=3D 0x001E,
-+
-+	/*
-+	 *  Rssi (get only)
-+	 *  -----------------------------------------------------------
-+	 *  Configuration :
-+	 *  Values to get : Rssi value
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_RSSI			=3D 0x001F,
-+
-+	/*
-+	 * Join Request
-+	 *  -----------------------------------------------------------
-+	 *  Configuration : Request to join
-+	 *  Values to set : index of scan result
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_JOIN_REQ			=3D 0x0020,
-+
-+	WID_LINKSPEED			=3D 0x0026,
-+
-+	/*
-+	 *  Enable User Control of TX Power
-+	 *  -----------------------------------------------------------
-+	 *  Configuration : Disable                  Enable
-+	 *  Values to set :    0                       1
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_USER_CONTROL_ON_TX_POWER	=3D 0x0027,
-+
-+	WID_MEMORY_ACCESS_8BIT		=3D 0x0029,
-+
-+	/*
-+	 *  Enable Auto RX Sensitivity feature
-+	 *  -----------------------------------------------------------
-+	 *  Configuration : Disable                  Enable
-+	 *  Values to set :    0                       1
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_AUTO_RX_SENSITIVITY		=3D 0x0032,
-+
-+	/*
-+	 *  Receive Buffer Based Ack
-+	 *  -----------------------------------------------------------
-+	 *  Configuration : Disable                  Enable
-+	 *  Values to set :    0                       1
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_DATAFLOW_CONTROL		=3D 0x0033,
-+
-+	/*
-+	 *  Scan Filter
-+	 *  -----------------------------------------------------------
-+	 *  Configuration : Class       No filter   AP only   Station Only
-+	 *  Values to set :                0           1           2
-+	 *  Configuration : Priority    High Rssi   Low Rssi     Detect
-+	 *  Values to set :                0          0x4         0x0
-+	 *  Configuration : Channel     filter off  filter on
-+	 *  Values to set :                0          0x10
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_SCAN_FILTER			=3D 0x0036,
-+
-+	/*
-+	 *  Link Loss Threshold (measure in the beacon period)
-+	 *  -----------------------------------------------------------
-+	 *  Configuration : Any value between 10 and 254(Set to 255 disable)
-+	 *  Values to set : Same value. Default is 10
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_LINK_LOSS_THRESHOLD		=3D 0x0037,
-+
-+	WID_ABORT_RUNNING_SCAN		=3D 0x003E,
-+
-+	/* NMAC Character WID list */
-+	WID_WPS_START			=3D 0x0043,
-+
-+	/*
-+	 *  Protection mode for MAC
-+	 *  -----------------------------------------------------------
-+	 *  Configuration :  Auto  No protection  ERP    HT    GF
-+	 *  Values to set :  0     1              2      3     4
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_11N_PROT_MECH		=3D 0x0080,
-+
-+	/*
-+	 *  ERP Protection type for MAC
-+	 *  -----------------------------------------------------------
-+	 *  Configuration :  Self-CTS   RTS-CTS
-+	 *  Values to set :  0          1
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_11N_ERP_PROT_TYPE		=3D 0x0081,
-+
-+	/*
-+	 *  HT Option Enable
-+	 *  -----------------------------------------------------------
-+	 *  Configuration :   HT Enable          HT Disable
-+	 *  Values to set :   1                  0
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_11N_ENABLE			=3D 0x0082,
-+
-+	/*
-+	 *  11n Operating mode (Note that 11g operating mode will also be
-+	 *  used in addition to this, if this is set to HT Mixed mode)
-+	 *  -----------------------------------------------------------
-+	 *   Configuration :  HT Mixed  HT Only-20MHz   HT Only-20/40MHz
-+	 *  Values to set :     1         2               3
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_11N_OPERATING_MODE		=3D 0x0083,
-+
-+	/*
-+	 *  11n OBSS non-HT STA Detection flag
-+	 *  -----------------------------------------------------------
-+	 *  Configuration :  Do not detect
-+	 *  Values to set :  0
-+	 *  Configuration :  Detect, do not protect or report
-+	 *  Values to set :  1
-+	 *  Configuration :  Detect, protect and do not report
-+	 *  Values to set :  2
-+	 *  Configuration :  Detect, protect and report to other BSS
-+	 *  Values to set :  3
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_11N_OBSS_NONHT_DETECTION	=3D 0x0084,
-+
-+	/*
-+	 *  11n HT Protection Type
-+	 *  -----------------------------------------------------------
-+	 *  Configuration :  RTS-CTS   First Frame Exchange at non-HT-rate
-+	 *  Values to set :  0         1
-+	 *  Configuration :  LSIG TXOP First Frame Exchange in Mixed Fmt
-+	 *  Values to set :  2         3
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_11N_HT_PROT_TYPE		=3D 0x0085,
-+
-+	/*
-+	 *  11n RIFS Protection Enable Flag
-+	 *  -----------------------------------------------------------
-+	 *  Configuration :  Disable    Enable
-+	 *  Values to set :  0          1
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_11N_RIFS_PROT_ENABLE	=3D 0x0086,
-+
-+	/*
-+	 *  SMPS Mode
-+	 *  -----------------------------------------------------------
-+	 *  Configuration :  Static   Dynamic   MIMO (Power Save Disabled)
-+	 *  Values to set :  1        2         3
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_11N_SMPS_MODE		=3D 0x0087,
-+
-+	/*
-+	 *  Current transmit MCS
-+	 *  -----------------------------------------------------------
-+	 *  Configuration :  MCS Index for data rate
-+	 *  Values to set :  0 to 7
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_11N_CURRENT_TX_MCS		=3D 0x0088,
-+
-+	WID_11N_PRINT_STATS		=3D 0x0089,
-+
-+	/*
-+	 *  11n Short GI Enable Flag
-+	 *  -----------------------------------------------------------
-+	 *  Configuration :  Disable    Enable
-+	 *  Values to set :  0          1
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_11N_SHORT_GI_ENABLE		=3D 0x008D,
-+
-+	/*
-+	 *  11n RIFS Enable Flag
-+	 *  -----------------------------------------------------------
-+	 *  Configuration :  Disable    Enable
-+	 *  Values to set :  0          1
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_RIFS_MODE			=3D 0x0094,
-+
-+	/*
-+	 *  TX Abort Feature
-+	 *  -----------------------------------------------------------
-+	 *  Configuration :  Disable Self CTS    Enable Self CTS
-+	 *  Values to set :             0                      1
-+	 *  Configuration :  Disable TX Abort    Enable TX Abort
-+	 *  Values to set :             2                      3
-+	 *  Configuration :  Enable HW TX Abort Enable SW TX Abort
-+	 *  Values to set :             4                      5
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_TX_ABORT_CONFIG		=3D 0x00A1,
-+
-+	WID_REG_TSSI_11B_VALUE		=3D 0x00A6,
-+	WID_REG_TSSI_11G_VALUE		=3D 0x00A7,
-+	WID_REG_TSSI_11N_VALUE		=3D 0x00A8,
-+	WID_TX_CALIBRATION		=3D 0x00A9,
-+	WID_DSCR_TSSI_11B_VALUE		=3D 0x00AA,
-+	WID_DSCR_TSSI_11G_VALUE		=3D 0x00AB,
-+	WID_DSCR_TSSI_11N_VALUE		=3D 0x00AC,
-+
-+	/*
-+	 *  Immediate Block-Ack Support
-+	 *  -----------------------------------------------------------
-+	 *  Configuration : Disable                  Enable
-+	 *  Values to set :    0                       1
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_11N_IMMEDIATE_BA_ENABLED	=3D 0x00AF,
-+
-+	/*
-+	 *  TXOP Disable Flag
-+	 *  -----------------------------------------------------------
-+	 *  Configuration : Disable                  Enable
-+	 *  Values to set :    1                        0
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_11N_TXOP_PROT_DISABLE	=3D 0x00B0,
-+
-+	WID_TX_POWER_LEVEL_11N		=3D 0x00B1,
-+
-+	/* Custom Character WID list */
-+	/* SCAN Complete notification WID*/
-+	WID_SCAN_COMPLETE		=3D 0x00C9,
-+
-+	WID_DEL_BEACON			=3D 0x00CA,
-+
-+	WID_LOG_TERMINAL_SWITCH		=3D 0x00CD,
-+	WID_TX_POWER			=3D 0x00CE,
-+	/*  EMAC Short WID list */
-+	/*  RTS Threshold */
-+	/*
-+	 *  -----------------------------------------------------------
-+	 *  Configuration :   Any value between 256 to 2347
-+	 *  Values to set :   Same value. Default is 2347
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_RTS_THRESHOLD		=3D 0x1000,
-+
-+	/*
-+	 *  Fragmentation Threshold
-+	 *  -----------------------------------------------------------
-+	 *  Configuration :   Any value between 256 to 2346
-+	 *  Values to set :   Same value. Default is 2346
-+	 *  -----------------------------------------------------------
-+	 */
-+	WID_FRAG_THRESHOLD		=3D 0x1001,
-+
-+	WID_SHORT_RETRY_LIMIT		=3D 0x1002,
-+	WID_LONG_RETRY_LIMIT		=3D 0x1003,
-+	WID_BEACON_INTERVAL		=3D 0x1006,
-+	WID_MEMORY_ACCESS_16BIT		=3D 0x1008,
-+	WID_PASSIVE_SCAN_TIME           =3D 0x100D,
-+	WID_JOIN_START_TIMEOUT		=3D 0x100F,
-+	WID_ASOC_TIMEOUT		=3D 0x1011,
-+	WID_11I_PROTOCOL_TIMEOUT	=3D 0x1012,
-+	WID_EAPOL_RESPONSE_TIMEOUT	=3D 0x1013,
-+
-+	/* NMAC Short WID list */
-+	WID_11N_SIG_QUAL_VAL		=3D 0x1085,
-+	WID_CCA_THRESHOLD		=3D 0x1087,
-+
-+	/* Custom Short WID list */
-+
-+	/* EMAC Integer WID list */
-+	WID_FAILED_COUNT		=3D 0x2000,
-+	WID_RETRY_COUNT			=3D 0x2001,
-+	WID_MULTIPLE_RETRY_COUNT	=3D 0x2002,
-+	WID_FRAME_DUPLICATE_COUNT	=3D 0x2003,
-+	WID_ACK_FAILURE_COUNT		=3D 0x2004,
-+	WID_RECEIVED_FRAGMENT_COUNT	=3D 0x2005,
-+	WID_MCAST_RECEIVED_FRAME_COUNT	=3D 0x2006,
-+	WID_FCS_ERROR_COUNT		=3D 0x2007,
-+	WID_SUCCESS_FRAME_COUNT		=3D 0x2008,
-+	WID_HUT_TX_COUNT		=3D 0x200A,
-+	WID_TX_FRAGMENT_COUNT		=3D 0x200B,
-+	WID_TX_MULTICAST_FRAME_COUNT	=3D 0x200C,
-+	WID_RTS_SUCCESS_COUNT		=3D 0x200D,
-+	WID_RTS_FAILURE_COUNT		=3D 0x200E,
-+	WID_WEP_UNDECRYPTABLE_COUNT	=3D 0x200F,
-+	WID_REKEY_PERIOD		=3D 0x2010,
-+	WID_REKEY_PACKET_COUNT		=3D 0x2011,
-+	WID_1X_SERV_ADDR		=3D 0x2012,
-+	WID_STACK_IP_ADDR		=3D 0x2013,
-+	WID_STACK_NETMASK_ADDR		=3D 0x2014,
-+	WID_HW_RX_COUNT			=3D 0x2015,
-+	WID_MEMORY_ADDRESS		=3D 0x201E,
-+	WID_MEMORY_ACCESS_32BIT		=3D 0x201F,
-+
-+	/* NMAC Integer WID list */
-+	/* Custom Integer WID list */
-+	WID_GET_INACTIVE_TIME		=3D 0x2084,
-+	/* EMAC String WID list */
-+	WID_SSID			=3D 0x3000,
-+	WID_FIRMWARE_VERSION		=3D 0x3001,
-+	WID_OPERATIONAL_RATE_SET	=3D 0x3002,
-+	WID_BSSID			=3D 0x3003,
-+	WID_WEP_KEY_VALUE		=3D 0x3004,
-+	WID_11I_PSK			=3D 0x3008,
-+	WID_11E_P_ACTION_REQ		=3D 0x3009,
-+	WID_1X_KEY			=3D 0x300A,
-+	WID_HARDWARE_VERSION		=3D 0x300B,
-+	WID_MAC_ADDR			=3D 0x300C,
-+	WID_HUT_DEST_ADDR		=3D 0x300D,
-+	WID_PHY_VERSION			=3D 0x300F,
-+	WID_SUPP_USERNAME		=3D 0x3010,
-+	WID_SUPP_PASSWORD		=3D 0x3011,
-+	WID_SITE_SURVEY_RESULTS		=3D 0x3012,
-+	WID_RX_POWER_LEVEL		=3D 0x3013,
-+	WID_SET_STA_MAC_INACTIVE_TIME	=3D 0x3017,
-+	WID_ADD_WEP_KEY			=3D 0x3019,
-+	WID_REMOVE_WEP_KEY		=3D 0x301A,
-+	WID_ADD_PTK			=3D 0x301B,
-+	WID_ADD_RX_GTK			=3D 0x301C,
-+	WID_ADD_TX_GTK			=3D 0x301D,
-+	WID_REMOVE_KEY			=3D 0x301E,
-+	WID_ASSOC_REQ_INFO		=3D 0x301F,
-+	WID_ASSOC_RES_INFO		=3D 0x3020,
-+	WID_MANUFACTURER		=3D 0x3026, /* Added for CAPI tool */
-+	WID_MODEL_NAME			=3D 0x3027, /* Added for CAPI tool */
-+	WID_MODEL_NUM			=3D 0x3028, /* Added for CAPI tool */
-+	WID_DEVICE_NAME			=3D 0x3029, /* Added for CAPI tool */
-+
-+	/* NMAC String WID list */
-+	WID_SET_OPERATION_MODE		=3D 0x3079,
-+	WID_11N_P_ACTION_REQ		=3D 0x3080,
-+	WID_HUT_TEST_ID			=3D 0x3081,
-+	WID_PMKID_INFO			=3D 0x3082,
-+	WID_FIRMWARE_INFO		=3D 0x3083,
-+	WID_REGISTER_FRAME		=3D 0x3084,
-+	WID_DEL_ALL_STA			=3D 0x3085,
-+	WID_REMAIN_ON_CHAN		=3D 0x3996,
-+	WID_SSID_PROBE_REQ		=3D 0x3997,
-+	WID_JOIN_REQ_EXTENDED		=3D 0x3998,
-+
-+	WID_IP_ADDRESS			=3D 0x3999,
-+
-+	/* Custom String WID list */
-+
-+	/* EMAC Binary WID list */
-+	WID_UAPSD_CONFIG		=3D 0x4001,
-+	WID_UAPSD_STATUS		=3D 0x4002,
-+	WID_WMM_AP_AC_PARAMS		=3D 0x4003,
-+	WID_WMM_STA_AC_PARAMS		=3D 0x4004,
-+	WID_NETWORK_INFO		=3D 0x4005,
-+	WID_STA_JOIN_INFO		=3D 0x4006,
-+	WID_CONNECTED_STA_LIST		=3D 0x4007,
-+
-+	/* NMAC Binary WID list */
-+	WID_11N_AUTORATE_TABLE		=3D 0x4080,
-+
-+	WID_SCAN_CHANNEL_LIST		=3D 0x4084,
-+
-+	WID_INFO_ELEMENT_PROBE		=3D 0x4085,
-+	WID_INFO_ELEMENT_ASSOCIATE	=3D 0x4086,
-+	WID_ADD_STA			=3D 0X4087,
-+	WID_REMOVE_STA			=3D 0X4088,
-+	WID_EDIT_STA			=3D 0X4089,
-+	WID_ADD_BEACON			=3D 0x408a,
-+
-+	WID_SETUP_MULTICAST_FILTER	=3D 0x408b,
-+
-+	/* Miscellaneous WIDs */
-+	WID_ALL				=3D 0x7FFE,
-+	WID_MAX				=3D 0xFFFF
-+};
-+
-+#endif
++#include <linux/if_ether.h>
++#include <linux/ip.h>
++#include "cfg80211.h"
++#include "wlan_cfg.h"
++
++static inline bool is_wilc1000(u32 id)
++{
++	return (id & (~WILC_CHIP_REV_FIELD)) =3D=3D WILC_1000_BASE_ID;
++}
++
++static inline void acquire_bus(struct wilc *wilc, enum bus_acquire acquire=
+)
++{
++	mutex_lock(&wilc->hif_cs);
++	if (acquire =3D=3D WILC_BUS_ACQUIRE_AND_WAKEUP)
++		chip_wakeup(wilc);
++}
++
++static inline void release_bus(struct wilc *wilc, enum bus_release release=
+)
++{
++	if (release =3D=3D WILC_BUS_RELEASE_ALLOW_SLEEP)
++		chip_allow_sleep(wilc);
++	mutex_unlock(&wilc->hif_cs);
++}
++
++static void wilc_wlan_txq_remove(struct wilc *wilc, struct txq_entry_t *tq=
+e)
++{
++	list_del(&tqe->list);
++	wilc->txq_entries -=3D 1;
++}
++
++static struct txq_entry_t *
++wilc_wlan_txq_remove_from_head(struct net_device *dev)
++{
++	struct txq_entry_t *tqe =3D NULL;
++	unsigned long flags;
++	struct wilc_vif *vif =3D netdev_priv(dev);
++	struct wilc *wilc =3D vif->wilc;
++
++	spin_lock_irqsave(&wilc->txq_spinlock, flags);
++
++	if (!list_empty(&wilc->txq_head.list)) {
++		tqe =3D list_first_entry(&wilc->txq_head.list, struct txq_entry_t,
++				       list);
++		list_del(&tqe->list);
++		wilc->txq_entries -=3D 1;
++	}
++	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
++	return tqe;
++}
++
++static void wilc_wlan_txq_add_to_tail(struct net_device *dev,
++				      struct txq_entry_t *tqe)
++{
++	unsigned long flags;
++	struct wilc_vif *vif =3D netdev_priv(dev);
++	struct wilc *wilc =3D vif->wilc;
++
++	spin_lock_irqsave(&wilc->txq_spinlock, flags);
++
++	list_add_tail(&tqe->list, &wilc->txq_head.list);
++	wilc->txq_entries +=3D 1;
++
++	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
++
++	complete(&wilc->txq_event);
++}
++
++static void wilc_wlan_txq_add_to_head(struct wilc_vif *vif,
++				      struct txq_entry_t *tqe)
++{
++	unsigned long flags;
++	struct wilc *wilc =3D vif->wilc;
++
++	mutex_lock(&wilc->txq_add_to_head_cs);
++
++	spin_lock_irqsave(&wilc->txq_spinlock, flags);
++
++	list_add(&tqe->list, &wilc->txq_head.list);
++	wilc->txq_entries +=3D 1;
++
++	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
++	mutex_unlock(&wilc->txq_add_to_head_cs);
++	complete(&wilc->txq_event);
++}
++
++#define NOT_TCP_ACK			(-1)
++
++static inline void add_tcp_session(struct wilc_vif *vif, u32 src_prt,
++				   u32 dst_prt, u32 seq)
++{
++	struct tcp_ack_filter *f =3D &vif->ack_filter;
++
++	if (f->tcp_session < 2 * MAX_TCP_SESSION) {
++		f->ack_session_info[f->tcp_session].seq_num =3D seq;
++		f->ack_session_info[f->tcp_session].bigger_ack_num =3D 0;
++		f->ack_session_info[f->tcp_session].src_port =3D src_prt;
++		f->ack_session_info[f->tcp_session].dst_port =3D dst_prt;
++		f->tcp_session++;
++	}
++}
++
++static inline void update_tcp_session(struct wilc_vif *vif, u32 index, u32=
+ ack)
++{
++	struct tcp_ack_filter *f =3D &vif->ack_filter;
++
++	if (index < 2 * MAX_TCP_SESSION &&
++	    ack > f->ack_session_info[index].bigger_ack_num)
++		f->ack_session_info[index].bigger_ack_num =3D ack;
++}
++
++static inline void add_tcp_pending_ack(struct wilc_vif *vif, u32 ack,
++				       u32 session_index,
++				       struct txq_entry_t *txqe)
++{
++	struct tcp_ack_filter *f =3D &vif->ack_filter;
++	u32 i =3D f->pending_base + f->pending_acks_idx;
++
++	if (i < MAX_PENDING_ACKS) {
++		f->pending_acks[i].ack_num =3D ack;
++		f->pending_acks[i].txqe =3D txqe;
++		f->pending_acks[i].session_index =3D session_index;
++		txqe->ack_idx =3D i;
++		f->pending_acks_idx++;
++	}
++}
++
++static inline void tcp_process(struct net_device *dev, struct txq_entry_t =
+*tqe)
++{
++	void *buffer =3D tqe->buffer;
++	const struct ethhdr *eth_hdr_ptr =3D buffer;
++	int i;
++	unsigned long flags;
++	struct wilc_vif *vif =3D netdev_priv(dev);
++	struct wilc *wilc =3D vif->wilc;
++	struct tcp_ack_filter *f =3D &vif->ack_filter;
++	const struct iphdr *ip_hdr_ptr;
++	const struct tcphdr *tcp_hdr_ptr;
++	u32 ihl, total_length, data_offset;
++
++	spin_lock_irqsave(&wilc->txq_spinlock, flags);
++
++	if (eth_hdr_ptr->h_proto !=3D htons(ETH_P_IP))
++		goto out;
++
++	ip_hdr_ptr =3D buffer + ETH_HLEN;
++
++	if (ip_hdr_ptr->protocol !=3D IPPROTO_TCP)
++		goto out;
++
++	ihl =3D ip_hdr_ptr->ihl << 2;
++	tcp_hdr_ptr =3D buffer + ETH_HLEN + ihl;
++	total_length =3D ntohs(ip_hdr_ptr->tot_len);
++
++	data_offset =3D tcp_hdr_ptr->doff << 2;
++	if (total_length =3D=3D (ihl + data_offset)) {
++		u32 seq_no, ack_no;
++
++		seq_no =3D ntohl(tcp_hdr_ptr->seq);
++		ack_no =3D ntohl(tcp_hdr_ptr->ack_seq);
++		for (i =3D 0; i < f->tcp_session; i++) {
++			u32 j =3D f->ack_session_info[i].seq_num;
++
++			if (i < 2 * MAX_TCP_SESSION &&
++			    j =3D=3D seq_no) {
++				update_tcp_session(vif, i, ack_no);
++				break;
++			}
++		}
++		if (i =3D=3D f->tcp_session)
++			add_tcp_session(vif, 0, 0, seq_no);
++
++		add_tcp_pending_ack(vif, ack_no, i, tqe);
++	}
++
++out:
++	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
++}
++
++static void wilc_wlan_txq_filter_dup_tcp_ack(struct net_device *dev)
++{
++	struct wilc_vif *vif =3D netdev_priv(dev);
++	struct wilc *wilc =3D vif->wilc;
++	struct tcp_ack_filter *f =3D &vif->ack_filter;
++	u32 i =3D 0;
++	u32 dropped =3D 0;
++	unsigned long flags;
++
++	spin_lock_irqsave(&wilc->txq_spinlock, flags);
++	for (i =3D f->pending_base;
++	     i < (f->pending_base + f->pending_acks_idx); i++) {
++		u32 index;
++		u32 bigger_ack_num;
++
++		if (i >=3D MAX_PENDING_ACKS)
++			break;
++
++		index =3D f->pending_acks[i].session_index;
++
++		if (index >=3D 2 * MAX_TCP_SESSION)
++			break;
++
++		bigger_ack_num =3D f->ack_session_info[index].bigger_ack_num;
++
++		if (f->pending_acks[i].ack_num < bigger_ack_num) {
++			struct txq_entry_t *tqe;
++
++			tqe =3D f->pending_acks[i].txqe;
++			if (tqe) {
++				wilc_wlan_txq_remove(wilc, tqe);
++				tqe->status =3D 1;
++				if (tqe->tx_complete_func)
++					tqe->tx_complete_func(tqe->priv,
++							      tqe->status);
++				kfree(tqe);
++				dropped++;
++			}
++		}
++	}
++	f->pending_acks_idx =3D 0;
++	f->tcp_session =3D 0;
++
++	if (f->pending_base =3D=3D 0)
++		f->pending_base =3D MAX_TCP_SESSION;
++	else
++		f->pending_base =3D 0;
++
++	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
++
++	while (dropped > 0) {
++		wait_for_completion_timeout(&wilc->txq_event,
++					    msecs_to_jiffies(1));
++		dropped--;
++	}
++}
++
++void wilc_enable_tcp_ack_filter(struct wilc_vif *vif, bool value)
++{
++	vif->ack_filter.enabled =3D value;
++}
++
++static int wilc_wlan_txq_add_cfg_pkt(struct wilc_vif *vif, u8 *buffer,
++				     u32 buffer_size)
++{
++	struct txq_entry_t *tqe;
++	struct wilc *wilc =3D vif->wilc;
++
++	netdev_dbg(vif->ndev, "Adding config packet ...\n");
++	if (wilc->quit) {
++		netdev_dbg(vif->ndev, "Return due to clear function\n");
++		complete(&wilc->cfg_event);
++		return 0;
++	}
++
++	tqe =3D kmalloc(sizeof(*tqe), GFP_ATOMIC);
++	if (!tqe)
++		return 0;
++
++	tqe->type =3D WILC_CFG_PKT;
++	tqe->buffer =3D buffer;
++	tqe->buffer_size =3D buffer_size;
++	tqe->tx_complete_func =3D NULL;
++	tqe->priv =3D NULL;
++	tqe->ack_idx =3D NOT_TCP_ACK;
++	tqe->vif =3D vif;
++
++	wilc_wlan_txq_add_to_head(vif, tqe);
++
++	return 1;
++}
++
++int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buff=
+er,
++			      u32 buffer_size,
++			      void (*tx_complete_fn)(void *, int))
++{
++	struct txq_entry_t *tqe;
++	struct wilc_vif *vif =3D netdev_priv(dev);
++	struct wilc *wilc;
++
++	wilc =3D vif->wilc;
++
++	if (wilc->quit)
++		return 0;
++
++	tqe =3D kmalloc(sizeof(*tqe), GFP_ATOMIC);
++
++	if (!tqe)
++		return 0;
++	tqe->type =3D WILC_NET_PKT;
++	tqe->buffer =3D buffer;
++	tqe->buffer_size =3D buffer_size;
++	tqe->tx_complete_func =3D tx_complete_fn;
++	tqe->priv =3D priv;
++	tqe->vif =3D vif;
++
++	tqe->ack_idx =3D NOT_TCP_ACK;
++	if (vif->ack_filter.enabled)
++		tcp_process(dev, tqe);
++	wilc_wlan_txq_add_to_tail(dev, tqe);
++	return wilc->txq_entries;
++}
++
++int wilc_wlan_txq_add_mgmt_pkt(struct net_device *dev, void *priv, u8 *buf=
+fer,
++			       u32 buffer_size,
++			       void (*tx_complete_fn)(void *, int))
++{
++	struct txq_entry_t *tqe;
++	struct wilc_vif *vif =3D netdev_priv(dev);
++	struct wilc *wilc;
++
++	wilc =3D vif->wilc;
++
++	if (wilc->quit)
++		return 0;
++
++	tqe =3D kmalloc(sizeof(*tqe), GFP_ATOMIC);
++
++	if (!tqe)
++		return 0;
++	tqe->type =3D WILC_MGMT_PKT;
++	tqe->buffer =3D buffer;
++	tqe->buffer_size =3D buffer_size;
++	tqe->tx_complete_func =3D tx_complete_fn;
++	tqe->priv =3D priv;
++	tqe->ack_idx =3D NOT_TCP_ACK;
++	tqe->vif =3D vif;
++	wilc_wlan_txq_add_to_tail(dev, tqe);
++	return 1;
++}
++
++static struct txq_entry_t *wilc_wlan_txq_get_first(struct wilc *wilc)
++{
++	struct txq_entry_t *tqe =3D NULL;
++	unsigned long flags;
++
++	spin_lock_irqsave(&wilc->txq_spinlock, flags);
++
++	if (!list_empty(&wilc->txq_head.list))
++		tqe =3D list_first_entry(&wilc->txq_head.list, struct txq_entry_t,
++				       list);
++
++	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
++
++	return tqe;
++}
++
++static struct txq_entry_t *wilc_wlan_txq_get_next(struct wilc *wilc,
++						  struct txq_entry_t *tqe)
++{
++	unsigned long flags;
++
++	spin_lock_irqsave(&wilc->txq_spinlock, flags);
++
++	if (!list_is_last(&tqe->list, &wilc->txq_head.list))
++		tqe =3D list_next_entry(tqe, list);
++	else
++		tqe =3D NULL;
++	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
++
++	return tqe;
++}
++
++static void wilc_wlan_rxq_add(struct wilc *wilc, struct rxq_entry_t *rqe)
++{
++	if (wilc->quit)
++		return;
++
++	mutex_lock(&wilc->rxq_cs);
++	list_add_tail(&rqe->list, &wilc->rxq_head.list);
++	mutex_unlock(&wilc->rxq_cs);
++}
++
++static struct rxq_entry_t *wilc_wlan_rxq_remove(struct wilc *wilc)
++{
++	struct rxq_entry_t *rqe =3D NULL;
++
++	mutex_lock(&wilc->rxq_cs);
++	if (!list_empty(&wilc->rxq_head.list)) {
++		rqe =3D list_first_entry(&wilc->rxq_head.list, struct rxq_entry_t,
++				       list);
++		list_del(&rqe->list);
++	}
++	mutex_unlock(&wilc->rxq_cs);
++	return rqe;
++}
++
++void chip_allow_sleep(struct wilc *wilc)
++{
++	u32 reg =3D 0;
++
++	wilc->hif_func->hif_read_reg(wilc, WILC_SDIO_WAKEUP_REG, &reg);
++
++	wilc->hif_func->hif_write_reg(wilc, WILC_SDIO_WAKEUP_REG,
++				      reg & ~WILC_SDIO_WAKEUP_BIT);
++	wilc->hif_func->hif_write_reg(wilc, WILC_SDIO_HOST_TO_FW_REG, 0);
++}
++EXPORT_SYMBOL_GPL(chip_allow_sleep);
++
++void chip_wakeup(struct wilc *wilc)
++{
++	u32 reg, clk_status_reg;
++	const struct wilc_hif_func *h =3D wilc->hif_func;
++
++	if (wilc->io_type =3D=3D WILC_HIF_SPI) {
++		do {
++			h->hif_read_reg(wilc, WILC_SPI_WAKEUP_REG, &reg);
++			h->hif_write_reg(wilc, WILC_SPI_WAKEUP_REG,
++					 reg | WILC_SPI_WAKEUP_BIT);
++			h->hif_write_reg(wilc, WILC_SPI_WAKEUP_REG,
++					 reg & ~WILC_SPI_WAKEUP_BIT);
++
++			do {
++				usleep_range(2000, 2500);
++				wilc_get_chipid(wilc, true);
++			} while (wilc_get_chipid(wilc, true) =3D=3D 0);
++		} while (wilc_get_chipid(wilc, true) =3D=3D 0);
++	} else if (wilc->io_type =3D=3D WILC_HIF_SDIO) {
++		h->hif_write_reg(wilc, WILC_SDIO_HOST_TO_FW_REG,
++				 WILC_SDIO_HOST_TO_FW_BIT);
++		usleep_range(200, 400);
++		h->hif_read_reg(wilc, WILC_SDIO_WAKEUP_REG, &reg);
++		do {
++			h->hif_write_reg(wilc, WILC_SDIO_WAKEUP_REG,
++					 reg | WILC_SDIO_WAKEUP_BIT);
++			h->hif_read_reg(wilc, WILC_SDIO_CLK_STATUS_REG,
++					&clk_status_reg);
++
++			while (!(clk_status_reg & WILC_SDIO_CLK_STATUS_BIT)) {
++				usleep_range(2000, 2500);
++
++				h->hif_read_reg(wilc, WILC_SDIO_CLK_STATUS_REG,
++						&clk_status_reg);
++			}
++			if (!(clk_status_reg & WILC_SDIO_CLK_STATUS_BIT)) {
++				h->hif_write_reg(wilc, WILC_SDIO_WAKEUP_REG,
++						 reg & ~WILC_SDIO_WAKEUP_BIT);
++			}
++		} while (!(clk_status_reg & WILC_SDIO_CLK_STATUS_BIT));
++	}
++
++	if (wilc->chip_ps_state =3D=3D WILC_CHIP_SLEEPING_MANUAL) {
++		if (wilc_get_chipid(wilc, false) < WILC_1000_BASE_ID_2B) {
++			u32 val32;
++
++			h->hif_read_reg(wilc, WILC_REG_4_TO_1_RX, &val32);
++			val32 |=3D BIT(6);
++			h->hif_write_reg(wilc, WILC_REG_4_TO_1_RX, val32);
++
++			h->hif_read_reg(wilc, WILC_REG_4_TO_1_TX_BANK0, &val32);
++			val32 |=3D BIT(6);
++			h->hif_write_reg(wilc, WILC_REG_4_TO_1_TX_BANK0, val32);
++		}
++	}
++	wilc->chip_ps_state =3D WILC_CHIP_WAKEDUP;
++}
++EXPORT_SYMBOL_GPL(chip_wakeup);
++
++void host_wakeup_notify(struct wilc *wilc)
++{
++	acquire_bus(wilc, WILC_BUS_ACQUIRE_ONLY);
++	wilc->hif_func->hif_write_reg(wilc, WILC_CORTUS_INTERRUPT_2, 1);
++	release_bus(wilc, WILC_BUS_RELEASE_ONLY);
++}
++EXPORT_SYMBOL_GPL(host_wakeup_notify);
++
++void host_sleep_notify(struct wilc *wilc)
++{
++	acquire_bus(wilc, WILC_BUS_ACQUIRE_ONLY);
++	wilc->hif_func->hif_write_reg(wilc, WILC_CORTUS_INTERRUPT_1, 1);
++	release_bus(wilc, WILC_BUS_RELEASE_ONLY);
++}
++EXPORT_SYMBOL_GPL(host_sleep_notify);
++
++int wilc_wlan_handle_txq(struct wilc *wilc, u32 *txq_count)
++{
++	int i, entries =3D 0;
++	u32 sum;
++	u32 reg;
++	u32 offset =3D 0;
++	int vmm_sz =3D 0;
++	struct txq_entry_t *tqe;
++	int ret =3D 0;
++	int counter;
++	int timeout;
++	u32 vmm_table[WILC_VMM_TBL_SIZE];
++	const struct wilc_hif_func *func;
++	u8 *txb =3D wilc->tx_buffer;
++	struct net_device *dev;
++	struct wilc_vif *vif;
++
++	if (wilc->quit)
++		goto out_update_cnt;
++
++	mutex_lock(&wilc->txq_add_to_head_cs);
++	tqe =3D wilc_wlan_txq_get_first(wilc);
++	if (!tqe)
++		goto out_unlock;
++	dev =3D tqe->vif->ndev;
++	wilc_wlan_txq_filter_dup_tcp_ack(dev);
++	i =3D 0;
++	sum =3D 0;
++	while (tqe && (i < (WILC_VMM_TBL_SIZE - 1))) {
++		if (tqe->type =3D=3D WILC_CFG_PKT)
++			vmm_sz =3D ETH_CONFIG_PKT_HDR_OFFSET;
++		else if (tqe->type =3D=3D WILC_NET_PKT)
++			vmm_sz =3D ETH_ETHERNET_HDR_OFFSET;
++		else
++			vmm_sz =3D HOST_HDR_OFFSET;
++
++		vmm_sz +=3D tqe->buffer_size;
++		vmm_sz =3D ALIGN(vmm_sz, 4);
++
++		if ((sum + vmm_sz) > WILC_TX_BUFF_SIZE)
++			break;
++
++		vmm_table[i] =3D vmm_sz / 4;
++		if (tqe->type =3D=3D WILC_CFG_PKT)
++			vmm_table[i] |=3D BIT(10);
++		cpu_to_le32s(&vmm_table[i]);
++
++		i++;
++		sum +=3D vmm_sz;
++		tqe =3D wilc_wlan_txq_get_next(wilc, tqe);
++	}
++
++	if (i =3D=3D 0)
++		goto out_unlock;
++	vmm_table[i] =3D 0x0;
++
++	acquire_bus(wilc, WILC_BUS_ACQUIRE_AND_WAKEUP);
++	counter =3D 0;
++	func =3D wilc->hif_func;
++	do {
++		ret =3D func->hif_read_reg(wilc, WILC_HOST_TX_CTRL, &reg);
++		if (ret)
++			break;
++
++		if ((reg & 0x1) =3D=3D 0)
++			break;
++
++		counter++;
++		if (counter > 200) {
++			counter =3D 0;
++			ret =3D func->hif_write_reg(wilc, WILC_HOST_TX_CTRL, 0);
++			break;
++		}
++	} while (!wilc->quit);
++
++	if (ret)
++		goto out_release_bus;
++
++	timeout =3D 200;
++	do {
++		ret =3D func->hif_block_tx(wilc,
++					 WILC_VMM_TBL_RX_SHADOW_BASE,
++					 (u8 *)vmm_table,
++					 ((i + 1) * 4));
++		if (ret)
++			break;
++
++		ret =3D func->hif_write_reg(wilc, WILC_HOST_VMM_CTL, 0x2);
++		if (ret)
++			break;
++
++		do {
++			ret =3D func->hif_read_reg(wilc, WILC_HOST_VMM_CTL, &reg);
++			if (ret)
++				break;
++			if (FIELD_GET(WILC_VMM_ENTRY_AVAILABLE, reg)) {
++				entries =3D FIELD_GET(WILC_VMM_ENTRY_COUNT, reg);
++				break;
++			}
++		} while (--timeout);
++		if (timeout <=3D 0) {
++			ret =3D func->hif_write_reg(wilc, WILC_HOST_VMM_CTL, 0x0);
++			break;
++		}
++
++		if (ret)
++			break;
++
++		if (entries =3D=3D 0) {
++			ret =3D func->hif_read_reg(wilc, WILC_HOST_TX_CTRL, &reg);
++			if (ret)
++				break;
++			reg &=3D ~BIT(0);
++			ret =3D func->hif_write_reg(wilc, WILC_HOST_TX_CTRL, reg);
++		}
++	} while (0);
++
++	if (ret)
++		goto out_release_bus;
++
++	if (entries =3D=3D 0) {
++		/*
++		 * No VMM space available in firmware so retry to transmit
++		 * the packet from tx queue.
++		 */
++		ret =3D WILC_VMM_ENTRY_FULL_RETRY;
++		goto out_release_bus;
++	}
++
++	release_bus(wilc, WILC_BUS_RELEASE_ALLOW_SLEEP);
++
++	offset =3D 0;
++	i =3D 0;
++	do {
++		u32 header, buffer_offset;
++		char *bssid;
++		u8 mgmt_ptk =3D 0;
++
++		tqe =3D wilc_wlan_txq_remove_from_head(dev);
++		if (!tqe)
++			break;
++
++		vif =3D tqe->vif;
++		if (vmm_table[i] =3D=3D 0)
++			break;
++
++		le32_to_cpus(&vmm_table[i]);
++		vmm_sz =3D FIELD_GET(WILC_VMM_BUFFER_SIZE, vmm_table[i]);
++		vmm_sz *=3D 4;
++
++		if (tqe->type =3D=3D WILC_MGMT_PKT)
++			mgmt_ptk =3D 1;
++
++		header =3D (FIELD_PREP(WILC_VMM_HDR_TYPE, tqe->type) |
++			  FIELD_PREP(WILC_VMM_HDR_MGMT_FIELD, mgmt_ptk) |
++			  FIELD_PREP(WILC_VMM_HDR_PKT_SIZE, tqe->buffer_size) |
++			  FIELD_PREP(WILC_VMM_HDR_BUFF_SIZE, vmm_sz));
++
++		cpu_to_le32s(&header);
++		memcpy(&txb[offset], &header, 4);
++		if (tqe->type =3D=3D WILC_CFG_PKT) {
++			buffer_offset =3D ETH_CONFIG_PKT_HDR_OFFSET;
++		} else if (tqe->type =3D=3D WILC_NET_PKT) {
++			bssid =3D tqe->vif->bssid;
++			buffer_offset =3D ETH_ETHERNET_HDR_OFFSET;
++			memcpy(&txb[offset + 8], bssid, 6);
++		} else {
++			buffer_offset =3D HOST_HDR_OFFSET;
++		}
++
++		memcpy(&txb[offset + buffer_offset],
++		       tqe->buffer, tqe->buffer_size);
++		offset +=3D vmm_sz;
++		i++;
++		tqe->status =3D 1;
++		if (tqe->tx_complete_func)
++			tqe->tx_complete_func(tqe->priv, tqe->status);
++		if (tqe->ack_idx !=3D NOT_TCP_ACK &&
++		    tqe->ack_idx < MAX_PENDING_ACKS)
++			vif->ack_filter.pending_acks[tqe->ack_idx].txqe =3D NULL;
++		kfree(tqe);
++	} while (--entries);
++
++	acquire_bus(wilc, WILC_BUS_ACQUIRE_AND_WAKEUP);
++
++	ret =3D func->hif_clear_int_ext(wilc, ENABLE_TX_VMM);
++	if (ret)
++		goto out_release_bus;
++
++	ret =3D func->hif_block_tx_ext(wilc, 0, txb, offset);
++
++out_release_bus:
++	release_bus(wilc, WILC_BUS_RELEASE_ALLOW_SLEEP);
++
++out_unlock:
++	mutex_unlock(&wilc->txq_add_to_head_cs);
++
++out_update_cnt:
++	*txq_count =3D wilc->txq_entries;
++	return ret;
++}
++
++static void wilc_wlan_handle_rx_buff(struct wilc *wilc, u8 *buffer, int si=
+ze)
++{
++	int offset =3D 0;
++	u32 header;
++	u32 pkt_len, pkt_offset, tp_len;
++	int is_cfg_packet;
++	u8 *buff_ptr;
++
++	do {
++		buff_ptr =3D buffer + offset;
++		header =3D get_unaligned_le32(buff_ptr);
++
++		is_cfg_packet =3D FIELD_GET(WILC_PKT_HDR_CONFIG_FIELD, header);
++		pkt_offset =3D FIELD_GET(WILC_PKT_HDR_OFFSET_FIELD, header);
++		tp_len =3D FIELD_GET(WILC_PKT_HDR_TOTAL_LEN_FIELD, header);
++		pkt_len =3D FIELD_GET(WILC_PKT_HDR_LEN_FIELD, header);
++
++		if (pkt_len =3D=3D 0 || tp_len =3D=3D 0)
++			break;
++
++		if (pkt_offset & IS_MANAGMEMENT) {
++			buff_ptr +=3D HOST_HDR_OFFSET;
++			wilc_wfi_mgmt_rx(wilc, buff_ptr, pkt_len);
++		} else {
++			if (!is_cfg_packet) {
++				if (pkt_len > 0) {
++					wilc_frmw_to_host(wilc, buff_ptr,
++							  pkt_len, pkt_offset);
++				}
++			} else {
++				struct wilc_cfg_rsp rsp;
++
++				buff_ptr +=3D pkt_offset;
++
++				wilc_wlan_cfg_indicate_rx(wilc, buff_ptr,
++							  pkt_len,
++							  &rsp);
++				if (rsp.type =3D=3D WILC_CFG_RSP) {
++					if (wilc->cfg_seq_no =3D=3D rsp.seq_no)
++						complete(&wilc->cfg_event);
++				} else if (rsp.type =3D=3D WILC_CFG_RSP_STATUS) {
++					wilc_mac_indicate(wilc);
++				}
++			}
++		}
++		offset +=3D tp_len;
++	} while (offset < size);
++}
++
++static void wilc_wlan_handle_rxq(struct wilc *wilc)
++{
++	int size;
++	u8 *buffer;
++	struct rxq_entry_t *rqe;
++
++	while (!wilc->quit) {
++		rqe =3D wilc_wlan_rxq_remove(wilc);
++		if (!rqe)
++			break;
++
++		buffer =3D rqe->buffer;
++		size =3D rqe->buffer_size;
++		wilc_wlan_handle_rx_buff(wilc, buffer, size);
++
++		kfree(rqe);
++	}
++	if (wilc->quit)
++		complete(&wilc->cfg_event);
++}
++
++static void wilc_unknown_isr_ext(struct wilc *wilc)
++{
++	wilc->hif_func->hif_clear_int_ext(wilc, 0);
++}
++
++static void wilc_wlan_handle_isr_ext(struct wilc *wilc, u32 int_status)
++{
++	u32 offset =3D wilc->rx_buffer_offset;
++	u8 *buffer =3D NULL;
++	u32 size;
++	u32 retries =3D 0;
++	int ret =3D 0;
++	struct rxq_entry_t *rqe;
++
++	size =3D FIELD_GET(WILC_INTERRUPT_DATA_SIZE, int_status) << 2;
++
++	while (!size && retries < 10) {
++		wilc->hif_func->hif_read_size(wilc, &size);
++		size =3D FIELD_GET(WILC_INTERRUPT_DATA_SIZE, size) << 2;
++		retries++;
++	}
++
++	if (size <=3D 0)
++		return;
++
++	if (WILC_RX_BUFF_SIZE - offset < size)
++		offset =3D 0;
++
++	buffer =3D &wilc->rx_buffer[offset];
++
++	wilc->hif_func->hif_clear_int_ext(wilc, DATA_INT_CLR | ENABLE_RX_VMM);
++	ret =3D wilc->hif_func->hif_block_rx_ext(wilc, 0, buffer, size);
++	if (ret)
++		return;
++
++	offset +=3D size;
++	wilc->rx_buffer_offset =3D offset;
++	rqe =3D kmalloc(sizeof(*rqe), GFP_KERNEL);
++	if (!rqe)
++		return;
++
++	rqe->buffer =3D buffer;
++	rqe->buffer_size =3D size;
++	wilc_wlan_rxq_add(wilc, rqe);
++	wilc_wlan_handle_rxq(wilc);
++}
++
++void wilc_handle_isr(struct wilc *wilc)
++{
++	u32 int_status;
++
++	acquire_bus(wilc, WILC_BUS_ACQUIRE_AND_WAKEUP);
++	wilc->hif_func->hif_read_int(wilc, &int_status);
++
++	if (int_status & DATA_INT_EXT)
++		wilc_wlan_handle_isr_ext(wilc, int_status);
++
++	if (!(int_status & (ALL_INT_EXT)))
++		wilc_unknown_isr_ext(wilc);
++
++	release_bus(wilc, WILC_BUS_RELEASE_ALLOW_SLEEP);
++}
++EXPORT_SYMBOL_GPL(wilc_handle_isr);
++
++int wilc_wlan_firmware_download(struct wilc *wilc, const u8 *buffer,
++				u32 buffer_size)
++{
++	u32 offset;
++	u32 addr, size, size2, blksz;
++	u8 *dma_buffer;
++	int ret =3D 0;
++
++	blksz =3D BIT(12);
++
++	dma_buffer =3D kmalloc(blksz, GFP_KERNEL);
++	if (!dma_buffer)
++		return -EIO;
++
++	offset =3D 0;
++	do {
++		addr =3D get_unaligned_le32(&buffer[offset]);
++		size =3D get_unaligned_le32(&buffer[offset + 4]);
++		acquire_bus(wilc, WILC_BUS_ACQUIRE_ONLY);
++		offset +=3D 8;
++		while (((int)size) && (offset < buffer_size)) {
++			if (size <=3D blksz)
++				size2 =3D size;
++			else
++				size2 =3D blksz;
++
++			memcpy(dma_buffer, &buffer[offset], size2);
++			ret =3D wilc->hif_func->hif_block_tx(wilc, addr,
++							   dma_buffer, size2);
++			if (ret)
++				break;
++
++			addr +=3D size2;
++			offset +=3D size2;
++			size -=3D size2;
++		}
++		release_bus(wilc, WILC_BUS_RELEASE_ONLY);
++
++		if (ret)
++			goto fail;
++	} while (offset < buffer_size);
++
++fail:
++
++	kfree(dma_buffer);
++
++	return ret;
++}
++
++int wilc_wlan_start(struct wilc *wilc)
++{
++	u32 reg =3D 0;
++	int ret;
++	u32 chipid;
++
++	if (wilc->io_type =3D=3D WILC_HIF_SDIO) {
++		reg =3D 0;
++		reg |=3D BIT(3);
++	} else if (wilc->io_type =3D=3D WILC_HIF_SPI) {
++		reg =3D 1;
++	}
++	acquire_bus(wilc, WILC_BUS_ACQUIRE_ONLY);
++	ret =3D wilc->hif_func->hif_write_reg(wilc, WILC_VMM_CORE_CFG, reg);
++	if (ret) {
++		release_bus(wilc, WILC_BUS_RELEASE_ONLY);
++		return ret;
++	}
++	reg =3D 0;
++	if (wilc->io_type =3D=3D WILC_HIF_SDIO && wilc->dev_irq_num)
++		reg |=3D WILC_HAVE_SDIO_IRQ_GPIO;
++
++	ret =3D wilc->hif_func->hif_write_reg(wilc, WILC_GP_REG_1, reg);
++	if (ret) {
++		release_bus(wilc, WILC_BUS_RELEASE_ONLY);
++		return ret;
++	}
++
++	wilc->hif_func->hif_sync_ext(wilc, NUM_INT_EXT);
++
++	ret =3D wilc->hif_func->hif_read_reg(wilc, WILC_CHIPID, &chipid);
++	if (ret) {
++		release_bus(wilc, WILC_BUS_RELEASE_ONLY);
++		return ret;
++	}
++
++	wilc->hif_func->hif_read_reg(wilc, WILC_GLB_RESET_0, &reg);
++	if ((reg & BIT(10)) =3D=3D BIT(10)) {
++		reg &=3D ~BIT(10);
++		wilc->hif_func->hif_write_reg(wilc, WILC_GLB_RESET_0, reg);
++		wilc->hif_func->hif_read_reg(wilc, WILC_GLB_RESET_0, &reg);
++	}
++
++	reg |=3D BIT(10);
++	ret =3D wilc->hif_func->hif_write_reg(wilc, WILC_GLB_RESET_0, reg);
++	wilc->hif_func->hif_read_reg(wilc, WILC_GLB_RESET_0, &reg);
++	release_bus(wilc, WILC_BUS_RELEASE_ONLY);
++
++	return ret;
++}
++
++int wilc_wlan_stop(struct wilc *wilc, struct wilc_vif *vif)
++{
++	u32 reg =3D 0;
++	int ret;
++
++	acquire_bus(wilc, WILC_BUS_ACQUIRE_AND_WAKEUP);
++
++	ret =3D wilc->hif_func->hif_read_reg(wilc, WILC_GP_REG_0, &reg);
++	if (ret) {
++		netdev_err(vif->ndev, "Error while reading reg\n");
++		release_bus(wilc, WILC_BUS_RELEASE_ALLOW_SLEEP);
++		return ret;
++	}
++
++	ret =3D wilc->hif_func->hif_write_reg(wilc, WILC_GP_REG_0,
++					(reg | WILC_ABORT_REQ_BIT));
++	if (ret) {
++		netdev_err(vif->ndev, "Error while writing reg\n");
++		release_bus(wilc, WILC_BUS_RELEASE_ALLOW_SLEEP);
++		return ret;
++	}
++
++	ret =3D wilc->hif_func->hif_read_reg(wilc, WILC_FW_HOST_COMM, &reg);
++	if (ret) {
++		netdev_err(vif->ndev, "Error while reading reg\n");
++		release_bus(wilc, WILC_BUS_RELEASE_ALLOW_SLEEP);
++		return ret;
++	}
++	reg =3D BIT(0);
++
++	ret =3D wilc->hif_func->hif_write_reg(wilc, WILC_FW_HOST_COMM, reg);
++	if (ret) {
++		netdev_err(vif->ndev, "Error while writing reg\n");
++		release_bus(wilc, WILC_BUS_RELEASE_ALLOW_SLEEP);
++		return ret;
++	}
++
++	release_bus(wilc, WILC_BUS_RELEASE_ALLOW_SLEEP);
++
++	return 0;
++}
++
++void wilc_wlan_cleanup(struct net_device *dev)
++{
++	struct txq_entry_t *tqe;
++	struct rxq_entry_t *rqe;
++	struct wilc_vif *vif =3D netdev_priv(dev);
++	struct wilc *wilc =3D vif->wilc;
++
++	wilc->quit =3D 1;
++	while ((tqe =3D wilc_wlan_txq_remove_from_head(dev))) {
++		if (tqe->tx_complete_func)
++			tqe->tx_complete_func(tqe->priv, 0);
++		kfree(tqe);
++	}
++
++	while ((rqe =3D wilc_wlan_rxq_remove(wilc)))
++		kfree(rqe);
++
++	kfree(wilc->rx_buffer);
++	wilc->rx_buffer =3D NULL;
++	kfree(wilc->tx_buffer);
++	wilc->tx_buffer =3D NULL;
++	wilc->hif_func->hif_deinit(NULL);
++}
++
++static int wilc_wlan_cfg_commit(struct wilc_vif *vif, int type,
++				u32 drv_handler)
++{
++	struct wilc *wilc =3D vif->wilc;
++	struct wilc_cfg_frame *cfg =3D &wilc->cfg_frame;
++	int t_len =3D wilc->cfg_frame_offset + sizeof(struct wilc_cfg_cmd_hdr);
++
++	if (type =3D=3D WILC_CFG_SET)
++		cfg->hdr.cmd_type =3D 'W';
++	else
++		cfg->hdr.cmd_type =3D 'Q';
++
++	cfg->hdr.seq_no =3D wilc->cfg_seq_no % 256;
++	cfg->hdr.total_len =3D cpu_to_le16(t_len);
++	cfg->hdr.driver_handler =3D cpu_to_le32(drv_handler);
++	wilc->cfg_seq_no =3D cfg->hdr.seq_no;
++
++	if (!wilc_wlan_txq_add_cfg_pkt(vif, (u8 *)&cfg->hdr, t_len))
++		return -1;
++
++	return 0;
++}
++
++int wilc_wlan_cfg_set(struct wilc_vif *vif, int start, u16 wid, u8 *buffer=
+,
++		      u32 buffer_size, int commit, u32 drv_handler)
++{
++	u32 offset;
++	int ret_size;
++	struct wilc *wilc =3D vif->wilc;
++
++	mutex_lock(&wilc->cfg_cmd_lock);
++
++	if (start)
++		wilc->cfg_frame_offset =3D 0;
++
++	offset =3D wilc->cfg_frame_offset;
++	ret_size =3D wilc_wlan_cfg_set_wid(wilc->cfg_frame.frame, offset,
++					 wid, buffer, buffer_size);
++	offset +=3D ret_size;
++	wilc->cfg_frame_offset =3D offset;
++
++	if (!commit) {
++		mutex_unlock(&wilc->cfg_cmd_lock);
++		return ret_size;
++	}
++
++	netdev_dbg(vif->ndev, "%s: seqno[%d]\n", __func__, wilc->cfg_seq_no);
++
++	if (wilc_wlan_cfg_commit(vif, WILC_CFG_SET, drv_handler))
++		ret_size =3D 0;
++
++	if (!wait_for_completion_timeout(&wilc->cfg_event,
++					 WILC_CFG_PKTS_TIMEOUT)) {
++		netdev_dbg(vif->ndev, "%s: Timed Out\n", __func__);
++		ret_size =3D 0;
++	}
++
++	wilc->cfg_frame_offset =3D 0;
++	wilc->cfg_seq_no +=3D 1;
++	mutex_unlock(&wilc->cfg_cmd_lock);
++
++	return ret_size;
++}
++
++int wilc_wlan_cfg_get(struct wilc_vif *vif, int start, u16 wid, int commit=
+,
++		      u32 drv_handler)
++{
++	u32 offset;
++	int ret_size;
++	struct wilc *wilc =3D vif->wilc;
++
++	mutex_lock(&wilc->cfg_cmd_lock);
++
++	if (start)
++		wilc->cfg_frame_offset =3D 0;
++
++	offset =3D wilc->cfg_frame_offset;
++	ret_size =3D wilc_wlan_cfg_get_wid(wilc->cfg_frame.frame, offset, wid);
++	offset +=3D ret_size;
++	wilc->cfg_frame_offset =3D offset;
++
++	if (!commit) {
++		mutex_unlock(&wilc->cfg_cmd_lock);
++		return ret_size;
++	}
++
++	if (wilc_wlan_cfg_commit(vif, WILC_CFG_QUERY, drv_handler))
++		ret_size =3D 0;
++
++	if (!wait_for_completion_timeout(&wilc->cfg_event,
++					 WILC_CFG_PKTS_TIMEOUT)) {
++		netdev_dbg(vif->ndev, "%s: Timed Out\n", __func__);
++		ret_size =3D 0;
++	}
++	wilc->cfg_frame_offset =3D 0;
++	wilc->cfg_seq_no +=3D 1;
++	mutex_unlock(&wilc->cfg_cmd_lock);
++
++	return ret_size;
++}
++
++int wilc_send_config_pkt(struct wilc_vif *vif, u8 mode, struct wid *wids,
++			 u32 count)
++{
++	int i;
++	int ret =3D 0;
++	u32 drv =3D wilc_get_vif_idx(vif);
++
++	if (mode =3D=3D WILC_GET_CFG) {
++		for (i =3D 0; i < count; i++) {
++			if (!wilc_wlan_cfg_get(vif, !i,
++					       wids[i].id,
++					       (i =3D=3D count - 1),
++					       drv)) {
++				ret =3D -ETIMEDOUT;
++				break;
++			}
++		}
++		for (i =3D 0; i < count; i++) {
++			wids[i].size =3D wilc_wlan_cfg_get_val(vif->wilc,
++							     wids[i].id,
++							     wids[i].val,
++							     wids[i].size);
++		}
++	} else if (mode =3D=3D WILC_SET_CFG) {
++		for (i =3D 0; i < count; i++) {
++			if (!wilc_wlan_cfg_set(vif, !i,
++					       wids[i].id,
++					       wids[i].val,
++					       wids[i].size,
++					       (i =3D=3D count - 1),
++					       drv)) {
++				ret =3D -ETIMEDOUT;
++				break;
++			}
++		}
++	}
++
++	return ret;
++}
++
++static int init_chip(struct net_device *dev)
++{
++	u32 chipid;
++	u32 reg;
++	int ret =3D 0;
++	struct wilc_vif *vif =3D netdev_priv(dev);
++	struct wilc *wilc =3D vif->wilc;
++
++	acquire_bus(wilc, WILC_BUS_ACQUIRE_ONLY);
++
++	chipid =3D wilc_get_chipid(wilc, true);
++
++	if ((chipid & 0xfff) !=3D 0xa0) {
++		ret =3D wilc->hif_func->hif_read_reg(wilc,
++						   WILC_CORTUS_RESET_MUX_SEL,
++						   &reg);
++		if (ret) {
++			netdev_err(dev, "fail read reg 0x1118\n");
++			goto release;
++		}
++		reg |=3D BIT(0);
++		ret =3D wilc->hif_func->hif_write_reg(wilc,
++						    WILC_CORTUS_RESET_MUX_SEL,
++						    reg);
++		if (ret) {
++			netdev_err(dev, "fail write reg 0x1118\n");
++			goto release;
++		}
++		ret =3D wilc->hif_func->hif_write_reg(wilc,
++						    WILC_CORTUS_BOOT_REGISTER,
++						    WILC_CORTUS_BOOT_FROM_IRAM);
++		if (ret) {
++			netdev_err(dev, "fail write reg 0xc0000\n");
++			goto release;
++		}
++	}
++
++release:
++	release_bus(wilc, WILC_BUS_RELEASE_ONLY);
++
++	return ret;
++}
++
++u32 wilc_get_chipid(struct wilc *wilc, bool update)
++{
++	static u32 chipid;
++	u32 tempchipid =3D 0;
++	u32 rfrevid =3D 0;
++
++	if (chipid =3D=3D 0 || update) {
++		wilc->hif_func->hif_read_reg(wilc, WILC_CHIPID, &tempchipid);
++		wilc->hif_func->hif_read_reg(wilc, WILC_RF_REVISION_ID,
++					     &rfrevid);
++		if (!is_wilc1000(tempchipid)) {
++			chipid =3D 0;
++			return chipid;
++		}
++		if (tempchipid =3D=3D WILC_1000_BASE_ID_2A) { /* 0x1002A0 */
++			if (rfrevid !=3D 0x1)
++				tempchipid =3D WILC_1000_BASE_ID_2A_REV1;
++		} else if (tempchipid =3D=3D WILC_1000_BASE_ID_2B) { /* 0x1002B0 */
++			if (rfrevid =3D=3D 0x4)
++				tempchipid =3D WILC_1000_BASE_ID_2B_REV1;
++			else if (rfrevid !=3D 0x3)
++				tempchipid =3D WILC_1000_BASE_ID_2B_REV2;
++		}
++
++		chipid =3D tempchipid;
++	}
++	return chipid;
++}
++
++int wilc_wlan_init(struct net_device *dev)
++{
++	int ret =3D 0;
++	struct wilc_vif *vif =3D netdev_priv(dev);
++	struct wilc *wilc;
++
++	wilc =3D vif->wilc;
++
++	wilc->quit =3D 0;
++
++	if (wilc->hif_func->hif_init(wilc, false)) {
++		ret =3D -EIO;
++		goto fail;
++	}
++
++	if (!wilc->tx_buffer)
++		wilc->tx_buffer =3D kmalloc(WILC_TX_BUFF_SIZE, GFP_KERNEL);
++
++	if (!wilc->tx_buffer) {
++		ret =3D -ENOBUFS;
++		goto fail;
++	}
++
++	if (!wilc->rx_buffer)
++		wilc->rx_buffer =3D kmalloc(WILC_RX_BUFF_SIZE, GFP_KERNEL);
++
++	if (!wilc->rx_buffer) {
++		ret =3D -ENOBUFS;
++		goto fail;
++	}
++
++	if (init_chip(dev)) {
++		ret =3D -EIO;
++		goto fail;
++	}
++
++	return 0;
++
++fail:
++
++	kfree(wilc->rx_buffer);
++	wilc->rx_buffer =3D NULL;
++	kfree(wilc->tx_buffer);
++	wilc->tx_buffer =3D NULL;
++
++	return ret;
++}
 --=20
 2.24.0
