@@ -2,121 +2,513 @@ Return-Path: <SRS0=Gmm1=4P=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95B02C4BA3B
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Feb 2020 12:00:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A11BAC4BA24
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Feb 2020 12:02:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 64FCD24692
-	for <linux-wireless@archiver.kernel.org>; Thu, 27 Feb 2020 12:00:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4DF7724697
+	for <linux-wireless@archiver.kernel.org>; Thu, 27 Feb 2020 12:02:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="jOsXDixD"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="NXV8S2YK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728946AbgB0MAe (ORCPT
+        id S1728936AbgB0MCE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 27 Feb 2020 07:00:34 -0500
-Received: from nbd.name ([46.4.11.11]:41276 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728932AbgB0MAe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Feb 2020 07:00:34 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
-        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=4VI4j9VnDkxGp8XqKBRNsmMTWtDF5odX1l5UabyJz38=; b=jOsXDixD11CtY/dHBkQAJXhRIF
-        /Er8T0Zvpud34AUrXrrE430va4pbsrLmlxcpAAY4DHY9k+S575/2YXcBBzV1R6AG3xGYdF+CT0sQx
-        KZk8Wli1/gTmKkxh6NzxbNkc9oT9+JUckeQ8v1UT9eAKvry+A99IynHqqtD9nGWlP1hk=;
-Received: from [80.255.7.118] (helo=nf.local)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.89)
-        (envelope-from <nbd@nbd.name>)
-        id 1j7Hq9-00062T-4X; Thu, 27 Feb 2020 13:00:29 +0100
-Subject: Re: [PATCH v11 4/4] mac80211: Use Airtime-based Queue Limits (AQL) on
- packet dequeue
-To:     =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@redhat.com>,
-        Kan Yan <kyan@google.com>
-Cc:     Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Make-Wifi-fast <make-wifi-fast@lists.bufferbloat.net>,
-        Yibo Zhao <yiboz@codeaurora.org>,
-        John Crispin <john@phrozen.org>,
-        Lorenzo Bianconi <lorenzo@kernel.org>,
-        Rajkumar Manoharan <rmanohar@codeaurora.org>,
-        Kevin Hayes <kevinhayes@google.com>
-References: <20191119060610.76681-1-kyan@google.com>
- <20191119060610.76681-5-kyan@google.com>
- <789d592c-5b1b-b785-6d9c-86b7cc7d57f4@nbd.name> <87k149xbb4.fsf@toke.dk>
- <CA+iem5vcz4PqJR+hj9CyS4pJMD4RpNz2RHxQyUy+-qT9y2WhyQ@mail.gmail.com>
- <cedd9fa8-e6ff-be64-d013-4243cb2fd85f@nbd.name> <87o8tkwanq.fsf@toke.dk>
-From:   Felix Fietkau <nbd@nbd.name>
-Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
- xsDiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
- ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
- Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
- AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
- vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
- wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
- TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
- l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwc0cRmVsaXggRmll
- dGthdSA8bmJkQG5iZC5uYW1lPsJgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
- HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
- VrwYTIThkTlQzsFNBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
- CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
- VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
- Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
- DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
- wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
- f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
- aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
- FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
- TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
- GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
- RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <c1a8b4a9-3cc7-fe23-b9f9-2a28d5ec2158@nbd.name>
-Date:   Thu, 27 Feb 2020 13:00:27 +0100
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:68.0)
- Gecko/20100101 Thunderbird/68.5.0
-MIME-Version: 1.0
-In-Reply-To: <87o8tkwanq.fsf@toke.dk>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+        Thu, 27 Feb 2020 07:02:04 -0500
+Received: from mail26.static.mailgun.info ([104.130.122.26]:49403 "EHLO
+        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728882AbgB0MCE (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 27 Feb 2020 07:02:04 -0500
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1582804923; h=References: In-Reply-To: Message-Id: Date:
+ Subject: Cc: To: From: Sender;
+ bh=MdhI/9JmNIeifzX3K+y+p1IPxd9/gjBv/nyAAJXJd+I=; b=NXV8S2YKWtY6AVFGGkcueMCN5f+eE9lG/2Ty15HvAxCMOXTSONzYSn7MuGSeyBgUnYUG2jZr
+ mfwwefxlX+14E/EwfXi793e3iPZMJ5smQuz2bGm3HDUswBkuRnWeZsixcxfgBWhHYBC8tg5z
+ BeYP7Ax+tpqQjPDTv/Cnj1lUkZE=
+X-Mailgun-Sending-Ip: 104.130.122.26
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
+ by mxa.mailgun.org with ESMTP id 5e57afba.7fd758cd9180-smtp-out-n01;
+ Thu, 27 Feb 2020 12:02:02 -0000 (UTC)
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 10C46C4479D; Thu, 27 Feb 2020 12:02:01 +0000 (UTC)
+Received: from vnaralas-linux.qualcomm.com (blr-c-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.19.19])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: mpubbise)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id D0227C43383;
+        Thu, 27 Feb 2020 12:01:58 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org D0227C43383
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=mpubbise@codeaurora.org
+From:   Manikanta Pubbisetty <mpubbise@codeaurora.org>
+To:     ath11k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org,
+        Manikanta Pubbisetty <mpubbise@codeaurora.org>
+Subject: [RFCv2 2/2] ath11k: add 802.11 decapsulation offloading support
+Date:   Thu, 27 Feb 2020 17:31:39 +0530
+Message-Id: <1582804899-12814-3-git-send-email-mpubbise@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1582804899-12814-1-git-send-email-mpubbise@codeaurora.org>
+References: <1582804899-12814-1-git-send-email-mpubbise@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2020-02-27 12:07, Toke Høiland-Jørgensen wrote:
-> Felix Fietkau <nbd@nbd.name> writes:
-> 
->>> Not sure I fully understand your concerns here. The AQL budget is per
->>> STA, per TID, so frames queued in the driver's special queue for one
->>> station won't impact another station's budget. Those frames are
->>> counted towards the per interface pending airtime, which could trigger
->>> AQL to switch to use the lower queue limit. In this case, that could
->>> be the desirable behavior when there is heavy traffic.
->> Yes, the per interface limit is what I'm concerned about. I'm not sure
->> if it will be an issue in practice, it's just something that I noticed
->> while reviewing the code.
-> 
-> Ah, right. Note that it's not a hard limit, though; it's just a
-> threshold for when the per-station limit switches to a smaller value.
-> The idea is that when there are many stations with outstanding data,
-> each station's latency will be higher since they have to also wait for
-> their turn to transmit. And so we compensate for this by lowering each
-> station's queue limit, since the hardware is unlikely to become idle
-> when there are many stations to send to.
-> 
-> The lower limit is still 5ms of data, though, so there should still be
-> enough for a full aggregate queued for each station. Arguably the limit
-> could actually be made *smaller*: On a very busy network with lots of
-> stations transmitting at once, IMO we *don't* want to send full-sized
-> aggregates as that will add up to way too much latency. Better to
-> sacrifice a bit of network efficiency to raise responsiveness :)
-Makes sense, thanks.
+Adding 802.11 decapsulation offloading support to the driver.
+Since the packets delivered to the driver are in 802.3 format, these
+can be sent to the network core with minimal processing in mac80211.
+This helps in releasing some CPU cycles in the host processor and
+thereby improving the performance.
 
-- Felix
+Ethernet decap can be enabled by using a modparam as shown below:
+insmod ath11k ethernet_mode=1
+
+Signed-off-by: Manikanta Pubbisetty <mpubbise@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath11k/core.c     |   4 +
+ drivers/net/wireless/ath/ath11k/core.h     |   3 +
+ drivers/net/wireless/ath/ath11k/dp_rx.c    | 184 +++++++++++++++++------------
+ drivers/net/wireless/ath/ath11k/hal_desc.h |   2 +
+ drivers/net/wireless/ath/ath11k/mac.c      |  21 ++++
+ 5 files changed, 140 insertions(+), 74 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath11k/core.c b/drivers/net/wireless/ath/ath11k/core.c
+index 6a30601..c9f784a 100644
+--- a/drivers/net/wireless/ath/ath11k/core.c
++++ b/drivers/net/wireless/ath/ath11k/core.c
+@@ -17,6 +17,10 @@ unsigned int ath11k_debug_mask;
+ module_param_named(debug_mask, ath11k_debug_mask, uint, 0644);
+ MODULE_PARM_DESC(debug_mask, "Debugging mask");
+ 
++unsigned int ath11k_ethernet_mode;
++module_param_named(ethernet_mode, ath11k_ethernet_mode, uint, 0644);
++MODULE_PARM_DESC(ethernet_mode, "Use ethernet frame datapath 0: disable, 1: enable");
++
+ static const struct ath11k_hw_params ath11k_hw_params = {
+ 	.name = "ipq8074",
+ 	.fw = {
+diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
+index ce8f7fe..d3d9590 100644
+--- a/drivers/net/wireless/ath/ath11k/core.h
++++ b/drivers/net/wireless/ath/ath11k/core.h
+@@ -71,6 +71,7 @@ struct ath11k_skb_rxcb {
+ 	bool is_first_msdu;
+ 	bool is_last_msdu;
+ 	bool is_continuation;
++	bool is_mcbc;
+ 	struct hal_rx_desc *rx_desc;
+ 	u8 err_rel_src;
+ 	u8 err_code;
+@@ -78,6 +79,8 @@ struct ath11k_skb_rxcb {
+ 	u8 unmapped;
+ 	u8 is_frag;
+ 	u8 tid;
++	u16 peer_id;
++	u16 seq_no;
+ };
+ 
+ enum ath11k_hw_rev {
+diff --git a/drivers/net/wireless/ath/ath11k/dp_rx.c b/drivers/net/wireless/ath/ath11k/dp_rx.c
+index 5b9b457..9ffe83d 100644
+--- a/drivers/net/wireless/ath/ath11k/dp_rx.c
++++ b/drivers/net/wireless/ath/ath11k/dp_rx.c
+@@ -260,6 +260,13 @@ static u32 ath11k_dp_rxdesc_get_ppduid(struct hal_rx_desc *rx_desc)
+ 	return __le16_to_cpu(rx_desc->mpdu_start.phy_ppdu_id);
+ }
+ 
++static bool ath11k_dp_rx_h_attn_is_mcbc(struct hal_rx_desc *desc)
++{
++	return ath11k_dp_rx_h_msdu_end_first_msdu(desc) &&
++		(!!FIELD_GET(RX_ATTENTION_INFO1_MCAST_BCAST,
++			     __le32_to_cpu(desc->attention.info1)));
++}
++
+ /* Returns number of Rx buffers replenished */
+ int ath11k_dp_rxbufs_replenish(struct ath11k_base *ab, int mac_id,
+ 			       struct dp_rxdma_ring *rx_ring,
+@@ -1977,9 +1984,15 @@ static void ath11k_dp_rx_h_undecap(struct ath11k *ar, struct sk_buff *msdu,
+ 					   decrypted);
+ 		break;
+ 	case DP_RX_DECAP_TYPE_ETHERNET2_DIX:
+-		/* TODO undecap support for middle/last msdu's of amsdu */
+-		ath11k_dp_rx_h_undecap_eth(ar, msdu, first_hdr,
+-					   enctype, status);
++		/* PN for mcast packets will be validated in mac80211;
++		 * remove eth header and add 802.11 header.
++		 */
++		if (ATH11K_SKB_RXCB(msdu)->is_mcbc) {
++			status->flag |= RX_FLAG_80211_MCAST;
++			if (decrypted)
++				ath11k_dp_rx_h_undecap_eth(ar, msdu, first_hdr,
++							   enctype, status);
++		}
+ 		break;
+ 	case DP_RX_DECAP_TYPE_8023:
+ 		/* TODO: Handle undecap for these formats */
+@@ -1987,38 +2000,65 @@ static void ath11k_dp_rx_h_undecap(struct ath11k *ar, struct sk_buff *msdu,
+ 	}
+ }
+ 
++static struct ath11k_peer *
++ath11k_dp_rx_h_find_peer(struct ath11k_base *ab, struct sk_buff *msdu)
++{
++	struct ath11k_skb_rxcb *rxcb = ATH11K_SKB_RXCB(msdu);
++	struct hal_rx_desc *rx_desc = rxcb->rx_desc;
++	struct ath11k_peer *peer = NULL;
++
++	lockdep_assert_held(&ab->base_lock);
++
++	if (rxcb->peer_id)
++		peer = ath11k_peer_find_by_id(ab, rxcb->peer_id);
++	if (peer)
++		return peer;
++
++	if (!rx_desc ||
++	    !(rx_desc->mpdu_start.info1 & RX_MPDU_START_INFO1_MAC_ADDR2_VALID))
++		return NULL;
++
++	peer = ath11k_peer_find_by_addr(ab, rx_desc->mpdu_start.addr2);
++
++	return peer;
++}
++
+ static void ath11k_dp_rx_h_mpdu(struct ath11k *ar,
+ 				struct sk_buff *msdu,
+ 				struct hal_rx_desc *rx_desc,
+ 				struct ieee80211_rx_status *rx_status)
+ {
+-	bool  fill_crypto_hdr, mcast;
++	bool  fill_crypto_hdr;
+ 	enum hal_encrypt_type enctype;
+ 	bool is_decrypted = false;
++	struct ath11k_skb_rxcb *rxcb;
+ 	struct ieee80211_hdr *hdr;
+ 	struct ath11k_peer *peer;
+ 	u32 err_bitmap;
+ 
+-	hdr = (struct ieee80211_hdr *)msdu->data;
+-
+ 	/* PN for multicast packets will be checked in mac80211 */
++	rxcb = ATH11K_SKB_RXCB(msdu);
++	rxcb->is_mcbc = ath11k_dp_rx_h_attn_is_mcbc(rx_desc);
++	fill_crypto_hdr = rxcb->is_mcbc;
+ 
+-	mcast = fill_crypto_hdr = is_multicast_ether_addr(hdr->addr1);
+-
+-	is_decrypted = ath11k_dp_rx_h_attn_is_decrypted(rx_desc);
++	if (rxcb->is_mcbc) {
++		rxcb->peer_id = ath11k_dp_rx_h_mpdu_start_peer_id(rx_desc);
++		rxcb->seq_no = ath11k_dp_rx_h_mpdu_start_seq_no(rx_desc);
++	}
+ 
+ 	spin_lock_bh(&ar->ab->base_lock);
+-	peer = ath11k_peer_find_by_addr(ar->ab, hdr->addr2);
++	peer = ath11k_dp_rx_h_find_peer(ar->ab, msdu);
+ 	if (peer) {
+-		if (mcast)
++		if (rxcb->is_mcbc)
+ 			enctype = peer->sec_type_grp;
+ 		else
+ 			enctype = peer->sec_type;
+ 	} else {
+-		enctype = HAL_ENCRYPT_TYPE_OPEN;
++		enctype = ath11k_dp_rx_h_mpdu_start_enctype(rx_desc);
+ 	}
+ 	spin_unlock_bh(&ar->ab->base_lock);
+ 
++	is_decrypted = ath11k_dp_rx_h_attn_is_decrypted(rx_desc);
+ 	err_bitmap = ath11k_dp_rx_h_attn_mpdu_err(rx_desc);
+ 
+ 	/* Clear per-MPDU flags while leaving per-PPDU flags intact */
+@@ -2051,8 +2091,11 @@ static void ath11k_dp_rx_h_mpdu(struct ath11k *ar,
+ 	if (!is_decrypted || fill_crypto_hdr)
+ 		return;
+ 
+-	hdr = (void *)msdu->data;
+-	hdr->frame_control &= ~__cpu_to_le16(IEEE80211_FCTL_PROTECTED);
++	if (ath11k_dp_rx_h_msdu_start_decap_type(rx_desc) !=
++	    DP_RX_DECAP_TYPE_ETHERNET2_DIX) {
++		hdr = (void *)msdu->data;
++		hdr->frame_control &= ~__cpu_to_le16(IEEE80211_FCTL_PROTECTED);
++	}
+ }
+ 
+ static void ath11k_dp_rx_h_rate(struct ath11k *ar, struct hal_rx_desc *rx_desc,
+@@ -2153,52 +2196,47 @@ static void ath11k_dp_rx_h_ppdu(struct ath11k *ar, struct hal_rx_desc *rx_desc,
+ 	ath11k_dp_rx_h_rate(ar, rx_desc, rx_status);
+ }
+ 
+-
+-static char *ath11k_print_get_tid(struct ieee80211_hdr *hdr, char *out,
+-				  size_t size)
+-{
+-	u8 *qc;
+-	int tid;
+-
+-	if (!ieee80211_is_data_qos(hdr->frame_control))
+-		return "";
+-
+-	qc = ieee80211_get_qos_ctl(hdr);
+-	tid = *qc & IEEE80211_QOS_CTL_TID_MASK;
+-	snprintf(out, size, "tid %d", tid);
+-
+-	return out;
+-}
+-
+ static void ath11k_dp_rx_deliver_msdu(struct ath11k *ar, struct napi_struct *napi,
+-				      struct sk_buff *msdu)
++				      struct sk_buff *msdu,
++				      struct ieee80211_rx_status *status)
+ {
+ 	static const struct ieee80211_radiotap_he known = {
+-		.data1 = cpu_to_le16(IEEE80211_RADIOTAP_HE_DATA1_DATA_MCS_KNOWN |
+-				     IEEE80211_RADIOTAP_HE_DATA1_BW_RU_ALLOC_KNOWN),
++		.data1 = cpu_to_le16(IEEE80211_RADIOTAP_HE_DATA1_DATA_MCS_KNOWN),
+ 		.data2 = cpu_to_le16(IEEE80211_RADIOTAP_HE_DATA2_GI_KNOWN),
+ 	};
+-	struct ieee80211_rx_status *status;
+-	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)msdu->data;
++	struct ieee80211_rx_status *rx_status;
+ 	struct ieee80211_radiotap_he *he = NULL;
+-	char tid[32];
++	struct ieee80211_sta *pubsta = NULL;
++	struct ath11k_peer *peer;
++	struct ath11k_skb_rxcb *rxcb = ATH11K_SKB_RXCB(msdu);
++	bool is_mcbc = rxcb->is_mcbc;
++	u8 decap;
+ 
+-	status = IEEE80211_SKB_RXCB(msdu);
+-	if (status->encoding == RX_ENC_HE) {
++	if (status->encoding == RX_ENC_HE && status->flag & RX_FLAG_ONLY_MONITOR) {
+ 		he = skb_push(msdu, sizeof(known));
+ 		memcpy(he, &known, sizeof(known));
+ 		status->flag |= RX_FLAG_RADIOTAP_HE;
+ 	}
+ 
++	if (!(status->flag & RX_FLAG_ONLY_MONITOR))
++		decap = ath11k_dp_rx_h_msdu_start_decap_type(rxcb->rx_desc);
++	else
++		decap = DP_RX_DECAP_TYPE_RAW;
++
++	spin_lock_bh(&ar->ab->base_lock);
++	peer = ath11k_dp_rx_h_find_peer(ar->ab, msdu);
++	if (peer && peer->sta)
++		pubsta = peer->sta;
++	spin_unlock_bh(&ar->ab->base_lock);
++
+ 	ath11k_dbg(ar->ab, ATH11K_DBG_DATA,
+-		   "rx skb %pK len %u peer %pM %s %s sn %u %s%s%s%s%s%s%s %srate_idx %u vht_nss %u freq %u band %u flag 0x%x fcs-err %i mic-err %i amsdu-more %i\n",
++		   "rx skb %pK len %u peer %pM tid %u %s sn %u %s%s%s%s%s%s%s %srate_idx %u vht_nss %u freq %u band %u flag 0x%x fcs-err %i mic-err %i amsdu-more %i\n",
+ 		   msdu,
+ 		   msdu->len,
+-		   ieee80211_get_SA(hdr),
+-		   ath11k_print_get_tid(hdr, tid, sizeof(tid)),
+-		   is_multicast_ether_addr(ieee80211_get_DA(hdr)) ?
+-							"mcast" : "ucast",
+-		   (__le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_SEQ) >> 4,
++		   peer ? peer->addr : NULL,
++		   rxcb->tid,
++		   (rxcb->rx_desc->msdu_end.info2 & RX_MSDU_END_INFO2_DA_IS_MCBC) ? "mcast" : "ucast",
++		   rxcb->seq_no,
+ 		   (status->encoding == RX_ENC_LEGACY) ? "legacy" : "",
+ 		   (status->encoding == RX_ENC_HT) ? "ht" : "",
+ 		   (status->encoding == RX_ENC_VHT) ? "vht" : "",
+@@ -2215,20 +2253,28 @@ static void ath11k_dp_rx_deliver_msdu(struct ath11k *ar, struct napi_struct *nap
+ 		   !!(status->flag & RX_FLAG_MMIC_ERROR),
+ 		   !!(status->flag & RX_FLAG_AMSDU_MORE));
+ 
++	rx_status = IEEE80211_SKB_RXCB(msdu);
++	*rx_status = *status;
++
+ 	/* TODO: trace rx packet */
+ 
+-	ieee80211_rx_napi(ar->hw, NULL, msdu, napi);
++	/* PN for multicast packets are validated in mac80211,
++	 * so send them through ieee80211_rx_napi().
++	 */
++	if (decap != DP_RX_DECAP_TYPE_ETHERNET2_DIX ||
++	    (is_mcbc && rx_status->flag & RX_FLAG_DECRYPTED))
++		ieee80211_rx_napi(ar->hw, pubsta, msdu, napi);
++	else
++		ieee80211_rx_decap_offl(ar->hw, pubsta, msdu, napi);
+ }
+ 
+ static int ath11k_dp_rx_process_msdu(struct ath11k *ar,
+ 				     struct sk_buff *msdu,
+-				     struct sk_buff_head *msdu_list)
++				     struct sk_buff_head *msdu_list,
++				     struct ieee80211_rx_status *rx_status)
+ {
+ 	struct hal_rx_desc *rx_desc, *lrx_desc;
+-	struct ieee80211_rx_status rx_status = {0};
+-	struct ieee80211_rx_status *status;
+ 	struct ath11k_skb_rxcb *rxcb;
+-	struct ieee80211_hdr *hdr;
+ 	struct sk_buff *last_buf;
+ 	u8 l3_pad_bytes;
+ 	u16 msdu_len;
+@@ -2276,19 +2322,11 @@ static int ath11k_dp_rx_process_msdu(struct ath11k *ar,
+ 		}
+ 	}
+ 
+-	hdr = (struct ieee80211_hdr *)msdu->data;
+-
+-	/* Process only data frames */
+-	if (!ieee80211_is_data(hdr->frame_control))
+-		return -EINVAL;
+-
+-	ath11k_dp_rx_h_ppdu(ar, rx_desc, &rx_status);
+-	ath11k_dp_rx_h_mpdu(ar, msdu, rx_desc, &rx_status);
++	ath11k_dp_rx_h_ppdu(ar, rx_desc, rx_status);
++	ath11k_dp_rx_h_mpdu(ar, msdu, rx_desc, rx_status);
+ 
+-	rx_status.flag |= RX_FLAG_SKIP_MONITOR | RX_FLAG_DUP_VALIDATED;
++	rx_status->flag |= RX_FLAG_SKIP_MONITOR | RX_FLAG_DUP_VALIDATED;
+ 
+-	status = IEEE80211_SKB_RXCB(msdu);
+-	*status = rx_status;
+ 	return 0;
+ 
+ free_out:
+@@ -2303,6 +2341,7 @@ static void ath11k_dp_rx_process_received_packets(struct ath11k_base *ab,
+ 	struct ath11k_skb_rxcb *rxcb;
+ 	struct sk_buff *msdu;
+ 	struct ath11k *ar;
++	struct ieee80211_rx_status rx_status = {0};
+ 	u8 mac_id;
+ 	int ret;
+ 
+@@ -2325,7 +2364,7 @@ static void ath11k_dp_rx_process_received_packets(struct ath11k_base *ab,
+ 			continue;
+ 		}
+ 
+-		ret = ath11k_dp_rx_process_msdu(ar, msdu, msdu_list);
++		ret = ath11k_dp_rx_process_msdu(ar, msdu, msdu_list, &rx_status);
+ 		if (ret) {
+ 			ath11k_dbg(ab, ATH11K_DBG_DATA,
+ 				   "Unable to process msdu %d", ret);
+@@ -2333,7 +2372,7 @@ static void ath11k_dp_rx_process_received_packets(struct ath11k_base *ab,
+ 			continue;
+ 		}
+ 
+-		ath11k_dp_rx_deliver_msdu(ar, napi, msdu);
++		ath11k_dp_rx_deliver_msdu(ar, napi, msdu, &rx_status);
+ 		(*quota)--;
+ 	}
+ 
+@@ -2415,9 +2454,13 @@ int ath11k_dp_process_rx(struct ath11k_base *ab, int ring_id,
+ 					RX_MSDU_DESC_INFO0_LAST_MSDU_IN_MPDU);
+ 		rxcb->is_continuation = !!(desc->rx_msdu_info.info0 &
+ 					   RX_MSDU_DESC_INFO0_MSDU_CONTINUATION);
+-		rxcb->mac_id = mac_id;
++		rxcb->peer_id = FIELD_GET(RX_MPDU_DESC_META_DATA_PEER_ID,
++					  desc->rx_mpdu_info.meta_data);
++		rxcb->seq_no = FIELD_GET(RX_MPDU_DESC_INFO0_SEQ_NUM,
++					 desc->rx_mpdu_info.info0);
+ 		rxcb->tid = FIELD_GET(HAL_REO_DEST_RING_INFO0_RX_QUEUE_NUM,
+ 				      desc->info0);
++		rxcb->mac_id = mac_id;
+ 
+ 		__skb_queue_tail(&msdu_list, msdu);
+ 
+@@ -3689,7 +3732,6 @@ static void ath11k_dp_rx_wbm_err(struct ath11k *ar,
+ {
+ 	struct ath11k_skb_rxcb *rxcb = ATH11K_SKB_RXCB(msdu);
+ 	struct ieee80211_rx_status rxs = {0};
+-	struct ieee80211_rx_status *status;
+ 	bool drop = true;
+ 
+ 	switch (rxcb->err_rel_src) {
+@@ -3709,10 +3751,7 @@ static void ath11k_dp_rx_wbm_err(struct ath11k *ar,
+ 		return;
+ 	}
+ 
+-	status = IEEE80211_SKB_RXCB(msdu);
+-	*status = rxs;
+-
+-	ath11k_dp_rx_deliver_msdu(ar, napi, msdu);
++	ath11k_dp_rx_deliver_msdu(ar, napi, msdu, &rxs);
+ }
+ 
+ int ath11k_dp_rx_process_wbm_err(struct ath11k_base *ab,
+@@ -4539,7 +4578,7 @@ static int ath11k_dp_rx_mon_deliver(struct ath11k *ar, u32 mac_id,
+ {
+ 	struct ath11k_pdev_dp *dp = &ar->dp;
+ 	struct sk_buff *mon_skb, *skb_next, *header;
+-	struct ieee80211_rx_status *rxs = &dp->rx_status, *status;
++	struct ieee80211_rx_status *rxs = &dp->rx_status;
+ 
+ 	mon_skb = ath11k_dp_rx_mon_merg_msdus(ar, mac_id, head_msdu,
+ 					      tail_msdu, rxs);
+@@ -4565,10 +4604,7 @@ static int ath11k_dp_rx_mon_deliver(struct ath11k *ar, u32 mac_id,
+ 		}
+ 		rxs->flag |= RX_FLAG_ONLY_MONITOR;
+ 
+-		status = IEEE80211_SKB_RXCB(mon_skb);
+-		*status = *rxs;
+-
+-		ath11k_dp_rx_deliver_msdu(ar, napi, mon_skb);
++		ath11k_dp_rx_deliver_msdu(ar, napi, mon_skb, rxs);
+ 		mon_skb = skb_next;
+ 	} while (mon_skb);
+ 	rxs->flag = 0;
+diff --git a/drivers/net/wireless/ath/ath11k/hal_desc.h b/drivers/net/wireless/ath/ath11k/hal_desc.h
+index 5e20038..99ca4a3 100644
+--- a/drivers/net/wireless/ath/ath11k/hal_desc.h
++++ b/drivers/net/wireless/ath/ath11k/hal_desc.h
+@@ -494,6 +494,8 @@ struct hal_tlv_hdr {
+ #define RX_MPDU_DESC_INFO0_DA_IDX_TIMEOUT	BIT(29)
+ #define RX_MPDU_DESC_INFO0_RAW_MPDU		BIT(30)
+ 
++#define RX_MPDU_DESC_META_DATA_PEER_ID		GENMASK(15, 0)
++
+ struct rx_mpdu_desc {
+ 	u32 info0; /* %RX_MPDU_DESC_INFO */
+ 	u32 meta_data;
+diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+index 7f29b4d..3c7e4a9 100644
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -15,6 +15,8 @@
+ #include "testmode.h"
+ #include "peer.h"
+ 
++extern unsigned int ath11k_ethernet_mode;
++
+ #define CHAN2G(_channel, _freq, _flags) { \
+ 	.band                   = NL80211_BAND_2GHZ, \
+ 	.hw_value               = (_channel), \
+@@ -4202,6 +4204,25 @@ static int ath11k_mac_op_add_interface(struct ieee80211_hw *hw,
+ 		goto err_vdev_del;
+ 	}
+ 
++	/* Do not enable ethernet mode for mesh vifs, packets in mesh network
++	 * can be forwarded to other mesh nodes and mac80211 expects the packet
++	 * in 802.11 format. Also, please note that ethernet mode shall not be
++	 * used on interface where 4addr mode is enabled as we might not have
++	 * 4addr related config during add_interface().
++	 */
++	if (ath11k_ethernet_mode && vif->type != NL80211_IFTYPE_MESH_POINT) {
++		param_id = WMI_VDEV_PARAM_RX_DECAP_TYPE;
++		param_value = ATH11K_HW_TXRX_ETHERNET;
++
++		ret = ath11k_wmi_vdev_set_param_cmd(ar, arvif->vdev_id,
++						    param_id, param_value);
++		if (ret) {
++			ath11k_warn(ab, "failed to set vdev %d tx encap mode: %d\n",
++				    arvif->vdev_id, ret);
++			goto err_vdev_del;
++		}
++	}
++
+ 	nss = get_num_chains(ar->cfg_tx_chainmask) ? : 1;
+ 	ret = ath11k_wmi_vdev_set_param_cmd(ar, arvif->vdev_id,
+ 					    WMI_VDEV_PARAM_NSS, nss);
+-- 
+2.7.4
