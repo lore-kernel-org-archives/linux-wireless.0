@@ -7,45 +7,45 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA774C3F2CE
-	for <linux-wireless@archiver.kernel.org>; Sun,  1 Mar 2020 12:47:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C861C3F2CE
+	for <linux-wireless@archiver.kernel.org>; Sun,  1 Mar 2020 12:47:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8394121D56
-	for <linux-wireless@archiver.kernel.org>; Sun,  1 Mar 2020 12:47:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D1C6D2087F
+	for <linux-wireless@archiver.kernel.org>; Sun,  1 Mar 2020 12:47:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1583066833;
-	bh=7Zfnv/9fTn242EiDkTeEw/caMJ5bhFK2NHX22VyebbQ=;
+	s=default; t=1583066835;
+	bh=dZcIbFqjKC6WXT3+tjE2HS0e90KY8tWoLhLIwIeLogQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=IAzBKqsJOsbwHwIbVQJprluUCnN7G7DFwyt1Jbec1Mgq08vlgaTqrsg+ogixAB2lh
-	 d/BNymdtTQ2I9CPIMdLdjoUD8vkAgDrLsPpvexD1zX87Cp+aOOtKwfcB6okqpXGIeF
-	 HzwSngj/S2VzrRzkxmgsWwQRHvJJ9XN2p+GHaSWI=
+	b=o58O5k1ZP7erqjyKoJlEK0Q0Fmn4Q1YymeFiKduPIPxLeUYbp4FG+qB6IGWVNzNqK
+	 G0Okc5zswLGLWKeCKQY2nkuwaGUKswsU5UOALVkLsnJBLfJkbzXKG8nppJfa693GSW
+	 WP8yd1uCT8gKj1Ah3Vhi8pa/wJhOoLJioFRbg3Cc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726755AbgCAMrM (ORCPT
+        id S1726766AbgCAMrO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 1 Mar 2020 07:47:12 -0500
-Received: from mail.kernel.org ([198.145.29.99]:56140 "EHLO mail.kernel.org"
+        Sun, 1 Mar 2020 07:47:14 -0500
+Received: from mail.kernel.org ([198.145.29.99]:56186 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725874AbgCAMrM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 1 Mar 2020 07:47:12 -0500
+        id S1725874AbgCAMrO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 1 Mar 2020 07:47:14 -0500
 Received: from localhost.localdomain (unknown [151.48.128.122])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 793B821775;
-        Sun,  1 Mar 2020 12:47:10 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 5DB3B2087F;
+        Sun,  1 Mar 2020 12:47:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1583066831;
-        bh=7Zfnv/9fTn242EiDkTeEw/caMJ5bhFK2NHX22VyebbQ=;
+        s=default; t=1583066833;
+        bh=dZcIbFqjKC6WXT3+tjE2HS0e90KY8tWoLhLIwIeLogQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Ym6mieeo8Ty//8YtNa+R2afPBf68b+PEpXc1Lwb6p60rzIRbMZZzc7CMTlkMCrUmd
-         pFvxnHVY0d1VMbC3t0v/ZT5OFuGDyDn0ikL6pTxgRGKAo584kjjGyywSftDOYob9ZS
-         yvnipa/yiyFQ9XkPTX/Ir6BRuErA/CYvAXYBOctk=
+        b=HSQi6kAdMnVL5AViuSHZHNoENJq9dm0+6S1Ndv7Luf7APBfit3QxgI9mwcxBa+S3X
+         +cQ040mdMvOXfW4G3gj2cGjEp2zNEe8vBG+H1Mi3zcrPdsjKJCYLZUMhrZRu+EjvIZ
+         d9cjBmC3m7yLscdDMLaf8gUrffrNs49XIzAsNFkA=
 From:   Lorenzo Bianconi <lorenzo@kernel.org>
 To:     nbd@nbd.name
 Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org,
         ryder.lee@mediatek.com
-Subject: [PATCH 1/4] mt76: mt7615: use proper size for mcu msg in mt7615_mcu_set_tx_ba
-Date:   Sun,  1 Mar 2020 13:46:51 +0100
-Message-Id: <bba8a9d03a2ab0abba97e8eaff372e3b0c134436.1583066508.git.lorenzo@kernel.org>
+Subject: [PATCH 2/4] mt76: mt7615: use proper size for mcu msg in mt7615_mcu_set_rx_ba
+Date:   Sun,  1 Mar 2020 13:46:52 +0100
+Message-Id: <20adf9e814c3230a1df386ddaf793d0579e9d8e5.1583066508.git.lorenzo@kernel.org>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <cover.1583066508.git.lorenzo@kernel.org>
 References: <cover.1583066508.git.lorenzo@kernel.org>
@@ -56,21 +56,20 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Use proper buffer size for mcu messages in mt7615_mcu_set_tx_ba routine.
+Use proper buffer size for mcu messages in mt7615_mcu_set_rx_ba routine.
 Allocate the mcu buffer relying on kmalloc instead of putting it on the
 stack
 
 Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
  .../net/wireless/mediatek/mt76/mt7615/mcu.c   | 77 +++++++++++--------
- .../net/wireless/mediatek/mt76/mt7615/mcu.h   |  6 ++
- 2 files changed, 49 insertions(+), 34 deletions(-)
+ 1 file changed, 43 insertions(+), 34 deletions(-)
 
 diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-index 7218a3041ead..fd01c24c48e2 100644
+index fd01c24c48e2..70bf84b31772 100644
 --- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
 +++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-@@ -1696,49 +1696,54 @@ int mt7615_mcu_set_tx_ba(struct mt7615_dev *dev,
+@@ -1779,49 +1779,54 @@ int mt7615_mcu_set_rx_ba(struct mt7615_dev *dev,
  {
  	struct mt7615_sta *msta = (struct mt7615_sta *)params->sta->drv_priv;
  	struct mt7615_vif *mvif = msta->vif;
@@ -90,7 +89,7 @@ index 7218a3041ead..fd01c24c48e2 100644
 -			.tag = cpu_to_le16(STA_REC_BA),
 -			.len = cpu_to_le16(sizeof(struct sta_rec_ba)),
 -			.tid = params->tid,
--			.ba_type = MT_BA_TYPE_ORIGINATOR,
+-			.ba_type = MT_BA_TYPE_RECIPIENT,
 -			.amsdu = params->amsdu,
 -			.ba_en = add << params->tid,
 -			.ssn = cpu_to_le16(params->ssn),
@@ -124,7 +123,7 @@ index 7218a3041ead..fd01c24c48e2 100644
 +	sta_ba->tag = cpu_to_le16(STA_REC_BA);
 +	sta_ba->len = cpu_to_le16(sizeof(*sta_ba));
 +	sta_ba->tid = params->tid;
-+	sta_ba->ba_type = MT_BA_TYPE_ORIGINATOR;
++	sta_ba->ba_type = MT_BA_TYPE_RECIPIENT;
 +	sta_ba->amsdu = params->amsdu;
 +	sta_ba->ba_en = add << params->tid;
 +	sta_ba->ssn = cpu_to_le16(params->ssn);
@@ -156,9 +155,9 @@ index 7218a3041ead..fd01c24c48e2 100644
  	wtbl_ba->tag = cpu_to_le16(WTBL_BA);
  	wtbl_ba->len = cpu_to_le16(sizeof(*wtbl_ba));
  	wtbl_ba->tid = params->tid;
-@@ -1757,11 +1762,15 @@ int mt7615_mcu_set_tx_ba(struct mt7615_dev *dev,
- 		wtbl_ba->ba_winsize_idx = idx;
- 	}
+@@ -1832,11 +1837,15 @@ int mt7615_mcu_set_rx_ba(struct mt7615_dev *dev,
+ 
+ 	memcpy(wtbl_ba->peer_addr, params->sta->addr, ETH_ALEN);
  
 +	wtbl_len = sizeof(*wtbl_hdr) + sizeof(*wtbl_ba);
  	if (wtbl)
@@ -166,32 +165,15 @@ index 7218a3041ead..fd01c24c48e2 100644
 +		wtbl->len = cpu_to_le16(wtbl_len);
  
 -	return mt7615_mcu_send_sta_rec(dev, (u8 *)&req, (u8 *)wtbl_hdr,
--				       buf - (u8 *)wtbl_hdr, true);
+-				       buf - (u8 *)wtbl_hdr, add);
 +	err = mt7615_mcu_send_sta_rec(dev, buf, (u8 *)wtbl_hdr, wtbl_len,
-+				      true);
++				      add);
 +	kfree(buf);
 +
 +	return err;
  }
  
- int mt7615_mcu_set_rx_ba(struct mt7615_dev *dev,
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.h b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.h
-index db0199e60cb8..62da62981138 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.h
-@@ -496,6 +496,12 @@ struct wtbl_raw {
- 				     sizeof(struct wtbl_pn) + \
- 				     sizeof(struct wtbl_spe))
- 
-+#define MT7615_MCU_BA_BUF_SIZE	(sizeof(struct sta_req_hdr) +	\
-+				 sizeof(struct sta_rec_ba) +	\
-+				 sizeof(struct sta_rec_wtbl) +	\
-+				 sizeof(struct wtbl_req_hdr) +	\
-+				 sizeof(struct wtbl_ba))
-+
- enum {
- 	WTBL_GENERIC,
- 	WTBL_RX,
+ int mt7615_mcu_get_temperature(struct mt7615_dev *dev, int index)
 -- 
 2.24.1
 
