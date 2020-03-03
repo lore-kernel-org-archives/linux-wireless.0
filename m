@@ -6,35 +6,33 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E068EC3F2C6
-	for <linux-wireless@archiver.kernel.org>; Tue,  3 Mar 2020 11:50:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D10DC3F2D7
+	for <linux-wireless@archiver.kernel.org>; Tue,  3 Mar 2020 11:50:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C1DDF20866
-	for <linux-wireless@archiver.kernel.org>; Tue,  3 Mar 2020 11:50:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4955E20863
+	for <linux-wireless@archiver.kernel.org>; Tue,  3 Mar 2020 11:50:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729089AbgCCLug (ORCPT
+        id S1729072AbgCCLug (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Tue, 3 Mar 2020 06:50:36 -0500
-Received: from smail.rz.tu-ilmenau.de ([141.24.186.67]:59762 "EHLO
+Received: from smail.rz.tu-ilmenau.de ([141.24.186.67]:59753 "EHLO
         smail.rz.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728157AbgCCLug (ORCPT
+        with ESMTP id S1726890AbgCCLug (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 3 Mar 2020 06:50:36 -0500
 Received: from localhost.localdomain (unknown [141.24.207.101])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by smail.rz.tu-ilmenau.de (Postfix) with ESMTPSA id 88010580075;
+        by smail.rz.tu-ilmenau.de (Postfix) with ESMTPSA id 69C14580065;
         Tue,  3 Mar 2020 12:50:34 +0100 (CET)
 From:   Markus Theil <markus.theil@tu-ilmenau.de>
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org, nbd@nbd.name, lorenzo@kernel.org,
         Markus Theil <markus.theil@tu-ilmenau.de>
-Subject: [PATCH 3/3] mt76: set monitor mode scan ext. feature
-Date:   Tue,  3 Mar 2020 12:50:17 +0100
-Message-Id: <20200303115017.9845-3-markus.theil@tu-ilmenau.de>
+Subject: [PATCH 1/3] nl80211: add monitor mode scan feature
+Date:   Tue,  3 Mar 2020 12:50:15 +0100
+Message-Id: <20200303115017.9845-1-markus.theil@tu-ilmenau.de>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200303115017.9845-1-markus.theil@tu-ilmenau.de>
-References: <20200303115017.9845-1-markus.theil@tu-ilmenau.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -42,30 +40,44 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This patch enables monitor mode scanning for the mt76 driver.
+Back in 2007 "mac80211: don't allow scanning in monitor mode"
+(f27b62d3e7ec) disabled scanning in monitor mode, because hw
+controlled by the zd1211rw driver got confused during this operation.
 
-I tested this with the following interface combinations:
-  * 1 monitor VIF
-  * 1 STA VIF + 1 monitor VIF
-  * 1 AP VIF + 1 monitor VIF
+Nevertheless, it can be useful to scan in monitor mode, e.g.
+when building a tool which processes scans, channel surveys and
+monitors the channel passively in monitor mode.
+
+This patch adds a feature flag for scanning in monitor mode,
+which can be set by hw supporting this feature.
 
 Signed-off-by: Markus Theil <markus.theil@tu-ilmenau.de>
 ---
- drivers/net/wireless/mediatek/mt76/mac80211.c | 1 +
- 1 file changed, 1 insertion(+)
+ include/uapi/linux/nl80211.h | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
-index 96018fd65779..781511cc736d 100644
---- a/drivers/net/wireless/mediatek/mt76/mac80211.c
-+++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
-@@ -316,6 +316,7 @@ int mt76_register_device(struct mt76_dev *dev, bool vht,
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index b002ef2060fa..062519967e60 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -5642,6 +5642,9 @@ enum nl80211_feature_flags {
+  * @NL80211_EXT_FEATURE_BEACON_PROTECTION: The driver supports Beacon protection
+  *	and can receive key configuration for BIGTK using key indexes 6 and 7.
+  *
++ * @NL80211_EXT_FEATURE_MONITOR_MODE_SCAN: The driver supports scanning while in
++ *	monitor mode.
++ *
+  * @NUM_NL80211_EXT_FEATURES: number of extended features.
+  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
+  */
+@@ -5690,6 +5693,7 @@ enum nl80211_ext_feature_index {
+ 	NL80211_EXT_FEATURE_VLAN_OFFLOAD,
+ 	NL80211_EXT_FEATURE_AQL,
+ 	NL80211_EXT_FEATURE_BEACON_PROTECTION,
++	NL80211_EXT_FEATURE_MONITOR_MODE_SCAN,
  
- 	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
- 	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_AIRTIME_FAIRNESS);
-+	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_MONITOR_MODE_SCAN);
- 
- 	wiphy->available_antennas_tx = dev->antenna_mask;
- 	wiphy->available_antennas_rx = dev->antenna_mask;
+ 	/* add new features before the definition below */
+ 	NUM_NL80211_EXT_FEATURES,
 -- 
 2.25.1
 
