@@ -2,106 +2,79 @@ Return-Path: <SRS0=uccD=4U=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8AD7C3F2C6
-	for <linux-wireless@archiver.kernel.org>; Tue,  3 Mar 2020 15:38:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1C7DC3F2C6
+	for <linux-wireless@archiver.kernel.org>; Tue,  3 Mar 2020 17:53:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8C2532083E
-	for <linux-wireless@archiver.kernel.org>; Tue,  3 Mar 2020 15:38:36 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="RR5v4h6S"
+	by mail.kernel.org (Postfix) with ESMTP id AD39220870
+	for <linux-wireless@archiver.kernel.org>; Tue,  3 Mar 2020 17:53:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1583258020;
+	bh=EpRhqg1t2E2K0Or7CHeACcbTjwjBa3cBLkyGEK5sBw0=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:List-ID:From;
+	b=Fx+OEuIISljeBvXrqVbD5nrHC38W+cWl+hykHLD1b7qpcawyiMePpkIaoNXZbI8GP
+	 EMXjqN3dvRo8KUG1iAExnISEYrCbRXXUsZg/b4IxgH/i3VcZLkSSuj5ckjbJFHnEYB
+	 Kc79OeAHI2YwpUZILJo5mt/8ePGLfSz7VYBJ14UU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729828AbgCCPig (ORCPT
+        id S1731447AbgCCRxf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 3 Mar 2020 10:38:36 -0500
-Received: from mail27.static.mailgun.info ([104.130.122.27]:52184 "EHLO
-        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727079AbgCCPif (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Mar 2020 10:38:35 -0500
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1583249915; h=Content-Type: MIME-Version: Message-ID:
- In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
- bh=xMbcRFa1lupH2RVlOWB+oT2CKMT8BSb25UxqgOLfzPY=; b=RR5v4h6SIjQAmyar56KNbOzY3Tfebg6lTr5DVEtLWo6c5gf85RydxlGFwyWrTs1/nQtnAQZs
- 1kEpfjzclhzqhSpHDyPHHdVgiy6o4C2UawGmVwI+F0p+yfBpLyZljs6rOecE7pdCRjvylwKE
- CHGLqvWMPZrzz6JFPjGAY94aL3E=
-X-Mailgun-Sending-Ip: 104.130.122.27
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e5e79e8.7fde1a6d6ca8-smtp-out-n02;
- Tue, 03 Mar 2020 15:38:16 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 97E6DC447A2; Tue,  3 Mar 2020 15:38:15 +0000 (UTC)
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        Tue, 3 Mar 2020 12:53:35 -0500
+Received: from mail.kernel.org ([198.145.29.99]:34206 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1732391AbgCCRxf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 3 Mar 2020 12:53:35 -0500
+Received: from kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com (unknown [163.114.132.128])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 5A9C7C433A2;
-        Tue,  3 Mar 2020 15:38:14 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 5A9C7C433A2
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Felix Fietkau <nbd@nbd.name>
-Cc:     linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: pull request: mt76 2019-02-14 v2
-References: <fa565f39-c10d-4b94-ba92-3cab33f77322@nbd.name>
-Date:   Tue, 03 Mar 2020 17:38:12 +0200
-In-Reply-To: <fa565f39-c10d-4b94-ba92-3cab33f77322@nbd.name> (Felix Fietkau's
-        message of "Fri, 14 Feb 2020 18:57:23 +0100")
-Message-ID: <87lfohqwij.fsf@kamboji.qca.qualcomm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        by mail.kernel.org (Postfix) with ESMTPSA id 8D4AB206D5;
+        Tue,  3 Mar 2020 17:53:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1583258014;
+        bh=EpRhqg1t2E2K0Or7CHeACcbTjwjBa3cBLkyGEK5sBw0=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=mPFoltkybB7GKFwqM7aa9nrG3QKhQCSTLz1AtKCRK3tvTsGitjsupuZowCR+UCHzu
+         xr8SteCXaHMu1JgG3D2dW0DzkZdiUi4J0oL1LqJy76cXFmyiy/Ezr7V6WcFMIBHH84
+         Is68busg2NQv+208JliSqp3StByr8QOR13CDKxdc=
+Date:   Tue, 3 Mar 2020 09:53:32 -0800
+From:   Jakub Kicinski <kuba@kernel.org>
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        kvalo@codeaurora.org
+Subject: Re: [PATCH wireless 0/3] nl80211: add missing attribute validation
+Message-ID: <20200303095332.138ce9b7@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+In-Reply-To: <e5d88e0dbca9cc445caa95cfe32edda52f6b193d.camel@sipsolutions.net>
+References: <20200303051058.4089398-1-kuba@kernel.org>
+        <e5d88e0dbca9cc445caa95cfe32edda52f6b193d.camel@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Felix Fietkau <nbd@nbd.name> writes:
+On Tue, 03 Mar 2020 08:29:46 +0100 Johannes Berg wrote:
+> Hi Jakub,
+> 
+> > Wireless seems to be missing a handful of netlink policy entries.  
+> 
+> Yep, these look good to me.
+> 
+> Here's a
+> 
+> Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
+> 
+> if you want to apply them directly? 
 
-> Hi Kalle,
->
-> here's v2 of my first pull request for 5.7. Fixed the version number
-> in the tag, otherwise unchanged.
->
-> - Felix
->
-> The following changes since commit aa7619a39acef91c5a6904f3ada7d0f20e2ad25e:
->
->   rtw88: Fix incorrect beamformee role setting (2020-02-13 12:07:25 +0200)
->
-> are available in the Git repository at:
->
->   https://github.com/nbd168/wireless tags/mt76-for-kvalo-2020-02-14
->
-> for you to fetch changes up to 0987295750574adc59999b8fb9890834574bc4e2:
->
->   mt76: Introduce mt76_mcu data structure (2020-02-14 10:17:46 +0100)
->
-> ----------------------------------------------------------------
-> mt76 patches for 5.7
->
-> * dual-band concurrent support for MT7615
-> * fixes for rx path race conditions
-> * EEPROM fixes
-> * MAC address handling fixes
-> * coverage class support for MT7615
-> * beacon fixes for USB devices
-> * MT7615 LED support
-> * minor cleanups/fixes for all drivers
-> * set_antenna support for MT7615
-> * tracing improvements
-> * preparation for supporting new USB devices
-> * tx power fixes
->
-> ----------------------------------------------------------------
+Up to Dave, I only put a maintainer hat to cover for Dave when he's
+away :)
 
-Pulled, thanks Felix.
+> I can take them, but you said later you might want to pick them into
+> stable, so maybe you have some more direct plan there?
 
--- 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+No real plan, but the autoselection bot will very likely pick those up
+even if we don't do anything, so given the very limited testing I was
+cautious with refactoring.
