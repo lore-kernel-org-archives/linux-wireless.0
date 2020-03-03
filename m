@@ -2,79 +2,66 @@ Return-Path: <SRS0=uccD=4U=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1C7DC3F2C6
-	for <linux-wireless@archiver.kernel.org>; Tue,  3 Mar 2020 17:53:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23E50C3F2D7
+	for <linux-wireless@archiver.kernel.org>; Tue,  3 Mar 2020 18:58:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AD39220870
-	for <linux-wireless@archiver.kernel.org>; Tue,  3 Mar 2020 17:53:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1583258020;
-	bh=EpRhqg1t2E2K0Or7CHeACcbTjwjBa3cBLkyGEK5sBw0=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:List-ID:From;
-	b=Fx+OEuIISljeBvXrqVbD5nrHC38W+cWl+hykHLD1b7qpcawyiMePpkIaoNXZbI8GP
-	 EMXjqN3dvRo8KUG1iAExnISEYrCbRXXUsZg/b4IxgH/i3VcZLkSSuj5ckjbJFHnEYB
-	 Kc79OeAHI2YwpUZILJo5mt/8ePGLfSz7VYBJ14UU=
+	by mail.kernel.org (Postfix) with ESMTP id 07426206D7
+	for <linux-wireless@archiver.kernel.org>; Tue,  3 Mar 2020 18:58:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731447AbgCCRxf (ORCPT
+        id S1730576AbgCCS6p (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 3 Mar 2020 12:53:35 -0500
-Received: from mail.kernel.org ([198.145.29.99]:34206 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732391AbgCCRxf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Mar 2020 12:53:35 -0500
-Received: from kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com (unknown [163.114.132.128])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 8D4AB206D5;
-        Tue,  3 Mar 2020 17:53:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1583258014;
-        bh=EpRhqg1t2E2K0Or7CHeACcbTjwjBa3cBLkyGEK5sBw0=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=mPFoltkybB7GKFwqM7aa9nrG3QKhQCSTLz1AtKCRK3tvTsGitjsupuZowCR+UCHzu
-         xr8SteCXaHMu1JgG3D2dW0DzkZdiUi4J0oL1LqJy76cXFmyiy/Ezr7V6WcFMIBHH84
-         Is68busg2NQv+208JliSqp3StByr8QOR13CDKxdc=
-Date:   Tue, 3 Mar 2020 09:53:32 -0800
-From:   Jakub Kicinski <kuba@kernel.org>
-To:     Johannes Berg <johannes@sipsolutions.net>
+        Tue, 3 Mar 2020 13:58:45 -0500
+Received: from s3.sipsolutions.net ([144.76.43.62]:60800 "EHLO
+        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729249AbgCCS6o (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 3 Mar 2020 13:58:44 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.93)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1j9Ckc-00DUJb-FQ; Tue, 03 Mar 2020 19:58:42 +0100
+Message-ID: <62f6a04e5b1231e533572bfebcae791b1ad57bb7.camel@sipsolutions.net>
+Subject: Re: [PATCH wireless 0/3] nl80211: add missing attribute validation
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Jakub Kicinski <kuba@kernel.org>
 Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         kvalo@codeaurora.org
-Subject: Re: [PATCH wireless 0/3] nl80211: add missing attribute validation
-Message-ID: <20200303095332.138ce9b7@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
-In-Reply-To: <e5d88e0dbca9cc445caa95cfe32edda52f6b193d.camel@sipsolutions.net>
+Date:   Tue, 03 Mar 2020 19:58:41 +0100
+In-Reply-To: <20200303095332.138ce9b7@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
 References: <20200303051058.4089398-1-kuba@kernel.org>
-        <e5d88e0dbca9cc445caa95cfe32edda52f6b193d.camel@sipsolutions.net>
+         <e5d88e0dbca9cc445caa95cfe32edda52f6b193d.camel@sipsolutions.net>
+         <20200303095332.138ce9b7@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.34.2 (3.34.2-1.fc31) 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, 03 Mar 2020 08:29:46 +0100 Johannes Berg wrote:
-> Hi Jakub,
+On Tue, 2020-03-03 at 09:53 -0800, Jakub Kicinski wrote:
+> On Tue, 03 Mar 2020 08:29:46 +0100 Johannes Berg wrote:
+> > Hi Jakub,
+> > 
+> > > Wireless seems to be missing a handful of netlink policy entries.  
+> > 
+> > Yep, these look good to me.
+> > 
+> > Here's a
+> > 
+> > Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
+> > 
+> > if you want to apply them directly? 
 > 
-> > Wireless seems to be missing a handful of netlink policy entries.  
-> 
-> Yep, these look good to me.
-> 
-> Here's a
-> 
-> Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
-> 
-> if you want to apply them directly? 
+> Up to Dave, I only put a maintainer hat to cover for Dave when he's
+> away :)
 
-Up to Dave, I only put a maintainer hat to cover for Dave when he's
-away :)
+Ah, ok; I'll just take them then, that's easier.
 
-> I can take them, but you said later you might want to pick them into
-> stable, so maybe you have some more direct plan there?
+johannes
 
-No real plan, but the autoselection bot will very likely pick those up
-even if we don't do anything, so given the very limited testing I was
-cautious with refactoring.
