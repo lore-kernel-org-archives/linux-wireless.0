@@ -2,54 +2,50 @@ Return-Path: <SRS0=uccD=4U=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 599D3C3F2D7
-	for <linux-wireless@archiver.kernel.org>; Tue,  3 Mar 2020 05:11:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 325B2C3F2CD
+	for <linux-wireless@archiver.kernel.org>; Tue,  3 Mar 2020 05:11:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2B66D20CC7
-	for <linux-wireless@archiver.kernel.org>; Tue,  3 Mar 2020 05:11:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0033B20CC7
+	for <linux-wireless@archiver.kernel.org>; Tue,  3 Mar 2020 05:11:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1583212274;
-	bh=3g/nS2QPU8iYCOIqxGuzFG/Tz8mgplaIyPPBhcSeaIM=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=WmeehKzXbDbbHX6b3wP+AGasyJ7OXEoIyv5Oy/ZSNyBRGKVBH/8n8UDk9CiAGxrIK
-	 rW8STMP1fjuTi9N/GOgcC0dd6beUBlENvcvdVpB9M/guYz1dP7tpvUNq1gFazAn6QM
-	 9CNhjLsOYCqm9Vc1c57vBOvrDK6sSj2SKhFxzrn4=
+	s=default; t=1583212277;
+	bh=MSJlZzIsWKJk63l9OvPUH4wPGhMhw5K1TXo0SLcMGAg=;
+	h=From:To:Cc:Subject:Date:List-ID:From;
+	b=Rcc1b2tQ1B3b2CWass3T9FYq5GP9/+uYiigcboFRStiBbO+15LhqiQVXEIXg490/e
+	 4FMDITx3PZmnt3wmXcGqzVkpPcmqGWYR6FulRgs7aa/z9W23I8F5weMOyWaZtqD/vW
+	 Mm/EKM7L9N4Ibcj19Pune0aXhNKjkKRgSGKUaTIM=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727423AbgCCFLK (ORCPT
+        id S1726079AbgCCFLI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 3 Mar 2020 00:11:10 -0500
-Received: from mail.kernel.org ([198.145.29.99]:43476 "EHLO mail.kernel.org"
+        Tue, 3 Mar 2020 00:11:08 -0500
+Received: from mail.kernel.org ([198.145.29.99]:43418 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727409AbgCCFLK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Mar 2020 00:11:10 -0500
+        id S1725807AbgCCFLI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 3 Mar 2020 00:11:08 -0500
 Received: from kicinski-fedora-PC1C0HJN.thefacebook.com (unknown [163.114.132.128])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 4F48C2173E;
-        Tue,  3 Mar 2020 05:11:09 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id C2E5C20CC7;
+        Tue,  3 Mar 2020 05:11:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1583212269;
-        bh=3g/nS2QPU8iYCOIqxGuzFG/Tz8mgplaIyPPBhcSeaIM=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=tIQg38ZPj6yJYZTrYvyIsHqxVyZJ+AN6cdwCY/49hSNLBL3Kjg4NN43eWlYBE2Pbw
-         heapgX+fHa0pO8sb/tOWVfr3MZa89RHRfiF38Nc5deZgmgfJoVArwYu44QwZVOVf6U
-         jsQuC1R97DwKHPNa+w9MfAjLtFDw0rK+mGc81jic=
+        s=default; t=1583212268;
+        bh=MSJlZzIsWKJk63l9OvPUH4wPGhMhw5K1TXo0SLcMGAg=;
+        h=From:To:Cc:Subject:Date:From;
+        b=p3yMKhF8o7ayhU2/Yht9GzAzJxQoPD+uNMK2ljUOwGKA4uLANSG0DWmAw2txI2YUx
+         /+gGJ3E0EKg0aUvduLpkutVJBUiUsqIdhTHsLQy6DtfjkgnNfDVVDwfRq+4xrPSVXk
+         lezP1cM3nk/FV5RpZRp6l4HLl6k62Gkja9McxjJQ=
 From:   Jakub Kicinski <kuba@kernel.org>
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        kvalo@codeaurora.org, Jakub Kicinski <kuba@kernel.org>,
-        Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH wireless 3/3] nl80211: add missing attribute validation for channel switch
-Date:   Mon,  2 Mar 2020 21:10:58 -0800
-Message-Id: <20200303051058.4089398-4-kuba@kernel.org>
+        kvalo@codeaurora.org, Jakub Kicinski <kuba@kernel.org>
+Subject: [PATCH wireless 0/3] nl80211: add missing attribute validation
+Date:   Mon,  2 Mar 2020 21:10:55 -0800
+Message-Id: <20200303051058.4089398-1-kuba@kernel.org>
 X-Mailer: git-send-email 2.24.1
-In-Reply-To: <20200303051058.4089398-1-kuba@kernel.org>
-References: <20200303051058.4089398-1-kuba@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -57,29 +53,21 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add missing attribute validation for NL80211_ATTR_OPER_CLASS
-to the netlink policy.
+Hi!
 
-Fixes: 1057d35ede5d ("cfg80211: introduce TDLS channel switch commands")
-Signed-off-by: Jakub Kicinski <kuba@kernel.org>
----
-CC: Arik Nemtsov <arik@wizery.com>
----
- net/wireless/nl80211.c | 1 +
- 1 file changed, 1 insertion(+)
+Wireless seems to be missing a handful of netlink policy entries.
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 48e6508aba52..ec5d67794aab 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -565,6 +565,7 @@ const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
- 		NLA_POLICY_MAX(NLA_U8, IEEE80211_NUM_UPS - 1),
- 	[NL80211_ATTR_ADMITTED_TIME] = { .type = NLA_U16 },
- 	[NL80211_ATTR_SMPS_MODE] = { .type = NLA_U8 },
-+	[NL80211_ATTR_OPER_CLASS] = { .type = NLA_U8 },
- 	[NL80211_ATTR_MAC_MASK] = {
- 		.type = NLA_EXACT_LEN_WARN,
- 		.len = ETH_ALEN
+Compilation tested only.
+
+Jakub Kicinski (3):
+  nl80211: add missing attribute validation for critical protocol
+    indication
+  nl80211: add missing attribute validation for beacon report scanning
+  nl80211: add missing attribute validation for channel switch
+
+ net/wireless/nl80211.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
 -- 
 2.24.1
 
