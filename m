@@ -2,73 +2,71 @@ Return-Path: <SRS0=uccD=4U=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EB4CC3F2C6
-	for <linux-wireless@archiver.kernel.org>; Tue,  3 Mar 2020 09:31:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CBD4C3F2CD
+	for <linux-wireless@archiver.kernel.org>; Tue,  3 Mar 2020 11:50:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EA2E121556
-	for <linux-wireless@archiver.kernel.org>; Tue,  3 Mar 2020 09:31:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7AE2720866
+	for <linux-wireless@archiver.kernel.org>; Tue,  3 Mar 2020 11:50:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728183AbgCCJbD (ORCPT
+        id S1729091AbgCCLug (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 3 Mar 2020 04:31:03 -0500
-Received: from s3.sipsolutions.net ([144.76.43.62]:51318 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728171AbgCCJbD (ORCPT
+        Tue, 3 Mar 2020 06:50:36 -0500
+Received: from smail.rz.tu-ilmenau.de ([141.24.186.67]:59758 "EHLO
+        smail.rz.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728350AbgCCLug (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Mar 2020 04:31:03 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.93)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1j93tE-00CJUn-AU; Tue, 03 Mar 2020 10:31:00 +0100
-Message-ID: <a6da58cf50e1f6f8f2f45f8c2eb9fa69ba0b78ed.camel@sipsolutions.net>
-Subject: Re: [mac80211]: wds link and Radius authentication issue
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Cedric VONCKEN <cedric.voncken@acksys.fr>,
-        Steve deRosier <derosier@gmail.com>
-Cc:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date:   Tue, 03 Mar 2020 10:30:59 +0100
-In-Reply-To: <DB8PR01MB5529C93C4FA5B570DC57F88F90E40@DB8PR01MB5529.eurprd01.prod.exchangelabs.com>
-References: <DB8PR01MB5529DDE77726C997EAAC3F3C90EB0@DB8PR01MB5529.eurprd01.prod.exchangelabs.com>
-         <DB8PR01MB55290E6894E532ABA3748A5590EB0@DB8PR01MB5529.eurprd01.prod.exchangelabs.com>
-         <DB8PR01MB5529D69C90706C78D3B66BA490EB0@DB8PR01MB5529.eurprd01.prod.exchangelabs.com>
-         <CALLGbRJYAfa=5t46UTj8GT6yhMVUZkCeD6pqF+XVhLSdmoJ5wg@mail.gmail.com>
-         (sfid-20200228_022737_077710_BB93474D) <a7df3def1f3bbd80bf96ffb74f2da365ff578df7.camel@sipsolutions.net>
-         <DB8PR01MB552911EB44BBFD569694FF1990E70@DB8PR01MB5529.eurprd01.prod.exchangelabs.com>
-         <DB8PR01MB55292C768759D14699CC5BAE90E70@DB8PR01MB5529.eurprd01.prod.exchangelabs.com>
-         <DB8PR01MB55298F5D3E6D1A111EB5AE6C90E70@DB8PR01MB5529.eurprd01.prod.exchangelabs.com>
-         <ad70a65c0c113f86ee7d5f12b8483ab2bfa32257.camel@sipsolutions.net>
-         <DB8PR01MB5529C93C4FA5B570DC57F88F90E40@DB8PR01MB5529.eurprd01.prod.exchangelabs.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.34.2 (3.34.2-1.fc31) 
+        Tue, 3 Mar 2020 06:50:36 -0500
+Received: from localhost.localdomain (unknown [141.24.207.101])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by smail.rz.tu-ilmenau.de (Postfix) with ESMTPSA id 816D8580074;
+        Tue,  3 Mar 2020 12:50:34 +0100 (CET)
+From:   Markus Theil <markus.theil@tu-ilmenau.de>
+To:     johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org, nbd@nbd.name, lorenzo@kernel.org,
+        Markus Theil <markus.theil@tu-ilmenau.de>
+Subject: [PATCH 2/3] mac80211: conditionally allow scan in monitor mode
+Date:   Tue,  3 Mar 2020 12:50:16 +0100
+Message-Id: <20200303115017.9845-2-markus.theil@tu-ilmenau.de>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20200303115017.9845-1-markus.theil@tu-ilmenau.de>
+References: <20200303115017.9845-1-markus.theil@tu-ilmenau.de>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Cedric,
+This patch checks the monitor mode scan feature flag and conditionally
+allows scanning in monitor mode for hw which supports this.
 
-Umm, that was hard to read. You should quote my writing, not your own :)
+Signed-off-by: Markus Theil <markus.theil@tu-ilmenau.de>
+---
+ net/mac80211/cfg.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-
-> > The wlan0.sta1 net dev was created by hostapd to manage the wds sta.
-> > This netdev type is AP VLAN. The function ieee80211_lookup_ra_sta
-> > return
-> > -ENOLINK because the pointer sdata->u.vlan.sta was not defined.
-
-Right.
-
-> > In mac80211, where this rcu pointer is allocated? Which NL message the user space use ?
-
-Look at ieee80211_change_station(), called from nl80211_set_station()
-with 
-
-	params.vlan = get_vlan(info, rdev);
-
-johannes
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 7b654d2b8bb2..01a20f2dbf86 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2313,6 +2313,12 @@ static int ieee80211_scan(struct wiphy *wiphy,
+ 		     !(req->flags & NL80211_SCAN_FLAG_AP)))
+ 			return -EOPNOTSUPP;
+ 		break;
++	case NL80211_IFTYPE_MONITOR:
++		if (wiphy_ext_feature_isset(wiphy,
++					    NL80211_EXT_FEATURE_MONITOR_MODE_SCAN))
++			break;
++		else
++			return -EOPNOTSUPP;
+ 	case NL80211_IFTYPE_NAN:
+ 	default:
+ 		return -EOPNOTSUPP;
+-- 
+2.25.1
 
