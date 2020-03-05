@@ -6,31 +6,31 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EAB1DC3F2D1
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Mar 2020 14:57:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EBDF9C3F2D7
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Mar 2020 14:57:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B189D207FD
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Mar 2020 14:57:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C6A26207FD
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Mar 2020 14:57:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726222AbgCEO5O (ORCPT
+        id S1726251AbgCEO5P (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 5 Mar 2020 09:57:14 -0500
-Received: from s3.sipsolutions.net ([144.76.43.62]:35776 "EHLO
+        Thu, 5 Mar 2020 09:57:15 -0500
+Received: from s3.sipsolutions.net ([144.76.43.62]:35788 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726162AbgCEO5N (ORCPT
+        with ESMTP id S1726209AbgCEO5O (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Mar 2020 09:57:13 -0500
+        Thu, 5 Mar 2020 09:57:14 -0500
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.93)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1j9rvx-001JyE-F1; Thu, 05 Mar 2020 15:57:09 +0100
+        id 1j9rvy-001JyE-Qq; Thu, 05 Mar 2020 15:57:10 +0100
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Bob Copeland <me@bobcopeland.com>,
         Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/4] wmediumd: update list.h from kernel
-Date:   Thu,  5 Mar 2020 15:56:52 +0100
-Message-Id: <20200305155407.76768e7e8871.Ibd11bcf6d629ea75bf3edc6b64242c46d5f2c6be@changeid>
+Subject: [PATCH 4/4] wmediumd: add vhost-user support
+Date:   Thu,  5 Mar 2020 15:56:55 +0100
+Message-Id: <20200305155407.69f291a965c4.I7daa3df133d43910c3ecd5cd67667c3176ee0f6f@changeid>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200305145655.67427-1-johannes@sipsolutions.net>
 References: <20200305145655.67427-1-johannes@sipsolutions.net>
@@ -43,725 +43,468 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-This just pulls in some nicer things to use.
+Add support for listening on a vhost-user socket, which can
+then be used e.g. together with user-mode-linux or qemu/kvm
+and hwsim running inside a virtual machine.
+
+It also supports a combination of local (netlink) and vhost-
+user, just because we can :-)
 
 ---
- wmediumd/list.h | 506 ++++++++++++++++++++++++++++++++++++++++++------
- 1 file changed, 446 insertions(+), 60 deletions(-)
+ wmediumd/config.c   |   4 +-
+ wmediumd/wmediumd.c | 201 +++++++++++++++++++++++++++++++++-----------
+ wmediumd/wmediumd.h |  23 +++++
+ 3 files changed, 177 insertions(+), 51 deletions(-)
 
-diff --git a/wmediumd/list.h b/wmediumd/list.h
-index a33a187473f2..a6212af9a712 100644
---- a/wmediumd/list.h
-+++ b/wmediumd/list.h
-@@ -1,9 +1,20 @@
--#ifndef _LIST_H
--#define _LIST_H
-+/* SPDX-License-Identifier: GPL-2.0 */
-+#ifndef _LINUX_LIST_H
-+#define _LINUX_LIST_H
+diff --git a/wmediumd/config.c b/wmediumd/config.c
+index 971493780568..c9a6f5ca9ca0 100644
+--- a/wmediumd/config.c
++++ b/wmediumd/config.c
+@@ -438,7 +438,7 @@ int load_config(struct wmediumd *ctx, const char *file, const char *per_file)
+ 	w_logf(ctx, LOG_NOTICE, "#_if = %d\n", count_ids);
  
--/* Stripped down implementation of linked list taken
-- * from the Linux Kernel.
-- */
-+#include <linux/types.h>
-+#include <stddef.h>
+ 	/* Fill the mac_addr */
+-	ctx->sta_array = malloc(sizeof(struct station *) * count_ids);
++	ctx->sta_array = calloc(count_ids, sizeof(struct station *));
+ 	if (!ctx->sta_array) {
+ 		w_flogf(ctx, LOG_ERR, stderr, "Out of memory(sta_array)!\n");
+ 		return -ENOMEM;
+@@ -448,7 +448,7 @@ int load_config(struct wmediumd *ctx, const char *file, const char *per_file)
+ 		const char *str =  config_setting_get_string_elem(ids, i);
+ 		string_to_mac_address(str, addr);
+ 
+-		station = malloc(sizeof(*station));
++		station = calloc(1, sizeof(*station));
+ 		if (!station) {
+ 			w_flogf(ctx, LOG_ERR, stderr, "Out of memory!\n");
+ 			return -ENOMEM;
+diff --git a/wmediumd/wmediumd.c b/wmediumd/wmediumd.c
+index 70979fca09d4..8fb0ed49bbb1 100644
+--- a/wmediumd/wmediumd.c
++++ b/wmediumd/wmediumd.c
+@@ -38,6 +38,7 @@
+ #include <usfstl/loop.h>
+ #include <usfstl/sched.h>
+ #include <usfstl/schedctrl.h>
++#include <usfstl/vhost.h>
+ 
+ #include "wmediumd.h"
+ #include "ieee80211.h"
+@@ -47,6 +48,12 @@ USFSTL_SCHEDULER(scheduler);
+ 
+ static void wmediumd_deliver_frame(struct usfstl_job *job);
+ 
++enum {
++	HWSIM_VQ_TX,
++	HWSIM_VQ_RX,
++	HWSIM_NUM_VQS,
++};
 +
-+/* Stripped down from Linux ~5.5 */
-+
-+#define POISON_POINTER_DELTA 0
-+#define LIST_POISON1  ((void *) 0x00100100 + POISON_POINTER_DELTA)
-+#define LIST_POISON2  ((void *) 0x00200200 + POISON_POINTER_DELTA)
-+#define WRITE_ONCE(p, v) do { p = v; } while (0)
-+#define READ_ONCE(p) (p)
-+#ifndef container_of
-+#define container_of(ptr, type, member) ((type *)(void*)( (char*)ptr - offsetof(type, member)))
-+#endif
- 
- /*
-  * Simple doubly linked list implementation.
-@@ -24,12 +35,30 @@ struct list_head {
- #define LIST_HEAD(name) \
- 	struct list_head name = LIST_HEAD_INIT(name)
- 
-+/**
-+ * INIT_LIST_HEAD - Initialize a list_head structure
-+ * @list: list_head structure to be initialized.
-+ *
-+ * Initializes the list_head to point to itself.  If it is a list header,
-+ * the result is an empty list.
-+ */
- static inline void INIT_LIST_HEAD(struct list_head *list)
+ static inline int div_round(int a, int b)
  {
--	list->next = list;
-+	WRITE_ONCE(list->next, list);
- 	list->prev = list;
+ 	return (a + b - 1) / b;
+@@ -361,6 +368,8 @@ void queue_frame(struct wmediumd *ctx, struct station *station,
+ 	target += send_time;
+ 
+ 	frame->duration = send_time;
++	frame->dest = deststa ? deststa->client : NULL;
++	frame->src = station->client;
+ 	frame->job.start = target;
+ 	frame->job.callback = wmediumd_deliver_frame;
+ 	frame->job.data = ctx;
+@@ -369,26 +378,44 @@ void queue_frame(struct wmediumd *ctx, struct station *station,
+ 	list_add_tail(&frame->list, &queue->frames);
  }
  
-+static inline bool __list_add_valid(struct list_head *new,
-+				struct list_head *prev,
-+				struct list_head *next)
++static void wmediumd_send_to_client(struct wmediumd *ctx,
++				    struct client *client,
++				    struct nl_msg *msg)
 +{
-+	return true;
-+}
-+static inline bool __list_del_entry_valid(struct list_head *entry)
-+{
-+	return true;
-+}
++	size_t len;
++	int ret;
 +
- /*
-  * Insert a new entry between two known consecutive entries.
-  *
-@@ -40,10 +69,13 @@ static inline void __list_add(struct list_head *new,
- 			      struct list_head *prev,
- 			      struct list_head *next)
- {
-+	if (!__list_add_valid(new, prev, next))
-+		return;
-+
- 	next->prev = new;
- 	new->next = next;
- 	new->prev = prev;
--	prev->next = new;
-+	WRITE_ONCE(prev->next, new);
- }
- 
- /**
-@@ -59,6 +91,7 @@ static inline void list_add(struct list_head *new, struct list_head *head)
- 	__list_add(new, head, head->next);
- }
- 
-+
- /**
-  * list_add_tail - add a new entry
-  * @new: new entry to be added
-@@ -79,15 +112,171 @@ static inline void list_add_tail(struct list_head *new, struct list_head *head)
-  * This is only for internal list manipulation where we know
-  * the prev/next entries already!
-  */
--static inline void __list_del(struct list_head *prev, struct list_head *next)
-+static inline void __list_del(struct list_head * prev, struct list_head * next)
- {
- 	next->prev = prev;
--	prev->next = next;
-+	WRITE_ONCE(prev->next, next);
- }
- 
--#define POISON_POINTER_DELTA 0
--#define LIST_POISON1  ((void *) 0x00100100 + POISON_POINTER_DELTA)
--#define LIST_POISON2  ((void *) 0x00200200 + POISON_POINTER_DELTA)
-+/*
-+ * Delete a list entry and clear the 'prev' pointer.
-+ *
-+ * This is a special-purpose list clearing method used in the networking code
-+ * for lists allocated as per-cpu, where we don't want to incur the extra
-+ * WRITE_ONCE() overhead of a regular list_del_init(). The code that uses this
-+ * needs to check the node 'prev' pointer instead of calling list_empty().
-+ */
-+static inline void __list_del_clearprev(struct list_head *entry)
-+{
-+	__list_del(entry->prev, entry->next);
-+	entry->prev = NULL;
-+}
-+
-+static inline void __list_del_entry(struct list_head *entry)
-+{
-+	if (!__list_del_entry_valid(entry))
-+		return;
-+
-+	__list_del(entry->prev, entry->next);
-+}
-+
-+/**
-+ * list_del - deletes entry from list.
-+ * @entry: the element to delete from the list.
-+ * Note: list_empty() on entry does not return true after this, the entry is
-+ * in an undefined state.
-+ */
-+static inline void list_del(struct list_head *entry)
-+{
-+	__list_del_entry(entry);
-+	entry->next = LIST_POISON1;
-+	entry->prev = LIST_POISON2;
-+}
-+
-+/**
-+ * list_replace - replace old entry by new one
-+ * @old : the element to be replaced
-+ * @new : the new element to insert
-+ *
-+ * If @old was empty, it will be overwritten.
-+ */
-+static inline void list_replace(struct list_head *old,
-+				struct list_head *new)
-+{
-+	new->next = old->next;
-+	new->next->prev = new;
-+	new->prev = old->prev;
-+	new->prev->next = new;
-+}
-+
-+/**
-+ * list_replace_init - replace old entry by new one and initialize the old one
-+ * @old : the element to be replaced
-+ * @new : the new element to insert
-+ *
-+ * If @old was empty, it will be overwritten.
-+ */
-+static inline void list_replace_init(struct list_head *old,
-+				     struct list_head *new)
-+{
-+	list_replace(old, new);
-+	INIT_LIST_HEAD(old);
-+}
-+
-+/**
-+ * list_swap - replace entry1 with entry2 and re-add entry1 at entry2's position
-+ * @entry1: the location to place entry2
-+ * @entry2: the location to place entry1
-+ */
-+static inline void list_swap(struct list_head *entry1,
-+			     struct list_head *entry2)
-+{
-+	struct list_head *pos = entry2->prev;
-+
-+	list_del(entry2);
-+	list_replace(entry1, entry2);
-+	if (pos == entry1)
-+		pos = entry2;
-+	list_add(entry1, pos);
-+}
-+
-+/**
-+ * list_del_init - deletes entry from list and reinitialize it.
-+ * @entry: the element to delete from the list.
-+ */
-+static inline void list_del_init(struct list_head *entry)
-+{
-+	__list_del_entry(entry);
-+	INIT_LIST_HEAD(entry);
-+}
-+
-+/**
-+ * list_move - delete from one list and add as another's head
-+ * @list: the entry to move
-+ * @head: the head that will precede our entry
-+ */
-+static inline void list_move(struct list_head *list, struct list_head *head)
-+{
-+	__list_del_entry(list);
-+	list_add(list, head);
-+}
-+
-+/**
-+ * list_move_tail - delete from one list and add as another's tail
-+ * @list: the entry to move
-+ * @head: the head that will follow our entry
-+ */
-+static inline void list_move_tail(struct list_head *list,
-+				  struct list_head *head)
-+{
-+	__list_del_entry(list);
-+	list_add_tail(list, head);
-+}
-+
-+/**
-+ * list_bulk_move_tail - move a subsection of a list to its tail
-+ * @head: the head that will follow our entry
-+ * @first: first entry to move
-+ * @last: last entry to move, can be the same as first
-+ *
-+ * Move all entries between @first and including @last before @head.
-+ * All three entries must belong to the same linked list.
-+ */
-+static inline void list_bulk_move_tail(struct list_head *head,
-+				       struct list_head *first,
-+				       struct list_head *last)
-+{
-+	first->prev->next = last->next;
-+	last->next->prev = first->prev;
-+
-+	head->prev->next = first;
-+	first->prev = head->prev;
-+
-+	last->next = head;
-+	head->prev = last;
-+}
-+
-+/**
-+ * list_is_first -- tests whether @list is the first entry in list @head
-+ * @list: the entry to test
-+ * @head: the head of the list
-+ */
-+static inline int list_is_first(const struct list_head *list,
-+					const struct list_head *head)
-+{
-+	return list->prev == head;
-+}
-+
-+/**
-+ * list_is_last - tests whether @list is the last entry in list @head
-+ * @list: the entry to test
-+ * @head: the head of the list
-+ */
-+static inline int list_is_last(const struct list_head *list,
-+				const struct list_head *head)
-+{
-+	return list->next == head;
-+}
- 
- /**
-  * list_empty - tests whether a list is empty
-@@ -95,32 +284,215 @@ static inline void __list_del(struct list_head *prev, struct list_head *next)
-  */
- static inline int list_empty(const struct list_head *head)
- {
--	return head->next == head;
-+	return READ_ONCE(head->next) == head;
- }
- 
- /**
-- * list_del - deletes entry from list.
-- * @entry: the element to delete from the list.
-- * Note: list_empty() on entry does not return true after this, the entry is
-- * in an undefined state.
-+ * list_empty_careful - tests whether a list is empty and not being modified
-+ * @head: the list to test
-+ *
-+ * Description:
-+ * tests whether a list is empty _and_ checks that no other CPU might be
-+ * in the process of modifying either member (next or prev)
-+ *
-+ * NOTE: using list_empty_careful() without synchronization
-+ * can only be safe if the only activity that can happen
-+ * to the list entry is list_del_init(). Eg. it cannot be used
-+ * if another CPU could re-list_add() it.
-  */
--static inline void __list_del_entry(struct list_head *entry)
-+static inline int list_empty_careful(const struct list_head *head)
- {
--	__list_del(entry->prev, entry->next);
-+	struct list_head *next = head->next;
-+	return (next == head) && (next == head->prev);
- }
- 
--static inline void list_del(struct list_head *entry)
-+/**
-+ * list_rotate_left - rotate the list to the left
-+ * @head: the head of the list
-+ */
-+static inline void list_rotate_left(struct list_head *head)
- {
--	__list_del(entry->prev, entry->next);
--	entry->next = LIST_POISON1;
--	entry->prev = LIST_POISON2;
-+	struct list_head *first;
-+
-+	if (!list_empty(head)) {
-+		first = head->next;
-+		list_move_tail(first, head);
++	switch (client->type) {
++	case CLIENT_NETLINK:
++		ret = nl_send_auto_complete(ctx->sock, msg);
++		if (ret < 0)
++			w_logf(ctx, LOG_ERR, "%s: nl_send_auto failed\n", __func__);
++		break;
++	case CLIENT_VHOST_USER:
++		len = nlmsg_total_size(nlmsg_datalen(nlmsg_hdr(msg)));
++		usfstl_vhost_user_dev_notify(client->dev, HWSIM_VQ_RX,
++					     (void *)nlmsg_hdr(msg), len);
++		break;
 +	}
 +}
 +
-+/**
-+ * list_rotate_to_front() - Rotate list to specific item.
-+ * @list: The desired new front of the list.
-+ * @head: The head of the list.
-+ *
-+ * Rotates list so that @list becomes the new front of the list.
-+ */
-+static inline void list_rotate_to_front(struct list_head *list,
-+					struct list_head *head)
+ /*
+  * Report transmit status to the kernel.
+  */
+-static int send_tx_info_frame_nl(struct wmediumd *ctx, struct frame *frame)
++static void send_tx_info_frame_nl(struct wmediumd *ctx, struct frame *frame)
+ {
+-	struct nl_sock *sock = ctx->sock;
+ 	struct nl_msg *msg;
+-	int ret;
+ 
+ 	msg = nlmsg_alloc();
+ 	if (!msg) {
+ 		w_logf(ctx, LOG_ERR, "Error allocating new message MSG!\n");
+-		return -1;
++		return;
+ 	}
+ 
+ 	if (genlmsg_put(msg, NL_AUTO_PID, NL_AUTO_SEQ, ctx->family_id,
+ 			0, NLM_F_REQUEST, HWSIM_CMD_TX_INFO_FRAME,
+ 			VERSION_NR) == NULL) {
+ 		w_logf(ctx, LOG_ERR, "%s: genlmsg_put failed\n", __func__);
+-		ret = -1;
+ 		goto out;
+ 	}
+ 
+@@ -401,45 +428,34 @@ static int send_tx_info_frame_nl(struct wmediumd *ctx, struct frame *frame)
+ 		    frame->tx_rates) ||
+ 	    nla_put_u64(msg, HWSIM_ATTR_COOKIE, frame->cookie)) {
+ 		w_logf(ctx, LOG_ERR, "%s: Failed to fill a payload\n", __func__);
+-		ret = -1;
+ 		goto out;
+ 	}
+ 
+-	ret = nl_send_auto_complete(sock, msg);
+-	if (ret < 0) {
+-		w_logf(ctx, LOG_ERR, "%s: nl_send_auto failed\n", __func__);
+-		ret = -1;
+-		goto out;
+-	}
+-	ret = 0;
++	wmediumd_send_to_client(ctx, frame->src, msg);
+ 
+ out:
+ 	nlmsg_free(msg);
+-	return ret;
+ }
+ 
+ /*
+  * Send a data frame to the kernel for reception at a specific radio.
+  */
+-int send_cloned_frame_msg(struct wmediumd *ctx, struct station *dst,
+-			  u8 *data, int data_len, int rate_idx, int signal,
+-			  int freq)
++static void send_cloned_frame_msg(struct wmediumd *ctx, struct station *dst,
++				  u8 *data, int data_len, int rate_idx,
++				  int signal, int freq)
+ {
+ 	struct nl_msg *msg;
+-	struct nl_sock *sock = ctx->sock;
+-	int ret;
+ 
+ 	msg = nlmsg_alloc();
+ 	if (!msg) {
+ 		w_logf(ctx, LOG_ERR, "Error allocating new message MSG!\n");
+-		return -1;
++		return;
+ 	}
+ 
+ 	if (genlmsg_put(msg, NL_AUTO_PID, NL_AUTO_SEQ, ctx->family_id,
+ 			0, NLM_F_REQUEST, HWSIM_CMD_FRAME,
+ 			VERSION_NR) == NULL) {
+ 		w_logf(ctx, LOG_ERR, "%s: genlmsg_put failed\n", __func__);
+-		ret = -1;
+ 		goto out;
+ 	}
+ 
+@@ -450,24 +466,23 @@ int send_cloned_frame_msg(struct wmediumd *ctx, struct station *dst,
+ 	    nla_put_u32(msg, HWSIM_ATTR_FREQ, freq) ||
+ 	    nla_put_u32(msg, HWSIM_ATTR_SIGNAL, -50)) {
+ 		w_logf(ctx, LOG_ERR, "%s: Failed to fill a payload\n", __func__);
+-		ret = -1;
+ 		goto out;
+ 	}
+ 
+ 	w_logf(ctx, LOG_DEBUG, "cloned msg dest " MAC_FMT " (radio: " MAC_FMT ") len %d\n",
+ 		   MAC_ARGS(dst->addr), MAC_ARGS(dst->hwaddr), data_len);
+ 
+-	ret = nl_send_auto_complete(sock, msg);
+-	if (ret < 0) {
+-		w_logf(ctx, LOG_ERR, "%s: nl_send_auto failed\n", __func__);
+-		ret = -1;
+-		goto out;
++	if (dst->client) {
++		wmediumd_send_to_client(ctx, dst->client, msg);
++	} else {
++		struct client *client;
++
++		list_for_each_entry(client, &ctx->clients, list)
++			wmediumd_send_to_client(ctx, client, msg);
+ 	}
+-	ret = 0;
+ 
+ out:
+ 	nlmsg_free(msg);
+-	return ret;
+ }
+ 
+ void wmediumd_deliver_frame(struct usfstl_job *job)
+@@ -587,9 +602,10 @@ int nl_err_cb(struct sockaddr_nl *nla, struct nlmsgerr *nlerr, void *arg)
+  * Handle events from the kernel.  Process CMD_FRAME events and queue them
+  * for later delivery with the scheduler.
+  */
+-static int process_messages_cb(struct nl_msg *msg, void *arg)
++static void _process_messages(struct nl_msg *msg,
++			      struct wmediumd *ctx,
++			      struct client *client)
+ {
+-	struct wmediumd *ctx = arg;
+ 	struct nlattr *attrs[HWSIM_ATTR_MAX+1];
+ 	/* netlink header */
+ 	struct nlmsghdr *nlh = nlmsg_hdr(msg);
+@@ -627,18 +643,20 @@ static int process_messages_cb(struct nl_msg *msg, void *arg)
+ 			src = hdr->addr2;
+ 
+ 			if (data_len < 6 + 6 + 4)
+-				goto out;
++				return;
+ 
+ 			sender = get_station_by_addr(ctx, src);
+ 			if (!sender) {
+ 				w_flogf(ctx, LOG_ERR, stderr, "Unable to find sender station " MAC_FMT "\n", MAC_ARGS(src));
+-				goto out;
++				return;
+ 			}
+ 			memcpy(sender->hwaddr, hwaddr, ETH_ALEN);
++			if (!sender->client)
++				sender->client = client;
+ 
+ 			frame = calloc(1, sizeof(*frame) + data_len);
+ 			if (!frame)
+-				goto out;
++				return;
+ 
+ 			memcpy(frame->data, data, data_len);
+ 			frame->data_len = data_len;
+@@ -653,10 +671,64 @@ static int process_messages_cb(struct nl_msg *msg, void *arg)
+ 			queue_frame(ctx, sender, frame);
+ 		}
+ 	}
+-out:
++}
++
++static int process_messages_cb(struct nl_msg *msg, void *arg)
 +{
++	struct wmediumd *ctx = arg;
++
++	_process_messages(msg, ctx, &ctx->nl_client);
+ 	return 0;
+ }
+ 
++static void wmediumd_vu_connected(struct usfstl_vhost_user_dev *dev)
++{
++	struct wmediumd *ctx = dev->server->data;
++	struct client *client;
++
++	client = calloc(1, sizeof(*client));
++	dev->data = client;
++	client->type = CLIENT_VHOST_USER;
++	client->dev = dev;
++	list_add(&client->list, &ctx->clients);
++}
++
++static void wmediumd_vu_handle(struct usfstl_vhost_user_dev *dev,
++			       struct usfstl_vhost_user_buf *buf,
++			       unsigned int vring)
++{
++	struct nl_msg *nlmsg;
++	char data[4096];
++	size_t len;
++
++	len = iov_read(data, sizeof(data), buf->out_sg, buf->n_out_sg);
++
++	if (!nlmsg_ok((const struct nlmsghdr *)data, len))
++		return;
++	nlmsg = nlmsg_convert((struct nlmsghdr *)data);
++	if (!nlmsg)
++		return;
++
++	_process_messages(nlmsg, dev->server->data, dev->data);
++
++	nlmsg_free(nlmsg);
++}
++
++static void wmediumd_vu_disconnected(struct usfstl_vhost_user_dev *dev)
++{
++	struct client *client = dev->data;
++
++	dev->data = NULL;
++	list_del(&client->list);
++	free(client);
++}
++
++static const struct usfstl_vhost_user_ops wmediumd_vu_ops = {
++	.connected = wmediumd_vu_connected,
++	.handle = wmediumd_vu_handle,
++	.disconnected = wmediumd_vu_disconnected,
++};
++
+ /*
+  * Register with the kernel to start receiving new frames.
+  */
+@@ -760,6 +832,8 @@ void print_help(int exval)
+ 	printf("  -c FILE         set input config file\n");
+ 	printf("  -x FILE         set input PER file\n");
+ 	printf("  -t socket       set the time control socket\n");
++	printf("  -u socket       expose vhost-user socket, don't use netlink\n");
++	printf("  -n              force netlink use even with vhost-user\n");
+ 
+ 	exit(exval);
+ }
+@@ -772,6 +846,15 @@ int main(int argc, char *argv[])
+ 	char *per_file = NULL;
+ 	const char *time_socket = NULL;
+ 	struct usfstl_sched_ctrl ctrl = {};
++	struct usfstl_vhost_user_server vusrv = {
++		.ops = &wmediumd_vu_ops,
++		.max_queues = HWSIM_NUM_VQS,
++		.input_queues = 1 << HWSIM_VQ_TX,
++		.protocol_features =
++			1ULL << VHOST_USER_PROTOCOL_F_INBAND_NOTIFICATIONS,
++		.data = &ctx,
++	};
++	bool use_netlink, force_netlink = false;
+ 
+ 	setvbuf(stdout, NULL, _IOLBF, BUFSIZ);
+ 
+@@ -784,7 +867,7 @@ int main(int argc, char *argv[])
+ 	unsigned long int parse_log_lvl;
+ 	char* parse_end_token;
+ 
+-	while ((opt = getopt(argc, argv, "hVc:l:x:t:")) != -1) {
++	while ((opt = getopt(argc, argv, "hVc:l:x:t:u:n")) != -1) {
+ 		switch (opt) {
+ 		case 'h':
+ 			print_help(EXIT_SUCCESS);
+@@ -819,6 +902,12 @@ int main(int argc, char *argv[])
+ 		case 't':
+ 			time_socket = optarg;
+ 			break;
++		case 'u':
++			vusrv.socket = optarg;
++			break;
++		case 'n':
++			force_netlink = true;
++			break;
+ 		case '?':
+ 			printf("wmediumd: Error - No such option: "
+ 			       "`%c'\n\n", optopt);
+@@ -839,11 +928,15 @@ int main(int argc, char *argv[])
+ 	w_logf(&ctx, LOG_NOTICE, "Input configuration file: %s\n", config_file);
+ 
+ 	INIT_LIST_HEAD(&ctx.stations);
++	INIT_LIST_HEAD(&ctx.clients);
++
+ 	if (load_config(&ctx, config_file, per_file))
+ 		return EXIT_FAILURE;
+ 
++	use_netlink = force_netlink || !vusrv.socket;
++
+ 	/* init netlink */
+-	if (init_netlink(&ctx) < 0)
++	if (use_netlink && init_netlink(&ctx) < 0)
+ 		return EXIT_FAILURE;
+ 
+ 	if (ctx.intf) {
+@@ -854,22 +947,32 @@ int main(int argc, char *argv[])
+ 		usfstl_sched_add_job(&scheduler, &ctx.intf_job);
+ 	}
+ 
+-	if (time_socket)
++	if (time_socket) {
+ 		usfstl_sched_ctrl_start(&ctrl, time_socket,
+-					1000 /* nsec per usec */,
+-					(uint64_t)-1 /* no ID */,
+-					&scheduler);
+-	else
++				      1000 /* nsec per usec */,
++				      (uint64_t)-1 /* no ID */,
++				      &scheduler);
++		vusrv.scheduler = &scheduler;
++		vusrv.ctrl = &ctrl;
++	} else {
+ 		usfstl_sched_wallclock_init(&scheduler, 1000);
++	}
++
++	if (vusrv.socket)
++		usfstl_vhost_user_server_start(&vusrv);
++
++	if (use_netlink) {
++		ctx.nl_client.type = CLIENT_NETLINK;
++		list_add(&ctx.nl_client.list, &ctx.clients);
+ 
+-	ctx.nl_loop.handler = sock_event_cb;
+-	ctx.nl_loop.data = &ctx;
+-	ctx.nl_loop.fd = nl_socket_get_fd(ctx.sock);
+-	usfstl_loop_register(&ctx.nl_loop);
++		ctx.nl_loop.handler = sock_event_cb;
++		ctx.nl_loop.data = &ctx;
++		ctx.nl_loop.fd = nl_socket_get_fd(ctx.sock);
++		usfstl_loop_register(&ctx.nl_loop);
+ 
+-	/* register for new frames */
+-	if (send_register_msg(&ctx) == 0) {
+-		w_logf(&ctx, LOG_NOTICE, "REGISTER SENT!\n");
++		/* register for new frames */
++		if (send_register_msg(&ctx) == 0)
++			w_logf(&ctx, LOG_NOTICE, "REGISTER SENT!\n");
+ 	}
+ 
+ 	while (1) {
+diff --git a/wmediumd/wmediumd.h b/wmediumd/wmediumd.h
+index 077c17163afc..d4ce3a1df15d 100644
+--- a/wmediumd/wmediumd.h
++++ b/wmediumd/wmediumd.h
+@@ -144,6 +144,25 @@ struct station {
+ 	int tx_power;			/* transmission power [dBm] */
+ 	struct wqueue queues[IEEE80211_NUM_ACS];
+ 	struct list_head list;
++	struct client *client;
++};
++
++enum client_type {
++	CLIENT_NETLINK,
++	CLIENT_VHOST_USER,
++};
++
++struct client {
++	struct list_head list;
++	enum client_type type;
++
 +	/*
-+	 * Deletes the list head from the list denoted by @head and
-+	 * places it as the tail of @list, this effectively rotates the
-+	 * list so that @list is at the front.
++	 * There's no additional data for the netlink client, we
++	 * just have it as such for the link from struct station.
 +	 */
-+	list_move_tail(head, list);
-+}
 +
-+/**
-+ * list_is_singular - tests whether a list has just one entry.
-+ * @head: the list to test.
-+ */
-+static inline int list_is_singular(const struct list_head *head)
-+{
-+	return !list_empty(head) && (head->next == head->prev);
-+}
-+
-+static inline void __list_cut_position(struct list_head *list,
-+		struct list_head *head, struct list_head *entry)
-+{
-+	struct list_head *new_first = entry->next;
-+	list->next = head->next;
-+	list->next->prev = list;
-+	list->prev = entry;
-+	entry->next = list;
-+	head->next = new_first;
-+	new_first->prev = head;
-+}
-+
-+/**
-+ * list_cut_position - cut a list into two
-+ * @list: a new list to add all removed entries
-+ * @head: a list with entries
-+ * @entry: an entry within head, could be the head itself
-+ *	and if so we won't cut the list
-+ *
-+ * This helper moves the initial part of @head, up to and
-+ * including @entry, from @head to @list. You should
-+ * pass on @entry an element you know is on @head. @list
-+ * should be an empty list or a list you do not care about
-+ * losing its data.
-+ *
-+ */
-+static inline void list_cut_position(struct list_head *list,
-+		struct list_head *head, struct list_head *entry)
-+{
-+	if (list_empty(head))
-+		return;
-+	if (list_is_singular(head) &&
-+		(head->next != entry && head != entry))
-+		return;
-+	if (entry == head)
-+		INIT_LIST_HEAD(list);
-+	else
-+		__list_cut_position(list, head, entry);
-+}
-+
-+/**
-+ * list_cut_before - cut a list into two, before given entry
-+ * @list: a new list to add all removed entries
-+ * @head: a list with entries
-+ * @entry: an entry within head, could be the head itself
-+ *
-+ * This helper moves the initial part of @head, up to but
-+ * excluding @entry, from @head to @list.  You should pass
-+ * in @entry an element you know is on @head.  @list should
-+ * be an empty list or a list you do not care about losing
-+ * its data.
-+ * If @entry == @head, all entries on @head are moved to
-+ * @list.
-+ */
-+static inline void list_cut_before(struct list_head *list,
-+				   struct list_head *head,
-+				   struct list_head *entry)
-+{
-+	if (head->next == entry) {
-+		INIT_LIST_HEAD(list);
-+		return;
-+	}
-+	list->next = head->next;
-+	list->next->prev = list;
-+	list->prev = entry->prev;
-+	list->prev->next = list;
-+	head->next = entry;
-+	entry->prev = head;
-+}
-+
-+static inline void __list_splice(const struct list_head *list,
-+				 struct list_head *prev,
-+				 struct list_head *next)
-+{
-+	struct list_head *first = list->next;
-+	struct list_head *last = list->prev;
-+
-+	first->prev = prev;
-+	prev->next = first;
-+
-+	last->next = next;
-+	next->prev = last;
-+}
-+
-+/**
-+ * list_splice - join two lists, this is designed for stacks
-+ * @list: the new list to add.
-+ * @head: the place to add it in the first list.
-+ */
-+static inline void list_splice(const struct list_head *list,
-+				struct list_head *head)
-+{
-+	if (!list_empty(list))
-+		__list_splice(list, head, head->next);
-+}
-+
-+/**
-+ * list_splice_tail - join two lists, each list being a queue
-+ * @list: the new list to add.
-+ * @head: the place to add it in the first list.
-+ */
-+static inline void list_splice_tail(struct list_head *list,
-+				struct list_head *head)
-+{
-+	if (!list_empty(list))
-+		__list_splice(list, head->prev, head);
-+}
-+
-+/**
-+ * list_splice_init - join two lists and reinitialise the emptied list.
-+ * @list: the new list to add.
-+ * @head: the place to add it in the first list.
-+ *
-+ * The list at @list is reinitialised
-+ */
-+static inline void list_splice_init(struct list_head *list,
-+				    struct list_head *head)
-+{
-+	if (!list_empty(list)) {
-+		__list_splice(list, head, head->next);
-+		INIT_LIST_HEAD(list);
-+	}
-+}
-+
-+/**
-+ * list_splice_tail_init - join two lists and reinitialise the emptied list
-+ * @list: the new list to add.
-+ * @head: the place to add it in the first list.
-+ *
-+ * Each of the lists is a queue.
-+ * The list at @list is reinitialised
-+ */
-+static inline void list_splice_tail_init(struct list_head *list,
-+					 struct list_head *head)
-+{
-+	if (!list_empty(list)) {
-+		__list_splice(list, head->prev, head);
-+		INIT_LIST_HEAD(list);
-+	}
- }
++	/* for vhost-user */
++	struct usfstl_vhost_user_dev *dev;
+ };
  
- /**
-  * list_entry - get the struct for this entry
-  * @ptr:	the &struct list_head pointer.
-  * @type:	the type of the struct this is embedded in.
-- * @member:	the name of the list_struct within the struct.
-+ * @member:	the name of the list_head within the struct.
-  */
- #define list_entry(ptr, type, member) \
- 	container_of(ptr, type, member)
-@@ -129,7 +501,7 @@ static inline void list_del(struct list_head *entry)
-  * list_first_entry - get the first element from a list
-  * @ptr:	the list head to take the element from.
-  * @type:	the type of the struct this is embedded in.
-- * @member:	the name of the list_struct within the struct.
-+ * @member:	the name of the list_head within the struct.
-  *
-  * Note, that list is expected to be not empty.
-  */
-@@ -140,7 +512,7 @@ static inline void list_del(struct list_head *entry)
-  * list_last_entry - get the last element from a list
-  * @ptr:	the list head to take the element from.
-  * @type:	the type of the struct this is embedded in.
-- * @member:	the name of the list_struct within the struct.
-+ * @member:	the name of the list_head within the struct.
-  *
-  * Note, that list is expected to be not empty.
-  */
-@@ -151,28 +523,34 @@ static inline void list_del(struct list_head *entry)
-  * list_first_entry_or_null - get the first element from a list
-  * @ptr:	the list head to take the element from.
-  * @type:	the type of the struct this is embedded in.
-- * @member:	the name of the list_struct within the struct.
-+ * @member:	the name of the list_head within the struct.
-  *
-  * Note that if the list is empty, it returns NULL.
-  */
--#define list_first_entry_or_null(ptr, type, member) \
--	(!list_empty(ptr) ? list_first_entry(ptr, type, member) : NULL)
-+#define list_first_entry_or_null(ptr, type, member) ({ \
-+	struct list_head *head__ = (ptr); \
-+	struct list_head *pos__ = READ_ONCE(head__->next); \
-+	pos__ != head__ ? list_entry(pos__, type, member) : NULL; \
-+})
+ struct wmediumd {
+@@ -152,6 +171,9 @@ struct wmediumd {
+ 	struct nl_sock *sock;
+ 	struct usfstl_loop_entry nl_loop;
  
- /**
-  * list_last_entry_or_null - get the last element from a list
-  * @ptr:	the list head to take the element from.
-  * @type:	the type of the struct this is embedded in.
-- * @member:	the name of the list_struct within the struct.
-+ * @member:	the name of the list_head within the struct.
-  *
-  * Note that if the list is empty, it returns NULL.
-  */
--#define list_last_entry_or_null(ptr, type, member) \
--	(!list_empty(ptr) ? list_last_entry(ptr, type, member) : NULL)
-+#define list_last_entry_or_null(ptr, type, member) ({ \
-+	struct list_head *head__ = (ptr); \
-+	struct list_head *pos__ = READ_ONCE(head__->prev); \
-+	pos__ != head__ ? list_entry(pos__, type, member) : NULL; \
-+})
- 
- /**
-  * list_next_entry - get the next element in list
-  * @pos:	the type * to cursor
-- * @member:	the name of the list_struct within the struct.
-+ * @member:	the name of the list_head within the struct.
-  */
- #define list_next_entry(pos, member) \
- 	list_entry((pos)->member.next, typeof(*(pos)), member)
-@@ -180,7 +558,7 @@ static inline void list_del(struct list_head *entry)
- /**
-  * list_prev_entry - get the prev element in list
-  * @pos:	the type * to cursor
-- * @member:	the name of the list_struct within the struct.
-+ * @member:	the name of the list_head within the struct.
-  */
- #define list_prev_entry(pos, member) \
- 	list_entry((pos)->member.prev, typeof(*(pos)), member)
-@@ -193,6 +571,16 @@ static inline void list_del(struct list_head *entry)
- #define list_for_each(pos, head) \
- 	for (pos = (head)->next; pos != (head); pos = pos->next)
- 
-+/**
-+ * list_for_each_continue - continue iteration over a list
-+ * @pos:	the &struct list_head to use as a loop cursor.
-+ * @head:	the head for your list.
-+ *
-+ * Continue to iterate over a list, continuing after the current position.
-+ */
-+#define list_for_each_continue(pos, head) \
-+	for (pos = pos->next; pos != (head); pos = pos->next)
++	struct list_head clients;
++	struct client nl_client;
 +
- /**
-  * list_for_each_prev	-	iterate over a list backwards
-  * @pos:	the &struct list_head to use as a loop cursor.
-@@ -226,7 +614,7 @@ static inline void list_del(struct list_head *entry)
-  * list_for_each_entry	-	iterate over list of given type
-  * @pos:	the type * to use as a loop cursor.
-  * @head:	the head for your list.
-- * @member:	the name of the list_struct within the struct.
-+ * @member:	the name of the list_head within the struct.
-  */
- #define list_for_each_entry(pos, head, member)				\
- 	for (pos = list_first_entry(head, typeof(*pos), member);	\
-@@ -237,7 +625,7 @@ static inline void list_del(struct list_head *entry)
-  * list_for_each_entry_reverse - iterate backwards over list of given type.
-  * @pos:	the type * to use as a loop cursor.
-  * @head:	the head for your list.
-- * @member:	the name of the list_struct within the struct.
-+ * @member:	the name of the list_head within the struct.
-  */
- #define list_for_each_entry_reverse(pos, head, member)			\
- 	for (pos = list_last_entry(head, typeof(*pos), member);		\
-@@ -248,7 +636,7 @@ static inline void list_del(struct list_head *entry)
-  * list_prepare_entry - prepare a pos entry for use in list_for_each_entry_continue()
-  * @pos:	the type * to use as a start point
-  * @head:	the head of the list
-- * @member:	the name of the list_struct within the struct.
-+ * @member:	the name of the list_head within the struct.
-  *
-  * Prepares a pos entry for use as a start point in list_for_each_entry_continue().
-  */
-@@ -259,7 +647,7 @@ static inline void list_del(struct list_head *entry)
-  * list_for_each_entry_continue - continue iteration over list of given type
-  * @pos:	the type * to use as a loop cursor.
-  * @head:	the head for your list.
-- * @member:	the name of the list_struct within the struct.
-+ * @member:	the name of the list_head within the struct.
-  *
-  * Continue to iterate over list of given type, continuing after
-  * the current position.
-@@ -273,7 +661,7 @@ static inline void list_del(struct list_head *entry)
-  * list_for_each_entry_continue_reverse - iterate backwards from the given point
-  * @pos:	the type * to use as a loop cursor.
-  * @head:	the head for your list.
-- * @member:	the name of the list_struct within the struct.
-+ * @member:	the name of the list_head within the struct.
-  *
-  * Start to iterate over list of given type backwards, continuing after
-  * the current position.
-@@ -287,7 +675,7 @@ static inline void list_del(struct list_head *entry)
-  * list_for_each_entry_from - iterate over list of given type from the current point
-  * @pos:	the type * to use as a loop cursor.
-  * @head:	the head for your list.
-- * @member:	the name of the list_struct within the struct.
-+ * @member:	the name of the list_head within the struct.
-  *
-  * Iterate over list of given type, continuing from current position.
-  */
-@@ -295,12 +683,25 @@ static inline void list_del(struct list_head *entry)
- 	for (; &pos->member != (head);					\
- 	     pos = list_next_entry(pos, member))
- 
-+/**
-+ * list_for_each_entry_from_reverse - iterate backwards over list of given type
-+ *                                    from the current point
-+ * @pos:	the type * to use as a loop cursor.
-+ * @head:	the head for your list.
-+ * @member:	the name of the list_head within the struct.
-+ *
-+ * Iterate backwards over list of given type, continuing from current position.
-+ */
-+#define list_for_each_entry_from_reverse(pos, head, member)		\
-+	for (; &pos->member != (head);					\
-+	     pos = list_prev_entry(pos, member))
-+
- /**
-  * list_for_each_entry_safe - iterate over list of given type safe against removal of list entry
-  * @pos:	the type * to use as a loop cursor.
-  * @n:		another type * to use as temporary storage
-  * @head:	the head for your list.
-- * @member:	the name of the list_struct within the struct.
-+ * @member:	the name of the list_head within the struct.
-  */
- #define list_for_each_entry_safe(pos, n, head, member)			\
- 	for (pos = list_first_entry(head, typeof(*pos), member),	\
-@@ -313,7 +714,7 @@ static inline void list_del(struct list_head *entry)
-  * @pos:	the type * to use as a loop cursor.
-  * @n:		another type * to use as temporary storage
-  * @head:	the head for your list.
-- * @member:	the name of the list_struct within the struct.
-+ * @member:	the name of the list_head within the struct.
-  *
-  * Iterate over list of given type, continuing after current point,
-  * safe against removal of list entry.
-@@ -329,7 +730,7 @@ static inline void list_del(struct list_head *entry)
-  * @pos:	the type * to use as a loop cursor.
-  * @n:		another type * to use as temporary storage
-  * @head:	the head for your list.
-- * @member:	the name of the list_struct within the struct.
-+ * @member:	the name of the list_head within the struct.
-  *
-  * Iterate over list of given type from current point, safe against
-  * removal of list entry.
-@@ -344,7 +745,7 @@ static inline void list_del(struct list_head *entry)
-  * @pos:	the type * to use as a loop cursor.
-  * @n:		another type * to use as temporary storage
-  * @head:	the head for your list.
-- * @member:	the name of the list_struct within the struct.
-+ * @member:	the name of the list_head within the struct.
-  *
-  * Iterate backwards over list of given type, safe against removal
-  * of list entry.
-@@ -359,7 +760,7 @@ static inline void list_del(struct list_head *entry)
-  * list_safe_reset_next - reset a stale list_for_each_entry_safe loop
-  * @pos:	the loop cursor used in the list_for_each_entry_safe loop
-  * @n:		temporary storage used in list_for_each_entry_safe
-- * @member:	the name of the list_struct within the struct.
-+ * @member:	the name of the list_head within the struct.
-  *
-  * list_safe_reset_next is not safe to use in general if the list may be
-  * modified concurrently (eg. the lock is dropped in the loop body). An
-@@ -370,19 +771,4 @@ static inline void list_del(struct list_head *entry)
- #define list_safe_reset_next(pos, n, member)				\
- 	n = list_next_entry(pos, member)
- 
--#ifndef offsetof
--#define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
--#endif
--
--/**
-- * container_of - cast a member of a structure out to the containing structure
-- * @ptr:	the pointer to the member.
-- * @type:	the type of the container struct this is embedded in.
-- * @member:	the name of the member within the struct.
-- *
-- */
--#define container_of(ptr, type, member) ({			\
--	const typeof( ((type *)0)->member ) *__mptr = (ptr);	\
--	(type *)( (char *)__mptr - offsetof(type,member) );})
--
- #endif
+ 	int num_stas;
+ 	struct list_head stations;
+ 	struct station **sta_array;
+@@ -188,6 +210,7 @@ struct hwsim_tx_rate {
+ struct frame {
+ 	struct list_head list;		/* frame queue list */
+ 	struct usfstl_job job;
++	struct client *src, *dest;
+ 	bool acked;
+ 	u64 cookie;
+ 	u32 freq;
 -- 
 2.24.1
 
