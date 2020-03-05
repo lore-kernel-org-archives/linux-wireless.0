@@ -7,46 +7,46 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BFABDC3F2D2
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Mar 2020 17:23:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7C92C3F2D2
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Mar 2020 17:23:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8FC6520870
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Mar 2020 17:23:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7502D20637
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Mar 2020 17:23:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1583429004;
-	bh=iUS63HzURkdNWPqhwTnoxFpkn4beUpwEPN/ZA6lYULI=;
+	s=default; t=1583429009;
+	bh=idOIMTE6Zyt3F86aW3sP2PcOyQAZyqAKYQdsQE9Lt9w=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=QvsEzkUCg4JzlCMYLvTGI35zQVvjtWjM9lyskyVPIyykyjj2HswrdpncqvR5CmVh0
-	 /5brtcnFCYIqqhWg2ogwYAMrHEu38eoiSX+Be2mQ7tzee6QeorvPHzH3HoiOKJnDKa
-	 l0lyRzwLRZvog+SK8T5tNn+b5wmlbZv7HVmfLbtw=
+	b=prXeGjY8nQKJ3vcyidLbLrwYJVFpSYWpk8ou1O7YtBx6Ysm+g2xslD3j8F773bOQJ
+	 fw3Og9tJqcb21amOdVzFmYXT7m0VUJmMYeGC9C3l1QFQ6oEyzwwqFDSxoBqnskkodV
+	 kim/Z9jqIyh2+12i088Kyj0sm2uLJ5BmProiEe9o=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727563AbgCERXP (ORCPT
+        id S1727323AbgCERNn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 5 Mar 2020 12:23:15 -0500
-Received: from mail.kernel.org ([198.145.29.99]:39374 "EHLO mail.kernel.org"
+        Thu, 5 Mar 2020 12:13:43 -0500
+Received: from mail.kernel.org ([198.145.29.99]:39338 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727334AbgCERNo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Mar 2020 12:13:44 -0500
+        id S1727273AbgCERNn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 5 Mar 2020 12:13:43 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 03C6A20848;
-        Thu,  5 Mar 2020 17:13:42 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id DE87A20870;
+        Thu,  5 Mar 2020 17:13:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1583428423;
-        bh=iUS63HzURkdNWPqhwTnoxFpkn4beUpwEPN/ZA6lYULI=;
+        s=default; t=1583428422;
+        bh=idOIMTE6Zyt3F86aW3sP2PcOyQAZyqAKYQdsQE9Lt9w=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=bVVvzVkI+bY7aS7EThPnnuiZbE2w95Q44iH0Nr4JdO96Qf1m1UyhI4OaI+KBL2KP6
-         7GHqPHgzKxK1kiosVlQUPBuRPKX/90XKLn4bSFGmYlXJY1Ui4HKivwKOtAMxDvG48V
-         9ACmg+/6eJtV7iiXzEbUFD2n6KayPcPO3Rxdx5xw=
+        b=X8Tp3upoFmuRv1ugDhkgiZW2F8u/saKXPTQeJTfnVOOF7Vm6IVRMJhsUwJoc/XeP2
+         E1xa9BaACFu65GHOvdN1/gmdgKZQMv6EFMbI3GDSPuN2lJRNYO/dyXQj3jhgIJtL9+
+         UJSvW2PjD21U52otrJ0p37sfrEKIz2/dsY9Kg5Xc=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.5 25/67] cfg80211: check reg_rule for NULL in handle_channel_custom()
-Date:   Thu,  5 Mar 2020 12:12:26 -0500
-Message-Id: <20200305171309.29118-25-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.5 24/67] nl80211: fix potential leak in AP start
+Date:   Thu,  5 Mar 2020 12:12:25 -0500
+Message-Id: <20200305171309.29118-24-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200305171309.29118-1-sashal@kernel.org>
 References: <20200305171309.29118-1-sashal@kernel.org>
@@ -61,33 +61,42 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit a7ee7d44b57c9ae174088e53a668852b7f4f452d ]
+[ Upstream commit 9951ebfcdf2b97dbb28a5d930458424341e61aa2 ]
 
-We may end up with a NULL reg_rule after the loop in
-handle_channel_custom() if the bandwidth didn't fit,
-check if this is the case and bail out if so.
+If nl80211_parse_he_obss_pd() fails, we leak the previously
+allocated ACL memory. Free it in this case.
 
+Fixes: 796e90f42b7e ("cfg80211: add support for parsing OBBS_PD attributes")
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Link: https://lore.kernel.org/r/20200221104449.3b558a50201c.I4ad3725c4dacaefd2d18d3cc65ba6d18acd5dbfe@changeid
+Link: https://lore.kernel.org/r/20200221104142.835aba4cdd14.I1923b55ba9989c57e13978f91f40bfdc45e60cbd@changeid
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/wireless/reg.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/wireless/nl80211.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index fff9a74891fc4..1a8218f1bbe07 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -2276,7 +2276,7 @@ static void handle_channel_custom(struct wiphy *wiphy,
- 			break;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 1e97ac5435b23..6032f1cce9416 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -4799,8 +4799,7 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
+ 		err = nl80211_parse_he_obss_pd(
+ 					info->attrs[NL80211_ATTR_HE_OBSS_PD],
+ 					&params.he_obss_pd);
+-		if (err)
+-			return err;
++		goto out;
  	}
  
--	if (IS_ERR(reg_rule)) {
-+	if (IS_ERR_OR_NULL(reg_rule)) {
- 		pr_debug("Disabling freq %d MHz as custom regd has no rule that fits it\n",
- 			 chan->center_freq);
- 		if (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED) {
+ 	nl80211_calculate_ap_params(&params);
+@@ -4822,6 +4821,7 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
+ 	}
+ 	wdev_unlock(wdev);
+ 
++out:
+ 	kfree(params.acl);
+ 
+ 	return err;
 -- 
 2.20.1
 
