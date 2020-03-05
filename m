@@ -4,53 +4,52 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BDAFC3F2D1
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Mar 2020 17:13:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC967C3F2D1
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Mar 2020 17:14:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 21654208CD
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Mar 2020 17:13:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AFD112465D
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Mar 2020 17:14:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1583428431;
-	bh=DG/2VcvrtWmbrzXX3esW4l5TyuRQ5xV/c/O73MTYuVY=;
+	s=default; t=1583428488;
+	bh=fVEhOtjzIRXLblm9Oehoq5s64cEfH6JyaAg+jP4d8oA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=hr76KZGIoVD6w16IzLXEQj5LcbOa2sjj78Onq01tgtPLzANl3DW2fO3D6Nnn0A2c6
-	 m1oyP1dRqwD4368V1zg2K6J/ZG9OPc1vr7pzoNFwqzOSntbjA16mwIRWZHTgu5wjYv
-	 nbLhxpj0mNCyQSk+KeMAsq0ASRW0JN0GMb2chZu8=
+	b=ISV/TmRG2oUbL5I0r5XB9i/UkuzM+Y+zznYAbNVipqswN0EuEstbTfGCGwNnkQfJ1
+	 bAR0oQCkWSITZG8rDgnLwpELY9ciVzXPaFeIcCZGoiiRAMFjvRiA5DbSkDuBVlHa2F
+	 njxN7S3EyCgVOlE59feXKyBeLiIttG41eXrcyTeE=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727273AbgCERNr (ORCPT
+        id S1727803AbgCEROr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 5 Mar 2020 12:13:47 -0500
-Received: from mail.kernel.org ([198.145.29.99]:39394 "EHLO mail.kernel.org"
+        Thu, 5 Mar 2020 12:14:47 -0500
+Received: from mail.kernel.org ([198.145.29.99]:41130 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727359AbgCERNp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Mar 2020 12:13:45 -0500
+        id S1727788AbgCEROp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 5 Mar 2020 12:14:45 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 342EE20870;
-        Thu,  5 Mar 2020 17:13:44 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 648CD2465D;
+        Thu,  5 Mar 2020 17:14:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1583428425;
-        bh=DG/2VcvrtWmbrzXX3esW4l5TyuRQ5xV/c/O73MTYuVY=;
+        s=default; t=1583428485;
+        bh=fVEhOtjzIRXLblm9Oehoq5s64cEfH6JyaAg+jP4d8oA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=CZTkTiJyVCBzFMp92TJKKBFpSCho8AsJd1VzHs+xRuWMrupVrKL7wkZO3uQUzVSGD
-         YZxI8pTq47wubRi4dAdd8HGCOQ23b27ECJcuQ5NEepto8bNqfVSTHk0RmMaJpWngpO
-         YbxlkkHRZKgUcOO4Vw70XjkKktz9WkR2lnAN2eVE=
+        b=ctNo/RhSeb6zpCeyH+TU+zsEMiuMDc/8nT8oQ7wvX2AH6HuEy6zmZ1JEAboiow2el
+         zCSQp7F4iA8npn6SBdjXbxy3HMYqjewBpE0iYgd2NDp1IVJ8og0J8WkyihduXVTXjI
+         D8vf/rjU3rbaFpCn6f5JEUlIDPAixER1T7e1hJak=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>,
+Cc:     Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.5 26/67] mac80211: Remove a redundant mutex unlock
-Date:   Thu,  5 Mar 2020 12:12:27 -0500
-Message-Id: <20200305171309.29118-26-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 20/58] nl80211: fix potential leak in AP start
+Date:   Thu,  5 Mar 2020 12:13:41 -0500
+Message-Id: <20200305171420.29595-20-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200305171309.29118-1-sashal@kernel.org>
-References: <20200305171309.29118-1-sashal@kernel.org>
+In-Reply-To: <20200305171420.29595-1-sashal@kernel.org>
+References: <20200305171420.29595-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -60,50 +59,44 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit 0daa63ed4c6c4302790ce67b7a90c0997ceb7514 ]
+[ Upstream commit 9951ebfcdf2b97dbb28a5d930458424341e61aa2 ]
 
-The below-mentioned commit changed the code to unlock *inside*
-the function, but previously the unlock was *outside*. It failed
-to remove the outer unlock, however, leading to double unlock.
+If nl80211_parse_he_obss_pd() fails, we leak the previously
+allocated ACL memory. Free it in this case.
 
-Fix this.
-
-Fixes: 33483a6b88e4 ("mac80211: fix missing unlock on error in ieee80211_mark_sta_auth()")
-Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Link: https://lore.kernel.org/r/20200221104719.cce4741cf6eb.I671567b185c8a4c2409377e483fd149ce590f56d@changeid
-[rewrite commit message to better explain what happened]
+Fixes: 796e90f42b7e ("cfg80211: add support for parsing OBBS_PD attributes")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Link: https://lore.kernel.org/r/20200221104142.835aba4cdd14.I1923b55ba9989c57e13978f91f40bfdc45e60cbd@changeid
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/mac80211/mlme.c | 6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
+ net/wireless/nl80211.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index e041af2f021ad..88d7a692a9658 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2959,7 +2959,7 @@ static void ieee80211_rx_mgmt_auth(struct ieee80211_sub_if_data *sdata,
- 	    (auth_transaction == 2 &&
- 	     ifmgd->auth_data->expected_transaction == 2)) {
- 		if (!ieee80211_mark_sta_auth(sdata, bssid))
--			goto out_err;
-+			return; /* ignore frame -- wait for timeout */
- 	} else if (ifmgd->auth_data->algorithm == WLAN_AUTH_SAE &&
- 		   auth_transaction == 2) {
- 		sdata_info(sdata, "SAE peer confirmed\n");
-@@ -2967,10 +2967,6 @@ static void ieee80211_rx_mgmt_auth(struct ieee80211_sub_if_data *sdata,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index c74646b7a751f..78c2d9359fc72 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -4794,8 +4794,7 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
+ 		err = nl80211_parse_he_obss_pd(
+ 					info->attrs[NL80211_ATTR_HE_OBSS_PD],
+ 					&params.he_obss_pd);
+-		if (err)
+-			return err;
++		goto out;
  	}
  
- 	cfg80211_rx_mlme_mgmt(sdata->dev, (u8 *)mgmt, len);
--	return;
-- out_err:
--	mutex_unlock(&sdata->local->sta_mtx);
--	/* ignore frame -- wait for timeout */
- }
+ 	nl80211_calculate_ap_params(&params);
+@@ -4817,6 +4816,7 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
+ 	}
+ 	wdev_unlock(wdev);
  
- #define case_WLAN(type) \
++out:
+ 	kfree(params.acl);
+ 
+ 	return err;
 -- 
 2.20.1
 
