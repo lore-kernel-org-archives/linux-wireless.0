@@ -4,50 +4,49 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 442CEC3F2D2
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Mar 2020 17:20:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0754BC3F2D7
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Mar 2020 17:20:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0F17820870
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Mar 2020 17:20:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C9A4D20848
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Mar 2020 17:20:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1583428856;
-	bh=/y4YRKLmqcpeFP+pPVW27yC67xqccznREWtav/5wFDA=;
+	s=default; t=1583428858;
+	bh=iUS63HzURkdNWPqhwTnoxFpkn4beUpwEPN/ZA6lYULI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Zkvk4QP/BIpSP9/OiSLnig86PVTgZDSXssw9EyA/hvLsv0qV8kPS9+rTdPmnmexMA
-	 uDjUEs7b2cAb2t2pizVe8nxrcYH8dFg+EpCVfJsJdZ582k1NuzDA6znvDZC2/8T7Td
-	 7NQp2iRkW+3ORBtpHoCBzro4i3obM5OlgrNShmuY=
+	b=MGIuHIj4ArLRRzFEt750P13YLmtu37G62JW2+XxDlqiWnePlc+SwqAg/CLQeRcpuZ
+	 wCjQUGfecwnmxwlQwocnlAQCWbAgksK+67G+77fN1A/sjIBxymZOLZcsEv4y53EUMo
+	 CfZkXffF2gbatz7paaSIsLenWQh8qzl7RoKa17n4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728306AbgCERUp (ORCPT
+        id S1727918AbgCERU6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 5 Mar 2020 12:20:45 -0500
-Received: from mail.kernel.org ([198.145.29.99]:41196 "EHLO mail.kernel.org"
+        Thu, 5 Mar 2020 12:20:58 -0500
+Received: from mail.kernel.org ([198.145.29.99]:41152 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727805AbgCEROs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Mar 2020 12:14:48 -0500
+        id S1727798AbgCEROq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 5 Mar 2020 12:14:46 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 802B021744;
-        Thu,  5 Mar 2020 17:14:46 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 6F22D24654;
+        Thu,  5 Mar 2020 17:14:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1583428487;
-        bh=/y4YRKLmqcpeFP+pPVW27yC67xqccznREWtav/5wFDA=;
+        s=default; t=1583428486;
+        bh=iUS63HzURkdNWPqhwTnoxFpkn4beUpwEPN/ZA6lYULI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Ok14nVaT8DJ+SFU9ym2AqHcKd7ih1gLG4ddwdar9wIIu6TgFMSNwaCj2iS5udR0B8
-         R9V9pqVIO6KMZ8t2az3McEI/EjwSmsysseE1nMVna6J5KjriuL7QD1J4HC5nB+Ea7B
-         SwTcZ+Zcw3T0sEhwZkv6Y2vWU7vDNiKqSN4vjkpA=
+        b=fKaCJ0IMRQ6lWRtPaqW8pMGnQlr95rgaJIOgNJ9DVjrqzaEDJEegrn37K/36HXkMY
+         wE6TS/B924XDFSCE1gvfAc15F6bSZHdFQigImZwvR9/R6RePSAP4+ZQ5AC4jOVnCWR
+         0Xp6sP8Cc6xbGfeX0mYw9JC/jXaUvLhQ7o7Q4zIE=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>,
+Cc:     Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 22/58] mac80211: Remove a redundant mutex unlock
-Date:   Thu,  5 Mar 2020 12:13:43 -0500
-Message-Id: <20200305171420.29595-22-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 21/58] cfg80211: check reg_rule for NULL in handle_channel_custom()
+Date:   Thu,  5 Mar 2020 12:13:42 -0500
+Message-Id: <20200305171420.29595-21-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200305171420.29595-1-sashal@kernel.org>
 References: <20200305171420.29595-1-sashal@kernel.org>
@@ -60,50 +59,35 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit 0daa63ed4c6c4302790ce67b7a90c0997ceb7514 ]
+[ Upstream commit a7ee7d44b57c9ae174088e53a668852b7f4f452d ]
 
-The below-mentioned commit changed the code to unlock *inside*
-the function, but previously the unlock was *outside*. It failed
-to remove the outer unlock, however, leading to double unlock.
+We may end up with a NULL reg_rule after the loop in
+handle_channel_custom() if the bandwidth didn't fit,
+check if this is the case and bail out if so.
 
-Fix this.
-
-Fixes: 33483a6b88e4 ("mac80211: fix missing unlock on error in ieee80211_mark_sta_auth()")
-Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Link: https://lore.kernel.org/r/20200221104719.cce4741cf6eb.I671567b185c8a4c2409377e483fd149ce590f56d@changeid
-[rewrite commit message to better explain what happened]
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Link: https://lore.kernel.org/r/20200221104449.3b558a50201c.I4ad3725c4dacaefd2d18d3cc65ba6d18acd5dbfe@changeid
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/mac80211/mlme.c | 6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
+ net/wireless/reg.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 1e3b9d34aaa46..c7d8044ff0fa6 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2959,7 +2959,7 @@ static void ieee80211_rx_mgmt_auth(struct ieee80211_sub_if_data *sdata,
- 	    (auth_transaction == 2 &&
- 	     ifmgd->auth_data->expected_transaction == 2)) {
- 		if (!ieee80211_mark_sta_auth(sdata, bssid))
--			goto out_err;
-+			return; /* ignore frame -- wait for timeout */
- 	} else if (ifmgd->auth_data->algorithm == WLAN_AUTH_SAE &&
- 		   auth_transaction == 2) {
- 		sdata_info(sdata, "SAE peer confirmed\n");
-@@ -2967,10 +2967,6 @@ static void ieee80211_rx_mgmt_auth(struct ieee80211_sub_if_data *sdata,
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index fff9a74891fc4..1a8218f1bbe07 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -2276,7 +2276,7 @@ static void handle_channel_custom(struct wiphy *wiphy,
+ 			break;
  	}
  
- 	cfg80211_rx_mlme_mgmt(sdata->dev, (u8 *)mgmt, len);
--	return;
-- out_err:
--	mutex_unlock(&sdata->local->sta_mtx);
--	/* ignore frame -- wait for timeout */
- }
- 
- #define case_WLAN(type) \
+-	if (IS_ERR(reg_rule)) {
++	if (IS_ERR_OR_NULL(reg_rule)) {
+ 		pr_debug("Disabling freq %d MHz as custom regd has no rule that fits it\n",
+ 			 chan->center_freq);
+ 		if (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED) {
 -- 
 2.20.1
 
