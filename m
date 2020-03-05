@@ -2,64 +2,108 @@ Return-Path: <SRS0=q56x=4W=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3FBEC3F2D1
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Mar 2020 16:44:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BDAFC3F2D1
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Mar 2020 17:13:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C0C8520637
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Mar 2020 16:44:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 21654208CD
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Mar 2020 17:13:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1583428431;
+	bh=DG/2VcvrtWmbrzXX3esW4l5TyuRQ5xV/c/O73MTYuVY=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=hr76KZGIoVD6w16IzLXEQj5LcbOa2sjj78Onq01tgtPLzANl3DW2fO3D6Nnn0A2c6
+	 m1oyP1dRqwD4368V1zg2K6J/ZG9OPc1vr7pzoNFwqzOSntbjA16mwIRWZHTgu5wjYv
+	 nbLhxpj0mNCyQSk+KeMAsq0ASRW0JN0GMb2chZu8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726094AbgCEQoi (ORCPT
+        id S1727273AbgCERNr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 5 Mar 2020 11:44:38 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:60768 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725944AbgCEQoh (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Mar 2020 11:44:37 -0500
-Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa)
-        by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.92.2)
-        (envelope-from <luca@coelho.fi>)
-        id 1j9tbv-0005UW-Af; Thu, 05 Mar 2020 18:44:35 +0200
-Message-ID: <39c51b932b8a5588ea6ec8a040255fb56b498214.camel@coelho.fi>
-From:   Luca Coelho <luca@coelho.fi>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     linux-wireless@vger.kernel.org
-Date:   Thu, 05 Mar 2020 18:44:33 +0200
-In-Reply-To: <87ftemq2ik.fsf@kamboji.qca.qualcomm.com>
-References: <iwlwifi.20200305142622.3b1f9018cd2e.Iccbce3e78befd4ac39735b26617cfb6a12a2ae5a@changeid>
-         <87ftemq2ik.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.34.1-4 
+        Thu, 5 Mar 2020 12:13:47 -0500
+Received: from mail.kernel.org ([198.145.29.99]:39394 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727359AbgCERNp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 5 Mar 2020 12:13:45 -0500
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 342EE20870;
+        Thu,  5 Mar 2020 17:13:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1583428425;
+        bh=DG/2VcvrtWmbrzXX3esW4l5TyuRQ5xV/c/O73MTYuVY=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=CZTkTiJyVCBzFMp92TJKKBFpSCho8AsJd1VzHs+xRuWMrupVrKL7wkZO3uQUzVSGD
+         YZxI8pTq47wubRi4dAdd8HGCOQ23b27ECJcuQ5NEepto8bNqfVSTHk0RmMaJpWngpO
+         YbxlkkHRZKgUcOO4Vw70XjkKktz9WkR2lnAN2eVE=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.5 26/67] mac80211: Remove a redundant mutex unlock
+Date:   Thu,  5 Mar 2020 12:12:27 -0500
+Message-Id: <20200305171309.29118-26-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20200305171309.29118-1-sashal@kernel.org>
+References: <20200305171309.29118-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] MAINTAINERS: update web URL for iwlwifi
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, 2020-03-05 at 16:50 +0200, Kalle Valo wrote:
-> Luca Coelho <luca@coelho.fi> writes:
-> 
-> > From: Luca Coelho <luciano.coelho@intel.com>
-> > 
-> > The current URL mentioned in iwlwifi's W entry is outdated and
-> > currently pointing to a dead link.  Change it so that it points to the
-> > correct Wiki page directly.
-> > 
-> > Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-> 
-> I'll queue this for v5.6, ok?
+From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
 
-Sure, if you think it's worth it.  TBH my main goal to send this one by
-itself was to test my "Link:"-adding setup (with Johannes' scripts). ;)
+[ Upstream commit 0daa63ed4c6c4302790ce67b7a90c0997ceb7514 ]
 
---
-Cheers,
-Luca.
+The below-mentioned commit changed the code to unlock *inside*
+the function, but previously the unlock was *outside*. It failed
+to remove the outer unlock, however, leading to double unlock.
+
+Fix this.
+
+Fixes: 33483a6b88e4 ("mac80211: fix missing unlock on error in ieee80211_mark_sta_auth()")
+Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Link: https://lore.kernel.org/r/20200221104719.cce4741cf6eb.I671567b185c8a4c2409377e483fd149ce590f56d@changeid
+[rewrite commit message to better explain what happened]
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ net/mac80211/mlme.c | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index e041af2f021ad..88d7a692a9658 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2959,7 +2959,7 @@ static void ieee80211_rx_mgmt_auth(struct ieee80211_sub_if_data *sdata,
+ 	    (auth_transaction == 2 &&
+ 	     ifmgd->auth_data->expected_transaction == 2)) {
+ 		if (!ieee80211_mark_sta_auth(sdata, bssid))
+-			goto out_err;
++			return; /* ignore frame -- wait for timeout */
+ 	} else if (ifmgd->auth_data->algorithm == WLAN_AUTH_SAE &&
+ 		   auth_transaction == 2) {
+ 		sdata_info(sdata, "SAE peer confirmed\n");
+@@ -2967,10 +2967,6 @@ static void ieee80211_rx_mgmt_auth(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	cfg80211_rx_mlme_mgmt(sdata->dev, (u8 *)mgmt, len);
+-	return;
+- out_err:
+-	mutex_unlock(&sdata->local->sta_mtx);
+-	/* ignore frame -- wait for timeout */
+ }
+ 
+ #define case_WLAN(type) \
+-- 
+2.20.1
 
