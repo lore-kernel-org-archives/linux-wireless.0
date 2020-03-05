@@ -2,121 +2,94 @@ Return-Path: <SRS0=q56x=4W=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64459C3F2D1
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Mar 2020 09:07:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF2CEC3F2CD
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Mar 2020 11:29:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 37F0B21556
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Mar 2020 09:07:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 944F120801
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Mar 2020 11:29:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Rtmnhz4n"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Li+6lDK9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727121AbgCEJHc (ORCPT
+        id S1727326AbgCEL3t (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 5 Mar 2020 04:07:32 -0500
-Received: from mail-wr1-f44.google.com ([209.85.221.44]:34392 "EHLO
-        mail-wr1-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725897AbgCEJHc (ORCPT
+        Thu, 5 Mar 2020 06:29:49 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:37370 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1725897AbgCEL3t (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Mar 2020 04:07:32 -0500
-Received: by mail-wr1-f44.google.com with SMTP id z15so6029794wrl.1
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Mar 2020 01:07:30 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=to:from:subject:message-id:date:user-agent:mime-version
-         :content-transfer-encoding:content-language;
-        bh=pveQNqjQrDxjxctTRbcArEI0/9cLLRZ+RHHbjAxefrg=;
-        b=Rtmnhz4nM7wCRYWgwrg9LX3V/n2xMK6NPTNst09JDb3miyVqOdoUt7TLwaY37mP53A
-         jI0zz0OaLai4A8nPkMB0Qz1r/QZeQWANHegF04voHF6f8c+ZvrXWJ8tCxkp6E36wsD/n
-         Lgh5pj4k8+6RiPf1BD4OLwcoSU1cljz57F3Evw11g61eaoeCDwXeCpmQi/acz1er8NiZ
-         dgIcDnwT+HABn/q7jnkzWqWROblmmDg9Rpmjx1xt6a7ftWh8lGzT0zqo8Baku1C36jLk
-         Y2J8bUe3WGbi66S2C1utsJhXuuC4y/YBU9DChgkd2Ym+ZJmBKN8d5mgITJaKX+FU/Bmn
-         YU3w==
+        Thu, 5 Mar 2020 06:29:49 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1583407788;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=bWmZYuBqFe4P6NKv7YNOQnNI/DTRjEGt3iV2gL4Rqx0=;
+        b=Li+6lDK9ddzEHnCVpulG+pr+rTJ9TfX+QtNda3COaLgFZ4xYeyU6pJXEAWV0YZkfKeJ06i
+        mJewXL54DBb76rOO0fq4ceeH0LDQli7oRRLyiAL7E5TsgOYso17wiKLMFUkFxfWMBiQle7
+        NP5zkAa3+cRdncH0FvGhkB2aNeIBJNI=
+Received: from mail-wm1-f69.google.com (mail-wm1-f69.google.com
+ [209.85.128.69]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-48-NuP4xlpXMVesm7ygN31waQ-1; Thu, 05 Mar 2020 06:29:47 -0500
+X-MC-Unique: NuP4xlpXMVesm7ygN31waQ-1
+Received: by mail-wm1-f69.google.com with SMTP id b23so1967058wmj.3
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Mar 2020 03:29:46 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:to:from:subject:message-id:date:user-agent
-         :mime-version:content-transfer-encoding:content-language;
-        bh=pveQNqjQrDxjxctTRbcArEI0/9cLLRZ+RHHbjAxefrg=;
-        b=tTI7pxwmmFhfiPThPKY9JoigCMzcokUcySTmfbUh6tPNNP/6/VyM59TrPfPPppPkvN
-         AhSdu6NYqtF9JYyh4adJN9OAVDODUKzUS92M7F4NdQQtz/uDNj4/x8EjCtsXLz/a6Xjz
-         SUxRghBgjl/4rslRj07dlSTtro/fWW71KbPI2/O9kxWKOAxakfeOvE6TzNZbQ/wbf4NJ
-         7ryIMoc8IMQHnePB4E2ClIik85xLR1980hUM9k/oTeZ75/BDp+vTg+XJGMu5Pjr4wsF+
-         ldZHsnhWrYXxlfHIDU0zp9Otm0aiHhfkBbXY3qIULIYiPD/59E0oCpBQYfVKnENZ3WX/
-         R10Q==
-X-Gm-Message-State: ANhLgQ2rRGjWIDUrRSSiWt4OQW28xk/crOATk2nxAR0I/kccKnNdB3Pk
-        chtwsAErZxFMcu9nZ3M2C7Y=
-X-Google-Smtp-Source: ADFU+vuunH6rG3DQkxMXaASoBBl/PXwhAMwYFEbF/SllIj51RhGKJed7TKVp+UIRmg4UuAOkMts+aA==
-X-Received: by 2002:adf:b317:: with SMTP id j23mr77835wrd.413.1583399250014;
-        Thu, 05 Mar 2020 01:07:30 -0800 (PST)
-Received: from [192.168.0.240] (178-117-183-57.access.telenet.be. [178.117.183.57])
-        by smtp.gmail.com with ESMTPSA id f127sm8639116wma.4.2020.03.05.01.07.28
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 05 Mar 2020 01:07:29 -0800 (PST)
-To:     linux-wireless@vger.kernel.org, linuxwifi@intel.com
-From:   Wei Liu <wei.liu1011@gmail.com>
-Subject: Precise time synchronization via wifi interface (intel AX201 iwlwifi
- driver)
-Message-ID: <032f07e2-2771-619b-52b4-a25c8cd10f86@gmail.com>
-Date:   Thu, 5 Mar 2020 10:07:29 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.5.0
+        h=x-gm-message-state:from:to:subject:in-reply-to:references:date
+         :message-id:mime-version;
+        bh=bWmZYuBqFe4P6NKv7YNOQnNI/DTRjEGt3iV2gL4Rqx0=;
+        b=jpC3zphfkSnAfZ/2mdPxyprg7yNDlHY4BZtcdqSCgOuv353/8Hxaglx6Q2e9in4GI6
+         non5yXGBbwlmen6iKHq+8tzcaG7gopKPnBh5lHjiiwXytl8BJHRdoAqdd4VkD/drRzZ7
+         90yUF+dS5C4qPCu3kFpmN0FSD6DQXsEZoVfKEzvZ288+uMPXF8MVipTIjx8uae/0ZV6i
+         3kyfwtgXRb3qNGSYYtZ2kfD9rxMSC1GOYNDxPW5ARjgnWx2rbF2kkVPhguyqSjmBqOKs
+         emMqvpt9NAmIzGwW8sAtCqm3Gsj30KHvPl4c4VO+Gx//KahOc3Dqplat0WdZUZva5vcs
+         DLTw==
+X-Gm-Message-State: ANhLgQ0DaurQVFeBf6F0UEXJZWFQB4lH90SMeHdqSNn/OMiLRhFLzP5e
+        eW9SEG5Nknh5pQ+6K6G3QyZ9/OLzH5yoKkC/Hi5w3ndAIpyS+m5ffgfwTb24A4+dtt8qc4dV5tq
+        PRFPRrNLGlRbeAh4yvxxJ4PAt1VY=
+X-Received: by 2002:a05:600c:24d2:: with SMTP id 18mr9089743wmu.149.1583407785559;
+        Thu, 05 Mar 2020 03:29:45 -0800 (PST)
+X-Google-Smtp-Source: ADFU+vtJKuEKZWiHcJZJ6a7d1lHkK1Ffk5FLY5/J6xDfuGQjlQkCrR8JkRKPoN1KVBQvGpu/KYmJkg==
+X-Received: by 2002:a05:600c:24d2:: with SMTP id 18mr9089730wmu.149.1583407785392;
+        Thu, 05 Mar 2020 03:29:45 -0800 (PST)
+Received: from alrua-x1.borgediget.toke.dk ([2a0c:4d80:42:443::2])
+        by smtp.gmail.com with ESMTPSA id z11sm8662608wmd.47.2020.03.05.03.29.44
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 05 Mar 2020 03:29:44 -0800 (PST)
+Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
+        id 1214218034F; Thu,  5 Mar 2020 12:29:43 +0100 (CET)
+From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
+To:     Wei Liu <wei.liu1011@gmail.com>, linux-wireless@vger.kernel.org,
+        linuxwifi@intel.com
+Subject: Re: Precise time synchronization via wifi interface (intel AX201 iwlwifi driver)
+In-Reply-To: <032f07e2-2771-619b-52b4-a25c8cd10f86@gmail.com>
+References: <032f07e2-2771-619b-52b4-a25c8cd10f86@gmail.com>
+X-Clacks-Overhead: GNU Terry Pratchett
+Date:   Thu, 05 Mar 2020 12:29:43 +0100
+Message-ID: <87r1y72g60.fsf@toke.dk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
+Wei Liu <wei.liu1011@gmail.com> writes:
 
-I am trying to achieve precise time synchronization via wifi interface.
+> Hi,
+>
+> I am trying to achieve precise time synchronization via wifi
+> interface.
 
-I used intel AX201 card, certified with TimeSync, 802.11v, mc. So I 
-assume it has the capability to do hardware time stamp when running 
-applications like linux ptp (http://linuxptp.sourceforge.net/) and gptp 
-(https://github.com/Avnu/gptp). However I get error that seems to 
-suggest the timestamp mode is not supported.
+Erm, good luck with that? :)
 
-After reading some source code, I discover that the /ptp4l/ application, 
-or /gptp/, or /ethtool/ /-T/ , they all use a system call /ioctl/, which 
-uses ethtool_ops call back to determine whether the hardware can do 
-software/hardware timestamp.
+You do realise that there's a whole bunch of stuff going on below the
+driver level (listen-before-send, etc) that makes 'precise' timing (as
+in microsecond-accuracy like ptp)... shall we just say challenging?
 
-However when searching in the driver/net/wireless/iwlwifi directory, I 
-don't see anywhere /ethtool_ops/ is being implemented in the driver. So 
-this most likely is why all user space tools I tried seem to determine 
-the card cannot do hardware and also software (driver level) transmit 
-timestamp.
+-Toke
 
-Can someone tell me how I could run ptp like application to fully make 
-use of the Timesync feature of intel card?
-
-Some more details below:
-
-root@localhost:/debug/tracing# ethtool -i wlp2s0
-driver: iwlwifi
-version: 5.4.6-050406-generic
-firmware-version: 48.4fa0041f.0
-expansion-rom-version:
-bus-info: 0000:02:00.0
-supports-statistics: yes
-supports-test: no
-supports-eeprom-access: no
-supports-register-dump: no
-supports-priv-flags: no
-
-root@localhost:/debug/tracing# ethtool -T wlp2s0
-Time stamping parameters for wlp2s0:
-Capabilities:
-         software-receive      (SOF_TIMESTAMPING_RX_SOFTWARE)
-         software-system-clock (SOF_TIMESTAMPING_SOFTWARE)
-PTP Hardware Clock: none
-Hardware Transmit Timestamp Modes: none
-Hardware Receive Filter Modes: none
