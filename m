@@ -7,47 +7,46 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F81CC3F2D2
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Mar 2020 17:17:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF3C4C3F2D7
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Mar 2020 17:17:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 23CC9208CD
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Mar 2020 17:17:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B98D320870
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Mar 2020 17:17:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1583428649;
-	bh=eNzdRRHaJ0+IxpR/5W49HbKbaI2NcG1Qkrx0pmi9OB0=;
+	s=default; t=1583428661;
+	bh=mwst+dBFMWQvD2GtYzncPLfCVIHE0q3HaiZ5TbF0oAg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=HjAh9yS5NfRZ3M5f6QDvO3QnNNl5Cru6ngQabrSxcNzzzeaoYajb6Kdi8xUekm8/h
-	 cwYJO7mFyKebYkORkG3KMcVOCWmyamNZO4XeBgIu1Yo+zhn9MNiZ0IMzQzkdNG2H1N
-	 aofnTAjixiuFJc/GEiWShHvD4OkZGcjeTFpG5OAM=
+	b=y7O18Jp70vI7Nx1OKua3u+qKHgHI20N6uWhdZZkb8QwVbxXzta1bcFhJOUUMW5kjA
+	 /lKbsJ8Z5V8ReEoLBNXSANexx6hpgHmagh/D66WVZrNZdLLolMWRe4bMHhqU+TawK0
+	 2fLjQyy38vO5KEPcGU5+C2HTZTdylSQvJ1N/x1nU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728329AbgCERP7 (ORCPT
+        id S1728296AbgCERPy (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 5 Mar 2020 12:15:59 -0500
-Received: from mail.kernel.org ([198.145.29.99]:42908 "EHLO mail.kernel.org"
+        Thu, 5 Mar 2020 12:15:54 -0500
+Received: from mail.kernel.org ([198.145.29.99]:42738 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728314AbgCERP6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Mar 2020 12:15:58 -0500
+        id S1728285AbgCERPw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 5 Mar 2020 12:15:52 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 78D90217F4;
-        Thu,  5 Mar 2020 17:15:56 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id B9D23217F4;
+        Thu,  5 Mar 2020 17:15:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1583428557;
-        bh=eNzdRRHaJ0+IxpR/5W49HbKbaI2NcG1Qkrx0pmi9OB0=;
+        s=default; t=1583428552;
+        bh=mwst+dBFMWQvD2GtYzncPLfCVIHE0q3HaiZ5TbF0oAg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=jU1ddhuFUCuuYoN87osODCDp46M0YKx5k9Yx9KRrWZLgTb2kHuoW3yuf1b6S9PJZp
-         bq4lQ6DHpti9RmW0Qy71wJrxrLmLft0ZWDp1eKZ5Rl7L0tKOUZSbre6kSNf44Ci3p8
-         1/LbD0kqIVA4WZm8HvQc1pyVQF7vdQqHoW/y28DA=
+        b=1p33aI0IDhFrBrftyfXtug8/stUqCikbS/miVAlrotiQtaLlL2nR9Re13kehDDxTu
+         Qj7mG04AH1MWvEn+y3Sxedu+6hRAdafXMR36/42uNKp8RTVX4l/pjnuLM+CuG+e+n6
+         4yY06ecGW54aNbE6Wp82VmAuE9CoGGM02NPucT0U=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Madhuparna Bhowmik <madhuparnabhowmik10@gmail.com>,
-        Johannes Berg <johannes.berg@intel.com>,
+Cc:     Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 13/19] mac80211: rx: avoid RCU list traversal under mutex
-Date:   Thu,  5 Mar 2020 12:15:34 -0500
-Message-Id: <20200305171540.30250-13-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 09/19] cfg80211: check reg_rule for NULL in handle_channel_custom()
+Date:   Thu,  5 Mar 2020 12:15:30 -0500
+Message-Id: <20200305171540.30250-9-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200305171540.30250-1-sashal@kernel.org>
 References: <20200305171540.30250-1-sashal@kernel.org>
@@ -60,37 +59,35 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Madhuparna Bhowmik <madhuparnabhowmik10@gmail.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-[ Upstream commit 253216ffb2a002a682c6f68bd3adff5b98b71de8 ]
+[ Upstream commit a7ee7d44b57c9ae174088e53a668852b7f4f452d ]
 
-local->sta_mtx is held in __ieee80211_check_fast_rx_iface().
-No need to use list_for_each_entry_rcu() as it also requires
-a cond argument to avoid false lockdep warnings when not used in
-RCU read-side section (with CONFIG_PROVE_RCU_LIST).
-Therefore use list_for_each_entry();
+We may end up with a NULL reg_rule after the loop in
+handle_channel_custom() if the bandwidth didn't fit,
+check if this is the case and bail out if so.
 
-Signed-off-by: Madhuparna Bhowmik <madhuparnabhowmik10@gmail.com>
-Link: https://lore.kernel.org/r/20200223143302.15390-1-madhuparnabhowmik10@gmail.com
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Link: https://lore.kernel.org/r/20200221104449.3b558a50201c.I4ad3725c4dacaefd2d18d3cc65ba6d18acd5dbfe@changeid
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- net/mac80211/rx.c | 2 +-
+ net/wireless/reg.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 31000622376df..7c92b1471c34c 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -3862,7 +3862,7 @@ void __ieee80211_check_fast_rx_iface(struct ieee80211_sub_if_data *sdata)
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index a520f433d4765..b95d1c2bdef7e 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1733,7 +1733,7 @@ static void handle_channel_custom(struct wiphy *wiphy,
+ 			break;
+ 	}
  
- 	lockdep_assert_held(&local->sta_mtx);
- 
--	list_for_each_entry_rcu(sta, &local->sta_list, list) {
-+	list_for_each_entry(sta, &local->sta_list, list) {
- 		if (sdata != sta->sdata &&
- 		    (!sta->sdata->bss || sta->sdata->bss != sdata->bss))
- 			continue;
+-	if (IS_ERR(reg_rule)) {
++	if (IS_ERR_OR_NULL(reg_rule)) {
+ 		pr_debug("Disabling freq %d MHz as custom regd has no rule that fits it\n",
+ 			 chan->center_freq);
+ 		if (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED) {
 -- 
 2.20.1
 
