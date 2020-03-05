@@ -2,78 +2,76 @@ Return-Path: <SRS0=q56x=4W=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77CBEC3F2D1
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Mar 2020 14:04:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8D3EC3F2CD
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Mar 2020 14:10:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 59C75206D5
-	for <linux-wireless@archiver.kernel.org>; Thu,  5 Mar 2020 14:04:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 986A6206D5
+	for <linux-wireless@archiver.kernel.org>; Thu,  5 Mar 2020 14:10:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726490AbgCEOEl (ORCPT
+        id S1726263AbgCEOKB convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 5 Mar 2020 09:04:41 -0500
-Received: from mailext.lri.fr ([129.175.15.10]:48416 "HELO mailext.lri.fr"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-        id S1726222AbgCEOEl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Mar 2020 09:04:41 -0500
-Received: from [129.175.15.10] (mailext.lri.fr [129.175.15.10])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mailext.lri.fr (Postfix) with ESMTPSA id B782FC0F9E;
-        Thu,  5 Mar 2020 14:58:02 +0100 (CET)
-From:   Nicolas Cavallari <cavallar@lri.fr>
-To:     linux-wireless@vger.kernel.org
-Cc:     Johannes Berg <johannes@sipsolutions.com>
-Subject: [PATCH v3 2/2] mac80211: Allow deleting stations in ibss mode to reset their state
-Date:   Thu,  5 Mar 2020 14:57:54 +0100
-Message-Id: <20200305135754.12094-2-cavallar@lri.fr>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200305135754.12094-1-cavallar@lri.fr>
-References: <20200305135754.12094-1-cavallar@lri.fr>
-MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+        Thu, 5 Mar 2020 09:10:01 -0500
+Received: from coyote.holtmann.net ([212.227.132.17]:49810 "EHLO
+        mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726079AbgCEOKB (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 5 Mar 2020 09:10:01 -0500
+Received: from marcel-macpro.fritz.box (p4FEFC5A7.dip0.t-ipconnect.de [79.239.197.167])
+        by mail.holtmann.org (Postfix) with ESMTPSA id 70991CECEC;
+        Thu,  5 Mar 2020 15:19:27 +0100 (CET)
+Content-Type: text/plain;
+        charset=utf-8
+Mime-Version: 1.0 (Mac OS X Mail 13.0 \(3608.60.0.2.5\))
+Subject: Re: [PATCH] mac80211_hwsim: add frame transmission support over
+ virtio
+From:   Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <c5319f6630be431c8680051fd4c33d59524683a2.camel@sipsolutions.net>
+Date:   Thu, 5 Mar 2020 15:09:59 +0100
+Cc:     linux-wireless@vger.kernel.org
+Content-Transfer-Encoding: 8BIT
+Message-Id: <E37B1033-8525-422A-AF10-5EEE5988FE57@holtmann.org>
+References: <20200305143212.c6e4c87d225b.I7ce60bf143e863dcdf0fb8040aab7168ba549b99@changeid>
+ <2F7ADB4C-8C2C-4DEC-80AF-9E2D6B55CA88@holtmann.org>
+ <c5319f6630be431c8680051fd4c33d59524683a2.camel@sipsolutions.net>
+To:     Johannes Berg <johannes@sipsolutions.net>
+X-Mailer: Apple Mail (2.3608.60.0.2.5)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Nicolas Cavallari <nicolas.cavallari@green-communications.fr>
+Hi Johannes,
 
-Set the NL80211_EXT_FEATURE_DEL_IBSS_STA if the interface support IBSS
-mode, so that stations can be reset from user space.
+>>> This allows communication with external entities.
+>>> 
+>>> It also required fixing up the netlink policy, since NLA_UNSPEC
+>>> attributes are no longer accepted.
+>>> 
+>>> Signed-off-by: Erel Geron <erelx.geron@intel.com>
+>>> [port to backports, inline the ID, use 29 as the ID as requested,
+>>> drop != NULL checks, reduce ifdefs]
+>>> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+>> 
+>> since the module now can auto-load, don’t you want to change radios = 2 to radio = 0?
+> 
+> Hmm. I didn't really want to change the behaviour there, and the auto-
+> loading is *highly* unlikely, you need to specifically set up a vhost-
+> user wmediumd (which I'm in the process of publishing).
+> 
+> And even then, you still need to have the radios, they just don't
+> communicate directly with each other but will go into wmediumd over the
+> virtio when you actually have virtio.
+> 
+> I'm not principally opposed to changing the default, but I'm not
+> convinced it'd be related to this patch in any way.
 
-mac80211 already deletes stations by itself, so mac80211 drivers must
-already support this.
+can we just make it a Kconfig option that defaults to 2, but gets set to 0 when virtio support is included.
 
-This has been successfully tested with ath9k.
+Regards
 
-Signed-off-by: Nicolas Cavallari <nicolas.cavallari@green-communications.=
-fr>
-
----
-v3: spelling fixes in commit message.
----
- net/mac80211/main.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 944e86da5c65..bc7fd67dc987 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -1081,6 +1081,10 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 				      NL80211_EXT_FEATURE_EXT_KEY_ID);
- 	}
-=20
-+	if (local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_ADHOC))
-+		wiphy_ext_feature_set(local->hw.wiphy,
-+				      NL80211_EXT_FEATURE_DEL_IBSS_STA);
-+
- 	/*
- 	 * Calculate scan IE length -- we need this to alloc
- 	 * memory and to subtract from the driver limit. It
---=20
-2.25.1
+Marcel
 
