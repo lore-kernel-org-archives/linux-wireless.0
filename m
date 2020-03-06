@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1770CC3F2D8
-	for <linux-wireless@archiver.kernel.org>; Fri,  6 Mar 2020 01:07:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C42FC3F2D7
+	for <linux-wireless@archiver.kernel.org>; Fri,  6 Mar 2020 01:07:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D6D792073D
-	for <linux-wireless@archiver.kernel.org>; Fri,  6 Mar 2020 01:07:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1ADCE20726
+	for <linux-wireless@archiver.kernel.org>; Fri,  6 Mar 2020 01:07:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1583456821;
-	bh=OTtKcRFqA0dHpMGNL6+t5z24seiqfljjuZjgBBCPLfY=;
+	s=default; t=1583456823;
+	bh=RM7eXOLghBAxQOombdSNP2dy3sQBpkjdvLa0D3I5Dyo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=H136YYWQcopqd43ctlL/3G/dkHTko0FdbxnsHNwMom1ATJ71glEJ2mMmPN86tAIIw
-	 aLExEtC7FP23Ip9zelzk11Zc/cfbkmuB/8Hl/06jaug0xzMEq8zE1Fg5DeU+5C7PDv
-	 TpRmADCXRf2xIl2C3vGZ3ZNnrADDx9yDS4zKuJcY=
+	b=zXMn8ejBtL6Ik8TGHtvY4oC1/aEAGWu9EO0hgSAT+M5WEWTPovQ2SiCAJr+MIJvbL
+	 kgxY0ElITZiwBswcMqWUiW/pvq3AUvh5T3fYnpxcmktxcetFRlB5V6Stn9bVOlsxqt
+	 eCkOYRminpdx8RqAG0KIFIEm2+1J+W2uhN3qPlS4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726958AbgCFBG4 (ORCPT
+        id S1726910AbgCFBG4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Thu, 5 Mar 2020 20:06:56 -0500
-Received: from mail.kernel.org ([198.145.29.99]:59594 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:59554 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726243AbgCFBGz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Mar 2020 20:06:55 -0500
+        id S1726358AbgCFBGy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 5 Mar 2020 20:06:54 -0500
 Received: from kicinski-fedora-PC1C0HJN.thefacebook.com (unknown [163.114.132.128])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 4CF9021739;
-        Fri,  6 Mar 2020 01:06:54 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 35ED52166E;
+        Fri,  6 Mar 2020 01:06:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1583456815;
-        bh=OTtKcRFqA0dHpMGNL6+t5z24seiqfljjuZjgBBCPLfY=;
+        s=default; t=1583456814;
+        bh=RM7eXOLghBAxQOombdSNP2dy3sQBpkjdvLa0D3I5Dyo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=o6Qjy9P01UiS3cRTUVa8SYuYa2qHdRq6ENqFXfERy7JrO+v0Vys+zs489/8ajnsxC
-         I5LvmiqAv3c7weaJqnT614MpmnsuCGQMJu31+Fjek+tI9ZN9gIzZhH/5GvaQLIRR/p
-         U1iHGRWr1Yw9Y2FZ5yV2ky8AL9hLDWygp4IJXWs4=
+        b=Bcn4aEmn6bdLy0jeeEaeMUpU/remFlYp2vgolj4RincgisqfFU4CEObnwDDWJfkXF
+         I9FhD5DBaK11ROE+9WHsVbpX/6YaAwm8hgayvhrcPeuwu+7s57NsL0vip2x5TultwU
+         jsVJO4cG3fiOZD4dHEPaEI3jSr7o7OfEOHtq63Kw=
 From:   Jakub Kicinski <kuba@kernel.org>
 To:     davem@davemloft.net
 Cc:     jdike@addtoit.com, richard@nod.at, anton.ivanov@cambridgegreys.com,
@@ -50,9 +50,9 @@ Cc:     jdike@addtoit.com, richard@nod.at, anton.ivanov@cambridgegreys.com,
         merez@codeaurora.org, kvalo@codeaurora.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         Jakub Kicinski <kuba@kernel.org>
-Subject: [PATCH net-next 7/7] wil6210: reject unsupported coalescing params
-Date:   Thu,  5 Mar 2020 17:06:02 -0800
-Message-Id: <20200306010602.1620354-8-kuba@kernel.org>
+Subject: [PATCH net-next 6/7] staging: qlge: reject unsupported coalescing params
+Date:   Thu,  5 Mar 2020 17:06:01 -0800
+Message-Id: <20200306010602.1620354-7-kuba@kernel.org>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200306010602.1620354-1-kuba@kernel.org>
 References: <20200306010602.1620354-1-kuba@kernel.org>
@@ -70,21 +70,22 @@ This driver did not previously reject unsupported parameters.
 
 Signed-off-by: Jakub Kicinski <kuba@kernel.org>
 ---
- drivers/net/wireless/ath/wil6210/ethtool.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/staging/qlge/qlge_ethtool.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/wil6210/ethtool.c b/drivers/net/wireless/ath/wil6210/ethtool.c
-index fef10886ca4a..e481674485c2 100644
---- a/drivers/net/wireless/ath/wil6210/ethtool.c
-+++ b/drivers/net/wireless/ath/wil6210/ethtool.c
-@@ -95,6 +95,7 @@ static int wil_ethtoolops_set_coalesce(struct net_device *ndev,
+diff --git a/drivers/staging/qlge/qlge_ethtool.c b/drivers/staging/qlge/qlge_ethtool.c
+index 790997aff995..050c0da23c6f 100644
+--- a/drivers/staging/qlge/qlge_ethtool.c
++++ b/drivers/staging/qlge/qlge_ethtool.c
+@@ -714,6 +714,8 @@ static void ql_set_msglevel(struct net_device *ndev, u32 value)
  }
  
- static const struct ethtool_ops wil_ethtool_ops = {
-+	.supported_coalesce_params = ETHTOOL_COALESCE_USECS,
- 	.get_drvinfo	= cfg80211_get_drvinfo,
- 	.get_coalesce	= wil_ethtoolops_get_coalesce,
- 	.set_coalesce	= wil_ethtoolops_set_coalesce,
+ const struct ethtool_ops qlge_ethtool_ops = {
++	.supported_coalesce_params = ETHTOOL_COALESCE_USECS |
++				     ETHTOOL_COALESCE_MAX_FRAMES,
+ 	.get_drvinfo = ql_get_drvinfo,
+ 	.get_wol = ql_get_wol,
+ 	.set_wol = ql_set_wol,
 -- 
 2.24.1
 
