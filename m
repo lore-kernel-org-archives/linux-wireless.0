@@ -2,92 +2,77 @@ Return-Path: <SRS0=+GjY=4X=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1C8FC10F27
-	for <linux-wireless@archiver.kernel.org>; Fri,  6 Mar 2020 13:16:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86AC1C10F29
+	for <linux-wireless@archiver.kernel.org>; Fri,  6 Mar 2020 13:16:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BA047208C3
-	for <linux-wireless@archiver.kernel.org>; Fri,  6 Mar 2020 13:16:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 58C7E208C3
+	for <linux-wireless@archiver.kernel.org>; Fri,  6 Mar 2020 13:16:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727405AbgCFNQp (ORCPT
+        id S1727409AbgCFNQq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 6 Mar 2020 08:16:45 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:60910 "EHLO
+        Fri, 6 Mar 2020 08:16:46 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:60922 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726579AbgCFNQo (ORCPT
+        with ESMTP id S1727401AbgCFNQp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Mar 2020 08:16:44 -0500
+        Fri, 6 Mar 2020 08:16:45 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92.2)
         (envelope-from <luca@coelho.fi>)
-        id 1jACqD-0005yR-Gp; Fri, 06 Mar 2020 15:16:43 +0200
+        id 1jACqK-0005yR-7i; Fri, 06 Mar 2020 15:16:44 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Fri,  6 Mar 2020 15:16:20 +0200
-Message-Id: <20200306131627.503176-1-luca@coelho.fi>
+Date:   Fri,  6 Mar 2020 15:16:22 +0200
+Message-Id: <iwlwifi.20200306151128.492d167c1a25.I1ad1353dbbf6c99ae57814be750f41a1c9f7f4ac@changeid>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20200306131627.503176-1-luca@coelho.fi>
+References: <20200306131627.503176-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH v5.6 0/7] iwlwifi: fixes intended for 5.6 2020-03-06
+Subject: [PATCH v5.6 2/7] iwlwifi: consider HE capability when setting LDPC
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Mordechay Goodstein <mordechay.goodstein@intel.com>
 
-Hi,
+The AP may set the LDPC capability only in HE (IEEE80211_HE_PHY_CAP1),
+but we were checking it only in the HT capabilities.
 
-This is my second patchset with fixes for v5.6.  This time I have 7
-important fixes.
+If we don't use this capability when required, the DSP gets the wrong
+configuration in HE and doesn't work properly.
 
-The changes are:
+Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
+Fixes: befebbb30af0 ("iwlwifi: rs: consider LDPC capability in case of HE")
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-* Fix a locking issue in time events handling;
-* A fix in rate-scaling;
-* Fix for a potential NULL pointer deref;
-* Enable antenna diversity in some devices that were erroneously not
-  doing it;
-* Allow FW dumps to continue when the FW is stuck;
-* A fix in the HE capabilities handling;
-* Another fix for FW dumps where we were reading wrong addresses.
-
-As usual, I'm pushing this to a pending branch, for kbuild bot.  And
-since these are fixes for the current rc series, feel free to take
-them directly to wireless-drivers.git.
-
-Cheers,
-Luca.
-
-
-Avraham Stern (1):
-  iwlwifi: mvm: take the required lock when clearing time event data
-
-Ilan Peer (1):
-  iwlwifi: mvm: Fix rate scale NSS configuration
-
-Luca Coelho (3):
-  iwlwifi: check allocated pointer when allocating conf_tlvs
-  iwlwifi: dbg: don't abort if sending DBGC_SUSPEND_RESUME fails
-  iwlwifi: cfg: use antenna diversity with all AX101 devices
-
-Mordechay Goodstein (2):
-  iwlwifi: consider HE capability when setting LDPC
-  iwlwifi: yoyo: don't add TLV offset when reading FIFOs
-
- .../net/wireless/intel/iwlwifi/cfg/22000.c    |  2 ++
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c   | 25 +++++--------
- drivers/net/wireless/intel/iwlwifi/fw/dbg.h   |  6 ++--
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c  |  2 +-
- .../net/wireless/intel/iwlwifi/mvm/rs-fw.c    | 35 ++++++++++++++-----
- .../wireless/intel/iwlwifi/mvm/time-event.c   |  4 +++
- 6 files changed, 44 insertions(+), 30 deletions(-)
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c
+index e2cf9e015ef8..80ef238a8488 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c
+@@ -147,7 +147,11 @@ static u16 rs_fw_get_config_flags(struct iwl_mvm *mvm,
+ 	     (vht_ena && (vht_cap->cap & IEEE80211_VHT_CAP_RXLDPC))))
+ 		flags |= IWL_TLC_MNG_CFG_FLAGS_LDPC_MSK;
+ 
+-	/* consider our LDPC support in case of HE */
++	/* consider LDPC support in case of HE */
++	if (he_cap->has_he && (he_cap->he_cap_elem.phy_cap_info[1] &
++	    IEEE80211_HE_PHY_CAP1_LDPC_CODING_IN_PAYLOAD))
++		flags |= IWL_TLC_MNG_CFG_FLAGS_LDPC_MSK;
++
+ 	if (sband->iftype_data && sband->iftype_data->he_cap.has_he &&
+ 	    !(sband->iftype_data->he_cap.he_cap_elem.phy_cap_info[1] &
+ 	     IEEE80211_HE_PHY_CAP1_LDPC_CODING_IN_PAYLOAD))
 -- 
 2.25.1
 
