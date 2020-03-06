@@ -6,36 +6,36 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C50CC10DCE
-	for <linux-wireless@archiver.kernel.org>; Fri,  6 Mar 2020 13:16:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 597BEC10F28
+	for <linux-wireless@archiver.kernel.org>; Fri,  6 Mar 2020 13:16:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6E57C21744
-	for <linux-wireless@archiver.kernel.org>; Fri,  6 Mar 2020 13:16:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 32746208C3
+	for <linux-wireless@archiver.kernel.org>; Fri,  6 Mar 2020 13:16:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727423AbgCFNQs (ORCPT
+        id S1727425AbgCFNQu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 6 Mar 2020 08:16:48 -0500
-Received: from paleale.coelho.fi ([176.9.41.70]:60940 "EHLO
+        Fri, 6 Mar 2020 08:16:50 -0500
+Received: from paleale.coelho.fi ([176.9.41.70]:60950 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727412AbgCFNQs (ORCPT
+        with ESMTP id S1727420AbgCFNQt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Mar 2020 08:16:48 -0500
+        Fri, 6 Mar 2020 08:16:49 -0500
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92.2)
         (envelope-from <luca@coelho.fi>)
-        id 1jACqM-0005yR-4b; Fri, 06 Mar 2020 15:16:46 +0200
+        id 1jACqN-0005yR-Gg; Fri, 06 Mar 2020 15:16:47 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Fri,  6 Mar 2020 15:16:25 +0200
-Message-Id: <iwlwifi.20200306151129.dcec37b2efd4.I8dcd190431d110a6a0e88095ce93591ccfb3d78d@changeid>
+Date:   Fri,  6 Mar 2020 15:16:27 +0200
+Message-Id: <iwlwifi.20200306151129.1cd986ef467c.Idc0b111475ae3d38b68ae062613c080b574e33e1@changeid>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200306131627.503176-1-luca@coelho.fi>
 References: <20200306131627.503176-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH v5.6 5/7] iwlwifi: dbg: don't abort if sending DBGC_SUSPEND_RESUME fails
+Subject: [PATCH v5.6 7/7] iwlwifi: cfg: use antenna diversity with all AX101 devices
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -43,81 +43,36 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Luca Coelho <luciano.coelho@intel.com>
 
-If the firmware is in a bad state or not initialized fully, sending
-the DBGC_SUSPEND_RESUME command fails but we can still collect logs.
+We were erroneously only setting the tx_with_siso_diversity flag in
+the Qu B-step configurations for AX101 devices, though we should do
+it on all configurations.  Add the flag to the other two
+configurations, namely Qu C-step and QuZ.
 
-Instead of aborting the entire dump process, simply ignore the error.
-By removing the last callpoint that was checking the return value, we
-can also convert the function to return void.
-
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Fixes: 576058330f2d ("iwlwifi: dbg: support debug recording suspend resume command")
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c | 15 +++++----------
- drivers/net/wireless/intel/iwlwifi/fw/dbg.h |  6 +++---
- 2 files changed, 8 insertions(+), 13 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/cfg/22000.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-index e60eb5cc847f..8796ab8f2a5f 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-@@ -2490,10 +2490,7 @@ static void iwl_fw_dbg_collect_sync(struct iwl_fw_runtime *fwrt, u8 wk_idx)
- 		goto out;
- 	}
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
+index a22a830019c0..355af47c5f73 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
+@@ -283,6 +283,7 @@ const struct iwl_cfg iwl_ax101_cfg_qu_c0_hr_b0 = {
+ 	 * HT size; mac80211 would otherwise pick the HE max (256) by default.
+ 	 */
+ 	.max_tx_agg_size = IEEE80211_MAX_AMPDU_BUF_HT,
++	.tx_with_siso_diversity = true,
+ 	.num_rbds = IWL_NUM_RBDS_22000_HE,
+ };
  
--	if (iwl_fw_dbg_stop_restart_recording(fwrt, &params, true)) {
--		IWL_ERR(fwrt, "Failed to stop DBGC recording, aborting dump\n");
--		goto out;
--	}
-+	iwl_fw_dbg_stop_restart_recording(fwrt, &params, true);
+@@ -309,6 +310,7 @@ const struct iwl_cfg iwl_ax101_cfg_quz_hr = {
+ 	 * HT size; mac80211 would otherwise pick the HE max (256) by default.
+ 	 */
+ 	.max_tx_agg_size = IEEE80211_MAX_AMPDU_BUF_HT,
++	.tx_with_siso_diversity = true,
+ 	.num_rbds = IWL_NUM_RBDS_22000_HE,
+ };
  
- 	IWL_DEBUG_FW_INFO(fwrt, "WRT: Data collection start\n");
- 	if (iwl_trans_dbg_ini_valid(fwrt->trans))
-@@ -2658,14 +2655,14 @@ static int iwl_fw_dbg_restart_recording(struct iwl_trans *trans,
- 	return 0;
- }
- 
--int iwl_fw_dbg_stop_restart_recording(struct iwl_fw_runtime *fwrt,
--				      struct iwl_fw_dbg_params *params,
--				      bool stop)
-+void iwl_fw_dbg_stop_restart_recording(struct iwl_fw_runtime *fwrt,
-+				       struct iwl_fw_dbg_params *params,
-+				       bool stop)
- {
- 	int ret = 0;
- 
- 	if (test_bit(STATUS_FW_ERROR, &fwrt->trans->status))
--		return 0;
-+		return;
- 
- 	if (fw_has_capa(&fwrt->fw->ucode_capa,
- 			IWL_UCODE_TLV_CAPA_DBG_SUSPEND_RESUME_CMD_SUPP))
-@@ -2682,7 +2679,5 @@ int iwl_fw_dbg_stop_restart_recording(struct iwl_fw_runtime *fwrt,
- 			iwl_fw_set_dbg_rec_on(fwrt);
- 	}
- #endif
--
--	return ret;
- }
- IWL_EXPORT_SYMBOL(iwl_fw_dbg_stop_restart_recording);
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
-index 179f2905d56b..9d3513213f5f 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
-@@ -239,9 +239,9 @@ _iwl_fw_dbg_trigger_simple_stop(struct iwl_fw_runtime *fwrt,
- 	_iwl_fw_dbg_trigger_simple_stop((fwrt), (wdev),		\
- 					iwl_fw_dbg_get_trigger((fwrt)->fw,\
- 							       (trig)))
--int iwl_fw_dbg_stop_restart_recording(struct iwl_fw_runtime *fwrt,
--				      struct iwl_fw_dbg_params *params,
--				      bool stop);
-+void iwl_fw_dbg_stop_restart_recording(struct iwl_fw_runtime *fwrt,
-+				       struct iwl_fw_dbg_params *params,
-+				       bool stop);
- 
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- static inline void iwl_fw_set_dbg_rec_on(struct iwl_fw_runtime *fwrt)
 -- 
 2.25.1
 
