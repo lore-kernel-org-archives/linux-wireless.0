@@ -4,41 +4,41 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA8D1C3F2D1
-	for <linux-wireless@archiver.kernel.org>; Fri,  6 Mar 2020 01:06:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F3DBC3F2D1
+	for <linux-wireless@archiver.kernel.org>; Fri,  6 Mar 2020 01:06:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A9C6D208CD
-	for <linux-wireless@archiver.kernel.org>; Fri,  6 Mar 2020 01:06:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2ABE6208CD
+	for <linux-wireless@archiver.kernel.org>; Fri,  6 Mar 2020 01:06:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1583456812;
-	bh=BFAz6k8N2AgaW0pXpCjlxC1XrQ/2bd8PY1PxlDWovR0=;
+	s=default; t=1583456815;
+	bh=MnSx+bRM3bH2XiO0Bs9afQghY0J5GNchXPkSWXLLq9o=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=JoAEhs9QVHvob6beBWC42ksiKsrVISlKUEVjB10M1UDMnyuEaynbxJrMTt65zTUVi
-	 O7HTFtQg2WZfSxAaU81uKBybtC7nLclya/pYYhQQJJgeDPfUl4casKjlZz0lgR62qJ
-	 r/qIksdaGuKmf2lVI2bk9TfWL6lpXoe8STmAIjLE=
+	b=pxsYkwu/Y9cjZdgJVmWvjsj6jUWlwJp0pSYuONN9Oe/a+VBN30YVE522FvbjmJ6iX
+	 CtbcOa1Uki5VHj2BAh1G8IEQ6LiK20YAHWleppSMA+ehb75kWpHNOabUgOjaNaGFfQ
+	 Cc5HNcp+LvUg9E0IiY4xcMOl0Vz2c4+mE3KE72fA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726846AbgCFBGv (ORCPT
+        id S1726436AbgCFBGt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 5 Mar 2020 20:06:51 -0500
-Received: from mail.kernel.org ([198.145.29.99]:59366 "EHLO mail.kernel.org"
+        Thu, 5 Mar 2020 20:06:49 -0500
+Received: from mail.kernel.org ([198.145.29.99]:59296 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726485AbgCFBGu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Mar 2020 20:06:50 -0500
+        id S1726358AbgCFBGt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 5 Mar 2020 20:06:49 -0500
 Received: from kicinski-fedora-PC1C0HJN.thefacebook.com (unknown [163.114.132.128])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id CBE7E208C3;
-        Fri,  6 Mar 2020 01:06:48 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id AFC6120848;
+        Fri,  6 Mar 2020 01:06:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1583456809;
-        bh=BFAz6k8N2AgaW0pXpCjlxC1XrQ/2bd8PY1PxlDWovR0=;
+        s=default; t=1583456808;
+        bh=MnSx+bRM3bH2XiO0Bs9afQghY0J5GNchXPkSWXLLq9o=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=eDv4q92MORThFDshgMnFSWnN8110Mhqn0qrE54dC9E9Y+VvvVknnafFvOnuYH/ZKD
-         gmYxPMTC8cTzqhFWwwQSMS+YQORfDP0IGiQRhC/0UBDTJpDSpQwDKTs4Q+Nzn/qODN
-         a2RcZc51Zeqqp6AIeWQOrvJk1S0sJ8uHzQhK90BY=
+        b=P4gn3Onzd39vjbS4WUY4DHugnMU8BK/REwM4+XVaV2bhs81F9FpAFTN4iLyHcS4hg
+         3CtL1IEuhYU/zfQ5Plb1Mmdwh1OQfd3aSAgc2/nc8pkE7WCmm/sAk+mfxirK6eCQnA
+         EEF4o4/w1/CFEEEMlSmgL5cfdZbYh5MHI+sGC4IM=
 From:   Jakub Kicinski <kuba@kernel.org>
 To:     davem@davemloft.net
 Cc:     jdike@addtoit.com, richard@nod.at, anton.ivanov@cambridgegreys.com,
@@ -50,9 +50,9 @@ Cc:     jdike@addtoit.com, richard@nod.at, anton.ivanov@cambridgegreys.com,
         merez@codeaurora.org, kvalo@codeaurora.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         Jakub Kicinski <kuba@kernel.org>
-Subject: [PATCH net-next 2/7] RDMA/ipoib: reject unsupported coalescing params
-Date:   Thu,  5 Mar 2020 17:05:57 -0800
-Message-Id: <20200306010602.1620354-3-kuba@kernel.org>
+Subject: [PATCH net-next 1/7] um: reject unsupported coalescing params
+Date:   Thu,  5 Mar 2020 17:05:56 -0800
+Message-Id: <20200306010602.1620354-2-kuba@kernel.org>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200306010602.1620354-1-kuba@kernel.org>
 References: <20200306010602.1620354-1-kuba@kernel.org>
@@ -70,22 +70,21 @@ This driver did not previously reject unsupported parameters.
 
 Signed-off-by: Jakub Kicinski <kuba@kernel.org>
 ---
- drivers/infiniband/ulp/ipoib/ipoib_ethtool.c | 2 ++
- 1 file changed, 2 insertions(+)
+ arch/um/drivers/vector_kern.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/infiniband/ulp/ipoib/ipoib_ethtool.c b/drivers/infiniband/ulp/ipoib/ipoib_ethtool.c
-index 63e4f9d15fd9..a10a0c2ca2da 100644
---- a/drivers/infiniband/ulp/ipoib/ipoib_ethtool.c
-+++ b/drivers/infiniband/ulp/ipoib/ipoib_ethtool.c
-@@ -213,6 +213,8 @@ static int ipoib_get_link_ksettings(struct net_device *netdev,
+diff --git a/arch/um/drivers/vector_kern.c b/arch/um/drivers/vector_kern.c
+index 0ff86391f77d..e98304d0219e 100644
+--- a/arch/um/drivers/vector_kern.c
++++ b/arch/um/drivers/vector_kern.c
+@@ -1508,6 +1508,7 @@ static int vector_set_coalesce(struct net_device *netdev,
  }
  
- static const struct ethtool_ops ipoib_ethtool_ops = {
-+	.supported_coalesce_params = ETHTOOL_COALESCE_RX_USECS |
-+				     ETHTOOL_COALESCE_RX_MAX_FRAMES,
- 	.get_link_ksettings	= ipoib_get_link_ksettings,
- 	.get_drvinfo		= ipoib_get_drvinfo,
- 	.get_coalesce		= ipoib_get_coalesce,
+ static const struct ethtool_ops vector_net_ethtool_ops = {
++	.supported_coalesce_params = ETHTOOL_COALESCE_TX_USECS,
+ 	.get_drvinfo	= vector_net_get_drvinfo,
+ 	.get_link	= ethtool_op_get_link,
+ 	.get_ts_info	= ethtool_op_get_ts_info,
 -- 
 2.24.1
 
