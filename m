@@ -6,36 +6,36 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 297FBC10F28
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC213C18E5A
 	for <linux-wireless@archiver.kernel.org>; Mon,  9 Mar 2020 07:16:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 07E4320728
+	by mail.kernel.org (Postfix) with ESMTP id C530620728
 	for <linux-wireless@archiver.kernel.org>; Mon,  9 Mar 2020 07:16:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726487AbgCIHQj (ORCPT
+        id S1726478AbgCIHQi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 9 Mar 2020 03:16:39 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:33068 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726027AbgCIHQi (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
         Mon, 9 Mar 2020 03:16:38 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:33054 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1725796AbgCIHQg (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 9 Mar 2020 03:16:36 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.92.2)
         (envelope-from <luca@coelho.fi>)
-        id 1jBCeR-0007CP-NM; Mon, 09 Mar 2020 09:16:36 +0200
+        id 1jBCeQ-0007CP-4t; Mon, 09 Mar 2020 09:16:34 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Mon,  9 Mar 2020 09:16:13 +0200
-Message-Id: <iwlwifi.20200309091348.18d4304b5454.Ib168d186da88393e9ec46f0fca523edb48d9138e@changeid>
+Date:   Mon,  9 Mar 2020 09:16:11 +0200
+Message-Id: <iwlwifi.20200309091348.602bb33528cf.I3acacb07c69ed063c7f1ca78f2dce9b7b4ef3946@changeid>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200309071619.670108-1-luca@coelho.fi>
 References: <20200309071619.670108-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 07/13] iwlwifi: move TH1 devices to the new table
+Subject: [PATCH 05/13] iwlwifi: add Pu/PnJ/Th device values to differentiate them
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -43,117 +43,154 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Luca Coelho <luciano.coelho@intel.com>
 
-TH1 devices can now be fully differentiated by using the device
-parameters we have (particularly the RF_TYPE).  Start using these
-parameters instead of hardcoding to specific subsystem device IDs.
+Pu, PnJ and Th devices have different combinations of PCI ID, MAC ID
+and RF IDs.  Use these to differentiate them and choose the correct
+configuration.
 
-This also fixes the name of one of the TH1 devices that was
-erroneously using the 9260 struct and renames 9160 to 9162.
+This also includes a change from using soc cfg's for 0x2526
+devices (PnJ/Th), which was incorrect.
 
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/cfg/9000.c   |  8 ++------
- drivers/net/wireless/intel/iwlwifi/iwl-config.h |  4 +++-
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c   | 14 ++++++++++----
- 3 files changed, 15 insertions(+), 11 deletions(-)
+ .../net/wireless/intel/iwlwifi/iwl-config.h   |  9 ++++
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 54 +++++++++----------
+ 2 files changed, 34 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/9000.c b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
-index 97644a5be253..6fff67b7ebd0 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
-@@ -178,23 +178,19 @@ const struct iwl_cfg_trans_params iwl9000_trans_cfg = {
- 	.rf_id = true,
- };
- 
--const struct iwl_cfg iwl9160_2ac_cfg = {
--	.name = "Intel(R) Dual Band Wireless AC 9160",
--	.fw_name_pre = IWL9260_FW_PRE,
--	IWL_DEVICE_9000,
--};
--
- const struct iwl_cfg iwl9260_2ac_cfg = {
- 	.name = "Intel(R) Dual Band Wireless AC 9260",
- 	.fw_name_pre = IWL9260_FW_PRE,
- 	IWL_DEVICE_9000,
- };
- 
-+const char iwl9162_name[] = "Intel(R) Wireless-AC 9162";
- const char iwl9260_name[] = "Intel(R) Wireless-AC 9260";
- const char iwl9270_name[] = "Intel(R) Wireless-AC 9270";
- const char iwl9461_name[] = "Intel(R) Wireless-AC 9461";
- const char iwl9462_name[] = "Intel(R) Wireless-AC 9462";
- const char iwl9560_name[] = "Intel(R) Wireless-AC 9560";
-+const char iwl9162_160_name[] = "Intel(R) Wireless-AC 9162 160MHz";
- const char iwl9260_160_name[] = "Intel(R) Wireless-AC 9260 160MHz";
- const char iwl9270_160_name[] = "Intel(R) Wireless-AC 9270 160MHz";
- const char iwl9461_160_name[] = "Intel(R) Wireless-AC 9461 160MHz";
 diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-index 72b84f0e72c1..f8244f809c14 100644
+index e2b8f6b95678..7a985b317807 100644
 --- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
 +++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-@@ -460,6 +460,7 @@ struct iwl_cfg {
+@@ -454,6 +454,8 @@ struct iwl_cfg {
+ 
+ #define IWL_CFG_ANY (~0)
+ 
++#define IWL_CFG_MAC_TYPE_PU		0x31
++#define IWL_CFG_MAC_TYPE_PNJ		0x32
+ #define IWL_CFG_MAC_TYPE_TH		0x32
  #define IWL_CFG_MAC_TYPE_QU		0x33
  
- #define IWL_CFG_RF_TYPE_TH		0x105
-+#define IWL_CFG_RF_TYPE_TH1		0x108
+@@ -461,12 +463,18 @@ struct iwl_cfg {
  #define IWL_CFG_RF_TYPE_JF2		0x105
  #define IWL_CFG_RF_TYPE_JF1		0x108
  
-@@ -495,11 +496,13 @@ struct iwl_dev_info {
-  * This list declares the config structures for all devices.
-  */
- extern const struct iwl_cfg_trans_params iwl9000_trans_cfg;
-+extern const char iwl9162_name[];
- extern const char iwl9260_name[];
- extern const char iwl9270_name[];
- extern const char iwl9461_name[];
- extern const char iwl9462_name[];
- extern const char iwl9560_name[];
-+extern const char iwl9162_160_name[];
- extern const char iwl9260_160_name[];
- extern const char iwl9270_160_name[];
- extern const char iwl9461_160_name[];
-@@ -574,7 +577,6 @@ extern const struct iwl_cfg iwl8260_2ac_cfg;
- extern const struct iwl_cfg iwl8265_2ac_cfg;
- extern const struct iwl_cfg iwl8275_2ac_cfg;
- extern const struct iwl_cfg iwl4165_2ac_cfg;
--extern const struct iwl_cfg iwl9160_2ac_cfg;
- extern const struct iwl_cfg iwl9260_2ac_cfg;
- extern const struct iwl_cfg iwl9260_2ac_160_cfg;
- extern const struct iwl_cfg iwl9260_killer_2ac_cfg;
++#define IWL_CFG_RF_ID_TH		0x1
++#define IWL_CFG_RF_ID_TH1		0x1
++#define IWL_CFG_RF_ID_JF		0x3
++#define IWL_CFG_RF_ID_JF1		0x6
++
+ #define IWL_CFG_NO_160			0x0
+ #define IWL_CFG_160			0x1
+ 
+ #define IWL_CFG_CORES_BT		0x0
+ #define IWL_CFG_CORES_BT_GNSS		0x5
+ 
++#define IWL_SUBDEVICE_RF_ID(subdevice)	((u16)((subdevice) & 0x00F0) >> 4)
+ #define IWL_SUBDEVICE_NO_160(subdevice)	((u16)((subdevice) & 0x0100) >> 9)
+ #define IWL_SUBDEVICE_CORES(subdevice)	((u16)((subdevice) & 0x1C00) >> 10)
+ 
+@@ -475,6 +483,7 @@ struct iwl_dev_info {
+ 	u16 subdevice;
+ 	u16 mac_type;
+ 	u16 rf_type;
++	u8 rf_id;
+ 	u8 no_160;
+ 	u8 cores;
+ 	const struct iwl_cfg *cfg;
 diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index b56b1c31c2f0..6bd126c0b7f6 100644
+index f474d1426970..492aa4469608 100644
 --- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
 +++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -567,11 +567,8 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- 	{IWL_PCI_DEVICE(0x06F0, 0x42A4, iwl9462_2ac_cfg_quz_a0_jf_b0_soc)},
+@@ -941,36 +941,20 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ };
+ MODULE_DEVICE_TABLE(pci, iwl_hw_card_ids);
  
- 	{IWL_PCI_DEVICE(0x2526, PCI_ANY_ID, iwl9000_trans_cfg)},
-+	{IWL_PCI_DEVICE(0x271B, PCI_ANY_ID, iwl9000_trans_cfg)},
+-#define _IWL_DEV_INFO(_device, _subdevice, _mac_type, _rf_type, _no_160,   \
+-		      _cores, _cfg, _name)				   \
++#define _IWL_DEV_INFO(_device, _subdevice, _mac_type, _rf_type, _rf_id,    \
++		      _no_160, _cores, _cfg, _name)			   \
+ 	{ .device = (_device), .subdevice = (_subdevice), .cfg = &(_cfg),  \
+ 	  .name = _name, .mac_type = _mac_type, .rf_type = _rf_type,	   \
+-	  .no_160 = _no_160, .cores = _cores }
++	  .no_160 = _no_160, .cores = _cores, .rf_id = _rf_id, }
  
--	{IWL_PCI_DEVICE(0x271B, 0x0010, iwl9160_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x271B, 0x0014, iwl9160_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x271B, 0x0210, iwl9160_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x271B, 0x0214, iwl9260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x271C, 0x0214, iwl9260_2ac_cfg)},
+ #define IWL_DEV_INFO(_device, _subdevice, _cfg, _name) \
+-	_IWL_DEV_INFO(_device, _subdevice, IWL_CFG_ANY, IWL_CFG_ANY,	\
+-		      IWL_CFG_ANY, IWL_CFG_ANY, _cfg, _name)
++	_IWL_DEV_INFO(_device, _subdevice, IWL_CFG_ANY, IWL_CFG_ANY,	   \
++		      IWL_CFG_ANY, IWL_CFG_ANY, IWL_CFG_ANY, _cfg, _name)
  
- 	{IWL_PCI_DEVICE(0x2720, 0x0034, iwl9560_2ac_cfg_qu_b0_jf_b0)},
-@@ -992,6 +989,15 @@ static const struct iwl_dev_info iwl_dev_info_table[] = {
- 		      IWL_CFG_NO_160, IWL_CFG_CORES_BT_GNSS,
+ static const struct iwl_dev_info iwl_dev_info_table[] = {
+ #if IS_ENABLED(CONFIG_IWLMVM)
+ 	IWL_DEV_INFO(0x2526, 0x1550, iwl9260_2ac_cfg, iwl9260_killer_1550_name),
+ 
+-	IWL_DEV_INFO(0x2526, 0x0030, iwl9560_2ac_cfg, iwl9560_160_name),
+-	IWL_DEV_INFO(0x2526, 0x0038, iwl9560_2ac_cfg, iwl9560_160_name),
+-	IWL_DEV_INFO(0x2526, 0x003C, iwl9560_2ac_cfg, iwl9560_160_name),
+-	IWL_DEV_INFO(0x2526, 0x4030, iwl9560_2ac_cfg, iwl9560_160_name),
+-	IWL_DEV_INFO(0x2526, 0x2030, iwl9560_2ac_cfg_soc, iwl9560_160_name),
+-	IWL_DEV_INFO(0x2526, 0x2034, iwl9560_2ac_cfg_soc, iwl9560_160_name),
+-	IWL_DEV_INFO(0x2526, 0x4034, iwl9560_2ac_cfg_soc, iwl9560_160_name),
+-
+-	IWL_DEV_INFO(0x2526, 0x0034, iwl9560_2ac_cfg, iwl9560_name),
+-	IWL_DEV_INFO(0x2526, 0x0230, iwl9560_2ac_cfg, iwl9560_name),
+-	IWL_DEV_INFO(0x2526, 0x0234, iwl9560_2ac_cfg, iwl9560_name),
+-	IWL_DEV_INFO(0x2526, 0x0238, iwl9560_2ac_cfg, iwl9560_name),
+-	IWL_DEV_INFO(0x2526, 0x023C, iwl9560_2ac_cfg, iwl9560_name),
+-	IWL_DEV_INFO(0x2526, 0x1030, iwl9560_2ac_cfg, iwl9560_name),
+-	IWL_DEV_INFO(0x2526, 0x4234, iwl9560_2ac_cfg_soc, iwl9560_name),
+-
+ 	IWL_DEV_INFO(0x2526, 0x0060, iwl9560_2ac_cfg_soc, iwl9461_name),
+ 	IWL_DEV_INFO(0x2526, 0x0064, iwl9560_2ac_cfg_soc, iwl9461_name),
+ 	IWL_DEV_INFO(0x2526, 0x0260, iwl9560_2ac_cfg_soc, iwl9461_name),
+@@ -987,21 +971,30 @@ static const struct iwl_dev_info iwl_dev_info_table[] = {
+ 	IWL_DEV_INFO(0x2526, 0x1552, iwl9560_2ac_cfg_soc, iwl9560_killer_1550i_name),
+ 
+ 	_IWL_DEV_INFO(0x2526, IWL_CFG_ANY,
+-		      IWL_CFG_MAC_TYPE_TH, IWL_CFG_RF_TYPE_TH, IWL_CFG_160,
+-		      IWL_CFG_CORES_BT_GNSS,
++		      IWL_CFG_MAC_TYPE_PNJ, IWL_CFG_RF_TYPE_JF2, IWL_CFG_RF_ID_JF,
++		      IWL_CFG_160, IWL_CFG_CORES_BT,
++		      iwl9560_2ac_cfg, iwl9560_160_name),
++	_IWL_DEV_INFO(0x2526, IWL_CFG_ANY,
++		      IWL_CFG_MAC_TYPE_PNJ, IWL_CFG_RF_TYPE_JF2, IWL_CFG_RF_ID_JF,
++		      IWL_CFG_NO_160, IWL_CFG_CORES_BT,
++		      iwl9560_2ac_cfg, iwl9560_name),
++
++	_IWL_DEV_INFO(0x2526, IWL_CFG_ANY,
++		      IWL_CFG_MAC_TYPE_TH, IWL_CFG_RF_TYPE_TH, IWL_CFG_ANY,
++		      IWL_CFG_160, IWL_CFG_CORES_BT_GNSS,
+ 		      iwl9260_2ac_cfg, iwl9270_160_name),
+ 	_IWL_DEV_INFO(0x2526, IWL_CFG_ANY,
+-		      IWL_CFG_MAC_TYPE_TH, IWL_CFG_RF_TYPE_TH, IWL_CFG_NO_160,
+-		      IWL_CFG_CORES_BT_GNSS,
++		      IWL_CFG_MAC_TYPE_TH, IWL_CFG_RF_TYPE_TH, IWL_CFG_ANY,
++		      IWL_CFG_NO_160, IWL_CFG_CORES_BT_GNSS,
  		      iwl9260_2ac_cfg, iwl9270_name),
  
-+	_IWL_DEV_INFO(0x271B, IWL_CFG_ANY,
-+		      IWL_CFG_MAC_TYPE_TH, IWL_CFG_RF_TYPE_TH1, IWL_CFG_ANY,
-+		      IWL_CFG_160, IWL_CFG_CORES_BT,
-+		      iwl9260_2ac_cfg, iwl9162_160_name),
-+	_IWL_DEV_INFO(0x271B, IWL_CFG_ANY,
-+		      IWL_CFG_MAC_TYPE_TH, IWL_CFG_RF_TYPE_TH1, IWL_CFG_ANY,
-+		      IWL_CFG_NO_160, IWL_CFG_CORES_BT,
-+		      iwl9260_2ac_cfg, iwl9162_name),
-+
  	_IWL_DEV_INFO(0x2526, IWL_CFG_ANY,
- 		      IWL_CFG_MAC_TYPE_TH, IWL_CFG_RF_TYPE_TH, IWL_CFG_ANY,
- 		      IWL_CFG_160, IWL_CFG_CORES_BT,
+-		      IWL_CFG_MAC_TYPE_TH, IWL_CFG_RF_TYPE_TH, IWL_CFG_160,
+-		      IWL_CFG_CORES_BT,
++		      IWL_CFG_MAC_TYPE_TH, IWL_CFG_RF_TYPE_TH, IWL_CFG_ANY,
++		      IWL_CFG_160, IWL_CFG_CORES_BT,
+ 		      iwl9260_2ac_cfg, iwl9260_160_name),
+ 	_IWL_DEV_INFO(0x2526, IWL_CFG_ANY,
+-		      IWL_CFG_MAC_TYPE_TH, IWL_CFG_RF_TYPE_TH, IWL_CFG_NO_160,
+-		      IWL_CFG_CORES_BT,
++		      IWL_CFG_MAC_TYPE_TH, IWL_CFG_RF_TYPE_TH, IWL_CFG_ANY,
++		      IWL_CFG_NO_160, IWL_CFG_CORES_BT,
+ 		      iwl9260_2ac_cfg, iwl9260_name),
+ #endif /* CONFIG_IWLMVM */
+ };
+@@ -1052,6 +1045,9 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		    (dev_info->rf_type == (u16)IWL_CFG_ANY ||
+ 		     dev_info->rf_type ==
+ 		     CSR_HW_RFID_TYPE(iwl_trans->hw_rf_id)) &&
++		    (dev_info->rf_id == (u8)IWL_CFG_ANY ||
++		     dev_info->rf_id ==
++		     IWL_SUBDEVICE_RF_ID(pdev->subsystem_device)) &&
+ 		    (dev_info->no_160 == (u8)IWL_CFG_ANY ||
+ 		     dev_info->no_160 ==
+ 		     IWL_SUBDEVICE_NO_160(pdev->subsystem_device)) &&
 -- 
 2.25.1
 
