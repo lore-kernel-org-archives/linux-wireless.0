@@ -2,56 +2,55 @@ Return-Path: <SRS0=CJfu=43=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97E1BC10DCE
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Mar 2020 22:54:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD90FC10DCE
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Mar 2020 23:01:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 477BA20873
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Mar 2020 22:54:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 76CAF20848
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Mar 2020 23:01:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=embeddedor.com header.i=@embeddedor.com header.b="UrXazXuk"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=embeddedor.com header.i=@embeddedor.com header.b="oF3wtI6l"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727582AbgCJWyV (ORCPT
+        id S1727768AbgCJXBI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 10 Mar 2020 18:54:21 -0400
-Received: from gateway23.websitewelcome.com ([192.185.50.107]:41494 "EHLO
-        gateway23.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726325AbgCJWyV (ORCPT
+        Tue, 10 Mar 2020 19:01:08 -0400
+Received: from gateway36.websitewelcome.com ([50.116.125.2]:37546 "EHLO
+        gateway36.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726325AbgCJXBI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Mar 2020 18:54:21 -0400
-X-Greylist: delayed 1361 seconds by postgrey-1.27 at vger.kernel.org; Tue, 10 Mar 2020 18:54:20 EDT
+        Tue, 10 Mar 2020 19:01:08 -0400
 Received: from cm16.websitewelcome.com (cm16.websitewelcome.com [100.42.49.19])
-        by gateway23.websitewelcome.com (Postfix) with ESMTP id 9A41F10147
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Mar 2020 17:31:38 -0500 (CDT)
+        by gateway36.websitewelcome.com (Postfix) with ESMTP id E41EB40230204
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Mar 2020 16:52:14 -0500 (CDT)
 Received: from gator4166.hostgator.com ([108.167.133.22])
         by cmsmtp with SMTP
-        id BnPWjqpvO8vkBBnPWjjU50; Tue, 10 Mar 2020 17:31:38 -0500
+        id BnUPjquiZ8vkBBnUPjjYpu; Tue, 10 Mar 2020 17:36:41 -0500
 X-Authority-Reason: nr=8
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
-        In-Reply-To:MIME-Version:Date:Message-ID:Subject:From:References:Cc:To:Sender
+        In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
         Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
         List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=w0YvlpJ9A4mJHE7pt+fEtvHaVPgf5lPMkaRKnby+BOc=; b=UrXazXuke4YztNw1qZe2mjGFro
-        /V/XgQXZaYJO7BSCh1JqdsZDAJNVId0MJoi8AkjlPa9GbMH/lhnBy9Se+BNPLhvAr0Ggvuvd+GNsC
-        /51odeZDUL8B0E2mFnJpLw+1Ye19Tv/bqVuYx2hE4hSn4gbetrNTfyGQVobVhBb5gCl0qeYPIV8C4
-        zvU/0X8xb6v084hMsTuZR1mDQYJ7dAOtiUNBZcyvVxE0m3ck+irkbWPiq4H3aRLYAPTMscBOIVKOj
-        aHbIahkCiGbnFiEKcRY4rfcZ47H3wKZXyAyBRRXRlQcR5W1Q7SOnNuGsRkrDkHhJjPipJPgBPRhok
-        SkQN0jAw==;
-Received: from 187-162-252-62.static.axtel.net ([187.162.252.62]:47020 helo=[192.168.0.140])
+        bh=KG9npqDNvNL0nWJrwiRj2aZsbizoObHAFhshQC8xR7E=; b=oF3wtI6lPK8UukLiMJlIl/3Eim
+        bKHuKTiCJqjzMoVHaDxamp4upOrqlftJ/IUUuXkMi81AR0DGINbJJeGQaiD/f+1xp4jEztI9jI1aJ
+        EJJDmD91lJVdxlYTC1u2jv3dnm1gul+v/ub8LG9clYGsitVrvxzCFSWrKwVng7MXumjh8FfFSQ4cd
+        9NPIn6a2DNz9u1sl0kbLw0rohvm/9REAt5RcWMVNw5T96erwgbye6s05yRFgQO5j6nqtpXUpgdc9P
+        9d56K5vzEybiVKe6T3GzcfVY7BLN+JBZUaH0JtcnoEpUVhAr2MArEjlfNW8ZMveHZhID4X+VOsJfZ
+        Lv3++6hw==;
+Received: from 187-162-252-62.static.axtel.net ([187.162.252.62]:47142 helo=[192.168.0.140])
         by gator4166.hostgator.com with esmtpsa (TLSv1.2:ECDHE-RSA-AES128-GCM-SHA256:128)
         (Exim 4.92)
         (envelope-from <gustavo@embeddedor.com>)
-        id 1jBnPW-002Y2K-3f; Tue, 10 Mar 2020 17:31:38 -0500
+        id 1jBnUO-002aEt-Nl; Tue, 10 Mar 2020 17:36:40 -0500
+Subject: Re: [PATCH][next] zd1211rw/zd_usb.h: Replace zero-length array with
+ flexible-array member
 To:     Jes Sorensen <jes.sorensen@gmail.com>,
         Kalle Valo <kvalo@codeaurora.org>
-Cc:     Joe Perches <joe@perches.com>, Daniel Drake <dsd@gentoo.org>,
-        Ulrich Kunitz <kune@deine-taler.de>,
+Cc:     Joe Perches <joe@perches.com>, Ulrich Kunitz <kune@deine-taler.de>,
         "David S. Miller" <davem@davemloft.net>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org, Kees Cook <keescook@chromium.org>
@@ -65,6 +64,8 @@ References: <20200305111216.GA24982@embeddedor>
  <021d1125-3ffd-39ef-395a-b796c527bde4@gmail.com>
  <fb3395d7-e932-10ac-1feb-ab2ceb63424e@embeddedor.com>
  <361da904-5adf-eb0c-e937-c5d2f69ac8be@gmail.com>
+ <e4cfda6c-37f0-3c28-f50b-32200a67d856@embeddedor.com>
+ <9700b2c9-1029-60b0-c5d2-684bdcede354@gmail.com>
 From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
 Openpgp: preference=signencrypt
 Autocrypt: addr=gustavo@embeddedor.com; keydata=
@@ -110,17 +111,15 @@ Autocrypt: addr=gustavo@embeddedor.com; keydata=
  YJWH93PN+ZUh6i6Rd2U/i8jH5WvzR57UeWxE4P8bQc0hNGrUsHQH6bpHV2lbuhDdqo+cM9eh
  GZEO3+gCDFmKrjspZjkJbB5Gadzvts5fcWGOXEvuT8uQSvl+vEL0g6vczsyPBtqoBLa9SNrS
  VtSixD1uOgytAP7RWS474w==
-Subject: Re: [PATCH][next] zd1211rw/zd_usb.h: Replace zero-length array with
- flexible-array member
-Message-ID: <e4cfda6c-37f0-3c28-f50b-32200a67d856@embeddedor.com>
-Date:   Tue, 10 Mar 2020 17:31:35 -0500
+Message-ID: <948ec681-c4ee-3479-8d8b-5aa1e358ec04@embeddedor.com>
+Date:   Tue, 10 Mar 2020 17:36:39 -0500
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.9.0
 MIME-Version: 1.0
-In-Reply-To: <361da904-5adf-eb0c-e937-c5d2f69ac8be@gmail.com>
+In-Reply-To: <9700b2c9-1029-60b0-c5d2-684bdcede354@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
 X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
 X-AntiAbuse: Original Domain - vger.kernel.org
@@ -129,13 +128,13 @@ X-AntiAbuse: Sender Address Domain - embeddedor.com
 X-BWhitelist: no
 X-Source-IP: 187.162.252.62
 X-Source-L: No
-X-Exim-ID: 1jBnPW-002Y2K-3f
+X-Exim-ID: 1jBnUO-002aEt-Nl
 X-Source: 
 X-Source-Args: 
 X-Source-Dir: 
-X-Source-Sender: 187-162-252-62.static.axtel.net ([192.168.0.140]) [187.162.252.62]:47020
+X-Source-Sender: 187-162-252-62.static.axtel.net ([192.168.0.140]) [187.162.252.62]:47142
 X-Source-Auth: gustavo@embeddedor.com
-X-Email-Count: 25
+X-Email-Count: 44
 X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
 X-Local-Domain: yes
 Sender: linux-wireless-owner@vger.kernel.org
@@ -145,45 +144,53 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 
 
-On 3/10/20 5:20 PM, Jes Sorensen wrote:
-> On 3/10/20 6:13 PM, Gustavo A. R. Silva wrote:
+On 3/10/20 5:34 PM, Jes Sorensen wrote:
+> On 3/10/20 6:31 PM, Gustavo A. R. Silva wrote:
 >>
 >>
->> On 3/10/20 5:07 PM, Jes Sorensen wrote:
->>> As I stated in my previous answer, this seems more code churn than an
->>> actual fix. If this is a real problem, shouldn't the work be put into
->>> fixing the compiler to handle foo[0] instead? It seems that is where the
->>> real value would be.
+>> On 3/10/20 5:20 PM, Jes Sorensen wrote:
+>>> On 3/10/20 6:13 PM, Gustavo A. R. Silva wrote:
+>>>>
+>>>>
+>>>> On 3/10/20 5:07 PM, Jes Sorensen wrote:
+>>>>> As I stated in my previous answer, this seems more code churn than an
+>>>>> actual fix. If this is a real problem, shouldn't the work be put into
+>>>>> fixing the compiler to handle foo[0] instead? It seems that is where the
+>>>>> real value would be.
+>>>>
+>>>> Yeah. But, unfortunately, I'm not a compiler guy, so I'm not able to fix the
+>>>> compiler as you suggest. And I honestly don't see what is so annoying/disturbing
+>>>> about applying a patch that removes the 0 from foo[0] when it brings benefit
+>>>> to the whole codebase.
+>>>
+>>> My point is that it adds what seems like unnecessary churn, which is not
+>>> a benefit, and it doesn't improve the generated code.
+>>>
 >>
->> Yeah. But, unfortunately, I'm not a compiler guy, so I'm not able to fix the
->> compiler as you suggest. And I honestly don't see what is so annoying/disturbing
->> about applying a patch that removes the 0 from foo[0] when it brings benefit
->> to the whole codebase.
+>> As an example of one of the benefits of this is that the compiler won't trigger
+>> a warning in the following case:
+>>
+>> struct boo {
+>> 	int stuff;
+>> 	struct foo array[0];
+>> 	int morestuff;
+>> };
+>>
+>> The result of the code above is an undefined behavior.
+>>
+>> On the other hand in the case below, the compiles does trigger a warning:
+>>
+>> struct boo {
+>> 	int stuff;
+>> 	struct foo array[];
+>> 	int morestuff;
+>> };
 > 
-> My point is that it adds what seems like unnecessary churn, which is not
-> a benefit, and it doesn't improve the generated code.
+> Right, this just underlines my prior argument, that this should be fixed
+> in the compiler.
 > 
 
-As an example of one of the benefits of this is that the compiler won't trigger
-a warning in the following case:
-
-struct boo {
-	int stuff;
-	struct foo array[0];
-	int morestuff;
-};
-
-The result of the code above is an undefined behavior.
-
-On the other hand in the case below, the compiles does trigger a warning:
-
-struct boo {
-	int stuff;
-	struct foo array[];
-	int morestuff;
-};
-
-See: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=76497732932f15e7323dc805e8ea8dc11bb587cf
+In the meantime it's not at all harmful to do something about it in the codebase.
 
 Thanks
 --
