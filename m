@@ -2,34 +2,34 @@ Return-Path: <SRS0=CJfu=43=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7A54C10F27
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Mar 2020 22:45:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 940FDC18E5A
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Mar 2020 22:47:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8F9A921927
-	for <linux-wireless@archiver.kernel.org>; Tue, 10 Mar 2020 22:45:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4C664222D9
+	for <linux-wireless@archiver.kernel.org>; Tue, 10 Mar 2020 22:47:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=embeddedor.com header.i=@embeddedor.com header.b="ZYOZodow"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=embeddedor.com header.i=@embeddedor.com header.b="YyHoh/0X"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726380AbgCJWpQ (ORCPT
+        id S1727695AbgCJWrD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 10 Mar 2020 18:45:16 -0400
-Received: from gateway33.websitewelcome.com ([192.185.146.85]:23967 "EHLO
-        gateway33.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726325AbgCJWpO (ORCPT
+        Tue, 10 Mar 2020 18:47:03 -0400
+Received: from gateway36.websitewelcome.com ([50.116.125.2]:37814 "EHLO
+        gateway36.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726315AbgCJWrC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Mar 2020 18:45:14 -0400
-X-Greylist: delayed 1353 seconds by postgrey-1.27 at vger.kernel.org; Tue, 10 Mar 2020 18:45:14 EDT
-Received: from cm16.websitewelcome.com (cm16.websitewelcome.com [100.42.49.19])
-        by gateway33.websitewelcome.com (Postfix) with ESMTP id A10998F9F72
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Mar 2020 17:21:53 -0500 (CDT)
+        Tue, 10 Mar 2020 18:47:02 -0400
+X-Greylist: delayed 620 seconds by postgrey-1.27 at vger.kernel.org; Tue, 10 Mar 2020 18:47:01 EDT
+Received: from cm12.websitewelcome.com (cm12.websitewelcome.com [100.42.49.8])
+        by gateway36.websitewelcome.com (Postfix) with ESMTP id 4495D40862ADE
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Mar 2020 17:02:35 -0500 (CDT)
 Received: from gator4166.hostgator.com ([108.167.133.22])
         by cmsmtp with SMTP
-        id BnG5jqggC8vkBBnG5jjKtw; Tue, 10 Mar 2020 17:21:53 -0500
+        id BnePjI54F1s2xBnePj24Om; Tue, 10 Mar 2020 17:47:01 -0500
 X-Authority-Reason: nr=8
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
@@ -37,17 +37,17 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
         Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
         List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=41Tj2XlH5TbhpR/J2ek3eO22cPzrnxQN6EC+pTU4jo8=; b=ZYOZodowhuXUL05dCUtPBabCzD
-        frvvp4OKMasqUSsP2bqLfMpg9Uuz44WTPpvYoLsMozl1UO7pzpWUlKKwh605aAEoO2IG5gqOGoce/
-        SImBR3osnAKnYqzEk6kRScpZA+s9naxCpyJkcGYLTFIIK8I6X3sLjDBIMo/lhl09S6DHdhxZ0mPeS
-        MBTgYKSE+FsEmDffVc+t8AGpufWw+I1iJCt88SCfdYsyd5Onaveke1OjC/aO0/cF60mh3krh2YtbT
-        jmp0rPX9Vwf3XfCc6WfngI3yDoo0U1hvYPdx60ron+nO9G85tmyRNb2uOnDypvr5lEW7VJUndcJ/i
-        4aSqxNSw==;
-Received: from 187-162-252-62.static.axtel.net ([187.162.252.62]:46884 helo=[192.168.0.140])
+        bh=UsqxYLWLXKnLJ3c6VQJ3e9hzgKr1x3F1ADDL6grOKPI=; b=YyHoh/0Xsgyn9+zhrEj6JxNffD
+        w4WINQIvgYuo4flUxZBn27eoCLBP7zzbeYoUCGixjj3yEQKSPzxx76ADlLnV+P9n92JxZBVpotxIU
+        yizrAm9JHIyu9TLEBDA5BOcEAwXOxXgYvfUpLzqzemQlqP29s7U5R/jfnjZ/9lPLFS6fn5N9+KPuN
+        l2TxrizmjM3gMEaZBc8qotaCLcDaJL7068ex0/q3n1TyzWJcjrEK8i48Kt3R5Gp3x1cneEdKGrfsa
+        7m3XLpM12wmulBkUvmDlwP3avZw/pN8viBdo5y6XyeMBH6XBrGP+fj5DYKWz0KZOSa8HTsVjk9br8
+        7PbUvx/A==;
+Received: from 187-162-252-62.static.axtel.net ([187.162.252.62]:47200 helo=[192.168.0.140])
         by gator4166.hostgator.com with esmtpsa (TLSv1.2:ECDHE-RSA-AES128-GCM-SHA256:128)
         (Exim 4.92)
         (envelope-from <gustavo@embeddedor.com>)
-        id 1jBnG5-002TYx-4r; Tue, 10 Mar 2020 17:21:53 -0500
+        id 1jBneO-002f2q-V7; Tue, 10 Mar 2020 17:47:01 -0500
 Subject: Re: [PATCH][next] zd1211rw/zd_usb.h: Replace zero-length array with
  flexible-array member
 To:     Joe Perches <joe@perches.com>,
@@ -56,7 +56,7 @@ To:     Joe Perches <joe@perches.com>,
 Cc:     Daniel Drake <dsd@gentoo.org>, Ulrich Kunitz <kune@deine-taler.de>,
         "David S. Miller" <davem@davemloft.net>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
+        linux-kernel@vger.kernel.org, Kees Cook <keescook@chromium.org>
 References: <20200305111216.GA24982@embeddedor>
  <87k13yq2jo.fsf@kamboji.qca.qualcomm.com>
  <256881484c5db07e47c611a56550642a6f6bd8e9.camel@perches.com>
@@ -67,6 +67,10 @@ References: <20200305111216.GA24982@embeddedor>
  <021d1125-3ffd-39ef-395a-b796c527bde4@gmail.com>
  <fb3395d7-e932-10ac-1feb-ab2ceb63424e@embeddedor.com>
  <937b0b529509ec1641453ef7c13f38e2d7cc813e.camel@perches.com>
+ <c2aa4d8d-1c39-1903-2b49-382f2143e181@embeddedor.com>
+ <8b6213e51131deacbdac29a8d9c088ae49933724.camel@perches.com>
+ <e65fd08d-984f-0bdc-5fbf-6abceacf819a@gmail.com>
+ <ac0ab948aabd201360d9330c206dd72df14847ae.camel@perches.com>
 From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
 Openpgp: preference=signencrypt
 Autocrypt: addr=gustavo@embeddedor.com; keydata=
@@ -112,12 +116,12 @@ Autocrypt: addr=gustavo@embeddedor.com; keydata=
  YJWH93PN+ZUh6i6Rd2U/i8jH5WvzR57UeWxE4P8bQc0hNGrUsHQH6bpHV2lbuhDdqo+cM9eh
  GZEO3+gCDFmKrjspZjkJbB5Gadzvts5fcWGOXEvuT8uQSvl+vEL0g6vczsyPBtqoBLa9SNrS
  VtSixD1uOgytAP7RWS474w==
-Message-ID: <c2aa4d8d-1c39-1903-2b49-382f2143e181@embeddedor.com>
-Date:   Tue, 10 Mar 2020 17:21:52 -0500
+Message-ID: <75c0c37a-82bf-507e-d6ea-89cd56add8a7@embeddedor.com>
+Date:   Tue, 10 Mar 2020 17:46:59 -0500
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.9.0
 MIME-Version: 1.0
-In-Reply-To: <937b0b529509ec1641453ef7c13f38e2d7cc813e.camel@perches.com>
+In-Reply-To: <ac0ab948aabd201360d9330c206dd72df14847ae.camel@perches.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -129,13 +133,13 @@ X-AntiAbuse: Sender Address Domain - embeddedor.com
 X-BWhitelist: no
 X-Source-IP: 187.162.252.62
 X-Source-L: No
-X-Exim-ID: 1jBnG5-002TYx-4r
+X-Exim-ID: 1jBneO-002f2q-V7
 X-Source: 
 X-Source-Args: 
 X-Source-Dir: 
-X-Source-Sender: 187-162-252-62.static.axtel.net ([192.168.0.140]) [187.162.252.62]:46884
+X-Source-Sender: 187-162-252-62.static.axtel.net ([192.168.0.140]) [187.162.252.62]:47200
 X-Source-Auth: gustavo@embeddedor.com
-X-Email-Count: 16
+X-Email-Count: 54
 X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
 X-Local-Domain: yes
 Sender: linux-wireless-owner@vger.kernel.org
@@ -145,70 +149,24 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 
 
-On 3/10/20 5:15 PM, Joe Perches wrote:
-> On Tue, 2020-03-10 at 17:13 -0500, Gustavo A. R. Silva wrote:
->>
->> On 3/10/20 5:07 PM, Jes Sorensen wrote:
->>> On 3/10/20 5:52 PM, Gustavo A. R. Silva wrote:
->>>>
->>>> On 3/10/20 8:56 AM, Kalle Valo wrote:
->>>>> + jes
->>>>>
->>>>> "Gustavo A. R. Silva" <gustavo@embeddedor.com> writes:
->>>>>>> I wrote in a confusing way, my question above was about the actual patch
->>>>>>> and not the the title. For example, Jes didn't like this style change:
->>>>>>>
->>>>>>> https://patchwork.kernel.org/patch/11402315/
->>>>>>>
->>>>>>
->>>>>> It doesn't seem that that comment adds a lot to the conversation. The only
->>>>>> thing that it says is literally "fix the compiler". By the way, more than
->>>>>> a hundred patches have already been applied to linux-next[1] and he seems
->>>>>> to be the only person that has commented such a thing.
->>>>>
->>>>> But I also asked who prefers this format in that thread, you should not
->>>>> ignore questions from two maintainers (me and Jes).
->>>>>
->>>>
->>>> I'm sorry. I thought the changelog text had already the proper information.
->>>> In the changelog text I'm quoting the GCC documentation below:
->>>>
->>>> "The preferred mechanism to declare variable-length types like struct line
->>>> above is the ISO C99 flexible array member..." [1]
->>>>
->>>> I'm also including a link to the following KSPP open issue:
->>>>
->>>> https://github.com/KSPP/linux/issues/21
->>>>
->>>> The issue above mentions the following:
->>>>
->>>> "Both cases (0-byte and 1-byte arrays) pose confusion for things like sizeof(),
->>>> CONFIG_FORTIFY_SOURCE."
->>>>
->>>> sizeof(flexible-array-member) triggers a warning because flexible array members have
->>>> incomplete type[1]. There are some instances of code in which the sizeof operator
->>>> is being incorrectly/erroneously applied to zero-length arrays and the result is zero.
->>>> Such instances may be hiding some bugs. So, the idea is also to get completely rid
->>>> of those sorts of issues.
->>>
->>> As I stated in my previous answer, this seems more code churn than an
->>> actual fix. If this is a real problem, shouldn't the work be put into
->>> fixing the compiler to handle foo[0] instead? It seems that is where the
->>> real value would be.
->>>
->>
->> Yeah. But, unfortunately, I'm not a compiler guy, so I'm not able to fix the
->> compiler as you suggest. And I honestly don't see what is so annoying/disturbing
->> about applying a patch that removes the 0 from foo[0] when it brings benefit
->> to the whole codebase.
+On 3/10/20 5:41 PM, Joe Perches wrote:
+> On Tue, 2020-03-10 at 18:33 -0400, Jes Sorensen wrote:
+>> Again, the changes are not harmful to the code, but add no value.
 > 
-> As far as I can tell, it doesn't actually make a difference as
-> all the compilers produce the same object code with either form.
+> That argument asserts that style consistency is value-free.
+> I generally disagree with that argument.
 > 
 
-That's precisely why we can implement these changes, cleanly(the fact
-that the compiler produces the same object code). So, the resulting
-object code is not the point here.
+If this is a matter of style, then I have already proved (this is in
+the changelog text) that the [] style is better than the [0] style:
 
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=76497732932f15e7323dc805e8ea8dc11bb587cf
+
+> But then again, it's likely we will have to agree to disagree.
+> 
+
+That's a healthy thing. :)
+
+Thanks
 --
 Gustavo
