@@ -6,29 +6,30 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C65BC10F29
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Mar 2020 08:47:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F919C18E5C
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Mar 2020 08:47:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4A29720637
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Mar 2020 08:47:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 455AB20637
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Mar 2020 08:47:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728651AbgCKIrU (ORCPT
+        id S1728727AbgCKIrV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 11 Mar 2020 04:47:20 -0400
-Received: from mx2.suse.de ([195.135.220.15]:55828 "EHLO mx2.suse.de"
+        Wed, 11 Mar 2020 04:47:21 -0400
+Received: from mx2.suse.de ([195.135.220.15]:55894 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728242AbgCKIrU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Mar 2020 04:47:20 -0400
+        id S1728688AbgCKIrV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 11 Mar 2020 04:47:21 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 751C7ADDA;
-        Wed, 11 Mar 2020 08:47:18 +0000 (UTC)
+        by mx2.suse.de (Postfix) with ESMTP id 6858DAF8E;
+        Wed, 11 Mar 2020 08:47:19 +0000 (UTC)
 From:   Takashi Iwai <tiwai@suse.de>
 To:     linux-wireless@vger.kernel.org
-Cc:     Kalle Valo <kvalo@codeaurora.org>, ath11k@lists.infradead.org
-Subject: [PATCH 1/7] ath11k: Use scnprintf() for avoiding potential buffer overflow
-Date:   Wed, 11 Mar 2020 09:47:07 +0100
-Message-Id: <20200311084713.18220-2-tiwai@suse.de>
+Cc:     Kalle Valo <kvalo@codeaurora.org>,
+        Luis Chamberlain <mcgrof@kernel.org>
+Subject: [PATCH 7/7] prism54: Use scnprintf() for avoiding potential buffer overflow
+Date:   Wed, 11 Mar 2020 09:47:13 +0100
+Message-Id: <20200311084713.18220-8-tiwai@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20200311084713.18220-1-tiwai@suse.de>
 References: <20200311084713.18220-1-tiwai@suse.de>
@@ -41,70 +42,127 @@ Since snprintf() returns the would-be-output size instead of the
 actual output size, the succeeding calls may go beyond the given
 buffer limit.  Fix it by replacing with scnprintf().
 
-Cc: ath11k@lists.infradead.org
+Cc: Luis Chamberlain <mcgrof@kernel.org>
 Signed-off-by: Takashi Iwai <tiwai@suse.de>
 ---
- drivers/net/wireless/ath/ath11k/debug_htt_stats.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/net/wireless/intersil/prism54/oid_mgt.c | 34 ++++++++++++-------------
+ 1 file changed, 17 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath11k/debug_htt_stats.c b/drivers/net/wireless/ath/ath11k/debug_htt_stats.c
-index 9939e909628f..f44dec839e70 100644
---- a/drivers/net/wireless/ath/ath11k/debug_htt_stats.c
-+++ b/drivers/net/wireless/ath/ath11k/debug_htt_stats.c
-@@ -22,7 +22,7 @@
- 	do {										\
- 		int index = 0; u8 i;							\
- 		for (i = 0; i < len; i++) {						\
--			index += snprintf(out + index, HTT_MAX_STRING_LEN - index,	\
-+			index += scnprintf(out + index, HTT_MAX_STRING_LEN - index,	\
- 					  " %u:%u,", i, arr[i]);			\
- 			if (index < 0 || index >= HTT_MAX_STRING_LEN)			\
- 				break;							\
-@@ -46,7 +46,7 @@ static inline void htt_print_stats_string_tlv(const void *tag_buf,
- 	len += HTT_DBG_OUT(buf + len, buf_len - len, "HTT_STATS_STRING_TLV:");
- 
- 	for (i = 0; i < tag_len; i++) {
--		index += snprintf(&data[index],
-+		index += scnprintf(&data[index],
- 				HTT_MAX_STRING_LEN - index,
- 				"%.*s", 4, (char *)&(htt_stats_buf->data[i]));
- 		if (index >= HTT_MAX_STRING_LEN)
-@@ -3097,7 +3097,7 @@ static inline void htt_print_rx_pdev_rate_stats_tlv(const void *tag_buf,
- 		index = 0;
- 
- 		for (i = 0; i < HTT_RX_PDEV_STATS_RXEVM_MAX_PILOTS_PER_NSS; i++)
--			index += snprintf(&rx_pilot_evm_db[j][index],
-+			index += scnprintf(&rx_pilot_evm_db[j][index],
- 					  HTT_MAX_STRING_LEN - index,
- 					  " %u:%d,",
- 					  i,
-@@ -3109,7 +3109,7 @@ static inline void htt_print_rx_pdev_rate_stats_tlv(const void *tag_buf,
- 	index = 0;
- 	memset(str_buf, 0x0, HTT_MAX_STRING_LEN);
- 	for (i = 0; i < HTT_RX_PDEV_STATS_NUM_SPATIAL_STREAMS; i++)
--		index += snprintf(&str_buf[index],
-+		index += scnprintf(&str_buf[index],
- 				  HTT_MAX_STRING_LEN - index,
- 				  " %u:%d,", i, htt_stats_buf->rx_pilot_evm_db_mean[i]);
- 	len += HTT_DBG_OUT(buf + len, buf_len - len, "pilot_evm_dB_mean = %s ", str_buf);
-@@ -3217,7 +3217,7 @@ static inline void htt_print_rx_pdev_rate_stats_tlv(const void *tag_buf,
- 		index = 0;
- 		memset(str_buf, 0x0, HTT_MAX_STRING_LEN);
- 		for (i = 0; i < HTT_RX_PDEV_MAX_OFDMA_NUM_USER; i++)
--			index += snprintf(&str_buf[index],
-+			index += scnprintf(&str_buf[index],
- 					  HTT_MAX_STRING_LEN - index,
- 					  " %u:%d,",
- 					  i, htt_stats_buf->rx_ul_fd_rssi[j][i]);
-@@ -3232,7 +3232,7 @@ static inline void htt_print_rx_pdev_rate_stats_tlv(const void *tag_buf,
- 		index = 0;
- 		memset(str_buf, 0x0, HTT_MAX_STRING_LEN);
- 		for (i = 0; i < HTT_RX_PDEV_STATS_NUM_BW_COUNTERS; i++)
--			index += snprintf(&str_buf[index],
-+			index += scnprintf(&str_buf[index],
- 					  HTT_MAX_STRING_LEN - index,
- 					  " %u:%d,",
- 					  i,
+diff --git a/drivers/net/wireless/intersil/prism54/oid_mgt.c b/drivers/net/wireless/intersil/prism54/oid_mgt.c
+index 5705ad925a51..9fd307ca4b6d 100644
+--- a/drivers/net/wireless/intersil/prism54/oid_mgt.c
++++ b/drivers/net/wireless/intersil/prism54/oid_mgt.c
+@@ -780,17 +780,17 @@ mgt_response_to_str(enum oid_num_t n, union oid_res_t *r, char *str)
+ {
+ 	switch (isl_oid[n].flags & OID_FLAG_TYPE) {
+ 	case OID_TYPE_U32:
+-		return snprintf(str, PRIV_STR_SIZE, "%u\n", r->u);
++		return scnprintf(str, PRIV_STR_SIZE, "%u\n", r->u);
+ 	case OID_TYPE_BUFFER:{
+ 			struct obj_buffer *buff = r->ptr;
+-			return snprintf(str, PRIV_STR_SIZE,
++			return scnprintf(str, PRIV_STR_SIZE,
+ 					"size=%u\naddr=0x%X\n", buff->size,
+ 					buff->addr);
+ 		}
+ 		break;
+ 	case OID_TYPE_BSS:{
+ 			struct obj_bss *bss = r->ptr;
+-			return snprintf(str, PRIV_STR_SIZE,
++			return scnprintf(str, PRIV_STR_SIZE,
+ 					"age=%u\nchannel=%u\n"
+ 					"capinfo=0x%X\nrates=0x%X\n"
+ 					"basic_rates=0x%X\n", bss->age,
+@@ -801,9 +801,9 @@ mgt_response_to_str(enum oid_num_t n, union oid_res_t *r, char *str)
+ 	case OID_TYPE_BSSLIST:{
+ 			struct obj_bsslist *list = r->ptr;
+ 			int i, k;
+-			k = snprintf(str, PRIV_STR_SIZE, "nr=%u\n", list->nr);
++			k = scnprintf(str, PRIV_STR_SIZE, "nr=%u\n", list->nr);
+ 			for (i = 0; i < list->nr; i++)
+-				k += snprintf(str + k, PRIV_STR_SIZE - k,
++				k += scnprintf(str + k, PRIV_STR_SIZE - k,
+ 					      "bss[%u] :\nage=%u\nchannel=%u\n"
+ 					      "capinfo=0x%X\nrates=0x%X\n"
+ 					      "basic_rates=0x%X\n",
+@@ -819,23 +819,23 @@ mgt_response_to_str(enum oid_num_t n, union oid_res_t *r, char *str)
+ 			struct obj_frequencies *freq = r->ptr;
+ 			int i, t;
+ 			printk("nr : %u\n", freq->nr);
+-			t = snprintf(str, PRIV_STR_SIZE, "nr=%u\n", freq->nr);
++			t = scnprintf(str, PRIV_STR_SIZE, "nr=%u\n", freq->nr);
+ 			for (i = 0; i < freq->nr; i++)
+-				t += snprintf(str + t, PRIV_STR_SIZE - t,
++				t += scnprintf(str + t, PRIV_STR_SIZE - t,
+ 					      "mhz[%u]=%u\n", i, freq->mhz[i]);
+ 			return t;
+ 		}
+ 		break;
+ 	case OID_TYPE_MLME:{
+ 			struct obj_mlme *mlme = r->ptr;
+-			return snprintf(str, PRIV_STR_SIZE,
++			return scnprintf(str, PRIV_STR_SIZE,
+ 					"id=0x%X\nstate=0x%X\ncode=0x%X\n",
+ 					mlme->id, mlme->state, mlme->code);
+ 		}
+ 		break;
+ 	case OID_TYPE_MLMEEX:{
+ 			struct obj_mlmeex *mlme = r->ptr;
+-			return snprintf(str, PRIV_STR_SIZE,
++			return scnprintf(str, PRIV_STR_SIZE,
+ 					"id=0x%X\nstate=0x%X\n"
+ 					"code=0x%X\nsize=0x%X\n", mlme->id,
+ 					mlme->state, mlme->code, mlme->size);
+@@ -843,7 +843,7 @@ mgt_response_to_str(enum oid_num_t n, union oid_res_t *r, char *str)
+ 		break;
+ 	case OID_TYPE_ATTACH:{
+ 			struct obj_attachment *attach = r->ptr;
+-			return snprintf(str, PRIV_STR_SIZE,
++			return scnprintf(str, PRIV_STR_SIZE,
+ 					"id=%d\nsize=%d\n",
+ 					attach->id,
+ 					attach->size);
+@@ -851,7 +851,7 @@ mgt_response_to_str(enum oid_num_t n, union oid_res_t *r, char *str)
+ 		break;
+ 	case OID_TYPE_SSID:{
+ 			struct obj_ssid *ssid = r->ptr;
+-			return snprintf(str, PRIV_STR_SIZE,
++			return scnprintf(str, PRIV_STR_SIZE,
+ 					"length=%u\noctets=%.*s\n",
+ 					ssid->length, ssid->length,
+ 					ssid->octets);
+@@ -860,13 +860,13 @@ mgt_response_to_str(enum oid_num_t n, union oid_res_t *r, char *str)
+ 	case OID_TYPE_KEY:{
+ 			struct obj_key *key = r->ptr;
+ 			int t, i;
+-			t = snprintf(str, PRIV_STR_SIZE,
++			t = scnprintf(str, PRIV_STR_SIZE,
+ 				     "type=0x%X\nlength=0x%X\nkey=0x",
+ 				     key->type, key->length);
+ 			for (i = 0; i < key->length; i++)
+-				t += snprintf(str + t, PRIV_STR_SIZE - t,
++				t += scnprintf(str + t, PRIV_STR_SIZE - t,
+ 					      "%02X:", key->key[i]);
+-			t += snprintf(str + t, PRIV_STR_SIZE - t, "\n");
++			t += scnprintf(str + t, PRIV_STR_SIZE - t, "\n");
+ 			return t;
+ 		}
+ 		break;
+@@ -874,11 +874,11 @@ mgt_response_to_str(enum oid_num_t n, union oid_res_t *r, char *str)
+ 	case OID_TYPE_ADDR:{
+ 			unsigned char *buff = r->ptr;
+ 			int t, i;
+-			t = snprintf(str, PRIV_STR_SIZE, "hex data=");
++			t = scnprintf(str, PRIV_STR_SIZE, "hex data=");
+ 			for (i = 0; i < isl_oid[n].size; i++)
+-				t += snprintf(str + t, PRIV_STR_SIZE - t,
++				t += scnprintf(str + t, PRIV_STR_SIZE - t,
+ 					      "%02X:", buff[i]);
+-			t += snprintf(str + t, PRIV_STR_SIZE - t, "\n");
++			t += scnprintf(str + t, PRIV_STR_SIZE - t, "\n");
+ 			return t;
+ 		}
+ 		break;
 -- 
 2.16.4
 
