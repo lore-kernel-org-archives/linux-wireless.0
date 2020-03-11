@@ -2,85 +2,90 @@ Return-Path: <SRS0=yqm1=44=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B389C00302
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Mar 2020 15:21:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0667FC0044D
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Mar 2020 16:46:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C8F792073E
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Mar 2020 15:21:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3FB3B20734
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Mar 2020 16:46:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=bobcopeland-com.20150623.gappssmtp.com header.i=@bobcopeland-com.20150623.gappssmtp.com header.b="PlhUay0k"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="KtioJEEU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729887AbgCKPVO (ORCPT
+        id S1730316AbgCKQqt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 11 Mar 2020 11:21:14 -0400
-Received: from mail-qv1-f43.google.com ([209.85.219.43]:36150 "EHLO
-        mail-qv1-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729408AbgCKPVO (ORCPT
+        Wed, 11 Mar 2020 12:46:49 -0400
+Received: from mail26.static.mailgun.info ([104.130.122.26]:26482 "EHLO
+        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1730175AbgCKQqs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Mar 2020 11:21:14 -0400
-Received: by mail-qv1-f43.google.com with SMTP id r15so1038963qve.3
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Mar 2020 08:21:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bobcopeland-com.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=y/5uCc6iDiMl1s7i8RtXL7ftP3Qn2dNas9sWS9jP7Rs=;
-        b=PlhUay0kFtxmxxAYYbX4vTXfO1BLewdLbSnKEIlDSVeZAuxKjP/ol/5gOhh+TTvi1k
-         vHfGWrd/CqY7wAvAGqkgyDJOT8v+GePaiNLqdSm5x16pxVQMlasXH7vNfdao8qMX71qm
-         pyzTd1sx4Dr42KVKuD6NsBJ5CXDrwlGXj5m7E7yF/snDLNk0LAHf0DRLxzqLJTDSPcjG
-         AA6OEuFtMw1sOAC3iQcViWutjKax3Jk/a8ZG99Pk/k8xMFDaAX/g0IZrW/gSBzrErzrg
-         uT3manopB3Vr6SeQaxoeFKNXfli5Q8EsUOpyjXNx+VbwD3EzwRjjctQow9YCKhcD8kMx
-         CoYQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=y/5uCc6iDiMl1s7i8RtXL7ftP3Qn2dNas9sWS9jP7Rs=;
-        b=XIW91ODgrmxjf37SMktQV72+dbqU6TQCJoNnBMczDc6OY0uc7F/BxnarTbGuymdbB4
-         M2+E21Yq4muk3i83IE7KZ0vRfa1Ob5A5VY6e7Gbv0kOVh3HQxq0pVotvQbLWqqKB+Gf/
-         qy/Mhga0xdgHb768bi/AJaN9xVoxJIS5XDjRRZNv3TAp7+BsxM9eRJKioeD3X3p9zuCK
-         UuV8PQpYZNXPIpx5yfSANLpVtboWQTuj7ypsnzsRyvEoYAeVUgIW4voILrgOE0ET3Ddv
-         1owi4W04e7YCOkRiEc0O9yTwUrCG/B5jUdsp/7/+tx8/tAjKYWz2D9m32CsGJeqqEBjM
-         Pldw==
-X-Gm-Message-State: ANhLgQ09L1wtUu6ICPIJQFaZHQRaSu0qKZsLUZ84p1kNFByWL/ZBDQDq
-        qQCce8TTacXJKlDHa/tov8svdY9kgwM=
-X-Google-Smtp-Source: ADFU+vswVRh4pOMkphii0YtXHr/5lk9J4Sq0UsqEpBvklF7MXD2k6M+NdvgRI54W2L0u6Q9blWpjVw==
-X-Received: by 2002:a05:6214:5b2:: with SMTP id by18mr869156qvb.92.1583940071871;
-        Wed, 11 Mar 2020 08:21:11 -0700 (PDT)
-Received: from elrond.bobcopeland.com ([2607:fea8:5ac0:1bf2:91a5:cfde:3bfc:7446])
-        by smtp.gmail.com with ESMTPSA id o14sm5987631qtq.12.2020.03.11.08.21.10
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 11 Mar 2020 08:21:10 -0700 (PDT)
-Received: by elrond.bobcopeland.com (Postfix, from userid 1000)
-        id D055BFC0086; Wed, 11 Mar 2020 11:21:09 -0400 (EDT)
-Date:   Wed, 11 Mar 2020 11:21:09 -0400
-From:   Bob Copeland <me@bobcopeland.com>
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 0/4] wmediumd vhost-user
-Message-ID: <20200311152109.GA12125@bobcopeland.com>
-References: <20200305145655.67427-1-johannes@sipsolutions.net>
+        Wed, 11 Mar 2020 12:46:48 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1583945208; h=Date: Message-Id: Cc: To: References:
+ In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
+ Content-Type: Sender; bh=UhXC7/qsMc5z5an8m2+8QfRfmwemVdL8yXwo8p3PF1Y=;
+ b=KtioJEEU3tsUT7J0EOJera4zUkw0hA+c9xPs+aDbwNqpGaKIYhAcicAYW+a48PugkRVExkf0
+ fq42x1ve/BhM/W8sSS8dbiRhi8bVdP+YCgL+I47zehvI+ABuMiMKp3ZQ8+i+bB2jO5Fx4ptV
+ PZbun2JPByHWUwm5Wv+E0VHKW9Q=
+X-Mailgun-Sending-Ip: 104.130.122.26
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
+ by mxa.mailgun.org with ESMTP id 5e6915ed.7fef9be680d8-smtp-out-n03;
+ Wed, 11 Mar 2020 16:46:37 -0000 (UTC)
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 549F9C433D2; Wed, 11 Mar 2020 16:46:36 +0000 (UTC)
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 0A13CC433CB;
+        Wed, 11 Mar 2020 16:46:34 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 0A13CC433CB
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200305145655.67427-1-johannes@sipsolutions.net>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH] ath10k: fix not registering airtime of 11a station with
+ WMM disable
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1582171405-27236-1-git-send-email-yiboz@codeaurora.org>
+References: <1582171405-27236-1-git-send-email-yiboz@codeaurora.org>
+To:     Yibo Zhao <yiboz@codeaurora.org>
+Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Yibo Zhao <yiboz@codeaurora.org>
+User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
+Message-Id: <20200311164636.549F9C433D2@smtp.codeaurora.org>
+Date:   Wed, 11 Mar 2020 16:46:36 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, Mar 05, 2020 at 03:56:51PM +0100, Johannes Berg wrote:
-> Hi,
-> 
-> This adds vhost-user support, to match the hwsim code I
-> just sent to the list.
+Yibo Zhao <yiboz@codeaurora.org> wrote:
 
-Thanks!  Applied.
+> The tid of 11a station with WMM disable reported by FW is 0x10 in
+> tx completion. The tid 16 is mapped to a NULL txq since buffer
+> MMPDU capbility is not supported. Then 11a station's airtime will
+> not be registered due to NULL txq check. As a results, airtime of
+> 11a station keeps unchanged in debugfs system.
+> 
+> Mask the tid along with IEEE80211_QOS_CTL_TID_MASK to make it in
+> the valid range.
+> 
+> Hardwares tested : QCA9984
+> Firmwares tested : 10.4-3.10-00047
+> 
+> Signed-off-by: Yibo Zhao <yiboz@codeaurora.org>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+
+Patch applied to ath-next branch of ath.git, thanks.
+
+f9680c75d187 ath10k: fix not registering airtime of 11a station with WMM disable
 
 -- 
-Bob Copeland %% https://bobcopeland.com/
+https://patchwork.kernel.org/patch/11393223/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
