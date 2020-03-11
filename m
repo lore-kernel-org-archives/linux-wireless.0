@@ -2,107 +2,52 @@ Return-Path: <SRS0=yqm1=44=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED96DC4CC9E
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Mar 2020 16:53:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F070FC2BB1D
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Mar 2020 19:29:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 42FCD20737
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Mar 2020 16:53:42 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="G02+HbKV"
+	by mail.kernel.org (Postfix) with ESMTP id E98E720736
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Mar 2020 19:29:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730335AbgCKQxj (ORCPT
+        id S1731069AbgCKT31 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 11 Mar 2020 12:53:39 -0400
-Received: from mail27.static.mailgun.info ([104.130.122.27]:47447 "EHLO
-        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730019AbgCKQxi (ORCPT
+        Wed, 11 Mar 2020 15:29:27 -0400
+Received: from shards.monkeyblade.net ([23.128.96.9]:51716 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730913AbgCKT31 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Mar 2020 12:53:38 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1583945618; h=Date: Message-Id: Cc: To: References:
- In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=ubLoWCp3h01mj32RDpUyl192zHsOqVXscIZcMtW7IbI=;
- b=G02+HbKVrWv/IrJlJx9MbNO4bHmYUUsSpQVn6zB1heIw8vxoMCXfAFxKCfzdRzdxfygJwqk1
- 3V8IZXxGgxYFoyXV9MQ2p5cTyCaRpYPz9pJzsCYnmQKy+c/AirjHUCC8gMg343qZVivksk6k
- atnbtxzF4LfXCMFOT6Sfpf1fG8M=
-X-Mailgun-Sending-Ip: 104.130.122.27
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e69178a.7fc3b35dc500-smtp-out-n01;
- Wed, 11 Mar 2020 16:53:30 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 7184BC433D2; Wed, 11 Mar 2020 16:53:30 +0000 (UTC)
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id E469BC433CB;
-        Wed, 11 Mar 2020 16:53:27 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org E469BC433CB
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+        Wed, 11 Mar 2020 15:29:27 -0400
+Received: from localhost (unknown [IPv6:2601:601:9f00:477::3d5])
+        (using TLSv1 with cipher AES256-SHA (256/256 bits))
+        (Client did not present a certificate)
+        (Authenticated sender: davem-davemloft)
+        by shards.monkeyblade.net (Postfix) with ESMTPSA id C81811581AD2E;
+        Wed, 11 Mar 2020 12:29:26 -0700 (PDT)
+Date:   Wed, 11 Mar 2020 12:29:24 -0700 (PDT)
+Message-Id: <20200311.122924.1599212065271140342.davem@davemloft.net>
+To:     johannes@sipsolutions.net
+Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211 2020-03-11
+From:   David Miller <davem@davemloft.net>
+In-Reply-To: <20200311085355.8235-1-johannes@sipsolutions.net>
+References: <20200311085355.8235-1-johannes@sipsolutions.net>
+X-Mailer: Mew version 6.8 on Emacs 26.1
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] ath9k: Handle txpower changes even when TPC is disabled
-From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20200229161347.31341-1-repk@triplefau.lt>
-References: <20200229161347.31341-1-repk@triplefau.lt>
-To:     Remi Pommarel <repk@triplefau.lt>
-Cc:     Lorenzo Bianconi <lorenzo@kernel.org>,
-        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Remi Pommarel <repk@triplefau.lt>, stable@vger.kernel.org
-User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20200311165330.7184BC433D2@smtp.codeaurora.org>
-Date:   Wed, 11 Mar 2020 16:53:30 +0000 (UTC)
+X-Greylist: Sender succeeded SMTP AUTH, not delayed by milter-greylist-4.5.12 (shards.monkeyblade.net [149.20.54.216]); Wed, 11 Mar 2020 12:29:26 -0700 (PDT)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Remi Pommarel <repk@triplefau.lt> wrote:
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Wed, 11 Mar 2020 09:53:54 +0100
 
-> When TPC is disabled IEEE80211_CONF_CHANGE_POWER event can be handled to
-> reconfigure HW's maximum txpower.
-> 
-> This fixes 0dBm txpower setting when user attaches to an interface for
-> the first time with the following scenario:
-> 
-> ieee80211_do_open()
->     ath9k_add_interface()
->         ath9k_set_txpower() /* Set TX power with not yet initialized
->                                sc->hw->conf.power_level */
-> 
->     ieee80211_hw_config() /* Iniatilize sc->hw->conf.power_level and
->                              raise IEEE80211_CONF_CHANGE_POWER */
-> 
->     ath9k_config() /* IEEE80211_CONF_CHANGE_POWER is ignored */
-> 
-> This issue can be reproduced with the following:
-> 
->   $ modprobe -r ath9k
->   $ modprobe ath9k
->   $ wpa_supplicant -i wlan0 -c /tmp/wpa.conf &
->   $ iw dev /* Here TX power is either 0 or 3 depending on RF chain */
->   $ killall wpa_supplicant
->   $ iw dev /* TX power goes back to calibrated value and subsequent
->               calls will be fine */
-> 
-> Fixes: 283dd11994cde ("ath9k: add per-vif TX power capability")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Remi Pommarel <repk@triplefau.lt>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+> I have a few fixes still; please pull and let me know
+> if there's any problem.
 
-Patch applied to ath-next branch of ath.git, thanks.
-
-968ae2caad07 ath9k: Handle txpower changes even when TPC is disabled
-
--- 
-https://patchwork.kernel.org/patch/11413917/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Pulled, thanks a lot.
