@@ -7,64 +7,64 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA9E4C10F29
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Mar 2020 12:19:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E387BC18E5A
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Mar 2020 12:19:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9CE3C2146E
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Mar 2020 12:19:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B193D22525
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Mar 2020 12:19:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="UUaZXU+c"
+	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="S4tR8hNo"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729332AbgCKMTB (ORCPT
+        id S1729317AbgCKMTa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 11 Mar 2020 08:19:01 -0400
-Received: from esa6.microchip.iphmx.com ([216.71.154.253]:26317 "EHLO
-        esa6.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729237AbgCKMTA (ORCPT
+        Wed, 11 Mar 2020 08:19:30 -0400
+Received: from esa3.microchip.iphmx.com ([68.232.153.233]:13865 "EHLO
+        esa3.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729259AbgCKMT3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Mar 2020 08:19:00 -0400
-Received-SPF: Pass (esa6.microchip.iphmx.com: domain of
+        Wed, 11 Mar 2020 08:19:29 -0400
+Received-SPF: Pass (esa3.microchip.iphmx.com: domain of
   Ajay.Kathat@microchip.com designates 198.175.253.82 as
   permitted sender) identity=mailfrom;
-  client-ip=198.175.253.82; receiver=esa6.microchip.iphmx.com;
+  client-ip=198.175.253.82; receiver=esa3.microchip.iphmx.com;
   envelope-from="Ajay.Kathat@microchip.com";
   x-sender="Ajay.Kathat@microchip.com"; x-conformance=spf_only;
   x-record-type="v=spf1"; x-record-text="v=spf1 mx
   a:ushub1.microchip.com a:smtpout.microchip.com
   -exists:%{i}.spf.microchip.iphmx.com include:servers.mcsv.net
   include:mktomail.com include:spf.protection.outlook.com ~all"
-Received-SPF: None (esa6.microchip.iphmx.com: no sender
+Received-SPF: None (esa3.microchip.iphmx.com: no sender
   authenticity information available from domain of
   postmaster@email.microchip.com) identity=helo;
-  client-ip=198.175.253.82; receiver=esa6.microchip.iphmx.com;
+  client-ip=198.175.253.82; receiver=esa3.microchip.iphmx.com;
   envelope-from="Ajay.Kathat@microchip.com";
   x-sender="postmaster@email.microchip.com";
   x-conformance=spf_only
-Authentication-Results: esa6.microchip.iphmx.com; spf=Pass smtp.mailfrom=Ajay.Kathat@microchip.com; spf=None smtp.helo=postmaster@email.microchip.com; dmarc=pass (p=none dis=none) d=microchip.com
-IronPort-SDR: 8dGt84TJN+lNVbWImrpeU0xlzwdrS5pc5qndXe3ffRswy6cpe8S2zb9OrRTfaSM5p9AX+ej4B8
- 9vZfzeOdBzmMUQYfSD4bzgP3e8tFIyyM2ASU695IvD+ie2M8jjMNFN8WaI0bs9DWwKxyc1MV/f
- PJ2ZoCH6MCPStZhcVWb6PoMPZr7aK3rFrIghKue0O3JRTiMevxxwA+KKFAYAdEjQshtz6hBzZl
- XcM4Bg0QHV7ZgvaRMWOKZPeng6KZP+qJ6bE2tKI8DYQjlIFUQdH5qLmrkY/fEwFZLa1X71pVCQ
- Xag=
+Authentication-Results: esa3.microchip.iphmx.com; spf=Pass smtp.mailfrom=Ajay.Kathat@microchip.com; spf=None smtp.helo=postmaster@email.microchip.com; dmarc=pass (p=none dis=none) d=microchip.com
+IronPort-SDR: QHiBXLJJEkl/alqgM/bd1HGadIGdBwLwl015D3Sn2duaPH6HzMDTtZ3OYBgApuDOSUYbhBb57P
+ +3CBa2fZTaCj0TIEHi4cVcgPH/fNKJ+iiKrL/OaFeIGQMzTAnvCfq/XkBZlURdWPQ7Khn1OIS9
+ hNDVuqje1wpo3Tz8pEMgyaf6Q0Fjs7OPAxlKJepqbATZkRO3KEc/JVRMY9A+OqbUfqPWPOKvm0
+ +AcxuPXd5qbcl0PXThHzUJ8aUJVetgTZmEQp24wH8dianJx7aSskTvnpub6aHX4V28JHCvZBDt
+ PDc=
 X-IronPort-AV: E=Sophos;i="5.70,540,1574146800"; 
-   d="scan'208";a="5254866"
+   d="scan'208";a="69605602"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa6.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 11 Mar 2020 05:18:59 -0700
+  by esa3.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 11 Mar 2020 05:19:27 -0700
 Received: from chn-vm-ex04.mchp-main.com (10.10.85.152) by
- chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server
+ chn-vm-ex01.mchp-main.com (10.10.85.143) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1713.5; Wed, 11 Mar 2020 05:18:59 -0700
+ 15.1.1713.5; Wed, 11 Mar 2020 05:19:27 -0700
 Received: from NAM10-MW2-obe.outbound.protection.outlook.com (10.10.215.89) by
  email.microchip.com (10.10.87.151) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5
- via Frontend Transport; Wed, 11 Mar 2020 05:18:59 -0700
+ via Frontend Transport; Wed, 11 Mar 2020 05:19:27 -0700
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=f9cHbpjQynKeHsRsVpNP9sbFVkDzCOLVFFhVyzgu+IbHrltdKuKHS4zVktqz5qeKrAoXbVlQ3ndGnilHR7FwK6DevANpF36RAtYJvxUmQ5YJfc9bYpzOdCwZ7uKPRM13yhq+tCAxy04glU+bDe86oqQXpBJ6vYZv5FeYuYmLo69Y24fnN1e1ui9el2WMzyt6SlU8ABnSmNfLzfaYWv24iWMuDeGTEkqsZ4Wa5Ufq+Z6D3lMffr0SUvidkEgufOhMzTg+fOoYEB5DRVEqYbc0Wb5T7IPo6od3zaRmVc1QPJMX1ntQZB1NL4yO6tFhXM4kva75kdcRBHbS8MMpaqzYHA==
+ b=cSwSYSwdHszhz0Y9jXdVJOoZ1g3tHxotLKGMi6RE2fd8RyZ9rCpGzd5paVN8HM9PvvyrnFQFcaFni1eIzOWDLLJA7XGGCR2bMUtW/GlNFOGFplkpHvkQZ1iq6TBlYpifOj+QVyIr5h9sHD2MWneTocR3T9Ci+zEv/EGT1TSVLFj1WWQ80ZkuShplwNeYpqkOG/L+2KGYkOFbxKNoMYqK6Ap34zYUbXkdIfKmAMO7n9GUlyjDetcHn9xxXYiBFIawqvZR9Nnvav4ycQ3jA9xunT+/AEzNmiQ5hYqW/BQgk6uHtopK54XCt7tBh0tcFnQ1m3BhRbfnYLmJNtUTfUuxdQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=BE6V6rw8RGcvPmlpl38LypXAetuHq5F9l/xjhkeWF48=;
- b=Sa2k7k9OcROdK3DAVT5gw29nHVxhbV0BQpxsmOozOhtoqoqLLDgnCvHA44EzPuiLPbb4+MP4aDfwpeGB/KCygOZ2SgzYkKs3CX26zbEKU5TrMnCRm5Po9p0g8N/x0KENHmAX2viZ9+TZNxDSHO/x3mLBJdxgztVX3Saja0cGvLM2KlubmJF/u36y27GlFHr2jSIPkDUyAeZPgFAQDLgZqCpLn7/1cs5JI7mkRVdw7TlpsbAY51quBcj7i9Fgs801mY6euX1+nZOgwa6S94JU/DfdTysDG6QfIaz2tiXXubhP1LhTQG9Nd2xg7MssMe62BcdfGtHsvokS9koddwQNvA==
+ bh=8NEmNxWHt//zd0Rl+EbH1Xdj3cXo36+I+LbtvN+CtOo=;
+ b=IlbF2zO3YFsixnrZR1Ez3jcX3l3P8k/c8Pmc/Nd8IjCwzefKWKgcVa6mH908p6trmKJCWi21SvCna17/kg1dhrTZccAfyxygwxwpnKmanTlPmcffk9ZUOFFOFOgpgamYawz29ZS9hUma1HSKKLkyy259Ks2jvbRAseX5HPpzOu5vcUDka2J/PiAUO+BiO9sX6F6OQt3cXI2hZwIcJQPIwO6rZbXV4M4CYeeD7S30bI84rL5j/6mE9YWWf1BLF+Q2JHn1M6Xd6fV12JXdALgBPE6ELZ1O5vBabef+9BSfG9M5rTCL0r8WNoW0+Yi/5oiMqIhutZQOqO4dNnEb4nbadg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=microchip.com; dmarc=pass action=none
  header.from=microchip.com; dkim=pass header.d=microchip.com; arc=none
@@ -72,17 +72,17 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=microchiptechnology.onmicrosoft.com;
  s=selector2-microchiptechnology-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=BE6V6rw8RGcvPmlpl38LypXAetuHq5F9l/xjhkeWF48=;
- b=UUaZXU+c1SbZSQDlEazuzQJ1XqFYuLRptxdLY21fl5KDXcRQ2d2S50tUgxL/HMmKMAXtdws0srWfKVaHYQG5cbVTEwm1oBUK01X9jCW6Q6iP5yjFjc35JmqkiPn6DP5rGfJCYTpQvfm7tSXllHaTwlNZI0Bjf0eY3gey3WI29a4=
+ bh=8NEmNxWHt//zd0Rl+EbH1Xdj3cXo36+I+LbtvN+CtOo=;
+ b=S4tR8hNo3W0dAAjigPST4TovCkaDk8Wt4ZapaZhPsk6f3XaJnaoZMCLHmwTsyeXMkDMQyWlCsx/sElo5AVceqP+xMOkqFxMvuzFkNVUqs/hFA8ZnVtCv+8JH/ZbVHJE0tUQv8QxN++OFjRGKft+AdiI0BT8he0sSS3JlHmUkDMQ=
 Received: from BYAPR11MB3125.namprd11.prod.outlook.com (2603:10b6:a03:8e::32)
  by BYAPR11MB2805.namprd11.prod.outlook.com (2603:10b6:a02:c1::15) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2814.14; Wed, 11 Mar
- 2020 12:18:56 +0000
+ 2020 12:19:25 +0000
 Received: from BYAPR11MB3125.namprd11.prod.outlook.com
  ([fe80::c27:87cf:ca4:d86e]) by BYAPR11MB3125.namprd11.prod.outlook.com
  ([fe80::c27:87cf:ca4:d86e%4]) with mapi id 15.20.2793.013; Wed, 11 Mar 2020
- 12:18:56 +0000
+ 12:19:25 +0000
 From:   <Ajay.Kathat@microchip.com>
 To:     <linux-wireless@vger.kernel.org>
 CC:     <devel@driverdev.osuosl.org>, <devicetree@vger.kernel.org>,
@@ -90,11 +90,11 @@ CC:     <devel@driverdev.osuosl.org>, <devicetree@vger.kernel.org>,
         <Adham.Abozaeid@microchip.com>, <Nicolas.Ferre@microchip.com>,
         <Claudiu.Beznea@microchip.com>, <Venkateswara.Kaja@microchip.com>,
         <Ajay.Kathat@microchip.com>
-Subject: [PATCH v5 09/17] wilc1000: add netdev.c
-Thread-Topic: [PATCH v5 09/17] wilc1000: add netdev.c
-Thread-Index: AQHV9582bUeZQQHSVECPGa+Uj5XHcg==
-Date:   Wed, 11 Mar 2020 12:18:46 +0000
-Message-ID: <20200311121809.5610-10-ajay.kathat@microchip.com>
+Subject: [PATCH v5 13/17] wilc1000: add wlan.c
+Thread-Topic: [PATCH v5 13/17] wilc1000: add wlan.c
+Thread-Index: AQHV95842cWP9H0JDUOoDaFgJZs0Ng==
+Date:   Wed, 11 Mar 2020 12:18:49 +0000
+Message-ID: <20200311121809.5610-14-ajay.kathat@microchip.com>
 References: <20200311121809.5610-1-ajay.kathat@microchip.com>
 In-Reply-To: <20200311121809.5610-1-ajay.kathat@microchip.com>
 Accept-Language: en-US
@@ -104,30 +104,30 @@ X-MS-TNEF-Correlator:
 x-mailer: git-send-email 2.17.1
 x-originating-ip: [121.244.27.38]
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 6af6c8ae-5708-4d88-7ae5-08d7c5b65ed2
+x-ms-office365-filtering-correlation-id: 38dd4b81-8467-4925-1e62-08d7c5b67038
 x-ms-traffictypediagnostic: BYAPR11MB2805:
 x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <BYAPR11MB28059232E0D77D7A0A4A62CBE3FC0@BYAPR11MB2805.namprd11.prod.outlook.com>
+x-microsoft-antispam-prvs: <BYAPR11MB2805667679133D5AE3E93F3CE3FC0@BYAPR11MB2805.namprd11.prod.outlook.com>
 x-bypassexternaltag: True
-x-ms-oob-tlc-oobclassifiers: OLM:40;
+x-ms-oob-tlc-oobclassifiers: OLM:15;
 x-forefront-prvs: 0339F89554
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(39860400002)(376002)(136003)(346002)(396003)(366004)(199004)(478600001)(2906002)(71200400001)(8936002)(81166006)(81156014)(6666004)(316002)(5660300002)(54906003)(6506007)(1076003)(8676002)(6512007)(86362001)(36756003)(107886003)(4326008)(6486002)(76116006)(91956017)(66476007)(64756008)(66446008)(66946007)(66556008)(6916009)(2616005)(186003)(30864003)(26005)(579004);DIR:OUT;SFP:1101;SCL:1;SRVR:BYAPR11MB2805;H:BYAPR11MB3125.namprd11.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(39860400002)(376002)(136003)(346002)(396003)(366004)(199004)(478600001)(2906002)(71200400001)(8936002)(81166006)(81156014)(6666004)(316002)(5660300002)(54906003)(6506007)(1076003)(8676002)(6512007)(86362001)(36756003)(107886003)(4326008)(6486002)(76116006)(91956017)(66476007)(64756008)(66446008)(66946007)(66556008)(6916009)(2616005)(186003)(30864003)(26005)(579004)(559001);DIR:OUT;SFP:1101;SCL:1;SRVR:BYAPR11MB2805;H:BYAPR11MB3125.namprd11.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;
 received-spf: None (protection.outlook.com: microchip.com does not designate
  permitted sender hosts)
 x-ms-exchange-senderadcheck: 1
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: UjUmCOc2q4e3AHj9+yKiSSXXJPhq1uzWySNIMC7W1pfdO5fduB7a6Wt/4ZW0VipuykfXo1B/sRCipBtoUAGSDrejsp7QPhwsKqWrfS6eai4esSJ9DTOS2X1JWmXiLN1642Jy6rN7Hv6ySoua+JSNyxUuttxLThek82+cNdUZ5MsaHekxlmFC+5HnACef6bjqndG1q6LW/0JMAuYAymp7vIaYsEuPdpg2ZyBkHx6qkc5wHKjnTwnZgH9oBtvlAeMMAeBg1XNRx6vuB3rhbA8j6wWo2MZRUs1BGAdrhMlMAk/DMwNTI8TAVmq6FLnsJfp8jFWSsjP1e+FwCZtql+XvZXEiTdIcOlQK0f26jXhigEvor1oQhKTyobHaSC3ByMGlEgG5pO1tArBbf7I9bejo51shkMBXKtmllmblsSAKEW2acUbbk59IykqQ7p5hpy3y
-x-ms-exchange-antispam-messagedata: 4VmBHxAFi+l2hlEflXBIHHGj5GhqOXdTEsOAmRVRkROJoyZUuRx+ZJVXy3P2AmFCzxcL5f3x7Ab0a5c0CT+hvQTVOZv+t7HjvLBQDX4S7xr2xM/dMtUkSkMqguKKK3x8pLvwcldFm1IkBDX3vW6hsw==
+x-microsoft-antispam-message-info: v9TBkRIz+DJ2hYQgiz0ejQScOYQoY3d2csLy/GKj4FPUfUo+z03vk3iVle9wrBtp6ztsP6zceJafLZFAVrFHtD7/tkGEW8Eoia4YETTOrVtiCYDKtblbQxEqEGU3ln+5jODSSygutA+M9QKYqhjm9h6kTaTFAEQzYhuBaTKN/xP20K1EUIb6DT819mIqJqwhULJKJFz7/6QS5U2G78DDzvXGZEDmqRJLZjNY0hQU9t0wxh6sr5skG2szJEGKc2+r8vgaqgBxP7Q0RkNqR3nKWRst3pjNYrBGI2whRo5VMeYfPDhsPvQ+jmhEOCiuh/b8lG2vq0AUw4ROaQH8LSI6f2mZYst4SjtkOU15++2t+2S8ohI4yGjEC3DYsW2UDJx7He14Bd8Z1PoJ2eK3JfQ/EstbEGkqtxxrBmuqkkF9e4rAqJGcQzIrBAHSTe638n2h
+x-ms-exchange-antispam-messagedata: zitc4UgfzfYMjKAokOc7yU6z87hA73bj92EIt7e+hVfpy2nZ7O2A7hxC5zSa75hEfnTjchpgBePuDcGgP3/mWpP7nX2PcXgah0WllnLr+q8A6y9lai8TEniSzrpt8C5F6h/pRPPn2+hTMYXDhnmKkQ==
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-Network-Message-Id: 6af6c8ae-5708-4d88-7ae5-08d7c5b65ed2
-X-MS-Exchange-CrossTenant-originalarrivaltime: 11 Mar 2020 12:18:46.4681
+X-MS-Exchange-CrossTenant-Network-Message-Id: 38dd4b81-8467-4925-1e62-08d7c5b67038
+X-MS-Exchange-CrossTenant-originalarrivaltime: 11 Mar 2020 12:18:49.0187
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: hjmsLlnRG+PSrQeLTD+q+HHbB3Pugf0iCzY6LjEqeEr+xjz8dnBZVHwenOvXykP0HW4uVWCf7UUpCYZEn8dGoLcaMmxdlRsHjaStkmYnIXI=
+X-MS-Exchange-CrossTenant-userprincipalname: /kmcqano7wnnsKSjC9e4f78+QSC5jKVbOKDL1imwNrWDhUE6gOvhhRYlBxA6oMSiUnDqxy8qdr0O62hJdOAUsfCQU2IgB0g5nfw+K2pYMWY=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR11MB2805
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
@@ -136,22 +136,22 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ajay Singh <ajay.kathat@microchip.com>
 
-Moved 'drivers/staging/wilc1000/netdev.c' to
-'drivers/net/wireless/microchip/wilc1000/netdev.c'.
+Moved 'drivers/staging/wilc1000/wlan.c' to
+'drivers/net/wireless/microchip/wilc1000/wlan.c'.
 
 Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- .../net/wireless/microchip/wilc1000/netdev.c  | 932 ++++++++++++++++++
- 1 file changed, 932 insertions(+)
- create mode 100644 drivers/net/wireless/microchip/wilc1000/netdev.c
+ .../net/wireless/microchip/wilc1000/wlan.c    | 1238 +++++++++++++++++
+ 1 file changed, 1238 insertions(+)
+ create mode 100644 drivers/net/wireless/microchip/wilc1000/wlan.c
 
-diff --git a/drivers/net/wireless/microchip/wilc1000/netdev.c b/drivers/net=
-/wireless/microchip/wilc1000/netdev.c
+diff --git a/drivers/net/wireless/microchip/wilc1000/wlan.c b/drivers/net/w=
+ireless/microchip/wilc1000/wlan.c
 new file mode 100644
-index 000000000000..a61c1a7aefa8
+index 000000000000..6a82fb2f283e
 --- /dev/null
-+++ b/drivers/net/wireless/microchip/wilc1000/netdev.c
-@@ -0,0 +1,932 @@
++++ b/drivers/net/wireless/microchip/wilc1000/wlan.c
+@@ -0,0 +1,1238 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
 + * Copyright (c) 2012 - 2018 Microchip Technology Inc., and its subsidiari=
@@ -159,936 +159,1247 @@ es.
 + * All rights reserved.
 + */
 +
-+#include <linux/irq.h>
-+#include <linux/kthread.h>
-+#include <linux/firmware.h>
-+#include <linux/netdevice.h>
-+#include <linux/inetdevice.h>
-+
++#include <linux/if_ether.h>
++#include <linux/ip.h>
 +#include "cfg80211.h"
 +#include "wlan_cfg.h"
 +
-+#define WILC_MULTICAST_TABLE_SIZE	8
-+
-+static irqreturn_t isr_uh_routine(int irq, void *user_data)
++static inline bool is_wilc1000(u32 id)
 +{
-+	struct net_device *dev =3D user_data;
-+	struct wilc_vif *vif =3D netdev_priv(dev);
-+	struct wilc *wilc =3D vif->wilc;
-+
-+	if (wilc->close) {
-+		netdev_err(dev, "Can't handle UH interrupt\n");
-+		return IRQ_HANDLED;
-+	}
-+	return IRQ_WAKE_THREAD;
++	return (id & (~WILC_CHIP_REV_FIELD)) =3D=3D WILC_1000_BASE_ID;
 +}
 +
-+static irqreturn_t isr_bh_routine(int irq, void *userdata)
-+{
-+	struct net_device *dev =3D userdata;
-+	struct wilc_vif *vif =3D netdev_priv(userdata);
-+	struct wilc *wilc =3D vif->wilc;
-+
-+	if (wilc->close) {
-+		netdev_err(dev, "Can't handle BH interrupt\n");
-+		return IRQ_HANDLED;
-+	}
-+
-+	wilc_handle_isr(wilc);
-+
-+	return IRQ_HANDLED;
-+}
-+
-+static int init_irq(struct net_device *dev)
-+{
-+	struct wilc_vif *vif =3D netdev_priv(dev);
-+	struct wilc *wl =3D vif->wilc;
-+	int ret;
-+
-+	ret =3D request_threaded_irq(wl->dev_irq_num, isr_uh_routine,
-+				   isr_bh_routine,
-+				   IRQF_TRIGGER_FALLING | IRQF_ONESHOT,
-+				   "WILC_IRQ", dev);
-+	if (ret) {
-+		netdev_err(dev, "Failed to request IRQ [%d]\n", ret);
-+		return ret;
-+	}
-+	netdev_dbg(dev, "IRQ request succeeded IRQ-NUM=3D %d\n", wl->dev_irq_num)=
-;
-+
-+	return 0;
-+}
-+
-+static void deinit_irq(struct net_device *dev)
-+{
-+	struct wilc_vif *vif =3D netdev_priv(dev);
-+	struct wilc *wilc =3D vif->wilc;
-+
-+	/* Deinitialize IRQ */
-+	if (wilc->dev_irq_num)
-+		free_irq(wilc->dev_irq_num, wilc);
-+}
-+
-+void wilc_mac_indicate(struct wilc *wilc)
-+{
-+	s8 status;
-+
-+	wilc_wlan_cfg_get_val(wilc, WID_STATUS, &status, 1);
-+	if (wilc->mac_status =3D=3D WILC_MAC_STATUS_INIT) {
-+		wilc->mac_status =3D status;
-+		complete(&wilc->sync_event);
-+	} else {
-+		wilc->mac_status =3D status;
-+	}
-+}
-+
-+static struct net_device *get_if_handler(struct wilc *wilc, u8 *mac_header=
++static inline void acquire_bus(struct wilc *wilc, enum bus_acquire acquire=
 )
 +{
-+	struct net_device *ndev =3D NULL;
-+	struct wilc_vif *vif;
-+	struct ieee80211_hdr *h =3D (struct ieee80211_hdr *)mac_header;
-+
-+	list_for_each_entry_rcu(vif, &wilc->vif_list, list) {
-+		if (vif->mode =3D=3D WILC_STATION_MODE)
-+			if (ether_addr_equal_unaligned(h->addr2, vif->bssid)) {
-+				ndev =3D vif->ndev;
-+				goto out;
-+			}
-+		if (vif->mode =3D=3D WILC_AP_MODE)
-+			if (ether_addr_equal_unaligned(h->addr1, vif->bssid)) {
-+				ndev =3D vif->ndev;
-+				goto out;
-+			}
-+	}
-+out:
-+	return ndev;
++	mutex_lock(&wilc->hif_cs);
++	if (acquire =3D=3D WILC_BUS_ACQUIRE_AND_WAKEUP)
++		chip_wakeup(wilc);
 +}
 +
-+void wilc_wlan_set_bssid(struct net_device *wilc_netdev, u8 *bssid, u8 mod=
++static inline void release_bus(struct wilc *wilc, enum bus_release release=
+)
++{
++	if (release =3D=3D WILC_BUS_RELEASE_ALLOW_SLEEP)
++		chip_allow_sleep(wilc);
++	mutex_unlock(&wilc->hif_cs);
++}
++
++static void wilc_wlan_txq_remove(struct wilc *wilc, struct txq_entry_t *tq=
 e)
 +{
-+	struct wilc_vif *vif =3D netdev_priv(wilc_netdev);
-+
-+	if (bssid)
-+		ether_addr_copy(vif->bssid, bssid);
-+	else
-+		eth_zero_addr(vif->bssid);
-+
-+	vif->mode =3D mode;
++	list_del(&tqe->list);
++	wilc->txq_entries -=3D 1;
 +}
 +
-+int wilc_wlan_get_num_conn_ifcs(struct wilc *wilc)
++static struct txq_entry_t *
++wilc_wlan_txq_remove_from_head(struct net_device *dev)
 +{
-+	int srcu_idx;
-+	u8 ret_val =3D 0;
++	struct txq_entry_t *tqe =3D NULL;
++	unsigned long flags;
++	struct wilc_vif *vif =3D netdev_priv(dev);
++	struct wilc *wilc =3D vif->wilc;
++
++	spin_lock_irqsave(&wilc->txq_spinlock, flags);
++
++	if (!list_empty(&wilc->txq_head.list)) {
++		tqe =3D list_first_entry(&wilc->txq_head.list, struct txq_entry_t,
++				       list);
++		list_del(&tqe->list);
++		wilc->txq_entries -=3D 1;
++	}
++	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
++	return tqe;
++}
++
++static void wilc_wlan_txq_add_to_tail(struct net_device *dev,
++				      struct txq_entry_t *tqe)
++{
++	unsigned long flags;
++	struct wilc_vif *vif =3D netdev_priv(dev);
++	struct wilc *wilc =3D vif->wilc;
++
++	spin_lock_irqsave(&wilc->txq_spinlock, flags);
++
++	list_add_tail(&tqe->list, &wilc->txq_head.list);
++	wilc->txq_entries +=3D 1;
++
++	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
++
++	complete(&wilc->txq_event);
++}
++
++static void wilc_wlan_txq_add_to_head(struct wilc_vif *vif,
++				      struct txq_entry_t *tqe)
++{
++	unsigned long flags;
++	struct wilc *wilc =3D vif->wilc;
++
++	mutex_lock(&wilc->txq_add_to_head_cs);
++
++	spin_lock_irqsave(&wilc->txq_spinlock, flags);
++
++	list_add(&tqe->list, &wilc->txq_head.list);
++	wilc->txq_entries +=3D 1;
++
++	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
++	mutex_unlock(&wilc->txq_add_to_head_cs);
++	complete(&wilc->txq_event);
++}
++
++#define NOT_TCP_ACK			(-1)
++
++static inline void add_tcp_session(struct wilc_vif *vif, u32 src_prt,
++				   u32 dst_prt, u32 seq)
++{
++	struct tcp_ack_filter *f =3D &vif->ack_filter;
++
++	if (f->tcp_session < 2 * MAX_TCP_SESSION) {
++		f->ack_session_info[f->tcp_session].seq_num =3D seq;
++		f->ack_session_info[f->tcp_session].bigger_ack_num =3D 0;
++		f->ack_session_info[f->tcp_session].src_port =3D src_prt;
++		f->ack_session_info[f->tcp_session].dst_port =3D dst_prt;
++		f->tcp_session++;
++	}
++}
++
++static inline void update_tcp_session(struct wilc_vif *vif, u32 index, u32=
+ ack)
++{
++	struct tcp_ack_filter *f =3D &vif->ack_filter;
++
++	if (index < 2 * MAX_TCP_SESSION &&
++	    ack > f->ack_session_info[index].bigger_ack_num)
++		f->ack_session_info[index].bigger_ack_num =3D ack;
++}
++
++static inline void add_tcp_pending_ack(struct wilc_vif *vif, u32 ack,
++				       u32 session_index,
++				       struct txq_entry_t *txqe)
++{
++	struct tcp_ack_filter *f =3D &vif->ack_filter;
++	u32 i =3D f->pending_base + f->pending_acks_idx;
++
++	if (i < MAX_PENDING_ACKS) {
++		f->pending_acks[i].ack_num =3D ack;
++		f->pending_acks[i].txqe =3D txqe;
++		f->pending_acks[i].session_index =3D session_index;
++		txqe->ack_idx =3D i;
++		f->pending_acks_idx++;
++	}
++}
++
++static inline void tcp_process(struct net_device *dev, struct txq_entry_t =
+*tqe)
++{
++	void *buffer =3D tqe->buffer;
++	const struct ethhdr *eth_hdr_ptr =3D buffer;
++	int i;
++	unsigned long flags;
++	struct wilc_vif *vif =3D netdev_priv(dev);
++	struct wilc *wilc =3D vif->wilc;
++	struct tcp_ack_filter *f =3D &vif->ack_filter;
++	const struct iphdr *ip_hdr_ptr;
++	const struct tcphdr *tcp_hdr_ptr;
++	u32 ihl, total_length, data_offset;
++
++	spin_lock_irqsave(&wilc->txq_spinlock, flags);
++
++	if (eth_hdr_ptr->h_proto !=3D htons(ETH_P_IP))
++		goto out;
++
++	ip_hdr_ptr =3D buffer + ETH_HLEN;
++
++	if (ip_hdr_ptr->protocol !=3D IPPROTO_TCP)
++		goto out;
++
++	ihl =3D ip_hdr_ptr->ihl << 2;
++	tcp_hdr_ptr =3D buffer + ETH_HLEN + ihl;
++	total_length =3D ntohs(ip_hdr_ptr->tot_len);
++
++	data_offset =3D tcp_hdr_ptr->doff << 2;
++	if (total_length =3D=3D (ihl + data_offset)) {
++		u32 seq_no, ack_no;
++
++		seq_no =3D ntohl(tcp_hdr_ptr->seq);
++		ack_no =3D ntohl(tcp_hdr_ptr->ack_seq);
++		for (i =3D 0; i < f->tcp_session; i++) {
++			u32 j =3D f->ack_session_info[i].seq_num;
++
++			if (i < 2 * MAX_TCP_SESSION &&
++			    j =3D=3D seq_no) {
++				update_tcp_session(vif, i, ack_no);
++				break;
++			}
++		}
++		if (i =3D=3D f->tcp_session)
++			add_tcp_session(vif, 0, 0, seq_no);
++
++		add_tcp_pending_ack(vif, ack_no, i, tqe);
++	}
++
++out:
++	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
++}
++
++static void wilc_wlan_txq_filter_dup_tcp_ack(struct net_device *dev)
++{
++	struct wilc_vif *vif =3D netdev_priv(dev);
++	struct wilc *wilc =3D vif->wilc;
++	struct tcp_ack_filter *f =3D &vif->ack_filter;
++	u32 i =3D 0;
++	u32 dropped =3D 0;
++	unsigned long flags;
++
++	spin_lock_irqsave(&wilc->txq_spinlock, flags);
++	for (i =3D f->pending_base;
++	     i < (f->pending_base + f->pending_acks_idx); i++) {
++		u32 index;
++		u32 bigger_ack_num;
++
++		if (i >=3D MAX_PENDING_ACKS)
++			break;
++
++		index =3D f->pending_acks[i].session_index;
++
++		if (index >=3D 2 * MAX_TCP_SESSION)
++			break;
++
++		bigger_ack_num =3D f->ack_session_info[index].bigger_ack_num;
++
++		if (f->pending_acks[i].ack_num < bigger_ack_num) {
++			struct txq_entry_t *tqe;
++
++			tqe =3D f->pending_acks[i].txqe;
++			if (tqe) {
++				wilc_wlan_txq_remove(wilc, tqe);
++				tqe->status =3D 1;
++				if (tqe->tx_complete_func)
++					tqe->tx_complete_func(tqe->priv,
++							      tqe->status);
++				kfree(tqe);
++				dropped++;
++			}
++		}
++	}
++	f->pending_acks_idx =3D 0;
++	f->tcp_session =3D 0;
++
++	if (f->pending_base =3D=3D 0)
++		f->pending_base =3D MAX_TCP_SESSION;
++	else
++		f->pending_base =3D 0;
++
++	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
++
++	while (dropped > 0) {
++		wait_for_completion_timeout(&wilc->txq_event,
++					    msecs_to_jiffies(1));
++		dropped--;
++	}
++}
++
++void wilc_enable_tcp_ack_filter(struct wilc_vif *vif, bool value)
++{
++	vif->ack_filter.enabled =3D value;
++}
++
++static int wilc_wlan_txq_add_cfg_pkt(struct wilc_vif *vif, u8 *buffer,
++				     u32 buffer_size)
++{
++	struct txq_entry_t *tqe;
++	struct wilc *wilc =3D vif->wilc;
++
++	netdev_dbg(vif->ndev, "Adding config packet ...\n");
++	if (wilc->quit) {
++		netdev_dbg(vif->ndev, "Return due to clear function\n");
++		complete(&wilc->cfg_event);
++		return 0;
++	}
++
++	tqe =3D kmalloc(sizeof(*tqe), GFP_ATOMIC);
++	if (!tqe)
++		return 0;
++
++	tqe->type =3D WILC_CFG_PKT;
++	tqe->buffer =3D buffer;
++	tqe->buffer_size =3D buffer_size;
++	tqe->tx_complete_func =3D NULL;
++	tqe->priv =3D NULL;
++	tqe->ack_idx =3D NOT_TCP_ACK;
++	tqe->vif =3D vif;
++
++	wilc_wlan_txq_add_to_head(vif, tqe);
++
++	return 1;
++}
++
++int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buff=
+er,
++			      u32 buffer_size,
++			      void (*tx_complete_fn)(void *, int))
++{
++	struct txq_entry_t *tqe;
++	struct wilc_vif *vif =3D netdev_priv(dev);
++	struct wilc *wilc;
++
++	wilc =3D vif->wilc;
++
++	if (wilc->quit)
++		return 0;
++
++	tqe =3D kmalloc(sizeof(*tqe), GFP_ATOMIC);
++
++	if (!tqe)
++		return 0;
++	tqe->type =3D WILC_NET_PKT;
++	tqe->buffer =3D buffer;
++	tqe->buffer_size =3D buffer_size;
++	tqe->tx_complete_func =3D tx_complete_fn;
++	tqe->priv =3D priv;
++	tqe->vif =3D vif;
++
++	tqe->ack_idx =3D NOT_TCP_ACK;
++	if (vif->ack_filter.enabled)
++		tcp_process(dev, tqe);
++	wilc_wlan_txq_add_to_tail(dev, tqe);
++	return wilc->txq_entries;
++}
++
++int wilc_wlan_txq_add_mgmt_pkt(struct net_device *dev, void *priv, u8 *buf=
+fer,
++			       u32 buffer_size,
++			       void (*tx_complete_fn)(void *, int))
++{
++	struct txq_entry_t *tqe;
++	struct wilc_vif *vif =3D netdev_priv(dev);
++	struct wilc *wilc;
++
++	wilc =3D vif->wilc;
++
++	if (wilc->quit)
++		return 0;
++
++	tqe =3D kmalloc(sizeof(*tqe), GFP_ATOMIC);
++
++	if (!tqe)
++		return 0;
++	tqe->type =3D WILC_MGMT_PKT;
++	tqe->buffer =3D buffer;
++	tqe->buffer_size =3D buffer_size;
++	tqe->tx_complete_func =3D tx_complete_fn;
++	tqe->priv =3D priv;
++	tqe->ack_idx =3D NOT_TCP_ACK;
++	tqe->vif =3D vif;
++	wilc_wlan_txq_add_to_tail(dev, tqe);
++	return 1;
++}
++
++static struct txq_entry_t *wilc_wlan_txq_get_first(struct wilc *wilc)
++{
++	struct txq_entry_t *tqe =3D NULL;
++	unsigned long flags;
++
++	spin_lock_irqsave(&wilc->txq_spinlock, flags);
++
++	if (!list_empty(&wilc->txq_head.list))
++		tqe =3D list_first_entry(&wilc->txq_head.list, struct txq_entry_t,
++				       list);
++
++	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
++
++	return tqe;
++}
++
++static struct txq_entry_t *wilc_wlan_txq_get_next(struct wilc *wilc,
++						  struct txq_entry_t *tqe)
++{
++	unsigned long flags;
++
++	spin_lock_irqsave(&wilc->txq_spinlock, flags);
++
++	if (!list_is_last(&tqe->list, &wilc->txq_head.list))
++		tqe =3D list_next_entry(tqe, list);
++	else
++		tqe =3D NULL;
++	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
++
++	return tqe;
++}
++
++static void wilc_wlan_rxq_add(struct wilc *wilc, struct rxq_entry_t *rqe)
++{
++	if (wilc->quit)
++		return;
++
++	mutex_lock(&wilc->rxq_cs);
++	list_add_tail(&rqe->list, &wilc->rxq_head.list);
++	mutex_unlock(&wilc->rxq_cs);
++}
++
++static struct rxq_entry_t *wilc_wlan_rxq_remove(struct wilc *wilc)
++{
++	struct rxq_entry_t *rqe =3D NULL;
++
++	mutex_lock(&wilc->rxq_cs);
++	if (!list_empty(&wilc->rxq_head.list)) {
++		rqe =3D list_first_entry(&wilc->rxq_head.list, struct rxq_entry_t,
++				       list);
++		list_del(&rqe->list);
++	}
++	mutex_unlock(&wilc->rxq_cs);
++	return rqe;
++}
++
++void chip_allow_sleep(struct wilc *wilc)
++{
++	u32 reg =3D 0;
++
++	wilc->hif_func->hif_read_reg(wilc, WILC_SDIO_WAKEUP_REG, &reg);
++
++	wilc->hif_func->hif_write_reg(wilc, WILC_SDIO_WAKEUP_REG,
++				      reg & ~WILC_SDIO_WAKEUP_BIT);
++	wilc->hif_func->hif_write_reg(wilc, WILC_SDIO_HOST_TO_FW_REG, 0);
++}
++EXPORT_SYMBOL_GPL(chip_allow_sleep);
++
++void chip_wakeup(struct wilc *wilc)
++{
++	u32 reg, clk_status_reg;
++	const struct wilc_hif_func *h =3D wilc->hif_func;
++
++	if (wilc->io_type =3D=3D WILC_HIF_SPI) {
++		do {
++			h->hif_read_reg(wilc, WILC_SPI_WAKEUP_REG, &reg);
++			h->hif_write_reg(wilc, WILC_SPI_WAKEUP_REG,
++					 reg | WILC_SPI_WAKEUP_BIT);
++			h->hif_write_reg(wilc, WILC_SPI_WAKEUP_REG,
++					 reg & ~WILC_SPI_WAKEUP_BIT);
++
++			do {
++				usleep_range(2000, 2500);
++				wilc_get_chipid(wilc, true);
++			} while (wilc_get_chipid(wilc, true) =3D=3D 0);
++		} while (wilc_get_chipid(wilc, true) =3D=3D 0);
++	} else if (wilc->io_type =3D=3D WILC_HIF_SDIO) {
++		h->hif_write_reg(wilc, WILC_SDIO_HOST_TO_FW_REG,
++				 WILC_SDIO_HOST_TO_FW_BIT);
++		usleep_range(200, 400);
++		h->hif_read_reg(wilc, WILC_SDIO_WAKEUP_REG, &reg);
++		do {
++			h->hif_write_reg(wilc, WILC_SDIO_WAKEUP_REG,
++					 reg | WILC_SDIO_WAKEUP_BIT);
++			h->hif_read_reg(wilc, WILC_SDIO_CLK_STATUS_REG,
++					&clk_status_reg);
++
++			while (!(clk_status_reg & WILC_SDIO_CLK_STATUS_BIT)) {
++				usleep_range(2000, 2500);
++
++				h->hif_read_reg(wilc, WILC_SDIO_CLK_STATUS_REG,
++						&clk_status_reg);
++			}
++			if (!(clk_status_reg & WILC_SDIO_CLK_STATUS_BIT)) {
++				h->hif_write_reg(wilc, WILC_SDIO_WAKEUP_REG,
++						 reg & ~WILC_SDIO_WAKEUP_BIT);
++			}
++		} while (!(clk_status_reg & WILC_SDIO_CLK_STATUS_BIT));
++	}
++
++	if (wilc->chip_ps_state =3D=3D WILC_CHIP_SLEEPING_MANUAL) {
++		if (wilc_get_chipid(wilc, false) < WILC_1000_BASE_ID_2B) {
++			u32 val32;
++
++			h->hif_read_reg(wilc, WILC_REG_4_TO_1_RX, &val32);
++			val32 |=3D BIT(6);
++			h->hif_write_reg(wilc, WILC_REG_4_TO_1_RX, val32);
++
++			h->hif_read_reg(wilc, WILC_REG_4_TO_1_TX_BANK0, &val32);
++			val32 |=3D BIT(6);
++			h->hif_write_reg(wilc, WILC_REG_4_TO_1_TX_BANK0, val32);
++		}
++	}
++	wilc->chip_ps_state =3D WILC_CHIP_WAKEDUP;
++}
++EXPORT_SYMBOL_GPL(chip_wakeup);
++
++void host_wakeup_notify(struct wilc *wilc)
++{
++	acquire_bus(wilc, WILC_BUS_ACQUIRE_ONLY);
++	wilc->hif_func->hif_write_reg(wilc, WILC_CORTUS_INTERRUPT_2, 1);
++	release_bus(wilc, WILC_BUS_RELEASE_ONLY);
++}
++EXPORT_SYMBOL_GPL(host_wakeup_notify);
++
++void host_sleep_notify(struct wilc *wilc)
++{
++	acquire_bus(wilc, WILC_BUS_ACQUIRE_ONLY);
++	wilc->hif_func->hif_write_reg(wilc, WILC_CORTUS_INTERRUPT_1, 1);
++	release_bus(wilc, WILC_BUS_RELEASE_ONLY);
++}
++EXPORT_SYMBOL_GPL(host_sleep_notify);
++
++int wilc_wlan_handle_txq(struct wilc *wilc, u32 *txq_count)
++{
++	int i, entries =3D 0;
++	u32 sum;
++	u32 reg;
++	u32 offset =3D 0;
++	int vmm_sz =3D 0;
++	struct txq_entry_t *tqe;
++	int ret =3D 0;
++	int counter;
++	int timeout;
++	u32 vmm_table[WILC_VMM_TBL_SIZE];
++	const struct wilc_hif_func *func;
++	u8 *txb =3D wilc->tx_buffer;
++	struct net_device *dev;
 +	struct wilc_vif *vif;
 +
-+	srcu_idx =3D srcu_read_lock(&wilc->srcu);
-+	list_for_each_entry_rcu(vif, &wilc->vif_list, list) {
-+		if (!is_zero_ether_addr(vif->bssid))
-+			ret_val++;
++	if (wilc->quit)
++		goto out_update_cnt;
++
++	mutex_lock(&wilc->txq_add_to_head_cs);
++	tqe =3D wilc_wlan_txq_get_first(wilc);
++	if (!tqe)
++		goto out_unlock;
++	dev =3D tqe->vif->ndev;
++	wilc_wlan_txq_filter_dup_tcp_ack(dev);
++	i =3D 0;
++	sum =3D 0;
++	while (tqe && (i < (WILC_VMM_TBL_SIZE - 1))) {
++		if (tqe->type =3D=3D WILC_CFG_PKT)
++			vmm_sz =3D ETH_CONFIG_PKT_HDR_OFFSET;
++		else if (tqe->type =3D=3D WILC_NET_PKT)
++			vmm_sz =3D ETH_ETHERNET_HDR_OFFSET;
++		else
++			vmm_sz =3D HOST_HDR_OFFSET;
++
++		vmm_sz +=3D tqe->buffer_size;
++		vmm_sz =3D ALIGN(vmm_sz, 4);
++
++		if ((sum + vmm_sz) > WILC_TX_BUFF_SIZE)
++			break;
++
++		vmm_table[i] =3D vmm_sz / 4;
++		if (tqe->type =3D=3D WILC_CFG_PKT)
++			vmm_table[i] |=3D BIT(10);
++		cpu_to_le32s(&vmm_table[i]);
++
++		i++;
++		sum +=3D vmm_sz;
++		tqe =3D wilc_wlan_txq_get_next(wilc, tqe);
 +	}
-+	srcu_read_unlock(&wilc->srcu, srcu_idx);
-+	return ret_val;
-+}
 +
-+static int wilc_txq_task(void *vp)
-+{
-+	int ret;
-+	u32 txq_count;
-+	struct wilc *wl =3D vp;
++	if (i =3D=3D 0)
++		goto out_unlock;
++	vmm_table[i] =3D 0x0;
 +
-+	complete(&wl->txq_thread_started);
-+	while (1) {
-+		wait_for_completion(&wl->txq_event);
++	acquire_bus(wilc, WILC_BUS_ACQUIRE_AND_WAKEUP);
++	counter =3D 0;
++	func =3D wilc->hif_func;
++	do {
++		ret =3D func->hif_read_reg(wilc, WILC_HOST_TX_CTRL, &reg);
++		if (ret)
++			break;
 +
-+		if (wl->close) {
-+			complete(&wl->txq_thread_started);
++		if ((reg & 0x1) =3D=3D 0)
++			break;
 +
-+			while (!kthread_should_stop())
-+				schedule();
++		counter++;
++		if (counter > 200) {
++			counter =3D 0;
++			ret =3D func->hif_write_reg(wilc, WILC_HOST_TX_CTRL, 0);
 +			break;
 +		}
++	} while (!wilc->quit);
++
++	if (ret)
++		goto out_release_bus;
++
++	timeout =3D 200;
++	do {
++		ret =3D func->hif_block_tx(wilc,
++					 WILC_VMM_TBL_RX_SHADOW_BASE,
++					 (u8 *)vmm_table,
++					 ((i + 1) * 4));
++		if (ret)
++			break;
++
++		ret =3D func->hif_write_reg(wilc, WILC_HOST_VMM_CTL, 0x2);
++		if (ret)
++			break;
++
 +		do {
-+			ret =3D wilc_wlan_handle_txq(wl, &txq_count);
-+			if (txq_count < FLOW_CONTROL_LOWER_THRESHOLD) {
-+				int srcu_idx;
-+				struct wilc_vif *ifc;
-+
-+				srcu_idx =3D srcu_read_lock(&wl->srcu);
-+				list_for_each_entry_rcu(ifc, &wl->vif_list,
-+							list) {
-+					if (ifc->mac_opened && ifc->ndev)
-+						netif_wake_queue(ifc->ndev);
-+				}
-+				srcu_read_unlock(&wl->srcu, srcu_idx);
++			ret =3D func->hif_read_reg(wilc, WILC_HOST_VMM_CTL, &reg);
++			if (ret)
++				break;
++			if (FIELD_GET(WILC_VMM_ENTRY_AVAILABLE, reg)) {
++				entries =3D FIELD_GET(WILC_VMM_ENTRY_COUNT, reg);
++				break;
 +			}
-+		} while (ret =3D=3D WILC_VMM_ENTRY_FULL_RETRY && !wl->close);
++		} while (--timeout);
++		if (timeout <=3D 0) {
++			ret =3D func->hif_write_reg(wilc, WILC_HOST_VMM_CTL, 0x0);
++			break;
++		}
++
++		if (ret)
++			break;
++
++		if (entries =3D=3D 0) {
++			ret =3D func->hif_read_reg(wilc, WILC_HOST_TX_CTRL, &reg);
++			if (ret)
++				break;
++			reg &=3D ~BIT(0);
++			ret =3D func->hif_write_reg(wilc, WILC_HOST_TX_CTRL, reg);
++		}
++	} while (0);
++
++	if (ret)
++		goto out_release_bus;
++
++	if (entries =3D=3D 0) {
++		/*
++		 * No VMM space available in firmware so retry to transmit
++		 * the packet from tx queue.
++		 */
++		ret =3D WILC_VMM_ENTRY_FULL_RETRY;
++		goto out_release_bus;
 +	}
++
++	release_bus(wilc, WILC_BUS_RELEASE_ALLOW_SLEEP);
++
++	offset =3D 0;
++	i =3D 0;
++	do {
++		u32 header, buffer_offset;
++		char *bssid;
++		u8 mgmt_ptk =3D 0;
++
++		tqe =3D wilc_wlan_txq_remove_from_head(dev);
++		if (!tqe)
++			break;
++
++		vif =3D tqe->vif;
++		if (vmm_table[i] =3D=3D 0)
++			break;
++
++		le32_to_cpus(&vmm_table[i]);
++		vmm_sz =3D FIELD_GET(WILC_VMM_BUFFER_SIZE, vmm_table[i]);
++		vmm_sz *=3D 4;
++
++		if (tqe->type =3D=3D WILC_MGMT_PKT)
++			mgmt_ptk =3D 1;
++
++		header =3D (FIELD_PREP(WILC_VMM_HDR_TYPE, tqe->type) |
++			  FIELD_PREP(WILC_VMM_HDR_MGMT_FIELD, mgmt_ptk) |
++			  FIELD_PREP(WILC_VMM_HDR_PKT_SIZE, tqe->buffer_size) |
++			  FIELD_PREP(WILC_VMM_HDR_BUFF_SIZE, vmm_sz));
++
++		cpu_to_le32s(&header);
++		memcpy(&txb[offset], &header, 4);
++		if (tqe->type =3D=3D WILC_CFG_PKT) {
++			buffer_offset =3D ETH_CONFIG_PKT_HDR_OFFSET;
++		} else if (tqe->type =3D=3D WILC_NET_PKT) {
++			bssid =3D tqe->vif->bssid;
++			buffer_offset =3D ETH_ETHERNET_HDR_OFFSET;
++			memcpy(&txb[offset + 8], bssid, 6);
++		} else {
++			buffer_offset =3D HOST_HDR_OFFSET;
++		}
++
++		memcpy(&txb[offset + buffer_offset],
++		       tqe->buffer, tqe->buffer_size);
++		offset +=3D vmm_sz;
++		i++;
++		tqe->status =3D 1;
++		if (tqe->tx_complete_func)
++			tqe->tx_complete_func(tqe->priv, tqe->status);
++		if (tqe->ack_idx !=3D NOT_TCP_ACK &&
++		    tqe->ack_idx < MAX_PENDING_ACKS)
++			vif->ack_filter.pending_acks[tqe->ack_idx].txqe =3D NULL;
++		kfree(tqe);
++	} while (--entries);
++
++	acquire_bus(wilc, WILC_BUS_ACQUIRE_AND_WAKEUP);
++
++	ret =3D func->hif_clear_int_ext(wilc, ENABLE_TX_VMM);
++	if (ret)
++		goto out_release_bus;
++
++	ret =3D func->hif_block_tx_ext(wilc, 0, txb, offset);
++
++out_release_bus:
++	release_bus(wilc, WILC_BUS_RELEASE_ALLOW_SLEEP);
++
++out_unlock:
++	mutex_unlock(&wilc->txq_add_to_head_cs);
++
++out_update_cnt:
++	*txq_count =3D wilc->txq_entries;
++	return ret;
++}
++
++static void wilc_wlan_handle_rx_buff(struct wilc *wilc, u8 *buffer, int si=
+ze)
++{
++	int offset =3D 0;
++	u32 header;
++	u32 pkt_len, pkt_offset, tp_len;
++	int is_cfg_packet;
++	u8 *buff_ptr;
++
++	do {
++		buff_ptr =3D buffer + offset;
++		header =3D get_unaligned_le32(buff_ptr);
++
++		is_cfg_packet =3D FIELD_GET(WILC_PKT_HDR_CONFIG_FIELD, header);
++		pkt_offset =3D FIELD_GET(WILC_PKT_HDR_OFFSET_FIELD, header);
++		tp_len =3D FIELD_GET(WILC_PKT_HDR_TOTAL_LEN_FIELD, header);
++		pkt_len =3D FIELD_GET(WILC_PKT_HDR_LEN_FIELD, header);
++
++		if (pkt_len =3D=3D 0 || tp_len =3D=3D 0)
++			break;
++
++		if (pkt_offset & IS_MANAGMEMENT) {
++			buff_ptr +=3D HOST_HDR_OFFSET;
++			wilc_wfi_mgmt_rx(wilc, buff_ptr, pkt_len);
++		} else {
++			if (!is_cfg_packet) {
++				wilc_frmw_to_host(wilc, buff_ptr, pkt_len,
++						  pkt_offset);
++			} else {
++				struct wilc_cfg_rsp rsp;
++
++				buff_ptr +=3D pkt_offset;
++
++				wilc_wlan_cfg_indicate_rx(wilc, buff_ptr,
++							  pkt_len,
++							  &rsp);
++				if (rsp.type =3D=3D WILC_CFG_RSP) {
++					if (wilc->cfg_seq_no =3D=3D rsp.seq_no)
++						complete(&wilc->cfg_event);
++				} else if (rsp.type =3D=3D WILC_CFG_RSP_STATUS) {
++					wilc_mac_indicate(wilc);
++				}
++			}
++		}
++		offset +=3D tp_len;
++	} while (offset < size);
++}
++
++static void wilc_wlan_handle_rxq(struct wilc *wilc)
++{
++	int size;
++	u8 *buffer;
++	struct rxq_entry_t *rqe;
++
++	while (!wilc->quit) {
++		rqe =3D wilc_wlan_rxq_remove(wilc);
++		if (!rqe)
++			break;
++
++		buffer =3D rqe->buffer;
++		size =3D rqe->buffer_size;
++		wilc_wlan_handle_rx_buff(wilc, buffer, size);
++
++		kfree(rqe);
++	}
++	if (wilc->quit)
++		complete(&wilc->cfg_event);
++}
++
++static void wilc_unknown_isr_ext(struct wilc *wilc)
++{
++	wilc->hif_func->hif_clear_int_ext(wilc, 0);
++}
++
++static void wilc_wlan_handle_isr_ext(struct wilc *wilc, u32 int_status)
++{
++	u32 offset =3D wilc->rx_buffer_offset;
++	u8 *buffer =3D NULL;
++	u32 size;
++	u32 retries =3D 0;
++	int ret =3D 0;
++	struct rxq_entry_t *rqe;
++
++	size =3D FIELD_GET(WILC_INTERRUPT_DATA_SIZE, int_status) << 2;
++
++	while (!size && retries < 10) {
++		wilc->hif_func->hif_read_size(wilc, &size);
++		size =3D FIELD_GET(WILC_INTERRUPT_DATA_SIZE, size) << 2;
++		retries++;
++	}
++
++	if (size <=3D 0)
++		return;
++
++	if (WILC_RX_BUFF_SIZE - offset < size)
++		offset =3D 0;
++
++	buffer =3D &wilc->rx_buffer[offset];
++
++	wilc->hif_func->hif_clear_int_ext(wilc, DATA_INT_CLR | ENABLE_RX_VMM);
++	ret =3D wilc->hif_func->hif_block_rx_ext(wilc, 0, buffer, size);
++	if (ret)
++		return;
++
++	offset +=3D size;
++	wilc->rx_buffer_offset =3D offset;
++	rqe =3D kmalloc(sizeof(*rqe), GFP_KERNEL);
++	if (!rqe)
++		return;
++
++	rqe->buffer =3D buffer;
++	rqe->buffer_size =3D size;
++	wilc_wlan_rxq_add(wilc, rqe);
++	wilc_wlan_handle_rxq(wilc);
++}
++
++void wilc_handle_isr(struct wilc *wilc)
++{
++	u32 int_status;
++
++	acquire_bus(wilc, WILC_BUS_ACQUIRE_AND_WAKEUP);
++	wilc->hif_func->hif_read_int(wilc, &int_status);
++
++	if (int_status & DATA_INT_EXT)
++		wilc_wlan_handle_isr_ext(wilc, int_status);
++
++	if (!(int_status & (ALL_INT_EXT)))
++		wilc_unknown_isr_ext(wilc);
++
++	release_bus(wilc, WILC_BUS_RELEASE_ALLOW_SLEEP);
++}
++EXPORT_SYMBOL_GPL(wilc_handle_isr);
++
++int wilc_wlan_firmware_download(struct wilc *wilc, const u8 *buffer,
++				u32 buffer_size)
++{
++	u32 offset;
++	u32 addr, size, size2, blksz;
++	u8 *dma_buffer;
++	int ret =3D 0;
++
++	blksz =3D BIT(12);
++
++	dma_buffer =3D kmalloc(blksz, GFP_KERNEL);
++	if (!dma_buffer)
++		return -EIO;
++
++	offset =3D 0;
++	do {
++		addr =3D get_unaligned_le32(&buffer[offset]);
++		size =3D get_unaligned_le32(&buffer[offset + 4]);
++		acquire_bus(wilc, WILC_BUS_ACQUIRE_ONLY);
++		offset +=3D 8;
++		while (((int)size) && (offset < buffer_size)) {
++			if (size <=3D blksz)
++				size2 =3D size;
++			else
++				size2 =3D blksz;
++
++			memcpy(dma_buffer, &buffer[offset], size2);
++			ret =3D wilc->hif_func->hif_block_tx(wilc, addr,
++							   dma_buffer, size2);
++			if (ret)
++				break;
++
++			addr +=3D size2;
++			offset +=3D size2;
++			size -=3D size2;
++		}
++		release_bus(wilc, WILC_BUS_RELEASE_ONLY);
++
++		if (ret)
++			goto fail;
++	} while (offset < buffer_size);
++
++fail:
++
++	kfree(dma_buffer);
++
++	return ret;
++}
++
++int wilc_wlan_start(struct wilc *wilc)
++{
++	u32 reg =3D 0;
++	int ret;
++	u32 chipid;
++
++	if (wilc->io_type =3D=3D WILC_HIF_SDIO) {
++		reg =3D 0;
++		reg |=3D BIT(3);
++	} else if (wilc->io_type =3D=3D WILC_HIF_SPI) {
++		reg =3D 1;
++	}
++	acquire_bus(wilc, WILC_BUS_ACQUIRE_ONLY);
++	ret =3D wilc->hif_func->hif_write_reg(wilc, WILC_VMM_CORE_CFG, reg);
++	if (ret) {
++		release_bus(wilc, WILC_BUS_RELEASE_ONLY);
++		return ret;
++	}
++	reg =3D 0;
++	if (wilc->io_type =3D=3D WILC_HIF_SDIO && wilc->dev_irq_num)
++		reg |=3D WILC_HAVE_SDIO_IRQ_GPIO;
++
++	ret =3D wilc->hif_func->hif_write_reg(wilc, WILC_GP_REG_1, reg);
++	if (ret) {
++		release_bus(wilc, WILC_BUS_RELEASE_ONLY);
++		return ret;
++	}
++
++	wilc->hif_func->hif_sync_ext(wilc, NUM_INT_EXT);
++
++	ret =3D wilc->hif_func->hif_read_reg(wilc, WILC_CHIPID, &chipid);
++	if (ret) {
++		release_bus(wilc, WILC_BUS_RELEASE_ONLY);
++		return ret;
++	}
++
++	wilc->hif_func->hif_read_reg(wilc, WILC_GLB_RESET_0, &reg);
++	if ((reg & BIT(10)) =3D=3D BIT(10)) {
++		reg &=3D ~BIT(10);
++		wilc->hif_func->hif_write_reg(wilc, WILC_GLB_RESET_0, reg);
++		wilc->hif_func->hif_read_reg(wilc, WILC_GLB_RESET_0, &reg);
++	}
++
++	reg |=3D BIT(10);
++	ret =3D wilc->hif_func->hif_write_reg(wilc, WILC_GLB_RESET_0, reg);
++	wilc->hif_func->hif_read_reg(wilc, WILC_GLB_RESET_0, &reg);
++	release_bus(wilc, WILC_BUS_RELEASE_ONLY);
++
++	return ret;
++}
++
++int wilc_wlan_stop(struct wilc *wilc, struct wilc_vif *vif)
++{
++	u32 reg =3D 0;
++	int ret;
++
++	acquire_bus(wilc, WILC_BUS_ACQUIRE_AND_WAKEUP);
++
++	ret =3D wilc->hif_func->hif_read_reg(wilc, WILC_GP_REG_0, &reg);
++	if (ret) {
++		netdev_err(vif->ndev, "Error while reading reg\n");
++		release_bus(wilc, WILC_BUS_RELEASE_ALLOW_SLEEP);
++		return ret;
++	}
++
++	ret =3D wilc->hif_func->hif_write_reg(wilc, WILC_GP_REG_0,
++					(reg | WILC_ABORT_REQ_BIT));
++	if (ret) {
++		netdev_err(vif->ndev, "Error while writing reg\n");
++		release_bus(wilc, WILC_BUS_RELEASE_ALLOW_SLEEP);
++		return ret;
++	}
++
++	ret =3D wilc->hif_func->hif_read_reg(wilc, WILC_FW_HOST_COMM, &reg);
++	if (ret) {
++		netdev_err(vif->ndev, "Error while reading reg\n");
++		release_bus(wilc, WILC_BUS_RELEASE_ALLOW_SLEEP);
++		return ret;
++	}
++	reg =3D BIT(0);
++
++	ret =3D wilc->hif_func->hif_write_reg(wilc, WILC_FW_HOST_COMM, reg);
++	if (ret) {
++		netdev_err(vif->ndev, "Error while writing reg\n");
++		release_bus(wilc, WILC_BUS_RELEASE_ALLOW_SLEEP);
++		return ret;
++	}
++
++	release_bus(wilc, WILC_BUS_RELEASE_ALLOW_SLEEP);
++
 +	return 0;
 +}
 +
-+static int wilc_wlan_get_firmware(struct net_device *dev)
++void wilc_wlan_cleanup(struct net_device *dev)
 +{
++	struct txq_entry_t *tqe;
++	struct rxq_entry_t *rqe;
 +	struct wilc_vif *vif =3D netdev_priv(dev);
 +	struct wilc *wilc =3D vif->wilc;
-+	int chip_id;
-+	const struct firmware *wilc_firmware;
-+	char *firmware;
 +
-+	chip_id =3D wilc_get_chipid(wilc, false);
++	wilc->quit =3D 1;
++	while ((tqe =3D wilc_wlan_txq_remove_from_head(dev))) {
++		if (tqe->tx_complete_func)
++			tqe->tx_complete_func(tqe->priv, 0);
++		kfree(tqe);
++	}
 +
-+	if (chip_id < 0x1003a0)
-+		firmware =3D FIRMWARE_1002;
++	while ((rqe =3D wilc_wlan_rxq_remove(wilc)))
++		kfree(rqe);
++
++	kfree(wilc->rx_buffer);
++	wilc->rx_buffer =3D NULL;
++	kfree(wilc->tx_buffer);
++	wilc->tx_buffer =3D NULL;
++	wilc->hif_func->hif_deinit(NULL);
++}
++
++static int wilc_wlan_cfg_commit(struct wilc_vif *vif, int type,
++				u32 drv_handler)
++{
++	struct wilc *wilc =3D vif->wilc;
++	struct wilc_cfg_frame *cfg =3D &wilc->cfg_frame;
++	int t_len =3D wilc->cfg_frame_offset + sizeof(struct wilc_cfg_cmd_hdr);
++
++	if (type =3D=3D WILC_CFG_SET)
++		cfg->hdr.cmd_type =3D 'W';
 +	else
-+		firmware =3D FIRMWARE_1003;
++		cfg->hdr.cmd_type =3D 'Q';
 +
-+	netdev_info(dev, "loading firmware %s\n", firmware);
++	cfg->hdr.seq_no =3D wilc->cfg_seq_no % 256;
++	cfg->hdr.total_len =3D cpu_to_le16(t_len);
++	cfg->hdr.driver_handler =3D cpu_to_le32(drv_handler);
++	wilc->cfg_seq_no =3D cfg->hdr.seq_no;
 +
-+	if (request_firmware(&wilc_firmware, firmware, wilc->dev) !=3D 0) {
-+		netdev_err(dev, "%s - firmware not available\n", firmware);
-+		return -EINVAL;
-+	}
-+	wilc->firmware =3D wilc_firmware;
-+
-+	return 0;
-+}
-+
-+static int wilc_start_firmware(struct net_device *dev)
-+{
-+	struct wilc_vif *vif =3D netdev_priv(dev);
-+	struct wilc *wilc =3D vif->wilc;
-+	int ret =3D 0;
-+
-+	ret =3D wilc_wlan_start(wilc);
-+	if (ret)
-+		return ret;
-+
-+	if (!wait_for_completion_timeout(&wilc->sync_event,
-+					 msecs_to_jiffies(5000)))
-+		return -ETIME;
++	if (!wilc_wlan_txq_add_cfg_pkt(vif, (u8 *)&cfg->hdr, t_len))
++		return -1;
 +
 +	return 0;
 +}
 +
-+static int wilc1000_firmware_download(struct net_device *dev)
++int wilc_wlan_cfg_set(struct wilc_vif *vif, int start, u16 wid, u8 *buffer=
+,
++		      u32 buffer_size, int commit, u32 drv_handler)
 +{
-+	struct wilc_vif *vif =3D netdev_priv(dev);
++	u32 offset;
++	int ret_size;
 +	struct wilc *wilc =3D vif->wilc;
-+	int ret =3D 0;
 +
-+	if (!wilc->firmware) {
-+		netdev_err(dev, "Firmware buffer is NULL\n");
-+		return -ENOBUFS;
++	mutex_lock(&wilc->cfg_cmd_lock);
++
++	if (start)
++		wilc->cfg_frame_offset =3D 0;
++
++	offset =3D wilc->cfg_frame_offset;
++	ret_size =3D wilc_wlan_cfg_set_wid(wilc->cfg_frame.frame, offset,
++					 wid, buffer, buffer_size);
++	offset +=3D ret_size;
++	wilc->cfg_frame_offset =3D offset;
++
++	if (!commit) {
++		mutex_unlock(&wilc->cfg_cmd_lock);
++		return ret_size;
 +	}
 +
-+	ret =3D wilc_wlan_firmware_download(wilc, wilc->firmware->data,
-+					  wilc->firmware->size);
-+	if (ret)
-+		return ret;
++	netdev_dbg(vif->ndev, "%s: seqno[%d]\n", __func__, wilc->cfg_seq_no);
 +
-+	release_firmware(wilc->firmware);
-+	wilc->firmware =3D NULL;
++	if (wilc_wlan_cfg_commit(vif, WILC_CFG_SET, drv_handler))
++		ret_size =3D 0;
 +
-+	netdev_dbg(dev, "Download Succeeded\n");
++	if (!wait_for_completion_timeout(&wilc->cfg_event,
++					 WILC_CFG_PKTS_TIMEOUT)) {
++		netdev_dbg(vif->ndev, "%s: Timed Out\n", __func__);
++		ret_size =3D 0;
++	}
 +
-+	return 0;
++	wilc->cfg_frame_offset =3D 0;
++	wilc->cfg_seq_no +=3D 1;
++	mutex_unlock(&wilc->cfg_cmd_lock);
++
++	return ret_size;
 +}
 +
-+static int wilc_init_fw_config(struct net_device *dev, struct wilc_vif *vi=
-f)
++int wilc_wlan_cfg_get(struct wilc_vif *vif, int start, u16 wid, int commit=
+,
++		      u32 drv_handler)
 +{
-+	struct wilc_priv *priv =3D &vif->priv;
-+	struct host_if_drv *hif_drv;
-+	u8 b;
-+	u16 hw;
-+	u32 w;
++	u32 offset;
++	int ret_size;
++	struct wilc *wilc =3D vif->wilc;
 +
-+	netdev_dbg(dev, "Start configuring Firmware\n");
-+	hif_drv =3D (struct host_if_drv *)priv->hif_drv;
-+	netdev_dbg(dev, "Host =3D %p\n", hif_drv);
++	mutex_lock(&wilc->cfg_cmd_lock);
 +
-+	w =3D vif->iftype;
-+	cpu_to_le32s(&w);
-+	if (!wilc_wlan_cfg_set(vif, 1, WID_SET_OPERATION_MODE, (u8 *)&w, 4,
-+			       0, 0))
++	if (start)
++		wilc->cfg_frame_offset =3D 0;
++
++	offset =3D wilc->cfg_frame_offset;
++	ret_size =3D wilc_wlan_cfg_get_wid(wilc->cfg_frame.frame, offset, wid);
++	offset +=3D ret_size;
++	wilc->cfg_frame_offset =3D offset;
++
++	if (!commit) {
++		mutex_unlock(&wilc->cfg_cmd_lock);
++		return ret_size;
++	}
++
++	if (wilc_wlan_cfg_commit(vif, WILC_CFG_QUERY, drv_handler))
++		ret_size =3D 0;
++
++	if (!wait_for_completion_timeout(&wilc->cfg_event,
++					 WILC_CFG_PKTS_TIMEOUT)) {
++		netdev_dbg(vif->ndev, "%s: Timed Out\n", __func__);
++		ret_size =3D 0;
++	}
++	wilc->cfg_frame_offset =3D 0;
++	wilc->cfg_seq_no +=3D 1;
++	mutex_unlock(&wilc->cfg_cmd_lock);
++
++	return ret_size;
++}
++
++int wilc_send_config_pkt(struct wilc_vif *vif, u8 mode, struct wid *wids,
++			 u32 count)
++{
++	int i;
++	int ret =3D 0;
++	u32 drv =3D wilc_get_vif_idx(vif);
++
++	if (mode =3D=3D WILC_GET_CFG) {
++		for (i =3D 0; i < count; i++) {
++			if (!wilc_wlan_cfg_get(vif, !i,
++					       wids[i].id,
++					       (i =3D=3D count - 1),
++					       drv)) {
++				ret =3D -ETIMEDOUT;
++				break;
++			}
++		}
++		for (i =3D 0; i < count; i++) {
++			wids[i].size =3D wilc_wlan_cfg_get_val(vif->wilc,
++							     wids[i].id,
++							     wids[i].val,
++							     wids[i].size);
++		}
++	} else if (mode =3D=3D WILC_SET_CFG) {
++		for (i =3D 0; i < count; i++) {
++			if (!wilc_wlan_cfg_set(vif, !i,
++					       wids[i].id,
++					       wids[i].val,
++					       wids[i].size,
++					       (i =3D=3D count - 1),
++					       drv)) {
++				ret =3D -ETIMEDOUT;
++				break;
++			}
++		}
++	}
++
++	return ret;
++}
++
++static int init_chip(struct net_device *dev)
++{
++	u32 chipid;
++	u32 reg;
++	int ret =3D 0;
++	struct wilc_vif *vif =3D netdev_priv(dev);
++	struct wilc *wilc =3D vif->wilc;
++
++	acquire_bus(wilc, WILC_BUS_ACQUIRE_ONLY);
++
++	chipid =3D wilc_get_chipid(wilc, true);
++
++	if ((chipid & 0xfff) !=3D 0xa0) {
++		ret =3D wilc->hif_func->hif_read_reg(wilc,
++						   WILC_CORTUS_RESET_MUX_SEL,
++						   &reg);
++		if (ret) {
++			netdev_err(dev, "fail read reg 0x1118\n");
++			goto release;
++		}
++		reg |=3D BIT(0);
++		ret =3D wilc->hif_func->hif_write_reg(wilc,
++						    WILC_CORTUS_RESET_MUX_SEL,
++						    reg);
++		if (ret) {
++			netdev_err(dev, "fail write reg 0x1118\n");
++			goto release;
++		}
++		ret =3D wilc->hif_func->hif_write_reg(wilc,
++						    WILC_CORTUS_BOOT_REGISTER,
++						    WILC_CORTUS_BOOT_FROM_IRAM);
++		if (ret) {
++			netdev_err(dev, "fail write reg 0xc0000\n");
++			goto release;
++		}
++	}
++
++release:
++	release_bus(wilc, WILC_BUS_RELEASE_ONLY);
++
++	return ret;
++}
++
++u32 wilc_get_chipid(struct wilc *wilc, bool update)
++{
++	static u32 chipid;
++	u32 tempchipid =3D 0;
++	u32 rfrevid =3D 0;
++
++	if (chipid =3D=3D 0 || update) {
++		wilc->hif_func->hif_read_reg(wilc, WILC_CHIPID, &tempchipid);
++		wilc->hif_func->hif_read_reg(wilc, WILC_RF_REVISION_ID,
++					     &rfrevid);
++		if (!is_wilc1000(tempchipid)) {
++			chipid =3D 0;
++			return chipid;
++		}
++		if (tempchipid =3D=3D WILC_1000_BASE_ID_2A) { /* 0x1002A0 */
++			if (rfrevid !=3D 0x1)
++				tempchipid =3D WILC_1000_BASE_ID_2A_REV1;
++		} else if (tempchipid =3D=3D WILC_1000_BASE_ID_2B) { /* 0x1002B0 */
++			if (rfrevid =3D=3D 0x4)
++				tempchipid =3D WILC_1000_BASE_ID_2B_REV1;
++			else if (rfrevid !=3D 0x3)
++				tempchipid =3D WILC_1000_BASE_ID_2B_REV2;
++		}
++
++		chipid =3D tempchipid;
++	}
++	return chipid;
++}
++
++int wilc_wlan_init(struct net_device *dev)
++{
++	int ret =3D 0;
++	struct wilc_vif *vif =3D netdev_priv(dev);
++	struct wilc *wilc;
++
++	wilc =3D vif->wilc;
++
++	wilc->quit =3D 0;
++
++	if (wilc->hif_func->hif_init(wilc, false)) {
++		ret =3D -EIO;
 +		goto fail;
++	}
 +
-+	b =3D WILC_FW_BSS_TYPE_INFRA;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_BSS_TYPE, &b, 1, 0, 0))
-+		goto fail;
++	if (!wilc->tx_buffer)
++		wilc->tx_buffer =3D kmalloc(WILC_TX_BUFF_SIZE, GFP_KERNEL);
 +
-+	b =3D WILC_FW_TX_RATE_AUTO;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_CURRENT_TX_RATE, &b, 1, 0, 0))
++	if (!wilc->tx_buffer) {
++		ret =3D -ENOBUFS;
 +		goto fail;
++	}
 +
-+	b =3D WILC_FW_OPER_MODE_G_MIXED_11B_2;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_11G_OPERATING_MODE, &b, 1, 0, 0))
-+		goto fail;
++	if (!wilc->rx_buffer)
++		wilc->rx_buffer =3D kmalloc(WILC_RX_BUFF_SIZE, GFP_KERNEL);
 +
-+	b =3D WILC_FW_PREAMBLE_SHORT;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_PREAMBLE, &b, 1, 0, 0))
++	if (!wilc->rx_buffer) {
++		ret =3D -ENOBUFS;
 +		goto fail;
++	}
 +
-+	b =3D WILC_FW_11N_PROT_AUTO;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_11N_PROT_MECH, &b, 1, 0, 0))
++	if (init_chip(dev)) {
++		ret =3D -EIO;
 +		goto fail;
-+
-+	b =3D WILC_FW_ACTIVE_SCAN;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_SCAN_TYPE, &b, 1, 0, 0))
-+		goto fail;
-+
-+	b =3D WILC_FW_SITE_SURVEY_OFF;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_SITE_SURVEY, &b, 1, 0, 0))
-+		goto fail;
-+
-+	hw =3D 0xffff;
-+	cpu_to_le16s(&hw);
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_RTS_THRESHOLD, (u8 *)&hw, 2, 0, 0))
-+		goto fail;
-+
-+	hw =3D 2346;
-+	cpu_to_le16s(&hw);
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_FRAG_THRESHOLD, (u8 *)&hw, 2, 0, 0))
-+		goto fail;
-+
-+	b =3D 0;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_BCAST_SSID, &b, 1, 0, 0))
-+		goto fail;
-+
-+	b =3D 1;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_QOS_ENABLE, &b, 1, 0, 0))
-+		goto fail;
-+
-+	b =3D WILC_FW_NO_POWERSAVE;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_POWER_MANAGEMENT, &b, 1, 0, 0))
-+		goto fail;
-+
-+	b =3D WILC_FW_SEC_NO;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_11I_MODE, &b, 1, 0, 0))
-+		goto fail;
-+
-+	b =3D WILC_FW_AUTH_OPEN_SYSTEM;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_AUTH_TYPE, &b, 1, 0, 0))
-+		goto fail;
-+
-+	b =3D 3;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_LISTEN_INTERVAL, &b, 1, 0, 0))
-+		goto fail;
-+
-+	b =3D 3;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_DTIM_PERIOD, &b, 1, 0, 0))
-+		goto fail;
-+
-+	b =3D WILC_FW_ACK_POLICY_NORMAL;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_ACK_POLICY, &b, 1, 0, 0))
-+		goto fail;
-+
-+	b =3D 0;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_USER_CONTROL_ON_TX_POWER, &b, 1,
-+			       0, 0))
-+		goto fail;
-+
-+	b =3D 48;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_TX_POWER_LEVEL_11A, &b, 1, 0, 0))
-+		goto fail;
-+
-+	b =3D 28;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_TX_POWER_LEVEL_11B, &b, 1, 0, 0))
-+		goto fail;
-+
-+	hw =3D 100;
-+	cpu_to_le16s(&hw);
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_BEACON_INTERVAL, (u8 *)&hw, 2, 0, 0))
-+		goto fail;
-+
-+	b =3D WILC_FW_REKEY_POLICY_DISABLE;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_REKEY_POLICY, &b, 1, 0, 0))
-+		goto fail;
-+
-+	w =3D 84600;
-+	cpu_to_le32s(&w);
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_REKEY_PERIOD, (u8 *)&w, 4, 0, 0))
-+		goto fail;
-+
-+	w =3D 500;
-+	cpu_to_le32s(&w);
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_REKEY_PACKET_COUNT, (u8 *)&w, 4, 0,
-+			       0))
-+		goto fail;
-+
-+	b =3D 1;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_SHORT_SLOT_ALLOWED, &b, 1, 0,
-+			       0))
-+		goto fail;
-+
-+	b =3D WILC_FW_ERP_PROT_SELF_CTS;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_11N_ERP_PROT_TYPE, &b, 1, 0, 0))
-+		goto fail;
-+
-+	b =3D 1;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_11N_ENABLE, &b, 1, 0, 0))
-+		goto fail;
-+
-+	b =3D WILC_FW_11N_OP_MODE_HT_MIXED;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_11N_OPERATING_MODE, &b, 1, 0, 0))
-+		goto fail;
-+
-+	b =3D 1;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_11N_TXOP_PROT_DISABLE, &b, 1, 0, 0))
-+		goto fail;
-+
-+	b =3D WILC_FW_OBBS_NONHT_DETECT_PROTECT_REPORT;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_11N_OBSS_NONHT_DETECTION, &b, 1,
-+			       0, 0))
-+		goto fail;
-+
-+	b =3D WILC_FW_HT_PROT_RTS_CTS_NONHT;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_11N_HT_PROT_TYPE, &b, 1, 0, 0))
-+		goto fail;
-+
-+	b =3D 0;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_11N_RIFS_PROT_ENABLE, &b, 1, 0,
-+			       0))
-+		goto fail;
-+
-+	b =3D 7;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_11N_CURRENT_TX_MCS, &b, 1, 0, 0))
-+		goto fail;
-+
-+	b =3D 1;
-+	if (!wilc_wlan_cfg_set(vif, 0, WID_11N_IMMEDIATE_BA_ENABLED, &b, 1,
-+			       1, 1))
-+		goto fail;
++	}
 +
 +	return 0;
 +
 +fail:
-+	return -EINVAL;
-+}
 +
-+static void wlan_deinitialize_threads(struct net_device *dev)
-+{
-+	struct wilc_vif *vif =3D netdev_priv(dev);
-+	struct wilc *wl =3D vif->wilc;
++	kfree(wilc->rx_buffer);
++	wilc->rx_buffer =3D NULL;
++	kfree(wilc->tx_buffer);
++	wilc->tx_buffer =3D NULL;
 +
-+	wl->close =3D 1;
-+
-+	complete(&wl->txq_event);
-+
-+	if (wl->txq_thread) {
-+		kthread_stop(wl->txq_thread);
-+		wl->txq_thread =3D NULL;
-+	}
-+}
-+
-+static void wilc_wlan_deinitialize(struct net_device *dev)
-+{
-+	struct wilc_vif *vif =3D netdev_priv(dev);
-+	struct wilc *wl =3D vif->wilc;
-+
-+	if (!wl) {
-+		netdev_err(dev, "wl is NULL\n");
-+		return;
-+	}
-+
-+	if (wl->initialized) {
-+		netdev_info(dev, "Deinitializing wilc1000...\n");
-+
-+		if (!wl->dev_irq_num &&
-+		    wl->hif_func->disable_interrupt) {
-+			mutex_lock(&wl->hif_cs);
-+			wl->hif_func->disable_interrupt(wl);
-+			mutex_unlock(&wl->hif_cs);
-+		}
-+		complete(&wl->txq_event);
-+
-+		wlan_deinitialize_threads(dev);
-+		deinit_irq(dev);
-+
-+		wilc_wlan_stop(wl, vif);
-+		wilc_wlan_cleanup(dev);
-+
-+		wl->initialized =3D false;
-+
-+		netdev_dbg(dev, "wilc1000 deinitialization Done\n");
-+	} else {
-+		netdev_dbg(dev, "wilc1000 is not initialized\n");
-+	}
-+}
-+
-+static int wlan_initialize_threads(struct net_device *dev)
-+{
-+	struct wilc_vif *vif =3D netdev_priv(dev);
-+	struct wilc *wilc =3D vif->wilc;
-+
-+	wilc->txq_thread =3D kthread_run(wilc_txq_task, (void *)wilc,
-+				       "K_TXQ_TASK");
-+	if (IS_ERR(wilc->txq_thread)) {
-+		netdev_err(dev, "couldn't create TXQ thread\n");
-+		wilc->close =3D 0;
-+		return PTR_ERR(wilc->txq_thread);
-+	}
-+	wait_for_completion(&wilc->txq_thread_started);
-+
-+	return 0;
-+}
-+
-+static int wilc_wlan_initialize(struct net_device *dev, struct wilc_vif *v=
-if)
-+{
-+	int ret =3D 0;
-+	struct wilc *wl =3D vif->wilc;
-+
-+	if (!wl->initialized) {
-+		wl->mac_status =3D WILC_MAC_STATUS_INIT;
-+		wl->close =3D 0;
-+
-+		ret =3D wilc_wlan_init(dev);
-+		if (ret)
-+			return ret;
-+
-+		ret =3D wlan_initialize_threads(dev);
-+		if (ret)
-+			goto fail_wilc_wlan;
-+
-+		if (wl->dev_irq_num && init_irq(dev)) {
-+			ret =3D -EIO;
-+			goto fail_threads;
-+		}
-+
-+		if (!wl->dev_irq_num &&
-+		    wl->hif_func->enable_interrupt &&
-+		    wl->hif_func->enable_interrupt(wl)) {
-+			ret =3D -EIO;
-+			goto fail_irq_init;
-+		}
-+
-+		ret =3D wilc_wlan_get_firmware(dev);
-+		if (ret)
-+			goto fail_irq_enable;
-+
-+		ret =3D wilc1000_firmware_download(dev);
-+		if (ret)
-+			goto fail_irq_enable;
-+
-+		ret =3D wilc_start_firmware(dev);
-+		if (ret)
-+			goto fail_irq_enable;
-+
-+		if (wilc_wlan_cfg_get(vif, 1, WID_FIRMWARE_VERSION, 1, 0)) {
-+			int size;
-+			char firmware_ver[20];
-+
-+			size =3D wilc_wlan_cfg_get_val(wl, WID_FIRMWARE_VERSION,
-+						     firmware_ver,
-+						     sizeof(firmware_ver));
-+			firmware_ver[size] =3D '\0';
-+			netdev_dbg(dev, "Firmware Ver =3D %s\n", firmware_ver);
-+		}
-+
-+		ret =3D wilc_init_fw_config(dev, vif);
-+		if (ret) {
-+			netdev_err(dev, "Failed to configure firmware\n");
-+			goto fail_fw_start;
-+		}
-+		wl->initialized =3D true;
-+		return 0;
-+
-+fail_fw_start:
-+		wilc_wlan_stop(wl, vif);
-+
-+fail_irq_enable:
-+		if (!wl->dev_irq_num &&
-+		    wl->hif_func->disable_interrupt)
-+			wl->hif_func->disable_interrupt(wl);
-+fail_irq_init:
-+		if (wl->dev_irq_num)
-+			deinit_irq(dev);
-+fail_threads:
-+		wlan_deinitialize_threads(dev);
-+fail_wilc_wlan:
-+		wilc_wlan_cleanup(dev);
-+		netdev_err(dev, "WLAN initialization FAILED\n");
-+	} else {
-+		netdev_dbg(dev, "wilc1000 already initialized\n");
-+	}
 +	return ret;
 +}
-+
-+static int mac_init_fn(struct net_device *ndev)
-+{
-+	netif_start_queue(ndev);
-+	netif_stop_queue(ndev);
-+
-+	return 0;
-+}
-+
-+static int wilc_mac_open(struct net_device *ndev)
-+{
-+	struct wilc_vif *vif =3D netdev_priv(ndev);
-+	struct wilc *wl =3D vif->wilc;
-+	unsigned char mac_add[ETH_ALEN] =3D {0};
-+	int ret =3D 0;
-+
-+	if (!wl || !wl->dev) {
-+		netdev_err(ndev, "device not ready\n");
-+		return -ENODEV;
-+	}
-+
-+	netdev_dbg(ndev, "MAC OPEN[%p]\n", ndev);
-+
-+	ret =3D wilc_init_host_int(ndev);
-+	if (ret)
-+		return ret;
-+
-+	ret =3D wilc_wlan_initialize(ndev, vif);
-+	if (ret) {
-+		wilc_deinit_host_int(ndev);
-+		return ret;
-+	}
-+
-+	wilc_set_operation_mode(vif, wilc_get_vif_idx(vif), vif->iftype,
-+				vif->idx);
-+	wilc_get_mac_address(vif, mac_add);
-+	netdev_dbg(ndev, "Mac address: %pM\n", mac_add);
-+	ether_addr_copy(ndev->dev_addr, mac_add);
-+
-+	if (!is_valid_ether_addr(ndev->dev_addr)) {
-+		netdev_err(ndev, "Wrong MAC address\n");
-+		wilc_deinit_host_int(ndev);
-+		wilc_wlan_deinitialize(ndev);
-+		return -EINVAL;
-+	}
-+
-+	wilc_mgmt_frame_register(vif->ndev->ieee80211_ptr->wiphy,
-+				 vif->ndev->ieee80211_ptr,
-+				 vif->frame_reg[0].type,
-+				 vif->frame_reg[0].reg);
-+	wilc_mgmt_frame_register(vif->ndev->ieee80211_ptr->wiphy,
-+				 vif->ndev->ieee80211_ptr,
-+				 vif->frame_reg[1].type,
-+				 vif->frame_reg[1].reg);
-+	netif_wake_queue(ndev);
-+	wl->open_ifcs++;
-+	vif->mac_opened =3D 1;
-+	return 0;
-+}
-+
-+static struct net_device_stats *mac_stats(struct net_device *dev)
-+{
-+	struct wilc_vif *vif =3D netdev_priv(dev);
-+
-+	return &vif->netstats;
-+}
-+
-+static void wilc_set_multicast_list(struct net_device *dev)
-+{
-+	struct netdev_hw_addr *ha;
-+	struct wilc_vif *vif =3D netdev_priv(dev);
-+	int i;
-+	u8 *mc_list;
-+	u8 *cur_mc;
-+
-+	if (dev->flags & IFF_PROMISC)
-+		return;
-+
-+	if (dev->flags & IFF_ALLMULTI ||
-+	    dev->mc.count > WILC_MULTICAST_TABLE_SIZE) {
-+		wilc_setup_multicast_filter(vif, 0, 0, NULL);
-+		return;
-+	}
-+
-+	if (dev->mc.count =3D=3D 0) {
-+		wilc_setup_multicast_filter(vif, 1, 0, NULL);
-+		return;
-+	}
-+
-+	mc_list =3D kmalloc_array(dev->mc.count, ETH_ALEN, GFP_ATOMIC);
-+	if (!mc_list)
-+		return;
-+
-+	cur_mc =3D mc_list;
-+	i =3D 0;
-+	netdev_for_each_mc_addr(ha, dev) {
-+		memcpy(cur_mc, ha->addr, ETH_ALEN);
-+		netdev_dbg(dev, "Entry[%d]: %pM\n", i, cur_mc);
-+		i++;
-+		cur_mc +=3D ETH_ALEN;
-+	}
-+
-+	if (wilc_setup_multicast_filter(vif, 1, dev->mc.count, mc_list))
-+		kfree(mc_list);
-+}
-+
-+static void wilc_tx_complete(void *priv, int status)
-+{
-+	struct tx_complete_data *pv_data =3D priv;
-+
-+	dev_kfree_skb(pv_data->skb);
-+	kfree(pv_data);
-+}
-+
-+netdev_tx_t wilc_mac_xmit(struct sk_buff *skb, struct net_device *ndev)
-+{
-+	struct wilc_vif *vif =3D netdev_priv(ndev);
-+	struct wilc *wilc =3D vif->wilc;
-+	struct tx_complete_data *tx_data =3D NULL;
-+	int queue_count;
-+
-+	if (skb->dev !=3D ndev) {
-+		netdev_err(ndev, "Packet not destined to this device\n");
-+		return 0;
-+	}
-+
-+	tx_data =3D kmalloc(sizeof(*tx_data), GFP_ATOMIC);
-+	if (!tx_data) {
-+		dev_kfree_skb(skb);
-+		netif_wake_queue(ndev);
-+		return 0;
-+	}
-+
-+	tx_data->buff =3D skb->data;
-+	tx_data->size =3D skb->len;
-+	tx_data->skb  =3D skb;
-+
-+	vif->netstats.tx_packets++;
-+	vif->netstats.tx_bytes +=3D tx_data->size;
-+	queue_count =3D wilc_wlan_txq_add_net_pkt(ndev, (void *)tx_data,
-+						tx_data->buff, tx_data->size,
-+						wilc_tx_complete);
-+
-+	if (queue_count > FLOW_CONTROL_UPPER_THRESHOLD) {
-+		int srcu_idx;
-+		struct wilc_vif *vif;
-+
-+		srcu_idx =3D srcu_read_lock(&wilc->srcu);
-+		list_for_each_entry_rcu(vif, &wilc->vif_list, list) {
-+			if (vif->mac_opened)
-+				netif_stop_queue(vif->ndev);
-+		}
-+		srcu_read_unlock(&wilc->srcu, srcu_idx);
-+	}
-+
-+	return 0;
-+}
-+
-+static int wilc_mac_close(struct net_device *ndev)
-+{
-+	struct wilc_vif *vif =3D netdev_priv(ndev);
-+	struct wilc *wl =3D vif->wilc;
-+
-+	netdev_dbg(ndev, "Mac close\n");
-+
-+	if (wl->open_ifcs > 0)
-+		wl->open_ifcs--;
-+	else
-+		return 0;
-+
-+	if (vif->ndev) {
-+		netif_stop_queue(vif->ndev);
-+
-+		wilc_deinit_host_int(vif->ndev);
-+	}
-+
-+	if (wl->open_ifcs =3D=3D 0) {
-+		netdev_dbg(ndev, "Deinitializing wilc1000\n");
-+		wl->close =3D 1;
-+		wilc_wlan_deinitialize(ndev);
-+	}
-+
-+	vif->mac_opened =3D 0;
-+
-+	return 0;
-+}
-+
-+void wilc_frmw_to_host(struct wilc *wilc, u8 *buff, u32 size,
-+		       u32 pkt_offset)
-+{
-+	unsigned int frame_len =3D 0;
-+	int stats;
-+	unsigned char *buff_to_send =3D NULL;
-+	struct sk_buff *skb;
-+	struct net_device *wilc_netdev;
-+	struct wilc_vif *vif;
-+
-+	if (!wilc)
-+		return;
-+
-+	wilc_netdev =3D get_if_handler(wilc, buff);
-+	if (!wilc_netdev)
-+		return;
-+
-+	buff +=3D pkt_offset;
-+	vif =3D netdev_priv(wilc_netdev);
-+
-+	if (size > 0) {
-+		frame_len =3D size;
-+		buff_to_send =3D buff;
-+
-+		skb =3D dev_alloc_skb(frame_len);
-+		if (!skb)
-+			return;
-+
-+		skb->dev =3D wilc_netdev;
-+
-+		skb_put_data(skb, buff_to_send, frame_len);
-+
-+		skb->protocol =3D eth_type_trans(skb, wilc_netdev);
-+		vif->netstats.rx_packets++;
-+		vif->netstats.rx_bytes +=3D frame_len;
-+		skb->ip_summed =3D CHECKSUM_UNNECESSARY;
-+		stats =3D netif_rx(skb);
-+		netdev_dbg(wilc_netdev, "netif_rx ret value is: %d\n", stats);
-+	}
-+}
-+
-+void wilc_wfi_mgmt_rx(struct wilc *wilc, u8 *buff, u32 size)
-+{
-+	int srcu_idx;
-+	struct wilc_vif *vif;
-+
-+	srcu_idx =3D srcu_read_lock(&wilc->srcu);
-+	list_for_each_entry_rcu(vif, &wilc->vif_list, list) {
-+		u16 type =3D le16_to_cpup((__le16 *)buff);
-+
-+		if (vif->priv.p2p_listen_state &&
-+		    ((type =3D=3D vif->frame_reg[0].type && vif->frame_reg[0].reg) ||
-+		     (type =3D=3D vif->frame_reg[1].type && vif->frame_reg[1].reg)))
-+			wilc_wfi_p2p_rx(vif, buff, size);
-+
-+		if (vif->monitor_flag)
-+			wilc_wfi_monitor_rx(wilc->monitor_dev, buff, size);
-+	}
-+	srcu_read_unlock(&wilc->srcu, srcu_idx);
-+}
-+
-+static const struct net_device_ops wilc_netdev_ops =3D {
-+	.ndo_init =3D mac_init_fn,
-+	.ndo_open =3D wilc_mac_open,
-+	.ndo_stop =3D wilc_mac_close,
-+	.ndo_start_xmit =3D wilc_mac_xmit,
-+	.ndo_get_stats =3D mac_stats,
-+	.ndo_set_rx_mode  =3D wilc_set_multicast_list,
-+};
-+
-+void wilc_netdev_cleanup(struct wilc *wilc)
-+{
-+	struct wilc_vif *vif;
-+	int srcu_idx, ifc_cnt =3D 0;
-+
-+	if (!wilc)
-+		return;
-+
-+	if (wilc->firmware) {
-+		release_firmware(wilc->firmware);
-+		wilc->firmware =3D NULL;
-+	}
-+
-+	srcu_idx =3D srcu_read_lock(&wilc->srcu);
-+	list_for_each_entry_rcu(vif, &wilc->vif_list, list) {
-+		if (vif->ndev)
-+			unregister_netdev(vif->ndev);
-+	}
-+	srcu_read_unlock(&wilc->srcu, srcu_idx);
-+
-+	wilc_wfi_deinit_mon_interface(wilc, false);
-+	flush_workqueue(wilc->hif_workqueue);
-+	destroy_workqueue(wilc->hif_workqueue);
-+
-+	while (ifc_cnt < WILC_NUM_CONCURRENT_IFC) {
-+		mutex_lock(&wilc->vif_mutex);
-+		if (wilc->vif_num <=3D 0) {
-+			mutex_unlock(&wilc->vif_mutex);
-+			break;
-+		}
-+		vif =3D wilc_get_wl_to_vif(wilc);
-+		if (!IS_ERR(vif))
-+			list_del_rcu(&vif->list);
-+
-+		wilc->vif_num--;
-+		mutex_unlock(&wilc->vif_mutex);
-+		synchronize_srcu(&wilc->srcu);
-+		ifc_cnt++;
-+	}
-+
-+	wilc_wlan_cfg_deinit(wilc);
-+	wlan_deinit_locks(wilc);
-+	kfree(wilc->bus_data);
-+	wiphy_unregister(wilc->wiphy);
-+	wiphy_free(wilc->wiphy);
-+}
-+EXPORT_SYMBOL_GPL(wilc_netdev_cleanup);
-+
-+static u8 wilc_get_available_idx(struct wilc *wl)
-+{
-+	int idx =3D 0;
-+	struct wilc_vif *vif;
-+	int srcu_idx;
-+
-+	srcu_idx =3D srcu_read_lock(&wl->srcu);
-+	list_for_each_entry_rcu(vif, &wl->vif_list, list) {
-+		if (vif->idx =3D=3D 0)
-+			idx =3D 1;
-+		else
-+			idx =3D 0;
-+	}
-+	srcu_read_unlock(&wl->srcu, srcu_idx);
-+	return idx;
-+}
-+
-+struct wilc_vif *wilc_netdev_ifc_init(struct wilc *wl, const char *name,
-+				      int vif_type, enum nl80211_iftype type,
-+				      bool rtnl_locked)
-+{
-+	struct net_device *ndev;
-+	struct wilc_vif *vif;
-+	int ret;
-+
-+	ndev =3D alloc_etherdev(sizeof(*vif));
-+	if (!ndev)
-+		return ERR_PTR(-ENOMEM);
-+
-+	vif =3D netdev_priv(ndev);
-+	ndev->ieee80211_ptr =3D &vif->priv.wdev;
-+	strcpy(ndev->name, name);
-+	vif->wilc =3D wl;
-+	vif->ndev =3D ndev;
-+	ndev->ml_priv =3D vif;
-+
-+	ndev->netdev_ops =3D &wilc_netdev_ops;
-+
-+	SET_NETDEV_DEV(ndev, wiphy_dev(wl->wiphy));
-+
-+	vif->priv.wdev.wiphy =3D wl->wiphy;
-+	vif->priv.wdev.netdev =3D ndev;
-+	vif->priv.wdev.iftype =3D type;
-+	vif->priv.dev =3D ndev;
-+
-+	if (rtnl_locked)
-+		ret =3D register_netdevice(ndev);
-+	else
-+		ret =3D register_netdev(ndev);
-+
-+	if (ret) {
-+		free_netdev(ndev);
-+		return ERR_PTR(-EFAULT);
-+	}
-+
-+	ndev->needs_free_netdev =3D true;
-+	vif->iftype =3D vif_type;
-+	vif->idx =3D wilc_get_available_idx(wl);
-+	vif->mac_opened =3D 0;
-+	mutex_lock(&wl->vif_mutex);
-+	list_add_tail_rcu(&vif->list, &wl->vif_list);
-+	wl->vif_num +=3D 1;
-+	mutex_unlock(&wl->vif_mutex);
-+	synchronize_srcu(&wl->srcu);
-+
-+	return vif;
-+}
-+
-+MODULE_LICENSE("GPL");
 --=20
 2.24.0
