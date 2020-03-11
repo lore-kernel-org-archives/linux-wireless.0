@@ -2,80 +2,69 @@ Return-Path: <SRS0=yqm1=44=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0
-	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E31CDC18E5A
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Mar 2020 09:23:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2142C18E5A
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Mar 2020 09:31:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C5C4C2146E
-	for <linux-wireless@archiver.kernel.org>; Wed, 11 Mar 2020 09:23:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 952ED21D56
+	for <linux-wireless@archiver.kernel.org>; Wed, 11 Mar 2020 09:31:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728444AbgCKJX4 (ORCPT
+        id S1728932AbgCKJb4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 11 Mar 2020 05:23:56 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:45512 "EHLO
+        Wed, 11 Mar 2020 05:31:56 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:45590 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726097AbgCKJX4 (ORCPT
+        with ESMTP id S1728753AbgCKJbz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Mar 2020 05:23:56 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        Wed, 11 Mar 2020 05:31:55 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.93)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1jBx7r-000qTG-Hm; Wed, 11 Mar 2020 09:54:03 +0100
+        id 1jBxiR-000vTt-GU; Wed, 11 Mar 2020 10:31:51 +0100
+Message-ID: <f230965a23ee69341a402dff15efb67c7c221bde.camel@sipsolutions.net>
+Subject: Re: [PATCH 1/2] Revert "mac80211: support
+ NL80211_EXT_FEATURE_CONTROL_PORT_OVER_NL80211_MAC_ADDRS"
 From:   Johannes Berg <johannes@sipsolutions.net>
-To:     netdev@vger.kernel.org
+To:     Markus Theil <markus.theil@tu-ilmenau.de>,
+        Denis Kenzior <denkenz@gmail.com>, Jouni Malinen <j@w1.fi>
 Cc:     linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211 2020-03-11
-Date:   Wed, 11 Mar 2020 09:53:54 +0100
-Message-Id: <20200311085355.8235-1-johannes@sipsolutions.net>
-X-Mailer: git-send-email 2.24.1
+Date:   Wed, 11 Mar 2020 10:31:50 +0100
+In-Reply-To: <ed6047dd-e71d-0cff-3c1f-5a11a53c6d8c@tu-ilmenau.de>
+References: <20200224101910.b87da63a3cd6.Ic94bc51a370c4aa7d19fbca9b96d90ab703257dc@changeid>
+         <c9fba32a-6959-a93a-3119-23915053538c@gmail.com>
+         <53190ece697ab7d9e83fdd667eaf9e05a4418193.camel@sipsolutions.net>
+         <6e723a78-db68-8ffb-986a-4a3961107f72@gmail.com>
+         <1a56c641eaa03c99dc9a90208902d8bb1ca1b0aa.camel@sipsolutions.net>
+         <048b81db-8e92-7fe0-1f5c-3b6f9ea1a1f1@gmail.com>
+         <366b1599374240ef194bf7eb6e1e47a8b675f474.camel@sipsolutions.net>
+         <978dab89-343a-3fc9-dbdb-7acf87d735ca@gmail.com>
+         <20200225110018.GA7561@w1.fi>
+         <957c6850-b26b-4cfd-5bc9-d77400e621b3@gmail.com>
+         <ed6047dd-e71d-0cff-3c1f-5a11a53c6d8c@tu-ilmenau.de>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.34.2 (3.34.2-1.fc31) 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Dave,
+On Wed, 2020-03-04 at 17:24 +0100, Markus Theil wrote:
 
-I have a few fixes still; please pull and let me know
-if there's any problem.
+> Is there any consensus on how to move on in this discussion? In my
+> opinion a pragmatic way would be to make rx forwarding of pre-auth
+> frames optional with a flag which can be set whenever
+> NL80211_ATTR_CONTROL_PORT_OVER_NL80211 is included, like Denis has
+> already proposed. We could call this flag for example
+> NL80211_ATTR_CONTROL_PORT_NO_PREAUTH.
 
-Thanks,
+Yeah, that seems right.
+
+Do you want to make the patch?
+
 johannes
-
-
-
-The following changes since commit 2165fdf4bc2d323ec73e5995510f163163ce0fa4:
-
-  Merge branch 's390-qeth-fixes' (2020-03-10 16:07:49 -0700)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-net-2020-03-11
-
-for you to fetch changes up to ba32679cac50c38fdf488296f96b1f3175532b8e:
-
-  mac80211: Do not send mesh HWMP PREQ if HWMP is disabled (2020-03-11 09:04:14 +0100)
-
-----------------------------------------------------------------
-A couple of fixes:
- * three netlink validation fixes
- * a mesh path selection fix
-
-----------------------------------------------------------------
-Jakub Kicinski (3):
-      nl80211: add missing attribute validation for critical protocol indication
-      nl80211: add missing attribute validation for beacon report scanning
-      nl80211: add missing attribute validation for channel switch
-
-Nicolas Cavallari (1):
-      mac80211: Do not send mesh HWMP PREQ if HWMP is disabled
-
- net/mac80211/mesh_hwmp.c | 3 ++-
- net/wireless/nl80211.c   | 5 +++++
- 2 files changed, 7 insertions(+), 1 deletion(-)
 
