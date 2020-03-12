@@ -6,87 +6,82 @@ X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
 	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07BD6C1975A
-	for <linux-wireless@archiver.kernel.org>; Thu, 12 Mar 2020 13:43:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB622C10DCE
+	for <linux-wireless@archiver.kernel.org>; Thu, 12 Mar 2020 13:44:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CCEC120650
-	for <linux-wireless@archiver.kernel.org>; Thu, 12 Mar 2020 13:43:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 947D02067C
+	for <linux-wireless@archiver.kernel.org>; Thu, 12 Mar 2020 13:44:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="dj7WsWK3"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="mlwH1pAd"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727442AbgCLNnQ (ORCPT
+        id S1727340AbgCLNoW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 12 Mar 2020 09:43:16 -0400
+        Thu, 12 Mar 2020 09:44:22 -0400
 Received: from mail27.static.mailgun.info ([104.130.122.27]:19027 "EHLO
         mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727007AbgCLNnP (ORCPT
+        by vger.kernel.org with ESMTP id S1727007AbgCLNoV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Mar 2020 09:43:15 -0400
+        Thu, 12 Mar 2020 09:44:21 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1584020595; h=Date: Message-Id: Cc: To: References:
+ s=smtp; t=1584020661; h=Date: Message-Id: Cc: To: References:
  In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=Y/dcz94yMDkLEqXytCTThtLkiGIChjJJikH8kQiomQU=;
- b=dj7WsWK3Zoqh8NNlQVXoKll/w92DtGg6IYg+k+b1TuZwnj5XpT9t7u1bHdO/A7kW2ufy2Zrn
- z7NFLgGp8iP6/Q4zV+dW0qvqPqcTYwVHldODvDe1dBmz6g0TAx7UBZg80GLvKZYEA/hp/HaU
- AqJOJFm3xjVaa5fqJqEickr+Dc4=
+ Content-Type: Sender; bh=vPtGwSu1+5eK4tRGXIHzuXmuMUCPslSsRZ8+3nB35xk=;
+ b=mlwH1pAdr0eChLnXaMUKaYMYJuqcaE5NI53umodvAOgXL4dphAysuxjUL1ng+Vu5cQTrvnFn
+ 87Thtkus6T5lQEx6Uz23lzx+7HdOBhr/hNlzPLR2XEcrbWUQ88zTl/SU6ejzlqBmxpagKNWM
+ 0UwuDpj9I8T4HrmUFMyUgFBZU9w=
 X-Mailgun-Sending-Ip: 104.130.122.27
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e6a3c68.7fc4bb397d50-smtp-out-n01;
- Thu, 12 Mar 2020 13:43:04 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5e6a3ca4.7fa8319655e0-smtp-out-n02;
+ Thu, 12 Mar 2020 13:44:04 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 82B12C4478C; Thu, 12 Mar 2020 13:43:02 +0000 (UTC)
+        id 743FAC43636; Thu, 12 Mar 2020 13:44:04 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 473FFC433CB;
-        Thu, 12 Mar 2020 13:42:59 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 473FFC433CB
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 1FE68C433CB;
+        Thu, 12 Mar 2020 13:44:02 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 1FE68C433CB
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] libertas: Use new structure for SPI transfer delays
+Subject: Re: [PATCH 3/7] carl9170: Use scnprintf() for avoiding potential
+ buffer overflow
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20200227140634.9286-1-sergiu.cuciurean@analog.com>
-References: <20200227140634.9286-1-sergiu.cuciurean@analog.com>
-To:     Sergiu Cuciurean <sergiu.cuciurean@analog.com>
-Cc:     <linux-kernel@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <linux-wireless@vger.kernel.org>,
-        <libertas-dev@lists.infradead.org>, <davem@davemloft.net>,
-        <gregkh@linuxfoundation.org>, <dcbw@redhat.com>,
-        <allison@lohutok.net>, <tglx@linutronix.de>,
-        Sergiu Cuciurean <sergiu.cuciurean@analog.com>
+In-Reply-To: <20200311084713.18220-4-tiwai@suse.de>
+References: <20200311084713.18220-4-tiwai@suse.de>
+To:     Takashi Iwai <tiwai@suse.de>
+Cc:     linux-wireless@vger.kernel.org,
+        Christian Lamparter <chunkeey@googlemail.com>
 User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20200312134302.82B12C4478C@smtp.codeaurora.org>
-Date:   Thu, 12 Mar 2020 13:43:02 +0000 (UTC)
+Message-Id: <20200312134404.743FAC43636@smtp.codeaurora.org>
+Date:   Thu, 12 Mar 2020 13:44:04 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Sergiu Cuciurean <sergiu.cuciurean@analog.com> wrote:
+Takashi Iwai <tiwai@suse.de> wrote:
 
-> In a recent change to the SPI subsystem [1], a new `delay` struct was added
-> to replace the `delay_usecs`. This change replaces the current
-> `delay_usecs` with `delay` for this driver.
+> Since snprintf() returns the would-be-output size instead of the
+> actual output size, the succeeding calls may go beyond the given
+> buffer limit.  Fix it by replacing with scnprintf().
 > 
-> The `spi_transfer_delay_exec()` function [in the SPI framework] makes sure
-> that both `delay_usecs` & `delay` are used (in this order to preserve
-> backwards compatibility).
-> 
-> [1] commit bebcfd272df6 ("spi: introduce `delay` field for
-> `spi_transfer` + spi_transfer_delay_exec()")
-> 
-> Signed-off-by: Sergiu Cuciurean <sergiu.cuciurean@analog.com>
+> Cc: Christian Lamparter <chunkeey@googlemail.com>
+> Signed-off-by: Takashi Iwai <tiwai@suse.de>
 
-Patch applied to wireless-drivers-next.git, thanks.
+5 patches applied to wireless-drivers-next.git, thanks.
 
-32521a913852 libertas: Use new structure for SPI transfer delays
+5cb5b4759cf6 carl9170: Use scnprintf() for avoiding potential buffer overflow
+68b02e0c512b b43: Use scnprintf() for avoiding potential buffer overflow
+d3f8c708c0d7 b43legacy: Use scnprintf() for avoiding potential buffer overflow
+f35ba45c39c9 ipw2x00: Use scnprintf() for avoiding potential buffer overflow
+1da740e08a2d prism54: Use scnprintf() for avoiding potential buffer overflow
 
 -- 
-https://patchwork.kernel.org/patch/11408719/
+https://patchwork.kernel.org/patch/11431145/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
