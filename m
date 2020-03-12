@@ -2,83 +2,132 @@ Return-Path: <SRS0=JKVC=45=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2280EC10DCE
-	for <linux-wireless@archiver.kernel.org>; Thu, 12 Mar 2020 08:22:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F2F4C1975A
+	for <linux-wireless@archiver.kernel.org>; Thu, 12 Mar 2020 09:11:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EB4B0206EB
-	for <linux-wireless@archiver.kernel.org>; Thu, 12 Mar 2020 08:22:10 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="MAf/61VZ"
+	by mail.kernel.org (Postfix) with ESMTP id 4459620691
+	for <linux-wireless@archiver.kernel.org>; Thu, 12 Mar 2020 09:11:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726426AbgCLIWK (ORCPT
+        id S1726632AbgCLJLF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 12 Mar 2020 04:22:10 -0400
-Received: from mail26.static.mailgun.info ([104.130.122.26]:63909 "EHLO
-        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725980AbgCLIWJ (ORCPT
+        Thu, 12 Mar 2020 05:11:05 -0400
+Received: from smail.rz.tu-ilmenau.de ([141.24.186.67]:42637 "EHLO
+        smail.rz.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725268AbgCLJLF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Mar 2020 04:22:09 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1584001329; h=Date: Message-Id: Cc: To: References:
- In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=E2G4Qml6OjdHGKMn6Uh+cBEOG0pksFOETHSpomcONkQ=;
- b=MAf/61VZ/LDIrmFESGshC7GZ6w/fIfCwFaN6obXLJN9/JwIaAoLY1k79TjNdO444qM2u9AIF
- PKDqLzVUrTtDQnsbviL3DoEQpyeOprV7ocT5mb4LQDl6BjkkawHceAKJzlgHjM7e9/P5Ncnq
- fivo348M42i2F8E8qw2BG3k0DY0=
-X-Mailgun-Sending-Ip: 104.130.122.26
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e69f131.7f76a3a23068-smtp-out-n04;
- Thu, 12 Mar 2020 08:22:09 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 293AEC433D2; Thu, 12 Mar 2020 08:22:08 +0000 (UTC)
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        Thu, 12 Mar 2020 05:11:05 -0400
+Received: from isengard.tu-ilmenau.de (unknown [141.24.111.112])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 0EA73C433CB;
-        Thu, 12 Mar 2020 08:22:06 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 0EA73C433CB
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
+        by smail.rz.tu-ilmenau.de (Postfix) with ESMTPSA id 832A658006C;
+        Thu, 12 Mar 2020 10:11:03 +0100 (CET)
+From:   Markus Theil <markus.theil@tu-ilmenau.de>
+To:     johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org,
+        Markus Theil <markus.theil@tu-ilmenau.de>
+Subject: [PATCH 1/3] nl80211: add no pre-auth attribute and ext. feature flag for ctrl. port
+Date:   Thu, 12 Mar 2020 10:10:53 +0100
+Message-Id: <20200312091055.54257-2-markus.theil@tu-ilmenau.de>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20200312091055.54257-1-markus.theil@tu-ilmenau.de>
+References: <20200312091055.54257-1-markus.theil@tu-ilmenau.de>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH 1/7] ath11k: Use scnprintf() for avoiding potential buffer
- overflow
-From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20200311084713.18220-2-tiwai@suse.de>
-References: <20200311084713.18220-2-tiwai@suse.de>
-To:     Takashi Iwai <tiwai@suse.de>
-Cc:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org
-User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20200312082208.293AEC433D2@smtp.codeaurora.org>
-Date:   Thu, 12 Mar 2020 08:22:08 +0000 (UTC)
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Takashi Iwai <tiwai@suse.de> wrote:
+If the nl80211 control port is used before this patch, pre-auth frames
+(0x88c7) are send to userspace uncoditionally. While this enables userspace
+to only use nl80211 on the station side, it is not always useful for APs.
+Furthermore, pre-auth frames are ordinary data frames and not related to
+the control port. Therefore it should for example be possible for pre-auth
+frames to be bridged onto a wired network on AP side without touching
+userspace.
 
-> Since snprintf() returns the would-be-output size instead of the
-> actual output size, the succeeding calls may go beyond the given
-> buffer limit.  Fix it by replacing with scnprintf().
-> 
-> Cc: ath11k@lists.infradead.org
-> Signed-off-by: Takashi Iwai <tiwai@suse.de>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+For backwards compatibility to code already using pre-auth over nl80211,
+this patch adds a feature flag to disable this behavior, while it remains
+enabled by default. An additional ext. feature flag is added to detect this
+from userspace.
 
-2 patches applied to ath-next branch of ath.git, thanks.
+Thanks to Jouni for pointing out, that pre-auth frames should be handled as
+ordinary data frames.
 
-bc8f237823bc ath11k: Use scnprintf() for avoiding potential buffer overflow
-dfb252c7b680 ath5k: Use scnprintf() for avoiding potential buffer overflow
+Signed-off-by: Markus Theil <markus.theil@tu-ilmenau.de>
+---
+ include/uapi/linux/nl80211.h | 13 ++++++++++++-
+ net/wireless/nl80211.c       |  1 +
+ 2 files changed, 13 insertions(+), 1 deletion(-)
 
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index b002ef2060fa..66fffc30bb73 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1632,7 +1632,8 @@ enum nl80211_commands {
+  *	flag is included, then control port frames are sent over NL80211 instead
+  *	using %CMD_CONTROL_PORT_FRAME.  If control port routing over NL80211 is
+  *	to be used then userspace must also use the %NL80211_ATTR_SOCKET_OWNER
+- *	flag.
++ *	flag. When used with %NL80211_ATTR_CONTROL_PORT_NO_PREAUTH, pre-auth
++ *	frames are not forwared over the control port.
+  *
+  * @NL80211_ATTR_TESTDATA: Testmode data blob, passed through to the driver.
+  *	We recommend using nested, driver-specific attributes within this.
+@@ -2442,6 +2443,9 @@ enum nl80211_commands {
+  *	on output (in wiphy attributes) it contains only the feature sub-
+  *	attributes.
+  *
++ * @NL80211_ATTR_CONTROL_PORT_NO_PREAUTH: disable preauth frame rx on control
++ *	port in order to forward/receive them as ordinary data frames.
++ *
+  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+@@ -2912,6 +2916,8 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_TID_CONFIG,
+ 
++	NL80211_ATTR_CONTROL_PORT_NO_PREAUTH,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -5642,6 +5648,10 @@ enum nl80211_feature_flags {
+  * @NL80211_EXT_FEATURE_BEACON_PROTECTION: The driver supports Beacon protection
+  *	and can receive key configuration for BIGTK using key indexes 6 and 7.
+  *
++ * @NL80211_EXT_FEATURE_CONTROL_PORT_NO_PREAUTH: The driver can disable the
++ *	forwarding of preauth frames over the control port. They are then
++ *	handled as ordinary data frames.
++ *
+  * @NUM_NL80211_EXT_FEATURES: number of extended features.
+  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
+  */
+@@ -5690,6 +5700,7 @@ enum nl80211_ext_feature_index {
+ 	NL80211_EXT_FEATURE_VLAN_OFFLOAD,
+ 	NL80211_EXT_FEATURE_AQL,
+ 	NL80211_EXT_FEATURE_BEACON_PROTECTION,
++	NL80211_EXT_FEATURE_CONTROL_PORT_NO_PREAUTH,
+ 
+ 	/* add new features before the definition below */
+ 	NUM_NL80211_EXT_FEATURES,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 59f233790686..0f91e02a77c6 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -652,6 +652,7 @@ const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
+ 	[NL80211_ATTR_HE_BSS_COLOR] = NLA_POLICY_NESTED(he_bss_color_policy),
+ 	[NL80211_ATTR_TID_CONFIG] =
+ 		NLA_POLICY_NESTED_ARRAY(nl80211_tid_config_attr_policy),
++	[NL80211_ATTR_CONTROL_PORT_NO_PREAUTH] = { .type = NLA_FLAG },
+ };
+ 
+ /* policy for the key attributes */
 -- 
-https://patchwork.kernel.org/patch/11431143/
+2.25.1
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
