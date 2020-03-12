@@ -2,28 +2,28 @@ Return-Path: <SRS0=JKVC=45=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12AD4C2BB1D
-	for <linux-wireless@archiver.kernel.org>; Thu, 12 Mar 2020 08:09:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03849C10DCE
+	for <linux-wireless@archiver.kernel.org>; Thu, 12 Mar 2020 08:09:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id ED4CE20650
-	for <linux-wireless@archiver.kernel.org>; Thu, 12 Mar 2020 08:09:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D9CE32072F
+	for <linux-wireless@archiver.kernel.org>; Thu, 12 Mar 2020 08:09:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726437AbgCLIJB (ORCPT
+        id S1726446AbgCLIJC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 12 Mar 2020 04:09:01 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:59244 "EHLO
+        Thu, 12 Mar 2020 04:09:02 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:59245 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726302AbgCLIJB (ORCPT
+        with ESMTP id S1726310AbgCLIJB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 12 Mar 2020 04:09:01 -0400
 Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID 02C88sXc006396, This message is accepted by code: ctloc85258
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID 02C88sBw006400, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (RTEXMB06.realtek.com.tw[172.21.6.99])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id 02C88sXc006396
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id 02C88sBw006400
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT);
         Thu, 12 Mar 2020 16:08:54 +0800
 Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
@@ -37,10 +37,12 @@ Received: from localhost.localdomain (172.21.68.128) by
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>, <briannorris@chromium.org>
-Subject: [PATCH 0/5] rtw88: TX path update for latency and efficiency
-Date:   Thu, 12 Mar 2020 16:08:47 +0800
-Message-ID: <20200312080852.16684-1-yhchuang@realtek.com>
+Subject: [PATCH 2/5] rtw88: extract alloc rsvd_page and h2c skb routines
+Date:   Thu, 12 Mar 2020 16:08:49 +0800
+Message-ID: <20200312080852.16684-3-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20200312080852.16684-1-yhchuang@realtek.com>
+References: <20200312080852.16684-1-yhchuang@realtek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [172.21.68.128]
@@ -53,50 +55,162 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-This patchset makes the driver transmit with less CPU latency and
-higher efficiency. Originally, the TX path hold an IRQ lock that
-will disable all of the IRQs, to wait for the PS state transition.
-It may sometimes cause the CPU to delay for a long enough time,
-like several milliseconds. This could lead to some time-sensitive
-programs to lose their immediacy. We can just use *_bh() locks to
-not to block the IRQs, and only use *_irqsafe() locks to the ISR
-related settings.
+Extract skb allocation routines for rsvd_page and h2c.
+These routines should also be used by USB and SDIO.
 
-And, the TX path includes to send reserved pages to the device.
-But the old reserved page routine did not consider that the driver
-could possibly run multiple vifs at the same time. So, update the
-reserved page routine of the TX path to generate reserved pages
-and associate them to each vif, so we can take multi-vif into
-consideration.
+This should not change the logic at all.
+memset() for pkt_info is unnecessary, just declare as {0}.
+Also skb_put()/memcpy() can be replaced by skb_put_data().
 
-For the data packets come from TX queue, the driver used to kick
-off them one by one, while we can do better to kick a bunch of
-them at once to save some time to access to the IO register and
-the DMA engine transition
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw88/pci.c | 27 ++----------
+ drivers/net/wireless/realtek/rtw88/tx.c  | 54 ++++++++++++++++++++++++
+ drivers/net/wireless/realtek/rtw88/tx.h  |  8 ++++
+ 3 files changed, 66 insertions(+), 23 deletions(-)
 
-
-Brian Norris (1):
-  rtw88: don't hold all IRQs disabled for PS operations
-
-Yan-Hsuan Chuang (4):
-  rtw88: extract alloc rsvd_page and h2c skb routines
-  rtw88: associate reserved pages with each vif
-  rtw88: pci: define a mask for TX/RX BD indexes
-  rtw88: kick off TX packets once for higher efficiency
-
- drivers/net/wireless/realtek/rtw88/fw.c       | 265 ++++++++++++++----
- drivers/net/wireless/realtek/rtw88/fw.h       |  25 +-
- drivers/net/wireless/realtek/rtw88/hci.h      |  20 +-
- drivers/net/wireless/realtek/rtw88/mac80211.c |  22 +-
- drivers/net/wireless/realtek/rtw88/main.c     |   9 +-
- drivers/net/wireless/realtek/rtw88/main.h     |   1 +
- drivers/net/wireless/realtek/rtw88/pci.c      | 199 ++++++++-----
- drivers/net/wireless/realtek/rtw88/pci.h      |   7 +-
- drivers/net/wireless/realtek/rtw88/tx.c       | 131 +++++++--
- drivers/net/wireless/realtek/rtw88/tx.h       |  10 +-
- drivers/net/wireless/realtek/rtw88/wow.c      |  39 +--
- 11 files changed, 516 insertions(+), 212 deletions(-)
-
+diff --git a/drivers/net/wireless/realtek/rtw88/pci.c b/drivers/net/wireless/realtek/rtw88/pci.c
+index b1f14d1fa2b3..c0fd579d9551 100644
+--- a/drivers/net/wireless/realtek/rtw88/pci.c
++++ b/drivers/net/wireless/realtek/rtw88/pci.c
+@@ -760,43 +760,24 @@ static int rtw_pci_write_data_rsvd_page(struct rtw_dev *rtwdev, u8 *buf,
+ 					u32 size)
+ {
+ 	struct sk_buff *skb;
+-	struct rtw_tx_pkt_info pkt_info;
+-	u32 tx_pkt_desc_sz;
+-	u32 length;
++	struct rtw_tx_pkt_info pkt_info = {0};
+ 
+-	tx_pkt_desc_sz = rtwdev->chip->tx_pkt_desc_sz;
+-	length = size + tx_pkt_desc_sz;
+-	skb = dev_alloc_skb(length);
++	skb = rtw_tx_write_data_rsvd_page_get(rtwdev, &pkt_info, buf, size);
+ 	if (!skb)
+ 		return -ENOMEM;
+ 
+-	skb_reserve(skb, tx_pkt_desc_sz);
+-	memcpy((u8 *)skb_put(skb, size), buf, size);
+-	memset(&pkt_info, 0, sizeof(pkt_info));
+-	pkt_info.tx_pkt_size = size;
+-	pkt_info.offset = tx_pkt_desc_sz;
+-
+ 	return rtw_pci_xmit(rtwdev, &pkt_info, skb, RTW_TX_QUEUE_BCN);
+ }
+ 
+ static int rtw_pci_write_data_h2c(struct rtw_dev *rtwdev, u8 *buf, u32 size)
+ {
+ 	struct sk_buff *skb;
+-	struct rtw_tx_pkt_info pkt_info;
+-	u32 tx_pkt_desc_sz;
+-	u32 length;
++	struct rtw_tx_pkt_info pkt_info = {0};
+ 
+-	tx_pkt_desc_sz = rtwdev->chip->tx_pkt_desc_sz;
+-	length = size + tx_pkt_desc_sz;
+-	skb = dev_alloc_skb(length);
++	skb = rtw_tx_write_data_h2c_get(rtwdev, &pkt_info, buf, size);
+ 	if (!skb)
+ 		return -ENOMEM;
+ 
+-	skb_reserve(skb, tx_pkt_desc_sz);
+-	memcpy((u8 *)skb_put(skb, size), buf, size);
+-	memset(&pkt_info, 0, sizeof(pkt_info));
+-	pkt_info.tx_pkt_size = size;
+-
+ 	return rtw_pci_xmit(rtwdev, &pkt_info, skb, RTW_TX_QUEUE_H2C);
+ }
+ 
+diff --git a/drivers/net/wireless/realtek/rtw88/tx.c b/drivers/net/wireless/realtek/rtw88/tx.c
+index 24c39c60c99a..0447228e66be 100644
+--- a/drivers/net/wireless/realtek/rtw88/tx.c
++++ b/drivers/net/wireless/realtek/rtw88/tx.c
+@@ -6,6 +6,7 @@
+ #include "tx.h"
+ #include "fw.h"
+ #include "ps.h"
++#include "debug.h"
+ 
+ static
+ void rtw_tx_stats(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
+@@ -368,6 +369,59 @@ void rtw_rsvd_page_pkt_info_update(struct rtw_dev *rtwdev,
+ 	pkt_info->ls = true;
+ }
+ 
++struct sk_buff *
++rtw_tx_write_data_rsvd_page_get(struct rtw_dev *rtwdev,
++				struct rtw_tx_pkt_info *pkt_info,
++				u8 *buf, u32 size)
++{
++	struct rtw_chip_info *chip = rtwdev->chip;
++	struct sk_buff *skb;
++	u32 tx_pkt_desc_sz;
++	u32 length;
++
++	tx_pkt_desc_sz = chip->tx_pkt_desc_sz;
++	length = size + tx_pkt_desc_sz;
++	skb = dev_alloc_skb(length);
++	if (!skb) {
++		rtw_err(rtwdev, "failed to alloc write data rsvd page skb\n");
++		return NULL;
++	}
++
++	skb_reserve(skb, tx_pkt_desc_sz);
++	skb_put_data(skb, buf, size);
++	pkt_info->tx_pkt_size = size;
++	pkt_info->offset = tx_pkt_desc_sz;
++
++	return skb;
++}
++EXPORT_SYMBOL(rtw_tx_write_data_rsvd_page_get);
++
++struct sk_buff *
++rtw_tx_write_data_h2c_get(struct rtw_dev *rtwdev,
++			  struct rtw_tx_pkt_info *pkt_info,
++			  u8 *buf, u32 size)
++{
++	struct rtw_chip_info *chip = rtwdev->chip;
++	struct sk_buff *skb;
++	u32 tx_pkt_desc_sz;
++	u32 length;
++
++	tx_pkt_desc_sz = chip->tx_pkt_desc_sz;
++	length = size + tx_pkt_desc_sz;
++	skb = dev_alloc_skb(length);
++	if (!skb) {
++		rtw_err(rtwdev, "failed to alloc write data h2c skb\n");
++		return NULL;
++	}
++
++	skb_reserve(skb, tx_pkt_desc_sz);
++	skb_put_data(skb, buf, size);
++	pkt_info->tx_pkt_size = size;
++
++	return skb;
++}
++EXPORT_SYMBOL(rtw_tx_write_data_h2c_get);
++
+ void rtw_tx(struct rtw_dev *rtwdev,
+ 	    struct ieee80211_tx_control *control,
+ 	    struct sk_buff *skb)
+diff --git a/drivers/net/wireless/realtek/rtw88/tx.h b/drivers/net/wireless/realtek/rtw88/tx.h
+index 9ca4f74a501b..e8e7756866b1 100644
+--- a/drivers/net/wireless/realtek/rtw88/tx.h
++++ b/drivers/net/wireless/realtek/rtw88/tx.h
+@@ -93,5 +93,13 @@ void rtw_tx_report_handle(struct rtw_dev *rtwdev, struct sk_buff *skb);
+ void rtw_rsvd_page_pkt_info_update(struct rtw_dev *rtwdev,
+ 				   struct rtw_tx_pkt_info *pkt_info,
+ 				   struct sk_buff *skb);
++struct sk_buff *
++rtw_tx_write_data_rsvd_page_get(struct rtw_dev *rtwdev,
++				struct rtw_tx_pkt_info *pkt_info,
++				u8 *buf, u32 size);
++struct sk_buff *
++rtw_tx_write_data_h2c_get(struct rtw_dev *rtwdev,
++			  struct rtw_tx_pkt_info *pkt_info,
++			  u8 *buf, u32 size);
+ 
+ #endif
 -- 
 2.17.1
 
