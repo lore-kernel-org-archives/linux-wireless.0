@@ -7,45 +7,45 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF232C2BB1D
-	for <linux-wireless@archiver.kernel.org>; Thu, 12 Mar 2020 16:03:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1431AC1975A
+	for <linux-wireless@archiver.kernel.org>; Thu, 12 Mar 2020 16:03:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7EBE2206FA
-	for <linux-wireless@archiver.kernel.org>; Thu, 12 Mar 2020 16:03:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E087F206FA
+	for <linux-wireless@archiver.kernel.org>; Thu, 12 Mar 2020 16:03:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1584028991;
-	bh=Z4I+TK3QjV0mRnpCT/VwqWyqg9ld9uyaP01rVI2fHWo=;
+	s=default; t=1584028993;
+	bh=s2oTxp0CPVkfjff1Pd2NdMD47t4/JXAq+JOrcxwD0aI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=iAqmWD+I9MgAWTXwaTY+jJZVhgEK4dVQkYc+NSd6ifEFEu1elpxNl4GNN5lWkNM3p
-	 ua8+4lEEYh8sbb90O41ENK9k33z+dalgWmEhGXlTzeWsPLTmHaCRKNohNdjZLE2Ptv
-	 MUQXHwXCZ3mcH/FLL4utSTvsu0Y99NZ4YkmFnet0=
+	b=z6ppnHsLjTHilrOpzWvib1+OZW07S+yOvoiyb86k6KWubBRVlWKtMJbogNaiy2NWp
+	 UxbAFpwo5/DQTkV+0C/7Pt3GFdbkkNuwVd5F4EJKapLMHMFui5a8PlG39bB88sYd8j
+	 T79ERBBOyS85MiMD102ESsGKVRknoFdhPpWbzq+s=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727933AbgCLQDK (ORCPT
+        id S1727946AbgCLQDN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 12 Mar 2020 12:03:10 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57252 "EHLO mail.kernel.org"
+        Thu, 12 Mar 2020 12:03:13 -0400
+Received: from mail.kernel.org ([198.145.29.99]:57290 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727798AbgCLQDK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Mar 2020 12:03:10 -0400
+        id S1727798AbgCLQDM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 12 Mar 2020 12:03:12 -0400
 Received: from lore-desk-wlan.redhat.com (unknown [151.48.128.122])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 19D58206F1;
-        Thu, 12 Mar 2020 16:03:07 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 6144B206F1;
+        Thu, 12 Mar 2020 16:03:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1584028989;
-        bh=Z4I+TK3QjV0mRnpCT/VwqWyqg9ld9uyaP01rVI2fHWo=;
+        s=default; t=1584028992;
+        bh=s2oTxp0CPVkfjff1Pd2NdMD47t4/JXAq+JOrcxwD0aI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=bWSTDzZ60gJ74p5hYhUFdL6UZYYB60oey1HsSqFjWc8Oi50i02FFjaPGjSR75Xv6d
-         Dmeklas4YfmUTUjb1e9RSBIkYuVAirmxPfsU1gTvhlJBXFLAXAhZlHRnf8o5lHl/wf
-         cIvsDStEFjeLimFzBXFFUYBT7YN0glXp5ZRqPUH4=
+        b=UF62X5jYAXu1kLACX8NYibCOzyL45p+xYWQrMiY+8bRilJYqC+DZj9+Bv9uSwdvFn
+         n0Qc2rv7k57UIlJTWf5WQO6fGmojX1Zd2aDXUJR60mIObWg6hui0HmE3CN0vknHMIK
+         +uEXqu73/AtrcKwa4Iet90NX+wELdfUgYGyI5otA=
 From:   Lorenzo Bianconi <lorenzo@kernel.org>
 To:     nbd@nbd.name
 Cc:     lorenzo.bianconi@redhat.com, sean.wang@mediatek.com,
         ryder.lee@mediatek.com, linux-wireless@vger.kernel.org
-Subject: [PATCH v3 13/25] mt76: mt7615: introduce MCU_FW_PREFIX for fw mcu commands
-Date:   Thu, 12 Mar 2020 17:02:23 +0100
-Message-Id: <426390d682e487bc9323bade7594ce95ae0b5c1a.1584028319.git.lorenzo@kernel.org>
+Subject: [PATCH v3 15/25] mt76: mt7615: add mt7663e support to mt7615_reg_map
+Date:   Thu, 12 Mar 2020 17:02:25 +0100
+Message-Id: <971043f0bc9fa31c88b472b7861ae5ae4052c354.1584028319.git.lorenzo@kernel.org>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <cover.1584028319.git.lorenzo@kernel.org>
 References: <cover.1584028319.git.lorenzo@kernel.org>
@@ -56,151 +56,73 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Currently fw commands rely on negative cmds since they need different
-mcu msg metadata. Extend this approach introducing MCU_FW_PREFIX.
-This is a preliminary patch to support new mt7663e firmware commands
+Introduce mt7663e support to mt7615_reg_map routine in order to reuse it
+adding support for mt7663e driver
 
+Co-developed-by: Sean Wang <sean.wang@mediatek.com>
+Signed-off-by: Sean Wang <sean.wang@mediatek.com>
+Co-developed-by: Ryder Lee <ryder.lee@mediatek.com>
+Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
 Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
- .../net/wireless/mediatek/mt76/mt7615/mcu.c   | 25 ++++++++++---------
- .../net/wireless/mediatek/mt76/mt7615/mcu.h   | 15 ++++++-----
- 2 files changed, 22 insertions(+), 18 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7615/mmio.c   | 12 +++++++++---
+ drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h |  5 +++++
+ drivers/net/wireless/mediatek/mt76/mt7615/regs.h   |  3 +++
+ 3 files changed, 17 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-index 1c26e2c3e476..4ce3d248182c 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-@@ -52,6 +52,7 @@ struct mt7615_fw_trailer {
- void mt7615_mcu_fill_msg(struct mt7615_dev *dev, struct sk_buff *skb,
- 			 int cmd, int *wait_seq)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mmio.c b/drivers/net/wireless/mediatek/mt76/mt7615/mmio.c
+index fb4a76270ad4..43c8b29020f5 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mmio.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mmio.c
+@@ -30,9 +30,15 @@ const u32 mt7615e_reg_map[] = {
+ 
+ u32 mt7615_reg_map(struct mt7615_dev *dev, u32 addr)
  {
-+	int mcu_cmd = cmd & MCU_CMD_MASK;
- 	struct mt7615_mcu_txd *mcu_txd;
- 	u8 seq, q_idx, pkt_fmt;
- 	__le32 *txd;
-@@ -63,7 +64,7 @@ void mt7615_mcu_fill_msg(struct mt7615_dev *dev, struct sk_buff *skb,
- 
- 	mcu_txd = (struct mt7615_mcu_txd *)skb_push(skb, sizeof(*mcu_txd));
- 
--	if (cmd != -MCU_CMD_FW_SCATTER) {
-+	if (cmd != MCU_CMD_FW_SCATTER) {
- 		q_idx = MT_TX_MCU_PORT_RX_Q0;
- 		pkt_fmt = MT_TX_TYPE_CMD;
- 	} else {
-@@ -87,9 +88,9 @@ void mt7615_mcu_fill_msg(struct mt7615_dev *dev, struct sk_buff *skb,
- 	mcu_txd->pkt_type = MCU_PKT_ID;
- 	mcu_txd->seq = seq;
- 
--	if (cmd < 0) {
-+	if (cmd & MCU_FW_PREFIX) {
- 		mcu_txd->set_query = MCU_Q_NA;
--		mcu_txd->cid = -cmd;
-+		mcu_txd->cid = mcu_cmd;
- 	} else {
- 		mcu_txd->cid = MCU_CMD_EXT_CID;
- 		mcu_txd->set_query = MCU_Q_SET;
-@@ -127,7 +128,7 @@ mt7615_mcu_parse_response(struct mt7615_dev *dev, int cmd,
- 		return -EAGAIN;
- 
- 	switch (cmd) {
--	case -MCU_CMD_PATCH_SEM_CONTROL:
-+	case MCU_CMD_PATCH_SEM_CONTROL:
- 		skb_pull(skb, sizeof(*rxd) - 4);
- 		ret = *skb->data;
- 		break;
-@@ -152,8 +153,8 @@ int mt7615_mcu_wait_response(struct mt7615_dev *dev, int cmd, int seq)
- 	while (true) {
- 		skb = mt76_mcu_get_response(&dev->mt76, expires);
- 		if (!skb) {
--			dev_err(dev->mt76.dev, "Message %d (seq %d) timeout\n",
--				cmd, seq);
-+			dev_err(dev->mt76.dev, "Message %ld (seq %d) timeout\n",
-+				cmd & MCU_CMD_MASK, seq);
- 			return -ETIMEDOUT;
- 		}
- 
-@@ -308,7 +309,7 @@ static int mt7615_mcu_init_download(struct mt7615_dev *dev, u32 addr,
- 		.mode = cpu_to_le32(mode),
- 	};
- 
--	return __mt76_mcu_send_msg(&dev->mt76, -MCU_CMD_TARGET_ADDRESS_LEN_REQ,
-+	return __mt76_mcu_send_msg(&dev->mt76, MCU_CMD_TARGET_ADDRESS_LEN_REQ,
- 				   &req, sizeof(req), true);
- }
- 
-@@ -1101,7 +1102,7 @@ static int mt7615_mcu_send_firmware(struct mt7615_dev *dev, const void *data,
- 		cur_len = min_t(int, 4096 - sizeof(struct mt7615_mcu_txd),
- 				len);
- 
--		ret = __mt76_mcu_send_msg(&dev->mt76, -MCU_CMD_FW_SCATTER,
-+		ret = __mt76_mcu_send_msg(&dev->mt76, MCU_CMD_FW_SCATTER,
- 					  data, cur_len, false);
- 		if (ret)
- 			break;
-@@ -1127,13 +1128,13 @@ static int mt7615_mcu_start_firmware(struct mt7615_dev *dev, u32 addr,
- 		.addr = cpu_to_le32(addr),
- 	};
- 
--	return __mt76_mcu_send_msg(&dev->mt76, -MCU_CMD_FW_START_REQ,
-+	return __mt76_mcu_send_msg(&dev->mt76, MCU_CMD_FW_START_REQ,
- 				   &req, sizeof(req), true);
- }
- 
- static int mt7615_mcu_restart(struct mt76_dev *dev)
- {
--	return __mt76_mcu_send_msg(dev, -MCU_CMD_RESTART_DL_REQ, NULL,
-+	return __mt76_mcu_send_msg(dev, MCU_CMD_RESTART_DL_REQ, NULL,
- 				   0, true);
- }
- 
-@@ -1145,7 +1146,7 @@ static int mt7615_mcu_patch_sem_ctrl(struct mt7615_dev *dev, bool get)
- 		.op = cpu_to_le32(get ? PATCH_SEM_GET : PATCH_SEM_RELEASE),
- 	};
- 
--	return __mt76_mcu_send_msg(&dev->mt76, -MCU_CMD_PATCH_SEM_CONTROL,
-+	return __mt76_mcu_send_msg(&dev->mt76, MCU_CMD_PATCH_SEM_CONTROL,
- 				   &req, sizeof(req), true);
- }
- 
-@@ -1158,7 +1159,7 @@ static int mt7615_mcu_start_patch(struct mt7615_dev *dev)
- 		.check_crc = 0,
- 	};
- 
--	return __mt76_mcu_send_msg(&dev->mt76, -MCU_CMD_PATCH_FINISH_REQ,
-+	return __mt76_mcu_send_msg(&dev->mt76, MCU_CMD_PATCH_FINISH_REQ,
- 				   &req, sizeof(req), true);
- }
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.h b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.h
-index c84695facf08..8ae08a2bf10d 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.h
-@@ -179,16 +179,19 @@ enum {
- 	MCU_S2D_H2CN
- };
- 
-+#define MCU_FW_PREFIX		BIT(31)
-+#define MCU_CMD_MASK		~MCU_FW_PREFIX
+-	u32 base = addr & MT_MCU_PCIE_REMAP_2_BASE;
+-	u32 offset = addr & MT_MCU_PCIE_REMAP_2_OFFSET;
+-
++	u32 base, offset;
 +
- enum {
--	MCU_CMD_TARGET_ADDRESS_LEN_REQ = 0x01,
--	MCU_CMD_FW_START_REQ = 0x02,
-+	MCU_CMD_TARGET_ADDRESS_LEN_REQ = MCU_FW_PREFIX | 0x01,
-+	MCU_CMD_FW_START_REQ = MCU_FW_PREFIX | 0x02,
- 	MCU_CMD_INIT_ACCESS_REG = 0x3,
- 	MCU_CMD_PATCH_START_REQ = 0x05,
--	MCU_CMD_PATCH_FINISH_REQ = 0x07,
--	MCU_CMD_PATCH_SEM_CONTROL = 0x10,
-+	MCU_CMD_PATCH_FINISH_REQ = MCU_FW_PREFIX | 0x07,
-+	MCU_CMD_PATCH_SEM_CONTROL = MCU_FW_PREFIX | 0x10,
- 	MCU_CMD_EXT_CID = 0xED,
--	MCU_CMD_FW_SCATTER = 0xEE,
--	MCU_CMD_RESTART_DL_REQ = 0xEF,
-+	MCU_CMD_FW_SCATTER = MCU_FW_PREFIX | 0xEE,
-+	MCU_CMD_RESTART_DL_REQ = MCU_FW_PREFIX | 0xEF,
- };
++	if (is_mt7663(&dev->mt76)) {
++		base = addr & MT7663_MCU_PCIE_REMAP_2_BASE;
++		offset = addr & MT7663_MCU_PCIE_REMAP_2_OFFSET;
++	} else {
++		base = addr & MT_MCU_PCIE_REMAP_2_BASE;
++		offset = addr & MT_MCU_PCIE_REMAP_2_OFFSET;
++	}
+ 	mt76_wr(dev, MT_MCU_PCIE_REMAP_2, base);
  
- enum {
+ 	return MT_PCIE_REMAP_BASE_2 + offset;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
+index c03ad0409f43..143fa63517ff 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
+@@ -343,6 +343,11 @@ static inline bool is_mt7615(struct mt76_dev *dev)
+ 	return mt76_chip(dev) == 0x7615;
+ }
+ 
++static inline bool is_mt7663(struct mt76_dev *dev)
++{
++	return mt76_chip(dev) == 0x7663;
++}
++
+ static inline void mt7615_irq_enable(struct mt7615_dev *dev, u32 mask)
+ {
+ 	mt76_set_irq_mask(&dev->mt76, MT_INT_MASK_CSR, 0, mask);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/regs.h b/drivers/net/wireless/mediatek/mt76/mt7615/regs.h
+index b422a9c71089..928e5a841885 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/regs.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/regs.h
+@@ -55,6 +55,9 @@ enum mt7615_reg_base {
+ 
+ #define MT_HIF(ofs)			((dev)->reg_map[MT_HIF_BASE] + (ofs))
+ 
++#define MT7663_MCU_PCIE_REMAP_2_OFFSET	GENMASK(15, 0)
++#define MT7663_MCU_PCIE_REMAP_2_BASE	GENMASK(31, 16)
++
+ #define MT_CFG_LPCR_HOST		MT_HIF(0x1f0)
+ #define MT_CFG_LPCR_HOST_FW_OWN		BIT(0)
+ #define MT_CFG_LPCR_HOST_DRV_OWN	BIT(1)
 -- 
 2.24.1
 
