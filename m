@@ -6,30 +6,30 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C418BC5ACD3
-	for <linux-wireless@archiver.kernel.org>; Thu, 12 Mar 2020 08:09:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EFA9C5ACC1
+	for <linux-wireless@archiver.kernel.org>; Thu, 12 Mar 2020 08:09:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7EAF3206F1
-	for <linux-wireless@archiver.kernel.org>; Thu, 12 Mar 2020 08:09:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3D454206F1
+	for <linux-wireless@archiver.kernel.org>; Thu, 12 Mar 2020 08:09:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726464AbgCLIJE (ORCPT
+        id S1726461AbgCLIJC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 12 Mar 2020 04:09:04 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:59242 "EHLO
+        Thu, 12 Mar 2020 04:09:02 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:59246 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726000AbgCLIJC (ORCPT
+        with ESMTP id S1726387AbgCLIJC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 12 Mar 2020 04:09:02 -0400
 Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID 02C88tVI006441, This message is accepted by code: ctloc85258
+X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID 02C88tFm006449, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (RTEXMB06.realtek.com.tw[172.21.6.99])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id 02C88tVI006441
+        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id 02C88tFm006449
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT);
         Thu, 12 Mar 2020 16:08:55 +0800
 Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
  RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Thu, 12 Mar 2020 16:08:54 +0800
+ 15.1.1779.2; Thu, 12 Mar 2020 16:08:55 +0800
 Received: from localhost.localdomain (172.21.68.128) by
  RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
@@ -37,9 +37,9 @@ Received: from localhost.localdomain (172.21.68.128) by
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>, <briannorris@chromium.org>
-Subject: [PATCH 3/5] rtw88: associate reserved pages with each vif
-Date:   Thu, 12 Mar 2020 16:08:50 +0800
-Message-ID: <20200312080852.16684-4-yhchuang@realtek.com>
+Subject: [PATCH 5/5] rtw88: kick off TX packets once for higher efficiency
+Date:   Thu, 12 Mar 2020 16:08:52 +0800
+Message-ID: <20200312080852.16684-6-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200312080852.16684-1-yhchuang@realtek.com>
 References: <20200312080852.16684-1-yhchuang@realtek.com>
@@ -55,733 +55,410 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-Each device has only one reserved page shared with all of the
-vifs, so it seems not reasonable to pass vif as one of the
-arguments to rtw_fw_download_rsvd_page(). If driver is going
-to run more than one vif, the content of reserved page could
-not be built for all of the vifs.
+Driver used to kick off every TX packets, that will waste some
+time while we can do better to kick off the TX packets once after
+they are all prepared to be transmitted.
 
-To fix it, let each vif maintain its own reserved page list,
-and build the final reserved page to download to the firmware
-from all of the vifs. Hence driver should add reserved pages
-to each vif according to the vif->type when adding the vif.
+For PCI, it uses DMA engine to transfer the SKBs to the device,
+and the transition of the state of the DMA engine could be a cost.
+Driver can save some time to kick off multiple SKBs once so that
+the DMA engine will have only one transition.
 
-For station mode, add reserved page with rtw_add_rsvd_page_sta().
-If the station mode is going to suspend in PNO (net-detect)
-mode, remove the reserved pages used for normal mode, and add
-new one for wowlan mode with rtw_add_rsvd_page_pno().
-
-For beacon mode, only beacon is required to be added using
-rtw_add_rsvd_page_bcn().
-
-This would make the code flow simpler as we don't need to
-add reserved pages when vif is running, just add/remove them
-when ieee80211_ops::[add|remove]_interface.
-
-When driver is going to download the reserved page, it will
-collect pages from all of the vifs, this list is maintained
-by rtwdev, with build_list as the pages' member. That way, we
-can still build a list of reserved pages to be downloaded.
-Also we can get the location of the pages from the list that
-is maintained by rtwdev.
-
-The biggest problem is that the first page should always be
-beacon, if other type of reserved page is put in the first
-page, the tx descriptor and offset could be wrong.
-But station mode vif does not add beacon into its list, so
-we need to add a dummy page in front of the list, to make
-sure other pages will not be put in the first page. As the
-dummy page is allocated when building the list, we must free
-it before building a new list of reserved pages to firmware.
+So, split rtw_hci_ops::tx() to rtw_hci_ops::tx_write() and
+rtw_hci_ops::tx_kick_off() to explicitly kick the SKBs off after
+they are written to the prepared buffer. For packets come from
+ieee80211_ops::tx(), write one and then kick it off immediately.
+For packets queued in TX queue, which come from
+ieee80211_ops::wake_tx_queue(), we can dequeue them, write them
+to the buffer, and then kick them off together.
 
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/fw.c       | 265 ++++++++++++++----
- drivers/net/wireless/realtek/rtw88/fw.h       |  25 +-
- drivers/net/wireless/realtek/rtw88/mac80211.c |  22 +-
- drivers/net/wireless/realtek/rtw88/main.c     |   9 +-
- drivers/net/wireless/realtek/rtw88/main.h     |   1 +
- drivers/net/wireless/realtek/rtw88/wow.c      |  39 +--
- 6 files changed, 258 insertions(+), 103 deletions(-)
+ drivers/net/wireless/realtek/rtw88/hci.h | 20 ++++--
+ drivers/net/wireless/realtek/rtw88/pci.c | 92 +++++++++++++++++-------
+ drivers/net/wireless/realtek/rtw88/pci.h |  1 +
+ drivers/net/wireless/realtek/rtw88/tx.c  | 77 ++++++++++++++------
+ drivers/net/wireless/realtek/rtw88/tx.h  |  2 +-
+ 5 files changed, 136 insertions(+), 56 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wireless/realtek/rtw88/fw.c
-index 6867bf29d4c8..05c430b3489c 100644
---- a/drivers/net/wireless/realtek/rtw88/fw.c
-+++ b/drivers/net/wireless/realtek/rtw88/fw.c
-@@ -583,7 +583,7 @@ static u8 rtw_get_rsvd_page_location(struct rtw_dev *rtwdev,
- 	struct rtw_rsvd_page *rsvd_pkt;
- 	u8 location = 0;
+diff --git a/drivers/net/wireless/realtek/rtw88/hci.h b/drivers/net/wireless/realtek/rtw88/hci.h
+index cad56389182c..2cba327e6218 100644
+--- a/drivers/net/wireless/realtek/rtw88/hci.h
++++ b/drivers/net/wireless/realtek/rtw88/hci.h
+@@ -7,9 +7,10 @@
  
--	list_for_each_entry(rsvd_pkt, &rtwdev->rsvd_page_list, list) {
-+	list_for_each_entry(rsvd_pkt, &rtwdev->rsvd_page_list, build_list) {
- 		if (type == rsvd_pkt->type)
- 			location = rsvd_pkt->page;
- 	}
-@@ -636,7 +636,7 @@ u8 rtw_get_rsvd_page_probe_req_location(struct rtw_dev *rtwdev,
- 	struct rtw_rsvd_page *rsvd_pkt;
- 	u8 location = 0;
+ /* ops for PCI, USB and SDIO */
+ struct rtw_hci_ops {
+-	int (*tx)(struct rtw_dev *rtwdev,
+-		  struct rtw_tx_pkt_info *pkt_info,
+-		  struct sk_buff *skb);
++	int (*tx_write)(struct rtw_dev *rtwdev,
++			struct rtw_tx_pkt_info *pkt_info,
++			struct sk_buff *skb);
++	void (*tx_kick_off)(struct rtw_dev *rtwdev);
+ 	int (*setup)(struct rtw_dev *rtwdev);
+ 	int (*start)(struct rtw_dev *rtwdev);
+ 	void (*stop)(struct rtw_dev *rtwdev);
+@@ -28,11 +29,16 @@ struct rtw_hci_ops {
+ 	void (*write32)(struct rtw_dev *rtwdev, u32 addr, u32 val);
+ };
  
--	list_for_each_entry(rsvd_pkt, &rtwdev->rsvd_page_list, list) {
-+	list_for_each_entry(rsvd_pkt, &rtwdev->rsvd_page_list, build_list) {
- 		if (rsvd_pkt->type != RSVD_PROBE_REQ)
- 			continue;
- 		if ((!ssid && !rsvd_pkt->ssid) ||
-@@ -653,7 +653,7 @@ u16 rtw_get_rsvd_page_probe_req_size(struct rtw_dev *rtwdev,
- 	struct rtw_rsvd_page *rsvd_pkt;
- 	u16 size = 0;
- 
--	list_for_each_entry(rsvd_pkt, &rtwdev->rsvd_page_list, list) {
-+	list_for_each_entry(rsvd_pkt, &rtwdev->rsvd_page_list, build_list) {
- 		if (rsvd_pkt->type != RSVD_PROBE_REQ)
- 			continue;
- 		if ((!ssid && !rsvd_pkt->ssid) ||
-@@ -690,25 +690,6 @@ void rtw_send_rsvd_page_h2c(struct rtw_dev *rtwdev)
- 	rtw_fw_send_h2c_command(rtwdev, h2c_pkt);
+-static inline int rtw_hci_tx(struct rtw_dev *rtwdev,
+-			     struct rtw_tx_pkt_info *pkt_info,
+-			     struct sk_buff *skb)
++static inline int rtw_hci_tx_write(struct rtw_dev *rtwdev,
++				   struct rtw_tx_pkt_info *pkt_info,
++				   struct sk_buff *skb)
+ {
+-	return rtwdev->hci.ops->tx(rtwdev, pkt_info, skb);
++	return rtwdev->hci.ops->tx_write(rtwdev, pkt_info, skb);
++}
++
++static inline void rtw_hci_tx_kick_off(struct rtw_dev *rtwdev)
++{
++	return rtwdev->hci.ops->tx_kick_off(rtwdev);
  }
  
--static struct sk_buff *
--rtw_beacon_get(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
--{
--	struct sk_buff *skb_new;
--
--	if (vif->type != NL80211_IFTYPE_AP &&
--	    vif->type != NL80211_IFTYPE_ADHOC &&
--	    !ieee80211_vif_is_mesh(vif)) {
--		skb_new = alloc_skb(1, GFP_KERNEL);
--		if (!skb_new)
--			return NULL;
--		skb_put(skb_new, 1);
+ static inline int rtw_hci_setup(struct rtw_dev *rtwdev)
+diff --git a/drivers/net/wireless/realtek/rtw88/pci.c b/drivers/net/wireless/realtek/rtw88/pci.c
+index 812944a7b4bd..e37c71495c0d 100644
+--- a/drivers/net/wireless/realtek/rtw88/pci.c
++++ b/drivers/net/wireless/realtek/rtw88/pci.c
+@@ -691,9 +691,34 @@ static void rtw_pci_dma_check(struct rtw_dev *rtwdev,
+ 	rtwpci->rx_tag = (rtwpci->rx_tag + 1) % RX_TAG_MAX;
+ }
+ 
+-static int rtw_pci_xmit(struct rtw_dev *rtwdev,
+-			struct rtw_tx_pkt_info *pkt_info,
+-			struct sk_buff *skb, u8 queue)
++static void rtw_pci_tx_kick_off_queue(struct rtw_dev *rtwdev, u8 queue)
++{
++	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
++	struct rtw_pci_tx_ring *ring;
++	u32 bd_idx;
++
++	ring = &rtwpci->tx_rings[queue];
++	bd_idx = rtw_pci_tx_queue_idx_addr[queue];
++
++	spin_lock_bh(&rtwpci->irq_lock);
++	rtw_pci_deep_ps_leave(rtwdev);
++	rtw_write16(rtwdev, bd_idx, ring->r.wp & TRX_BD_IDX_MASK);
++	spin_unlock_bh(&rtwpci->irq_lock);
++}
++
++static void rtw_pci_tx_kick_off(struct rtw_dev *rtwdev)
++{
++	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
++	u8 queue;
++
++	for (queue = 0; queue < RTK_MAX_TX_QUEUE_NUM; queue++)
++		if (test_and_clear_bit(queue, rtwpci->tx_queued))
++			rtw_pci_tx_kick_off_queue(rtwdev, queue);
++}
++
++static int rtw_pci_tx_write_data(struct rtw_dev *rtwdev,
++				 struct rtw_tx_pkt_info *pkt_info,
++				 struct sk_buff *skb, u8 queue)
+ {
+ 	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
+ 	struct rtw_chip_info *chip = rtwdev->chip;
+@@ -706,7 +731,6 @@ static int rtw_pci_xmit(struct rtw_dev *rtwdev,
+ 	u32 psb_len;
+ 	u8 *pkt_desc;
+ 	struct rtw_pci_tx_buffer_desc *buf_desc;
+-	u32 bd_idx;
+ 
+ 	ring = &rtwpci->tx_rings[queue];
+ 
+@@ -745,22 +769,17 @@ static int rtw_pci_xmit(struct rtw_dev *rtwdev,
+ 
+ 	spin_lock_bh(&rtwpci->irq_lock);
+ 
+-	rtw_pci_deep_ps_leave(rtwdev);
+ 	skb_queue_tail(&ring->queue, skb);
+ 
+-	/* kick off tx queue */
+-	if (queue != RTW_TX_QUEUE_BCN) {
+-		if (++ring->r.wp >= ring->r.len)
+-			ring->r.wp = 0;
+-		bd_idx = rtw_pci_tx_queue_idx_addr[queue];
+-		rtw_write16(rtwdev, bd_idx, ring->r.wp & TRX_BD_IDX_MASK);
 -	} else {
--		skb_new = ieee80211_beacon_get(hw, vif);
+-		u32 reg_bcn_work;
+-
+-		reg_bcn_work = rtw_read8(rtwdev, RTK_PCI_TXBD_BCN_WORK);
+-		reg_bcn_work |= BIT_PCI_BCNQ_FLAG;
+-		rtw_write8(rtwdev, RTK_PCI_TXBD_BCN_WORK, reg_bcn_work);
 -	}
--
--	return skb_new;
--}
--
- static struct sk_buff *rtw_nlo_info_get(struct ieee80211_hw *hw)
- {
- 	struct rtw_dev *rtwdev = hw->priv;
-@@ -853,15 +834,31 @@ static struct sk_buff *rtw_lps_pg_info_get(struct ieee80211_hw *hw)
- }
- 
- static struct sk_buff *rtw_get_rsvd_page_skb(struct ieee80211_hw *hw,
--					     struct ieee80211_vif *vif,
- 					     struct rtw_rsvd_page *rsvd_pkt)
- {
-+	struct ieee80211_vif *vif;
-+	struct rtw_vif *rtwvif;
- 	struct sk_buff *skb_new;
- 	struct cfg80211_ssid *ssid;
- 
-+	if (rsvd_pkt->type == RSVD_DUMMY) {
-+		skb_new = alloc_skb(1, GFP_KERNEL);
-+		if (!skb_new)
-+			return NULL;
++	if (queue == RTW_TX_QUEUE_BCN)
++		goto out_unlock;
 +
-+		skb_put(skb_new, 1);
-+		return skb_new;
++	/* update write-index, and kick it off later */
++	set_bit(queue, rtwpci->tx_queued);
++	if (++ring->r.wp >= ring->r.len)
++		ring->r.wp = 0;
++
++out_unlock:
+ 	spin_unlock_bh(&rtwpci->irq_lock);
+ 
+ 	return 0;
+@@ -771,36 +790,58 @@ static int rtw_pci_write_data_rsvd_page(struct rtw_dev *rtwdev, u8 *buf,
+ {
+ 	struct sk_buff *skb;
+ 	struct rtw_tx_pkt_info pkt_info = {0};
++	u8 reg_bcn_work;
++	int ret;
+ 
+ 	skb = rtw_tx_write_data_rsvd_page_get(rtwdev, &pkt_info, buf, size);
+ 	if (!skb)
+ 		return -ENOMEM;
+ 
+-	return rtw_pci_xmit(rtwdev, &pkt_info, skb, RTW_TX_QUEUE_BCN);
++	ret = rtw_pci_tx_write_data(rtwdev, &pkt_info, skb, RTW_TX_QUEUE_BCN);
++	if (ret) {
++		rtw_err(rtwdev, "failed to write rsvd page data\n");
++		return ret;
 +	}
 +
-+	rtwvif = rsvd_pkt->rtwvif;
-+	if (!rtwvif)
-+		return NULL;
++	/* reserved pages go through beacon queue */
++	reg_bcn_work = rtw_read8(rtwdev, RTK_PCI_TXBD_BCN_WORK);
++	reg_bcn_work |= BIT_PCI_BCNQ_FLAG;
++	rtw_write8(rtwdev, RTK_PCI_TXBD_BCN_WORK, reg_bcn_work);
 +
-+	vif = rtwvif_to_vif(rtwvif);
-+
- 	switch (rsvd_pkt->type) {
- 	case RSVD_BEACON:
--		skb_new = rtw_beacon_get(hw, vif);
-+		skb_new = ieee80211_beacon_get(hw, vif);
- 		break;
- 	case RSVD_PS_POLL:
- 		skb_new = ieee80211_pspoll_get(hw, vif);
-@@ -948,6 +945,8 @@ static struct rtw_rsvd_page *rtw_alloc_rsvd_page(struct rtw_dev *rtwdev,
- 	if (!rsvd_pkt)
- 		return NULL;
- 
-+	INIT_LIST_HEAD(&rsvd_pkt->vif_list);
-+	INIT_LIST_HEAD(&rsvd_pkt->build_list);
- 	rsvd_pkt->type = type;
- 	rsvd_pkt->add_txdesc = txdesc;
- 
-@@ -955,51 +954,124 @@ static struct rtw_rsvd_page *rtw_alloc_rsvd_page(struct rtw_dev *rtwdev,
++	return 0;
  }
  
- static void rtw_insert_rsvd_page(struct rtw_dev *rtwdev,
-+				 struct rtw_vif *rtwvif,
- 				 struct rtw_rsvd_page *rsvd_pkt)
+ static int rtw_pci_write_data_h2c(struct rtw_dev *rtwdev, u8 *buf, u32 size)
  {
- 	lockdep_assert_held(&rtwdev->mutex);
--	list_add_tail(&rsvd_pkt->list, &rtwdev->rsvd_page_list);
-+
-+	list_add_tail(&rsvd_pkt->vif_list, &rtwvif->rsvd_page_list);
- }
+ 	struct sk_buff *skb;
+ 	struct rtw_tx_pkt_info pkt_info = {0};
++	int ret;
  
--void rtw_add_rsvd_page(struct rtw_dev *rtwdev, enum rtw_rsvd_packet_type type,
--		       bool txdesc)
-+static void rtw_add_rsvd_page(struct rtw_dev *rtwdev,
-+			      struct rtw_vif *rtwvif,
-+			      enum rtw_rsvd_packet_type type,
-+			      bool txdesc)
- {
- 	struct rtw_rsvd_page *rsvd_pkt;
+ 	skb = rtw_tx_write_data_h2c_get(rtwdev, &pkt_info, buf, size);
+ 	if (!skb)
+ 		return -ENOMEM;
  
- 	rsvd_pkt = rtw_alloc_rsvd_page(rtwdev, type, txdesc);
--	if (!rsvd_pkt)
-+	if (!rsvd_pkt) {
-+		rtw_err(rtwdev, "failed to alloc rsvd page %d\n", type);
- 		return;
+-	return rtw_pci_xmit(rtwdev, &pkt_info, skb, RTW_TX_QUEUE_H2C);
++	ret = rtw_pci_tx_write_data(rtwdev, &pkt_info, skb, RTW_TX_QUEUE_H2C);
++	if (ret) {
++		rtw_err(rtwdev, "failed to write h2c data\n");
++		return ret;
 +	}
- 
--	rtw_insert_rsvd_page(rtwdev, rsvd_pkt);
-+	rsvd_pkt->rtwvif = rtwvif;
-+	rtw_insert_rsvd_page(rtwdev, rtwvif, rsvd_pkt);
++
++	rtw_pci_tx_kick_off_queue(rtwdev, RTW_TX_QUEUE_H2C);
++
++	return 0;
  }
  
--void rtw_add_rsvd_page_probe_req(struct rtw_dev *rtwdev,
--				 struct cfg80211_ssid *ssid)
-+static void rtw_add_rsvd_page_probe_req(struct rtw_dev *rtwdev,
-+					struct rtw_vif *rtwvif,
-+					struct cfg80211_ssid *ssid)
+-static int rtw_pci_tx(struct rtw_dev *rtwdev,
+-		      struct rtw_tx_pkt_info *pkt_info,
+-		      struct sk_buff *skb)
++static int rtw_pci_tx_write(struct rtw_dev *rtwdev,
++			    struct rtw_tx_pkt_info *pkt_info,
++			    struct sk_buff *skb)
  {
- 	struct rtw_rsvd_page *rsvd_pkt;
+ 	struct rtw_pci *rtwpci = (struct rtw_pci *)rtwdev->priv;
+ 	struct rtw_pci_tx_ring *ring;
+ 	u8 queue = rtw_hw_queue_mapping(skb);
+ 	int ret;
  
- 	rsvd_pkt = rtw_alloc_rsvd_page(rtwdev, RSVD_PROBE_REQ, true);
--	if (!rsvd_pkt)
-+	if (!rsvd_pkt) {
-+		rtw_err(rtwdev, "failed to alloc probe req rsvd page\n");
- 		return;
-+	}
+-	ret = rtw_pci_xmit(rtwdev, pkt_info, skb, queue);
++	ret = rtw_pci_tx_write_data(rtwdev, pkt_info, skb, queue);
+ 	if (ret)
+ 		return ret;
  
-+	rsvd_pkt->rtwvif = rtwvif;
- 	rsvd_pkt->ssid = ssid;
--	rtw_insert_rsvd_page(rtwdev, rsvd_pkt);
-+	rtw_insert_rsvd_page(rtwdev, rtwvif, rsvd_pkt);
+@@ -1374,7 +1415,8 @@ static void rtw_pci_destroy(struct rtw_dev *rtwdev, struct pci_dev *pdev)
  }
  
--void rtw_reset_rsvd_page(struct rtw_dev *rtwdev)
-+void rtw_remove_rsvd_page(struct rtw_dev *rtwdev,
-+			  struct rtw_vif *rtwvif)
+ static struct rtw_hci_ops rtw_pci_ops = {
+-	.tx = rtw_pci_tx,
++	.tx_write = rtw_pci_tx_write,
++	.tx_kick_off = rtw_pci_tx_kick_off,
+ 	.setup = rtw_pci_setup,
+ 	.start = rtw_pci_start,
+ 	.stop = rtw_pci_stop,
+diff --git a/drivers/net/wireless/realtek/rtw88/pci.h b/drivers/net/wireless/realtek/rtw88/pci.h
+index 67b5e2fe2b62..3ac4fb328d31 100644
+--- a/drivers/net/wireless/realtek/rtw88/pci.h
++++ b/drivers/net/wireless/realtek/rtw88/pci.h
+@@ -208,6 +208,7 @@ struct rtw_pci {
+ 	bool irq_enabled;
+ 
+ 	u16 rx_tag;
++	DECLARE_BITMAP(tx_queued, RTK_MAX_TX_QUEUE_NUM);
+ 	struct rtw_pci_tx_ring tx_rings[RTK_MAX_TX_QUEUE_NUM];
+ 	struct rtw_pci_rx_ring rx_rings[RTK_MAX_RX_QUEUE_NUM];
+ 	u16 link_ctrl;
+diff --git a/drivers/net/wireless/realtek/rtw88/tx.c b/drivers/net/wireless/realtek/rtw88/tx.c
+index 0447228e66be..b31eb4d9664b 100644
+--- a/drivers/net/wireless/realtek/rtw88/tx.c
++++ b/drivers/net/wireless/realtek/rtw88/tx.c
+@@ -221,7 +221,7 @@ void rtw_tx_report_handle(struct rtw_dev *rtwdev, struct sk_buff *skb)
+ 
+ static void rtw_tx_mgmt_pkt_info_update(struct rtw_dev *rtwdev,
+ 					struct rtw_tx_pkt_info *pkt_info,
+-					struct ieee80211_tx_control *control,
++					struct ieee80211_sta *sta,
+ 					struct sk_buff *skb)
  {
- 	struct rtw_rsvd_page *rsvd_pkt, *tmp;
+ 	pkt_info->use_rate = true;
+@@ -231,10 +231,9 @@ static void rtw_tx_mgmt_pkt_info_update(struct rtw_dev *rtwdev,
  
- 	lockdep_assert_held(&rtwdev->mutex);
+ static void rtw_tx_data_pkt_info_update(struct rtw_dev *rtwdev,
+ 					struct rtw_tx_pkt_info *pkt_info,
+-					struct ieee80211_tx_control *control,
++					struct ieee80211_sta *sta,
+ 					struct sk_buff *skb)
+ {
+-	struct ieee80211_sta *sta = control->sta;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct rtw_sta_info *si;
+@@ -293,7 +292,7 @@ static void rtw_tx_data_pkt_info_update(struct rtw_dev *rtwdev,
  
--	list_for_each_entry_safe(rsvd_pkt, tmp, &rtwdev->rsvd_page_list, list) {
--		if (rsvd_pkt->type == RSVD_BEACON)
--			continue;
--		list_del(&rsvd_pkt->list);
-+	/* remove all of the rsvd pages for vif */
-+	list_for_each_entry_safe(rsvd_pkt, tmp, &rtwvif->rsvd_page_list,
-+				 vif_list) {
-+		list_del(&rsvd_pkt->vif_list);
-+		if (!list_empty(&rsvd_pkt->build_list))
-+			list_del(&rsvd_pkt->build_list);
- 		kfree(rsvd_pkt);
+ void rtw_tx_pkt_info_update(struct rtw_dev *rtwdev,
+ 			    struct rtw_tx_pkt_info *pkt_info,
+-			    struct ieee80211_tx_control *control,
++			    struct ieee80211_sta *sta,
+ 			    struct sk_buff *skb)
+ {
+ 	struct rtw_chip_info *chip = rtwdev->chip;
+@@ -305,15 +304,15 @@ void rtw_tx_pkt_info_update(struct rtw_dev *rtwdev,
+ 	u8 sec_type = 0;
+ 	bool bmc;
+ 
+-	if (control->sta) {
+-		si = (struct rtw_sta_info *)control->sta->drv_priv;
++	if (sta) {
++		si = (struct rtw_sta_info *)sta->drv_priv;
+ 		vif = si->vif;
  	}
- }
  
-+void rtw_add_rsvd_page_bcn(struct rtw_dev *rtwdev,
-+			   struct rtw_vif *rtwvif)
-+{
-+	struct ieee80211_vif *vif = rtwvif_to_vif(rtwvif);
-+
-+	if (vif->type != NL80211_IFTYPE_AP &&
-+	    vif->type != NL80211_IFTYPE_ADHOC &&
-+	    vif->type != NL80211_IFTYPE_MESH_POINT) {
-+		rtw_warn(rtwdev, "Cannot add beacon rsvd page for %d\n",
-+			 vif->type);
-+		return;
-+	}
-+
-+	rtw_add_rsvd_page(rtwdev, rtwvif, RSVD_BEACON, false);
-+}
-+
-+void rtw_add_rsvd_page_pno(struct rtw_dev *rtwdev,
-+			   struct rtw_vif *rtwvif)
-+{
-+	struct ieee80211_vif *vif = rtwvif_to_vif(rtwvif);
-+	struct rtw_wow_param *rtw_wow = &rtwdev->wow;
-+	struct rtw_pno_request *rtw_pno_req = &rtw_wow->pno_req;
-+	struct cfg80211_ssid *ssid;
-+	int i;
-+
-+	if (vif->type != NL80211_IFTYPE_STATION) {
-+		rtw_warn(rtwdev, "Cannot add PNO rsvd page for %d\n",
-+			 vif->type);
-+		return;
-+	}
-+
-+	for (i = 0 ; i < rtw_pno_req->match_set_cnt; i++) {
-+		ssid = &rtw_pno_req->match_sets[i].ssid;
-+		rtw_add_rsvd_page_probe_req(rtwdev, rtwvif, ssid);
-+	}
-+
-+	rtw_add_rsvd_page_probe_req(rtwdev, rtwvif, NULL);
-+	rtw_add_rsvd_page(rtwdev, rtwvif, RSVD_NLO_INFO, false);
-+	rtw_add_rsvd_page(rtwdev, rtwvif, RSVD_CH_INFO, true);
-+}
-+
-+void rtw_add_rsvd_page_sta(struct rtw_dev *rtwdev,
-+			   struct rtw_vif *rtwvif)
-+{
-+	struct ieee80211_vif *vif = rtwvif_to_vif(rtwvif);
-+
-+	if (vif->type != NL80211_IFTYPE_STATION) {
-+		rtw_warn(rtwdev, "Cannot add sta rsvd page for %d\n",
-+			 vif->type);
-+		return;
-+	}
-+
-+	rtw_add_rsvd_page(rtwdev, rtwvif, RSVD_PS_POLL, true);
-+	rtw_add_rsvd_page(rtwdev, rtwvif, RSVD_QOS_NULL, true);
-+	rtw_add_rsvd_page(rtwdev, rtwvif, RSVD_NULL, true);
-+	rtw_add_rsvd_page(rtwdev, rtwvif, RSVD_LPS_PG_DPK, true);
-+	rtw_add_rsvd_page(rtwdev, rtwvif, RSVD_LPS_PG_INFO, true);
-+}
-+
- int rtw_fw_write_data_rsvd_page(struct rtw_dev *rtwdev, u16 pg_addr,
- 				u8 *buf, u32 size)
+ 	if (ieee80211_is_mgmt(fc) || ieee80211_is_nullfunc(fc))
+-		rtw_tx_mgmt_pkt_info_update(rtwdev, pkt_info, control, skb);
++		rtw_tx_mgmt_pkt_info_update(rtwdev, pkt_info, sta, skb);
+ 	else if (ieee80211_is_data(fc))
+-		rtw_tx_data_pkt_info_update(rtwdev, pkt_info, control, skb);
++		rtw_tx_data_pkt_info_update(rtwdev, pkt_info, sta, skb);
+ 
+ 	if (info->control.hw_key) {
+ 		struct ieee80211_key_conf *key = info->control.hw_key;
+@@ -427,10 +426,16 @@ void rtw_tx(struct rtw_dev *rtwdev,
+ 	    struct sk_buff *skb)
  {
-@@ -1063,8 +1135,72 @@ static int rtw_download_drv_rsvd_page(struct rtw_dev *rtwdev, u8 *buf, u32 size)
- 	return rtw_fw_write_data_rsvd_page(rtwdev, pg_addr, buf, size);
+ 	struct rtw_tx_pkt_info pkt_info = {0};
++	int ret;
+ 
+-	rtw_tx_pkt_info_update(rtwdev, &pkt_info, control, skb);
+-	if (rtw_hci_tx(rtwdev, &pkt_info, skb))
++	rtw_tx_pkt_info_update(rtwdev, &pkt_info, control->sta, skb);
++	ret = rtw_hci_tx_write(rtwdev, &pkt_info, skb);
++	if (ret) {
++		rtw_err(rtwdev, "failed to write TX skb to HCI\n");
+ 		goto out;
++	}
++
++	rtw_hci_tx_kick_off(rtwdev);
+ 
+ 	return;
+ 
+@@ -470,37 +475,61 @@ static void rtw_txq_check_agg(struct rtw_dev *rtwdev,
+ 	ieee80211_queue_work(rtwdev->hw, &rtwdev->ba_work);
  }
  
--static u8 *rtw_build_rsvd_page(struct rtw_dev *rtwdev,
--			       struct ieee80211_vif *vif, u32 *size)
-+static void __rtw_build_rsvd_page_reset(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_rsvd_page *rsvd_pkt, *tmp;
-+
-+	list_for_each_entry_safe(rsvd_pkt, tmp, &rtwdev->rsvd_page_list,
-+				 build_list) {
-+		list_del_init(&rsvd_pkt->build_list);
-+
-+		/* Don't free except for the dummy rsvd page,
-+		 * others will be freed when removing vif
-+		 */
-+		if (rsvd_pkt->type == RSVD_DUMMY)
-+			kfree(rsvd_pkt);
+-static bool rtw_txq_dequeue(struct rtw_dev *rtwdev,
+-			    struct rtw_txq *rtwtxq)
++static int rtw_txq_push_skb(struct rtw_dev *rtwdev,
++			    struct rtw_txq *rtwtxq,
++			    struct sk_buff *skb)
+ {
+ 	struct ieee80211_txq *txq = rtwtxq_to_txq(rtwtxq);
+-	struct ieee80211_tx_control control;
+-	struct sk_buff *skb;
+-
+-	skb = ieee80211_tx_dequeue(rtwdev->hw, txq);
+-	if (!skb)
+-		return false;
++	struct rtw_tx_pkt_info pkt_info = {0};
++	int ret;
+ 
+ 	rtw_txq_check_agg(rtwdev, rtwtxq, skb);
+ 
+-	control.sta = txq->sta;
+-	rtw_tx(rtwdev, &control, skb);
++	rtw_tx_pkt_info_update(rtwdev, &pkt_info, txq->sta, skb);
++	ret = rtw_hci_tx_write(rtwdev, &pkt_info, skb);
++	if (ret) {
++		rtw_err(rtwdev, "failed to write TX skb to HCI\n");
++		return ret;
 +	}
-+}
-+
-+static void rtw_build_rsvd_page_iter(void *data, u8 *mac,
-+				     struct ieee80211_vif *vif)
-+{
-+	struct rtw_dev *rtwdev = data;
-+	struct rtw_vif *rtwvif = (struct rtw_vif *)vif->drv_priv;
-+	struct rtw_rsvd_page *rsvd_pkt;
-+
-+	list_for_each_entry(rsvd_pkt, &rtwvif->rsvd_page_list, vif_list) {
-+		if (rsvd_pkt->type == RSVD_BEACON)
-+			list_add(&rsvd_pkt->build_list,
-+				 &rtwdev->rsvd_page_list);
-+		else
-+			list_add_tail(&rsvd_pkt->build_list,
-+				      &rtwdev->rsvd_page_list);
-+	}
-+}
-+
-+static int  __rtw_build_rsvd_page_from_vifs(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_rsvd_page *rsvd_pkt;
-+
-+	__rtw_build_rsvd_page_reset(rtwdev);
-+
-+	/* gather rsvd page from vifs */
-+	rtw_iterate_vifs_atomic(rtwdev, rtw_build_rsvd_page_iter, rtwdev);
-+
-+	rsvd_pkt = list_first_entry_or_null(&rtwdev->rsvd_page_list,
-+					    struct rtw_rsvd_page, build_list);
-+	if (!rsvd_pkt) {
-+		WARN(1, "Should not have an empty reserved page\n");
-+		return -EINVAL;
-+	}
-+
-+	/* the first rsvd should be beacon, otherwise add a dummy one */
-+	if (rsvd_pkt->type != RSVD_BEACON) {
-+		struct rtw_rsvd_page *dummy_pkt;
-+
-+		dummy_pkt = rtw_alloc_rsvd_page(rtwdev, RSVD_DUMMY, false);
-+		if (!dummy_pkt) {
-+			rtw_err(rtwdev, "failed to alloc dummy rsvd page\n");
-+			return -ENOMEM;
-+		}
-+
-+		list_add(&dummy_pkt->build_list, &rtwdev->rsvd_page_list);
-+	}
-+
+ 	rtwtxq->last_push = jiffies;
+ 
+-	return true;
 +	return 0;
 +}
 +
-+static u8 *rtw_build_rsvd_page(struct rtw_dev *rtwdev, u32 *size)
- {
- 	struct ieee80211_hw *hw = rtwdev->hw;
- 	struct rtw_chip_info *chip = rtwdev->chip;
-@@ -1074,13 +1210,21 @@ static u8 *rtw_build_rsvd_page(struct rtw_dev *rtwdev,
- 	u8 total_page = 0;
- 	u8 page_size, page_margin, tx_desc_sz;
- 	u8 *buf;
-+	int ret;
- 
- 	page_size = chip->page_size;
- 	tx_desc_sz = chip->tx_pkt_desc_sz;
- 	page_margin = page_size - tx_desc_sz;
- 
--	list_for_each_entry(rsvd_pkt, &rtwdev->rsvd_page_list, list) {
--		iter = rtw_get_rsvd_page_skb(hw, vif, rsvd_pkt);
-+	ret = __rtw_build_rsvd_page_from_vifs(rtwdev);
-+	if (ret) {
-+		rtw_err(rtwdev,
-+			"failed to build rsvd page from vifs, ret %d\n", ret);
++static struct sk_buff *rtw_txq_dequeue(struct rtw_dev *rtwdev,
++				       struct rtw_txq *rtwtxq)
++{
++	struct ieee80211_txq *txq = rtwtxq_to_txq(rtwtxq);
++	struct sk_buff *skb;
++
++	skb = ieee80211_tx_dequeue(rtwdev->hw, txq);
++	if (!skb)
 +		return NULL;
++
++	return skb;
+ }
+ 
+ static void rtw_txq_push(struct rtw_dev *rtwdev,
+ 			 struct rtw_txq *rtwtxq,
+ 			 unsigned long frames)
+ {
++	struct sk_buff *skb;
++	int ret;
+ 	int i;
+ 
+ 	rcu_read_lock();
+ 
+-	for (i = 0; i < frames; i++)
+-		if (!rtw_txq_dequeue(rtwdev, rtwtxq))
++	for (i = 0; i < frames; i++) {
++		skb = rtw_txq_dequeue(rtwdev, rtwtxq);
++		if (!skb)
++			break;
++
++		ret = rtw_txq_push_skb(rtwdev, rtwtxq, skb);
++		if (ret) {
++			rtw_err(rtwdev, "failed to pusk skb, ret %d\n", ret);
+ 			break;
++		}
 +	}
+ 
+ 	rcu_read_unlock();
+ }
+@@ -523,6 +552,8 @@ void rtw_tx_tasklet(unsigned long data)
+ 		list_del_init(&rtwtxq->list);
+ 	}
+ 
++	rtw_hci_tx_kick_off(rtwdev);
 +
-+	list_for_each_entry(rsvd_pkt, &rtwdev->rsvd_page_list, build_list) {
-+		iter = rtw_get_rsvd_page_skb(hw, rsvd_pkt);
- 		if (!iter) {
- 			rtw_err(rtwdev, "failed to build rsvd packet\n");
- 			goto release_skb;
-@@ -1104,7 +1248,8 @@ static u8 *rtw_build_rsvd_page(struct rtw_dev *rtwdev,
- 		 * is smaller than the actual size of the whole rsvd_page
- 		 */
- 		if (total_page == 0) {
--			if (rsvd_pkt->type != RSVD_BEACON) {
-+			if (rsvd_pkt->type != RSVD_BEACON &&
-+			    rsvd_pkt->type != RSVD_DUMMY) {
- 				rtw_err(rtwdev, "first page should be a beacon\n");
- 				goto release_skb;
- 			}
-@@ -1132,7 +1277,7 @@ static u8 *rtw_build_rsvd_page(struct rtw_dev *rtwdev,
- 	 * And that rsvd_pkt does not require tx_desc because when it goes
- 	 * through TX path, the TX path will generate one for it.
- 	 */
--	list_for_each_entry(rsvd_pkt, &rtwdev->rsvd_page_list, list) {
-+	list_for_each_entry(rsvd_pkt, &rtwdev->rsvd_page_list, build_list) {
- 		rtw_rsvd_page_list_to_buf(rtwdev, page_size, page_margin,
- 					  page, buf, rsvd_pkt);
- 		if (page == 0)
-@@ -1148,7 +1293,7 @@ static u8 *rtw_build_rsvd_page(struct rtw_dev *rtwdev,
- 	return buf;
- 
- release_skb:
--	list_for_each_entry(rsvd_pkt, &rtwdev->rsvd_page_list, list) {
-+	list_for_each_entry(rsvd_pkt, &rtwdev->rsvd_page_list, build_list) {
- 		kfree_skb(rsvd_pkt->skb);
- 		rsvd_pkt->skb = NULL;
- 	}
-@@ -1156,18 +1301,31 @@ static u8 *rtw_build_rsvd_page(struct rtw_dev *rtwdev,
- 	return NULL;
+ 	spin_unlock_bh(&rtwdev->txq_lock);
  }
  
--static int
--rtw_download_beacon(struct rtw_dev *rtwdev, struct ieee80211_vif *vif)
-+static int rtw_download_beacon(struct rtw_dev *rtwdev)
- {
- 	struct ieee80211_hw *hw = rtwdev->hw;
-+	struct rtw_rsvd_page *rsvd_pkt;
- 	struct sk_buff *skb;
- 	int ret = 0;
- 
--	skb = rtw_beacon_get(hw, vif);
-+	rsvd_pkt = list_first_entry_or_null(&rtwdev->rsvd_page_list,
-+					    struct rtw_rsvd_page, build_list);
-+	if (!rsvd_pkt) {
-+		rtw_err(rtwdev, "failed to get rsvd page from build list\n");
-+		return -ENOENT;
-+	}
-+
-+	if (rsvd_pkt->type != RSVD_BEACON &&
-+	    rsvd_pkt->type != RSVD_DUMMY) {
-+		rtw_err(rtwdev, "invalid rsvd page type %d, should be beacon or dummy\n",
-+			rsvd_pkt->type);
-+		return -EINVAL;
-+	}
-+
-+	skb = rtw_get_rsvd_page_skb(hw, rsvd_pkt);
- 	if (!skb) {
- 		rtw_err(rtwdev, "failed to get beacon skb\n");
--		ret = -ENOMEM;
--		goto out;
-+		return -ENOMEM;
- 	}
- 
- 	ret = rtw_download_drv_rsvd_page(rtwdev, skb->data, skb->len);
-@@ -1176,17 +1334,16 @@ rtw_download_beacon(struct rtw_dev *rtwdev, struct ieee80211_vif *vif)
- 
- 	dev_kfree_skb(skb);
- 
--out:
- 	return ret;
- }
- 
--int rtw_fw_download_rsvd_page(struct rtw_dev *rtwdev, struct ieee80211_vif *vif)
-+int rtw_fw_download_rsvd_page(struct rtw_dev *rtwdev)
- {
- 	u8 *buf;
- 	u32 size;
- 	int ret;
- 
--	buf = rtw_build_rsvd_page(rtwdev, vif, &size);
-+	buf = rtw_build_rsvd_page(rtwdev, &size);
- 	if (!buf) {
- 		rtw_err(rtwdev, "failed to build rsvd page pkt\n");
- 		return -ENOMEM;
-@@ -1203,7 +1360,7 @@ int rtw_fw_download_rsvd_page(struct rtw_dev *rtwdev, struct ieee80211_vif *vif)
- 	 * the beacon again to replace the TX desc header, and we will get
- 	 * a correct tx_desc for the beacon in the rsvd page.
- 	 */
--	ret = rtw_download_beacon(rtwdev, vif);
-+	ret = rtw_download_beacon(rtwdev);
- 	if (ret) {
- 		rtw_err(rtwdev, "failed to download beacon\n");
- 		goto free;
-diff --git a/drivers/net/wireless/realtek/rtw88/fw.h b/drivers/net/wireless/realtek/rtw88/fw.h
-index ccd27bd45775..d507a954e701 100644
---- a/drivers/net/wireless/realtek/rtw88/fw.h
-+++ b/drivers/net/wireless/realtek/rtw88/fw.h
-@@ -41,6 +41,7 @@ struct rtw_c2h_cmd {
- 
- enum rtw_rsvd_packet_type {
- 	RSVD_BEACON,
-+	RSVD_DUMMY,
- 	RSVD_PS_POLL,
- 	RSVD_PROBE_RESP,
- 	RSVD_NULL,
-@@ -98,7 +99,13 @@ struct rtw_lps_pg_info_hdr {
- } __packed;
- 
- struct rtw_rsvd_page {
--	struct list_head list;
-+	/* associated with each vif */
-+	struct list_head vif_list;
-+	struct rtw_vif *rtwvif;
-+
-+	/* associated when build rsvd page */
-+	struct list_head build_list;
-+
- 	struct sk_buff *skb;
- 	enum rtw_rsvd_packet_type type;
- 	u8 page;
-@@ -502,15 +509,17 @@ void rtw_fw_bt_wifi_control(struct rtw_dev *rtwdev, u8 op_code, u8 *data);
- void rtw_fw_send_rssi_info(struct rtw_dev *rtwdev, struct rtw_sta_info *si);
- void rtw_fw_send_ra_info(struct rtw_dev *rtwdev, struct rtw_sta_info *si);
- void rtw_fw_media_status_report(struct rtw_dev *rtwdev, u8 mac_id, bool conn);
--void rtw_add_rsvd_page(struct rtw_dev *rtwdev, enum rtw_rsvd_packet_type type,
--		       bool txdesc);
--void rtw_add_rsvd_page_probe_req(struct rtw_dev *rtwdev,
--				 struct cfg80211_ssid *ssid);
- int rtw_fw_write_data_rsvd_page(struct rtw_dev *rtwdev, u16 pg_addr,
- 				u8 *buf, u32 size);
--void rtw_reset_rsvd_page(struct rtw_dev *rtwdev);
--int rtw_fw_download_rsvd_page(struct rtw_dev *rtwdev,
--			      struct ieee80211_vif *vif);
-+void rtw_remove_rsvd_page(struct rtw_dev *rtwdev,
-+			  struct rtw_vif *rtwvif);
-+void rtw_add_rsvd_page_bcn(struct rtw_dev *rtwdev,
-+			   struct rtw_vif *rtwvif);
-+void rtw_add_rsvd_page_pno(struct rtw_dev *rtwdev,
-+			   struct rtw_vif *rtwvif);
-+void rtw_add_rsvd_page_sta(struct rtw_dev *rtwdev,
-+			   struct rtw_vif *rtwvif);
-+int rtw_fw_download_rsvd_page(struct rtw_dev *rtwdev);
- void rtw_send_rsvd_page_h2c(struct rtw_dev *rtwdev);
- int rtw_dump_drv_rsvd_page(struct rtw_dev *rtwdev,
- 			   u32 offset, u32 size, u32 *buf);
-diff --git a/drivers/net/wireless/realtek/rtw88/mac80211.c b/drivers/net/wireless/realtek/rtw88/mac80211.c
-index b3125e311fa2..d7d02e4c0184 100644
---- a/drivers/net/wireless/realtek/rtw88/mac80211.c
-+++ b/drivers/net/wireless/realtek/rtw88/mac80211.c
-@@ -161,6 +161,7 @@ static int rtw_ops_add_interface(struct ieee80211_hw *hw,
- 	memset(&rtwvif->bfee, 0, sizeof(struct rtw_bfee));
- 	rtwvif->conf = &rtw_vif_port[port];
- 	rtw_txq_init(rtwdev, vif->txq);
-+	INIT_LIST_HEAD(&rtwvif->rsvd_page_list);
- 
- 	mutex_lock(&rtwdev->mutex);
- 
-@@ -169,18 +170,24 @@ static int rtw_ops_add_interface(struct ieee80211_hw *hw,
- 	switch (vif->type) {
- 	case NL80211_IFTYPE_AP:
- 	case NL80211_IFTYPE_MESH_POINT:
-+		rtw_add_rsvd_page_bcn(rtwdev, rtwvif);
- 		net_type = RTW_NET_AP_MODE;
- 		bcn_ctrl = BIT_EN_BCN_FUNCTION | BIT_DIS_TSF_UDT;
- 		break;
- 	case NL80211_IFTYPE_ADHOC:
-+		rtw_add_rsvd_page_bcn(rtwdev, rtwvif);
- 		net_type = RTW_NET_AD_HOC;
- 		bcn_ctrl = BIT_EN_BCN_FUNCTION | BIT_DIS_TSF_UDT;
- 		break;
- 	case NL80211_IFTYPE_STATION:
--	default:
-+		rtw_add_rsvd_page_sta(rtwdev, rtwvif);
- 		net_type = RTW_NET_NO_LINK;
- 		bcn_ctrl = BIT_EN_BCN_FUNCTION;
- 		break;
-+	default:
-+		WARN_ON(1);
-+		mutex_unlock(&rtwdev->mutex);
-+		return -EINVAL;
- 	}
- 
- 	ether_addr_copy(rtwvif->mac_addr, vif->addr);
-@@ -211,6 +218,7 @@ static void rtw_ops_remove_interface(struct ieee80211_hw *hw,
- 	rtw_leave_lps_deep(rtwdev);
- 
- 	rtw_txq_cleanup(rtwdev, vif->txq);
-+	rtw_remove_rsvd_page(rtwdev, rtwvif);
- 
- 	eth_zero_addr(rtwvif->mac_addr);
- 	config |= PORT_SET_MAC_ADDR;
-@@ -342,12 +350,7 @@ static void rtw_ops_bss_info_changed(struct ieee80211_hw *hw,
- 			chip->ops->phy_calibration(rtwdev);
- 
- 			rtwvif->aid = conf->aid;
--			rtw_add_rsvd_page(rtwdev, RSVD_PS_POLL, true);
--			rtw_add_rsvd_page(rtwdev, RSVD_QOS_NULL, true);
--			rtw_add_rsvd_page(rtwdev, RSVD_NULL, true);
--			rtw_add_rsvd_page(rtwdev, RSVD_LPS_PG_DPK, true);
--			rtw_add_rsvd_page(rtwdev, RSVD_LPS_PG_INFO, true);
--			rtw_fw_download_rsvd_page(rtwdev, vif);
-+			rtw_fw_download_rsvd_page(rtwdev);
- 			rtw_send_rsvd_page_h2c(rtwdev);
- 			rtw_coex_media_status_notify(rtwdev, conf->assoc);
- 			if (rtw_bf_support)
-@@ -356,7 +359,6 @@ static void rtw_ops_bss_info_changed(struct ieee80211_hw *hw,
- 			rtw_leave_lps(rtwdev);
- 			net_type = RTW_NET_NO_LINK;
- 			rtwvif->aid = 0;
--			rtw_reset_rsvd_page(rtwdev);
- 			rtw_bf_disassoc(rtwdev, vif, conf);
- 		}
- 
-@@ -371,7 +373,7 @@ static void rtw_ops_bss_info_changed(struct ieee80211_hw *hw,
- 	}
- 
- 	if (changed & BSS_CHANGED_BEACON)
--		rtw_fw_download_rsvd_page(rtwdev, vif);
-+		rtw_fw_download_rsvd_page(rtwdev);
- 
- 	if (changed & BSS_CHANGED_MU_GROUPS) {
- 		struct rtw_chip_info *chip = rtwdev->chip;
-@@ -556,7 +558,7 @@ static int rtw_ops_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 
- 	/* download new cam settings for PG to backup */
- 	if (rtw_fw_lps_deep_mode == LPS_DEEP_MODE_PG)
--		rtw_fw_download_rsvd_page(rtwdev, vif);
-+		rtw_fw_download_rsvd_page(rtwdev);
- 
- out:
- 	mutex_unlock(&rtwdev->mutex);
-diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
-index 2f73820cd9ba..d8c012bd2112 100644
---- a/drivers/net/wireless/realtek/rtw88/main.c
-+++ b/drivers/net/wireless/realtek/rtw88/main.c
-@@ -1400,10 +1400,6 @@ int rtw_core_init(struct rtw_dev *rtwdev)
- 	else
- 		rtwdev->lps_conf.deep_mode = rtw_fw_lps_deep_mode;
- 
--	mutex_lock(&rtwdev->mutex);
--	rtw_add_rsvd_page(rtwdev, RSVD_BEACON, false);
--	mutex_unlock(&rtwdev->mutex);
--
- 	rtw_stats_init(rtwdev);
- 
- 	/* default rx filter setting */
-@@ -1446,8 +1442,9 @@ void rtw_core_deinit(struct rtw_dev *rtwdev)
- 	skb_queue_purge(&rtwdev->tx_report.queue);
- 	spin_unlock_irqrestore(&rtwdev->tx_report.q_lock, flags);
- 
--	list_for_each_entry_safe(rsvd_pkt, tmp, &rtwdev->rsvd_page_list, list) {
--		list_del(&rsvd_pkt->list);
-+	list_for_each_entry_safe(rsvd_pkt, tmp, &rtwdev->rsvd_page_list,
-+				 build_list) {
-+		list_del(&rsvd_pkt->build_list);
- 		kfree(rsvd_pkt);
- 	}
- 
-diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
-index c074cef22120..367dc6b92d4f 100644
---- a/drivers/net/wireless/realtek/rtw88/main.h
-+++ b/drivers/net/wireless/realtek/rtw88/main.h
-@@ -752,6 +752,7 @@ struct rtw_vif {
- 	u8 bssid[ETH_ALEN];
- 	u8 port;
- 	u8 bcn_ctrl;
-+	struct list_head rsvd_page_list;
- 	struct ieee80211_tx_queue_params tx_params[IEEE80211_NUM_ACS];
- 	const struct rtw_vif_port *conf;
- 
-diff --git a/drivers/net/wireless/realtek/rtw88/wow.c b/drivers/net/wireless/realtek/rtw88/wow.c
-index 4820dca958dd..2fcdf70a3a77 100644
---- a/drivers/net/wireless/realtek/rtw88/wow.c
-+++ b/drivers/net/wireless/realtek/rtw88/wow.c
-@@ -431,50 +431,39 @@ static void rtw_wow_fw_media_status(struct rtw_dev *rtwdev, bool connect)
- 	rtw_iterate_stas_atomic(rtwdev, rtw_wow_fw_media_status_iter, &data);
- }
- 
--static void rtw_wow_config_pno_rsvd_page(struct rtw_dev *rtwdev)
-+static void rtw_wow_config_pno_rsvd_page(struct rtw_dev *rtwdev,
-+					 struct rtw_vif *rtwvif)
- {
--	struct rtw_wow_param *rtw_wow = &rtwdev->wow;
--	struct rtw_pno_request *rtw_pno_req = &rtw_wow->pno_req;
--	struct cfg80211_ssid *ssid;
--	int i;
--
--	for (i = 0 ; i < rtw_pno_req->match_set_cnt; i++) {
--		ssid = &rtw_pno_req->match_sets[i].ssid;
--		rtw_add_rsvd_page_probe_req(rtwdev, ssid);
--	}
--	rtw_add_rsvd_page_probe_req(rtwdev, NULL);
--	rtw_add_rsvd_page(rtwdev, RSVD_NLO_INFO, false);
--	rtw_add_rsvd_page(rtwdev, RSVD_CH_INFO, true);
-+	rtw_add_rsvd_page_pno(rtwdev, rtwvif);
- }
- 
--static void rtw_wow_config_linked_rsvd_page(struct rtw_dev *rtwdev)
-+static void rtw_wow_config_linked_rsvd_page(struct rtw_dev *rtwdev,
-+					   struct rtw_vif *rtwvif)
- {
--	rtw_add_rsvd_page(rtwdev, RSVD_PS_POLL, true);
--	rtw_add_rsvd_page(rtwdev, RSVD_QOS_NULL, true);
--	rtw_add_rsvd_page(rtwdev, RSVD_NULL, true);
--	rtw_add_rsvd_page(rtwdev, RSVD_LPS_PG_DPK, true);
--	rtw_add_rsvd_page(rtwdev, RSVD_LPS_PG_INFO, true);
-+	rtw_add_rsvd_page_sta(rtwdev, rtwvif);
- }
- 
--static void rtw_wow_config_rsvd_page(struct rtw_dev *rtwdev)
-+static void rtw_wow_config_rsvd_page(struct rtw_dev *rtwdev,
-+				     struct rtw_vif *rtwvif)
- {
--	rtw_reset_rsvd_page(rtwdev);
-+	rtw_remove_rsvd_page(rtwdev, rtwvif);
- 
- 	if (rtw_wow_mgd_linked(rtwdev)) {
--		rtw_wow_config_linked_rsvd_page(rtwdev);
-+		rtw_wow_config_linked_rsvd_page(rtwdev, rtwvif);
- 	} else if (test_bit(RTW_FLAG_WOWLAN, rtwdev->flags) &&
- 		   rtw_wow_no_link(rtwdev)) {
--		rtw_wow_config_pno_rsvd_page(rtwdev);
-+		rtw_wow_config_pno_rsvd_page(rtwdev, rtwvif);
- 	}
- }
- 
- static int rtw_wow_dl_fw_rsvd_page(struct rtw_dev *rtwdev)
- {
- 	struct ieee80211_vif *wow_vif = rtwdev->wow.wow_vif;
-+	struct rtw_vif *rtwvif = (struct rtw_vif *)wow_vif->drv_priv;
- 
--	rtw_wow_config_rsvd_page(rtwdev);
-+	rtw_wow_config_rsvd_page(rtwdev, rtwvif);
- 
--	return rtw_fw_download_rsvd_page(rtwdev, wow_vif);
-+	return rtw_fw_download_rsvd_page(rtwdev);
- }
- 
- static int rtw_wow_swap_fw(struct rtw_dev *rtwdev, enum rtw_fw_type type)
+diff --git a/drivers/net/wireless/realtek/rtw88/tx.h b/drivers/net/wireless/realtek/rtw88/tx.h
+index e8e7756866b1..e488a2643eb3 100644
+--- a/drivers/net/wireless/realtek/rtw88/tx.h
++++ b/drivers/net/wireless/realtek/rtw88/tx.h
+@@ -85,7 +85,7 @@ void rtw_txq_cleanup(struct rtw_dev *rtwdev, struct ieee80211_txq *txq);
+ void rtw_tx_tasklet(unsigned long data);
+ void rtw_tx_pkt_info_update(struct rtw_dev *rtwdev,
+ 			    struct rtw_tx_pkt_info *pkt_info,
+-			    struct ieee80211_tx_control *control,
++			    struct ieee80211_sta *sta,
+ 			    struct sk_buff *skb);
+ void rtw_tx_fill_tx_desc(struct rtw_tx_pkt_info *pkt_info, struct sk_buff *skb);
+ void rtw_tx_report_enqueue(struct rtw_dev *rtwdev, struct sk_buff *skb, u8 sn);
 -- 
 2.17.1
 
