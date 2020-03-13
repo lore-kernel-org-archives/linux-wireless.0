@@ -2,90 +2,103 @@ Return-Path: <SRS0=ouYR=46=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45647C2BB1D
-	for <linux-wireless@archiver.kernel.org>; Fri, 13 Mar 2020 08:32:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF02AC2BB1D
+	for <linux-wireless@archiver.kernel.org>; Fri, 13 Mar 2020 10:05:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1AE9120749
-	for <linux-wireless@archiver.kernel.org>; Fri, 13 Mar 2020 08:32:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C86E9206E7
+	for <linux-wireless@archiver.kernel.org>; Fri, 13 Mar 2020 10:05:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="c0gfCNAo"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SWLxTPE4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726550AbgCMIc4 (ORCPT
+        id S1726491AbgCMKFc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 13 Mar 2020 04:32:56 -0400
-Received: from mail26.static.mailgun.info ([104.130.122.26]:62649 "EHLO
-        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726545AbgCMIc4 (ORCPT
+        Fri, 13 Mar 2020 06:05:32 -0400
+Received: from mail-qt1-f195.google.com ([209.85.160.195]:42266 "EHLO
+        mail-qt1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726393AbgCMKFb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Mar 2020 04:32:56 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1584088375; h=Message-Id: Date: Subject: Cc: To: From:
- Sender; bh=lDDP0fSoCWyBVdzP8FTmEEK9qz5Vx3wfY71/vDaicZ8=; b=c0gfCNAobn8CSa2E/UvACJbtUShQ7miHOXaFR/TVtZxCiqOaEMFTdhYn5p+1Xz43Canarc4V
- q1my5rLnFG2r1mNOhXBDO3Zrb4xxvUtPd9jYochFMDzUGhy4oYH+0z919lcAzV6Gs0rmZOZj
- 9Ptn0jj0l6oNS7n5oG6IYEONg18=
-X-Mailgun-Sending-Ip: 104.130.122.26
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e6b4523.7fddb4f7d570-smtp-out-n05;
- Fri, 13 Mar 2020 08:32:35 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id B1E1BC432C2; Fri, 13 Mar 2020 08:32:34 +0000 (UTC)
-Received: from vnaralas-linux.qualcomm.com (blr-c-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.19.19])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: mpubbise)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id EED37C433CB;
-        Fri, 13 Mar 2020 08:32:32 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org EED37C433CB
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=mpubbise@codeaurora.org
-From:   Manikanta Pubbisetty <mpubbise@codeaurora.org>
-To:     ath11k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org,
-        Manikanta Pubbisetty <mpubbise@codeaurora.org>
-Subject: [PATCH v2 0/2] ath11k: offload PN verification to the HW
-Date:   Fri, 13 Mar 2020 14:02:21 +0530
-Message-Id: <1584088343-3584-1-git-send-email-mpubbise@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
+        Fri, 13 Mar 2020 06:05:31 -0400
+Received: by mail-qt1-f195.google.com with SMTP id g16so6948549qtp.9
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Mar 2020 03:05:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :content-transfer-encoding;
+        bh=wH89Ibe/vkawOmsrfwNRHbw0PbtQ6P4s7dsLFgWLgfQ=;
+        b=SWLxTPE4DlWbhnKplRm1DQ5U8+UpFulrtVrz/bkf7XEgXgTYRcf8pqzs0LKHGHFd7Y
+         TjRWtRDganKPEfXwECv9oy91D1+c0oq/hyqm9W2s2uLj3XuIZS9enYTMR8zb4a4cmOZ/
+         11cHOhsoiHh8sRs0rd35AmI8dS5zUf8HIwzg2ZJzP7HM9o+w9OX8NUKHCmKA/Tz90uWN
+         F0WfpNNkmpgXMZnnCAfk5mBo5YFQWzjm9sBb3uIoKslg1BhnmIgdIUeZ/cF7+U+SXZZt
+         d+JqstSSc4WJkvq986l7dut8aZ/T3aF28A4q2PnP6MBs4QFnnc7ZA2ymPryMiQuLE3eP
+         uVtQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:content-transfer-encoding;
+        bh=wH89Ibe/vkawOmsrfwNRHbw0PbtQ6P4s7dsLFgWLgfQ=;
+        b=sgj72u+TD89Aj4kunZo48R/HX54R2r7rfvUQfPQrfZvFe98Irwt7PEIXCQWj3XfeGC
+         Q/7eh8UCKnw+Y60i3aNLrDlouj0OglQ1lu50l/meNQtBiStnKQiUxnICiYUFt1lfojjr
+         ML8Am/QzkSUlCWU65nGSS7t6u3wrNmCdZUld5B8sjNg+LGgt46F8GIFKDHhimrAxKLLl
+         ppSx4VKoCUht0ZKxNTRHN86c8BcMNYA+dMcb+pGmiaO21NIc3XgksAd+2FL8BQvF+cMD
+         ZQ8ShWmR+ouYdftBD442onweUUnN24P016Hw8ZDcHlW3RJbEN0uRBJCF3UPkvECzlY+S
+         Jlkw==
+X-Gm-Message-State: ANhLgQ1YZ7G20pkeSYR1TDhP8GUeGsA2Vq1NwCJZBRmDkGf1DiTRFjPW
+        jU6ehJhc7Wjzu2rLEwC5PKgrzvGN1V9rtVKnupsloHBV
+X-Google-Smtp-Source: ADFU+vuicUlBP4Ncv0tpBEx3e071e/E2tQGoLsyyLP6ip8btfn8WiT5JYJjFKCkZhVEKBztEuEu2a8lHtETlSh2YZTs=
+X-Received: by 2002:aed:35b1:: with SMTP id c46mr11527972qte.74.1584093930698;
+ Fri, 13 Mar 2020 03:05:30 -0700 (PDT)
+MIME-Version: 1.0
+References: <CAFb4eQ=Y8XUGsE2c2tur4EPTC=81Ck3tRPF9Uf+6zBnA47j-Dw@mail.gmail.com>
+In-Reply-To: <CAFb4eQ=Y8XUGsE2c2tur4EPTC=81Ck3tRPF9Uf+6zBnA47j-Dw@mail.gmail.com>
+From:   Equipe Soft <equipe.soft.isere@gmail.com>
+Date:   Fri, 13 Mar 2020 11:05:00 +0100
+Message-ID: <CAFb4eQkFGM1rhrccExu6B5_5-3g60nDD_aRt3JDA2qT9FVbDig@mail.gmail.com>
+Subject: Re: Is iwlwifi-9260-th-b0-jf-b0-46.ucode a debug firmware?
+To:     linuxwifi@intel.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This patch series enables PN validation in the HW thereby
-reducing CPU cycles spent in the host CPU. It also is the
-basis for other performance improvement patches that follow
-this series.
-
-TSC (TKIP sequence counter) validation is also offloaded.
-
-Hardware validates PN/TSC only for unicast packets;
-for group addressed packets, PN validation is done
-in mac80211.
-
-v2:
-        - fixed kbuild test robot warnings
-
-Manikanta Pubbisetty (2):
-  ath11k: handle RX fragments
-  ath11k: enable PN offload
-
- drivers/net/wireless/ath/ath11k/Kconfig   |   1 +
- drivers/net/wireless/ath/ath11k/core.h    |   2 +
- drivers/net/wireless/ath/ath11k/dp.c      |  12 +-
- drivers/net/wireless/ath/ath11k/dp.h      |  12 +
- drivers/net/wireless/ath/ath11k/dp_rx.c   | 870 ++++++++++++++++++++++++++----
- drivers/net/wireless/ath/ath11k/dp_rx.h   |   8 +-
- drivers/net/wireless/ath/ath11k/hal.h     |   2 +-
- drivers/net/wireless/ath/ath11k/hal_rx.c  |  14 +-
- drivers/net/wireless/ath/ath11k/mac.c     |  41 +-
- drivers/net/wireless/ath/ath11k/peer.h    |   7 +
- drivers/net/wireless/ath/ath11k/rx_desc.h |   2 +-
- 11 files changed, 865 insertions(+), 106 deletions(-)
-
--- 
-2.7.4
+Hello, do you have any news about the issue?
+Best regards.
+@team
+Le ven. 6 mars 2020 =C3=A0 10:33, Equipe Soft <equipe.soft.isere@gmail.com>=
+ a =C3=A9crit :
+>
+> Hello,
+> we are using backport-iwlwifi core45 drivers and latest AC9260
+> firmware binary blob:
+> latest firmware available in Intel iwlwifi firmware fork:
+> https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/linux-firmware.gi=
+t/commit/iwlwifi-9260-th-b0-jf-b0-46.ucode?id=3D4bebf45872a9818a17e20791185=
+00030a8fa377a
+> 2019-11-28 iwlwifi: update FWs to core47-142 release
+>
+> At runtime, we noticed these log traces:
+> iwlwifi 0000:01:00.0: Found debug destination: EXTERNAL_DRAM
+> iwlwifi 0000:01:00.0: Found debug configuration: 0
+> iwlwifi 0000:01:00.0: Allocated 0x00400000 bytes for firmware monitor.
+> So it seems that it is a debug firmware...
+>
+> Q0) can you please confirm that we can safely use this debug firmware
+> in our product ?
+> Q1) is debug mode deliberately enabled in newer firmware or is it an
+> error (maybe like forgotten to disable it) ?
+> Q2) is there an impact on performance with this debug firmware ? WiFi
+> speed/throughput may be reduced or not ?
+> Q3) moreover, can you please confirm whether or not WoWLAN (aka
+> Wake-on-WLAN) is working with this debug firmware ?
+> Q4) is WoWLAN working with any AC9260 firmware version ? and any
+> iwlwifi driver version ?
+>
+> Thanks for your help,
+>
+> @team
