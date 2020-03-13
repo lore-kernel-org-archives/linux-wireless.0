@@ -2,215 +2,418 @@ Return-Path: <SRS0=ouYR=46=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FD37C10DCE
-	for <linux-wireless@archiver.kernel.org>; Fri, 13 Mar 2020 06:51:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78428C2BB1D
+	for <linux-wireless@archiver.kernel.org>; Fri, 13 Mar 2020 08:32:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7964E2072C
-	for <linux-wireless@archiver.kernel.org>; Fri, 13 Mar 2020 06:51:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 47D3820749
+	for <linux-wireless@archiver.kernel.org>; Fri, 13 Mar 2020 08:32:48 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="CMpUUCIK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726254AbgCMGv0 (ORCPT
+        id S1726543AbgCMIcr (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 13 Mar 2020 02:51:26 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:36262 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726001AbgCMGv0 (ORCPT
+        Fri, 13 Mar 2020 04:32:47 -0400
+Received: from mail26.static.mailgun.info ([104.130.122.26]:62649 "EHLO
+        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726491AbgCMIcr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Mar 2020 02:51:26 -0400
-Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID 02D6pH5q012046, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (RTEXMB06.realtek.com.tw[172.21.6.99])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id 02D6pH5q012046
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 13 Mar 2020 14:51:17 +0800
-Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
- RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Fri, 13 Mar 2020 14:51:17 +0800
-Received: from localhost.localdomain (172.21.68.128) by
- RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Fri, 13 Mar 2020 14:51:17 +0800
-From:   <yhchuang@realtek.com>
-To:     <kvalo@codeaurora.org>
-CC:     <linux-wireless@vger.kernel.org>, <briannorris@chromium.org>
-Subject: [PATCH] rtw88: add debugfs to fix tx rate
-Date:   Fri, 13 Mar 2020 14:51:14 +0800
-Message-ID: <20200313065114.23433-1-yhchuang@realtek.com>
-X-Mailer: git-send-email 2.17.1
-MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [172.21.68.128]
-X-ClientProxiedBy: RTEXMB03.realtek.com.tw (172.21.6.96) To
- RTEXMB04.realtek.com.tw (172.21.6.97)
+        Fri, 13 Mar 2020 04:32:47 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1584088367; h=References: In-Reply-To: Message-Id: Date:
+ Subject: Cc: To: From: Sender;
+ bh=zqKC+TFR/QaUIs4aBINzxVWqfzmVO6EOjAMLlQsFcsQ=; b=CMpUUCIKgvlrETu5oE0fGMvICdLEUEaqpW6o3yc/AqD70/riNeWWJx9f0TFl3fKILLHvPXPD
+ TDbbAIpGIACSyiS0LXRVXtGVDOZ0FWldKCIuz1qzXGuCDYz2jC/SH7zGFhYCya6oEmj48SLy
+ p4fFQ35uTWChhUZ4Ota4Ks4KvcQ=
+X-Mailgun-Sending-Ip: 104.130.122.26
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
+ by mxa.mailgun.org with ESMTP id 5e6b452d.7f01023b5068-smtp-out-n05;
+ Fri, 13 Mar 2020 08:32:45 -0000 (UTC)
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 26E5BC4478F; Fri, 13 Mar 2020 08:32:44 +0000 (UTC)
+Received: from vnaralas-linux.qualcomm.com (blr-c-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.19.19])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: mpubbise)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id DFCB8C44792;
+        Fri, 13 Mar 2020 08:32:41 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org DFCB8C44792
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=mpubbise@codeaurora.org
+From:   Manikanta Pubbisetty <mpubbise@codeaurora.org>
+To:     ath11k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org,
+        Manikanta Pubbisetty <mpubbise@codeaurora.org>
+Subject: [PATCH v2 2/2] ath11k: enable PN offload
+Date:   Fri, 13 Mar 2020 14:02:23 +0530
+Message-Id: <1584088343-3584-3-git-send-email-mpubbise@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1584088343-3584-1-git-send-email-mpubbise@codeaurora.org>
+References: <1584088343-3584-1-git-send-email-mpubbise@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Enabling PN checking in the hardware; hardware checks
+the PN of the received packets and reports the errors
+to the host for further handling; default action is to
+drop such packets. TSC (TKIP sequence counter)
+validation is also offloaded.
 
-It is useful to fix the bit rate of TX packets. For example, if
-someone is measuring the TX power, or debugging with the issues
-of the TX throughput on the field.
+Hardware validates PN/TSC only for unicast packets;
+for group addressed packets, PN validation is done
+in mac80211.
 
-To set the value of fixed rate, one should input corresponding
-desc rate index (ex, 0x0b for DESC_RATE54M to fix at 54 Mbps).
-Set a value larger than DESC_RATE_MAX will disable fix rate, so
-the rate adaptive mechanism can resume to work.
+PN errors are reported to the driver via WBM RX release
+ring and can be dumped by using the following command.
 
-Example,
-  To fix rate at MCS 1:
-  echo 0x0d > /sys/kernel/debug/ieee80211/phy0/rtw88/fix_rate
+"cat /sys/kernel/debug/ath11k/soc_rx_stats | grep -i pn"
 
-  To not to fix rate:
-  echo 0xff > /sys/kernel/debug/ieee80211/phy0/rtw88/fix_rate
+Sample Output:
+PN check fail: 210
 
-  To know which rate was fixed at:
-  cat /sys/kernel/debug/ieee80211/phy0/rtw88/fix_rate
-
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Manikanta Pubbisetty <mpubbise@codeaurora.org>
 ---
- drivers/net/wireless/realtek/rtw88/debug.c | 47 ++++++++++++++++++++++
- drivers/net/wireless/realtek/rtw88/main.c  |  1 +
- drivers/net/wireless/realtek/rtw88/main.h  |  1 +
- drivers/net/wireless/realtek/rtw88/tx.c    |  9 +++++
- 4 files changed, 58 insertions(+)
+ drivers/net/wireless/ath/ath11k/core.h   |   1 +
+ drivers/net/wireless/ath/ath11k/dp.c     |   4 +-
+ drivers/net/wireless/ath/ath11k/dp_rx.c  | 115 ++++++++++++++++++++++++++++---
+ drivers/net/wireless/ath/ath11k/dp_rx.h  |   7 +-
+ drivers/net/wireless/ath/ath11k/hal.h    |   2 +-
+ drivers/net/wireless/ath/ath11k/hal_rx.c |  14 +++-
+ drivers/net/wireless/ath/ath11k/mac.c    |  27 ++++++++
+ 7 files changed, 156 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/debug.c b/drivers/net/wireless/realtek/rtw88/debug.c
-index 5a181e01ebef..72e8877fd5f2 100644
---- a/drivers/net/wireless/realtek/rtw88/debug.c
-+++ b/drivers/net/wireless/realtek/rtw88/debug.c
-@@ -140,6 +140,22 @@ static int rtw_debugfs_get_rf_read(struct seq_file *m, void *v)
- 	return 0;
+diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
+index af83429..af04e12 100644
+--- a/drivers/net/wireless/ath/ath11k/core.h
++++ b/drivers/net/wireless/ath/ath11k/core.h
+@@ -333,6 +333,7 @@ struct ath11k_sta {
+ 	u32 bw;
+ 	u32 nss;
+ 	u32 smps;
++	enum hal_pn_type pn_type;
+ 
+ 	struct work_struct update_wk;
+ 	struct rate_info txrate;
+diff --git a/drivers/net/wireless/ath/ath11k/dp.c b/drivers/net/wireless/ath/ath11k/dp.c
+index 9971744..a1371ab 100644
+--- a/drivers/net/wireless/ath/ath11k/dp.c
++++ b/drivers/net/wireless/ath/ath11k/dp.c
+@@ -58,8 +58,8 @@ int ath11k_dp_peer_setup(struct ath11k *ar, int vdev_id, const u8 *addr)
+ 	}
+ 
+ 	for (tid = 0; tid <= IEEE80211_NUM_TIDS; tid++) {
+-		ret = ath11k_peer_rx_tid_setup(ar, addr, vdev_id,
+-					       tid, 1, 0);
++		ret = ath11k_peer_rx_tid_setup(ar, addr, vdev_id, tid, 1, 0,
++					       HAL_PN_TYPE_NONE);
+ 		if (ret) {
+ 			ath11k_warn(ab, "failed to setup rxd tid queue for tid %d: %d\n",
+ 				    tid, ret);
+diff --git a/drivers/net/wireless/ath/ath11k/dp_rx.c b/drivers/net/wireless/ath/ath11k/dp_rx.c
+index 9871f2d..320fec2 100644
+--- a/drivers/net/wireless/ath/ath11k/dp_rx.c
++++ b/drivers/net/wireless/ath/ath11k/dp_rx.c
+@@ -843,7 +843,8 @@ static void ath11k_dp_rx_tid_mem_free(struct ath11k_base *ab,
  }
  
-+static int rtw_debugfs_get_fix_rate(struct seq_file *m, void *v)
-+{
-+	struct rtw_debugfs_priv *debugfs_priv = m->private;
-+	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
-+	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
-+	u8 fix_rate = dm_info->fix_rate;
-+
-+	if (fix_rate >= DESC_RATE_MAX) {
-+		seq_printf(m, "Fix rate disabled, fix_rate = %u\n", fix_rate);
-+		return 0;
-+	}
-+
-+	seq_printf(m, "Data frames fixed at desc rate %u\n", fix_rate);
-+	return 0;
-+}
-+
- static int rtw_debugfs_copy_from_user(char tmp[], int size,
- 				      const char __user *buffer, size_t count,
- 				      int num)
-@@ -397,6 +413,31 @@ static ssize_t rtw_debugfs_set_rf_read(struct file *filp,
- 	return count;
- }
- 
-+static ssize_t rtw_debugfs_set_fix_rate(struct file *filp,
-+					const char __user *buffer,
-+					size_t count, loff_t *loff)
-+{
-+	struct seq_file *seqpriv = (struct seq_file *)filp->private_data;
-+	struct rtw_debugfs_priv *debugfs_priv = seqpriv->private;
-+	struct rtw_dev *rtwdev = debugfs_priv->rtwdev;
-+	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
-+	u8 fix_rate;
-+	char tmp[32 + 1];
-+	int ret;
-+
-+	rtw_debugfs_copy_from_user(tmp, sizeof(tmp), buffer, count, 1);
-+
-+	ret = kstrtou8(tmp, 0, &fix_rate);
-+	if (ret) {
-+		rtw_warn(rtwdev, "invalid args, [rate]\n");
-+		return ret;
-+	}
-+
-+	dm_info->fix_rate = fix_rate;
-+
-+	return count;
-+}
-+
- static int rtw_debug_get_mac_page(struct seq_file *m, void *v)
+ int ath11k_peer_rx_tid_setup(struct ath11k *ar, const u8 *peer_mac, int vdev_id,
+-			     u8 tid, u32 ba_win_sz, u16 ssn)
++			     u8 tid, u32 ba_win_sz, u16 ssn,
++			     enum hal_pn_type pn_type)
  {
- 	struct rtw_debugfs_priv *debugfs_priv = m->private;
-@@ -770,6 +811,11 @@ static struct rtw_debugfs_priv rtw_debug_priv_read_reg = {
- 	.cb_read = rtw_debugfs_get_read_reg,
- };
+ 	struct ath11k_base *ab = ar->ab;
+ 	struct ath11k_peer *peer;
+@@ -904,7 +905,8 @@ int ath11k_peer_rx_tid_setup(struct ath11k *ar, const u8 *peer_mac, int vdev_id,
  
-+static struct rtw_debugfs_priv rtw_debug_priv_fix_rate = {
-+	.cb_write = rtw_debugfs_set_fix_rate,
-+	.cb_read = rtw_debugfs_get_fix_rate,
-+};
-+
- static struct rtw_debugfs_priv rtw_debug_priv_dump_cam = {
- 	.cb_write = rtw_debugfs_set_single_input,
- 	.cb_read = rtw_debugfs_get_dump_cam,
-@@ -811,6 +857,7 @@ void rtw_debugfs_init(struct rtw_dev *rtwdev)
- 	rtw_debugfs_add_rw(read_reg);
- 	rtw_debugfs_add_w(rf_write);
- 	rtw_debugfs_add_rw(rf_read);
-+	rtw_debugfs_add_rw(fix_rate);
- 	rtw_debugfs_add_rw(dump_cam);
- 	rtw_debugfs_add_rw(rsvd_page);
- 	rtw_debugfs_add_r(phy_info);
-diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
-index 2f73820cd9ba..ac49142cc4d7 100644
---- a/drivers/net/wireless/realtek/rtw88/main.c
-+++ b/drivers/net/wireless/realtek/rtw88/main.c
-@@ -1394,6 +1394,7 @@ int rtw_core_init(struct rtw_dev *rtwdev)
+ 	addr_aligned = PTR_ALIGN(vaddr, HAL_LINK_DESC_ALIGN);
  
- 	rtwdev->sec.total_cam_num = 32;
- 	rtwdev->hal.current_channel = 1;
-+	rtwdev->dm_info.fix_rate = U8_MAX;
- 	set_bit(RTW_BC_MC_MACID, rtwdev->mac_id_map);
- 	if (!(BIT(rtw_fw_lps_deep_mode) & chip->lps_deep_mode_supported))
- 		rtwdev->lps_conf.deep_mode = LPS_DEEP_MODE_NONE;
-diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
-index c074cef22120..69ec6bf63b8b 100644
---- a/drivers/net/wireless/realtek/rtw88/main.h
-+++ b/drivers/net/wireless/realtek/rtw88/main.h
-@@ -1383,6 +1383,7 @@ struct rtw_dm_info {
- 	u8 cck_gi_u_bnd;
- 	u8 cck_gi_l_bnd;
+-	ath11k_hal_reo_qdesc_setup(addr_aligned, tid, ba_win_sz, ssn);
++	ath11k_hal_reo_qdesc_setup(addr_aligned, tid, ba_win_sz,
++				   ssn, pn_type);
  
-+	u8 fix_rate;
- 	u8 tx_rate;
- 	u8 thermal_avg[RTW_RF_PATH_MAX];
- 	u8 thermal_meter_k;
-diff --git a/drivers/net/wireless/realtek/rtw88/tx.c b/drivers/net/wireless/realtek/rtw88/tx.c
-index 24c39c60c99a..5d2c59d2c5a5 100644
---- a/drivers/net/wireless/realtek/rtw88/tx.c
-+++ b/drivers/net/wireless/realtek/rtw88/tx.c
-@@ -236,7 +236,9 @@ static void rtw_tx_data_pkt_info_update(struct rtw_dev *rtwdev,
- 	struct ieee80211_sta *sta = control->sta;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
- 	struct rtw_sta_info *si;
-+	u8 fix_rate;
- 	u16 seq;
- 	u8 ampdu_factor = 0;
- 	u8 ampdu_density = 0;
-@@ -288,6 +290,13 @@ static void rtw_tx_data_pkt_info_update(struct rtw_dev *rtwdev,
- 	pkt_info->bw = bw;
- 	pkt_info->stbc = stbc;
- 	pkt_info->ldpc = ldpc;
-+
-+	fix_rate = dm_info->fix_rate;
-+	if (fix_rate < DESC_RATE_MAX) {
-+		pkt_info->rate = fix_rate;
-+		pkt_info->dis_rate_fallback = true;
-+		pkt_info->use_rate = true;
-+	}
+ 	paddr = dma_map_single(ab->dev, addr_aligned, hw_desc_sz,
+ 			       DMA_BIDIRECTIONAL);
+@@ -948,7 +950,7 @@ int ath11k_dp_rx_ampdu_start(struct ath11k *ar,
+ 
+ 	ret = ath11k_peer_rx_tid_setup(ar, params->sta->addr, vdev_id,
+ 				       params->tid, params->buf_size,
+-				       params->ssn);
++				       params->ssn, arsta->pn_type);
+ 	if (ret)
+ 		ath11k_warn(ab, "failed to setup rx tid %d\n", ret);
+ 
+@@ -1001,8 +1003,80 @@ int ath11k_dp_rx_ampdu_stop(struct ath11k *ar,
+ 	return ret;
  }
  
- void rtw_tx_pkt_info_update(struct rtw_dev *rtwdev,
+-static int ath11k_get_ppdu_user_index(struct htt_ppdu_stats *ppdu_stats,
+-				      u16 peer_id)
++int ath11k_dp_peer_rx_pn_replay_config(struct ath11k_vif *arvif,
++				       const u8 *peer_addr,
++				       enum set_key_cmd key_cmd,
++				       struct ieee80211_key_conf *key)
++{
++	struct ath11k *ar = arvif->ar;
++	struct ath11k_base *ab = ar->ab;
++	struct ath11k_hal_reo_cmd cmd = {0};
++	struct ath11k_peer *peer;
++	struct dp_rx_tid *rx_tid;
++	u8 tid;
++	int ret = 0;
++
++	/* NOTE: Enable PN/TSC replay check offload only for unicast frames.
++	 * We use mac80211 PN/TSC replay check functionality for bcast/mcast
++	 * for now.
++	 */
++	if (!(key->flags & IEEE80211_KEY_FLAG_PAIRWISE))
++		return 0;
++
++	cmd.flag |= HAL_REO_CMD_FLG_NEED_STATUS;
++	cmd.upd0 |= HAL_REO_CMD_UPD0_PN |
++		    HAL_REO_CMD_UPD0_PN_SIZE |
++		    HAL_REO_CMD_UPD0_PN_VALID |
++		    HAL_REO_CMD_UPD0_PN_CHECK |
++		    HAL_REO_CMD_UPD0_SVLD;
++
++	switch (key->cipher) {
++	case WLAN_CIPHER_SUITE_TKIP:
++	case WLAN_CIPHER_SUITE_CCMP:
++	case WLAN_CIPHER_SUITE_CCMP_256:
++	case WLAN_CIPHER_SUITE_GCMP:
++	case WLAN_CIPHER_SUITE_GCMP_256:
++		if (key_cmd == SET_KEY) {
++			cmd.upd1 |= HAL_REO_CMD_UPD1_PN_CHECK;
++			cmd.pn_size = 48;
++		}
++		break;
++	default:
++		break;
++	}
++
++	spin_lock_bh(&ab->base_lock);
++
++	peer = ath11k_peer_find(ab, arvif->vdev_id, peer_addr);
++	if (!peer) {
++		ath11k_warn(ab, "failed to find the peer to configure pn replay detection\n");
++		spin_unlock_bh(&ab->base_lock);
++		return -ENOENT;
++	}
++
++	for (tid = 0; tid <= IEEE80211_NUM_TIDS; tid++) {
++		rx_tid = &peer->rx_tid[tid];
++		if (!rx_tid->active)
++			continue;
++		cmd.addr_lo = lower_32_bits(rx_tid->paddr);
++		cmd.addr_hi = upper_32_bits(rx_tid->paddr);
++		ret = ath11k_dp_tx_send_reo_cmd(ab, rx_tid,
++						HAL_REO_CMD_UPDATE_RX_QUEUE,
++						&cmd, NULL);
++		if (ret) {
++			ath11k_warn(ab, "failed to configure rx tid %d queue for pn replay detection %d\n",
++				    tid, ret);
++			break;
++		}
++	}
++
++	spin_unlock_bh(&ar->ab->base_lock);
++
++	return ret;
++}
++
++static inline int ath11k_get_ppdu_user_index(struct htt_ppdu_stats *ppdu_stats,
++					     u16 peer_id)
+ {
+ 	int i;
+ 
+@@ -1974,7 +2048,7 @@ static void ath11k_dp_rx_h_mpdu(struct ath11k *ar,
+ 	struct sk_buff *last_msdu;
+ 	struct sk_buff *msdu;
+ 	struct ath11k_skb_rxcb *last_rxcb;
+-	bool is_decrypted;
++	bool is_decrypted = false, fill_crypto_hdr;
+ 	u32 err_bitmap;
+ 	u8 *qos;
+ 
+@@ -1991,6 +2065,9 @@ static void ath11k_dp_rx_h_mpdu(struct ath11k *ar,
+ 		qos[0] &= ~IEEE80211_QOS_CTL_A_MSDU_PRESENT;
+ 	}
+ 
++	/* PN for multicast packets will be checked in mac80211 */
++	fill_crypto_hdr = is_multicast_ether_addr(hdr->addr1);
++
+ 	is_decrypted = ath11k_dp_rx_h_attn_is_decrypted(rx_desc);
+ 	enctype = ath11k_dp_rx_h_mpdu_start_enctype(rx_desc);
+ 
+@@ -2013,14 +2090,27 @@ static void ath11k_dp_rx_h_mpdu(struct ath11k *ar,
+ 	if (err_bitmap & DP_RX_MPDU_ERR_TKIP_MIC)
+ 		rx_status->flag |= RX_FLAG_MMIC_ERROR;
+ 
+-	if (is_decrypted)
+-		rx_status->flag |= RX_FLAG_DECRYPTED | RX_FLAG_MMIC_STRIPPED |
+-				   RX_FLAG_MIC_STRIPPED | RX_FLAG_ICV_STRIPPED;
++	if (is_decrypted) {
++		rx_status->flag |= RX_FLAG_DECRYPTED | RX_FLAG_MMIC_STRIPPED;
++
++		if (fill_crypto_hdr)
++			rx_status->flag |= RX_FLAG_MIC_STRIPPED |
++					RX_FLAG_ICV_STRIPPED;
++		else
++			rx_status->flag |= RX_FLAG_IV_STRIPPED |
++					   RX_FLAG_PN_VALIDATED;
++	}
+ 
+ 	skb_queue_walk(amsdu_list, msdu) {
+ 		ath11k_dp_rx_h_csum_offload(msdu);
+ 		ath11k_dp_rx_h_undecap(ar, msdu, rx_desc,
+ 				       enctype, rx_status, is_decrypted);
++
++		if (!is_decrypted || fill_crypto_hdr)
++			continue;
++
++		hdr = (void *)msdu->data;
++		hdr->frame_control &= ~__cpu_to_le16(IEEE80211_FCTL_PROTECTED);
+ 	}
+ }
+ 
+@@ -3603,6 +3693,13 @@ static bool ath11k_dp_rx_h_reo_err(struct ath11k *ar, struct sk_buff *msdu,
+ 		if (ath11k_dp_rx_h_null_q_desc(ar, msdu, status, msdu_list))
+ 			drop = true;
+ 		break;
++	case HAL_REO_DEST_RING_ERROR_CODE_PN_CHECK_FAILED:
++		/* TODO: Do not drop PN failed packets in the driver;
++		 * instead, it is good to drop such packets in mac80211
++		 * after incrementing the replay counters.
++		 */
++
++		/* fall through */
+ 	default:
+ 		/* TODO: Review other errors and process them to mac80211
+ 		 * as appropriate.
+diff --git a/drivers/net/wireless/ath/ath11k/dp_rx.h b/drivers/net/wireless/ath/ath11k/dp_rx.h
+index c3f3ccd..9ab535f 100644
+--- a/drivers/net/wireless/ath/ath11k/dp_rx.h
++++ b/drivers/net/wireless/ath/ath11k/dp_rx.h
+@@ -43,11 +43,16 @@ int ath11k_dp_rx_ampdu_start(struct ath11k *ar,
+ 			     struct ieee80211_ampdu_params *params);
+ int ath11k_dp_rx_ampdu_stop(struct ath11k *ar,
+ 			    struct ieee80211_ampdu_params *params);
++int ath11k_dp_peer_rx_pn_replay_config(struct ath11k_vif *arvif,
++				       const u8 *peer_addr,
++				       enum set_key_cmd key_cmd,
++				       struct ieee80211_key_conf *key);
+ void ath11k_peer_rx_tid_cleanup(struct ath11k *ar, struct ath11k_peer *peer);
+ void ath11k_peer_rx_tid_delete(struct ath11k *ar,
+ 			       struct ath11k_peer *peer, u8 tid);
+ int ath11k_peer_rx_tid_setup(struct ath11k *ar, const u8 *peer_mac, int vdev_id,
+-			     u8 tid, u32 ba_win_sz, u16 ssn);
++			     u8 tid, u32 ba_win_sz, u16 ssn,
++			     enum hal_pn_type pn_type);
+ void ath11k_dp_htt_htc_t2h_msg_handler(struct ath11k_base *ab,
+ 				       struct sk_buff *skb);
+ int ath11k_dp_pdev_reo_setup(struct ath11k_base *ab);
+diff --git a/drivers/net/wireless/ath/ath11k/hal.h b/drivers/net/wireless/ath/ath11k/hal.h
+index 5b13ccd..4cfd934 100644
+--- a/drivers/net/wireless/ath/ath11k/hal.h
++++ b/drivers/net/wireless/ath/ath11k/hal.h
+@@ -847,7 +847,7 @@ struct ath11k_hal {
+ 
+ u32 ath11k_hal_reo_qdesc_size(u32 ba_window_size, u8 tid);
+ void ath11k_hal_reo_qdesc_setup(void *vaddr, int tid, u32 ba_window_size,
+-				u32 start_seqtype);
++				u32 start_seq, enum hal_pn_type type);
+ void ath11k_hal_reo_init_cmd_ring(struct ath11k_base *ab,
+ 				  struct hal_srng *srng);
+ void ath11k_hal_reo_hw_setup(struct ath11k_base *ab);
+diff --git a/drivers/net/wireless/ath/ath11k/hal_rx.c b/drivers/net/wireless/ath/ath11k/hal_rx.c
+index 58c57f9..3a66656 100644
+--- a/drivers/net/wireless/ath/ath11k/hal_rx.c
++++ b/drivers/net/wireless/ath/ath11k/hal_rx.c
+@@ -694,7 +694,7 @@ u32 ath11k_hal_reo_qdesc_size(u32 ba_window_size, u8 tid)
+ }
+ 
+ void ath11k_hal_reo_qdesc_setup(void *vaddr, int tid, u32 ba_window_size,
+-				u32 start_seq)
++				u32 start_seq, enum hal_pn_type type)
+ {
+ 	struct hal_rx_reo_queue *qdesc = (struct hal_rx_reo_queue *)vaddr;
+ 	struct hal_rx_reo_queue_ext *ext_desc;
+@@ -723,6 +723,18 @@ void ath11k_hal_reo_qdesc_setup(void *vaddr, int tid, u32 ba_window_size,
+ 
+ 	qdesc->info0 |= FIELD_PREP(HAL_RX_REO_QUEUE_INFO0_BA_WINDOW_SIZE,
+ 				   ba_window_size - 1);
++	switch (type) {
++	case HAL_PN_TYPE_NONE:
++	case HAL_PN_TYPE_WAPI_EVEN:
++	case HAL_PN_TYPE_WAPI_UNEVEN:
++		break;
++	case HAL_PN_TYPE_WPA:
++		qdesc->info0 |=
++			FIELD_PREP(HAL_RX_REO_QUEUE_INFO0_PN_CHECK, 1) |
++			FIELD_PREP(HAL_RX_REO_QUEUE_INFO0_PN_SIZE,
++				   HAL_RX_REO_QUEUE_PN_SIZE_48);
++		break;
++	}
+ 
+ 	/* TODO: Set Ignore ampdu flags based on BA window size and/or
+ 	 * AMPDU capabilities
+diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+index 2b90975..c02e4a3 100644
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -2325,6 +2325,7 @@ static int ath11k_mac_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 	struct ath11k_base *ab = ar->ab;
+ 	struct ath11k_vif *arvif = ath11k_vif_to_arvif(vif);
+ 	struct ath11k_peer *peer;
++	struct ath11k_sta *arsta;
+ 	const u8 *peer_addr;
+ 	int ret = 0;
+ 	u32 flags = 0;
+@@ -2382,6 +2383,12 @@ static int ath11k_mac_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 		goto exit;
+ 	}
+ 
++	ret = ath11k_dp_peer_rx_pn_replay_config(arvif, peer_addr, cmd, key);
++	if (ret) {
++		ath11k_warn(ab, "failed to offload PN replay detection %d\n", ret);
++		goto exit;
++	}
++
+ 	spin_lock_bh(&ab->base_lock);
+ 	peer = ath11k_peer_find(ab, arvif->vdev_id, peer_addr);
+ 	if (peer && cmd == SET_KEY) {
+@@ -2399,6 +2406,26 @@ static int ath11k_mac_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 	} else if (!peer)
+ 		/* impossible unless FW goes crazy */
+ 		ath11k_warn(ab, "peer %pM disappeared!\n", peer_addr);
++
++	if (sta) {
++		arsta = (struct ath11k_sta *)sta->drv_priv;
++
++		switch (key->cipher) {
++		case WLAN_CIPHER_SUITE_TKIP:
++		case WLAN_CIPHER_SUITE_CCMP:
++		case WLAN_CIPHER_SUITE_CCMP_256:
++		case WLAN_CIPHER_SUITE_GCMP:
++		case WLAN_CIPHER_SUITE_GCMP_256:
++			if (cmd == SET_KEY)
++				arsta->pn_type = HAL_PN_TYPE_WPA;
++			else
++				arsta->pn_type = HAL_PN_TYPE_NONE;
++			break;
++		default:
++			arsta->pn_type = HAL_PN_TYPE_NONE;
++			break;
++		}
++	}
+ 	spin_unlock_bh(&ab->base_lock);
+ 
+ exit:
 -- 
-2.17.1
-
+2.7.4
