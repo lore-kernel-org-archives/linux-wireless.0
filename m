@@ -2,109 +2,130 @@ Return-Path: <SRS0=6JIn=5C=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84D61C10F29
-	for <linux-wireless@archiver.kernel.org>; Tue, 17 Mar 2020 12:00:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21FC0C18E5B
+	for <linux-wireless@archiver.kernel.org>; Tue, 17 Mar 2020 14:52:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5975C20663
-	for <linux-wireless@archiver.kernel.org>; Tue, 17 Mar 2020 12:00:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E2A1F20724
+	for <linux-wireless@archiver.kernel.org>; Tue, 17 Mar 2020 14:52:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="tYH8UjY+"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="M73VUuxg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726552AbgCQMA3 (ORCPT
+        id S1726821AbgCQOwS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 17 Mar 2020 08:00:29 -0400
-Received: from mail26.static.mailgun.info ([104.130.122.26]:27842 "EHLO
-        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726428AbgCQMA3 (ORCPT
+        Tue, 17 Mar 2020 10:52:18 -0400
+Received: from mail-oi1-f195.google.com ([209.85.167.195]:37903 "EHLO
+        mail-oi1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726812AbgCQOwS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Mar 2020 08:00:29 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1584446428; h=Message-Id: Date: Subject: Cc: To: From:
- Sender; bh=0V4JeM7uMHP3PDzj6H7teVS8H+e3C0yYmlguWTAzDd4=; b=tYH8UjY+CmJiH6GPseZDp1tFO83W0XZE38gwy2cvQW10Ly6Kuj0z5qKPDSaHDjEhkdp7fyY7
- XIa+nax7dlY3pVh1VBKlS2quF3AuU2G9VLNgR6FrbDCYvA8yst5mQfjVHsC4S6biWHf/sM0D
- oQEiCieKsmLDOS7A753u6V9J7UU=
-X-Mailgun-Sending-Ip: 104.130.122.26
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e70bbcf.7f52d9b2fdc0-smtp-out-n01;
- Tue, 17 Mar 2020 12:00:15 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id B6BECC433BA; Tue, 17 Mar 2020 12:00:15 +0000 (UTC)
-Received: from periyasa-linux.qualcomm.com (blr-c-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.19.19])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kumarpan)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id CCC39C433CB;
-        Tue, 17 Mar 2020 12:00:12 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org CCC39C433CB
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kumarpan@codeaurora.org
-From:   Pravas Kumar Panda <kumarpan@codeaurora.org>
-To:     ath11k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org,
-        Pravas Kumar Panda <kumarpan@codeaurora.org>
-Subject: [PATCH] ath11k: Adding proper validation before accessing tx_stats
-Date:   Tue, 17 Mar 2020 17:29:29 +0530
-Message-Id: <1584446369-7021-1-git-send-email-kumarpan@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
+        Tue, 17 Mar 2020 10:52:18 -0400
+Received: by mail-oi1-f195.google.com with SMTP id k21so22021290oij.5;
+        Tue, 17 Mar 2020 07:52:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=ecR1Q8eBSDGpmsPXI5s5h5OW1t7Z861Vgx2tdv3FnXk=;
+        b=M73VUuxgxkAIX/ocDUVEUTlCgJ8KHTL6VWjeH54w4zFFZDtkniU3HZmsXZ8cRjx9SZ
+         iMVnldkfezJpuyIXdNUZs1deTLMHrwUENRf832zkxpCzawDTcrwBvI5caGFIB419DJKZ
+         HIJdVwv+ROFcmPkSmViyNyn+B6OzpRr3SqvxJO9WpQYvJyhbg06+VjTBCqxa/ksZpTn/
+         vPnVmQCiCyphkzpb1SclHw1OtQWGWDjuroBAtH+aSnnxZ1+WQLnm7ykFLShSOn3gUFpq
+         pECcMoWKMeBxIIIPEdmLTbnO8Xfcn8peASfRgLeawPjPJrzRBT6Ls5R/EEuy17cizVqW
+         kNTw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:sender:subject:to:cc:references:from:message-id
+         :date:user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=ecR1Q8eBSDGpmsPXI5s5h5OW1t7Z861Vgx2tdv3FnXk=;
+        b=qtsFFYXGMkhDQezIGnHg2yxKGky4y7TtAzL9MyToV4p3+GsAT+llUwgatz6okHtrwu
+         lZr2z4ZlsPOsqtwNRHW3HeFhFRLyODNk+hyRZI08gsE+easlwfB3CTzudqmIt/iuMin+
+         3u2IdX7o+4SwKdRrKN7jY6h5OI2LCxraeBadbT3RqVYBO9uzO1Zq5kUgeGwBpWuxgNgl
+         C7PeKSJtzjtT1BhiOj1gS1VkTyVrCU2adzww0XRk4ur9WEBPVT4/T97H7gBO5Pttotrg
+         CTA+JKnky9CLZV6nD6WSge/DeW9UiLdaN6HMP2hX2wF6ZUm07RmgYqQbTVYJluK89rzm
+         pZJg==
+X-Gm-Message-State: ANhLgQ2THtvcaIEqD8FvWFxyjZXdDmSBrjVB7Am70EAF++RguORFVKJU
+        0daS8Dnr5fvT9QHJXGjmWQL7LVTv
+X-Google-Smtp-Source: ADFU+vsIaoTFpOvKki2DRF5YUDh4a0WfOkHZ9PIMSzhF/46X4oNIYN6IERXbjZ52QimF6y2g84nWZw==
+X-Received: by 2002:aca:52d0:: with SMTP id g199mr3824119oib.59.1584456736636;
+        Tue, 17 Mar 2020 07:52:16 -0700 (PDT)
+Received: from [192.168.1.120] (cpe-24-31-245-230.kc.res.rr.com. [24.31.245.230])
+        by smtp.gmail.com with ESMTPSA id 60sm1121917ott.17.2020.03.17.07.52.15
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 17 Mar 2020 07:52:16 -0700 (PDT)
+Subject: Re: PROBLEM: 5.6.0-rc6 + Realtek RTL8188CUS wifi dongle: 8051 reset
+ failed!
+To:     AC <achirvasub@gmail.com>, Ping-Ke Shih <pkshih@realtek.com>,
+        Jes Sorensen <Jes.Sorensen@gmail.com>,
+        linux-wireless@vger.kernel.org
+Cc:     kernel list <linux-kernel@vger.kernel.org>
+References: <C9F34A4B-E3F3-4D7A-B870-058C8D4871B9@gmail.com>
+From:   Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <9ae33061-1595-4387-5767-79437b2ff2ae@lwfinger.net>
+Date:   Tue, 17 Mar 2020 09:52:14 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.5.0
+MIME-Version: 1.0
+In-Reply-To: <C9F34A4B-E3F3-4D7A-B870-058C8D4871B9@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: base64
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Before dumping tx_stats proper validation was not been taken care of.
-Due to which we were encountering null pointer dereference(kernel panic).
-This scenario will arise when a station is getting disconnected and
-we are changing the STA state by ath11k_mac_op_sta_state and assigning
-tx_stats as NULL and after this the mac80211 will destroy the
-debugfs entry from where we are trying to read the stats.
-
-If anyone tries to dump tx_stats for that STA in between setting
-tx_stats to NULL and debugfs file removal without checking the NULL
-value it will run into a NULL pointer exception.
-
-Proceeding with the analysis of "ARM Kernel Panic".
-The APSS crash happened due to OOPS on CPU 3.
-Crash Signature : Unable to handle kernel NULL pointer dereference at
-virtual address 00000360
-During the crash,
-PC points to "ath11k_debug_htt_stats_init+0x16ac/0x1acc [ath11k]"
-LR points to "ath11k_debug_htt_stats_init+0x1688/0x1acc [ath11k]".
-The Backtrace obtained is as follows:
-[<ffffffbffcfd8590>] ath11k_debug_htt_stats_init+0x16ac/0x1acc [ath11k]
-[<ffffffc000156320>] do_loop_readv_writev+0x60/0xa4
-[<ffffffc000156a5c>] do_readv_writev+0xd8/0x19c
-[<ffffffc000156b54>] vfs_readv+0x34/0x48
-[<ffffffc00017d6f4>] default_file_splice_read+0x1a8/0x2e4
-[<ffffffc00017c56c>] do_splice_to+0x78/0x98
-[<ffffffc00017c63c>] splice_direct_to_actor+0xb0/0x1a4
-[<ffffffc00017c7b4>] do_splice_direct+0x84/0xa8
-[<ffffffc000156f40>] do_sendfile+0x160/0x2a4
-[<ffffffc000157980>] SyS_sendfile64+0xb4/0xc8
-
-Signed-off-by: Pravas Kumar Panda <kumarpan@codeaurora.org>
----
- drivers/net/wireless/ath/ath11k/debugfs_sta.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath11k/debugfs_sta.c b/drivers/net/wireless/ath/ath11k/debugfs_sta.c
-index 872f3ef..389dac2 100644
---- a/drivers/net/wireless/ath/ath11k/debugfs_sta.c
-+++ b/drivers/net/wireless/ath/ath11k/debugfs_sta.c
-@@ -219,6 +219,9 @@ static ssize_t ath11k_dbg_sta_dump_tx_stats(struct file *file,
- 	const int size = 2 * 4096;
- 	char *buf;
- 
-+	if (!arsta->tx_stats)
-+		return -ENOENT;
-+
- 	buf = kzalloc(size, GFP_KERNEL);
- 	if (!buf)
- 		return -ENOMEM;
--- 
-2.7.4
+T24gMy8xNy8yMCAxOjQ0IEFNLCBBQyB3cm90ZToNCj4gSSBhbSBvbiBEZWJpYW4gMTAuMyBz
+dGFibGUgaTM4NiwgcnVubmluZyBhIGN1c3RvbS1jb21waWxlZCBrZXJuZWwgKEkgY29tcGls
+ZSB3ZWVrbHksIHdoZW4gbmV3IHJjIHJlbGVhc2VzIGRyb3ApLg0KPiANCj4gSSBrZWVwIHRo
+ZSBmb2xsb3dpbmcgVVNCIHdpZmkgZG9uZ2xlIGNvbm5lY3RlZCB0byB0aGlzIG1hY2hpbmU6
+DQo+IA0KPiBJRCAwNTBkOjExMDIgQmVsa2luIENvbXBvbmVudHMgRjdEMTEwMiBOMTUwL1N1
+cmYgTWljcm8gV2lyZWxlc3MgQWRhcHRlciB2MTAwMCBbUmVhbHRlayBSVEw4MTg4Q1VTXQ0K
+PiANCj4gDQo+IC0tLQ0KPiANCj4gVGhlIHByb2JsZW06DQo+IA0KPiBBcyBvZiA1LjYuMC1y
+YzYsIGJvb3RpbmcgdXAgd2l0aCB0aGUgZG9uZ2xlIGNvbm5lY3RlZCByZXR1cm5zIGEgbnVt
+YmVyIG9mIGRtZXNnIGNvbXBsYWludHM6DQo+IA0KPiAtLS0gY3V0IGhlcmUgLS0tDQo+IA0K
+PiBbICAgIDkuNDQ4MzM3XSBydGw4MTkyY3U6IE1BQyBhdXRvIE9OIG9rYXkhICAgICAgICAg
+IFsgICAgOS41NzkwMjVdIHJ0bDgxOTJjdTogVHggcXVldWUgc2VsZWN0OiAweDA1ICAgICAg
+WyAgIDEwLjQ3NTMwOF0gcnRsODE5MmNfY29tbW9uOiBQb2xsaW5nIEZXIHJlYWR5IGZhaWwh
+IFJFR19NQ1VGV0RMOjB4MDAwMzAwMDYuICAgICAgICAgICAgICAgICAgICAgICAgICAgIFsg
+ICAxMC40NzgyMTNdIHJ0bDgxOTJjX2NvbW1vbjogRmlybXdhcmUgaXMgbm90IHJlYWR5IHRv
+IHJ1biEgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBbICAg
+MTAuOTYwMDkzXSBydGw4MTkyY3U6IDgwNTEgcmVzZXQgZmFpbGVkIS4uLi4uLi4uLi4uLi4u
+Li4uLi4uLi4uLi4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgWyAgIDEw
+Ljk3MTAyN10gcnRsODE5MmN1OiBNQUMgYXV0byBPTiBva2F5ISAgICAgICAgICBbICAgMTEu
+MTAxNjkxXSBydGw4MTkyY3U6IFR4IHF1ZXVlIHNlbGVjdDogMHgwNQ0KPiANCj4gLS0tIGVu
+ZCAtLS0NCj4gDQo+IE9jY2FzaW9uYWxseSwgdGhpcyByZXN1bHRzIGluIGEgdGltZW91dCB3
+aGlsZSB0cnlpbmcgdG8gcmVhY2ggbmV0d29yay50YXJnZXQgKHN5c3RlbWQpLg0KPiANCj4g
+QWZ0ZXJ3YXJkcywgdGhlcmUncyBlbmRsZXNzIGRtZXNnIG5vaXNlIFJlOiBydGw4MTkyY3U6
+DQo+IA0KPiAtLS0gY3V0IGhlcmUgLS0tDQo+IA0KPiBbMTEzOTEuMjA0NTU1XSBydGw4MTky
+Y3U6IFR4IHF1ZXVlIHNlbGVjdDogMHgwNSAgICAgIFsxMTcwNy4wNTA0ODBdIHJ0bDgxOTJj
+dTogTUFDIGF1dG8gT04gb2theSEgICAgICAgICAgWzExNzA3LjE4MTExOF0gcnRsODE5MmN1
+OiBUeCBxdWV1ZSBzZWxlY3Q6IDB4MDUgICAgICBbMTIwMjMuMDU3MDU2XSBydGw4MTkyY3U6
+IE1BQyBhdXRvIE9OIG9rYXkhICAgICAgICAgIFsxMjAyMy4xODc3MjddIHJ0bDgxOTJjdTog
+VHggcXVldWUgc2VsZWN0OiAweDA1DQo+IFsxMjMzOS4wNjAxODNdIHJ0bDgxOTJjdTogTUFD
+IGF1dG8gT04gb2theSEgICAgICAgICAgWzEyMzM5LjE5OTMxNl0gcnRsODE5MmN1OiBUeCBx
+dWV1ZSBzZWxlY3Q6IDB4MDUgICAgICBbMTI2NTUuMDU0MTQwXSBydGw4MTkyY3U6IE1BQyBh
+dXRvIE9OIG9rYXkhICAgICAgICAgIFsxMjY1NS4xODQ3ODldIHJ0bDgxOTJjdTogVHggcXVl
+dWUgc2VsZWN0OiAweDA1ICAgICAgWzEyOTcxLjA1Mzk0OF0gcnRsODE5MmN1OiBNQUMgYXV0
+byBPTiBva2F5ISAgICAgICAgICBbMTI5NzEuMTg0NjAwXSBydGw4MTkyY3U6IFR4IHF1ZXVl
+IHNlbGVjdDogMHgwNSAgICAgIFsxMzI4Ny4wNjI3MTJdIHJ0bDgxOTJjdTogTUFDIGF1dG8g
+T04gb2theSEgICAgICAgICAgWzEzMjg3LjE5MzM2M10gcnRsODE5MmN1OiBUeCBxdWV1ZSBz
+ZWxlY3Q6IDB4MDUgICAgICBbMTM2MDMuMDY1OTg3XSBydGw4MTkyY3U6IE1BQyBhdXRvIE9O
+IG9rYXkhICAgICAgICAgIFsxMzYwMy4xOTY2NDFdIHJ0bDgxOTJjdTogVHggcXVldWUgc2Vs
+ZWN0OiAweDA1ICAgICAgWzEzOTE5LjA2NjYxN10gcnRsODE5MmN1OiBNQUMgYXV0byBPTiBv
+a2F5ISAgICAgICAgICBbMTM5MTkuMTk3MjcwXSBydGw4MTkyY3U6IFR4IHF1ZXVlIHNlbGVj
+dDogMHgwNSAgICAgIFsxNDIzNS4wNjA2MjFdIHJ0bDgxOTJjdTogTUFDIGF1dG8gT04gb2th
+eSEgICAgICAgICAgWzE0MjM1LjE5MTI3N10gcnRsODE5MmN1OiBUeCBxdWV1ZSBzZWxlY3Q6
+IDB4MDUgICAgICBbMTQ1NTEuMDU1MTA0XSBydGw4MTkyY3U6IE1BQyBhdXRvIE9OIG9rYXkh
+ICAgICAgICAgIFsxNDU1MS4xODU3NDFdIHJ0bDgxOTJjdTogVHggcXVldWUgc2VsZWN0OiAw
+eDA1ICAgICAgWzE0ODY3LjA1MTc5OV0gcnRsODE5MmN1OiBNQUMgYXV0byBPTiBva2F5ISAg
+ICAgICAgICBbMTQ4NjcuMTgyNDUxXSBydGw4MTkyY3U6IFR4IHF1ZXVlIHNlbGVjdDogMHgw
+NSAgICAgIFsxNDg3OC44NTUwNzBdIHBlcmY6IGludGVycnVwdCB0b29rIHRvbyBsb25nICg3
+ODk3ID4gNzg5NiksIGxvd2VyaW5nIGtlcm5lbC5wZXJmX2V2ZW50X21heF9zYW1wbGVfcmF0
+ZSB0byAyNTI1MA0KDQpQbGVhc2UgYmlzZWN0IHRoaXMgcHJvYmxlbS4gTm8gb25lIGVsc2Ug
+aGFzIHJlcG9ydGVkIGl0LCB0aHVzIGl0IG1heSBkZXBlbmQgb24gDQpzb21lIHNwZWNpZmlj
+IGNvbmZpZ3VyYXRpb24gb2YgeW91ciBzeXN0ZW0uDQoNCldhcyA1LjYuMC1yYzUgT0s/DQoN
+CkxhcnJ5DQoNCg==
