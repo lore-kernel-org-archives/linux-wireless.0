@@ -2,89 +2,101 @@ Return-Path: <SRS0=6JIn=5C=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CA3AC10F29
-	for <linux-wireless@archiver.kernel.org>; Tue, 17 Mar 2020 04:18:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A0A2C10F29
+	for <linux-wireless@archiver.kernel.org>; Tue, 17 Mar 2020 06:36:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E71B420719
-	for <linux-wireless@archiver.kernel.org>; Tue, 17 Mar 2020 04:18:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A878E20674
+	for <linux-wireless@archiver.kernel.org>; Tue, 17 Mar 2020 06:36:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="wTkloh+n"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="HpTxh4w6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726586AbgCQESc (ORCPT
+        id S1725957AbgCQGgl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 17 Mar 2020 00:18:32 -0400
-Received: from mail26.static.mailgun.info ([104.130.122.26]:57896 "EHLO
-        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725536AbgCQESc (ORCPT
+        Tue, 17 Mar 2020 02:36:41 -0400
+Received: from mail27.static.mailgun.info ([104.130.122.27]:43611 "EHLO
+        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725730AbgCQGgl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Mar 2020 00:18:32 -0400
+        Tue, 17 Mar 2020 02:36:41 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1584418711; h=Message-Id: Date: Subject: Cc: To: From:
- Sender; bh=zv1ZF5aE/Ow1rxwLiS4O8HQowOiDcGaTxy0iW8ms5NQ=; b=wTkloh+n5+Dc9b0F+TJ9aHuz6x1p59t82Pp0G907jaTKHNyxyIPogwKn8YO2KSEri4CSuksf
- CQbmigTE8rpwijM+5FXinJosSXIu4sOpW1HZ0ZUOdGyhXdTlrWNZmODIRwvvp7TXrRuEcB76
- CnlVZVGgTO8Jgf3pk6yafsDXXis=
-X-Mailgun-Sending-Ip: 104.130.122.26
+ s=smtp; t=1584427001; h=Date: Message-Id: Cc: To: References:
+ In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
+ Content-Type: Sender; bh=xvFgNez5iQJug+yeBep1gjuVYmgRXA6RuDCTwudLvUc=;
+ b=HpTxh4w6JCtjroNmritEknypykYCYcsw9s2V3nypfagAxWPOhBNfemqYGTBVTPUfaI8syNVF
+ yl1DoJuhy4Eyup1VM8+GGLexRAB5hbvBeWjKVHl66cPtDPZpiho1dpugyS5MqH1SNhSNCjPA
+ Tdc+pRpdv1qyefXRpEnMd+PjMPU=
+X-Mailgun-Sending-Ip: 104.130.122.27
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e704f96.7fafa992fb58-smtp-out-n02;
- Tue, 17 Mar 2020 04:18:30 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5e706fe5.7fe0859d1a78-smtp-out-n03;
+ Tue, 17 Mar 2020 06:36:21 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 64B24C43637; Tue, 17 Mar 2020 04:18:30 +0000 (UTC)
-Received: from vnaralas-linux.qualcomm.com (blr-c-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.19.19])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        id AFA2FC432C2; Tue, 17 Mar 2020 06:36:20 +0000 (UTC)
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: vnaralas)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id AA698C433D2;
-        Tue, 17 Mar 2020 04:18:28 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org AA698C433D2
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 326F4C433CB;
+        Tue, 17 Mar 2020 06:36:18 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 326F4C433CB
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=vnaralas@codeaurora.org
-From:   Venkateswara Naralasetty <vnaralas@codeaurora.org>
-To:     ath11k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org,
-        Venkateswara Naralasetty <vnaralas@codeaurora.org>
-Subject: [PATCH] ath11k: fill channel info from rx channel
-Date:   Tue, 17 Mar 2020 09:48:18 +0530
-Message-Id: <1584418698-19505-1-git-send-email-vnaralas@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH v2 1/2] ath11k: handle RX fragments
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1584088343-3584-2-git-send-email-mpubbise@codeaurora.org>
+References: <1584088343-3584-2-git-send-email-mpubbise@codeaurora.org>
+To:     Manikanta Pubbisetty <mpubbise@codeaurora.org>
+Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Manikanta Pubbisetty <mpubbise@codeaurora.org>
+User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
+Message-Id: <20200317063620.AFA2FC432C2@smtp.codeaurora.org>
+Date:   Tue, 17 Mar 2020 06:36:20 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Fill the channel information from rx channel for the packet
-which has invalid channel info from meta data.
+Manikanta Pubbisetty <mpubbise@codeaurora.org> wrote:
 
-Signed-off-by: Venkateswara Naralasetty <vnaralas@codeaurora.org>
----
- drivers/net/wireless/ath/ath11k/dp_rx.c | 10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+> IPQ8074 HW has support to verify the PN of the received frames.
+> For all frames except for fragmented ones, HW checks the PN and
+> delivers them to the driver. For fragmented frames, driver is
+> required to do a little more; it has to reassemble the fragments
+> and then reinject them to the HW for verifying the PN. Currently,
+> to keep the logic simple, PN verifcation is disabled in HW and is
+> handled in mac80211 for all the frames (fragmented and unfragmented).
+> 
+> On the contrary, offloading PN Validation to the HW brings important
+> benefits. It reduces CPU cycles spent on the host CPU for verifying
+> the same; helps in enabling features which improve performance like
+> mac80211 fast RX path, enabling multiple REO rings for parallel RX
+> processing, 802.11 decapsulation offloading. All these features are
+> dependent on PN offload which in turn is dependent on handling of
+> the received fragments in the driver.
+> 
+> When TKIP security is used, additional handling is required while
+> processing the fragments; since MIC is computed on an MSDU in TKIP,
+> only the last fragment has the MIC info. In this case, driver has to
+> compute the MIC after reassembly and compare it against the MIC
+> present in the frame. For this, MICHAEL_MIC kernel crypto library
+> APIs are used and the dependencies are appropriately set.
+> 
+> Signed-off-by: Manikanta Pubbisetty <mpubbise@codeaurora.org>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-diff --git a/drivers/net/wireless/ath/ath11k/dp_rx.c b/drivers/net/wireless/ath/ath11k/dp_rx.c
-index dc7881b..034e6f21 100644
---- a/drivers/net/wireless/ath/ath11k/dp_rx.c
-+++ b/drivers/net/wireless/ath/ath11k/dp_rx.c
-@@ -1998,9 +1998,13 @@ static void ath11k_dp_rx_h_ppdu(struct ath11k *ar, struct hal_rx_desc *rx_desc,
- 	} else if (channel_num >= 36 && channel_num <= 173) {
- 		rx_status->band = NL80211_BAND_5GHZ;
- 	} else {
--		ath11k_warn(ar->ab, "Unsupported Channel info received %d\n",
--			    channel_num);
--		return;
-+		spin_lock_bh(&ar->data_lock);
-+		rx_status->band = ar->rx_channel->band;
-+		channel_num =
-+			ieee80211_frequency_to_channel(ar->rx_channel->center_freq);
-+		spin_unlock_bh(&ar->data_lock);
-+		ath11k_dbg_dump(ar->ab, ATH11K_DBG_DATA, NULL, "rx_desc: ",
-+				rx_desc, sizeof(struct hal_rx_desc));
- 	}
- 
- 	rx_status->freq = ieee80211_channel_to_frequency(channel_num,
+2 patches applied to ath-next branch of ath.git, thanks.
+
+243874c64c81 ath11k: handle RX fragments
+1441b2f205a7 ath11k: enable PN offload
+
 -- 
-2.7.4
+https://patchwork.kernel.org/patch/11436249/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
