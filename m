@@ -7,46 +7,46 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A7B4C18E5B
-	for <linux-wireless@archiver.kernel.org>; Tue, 17 Mar 2020 16:42:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6A3DC5ACBF
+	for <linux-wireless@archiver.kernel.org>; Tue, 17 Mar 2020 16:42:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3D6E120752
-	for <linux-wireless@archiver.kernel.org>; Tue, 17 Mar 2020 16:42:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7D90320735
+	for <linux-wireless@archiver.kernel.org>; Tue, 17 Mar 2020 16:42:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1584463352;
-	bh=F6pU+evzRGxGg+nHIpDJ8bNvdVFnMVeGCf8+3esDiY0=;
+	s=default; t=1584463353;
+	bh=ynUZ5Y6q9lgAZbJYesFYCJto2omiLpDktVmChdZM5jU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=uhSdA5p/2TIwbd69fEfU9fI+YCiPINIn3I2HILACnpruuCPz+2VLuAtq1Q8d9b7UH
-	 4F2eSC5Gi6tNeOrC6zwR8jzk81EMfH0PRyd4q1V6uPbWEsr/pMmAnnjZxtwGVoIFgD
-	 8yua2QIzEE5Zd6L77gr0YnRYsXZgdrUIcBSVuoq0=
+	b=xEaYdLkAYbVWfBJIy4WWVCdY4J9r39TsiG3cK40NMRslwZWJH5uGgFlgyFFEB2Itq
+	 nbyIUZC5OSYPVDcC9YPJo94yAZ4IVwVwmWNO5/7Kefk72qVBJoJhuZMDjQh8Sf9FDB
+	 QbFc6N38JN1QQNVYuUYpI7jaO73G+WxXIfUwILKE=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726797AbgCQQmb (ORCPT
+        id S1726808AbgCQQmc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 17 Mar 2020 12:42:31 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47632 "EHLO mail.kernel.org"
+        Tue, 17 Mar 2020 12:42:32 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47774 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726647AbgCQQma (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Mar 2020 12:42:30 -0400
+        id S1726019AbgCQQmc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 17 Mar 2020 12:42:32 -0400
 Received: from lore-desk-wlan.redhat.com (unknown [151.48.128.122])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A376520735;
-        Tue, 17 Mar 2020 16:42:24 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 58C5F20663;
+        Tue, 17 Mar 2020 16:42:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1584463346;
-        bh=F6pU+evzRGxGg+nHIpDJ8bNvdVFnMVeGCf8+3esDiY0=;
+        s=default; t=1584463351;
+        bh=ynUZ5Y6q9lgAZbJYesFYCJto2omiLpDktVmChdZM5jU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=FQTcDObZEKCU/B/qQs5XrejOyLepKAbVf32t0tPrLQ7V2Wnfakor0rZDjHVOankLS
-         kBPyHMeMX0DJ28FkJOcP0Zzzenz1a4kqUUlFZ8iH9B02P0vI+N352kfADOsZRbXS4F
-         ZBjqYvJBJcjNQei7tOk6N7KPVgQcFBqI3q8c/ojo=
+        b=pJbEJreYdeKzPzlKm7ZgF2nAvl7NE75kARF5RWhvcGn4tbLMvvy8s6vQ7aI2ufVPP
+         luvKwViklkqCtXsllq6T2pne4/cAWnLTTXwoGkTL84ikFc5GEIm595Bv2bnaaYScRq
+         2/YENc5hX591brNOrqmm85iRHjlSRQrgYbpbgTUQ=
 From:   Lorenzo Bianconi <lorenzo@kernel.org>
 To:     nbd@nbd.name
 Cc:     lorenzo.bianconi@redhat.com, sean.wang@mediatek.com,
         ryder.lee@mediatek.com, linux-wireless@vger.kernel.org,
         linux-mediatek@lists.infradead.org
-Subject: [PATCH v4 18/25] mt76: mt7615: introduce mt7615_eeprom_parse_hw_band_cap routine
-Date:   Tue, 17 Mar 2020 17:41:25 +0100
-Message-Id: <6906c64480364bf220fed1b348c3a2c64fcfd358.1584463004.git.lorenzo@kernel.org>
+Subject: [PATCH v4 21/25] mt76: mt7615: introduce set_bmc and st_sta for uni commands
+Date:   Tue, 17 Mar 2020 17:41:28 +0100
+Message-Id: <887044814c14356c4b56a827e929c474e5b6da3b.1584463004.git.lorenzo@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <cover.1584463004.git.lorenzo@kernel.org>
 References: <cover.1584463004.git.lorenzo@kernel.org>
@@ -57,65 +57,109 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Introduce mt7615_eeprom_parse_hw_band_cap routine in order to configure
-supported band for mt7663e and mt7622 devices since they do not rely on
-eeprom data to enable 2GHz/5GHz bands
+Introduce mt7615_mcu_uni_set_bmc and mt7615_mcu_uni_set_sta routines for
+mt7663e commands.
 
+Co-developed-by: Sean Wang <sean.wang@mediatek.com>
+Signed-off-by: Sean Wang <sean.wang@mediatek.com>
 Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
- .../wireless/mediatek/mt76/mt7615/eeprom.c    | 30 +++++++++++++++----
- 1 file changed, 24 insertions(+), 6 deletions(-)
+ .../net/wireless/mediatek/mt76/mt7615/mcu.c   | 27 ++++++++++++++++---
+ .../net/wireless/mediatek/mt76/mt7615/mcu.h   | 15 ++++++++++-
+ 2 files changed, 37 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
-index 5220c18e711f..b1091694569e 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
-@@ -91,11 +91,23 @@ static int mt7615_check_eeprom(struct mt76_dev *dev)
- 	}
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
+index 372ffc6322c9..a72b65ebdffc 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
+@@ -1062,8 +1062,8 @@ mt7615_mcu_sta_rx_ba(struct mt7615_dev *dev,
  }
  
--static void mt7615_eeprom_parse_hw_cap(struct mt7615_dev *dev)
-+static void
-+mt7615_eeprom_parse_hw_band_cap(struct mt7615_dev *dev)
+ static int
+-mt7615_mcu_add_sta(struct mt7615_dev *dev, struct ieee80211_vif *vif,
+-		   struct ieee80211_sta *sta, bool enable)
++mt7615_mcu_add_sta_cmd(struct mt7615_dev *dev, struct ieee80211_vif *vif,
++		       struct ieee80211_sta *sta, bool enable, int cmd)
  {
--	u8 *eeprom = dev->mt76.eeprom.data;
--	u8 tx_mask, max_nss;
--	u32 val;
-+	u8 val, *eeprom = dev->mt76.eeprom.data;
-+
-+	if (is_mt7663(&dev->mt76)) {
-+		/* dual band */
-+		dev->mt76.cap.has_2ghz = true;
-+		dev->mt76.cap.has_5ghz = true;
-+		return;
-+	}
-+
-+	if (is_mt7622(&dev->mt76)) {
-+		/* 2GHz only */
-+		dev->mt76.cap.has_2ghz = true;
-+		return;
-+	}
- 
- 	val = FIELD_GET(MT_EE_NIC_WIFI_CONF_BAND_SEL,
- 			eeprom[MT_EE_WIFI_CONF]);
-@@ -111,9 +123,15 @@ static void mt7615_eeprom_parse_hw_cap(struct mt7615_dev *dev)
- 		dev->mt76.cap.has_5ghz = true;
- 		break;
+ 	struct mt7615_vif *mvif = (struct mt7615_vif *)vif->drv_priv;
+ 	struct wtbl_req_hdr *wtbl_hdr;
+@@ -1092,8 +1092,15 @@ mt7615_mcu_add_sta(struct mt7615_dev *dev, struct ieee80211_vif *vif,
+ 			mt7615_mcu_wtbl_ht_tlv(skb, sta, sta_wtbl, wtbl_hdr);
  	}
+ 
+-	return __mt76_mcu_skb_send_msg(&dev->mt76, skb,
+-				       MCU_EXT_CMD_STA_REC_UPDATE, true);
++	return __mt76_mcu_skb_send_msg(&dev->mt76, skb, cmd, true);
 +}
 +
-+static void mt7615_eeprom_parse_hw_cap(struct mt7615_dev *dev)
++static int
++mt7615_mcu_add_sta(struct mt7615_dev *dev, struct ieee80211_vif *vif,
++		   struct ieee80211_sta *sta, bool enable)
 +{
-+	u8 *eeprom = dev->mt76.eeprom.data;
-+	u8 tx_mask, max_nss;
-+	u32 val;
++	return mt7615_mcu_add_sta_cmd(dev, vif, sta, enable,
++				      MCU_EXT_CMD_STA_REC_UPDATE);
+ }
  
--	if (is_mt7622(&dev->mt76))
--		dev->mt76.cap.has_5ghz = false;
-+	mt7615_eeprom_parse_hw_band_cap(dev);
+ static const struct mt7615_mcu_ops sta_update_ops = {
+@@ -1106,6 +1113,18 @@ static const struct mt7615_mcu_ops sta_update_ops = {
+ 	.sta_add = mt7615_mcu_add_sta,
+ };
  
- 	/* read tx-rx mask from eeprom */
- 	val = mt76_rr(dev, MT_TOP_STRAP_STA);
++static int
++mt7615_mcu_uni_add_sta(struct mt7615_dev *dev, struct ieee80211_vif *vif,
++		       struct ieee80211_sta *sta, bool enable)
++{
++	return mt7615_mcu_add_sta_cmd(dev, vif, sta, enable,
++				      MCU_UNI_CMD_STA_REC_UPDATE);
++}
++
++static const struct mt7615_mcu_ops uni_update_ops = {
++	.sta_add = mt7615_mcu_uni_add_sta,
++};
++
+ static int mt7615_mcu_send_firmware(struct mt7615_dev *dev, const void *data,
+ 				    int len)
+ {
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.h b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.h
+index 3aad460e0809..bc87cf0419d8 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.h
+@@ -269,6 +269,10 @@ enum {
+ 	MCU_EXT_CMD_SET_RDD_PATTERN = 0x7d,
+ };
+ 
++enum {
++	MCU_UNI_CMD_STA_REC_UPDATE = MCU_UNI_PREFIX | 0x03,
++};
++
+ #define MCU_CMD_ACK		BIT(0)
+ #define MCU_CMD_UNI		BIT(1)
+ #define MCU_CMD_QUERY		BIT(2)
+@@ -607,6 +611,15 @@ struct sta_req_hdr {
+ 	u8 rsv[2];
+ } __packed;
+ 
++struct sta_rec_state {
++	__le16 tag;
++	__le16 len;
++	u8 state;
++	__le32 flags;
++	u8 vhtop;
++	u8 pad[2];
++} __packed;
++
+ struct sta_rec_basic {
+ 	__le16 tag;
+ 	__le16 len;
+@@ -659,7 +672,7 @@ enum {
+ 	STA_REC_BF,
+ 	STA_REC_AMSDU, /* for CR4 */
+ 	STA_REC_BA,
+-	STA_REC_RED, /* not used */
++	STA_REC_STATE,
+ 	STA_REC_TX_PROC, /* for hdr trans and CSO in CR4 */
+ 	STA_REC_HT,
+ 	STA_REC_VHT,
 -- 
 2.25.1
 
