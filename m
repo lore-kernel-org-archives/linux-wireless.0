@@ -2,150 +2,66 @@ Return-Path: <SRS0=6JIn=5C=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB6D8C2BB1D
-	for <linux-wireless@archiver.kernel.org>; Tue, 17 Mar 2020 16:54:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02C1CC10F29
+	for <linux-wireless@archiver.kernel.org>; Tue, 17 Mar 2020 17:14:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B31DC2073E
-	for <linux-wireless@archiver.kernel.org>; Tue, 17 Mar 2020 16:54:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CC11420663
+	for <linux-wireless@archiver.kernel.org>; Tue, 17 Mar 2020 17:14:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="b2ShH2D0"
+	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="Brm+AHMI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726760AbgCQQy3 (ORCPT
+        id S1726840AbgCQROW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 17 Mar 2020 12:54:29 -0400
-Received: from mail27.static.mailgun.info ([104.130.122.27]:58511 "EHLO
-        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726016AbgCQQy2 (ORCPT
+        Tue, 17 Mar 2020 13:14:22 -0400
+Received: from mail2.candelatech.com ([208.74.158.173]:38626 "EHLO
+        mail3.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726762AbgCQROV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Mar 2020 12:54:28 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1584464067; h=Content-Type: MIME-Version: Message-ID:
- In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
- bh=B75EPtnjuZ88W0sTU7M6zEPNt8KLHghX4zlsyvi8tfc=; b=b2ShH2D0QGaCbVKCxS3+hZUBx1XGwEW3wpActGr6ZqQv3UOPeKWxGEtjGDkIrIFr3r0AYAu5
- mR7fExymIKfBpyF+/5xH7O2uPc+r2uksNKtI1W1643l77A9v1OBfNGfJAs1E9adBm14i5H7X
- KpVPf3omoylhUcsSOowPGqt3hog=
-X-Mailgun-Sending-Ip: 104.130.122.27
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e7100c3.7fdd034d31b8-smtp-out-n02;
- Tue, 17 Mar 2020 16:54:27 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 5A155C43637; Tue, 17 Mar 2020 16:54:26 +0000 (UTC)
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        Tue, 17 Mar 2020 13:14:21 -0400
+Received: from [192.168.100.195] (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id E8C7AC433CB;
-        Tue, 17 Mar 2020 16:54:23 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org E8C7AC433CB
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Brian Norris <briannorris@chromium.org>
-Cc:     Jouni Malinen <j@w1.fi>, Pkshih <pkshih@realtek.com>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k\@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH 1/2] nl80211: vendor-cmd: qca: add dynamic SAR power limits
-References: <1576684108-30177-1-git-send-email-kvalo@codeaurora.org>
-        <1576684108-30177-2-git-send-email-kvalo@codeaurora.org>
-        <1576748692.7758.17.camel@realtek.com> <20191219154828.GA12287@w1.fi>
-        <CA+ASDXMTYLGbEkBPHSqtyitMEvY5o_MjU0s+NoWdnN_ORy1gDw@mail.gmail.com>
-        <20191219185522.GA16010@w1.fi>
-        <CA+ASDXNOxkrZTxL0Jo4ONR2YtL83BVc_w-rBXc6ggBLdwUpDZw@mail.gmail.com>
-Date:   Tue, 17 Mar 2020 18:54:21 +0200
-In-Reply-To: <CA+ASDXNOxkrZTxL0Jo4ONR2YtL83BVc_w-rBXc6ggBLdwUpDZw@mail.gmail.com>
-        (Brian Norris's message of "Thu, 19 Dec 2019 15:40:43 -0800")
-Message-ID: <871rpqly6a.fsf@kamboji.qca.qualcomm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        by mail3.candelatech.com (Postfix) with ESMTPSA id 176DA13C344;
+        Tue, 17 Mar 2020 10:14:21 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 176DA13C344
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
+        s=default; t=1584465261;
+        bh=StU1Y3ZiUqQb3GNkuDIJ1U1JRS8KyGStkkeBtQGM4bI=;
+        h=To:Cc:From:Subject:Date:From;
+        b=Brm+AHMIaHBFr/ABRoNixx61bKI8y4FvlZFm4T0AaRtY7R5zMozi/T/jXlPfyB2SL
+         woUvtO7o47oKJSjMnPCQ2mpjijaMxmqJT+A3fVibIUEvw9vPYLp7/68valVY+WEW1W
+         VHtLMMCgQheYrALSSsyvoWmiMMj6TAmOLGz5kwp4=
+To:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc:     Luca Coelho <luca@coelho.fi>
+From:   Ben Greear <greearb@candelatech.com>
+Subject: How to set AX200 to be a 1x1 antenna radio?
+Organization: Candela Technologies
+Message-ID: <3bce6845-ee07-e5b6-6ccb-3366ab1493cd@candelatech.com>
+Date:   Tue, 17 Mar 2020 10:14:20 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.2.2
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Brian Norris <briannorris@chromium.org> writes:
+Hello,
 
->> > > This was discussed during the 2019 wireless workshop. The conclusion
->> > > from that discussion was that while there is clear need for SAR power
->> > > limits for various devices and multiple vendors/drivers, it did not look
->> > > clear that a single common interface could be defined cleanly taken into
->> > > account the differences in the ways vendors have designed the mechanism
->> > > in driver and firmware implementations. As such, vendor specific
->> > > commands were identified as the approach.
->> >
->> > [citation needed]
->>
->> I'm not aware of any publicly available meeting minutes that covered the
->> details for that discussion. My personal notes indicate that there were
->> at least two vendors indicating existence of vendor specific commands
->> for configuring SAR parameters, a discussion about the parameters used
->> for this being different, and a conclusion that this would be an example
->> kernel interface where a generic nl80211 interface may not be achievable
->> and a vendor specific interface would be more likely. This discussion
->> resulted in the discussion on how to use vendor specific nl80211
->> commands/attributes in upstream drivers and the eventual documentation
->> of that in the location you noted.
->
-> Hmm, I actually think I was only around for the pre-discussion, in
-> which y'all suggested you might later meet to decide what eventually
-> became [1]. So maybe I missed some specific examples that would
-> provide the [citation] I requested.
->
-> That being said, I have personally fielded out-of-tree SAR
-> implementations from 4 different vendors:
->
-> (a) Two of them (this ath10k proposal, roughly; and Realtek's) employ
-> exactly the same concept: N frequency ranges, each with associated
-> power limits.
-> (b) Two of them (Intel/variant-of-iwiwifi and Marvell/mwifiex) utilize
-> a platform-specific (BIOS or Device Tree) mechanism for enumerating
-> power tables, and the nl80211 API simply takes an index N (e.g., 0 or
-> 1), so user space can say "switch to mode N"
->
-> Unfortunately, for (b), I think there are enough reasons to think they
-> won't share an API similar to (a) (for Marvell, their
-> platform-specific tables are large undocumented blobs -- I have a
-> feeling if we already had a common API for (a), they *could* have
-> implemented some translation in a nicer way in their driver, but they
-> haven't chosen to do that work and probably won't be convinced to do
-> so).
->
-> But that still means there's some hope for (a).
->
-> Anyway, I am happy that there's a documented policy for vendor APIs
-> [1], and I'm happy to see this proposal out here. I just want to see a
-> critical eye put to this particular proposal if possible, to see if we
-> can improve its flexibility (either now, or in a later version of a
-> QCA vendor command, or even in a common nl80211-proper command).
->
-> So to put a little different spin on Pkshih's request: is there any
-> value in making this particular ath10k proposal a little more generic
-> (e.g., more granularity or flexibility in frequency bands, or more
-> precision in power limits), such that other vendors might implement
-> the same thing? Or would it be better to let each vendor implement
-> their similar-looking APIs (i.e., (a); or maybe even (b)) on their
-> own, and only later look at sharing?
+Any suggestions for how to set the AX200 to act like a 1x1 device?  I can try
+writing a driver patch if anyone can point me to how to make the firmware do this...
 
-The downside of accepting SAR vendor commands to upstream is that (in
-theory) that should be supported a long time:
-
-  4. The newly proposed API shall be subject to stable API rules.
-
-  https://wireless.wiki.kernel.org/en/developers/documentation/nl80211#vendor-specific_api
-
-So if sometime in the future we add a generic command the driver would
-need to support both vendor and generic commands. So, IF it makes sense
-to implement a generic command, I would rather have a generic command
-implemented from the beginning and drop the SAR vendor command patches
-altogether.
-
-For me either solutions are good enough, I'm not familiar enough with
-all the different SAR user space interfaces to make a good decision.
+Thanks,
+Ben
 
 -- 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
