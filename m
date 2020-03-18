@@ -6,85 +6,76 @@ X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
 	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45CB9C10DCE
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Mar 2020 11:45:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 600A8C5ACD7
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Mar 2020 11:47:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 154562076D
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Mar 2020 11:45:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 28BA92076D
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Mar 2020 11:47:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="Txgo5h5D"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="EB1451DQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726663AbgCRLpy (ORCPT
+        id S1726975AbgCRLr2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 18 Mar 2020 07:45:54 -0400
-Received: from mail26.static.mailgun.info ([104.130.122.26]:60708 "EHLO
-        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726586AbgCRLpy (ORCPT
+        Wed, 18 Mar 2020 07:47:28 -0400
+Received: from mail27.static.mailgun.info ([104.130.122.27]:33585 "EHLO
+        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726586AbgCRLr2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Mar 2020 07:45:54 -0400
+        Wed, 18 Mar 2020 07:47:28 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1584531953; h=Date: Message-Id: Cc: To: References:
+ s=smtp; t=1584532048; h=Date: Message-Id: Cc: To: References:
  In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=VQBMQtJTp2nFFQCefMoBGwuo5ohvM/mnENFxFvogrKM=;
- b=Txgo5h5DdQHfV4/YnKis9GJUXN/Q3snWuPGZHO9RWoY4w/vA+C33Qzs6CIdxuKd4thVTkKUE
- CYAMw35vR1V8q7XQmuQ6pmVg6FevI7GD0eqqJ9xuyaruJ602jt7xVJXTxKkHe4la9oGH6D6m
- KLIJjC2MYv59mUrZu4C8vYidI2E=
-X-Mailgun-Sending-Ip: 104.130.122.26
+ Content-Type: Sender; bh=8FnMbdlSFETz6u11y6zFflYVskopbdbpfy530MvDShM=;
+ b=EB1451DQJ8VQUPzvmSoSnybCYujV2h+BakIDazkwZjSJtg34YoqdZB+EVzgFf8bu11nEdJL6
+ VaIak7rO9xJDpFah9atVe4LTNXu+o3HEjiKoKq1UrFSgTJFd1/sdCZ+f9kW28DP9KfRZF9U8
+ /YIA2m42bszoi3trjRNYap0Mj5U=
+X-Mailgun-Sending-Ip: 104.130.122.27
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e7209eb.7f952826d500-smtp-out-n03;
- Wed, 18 Mar 2020 11:45:47 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5e720a3f.7f675d0629d0-smtp-out-n02;
+ Wed, 18 Mar 2020 11:47:11 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id D455BC433D2; Wed, 18 Mar 2020 11:45:46 +0000 (UTC)
+        id AF411C432C2; Wed, 18 Mar 2020 11:47:10 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 2F6CCC433CB;
-        Wed, 18 Mar 2020 11:45:44 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 2F6CCC433CB
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 78ACAC432C2;
+        Wed, 18 Mar 2020 11:47:08 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 78ACAC432C2
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v3] ath11k: Supporting RX ring backpressure HTT event and
- stats handling
+Subject: Re: [PATCH] ath11k: fill channel info from rx channel
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1584350920-20688-1-git-send-email-srirrama@codeaurora.org>
-References: <1584350920-20688-1-git-send-email-srirrama@codeaurora.org>
-To:     Sriram R <srirrama@codeaurora.org>
+In-Reply-To: <1584418698-19505-1-git-send-email-vnaralas@codeaurora.org>
+References: <1584418698-19505-1-git-send-email-vnaralas@codeaurora.org>
+To:     Venkateswara Naralasetty <vnaralas@codeaurora.org>
 Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Sriram R <srirrama@codeaurora.org>,
-        Vikas Patel <vikpatel@codeaurora.org>
+        Venkateswara Naralasetty <vnaralas@codeaurora.org>
 User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20200318114546.D455BC433D2@smtp.codeaurora.org>
-Date:   Wed, 18 Mar 2020 11:45:46 +0000 (UTC)
+Message-Id: <20200318114710.AF411C432C2@smtp.codeaurora.org>
+Date:   Wed, 18 Mar 2020 11:47:10 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Sriram R <srirrama@codeaurora.org> wrote:
+Venkateswara Naralasetty <vnaralas@codeaurora.org> wrote:
 
-> The Firmware sends HTT event to host whenever there is a
-> backpressure on RX rings, Handling such event and dumping
-> info on the console under the "ATH11K_DBG_DP_HTT"  debug level.
+> Fill the channel information from rx channel for the packet
+> which has invalid channel info from meta data.
 > 
-> Fetching RX ring backpressure histogram from FW via htt_stats debugfs.
-> 
->  #echo "24" > /sys/kernel/debug/ath11k/ipq8074/macX/htt_stats_type
->  #cat /sys/kernel/debug/ath11k/ipq8074/macX/htt_stats
-> 
-> Signed-off-by: Vikas Patel <vikpatel@codeaurora.org>
-> Signed-off-by: Sriram R <srirrama@codeaurora.org>
+> Signed-off-by: Venkateswara Naralasetty <vnaralas@codeaurora.org>
 > Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
 Patch applied to ath-next branch of ath.git, thanks.
 
-678e8414bf4e ath11k: Supporting RX ring backpressure HTT event and stats handling
+de06b2f75190 ath11k: fill channel info from rx channel
 
 -- 
-https://patchwork.kernel.org/patch/11440011/
+https://patchwork.kernel.org/patch/11441701/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
