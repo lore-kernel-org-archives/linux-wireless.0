@@ -2,35 +2,35 @@ Return-Path: <SRS0=7roA=5D=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B50A4C43333
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Mar 2020 20:48:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ACFD5C4332D
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Mar 2020 20:48:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 932912071C
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Mar 2020 20:48:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 853512071C
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Mar 2020 20:48:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727005AbgCRUrS (ORCPT
+        id S1726851AbgCRUrR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 18 Mar 2020 16:47:18 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:58399 "EHLO
+        Wed, 18 Mar 2020 16:47:17 -0400
+Received: from Galois.linutronix.de ([193.142.43.55]:58398 "EHLO
         Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726663AbgCRUrS (ORCPT
+        with ESMTP id S1726647AbgCRUrR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Mar 2020 16:47:18 -0400
+        Wed, 18 Mar 2020 16:47:17 -0400
 Received: from p5de0bf0b.dip0.t-ipconnect.de ([93.224.191.11] helo=nanos.tec.linutronix.de)
         by Galois.linutronix.de with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
         (Exim 4.80)
         (envelope-from <tglx@linutronix.de>)
-        id 1jEfaJ-000666-4B; Wed, 18 Mar 2020 21:46:39 +0100
+        id 1jEfaG-00065g-VF; Wed, 18 Mar 2020 21:46:37 +0100
 Received: from nanos.tec.linutronix.de (localhost [IPv6:::1])
-        by nanos.tec.linutronix.de (Postfix) with ESMTP id E74691040C9;
+        by nanos.tec.linutronix.de (Postfix) with ESMTP id 0CF59101161;
         Wed, 18 Mar 2020 21:46:35 +0100 (CET)
-Message-Id: <20200318204407.793899611@linutronix.de>
+Message-Id: <20200318204302.693307984@linutronix.de>
 User-Agent: quilt/0.65
-Date:   Wed, 18 Mar 2020 21:43:06 +0100
+Date:   Wed, 18 Mar 2020 21:43:02 +0100
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Peter Zijlstra <peterz@infradead.org>,
@@ -41,22 +41,19 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         Steven Rostedt <rostedt@goodmis.org>,
         Randy Dunlap <rdunlap@infradead.org>,
         Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         Logan Gunthorpe <logang@deltatee.com>,
         Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
         Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
         Felipe Balbi <balbi@kernel.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-usb@vger.kernel.org, Oleg Nesterov <oleg@redhat.com>,
+        linux-usb@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Oleg Nesterov <oleg@redhat.com>,
         Davidlohr Bueso <dave@stgolabs.net>,
         Michael Ellerman <mpe@ellerman.id.au>,
         Arnd Bergmann <arnd@arndb.de>, linuxppc-dev@lists.ozlabs.org
-Subject: [patch V2 04/15] orinoco_usb: Use the regular completion interfaces
-References: <20200318204302.693307984@linutronix.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Subject: [patch V2 00/15] Lock ordering documentation and annotation for lockdep
 X-Linutronix-Spam-Score: -1.0
 X-Linutronix-Spam-Level: -
 X-Linutronix-Spam-Status: No , -1.0 points, 5.0 required,  ALL_TRUSTED=-1,SHORTCIRCUIT=-0.0001
@@ -65,92 +62,28 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Thomas Gleixner <tglx@linutronix.de>
+This is the second version of this work. The first one can be found here:
 
-The completion usage in this driver is interesting:
+   https://lore.kernel.org/r/20200313174701.148376-1-bigeasy@linutronix.de
 
-  - it uses a magic complete function which according to the comment was
-    implemented by invoking complete() four times in a row because
-    complete_all() was not exported at that time.
+Changes since V1:
 
-  - it uses an open coded wait/poll which checks completion:done. Only one wait
-    side (device removal) uses the regular wait_for_completion() interface.
+  - Split the PCI/switchtec patch (picked up the fix from Logan) and
+    reworked the change log.
 
-The rationale behind this is to prevent that wait_for_completion() consumes
-completion::done which would prevent that all waiters are woken. This is not
-necessary with complete_all() as that sets completion::done to UINT_MAX which
-is left unmodified by the woken waiters.
+  - Addressed Linus feedback vs. completions.
 
-Replace the magic complete function with complete_all() and convert the
-open coded wait/poll to regular completion interfaces.
+    Most of the places which had open coded completion variants have been
+    analysed and fixed up to use the regular interfaces.
 
-This changes the wait to exclusive wait mode. But that does not make any
-difference because the wakers use complete_all() which ignores the
-exclusive mode.
+    The PS3 one got converted by Peter Zijlstra to rcu_wait().
 
-Reported-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
----
-V2: New patch to avoid conversion to swait functions later.
----
- drivers/net/wireless/intersil/orinoco/orinoco_usb.c |   21 ++++----------------
- 1 file changed, 5 insertions(+), 16 deletions(-)
+    Add explanation in the change log why swait actually fits the
+    completion semantics.
 
---- a/drivers/net/wireless/intersil/orinoco/orinoco_usb.c
-+++ b/drivers/net/wireless/intersil/orinoco/orinoco_usb.c
-@@ -365,17 +365,6 @@ static struct request_context *ezusb_all
- 	return ctx;
- }
- 
--
--/* Hopefully the real complete_all will soon be exported, in the mean
-- * while this should work. */
--static inline void ezusb_complete_all(struct completion *comp)
--{
--	complete(comp);
--	complete(comp);
--	complete(comp);
--	complete(comp);
--}
--
- static void ezusb_ctx_complete(struct request_context *ctx)
- {
- 	struct ezusb_priv *upriv = ctx->upriv;
-@@ -409,7 +398,7 @@ static void ezusb_ctx_complete(struct re
- 
- 			netif_wake_queue(dev);
- 		}
--		ezusb_complete_all(&ctx->done);
-+		complete_all(&ctx->done);
- 		ezusb_request_context_put(ctx);
- 		break;
- 
-@@ -419,7 +408,7 @@ static void ezusb_ctx_complete(struct re
- 			/* This is normal, as all request contexts get flushed
- 			 * when the device is disconnected */
- 			err("Called, CTX not terminating, but device gone");
--			ezusb_complete_all(&ctx->done);
-+			complete_all(&ctx->done);
- 			ezusb_request_context_put(ctx);
- 			break;
- 		}
-@@ -690,11 +679,11 @@ static void ezusb_req_ctx_wait(struct ez
- 			 * get the chance to run themselves. So we make sure
- 			 * that we don't sleep for ever */
- 			int msecs = DEF_TIMEOUT * (1000 / HZ);
--			while (!ctx->done.done && msecs--)
-+
-+			while (!try_wait_for_completion(&ctx->done) && msecs--)
- 				udelay(1000);
- 		} else {
--			wait_event_interruptible(ctx->done.wait,
--						 ctx->done.done);
-+			wait_for_completion(&ctx->done);
- 		}
- 		break;
- 	default:
+  - Addressed Randys feedback on documentation
+
+Thanks,
+
+	tglx
 
