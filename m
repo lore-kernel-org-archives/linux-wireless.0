@@ -7,53 +7,53 @@ X-Spam-Status: No, score=-10.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B675C5ACD7
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Mar 2020 12:03:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70CADC10DCE
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Mar 2020 12:06:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DE9B120771
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Mar 2020 12:03:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 41A612076D
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Mar 2020 12:06:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="R1yEwe6d"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="Hi+CTxib"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726643AbgCRMDA (ORCPT
+        id S1726781AbgCRMG5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 18 Mar 2020 08:03:00 -0400
-Received: from mail27.static.mailgun.info ([104.130.122.27]:61562 "EHLO
-        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726619AbgCRMDA (ORCPT
+        Wed, 18 Mar 2020 08:06:57 -0400
+Received: from mail26.static.mailgun.info ([104.130.122.26]:62026 "EHLO
+        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726631AbgCRMG5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Mar 2020 08:03:00 -0400
+        Wed, 18 Mar 2020 08:06:57 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1584532980; h=Content-Type: MIME-Version: Message-ID:
+ s=smtp; t=1584533217; h=Content-Type: MIME-Version: Message-ID:
  In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
- bh=8YXEx/M9tgj715b9K7Jb9BvuLuxD4SNsxI+t+d3T3fs=; b=R1yEwe6dJN0JMAmUDUtJChYGlwgmBdWGLdHP2RRza/hgXf9zlvYkHpYo1eXhoTnsyIXGUo2G
- empHeJSNd/YezNaXNZvrKp5INOcpVkNQdQSmlUFAECN8k4Tn9E7lxYy4Gm88DiBR4Xq/puQG
- 8EFJl1UXNx91wr4DhnVOGxJsRK0=
-X-Mailgun-Sending-Ip: 104.130.122.27
+ bh=slLmtbswgk6dT89rTFhcmPBFr7EqjQwUTpcuDJEcfJU=; b=Hi+CTxib/WPUsDdn/ytTgm0PcEN4IflI8syXxnuSuAKFTD+39YomKvziNeS5PkNdqe3UUewY
+ O9uiHFJszjMzwGyznsZWDURo/HJuFWIWXdKv2TW7q4UotHYIftgc6XPHLEY7DA3X9T45wCSO
+ 4fOmt5TTDesgR6nOp/1K4hf7Auc=
+X-Mailgun-Sending-Ip: 104.130.122.26
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e720def.7f35cb9bef48-smtp-out-n01;
- Wed, 18 Mar 2020 12:02:55 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5e720ed0.7f8b3efab1b8-smtp-out-n05;
+ Wed, 18 Mar 2020 12:06:40 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id C5B5AC433D2; Wed, 18 Mar 2020 12:02:55 +0000 (UTC)
+        id 84A25C433CB; Wed, 18 Mar 2020 12:06:39 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 946ABC433CB;
-        Wed, 18 Mar 2020 12:02:54 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 946ABC433CB
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 70FCBC433D2;
+        Wed, 18 Mar 2020 12:06:37 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 70FCBC433D2
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Felix Fietkau <nbd@nbd.name>
-Cc:     linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: pull request: mt76 2019-03-17
-References: <91c846f1-8cd1-d460-663b-add7a439028f@nbd.name>
-Date:   Wed, 18 Mar 2020 14:02:52 +0200
-In-Reply-To: <91c846f1-8cd1-d460-663b-add7a439028f@nbd.name> (Felix Fietkau's
-        message of "Tue, 17 Mar 2020 18:20:34 +0100")
-Message-ID: <87wo7hkh03.fsf@kamboji.qca.qualcomm.com>
+To:     Luca Coelho <luca@coelho.fi>
+Cc:     linux-wireless@vger.kernel.org, linuxwifi@intel.com
+Subject: Re: pull-request: iwlwifi-next 2020-03-17
+References: <9940614e4051cc054569033ca7c127f3339469e6.camel@coelho.fi>
+Date:   Wed, 18 Mar 2020 14:06:35 +0200
+In-Reply-To: <9940614e4051cc054569033ca7c127f3339469e6.camel@coelho.fi> (Luca
+        Coelho's message of "Tue, 17 Mar 2020 21:26:16 +0200")
+Message-ID: <87sgi5kgtw.fsf@kamboji.qca.qualcomm.com>
 User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
 Content-Type: text/plain
@@ -62,13 +62,17 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Felix Fietkau <nbd@nbd.name> writes:
+Luca Coelho <luca@coelho.fi> writes:
 
-> Hi Kalle,
+> Here's the fist batch of patches intended for v5.7.  This includes
+> the last patchset I sent out.  Usual development work.  More details
+> about the contents in the tag description.
 >
-> here's my second pull request for 5.7.
+> Please let me know if there are any issues.
 >
-> - Felix
+> Cheers,
+> Luca.
+>
 >
 > The following changes since commit 377c0a94ad1cf005c47d7a502d1f8e46fbcf747a:
 >
@@ -76,26 +80,20 @@ Felix Fietkau <nbd@nbd.name> writes:
 >
 > are available in the Git repository at:
 >
->   https://github.com/nbd168/wireless tags/mt76-for-kvalo-2020-03-17
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git tags/iwlwifi-next-for-kalle-2020-03-17
 >
-> for you to fetch changes up to f40ac0f3d3c0e2b17185e1707a3b4552e5187dd5:
+> for you to fetch changes up to 5e003982b07ae351cadef4c252b3279b3424bf0d:
 >
->   mt76: mt7615: introduce mt7663e support (2020-03-17 17:48:00 +0100)
+>   iwlwifi: move AX200 devices to the new table (2020-03-17 21:10:47 +0200)
 >
 > ----------------------------------------------------------------
-> mt76 patches for 5.7
+> First set of iwlwifi patches intended for v5.7
 >
-> * MT7663 support for the MT7615 driver
-> * USB fixes
-> * DBDC fixes for MT7615
-> * MT76x02 watchdog fixes
-> * Injection fix for MT7615
-> * Sensitivity fix for MT7615
-> * MCU support code cleanup
+> * Refactoring of the device selection algorithms;
 >
 > ----------------------------------------------------------------
 
-Pulled, thanks Felix.
+Pulled, thanks Luca.
 
 -- 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
