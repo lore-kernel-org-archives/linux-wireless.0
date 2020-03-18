@@ -6,31 +6,31 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BF90C4332B
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Mar 2020 20:47:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A53C6C4332D
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Mar 2020 20:48:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DE1ED208D5
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Mar 2020 20:47:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8770420775
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Mar 2020 20:48:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727282AbgCRUre (ORCPT
+        id S1727358AbgCRUrz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 18 Mar 2020 16:47:34 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:58413 "EHLO
+        Wed, 18 Mar 2020 16:47:55 -0400
+Received: from Galois.linutronix.de ([193.142.43.55]:58412 "EHLO
         Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727227AbgCRUrd (ORCPT
+        with ESMTP id S1727225AbgCRUrc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Mar 2020 16:47:33 -0400
+        Wed, 18 Mar 2020 16:47:32 -0400
 Received: from p5de0bf0b.dip0.t-ipconnect.de ([93.224.191.11] helo=nanos.tec.linutronix.de)
         by Galois.linutronix.de with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
         (Exim 4.80)
         (envelope-from <tglx@linutronix.de>)
-        id 1jEfaO-0006CC-Ol; Wed, 18 Mar 2020 21:46:45 +0100
+        id 1jEfaK-000669-59; Wed, 18 Mar 2020 21:46:40 +0100
 Received: from nanos.tec.linutronix.de (localhost [IPv6:::1])
-        by nanos.tec.linutronix.de (Postfix) with ESMTP id 2A8F31040CB;
+        by nanos.tec.linutronix.de (Postfix) with ESMTP id 9A0B91040CD;
         Wed, 18 Mar 2020 21:46:36 +0100 (CET)
-Message-Id: <20200318204407.901266791@linutronix.de>
+Message-Id: <20200318204408.102694393@linutronix.de>
 User-Agent: quilt/0.65
-Date:   Wed, 18 Mar 2020 21:43:07 +0100
+Date:   Wed, 18 Mar 2020 21:43:09 +0100
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Peter Zijlstra <peterz@infradead.org>,
@@ -40,6 +40,8 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         Joel Fernandes <joel@joelfernandes.org>,
         Steven Rostedt <rostedt@goodmis.org>,
         Randy Dunlap <rdunlap@infradead.org>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Arnd Bergmann <arnd@arndb.de>, linuxppc-dev@lists.ozlabs.org,
         Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
         Logan Gunthorpe <logang@deltatee.com>,
         Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
@@ -50,10 +52,8 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         "David S. Miller" <davem@davemloft.net>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         Oleg Nesterov <oleg@redhat.com>,
-        Davidlohr Bueso <dave@stgolabs.net>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Arnd Bergmann <arnd@arndb.de>, linuxppc-dev@lists.ozlabs.org
-Subject: [patch V2 05/15] acpi: Remove header dependency
+        Davidlohr Bueso <dave@stgolabs.net>
+Subject: [patch V2 07/15] powerpc/ps3: Convert half completion to rcuwait
 References: <20200318204302.693307984@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -65,58 +65,84 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-In order to avoid future header hell, remove the inclusion of
-proc_fs.h from acpi_bus.h. All it needs is a forward declaration of a
-struct.
+The PS3 notification interrupt and kthread use a hacked up completion to
+communicate. Since we're wanting to change the completion implementation and
+this is abuse anyway, replace it with a simple rcuwait since there is only ever
+the one waiter.
+
+AFAICT the kthread uses TASK_INTERRUPTIBLE to not increase loadavg, kthreads
+cannot receive signals by default and this one doesn't look different. Use
+TASK_IDLE instead.
 
 Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Cc: Michael Ellerman <mpe@ellerman.id.au>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: linuxppc-dev@lists.ozlabs.org
 ---
- drivers/platform/x86/dell-smo8800.c                      |    1 +
- drivers/platform/x86/wmi.c                               |    1 +
- drivers/thermal/intel/int340x_thermal/acpi_thermal_rel.c |    1 +
- include/acpi/acpi_bus.h                                  |    2 +-
- 4 files changed, 4 insertions(+), 1 deletion(-)
+V2: New patch to avoid the magic completion wait variant
+---
+ arch/powerpc/platforms/ps3/device-init.c |   17 ++++++++---------
+ 1 file changed, 8 insertions(+), 9 deletions(-)
 
---- a/drivers/platform/x86/dell-smo8800.c
-+++ b/drivers/platform/x86/dell-smo8800.c
-@@ -16,6 +16,7 @@
- #include <linux/interrupt.h>
- #include <linux/miscdevice.h>
- #include <linux/uaccess.h>
-+#include <linux/fs.h>
+--- a/arch/powerpc/platforms/ps3/device-init.c
++++ b/arch/powerpc/platforms/ps3/device-init.c
+@@ -13,6 +13,7 @@
+ #include <linux/init.h>
+ #include <linux/slab.h>
+ #include <linux/reboot.h>
++#include <linux/rcuwait.h>
  
- struct smo8800_device {
- 	u32 irq;                     /* acpi device irq */
---- a/drivers/platform/x86/wmi.c
-+++ b/drivers/platform/x86/wmi.c
-@@ -29,6 +29,7 @@
- #include <linux/uaccess.h>
- #include <linux/uuid.h>
- #include <linux/wmi.h>
-+#include <linux/fs.h>
- #include <uapi/linux/wmi.h>
+ #include <asm/firmware.h>
+ #include <asm/lv1call.h>
+@@ -670,7 +671,8 @@ struct ps3_notification_device {
+ 	spinlock_t lock;
+ 	u64 tag;
+ 	u64 lv1_status;
+-	struct completion done;
++	struct rcuwait wait;
++	bool done;
+ };
  
- ACPI_MODULE_NAME("wmi");
---- a/drivers/thermal/intel/int340x_thermal/acpi_thermal_rel.c
-+++ b/drivers/thermal/intel/int340x_thermal/acpi_thermal_rel.c
-@@ -19,6 +19,7 @@
- #include <linux/acpi.h>
- #include <linux/uaccess.h>
- #include <linux/miscdevice.h>
-+#include <linux/fs.h>
- #include "acpi_thermal_rel.h"
+ enum ps3_notify_type {
+@@ -712,7 +714,8 @@ static irqreturn_t ps3_notification_inte
+ 		pr_debug("%s:%u: completed, status 0x%llx\n", __func__,
+ 			 __LINE__, status);
+ 		dev->lv1_status = status;
+-		complete(&dev->done);
++		dev->done = true;
++		rcuwait_wake_up(&dev->wait);
+ 	}
+ 	spin_unlock(&dev->lock);
+ 	return IRQ_HANDLED;
+@@ -725,12 +728,12 @@ static int ps3_notification_read_write(s
+ 	unsigned long flags;
+ 	int res;
  
- static acpi_handle acpi_thermal_rel_handle;
---- a/include/acpi/acpi_bus.h
-+++ b/include/acpi/acpi_bus.h
-@@ -80,7 +80,7 @@ bool acpi_dev_present(const char *hid, c
+-	init_completion(&dev->done);
+ 	spin_lock_irqsave(&dev->lock, flags);
+ 	res = write ? lv1_storage_write(dev->sbd.dev_id, 0, 0, 1, 0, lpar,
+ 					&dev->tag)
+ 		    : lv1_storage_read(dev->sbd.dev_id, 0, 0, 1, 0, lpar,
+ 				       &dev->tag);
++	dev->done = false;
+ 	spin_unlock_irqrestore(&dev->lock, flags);
+ 	if (res) {
+ 		pr_err("%s:%u: %s failed %d\n", __func__, __LINE__, op, res);
+@@ -738,14 +741,10 @@ static int ps3_notification_read_write(s
+ 	}
+ 	pr_debug("%s:%u: notification %s issued\n", __func__, __LINE__, op);
  
- #ifdef CONFIG_ACPI
+-	res = wait_event_interruptible(dev->done.wait,
+-				       dev->done.done || kthread_should_stop());
++	rcuwait_wait_event(&dev->wait, dev->done || kthread_should_stop(), TASK_IDLE);
++
+ 	if (kthread_should_stop())
+ 		res = -EINTR;
+-	if (res) {
+-		pr_debug("%s:%u: interrupted %s\n", __func__, __LINE__, op);
+-		return res;
+-	}
  
--#include <linux/proc_fs.h>
-+struct proc_dir_entry;
- 
- #define ACPI_BUS_FILE_ROOT	"acpi"
- extern struct proc_dir_entry *acpi_root_dir;
+ 	if (dev->lv1_status) {
+ 		pr_err("%s:%u: %s not completed, status 0x%llx\n", __func__,
 
