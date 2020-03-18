@@ -2,102 +2,109 @@ Return-Path: <SRS0=7roA=5D=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3C3CC4332D
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Mar 2020 20:42:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95DE5C43332
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Mar 2020 20:47:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 75D5C2076F
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Mar 2020 20:42:04 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CMuxrgL2"
+	by mail.kernel.org (Postfix) with ESMTP id 774E92071C
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Mar 2020 20:47:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726858AbgCRUmD (ORCPT
+        id S1727127AbgCRUrY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 18 Mar 2020 16:42:03 -0400
-Received: from mail-ot1-f67.google.com ([209.85.210.67]:44608 "EHLO
-        mail-ot1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726647AbgCRUmD (ORCPT
+        Wed, 18 Mar 2020 16:47:24 -0400
+Received: from Galois.linutronix.de ([193.142.43.55]:58402 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727065AbgCRUrV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Mar 2020 16:42:03 -0400
-Received: by mail-ot1-f67.google.com with SMTP id a49so19362otc.11
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Mar 2020 13:42:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=pQRsiCryPl6V3NAo7sXN37tpmxbYeh89CI/87fyojnk=;
-        b=CMuxrgL2erpmegOomT+Tn0hIhYhoeGJVizIyJb2mQSZidCn+ThKAqtg/WQgvB0wJxi
-         1CsHMP3LoiPjfB7iyTgXs9WE60pRP9K+y9DNeEsgdTiheBArbvIZeh2gOt7RUID+jMUS
-         A8m+snoKdFq/ifIWmOIvGV01aYPxiDgzBUDjko1A4kHDSjeNABA1G5GwohHH6velO8ZT
-         IbQBz3u0nczwx4il4nvpRkx8HUZgBnyKaDdELQnm5nKwR1t2QWhJ7Ivuhy8ZqALzrPtQ
-         /BBeccoGa3VZ+MzlCG389nLlywnUPz8IXJypBXVDrWqW/K+HpUUs9GuOiIHWOOM1BKFc
-         BLmw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=pQRsiCryPl6V3NAo7sXN37tpmxbYeh89CI/87fyojnk=;
-        b=iVIVl3Xncv7VT2DLcdviRk/XpVuCtlhbBo4ZeQK/UPg/iktE39p8H5e+C0UjPBaXsr
-         nteis6QFi8GbkxH86l/fTGguIukJ5gtkD0iD/YeuM5c7BDT2HQtGNZMczuh8SJT9O9zB
-         yMTLnNLP2phb0GSuYQdJVBzX9Y/sY+gOb3ssodSyfZj4kJkiWl/7Sw/B2psBEzSzZySR
-         j+OQNcIXAd0GVID53zYAJsZ2Ip8KknmffSXh9Z+OT43cCbHwVc3DmjOqJx/cUV8SDlii
-         rNVWbDQLhFUH3kOUBckLYc7dzfLwJalD0CsahEI+sMUI8MjOMcV0lLoTTS/JForlLAme
-         QZsA==
-X-Gm-Message-State: ANhLgQ27NcwdMnA3jUBsxLuZy2jzliuassL4YI+M5ZZB5gt93fYsWsFy
-        0VcvlGUZe/AkUB0kbqrEn2/7bEwtb6QWNG2eoGg=
-X-Google-Smtp-Source: ADFU+vs2BITNC0ZQReLbOhpag2laBd61Jj/bxVA1ezKScEjxPAYqSwTUonv6J3BbGwNDbvO3iNyulxqrdUdDwnbj3Nw=
-X-Received: by 2002:a9d:2c69:: with SMTP id f96mr5320817otb.62.1584564122685;
- Wed, 18 Mar 2020 13:42:02 -0700 (PDT)
+        Wed, 18 Mar 2020 16:47:21 -0400
+Received: from p5de0bf0b.dip0.t-ipconnect.de ([93.224.191.11] helo=nanos.tec.linutronix.de)
+        by Galois.linutronix.de with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
+        (Exim 4.80)
+        (envelope-from <tglx@linutronix.de>)
+        id 1jEfaH-00065i-6k; Wed, 18 Mar 2020 21:46:37 +0100
+Received: from nanos.tec.linutronix.de (localhost [IPv6:::1])
+        by nanos.tec.linutronix.de (Postfix) with ESMTP id 4402C1040C5;
+        Wed, 18 Mar 2020 21:46:35 +0100 (CET)
+Message-Id: <20200318204407.497942274@linutronix.de>
+User-Agent: quilt/0.65
+Date:   Wed, 18 Mar 2020 21:43:03 +0100
+From:   Thomas Gleixner <tglx@linutronix.de>
+To:     LKML <linux-kernel@vger.kernel.org>
+Cc:     Peter Zijlstra <peterz@infradead.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Ingo Molnar <mingo@kernel.org>, Will Deacon <will@kernel.org>,
+        "Paul E . McKenney" <paulmck@kernel.org>,
+        Joel Fernandes <joel@joelfernandes.org>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Randy Dunlap <rdunlap@infradead.org>,
+        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Felipe Balbi <balbi@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-usb@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Oleg Nesterov <oleg@redhat.com>,
+        Davidlohr Bueso <dave@stgolabs.net>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Arnd Bergmann <arnd@arndb.de>, linuxppc-dev@lists.ozlabs.org
+Subject: [patch V2 01/15] PCI/switchtec: Fix init_completion race condition with poll_wait()
+References: <20200318204302.693307984@linutronix.de>
 MIME-Version: 1.0
-References: <20200313030545.9184-1-mark.asselstine@windriver.com>
- <CAPuovEJWzAvCwWQq0E5MACxo=1Dk5pK4YyjH+d0W-bspAMJJQA@mail.gmail.com> <3d90288f0b8c41bfcd5f44781e82eb9f62a3e48d.camel@intel.com>
-In-Reply-To: <3d90288f0b8c41bfcd5f44781e82eb9f62a3e48d.camel@intel.com>
-From:   Mark Asselstine <asselsm@gmail.com>
-Date:   Wed, 18 Mar 2020 16:41:51 -0400
-Message-ID: <CAPuovELQ3UG1nUjd4boKrxM2zGChJVquV3X-0baO2L7sfXs6_A@mail.gmail.com>
-Subject: Re: [PATCH] iwlwifi: set 'free_queue' to the loop variable, not a
- meaningless bool
-To:     Luciano Coelho <luciano.coelho@intel.com>
-Cc:     johannes.berg@intel.com,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
+X-Linutronix-Spam-Score: -1.0
+X-Linutronix-Spam-Level: -
+X-Linutronix-Spam-Status: No , -1.0 points, 5.0 required,  ALL_TRUSTED=-1,SHORTCIRCUIT=-0.0001
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, Mar 17, 2020 at 4:15 PM Luciano Coelho <luciano.coelho@intel.com> wrote:
->
-> On Tue, 2020-03-17 at 16:12 -0400, Mark Asselstine wrote:
-> > Luca,
-> >
-> > This is my first time sending a fix for iwlwifi and I haven't seen any
-> > feedback or seen the code merged. Should I have sent this somewhere
-> > else?
->
-> Hi Mark,
->
-> I'm sorry, I have a huge backlog of work and I'm trying to catch up.  I
-> will review your patch and apply it to our internal tree and then
-> upstream it according to our usual process asap.
->
-> Thanks for your patch!
+From: Logan Gunthorpe <logang@deltatee.com>
 
-Thanks Luca,
+The call to init_completion() in mrpc_queue_cmd() can theoretically
+race with the call to poll_wait() in switchtec_dev_poll().
 
-I appreciate the work maintainers do and how busy you can get, so I
-completely understand. Normally I would have just waited, but again
-this is not an area I have worked in so just wanted to double check I
-didn't screw up. Thanks for the response.
+  poll()			write()
+    switchtec_dev_poll()   	  switchtec_dev_write()
+      poll_wait(&s->comp.wait);      mrpc_queue_cmd()
+			               init_completion(&s->comp)
+				         init_waitqueue_head(&s->comp.wait)
 
-Mark
+To my knowledge, no one has hit this bug.
 
->
-> --
-> Cheers,
-> Luca.
->
+Fix this by using reinit_completion() instead of init_completion() in
+mrpc_queue_cmd().
+
+Fixes: 080b47def5e5 ("MicroSemi Switchtec management interface driver")
+Reported-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Link: https://lkml.kernel.org/r/20200313183608.2646-1-logang@deltatee.com
+
+---
+ drivers/pci/switch/switchtec.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
+index a823b4b8ef8a..81dc7ac01381 100644
+--- a/drivers/pci/switch/switchtec.c
++++ b/drivers/pci/switch/switchtec.c
+@@ -175,7 +175,7 @@ static int mrpc_queue_cmd(struct switchtec_user *stuser)
+ 	kref_get(&stuser->kref);
+ 	stuser->read_len = sizeof(stuser->data);
+ 	stuser_set_state(stuser, MRPC_QUEUED);
+-	init_completion(&stuser->comp);
++	reinit_completion(&stuser->comp);
+ 	list_add_tail(&stuser->list, &stdev->mrpc_queue);
+ 
+ 	mrpc_cmd_submit(stdev);
+-- 
+2.20.1
+
+
