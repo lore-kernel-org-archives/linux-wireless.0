@@ -2,100 +2,125 @@ Return-Path: <SRS0=7roA=5D=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FAKE_REPLY_C,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE7D7C4332B
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Mar 2020 21:10:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76711C43332
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Mar 2020 21:25:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7FCB420775
-	for <linux-wireless@archiver.kernel.org>; Wed, 18 Mar 2020 21:10:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4850420777
+	for <linux-wireless@archiver.kernel.org>; Wed, 18 Mar 2020 21:25:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1584565820;
-	bh=rRNLqGDe4Hh9VMNxMXiXDvn4zvX3xSXrJ2j8vKZEdL4=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=SBoiIsWvT9B/5faqKVxZDnDK2dhaKLKNiEKYSCs6FyxCpbOJVhBHDlzU8wgkT+ZWJ
-	 Sv7t6qfPk0jYXL+wvDgZL4yyHkcb1UuO7lFcyr3qj2iv6VZNLuKlwZ8fTmqWY5Epnz
-	 oeLZ58GZOs6SCmOtiHUmEywZ/bICEMlAnhv41QuE=
+	s=default; t=1584566720;
+	bh=PPihHaGg1zzpn1nHu5VlZHYT+H8Lm/yb44OJhzptGDI=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
+	b=FyIHW7X79JEc6Tfdc+4j4U2O5tobOCElOtegaqMu8oRi08w0A/p4KLRqg1OSRyZm6
+	 4HvEeMkbs64hslooki+Zp1RDtz2oxiZtL/bJV4CTN+/DN2hxaNohUtGn4G8dI+t3an
+	 05XX9dcAz44Kt84kIYo9vKHmEItSVtHHZGrRx0Lw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727046AbgCRUx2 (ORCPT
+        id S1726943AbgCRVZR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 18 Mar 2020 16:53:28 -0400
-Received: from mail.kernel.org ([198.145.29.99]:52296 "EHLO mail.kernel.org"
+        Wed, 18 Mar 2020 17:25:17 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53380 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726894AbgCRUx0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Mar 2020 16:53:26 -0400
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S1726619AbgCRVZQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 18 Mar 2020 17:25:16 -0400
+Received: from localhost (mobile-166-175-186-165.mycingular.net [166.175.186.165])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 36EC420724;
-        Wed, 18 Mar 2020 20:53:25 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id A267920772;
+        Wed, 18 Mar 2020 21:25:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1584564805;
-        bh=rRNLqGDe4Hh9VMNxMXiXDvn4zvX3xSXrJ2j8vKZEdL4=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=vC4ytYBFLDVWKAqBMv1QVIPSr6hqii9qKgtApNOCWFaw+T7NxBLQcGf12oSwixEK1
-         XquXGk4+woE8W7sf5NoKd8EiYnWF6xjOjcD7g2HTler+UxC+zjHCVqp3iRiq04B6Rd
-         BthlzDu/w3U9Vt1sbPimLWfI2Bq4bAj+yFBI+If8=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Dan Moulding <dmoulding@me.com>, Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.5 03/84] iwlwifi: mvm: Do not require PHY_SKU NVM section for 3168 devices
-Date:   Wed, 18 Mar 2020 16:52:00 -0400
-Message-Id: <20200318205321.16066-3-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200318205321.16066-1-sashal@kernel.org>
-References: <20200318205321.16066-1-sashal@kernel.org>
+        s=default; t=1584566716;
+        bh=PPihHaGg1zzpn1nHu5VlZHYT+H8Lm/yb44OJhzptGDI=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=J4R5BuBT7s0ufQ6OkQFm2DJaGU3GVO9cGs2MX4LtzTi7i9JWE5dM20xu5JQTXlZ83
+         PEvcq3DTg4VilmyOANCyGwCHYadT4otbhpLYSpa8TZJkQXYvR3a8J+LlUM3ulELzZx
+         jLKhC0M9bULug4AxIw26CRfmCEZy/H4Ad8J0WRnI=
+Date:   Wed, 18 Mar 2020 16:25:13 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Thomas Gleixner <tglx@linutronix.de>
+Cc:     LKML <linux-kernel@vger.kernel.org>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Ingo Molnar <mingo@kernel.org>, Will Deacon <will@kernel.org>,
+        "Paul E . McKenney" <paulmck@kernel.org>,
+        Joel Fernandes <joel@joelfernandes.org>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Randy Dunlap <rdunlap@infradead.org>,
+        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        linux-pci@vger.kernel.org, Felipe Balbi <balbi@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-usb@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Oleg Nesterov <oleg@redhat.com>,
+        Davidlohr Bueso <dave@stgolabs.net>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Arnd Bergmann <arnd@arndb.de>, linuxppc-dev@lists.ozlabs.org
+Subject: Re: [patch V2 01/15] PCI/switchtec: Fix init_completion race
+ condition with poll_wait()
+Message-ID: <20200318212513.GA240916@google.com>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200318204407.497942274@linutronix.de>
+User-Agent: Mutt/1.12.2 (2019-09-21)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Dan Moulding <dmoulding@me.com>
+On Wed, Mar 18, 2020 at 09:43:03PM +0100, Thomas Gleixner wrote:
+> From: Logan Gunthorpe <logang@deltatee.com>
+> 
+> The call to init_completion() in mrpc_queue_cmd() can theoretically
+> race with the call to poll_wait() in switchtec_dev_poll().
+> 
+>   poll()			write()
+>     switchtec_dev_poll()   	  switchtec_dev_write()
+>       poll_wait(&s->comp.wait);      mrpc_queue_cmd()
+> 			               init_completion(&s->comp)
+> 				         init_waitqueue_head(&s->comp.wait)
+> 
+> To my knowledge, no one has hit this bug.
+> 
+> Fix this by using reinit_completion() instead of init_completion() in
+> mrpc_queue_cmd().
+> 
+> Fixes: 080b47def5e5 ("MicroSemi Switchtec management interface driver")
+> Reported-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+> Link: https://lkml.kernel.org/r/20200313183608.2646-1-logang@deltatee.com
 
-[ Upstream commit a9149d243f259ad8f02b1e23dfe8ba06128f15e1 ]
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-The logic for checking required NVM sections was recently fixed in
-commit b3f20e098293 ("iwlwifi: mvm: fix NVM check for 3168
-devices"). However, with that fixed the else is now taken for 3168
-devices and within the else clause there is a mandatory check for the
-PHY_SKU section. This causes the parsing to fail for 3168 devices.
+Not because I understand and have reviewed this, but because I trust
+you to do the right thing and it belongs with the rest of the series.
 
-The PHY_SKU section is really only mandatory for the IWL_NVM_EXT
-layout (the phy_sku parameter of iwl_parse_nvm_data is only used when
-the NVM type is IWL_NVM_EXT). So this changes the PHY_SKU section
-check so that it's only mandatory for IWL_NVM_EXT.
-
-Fixes: b3f20e098293 ("iwlwifi: mvm: fix NVM check for 3168 devices")
-Signed-off-by: Dan Moulding <dmoulding@me.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/net/wireless/intel/iwlwifi/mvm/nvm.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
-index 46128a2a9c6e1..e98ce380c7b91 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
-@@ -308,7 +308,8 @@ iwl_parse_nvm_sections(struct iwl_mvm *mvm)
- 		}
- 
- 		/* PHY_SKU section is mandatory in B0 */
--		if (!mvm->nvm_sections[NVM_SECTION_TYPE_PHY_SKU].data) {
-+		if (mvm->trans->cfg->nvm_type == IWL_NVM_EXT &&
-+		    !mvm->nvm_sections[NVM_SECTION_TYPE_PHY_SKU].data) {
- 			IWL_ERR(mvm,
- 				"Can't parse phy_sku in B0, empty sections\n");
- 			return NULL;
--- 
-2.20.1
-
+> ---
+>  drivers/pci/switch/switchtec.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
+> index a823b4b8ef8a..81dc7ac01381 100644
+> --- a/drivers/pci/switch/switchtec.c
+> +++ b/drivers/pci/switch/switchtec.c
+> @@ -175,7 +175,7 @@ static int mrpc_queue_cmd(struct switchtec_user *stuser)
+>  	kref_get(&stuser->kref);
+>  	stuser->read_len = sizeof(stuser->data);
+>  	stuser_set_state(stuser, MRPC_QUEUED);
+> -	init_completion(&stuser->comp);
+> +	reinit_completion(&stuser->comp);
+>  	list_add_tail(&stuser->list, &stdev->mrpc_queue);
+>  
+>  	mrpc_cmd_submit(stdev);
+> -- 
+> 2.20.1
+> 
+> 
