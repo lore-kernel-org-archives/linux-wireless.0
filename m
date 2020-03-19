@@ -2,99 +2,71 @@ Return-Path: <SRS0=6X60=5E=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79333C4332D
-	for <linux-wireless@archiver.kernel.org>; Thu, 19 Mar 2020 18:05:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 634BEC4332B
+	for <linux-wireless@archiver.kernel.org>; Thu, 19 Mar 2020 19:50:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4F91C2078C
-	for <linux-wireless@archiver.kernel.org>; Thu, 19 Mar 2020 18:05:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2D47B206D7
+	for <linux-wireless@archiver.kernel.org>; Thu, 19 Mar 2020 19:50:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1584647423;
+	bh=MFk5i2iiXtU50QkhlM+1rTn5+B+gPnQ/5B883R6gq5U=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
+	b=OGFSRo0BHIwIxbWNTJWnMRSFtCE+vGLrqHcs3vVoNqe54RgzWMduNSXCQneHeECMO
+	 ZZ3nbz/AQARj1nOsxbq3GheCrgo8vf9lsrkwEPQptydk8tenhc6sMN7M2pW+4tvN+A
+	 Cy2ak2BkTg3RE9TxeGqth/5RoYTjFmmlVzIsgj8Y=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727393AbgCSSFS (ORCPT
+        id S1727511AbgCSTuW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 19 Mar 2020 14:05:18 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:33816 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726867AbgCSSFS (ORCPT
+        Thu, 19 Mar 2020 15:50:22 -0400
+Received: from mail-ed1-f67.google.com ([209.85.208.67]:39800 "EHLO
+        mail-ed1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725747AbgCSTuW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Mar 2020 14:05:18 -0400
-Received: from p5de0bf0b.dip0.t-ipconnect.de ([93.224.191.11] helo=nanos.tec.linutronix.de)
-        by Galois.linutronix.de with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
-        (Exim 4.80)
-        (envelope-from <tglx@linutronix.de>)
-        id 1jEzX8-0006yI-P7; Thu, 19 Mar 2020 19:04:42 +0100
-Received: by nanos.tec.linutronix.de (Postfix, from userid 1000)
-        id CEAC0103088; Thu, 19 Mar 2020 19:04:36 +0100 (CET)
-From:   Thomas Gleixner <tglx@linutronix.de>
-To:     Jonathan Corbet <corbet@lwn.net>
-Cc:     LKML <linux-kernel@vger.kernel.org>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Ingo Molnar <mingo@kernel.org>, Will Deacon <will@kernel.org>,
-        "Paul E . McKenney" <paulmck@kernel.org>,
-        Joel Fernandes <joel@joelfernandes.org>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Randy Dunlap <rdunlap@infradead.org>,
-        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Felipe Balbi <balbi@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-usb@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        Oleg Nesterov <oleg@redhat.com>,
-        Davidlohr Bueso <dave@stgolabs.net>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Arnd Bergmann <arnd@arndb.de>, linuxppc-dev@lists.ozlabs.org
-Subject: Re: [patch V2 08/15] Documentation: Add lock ordering and nesting documentation
-In-Reply-To: <20200319090426.512510cb@lwn.net>
-References: <20200318204302.693307984@linutronix.de> <20200318204408.211530902@linutronix.de> <20200319090426.512510cb@lwn.net>
-Date:   Thu, 19 Mar 2020 19:04:36 +0100
-Message-ID: <871rpo5ih7.fsf@nanos.tec.linutronix.de>
+        Thu, 19 Mar 2020 15:50:22 -0400
+Received: by mail-ed1-f67.google.com with SMTP id a43so4255509edf.6
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Mar 2020 12:50:20 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=MFk5i2iiXtU50QkhlM+1rTn5+B+gPnQ/5B883R6gq5U=;
+        b=VNUVm5O3V+eVH292HyWNwL1SFfbB/t1faA4Ry97i1PCmBBvjmB7btgOWJj4H687/Bb
+         5WoAvTc47P/dchzjxXYy4/xIgPD82ZQHbOm+1kjGOlmvHj5u/1hbDjmlcQtyqvQNTTOp
+         mEC3aqROdXGwPmQ8iCynj6g3Wl+mI2tWDJBFmR59VhuyByTDFI1etc/2eDf8AbICQK7W
+         zFTvksdmJ3yV39Vp0eIGLnS23Au3q98k9zHN6BW/IlmWBcRC46RnRdbv7hx0DeDAS2qb
+         X1ASja2CnpOfIktVlcmMjrMY7s2rnI5EWZqONUPYYnY9k9M2+U38Gg7hhvgC4Va02sLb
+         NX+w==
+X-Gm-Message-State: ANhLgQ1reD9/80dRdEHmgqGumIC5qAxMPDwby4a7M7TBggBAzgdt0m/1
+        eIdnh73Ta1j8pu3N8k2tIb0Hw4FRDidF99+C6mo=
+X-Google-Smtp-Source: ADFU+vvqXbxUPqNrGib6H/au8KnUJLaPorlPB/ylMwfKH4Rgb0AGqfapXk29cpLvqaEBCvY3OIxpU3utebaFpAUE0Gw=
+X-Received: by 2002:a17:906:82cd:: with SMTP id a13mr5030705ejy.70.1584647419726;
+ Thu, 19 Mar 2020 12:50:19 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Linutronix-Spam-Score: -1.0
-X-Linutronix-Spam-Level: -
-X-Linutronix-Spam-Status: No , -1.0 points, 5.0 required,  ALL_TRUSTED=-1,SHORTCIRCUIT=-0.0001
+References: <iwlwifi.20200318081237.46db40617cc6.Id5cf852ec8c5dbf20ba86bad7b165a0c828f8b2e@changeid>
+ <20200318213440.GO311@earth.li> <CAJvTdKmrKJQee-WrG4UCo0FYrr++Er=mftrdLKjcCuy23N+HPw@mail.gmail.com>
+In-Reply-To: <CAJvTdKmrKJQee-WrG4UCo0FYrr++Er=mftrdLKjcCuy23N+HPw@mail.gmail.com>
+From:   Len Brown <lenb@kernel.org>
+Date:   Thu, 19 Mar 2020 15:50:08 -0400
+Message-ID: <CAJvTdK=PbQh9uqN2P43p=ZYvYtf6mxZgyXveKrhgr+w3nUuBCQ@mail.gmail.com>
+Subject: Re: [PATCH v5.6] iwlwifi: don't send GEO_TX_POWER_LIMIT if no wgds table
+To:     Jonathan McDowell <noodles@earth.li>
+Cc:     Luca Coelho <luca@coelho.fi>, kvalo@codeaurora.org,
+        linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Jonathan Corbet <corbet@lwn.net> writes:
-> On Wed, 18 Mar 2020 21:43:10 +0100
-> Thomas Gleixner <tglx@linutronix.de> wrote:
->> Add initial documentation.
->
-> ...time to add a a couple of nits...:)
+BTW. also verified that this patch (with a small offset) applied to
+5.5 and also fixes the problem there.
 
-...time
+5.3 and 5.4 always worked fine not requiring any patching, as the
+regression happened in 5.5-rc1.
 
-Is that valid RST?
-
->> +++ b/Documentation/locking/locktypes.rst
->> @@ -0,0 +1,298 @@
->> +.. _kernel_hacking_locktypes:
->> +
->
-> So ... I vaguely remember that some Thomas guy added a document saying we
-> should be putting SPDX tags on our files? :)
-
-Never met him or heard about that.
-
->> +
->> +The preferred solution is to use :c:func:`spin_lock_irq()` or
->> +:c:func:`spin_lock_irqsave()` and their unlock counterparts.
->
-> We don't need (and shouldn't use) :c:func: anymore; just saying
-> spin_lock_irq() will cause the Right Things to happen.
-
-Good to know. Will fix.
-
-Thanks,
-
-        tglx
+thanks,
+Len Brown, Intel Open Source Technology Center
