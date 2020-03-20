@@ -2,54 +2,178 @@ Return-Path: <SRS0=Zq5x=5F=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 126D6C4332D
-	for <linux-wireless@archiver.kernel.org>; Fri, 20 Mar 2020 16:19:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B920C4332B
+	for <linux-wireless@archiver.kernel.org>; Fri, 20 Mar 2020 17:59:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E64FB20724
-	for <linux-wireless@archiver.kernel.org>; Fri, 20 Mar 2020 16:19:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D511620788
+	for <linux-wireless@archiver.kernel.org>; Fri, 20 Mar 2020 17:59:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1584727164;
+	bh=cnq4nWVTKlpiioi5LAnpkK4k7dRFVQqLsLMbJGMBCpQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=1kjD+NQr0lR8IkF8lNX6X9UTtk7CvFdSX6tBlQqtWB2B4fRaCaCeTit/dxldwUh/R
+	 jwTXm52wSb07zIEvhkdWhsxt7sWglj8iconkHtM6PGzMLQdZUu/RgU89s3MpD0P/Jn
+	 gLWy/LCb6258sGf2juFbnuaz7iGgYhxpAj/IZNLI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727414AbgCTQTm (ORCPT
+        id S1727269AbgCTR7Y (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 20 Mar 2020 12:19:42 -0400
-Received: from shards.monkeyblade.net ([23.128.96.9]:52132 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726801AbgCTQTm (ORCPT
+        Fri, 20 Mar 2020 13:59:24 -0400
+Received: from mail-il1-f195.google.com ([209.85.166.195]:45939 "EHLO
+        mail-il1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726816AbgCTR7X (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Mar 2020 12:19:42 -0400
-Received: from localhost (unknown [IPv6:2601:601:9f00:477::3d5])
-        (using TLSv1 with cipher AES256-SHA (256/256 bits))
-        (Client did not present a certificate)
-        (Authenticated sender: davem-davemloft)
-        by shards.monkeyblade.net (Postfix) with ESMTPSA id 0F2C815858BBA;
-        Fri, 20 Mar 2020 09:19:42 -0700 (PDT)
-Date:   Fri, 20 Mar 2020 09:19:39 -0700 (PDT)
-Message-Id: <20200320.091939.549165643522518933.davem@davemloft.net>
-To:     johannes@sipsolutions.net
-Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211-next 2020-03-20
-From:   David Miller <davem@davemloft.net>
-In-Reply-To: <20200320134642.87932-1-johannes@sipsolutions.net>
-References: <20200320134642.87932-1-johannes@sipsolutions.net>
-X-Mailer: Mew version 6.8 on Emacs 26.1
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-X-Greylist: Sender succeeded SMTP AUTH, not delayed by milter-greylist-4.5.12 (shards.monkeyblade.net [149.20.54.216]); Fri, 20 Mar 2020 09:19:42 -0700 (PDT)
+        Fri, 20 Mar 2020 13:59:23 -0400
+Received: by mail-il1-f195.google.com with SMTP id m9so6401806ilq.12;
+        Fri, 20 Mar 2020 10:59:23 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=95Suyv4ag/UW0GMJDUqwKID1E5LJYUXds0iFnK4QjiI=;
+        b=Dpx0kyIKugARf40N5g3nCYvNuF+BhUMTYqCCk+DN2R3cu+E5r02V1R2KpeEDPTXt2n
+         bZcfDBbjfdpHIMUewmFqXlsGrZcH1yn8XF5umT6JkYo1uBCejYbOsFVvYsnjHgeGLMrD
+         jqiC1MziBsHEmXGFZ2k7YPo9bac9w2rK8DzNQb+rLkGjt6Cpbheuq6IVEohdL0kBxpS2
+         +zNDvueoY51uT2GVvJiRasumPZkLqXBN+QplTo26LY7KOfyUwkv6mMU8d3ghQ6IB1AUs
+         vrOzpmYApGJxZPbc4PhK6VCmY2fLJbGWey7ihYRgHTa59Skgs7+uuLT+Lr6lsqvwGbRA
+         Q5rA==
+X-Gm-Message-State: ANhLgQ3N8GpAY2Ol+/6pyQtGKyvmkDBxuJhfZbp9j6kbZ7fg9NebS0U5
+        B0oFpCDK6youLFYVHe2rKE+f8Ow=
+X-Google-Smtp-Source: ADFU+vt7qmPnUmzTMPbajCklZuNV66re7YCKjK/pSmVBOIAgFLPoaGoK9cfTLRSFh8EnaJJFE/KSYg==
+X-Received: by 2002:a92:b61d:: with SMTP id s29mr9370804ili.66.1584727163066;
+        Fri, 20 Mar 2020 10:59:23 -0700 (PDT)
+Received: from rob-hp-laptop ([64.188.179.250])
+        by smtp.gmail.com with ESMTPSA id u77sm2236931ili.35.2020.03.20.10.59.21
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 20 Mar 2020 10:59:21 -0700 (PDT)
+Received: (nullmailer pid 5880 invoked by uid 1000);
+        Fri, 20 Mar 2020 17:59:20 -0000
+Date:   Fri, 20 Mar 2020 11:59:20 -0600
+From:   Rob Herring <robh@kernel.org>
+To:     Ajay.Kathat@microchip.com
+Cc:     linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        devicetree@vger.kernel.org, gregkh@linuxfoundation.org,
+        johannes@sipsolutions.net, Adham.Abozaeid@microchip.com,
+        Nicolas.Ferre@microchip.com, Claudiu.Beznea@microchip.com,
+        Venkateswara.Kaja@microchip.com
+Subject: Re: [PATCH v5 16/17] dt: bindings: net: add microchip,wilc1000.yaml
+Message-ID: <20200320175920.GA31641@bogus>
+References: <20200311121809.5610-1-ajay.kathat@microchip.com>
+ <20200311121809.5610-17-ajay.kathat@microchip.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200311121809.5610-17-ajay.kathat@microchip.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Fri, 20 Mar 2020 14:46:41 +0100
-
-> Here's another set of changes for net-next, nothing really stands out,
-> but see the description and shortlog below.
+On Wed, Mar 11, 2020 at 12:18:50PM +0000, Ajay.Kathat@microchip.com wrote:
+> From: Ajay Singh <ajay.kathat@microchip.com>
 > 
-> Please pull and let me know if there's any problem.
+> This file describes the binding details to connect wilc1000 device. It's
+> moved from staging to 'Documentation/devicetree/bindings/net/wireless'
+> path.
+> 
+> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+> ---
+>  .../net/wireless/microchip,wilc1000.yaml      | 72 +++++++++++++++++++
+>  1 file changed, 72 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/net/wireless/microchip,wilc1000.yaml
+> 
+> diff --git a/Documentation/devicetree/bindings/net/wireless/microchip,wilc1000.yaml b/Documentation/devicetree/bindings/net/wireless/microchip,wilc1000.yaml
+> new file mode 100644
+> index 000000000000..bc6cc5d3f347
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/net/wireless/microchip,wilc1000.yaml
+> @@ -0,0 +1,72 @@
+> +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+> +%YAML 1.2
+> +---
+> +$id: http://devicetree.org/schemas/net/wireless/microchip,wilc1000.yaml#
+> +$schema: http://devicetree.org/meta-schemas/core.yaml#
+> +
+> +title: Microchip WILC wireless devicetree bindings
+> +
+> +maintainers:
+> +  - Adham Abozaeid <adham.abozaeid@microchip.com>
+> +  - Ajay Singh <ajay.kathat@microchip.com>
+> +
+> +description:
+> +  The wilc1000 chips can be connected via SPI or SDIO. This document
+> +  describes the binding to connect wilc devices.
+> +
+> +properties:
+> +  compatible:
+> +    const: microchip,wilc1000
+> +
+> +  spi-max-frequency: true
+> +
+> +  interrupts:
+> +    maxItems: 1
+> +
+> +  clocks:
+> +    description: phandle to the clock connected on rtc clock line.
+> +    maxItems: 1
+> +
+> +  clock-names:
+> +    const: rtc
+> +
+> +required:
+> +  - compatible
+> +  - interrupts
+> +
+> +examples:
+> +  - |
+> +    spi1: spi@fc018000 {
 
-Pulled, thanks Johannes.
+spi {
+
+> +      #address-cells = <1>;
+> +      #size-cells = <0>;
+> +      cs-gpios = <&pioB 21 0>;
+
+Drop this. Not relevant to the example.
+
+> +      wifi@0 {
+> +        compatible = "microchip,wilc1000";
+> +        spi-max-frequency = <48000000>;
+> +        reg = <0>;
+> +        interrupt-parent = <&pioC>;
+> +        interrupts = <27 0>;
+> +        clocks = <&pck1>;
+> +        clock-names = "rtc";
+> +      };
+> +    };
+> +
+> +  - |
+> +    mmc1: mmc@fc000000 {
+
+Drop the label. Either drop the unit address or add a 'reg' property to 
+match.
+
+> +      #address-cells = <1>;
+> +      #size-cells = <0>;
+> +      pinctrl-names = "default";
+> +      pinctrl-0 = <&pinctrl_mmc1_clk_cmd_dat0 &pinctrl_mmc1_dat1_3>;
+> +      non-removable;
+> +      vmmc-supply = <&vcc_mmc1_reg>;
+> +      vqmmc-supply = <&vcc_3v3_reg>;
+> +      bus-width = <4>;
+> +      wifi@0 {
+> +        compatible = "microchip,wilc1000";
+> +        reg = <0>;
+> +        interrupt-parent = <&pioC>;
+> +        interrupts = <27 0>;
+> +        clocks = <&pck1>;
+> +        clock-names = "rtc";
+> +      };
+> +    };
+> -- 
+> 2.24.0
