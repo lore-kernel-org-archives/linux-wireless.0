@@ -2,178 +2,142 @@ Return-Path: <SRS0=Zq5x=5F=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B920C4332B
-	for <linux-wireless@archiver.kernel.org>; Fri, 20 Mar 2020 17:59:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF00AC4332D
+	for <linux-wireless@archiver.kernel.org>; Fri, 20 Mar 2020 19:52:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D511620788
-	for <linux-wireless@archiver.kernel.org>; Fri, 20 Mar 2020 17:59:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1584727164;
-	bh=cnq4nWVTKlpiioi5LAnpkK4k7dRFVQqLsLMbJGMBCpQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=1kjD+NQr0lR8IkF8lNX6X9UTtk7CvFdSX6tBlQqtWB2B4fRaCaCeTit/dxldwUh/R
-	 jwTXm52wSb07zIEvhkdWhsxt7sWglj8iconkHtM6PGzMLQdZUu/RgU89s3MpD0P/Jn
-	 gLWy/LCb6258sGf2juFbnuaz7iGgYhxpAj/IZNLI=
+	by mail.kernel.org (Postfix) with ESMTP id BF05D20777
+	for <linux-wireless@archiver.kernel.org>; Fri, 20 Mar 2020 19:52:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727269AbgCTR7Y (ORCPT
+        id S1727015AbgCTTwc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 20 Mar 2020 13:59:24 -0400
-Received: from mail-il1-f195.google.com ([209.85.166.195]:45939 "EHLO
-        mail-il1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726816AbgCTR7X (ORCPT
+        Fri, 20 Mar 2020 15:52:32 -0400
+Received: from Galois.linutronix.de ([193.142.43.55]:37003 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726773AbgCTTwa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Mar 2020 13:59:23 -0400
-Received: by mail-il1-f195.google.com with SMTP id m9so6401806ilq.12;
-        Fri, 20 Mar 2020 10:59:23 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=95Suyv4ag/UW0GMJDUqwKID1E5LJYUXds0iFnK4QjiI=;
-        b=Dpx0kyIKugARf40N5g3nCYvNuF+BhUMTYqCCk+DN2R3cu+E5r02V1R2KpeEDPTXt2n
-         bZcfDBbjfdpHIMUewmFqXlsGrZcH1yn8XF5umT6JkYo1uBCejYbOsFVvYsnjHgeGLMrD
-         jqiC1MziBsHEmXGFZ2k7YPo9bac9w2rK8DzNQb+rLkGjt6Cpbheuq6IVEohdL0kBxpS2
-         +zNDvueoY51uT2GVvJiRasumPZkLqXBN+QplTo26LY7KOfyUwkv6mMU8d3ghQ6IB1AUs
-         vrOzpmYApGJxZPbc4PhK6VCmY2fLJbGWey7ihYRgHTa59Skgs7+uuLT+Lr6lsqvwGbRA
-         Q5rA==
-X-Gm-Message-State: ANhLgQ3N8GpAY2Ol+/6pyQtGKyvmkDBxuJhfZbp9j6kbZ7fg9NebS0U5
-        B0oFpCDK6youLFYVHe2rKE+f8Ow=
-X-Google-Smtp-Source: ADFU+vt7qmPnUmzTMPbajCklZuNV66re7YCKjK/pSmVBOIAgFLPoaGoK9cfTLRSFh8EnaJJFE/KSYg==
-X-Received: by 2002:a92:b61d:: with SMTP id s29mr9370804ili.66.1584727163066;
-        Fri, 20 Mar 2020 10:59:23 -0700 (PDT)
-Received: from rob-hp-laptop ([64.188.179.250])
-        by smtp.gmail.com with ESMTPSA id u77sm2236931ili.35.2020.03.20.10.59.21
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 20 Mar 2020 10:59:21 -0700 (PDT)
-Received: (nullmailer pid 5880 invoked by uid 1000);
-        Fri, 20 Mar 2020 17:59:20 -0000
-Date:   Fri, 20 Mar 2020 11:59:20 -0600
-From:   Rob Herring <robh@kernel.org>
-To:     Ajay.Kathat@microchip.com
-Cc:     linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        devicetree@vger.kernel.org, gregkh@linuxfoundation.org,
-        johannes@sipsolutions.net, Adham.Abozaeid@microchip.com,
-        Nicolas.Ferre@microchip.com, Claudiu.Beznea@microchip.com,
-        Venkateswara.Kaja@microchip.com
-Subject: Re: [PATCH v5 16/17] dt: bindings: net: add microchip,wilc1000.yaml
-Message-ID: <20200320175920.GA31641@bogus>
-References: <20200311121809.5610-1-ajay.kathat@microchip.com>
- <20200311121809.5610-17-ajay.kathat@microchip.com>
+        Fri, 20 Mar 2020 15:52:30 -0400
+Received: from p5de0bf0b.dip0.t-ipconnect.de ([93.224.191.11] helo=nanos.tec.linutronix.de)
+        by Galois.linutronix.de with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
+        (Exim 4.80)
+        (envelope-from <tglx@linutronix.de>)
+        id 1jFNgI-0002w2-14; Fri, 20 Mar 2020 20:51:46 +0100
+Received: by nanos.tec.linutronix.de (Postfix, from userid 1000)
+        id 626F61039FC; Fri, 20 Mar 2020 20:51:44 +0100 (CET)
+From:   Thomas Gleixner <tglx@linutronix.de>
+To:     paulmck@kernel.org
+Cc:     LKML <linux-kernel@vger.kernel.org>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Ingo Molnar <mingo@kernel.org>, Will Deacon <will@kernel.org>,
+        Joel Fernandes <joel@joelfernandes.org>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Randy Dunlap <rdunlap@infradead.org>,
+        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Felipe Balbi <balbi@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-usb@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Oleg Nesterov <oleg@redhat.com>,
+        Davidlohr Bueso <dave@stgolabs.net>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Arnd Bergmann <arnd@arndb.de>, linuxppc-dev@lists.ozlabs.org
+Subject: Re: [patch V2 08/15] Documentation: Add lock ordering and nesting documentation
+In-Reply-To: <20200320160145.GN3199@paulmck-ThinkPad-P72>
+Date:   Fri, 20 Mar 2020 20:51:44 +0100
+Message-ID: <87mu8apzxr.fsf@nanos.tec.linutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200311121809.5610-17-ajay.kathat@microchip.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Type: text/plain
+X-Linutronix-Spam-Score: -1.0
+X-Linutronix-Spam-Level: -
+X-Linutronix-Spam-Status: No , -1.0 points, 5.0 required,  ALL_TRUSTED=-1,SHORTCIRCUIT=-0.0001
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, Mar 11, 2020 at 12:18:50PM +0000, Ajay.Kathat@microchip.com wrote:
-> From: Ajay Singh <ajay.kathat@microchip.com>
-> 
-> This file describes the binding details to connect wilc1000 device. It's
-> moved from staging to 'Documentation/devicetree/bindings/net/wireless'
-> path.
-> 
-> Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
-> ---
->  .../net/wireless/microchip,wilc1000.yaml      | 72 +++++++++++++++++++
->  1 file changed, 72 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/net/wireless/microchip,wilc1000.yaml
-> 
-> diff --git a/Documentation/devicetree/bindings/net/wireless/microchip,wilc1000.yaml b/Documentation/devicetree/bindings/net/wireless/microchip,wilc1000.yaml
-> new file mode 100644
-> index 000000000000..bc6cc5d3f347
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/net/wireless/microchip,wilc1000.yaml
-> @@ -0,0 +1,72 @@
-> +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-> +%YAML 1.2
-> +---
-> +$id: http://devicetree.org/schemas/net/wireless/microchip,wilc1000.yaml#
-> +$schema: http://devicetree.org/meta-schemas/core.yaml#
-> +
-> +title: Microchip WILC wireless devicetree bindings
-> +
-> +maintainers:
-> +  - Adham Abozaeid <adham.abozaeid@microchip.com>
-> +  - Ajay Singh <ajay.kathat@microchip.com>
-> +
-> +description:
-> +  The wilc1000 chips can be connected via SPI or SDIO. This document
-> +  describes the binding to connect wilc devices.
-> +
-> +properties:
-> +  compatible:
-> +    const: microchip,wilc1000
-> +
-> +  spi-max-frequency: true
-> +
-> +  interrupts:
-> +    maxItems: 1
-> +
-> +  clocks:
-> +    description: phandle to the clock connected on rtc clock line.
-> +    maxItems: 1
-> +
-> +  clock-names:
-> +    const: rtc
-> +
-> +required:
-> +  - compatible
-> +  - interrupts
-> +
-> +examples:
-> +  - |
-> +    spi1: spi@fc018000 {
+"Paul E. McKenney" <paulmck@kernel.org> writes:
+>
+>  - The soft interrupt related suffix (_bh()) still disables softirq
+>    handlers.  However, unlike non-PREEMPT_RT kernels (which disable
+>    preemption to get this effect), PREEMPT_RT kernels use a per-CPU
+>    lock to exclude softirq handlers.
 
-spi {
+I've made that:
 
-> +      #address-cells = <1>;
-> +      #size-cells = <0>;
-> +      cs-gpios = <&pioB 21 0>;
+  - The soft interrupt related suffix (_bh()) still disables softirq
+    handlers.
 
-Drop this. Not relevant to the example.
+    Non-PREEMPT_RT kernels disable preemption to get this effect.
 
-> +      wifi@0 {
-> +        compatible = "microchip,wilc1000";
-> +        spi-max-frequency = <48000000>;
-> +        reg = <0>;
-> +        interrupt-parent = <&pioC>;
-> +        interrupts = <27 0>;
-> +        clocks = <&pck1>;
-> +        clock-names = "rtc";
-> +      };
-> +    };
-> +
-> +  - |
-> +    mmc1: mmc@fc000000 {
+    PREEMPT_RT kernels use a per-CPU lock for serialization. The lock
+    disables softirq handlers and prevents reentrancy by a preempting
+    task.
+    
+On non-RT this is implicit through preemption disable, but it's non
+obvious for RT as preemption stays enabled.
 
-Drop the label. Either drop the unit address or add a 'reg' property to 
-match.
+> PREEMPT_RT kernels preserve all other spinlock_t semantics:
+>
+>  - Tasks holding a spinlock_t do not migrate.  Non-PREEMPT_RT kernels
+>    avoid migration by disabling preemption.  PREEMPT_RT kernels instead
+>    disable migration, which ensures that pointers to per-CPU variables
+>    remain valid even if the task is preempted.
+>
+>  - Task state is preserved across spinlock acquisition, ensuring that the
+>    task-state rules apply to all kernel configurations.  In non-PREEMPT_RT
+>    kernels leave task state untouched.  However, PREEMPT_RT must change
+>    task state if the task blocks during acquisition.  Therefore, the
+>    corresponding lock wakeup restores the task state.  Note that regular
+>    (not lock related) wakeups do not restore task state.
 
-> +      #address-cells = <1>;
-> +      #size-cells = <0>;
-> +      pinctrl-names = "default";
-> +      pinctrl-0 = <&pinctrl_mmc1_clk_cmd_dat0 &pinctrl_mmc1_dat1_3>;
-> +      non-removable;
-> +      vmmc-supply = <&vcc_mmc1_reg>;
-> +      vqmmc-supply = <&vcc_3v3_reg>;
-> +      bus-width = <4>;
-> +      wifi@0 {
-> +        compatible = "microchip,wilc1000";
-> +        reg = <0>;
-> +        interrupt-parent = <&pioC>;
-> +        interrupts = <27 0>;
-> +        clocks = <&pck1>;
-> +        clock-names = "rtc";
-> +      };
-> +    };
-> -- 
-> 2.24.0
+   - Task state is preserved across spinlock acquisition, ensuring that the
+     task-state rules apply to all kernel configurations.  Non-PREEMPT_RT
+     kernels leave task state untouched.  However, PREEMPT_RT must change
+     task state if the task blocks during acquisition.  Therefore, it
+     saves the current task state before blocking and the corresponding
+     lock wakeup restores it. A regular not lock related wakeup sets the
+     task state to RUNNING. If this happens while the task is blocked on
+     a spinlock then the saved task state is changed so that correct
+     state is restored on lock wakeup.
+
+Hmm?
+
+> But this code failes on PREEMPT_RT kernels because the memory allocator
+> is fully preemptible and therefore cannot be invoked from truly atomic
+> contexts.  However, it is perfectly fine to invoke the memory allocator
+> while holding a normal non-raw spinlocks because they do not disable
+> preemption::
+>
+>> +  spin_lock(&lock);
+>> +  p = kmalloc(sizeof(*p), GFP_ATOMIC);
+>> +
+>> +Most places which use GFP_ATOMIC allocations are safe on PREEMPT_RT as the
+>> +execution is forced into thread context and the lock substitution is
+>> +ensuring preemptibility.
+>
+> Interestingly enough, most uses of GFP_ATOMIC allocations are
+> actually safe on PREEMPT_RT because the the lock substitution ensures
+> preemptibility.  Only those GFP_ATOMIC allocations that are invoke
+> while holding a raw spinlock or with preemption otherwise disabled need
+> adjustment to work correctly on PREEMPT_RT.
+>
+> [ I am not as confident of the above as I would like to be... ]
+
+I'd leave that whole paragraph out. This documents the rules and from
+the above code examples it's pretty clear what works and what not :)
+
+> And meeting time, will continue later!
+
+Enjoy!
+
+Thanks,
+
+        tglx
