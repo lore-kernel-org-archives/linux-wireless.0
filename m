@@ -2,90 +2,138 @@ Return-Path: <SRS0=Zq5x=5F=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MSGID_FROM_MTA_HEADER,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31AEBC4332B
-	for <linux-wireless@archiver.kernel.org>; Fri, 20 Mar 2020 07:00:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DBE6C4332D
+	for <linux-wireless@archiver.kernel.org>; Fri, 20 Mar 2020 08:05:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0041820773
-	for <linux-wireless@archiver.kernel.org>; Fri, 20 Mar 2020 07:00:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D126820775
+	for <linux-wireless@archiver.kernel.org>; Fri, 20 Mar 2020 08:05:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="SS2stUyn"
+	dkim=pass (1024-bit key) header.d=cypress.com header.i=@cypress.com header.b="bgVAu4/b"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726821AbgCTG75 (ORCPT
+        id S1726897AbgCTIFD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 20 Mar 2020 02:59:57 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:43512 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726232AbgCTG75 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Mar 2020 02:59:57 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=iZ+tfXP9s+9EAQeQf95cP5ovh7AcQ3rFatDjmNA0Hpo=; b=SS2stUyn7rcx2bDE5sgbJPy234
-        X9zm/vp1W32VRiUAiag9wc6+PVqSgvIgsex3vU9E84yi9emMqCBjOL8b7qfPZtQkzzDv+ofwjR/c0
-        QqIG4wFoyXYG03dKfZLr/ByjjOnzQZgMIsED/UXA3TjGOpdi16UiLfl7+s/pKrebSwQXNd9u4pstl
-        +qXtTUiOQHDVZkhWsyHsqIFLLUunbIQgVzbJEP1S4/2sDgk9ikKUV9u7HOeGT3pSs1gwB2yhFrrPK
-        c3xR/dV7sjrTgGqDl4NyeXhuFf9XPfBkHa1DsefnsUIiMYD5W+PnILH3G4rhCIrK0mmmME0frAQvb
-        yfAFAVTA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jFBdD-00080q-N8; Fri, 20 Mar 2020 06:59:47 +0000
-Date:   Thu, 19 Mar 2020 23:59:47 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Julian Calaby <julian.calaby@gmail.com>
-Cc:     Thomas Gleixner <tglx@linutronix.de>,
-        Randy Dunlap <rdunlap@infradead.org>,
-        Peter Zijlstra <peterz@infradead.org>,
-        linux-pci@vger.kernel.org,
-        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-        Oleg Nesterov <oleg@redhat.com>,
-        Joel Fernandes <joel@joelfernandes.org>,
-        Will Deacon <will@kernel.org>, Ingo Molnar <mingo@kernel.org>,
-        Davidlohr Bueso <dave@stgolabs.net>,
-        "Paul E . McKenney" <paulmck@kernel.org>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        Arnd Bergmann <arnd@arndb.de>, linuxppc-dev@lists.ozlabs.org,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Felipe Balbi <balbi@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-usb <linux-usb@vger.kernel.org>,
-        linux-wireless@vger.kernel.org,
-        LKML <linux-kernel@vger.kernel.org>, netdev@vger.kernel.org,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        "David S. Miller" <davem@davemloft.net>
-Subject: Re: [patch V2 11/15] completion: Use simple wait queues
-Message-ID: <20200320065947.GA25206@infradead.org>
-References: <20200318204302.693307984@linutronix.de>
- <20200318204408.521507446@linutronix.de>
- <CAGRGNgXAW14=8ntTiB_hJ_nLq7WC_oFR3N9BNjqVEZM=ze85tQ@mail.gmail.com>
+        Fri, 20 Mar 2020 04:05:03 -0400
+Received: from mail-mw2nam10on2118.outbound.protection.outlook.com ([40.107.94.118]:52096
+        "EHLO NAM10-MW2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726654AbgCTIFC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 20 Mar 2020 04:05:02 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=bSXv5qlaXVRo9RQiQVVj7DqXCSzy/NlS8EyIj04u3OrwQHNS3BQBAFMT242pFLijJL9P9dRqkNjPak95KhtlnpftXSXVt2rLvRVlyPZSVKP4nLPnAVel34xxppD21hqPZcDUvELEAfpW4H714igXMJySErmkyJUCetryj/YVhO31CGDXxDtnxVChHGyKdV4VPq/8KY04HX+cCtVm8dxeUWa1gG9vH4qYP6006LhtOgkWWMA7arWERCjKYAf7CDiXkNaYPaKSdzSfERX9J2ZX0/I1gm7w/UrwsoQQWJ/MgBCjJjsYayCdEbVCDSvdeqboNydZJ98i5Si0rLaEcRJcRg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=DqsO6ChMTIp1WKxxlYtiddNm2gXJ9cjn56X14kO+AGQ=;
+ b=Hu3JIAG/rudi39KEsbHy7UnuHnqz20AqlvROny79E8XUXnFbAujzWAnlnQprxTzyUirdwT5II8ysMM5cD2yIgOYyDpSnG0609OXPlOeOyqpye/nzoS5W2SUpEGSFx4JgcNRnqK39VlmvGqJV6zCW/UffI9tZkI77eCm/B6gqj87VZTOf+3xnvurBCgyMtJPdNf6DkIfgXdWFN9BUvS4Xz5jr7eiQ241mwAw/J8yZBbuBf2GUr5R7N7knSGP6krRM0DEZFfnTTXCOaZ/jpe5ZLHeZhMyP+nLaNCRMU7elyBXVFqOGzuVyawbKF9TnCzbZZlDGmTI3ej98xW3LnnAWMA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=cypress.com; dmarc=pass action=none header.from=cypress.com;
+ dkim=pass header.d=cypress.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cypress.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=DqsO6ChMTIp1WKxxlYtiddNm2gXJ9cjn56X14kO+AGQ=;
+ b=bgVAu4/bpvdUkSctEGS/UQiD8lwLg5cVE39TiRAN2IEmQ0zTZ/aZrFjR8N1K5zGL7ZDrrPE5G7remd5naQPJ7JrsWEfndrg1biWUAapXjgne1klS0kfgYFvof+ioOOXWTy0wk/VyLar1DSUPVBEPbueH1lHWw/vPgWosdVs7aRg=
+Authentication-Results: spf=none (sender IP is )
+ smtp.mailfrom=Wright.Feng@cypress.com; 
+Received: from DM6PR06MB4748.namprd06.prod.outlook.com (2603:10b6:5:fd::18) by
+ DM6PR06MB5577.namprd06.prod.outlook.com (2603:10b6:5:119::18) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2835.19; Fri, 20 Mar 2020 08:04:59 +0000
+Received: from DM6PR06MB4748.namprd06.prod.outlook.com
+ ([fe80::299a:b6f7:1338:e451]) by DM6PR06MB4748.namprd06.prod.outlook.com
+ ([fe80::299a:b6f7:1338:e451%7]) with mapi id 15.20.2835.017; Fri, 20 Mar 2020
+ 08:04:59 +0000
+Subject: Re: [PATCH 1/3] brcmfmac: support AP isolate
+To:     Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        franky.lin@broadcom.com, hante.meuleman@broadcom.com,
+        kvalo@codeaurora.org, chi-hsien.lin@cypress.com
+Cc:     linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+References: <1584604406-15452-1-git-send-email-wright.feng@cypress.com>
+ <1584604406-15452-2-git-send-email-wright.feng@cypress.com>
+ <32bb2e43-76f5-5c41-af20-3cec1baa7bd8@broadcom.com>
+From:   Wright Feng <wright.feng@cypress.com>
+Message-ID: <bdf0b3ea-6934-8409-52b7-1ccc2ef56203@cypress.com>
+Date:   Fri, 20 Mar 2020 16:04:53 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.0
+In-Reply-To: <32bb2e43-76f5-5c41-af20-3cec1baa7bd8@broadcom.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: BYAPR04CA0013.namprd04.prod.outlook.com
+ (2603:10b6:a03:40::26) To DM6PR06MB4748.namprd06.prod.outlook.com
+ (2603:10b6:5:fd::18)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAGRGNgXAW14=8ntTiB_hJ_nLq7WC_oFR3N9BNjqVEZM=ze85tQ@mail.gmail.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from [10.9.112.177] (61.222.14.99) by BYAPR04CA0013.namprd04.prod.outlook.com (2603:10b6:a03:40::26) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2835.18 via Frontend Transport; Fri, 20 Mar 2020 08:04:57 +0000
+X-Originating-IP: [61.222.14.99]
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-HT: Tenant
+X-MS-Office365-Filtering-Correlation-Id: dab5f877-db31-488e-a940-08d7cca562af
+X-MS-TrafficTypeDiagnostic: DM6PR06MB5577:|DM6PR06MB5577:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <DM6PR06MB5577B7905C404594AF71BAA1FBF50@DM6PR06MB5577.namprd06.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:2803;
+X-Forefront-PRVS: 03484C0ABF
+X-Forefront-Antispam-Report: SFV:NSPM;SFS:(10019020)(136003)(366004)(346002)(39860400002)(376002)(396003)(199004)(53546011)(316002)(956004)(6666004)(8936002)(16526019)(2906002)(4326008)(31696002)(52116002)(81166006)(186003)(86362001)(8676002)(16576012)(26005)(2616005)(6486002)(36756003)(81156014)(66946007)(66556008)(66476007)(5660300002)(31686004)(44832011)(6636002)(478600001);DIR:OUT;SFP:1102;SCL:1;SRVR:DM6PR06MB5577;H:DM6PR06MB4748.namprd06.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;
+Received-SPF: None (protection.outlook.com: cypress.com does not designate
+ permitted sender hosts)
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: /6sBuaehFy51qvwHtJvVNcubnPl/uirvrLI/59JY94RyR91fkll6l/XtJnrNHXJ7TxwRQ6CqfTe8ern+Gb/9874nx1C7PHZXbBGOmPjts6mLsGEpEL6+Zq4NqA98ModJAAYfhdblv3S9loDDuF/4k0bEAQRtzdA4d7g4kZXTQAmUqsjWccOBKDb4BjdcJ/dk9n8Txbs3UhIhVgQTSLzAKXFmYyrY4lezutOq17SaoJ9/k5JWgpmrx0odLL5pFmLAQ3GTz/fT85OkDIjrnSgmRtEcq79T27xaozdTaf31SAb32YrJx12CLXe1bIXmMdF4gv1KCEjzMyHJOHkaG/6dfz6HYlcS5DgRxUReT7HF0fu+BmWfUImB9vbzEBnH9B0y/IrgdEjiP1ZSqcziYnblJvdm1nFtX5yvZH2LnWwOXtrgMVXhqyGiHAiEuuuUGuyE
+X-MS-Exchange-AntiSpam-MessageData: KNDTtBxU5iguw9V6QzMsq1DuwjNMVnnqa1Rzp12/qrepaGzyeSZILXbA3b6o8VJ28FRHKgZHhn968v4GdFU0iFMnWSw9B3j7ZkajSvmhLwOmEjRrnMwFUvWzj0mkhRgBYstlTEN2kBMzUWqKIL6Dzw==
+X-OriginatorOrg: cypress.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: dab5f877-db31-488e-a940-08d7cca562af
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Mar 2020 08:04:59.5232
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 011addfc-2c09-450d-8938-e0bbc2dd2376
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: GcPVLjXhJjxMYTxGB5rZnvYOFmKsw79plZdOhInS4ERKPyyToJG98MRZeyG3iLr2JEMbSswiBSDY80ayg97IiQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR06MB5577
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, Mar 20, 2020 at 10:25:41AM +1100, Julian Calaby wrote:
-> > +++ b/drivers/usb/gadget/function/f_fs.c
-> > @@ -1703,7 +1703,7 @@ static void ffs_data_put(struct ffs_data
-> >                 pr_info("%s(): freeing\n", __func__);
-> >                 ffs_data_clear(ffs);
-> >                 BUG_ON(waitqueue_active(&ffs->ev.waitq) ||
-> > -                      waitqueue_active(&ffs->ep0req_completion.wait) ||
-> > +                      swait_active(&ffs->ep0req_completion.wait) ||
-> 
-> This looks like some code is reaching deep into the dirty dark corners
-> of the completion implementation, should there be some wrapper around
-> this to hide that?
 
-Or just remote it entirely..
+
+Arend Van Spriel 於 3/19/2020 4:48 PM 寫道:
+> On 3/19/2020 8:53 AM, Wright Feng wrote:
+>> Hostap daemon has a parameter "ap_isolate" which is used to prevent
+>> low-level bridging of frames between associated stations in the BSS.
+>> For driver side, we add cfg80211 ops method change_bss to support
+>> setting AP isolate from user space.
+>>
+>> Signed-off-by: Wright Feng <wright.feng@cypress.com>
+>> Signed-off-by: Chi-hsien Lin <chi-hsien.lin@cypress.com>
+>> ---
+>>   .../wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 21 
+>> +++++++++++++++++++++
+>>   1 file changed, 21 insertions(+)
+>>
+>> diff --git 
+>> a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c 
+>> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+>> index a2328d3..eb49900 100644
+>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> 
+> [...]
+> 
+>> @@ -5421,6 +5441,7 @@ static struct cfg80211_ops brcmf_cfg80211_ops = {
+>>       .update_connect_params = brcmf_cfg80211_update_conn_params,
+>>       .set_pmk = brcmf_cfg80211_set_pmk,
+>>       .del_pmk = brcmf_cfg80211_del_pmk,
+>> +    .change_bss = brcmf_cfg80211_change_bss,
+> 
+> maybe only add this when firmware support "ap_isolate"?
+Sounds great, will do it in V2.
+> 
+> Regards,
+> Arend
