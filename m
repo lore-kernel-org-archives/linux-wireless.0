@@ -6,24 +6,24 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6DC6C43333
-	for <linux-wireless@archiver.kernel.org>; Fri, 20 Mar 2020 09:49:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21E10C4332D
+	for <linux-wireless@archiver.kernel.org>; Fri, 20 Mar 2020 09:49:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 88EFC20722
-	for <linux-wireless@archiver.kernel.org>; Fri, 20 Mar 2020 09:49:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F3F0620722
+	for <linux-wireless@archiver.kernel.org>; Fri, 20 Mar 2020 09:49:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727043AbgCTJtZ (ORCPT
+        id S1727264AbgCTJtb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 20 Mar 2020 05:49:25 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:35044 "EHLO
+        Fri, 20 Mar 2020 05:49:31 -0400
+Received: from Galois.linutronix.de ([193.142.43.55]:35047 "EHLO
         Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726602AbgCTJtY (ORCPT
+        with ESMTP id S1727120AbgCTJtZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Mar 2020 05:49:24 -0400
+        Fri, 20 Mar 2020 05:49:25 -0400
 Received: from localhost ([127.0.0.1] helo=flow.W.breakpoint.cc)
         by Galois.linutronix.de with esmtp (Exim 4.80)
         (envelope-from <bigeasy@linutronix.de>)
-        id 1jFEH0-0000vL-Ur; Fri, 20 Mar 2020 10:49:03 +0100
+        id 1jFEH3-0000vL-DT; Fri, 20 Mar 2020 10:49:05 +0100
 From:   Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 To:     tglx@linutronix.de
 Cc:     arnd@arndb.de, balbi@kernel.org, bhelgaas@google.com,
@@ -37,13 +37,11 @@ Cc:     arnd@arndb.de, balbi@kernel.org, bhelgaas@google.com,
         oleg@redhat.com, paulmck@kernel.org, peterz@infradead.org,
         rdunlap@infradead.org, rostedt@goodmis.org,
         torvalds@linux-foundation.org, will@kernel.org,
-        Nick Hu <nickhu@andestech.com>,
-        Greentime Hu <green.hu@gmail.com>,
-        Vincent Chen <deanbo422@gmail.com>,
+        Michal Simek <monstr@monstr.eu>,
         kbuild test robot <lkp@intel.com>
-Subject: [PATCH 1/5] nds32: Remove mm.h from asm/uaccess.h
-Date:   Fri, 20 Mar 2020 10:48:52 +0100
-Message-Id: <20200320094856.3453859-2-bigeasy@linutronix.de>
+Subject: [PATCH 5/5] microblaze: Remove mm.h from asm/uaccess.h
+Date:   Fri, 20 Mar 2020 10:48:56 +0100
+Message-Id: <20200320094856.3453859-6-bigeasy@linutronix.de>
 X-Mailer: git-send-email 2.26.0.rc2
 In-Reply-To: <20200320094856.3453859-1-bigeasy@linutronix.de>
 References: <20200318204408.010461877@linutronix.de>
@@ -60,7 +58,7 @@ include chain leands to:
 |   CC      kernel/locking/percpu-rwsem.o
 | In file included from include/linux/huge_mm.h:8,
 |                  from include/linux/mm.h:567,
-|                  from arch/nds32/include/asm/uaccess.h:,
+|                  from arch/microblaze/include/asm/uaccess.h:,
 |                  from include/linux/uaccess.h:11,
 |                  from include/linux/sched/task.h:11,
 |                  from include/linux/sched/signal.h:9,
@@ -75,28 +73,26 @@ once rcuwait.h includes linux/sched/signal.h.
 
 Remove the linux/mm.h include.
 
-Cc: Nick Hu <nickhu@andestech.com>
-Cc: Greentime Hu <green.hu@gmail.com>
-Cc: Vincent Chen <deanbo422@gmail.com>
+Cc: Michal Simek <monstr@monstr.eu>
 Reported-by: kbuild test robot <lkp@intel.com>
 Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 ---
- arch/nds32/include/asm/uaccess.h | 1 -
+ arch/microblaze/include/asm/uaccess.h | 1 -
  1 file changed, 1 deletion(-)
 
-diff --git a/arch/nds32/include/asm/uaccess.h b/arch/nds32/include/asm/uacc=
-ess.h
-index 8916ad9f9f139..3a9219f53ee0d 100644
---- a/arch/nds32/include/asm/uaccess.h
-+++ b/arch/nds32/include/asm/uaccess.h
-@@ -11,7 +11,6 @@
- #include <asm/errno.h>
- #include <asm/memory.h>
- #include <asm/types.h>
+diff --git a/arch/microblaze/include/asm/uaccess.h b/arch/microblaze/includ=
+e/asm/uaccess.h
+index a1f206b90753a..4916d5fbea5e3 100644
+--- a/arch/microblaze/include/asm/uaccess.h
++++ b/arch/microblaze/include/asm/uaccess.h
+@@ -12,7 +12,6 @@
+ #define _ASM_MICROBLAZE_UACCESS_H
+=20
+ #include <linux/kernel.h>
 -#include <linux/mm.h>
 =20
- #define __asmeq(x, y)  ".ifnc " x "," y " ; .err ; .endif\n\t"
-=20
+ #include <asm/mmu.h>
+ #include <asm/page.h>
 --=20
 2.26.0.rc2
 
