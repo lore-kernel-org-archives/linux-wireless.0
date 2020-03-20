@@ -4,81 +4,99 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F23CC4332B
-	for <linux-wireless@archiver.kernel.org>; Fri, 20 Mar 2020 09:20:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6DC6C43333
+	for <linux-wireless@archiver.kernel.org>; Fri, 20 Mar 2020 09:49:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 22BFF20739
-	for <linux-wireless@archiver.kernel.org>; Fri, 20 Mar 2020 09:20:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 88EFC20722
+	for <linux-wireless@archiver.kernel.org>; Fri, 20 Mar 2020 09:49:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726704AbgCTJUj (ORCPT
+        id S1727043AbgCTJtZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 20 Mar 2020 05:20:39 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:42224 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726232AbgCTJUj (ORCPT
+        Fri, 20 Mar 2020 05:49:25 -0400
+Received: from Galois.linutronix.de ([193.142.43.55]:35044 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726602AbgCTJtY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Mar 2020 05:20:39 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.93)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1jFDpT-00APNL-Cp; Fri, 20 Mar 2020 10:20:35 +0100
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     linux-wireless@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: don't leave skb->next/prev pointing to stack
-Date:   Fri, 20 Mar 2020 10:20:23 +0100
-Message-Id: <20200320102021.1be7823fc05e.Ia89fb79a0469d32137c9a04315a1d2dfc7b7d6f5@changeid>
-X-Mailer: git-send-email 2.25.1
+        Fri, 20 Mar 2020 05:49:24 -0400
+Received: from localhost ([127.0.0.1] helo=flow.W.breakpoint.cc)
+        by Galois.linutronix.de with esmtp (Exim 4.80)
+        (envelope-from <bigeasy@linutronix.de>)
+        id 1jFEH0-0000vL-Ur; Fri, 20 Mar 2020 10:49:03 +0100
+From:   Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To:     tglx@linutronix.de
+Cc:     arnd@arndb.de, balbi@kernel.org, bhelgaas@google.com,
+        bigeasy@linutronix.de, dave@stgolabs.net, davem@davemloft.net,
+        gregkh@linuxfoundation.org, joel@joelfernandes.org,
+        kurt.schwemmer@microsemi.com, kvalo@codeaurora.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, logang@deltatee.com,
+        mingo@kernel.org, mpe@ellerman.id.au, netdev@vger.kernel.org,
+        oleg@redhat.com, paulmck@kernel.org, peterz@infradead.org,
+        rdunlap@infradead.org, rostedt@goodmis.org,
+        torvalds@linux-foundation.org, will@kernel.org,
+        Nick Hu <nickhu@andestech.com>,
+        Greentime Hu <green.hu@gmail.com>,
+        Vincent Chen <deanbo422@gmail.com>,
+        kbuild test robot <lkp@intel.com>
+Subject: [PATCH 1/5] nds32: Remove mm.h from asm/uaccess.h
+Date:   Fri, 20 Mar 2020 10:48:52 +0100
+Message-Id: <20200320094856.3453859-2-bigeasy@linutronix.de>
+X-Mailer: git-send-email 2.26.0.rc2
+In-Reply-To: <20200320094856.3453859-1-bigeasy@linutronix.de>
+References: <20200318204408.010461877@linutronix.de>
+ <20200320094856.3453859-1-bigeasy@linutronix.de>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+The defconfig compiles without linux/mm.h. With mm.h included the
+include chain leands to:
+|   CC      kernel/locking/percpu-rwsem.o
+| In file included from include/linux/huge_mm.h:8,
+|                  from include/linux/mm.h:567,
+|                  from arch/nds32/include/asm/uaccess.h:,
+|                  from include/linux/uaccess.h:11,
+|                  from include/linux/sched/task.h:11,
+|                  from include/linux/sched/signal.h:9,
+|                  from include/linux/rcuwait.h:6,
+|                  from include/linux/percpu-rwsem.h:8,
+|                  from kernel/locking/percpu-rwsem.c:6:
+| include/linux/fs.h:1422:29: error: array type has incomplete element type=
+ 'struct percpu_rw_semaphore'
+|  1422 |  struct percpu_rw_semaphore rw_sem[SB_FREEZE_LEVELS];
 
-In beacon protection, don't leave skb->next/prev pointing to the
-on-stack list, even if that's actually harmless since we don't use
-them again afterwards.
+once rcuwait.h includes linux/sched/signal.h.
 
-While at it, check that the SKB on the list is still the same, as
-that's required here. If not, the encryption (protection) code is
-buggy.
+Remove the linux/mm.h include.
 
-Fixes: 0a3a84360b37 ("mac80211: Beacon protection using the new BIGTK (AP)")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Cc: Nick Hu <nickhu@andestech.com>
+Cc: Greentime Hu <green.hu@gmail.com>
+Cc: Vincent Chen <deanbo422@gmail.com>
+Reported-by: kbuild test robot <lkp@intel.com>
+Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 ---
- net/mac80211/tx.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ arch/nds32/include/asm/uaccess.h | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 83147385c200..49d35936cc9d 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -4670,6 +4670,7 @@ static int ieee80211_beacon_protect(struct sk_buff *skb,
- {
- 	ieee80211_tx_result res;
- 	struct ieee80211_tx_data tx;
-+	struct sk_buff *check_skb;
- 
- 	memset(&tx, 0, sizeof(tx));
- 	tx.key = rcu_dereference(sdata->default_beacon_key);
-@@ -4680,8 +4681,11 @@ static int ieee80211_beacon_protect(struct sk_buff *skb,
- 	__skb_queue_head_init(&tx.skbs);
- 	__skb_queue_tail(&tx.skbs, skb);
- 	res = ieee80211_tx_h_encrypt(&tx);
-+	check_skb = __skb_dequeue(&tx.skbs);
-+	/* we may crash after this, but it'd be a bug in crypto */
-+	WARN_ON(check_skb != skb);
- 	if (WARN_ON_ONCE(res != TX_CONTINUE))
--		return -1;
-+		return -EINVAL;
- 
- 	return 0;
- }
--- 
-2.25.1
+diff --git a/arch/nds32/include/asm/uaccess.h b/arch/nds32/include/asm/uacc=
+ess.h
+index 8916ad9f9f139..3a9219f53ee0d 100644
+--- a/arch/nds32/include/asm/uaccess.h
++++ b/arch/nds32/include/asm/uaccess.h
+@@ -11,7 +11,6 @@
+ #include <asm/errno.h>
+ #include <asm/memory.h>
+ #include <asm/types.h>
+-#include <linux/mm.h>
+=20
+ #define __asmeq(x, y)  ".ifnc " x "," y " ; .err ; .endif\n\t"
+=20
+--=20
+2.26.0.rc2
 
