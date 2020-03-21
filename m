@@ -6,31 +6,31 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7ED2C4332B
-	for <linux-wireless@archiver.kernel.org>; Sat, 21 Mar 2020 11:36:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 888CAC43333
+	for <linux-wireless@archiver.kernel.org>; Sat, 21 Mar 2020 11:36:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B53A620658
-	for <linux-wireless@archiver.kernel.org>; Sat, 21 Mar 2020 11:36:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6164320722
+	for <linux-wireless@archiver.kernel.org>; Sat, 21 Mar 2020 11:36:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728874AbgCULgd (ORCPT
+        id S1728900AbgCULgy (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 21 Mar 2020 07:36:33 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:38488 "EHLO
+        Sat, 21 Mar 2020 07:36:54 -0400
+Received: from Galois.linutronix.de ([193.142.43.55]:38478 "EHLO
         Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728496AbgCULe5 (ORCPT
+        with ESMTP id S1727212AbgCULe4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 21 Mar 2020 07:34:57 -0400
+        Sat, 21 Mar 2020 07:34:56 -0400
 Received: from p5de0bf0b.dip0.t-ipconnect.de ([93.224.191.11] helo=nanos.tec.linutronix.de)
         by Galois.linutronix.de with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
         (Exim 4.80)
         (envelope-from <tglx@linutronix.de>)
-        id 1jFcOQ-0001zI-Kw; Sat, 21 Mar 2020 12:34:18 +0100
+        id 1jFcOW-0002Cb-2m; Sat, 21 Mar 2020 12:34:24 +0100
 Received: from nanos.tec.linutronix.de (localhost [IPv6:::1])
-        by nanos.tec.linutronix.de (Postfix) with ESMTP id EAFF31039FF;
-        Sat, 21 Mar 2020 12:34:17 +0100 (CET)
-Message-Id: <20200321113241.043380271@linutronix.de>
+        by nanos.tec.linutronix.de (Postfix) with ESMTP id D1AE31040C5;
+        Sat, 21 Mar 2020 12:34:20 +0100 (CET)
+Message-Id: <20200321113242.120587764@linutronix.de>
 User-Agent: quilt/0.65
-Date:   Sat, 21 Mar 2020 12:25:47 +0100
+Date:   Sat, 21 Mar 2020 12:25:58 +0100
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Peter Zijlstra <peterz@infradead.org>,
@@ -40,12 +40,13 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         Joel Fernandes <joel@joelfernandes.org>,
         Oleg Nesterov <oleg@redhat.com>,
         Davidlohr Bueso <dave@stgolabs.net>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Felipe Balbi <balbi@kernel.org>, linux-usb@vger.kernel.org,
         Logan Gunthorpe <logang@deltatee.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        linux-pci@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
+        linux-pci@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Felipe Balbi <balbi@kernel.org>, linux-usb@vger.kernel.org,
+        Kalle Valo <kvalo@codeaurora.org>,
         "David S. Miller" <davem@davemloft.net>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         Darren Hart <dvhart@infradead.org>,
@@ -71,8 +72,7 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         Jonathan Corbet <corbet@lwn.net>,
         Randy Dunlap <rdunlap@infradead.org>,
         Davidlohr Bueso <dbueso@suse.de>
-Subject: [patch V3 03/20] usb: gadget: Use completion interface instead of
- open coding it
+Subject: [patch V3 14/20] timekeeping: Split jiffies seqlock
 References: <20200321112544.878032781@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -87,51 +87,169 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Thomas Gleixner <tglx@linutronix.de>
 
-ep_io() uses a completion on stack and open codes the waiting with:
+seqlock consists of a sequence counter and a spinlock_t which is used to
+serialize the writers. spinlock_t is substituted by a "sleeping" spinlock
+on PREEMPT_RT enabled kernels which breaks the usage in the timekeeping
+code as the writers are executed in hard interrupt and therefore
+non-preemptible context even on PREEMPT_RT.
 
-  wait_event_interruptible (done.wait, done.done);
-and
-  wait_event (done.wait, done.done);
+The spinlock in seqlock cannot be unconditionally replaced by a
+raw_spinlock_t as many seqlock users have nesting spinlock sections or
+other code which is not suitable to run in truly atomic context on RT.
 
-This waits in non-exclusive mode for complete(), but there is no reason to
-do so because the completion can only be waited for by the task itself and
-complete() wakes exactly one exlusive waiter.
+Instead of providing a raw_seqlock API for a single use case, open code the
+seqlock for the jiffies use case and implement it with a raw_spinlock_t and
+a sequence counter.
 
-Replace the open coded implementation with the corresponding
-wait_for_completion*() functions.
-
-No functional change.
-
-Reported-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Felipe Balbi <balbi@kernel.org>
-Cc: linux-usb@vger.kernel.org
----
-V2: New patch to avoid the conversion to swait interfaces later
----
- drivers/usb/gadget/legacy/inode.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
 
---- a/drivers/usb/gadget/legacy/inode.c
-+++ b/drivers/usb/gadget/legacy/inode.c
-@@ -344,7 +344,7 @@ ep_io (struct ep_data *epdata, void *buf
- 	spin_unlock_irq (&epdata->dev->lock);
+---
+ kernel/time/jiffies.c     |    7 ++++---
+ kernel/time/tick-common.c |   10 ++++++----
+ kernel/time/tick-sched.c  |   19 ++++++++++++-------
+ kernel/time/timekeeping.c |    6 ++++--
+ kernel/time/timekeeping.h |    3 ++-
+ 5 files changed, 28 insertions(+), 17 deletions(-)
+
+--- a/kernel/time/jiffies.c
++++ b/kernel/time/jiffies.c
+@@ -58,7 +58,8 @@ static struct clocksource clocksource_ji
+ 	.max_cycles	= 10,
+ };
  
- 	if (likely (value == 0)) {
--		value = wait_event_interruptible (done.wait, done.done);
-+		value = wait_for_completion_interruptible(&done);
- 		if (value != 0) {
- 			spin_lock_irq (&epdata->dev->lock);
- 			if (likely (epdata->ep != NULL)) {
-@@ -353,7 +353,7 @@ ep_io (struct ep_data *epdata, void *buf
- 				usb_ep_dequeue (epdata->ep, epdata->req);
- 				spin_unlock_irq (&epdata->dev->lock);
+-__cacheline_aligned_in_smp DEFINE_SEQLOCK(jiffies_lock);
++__cacheline_aligned_in_smp DEFINE_RAW_SPINLOCK(jiffies_lock);
++__cacheline_aligned_in_smp seqcount_t jiffies_seq;
  
--				wait_event (done.wait, done.done);
-+				wait_for_completion(&done);
- 				if (epdata->status == -ECONNRESET)
- 					epdata->status = -EINTR;
- 			} else {
+ #if (BITS_PER_LONG < 64)
+ u64 get_jiffies_64(void)
+@@ -67,9 +68,9 @@ u64 get_jiffies_64(void)
+ 	u64 ret;
+ 
+ 	do {
+-		seq = read_seqbegin(&jiffies_lock);
++		seq = read_seqcount_begin(&jiffies_seq);
+ 		ret = jiffies_64;
+-	} while (read_seqretry(&jiffies_lock, seq));
++	} while (read_seqcount_retry(&jiffies_seq, seq));
+ 	return ret;
+ }
+ EXPORT_SYMBOL(get_jiffies_64);
+--- a/kernel/time/tick-common.c
++++ b/kernel/time/tick-common.c
+@@ -84,13 +84,15 @@ int tick_is_oneshot_available(void)
+ static void tick_periodic(int cpu)
+ {
+ 	if (tick_do_timer_cpu == cpu) {
+-		write_seqlock(&jiffies_lock);
++		raw_spin_lock(&jiffies_lock);
++		write_seqcount_begin(&jiffies_seq);
+ 
+ 		/* Keep track of the next tick event */
+ 		tick_next_period = ktime_add(tick_next_period, tick_period);
+ 
+ 		do_timer(1);
+-		write_sequnlock(&jiffies_lock);
++		write_seqcount_end(&jiffies_seq);
++		raw_spin_unlock(&jiffies_lock);
+ 		update_wall_time();
+ 	}
+ 
+@@ -162,9 +164,9 @@ void tick_setup_periodic(struct clock_ev
+ 		ktime_t next;
+ 
+ 		do {
+-			seq = read_seqbegin(&jiffies_lock);
++			seq = read_seqcount_begin(&jiffies_seq);
+ 			next = tick_next_period;
+-		} while (read_seqretry(&jiffies_lock, seq));
++		} while (read_seqcount_retry(&jiffies_seq, seq));
+ 
+ 		clockevents_switch_state(dev, CLOCK_EVT_STATE_ONESHOT);
+ 
+--- a/kernel/time/tick-sched.c
++++ b/kernel/time/tick-sched.c
+@@ -65,7 +65,8 @@ static void tick_do_update_jiffies64(kti
+ 		return;
+ 
+ 	/* Reevaluate with jiffies_lock held */
+-	write_seqlock(&jiffies_lock);
++	raw_spin_lock(&jiffies_lock);
++	write_seqcount_begin(&jiffies_seq);
+ 
+ 	delta = ktime_sub(now, last_jiffies_update);
+ 	if (delta >= tick_period) {
+@@ -91,10 +92,12 @@ static void tick_do_update_jiffies64(kti
+ 		/* Keep the tick_next_period variable up to date */
+ 		tick_next_period = ktime_add(last_jiffies_update, tick_period);
+ 	} else {
+-		write_sequnlock(&jiffies_lock);
++		write_seqcount_end(&jiffies_seq);
++		raw_spin_unlock(&jiffies_lock);
+ 		return;
+ 	}
+-	write_sequnlock(&jiffies_lock);
++	write_seqcount_end(&jiffies_seq);
++	raw_spin_unlock(&jiffies_lock);
+ 	update_wall_time();
+ }
+ 
+@@ -105,12 +108,14 @@ static ktime_t tick_init_jiffy_update(vo
+ {
+ 	ktime_t period;
+ 
+-	write_seqlock(&jiffies_lock);
++	raw_spin_lock(&jiffies_lock);
++	write_seqcount_begin(&jiffies_seq);
+ 	/* Did we start the jiffies update yet ? */
+ 	if (last_jiffies_update == 0)
+ 		last_jiffies_update = tick_next_period;
+ 	period = last_jiffies_update;
+-	write_sequnlock(&jiffies_lock);
++	write_seqcount_end(&jiffies_seq);
++	raw_spin_unlock(&jiffies_lock);
+ 	return period;
+ }
+ 
+@@ -676,10 +681,10 @@ static ktime_t tick_nohz_next_event(stru
+ 
+ 	/* Read jiffies and the time when jiffies were updated last */
+ 	do {
+-		seq = read_seqbegin(&jiffies_lock);
++		seq = read_seqcount_begin(&jiffies_seq);
+ 		basemono = last_jiffies_update;
+ 		basejiff = jiffies;
+-	} while (read_seqretry(&jiffies_lock, seq));
++	} while (read_seqcount_retry(&jiffies_seq, seq));
+ 	ts->last_jiffies = basejiff;
+ 	ts->timer_expires_base = basemono;
+ 
+--- a/kernel/time/timekeeping.c
++++ b/kernel/time/timekeeping.c
+@@ -2397,8 +2397,10 @@ EXPORT_SYMBOL(hardpps);
+  */
+ void xtime_update(unsigned long ticks)
+ {
+-	write_seqlock(&jiffies_lock);
++	raw_spin_lock(&jiffies_lock);
++	write_seqcount_begin(&jiffies_seq);
+ 	do_timer(ticks);
+-	write_sequnlock(&jiffies_lock);
++	write_seqcount_end(&jiffies_seq);
++	raw_spin_unlock(&jiffies_lock);
+ 	update_wall_time();
+ }
+--- a/kernel/time/timekeeping.h
++++ b/kernel/time/timekeeping.h
+@@ -25,7 +25,8 @@ static inline void sched_clock_resume(vo
+ extern void do_timer(unsigned long ticks);
+ extern void update_wall_time(void);
+ 
+-extern seqlock_t jiffies_lock;
++extern raw_spinlock_t jiffies_lock;
++extern seqcount_t jiffies_seq;
+ 
+ #define CS_NAME_LEN	32
+ 
 
 
