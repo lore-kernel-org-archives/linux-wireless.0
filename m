@@ -2,35 +2,35 @@ Return-Path: <SRS0=bMqq=5G=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6DBEC4332E
-	for <linux-wireless@archiver.kernel.org>; Sat, 21 Mar 2020 11:37:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 220BAC4332B
+	for <linux-wireless@archiver.kernel.org>; Sat, 21 Mar 2020 11:38:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BCFE12077D
-	for <linux-wireless@archiver.kernel.org>; Sat, 21 Mar 2020 11:37:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 01AAB20780
+	for <linux-wireless@archiver.kernel.org>; Sat, 21 Mar 2020 11:38:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728524AbgCULez (ORCPT
+        id S1728508AbgCULey (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 21 Mar 2020 07:34:55 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:38418 "EHLO
+        Sat, 21 Mar 2020 07:34:54 -0400
+Received: from Galois.linutronix.de ([193.142.43.55]:38423 "EHLO
         Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725932AbgCULex (ORCPT
+        with ESMTP id S1726652AbgCULex (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Sat, 21 Mar 2020 07:34:53 -0400
 Received: from p5de0bf0b.dip0.t-ipconnect.de ([93.224.191.11] helo=nanos.tec.linutronix.de)
         by Galois.linutronix.de with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
         (Exim 4.80)
         (envelope-from <tglx@linutronix.de>)
-        id 1jFcOQ-0001zF-3g; Sat, 21 Mar 2020 12:34:18 +0100
+        id 1jFcOZ-0002Re-66; Sat, 21 Mar 2020 12:34:27 +0100
 Received: from nanos.tec.linutronix.de (localhost [IPv6:::1])
-        by nanos.tec.linutronix.de (Postfix) with ESMTP id 2A835FFBBF;
-        Sat, 21 Mar 2020 12:34:17 +0100 (CET)
-Message-Id: <20200321112544.878032781@linutronix.de>
+        by nanos.tec.linutronix.de (Postfix) with ESMTP id 692651040CC;
+        Sat, 21 Mar 2020 12:34:22 +0100 (CET)
+Message-Id: <20200321113242.751182723@linutronix.de>
 User-Agent: quilt/0.65
-Date:   Sat, 21 Mar 2020 12:25:44 +0100
+Date:   Sat, 21 Mar 2020 12:26:04 +0100
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Peter Zijlstra <peterz@infradead.org>,
@@ -72,7 +72,10 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         Jonathan Corbet <corbet@lwn.net>,
         Randy Dunlap <rdunlap@infradead.org>,
         Davidlohr Bueso <dbueso@suse.de>
-Subject: [patch V3 00/20] Lock ordering documentation and annotation for lockdep
+Subject: [patch V3 20/20] lockdep: Add posixtimer context tracing bits
+References: <20200321112544.878032781@linutronix.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-transfer-encoding: 8-bit
 X-Linutronix-Spam-Score: -1.0
 X-Linutronix-Spam-Level: -
@@ -82,22 +85,77 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This is the third and hopefully final version of this work. The second one
-can be found here:
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 
-   https://lore.kernel.org/r/20200318204302.693307984@linutronix.de
+Splitting run_posix_cpu_timers() into two parts is work in progress which
+is stuck on other entry code related problems. The heavy lifting which
+involves locking of sighand lock will be moved into task context so the
+necessary execution time is burdened on the task and not on interrupt
+context.
 
-Changes since V2:
+Until this work completes lockdep with the spinlock nesting rules enabled
+would emit warnings for this known context.
 
-  - Included the arch/XXX fixups for the rcuwait changes (Sebastian)
+Prevent it by setting "->irq_config = 1" for the invocation of
+run_posix_cpu_timers() so lockdep does not complain when sighand lock is
+acquried. This will be removed once the split is completed.
 
-  - Folded the init fix for the PS3 change (Sebastian)
+Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+---
+ include/linux/irqflags.h       |   12 ++++++++++++
+ kernel/time/posix-cpu-timers.c |    6 +++++-
+ 2 files changed, 17 insertions(+), 1 deletion(-)
 
-  - Addressed feedback on documentation (Paul, Davidlohr, Jonathan)
-
-  - Picked up acks and reviewed tags
-
-Thanks,
-
-	tglx
+--- a/include/linux/irqflags.h
++++ b/include/linux/irqflags.h
+@@ -69,6 +69,16 @@ do {						\
+ 			current->irq_config = 0;	\
+ 	  } while (0)
+ 
++# define lockdep_posixtimer_enter()				\
++	  do {							\
++		  current->irq_config = 1;			\
++	  } while (0)
++
++# define lockdep_posixtimer_exit()				\
++	  do {							\
++		  current->irq_config = 0;			\
++	  } while (0)
++
+ # define lockdep_irq_work_enter(__work)					\
+ 	  do {								\
+ 		  if (!(atomic_read(&__work->flags) & IRQ_WORK_HARD_IRQ))\
+@@ -94,6 +104,8 @@ do {						\
+ # define lockdep_softirq_exit()		do { } while (0)
+ # define lockdep_hrtimer_enter(__hrtimer)		do { } while (0)
+ # define lockdep_hrtimer_exit(__hrtimer)		do { } while (0)
++# define lockdep_posixtimer_enter()		do { } while (0)
++# define lockdep_posixtimer_exit()		do { } while (0)
+ # define lockdep_irq_work_enter(__work)		do { } while (0)
+ # define lockdep_irq_work_exit(__work)		do { } while (0)
+ #endif
+--- a/kernel/time/posix-cpu-timers.c
++++ b/kernel/time/posix-cpu-timers.c
+@@ -1126,8 +1126,11 @@ void run_posix_cpu_timers(void)
+ 	if (!fastpath_timer_check(tsk))
+ 		return;
+ 
+-	if (!lock_task_sighand(tsk, &flags))
++	lockdep_posixtimer_enter();
++	if (!lock_task_sighand(tsk, &flags)) {
++		lockdep_posixtimer_exit();
+ 		return;
++	}
+ 	/*
+ 	 * Here we take off tsk->signal->cpu_timers[N] and
+ 	 * tsk->cpu_timers[N] all the timers that are firing, and
+@@ -1169,6 +1172,7 @@ void run_posix_cpu_timers(void)
+ 			cpu_timer_fire(timer);
+ 		spin_unlock(&timer->it_lock);
+ 	}
++	lockdep_posixtimer_exit();
+ }
+ 
+ /*
 
