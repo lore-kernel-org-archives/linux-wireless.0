@@ -6,31 +6,31 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA518C43333
-	for <linux-wireless@archiver.kernel.org>; Sat, 21 Mar 2020 11:37:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C026C54FCA
+	for <linux-wireless@archiver.kernel.org>; Sat, 21 Mar 2020 11:37:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9BCFD20658
-	for <linux-wireless@archiver.kernel.org>; Sat, 21 Mar 2020 11:37:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7AD9320658
+	for <linux-wireless@archiver.kernel.org>; Sat, 21 Mar 2020 11:37:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728944AbgCULha (ORCPT
+        id S1726652AbgCULez (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 21 Mar 2020 07:37:30 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:38469 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727052AbgCULez (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
         Sat, 21 Mar 2020 07:34:55 -0400
+Received: from Galois.linutronix.de ([193.142.43.55]:38431 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726834AbgCULey (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 21 Mar 2020 07:34:54 -0400
 Received: from p5de0bf0b.dip0.t-ipconnect.de ([93.224.191.11] helo=nanos.tec.linutronix.de)
         by Galois.linutronix.de with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
         (Exim 4.80)
         (envelope-from <tglx@linutronix.de>)
-        id 1jFcOW-0002EM-Vk; Sat, 21 Mar 2020 12:34:25 +0100
+        id 1jFcOU-0001zl-4v; Sat, 21 Mar 2020 12:34:22 +0100
 Received: from nanos.tec.linutronix.de (localhost [IPv6:::1])
-        by nanos.tec.linutronix.de (Postfix) with ESMTP id 1C9FE1040C6;
-        Sat, 21 Mar 2020 12:34:21 +0100 (CET)
-Message-Id: <20200321113242.228481202@linutronix.de>
+        by nanos.tec.linutronix.de (Postfix) with ESMTP id 53DF71039FD;
+        Sat, 21 Mar 2020 12:34:20 +0100 (CET)
+Message-Id: <20200321113241.930037873@linutronix.de>
 User-Agent: quilt/0.65
-Date:   Sat, 21 Mar 2020 12:25:59 +0100
+Date:   Sat, 21 Mar 2020 12:25:56 +0100
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Peter Zijlstra <peterz@infradead.org>,
@@ -40,6 +40,10 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         Joel Fernandes <joel@joelfernandes.org>,
         Oleg Nesterov <oleg@redhat.com>,
         Davidlohr Bueso <dave@stgolabs.net>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Geoff Levand <geoff@infradead.org>,
+        linuxppc-dev@lists.ozlabs.org,
         Logan Gunthorpe <logang@deltatee.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
@@ -64,15 +68,11 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         linux-hexagon@vger.kernel.org, Tony Luck <tony.luck@intel.com>,
         Fenghua Yu <fenghua.yu@intel.com>, linux-ia64@vger.kernel.org,
         Michal Simek <monstr@monstr.eu>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Geoff Levand <geoff@infradead.org>,
-        linuxppc-dev@lists.ozlabs.org,
         "Paul E . McKenney" <paulmck@kernel.org>,
         Jonathan Corbet <corbet@lwn.net>,
         Randy Dunlap <rdunlap@infradead.org>,
         Davidlohr Bueso <dbueso@suse.de>
-Subject: [patch V3 15/20] sched/swait: Prepare usage in completions
+Subject: [patch V3 12/20] powerpc/ps3: Convert half completion to rcuwait
 References: <20200321112544.878032781@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -87,62 +87,95 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Thomas Gleixner <tglx@linutronix.de>
 
-As a preparation to use simple wait queues for completions:
+The PS3 notification interrupt and kthread use a hacked up completion to
+communicate. Since we're wanting to change the completion implementation and
+this is abuse anyway, replace it with a simple rcuwait since there is only ever
+the one waiter.
 
-  - Provide swake_up_all_locked() to support complete_all()
-  - Make __prepare_to_swait() public available
+AFAICT the kthread uses TASK_INTERRUPTIBLE to not increase loadavg, kthreads
+cannot receive signals by default and this one doesn't look different. Use
+TASK_IDLE instead.
 
-This is done to enable the usage of complete() within truly atomic contexts
-on a PREEMPT_RT enabled kernel.
-
+Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Michael Ellerman <mpe@ellerman.id.au>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Geoff Levand <geoff@infradead.org>
+Cc: linuxppc-dev@lists.ozlabs.org
 ---
-V2: Add comment to swake_up_all_locked()
+V3: Folded the init fix from bigeasy
+V2: New patch to avoid the magic completion wait variant
 ---
- kernel/sched/sched.h |    3 +++
- kernel/sched/swait.c |   15 ++++++++++++++-
- 2 files changed, 17 insertions(+), 1 deletion(-)
+ arch/powerpc/platforms/ps3/device-init.c |   18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
---- a/kernel/sched/sched.h
-+++ b/kernel/sched/sched.h
-@@ -2492,3 +2492,6 @@ static inline bool is_per_cpu_kthread(st
- 	return true;
- }
- #endif
-+
-+void swake_up_all_locked(struct swait_queue_head *q);
-+void __prepare_to_swait(struct swait_queue_head *q, struct swait_queue *wait);
---- a/kernel/sched/swait.c
-+++ b/kernel/sched/swait.c
-@@ -32,6 +32,19 @@ void swake_up_locked(struct swait_queue_
- }
- EXPORT_SYMBOL(swake_up_locked);
+--- a/arch/powerpc/platforms/ps3/device-init.c
++++ b/arch/powerpc/platforms/ps3/device-init.c
+@@ -13,6 +13,7 @@
+ #include <linux/init.h>
+ #include <linux/slab.h>
+ #include <linux/reboot.h>
++#include <linux/rcuwait.h>
  
-+/*
-+ * Wake up all waiters. This is an interface which is solely exposed for
-+ * completions and not for general usage.
-+ *
-+ * It is intentionally different from swake_up_all() to allow usage from
-+ * hard interrupt context and interrupt disabled regions.
-+ */
-+void swake_up_all_locked(struct swait_queue_head *q)
-+{
-+	while (!list_empty(&q->task_list))
-+		swake_up_locked(q);
-+}
-+
- void swake_up_one(struct swait_queue_head *q)
- {
+ #include <asm/firmware.h>
+ #include <asm/lv1call.h>
+@@ -670,7 +671,8 @@ struct ps3_notification_device {
+ 	spinlock_t lock;
+ 	u64 tag;
+ 	u64 lv1_status;
+-	struct completion done;
++	struct rcuwait wait;
++	bool done;
+ };
+ 
+ enum ps3_notify_type {
+@@ -712,7 +714,8 @@ static irqreturn_t ps3_notification_inte
+ 		pr_debug("%s:%u: completed, status 0x%llx\n", __func__,
+ 			 __LINE__, status);
+ 		dev->lv1_status = status;
+-		complete(&dev->done);
++		dev->done = true;
++		rcuwait_wake_up(&dev->wait);
+ 	}
+ 	spin_unlock(&dev->lock);
+ 	return IRQ_HANDLED;
+@@ -725,12 +728,12 @@ static int ps3_notification_read_write(s
  	unsigned long flags;
-@@ -69,7 +82,7 @@ void swake_up_all(struct swait_queue_hea
- }
- EXPORT_SYMBOL(swake_up_all);
+ 	int res;
  
--static void __prepare_to_swait(struct swait_queue_head *q, struct swait_queue *wait)
-+void __prepare_to_swait(struct swait_queue_head *q, struct swait_queue *wait)
- {
- 	wait->task = current;
- 	if (list_empty(&wait->task_list))
-
+-	init_completion(&dev->done);
+ 	spin_lock_irqsave(&dev->lock, flags);
+ 	res = write ? lv1_storage_write(dev->sbd.dev_id, 0, 0, 1, 0, lpar,
+ 					&dev->tag)
+ 		    : lv1_storage_read(dev->sbd.dev_id, 0, 0, 1, 0, lpar,
+ 				       &dev->tag);
++	dev->done = false;
+ 	spin_unlock_irqrestore(&dev->lock, flags);
+ 	if (res) {
+ 		pr_err("%s:%u: %s failed %d\n", __func__, __LINE__, op, res);
+@@ -738,14 +741,10 @@ static int ps3_notification_read_write(s
+ 	}
+ 	pr_debug("%s:%u: notification %s issued\n", __func__, __LINE__, op);
+ 
+-	res = wait_event_interruptible(dev->done.wait,
+-				       dev->done.done || kthread_should_stop());
++	rcuwait_wait_event(&dev->wait, dev->done || kthread_should_stop(), TASK_IDLE);
++
+ 	if (kthread_should_stop())
+ 		res = -EINTR;
+-	if (res) {
+-		pr_debug("%s:%u: interrupted %s\n", __func__, __LINE__, op);
+-		return res;
+-	}
+ 
+ 	if (dev->lv1_status) {
+ 		pr_err("%s:%u: %s not completed, status 0x%llx\n", __func__,
+@@ -810,6 +809,7 @@ static int ps3_probe_thread(void *data)
+ 	}
+ 
+ 	spin_lock_init(&dev.lock);
++	rcuwait_init(&dev.wait);
+ 
+ 	res = request_irq(irq, ps3_notification_interrupt, 0,
+ 			  "ps3_notification", &dev);
 
