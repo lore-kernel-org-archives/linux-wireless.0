@@ -2,35 +2,35 @@ Return-Path: <SRS0=bMqq=5G=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58960C4332B
-	for <linux-wireless@archiver.kernel.org>; Sat, 21 Mar 2020 11:36:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7ED2C4332B
+	for <linux-wireless@archiver.kernel.org>; Sat, 21 Mar 2020 11:36:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 361C220658
-	for <linux-wireless@archiver.kernel.org>; Sat, 21 Mar 2020 11:36:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B53A620658
+	for <linux-wireless@archiver.kernel.org>; Sat, 21 Mar 2020 11:36:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728884AbgCULge (ORCPT
+        id S1728874AbgCULgd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 21 Mar 2020 07:36:34 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:38489 "EHLO
+        Sat, 21 Mar 2020 07:36:33 -0400
+Received: from Galois.linutronix.de ([193.142.43.55]:38488 "EHLO
         Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728493AbgCULe5 (ORCPT
+        with ESMTP id S1728496AbgCULe5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Sat, 21 Mar 2020 07:34:57 -0400
 Received: from p5de0bf0b.dip0.t-ipconnect.de ([93.224.191.11] helo=nanos.tec.linutronix.de)
         by Galois.linutronix.de with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
         (Exim 4.80)
         (envelope-from <tglx@linutronix.de>)
-        id 1jFcOX-0001zf-CX; Sat, 21 Mar 2020 12:34:25 +0100
+        id 1jFcOQ-0001zI-Kw; Sat, 21 Mar 2020 12:34:18 +0100
 Received: from nanos.tec.linutronix.de (localhost [IPv6:::1])
-        by nanos.tec.linutronix.de (Postfix) with ESMTP id C92BE1040A1;
-        Sat, 21 Mar 2020 12:34:19 +0100 (CET)
-Message-Id: <20200321113241.719022171@linutronix.de>
+        by nanos.tec.linutronix.de (Postfix) with ESMTP id EAFF31039FF;
+        Sat, 21 Mar 2020 12:34:17 +0100 (CET)
+Message-Id: <20200321113241.043380271@linutronix.de>
 User-Agent: quilt/0.65
-Date:   Sat, 21 Mar 2020 12:25:54 +0100
+Date:   Sat, 21 Mar 2020 12:25:47 +0100
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Peter Zijlstra <peterz@infradead.org>,
@@ -40,15 +40,12 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         Joel Fernandes <joel@joelfernandes.org>,
         Oleg Nesterov <oleg@redhat.com>,
         Davidlohr Bueso <dave@stgolabs.net>,
-        kbuild test robot <lkp@intel.com>,
-        Michal Simek <monstr@monstr.eu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Felipe Balbi <balbi@kernel.org>, linux-usb@vger.kernel.org,
         Logan Gunthorpe <logang@deltatee.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        linux-pci@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Felipe Balbi <balbi@kernel.org>, linux-usb@vger.kernel.org,
-        Kalle Valo <kvalo@codeaurora.org>,
+        linux-pci@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
         "David S. Miller" <davem@davemloft.net>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         Darren Hart <dvhart@infradead.org>,
@@ -57,13 +54,15 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         Zhang Rui <rui.zhang@intel.com>,
         "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
         linux-pm@vger.kernel.org, Len Brown <lenb@kernel.org>,
-        linux-acpi@vger.kernel.org, Nick Hu <nickhu@andestech.com>,
+        linux-acpi@vger.kernel.org, kbuild test robot <lkp@intel.com>,
+        Nick Hu <nickhu@andestech.com>,
         Greentime Hu <green.hu@gmail.com>,
         Vincent Chen <deanbo422@gmail.com>,
         Guo Ren <guoren@kernel.org>, linux-csky@vger.kernel.org,
         Brian Cain <bcain@codeaurora.org>,
         linux-hexagon@vger.kernel.org, Tony Luck <tony.luck@intel.com>,
         Fenghua Yu <fenghua.yu@intel.com>, linux-ia64@vger.kernel.org,
+        Michal Simek <monstr@monstr.eu>,
         Michael Ellerman <mpe@ellerman.id.au>,
         Arnd Bergmann <arnd@arndb.de>,
         Geoff Levand <geoff@infradead.org>,
@@ -72,7 +71,8 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         Jonathan Corbet <corbet@lwn.net>,
         Randy Dunlap <rdunlap@infradead.org>,
         Davidlohr Bueso <dbueso@suse.de>
-Subject: [patch V3 10/20] microblaze: Remove mm.h from asm/uaccess.h
+Subject: [patch V3 03/20] usb: gadget: Use completion interface instead of
+ open coding it
 References: <20200321112544.878032781@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -85,50 +85,53 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+From: Thomas Gleixner <tglx@linutronix.de>
 
-The defconfig compiles without linux/mm.h. With mm.h included the
-include chain leands to:
-|   CC      kernel/locking/percpu-rwsem.o
-| In file included from include/linux/huge_mm.h:8,
-|                  from include/linux/mm.h:567,
-|                  from arch/microblaze/include/asm/uaccess.h:,
-|                  from include/linux/uaccess.h:11,
-|                  from include/linux/sched/task.h:11,
-|                  from include/linux/sched/signal.h:9,
-|                  from include/linux/rcuwait.h:6,
-|                  from include/linux/percpu-rwsem.h:8,
-|                  from kernel/locking/percpu-rwsem.c:6:
-| include/linux/fs.h:1422:29: error: array type has incomplete element type 'struct percpu_rw_semaphore'
-|  1422 |  struct percpu_rw_semaphore rw_sem[SB_FREEZE_LEVELS];
+ep_io() uses a completion on stack and open codes the waiting with:
 
-once rcuwait.h includes linux/sched/signal.h.
+  wait_event_interruptible (done.wait, done.done);
+and
+  wait_event (done.wait, done.done);
 
-Remove the linux/mm.h include.
+This waits in non-exclusive mode for complete(), but there is no reason to
+do so because the completion can only be waited for by the task itself and
+complete() wakes exactly one exlusive waiter.
 
-Reported-by: kbuild test robot <lkp@intel.com>
-Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Replace the open coded implementation with the corresponding
+wait_for_completion*() functions.
+
+No functional change.
+
+Reported-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: Michal Simek <monstr@monstr.eu>
+Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Felipe Balbi <balbi@kernel.org>
+Cc: linux-usb@vger.kernel.org
 ---
-V3; New patch
+V2: New patch to avoid the conversion to swait interfaces later
 ---
- arch/microblaze/include/asm/uaccess.h | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/usb/gadget/legacy/inode.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/arch/microblaze/include/asm/uaccess.h b/arch/microblaze/include/asm/uaccess.h
-index a1f206b90753a..4916d5fbea5e3 100644
---- a/arch/microblaze/include/asm/uaccess.h
-+++ b/arch/microblaze/include/asm/uaccess.h
-@@ -12,7 +12,6 @@
- #define _ASM_MICROBLAZE_UACCESS_H
+--- a/drivers/usb/gadget/legacy/inode.c
++++ b/drivers/usb/gadget/legacy/inode.c
+@@ -344,7 +344,7 @@ ep_io (struct ep_data *epdata, void *buf
+ 	spin_unlock_irq (&epdata->dev->lock);
  
- #include <linux/kernel.h>
--#include <linux/mm.h>
+ 	if (likely (value == 0)) {
+-		value = wait_event_interruptible (done.wait, done.done);
++		value = wait_for_completion_interruptible(&done);
+ 		if (value != 0) {
+ 			spin_lock_irq (&epdata->dev->lock);
+ 			if (likely (epdata->ep != NULL)) {
+@@ -353,7 +353,7 @@ ep_io (struct ep_data *epdata, void *buf
+ 				usb_ep_dequeue (epdata->ep, epdata->req);
+ 				spin_unlock_irq (&epdata->dev->lock);
  
- #include <asm/mmu.h>
- #include <asm/page.h>
--- 
-2.26.0.rc2
+-				wait_event (done.wait, done.done);
++				wait_for_completion(&done);
+ 				if (epdata->status == -ECONNRESET)
+ 					epdata->status = -EINTR;
+ 			} else {
 
 
