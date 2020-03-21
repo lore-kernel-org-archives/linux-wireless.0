@@ -6,31 +6,31 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B86BC54FD5
-	for <linux-wireless@archiver.kernel.org>; Sat, 21 Mar 2020 11:35:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BB01C43333
+	for <linux-wireless@archiver.kernel.org>; Sat, 21 Mar 2020 11:35:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6C8B92077D
-	for <linux-wireless@archiver.kernel.org>; Sat, 21 Mar 2020 11:35:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7720B20754
+	for <linux-wireless@archiver.kernel.org>; Sat, 21 Mar 2020 11:35:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728702AbgCULfC (ORCPT
+        id S1728676AbgCULfB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 21 Mar 2020 07:35:02 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:38496 "EHLO
+        Sat, 21 Mar 2020 07:35:01 -0400
+Received: from Galois.linutronix.de ([193.142.43.55]:38471 "EHLO
         Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728521AbgCULe5 (ORCPT
+        with ESMTP id S1727071AbgCULe4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 21 Mar 2020 07:34:57 -0400
+        Sat, 21 Mar 2020 07:34:56 -0400
 Received: from p5de0bf0b.dip0.t-ipconnect.de ([93.224.191.11] helo=nanos.tec.linutronix.de)
         by Galois.linutronix.de with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
         (Exim 4.80)
         (envelope-from <tglx@linutronix.de>)
-        id 1jFcOT-0001zi-1B; Sat, 21 Mar 2020 12:34:21 +0100
+        id 1jFcOQ-0001zH-Br; Sat, 21 Mar 2020 12:34:18 +0100
 Received: from nanos.tec.linutronix.de (localhost [IPv6:::1])
-        by nanos.tec.linutronix.de (Postfix) with ESMTP id 16805FFBBF;
-        Sat, 21 Mar 2020 12:34:20 +0100 (CET)
-Message-Id: <20200321113241.824030968@linutronix.de>
+        by nanos.tec.linutronix.de (Postfix) with ESMTP id AC6861039FD;
+        Sat, 21 Mar 2020 12:34:17 +0100 (CET)
+Message-Id: <20200321113240.936097534@linutronix.de>
 User-Agent: quilt/0.65
-Date:   Sat, 21 Mar 2020 12:25:55 +0100
+Date:   Sat, 21 Mar 2020 12:25:46 +0100
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Peter Zijlstra <peterz@infradead.org>,
@@ -72,7 +72,7 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         Jonathan Corbet <corbet@lwn.net>,
         Randy Dunlap <rdunlap@infradead.org>,
         Davidlohr Bueso <dbueso@suse.de>
-Subject: [patch V3 11/20] rcuwait: Add @state argument to rcuwait_wait_event()
+Subject: [patch V3 02/20] pci/switchtec: Replace completion wait queue usage for poll
 References: <20200321112544.878032781@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -85,74 +85,120 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Peter Zijlstra (Intel) <peterz@infradead.org>
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 
-Extend rcuwait_wait_event() with a state variable so that it is not
-restricted to UNINTERRUPTIBLE waits.
+The poll callback is using the completion wait queue and sticks it into
+poll_wait() to wake up pollers after a command has completed.
 
-Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
+This works to some extent, but cannot provide EPOLLEXCLUSIVE support
+because the waker side uses complete_all() which unconditionally wakes up
+all waiters. complete_all() is required because completions internally use
+exclusive wait and complete() only wakes up one waiter by default.
+
+This mixes conceptually different mechanisms and relies on internal
+implementation details of completions, which in turn puts contraints on
+changing the internal implementation of completions.
+
+Replace it with a regular wait queue and store the state in struct
+switchtec_user.
+
+Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Davidlohr Bueso <dave@stgolabs.net>
-
+Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
+Acked-by: Peter Zijlstra (Intel) <peterz@infradead.org>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
+Cc: linux-pci@vger.kernel.org
 ---
- include/linux/rcuwait.h       |   12 ++++++++++--
- kernel/locking/percpu-rwsem.c |    2 +-
- 2 files changed, 11 insertions(+), 3 deletions(-)
+V2: Reworded changelog.
+---
+ drivers/pci/switch/switchtec.c |   22 +++++++++++++---------
+ 1 file changed, 13 insertions(+), 9 deletions(-)
 
---- a/include/linux/rcuwait.h
-+++ b/include/linux/rcuwait.h
-@@ -3,6 +3,7 @@
- #define _LINUX_RCUWAIT_H_
+--- a/drivers/pci/switch/switchtec.c
++++ b/drivers/pci/switch/switchtec.c
+@@ -52,10 +52,11 @@ struct switchtec_user {
  
- #include <linux/rcupdate.h>
-+#include <linux/sched/signal.h>
+ 	enum mrpc_state state;
  
- /*
-  * rcuwait provides a way of blocking and waking up a single
-@@ -30,23 +31,30 @@ extern void rcuwait_wake_up(struct rcuwa
-  * The caller is responsible for locking around rcuwait_wait_event(),
-  * such that writes to @task are properly serialized.
-  */
--#define rcuwait_wait_event(w, condition)				\
-+#define rcuwait_wait_event(w, condition, state)				\
- ({									\
-+	int __ret = 0;							\
- 	rcu_assign_pointer((w)->task, current);				\
- 	for (;;) {							\
- 		/*							\
- 		 * Implicit barrier (A) pairs with (B) in		\
- 		 * rcuwait_wake_up().					\
- 		 */							\
--		set_current_state(TASK_UNINTERRUPTIBLE);		\
-+		set_current_state(state);				\
- 		if (condition)						\
- 			break;						\
- 									\
-+		if (signal_pending_state(state, current)) {		\
-+			__ret = -EINTR;					\
-+			break;						\
-+		}							\
-+									\
- 		schedule();						\
- 	}								\
- 									\
- 	WRITE_ONCE((w)->task, NULL);					\
- 	__set_current_state(TASK_RUNNING);				\
-+	__ret;								\
- })
+-	struct completion comp;
++	wait_queue_head_t cmd_comp;
+ 	struct kref kref;
+ 	struct list_head list;
  
- #endif /* _LINUX_RCUWAIT_H_ */
---- a/kernel/locking/percpu-rwsem.c
-+++ b/kernel/locking/percpu-rwsem.c
-@@ -162,7 +162,7 @@ void percpu_down_write(struct percpu_rw_
- 	 */
++	bool cmd_done;
+ 	u32 cmd;
+ 	u32 status;
+ 	u32 return_code;
+@@ -77,7 +78,7 @@ static struct switchtec_user *stuser_cre
+ 	stuser->stdev = stdev;
+ 	kref_init(&stuser->kref);
+ 	INIT_LIST_HEAD(&stuser->list);
+-	init_completion(&stuser->comp);
++	init_waitqueue_head(&stuser->cmd_comp);
+ 	stuser->event_cnt = atomic_read(&stdev->event_cnt);
  
- 	/* Wait for all now active readers to complete. */
--	rcuwait_wait_event(&sem->writer, readers_active_check(sem));
-+	rcuwait_wait_event(&sem->writer, readers_active_check(sem), TASK_UNINTERRUPTIBLE);
- }
- EXPORT_SYMBOL_GPL(percpu_down_write);
+ 	dev_dbg(&stdev->dev, "%s: %p\n", __func__, stuser);
+@@ -175,7 +176,7 @@ static int mrpc_queue_cmd(struct switcht
+ 	kref_get(&stuser->kref);
+ 	stuser->read_len = sizeof(stuser->data);
+ 	stuser_set_state(stuser, MRPC_QUEUED);
+-	reinit_completion(&stuser->comp);
++	stuser->cmd_done = false;
+ 	list_add_tail(&stuser->list, &stdev->mrpc_queue);
  
+ 	mrpc_cmd_submit(stdev);
+@@ -222,7 +223,8 @@ static void mrpc_complete_cmd(struct swi
+ 		memcpy_fromio(stuser->data, &stdev->mmio_mrpc->output_data,
+ 			      stuser->read_len);
+ out:
+-	complete_all(&stuser->comp);
++	stuser->cmd_done = true;
++	wake_up_interruptible(&stuser->cmd_comp);
+ 	list_del_init(&stuser->list);
+ 	stuser_put(stuser);
+ 	stdev->mrpc_busy = 0;
+@@ -529,10 +531,11 @@ static ssize_t switchtec_dev_read(struct
+ 	mutex_unlock(&stdev->mrpc_mutex);
+ 
+ 	if (filp->f_flags & O_NONBLOCK) {
+-		if (!try_wait_for_completion(&stuser->comp))
++		if (!stuser->cmd_done)
+ 			return -EAGAIN;
+ 	} else {
+-		rc = wait_for_completion_interruptible(&stuser->comp);
++		rc = wait_event_interruptible(stuser->cmd_comp,
++					      stuser->cmd_done);
+ 		if (rc < 0)
+ 			return rc;
+ 	}
+@@ -580,7 +583,7 @@ static __poll_t switchtec_dev_poll(struc
+ 	struct switchtec_dev *stdev = stuser->stdev;
+ 	__poll_t ret = 0;
+ 
+-	poll_wait(filp, &stuser->comp.wait, wait);
++	poll_wait(filp, &stuser->cmd_comp, wait);
+ 	poll_wait(filp, &stdev->event_wq, wait);
+ 
+ 	if (lock_mutex_and_test_alive(stdev))
+@@ -588,7 +591,7 @@ static __poll_t switchtec_dev_poll(struc
+ 
+ 	mutex_unlock(&stdev->mrpc_mutex);
+ 
+-	if (try_wait_for_completion(&stuser->comp))
++	if (stuser->cmd_done)
+ 		ret |= EPOLLIN | EPOLLRDNORM;
+ 
+ 	if (stuser->event_cnt != atomic_read(&stdev->event_cnt))
+@@ -1272,7 +1275,8 @@ static void stdev_kill(struct switchtec_
+ 
+ 	/* Wake up and kill any users waiting on an MRPC request */
+ 	list_for_each_entry_safe(stuser, tmpuser, &stdev->mrpc_queue, list) {
+-		complete_all(&stuser->comp);
++		stuser->cmd_done = true;
++		wake_up_interruptible(&stuser->cmd_comp);
+ 		list_del_init(&stuser->list);
+ 		stuser_put(stuser);
+ 	}
 
 
