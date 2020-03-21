@@ -2,92 +2,76 @@ Return-Path: <SRS0=bMqq=5G=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1029C4332B
-	for <linux-wireless@archiver.kernel.org>; Sat, 21 Mar 2020 14:11:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99490C4332B
+	for <linux-wireless@archiver.kernel.org>; Sat, 21 Mar 2020 15:14:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7907420754
-	for <linux-wireless@archiver.kernel.org>; Sat, 21 Mar 2020 14:11:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6D34820786
+	for <linux-wireless@archiver.kernel.org>; Sat, 21 Mar 2020 15:14:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1584799883;
-	bh=z3bsHcwPw1dy+MZ69yHRllkviwuFf+1W8mJ1Vq6tZx8=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
-	b=DRkYWE46mdX9xd0j9w/rXJZrlwOJL0LFeA0Q00J83zuDfGImbxNGKbkdtd6jP3QGa
-	 wLgdCUoQsG2Np5CQ3UG7hWRSCwhKXToyvjdK+NXWaad0o8h1gOldxZJ0Qi5fEkE8e8
-	 qgZPWQ8ejC+fWkJVoA/db6Uc7qmWjNfyY/p6DTOQ=
+	s=default; t=1584803693;
+	bh=Jgs2IKu8wCZxhbCjpPKEoex9MwTGh097SHWHgFKyZK0=;
+	h=From:To:Cc:Subject:Date:List-ID:From;
+	b=rjB8jSuBQpfZn+hSYST8+mGvMJvSk2AZ/vPf6lErswoP+wFbHH/SOz3rvZhKP9ixr
+	 JFvE70CkMd2FO2aMQmo8U44l07F84kZ/4BvYtzX3NJCqaDT2xACONozqHLuMBnHp2z
+	 7HizjFK9ovBWl3zC7J8RKbDEyfFWz5ipgZduczJ4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727273AbgCUOLT (ORCPT
+        id S1727453AbgCUPOw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 21 Mar 2020 10:11:19 -0400
-Received: from mail.kernel.org ([198.145.29.99]:54738 "EHLO mail.kernel.org"
+        Sat, 21 Mar 2020 11:14:52 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49804 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726823AbgCUOLT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 21 Mar 2020 10:11:19 -0400
-Received: from mail-lf1-f53.google.com (mail-lf1-f53.google.com [209.85.167.53])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S1727385AbgCUPOw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 21 Mar 2020 11:14:52 -0400
+Received: from localhost.localdomain (unknown [151.48.139.19])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 6A7A220842;
-        Sat, 21 Mar 2020 14:11:18 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 0FB3A20409;
+        Sat, 21 Mar 2020 15:14:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1584799878;
-        bh=z3bsHcwPw1dy+MZ69yHRllkviwuFf+1W8mJ1Vq6tZx8=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=U6uraq1+O/wBDq9BdnirqCkla8fi4hhFooa9u8EOGpG/NUK8KcAg8m6t2KHRzRSTZ
-         U1tt2IsiTDMVS0ltxGzSghSwm0SPd3Ix8AtBnYo+moOc67e2fIk/ICATj9ELG9zqHj
-         KWOd3QQR+qDycpEtfRl0ifl4E+I1zEKfB5l1H1GU=
-Received: by mail-lf1-f53.google.com with SMTP id t21so6707987lfe.9;
-        Sat, 21 Mar 2020 07:11:18 -0700 (PDT)
-X-Gm-Message-State: ANhLgQ2NRbh5XueagTwvvEpfNbQrjY3WjmYWsExYRuD9ZYsKAjI5eANG
-        5wC7rxeybWBIdvZuJtjEJiBY448WImtO3Cpbfzs=
-X-Google-Smtp-Source: ADFU+vt7yzzoIODXTl3pSLaF05QHM7NQajznhAWuFfmnjqd/dl0IS02TuRz56P5ko6Q0w3g4sq26da7i2uTfuhqRlWs=
-X-Received: by 2002:a05:6512:1116:: with SMTP id l22mr8128251lfg.70.1584799876421;
- Sat, 21 Mar 2020 07:11:16 -0700 (PDT)
+        s=default; t=1584803692;
+        bh=Jgs2IKu8wCZxhbCjpPKEoex9MwTGh097SHWHgFKyZK0=;
+        h=From:To:Cc:Subject:Date:From;
+        b=ol1aSsqaAiQlwQ2o60yMe20YFheThCJ72819wtA8rwEg9T/HGXFrrPhW/fgkguom+
+         OI/o+jPT1iQlsIBuAC2fZJ3VBfbhYwaLCpgTFj26kuFgLNRQKuIEKP5YskY7zl1vth
+         fPTW97xIv6qbjI347YXqHkSOIJJE3X34drg3IdWs=
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     nbd@nbd.name
+Cc:     lorenzo.bianconi@redhat.com, linux-wireless@vger.kernel.org
+Subject: [PATCH] mt76: mt76x2u: introduce Mercury UD13 support
+Date:   Sat, 21 Mar 2020 16:14:42 +0100
+Message-Id: <af2ea4a6881ca91c03320976e61e875bcb5cb46f.1584803570.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-References: <20200318204408.010461877@linutronix.de> <20200320094856.3453859-1-bigeasy@linutronix.de>
- <20200320094856.3453859-3-bigeasy@linutronix.de> <tglx@linutronix.de>
- <CAJF2gTQDvmSdJB3R0By0Q6d9ganVBV1FBm3urL8Jf1fyiEi+1A@mail.gmail.com> <87zhc9rjuz.fsf@nanos.tec.linutronix.de>
-In-Reply-To: <87zhc9rjuz.fsf@nanos.tec.linutronix.de>
-From:   Guo Ren <guoren@kernel.org>
-Date:   Sat, 21 Mar 2020 22:11:05 +0800
-X-Gmail-Original-Message-ID: <CAJF2gTTTFYSwFYZArmJRkVJOKL2pWWgLj9nAQ_EdH2rU3jTdbw@mail.gmail.com>
-Message-ID: <CAJF2gTTTFYSwFYZArmJRkVJOKL2pWWgLj9nAQ_EdH2rU3jTdbw@mail.gmail.com>
-Subject: Re: [PATCH 2/5] csky: Remove mm.h from asm/uaccess.h
-To:     Thomas Gleixner <tglx@linutronix.de>
-Cc:     Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-        Arnd Bergmann <arnd@arndb.de>, balbi@kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>, dave@stgolabs.net,
-        David Miller <davem@davemloft.net>, gregkh@linuxfoundation.org,
-        joel@joelfernandes.org, kurt.schwemmer@microsemi.com,
-        kvalo@codeaurora.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-wireless@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        logang@deltatee.com, mingo@kernel.org,
-        Michael Ellerman <mpe@ellerman.id.au>, netdev@vger.kernel.org,
-        oleg@redhat.com, paulmck@kernel.org,
-        Peter Zijlstra <peterz@infradead.org>,
-        Randy Dunlap <rdunlap@infradead.org>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        torvalds@linux-foundation.org, Will Deacon <will@kernel.org>,
-        linux-csky@vger.kernel.org, kbuild test robot <lkp@intel.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Sat, Mar 21, 2020 at 8:08 PM Thomas Gleixner <tglx@linutronix.de> wrote:
->
-> Guo Ren <guoren@kernel.org> writes:
->
-> > Tested and Acked by me.
-> >
-> > Queued for next pull request, thx
->
-> Can we please route that with the rcuwait changes to avoid breakage
-> unless you ship it to Linus right away?
+Introduce Mercury UD13 dual-band dongle support to mt76x2u driver
 
-Ok, I won't queue it.
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+---
+ drivers/net/wireless/mediatek/mt76/mt76x2/usb.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/usb.c b/drivers/net/wireless/mediatek/mt76/mt76x2/usb.c
+index eafa283ca699..7be7fe7a068b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76x2/usb.c
++++ b/drivers/net/wireless/mediatek/mt76/mt76x2/usb.c
+@@ -16,6 +16,7 @@ static const struct usb_device_id mt76x2u_device_table[] = {
+ 	{ USB_DEVICE(0x0e8d, 0x7612) },	/* Aukey USBAC1200 - Alfa AWUS036ACM */
+ 	{ USB_DEVICE(0x057c, 0x8503) },	/* Avm FRITZ!WLAN AC860 */
+ 	{ USB_DEVICE(0x7392, 0xb711) },	/* Edimax EW 7722 UAC */
++	{ USB_DEVICE(0x2c4e, 0x0103) },	/* Mercury UD13 */
+ 	{ USB_DEVICE(0x0846, 0x9053) },	/* Netgear A6210 */
+ 	{ USB_DEVICE(0x045e, 0x02e6) },	/* XBox One Wireless Adapter */
+ 	{ },
+-- 
+2.25.1
+
