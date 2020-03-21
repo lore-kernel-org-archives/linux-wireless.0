@@ -6,31 +6,31 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DCC3C43333
-	for <linux-wireless@archiver.kernel.org>; Sat, 21 Mar 2020 11:37:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6E29C4332B
+	for <linux-wireless@archiver.kernel.org>; Sat, 21 Mar 2020 11:37:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DCEC42077D
-	for <linux-wireless@archiver.kernel.org>; Sat, 21 Mar 2020 11:37:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 962BB20658
+	for <linux-wireless@archiver.kernel.org>; Sat, 21 Mar 2020 11:37:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728923AbgCULhE (ORCPT
+        id S1728933AbgCULhO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 21 Mar 2020 07:37:04 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:38466 "EHLO
+        Sat, 21 Mar 2020 07:37:14 -0400
+Received: from Galois.linutronix.de ([193.142.43.55]:38472 "EHLO
         Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727028AbgCULe4 (ORCPT
+        with ESMTP id S1727100AbgCULe4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Sat, 21 Mar 2020 07:34:56 -0400
 Received: from p5de0bf0b.dip0.t-ipconnect.de ([93.224.191.11] helo=nanos.tec.linutronix.de)
         by Galois.linutronix.de with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
         (Exim 4.80)
         (envelope-from <tglx@linutronix.de>)
-        id 1jFcOR-0001zU-F0; Sat, 21 Mar 2020 12:34:19 +0100
+        id 1jFcOS-0001zZ-4Y; Sat, 21 Mar 2020 12:34:20 +0100
 Received: from nanos.tec.linutronix.de (localhost [IPv6:::1])
-        by nanos.tec.linutronix.de (Postfix) with ESMTP id B80C01039FD;
-        Sat, 21 Mar 2020 12:34:18 +0100 (CET)
-Message-Id: <20200321113241.339289758@linutronix.de>
+        by nanos.tec.linutronix.de (Postfix) with ESMTP id 4AC801039FF;
+        Sat, 21 Mar 2020 12:34:19 +0100 (CET)
+Message-Id: <20200321113241.531525286@linutronix.de>
 User-Agent: quilt/0.65
-Date:   Sat, 21 Mar 2020 12:25:50 +0100
+Date:   Sat, 21 Mar 2020 12:25:52 +0100
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Peter Zijlstra <peterz@infradead.org>,
@@ -41,9 +41,8 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         Oleg Nesterov <oleg@redhat.com>,
         Davidlohr Bueso <dave@stgolabs.net>,
         kbuild test robot <lkp@intel.com>,
-        Nick Hu <nickhu@andestech.com>,
-        Greentime Hu <green.hu@gmail.com>,
-        Vincent Chen <deanbo422@gmail.com>,
+        Brian Cain <bcain@codeaurora.org>,
+        linux-hexagon@vger.kernel.org,
         Logan Gunthorpe <logang@deltatee.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
@@ -59,9 +58,11 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         Zhang Rui <rui.zhang@intel.com>,
         "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
         linux-pm@vger.kernel.org, Len Brown <lenb@kernel.org>,
-        linux-acpi@vger.kernel.org, Guo Ren <guoren@kernel.org>,
-        linux-csky@vger.kernel.org, Brian Cain <bcain@codeaurora.org>,
-        linux-hexagon@vger.kernel.org, Tony Luck <tony.luck@intel.com>,
+        linux-acpi@vger.kernel.org, Nick Hu <nickhu@andestech.com>,
+        Greentime Hu <green.hu@gmail.com>,
+        Vincent Chen <deanbo422@gmail.com>,
+        Guo Ren <guoren@kernel.org>, linux-csky@vger.kernel.org,
+        Tony Luck <tony.luck@intel.com>,
         Fenghua Yu <fenghua.yu@intel.com>, linux-ia64@vger.kernel.org,
         Michal Simek <monstr@monstr.eu>,
         Michael Ellerman <mpe@ellerman.id.au>,
@@ -72,7 +73,7 @@ Cc:     Peter Zijlstra <peterz@infradead.org>,
         Jonathan Corbet <corbet@lwn.net>,
         Randy Dunlap <rdunlap@infradead.org>,
         Davidlohr Bueso <dbueso@suse.de>
-Subject: [patch V3 06/20] nds32: Remove mm.h from asm/uaccess.h
+Subject: [patch V3 08/20] hexagon: Remove mm.h from asm/uaccess.h
 References: <20200321112544.878032781@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -92,7 +93,7 @@ include chain leands to:
 |   CC      kernel/locking/percpu-rwsem.o
 | In file included from include/linux/huge_mm.h:8,
 |                  from include/linux/mm.h:567,
-|                  from arch/nds32/include/asm/uaccess.h:,
+|                  from arch/hexagon/include/asm/uaccess.h:,
 |                  from include/linux/uaccess.h:11,
 |                  from include/linux/sched/task.h:11,
 |                  from include/linux/sched/signal.h:9,
@@ -109,27 +110,26 @@ Remove the linux/mm.h include.
 Reported-by: kbuild test robot <lkp@intel.com>
 Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: Nick Hu <nickhu@andestech.com>
-Cc: Greentime Hu <green.hu@gmail.com>
-Cc: Vincent Chen <deanbo422@gmail.com>
+Cc: Brian Cain <bcain@codeaurora.org>
+Cc: linux-hexagon@vger.kernel.org
 ---
 V3: New patch
 ---
- arch/nds32/include/asm/uaccess.h | 1 -
+ arch/hexagon/include/asm/uaccess.h | 1 -
  1 file changed, 1 deletion(-)
 
-diff --git a/arch/nds32/include/asm/uaccess.h b/arch/nds32/include/asm/uaccess.h
-index 8916ad9f9f139..3a9219f53ee0d 100644
---- a/arch/nds32/include/asm/uaccess.h
-+++ b/arch/nds32/include/asm/uaccess.h
-@@ -11,7 +11,6 @@
- #include <asm/errno.h>
- #include <asm/memory.h>
- #include <asm/types.h>
+diff --git a/arch/hexagon/include/asm/uaccess.h b/arch/hexagon/include/asm/uaccess.h
+index 00cb38faad0c4..c1019a736ff13 100644
+--- a/arch/hexagon/include/asm/uaccess.h
++++ b/arch/hexagon/include/asm/uaccess.h
+@@ -10,7 +10,6 @@
+ /*
+  * User space memory access functions
+  */
 -#include <linux/mm.h>
+ #include <asm/sections.h>
  
- #define __asmeq(x, y)  ".ifnc " x "," y " ; .err ; .endif\n\t"
- 
+ /*
 -- 
 2.26.0.rc2
 
