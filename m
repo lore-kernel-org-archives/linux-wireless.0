@@ -6,349 +6,403 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E197C3F2CD
-	for <linux-wireless@archiver.kernel.org>; Mon, 23 Mar 2020 13:19:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02BFFC54FD0
+	for <linux-wireless@archiver.kernel.org>; Mon, 23 Mar 2020 13:19:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F172320722
-	for <linux-wireless@archiver.kernel.org>; Mon, 23 Mar 2020 13:19:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C588D20722
+	for <linux-wireless@archiver.kernel.org>; Mon, 23 Mar 2020 13:19:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728492AbgCWNTm (ORCPT
+        id S1728507AbgCWNTo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 23 Mar 2020 09:19:42 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:43408 "EHLO
+        Mon, 23 Mar 2020 09:19:44 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:43434 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728461AbgCWNTl (ORCPT
+        with ESMTP id S1728497AbgCWNTn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Mar 2020 09:19:41 -0400
+        Mon, 23 Mar 2020 09:19:43 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1jGMzR-00023f-Oi; Mon, 23 Mar 2020 15:19:38 +0200
+        id 1jGMzU-00023f-SC; Mon, 23 Mar 2020 15:19:41 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Mon, 23 Mar 2020 15:19:16 +0200
-Message-Id: <iwlwifi.20200323151304.a4f4c675fc1a.I3b461108abf2306c3d054099112f2c3afce1cc92@changeid>
+Date:   Mon, 23 Mar 2020 15:19:20 +0200
+Message-Id: <iwlwifi.20200323151304.2b0ce6957740.Ib71b07ea9e322eb74571dc5e8aa58f17eece5c9c@changeid>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200323131925.208376-1-luca@coelho.fi>
 References: <20200323131925.208376-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 05/14] iwlwifi: scan: support scan req cmd ver 14
+Subject: [PATCH 09/14] iwlwifi: move integrated, extra_phy and soc_latency to trans_cfg
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Modify adaptive dwell number of APs override API
-Instead of using channel to index mapping, add the adaptive dwell
-override parameters as part of the configuration per channel in the scan
-request command.
+These values are selected based on the PCI device ID, so the decision
+to use them can be made early.  By moving them to the trans_cfg, we
+avoid duplicating the large cfg structs for small pieces of
+data (sometimes a single boolean).  This will also allow us to make
+more decisions based on, for instance, the SoC type in used.
 
-Support 2 different override values and use them as follows:
-1. 10 APs for friendly GO channels in p2p scan.
-2. 2 APs for social channels in p2p scan.
+The trans_cfg concept changes a bit, because previously it was used
+only to boot the device before reading further characteristics and now
+it also contains more data that is associated with the device ID.
 
-Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../net/wireless/intel/iwlwifi/fw/api/scan.h  |  52 ++++++-
- drivers/net/wireless/intel/iwlwifi/mvm/scan.c | 129 +++++++++++++++++-
- 2 files changed, 173 insertions(+), 8 deletions(-)
+ .../net/wireless/intel/iwlwifi/cfg/22000.c    | 24 +++++------
+ drivers/net/wireless/intel/iwlwifi/cfg/9000.c | 31 +++++++++-----
+ .../net/wireless/intel/iwlwifi/iwl-config.h   | 21 ++++++----
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c   |  7 ++--
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 42 ++++---------------
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c  |  2 +-
+ .../net/wireless/intel/iwlwifi/pcie/trans.c   |  2 +-
+ 7 files changed, 58 insertions(+), 71 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h b/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
-index 1b2b5fa56e19..2e70e4e752e1 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/scan.h
-@@ -702,13 +702,16 @@ struct  iwl_scan_channel_cfg_umac {
- 			u8 channel_num;
- 			u8 iter_count;
- 			__le16 iter_interval;
--		} v1;  /* SCAN_CHANNEL_CFG_S_VER1 */
-+		} v1;  /* SCAN_CHANNEL_CONFIG_API_S_VER_1 */
- 		struct {
- 			u8 channel_num;
- 			u8 band;
- 			u8 iter_count;
- 			u8 iter_interval;
--		 } v2; /* SCAN_CHANNEL_CFG_S_VER2 */
-+		 } v2; /* SCAN_CHANNEL_CONFIG_API_S_VER_2
-+			* SCAN_CHANNEL_CONFIG_API_S_VER_3
-+			* SCAN_CHANNEL_CONFIG_API_S_VER_4
-+			*/
- 	};
- } __packed;
- 
-@@ -943,6 +946,25 @@ struct iwl_scan_channel_params_v4 {
- 	u8 adwell_ch_override_bitmap[16];
- } __packed; /* SCAN_CHANNEL_PARAMS_API_S_VER_4 also
- 	       SCAN_CHANNEL_PARAMS_API_S_VER_5 */
-+
-+/**
-+ * struct iwl_scan_channel_params_v6
-+ * @flags: channel flags &enum iwl_scan_channel_flags
-+ * @count: num of channels in scan request
-+ * @n_aps_override: override the number of APs the FW uses to calculate dwell
-+ *	time when adaptive dwell is used.
-+ *	Channel k will use n_aps_override[i] when BIT(20 + i) is set in
-+ *	channel_config[k].flags
-+ * @channel_config: array of explicit channel configurations
-+ *                  for 2.4Ghz and 5.2Ghz bands
-+ */
-+struct iwl_scan_channel_params_v6 {
-+	u8 flags;
-+	u8 count;
-+	u8 n_aps_override[2];
-+	struct iwl_scan_channel_cfg_umac channel_config[SCAN_MAX_NUM_CHANS_V3];
-+} __packed; /* SCAN_CHANNEL_PARAMS_API_S_VER_6 */
-+
- /**
-  * struct iwl_scan_general_params_v10
-  * @flags: &enum iwl_umac_scan_flags
-@@ -1023,6 +1045,20 @@ struct iwl_scan_req_params_v13 {
- 	struct iwl_scan_probe_params_v4 probe_params;
- } __packed; /* SCAN_REQUEST_PARAMS_API_S_VER_13 */
- 
-+/**
-+ * struct iwl_scan_req_params_v14
-+ * @general_params: &struct iwl_scan_general_params_v10
-+ * @channel_params: &struct iwl_scan_channel_params_v6
-+ * @periodic_params: &struct iwl_scan_periodic_parms_v1
-+ * @probe_params: &struct iwl_scan_probe_params_v4
-+ */
-+struct iwl_scan_req_params_v14 {
-+	struct iwl_scan_general_params_v10 general_params;
-+	struct iwl_scan_channel_params_v6 channel_params;
-+	struct iwl_scan_periodic_parms_v1 periodic_params;
-+	struct iwl_scan_probe_params_v4 probe_params;
-+} __packed; /* SCAN_REQUEST_PARAMS_API_S_VER_14 */
-+
- /**
-  * struct iwl_scan_req_umac_v12
-  * @uid: scan id, &enum iwl_umac_scan_uid_offsets
-@@ -1047,6 +1083,18 @@ struct iwl_scan_req_umac_v13 {
- 	struct iwl_scan_req_params_v13 scan_params;
- } __packed; /* SCAN_REQUEST_CMD_UMAC_API_S_VER_13 */
- 
-+/**
-+ * struct iwl_scan_req_umac_v14
-+ * @uid: scan id, &enum iwl_umac_scan_uid_offsets
-+ * @ooc_priority: out of channel priority - &enum iwl_scan_priority
-+ * @scan_params: scan parameters
-+ */
-+struct iwl_scan_req_umac_v14 {
-+	__le32 uid;
-+	__le32 ooc_priority;
-+	struct iwl_scan_req_params_v14 scan_params;
-+} __packed; /* SCAN_REQUEST_CMD_UMAC_API_S_VER_14 */
-+
- /**
-  * struct iwl_umac_scan_abort
-  * @uid: scan id, &enum iwl_umac_scan_uid_offsets
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-index 3b263c81bcae..1fa74086a4f7 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-@@ -91,8 +91,14 @@
- #define IWL_SCAN_ADWELL_DEFAULT_N_APS_SOCIAL 10
- /* number of scan channels */
- #define IWL_SCAN_NUM_CHANNELS 112
--/* adaptive dwell default number of APs override */
--#define IWL_SCAN_ADWELL_DEFAULT_N_APS_OVERRIDE 10
-+/* adaptive dwell number of APs override mask for p2p friendly GO */
-+#define IWL_SCAN_ADWELL_N_APS_GO_FRIENDLY_BIT BIT(20)
-+/* adaptive dwell number of APs override mask for social channels */
-+#define IWL_SCAN_ADWELL_N_APS_SOCIAL_CHS_BIT BIT(21)
-+/* adaptive dwell number of APs override for p2p friendly GO channels */
-+#define IWL_SCAN_ADWELL_N_APS_GO_FRIENDLY 10
-+/* adaptive dwell number of APs override for social channels */
-+#define IWL_SCAN_ADWELL_N_APS_SOCIAL_CHS 2
- 
- struct iwl_mvm_scan_timing_params {
- 	u32 suspend_time;
-@@ -1529,14 +1535,19 @@ static int iwl_mvm_scan_ch_and_band_to_idx(u8 channel_id, u8 band)
- 	return -EINVAL;
- }
- 
-+static const u8 p2p_go_friendly_chs[] = {
-+	36, 40, 44, 48, 149, 153, 157, 161, 165,
-+};
-+
-+static const u8 social_chs[] = {
-+	1, 6, 11
-+};
-+
- static void iwl_mvm_scan_ch_add_n_aps_override(enum nl80211_iftype vif_type,
- 					       u8 ch_id, u8 band, u8 *ch_bitmap,
- 					       size_t bitmap_n_entries)
- {
- 	int i;
--	static const u8 p2p_go_friendly_chs[] = {
--		36, 40, 44, 48, 149, 153, 157, 161, 165,
--	};
- 
- 	if (vif_type != NL80211_IFTYPE_P2P_DEVICE)
- 		return;
-@@ -1561,6 +1572,35 @@ static void iwl_mvm_scan_ch_add_n_aps_override(enum nl80211_iftype vif_type,
- 	}
- }
- 
-+static u32 iwl_mvm_scan_ch_n_aps_flag(enum nl80211_iftype vif_type, u8 ch_id)
-+{
-+	int i;
-+	u32 flags = 0;
-+
-+	if (vif_type != NL80211_IFTYPE_P2P_DEVICE)
-+		goto out;
-+
-+	for (i = 0; i < ARRAY_SIZE(p2p_go_friendly_chs); i++) {
-+		if (p2p_go_friendly_chs[i] == ch_id) {
-+			flags |= IWL_SCAN_ADWELL_N_APS_GO_FRIENDLY_BIT;
-+			break;
-+		}
-+	}
-+
-+	if (flags)
-+		goto out;
-+
-+	for (i = 0; i < ARRAY_SIZE(social_chs); i++) {
-+		if (social_chs[i] == ch_id) {
-+			flags |= IWL_SCAN_ADWELL_N_APS_SOCIAL_CHS_BIT;
-+			break;
-+		}
-+	}
-+
-+out:
-+	return flags;
-+}
-+
- static void
- iwl_mvm_umac_scan_cfg_channels(struct iwl_mvm *mvm,
- 			       struct ieee80211_channel **channels,
-@@ -1615,6 +1655,30 @@ iwl_mvm_umac_scan_cfg_channels_v4(struct iwl_mvm *mvm,
- 	}
- }
- 
-+static void
-+iwl_mvm_umac_scan_cfg_channels_v6(struct iwl_mvm *mvm,
-+				  struct ieee80211_channel **channels,
-+				  struct iwl_scan_channel_params_v6 *cp,
-+				  int n_channels, u32 flags,
-+				  enum nl80211_iftype vif_type)
-+{
-+	int i;
-+
-+	for (i = 0; i < n_channels; i++) {
-+		enum nl80211_band band = channels[i]->band;
-+		struct iwl_scan_channel_cfg_umac *cfg = &cp->channel_config[i];
-+		u32 n_aps_flag =
-+			iwl_mvm_scan_ch_n_aps_flag(vif_type,
-+						   cfg->v2.channel_num);
-+
-+		cfg->flags = cpu_to_le32(flags | n_aps_flag);
-+		cfg->v2.channel_num = channels[i]->hw_value;
-+		cfg->v2.band = iwl_mvm_phy_band_from_nl80211(band);
-+		cfg->v2.iter_count = 1;
-+		cfg->v2.iter_interval = 0;
-+	}
-+}
-+
- static u8 iwl_mvm_scan_umac_chan_flags_v2(struct iwl_mvm *mvm,
- 					  struct iwl_mvm_scan_params *params,
- 					  struct ieee80211_vif *vif)
-@@ -1915,7 +1979,7 @@ iwl_mvm_scan_umac_fill_ch_p_v4(struct iwl_mvm *mvm,
- {
- 	cp->flags = iwl_mvm_scan_umac_chan_flags_v2(mvm, params, vif);
- 	cp->count = params->n_channels;
--	cp->num_of_aps_override = IWL_SCAN_ADWELL_DEFAULT_N_APS_OVERRIDE;
-+	cp->num_of_aps_override = IWL_SCAN_ADWELL_N_APS_GO_FRIENDLY;
- 
- 	iwl_mvm_umac_scan_cfg_channels_v4(mvm, params->channels, cp,
- 					  params->n_channels,
-@@ -1923,6 +1987,23 @@ iwl_mvm_scan_umac_fill_ch_p_v4(struct iwl_mvm *mvm,
- 					  vif->type);
- }
- 
-+static void
-+iwl_mvm_scan_umac_fill_ch_p_v6(struct iwl_mvm *mvm,
-+			       struct iwl_mvm_scan_params *params,
-+			       struct ieee80211_vif *vif,
-+			       struct iwl_scan_channel_params_v6 *cp,
-+			       u32 channel_cfg_flags)
-+{
-+	cp->flags = iwl_mvm_scan_umac_chan_flags_v2(mvm, params, vif);
-+	cp->count = params->n_channels;
-+	cp->n_aps_override[0] = IWL_SCAN_ADWELL_N_APS_GO_FRIENDLY;
-+	cp->n_aps_override[1] = IWL_SCAN_ADWELL_N_APS_SOCIAL_CHS;
-+
-+	iwl_mvm_umac_scan_cfg_channels_v6(mvm, params->channels, cp,
-+					  params->n_channels,
-+					  channel_cfg_flags,
-+					  vif->type);
-+}
- 
- static int iwl_mvm_scan_umac_v12(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 				 struct iwl_mvm_scan_params *params, int type,
-@@ -1990,6 +2071,40 @@ static int iwl_mvm_scan_umac_v13(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 	return 0;
- }
- 
-+static int iwl_mvm_scan_umac_v14(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
-+				 struct iwl_mvm_scan_params *params, int type,
-+				 int uid)
-+{
-+	struct iwl_scan_req_umac_v14 *cmd = mvm->scan_cmd;
-+	struct iwl_scan_req_params_v14 *scan_p = &cmd->scan_params;
-+	int ret;
-+	u16 gen_flags;
-+	u32 bitmap_ssid = 0;
-+
-+	mvm->scan_uid_status[uid] = type;
-+
-+	cmd->ooc_priority = cpu_to_le32(iwl_mvm_scan_umac_ooc_priority(params));
-+	cmd->uid = cpu_to_le32(uid);
-+
-+	gen_flags = iwl_mvm_scan_umac_flags_v2(mvm, params, vif, type);
-+	iwl_mvm_scan_umac_fill_general_p_v10(mvm, params, vif,
-+					     &scan_p->general_params,
-+					     gen_flags);
-+
-+	 ret = iwl_mvm_fill_scan_sched_params(params,
-+					      scan_p->periodic_params.schedule,
-+					      &scan_p->periodic_params.delay);
-+	if (ret)
-+		return ret;
-+
-+	iwl_mvm_scan_umac_fill_probe_p_v4(params, &scan_p->probe_params,
-+					  &bitmap_ssid);
-+	iwl_mvm_scan_umac_fill_ch_p_v6(mvm, params, vif,
-+				       &scan_p->channel_params, bitmap_ssid);
-+
-+	return 0;
-+}
-+
- static int iwl_mvm_num_scans(struct iwl_mvm *mvm)
- {
- 	return hweight32(mvm->scan_status & IWL_MVM_SCAN_MASK);
-@@ -2105,6 +2220,7 @@ struct iwl_scan_umac_handler {
- 
- static const struct iwl_scan_umac_handler iwl_scan_umac_handlers[] = {
- 	/* set the newest version first to shorten the list traverse time */
-+	IWL_SCAN_UMAC_HANDLER(14),
- 	IWL_SCAN_UMAC_HANDLER(13),
- 	IWL_SCAN_UMAC_HANDLER(12),
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
+index 53568bbcf214..bfabe0ed4ee8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
+@@ -464,8 +464,8 @@ const struct iwl_cfg iwl9560_2ac_cfg_quz_a0_jf_b0_soc = {
+ 	 * HT size; mac80211 would otherwise pick the HE max (256) by default.
+ 	 */
+ 	.max_tx_agg_size = IEEE80211_MAX_AMPDU_BUF_HT,
+-	.integrated = true,
+-	.soc_latency = 5000,
++	.trans.integrated = true,
++	.trans.xtal_latency = 5000,
+ 	.num_rbds = IWL_NUM_RBDS_NON_HE,
  };
-@@ -2463,6 +2579,7 @@ static int iwl_mvm_scan_stop_wait(struct iwl_mvm *mvm, int type)
- static int iwl_scan_req_umac_get_size(u8 scan_ver)
- {
- 	switch (scan_ver) {
-+		IWL_SCAN_REQ_UMAC_HANDLE_SIZE(14);
- 		IWL_SCAN_REQ_UMAC_HANDLE_SIZE(13);
- 		IWL_SCAN_REQ_UMAC_HANDLE_SIZE(12);
- 	}
+ 
+@@ -479,8 +479,8 @@ const struct iwl_cfg iwl9560_2ac_160_cfg_quz_a0_jf_b0_soc = {
+ 	 * HT size; mac80211 would otherwise pick the HE max (256) by default.
+ 	 */
+ 	.max_tx_agg_size = IEEE80211_MAX_AMPDU_BUF_HT,
+-	.integrated = true,
+-	.soc_latency = 5000,
++	.trans.integrated = true,
++	.trans.xtal_latency = 5000,
+ 	.num_rbds = IWL_NUM_RBDS_NON_HE,
+ };
+ 
+@@ -494,8 +494,8 @@ const struct iwl_cfg iwl9461_2ac_cfg_quz_a0_jf_b0_soc = {
+ 	 * HT size; mac80211 would otherwise pick the HE max (256) by default.
+ 	 */
+ 	.max_tx_agg_size = IEEE80211_MAX_AMPDU_BUF_HT,
+-	.integrated = true,
+-	.soc_latency = 5000,
++	.trans.integrated = true,
++	.trans.xtal_latency = 5000,
+ 	.num_rbds = IWL_NUM_RBDS_NON_HE,
+ };
+ 
+@@ -509,8 +509,8 @@ const struct iwl_cfg iwl9462_2ac_cfg_quz_a0_jf_b0_soc = {
+ 	 * HT size; mac80211 would otherwise pick the HE max (256) by default.
+ 	 */
+ 	.max_tx_agg_size = IEEE80211_MAX_AMPDU_BUF_HT,
+-	.integrated = true,
+-	.soc_latency = 5000,
++	.trans.integrated = true,
++	.trans.xtal_latency = 5000,
+ 	.num_rbds = IWL_NUM_RBDS_NON_HE,
+ };
+ 
+@@ -524,8 +524,8 @@ const struct iwl_cfg iwl9560_killer_s_2ac_cfg_quz_a0_jf_b0_soc = {
+ 	 * HT size; mac80211 would otherwise pick the HE max (256) by default.
+ 	 */
+ 	.max_tx_agg_size = IEEE80211_MAX_AMPDU_BUF_HT,
+-	.integrated = true,
+-	.soc_latency = 5000,
++	.trans.integrated = true,
++	.trans.xtal_latency = 5000,
+ 	.num_rbds = IWL_NUM_RBDS_NON_HE,
+ };
+ 
+@@ -539,8 +539,8 @@ const struct iwl_cfg iwl9560_killer_i_2ac_cfg_quz_a0_jf_b0_soc = {
+ 	 * HT size; mac80211 would otherwise pick the HE max (256) by default.
+ 	 */
+ 	.max_tx_agg_size = IEEE80211_MAX_AMPDU_BUF_HT,
+-	.integrated = true,
+-	.soc_latency = 5000,
++	.trans.integrated = true,
++	.trans.xtal_latency = 5000,
+ 	.num_rbds = IWL_NUM_RBDS_NON_HE,
+ };
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/9000.c b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
+index cb2604b01a99..f84b8e5d3f0b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/9000.c
+@@ -174,9 +174,23 @@ const struct iwl_cfg_trans_params iwl9000_trans_cfg = {
+ 	.rf_id = true,
+ };
+ 
+-const struct iwl_cfg iwl9260_2ac_cfg = {
+-	.fw_name_pre = IWL9260_FW_PRE,
+-	IWL_DEVICE_9000,
++const struct iwl_cfg_trans_params iwl9560_trans_cfg = {
++	.device_family = IWL_DEVICE_FAMILY_9000,
++	.base_params = &iwl9000_base_params,
++	.mq_rx_supported = true,
++	.rf_id = true,
++	.integrated = true,
++	.xtal_latency = 5000,
++};
++
++const struct iwl_cfg_trans_params iwl9560_shared_clk_trans_cfg = {
++	.device_family = IWL_DEVICE_FAMILY_9000,
++	.base_params = &iwl9000_base_params,
++	.mq_rx_supported = true,
++	.rf_id = true,
++	.integrated = true,
++	.xtal_latency = 5000,
++	.extra_phy_cfg_flags = FW_PHY_CFG_SHARED_CLK
+ };
+ 
+ const char iwl9162_name[] = "Intel(R) Wireless-AC 9162";
+@@ -200,19 +214,14 @@ const char iwl9560_killer_1550i_name[] =
+ const char iwl9560_killer_1550s_name[] =
+ 	"Killer (R) Wireless-AC 1550s Wireless Network Adapter (9560NGW)";
+ 
+-const struct iwl_cfg iwl9560_2ac_cfg_soc = {
+-	.fw_name_pre = IWL9000_FW_PRE,
++const struct iwl_cfg iwl9260_2ac_cfg = {
++	.fw_name_pre = IWL9260_FW_PRE,
+ 	IWL_DEVICE_9000,
+-	.integrated = true,
+-	.soc_latency = 5000,
+ };
+ 
+-const struct iwl_cfg iwl9560_2ac_cfg_shared_clk = {
++const struct iwl_cfg iwl9560_2ac_cfg_soc = {
+ 	.fw_name_pre = IWL9000_FW_PRE,
+ 	IWL_DEVICE_9000,
+-	.integrated = true,
+-	.soc_latency = 5000,
+-	.extra_phy_cfg_flags = FW_PHY_CFG_SHARED_CLK
+ };
+ 
+ MODULE_FIRMWARE(IWL9000_MODULE_FIRMWARE(IWL9000_UCODE_API_MAX));
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+index dc32ccf95be5..2e9a85a9ee67 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+@@ -287,27 +287,34 @@ struct iwl_pwr_tx_backoff {
+ /**
+  * struct iwl_cfg_trans - information needed to start the trans
+  *
+- * These values cannot be changed when multiple configs are used for a
+- * single PCI ID, because they are needed before the HW REV or RFID
+- * can be read.
++ * These values are specific to the device ID and do not change when
++ * multiple configs are used for a single device ID.  They values are
++ * used, among other things, to boot the NIC so that the HW REV or
++ * RFID can be read before deciding the remaining parameters to use.
+  *
+  * @base_params: pointer to basic parameters
+  * @csr: csr flags and addresses that are different across devices
+  * @device_family: the device family
+  * @umac_prph_offset: offset to add to UMAC periphery address
++ * @xtal_latency: power up latency to get the xtal stabilized
++ * @extra_phy_cfg_flags: extra configuration flags to pass to the PHY
+  * @rf_id: need to read rf_id to determine the firmware image
+  * @use_tfh: use TFH
+  * @gen2: 22000 and on transport operation
+  * @mq_rx_supported: multi-queue rx support
++ * @integrated: discrete or integrated
+  */
+ struct iwl_cfg_trans_params {
+ 	const struct iwl_base_params *base_params;
+ 	enum iwl_device_family device_family;
+ 	u32 umac_prph_offset;
++	u32 xtal_latency;
++	u32 extra_phy_cfg_flags;
+ 	u32 rf_id:1,
+ 	    use_tfh:1,
+ 	    gen2:1,
+ 	    mq_rx_supported:1,
++	    integrated:1,
+ 	    bisr_workaround:1;
+ };
+ 
+@@ -374,7 +381,6 @@ struct iwl_fw_mon_regs {
+  * @smem_offset: offset from which the SMEM begins
+  * @smem_len: the length of SMEM
+  * @vht_mu_mimo_supported: VHT MU-MIMO support
+- * @integrated: discrete or integrated
+  * @cdb: CDB support
+  * @nvm_type: see &enum iwl_nvm_type
+  * @d3_debug_data_base_addr: base address where D3 debug data is stored
+@@ -413,7 +419,6 @@ struct iwl_cfg {
+ 	u32 dccm2_len;
+ 	u32 smem_offset;
+ 	u32 smem_len;
+-	u32 soc_latency;
+ 	u16 nvm_ver;
+ 	u16 nvm_calib_ver;
+ 	u32 rx_with_siso_diversity:1,
+@@ -427,7 +432,6 @@ struct iwl_cfg {
+ 	    disable_dummy_notification:1,
+ 	    apmg_not_supported:1,
+ 	    vht_mu_mimo_supported:1,
+-	    integrated:1,
+ 	    cdb:1,
+ 	    dbgc_supported:1,
+ 	    uhb_supported:1;
+@@ -442,7 +446,6 @@ struct iwl_cfg {
+ 	u8 ucode_api_min;
+ 	u16 num_rbds;
+ 	u32 min_umac_error_event_table;
+-	u32 extra_phy_cfg_flags;
+ 	u32 d3_debug_data_base_addr;
+ 	u32 d3_debug_data_length;
+ 	u32 min_txq_size;
+@@ -496,6 +499,8 @@ struct iwl_dev_info {
+  * This list declares the config structures for all devices.
+  */
+ extern const struct iwl_cfg_trans_params iwl9000_trans_cfg;
++extern const struct iwl_cfg_trans_params iwl9560_trans_cfg;
++extern const struct iwl_cfg_trans_params iwl9560_shared_clk_trans_cfg;
+ extern const struct iwl_cfg_trans_params iwl_ax200_trans_cfg;
+ extern const char iwl9162_name[];
+ extern const char iwl9260_name[];
+@@ -586,7 +591,6 @@ extern const struct iwl_cfg iwl9260_2ac_cfg;
+ extern const struct iwl_cfg iwl9260_2ac_160_cfg;
+ extern const struct iwl_cfg iwl9260_killer_2ac_cfg;
+ extern const struct iwl_cfg iwl9270_2ac_cfg;
+-extern const struct iwl_cfg iwl9560_2ac_cfg;
+ extern const struct iwl_cfg iwl9560_2ac_cfg_quz_a0_jf_b0_soc;
+ extern const struct iwl_cfg iwl9560_2ac_160_cfg_quz_a0_jf_b0_soc;
+ extern const struct iwl_cfg iwl9461_2ac_cfg_quz_a0_jf_b0_soc;
+@@ -596,7 +600,6 @@ extern const struct iwl_cfg iwl9560_killer_i_2ac_cfg_quz_a0_jf_b0_soc;
+ extern const struct iwl_cfg iwl9560_killer_s_2ac_cfg_quz_a0_jf_b0_soc;
+ extern const struct iwl_cfg iwl9461_2ac_cfg_shared_clk;
+ extern const struct iwl_cfg iwl9462_2ac_cfg_shared_clk;
+-extern const struct iwl_cfg iwl9560_2ac_cfg_shared_clk;
+ extern const struct iwl_cfg iwl9560_2ac_160_cfg_shared_clk;
+ extern const struct iwl_cfg iwl9560_killer_2ac_cfg_shared_clk;
+ extern const struct iwl_cfg iwl9560_killer_s_2ac_cfg_shared_clk;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 1b3a2f52e13f..98978a475d93 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -93,10 +93,10 @@ static int iwl_set_soc_latency(struct iwl_mvm *mvm)
+ 	struct iwl_soc_configuration_cmd cmd;
+ 	int ret;
+ 
+-	cmd.device_type = (mvm->trans->cfg->integrated) ?
++	cmd.device_type = (mvm->trans->trans_cfg->integrated) ?
+ 		cpu_to_le32(SOC_CONFIG_CMD_INTEGRATED) :
+ 		cpu_to_le32(SOC_CONFIG_CMD_DISCRETE);
+-	cmd.soc_latency = cpu_to_le32(mvm->trans->cfg->soc_latency);
++	cmd.soc_latency = cpu_to_le32(mvm->trans->trans_cfg->xtal_latency);
+ 
+ 	ret = iwl_mvm_send_cmd_pdu(mvm, iwl_cmd_id(SOC_CONFIGURATION_CMD,
+ 						   SYSTEM_GROUP, 0), 0,
+@@ -561,7 +561,8 @@ static int iwl_send_phy_cfg_cmd(struct iwl_mvm *mvm)
+ 	phy_cfg_cmd.phy_cfg = cpu_to_le32(iwl_mvm_get_phy_config(mvm));
+ 
+ 	/* set flags extra PHY configuration flags from the device's cfg */
+-	phy_cfg_cmd.phy_cfg |= cpu_to_le32(mvm->cfg->extra_phy_cfg_flags);
++	phy_cfg_cmd.phy_cfg |=
++		cpu_to_le32(mvm->trans->trans_cfg->extra_phy_cfg_flags);
+ 
+ 	phy_cfg_cmd.calib_control.event_trigger =
+ 		mvm->fw->default_calib[ucode_type].event_trigger;
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index 5f10dba12c8c..76c8df244dba 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -567,12 +567,12 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ 	{IWL_PCI_DEVICE(0x06F0, 0x42A4, iwl9462_2ac_cfg_quz_a0_jf_b0_soc)},
+ 
+ 	{IWL_PCI_DEVICE(0x2526, PCI_ANY_ID, iwl9000_trans_cfg)},
+-	{IWL_PCI_DEVICE(0x271B, PCI_ANY_ID, iwl9000_trans_cfg)},
+-	{IWL_PCI_DEVICE(0x271C, PCI_ANY_ID, iwl9000_trans_cfg)},
+-	{IWL_PCI_DEVICE(0x30DC, PCI_ANY_ID, iwl9000_trans_cfg)},
+-	{IWL_PCI_DEVICE(0x31DC, PCI_ANY_ID, iwl9000_trans_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, PCI_ANY_ID, iwl9000_trans_cfg)},
+-	{IWL_PCI_DEVICE(0xA370, PCI_ANY_ID, iwl9000_trans_cfg)},
++	{IWL_PCI_DEVICE(0x271B, PCI_ANY_ID, iwl9560_trans_cfg)},
++	{IWL_PCI_DEVICE(0x271C, PCI_ANY_ID, iwl9560_trans_cfg)},
++	{IWL_PCI_DEVICE(0x30DC, PCI_ANY_ID, iwl9560_trans_cfg)},
++	{IWL_PCI_DEVICE(0x31DC, PCI_ANY_ID, iwl9560_shared_clk_trans_cfg)},
++	{IWL_PCI_DEVICE(0x9DF0, PCI_ANY_ID, iwl9560_trans_cfg)},
++	{IWL_PCI_DEVICE(0xA370, PCI_ANY_ID, iwl9560_trans_cfg)},
+ 
+ 	{IWL_PCI_DEVICE(0x2720, 0x0034, iwl9560_2ac_cfg_qu_b0_jf_b0)},
+ 	{IWL_PCI_DEVICE(0x2720, 0x0038, iwl9560_2ac_160_cfg_qu_b0_jf_b0)},
+@@ -825,37 +825,11 @@ static const struct iwl_dev_info iwl_dev_info_table[] = {
+ 	IWL_DEV_INFO(0x2526, 0x1552, iwl9560_2ac_cfg_soc, iwl9560_killer_1550i_name),
+ 	IWL_DEV_INFO(0x30DC, 0x1551, iwl9560_2ac_cfg_soc, iwl9560_killer_1550s_name),
+ 	IWL_DEV_INFO(0x30DC, 0x1552, iwl9560_2ac_cfg_soc, iwl9560_killer_1550i_name),
+-	IWL_DEV_INFO(0x31DC, 0x1551, iwl9560_2ac_cfg_shared_clk, iwl9560_killer_1550s_name),
+-	IWL_DEV_INFO(0x31DC, 0x1552, iwl9560_2ac_cfg_shared_clk, iwl9560_killer_1550i_name),
++	IWL_DEV_INFO(0x31DC, 0x1551, iwl9560_2ac_cfg_soc, iwl9560_killer_1550s_name),
++	IWL_DEV_INFO(0x31DC, 0x1552, iwl9560_2ac_cfg_soc, iwl9560_killer_1550i_name),
+ 
+ 	IWL_DEV_INFO(0x271C, 0x0214, iwl9260_2ac_cfg, iwl9260_1_name),
+ 
+-	_IWL_DEV_INFO(0x31DC, IWL_CFG_ANY,
+-		      IWL_CFG_MAC_TYPE_PU, IWL_CFG_RF_TYPE_JF1, IWL_CFG_RF_ID_JF1,
+-		      IWL_CFG_160, IWL_CFG_CORES_BT,
+-		      iwl9560_2ac_cfg_shared_clk, iwl9461_160_name),
+-	_IWL_DEV_INFO(0x31DC, IWL_CFG_ANY,
+-		      IWL_CFG_MAC_TYPE_PU, IWL_CFG_RF_TYPE_JF1, IWL_CFG_RF_ID_JF1,
+-		      IWL_CFG_NO_160, IWL_CFG_CORES_BT,
+-		      iwl9560_2ac_cfg_shared_clk, iwl9461_name),
+-	_IWL_DEV_INFO(0x31DC, IWL_CFG_ANY,
+-		      IWL_CFG_MAC_TYPE_PU, IWL_CFG_RF_TYPE_JF1, IWL_CFG_RF_ID_JF1_DIV,
+-		      IWL_CFG_160, IWL_CFG_CORES_BT,
+-		      iwl9560_2ac_cfg_shared_clk, iwl9462_160_name),
+-	_IWL_DEV_INFO(0x31DC, IWL_CFG_ANY,
+-		      IWL_CFG_MAC_TYPE_PU, IWL_CFG_RF_TYPE_JF1, IWL_CFG_RF_ID_JF1_DIV,
+-		      IWL_CFG_NO_160, IWL_CFG_CORES_BT,
+-		      iwl9560_2ac_cfg_shared_clk, iwl9462_name),
+-
+-	_IWL_DEV_INFO(0x31DC, IWL_CFG_ANY,
+-		      IWL_CFG_MAC_TYPE_PU, IWL_CFG_RF_TYPE_JF2, IWL_CFG_RF_ID_JF,
+-		      IWL_CFG_160, IWL_CFG_CORES_BT,
+-		      iwl9560_2ac_cfg_shared_clk, iwl9560_160_name),
+-	_IWL_DEV_INFO(0x31DC, IWL_CFG_ANY,
+-		      IWL_CFG_MAC_TYPE_PU, IWL_CFG_RF_TYPE_JF2, IWL_CFG_RF_ID_JF,
+-		      IWL_CFG_NO_160, IWL_CFG_CORES_BT,
+-		      iwl9560_2ac_cfg_shared_clk, iwl9560_name),
+-
+ 	_IWL_DEV_INFO(IWL_CFG_ANY, IWL_CFG_ANY,
+ 		      IWL_CFG_MAC_TYPE_PU, IWL_CFG_RF_TYPE_JF1, IWL_CFG_RF_ID_JF1,
+ 		      IWL_CFG_160, IWL_CFG_CORES_BT,
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+index 427fcea5cb2d..8c29071cb415 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+@@ -1043,7 +1043,7 @@ static void iwl_pcie_rx_mq_hw_init(struct iwl_trans *trans)
+ 			       RFH_GEN_CFG_VAL(DEFAULT_RXQ_NUM, 0) |
+ 			       RFH_GEN_CFG_SERVICE_DMA_SNOOP |
+ 			       RFH_GEN_CFG_VAL(RB_CHUNK_SIZE,
+-					       trans->cfg->integrated ?
++					       trans->trans_cfg->integrated ?
+ 					       RFH_GEN_CFG_RB_CHUNK_SIZE_64 :
+ 					       RFH_GEN_CFG_RB_CHUNK_SIZE_128));
+ 	/* Enable the relevant rx queues */
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index 46832bbfcae7..e4cbd8daa7c6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -1817,7 +1817,7 @@ static int _iwl_trans_pcie_start_hw(struct iwl_trans *trans)
+ 	iwl_trans_pcie_sw_reset(trans);
+ 
+ 	if (trans->trans_cfg->device_family == IWL_DEVICE_FAMILY_22000 &&
+-	    trans->cfg->integrated) {
++	    trans->trans_cfg->integrated) {
+ 		err = iwl_pcie_gen2_force_power_gating(trans);
+ 		if (err)
+ 			return err;
 -- 
 2.25.1
 
