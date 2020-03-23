@@ -6,30 +6,30 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26816C54FCF
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0F44C54EEB
 	for <linux-wireless@archiver.kernel.org>; Mon, 23 Mar 2020 15:25:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F2C80206F8
-	for <linux-wireless@archiver.kernel.org>; Mon, 23 Mar 2020 15:25:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 80F77206F8
+	for <linux-wireless@archiver.kernel.org>; Mon, 23 Mar 2020 15:25:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727368AbgCWPZw (ORCPT
+        id S1727313AbgCWPZu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 23 Mar 2020 11:25:52 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:49316 "EHLO
+        Mon, 23 Mar 2020 11:25:50 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:49292 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727278AbgCWPZv (ORCPT
+        with ESMTP id S1727228AbgCWPZt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Mar 2020 11:25:51 -0400
+        Mon, 23 Mar 2020 11:25:49 -0400
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.93)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1jGOxY-002WVN-T4; Mon, 23 Mar 2020 16:25:49 +0100
+        id 1jGOxX-002WVN-RR; Mon, 23 Mar 2020 16:25:47 +0100
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     me@bobcopeland.com, Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 6/7] wmediumd: track dynamic station addresses
-Date:   Mon, 23 Mar 2020 16:25:41 +0100
-Message-Id: <20200323162245.358bbb1372cb.Idd69e690298107f7d7be6c547284b6443926e5a2@changeid>
+Subject: [PATCH 3/7] wmediumd: fix use-after-free
+Date:   Mon, 23 Mar 2020 16:25:38 +0100
+Message-Id: <20200323162245.3c73cce10e60.I075866ca98e0f5633baef99efdcb8276962c198b@changeid>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200323152542.68696-1-johannes@sipsolutions.net>
 References: <20200323152542.68696-1-johannes@sipsolutions.net>
@@ -42,220 +42,92 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-With newer kernels, mac80211_hwsim indicates to us when it starts
-and stops using a certain MAC address on a certain radio. Without
-that, there's a need to configure each MAC address as a station,
-which is not only incorrect (a station can have multiple addresses
-and wouldn't have a different position or different frame loss
-probabilities between them) but also impractical, e.g. for random
-scanning.
+When a client (vhost-user) disconnects when there's a frame from
+it on the queue, we have a use-after-free on actually sending it.
+Avoid this by clearing all the stations->client pointers that go
+away, and removing frames where the source goes away.
 
-Add the necessary code to track and use this information, and look
-up sender station by the HW address and destination by any of the
-used addresses.
+Also, while at it, remove the unused frame->dest pointer.
 
-Still keep looking up by source address as well to not break any
-existing use cases.
-
+Fixes: 5b4cebfbf6d9 ("wmediumd: add vhost-user support")
 ---
- wmediumd/wmediumd.c | 97 ++++++++++++++++++++++++++++++++++++++++-----
- wmediumd/wmediumd.h | 22 ++++++++--
- 2 files changed, 105 insertions(+), 14 deletions(-)
+ wmediumd/wmediumd.c | 35 ++++++++++++++++++++++++++++++++---
+ wmediumd/wmediumd.h |  2 +-
+ 2 files changed, 33 insertions(+), 4 deletions(-)
 
 diff --git a/wmediumd/wmediumd.c b/wmediumd/wmediumd.c
-index a1e16defd144..14ea63b6ba69 100644
+index e7374d9b9639..39797e58f277 100644
 --- a/wmediumd/wmediumd.c
 +++ b/wmediumd/wmediumd.c
-@@ -238,6 +238,32 @@ static struct station *get_station_by_addr(struct wmediumd *ctx, u8 *addr)
- 	return NULL;
- }
+@@ -368,7 +368,6 @@ static void queue_frame(struct wmediumd *ctx, struct station *station,
+ 	target += send_time;
  
-+static bool station_has_addr(struct station *station, const u8 *addr)
-+{
-+	unsigned int i;
-+
-+	if (memcmp(station->addr, addr, ETH_ALEN) == 0)
-+		return true;
-+
-+	for (i = 0; i < station->n_addrs; i++) {
-+		if (memcmp(station->addrs[i].addr, addr, ETH_ALEN) == 0)
-+			return true;
-+	}
-+
-+	return false;
-+}
-+
-+static struct station *get_station_by_used_addr(struct wmediumd *ctx, u8 *addr)
-+{
-+	struct station *station;
-+
-+	list_for_each_entry(station, &ctx->stations, list) {
-+		if (station_has_addr(station, addr))
-+			return station;
-+	}
-+	return NULL;
-+}
-+
- static void queue_frame(struct wmediumd *ctx, struct station *station,
- 			struct frame *frame)
- {
-@@ -285,7 +311,7 @@ static void queue_frame(struct wmediumd *ctx, struct station *station,
- 	if (is_multicast_ether_addr(dest)) {
- 		deststa = NULL;
- 	} else {
--		deststa = get_station_by_addr(ctx, dest);
-+		deststa = get_station_by_used_addr(ctx, dest);
- 		if (deststa) {
- 			snr = ctx->get_link_snr(ctx, station, deststa) -
- 				get_signal_offset_by_interference(ctx,
-@@ -586,7 +612,7 @@ static void wmediumd_deliver_frame(struct usfstl_job *job)
- 						      1, signal,
- 						      frame->freq);
- 
--			} else if (memcmp(dest, station->addr, ETH_ALEN) == 0) {
-+			} else if (station_has_addr(station, dest)) {
- 				if (set_interference_duration(ctx,
- 					frame->sender->index, frame->duration,
- 					frame->signal))
-@@ -657,13 +683,16 @@ static void _process_messages(struct nl_msg *msg,
- 	struct station *sender;
- 	struct frame *frame;
- 	struct ieee80211_hdr *hdr;
--	u8 *src;
-+	u8 *src, *hwaddr, *addr;
-+	void *new;
-+	unsigned int i;
-+
-+	genlmsg_parse(nlh, 0, attrs, HWSIM_ATTR_MAX, NULL);
- 
--	if (gnlh->cmd == HWSIM_CMD_FRAME) {
--		/* we get the attributes*/
--		genlmsg_parse(nlh, 0, attrs, HWSIM_ATTR_MAX, NULL);
-+	switch (gnlh->cmd) {
-+	case HWSIM_CMD_FRAME:
- 		if (attrs[HWSIM_ATTR_ADDR_TRANSMITTER]) {
--			u8 *hwaddr = (u8 *)nla_data(attrs[HWSIM_ATTR_ADDR_TRANSMITTER]);
-+			hwaddr = (u8 *)nla_data(attrs[HWSIM_ATTR_ADDR_TRANSMITTER]);
- 
- 			unsigned int data_len =
- 				nla_len(attrs[HWSIM_ATTR_FRAME]);
-@@ -687,12 +716,18 @@ static void _process_messages(struct nl_msg *msg,
- 			if (data_len < 6 + 6 + 4)
- 				return;
- 
--			sender = get_station_by_addr(ctx, src);
-+			sender = get_station_by_addr(ctx, hwaddr);
- 			if (!sender) {
--				w_flogf(ctx, LOG_ERR, stderr, "Unable to find sender station " MAC_FMT "\n", MAC_ARGS(src));
--				return;
-+				sender = get_station_by_used_addr(ctx, src);
-+				if (!sender) {
-+					w_flogf(ctx, LOG_ERR, stderr,
-+						"Unable to find sender station by src=" MAC_FMT " nor hwaddr=" MAC_FMT "\n",
-+						MAC_ARGS(src), MAC_ARGS(hwaddr));
-+					return;
-+				}
-+				memcpy(sender->hwaddr, hwaddr, ETH_ALEN);
- 			}
--			memcpy(sender->hwaddr, hwaddr, ETH_ALEN);
-+
- 			if (!sender->client)
- 				sender->client = client;
- 
-@@ -712,6 +747,46 @@ static void _process_messages(struct nl_msg *msg,
- 			       min(tx_rates_len, sizeof(frame->tx_rates)));
- 			queue_frame(ctx, sender, frame);
- 		}
-+		break;
-+	case HWSIM_CMD_ADD_MAC_ADDR:
-+		if (!attrs[HWSIM_ATTR_ADDR_TRANSMITTER] ||
-+		    !attrs[HWSIM_ATTR_ADDR_RECEIVER])
-+			break;
-+		hwaddr = (u8 *)nla_data(attrs[HWSIM_ATTR_ADDR_TRANSMITTER]);
-+		addr = (u8 *)nla_data(attrs[HWSIM_ATTR_ADDR_RECEIVER]);
-+		sender = get_station_by_addr(ctx, hwaddr);
-+		if (!sender)
-+			break;
-+		for (i = 0; i < sender->n_addrs; i++) {
-+			if (memcmp(sender->addrs[i].addr, addr, ETH_ALEN) == 0)
-+				return;
-+		}
-+		new = realloc(sender->addrs, ETH_ALEN * (sender->n_addrs + 1));
-+		if (!new)
-+			break;
-+		sender->addrs = new;
-+		memcpy(sender->addrs[sender->n_addrs].addr, addr, ETH_ALEN);
-+		sender->n_addrs += 1;
-+		break;
-+	case HWSIM_CMD_DEL_MAC_ADDR:
-+		if (!attrs[HWSIM_ATTR_ADDR_TRANSMITTER] ||
-+		    !attrs[HWSIM_ATTR_ADDR_RECEIVER])
-+			break;
-+		hwaddr = (u8 *)nla_data(attrs[HWSIM_ATTR_ADDR_TRANSMITTER]);
-+		addr = (u8 *)nla_data(attrs[HWSIM_ATTR_ADDR_RECEIVER]);
-+		sender = get_station_by_addr(ctx, hwaddr);
-+		if (!sender)
-+			break;
-+		for (i = 0; i < sender->n_addrs; i++) {
-+			if (memcmp(sender->addrs[i].addr, addr, ETH_ALEN))
-+				continue;
-+			sender->n_addrs -= 1;
-+			memmove(sender->addrs[i].addr,
-+				sender->addrs[sender->n_addrs].addr,
-+				ETH_ALEN);
-+			break;
-+		}
-+		break;
+ 	frame->duration = send_time;
+-	frame->dest = deststa ? deststa->client : NULL;
+ 	frame->src = station->client;
+ 	frame->job.start = target;
+ 	frame->job.callback = wmediumd_deliver_frame;
+@@ -399,6 +398,37 @@ static void wmediumd_send_to_client(struct wmediumd *ctx,
  	}
  }
  
++static void wmediumd_remove_client(struct wmediumd *ctx, struct client *client)
++{
++	struct frame *frame, *tmp;
++	struct wqueue *queue;
++	struct station *station;
++	int ac;
++
++	list_for_each_entry(station, &ctx->stations, list) {
++		if (station->client == client)
++			station->client = NULL;
++	}
++
++	list_for_each_entry(station, &ctx->stations, list) {
++		for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
++			queue = &station->queues[ac];
++			list_for_each_entry_safe(frame, tmp, &queue->frames,
++						 list) {
++				if (frame->src == client) {
++					list_del(&frame->list);
++					usfstl_sched_del_job(&frame->job);
++					free(frame);
++				}
++			}
++		}
++	}
++
++	if (!list_empty(&client->list))
++		list_del(&client->list);
++	free(client);
++}
++
+ /*
+  * Report transmit status to the kernel.
+  */
+@@ -719,8 +749,7 @@ static void wmediumd_vu_disconnected(struct usfstl_vhost_user_dev *dev)
+ 	struct client *client = dev->data;
+ 
+ 	dev->data = NULL;
+-	list_del(&client->list);
+-	free(client);
++	wmediumd_remove_client(dev->server->data, client);
+ }
+ 
+ static const struct usfstl_vhost_user_ops wmediumd_vu_ops = {
 diff --git a/wmediumd/wmediumd.h b/wmediumd/wmediumd.h
-index 1d0392616d83..e201788b9b52 100644
+index d4ce3a1df15d..06b356516a15 100644
 --- a/wmediumd/wmediumd.h
 +++ b/wmediumd/wmediumd.h
-@@ -29,9 +29,19 @@
- #define HWSIM_TX_CTL_NO_ACK		(1 << 1)
- #define HWSIM_TX_STAT_ACK		(1 << 2)
- 
--#define HWSIM_CMD_REGISTER 1
--#define HWSIM_CMD_FRAME 2
--#define HWSIM_CMD_TX_INFO_FRAME 3
-+enum {
-+	HWSIM_CMD_UNSPEC,
-+	HWSIM_CMD_REGISTER,
-+	HWSIM_CMD_FRAME,
-+	HWSIM_CMD_TX_INFO_FRAME,
-+	HWSIM_CMD_NEW_RADIO,
-+	HWSIM_CMD_DEL_RADIO,
-+	HWSIM_CMD_GET_RADIO,
-+	HWSIM_CMD_ADD_MAC_ADDR,
-+	HWSIM_CMD_DEL_MAC_ADDR,
-+	__HWSIM_CMD_MAX,
-+};
-+#define HWSIM_CMD_MAX (_HWSIM_CMD_MAX - 1)
- 
- /**
-  * enum hwsim_attrs - hwsim netlink attributes
-@@ -135,6 +145,10 @@ struct wqueue {
- 	int cw_max;
- };
- 
-+struct addr {
-+	u8 addr[ETH_ALEN];
-+};
-+
- struct station {
- 	int index;
- 	u8 addr[ETH_ALEN];		/* virtual interface mac address */
-@@ -145,6 +159,8 @@ struct station {
- 	struct wqueue queues[IEEE80211_NUM_ACS];
- 	struct list_head list;
- 	struct client *client;
-+	unsigned int n_addrs;
-+	struct addr *addrs;
- };
- 
- enum client_type {
+@@ -210,7 +210,7 @@ struct hwsim_tx_rate {
+ struct frame {
+ 	struct list_head list;		/* frame queue list */
+ 	struct usfstl_job job;
+-	struct client *src, *dest;
++	struct client *src;
+ 	bool acked;
+ 	u64 cookie;
+ 	u32 freq;
 -- 
 2.25.1
 
