@@ -2,31 +2,51 @@ Return-Path: <SRS0=rxFU=5K=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D67EC54FCF
-	for <linux-wireless@archiver.kernel.org>; Wed, 25 Mar 2020 16:02:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DFA8CC1975A
+	for <linux-wireless@archiver.kernel.org>; Wed, 25 Mar 2020 16:39:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 652CD20409
-	for <linux-wireless@archiver.kernel.org>; Wed, 25 Mar 2020 16:02:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BF4902077D
+	for <linux-wireless@archiver.kernel.org>; Wed, 25 Mar 2020 16:39:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1585154364;
+	bh=A1GPX4wlECfGGG7gTSHHrGt3spoxTdKZ1xy9utwV/BA=;
+	h=Date:From:To:Cc:Subject:Reply-To:References:In-Reply-To:List-ID:
+	 From;
+	b=bh5hLg+bNJdJIia42ydD9rENmqEg5elG40tzIOD3jyL55dN/Ug8eNkAS41fBgwOCI
+	 NJJWSaJiPtRYSwj54Jv9bWLwDppagi9YpLK10LqTbsKwEzEf3SlAaHT9yzTXOEaCjR
+	 t6boIZI5qyF8AVrUn8Wtjkm8R1HYThTyV6i7zjdk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727990AbgCYQCt convert rfc822-to-8bit (ORCPT
+        id S1727711AbgCYQjV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 25 Mar 2020 12:02:49 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:48461 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727768AbgCYQCs (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Mar 2020 12:02:48 -0400
-Received: from bigeasy by Galois.linutronix.de with local (Exim 4.80)
-        (envelope-from <bigeasy@linutronix.de>)
-        id 1jH8Ts-0005AG-4C; Wed, 25 Mar 2020 17:02:12 +0100
-Date:   Wed, 25 Mar 2020 17:02:12 +0100
-From:   Sebastian Siewior <bigeasy@linutronix.de>
-To:     Thomas Gleixner <tglx@linutronix.de>
-Cc:     paulmck@kernel.org, LKML <linux-kernel@vger.kernel.org>,
+        Wed, 25 Mar 2020 12:39:21 -0400
+Received: from mail.kernel.org ([198.145.29.99]:39030 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727464AbgCYQjU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 25 Mar 2020 12:39:20 -0400
+Received: from paulmck-ThinkPad-P72.home (50-39-105-78.bvtn.or.frontiernet.net [50.39.105.78])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 6311D2073E;
+        Wed, 25 Mar 2020 16:39:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1585154359;
+        bh=A1GPX4wlECfGGG7gTSHHrGt3spoxTdKZ1xy9utwV/BA=;
+        h=Date:From:To:Cc:Subject:Reply-To:References:In-Reply-To:From;
+        b=APOdz2w7EH+7D58vqGoNgP8mOHfbNma8Ty1WIG8jpBICPSinl9OycWqb0OdtxkciV
+         gxpkAVRwhIe+WxIGCYwXBH73yF99ZY9v+QEk7Sp75Ev8c6B1ujrOAxGnV4ZUKw4afx
+         Pt8nI6CO51v4M2JmrHTqBAusgH99DwWPqLUsLFTU=
+Received: by paulmck-ThinkPad-P72.home (Postfix, from userid 1000)
+        id 325E9352094D; Wed, 25 Mar 2020 09:39:19 -0700 (PDT)
+Date:   Wed, 25 Mar 2020 09:39:19 -0700
+From:   "Paul E. McKenney" <paulmck@kernel.org>
+To:     Sebastian Siewior <bigeasy@linutronix.de>
+Cc:     Thomas Gleixner <tglx@linutronix.de>,
+        LKML <linux-kernel@vger.kernel.org>,
         Peter Zijlstra <peterz@infradead.org>,
         Ingo Molnar <mingo@kernel.org>,
         Linus Torvalds <torvalds@linux-foundation.org>,
@@ -65,56 +85,71 @@ Cc:     paulmck@kernel.org, LKML <linux-kernel@vger.kernel.org>,
         linuxppc-dev@lists.ozlabs.org, Davidlohr Bueso <dbueso@suse.de>
 Subject: Re: Documentation/locking/locktypes: Further clarifications and
  wordsmithing
-Message-ID: <20200325160212.oavrni7gmzudnczv@linutronix.de>
+Message-ID: <20200325163919.GU19865@paulmck-ThinkPad-P72>
+Reply-To: paulmck@kernel.org
 References: <20200323025501.GE3199@paulmck-ThinkPad-P72>
  <87r1xhz6qp.fsf@nanos.tec.linutronix.de>
  <20200325002811.GO19865@paulmck-ThinkPad-P72>
  <87wo78y5yy.fsf@nanos.tec.linutronix.de>
+ <20200325160212.oavrni7gmzudnczv@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-Content-Transfer-Encoding: 8BIT
-In-Reply-To: <87wo78y5yy.fsf@nanos.tec.linutronix.de>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20200325160212.oavrni7gmzudnczv@linutronix.de>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2020-03-25 13:27:49 [+0100], Thomas Gleixner wrote:
-> The documentation of rw_semaphores is wrong as it claims that the non-owner
-> reader release is not supported by RT. That's just history biased memory
-> distortion.
+On Wed, Mar 25, 2020 at 05:02:12PM +0100, Sebastian Siewior wrote:
+> On 2020-03-25 13:27:49 [+0100], Thomas Gleixner wrote:
+> > The documentation of rw_semaphores is wrong as it claims that the non-owner
+> > reader release is not supported by RT. That's just history biased memory
+> > distortion.
+> > 
+> > Split the 'Owner semantics' section up and add separate sections for
+> > semaphore and rw_semaphore to reflect reality.
+> > 
+> > Aside of that the following updates are done:
+> > 
+> >  - Add pseudo code to document the spinlock state preserving mechanism on
+> >    PREEMPT_RT
+> > 
+> >  - Wordsmith the bitspinlock and lock nesting sections
+> > 
+> > Co-developed-by: Paul McKenney <paulmck@kernel.org>
+> > Signed-off-by: Paul McKenney <paulmck@kernel.org>
+> > Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+> Acked-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 > 
-> Split the 'Owner semantics' section up and add separate sections for
-> semaphore and rw_semaphore to reflect reality.
+> > --- a/Documentation/locking/locktypes.rst
+> > +++ b/Documentation/locking/locktypes.rst
+> …
+> > +rw_semaphore
+> > +============
+> > +
+> > +rw_semaphore is a multiple readers and single writer lock mechanism.
+> > +
+> > +On non-PREEMPT_RT kernels the implementation is fair, thus preventing
+> > +writer starvation.
+> > +
+> > +rw_semaphore complies by default with the strict owner semantics, but there
+> > +exist special-purpose interfaces that allow non-owner release for readers.
+> > +These work independent of the kernel configuration.
 > 
-> Aside of that the following updates are done:
-> 
->  - Add pseudo code to document the spinlock state preserving mechanism on
->    PREEMPT_RT
-> 
->  - Wordsmith the bitspinlock and lock nesting sections
-> 
-> Co-developed-by: Paul McKenney <paulmck@kernel.org>
-> Signed-off-by: Paul McKenney <paulmck@kernel.org>
-> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Acked-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+> This reads funny, could be my English. "This works independent …" maybe?
 
-> --- a/Documentation/locking/locktypes.rst
-> +++ b/Documentation/locking/locktypes.rst
-…
-> +rw_semaphore
-> +============
-> +
-> +rw_semaphore is a multiple readers and single writer lock mechanism.
-> +
-> +On non-PREEMPT_RT kernels the implementation is fair, thus preventing
-> +writer starvation.
-> +
-> +rw_semaphore complies by default with the strict owner semantics, but there
-> +exist special-purpose interfaces that allow non-owner release for readers.
-> +These work independent of the kernel configuration.
+The "These" refers to "interfaces", which is plural, so "These" rather
+than "This".  But yes, it is a bit awkward, because you have to skip
+back past "readers", "release", and "non-owner" to find the implied
+subject of that last sentence.
 
-This reads funny, could be my English. "This works independent …" maybe?
+So how about this instead, making the implied subject explicit?
 
-Sebastian
+rw_semaphore complies by default with the strict owner semantics, but there
+exist special-purpose interfaces that allow non-owner release for readers.
+These interfaces work independent of the kernel configuration.
+
+							Thanx, Paul
