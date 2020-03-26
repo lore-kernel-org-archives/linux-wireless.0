@@ -6,83 +6,152 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51A32C2D0E5
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Mar 2020 12:01:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8615EC43331
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Mar 2020 12:01:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 28FE820714
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Mar 2020 12:01:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 638D820714
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Mar 2020 12:01:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728200AbgCZMBG (ORCPT
+        id S1728196AbgCZMBE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 26 Mar 2020 08:01:06 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:44134 "EHLO
+        Thu, 26 Mar 2020 08:01:04 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:44122 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728001AbgCZMBF (ORCPT
+        with ESMTP id S1728181AbgCZMBE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Mar 2020 08:01:05 -0400
+        Thu, 26 Mar 2020 08:01:04 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1jHRC3-0003we-1I; Thu, 26 Mar 2020 14:01:03 +0200
+        id 1jHRC1-0003we-Ed; Thu, 26 Mar 2020 14:01:01 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org
-Date:   Thu, 26 Mar 2020 14:00:38 +0200
-Message-Id: <20200326120042.578777-9-luca@coelho.fi>
+Date:   Thu, 26 Mar 2020 14:00:36 +0200
+Message-Id: <20200326120042.578777-7-luca@coelho.fi>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200326120042.578777-1-luca@coelho.fi>
 References: <20200326120042.578777-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 08/12] mac80211: Fail association when AP has no legacy rates
+Subject: [PATCH 06/12] mac80211: agg-tx: refactor sending addba
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ilan Peer <ilan.peer@intel.com>
+From: Mordechay Goodstein <mordechay.goodstein@intel.com>
 
-The MLME logic had a workaround that allowed to continue an
-association with an AP even if the AP did not provide any basic
-rates in its supported rates in the association response, assuming
-that the first (non basic) legacy rate could be used as a basic rate.
-However, this did not consider the case where the AP (which is
-obviously buggy) did not provide any legacy rate.
+We move the actual arming the timer and sending ADDBA to a function
+for the use in different places calling the same logic.
 
-Fix this by failing the association, as this can result in
-an unexpected failure in the low level driver and FW, e.g., in
-rate scale logic etc.
-
-Change-Id: I6e6ce5efda351a8544c0e7bfeee260fe3360d401
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Change-Id: I75934e6464535fbf43969acc796bc886291e79a5
+Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- net/mac80211/mlme.c | 10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
+ net/mac80211/agg-tx.c | 67 +++++++++++++++++++++++++------------------
+ 1 file changed, 39 insertions(+), 28 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 04ed883339c7..2b57c53ab070 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -5037,8 +5037,16 @@ static int ieee80211_prep_connection(struct ieee80211_sub_if_data *sdata,
- 		 * doesn't happen any more, but keep the workaround so
- 		 * in case some *other* APs are buggy in different ways
- 		 * we can connect -- with a warning.
-+		 * Allow this workaround only in case the AP provided at least
-+		 * one rate.
- 		 */
--		if (!basic_rates && min_rate_index >= 0) {
-+		if (min_rate_index < 0) {
-+			sdata_info(sdata,
-+				   "No legacy rates in association response\n");
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index 33da6f738c99..32f40c4f3120 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -9,7 +9,7 @@
+  * Copyright 2007, Michael Wu <flamingice@sourmilk.net>
+  * Copyright 2007-2010, Intel Corporation
+  * Copyright(c) 2015-2017 Intel Deutschland GmbH
+- * Copyright (C) 2018 - 2019 Intel Corporation
++ * Copyright (C) 2018 - 2020 Intel Corporation
+  */
+ 
+ #include <linux/ieee80211.h>
+@@ -448,6 +448,43 @@ static void sta_addba_resp_timer_expired(struct timer_list *t)
+ 	ieee80211_stop_tx_ba_session(&sta->sta, tid);
+ }
+ 
++static void ieee80211_send_addba_with_timeout(struct sta_info *sta,
++					      struct tid_ampdu_tx *tid_tx)
++{
++	struct ieee80211_sub_if_data *sdata = sta->sdata;
++	struct ieee80211_local *local = sta->local;
++	u8 tid = tid_tx->tid;
++	u16 buf_size;
 +
-+			sta_info_free(local, new_sta);
-+			return -EINVAL;
-+		} else if (!basic_rates) {
- 			sdata_info(sdata,
- 				   "No basic rates, using min rate instead\n");
- 			basic_rates = BIT(min_rate_index);
++	/* activate the timer for the recipient's addBA response */
++	mod_timer(&tid_tx->addba_resp_timer, jiffies + ADDBA_RESP_INTERVAL);
++	ht_dbg(sdata, "activated addBA response timer on %pM tid %d\n",
++	       sta->sta.addr, tid);
++
++	spin_lock_bh(&sta->lock);
++	sta->ampdu_mlme.last_addba_req_time[tid] = jiffies;
++	sta->ampdu_mlme.addba_req_num[tid]++;
++	spin_unlock_bh(&sta->lock);
++
++	if (sta->sta.he_cap.has_he) {
++		buf_size = local->hw.max_tx_aggregation_subframes;
++	} else {
++		/*
++		 * We really should use what the driver told us it will
++		 * transmit as the maximum, but certain APs (e.g. the
++		 * LinkSys WRT120N with FW v1.0.07 build 002 Jun 18 2012)
++		 * will crash when we use a lower number.
++		 */
++		buf_size = IEEE80211_MAX_AMPDU_BUF_HT;
++	}
++
++	/* send AddBA request */
++	ieee80211_send_addba_request(sdata, sta->sta.addr, tid,
++				     tid_tx->dialog_token,
++				     sta->tid_seq[tid] >> 4,
++				     buf_size, tid_tx->timeout);
++}
++
+ void ieee80211_tx_ba_session_handle_start(struct sta_info *sta, int tid)
+ {
+ 	struct tid_ampdu_tx *tid_tx;
+@@ -462,7 +499,6 @@ void ieee80211_tx_ba_session_handle_start(struct sta_info *sta, int tid)
+ 		.timeout = 0,
+ 	};
+ 	int ret;
+-	u16 buf_size;
+ 
+ 	tid_tx = rcu_dereference_protected_tid_tx(sta, tid);
+ 
+@@ -508,32 +544,7 @@ void ieee80211_tx_ba_session_handle_start(struct sta_info *sta, int tid)
+ 		return;
+ 	}
+ 
+-	/* activate the timer for the recipient's addBA response */
+-	mod_timer(&tid_tx->addba_resp_timer, jiffies + ADDBA_RESP_INTERVAL);
+-	ht_dbg(sdata, "activated addBA response timer on %pM tid %d\n",
+-	       sta->sta.addr, tid);
+-
+-	spin_lock_bh(&sta->lock);
+-	sta->ampdu_mlme.last_addba_req_time[tid] = jiffies;
+-	sta->ampdu_mlme.addba_req_num[tid]++;
+-	spin_unlock_bh(&sta->lock);
+-
+-	if (sta->sta.he_cap.has_he) {
+-		buf_size = local->hw.max_tx_aggregation_subframes;
+-	} else {
+-		/*
+-		 * We really should use what the driver told us it will
+-		 * transmit as the maximum, but certain APs (e.g. the
+-		 * LinkSys WRT120N with FW v1.0.07 build 002 Jun 18 2012)
+-		 * will crash when we use a lower number.
+-		 */
+-		buf_size = IEEE80211_MAX_AMPDU_BUF_HT;
+-	}
+-
+-	/* send AddBA request */
+-	ieee80211_send_addba_request(sdata, sta->sta.addr, tid,
+-				     tid_tx->dialog_token, params.ssn,
+-				     buf_size, tid_tx->timeout);
++	ieee80211_send_addba_with_timeout(sta, tid_tx);
+ }
+ 
+ /*
 -- 
 2.25.1
 
