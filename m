@@ -6,127 +6,107 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2668C2D0E8
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Mar 2020 12:55:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA127C2D0E8
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Mar 2020 12:55:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9487320748
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Mar 2020 12:55:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BCE2B2073E
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Mar 2020 12:55:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728191AbgCZMzW (ORCPT
+        id S1728237AbgCZMzX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 26 Mar 2020 08:55:22 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:44192 "EHLO
+        Thu, 26 Mar 2020 08:55:23 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:44204 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728065AbgCZMzV (ORCPT
+        with ESMTP id S1728065AbgCZMzX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Mar 2020 08:55:21 -0400
+        Thu, 26 Mar 2020 08:55:23 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1jHS2Z-00040Z-8m; Thu, 26 Mar 2020 14:55:19 +0200
+        id 1jHS2a-00040Z-N2; Thu, 26 Mar 2020 14:55:21 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Thu, 26 Mar 2020 14:54:59 +0200
-Message-Id: <iwlwifi.20200326145047.9f3f3a11ed27.Ib4d0c471da9c50d9981541a7f5926db384a0f7ce@changeid>
+Date:   Thu, 26 Mar 2020 14:55:01 +0200
+Message-Id: <iwlwifi.20200326145047.abe5b5ef260a.I8a14c6af45ea14d8e7f1ef38a589158f38d0c0ea@changeid>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200326125510.621842-1-luca@coelho.fi>
 References: <20200326125510.621842-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 01/12] iwlwifi: mvm: add support for non EDCA based measurements
+Subject: [PATCH 03/12] iwlwifi: add trans_cfg for devices with long latency
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Avraham Stern <avraham.stern@intel.com>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Add support for requesting trigger-based / non trigger-based
-measurements.
+A couple of SoCs, which can be recognized by PCI device IDs 0xA0F0 and
+0x43F0, need a longer wait for the xtal to stabilize.  To handle this,
+add a new trans_cfg structure for Qu devices with a larger
+xtal_latency value and apply them to the devices recognized by these
+IDs.  Also add a flag that allows us to inform the FW that the low
+latency xtal should be used.
 
-Signed-off-by: Avraham Stern <avraham.stern@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/api/location.h   | 6 ++++++
- drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c | 9 +++++++++
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c      | 5 ++++-
- 3 files changed, 19 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/cfg/22000.c  | 12 ++++++++++++
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h |  1 +
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c   |  5 +++--
+ 3 files changed, 16 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/location.h b/drivers/net/wireless/intel/iwlwifi/fw/api/location.h
-index a0d6802c2715..0214e553d5ae 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/location.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/location.h
-@@ -427,6 +427,9 @@ struct iwl_tof_range_req_ap_entry_v2 {
-  *	Default algo type is ML.
-  * @IWL_INITIATOR_AP_FLAGS_MCSI_REPORT: Send the MCSI for each FTM frame to the
-  *	driver.
-+ * @IWL_INITIATOR_AP_FLAGS_NON_TB: Use non trigger based flow
-+ * @IWL_INITIATOR_AP_FLAGS_TB: Use trigger based flow
-+ * @IWL_INITIATOR_AP_FLAGS_SECURED: request secured measurement
-  */
- enum iwl_initiator_ap_flags {
- 	IWL_INITIATOR_AP_FLAGS_ASAP = BIT(1),
-@@ -436,6 +439,9 @@ enum iwl_initiator_ap_flags {
- 	IWL_INITIATOR_AP_FLAGS_ALGO_LR = BIT(5),
- 	IWL_INITIATOR_AP_FLAGS_ALGO_FFT = BIT(6),
- 	IWL_INITIATOR_AP_FLAGS_MCSI_REPORT = BIT(8),
-+	IWL_INITIATOR_AP_FLAGS_NON_TB = BIT(9),
-+	IWL_INITIATOR_AP_FLAGS_TB = BIT(10),
-+	IWL_INITIATOR_AP_FLAGS_SECURED = BIT(11),
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
+index 66f5df74a321..7b67c1ebbedf 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
+@@ -246,6 +246,18 @@ const struct iwl_cfg_trans_params iwl_qu_trans_cfg = {
+ 	.xtal_latency = 5000,
  };
  
- /**
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c b/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
-index 6e1ea921c299..9e21f5e5d364 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
-@@ -278,6 +278,10 @@ iwl_mvm_ftm_target_chandef_v2(struct iwl_mvm *mvm,
- 		return -EINVAL;
- 	}
- 
-+	/* non EDCA based measurement must use HE preamble */
-+	if (peer->ftm.trigger_based || peer->ftm.non_trigger_based)
-+		*format_bw |= IWL_LOCATION_FRAME_FORMAT_HE;
++const struct iwl_cfg_trans_params iwl_qu_long_latency_trans_cfg = {
++	.mq_rx_supported = true,
++	.use_tfh = true,
++	.rf_id = true,
++	.gen2 = true,
++	.device_family = IWL_DEVICE_FAMILY_22000,
++	.base_params = &iwl_22000_base_params,
++	.integrated = true,
++	.xtal_latency = 12000,
++	.low_latency_xtal = true,
++};
 +
- 	*ctrl_ch_position = (peer->chandef.width > NL80211_CHAN_WIDTH_20) ?
- 		iwl_mvm_get_ctrl_pos(&peer->chandef) : 0;
- 
-@@ -349,6 +353,11 @@ iwl_mvm_ftm_put_target_common(struct iwl_mvm *mvm,
- 		FTM_PUT_FLAG(ALGO_LR);
- 	else if (IWL_MVM_FTM_INITIATOR_ALGO == IWL_TOF_ALGO_TYPE_FFT)
- 		FTM_PUT_FLAG(ALGO_FFT);
+ const struct iwl_cfg_trans_params iwl_qnj_trans_cfg = {
+ 	.mq_rx_supported = true,
+ 	.use_tfh = true,
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+index 3069a322ca75..ec715ee17156 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+@@ -507,6 +507,7 @@ extern const struct iwl_cfg_trans_params iwl9000_trans_cfg;
+ extern const struct iwl_cfg_trans_params iwl9560_trans_cfg;
+ extern const struct iwl_cfg_trans_params iwl9560_shared_clk_trans_cfg;
+ extern const struct iwl_cfg_trans_params iwl_qu_trans_cfg;
++extern const struct iwl_cfg_trans_params iwl_qu_long_latency_trans_cfg;
+ extern const struct iwl_cfg_trans_params iwl_qnj_trans_cfg;
+ extern const struct iwl_cfg_trans_params iwl_ax200_trans_cfg;
+ extern const char iwl9162_name[];
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index ba4773e07bf2..d6735453849d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -526,8 +526,9 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ 	{IWL_PCI_DEVICE(0x06F0, PCI_ANY_ID, iwl_qu_trans_cfg)},
+ 	{IWL_PCI_DEVICE(0x34F0, PCI_ANY_ID, iwl_qu_trans_cfg)},
+ 	{IWL_PCI_DEVICE(0x3DF0, PCI_ANY_ID, iwl_qu_trans_cfg)},
+-	{IWL_PCI_DEVICE(0x43F0, PCI_ANY_ID, iwl_qu_trans_cfg)},
+-	{IWL_PCI_DEVICE(0xA0F0, PCI_ANY_ID, iwl_qu_trans_cfg)},
 +
-+	if (peer->ftm.trigger_based)
-+		FTM_PUT_FLAG(TB);
-+	else if (peer->ftm.non_trigger_based)
-+		FTM_PUT_FLAG(NON_TB);
- }
++	{IWL_PCI_DEVICE(0x43F0, PCI_ANY_ID, iwl_qu_long_latency_trans_cfg)},
++	{IWL_PCI_DEVICE(0xA0F0, PCI_ANY_ID, iwl_qu_long_latency_trans_cfg)},
  
- static int
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 7b6d14445f1b..c9c40965de4c 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -193,6 +193,8 @@ static const struct cfg80211_pmsr_capabilities iwl_mvm_pmsr_capa = {
- 		.non_asap = 1,
- 		.request_lci = 1,
- 		.request_civicloc = 1,
-+		.trigger_based = 1,
-+		.non_trigger_based = 1,
- 		.max_bursts_exponent = -1, /* all supported */
- 		.max_ftms_per_burst = 0, /* no limits */
- 		.bandwidths = BIT(NL80211_CHAN_WIDTH_20_NOHT) |
-@@ -201,7 +203,8 @@ static const struct cfg80211_pmsr_capabilities iwl_mvm_pmsr_capa = {
- 			      BIT(NL80211_CHAN_WIDTH_80),
- 		.preambles = BIT(NL80211_PREAMBLE_LEGACY) |
- 			     BIT(NL80211_PREAMBLE_HT) |
--			     BIT(NL80211_PREAMBLE_VHT),
-+			     BIT(NL80211_PREAMBLE_VHT) |
-+			     BIT(NL80211_PREAMBLE_HE),
- 	},
- };
+ 	{IWL_PCI_DEVICE(0x2720, PCI_ANY_ID, iwl_qnj_trans_cfg)},
  
 -- 
 2.25.1
