@@ -2,87 +2,77 @@ Return-Path: <SRS0=ssZ+=5L=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1208EC2D0E7
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Mar 2020 06:19:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34E6BC43331
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Mar 2020 06:49:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DEF3720719
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Mar 2020 06:19:53 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="qFyDC7WT"
+	by mail.kernel.org (Postfix) with ESMTP id 15DD0206F8
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Mar 2020 06:49:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726322AbgCZGTx (ORCPT
+        id S1727725AbgCZGtP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 26 Mar 2020 02:19:53 -0400
-Received: from mail26.static.mailgun.info ([104.130.122.26]:43321 "EHLO
-        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725819AbgCZGTv (ORCPT
+        Thu, 26 Mar 2020 02:49:15 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:44002 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727708AbgCZGtP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Mar 2020 02:19:51 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1585203591; h=Content-Type: MIME-Version: Message-ID:
- In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
- bh=8fHBnabYixGwE4XAz5kPWWZx2CunwgyaNZeFS6vGEXM=; b=qFyDC7WTVqdqJtqGwDLTo3ASJsTNLFdDVJEbp/BEoMy8zFIgmWAAYHd6eRF7nc/01vBB4ixS
- siV+f2AuuhhCK+5bxps4K6LO2EeUyTPmfcK5udRjQkOXsbXhHhiMwJ4gt80Yt9zIInr+gf73
- Lm8xMf0xCo5LNnCIW1k1mnkEPKI=
-X-Mailgun-Sending-Ip: 104.130.122.26
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e7c4983.7fd93f8b33e8-smtp-out-n01;
- Thu, 26 Mar 2020 06:19:47 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id AD05DC433BA; Thu, 26 Mar 2020 06:19:47 +0000 (UTC)
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 3B4E8C433F2;
-        Thu, 26 Mar 2020 06:19:46 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 3B4E8C433F2
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     David Miller <davem@davemloft.net>
-Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull-request: wireless-drivers-2020-03-25
-References: <20200325195754.92C97C433D2@smtp.codeaurora.org>
-        <20200325.131250.822565965107597577.davem@davemloft.net>
-Date:   Thu, 26 Mar 2020 08:19:43 +0200
-In-Reply-To: <20200325.131250.822565965107597577.davem@davemloft.net> (David
-        Miller's message of "Wed, 25 Mar 2020 13:12:50 -0700 (PDT)")
-Message-ID: <87sghv3af4.fsf@kamboji.qca.qualcomm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        Thu, 26 Mar 2020 02:49:15 -0400
+Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa)
+        by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        (Exim 4.93)
+        (envelope-from <luca@coelho.fi>)
+        id 1jHMKH-0003o5-2j; Thu, 26 Mar 2020 08:49:13 +0200
+Message-ID: <937db1c0c8a1352705f07d7866873efba0d1da44.camel@coelho.fi>
+From:   Luca Coelho <luca@coelho.fi>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org
+Date:   Thu, 26 Mar 2020 08:49:11 +0200
+In-Reply-To: <877dz94wrg.fsf@kamboji.qca.qualcomm.com>
+References: <20200323131925.208376-1-luca@coelho.fi>
+         <iwlwifi.20200323151304.a491f6c5ae4b.I6829a46b89e4e701f80a0e4033f4dd41ee44ed12@changeid>
+         <877dz94wrg.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.36.0-1 
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH 01/14] iwlwifi: mvm: add soc latency support
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-David Miller <davem@davemloft.net> writes:
+On Tue, 2020-03-24 at 17:07 +0200, Kalle Valo wrote:
+> Luca Coelho <luca@coelho.fi> writes:
+> 
+> > From: Shahar S Matityahu <shahar.s.matityahu@intel.com>
+> > 
+> > Some devices require longer time to stabilize the power and XTAL.
+> > This is especially true for devices integrated in the SoC.  Add
+> > support for a new firmware API that allows the driver to set the
+> > latency value accordingly.
+> > 
+> > Signed-off-by: Shahar S Matityahu <shahar.s.matityahu@intel.com>
+> > Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+> 
+> [...]
+> 
+> > +++ b/drivers/net/wireless/intel/iwlwifi/fw/api/soc.h
+> > @@ -0,0 +1,83 @@
+> > +/******************************************************************************
+> > + *
+> > + * This file is provided under a dual BSD/GPLv2 license.  When using or
+> > + * redistributing this file, you may do so under either license.
+> 
+> Any chance of getting SPDX tags to iwlwifi soon? They are awesome and
+> make life so much easier.
 
-> From: Kalle Valo <kvalo@codeaurora.org>
-> Date: Wed, 25 Mar 2020 19:57:54 +0000 (UTC)
->
->> here's a pull request to net tree, more info below. Please let me know if there
->> are any problems.
->
-> Pulled, thanks Kalle.
+Hmmm... Most of our files already have it.  I'll add the tags to the
+remaining ones and send it upstream as usual.
 
-Thanks. I forgot to remind in this pull request about the iwlwifi
-conflict when you merge net to net-next. Here are the instructions how
-to handle that:
+--
+Cheers,
+Luca.
 
-  To solve that just drop the changes from commit cf52c8a776d1 in
-  wireless-drivers and take the hunk from wireless-drivers-next as is.
-  The list of specific subsystem device IDs are not necessary after
-  commit d6f2134a3831 (in wireless-drivers-next) anymore, the detection
-  is based on other characteristics of the devices.
-
-  https://git.kernel.org/pub/scm/linux/kernel/git/netdev/net-next.git/commit/?id=5ef8c665416b9815113042e0edebe8ff66a45e2e
-
--- 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
