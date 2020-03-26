@@ -2,100 +2,180 @@ Return-Path: <SRS0=ssZ+=5L=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91A57C2D0E9
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Mar 2020 19:38:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE81FC2D0E5
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Mar 2020 20:47:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 666DE20714
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Mar 2020 19:38:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8B3FA2070A
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Mar 2020 20:47:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="tqaN9BSY"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IIwvZ/Gy"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728629AbgCZTis (ORCPT
+        id S1727852AbgCZUrV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 26 Mar 2020 15:38:48 -0400
-Received: from mail27.static.mailgun.info ([104.130.122.27]:54675 "EHLO
-        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726340AbgCZTir (ORCPT
+        Thu, 26 Mar 2020 16:47:21 -0400
+Received: from us-smtp-delivery-74.mimecast.com ([216.205.24.74]:20653 "EHLO
+        us-smtp-delivery-74.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726296AbgCZUrU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Mar 2020 15:38:47 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1585251527; h=Content-Type: MIME-Version: Message-ID:
- In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
- bh=HGer0yxP7sLj3QyFrIf54CwysnJOZjYM50OWoKj9vg0=; b=tqaN9BSYjyH2fXyr495hPcT9faWssMNRohbrgIXX5qqqGaJlVhWBT3ZqtkDi1ed+hhc6jaEg
- 6MU93iFl/cPxO/jdVTHJHpx7krgat4SefAv9lV/c0II6WoJK6QQw/zLkSrwCT6KkiuuDs2Df
- PfLwkTs2IehK55pFGNQrZx2c7zc=
-X-Mailgun-Sending-Ip: 104.130.122.27
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e7d04c6.7f611eadf928-smtp-out-n03;
- Thu, 26 Mar 2020 19:38:46 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id A0EE1C433BA; Thu, 26 Mar 2020 19:38:45 +0000 (UTC)
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        Thu, 26 Mar 2020 16:47:20 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1585255638;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=oBEHdLAbXLz6FzSdu8JBxHGY7mbTy71DD8uF/npGEWc=;
+        b=IIwvZ/GyMSMVl8s5AI4qaL+3nFhlG3a74SqkL3NDTiXqtu9F9glNlPKpAevYwnCGU70N9q
+        ilYnjLICz2dDmyXgiVp4yWSmv6SnpIosLS2W4JNtxTb0MdyUOAgvejorkf7cKEYvkyEvZJ
+        NUK3fqN7PraRHgqenLWpIer1a8Ca/58=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-127--zxsdm6nOLmJUfjqhN4ybw-1; Thu, 26 Mar 2020 16:47:12 -0400
+X-MC-Unique: -zxsdm6nOLmJUfjqhN4ybw-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id A1268C433F2;
-        Thu, 26 Mar 2020 19:38:43 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org A1268C433F2
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     David Miller <davem@davemloft.net>
-Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull-request: wireless-drivers-2020-03-25
-References: <20200325195754.92C97C433D2@smtp.codeaurora.org>
-        <20200325.131250.822565965107597577.davem@davemloft.net>
-        <87sghv3af4.fsf@kamboji.qca.qualcomm.com>
-        <20200326.112927.988175486161491472.davem@davemloft.net>
-Date:   Thu, 26 Mar 2020 21:38:41 +0200
-In-Reply-To: <20200326.112927.988175486161491472.davem@davemloft.net> (David
-        Miller's message of "Thu, 26 Mar 2020 11:29:27 -0700 (PDT)")
-Message-ID: <87k1363nzy.fsf@kamboji.qca.qualcomm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 7C5808010E3;
+        Thu, 26 Mar 2020 20:47:09 +0000 (UTC)
+Received: from localhost.localdomain (unknown [10.10.110.57])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 463EC92F98;
+        Thu, 26 Mar 2020 20:47:05 +0000 (UTC)
+Message-ID: <4198a0421b572b9d6d36c3ff1202868df5a5c6d4.camel@redhat.com>
+Subject: Re: Geoffroy LETOURNEUR: Samsung AX200 system integration on Nvidia
+ Nano.
+From:   Dan Williams <dcbw@redhat.com>
+To:     Duncan McDonald <d.mcdonald@samsung.com>,
+        Martin Bourreau <m.bourreau@samsung.com>,
+        Geoffroy Letourneur <g.letourneur@samsung.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Matthias May <matthias.may@neratec.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linuxwifi@intel.com" <linuxwifi@intel.com>
+Cc:     Gilles Mazars <g.mazars@samsung.com>,
+        "Kitty (Xia) Lou" <kitty.lou@samsung.com>,
+        Harris Warren <harris.w@samsung.com>,
+        Raymond Chan <raymond.chan@samsung.com>,
+        "Seshu (Leela Seshu Reddy) Cheedepudi" <seshu.reddy@samsung.com>
+Date:   Thu, 26 Mar 2020 15:47:04 -0500
+In-Reply-To: <495ebf129e8846e8a6952eee37f650e2@samsung.com>
+References: <CGME20200325155438uscas1p19c02d00cfd32dac911df3df7a5390eba@uscas1p1.samsung.com>
+         <8096A04E-8692-4DC3-A8D0-8F85FF972799@samsung.com>
+         <04b77faf-2862-22a4-c7e1-1163219e76e9@neratec.com>
+         <6AA2E7A5-70C5-4A5D-A934-0D0DDCA024FD@samsung.com>
+         <1f9123cc49768db30115c364358ea4898bcfff9d.camel@sipsolutions.net>
+         <E16BF92C-B26C-4219-B09B-1DEBF96A3911@samsung.com>
+         <a70556a0cacc376826f38258156a0224d2f54b56.camel@redhat.com>
+         <ECFB8F73-CA97-4100-9B89-029B4701884A@samsung.com>
+         <495ebf129e8846e8a6952eee37f650e2@samsung.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.32.5 (3.32.5-1.fc30) 
 MIME-Version: 1.0
-Content-Type: text/plain
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-David Miller <davem@davemloft.net> writes:
+On Thu, 2020-03-26 at 17:45 +0000, Duncan McDonald wrote:
+> Martin,
+>=20
+> Interesting. I knew there were issues for 802.11ax in the ISM band
+> outside of the ones currently used for wifi, but it seems the issues
+> extend to the current 5GHz band as well.
 
-> From: Kalle Valo <kvalo@codeaurora.org>
-> Date: Thu, 26 Mar 2020 08:19:43 +0200
->
->> David Miller <davem@davemloft.net> writes:
->> 
->>> From: Kalle Valo <kvalo@codeaurora.org>
->>> Date: Wed, 25 Mar 2020 19:57:54 +0000 (UTC)
->>>
->>>> here's a pull request to net tree, more info below. Please let me know if there
->>>> are any problems.
->>>
->>> Pulled, thanks Kalle.
->> 
->> Thanks. I forgot to remind in this pull request about the iwlwifi
->> conflict when you merge net to net-next. Here are the instructions how
->> to handle that:
->> 
->>   To solve that just drop the changes from commit cf52c8a776d1 in
->>   wireless-drivers and take the hunk from wireless-drivers-next as is.
->>   The list of specific subsystem device IDs are not necessary after
->>   commit d6f2134a3831 (in wireless-drivers-next) anymore, the detection
->>   is based on other characteristics of the devices.
->> 
->>   https://git.kernel.org/pub/scm/linux/kernel/git/netdev/net-next.git/commit/?id=5ef8c665416b9815113042e0edebe8ff66a45e2e
->
-> I think that's what I did basically, please go take a look and double
-> check my work.
+To be clear, I have no idea about this specific device or case. But
+802.11h is an example of behavior required for legal/regulatory
+reasons.
 
-Looks good to me, thanks for taking care of it.
+https://www.prowesswireless.com/post/2016/05/28/dfs-80211h
+https://www.cisco.com/c/en/us/support/docs/wireless-mobility/80211/213882=
+-radar-detection-in-dynamic-frequency-sel.html
 
--- 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Dan
+
+> Duncan
+>=20
+> -----Original Message-----
+> From: Martin Bourreau=20
+> Sent: Thursday, March 26, 2020 10:39 AM
+> To: Dan Williams <dcbw@redhat.com>; Geoffroy Letourneur <
+> g.letourneur@samsung.com>; Johannes Berg <johannes@sipsolutions.net>;
+> Matthias May <matthias.may@neratec.com>;=20
+> linux-wireless@vger.kernel.org; linuxwifi@intel.com
+> Cc: Gilles Mazars <g.mazars@samsung.com>; Kitty (Xia) Lou <
+> kitty.lou@samsung.com>; Harris Warren <harris.w@samsung.com>; Raymond
+> Chan <raymond.chan@samsung.com>; Duncan McDonald <
+> d.mcdonald@samsung.com>; Seshu (Leela Seshu Reddy) Cheedepudi <
+> seshu.reddy@samsung.com>
+> Subject: Re: Geoffroy LETOURNEUR: Samsung AX200 system integration on
+> Nvidia Nano.
+>=20
+> Adding people for awareness of the conversation.=20
+>=20
+> =EF=BB=BFLe 26/03/2020 15:32, =C2=AB Dan Williams =C2=BB <dcbw@redhat.c=
+om> a =C3=A9crit :
+>=20
+>     On Thu, 2020-03-26 at 09:27 +0000, Geoffroy Letourneur wrote:
+>     > Hello Johannes,
+>     >=20
+>     > What you mean by regulatory restrictions?
+>     > Hardware restriction ?
+>     > Software restriction ?
+>     > Law restriction ?
+>    =20
+>     There are legal restrictions on spectrum use, especially in the
+> 5Ghz
+>     range. Which means additional effort must be put into both
+> hardware and
+>     software to satisfy those restrictions. And perhaps that effort
+> was not
+>     considered cost effective for the AX200.
+>    =20
+>     Dan
+>    =20
+>     > Best regards Geo
+>     >=20
+>     > --
+>     > Geoffroy LETOURNEUR
+>     > Embedded Software Engineer,
+>     > SSIC, Paris
+>     > =20
+>     > Email: g.letourneur@samsung.com
+>     > Tel: +33 6 45 14 24 32
+>     > =20
+>     > =20
+>     > =20
+>     >=20
+>     > Le 26/03/2020 09:24, =C2=AB Johannes Berg =C2=BB <
+> johannes@sipsolutions.net> a
+>     > =C3=A9crit :
+>     >=20
+>     >     On Thu, 2020-03-26 at 08:19 +0000, Geoffroy Letourneur
+> wrote:
+>     >     > Hello Matthias,
+>     >     >=20
+>     >     > The AX200 module seems to support AP mode it works with
+> 2.4GHz
+>     > Wifi
+>     >     > 802.11n mode, I tested it. But maybe it could not support
+> this
+>     > mode in
+>     >     > 802.11ax.=20
+>     >    =20
+>     >     2.4 GHz should be OK - 5 GHz is generally limited on those
+>     > devices due
+>     >     to regulatory restrictions.
+>     >    =20
+>     >     johannes
+>     >    =20
+>     >    =20
+>     >=20
+>    =20
+>    =20
+>=20
+
