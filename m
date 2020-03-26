@@ -4,47 +4,46 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-5.4 required=3.0 tests=FROM_LOCAL_HEX,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC8FCC43331
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Mar 2020 11:34:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A42BC2D0E5
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Mar 2020 11:34:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9EB1220748
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Mar 2020 11:34:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 074572070A
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Mar 2020 11:34:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728228AbgCZLe0 (ORCPT
+        id S1728190AbgCZLe1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 26 Mar 2020 07:34:26 -0400
-Received: from mail-io1-f71.google.com ([209.85.166.71]:50668 "EHLO
-        mail-io1-f71.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728192AbgCZLeS (ORCPT
+        Thu, 26 Mar 2020 07:34:27 -0400
+Received: from mail-il1-f200.google.com ([209.85.166.200]:53008 "EHLO
+        mail-il1-f200.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728154AbgCZLeS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 26 Mar 2020 07:34:18 -0400
-Received: by mail-io1-f71.google.com with SMTP id s2so4901907iot.17
+Received: by mail-il1-f200.google.com with SMTP id d2so4969228ilf.19
         for <linux-wireless@vger.kernel.org>; Thu, 26 Mar 2020 04:34:16 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:date:message-id:subject:from:to;
-        bh=tUu5ipLqX0h3zkfeKvn8ONybl6tcgocGmca6tPedBZ0=;
-        b=Jjz8V4BYZlqe09nVzzF/0QXDHG3RzsGlEljpUz72CQckaaDRW7j3CkygpsUyfmM7a1
-         Ek29mVEuzbH5V0k481Dldd4QUSSFFaZKGC4NY2VtsIe9w7J0LDP99sQBLsIAJ433rQL3
-         cihsky+0QDWtaVrgEpD8dqdjj/HSiNxFwrt8xKt99gmwad0AP4Mk/OVLh9n7ZPdPI+y4
-         6C0Lseg8Zup0nB/VkD0orYmBWumoTNLbkjxqR065kppHp68FiIJPV8GW+mApwXDep3jc
-         HMdLtupTwUY/w7rVg6qeGdO0e2bVhH3mab33urjf9oT2xs0t8kp3Cpn9880chStBOglX
-         Z9NA==
-X-Gm-Message-State: ANhLgQ37jlmBIe8j2CSS0FEcZEbEyy5JyyO0/g5ASZVJPiW0OXa8QvBp
-        kMxAprlc+j/T3aatTZeHe9KavGM3kavzS65Kne4vI8FFmzQF
-X-Google-Smtp-Source: ADFU+vufjsMSX1K3oF5eN1nnvBpx+Ckwu2UMj8UTss4Wk2k2mnY6WJIimTmipZxTr2BHd+iCykHeg/7tCTky5POrj5DZ9bt6L/UQ
+        bh=OeinQFi7x4TlScyCTQhRHYs3o4+FpLXfl1bcf2XkeHU=;
+        b=tO5tumuoN5jwIY9jE6nEVcVjCTTBFgpKKiUCU/MLFpJ94awHBv/CPf7CEY8t3Eb2pF
+         je0Rmfhb1RKrrTCvizkVA/IgKswcrpZNQjFMYaStuicksaVn4E+mvmpee+0F0zQYv1OR
+         GUKvtiJns6DKQhWYbhIORoZv/u1Xre/Bup7e/RNjey1IQItNgEPFDtTuTtsfYU/XEmhE
+         a+ZHRpvNGuRJcHy+sg9hqD7kOMqyQLVNgl8q/ykhFQP8xVwJdV3DW2qWTSeL0gflu2ge
+         sTbrwprAuuu4Sf0tJQqe42RL+w1OaaI319X05knt1Ty2oiFBUAVaVFnBB1JVScZ5cnH+
+         sPfQ==
+X-Gm-Message-State: ANhLgQ2rNLfvrBrL5w9P2XxU6wG1N+sdQ8Aohqcvhv8PpHq8sLLYSh+x
+        ekawLvR7qI6CmONvS9TVNz3HxSFbcj41uK3jIelubOO/8F1X
+X-Google-Smtp-Source: ADFU+vsqgiA/JP2Ls4ZR6uB3AkBQAQ0h+SfYGkztbIwJbRaJ5pX2Azq8wXCu2UNxpKEfK5jx9TCwcV+WALKhxu17MTcaoyFWAx51
 MIME-Version: 1.0
-X-Received: by 2002:a05:6638:1248:: with SMTP id o8mr6892714jas.143.1585222456046;
+X-Received: by 2002:a92:9edc:: with SMTP id s89mr8441522ilk.229.1585222456337;
  Thu, 26 Mar 2020 04:34:16 -0700 (PDT)
 Date:   Thu, 26 Mar 2020 04:34:16 -0700
 X-Google-Appengine-App-Id: s~syzkaller
 X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <00000000000061f8bb05a1c05def@google.com>
-Subject: KASAN: use-after-free Read in ath9k_hif_usb_rx_cb
-From:   syzbot <syzbot+89bd486af9427a9fc605@syzkaller.appspotmail.com>
+Message-ID: <000000000000666c9c05a1c05d12@google.com>
+Subject: general protection fault in ath9k_hif_usb_rx_cb
+From:   syzbot <syzbot+40d5d2e8a4680952f042@syzkaller.appspotmail.com>
 To:     andreyknvl@google.com, ath9k-devel@qca.qualcomm.com,
         davem@davemloft.net, kvalo@codeaurora.org,
         linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org,
@@ -62,37 +61,36 @@ syzbot found the following crash on:
 
 HEAD commit:    e17994d1 usb: core: kcov: collect coverage from usb comple..
 git tree:       https://github.com/google/kasan.git usb-fuzzer
-console output: https://syzkaller.appspot.com/x/log.txt?x=12533987e00000
+console output: https://syzkaller.appspot.com/x/log.txt?x=112072ade00000
 kernel config:  https://syzkaller.appspot.com/x/.config?x=5d64370c438bc60
-dashboard link: https://syzkaller.appspot.com/bug?extid=89bd486af9427a9fc605
+dashboard link: https://syzkaller.appspot.com/bug?extid=40d5d2e8a4680952f042
 compiler:       gcc (GCC) 9.0.0 20181231 (experimental)
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=161978d5e00000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=1509b523e00000
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=143981d3e00000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=152072ade00000
 
 IMPORTANT: if you fix the bug, please add the following tag to the commit:
-Reported-by: syzbot+89bd486af9427a9fc605@syzkaller.appspotmail.com
+Reported-by: syzbot+40d5d2e8a4680952f042@syzkaller.appspotmail.com
 
-==================================================================
-BUG: KASAN: use-after-free in memcpy include/linux/string.h:381 [inline]
-BUG: KASAN: use-after-free in ath9k_hif_usb_rx_stream drivers/net/wireless/ath/ath9k/hif_usb.c:553 [inline]
-BUG: KASAN: use-after-free in ath9k_hif_usb_rx_cb+0x3be/0xf70 drivers/net/wireless/ath/ath9k/hif_usb.c:666
-Read of size 49151 at addr ffff8881ceee0000 by task swapper/1/0
-
-CPU: 1 PID: 0 Comm: swapper/1 Not tainted 5.6.0-rc5-syzkaller #0
+general protection fault, probably for non-canonical address 0xdffffc0000000015: 0000 [#1] SMP KASAN
+KASAN: null-ptr-deref in range [0x00000000000000a8-0x00000000000000af]
+CPU: 0 PID: 0 Comm: swapper/0 Not tainted 5.6.0-rc5-syzkaller #0
 Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011
+RIP: 0010:usb_get_intfdata include/linux/usb.h:265 [inline]
+RIP: 0010:ath9k_hif_usb_rx_cb+0x103/0xf70 drivers/net/wireless/ath/ath9k/hif_usb.c:643
+Code: 83 3c 24 00 48 89 c3 0f 84 19 04 00 00 e8 95 d5 6e fe 48 8d bb a8 00 00 00 48 b8 00 00 00 00 00 fc ff df 48 89 fa 48 c1 ea 03 <80> 3c 02 00 0f 85 27 0c 00 00 4c 8b a3 a8 00 00 00 4d 85 e4 0f 84
+RSP: 0018:ffff8881db209928 EFLAGS: 00010002
+RAX: dffffc0000000000 RBX: 0000000000000000 RCX: ffffffff835ed4bc
+RDX: 0000000000000015 RSI: ffffffff82d0804b RDI: 00000000000000a8
+RBP: ffff8881d3c03b00 R08: ffffffff8702cc40 R09: fffffbfff0e28205
+R10: fffffbfff0e28204 R11: ffffffff87141023 R12: 0100000000000001
+R13: ffff8881ceef31c8 R14: ffff8881d3c03b00 R15: ffff8881d3c03b40
+FS:  0000000000000000(0000) GS:ffff8881db200000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 000056168f698a48 CR3: 00000001d050a000 CR4: 00000000001406f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
 Call Trace:
  <IRQ>
- __dump_stack lib/dump_stack.c:77 [inline]
- dump_stack+0xef/0x16e lib/dump_stack.c:118
- print_address_description.constprop.0.cold+0xd3/0x314 mm/kasan/report.c:374
- __kasan_report.cold+0x37/0x77 mm/kasan/report.c:506
- kasan_report+0xe/0x20 mm/kasan/common.c:641
- check_memory_region_inline mm/kasan/generic.c:185 [inline]
- check_memory_region+0x152/0x1c0 mm/kasan/generic.c:192
- memcpy+0x20/0x50 mm/kasan/common.c:127
- memcpy include/linux/string.h:381 [inline]
- ath9k_hif_usb_rx_stream drivers/net/wireless/ath/ath9k/hif_usb.c:553 [inline]
- ath9k_hif_usb_rx_cb+0x3be/0xf70 drivers/net/wireless/ath/ath9k/hif_usb.c:666
  __usb_hcd_giveback_urb+0x29a/0x550 drivers/usb/core/hcd.c:1650
  usb_hcd_giveback_urb+0x368/0x420 drivers/usb/core/hcd.c:1716
  dummy_timer+0x1258/0x32ae drivers/usb/gadget/udc/dummy_hcd.c:1966
@@ -110,33 +108,33 @@ Call Trace:
  </IRQ>
 RIP: 0010:default_idle+0x28/0x300 arch/x86/kernel/process.c:696
 Code: cc cc 41 56 41 55 65 44 8b 2d 44 77 72 7a 41 54 55 53 0f 1f 44 00 00 e8 b6 62 b5 fb e9 07 00 00 00 0f 00 2d ea 0c 53 00 fb f4 <65> 44 8b 2d 20 77 72 7a 0f 1f 44 00 00 5b 5d 41 5c 41 5d 41 5e c3
-RSP: 0018:ffff8881da22fda8 EFLAGS: 00000246 ORIG_RAX: ffffffffffffff13
-RAX: 0000000000000007 RBX: ffff8881da213100 RCX: 0000000000000000
-RDX: 0000000000000000 RSI: 0000000000000006 RDI: ffff8881da21394c
-RBP: ffffed103b442620 R08: ffff8881da213100 R09: 0000000000000000
-R10: 0000000000000000 R11: 0000000000000000 R12: 0000000000000001
-R13: 0000000000000001 R14: ffffffff87e607c0 R15: 0000000000000000
+RSP: 0018:ffffffff87007d80 EFLAGS: 00000246 ORIG_RAX: ffffffffffffff13
+RAX: 0000000000000007 RBX: ffffffff8702cc40 RCX: 0000000000000000
+RDX: 0000000000000000 RSI: 0000000000000006 RDI: ffffffff8702d48c
+RBP: fffffbfff0e05988 R08: ffffffff8702cc40 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000000 R12: 0000000000000000
+R13: 0000000000000000 R14: ffffffff87e607c0 R15: 0000000000000000
  cpuidle_idle_call kernel/sched/idle.c:154 [inline]
  do_idle+0x3e0/0x500 kernel/sched/idle.c:269
  cpu_startup_entry+0x14/0x20 kernel/sched/idle.c:361
- start_secondary+0x2a4/0x390 arch/x86/kernel/smpboot.c:264
+ start_kernel+0xe16/0xe5a init/main.c:998
  secondary_startup_64+0xb6/0xc0 arch/x86/kernel/head_64.S:242
-
-The buggy address belongs to the page:
-page:ffffea00073bb800 refcount:1 mapcount:0 mapping:0000000000000000 index:0x0 compound_mapcount: 0
-flags: 0x200000000010000(head)
-raw: 0200000000010000 dead000000000100 dead000000000122 0000000000000000
-raw: 0000000000000000 0000000000000000 00000001ffffffff 0000000000000000
-page dumped because: kasan: bad access detected
-
-Memory state around the buggy address:
- ffff8881ceee7f00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
- ffff8881ceee7f80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->ffff8881ceee8000: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
-                   ^
- ffff8881ceee8080: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
- ffff8881ceee8100: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
-==================================================================
+Modules linked in:
+---[ end trace eca37a89cc7a3629 ]---
+RIP: 0010:usb_get_intfdata include/linux/usb.h:265 [inline]
+RIP: 0010:ath9k_hif_usb_rx_cb+0x103/0xf70 drivers/net/wireless/ath/ath9k/hif_usb.c:643
+Code: 83 3c 24 00 48 89 c3 0f 84 19 04 00 00 e8 95 d5 6e fe 48 8d bb a8 00 00 00 48 b8 00 00 00 00 00 fc ff df 48 89 fa 48 c1 ea 03 <80> 3c 02 00 0f 85 27 0c 00 00 4c 8b a3 a8 00 00 00 4d 85 e4 0f 84
+RSP: 0018:ffff8881db209928 EFLAGS: 00010002
+RAX: dffffc0000000000 RBX: 0000000000000000 RCX: ffffffff835ed4bc
+RDX: 0000000000000015 RSI: ffffffff82d0804b RDI: 00000000000000a8
+RBP: ffff8881d3c03b00 R08: ffffffff8702cc40 R09: fffffbfff0e28205
+R10: fffffbfff0e28204 R11: ffffffff87141023 R12: 0100000000000001
+R13: ffff8881ceef31c8 R14: ffff8881d3c03b00 R15: ffff8881d3c03b40
+FS:  0000000000000000(0000) GS:ffff8881db200000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 000056168f698a48 CR3: 00000001d050a000 CR4: 00000000001406f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
 
 
 ---
