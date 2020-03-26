@@ -6,168 +6,78 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C306CC2D0E8
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Mar 2020 12:55:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57174C2D0E5
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Mar 2020 12:55:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A4DFC2073E
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Mar 2020 12:55:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2AE642073E
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Mar 2020 12:55:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728202AbgCZMzX (ORCPT
+        id S1728296AbgCZMzb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 26 Mar 2020 08:55:23 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:44198 "EHLO
+        Thu, 26 Mar 2020 08:55:31 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:44254 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728150AbgCZMzW (ORCPT
+        with ESMTP id S1728292AbgCZMza (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Mar 2020 08:55:22 -0400
+        Thu, 26 Mar 2020 08:55:30 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1jHS2Z-00040Z-US; Thu, 26 Mar 2020 14:55:20 +0200
+        id 1jHS2g-00040Z-JA; Thu, 26 Mar 2020 14:55:27 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Thu, 26 Mar 2020 14:55:00 +0200
-Message-Id: <iwlwifi.20200326145047.81b06bbae5ca.Ib68d4c821ebcce253b42ed0ea15881fb4e3e01da@changeid>
+Date:   Thu, 26 Mar 2020 14:55:09 +0200
+Message-Id: <iwlwifi.20200326145047.de454f52fa20.I41d40008311b108d0578bd2ec73c5477e700a839@changeid>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200326125510.621842-1-luca@coelho.fi>
 References: <20200326125510.621842-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 02/12] iwlwifi: add support for version 2 of SOC_CONFIGURATION_CMD
+Subject: [PATCH 11/12] iwlwifi: pcie: make iwl_pcie_cmdq_reclaim static
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-This new command is mostly backwards compatible, with the exception
-that the device_type element was changed into a bitmask.  The device
-type bit remains the same (because we only had 0 and 1 anyway), but
-when using v1 we can't set any other bits, because that would change
-the integer.
+There's no need for this to be exposed outside of the tx.c
+file, make it static.
 
-Other than that, the struct remains the same and the driver can set
-the device_type bit in both cases, but it can only set the low_latency
-bit if VER_2 is used.
-
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../net/wireless/intel/iwlwifi/fw/api/soc.h   | 24 +++++++++++--------
- .../net/wireless/intel/iwlwifi/iwl-config.h   |  2 ++
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c   | 21 ++++++++++++----
- 3 files changed, 32 insertions(+), 15 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/internal.h | 1 -
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c       | 2 +-
+ 2 files changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/soc.h b/drivers/net/wireless/intel/iwlwifi/fw/api/soc.h
-index 5d1fb98fe667..aadca78e9846 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/soc.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/soc.h
-@@ -8,6 +8,7 @@
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-+ * Copyright(c) 2019        Intel Deutschland GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -30,6 +31,7 @@
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-+ * Copyright(c) 2019        Intel Deutschland GmbH
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -63,21 +65,23 @@
- #ifndef __iwl_fw_api_soc_h__
- #define __iwl_fw_api_soc_h__
- 
--/* type of devices for defining SOC latency */
--enum iwl_soc_device_types {
--	SOC_CONFIG_CMD_INTEGRATED   = 0x0,
--	SOC_CONFIG_CMD_DISCRETE     = 0x1,
--};
-+#define SOC_CONFIG_CMD_FLAGS_DISCRETE		BIT(0)
-+#define SOC_CONFIG_CMD_FLAGS_LOW_LATENCY	BIT(1)
- 
- /**
-  * struct iwl_soc_configuration_cmd - Set device stabilization latency
-  *
-- * @device_type: the device type as defined in &enum iwl_soc_device_types
-- * @soc_latency: time for SOC to ensure stable power & XTAL
-+ * @flags: soc settings flags.  In VER_1, we can only set the DISCRETE
-+ *	flag, because the FW treats the whole value as an integer. In
-+ *	VER_2, we can set the bits independently.
-+ * @latency: time for SOC to ensure stable power & XTAL
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+index 72f144c3a46e..595e6873d56e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+@@ -718,7 +718,6 @@ int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
+ 		      struct iwl_device_tx_cmd *dev_cmd, int txq_id);
+ void iwl_pcie_txq_check_wrptrs(struct iwl_trans *trans);
+ int iwl_trans_pcie_send_hcmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd);
+-void iwl_pcie_cmdq_reclaim(struct iwl_trans *trans, int txq_id, int idx);
+ void iwl_pcie_gen2_txq_inc_wr_ptr(struct iwl_trans *trans,
+ 				  struct iwl_txq *txq);
+ void iwl_pcie_hcmd_complete(struct iwl_trans *trans,
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+index 2f69a6469fe7..4582d418ba4d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+@@ -1287,7 +1287,7 @@ static int iwl_pcie_set_cmd_in_flight(struct iwl_trans *trans,
+  * need to be reclaimed. As result, some free space forms.  If there is
+  * enough free space (> low mark), wake the stack that feeds us.
   */
- struct iwl_soc_configuration_cmd {
--	__le32 device_type;
--	__le32 soc_latency;
--} __packed; /* SOC_CONFIGURATION_CMD_S_VER_1 */
-+	__le32 flags;
-+	__le32 latency;
-+} __packed; /*
-+	     * SOC_CONFIGURATION_CMD_S_VER_1 (see description above)
-+	     * SOC_CONFIGURATION_CMD_S_VER_2
-+	     */
- 
- #endif /* __iwl_fw_api_soc_h__ */
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-index 8549e8a39705..3069a322ca75 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-@@ -303,6 +303,7 @@ struct iwl_pwr_tx_backoff {
-  * @gen2: 22000 and on transport operation
-  * @mq_rx_supported: multi-queue rx support
-  * @integrated: discrete or integrated
-+ * @low_latency_xtal: use the low latency xtal if supported
-  */
- struct iwl_cfg_trans_params {
- 	const struct iwl_base_params *base_params;
-@@ -315,6 +316,7 @@ struct iwl_cfg_trans_params {
- 	    gen2:1,
- 	    mq_rx_supported:1,
- 	    integrated:1,
-+	    low_latency_xtal:1,
- 	    bisr_workaround:1;
- };
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index 98978a475d93..bc040e9ca55f 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -90,13 +90,24 @@ struct iwl_mvm_alive_data {
- /* set device type and latency */
- static int iwl_set_soc_latency(struct iwl_mvm *mvm)
+-void iwl_pcie_cmdq_reclaim(struct iwl_trans *trans, int txq_id, int idx)
++static void iwl_pcie_cmdq_reclaim(struct iwl_trans *trans, int txq_id, int idx)
  {
--	struct iwl_soc_configuration_cmd cmd;
-+	struct iwl_soc_configuration_cmd cmd = {};
- 	int ret;
- 
--	cmd.device_type = (mvm->trans->trans_cfg->integrated) ?
--		cpu_to_le32(SOC_CONFIG_CMD_INTEGRATED) :
--		cpu_to_le32(SOC_CONFIG_CMD_DISCRETE);
--	cmd.soc_latency = cpu_to_le32(mvm->trans->trans_cfg->xtal_latency);
-+	/*
-+	 * In VER_1 of this command, the discrete value is considered
-+	 * an integer; In VER_2, it's a bitmask.  Since we have only 2
-+	 * values in VER_1, this is backwards-compatible with VER_2,
-+	 * as long as we don't set any other bits.
-+	 */
-+	if (!mvm->trans->trans_cfg->integrated)
-+		cmd.flags = cpu_to_le32(SOC_CONFIG_CMD_FLAGS_DISCRETE);
-+
-+	if (iwl_mvm_lookup_cmd_ver(mvm->fw, IWL_ALWAYS_LONG_GROUP,
-+				   SCAN_REQ_UMAC) >= 2 &&
-+	    (mvm->trans->trans_cfg->low_latency_xtal))
-+		cmd.flags |= cpu_to_le32(SOC_CONFIG_CMD_FLAGS_LOW_LATENCY);
-+
-+	cmd.latency = cpu_to_le32(mvm->trans->trans_cfg->xtal_latency);
- 
- 	ret = iwl_mvm_send_cmd_pdu(mvm, iwl_cmd_id(SOC_CONFIGURATION_CMD,
- 						   SYSTEM_GROUP, 0), 0,
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	struct iwl_txq *txq = trans_pcie->txq[txq_id];
 -- 
 2.25.1
 
