@@ -2,198 +2,102 @@ Return-Path: <SRS0=ssZ+=5L=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2813FC43331
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Mar 2020 13:17:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69876C43331
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Mar 2020 13:19:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F2CFC20748
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Mar 2020 13:17:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 39E1220775
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Mar 2020 13:19:40 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="deA4b2WL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727607AbgCZNRu (ORCPT
+        id S1727647AbgCZNTj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 26 Mar 2020 09:17:50 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:44402 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726175AbgCZNRu (ORCPT
+        Thu, 26 Mar 2020 09:19:39 -0400
+Received: from mail26.static.mailgun.info ([104.130.122.26]:45549 "EHLO
+        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725994AbgCZNTj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Mar 2020 09:17:50 -0400
-Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
-        by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.93)
-        (envelope-from <luca@coelho.fi>)
-        id 1jHSGn-00044K-7D; Thu, 26 Mar 2020 15:10:01 +0200
-From:   Luca Coelho <luca@coelho.fi>
-To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org
-Date:   Thu, 26 Mar 2020 15:09:42 +0200
-Message-Id: <iwlwifi.20200326150855.6865c7f28a14.I9fb1d911b064262d33e33dfba730cdeef83926ca@changeid>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200326130943.623208-1-luca@coelho.fi>
-References: <20200326130943.623208-1-luca@coelho.fi>
+        Thu, 26 Mar 2020 09:19:39 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1585228778; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=bKl+Ocs3pZwi2SL3TPaz71mJwbt8jJ41lnMSSs30fu0=;
+ b=deA4b2WLoguImfOOnDRb5phCVXa1wqS45kth+m5mmu+ZUcmFE3XcxLMIImQ+deifdIX+Q40e
+ touQFrhBWHC0vNqfomhMDgfLI2zLQ6i6IgC1lLKSPjxUns4KziUhDugGlSnLynIcmxLUBaCp
+ GPr/3p48C0WJMjP7WNVXpc7wCn4=
+X-Mailgun-Sending-Ip: 104.130.122.26
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
+ by mxa.mailgun.org with ESMTP id 5e7cabe2.7f4e24117500-smtp-out-n05;
+ Thu, 26 Mar 2020 13:19:30 -0000 (UTC)
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 7C643C433BA; Thu, 26 Mar 2020 13:19:29 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: ssreeela)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 2C320C433F2;
+        Thu, 26 Mar 2020 13:19:29 +0000 (UTC)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: [PATCH v2 11/12] mac80211: drop data frames without key on encrypted links
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Thu, 26 Mar 2020 18:49:29 +0530
+From:   ssreeela@codeaurora.org
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     Lei Wang <leiwa@codeaurora.org>, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Subject: Re: [PATCH] ath10k: enable radar detection in secondary segment
+In-Reply-To: <87o8sj2zz7.fsf@kamboji.qca.qualcomm.com>
+References: <1585158041-11740-1-git-send-email-ssreeela@codeaurora.org>
+ <20200326100139.5BC86C433BA@smtp.codeaurora.org>
+ <87o8sj2zz7.fsf@kamboji.qca.qualcomm.com>
+Message-ID: <1b4c3f1ecaa1acb7684c35010a4e3316@codeaurora.org>
+X-Sender: ssreeela@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 2020-03-26 15:35, Kalle Valo wrote:
+> Kalle Valo <kvalo@codeaurora.org> writes:
+> 
+>> Sowmiya Sree Elavalagan <ssreeela@codeaurora.org> wrote:
+>> 
+>>> From: Lei Wang <leiwa@codeaurora.org>
+>>> 
+>>> Enable radar detection in secondary segment for VHT160 and VHT80+80 
+>>> mode
+>>> on DFS channels. Otherwise, when injecting radar pulse in the 
+>>> secondary
+>>> segment, the DUT can't detect radar pulse.
+>>> 
+>>> Tested: qca9984 with firmware ver 10.4-3.10-00047
+>>> 
+>>> Signed-off-by: Lei Wang <leiwa@codeaurora.org>
+>>> Signed-off-by: Sowmiya Sree Elavalagan <ssreeela@codeaurora.org>
+>> 
+>> Failed to apply:
+>> 
+>> error: patch failed: drivers/net/wireless/ath/ath10k/wmi.c:1717
+>> error: drivers/net/wireless/ath/ath10k/wmi.c: patch does not apply
+>> stg import: Diff does not apply cleanly
+>> 
+>> Patch set to Changes Requested.
+> 
+> I guess this depends on "ath10k: enable VHT160 and VHT80+80 modes"? If
+> that's the case then you should submit them in the same patchset to 
+> make
+> the dependency clear.
 
-If we know that we have an encrypted link (based on having had
-a key configured for TX in the past) then drop all data frames
-in the key selection handler if there's no key anymore.
+Yes, this patch is dependent on ath10k: enable VHT160 and VHT80+80 
+modes.
+Sure will update and send.
 
-This fixes an issue with mac80211 internal TXQs - there we can
-buffer frames for an encrypted link, but then if the key is no
-longer there when they're dequeued, the frames are sent without
-encryption. This happens if a station is disconnected while the
-frames are still on the TXQ.
-
-Detecting that a link should be encrypted based on a first key
-having been configured for TX is fine as there are no use cases
-for a connection going from with encryption to no encryption.
-With extended key IDs, however, there is a case of having a key
-configured for only decryption, so we can't just trigger this
-behaviour on a key being configured.
-
-Cc: stable@vger.kernel.org
-Reported-by: Jouni Malinen <j@w1.fi>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- net/mac80211/debugfs_sta.c |  3 ++-
- net/mac80211/key.c         | 20 ++++++++++++--------
- net/mac80211/sta_info.h    |  1 +
- net/mac80211/tx.c          | 12 +++++++++---
- 4 files changed, 24 insertions(+), 12 deletions(-)
-
-diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
-index 266d63819415..829dcad69c2c 100644
---- a/net/mac80211/debugfs_sta.c
-+++ b/net/mac80211/debugfs_sta.c
-@@ -5,7 +5,7 @@
-  * Copyright 2007	Johannes Berg <johannes@sipsolutions.net>
-  * Copyright 2013-2014  Intel Mobile Communications GmbH
-  * Copyright(c) 2016 Intel Deutschland GmbH
-- * Copyright (C) 2018 - 2019 Intel Corporation
-+ * Copyright (C) 2018 - 2020 Intel Corporation
-  */
- 
- #include <linux/debugfs.h>
-@@ -78,6 +78,7 @@ static const char * const sta_flag_names[] = {
- 	FLAG(MPSP_OWNER),
- 	FLAG(MPSP_RECIPIENT),
- 	FLAG(PS_DELIVER),
-+	FLAG(USES_ENCRYPTION),
- #undef FLAG
- };
- 
-diff --git a/net/mac80211/key.c b/net/mac80211/key.c
-index 6354491c5a09..8f403c1bb908 100644
---- a/net/mac80211/key.c
-+++ b/net/mac80211/key.c
-@@ -6,7 +6,7 @@
-  * Copyright 2007-2008	Johannes Berg <johannes@sipsolutions.net>
-  * Copyright 2013-2014  Intel Mobile Communications GmbH
-  * Copyright 2015-2017	Intel Deutschland GmbH
-- * Copyright 2018-2019  Intel Corporation
-+ * Copyright 2018-2020  Intel Corporation
-  */
- 
- #include <linux/if_ether.h>
-@@ -277,22 +277,29 @@ static void ieee80211_key_disable_hw_accel(struct ieee80211_key *key)
- 			  sta ? sta->sta.addr : bcast_addr, ret);
- }
- 
--int ieee80211_set_tx_key(struct ieee80211_key *key)
-+static int _ieee80211_set_tx_key(struct ieee80211_key *key, bool force)
- {
- 	struct sta_info *sta = key->sta;
- 	struct ieee80211_local *local = key->local;
- 
- 	assert_key_lock(local);
- 
-+	set_sta_flag(sta, WLAN_STA_USES_ENCRYPTION);
-+
- 	sta->ptk_idx = key->conf.keyidx;
- 
--	if (!ieee80211_hw_check(&local->hw, AMPDU_KEYBORDER_SUPPORT))
-+	if (force || !ieee80211_hw_check(&local->hw, AMPDU_KEYBORDER_SUPPORT))
- 		clear_sta_flag(sta, WLAN_STA_BLOCK_BA);
- 	ieee80211_check_fast_xmit(sta);
- 
- 	return 0;
- }
- 
-+int ieee80211_set_tx_key(struct ieee80211_key *key)
-+{
-+	return _ieee80211_set_tx_key(key, false);
-+}
-+
- static void ieee80211_pairwise_rekey(struct ieee80211_key *old,
- 				     struct ieee80211_key *new)
- {
-@@ -481,11 +488,8 @@ static int ieee80211_key_replace(struct ieee80211_sub_if_data *sdata,
- 		if (pairwise) {
- 			rcu_assign_pointer(sta->ptk[idx], new);
- 			if (new &&
--			    !(new->conf.flags & IEEE80211_KEY_FLAG_NO_AUTO_TX)) {
--				sta->ptk_idx = idx;
--				clear_sta_flag(sta, WLAN_STA_BLOCK_BA);
--				ieee80211_check_fast_xmit(sta);
--			}
-+			    !(new->conf.flags & IEEE80211_KEY_FLAG_NO_AUTO_TX))
-+				_ieee80211_set_tx_key(new, true);
- 		} else {
- 			rcu_assign_pointer(sta->gtk[idx], new);
- 		}
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 78ab18eee1ec..a5de3aa6ea42 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -99,6 +99,7 @@ enum ieee80211_sta_info_flags {
- 	WLAN_STA_MPSP_OWNER,
- 	WLAN_STA_MPSP_RECIPIENT,
- 	WLAN_STA_PS_DELIVER,
-+	WLAN_STA_USES_ENCRYPTION,
- 
- 	NUM_WLAN_STA_FLAGS,
- };
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 49d35936cc9d..637c22a4256f 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -590,10 +590,13 @@ ieee80211_tx_h_select_key(struct ieee80211_tx_data *tx)
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)tx->skb->data;
- 
--	if (unlikely(info->flags & IEEE80211_TX_INTFL_DONT_ENCRYPT))
-+	if (unlikely(info->flags & IEEE80211_TX_INTFL_DONT_ENCRYPT)) {
- 		tx->key = NULL;
--	else if (tx->sta &&
--		 (key = rcu_dereference(tx->sta->ptk[tx->sta->ptk_idx])))
-+		return TX_CONTINUE;
-+	}
-+
-+	if (tx->sta &&
-+	    (key = rcu_dereference(tx->sta->ptk[tx->sta->ptk_idx])))
- 		tx->key = key;
- 	else if (ieee80211_is_group_privacy_action(tx->skb) &&
- 		(key = rcu_dereference(tx->sdata->default_multicast_key)))
-@@ -654,6 +657,9 @@ ieee80211_tx_h_select_key(struct ieee80211_tx_data *tx)
- 		if (!skip_hw && tx->key &&
- 		    tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)
- 			info->control.hw_key = &tx->key->conf;
-+	} else if (!ieee80211_is_mgmt(hdr->frame_control) && tx->sta &&
-+		   test_sta_flag(tx->sta, WLAN_STA_USES_ENCRYPTION)) {
-+		return TX_DROP;
- 	}
- 
- 	return TX_CONTINUE;
--- 
-2.25.1
-
+Thanks,
+Sowmiya Sree
