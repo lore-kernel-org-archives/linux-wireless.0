@@ -6,100 +6,151 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59083C2D0EC
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Mar 2020 13:10:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FD36C43331
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Mar 2020 13:10:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3BC202076A
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Mar 2020 13:10:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6045A20737
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Mar 2020 13:10:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727733AbgCZNJ7 (ORCPT
+        id S1727781AbgCZNKA (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 26 Mar 2020 09:09:59 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:44328 "EHLO
+        Thu, 26 Mar 2020 09:10:00 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:44346 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726260AbgCZNJ6 (ORCPT
+        with ESMTP id S1727725AbgCZNKA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Mar 2020 09:09:58 -0400
+        Thu, 26 Mar 2020 09:10:00 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1jHSGi-00044K-B1; Thu, 26 Mar 2020 15:09:56 +0200
+        id 1jHSGj-00044K-S9; Thu, 26 Mar 2020 15:09:58 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org
-Date:   Thu, 26 Mar 2020 15:09:35 +0200
-Message-Id: <iwlwifi.20200326150855.20feaabfb484.I886252639604c8e3e84b8ef97962f1b0e4beec81@changeid>
+Date:   Thu, 26 Mar 2020 15:09:37 +0200
+Message-Id: <iwlwifi.20200326150855.58a337eb90a1.I75934e6464535fbf43969acc796bc886291e79a5@changeid>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200326130943.623208-1-luca@coelho.fi>
 References: <20200326130943.623208-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH v2 04/12] cfg80211: Parse HE membership selector
+Subject: [PATCH v2 06/12] mac80211: agg-tx: refactor sending addba
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ilan Peer <ilan.peer@intel.com>
+From: Mordechay Goodstein <mordechay.goodstein@intel.com>
 
-This extends the support for drivers that rebuilds IEs in the
-FW (same as with HT/VHT).
+We move the actual arming the timer and sending ADDBA to a function
+for the use in different places calling the same logic.
 
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- include/linux/ieee80211.h | 1 +
- include/net/cfg80211.h    | 3 ++-
- net/wireless/nl80211.c    | 2 ++
- 3 files changed, 5 insertions(+), 1 deletion(-)
+ net/mac80211/agg-tx.c | 67 +++++++++++++++++++++++++------------------
+ 1 file changed, 39 insertions(+), 28 deletions(-)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index bdcc3165c440..7c7b974c41b1 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -1067,6 +1067,7 @@ struct ieee80211_mgmt {
- /* Supported rates membership selectors */
- #define BSS_MEMBERSHIP_SELECTOR_HT_PHY	127
- #define BSS_MEMBERSHIP_SELECTOR_VHT_PHY	126
-+#define BSS_MEMBERSHIP_SELECTOR_HE_PHY	122
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index 33da6f738c99..32f40c4f3120 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -9,7 +9,7 @@
+  * Copyright 2007, Michael Wu <flamingice@sourmilk.net>
+  * Copyright 2007-2010, Intel Corporation
+  * Copyright(c) 2015-2017 Intel Deutschland GmbH
+- * Copyright (C) 2018 - 2019 Intel Corporation
++ * Copyright (C) 2018 - 2020 Intel Corporation
+  */
  
- /* mgmt header + 1 byte category code */
- #define IEEE80211_MIN_ACTION_SIZE offsetof(struct ieee80211_mgmt, u.action.u)
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index c78bd4ff9e33..18e17496a904 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1052,6 +1052,7 @@ enum cfg80211_ap_settings_flags {
-  * @ht_required: stations must support HT
-  * @vht_required: stations must support VHT
-  * @twt_responder: Enable Target Wait Time
-+ * @he_required: stations must support HE
-  * @flags: flags, as defined in enum cfg80211_ap_settings_flags
-  * @he_obss_pd: OBSS Packet Detection settings
-  * @he_bss_color: BSS Color settings
-@@ -1081,7 +1082,7 @@ struct cfg80211_ap_settings {
- 	const struct ieee80211_vht_cap *vht_cap;
- 	const struct ieee80211_he_cap_elem *he_cap;
- 	const struct ieee80211_he_operation *he_oper;
--	bool ht_required, vht_required;
-+	bool ht_required, vht_required, he_required;
- 	bool twt_responder;
- 	u32 flags;
- 	struct ieee80211_he_obss_pd he_obss_pd;
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index ad87e9db9a91..0586093420e8 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -4728,6 +4728,8 @@ static void nl80211_check_ap_rate_selectors(struct cfg80211_ap_settings *params,
- 			params->ht_required = true;
- 		if (rates[2 + i] == BSS_MEMBERSHIP_SELECTOR_VHT_PHY)
- 			params->vht_required = true;
-+		if (rates[2 + i] == BSS_MEMBERSHIP_SELECTOR_HE_PHY)
-+			params->he_required = true;
- 	}
+ #include <linux/ieee80211.h>
+@@ -448,6 +448,43 @@ static void sta_addba_resp_timer_expired(struct timer_list *t)
+ 	ieee80211_stop_tx_ba_session(&sta->sta, tid);
  }
  
++static void ieee80211_send_addba_with_timeout(struct sta_info *sta,
++					      struct tid_ampdu_tx *tid_tx)
++{
++	struct ieee80211_sub_if_data *sdata = sta->sdata;
++	struct ieee80211_local *local = sta->local;
++	u8 tid = tid_tx->tid;
++	u16 buf_size;
++
++	/* activate the timer for the recipient's addBA response */
++	mod_timer(&tid_tx->addba_resp_timer, jiffies + ADDBA_RESP_INTERVAL);
++	ht_dbg(sdata, "activated addBA response timer on %pM tid %d\n",
++	       sta->sta.addr, tid);
++
++	spin_lock_bh(&sta->lock);
++	sta->ampdu_mlme.last_addba_req_time[tid] = jiffies;
++	sta->ampdu_mlme.addba_req_num[tid]++;
++	spin_unlock_bh(&sta->lock);
++
++	if (sta->sta.he_cap.has_he) {
++		buf_size = local->hw.max_tx_aggregation_subframes;
++	} else {
++		/*
++		 * We really should use what the driver told us it will
++		 * transmit as the maximum, but certain APs (e.g. the
++		 * LinkSys WRT120N with FW v1.0.07 build 002 Jun 18 2012)
++		 * will crash when we use a lower number.
++		 */
++		buf_size = IEEE80211_MAX_AMPDU_BUF_HT;
++	}
++
++	/* send AddBA request */
++	ieee80211_send_addba_request(sdata, sta->sta.addr, tid,
++				     tid_tx->dialog_token,
++				     sta->tid_seq[tid] >> 4,
++				     buf_size, tid_tx->timeout);
++}
++
+ void ieee80211_tx_ba_session_handle_start(struct sta_info *sta, int tid)
+ {
+ 	struct tid_ampdu_tx *tid_tx;
+@@ -462,7 +499,6 @@ void ieee80211_tx_ba_session_handle_start(struct sta_info *sta, int tid)
+ 		.timeout = 0,
+ 	};
+ 	int ret;
+-	u16 buf_size;
+ 
+ 	tid_tx = rcu_dereference_protected_tid_tx(sta, tid);
+ 
+@@ -508,32 +544,7 @@ void ieee80211_tx_ba_session_handle_start(struct sta_info *sta, int tid)
+ 		return;
+ 	}
+ 
+-	/* activate the timer for the recipient's addBA response */
+-	mod_timer(&tid_tx->addba_resp_timer, jiffies + ADDBA_RESP_INTERVAL);
+-	ht_dbg(sdata, "activated addBA response timer on %pM tid %d\n",
+-	       sta->sta.addr, tid);
+-
+-	spin_lock_bh(&sta->lock);
+-	sta->ampdu_mlme.last_addba_req_time[tid] = jiffies;
+-	sta->ampdu_mlme.addba_req_num[tid]++;
+-	spin_unlock_bh(&sta->lock);
+-
+-	if (sta->sta.he_cap.has_he) {
+-		buf_size = local->hw.max_tx_aggregation_subframes;
+-	} else {
+-		/*
+-		 * We really should use what the driver told us it will
+-		 * transmit as the maximum, but certain APs (e.g. the
+-		 * LinkSys WRT120N with FW v1.0.07 build 002 Jun 18 2012)
+-		 * will crash when we use a lower number.
+-		 */
+-		buf_size = IEEE80211_MAX_AMPDU_BUF_HT;
+-	}
+-
+-	/* send AddBA request */
+-	ieee80211_send_addba_request(sdata, sta->sta.addr, tid,
+-				     tid_tx->dialog_token, params.ssn,
+-				     buf_size, tid_tx->timeout);
++	ieee80211_send_addba_with_timeout(sta, tid_tx);
+ }
+ 
+ /*
 -- 
 2.25.1
 
