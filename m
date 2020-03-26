@@ -2,104 +2,104 @@ Return-Path: <SRS0=ssZ+=5L=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.4 required=3.0 tests=FROM_LOCAL_HEX,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74FC1C43331
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Mar 2020 11:34:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD64AC43331
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Mar 2020 11:45:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 584022070A
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Mar 2020 11:34:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8B98820409
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Mar 2020 11:45:20 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ii+N+nH3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728180AbgCZLeR (ORCPT
+        id S1728140AbgCZLpT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 26 Mar 2020 07:34:17 -0400
-Received: from mail-io1-f69.google.com ([209.85.166.69]:49531 "EHLO
-        mail-io1-f69.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728120AbgCZLeQ (ORCPT
+        Thu, 26 Mar 2020 07:45:19 -0400
+Received: from mail-pg1-f196.google.com ([209.85.215.196]:44735 "EHLO
+        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727948AbgCZLpT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Mar 2020 07:34:16 -0400
-Received: by mail-io1-f69.google.com with SMTP id p14so4883515ios.16
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Mar 2020 04:34:16 -0700 (PDT)
+        Thu, 26 Mar 2020 07:45:19 -0400
+Received: by mail-pg1-f196.google.com with SMTP id 142so2721465pgf.11
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Mar 2020 04:45:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=QNc7sUitYw+STr16lrtQWpfnsD8DXSPcqt4YHYoo/vA=;
+        b=Ii+N+nH3zPPvVwnTqGDG7+afr0CZ0b58kdFhT46r2UJZcO49+8kv638i8xqsSKsVOk
+         H+lf7rtAPu4VvQKNjuEwj0YOdDCT9Ct3WNDQC7jMXWxY/XUzMcsop24gWRg9ckVeCYW1
+         Tfw1JYeTRp6ucho8i1sz4Ovm1iNqNCNCW0LlFJKKE3j3rZHSoPaxYKJWT2++RAplJCXc
+         fvDotAPc0GRnPOszJor2boD2GbSq56SsfRcI7aSVNMfKBVd2OA8fHJkpr/dCEUu0hICh
+         hxUmBKa2si3hvPKjinJ0D2fd1r2zQr0CvYYHFGC3yo7fHWXWKxYD8nprCz/zekmEh7pV
+         llCA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:date:message-id:subject:from:to;
-        bh=C6y3mIPzLR73ufsopJWEkr5Zr1g0mPoX0sCzPuo9kgE=;
-        b=AqaDbMCjbEm4mvC25fVqiB5RdO6Hqyl1VwcspRMgitneo9ZFFIdGpsqiWz2NQOUmCf
-         veBWeaRvP4V55gYgynurmz2cUxOUaCfd0sIg7m1nbAWtd+AEIAYFlfiRYfW1X44E2+in
-         GEqPgBbLc4vK/ZZ2hdOTirfKfXijGSmgYCdIrQAzOVrWj5EUFos46EjK62RRZM3i5d/h
-         Y8To6hFhXCI0ll2NCqQMLtMSV8rLHMOWLxzS0/NkWuenXNmedVWz88MgbUBESS/TVo96
-         zJKnA8zpQymGUDmZ4DaS+k/A+TtmiAR4V0gSQapIRmcdJGA7/8lUuGvQS3UhL4boi3Md
-         0GGQ==
-X-Gm-Message-State: ANhLgQ3Iv0y9RuXJsghHdRPHnNCTjVPAuiYr5xsDyh0RBnJz4jv4H6R/
-        NMAb/7bRTWzVLSQ3Q7qeWeCL8MbivDAN9VkKAbVS7Z7Vw+W9
-X-Google-Smtp-Source: ADFU+vtl0vK645d3im2PLzaqrxJeMAlY9qjUChu1B+bIlwDJN2zTknUFKGOjQ/cSY3xTK6hM6rc6/WQj07FZ/qJB73caM2aXesCV
-MIME-Version: 1.0
-X-Received: by 2002:a5d:970e:: with SMTP id h14mr7083406iol.201.1585222455723;
- Thu, 26 Mar 2020 04:34:15 -0700 (PDT)
-Date:   Thu, 26 Mar 2020 04:34:15 -0700
-X-Google-Appengine-App-Id: s~syzkaller
-X-Google-Appengine-App-Id-Alias: syzkaller
-Message-ID: <0000000000005d13df05a1c05dfb@google.com>
-Subject: KASAN: slab-out-of-bounds Write in ath9k_htc_rx_msg
-From:   syzbot <syzbot+694d40a36a6452d77f36@syzkaller.appspotmail.com>
-To:     andreyknvl@google.com, ath9k-devel@qca.qualcomm.com,
-        davem@davemloft.net, kvalo@codeaurora.org,
-        linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        syzkaller-bugs@googlegroups.com
-Content-Type: text/plain; charset="UTF-8"
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=QNc7sUitYw+STr16lrtQWpfnsD8DXSPcqt4YHYoo/vA=;
+        b=KaSoevHedZFQiU6g58ITaOp8xo+Ey+Jf7qnfSIZsuY9Qi9m/PoxlvxESBB4ozs4sGI
+         4RVXyOOO7F1++qUyfty5AOyRlAOQusIRdtnZoQQ4uBS76OxbJ/v3uNWs5KgPDGXGYiQT
+         KbXhqjEXT2W6GN3xaU+E+ZWXHvS5MXVGgWwcOW+QEEkJ6buQaFl8l6/piDlNkbuko6WP
+         pl3oTlCrnx8MYx+Yy2rV6uWiqhEOsh7ikV3rUDtBL3tIYSeSMByZJyErlZCWHG5gR3b3
+         V/XW6MZmKN545Yw4tnzljleWuTU3xUaw9+N6kPJjJwOnG/dv081aVQP81ProSwEd+kPj
+         MFAA==
+X-Gm-Message-State: ANhLgQ2Co20pnsM6A3I3HhsUO2cdkdu1k3yTwZRPliqvtr8QF7SS4NT4
+        ZRPyQMNQ7XcAbqptvQK3AOU=
+X-Google-Smtp-Source: ADFU+vssNiTUhowNTZTuDPc0uSOqYT6zyE3GLeJ+oFH+ooA1OxZZlnzO9DemmVcW9gLVajK5wY2wBA==
+X-Received: by 2002:a63:a055:: with SMTP id u21mr7778404pgn.100.1585223116477;
+        Thu, 26 Mar 2020 04:45:16 -0700 (PDT)
+Received: from localhost.localdomain ([183.83.146.239])
+        by smtp.gmail.com with ESMTPSA id 184sm1468382pgb.52.2020.03.26.04.45.13
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 26 Mar 2020 04:45:15 -0700 (PDT)
+From:   chaitanya.mgit@gmail.com
+To:     seth.forshee@canonical.com, wireless-regdb@lists.infradead.org,
+        linux-wireless@vger.kernel.org
+Cc:     Chaitanya Tata <chaitanya.mgit@gmail.com>
+Subject: [PATCH] GB: Extend to cover DMG channels 5 & 6
+Date:   Thu, 26 Mar 2020 17:15:06 +0530
+Message-Id: <20200326114506.943-1-chaitanya.mgit@gmail.com>
+X-Mailer: git-send-email 2.17.1
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hello,
+From: Chaitanya Tata <chaitanya.mgit@gmail.com>
 
-syzbot found the following crash on:
+OFCOM extended the DMG band to include till 71GHz.
 
-HEAD commit:    e17994d1 usb: core: kcov: collect coverage from usb comple..
-git tree:       https://github.com/google/kasan.git usb-fuzzer
-console output: https://syzkaller.appspot.com/x/log.txt?x=1409ca5be00000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=5d64370c438bc60
-dashboard link: https://syzkaller.appspot.com/bug?extid=694d40a36a6452d77f36
-compiler:       gcc (GCC) 9.0.0 20181231 (experimental)
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=122d48f3e00000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=122511e5e00000
-
-IMPORTANT: if you fix the bug, please add the following tag to the commit:
-Reported-by: syzbot+694d40a36a6452d77f36@syzkaller.appspotmail.com
-
-==================================================================
-BUG: KASAN: slab-out-of-bounds in htc_process_conn_rsp drivers/net/wireless/ath/ath9k/htc_hst.c:131 [inline]
-BUG: KASAN: slab-out-of-bounds in ath9k_htc_rx_msg+0xa25/0xaf0 drivers/net/wireless/ath/ath9k/htc_hst.c:443
-Write of size 2 at addr ffff8881ced8a7f0 by task swapper/0/0
-
-CPU: 0 PID: 0 Comm: swapper/0 Not tainted 5.6.0-rc5-syzkaller #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011
-Call Trace:
- <IRQ>
- __dump_stack lib/dump_stack.c:77 [inline]
- dump_stack+0xef/0x16e lib/dump_stack.c:118
- print_address_description.constprop.0.cold+0xd3/0x314 mm/kasan/report.c:374
- __kasan_report.cold+0x37/0x77 mm/kasan/report.c:506
- kasan_report+0xe/0x20 mm/kasan/common.c:641
- htc_process_conn_rsp drivers/net/wireless/ath/ath9k/htc_hst.c:131 [inline]
- ath9k_htc_rx_msg+0xa25/0xaf0 drivers/net/wireless/ath/ath9k/htc_hst.c:443
- ath9k_hif_usb_reg_in_cb+0x1ba/0x630 drivers/net/wireless/ath/ath9k/hif_usb.c:718
- __usb_hcd_giveback_urb+0x29a/0x550 drivers/usb/core/hcd.c:1650
- usb_hcd_giveback_urb+0x368/0x420 drivers/usb/core/hcd.c:1716
- dummy_timer+0x1258/0x32ae drivers/usb/gadget/udc/dummy_hcd.c:1966
-
-
+Signed-off-by: Chaitanya Tata <chaitanya.mgit@gmail.com>
 ---
-This bug is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
+ db.txt | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-syzbot will keep track of this bug report. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-syzbot can test patches for this bug, for details see:
-https://goo.gl/tpsmEJ#testing-patches
+diff --git a/db.txt b/db.txt
+index 9c4b447..c5750f2 100644
+--- a/db.txt
++++ b/db.txt
+@@ -587,6 +587,7 @@ country FR: DFS-ETSI
+ # Harmonized CEPT countries (July 2019): https://www.ecodocdb.dk/download/25c41779-cd6e/Rec7003e.pdf
+ # GB: https://www.ofcom.org.uk/__data/assets/pdf_file/0019/136009/Ofcom-Information-Sheet-5-GHz-RLANs.pdf
+ # GB: https://www.ofcom.org.uk/__data/assets/pdf_file/0028/84970/ir-2030.pdf
++# GB: https://www.ofcom.org.uk/__data/assets/pdf_file/0013/126121/Statement_Implementing-Ofcoms-decision-on-the-57-71GHz-band.pdf
+ country GB: DFS-ETSI
+ 	(2400 - 2483.5 @ 40), (100 mW)
+ 	(5150 - 5250 @ 80), (200 mW), NO-OUTDOOR, AUTO-BW, wmmrule=ETSI
+@@ -594,8 +595,8 @@ country GB: DFS-ETSI
+ 	(5470 - 5725 @ 160), (500 mW), DFS, wmmrule=ETSI
+ 	# short range devices (ETSI EN 300 440-1)
+ 	(5725 - 5875 @ 80), (25 mW)
+-	# 60 GHz band channels 1-4 (ETSI EN 302 567)
+-	(57000 - 66000 @ 2160), (40)
++	# 60 GHz band channels 1-6
++	(57000 - 71000 @ 2160), (40)
+ 
+ country GD: DFS-FCC
+ 	(2402 - 2472 @ 40), (30)
+-- 
+2.17.1
+
