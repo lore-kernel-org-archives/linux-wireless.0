@@ -6,138 +6,73 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A5FEC2D0E5
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Mar 2020 13:10:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CC5BC2D0EE
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Mar 2020 13:10:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5916320748
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Mar 2020 13:10:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4785720748
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Mar 2020 13:10:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727806AbgCZNKB (ORCPT
+        id S1727845AbgCZNKC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 26 Mar 2020 09:10:01 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:44354 "EHLO
+        Thu, 26 Mar 2020 09:10:02 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:44368 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726260AbgCZNKA (ORCPT
+        with ESMTP id S1727725AbgCZNKC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Mar 2020 09:10:00 -0400
+        Thu, 26 Mar 2020 09:10:02 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1jHSGk-00044K-Ij; Thu, 26 Mar 2020 15:09:59 +0200
+        id 1jHSGl-00044K-V4; Thu, 26 Mar 2020 15:10:00 +0200
 From:   Luca Coelho <luca@coelho.fi>
 To:     johannes@sipsolutions.net
 Cc:     linux-wireless@vger.kernel.org
-Date:   Thu, 26 Mar 2020 15:09:38 +0200
-Message-Id: <iwlwifi.20200326150855.0f27423fec75.If67daab123a27c1cbddef000d6a3f212aa6309ef@changeid>
+Date:   Thu, 26 Mar 2020 15:09:40 +0200
+Message-Id: <iwlwifi.20200326150855.adf551928846.Iae9015573d6c350cc1b12a311d6d13d086beec6c@changeid>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200326130943.623208-1-luca@coelho.fi>
 References: <20200326130943.623208-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH v2 07/12] mac80211: agg-tx: add an option to defer ADDBA transmit
+Subject: [PATCH v2 09/12] mac80211: minstrel_ht_assign_best_tp_rates: remove redundant test
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Mordechay Goodstein <mordechay.goodstein@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Driver tells mac80211 to sends ADDBA with SSN (starting sequence number)
-from the head of the queue, while the transmission of all the frames in the
-queue may take a while, which causes the peer to time out. In order to
-fix this scenario, add an option to defer ADDBA transmit until queue
-is drained.
+We know this pointer isn't NULL and in fact dereferenced it before,
+remove the redundant test.
 
-Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- include/net/mac80211.h  |  6 +++++-
- net/mac80211/agg-tx.c   | 12 +++++++++++-
- net/mac80211/sta_info.h |  2 ++
- 3 files changed, 18 insertions(+), 2 deletions(-)
+ net/mac80211/rc80211_minstrel_ht.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index f2b0a7795d0a..bcf706798e52 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -3119,7 +3119,10 @@ enum ieee80211_filter_flags {
-  * @IEEE80211_AMPDU_RX_START: start RX aggregation
-  * @IEEE80211_AMPDU_RX_STOP: stop RX aggregation
-  * @IEEE80211_AMPDU_TX_START: start TX aggregation, the driver must either
-- *	call ieee80211_start_tx_ba_cb_irqsafe() or return the special
-+ *	call ieee80211_start_tx_ba_cb_irqsafe() or
-+ *	call ieee80211_start_tx_ba_cb_irqsafe() with status
-+ *	%IEEE80211_AMPDU_TX_START_DELAY_ADDBA to delay addba after
-+ *	ieee80211_start_tx_ba_cb_irqsafe is called, or just return the special
-  *	status %IEEE80211_AMPDU_TX_START_IMMEDIATE.
-  * @IEEE80211_AMPDU_TX_OPERATIONAL: TX aggregation has become operational
-  * @IEEE80211_AMPDU_TX_STOP_CONT: stop TX aggregation but continue transmitting
-@@ -3145,6 +3148,7 @@ enum ieee80211_ampdu_mlme_action {
- };
- 
- #define IEEE80211_AMPDU_TX_START_IMMEDIATE 1
-+#define IEEE80211_AMPDU_TX_START_DELAY_ADDBA 2
- 
- /**
-  * struct ieee80211_ampdu_params - AMPDU action parameters
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index 32f40c4f3120..c2d5f512526d 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -483,6 +483,8 @@ static void ieee80211_send_addba_with_timeout(struct sta_info *sta,
- 				     tid_tx->dialog_token,
- 				     sta->tid_seq[tid] >> 4,
- 				     buf_size, tid_tx->timeout);
-+
-+	WARN_ON(test_and_set_bit(HT_AGG_STATE_SENT_ADDBA, &tid_tx->state));
- }
- 
- void ieee80211_tx_ba_session_handle_start(struct sta_info *sta, int tid)
-@@ -521,7 +523,9 @@ void ieee80211_tx_ba_session_handle_start(struct sta_info *sta, int tid)
- 
- 	params.ssn = sta->tid_seq[tid] >> 4;
- 	ret = drv_ampdu_action(local, sdata, &params);
--	if (ret == IEEE80211_AMPDU_TX_START_IMMEDIATE) {
-+	if (ret == IEEE80211_AMPDU_TX_START_DELAY_ADDBA) {
-+		return;
-+	} else if (ret == IEEE80211_AMPDU_TX_START_IMMEDIATE) {
- 		/*
- 		 * We didn't send the request yet, so don't need to check
- 		 * here if we already got a response, just mark as driver
-@@ -765,6 +769,12 @@ void ieee80211_start_tx_ba_cb(struct sta_info *sta, int tid,
- 	if (WARN_ON(test_and_set_bit(HT_AGG_STATE_DRV_READY, &tid_tx->state)))
- 		return;
- 
-+	if (!test_bit(HT_AGG_STATE_SENT_ADDBA, &tid_tx->state)) {
-+		ieee80211_send_addba_with_timeout(sta, tid_tx);
-+		/* RESPONSE_RECEIVED state whould trigger the flow again */
-+		return;
-+	}
-+
- 	if (test_bit(HT_AGG_STATE_RESPONSE_RECEIVED, &tid_tx->state))
- 		ieee80211_agg_tx_operational(local, sta, tid);
- }
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 364a35414d05..78ab18eee1ec 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -3,6 +3,7 @@
-  * Copyright 2002-2005, Devicescape Software, Inc.
-  * Copyright 2013-2014  Intel Mobile Communications GmbH
-  * Copyright(c) 2015-2017 Intel Deutschland GmbH
-+ * Copyright(c) 2020 Intel Corporation
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index 694a31978a04..5547111d22bf 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -1,6 +1,7 @@
+ // SPDX-License-Identifier: GPL-2.0-only
+ /*
+  * Copyright (C) 2010-2013 Felix Fietkau <nbd@openwrt.org>
++ * Copyright (C) 2019-2020 Intel Corporation
   */
+ #include <linux/netdevice.h>
+ #include <linux/types.h>
+@@ -490,7 +491,7 @@ minstrel_ht_assign_best_tp_rates(struct minstrel_ht_sta *mi,
+ 	tmp_prob = mi->groups[tmp_group].rates[tmp_idx].prob_avg;
+ 	tmp_mcs_tp = minstrel_ht_get_tp_avg(mi, tmp_group, tmp_idx, tmp_prob);
  
- #ifndef STA_INFO_H
-@@ -115,6 +116,7 @@ enum ieee80211_sta_info_flags {
- #define HT_AGG_STATE_WANT_STOP		5
- #define HT_AGG_STATE_START_CB		6
- #define HT_AGG_STATE_STOP_CB		7
-+#define HT_AGG_STATE_SENT_ADDBA		8
- 
- DECLARE_EWMA(avg_signal, 10, 8)
- enum ieee80211_agg_stop_reason {
+-	if (tmp_cck_tp_rate && tmp_cck_tp > tmp_mcs_tp) {
++	if (tmp_cck_tp > tmp_mcs_tp) {
+ 		for(i = 0; i < MAX_THR_RATES; i++) {
+ 			minstrel_ht_sort_best_tp_rates(mi, tmp_cck_tp_rate[i],
+ 						       tmp_mcs_tp_rate);
 -- 
 2.25.1
 
