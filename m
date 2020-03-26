@@ -2,82 +2,112 @@ Return-Path: <SRS0=ssZ+=5L=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC3BCC43331
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Mar 2020 12:04:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4681AC43331
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Mar 2020 12:55:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9214120714
-	for <linux-wireless@archiver.kernel.org>; Thu, 26 Mar 2020 12:04:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 243652073E
+	for <linux-wireless@archiver.kernel.org>; Thu, 26 Mar 2020 12:55:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728001AbgCZMEb (ORCPT
+        id S1728172AbgCZMzV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 26 Mar 2020 08:04:31 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:44176 "EHLO
+        Thu, 26 Mar 2020 08:55:21 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:44186 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727841AbgCZMEb (ORCPT
+        with ESMTP id S1727841AbgCZMzV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Mar 2020 08:04:31 -0400
+        Thu, 26 Mar 2020 08:55:21 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1jHRC4-0003we-Ca; Thu, 26 Mar 2020 14:01:04 +0200
+        id 1jHS2Y-00040Z-Cr; Thu, 26 Mar 2020 14:55:19 +0200
 From:   Luca Coelho <luca@coelho.fi>
-To:     johannes@sipsolutions.net
+To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Thu, 26 Mar 2020 14:00:40 +0200
-Message-Id: <20200326120042.578777-11-luca@coelho.fi>
+Date:   Thu, 26 Mar 2020 14:54:58 +0200
+Message-Id: <20200326125510.621842-1-luca@coelho.fi>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200326120042.578777-1-luca@coelho.fi>
-References: <20200326120042.578777-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 10/12] mac80211_hwsim: indicate in IBSS that we have transmitted beacons
+Subject: [PATCH 00/12] iwlwifi: updates intended for v5.7 2020-03-27
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-This is actually true because there's no functional beacon distribution
-and lets us get active scanning working - without it, mac80211 doesn't
-respond to probe requests.
+Hi,
 
-Change-Id: Id86fd36e3d88d2a75d6e0c6618fd93ce8fe84065
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/mac80211_hwsim.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+Here's the third set of patches intended for v5.7.  It's the usual
+development, new features, cleanups and bugfixes.
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 4d7141d06027..21148c6d24af 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -2464,6 +2464,11 @@ static void mac80211_hwsim_get_et_stats(struct ieee80211_hw *hw,
- 	WARN_ON(i != MAC80211_HWSIM_SSTATS_LEN);
- }
- 
-+static int mac80211_hwsim_tx_last_beacon(struct ieee80211_hw *hw)
-+{
-+	return 1;
-+}
-+
- #define HWSIM_COMMON_OPS					\
- 	.tx = mac80211_hwsim_tx,				\
- 	.start = mac80211_hwsim_start,				\
-@@ -2474,6 +2479,7 @@ static void mac80211_hwsim_get_et_stats(struct ieee80211_hw *hw,
- 	.config = mac80211_hwsim_config,			\
- 	.configure_filter = mac80211_hwsim_configure_filter,	\
- 	.bss_info_changed = mac80211_hwsim_bss_info_changed,	\
-+	.tx_last_beacon = mac80211_hwsim_tx_last_beacon,	\
- 	.sta_add = mac80211_hwsim_sta_add,			\
- 	.sta_remove = mac80211_hwsim_sta_remove,		\
- 	.sta_notify = mac80211_hwsim_sta_notify,		\
+The changes are:
+
+* More refactoring of the device selection algorithms;
+* Support new FW API version;
+* Support for EDCA measurements;
+* New scan API features;
+* Enable new debugging code;
+* Some other small fixes and clean-ups;
+
+As usual, I'm pushing this to a pending branch, for kbuild bot, and
+will send a pull-request later.
+
+Please review.
+
+Cheers,
+Luca.
+
+
+Avraham Stern (1):
+  iwlwifi: mvm: add support for non EDCA based measurements
+
+Johannes Berg (3):
+  iwlwifi: remove IWL_FW_DBG_DOMAIN macro
+  iwlwifi: pcie: make iwl_pcie_cmdq_reclaim static
+  iwlwifi: mvm: remove newline from rs_pretty_print_rate()
+
+Luca Coelho (6):
+  iwlwifi: add support for version 2 of SOC_CONFIGURATION_CMD
+  iwlwifi: add trans_cfg for devices with long latency
+  iwlwifi: remove support for QnJ Hr STEP A
+  iwlwifi: remove support for QnJ HR FPGA
+  iwlwifi: yoyo: enable yoyo by default
+  iwlwifi: bump FW API to 53 for 22000 series
+
+Tova Mussai (1):
+  iwlwifi: scan: support FW APIs with variable number of profiles
+
+rotem saado (1):
+  iwlwifi: yoyo: don't block dumping internal memory when not in SRAM
+    mode
+
+ .../net/wireless/intel/iwlwifi/cfg/22000.c    | 48 +++++--------------
+ .../wireless/intel/iwlwifi/fw/api/location.h  |  6 +++
+ .../net/wireless/intel/iwlwifi/fw/api/scan.h  | 31 +++++++++---
+ .../net/wireless/intel/iwlwifi/fw/api/soc.h   | 24 ++++++----
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c   |  8 +---
+ .../net/wireless/intel/iwlwifi/fw/runtime.h   |  2 -
+ .../net/wireless/intel/iwlwifi/iwl-config.h   |  5 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c  |  3 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c   |  5 +-
+ .../net/wireless/intel/iwlwifi/mvm/debugfs.c  |  4 ++
+ .../intel/iwlwifi/mvm/ftm-initiator.c         |  9 ++++
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c   | 21 ++++++--
+ .../net/wireless/intel/iwlwifi/mvm/mac80211.c | 10 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |  7 +++
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c   |  6 ++-
+ drivers/net/wireless/intel/iwlwifi/mvm/scan.c | 40 +++++++++++-----
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 17 ++-----
+ .../wireless/intel/iwlwifi/pcie/internal.h    |  1 -
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c  |  2 +-
+ 19 files changed, 145 insertions(+), 104 deletions(-)
+
 -- 
 2.25.1
 
