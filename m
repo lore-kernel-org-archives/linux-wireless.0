@@ -4,49 +4,49 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41CD2C2BA16
-	for <linux-wireless@archiver.kernel.org>; Fri, 27 Mar 2020 06:33:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 313F9C2D0ED
+	for <linux-wireless@archiver.kernel.org>; Fri, 27 Mar 2020 06:33:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E8CDF20663
-	for <linux-wireless@archiver.kernel.org>; Fri, 27 Mar 2020 06:33:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E185420663
+	for <linux-wireless@archiver.kernel.org>; Fri, 27 Mar 2020 06:33:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="ZF3jIMyk"
+	dkim=pass (1024-bit key) header.d=microchiptechnology.onmicrosoft.com header.i=@microchiptechnology.onmicrosoft.com header.b="MPnDY+0I"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727750AbgC0GdZ (ORCPT
+        id S1727720AbgC0GdX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 27 Mar 2020 02:33:25 -0400
+        Fri, 27 Mar 2020 02:33:23 -0400
 Received: from esa5.microchip.iphmx.com ([216.71.150.166]:49549 "EHLO
         esa5.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727708AbgC0GdY (ORCPT
+        with ESMTP id S1727185AbgC0GdW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Mar 2020 02:33:24 -0400
-IronPort-SDR: xBGRiXiPJct1+hhxZQOR0GDEa1yE3HzEC1GctcHy8Cz4bPqkdR3LghSn0DXXYYw8AZGhbCnZhd
- rljKSNZJwWglkGMQYwM/1nmc71xA3KjmCtY/I8EqUYI7gPLUoddcJt0p1OlNKIVjD/rLQHGrXI
- pPLq2heqfpiL43RILnhVEZK3JwV4YvzpjisSjCy4PVwY0vhbWMedp7U9PofFzKMKIZUSDPlxI0
- WEJXsXZLHLkYUzLdYbAQmQrFsNzSpJckkBY8qUle8gOwynOKCNqS/34DVggcpDKhhn1Cebb7r6
- Xcs=
+        Fri, 27 Mar 2020 02:33:22 -0400
+IronPort-SDR: 1CP3LkytKAmnVdbX7QfveRL1U2gjWP4RsMfoFfHNnd3gbz/f4bs62dIv7cKKeyXPjqWQk8CD4e
+ I2kDosFqs3v9hqaLQ6VbIkpHrxQr/jze0Oyt9OgaU4sVK+A3L3yJ7PVtYhs7gJDqg4GhEfeoox
+ utAMznDFy2QophfBu1TPEFkXpgZrI13hRCqpZBWnV670M3epNhgp2b6VWLIlLbSwzyRWqTzbaD
+ Mk+YVSAL/whkM6JttgfWEwjx8lfeMIivzZjXykCRWqQ4BnbVEfyImxEk0PTgUtmvWI4uxUcuBo
+ uLc=
 X-IronPort-AV: E=Sophos;i="5.72,311,1580799600"; 
-   d="scan'208";a="70452414"
+   d="scan'208";a="70452400"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa5.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 26 Mar 2020 23:33:23 -0700
+  by esa5.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 26 Mar 2020 23:33:21 -0700
 Received: from chn-vm-ex04.mchp-main.com (10.10.85.152) by
  chn-vm-ex04.mchp-main.com (10.10.85.152) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1713.5; Thu, 26 Mar 2020 23:33:21 -0700
+ 15.1.1713.5; Thu, 26 Mar 2020 23:33:18 -0700
 Received: from NAM12-MW2-obe.outbound.protection.outlook.com (10.10.215.89) by
  email.microchip.com (10.10.87.151) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5
- via Frontend Transport; Thu, 26 Mar 2020 23:33:21 -0700
+ via Frontend Transport; Thu, 26 Mar 2020 23:33:18 -0700
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=HkmWeSAHLXtK/6+YQPe4Kym42+HcpBuLu7XM8oCUfFX9ldMgGVTRK2EVa9+u/Rrj7WcEqCAS5i+AALQM/FxEXAXGanP7F2xpAjFb9Jb/FWGoXIt/DlXOj3D6jnfu7SGY2Izc2eEeSI2EcmLjGUEqjdbE2iokE6ZNmgQPXy0UqPf1XaezGTUSSCe2c05wJJTyO5V5gxip23ioEuAoullFOz+bMbC0AW27StVyKWF7/JAuBCKkZScSlFPy9BJWbacauw7UtACk6lwQrWSn8KLtJjl03pjHhH4PJKZm0kS3fcq4lEuNuGYAFzpP+0+paWZ1Ocep+HTzVkppnDGmxyqG9Q==
+ b=dvpXFAhIfc6O7Ffj5KAXeje3/83IcfgWID4mJGAtc+0vaGAuNA+K55FUh5iHhwxMjSzqCGW1oJi9K5ijB61eVdOuSIgGvZM4vA0Dc32u32DxACGh5aUcMVLgJphFGfttGaVQ8Rqb0I9/bhcfqiTH1/KIDa/fC2gMAauHOdsFmPenCJDRP3xsIb8jMtjo/MrAFCm6IXsV9G9DQppbUrBjfgI7FfOykV8nEWZw/tkV1X21LmWMDbH2XQZFcKxAoYmwj+ETX9wzLXnBxirFnyl8gymxeYiw6/pl2wm1SHzKXUDUtadRk3yqdNy8kMRZ/DWrMzl6xsEWc9CBIE8FtVhNNQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=6Y3dRx7lty2J5gZu8DU1YXgIthh1ObPT+WLB9M2bTRw=;
- b=lRDnP1+wo6Z+XsWUvCcI/Wp7RTugrAmC+ga6pmI//eMCutemdASuhp8smgJ+j0iVQ3TTDXYE6S2DTt/emuZP84c0hHJ5bKOf0gIPfs8W8vTIMwoJc3V69OnxNLUYmbijduc7AYBXaOrSFX5cdzyE03S7eKlQ+RmC9BF7tEzD+AMLF846qbKe9SbY4vEPd2V/zsI2Zu2IudVkMLKDkJ/D5I7VmxU2uhXu5KpWYToKN2skFn6orZ8YKIZ2Im0pklULOTo92fa6W9Q9nlfFhYCYxdARIQaFn8twx+Oy8xOpGU0ArCJvpZi0vX5HYaZIKr9/sSo5HPLoJhyrp0kh5PVl0Q==
+ bh=Jf3t/5MFB/CSijnJK4XtO9fCTjGZSy+D+RGg+/Bom0Y=;
+ b=BDY7EPzqOiHf7ipCNt8z+bLk33yJBokE04Lk0+PHwKgLSVW+sLzUr5bwIt8zbvoZ91/rhnR4NmuoCGCWtbdafDzk1nnKQvHcpLT3D7eprOH5YkKnctPOcUQYJQx7QB4dZVlbD4Spa6s0CwEL73ujP+2RsQ1/mAGKv7a0w5Y5d0Rt3YKbs19bSxQkIu8o11rxAEBP8Va+xYsVkpmx4EwC4cWBlxEOck1XYsJGymjrWhXUA7PkpUNk/Z5QqZAdBJr/ln8jXIWf/DoFHGTJWWrvsOY2hJgJ927BPo9/HY7VNbq0bXzSUSfXOn0x0qFKXXcSzx1VXGzqnrgEblNyzTIgww==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=microchip.com; dmarc=pass action=none
  header.from=microchip.com; dkim=pass header.d=microchip.com; arc=none
@@ -54,17 +54,17 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=microchiptechnology.onmicrosoft.com;
  s=selector2-microchiptechnology-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=6Y3dRx7lty2J5gZu8DU1YXgIthh1ObPT+WLB9M2bTRw=;
- b=ZF3jIMyksAofWXU0zOP42ANILYb/EW+uilV2Gwf4onoEsQnXqErLV1mdLUT5CRsfoq2XT5W34kdZx2nLTb4H/tIilFCFIHLrG7aWv8HxRQ2IMdRWELcYyNLhGQY7ORyOwjN8ADTEGL2A50/AenDOt6+nc5U/RXikCHEB+a9YDNw=
+ bh=Jf3t/5MFB/CSijnJK4XtO9fCTjGZSy+D+RGg+/Bom0Y=;
+ b=MPnDY+0IwxlncO5HO/DHguHFdMwm/jRHonIDSQQdf+Ky2inhXN1SKcewe5JfmY2A3vhJo8NSXGVzFcXbCvDzftRjYTdrgBfqMxDs8KI9kQoVhOale5PKzp49pawkT9gVByfAsbGod6V/Hlq3S1z+eZVUBfdBpado8k3OFiVuVJI=
 Received: from BYAPR11MB3125.namprd11.prod.outlook.com (2603:10b6:a03:8e::32)
  by BYAPR11MB3397.namprd11.prod.outlook.com (2603:10b6:a03:1b::29) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2856.19; Fri, 27 Mar
- 2020 06:33:19 +0000
+ 2020 06:33:16 +0000
 Received: from BYAPR11MB3125.namprd11.prod.outlook.com
  ([fe80::c27:87cf:ca4:d86e]) by BYAPR11MB3125.namprd11.prod.outlook.com
  ([fe80::c27:87cf:ca4:d86e%4]) with mapi id 15.20.2835.021; Fri, 27 Mar 2020
- 06:33:19 +0000
+ 06:33:16 +0000
 From:   <Ajay.Kathat@microchip.com>
 To:     <linux-wireless@vger.kernel.org>
 CC:     <devel@driverdev.osuosl.org>, <devicetree@vger.kernel.org>,
@@ -72,11 +72,11 @@ CC:     <devel@driverdev.osuosl.org>, <devicetree@vger.kernel.org>,
         <Adham.Abozaeid@microchip.com>, <Nicolas.Ferre@microchip.com>,
         <Claudiu.Beznea@microchip.com>, <Venkateswara.Kaja@microchip.com>,
         <Ajay.Kathat@microchip.com>
-Subject: [PATCH v6 14/17] wilc1000: add sdio.c
-Thread-Topic: [PATCH v6 14/17] wilc1000: add sdio.c
-Thread-Index: AQHWBAGaqsNYpKZtUEy/lvOPO4SrUw==
-Date:   Fri, 27 Mar 2020 06:33:18 +0000
-Message-ID: <20200327063302.20511-15-ajay.kathat@microchip.com>
+Subject: [PATCH v6 11/17] wilc1000: add spi.c
+Thread-Topic: [PATCH v6 11/17] wilc1000: add spi.c
+Thread-Index: AQHWBAGZWTlZUM4UiUSwYbBGBh9zVQ==
+Date:   Fri, 27 Mar 2020 06:33:16 +0000
+Message-ID: <20200327063302.20511-12-ajay.kathat@microchip.com>
 References: <20200327063302.20511-1-ajay.kathat@microchip.com>
 In-Reply-To: <20200327063302.20511-1-ajay.kathat@microchip.com>
 Accept-Language: en-US
@@ -88,30 +88,30 @@ authentication-results: spf=none (sender IP is )
  smtp.mailfrom=Ajay.Kathat@microchip.com; 
 x-originating-ip: [183.82.22.58]
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 886963d0-d94a-4647-b440-08d7d218bd32
+x-ms-office365-filtering-correlation-id: 59ee0c0a-6afc-4de3-6943-08d7d218bbdd
 x-ms-traffictypediagnostic: BYAPR11MB3397:
 x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <BYAPR11MB3397BEDE750316373DB46B09E3CC0@BYAPR11MB3397.namprd11.prod.outlook.com>
+x-microsoft-antispam-prvs: <BYAPR11MB3397A381284992C92A17B8EDE3CC0@BYAPR11MB3397.namprd11.prod.outlook.com>
 x-bypassexternaltag: True
-x-ms-oob-tlc-oobclassifiers: OLM:8;
+x-ms-oob-tlc-oobclassifiers: OLM:185;
 x-forefront-prvs: 0355F3A3AE
 x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(39850400004)(136003)(376002)(346002)(366004)(396003)(81156014)(26005)(8676002)(81166006)(76116006)(66446008)(66556008)(66476007)(36756003)(6512007)(66946007)(6486002)(64756008)(91956017)(2906002)(6506007)(4326008)(71200400001)(2616005)(107886003)(186003)(30864003)(86362001)(5660300002)(478600001)(1076003)(6916009)(316002)(8936002)(54906003)(579004);DIR:OUT;SFP:1101;SCL:1;SRVR:BYAPR11MB3397;H:BYAPR11MB3125.namprd11.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;
 received-spf: None (protection.outlook.com: microchip.com does not designate
  permitted sender hosts)
 x-ms-exchange-senderadcheck: 1
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 90oksm82MZH1TZKvkd2xHLmxBbvjJ7HMP2laYtdwMt9e5POFMGZzTxUW71Tb2M7LHAO40onnyO5+ULskubo2zqOP+CHQJ6XrXzrULLWuwDzbMcVfrc1hL7lAhauwtzHpXPF9CVELq24c4+y6g/rKN2mQtsJ+tgfHmgM5jM6hzkrq3zPX/loWynW1BgLhStiT30kCLtUzhHuaveCvwGEUThmpmSuWYFTKQt5qSKhs9QWSsmnls//IPzmRv2MYWrfVxkdXp/TSKWOd61BBvyiK5X0fJVOPsqy6dW18ApO3dWzRIC9mWPT5wptiyELKCKzDdp6VaEKua+h3w2QMBmq1Z8qh7g5j8oLM2zs9K53ZJHGc4VilXUX4kC++ecYSMDMNfZxlNoEZcr7KQs4JlxXzv5hqcSyXO5PmY6NSYVCE1UV3WzqE6knZ3PxDQfoXCI2C
-x-ms-exchange-antispam-messagedata: s8I2SoOK5XT3/Zi9xqXs8eSp2Ob8nzpOKdfB2Iehi5WKQBLAy2g7LsEQRwPLyXDzpy4VdjlPqWSjk1CIMf3Ggb9EXpNMYAUXISJJInp1RvQythwWYU2M7rO1WSzQvvIjZNzKBv2oWmJ9R5K/cKOvjw==
+x-microsoft-antispam-message-info: OpReM26/ok5rSanWh1f1oNomtr9kNurkpax2AdSYtMKuSCQnKleLjHV02vKMGX9ZUtLumomijxVA8ntYLvHvM1Moz3ndK5vNgSY4L9uDYVYxeKrRTpjsApUMhzwTyf9hp03aQqRSxJNlM0pgerdeZ1HLSjxEwQ9rRf1es0MHa8lLP+M/c2YiP7OQ75spo7hRmdxydltiA5n725/dUCY88NynW3y1iimg2iTKVGhtVBO9sGcWio5X6ldqsvdj4SxqmQT95DK7ZMhe7tmXmfjgUwSLsGzxnJpb9c6KcsmvRZuZTnnf8VsTZw3ou9Ffrhp3Zsxoih+5w1kijuV+aE3hoPK9vxU7+mgIIio29NTNUrAwn/AumZnGy2ZA/rpe2YYyZERAePgQrGDMzubUioGMfoq5IGEWCYNmjA4WCufcB8mzR+FJDiNT1dGJjmkCpl7/
+x-ms-exchange-antispam-messagedata: 8n1bBjFDWoHG6AfUOPLjjzWJQPK9IYglrRix9EzoMJyvFwqcWWQ374BrANrptKkAqSDtxeG4mr+T9dNEkMjANjwDqHiyxu5mNG6iFber0Hv7UHSDBT8QfuRmo9So5UAjIe8QvoIpah5qKceO4GVJfA==
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-Network-Message-Id: 886963d0-d94a-4647-b440-08d7d218bd32
-X-MS-Exchange-CrossTenant-originalarrivaltime: 27 Mar 2020 06:33:19.0429
+X-MS-Exchange-CrossTenant-Network-Message-Id: 59ee0c0a-6afc-4de3-6943-08d7d218bbdd
+X-MS-Exchange-CrossTenant-originalarrivaltime: 27 Mar 2020 06:33:16.7113
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: GpIWxXftL95X2MOGI7BpmFSMcVPdWatJGh0wqxmy8TKV5X882NVmM2tIKxHYRR8i376N+KCVEH9VBFc5zLlM+EPb0cOZ/ytXi6KdlHjOUKs=
+X-MS-Exchange-CrossTenant-userprincipalname: F/YHcHrS5mjT/R/bbdbeRq6ssCM0PLdenTuVB1SyK5CSdxOKgDLqZ5LyZf2E6mBFNPhJeAiaWlGxGMX3GDJEXpnmnydczRWplAy9vzW9Sko=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR11MB3397
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
@@ -120,22 +120,22 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ajay Singh <ajay.kathat@microchip.com>
 
-Moved 'drivers/staging/wilc1000/sdio.c' to
-'drivers/net/wireless/microchip/wilc1000/sdio.c'.
+Moved 'drivers/staging/wilc1000/spi.c' to
+'drivers/net/wireless/microchip/wilc1000/spi.c'.
 
 Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
 ---
- .../net/wireless/microchip/wilc1000/sdio.c    | 1023 +++++++++++++++++
- 1 file changed, 1023 insertions(+)
- create mode 100644 drivers/net/wireless/microchip/wilc1000/sdio.c
+ drivers/net/wireless/microchip/wilc1000/spi.c | 945 ++++++++++++++++++
+ 1 file changed, 945 insertions(+)
+ create mode 100644 drivers/net/wireless/microchip/wilc1000/spi.c
 
-diff --git a/drivers/net/wireless/microchip/wilc1000/sdio.c b/drivers/net/w=
-ireless/microchip/wilc1000/sdio.c
+diff --git a/drivers/net/wireless/microchip/wilc1000/spi.c b/drivers/net/wi=
+reless/microchip/wilc1000/spi.c
 new file mode 100644
-index 000000000000..36eb589263bf
+index 000000000000..3f19e3f38a39
 --- /dev/null
-+++ b/drivers/net/wireless/microchip/wilc1000/sdio.c
-@@ -0,0 +1,1023 @@
++++ b/drivers/net/wireless/microchip/wilc1000/spi.c
+@@ -0,0 +1,945 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
 + * Copyright (c) 2012 - 2018 Microchip Technology Inc., and its subsidiari=
@@ -144,569 +144,749 @@ es.
 + */
 +
 +#include <linux/clk.h>
-+#include <linux/mmc/sdio_func.h>
-+#include <linux/mmc/host.h>
-+#include <linux/mmc/sdio.h>
-+#include <linux/of_irq.h>
++#include <linux/spi/spi.h>
++#include <linux/crc7.h>
 +
 +#include "netdev.h"
 +#include "cfg80211.h"
 +
-+#define SDIO_MODALIAS "wilc1000_sdio"
-+
-+#define SDIO_VENDOR_ID_WILC 0x0296
-+#define SDIO_DEVICE_ID_WILC 0x5347
-+
-+static const struct sdio_device_id wilc_sdio_ids[] =3D {
-+	{ SDIO_DEVICE(SDIO_VENDOR_ID_WILC, SDIO_DEVICE_ID_WILC) },
-+	{ },
++struct wilc_spi {
++	int crc_off;
 +};
 +
-+#define WILC_SDIO_BLOCK_SIZE 512
++static const struct wilc_hif_func wilc_hif_spi;
 +
-+struct wilc_sdio {
-+	bool irq_gpio;
-+	u32 block_size;
-+	int has_thrpt_enh3;
-+};
++/********************************************
++ *
++ *      Spi protocol Function
++ *
++ ********************************************/
 +
-+struct sdio_cmd52 {
-+	u32 read_write:		1;
-+	u32 function:		3;
-+	u32 raw:		1;
-+	u32 address:		17;
-+	u32 data:		8;
-+};
++#define CMD_DMA_WRITE				0xc1
++#define CMD_DMA_READ				0xc2
++#define CMD_INTERNAL_WRITE			0xc3
++#define CMD_INTERNAL_READ			0xc4
++#define CMD_TERMINATE				0xc5
++#define CMD_REPEAT				0xc6
++#define CMD_DMA_EXT_WRITE			0xc7
++#define CMD_DMA_EXT_READ			0xc8
++#define CMD_SINGLE_WRITE			0xc9
++#define CMD_SINGLE_READ				0xca
++#define CMD_RESET				0xcf
 +
-+struct sdio_cmd53 {
-+	u32 read_write:		1;
-+	u32 function:		3;
-+	u32 block_mode:		1;
-+	u32 increment:		1;
-+	u32 address:		17;
-+	u32 count:		9;
-+	u8 *buffer;
-+	u32 block_size;
-+};
++#define DATA_PKT_SZ_256				256
++#define DATA_PKT_SZ_512				512
++#define DATA_PKT_SZ_1K				1024
++#define DATA_PKT_SZ_4K				(4 * 1024)
++#define DATA_PKT_SZ_8K				(8 * 1024)
++#define DATA_PKT_SZ				DATA_PKT_SZ_8K
 +
-+static const struct wilc_hif_func wilc_hif_sdio;
++#define USE_SPI_DMA				0
 +
-+static void wilc_sdio_interrupt(struct sdio_func *func)
++#define WILC_SPI_COMMAND_STAT_SUCCESS		0
++#define WILC_GET_RESP_HDR_START(h)		(((h) >> 4) & 0xf)
++
++struct wilc_spi_cmd {
++	u8 cmd_type;
++	union {
++		struct {
++			u8 addr[3];
++			u8 crc[];
++		} __packed simple_cmd;
++		struct {
++			u8 addr[3];
++			u8 size[2];
++			u8 crc[];
++		} __packed dma_cmd;
++		struct {
++			u8 addr[3];
++			u8 size[3];
++			u8 crc[];
++		} __packed dma_cmd_ext;
++		struct {
++			u8 addr[2];
++			__be32 data;
++			u8 crc[];
++		} __packed internal_w_cmd;
++		struct {
++			u8 addr[3];
++			__be32 data;
++			u8 crc[];
++		} __packed w_cmd;
++	} u;
++} __packed;
++
++struct wilc_spi_read_rsp_data {
++	u8 rsp_cmd_type;
++	u8 status;
++	u8 resp_header;
++	u8 resp_data[4];
++	u8 crc[];
++} __packed;
++
++struct wilc_spi_rsp_data {
++	u8 rsp_cmd_type;
++	u8 status;
++} __packed;
++
++static int wilc_bus_probe(struct spi_device *spi)
 +{
-+	sdio_release_host(func);
-+	wilc_handle_isr(sdio_get_drvdata(func));
-+	sdio_claim_host(func);
-+}
-+
-+static int wilc_sdio_cmd52(struct wilc *wilc, struct sdio_cmd52 *cmd)
-+{
-+	struct sdio_func *func =3D container_of(wilc->dev, struct sdio_func, dev)=
-;
 +	int ret;
-+	u8 data;
-+
-+	sdio_claim_host(func);
-+
-+	func->num =3D cmd->function;
-+	if (cmd->read_write) {  /* write */
-+		if (cmd->raw) {
-+			sdio_writeb(func, cmd->data, cmd->address, &ret);
-+			data =3D sdio_readb(func, cmd->address, &ret);
-+			cmd->data =3D data;
-+		} else {
-+			sdio_writeb(func, cmd->data, cmd->address, &ret);
-+		}
-+	} else {        /* read */
-+		data =3D sdio_readb(func, cmd->address, &ret);
-+		cmd->data =3D data;
-+	}
-+
-+	sdio_release_host(func);
-+
-+	if (ret)
-+		dev_err(&func->dev, "%s..failed, err(%d)\n", __func__, ret);
-+	return ret;
-+}
-+
-+static int wilc_sdio_cmd53(struct wilc *wilc, struct sdio_cmd53 *cmd)
-+{
-+	struct sdio_func *func =3D container_of(wilc->dev, struct sdio_func, dev)=
-;
-+	int size, ret;
-+
-+	sdio_claim_host(func);
-+
-+	func->num =3D cmd->function;
-+	func->cur_blksize =3D cmd->block_size;
-+	if (cmd->block_mode)
-+		size =3D cmd->count * cmd->block_size;
-+	else
-+		size =3D cmd->count;
-+
-+	if (cmd->read_write) {  /* write */
-+		ret =3D sdio_memcpy_toio(func, cmd->address,
-+				       (void *)cmd->buffer, size);
-+	} else {        /* read */
-+		ret =3D sdio_memcpy_fromio(func, (void *)cmd->buffer,
-+					 cmd->address,  size);
-+	}
-+
-+	sdio_release_host(func);
-+
-+	if (ret)
-+		dev_err(&func->dev, "%s..failed, err(%d)\n", __func__,  ret);
-+
-+	return ret;
-+}
-+
-+static int wilc_sdio_probe(struct sdio_func *func,
-+			   const struct sdio_device_id *id)
-+{
 +	struct wilc *wilc;
-+	int ret;
-+	struct wilc_sdio *sdio_priv;
++	struct wilc_spi *spi_priv;
 +
-+	sdio_priv =3D kzalloc(sizeof(*sdio_priv), GFP_KERNEL);
-+	if (!sdio_priv)
++	spi_priv =3D kzalloc(sizeof(*spi_priv), GFP_KERNEL);
++	if (!spi_priv)
 +		return -ENOMEM;
 +
-+	ret =3D wilc_cfg80211_init(&wilc, &func->dev, WILC_HIF_SDIO,
-+				 &wilc_hif_sdio);
++	ret =3D wilc_cfg80211_init(&wilc, &spi->dev, WILC_HIF_SPI, &wilc_hif_spi)=
+;
 +	if (ret) {
-+		kfree(sdio_priv);
++		kfree(spi_priv);
 +		return ret;
 +	}
 +
-+	if (IS_ENABLED(CONFIG_WILC1000_HW_OOB_INTR)) {
-+		struct device_node *np =3D func->card->dev.of_node;
-+		int irq_num =3D of_irq_get(np, 0);
++	spi_set_drvdata(spi, wilc);
++	wilc->dev =3D &spi->dev;
++	wilc->bus_data =3D spi_priv;
++	wilc->dev_irq_num =3D spi->irq;
 +
-+		if (irq_num > 0) {
-+			wilc->dev_irq_num =3D irq_num;
-+			sdio_priv->irq_gpio =3D true;
-+		}
-+	}
-+
-+	sdio_set_drvdata(func, wilc);
-+	wilc->bus_data =3D sdio_priv;
-+	wilc->dev =3D &func->dev;
-+
-+	wilc->rtc_clk =3D devm_clk_get(&func->card->dev, "rtc");
++	wilc->rtc_clk =3D devm_clk_get(&spi->dev, "rtc_clk");
 +	if (PTR_ERR_OR_ZERO(wilc->rtc_clk) =3D=3D -EPROBE_DEFER)
 +		return -EPROBE_DEFER;
 +	else if (!IS_ERR(wilc->rtc_clk))
 +		clk_prepare_enable(wilc->rtc_clk);
 +
-+	dev_info(&func->dev, "Driver Initializing success\n");
 +	return 0;
 +}
 +
-+static void wilc_sdio_remove(struct sdio_func *func)
++static int wilc_bus_remove(struct spi_device *spi)
 +{
-+	struct wilc *wilc =3D sdio_get_drvdata(func);
++	struct wilc *wilc =3D spi_get_drvdata(spi);
 +
 +	if (!IS_ERR(wilc->rtc_clk))
 +		clk_disable_unprepare(wilc->rtc_clk);
 +
 +	wilc_netdev_cleanup(wilc);
-+}
-+
-+static int wilc_sdio_reset(struct wilc *wilc)
-+{
-+	struct sdio_cmd52 cmd;
-+	int ret;
-+	struct sdio_func *func =3D dev_to_sdio_func(wilc->dev);
-+
-+	cmd.read_write =3D 1;
-+	cmd.function =3D 0;
-+	cmd.raw =3D 0;
-+	cmd.address =3D SDIO_CCCR_ABORT;
-+	cmd.data =3D WILC_SDIO_CCCR_ABORT_RESET;
-+	ret =3D wilc_sdio_cmd52(wilc, &cmd);
-+	if (ret) {
-+		dev_err(&func->dev, "Fail cmd 52, reset cmd ...\n");
-+		return ret;
-+	}
 +	return 0;
 +}
 +
-+static int wilc_sdio_suspend(struct device *dev)
++static const struct of_device_id wilc_of_match[] =3D {
++	{ .compatible =3D "microchip,wilc1000", },
++	{ /* sentinel */ }
++};
++MODULE_DEVICE_TABLE(of, wilc_of_match);
++
++static struct spi_driver wilc_spi_driver =3D {
++	.driver =3D {
++		.name =3D MODALIAS,
++		.of_match_table =3D wilc_of_match,
++	},
++	.probe =3D  wilc_bus_probe,
++	.remove =3D wilc_bus_remove,
++};
++module_spi_driver(wilc_spi_driver);
++MODULE_LICENSE("GPL");
++
++static int wilc_spi_tx(struct wilc *wilc, u8 *b, u32 len)
 +{
-+	struct sdio_func *func =3D dev_to_sdio_func(dev);
-+	struct wilc *wilc =3D sdio_get_drvdata(func);
++	struct spi_device *spi =3D to_spi_device(wilc->dev);
 +	int ret;
++	struct spi_message msg;
 +
-+	dev_info(dev, "sdio suspend\n");
-+	chip_wakeup(wilc);
++	if (len > 0 && b) {
++		struct spi_transfer tr =3D {
++			.tx_buf =3D b,
++			.len =3D len,
++			.delay =3D {
++				.value =3D 0,
++				.unit =3D SPI_DELAY_UNIT_USECS
++			},
++		};
++		char *r_buffer =3D kzalloc(len, GFP_KERNEL);
 +
-+	if (!IS_ERR(wilc->rtc_clk))
-+		clk_disable_unprepare(wilc->rtc_clk);
++		if (!r_buffer)
++			return -ENOMEM;
 +
-+	if (wilc->suspend_event) {
-+		host_sleep_notify(wilc);
-+		chip_allow_sleep(wilc);
-+	}
++		tr.rx_buf =3D r_buffer;
++		dev_dbg(&spi->dev, "Request writing %d bytes\n", len);
 +
-+	ret =3D wilc_sdio_reset(wilc);
-+	if (ret) {
-+		dev_err(&func->dev, "Fail reset sdio\n");
-+		return ret;
-+	}
-+	sdio_claim_host(func);
++		memset(&msg, 0, sizeof(msg));
++		spi_message_init(&msg);
++		msg.spi =3D spi;
++		msg.is_dma_mapped =3D USE_SPI_DMA;
++		spi_message_add_tail(&tr, &msg);
 +
-+	return 0;
-+}
++		ret =3D spi_sync(spi, &msg);
++		if (ret < 0)
++			dev_err(&spi->dev, "SPI transaction failed\n");
 +
-+static int wilc_sdio_enable_interrupt(struct wilc *dev)
-+{
-+	struct sdio_func *func =3D container_of(dev->dev, struct sdio_func, dev);
-+	int ret =3D 0;
-+
-+	sdio_claim_host(func);
-+	ret =3D sdio_claim_irq(func, wilc_sdio_interrupt);
-+	sdio_release_host(func);
-+
-+	if (ret < 0) {
-+		dev_err(&func->dev, "can't claim sdio_irq, err(%d)\n", ret);
-+		ret =3D -EIO;
-+	}
-+	return ret;
-+}
-+
-+static void wilc_sdio_disable_interrupt(struct wilc *dev)
-+{
-+	struct sdio_func *func =3D container_of(dev->dev, struct sdio_func, dev);
-+	int ret;
-+
-+	sdio_claim_host(func);
-+	ret =3D sdio_release_irq(func);
-+	if (ret < 0)
-+		dev_err(&func->dev, "can't release sdio_irq, err(%d)\n", ret);
-+	sdio_release_host(func);
-+}
-+
-+/********************************************
-+ *
-+ *      Function 0
-+ *
-+ ********************************************/
-+
-+static int wilc_sdio_set_func0_csa_address(struct wilc *wilc, u32 adr)
-+{
-+	struct sdio_func *func =3D dev_to_sdio_func(wilc->dev);
-+	struct sdio_cmd52 cmd;
-+	int ret;
-+
-+	/**
-+	 *      Review: BIG ENDIAN
-+	 **/
-+	cmd.read_write =3D 1;
-+	cmd.function =3D 0;
-+	cmd.raw =3D 0;
-+	cmd.address =3D WILC_SDIO_FBR_CSA_REG;
-+	cmd.data =3D (u8)adr;
-+	ret =3D wilc_sdio_cmd52(wilc, &cmd);
-+	if (ret) {
-+		dev_err(&func->dev, "Failed cmd52, set %04x data...\n",
-+			cmd.address);
-+		return ret;
-+	}
-+
-+	cmd.address =3D WILC_SDIO_FBR_CSA_REG + 1;
-+	cmd.data =3D (u8)(adr >> 8);
-+	ret =3D wilc_sdio_cmd52(wilc, &cmd);
-+	if (ret) {
-+		dev_err(&func->dev, "Failed cmd52, set %04x data...\n",
-+			cmd.address);
-+		return ret;
-+	}
-+
-+	cmd.address =3D WILC_SDIO_FBR_CSA_REG + 2;
-+	cmd.data =3D (u8)(adr >> 16);
-+	ret =3D wilc_sdio_cmd52(wilc, &cmd);
-+	if (ret) {
-+		dev_err(&func->dev, "Failed cmd52, set %04x data...\n",
-+			cmd.address);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static int wilc_sdio_set_block_size(struct wilc *wilc, u8 func_num,
-+				    u32 block_size)
-+{
-+	struct sdio_func *func =3D dev_to_sdio_func(wilc->dev);
-+	struct sdio_cmd52 cmd;
-+	int ret;
-+
-+	cmd.read_write =3D 1;
-+	cmd.function =3D 0;
-+	cmd.raw =3D 0;
-+	cmd.address =3D SDIO_FBR_BASE(func_num) + SDIO_CCCR_BLKSIZE;
-+	cmd.data =3D (u8)block_size;
-+	ret =3D wilc_sdio_cmd52(wilc, &cmd);
-+	if (ret) {
-+		dev_err(&func->dev, "Failed cmd52, set %04x data...\n",
-+			cmd.address);
-+		return ret;
-+	}
-+
-+	cmd.address =3D SDIO_FBR_BASE(func_num) + SDIO_CCCR_BLKSIZE +  1;
-+	cmd.data =3D (u8)(block_size >> 8);
-+	ret =3D wilc_sdio_cmd52(wilc, &cmd);
-+	if (ret) {
-+		dev_err(&func->dev, "Failed cmd52, set %04x data...\n",
-+			cmd.address);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+/********************************************
-+ *
-+ *      Sdio interfaces
-+ *
-+ ********************************************/
-+static int wilc_sdio_write_reg(struct wilc *wilc, u32 addr, u32 data)
-+{
-+	struct sdio_func *func =3D dev_to_sdio_func(wilc->dev);
-+	struct wilc_sdio *sdio_priv =3D wilc->bus_data;
-+	int ret;
-+
-+	cpu_to_le32s(&data);
-+
-+	if (addr >=3D 0xf0 && addr <=3D 0xff) { /* only vendor specific registers=
- */
-+		struct sdio_cmd52 cmd;
-+
-+		cmd.read_write =3D 1;
-+		cmd.function =3D 0;
-+		cmd.raw =3D 0;
-+		cmd.address =3D addr;
-+		cmd.data =3D data;
-+		ret =3D wilc_sdio_cmd52(wilc, &cmd);
-+		if (ret)
-+			dev_err(&func->dev,
-+				"Failed cmd 52, read reg (%08x) ...\n", addr);
++		kfree(r_buffer);
 +	} else {
-+		struct sdio_cmd53 cmd;
-+
-+		/**
-+		 *      set the AHB address
-+		 **/
-+		ret =3D wilc_sdio_set_func0_csa_address(wilc, addr);
-+		if (ret)
-+			return ret;
-+
-+		cmd.read_write =3D 1;
-+		cmd.function =3D 0;
-+		cmd.address =3D WILC_SDIO_FBR_DATA_REG;
-+		cmd.block_mode =3D 0;
-+		cmd.increment =3D 1;
-+		cmd.count =3D 4;
-+		cmd.buffer =3D (u8 *)&data;
-+		cmd.block_size =3D sdio_priv->block_size;
-+		ret =3D wilc_sdio_cmd53(wilc, &cmd);
-+		if (ret)
-+			dev_err(&func->dev,
-+				"Failed cmd53, write reg (%08x)...\n", addr);
++		dev_err(&spi->dev,
++			"can't write data with the following length: %d\n",
++			len);
++		ret =3D -EINVAL;
 +	}
 +
 +	return ret;
 +}
 +
-+static int wilc_sdio_write(struct wilc *wilc, u32 addr, u8 *buf, u32 size)
++static int wilc_spi_rx(struct wilc *wilc, u8 *rb, u32 rlen)
 +{
-+	struct sdio_func *func =3D dev_to_sdio_func(wilc->dev);
-+	struct wilc_sdio *sdio_priv =3D wilc->bus_data;
-+	u32 block_size =3D sdio_priv->block_size;
-+	struct sdio_cmd53 cmd;
-+	int nblk, nleft, ret;
++	struct spi_device *spi =3D to_spi_device(wilc->dev);
++	int ret;
 +
-+	cmd.read_write =3D 1;
-+	if (addr > 0) {
-+		/**
-+		 *      func 0 access
-+		 **/
-+		cmd.function =3D 0;
-+		cmd.address =3D WILC_SDIO_FBR_DATA_REG;
++	if (rlen > 0) {
++		struct spi_message msg;
++		struct spi_transfer tr =3D {
++			.rx_buf =3D rb,
++			.len =3D rlen,
++			.delay =3D {
++				.value =3D 0,
++				.unit =3D SPI_DELAY_UNIT_USECS
++			},
++
++		};
++		char *t_buffer =3D kzalloc(rlen, GFP_KERNEL);
++
++		if (!t_buffer)
++			return -ENOMEM;
++
++		tr.tx_buf =3D t_buffer;
++
++		memset(&msg, 0, sizeof(msg));
++		spi_message_init(&msg);
++		msg.spi =3D spi;
++		msg.is_dma_mapped =3D USE_SPI_DMA;
++		spi_message_add_tail(&tr, &msg);
++
++		ret =3D spi_sync(spi, &msg);
++		if (ret < 0)
++			dev_err(&spi->dev, "SPI transaction failed\n");
++		kfree(t_buffer);
 +	} else {
-+		/**
-+		 *      func 1 access
-+		 **/
-+		cmd.function =3D 1;
-+		cmd.address =3D WILC_SDIO_F1_DATA_REG;
++		dev_err(&spi->dev,
++			"can't read data with the following length: %u\n",
++			rlen);
++		ret =3D -EINVAL;
 +	}
 +
-+	size =3D ALIGN(size, 4);
-+	nblk =3D size / block_size;
-+	nleft =3D size % block_size;
++	return ret;
++}
 +
-+	if (nblk > 0) {
-+		cmd.block_mode =3D 1;
-+		cmd.increment =3D 1;
-+		cmd.count =3D nblk;
-+		cmd.buffer =3D buf;
-+		cmd.block_size =3D block_size;
-+		if (addr > 0) {
-+			ret =3D wilc_sdio_set_func0_csa_address(wilc, addr);
-+			if (ret)
-+				return ret;
-+		}
-+		ret =3D wilc_sdio_cmd53(wilc, &cmd);
-+		if (ret) {
-+			dev_err(&func->dev,
-+				"Failed cmd53 [%x], block send...\n", addr);
-+			return ret;
-+		}
-+		if (addr > 0)
-+			addr +=3D nblk * block_size;
-+		buf +=3D nblk * block_size;
++static int wilc_spi_tx_rx(struct wilc *wilc, u8 *wb, u8 *rb, u32 rlen)
++{
++	struct spi_device *spi =3D to_spi_device(wilc->dev);
++	int ret;
++
++	if (rlen > 0) {
++		struct spi_message msg;
++		struct spi_transfer tr =3D {
++			.rx_buf =3D rb,
++			.tx_buf =3D wb,
++			.len =3D rlen,
++			.bits_per_word =3D 8,
++			.delay =3D {
++				.value =3D 0,
++				.unit =3D SPI_DELAY_UNIT_USECS
++			},
++
++		};
++
++		memset(&msg, 0, sizeof(msg));
++		spi_message_init(&msg);
++		msg.spi =3D spi;
++		msg.is_dma_mapped =3D USE_SPI_DMA;
++
++		spi_message_add_tail(&tr, &msg);
++		ret =3D spi_sync(spi, &msg);
++		if (ret < 0)
++			dev_err(&spi->dev, "SPI transaction failed\n");
++	} else {
++		dev_err(&spi->dev,
++			"can't read data with the following length: %u\n",
++			rlen);
++		ret =3D -EINVAL;
 +	}
 +
-+	if (nleft > 0) {
-+		cmd.block_mode =3D 0;
-+		cmd.increment =3D 1;
-+		cmd.count =3D nleft;
-+		cmd.buffer =3D buf;
++	return ret;
++}
 +
-+		cmd.block_size =3D block_size;
++static int spi_data_write(struct wilc *wilc, u8 *b, u32 sz)
++{
++	struct spi_device *spi =3D to_spi_device(wilc->dev);
++	struct wilc_spi *spi_priv =3D wilc->bus_data;
++	int ix, nbytes;
++	int result =3D 0;
++	u8 cmd, order, crc[2] =3D {0};
 +
-+		if (addr > 0) {
-+			ret =3D wilc_sdio_set_func0_csa_address(wilc, addr);
-+			if (ret)
-+				return ret;
++	/*
++	 * Data
++	 */
++	ix =3D 0;
++	do {
++		if (sz <=3D DATA_PKT_SZ) {
++			nbytes =3D sz;
++			order =3D 0x3;
++		} else {
++			nbytes =3D DATA_PKT_SZ;
++			if (ix =3D=3D 0)
++				order =3D 0x1;
++			else
++				order =3D 0x02;
 +		}
-+		ret =3D wilc_sdio_cmd53(wilc, &cmd);
-+		if (ret) {
-+			dev_err(&func->dev,
-+				"Failed cmd53 [%x], bytes send...\n", addr);
-+			return ret;
++
++		/*
++		 * Write command
++		 */
++		cmd =3D 0xf0;
++		cmd |=3D order;
++
++		if (wilc_spi_tx(wilc, &cmd, 1)) {
++			dev_err(&spi->dev,
++				"Failed data block cmd write, bus error...\n");
++			result =3D -EINVAL;
++			break;
 +		}
++
++		/*
++		 * Write data
++		 */
++		if (wilc_spi_tx(wilc, &b[ix], nbytes)) {
++			dev_err(&spi->dev,
++				"Failed data block write, bus error...\n");
++			result =3D -EINVAL;
++			break;
++		}
++
++		/*
++		 * Write Crc
++		 */
++		if (!spi_priv->crc_off) {
++			if (wilc_spi_tx(wilc, crc, 2)) {
++				dev_err(&spi->dev, "Failed data block crc write, bus error...\n");
++				result =3D -EINVAL;
++				break;
++			}
++		}
++
++		/*
++		 * No need to wait for response
++		 */
++		ix +=3D nbytes;
++		sz -=3D nbytes;
++	} while (sz);
++
++	return result;
++}
++
++/********************************************
++ *
++ *      Spi Internal Read/Write Function
++ *
++ ********************************************/
++static u8 wilc_get_crc7(u8 *buffer, u32 len)
++{
++	return crc7_be(0xfe, buffer, len);
++}
++
++static int wilc_spi_single_read(struct wilc *wilc, u8 cmd, u32 adr, void *=
+b,
++				u8 clockless)
++{
++	struct spi_device *spi =3D to_spi_device(wilc->dev);
++	struct wilc_spi *spi_priv =3D wilc->bus_data;
++	u8 wb[32], rb[32];
++	int cmd_len, resp_len;
++	u8 crc[2];
++	struct wilc_spi_cmd *c;
++	struct wilc_spi_read_rsp_data *r;
++
++	memset(wb, 0x0, sizeof(wb));
++	memset(rb, 0x0, sizeof(rb));
++	c =3D (struct wilc_spi_cmd *)wb;
++	c->cmd_type =3D cmd;
++	if (cmd =3D=3D CMD_SINGLE_READ) {
++		c->u.simple_cmd.addr[0] =3D adr >> 16;
++		c->u.simple_cmd.addr[1] =3D adr >> 8;
++		c->u.simple_cmd.addr[2] =3D adr;
++	} else if (cmd =3D=3D CMD_INTERNAL_READ) {
++		c->u.simple_cmd.addr[0] =3D adr >> 8;
++		if (clockless =3D=3D 1)
++			c->u.simple_cmd.addr[0] |=3D BIT(7);
++		c->u.simple_cmd.addr[1] =3D adr;
++		c->u.simple_cmd.addr[2] =3D 0x0;
++	} else {
++		dev_err(&spi->dev, "cmd [%x] not supported\n", cmd);
++		return -EINVAL;
++	}
++
++	cmd_len =3D offsetof(struct wilc_spi_cmd, u.simple_cmd.crc);
++	resp_len =3D sizeof(*r);
++	if (!spi_priv->crc_off) {
++		c->u.simple_cmd.crc[0] =3D wilc_get_crc7(wb, cmd_len);
++		cmd_len +=3D 1;
++		resp_len +=3D 2;
++	}
++
++	if (cmd_len + resp_len > ARRAY_SIZE(wb)) {
++		dev_err(&spi->dev,
++			"spi buffer size too small (%d) (%d) (%zu)\n",
++			cmd_len, resp_len, ARRAY_SIZE(wb));
++		return -EINVAL;
++	}
++
++	if (wilc_spi_tx_rx(wilc, wb, rb, cmd_len + resp_len)) {
++		dev_err(&spi->dev, "Failed cmd write, bus error...\n");
++		return -EINVAL;
++	}
++
++	r =3D (struct wilc_spi_read_rsp_data *)&rb[cmd_len];
++	if (r->rsp_cmd_type !=3D cmd) {
++		dev_err(&spi->dev,
++			"Failed cmd response, cmd (%02x), resp (%02x)\n",
++			cmd, r->rsp_cmd_type);
++		return -EINVAL;
++	}
++
++	if (r->status !=3D WILC_SPI_COMMAND_STAT_SUCCESS) {
++		dev_err(&spi->dev, "Failed cmd state response state (%02x)\n",
++			r->status);
++		return -EINVAL;
++	}
++
++	if (WILC_GET_RESP_HDR_START(r->resp_header) !=3D 0xf) {
++		dev_err(&spi->dev, "Error, data read response (%02x)\n",
++			r->resp_header);
++		return -EINVAL;
++	}
++
++	if (b)
++		memcpy(b, r->resp_data, 4);
++
++	if (!spi_priv->crc_off)
++		memcpy(crc, r->crc, 2);
++
++	return 0;
++}
++
++static int wilc_spi_write_cmd(struct wilc *wilc, u8 cmd, u32 adr, u32 data=
+,
++			      u8 clockless)
++{
++	struct spi_device *spi =3D to_spi_device(wilc->dev);
++	struct wilc_spi *spi_priv =3D wilc->bus_data;
++	u8 wb[32], rb[32];
++	int cmd_len, resp_len;
++	struct wilc_spi_cmd *c;
++	struct wilc_spi_rsp_data *r;
++
++	memset(wb, 0x0, sizeof(wb));
++	memset(rb, 0x0, sizeof(rb));
++	c =3D (struct wilc_spi_cmd *)wb;
++	c->cmd_type =3D cmd;
++	if (cmd =3D=3D CMD_INTERNAL_WRITE) {
++		c->u.internal_w_cmd.addr[0] =3D adr >> 8;
++		if (clockless =3D=3D 1)
++			c->u.internal_w_cmd.addr[0] |=3D BIT(7);
++
++		c->u.internal_w_cmd.addr[1] =3D adr;
++		c->u.internal_w_cmd.data =3D cpu_to_be32(data);
++		cmd_len =3D offsetof(struct wilc_spi_cmd, u.internal_w_cmd.crc);
++		if (!spi_priv->crc_off)
++			c->u.internal_w_cmd.crc[0] =3D wilc_get_crc7(wb, cmd_len);
++	} else if (cmd =3D=3D CMD_SINGLE_WRITE) {
++		c->u.w_cmd.addr[0] =3D adr >> 16;
++		c->u.w_cmd.addr[1] =3D adr >> 8;
++		c->u.w_cmd.addr[2] =3D adr;
++		c->u.w_cmd.data =3D cpu_to_be32(data);
++		cmd_len =3D offsetof(struct wilc_spi_cmd, u.w_cmd.crc);
++		if (!spi_priv->crc_off)
++			c->u.w_cmd.crc[0] =3D wilc_get_crc7(wb, cmd_len);
++	} else {
++		dev_err(&spi->dev, "write cmd [%x] not supported\n", cmd);
++		return -EINVAL;
++	}
++
++	if (!spi_priv->crc_off)
++		cmd_len +=3D 1;
++
++	resp_len =3D sizeof(*r);
++
++	if (cmd_len + resp_len > ARRAY_SIZE(wb)) {
++		dev_err(&spi->dev,
++			"spi buffer size too small (%d) (%d) (%zu)\n",
++			cmd_len, resp_len, ARRAY_SIZE(wb));
++		return -EINVAL;
++	}
++
++	if (wilc_spi_tx_rx(wilc, wb, rb, cmd_len + resp_len)) {
++		dev_err(&spi->dev, "Failed cmd write, bus error...\n");
++		return -EINVAL;
++	}
++
++	r =3D (struct wilc_spi_rsp_data *)&rb[cmd_len];
++	if (r->rsp_cmd_type !=3D cmd) {
++		dev_err(&spi->dev,
++			"Failed cmd response, cmd (%02x), resp (%02x)\n",
++			cmd, r->rsp_cmd_type);
++		return -EINVAL;
++	}
++
++	if (r->status !=3D WILC_SPI_COMMAND_STAT_SUCCESS) {
++		dev_err(&spi->dev, "Failed cmd state response state (%02x)\n",
++			r->status);
++		return -EINVAL;
 +	}
 +
 +	return 0;
 +}
 +
-+static int wilc_sdio_read_reg(struct wilc *wilc, u32 addr, u32 *data)
++static int wilc_spi_dma_rw(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 =
+sz)
 +{
-+	struct sdio_func *func =3D dev_to_sdio_func(wilc->dev);
-+	struct wilc_sdio *sdio_priv =3D wilc->bus_data;
-+	int ret;
++	struct spi_device *spi =3D to_spi_device(wilc->dev);
++	struct wilc_spi *spi_priv =3D wilc->bus_data;
++	u8 wb[32], rb[32];
++	int cmd_len, resp_len;
++	int retry, ix =3D 0;
++	u8 crc[2];
++	struct wilc_spi_cmd *c;
++	struct wilc_spi_rsp_data *r;
 +
-+	if (addr >=3D 0xf0 && addr <=3D 0xff) { /* only vendor specific registers=
- */
-+		struct sdio_cmd52 cmd;
-+
-+		cmd.read_write =3D 0;
-+		cmd.function =3D 0;
-+		cmd.raw =3D 0;
-+		cmd.address =3D addr;
-+		ret =3D wilc_sdio_cmd52(wilc, &cmd);
-+		if (ret) {
-+			dev_err(&func->dev,
-+				"Failed cmd 52, read reg (%08x) ...\n", addr);
-+			return ret;
-+		}
-+		*data =3D cmd.data;
++	memset(wb, 0x0, sizeof(wb));
++	memset(rb, 0x0, sizeof(rb));
++	c =3D (struct wilc_spi_cmd *)wb;
++	c->cmd_type =3D cmd;
++	if (cmd =3D=3D CMD_DMA_WRITE || cmd =3D=3D CMD_DMA_READ) {
++		c->u.dma_cmd.addr[0] =3D adr >> 16;
++		c->u.dma_cmd.addr[1] =3D adr >> 8;
++		c->u.dma_cmd.addr[2] =3D adr;
++		c->u.dma_cmd.size[0] =3D sz >> 8;
++		c->u.dma_cmd.size[1] =3D sz;
++		cmd_len =3D offsetof(struct wilc_spi_cmd, u.dma_cmd.crc);
++		if (!spi_priv->crc_off)
++			c->u.dma_cmd.crc[0] =3D wilc_get_crc7(wb, cmd_len);
++	} else if (cmd =3D=3D CMD_DMA_EXT_WRITE || cmd =3D=3D CMD_DMA_EXT_READ) {
++		c->u.dma_cmd_ext.addr[0] =3D adr >> 16;
++		c->u.dma_cmd_ext.addr[1] =3D adr >> 8;
++		c->u.dma_cmd_ext.addr[2] =3D adr;
++		c->u.dma_cmd_ext.size[0] =3D sz >> 16;
++		c->u.dma_cmd_ext.size[1] =3D sz >> 8;
++		c->u.dma_cmd_ext.size[2] =3D sz;
++		cmd_len =3D offsetof(struct wilc_spi_cmd, u.dma_cmd_ext.crc);
++		if (!spi_priv->crc_off)
++			c->u.dma_cmd_ext.crc[0] =3D wilc_get_crc7(wb, cmd_len);
 +	} else {
-+		struct sdio_cmd53 cmd;
++		dev_err(&spi->dev, "dma read write cmd [%x] not supported\n",
++			cmd);
++		return -EINVAL;
++	}
++	if (!spi_priv->crc_off)
++		cmd_len +=3D 1;
 +
-+		ret =3D wilc_sdio_set_func0_csa_address(wilc, addr);
-+		if (ret)
-+			return ret;
++	resp_len =3D sizeof(*r);
 +
-+		cmd.read_write =3D 0;
-+		cmd.function =3D 0;
-+		cmd.address =3D WILC_SDIO_FBR_DATA_REG;
-+		cmd.block_mode =3D 0;
-+		cmd.increment =3D 1;
-+		cmd.count =3D 4;
-+		cmd.buffer =3D (u8 *)data;
++	if (cmd_len + resp_len > ARRAY_SIZE(wb)) {
++		dev_err(&spi->dev, "spi buffer size too small (%d)(%d) (%zu)\n",
++			cmd_len, resp_len, ARRAY_SIZE(wb));
++		return -EINVAL;
++	}
 +
-+		cmd.block_size =3D sdio_priv->block_size;
-+		ret =3D wilc_sdio_cmd53(wilc, &cmd);
-+		if (ret) {
-+			dev_err(&func->dev,
-+				"Failed cmd53, read reg (%08x)...\n", addr);
-+			return ret;
++	if (wilc_spi_tx_rx(wilc, wb, rb, cmd_len + resp_len)) {
++		dev_err(&spi->dev, "Failed cmd write, bus error...\n");
++		return -EINVAL;
++	}
++
++	r =3D (struct wilc_spi_rsp_data *)&rb[cmd_len];
++	if (r->rsp_cmd_type !=3D cmd) {
++		dev_err(&spi->dev,
++			"Failed cmd response, cmd (%02x), resp (%02x)\n",
++			cmd, r->rsp_cmd_type);
++		return -EINVAL;
++	}
++
++	if (r->status !=3D WILC_SPI_COMMAND_STAT_SUCCESS) {
++		dev_err(&spi->dev, "Failed cmd state response state (%02x)\n",
++			r->status);
++		return -EINVAL;
++	}
++
++	if (cmd =3D=3D CMD_DMA_WRITE || cmd =3D=3D CMD_DMA_EXT_WRITE)
++		return 0;
++
++	while (sz > 0) {
++		int nbytes;
++		u8 rsp;
++
++		if (sz <=3D DATA_PKT_SZ)
++			nbytes =3D sz;
++		else
++			nbytes =3D DATA_PKT_SZ;
++
++		/*
++		 * Data Response header
++		 */
++		retry =3D 100;
++		do {
++			if (wilc_spi_rx(wilc, &rsp, 1)) {
++				dev_err(&spi->dev,
++					"Failed resp read, bus err\n");
++				return -EINVAL;
++			}
++			if (WILC_GET_RESP_HDR_START(rsp) =3D=3D 0xf)
++				break;
++		} while (retry--);
++
++		/*
++		 * Read bytes
++		 */
++		if (wilc_spi_rx(wilc, &b[ix], nbytes)) {
++			dev_err(&spi->dev,
++				"Failed block read, bus err\n");
++			return -EINVAL;
 +		}
++
++		/*
++		 * Read Crc
++		 */
++		if (!spi_priv->crc_off && wilc_spi_rx(wilc, crc, 2)) {
++			dev_err(&spi->dev,
++				"Failed block crc read, bus err\n");
++			return -EINVAL;
++		}
++
++		ix +=3D nbytes;
++		sz -=3D nbytes;
++	}
++	return 0;
++}
++
++static int wilc_spi_read_reg(struct wilc *wilc, u32 addr, u32 *data)
++{
++	struct spi_device *spi =3D to_spi_device(wilc->dev);
++	int result;
++	u8 cmd =3D CMD_SINGLE_READ;
++	u8 clockless =3D 0;
++
++	if (addr < WILC_SPI_CLOCKLESS_ADDR_LIMIT) {
++		/* Clockless register */
++		cmd =3D CMD_INTERNAL_READ;
++		clockless =3D 1;
++	}
++
++	result =3D wilc_spi_single_read(wilc, cmd, addr, data, clockless);
++	if (result) {
++		dev_err(&spi->dev, "Failed cmd, read reg (%08x)...\n", addr);
++		return result;
 +	}
 +
 +	le32_to_cpus(data);
++
 +	return 0;
 +}
 +
-+static int wilc_sdio_read(struct wilc *wilc, u32 addr, u8 *buf, u32 size)
++static int wilc_spi_read(struct wilc *wilc, u32 addr, u8 *buf, u32 size)
 +{
-+	struct sdio_func *func =3D dev_to_sdio_func(wilc->dev);
-+	struct wilc_sdio *sdio_priv =3D wilc->bus_data;
-+	u32 block_size =3D sdio_priv->block_size;
-+	struct sdio_cmd53 cmd;
-+	int nblk, nleft, ret;
++	struct spi_device *spi =3D to_spi_device(wilc->dev);
++	int result;
 +
-+	cmd.read_write =3D 0;
-+	if (addr > 0) {
-+		/**
-+		 *      func 0 access
-+		 **/
-+		cmd.function =3D 0;
-+		cmd.address =3D WILC_SDIO_FBR_DATA_REG;
-+	} else {
-+		/**
-+		 *      func 1 access
-+		 **/
-+		cmd.function =3D 1;
-+		cmd.address =3D WILC_SDIO_F1_DATA_REG;
++	if (size <=3D 4)
++		return -EINVAL;
++
++	result =3D wilc_spi_dma_rw(wilc, CMD_DMA_EXT_READ, addr, buf, size);
++	if (result) {
++		dev_err(&spi->dev, "Failed cmd, read block (%08x)...\n", addr);
++		return result;
 +	}
 +
-+	size =3D ALIGN(size, 4);
-+	nblk =3D size / block_size;
-+	nleft =3D size % block_size;
++	return 0;
++}
 +
-+	if (nblk > 0) {
-+		cmd.block_mode =3D 1;
-+		cmd.increment =3D 1;
-+		cmd.count =3D nblk;
-+		cmd.buffer =3D buf;
-+		cmd.block_size =3D block_size;
-+		if (addr > 0) {
-+			ret =3D wilc_sdio_set_func0_csa_address(wilc, addr);
-+			if (ret)
-+				return ret;
-+		}
-+		ret =3D wilc_sdio_cmd53(wilc, &cmd);
-+		if (ret) {
-+			dev_err(&func->dev,
-+				"Failed cmd53 [%x], block read...\n", addr);
-+			return ret;
-+		}
-+		if (addr > 0)
-+			addr +=3D nblk * block_size;
-+		buf +=3D nblk * block_size;
-+	}       /* if (nblk > 0) */
++static int spi_internal_write(struct wilc *wilc, u32 adr, u32 dat)
++{
++	struct spi_device *spi =3D to_spi_device(wilc->dev);
++	int result;
 +
-+	if (nleft > 0) {
-+		cmd.block_mode =3D 0;
-+		cmd.increment =3D 1;
-+		cmd.count =3D nleft;
-+		cmd.buffer =3D buf;
++	result =3D wilc_spi_write_cmd(wilc, CMD_INTERNAL_WRITE, adr, dat, 0);
++	if (result) {
++		dev_err(&spi->dev, "Failed internal write cmd...\n");
++		return result;
++	}
 +
-+		cmd.block_size =3D block_size;
++	return 0;
++}
 +
-+		if (addr > 0) {
-+			ret =3D wilc_sdio_set_func0_csa_address(wilc, addr);
-+			if (ret)
-+				return ret;
-+		}
-+		ret =3D wilc_sdio_cmd53(wilc, &cmd);
-+		if (ret) {
-+			dev_err(&func->dev,
-+				"Failed cmd53 [%x], bytes read...\n", addr);
-+			return ret;
-+		}
++static int spi_internal_read(struct wilc *wilc, u32 adr, u32 *data)
++{
++	struct spi_device *spi =3D to_spi_device(wilc->dev);
++	int result;
++
++	result =3D wilc_spi_single_read(wilc, CMD_INTERNAL_READ, adr, data, 0);
++	if (result) {
++		dev_err(&spi->dev, "Failed internal read cmd...\n");
++		return result;
++	}
++
++	le32_to_cpus(data);
++
++	return 0;
++}
++
++/********************************************
++ *
++ *      Spi interfaces
++ *
++ ********************************************/
++
++static int wilc_spi_write_reg(struct wilc *wilc, u32 addr, u32 data)
++{
++	struct spi_device *spi =3D to_spi_device(wilc->dev);
++	int result;
++	u8 cmd =3D CMD_SINGLE_WRITE;
++	u8 clockless =3D 0;
++
++	if (addr < WILC_SPI_CLOCKLESS_ADDR_LIMIT) {
++		/* Clockless register */
++		cmd =3D CMD_INTERNAL_WRITE;
++		clockless =3D 1;
++	}
++
++	result =3D wilc_spi_write_cmd(wilc, cmd, addr, data, clockless);
++	if (result) {
++		dev_err(&spi->dev, "Failed cmd, write reg (%08x)...\n", addr);
++		return result;
++	}
++
++	return 0;
++}
++
++static int wilc_spi_write(struct wilc *wilc, u32 addr, u8 *buf, u32 size)
++{
++	struct spi_device *spi =3D to_spi_device(wilc->dev);
++	int result;
++
++	/*
++	 * has to be greated than 4
++	 */
++	if (size <=3D 4)
++		return -EINVAL;
++
++	result =3D wilc_spi_dma_rw(wilc, CMD_DMA_EXT_WRITE, addr, NULL, size);
++	if (result) {
++		dev_err(&spi->dev,
++			"Failed cmd, write block (%08x)...\n", addr);
++		return result;
++	}
++
++	/*
++	 * Data
++	 */
++	result =3D spi_data_write(wilc, buf, size);
++	if (result) {
++		dev_err(&spi->dev, "Failed block data write...\n");
++		return result;
 +	}
 +
 +	return 0;
@@ -718,451 +898,193 @@ es.
 + *
 + ********************************************/
 +
-+static int wilc_sdio_deinit(struct wilc *wilc)
++static int wilc_spi_deinit(struct wilc *wilc)
 +{
++	/*
++	 * TODO:
++	 */
 +	return 0;
 +}
 +
-+static int wilc_sdio_init(struct wilc *wilc, bool resume)
++static int wilc_spi_init(struct wilc *wilc, bool resume)
 +{
-+	struct sdio_func *func =3D dev_to_sdio_func(wilc->dev);
-+	struct wilc_sdio *sdio_priv =3D wilc->bus_data;
-+	struct sdio_cmd52 cmd;
-+	int loop, ret;
-+	u32 chipid;
-+
-+	/**
-+	 *      function 0 csa enable
-+	 **/
-+	cmd.read_write =3D 1;
-+	cmd.function =3D 0;
-+	cmd.raw =3D 1;
-+	cmd.address =3D SDIO_FBR_BASE(func->num);
-+	cmd.data =3D SDIO_FBR_ENABLE_CSA;
-+	ret =3D wilc_sdio_cmd52(wilc, &cmd);
-+	if (ret) {
-+		dev_err(&func->dev, "Fail cmd 52, enable csa...\n");
-+		return ret;
-+	}
-+
-+	/**
-+	 *      function 0 block size
-+	 **/
-+	ret =3D wilc_sdio_set_block_size(wilc, 0, WILC_SDIO_BLOCK_SIZE);
-+	if (ret) {
-+		dev_err(&func->dev, "Fail cmd 52, set func 0 block size...\n");
-+		return ret;
-+	}
-+	sdio_priv->block_size =3D WILC_SDIO_BLOCK_SIZE;
-+
-+	/**
-+	 *      enable func1 IO
-+	 **/
-+	cmd.read_write =3D 1;
-+	cmd.function =3D 0;
-+	cmd.raw =3D 1;
-+	cmd.address =3D SDIO_CCCR_IOEx;
-+	cmd.data =3D WILC_SDIO_CCCR_IO_EN_FUNC1;
-+	ret =3D wilc_sdio_cmd52(wilc, &cmd);
-+	if (ret) {
-+		dev_err(&func->dev,
-+			"Fail cmd 52, set IOE register...\n");
-+		return ret;
-+	}
-+
-+	/**
-+	 *      make sure func 1 is up
-+	 **/
-+	cmd.read_write =3D 0;
-+	cmd.function =3D 0;
-+	cmd.raw =3D 0;
-+	cmd.address =3D SDIO_CCCR_IORx;
-+	loop =3D 3;
-+	do {
-+		cmd.data =3D 0;
-+		ret =3D wilc_sdio_cmd52(wilc, &cmd);
-+		if (ret) {
-+			dev_err(&func->dev,
-+				"Fail cmd 52, get IOR register...\n");
-+			return ret;
-+		}
-+		if (cmd.data =3D=3D WILC_SDIO_CCCR_IO_EN_FUNC1)
-+			break;
-+	} while (loop--);
-+
-+	if (loop <=3D 0) {
-+		dev_err(&func->dev, "Fail func 1 is not ready...\n");
-+		return -EINVAL;
-+	}
-+
-+	/**
-+	 *      func 1 is ready, set func 1 block size
-+	 **/
-+	ret =3D wilc_sdio_set_block_size(wilc, 1, WILC_SDIO_BLOCK_SIZE);
-+	if (ret) {
-+		dev_err(&func->dev, "Fail set func 1 block size...\n");
-+		return ret;
-+	}
-+
-+	/**
-+	 *      func 1 interrupt enable
-+	 **/
-+	cmd.read_write =3D 1;
-+	cmd.function =3D 0;
-+	cmd.raw =3D 1;
-+	cmd.address =3D SDIO_CCCR_IENx;
-+	cmd.data =3D WILC_SDIO_CCCR_IEN_MASTER | WILC_SDIO_CCCR_IEN_FUNC1;
-+	ret =3D wilc_sdio_cmd52(wilc, &cmd);
-+	if (ret) {
-+		dev_err(&func->dev, "Fail cmd 52, set IEN register...\n");
-+		return ret;
-+	}
-+
-+	/**
-+	 *      make sure can read back chip id correctly
-+	 **/
-+	if (!resume) {
-+		int rev;
-+
-+		ret =3D wilc_sdio_read_reg(wilc, WILC_CHIPID, &chipid);
-+		if (ret) {
-+			dev_err(&func->dev, "Fail cmd read chip id...\n");
-+			return ret;
-+		}
-+		dev_err(&func->dev, "chipid (%08x)\n", chipid);
-+		rev =3D FIELD_GET(WILC_CHIP_REV_FIELD, chipid);
-+		if (rev > FIELD_GET(WILC_CHIP_REV_FIELD, WILC_1000_BASE_ID_2A))
-+			sdio_priv->has_thrpt_enh3 =3D 1;
-+		else
-+			sdio_priv->has_thrpt_enh3 =3D 0;
-+		dev_info(&func->dev, "has_thrpt_enh3 =3D %d...\n",
-+			 sdio_priv->has_thrpt_enh3);
-+	}
-+
-+	return 0;
-+}
-+
-+static int wilc_sdio_read_size(struct wilc *wilc, u32 *size)
-+{
-+	u32 tmp;
-+	struct sdio_cmd52 cmd;
-+
-+	/**
-+	 *      Read DMA count in words
-+	 **/
-+	cmd.read_write =3D 0;
-+	cmd.function =3D 0;
-+	cmd.raw =3D 0;
-+	cmd.address =3D WILC_SDIO_INTERRUPT_DATA_SZ_REG;
-+	cmd.data =3D 0;
-+	wilc_sdio_cmd52(wilc, &cmd);
-+	tmp =3D cmd.data;
-+
-+	cmd.address =3D WILC_SDIO_INTERRUPT_DATA_SZ_REG + 1;
-+	cmd.data =3D 0;
-+	wilc_sdio_cmd52(wilc, &cmd);
-+	tmp |=3D (cmd.data << 8);
-+
-+	*size =3D tmp;
-+	return 0;
-+}
-+
-+static int wilc_sdio_read_int(struct wilc *wilc, u32 *int_status)
-+{
-+	struct sdio_func *func =3D dev_to_sdio_func(wilc->dev);
-+	struct wilc_sdio *sdio_priv =3D wilc->bus_data;
-+	u32 tmp;
-+	u8 irq_flags;
-+	struct sdio_cmd52 cmd;
-+
-+	wilc_sdio_read_size(wilc, &tmp);
-+
-+	/**
-+	 *      Read IRQ flags
-+	 **/
-+	if (!sdio_priv->irq_gpio) {
-+		cmd.function =3D 1;
-+		cmd.address =3D WILC_SDIO_EXT_IRQ_FLAG_REG;
-+	} else {
-+		cmd.function =3D 0;
-+		cmd.address =3D WILC_SDIO_IRQ_FLAG_REG;
-+	}
-+	cmd.raw =3D 0;
-+	cmd.read_write =3D 0;
-+	cmd.data =3D 0;
-+	wilc_sdio_cmd52(wilc, &cmd);
-+	irq_flags =3D cmd.data;
-+	tmp |=3D FIELD_PREP(IRG_FLAGS_MASK, cmd.data);
-+
-+	if (FIELD_GET(UNHANDLED_IRQ_MASK, irq_flags))
-+		dev_err(&func->dev, "Unexpected interrupt (1) int=3D%lx\n",
-+			FIELD_GET(UNHANDLED_IRQ_MASK, irq_flags));
-+
-+	*int_status =3D tmp;
-+
-+	return 0;
-+}
-+
-+static int wilc_sdio_clear_int_ext(struct wilc *wilc, u32 val)
-+{
-+	struct sdio_func *func =3D dev_to_sdio_func(wilc->dev);
-+	struct wilc_sdio *sdio_priv =3D wilc->bus_data;
-+	int ret;
-+	int vmm_ctl;
-+
-+	if (sdio_priv->has_thrpt_enh3) {
-+		u32 reg =3D 0;
-+
-+		if (sdio_priv->irq_gpio)
-+			reg =3D val & (BIT(MAX_NUM_INT) - 1);
-+
-+		/* select VMM table 0 */
-+		if (val & SEL_VMM_TBL0)
-+			reg |=3D BIT(5);
-+		/* select VMM table 1 */
-+		if (val & SEL_VMM_TBL1)
-+			reg |=3D BIT(6);
-+		/* enable VMM */
-+		if (val & EN_VMM)
-+			reg |=3D BIT(7);
-+		if (reg) {
-+			struct sdio_cmd52 cmd;
-+
-+			cmd.read_write =3D 1;
-+			cmd.function =3D 0;
-+			cmd.raw =3D 0;
-+			cmd.address =3D WILC_SDIO_IRQ_CLEAR_FLAG_REG;
-+			cmd.data =3D reg;
-+
-+			ret =3D wilc_sdio_cmd52(wilc, &cmd);
-+			if (ret) {
-+				dev_err(&func->dev,
-+					"Failed cmd52, set (%02x) data (%d) ...\n",
-+					cmd.address, __LINE__);
-+				return ret;
-+			}
-+		}
-+		return 0;
-+	}
-+	if (sdio_priv->irq_gpio) {
-+		/* has_thrpt_enh2 uses register 0xf8 to clear interrupts. */
-+		/*
-+		 * Cannot clear multiple interrupts.
-+		 * Must clear each interrupt individually.
-+		 */
-+		u32 flags;
-+		int i;
-+
-+		flags =3D val & (BIT(MAX_NUM_INT) - 1);
-+		for (i =3D 0; i < NUM_INT_EXT && flags; i++) {
-+			if (flags & BIT(i)) {
-+				struct sdio_cmd52 cmd;
-+
-+				cmd.read_write =3D 1;
-+				cmd.function =3D 0;
-+				cmd.raw =3D 0;
-+				cmd.address =3D WILC_SDIO_IRQ_CLEAR_FLAG_REG;
-+				cmd.data =3D BIT(i);
-+
-+				ret =3D wilc_sdio_cmd52(wilc, &cmd);
-+				if (ret) {
-+					dev_err(&func->dev,
-+						"Failed cmd52, set (%02x) data (%d) ...\n",
-+						cmd.address, __LINE__);
-+					return ret;
-+				}
-+				flags &=3D ~BIT(i);
-+			}
-+		}
-+
-+		for (i =3D NUM_INT_EXT; i < MAX_NUM_INT && flags; i++) {
-+			if (flags & BIT(i)) {
-+				dev_err(&func->dev,
-+					"Unexpected interrupt cleared %d...\n",
-+					i);
-+				flags &=3D ~BIT(i);
-+			}
-+		}
-+	}
-+
-+	vmm_ctl =3D 0;
-+	/* select VMM table 0 */
-+	if (val & SEL_VMM_TBL0)
-+		vmm_ctl |=3D BIT(0);
-+	/* select VMM table 1 */
-+	if (val & SEL_VMM_TBL1)
-+		vmm_ctl |=3D BIT(1);
-+	/* enable VMM */
-+	if (val & EN_VMM)
-+		vmm_ctl |=3D BIT(2);
-+
-+	if (vmm_ctl) {
-+		struct sdio_cmd52 cmd;
-+
-+		cmd.read_write =3D 1;
-+		cmd.function =3D 0;
-+		cmd.raw =3D 0;
-+		cmd.address =3D WILC_SDIO_VMM_TBL_CTRL_REG;
-+		cmd.data =3D vmm_ctl;
-+		ret =3D wilc_sdio_cmd52(wilc, &cmd);
-+		if (ret) {
-+			dev_err(&func->dev,
-+				"Failed cmd52, set (%02x) data (%d) ...\n",
-+				cmd.address, __LINE__);
-+			return ret;
-+		}
-+	}
-+	return 0;
-+}
-+
-+static int wilc_sdio_sync_ext(struct wilc *wilc, int nint)
-+{
-+	struct sdio_func *func =3D dev_to_sdio_func(wilc->dev);
-+	struct wilc_sdio *sdio_priv =3D wilc->bus_data;
++	struct spi_device *spi =3D to_spi_device(wilc->dev);
++	struct wilc_spi *spi_priv =3D wilc->bus_data;
 +	u32 reg;
++	u32 chipid;
++	static int isinit;
++	int ret;
++
++	if (isinit) {
++		ret =3D wilc_spi_read_reg(wilc, WILC_CHIPID, &chipid);
++		if (ret)
++			dev_err(&spi->dev, "Fail cmd read chip id...\n");
++
++		return ret;
++	}
++
++	/*
++	 * configure protocol
++	 */
++
++	/*
++	 * TODO: We can remove the CRC trials if there is a definite
++	 * way to reset
++	 */
++	/* the SPI to it's initial value. */
++	ret =3D spi_internal_read(wilc, WILC_SPI_PROTOCOL_OFFSET, &reg);
++	if (ret) {
++		/*
++		 * Read failed. Try with CRC off. This might happen when module
++		 * is removed but chip isn't reset
++		 */
++		spi_priv->crc_off =3D 1;
++		dev_err(&spi->dev,
++			"Failed read with CRC on, retrying with CRC off\n");
++		ret =3D spi_internal_read(wilc, WILC_SPI_PROTOCOL_OFFSET, &reg);
++		if (ret) {
++			/*
++			 * Read failed with both CRC on and off,
++			 * something went bad
++			 */
++			dev_err(&spi->dev, "Failed internal read protocol\n");
++			return ret;
++		}
++	}
++	if (spi_priv->crc_off =3D=3D 0) {
++		reg &=3D ~0xc; /* disable crc checking */
++		reg &=3D ~0x70;
++		reg |=3D (0x5 << 4);
++		ret =3D spi_internal_write(wilc, WILC_SPI_PROTOCOL_OFFSET, reg);
++		if (ret) {
++			dev_err(&spi->dev,
++				"[wilc spi %d]: Failed internal write reg\n",
++				__LINE__);
++			return ret;
++		}
++		spi_priv->crc_off =3D 1;
++	}
++
++	/*
++	 * make sure can read back chip id correctly
++	 */
++	ret =3D wilc_spi_read_reg(wilc, WILC_CHIPID, &chipid);
++	if (ret) {
++		dev_err(&spi->dev, "Fail cmd read chip id...\n");
++		return ret;
++	}
++
++	isinit =3D 1;
++
++	return 0;
++}
++
++static int wilc_spi_read_size(struct wilc *wilc, u32 *size)
++{
++	int ret;
++
++	ret =3D spi_internal_read(wilc,
++				WILC_SPI_INT_STATUS - WILC_SPI_REG_BASE, size);
++	*size =3D FIELD_GET(IRQ_DMA_WD_CNT_MASK, *size);
++
++	return ret;
++}
++
++static int wilc_spi_read_int(struct wilc *wilc, u32 *int_status)
++{
++	return spi_internal_read(wilc, WILC_SPI_INT_STATUS - WILC_SPI_REG_BASE,
++				 int_status);
++}
++
++static int wilc_spi_clear_int_ext(struct wilc *wilc, u32 val)
++{
++	return spi_internal_write(wilc, WILC_SPI_INT_CLEAR - WILC_SPI_REG_BASE,
++				  val);
++}
++
++static int wilc_spi_sync_ext(struct wilc *wilc, int nint)
++{
++	struct spi_device *spi =3D to_spi_device(wilc->dev);
++	u32 reg;
++	int ret, i;
 +
 +	if (nint > MAX_NUM_INT) {
-+		dev_err(&func->dev, "Too many interrupts (%d)...\n", nint);
++		dev_err(&spi->dev, "Too many interrupts (%d)...\n", nint);
 +		return -EINVAL;
 +	}
 +
-+	/**
-+	 *      Disable power sequencer
-+	 **/
-+	if (wilc_sdio_read_reg(wilc, WILC_MISC, &reg)) {
-+		dev_err(&func->dev, "Failed read misc reg...\n");
-+		return -EINVAL;
++	/*
++	 * interrupt pin mux select
++	 */
++	ret =3D wilc_spi_read_reg(wilc, WILC_PIN_MUX_0, &reg);
++	if (ret) {
++		dev_err(&spi->dev, "Failed read reg (%08x)...\n",
++			WILC_PIN_MUX_0);
++		return ret;
++	}
++	reg |=3D BIT(8);
++	ret =3D wilc_spi_write_reg(wilc, WILC_PIN_MUX_0, reg);
++	if (ret) {
++		dev_err(&spi->dev, "Failed write reg (%08x)...\n",
++			WILC_PIN_MUX_0);
++		return ret;
 +	}
 +
-+	reg &=3D ~BIT(8);
-+	if (wilc_sdio_write_reg(wilc, WILC_MISC, reg)) {
-+		dev_err(&func->dev, "Failed write misc reg...\n");
-+		return -EINVAL;
++	/*
++	 * interrupt enable
++	 */
++	ret =3D wilc_spi_read_reg(wilc, WILC_INTR_ENABLE, &reg);
++	if (ret) {
++		dev_err(&spi->dev, "Failed read reg (%08x)...\n",
++			WILC_INTR_ENABLE);
++		return ret;
 +	}
 +
-+	if (sdio_priv->irq_gpio) {
-+		u32 reg;
-+		int ret, i;
++	for (i =3D 0; (i < 5) && (nint > 0); i++, nint--)
++		reg |=3D (BIT((27 + i)));
 +
-+		/**
-+		 *      interrupt pin mux select
-+		 **/
-+		ret =3D wilc_sdio_read_reg(wilc, WILC_PIN_MUX_0, &reg);
++	ret =3D wilc_spi_write_reg(wilc, WILC_INTR_ENABLE, reg);
++	if (ret) {
++		dev_err(&spi->dev, "Failed write reg (%08x)...\n",
++			WILC_INTR_ENABLE);
++		return ret;
++	}
++	if (nint) {
++		ret =3D wilc_spi_read_reg(wilc, WILC_INTR2_ENABLE, &reg);
 +		if (ret) {
-+			dev_err(&func->dev, "Failed read reg (%08x)...\n",
-+				WILC_PIN_MUX_0);
-+			return ret;
-+		}
-+		reg |=3D BIT(8);
-+		ret =3D wilc_sdio_write_reg(wilc, WILC_PIN_MUX_0, reg);
-+		if (ret) {
-+			dev_err(&func->dev, "Failed write reg (%08x)...\n",
-+				WILC_PIN_MUX_0);
++			dev_err(&spi->dev, "Failed read reg (%08x)...\n",
++				WILC_INTR2_ENABLE);
 +			return ret;
 +		}
 +
-+		/**
-+		 *      interrupt enable
-+		 **/
-+		ret =3D wilc_sdio_read_reg(wilc, WILC_INTR_ENABLE, &reg);
++		for (i =3D 0; (i < 3) && (nint > 0); i++, nint--)
++			reg |=3D BIT(i);
++
++		ret =3D wilc_spi_read_reg(wilc, WILC_INTR2_ENABLE, &reg);
 +		if (ret) {
-+			dev_err(&func->dev, "Failed read reg (%08x)...\n",
-+				WILC_INTR_ENABLE);
++			dev_err(&spi->dev, "Failed write reg (%08x)...\n",
++				WILC_INTR2_ENABLE);
 +			return ret;
-+		}
-+
-+		for (i =3D 0; (i < 5) && (nint > 0); i++, nint--)
-+			reg |=3D BIT((27 + i));
-+		ret =3D wilc_sdio_write_reg(wilc, WILC_INTR_ENABLE, reg);
-+		if (ret) {
-+			dev_err(&func->dev, "Failed write reg (%08x)...\n",
-+				WILC_INTR_ENABLE);
-+			return ret;
-+		}
-+		if (nint) {
-+			ret =3D wilc_sdio_read_reg(wilc, WILC_INTR2_ENABLE, &reg);
-+			if (ret) {
-+				dev_err(&func->dev,
-+					"Failed read reg (%08x)...\n",
-+					WILC_INTR2_ENABLE);
-+				return ret;
-+			}
-+
-+			for (i =3D 0; (i < 3) && (nint > 0); i++, nint--)
-+				reg |=3D BIT(i);
-+
-+			ret =3D wilc_sdio_read_reg(wilc, WILC_INTR2_ENABLE, &reg);
-+			if (ret) {
-+				dev_err(&func->dev,
-+					"Failed write reg (%08x)...\n",
-+					WILC_INTR2_ENABLE);
-+				return ret;
-+			}
 +		}
 +	}
-+	return 0;
-+}
-+
-+/* Global sdio HIF function table */
-+static const struct wilc_hif_func wilc_hif_sdio =3D {
-+	.hif_init =3D wilc_sdio_init,
-+	.hif_deinit =3D wilc_sdio_deinit,
-+	.hif_read_reg =3D wilc_sdio_read_reg,
-+	.hif_write_reg =3D wilc_sdio_write_reg,
-+	.hif_block_rx =3D wilc_sdio_read,
-+	.hif_block_tx =3D wilc_sdio_write,
-+	.hif_read_int =3D wilc_sdio_read_int,
-+	.hif_clear_int_ext =3D wilc_sdio_clear_int_ext,
-+	.hif_read_size =3D wilc_sdio_read_size,
-+	.hif_block_tx_ext =3D wilc_sdio_write,
-+	.hif_block_rx_ext =3D wilc_sdio_read,
-+	.hif_sync_ext =3D wilc_sdio_sync_ext,
-+	.enable_interrupt =3D wilc_sdio_enable_interrupt,
-+	.disable_interrupt =3D wilc_sdio_disable_interrupt,
-+};
-+
-+static int wilc_sdio_resume(struct device *dev)
-+{
-+	struct sdio_func *func =3D dev_to_sdio_func(dev);
-+	struct wilc *wilc =3D sdio_get_drvdata(func);
-+
-+	dev_info(dev, "sdio resume\n");
-+	sdio_release_host(func);
-+	chip_wakeup(wilc);
-+	wilc_sdio_init(wilc, true);
-+
-+	if (wilc->suspend_event)
-+		host_wakeup_notify(wilc);
-+
-+	chip_allow_sleep(wilc);
 +
 +	return 0;
 +}
 +
-+static const struct of_device_id wilc_of_match[] =3D {
-+	{ .compatible =3D "microchip,wilc1000", },
-+	{ /* sentinel */ }
++/* Global spi HIF function table */
++static const struct wilc_hif_func wilc_hif_spi =3D {
++	.hif_init =3D wilc_spi_init,
++	.hif_deinit =3D wilc_spi_deinit,
++	.hif_read_reg =3D wilc_spi_read_reg,
++	.hif_write_reg =3D wilc_spi_write_reg,
++	.hif_block_rx =3D wilc_spi_read,
++	.hif_block_tx =3D wilc_spi_write,
++	.hif_read_int =3D wilc_spi_read_int,
++	.hif_clear_int_ext =3D wilc_spi_clear_int_ext,
++	.hif_read_size =3D wilc_spi_read_size,
++	.hif_block_tx_ext =3D wilc_spi_write,
++	.hif_block_rx_ext =3D wilc_spi_read,
++	.hif_sync_ext =3D wilc_spi_sync_ext,
 +};
-+MODULE_DEVICE_TABLE(of, wilc_of_match);
-+
-+static const struct dev_pm_ops wilc_sdio_pm_ops =3D {
-+	.suspend =3D wilc_sdio_suspend,
-+	.resume =3D wilc_sdio_resume,
-+};
-+
-+static struct sdio_driver wilc_sdio_driver =3D {
-+	.name		=3D SDIO_MODALIAS,
-+	.id_table	=3D wilc_sdio_ids,
-+	.probe		=3D wilc_sdio_probe,
-+	.remove		=3D wilc_sdio_remove,
-+	.drv =3D {
-+		.pm =3D &wilc_sdio_pm_ops,
-+		.of_match_table =3D wilc_of_match,
-+	}
-+};
-+module_driver(wilc_sdio_driver,
-+	      sdio_register_driver,
-+	      sdio_unregister_driver);
-+MODULE_LICENSE("GPL");
 --=20
 2.24.0
