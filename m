@@ -2,277 +2,142 @@ Return-Path: <SRS0=FBzj=5M=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73C08C2D0E8
-	for <linux-wireless@archiver.kernel.org>; Fri, 27 Mar 2020 07:52:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C820C43331
+	for <linux-wireless@archiver.kernel.org>; Fri, 27 Mar 2020 09:14:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4DF8620705
-	for <linux-wireless@archiver.kernel.org>; Fri, 27 Mar 2020 07:52:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BE86020716
+	for <linux-wireless@archiver.kernel.org>; Fri, 27 Mar 2020 09:14:54 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=cypress.com header.i=@cypress.com header.b="VPuWm5LP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726215AbgC0Hwm (ORCPT
+        id S1727247AbgC0JOx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 27 Mar 2020 03:52:42 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:53088 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726106AbgC0Hwm (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Mar 2020 03:52:42 -0400
-Authenticated-By: 
-X-SpamFilter-By: BOX Solutions SpamTrap 5.62 with qID 02R7qXQj009398, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (RTEXMB06.realtek.com.tw[172.21.6.99])
-        by rtits2.realtek.com.tw (8.15.2/2.57/5.78) with ESMTPS id 02R7qXQj009398
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 27 Mar 2020 15:52:33 +0800
-Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
- RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Fri, 27 Mar 2020 15:52:33 +0800
-Received: from localhost.localdomain (172.21.68.128) by
- RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Fri, 27 Mar 2020 15:52:32 +0800
-From:   <yhchuang@realtek.com>
-To:     <kvalo@codeaurora.org>
-CC:     <linux-wireless@vger.kernel.org>, <briannorris@chromium.org>,
-        <tehuang@realtek.com>
-Subject: [PATCH v7 1/2] rtw88: add regulatory process strategy for different chipset
-Date:   Fri, 27 Mar 2020 15:52:28 +0800
-Message-ID: <20200327075229.29191-2-yhchuang@realtek.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20200327075229.29191-1-yhchuang@realtek.com>
-References: <20200327075229.29191-1-yhchuang@realtek.com>
+        Fri, 27 Mar 2020 05:14:53 -0400
+Received: from mail-bn8nam12on2113.outbound.protection.outlook.com ([40.107.237.113]:13537
+        "EHLO NAM12-BN8-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726096AbgC0JOx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 27 Mar 2020 05:14:53 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=M/kQtnEkSJrNcU0jmOFijQ5m6LaxoPc/fkzpLfYn/drNmTngJuVAvD93INyGu23HUNvVgkttxueSuuntcijnQT8bkVTcDrZsvW66FkGVU3gWqLYZ2cYI/VJ4RWtYHtoCZztGxUndr6ZJ7WKFoQPx9ISDkSkVugfmjrbbmS0HPAOj/CJmM8Ej/U4qGdi6BOSo4/HAU+k6fq9P89uXHaQHMYKc7kddKbBpgtKlZVesVngN+FTJ2APR/6T5DjEZ+gdWGvOHd4/idz7424hAmXVHQB7YWBKZAzfP2umySm2ezFryq1Q9gIEJWc8mxV5zfwVchaWuHQ9aH7SODnuFOovKhw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=zg7TsrNDefBu2Pyv0lbCxRmQhwRh/qTQoCXEEz3wqOU=;
+ b=km+mydP+K3ntHeBHUcPyIQd/0IfF1DT+nUWm1IN+GsssBmoJ3N8dNnu98/tFQnjMj/4215VlJYyhQz16SzvN0sWHdkTVOiMrhPj8SCF1TIseP7GpVDb2SMhH2/PqEzNws7uE5hnITM/s30ankReTNagA31pKKodUBerwiFVmmypw/8xmLNDwmJuG6LIFof2TViSE+BMZxX7WFMlsT5mbGzj0ZQc9mOW6tOFsdXrY31PtlY3ktSB1iUEk5iTnbHPjCSrzQKvWHebS1NV4u9XItXxSo5+bqxWK5R9qQNuXzGrLXBT3rDSneFRKhuSkqVnuFKKT5qbF/YFvvrwMiVVUig==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=cypress.com; dmarc=pass action=none header.from=cypress.com;
+ dkim=pass header.d=cypress.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cypress.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=zg7TsrNDefBu2Pyv0lbCxRmQhwRh/qTQoCXEEz3wqOU=;
+ b=VPuWm5LPDUv8uFWqv6MKzSrAy40/u2DCGUAQVTQpPB8OWa+M3ButXhVFQpDKOfGRzwqqlB9+Q4euDCD+oUD8t/+MjRqh1k1hqW93mqeAlgykEcs/JY0p4+kDCK3LcPXwM+fI/0+5XgYoxI404DPcTuD/W7PcSchKPHONsp5Zvt0=
+Authentication-Results: spf=none (sender IP is )
+ smtp.mailfrom=Wright.Feng@cypress.com; 
+Received: from DM6PR06MB4748.namprd06.prod.outlook.com (2603:10b6:5:fd::18) by
+ DM6PR06MB6316.namprd06.prod.outlook.com (2603:10b6:5:121::25) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2856.18; Fri, 27 Mar 2020 09:14:47 +0000
+Received: from DM6PR06MB4748.namprd06.prod.outlook.com
+ ([fe80::299a:b6f7:1338:e451]) by DM6PR06MB4748.namprd06.prod.outlook.com
+ ([fe80::299a:b6f7:1338:e451%7]) with mapi id 15.20.2856.018; Fri, 27 Mar 2020
+ 09:14:46 +0000
+Subject: Re: [PATCH 3/3] brcmfmac: make setting SDIO workqueue WQ_HIGHPRI a
+ module parameter
+To:     Tejun Heo <tj@kernel.org>
+Cc:     Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        franky.lin@broadcom.com, hante.meuleman@broadcom.com,
+        kvalo@codeaurora.org, chi-hsien.lin@cypress.com,
+        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+References: <1584604406-15452-1-git-send-email-wright.feng@cypress.com>
+ <1584604406-15452-4-git-send-email-wright.feng@cypress.com>
+ <40e33702-d37f-085d-a5a7-7f09ae9e2629@broadcom.com>
+ <241fd81b-a252-ed86-b93e-6796cf1bce23@cypress.com>
+ <20200324182358.GD162390@mtj.duckdns.org>
+ <02b42d9f-7ba3-bb7e-36a6-5e141d37d75d@cypress.com>
+ <20200325140814.GI162390@mtj.duckdns.org>
+ <171122f50d8.279b.9b12b7fc0a3841636cfb5e919b41b954@broadcom.com>
+ <c1192351-6f72-6f82-bb2b-9f91266d8aab@cypress.com>
+ <20200325151234.GL162390@mtj.duckdns.org>
+From:   Wright Feng <wright.feng@cypress.com>
+Message-ID: <342a1c26-16e6-d824-e421-5f4785f905b8@cypress.com>
+Date:   Fri, 27 Mar 2020 17:14:29 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.6.0
+In-Reply-To: <20200325151234.GL162390@mtj.duckdns.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: TY2PR06CA0019.apcprd06.prod.outlook.com
+ (2603:1096:404:42::31) To DM6PR06MB4748.namprd06.prod.outlook.com
+ (2603:10b6:5:fd::18)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [172.21.68.128]
-X-ClientProxiedBy: RTEXMB03.realtek.com.tw (172.21.6.96) To
- RTEXMB04.realtek.com.tw (172.21.6.97)
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from [192.168.0.17] (123.194.189.67) by TY2PR06CA0019.apcprd06.prod.outlook.com (2603:1096:404:42::31) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2856.20 via Frontend Transport; Fri, 27 Mar 2020 09:14:44 +0000
+X-Originating-IP: [123.194.189.67]
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-HT: Tenant
+X-MS-Office365-Filtering-Correlation-Id: 39aa5c2a-86fe-4ba3-18f1-08d7d22f4b5a
+X-MS-TrafficTypeDiagnostic: DM6PR06MB6316:|DM6PR06MB6316:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <DM6PR06MB631696EF785AD97DBA995CE8FBCC0@DM6PR06MB6316.namprd06.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:9508;
+X-Forefront-PRVS: 0355F3A3AE
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR06MB4748.namprd06.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(10019020)(366004)(136003)(396003)(39860400002)(346002)(376002)(478600001)(6486002)(8676002)(8936002)(52116002)(81166006)(81156014)(6666004)(2906002)(36756003)(6916009)(31696002)(16576012)(956004)(16526019)(2616005)(186003)(31686004)(26005)(66476007)(5660300002)(4326008)(66556008)(316002)(86362001)(66946007)(44832011);DIR:OUT;SFP:1102;
+Received-SPF: None (protection.outlook.com: cypress.com does not designate
+ permitted sender hosts)
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: zvs4MYECnZs2gotVFhTeVvQIRflQuHvH53dhjyvNWHmxIoy9DNO7myHMZXvLMxt+7lNwQMR4s9KqYdhucCoA6SJ/36IlHWB4CxcVC1ghB3nqd1iiBcqhCuZYMpv9D0qTUd+KP/YCOdLNgqEiIEZmtDMEm4n0C4F2LtElONKI8EEvVGtEASg7CHn17AXX2hPObQDZU4B2MuoOsZBmtv1CnmS//LKs/HaXOQJWzIurYtfVpR8NviAPHTHLzNd3PAURknsNOCxXFJw/nYNiApekecP+vpkOxT4xk5ouZ/zB98d69wLTxIVSnEIQ7bIoKI5ZvBXpx1QVjWKoMUS5vYdi6NqQadodeMzA/BOpOpDqm8UDClcI4Xmz4seYIPBNuoxwOlKPimP8qFWl2mxttUGC+3EGXKBUIOTbCBET5PGohWguotME8aHUmyxCL+hxjbHe
+X-MS-Exchange-AntiSpam-MessageData: SIXzgU14+32hYGkp8jL6fDGzNx9BAUwUT+grydb2/kYu3bePRL9/oOFO2zngW+U2N+iYSJpqTLOkUSxFXeZDPHGK/3GVCz95HhZyBXX4kUUxhNvbQ4OxCIl1McReO9si9Fj8wl6c0L3F0sq12LZSyw==
+X-OriginatorOrg: cypress.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 39aa5c2a-86fe-4ba3-18f1-08d7d22f4b5a
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Mar 2020 09:14:46.8404
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 011addfc-2c09-450d-8938-e0bbc2dd2376
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: eQFFPPm3U8IqDlIeCussKYbU0rQ17EW0kkfMOieIjkD4TA1m72EmDK+moqmY8dbdMBpeBtVWweRQD0ZchmlWQA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR06MB6316
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Tzu-En Huang <tehuang@realtek.com>
 
-In Realtek chipset, there are 2 different settings of regulatory,
-worldwide chipsets, and chipsets with a specific country.
-Since we do not want stack to possibly decrease driver's regulatory,
-REGULATORY_STRICT_REG is set, i.e. rtw88 will have the control of its
-regulatory. And we ignore regulatory notifications set from user-space,
-unless compiled with the compile flag option RTW88_REGD_USER_REG_HINTS.
 
-Regarding chipsets with a specific country, driver calls
-regulatory_hint() to tell the stack what regulatory it is. As we do
-not want the regulatory of this chipset be changed, driver will not
-apply new regulatory notifications from either DRIVER, USER or
-COUNTRY_IE.
+Tejun Heo 於 3/25/2020 11:12 PM 寫道:
+> Hello,
+> 
+> On Wed, Mar 25, 2020 at 11:06:33PM +0800, Wright Feng wrote:
+>> I was trying do that, but the comment of alloc_oredered_workqueue shows that
+>> only WQ_FREEZABLE and WQ_MEM_RECLAIM are meaningful, so...
+>>
+>> I will measure the throughput with "alloc_ordered_workqueue(NAME,
+>> WQ_HIGHPRI, ...)" to see if WQ_HIGHPRI works with alloc_ordered_workqueue.
+>> Thanks for the suggestion.
+>>
+>> ---
+>> /**
+>>   * alloc_ordered_workqueue - allocate an ordered workqueue
+>>   * @fmt: printf format for the name of the workqueue
+>>   * @flags: WQ_* flags (only WQ_FREEZABLE and WQ_MEM_RECLAIM are meaningful)
+>>   * @args...: args for @fmt
+> 
+> Yeah, I think the comment is outdated. If it doesn't work as expected, please
+> let me know.
+> 
+It works as expected. With alloc_oredered_workqueue(..., WQ_HIGHPRI, 
+...), the nice value is -20 and throughput result with 43455(11ac) on 1 
+core 1.6 Ghz platform is
+Without WQ_HIGGPRI TX/RX: 293/301 (mbps)
+With    WQ_HIGHPRI TX/RX: 293/321 (mbps)
 
-And for worldwide chipsets, there are many cases we want to describe.
-Let's start with case without RTW88_REGD_USER_REG_HINTS. In worldwide
-mode, we want to follow the regulatory of an associated AP, but we do
-not want to follow the regulatory from other drivers, so we will apply
-regulatory notifications from COUNTRY_IE.
-For cases with RTW88_REGD_USER_REG_HINTS, if there are not any USER
-notifications, driver will also follow the AP's regulatory. On the other
-hand, if there are notifications from USER, we want to make sure that the
-settings from user-space will not be violated when associating to a new
-AP. In this situation, stack will change the regulatory to AP's. And
-because we have set REGULATORY_STRICT_REG, stack will intersect driver's
-regulatory with AP's. Thus, we provide a custom worldwide regulatory for
-intersection, and the result of it will never violate the setting from
-USER.
-
-Signed-off-by: Tzu-En Huang <tehuang@realtek.com>
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
----
-
-v3 -> v4
-  * squashed with "rtw88: support dynamic user regulatory setting"
-  * modify the commit log
-
-v4 -> v5
-  * no change
-
-v5 -> v6
-  * remove custom world-wide, use stack world-wide
-  * surface error codes
-
-v6 -> v7
-  * restore custom world-wide
-  * modify commit message to be more clear
-
- drivers/net/wireless/realtek/rtw88/Kconfig | 10 ++++
- drivers/net/wireless/realtek/rtw88/main.c  |  7 ++-
- drivers/net/wireless/realtek/rtw88/main.h  |  1 +
- drivers/net/wireless/realtek/rtw88/regd.c  | 63 ++++++++++++++++++----
- 4 files changed, 70 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtw88/Kconfig b/drivers/net/wireless/realtek/rtw88/Kconfig
-index 33bd7ed797ff..04b84ec1dfc1 100644
---- a/drivers/net/wireless/realtek/rtw88/Kconfig
-+++ b/drivers/net/wireless/realtek/rtw88/Kconfig
-@@ -52,4 +52,14 @@ config RTW88_DEBUGFS
- 
- 	  If unsure, say Y to simplify debug problems
- 
-+config RTW88_REGD_USER_REG_HINTS
-+	bool "Realtek rtw88 user regulatory hints"
-+	depends on RTW88_CORE
-+	default n
-+	help
-+	  Enable regulatoy user hints
-+
-+	  If unsure, say N. This should only be allowed on distributions
-+	  that need this to correct the regulatory.
-+
- endif
-diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
-index 7640e97706f5..aa23b084adb0 100644
---- a/drivers/net/wireless/realtek/rtw88/main.c
-+++ b/drivers/net/wireless/realtek/rtw88/main.c
-@@ -1501,8 +1501,11 @@ int rtw_register_hw(struct rtw_dev *rtwdev, struct ieee80211_hw *hw)
- 		return ret;
- 	}
- 
--	if (regulatory_hint(hw->wiphy, rtwdev->regd.alpha2))
--		rtw_err(rtwdev, "regulatory_hint fail\n");
-+	if (!rtwdev->efuse.country_worldwide) {
-+		ret = regulatory_hint(hw->wiphy, rtwdev->efuse.country_code);
-+		if (ret)
-+			rtw_warn(rtwdev, "failed to hint regulatory:%d\n", ret);
-+	}
- 
- 	rtw_debugfs_init(rtwdev);
- 
-diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
-index c6b590fdb573..35ffc8c6e949 100644
---- a/drivers/net/wireless/realtek/rtw88/main.h
-+++ b/drivers/net/wireless/realtek/rtw88/main.h
-@@ -1446,6 +1446,7 @@ struct rtw_efuse {
- 	u8 addr[ETH_ALEN];
- 	u8 channel_plan;
- 	u8 country_code[2];
-+	bool country_worldwide;
- 	u8 rf_board_option;
- 	u8 rfe_option;
- 	u8 power_track_type;
-diff --git a/drivers/net/wireless/realtek/rtw88/regd.c b/drivers/net/wireless/realtek/rtw88/regd.c
-index 69744dd65968..27a7fe8395f4 100644
---- a/drivers/net/wireless/realtek/rtw88/regd.c
-+++ b/drivers/net/wireless/realtek/rtw88/regd.c
-@@ -7,6 +7,18 @@
- #include "debug.h"
- #include "phy.h"
- 
-+static const struct ieee80211_regdomain rtw88_world_regdom = {
-+	.n_reg_rules = 5,
-+	.alpha2 =  "99",
-+	.reg_rules = {
-+		REG_RULE(2412 - 10, 2462 + 10, 40, 0, 20, 0),
-+		REG_RULE(2467 - 10, 2484 + 10, 40, 0, 20, NL80211_RRF_NO_IR),
-+		REG_RULE(5180 - 10, 5240 + 10, 80, 0, 20, NL80211_RRF_NO_IR),
-+		REG_RULE(5260 - 10, 5700 + 10, 80, 0, 20,
-+			 NL80211_RRF_NO_IR | NL80211_RRF_DFS),
-+		REG_RULE(5745 - 10, 5825 + 10, 80, 0, 20, NL80211_RRF_NO_IR),
-+	}
-+};
- #define COUNTRY_CHPLAN_ENT(_alpha2, _chplan, _txpwr_regd) \
- 	{.alpha2 = (_alpha2), \
- 	 .chplan = (_chplan), \
-@@ -339,12 +351,31 @@ static struct rtw_regulatory rtw_regd_find_reg_by_name(char *alpha2)
- 	return rtw_defined_chplan;
- }
- 
-+static bool rtw_regd_is_ww(struct rtw_regulatory *reg)
-+{
-+	if (reg->txpwr_regd == RTW_REGD_WW)
-+		return true;
-+	return false;
-+}
-+
- static int rtw_regd_notifier_apply(struct rtw_dev *rtwdev,
- 				   struct wiphy *wiphy,
- 				   struct regulatory_request *request)
- {
--	if (request->initiator == NL80211_REGDOM_SET_BY_USER)
-+	if (request->initiator == NL80211_REGDOM_SET_BY_DRIVER)
-+		return -ENOTSUPP;
-+	if (request->initiator == NL80211_REGDOM_SET_BY_USER &&
-+	    !IS_ENABLED(CONFIG_RTW88_REGD_USER_REG_HINTS))
-+		return -EPERM;
-+	if (request->initiator == NL80211_REGDOM_SET_BY_COUNTRY_IE &&
-+	    !rtw_regd_is_ww(&rtwdev->regd))
-+		return -EINVAL;
-+	if (request->initiator == NL80211_REGDOM_SET_BY_CORE &&
-+	    !rtwdev->efuse.country_worldwide) {
-+		rtwdev->regd =
-+			rtw_regd_find_reg_by_name(rtwdev->efuse.country_code);
- 		return 0;
-+	}
- 	rtwdev->regd = rtw_regd_find_reg_by_name(request->alpha2);
- 	rtw_regd_apply_world_flags(wiphy, request->initiator);
- 
-@@ -352,15 +383,22 @@ static int rtw_regd_notifier_apply(struct rtw_dev *rtwdev,
- }
- 
- static int
--rtw_regd_init_wiphy(struct rtw_regulatory *reg, struct wiphy *wiphy,
-+rtw_regd_init_wiphy(struct rtw_dev *rtwdev, struct wiphy *wiphy,
- 		    void (*reg_notifier)(struct wiphy *wiphy,
- 					 struct regulatory_request *request))
- {
-+	struct rtw_regulatory *reg = &rtwdev->regd;
-+
- 	wiphy->reg_notifier = reg_notifier;
- 
--	wiphy->regulatory_flags &= ~REGULATORY_CUSTOM_REG;
--	wiphy->regulatory_flags &= ~REGULATORY_STRICT_REG;
--	wiphy->regulatory_flags &= ~REGULATORY_DISABLE_BEACON_HINTS;
-+	if (rtw_regd_is_ww(reg)) {
-+		rtwdev->efuse.country_worldwide = true;
-+		wiphy->regulatory_flags |= REGULATORY_CUSTOM_REG;
-+		wiphy_apply_custom_regulatory(wiphy, &rtw88_world_regdom);
-+	} else {
-+		rtwdev->efuse.country_worldwide = false;
-+	}
-+	wiphy->regulatory_flags |= REGULATORY_STRICT_REG;
- 
- 	rtw_regd_apply_hw_cap_flags(wiphy);
- 
-@@ -377,7 +415,7 @@ int rtw_regd_init(struct rtw_dev *rtwdev,
- 		return -EINVAL;
- 
- 	rtwdev->regd = rtw_regd_find_reg_by_name(rtwdev->efuse.country_code);
--	rtw_regd_init_wiphy(&rtwdev->regd, wiphy, reg_notifier);
-+	rtw_regd_init_wiphy(rtwdev, wiphy, reg_notifier);
- 
- 	return 0;
- }
-@@ -387,12 +425,19 @@ void rtw_regd_notifier(struct wiphy *wiphy, struct regulatory_request *request)
- 	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
- 	struct rtw_dev *rtwdev = hw->priv;
- 	struct rtw_hal *hal = &rtwdev->hal;
-+	int ret;
- 
--	rtw_regd_notifier_apply(rtwdev, wiphy, request);
-+	ret = rtw_regd_notifier_apply(rtwdev, wiphy, request);
-+	if (ret) {
-+		rtw_warn(rtwdev, "failed to apply regulatory from initiator %d: %d\n",
-+			 request->initiator, ret);
-+		return;
-+	}
- 	rtw_dbg(rtwdev, RTW_DBG_REGD,
- 		"get alpha2 %c%c from initiator %d, mapping to chplan 0x%x, txregd %d\n",
--		request->alpha2[0], request->alpha2[1], request->initiator,
--		rtwdev->regd.chplan, rtwdev->regd.txpwr_regd);
-+		request->alpha2[0], request->alpha2[1],
-+		request->initiator, rtwdev->regd.chplan,
-+		rtwdev->regd.txpwr_regd);
- 
- 	rtw_phy_set_tx_power_level(rtwdev, hal->current_channel);
- }
--- 
-2.17.1
-
+Regards,
+Wright
