@@ -2,97 +2,95 @@ Return-Path: <SRS0=FBzj=5M=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63376C43331
-	for <linux-wireless@archiver.kernel.org>; Fri, 27 Mar 2020 11:16:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4608C2D0E8
+	for <linux-wireless@archiver.kernel.org>; Fri, 27 Mar 2020 11:25:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2F63820675
-	for <linux-wireless@archiver.kernel.org>; Fri, 27 Mar 2020 11:16:09 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="XMconDCV"
+	by mail.kernel.org (Postfix) with ESMTP id 9150A2072F
+	for <linux-wireless@archiver.kernel.org>; Fri, 27 Mar 2020 11:25:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1585308316;
+	bh=nYLHHHRgW7KyhXgGAfcT0pygfJkAcJNPNdQChIW8IzE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=PX8kzleV/SG0pxdkzteBNx4fbVXmqZUspMKKFyHZ79nu7MkoWxXDlFKup1bCMgp73
+	 ScDswDEPODOv4pgvITDIO/xAjwNaa+VANvXYDQtMx1clrn3pm8QR4Dc2Hyha+3OCIf
+	 WQVQaCWiCtCrmq99PHh7E0qMr5j4mA4Nj2m4/4ww=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726640AbgC0LQI (ORCPT
+        id S1727336AbgC0LZP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 27 Mar 2020 07:16:08 -0400
-Received: from mail26.static.mailgun.info ([104.130.122.26]:39177 "EHLO
-        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726379AbgC0LQI (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Mar 2020 07:16:08 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1585307768; h=Content-Type: MIME-Version: Message-ID:
- In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
- bh=9LK10OXgzi/rnLsXdPOkiREm+deDTcfebaSPGXR+HEQ=; b=XMconDCVrItWeq8VEnjZtvU2UjkbIgEkKpUqi6KwK4Sa9HS35WCEpFZoYsypDnX0w3SsZz/N
- pzROaILRpopmlyKNQSDN+e4LfzEGSVuGq9GIZLrQY8XILOGR3vMMoGoPp6b2U7jEc7EaR0F0
- Z2XeU7E0Q1cofnY1U7nnDnFnFxM=
-X-Mailgun-Sending-Ip: 104.130.122.26
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e7de076.7f47fbeeb1f0-smtp-out-n05;
- Fri, 27 Mar 2020 11:16:06 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 81092C43636; Fri, 27 Mar 2020 11:16:06 +0000 (UTC)
-Received: from tynnyri.adurom.net (tynnyri.adurom.net [51.15.11.48])
+        Fri, 27 Mar 2020 07:25:15 -0400
+Received: from mail.kernel.org ([198.145.29.99]:39032 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727263AbgC0LZP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 27 Mar 2020 07:25:15 -0400
+Received: from localhost (83-86-89-107.cable.dynamic.v4.ziggo.nl [83.86.89.107])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id D3418C433D2;
-        Fri, 27 Mar 2020 11:16:03 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org D3418C433D2
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     <Ajay.Kathat@microchip.com>
-Cc:     <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
-        <devicetree@vger.kernel.org>, <gregkh@linuxfoundation.org>,
-        <johannes@sipsolutions.net>, <Adham.Abozaeid@microchip.com>,
-        <Nicolas.Ferre@microchip.com>, <Claudiu.Beznea@microchip.com>,
-        <Venkateswara.Kaja@microchip.com>
+        by mail.kernel.org (Postfix) with ESMTPSA id 5EDC5206F8;
+        Fri, 27 Mar 2020 11:25:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1585308314;
+        bh=nYLHHHRgW7KyhXgGAfcT0pygfJkAcJNPNdQChIW8IzE=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=18dP0C8Mb7gJckrnRxRLPL+nbNHpzhZUFKEJGWDnCbTz27iZ61uQ1UzoML5cqpwjZ
+         OnMES3/9QvzfhK6otlnz7npww5X9/VLU5sDKzxloN3NhcbnzffEaCd8pBwM/aSppbp
+         q/SogzJO2Od4oA1on+He3NN2cgG9I3jI1cN7hBEc=
+Date:   Fri, 27 Mar 2020 12:25:11 +0100
+From:   Greg KH <gregkh@linuxfoundation.org>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     Ajay.Kathat@microchip.com, devel@driverdev.osuosl.org,
+        devicetree@vger.kernel.org, Venkateswara.Kaja@microchip.com,
+        linux-wireless@vger.kernel.org, Nicolas.Ferre@microchip.com,
+        Adham.Abozaeid@microchip.com, johannes@sipsolutions.net
 Subject: Re: [PATCH v6 00/17] wilc1000: move out of staging
+Message-ID: <20200327112511.GA1708276@kroah.com>
 References: <20200327063302.20511-1-ajay.kathat@microchip.com>
-Date:   Fri, 27 Mar 2020 13:16:01 +0200
-In-Reply-To: <20200327063302.20511-1-ajay.kathat@microchip.com> (Ajay Kathat's
-        message of "Fri, 27 Mar 2020 06:33:07 +0000")
-Message-ID: <87ftduoxou.fsf@tynnyri.adurom.net>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
+ <87ftduoxou.fsf@tynnyri.adurom.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <87ftduoxou.fsf@tynnyri.adurom.net>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-<Ajay.Kathat@microchip.com> writes:
+On Fri, Mar 27, 2020 at 01:16:01PM +0200, Kalle Valo wrote:
+> <Ajay.Kathat@microchip.com> writes:
+> 
+> > From: Ajay Singh <ajay.kathat@microchip.com>
+> >
+> > This patch series is to review and move wilc1000 driver out of staging.
+> > Most of the review comments received in [1] & [2] are addressed in the
+> > latest code. Please review and provide your inputs.
+> >
+> > [1]. https://lore.kernel.org/linux-wireless/1537957525-11467-1-git-send-email-ajay.kathat@microchip.com/
+> > [2]. https://lore.kernel.org/linux-wireless/1562896697-8002-1-git-send-email-ajay.kathat@microchip.com/
+> >
+> > Changes since v5:
+> >  - handle DT binding review comments suggested in below link:
+> >   * https://lore.kernel.org/driverdev-devel/20200320175920.GA31641@bogus
+> >  - merged latest driver from staging which contains few cleanup patches
+> >    and changes to use crc7 from existing library instead of having
+> >    private implementation.
+> 
+> This is already the third version this month, please avoid spamming the
+> list unnecessarily. What you can do to speed up the acceptance is to get
+> Reviewed-by tags from people, the more I see those the more confident I
+> get about the driver. I will also review this again once I find some
+> free time, but don't know when that will happen.
+> 
+> But it would be good to document in the cover letter what commit id are
+> you using as the baseline. That way it's easy to review rest of the
+> changes Greg has applied separately and you don't need to resend the
+> whole driver everytime.
 
-> From: Ajay Singh <ajay.kathat@microchip.com>
->
-> This patch series is to review and move wilc1000 driver out of staging.
-> Most of the review comments received in [1] & [2] are addressed in the
-> latest code. Please review and provide your inputs.
->
-> [1]. https://lore.kernel.org/linux-wireless/1537957525-11467-1-git-send-email-ajay.kathat@microchip.com/
-> [2]. https://lore.kernel.org/linux-wireless/1562896697-8002-1-git-send-email-ajay.kathat@microchip.com/
->
-> Changes since v5:
->  - handle DT binding review comments suggested in below link:
->   * https://lore.kernel.org/driverdev-devel/20200320175920.GA31641@bogus
->  - merged latest driver from staging which contains few cleanup patches
->    and changes to use crc7 from existing library instead of having
->    private implementation.
+Using the --base= flag in git format-patch is helpful in automating that
+:)
 
-This is already the third version this month, please avoid spamming the
-list unnecessarily. What you can do to speed up the acceptance is to get
-Reviewed-by tags from people, the more I see those the more confident I
-get about the driver. I will also review this again once I find some
-free time, but don't know when that will happen.
+thanks,
 
-But it would be good to document in the cover letter what commit id are
-you using as the baseline. That way it's easy to review rest of the
-changes Greg has applied separately and you don't need to resend the
-whole driver everytime.
-
--- 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+greg k-h
