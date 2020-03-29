@@ -6,31 +6,31 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F852C2D0EB
-	for <linux-wireless@archiver.kernel.org>; Sun, 29 Mar 2020 19:31:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE74CC2D0EB
+	for <linux-wireless@archiver.kernel.org>; Sun, 29 Mar 2020 20:50:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 702A520748
-	for <linux-wireless@archiver.kernel.org>; Sun, 29 Mar 2020 19:31:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8E0B920748
+	for <linux-wireless@archiver.kernel.org>; Sun, 29 Mar 2020 20:50:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728608AbgC2Tbk (ORCPT
+        id S1728842AbgC2UuY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 29 Mar 2020 15:31:40 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:35592 "EHLO
+        Sun, 29 Mar 2020 16:50:24 -0400
+Received: from s3.sipsolutions.net ([144.76.43.62]:37154 "EHLO
         sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727330AbgC2Tbk (ORCPT
+        with ESMTP id S1727370AbgC2UuX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 29 Mar 2020 15:31:40 -0400
+        Sun, 29 Mar 2020 16:50:23 -0400
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.93)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1jIdea-003lQD-E9; Sun, 29 Mar 2020 21:31:28 +0200
+        id 1jIesj-003vlB-Sy; Sun, 29 Mar 2020 22:50:10 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org
 Cc:     davem@davemloft.net, j@w1.fi,
         Johannes Berg <johannes.berg@intel.com>, stable@vger.kernel.org
-Subject: [PATCH] mac80211: fix authentication with iwlwifi/mvm
-Date:   Sun, 29 Mar 2020 21:31:18 +0200
-Message-Id: <20200329213114.0a067c2cbfdb.I9712908b102ee30fe76fa72c9ec93c92f52ab689@changeid>
+Subject: [PATCH v2] mac80211: fix authentication with iwlwifi/mvm
+Date:   Sun, 29 Mar 2020 22:50:06 +0200
+Message-Id: <20200329225004.115da08b271d.I9712908b102ee30fe76fa72c9ec93c92f52ab689@changeid>
 X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -52,12 +52,14 @@ Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
 Dave, can you please apply this directly?
 
+(sorry, I shall remember to use git commit --amend properly)
+
 ---
  net/mac80211/tx.c | 3 ++-
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index d9cca6dbd870..19a67f639471 100644
+index d9cca6dbd870..efe4c1fc68e5 100644
 --- a/net/mac80211/tx.c
 +++ b/net/mac80211/tx.c
 @@ -3610,7 +3610,8 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
@@ -65,7 +67,7 @@ index d9cca6dbd870..19a67f639471 100644
  		 * EAPOL frames from the local station.
  		 */
 -		if (unlikely(!ieee80211_vif_is_mesh(&tx.sdata->vif) &&
-+		if (unlikely(ieee80211_is_data(hdr->fc) &&
++		if (unlikely(ieee80211_is_data(hdr->frame_control) &&
 +			     !ieee80211_vif_is_mesh(&tx.sdata->vif) &&
  			     tx.sdata->vif.type != NL80211_IFTYPE_OCB &&
  			     !is_multicast_ether_addr(hdr->addr1) &&
