@@ -2,76 +2,85 @@ Return-Path: <SRS0=B81N=5P=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61950C43331
-	for <linux-wireless@archiver.kernel.org>; Mon, 30 Mar 2020 11:00:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EB9BC43331
+	for <linux-wireless@archiver.kernel.org>; Mon, 30 Mar 2020 11:17:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3A3B1205ED
-	for <linux-wireless@archiver.kernel.org>; Mon, 30 Mar 2020 11:00:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 255B320757
+	for <linux-wireless@archiver.kernel.org>; Mon, 30 Mar 2020 11:17:16 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="Z9qjOUuU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729504AbgC3LAY (ORCPT
+        id S1729713AbgC3LRP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 30 Mar 2020 07:00:24 -0400
-Received: from smail.rz.tu-ilmenau.de ([141.24.186.67]:40240 "EHLO
-        smail.rz.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729401AbgC3LAY (ORCPT
+        Mon, 30 Mar 2020 07:17:15 -0400
+Received: from mail27.static.mailgun.info ([104.130.122.27]:50372 "EHLO
+        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729267AbgC3LRM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Mar 2020 07:00:24 -0400
-Received: from sauron.tu-ilmenau.de (unknown [141.24.16.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        Mon, 30 Mar 2020 07:17:12 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1585567032; h=Message-Id: Date: Subject: Cc: To: From:
+ Sender; bh=ohNyk2iJCkJ68ndhVx4gG40YfMXlUYfIKl79zrMGSBo=; b=Z9qjOUuUKFGiE/qxLArDdHoo2E9EFE8jDj6/I8JrCv/50PAoCvpD5IHEZClQdTURaF5RhsAU
+ K1F/+nXJGY1+V1oDbsWUM0VledEbakvw0uVpxy1zhlvKDI+luIbgVJX0wK79LIMKVRyXhgri
+ egJCmz1QWwj8bSq8Ph2ZFi8KEMc=
+X-Mailgun-Sending-Ip: 104.130.122.27
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
+ by mxa.mailgun.org with ESMTP id 5e81d52e.7f86213c2618-smtp-out-n04;
+ Mon, 30 Mar 2020 11:17:02 -0000 (UTC)
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id A0B37C43636; Mon, 30 Mar 2020 11:17:02 +0000 (UTC)
+Received: from checstp253621-lin.qualcomm.com (blr-c-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.19.19])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
-        by smail.rz.tu-ilmenau.de (Postfix) with ESMTPSA id 7D3B6580068;
-        Mon, 30 Mar 2020 13:00:22 +0200 (CEST)
-From:   Markus Theil <markus.theil@tu-ilmenau.de>
-To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org,
-        Markus Theil <markus.theil@tu-ilmenau.de>
-Subject: [PATCH] iw: event: log rssi value for cqm
-Date:   Mon, 30 Mar 2020 13:00:27 +0200
-Message-Id: <20200330110027.21541-1-markus.theil@tu-ilmenau.de>
-X-Mailer: git-send-email 2.26.0
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        (Authenticated sender: srirrama)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id B6E90C433D2;
+        Mon, 30 Mar 2020 11:17:00 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org B6E90C433D2
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=srirrama@codeaurora.org
+From:   Sriram R <srirrama@codeaurora.org>
+To:     ath11k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org, Sriram R <srirrama@codeaurora.org>
+Subject: [PATCH] ath11k: Increase the tx completion ring size
+Date:   Mon, 30 Mar 2020 16:46:46 +0530
+Message-Id: <1585567006-9173-1-git-send-email-srirrama@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Signed-off-by: Markus Theil <markus.theil@tu-ilmenau.de>
+Increase the tx completion ring size to 0x8000.Also set the
+idr size to be same as the completion ring size.
+
+This avoids backpressure on the TX Completion and
+corresponding TCL Data ring during high data traffic.
+
+Signed-off-by: Sriram R <srirrama@codeaurora.org>
 ---
- event.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath11k/dp.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/event.c b/event.c
-index b132b17..02e4593 100644
---- a/event.c
-+++ b/event.c
-@@ -122,17 +122,20 @@ static void parse_cqm_event(struct nlattr **attrs)
+diff --git a/drivers/net/wireless/ath/ath11k/dp.h b/drivers/net/wireless/ath/ath11k/dp.h
+index 551f9c9..d4e19dc 100644
+--- a/drivers/net/wireless/ath/ath11k/dp.h
++++ b/drivers/net/wireless/ath/ath11k/dp.h
+@@ -169,8 +169,8 @@ struct ath11k_pdev_dp {
  
- 	if (cqm[NL80211_ATTR_CQM_RSSI_THRESHOLD_EVENT]) {
- 		enum nl80211_cqm_rssi_threshold_event rssi_event;
-+		int32_t rssi_level = -1;
- 		bool found_one = false;
- 
- 		rssi_event = nla_get_u32(cqm[NL80211_ATTR_CQM_RSSI_THRESHOLD_EVENT]);
-+		if(cqm[NL80211_ATTR_CQM_RSSI_LEVEL])
-+			rssi_level = nla_get_u32(cqm[NL80211_ATTR_CQM_RSSI_LEVEL]);
- 
- 		switch (rssi_event) {
- 		case NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH:
--			printf("RSSI went above threshold\n");
-+			printf("RSSI (%i dBm) went above threshold\n", rssi_level);
- 			found_one = true;
- 			break;
- 		case NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW:
--			printf("RSSI went below threshold\n");
-+			printf("RSSI (%i dBm) went below threshold\n", rssi_level);
- 			found_one = true;
- 			break;
- 		case NL80211_CQM_RSSI_BEACON_LOSS_EVENT:
+ #define DP_WBM_RELEASE_RING_SIZE	64
+ #define DP_TCL_DATA_RING_SIZE		512
+-#define DP_TX_COMP_RING_SIZE		8192
+-#define DP_TX_IDR_SIZE			(DP_TX_COMP_RING_SIZE << 1)
++#define DP_TX_COMP_RING_SIZE		32768
++#define DP_TX_IDR_SIZE			DP_TX_COMP_RING_SIZE
+ #define DP_TCL_CMD_RING_SIZE		32
+ #define DP_TCL_STATUS_RING_SIZE		32
+ #define DP_REO_DST_RING_MAX		4
 -- 
-2.26.0
-
+2.7.4
