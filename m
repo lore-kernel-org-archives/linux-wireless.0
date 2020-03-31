@@ -2,131 +2,117 @@ Return-Path: <SRS0=Q85H=5Q=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MIME_BASE64_TEXT,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9859C2D0F1
-	for <linux-wireless@archiver.kernel.org>; Tue, 31 Mar 2020 06:51:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69638C2D0EF
+	for <linux-wireless@archiver.kernel.org>; Tue, 31 Mar 2020 09:21:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C182B20757
-	for <linux-wireless@archiver.kernel.org>; Tue, 31 Mar 2020 06:51:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3C7AC2072E
+	for <linux-wireless@archiver.kernel.org>; Tue, 31 Mar 2020 09:21:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="e0pjuefH"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NhRKE6/J"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729968AbgCaGvy (ORCPT
+        id S1731957AbgCaJV3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 31 Mar 2020 02:51:54 -0400
-Received: from mailgw02.mediatek.com ([210.61.82.184]:15083 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1729918AbgCaGvx (ORCPT
+        Tue, 31 Mar 2020 05:21:29 -0400
+Received: from mail-pg1-f194.google.com ([209.85.215.194]:34409 "EHLO
+        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730548AbgCaJV3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Mar 2020 02:51:53 -0400
-X-UUID: 006bba34ee6e4058afd77f1a9cacc190-20200331
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=X0OcyMvL4lbrg36Mk7oc4dDFTS47i4dhzRfE8BnWJPY=;
-        b=e0pjuefH4LBBOaf69KOvQC2jlL8ddbwbVAK2zY/rPkbPiDIwlTPLitU5ep5SyFascGU8WVl8BHFaj6JSUOs33kKirsnk2N5EArdjBURte9Xama95FVC90tn11lY4VB/6CaGxnMNgGntVqTnw5xgMQPoO/+LOunrgdyaUdHOr/5A=;
-X-UUID: 006bba34ee6e4058afd77f1a9cacc190-20200331
-Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw02.mediatek.com
-        (envelope-from <ryder.lee@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
-        with ESMTP id 58095262; Tue, 31 Mar 2020 14:51:43 +0800
-Received: from mtkcas07.mediatek.inc (172.21.101.84) by
- mtkmbs08n2.mediatek.inc (172.21.101.56) with Microsoft SMTP Server (TLS) id
- 15.0.1395.4; Tue, 31 Mar 2020 14:51:38 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas07.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Tue, 31 Mar 2020 14:51:38 +0800
-From:   Ryder Lee <ryder.lee@mediatek.com>
-To:     Felix Fietkau <nbd@nbd.name>,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-CC:     Shayne Chen <shayne.chen@mediatek.com>,
-        Sean Wang <sean.wang@mediatek.com>,
-        <linux-wireless@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>,
-        Ryder Lee <ryder.lee@mediatek.com>
-Subject: [PATCH 2/4] mt76: mt7615: enable aggr_stats for both phy
-Date:   Tue, 31 Mar 2020 14:51:36 +0800
-Message-ID: <5f658e6a42f653299db86244942618730ffb9926.1585636614.git.ryder.lee@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-In-Reply-To: <1fc90ec2a64d062ac7264aaa3dd158f2282ad7b8.1585636614.git.ryder.lee@mediatek.com>
-References: <1fc90ec2a64d062ac7264aaa3dd158f2282ad7b8.1585636614.git.ryder.lee@mediatek.com>
+        Tue, 31 Mar 2020 05:21:29 -0400
+Received: by mail-pg1-f194.google.com with SMTP id l14so2953900pgb.1;
+        Tue, 31 Mar 2020 02:21:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:date:to:cc:subject:message-id:mime-version:content-disposition;
+        bh=yGyg1ENScRE5z1DsfTEwNcOjmNLUF+zRAh9CdI7gqOg=;
+        b=NhRKE6/JaxAnbEhCW2wwKvHlDkv5/m7BqqIKe/fNqwhdNUu3OrHc5ry5mfGANoCq5p
+         bYiXIMCsf0PrCT6EHGQhi8wXvYCKRhfufmTAxaNLVEwx2vy5BYAfmXePoII21Mt6HGSm
+         mdB9L7HAXTrCfJDftHtQM0C2npxwlVimMB0N/igUc0Uk5mdMJ9yHQrtIf30YoRk4a62Y
+         FgcCS2RgMqRRjS7e3oAhJJMtYMMQMy62QdSgfO0QAL2RBOb0xobhKy1Vd9zWgl/zmgmh
+         GIEYoAZr1jL5zYQa4spE7zNWkH0wAZdtmkoPsfkMsH9sflsJbawHAibObcNW1fUdLWQv
+         SEsw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:date:to:cc:subject:message-id:mime-version
+         :content-disposition;
+        bh=yGyg1ENScRE5z1DsfTEwNcOjmNLUF+zRAh9CdI7gqOg=;
+        b=k4aNGw3ftaWexysu20yJ1P0G/n0ivMCrerevwNkledKS4dfbxy6fHyNjL/exKCRMXl
+         aVFIGx57uNY72wbhBqTE8v/NZY/r/7c8hHU/0futrcfVM3j9N1+oyTGHGf3TBcFOsAUm
+         dEnhoy3wRaC2mTXpudbu7nI+dhW37QJSuADwBR0kyueagE36H+6E8nQYdtmAbNcQ32aY
+         PRz5uvvYn4fABODVPVj+taaP1NpJj3bUzyya9oAljhtsNxBaTP8TTQ5sDQePP2cdTlUU
+         LeXt9/e/BCU7FrqJgLhmqT99vplsNX+TI4Fxov3Xm75BBKHH4qV2/fVSwXxLW3SgkPu3
+         ARjQ==
+X-Gm-Message-State: ANhLgQ3i2cgOR75GMXPzdVYLBU+90vuj+MSFF6jbCG0+R8kSwWZYVOVu
+        kMeXKTKFBD1sD6WJ7jkCRJc=
+X-Google-Smtp-Source: ADFU+vslw43GDAqAatksB6/tDHIxvAhJy1bO7D85eQQEgR3jPGoNMqSSAkg7du8J6pRlH6QdKdWWJQ==
+X-Received: by 2002:aa7:962d:: with SMTP id r13mr18081654pfg.244.1585646488149;
+        Tue, 31 Mar 2020 02:21:28 -0700 (PDT)
+Received: from localhost (194.99.30.125.dy.iij4u.or.jp. [125.30.99.194])
+        by smtp.gmail.com with ESMTPSA id d23sm11980605pfq.210.2020.03.31.02.21.26
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 31 Mar 2020 02:21:27 -0700 (PDT)
+From:   Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+X-Google-Original-From: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>
+Date:   Tue, 31 Mar 2020 18:21:25 +0900
+To:     Jouni Malinen <jouni@codeaurora.org>,
+        Johannes Berg <johannes.berg@intel.com>
+Cc:     "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [linux-next] bisected: first bad commit: mac80211: Check port
+ authorization in the ieee80211_tx_dequeue() case
+Message-ID: <20200331092125.GA502@jagdpanzerIV.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-TM-SNTS-SMTP: 07D14E5CF4D800D171A703094CC85C8C5D681E1C11756252B4BC06F32B9DEBC62000:8
-X-MTK:  N
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-VXNlIGJvdHRvbSBoYWxmIG9mIGFnZ3Jfc3RhdHMgZm9yIHNlY29uZCBwaHkuDQoNClNpZ25lZC1v
-ZmYtYnk6IFJ5ZGVyIExlZSA8cnlkZXIubGVlQG1lZGlhdGVrLmNvbT4NCi0tLQ0KIC4uLi93aXJl
-bGVzcy9tZWRpYXRlay9tdDc2L210NzYxNS9kZWJ1Z2ZzLmMgICB8ICA0ICsrKy0NCiAuLi4vbmV0
-L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3NjE1L21hYy5jICAgfCAyMSArKysrKysrKysrLS0t
-LS0tLS0tDQogLi4uL25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210NzYxNS9yZWdzLmggIHwg
-IDMgKystDQogMyBmaWxlcyBjaGFuZ2VkLCAxNiBpbnNlcnRpb25zKCspLCAxMiBkZWxldGlvbnMo
-LSkNCg0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3
-NjE1L2RlYnVnZnMuYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3NjE1
-L2RlYnVnZnMuYw0KaW5kZXggOWZkNDBkNzIzMjAxLi45ODBlN2UzY2YzN2UgMTAwNjQ0DQotLS0g
-YS9kcml2ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210NzYxNS9kZWJ1Z2ZzLmMNCisr
-KyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3NjE1L2RlYnVnZnMuYw0K
-QEAgLTE0NSw4ICsxNDUsMTAgQEAgbXQ3NjE1X2FtcGR1X3N0YXRfcmVhZF9waHkoc3RydWN0IG10
-NzYxNV9waHkgKnBoeSwNCiAJCXNlcV9wcmludGYoZmlsZSwgIiUzZCAtJTNkIHwgIiwNCiAJCQkg
-ICBib3VuZFtpXSwgYm91bmRbaSArIDFdKTsNCiAJc2VxX3B1dHMoZmlsZSwgIlxuQ291bnQ6ICAi
-KTsNCisNCisJcmFuZ2UgPSBleHRfcGh5ID8gQVJSQVlfU0laRShkZXYtPm10NzYuYWdncl9zdGF0
-cykgLyAyIDogMDsNCiAJZm9yIChpID0gMDsgaSA8IEFSUkFZX1NJWkUoYm91bmQpOyBpKyspDQot
-CQlzZXFfcHJpbnRmKGZpbGUsICIlOGQgfCAiLCBkZXYtPm10NzYuYWdncl9zdGF0c1tpXSk7DQor
-CQlzZXFfcHJpbnRmKGZpbGUsICIlOGQgfCAiLCBkZXYtPm10NzYuYWdncl9zdGF0c1tpICsgcmFu
-Z2VdKTsNCiAJc2VxX3B1dHMoZmlsZSwgIlxuIik7DQogfQ0KIA0KZGlmZiAtLWdpdCBhL2RyaXZl
-cnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3NjE1L21hYy5jIGIvZHJpdmVycy9uZXQv
-d2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc2MTUvbWFjLmMNCmluZGV4IGEyN2E2ZDE2NDAwOS4u
-ODU3Mjk3M2NjNGM4IDEwMDY0NA0KLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsv
-bXQ3Ni9tdDc2MTUvbWFjLmMNCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210
-NzYvbXQ3NjE1L21hYy5jDQpAQCAtODIsOCArODIsMTAgQEAgdm9pZCBtdDc2MTVfbWFjX3Jlc2V0
-X2NvdW50ZXJzKHN0cnVjdCBtdDc2MTVfZGV2ICpkZXYpDQogew0KIAlpbnQgaTsNCiANCi0JZm9y
-IChpID0gMDsgaSA8IDQ7IGkrKykNCi0JCW10NzZfcnIoZGV2LCBNVF9UWF9BR0dfQ05UKGkpKTsN
-CisJZm9yIChpID0gMDsgaSA8IDQ7IGkrKykgew0KKwkJbXQ3Nl9ycihkZXYsIE1UX1RYX0FHR19D
-TlQoMCwgaSkpOw0KKwkJbXQ3Nl9ycihkZXYsIE1UX1RYX0FHR19DTlQoMSwgaSkpOw0KKwl9DQog
-DQogCW1lbXNldChkZXYtPm10NzYuYWdncl9zdGF0cywgMCwgc2l6ZW9mKGRldi0+bXQ3Ni5hZ2dy
-X3N0YXRzKSk7DQogCWRldi0+bXQ3Ni5waHkuc3VydmV5X3RpbWUgPSBrdGltZV9nZXRfYm9vdHRp
-bWUoKTsNCkBAIC0xNzUxLDEzICsxNzUzLDE0IEBAIG10NzYxNV9tYWNfdXBkYXRlX21pYl9zdGF0
-cyhzdHJ1Y3QgbXQ3NjE1X3BoeSAqcGh5KQ0KIAlzdHJ1Y3QgbXQ3NjE1X2RldiAqZGV2ID0gcGh5
-LT5kZXY7DQogCXN0cnVjdCBtaWJfc3RhdHMgKm1pYiA9ICZwaHktPm1pYjsNCiAJYm9vbCBleHRf
-cGh5ID0gcGh5ICE9ICZkZXYtPnBoeTsNCi0JaW50IGk7DQorCWludCBpLCBhZ2dyOw0KIA0KIAlt
-ZW1zZXQobWliLCAwLCBzaXplb2YoKm1pYikpOw0KIA0KIAltaWItPmZjc19lcnJfY250ID0gbXQ3
-Nl9nZXRfZmllbGQoZGV2LCBNVF9NSUJfU0RSMyhleHRfcGh5KSwNCiAJCQkJCSAgTVRfTUlCX1NE
-UjNfRkNTX0VSUl9NQVNLKTsNCiANCisJYWdnciA9IGV4dF9waHkgPyBBUlJBWV9TSVpFKGRldi0+
-bXQ3Ni5hZ2dyX3N0YXRzKSAvIDIgOiAwOw0KIAlmb3IgKGkgPSAwOyBpIDwgNDsgaSsrKSB7DQog
-CQl1MzIgZGF0YSwgdmFsLCB2YWwyOw0KIA0KQEAgLTE3NzIsNiArMTc3NSwxMSBAQCBtdDc2MTVf
-bWFjX3VwZGF0ZV9taWJfc3RhdHMoc3RydWN0IG10NzYxNV9waHkgKnBoeSkNCiAJCQltaWItPnJ0
-c19jbnQgPSBGSUVMRF9HRVQoTVRfTUlCX1JUU19DT1VOVF9NQVNLLCB2YWwyKTsNCiAJCQltaWIt
-PnJ0c19yZXRyaWVzX2NudCA9IGRhdGE7DQogCQl9DQorDQorCQl2YWwgPSBtdDc2X3JyKGRldiwg
-TVRfVFhfQUdHX0NOVChleHRfcGh5LCBpKSk7DQorDQorCQlkZXYtPm10NzYuYWdncl9zdGF0c1th
-Z2dyKytdICs9IHZhbCAmIDB4ZmZmZjsNCisJCWRldi0+bXQ3Ni5hZ2dyX3N0YXRzW2FnZ3IrK10g
-Kz0gdmFsID4+IDE2Ow0KIAl9DQogfQ0KIA0KQEAgLTE3NzksNyArMTc4Nyw2IEBAIHZvaWQgbXQ3
-NjE1X21hY193b3JrKHN0cnVjdCB3b3JrX3N0cnVjdCAqd29yaykNCiB7DQogCXN0cnVjdCBtdDc2
-MTVfZGV2ICpkZXY7DQogCXN0cnVjdCBtdDc2MTVfcGh5ICpleHRfcGh5Ow0KLQlpbnQgaSwgaWR4
-Ow0KIA0KIAlkZXYgPSAoc3RydWN0IG10NzYxNV9kZXYgKiljb250YWluZXJfb2Yod29yaywgc3Ry
-dWN0IG10NzZfZGV2LA0KIAkJCQkJCW1hY193b3JrLndvcmspOw0KQEAgLTE3OTksMTIgKzE4MDYs
-NiBAQCB2b2lkIG10NzYxNV9tYWNfd29yayhzdHJ1Y3Qgd29ya19zdHJ1Y3QgKndvcmspDQogCQlk
-ZXYtPm1hY193b3JrX2NvdW50ID0gMDsNCiAJfQ0KIA0KLQlmb3IgKGkgPSAwLCBpZHggPSAwOyBp
-IDwgNDsgaSsrKSB7DQotCQl1MzIgdmFsID0gbXQ3Nl9ycihkZXYsIE1UX1RYX0FHR19DTlQoaSkp
-Ow0KLQ0KLQkJZGV2LT5tdDc2LmFnZ3Jfc3RhdHNbaWR4KytdICs9IHZhbCAmIDB4ZmZmZjsNCi0J
-CWRldi0+bXQ3Ni5hZ2dyX3N0YXRzW2lkeCsrXSArPSB2YWwgPj4gMTY7DQotCX0NCiAJbXV0ZXhf
-dW5sb2NrKCZkZXYtPm10NzYubXV0ZXgpOw0KIA0KIAltdDc2X3R4X3N0YXR1c19jaGVjaygmZGV2
-LT5tdDc2LCBOVUxMLCBmYWxzZSk7DQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3Mv
-bWVkaWF0ZWsvbXQ3Ni9tdDc2MTUvcmVncy5oIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0
-ZWsvbXQ3Ni9tdDc2MTUvcmVncy5oDQppbmRleCAxZTBkOTViOTE3ZTEuLmQ5MTA0MTYxM2RmOCAx
-MDA2NDQNCi0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3NjE1L3Jl
-Z3MuaA0KKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc2MTUvcmVn
-cy5oDQpAQCAtNDA2LDcgKzQwNiw4IEBAIGVudW0gbXQ3NjE1X3JlZ19iYXNlIHsNCiAJCQkJCQkg
-ICgobikgPDwgNCkpDQogI2RlZmluZSBNVF9NSUJfQUNLX0ZBSUxfQ09VTlRfTUFTSwlHRU5NQVNL
-KDMxLCAxNikNCiANCi0jZGVmaW5lIE1UX1RYX0FHR19DTlQobikJCU1UX1dGX01JQigweGE4ICsg
-KChuKSA8PCAyKSkNCisjZGVmaW5lIE1UX1RYX0FHR19DTlQoX2JhbmQsIG4pCQlNVF9XRl9NSUIo
-MHhhOCArICgoX2JhbmQpIDw8IDkpICsgXA0KKwkJCQkJCSAgKChuKSA8PCAyKSkNCiANCiAjZGVm
-aW5lIE1UX0RNQV9TSERMKG9mcykJCShkZXYtPnJlZ19tYXBbTVRfRE1BX1NIRExfQkFTRV0gKyAo
-b2ZzKSkNCiANCi0tIA0KMi4xOC4wDQo=
+Hello,
 
+Commit "mac80211: Check port authorization in the ieee80211_tx_dequeue()
+case" breaks wifi on my laptop:
+
+	kernel: wlp2s0: authentication with XXXXXXXXXXXXXX timed out
+
+It just never connects to the network.
+
+$ git bisect log
+git bisect start
+# bad: [458ef2a25e0cbdc216012aa2b9cf549d64133b08] Merge tag 'x86-timers-2020-03-30' of git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip
+git bisect bad 458ef2a25e0cbdc216012aa2b9cf549d64133b08
+# good: [16fbf79b0f83bc752cee8589279f1ebfe57b3b6e] Linux 5.6-rc7
+git bisect good 16fbf79b0f83bc752cee8589279f1ebfe57b3b6e
+# bad: [59838093be51ee9447f6ad05483d697b6fa0368d] Merge tag 'driver-core-5.7-rc1' of git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/driver-core
+git bisect bad 59838093be51ee9447f6ad05483d697b6fa0368d
+# bad: [e59cd88028dbd41472453e5883f78330aa73c56e] Merge tag 'for-5.7/io_uring-2020-03-29' of git://git.kernel.dk/linux-block
+git bisect bad e59cd88028dbd41472453e5883f78330aa73c56e
+# good: [906c40438bb669b253d0daeaf5f37a9f78a81b41] Merge branch 'i2c/for-current' of git://git.kernel.org/pub/scm/linux/kernel/git/wsa/linux
+git bisect good 906c40438bb669b253d0daeaf5f37a9f78a81b41
+# bad: [10f36b1e80a9f7afdaefe6f0b06dcdf89715eed7] Merge tag 'for-5.7/block-2020-03-29' of git://git.kernel.dk/linux-block
+git bisect bad 10f36b1e80a9f7afdaefe6f0b06dcdf89715eed7
+# bad: [3a0eb192c01f43dca12628d8b5866d5b8ffb35f5] Merge tag 'for-5.7/libata-2020-03-29' of git://git.kernel.dk/linux-block
+git bisect bad 3a0eb192c01f43dca12628d8b5866d5b8ffb35f5
+# bad: [0f751396346f5cfb6d02abe1985af53717b23c3d] Merge tag 'tpmdd-next-20200316' of git://git.infradead.org/users/jjs/linux-tpmdd
+git bisect bad 0f751396346f5cfb6d02abe1985af53717b23c3d
+# bad: [a0ba26f37ea04e025a793ef5e5ac809221728ecb] Merge git://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf
+git bisect bad a0ba26f37ea04e025a793ef5e5ac809221728ecb
+# bad: [8262e6f9b1034ede34548a04dec4c302d92c9497] net: ks8851-ml: Fix IO operations, again
+git bisect bad 8262e6f9b1034ede34548a04dec4c302d92c9497
+# bad: [ce2e1ca703071723ca2dd94d492a5ab6d15050da] mac80211: Check port authorization in the ieee80211_tx_dequeue() case
+git bisect bad ce2e1ca703071723ca2dd94d492a5ab6d15050da
+# good: [575a97acc3b7446094b0dcaf6285c7c6934c2477] ieee80211: fix HE SPR size calculation
+git bisect good 575a97acc3b7446094b0dcaf6285c7c6934c2477
+# good: [05dcb8bb258575a8dd3499d0d78bd2db633c2b23] cfg80211: Do not warn on same channel at the end of CSA
+git bisect good 05dcb8bb258575a8dd3499d0d78bd2db633c2b23
+# first bad commit: [ce2e1ca703071723ca2dd94d492a5ab6d15050da] mac80211: Check port authorization in the ieee80211_tx_dequeue() case
+
+	-ss
