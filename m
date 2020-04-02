@@ -2,85 +2,150 @@ Return-Path: <SRS0=piom=5S=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 750D3C2D0F3
-	for <linux-wireless@archiver.kernel.org>; Thu,  2 Apr 2020 13:07:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B239C2BA15
+	for <linux-wireless@archiver.kernel.org>; Thu,  2 Apr 2020 13:07:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 31CE220784
-	for <linux-wireless@archiver.kernel.org>; Thu,  2 Apr 2020 13:07:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1585832865;
-	bh=da75WNCyElUBj5uGiEqZob3llwVigdpNXgm0uTRUh+I=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=yesMl9EovLbaXn4kvxS2THA7y1dL3QkKBbMV+tvXufYgL1xU5obIc/B0G6IKPoSkH
-	 uHA1FmC3MitUmeoqk138B8ZA+Ava1oEPh6Rwg+3UMFwFNlYs84+kOVrUKs7gQx3w03
-	 Px6PjXPZbegeoiWatqTMBN9dl1nFUo2u9KJmUCrw=
+	by mail.kernel.org (Postfix) with ESMTP id 7196620787
+	for <linux-wireless@archiver.kernel.org>; Thu,  2 Apr 2020 13:07:49 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="I8vVgLzq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388416AbgDBNHo (ORCPT
+        id S2388444AbgDBNHq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 2 Apr 2020 09:07:44 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50646 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388403AbgDBNHo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Apr 2020 09:07:44 -0400
-Received: from localhost.localdomain.com (unknown [151.48.151.50])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 8FC4020678;
-        Thu,  2 Apr 2020 13:07:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1585832863;
-        bh=da75WNCyElUBj5uGiEqZob3llwVigdpNXgm0uTRUh+I=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=uHNS7aBPuON3nVqcsz2YAA6n6zHDLnAmq+9XaiNr6inUUaQVLkQ4AGvND4gZHUI3Y
-         SbdN4uF+A4nJ9YCRKaVy0tKmn7wvcfCLDo/wbI+/wbQcRmsP8ECNkLWJDtIqqN3LHS
-         jhtuVhp/bYUnfFgg36L9Wld1PwfwXqjXzgOIPQ+Q=
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     nbd@nbd.name
-Cc:     lorenzo.bianconi@redhat.com, sean.wang@mediatek.com,
-        ryder.lee@mediatek.com, linux-wireless@vger.kernel.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH 04/12] mt76: mt7663: disable RDD commands
-Date:   Thu,  2 Apr 2020 15:06:34 +0200
-Message-Id: <20da56fe7d926dbcf8e4309a530a8b77602fbb75.1585832458.git.lorenzo@kernel.org>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <cover.1585832458.git.lorenzo@kernel.org>
-References: <cover.1585832458.git.lorenzo@kernel.org>
+        Thu, 2 Apr 2020 09:07:46 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:48762 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388322AbgDBNHp (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 2 Apr 2020 09:07:45 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 032D3YoG195959;
+        Thu, 2 Apr 2020 13:07:38 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ content-transfer-encoding : in-reply-to; s=corp-2020-01-29;
+ bh=oW8EUs27voZDgUzLsb6d6q3EuFOz24ejqeKT2dTfZOA=;
+ b=I8vVgLzqdQAz1IIYt3+SEnRZu1bVXicIN7Wgz3nL1S/ofQjEf0KV1kEwqHkf9Sw7YQ0l
+ 8lzfA+K7uSmvdB5BewIrxxnZAFzYmSmeFAm1ZiQhe24y+yoTXVKfWGLz64by5kR7aYSg
+ I7PxRODynHvrpx/Vt/f2OG1IFrZURfQI3pIo/xYqdzbk2H9cVJt4hYI2QeyrxxA38jC2
+ iIF/J8QUvu/kCVSj+xSnmU1MDjMRz2yrqSz49Y69HdZ6Niiil8TBOjY6ROYhNFu6OkFC
+ 8mxKwry3nL0n64tx/4LLPa+iIxKpOgokn+kv74DerIxS30XnYFsBguoFTJbT9nNCJlv3 kQ== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 303cevb9bg-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 02 Apr 2020 13:07:38 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 032CwKj4054938;
+        Thu, 2 Apr 2020 13:05:37 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3030.oracle.com with ESMTP id 302g4vgwvh-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 02 Apr 2020 13:05:37 +0000
+Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 032D5YVo018468;
+        Thu, 2 Apr 2020 13:05:34 GMT
+Received: from kadam (/41.57.98.10)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 02 Apr 2020 06:05:33 -0700
+Date:   Thu, 2 Apr 2020 16:05:26 +0300
+From:   Dan Carpenter <dan.carpenter@oracle.com>
+To:     Jerome Pouiller <Jerome.Pouiller@silabs.com>
+Cc:     devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        Kalle Valo <kvalo@codeaurora.org>
+Subject: Re: [PATCH 04/32] staging: wfx: remove "burst" mechanism
+Message-ID: <20200402130526.GR2001@kadam>
+References: <20200401110405.80282-1-Jerome.Pouiller@silabs.com>
+ <20200401110405.80282-5-Jerome.Pouiller@silabs.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20200401110405.80282-5-Jerome.Pouiller@silabs.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9578 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 bulkscore=0 suspectscore=0
+ mlxscore=0 spamscore=0 malwarescore=0 mlxlogscore=999 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2004020118
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9578 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 adultscore=0
+ clxscore=1015 phishscore=0 lowpriorityscore=0 spamscore=0 malwarescore=0
+ suspectscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2004020119
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Disable dfs RDD mcu commands for mt7663 driver since they are not
-currently supported by the 7663 firmware
+On Wed, Apr 01, 2020 at 01:03:37PM +0200, Jerome Pouiller wrote:
+> From: Jérôme Pouiller <jerome.pouiller@silabs.com>
+> 
+> In the old days, the driver tried to reorder frames in order to send
+> frames from the same queue grouped to the firmware. However, the
+> firmware is able to do the job internally for a long time. There is no
+> reasons to keep this mechanism.
+> 
+> Signed-off-by: Jérôme Pouiller <jerome.pouiller@silabs.com>
+> ---
+>  drivers/staging/wfx/queue.c | 23 -----------------------
+>  drivers/staging/wfx/sta.c   |  2 --
+>  drivers/staging/wfx/wfx.h   |  1 -
+>  3 files changed, 26 deletions(-)
+> 
+> diff --git a/drivers/staging/wfx/queue.c b/drivers/staging/wfx/queue.c
+> index e3aa1e346c70..712ac783514b 100644
+> --- a/drivers/staging/wfx/queue.c
+> +++ b/drivers/staging/wfx/queue.c
+> @@ -363,8 +363,6 @@ static bool hif_handle_tx_data(struct wfx_vif *wvif, struct sk_buff *skb,
+>  static int wfx_get_prio_queue(struct wfx_vif *wvif,
+>  				 u32 tx_allowed_mask, int *total)
+>  {
+> -	static const int urgent = BIT(WFX_LINK_ID_AFTER_DTIM) |
+> -		BIT(WFX_LINK_ID_UAPSD);
+>  	const struct ieee80211_tx_queue_params *edca;
+>  	unsigned int score, best = -1;
+                            ^^^^^^^^^
+Not related to this this patch but this confused me initially.  UINT_MAX
+would be more readable.
 
-Co-developed-by: Sean Wang <sean.wang@mediatek.com>
-Signed-off-by: Sean Wang <sean.wang@mediatek.com>
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
----
- drivers/net/wireless/mediatek/mt76/mt7615/mac.c | 3 +++
- 1 file changed, 3 insertions(+)
+The other unrelated question I had about this function was:
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-index ec6ef6c3478e..7be06ece1658 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-@@ -2036,6 +2036,9 @@ int mt7615_dfs_init_radar_detector(struct mt7615_phy *phy)
- 	bool ext_phy = phy != &dev->phy;
- 	int err;
- 
-+	if (is_mt7663(&dev->mt76))
-+		return 0;
-+
- 	if (dev->mt76.region == NL80211_DFS_UNSET) {
- 		phy->dfs_state = -1;
- 		if (phy->rdd_state)
--- 
-2.25.1
+   402          /* search for a winner using edca params */
+   403          for (i = 0; i < IEEE80211_NUM_ACS; ++i) {
+                                ^^^^^^^^^^^^^^^^^
+IEEE80211_NUM_ACS is 4.
+
+   404                  int queued;
+   405  
+   406                  edca = &wvif->edca_params[i];
+   407                  queued = wfx_tx_queue_get_num_queued(&wvif->wdev->tx_queue[i],
+   408                                  tx_allowed_mask);
+   409                  if (!queued)
+   410                          continue;
+   411                  *total += queued;
+   412                  score = ((edca->aifs + edca->cw_min) << 16) +
+   413                          ((edca->cw_max - edca->cw_min) *
+   414                           (get_random_int() & 0xFFFF));
+   415                  if (score < best && (winner < 0 || i != 3)) {
+                                                           ^^^^^^
+
+Why do we not want winner to be 3?  It's unrelated to the patch but
+there should be a comment next to that code probably.
+
+   416                          best = score;
+   417                          winner = i;
+   418                  }
+   419          }
+
+regards,
+dan carpenter
 
