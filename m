@@ -2,132 +2,92 @@ Return-Path: <SRS0=piom=5S=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F8DEC43331
-	for <linux-wireless@archiver.kernel.org>; Thu,  2 Apr 2020 12:44:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E477C43331
+	for <linux-wireless@archiver.kernel.org>; Thu,  2 Apr 2020 13:07:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5462B206F6
-	for <linux-wireless@archiver.kernel.org>; Thu,  2 Apr 2020 12:44:49 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="eLhW1G3f"
+	by mail.kernel.org (Postfix) with ESMTP id 62844206F5
+	for <linux-wireless@archiver.kernel.org>; Thu,  2 Apr 2020 13:07:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1585832841;
+	bh=XwkzWyQAHMPvEqxV6v3rSr8+Yfh2Z51AJtPO4jEazP4=;
+	h=From:To:Cc:Subject:Date:List-ID:From;
+	b=nnsCQd+3s7pTt7VnV3nsS2n3WNtmMoKw+cRmSR4sJNY8OWM3+cFNSM/chbzSwxe0L
+	 pSjwn1DM5Pzp7BqnNBs6y55ft3yyhKHvjiP2QycdqgTFkkfdTqOhlxm2jsdCHfJ7V2
+	 zqP0ztPd+JxByfoCqFJnBdw8unsujPxriVx1ExU4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388227AbgDBMoo (ORCPT
+        id S2388391AbgDBNHU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 2 Apr 2020 08:44:44 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:52160 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726252AbgDBMoo (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 2 Apr 2020 08:44:44 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 032Chd3N166886;
-        Thu, 2 Apr 2020 12:44:34 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- content-transfer-encoding : in-reply-to; s=corp-2020-01-29;
- bh=x0huE/mMZHIQWX72jbyNEykJLzeJMXHbcFXfDWa7dW8=;
- b=eLhW1G3fnRko1c0gC+a4HrxWT3w6rocUTn1ahYM4d/m6x2caVtqU3KnWEbttWtFq1mJE
- ulnN2MY701BLGRw93KKn6R8yduUz8/q5IHaZdM7W2NeDCnbelZ5CA8DmldsT7G06l8vO
- UcwUPkbAkT5VN53GD2z+gCBTkO4xNn8mQDEH7pblzF/Jl6LcYV8xKA9sckhbbWPP60wh
- sHGj8zh5KeACpkL9JJT2FqA0FUtaTC9KQqk2cw/je/mFA6v7LkGbDbg25lVVY4/KAsh9
- cRblsnS/UzvlghlxdqqQOpgitxx1gV2ebAN3dXjS9GdWxpHcvzef8yECuyGPsVJ8q4BD Ng== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 303yundr5r-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 02 Apr 2020 12:44:34 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 032Cg8Ad064328;
-        Thu, 2 Apr 2020 12:42:33 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3020.oracle.com with ESMTP id 302ga2bw5k-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 02 Apr 2020 12:42:33 +0000
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 032CgVxX006017;
-        Thu, 2 Apr 2020 12:42:31 GMT
-Received: from kadam (/41.57.98.10)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 02 Apr 2020 05:42:31 -0700
-Date:   Thu, 2 Apr 2020 15:42:23 +0300
-From:   Dan Carpenter <dan.carpenter@oracle.com>
-To:     Jerome Pouiller <Jerome.Pouiller@silabs.com>
-Cc:     devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        Kalle Valo <kvalo@codeaurora.org>
-Subject: Re: [PATCH 01/32] staging: wfx: add sanity checks to hif_join()
-Message-ID: <20200402124223.GQ2001@kadam>
-References: <20200401110405.80282-1-Jerome.Pouiller@silabs.com>
- <20200401110405.80282-2-Jerome.Pouiller@silabs.com>
+        Thu, 2 Apr 2020 09:07:20 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50478 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2388174AbgDBNHU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 2 Apr 2020 09:07:20 -0400
+Received: from localhost.localdomain.com (unknown [151.48.151.50])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id A48DA20678;
+        Thu,  2 Apr 2020 13:07:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1585832840;
+        bh=XwkzWyQAHMPvEqxV6v3rSr8+Yfh2Z51AJtPO4jEazP4=;
+        h=From:To:Cc:Subject:Date:From;
+        b=2mbtA3ZPBQeR+CQisUDPvIUOmQEQzECgZX63i6x7bYsPhjaH1I2OjgPUUniRN6rzv
+         CM6N0B5Zp5Ov+4VUkGONqAOq+xMOi0vsQzmeVwKWClMSwUD35Exaaj8WgIrjP9g0wc
+         KYXpWu5lCENUuRBk9uiXCrpMfzGDHH+sjgZQ+f78=
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     nbd@nbd.name
+Cc:     lorenzo.bianconi@redhat.com, sean.wang@mediatek.com,
+        ryder.lee@mediatek.com, linux-wireless@vger.kernel.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH 00/12] mt7663 driver update
+Date:   Thu,  2 Apr 2020 15:06:30 +0200
+Message-Id: <cover.1585832458.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20200401110405.80282-2-Jerome.Pouiller@silabs.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9578 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- mlxlogscore=999 bulkscore=0 mlxscore=0 spamscore=0 adultscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004020116
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9578 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 lowpriorityscore=0
- malwarescore=0 adultscore=0 priorityscore=1501 mlxlogscore=999 bulkscore=0
- suspectscore=0 mlxscore=0 spamscore=0 impostorscore=0 clxscore=1015
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2004020116
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, Apr 01, 2020 at 01:03:34PM +0200, Jerome Pouiller wrote:
-> From: Jérôme Pouiller <jerome.pouiller@silabs.com>
-> 
-> Add a few check on start of hif_join().
-> 
-> Signed-off-by: Jérôme Pouiller <jerome.pouiller@silabs.com>
-> ---
->  drivers/staging/wfx/hif_tx.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/staging/wfx/hif_tx.c b/drivers/staging/wfx/hif_tx.c
-> index 77bca43aca42..445906035e9d 100644
-> --- a/drivers/staging/wfx/hif_tx.c
-> +++ b/drivers/staging/wfx/hif_tx.c
-> @@ -297,6 +297,8 @@ int hif_join(struct wfx_vif *wvif, const struct ieee80211_bss_conf *conf,
->  	struct hif_req_join *body = wfx_alloc_hif(sizeof(*body), &hif);
-                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-We've got an allocation here.  It's a mistake to put the allocation in
-the declaration block because you're going to forget to check for
-failure.
+This series add the following new features to mt7663e driver:
+- hw scan
+- scheduled scan
+- noise floor estimation
 
->  
->  	WARN_ON(!conf->basic_rates);
-> +	WARN_ON(sizeof(body->ssid) < ssidlen);
+Moreover it fixes some hw configuration issues
 
-Put the variable on the left.  WARN_ON(ssidlen > sizeof(body->ssid)).
-I'm not a big fan of adding this sort of debug code, just audit the
-callers to see if it's possible or not.
+Lorenzo Bianconi (9):
+  mt76: mt7663: fix mt7615_mac_cca_stats_reset routine
+  mt76: mt7663: enable nf estimation
+  mt76: mt7615: make scs configurable per chain
+  mt76: mt7663: disable RDD commands
+  mt76: mt7615: add ethool support to mt7663 driver
+  mt76: mt7615: introduce mt7615_mcu_set_channel_domain mcu command
+  mt76: mt7615: introduce hw scan support
+  mt76: mt7615: introduce scheduled scan support
+  mt76: mt7615: introduce rlm tlv in bss_info mcu command
 
-I have audited the caller for you, and I believe that this condition
-*is possible* so we need to return -EINVAL in this situation to prevent
-memory corruption.
+Sean Wang (3):
+  mt76: mt7663: keep Rx filters as the default
+  mt76: mt7615: introduce BSS absence event
+  mt76: mt7615: removing unnecessary register operations
 
-	if (ssidlen > sizeof(body->ssid))
-		return -EINVAL;
+ drivers/net/wireless/mediatek/mt76/mt76.h     |   2 +
+ .../wireless/mediatek/mt76/mt7615/debugfs.c   |   8 +-
+ .../net/wireless/mediatek/mt76/mt7615/init.c  |  45 +-
+ .../net/wireless/mediatek/mt76/mt7615/mac.c   |  76 +--
+ .../net/wireless/mediatek/mt76/mt7615/main.c  |  86 +++-
+ .../net/wireless/mediatek/mt76/mt7615/mcu.c   | 434 +++++++++++++++++-
+ .../net/wireless/mediatek/mt76/mt7615/mcu.h   | 143 +++++-
+ .../wireless/mediatek/mt76/mt7615/mt7615.h    |  36 +-
+ .../net/wireless/mediatek/mt76/mt7615/regs.h  |   3 +
+ 9 files changed, 767 insertions(+), 66 deletions(-)
 
-> +	WARN(!conf->ibss_joined && !ssidlen, "joining an unknown BSS");
->  	body->infrastructure_bss_mode = !conf->ibss_joined;
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Potential NULL dererefence because of the unchecked allocation.
-
-regards,
-dan carpenter
+-- 
+2.25.1
 
