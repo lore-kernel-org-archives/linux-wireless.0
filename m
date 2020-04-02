@@ -6,38 +6,38 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19D29C2D0F4
-	for <linux-wireless@archiver.kernel.org>; Thu,  2 Apr 2020 01:18:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 799B1C18E5B
+	for <linux-wireless@archiver.kernel.org>; Thu,  2 Apr 2020 01:18:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D38D22072E
-	for <linux-wireless@archiver.kernel.org>; Thu,  2 Apr 2020 01:18:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 45D092072E
+	for <linux-wireless@archiver.kernel.org>; Thu,  2 Apr 2020 01:18:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733295AbgDBBS3 (ORCPT
+        id S1733305AbgDBBSc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 1 Apr 2020 21:18:29 -0400
-Received: from mail.adapt-ip.com ([173.164.178.19]:46514 "EHLO
+        Wed, 1 Apr 2020 21:18:32 -0400
+Received: from mail.adapt-ip.com ([173.164.178.19]:46550 "EHLO
         web.adapt-ip.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1733272AbgDBBS2 (ORCPT
+        with ESMTP id S1733298AbgDBBSb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 1 Apr 2020 21:18:28 -0400
+        Wed, 1 Apr 2020 21:18:31 -0400
 Received: from localhost (localhost [127.0.0.1])
-        by web.adapt-ip.com (Postfix) with ESMTP id 227D14F7AFF;
-        Thu,  2 Apr 2020 01:18:27 +0000 (UTC)
+        by web.adapt-ip.com (Postfix) with ESMTP id C2F474F7AF8;
+        Thu,  2 Apr 2020 01:18:30 +0000 (UTC)
 X-Virus-Scanned: Debian amavisd-new at web.adapt-ip.com
 Received: from web.adapt-ip.com ([127.0.0.1])
         by localhost (web.adapt-ip.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id faLt3kAkNuYa; Thu,  2 Apr 2020 01:18:22 +0000 (UTC)
+        with ESMTP id ZbUKsvW2feN0; Thu,  2 Apr 2020 01:18:27 +0000 (UTC)
 Received: from atlas.campbell.adapt-ip.com (gateway.adapt-ip.com [173.164.178.20])
         (Authenticated sender: thomas@adapt-ip.com)
-        by web.adapt-ip.com (Postfix) with ESMTPSA id 139DA4F7AF6;
+        by web.adapt-ip.com (Postfix) with ESMTPSA id C6A2E4F7AFB;
         Thu,  2 Apr 2020 01:18:13 +0000 (UTC)
 From:   Thomas Pedersen <thomas@adapt-ip.com>
 To:     Johannes Berg <johannes@sipsolutions.net>
 Cc:     linux-wireless <linux-wireless@vger.kernel.org>,
         Thomas Pedersen <thomas@adapt-ip.com>
-Subject: [PATCH 6/9] nl80211: add KHz frequency offset for most wifi commands
-Date:   Wed,  1 Apr 2020 18:18:07 -0700
-Message-Id: <20200402011810.22947-7-thomas@adapt-ip.com>
+Subject: [PATCH 9/9] nl80211: S1G band and channel definitions
+Date:   Wed,  1 Apr 2020 18:18:10 -0700
+Message-Id: <20200402011810.22947-10-thomas@adapt-ip.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200402011810.22947-1-thomas@adapt-ip.com>
 References: <20200402011810.22947-1-thomas@adapt-ip.com>
@@ -48,379 +48,275 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-cfg80211 recently gained the ability to understand a
-frequency offset component in KHz. Expose this in nl80211
-through the new attributes NL80211_ATTR_WIPHY_FREQ_OFFSET,
-NL80211_FREQUENCY_ATTR_OFFSET,
-NL80211_ATTR_CENTER_FREQ1_OFFSET, and
-NL80211_BSS_FREQUENCY_OFFSET.
-
-These add support to send and receive a KHz offset
-component with the following NL80211 commands:
-
-- NL80211_CMD_FRAME
-- NL80211_CMD_GET_SCAN
-- NL80211_CMD_AUTHENTICATE
-- NL80211_CMD_ASSOCIATE
-- NL80211_CMD_CONNECT
-
-Along with any other command which takes a chandef, ie:
-
-- NL80211_CMD_SET_CHANNEL
-- NL80211_CMD_SET_WIPHY
-- NL80211_CMD_START_AP
-- NL80211_CMD_RADAR_DETECT
-- NL80211_CMD_NOTIFY_RADAR
-- NL80211_CMD_CHANNEL_SWITCH
-- NL80211_JOIN_IBSS
-- NL80211_CMD_REMAIN_ON_CHANNEL
-- NL80211_CMD_JOIN_OCB
-- NL80211_CMD_JOIN_MESH
-- NL80211_CMD_TDLS_CHANNEL_SWITCH
-
-If the driver advertises a band containing channels with
-frequency offset, it must also verify support for
-frequency offset channels in its cfg80211 ops, or return
-an error.
+Gives drivers the definitions needed to advertise support
+for S1G bands.
 
 Signed-off-by: Thomas Pedersen <thomas@adapt-ip.com>
-
 ---
-v2:
-  use NLA_POLICY_RANGE for the freq offsets (Johannes)
----
- include/uapi/linux/nl80211.h | 49 ++++++++++++++++--------
- net/wireless/nl80211.c       | 73 ++++++++++++++++++++++++++----------
- 2 files changed, 87 insertions(+), 35 deletions(-)
+ include/net/cfg80211.h       | 17 +++++++++++++++++
+ include/uapi/linux/nl80211.h | 16 ++++++++++++++++
+ net/mac80211/chan.c          |  7 ++++++-
+ net/mac80211/scan.c          |  1 +
+ net/mac80211/tx.c            |  1 +
+ net/mac80211/util.c          |  5 +++++
+ net/wireless/chan.c          | 29 +++++++++++++++++++++++++++++
+ net/wireless/core.c          |  5 +++--
+ net/wireless/util.c          |  8 ++++++++
+ 9 files changed, 86 insertions(+), 3 deletions(-)
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 2b691161830f..28401f039d75 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -296,13 +296,14 @@
-  *	to get a list of all present wiphys.
-  * @NL80211_CMD_SET_WIPHY: set wiphy parameters, needs %NL80211_ATTR_WIPHY or
-  *	%NL80211_ATTR_IFINDEX; can be used to set %NL80211_ATTR_WIPHY_NAME,
-- *	%NL80211_ATTR_WIPHY_TXQ_PARAMS, %NL80211_ATTR_WIPHY_FREQ (and the
-- *	attributes determining the channel width; this is used for setting
-- *	monitor mode channel),  %NL80211_ATTR_WIPHY_RETRY_SHORT,
-- *	%NL80211_ATTR_WIPHY_RETRY_LONG, %NL80211_ATTR_WIPHY_FRAG_THRESHOLD,
-- *	and/or %NL80211_ATTR_WIPHY_RTS_THRESHOLD.
-- *	However, for setting the channel, see %NL80211_CMD_SET_CHANNEL
-- *	instead, the support here is for backward compatibility only.
-+ *	%NL80211_ATTR_WIPHY_TXQ_PARAMS, %NL80211_ATTR_WIPHY_FREQ,
-+ *	%NL80211_ATTR_WIPHY_FREQ_OFFSET (and the attributes determining the
-+ *	channel width; this is used for setting monitor mode channel),
-+ *	%NL80211_ATTR_WIPHY_RETRY_SHORT, %NL80211_ATTR_WIPHY_RETRY_LONG,
-+ *	%NL80211_ATTR_WIPHY_FRAG_THRESHOLD, and/or
-+ *	%NL80211_ATTR_WIPHY_RTS_THRESHOLD.  However, for setting the channel,
-+ *	see %NL80211_CMD_SET_CHANNEL instead, the support here is for backward
-+ *	compatibility only.
-  * @NL80211_CMD_NEW_WIPHY: Newly created wiphy, response to get request
-  *	or rename notification. Has attributes %NL80211_ATTR_WIPHY and
-  *	%NL80211_ATTR_WIPHY_NAME.
-@@ -351,7 +352,8 @@
-  *	%NL80211_ATTR_AUTH_TYPE, %NL80211_ATTR_INACTIVITY_TIMEOUT,
-  *	%NL80211_ATTR_ACL_POLICY and %NL80211_ATTR_MAC_ADDRS.
-  *	The channel to use can be set on the interface or be given using the
-- *	%NL80211_ATTR_WIPHY_FREQ and the attributes determining channel width.
-+ *	%NL80211_ATTR_WIPHY_FREQ and %NL80211_ATTR_WIPHY_FREQ_OFFSET, and the
-+ *	attributes determining channel width.
-  * @NL80211_CMD_NEW_BEACON: old alias for %NL80211_CMD_START_AP
-  * @NL80211_CMD_STOP_AP: Stop AP operation on the given interface
-  * @NL80211_CMD_DEL_BEACON: old alias for %NL80211_CMD_STOP_AP
-@@ -536,11 +538,12 @@
-  *	interface. %NL80211_ATTR_MAC is used to specify PeerSTAAddress (and
-  *	BSSID in case of station mode). %NL80211_ATTR_SSID is used to specify
-  *	the SSID (mainly for association, but is included in authentication
-- *	request, too, to help BSS selection. %NL80211_ATTR_WIPHY_FREQ is used
-- *	to specify the frequence of the channel in MHz. %NL80211_ATTR_AUTH_TYPE
-- *	is used to specify the authentication type. %NL80211_ATTR_IE is used to
-- *	define IEs (VendorSpecificInfo, but also including RSN IE and FT IEs)
-- *	to be added to the frame.
-+ *	request, too, to help BSS selection. %NL80211_ATTR_WIPHY_FREQ +
-+ *	%NL80211_ATTR_WIPHY_FREQ_OFFSET is used to specify the frequence of the
-+ *	channel in MHz. %NL80211_ATTR_AUTH_TYPE is used to specify the
-+ *	authentication type. %NL80211_ATTR_IE is used to define IEs
-+ *	(VendorSpecificInfo, but also including RSN IE and FT IEs) to be added
-+ *	to the frame.
-  *	When used as an event, this reports reception of an Authentication
-  *	frame in station and IBSS modes when the local MLME processed the
-  *	frame, i.e., it was for the local STA and was received in correct
-@@ -595,8 +598,9 @@
-  *	requests to connect to a specified network but without separating
-  *	auth and assoc steps. For this, you need to specify the SSID in a
-  *	%NL80211_ATTR_SSID attribute, and can optionally specify the association
-- *	IEs in %NL80211_ATTR_IE, %NL80211_ATTR_AUTH_TYPE, %NL80211_ATTR_USE_MFP,
-- *	%NL80211_ATTR_MAC, %NL80211_ATTR_WIPHY_FREQ, %NL80211_ATTR_CONTROL_PORT,
-+ *	IEs in %NL80211_ATTR_IE, %NL80211_ATTR_AUTH_TYPE,
-+ *	%NL80211_ATTR_USE_MFP, %NL80211_ATTR_MAC, %NL80211_ATTR_WIPHY_FREQ,
-+ *	%NL80211_ATTR_WIPHY_FREQ_OFFSET, %NL80211_ATTR_CONTROL_PORT,
-  *	%NL80211_ATTR_CONTROL_PORT_ETHERTYPE,
-  *	%NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT,
-  *	%NL80211_ATTR_CONTROL_PORT_OVER_NL80211, %NL80211_ATTR_MAC_HINT, and
-@@ -1422,7 +1426,8 @@ enum nl80211_commands {
-  *	of &enum nl80211_chan_width, describing the channel width. See the
-  *	documentation of the enum for more information.
-  * @NL80211_ATTR_CENTER_FREQ1: Center frequency of the first part of the
-- *	channel, used for anything but 20 MHz bandwidth
-+ *	channel, used for anything but 20 MHz bandwidth. In S1G this is the
-+ *	operating channel center frequency.
-  * @NL80211_ATTR_CENTER_FREQ2: Center frequency of the second part of the
-  *	channel, used only for 80+80 MHz bandwidth
-  * @NL80211_ATTR_WIPHY_CHANNEL_TYPE: included with NL80211_ATTR_WIPHY_FREQ
-@@ -2469,6 +2474,11 @@ enum nl80211_commands {
-  *	entry without having to force a disconnection after the PMK timeout. If
-  *	no roaming occurs between the reauth threshold and PMK expiration,
-  *	disassociation is still forced.
-+ * @NL80211_ATTR_WIPHY_FREQ_OFFSET: offset of the associated
-+ *	%NL80211_ATTR_WIPHY_FREQ in positive KHz. Only valid when supplied with
-+ *	an %NL80211_ATTR_WIPHY_FREQ_OFFSET.
-+ * @NL80211_ATTR_CENTER_FREQ1_OFFSET: Center frequency offset in KHz for the
-+ *	first channel segment specified in %NL80211_ATTR_CENTER_FREQ1.
-  *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-@@ -2945,6 +2955,9 @@ enum nl80211_attrs {
- 	NL80211_ATTR_PMK_LIFETIME,
- 	NL80211_ATTR_PMK_REAUTH_THRESHOLD,
- 
-+	NL80211_ATTR_WIPHY_FREQ_OFFSET,
-+	NL80211_ATTR_CENTER_FREQ1_OFFSET,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -3666,6 +3679,7 @@ enum nl80211_wmm_rule {
-  *	(see &enum nl80211_wmm_rule)
-  * @NL80211_FREQUENCY_ATTR_NO_HE: HE operation is not allowed on this channel
-  *	in current regulatory domain.
-+ * @NL80211_FREQUENCY_ATTR_OFFSET: frequency offset in KHz
-  * @NL80211_FREQUENCY_ATTR_MAX: highest frequency attribute number
-  *	currently defined
-  * @__NL80211_FREQUENCY_ATTR_AFTER_LAST: internal use
-@@ -3696,6 +3710,7 @@ enum nl80211_frequency_attr {
- 	NL80211_FREQUENCY_ATTR_NO_10MHZ,
- 	NL80211_FREQUENCY_ATTR_WMM,
- 	NL80211_FREQUENCY_ATTR_NO_HE,
-+	NL80211_FREQUENCY_ATTR_OFFSET,
- 
- 	/* keep last */
- 	__NL80211_FREQUENCY_ATTR_AFTER_LAST,
-@@ -4466,6 +4481,7 @@ enum nl80211_bss_scan_width {
-  * @NL80211_BSS_CHAIN_SIGNAL: per-chain signal strength of last BSS update.
-  *	Contains a nested array of signal strength attributes (u8, dBm),
-  *	using the nesting index as the antenna number.
-+ * @NL80211_BSS_FREQUENCY_OFFSET: frequency offset in KHz
-  * @__NL80211_BSS_AFTER_LAST: internal
-  * @NL80211_BSS_MAX: highest BSS attribute
-  */
-@@ -4490,6 +4506,7 @@ enum nl80211_bss {
- 	NL80211_BSS_PARENT_TSF,
- 	NL80211_BSS_PARENT_BSSID,
- 	NL80211_BSS_CHAIN_SIGNAL,
-+	NL80211_BSS_FREQUENCY_OFFSET,
- 
- 	/* keep last */
- 	__NL80211_BSS_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 6ff2130f33ff..b1226401757a 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -365,6 +365,7 @@ const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
- 
- 	[NL80211_ATTR_CHANNEL_WIDTH] = { .type = NLA_U32 },
- 	[NL80211_ATTR_CENTER_FREQ1] = { .type = NLA_U32 },
-+	[NL80211_ATTR_CENTER_FREQ1_OFFSET] = NLA_POLICY_RANGE(NLA_U32, 0, 999),
- 	[NL80211_ATTR_CENTER_FREQ2] = { .type = NLA_U32 },
- 
- 	[NL80211_ATTR_WIPHY_RETRY_SHORT] = NLA_POLICY_MIN(NLA_U8, 1),
-@@ -663,6 +664,7 @@ const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
- 	[NL80211_ATTR_CONTROL_PORT_NO_PREAUTH] = { .type = NLA_FLAG },
- 	[NL80211_ATTR_PMK_LIFETIME] = NLA_POLICY_MIN(NLA_U32, 1),
- 	[NL80211_ATTR_PMK_REAUTH_THRESHOLD] = NLA_POLICY_RANGE(NLA_U8, 1, 100),
-+	[NL80211_ATTR_WIPHY_FREQ_OFFSET] = NLA_POLICY_RANGE(NLA_U32, 0, 999),
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index d7518bbb46cf..146aa8c12468 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -414,6 +414,22 @@ struct ieee80211_edmg {
+ 	enum ieee80211_edmg_bw_config bw_config;
  };
  
- /* policy for the key attributes */
-@@ -947,6 +949,9 @@ static int nl80211_msg_put_channel(struct sk_buff *msg, struct wiphy *wiphy,
- 			chan->center_freq))
- 		goto nla_put_failure;
- 
-+	if (nla_put_u32(msg, NL80211_FREQUENCY_ATTR_OFFSET, chan->freq_offset))
-+		goto nla_put_failure;
++/**
++ * struct ieee80211_sta_s1g_cap - STA's S1G capabilities
++ *
++ * This structure describes most essential parameters needed
++ * to describe 802.11ah S1G capabilities for a STA.
++ *
++ * @s1g_supported: is STA an S1G STA
++ * @cap: S1G capabilities information
++ * @nss_mcs: Supported NSS MCS set
++ */
++struct ieee80211_sta_s1g_cap {
++	bool s1g;
++	u8 cap[10]; /* use S1G_CAPAB_ */
++	u8 nss_mcs[5];
++};
 +
- 	if ((chan->flags & IEEE80211_CHAN_DISABLED) &&
- 	    nla_put_flag(msg, NL80211_FREQUENCY_ATTR_DISABLED))
- 		goto nla_put_failure;
-@@ -1352,13 +1357,11 @@ static int nl80211_key_allowed(struct wireless_dev *wdev)
- }
+ /**
+  * struct ieee80211_supported_band - frequency band definition
+  *
+@@ -445,6 +461,7 @@ struct ieee80211_supported_band {
+ 	int n_bitrates;
+ 	struct ieee80211_sta_ht_cap ht_cap;
+ 	struct ieee80211_sta_vht_cap vht_cap;
++	struct ieee80211_sta_s1g_cap s1g_cap;
+ 	struct ieee80211_edmg edmg_cap;
+ 	u16 n_iftype_data;
+ 	const struct ieee80211_sband_iftype_data *iftype_data;
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 0b76a2dabe25..5925613354f5 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -4407,6 +4407,11 @@ enum nl80211_key_mode {
+  *	attribute must be provided as well
+  * @NL80211_CHAN_WIDTH_5: 5 MHz OFDM channel
+  * @NL80211_CHAN_WIDTH_10: 10 MHz OFDM channel
++ * @NL80211_CHAN_WIDTH_1: 1 MHz OFDM channel
++ * @NL80211_CHAN_WIDTH_2: 2 MHz OFDM channel
++ * @NL80211_CHAN_WIDTH_4: 4 MHz OFDM channel
++ * @NL80211_CHAN_WIDTH_8: 8 MHz OFDM channel
++ * @NL80211_CHAN_WIDTH_16: 16 MHz OFDM channel
+  */
+ enum nl80211_chan_width {
+ 	NL80211_CHAN_WIDTH_20_NOHT,
+@@ -4417,6 +4422,11 @@ enum nl80211_chan_width {
+ 	NL80211_CHAN_WIDTH_160,
+ 	NL80211_CHAN_WIDTH_5,
+ 	NL80211_CHAN_WIDTH_10,
++	NL80211_CHAN_WIDTH_1,
++	NL80211_CHAN_WIDTH_2,
++	NL80211_CHAN_WIDTH_4,
++	NL80211_CHAN_WIDTH_8,
++	NL80211_CHAN_WIDTH_16,
+ };
  
- static struct ieee80211_channel *nl80211_get_valid_chan(struct wiphy *wiphy,
--							struct nlattr *tb)
-+							u32 freq)
- {
- 	struct ieee80211_channel *chan;
+ /**
+@@ -4427,11 +4437,15 @@ enum nl80211_chan_width {
+  * @NL80211_BSS_CHAN_WIDTH_20: control channel is 20 MHz wide or compatible
+  * @NL80211_BSS_CHAN_WIDTH_10: control channel is 10 MHz wide
+  * @NL80211_BSS_CHAN_WIDTH_5: control channel is 5 MHz wide
++ * @NL80211_BSS_CHAN_WIDTH_1: control channel is 1 MHz wide
++ * @NL80211_BSS_CHAN_WIDTH_2: control channel is 2 MHz wide
+  */
+ enum nl80211_bss_scan_width {
+ 	NL80211_BSS_CHAN_WIDTH_20,
+ 	NL80211_BSS_CHAN_WIDTH_10,
+ 	NL80211_BSS_CHAN_WIDTH_5,
++	NL80211_BSS_CHAN_WIDTH_1,
++	NL80211_BSS_CHAN_WIDTH_2,
+ };
  
--	if (tb == NULL)
--		return NULL;
--	chan = ieee80211_get_channel(wiphy, nla_get_u32(tb));
-+	chan = ieee80211_get_channel_khz(wiphy, freq);
- 	if (!chan || chan->flags & IEEE80211_CHAN_DISABLED)
- 		return NULL;
- 	return chan;
-@@ -2813,13 +2816,17 @@ int nl80211_parse_chandef(struct cfg80211_registered_device *rdev,
- 	if (!attrs[NL80211_ATTR_WIPHY_FREQ])
- 		return -EINVAL;
+ /**
+@@ -4710,6 +4724,7 @@ enum nl80211_txrate_gi {
+  * @NL80211_BAND_5GHZ: around 5 GHz band (4.9 - 5.7 GHz)
+  * @NL80211_BAND_60GHZ: around 60 GHz band (58.32 - 69.12 GHz)
+  * @NL80211_BAND_6GHZ: around 6 GHz band (5.9 - 7.2 GHz)
++ * @NL80211_BAND_S1GHZ: around 900MHz, supported by S1G PHYs
+  * @NUM_NL80211_BANDS: number of bands, avoid using this in userspace
+  *	since newer kernel versions may support more bands
+  */
+@@ -4718,6 +4733,7 @@ enum nl80211_band {
+ 	NL80211_BAND_5GHZ,
+ 	NL80211_BAND_60GHZ,
+ 	NL80211_BAND_6GHZ,
++	NL80211_BAND_S1GHZ,
  
--	control_freq = nla_get_u32(attrs[NL80211_ATTR_WIPHY_FREQ]);
-+	control_freq = MHZ_TO_KHZ(
-+			nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]));
-+	if (info->attrs[NL80211_ATTR_WIPHY_FREQ_OFFSET])
-+		control_freq +=
-+		    nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ_OFFSET]);
+ 	NUM_NL80211_BANDS,
+ };
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index e6e192f53e4e..08cf9da9c1e3 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -313,9 +313,14 @@ void ieee80211_recalc_chanctx_min_def(struct ieee80211_local *local,
  
- 	memset(chandef, 0, sizeof(*chandef));
--
--	chandef->chan = ieee80211_get_channel(&rdev->wiphy, control_freq);
-+	chandef->chan = ieee80211_get_channel_khz(&rdev->wiphy, control_freq);
- 	chandef->width = NL80211_CHAN_WIDTH_20_NOHT;
--	chandef->center_freq1 = control_freq;
-+	chandef->center_freq1 = KHZ_TO_MHZ(control_freq);
-+	chandef->freq1_offset = control_freq % 1000;
- 	chandef->center_freq2 = 0;
+ 	lockdep_assert_held(&local->chanctx_mtx);
  
- 	/* Primary channel not allowed */
-@@ -2870,6 +2877,9 @@ int nl80211_parse_chandef(struct cfg80211_registered_device *rdev,
- 		if (attrs[NL80211_ATTR_CENTER_FREQ1])
- 			chandef->center_freq1 =
- 				nla_get_u32(attrs[NL80211_ATTR_CENTER_FREQ1]);
-+		if (attrs[NL80211_ATTR_CENTER_FREQ1_OFFSET])
-+			chandef->freq1_offset = nla_get_u32(
-+				attrs[NL80211_ATTR_CENTER_FREQ1_OFFSET]);
- 		if (attrs[NL80211_ATTR_CENTER_FREQ2])
- 			chandef->center_freq2 =
- 				nla_get_u32(attrs[NL80211_ATTR_CENTER_FREQ2]);
-@@ -3302,6 +3312,9 @@ static int nl80211_send_chandef(struct sk_buff *msg,
- 	if (nla_put_u32(msg, NL80211_ATTR_WIPHY_FREQ,
- 			chandef->chan->center_freq))
- 		return -ENOBUFS;
-+	if (nla_put_u32(msg, NL80211_ATTR_WIPHY_FREQ_OFFSET,
-+			chandef->chan->freq_offset))
-+		return -ENOBUFS;
+-	/* don't optimize 5MHz, 10MHz, and radar_enabled confs */
++	/* don't optimize non-20MHz based and radar_enabled confs */
+ 	if (ctx->conf.def.width == NL80211_CHAN_WIDTH_5 ||
+ 	    ctx->conf.def.width == NL80211_CHAN_WIDTH_10 ||
++	    ctx->conf.def.width == NL80211_CHAN_WIDTH_1 ||
++	    ctx->conf.def.width == NL80211_CHAN_WIDTH_2 ||
++	    ctx->conf.def.width == NL80211_CHAN_WIDTH_4 ||
++	    ctx->conf.def.width == NL80211_CHAN_WIDTH_8 ||
++	    ctx->conf.def.width == NL80211_CHAN_WIDTH_16 ||
+ 	    ctx->conf.radar_enabled) {
+ 		ctx->conf.min_def = ctx->conf.def;
+ 		return;
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 5db15996524f..d3935e308ea3 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -906,6 +906,7 @@ static void ieee80211_scan_state_set_channel(struct ieee80211_local *local,
+ 	case NL80211_BSS_CHAN_WIDTH_10:
+ 		local->scan_chandef.width = NL80211_CHAN_WIDTH_10;
+ 		break;
++	default:
+ 	case NL80211_BSS_CHAN_WIDTH_20:
+ 		/* If scanning on oper channel, use whatever channel-type
+ 		 * is currently in use.
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 82846aca86d9..e0e0988dd96d 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -166,6 +166,7 @@ static __le16 ieee80211_duration(struct ieee80211_tx_data *tx,
+ 			if (r->flags & IEEE80211_RATE_MANDATORY_A)
+ 				mrate = r->bitrate;
+ 			break;
++		case NL80211_BAND_S1GHZ:
+ 		case NL80211_BAND_60GHZ:
+ 			/* TODO, for now fall through */
+ 		case NUM_NL80211_BANDS:
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 20436c86b9bf..c48e75dfdcdb 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -3456,6 +3456,11 @@ u32 ieee80211_chandef_downgrade(struct cfg80211_chan_def *c)
+ 		c->width = NL80211_CHAN_WIDTH_20_NOHT;
+ 		ret = IEEE80211_STA_DISABLE_HT | IEEE80211_STA_DISABLE_VHT;
+ 		break;
++	case NL80211_CHAN_WIDTH_1:
++	case NL80211_CHAN_WIDTH_2:
++	case NL80211_CHAN_WIDTH_4:
++	case NL80211_CHAN_WIDTH_8:
++	case NL80211_CHAN_WIDTH_16:
+ 	case NL80211_CHAN_WIDTH_5:
+ 	case NL80211_CHAN_WIDTH_10:
+ 		WARN_ON_ONCE(1);
+diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+index d60e50a3b910..3ea96b39bfb5 100644
+--- a/net/wireless/chan.c
++++ b/net/wireless/chan.c
+@@ -150,6 +150,11 @@ bool cfg80211_chandef_valid(const struct cfg80211_chan_def *chandef)
+ 	control_freq = chandef->chan->center_freq;
+ 
  	switch (chandef->width) {
- 	case NL80211_CHAN_WIDTH_20_NOHT:
++	case NL80211_CHAN_WIDTH_1:
++	case NL80211_CHAN_WIDTH_2:
++	case NL80211_CHAN_WIDTH_4:
++	case NL80211_CHAN_WIDTH_8:
++	case NL80211_CHAN_WIDTH_16:
+ 	case NL80211_CHAN_WIDTH_5:
+ 	case NL80211_CHAN_WIDTH_10:
  	case NL80211_CHAN_WIDTH_20:
-@@ -8906,6 +8919,8 @@ static int nl80211_send_bss(struct sk_buff *msg, struct netlink_callback *cb,
- 		goto nla_put_failure;
- 	if (nla_put_u16(msg, NL80211_BSS_CAPABILITY, res->capability) ||
- 	    nla_put_u32(msg, NL80211_BSS_FREQUENCY, res->channel->center_freq) ||
-+	    nla_put_u32(msg, NL80211_BSS_FREQUENCY_OFFSET,
-+			res->channel->freq_offset) ||
- 	    nla_put_u32(msg, NL80211_BSS_CHAN_WIDTH, res->scan_width) ||
- 	    nla_put_u32(msg, NL80211_BSS_SEEN_MS_AGO,
- 			jiffies_to_msecs(jiffies - intbss->ts)))
-@@ -9174,6 +9189,7 @@ static int nl80211_authenticate(struct sk_buff *skb, struct genl_info *info)
- 	enum nl80211_auth_type auth_type;
- 	struct key_parse key;
- 	bool local_state_change;
-+	u32 freq;
+@@ -260,6 +265,21 @@ static int cfg80211_chandef_get_width(const struct cfg80211_chan_def *c)
+ 	int width;
  
- 	if (!info->attrs[NL80211_ATTR_MAC])
- 		return -EINVAL;
-@@ -9230,8 +9246,12 @@ static int nl80211_authenticate(struct sk_buff *skb, struct genl_info *info)
- 		return -EOPNOTSUPP;
+ 	switch (c->width) {
++	case NL80211_CHAN_WIDTH_1:
++		width = 1;
++		break;
++	case NL80211_CHAN_WIDTH_2:
++		width = 2;
++		break;
++	case NL80211_CHAN_WIDTH_4:
++		width = 4;
++		break;
++	case NL80211_CHAN_WIDTH_8:
++		width = 8;
++		break;
++	case NL80211_CHAN_WIDTH_16:
++		width = 16;
++		break;
+ 	case NL80211_CHAN_WIDTH_5:
+ 		width = 5;
+ 		break;
+@@ -908,6 +928,15 @@ bool cfg80211_chandef_usable(struct wiphy *wiphy,
+ 	control_freq = chandef->chan->center_freq;
  
- 	bssid = nla_data(info->attrs[NL80211_ATTR_MAC]);
--	chan = nl80211_get_valid_chan(&rdev->wiphy,
--				      info->attrs[NL80211_ATTR_WIPHY_FREQ]);
-+	freq = MHZ_TO_KHZ(nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]));
-+	if (info->attrs[NL80211_ATTR_WIPHY_FREQ_OFFSET])
-+		freq +=
-+		    nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ_OFFSET]);
-+
-+	chan = nl80211_get_valid_chan(&rdev->wiphy, freq);
- 	if (!chan)
- 		return -EINVAL;
- 
-@@ -9421,6 +9441,7 @@ static int nl80211_associate(struct sk_buff *skb, struct genl_info *info)
- 	struct cfg80211_assoc_request req = {};
- 	const u8 *bssid, *ssid;
- 	int err, ssid_len = 0;
-+	u32 freq;
- 
- 	if (dev->ieee80211_ptr->conn_owner_nlportid &&
- 	    dev->ieee80211_ptr->conn_owner_nlportid != info->snd_portid)
-@@ -9440,8 +9461,11 @@ static int nl80211_associate(struct sk_buff *skb, struct genl_info *info)
- 
- 	bssid = nla_data(info->attrs[NL80211_ATTR_MAC]);
- 
--	chan = nl80211_get_valid_chan(&rdev->wiphy,
--				      info->attrs[NL80211_ATTR_WIPHY_FREQ]);
-+	freq = MHZ_TO_KHZ(nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ]));
-+	if (info->attrs[NL80211_ATTR_WIPHY_FREQ_OFFSET])
-+		freq +=
-+		    nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ_OFFSET]);
-+	chan = nl80211_get_valid_chan(&rdev->wiphy, freq);
- 	if (!chan)
- 		return -EINVAL;
- 
-@@ -10121,6 +10145,7 @@ static int nl80211_connect(struct sk_buff *skb, struct genl_info *info)
- 	struct cfg80211_connect_params connect;
- 	struct wiphy *wiphy;
- 	struct cfg80211_cached_keys *connkeys = NULL;
-+	u32 freq = 0;
- 	int err;
- 
- 	memset(&connect, 0, sizeof(connect));
-@@ -10191,14 +10216,21 @@ static int nl80211_connect(struct sk_buff *skb, struct genl_info *info)
- 		connect.prev_bssid =
- 			nla_data(info->attrs[NL80211_ATTR_PREV_BSSID]);
- 
--	if (info->attrs[NL80211_ATTR_WIPHY_FREQ]) {
--		connect.channel = nl80211_get_valid_chan(
--			wiphy, info->attrs[NL80211_ATTR_WIPHY_FREQ]);
-+	if (info->attrs[NL80211_ATTR_WIPHY_FREQ])
-+		freq = MHZ_TO_KHZ(nla_get_u32(
-+					info->attrs[NL80211_ATTR_WIPHY_FREQ]));
-+	if (info->attrs[NL80211_ATTR_WIPHY_FREQ_OFFSET])
-+		freq +=
-+		    nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ_OFFSET]);
-+
-+	if (freq) {
-+		connect.channel = nl80211_get_valid_chan(wiphy, freq);
- 		if (!connect.channel)
+ 	switch (chandef->width) {
++	case NL80211_CHAN_WIDTH_1:
++		width = 1;
++		break;
++	case NL80211_CHAN_WIDTH_2:
++		width = 2;
++		break;
++	case NL80211_CHAN_WIDTH_4:
++		width = 4;
++		break;
+ 	case NL80211_CHAN_WIDTH_5:
+ 		width = 5;
+ 		break;
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 341402b4f178..9c27866aa6f8 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -803,10 +803,11 @@ int wiphy_register(struct wiphy *wiphy)
+ 		if (WARN_ON(!sband->n_channels))
  			return -EINVAL;
- 	} else if (info->attrs[NL80211_ATTR_WIPHY_FREQ_HINT]) {
--		connect.channel_hint = nl80211_get_valid_chan(
--			wiphy, info->attrs[NL80211_ATTR_WIPHY_FREQ_HINT]);
-+		freq = nla_get_u32(info->attrs[NL80211_ATTR_WIPHY_FREQ_HINT]);
-+		freq = MHZ_TO_KHZ(freq);
-+		connect.channel_hint = nl80211_get_valid_chan(wiphy, freq);
- 		if (!connect.channel_hint)
+ 		/*
+-		 * on 60GHz band, there are no legacy rates, so
++		 * on 60GHz or sub-1Ghz band, there are no legacy rates, so
+ 		 * n_bitrates is 0
+ 		 */
+-		if (WARN_ON(band != NL80211_BAND_60GHZ &&
++		if (WARN_ON((band != NL80211_BAND_60GHZ &&
++			     band != NL80211_BAND_S1GHZ) &&
+ 			    !sband->n_bitrates))
  			return -EINVAL;
+ 
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 7418ca613177..d3c3551f4b81 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -100,6 +100,8 @@ u32 ieee80211_channel_to_freq_khz(int chan, enum nl80211_band band)
+ 		if (chan < 7)
+ 			return MHZ_TO_KHZ(56160 + chan * 2160);
+ 		break;
++	case NL80211_BAND_S1GHZ:
++		return 902000 + chan * 500;
+ 	default:
+ 		;
  	}
-@@ -16227,6 +16259,7 @@ int nl80211_send_mgmt(struct cfg80211_registered_device *rdev,
- 	    nla_put_u64_64bit(msg, NL80211_ATTR_WDEV, wdev_id(wdev),
- 			      NL80211_ATTR_PAD) ||
- 	    nla_put_u32(msg, NL80211_ATTR_WIPHY_FREQ, KHZ_TO_MHZ(freq)) ||
-+	    nla_put_u32(msg, NL80211_ATTR_WIPHY_FREQ_OFFSET, freq % 1000) ||
- 	    (sig_dbm &&
- 	     nla_put_u32(msg, NL80211_ATTR_RX_SIGNAL_DBM, sig_dbm)) ||
- 	    nla_put(msg, NL80211_ATTR_FRAME, len, buf) ||
-@@ -16877,8 +16910,10 @@ void cfg80211_report_obss_beacon(struct wiphy *wiphy,
- 
- 		if (nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx) ||
- 		    (freq &&
--		     nla_put_u32(msg, NL80211_ATTR_WIPHY_FREQ,
--				 KHZ_TO_MHZ(freq))) ||
-+		     (nla_put_u32(msg, NL80211_ATTR_WIPHY_FREQ,
-+				  KHZ_TO_MHZ(freq)) ||
-+		      nla_put_u32(msg, NL80211_ATTR_WIPHY_FREQ_OFFSET,
-+				  freq % 1000))) ||
- 		    (sig_dbm &&
- 		     nla_put_u32(msg, NL80211_ATTR_RX_SIGNAL_DBM, sig_dbm)) ||
- 		    nla_put(msg, NL80211_ATTR_FRAME, len, frame))
+@@ -208,6 +210,12 @@ static void set_mandatory_flags_band(struct ieee80211_supported_band *sband)
+ 		WARN_ON(!sband->ht_cap.ht_supported);
+ 		WARN_ON((sband->ht_cap.mcs.rx_mask[0] & 0x1e) != 0x1e);
+ 		break;
++	case NL80211_BAND_S1GHZ:
++		/* Figure 9-589bd: 3 means unsupported, so != 3 means at least
++		 * mandatory is ok.
++		 */
++		WARN_ON((sband->s1g_cap.nss_mcs[0] & 0x3) == 0x3);
++		break;
+ 	case NUM_NL80211_BANDS:
+ 	default:
+ 		WARN_ON(1);
 -- 
 2.20.1
 
