@@ -8,63 +8,63 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58FBFC2BA1E
-	for <linux-wireless@archiver.kernel.org>; Sat,  4 Apr 2020 04:19:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D1BDC2BA1E
+	for <linux-wireless@archiver.kernel.org>; Sat,  4 Apr 2020 04:19:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 25C0A2071C
-	for <linux-wireless@archiver.kernel.org>; Sat,  4 Apr 2020 04:19:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DF22F2070E
+	for <linux-wireless@archiver.kernel.org>; Sat,  4 Apr 2020 04:19:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="luiJRooM"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="P4t01GSB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726437AbgDDETX (ORCPT
+        id S1726077AbgDDETD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 4 Apr 2020 00:19:23 -0400
-Received: from mail-pj1-f67.google.com ([209.85.216.67]:37229 "EHLO
-        mail-pj1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726397AbgDDETQ (ORCPT
+        Sat, 4 Apr 2020 00:19:03 -0400
+Received: from mail-pf1-f195.google.com ([209.85.210.195]:34031 "EHLO
+        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725468AbgDDETD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 4 Apr 2020 00:19:16 -0400
-Received: by mail-pj1-f67.google.com with SMTP id k3so3954235pjj.2;
-        Fri, 03 Apr 2020 21:19:16 -0700 (PDT)
+        Sat, 4 Apr 2020 00:19:03 -0400
+Received: by mail-pf1-f195.google.com with SMTP id v23so1740778pfm.1;
+        Fri, 03 Apr 2020 21:19:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=NBIn0GFrxtO/4lI4+QkVpvttsLV5tnJTxG6y3LxiZMM=;
-        b=luiJRooMUjQR/cMYrZzVPmNZHNDguDoXCLND5Sy3sKsUk55oz8ntkQRVJJ4cDFFpIg
-         tP+CAKT1Gq34RP4xMlnhFcsDzL+6PK8tZ2I2msMHTkuAHAPXn7NGAgw22VVGd+k/yjS8
-         heDF/cIrwUBvvrXac4Vx99NlCIpSVWd5XWSpSRKgGXICYZxDsB+eCr3sVp7GBfcG5bHR
-         H6S82xDamqvqdSuSlplOQE/bH9gdo4RvTufJ+SDQuqw/0UJx+WTpD1gP6NpAQcfoFvWh
-         zKi2ZIgfVeJDnPoIZCVWRq7NLvlZAn10Iid9NXfrzwScQddZsttkKfYZJtN/tuq53HwY
-         90eQ==
+        bh=euDpQFiZ1RAaW/+LlG7KHJEwy5w9kMD7b+KEHHzS6hw=;
+        b=P4t01GSBwBuF6wK8/X25kGN/AWhm+HsIKuNw4nDZTRgGJNNlIuy934CghpHqlckPL2
+         j36+dZox0Ut/GmRGTptevh4kVmU0HCAHd1qaWvkTVA8uWAVnA+jI4mK7HVXhey6DK8Xp
+         ludLlIOCgtWnCkYws80YipnRHctpKFGT609uoqwyZJZU20bTMfme7xYnXbuvNY0UQXEO
+         W5zgf/OFHQI1EcUVh6Voojqlhkt7ZDJDdfZlMNjcfEa0oKV3PR01OY3P0lZuj83/N6Vp
+         EeCTcyVam/Dt+hv+eMfwnPg5joi6dDKHLAVsuFI2OKnlQTQy3bL/fvXDuN21g7adY15k
+         +s1A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=NBIn0GFrxtO/4lI4+QkVpvttsLV5tnJTxG6y3LxiZMM=;
-        b=rJzHEQg0XLAxC6kU0+fs7LzXMSrm1gaCxJRt+tnMPtpIj1f/WiOimPQaK+c7rwCBeD
-         mcerwg0heTaQNgVRv9gJgsjgRxSq0+mrPPKAakQuGaGN24BWlxgwKUDUfa1zPmb1TJLl
-         Y3HxdZ0C+NcVHDE69iAxsJvCQtDgZC1d+C7cGgNh0PISzn75uvt/RSOaE1eWBpWSjpGc
-         Tp7MTNENyH85QVlTxS7loS/e5KDb3TV5+HDA/j5r50AaxXrgXp3Am4j8JASVZ2qCyQ2Z
-         N3fKjy8kmZ7JG1boXmLvwbsbVowGpE+hKgM8LBKllpGCmYFCTa0QHAGPg2FnPkd31oJb
-         fc1Q==
-X-Gm-Message-State: AGi0PuZ+ISv+uulCMy3Gk+ONr9mfn7nVakt5TK+0VUuceA0SaDCTC7z6
-        PKa8+yv+t7r4fvYA5UcjASI=
-X-Google-Smtp-Source: APiQypLEK3KUi7Hzkd4Wl1s+j5ijufu6l0qQ2nzxAi9MWxnceM+z0z1m76p7oH/5++eGm4ekV4dZbA==
-X-Received: by 2002:a17:90a:d344:: with SMTP id i4mr14068135pjx.161.1585973955479;
-        Fri, 03 Apr 2020 21:19:15 -0700 (PDT)
+        bh=euDpQFiZ1RAaW/+LlG7KHJEwy5w9kMD7b+KEHHzS6hw=;
+        b=NfdbsQXRlOOVPSpJv3NFXNW5HztgikfLPtJYZb7zu6iC196OlBhH2KQ0HTg61mkQrD
+         mIEQo+IFsSnT2ZA0PHlVKa7gSUoD/aIgnIGg74etgoqahv3maDOetCWNrSLM20sk4Alv
+         Uh00CjxLmhI8/tAS8zrCUnfZLooiJcC1n/92XOhizRF0y0HK4TnqzHO4OtsaIUmUqB17
+         laazEZFvdjeZIXX4iDff1UgkOLrW8Tfp4w0UZYbSybA0rP0FwB3v09omkMjwN7D9mniK
+         dOKccnMHQtI4yGM6iHZcqXb7Fn50z2+iWA/ilCDQXB7QqosDg/pofJQAI06uP7b7u0pr
+         XONw==
+X-Gm-Message-State: AGi0PubUanVqjtk7S5WD72qZ2Bo4/Xsa7wr7GFMo5ZjHpMB6/DOBh7m4
+        owcsHWOQk8mFvJerkgyMTgHP6k5v
+X-Google-Smtp-Source: APiQypKa/6upTr/pEi2tecWTrshow8t42Rqlg3aIj8kBNZz4tDfa4MCBAsOw4Tu0Ep9vOO92TkT1jw==
+X-Received: by 2002:a62:7b4c:: with SMTP id w73mr11798690pfc.115.1585973940895;
+        Fri, 03 Apr 2020 21:19:00 -0700 (PDT)
 Received: from localhost (n112120135125.netvigator.com. [112.120.135.125])
-        by smtp.gmail.com with ESMTPSA id lj14sm6837259pjb.25.2020.04.03.21.19.14
+        by smtp.gmail.com with ESMTPSA id r7sm6918175pfg.38.2020.04.03.21.19.00
         (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Fri, 03 Apr 2020 21:19:15 -0700 (PDT)
+        Fri, 03 Apr 2020 21:19:00 -0700 (PDT)
 From:   Qiujun Huang <hqjagain@gmail.com>
 To:     kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com
 Cc:     davem@davemloft.net, linux-wireless@vger.kernel.org,
         netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
         anenbupt@gmail.com, syzkaller-bugs@googlegroups.com,
         Qiujun Huang <hqjagain@gmail.com>
-Subject: [PATCH 5/5] ath9k: Fix general protection fault in ath9k_hif_usb_rx_cb
-Date:   Sat,  4 Apr 2020 12:18:38 +0800
-Message-Id: <20200404041838.10426-6-hqjagain@gmail.com>
+Subject: [PATCH 1/5] ath9k: Fix use-after-free Read in htc_connect_service
+Date:   Sat,  4 Apr 2020 12:18:34 +0800
+Message-Id: <20200404041838.10426-2-hqjagain@gmail.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200404041838.10426-1-hqjagain@gmail.com>
 References: <20200404041838.10426-1-hqjagain@gmail.com>
@@ -73,24 +73,73 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-In ath9k_hif_usb_rx_cb interface number is assumed to be 0.
-usb_ifnum_to_if(urb->dev, 0)
-But it isn't always true.
+The skb is consumed by htc_send_epid, so it needn't release again.
 
 The case reported by syzbot:
-https://lore.kernel.org/linux-usb/000000000000666c9c05a1c05d12@google.com
-usb 2-1: new high-speed USB device number 2 using dummy_hcd
-usb 2-1: config 1 has an invalid interface number: 2 but max is 0
-usb 2-1: config 1 has no interface number 0
-usb 2-1: New USB device found, idVendor=0cf3, idProduct=9271, bcdDevice=
-1.08
-usb 2-1: New USB device strings: Mfr=1, Product=2, SerialNumber=3
-general protection fault, probably for non-canonical address
-0xdffffc0000000015: 0000 [#1] SMP KASAN
-KASAN: null-ptr-deref in range [0x00000000000000a8-0x00000000000000af]
-CPU: 0 PID: 0 Comm: swapper/0 Not tainted 5.6.0-rc5-syzkaller #0
 
-Call Trace
+https://lore.kernel.org/linux-usb/000000000000590f6b05a1c05d15@google.com
+usb 1-1: ath9k_htc: Firmware ath9k_htc/htc_9271-1.4.0.fw requested
+usb 1-1: ath9k_htc: Transferred FW: ath9k_htc/htc_9271-1.4.0.fw, size:
+51008
+usb 1-1: Service connection timeout for: 256
+==================================================================
+BUG: KASAN: use-after-free in atomic_read
+include/asm-generic/atomic-instrumented.h:26 [inline]
+BUG: KASAN: use-after-free in refcount_read include/linux/refcount.h:134
+[inline]
+BUG: KASAN: use-after-free in skb_unref include/linux/skbuff.h:1042
+[inline]
+BUG: KASAN: use-after-free in kfree_skb+0x32/0x3d0 net/core/skbuff.c:692
+Read of size 4 at addr ffff8881d0957994 by task kworker/1:2/83
+
+Call Trace:
+kfree_skb+0x32/0x3d0 net/core/skbuff.c:692
+htc_connect_service.cold+0xa9/0x109
+drivers/net/wireless/ath/ath9k/htc_hst.c:282
+ath9k_wmi_connect+0xd2/0x1a0 drivers/net/wireless/ath/ath9k/wmi.c:265
+ath9k_init_htc_services.constprop.0+0xb4/0x650
+drivers/net/wireless/ath/ath9k/htc_drv_init.c:146
+ath9k_htc_probe_device+0x25a/0x1d80
+drivers/net/wireless/ath/ath9k/htc_drv_init.c:959
+ath9k_htc_hw_init+0x31/0x60
+drivers/net/wireless/ath/ath9k/htc_hst.c:501
+ath9k_hif_usb_firmware_cb+0x26b/0x500
+drivers/net/wireless/ath/ath9k/hif_usb.c:1187
+request_firmware_work_func+0x126/0x242
+drivers/base/firmware_loader/main.c:976
+process_one_work+0x94b/0x1620 kernel/workqueue.c:2264
+worker_thread+0x96/0xe20 kernel/workqueue.c:2410
+kthread+0x318/0x420 kernel/kthread.c:255
+ret_from_fork+0x24/0x30 arch/x86/entry/entry_64.S:352
+
+Allocated by task 83:
+kmem_cache_alloc_node+0xdc/0x330 mm/slub.c:2814
+__alloc_skb+0xba/0x5a0 net/core/skbuff.c:198
+alloc_skb include/linux/skbuff.h:1081 [inline]
+htc_connect_service+0x2cc/0x840
+drivers/net/wireless/ath/ath9k/htc_hst.c:257
+ath9k_wmi_connect+0xd2/0x1a0 drivers/net/wireless/ath/ath9k/wmi.c:265
+ath9k_init_htc_services.constprop.0+0xb4/0x650
+drivers/net/wireless/ath/ath9k/htc_drv_init.c:146
+ath9k_htc_probe_device+0x25a/0x1d80
+drivers/net/wireless/ath/ath9k/htc_drv_init.c:959
+ath9k_htc_hw_init+0x31/0x60
+drivers/net/wireless/ath/ath9k/htc_hst.c:501
+ath9k_hif_usb_firmware_cb+0x26b/0x500
+drivers/net/wireless/ath/ath9k/hif_usb.c:1187
+request_firmware_work_func+0x126/0x242
+drivers/base/firmware_loader/main.c:976
+process_one_work+0x94b/0x1620 kernel/workqueue.c:2264
+worker_thread+0x96/0xe20 kernel/workqueue.c:2410
+kthread+0x318/0x420 kernel/kthread.c:255
+ret_from_fork+0x24/0x30 arch/x86/entry/entry_64.S:352
+
+Freed by task 0:
+kfree_skb+0x102/0x3d0 net/core/skbuff.c:690
+ath9k_htc_txcompletion_cb+0x1f8/0x2b0
+drivers/net/wireless/ath/ath9k/htc_hst.c:356
+hif_usb_regout_cb+0x10b/0x1b0
+drivers/net/wireless/ath/ath9k/hif_usb.c:90
 __usb_hcd_giveback_urb+0x29a/0x550 drivers/usb/core/hcd.c:1650
 usb_hcd_giveback_urb+0x368/0x420 drivers/usb/core/hcd.c:1716
 dummy_timer+0x1258/0x32ae drivers/usb/gadget/udc/dummy_hcd.c:1966
@@ -100,184 +149,53 @@ __run_timers kernel/time/timer.c:1773 [inline]
 __run_timers kernel/time/timer.c:1740 [inline]
 run_timer_softirq+0x5f9/0x1500 kernel/time/timer.c:1786
 __do_softirq+0x21e/0x950 kernel/softirq.c:292
-invoke_softirq kernel/softirq.c:373 [inline]
-irq_exit+0x178/0x1a0 kernel/softirq.c:413
-exiting_irq arch/x86/include/asm/apic.h:546 [inline]
-smp_apic_timer_interrupt+0x141/0x540 arch/x86/kernel/apic/apic.c:1146
-apic_timer_interrupt+0xf/0x20 arch/x86/entry/entry_64.S:829
 
-Reported-and-tested-by: syzbot+40d5d2e8a4680952f042@syzkaller.appspotmail.com
+Reported-and-tested-by: syzbot+9505af1ae303dabdc646@syzkaller.appspotmail.com
 Signed-off-by: Qiujun Huang <hqjagain@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/hif_usb.c | 48 ++++++++++++++++++------
- drivers/net/wireless/ath/ath9k/hif_usb.h |  5 +++
- 2 files changed, 42 insertions(+), 11 deletions(-)
+ drivers/net/wireless/ath/ath9k/htc_hst.c | 3 ---
+ drivers/net/wireless/ath/ath9k/wmi.c     | 1 -
+ 2 files changed, 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index 6049d3766c64..4ed21dad6a8e 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -643,9 +643,9 @@ static void ath9k_hif_usb_rx_stream(struct hif_device_usb *hif_dev,
+diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.c b/drivers/net/wireless/ath/ath9k/htc_hst.c
+index d091c8ebdcf0..1bf63a4efb4c 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_hst.c
++++ b/drivers/net/wireless/ath/ath9k/htc_hst.c
+@@ -170,7 +170,6 @@ static int htc_config_pipe_credits(struct htc_target *target)
+ 	time_left = wait_for_completion_timeout(&target->cmd_wait, HZ);
+ 	if (!time_left) {
+ 		dev_err(target->dev, "HTC credit config timeout\n");
+-		kfree_skb(skb);
+ 		return -ETIMEDOUT;
+ 	}
  
- static void ath9k_hif_usb_rx_cb(struct urb *urb)
- {
--	struct sk_buff *skb = (struct sk_buff *) urb->context;
--	struct hif_device_usb *hif_dev =
--		usb_get_intfdata(usb_ifnum_to_if(urb->dev, 0));
-+	struct rx_buf *rx_buf = (struct rx_buf *)urb->context;
-+	struct hif_device_usb *hif_dev = rx_buf->hif_dev;
-+	struct sk_buff *skb = rx_buf->skb;
- 	int ret;
+@@ -206,7 +205,6 @@ static int htc_setup_complete(struct htc_target *target)
+ 	time_left = wait_for_completion_timeout(&target->cmd_wait, HZ);
+ 	if (!time_left) {
+ 		dev_err(target->dev, "HTC start timeout\n");
+-		kfree_skb(skb);
+ 		return -ETIMEDOUT;
+ 	}
  
- 	if (!skb)
-@@ -685,14 +685,15 @@ static void ath9k_hif_usb_rx_cb(struct urb *urb)
- 	return;
- free:
- 	kfree_skb(skb);
-+	kfree(rx_buf);
- }
+@@ -279,7 +277,6 @@ int htc_connect_service(struct htc_target *target,
+ 	if (!time_left) {
+ 		dev_err(target->dev, "Service connection timeout for: %d\n",
+ 			service_connreq->service_id);
+-		kfree_skb(skb);
+ 		return -ETIMEDOUT;
+ 	}
  
- static void ath9k_hif_usb_reg_in_cb(struct urb *urb)
- {
--	struct sk_buff *skb = (struct sk_buff *) urb->context;
-+	struct rx_buf *rx_buf = (struct rx_buf *)urb->context;
-+	struct hif_device_usb *hif_dev = rx_buf->hif_dev;
-+	struct sk_buff *skb = rx_buf->skb;
- 	struct sk_buff *nskb;
--	struct hif_device_usb *hif_dev =
--		usb_get_intfdata(usb_ifnum_to_if(urb->dev, 0));
- 	int ret;
- 
- 	if (!skb)
-@@ -750,6 +751,7 @@ static void ath9k_hif_usb_reg_in_cb(struct urb *urb)
- 	return;
- free:
- 	kfree_skb(skb);
-+	kfree(rx_buf);
- 	urb->context = NULL;
- }
- 
-@@ -795,7 +797,7 @@ static int ath9k_hif_usb_alloc_tx_urbs(struct hif_device_usb *hif_dev)
- 	init_usb_anchor(&hif_dev->mgmt_submitted);
- 
- 	for (i = 0; i < MAX_TX_URB_NUM; i++) {
--		tx_buf = kzalloc(sizeof(struct tx_buf), GFP_KERNEL);
-+		tx_buf = kzalloc(sizeof(*tx_buf), GFP_KERNEL);
- 		if (!tx_buf)
- 			goto err;
- 
-@@ -832,8 +834,9 @@ static void ath9k_hif_usb_dealloc_rx_urbs(struct hif_device_usb *hif_dev)
- 
- static int ath9k_hif_usb_alloc_rx_urbs(struct hif_device_usb *hif_dev)
- {
--	struct urb *urb = NULL;
-+	struct rx_buf *rx_buf = NULL;
- 	struct sk_buff *skb = NULL;
-+	struct urb *urb = NULL;
- 	int i, ret;
- 
- 	init_usb_anchor(&hif_dev->rx_submitted);
-@@ -841,6 +844,12 @@ static int ath9k_hif_usb_alloc_rx_urbs(struct hif_device_usb *hif_dev)
- 
- 	for (i = 0; i < MAX_RX_URB_NUM; i++) {
- 
-+		rx_buf = kzalloc(sizeof(*rx_buf), GFP_KERNEL);
-+		if (!rx_buf) {
-+			ret = -ENOMEM;
-+			goto err_rxb;
-+		}
-+
- 		/* Allocate URB */
- 		urb = usb_alloc_urb(0, GFP_KERNEL);
- 		if (urb == NULL) {
-@@ -855,11 +864,14 @@ static int ath9k_hif_usb_alloc_rx_urbs(struct hif_device_usb *hif_dev)
- 			goto err_skb;
- 		}
- 
-+		rx_buf->hif_dev = hif_dev;
-+		rx_buf->skb = skb;
-+
- 		usb_fill_bulk_urb(urb, hif_dev->udev,
- 				  usb_rcvbulkpipe(hif_dev->udev,
- 						  USB_WLAN_RX_PIPE),
- 				  skb->data, MAX_RX_BUF_SIZE,
--				  ath9k_hif_usb_rx_cb, skb);
-+				  ath9k_hif_usb_rx_cb, rx_buf);
- 
- 		/* Anchor URB */
- 		usb_anchor_urb(urb, &hif_dev->rx_submitted);
-@@ -885,6 +897,8 @@ static int ath9k_hif_usb_alloc_rx_urbs(struct hif_device_usb *hif_dev)
- err_skb:
- 	usb_free_urb(urb);
- err_urb:
-+	kfree(rx_buf);
-+err_rxb:
- 	ath9k_hif_usb_dealloc_rx_urbs(hif_dev);
- 	return ret;
- }
-@@ -896,14 +910,21 @@ static void ath9k_hif_usb_dealloc_reg_in_urbs(struct hif_device_usb *hif_dev)
- 
- static int ath9k_hif_usb_alloc_reg_in_urbs(struct hif_device_usb *hif_dev)
- {
--	struct urb *urb = NULL;
-+	struct rx_buf *rx_buf = NULL;
- 	struct sk_buff *skb = NULL;
-+	struct urb *urb = NULL;
- 	int i, ret;
- 
- 	init_usb_anchor(&hif_dev->reg_in_submitted);
- 
- 	for (i = 0; i < MAX_REG_IN_URB_NUM; i++) {
- 
-+		rx_buf = kzalloc(sizeof(*rx_buf), GFP_KERNEL);
-+		if (!rx_buf) {
-+			ret = -ENOMEM;
-+			goto err_rxb;
-+		}
-+
- 		/* Allocate URB */
- 		urb = usb_alloc_urb(0, GFP_KERNEL);
- 		if (urb == NULL) {
-@@ -918,11 +939,14 @@ static int ath9k_hif_usb_alloc_reg_in_urbs(struct hif_device_usb *hif_dev)
- 			goto err_skb;
- 		}
- 
-+		rx_buf->hif_dev = hif_dev;
-+		rx_buf->skb = skb;
-+
- 		usb_fill_int_urb(urb, hif_dev->udev,
- 				  usb_rcvintpipe(hif_dev->udev,
- 						  USB_REG_IN_PIPE),
- 				  skb->data, MAX_REG_IN_BUF_SIZE,
--				  ath9k_hif_usb_reg_in_cb, skb, 1);
-+				  ath9k_hif_usb_reg_in_cb, rx_buf, 1);
- 
- 		/* Anchor URB */
- 		usb_anchor_urb(urb, &hif_dev->reg_in_submitted);
-@@ -948,6 +972,8 @@ static int ath9k_hif_usb_alloc_reg_in_urbs(struct hif_device_usb *hif_dev)
- err_skb:
- 	usb_free_urb(urb);
- err_urb:
-+	kfree(rx_buf);
-+err_rxb:
- 	ath9k_hif_usb_dealloc_reg_in_urbs(hif_dev);
- 	return ret;
- }
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.h b/drivers/net/wireless/ath/ath9k/hif_usb.h
-index a94e7e1c86e9..5985aa15ca93 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.h
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.h
-@@ -86,6 +86,11 @@ struct tx_buf {
- 	struct list_head list;
- };
- 
-+struct rx_buf {
-+	struct sk_buff *skb;
-+	struct hif_device_usb *hif_dev;
-+};
-+
- #define HIF_USB_TX_STOP  BIT(0)
- #define HIF_USB_TX_FLUSH BIT(1)
+diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
+index cdc146091194..d1f6710ca63b 100644
+--- a/drivers/net/wireless/ath/ath9k/wmi.c
++++ b/drivers/net/wireless/ath/ath9k/wmi.c
+@@ -336,7 +336,6 @@ int ath9k_wmi_cmd(struct wmi *wmi, enum wmi_cmd_id cmd_id,
+ 		ath_dbg(common, WMI, "Timeout waiting for WMI command: %s\n",
+ 			wmi_cmd_to_name(cmd_id));
+ 		mutex_unlock(&wmi->op_mutex);
+-		kfree_skb(skb);
+ 		return -ETIMEDOUT;
+ 	}
  
 -- 
 2.17.1
