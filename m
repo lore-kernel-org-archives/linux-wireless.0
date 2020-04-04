@@ -2,201 +2,129 @@ Return-Path: <SRS0=gxms=5U=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D1BDC2BA1E
-	for <linux-wireless@archiver.kernel.org>; Sat,  4 Apr 2020 04:19:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D56EBC2BA16
+	for <linux-wireless@archiver.kernel.org>; Sat,  4 Apr 2020 10:05:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DF22F2070E
-	for <linux-wireless@archiver.kernel.org>; Sat,  4 Apr 2020 04:19:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A0B8D206F5
+	for <linux-wireless@archiver.kernel.org>; Sat,  4 Apr 2020 10:05:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="P4t01GSB"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="Kvgy2L+S"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726077AbgDDETD (ORCPT
+        id S1726132AbgDDKFm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 4 Apr 2020 00:19:03 -0400
-Received: from mail-pf1-f195.google.com ([209.85.210.195]:34031 "EHLO
-        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725468AbgDDETD (ORCPT
+        Sat, 4 Apr 2020 06:05:42 -0400
+Received: from mail27.static.mailgun.info ([104.130.122.27]:39935 "EHLO
+        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726019AbgDDKFm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 4 Apr 2020 00:19:03 -0400
-Received: by mail-pf1-f195.google.com with SMTP id v23so1740778pfm.1;
-        Fri, 03 Apr 2020 21:19:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=euDpQFiZ1RAaW/+LlG7KHJEwy5w9kMD7b+KEHHzS6hw=;
-        b=P4t01GSBwBuF6wK8/X25kGN/AWhm+HsIKuNw4nDZTRgGJNNlIuy934CghpHqlckPL2
-         j36+dZox0Ut/GmRGTptevh4kVmU0HCAHd1qaWvkTVA8uWAVnA+jI4mK7HVXhey6DK8Xp
-         ludLlIOCgtWnCkYws80YipnRHctpKFGT609uoqwyZJZU20bTMfme7xYnXbuvNY0UQXEO
-         W5zgf/OFHQI1EcUVh6Voojqlhkt7ZDJDdfZlMNjcfEa0oKV3PR01OY3P0lZuj83/N6Vp
-         EeCTcyVam/Dt+hv+eMfwnPg5joi6dDKHLAVsuFI2OKnlQTQy3bL/fvXDuN21g7adY15k
-         +s1A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=euDpQFiZ1RAaW/+LlG7KHJEwy5w9kMD7b+KEHHzS6hw=;
-        b=NfdbsQXRlOOVPSpJv3NFXNW5HztgikfLPtJYZb7zu6iC196OlBhH2KQ0HTg61mkQrD
-         mIEQo+IFsSnT2ZA0PHlVKa7gSUoD/aIgnIGg74etgoqahv3maDOetCWNrSLM20sk4Alv
-         Uh00CjxLmhI8/tAS8zrCUnfZLooiJcC1n/92XOhizRF0y0HK4TnqzHO4OtsaIUmUqB17
-         laazEZFvdjeZIXX4iDff1UgkOLrW8Tfp4w0UZYbSybA0rP0FwB3v09omkMjwN7D9mniK
-         dOKccnMHQtI4yGM6iHZcqXb7Fn50z2+iWA/ilCDQXB7QqosDg/pofJQAI06uP7b7u0pr
-         XONw==
-X-Gm-Message-State: AGi0PubUanVqjtk7S5WD72qZ2Bo4/Xsa7wr7GFMo5ZjHpMB6/DOBh7m4
-        owcsHWOQk8mFvJerkgyMTgHP6k5v
-X-Google-Smtp-Source: APiQypKa/6upTr/pEi2tecWTrshow8t42Rqlg3aIj8kBNZz4tDfa4MCBAsOw4Tu0Ep9vOO92TkT1jw==
-X-Received: by 2002:a62:7b4c:: with SMTP id w73mr11798690pfc.115.1585973940895;
-        Fri, 03 Apr 2020 21:19:00 -0700 (PDT)
-Received: from localhost (n112120135125.netvigator.com. [112.120.135.125])
-        by smtp.gmail.com with ESMTPSA id r7sm6918175pfg.38.2020.04.03.21.19.00
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Fri, 03 Apr 2020 21:19:00 -0700 (PDT)
-From:   Qiujun Huang <hqjagain@gmail.com>
-To:     kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com
-Cc:     davem@davemloft.net, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        anenbupt@gmail.com, syzkaller-bugs@googlegroups.com,
-        Qiujun Huang <hqjagain@gmail.com>
-Subject: [PATCH 1/5] ath9k: Fix use-after-free Read in htc_connect_service
-Date:   Sat,  4 Apr 2020 12:18:34 +0800
-Message-Id: <20200404041838.10426-2-hqjagain@gmail.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20200404041838.10426-1-hqjagain@gmail.com>
-References: <20200404041838.10426-1-hqjagain@gmail.com>
+        Sat, 4 Apr 2020 06:05:42 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1585994742; h=Content-Type: MIME-Version: Message-ID:
+ In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
+ bh=3GAnmkswPjwBSgBCS22g329FoV7EMVAnRPDSd8PlgYE=; b=Kvgy2L+SH1EO0KY3I7jcCvnIQgaoGhL7+4SyWY2hpgGt1fPIpblik1wKFSPk9VilPEWOCtXR
+ MbBKWfACy/cQSZkOZLdYQnSd3gPN5vPclCjPLeDmxw7M24P2M/IOYSe2HemrxfMFaQH/gX7P
+ Lznbc5eeKl20oLdhmUz5H56aut4=
+X-Mailgun-Sending-Ip: 104.130.122.27
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
+ by mxa.mailgun.org with ESMTP id 5e885bf5.7f509e960458-smtp-out-n02;
+ Sat, 04 Apr 2020 10:05:41 -0000 (UTC)
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 6946FC433BA; Sat,  4 Apr 2020 10:05:41 +0000 (UTC)
+Received: from tynnyri.adurom.net (tynnyri.adurom.net [51.15.11.48])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 628B7C433F2;
+        Sat,  4 Apr 2020 10:05:39 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 628B7C433F2
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     George Spelvin <lkml@SDF.ORG>
+Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
+        devel@driverdev.osuosl.org, Ajay.Kathat@microchip.com,
+        gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
+        Adham.Abozaeid@microchip.com, johannes@sipsolutions.net
+Subject: Re: [PATCH v3] staging: wilc1000: Use crc7 in lib/ rather than a private copy
+References: <20200326152251.19094-1-ajay.kathat@microchip.com>
+        <20200402082745.GG2001@kadam> <20200402153034.GB2013@SDF.ORG>
+        <20200403091029.GC2001@kadam> <20200403234028.GA11944@SDF.ORG>
+Date:   Sat, 04 Apr 2020 13:05:36 +0300
+In-Reply-To: <20200403234028.GA11944@SDF.ORG> (George Spelvin's message of
+        "Fri, 3 Apr 2020 23:40:28 +0000")
+Message-ID: <87k12vo9an.fsf@tynnyri.adurom.net>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The skb is consumed by htc_send_epid, so it needn't release again.
+George Spelvin <lkml@SDF.ORG> writes:
 
-The case reported by syzbot:
+> On Fri, Apr 03, 2020 at 12:10:29PM +0300, Dan Carpenter wrote:
+>> On Thu, Apr 02, 2020 at 03:30:34PM +0000, George Spelvin wrote:
+>> > On Thu, Apr 02, 2020 at 11:27:45AM +0300, Dan Carpenter wrote:
+>> > > I don't know how this patch made it through two versions without anyone
+>> > > complaining that this paragraph should be done as a separate patch...
+>> > 
+>> > I often fold comment (and spacing/formatting) patches in to a main
+>> > patch, when touching adjacent code anyway and it doesn't cause
+>> > distracting clutter.
+>> > 
+>> > This seemed like such a case, which is why I submitted it as one.
+>> > But it's a bit of style thing.
+>> > 
+>> 
+>> We're super strict in Staging.  :P  Greg is more strict than I am.
+>
+> Okay, but it's my fault, not his.
+>
+>>> This should have you Signed-off-by.  The Reviewed-by is kind of assumed
+>>>> so you can drop that bit.  But everyone who touches a patch needs to
+>>>> add their signed off by.
+>>> 
+>>> Er... all he did was add "staging: " to the front of the title.
+>>> 
+>>> That's not a change to the code at all, and as trivial a change
+>>> to the commit message as adding "Reviewed-by:" to the end.
+>>> We don't need S-o-b for such things or we'd end up in a horrible
+>>> infinite recursion.
+>> 
+>> You've misunderstood.  He sent the email so he has to add his
+>> Signed-off-by.  It's not at all related to changing anything in the
+>> patch.  That's how sign offs work.
+>
+> Looking at my commits (just because I remember how they went in),
+> you seem to be right, but damn, submitting-patches.rst could be
+> clearer on the subject.
+>
+> I understand that it's addressed more to patch authors than
+> maintainers forwarding them, but I've read that thing a dozen times,
+> and the description of S-o-b always seemed to be about copyright.
+>
+> So I had assumed that edits which were below the de minimus standard
+> of copyright didn't need a separate S-o-b.
+>
+> Am I right that there should be an S-o-b from everyone from the
+> patch author to the patch committer (as recorded in git)?
 
-https://lore.kernel.org/linux-usb/000000000000590f6b05a1c05d15@google.com
-usb 1-1: ath9k_htc: Firmware ath9k_htc/htc_9271-1.4.0.fw requested
-usb 1-1: ath9k_htc: Transferred FW: ath9k_htc/htc_9271-1.4.0.fw, size:
-51008
-usb 1-1: Service connection timeout for: 256
-==================================================================
-BUG: KASAN: use-after-free in atomic_read
-include/asm-generic/atomic-instrumented.h:26 [inline]
-BUG: KASAN: use-after-free in refcount_read include/linux/refcount.h:134
-[inline]
-BUG: KASAN: use-after-free in skb_unref include/linux/skbuff.h:1042
-[inline]
-BUG: KASAN: use-after-free in kfree_skb+0x32/0x3d0 net/core/skbuff.c:692
-Read of size 4 at addr ffff8881d0957994 by task kworker/1:2/83
+Yes, everyone either modifying or distributing (=submitting) the patch
+should add their s-o-b.
 
-Call Trace:
-kfree_skb+0x32/0x3d0 net/core/skbuff.c:692
-htc_connect_service.cold+0xa9/0x109
-drivers/net/wireless/ath/ath9k/htc_hst.c:282
-ath9k_wmi_connect+0xd2/0x1a0 drivers/net/wireless/ath/ath9k/wmi.c:265
-ath9k_init_htc_services.constprop.0+0xb4/0x650
-drivers/net/wireless/ath/ath9k/htc_drv_init.c:146
-ath9k_htc_probe_device+0x25a/0x1d80
-drivers/net/wireless/ath/ath9k/htc_drv_init.c:959
-ath9k_htc_hw_init+0x31/0x60
-drivers/net/wireless/ath/ath9k/htc_hst.c:501
-ath9k_hif_usb_firmware_cb+0x26b/0x500
-drivers/net/wireless/ath/ath9k/hif_usb.c:1187
-request_firmware_work_func+0x126/0x242
-drivers/base/firmware_loader/main.c:976
-process_one_work+0x94b/0x1620 kernel/workqueue.c:2264
-worker_thread+0x96/0xe20 kernel/workqueue.c:2410
-kthread+0x318/0x420 kernel/kthread.c:255
-ret_from_fork+0x24/0x30 arch/x86/entry/entry_64.S:352
+> And the one exception is that we don't need S-o-b for git pulls after
+> that, because the merge commits record the information?
 
-Allocated by task 83:
-kmem_cache_alloc_node+0xdc/0x330 mm/slub.c:2814
-__alloc_skb+0xba/0x5a0 net/core/skbuff.c:198
-alloc_skb include/linux/skbuff.h:1081 [inline]
-htc_connect_service+0x2cc/0x840
-drivers/net/wireless/ath/ath9k/htc_hst.c:257
-ath9k_wmi_connect+0xd2/0x1a0 drivers/net/wireless/ath/ath9k/wmi.c:265
-ath9k_init_htc_services.constprop.0+0xb4/0x650
-drivers/net/wireless/ath/ath9k/htc_drv_init.c:146
-ath9k_htc_probe_device+0x25a/0x1d80
-drivers/net/wireless/ath/ath9k/htc_drv_init.c:959
-ath9k_htc_hw_init+0x31/0x60
-drivers/net/wireless/ath/ath9k/htc_hst.c:501
-ath9k_hif_usb_firmware_cb+0x26b/0x500
-drivers/net/wireless/ath/ath9k/hif_usb.c:1187
-request_firmware_work_func+0x126/0x242
-drivers/base/firmware_loader/main.c:976
-process_one_work+0x94b/0x1620 kernel/workqueue.c:2264
-worker_thread+0x96/0xe20 kernel/workqueue.c:2410
-kthread+0x318/0x420 kernel/kthread.c:255
-ret_from_fork+0x24/0x30 arch/x86/entry/entry_64.S:352
+Correct. When you do a git pull you are pulling the commits without any
+modification, so technically it's not even possible to add the s-o-b
+lines to the commits you are pulling. Modifying the commit logs would
+need a rebase and then it not would be a normal git pull anymore.
 
-Freed by task 0:
-kfree_skb+0x102/0x3d0 net/core/skbuff.c:690
-ath9k_htc_txcompletion_cb+0x1f8/0x2b0
-drivers/net/wireless/ath/ath9k/htc_hst.c:356
-hif_usb_regout_cb+0x10b/0x1b0
-drivers/net/wireless/ath/ath9k/hif_usb.c:90
-__usb_hcd_giveback_urb+0x29a/0x550 drivers/usb/core/hcd.c:1650
-usb_hcd_giveback_urb+0x368/0x420 drivers/usb/core/hcd.c:1716
-dummy_timer+0x1258/0x32ae drivers/usb/gadget/udc/dummy_hcd.c:1966
-call_timer_fn+0x195/0x6f0 kernel/time/timer.c:1404
-expire_timers kernel/time/timer.c:1449 [inline]
-__run_timers kernel/time/timer.c:1773 [inline]
-__run_timers kernel/time/timer.c:1740 [inline]
-run_timer_softirq+0x5f9/0x1500 kernel/time/timer.c:1786
-__do_softirq+0x21e/0x950 kernel/softirq.c:292
-
-Reported-and-tested-by: syzbot+9505af1ae303dabdc646@syzkaller.appspotmail.com
-Signed-off-by: Qiujun Huang <hqjagain@gmail.com>
----
- drivers/net/wireless/ath/ath9k/htc_hst.c | 3 ---
- drivers/net/wireless/ath/ath9k/wmi.c     | 1 -
- 2 files changed, 4 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.c b/drivers/net/wireless/ath/ath9k/htc_hst.c
-index d091c8ebdcf0..1bf63a4efb4c 100644
---- a/drivers/net/wireless/ath/ath9k/htc_hst.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_hst.c
-@@ -170,7 +170,6 @@ static int htc_config_pipe_credits(struct htc_target *target)
- 	time_left = wait_for_completion_timeout(&target->cmd_wait, HZ);
- 	if (!time_left) {
- 		dev_err(target->dev, "HTC credit config timeout\n");
--		kfree_skb(skb);
- 		return -ETIMEDOUT;
- 	}
- 
-@@ -206,7 +205,6 @@ static int htc_setup_complete(struct htc_target *target)
- 	time_left = wait_for_completion_timeout(&target->cmd_wait, HZ);
- 	if (!time_left) {
- 		dev_err(target->dev, "HTC start timeout\n");
--		kfree_skb(skb);
- 		return -ETIMEDOUT;
- 	}
- 
-@@ -279,7 +277,6 @@ int htc_connect_service(struct htc_target *target,
- 	if (!time_left) {
- 		dev_err(target->dev, "Service connection timeout for: %d\n",
- 			service_connreq->service_id);
--		kfree_skb(skb);
- 		return -ETIMEDOUT;
- 	}
- 
-diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
-index cdc146091194..d1f6710ca63b 100644
---- a/drivers/net/wireless/ath/ath9k/wmi.c
-+++ b/drivers/net/wireless/ath/ath9k/wmi.c
-@@ -336,7 +336,6 @@ int ath9k_wmi_cmd(struct wmi *wmi, enum wmi_cmd_id cmd_id,
- 		ath_dbg(common, WMI, "Timeout waiting for WMI command: %s\n",
- 			wmi_cmd_to_name(cmd_id));
- 		mutex_unlock(&wmi->op_mutex);
--		kfree_skb(skb);
- 		return -ETIMEDOUT;
- 	}
- 
 -- 
-2.17.1
-
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
