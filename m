@@ -7,46 +7,44 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EFF83C2BA2B
-	for <linux-wireless@archiver.kernel.org>; Mon,  6 Apr 2020 12:05:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6388C2BA19
+	for <linux-wireless@archiver.kernel.org>; Mon,  6 Apr 2020 12:05:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BD579208E4
-	for <linux-wireless@archiver.kernel.org>; Mon,  6 Apr 2020 12:05:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8F008208E4
+	for <linux-wireless@archiver.kernel.org>; Mon,  6 Apr 2020 12:05:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="X5PhHe3J"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="NKrsGpqL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727881AbgDFMFC (ORCPT
+        id S1727848AbgDFMFC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Mon, 6 Apr 2020 08:05:02 -0400
-Received: from nbd.name ([46.4.11.11]:35486 "EHLO nbd.name"
+Received: from nbd.name ([46.4.11.11]:35488 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727837AbgDFMFB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S1727614AbgDFMFB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Mon, 6 Apr 2020 08:05:01 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
-        Message-Id:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+         s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-Id:Date:Subject
+        :To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:Content-Description:
+        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
+        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
         List-Post:List-Owner:List-Archive;
-        bh=EiyfoY+LzndWncjUsp/QkyR+kHtde9ADtmPh5GRnAtQ=; b=X5PhHe3JYZZuRtBqtofHG0Jqfk
-        tAkBqDRJjSaImO+kSIDj+UYg7CFc37euQPMwYszOppbkM7Ae9GNc8TX+v+53REyD3BrlBDNioMWLj
-        fTitc+N6640DXhjT/mNyf3pF49D52h1SOrbhX9/rIxNFXc2XoCEyxzvr7mNeodWVz3Mg=;
+        bh=dyMsA4uHqgq9WTBI6tCsEhKaBVf+ETwutw6Dp+JJp5g=; b=NKrsGpqLQ8dnh4WicKninBNiMh
+        dJXqkWNkU2LWaSqsnopXlogFiOZRQkJyAJTsYIoRmeGl9fjlKGMKX6yoKIpdwklGBpUfBDO5jNZeo
+        k0gSIuc4ElE0GGhTXIhv/+AC3LvPaWuE5kmyr2KVPPCPWyHgg2uX8auvr1H3PjKNVqZ4=;
 Received: from [80.255.7.105] (helo=maeck.local)
         by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.89)
         (envelope-from <nbd@nbd.name>)
-        id 1jLQUu-0008NR-Nb
+        id 1jLQUu-0008NQ-NW
         for linux-wireless@vger.kernel.org; Mon, 06 Apr 2020 14:05:00 +0200
 Received: by maeck.local (Postfix, from userid 501)
-        id F0F2281E97B2; Mon,  6 Apr 2020 14:04:59 +0200 (CEST)
+        id EE4F081E97B1; Mon,  6 Apr 2020 14:04:59 +0200 (CEST)
 From:   Felix Fietkau <nbd@nbd.name>
 To:     linux-wireless@vger.kernel.org
-Subject: [PATCH 2/2] mt76: mt76x2: disable merge of OTP ROM data by default
-Date:   Mon,  6 Apr 2020 14:04:59 +0200
-Message-Id: <20200406120459.61713-2-nbd@nbd.name>
+Subject: [PATCH 1/2] mt76: mt7603: disable merge of OTP ROM data by default
+Date:   Mon,  6 Apr 2020 14:04:58 +0200
+Message-Id: <20200406120459.61713-1-nbd@nbd.name>
 X-Mailer: git-send-email 2.24.0
-In-Reply-To: <20200406120459.61713-1-nbd@nbd.name>
-References: <20200406120459.61713-1-nbd@nbd.name>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -61,37 +59,33 @@ boards.
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/mediatek/mt76/mt76x2/eeprom.c | 5 +++++
+ drivers/net/wireless/mediatek/mt76/mt7603/eeprom.c | 5 +++++
  1 file changed, 5 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x2/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt76x2/eeprom.c
-index 4a748a6f0ce2..410ffce3baff 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x2/eeprom.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x2/eeprom.c
-@@ -4,6 +4,7 @@
-  */
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt7603/eeprom.c
+index 2b6a4d8a8dc7..3ee06e2577b8 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7603/eeprom.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7603/eeprom.c
+@@ -1,5 +1,6 @@
+ // SPDX-License-Identifier: ISC
  
- #include <linux/module.h>
 +#include <linux/of.h>
- #include <asm/unaligned.h>
- #include "mt76x2.h"
+ #include "mt7603.h"
  #include "eeprom.h"
-@@ -76,6 +77,7 @@ mt76x2_apply_cal_free_data(struct mt76x02_dev *dev, u8 *efuse)
- 		MT_EE_RF_5G_GRP4_5_RX_HIGH_GAIN,
- 		MT_EE_RF_5G_GRP4_5_RX_HIGH_GAIN + 1,
+ 
+@@ -100,10 +101,14 @@ mt7603_apply_cal_free_data(struct mt7603_dev *dev, u8 *efuse)
+ 		MT_EE_TX_POWER_1_START_2G,
+ 		MT_EE_TX_POWER_1_START_2G + 1,
  	};
 +	struct device_node *np = dev->mt76.dev->of_node;
  	u8 *eeprom = dev->mt76.eeprom.data;
- 	u8 prev_grp0[4] = {
- 		eeprom[MT_EE_TX_POWER_0_START_5G],
-@@ -86,6 +88,9 @@ mt76x2_apply_cal_free_data(struct mt76x02_dev *dev, u8 *efuse)
- 	u16 val;
+ 	int n = ARRAY_SIZE(cal_free_bytes);
  	int i;
  
 +	if (!np || !of_property_read_bool(np, "mediatek,eeprom-merge-otp"))
 +		return;
 +
- 	if (!mt76x2_has_cal_free_data(dev, efuse))
+ 	if (!mt7603_has_cal_free_data(dev, efuse))
  		return;
  
 -- 
