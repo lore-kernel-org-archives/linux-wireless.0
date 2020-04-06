@@ -4,49 +4,47 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C6C56C2BA19
-	for <linux-wireless@archiver.kernel.org>; Mon,  6 Apr 2020 10:22:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82F3CC2BA1E
+	for <linux-wireless@archiver.kernel.org>; Mon,  6 Apr 2020 10:22:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 119FC2054F
-	for <linux-wireless@archiver.kernel.org>; Mon,  6 Apr 2020 10:22:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4BB182072A
+	for <linux-wireless@archiver.kernel.org>; Mon,  6 Apr 2020 10:22:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="VhUOJt1x"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="XmJk/5fG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727028AbgDFKWH (ORCPT
+        id S1727051AbgDFKWI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 6 Apr 2020 06:22:07 -0400
-Received: from nbd.name ([46.4.11.11]:57842 "EHLO nbd.name"
+        Mon, 6 Apr 2020 06:22:08 -0400
+Received: from nbd.name ([46.4.11.11]:57840 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726675AbgDFKWH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S1726890AbgDFKWH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Mon, 6 Apr 2020 06:22:07 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
-        Message-Id:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+         s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-Id:Date:Subject
+        :Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:Content-Description:
+        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
+        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
         List-Post:List-Owner:List-Archive;
-        bh=gSUMq6rvkPPyxjf1Y8nxReIv4JswMYaw3La2yp/B9Is=; b=VhUOJt1x2a0MyVDPhnvuigaMe1
-        RyUjx+OjlXLO5ujK179OGZE7fLHbT7uxawa/9mZas3dkOximt1FHdXwtO2HrlZeG9deTtdhBxSYuz
-        NXUAzGp7BCLPzJNjVk0wbHV/WcIRuF/HmeQ41o5uUd9dvWAAiFFR+HLeF8JPDE8MdhTY=;
+        bh=stOOqEyUv4RRmS97Ea4UT3risNNN7iloTEIIRHO3zB8=; b=XmJk/5fGejWRehnHl336UopYCH
+        b17zhp0pc/kdiNSg46hAW5Twz4KRS+9uY1nO7XOE+Mzfe9TiSXHVpx20EprstEBFmuQncFzxWEYjh
+        p8mXKFfejQvNCVWW+1hVul7Eghj4NpJj88pGceTKElN0F/vb1+q85PcPDOJktG1gMFlw=;
 Received: from [80.255.7.105] (helo=maeck.local)
         by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.89)
         (envelope-from <nbd@nbd.name>)
-        id 1jLOtJ-0001ga-OP
-        for linux-wireless@vger.kernel.org; Mon, 06 Apr 2020 12:22:05 +0200
+        id 1jLOtJ-0001gX-Ng; Mon, 06 Apr 2020 12:22:05 +0200
 Received: by maeck.local (Postfix, from userid 501)
-        id 97DF881E8915; Mon,  6 Apr 2020 12:22:03 +0200 (CEST)
+        id 9DE0C81E8917; Mon,  6 Apr 2020 12:22:03 +0200 (CEST)
 From:   Felix Fietkau <nbd@nbd.name>
 To:     linux-wireless@vger.kernel.org
-Subject: [PATCH 2/4] mt76: mt7615: disable merge of OTP ROM data by default
-Date:   Mon,  6 Apr 2020 12:22:01 +0200
-Message-Id: <20200406102203.54450-2-nbd@nbd.name>
+Cc:     devicetree@vger.kernel.org
+Subject: [PATCH 1/4] dt-bindings: net: wireless: mt76: document mediatek,eeprom-merge-otp property
+Date:   Mon,  6 Apr 2020 12:22:00 +0200
+Message-Id: <20200406102203.54450-1-nbd@nbd.name>
 X-Mailer: git-send-email 2.24.0
-In-Reply-To: <20200406102203.54450-1-nbd@nbd.name>
-References: <20200406102203.54450-1-nbd@nbd.name>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -54,40 +52,27 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The reference driver does not seem to enable it by default, only under certain
-conditions, e.g. when a .bin file is loaded.
-Make it opt-in via a device tree property for now, in case it is needed on some
-boards.
+It is used to enable merging of Flash EEPROM data with OTP ROM calibration.
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ .../devicetree/bindings/net/wireless/mediatek,mt76.txt         | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
-index 23ed20553de2..34c33d23d79f 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
-@@ -5,6 +5,7 @@
-  *         Felix Fietkau <nbd@nbd.name>
-  */
+diff --git a/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
+index 3a76d8faaaed..ab7e7a00e534 100644
+--- a/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
++++ b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
+@@ -25,6 +25,9 @@ Optional properties:
+ - mediatek,mtd-eeprom: Specify a MTD partition + offset containing EEPROM data
+ - big-endian: if the radio eeprom partition is written in big-endian, specify
+   this property
++- mediatek,eeprom-merge-otp: Merge EEPROM data with OTP data. Can be used on
++  boards where the flash calibration data is generic and specific calibration
++  data should be pulled from the OTP ROM
  
-+#include <linux/of.h>
- #include "mt7615.h"
- #include "eeprom.h"
- 
-@@ -255,6 +256,11 @@ static void mt7622_apply_cal_free_data(struct mt7615_dev *dev)
- 
- static void mt7615_cal_free_data(struct mt7615_dev *dev)
- {
-+	struct device_node *np = dev->mt76.dev->of_node;
-+
-+	if (!np || !of_property_read_bool(np, "mediatek,eeprom-merge-otp"))
-+		return;
-+
- 	switch (mt76_chip(&dev->mt76)) {
- 	case 0x7622:
- 		mt7622_apply_cal_free_data(dev);
+ The MAC address can as well be set with corresponding optional properties
+ defined in net/ethernet.txt.
 -- 
 2.24.0
 
