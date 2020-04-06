@@ -2,92 +2,93 @@ Return-Path: <SRS0=FAUf=5W=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6388C2BA19
-	for <linux-wireless@archiver.kernel.org>; Mon,  6 Apr 2020 12:05:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 319C7C2BA19
+	for <linux-wireless@archiver.kernel.org>; Mon,  6 Apr 2020 12:17:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8F008208E4
-	for <linux-wireless@archiver.kernel.org>; Mon,  6 Apr 2020 12:05:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 03C88208E4
+	for <linux-wireless@archiver.kernel.org>; Mon,  6 Apr 2020 12:17:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="NKrsGpqL"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="JKNc4Hfc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727848AbgDFMFC (ORCPT
+        id S1727857AbgDFMRI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 6 Apr 2020 08:05:02 -0400
-Received: from nbd.name ([46.4.11.11]:35488 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727614AbgDFMFB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Apr 2020 08:05:01 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-Id:Date:Subject
-        :To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:Content-Description:
-        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=dyMsA4uHqgq9WTBI6tCsEhKaBVf+ETwutw6Dp+JJp5g=; b=NKrsGpqLQ8dnh4WicKninBNiMh
-        dJXqkWNkU2LWaSqsnopXlogFiOZRQkJyAJTsYIoRmeGl9fjlKGMKX6yoKIpdwklGBpUfBDO5jNZeo
-        k0gSIuc4ElE0GGhTXIhv/+AC3LvPaWuE5kmyr2KVPPCPWyHgg2uX8auvr1H3PjKNVqZ4=;
-Received: from [80.255.7.105] (helo=maeck.local)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.89)
-        (envelope-from <nbd@nbd.name>)
-        id 1jLQUu-0008NQ-NW
-        for linux-wireless@vger.kernel.org; Mon, 06 Apr 2020 14:05:00 +0200
-Received: by maeck.local (Postfix, from userid 501)
-        id EE4F081E97B1; Mon,  6 Apr 2020 14:04:59 +0200 (CEST)
-From:   Felix Fietkau <nbd@nbd.name>
-To:     linux-wireless@vger.kernel.org
-Subject: [PATCH 1/2] mt76: mt7603: disable merge of OTP ROM data by default
-Date:   Mon,  6 Apr 2020 14:04:58 +0200
-Message-Id: <20200406120459.61713-1-nbd@nbd.name>
-X-Mailer: git-send-email 2.24.0
+        Mon, 6 Apr 2020 08:17:08 -0400
+Received: from mail27.static.mailgun.info ([104.130.122.27]:36171 "EHLO
+        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727614AbgDFMRI (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 6 Apr 2020 08:17:08 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1586175428; h=Content-Type: MIME-Version: Message-ID:
+ In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
+ bh=hPaukekXx0S9g5DYk6RxxkIC0V+FVGiqXWwaVk4VaVM=; b=JKNc4HfcCRCBuYa9IVmPy43GWBtexiWexf45vP7EoI1UdRcvxp3yoYb237qvuHzd6omPhoiw
+ +hy+mtBouXyEqK0bLXFXs9yC+PV92OksT9JcLZ1/L6HQqUyzFd/ITrfCbaXRtgfh/dsYVkiZ
+ jK0nCCvEj/NBVO0nBMVACRSNkHA=
+X-Mailgun-Sending-Ip: 104.130.122.27
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
+ by mxa.mailgun.org with ESMTP id 5e8b1dc3.7fba18c74730-smtp-out-n02;
+ Mon, 06 Apr 2020 12:17:07 -0000 (UTC)
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 6C015C433BA; Mon,  6 Apr 2020 12:17:07 +0000 (UTC)
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 10998C433D2;
+        Mon,  6 Apr 2020 12:17:04 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 10998C433D2
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Kai-Heng Feng <kai.heng.feng@canonical.com>
+Cc:     yhchuang@realtek.com, "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org (open list:REALTEK WIRELESS DRIVER
+        (rtw88)), netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
+        linux-kernel@vger.kernel.org (open list)
+Subject: Re: [PATCH] rtw88: Add delay on polling h2c command status bit
+References: <20200406093623.3980-1-kai.heng.feng@canonical.com>
+Date:   Mon, 06 Apr 2020 15:17:02 +0300
+In-Reply-To: <20200406093623.3980-1-kai.heng.feng@canonical.com> (Kai-Heng
+        Feng's message of "Mon, 6 Apr 2020 17:36:22 +0800")
+Message-ID: <87v9mczu4h.fsf@kamboji.qca.qualcomm.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The reference driver does not seem to enable it by default, only under certain
-conditions, e.g. when a .bin file is loaded.
-Make it opt-in via a device tree property for now, in case it is needed on some
-boards.
+Kai-Heng Feng <kai.heng.feng@canonical.com> writes:
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- drivers/net/wireless/mediatek/mt76/mt7603/eeprom.c | 5 +++++
- 1 file changed, 5 insertions(+)
+> On some systems we can constanly see rtw88 complains:
+> [39584.721375] rtw_pci 0000:03:00.0: failed to send h2c command
+>
+> Increase interval of each check to wait the status bit really changes.
+>
+> While at it, add some helpers so we can use standarized
+> readx_poll_timeout() macro.
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt7603/eeprom.c
-index 2b6a4d8a8dc7..3ee06e2577b8 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7603/eeprom.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7603/eeprom.c
-@@ -1,5 +1,6 @@
- // SPDX-License-Identifier: ISC
- 
-+#include <linux/of.h>
- #include "mt7603.h"
- #include "eeprom.h"
- 
-@@ -100,10 +101,14 @@ mt7603_apply_cal_free_data(struct mt7603_dev *dev, u8 *efuse)
- 		MT_EE_TX_POWER_1_START_2G,
- 		MT_EE_TX_POWER_1_START_2G + 1,
- 	};
-+	struct device_node *np = dev->mt76.dev->of_node;
- 	u8 *eeprom = dev->mt76.eeprom.data;
- 	int n = ARRAY_SIZE(cal_free_bytes);
- 	int i;
- 
-+	if (!np || !of_property_read_bool(np, "mediatek,eeprom-merge-otp"))
-+		return;
-+
- 	if (!mt7603_has_cal_free_data(dev, efuse))
- 		return;
- 
+One logical change per patch, please.
+
+> --- a/drivers/net/wireless/realtek/rtw88/hci.h
+> +++ b/drivers/net/wireless/realtek/rtw88/hci.h
+> @@ -253,6 +253,10 @@ rtw_write8_mask(struct rtw_dev *rtwdev, u32 addr, u32 mask, u8 data)
+>  	rtw_write8(rtwdev, addr, set);
+>  }
+>  
+> +#define rr8(addr)      rtw_read8(rtwdev, addr)
+> +#define rr16(addr)     rtw_read16(rtwdev, addr)
+> +#define rr32(addr)     rtw_read32(rtwdev, addr)
+
+For me these macros reduce code readability, not improve anything. They
+hide the use of rtwdev variable, which is evil, and a name like rr8() is
+just way too vague. Please keep the original function names as is.
+
 -- 
-2.24.0
-
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
