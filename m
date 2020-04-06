@@ -2,115 +2,92 @@ Return-Path: <SRS0=FAUf=5W=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31A7CC2BA80
-	for <linux-wireless@archiver.kernel.org>; Mon,  6 Apr 2020 09:36:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6C56C2BA19
+	for <linux-wireless@archiver.kernel.org>; Mon,  6 Apr 2020 10:22:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 041382051A
-	for <linux-wireless@archiver.kernel.org>; Mon,  6 Apr 2020 09:36:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 119FC2054F
+	for <linux-wireless@archiver.kernel.org>; Mon,  6 Apr 2020 10:22:08 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="VhUOJt1x"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726788AbgDFJgi (ORCPT
+        id S1727028AbgDFKWH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 6 Apr 2020 05:36:38 -0400
-Received: from youngberry.canonical.com ([91.189.89.112]:53751 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726687AbgDFJgi (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Apr 2020 05:36:38 -0400
-Received: from 61-220-137-37.hinet-ip.hinet.net ([61.220.137.37] helo=localhost)
-        by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.86_2)
-        (envelope-from <kai.heng.feng@canonical.com>)
-        id 1jLOB8-0002nT-Rr; Mon, 06 Apr 2020 09:36:27 +0000
-From:   Kai-Heng Feng <kai.heng.feng@canonical.com>
-To:     yhchuang@realtek.com
-Cc:     Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org (open list:REALTEK WIRELESS DRIVER
-        (rtw88)), netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH] rtw88: Add delay on polling h2c command status bit
-Date:   Mon,  6 Apr 2020 17:36:22 +0800
-Message-Id: <20200406093623.3980-1-kai.heng.feng@canonical.com>
-X-Mailer: git-send-email 2.17.1
+        Mon, 6 Apr 2020 06:22:07 -0400
+Received: from nbd.name ([46.4.11.11]:57842 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726675AbgDFKWH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 6 Apr 2020 06:22:07 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
+         s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
+        Message-Id:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=gSUMq6rvkPPyxjf1Y8nxReIv4JswMYaw3La2yp/B9Is=; b=VhUOJt1x2a0MyVDPhnvuigaMe1
+        RyUjx+OjlXLO5ujK179OGZE7fLHbT7uxawa/9mZas3dkOximt1FHdXwtO2HrlZeG9deTtdhBxSYuz
+        NXUAzGp7BCLPzJNjVk0wbHV/WcIRuF/HmeQ41o5uUd9dvWAAiFFR+HLeF8JPDE8MdhTY=;
+Received: from [80.255.7.105] (helo=maeck.local)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.89)
+        (envelope-from <nbd@nbd.name>)
+        id 1jLOtJ-0001ga-OP
+        for linux-wireless@vger.kernel.org; Mon, 06 Apr 2020 12:22:05 +0200
+Received: by maeck.local (Postfix, from userid 501)
+        id 97DF881E8915; Mon,  6 Apr 2020 12:22:03 +0200 (CEST)
+From:   Felix Fietkau <nbd@nbd.name>
+To:     linux-wireless@vger.kernel.org
+Subject: [PATCH 2/4] mt76: mt7615: disable merge of OTP ROM data by default
+Date:   Mon,  6 Apr 2020 12:22:01 +0200
+Message-Id: <20200406102203.54450-2-nbd@nbd.name>
+X-Mailer: git-send-email 2.24.0
+In-Reply-To: <20200406102203.54450-1-nbd@nbd.name>
+References: <20200406102203.54450-1-nbd@nbd.name>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On some systems we can constanly see rtw88 complains:
-[39584.721375] rtw_pci 0000:03:00.0: failed to send h2c command
+The reference driver does not seem to enable it by default, only under certain
+conditions, e.g. when a .bin file is loaded.
+Make it opt-in via a device tree property for now, in case it is needed on some
+boards.
 
-Increase interval of each check to wait the status bit really changes.
-
-While at it, add some helpers so we can use standarized
-readx_poll_timeout() macro.
-
-Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/realtek/rtw88/fw.c  | 12 ++++++------
- drivers/net/wireless/realtek/rtw88/hci.h |  4 ++++
- 2 files changed, 10 insertions(+), 6 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wireless/realtek/rtw88/fw.c
-index 05c430b3489c..bc9982e77524 100644
---- a/drivers/net/wireless/realtek/rtw88/fw.c
-+++ b/drivers/net/wireless/realtek/rtw88/fw.c
-@@ -2,6 +2,8 @@
- /* Copyright(c) 2018-2019  Realtek Corporation
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
+index 23ed20553de2..34c33d23d79f 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
+@@ -5,6 +5,7 @@
+  *         Felix Fietkau <nbd@nbd.name>
   */
  
-+#include <linux/iopoll.h>
-+
- #include "main.h"
- #include "coex.h"
- #include "fw.h"
-@@ -193,8 +195,8 @@ static void rtw_fw_send_h2c_command(struct rtw_dev *rtwdev,
- 	u8 box;
- 	u8 box_state;
- 	u32 box_reg, box_ex_reg;
--	u32 h2c_wait;
- 	int idx;
-+	int ret;
++#include <linux/of.h>
+ #include "mt7615.h"
+ #include "eeprom.h"
  
- 	rtw_dbg(rtwdev, RTW_DBG_FW,
- 		"send H2C content %02x%02x%02x%02x %02x%02x%02x%02x\n",
-@@ -226,12 +228,10 @@ static void rtw_fw_send_h2c_command(struct rtw_dev *rtwdev,
- 		goto out;
- 	}
+@@ -255,6 +256,11 @@ static void mt7622_apply_cal_free_data(struct mt7615_dev *dev)
  
--	h2c_wait = 20;
--	do {
--		box_state = rtw_read8(rtwdev, REG_HMETFR);
--	} while ((box_state >> box) & 0x1 && --h2c_wait > 0);
-+	ret = readx_poll_timeout(rr8, REG_HMETFR, box_state,
-+				 !((box_state >> box) & 0x1), 100, 3000);
- 
--	if (!h2c_wait) {
-+	if (ret) {
- 		rtw_err(rtwdev, "failed to send h2c command\n");
- 		goto out;
- 	}
-diff --git a/drivers/net/wireless/realtek/rtw88/hci.h b/drivers/net/wireless/realtek/rtw88/hci.h
-index 2cba327e6218..24062c7079c6 100644
---- a/drivers/net/wireless/realtek/rtw88/hci.h
-+++ b/drivers/net/wireless/realtek/rtw88/hci.h
-@@ -253,6 +253,10 @@ rtw_write8_mask(struct rtw_dev *rtwdev, u32 addr, u32 mask, u8 data)
- 	rtw_write8(rtwdev, addr, set);
- }
- 
-+#define rr8(addr)      rtw_read8(rtwdev, addr)
-+#define rr16(addr)     rtw_read16(rtwdev, addr)
-+#define rr32(addr)     rtw_read32(rtwdev, addr)
-+
- static inline enum rtw_hci_type rtw_hci_type(struct rtw_dev *rtwdev)
+ static void mt7615_cal_free_data(struct mt7615_dev *dev)
  {
- 	return rtwdev->hci.type;
++	struct device_node *np = dev->mt76.dev->of_node;
++
++	if (!np || !of_property_read_bool(np, "mediatek,eeprom-merge-otp"))
++		return;
++
+ 	switch (mt76_chip(&dev->mt76)) {
+ 	case 0x7622:
+ 		mt7622_apply_cal_free_data(dev);
 -- 
-2.17.1
+2.24.0
 
