@@ -4,52 +4,54 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB6F4C2BB1D
-	for <linux-wireless@archiver.kernel.org>; Tue,  7 Apr 2020 00:01:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 013CDC2BA1A
+	for <linux-wireless@archiver.kernel.org>; Tue,  7 Apr 2020 00:05:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A0F2D2083E
-	for <linux-wireless@archiver.kernel.org>; Tue,  7 Apr 2020 00:01:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C1C1E2078A
+	for <linux-wireless@archiver.kernel.org>; Tue,  7 Apr 2020 00:05:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1586217675;
-	bh=YJLA9UOw8df/fYXmEFyAHkWnjnxrWSoSrDIt/6Crg/Y=;
+	s=default; t=1586217940;
+	bh=Zg0lXdbFYkI82DZL3HsOsGw1RamNs7bH/YilUYo10QM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=yH1zLDWagOyEB+xZf4lt9QO0CTlMGeTxyBL2KuCHLBkRtZqP46JavCPBZC+f7KnBj
-	 vQcZK7GY2dUSiKBMPeKAPG0EgWHXLgWGf+5QhDcait5GUqkMIZE29nqpFl5QAwNrhb
-	 GN5Sgit3hX0q3iKNuybGDdg2stINmY4GjK6UvsSY=
+	b=pojmEROrz8fn+xYEe0zD2wOCmECJkeAxkFhDEEq6Ea4tOtk57SpQyDNRAnSVM5xwk
+	 O5q1G1R7G9HqDot8nF0AAq/qWylePUoxmY7GuRgdCPJxPQtsr5kw4zTrbtFduDcjdF
+	 DTXtfbPOYi3s3Rjsjr7gGqvwr/MUWCm4uASfUEIQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726701AbgDGABO (ORCPT
+        id S1728333AbgDGAFb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 6 Apr 2020 20:01:14 -0400
-Received: from mail.kernel.org ([198.145.29.99]:33688 "EHLO mail.kernel.org"
+        Mon, 6 Apr 2020 20:05:31 -0400
+Received: from mail.kernel.org ([198.145.29.99]:36994 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726676AbgDGABL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Apr 2020 20:01:11 -0400
+        id S1728090AbgDGAC2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 6 Apr 2020 20:02:28 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 1E45A20768;
-        Tue,  7 Apr 2020 00:01:10 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 386EB207FF;
+        Tue,  7 Apr 2020 00:02:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586217671;
-        bh=YJLA9UOw8df/fYXmEFyAHkWnjnxrWSoSrDIt/6Crg/Y=;
+        s=default; t=1586217748;
+        bh=Zg0lXdbFYkI82DZL3HsOsGw1RamNs7bH/YilUYo10QM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=aGdQNiuJYoHB+le3Q9LKmtMWN7KBal9QKnGIiP/GBTrIi9RvR5zzy0CVkNOR9ElUl
-         0G9huC0jIFj/iBxMElIDEi/HVbosdSlgscmLiQlDTXlETIh86EBwphkxeR5B5y0gBa
-         KfWpeYs60Wh/5PulH9Kym4wBhP3DfpcIxlafvjw8=
+        b=IE8TwNCF7jHkxwjhW0ZB51bKRVXYB1F5ZW25ZOJNebqoBS3zfkGYPY7intLkRYYL/
+         7X6dIgsJOSuL360/kA6PB9ITBiFnNKzq5HOtD8WfP+eT+zC9gBnGOAM8mRVCuu1UPW
+         bTDaNT69qw6ulugHnSo1kk+0a9t1K2uTjOgGfd5k=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Luca Coelho <luciano.coelho@intel.com>,
+Cc:     Ilan Peer <ilan.peer@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.5 09/35] iwlwifi: dbg: don't abort if sending DBGC_SUSPEND_RESUME fails
-Date:   Mon,  6 Apr 2020 20:00:31 -0400
-Message-Id: <20200407000058.16423-9-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 29/32] cfg80211: Do not warn on same channel at the end of CSA
+Date:   Mon,  6 Apr 2020 20:01:47 -0400
+Message-Id: <20200407000151.16768-29-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200407000058.16423-1-sashal@kernel.org>
-References: <20200407000058.16423-1-sashal@kernel.org>
+In-Reply-To: <20200407000151.16768-1-sashal@kernel.org>
+References: <20200407000151.16768-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -59,87 +61,43 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Ilan Peer <ilan.peer@intel.com>
 
-[ Upstream commit 699b760bd29edba736590fffef7654cb079c753e ]
+[ Upstream commit 05dcb8bb258575a8dd3499d0d78bd2db633c2b23 ]
 
-If the firmware is in a bad state or not initialized fully, sending
-the DBGC_SUSPEND_RESUME command fails but we can still collect logs.
+When cfg80211_update_assoc_bss_entry() is called, there is a
+verification that the BSS channel actually changed. As some APs use
+CSA also for bandwidth changes, this would result with a kernel
+warning.
 
-Instead of aborting the entire dump process, simply ignore the error.
-By removing the last callpoint that was checking the return value, we
-can also convert the function to return void.
+Fix this by removing the WARN_ON().
 
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Fixes: 576058330f2d ("iwlwifi: dbg: support debug recording suspend resume command")
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/iwlwifi.20200306151129.dcec37b2efd4.I8dcd190431d110a6a0e88095ce93591ccfb3d78d@changeid
+Link: https://lore.kernel.org/r/iwlwifi.20200326150855.96316ada0e8d.I6710376b1b4257e5f4712fc7ab16e2b638d512aa@changeid
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c | 15 +++++----------
- drivers/net/wireless/intel/iwlwifi/fw/dbg.h |  6 +++---
- 2 files changed, 8 insertions(+), 13 deletions(-)
+ net/wireless/scan.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-index e5c9149099886..bf93da0b04aef 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-@@ -2491,10 +2491,7 @@ static void iwl_fw_dbg_collect_sync(struct iwl_fw_runtime *fwrt, u8 wk_idx)
- 		goto out;
- 	}
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index aef240fdf8df6..328402ab64a3f 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -2022,7 +2022,11 @@ void cfg80211_update_assoc_bss_entry(struct wireless_dev *wdev,
  
--	if (iwl_fw_dbg_stop_restart_recording(fwrt, &params, true)) {
--		IWL_ERR(fwrt, "Failed to stop DBGC recording, aborting dump\n");
--		goto out;
--	}
-+	iwl_fw_dbg_stop_restart_recording(fwrt, &params, true);
+ 	spin_lock_bh(&rdev->bss_lock);
  
- 	IWL_DEBUG_FW_INFO(fwrt, "WRT: Data collection start\n");
- 	if (iwl_trans_dbg_ini_valid(fwrt->trans))
-@@ -2659,14 +2656,14 @@ static int iwl_fw_dbg_restart_recording(struct iwl_trans *trans,
- 	return 0;
- }
+-	if (WARN_ON(cbss->pub.channel == chan))
++	/*
++	 * Some APs use CSA also for bandwidth changes, i.e., without actually
++	 * changing the control channel, so no need to update in such a case.
++	 */
++	if (cbss->pub.channel == chan)
+ 		goto done;
  
--int iwl_fw_dbg_stop_restart_recording(struct iwl_fw_runtime *fwrt,
--				      struct iwl_fw_dbg_params *params,
--				      bool stop)
-+void iwl_fw_dbg_stop_restart_recording(struct iwl_fw_runtime *fwrt,
-+				       struct iwl_fw_dbg_params *params,
-+				       bool stop)
- {
- 	int ret = 0;
- 
- 	if (test_bit(STATUS_FW_ERROR, &fwrt->trans->status))
--		return 0;
-+		return;
- 
- 	if (fw_has_capa(&fwrt->fw->ucode_capa,
- 			IWL_UCODE_TLV_CAPA_DBG_SUSPEND_RESUME_CMD_SUPP))
-@@ -2683,7 +2680,5 @@ int iwl_fw_dbg_stop_restart_recording(struct iwl_fw_runtime *fwrt,
- 			iwl_fw_set_dbg_rec_on(fwrt);
- 	}
- #endif
--
--	return ret;
- }
- IWL_EXPORT_SYMBOL(iwl_fw_dbg_stop_restart_recording);
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
-index 179f2905d56b0..9d3513213f5ff 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.h
-@@ -239,9 +239,9 @@ _iwl_fw_dbg_trigger_simple_stop(struct iwl_fw_runtime *fwrt,
- 	_iwl_fw_dbg_trigger_simple_stop((fwrt), (wdev),		\
- 					iwl_fw_dbg_get_trigger((fwrt)->fw,\
- 							       (trig)))
--int iwl_fw_dbg_stop_restart_recording(struct iwl_fw_runtime *fwrt,
--				      struct iwl_fw_dbg_params *params,
--				      bool stop);
-+void iwl_fw_dbg_stop_restart_recording(struct iwl_fw_runtime *fwrt,
-+				       struct iwl_fw_dbg_params *params,
-+				       bool stop);
- 
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- static inline void iwl_fw_set_dbg_rec_on(struct iwl_fw_runtime *fwrt)
+ 	/* use transmitting bss */
 -- 
 2.20.1
 
