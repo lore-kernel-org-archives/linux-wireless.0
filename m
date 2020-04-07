@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-10.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0EC7C2BA2B
-	for <linux-wireless@archiver.kernel.org>; Tue,  7 Apr 2020 00:09:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC448C2BA1A
+	for <linux-wireless@archiver.kernel.org>; Tue,  7 Apr 2020 00:09:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7709A20768
-	for <linux-wireless@archiver.kernel.org>; Tue,  7 Apr 2020 00:09:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C2CE32076E
+	for <linux-wireless@archiver.kernel.org>; Tue,  7 Apr 2020 00:09:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1586218168;
-	bh=09QvhtRGrOLEMW1wLzmWFmr4KotkIXwu4+Ba9yZJCU8=;
+	s=default; t=1586218173;
+	bh=pXKRpwwHtbm90DIBd74/wZF5z6Ew8Gi8Rdz4A52o3G8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=fCsaL59pUnTStI1eig0oQO+Z6MYbamwMzhAILkxdO+KT/FldvyI/7fHBZJaB4LoXD
-	 Oo9KOjaQ3v/yI1i1QpGYsqD3wMXrNoB+IVT6dTw+KF+qC6E+5yk2bje4nUNriS2KDW
-	 KMF5bHwG7oYPa3WX/p9ddx4908HoMvXeAjkv804g=
+	b=lPr7pSIj2JK55v/uRUhFOEG2q4cqN7yLeu5nW0LuH/kitxokENRCrTVcagqYErhqW
+	 3+pon7yEFe0SO4k/Z1yRVPOC/mc2T/4QvTRSgfs7zse7mNIyVHemi+9utkMtqDnKNV
+	 bWDX5q3a4zUf3zABc6oZJnNbs8qC4YBOQt3mpINY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727849AbgDGAJT (ORCPT
+        id S1726663AbgDGABK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 6 Apr 2020 20:09:19 -0400
-Received: from mail.kernel.org ([198.145.29.99]:33752 "EHLO mail.kernel.org"
+        Mon, 6 Apr 2020 20:01:10 -0400
+Received: from mail.kernel.org ([198.145.29.99]:33608 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726683AbgDGABN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Apr 2020 20:01:13 -0400
+        id S1726633AbgDGABK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 6 Apr 2020 20:01:10 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 593562080C;
-        Tue,  7 Apr 2020 00:01:11 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 992B12078A;
+        Tue,  7 Apr 2020 00:01:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586217672;
-        bh=09QvhtRGrOLEMW1wLzmWFmr4KotkIXwu4+Ba9yZJCU8=;
+        s=default; t=1586217669;
+        bh=pXKRpwwHtbm90DIBd74/wZF5z6Ew8Gi8Rdz4A52o3G8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=WlE54Wd9VTJUvsU56h/1b7oOVlE8Dmi/LkEmAra2BquzKcy8WpTrRZXE1tuewyb97
-         2B/UfbZMQG3L9gqPzxm4VwD48i4yZGBjmaGRvVzuujAakl5HFR2w2AGy4qsNLci5K7
-         uvxRBV8hMvUDH9rL7gu7QVjBioOTnqblz8wNZVns=
+        b=biYnjtFgvDBXrlocXIFdt2BcsmJpLtGwgIiteml2s/rs5eYHbQrSPu5OqWEPg19VD
+         Pe9TS72Np7dVq8IgwdEFvoME8yG9pAum+8LxJchJv/FMfZAJoIDq8OFfFZBZ5wZ2Sj
+         0tdwuYH0Z5SarbQDaD8zrJTzYXoosDnSY1/bzfWc=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Ilan Peer <ilan.peer@intel.com>,
+Cc:     Mordechay Goodstein <mordechay.goodstein@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.5 10/35] iwlwifi: mvm: Fix rate scale NSS configuration
-Date:   Mon,  6 Apr 2020 20:00:32 -0400
-Message-Id: <20200407000058.16423-10-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.5 08/35] iwlwifi: yoyo: don't add TLV offset when reading FIFOs
+Date:   Mon,  6 Apr 2020 20:00:30 -0400
+Message-Id: <20200407000058.16423-8-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200407000058.16423-1-sashal@kernel.org>
 References: <20200407000058.16423-1-sashal@kernel.org>
@@ -60,93 +60,61 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ilan Peer <ilan.peer@intel.com>
+From: Mordechay Goodstein <mordechay.goodstein@intel.com>
 
-[ Upstream commit ce19801ba75a902ab515dda03b57738c708d0781 ]
+[ Upstream commit a5688e600e78f9fc68102bf0fe5c797fc2826abe ]
 
-The TLC configuration did not take into consideration the station's
-SMPS configuration, and thus configured rates for 2 NSS even if
-static SMPS was reported by the station. Fix this.
+The TLV offset is only used to read registers, while the offset used for
+the FIFO addresses are hard coded in the driver and not given by the
+TLV.
 
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+If we try to apply the TLV offset when reading the FIFOs, we'll read
+from invalid addresses, causing the driver to hang.
+
+Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
+Fixes: 8d7dea25ada7 ("iwlwifi: dbg_ini: implement Rx fifos dump")
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/iwlwifi.20200306151129.b4f940d13eca.Ieebfa889d08205a3a961ae0138fb5832e8a0f9c1@changeid
+Link: https://lore.kernel.org/r/iwlwifi.20200306151129.fbab869c26fa.I4ddac20d02f9bce41855a816aa6855c89bc3874e@changeid
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- .../net/wireless/intel/iwlwifi/mvm/rs-fw.c    | 29 ++++++++++++++-----
- 1 file changed, 21 insertions(+), 8 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c | 10 +++-------
+ 1 file changed, 3 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c
-index 80ef238a84884..ca99a9c4f70ef 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c
-@@ -6,7 +6,7 @@
-  * GPL LICENSE SUMMARY
-  *
-  * Copyright(c) 2017        Intel Deutschland GmbH
+diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+index 4c60f9959f7bf..e5c9149099886 100644
+--- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
++++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
+@@ -8,7 +8,7 @@
+  * Copyright(c) 2008 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2015 - 2017 Intel Deutschland GmbH
 - * Copyright(c) 2018 - 2019 Intel Corporation
 + * Copyright(c) 2018 - 2020 Intel Corporation
   *
   * This program is free software; you can redistribute it and/or modify
   * it under the terms of version 2 of the GNU General Public License as
-@@ -27,7 +27,7 @@
-  * BSD LICENSE
-  *
-  * Copyright(c) 2017        Intel Deutschland GmbH
+@@ -31,7 +31,7 @@
+  * Copyright(c) 2005 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2015 - 2017 Intel Deutschland GmbH
 - * Copyright(c) 2018 - 2019 Intel Corporation
 + * Copyright(c) 2018 - 2020 Intel Corporation
   * All rights reserved.
   *
   * Redistribution and use in source and binary forms, with or without
-@@ -195,11 +195,13 @@ rs_fw_vht_set_enabled_rates(const struct ieee80211_sta *sta,
- {
- 	u16 supp;
- 	int i, highest_mcs;
-+	u8 nss = sta->rx_nss;
- 
--	for (i = 0; i < sta->rx_nss; i++) {
--		if (i == IWL_TLC_NSS_MAX)
--			break;
-+	/* the station support only a single receive chain */
-+	if (sta->smps_mode == IEEE80211_SMPS_STATIC)
-+		nss = 1;
- 
-+	for (i = 0; i < nss && i < IWL_TLC_NSS_MAX; i++) {
- 		highest_mcs = rs_fw_vht_highest_rx_mcs_index(vht_cap, i + 1);
- 		if (!highest_mcs)
- 			continue;
-@@ -245,8 +247,13 @@ rs_fw_he_set_enabled_rates(const struct ieee80211_sta *sta,
- 	u16 tx_mcs_160 =
- 		le16_to_cpu(sband->iftype_data->he_cap.he_mcs_nss_supp.tx_mcs_160);
- 	int i;
-+	u8 nss = sta->rx_nss;
- 
--	for (i = 0; i < sta->rx_nss && i < IWL_TLC_NSS_MAX; i++) {
-+	/* the station support only a single receive chain */
-+	if (sta->smps_mode == IEEE80211_SMPS_STATIC)
-+		nss = 1;
-+
-+	for (i = 0; i < nss && i < IWL_TLC_NSS_MAX; i++) {
- 		u16 _mcs_160 = (mcs_160 >> (2 * i)) & 0x3;
- 		u16 _mcs_80 = (mcs_80 >> (2 * i)) & 0x3;
- 		u16 _tx_mcs_160 = (tx_mcs_160 >> (2 * i)) & 0x3;
-@@ -307,8 +314,14 @@ static void rs_fw_set_supp_rates(struct ieee80211_sta *sta,
- 		cmd->mode = IWL_TLC_MNG_MODE_HT;
- 		cmd->ht_rates[IWL_TLC_NSS_1][IWL_TLC_HT_BW_NONE_160] =
- 			cpu_to_le16(ht_cap->mcs.rx_mask[0]);
--		cmd->ht_rates[IWL_TLC_NSS_2][IWL_TLC_HT_BW_NONE_160] =
--			cpu_to_le16(ht_cap->mcs.rx_mask[1]);
-+
-+		/* the station support only a single receive chain */
-+		if (sta->smps_mode == IEEE80211_SMPS_STATIC)
-+			cmd->ht_rates[IWL_TLC_NSS_2][IWL_TLC_HT_BW_NONE_160] =
-+				0;
-+		else
-+			cmd->ht_rates[IWL_TLC_NSS_2][IWL_TLC_HT_BW_NONE_160] =
-+				cpu_to_le16(ht_cap->mcs.rx_mask[1]);
+@@ -1407,11 +1407,7 @@ static int iwl_dump_ini_rxf_iter(struct iwl_fw_runtime *fwrt,
+ 		goto out;
  	}
- }
  
+-	/*
+-	 * region register have absolute value so apply rxf offset after
+-	 * reading the registers
+-	 */
+-	offs += rxf_data.offset;
++	offs = rxf_data.offset;
+ 
+ 	/* Lock fence */
+ 	iwl_write_prph_no_grab(fwrt->trans, RXF_SET_FENCE_MODE + offs, 0x1);
 -- 
 2.20.1
 
