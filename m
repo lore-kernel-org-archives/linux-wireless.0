@@ -1,86 +1,101 @@
-Return-Path: <SRS0=FAUf=5W=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=LB6b=5X=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94A32C2BA1A
-	for <linux-wireless@archiver.kernel.org>; Mon,  6 Apr 2020 21:56:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 366C3C2BA2B
+	for <linux-wireless@archiver.kernel.org>; Tue,  7 Apr 2020 00:01:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 69556208E4
-	for <linux-wireless@archiver.kernel.org>; Mon,  6 Apr 2020 21:56:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CB3B12082D
+	for <linux-wireless@archiver.kernel.org>; Tue,  7 Apr 2020 00:01:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1586210200;
-	bh=cz7J06GHj8wA5T68rrWj6/Sv+02ISrlJSLYDGJBsVrI=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=gviqhJqEiiuf1N57A4pKD+tvcDTS864Er1c42ul1ZzOvvk2slU+xYRcqAQC+cG2mJ
-	 Mxqf+lCVSKMDcMNwG7eENciikkMRNg0MeWhAj3cc1ywlhbZ0TvWXZ7lEo2goUZSVdJ
-	 txwCnjFKi9BpT993ITieFf4IH5CvRHWKbmGM8Cjg=
+	s=default; t=1586217669;
+	bh=LsGwzhl9mRdO++Z0F9wZmxu6Hs4Hb4HS+22XNh9FSkM=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=GA3oASC0ULMe2pS/8HwWCQfJkHfHGm5y3lyDOPyZtNtjTnowWgpyAMemedL9kc8JK
+	 ZaYwSDAjhb86L5znE8+Eq2nuuN24g9fy9R9cNBY000sPD9n7y8AW6cjoSkC6OVVrhC
+	 8EohkF4KzPBcqIF+ze55ftSay+l6epXRwohnRta8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726329AbgDFV4j (ORCPT
+        id S1726620AbgDGABJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 6 Apr 2020 17:56:39 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47348 "EHLO mail.kernel.org"
+        Mon, 6 Apr 2020 20:01:09 -0400
+Received: from mail.kernel.org ([198.145.29.99]:33566 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726112AbgDFV4j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 6 Apr 2020 17:56:39 -0400
-Received: from lore-desk-wlan.redhat.com (unknown [151.48.151.50])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        id S1726591AbgDGABI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 6 Apr 2020 20:01:08 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 19B4D20842;
-        Mon,  6 Apr 2020 21:56:37 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 446E920801;
+        Tue,  7 Apr 2020 00:01:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586210199;
-        bh=cz7J06GHj8wA5T68rrWj6/Sv+02ISrlJSLYDGJBsVrI=;
-        h=From:To:Cc:Subject:Date:From;
-        b=m4h61MWXks/acJnCDmjD4FFKjV4oyXHjSKMkQPv5J6EZ7YlOlS4EMqxflpjljhtBp
-         uHsmbGYCGf8d67gPOADfTAb5WhzjxwNeE38HnY6wfsFdJoUPHhpPxaMV+8Sw/chbdc
-         4SkEpYZBomJAPcofrD0Go61/N478kavmWKqM8lWo=
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     nbd@nbd.name
-Cc:     lorenzo.bianconi@redhat.com, ryder.lee@mediatek.com,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH] mt76: mt7615: fix possible division by 0 in mt7615_mac_update_mib_stats
-Date:   Mon,  6 Apr 2020 23:56:30 +0200
-Message-Id: <3cdc3a64324d0b0e860875b3960ad3e3929a7210.1586210037.git.lorenzo@kernel.org>
-X-Mailer: git-send-email 2.25.1
+        s=default; t=1586217668;
+        bh=LsGwzhl9mRdO++Z0F9wZmxu6Hs4Hb4HS+22XNh9FSkM=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=lsqP/RvTQBtS6YlzkFUo1LgejTVHCxHUMhP24aYs7p/Ko8w8IN9WD22xCrpH534PO
+         S+W0q5EQicVv0yduBoRk8pSusVwvsc66qlpFR8k2JQkW4eCZ5+i931h6EBI2bBeosW
+         a3cMKuOnQ2hundR4U2Uisqq04tpcLYS4UK/pqv7k=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Mordechay Goodstein <mordechay.goodstein@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.5 07/35] iwlwifi: consider HE capability when setting LDPC
+Date:   Mon,  6 Apr 2020 20:00:29 -0400
+Message-Id: <20200407000058.16423-7-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20200407000058.16423-1-sashal@kernel.org>
+References: <20200407000058.16423-1-sashal@kernel.org>
 MIME-Version: 1.0
+X-stable: review
+X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Check that val is not zero before aggr_per estimation in order to avoid a
-possible division by 0
+From: Mordechay Goodstein <mordechay.goodstein@intel.com>
 
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+[ Upstream commit cb377dfda1755b3bc01436755d866c8e5336a762 ]
+
+The AP may set the LDPC capability only in HE (IEEE80211_HE_PHY_CAP1),
+but we were checking it only in the HT capabilities.
+
+If we don't use this capability when required, the DSP gets the wrong
+configuration in HE and doesn't work properly.
+
+Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
+Fixes: befebbb30af0 ("iwlwifi: rs: consider LDPC capability in case of HE")
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Link: https://lore.kernel.org/r/iwlwifi.20200306151128.492d167c1a25.I1ad1353dbbf6c99ae57814be750f41a1c9f7f4ac@changeid
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/mt7615/mac.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-index 596fa17a58ff..23f905dfecc7 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-@@ -1702,9 +1702,11 @@ mt7615_mac_update_mib_stats(struct mt7615_phy *phy)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c
+index e2cf9e015ef8c..80ef238a84884 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.c
+@@ -147,7 +147,11 @@ static u16 rs_fw_get_config_flags(struct iwl_mvm *mvm,
+ 	     (vht_ena && (vht_cap->cap & IEEE80211_VHT_CAP_RXLDPC))))
+ 		flags |= IWL_TLC_MNG_CFG_FLAGS_LDPC_MSK;
  
- 	val = mt76_get_field(dev, MT_MIB_SDR14(ext_phy),
- 			     MT_MIB_AMPDU_MPDU_COUNT);
--	val2 = mt76_get_field(dev, MT_MIB_SDR15(ext_phy),
--			      MT_MIB_AMPDU_ACK_COUNT);
--	mib->aggr_per = 1000 * (val - val2) / val;
-+	if (val) {
-+		val2 = mt76_get_field(dev, MT_MIB_SDR15(ext_phy),
-+				      MT_MIB_AMPDU_ACK_COUNT);
-+		mib->aggr_per = 1000 * (val - val2) / val;
-+	}
- 
- 	aggr = ext_phy ? ARRAY_SIZE(dev->mt76.aggr_stats) / 2 : 0;
- 	for (i = 0; i < 4; i++) {
+-	/* consider our LDPC support in case of HE */
++	/* consider LDPC support in case of HE */
++	if (he_cap->has_he && (he_cap->he_cap_elem.phy_cap_info[1] &
++	    IEEE80211_HE_PHY_CAP1_LDPC_CODING_IN_PAYLOAD))
++		flags |= IWL_TLC_MNG_CFG_FLAGS_LDPC_MSK;
++
+ 	if (sband->iftype_data && sband->iftype_data->he_cap.has_he &&
+ 	    !(sband->iftype_data->he_cap.he_cap_elem.phy_cap_info[1] &
+ 	     IEEE80211_HE_PHY_CAP1_LDPC_CODING_IN_PAYLOAD))
 -- 
-2.25.1
+2.20.1
 
