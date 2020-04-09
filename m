@@ -2,101 +2,69 @@ Return-Path: <SRS0=oNpL=5Z=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC930C2BB1D
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Apr 2020 08:50:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A0D3C3A5A0
+	for <linux-wireless@archiver.kernel.org>; Thu,  9 Apr 2020 08:54:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7EE68216FD
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Apr 2020 08:50:40 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="wAdL0quU"
+	by mail.kernel.org (Postfix) with ESMTP id 6813622203
+	for <linux-wireless@archiver.kernel.org>; Thu,  9 Apr 2020 08:46:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1586422009;
+	bh=jUfOmsLoGW71+bDFRzM3/lCI73zV3FaDo2M0AMpwE9E=;
+	h=From:To:Cc:Subject:Date:List-ID:From;
+	b=ONJNZCzKBRMQ5zfRNWRi7iy5k+MEJG01pouXsObXut+sdoRa1ru+KIbyevV4W5+xj
+	 SKCXXQyWaXwS5q4bHcc4FZ4t96PRCbse2Lnt26tqD6Pv2PCoenY/KkJX6ThJIiKXPk
+	 ixfCF1L39tBMi9qEJVu90tbR8CdRvhPUwvc1ArdQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726659AbgDIIue (ORCPT
+        id S1726561AbgDIIqs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 9 Apr 2020 04:50:34 -0400
-Received: from mail26.static.mailgun.info ([104.130.122.26]:33666 "EHLO
-        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725862AbgDIIue (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Apr 2020 04:50:34 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1586422234; h=Content-Type: MIME-Version: Message-ID:
- In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
- bh=OU4Jaga5I6b7zdc3pesHpsRuwkhLu184VpmHgFHKPks=; b=wAdL0quU6N7zaNI0APRL5AryHBExv1UiS+k1iq+X38ZUEoNyKE9T65T03QdO2yDbf/C5Rkfm
- rWUUj5HFOt5JpfdBIikdxx3/aN5JVWMGhQd2Pv+mNgpgCIs8Jg4JONp4pNOngTCXf7ogjYm9
- UMyLJ2qsYP9RsDUnt4r3pIFES+Q=
-X-Mailgun-Sending-Ip: 104.130.122.26
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e8ee1d9.7f2b7239cdc0-smtp-out-n03;
- Thu, 09 Apr 2020 08:50:33 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 4EDC5C433CB; Thu,  9 Apr 2020 08:50:33 +0000 (UTC)
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        Thu, 9 Apr 2020 04:46:48 -0400
+Received: from mail.kernel.org ([198.145.29.99]:33370 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726536AbgDIIqs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 9 Apr 2020 04:46:48 -0400
+Received: from lore-desk-wlan.redhat.com (unknown [151.48.151.50])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 1235EC433D2;
-        Thu,  9 Apr 2020 08:50:30 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 1235EC433D2
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Arnd Bergmann <arnd@arndb.de>
-Cc:     "David S. Miller" <davem@davemloft.net>,
-        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>,
-        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        ath11k@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/2] ath11k: fix ath11k_thermal_unregister() prototype
-References: <20200408190606.870098-1-arnd@arndb.de>
-        <20200408190606.870098-2-arnd@arndb.de>
-Date:   Thu, 09 Apr 2020 11:50:29 +0300
-In-Reply-To: <20200408190606.870098-2-arnd@arndb.de> (Arnd Bergmann's message
-        of "Wed, 8 Apr 2020 21:05:58 +0200")
-Message-ID: <87d08hujoq.fsf@kamboji.qca.qualcomm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        by mail.kernel.org (Postfix) with ESMTPSA id BC72722202;
+        Thu,  9 Apr 2020 08:46:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1586422008;
+        bh=jUfOmsLoGW71+bDFRzM3/lCI73zV3FaDo2M0AMpwE9E=;
+        h=From:To:Cc:Subject:Date:From;
+        b=J9cqC0piK2BIhOYYuXh5X0RUcjG9/HL/qaPq1ieiFVa//UN/eutlFBehlVPLCiZ8j
+         AoYhYxwz7z0otj9BKCXZrZ7BTY1BlfnvOWEMmHzxTci7deXX0WjJhPDjneOZrxpl1z
+         tqu0WcGt2m/ucCx5epCo7Yb/5RI9S8pGtNrlFWJ4=
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     nbd@nbd.name
+Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
+        sean.wang@mediatek.com, ryder.lee@mediatek.com,
+        soul.huang@mediatek.com, linux-mediatek@lists.infradead.org
+Subject: [PATCH 0/2] fix TXP DMA unmap for mt7622/mt7623
+Date:   Thu,  9 Apr 2020 10:46:37 +0200
+Message-Id: <cover.1586421673.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.25.2
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Arnd Bergmann <arnd@arndb.de> writes:
+Fix a possible data corruption unmapping hw txp from DMA engine
 
-> The stub function has the wrong prototype, causing a warning:
->
-> drivers/net/wireless/ath/ath11k/core.c: In function 'ath11k_core_pdev_destroy':
-> drivers/net/wireless/ath/ath11k/core.c:416:28: error: passing argument 1 of 'ath11k_thermal_unregister' from incompatible pointer type [-Werror=incompatible-pointer-types]
->
-> Change it to take the same arguments as the normal implementation.
->
-> Fixes: 2a63bbca06b2 ("ath11k: add thermal cooling device support")
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
->  drivers/net/wireless/ath/ath11k/thermal.h | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/ath/ath11k/thermal.h b/drivers/net/wireless/ath/ath11k/thermal.h
-> index f1395a14748c..ea9a58bf6a93 100644
-> --- a/drivers/net/wireless/ath/ath11k/thermal.h
-> +++ b/drivers/net/wireless/ath/ath11k/thermal.h
-> @@ -36,7 +36,7 @@ static inline int ath11k_thermal_register(struct ath11k_base *sc)
->  	return 0;
->  }
->  
-> -static inline void ath11k_thermal_unregister(struct ath11k *ar)
-> +static inline void ath11k_thermal_unregister(struct ath11k_base *ar)
->  {
->  }
+Lorenzo Bianconi (2):
+  mt76: mt7622: fix DMA unmap length
+  mt76: mt7663: fix DMA unmap length
 
-Already fixed by this commit:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git/commit/?id=c9be1a642a7b9ec021e3f32e084dc781b3e5216d
+ drivers/net/wireless/mediatek/mt76/mt7615/mac.c | 17 +++++++++++++----
+ drivers/net/wireless/mediatek/mt76/mt7615/mac.h |  3 +++
+ .../net/wireless/mediatek/mt76/mt7615/pci_mac.c | 16 ++++++++++++----
+ 3 files changed, 28 insertions(+), 8 deletions(-)
 
 -- 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.25.2
+
