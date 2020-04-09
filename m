@@ -2,83 +2,123 @@ Return-Path: <SRS0=oNpL=5Z=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C162C2D0EA
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Apr 2020 08:30:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 452ACC2D0EA
+	for <linux-wireless@archiver.kernel.org>; Thu,  9 Apr 2020 08:46:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A551220784
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Apr 2020 08:30:30 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="KpnLjXFu"
+	by mail.kernel.org (Postfix) with ESMTP id 0E5EF22209
+	for <linux-wireless@archiver.kernel.org>; Thu,  9 Apr 2020 08:46:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1586422012;
+	bh=SIpkwKZjrnQ6AtdZVrfLuhZQ/3hgVIcv+fqa+0b2KNg=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=PmYkJsw4anJxs3A6QHrWnU08nGddyQQWnVGO6ZYww3eEgphA8l7vzMbqetARSRg8D
+	 rvbs/z2OFhOlIYFb4ouqzv+f2YAcEc/tLxiI2FqU8misNgqEuImRU06rVwleSIA7sH
+	 xEIGsfb2VImDa62Yt/VkOjo7asTH0PX2EZH7iaBQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726052AbgDIIa3 (ORCPT
+        id S1726536AbgDIIqu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 9 Apr 2020 04:30:29 -0400
-Received: from mail26.static.mailgun.info ([104.130.122.26]:28543 "EHLO
-        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725828AbgDIIa3 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Apr 2020 04:30:29 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1586421029; h=Message-Id: Date: Subject: Cc: To: From:
- Sender; bh=UhDwT9XHx9i0JJElicqUHzv8NJfJXbAaCaXgCEfyyk8=; b=KpnLjXFuBrphTPz5Am4hBzgqjdFvqvpqgbpzdhnxpXhsUBHDbx7GJR89xgp+rQjPneUSbtwh
- ysxajRIHcWFNJKhHqinNVkmjcb9SnWyoDhe393dqXh86dg1mO/i9jYrMTd5oI8LHg7LxHiJO
- A1hN9IfA+BMfYiIkwG0eJxR4Q1Y=
-X-Mailgun-Sending-Ip: 104.130.122.26
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e8edd24.7f309064bae8-smtp-out-n02;
- Thu, 09 Apr 2020 08:30:28 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id C192EC433F2; Thu,  9 Apr 2020 08:30:27 +0000 (UTC)
-Received: from vnaralas-linux.qualcomm.com (blr-c-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.19.19])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        Thu, 9 Apr 2020 04:46:50 -0400
+Received: from mail.kernel.org ([198.145.29.99]:33380 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726521AbgDIIqu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 9 Apr 2020 04:46:50 -0400
+Received: from lore-desk-wlan.redhat.com (unknown [151.48.151.50])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: mpubbise)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id C623FC433D2;
-        Thu,  9 Apr 2020 08:30:24 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org C623FC433D2
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=mpubbise@codeaurora.org
-From:   Manikanta Pubbisetty <mpubbise@codeaurora.org>
-To:     ath11k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org,
-        Manikanta Pubbisetty <mpubbise@codeaurora.org>
-Subject: [PATCH] ath11k: set IRQ_DISABLE_UNLAZY flag for DP interrupts
-Date:   Thu,  9 Apr 2020 14:00:13 +0530
-Message-Id: <1586421013-23025-1-git-send-email-mpubbise@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
+        by mail.kernel.org (Postfix) with ESMTPSA id 6940322206;
+        Thu,  9 Apr 2020 08:46:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1586422011;
+        bh=SIpkwKZjrnQ6AtdZVrfLuhZQ/3hgVIcv+fqa+0b2KNg=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=UDwmUhEwn+/gnAuRS3qNFpf50dzarY4quuePBzOhXedW+ahj3PGFVVbxLGbpFVOzy
+         TCvE+synhZHe+VhfRdKZ1Rj9FZdC5nkfj02Z7wucU1IcLEDouShPwNbrGJYfe9x3ly
+         oaGgWWspg5utY4ZcZLEs19ylSZ2EHwvmvcCWPUhU=
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     nbd@nbd.name
+Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
+        sean.wang@mediatek.com, ryder.lee@mediatek.com,
+        soul.huang@mediatek.com, linux-mediatek@lists.infradead.org
+Subject: [PATCH 1/2] mt76: mt7622: fix DMA unmap length
+Date:   Thu,  9 Apr 2020 10:46:38 +0200
+Message-Id: <f46e842b580fe6e04fb2a7ff51a489832558f535.1586421673.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.25.2
+In-Reply-To: <cover.1586421673.git.lorenzo@kernel.org>
+References: <cover.1586421673.git.lorenzo@kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Unlike CE interrupts, DP interrupts are not enabled/disabled at
-source; they are enabled/disabled only at GIC level, therefore
-it is required to set IRQ_DISABLE_UNLAZY flag to avoid spurious
-interrupts.
+Fix DMA unmap length estimation in mt7615_txp_skb_unmap_hw for mt7622
+chipset
 
-Signed-off-by: Manikanta Pubbisetty <mpubbise@codeaurora.org>
+Fixes: 6aa4ed7927f1 ("mt76: mt7615: implement DMA support for MT7622")
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 ---
- drivers/net/wireless/ath/ath11k/ahb.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/mediatek/mt76/mt7615/mac.c     | 8 ++++----
+ drivers/net/wireless/mediatek/mt76/mt7615/mac.h     | 1 +
+ drivers/net/wireless/mediatek/mt76/mt7615/pci_mac.c | 3 +--
+ 3 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath11k/ahb.c b/drivers/net/wireless/ath/ath11k/ahb.c
-index 59342d2..3b2b76d 100644
---- a/drivers/net/wireless/ath/ath11k/ahb.c
-+++ b/drivers/net/wireless/ath/ath11k/ahb.c
-@@ -788,7 +788,7 @@ static int ath11k_ahb_ext_irq_config(struct ath11k_base *ab)
- 			irq = platform_get_irq_byname(ab->pdev,
- 						      irq_name[irq_idx]);
- 			ab->irq_num[irq_idx] = irq;
--			irq_set_status_flags(irq, IRQ_NOAUTOEN);
-+			irq_set_status_flags(irq, IRQ_NOAUTOEN | IRQ_DISABLE_UNLAZY);
- 			ret = request_irq(irq, ath11k_ahb_ext_interrupt_handler,
- 					  IRQF_TRIGGER_RISING,
- 					  irq_name[irq_idx], irq_grp);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
+index c4a81bde5cf9..e7db7f17c37b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
+@@ -662,16 +662,16 @@ mt7615_txp_skb_unmap_hw(struct mt76_dev *dev, struct mt7615_hw_txp *txp)
+ 		u16 len;
+ 
+ 		len = le16_to_cpu(ptr->len0);
+-		last = len & MT_TXD_LEN_MSDU_LAST;
+-		len &= ~MT_TXD_LEN_MSDU_LAST;
++		last = len & MT_TXD_LAST_MASK;
++		len &= ~MT_TXD_LAST_MASK;
+ 		dma_unmap_single(dev->dev, le32_to_cpu(ptr->buf0), len,
+ 				 DMA_TO_DEVICE);
+ 		if (last)
+ 			break;
+ 
+ 		len = le16_to_cpu(ptr->len1);
+-		last = len & MT_TXD_LEN_MSDU_LAST;
+-		len &= ~MT_TXD_LEN_MSDU_LAST;
++		last = len & MT_TXD_LAST_MASK;
++		len &= ~MT_TXD_LAST_MASK;
+ 		dma_unmap_single(dev->dev, le32_to_cpu(ptr->buf1), len,
+ 				 DMA_TO_DEVICE);
+ 		if (last)
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mac.h b/drivers/net/wireless/mediatek/mt76/mt7615/mac.h
+index b540a8cca1e1..d9b2fdfb4c8b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mac.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mac.h
+@@ -258,6 +258,7 @@ enum tx_phy_bandwidth {
+ 
+ #define MT_TXD_LEN_MSDU_LAST		BIT(14)
+ #define MT_TXD_LEN_AMSDU_LAST		BIT(15)
++#define MT_TXD_LAST_MASK		GENMASK(15, 14)
+ 
+ struct mt7615_txp_ptr {
+ 	__le32 buf0;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/pci_mac.c b/drivers/net/wireless/mediatek/mt76/mt7615/pci_mac.c
+index 7fba1c39060f..6dfd03a8869b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/pci_mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/pci_mac.c
+@@ -67,8 +67,7 @@ mt7615_write_hw_txp(struct mt7615_dev *dev, struct mt76_tx_info *tx_info,
+ 		u16 len = tx_info->buf[i + 1].len;
+ 
+ 		if (i == nbuf - 1)
+-			len |= MT_TXD_LEN_MSDU_LAST |
+-			       MT_TXD_LEN_AMSDU_LAST;
++			len |= MT_TXD_LAST_MASK;
+ 
+ 		if (i & 1) {
+ 			ptr->buf1 = cpu_to_le32(addr);
 -- 
-2.7.4
+2.25.2
+
