@@ -2,121 +2,102 @@ Return-Path: <SRS0=oNpL=5Z=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-11.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 060A3C3A5A0
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Apr 2020 08:49:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08BC9C2D0EA
+	for <linux-wireless@archiver.kernel.org>; Thu,  9 Apr 2020 08:50:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7319821D81
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Apr 2020 08:43:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CAFE321556
+	for <linux-wireless@archiver.kernel.org>; Thu,  9 Apr 2020 08:50:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="DNp7+s5F"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="Fa9hRfH4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725970AbgDIInu (ORCPT
+        id S1726561AbgDIIuS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 9 Apr 2020 04:43:50 -0400
-Received: from mail27.static.mailgun.info ([104.130.122.27]:36473 "EHLO
-        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725783AbgDIInu (ORCPT
+        Thu, 9 Apr 2020 04:50:18 -0400
+Received: from mail26.static.mailgun.info ([104.130.122.26]:33666 "EHLO
+        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725783AbgDIIuS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Apr 2020 04:43:50 -0400
+        Thu, 9 Apr 2020 04:50:18 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1586421830; h=Message-Id: Date: Subject: Cc: To: From:
- Sender; bh=J0vtTaLnI0a7vOQ+fPkjj1FHDESnDO3rMcl8Hm4wfX8=; b=DNp7+s5FulXd8GsjcUPPCuyPq1kTbNCHiF+40H/0h9lBAIae6Ie51iLxqde7XotzfuUgKGuj
- i0r2DogfH/fihRRNpo+7QTm2eYMF1xgseT1yeeUVgLb1S02KciZmNCmuW/fx1xGNC9M6zeXY
- 2ncKydaTY7l0xERxmoUV00fbghw=
-X-Mailgun-Sending-Ip: 104.130.122.27
+ s=smtp; t=1586422218; h=Content-Type: MIME-Version: Message-ID:
+ In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
+ bh=lKT87G/6eCqsB9hKN0EhH/E4zdNG9T0d5yHU6lAPE3w=; b=Fa9hRfH4V4ynrJSC47UTXldAQdThy4p32eY5XlnHrN9edrgkFeNL5eO/s6BYzu7Gg2f3soJB
+ djntuDAjFJN4pPN21az9LgUloDePk0keC6u0dMBgiswxVahozgoqp97eQ3n0HHp7HC8ci5QH
+ bvvJmSGUjcSGxI0AHbSmVaeBgnU=
+X-Mailgun-Sending-Ip: 104.130.122.26
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e8ee032.7f4598998ab0-smtp-out-n02;
- Thu, 09 Apr 2020 08:43:30 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5e8ee1bf.7fe9308f8420-smtp-out-n02;
+ Thu, 09 Apr 2020 08:50:07 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 679B5C433CB; Thu,  9 Apr 2020 08:43:29 +0000 (UTC)
-Received: from vnaralas-linux.qualcomm.com (blr-c-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.19.19])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        id 1E288C43636; Thu,  9 Apr 2020 08:50:06 +0000 (UTC)
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        (Authenticated sender: mpubbise)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id E051EC433D2;
-        Thu,  9 Apr 2020 08:43:26 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org E051EC433D2
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id AB618C433CB;
+        Thu,  9 Apr 2020 08:50:03 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org AB618C433CB
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=mpubbise@codeaurora.org
-From:   Manikanta Pubbisetty <mpubbise@codeaurora.org>
-To:     ath11k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org,
-        Manikanta Pubbisetty <mpubbise@codeaurora.org>
-Subject: [PATCH] ath11k: rx path optimizations
-Date:   Thu,  9 Apr 2020 14:13:17 +0530
-Message-Id: <1586421797-885-1-git-send-email-mpubbise@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Arnd Bergmann <arnd@arndb.de>
+Cc:     "David S. Miller" <davem@davemloft.net>,
+        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        ath11k@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/2] ath11k: fix missing return in ath11k_thermal_set_throttling
+References: <20200408190606.870098-1-arnd@arndb.de>
+Date:   Thu, 09 Apr 2020 11:50:01 +0300
+In-Reply-To: <20200408190606.870098-1-arnd@arndb.de> (Arnd Bergmann's message
+        of "Wed, 8 Apr 2020 21:05:57 +0200")
+Message-ID: <87h7xtujpi.fsf@kamboji.qca.qualcomm.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-During RX, accessing the reo dest ring descriptor directly is consuming
-a lot of CPU cycles. Accessing the descriptor after copying it locally
-has improved CPU usage by around ~10-15% while measuring throughput
-in RX DBTC test cases(all radios are involved in the throughput
-measurement).
+Arnd Bergmann <arnd@arndb.de> writes:
 
-HW tested: IPQ8074
+> The empty stub version of this function causes a compile-time
+> warning:
+>
+> In file included from drivers/net/wireless/ath/ath11k/core.h:23,
+>                  from drivers/net/wireless/ath/ath11k/dp_rx.h:8,
+>                  from drivers/net/wireless/ath/ath11k/ce.c:6:
+> drivers/net/wireless/ath/ath11k/thermal.h: In function 'ath11k_thermal_set_throttling':
+> drivers/net/wireless/ath/ath11k/thermal.h:45:1: error: no return statement in function returning non-void [-Werror=return-type]
+>
+> Just return success here.
+>
+> Fixes: a41d10348b01 ("ath11k: add thermal sensor device support")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+>  drivers/net/wireless/ath/ath11k/thermal.h | 1 +
+>  1 file changed, 1 insertion(+)
+>
+> diff --git a/drivers/net/wireless/ath/ath11k/thermal.h b/drivers/net/wireless/ath/ath11k/thermal.h
+> index 459b8d49c184..f1395a14748c 100644
+> --- a/drivers/net/wireless/ath/ath11k/thermal.h
+> +++ b/drivers/net/wireless/ath/ath11k/thermal.h
+> @@ -42,6 +42,7 @@ static inline void ath11k_thermal_unregister(struct ath11k *ar)
+>  
+>  static inline int ath11k_thermal_set_throttling(struct ath11k *ar, u32 throttle_state)
+>  {
+> +	return 0;
+>  }
 
-Signed-off-by: Manikanta Pubbisetty <mpubbise@codeaurora.org>
----
- drivers/net/wireless/ath/ath11k/dp_rx.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+Already fixed by this commit:
 
-diff --git a/drivers/net/wireless/ath/ath11k/dp_rx.c b/drivers/net/wireless/ath/ath11k/dp_rx.c
-index a3f2c76..203fd44 100644
---- a/drivers/net/wireless/ath/ath11k/dp_rx.c
-+++ b/drivers/net/wireless/ath/ath11k/dp_rx.c
-@@ -2403,12 +2403,12 @@ int ath11k_dp_process_rx(struct ath11k_base *ab, int ring_id,
- 
- try_again:
- 	while ((rx_desc = ath11k_hal_srng_dst_get_next_entry(ab, srng))) {
--		struct hal_reo_dest_ring *desc = (struct hal_reo_dest_ring *)rx_desc;
-+		struct hal_reo_dest_ring desc = *(struct hal_reo_dest_ring *)rx_desc;
- 		enum hal_reo_dest_ring_push_reason push_reason;
- 		u32 cookie;
- 
- 		cookie = FIELD_GET(BUFFER_ADDR_INFO1_SW_COOKIE,
--				   desc->buf_addr_info.info1);
-+				   desc.buf_addr_info.info1);
- 		buf_id = FIELD_GET(DP_RXDMA_BUF_COOKIE_BUF_ID,
- 				   cookie);
- 		mac_id = FIELD_GET(DP_RXDMA_BUF_COOKIE_PDEV_ID, cookie);
-@@ -2436,7 +2436,7 @@ int ath11k_dp_process_rx(struct ath11k_base *ab, int ring_id,
- 		total_msdu_reaped++;
- 
- 		push_reason = FIELD_GET(HAL_REO_DEST_RING_INFO0_PUSH_REASON,
--					desc->info0);
-+					desc.info0);
- 		if (push_reason !=
- 		    HAL_REO_DEST_RING_PUSH_REASON_ROUTING_INSTRUCTION) {
- 			dev_kfree_skb_any(msdu);
-@@ -2444,15 +2444,15 @@ int ath11k_dp_process_rx(struct ath11k_base *ab, int ring_id,
- 			continue;
- 		}
- 
--		rxcb->is_first_msdu = !!(desc->rx_msdu_info.info0 &
-+		rxcb->is_first_msdu = !!(desc.rx_msdu_info.info0 &
- 					 RX_MSDU_DESC_INFO0_FIRST_MSDU_IN_MPDU);
--		rxcb->is_last_msdu = !!(desc->rx_msdu_info.info0 &
-+		rxcb->is_last_msdu = !!(desc.rx_msdu_info.info0 &
- 					RX_MSDU_DESC_INFO0_LAST_MSDU_IN_MPDU);
--		rxcb->is_continuation = !!(desc->rx_msdu_info.info0 &
-+		rxcb->is_continuation = !!(desc.rx_msdu_info.info0 &
- 					   RX_MSDU_DESC_INFO0_MSDU_CONTINUATION);
- 		rxcb->mac_id = mac_id;
- 		rxcb->tid = FIELD_GET(HAL_REO_DEST_RING_INFO0_RX_QUEUE_NUM,
--				      desc->info0);
-+				      desc.info0);
- 
- 		__skb_queue_tail(&msdu_list, msdu);
- 
+https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git/commit/?id=c9be1a642a7b9ec021e3f32e084dc781b3e5216d
+
 -- 
-2.7.4
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
