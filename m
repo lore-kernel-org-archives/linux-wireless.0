@@ -6,84 +6,95 @@ X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C8FBC2BA2B
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Apr 2020 15:29:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6EFEC2BA2B
+	for <linux-wireless@archiver.kernel.org>; Thu,  9 Apr 2020 15:43:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CEC3E2083E
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Apr 2020 15:29:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 996F420753
+	for <linux-wireless@archiver.kernel.org>; Thu,  9 Apr 2020 15:43:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="qHZ6895H"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="p+279hiq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728247AbgDIP32 (ORCPT
+        id S1728220AbgDIPnC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 9 Apr 2020 11:29:28 -0400
-Received: from mail26.static.mailgun.info ([104.130.122.26]:54578 "EHLO
-        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728255AbgDIP32 (ORCPT
+        Thu, 9 Apr 2020 11:43:02 -0400
+Received: from mail27.static.mailgun.info ([104.130.122.27]:63843 "EHLO
+        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728167AbgDIPnC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Apr 2020 11:29:28 -0400
+        Thu, 9 Apr 2020 11:43:02 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1586446168; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=brs+hk/3j/GuFd9f10w+AYVvFGTMbGIG4zlFOTxpyww=;
- b=qHZ6895HaSlWDwsf3UGM7be2JdOYNlZfEQYzafklfRZQmvRMKzRfsKpVjEJ5K+OE5fYmIb0J
- 4Lx3pkNH9Fu6kdtFqtcsmHF0ttY1OKuA0pemAFUHvAPKpkhICAXPff3Wn7sKqtuhKyO9+vsv
- 5s5j2hB/N8xTlkHvFZ4T4hnQh2I=
-X-Mailgun-Sending-Ip: 104.130.122.26
+ s=smtp; t=1586446982; h=Content-Type: MIME-Version: Message-ID:
+ In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
+ bh=HXX12wmUv3R/HEJbd2SH/6l+DxGPnMH2DaiOr0PZbPs=; b=p+279hiqcaOAoo4XnXGAA8YBw9ngCYTz7T/vEvcoltCsf5PjldCTfkEd0bgGaalI+EjrHpom
+ dswDp3qVbmLI9TelWBEoJrXtk3YPcZNYov3ufNZ1qQ8y2yO14lvC7MaoKZwRUmwRs5hgnVYl
+ 38cKtOILN3igHY2autm4yNwaTi8=
+X-Mailgun-Sending-Ip: 104.130.122.27
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e8f3f55.7f2c8770e260-smtp-out-n01;
- Thu, 09 Apr 2020 15:29:25 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5e8f4279.7f7ecf1c1ed8-smtp-out-n01;
+ Thu, 09 Apr 2020 15:42:49 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id A5947C433BA; Thu,  9 Apr 2020 15:29:20 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        id 180B3C4478C; Thu,  9 Apr 2020 15:42:46 +0000 (UTC)
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        (Authenticated sender: wgong)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 73877C433CB;
-        Thu,  9 Apr 2020 15:29:20 +0000 (UTC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Thu, 09 Apr 2020 23:29:20 +0800
-From:   Wen Gong <wgong@codeaurora.org>
-To:     Kalle Valo <kvalo@codeaurora.org>
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id A391FC432C2;
+        Thu,  9 Apr 2020 15:42:43 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org A391FC432C2
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Wen Gong <wgong@codeaurora.org>
 Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
 Subject: Re: [PATCH v9 3/4] ath10k: add htt TX bundle for sdio
-In-Reply-To: <87pncgu2ba.fsf@kamboji.qca.qualcomm.com>
 References: <20200212080415.31265-1-wgong@codeaurora.org>
- <20200212080415.31265-4-wgong@codeaurora.org>
- <87pncgu2ba.fsf@kamboji.qca.qualcomm.com>
-Message-ID: <36ee3bed6f7cd200df0755209ec6bbc2@codeaurora.org>
-X-Sender: wgong@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+        <20200212080415.31265-4-wgong@codeaurora.org>
+        <87pncgu2ba.fsf@kamboji.qca.qualcomm.com>
+        <36ee3bed6f7cd200df0755209ec6bbc2@codeaurora.org>
+Date:   Thu, 09 Apr 2020 18:42:41 +0300
+In-Reply-To: <36ee3bed6f7cd200df0755209ec6bbc2@codeaurora.org> (Wen Gong's
+        message of "Thu, 09 Apr 2020 23:29:20 +0800")
+Message-ID: <87lfn4u0lq.fsf@kamboji.qca.qualcomm.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2020-04-09 23:05, Kalle Valo wrote:
+Wen Gong <wgong@codeaurora.org> writes:
 
->> +		ep->tx_credits -= credits;
->> +		ath10k_dbg(ar, ATH10K_DBG_HTC,
->> +			   "htc ep %d consumed %d credits (total %d)\n",
-> 
-> "htc ep %d consumed %d credits total %d\n"
-> 
-> [...]
-> 
->> +	ath10k_dbg(ar, ATH10K_DBG_HTC, "bundle skb: len:%d\n", 
->> bundle_skb->len);
-> 
-> "htc bundle skb len %d\n"
-> 
-> In other words, start with "htc" and don't use colons or parenthesis.
-> This applies to most of debug messages in this patch.
-I will change the log and other log and sent v10.
-but "ath10k: disable TX complete indication of htt for sdio" and
-"ath10k: change ATH10K_SDIO_BUS_REQUEST_MAX_NUM from 64 to 1024" has 
-appied to ath-next,
-so I only need to send the left 2 patches:
-"ath10k: add htt TX bundle for sdio" and "ath10k: enable alt data of TX 
-path for sdio", right?
+> On 2020-04-09 23:05, Kalle Valo wrote:
+>
+>>> +		ep->tx_credits -= credits;
+>>> +		ath10k_dbg(ar, ATH10K_DBG_HTC,
+>>> +			   "htc ep %d consumed %d credits (total %d)\n",
+>>
+>> "htc ep %d consumed %d credits total %d\n"
+>>
+>> [...]
+>>
+>>> +	ath10k_dbg(ar, ATH10K_DBG_HTC, "bundle skb: len:%d\n",
+>>> bundle_skb->len);
+>>
+>> "htc bundle skb len %d\n"
+>>
+>> In other words, start with "htc" and don't use colons or parenthesis.
+>> This applies to most of debug messages in this patch.
+>
+> I will change the log and other log and sent v10.
+> but "ath10k: disable TX complete indication of htt for sdio" and
+> "ath10k: change ATH10K_SDIO_BUS_REQUEST_MAX_NUM from 64 to 1024" has
+> appied to ath-next,
+> so I only need to send the left 2 patches:
+> "ath10k: add htt TX bundle for sdio" and "ath10k: enable alt data of
+> TX path for sdio", right?
+
+Correct, I already applied patches 1 and 2. But before you resend
+patches 3-4 did you see my question about creating a new thread, is it
+really necessary?
+
+-- 
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
