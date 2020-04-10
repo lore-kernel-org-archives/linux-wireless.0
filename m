@@ -2,127 +2,121 @@ Return-Path: <SRS0=NY3P=52=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MSGID_FROM_MTA_HEADER,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E7E9C2BB1D
-	for <linux-wireless@archiver.kernel.org>; Fri, 10 Apr 2020 12:33:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33BD5C2BBFD
+	for <linux-wireless@archiver.kernel.org>; Fri, 10 Apr 2020 13:33:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4443520769
-	for <linux-wireless@archiver.kernel.org>; Fri, 10 Apr 2020 12:33:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F3F0D212CC
+	for <linux-wireless@archiver.kernel.org>; Fri, 10 Apr 2020 13:33:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="INLqcIST"
+	dkim=pass (1024-bit key) header.d=silabs.onmicrosoft.com header.i=@silabs.onmicrosoft.com header.b="VX67xLs8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726092AbgDJMdQ (ORCPT
+        id S1726716AbgDJNdF (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 10 Apr 2020 08:33:16 -0400
-Received: from mail-lj1-f196.google.com ([209.85.208.196]:33066 "EHLO
-        mail-lj1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725930AbgDJMdQ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Apr 2020 08:33:16 -0400
-Received: by mail-lj1-f196.google.com with SMTP id q22so1838535ljg.0;
-        Fri, 10 Apr 2020 05:33:14 -0700 (PDT)
+        Fri, 10 Apr 2020 09:33:05 -0400
+Received: from mail-dm6nam12on2082.outbound.protection.outlook.com ([40.107.243.82]:31903
+        "EHLO NAM12-DM6-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726009AbgDJNdF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 10 Apr 2020 09:33:05 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=iVCHW1E4NZ/AHZe0s8jNTL9P1+lge74w3qBFfESKstsBAYq2kOJnmjIsXKODZXlB+qZYTiSbdAFXFK/0CovwNnQ1TSH1yZj8aKX/n0e6O0VvbvmLKENwMpwee8GqlSAP3/SDUHqgq3n3jhQATyLw+rOTw59Md2a74PU4Tei5vKQ/alDsfaRc7WJuWDV94QxzmreOFa46Z3pgLLCrOhpLkQJ47wfhfjNwFH24GzzmK1VcK9Zqtbf/wG29LQF5qcVNt+4IzOXZwhFQR6gbohe4JN/b8+xO92LH+gbzzRLoMljGatGWWhMqc/FRqqm/SWgcQnA+OFKN+zb4Jgylw7CyRw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=kjI0Je6vHCyxCyoGkgaW23q63NlgIf848mcwi2srrio=;
+ b=JAAWpKFi+snyQCNgb5YQDgPqEr22r3elE262YEbXtzFmjOro/kfLC0jXLPKxsNtLsxPmLXtcJiUGtnbc7SLyWcnHgz3N5LOmY2L1FkUXSZnJkp4oMb23Af6VO7n4nhzrHkcB+Alz03n86o53xPn813YAqSq2Uq8BAgv7t563JvRj6PyoRzTjebSlOskV6xt9n3VzpH//sNBCFyAjFFn2+SHtwfzpzl0GxxwWJcOJ8tuN/JPTDgBMzp/S//8irHg/rJm3/Plt6pvk2T0RfkBBk3kV4mVWXrfOQtPE1wDLE/rHjKZ6MN/pk4UXHfzfdJLg2/1H6q6LhCaD7T40hGjCuw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=silabs.com; dmarc=pass action=none header.from=silabs.com;
+ dkim=pass header.d=silabs.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:from:to:cc:subject:date:message-id;
-        bh=oZ4mTa/knZg2c3uydTiSH3iGohdOLCMYiOTGruiDB44=;
-        b=INLqcIST63qUP2L0bEZpAvS/9RIaV7Qr6MrQkTXbpyKTxw2bckSqzVlr/UTU5vJPlV
-         V0/BMJh/wM7nRQi3FBU/Gj9zVpdevlnc6EdAE4Q7v1uG5VEFStrbYDW0fdPQFdvMzt+4
-         u0IlEl1z+syacsjqSgJtLhOpUOQuTnS5e1ggOXUIdORCvZLPKW77Bdo3WVNILoxWWuLx
-         GcoDzdSxxOwH75+8UgRtDZVrdx9aSb6m4xuGAvn0/ovmVIfggkzmNBYZ7tz6579hYP1h
-         q0YGuBtlequ5w64x2mpCl0PKJ2fMEpdABifPhEi0OZLfNV1ZArdkYh9f1znVgUdgfgam
-         9mYQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:from:to:cc:subject:date:message-id;
-        bh=oZ4mTa/knZg2c3uydTiSH3iGohdOLCMYiOTGruiDB44=;
-        b=J3LAUvLnzqwVSfQo0+faf9EbrM74NngDUSNwTDLqs6HqsRYNxROarKwB2ykz6hIIX6
-         D+ZAgrJiBUYTCyhmkRQtRubHGAFvr3n/YCgKaFJkE7dbTJ+hhhrf15eBLP6G1BlEFuGF
-         sg6ENBOh1/EDQmQKSabMjQ5lGAuMOeRSVKmNW0PSBSJeD65wHRSDMCamOHlfDUfsNdDc
-         BwPX0vKijw1QpR/SSXorP8Xa9J0SKPaXcGs4Hb9KO4QL7mdIIImw5QO1HXTM0fPXshK+
-         7tz8EbixTrO/MffHart4vRdR/PG5M57sxUWJsptXSfaz1gM62qIfnrH6lIKhnzmp8Ons
-         sG1g==
-X-Gm-Message-State: AGi0PuasSP30BUKAweNKM1q3Mzme24sToHVtfPkNep2UXV6VR1erTSiJ
-        ajuOdyzbDvPCcsmJxwrMAkg=
-X-Google-Smtp-Source: APiQypI1WtuGNzKw6wZJX6wI33yCJEpZK1zTnaPinzEQNJpD/F835Vr6wwyW2yatQgL9RvoCtK3ivg==
-X-Received: by 2002:a2e:8745:: with SMTP id q5mr2936178ljj.157.1586521993889;
-        Fri, 10 Apr 2020 05:33:13 -0700 (PDT)
-Received: from work.bb.dnainternet.fi (dffyyyyyyyyyyyysyd4py-3.rev.dnainternet.fi. [2001:14ba:2100::1e0:1e18])
-        by smtp.gmail.com with ESMTPSA id r23sm1012619ljh.34.2020.04.10.05.33.12
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 10 Apr 2020 05:33:13 -0700 (PDT)
-From:   Tuomas Tynkkynen <tuomas.tynkkynen@iki.fi>
-To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        syzbot+6693adf1698864d21734@syzkaller.appspotmail.com,
-        Tuomas Tynkkynen <tuomas.tynkkynen@iki.fi>, stable@kernel.org
-Subject: [PATCH] mac80211_hwsim: Use kstrndup() in place of kasprintf()
-Date:   Fri, 10 Apr 2020 15:32:57 +0300
-Message-Id: <20200410123257.14559-1-tuomas.tynkkynen@iki.fi>
-X-Mailer: git-send-email 2.17.1
+ d=silabs.onmicrosoft.com; s=selector2-silabs-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=kjI0Je6vHCyxCyoGkgaW23q63NlgIf848mcwi2srrio=;
+ b=VX67xLs8IW+KBUOOLDOI5++kIIp3SzNJZ7gBdutMK9tUc833tZAl4CeI7No0UyPgZ/vTbmedWE1qAIMCpp24JnkZBMsOL5xHwZSQ5tJls6OoVwgKJol5hs2tLE0j3+1iyGJh58RgGZXB0DfIOQkKttUE3hkd/Eet0+g/CzwsQNA=
+Authentication-Results: spf=none (sender IP is )
+ smtp.mailfrom=Jerome.Pouiller@silabs.com; 
+Received: from MN2PR11MB4063.namprd11.prod.outlook.com (2603:10b6:208:13f::22)
+ by MN2PR11MB4398.namprd11.prod.outlook.com (2603:10b6:208:18b::31) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2878.20; Fri, 10 Apr
+ 2020 13:33:02 +0000
+Received: from MN2PR11MB4063.namprd11.prod.outlook.com
+ ([fe80::3d0a:d9ac:3df4:8b1]) by MN2PR11MB4063.namprd11.prod.outlook.com
+ ([fe80::3d0a:d9ac:3df4:8b1%6]) with mapi id 15.20.2878.021; Fri, 10 Apr 2020
+ 13:33:02 +0000
+From:   Jerome Pouiller <Jerome.Pouiller@silabs.com>
+To:     devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org
+Cc:     netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Pouiller?= 
+        <jerome.pouiller@silabs.com>
+Subject: [PATCH 02/19] staging: wfx: reduce hold duration of cfg80211_bss
+Date:   Fri, 10 Apr 2020 15:32:22 +0200
+Message-Id: <20200410133239.438347-3-Jerome.Pouiller@silabs.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20200410133239.438347-1-Jerome.Pouiller@silabs.com>
+References: <20200410133239.438347-1-Jerome.Pouiller@silabs.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: base64
+X-ClientProxiedBy: DM5PR15CA0056.namprd15.prod.outlook.com
+ (2603:10b6:3:ae::18) To MN2PR11MB4063.namprd11.prod.outlook.com
+ (2603:10b6:208:13f::22)
+MIME-Version: 1.0
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from pc-42.silabs.com (2a01:e35:2435:66a0:1265:30ff:fefd:6e7f) by DM5PR15CA0056.namprd15.prod.outlook.com (2603:10b6:3:ae::18) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2900.15 via Frontend Transport; Fri, 10 Apr 2020 13:33:00 +0000
+X-Mailer: git-send-email 2.25.1
+X-Originating-IP: [2a01:e35:2435:66a0:1265:30ff:fefd:6e7f]
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: ef8292e6-6543-425b-5052-08d7dd53b14c
+X-MS-TrafficTypeDiagnostic: MN2PR11MB4398:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <MN2PR11MB4398E59A911989DAC3EF434F93DE0@MN2PR11MB4398.namprd11.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:1091;
+X-Forefront-PRVS: 0369E8196C
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR11MB4063.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(10009020)(366004)(346002)(396003)(136003)(39850400004)(376002)(107886003)(81156014)(54906003)(8676002)(86362001)(1076003)(4744005)(6666004)(8936002)(4326008)(52116002)(66574012)(7696005)(316002)(66556008)(66946007)(186003)(478600001)(2906002)(6486002)(2616005)(66476007)(16526019)(5660300002)(36756003);DIR:OUT;SFP:1101;
+Received-SPF: None (protection.outlook.com: silabs.com does not designate
+ permitted sender hosts)
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: HYiViTNkZGrUfBPkg5Rf9QZt9JUYs5cVihyvIL9taGXzRLq4OzierheUvyiX9Qoi4N7KvYl19ebp+Lz7llT35Cl3dD+E9UTqlqNCwW+f2WXxTav7M32IIPnm5c015g3fAxZBmb/ppivBk+Y9wvfxEfKl2sTg0cfAP4ifba4AbSbB5NlKqfD2iPW46mW9oyRgItI/X3Xy+oDRHSc17WZwYDecnlBqbVAngkAT0uT1qb3AcLbWvmt3s//BAivGpnrlN0q5e7I1GQ6A6AeWK/CRMRMIeFsbpIaA4afaz9kFMWQaPVwQ8UXQJn/xdeQtS1AL/EEmOJf1jT4++1HgwwuiecbKQ3yuKo4RuMJ+tuLm/7YyEPakciP4nrhlAHj3vx9xyHhd5ggw7h+Rkkq2yZ3wyY4vy4oUDxacEucWnrFCfTCr2ksP0DoUuV3z8z5QtOOJ
+X-MS-Exchange-AntiSpam-MessageData: W6i06sxqp7r9y5ociy3puoMUyrjLqDCCpy6Aw+N0N74Qu+cNMZUdCL5DoOsjQUjpBSV76g/HYz42OcLBzGnJoKVLLXmkSXKBqWlQXKB7H/LBcjT4X/CLp7rUqzJhfy4exxcSuRztOzYj5PJJhcznuLr4jDa2XNtZOwR8az9uNuSMOmROXRgNU2Z4QkF8edOW1DV2u1Q6qiwrD99Ju8WeOA==
+X-OriginatorOrg: silabs.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: ef8292e6-6543-425b-5052-08d7dd53b14c
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Apr 2020 13:33:02.5675
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 54dbd822-5231-4b20-944d-6f4abcd541fb
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: Pl+s4sFudDAgNs6/t4nOjCA+0srZtx2fI/wF52H1LRQmh7J5FLFph8vcsxbImkrFPm2NIBJPsZaHUC4f8c+wPQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR11MB4398
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-syzbot reports a warning:
-
-precision 33020 too large
-WARNING: CPU: 0 PID: 9618 at lib/vsprintf.c:2471 set_precision+0x150/0x180 lib/vsprintf.c:2471
- vsnprintf+0xa7b/0x19a0 lib/vsprintf.c:2547
- kvasprintf+0xb2/0x170 lib/kasprintf.c:22
- kasprintf+0xbb/0xf0 lib/kasprintf.c:59
- hwsim_del_radio_nl+0x63a/0x7e0 drivers/net/wireless/mac80211_hwsim.c:3625
- genl_family_rcv_msg_doit net/netlink/genetlink.c:672 [inline]
- ...
- entry_SYSCALL_64_after_hwframe+0x49/0xbe
-
-Thus it seems that kasprintf() with "%.*s" format can not be used for
-duplicating a string with arbitrary length. Replace it with kstrndup().
-
-Reported-by: syzbot+6693adf1698864d21734@syzkaller.appspotmail.com
-Cc: stable@kernel.org
-Signed-off-by: Tuomas Tynkkynen <tuomas.tynkkynen@iki.fi>
----
-Compile tested only.
----
- drivers/net/wireless/mac80211_hwsim.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 7fe8207db6ae..7c4b7c31d07a 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -3669,9 +3669,9 @@ static int hwsim_new_radio_nl(struct sk_buff *msg, struct genl_info *info)
- 	}
- 
- 	if (info->attrs[HWSIM_ATTR_RADIO_NAME]) {
--		hwname = kasprintf(GFP_KERNEL, "%.*s",
--				   nla_len(info->attrs[HWSIM_ATTR_RADIO_NAME]),
--				   (char *)nla_data(info->attrs[HWSIM_ATTR_RADIO_NAME]));
-+		hwname = kstrndup((char *)nla_data(info->attrs[HWSIM_ATTR_RADIO_NAME]),
-+				  nla_len(info->attrs[HWSIM_ATTR_RADIO_NAME]),
-+				  GFP_KERNEL);
- 		if (!hwname)
- 			return -ENOMEM;
- 		param.hwname = hwname;
-@@ -3691,9 +3691,9 @@ static int hwsim_del_radio_nl(struct sk_buff *msg, struct genl_info *info)
- 	if (info->attrs[HWSIM_ATTR_RADIO_ID]) {
- 		idx = nla_get_u32(info->attrs[HWSIM_ATTR_RADIO_ID]);
- 	} else if (info->attrs[HWSIM_ATTR_RADIO_NAME]) {
--		hwname = kasprintf(GFP_KERNEL, "%.*s",
--				   nla_len(info->attrs[HWSIM_ATTR_RADIO_NAME]),
--				   (char *)nla_data(info->attrs[HWSIM_ATTR_RADIO_NAME]));
-+		hwname = kstrndup((char *)nla_data(info->attrs[HWSIM_ATTR_RADIO_NAME]),
-+				  nla_len(info->attrs[HWSIM_ATTR_RADIO_NAME]),
-+				  GFP_KERNEL);
- 		if (!hwname)
- 			return -ENOMEM;
- 	} else
--- 
-2.17.1
-
+RnJvbTogSsOpcsO0bWUgUG91aWxsZXIgPGplcm9tZS5wb3VpbGxlckBzaWxhYnMuY29tPgoKUG9p
+bnRlciB0byBjZmc4MDIxMV9ic3MgaXMgaGVsZCBkdXJpbmcgYWxsIGR1cmF0aW9uIG9mIHdmeF9k
+b19qb2luLiBCdXQsCml0IGlzIG5vdCBuZWNlc3NhcnksIFdlIGNhbiByZWxlYXNlIGl0IGZhciBl
+YXJsaWVyLgoKU2lnbmVkLW9mZi1ieTogSsOpcsO0bWUgUG91aWxsZXIgPGplcm9tZS5wb3VpbGxl
+ckBzaWxhYnMuY29tPgotLS0KIGRyaXZlcnMvc3RhZ2luZy93Zngvc3RhLmMgfCAzICstLQogMSBm
+aWxlIGNoYW5nZWQsIDEgaW5zZXJ0aW9uKCspLCAyIGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBh
+L2RyaXZlcnMvc3RhZ2luZy93Zngvc3RhLmMgYi9kcml2ZXJzL3N0YWdpbmcvd2Z4L3N0YS5jCmlu
+ZGV4IDM4MGU1MzE5NDcyYS4uYzY1ZDQ2NGE3YTliIDEwMDY0NAotLS0gYS9kcml2ZXJzL3N0YWdp
+bmcvd2Z4L3N0YS5jCisrKyBiL2RyaXZlcnMvc3RhZ2luZy93Zngvc3RhLmMKQEAgLTUwOSw2ICs1
+MDksNyBAQCBzdGF0aWMgdm9pZCB3ZnhfZG9fam9pbihzdHJ1Y3Qgd2Z4X3ZpZiAqd3ZpZikKIAkJ
+aGlmX3NldF9ibG9ja19hY2tfcG9saWN5KHd2aWYsIDB4RkYsIDB4RkYpOwogCiAJd2Z4X3NldF9t
+ZnAod3ZpZiwgYnNzKTsKKwljZmc4MDIxMV9wdXRfYnNzKHd2aWYtPndkZXYtPmh3LT53aXBoeSwg
+YnNzKTsKIAogCXJldCA9IGhpZl9qb2luKHd2aWYsIGNvbmYsIHd2aWYtPmNoYW5uZWwsIHNzaWQs
+IHNzaWRsZW4pOwogCWlmIChyZXQpIHsKQEAgLTUzOCw4ICs1MzksNiBAQCBzdGF0aWMgdm9pZCB3
+ZnhfZG9fam9pbihzdHJ1Y3Qgd2Z4X3ZpZiAqd3ZpZikKIAl3ZnhfdXBkYXRlX2ZpbHRlcmluZyh3
+dmlmKTsKIAogCW11dGV4X3VubG9jaygmd3ZpZi0+d2Rldi0+Y29uZl9tdXRleCk7Ci0JaWYgKGJz
+cykKLQkJY2ZnODAyMTFfcHV0X2Jzcyh3dmlmLT53ZGV2LT5ody0+d2lwaHksIGJzcyk7CiB9CiAK
+IHN0YXRpYyB2b2lkIHdmeF91bmpvaW5fd29yayhzdHJ1Y3Qgd29ya19zdHJ1Y3QgKndvcmspCi0t
+IAoyLjI1LjEKCg==
