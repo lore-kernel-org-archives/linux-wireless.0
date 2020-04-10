@@ -2,73 +2,127 @@ Return-Path: <SRS0=NY3P=52=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36DC8C2BB55
-	for <linux-wireless@archiver.kernel.org>; Fri, 10 Apr 2020 10:10:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E7E9C2BB1D
+	for <linux-wireless@archiver.kernel.org>; Fri, 10 Apr 2020 12:33:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0BAE62084D
-	for <linux-wireless@archiver.kernel.org>; Fri, 10 Apr 2020 10:10:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4443520769
+	for <linux-wireless@archiver.kernel.org>; Fri, 10 Apr 2020 12:33:22 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="INLqcIST"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726595AbgDJKKJ (ORCPT
+        id S1726092AbgDJMdQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 10 Apr 2020 06:10:09 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:32795 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725893AbgDJKKI (ORCPT
+        Fri, 10 Apr 2020 08:33:16 -0400
+Received: from mail-lj1-f196.google.com ([209.85.208.196]:33066 "EHLO
+        mail-lj1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725930AbgDJMdQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Apr 2020 06:10:08 -0400
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 03AA9xYkA027570, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexmb06.realtek.com.tw[172.21.6.99])
-        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 03AA9xYkA027570
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Fri, 10 Apr 2020 18:09:59 +0800
-Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
- RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Fri, 10 Apr 2020 18:09:59 +0800
-Received: from localhost.localdomain (172.21.68.128) by
- RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Fri, 10 Apr 2020 18:09:59 +0800
-From:   <yhchuang@realtek.com>
-To:     <kvalo@codeaurora.org>
-CC:     <linux-wireless@vger.kernel.org>, <briannorris@chromium.org>
-Subject: [PATCH 0/2] rtw88: add set antenna support
-Date:   Fri, 10 Apr 2020 18:09:48 +0800
-Message-ID: <20200410100950.3199-1-yhchuang@realtek.com>
+        Fri, 10 Apr 2020 08:33:16 -0400
+Received: by mail-lj1-f196.google.com with SMTP id q22so1838535ljg.0;
+        Fri, 10 Apr 2020 05:33:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:from:to:cc:subject:date:message-id;
+        bh=oZ4mTa/knZg2c3uydTiSH3iGohdOLCMYiOTGruiDB44=;
+        b=INLqcIST63qUP2L0bEZpAvS/9RIaV7Qr6MrQkTXbpyKTxw2bckSqzVlr/UTU5vJPlV
+         V0/BMJh/wM7nRQi3FBU/Gj9zVpdevlnc6EdAE4Q7v1uG5VEFStrbYDW0fdPQFdvMzt+4
+         u0IlEl1z+syacsjqSgJtLhOpUOQuTnS5e1ggOXUIdORCvZLPKW77Bdo3WVNILoxWWuLx
+         GcoDzdSxxOwH75+8UgRtDZVrdx9aSb6m4xuGAvn0/ovmVIfggkzmNBYZ7tz6579hYP1h
+         q0YGuBtlequ5w64x2mpCl0PKJ2fMEpdABifPhEi0OZLfNV1ZArdkYh9f1znVgUdgfgam
+         9mYQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:sender:from:to:cc:subject:date:message-id;
+        bh=oZ4mTa/knZg2c3uydTiSH3iGohdOLCMYiOTGruiDB44=;
+        b=J3LAUvLnzqwVSfQo0+faf9EbrM74NngDUSNwTDLqs6HqsRYNxROarKwB2ykz6hIIX6
+         D+ZAgrJiBUYTCyhmkRQtRubHGAFvr3n/YCgKaFJkE7dbTJ+hhhrf15eBLP6G1BlEFuGF
+         sg6ENBOh1/EDQmQKSabMjQ5lGAuMOeRSVKmNW0PSBSJeD65wHRSDMCamOHlfDUfsNdDc
+         BwPX0vKijw1QpR/SSXorP8Xa9J0SKPaXcGs4Hb9KO4QL7mdIIImw5QO1HXTM0fPXshK+
+         7tz8EbixTrO/MffHart4vRdR/PG5M57sxUWJsptXSfaz1gM62qIfnrH6lIKhnzmp8Ons
+         sG1g==
+X-Gm-Message-State: AGi0PuasSP30BUKAweNKM1q3Mzme24sToHVtfPkNep2UXV6VR1erTSiJ
+        ajuOdyzbDvPCcsmJxwrMAkg=
+X-Google-Smtp-Source: APiQypI1WtuGNzKw6wZJX6wI33yCJEpZK1zTnaPinzEQNJpD/F835Vr6wwyW2yatQgL9RvoCtK3ivg==
+X-Received: by 2002:a2e:8745:: with SMTP id q5mr2936178ljj.157.1586521993889;
+        Fri, 10 Apr 2020 05:33:13 -0700 (PDT)
+Received: from work.bb.dnainternet.fi (dffyyyyyyyyyyyysyd4py-3.rev.dnainternet.fi. [2001:14ba:2100::1e0:1e18])
+        by smtp.gmail.com with ESMTPSA id r23sm1012619ljh.34.2020.04.10.05.33.12
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 10 Apr 2020 05:33:13 -0700 (PDT)
+From:   Tuomas Tynkkynen <tuomas.tynkkynen@iki.fi>
+To:     johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        syzbot+6693adf1698864d21734@syzkaller.appspotmail.com,
+        Tuomas Tynkkynen <tuomas.tynkkynen@iki.fi>, stable@kernel.org
+Subject: [PATCH] mac80211_hwsim: Use kstrndup() in place of kasprintf()
+Date:   Fri, 10 Apr 2020 15:32:57 +0300
+Message-Id: <20200410123257.14559-1-tuomas.tynkkynen@iki.fi>
 X-Mailer: git-send-email 2.17.1
-MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [172.21.68.128]
-X-ClientProxiedBy: RTEXMB02.realtek.com.tw (172.21.6.95) To
- RTEXMB04.realtek.com.tw (172.21.6.97)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+syzbot reports a warning:
 
-Add support for ieee80211_ops::set_antenna to allow user space to
+precision 33020 too large
+WARNING: CPU: 0 PID: 9618 at lib/vsprintf.c:2471 set_precision+0x150/0x180 lib/vsprintf.c:2471
+ vsnprintf+0xa7b/0x19a0 lib/vsprintf.c:2547
+ kvasprintf+0xb2/0x170 lib/kasprintf.c:22
+ kasprintf+0xbb/0xf0 lib/kasprintf.c:59
+ hwsim_del_radio_nl+0x63a/0x7e0 drivers/net/wireless/mac80211_hwsim.c:3625
+ genl_family_rcv_msg_doit net/netlink/genetlink.c:672 [inline]
+ ...
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
 
-set the TX/RX antenna path. This is useful for a user wants to see
-the output of different antenna/path.
+Thus it seems that kasprintf() with "%.*s" format can not be used for
+duplicating a string with arbitrary length. Replace it with kstrndup().
 
-Yan-Hsuan Chuang (2):
-  rtw88: make rtw_chip_ops::set_antenna return int
-  rtw88: add support for set/get antennas
+Reported-by: syzbot+6693adf1698864d21734@syzkaller.appspotmail.com
+Cc: stable@kernel.org
+Signed-off-by: Tuomas Tynkkynen <tuomas.tynkkynen@iki.fi>
+---
+Compile tested only.
+---
+ drivers/net/wireless/mac80211_hwsim.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
- drivers/net/wireless/realtek/rtw88/mac80211.c | 33 +++++++++++++++++
- drivers/net/wireless/realtek/rtw88/main.c     |  3 ++
- drivers/net/wireless/realtek/rtw88/main.h     |  9 ++---
- drivers/net/wireless/realtek/rtw88/rtw8822b.c | 18 ++++++----
- drivers/net/wireless/realtek/rtw88/rtw8822c.c | 35 +++++++++++++++++++
- 5 files changed, 88 insertions(+), 10 deletions(-)
-
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 7fe8207db6ae..7c4b7c31d07a 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -3669,9 +3669,9 @@ static int hwsim_new_radio_nl(struct sk_buff *msg, struct genl_info *info)
+ 	}
+ 
+ 	if (info->attrs[HWSIM_ATTR_RADIO_NAME]) {
+-		hwname = kasprintf(GFP_KERNEL, "%.*s",
+-				   nla_len(info->attrs[HWSIM_ATTR_RADIO_NAME]),
+-				   (char *)nla_data(info->attrs[HWSIM_ATTR_RADIO_NAME]));
++		hwname = kstrndup((char *)nla_data(info->attrs[HWSIM_ATTR_RADIO_NAME]),
++				  nla_len(info->attrs[HWSIM_ATTR_RADIO_NAME]),
++				  GFP_KERNEL);
+ 		if (!hwname)
+ 			return -ENOMEM;
+ 		param.hwname = hwname;
+@@ -3691,9 +3691,9 @@ static int hwsim_del_radio_nl(struct sk_buff *msg, struct genl_info *info)
+ 	if (info->attrs[HWSIM_ATTR_RADIO_ID]) {
+ 		idx = nla_get_u32(info->attrs[HWSIM_ATTR_RADIO_ID]);
+ 	} else if (info->attrs[HWSIM_ATTR_RADIO_NAME]) {
+-		hwname = kasprintf(GFP_KERNEL, "%.*s",
+-				   nla_len(info->attrs[HWSIM_ATTR_RADIO_NAME]),
+-				   (char *)nla_data(info->attrs[HWSIM_ATTR_RADIO_NAME]));
++		hwname = kstrndup((char *)nla_data(info->attrs[HWSIM_ATTR_RADIO_NAME]),
++				  nla_len(info->attrs[HWSIM_ATTR_RADIO_NAME]),
++				  GFP_KERNEL);
+ 		if (!hwname)
+ 			return -ENOMEM;
+ 	} else
 -- 
 2.17.1
 
