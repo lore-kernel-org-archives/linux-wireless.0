@@ -7,142 +7,93 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 736CCC2BB1D
-	for <linux-wireless@archiver.kernel.org>; Fri, 10 Apr 2020 17:05:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E20A2C2BA2B
+	for <linux-wireless@archiver.kernel.org>; Fri, 10 Apr 2020 17:05:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 41D3C207FF
-	for <linux-wireless@archiver.kernel.org>; Fri, 10 Apr 2020 17:05:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B425C207FF
+	for <linux-wireless@archiver.kernel.org>; Fri, 10 Apr 2020 17:05:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="ttndIKf/"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="r8mq23Ib"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726669AbgDJRFg (ORCPT
+        id S1726652AbgDJRFm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 10 Apr 2020 13:05:36 -0400
+        Fri, 10 Apr 2020 13:05:42 -0400
 Received: from mail27.static.mailgun.info ([104.130.122.27]:47827 "EHLO
         mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726142AbgDJRFg (ORCPT
+        by vger.kernel.org with ESMTP id S1726142AbgDJRFm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Apr 2020 13:05:36 -0400
+        Fri, 10 Apr 2020 13:05:42 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1586538335; h=References: In-Reply-To: Message-Id: Date:
- Subject: Cc: To: From: Sender;
- bh=TI264FmlRMIEDjqWeS2Hwvh7QW6HEg4XFbSy1GYz9fQ=; b=ttndIKf/baUx+ZaGKEbs7vHMXHTWStHgk+Bbpy/X6tCyVC/aRfMY4JvXVEmf/8xUYtgmxmMM
- 77dIGOCYduzg+nJQKUXNo2Nv7/wJ6d+FsYw8gcI6i7eJY9EQiQwjGoRN73PLHn1cnNnXCw0T
- 7YtkDt2S9jH6aPUW0jtPFz7lXSg=
+ s=smtp; t=1586538342; h=Message-Id: Date: Subject: Cc: To: From:
+ Sender; bh=Kv7myonseSRBAS2TYbse5+s5rqqp2VnQhWcDuHD0LYw=; b=r8mq23Iblxz/nLklqy5shbkLXV4uRyWIiEgL/BTv/K16MuIhPPqqprjmMGc5Ra+jC3q/iEEy
+ m8aHoRi5WGJpvIfG4Vh8qB4fDa/UjbN7yNm3s3scKk1TgA36vXwHsEdB+KjsW6Ensydf9mcB
+ gD/P63PhW08CTDw7+kmu5BjGzn8=
 X-Mailgun-Sending-Ip: 104.130.122.27
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e90a757.7f220de0aab0-smtp-out-n05;
- Fri, 10 Apr 2020 17:05:27 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5e90a753.7f5456de4298-smtp-out-n05;
+ Fri, 10 Apr 2020 17:05:23 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 00836C432C2; Fri, 10 Apr 2020 17:05:26 +0000 (UTC)
+        id 2A79FC432C2; Fri, 10 Apr 2020 17:05:23 +0000 (UTC)
 Received: from che-swdbs-01.qca.qualcomm.com (blr-c-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.19.19])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: mkenna)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 9B542C433CB;
-        Fri, 10 Apr 2020 17:05:24 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 9B542C433CB
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 7A143C433BA;
+        Fri, 10 Apr 2020 17:05:20 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 7A143C433BA
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=mkenna@codeaurora.org
 From:   Maharaja Kennadyrajan <mkenna@codeaurora.org>
 To:     ath11k@lists.infradead.org
 Cc:     linux-wireless@vger.kernel.org,
         Maharaja Kennadyrajan <mkenna@codeaurora.org>
-Subject: [PATCH] ath11k: Fix rx_filter flags setting for per peer rx_stats
-Date:   Fri, 10 Apr 2020 22:36:45 +0530
-Message-Id: <1586538405-16226-3-git-send-email-mkenna@codeaurora.org>
+Subject: [PATCH] ath11k: Cleanup in pdev destroy and mac register during crash on recovery
+Date:   Fri, 10 Apr 2020 22:36:43 +0530
+Message-Id: <1586538405-16226-1-git-send-email-mkenna@codeaurora.org>
 X-Mailer: git-send-email 1.7.9.5
-In-Reply-To: <1586538405-16226-1-git-send-email-mkenna@codeaurora.org>
-References: <1586538405-16226-1-git-send-email-mkenna@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Rx_filter flags are set with default filter flags during
-wifi up/down sequence even though the 'ext_rx_stats' debugfs
-is enabled as 1. So, that we are not getting proper per peer
-rx_stats.
-Hence, fixing this by setting the missing rx_filter when
-ext_rx_stats is already set/enabled.
+Debugfs pdev entries should be cleaned up during the crash
+on recovery. If not, mac register will fail for the reason
+that it is already registered during core reconfigure.
 
 Signed-off-by: Maharaja Kennadyrajan <mkenna@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath11k/core.h  |  1 +
- drivers/net/wireless/ath/ath11k/debug.c |  2 ++
- drivers/net/wireless/ath/ath11k/debug.h | 10 ++++++++++
- drivers/net/wireless/ath/ath11k/mac.c   |  4 +++-
- 4 files changed, 16 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath11k/debug.c | 3 +++
+ drivers/net/wireless/ath/ath11k/mac.c   | 3 +++
+ 2 files changed, 6 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
-index b4c3e041..a8ef95f 100644
---- a/drivers/net/wireless/ath/ath11k/core.h
-+++ b/drivers/net/wireless/ath/ath11k/core.h
-@@ -392,6 +392,7 @@ struct ath11k_debug {
- 	u32 pktlog_mode;
- 	u32 pktlog_peer_valid;
- 	u8 pktlog_peer_addr[ETH_ALEN];
-+	u32 rx_filter;
- };
- 
- struct ath11k_per_peer_tx_stats {
 diff --git a/drivers/net/wireless/ath/ath11k/debug.c b/drivers/net/wireless/ath/ath11k/debug.c
-index 8d48517..e479504 100644
+index 8d48517..825e7ba6 100644
 --- a/drivers/net/wireless/ath/ath11k/debug.c
 +++ b/drivers/net/wireless/ath/ath11k/debug.c
-@@ -698,6 +698,8 @@ static ssize_t ath11k_write_extd_rx_stats(struct file *file,
- 		tlv_filter = ath11k_mac_mon_status_filter_default;
- 	}
+@@ -803,6 +803,9 @@ static ssize_t ath11k_debug_dump_soc_rx_stats(struct file *file,
  
-+	ar->debug.rx_filter = tlv_filter.rx_filter;
+ int ath11k_debug_pdev_create(struct ath11k_base *ab)
+ {
++	if (test_bit(ATH11K_FLAG_REGISTERED, &ab->dev_flags))
++		return 0;
 +
- 	ring_id = ar->dp.rx_mon_status_refill_ring.refill_buf_ring.ring_id;
- 	ret = ath11k_dp_tx_htt_rx_filter_setup(ar->ab, ring_id, ar->dp.mac_id,
- 					       HAL_RXDMA_MONITOR_STATUS,
-diff --git a/drivers/net/wireless/ath/ath11k/debug.h b/drivers/net/wireless/ath/ath11k/debug.h
-index 4a3ff82..45454fc 100644
---- a/drivers/net/wireless/ath/ath11k/debug.h
-+++ b/drivers/net/wireless/ath/ath11k/debug.h
-@@ -188,6 +188,11 @@ static inline int ath11k_debug_is_extd_rx_stats_enabled(struct ath11k *ar)
- 	return ar->debug.extd_rx_stats;
- }
+ 	ab->debugfs_soc = debugfs_create_dir(ab->hw_params.name, ab->debugfs_ath11k);
  
-+static inline int ath11k_debug_rx_filter(struct ath11k *ar)
-+{
-+	return ar->debug.rx_filter;
-+}
-+
- void ath11k_sta_add_debugfs(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			    struct ieee80211_sta *sta, struct dentry *dir);
- void
-@@ -269,6 +274,11 @@ static inline bool ath11k_debug_is_pktlog_peer_valid(struct ath11k *ar, u8 *addr
- 	return false;
- }
- 
-+static inline int ath11k_debug_rx_filter(struct ath11k *ar)
-+{
-+	return 0;
-+}
-+
- static inline void
- ath11k_accumulate_per_peer_tx_stats(struct ath11k_sta *arsta,
- 				    struct ath11k_per_peer_tx_stats *peer_stats,
+ 	if (IS_ERR_OR_NULL(ab->debugfs_soc)) {
 diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index 9f8bc19..3665e72 100644
+index 9f8bc19..4783394 100644
 --- a/drivers/net/wireless/ath/ath11k/mac.c
 +++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -3877,8 +3877,10 @@ static int ath11k_mac_config_mon_status_default(struct ath11k *ar, bool enable)
- 	struct htt_rx_ring_tlv_filter tlv_filter = {0};
- 	u32 ring_id;
+@@ -5891,6 +5891,9 @@ int ath11k_mac_register(struct ath11k_base *ab)
+ 	int i;
+ 	int ret;
  
--	if (enable)
-+	if (enable) {
- 		tlv_filter = ath11k_mac_mon_status_filter_default;
-+		tlv_filter.rx_filter = ath11k_debug_rx_filter(ar);
-+	}
- 
- 	ring_id = ar->dp.rx_mon_status_refill_ring.refill_buf_ring.ring_id;
- 
++	if (test_bit(ATH11K_FLAG_REGISTERED, &ab->dev_flags))
++		return 0;
++
+ 	for (i = 0; i < ab->num_radios; i++) {
+ 		pdev = &ab->pdevs[i];
+ 		ar = pdev->ar;
 -- 
 1.9.1
