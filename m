@@ -2,92 +2,142 @@ Return-Path: <SRS0=NY3P=52=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C53E7C2BA2B
-	for <linux-wireless@archiver.kernel.org>; Fri, 10 Apr 2020 09:12:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E69FEC2BA2B
+	for <linux-wireless@archiver.kernel.org>; Fri, 10 Apr 2020 10:10:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 95BFF207FF
-	for <linux-wireless@archiver.kernel.org>; Fri, 10 Apr 2020 09:12:08 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="aMd2+d5p"
+	by mail.kernel.org (Postfix) with ESMTP id C0D1C20757
+	for <linux-wireless@archiver.kernel.org>; Fri, 10 Apr 2020 10:10:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726703AbgDJJMG (ORCPT
+        id S1726234AbgDJKKI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 10 Apr 2020 05:12:06 -0400
-Received: from mail-wm1-f66.google.com ([209.85.128.66]:55894 "EHLO
-        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725897AbgDJJMC (ORCPT
+        Fri, 10 Apr 2020 06:10:08 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:32794 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726059AbgDJKKI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Apr 2020 05:12:02 -0400
-Received: by mail-wm1-f66.google.com with SMTP id e26so1842678wmk.5
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Apr 2020 02:12:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=subject:to:references:from:message-id:date:user-agent:mime-version
-         :in-reply-to:content-language:content-transfer-encoding;
-        bh=b2CpFz454BDdwSqjxr1G6oZhbHKRvHfmuEllgNAzRl4=;
-        b=aMd2+d5pjt/YhcQB6BbQ7FOikvw1vYCKys3R3QEmkI6Kuar1sQNy7O47jG/TbMq9YQ
-         QRWMyNFicIA8c1/4MRT5ymxHSswxEpO6OOeO1NL0pc3mw2knsEWtRIBLtPPiwVoDr7Nb
-         4LC4R/r9PlKF8ikSwBZ/dqHPfMJQIwYpT9wfA=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=b2CpFz454BDdwSqjxr1G6oZhbHKRvHfmuEllgNAzRl4=;
-        b=Z4w9DCmoEQy5B7zgJx5YFlbfeX5EQCZ+9M5MOVXK54lMAf16RWyuCqXWUXSLWY/NV7
-         r0aoKHP+1hEFs68YGx4AMc3mSkCL2CYs9EW/LeLmzlilnyaNKAQj8+hfYpojoXrFK/Nr
-         udmcVutQBMT7HHKelXZQgx7iLGdPbitjHtjT1uVIVZtt8h0nsFBy4zrez8NLDlbm9g/h
-         +QS3mu51eTmA60WLHK6sd5Vv+AmNffEs5QW1tirdYwwdmB7NSY7DbWfw5bfO3zk+bPUW
-         NcBrBhGGatU9RYY9RUiQAv4n+0urEfn+baAkrDjpmPwJ5RQ7zHVNaKK7hfrFkZx1I7dZ
-         ZCYg==
-X-Gm-Message-State: AGi0PuabN3xrJ4EURwHSbhRO0nfeIjbUzX9/B/N8HFlgn59YBTGkhcYC
-        WmZU+x+fdd4QgdPt34vOlzvlzA==
-X-Google-Smtp-Source: APiQypLhWw+WB9Ta+aCTQgGcKmryDdYoaFIy26iFQ5zeat19uu9UDC16papfiNcRsQWb200xnLPn+g==
-X-Received: by 2002:a7b:cb45:: with SMTP id v5mr4107314wmj.17.1586509921001;
-        Fri, 10 Apr 2020 02:12:01 -0700 (PDT)
-Received: from [192.168.178.129] (f140230.upc-f.chello.nl. [80.56.140.230])
-        by smtp.gmail.com with ESMTPSA id j11sm2063686wrt.14.2020.04.10.02.11.59
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 10 Apr 2020 02:12:00 -0700 (PDT)
-Subject: Re: [PATCH] brcmsmac: make brcms_c_set_mac() void
-To:     Jason Yan <yanaijie@huawei.com>, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, chi-hsien.lin@cypress.com,
-        wright.feng@cypress.com, kvalo@codeaurora.org, davem@davemloft.net,
-        eduardoabinader@gmail.com, christophe.jaillet@wanadoo.fr,
-        austindh.kim@gmail.com, linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20200410090817.26883-1-yanaijie@huawei.com>
-From:   Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <29f323a4-4749-0016-e5e5-6c17166876fc@broadcom.com>
-Date:   Fri, 10 Apr 2020 11:11:58 +0200
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.6.0
+        Fri, 10 Apr 2020 06:10:08 -0400
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 03AA9xbaE027574, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexmb06.realtek.com.tw[172.21.6.99])
+        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 03AA9xbaE027574
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+        Fri, 10 Apr 2020 18:09:59 +0800
+Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
+ RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1779.2; Fri, 10 Apr 2020 18:09:59 +0800
+Received: from localhost.localdomain (172.21.68.128) by
+ RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1779.2; Fri, 10 Apr 2020 18:09:59 +0800
+From:   <yhchuang@realtek.com>
+To:     <kvalo@codeaurora.org>
+CC:     <linux-wireless@vger.kernel.org>, <briannorris@chromium.org>
+Subject: [PATCH 1/2] rtw88: make rtw_chip_ops::set_antenna return int
+Date:   Fri, 10 Apr 2020 18:09:49 +0800
+Message-ID: <20200410100950.3199-2-yhchuang@realtek.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20200410100950.3199-1-yhchuang@realtek.com>
+References: <20200410100950.3199-1-yhchuang@realtek.com>
 MIME-Version: 1.0
-In-Reply-To: <20200410090817.26883-1-yanaijie@huawei.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-Originating-IP: [172.21.68.128]
+X-ClientProxiedBy: RTEXMB02.realtek.com.tw (172.21.6.95) To
+ RTEXMB04.realtek.com.tw (172.21.6.97)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 4/10/2020 11:08 AM, Jason Yan wrote:
-> Fix the following coccicheck warning:
-> 
-> drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.c:3773:5-8:
-> Unneeded variable: "err". Return "0" on line 3781
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Reported-by: Hulk Robot <hulkci@huawei.com>
-> Signed-off-by: Jason Yan <yanaijie@huawei.com>
-> ---
->   drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.c | 5 +----
->   1 file changed, 1 insertion(+), 4 deletions(-)
+To support ieee80211_ops::set_antenna, the driver can decide if the
+antenna mask is accepted, otherwise it can return an error code.
+Because each chip could have different limitations, let the chip
+check the mask and return.
+
+Also the antenna mask for TRX from upper space is 32-bit long.
+Change the antenna mask for rtw_chip_ops::set_antenna from u8 to u32.
+
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw88/main.h     |  9 +++++----
+ drivers/net/wireless/realtek/rtw88/rtw8822b.c | 18 ++++++++++++------
+ 2 files changed, 17 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
+index c6b590fdb573..c9edcabd7c42 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.h
++++ b/drivers/net/wireless/realtek/rtw88/main.h
+@@ -798,8 +798,9 @@ struct rtw_chip_ops {
+ 	void (*set_tx_power_index)(struct rtw_dev *rtwdev);
+ 	int (*rsvd_page_dump)(struct rtw_dev *rtwdev, u8 *buf, u32 offset,
+ 			      u32 size);
+-	void (*set_antenna)(struct rtw_dev *rtwdev, u8 antenna_tx,
+-			    u8 antenna_rx);
++	int (*set_antenna)(struct rtw_dev *rtwdev,
++			   u32 antenna_tx,
++			   u32 antenna_rx);
+ 	void (*cfg_ldo25)(struct rtw_dev *rtwdev, bool enable);
+ 	void (*false_alarm_statistics)(struct rtw_dev *rtwdev);
+ 	void (*phy_calibration)(struct rtw_dev *rtwdev);
+@@ -1567,8 +1568,8 @@ struct rtw_hal {
+ 	u8 sec_ch_offset;
+ 	u8 rf_type;
+ 	u8 rf_path_num;
+-	u8 antenna_tx;
+-	u8 antenna_rx;
++	u32 antenna_tx;
++	u32 antenna_rx;
+ 	u8 bfee_sts_cap;
+ 
+ 	/* protect tx power section */
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822b.c b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
+index 4dd7d4143b04..c02f3a730369 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822b.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
+@@ -998,8 +998,9 @@ static bool rtw8822b_check_rf_path(u8 antenna)
+ 	}
+ }
+ 
+-static void rtw8822b_set_antenna(struct rtw_dev *rtwdev, u8 antenna_tx,
+-				 u8 antenna_rx)
++static int rtw8822b_set_antenna(struct rtw_dev *rtwdev,
++				u32 antenna_tx,
++				u32 antenna_rx)
+ {
+ 	struct rtw_hal *hal = &rtwdev->hal;
+ 
+@@ -1007,16 +1008,21 @@ static void rtw8822b_set_antenna(struct rtw_dev *rtwdev, u8 antenna_tx,
+ 		antenna_tx, antenna_rx);
+ 
+ 	if (!rtw8822b_check_rf_path(antenna_tx)) {
+-		rtw_info(rtwdev, "unsupport tx path, set to default path ab\n");
+-		antenna_tx = BB_PATH_AB;
++		rtw_info(rtwdev, "unsupport tx path 0x%x\n", antenna_tx);
++		return -EINVAL;
+ 	}
++
+ 	if (!rtw8822b_check_rf_path(antenna_rx)) {
+-		rtw_info(rtwdev, "unsupport rx path, set to default path ab\n");
+-		antenna_rx = BB_PATH_AB;
++		rtw_info(rtwdev, "unsupport rx path 0x%x\n", antenna_rx);
++		return -EINVAL;
+ 	}
++
+ 	hal->antenna_tx = antenna_tx;
+ 	hal->antenna_rx = antenna_rx;
++
+ 	rtw8822b_config_trx_mode(rtwdev, antenna_tx, antenna_rx, false);
++
++	return 0;
+ }
+ 
+ static void rtw8822b_cfg_ldo25(struct rtw_dev *rtwdev, bool enable)
+-- 
+2.17.1
+
