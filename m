@@ -1,200 +1,100 @@
-Return-Path: <SRS0=oNpL=5Z=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=NY3P=52=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EBD4C2BA19
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Apr 2020 18:14:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E2C8C2D0EC
+	for <linux-wireless@archiver.kernel.org>; Fri, 10 Apr 2020 03:57:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 111CD20771
-	for <linux-wireless@archiver.kernel.org>; Thu,  9 Apr 2020 18:14:09 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="RHDnKIff"
+	by mail.kernel.org (Postfix) with ESMTP id D6D9720936
+	for <linux-wireless@archiver.kernel.org>; Fri, 10 Apr 2020 03:57:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1586491051;
+	bh=Kxg+6mNL0fU0Qz97sBuOPhNXN09NkF4B2vPqrXgEL0w=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=U8Bm1sJ7sONB7zmP5NJvr2GXZLczvXVW2pXab3vb9auVZaDdN/A2aTxa3qQz2Cqby
+	 /zHx1IBijELWKGdF8x79Swx/fPpA9JkdGIB5DdS6D9aMKi61HGPXL+dMYuNQkX3XOB
+	 J87IlpEpUMfAB8t9BIRR5+qOyCURnJkIcOPGN2ok=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726470AbgDISOH (ORCPT
+        id S1728691AbgDJD51 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 9 Apr 2020 14:14:07 -0400
-Received: from nbd.name ([46.4.11.11]:59826 "EHLO nbd.name"
+        Thu, 9 Apr 2020 23:57:27 -0400
+Received: from mail.kernel.org ([198.145.29.99]:33020 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725970AbgDISOH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Apr 2020 14:14:07 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-Id:Date:Subject
-        :Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:Content-Description:
-        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=B6jjiQyha5+H0c3ksayL63R5nLu7BQOaOuj7V+auOXI=; b=RHDnKIfffPN2gX6bvJETQjdD0R
-        BtiMZXPsQuxtQEXw+hwqLH/lohuLbhztENzqQN+VqT4rtYHj2uoGdwGUlrmQcMvIqg/oyMChYhjBO
-        IqdvyGmP8hp29uXuMZ4Nc6D6Qxdt3EXsVExGAARwc/8P3Wf4VdlL2kP5O7ycQrzAFs8I=;
-Received: from p54ae91d1.dip0.t-ipconnect.de ([84.174.145.209] helo=maeck.lan)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.89)
-        (envelope-from <nbd@nbd.name>)
-        id 1jMbgg-00007z-QG; Thu, 09 Apr 2020 20:14:02 +0200
-Received: by maeck.lan (Postfix, from userid 501)
-        id 3FC11829C694; Thu,  9 Apr 2020 20:14:02 +0200 (CEST)
-From:   Felix Fietkau <nbd@nbd.name>
-To:     linux-wireless@vger.kernel.org
-Cc:     Soul Huang <Soul.Huang@mediatek.com>,
-        Lorenzo Bianconi <lorenzo@kernel.org>
-Subject: [PATCH v2] mt76: mt7615: rework IRQ handling to prepare for MSI support
-Date:   Thu,  9 Apr 2020 20:14:01 +0200
-Message-Id: <20200409181401.12070-1-nbd@nbd.name>
-X-Mailer: git-send-email 2.24.0
+        id S1726791AbgDJDtM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 9 Apr 2020 23:49:12 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 1E5162145D;
+        Fri, 10 Apr 2020 03:49:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1586490553;
+        bh=Kxg+6mNL0fU0Qz97sBuOPhNXN09NkF4B2vPqrXgEL0w=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=DdodCpMjN3LJB/G0n2hf8dezhzhoq/IMCR4CnPdcqQIdyEbO/tBgjPLFaDfRo9dum
+         zeTRoqJ1qCsYSGJSqGzMbsHh9f7Dm6mxGVRpWL/4fyKAFqexlV0QR6mxwjMzMTnXzL
+         GaTAxekzszAZKC+2lnGS4h41qbtnIpGevwzKjH4U=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Ajay Singh <ajay.kathat@microchip.com>,
+        kbuild test robot <lkp@intel.com>,
+        Dan Carpenter <dan.carpenter@oracle.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
+Subject: [PATCH AUTOSEL 5.4 02/46] staging: wilc1000: avoid double unlocking of 'wilc->hif_cs' mutex
+Date:   Thu,  9 Apr 2020 23:48:25 -0400
+Message-Id: <20200410034909.8922-2-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20200410034909.8922-1-sashal@kernel.org>
+References: <20200410034909.8922-1-sashal@kernel.org>
 MIME-Version: 1.0
+X-stable: review
+X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-With MSI interrupts, IRQs must not be enabled from within the IRQ handler,
-because that can lead to lost events.
-Defer IRQ processing to a tasklet, which is also responsible for enabling
-IRQs (to avoid race conditions against the handler)
+From: Ajay Singh <ajay.kathat@microchip.com>
 
-Co-developed-by: Soul Huang <Soul.Huang@mediatek.com>
-Acked-by: Lorenzo Bianconi <lorenzo@kernel.org>
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+[ Upstream commit 6c411581caef6e3b2c286871641018364c6db50a ]
+
+Possible double unlocking of 'wilc->hif_cs' mutex was identified by
+smatch [1]. Removed the extra call to release_bus() in
+wilc_wlan_handle_txq() which was missed in earlier commit fdc2ac1aafc6
+("staging: wilc1000: support suspend/resume functionality").
+
+[1]. https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org/thread/NOEVW7C3GV74EWXJO3XX6VT2NKVB2HMT/
+
+Reported-by: kbuild test robot <lkp@intel.com>
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Ajay Singh <ajay.kathat@microchip.com>
+Link: https://lore.kernel.org/r/20200221170120.15739-1-ajay.kathat@microchip.com
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
-v2: fix potential irq storm on init
+ drivers/staging/wilc1000/wilc_wlan.c | 1 -
+ 1 file changed, 1 deletion(-)
 
- drivers/net/wireless/mediatek/mt76/mmio.c     |  3 +-
- .../net/wireless/mediatek/mt76/mt7615/init.c  |  2 ++
- .../net/wireless/mediatek/mt76/mt7615/mmio.c  | 29 ++++++++++++++-----
- .../wireless/mediatek/mt76/mt7615/mt7615.h    |  9 +++---
- 4 files changed, 29 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/net/wireless/mediatek/mt76/mmio.c b/drivers/net/wireless/mediatek/mt76/mmio.c
-index 7ead6620bb8b..26353b6bce97 100644
---- a/drivers/net/wireless/mediatek/mt76/mmio.c
-+++ b/drivers/net/wireless/mediatek/mt76/mmio.c
-@@ -73,7 +73,8 @@ void mt76_set_irq_mask(struct mt76_dev *dev, u32 addr,
- 	spin_lock_irqsave(&dev->mmio.irq_lock, flags);
- 	dev->mmio.irqmask &= ~clear;
- 	dev->mmio.irqmask |= set;
--	mt76_mmio_wr(dev, addr, dev->mmio.irqmask);
-+	if (addr)
-+		mt76_mmio_wr(dev, addr, dev->mmio.irqmask);
- 	spin_unlock_irqrestore(&dev->mmio.irq_lock, flags);
- }
- EXPORT_SYMBOL_GPL(mt76_set_irq_mask);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/init.c b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
-index 96b7c6284833..cb626a2d9197 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
-@@ -561,5 +561,7 @@ void mt7615_unregister_device(struct mt7615_dev *dev)
- 	spin_unlock_bh(&dev->token_lock);
- 	idr_destroy(&dev->token);
- 
-+	tasklet_disable(&dev->irq_tasklet);
-+
- 	mt76_free_device(&dev->mt76);
- }
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mmio.c b/drivers/net/wireless/mediatek/mt76/mt7615/mmio.c
-index 3849bb6b49d0..e9f9cda6bb59 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mmio.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mmio.c
-@@ -80,30 +80,42 @@ mt7615_rx_poll_complete(struct mt76_dev *mdev, enum mt76_rxq_id q)
- static irqreturn_t mt7615_irq_handler(int irq, void *dev_instance)
- {
- 	struct mt7615_dev *dev = dev_instance;
--	u32 intr;
- 
--	intr = mt76_rr(dev, MT_INT_SOURCE_CSR);
--	mt76_wr(dev, MT_INT_SOURCE_CSR, intr);
-+	mt76_wr(dev, MT_INT_MASK_CSR, 0);
- 
- 	if (!test_bit(MT76_STATE_INITIALIZED, &dev->mphy.state))
- 		return IRQ_NONE;
- 
--	trace_dev_irq(&dev->mt76, intr, dev->mt76.mmio.irqmask);
-+	tasklet_schedule(&dev->irq_tasklet);
-+
-+	return IRQ_HANDLED;
-+}
-+
-+static void mt7615_irq_tasklet(unsigned long data)
-+{
-+	struct mt7615_dev *dev = (struct mt7615_dev *)data;
-+	u32 intr, mask = 0;
-+
-+	mt76_wr(dev, MT_INT_MASK_CSR, 0);
- 
-+	intr = mt76_rr(dev, MT_INT_SOURCE_CSR);
-+	mt76_wr(dev, MT_INT_SOURCE_CSR, intr);
-+
-+	trace_dev_irq(&dev->mt76, intr, dev->mt76.mmio.irqmask);
- 	intr &= dev->mt76.mmio.irqmask;
- 
- 	if (intr & MT_INT_TX_DONE_ALL) {
--		mt7615_irq_disable(dev, MT_INT_TX_DONE_ALL);
-+		mask |= MT_INT_TX_DONE_ALL;
- 		napi_schedule(&dev->mt76.tx_napi);
- 	}
- 
- 	if (intr & MT_INT_RX_DONE(0)) {
--		mt7615_irq_disable(dev, MT_INT_RX_DONE(0));
-+		mask |= MT_INT_RX_DONE(0);
- 		napi_schedule(&dev->mt76.napi[0]);
- 	}
- 
- 	if (intr & MT_INT_RX_DONE(1)) {
--		mt7615_irq_disable(dev, MT_INT_RX_DONE(1));
-+		mask |= MT_INT_RX_DONE(1);
- 		napi_schedule(&dev->mt76.napi[1]);
- 	}
- 
-@@ -117,7 +129,7 @@ static irqreturn_t mt7615_irq_handler(int irq, void *dev_instance)
- 		}
- 	}
- 
--	return IRQ_HANDLED;
-+	mt76_set_irq_mask(&dev->mt76, MT_INT_MASK_CSR, mask, 0);
- }
- 
- int mt7615_mmio_probe(struct device *pdev, void __iomem *mem_base,
-@@ -154,6 +166,7 @@ int mt7615_mmio_probe(struct device *pdev, void __iomem *mem_base,
- 
- 	dev = container_of(mdev, struct mt7615_dev, mt76);
- 	mt76_mmio_init(&dev->mt76, mem_base);
-+	tasklet_init(&dev->irq_tasklet, mt7615_irq_tasklet, (unsigned long)dev);
- 
- 	dev->reg_map = map;
- 	dev->ops = ops;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-index 4f0d29e5e595..10a98d38f77e 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-@@ -229,6 +229,8 @@ struct mt7615_dev {
- 		struct mt76_phy mphy;
- 	};
- 
-+	struct tasklet_struct irq_tasklet;
-+
- 	struct mt7615_phy phy;
- 	u32 vif_mask;
- 	u32 omac_mask;
-@@ -404,12 +406,9 @@ static inline bool is_mt7663(struct mt76_dev *dev)
- 
- static inline void mt7615_irq_enable(struct mt7615_dev *dev, u32 mask)
- {
--	mt76_set_irq_mask(&dev->mt76, MT_INT_MASK_CSR, 0, mask);
--}
-+	mt76_set_irq_mask(&dev->mt76, 0, 0, mask);
- 
--static inline void mt7615_irq_disable(struct mt7615_dev *dev, u32 mask)
--{
--	mt76_set_irq_mask(&dev->mt76, MT_INT_MASK_CSR, mask, 0);
-+	tasklet_schedule(&dev->irq_tasklet);
- }
- 
- static inline bool mt7615_firmware_offload(struct mt7615_dev *dev)
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 771d8cb68dc17..02f551536e18b 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -578,7 +578,6 @@ int wilc_wlan_handle_txq(struct wilc *wilc, u32 *txq_count)
+ 				entries = ((reg >> 3) & 0x3f);
+ 				break;
+ 			}
+-			release_bus(wilc, WILC_BUS_RELEASE_ALLOW_SLEEP);
+ 		} while (--timeout);
+ 		if (timeout <= 0) {
+ 			ret = func->hif_write_reg(wilc, WILC_HOST_VMM_CTL, 0x0);
 -- 
-2.24.0
+2.20.1
 
