@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2F08C2BB85
-	for <linux-wireless@archiver.kernel.org>; Fri, 10 Apr 2020 04:00:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53D6DC2BB86
+	for <linux-wireless@archiver.kernel.org>; Fri, 10 Apr 2020 04:03:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 815842145D
-	for <linux-wireless@archiver.kernel.org>; Fri, 10 Apr 2020 04:00:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2214120BED
+	for <linux-wireless@archiver.kernel.org>; Fri, 10 Apr 2020 04:03:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1586491210;
-	bh=3UjQVSicJ7z1E7lK3tpNSkw0cHKIFbCY3jGJKT13Kv0=;
+	s=default; t=1586491411;
+	bh=veCBmgdRybGO47FNkFF3zVpn19J+P2jgtZGRswXSyFg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=s2Lk0Z7FxX2DHzg/rsaCuyziHadToVu4CC+bnZXEJaRY7BbIYO161XR+54l5G+eRu
-	 inTKLOegU19q08WT2ClUuATzKfwne9uHOV5je2BQGjy6svtWiZnkrKub71uooENOSv
-	 FBmpdMmLjfdzxBcPYIk4ck8GOSJSIDarXtnvB0fE=
+	b=GAnGO2Np+d2cTewii4/l6739eWMiM5FATHoxvCkApbkGdEBJFKHr8mSAiB57hKkxV
+	 Sp9k3DP3MtXxlgbl1Lr42+g90VD0BkvkuYdNh3L890acPUIXOrENvX8LHCt38MKl00
+	 6QqOAgWyU2/CT+Y9eSeb3Z2uZPVPfuS9r/IL9WXQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726690AbgDJDsG (ORCPT
+        id S1726718AbgDJDqm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 9 Apr 2020 23:48:06 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59266 "EHLO mail.kernel.org"
+        Thu, 9 Apr 2020 23:46:42 -0400
+Received: from mail.kernel.org ([198.145.29.99]:56612 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728018AbgDJDsF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 9 Apr 2020 23:48:05 -0400
+        id S1726082AbgDJDqk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 9 Apr 2020 23:46:40 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id C774C2145D;
-        Fri, 10 Apr 2020 03:48:04 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 59F4620BED;
+        Fri, 10 Apr 2020 03:46:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586490485;
-        bh=3UjQVSicJ7z1E7lK3tpNSkw0cHKIFbCY3jGJKT13Kv0=;
+        s=default; t=1586490400;
+        bh=veCBmgdRybGO47FNkFF3zVpn19J+P2jgtZGRswXSyFg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=DldbQVnm+vifTLWBeZlD02unaXCic91E2+1YSMtZ1Xz2FWUntkj8Q/ctV6ICKF0yj
-         WCBlfE20kDvAXABU2wEKVdoWzcbEjyK5Y0+RvSDdXzoNNMoRS0Efm6GvtY5PX9aQTQ
-         IdFcRLBh6nA+sNoiPHQlJwtZCz4tVt/W42G80SwQ=
+        b=grMnufgF/5rJDnhlgTHbr6X8mVDtQE+5ejGB+douOLT9mqr5UWg9DLkMMXwx9Yy7i
+         xnZp8bIkODz64Mn9eIFNduUe2GfW/z+VX9LWrRZIPCTFRCeb+hi8nDPV/y9ttPQ/uT
+         JcIZpXpAPxxAzUMVQtqo/yTWO+4FhHRz/YAt5Y6k=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Ajay Singh <ajay.kathat@microchip.com>,
@@ -47,12 +47,12 @@ Cc:     Ajay Singh <ajay.kathat@microchip.com>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
-Subject: [PATCH AUTOSEL 5.5 04/56] staging: wilc1000: avoid double unlocking of 'wilc->hif_cs' mutex
-Date:   Thu,  9 Apr 2020 23:47:08 -0400
-Message-Id: <20200410034800.8381-4-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.6 04/68] staging: wilc1000: avoid double unlocking of 'wilc->hif_cs' mutex
+Date:   Thu,  9 Apr 2020 23:45:29 -0400
+Message-Id: <20200410034634.7731-4-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200410034800.8381-1-sashal@kernel.org>
-References: <20200410034800.8381-1-sashal@kernel.org>
+In-Reply-To: <20200410034634.7731-1-sashal@kernel.org>
+References: <20200410034634.7731-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -84,10 +84,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 deletion(-)
 
 diff --git a/drivers/staging/wilc1000/wlan.c b/drivers/staging/wilc1000/wlan.c
-index d3de76126b787..3098399741d7b 100644
+index 601e4d1345d24..05b8adfe001da 100644
 --- a/drivers/staging/wilc1000/wlan.c
 +++ b/drivers/staging/wilc1000/wlan.c
-@@ -578,7 +578,6 @@ int wilc_wlan_handle_txq(struct wilc *wilc, u32 *txq_count)
+@@ -572,7 +572,6 @@ int wilc_wlan_handle_txq(struct wilc *wilc, u32 *txq_count)
  				entries = ((reg >> 3) & 0x3f);
  				break;
  			}
