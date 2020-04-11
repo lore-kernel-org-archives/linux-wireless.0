@@ -7,50 +7,46 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EA3AC2BA19
-	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:18:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CA91C2BBC7
+	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:19:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7795420757
-	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:18:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F1C2420757
+	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:19:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1586647133;
-	bh=OglxkV4OqD8XJqgtsspXhh1MlkPcsBPThcnK8t0l2n0=;
+	s=default; t=1586647163;
+	bh=cZ9vLBljASgp8PXLpSEwtdER+2F8t7FkhxeJGThML/Q=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=jpsr/Cwy2peIXESOUmR+Pddz5ppYuwzVAZB5835kMirx9ZHyFGa7CvH7WHA+0Df4I
-	 iTl6O+OE/BeH3FTVE7DHl32M1TzQPlS1eeJLp4SCzXNngFqymEZodQuV6tihS5qqHA
-	 K4eGhQ5n/qAUGeHszqnzmpKbcSNG4xti3YeAgazM=
+	b=rJlf3ltqpLWZ5TYl/k//gFMcfOZgABpn2qcukzyOcNcS8ebaWV3ZcpT71zAaFX9FC
+	 HnXqvhJx6ET923PWL5PhAR3/Lsh4ETUi73QG+mWeUTauBr/U28Wfw5P+5PY5fI8t0z
+	 nVBxMpxrq92LIlJkJj7YU468jAZE6y+qmGKqFNAc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730650AbgDKXOD (ORCPT
+        id S1730796AbgDKXTK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 11 Apr 2020 19:14:03 -0400
-Received: from mail.kernel.org ([198.145.29.99]:55514 "EHLO mail.kernel.org"
+        Sat, 11 Apr 2020 19:19:10 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55382 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730638AbgDKXOC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 11 Apr 2020 19:14:02 -0400
+        id S1730630AbgDKXN6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 11 Apr 2020 19:13:58 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id F0EB6218AC;
-        Sat, 11 Apr 2020 23:14:00 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 7201C20CC7;
+        Sat, 11 Apr 2020 23:13:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586646842;
-        bh=OglxkV4OqD8XJqgtsspXhh1MlkPcsBPThcnK8t0l2n0=;
+        s=default; t=1586646838;
+        bh=cZ9vLBljASgp8PXLpSEwtdER+2F8t7FkhxeJGThML/Q=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Z8Grs1bJHqPSQ49tSl5nTO65F9kU6IyBuvY3ntO6Ep+naI8WP8liP5dygkWVmUnp4
-         k2g+KTVcG8BpWit83sIsZhbKAU1qUly9ny6EP4AVsDnJ3RG/FUZvoHO4KUwLAzg3lW
-         DK43f6SvP1d+2hZylSkj8cLXtk7MWI81RgSC0J2U=
+        b=a2xxdflkcoKMfsy5AT6ISr598lvPV7rexB9DMVoajcWWP7dhXXbSbx14bOvJczKtw
+         bJ7DlftCrXbc0kQYpXbAP9VrFrF5wLASC8/tCvy/LsYnaAOu3rcccffcxjP0oapGva
+         7HiCG7YkdZAWGSqwxnoiBD1hNuPExdufh3pv/eD8=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Raveendran Somu <raveendran.somu@cypress.com>,
-        Chi-hsien Lin <chi-hsien.lin@cypress.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 29/37] brcmfmac: Fix driver crash on USB control transfer timeout
-Date:   Sat, 11 Apr 2020 19:13:18 -0400
-Message-Id: <20200411231327.26550-29-sashal@kernel.org>
+Cc:     Wen Gong <wgong@codeaurora.org>, Kalle Valo <kvalo@codeaurora.org>,
+        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.14 26/37] ath10k: start recovery process when read int status fail for sdio
+Date:   Sat, 11 Apr 2020 19:13:15 -0400
+Message-Id: <20200411231327.26550-26-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200411231327.26550-1-sashal@kernel.org>
 References: <20200411231327.26550-1-sashal@kernel.org>
@@ -63,57 +59,51 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Raveendran Somu <raveendran.somu@cypress.com>
+From: Wen Gong <wgong@codeaurora.org>
 
-[ Upstream commit 93a5bfbc7cad8bf3dea81c9bc07761c1226a0860 ]
+[ Upstream commit 37b7ecb75627699e96750db1e0c5ac56224245df ]
 
-When the control transfer gets timed out, the error status
-was returned without killing that urb, this leads to using
-the same urb. This issue causes the kernel crash as the same
-urb is sumbitted multiple times. The fix is to kill the
-urb for timeout transfer before returning error
+When running simulate crash stress test, it happened
+"failed to read from address 0x800: -110".
 
-Signed-off-by: Raveendran Somu <raveendran.somu@cypress.com>
-Signed-off-by: Chi-hsien Lin <chi-hsien.lin@cypress.com>
+Test steps:
+1. Run command continuous
+echo soft > /sys/kernel/debug/ieee80211/phy0/ath10k/simulate_fw_crash
+
+2. error happened and it did not begin recovery for long time.
+[74377.334846] ath10k_sdio mmc1:0001:1: simulating soft firmware crash
+[74378.378217] ath10k_sdio mmc1:0001:1: failed to read from address 0x800: -110
+[74378.378371] ath10k_sdio mmc1:0001:1: failed to process pending SDIO interrupts: -110
+
+It has sdio errors since it can not read MBOX_HOST_INT_STATUS_ADDRESS,
+then it has to do recovery process to recovery ath10k.
+
+Tested with QCA6174 SDIO with firmware WLAN.RMH.4.4.1-00042.
+
+Signed-off-by: Wen Gong <wgong@codeaurora.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/1585124429-97371-2-git-send-email-chi-hsien.lin@cypress.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath10k/sdio.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-index 4ad830b7b1c98..bbac03c2accfa 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-@@ -339,11 +339,12 @@ static int brcmf_usb_tx_ctlpkt(struct device *dev, u8 *buf, u32 len)
- 		return err;
- 	}
- 	timeout = brcmf_usb_ioctl_resp_wait(devinfo);
--	clear_bit(0, &devinfo->ctl_op);
- 	if (!timeout) {
- 		brcmf_err("Txctl wait timed out\n");
-+		usb_kill_urb(devinfo->ctl_urb);
- 		err = -EIO;
- 	}
-+	clear_bit(0, &devinfo->ctl_op);
- 	return err;
- }
+diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
+index fef313099e08a..1caabdc79d3e3 100644
+--- a/drivers/net/wireless/ath/ath10k/sdio.c
++++ b/drivers/net/wireless/ath/ath10k/sdio.c
+@@ -912,8 +912,11 @@ static int ath10k_sdio_mbox_read_int_status(struct ath10k *ar,
+ 	 */
+ 	ret = ath10k_sdio_read(ar, MBOX_HOST_INT_STATUS_ADDRESS,
+ 			       irq_proc_reg, sizeof(*irq_proc_reg));
+-	if (ret)
++	if (ret) {
++		queue_work(ar->workqueue, &ar->restart_work);
++		ath10k_warn(ar, "read int status fail, start recovery\n");
+ 		goto out;
++	}
  
-@@ -369,11 +370,12 @@ static int brcmf_usb_rx_ctlpkt(struct device *dev, u8 *buf, u32 len)
- 	}
- 	timeout = brcmf_usb_ioctl_resp_wait(devinfo);
- 	err = devinfo->ctl_urb_status;
--	clear_bit(0, &devinfo->ctl_op);
- 	if (!timeout) {
- 		brcmf_err("rxctl wait timed out\n");
-+		usb_kill_urb(devinfo->ctl_urb);
- 		err = -EIO;
- 	}
-+	clear_bit(0, &devinfo->ctl_op);
- 	if (!err)
- 		return devinfo->ctl_urb_actual_length;
- 	else
+ 	/* Update only those registers that are enabled */
+ 	*host_int_status = irq_proc_reg->host_int_status &
 -- 
 2.20.1
 
