@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BFE4C2BA19
-	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:37:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E4C4C2BA19
+	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:37:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E2A082051A
-	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:37:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 77EC82051A
+	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:37:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1586648229;
-	bh=s4vRQIJwcxkL6l2FldF0HlhnWS37JsVCYYVOD5lTqjw=;
+	s=default; t=1586648239;
+	bh=F3GZCkfuTpePzhtk5oZ3eLfLVs1Pby/rMwXEm7QXV5w=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Gwv3rvAyOxvpZgMTpzBZujitqB5l7mAjsT9+z2IWdHZ6OozuLfw1y1ovdh7FtubFp
-	 ysphjFz03i/y6Cyl6IhFnuPLpIbkSrKoVIjcaY0KCD/5oyXVGuMmh3VkVZ7Mw74Wnr
-	 VKo4edgx/eSxMEjPRIs10eJHkRd7sYmj2IcGhak4=
+	b=RvSmdnXHZUWPPFo9bBqziwPpdMeY7oStWqF9K5UnTf+sIuvXcJHczC0GZUz0xckSi
+	 x8/eWtx7diHIpwwU/3guEoIFmC8KBL6bHyDGcMxwUJ1CifxC5pjJd/FtG1gnRAsqAs
+	 WivNMzJdFd8djyDDEVj7O8L2Ouivqlr1x/sj4wBc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730625AbgDKXg6 (ORCPT
+        id S1728926AbgDKXI1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 11 Apr 2020 19:36:58 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45454 "EHLO mail.kernel.org"
+        Sat, 11 Apr 2020 19:08:27 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45288 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727040AbgDKXI3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 11 Apr 2020 19:08:29 -0400
+        id S1728222AbgDKXIZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 11 Apr 2020 19:08:25 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 5AAD021835;
-        Sat, 11 Apr 2020 23:08:28 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id BC54E20CC7;
+        Sat, 11 Apr 2020 23:08:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586646509;
-        bh=s4vRQIJwcxkL6l2FldF0HlhnWS37JsVCYYVOD5lTqjw=;
+        s=default; t=1586646505;
+        bh=F3GZCkfuTpePzhtk5oZ3eLfLVs1Pby/rMwXEm7QXV5w=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=N6QS8TvnS9OwRHruvz1jucCejeZVVfT5XzVdxONzKn2LYtJYnAWWo5ql/AFtcLaN1
-         +jVi3wxGev2iaa7PVd5Mqm5SLRZcro1D4hawq0outzVT5ggGJHYNmp7FR2WeolPolU
-         oGIzRZ38Mn8xlLFYt0ZnzKdAx2MjiRGUQwNeagVA=
+        b=My7ogXZzeB4z9OrSxHN/KmarlfT3kMYbS2a5CDilz7XKRtxekcANidyieJ1vTCdQk
+         QSP0blSDdHT2deY4ozT9d4sCUk8ZJ1OUsB3qRaPIqxnBuTZ42duP+Cs9DfEJH3zgcB
+         VVyXo5WMfB/lN481xzo2TAWp1gNhmAQv0qEfNZEk=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Felix Fietkau <nbd@nbd.name>, Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 5.5 068/121] mt76: mt7603: fix input validation issues for powersave-filtered frames
-Date:   Sat, 11 Apr 2020 19:06:13 -0400
-Message-Id: <20200411230706.23855-68-sashal@kernel.org>
+Cc:     Martin Kepplinger <martin.kepplinger@puri.sm>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.5 065/121] rsi: fix null pointer dereference during rsi_shutdown()
+Date:   Sat, 11 Apr 2020 19:06:10 -0400
+Message-Id: <20200411230706.23855-65-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200411230706.23855-1-sashal@kernel.org>
 References: <20200411230706.23855-1-sashal@kernel.org>
@@ -60,73 +60,43 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Felix Fietkau <nbd@nbd.name>
+From: Martin Kepplinger <martin.kepplinger@puri.sm>
 
-[ Upstream commit d55aa5e17461b8b423adae376978032c4a10a1d8 ]
+[ Upstream commit 16bbc3eb83728c03138191a5d23d84d38175fa26 ]
 
-Before extracting the tid out of the packet, check if it was qos-data.
-Only accept tid values 0-7
-Also, avoid accepting the hardware queue as skb queue mapping, it could
-lead to an overrun. Instead, derive the hardware queue from the tid number,
-in order to avoid issues with packets being filtered multiple times.
-This also fixes a mismatch between hardware and software queue indexes.
+Appearently the hw pointer can be NULL while the module is loaded and
+in that case rsi_shutdown() crashes due to the unconditional dereference.
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Signed-off-by: Martin Kepplinger <martin.kepplinger@puri.sm>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- .../net/wireless/mediatek/mt76/mt7603/dma.c   | 19 +++++++++++++++----
- 1 file changed, 15 insertions(+), 4 deletions(-)
+ drivers/net/wireless/rsi/rsi_91x_sdio.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/dma.c b/drivers/net/wireless/mediatek/mt76/mt7603/dma.c
-index a6ab73060aada..57428467fe967 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7603/dma.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7603/dma.c
-@@ -30,6 +30,16 @@ mt7603_init_tx_queue(struct mt7603_dev *dev, struct mt76_sw_queue *q,
- static void
- mt7603_rx_loopback_skb(struct mt7603_dev *dev, struct sk_buff *skb)
- {
-+	static const u8 tid_to_ac[8] = {
-+		IEEE80211_AC_BE,
-+		IEEE80211_AC_BK,
-+		IEEE80211_AC_BK,
-+		IEEE80211_AC_BE,
-+		IEEE80211_AC_VI,
-+		IEEE80211_AC_VI,
-+		IEEE80211_AC_VO,
-+		IEEE80211_AC_VO
-+	};
- 	__le32 *txd = (__le32 *)skb->data;
- 	struct ieee80211_hdr *hdr;
- 	struct ieee80211_sta *sta;
-@@ -38,7 +48,7 @@ mt7603_rx_loopback_skb(struct mt7603_dev *dev, struct sk_buff *skb)
- 	void *priv;
- 	int idx;
- 	u32 val;
--	u8 tid;
-+	u8 tid = 0;
+diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+index 1bebba4e85273..5d6143a551877 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
++++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
+@@ -1468,12 +1468,15 @@ static void rsi_shutdown(struct device *dev)
+ 	struct rsi_91x_sdiodev *sdev =
+ 		(struct rsi_91x_sdiodev *)adapter->rsi_dev;
+ 	struct ieee80211_hw *hw = adapter->hw;
+-	struct cfg80211_wowlan *wowlan = hw->wiphy->wowlan_config;
  
- 	if (skb->len < MT_TXD_SIZE + sizeof(struct ieee80211_hdr))
- 		goto free;
-@@ -56,15 +66,16 @@ mt7603_rx_loopback_skb(struct mt7603_dev *dev, struct sk_buff *skb)
+ 	rsi_dbg(ERR_ZONE, "SDIO Bus shutdown =====>\n");
  
- 	priv = msta = container_of(wcid, struct mt7603_sta, wcid);
- 	val = le32_to_cpu(txd[0]);
--	skb_set_queue_mapping(skb, FIELD_GET(MT_TXD0_Q_IDX, val));
--
- 	val &= ~(MT_TXD0_P_IDX | MT_TXD0_Q_IDX);
- 	val |= FIELD_PREP(MT_TXD0_Q_IDX, MT_TX_HW_QUEUE_MGMT);
- 	txd[0] = cpu_to_le32(val);
+-	if (rsi_config_wowlan(adapter, wowlan))
+-		rsi_dbg(ERR_ZONE, "Failed to configure WoWLAN\n");
++	if (hw) {
++		struct cfg80211_wowlan *wowlan = hw->wiphy->wowlan_config;
++
++		if (rsi_config_wowlan(adapter, wowlan))
++			rsi_dbg(ERR_ZONE, "Failed to configure WoWLAN\n");
++	}
  
- 	sta = container_of(priv, struct ieee80211_sta, drv_priv);
- 	hdr = (struct ieee80211_hdr *)&skb->data[MT_TXD_SIZE];
--	tid = *ieee80211_get_qos_ctl(hdr) & IEEE80211_QOS_CTL_TID_MASK;
-+	if (ieee80211_is_data_qos(hdr->frame_control))
-+		tid = *ieee80211_get_qos_ctl(hdr) &
-+		      IEEE80211_QOS_CTL_TAG1D_MASK;
-+	skb_set_queue_mapping(skb, tid_to_ac[tid]);
- 	ieee80211_sta_set_buffered(sta, tid, true);
- 
- 	spin_lock_bh(&dev->ps_lock);
+ 	if (IS_ENABLED(CONFIG_RSI_COEX) && adapter->priv->coex_mode > 1 &&
+ 	    adapter->priv->bt_adapter) {
 -- 
 2.20.1
 
