@@ -7,48 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1819C2BB86
-	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:30:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4A75C2BB86
+	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:30:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C28D0206E9
-	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:30:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AAC1120787
+	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:30:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1586647816;
-	bh=tRG72cihYiM6EZUluJkAAhOsZlcgd7QHeyjMoIxs5ao=;
+	s=default; t=1586647834;
+	bh=PKD20W0zqGHCtHxkmyIqExkny9+8SxyE/zHYatc8Ap4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=AwD87bvPdC9FCakiulG0DLFYkWiIXBxGbE5RoA8Mncc/mGUBD3xEotWEjJu4aChEC
-	 OSFjvFxDlMLahbdQ6OBNYblm8F1YzFHFEBT12TnRgCGWbp2+TqcBPc3MbPXq6TJTGi
-	 7511m3xuNpKpxK7hcP26FeqKHoUHG1odu6TY854I=
+	b=FzHvkcWye/6uC9PMJEzT9VRy4vb7gjADL6FXoy0AVL6kJkBiVazVcyhHYo7gzpcIM
+	 dP7DMDpNkLzu1KgSHrK9xysLKJrx56rodWTH2qsYd9RMzkTwOZ343yo2SSxcdHn7I5
+	 weqn3Oiq9Sqe8nfMgdDclA66lcAyAWvipof2OE9I=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730057AbgDKXaI (ORCPT
+        id S1729918AbgDKXa3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 11 Apr 2020 19:30:08 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49384 "EHLO mail.kernel.org"
+        Sat, 11 Apr 2020 19:30:29 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49224 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729666AbgDKXKk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 11 Apr 2020 19:10:40 -0400
+        id S1729636AbgDKXKg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 11 Apr 2020 19:10:36 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 2FF4E216FD;
-        Sat, 11 Apr 2020 23:10:40 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 99C172166E;
+        Sat, 11 Apr 2020 23:10:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586646641;
-        bh=tRG72cihYiM6EZUluJkAAhOsZlcgd7QHeyjMoIxs5ao=;
+        s=default; t=1586646636;
+        bh=PKD20W0zqGHCtHxkmyIqExkny9+8SxyE/zHYatc8Ap4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=PAQNMInd5t6NhoOJtPltrBMc/RZ+D2bn0gtn1HUW+OBnWRQdg3DWHxf5FArjc4tgZ
-         bCG25sG+up0pvtCiMpx5yNCwaxJIWwG/UeszELd5ClZ0oo/36KKSFy2D7HjdIIXtyG
-         msmw1VluRDIsCkxPUG2Zdd8i3wKI9oXoigui5Ajo=
+        b=KH3Q8Y3311EQD4ydnkpZBd/ZPunO6+l9l0ZxDrlfP+trPZGueIfBtRNAYeFcQoIsS
+         2QxkSdR4MXS4qcMSJHpykILUZ3zbIeDEIUrqRU40Zx60sMnImfL7nXpl7Dk6jqYave
+         xVFaysX+VK4s6aZ15PaIhOOmz7pBZLwNeTcEQnO0=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Tzu-En Huang <tehuang@realtek.com>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 047/108] rtw88: 8822c: update power sequence to v16
-Date:   Sat, 11 Apr 2020 19:08:42 -0400
-Message-Id: <20200411230943.24951-47-sashal@kernel.org>
+Cc:     Felix Fietkau <nbd@nbd.name>, Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH AUTOSEL 5.4 043/108] mt76: fix handling full tx queues in mt76_dma_tx_queue_skb_raw
+Date:   Sat, 11 Apr 2020 19:08:38 -0400
+Message-Id: <20200411230943.24951-43-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200411230943.24951-1-sashal@kernel.org>
 References: <20200411230943.24951-1-sashal@kernel.org>
@@ -61,36 +60,49 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Tzu-En Huang <tehuang@realtek.com>
+From: Felix Fietkau <nbd@nbd.name>
 
-[ Upstream commit 8299adec99b29f341f0ee4269f1ce70ca8508e78 ]
+[ Upstream commit 93eaec7625f13cffb593b471405b017c7e64d4ee ]
 
-Fix switching xtal mode leads to BT USB error issue.
+Fixes a theoretical issue where it could potentially overwrite an existing
+descriptor entry (and leaking its skb)
 
-Signed-off-by: Tzu-En Huang <tehuang@realtek.com>
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/realtek/rtw88/rtw8822c.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/net/wireless/mediatek/mt76/dma.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-index de0505a6a365d..509cc76e6ba54 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-@@ -3336,6 +3336,11 @@ static struct rtw_pwr_seq_cmd trans_cardemu_to_act_8822c[] = {
- 	 RTW_PWR_INTF_ALL_MSK,
- 	 RTW_PWR_ADDR_MAC,
- 	 RTW_PWR_CMD_WRITE, BIT(2), BIT(2)},
-+	{0x1064,
-+	 RTW_PWR_CUT_ALL_MSK,
-+	 RTW_PWR_INTF_ALL_MSK,
-+	 RTW_PWR_ADDR_MAC,
-+	 RTW_PWR_CMD_WRITE, BIT(1), BIT(1)},
- 	{0xFFFF,
- 	 RTW_PWR_CUT_ALL_MSK,
- 	 RTW_PWR_INTF_ALL_MSK,
+diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
+index 6249a46c19762..026d996612fbe 100644
+--- a/drivers/net/wireless/mediatek/mt76/dma.c
++++ b/drivers/net/wireless/mediatek/mt76/dma.c
+@@ -261,10 +261,13 @@ mt76_dma_tx_queue_skb_raw(struct mt76_dev *dev, enum mt76_txq_id qid,
+ 	struct mt76_queue_buf buf;
+ 	dma_addr_t addr;
+ 
++	if (q->queued + 1 >= q->ndesc - 1)
++		goto error;
++
+ 	addr = dma_map_single(dev->dev, skb->data, skb->len,
+ 			      DMA_TO_DEVICE);
+ 	if (unlikely(dma_mapping_error(dev->dev, addr)))
+-		return -ENOMEM;
++		goto error;
+ 
+ 	buf.addr = addr;
+ 	buf.len = skb->len;
+@@ -275,6 +278,10 @@ mt76_dma_tx_queue_skb_raw(struct mt76_dev *dev, enum mt76_txq_id qid,
+ 	spin_unlock_bh(&q->lock);
+ 
+ 	return 0;
++
++error:
++	dev_kfree_skb(skb);
++	return -ENOMEM;
+ }
+ 
+ static int
 -- 
 2.20.1
 
