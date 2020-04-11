@@ -4,54 +4,57 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42236C2BA19
-	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:32:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3574EC2BB86
+	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:35:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 19D9C20787
-	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:32:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F39B1206E9
+	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:35:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1586647936;
-	bh=MMe46zjI134depEk5VBUTl2isnIxc2CPpdG4qs8lO78=;
+	s=default; t=1586648139;
+	bh=GnH4lKvQ8fu8Ol/BddxK6xESVKV6pEYeeVYiwJHu0MQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Q1nLKELRuPZDDVss/+OJbM7QP9KZVZ5z+HpSuoDFeU7uokkch40s4lNqPPi4WwdE1
-	 JAMPr2t1atCph3IyjVlpXyJ4fissagaQjRqud2SEB3lnS4XosNczJLy/w3pdpOEJdx
-	 6yNvoUkrXDy2PsBcqHLpZTeIc4urhcmVrd0pDz3k=
+	b=E0u7tUPtx8RoCjbaUOiwrKqGrfT8jzBlWfsHQ/CgH8HU8QnSPCxEWaJgellokYRd3
+	 xsOBFF5LNHGAeZK/gUzWgfLPsu6T1kwrGgxhzj4xSWbq67NFkmn35KTjAuFoS40496
+	 QgT/usXin3VdsE+zYd1hV93U/PdO6GvfahcYp3ik=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729431AbgDKXKK (ORCPT
+        id S1728200AbgDKXI7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 11 Apr 2020 19:10:10 -0400
-Received: from mail.kernel.org ([198.145.29.99]:48228 "EHLO mail.kernel.org"
+        Sat, 11 Apr 2020 19:08:59 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46434 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728964AbgDKXKI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 11 Apr 2020 19:10:08 -0400
+        id S1728000AbgDKXI7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 11 Apr 2020 19:08:59 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 9CEBA2166E;
-        Sat, 11 Apr 2020 23:10:07 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 1C9FE20708;
+        Sat, 11 Apr 2020 23:08:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586646608;
-        bh=MMe46zjI134depEk5VBUTl2isnIxc2CPpdG4qs8lO78=;
+        s=default; t=1586646539;
+        bh=GnH4lKvQ8fu8Ol/BddxK6xESVKV6pEYeeVYiwJHu0MQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=fyJJsut9s1J3xaBPnorCqhtM/XC6bigselDX+o4wicduYEtpn1daExCqMDIQBboy7
-         zHFEBzPzR8XzRfUreFTFq8ShKAHUpd1xo6BROBx64AJStGWak3AYQFVd+1YBeTxeBo
-         z9nDsa90H48bvetj6MMq2u2YvXKizRJMClt/DAVA=
+        b=pw5IIWI9BlbJzl18NOd5Zvlh2dmaWmLBuDC46Lv2O8VPKQ88ydxcKMV/W/0cWbigr
+         jO0RBYC09yExEcojzC0UjQ0qww1VTCqqQcJXcZn//9QOzqeaXXS285Ghc0EcoKA6lC
+         FRLFNy9OxhAkbhd0som8SDsFxrkAAiSeVEgYj76s=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Brian Norris <briannorris@chromium.org>,
-        Ganapathi Bhat <ganapathi.gbhat@nxp.com>,
+Cc:     Raveendran Somu <raveendran.somu@cypress.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Chi-hsien Lin <chi-hsien.lin@cypress.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 020/108] mwifiex: set needed_headroom, not hard_header_len
-Date:   Sat, 11 Apr 2020 19:08:15 -0400
-Message-Id: <20200411230943.24951-20-sashal@kernel.org>
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.5 091/121] brcmfmac: fix the incorrect return value in brcmf_inform_single_bss().
+Date:   Sat, 11 Apr 2020 19:06:36 -0400
+Message-Id: <20200411230706.23855-91-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200411230943.24951-1-sashal@kernel.org>
-References: <20200411230943.24951-1-sashal@kernel.org>
+In-Reply-To: <20200411230706.23855-1-sashal@kernel.org>
+References: <20200411230706.23855-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -61,54 +64,41 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Brian Norris <briannorris@chromium.org>
+From: Raveendran Somu <raveendran.somu@cypress.com>
 
-[ Upstream commit 9454f7a895b822dd8fb4588fc55fda7c96728869 ]
+[ Upstream commit bd9944918ceb28ede97f715d209e220db5e92c09 ]
 
-hard_header_len provides limitations for things like AF_PACKET, such
-that we don't allow transmitting packets smaller than this.
+The function brcmf_inform_single_bss returns the value as success,
+even when the length exceeds the maximum value.
+The fix is to send appropriate code on this error.
+This issue is observed when Cypress test group reported random fmac
+crashes when running their tests and the path was identified from the
+crash logs. With this fix the random failure issue in Cypress test group
+was resolved.
 
-needed_headroom provides a suggested minimum headroom for SKBs, so that
-we can trivally add our headers to the front.
-
-The latter is the correct field to use in this case, while the former
-mostly just prevents sending small AF_PACKET frames.
-
-In any case, mwifiex already does its own bounce buffering [1] if we
-don't have enough headroom, so hints (not hard limits) are all that are
-needed.
-
-This is the essentially the same bug (and fix) that brcmfmac had, fixed
-in commit cb39288fd6bb ("brcmfmac: use ndev->needed_headroom to reserve
-additional header space").
-
-[1] mwifiex_hard_start_xmit():
-	if (skb_headroom(skb) < MWIFIEX_MIN_DATA_HEADER_LEN) {
-	[...]
-		/* Insufficient skb headroom - allocate a new skb */
-
-Fixes: 5e6e3a92b9a4 ("wireless: mwifiex: initial commit for Marvell mwifiex driver")
-Signed-off-by: Brian Norris <briannorris@chromium.org>
-Acked-by: Ganapathi Bhat <ganapathi.gbhat@nxp.com>
+Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Raveendran Somu <raveendran.somu@cypress.com>
+Signed-off-by: Chi-hsien Lin <chi-hsien.lin@cypress.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Link: https://lore.kernel.org/r/1585124429-97371-4-git-send-email-chi-hsien.lin@cypress.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/marvell/mwifiex/cfg80211.c | 2 +-
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index d896841685008..e63bc15c6e305 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -3052,7 +3052,7 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 5598bbd09b627..999c36cf52a6c 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -2874,7 +2874,7 @@ static s32 brcmf_inform_single_bss(struct brcmf_cfg80211_info *cfg,
  
- 	dev->flags |= IFF_BROADCAST | IFF_MULTICAST;
- 	dev->watchdog_timeo = MWIFIEX_DEFAULT_WATCHDOG_TIMEOUT;
--	dev->hard_header_len += MWIFIEX_MIN_DATA_HEADER_LEN;
-+	dev->needed_headroom = MWIFIEX_MIN_DATA_HEADER_LEN;
- 	dev->ethtool_ops = &mwifiex_ethtool_ops;
+ 	if (le32_to_cpu(bi->length) > WL_BSS_INFO_MAX) {
+ 		bphy_err(drvr, "Bss info is larger than buffer. Discarding\n");
+-		return 0;
++		return -EINVAL;
+ 	}
  
- 	mdev_priv = netdev_priv(dev);
+ 	if (!bi->ctl_ch) {
 -- 
 2.20.1
 
