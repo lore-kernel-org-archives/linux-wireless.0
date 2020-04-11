@@ -4,53 +4,50 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC6F2C2BA19
-	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:35:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BFE4C2BA19
+	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:37:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C311020787
-	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:35:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E2A082051A
+	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:37:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1586648147;
-	bh=a5MhkjJhLGiofqjLrUGMZvtWcls7SfWJinIAmTiwpEI=;
+	s=default; t=1586648229;
+	bh=s4vRQIJwcxkL6l2FldF0HlhnWS37JsVCYYVOD5lTqjw=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=nlOaDvCg9ZPC9NrxMqGBm4N0bXrkNH4f1Q+DpssBYZ3xGcKS948z3ryRUpYz4J14z
-	 MQjrPZuv2NtnfhG2/52VE3ZKhUUejPFPhbMrzX+sJFpTNzs3QptDIZXeETMm6UdcMI
-	 kwVljgmSPr/RcerSVaDnXwnDE+3bLHVeTw3FV8Lw=
+	b=Gwv3rvAyOxvpZgMTpzBZujitqB5l7mAjsT9+z2IWdHZ6OozuLfw1y1ovdh7FtubFp
+	 ysphjFz03i/y6Cyl6IhFnuPLpIbkSrKoVIjcaY0KCD/5oyXVGuMmh3VkVZ7Mw74Wnr
+	 VKo4edgx/eSxMEjPRIs10eJHkRd7sYmj2IcGhak4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727004AbgDKXI5 (ORCPT
+        id S1730625AbgDKXg6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 11 Apr 2020 19:08:57 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46356 "EHLO mail.kernel.org"
+        Sat, 11 Apr 2020 19:36:58 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45454 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729025AbgDKXI4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 11 Apr 2020 19:08:56 -0400
+        id S1727040AbgDKXI3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 11 Apr 2020 19:08:29 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 5690E20787;
-        Sat, 11 Apr 2020 23:08:55 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 5AAD021835;
+        Sat, 11 Apr 2020 23:08:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586646536;
-        bh=a5MhkjJhLGiofqjLrUGMZvtWcls7SfWJinIAmTiwpEI=;
+        s=default; t=1586646509;
+        bh=s4vRQIJwcxkL6l2FldF0HlhnWS37JsVCYYVOD5lTqjw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ewZnN33bgTolRW+AOqbjDT+G1UtCmnepvX6Nmmtl+gVj/ozCDpH189F6l7RhP47FB
-         SDu76PltugNNK4TZKIl2+p/kUbB2aWpFIgzAOe1UaveZkuADB4iIwNfBpoAR9iBwPt
-         7YpSdUyLWHOXmrnKXn0HzkAdCqQQCofl/WdX5rwE=
+        b=N6QS8TvnS9OwRHruvz1jucCejeZVVfT5XzVdxONzKn2LYtJYnAWWo5ql/AFtcLaN1
+         +jVi3wxGev2iaa7PVd5Mqm5SLRZcro1D4hawq0outzVT5ggGJHYNmp7FR2WeolPolU
+         oGIzRZ38Mn8xlLFYt0ZnzKdAx2MjiRGUQwNeagVA=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Raveendran Somu <raveendran.somu@cypress.com>,
-        Chi-hsien Lin <chi-hsien.lin@cypress.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.5 089/121] brcmfmac: Fix driver crash on USB control transfer timeout
-Date:   Sat, 11 Apr 2020 19:06:34 -0400
-Message-Id: <20200411230706.23855-89-sashal@kernel.org>
+Cc:     Felix Fietkau <nbd@nbd.name>, Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH AUTOSEL 5.5 068/121] mt76: mt7603: fix input validation issues for powersave-filtered frames
+Date:   Sat, 11 Apr 2020 19:06:13 -0400
+Message-Id: <20200411230706.23855-68-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200411230706.23855-1-sashal@kernel.org>
 References: <20200411230706.23855-1-sashal@kernel.org>
@@ -63,57 +60,73 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Raveendran Somu <raveendran.somu@cypress.com>
+From: Felix Fietkau <nbd@nbd.name>
 
-[ Upstream commit 93a5bfbc7cad8bf3dea81c9bc07761c1226a0860 ]
+[ Upstream commit d55aa5e17461b8b423adae376978032c4a10a1d8 ]
 
-When the control transfer gets timed out, the error status
-was returned without killing that urb, this leads to using
-the same urb. This issue causes the kernel crash as the same
-urb is sumbitted multiple times. The fix is to kill the
-urb for timeout transfer before returning error
+Before extracting the tid out of the packet, check if it was qos-data.
+Only accept tid values 0-7
+Also, avoid accepting the hardware queue as skb queue mapping, it could
+lead to an overrun. Instead, derive the hardware queue from the tid number,
+in order to avoid issues with packets being filtered multiple times.
+This also fixes a mismatch between hardware and software queue indexes.
 
-Signed-off-by: Raveendran Somu <raveendran.somu@cypress.com>
-Signed-off-by: Chi-hsien Lin <chi-hsien.lin@cypress.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/1585124429-97371-2-git-send-email-chi-hsien.lin@cypress.com
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ .../net/wireless/mediatek/mt76/mt7603/dma.c   | 19 +++++++++++++++----
+ 1 file changed, 15 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-index 575ed19e91951..10387a7f5d565 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-@@ -328,11 +328,12 @@ static int brcmf_usb_tx_ctlpkt(struct device *dev, u8 *buf, u32 len)
- 		return err;
- 	}
- 	timeout = brcmf_usb_ioctl_resp_wait(devinfo);
--	clear_bit(0, &devinfo->ctl_op);
- 	if (!timeout) {
- 		brcmf_err("Txctl wait timed out\n");
-+		usb_kill_urb(devinfo->ctl_urb);
- 		err = -EIO;
- 	}
-+	clear_bit(0, &devinfo->ctl_op);
- 	return err;
- }
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/dma.c b/drivers/net/wireless/mediatek/mt76/mt7603/dma.c
+index a6ab73060aada..57428467fe967 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7603/dma.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7603/dma.c
+@@ -30,6 +30,16 @@ mt7603_init_tx_queue(struct mt7603_dev *dev, struct mt76_sw_queue *q,
+ static void
+ mt7603_rx_loopback_skb(struct mt7603_dev *dev, struct sk_buff *skb)
+ {
++	static const u8 tid_to_ac[8] = {
++		IEEE80211_AC_BE,
++		IEEE80211_AC_BK,
++		IEEE80211_AC_BK,
++		IEEE80211_AC_BE,
++		IEEE80211_AC_VI,
++		IEEE80211_AC_VI,
++		IEEE80211_AC_VO,
++		IEEE80211_AC_VO
++	};
+ 	__le32 *txd = (__le32 *)skb->data;
+ 	struct ieee80211_hdr *hdr;
+ 	struct ieee80211_sta *sta;
+@@ -38,7 +48,7 @@ mt7603_rx_loopback_skb(struct mt7603_dev *dev, struct sk_buff *skb)
+ 	void *priv;
+ 	int idx;
+ 	u32 val;
+-	u8 tid;
++	u8 tid = 0;
  
-@@ -358,11 +359,12 @@ static int brcmf_usb_rx_ctlpkt(struct device *dev, u8 *buf, u32 len)
- 	}
- 	timeout = brcmf_usb_ioctl_resp_wait(devinfo);
- 	err = devinfo->ctl_urb_status;
--	clear_bit(0, &devinfo->ctl_op);
- 	if (!timeout) {
- 		brcmf_err("rxctl wait timed out\n");
-+		usb_kill_urb(devinfo->ctl_urb);
- 		err = -EIO;
- 	}
-+	clear_bit(0, &devinfo->ctl_op);
- 	if (!err)
- 		return devinfo->ctl_urb_actual_length;
- 	else
+ 	if (skb->len < MT_TXD_SIZE + sizeof(struct ieee80211_hdr))
+ 		goto free;
+@@ -56,15 +66,16 @@ mt7603_rx_loopback_skb(struct mt7603_dev *dev, struct sk_buff *skb)
+ 
+ 	priv = msta = container_of(wcid, struct mt7603_sta, wcid);
+ 	val = le32_to_cpu(txd[0]);
+-	skb_set_queue_mapping(skb, FIELD_GET(MT_TXD0_Q_IDX, val));
+-
+ 	val &= ~(MT_TXD0_P_IDX | MT_TXD0_Q_IDX);
+ 	val |= FIELD_PREP(MT_TXD0_Q_IDX, MT_TX_HW_QUEUE_MGMT);
+ 	txd[0] = cpu_to_le32(val);
+ 
+ 	sta = container_of(priv, struct ieee80211_sta, drv_priv);
+ 	hdr = (struct ieee80211_hdr *)&skb->data[MT_TXD_SIZE];
+-	tid = *ieee80211_get_qos_ctl(hdr) & IEEE80211_QOS_CTL_TID_MASK;
++	if (ieee80211_is_data_qos(hdr->frame_control))
++		tid = *ieee80211_get_qos_ctl(hdr) &
++		      IEEE80211_QOS_CTL_TAG1D_MASK;
++	skb_set_queue_mapping(skb, tid_to_ac[tid]);
+ 	ieee80211_sta_set_buffered(sta, tid, true);
+ 
+ 	spin_lock_bh(&dev->ps_lock);
 -- 
 2.20.1
 
