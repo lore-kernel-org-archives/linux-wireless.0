@@ -4,52 +4,50 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31EEDC2BB86
-	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:47:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82BA3C2BA19
+	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:47:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0952920936
-	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:47:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5C7B1206F7
+	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:47:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1586648835;
-	bh=Ddj9UahbyyEDMEsA4uD2XcrxDHuCCjCCosOi5TugEdY=;
+	s=default; t=1586648842;
+	bh=w68oapllwXBcXuPwr+A/R2ShE4TVv5AB6GPxa7PIA1g=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=r12y8hqmfl/kE0HlBRDLLBvH9sRI1yT6JYJ5Vi7nO0blh2gJMEADIda8/lcW7uzfa
-	 7Z8YDdcD9h+UOCdX4BmMkA94dQyH92G5mpHxNiGzmf7SWSfu8LFbRNYgkh8clVqRbr
-	 7zuew07afGDCUbxGj23Awx1KEfLcS5DqN+W+V828=
+	b=Hjzc8GzyXfOFvVWnPKjzuytmiMvx6oiXOT2IB7DW73AzHDa380KL14xNoNhUUQEPG
+	 ZDJb84BjHFCpBB2vrX3xERBzxgpj/ZlWQByxuJQPkQ0NAs/o1dopnvczg+hGaNc+MI
+	 KOQ9LV5BKRZT+/VpZOFkI/4ncsKQiKphFlz5lG78=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727775AbgDKXFE (ORCPT
+        id S1728195AbgDKXrU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 11 Apr 2020 19:05:04 -0400
-Received: from mail.kernel.org ([198.145.29.99]:38818 "EHLO mail.kernel.org"
+        Sat, 11 Apr 2020 19:47:20 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38804 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727753AbgDKXFD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 11 Apr 2020 19:05:03 -0400
+        id S1727732AbgDKXFC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 11 Apr 2020 19:05:02 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 1B47320787;
-        Sat, 11 Apr 2020 23:05:03 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id DA92E21841;
+        Sat, 11 Apr 2020 23:05:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586646304;
-        bh=Ddj9UahbyyEDMEsA4uD2XcrxDHuCCjCCosOi5TugEdY=;
+        s=default; t=1586646302;
+        bh=w68oapllwXBcXuPwr+A/R2ShE4TVv5AB6GPxa7PIA1g=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=R09AHwzyJt1Dzn6eHfrpLuYBQkx4hkio2pmTNGGqrqVNGctgW2v0rWP+3j3fmfS58
-         PVm4VQwx73md+gPSZLvHTwsd7L8J4KOOwqzESUQH+yX6SQ8pMnHy6G5jH/r77JCGSz
-         /u7Nst9DX4mKHeLvt0u2sMp15sh4oTVrX41Rdp9Q=
+        b=X3Dgskd7nGUMEBBHuGSQoYj9yAvax7I2NUvGpeeMCeNst65cbnSrMWJR9XUB+TW73
+         lFmGYK41NlbIaA6lUJwqe8km3LmP5OhqNpuu/LA79a0A7ezSMTuJl1WeW6tFPpWXQB
+         WCtpsCErDMA0Fk1xSpNfSitmywZnY1h1rVfRhYcE=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Tzu-En Huang <tehuang@realtek.com>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Chris Chiu <chiu@endlessm.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.6 062/149] rtw88: Fix incorrect beamformee role setting
-Date:   Sat, 11 Apr 2020 19:02:19 -0400
-Message-Id: <20200411230347.22371-62-sashal@kernel.org>
+Cc:     Felix Fietkau <nbd@nbd.name>, Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH AUTOSEL 5.6 061/149] mt76: fix handling full tx queues in mt76_dma_tx_queue_skb_raw
+Date:   Sat, 11 Apr 2020 19:02:18 -0400
+Message-Id: <20200411230347.22371-61-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200411230347.22371-1-sashal@kernel.org>
 References: <20200411230347.22371-1-sashal@kernel.org>
@@ -62,61 +60,49 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Tzu-En Huang <tehuang@realtek.com>
+From: Felix Fietkau <nbd@nbd.name>
 
-[ Upstream commit aa7619a39acef91c5a6904f3ada7d0f20e2ad25e ]
+[ Upstream commit 93eaec7625f13cffb593b471405b017c7e64d4ee ]
 
-In associating and configuring beamformee, bfee->role is not
-correctly set before rtw_chip_ops::config_bfee().
-Fix it by setting it correctly.
+Fixes a theoretical issue where it could potentially overwrite an existing
+descriptor entry (and leaking its skb)
 
-Signed-off-by: Tzu-En Huang <tehuang@realtek.com>
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
-Reviewed-by: Chris Chiu <chiu@endlessm.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/realtek/rtw88/bf.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ drivers/net/wireless/mediatek/mt76/dma.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/bf.c b/drivers/net/wireless/realtek/rtw88/bf.c
-index fda771d23f712..b6d1d71f4d302 100644
---- a/drivers/net/wireless/realtek/rtw88/bf.c
-+++ b/drivers/net/wireless/realtek/rtw88/bf.c
-@@ -41,7 +41,6 @@ void rtw_bf_assoc(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
- 	struct ieee80211_sta_vht_cap *ic_vht_cap;
- 	const u8 *bssid = bss_conf->bssid;
- 	u32 sound_dim;
--	u8 bfee_role = RTW_BFEE_NONE;
- 	u8 i;
+diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
+index 1847f55e199b0..c001d94958d83 100644
+--- a/drivers/net/wireless/mediatek/mt76/dma.c
++++ b/drivers/net/wireless/mediatek/mt76/dma.c
+@@ -261,10 +261,13 @@ mt76_dma_tx_queue_skb_raw(struct mt76_dev *dev, enum mt76_txq_id qid,
+ 	struct mt76_queue_buf buf;
+ 	dma_addr_t addr;
  
- 	if (!(chip->band & RTW_BAND_5G))
-@@ -67,7 +66,7 @@ void rtw_bf_assoc(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
- 		}
++	if (q->queued + 1 >= q->ndesc - 1)
++		goto error;
++
+ 	addr = dma_map_single(dev->dev, skb->data, skb->len,
+ 			      DMA_TO_DEVICE);
+ 	if (unlikely(dma_mapping_error(dev->dev, addr)))
+-		return -ENOMEM;
++		goto error;
  
- 		ether_addr_copy(bfee->mac_addr, bssid);
--		bfee_role = RTW_BFEE_MU;
-+		bfee->role = RTW_BFEE_MU;
- 		bfee->p_aid = (bssid[5] << 1) | (bssid[4] >> 7);
- 		bfee->aid = bss_conf->aid;
- 		bfinfo->bfer_mu_cnt++;
-@@ -85,7 +84,7 @@ void rtw_bf_assoc(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
- 		sound_dim >>= IEEE80211_VHT_CAP_SOUNDING_DIMENSIONS_SHIFT;
+ 	buf.addr = addr;
+ 	buf.len = skb->len;
+@@ -275,6 +278,10 @@ mt76_dma_tx_queue_skb_raw(struct mt76_dev *dev, enum mt76_txq_id qid,
+ 	spin_unlock_bh(&q->lock);
  
- 		ether_addr_copy(bfee->mac_addr, bssid);
--		bfee_role = RTW_BFEE_SU;
-+		bfee->role = RTW_BFEE_SU;
- 		bfee->sound_dim = (u8)sound_dim;
- 		bfee->g_id = 0;
- 		bfee->p_aid = (bssid[5] << 1) | (bssid[4] >> 7);
-@@ -102,7 +101,6 @@ void rtw_bf_assoc(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
- 	}
- 
- out_unlock:
--	bfee->role = bfee_role;
- 	rcu_read_unlock();
+ 	return 0;
++
++error:
++	dev_kfree_skb(skb);
++	return -ENOMEM;
  }
  
+ static int
 -- 
 2.20.1
 
