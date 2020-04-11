@@ -7,51 +7,53 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C50BBC2BB86
-	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:20:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0A0CC352B6
+	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:23:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9F46320769
-	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:20:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8B0502173E
+	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:23:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1586647243;
-	bh=bLBnbysrKfsk8Dar8PPtGfq5wiM7ssyB9QACtB20Xl0=;
+	s=default; t=1586647397;
+	bh=g0v0sXrv70IUGTrwcuOJiF8tOCF6w735QElodev/INo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=QS8ZxW81jW172j5jS+Uja+4ZF4mwKtPMbtD2LPBGvjEXlp9FX3e0qOA92PnI0ZYJT
-	 CqZAsRh1iDMEkqB7nX+3KLzbAdBGehjtVu7KOsSvWdhKWY0MvPVXLdq841bm4Ih95Q
-	 WLNVc8dfYjNjU4jk5f7wfVpicuT8T49aWc/zxHhk=
+	b=YkZVNiEqGUIC7rAT0nFCgqauWEYtewUbf4uVXgaI2DBZE815Bi5OsLz4rK9XUwM73
+	 Wd73EwkxzNo8CRkP0QxErmfwprUC1C7tmHbpRlRP116IpAQkC41dHu7TUHjk6Nz57J
+	 oAuevwFoX2Uk0aUUxskiF0B679hF5brtsBVAZIWE=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730622AbgDKXUh (ORCPT
+        id S1730442AbgDKXXL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 11 Apr 2020 19:20:37 -0400
-Received: from mail.kernel.org ([198.145.29.99]:54986 "EHLO mail.kernel.org"
+        Sat, 11 Apr 2020 19:23:11 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53948 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729800AbgDKXNj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 11 Apr 2020 19:13:39 -0400
+        id S1730324AbgDKXNF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 11 Apr 2020 19:13:05 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id BBB7E21BE5;
-        Sat, 11 Apr 2020 23:13:38 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 6D6F520787;
+        Sat, 11 Apr 2020 23:13:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586646819;
-        bh=bLBnbysrKfsk8Dar8PPtGfq5wiM7ssyB9QACtB20Xl0=;
+        s=default; t=1586646785;
+        bh=g0v0sXrv70IUGTrwcuOJiF8tOCF6w735QElodev/INo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=x7xzPEKcL3M+pHE99AWi8HxIXD7tP6T3iXUXKIoM3bEGeNGxlAnVxlcEcJfTx1vlm
-         /TxBBhb5YL5FqjVqa4Fd1PSU2lidOzdE49xJXKh/rwpXdl50EW1jJ1bYK/PSggM4VV
-         9CYkEoAq5vLLmMZt9ex+bN8XO1nFNbBYX9Z82n/g=
+        b=FatpMbInEFnovNmd6pIvm4fumQLnuUwUubMAwbbOSpzSwtNQNSusBE8JKzRw/FuXW
+         +VfVQzF1Y855/sy0MNit79yQ256Nt0oQZXpzs9LdqC2+sxkxuaAZu47KcdtXMWHU+f
+         SONO6qFXmQmAKgvgQgh+B3nNbR2KpzLLvDDBghr8=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Brian Norris <briannorris@chromium.org>,
-        Ganapathi Bhat <ganapathi.gbhat@nxp.com>,
+Cc:     Raveendran Somu <raveendran.somu@cypress.com>,
+        Chi-hsien Lin <chi-hsien.lin@cypress.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 10/37] mwifiex: set needed_headroom, not hard_header_len
-Date:   Sat, 11 Apr 2020 19:12:59 -0400
-Message-Id: <20200411231327.26550-10-sashal@kernel.org>
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 50/66] brcmfmac: Fix driver crash on USB control transfer timeout
+Date:   Sat, 11 Apr 2020 19:11:47 -0400
+Message-Id: <20200411231203.25933-50-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200411231327.26550-1-sashal@kernel.org>
-References: <20200411231327.26550-1-sashal@kernel.org>
+In-Reply-To: <20200411231203.25933-1-sashal@kernel.org>
+References: <20200411231203.25933-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -61,54 +63,57 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Brian Norris <briannorris@chromium.org>
+From: Raveendran Somu <raveendran.somu@cypress.com>
 
-[ Upstream commit 9454f7a895b822dd8fb4588fc55fda7c96728869 ]
+[ Upstream commit 93a5bfbc7cad8bf3dea81c9bc07761c1226a0860 ]
 
-hard_header_len provides limitations for things like AF_PACKET, such
-that we don't allow transmitting packets smaller than this.
+When the control transfer gets timed out, the error status
+was returned without killing that urb, this leads to using
+the same urb. This issue causes the kernel crash as the same
+urb is sumbitted multiple times. The fix is to kill the
+urb for timeout transfer before returning error
 
-needed_headroom provides a suggested minimum headroom for SKBs, so that
-we can trivally add our headers to the front.
-
-The latter is the correct field to use in this case, while the former
-mostly just prevents sending small AF_PACKET frames.
-
-In any case, mwifiex already does its own bounce buffering [1] if we
-don't have enough headroom, so hints (not hard limits) are all that are
-needed.
-
-This is the essentially the same bug (and fix) that brcmfmac had, fixed
-in commit cb39288fd6bb ("brcmfmac: use ndev->needed_headroom to reserve
-additional header space").
-
-[1] mwifiex_hard_start_xmit():
-	if (skb_headroom(skb) < MWIFIEX_MIN_DATA_HEADER_LEN) {
-	[...]
-		/* Insufficient skb headroom - allocate a new skb */
-
-Fixes: 5e6e3a92b9a4 ("wireless: mwifiex: initial commit for Marvell mwifiex driver")
-Signed-off-by: Brian Norris <briannorris@chromium.org>
-Acked-by: Ganapathi Bhat <ganapathi.gbhat@nxp.com>
+Signed-off-by: Raveendran Somu <raveendran.somu@cypress.com>
+Signed-off-by: Chi-hsien Lin <chi-hsien.lin@cypress.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Link: https://lore.kernel.org/r/1585124429-97371-2-git-send-email-chi-hsien.lin@cypress.com
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/marvell/mwifiex/cfg80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index 5e8e34a08b2d6..638e1fa64eea1 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -3007,7 +3007,7 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
+index 41254f04ab152..f395ea0b73e7d 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
+@@ -339,11 +339,12 @@ static int brcmf_usb_tx_ctlpkt(struct device *dev, u8 *buf, u32 len)
+ 		return err;
+ 	}
+ 	timeout = brcmf_usb_ioctl_resp_wait(devinfo);
+-	clear_bit(0, &devinfo->ctl_op);
+ 	if (!timeout) {
+ 		brcmf_err("Txctl wait timed out\n");
++		usb_kill_urb(devinfo->ctl_urb);
+ 		err = -EIO;
+ 	}
++	clear_bit(0, &devinfo->ctl_op);
+ 	return err;
+ }
  
- 	dev->flags |= IFF_BROADCAST | IFF_MULTICAST;
- 	dev->watchdog_timeo = MWIFIEX_DEFAULT_WATCHDOG_TIMEOUT;
--	dev->hard_header_len += MWIFIEX_MIN_DATA_HEADER_LEN;
-+	dev->needed_headroom = MWIFIEX_MIN_DATA_HEADER_LEN;
- 	dev->ethtool_ops = &mwifiex_ethtool_ops;
- 
- 	mdev_priv = netdev_priv(dev);
+@@ -369,11 +370,12 @@ static int brcmf_usb_rx_ctlpkt(struct device *dev, u8 *buf, u32 len)
+ 	}
+ 	timeout = brcmf_usb_ioctl_resp_wait(devinfo);
+ 	err = devinfo->ctl_urb_status;
+-	clear_bit(0, &devinfo->ctl_op);
+ 	if (!timeout) {
+ 		brcmf_err("rxctl wait timed out\n");
++		usb_kill_urb(devinfo->ctl_urb);
+ 		err = -EIO;
+ 	}
++	clear_bit(0, &devinfo->ctl_op);
+ 	if (!err)
+ 		return devinfo->ctl_urb_actual_length;
+ 	else
 -- 
 2.20.1
 
