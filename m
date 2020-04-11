@@ -7,48 +7,48 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E0D9C2BA19
-	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:46:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0D54C2BB86
+	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:46:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 393C020CC7
-	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:46:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B2E7120787
+	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:46:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1586648774;
-	bh=oQBj8lb2uNeut+/63KcU0BjmNZtn6nkTPn8nReRWhAQ=;
+	s=default; t=1586648818;
+	bh=vcMK00SX1SQoKbQ2sWRXizpxI4voNpuTBMeu82d7DlM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=mxLVc6KbXIP1ZS+3mwn6yrqKa4PaimvIaqybHWFLKYljV+xQIZ9HycDWeP3vqpE8b
-	 HtNS56AMxv6fffm6V6qFr4c8EwMUhwsiK9GU7BFnWSYxV1hsLkws47K74Wwa6WqkXP
-	 Nzcpkem+YsaoONMWlb5ap2ESNHxw60pKyn+44Uqo=
+	b=bvkdHjdrMqnzqnqfZ/EditDLhk8JWSOTWujLADLHOJjtCcvPEGD4ceSY7GR4WooB3
+	 9aarLzrcttrqiwKXRe8JozSJzuh0K1y9w4ouskC3yWs2cywtnnV+WihN9x/XaMWtrX
+	 pBL4kfKJnkV8L0O8ImcsJeBys0V8igPItj+vKFv4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729801AbgDKXqI (ORCPT
+        id S1729743AbgDKXqw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 11 Apr 2020 19:46:08 -0400
-Received: from mail.kernel.org ([198.145.29.99]:39594 "EHLO mail.kernel.org"
+        Sat, 11 Apr 2020 19:46:52 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38980 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727941AbgDKXF0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 11 Apr 2020 19:05:26 -0400
+        id S1727823AbgDKXFJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 11 Apr 2020 19:05:09 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 6B19C20708;
-        Sat, 11 Apr 2020 23:05:25 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 287E02166E;
+        Sat, 11 Apr 2020 23:05:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586646326;
-        bh=oQBj8lb2uNeut+/63KcU0BjmNZtn6nkTPn8nReRWhAQ=;
+        s=default; t=1586646310;
+        bh=vcMK00SX1SQoKbQ2sWRXizpxI4voNpuTBMeu82d7DlM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=TY3xSW43zk3Scr4Gi7rpHzHdDpx+W64L178R6fclzNq+qQMFm0V5/HBlCRKq3Gl//
-         HVSXrjjqCOfQXNuNSrvuOs7Q4FElyzYEYAfDd+WaYA0G49ZCEPPMxfDZ/U2aT2U1EL
-         L4nfz9MgJOSxKTCNCpSTEKmRW8PY0VrkwleHETQU=
+        b=go0WxNdBN0nA2gMPvZcq67y8c7xT6/dn7M1CpdcZrRoLwpGLKBg2QyGaRk4dI1PIT
+         U2uVlAYsU2pEGgIRqbBbG8gqer7d6PtY/h5Ok2Cv0fDcIMxeZTtCFnSkuKKkAX/RLs
+         melf4D12DrPVF7Faw7OUi5D7Hhl7qvIoNcF254Uw=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Vikas Patel <vikpatel@codeaurora.org>,
-        Venkateswara Naralasetty <vnaralas@codeaurora.org>,
+Cc:     Tzu-En Huang <tehuang@realtek.com>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>, ath11k@lists.infradead.org,
+        Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.6 079/149] ath11k: Fixing dangling pointer issue upon peer delete failure
-Date:   Sat, 11 Apr 2020 19:02:36 -0400
-Message-Id: <20200411230347.22371-79-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.6 067/149] rtw88: 8822c: update power sequence to v16
+Date:   Sat, 11 Apr 2020 19:02:24 -0400
+Message-Id: <20200411230347.22371-67-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200411230347.22371-1-sashal@kernel.org>
 References: <20200411230347.22371-1-sashal@kernel.org>
@@ -61,70 +61,36 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Vikas Patel <vikpatel@codeaurora.org>
+From: Tzu-En Huang <tehuang@realtek.com>
 
-[ Upstream commit 58595c9874c625ceb7004960d8e53b9226abdc92 ]
+[ Upstream commit 8299adec99b29f341f0ee4269f1ce70ca8508e78 ]
 
-When there is WMI command failure, 'peer->sta' was not getting
-cleaned up, and mac80211 frees the 'sta' memory, which is causing
-the below page fault.
+Fix switching xtal mode leads to BT USB error issue.
 
-Cleaning up the sta pointer in ath11k whenever peer delete command
-is sent.
-
-Unable to handle kernel paging request at virtual address 200080000006a
-pgd = ffffffc02a774000
-[200080000006a] *pgd=0000000000000000, *pud=0000000000000000
-Internal error: Oops: 96000004 [#1] PREEMPT SMP
-.
-.
-.
-CPU: 0 PID: 0 Comm: swapper/0 Tainted: G        W       4.4.60 #1
-Hardware name: Qualcomm Technologies, Inc. IPQ807x/AP-HK01-C1 (DT)
-task: ffffffc00083c6d0 ti: ffffffc00083c6d0 task.ti: ffffffc00083c6d0
-PC is at ath11k_dp_rx_process_mon_status+0x114/0x4e0 [ath11k]
-LR is at ath11k_dp_rx_process_mon_status+0xe8/0x4e0 [ath11k]
-pc : [<ffffffbffcf8e544>] lr : [<ffffffbffcf8e518>] pstate: 60000145
-sp : ffffffc000833a30
-
-Signed-off-by: Vikas Patel <vikpatel@codeaurora.org>
-Signed-off-by: Venkateswara Naralasetty <vnaralas@codeaurora.org>
+Signed-off-by: Tzu-En Huang <tehuang@realtek.com>
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath11k/mac.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+ drivers/net/wireless/realtek/rtw88/rtw8822c.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index 78f20ba47b37e..e89790a01c48b 100644
---- a/drivers/net/wireless/ath/ath11k/mac.c
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -2786,6 +2786,7 @@ static int ath11k_mac_op_sta_state(struct ieee80211_hw *hw,
- 	struct ath11k *ar = hw->priv;
- 	struct ath11k_vif *arvif = ath11k_vif_to_arvif(vif);
- 	struct ath11k_sta *arsta = (struct ath11k_sta *)sta->drv_priv;
-+	struct ath11k_peer *peer;
- 	int ret = 0;
- 
- 	/* cancel must be done outside the mutex to avoid deadlock */
-@@ -2818,6 +2819,17 @@ static int ath11k_mac_op_sta_state(struct ieee80211_hw *hw,
- 				   sta->addr, arvif->vdev_id);
- 
- 		ath11k_mac_dec_num_stations(arvif, sta);
-+		spin_lock_bh(&ar->ab->base_lock);
-+		peer = ath11k_peer_find(ar->ab, arvif->vdev_id, sta->addr);
-+		if (peer && peer->sta == sta) {
-+			ath11k_warn(ar->ab, "Found peer entry %pM n vdev %i after it was supposedly removed\n",
-+				    vif->addr, arvif->vdev_id);
-+			peer->sta = NULL;
-+			list_del(&peer->list);
-+			kfree(peer);
-+			ar->num_peers--;
-+		}
-+		spin_unlock_bh(&ar->ab->base_lock);
- 
- 		kfree(arsta->tx_stats);
- 		arsta->tx_stats = NULL;
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+index 3865097696d40..d49c8b697e4fc 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+@@ -3544,6 +3544,11 @@ static struct rtw_pwr_seq_cmd trans_cardemu_to_act_8822c[] = {
+ 	 RTW_PWR_INTF_ALL_MSK,
+ 	 RTW_PWR_ADDR_MAC,
+ 	 RTW_PWR_CMD_WRITE, BIT(2), BIT(2)},
++	{0x1064,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_ALL_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, BIT(1), BIT(1)},
+ 	{0xFFFF,
+ 	 RTW_PWR_CUT_ALL_MSK,
+ 	 RTW_PWR_INTF_ALL_MSK,
 -- 
 2.20.1
 
