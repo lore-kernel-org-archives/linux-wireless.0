@@ -7,51 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E91FC2BA19
-	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:44:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C68E5C2BB86
+	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:45:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0B45020709
-	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:44:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A17A8215A4
+	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:45:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1586648655;
-	bh=um6CFsKJ8fcYt2IepK3FugjmiB8jjVP+9kV045Z58m0=;
+	s=default; t=1586648742;
+	bh=s4vRQIJwcxkL6l2FldF0HlhnWS37JsVCYYVOD5lTqjw=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=bpV4N17sfhViQfPAOYtZxmq8WtK51D/ysOwCOfFb5pOa/gz5A7IVlISI8Isq7ox2E
-	 kWJfpit+v+VsbxAJ7owRX4rs1uyObC6pGEYFsJMav8aV82GxpqXRceN6auJsQVHKjy
-	 8n06x9Ivjw36I2THNPN+FRng/tz+o4B7VWIXZ0jI=
+	b=tqaxEcCCTPJdarsfICyX4hs4S/iO14e1pyqMuDFfNMW+Xe6emXcWrXFdv/GMNRmUp
+	 51TMerNOyXC6UokAFxAdsOBvig7Yu1BoTeJgiyJbOd+nmAUT2kGvlT/vJcApuxraxU
+	 4PUe0vYPbTketUPjSLDHfcbUKWUT87jLbN/jP+1g=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728684AbgDKXoI (ORCPT
+        id S1728015AbgDKXFf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 11 Apr 2020 19:44:08 -0400
-Received: from mail.kernel.org ([198.145.29.99]:41274 "EHLO mail.kernel.org"
+        Sat, 11 Apr 2020 19:05:35 -0400
+Received: from mail.kernel.org ([198.145.29.99]:39812 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728279AbgDKXGK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 11 Apr 2020 19:06:10 -0400
+        id S1727960AbgDKXFc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 11 Apr 2020 19:05:32 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id B235B217D8;
-        Sat, 11 Apr 2020 23:06:09 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 8E40F21775;
+        Sat, 11 Apr 2020 23:05:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586646370;
-        bh=um6CFsKJ8fcYt2IepK3FugjmiB8jjVP+9kV045Z58m0=;
+        s=default; t=1586646332;
+        bh=s4vRQIJwcxkL6l2FldF0HlhnWS37JsVCYYVOD5lTqjw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=qqW4TUcEZVro6+TIVi5Zbv9VPwbhyngmQxWmBILZWHDX8z7HPnBsTxQQGTE8+/Yn6
-         nXLZKxZCqb3/uqzSgrYPWUaQ86NoopKSrBEHenE7We1fhzqqmhbbC2VK09n07CheNB
-         /Wt5eOL1HV66Ek7s4VutPOBwykpmNwjQmkj4lU5g=
+        b=paRSp/q0r+PEf4tf/sVB45ij3JW+71lpAlY9OkbNRgEEMt9gB17GuRHca8gXgotLh
+         VU3urQE4fhqGs1eNJmxPhJzll7YYSdZ7Ynj0DQbSrXkJSnpuISFDRo36NsISp7j58+
+         SA7Pyh1k4bi3lrOkNPQ35wcmyYQl7RwjxtZ1KXA4=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Raveendran Somu <raveendran.somu@cypress.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Chi-hsien Lin <chi-hsien.lin@cypress.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.6 113/149] brcmfmac: fix the incorrect return value in brcmf_inform_single_bss().
-Date:   Sat, 11 Apr 2020 19:03:10 -0400
-Message-Id: <20200411230347.22371-113-sashal@kernel.org>
+Cc:     Felix Fietkau <nbd@nbd.name>, Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH AUTOSEL 5.6 084/149] mt76: mt7603: fix input validation issues for powersave-filtered frames
+Date:   Sat, 11 Apr 2020 19:02:41 -0400
+Message-Id: <20200411230347.22371-84-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200411230347.22371-1-sashal@kernel.org>
 References: <20200411230347.22371-1-sashal@kernel.org>
@@ -64,41 +60,73 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Raveendran Somu <raveendran.somu@cypress.com>
+From: Felix Fietkau <nbd@nbd.name>
 
-[ Upstream commit bd9944918ceb28ede97f715d209e220db5e92c09 ]
+[ Upstream commit d55aa5e17461b8b423adae376978032c4a10a1d8 ]
 
-The function brcmf_inform_single_bss returns the value as success,
-even when the length exceeds the maximum value.
-The fix is to send appropriate code on this error.
-This issue is observed when Cypress test group reported random fmac
-crashes when running their tests and the path was identified from the
-crash logs. With this fix the random failure issue in Cypress test group
-was resolved.
+Before extracting the tid out of the packet, check if it was qos-data.
+Only accept tid values 0-7
+Also, avoid accepting the hardware queue as skb queue mapping, it could
+lead to an overrun. Instead, derive the hardware queue from the tid number,
+in order to avoid issues with packets being filtered multiple times.
+This also fixes a mismatch between hardware and software queue indexes.
 
-Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-Signed-off-by: Raveendran Somu <raveendran.somu@cypress.com>
-Signed-off-by: Chi-hsien Lin <chi-hsien.lin@cypress.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/1585124429-97371-4-git-send-email-chi-hsien.lin@cypress.com
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ .../net/wireless/mediatek/mt76/mt7603/dma.c   | 19 +++++++++++++++----
+ 1 file changed, 15 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index a2328d3eee036..2ba165330038e 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -2953,7 +2953,7 @@ static s32 brcmf_inform_single_bss(struct brcmf_cfg80211_info *cfg,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/dma.c b/drivers/net/wireless/mediatek/mt76/mt7603/dma.c
+index a6ab73060aada..57428467fe967 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7603/dma.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7603/dma.c
+@@ -30,6 +30,16 @@ mt7603_init_tx_queue(struct mt7603_dev *dev, struct mt76_sw_queue *q,
+ static void
+ mt7603_rx_loopback_skb(struct mt7603_dev *dev, struct sk_buff *skb)
+ {
++	static const u8 tid_to_ac[8] = {
++		IEEE80211_AC_BE,
++		IEEE80211_AC_BK,
++		IEEE80211_AC_BK,
++		IEEE80211_AC_BE,
++		IEEE80211_AC_VI,
++		IEEE80211_AC_VI,
++		IEEE80211_AC_VO,
++		IEEE80211_AC_VO
++	};
+ 	__le32 *txd = (__le32 *)skb->data;
+ 	struct ieee80211_hdr *hdr;
+ 	struct ieee80211_sta *sta;
+@@ -38,7 +48,7 @@ mt7603_rx_loopback_skb(struct mt7603_dev *dev, struct sk_buff *skb)
+ 	void *priv;
+ 	int idx;
+ 	u32 val;
+-	u8 tid;
++	u8 tid = 0;
  
- 	if (le32_to_cpu(bi->length) > WL_BSS_INFO_MAX) {
- 		bphy_err(drvr, "Bss info is larger than buffer. Discarding\n");
--		return 0;
-+		return -EINVAL;
- 	}
+ 	if (skb->len < MT_TXD_SIZE + sizeof(struct ieee80211_hdr))
+ 		goto free;
+@@ -56,15 +66,16 @@ mt7603_rx_loopback_skb(struct mt7603_dev *dev, struct sk_buff *skb)
  
- 	if (!bi->ctl_ch) {
+ 	priv = msta = container_of(wcid, struct mt7603_sta, wcid);
+ 	val = le32_to_cpu(txd[0]);
+-	skb_set_queue_mapping(skb, FIELD_GET(MT_TXD0_Q_IDX, val));
+-
+ 	val &= ~(MT_TXD0_P_IDX | MT_TXD0_Q_IDX);
+ 	val |= FIELD_PREP(MT_TXD0_Q_IDX, MT_TX_HW_QUEUE_MGMT);
+ 	txd[0] = cpu_to_le32(val);
+ 
+ 	sta = container_of(priv, struct ieee80211_sta, drv_priv);
+ 	hdr = (struct ieee80211_hdr *)&skb->data[MT_TXD_SIZE];
+-	tid = *ieee80211_get_qos_ctl(hdr) & IEEE80211_QOS_CTL_TID_MASK;
++	if (ieee80211_is_data_qos(hdr->frame_control))
++		tid = *ieee80211_get_qos_ctl(hdr) &
++		      IEEE80211_QOS_CTL_TAG1D_MASK;
++	skb_set_queue_mapping(skb, tid_to_ac[tid]);
+ 	ieee80211_sta_set_buffered(sta, tid, true);
+ 
+ 	spin_lock_bh(&dev->ps_lock);
 -- 
 2.20.1
 
