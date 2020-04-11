@@ -4,52 +4,55 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A474DC2BBFD
-	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:05:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7F75C2BA19
+	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:08:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 753B0214D8
-	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:05:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 805472166E
+	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:08:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1586646353;
-	bh=W/yE/dUyDCwOgiZ+kx2wm6MH+IA6WOjD+VZvCvK923E=;
+	s=default; t=1586646491;
+	bh=Ddj9UahbyyEDMEsA4uD2XcrxDHuCCjCCosOi5TugEdY=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=0LShbLZANaC6sO3tbvRCOkseGgq4zv45cbc15jDyLD5yNq1QjLFpxvd4DLKUmOYRT
-	 xaejloFKZzXcP1KHXfsfjE4t//Hp2mXAefR706V0lJWimmqVblP0SGSOXP/hgcLQ9R
-	 b9thfsMLjIPUnmgGpuLe2M4NcfPSw6JeuS1M1HgA=
+	b=xzbsnmQq0f/CbIG/pQJraPU3UrqQaWr9EdtZH0UDIkHeEqHJSQaNAyE1Qpwylmnqm
+	 +Pt3mcmOwIqOWQOTjqHrmCBOm+TGR1KldOCq+rL3YabvVLNjj5VARuaUSX9U1QvzxH
+	 qeFXQ9Xe57+x8N8qY/T4WjcXJTkfxeYAxZ0jabiM=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728143AbgDKXFv (ORCPT
+        id S1728847AbgDKXIJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 11 Apr 2020 19:05:51 -0400
-Received: from mail.kernel.org ([198.145.29.99]:40510 "EHLO mail.kernel.org"
+        Sat, 11 Apr 2020 19:08:09 -0400
+Received: from mail.kernel.org ([198.145.29.99]:44654 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728085AbgDKXFu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 11 Apr 2020 19:05:50 -0400
+        id S1728828AbgDKXIH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 11 Apr 2020 19:08:07 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 36D4A21BE5;
-        Sat, 11 Apr 2020 23:05:50 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 838B12173E;
+        Sat, 11 Apr 2020 23:08:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586646351;
-        bh=W/yE/dUyDCwOgiZ+kx2wm6MH+IA6WOjD+VZvCvK923E=;
+        s=default; t=1586646487;
+        bh=Ddj9UahbyyEDMEsA4uD2XcrxDHuCCjCCosOi5TugEdY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=c4sEG9fkjT9fRV0kfSaB0Arcoq8AkK5Xlh39JTXEZmIgDrQ1q4aE9shNFdgn/AKqh
-         tOQkhFVxJUfVZg0MUEfrXcDjGZgmEFLZNH8M8yvvbvKTmwQPlXYdltTg3+GkRp8ynB
-         ouhwPPgYdNAFSpugmHKjEHQanvlS5EWJC7YdYBxc=
+        b=xCIcPcMG9nQMka0S/5SoL8PNnibwbH8ozK4L3dCxeJgeHwq1EO34m61ll4gzMbt4J
+         v6yCPiYfGbuKQ8h2YZFvTmQLsSkCleO7kD92Fws6905NUlj09VHMS+nAL4LCf30Rin
+         nJzo1mMI34Tq/AiSC28lhb8HrK+uRMA0k+Uirpnk=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Wen Gong <wgong@codeaurora.org>, Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
+Cc:     Tzu-En Huang <tehuang@realtek.com>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Chris Chiu <chiu@endlessm.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.6 098/149] ath10k: start recovery process when read int status fail for sdio
-Date:   Sat, 11 Apr 2020 19:02:55 -0400
-Message-Id: <20200411230347.22371-98-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.5 051/121] rtw88: Fix incorrect beamformee role setting
+Date:   Sat, 11 Apr 2020 19:05:56 -0400
+Message-Id: <20200411230706.23855-51-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200411230347.22371-1-sashal@kernel.org>
-References: <20200411230347.22371-1-sashal@kernel.org>
+In-Reply-To: <20200411230706.23855-1-sashal@kernel.org>
+References: <20200411230706.23855-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -59,51 +62,61 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Wen Gong <wgong@codeaurora.org>
+From: Tzu-En Huang <tehuang@realtek.com>
 
-[ Upstream commit 37b7ecb75627699e96750db1e0c5ac56224245df ]
+[ Upstream commit aa7619a39acef91c5a6904f3ada7d0f20e2ad25e ]
 
-When running simulate crash stress test, it happened
-"failed to read from address 0x800: -110".
+In associating and configuring beamformee, bfee->role is not
+correctly set before rtw_chip_ops::config_bfee().
+Fix it by setting it correctly.
 
-Test steps:
-1. Run command continuous
-echo soft > /sys/kernel/debug/ieee80211/phy0/ath10k/simulate_fw_crash
-
-2. error happened and it did not begin recovery for long time.
-[74377.334846] ath10k_sdio mmc1:0001:1: simulating soft firmware crash
-[74378.378217] ath10k_sdio mmc1:0001:1: failed to read from address 0x800: -110
-[74378.378371] ath10k_sdio mmc1:0001:1: failed to process pending SDIO interrupts: -110
-
-It has sdio errors since it can not read MBOX_HOST_INT_STATUS_ADDRESS,
-then it has to do recovery process to recovery ath10k.
-
-Tested with QCA6174 SDIO with firmware WLAN.RMH.4.4.1-00042.
-
-Signed-off-by: Wen Gong <wgong@codeaurora.org>
+Signed-off-by: Tzu-En Huang <tehuang@realtek.com>
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Reviewed-by: Chris Chiu <chiu@endlessm.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath10k/sdio.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtw88/bf.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
-index 9208291aaca3d..8b640a78f7ca4 100644
---- a/drivers/net/wireless/ath/ath10k/sdio.c
-+++ b/drivers/net/wireless/ath/ath10k/sdio.c
-@@ -953,8 +953,11 @@ static int ath10k_sdio_mbox_read_int_status(struct ath10k *ar,
- 	 */
- 	ret = ath10k_sdio_read(ar, MBOX_HOST_INT_STATUS_ADDRESS,
- 			       irq_proc_reg, sizeof(*irq_proc_reg));
--	if (ret)
-+	if (ret) {
-+		queue_work(ar->workqueue, &ar->restart_work);
-+		ath10k_warn(ar, "read int status fail, start recovery\n");
- 		goto out;
-+	}
+diff --git a/drivers/net/wireless/realtek/rtw88/bf.c b/drivers/net/wireless/realtek/rtw88/bf.c
+index fda771d23f712..b6d1d71f4d302 100644
+--- a/drivers/net/wireless/realtek/rtw88/bf.c
++++ b/drivers/net/wireless/realtek/rtw88/bf.c
+@@ -41,7 +41,6 @@ void rtw_bf_assoc(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
+ 	struct ieee80211_sta_vht_cap *ic_vht_cap;
+ 	const u8 *bssid = bss_conf->bssid;
+ 	u32 sound_dim;
+-	u8 bfee_role = RTW_BFEE_NONE;
+ 	u8 i;
  
- 	/* Update only those registers that are enabled */
- 	*host_int_status = irq_proc_reg->host_int_status &
+ 	if (!(chip->band & RTW_BAND_5G))
+@@ -67,7 +66,7 @@ void rtw_bf_assoc(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
+ 		}
+ 
+ 		ether_addr_copy(bfee->mac_addr, bssid);
+-		bfee_role = RTW_BFEE_MU;
++		bfee->role = RTW_BFEE_MU;
+ 		bfee->p_aid = (bssid[5] << 1) | (bssid[4] >> 7);
+ 		bfee->aid = bss_conf->aid;
+ 		bfinfo->bfer_mu_cnt++;
+@@ -85,7 +84,7 @@ void rtw_bf_assoc(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
+ 		sound_dim >>= IEEE80211_VHT_CAP_SOUNDING_DIMENSIONS_SHIFT;
+ 
+ 		ether_addr_copy(bfee->mac_addr, bssid);
+-		bfee_role = RTW_BFEE_SU;
++		bfee->role = RTW_BFEE_SU;
+ 		bfee->sound_dim = (u8)sound_dim;
+ 		bfee->g_id = 0;
+ 		bfee->p_aid = (bssid[5] << 1) | (bssid[4] >> 7);
+@@ -102,7 +101,6 @@ void rtw_bf_assoc(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
+ 	}
+ 
+ out_unlock:
+-	bfee->role = bfee_role;
+ 	rcu_read_unlock();
+ }
+ 
 -- 
 2.20.1
 
