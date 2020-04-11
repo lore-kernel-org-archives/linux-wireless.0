@@ -4,50 +4,50 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82BA3C2BA19
-	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:47:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B789EC2BBC7
+	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:47:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5C7B1206F7
-	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:47:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 89DAC206F7
+	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:47:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1586648842;
-	bh=w68oapllwXBcXuPwr+A/R2ShE4TVv5AB6GPxa7PIA1g=;
+	s=default; t=1586648849;
+	bh=vr0eU8N+DcfIEeHCMZcV+a3ZvG1NoSo5bc/6p6NwcV4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Hjzc8GzyXfOFvVWnPKjzuytmiMvx6oiXOT2IB7DW73AzHDa380KL14xNoNhUUQEPG
-	 ZDJb84BjHFCpBB2vrX3xERBzxgpj/ZlWQByxuJQPkQ0NAs/o1dopnvczg+hGaNc+MI
-	 KOQ9LV5BKRZT+/VpZOFkI/4ncsKQiKphFlz5lG78=
+	b=wYfiDkIcvEYFcRaaOh+V1f4PWxBRBBiaZVM71V5QEHO1NCJZVQLEOVquzARiv5V4A
+	 IGE2u5oOd9m206y47EomblcJhNPQvEm9VsCjX4bK01Nfj29ceO0hrhxIguN3PQgm+p
+	 81VKxmYM70vWl9g/RDKa5xa6AF12riaz/71OxXaE=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728195AbgDKXrU (ORCPT
+        id S1727719AbgDKXFC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 11 Apr 2020 19:47:20 -0400
-Received: from mail.kernel.org ([198.145.29.99]:38804 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727732AbgDKXFC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Sat, 11 Apr 2020 19:05:02 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38760 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727526AbgDKXFB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 11 Apr 2020 19:05:01 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id DA92E21841;
-        Sat, 11 Apr 2020 23:05:01 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id A3E66216FD;
+        Sat, 11 Apr 2020 23:05:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586646302;
-        bh=w68oapllwXBcXuPwr+A/R2ShE4TVv5AB6GPxa7PIA1g=;
+        s=default; t=1586646301;
+        bh=vr0eU8N+DcfIEeHCMZcV+a3ZvG1NoSo5bc/6p6NwcV4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=X3Dgskd7nGUMEBBHuGSQoYj9yAvax7I2NUvGpeeMCeNst65cbnSrMWJR9XUB+TW73
-         lFmGYK41NlbIaA6lUJwqe8km3LmP5OhqNpuu/LA79a0A7ezSMTuJl1WeW6tFPpWXQB
-         WCtpsCErDMA0Fk1xSpNfSitmywZnY1h1rVfRhYcE=
+        b=0erG1o+q5ty8XN/leqFe+f4PPIbB7S7zcjGNkSVYyd3A7a35uw032jqhPNVRMh3ow
+         9wffVw0wzOsHTPvS4pO07ZCk3JW3Hoq/P4D4g+RiFG8eHUY0zc4OnrBfO3D02+C+BC
+         a15Wp3V5qppZr2KbiAnVBbtZGL17rYAUrm2PyYak=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Felix Fietkau <nbd@nbd.name>, Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org,
         linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 5.6 061/149] mt76: fix handling full tx queues in mt76_dma_tx_queue_skb_raw
-Date:   Sat, 11 Apr 2020 19:02:18 -0400
-Message-Id: <20200411230347.22371-61-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.6 060/149] mt76: mt7615: disable 5 GHz on MT7622
+Date:   Sat, 11 Apr 2020 19:02:17 -0400
+Message-Id: <20200411230347.22371-60-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200411230347.22371-1-sashal@kernel.org>
 References: <20200411230347.22371-1-sashal@kernel.org>
@@ -62,47 +62,31 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Felix Fietkau <nbd@nbd.name>
 
-[ Upstream commit 93eaec7625f13cffb593b471405b017c7e64d4ee ]
+[ Upstream commit c3ad5e9d00af19c53dec1d8ae647a78ac377b593 ]
 
-Fixes a theoretical issue where it could potentially overwrite an existing
-descriptor entry (and leaking its skb)
+It is not supported by the chip, so avoid issues with potentially wrong
+EEPROM configurations.
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/dma.c | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+ drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wireless/mediatek/mt76/dma.c
-index 1847f55e199b0..c001d94958d83 100644
---- a/drivers/net/wireless/mediatek/mt76/dma.c
-+++ b/drivers/net/wireless/mediatek/mt76/dma.c
-@@ -261,10 +261,13 @@ mt76_dma_tx_queue_skb_raw(struct mt76_dev *dev, enum mt76_txq_id qid,
- 	struct mt76_queue_buf buf;
- 	dma_addr_t addr;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
+index 17e277bf39e0f..cb05a07135a03 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
+@@ -111,6 +111,9 @@ static void mt7615_eeprom_parse_hw_cap(struct mt7615_dev *dev)
+ 		break;
+ 	}
  
-+	if (q->queued + 1 >= q->ndesc - 1)
-+		goto error;
++	if (is_mt7622(&dev->mt76))
++		dev->mt76.cap.has_5ghz = false;
 +
- 	addr = dma_map_single(dev->dev, skb->data, skb->len,
- 			      DMA_TO_DEVICE);
- 	if (unlikely(dma_mapping_error(dev->dev, addr)))
--		return -ENOMEM;
-+		goto error;
- 
- 	buf.addr = addr;
- 	buf.len = skb->len;
-@@ -275,6 +278,10 @@ mt76_dma_tx_queue_skb_raw(struct mt76_dev *dev, enum mt76_txq_id qid,
- 	spin_unlock_bh(&q->lock);
- 
- 	return 0;
-+
-+error:
-+	dev_kfree_skb(skb);
-+	return -ENOMEM;
- }
- 
- static int
+ 	/* read tx-rx mask from eeprom */
+ 	val = mt76_rr(dev, MT_TOP_STRAP_STA);
+ 	max_nss = val & MT_TOP_3NSS ? 3 : 4;
 -- 
 2.20.1
 
