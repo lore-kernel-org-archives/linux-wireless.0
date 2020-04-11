@@ -7,47 +7,48 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C1C7C2BBC7
-	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:29:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1819C2BB86
+	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:30:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3C0DB2051A
-	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:29:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C28D0206E9
+	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:30:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1586647785;
-	bh=F3GZCkfuTpePzhtk5oZ3eLfLVs1Pby/rMwXEm7QXV5w=;
+	s=default; t=1586647816;
+	bh=tRG72cihYiM6EZUluJkAAhOsZlcgd7QHeyjMoIxs5ao=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=p1WFJmAnmTkIYXUflbjWU8xD3zCJ0wfUfFnzhhlCS9xY/OhIloOvnx4h7U1LbCO+x
-	 7stksdxD0HqByednW1Qqqx87BC7gXSW2k3KtzOk4V5N9wwq8TlsYu2wuXiMHVc9aVk
-	 XGvDmQLANGX5gXSJ96ud3QGZCVu5DIGsyrnmLaEc=
+	b=AwD87bvPdC9FCakiulG0DLFYkWiIXBxGbE5RoA8Mncc/mGUBD3xEotWEjJu4aChEC
+	 OSFjvFxDlMLahbdQ6OBNYblm8F1YzFHFEBT12TnRgCGWbp2+TqcBPc3MbPXq6TJTGi
+	 7511m3xuNpKpxK7hcP26FeqKHoUHG1odu6TY854I=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729728AbgDKXKz (ORCPT
+        id S1730057AbgDKXaI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 11 Apr 2020 19:10:55 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49894 "EHLO mail.kernel.org"
+        Sat, 11 Apr 2020 19:30:08 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49384 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729721AbgDKXKy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 11 Apr 2020 19:10:54 -0400
+        id S1729666AbgDKXKk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 11 Apr 2020 19:10:40 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id BF02D217D8;
-        Sat, 11 Apr 2020 23:10:53 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 2FF4E216FD;
+        Sat, 11 Apr 2020 23:10:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586646654;
-        bh=F3GZCkfuTpePzhtk5oZ3eLfLVs1Pby/rMwXEm7QXV5w=;
+        s=default; t=1586646641;
+        bh=tRG72cihYiM6EZUluJkAAhOsZlcgd7QHeyjMoIxs5ao=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=rYIEwmzyqKKf1XBMfrgHVNZLu9MoxhSXAITuyAqFB4t8igB0gPP2dkcDW6jGJdjVd
-         5GOge6zk38pWY6vdVZ5h0jCyDL+mrMCqterHmVBShvpdDRqAD9PHPRTgrO4IWd5M61
-         HQl3r1jr9JfALNZifesIoTpGfRuWp4xVkkpK5X6k=
+        b=PAQNMInd5t6NhoOJtPltrBMc/RZ+D2bn0gtn1HUW+OBnWRQdg3DWHxf5FArjc4tgZ
+         bCG25sG+up0pvtCiMpx5yNCwaxJIWwG/UeszELd5ClZ0oo/36KKSFy2D7HjdIIXtyG
+         msmw1VluRDIsCkxPUG2Zdd8i3wKI9oXoigui5Ajo=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Martin Kepplinger <martin.kepplinger@puri.sm>,
+Cc:     Tzu-En Huang <tehuang@realtek.com>,
+        Yan-Hsuan Chuang <yhchuang@realtek.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 057/108] rsi: fix null pointer dereference during rsi_shutdown()
-Date:   Sat, 11 Apr 2020 19:08:52 -0400
-Message-Id: <20200411230943.24951-57-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 047/108] rtw88: 8822c: update power sequence to v16
+Date:   Sat, 11 Apr 2020 19:08:42 -0400
+Message-Id: <20200411230943.24951-47-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200411230943.24951-1-sashal@kernel.org>
 References: <20200411230943.24951-1-sashal@kernel.org>
@@ -60,43 +61,36 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Martin Kepplinger <martin.kepplinger@puri.sm>
+From: Tzu-En Huang <tehuang@realtek.com>
 
-[ Upstream commit 16bbc3eb83728c03138191a5d23d84d38175fa26 ]
+[ Upstream commit 8299adec99b29f341f0ee4269f1ce70ca8508e78 ]
 
-Appearently the hw pointer can be NULL while the module is loaded and
-in that case rsi_shutdown() crashes due to the unconditional dereference.
+Fix switching xtal mode leads to BT USB error issue.
 
-Signed-off-by: Martin Kepplinger <martin.kepplinger@puri.sm>
+Signed-off-by: Tzu-En Huang <tehuang@realtek.com>
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/rsi/rsi_91x_sdio.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ drivers/net/wireless/realtek/rtw88/rtw8822c.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
-index 1bebba4e85273..5d6143a551877 100644
---- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
-@@ -1468,12 +1468,15 @@ static void rsi_shutdown(struct device *dev)
- 	struct rsi_91x_sdiodev *sdev =
- 		(struct rsi_91x_sdiodev *)adapter->rsi_dev;
- 	struct ieee80211_hw *hw = adapter->hw;
--	struct cfg80211_wowlan *wowlan = hw->wiphy->wowlan_config;
- 
- 	rsi_dbg(ERR_ZONE, "SDIO Bus shutdown =====>\n");
- 
--	if (rsi_config_wowlan(adapter, wowlan))
--		rsi_dbg(ERR_ZONE, "Failed to configure WoWLAN\n");
-+	if (hw) {
-+		struct cfg80211_wowlan *wowlan = hw->wiphy->wowlan_config;
-+
-+		if (rsi_config_wowlan(adapter, wowlan))
-+			rsi_dbg(ERR_ZONE, "Failed to configure WoWLAN\n");
-+	}
- 
- 	if (IS_ENABLED(CONFIG_RSI_COEX) && adapter->priv->coex_mode > 1 &&
- 	    adapter->priv->bt_adapter) {
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+index de0505a6a365d..509cc76e6ba54 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+@@ -3336,6 +3336,11 @@ static struct rtw_pwr_seq_cmd trans_cardemu_to_act_8822c[] = {
+ 	 RTW_PWR_INTF_ALL_MSK,
+ 	 RTW_PWR_ADDR_MAC,
+ 	 RTW_PWR_CMD_WRITE, BIT(2), BIT(2)},
++	{0x1064,
++	 RTW_PWR_CUT_ALL_MSK,
++	 RTW_PWR_INTF_ALL_MSK,
++	 RTW_PWR_ADDR_MAC,
++	 RTW_PWR_CMD_WRITE, BIT(1), BIT(1)},
+ 	{0xFFFF,
+ 	 RTW_PWR_CUT_ALL_MSK,
+ 	 RTW_PWR_INTF_ALL_MSK,
 -- 
 2.20.1
 
