@@ -8,76 +8,69 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4F54C2BB85
-	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 00:20:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7960AC2D0EC
+	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 00:20:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9B2D72145D
-	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 00:20:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4E85F2145D
+	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 00:20:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ve00Ui45"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ncIQdvrn"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726867AbgDKAUV (ORCPT
+        id S1726819AbgDKAUP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 10 Apr 2020 20:20:21 -0400
-Received: from mail-wm1-f67.google.com ([209.85.128.67]:35983 "EHLO
+        Fri, 10 Apr 2020 20:20:15 -0400
+Received: from mail-wm1-f67.google.com ([209.85.128.67]:39469 "EHLO
         mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726839AbgDKAUT (ORCPT
+        with ESMTP id S1726701AbgDKAUO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 10 Apr 2020 20:20:19 -0400
-Received: by mail-wm1-f67.google.com with SMTP id a201so4001464wme.1;
-        Fri, 10 Apr 2020 17:20:18 -0700 (PDT)
+        Fri, 10 Apr 2020 20:20:14 -0400
+Received: by mail-wm1-f67.google.com with SMTP id y24so4360688wma.4;
+        Fri, 10 Apr 2020 17:20:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=WqLpUe/3+ebAsfSyEr8eWQGQOEEyLPgemLyG5SvrhHI=;
-        b=ve00Ui45sd+mRIObqi4fVxpgDL1FPby9VCzCj4up6kJluTET85j6C/jkaFTqIiYuT2
-         1GhQGH7Sx8HCdF86m+cAKpqG94WATIWwwv3oP5hGRWQBpkyyCQxLel51jzVSK6Nd2Zai
-         lxaMJxKAfk7aEH+J5TOxzxVln/e4UL90yec+A7WY7I/6rEvheZU6yvou3zB6uqQmyrZe
-         Zlj5M8US/WwEC2BcQddcpVluxzqwGbCNosji3FGUDXv48GI6Tr/w1FUlo+a/AZOT6kQl
-         EO2vgzMWWDQKe+G9BK1TqgJccORmQo6iJZpkHulI2Mkf2LTPpZQPheRN4exbUQCIM5lc
-         pUmQ==
+        bh=neMHyWmt5aDs4XMeVy9/rpYrSAQCVVUJ/oaGM9211Q8=;
+        b=ncIQdvrnO5Y2UQ4dYx8USO2hUvroaLP7i3q1a/wfun2XI+gGPlRhgRiJU9OTT314qD
+         8q4YUQxdkfr1r9NLN2vyQjnAjRHRpkkmQY38RO7bvSia1aBpxZDnGwzZAyqFw6+kX6sK
+         6oXnPqKMY+TTO8Thr0aP15hIm+e394UBVPEVfsmsHST31qnML9qMB/XpPwRjIy0xzE+H
+         swmgg5phJbFpAayDQeTDasnKjdsuyJWAPqHSwWR2CWlowB/tqBPVmKjIp+RNpODjIbYM
+         cX0WpMgT/BaWa9ABnWzeSV1KOjR8lLR3Jewk9SX9yKI63TpUBY+m1qpoNoWSJ+XQA2Kj
+         KVHg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=WqLpUe/3+ebAsfSyEr8eWQGQOEEyLPgemLyG5SvrhHI=;
-        b=R8MACe4Zcce+OB2s1WOhn68taUezANBy0QkD5yknRpYWVjr2/VOGnGMtrX7QNnBKim
-         txBHmDMvbB7FfY4u5TiH8dT9ZQpOntVyF+ytFYZHe4/PZFODI0WhCjyaGC2G4hDkrZ5n
-         286n3mkdGVlYNEb4aPtZlZ9rzcuqoQX6iBhvzfY66+mNC1ogu8/e2mJVAs/Bx7eThAYV
-         D+dubES/InM9SRLgdWS1lEe18GB4RXWEs6Bo/2E+GZ0wFEhaL2g/I9Y1AuYbImoxjFKX
-         c0229AeDSmcvyNgOV2c1J6/3LNnzJrW70sNgZLNvjSi4uE8iAoE4bYeKsvqgx93Gss4X
-         /+UQ==
-X-Gm-Message-State: AGi0Pubw80t9+Pgzcck6RWFekHOVvfPazUBBV4ZIoUSGTzjWNwUw3YMw
-        ww41YqhkJBjD8qjoN+e5/zzlADmCXJMo
-X-Google-Smtp-Source: APiQypJTY6BBVpJIbEZoG4XC26odBRDzb6vOdpzxy/8sR/Td9iLmxzbhYDkcX8M+D2UiwGrPh8Pt7A==
-X-Received: by 2002:a1c:7ed7:: with SMTP id z206mr6958804wmc.64.1586564417420;
-        Fri, 10 Apr 2020 17:20:17 -0700 (PDT)
+        bh=neMHyWmt5aDs4XMeVy9/rpYrSAQCVVUJ/oaGM9211Q8=;
+        b=V7sO5CQaJsAgKuLpUqSHMHDl6SsI+Zdb021Pf2q1eD4SLcfgdRjTRzT8f0Trmto6re
+         BPk+h8He0r17tg1gcCLaGVSYagCvcVq+rQe3InvrKWhd64/gLflPaVUzeIzFXZVSJp4H
+         YDXyYLeJuLEy7+8zKiq4+tD20cl5pN7P3YFepm0T/FtKRO1ei1a0oY3A8UNAFylyojHH
+         tk+NmB2je1ziHmVltd15yS3FMf45t3XGHvW/JjfnnUcEJ6JNGT+rD6mBWIMhOoROncTb
+         k6qSeH6rk+dYMd9Ozb+RA+7B+6R+MNA6EyqQhJApMxL8imPrvTMESKrznnUz/5/Q3LYr
+         +s1g==
+X-Gm-Message-State: AGi0PuY+p67iiOFbTmqPR/c+ouOYa/Og/teVgLOoVht+C1g20frfR+S6
+        J99h13Z2lT0yrPkbrW7lpYCw+TNpZER3
+X-Google-Smtp-Source: APiQypIrfTUAeUpy3epoyJ8Ai+C1TsIbYkXmSFwo9u3pL1BWDnOWYKDkrOgbFpJir7rAeRe2FOxCFA==
+X-Received: by 2002:a1c:2d8b:: with SMTP id t133mr7726176wmt.131.1586564411392;
+        Fri, 10 Apr 2020 17:20:11 -0700 (PDT)
 Received: from ninjahost.lan (host-2-102-14-153.as13285.net. [2.102.14.153])
-        by smtp.gmail.com with ESMTPSA id b191sm5091594wmd.39.2020.04.10.17.20.15
+        by smtp.gmail.com with ESMTPSA id b191sm5091594wmd.39.2020.04.10.17.20.10
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 10 Apr 2020 17:20:16 -0700 (PDT)
+        Fri, 10 Apr 2020 17:20:10 -0700 (PDT)
 From:   Jules Irenge <jbi.octave@gmail.com>
 To:     linux-kernel@vger.kernel.org
-Cc:     boqun.feng@gmail.com,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
+Cc:     boqun.feng@gmail.com, Jouni Malinen <j@w1.fi>,
         Kalle Valo <kvalo@codeaurora.org>,
         "David S. Miller" <davem@davemloft.net>,
-        Johannes Berg <johannes.berg@intel.com>,
-        linux-wireless@vger.kernel.org (open list:BROADCOM BRCM80211
-        IEEE802.11n WIRELESS DRIVER),
-        brcm80211-dev-list.pdl@broadcom.com (open list:BROADCOM BRCM80211
-        IEEE802.11n WIRELESS DRIVER),
-        brcm80211-dev-list@cypress.com (open list:BROADCOM BRCM80211
-        IEEE802.11n WIRELESS DRIVER),
+        zhong jiang <zhongjiang@huawei.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Stephen Rothwell <sfr@canb.auug.org.au>,
+        Alexey Dobriyan <adobriyan@gmail.com>,
+        linux-wireless@vger.kernel.org (open list:HOST AP DRIVER),
         netdev@vger.kernel.org (open list:NETWORKING DRIVERS)
-Subject: [PATCH 5/9] mac80211: Add missing annotation for brcms_down()
-Date:   Sat, 11 Apr 2020 01:19:29 +0100
-Message-Id: <20200411001933.10072-6-jbi.octave@gmail.com>
+Subject: [PATCH 3/9] hostap: Add missing annotations for prism2_bss_list_proc_start() and prism2_bss_list_proc_stop
+Date:   Sat, 11 Apr 2020 01:19:27 +0100
+Message-Id: <20200411001933.10072-4-jbi.octave@gmail.com>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200411001933.10072-1-jbi.octave@gmail.com>
 References: <0/9>
@@ -89,30 +82,41 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Sparse reports a warning at brcms_down()
+Sparse reports warnings at prism2_bss_list_proc_start() and prism2_bss_list_proc_stop()
 
-warning: context imbalance in brcms_down()
-	- unexpected unlock
-The root cause is the missing annotation at brcms_down()
-Add the missing __must_hold(&wl->lock) annotation
+warning: context imbalance in prism2_wds_proc_stop() - unexpected unlock
+warning: context imbalance in prism2_bss_list_proc_start() - wrong count at exit
+
+The root cause is the missing annotations at prism2_bss_list_proc_start()
+
+Add the missing __acquires(&local->lock) annotation
+Add the missing __releases(&local->lock) annotation
 
 Signed-off-by: Jules Irenge <jbi.octave@gmail.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/intersil/hostap/hostap_proc.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c
-index c3dbeacea6ca..648efcbc819f 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c
-@@ -1431,6 +1431,7 @@ int brcms_up(struct brcms_info *wl)
-  * precondition: perimeter lock has been acquired
-  */
- void brcms_down(struct brcms_info *wl)
-+	__must_hold(&wl->lock)
- {
- 	uint callbacks, ret_val = 0;
+diff --git a/drivers/net/wireless/intersil/hostap/hostap_proc.c b/drivers/net/wireless/intersil/hostap/hostap_proc.c
+index a2ee4693eaed..97c270845fd1 100644
+--- a/drivers/net/wireless/intersil/hostap/hostap_proc.c
++++ b/drivers/net/wireless/intersil/hostap/hostap_proc.c
+@@ -149,6 +149,7 @@ static int prism2_bss_list_proc_show(struct seq_file *m, void *v)
+ }
  
+ static void *prism2_bss_list_proc_start(struct seq_file *m, loff_t *_pos)
++	__acquires(&local->lock)
+ {
+ 	local_info_t *local = PDE_DATA(file_inode(m->file));
+ 	spin_lock_bh(&local->lock);
+@@ -162,6 +163,7 @@ static void *prism2_bss_list_proc_next(struct seq_file *m, void *v, loff_t *_pos
+ }
+ 
+ static void prism2_bss_list_proc_stop(struct seq_file *m, void *v)
++	__releases(&local->lock)
+ {
+ 	local_info_t *local = PDE_DATA(file_inode(m->file));
+ 	spin_unlock_bh(&local->lock);
 -- 
 2.24.1
 
