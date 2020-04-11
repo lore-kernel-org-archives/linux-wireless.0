@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62001C2BA19
-	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:38:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D50BCC2BA19
+	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:39:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3C3E320709
-	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:38:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B0333206E9
+	for <linux-wireless@archiver.kernel.org>; Sat, 11 Apr 2020 23:39:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1586648295;
-	bh=vr0eU8N+DcfIEeHCMZcV+a3ZvG1NoSo5bc/6p6NwcV4=;
+	s=default; t=1586648377;
+	bh=gd10e2c/wzZb0TFnZI+DI1l+5W6eeDsygfka7Ju+dhE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=S9WQGof6Jao7VvpTTcF1pUbmjOQoVqCyz4R6Yqlil51YOuL+rHOiDxY+V1/kwNG3r
-	 aYajt9pQtTPfzd2Amtt2toRUP7wUsYI8XRO3W/69JXDf9eCgnxerbbD94bSnidSmVr
-	 H7yPpHEgah50PzuEm7478uXXL5QRaKWnrAkJ7GlI=
+	b=RitXjkdz6nnCQUr7D3RlcEDZzU4OyNc85qDnRa4uwcuRH3/obmoLcLjShFY11x7Bj
+	 R+8d+WC0f2rw7Tu3hm2+HA738bSvDNVK9J4AGSWwZl3ka+CpOP0Mc9Y83Zeua9TAdk
+	 TJA6cioij4lH2zCMN/5BO8k2D6CwjyDI3J3I8w08=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729966AbgDKXiI (ORCPT
+        id S1730158AbgDKXja (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 11 Apr 2020 19:38:08 -0400
-Received: from mail.kernel.org ([198.145.29.99]:44576 "EHLO mail.kernel.org"
+        Sat, 11 Apr 2020 19:39:30 -0400
+Received: from mail.kernel.org ([198.145.29.99]:43694 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728822AbgDKXIE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 11 Apr 2020 19:08:04 -0400
+        id S1728687AbgDKXHi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 11 Apr 2020 19:07:38 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 19243214D8;
-        Sat, 11 Apr 2020 23:08:04 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 9CC5F217D8;
+        Sat, 11 Apr 2020 23:07:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586646484;
-        bh=vr0eU8N+DcfIEeHCMZcV+a3ZvG1NoSo5bc/6p6NwcV4=;
+        s=default; t=1586646458;
+        bh=gd10e2c/wzZb0TFnZI+DI1l+5W6eeDsygfka7Ju+dhE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=jePnjNFEmT8PAv33ZVabp+i6/dAGjrKSygxzyR0rVDFpgyktpy9qlrfx0ATqeqr6H
-         +jB92hg0fD6YdNc+3RL9EK0IVNC9W28m0SfZ61v/85NWxUv2XuEx6NEIHyt6m+MIFV
-         TSTRcgwPvzQcGp1l9MvoNycEh5sx3jJYezWdLZlA=
+        b=hu3seVpba3gUR6z+KzXDcd4VTEak3KH6BhcbunEU/iYoufppxVR9i+gtvL7J/o/If
+         wTqQpch3exefrM0eVgrhJf1Rx1bQAg3nbRIJ3AjJlVY0AIrEGcvCfXESA4yBJRIRFm
+         Fq0Kk1Tzuc/aT0qte5Gw5wHw1vEp18MOnIgvZo+E=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Felix Fietkau <nbd@nbd.name>, Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 5.5 049/121] mt76: mt7615: disable 5 GHz on MT7622
-Date:   Sat, 11 Apr 2020 19:05:54 -0400
-Message-Id: <20200411230706.23855-49-sashal@kernel.org>
+Cc:     Yibo Zhao <yiboz@codeaurora.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.5 027/121] ath10k: fix not registering airtime of 11a station with WMM disable
+Date:   Sat, 11 Apr 2020 19:05:32 -0400
+Message-Id: <20200411230706.23855-27-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200411230706.23855-1-sashal@kernel.org>
 References: <20200411230706.23855-1-sashal@kernel.org>
@@ -60,33 +60,43 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Felix Fietkau <nbd@nbd.name>
+From: Yibo Zhao <yiboz@codeaurora.org>
 
-[ Upstream commit c3ad5e9d00af19c53dec1d8ae647a78ac377b593 ]
+[ Upstream commit f9680c75d187f2d5b9288c02f7a432041d4447b4 ]
 
-It is not supported by the chip, so avoid issues with potentially wrong
-EEPROM configurations.
+The tid of 11a station with WMM disable reported by FW is 0x10 in
+tx completion. The tid 16 is mapped to a NULL txq since buffer
+MMPDU capbility is not supported. Then 11a station's airtime will
+not be registered due to NULL txq check. As a results, airtime of
+11a station keeps unchanged in debugfs system.
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Mask the tid along with IEEE80211_QOS_CTL_TID_MASK to make it in
+the valid range.
+
+Hardwares tested : QCA9984
+Firmwares tested : 10.4-3.10-00047
+
+Signed-off-by: Yibo Zhao <yiboz@codeaurora.org>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
-index 17e277bf39e0f..cb05a07135a03 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
-@@ -111,6 +111,9 @@ static void mt7615_eeprom_parse_hw_cap(struct mt7615_dev *dev)
- 		break;
- 	}
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index d95b63f133abf..c249fbc8d2dd8 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -2732,7 +2732,8 @@ static void ath10k_htt_rx_tx_compl_ind(struct ath10k *ar,
+ 			continue;
+ 		}
  
-+	if (is_mt7622(&dev->mt76))
-+		dev->mt76.cap.has_5ghz = false;
-+
- 	/* read tx-rx mask from eeprom */
- 	val = mt76_rr(dev, MT_TOP_STRAP_STA);
- 	max_nss = val & MT_TOP_3NSS ? 3 : 4;
+-		tid = FIELD_GET(HTT_TX_PPDU_DUR_INFO0_TID_MASK, info0);
++		tid = FIELD_GET(HTT_TX_PPDU_DUR_INFO0_TID_MASK, info0) &
++						IEEE80211_QOS_CTL_TID_MASK;
+ 		tx_duration = __le32_to_cpu(ppdu_dur->tx_duration);
+ 
+ 		ieee80211_sta_register_airtime(peer->sta, tid, tx_duration, 0);
 -- 
 2.20.1
 
