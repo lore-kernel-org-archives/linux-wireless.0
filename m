@@ -2,86 +2,180 @@ Return-Path: <SRS0=hz+s=55=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 610ECC2BA19
-	for <linux-wireless@archiver.kernel.org>; Mon, 13 Apr 2020 11:21:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5767C2BA19
+	for <linux-wireless@archiver.kernel.org>; Mon, 13 Apr 2020 12:48:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3B68320732
-	for <linux-wireless@archiver.kernel.org>; Mon, 13 Apr 2020 11:21:51 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="NAo3FcSL"
+	by mail.kernel.org (Postfix) with ESMTP id 897D32073E
+	for <linux-wireless@archiver.kernel.org>; Mon, 13 Apr 2020 12:48:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728961AbgDMLVu (ORCPT
+        id S1729533AbgDMMsE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 13 Apr 2020 07:21:50 -0400
-Received: from mail26.static.mailgun.info ([104.130.122.26]:54496 "EHLO
-        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728826AbgDMLVt (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 13 Apr 2020 07:21:49 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1586776909; h=Message-Id: Date: Subject: Cc: To: From:
- Sender; bh=iBqud1oCsvUfEQjL5hlZ+sakjB+UhQOh81+t2E+YEbY=; b=NAo3FcSLUP7sDZFF71IfndT1gPZ6LP5/JnZxhHzrpfAklXpp63A9gV714u99zUiHwzygtr4P
- OAlBl8cSwA4N5l31nUhNqQBQ/P3vSJw2AtY8NL6EhXtrt3PST2TAAwki0ZzyhLG7e7MRm/gS
- 2AMILp87mdwJSrlb8f6Nkcb2IT4=
-X-Mailgun-Sending-Ip: 104.130.122.26
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e944b4c.7f14545cf8f0-smtp-out-n02;
- Mon, 13 Apr 2020 11:21:48 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id AD17DC433BA; Mon, 13 Apr 2020 11:21:47 +0000 (UTC)
-Received: from c-gsamin-linux.qualcomm.com (blr-c-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.19.19])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: gsamin)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id E3E26C433F2;
-        Mon, 13 Apr 2020 11:21:43 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org E3E26C433F2
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=gsamin@codeaurora.org
-From:   Govindaraj Saminathan <gsamin@codeaurora.org>
-To:     ath11k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org,
-        Govindaraj Saminathan <gsamin@codeaurora.org>
-Subject: [PATCH] ath11k: cleanup reo command error code overwritten
-Date:   Mon, 13 Apr 2020 16:51:12 +0530
-Message-Id: <1586776872-25766-1-git-send-email-gsamin@codeaurora.org>
-X-Mailer: git-send-email 1.9.1
+        Mon, 13 Apr 2020 08:48:04 -0400
+Received: from mx2.suse.de ([195.135.220.15]:53078 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727797AbgDMMsD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 13 Apr 2020 08:48:03 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id EADFDACA2;
+        Mon, 13 Apr 2020 12:48:00 +0000 (UTC)
+Message-ID: <bdb4170b21167cae89523fa688db6699539474bf.camel@suse.de>
+Subject: iwlwifi won't probe with linux-next
+From:   Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
+To:     Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Cc:     Intel Linux Wireless <linuxwifi@intel.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Date:   Mon, 13 Apr 2020 14:47:59 +0200
+Content-Type: multipart/signed; micalg="pgp-sha256";
+        protocol="application/pgp-signature"; boundary="=-4XXTefmifGSckgsXEWEw"
+User-Agent: Evolution 3.34.2 
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-should not overwrite the error code. No buffer available then return
-invalid. For other failures return the error code of actual failure.
 
-Signed-off-by: Govindaraj Saminathan <gsamin@codeaurora.org>
----
- drivers/net/wireless/ath/ath11k/dp_tx.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+--=-4XXTefmifGSckgsXEWEw
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/ath/ath11k/dp_tx.c b/drivers/net/wireless/ath/ath11k/dp_tx.c
-index 7aac4b0..6f40e72 100644
---- a/drivers/net/wireless/ath/ath11k/dp_tx.c
-+++ b/drivers/net/wireless/ath/ath11k/dp_tx.c
-@@ -543,8 +543,12 @@ int ath11k_dp_tx_send_reo_cmd(struct ath11k_base *ab, struct dp_rx_tid *rx_tid,
- 	cmd_ring = &ab->hal.srng_list[dp->reo_cmd_ring.ring_id];
- 	cmd_num = ath11k_hal_reo_cmd_send(ab, cmd_ring, type, cmd);
- 
-+	/* cmd_num should start from 1, during failure return the error code */
-+	if (cmd_num < 0)
-+		return cmd_num;
-+
- 	/* reo cmd ring descriptors has cmd_num starting from 1 */
--	if (cmd_num <= 0)
-+	if (cmd_num == 0)
- 		return -EINVAL;
- 
- 	if (!cb)
--- 
-1.9.1
+Hi,
+I'm having trouble with my iwlwifi device on the latest linux-next. Essenti=
+ally
+it fails at probe:
+
+	nico@linux-9qgx:~> dmesg | grep iwl
+	[    4.650950] iwlwifi 0000:28:00.0: enabling device (0000 -> 0002)
+	[    4.720086] iwlwifi: probe of 0000:28:00.0 failed with error -110
+
+I made some research and the timeout happens after the call to iwl_poll_bit=
+()
+in iwl_finish_nic_init().
+
+Also here is the relevant lspci output:
+
+	nico@linux-9qgx:~/c/linux> sudo lspci -s 0000:28:00.0 -vvv
+	28:00.0 Network controller: Intel Corporation Wi-Fi 6 AX200 (rev 1a)
+		DeviceName: RTL8111EPV
+		Subsystem: Intel Corporation Device 0084
+		Control: I/O- Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop-
+ParErr- Stepping- SERR- FastB2B- DisINTx-
+		Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=3Dfast >TAbort-
+<TAbort- <MAbort- >SERR- <PERR- INTx-
+		Interrupt: pin A routed to IRQ 41
+		Region 0: Memory at fc600000 (64-bit, non-prefetchable)
+[size=3D16K]
+		Capabilities: [c8] Power Management version 3
+			Flags: PMEClk- DSI+ D1- D2- AuxCurrent=3D0mA PME(D0+,D1-
+,D2-,D3hot+,D3cold+)
+			Status: D0 NoSoftRst+ PME-Enable- DSel=3D0 DScale=3D0 PME-
+		Capabilities: [d0] MSI: Enable- Count=3D1/1 Maskable- 64bit+
+			Address: 0000000000000000  Data: 0000
+		Capabilities: [40] Express (v2) Endpoint, MSI 00
+			DevCap:	MaxPayload 128 bytes, PhantFunc 0, Latency L0s
+<512ns, L1 unlimited
+				ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset+
+SlotPowerLimit 0.000W
+			DevCtl:	CorrErr- NonFatalErr- FatalErr- UnsupReq-
+				RlxdOrd+ ExtTag- PhantFunc- AuxPwr+ NoSnoop+
+FLReset-
+				MaxPayload 128 bytes, MaxReadReq 128 bytes
+			DevSta:	CorrErr- NonFatalErr- FatalErr- UnsupReq-
+AuxPwr+ TransPend-
+			LnkCap:	Port #6, Speed 5GT/s, Width x1, ASPM L1, Exit
+Latency L1 <8us
+				ClockPM+ Surprise- LLActRep- BwNot- ASPMOptComp+
+			LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- CommClk+
+				ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+			LnkSta:	Speed 5GT/s (ok), Width x1 (ok)
+				TrErr- Train- SlotClk+ DLActive- BWMgmt-
+ABWMgmt-
+			DevCap2: Completion Timeout: Range B, TimeoutDis+,
+NROPrPrP-, LTR+
+				10BitTagComp-, 10BitTagReq-, OBFF Via WAKE#,
+ExtFmt-, EETLPPrefix-
+				EmergencyPowerReduction Not Supported,
+EmergencyPowerReductionInit-
+				FRS-, TPHComp-, ExtTPHComp-
+				AtomicOpsCap: 32bit- 64bit- 128bitCAS-
+			DevCtl2: Completion Timeout: 16ms to 55ms, TimeoutDis-,
+LTR+, OBFF Disabled
+				AtomicOpsCtl: ReqEn-
+			LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance-
+SpeedDis-
+				Transmit Margin: Normal Operating Range,
+EnterModifiedCompliance- ComplianceSOS-
+				Compliance De-emphasis: -6dB
+			LnkSta2: Current De-emphasis Level: -6dB,
+EqualizationComplete-, EqualizationPhase1-
+				EqualizationPhase2-, EqualizationPhase3-,
+LinkEqualizationRequest-
+		Capabilities: [80] MSI-X: Enable- Count=3D16 Masked-
+			Vector table: BAR=3D0 offset=3D00002000
+			PBA: BAR=3D0 offset=3D00003000
+		Capabilities: [100 v1] Advanced Error Reporting
+			UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt-
+UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+			UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt-
+UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+			UESvrt:	DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt-
+UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+			CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout-
+AdvNonFatalErr-
+			CEMsk:	RxErr- BadTLP- BadDLLP- Rollover- Timeout-
+AdvNonFatalErr+
+			AERCap:	First Error Pointer: 00, ECRCGenCap- ECRCGenEn-
+ECRCChkCap- ECRCChkEn-
+				MultHdrRecCap- MultHdrRecEn- TLPPfxPres-
+HdrLogCap-
+			HeaderLog: 00000000 00000000 00000000 00000000
+		Capabilities: [14c v1] Latency Tolerance Reporting
+			Max snoop latency: 1048576ns
+			Max no snoop latency: 1048576ns
+		Capabilities: [154 v1] L1 PM Substates
+			L1SubCap: PCI-PM_L1.2+ PCI-PM_L1.1+ ASPM_L1.2+
+ASPM_L1.1+ L1_PM_Substates+
+				 PortCommonModeRestoreTime=3D30us
+PortTPowerOnTime=3D18us
+			L1SubCtl1: PCI-PM_L1.2- PCI-PM_L1.1- ASPM_L1.2-
+ASPM_L1.1-
+				  T_CommonMode=3D0us LTR1.2_Threshold=3D32768ns
+			L1SubCtl2: T_PwrOn=3D18us
+		Kernel modules: iwlwifi
+
+
+Note that I have a built kernel just for this, so I'll be happy to test
+anything. Also note that I updated my firmware to the last version availabl=
+e in
+the linux-firmware repo.
+
+Regards,
+Nicolas
+
+
+--=-4XXTefmifGSckgsXEWEw
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAABCAAdFiEErOkkGDHCg2EbPcGjlfZmHno8x/4FAl6UX38ACgkQlfZmHno8
+x/5Prwf9Gd3FLm2eW/QFEOC3dEeBHJViGgRxZgKKwbF3LE5xvTb+E/Mwm/A2GXlN
+iWztrip++27UE4jabScLYrK4lwhKoqjoFieVX22VwststvoSCExORozFGkj0OfOp
+PvOomDphEii5XzLcS64M4t+UD1/y5Jqw8eaoUkyC8PbIYs36x1YV8djMZ277gYMM
+5Q+HXoY2zcv5AQVapToNPQ79Xlcji/LYfcBwjVVUiZg32ThN9JoSMFMj73uDGe/7
+k0MPSyVXmveRzgzK1PujxUTuCWu8OemcBoiMaWxU2BexKAgBHMH+XAhHnUwEwbOf
+13Rqj6Vs00BYYNnagqhNwWZAGRTgGQ==
+=htq9
+-----END PGP SIGNATURE-----
+
+--=-4XXTefmifGSckgsXEWEw--
+
