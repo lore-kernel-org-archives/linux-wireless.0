@@ -3,43 +3,43 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 684BEC2BB86
-	for <linux-wireless@archiver.kernel.org>; Tue, 14 Apr 2020 11:12:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16FE9C2BA19
+	for <linux-wireless@archiver.kernel.org>; Tue, 14 Apr 2020 11:30:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 511C12072D
-	for <linux-wireless@archiver.kernel.org>; Tue, 14 Apr 2020 11:12:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EA5CF206D5
+	for <linux-wireless@archiver.kernel.org>; Tue, 14 Apr 2020 11:30:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390816AbgDNLM1 (ORCPT
+        id S2439155AbgDNLaE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 14 Apr 2020 07:12:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36006 "EHLO
+        Tue, 14 Apr 2020 07:30:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38576 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728734AbgDNLMS (ORCPT
+        by vger.kernel.org with ESMTP id S1728699AbgDNL3L (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Apr 2020 07:12:18 -0400
+        Tue, 14 Apr 2020 07:29:11 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1A42C061A0C;
-        Tue, 14 Apr 2020 04:12:17 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7BBE7C061A0C
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Apr 2020 04:29:11 -0700 (PDT)
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.93)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1jOIxX-00Gpsu-6e; Tue, 14 Apr 2020 12:38:27 +0200
-Message-ID: <ed2b00dfda5b6ce46a2c2a33093ee56f77af6a8f.camel@sipsolutions.net>
-Subject: Re: WARNING in hwsim_new_radio_nl
+        id 1jOJkX-00Gvc2-SS; Tue, 14 Apr 2020 13:29:05 +0200
+Message-ID: <895ba040fcefbc8899cf297c09dfbf804ec4bc87.camel@sipsolutions.net>
+Subject: Re: [PATCH v5.7 4/8] iwlwifi: mvm: limit maximum queue appropriately
 From:   Johannes Berg <johannes@sipsolutions.net>
-To:     syzbot <syzbot+a4aee3f42d7584d76761@syzkaller.appspotmail.com>,
-        davem@davemloft.net, kvalo@codeaurora.org,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        mathew.j.martineau@linux.intel.com, matthieu.baerts@tessares.net,
-        netdev@vger.kernel.org, pabeni@redhat.com,
-        syzkaller-bugs@googlegroups.com
-Date:   Tue, 14 Apr 2020 12:38:22 +0200
-In-Reply-To: <000000000000cb517b05a32c917b@google.com> (sfid-20200413_160506_506947_12BA215F)
-References: <000000000000cb517b05a32c917b@google.com>
-         (sfid-20200413_160506_506947_12BA215F)
+To:     Mark Asselstine <asselsm@gmail.com>, Luca Coelho <luca@coelho.fi>
+Cc:     kvalo@codeaurora.org,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Date:   Tue, 14 Apr 2020 13:29:04 +0200
+In-Reply-To: <CAPuovE+Pmh71BNWdKEBJYYVhuowL3XABMyDtk6kbFTzfSR3M+g@mail.gmail.com> (sfid-20200403_191045_693592_55FBA86D)
+References: <20200403082955.1126339-1-luca@coelho.fi>
+         <iwlwifi.20200403112332.0ed2f71aee7f.I3a4af6b03b87a6bc18db9b1ff9a812f397bee1fc@changeid>
+         <CAPuovEJK8AUBPeBBi=BMx-o+9krdA-_NqCJLByWHV2_q2b42Ow@mail.gmail.com>
+         <CAPuovE+Pmh71BNWdKEBJYYVhuowL3XABMyDtk6kbFTzfSR3M+g@mail.gmail.com>
+         (sfid-20200403_191045_693592_55FBA86D)
 Content-Type: text/plain; charset="UTF-8"
 User-Agent: Evolution 3.34.4 (3.34.4-1.fc31) 
 MIME-Version: 1.0
@@ -49,37 +49,32 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi syzbot keepers,
-
-On Mon, 2020-04-13 at 07:05 -0700, syzbot wrote:
-> syzbot has bisected this bug to:
+On Fri, 2020-04-03 at 13:10 -0400, Mark Asselstine wrote:
+> On Fri, Apr 3, 2020 at 10:38 AM Mark Asselstine <asselsm@gmail.com> wrote:
+> > On Fri, Apr 3, 2020 at 4:32 AM Luca Coelho <luca@coelho.fi> wrote:
+> > > From: Johannes Berg <johannes.berg@intel.com>
+> > > 
+> > > Due to some hardware issues, queue 32 isn't usable on devices that have
+> > > 32 queues (7000, 8000, 9000 families),
 > 
-> commit 01cacb00b35cb62b139f07d5f84bcf0eeda8eff6
-> Author: Paolo Abeni <pabeni@redhat.com>
-> Date:   Fri Mar 27 21:48:51 2020 +0000
-> 
->     mptcp: add netlink-based PM
-> 
-> bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=10225bb3e00000
+> Is this statement really correct?
 
-This is, fairly obviously, incorrect. Same with the bisection for
-6693adf1698864d21734, which is really the same underlying problem as
-this one (though at a different code site).
+No, it should've said "queue 31" since they're numbered 0-based ...
 
-However, it stands out that this was bisected to a commit that adds a
-new generic netlink family in both cases.
+> All these devices have 31 queues
+> according to (.num_of_queues = 31).
 
-This makes sense - the reproducer identifies the family by *number*, but
-that number isn't stable, generic netlink families should be identified
-by *name*.
+Well, they were supposed to have 32, but there's some issue with the
+last one. I don't really even remember what's up with it, but we just
+never use it.
 
-Perhaps somehow syzbot could be taught that, so that the bisection is
-stable across kernels with different generic netlink families
-registered?
+> Without a HW specification I can't
+> be 100% sure but you should have this information within Intel. From
+> the details of my patch and my investigation, this should be nack'd
+> along with an explanation as to why my fix is not valid.
 
-Alternatively, we _could_ add some kind of stable ID mode, but I'm not
-sure we really want to ... since that would mean people start hardcoding
-IDs?
+I don't see any real difference to your fix? Your fix marks them as used
+before, whereas mine just avoids looking at them.
 
 johannes
 
