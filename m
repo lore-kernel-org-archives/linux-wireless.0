@@ -2,44 +2,44 @@ Return-Path: <SRS0=D8BG=56=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2F8FC2BB86
-	for <linux-wireless@archiver.kernel.org>; Tue, 14 Apr 2020 11:12:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 684BEC2BB86
+	for <linux-wireless@archiver.kernel.org>; Tue, 14 Apr 2020 11:12:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CCFF12072D
-	for <linux-wireless@archiver.kernel.org>; Tue, 14 Apr 2020 11:12:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 511C12072D
+	for <linux-wireless@archiver.kernel.org>; Tue, 14 Apr 2020 11:12:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390794AbgDNLMI (ORCPT
+        id S2390816AbgDNLM1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 14 Apr 2020 07:12:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35970 "EHLO
+        Tue, 14 Apr 2020 07:12:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36006 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728734AbgDNLME (ORCPT
+        by vger.kernel.org with ESMTP id S1728734AbgDNLMS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Apr 2020 07:12:04 -0400
-X-Greylist: delayed 1999 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 14 Apr 2020 04:12:04 PDT
+        Tue, 14 Apr 2020 07:12:18 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06C3AC061A0C;
-        Tue, 14 Apr 2020 04:12:03 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1A42C061A0C;
+        Tue, 14 Apr 2020 04:12:17 -0700 (PDT)
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.93)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1jOJTr-00Gtcv-U2; Tue, 14 Apr 2020 13:11:52 +0200
-Message-ID: <e118e8790a7706253b94a1b181547f4841af64ce.camel@sipsolutions.net>
+        id 1jOIxX-00Gpsu-6e; Tue, 14 Apr 2020 12:38:27 +0200
+Message-ID: <ed2b00dfda5b6ce46a2c2a33093ee56f77af6a8f.camel@sipsolutions.net>
 Subject: Re: WARNING in hwsim_new_radio_nl
 From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Paolo Abeni <pabeni@redhat.com>,
-        syzbot <syzbot+a4aee3f42d7584d76761@syzkaller.appspotmail.com>,
+To:     syzbot <syzbot+a4aee3f42d7584d76761@syzkaller.appspotmail.com>,
         davem@davemloft.net, kvalo@codeaurora.org,
         linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, syzkaller-bugs@googlegroups.com
-Date:   Tue, 14 Apr 2020 13:11:50 +0200
-In-Reply-To: <66c3db9b1978a384246c729034a934cc558b75a6.camel@redhat.com>
-References: <000000000000bb471d05a2f246d7@google.com>
-         <66c3db9b1978a384246c729034a934cc558b75a6.camel@redhat.com>
+        mathew.j.martineau@linux.intel.com, matthieu.baerts@tessares.net,
+        netdev@vger.kernel.org, pabeni@redhat.com,
+        syzkaller-bugs@googlegroups.com
+Date:   Tue, 14 Apr 2020 12:38:22 +0200
+In-Reply-To: <000000000000cb517b05a32c917b@google.com> (sfid-20200413_160506_506947_12BA215F)
+References: <000000000000cb517b05a32c917b@google.com>
+         (sfid-20200413_160506_506947_12BA215F)
 Content-Type: text/plain; charset="UTF-8"
 User-Agent: Evolution 3.34.4 (3.34.4-1.fc31) 
 MIME-Version: 1.0
@@ -49,15 +49,37 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, 2020-04-14 at 12:42 +0200, Paolo Abeni wrote:
-> #syz test git://git.kernel.org/pub/scm/linux/kernel/git/davem/net.git master
+Hi syzbot keepers,
+
+On Mon, 2020-04-13 at 07:05 -0700, syzbot wrote:
+> syzbot has bisected this bug to:
 > 
-> I don't see why the bisection pointed to the MPTCP commit ?!?
+> commit 01cacb00b35cb62b139f07d5f84bcf0eeda8eff6
+> Author: Paolo Abeni <pabeni@redhat.com>
+> Date:   Fri Mar 27 21:48:51 2020 +0000
+> 
+>     mptcp: add netlink-based PM
+> 
+> bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=10225bb3e00000
 
-I just sent an explanation for that :)
+This is, fairly obviously, incorrect. Same with the bisection for
+6693adf1698864d21734, which is really the same underlying problem as
+this one (though at a different code site).
 
-Good fix too, I already applied another one just now for an earlier, but
-really mostly identical, syzbot warning (and yes, tagged it with both).
+However, it stands out that this was bisected to a commit that adds a
+new generic netlink family in both cases.
+
+This makes sense - the reproducer identifies the family by *number*, but
+that number isn't stable, generic netlink families should be identified
+by *name*.
+
+Perhaps somehow syzbot could be taught that, so that the bisection is
+stable across kernels with different generic netlink families
+registered?
+
+Alternatively, we _could_ add some kind of stable ID mode, but I'm not
+sure we really want to ... since that would mean people start hardcoding
+IDs?
 
 johannes
 
