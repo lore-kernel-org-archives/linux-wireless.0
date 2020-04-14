@@ -2,117 +2,89 @@ Return-Path: <SRS0=D8BG=56=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A1F1C2BBC7
-	for <linux-wireless@archiver.kernel.org>; Tue, 14 Apr 2020 12:50:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B83A5C2BA19
+	for <linux-wireless@archiver.kernel.org>; Tue, 14 Apr 2020 12:55:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E653B20768
-	for <linux-wireless@archiver.kernel.org>; Tue, 14 Apr 2020 12:50:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8A85A2076D
+	for <linux-wireless@archiver.kernel.org>; Tue, 14 Apr 2020 12:55:57 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="F04jVhAp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2502252AbgDNMtv (ORCPT
+        id S2502404AbgDNMzz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 14 Apr 2020 08:49:51 -0400
-Received: from mx2.suse.de ([195.135.220.15]:58492 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2502177AbgDNMtm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Apr 2020 08:49:42 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 6EF73AA7C;
-        Tue, 14 Apr 2020 12:49:36 +0000 (UTC)
-Received: by ds.suse.cz (Postfix, from userid 10065)
-        id E5E76DA72D; Tue, 14 Apr 2020 14:48:54 +0200 (CEST)
-Date:   Tue, 14 Apr 2020 14:48:54 +0200
-From:   David Sterba <dsterba@suse.cz>
-To:     Waiman Long <longman@redhat.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        David Howells <dhowells@redhat.com>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        James Morris <jmorris@namei.org>,
-        "Serge E. Hallyn" <serge@hallyn.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Joe Perches <joe@perches.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        David Rientjes <rientjes@google.com>, linux-mm@kvack.org,
-        keyrings@vger.kernel.org, linux-kernel@vger.kernel.org,
-        x86@kernel.org, linux-crypto@vger.kernel.org,
-        linux-s390@vger.kernel.org, linux-pm@vger.kernel.org,
-        linux-stm32@st-md-mailman.stormreply.com,
-        linux-arm-kernel@lists.infradead.org,
-        linux-amlogic@lists.infradead.org,
-        linux-mediatek@lists.infradead.org, linuxppc-dev@lists.ozlabs.org,
-        virtualization@lists.linux-foundation.org, netdev@vger.kernel.org,
-        intel-wired-lan@lists.osuosl.org, linux-ppp@vger.kernel.org,
-        wireguard@lists.zx2c4.com, linux-wireless@vger.kernel.org,
-        devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-cifs@vger.kernel.org, samba-technical@lists.samba.org,
-        linux-fscrypt@vger.kernel.org, ecryptfs@vger.kernel.org,
-        kasan-dev@googlegroups.com, linux-bluetooth@vger.kernel.org,
-        linux-wpan@vger.kernel.org, linux-sctp@vger.kernel.org,
-        linux-nfs@vger.kernel.org, tipc-discussion@lists.sourceforge.net,
-        cocci@systeme.lip6.fr, linux-security-module@vger.kernel.org,
-        linux-integrity@vger.kernel.org
-Subject: Re: [PATCH 1/2] mm, treewide: Rename kzfree() to kfree_sensitive()
-Message-ID: <20200414124854.GQ5920@twin.jikos.cz>
-Reply-To: dsterba@suse.cz
-Mail-Followup-To: dsterba@suse.cz, Waiman Long <longman@redhat.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        David Howells <dhowells@redhat.com>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        James Morris <jmorris@namei.org>,
-        "Serge E. Hallyn" <serge@hallyn.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Joe Perches <joe@perches.com>, Matthew Wilcox <willy@infradead.org>,
-        David Rientjes <rientjes@google.com>, linux-mm@kvack.org,
-        keyrings@vger.kernel.org, linux-kernel@vger.kernel.org,
-        x86@kernel.org, linux-crypto@vger.kernel.org,
-        linux-s390@vger.kernel.org, linux-pm@vger.kernel.org,
-        linux-stm32@st-md-mailman.stormreply.com,
-        linux-arm-kernel@lists.infradead.org,
-        linux-amlogic@lists.infradead.org,
-        linux-mediatek@lists.infradead.org, linuxppc-dev@lists.ozlabs.org,
-        virtualization@lists.linux-foundation.org, netdev@vger.kernel.org,
-        intel-wired-lan@lists.osuosl.org, linux-ppp@vger.kernel.org,
-        wireguard@lists.zx2c4.com, linux-wireless@vger.kernel.org,
-        devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-cifs@vger.kernel.org, samba-technical@lists.samba.org,
-        linux-fscrypt@vger.kernel.org, ecryptfs@vger.kernel.org,
-        kasan-dev@googlegroups.com, linux-bluetooth@vger.kernel.org,
-        linux-wpan@vger.kernel.org, linux-sctp@vger.kernel.org,
-        linux-nfs@vger.kernel.org, tipc-discussion@lists.sourceforge.net,
-        cocci@systeme.lip6.fr, linux-security-module@vger.kernel.org,
-        linux-integrity@vger.kernel.org
-References: <20200413211550.8307-1-longman@redhat.com>
- <20200413211550.8307-2-longman@redhat.com>
+        Tue, 14 Apr 2020 08:55:55 -0400
+Received: from us-smtp-2.mimecast.com ([205.139.110.61]:46420 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S2502398AbgDNMzv (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 14 Apr 2020 08:55:51 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1586868951;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=c9SNKfZgTrlGM6IU32reUMzHydagk4F1uZYHWoMs+JY=;
+        b=F04jVhAp59g1JKR7dMG3Xbn/wuEvGlkYY4WdVRoII88xcxil9Cs4y+Ky1es1nrENqNdKs7
+        4sDpyrAl3usHRQJksYwsgNhwxi8aMFeexx7W9Y5JRTxi5Uj1NJ5A9ZNGB8GfqVdKrSG5CG
+        wbWdYG9iraoT7lFjiQk5cihwumyZis4=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-40-vjzEu9A8OqS2YhspOZHYNw-1; Tue, 14 Apr 2020 08:55:49 -0400
+X-MC-Unique: vjzEu9A8OqS2YhspOZHYNw-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A8F9E149C8;
+        Tue, 14 Apr 2020 12:55:47 +0000 (UTC)
+Received: from ovpn-113-222.ams2.redhat.com (ovpn-113-222.ams2.redhat.com [10.36.113.222])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 27F76272D3;
+        Tue, 14 Apr 2020 12:55:44 +0000 (UTC)
+Message-ID: <43fe63365483cceb4dd181b642e29e6fa647cdd2.camel@redhat.com>
+Subject: Re: WARNING in hwsim_new_radio_nl
+From:   Paolo Abeni <pabeni@redhat.com>
+To:     Johannes Berg <johannes@sipsolutions.net>,
+        syzbot <syzbot+a4aee3f42d7584d76761@syzkaller.appspotmail.com>,
+        davem@davemloft.net, kvalo@codeaurora.org,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, syzkaller-bugs@googlegroups.com
+Date:   Tue, 14 Apr 2020 14:55:43 +0200
+In-Reply-To: <e118e8790a7706253b94a1b181547f4841af64ce.camel@sipsolutions.net>
+References: <000000000000bb471d05a2f246d7@google.com>
+         <66c3db9b1978a384246c729034a934cc558b75a6.camel@redhat.com>
+         <e118e8790a7706253b94a1b181547f4841af64ce.camel@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.32.5 (3.32.5-1.fc30) 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200413211550.8307-2-longman@redhat.com>
-User-Agent: Mutt/1.5.23.1-rc1 (2014-03-12)
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, Apr 13, 2020 at 05:15:49PM -0400, Waiman Long wrote:
->  fs/btrfs/ioctl.c                              |  2 +-
+On Tue, 2020-04-14 at 13:11 +0200, Johannes Berg wrote:
+> On Tue, 2020-04-14 at 12:42 +0200, Paolo Abeni wrote:
+> > #syz test git://git.kernel.org/pub/scm/linux/kernel/git/davem/net.git master
+> > 
+> > I don't see why the bisection pointed to the MPTCP commit ?!?
+> 
+> I just sent an explanation for that :)
 
+Thanks, I did not thought about hard-coded ids!
 
-> diff --git a/fs/btrfs/ioctl.c b/fs/btrfs/ioctl.c
-> index 40b729dce91c..eab3f8510426 100644
-> --- a/fs/btrfs/ioctl.c
-> +++ b/fs/btrfs/ioctl.c
-> @@ -2691,7 +2691,7 @@ static int btrfs_ioctl_get_subvol_info(struct file *file, void __user *argp)
->  	btrfs_put_root(root);
->  out_free:
->  	btrfs_free_path(path);
-> -	kzfree(subvol_info);
-> +	kfree_sensitive(subvol_info);
+> Good fix too, I already applied another one just now for an earlier, but
+> really mostly identical, syzbot warning (and yes, tagged it with both).
 
-This is not in a sensitive context so please switch it to plain kfree.
-With that you have my acked-by. Thanks.
+Nice! I saw the fix you mentioned after reading your email. I'm fine
+with that.
+
+Cheers,
+
+Paolo
+
