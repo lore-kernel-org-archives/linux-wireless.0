@@ -6,101 +6,81 @@ X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
 	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DCB28C2BA19
-	for <linux-wireless@archiver.kernel.org>; Tue, 14 Apr 2020 15:11:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6C19C2BA19
+	for <linux-wireless@archiver.kernel.org>; Tue, 14 Apr 2020 15:16:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B73F420768
-	for <linux-wireless@archiver.kernel.org>; Tue, 14 Apr 2020 15:11:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 80F402076B
+	for <linux-wireless@archiver.kernel.org>; Tue, 14 Apr 2020 15:16:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="LNaOpEoV"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="ATWCGJ4A"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2436821AbgDNPLC (ORCPT
+        id S2437988AbgDNPQC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 14 Apr 2020 11:11:02 -0400
-Received: from mail26.static.mailgun.info ([104.130.122.26]:35881 "EHLO
-        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2436798AbgDNPIa (ORCPT
+        Tue, 14 Apr 2020 11:16:02 -0400
+Received: from mail27.static.mailgun.info ([104.130.122.27]:18914 "EHLO
+        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2407293AbgDNPGp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Apr 2020 11:08:30 -0400
+        Tue, 14 Apr 2020 11:06:45 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1586876910; h=Date: Message-Id: Cc: To: References:
+ s=smtp; t=1586876804; h=Date: Message-Id: Cc: To: References:
  In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=3Eu+2EsqIxX4Ri9OtZXYaWwduDJVg0YfAuL8SNXYRlM=;
- b=LNaOpEoVgnogtYgv5eRFPGQvbcjdZNa03czHzeM5/0ZjDi82PCjaRhRqfWlJw69EMVRpK7+d
- 3AjzBAAmoxRAX9/3MsxaCAjjVb8162wq7kI5VXA0eIDJTZ75ceIWG7sHaTE/avgdQKsVyRxJ
- UuNELHibkAofjNG6kx9lweD10fA=
-X-Mailgun-Sending-Ip: 104.130.122.26
+ Content-Type: Sender; bh=uMcF+KDlK+3Q2CkUKTEO61BFIcOZRk8m+cBX00kOaQE=;
+ b=ATWCGJ4ABiVRTmQVe3uGHZ/Xt/gmvQY2ZAobYKlrxbDuCOB1ojJs8RLEYYMOg6KRNHmc/h+F
+ uehNhCpjh1PO23RMu9h95qeixnjN3T7X9yEcSt2NJteete2MVa5LMndL6O1h48llHYbI2hG5
+ BxPSHFU0/+D09Wfzv/GCnNhDbJ0=
+X-Mailgun-Sending-Ip: 104.130.122.27
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e95d1ed.7fdb720ae8b8-smtp-out-n04;
- Tue, 14 Apr 2020 15:08:29 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5e95d184.7f9b889b2180-smtp-out-n05;
+ Tue, 14 Apr 2020 15:06:44 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 586F4C433CB; Tue, 14 Apr 2020 15:08:29 +0000 (UTC)
+        id 02D37C432C2; Tue, 14 Apr 2020 15:06:44 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 62B80C4478C;
-        Tue, 14 Apr 2020 15:08:26 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 62B80C4478C
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id F31F5C433CB;
+        Tue, 14 Apr 2020 15:06:42 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org F31F5C433CB
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] b43legacy: Fix case where channel status is corrupted
+Subject: Re: [PATCH] p54usb: add AirVasT USB stick device-id
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20200407190043.1686-1-Larry.Finger@lwfinger.net>
-References: <20200407190043.1686-1-Larry.Finger@lwfinger.net>
-To:     Larry Finger <Larry.Finger@lwfinger.net>
+In-Reply-To: <20200405220659.45621-1-chunkeey@gmail.com>
+References: <20200405220659.45621-1-chunkeey@gmail.com>
+To:     Christian Lamparter <chunkeey@gmail.com>
 Cc:     linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Stable <stable@vger.kernel.org>
+        Giuseppe Marco Randazzo <gmrandazzo@gmail.com>
 User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20200414150829.586F4C433CB@smtp.codeaurora.org>
-Date:   Tue, 14 Apr 2020 15:08:29 +0000 (UTC)
+Message-Id: <20200414150644.02D37C432C2@smtp.codeaurora.org>
+Date:   Tue, 14 Apr 2020 15:06:44 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
+Christian Lamparter <chunkeey@gmail.com> wrote:
 
-> This patch fixes commit 75388acd0cd8 ("add mac80211-based driver for
-> legacy BCM43xx devices")
+> From: Giuseppe Marco Randazzo <gmrandazzo@gmail.com>
 > 
-> In https://bugzilla.kernel.org/show_bug.cgi?id=207093, a defect in
-> b43legacy is reported. Upon testing, thus problem exists on PPC and
-> X86 platforms, is present in the oldest kernel tested (3.2), and
-> has been present in the driver since it was first added to the kernel.
+> This patch adds the AirVasT USB wireless devices 124a:4026
+> to the list of supported devices. It's using the ISL3886
+> usb firmware. Without this modification, the wiki adapter
+> is not recognized.
 > 
-> The problem is a corrupted channel status received from the device.
-> Both the internal card in a PowerBook G4 and the PCMCIA version
-> (Broadcom BCM4306 with PCI ID 14e4:4320) have the problem. Only Rev, 2
-> (revision 4 of the 802.11 core) of the chip has been tested. No other
-> devices using b43legacy are available for testing.
-> 
-> Various sources of the problem were considered. Buffer overrun and
-> other sources of corruption within the driver were rejected because
-> the faulty channel status is always the same, not a random value.
-> It was concluded that the faulty data is coming from the device, probably
-> due to a firmware bug. As that source is not available, the driver
-> must take appropriate action to recover.
-> 
-> At present, the driver reports the error, and them continues to process
-> the bad packet. This is believed that to be a mistake, and the correct
-> action is to drop the correpted packet.
-> 
-> Fixes: 75388acd0cd8 ("add mac80211-based driver for legacy BCM43xx devices")
-> Cc: Stable <stable@vger.kernel.org>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Reported-and-tested by: F. Erhard <erhard_f@mailbox.org>
+> Cc: <stable@vger.kernel.org>
+> Signed-off-by: Giuseppe Marco Randazzo <gmrandazzo@gmail.com>
+> Signed-off-by: Christian Lamparter <chunkeey@gmail.com> [formatted, reworded]
 
 Patch applied to wireless-drivers-next.git, thanks.
 
-ec4d3e3a0545 b43legacy: Fix case where channel status is corrupted
+63e49a9fdac1 p54usb: add AirVasT USB stick device-id
 
 -- 
-https://patchwork.kernel.org/patch/11478883/
+https://patchwork.kernel.org/patch/11474885/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
