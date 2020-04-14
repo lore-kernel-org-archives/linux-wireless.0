@@ -2,85 +2,80 @@ Return-Path: <SRS0=D8BG=56=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6C19C2BA19
-	for <linux-wireless@archiver.kernel.org>; Tue, 14 Apr 2020 15:16:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C0F3C38A29
+	for <linux-wireless@archiver.kernel.org>; Tue, 14 Apr 2020 15:21:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 80F402076B
-	for <linux-wireless@archiver.kernel.org>; Tue, 14 Apr 2020 15:16:04 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="ATWCGJ4A"
+	by mail.kernel.org (Postfix) with ESMTP id DF196206D5
+	for <linux-wireless@archiver.kernel.org>; Tue, 14 Apr 2020 15:21:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2437988AbgDNPQC (ORCPT
+        id S2407435AbgDNPVC (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 14 Apr 2020 11:16:02 -0400
-Received: from mail27.static.mailgun.info ([104.130.122.27]:18914 "EHLO
-        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2407293AbgDNPGp (ORCPT
+        Tue, 14 Apr 2020 11:21:02 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:55882 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S2407370AbgDNPUK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Apr 2020 11:06:45 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1586876804; h=Date: Message-Id: Cc: To: References:
- In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=uMcF+KDlK+3Q2CkUKTEO61BFIcOZRk8m+cBX00kOaQE=;
- b=ATWCGJ4ABiVRTmQVe3uGHZ/Xt/gmvQY2ZAobYKlrxbDuCOB1ojJs8RLEYYMOg6KRNHmc/h+F
- uehNhCpjh1PO23RMu9h95qeixnjN3T7X9yEcSt2NJteete2MVa5LMndL6O1h48llHYbI2hG5
- BxPSHFU0/+D09Wfzv/GCnNhDbJ0=
-X-Mailgun-Sending-Ip: 104.130.122.27
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e95d184.7f9b889b2180-smtp-out-n05;
- Tue, 14 Apr 2020 15:06:44 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 02D37C432C2; Tue, 14 Apr 2020 15:06:44 +0000 (UTC)
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id F31F5C433CB;
-        Tue, 14 Apr 2020 15:06:42 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org F31F5C433CB
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
+        Tue, 14 Apr 2020 11:20:10 -0400
+Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa)
+        by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        (Exim 4.93)
+        (envelope-from <luca@coelho.fi>)
+        id 1jONM4-000IqP-Lx; Tue, 14 Apr 2020 18:20:05 +0300
+Message-ID: <21ab68ddec08d30c21ad8600a79a3d4343a1755d.camel@coelho.fi>
+From:   Luca Coelho <luca@coelho.fi>
+To:     Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc:     Intel Linux Wireless <linuxwifi@intel.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Date:   Tue, 14 Apr 2020 18:20:03 +0300
+In-Reply-To: <6e42e11cfe24f88ae1dac2ad793f9c73751e6c7d.camel@suse.de>
+References: <bdb4170b21167cae89523fa688db6699539474bf.camel@suse.de>
+         <6e42e11cfe24f88ae1dac2ad793f9c73751e6c7d.camel@suse.de>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.36.0-1 
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] p54usb: add AirVasT USB stick device-id
-From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20200405220659.45621-1-chunkeey@gmail.com>
-References: <20200405220659.45621-1-chunkeey@gmail.com>
-To:     Christian Lamparter <chunkeey@gmail.com>
-Cc:     linux-wireless@vger.kernel.org,
-        Giuseppe Marco Randazzo <gmrandazzo@gmail.com>
-User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20200414150644.02D37C432C2@smtp.codeaurora.org>
-Date:   Tue, 14 Apr 2020 15:06:44 +0000 (UTC)
+Subject: Re: iwlwifi won't probe with linux-next
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Christian Lamparter <chunkeey@gmail.com> wrote:
+On Tue, 2020-04-14 at 16:52 +0200, Nicolas Saenz Julienne wrote:
+> On Mon, 2020-04-13 at 14:47 +0200, Nicolas Saenz Julienne wrote:
+> > Hi,
+> > I'm having trouble with my iwlwifi device on the latest linux-next.
+> > Essentially
+> > it fails at probe:
+> > 
+> > 	nico@linux-9qgx:~> dmesg | grep iwl
+> > 	[    4.650950] iwlwifi 0000:28:00.0: enabling device (0000 -> 0002)
+> > 	[    4.720086] iwlwifi: probe of 0000:28:00.0 failed with error -110
+> > 
+> > I made some research and the timeout happens after the call to iwl_poll_bit()
+> > in iwl_finish_nic_init().
+> > 
+> > 
+> > 
 
-> From: Giuseppe Marco Randazzo <gmrandazzo@gmail.com>
+[...]
+
+> > Note that I have a built kernel just for this, so I'll be happy to test
+> > anything. Also note that I updated my firmware to the last version available
+> > in
+> > the linux-firmware repo.
 > 
-> This patch adds the AirVasT USB wireless devices 124a:4026
-> to the list of supported devices. It's using the ISL3886
-> usb firmware. Without this modification, the wiki adapter
-> is not recognized.
-> 
-> Cc: <stable@vger.kernel.org>
-> Signed-off-by: Giuseppe Marco Randazzo <gmrandazzo@gmail.com>
-> Signed-off-by: Christian Lamparter <chunkeey@gmail.com> [formatted, reworded]
+> Well, I updated my system's BIOS and the issue went away. Sorry for the noise.
 
-Patch applied to wireless-drivers-next.git, thanks.
+That's great to hear! Don't hesitate to report if you experience any
+other issue.
 
-63e49a9fdac1 p54usb: add AirVasT USB stick device-id
+--
+Cheers,
+Luca.
 
--- 
-https://patchwork.kernel.org/patch/11474885/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
