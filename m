@@ -2,92 +2,87 @@ Return-Path: <SRS0=D8BG=56=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA2AAC2BA19
-	for <linux-wireless@archiver.kernel.org>; Tue, 14 Apr 2020 10:06:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9266C2BA19
+	for <linux-wireless@archiver.kernel.org>; Tue, 14 Apr 2020 10:42:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 842882072D
-	for <linux-wireless@archiver.kernel.org>; Tue, 14 Apr 2020 10:06:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A255020644
+	for <linux-wireless@archiver.kernel.org>; Tue, 14 Apr 2020 10:42:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="QV1OLhFT"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="dXevArOi"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2438110AbgDNKGD (ORCPT
+        id S2438512AbgDNKmi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 14 Apr 2020 06:06:03 -0400
-Received: from mail27.static.mailgun.info ([104.130.122.27]:23540 "EHLO
-        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2438097AbgDNKGC (ORCPT
+        Tue, 14 Apr 2020 06:42:38 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:20825 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S2438506AbgDNKm1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 14 Apr 2020 06:06:02 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1586858761; h=Content-Type: MIME-Version: Message-ID:
- In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
- bh=VXvOdKy6CCyAPMd/h91SwZnHIpupce3DVaASPSKrwg8=; b=QV1OLhFTAtpfOvOQofexuNJuVFqtsdD5MrTVsbqmmesKFpoWuDk0mMNnSWRzFAfe6ffmQY7N
- wZHvHg2HQQ4WkSuq0rEZ4qGaXsG6W2yKu725dQ6dByApSNFz/APRUClA/GxawAcoadpJ9two
- qpy4kKmr8lQ+riHwGTOktmaI0Go=
-X-Mailgun-Sending-Ip: 104.130.122.27
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e958b02.7f7c1e0737d8-smtp-out-n02;
- Tue, 14 Apr 2020 10:05:54 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id E3737C432C2; Tue, 14 Apr 2020 10:05:53 +0000 (UTC)
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        Tue, 14 Apr 2020 06:42:27 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1586860945;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=XIJFty4A7/x7MXrExzV9BBal3iymPjuyPXQKR8dThbY=;
+        b=dXevArOiDz132TppQ4BiE2CkHKWJyc4ucjfNVyPstcK8r68VlJpiplZexQW5EvAUHv+JKj
+        OeqQ9Dtqapia8jGzhuXlkGWr/60IUEUOJ2YF5UQGwkCWY++rATsDP4JcKEtETaNz99wEIP
+        7cHGCqFDcyFQaTl8NB1cEY98Ja5uMsY=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-119-z82y5mbfOcmUvhsWElBrAA-1; Tue, 14 Apr 2020 06:42:22 -0400
+X-MC-Unique: z82y5mbfOcmUvhsWElBrAA-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 49171C433F2;
-        Tue, 14 Apr 2020 10:05:50 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 49171C433F2
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Ryder Lee <ryder.lee@mediatek.com>
-Cc:     Felix Fietkau <nbd@nbd.name>,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>,
-        Shayne Chen <shayne.chen@mediatek.com>,
-        "YF Luo" <yf.luo@mediatek.com>,
-        Yiwei Chung <yiwei.chung@mediatek.com>,
-        Chih-Min Chen <chih-min.chen@mediatek.com>,
-        Evelyn Tsai <evelyn.tsai@mediatek.com>,
-        Sean Wang <sean.wang@mediatek.com>,
-        <linux-wireless@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>
-Subject: Re: [PATCH 08/16] mt76: mt7915: add offloading Tx AMSDU support
-References: <cover.1586507878.git.ryder.lee@mediatek.com>
-        <0cf99a5f317b0d41cd4832b14c99b6b9b8e5fefc.1586507878.git.ryder.lee@mediatek.com>
-        <87imi2lg71.fsf@tynnyri.adurom.net>
-        <1586858399.6545.1.camel@mtkswgap22>
-Date:   Tue, 14 Apr 2020 13:05:48 +0300
-In-Reply-To: <1586858399.6545.1.camel@mtkswgap22> (Ryder Lee's message of
-        "Tue, 14 Apr 2020 17:59:59 +0800")
-Message-ID: <874ktmtm9v.fsf@kamboji.qca.qualcomm.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 10154802560;
+        Tue, 14 Apr 2020 10:42:21 +0000 (UTC)
+Received: from ovpn-113-222.ams2.redhat.com (ovpn-113-222.ams2.redhat.com [10.36.113.222])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 7A13F6092D;
+        Tue, 14 Apr 2020 10:42:18 +0000 (UTC)
+Message-ID: <66c3db9b1978a384246c729034a934cc558b75a6.camel@redhat.com>
+Subject: Re: WARNING in hwsim_new_radio_nl
+From:   Paolo Abeni <pabeni@redhat.com>
+To:     syzbot <syzbot+a4aee3f42d7584d76761@syzkaller.appspotmail.com>,
+        davem@davemloft.net, johannes@sipsolutions.net,
+        kvalo@codeaurora.org, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        syzkaller-bugs@googlegroups.com
+Date:   Tue, 14 Apr 2020 12:42:17 +0200
+In-Reply-To: <000000000000bb471d05a2f246d7@google.com>
+References: <000000000000bb471d05a2f246d7@google.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.32.5 (3.32.5-1.fc30) 
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Ryder Lee <ryder.lee@mediatek.com> writes:
+#syz test git://git.kernel.org/pub/scm/linux/kernel/git/davem/net.git master
 
-> On Tue, 2020-04-14 at 09:44 +0300, Kalle Valo wrote:
->> Ryder Lee <ryder.lee@mediatek.com> writes:
->> 
->> > Add module parameter to enable hw_tx_amsdu.
->> 
->> Why is a module parameter needed? And why is it not enabled by default?
->> 
->
-> This is still WIP, so make it optional. But I will drop this one until
-> we're ready.
+I don't see why the bisection pointed to the MPTCP commit ?!? the
+following patch should address the issue.
+---
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 7fe8207db6ae..2082abdb08d4 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -635,7 +635,8 @@ static const struct nla_policy hwsim_genl_policy[HWSIM_ATTR_MAX + 1] = {
+        [HWSIM_ATTR_SUPPORT_P2P_DEVICE] = { .type = NLA_FLAG },
+        [HWSIM_ATTR_USE_CHANCTX] = { .type = NLA_FLAG },
+        [HWSIM_ATTR_DESTROY_RADIO_ON_CLOSE] = { .type = NLA_FLAG },
+-       [HWSIM_ATTR_RADIO_NAME] = { .type = NLA_STRING },
++       [HWSIM_ATTR_RADIO_NAME] = { .type = NLA_STRING,
++                                   .len = NL80211_WIPHY_NAME_MAXLEN },
+        [HWSIM_ATTR_NO_VIF] = { .type = NLA_FLAG },
+        [HWSIM_ATTR_FREQ] = { .type = NLA_U32 },
+        [HWSIM_ATTR_TX_INFO_FLAGS] = { .type = NLA_BINARY },
 
-What do you mean? Are you saying that these patches are still RFC and
-the final patches will not have the module parameter?
-
--- 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
