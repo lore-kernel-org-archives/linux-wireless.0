@@ -2,69 +2,73 @@ Return-Path: <SRS0=MvhY=57=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no
+X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E3ACC2BA19
-	for <linux-wireless@archiver.kernel.org>; Wed, 15 Apr 2020 13:09:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D458C2BA19
+	for <linux-wireless@archiver.kernel.org>; Wed, 15 Apr 2020 13:20:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 64FD120857
-	for <linux-wireless@archiver.kernel.org>; Wed, 15 Apr 2020 13:09:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EAD7F2074F
+	for <linux-wireless@archiver.kernel.org>; Wed, 15 Apr 2020 13:20:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="nHw/ApgL"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Xy0NAs50"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2504619AbgDONJw (ORCPT
+        id S2506304AbgDONUU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 15 Apr 2020 09:09:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40054 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2897076AbgDOLfn (ORCPT
+        Wed, 15 Apr 2020 09:20:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56198 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S2506285AbgDONTo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Apr 2020 07:35:43 -0400
-Received: from mail-lj1-x244.google.com (mail-lj1-x244.google.com [IPv6:2a00:1450:4864:20::244])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5C9FEC061A0E
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2020 04:35:42 -0700 (PDT)
-Received: by mail-lj1-x244.google.com with SMTP id z26so3227326ljz.11
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2020 04:35:42 -0700 (PDT)
+        Wed, 15 Apr 2020 09:19:44 -0400
+Received: from mail-wr1-x442.google.com (mail-wr1-x442.google.com [IPv6:2a00:1450:4864:20::442])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B5EDCC061A0C;
+        Wed, 15 Apr 2020 06:19:43 -0700 (PDT)
+Received: by mail-wr1-x442.google.com with SMTP id b11so7742306wrs.6;
+        Wed, 15 Apr 2020 06:19:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=KBpalj9lT5kvxcjd5x3o+owJyJdduvaY1jMLu6w9DYI=;
-        b=nHw/ApgLmxZUw2uFNTIAg/ctnJ7fmQ28uOV3gnu5UtZgIkXAbP43vB4FqdI4Q4eHiy
-         2VvlqpmAjlL2m4089uAWAE9xB5Ij13OPiCOtrf4qvHEmXCD8KwnyKwA0EWo8HZChlWN+
-         JP5Lx0ENlM/A4M96Hqzs+VVLySNgd7BTG9tGk1/+1/8BNdJAK0Qro1X93sr+kCJZx9YI
-         SsvZM5+XuXR4L5fiXPNooZkqV2DvAJbk2cInkjEV6Tg5dAhu5lnQsxh/ygiRSfyx5XSN
-         dx3OxqOfJ4SnxBViMHsrwgFydTWVJwl4ADXgcN5Of6iXY0A1K6+HLBQBGetTQbzJ6n/0
-         Di6A==
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:reply-to:from:date:message-id
+         :subject:to:cc;
+        bh=lfpK/xOIlDnyJhSEQBBYKy273A0qYIk6KaRxAULUFas=;
+        b=Xy0NAs50nauKNzelhrgCoZ1oAYS0by3FW/Xaw2GPXjjbxeHr7P51WtKfCf1iVTlDao
+         1cOOPmWg97iJ76qPu3Zf8K1JeiI+rzszWGk02qVHLNvlaAePVcN0Z1ZL+XQNVE5e9274
+         GYzX7MjCAThNITca93dboFwAqeKUQEJNeSp75p0d8awYnOijpfDLDm0N9I+yyxD6oci7
+         AUyJfwQuq1AqKugkFVaK5DG/Twamt2jjtWUBC/Q78V6LlzCa56wRZOhfgAQvg26w7Zfk
+         Ki+dfNNizSoeEwHuWdzLPllpRX8OzyQKILZp1EwCutUgg3ED3sqXDlxRzrDrAzQvSFX9
+         Bp/A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=KBpalj9lT5kvxcjd5x3o+owJyJdduvaY1jMLu6w9DYI=;
-        b=GVXuRCmMGTiRk0MGewDTCc87e3QsCp/D+tN5fxWQJNWZOhXi3kQe2qAe1DT1TYT/fH
-         ymB6cEr0p8BZPMK5vF8QHLvDfwBWBK8N2FiDEDxuGN0pz/FMp7LaqvUA4aiWf2HwHErj
-         tAbt1ESoF/H2ca54EZQH955zB6di9xBi0VYK0qnslPrJZ5eug8dgZeR1aUnrLPF8uqyb
-         EAmlcyKk7+wnm2SbagIvkO15wLe+iqizqgSOyQecd3+DBcXlRxZnrjR9cb7wNJaKsNc2
-         DKYZbmo7g/uNlH6wTQcVsVWsoJvGuTA2SYiL2HymrbmHr6+jvSEDz5E5XDP+L8bceXvb
-         XzmQ==
-X-Gm-Message-State: AGi0PuZLBYSbq6agfHRUyafG0SRNmKIxDBsY+BAufNM6J4mVpXfFd6EA
-        PbQCaJH45CTjWpcuo23672yDZj++7APnjv53vWk4ig==
-X-Google-Smtp-Source: APiQypJk41kgiRI94BIMANGlD8TkJQffUXgc/CbpBaQcp5YFitlmaZ4ssDBWSOD5V3uSRs0pfIVRVVkAG2pELd1X3B0=
-X-Received: by 2002:a2e:b8c1:: with SMTP id s1mr3169915ljp.0.1586950540057;
- Wed, 15 Apr 2020 04:35:40 -0700 (PDT)
+        h=x-gm-message-state:mime-version:references:in-reply-to:reply-to
+         :from:date:message-id:subject:to:cc;
+        bh=lfpK/xOIlDnyJhSEQBBYKy273A0qYIk6KaRxAULUFas=;
+        b=bBHeMvd4p6pfzZqUQ5yM8GBAZuuS/BtWb31bb32ABhqN6PUzGkDYSa0oWCCDPohrxD
+         BwZ1Fdv3wskLVDfKER+qhlsWGKPFDAZUjbuOAoIUlMzgRfxb/qLPkYAH/uTq3KgwuWkK
+         k/xowWap+PdKC3DTaJ3/oTkV5KOor9wXYFVibyiWuKGmEjsBeEdFevzUvO59ikxLVHEq
+         p3ELX/MQHAWVpJZIdgpw/GoCP3kyv6+ntp3CcjWwlV4djrWj+XGwRGEBsEygVLceArz4
+         Kzl/Gw1n3H6tTPVTUcUz/9nKQ0GJ23TT0aCpa9Vzoi2u5TAyn2w+s8Mq2vhaRy17Q68a
+         4oRA==
+X-Gm-Message-State: AGi0PuZ3MSLAa2hREzCktIdd/tShzn5rlfWHKSID5unkgZN9H13bkmxR
+        ztMB5Vo1dADsOcE7JxYNc9q81JybyWGRIAqsypM=
+X-Google-Smtp-Source: APiQypIW8Pb7KI2m47zG2TSNaiw4mMtQU1+5Wz2hxAJY83V2FfpcUzk0ZWhEopuJDFTjiX0vj3fcibyWGzm0sC1HtaI=
+X-Received: by 2002:adf:ef51:: with SMTP id c17mr28624905wrp.130.1586956782339;
+ Wed, 15 Apr 2020 06:19:42 -0700 (PDT)
 MIME-Version: 1.0
 References: <1586254255-28713-1-git-send-email-sumit.garg@linaro.org>
- <CABPxzY+hL=jD6Zy=netP3oqNXg69gDL2g0KiPe40eaXXgZBnxw@mail.gmail.com> <CAFA6WYMZAq6X5m++h33ySCa6jOQCq_tHL=8mUi-kPMcn4FH=jA@mail.gmail.com>
-In-Reply-To: <CAFA6WYMZAq6X5m++h33ySCa6jOQCq_tHL=8mUi-kPMcn4FH=jA@mail.gmail.com>
-From:   Sumit Garg <sumit.garg@linaro.org>
-Date:   Wed, 15 Apr 2020 17:05:28 +0530
-Message-ID: <CAFA6WYOW9ne0iffwC1dc48a_aSaYkkxQzyHQXTV2Wkob9KOXQg@mail.gmail.com>
+ <CABPxzY+hL=jD6Zy=netP3oqNXg69gDL2g0KiPe40eaXXgZBnxw@mail.gmail.com>
+ <CAFA6WYMZAq6X5m++h33ySCa6jOQCq_tHL=8mUi-kPMcn4FH=jA@mail.gmail.com> <CAFA6WYOW9ne0iffwC1dc48a_aSaYkkxQzyHQXTV2Wkob9KOXQg@mail.gmail.com>
+In-Reply-To: <CAFA6WYOW9ne0iffwC1dc48a_aSaYkkxQzyHQXTV2Wkob9KOXQg@mail.gmail.com>
+Reply-To: sedat.dilek@gmail.com
+From:   Sedat Dilek <sedat.dilek@gmail.com>
+Date:   Wed, 15 Apr 2020 15:19:30 +0200
+Message-ID: <CA+icZUUDm=WPjmwh5ikp8t+xt7dqTgghCeB8F0+czaUh-sHXxA@mail.gmail.com>
 Subject: Re: [PATCH v2] mac80211: fix race in ieee80211_register_hw()
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless <linux-wireless@vger.kernel.org>,
+To:     Sumit Garg <sumit.garg@linaro.org>
+Cc:     Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
         Krishna Chaitanya <chaitanya.mgit@gmail.com>,
         "David S. Miller" <davem@davemloft.net>, kuba@kernel.org,
         Kalle Valo <kvalo@codeaurora.org>,
@@ -82,173 +86,29 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, 9 Apr 2020 at 10:12, Sumit Garg <sumit.garg@linaro.org> wrote:
->
-> Hi Johannes,
->
-> On Wed, 8 Apr 2020 at 00:55, Krishna Chaitanya <chaitanya.mgit@gmail.com> wrote:
-> >
-> > On Tue, Apr 7, 2020 at 3:41 PM Sumit Garg <sumit.garg@linaro.org> wrote:
-> > >
-> > > A race condition leading to a kernel crash is observed during invocation
-> > > of ieee80211_register_hw() on a dragonboard410c device having wcn36xx
-> > > driver built as a loadable module along with a wifi manager in user-space
-> > > waiting for a wifi device (wlanX) to be active.
-> > >
-> > > Sequence diagram for a particular kernel crash scenario:
-> > >
-> > >     user-space  ieee80211_register_hw()  ieee80211_tasklet_handler()
-> > >     ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-> > >        |                    |                 |
-> > >        |<---phy0----wiphy_register()          |
-> > >        |-----iwd if_add---->|                 |
-> > just a nitpick, a better one would be (iwd: if_add + ap_start) since
-> > we need to have 'iwctl ap start'
-> > to trigger the interrupts.
-> > >        |                    |<---IRQ----(RX packet)
-> > >        |              Kernel crash            |
-> > >        |              due to unallocated      |
-> > >        |              workqueue.              |
-> > >        |                    |                 |
-> > >        |       alloc_ordered_workqueue()      |
-> > >        |                    |                 |
-> > >        |              Misc wiphy init.        |
-> > >        |                    |                 |
-> > >        |            ieee80211_if_add()        |
-> > >        |                    |                 |
-> > >
-> > > As evident from above sequence diagram, this race condition isn't specific
-> > > to a particular wifi driver but rather the initialization sequence in
-> > > ieee80211_register_hw() needs to be fixed. So re-order the initialization
-> > > sequence and the updated sequence diagram would look like:
-> > >
-> > >     user-space  ieee80211_register_hw()  ieee80211_tasklet_handler()
-> > >     ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-> > >        |                    |                 |
-> > >        |       alloc_ordered_workqueue()      |
-> > >        |                    |                 |
-> > >        |              Misc wiphy init.        |
-> > >        |                    |                 |
-> > >        |<---phy0----wiphy_register()          |
-> > >        |-----iwd if_add---->|                 |
-> > same as above.
-> > >        |                    |<---IRQ----(RX packet)
-> > >        |                    |                 |
-> > >        |            ieee80211_if_add()        |
-> > >        |                    |                 |
-> > >
-> > > Cc: <stable@vger.kernel.org>
-> > > Signed-off-by: Sumit Garg <sumit.garg@linaro.org>
-> > > ---
-> > >
->
-> In case we don't have any further comments, could you fix this nitpick
-> from Chaitanya while applying or would you like me to respin and send
-> v3?
+On Wed, Apr 15, 2020 at 3:10 PM Sumit Garg <sumit.garg@linaro.org> wrote:
 
-A gentle ping. Is this patch a good candidate for 5.7-rc2?
+[.. ]
 
--Sumit
+> > In case we don't have any further comments, could you fix this nitpick
+> > from Chaitanya while applying or would you like me to respin and send
+> > v3?
+>
+> A gentle ping. Is this patch a good candidate for 5.7-rc2?
+>
 
->
-> -Sumit
->
-> > > Changes in v2:
-> > > - Move rtnl_unlock() just after ieee80211_init_rate_ctrl_alg().
-> > > - Update sequence diagrams in commit message for more clarification.
-> > >
-> > >  net/mac80211/main.c | 22 +++++++++++++---------
-> > >  1 file changed, 13 insertions(+), 9 deletions(-)
-> > >
-> > > diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-> > > index 4c2b5ba..d497129 100644
-> > > --- a/net/mac80211/main.c
-> > > +++ b/net/mac80211/main.c
-> > > @@ -1051,7 +1051,7 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
-> > >                 local->hw.wiphy->signal_type = CFG80211_SIGNAL_TYPE_UNSPEC;
-> > >                 if (hw->max_signal <= 0) {
-> > >                         result = -EINVAL;
-> > > -                       goto fail_wiphy_register;
-> > > +                       goto fail_workqueue;
-> > >                 }
-> > >         }
-> > >
-> > > @@ -1113,7 +1113,7 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
-> > >
-> > >         result = ieee80211_init_cipher_suites(local);
-> > >         if (result < 0)
-> > > -               goto fail_wiphy_register;
-> > > +               goto fail_workqueue;
-> > >
-> > >         if (!local->ops->remain_on_channel)
-> > >                 local->hw.wiphy->max_remain_on_channel_duration = 5000;
-> > > @@ -1139,10 +1139,6 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
-> > >
-> > >         local->hw.wiphy->max_num_csa_counters = IEEE80211_MAX_CSA_COUNTERS_NUM;
-> > >
-> > > -       result = wiphy_register(local->hw.wiphy);
-> > > -       if (result < 0)
-> > > -               goto fail_wiphy_register;
-> > > -
-> > >         /*
-> > >          * We use the number of queues for feature tests (QoS, HT) internally
-> > >          * so restrict them appropriately.
-> > > @@ -1207,6 +1203,8 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
-> > >                 goto fail_rate;
-> > >         }
-> > >
-> > > +       rtnl_unlock();
-> > > +
-> > >         if (local->rate_ctrl) {
-> > >                 clear_bit(IEEE80211_HW_SUPPORTS_VHT_EXT_NSS_BW, hw->flags);
-> > >                 if (local->rate_ctrl->ops->capa & RATE_CTRL_CAPA_VHT_EXT_NSS_BW)
-> > > @@ -1254,6 +1252,12 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
-> > >                 local->sband_allocated |= BIT(band);
-> > >         }
-> > >
-> > > +       result = wiphy_register(local->hw.wiphy);
-> > > +       if (result < 0)
-> > > +               goto fail_wiphy_register;
-> > > +
-> > > +       rtnl_lock();
-> > > +
-> > >         /* add one default STA interface if supported */
-> > >         if (local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_STATION) &&
-> > >             !ieee80211_hw_check(hw, NO_AUTO_VIF)) {
-> > > @@ -1293,6 +1297,8 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
-> > >  #if defined(CONFIG_INET) || defined(CONFIG_IPV6)
-> > >   fail_ifa:
-> > >  #endif
-> > > +       wiphy_unregister(local->hw.wiphy);
-> > > + fail_wiphy_register:
-> > >         rtnl_lock();
-> > >         rate_control_deinitialize(local);
-> > >         ieee80211_remove_interfaces(local);
-> > > @@ -1302,8 +1308,6 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
-> > >         ieee80211_led_exit(local);
-> > >         destroy_workqueue(local->workqueue);
-> > >   fail_workqueue:
-> > > -       wiphy_unregister(local->hw.wiphy);
-> > > - fail_wiphy_register:
-> > >         if (local->wiphy_ciphers_allocated)
-> > >                 kfree(local->hw.wiphy->cipher_suites);
-> > >         kfree(local->int_scan_req);
-> > > @@ -1353,8 +1357,8 @@ void ieee80211_unregister_hw(struct ieee80211_hw *hw)
-> > >         skb_queue_purge(&local->skb_queue_unreliable);
-> > >         skb_queue_purge(&local->skb_queue_tdls_chsw);
-> > >
-> > > -       destroy_workqueue(local->workqueue);
-> > >         wiphy_unregister(local->hw.wiphy);
-> > > +       destroy_workqueue(local->workqueue);
-> > >         ieee80211_led_exit(local);
-> > >         kfree(local->int_scan_req);
-> > >  }
-> > > --
-> > > 2.7.4
-> > >
-> >
-> >
-> > --
-> > Thanks,
-> > Regards,
-> > Chaitanya T K.
+Hi Sumit,
+
+it's in [1] (see [2]) with slightly mods by Johannes but not in Linus tree.
+
+Johannes requested a pull-request means will be merged in a next step
+in net.git and then hopefully land in Linus tree after Dave M.
+requested a pull-request.
+
+Thanks for your patch.
+
+Regards,
+- Sedat -
+
+[1] https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git/tag/?h=mac80211-for-net-2020-04-15
+[2] https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git/commit/?h=mac80211-for-net-2020-04-15&id=52e04b4ce5d03775b6a78f3ed1097480faacc9fd
