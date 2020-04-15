@@ -2,124 +2,118 @@ Return-Path: <SRS0=MvhY=57=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_IN_DEF_DKIM_WL autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MSGID_FROM_MTA_HEADER,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBED2C2BA19
-	for <linux-wireless@archiver.kernel.org>; Wed, 15 Apr 2020 15:16:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 941DBC3815B
+	for <linux-wireless@archiver.kernel.org>; Wed, 15 Apr 2020 16:12:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A9975208E4
-	for <linux-wireless@archiver.kernel.org>; Wed, 15 Apr 2020 15:16:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 586AA206F9
+	for <linux-wireless@archiver.kernel.org>; Wed, 15 Apr 2020 16:12:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="PQEZoTss"
+	dkim=pass (1024-bit key) header.d=silabs.onmicrosoft.com header.i=@silabs.onmicrosoft.com header.b="f1iFxbAc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2393423AbgDOPQp (ORCPT
+        id S1415145AbgDOQMT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 15 Apr 2020 11:16:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46220 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S2389664AbgDOPQm (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Apr 2020 11:16:42 -0400
-Received: from mail-qk1-x744.google.com (mail-qk1-x744.google.com [IPv6:2607:f8b0:4864:20::744])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 34221C061A0C
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2020 08:16:42 -0700 (PDT)
-Received: by mail-qk1-x744.google.com with SMTP id m67so17513970qke.12
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Apr 2020 08:16:42 -0700 (PDT)
+        Wed, 15 Apr 2020 12:12:19 -0400
+Received: from mail-eopbgr700077.outbound.protection.outlook.com ([40.107.70.77]:38433
+        "EHLO NAM04-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1415170AbgDOQMQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 15 Apr 2020 12:12:16 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=ZrAAMrD9P0wc82+GupXlJdFboETZ0IZxX/qYVCNgeDUNDss2/1sm1/R6hrqe/0GLPZ91ABYyssD/FsEOPySMRwfLi4R6NwISkeC4qucuk+o30ePViF3rW2v6JXQ68OWuuuUtTIP3OF3mlazNWmZhx838rq/EV2KyMbTJOQBkRi+XZLj/Vn4RywUcVfHl9wpJtBrUVaxumccH77H3Cv1jC4CeUY1gv4WBCSHPuLpbtqDn6f5kleWJeCuyd+ztWIExlwLVL7A0ZCW77Q1SUMQ3jgYCAkC9i1UJXqXCyNi7NXA54uYM1Y9/ZxPiFhE8gGgSrzTtc9y3sBp9Cx8ojf8w9w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=dNbWrpIqbUX49u4kph7dvG45SXR9AdixdFlt2Qcglfc=;
+ b=Aa9pWWuShoiLuyQRFYN9Sgg4RsL7eexTocQPk/XO7KTfVUWADTf9RHKhvFb3+dLfLa1nOHd4+1j4Mft20BjFQhVLN0VWi4eQMu40n6UG0XdOE0FU9C3yCgXd9LLnOD4POmhmdDfbupPCdIgPKYKLX2lUN+wLChqxAeHj2YOBWEDV5juyqd8JT1hMdGW67yR21MN7T4syyVXqO+IqGpy/WfVSwohn2ZXRI2fEEYfKcj/9YjqL0wWtHh+gQ2gK1ocRJ39GI1lRsNWnsv9A9R7iolAv/oCG7plb0UodKvu5oIYaKILiQZoRHAjSo52MgSKktJAZwfYvQjTtI5K055/fGw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=silabs.com; dmarc=pass action=none header.from=silabs.com;
+ dkim=pass header.d=silabs.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=2qQPAGL2IMZ0eMjrwtJCIRCLqfeX6RhiXaeITvmueB4=;
-        b=PQEZoTsslxtO2VG1gZ9IEXJ+x1EGsPSa5w+d4wjTJVgOduX5sEJ6HZoJfJRBbXRsU9
-         EXHzIHgdRzFaKGGE+fT3peXwkYEIAHFi3cdXG68+ylSdKhZL8gWe9zBXPqhUeWc2cNdF
-         gsEt61yr3z2YAwQghdQbDx6ZcQjhSEnozaayKcy7LJF75jqkrlpPlsnvR009mnmOtVmq
-         rjYjjR2c7Z1XHNg9dZbS7hATI88O0Qk6m97LJX9sd2Ky24Y2RfKkcTujsfHYrgtSzudc
-         op08cFDcPhGoabbs8CyIn+yDkK6oWBZ58w+VvEJ/gPs6yUnaHhv7LTvRu4+UHccln//R
-         Fm6g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=2qQPAGL2IMZ0eMjrwtJCIRCLqfeX6RhiXaeITvmueB4=;
-        b=QYhxanjP4mgcYye6VnmeZugpy5h97OdJcpJb/ILaevIgcad5GYXF+M6V5+FydjTiGZ
-         neaK1br2Q3h1fsrQ7iSvW8sG99ZEEAP+kCz5plPXj9WtQyk3TVVc17xHJbwIV1SQAhCS
-         v2kcz88D/QVhUhwcyi1A+30ixXCP2+l/w4CqvbKm2lwMSkq3z55If/yn7ENZ3mmh+k5D
-         GqHJdTMQIKKhI5O30H7uVP2vB0FmkerfZZOc0RA/J5zbN4jqrBrQk1liufvyO0BaVFNo
-         HhfFgdDc7jxv6R5oWo4L8wurPBkfz1URxNQKjV0bcPN3Z8AVWD6FaM8LUzvsHpULwQID
-         7B2A==
-X-Gm-Message-State: AGi0PuYJ0hBTRZCtW2Dz6HtG101CGOraxmt+Bz+4K1gprEWNaRc8Rnj3
-        0Q+wX6jY5tkbiBD8EKKQAddeHTxG3I/c+1pxy3H36A==
-X-Google-Smtp-Source: APiQypJF3rrWtTJifwbFr2yPhwI9Guj+09QRJ+ZSsnlVpgr82MOSMQpPk7+ZCYHIQZ3xMrt25PXwdxnh13N+LBZi64Q=
-X-Received: by 2002:a37:8d86:: with SMTP id p128mr27408591qkd.250.1586963800654;
- Wed, 15 Apr 2020 08:16:40 -0700 (PDT)
-MIME-Version: 1.0
-References: <000000000000cb517b05a32c917b@google.com> <ed2b00dfda5b6ce46a2c2a33093ee56f77af6a8f.camel@sipsolutions.net>
-In-Reply-To: <ed2b00dfda5b6ce46a2c2a33093ee56f77af6a8f.camel@sipsolutions.net>
-From:   Dmitry Vyukov <dvyukov@google.com>
-Date:   Wed, 15 Apr 2020 17:16:28 +0200
-Message-ID: <CACT4Y+YtT4_An1wtzNWe3_=kMAF3Yhj+pr=GM5ZYOJ9TN3ryXA@mail.gmail.com>
-Subject: Re: WARNING in hwsim_new_radio_nl
-To:     Johannes Berg <johannes@sipsolutions.net>,
-        syzkaller <syzkaller@googlegroups.com>
-Cc:     syzbot <syzbot+a4aee3f42d7584d76761@syzkaller.appspotmail.com>,
-        David Miller <davem@davemloft.net>,
+ d=silabs.onmicrosoft.com; s=selector2-silabs-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=dNbWrpIqbUX49u4kph7dvG45SXR9AdixdFlt2Qcglfc=;
+ b=f1iFxbAcoKAojDhGmI2Zsy0a6BVXOdURChAISedHV1gkh6Z9EWSrILRNoVMQcmCvGxjd9e2hS4qCM1Y0vvjcR26pE7EB5Gic6koLvMSQrRFfgqQuwxIahdxto1PhU6nb9FiA872FDzWUR4OP6wOL9IjBJuj44pe69wgwJynbHGg=
+Authentication-Results: spf=none (sender IP is )
+ smtp.mailfrom=Jerome.Pouiller@silabs.com; 
+Received: from MWHPR11MB1775.namprd11.prod.outlook.com (2603:10b6:300:10e::14)
+ by MWHPR11MB1408.namprd11.prod.outlook.com (2603:10b6:300:24::18) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2921.25; Wed, 15 Apr
+ 2020 16:12:12 +0000
+Received: from MWHPR11MB1775.namprd11.prod.outlook.com
+ ([fe80::81d5:b62b:3770:ffbe]) by MWHPR11MB1775.namprd11.prod.outlook.com
+ ([fe80::81d5:b62b:3770:ffbe%10]) with mapi id 15.20.2921.024; Wed, 15 Apr
+ 2020 16:12:12 +0000
+From:   Jerome Pouiller <Jerome.Pouiller@silabs.com>
+To:     devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org
+Cc:     netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Kalle Valo <kvalo@codeaurora.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        linux-wireless@vger.kernel.org, mathew.j.martineau@linux.intel.com,
-        matthieu.baerts@tessares.net, netdev <netdev@vger.kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        syzkaller-bugs <syzkaller-bugs@googlegroups.com>
-Content-Type: text/plain; charset="UTF-8"
+        "David S . Miller" <davem@davemloft.net>,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Pouiller?= 
+        <jerome.pouiller@silabs.com>
+Subject: [PATCH 01/20] staging: wfx: update filtering even if not connected
+Date:   Wed, 15 Apr 2020 18:11:28 +0200
+Message-Id: <20200415161147.69738-2-Jerome.Pouiller@silabs.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20200415161147.69738-1-Jerome.Pouiller@silabs.com>
+References: <20200415161147.69738-1-Jerome.Pouiller@silabs.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: base64
+X-ClientProxiedBy: PR1PR01CA0027.eurprd01.prod.exchangelabs.com
+ (2603:10a6:102::40) To MWHPR11MB1775.namprd11.prod.outlook.com
+ (2603:10b6:300:10e::14)
+MIME-Version: 1.0
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from pc-42.home (2a01:e35:2435:66a0:544b:f17b:7ae8:fb7) by PR1PR01CA0027.eurprd01.prod.exchangelabs.com (2603:10a6:102::40) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2921.25 via Frontend Transport; Wed, 15 Apr 2020 16:12:09 +0000
+X-Mailer: git-send-email 2.25.1
+X-Originating-IP: [2a01:e35:2435:66a0:544b:f17b:7ae8:fb7]
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: cec6d37c-7244-4ba7-4333-08d7e157c199
+X-MS-TrafficTypeDiagnostic: MWHPR11MB1408:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <MWHPR11MB1408722BE344549546CA8BCD93DB0@MWHPR11MB1408.namprd11.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:7219;
+X-Forefront-PRVS: 0374433C81
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MWHPR11MB1775.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(10009020)(136003)(396003)(376002)(346002)(39850400004)(366004)(8886007)(8936002)(4744005)(5660300002)(2906002)(6666004)(86362001)(8676002)(478600001)(81156014)(66574012)(1076003)(4326008)(52116002)(316002)(54906003)(107886003)(186003)(16526019)(66556008)(66476007)(36756003)(2616005)(6512007)(15650500001)(6486002)(6506007)(66946007);DIR:OUT;SFP:1101;
+Received-SPF: None (protection.outlook.com: silabs.com does not designate
+ permitted sender hosts)
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: p5TagCX4AS/s9Mwu34h50MnwLVoe5e2gmbpUCENzo83AXCCwDivjXEyBcrCv+BXM8qKTy3z4cUutlt+SAvr9+Ff7mUtCT2/ySBne3DQChM3pKe0Ns6Uyuuke39I5XvWcCBO4YtUdX51Qhey/O9lbJbs7oElyOoDXBkjUiTIUbhC+6OmSR/pdzVH3inXNcN990DS6uwenCv1+0bx+FwupNB+ScysZ48uDeumNpw+VJ+WIsrLBom0v2WJw9vcWN/WQJfS/XJWKKx/2+PS7mbffukwF507JECTCp1IlqYVw4sbYYKokxFrP0GoT6174SdIBdyzqzSjJbdgSi3gN6jv7EGWwWJc7HD54C5s0082GzAdemKq7759vywbxvoKN1DtigTKHSv0Lh3wJ2UhlwvZDSRerCE+HB30NXOWkYV1pA4dWfT2MIsnPop1WVQ08K2VT
+X-MS-Exchange-AntiSpam-MessageData: ak5tVTD+ugDt9ranHPysrYCtmirfyyynNGC29XHj54OUXYv3rszI4WpAI3VU9n5CtfAHkL5c+Dx8vBdoF5KY/TpI02jmItTAgZ1ZfRNeW3/EHI/TvtZI/WrG8CJzBQymY0A0Ha7dx61itPYlD96W7+qOZaVulz2D5zAKXKb6+si9VMJkLm3GpcWD6o+6gO5BK8Y59zF7zqtKiTpoK6Ivaw==
+X-OriginatorOrg: silabs.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: cec6d37c-7244-4ba7-4333-08d7e157c199
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Apr 2020 16:12:12.6354
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 54dbd822-5231-4b20-944d-6f4abcd541fb
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: f+hRf2ajPCoNYN0dKLy3MTVl3eg1W/CNN10pGhcMzGDT8pswcMoBWIX3mPSy45UH/Pa15wPMvqL22ANVSSTs4g==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR11MB1408
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, Apr 14, 2020 at 12:41 PM Johannes Berg
-<johannes@sipsolutions.net> wrote:
->
-> Hi syzbot keepers,
->
-> On Mon, 2020-04-13 at 07:05 -0700, syzbot wrote:
-> > syzbot has bisected this bug to:
-> >
-> > commit 01cacb00b35cb62b139f07d5f84bcf0eeda8eff6
-> > Author: Paolo Abeni <pabeni@redhat.com>
-> > Date:   Fri Mar 27 21:48:51 2020 +0000
-> >
-> >     mptcp: add netlink-based PM
-> >
-> > bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=10225bb3e00000
->
-> This is, fairly obviously, incorrect. Same with the bisection for
-> 6693adf1698864d21734, which is really the same underlying problem as
-> this one (though at a different code site).
->
-> However, it stands out that this was bisected to a commit that adds a
-> new generic netlink family in both cases.
->
-> This makes sense - the reproducer identifies the family by *number*, but
-> that number isn't stable, generic netlink families should be identified
-> by *name*.
->
-> Perhaps somehow syzbot could be taught that, so that the bisection is
-> stable across kernels with different generic netlink families
-> registered?
->
-> Alternatively, we _could_ add some kind of stable ID mode, but I'm not
-> sure we really want to ... since that would mean people start hardcoding
-> IDs?
-
-+syzkaller mailing list
-
-Hi Johannes,
-
-syzkaller has a pseudo-syscall to map string genetlink family ID to
-int ID. If that syscall would have been used, then I assume it should
-have worked. However in this case, it managed to trigger the bug with
-a plain opaque blob with no knowledge about the blob contents
-whatsoever. I don't see any realistic way to preserve family ID in
-this case.
+RnJvbTogSsOpcsO0bWUgUG91aWxsZXIgPGplcm9tZS5wb3VpbGxlckBzaWxhYnMuY29tPgoKQ3Vy
+cmVudGx5LCBmaWx0ZXJpbmcgYXJlIG5vdCB1cGRhdGUgaWYgdGhlIGRldmljZSBpcyBub3QgY29u
+bmVjdGVkLgpUaGVyZSBpcyBubyBvYnZpb3VzIHJhdGlvbmFsZSBmb3IgdGhhdC4gVXBkYXRpbmcg
+ZmlsdGVyaW5nIHdoaWxlIGl0IGlzCm5vdCBuZWNlc3NhcnkgaXMgaGFybWxlc3MuIE9uIHRoZSBv
+dGhlciBoYW5kLCBpdCBpcyBkaWZmaWN1bHQgdG8gZW5zdXJlCnRoYXQgdGhlIGZpbHRlcmluZyBy
+dWxlIGhhcyBiZWVuIGNvcnJlY3RseSBzZW50IHRvIHRoZSBmaXJtd2FyZS4KCkp1c3QgZHJvcCB0
+aGlzIHVzZWxlc3MgY29uZGl0aW9uLgoKU2lnbmVkLW9mZi1ieTogSsOpcsO0bWUgUG91aWxsZXIg
+PGplcm9tZS5wb3VpbGxlckBzaWxhYnMuY29tPgotLS0KIGRyaXZlcnMvc3RhZ2luZy93Zngvc3Rh
+LmMgfCAzIC0tLQogMSBmaWxlIGNoYW5nZWQsIDMgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEv
+ZHJpdmVycy9zdGFnaW5nL3dmeC9zdGEuYyBiL2RyaXZlcnMvc3RhZ2luZy93Zngvc3RhLmMKaW5k
+ZXggZjFkZjc3MTdkNWY0Li5jYjlkMTQ0NzE3NDUgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvc3RhZ2lu
+Zy93Zngvc3RhLmMKKysrIGIvZHJpdmVycy9zdGFnaW5nL3dmeC9zdGEuYwpAQCAtMTY4LDkgKzE2
+OCw2IEBAIHZvaWQgd2Z4X3VwZGF0ZV9maWx0ZXJpbmcoc3RydWN0IHdmeF92aWYgKnd2aWYpCiAJ
+CX0KIAl9OwogCi0JaWYgKHd2aWYtPnN0YXRlID09IFdGWF9TVEFURV9QQVNTSVZFKQotCQlyZXR1
+cm47Ci0KIAlpZiAod3ZpZi0+ZGlzYWJsZV9iZWFjb25fZmlsdGVyKSB7CiAJCWJmX2VuYWJsZSA9
+IDA7CiAJCWJmX2NvdW50ID0gMTsKLS0gCjIuMjUuMQoK
