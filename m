@@ -4,82 +4,81 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0043C2BA19
-	for <linux-wireless@archiver.kernel.org>; Wed, 15 Apr 2020 08:34:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DEABBC2BA19
+	for <linux-wireless@archiver.kernel.org>; Wed, 15 Apr 2020 08:39:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BDF4920784
-	for <linux-wireless@archiver.kernel.org>; Wed, 15 Apr 2020 08:34:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BC78C20656
+	for <linux-wireless@archiver.kernel.org>; Wed, 15 Apr 2020 08:39:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="Q+C9rNLt"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="AvMJoB45"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726099AbgDOIeJ (ORCPT
+        id S2894718AbgDOIjG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 15 Apr 2020 04:34:09 -0400
-Received: from mail27.static.mailgun.info ([104.130.122.27]:45967 "EHLO
+        Wed, 15 Apr 2020 04:39:06 -0400
+Received: from mail27.static.mailgun.info ([104.130.122.27]:37357 "EHLO
         mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725932AbgDOIeH (ORCPT
+        by vger.kernel.org with ESMTP id S2894709AbgDOIi4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Apr 2020 04:34:07 -0400
+        Wed, 15 Apr 2020 04:38:56 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1586939647; h=Date: Message-Id: Cc: To: References:
+ s=smtp; t=1586939935; h=Date: Message-Id: Cc: To: References:
  In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=SLHAYva2OLrmNU4E0D7HTfMDBN5YIO5M/rgVRwyA7MM=;
- b=Q+C9rNLtsu3i8/8Pi7JoJcpj7iMrU7m99iESJykBfSP1UQ9K0PsDnMf0TkWT8e8r1t9zUz8K
- NciVOg69TLPpVVL5lxjE2wK0N4r400KQlQGguA1lVDSnMLKz09XYbsJzuw0XvWqBg3PvcLWr
- Woo2a8ncBSIv/wa2cdD1hQncj+k=
+ Content-Type: Sender; bh=AMzv0dTiXtbC/nSmu3Wb4uhLamK6lblQmo4jjWC2e0c=;
+ b=AvMJoB45vjJtjeJp5X+wh7UcAnbhY2WA5FWoC0rqTOzUrqgb5DzMfx6OW4uyLxp9Ptemnn3j
+ VQqDMVShtYLKgSFQjK9CT5wKavLGDz5V8eZxx05ltJQKp8F2vxeCl9IIiHg9p29VSu3KyvEr
+ s4jjAN+MI8zoLVAWe2Tjnrj/p5o=
 X-Mailgun-Sending-Ip: 104.130.122.27
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e96c6f3.7f955406cb20-smtp-out-n03;
- Wed, 15 Apr 2020 08:33:55 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5e96c81e.7f7c1e073880-smtp-out-n02;
+ Wed, 15 Apr 2020 08:38:54 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id A191DC433BA; Wed, 15 Apr 2020 08:33:55 +0000 (UTC)
+        id D6B04C44792; Wed, 15 Apr 2020 08:38:53 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 89F54C433F2;
-        Wed, 15 Apr 2020 08:33:54 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 89F54C433F2
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 65A8AC4478F;
+        Wed, 15 Apr 2020 08:38:51 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 65A8AC4478F
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: Re: [PATCH] MAINTAINERS: Update URL for wireless drivers
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH] cw1200: make cw1200_spi_irq_unsubscribe() void
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20200412110724.6uaoqmjc3it73nzo@nixos>
-References: <20200412110724.6uaoqmjc3it73nzo@nixos>
-To:     Nils =?utf-8?q?ANDR=C3=89-CHANG?= <nils@nilsand.re>
-Cc:     linux-wireless@vger.kernel.org
+In-Reply-To: <20200410090910.27132-1-yanaijie@huawei.com>
+References: <20200410090910.27132-1-yanaijie@huawei.com>
+To:     Jason Yan <yanaijie@huawei.com>
+Cc:     <pizza@shaftnet.org>, <davem@davemloft.net>,
+        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, Jason Yan <yanaijie@huawei.com>
 User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20200415083355.A191DC433BA@smtp.codeaurora.org>
-Date:   Wed, 15 Apr 2020 08:33:55 +0000 (UTC)
+Message-Id: <20200415083853.D6B04C44792@smtp.codeaurora.org>
+Date:   Wed, 15 Apr 2020 08:38:53 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Nils wrote:
+Jason Yan <yanaijie@huawei.com> wrote:
 
-> Previously, http://wireless.kernel.org would redirect to
-> https://wireless.wiki.kernel.org, however, this is no longer the case
-> and most pages return 404.
+> Fix the following coccicheck warning:
 > 
-> https is used because http://wireless.kernel.org/* redirects to
-> https://wireless.wiki.kernel.org/*
+> drivers/net/wireless/st/cw1200/cw1200_spi.c:273:5-8: Unneeded variable:
+> "ret". Return "0" on line 279
 > 
-> Signed-off-by: Nils ANDRÉ-CHANG <nils@nilsand.re>
+> Reported-by: Hulk Robot <hulkci@huawei.com>
+> Signed-off-by: Jason Yan <yanaijie@huawei.com>
 
-The MAINTAINERS file had huge changes in v5.7-rc1 and this won't apply
-anymore. Please rebase this on top of Linus' tree and I'll apply it to
-wireless-drivers once I have updated it to v5.7-rc1.
+Patch applied to wireless-drivers-next.git, thanks.
 
-Patch set to Changes Requested.
+80efb443ea03 cw1200: make cw1200_spi_irq_unsubscribe() void
 
 -- 
-https://patchwork.kernel.org/patch/11484779/
+https://patchwork.kernel.org/patch/11483037/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
