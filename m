@@ -6,76 +6,80 @@ X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
 	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12CE0C2BA19
-	for <linux-wireless@archiver.kernel.org>; Wed, 15 Apr 2020 08:08:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0043C2BA19
+	for <linux-wireless@archiver.kernel.org>; Wed, 15 Apr 2020 08:34:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E300620857
-	for <linux-wireless@archiver.kernel.org>; Wed, 15 Apr 2020 08:08:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BDF4920784
+	for <linux-wireless@archiver.kernel.org>; Wed, 15 Apr 2020 08:34:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="DcKuqXog"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="Q+C9rNLt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2635528AbgDOIGj (ORCPT
+        id S1726099AbgDOIeJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 15 Apr 2020 04:06:39 -0400
-Received: from mail26.static.mailgun.info ([104.130.122.26]:30935 "EHLO
-        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2635453AbgDOIEp (ORCPT
+        Wed, 15 Apr 2020 04:34:09 -0400
+Received: from mail27.static.mailgun.info ([104.130.122.27]:45967 "EHLO
+        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725932AbgDOIeH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Apr 2020 04:04:45 -0400
+        Wed, 15 Apr 2020 04:34:07 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1586937884; h=Date: Message-Id: Cc: To: References:
+ s=smtp; t=1586939647; h=Date: Message-Id: Cc: To: References:
  In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=tKPUKvoHl3cQZvzd/QIwPOdZJPMNsAMUU3WubV/MYgQ=;
- b=DcKuqXogs0MhST0dqoT159foUydLKwi1Msj/9FubNrcMo3ULWWaV6mJL06N48ZTMIPNMPUT7
- B1ZBznLvxNHnctuMxkLT2SzVMdIvoe4jmi8gQUhAF0dD+69QMuPvkEgxNgdyRipeKeJR+xB1
- uQupGeNhqlKNCBY+WxUmJIfK+BE=
-X-Mailgun-Sending-Ip: 104.130.122.26
+ Content-Type: Sender; bh=SLHAYva2OLrmNU4E0D7HTfMDBN5YIO5M/rgVRwyA7MM=;
+ b=Q+C9rNLtsu3i8/8Pi7JoJcpj7iMrU7m99iESJykBfSP1UQ9K0PsDnMf0TkWT8e8r1t9zUz8K
+ NciVOg69TLPpVVL5lxjE2wK0N4r400KQlQGguA1lVDSnMLKz09XYbsJzuw0XvWqBg3PvcLWr
+ Woo2a8ncBSIv/wa2cdD1hQncj+k=
+X-Mailgun-Sending-Ip: 104.130.122.27
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e96c01c.7f2c6d8ec928-smtp-out-n01;
- Wed, 15 Apr 2020 08:04:44 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5e96c6f3.7f955406cb20-smtp-out-n03;
+ Wed, 15 Apr 2020 08:33:55 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id A1B45C43636; Wed, 15 Apr 2020 08:04:43 +0000 (UTC)
+        id A191DC433BA; Wed, 15 Apr 2020 08:33:55 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 42E05C44792;
-        Wed, 15 Apr 2020 08:04:42 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 42E05C44792
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 89F54C433F2;
+        Wed, 15 Apr 2020 08:33:54 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 89F54C433F2
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] ath11k: cleanup reo command error code overwritten
+Content-Transfer-Encoding: 8bit
+Subject: Re: [PATCH] MAINTAINERS: Update URL for wireless drivers
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1586776872-25766-1-git-send-email-gsamin@codeaurora.org>
-References: <1586776872-25766-1-git-send-email-gsamin@codeaurora.org>
-To:     Govindaraj Saminathan <gsamin@codeaurora.org>
-Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Govindaraj Saminathan <gsamin@codeaurora.org>
+In-Reply-To: <20200412110724.6uaoqmjc3it73nzo@nixos>
+References: <20200412110724.6uaoqmjc3it73nzo@nixos>
+To:     Nils =?utf-8?q?ANDR=C3=89-CHANG?= <nils@nilsand.re>
+Cc:     linux-wireless@vger.kernel.org
 User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20200415080443.A1B45C43636@smtp.codeaurora.org>
-Date:   Wed, 15 Apr 2020 08:04:43 +0000 (UTC)
+Message-Id: <20200415083355.A191DC433BA@smtp.codeaurora.org>
+Date:   Wed, 15 Apr 2020 08:33:55 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Govindaraj Saminathan <gsamin@codeaurora.org> wrote:
+Nils wrote:
 
-> should not overwrite the error code. No buffer available then return
-> invalid. For other failures return the error code of actual failure.
+> Previously, http://wireless.kernel.org would redirect to
+> https://wireless.wiki.kernel.org, however, this is no longer the case
+> and most pages return 404.
 > 
-> Signed-off-by: Govindaraj Saminathan <gsamin@codeaurora.org>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+> https is used because http://wireless.kernel.org/* redirects to
+> https://wireless.wiki.kernel.org/*
+> 
+> Signed-off-by: Nils ANDRÉ-CHANG <nils@nilsand.re>
 
-Patch applied to ath-next branch of ath.git, thanks.
+The MAINTAINERS file had huge changes in v5.7-rc1 and this won't apply
+anymore. Please rebase this on top of Linus' tree and I'll apply it to
+wireless-drivers once I have updated it to v5.7-rc1.
 
-e190bc05b191 ath11k: cleanup reo command error code overwritten
+Patch set to Changes Requested.
 
 -- 
-https://patchwork.kernel.org/patch/11485447/
+https://patchwork.kernel.org/patch/11484779/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
