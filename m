@@ -2,132 +2,75 @@ Return-Path: <SRS0=MvhY=57=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64745C2BB85
-	for <linux-wireless@archiver.kernel.org>; Wed, 15 Apr 2020 16:16:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46972C2BA19
+	for <linux-wireless@archiver.kernel.org>; Wed, 15 Apr 2020 17:02:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 41EF0206F9
-	for <linux-wireless@archiver.kernel.org>; Wed, 15 Apr 2020 16:16:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1F350206F9
+	for <linux-wireless@archiver.kernel.org>; Wed, 15 Apr 2020 17:02:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=silabs.onmicrosoft.com header.i=@silabs.onmicrosoft.com header.b="S5zFdA8V"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="lcRxFwyN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1415179AbgDOQMP (ORCPT
+        id S2404689AbgDORCv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 15 Apr 2020 12:12:15 -0400
-Received: from mail-eopbgr700077.outbound.protection.outlook.com ([40.107.70.77]:38433
-        "EHLO NAM04-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1414917AbgDOQMM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Apr 2020 12:12:12 -0400
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=dKHAQ+5+goXh1acgHNCj8H5ee37N9gIAqHwYI5au3uRQqG8CaIYokYZP1hrpA9Hm6f+MxZ0uOri2YEnyfPLFDVYtEBf+6GNVFI6zf6BR/tw/ZXGlWGiqTFrxTrp0KEXTmlgqBZoL2LiD87+3fEdn2hW13YIZk85YiJSQR+raRXnFCGeRY2EQbJwy0vBIqna02N+DPPssDDdcbGbGMv0RQRYkQnQry4viN1m1dV+mKCy5yP2DRkjjAiEVDdNlHze5aEXqOy06uynFqIn0Ih2R5aX/QvXUibCvMNIVtCgHNmGkwCqJ4JQDJpzqz10p8Grd+1YRPwmm/vrXBJHtKX0SoQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=hNKsHEJP/VKZtmDt4JTSPFNDm15L7SxRxvkDxasxFdc=;
- b=IRzfmYfAmXWbKndo29ApRikWMGkIRZ4FuXUVHoCnC9WAuVvQxhDCCIt4I2D86VabWxsv/Dppw/2QgjACBPwDpGvjjBc9D2WrjNL3ms3XgFzvrPrONyrQ3OM6hFeLsKOoVJZHDQMZJA8ZcPDfqmT1r+FOLESR7GLdLGAUGgFUf8vwcDSgQhSDQnCNTI/0e8EWxjG0vrc65jc6Ps31vkIhuMhBwXKXZZzSNLO/fuBThA8MeAiMpo2Co0dxu4uOuzItfqUhchkmPl0m4lkD92GByZq/xU0ecBypy3rnparBmDJw7G3/ef0ye2rjSZu/djAnCPH7/JwMc7hdD4dxUugNnQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=silabs.com; dmarc=pass action=none header.from=silabs.com;
- dkim=pass header.d=silabs.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=silabs.onmicrosoft.com; s=selector2-silabs-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=hNKsHEJP/VKZtmDt4JTSPFNDm15L7SxRxvkDxasxFdc=;
- b=S5zFdA8VZxGG/HPjyz4RT5o7XMuJEzVZ6xjbYdtVtIGlz5b4KnPSLmwGfkn2QFOZlxTtHgqcnG9qWURhSGZf3TP4U6AVbTkYLCJFnU/Zb5wLWiNyU7ZyL4GmiRMWuBoopt3G8IkJ5YQv1wDCWFkchRYJoZ9DmSMcvv9iNN68074=
-Authentication-Results: spf=none (sender IP is )
- smtp.mailfrom=Jerome.Pouiller@silabs.com; 
-Received: from MWHPR11MB1775.namprd11.prod.outlook.com (2603:10b6:300:10e::14)
- by MWHPR11MB1408.namprd11.prod.outlook.com (2603:10b6:300:24::18) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2921.25; Wed, 15 Apr
- 2020 16:12:09 +0000
-Received: from MWHPR11MB1775.namprd11.prod.outlook.com
- ([fe80::81d5:b62b:3770:ffbe]) by MWHPR11MB1775.namprd11.prod.outlook.com
- ([fe80::81d5:b62b:3770:ffbe%10]) with mapi id 15.20.2921.024; Wed, 15 Apr
- 2020 16:12:09 +0000
-From:   Jerome Pouiller <Jerome.Pouiller@silabs.com>
-To:     devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org
-Cc:     netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Pouiller?= 
-        <jerome.pouiller@silabs.com>
-Subject: [PATCH 00/20] staging: wfx: simplify filtering
-Date:   Wed, 15 Apr 2020 18:11:27 +0200
-Message-Id: <20200415161147.69738-1-Jerome.Pouiller@silabs.com>
-X-Mailer: git-send-email 2.25.1
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: base64
-X-ClientProxiedBy: PR1PR01CA0027.eurprd01.prod.exchangelabs.com
- (2603:10a6:102::40) To MWHPR11MB1775.namprd11.prod.outlook.com
- (2603:10b6:300:10e::14)
+        Wed, 15 Apr 2020 13:02:51 -0400
+Received: from mail26.static.mailgun.info ([104.130.122.26]:44236 "EHLO
+        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2404661AbgDORCu (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 15 Apr 2020 13:02:50 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1586970169; h=Date: Message-Id: Cc: To: References:
+ In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
+ Content-Type: Sender; bh=nDpbf+oKOTLzufE28klKD6wsmPoDbXY1+0uUYjubRkk=;
+ b=lcRxFwyNwR9U1Fo4rB3l8pKiuwsfjTeZuRwHH01t09xJ+QfyvjUMmPcpYcdXeflOWy+EWk2Z
+ HN/OhzOk/2T8kdkuJT+shCtBCJ7sYiQa8FMEnaBMlgxIPT0lj68DxbDqOeLRmosfd0JHsdR0
+ ijPhkdS6aKsgZFVkxqlotZs6KmQ=
+X-Mailgun-Sending-Ip: 104.130.122.26
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
+ by mxa.mailgun.org with ESMTP id 5e973e38.7f8e74f637a0-smtp-out-n04;
+ Wed, 15 Apr 2020 17:02:48 -0000 (UTC)
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 58A19C433CB; Wed, 15 Apr 2020 17:02:47 +0000 (UTC)
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 25B16C433F2;
+        Wed, 15 Apr 2020 17:02:45 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 25B16C433F2
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from pc-42.home (2a01:e35:2435:66a0:544b:f17b:7ae8:fb7) by PR1PR01CA0027.eurprd01.prod.exchangelabs.com (2603:10a6:102::40) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2921.25 via Frontend Transport; Wed, 15 Apr 2020 16:12:05 +0000
-X-Mailer: git-send-email 2.25.1
-X-Originating-IP: [2a01:e35:2435:66a0:544b:f17b:7ae8:fb7]
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 54e93146-d3b8-4f33-b458-08d7e157bf9b
-X-MS-TrafficTypeDiagnostic: MWHPR11MB1408:
-X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <MWHPR11MB1408C32B8A4381D75289D41593DB0@MWHPR11MB1408.namprd11.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:4303;
-X-Forefront-PRVS: 0374433C81
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MWHPR11MB1775.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(10009020)(366004)(8886007)(8936002)(5660300002)(2906002)(6666004)(86362001)(8676002)(81156014)(66574012)(1076003)(4326008)(52116002)(54906003)(107886003)(186003)(16526019)(66556008)(66476007)(36756003)(2616005)(6512007)(6486002)(6506007)(66946007)(498600001);DIR:OUT;SFP:1101;
-Received-SPF: None (protection.outlook.com: silabs.com does not designate
- permitted sender hosts)
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: /PxQhcvCnwdXvcP/Oy5oSwOWizRaVKrF1OYXaACM0cDAbwRvGmp9dUJLZL8cgL8lXS6Ln2bS9IiZl/ea6yNHXv8+NhS1pSxutJWLg0oecJR8kG3L8tN6hvDTtIMw53ntSEw+bV25m6NPInPaL/GLaa69cgfHI4fTcypuZslF4UehujSajFcVZxXyetTuBUoH3g0aoUUmI499HSjvPEzW3o1Eg1/gf3qbNrOh1ZjxiRQBMScu3MZc5veXGjnWXU2jYGfQ4K35f/+9aN5n5SNzZTtk3EKlIKKJ1jZVR/WegsX8c6X2aDEa3BqddUj+xOS0XUhvei7x7xiRxpGAnbyZiImNh+SNWFpltA32eKydIfW0GreqOOZem0wJacH9JceMx3CuljYYSjqIRqv3vZtLLJy6NuginRwUGi/vx3WalKllGMGoQXRZUyzAOO/pJJmM
-X-MS-Exchange-AntiSpam-MessageData: KKZLvU+69XnT6g1WsGZ0bxGoFHg4lCEaRKLtb713APgUuBON29Iv7wp8EObgvx+TW/HmHXxB3vCeT8bFAmf6wBQkYi49jjBg7E/6n2vsh4rhE3gUSHq5AK5r9nJBfrIcbkN6Vcr4MT9AA0TCCtu4YOA1GbVv7MaWm5iLIIr2pzVCOURX+rHVNG4FhUr+/k8lJhQSm22KckzyO58JRQ4fww==
-X-OriginatorOrg: silabs.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 54e93146-d3b8-4f33-b458-08d7e157bf9b
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Apr 2020 16:12:09.3619
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 54dbd822-5231-4b20-944d-6f4abcd541fb
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: E+uqeTPMkHLkOpWgJs9gGrBXoV1qkU7RDZUZsuMjjGVOE08MvknFC58QmFlahbbSElzwqZ4diiwMIXeszT5ajg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR11MB1408
+Content-Transfer-Encoding: 8bit
+Subject: Re: [PATCH] brcmfmac: remove leading space
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20200412171900.xzedxhzd56gox5kf@nixos>
+References: <20200412171900.xzedxhzd56gox5kf@nixos>
+To:     Nils =?utf-8?q?ANDR=C3=89-CHANG?= <nils@nilsand.re>
+Cc:     trivial@kernel.org, linux-wireless@vger.kernel.org
+User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
+Message-Id: <20200415170247.58A19C433CB@smtp.codeaurora.org>
+Date:   Wed, 15 Apr 2020 17:02:47 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-RnJvbTogSsOpcsO0bWUgUG91aWxsZXIgPGplcm9tZS5wb3VpbGxlckBzaWxhYnMuY29tPgoKVGhl
-IGZyYW1lIGZpbHRlcmluZyBpcyBtb3JlIGNvbXBsZXggdGhhbiBuZWNlc3NhcnkuIFRoaXMgc2Vy
-aWVzIHNpbXBsaWZ5CnRoZSAgd2hvbGUgcHJvY2VzcyBhbmQgaG9wZWZ1bGx5IGZpeGVzIHNvbWUg
-Y29ybmVyIGNhc2VzLgoKSsOpcsO0bWUgUG91aWxsZXIgKDIwKToKICBzdGFnaW5nOiB3Zng6IHVw
-ZGF0ZSBmaWx0ZXJpbmcgZXZlbiBpZiBub3QgY29ubmVjdGVkCiAgc3RhZ2luZzogd2Z4OiBzaW1w
-bGlmeSB3ZnhfdXBkYXRlX2ZpbHRlcmluZygpCiAgc3RhZ2luZzogd2Z4OiByZXdvcmsgd2Z4X2Nv
-bmZpZ3VyZV9maWx0ZXIoKQogIHN0YWdpbmc6IHdmeDogc2ltcGxpZnkgaGFuZGxpbmcgb2YgYmVh
-Y29uIGZpbHRlciBkdXJpbmcgam9pbiBwcm9jZXNzCiAgc3RhZ2luZzogd2Z4OiB3ZnhfdXBkYXRl
-X2ZpbHRlcmluZ193b3JrKCkgaXMgbm8gbW9yZSB1c2VkCiAgc3RhZ2luZzogd2Z4OiBkbyBub3Qg
-d2FpdCBmb3IgYSBkdGltIGJlZm9yZSBhc3NvY2lhdGUKICBzdGFnaW5nOiB3Zng6IGRpc2FibGlu
-ZyBiZWFjb24gZmlsdGVyaW5nIGFmdGVyIGhpZl9yZXNldCgpIGlzIHVzZWxlc3MKICBzdGFnaW5n
-OiB3Zng6IGRvIG5vdCB1c2UgYnVpbHQtaW4gQVVUT19FUlAgZmVhdHVyZQogIHN0YWdpbmc6IHdm
-eDogc3RvcCBjaGFuZ2luZyBmaWx0ZXJpbmcgcnVsZSBpbiB3ZnhfaHdfc2NhbigpCiAgc3RhZ2lu
-Zzogd2Z4OiBlbnN1cmUgdGhhdCBwcm9iZSByZXF1ZXN0cyBhcmUgZmlsdGVyZWQgd2hlbiBBUAog
-IHN0YWdpbmc6IHdmeDogZHJvcCB1c2VsZXNzIHdmeF9md2RfcHJvYmVfcmVxKCkKICBzdGFnaW5n
-OiB3Zng6IGFsaWduIHNlbWFudGljIG9mIGJlYWNvbiBmaWx0ZXIgd2l0aCBvdGhlciBmaWx0ZXJz
-CiAgc3RhZ2luZzogd2Z4OiBhbGlnbiBzZW1hbnRpYyBvZiBwcm9iZSByZXF1ZXN0IGZpbHRlciB3
-aXRoIG90aGVyCiAgICBmaWx0ZXJzCiAgc3RhZ2luZzogd2Z4OiBkcm9wIHN0cnVjdCB3ZnhfZ3Jw
-X2FkZHJfdGFibGUKICBzdGFnaW5nOiB3Zng6IGRyb3AgdXNlbGVzcyBjYWxsIHRvIGhpZl9zZXRf
-cnhfZmlsdGVyKCkKICBzdGFnaW5nOiB3Zng6IGRyb3AgdXNlbGVzcyBhdHRyaWJ1dGVzICdmaWx0
-ZXJfcHJicmVxJyBhbmQKICAgICdmaWx0ZXJfYnNzaWQnCiAgc3RhZ2luZzogd2Z4OiBzcGxpdCBv
-dXQgd2Z4X2ZpbHRlcl9iZWFjb24oKQogIHN0YWdpbmc6IHdmeDogZHJvcCB1c2VsZXNzIGZpbHRl
-ciB1cGRhdGUgd2hlbiBzdGFydGluZyBBUAogIHN0YWdpbmc6IHdmeDogZHJvcCB1c2VsZXNzIGF0
-dHJpYnV0ZSAnZmlsdGVyX21jYXN0JwogIHN0YWdpbmc6IHdmeDogdXBkYXRlIFRPRE8KCiBkcml2
-ZXJzL3N0YWdpbmcvd2Z4L1RPRE8gICAgICAgICB8ICA0MCArKystLS0tLQogZHJpdmVycy9zdGFn
-aW5nL3dmeC9kYXRhX3J4LmMgICAgfCAgMTIgLS0tCiBkcml2ZXJzL3N0YWdpbmcvd2Z4L2hpZl90
-eF9taWIuYyB8ICAgNCArLQogZHJpdmVycy9zdGFnaW5nL3dmeC9tYWluLmMgICAgICAgfCAgIDEg
-LQogZHJpdmVycy9zdGFnaW5nL3dmeC9zY2FuLmMgICAgICAgfCAgIDEgLQogZHJpdmVycy9zdGFn
-aW5nL3dmeC9zdGEuYyAgICAgICAgfCAxNzEgKysrKysrKysrKysrKysrLS0tLS0tLS0tLS0tLS0t
-LQogZHJpdmVycy9zdGFnaW5nL3dmeC9zdGEuaCAgICAgICAgfCAgIDggLS0KIGRyaXZlcnMvc3Rh
-Z2luZy93Zngvd2Z4LmggICAgICAgIHwgICA3ICstCiA4IGZpbGVzIGNoYW5nZWQsIDEwMSBpbnNl
-cnRpb25zKCspLCAxNDMgZGVsZXRpb25zKC0pCgotLSAKMi4yNS4xCgo=
+Nils wrote:
+
+> Signed-off-by: Nils ANDRÉ-CHANG <nils@nilsand.re>
+
+Patch applied to wireless-drivers-next.git, thanks.
+
+f0f383347ced brcmfmac: remove leading space
+
+-- 
+https://patchwork.kernel.org/patch/11484825/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
