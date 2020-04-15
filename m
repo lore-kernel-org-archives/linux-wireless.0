@@ -6,24 +6,24 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C40E8C2BA19
-	for <linux-wireless@archiver.kernel.org>; Wed, 15 Apr 2020 09:59:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3191BC3815B
+	for <linux-wireless@archiver.kernel.org>; Wed, 15 Apr 2020 09:59:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A6A5E20775
-	for <linux-wireless@archiver.kernel.org>; Wed, 15 Apr 2020 09:59:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0496020775
+	for <linux-wireless@archiver.kernel.org>; Wed, 15 Apr 2020 09:59:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2408507AbgDOJ70 (ORCPT
+        id S2408510AbgDOJ72 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 15 Apr 2020 05:59:26 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:47644 "EHLO
+        Wed, 15 Apr 2020 05:59:28 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:47645 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2405824AbgDOJ7Z (ORCPT
+        with ESMTP id S2408505AbgDOJ7Z (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 15 Apr 2020 05:59:25 -0400
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 03F9xF931005961, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 03F9xF911005961, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexmb06.realtek.com.tw[172.21.6.99])
-        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 03F9xF931005961
+        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 03F9xF911005961
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
         Wed, 15 Apr 2020 17:59:15 +0800
 Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
@@ -33,16 +33,14 @@ Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
 Received: from localhost.localdomain (172.21.68.128) by
  RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Wed, 15 Apr 2020 17:59:15 +0800
+ 15.1.1779.2; Wed, 15 Apr 2020 17:59:14 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>, <briannorris@chromium.org>
 Subject: [PATCH] rtw88: set power trim according to efuse PG values
-Date:   Wed, 15 Apr 2020 17:59:12 +0800
-Message-ID: <20200415095912.18194-2-yhchuang@realtek.com>
+Date:   Wed, 15 Apr 2020 17:59:11 +0800
+Message-ID: <20200415095912.18194-1-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20200415095912.18194-1-yhchuang@realtek.com>
-References: <20200415095912.18194-1-yhchuang@realtek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [172.21.68.128]
