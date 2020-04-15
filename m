@@ -6,78 +6,91 @@ X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
 	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 653D2C3815B
-	for <linux-wireless@archiver.kernel.org>; Wed, 15 Apr 2020 08:04:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B45F3C3815B
+	for <linux-wireless@archiver.kernel.org>; Wed, 15 Apr 2020 08:08:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 436DE2051A
-	for <linux-wireless@archiver.kernel.org>; Wed, 15 Apr 2020 08:04:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9514E20784
+	for <linux-wireless@archiver.kernel.org>; Wed, 15 Apr 2020 08:08:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="BSV146iC"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="j4GoOTnD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2635404AbgDOIDb (ORCPT
+        id S2635595AbgDOIIG (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 15 Apr 2020 04:03:31 -0400
-Received: from mail27.static.mailgun.info ([104.130.122.27]:36134 "EHLO
+        Wed, 15 Apr 2020 04:08:06 -0400
+Received: from mail27.static.mailgun.info ([104.130.122.27]:19233 "EHLO
         mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2635403AbgDOIDT (ORCPT
+        by vger.kernel.org with ESMTP id S2635584AbgDOIIA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 15 Apr 2020 04:03:19 -0400
+        Wed, 15 Apr 2020 04:08:00 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1586937796; h=Date: Message-Id: Cc: To: References:
+ s=smtp; t=1586938079; h=Date: Message-Id: Cc: To: References:
  In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=q7T8KxiVu+YFV5YwNwOoJ3HkGx85UIrkt+/kfz40cJg=;
- b=BSV146iCbiOVddjVrkLVGXnmEcnZMJFuyu6SalUr8+K4PwTaGHm+FxWJ1T8hwAGkkILGCcCa
- rts/JD3u6ty0fnhGVCqRs+MrCaprey2tC8Po4Im/2eCigBixQj0C1FdqUsk6xFcarm497G6t
- 1sc6DKdI6k5NSY7aIXEzu5zeuJQ=
+ Content-Type: Sender; bh=vVMLaqkLICcto/eiMUDxkqMTXjEUOb5GRGusH5kiVf0=;
+ b=j4GoOTnDL96/M/MHtlgfb9DxRPrTvooz0Ijz9Q+8ERu7sVD6XO7fslOgxDs/HyGYJNIcRu6E
+ XEOzGz5VciwemHvesoP5cKsf2dkcd99rFqByTH900s+Cmy/CJw3V+TtFWCLYPbRcnnHWkaIw
+ rjZXWGNGkMX0CNW6wNPWoW7z/0k=
 X-Mailgun-Sending-Ip: 104.130.122.27
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e96bfc3.7fd0427c3dc0-smtp-out-n03;
- Wed, 15 Apr 2020 08:03:15 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5e96c0d9.7f210512c730-smtp-out-n04;
+ Wed, 15 Apr 2020 08:07:53 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id D4A5AC432C2; Wed, 15 Apr 2020 08:03:14 +0000 (UTC)
+        id 02F66C43636; Wed, 15 Apr 2020 08:07:52 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 6E6E1C44793;
-        Wed, 15 Apr 2020 08:03:13 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 6E6E1C44793
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id ABB52C433CB;
+        Wed, 15 Apr 2020 08:07:51 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org ABB52C433CB
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] ath10k: Fix typo in warning messages
+Subject: Re: [PATCH] ath11k: Add dynamic tcl ring selection logic with retry
+ mechanism
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1586715875-5182-1-git-send-email-telumamatha36@gmail.com>
-References: <1586715875-5182-1-git-send-email-telumamatha36@gmail.com>
-To:     Mamatha Telu <telumamatha36@gmail.com>
-Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Mamatha Telu <telumamatha36@gmail.com>
+In-Reply-To: <1586782622-22570-1-git-send-email-srirrama@codeaurora.org>
+References: <1586782622-22570-1-git-send-email-srirrama@codeaurora.org>
+To:     Sriram R <srirrama@codeaurora.org>
+Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Sriram R <srirrama@codeaurora.org>
 User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
-Message-Id: <20200415080314.D4A5AC432C2@smtp.codeaurora.org>
-Date:   Wed, 15 Apr 2020 08:03:14 +0000 (UTC)
+Message-Id: <20200415080753.02F66C43636@smtp.codeaurora.org>
+Date:   Wed, 15 Apr 2020 08:07:52 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Mamatha Telu <telumamatha36@gmail.com> wrote:
+Sriram R <srirrama@codeaurora.org> wrote:
 
-> Fix some typo:
->   s/fnrom/from
->   s/pkgs/pkts/
->   s/AMSUs/AMSDUs/
+> IPQ8074 HW supports three TCL rings for tx. Currently these rings
+> are mapped based on the Access categories, viz. VO, VI, BE, BK.
+> In case, one of the traffic type dominates, then it could stress
+> the same tcl rings. Rather, it would be optimal to make use of all
+> the rings in a round robin fashion irrespective of the traffic type
+> so that the load could be evenly distributed among all the rings.
+> Also, in case the selected ring is busy or full, a retry mechanism
+> is used to ensure other available ring is selected without dropping
+> the packet.
 > 
-> Signed-off-by: Mamatha Telu <telumamatha36@gmail.com>
+> In SMP systems, this change avoids a single CPU from getting hogged
+> when heavy traffic of same category is transmitted.
+> The tx completion interrupts corresponding to the used tcl ring
+> would be more which causes the assigned CPU to get hogged.
+> Distribution of tx packets to different tcl rings helps balance
+> this load.
+> 
+> Signed-off-by: Sriram R <srirrama@codeaurora.org>
 > Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
 Patch applied to ath-next branch of ath.git, thanks.
 
-8a7968bee8d0 ath10k: Fix typo in warning messages
+d687275b268b ath11k: Add dynamic tcl ring selection logic with retry mechanism
 
 -- 
-https://patchwork.kernel.org/patch/11484661/
+https://patchwork.kernel.org/patch/11485549/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
