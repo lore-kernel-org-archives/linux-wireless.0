@@ -6,41 +6,41 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDF0CC2BB1D
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 07:47:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2A1DC2BB85
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 07:47:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B5CD22137B
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 07:47:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8CDF42137B
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 07:47:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729406AbgDQHrX (ORCPT
+        id S1729411AbgDQHrY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 17 Apr 2020 03:47:23 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:37063 "EHLO
+        Fri, 17 Apr 2020 03:47:24 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:37074 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729325AbgDQHrP (ORCPT
+        with ESMTP id S1729313AbgDQHrV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Apr 2020 03:47:15 -0400
+        Fri, 17 Apr 2020 03:47:21 -0400
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 03H7l7hG5020159, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 03H7l9hE5020159, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexmb06.realtek.com.tw[172.21.6.99])
-        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 03H7l7hG5020159
+        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 03H7l9hE5020159
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Fri, 17 Apr 2020 15:47:07 +0800
+        Fri, 17 Apr 2020 15:47:09 +0800
 Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
  RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Fri, 17 Apr 2020 15:47:04 +0800
+ 15.1.1779.2; Fri, 17 Apr 2020 15:47:05 +0800
 Received: from localhost.localdomain (172.21.68.128) by
  RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Fri, 17 Apr 2020 15:47:04 +0800
+ 15.1.1779.2; Fri, 17 Apr 2020 15:47:05 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <pkshih@realtek.com>, <linux-wireless@vger.kernel.org>,
         <briannorris@chromium.org>, <kevin_yang@realtek.com>
-Subject: [PATCH 29/40] rtw88: 8723d: implement flush queue
-Date:   Fri, 17 Apr 2020 15:46:42 +0800
-Message-ID: <20200417074653.15591-30-yhchuang@realtek.com>
+Subject: [PATCH 38/40] rtw88: extract: make 8723d an individual kernel module
+Date:   Fri, 17 Apr 2020 15:46:51 +0800
+Message-ID: <20200417074653.15591-39-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200417074653.15591-1-yhchuang@realtek.com>
 References: <20200417074653.15591-1-yhchuang@realtek.com>
@@ -54,204 +54,189 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+From: Zong-Zhe Yang <kevin_yang@realtek.com>
 
-Flush queue is used to check if queue is empty, before doing something
-else. Since 8723D uses different registers and page number of
-availabl/reserved occupy 8 bits instead of 16 bits, so use a 'wsize' field
-to discriminate which rtw_read{8,16} is adopted.
+Make objects about 8723d functions and 8723d tables,
+i.e. rtw8723d.o and rtw8723d_table.o, an individual
+kernel module called rtw88_8723d.ko.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+For 8723d pcie chip, i.e. 8723DE chip, add a chip
+entry point module called rtw88_8723de.ko which
+will depend on rtw88_8723d.ko and rtwpci.ko.
+
+Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/mac.c      | 29 +++++++------------
- drivers/net/wireless/realtek/rtw88/main.h     | 11 +++++++
- drivers/net/wireless/realtek/rtw88/rtw8723d.c | 17 +++++++++++
- drivers/net/wireless/realtek/rtw88/rtw8822b.c | 17 +++++++++++
- drivers/net/wireless/realtek/rtw88/rtw8822c.c | 17 +++++++++++
- 5 files changed, 73 insertions(+), 18 deletions(-)
+ drivers/net/wireless/realtek/rtw88/Kconfig    |  6 +++-
+ drivers/net/wireless/realtek/rtw88/Makefile   |  7 ++++-
+ drivers/net/wireless/realtek/rtw88/main.h     |  1 -
+ drivers/net/wireless/realtek/rtw88/pci.c      |  3 --
+ drivers/net/wireless/realtek/rtw88/rtw8723d.c |  5 ++++
+ .../net/wireless/realtek/rtw88/rtw8723de.c    | 30 +++++++++++++++++++
+ .../net/wireless/realtek/rtw88/rtw8723de.h    | 20 +++++++++++++
+ 7 files changed, 66 insertions(+), 6 deletions(-)
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723de.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723de.h
 
-diff --git a/drivers/net/wireless/realtek/rtw88/mac.c b/drivers/net/wireless/realtek/rtw88/mac.c
-index c42d0f681dda..d949949236a3 100644
---- a/drivers/net/wireless/realtek/rtw88/mac.c
-+++ b/drivers/net/wireless/realtek/rtw88/mac.c
-@@ -917,31 +917,24 @@ static u32 get_priority_queues(struct rtw_dev *rtwdev, u32 queues)
- static void __rtw_mac_flush_prio_queue(struct rtw_dev *rtwdev,
- 				       u32 prio_queue, bool drop)
- {
--	u32 addr;
-+	struct rtw_chip_info *chip = rtwdev->chip;
-+	const struct rtw_prioq_addr *addr;
-+	bool wsize;
- 	u16 avail_page, rsvd_page;
- 	int i;
+diff --git a/drivers/net/wireless/realtek/rtw88/Kconfig b/drivers/net/wireless/realtek/rtw88/Kconfig
+index dd71407a06c3..ca894c4f96ac 100644
+--- a/drivers/net/wireless/realtek/rtw88/Kconfig
++++ b/drivers/net/wireless/realtek/rtw88/Kconfig
+@@ -22,6 +22,9 @@ config RTW88_8822B
+ config RTW88_8822C
+ 	tristate
  
--	switch (prio_queue) {
--	case RTW_DMA_MAPPING_EXTRA:
--		addr = REG_FIFOPAGE_INFO_4;
--		break;
--	case RTW_DMA_MAPPING_LOW:
--		addr = REG_FIFOPAGE_INFO_2;
--		break;
--	case RTW_DMA_MAPPING_NORMAL:
--		addr = REG_FIFOPAGE_INFO_3;
--		break;
--	case RTW_DMA_MAPPING_HIGH:
--		addr = REG_FIFOPAGE_INFO_1;
--		break;
--	default:
-+	if (prio_queue >= RTW_DMA_MAPPING_MAX)
- 		return;
--	}
++config RTW88_8723D
++	tristate
 +
-+	addr = &chip->prioq_addrs->prio[prio_queue];
-+	wsize = chip->prioq_addrs->wsize;
+ config RTW88_8822BE
+ 	tristate "Realtek 8822BE PCI wireless network adapter"
+ 	depends on PCI
+@@ -45,10 +48,11 @@ config RTW88_8822CE
+ 	  802.11ac PCIe wireless network adapter
  
- 	/* check if all of the reserved pages are available for 100 msecs */
- 	for (i = 0; i < 5; i++) {
--		rsvd_page = rtw_read16(rtwdev, addr);
--		avail_page = rtw_read16(rtwdev, addr + 2);
-+		rsvd_page = wsize ? rtw_read16(rtwdev, addr->rsvd) :
-+				     rtw_read8(rtwdev, addr->rsvd);
-+		avail_page = wsize ? rtw_read16(rtwdev, addr->avail) :
-+				      rtw_read8(rtwdev, addr->avail);
- 		if (rsvd_page == avail_page)
- 			return;
+ config RTW88_8723DE
+-	bool "Realtek 8723DE PCI wireless network adapter"
++	tristate "Realtek 8723DE PCI wireless network adapter"
+ 	depends on PCI
+ 	select RTW88_CORE
+ 	select RTW88_PCI
++	select RTW88_8723D
+ 	help
+ 	  Select this option will enable support for 8723DE chipset
  
+diff --git a/drivers/net/wireless/realtek/rtw88/Makefile b/drivers/net/wireless/realtek/rtw88/Makefile
+index 0b29f07e3661..9e3e95360089 100644
+--- a/drivers/net/wireless/realtek/rtw88/Makefile
++++ b/drivers/net/wireless/realtek/rtw88/Makefile
+@@ -18,7 +18,6 @@ rtw88-y += main.o \
+ 	   wow.o \
+ 	   regd.o
+ 
+-rtw88-$(CONFIG_RTW88_8723DE)	+= rtw8723d.o rtw8723d_table.o
+ 
+ obj-$(CONFIG_RTW88_8822B)	+= rtw88_8822b.o
+ rtw88_8822b-objs		:= rtw8822b.o rtw8822b_table.o
+@@ -32,5 +31,11 @@ rtw88_8822c-objs		:= rtw8822c.o rtw8822c_table.o
+ obj-$(CONFIG_RTW88_8822CE)	+= rtw88_8822ce.o
+ rtw88_8822ce-objs		:= rtw8822ce.o
+ 
++obj-$(CONFIG_RTW88_8723D)	+= rtw88_8723d.o
++rtw88_8723d-objs		:= rtw8723d.o rtw8723d_table.o
++
++obj-$(CONFIG_RTW88_8723DE)	+= rtw88_8723de.o
++rtw88_8723de-objs		:= rtw8723de.o
++
+ obj-$(CONFIG_RTW88_PCI)		+= rtwpci.o
+ rtwpci-objs			:= pci.o
 diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
-index 9421397ee444..8ba8702457f4 100644
+index a0c34c1154b6..7c785a63fadf 100644
 --- a/drivers/net/wireless/realtek/rtw88/main.h
 +++ b/drivers/net/wireless/realtek/rtw88/main.h
-@@ -943,6 +943,16 @@ struct rtw_rqpn {
- 	enum rtw_dma_mapping dma_map_hi;
+@@ -39,7 +39,6 @@ extern bool rtw_bf_support;
+ extern unsigned int rtw_fw_lps_deep_mode;
+ extern unsigned int rtw_debug_mask;
+ extern const struct ieee80211_ops rtw_ops;
+-extern struct rtw_chip_info rtw8723d_hw_spec;
+ 
+ #define RTW_MAX_CHANNEL_NUM_2G 14
+ #define RTW_MAX_CHANNEL_NUM_5G 49
+diff --git a/drivers/net/wireless/realtek/rtw88/pci.c b/drivers/net/wireless/realtek/rtw88/pci.c
+index 25672d0a09aa..46aaac94287b 100644
+--- a/drivers/net/wireless/realtek/rtw88/pci.c
++++ b/drivers/net/wireless/realtek/rtw88/pci.c
+@@ -1598,9 +1598,6 @@ void rtw_pci_shutdown(struct pci_dev *pdev)
+ EXPORT_SYMBOL(rtw_pci_shutdown);
+ 
+ static const struct pci_device_id rtw_pci_id_table[] = {
+-#ifdef CONFIG_RTW88_8723DE
+-	{ RTK_PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0xD723, rtw8723d_hw_spec) },
+-#endif
+ 	{},
  };
- 
-+struct rtw_prioq_addr {
-+	u32 rsvd;
-+	u32 avail;
-+};
-+
-+struct rtw_prioq_addrs {
-+	struct rtw_prioq_addr prio[RTW_DMA_MAPPING_MAX];
-+	bool wsize;
-+};
-+
- struct rtw_page_table {
- 	u16 hq_num;
- 	u16 nq_num;
-@@ -1098,6 +1108,7 @@ struct rtw_chip_info {
- 	const struct rtw_pwr_seq_cmd **pwr_on_seq;
- 	const struct rtw_pwr_seq_cmd **pwr_off_seq;
- 	const struct rtw_rqpn *rqpn_table;
-+	const struct rtw_prioq_addrs *prioq_addrs;
- 	const struct rtw_page_table *page_table;
- 	const struct rtw_intf_phy_para_table *intf_table;
- 
+ MODULE_DEVICE_TABLE(pci, rtw_pci_id_table);
 diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723d.c b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-index b58915e5e1de..e93f4f0e5676 100644
+index 5a662112752d..5c592560c3e0 100644
 --- a/drivers/net/wireless/realtek/rtw88/rtw8723d.c
 +++ b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-@@ -2281,6 +2281,22 @@ static const struct rtw_rqpn rqpn_table_8723d[] = {
- 	 RTW_DMA_MAPPING_EXTRA, RTW_DMA_MAPPING_HIGH},
- };
+@@ -2,6 +2,7 @@
+ /* Copyright(c) 2018-2019  Realtek Corporation
+  */
  
-+static const struct rtw_prioq_addrs prioq_addrs_8723d = {
-+	.prio[RTW_DMA_MAPPING_EXTRA] = {
-+		.rsvd = REG_RQPN_NPQ + 2, .avail = REG_RQPN_NPQ + 3,
-+	},
-+	.prio[RTW_DMA_MAPPING_LOW] = {
-+		.rsvd = REG_RQPN + 1, .avail = REG_FIFOPAGE_CTRL_2 + 1,
-+	},
-+	.prio[RTW_DMA_MAPPING_NORMAL] = {
-+		.rsvd = REG_RQPN_NPQ, .avail = REG_RQPN_NPQ + 1,
-+	},
-+	.prio[RTW_DMA_MAPPING_HIGH] = {
-+		.rsvd = REG_RQPN, .avail = REG_FIFOPAGE_CTRL_2,
-+	},
-+	.wsize = false,
-+};
-+
- static const struct rtw_intf_phy_para pcie_gen1_param_8723d[] = {
- 	{0x0008, 0x4a22,
- 	 RTW_IP_SEL_PHY,
-@@ -2414,6 +2430,7 @@ struct rtw_chip_info rtw8723d_hw_spec = {
- 	.pwr_off_seq = card_disable_flow_8723d,
- 	.page_table = page_table_8723d,
- 	.rqpn_table = rqpn_table_8723d,
-+	.prioq_addrs = &prioq_addrs_8723d,
- 	.intf_table = &phy_para_table_8723d,
- 	.dig = rtw8723d_dig,
- 	.dig_cck = rtw8723d_dig_cck,
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822b.c b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
-index 51b16a831162..bd6a3f4399e1 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8822b.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
-@@ -2083,6 +2083,22 @@ static const struct rtw_rqpn rqpn_table_8822b[] = {
- 	 RTW_DMA_MAPPING_EXTRA, RTW_DMA_MAPPING_HIGH},
- };
++#include <linux/module.h>
+ #include "main.h"
+ #include "coex.h"
+ #include "fw.h"
+@@ -2758,3 +2759,7 @@ struct rtw_chip_info rtw8723d_hw_spec = {
+ EXPORT_SYMBOL(rtw8723d_hw_spec);
  
-+static struct rtw_prioq_addrs prioq_addrs_8822b = {
-+	.prio[RTW_DMA_MAPPING_EXTRA] = {
-+		.rsvd = REG_FIFOPAGE_INFO_4, .avail = REG_FIFOPAGE_INFO_4 + 2,
-+	},
-+	.prio[RTW_DMA_MAPPING_LOW] = {
-+		.rsvd = REG_FIFOPAGE_INFO_2, .avail = REG_FIFOPAGE_INFO_2 + 2,
-+	},
-+	.prio[RTW_DMA_MAPPING_NORMAL] = {
-+		.rsvd = REG_FIFOPAGE_INFO_3, .avail = REG_FIFOPAGE_INFO_3 + 2,
-+	},
-+	.prio[RTW_DMA_MAPPING_HIGH] = {
-+		.rsvd = REG_FIFOPAGE_INFO_1, .avail = REG_FIFOPAGE_INFO_1 + 2,
-+	},
-+	.wsize = true,
-+};
+ MODULE_FIRMWARE("rtw88/rtw8723d_fw.bin");
 +
- static struct rtw_chip_ops rtw8822b_ops = {
- 	.phy_set_param		= rtw8822b_phy_set_param,
- 	.read_efuse		= rtw8822b_read_efuse,
-@@ -2433,6 +2449,7 @@ struct rtw_chip_info rtw8822b_hw_spec = {
- 	.pwr_off_seq = card_disable_flow_8822b,
- 	.page_table = page_table_8822b,
- 	.rqpn_table = rqpn_table_8822b,
-+	.prioq_addrs = &prioq_addrs_8822b,
- 	.intf_table = &phy_para_table_8822b,
- 	.dig = rtw8822b_dig,
- 	.dig_cck = NULL,
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-index b17b7cfbbe40..38e90de14a3c 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-@@ -3819,6 +3819,22 @@ static const struct rtw_rqpn rqpn_table_8822c[] = {
- 	 RTW_DMA_MAPPING_EXTRA, RTW_DMA_MAPPING_HIGH},
- };
- 
-+static struct rtw_prioq_addrs prioq_addrs_8822c = {
-+	.prio[RTW_DMA_MAPPING_EXTRA] = {
-+		.rsvd = REG_FIFOPAGE_INFO_4, .avail = REG_FIFOPAGE_INFO_4 + 2,
-+	},
-+	.prio[RTW_DMA_MAPPING_LOW] = {
-+		.rsvd = REG_FIFOPAGE_INFO_2, .avail = REG_FIFOPAGE_INFO_2 + 2,
-+	},
-+	.prio[RTW_DMA_MAPPING_NORMAL] = {
-+		.rsvd = REG_FIFOPAGE_INFO_3, .avail = REG_FIFOPAGE_INFO_3 + 2,
-+	},
-+	.prio[RTW_DMA_MAPPING_HIGH] = {
-+		.rsvd = REG_FIFOPAGE_INFO_1, .avail = REG_FIFOPAGE_INFO_1 + 2,
-+	},
-+	.wsize = true,
-+};
++MODULE_AUTHOR("Realtek Corporation");
++MODULE_DESCRIPTION("Realtek 802.11n wireless 8723d driver");
++MODULE_LICENSE("Dual BSD/GPL");
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723de.c b/drivers/net/wireless/realtek/rtw88/rtw8723de.c
+new file mode 100644
+index 000000000000..105866eb0a55
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw88/rtw8723de.c
+@@ -0,0 +1,30 @@
++// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
++/* Copyright(c) 2018-2019  Realtek Corporation
++ */
 +
- static struct rtw_chip_ops rtw8822c_ops = {
- 	.phy_set_param		= rtw8822c_phy_set_param,
- 	.read_efuse		= rtw8822c_read_efuse,
-@@ -4181,6 +4197,7 @@ struct rtw_chip_info rtw8822c_hw_spec = {
- 	.pwr_off_seq = card_disable_flow_8822c,
- 	.page_table = page_table_8822c,
- 	.rqpn_table = rqpn_table_8822c,
-+	.prioq_addrs = &prioq_addrs_8822c,
- 	.intf_table = &phy_para_table_8822c,
- 	.dig = rtw8822c_dig,
- 	.dig_cck = NULL,
++#include <linux/module.h>
++#include <linux/pci.h>
++#include "rtw8723de.h"
++
++static const struct pci_device_id rtw_8723de_id_table[] = {
++	{
++		PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0xD723),
++		.driver_data = (kernel_ulong_t)&rtw8723d_hw_spec
++	},
++	{}
++};
++MODULE_DEVICE_TABLE(pci, rtw_8723de_id_table);
++
++static struct pci_driver rtw_8723de_driver = {
++	.name = "rtw_8723de",
++	.id_table = rtw_8723de_id_table,
++	.probe = rtw_pci_probe,
++	.remove = rtw_pci_remove,
++	.driver.pm = RTW_PM_OPS,
++	.shutdown = rtw_pci_shutdown,
++};
++module_pci_driver(rtw_8723de_driver);
++
++MODULE_AUTHOR("Realtek Corporation");
++MODULE_DESCRIPTION("Realtek 802.11n wireless 8723de driver");
++MODULE_LICENSE("Dual BSD/GPL");
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723de.h b/drivers/net/wireless/realtek/rtw88/rtw8723de.h
+new file mode 100644
+index 000000000000..fbf5b9bcd314
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw88/rtw8723de.h
+@@ -0,0 +1,20 @@
++/* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
++/* Copyright(c) 2018-2019  Realtek Corporation
++ */
++
++#ifndef __RTW_8723DE_H_
++#define __RTW_8723DE_H_
++
++#ifdef CONFIG_PM
++extern const struct dev_pm_ops rtw_pci_pm;
++#define RTW_PM_OPS (&rtw_pci_pm)
++#else
++#define RTW_PM_OPS NULL
++#endif
++
++extern struct rtw_chip_info rtw8723d_hw_spec;
++int rtw_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id);
++void rtw_pci_remove(struct pci_dev *pdev);
++void rtw_pci_shutdown(struct pci_dev *pdev);
++
++#endif
 -- 
 2.17.1
 
