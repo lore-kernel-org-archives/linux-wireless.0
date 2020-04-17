@@ -2,122 +2,181 @@ Return-Path: <SRS0=s1dN=6B=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87717C2BB55
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 07:46:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48FA6C2BB1D
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 07:47:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6821E208E4
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 07:46:15 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MBSDz5mp"
+	by mail.kernel.org (Postfix) with ESMTP id 2E19E2137B
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 07:47:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729148AbgDQHqK (ORCPT
+        id S1729212AbgDQHrI (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 17 Apr 2020 03:46:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57162 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726405AbgDQHqJ (ORCPT
+        Fri, 17 Apr 2020 03:47:08 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:36995 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728519AbgDQHrI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Apr 2020 03:46:09 -0400
-Received: from mail-wr1-x443.google.com (mail-wr1-x443.google.com [IPv6:2a00:1450:4864:20::443])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4090BC061A0C;
-        Fri, 17 Apr 2020 00:46:09 -0700 (PDT)
-Received: by mail-wr1-x443.google.com with SMTP id h9so1885713wrc.8;
-        Fri, 17 Apr 2020 00:46:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=WVQ/+AhI0heLiMpL6qUSa1/GcjVQsFVijLYHxi226DU=;
-        b=MBSDz5mpJtaE1yIz/84PJyENirATfdTRv+ZFRD2B2Dv9EwB8I6aGfwg2P/6O9kQkBQ
-         6FJx2DYzNj9rmnbBL91o9MySgAP/Zy4Je67YtwA6IvpcA8tf8EplXLL5XBC2ByvAI926
-         MGlc+C78QovU0t0uShQaMpEnHKshauca6GXoGF6P8OcOPTNwL4qX4jinEHqI+WpE6eVV
-         yKqUW/rS9pJ/Vd7UfkZrl+bDU3x0kFFxX/phVZVrY+7AiLCTw6gVBk1k1SLwG9ZmmZwU
-         I2CFzKb2IJ/Nt7swn2FZqDeWxmFW0P7f6rp5Ao+NNvi5JKbVDmzpdwtuZmPR2JT2beFA
-         OBvA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=WVQ/+AhI0heLiMpL6qUSa1/GcjVQsFVijLYHxi226DU=;
-        b=pOrnLfv9ZY3JtmheYvtn43+9OQ3J6S5RAlPEuodKAG6qd/jhQ7zVclglQmSkVPEBQu
-         /c8P6mgG2J3bYc6Zv/UAbdDvQ78+uyhY3uPBELAtI2pOQ3YEZtVCp9sZ3r8jeX9/WC8C
-         Pn3yKR+T74Asnhi/AFxxikb6kU8WIthfPo1ezZ95oUh9chUT6PGTcHcD/TbRKNCiKDrX
-         G57YfSFV+Ru7RU3Co6moruoDcHX2XyXmU12+YBis+0ubX7uPTxvO0JsnskV5b1x13xiO
-         5Y65sfs+xfPNfb94UMmM1172fFDBhr1hW516dcaxt7I8AfUs6XeCitH+puIcYVlTT0y6
-         H5Zw==
-X-Gm-Message-State: AGi0PubJNEsw4N/t8/IeGXgckVoDq1WUPp9ZMus2YKTcKF47irAGexsi
-        q2j3J9O5V7QZwSW0FXuuDwUkCT7ZMWU=
-X-Google-Smtp-Source: APiQypJaGbkLtt6pNYoQVWS2snH17zlJcGjRBIyl34hCnK1VQijByjh7EpfOrwXAi5vBGBPRjiIYwQ==
-X-Received: by 2002:adf:f34e:: with SMTP id e14mr2504513wrp.80.1587109568013;
-        Fri, 17 Apr 2020 00:46:08 -0700 (PDT)
-Received: from localhost.localdomain (x59cc99b1.dyn.telefonica.de. [89.204.153.177])
-        by smtp.gmail.com with ESMTPSA id m1sm25398169wro.64.2020.04.17.00.46.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 17 Apr 2020 00:46:07 -0700 (PDT)
-From:   Sedat Dilek <sedat.dilek@gmail.com>
-To:     Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc:     Chris Rorvick <chris@rorvick.com>,
-        Sedat Dilek <sedat.dilek@gmail.com>
-Subject: [PATCH wireless-drivers v3] iwlwifi: actually check allocated conf_tlv pointer
-Date:   Fri, 17 Apr 2020 09:45:58 +0200
-Message-Id: <20200417074558.12316-1-sedat.dilek@gmail.com>
-X-Mailer: git-send-email 2.26.1
+        Fri, 17 Apr 2020 03:47:08 -0400
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 03H7l2Og9020020, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexmb06.realtek.com.tw[172.21.6.99])
+        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 03H7l2Og9020020
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+        Fri, 17 Apr 2020 15:47:02 +0800
+Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
+ RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1779.2; Fri, 17 Apr 2020 15:47:01 +0800
+Received: from localhost.localdomain (172.21.68.128) by
+ RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1779.2; Fri, 17 Apr 2020 15:47:00 +0800
+From:   <yhchuang@realtek.com>
+To:     <kvalo@codeaurora.org>
+CC:     <pkshih@realtek.com>, <linux-wireless@vger.kernel.org>,
+        <briannorris@chromium.org>, <kevin_yang@realtek.com>
+Subject: [PATCH 08/40] rtw88: 8723d: Add read_efuse to recognize efuse info from map
+Date:   Fri, 17 Apr 2020 15:46:21 +0800
+Message-ID: <20200417074653.15591-9-yhchuang@realtek.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20200417074653.15591-1-yhchuang@realtek.com>
+References: <20200417074653.15591-1-yhchuang@realtek.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [172.21.68.128]
+X-ClientProxiedBy: RTEXMB03.realtek.com.tw (172.21.6.96) To
+ RTEXMB04.realtek.com.tw (172.21.6.97)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Chris Rorvick <chris@rorvick.com>
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Commit 71bc0334a637 ("iwlwifi: check allocated pointer when allocating
-conf_tlvs") attempted to fix a typoe introduced by commit 17b809c9b22e
-("iwlwifi: dbg: move debug data to a struct") but does not implement the
-check correctly.
+The logical efuse map is decoded from physical map by parsing the
+header format of the physical map. And each different type of chips
+has different logical efuse layout. So add the logical map's layout
+for parsing the efuse contents.
 
-Fixes: 71bc0334a637 ("iwlwifi: check allocated pointer when allocating conf_tlvs")
-Tweeted-by: @grsecurity
-Message-Id: <20200402050219.4842-1-chris@rorvick.com>
-Signed-off-by: Chris Rorvick <chris@rorvick.com>
-Signed-off-by: Sedat Dilek <sedat.dilek@gmail.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
-Changes v1->v2:
-- Fix typo s/fw.dbg_conf_tlv/fw.dbg.conf_tlv
-- Add Fixes tag as suggested by Kalle
-- v2 on top of wireless-drivers.git as suggested by Kalle
-Changes v2->v3:
-- Add Changelog
+ drivers/net/wireless/realtek/rtw88/rtw8723d.c | 43 +++++++++++++++++++
+ drivers/net/wireless/realtek/rtw88/rtw8723d.h | 39 +++++++++++++++++
+ 2 files changed, 82 insertions(+)
 
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-index ff52e69c1c80..eeb750bdbda1 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-@@ -1467,7 +1467,7 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
- 				kmemdup(pieces->dbg_conf_tlv[i],
- 					pieces->dbg_conf_tlv_len[i],
- 					GFP_KERNEL);
--			if (!pieces->dbg_conf_tlv[i])
-+			if (!drv->fw.dbg.conf_tlv[i])
- 				goto out_free_fw;
- 		}
- 	}
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723d.c b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
+index 756454d69fad..c25cabbab64d 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8723d.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
+@@ -14,6 +14,48 @@
+ #include "reg.h"
+ #include "debug.h"
+ 
++static void rtw8723de_efuse_parsing(struct rtw_efuse *efuse,
++				    struct rtw8723d_efuse *map)
++{
++	ether_addr_copy(efuse->addr, map->e.mac_addr);
++}
++
++static int rtw8723d_read_efuse(struct rtw_dev *rtwdev, u8 *log_map)
++{
++	struct rtw_efuse *efuse = &rtwdev->efuse;
++	struct rtw8723d_efuse *map;
++	int i;
++
++	map = (struct rtw8723d_efuse *)log_map;
++
++	efuse->rfe_option = 0;
++	efuse->rf_board_option = map->rf_board_option;
++	efuse->crystal_cap = map->xtal_k;
++	efuse->pa_type_2g = map->pa_type;
++	efuse->lna_type_2g = map->lna_type_2g[0];
++	efuse->channel_plan = map->channel_plan;
++	efuse->country_code[0] = map->country_code[0];
++	efuse->country_code[1] = map->country_code[1];
++	efuse->bt_setting = map->rf_bt_setting;
++	efuse->regd = map->rf_board_option & 0x7;
++	efuse->thermal_meter[0] = map->thermal_meter;
++	efuse->thermal_meter_k = map->thermal_meter;
++
++	for (i = 0; i < 4; i++)
++		efuse->txpwr_idx_table[i] = map->txpwr_idx_table[i];
++
++	switch (rtw_hci_type(rtwdev)) {
++	case RTW_HCI_TYPE_PCIE:
++		rtw8723de_efuse_parsing(efuse, map);
++		break;
++	default:
++		/* unsupported now */
++		return -ENOTSUPP;
++	}
++
++	return 0;
++}
++
+ static void rtw8723d_cfg_ldo25(struct rtw_dev *rtwdev, bool enable)
+ {
+ 	u8 ldo_pwr;
+@@ -41,6 +83,7 @@ static void rtw8723d_efuse_grant(struct rtw_dev *rtwdev, bool on)
+ }
+ 
+ static struct rtw_chip_ops rtw8723d_ops = {
++	.read_efuse		= rtw8723d_read_efuse,
+ 	.read_rf		= rtw_phy_read_rf_sipi,
+ 	.write_rf		= rtw_phy_write_rf_reg_sipi,
+ 	.set_antenna		= NULL,
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723d.h b/drivers/net/wireless/realtek/rtw88/rtw8723d.h
+index 0b784cfc34c6..1939d9897a26 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8723d.h
++++ b/drivers/net/wireless/realtek/rtw88/rtw8723d.h
+@@ -5,4 +5,43 @@
+ #ifndef __RTW8723D_H__
+ #define __RTW8723D_H__
+ 
++struct rtw8723de_efuse {
++	u8 mac_addr[ETH_ALEN];		/* 0xd0 */
++	u8 vender_id[2];
++	u8 device_id[2];
++	u8 sub_vender_id[2];
++	u8 sub_device_id[2];
++};
++
++struct rtw8723d_efuse {
++	__le16 rtl_id;
++	u8 rsvd[2];
++	u8 afe;
++	u8 rsvd1[11];
++
++	/* power index for four RF paths */
++	struct rtw_txpwr_idx txpwr_idx_table[4];
++
++	u8 channel_plan;		/* 0xb8 */
++	u8 xtal_k;
++	u8 thermal_meter;
++	u8 iqk_lck;
++	u8 pa_type;			/* 0xbc */
++	u8 lna_type_2g[2];		/* 0xbd */
++	u8 lna_type_5g[2];
++	u8 rf_board_option;
++	u8 rf_feature_option;
++	u8 rf_bt_setting;
++	u8 eeprom_version;
++	u8 eeprom_customer_id;
++	u8 tx_bb_swing_setting_2g;
++	u8 res_c7;
++	u8 tx_pwr_calibrate_rate;
++	u8 rf_antenna_option;		/* 0xc9 */
++	u8 rfe_option;
++	u8 country_code[2];
++	u8 res[3];
++	struct rtw8723de_efuse e;
++};
++
+ #endif
 -- 
-2.26.1
+2.17.1
 
