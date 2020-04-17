@@ -6,76 +6,101 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BEE7C2BB1D
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 07:08:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BD4EC38A29
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 07:08:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1D0A821D94
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 07:08:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5D3E221D94
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 07:08:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728768AbgDQHI3 (ORCPT
+        id S1728750AbgDQHI1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 17 Apr 2020 03:08:29 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:56394 "EHLO
+        Fri, 17 Apr 2020 03:08:27 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:56382 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728738AbgDQHI2 (ORCPT
+        with ESMTP id S1728738AbgDQHI1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Apr 2020 03:08:28 -0400
+        Fri, 17 Apr 2020 03:08:27 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1jPL6w-000KNJ-HK; Fri, 17 Apr 2020 10:08:27 +0300
+        id 1jPL6u-000KNJ-Tb; Fri, 17 Apr 2020 10:08:25 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Fri, 17 Apr 2020 10:08:13 +0300
-Message-Id: <iwlwifi.20200417100405.53dbc3c6c36b.Idfe118546b92cc31548b2211472a5303c7de5909@changeid>
+Date:   Fri, 17 Apr 2020 10:08:11 +0300
+Message-Id: <iwlwifi.20200417100405.ae6cd345764f.I0985c55223decf70182b9ef1d8edf4179f537853@changeid>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200417070814.2044774-1-luca@coelho.fi>
 References: <20200417070814.2044774-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH v2 v5.7 5/6] iwlwifi: mvm: Do not declare support for ACK Enabled Aggregation
+Subject: [PATCH v2 v5.7 3/6] iwlwifi: pcie: indicate correct RB size to device
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ilan Peer <ilan.peer@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-As this was not supposed to be enabled to begin with.
+In the context info, we need to indicate the correct RB size
+to the device so that it will not think we have 4k when we
+only use 2k. This seems to not have caused any issues right
+now, likely because the hardware no longer supports putting
+multiple entries into a single RB, and practically all of
+the entries should be smaller than 2k.
 
-Cc: stable@vger.kernel.org # v4.19+
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Nevertheless, it's a bug, and we must advertise the right
+size to the device.
+
+Note that right now we can only tell it 2k vs. 4k, so for
+the cases where we have more, still use 4k. This needs to
+be fixed by the firmware first.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Fixes: cfdc20efebdc ("iwlwifi: pcie: use partial pages if applicable")
+Cc: stable@vger.kernel.org # v5.6
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ .../intel/iwlwifi/pcie/ctxt-info-gen3.c        | 18 ++++++++++++++----
+ 1 file changed, 14 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-index 9e9810d2b262..ccf0bc16465d 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-@@ -532,8 +532,7 @@ static struct ieee80211_sband_iftype_data iwl_he_capa[] = {
- 					IEEE80211_HE_MAC_CAP1_TF_MAC_PAD_DUR_16US |
- 					IEEE80211_HE_MAC_CAP1_MULTI_TID_AGG_RX_QOS_8,
- 				.mac_cap_info[2] =
--					IEEE80211_HE_MAC_CAP2_32BIT_BA_BITMAP |
--					IEEE80211_HE_MAC_CAP2_ACK_EN,
-+					IEEE80211_HE_MAC_CAP2_32BIT_BA_BITMAP,
- 				.mac_cap_info[3] =
- 					IEEE80211_HE_MAC_CAP3_OMI_CONTROL |
- 					IEEE80211_HE_MAC_CAP3_MAX_AMPDU_LEN_EXP_VHT_2,
-@@ -617,8 +616,7 @@ static struct ieee80211_sband_iftype_data iwl_he_capa[] = {
- 					IEEE80211_HE_MAC_CAP1_TF_MAC_PAD_DUR_16US |
- 					IEEE80211_HE_MAC_CAP1_MULTI_TID_AGG_RX_QOS_8,
- 				.mac_cap_info[2] =
--					IEEE80211_HE_MAC_CAP2_BSR |
--					IEEE80211_HE_MAC_CAP2_ACK_EN,
-+					IEEE80211_HE_MAC_CAP2_BSR,
- 				.mac_cap_info[3] =
- 					IEEE80211_HE_MAC_CAP3_OMI_CONTROL |
- 					IEEE80211_HE_MAC_CAP3_MAX_AMPDU_LEN_EXP_VHT_2,
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
+index 01f248ba8fec..9d5b1e51b50d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
+@@ -129,6 +129,18 @@ int iwl_pcie_ctxt_info_gen3_init(struct iwl_trans *trans,
+ 	int cmdq_size = max_t(u32, IWL_CMD_QUEUE_SIZE,
+ 			      trans->cfg->min_txq_size);
+ 
++	switch (trans_pcie->rx_buf_size) {
++	case IWL_AMSDU_DEF:
++		return -EINVAL;
++	case IWL_AMSDU_2K:
++		break;
++	case IWL_AMSDU_4K:
++	case IWL_AMSDU_8K:
++	case IWL_AMSDU_12K:
++		control_flags |= IWL_PRPH_SCRATCH_RB_SIZE_4K;
++		break;
++	}
++
+ 	/* Allocate prph scratch */
+ 	prph_scratch = dma_alloc_coherent(trans->dev, sizeof(*prph_scratch),
+ 					  &trans_pcie->prph_scratch_dma_addr,
+@@ -143,10 +155,8 @@ int iwl_pcie_ctxt_info_gen3_init(struct iwl_trans *trans,
+ 		cpu_to_le16((u16)iwl_read32(trans, CSR_HW_REV));
+ 	prph_sc_ctrl->version.size = cpu_to_le16(sizeof(*prph_scratch) / 4);
+ 
+-	control_flags = IWL_PRPH_SCRATCH_RB_SIZE_4K |
+-			IWL_PRPH_SCRATCH_MTR_MODE |
+-			(IWL_PRPH_MTR_FORMAT_256B &
+-			 IWL_PRPH_SCRATCH_MTR_FORMAT);
++	control_flags |= IWL_PRPH_SCRATCH_MTR_MODE;
++	control_flags |= IWL_PRPH_MTR_FORMAT_256B & IWL_PRPH_SCRATCH_MTR_FORMAT;
+ 
+ 	/* initialize RX default queue */
+ 	prph_sc_ctrl->rbd_cfg.free_rbd_addr =
 -- 
 2.25.1
 
