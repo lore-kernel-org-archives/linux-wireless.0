@@ -6,41 +6,41 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 038D1C2BB1D
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 07:47:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CDF0CC2BB1D
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 07:47:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E233C214AF
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 07:47:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B5CD22137B
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 07:47:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729382AbgDQHrU (ORCPT
+        id S1729406AbgDQHrX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 17 Apr 2020 03:47:20 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:37055 "EHLO
+        Fri, 17 Apr 2020 03:47:23 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:37063 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729313AbgDQHrR (ORCPT
+        with ESMTP id S1729325AbgDQHrP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Apr 2020 03:47:17 -0400
+        Fri, 17 Apr 2020 03:47:15 -0400
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 03H7l5oI5020081, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 03H7l7hG5020159, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexmb06.realtek.com.tw[172.21.6.99])
-        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 03H7l5oI5020081
+        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 03H7l7hG5020159
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Fri, 17 Apr 2020 15:47:05 +0800
+        Fri, 17 Apr 2020 15:47:07 +0800
 Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
  RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Fri, 17 Apr 2020 15:47:03 +0800
+ 15.1.1779.2; Fri, 17 Apr 2020 15:47:04 +0800
 Received: from localhost.localdomain (172.21.68.128) by
  RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Fri, 17 Apr 2020 15:47:03 +0800
+ 15.1.1779.2; Fri, 17 Apr 2020 15:47:04 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <pkshih@realtek.com>, <linux-wireless@vger.kernel.org>,
         <briannorris@chromium.org>, <kevin_yang@realtek.com>
-Subject: [PATCH 22/40] rtw88: 8723d: Add chip_ops::false_alarm_statistics
-Date:   Fri, 17 Apr 2020 15:46:35 +0800
-Message-ID: <20200417074653.15591-23-yhchuang@realtek.com>
+Subject: [PATCH 29/40] rtw88: 8723d: implement flush queue
+Date:   Fri, 17 Apr 2020 15:46:42 +0800
+Message-ID: <20200417074653.15591-30-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200417074653.15591-1-yhchuang@realtek.com>
 References: <20200417074653.15591-1-yhchuang@realtek.com>
@@ -56,162 +56,202 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ping-Ke Shih <pkshih@realtek.com>
 
-This ops is used to do statistics of false alarm periodically, and then
-fine tune RX initial gain to adaptive different circumstance.
-
-There are three steps, hold/get/reset counter, to retrieve false alarm
-counters that consist of CCK and OFDM. In addition to false alarm
-counters, it also collects CRC ok/error counters of CCK, OFDM and HT.
+Flush queue is used to check if queue is empty, before doing something
+else. Since 8723D uses different registers and page number of
+availabl/reserved occupy 8 bits instead of 16 bits, so use a 'wsize' field
+to discriminate which rtw_read{8,16} is adopted.
 
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/rtw8723d.c | 65 +++++++++++++++++++
- drivers/net/wireless/realtek/rtw88/rtw8723d.h | 41 ++++++++++++
- 2 files changed, 106 insertions(+)
+ drivers/net/wireless/realtek/rtw88/mac.c      | 29 +++++++------------
+ drivers/net/wireless/realtek/rtw88/main.h     | 11 +++++++
+ drivers/net/wireless/realtek/rtw88/rtw8723d.c | 17 +++++++++++
+ drivers/net/wireless/realtek/rtw88/rtw8822b.c | 17 +++++++++++
+ drivers/net/wireless/realtek/rtw88/rtw8822c.c | 17 +++++++++++
+ 5 files changed, 73 insertions(+), 18 deletions(-)
 
+diff --git a/drivers/net/wireless/realtek/rtw88/mac.c b/drivers/net/wireless/realtek/rtw88/mac.c
+index c42d0f681dda..d949949236a3 100644
+--- a/drivers/net/wireless/realtek/rtw88/mac.c
++++ b/drivers/net/wireless/realtek/rtw88/mac.c
+@@ -917,31 +917,24 @@ static u32 get_priority_queues(struct rtw_dev *rtwdev, u32 queues)
+ static void __rtw_mac_flush_prio_queue(struct rtw_dev *rtwdev,
+ 				       u32 prio_queue, bool drop)
+ {
+-	u32 addr;
++	struct rtw_chip_info *chip = rtwdev->chip;
++	const struct rtw_prioq_addr *addr;
++	bool wsize;
+ 	u16 avail_page, rsvd_page;
+ 	int i;
+ 
+-	switch (prio_queue) {
+-	case RTW_DMA_MAPPING_EXTRA:
+-		addr = REG_FIFOPAGE_INFO_4;
+-		break;
+-	case RTW_DMA_MAPPING_LOW:
+-		addr = REG_FIFOPAGE_INFO_2;
+-		break;
+-	case RTW_DMA_MAPPING_NORMAL:
+-		addr = REG_FIFOPAGE_INFO_3;
+-		break;
+-	case RTW_DMA_MAPPING_HIGH:
+-		addr = REG_FIFOPAGE_INFO_1;
+-		break;
+-	default:
++	if (prio_queue >= RTW_DMA_MAPPING_MAX)
+ 		return;
+-	}
++
++	addr = &chip->prioq_addrs->prio[prio_queue];
++	wsize = chip->prioq_addrs->wsize;
+ 
+ 	/* check if all of the reserved pages are available for 100 msecs */
+ 	for (i = 0; i < 5; i++) {
+-		rsvd_page = rtw_read16(rtwdev, addr);
+-		avail_page = rtw_read16(rtwdev, addr + 2);
++		rsvd_page = wsize ? rtw_read16(rtwdev, addr->rsvd) :
++				     rtw_read8(rtwdev, addr->rsvd);
++		avail_page = wsize ? rtw_read16(rtwdev, addr->avail) :
++				      rtw_read8(rtwdev, addr->avail);
+ 		if (rsvd_page == avail_page)
+ 			return;
+ 
+diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
+index 9421397ee444..8ba8702457f4 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.h
++++ b/drivers/net/wireless/realtek/rtw88/main.h
+@@ -943,6 +943,16 @@ struct rtw_rqpn {
+ 	enum rtw_dma_mapping dma_map_hi;
+ };
+ 
++struct rtw_prioq_addr {
++	u32 rsvd;
++	u32 avail;
++};
++
++struct rtw_prioq_addrs {
++	struct rtw_prioq_addr prio[RTW_DMA_MAPPING_MAX];
++	bool wsize;
++};
++
+ struct rtw_page_table {
+ 	u16 hq_num;
+ 	u16 nq_num;
+@@ -1098,6 +1108,7 @@ struct rtw_chip_info {
+ 	const struct rtw_pwr_seq_cmd **pwr_on_seq;
+ 	const struct rtw_pwr_seq_cmd **pwr_off_seq;
+ 	const struct rtw_rqpn *rqpn_table;
++	const struct rtw_prioq_addrs *prioq_addrs;
+ 	const struct rtw_page_table *page_table;
+ 	const struct rtw_intf_phy_para_table *intf_table;
+ 
 diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723d.c b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-index c619ee289561..df78d3b4b07a 100644
+index b58915e5e1de..e93f4f0e5676 100644
 --- a/drivers/net/wireless/realtek/rtw88/rtw8723d.c
 +++ b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-@@ -563,6 +563,70 @@ static void rtw8723d_efuse_grant(struct rtw_dev *rtwdev, bool on)
- 	}
- }
+@@ -2281,6 +2281,22 @@ static const struct rtw_rqpn rqpn_table_8723d[] = {
+ 	 RTW_DMA_MAPPING_EXTRA, RTW_DMA_MAPPING_HIGH},
+ };
  
-+static void rtw8723d_false_alarm_statistics(struct rtw_dev *rtwdev)
-+{
-+	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
-+	u32 cck_fa_cnt;
-+	u32 ofdm_fa_cnt;
-+	u32 crc32_cnt;
-+	u32 val32;
++static const struct rtw_prioq_addrs prioq_addrs_8723d = {
++	.prio[RTW_DMA_MAPPING_EXTRA] = {
++		.rsvd = REG_RQPN_NPQ + 2, .avail = REG_RQPN_NPQ + 3,
++	},
++	.prio[RTW_DMA_MAPPING_LOW] = {
++		.rsvd = REG_RQPN + 1, .avail = REG_FIFOPAGE_CTRL_2 + 1,
++	},
++	.prio[RTW_DMA_MAPPING_NORMAL] = {
++		.rsvd = REG_RQPN_NPQ, .avail = REG_RQPN_NPQ + 1,
++	},
++	.prio[RTW_DMA_MAPPING_HIGH] = {
++		.rsvd = REG_RQPN, .avail = REG_FIFOPAGE_CTRL_2,
++	},
++	.wsize = false,
++};
 +
-+	/* hold counter */
-+	rtw_write32_mask(rtwdev, REG_OFDM_FA_HOLDC_11N, BIT_MASK_OFDM_FA_KEEP, 1);
-+	rtw_write32_mask(rtwdev, REG_OFDM_FA_RSTD_11N, BIT_MASK_OFDM_FA_KEEP1, 1);
-+	rtw_write32_mask(rtwdev, REG_CCK_FA_RST_11N, BIT_MASK_CCK_CNT_KEEP, 1);
-+	rtw_write32_mask(rtwdev, REG_CCK_FA_RST_11N, BIT_MASK_CCK_FA_KEEP, 1);
-+
-+	cck_fa_cnt = rtw_read32_mask(rtwdev, REG_CCK_FA_LSB_11N, MASKBYTE0);
-+	cck_fa_cnt += rtw_read32_mask(rtwdev, REG_CCK_FA_MSB_11N, MASKBYTE3) << 8;
-+
-+	val32 = rtw_read32(rtwdev, REG_OFDM_FA_TYPE1_11N);
-+	ofdm_fa_cnt = u32_get_bits(val32, BIT_MASK_OFDM_FF_CNT);
-+	ofdm_fa_cnt += u32_get_bits(val32, BIT_MASK_OFDM_SF_CNT);
-+	val32 = rtw_read32(rtwdev, REG_OFDM_FA_TYPE2_11N);
-+	dm_info->ofdm_cca_cnt = u32_get_bits(val32, BIT_MASK_OFDM_CCA_CNT);
-+	ofdm_fa_cnt += u32_get_bits(val32, BIT_MASK_OFDM_PF_CNT);
-+	val32 = rtw_read32(rtwdev, REG_OFDM_FA_TYPE3_11N);
-+	ofdm_fa_cnt += u32_get_bits(val32, BIT_MASK_OFDM_RI_CNT);
-+	ofdm_fa_cnt += u32_get_bits(val32, BIT_MASK_OFDM_CRC_CNT);
-+	val32 = rtw_read32(rtwdev, REG_OFDM_FA_TYPE4_11N);
-+	ofdm_fa_cnt += u32_get_bits(val32, BIT_MASK_OFDM_MNS_CNT);
-+
-+	dm_info->cck_fa_cnt = cck_fa_cnt;
-+	dm_info->ofdm_fa_cnt = ofdm_fa_cnt;
-+	dm_info->total_fa_cnt = cck_fa_cnt + ofdm_fa_cnt;
-+
-+	dm_info->cck_err_cnt = rtw_read32(rtwdev, REG_IGI_C_11N);
-+	dm_info->cck_ok_cnt = rtw_read32(rtwdev, REG_IGI_D_11N);
-+	crc32_cnt = rtw_read32(rtwdev, REG_OFDM_CRC32_CNT_11N);
-+	dm_info->ofdm_err_cnt = u32_get_bits(crc32_cnt, BIT_MASK_OFDM_LCRC_ERR);
-+	dm_info->ofdm_ok_cnt = u32_get_bits(crc32_cnt, BIT_MASK_OFDM_LCRC_OK);
-+	crc32_cnt = rtw_read32(rtwdev, REG_HT_CRC32_CNT_11N);
-+	dm_info->ht_err_cnt = u32_get_bits(crc32_cnt, BIT_MASK_HT_CRC_ERR);
-+	dm_info->ht_ok_cnt = u32_get_bits(crc32_cnt, BIT_MASK_HT_CRC_OK);
-+	dm_info->vht_err_cnt = 0;
-+	dm_info->vht_ok_cnt = 0;
-+
-+	val32 = rtw_read32(rtwdev, REG_CCK_CCA_CNT_11N);
-+	dm_info->cck_cca_cnt = (u32_get_bits(val32, BIT_MASK_CCK_FA_MSB) << 8) |
-+			       u32_get_bits(val32, BIT_MASK_CCK_FA_LSB);
-+	dm_info->total_cca_cnt = dm_info->cck_cca_cnt + dm_info->ofdm_cca_cnt;
-+
-+	/* reset counter */
-+	rtw_write32_mask(rtwdev, REG_OFDM_FA_RSTC_11N, BIT_MASK_OFDM_FA_RST, 1);
-+	rtw_write32_mask(rtwdev, REG_OFDM_FA_RSTC_11N, BIT_MASK_OFDM_FA_RST, 0);
-+	rtw_write32_mask(rtwdev, REG_OFDM_FA_RSTD_11N, BIT_MASK_OFDM_FA_RST1, 1);
-+	rtw_write32_mask(rtwdev, REG_OFDM_FA_RSTD_11N, BIT_MASK_OFDM_FA_RST1, 0);
-+	rtw_write32_mask(rtwdev, REG_OFDM_FA_HOLDC_11N, BIT_MASK_OFDM_FA_KEEP, 0);
-+	rtw_write32_mask(rtwdev, REG_OFDM_FA_RSTD_11N, BIT_MASK_OFDM_FA_KEEP1, 0);
-+	rtw_write32_mask(rtwdev, REG_CCK_FA_RST_11N, BIT_MASK_CCK_CNT_KPEN, 0);
-+	rtw_write32_mask(rtwdev, REG_CCK_FA_RST_11N, BIT_MASK_CCK_CNT_KPEN, 2);
-+	rtw_write32_mask(rtwdev, REG_CCK_FA_RST_11N, BIT_MASK_CCK_FA_KPEN, 0);
-+	rtw_write32_mask(rtwdev, REG_CCK_FA_RST_11N, BIT_MASK_CCK_FA_KPEN, 2);
-+	rtw_write32_mask(rtwdev, REG_PAGE_F_RST_11N, BIT_MASK_F_RST_ALL, 1);
-+	rtw_write32_mask(rtwdev, REG_PAGE_F_RST_11N, BIT_MASK_F_RST_ALL, 0);
-+}
-+
- static struct rtw_chip_ops rtw8723d_ops = {
- 	.phy_set_param		= rtw8723d_phy_set_param,
- 	.read_efuse		= rtw8723d_read_efuse,
-@@ -575,6 +639,7 @@ static struct rtw_chip_ops rtw8723d_ops = {
- 	.set_antenna		= NULL,
- 	.cfg_ldo25		= rtw8723d_cfg_ldo25,
- 	.efuse_grant		= rtw8723d_efuse_grant,
-+	.false_alarm_statistics	= rtw8723d_false_alarm_statistics,
- 	.config_bfee		= NULL,
- 	.set_gid_table		= NULL,
- 	.cfg_csi_rate		= NULL,
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723d.h b/drivers/net/wireless/realtek/rtw88/rtw8723d.h
-index c08c351ba657..b5b7fc9cd1c8 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8723d.h
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8723d.h
-@@ -72,13 +72,54 @@ struct rtw8723d_efuse {
- #define REG_FPGA1_RFMOD		0x0900
- #define REG_BBRX_DFIR		0x0954
- #define REG_CCK0_SYS		0x0a00
-+#define REG_CCK_FA_RST_11N	0x0a2c
-+#define BIT_MASK_CCK_CNT_KEEP	BIT(12)
-+#define BIT_MASK_CCK_CNT_EN	BIT(13)
-+#define BIT_MASK_CCK_CNT_KPEN	(BIT_MASK_CCK_CNT_KEEP | BIT_MASK_CCK_CNT_EN)
-+#define BIT_MASK_CCK_FA_KEEP	BIT(14)
-+#define BIT_MASK_CCK_FA_EN	BIT(15)
-+#define BIT_MASK_CCK_FA_KPEN	(BIT_MASK_CCK_FA_KEEP | BIT_MASK_CCK_FA_EN)
-+#define REG_CCK_FA_LSB_11N	0x0a5c
-+#define REG_CCK_FA_MSB_11N	0x0a58
-+#define REG_CCK_CCA_CNT_11N	0x0a60
-+#define BIT_MASK_CCK_FA_MSB	GENMASK(7, 0)
-+#define BIT_MASK_CCK_FA_LSB	GENMASK(15, 8)
-+#define REG_OFDM_FA_HOLDC_11N	0x0c00
-+#define BIT_MASK_OFDM_FA_KEEP	BIT(31)
-+#define REG_OFDM_FA_RSTC_11N	0x0c0c
-+#define BIT_MASK_OFDM_FA_RST	BIT(31)
- #define REG_OFDM0_RXDSP		0x0c40
- #define REG_OFDM0_XAAGC1	0x0c50
- #define REG_OFDM0_XBAGC1	0x0c58
-+#define REG_OFDM_FA_TYPE1_11N	0x0cf0
-+#define BIT_MASK_OFDM_FF_CNT	GENMASK(15, 0)
-+#define BIT_MASK_OFDM_SF_CNT	GENMASK(31, 16)
-+#define REG_OFDM_FA_RSTD_11N	0x0d00
-+#define BIT_MASK_OFDM_FA_RST1	BIT(27)
-+#define BIT_MASK_OFDM_FA_KEEP1	BIT(31)
- #define REG_OFDM1_CFOTRK	0x0d2c
- #define REG_OFDM1_CSI1		0x0d40
- #define REG_OFDM1_CSI2		0x0d44
- #define REG_OFDM1_CSI3		0x0d48
- #define REG_OFDM1_CSI4		0x0d4c
-+#define REG_OFDM_FA_TYPE2_11N	0x0da0
-+#define BIT_MASK_OFDM_CCA_CNT	GENMASK(15, 0)
-+#define BIT_MASK_OFDM_PF_CNT	GENMASK(31, 16)
-+#define REG_OFDM_FA_TYPE3_11N	0x0da4
-+#define BIT_MASK_OFDM_RI_CNT	GENMASK(15, 0)
-+#define BIT_MASK_OFDM_CRC_CNT	GENMASK(31, 16)
-+#define REG_OFDM_FA_TYPE4_11N	0x0da8
-+#define BIT_MASK_OFDM_MNS_CNT	GENMASK(15, 0)
-+#define REG_PAGE_F_RST_11N		0x0f14
-+#define BIT_MASK_F_RST_ALL		BIT(16)
-+#define REG_IGI_C_11N			0x0f84
-+#define REG_IGI_D_11N			0x0f88
-+#define REG_HT_CRC32_CNT_11N		0x0f90
-+#define BIT_MASK_HT_CRC_OK		GENMASK(15, 0)
-+#define BIT_MASK_HT_CRC_ERR		GENMASK(31, 16)
-+#define REG_OFDM_CRC32_CNT_11N		0x0f94
-+#define BIT_MASK_OFDM_LCRC_OK		GENMASK(15, 0)
-+#define BIT_MASK_OFDM_LCRC_ERR		GENMASK(31, 16)
-+#define REG_HT_CRC32_CNT_11N_AGG	0x0fb8
+ static const struct rtw_intf_phy_para pcie_gen1_param_8723d[] = {
+ 	{0x0008, 0x4a22,
+ 	 RTW_IP_SEL_PHY,
+@@ -2414,6 +2430,7 @@ struct rtw_chip_info rtw8723d_hw_spec = {
+ 	.pwr_off_seq = card_disable_flow_8723d,
+ 	.page_table = page_table_8723d,
+ 	.rqpn_table = rqpn_table_8723d,
++	.prioq_addrs = &prioq_addrs_8723d,
+ 	.intf_table = &phy_para_table_8723d,
+ 	.dig = rtw8723d_dig,
+ 	.dig_cck = rtw8723d_dig_cck,
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822b.c b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
+index 51b16a831162..bd6a3f4399e1 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822b.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
+@@ -2083,6 +2083,22 @@ static const struct rtw_rqpn rqpn_table_8822b[] = {
+ 	 RTW_DMA_MAPPING_EXTRA, RTW_DMA_MAPPING_HIGH},
+ };
  
- #endif
++static struct rtw_prioq_addrs prioq_addrs_8822b = {
++	.prio[RTW_DMA_MAPPING_EXTRA] = {
++		.rsvd = REG_FIFOPAGE_INFO_4, .avail = REG_FIFOPAGE_INFO_4 + 2,
++	},
++	.prio[RTW_DMA_MAPPING_LOW] = {
++		.rsvd = REG_FIFOPAGE_INFO_2, .avail = REG_FIFOPAGE_INFO_2 + 2,
++	},
++	.prio[RTW_DMA_MAPPING_NORMAL] = {
++		.rsvd = REG_FIFOPAGE_INFO_3, .avail = REG_FIFOPAGE_INFO_3 + 2,
++	},
++	.prio[RTW_DMA_MAPPING_HIGH] = {
++		.rsvd = REG_FIFOPAGE_INFO_1, .avail = REG_FIFOPAGE_INFO_1 + 2,
++	},
++	.wsize = true,
++};
++
+ static struct rtw_chip_ops rtw8822b_ops = {
+ 	.phy_set_param		= rtw8822b_phy_set_param,
+ 	.read_efuse		= rtw8822b_read_efuse,
+@@ -2433,6 +2449,7 @@ struct rtw_chip_info rtw8822b_hw_spec = {
+ 	.pwr_off_seq = card_disable_flow_8822b,
+ 	.page_table = page_table_8822b,
+ 	.rqpn_table = rqpn_table_8822b,
++	.prioq_addrs = &prioq_addrs_8822b,
+ 	.intf_table = &phy_para_table_8822b,
+ 	.dig = rtw8822b_dig,
+ 	.dig_cck = NULL,
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+index b17b7cfbbe40..38e90de14a3c 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+@@ -3819,6 +3819,22 @@ static const struct rtw_rqpn rqpn_table_8822c[] = {
+ 	 RTW_DMA_MAPPING_EXTRA, RTW_DMA_MAPPING_HIGH},
+ };
+ 
++static struct rtw_prioq_addrs prioq_addrs_8822c = {
++	.prio[RTW_DMA_MAPPING_EXTRA] = {
++		.rsvd = REG_FIFOPAGE_INFO_4, .avail = REG_FIFOPAGE_INFO_4 + 2,
++	},
++	.prio[RTW_DMA_MAPPING_LOW] = {
++		.rsvd = REG_FIFOPAGE_INFO_2, .avail = REG_FIFOPAGE_INFO_2 + 2,
++	},
++	.prio[RTW_DMA_MAPPING_NORMAL] = {
++		.rsvd = REG_FIFOPAGE_INFO_3, .avail = REG_FIFOPAGE_INFO_3 + 2,
++	},
++	.prio[RTW_DMA_MAPPING_HIGH] = {
++		.rsvd = REG_FIFOPAGE_INFO_1, .avail = REG_FIFOPAGE_INFO_1 + 2,
++	},
++	.wsize = true,
++};
++
+ static struct rtw_chip_ops rtw8822c_ops = {
+ 	.phy_set_param		= rtw8822c_phy_set_param,
+ 	.read_efuse		= rtw8822c_read_efuse,
+@@ -4181,6 +4197,7 @@ struct rtw_chip_info rtw8822c_hw_spec = {
+ 	.pwr_off_seq = card_disable_flow_8822c,
+ 	.page_table = page_table_8822c,
+ 	.rqpn_table = rqpn_table_8822c,
++	.prioq_addrs = &prioq_addrs_8822c,
+ 	.intf_table = &phy_para_table_8822c,
+ 	.dig = rtw8822c_dig,
+ 	.dig_cck = NULL,
 -- 
 2.17.1
 
