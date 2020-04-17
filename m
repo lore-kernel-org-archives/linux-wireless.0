@@ -2,94 +2,109 @@ Return-Path: <SRS0=s1dN=6B=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0C10C2BB55
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 07:08:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39EA8C2BB85
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 07:08:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D9CFE21D94
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 07:08:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 19D0121D94
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 07:08:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728728AbgDQHI0 (ORCPT
+        id S1728746AbgDQHI1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 17 Apr 2020 03:08:26 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:56364 "EHLO
+        Fri, 17 Apr 2020 03:08:27 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:56376 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728449AbgDQHIZ (ORCPT
+        with ESMTP id S1728625AbgDQHI0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Apr 2020 03:08:25 -0400
+        Fri, 17 Apr 2020 03:08:26 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1jPL6s-000KNJ-QX; Fri, 17 Apr 2020 10:08:23 +0300
+        id 1jPL6u-000KNJ-7G; Fri, 17 Apr 2020 10:08:24 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Fri, 17 Apr 2020 10:08:08 +0300
-Message-Id: <20200417070814.2044774-1-luca@coelho.fi>
+Date:   Fri, 17 Apr 2020 10:08:10 +0300
+Message-Id: <iwlwifi.20200417100405.1f9142751fbc.Ifbfd0f928a0a761110b8f4f2ca5483a61fb21131@changeid>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20200417070814.2044774-1-luca@coelho.fi>
+References: <20200417070814.2044774-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH v2 v5.7 0/6] iwlwifi: fixes intended for v5.7 2020-04-03-2
+Subject: [PATCH v2 v5.7 2/6] iwlwifi: mvm: beacon statistics shouldn't go backwards
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Mordechay Goodstein <mordechay.goodstein@intel.com>
 
-Hi,
+We reset statistics also in case that we didn't reassoc so in
+this cases keep last beacon counter.
 
-This is v2 of the series, with the comments addressed.  I'll assign
-them directly to you, as we had agreed before.
+Cc: stable@vger.kernel.org # v4.19+
+Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/rx.c | 13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
 
-In v2:
-   * Dropped "iwlwifi: mvm: don't call iwl_mvm_free_inactive_queue()
-     under RCU", while waiting for Johannes address the comment;
-
-   * Dropped "iwlwifi: msix: limit max RX queues for 9000 family",
-     since, as Emmanuel noted, NSSN is currently disabled;
-
-   * Fixed the commit message in "iwlwifi: mvm: limit maximum queue
-     appropriately", so that it says "queue 31" instead of "queue 32".
-
-This is my first patchset with fixes for v5.7.
-
-The changes are:
-
-* Remove ACK enabled aggregation support flag, since we never really
-  supported it;
-* A few fixes for the queues configuration on the 9000 family of
-  devices that were causing FW hangs;
-* A fix for the TCM statistics gathering code;
-
-Cheers,
-Luca.
-
-
-Ilan Peer (1):
-  iwlwifi: mvm: Do not declare support for ACK Enabled Aggregation
-
-Johannes Berg (4):
-  iwlwifi: pcie: actually release queue memory in TVQM
-  iwlwifi: pcie: indicate correct RB size to device
-  iwlwifi: mvm: limit maximum queue appropriately
-  iwlwifi: mvm: fix inactive TID removal return value usage
-
-Mordechay Goodstein (1):
-  iwlwifi: mvm: beacon statistics shouldn't go backwards
-
- .../net/wireless/intel/iwlwifi/fw/api/txq.h    |  6 +++---
- .../net/wireless/intel/iwlwifi/iwl-nvm-parse.c |  6 ++----
- drivers/net/wireless/intel/iwlwifi/mvm/rx.c    | 13 +++++++++++--
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c   |  9 +++++++--
- .../intel/iwlwifi/pcie/ctxt-info-gen3.c        | 18 ++++++++++++++----
- .../net/wireless/intel/iwlwifi/pcie/tx-gen2.c  |  3 +++
- 6 files changed, 40 insertions(+), 15 deletions(-)
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
+index 5ee33c8ae9d2..77b8def26edb 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
+@@ -8,7 +8,7 @@
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
+- * Copyright(c) 2018 - 2019 Intel Corporation
++ * Copyright(c) 2018 - 2020 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -31,7 +31,7 @@
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
+- * Copyright(c) 2018 - 2019 Intel Corporation
++ * Copyright(c) 2018 - 2020 Intel Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -566,6 +566,7 @@ void iwl_mvm_rx_rx_mpdu(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 
+ struct iwl_mvm_stat_data {
+ 	struct iwl_mvm *mvm;
++	__le32 flags;
+ 	__le32 mac_id;
+ 	u8 beacon_filter_average_energy;
+ 	void *general;
+@@ -606,6 +607,13 @@ static void iwl_mvm_stat_iterator(void *_data, u8 *mac,
+ 			-general->beacon_average_energy[vif_id];
+ 	}
+ 
++	/* make sure that beacon statistics don't go backwards with TCM
++	 * request to clear statistics
++	 */
++	if (le32_to_cpu(data->flags) & IWL_STATISTICS_REPLY_FLG_CLEAR)
++		mvmvif->beacon_stats.accu_num_beacons +=
++			mvmvif->beacon_stats.num_beacons;
++
+ 	if (mvmvif->id != id)
+ 		return;
+ 
+@@ -763,6 +771,7 @@ void iwl_mvm_handle_rx_statistics(struct iwl_mvm *mvm,
+ 
+ 		flags = stats->flag;
+ 	}
++	data.flags = flags;
+ 
+ 	iwl_mvm_rx_stats_check_trigger(mvm, pkt);
+ 
 -- 
 2.25.1
 
