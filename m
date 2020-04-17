@@ -2,69 +2,83 @@ Return-Path: <SRS0=s1dN=6B=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25F0BC38A2F
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 06:42:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A287C2BB1D
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 07:08:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 066D5221EA
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 06:42:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4B43821D94
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 07:08:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728266AbgDQGmE (ORCPT
+        id S1728736AbgDQHI0 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 17 Apr 2020 02:42:04 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:56350 "EHLO
+        Fri, 17 Apr 2020 03:08:26 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:56370 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728248AbgDQGmD (ORCPT
+        with ESMTP id S1728466AbgDQHIZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Apr 2020 02:42:03 -0400
-Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa)
+        Fri, 17 Apr 2020 03:08:25 -0400
+Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1jPKhN-000KMG-AC; Fri, 17 Apr 2020 09:42:01 +0300
-Message-ID: <1c6acee636c0463c4c293ff910053f8b25b4da92.camel@coelho.fi>
+        id 1jPL6t-000KNJ-HS; Fri, 17 Apr 2020 10:08:23 +0300
 From:   Luca Coelho <luca@coelho.fi>
-To:     Mark Asselstine <asselsm@gmail.com>
-Cc:     kvalo@codeaurora.org,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        johannes.berg@intel.com
-Date:   Fri, 17 Apr 2020 09:42:00 +0300
-In-Reply-To: <CAPuovE+_jWPjesRZ0GFk0zjf-jLmyyqOGxwyZGcawg5DL9CbXg@mail.gmail.com>
-References: <20200403082955.1126339-1-luca@coelho.fi>
-         <iwlwifi.20200403112332.0f49448c133d.I17fd308bc4a9491859c9b112f4eb5d2c3fc18d7d@changeid>
-         <CAPuovE+_jWPjesRZ0GFk0zjf-jLmyyqOGxwyZGcawg5DL9CbXg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.36.0-1 
+To:     kvalo@codeaurora.org
+Cc:     linux-wireless@vger.kernel.org
+Date:   Fri, 17 Apr 2020 10:08:09 +0300
+Message-Id: <iwlwifi.20200417100405.f5f4c4193ec1.Id5feebc9b4318041913a9c89fc1378bb5454292c@changeid>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20200417070814.2044774-1-luca@coelho.fi>
+References: <20200417070814.2044774-1-luca@coelho.fi>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v5.7 8/8] iwlwifi: mvm: don't call
- iwl_mvm_free_inactive_queue() under RCU
+Content-Transfer-Encoding: 8bit
+Subject: [PATCH v2 v5.7 1/6] iwlwifi: pcie: actually release queue memory in TVQM
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, 2020-04-03 at 10:28 -0400, Mark Asselstine wrote:
-> I was looking into this as part of
-> https://bugzilla.kernel.org/show_bug.cgi?id=206971 and had a similar
-> fix in flight. My concern was that queue_owner being used outside of
-> the RCU might be an issue as now you have no guaranty that the
-> eventual use of sta->txq[tid] in iwl_mvm_free_inactive_queue() is
-> going to be valid. The only way to work around this is instead of
-> storing queue_owner, store mvmtxq = iwl_mvm_txq_from_tid(sta, i), then
-> adjust iwl_mvm_free_inactive_queue(), iwl_mvm_disable_txq() and
-> whatnot to take struct iwl_mvm_txq * instead of struct ieee80211_sta
-> *. If you open the bug you will see the latest version of my work as
-> the attached patch. I am not an RCU expert so I am curious to hear
-> your thoughts.
+From: Johannes Berg <johannes.berg@intel.com>
 
-I asked Johannes to check your comment.  For now, I'm going to drop it
-from v2 of this patchset, so we can go ahead with the other patches.
+The iwl_trans_pcie_dyn_txq_free() function only releases the frames
+that may be left on the queue by calling iwl_pcie_gen2_txq_unmap(),
+but doesn't actually free the DMA ring or byte-count tables for the
+queue. This leads to pretty large memory leaks (at least before my
+queue size improvements), in particular in monitor/sniffer mode on
+channel hopping since this happens on every channel change.
 
---
-Cheers,
-Luca.
+This was also now more evident after the move to a DMA pool for the
+byte count tables, showing messages such as
+
+  BUG iwlwifi:bc (...): Objects remaining in iwlwifi:bc on __kmem_cache_shutdown()
+
+This fixes https://bugzilla.kernel.org/show_bug.cgi?id=206811.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Fixes: 6b35ff91572f ("iwlwifi: pcie: introduce a000 TX queues management")
+Cc: stable@vger.kernel.org # v4.14+
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+index 86fc00167817..9664dbc70ef1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
+@@ -1418,6 +1418,9 @@ void iwl_trans_pcie_dyn_txq_free(struct iwl_trans *trans, int queue)
+ 
+ 	iwl_pcie_gen2_txq_unmap(trans, queue);
+ 
++	iwl_pcie_gen2_txq_free_memory(trans, trans_pcie->txq[queue]);
++	trans_pcie->txq[queue] = NULL;
++
+ 	IWL_DEBUG_TX_QUEUES(trans, "Deactivate queue %d\n", queue);
+ }
+ 
+-- 
+2.25.1
 
