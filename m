@@ -2,28 +2,28 @@ Return-Path: <SRS0=s1dN=6B=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F76AC38A2C
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 07:47:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7335EC2BB55
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 07:47:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 09DB9208E4
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 07:47:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5DFD1208E4
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 07:47:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729475AbgDQHrq (ORCPT
+        id S1729234AbgDQHrK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 17 Apr 2020 03:47:46 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:36988 "EHLO
+        Fri, 17 Apr 2020 03:47:10 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:36983 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726382AbgDQHrJ (ORCPT
+        with ESMTP id S1726767AbgDQHrI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Apr 2020 03:47:09 -0400
+        Fri, 17 Apr 2020 03:47:08 -0400
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 03H7l0Oi9020020, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 03H7l0Of9020020, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexmb06.realtek.com.tw[172.21.6.99])
-        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 03H7l0Oi9020020
+        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 03H7l0Of9020020
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
         Fri, 17 Apr 2020 15:47:00 +0800
 Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
@@ -33,17 +33,15 @@ Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
 Received: from localhost.localdomain (172.21.68.128) by
  RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Fri, 17 Apr 2020 15:47:00 +0800
+ 15.1.1779.2; Fri, 17 Apr 2020 15:46:59 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <pkshih@realtek.com>, <linux-wireless@vger.kernel.org>,
         <briannorris@chromium.org>, <kevin_yang@realtek.com>
-Subject: [PATCH 02/40] rtw88: 8723d: add beamform wrapper functions
-Date:   Fri, 17 Apr 2020 15:46:15 +0800
-Message-ID: <20200417074653.15591-3-yhchuang@realtek.com>
+Subject: [PATCH 00/40] rtw88: add support for 802.11n RTL8723DE devices
+Date:   Fri, 17 Apr 2020 15:46:13 +0800
+Message-ID: <20200417074653.15591-1-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20200417074653.15591-1-yhchuang@realtek.com>
-References: <20200417074653.15591-1-yhchuang@realtek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [172.21.68.128]
@@ -54,151 +52,134 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-8723D doesn't support beamform because rtw88 only supports VHT beamform
-but 8723d doesn't have VHT capability. Though 8723d doesn't support
-beamform, BSS_CHANGED_MU_GROUPS is still marked as changed when doing
-disassociation. So, add wrapper functions for all beamform ops to make
-sure they aren't NULL before calling.
+Although RTL8723DE devices are 802.11n devices, while rtw88
+aimed to support for 802.11ac devices, the 8723DE devices's
+architecture is relatively close to the 802.11ac devices.
+So, add support for them on rtw88, with some minor modifications.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
----
- drivers/net/wireless/realtek/rtw88/bf.c       |  7 +++---
- drivers/net/wireless/realtek/rtw88/bf.h       | 22 +++++++++++++++++++
- drivers/net/wireless/realtek/rtw88/mac80211.c |  7 ++----
- drivers/net/wireless/realtek/rtw88/main.c     |  7 +++---
- drivers/net/wireless/realtek/rtw88/rtw8723d.c |  3 +++
- 5 files changed, 33 insertions(+), 13 deletions(-)
+Basically their TRX paths are the same, except that 8723DE
+does not have H2CQ for H2C commands and the corresponding
+HIMR3/HISR3 for H2CQ. Another thing is that 8723DE uses a
+different way to download firmware, so it cannot share with
+8822BE/8822CE mac firmware download routine.
 
-diff --git a/drivers/net/wireless/realtek/rtw88/bf.c b/drivers/net/wireless/realtek/rtw88/bf.c
-index b6d1d71f4d30..a5912da327e2 100644
---- a/drivers/net/wireless/realtek/rtw88/bf.c
-+++ b/drivers/net/wireless/realtek/rtw88/bf.c
-@@ -10,7 +10,6 @@
- void rtw_bf_disassoc(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
- 		     struct ieee80211_bss_conf *bss_conf)
- {
--	struct rtw_chip_info *chip = rtwdev->chip;
- 	struct rtw_vif *rtwvif = (struct rtw_vif *)vif->drv_priv;
- 	struct rtw_bfee *bfee = &rtwvif->bfee;
- 	struct rtw_bf_info *bfinfo = &rtwdev->bf_info;
-@@ -23,7 +22,7 @@ void rtw_bf_disassoc(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
- 	else if (bfee->role == RTW_BFEE_SU)
- 		bfinfo->bfer_su_cnt--;
- 
--	chip->ops->config_bfee(rtwdev, rtwvif, bfee, false);
-+	rtw_chip_config_bfee(rtwdev, rtwvif, bfee, false);
- 
- 	bfee->role = RTW_BFEE_NONE;
- }
-@@ -71,7 +70,7 @@ void rtw_bf_assoc(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
- 		bfee->aid = bss_conf->aid;
- 		bfinfo->bfer_mu_cnt++;
- 
--		chip->ops->config_bfee(rtwdev, rtwvif, bfee, true);
-+		rtw_chip_config_bfee(rtwdev, rtwvif, bfee, true);
- 	} else if ((ic_vht_cap->cap & IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE) &&
- 		   (vht_cap->cap & IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE)) {
- 		if (bfinfo->bfer_su_cnt >= chip->bfer_su_max_num) {
-@@ -97,7 +96,7 @@ void rtw_bf_assoc(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
- 			}
- 		}
- 
--		chip->ops->config_bfee(rtwdev, rtwvif, bfee, true);
-+		rtw_chip_config_bfee(rtwdev, rtwvif, bfee, true);
- 	}
- 
- out_unlock:
-diff --git a/drivers/net/wireless/realtek/rtw88/bf.h b/drivers/net/wireless/realtek/rtw88/bf.h
-index 96a8216dd11f..17855edb5006 100644
---- a/drivers/net/wireless/realtek/rtw88/bf.h
-+++ b/drivers/net/wireless/realtek/rtw88/bf.h
-@@ -89,4 +89,26 @@ void rtw_bf_set_gid_table(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
- void rtw_bf_phy_init(struct rtw_dev *rtwdev);
- void rtw_bf_cfg_csi_rate(struct rtw_dev *rtwdev, u8 rssi, u8 cur_rate,
- 			 u8 fixrate_en, u8 *new_rate);
-+static inline void rtw_chip_config_bfee(struct rtw_dev *rtwdev, struct rtw_vif *vif,
-+					struct rtw_bfee *bfee, bool enable)
-+{
-+	if (rtwdev->chip->ops->config_bfee)
-+		rtwdev->chip->ops->config_bfee(rtwdev, vif, bfee, enable);
-+}
-+
-+static inline void rtw_chip_set_gid_table(struct rtw_dev *rtwdev,
-+					  struct ieee80211_vif *vif,
-+					  struct ieee80211_bss_conf *conf)
-+{
-+	if (rtwdev->chip->ops->set_gid_table)
-+		rtwdev->chip->ops->set_gid_table(rtwdev, vif, conf);
-+}
-+
-+static inline void rtw_chip_cfg_csi_rate(struct rtw_dev *rtwdev, u8 rssi, u8 cur_rate,
-+					 u8 fixrate_en, u8 *new_rate)
-+{
-+	if (rtwdev->chip->ops->cfg_csi_rate)
-+		rtwdev->chip->ops->cfg_csi_rate(rtwdev, rssi, cur_rate,
-+						fixrate_en, new_rate);
-+}
- #endif
-diff --git a/drivers/net/wireless/realtek/rtw88/mac80211.c b/drivers/net/wireless/realtek/rtw88/mac80211.c
-index a2e6ef4ad9ee..98d2ac22f6f6 100644
---- a/drivers/net/wireless/realtek/rtw88/mac80211.c
-+++ b/drivers/net/wireless/realtek/rtw88/mac80211.c
-@@ -375,11 +375,8 @@ static void rtw_ops_bss_info_changed(struct ieee80211_hw *hw,
- 	if (changed & BSS_CHANGED_BEACON)
- 		rtw_fw_download_rsvd_page(rtwdev);
- 
--	if (changed & BSS_CHANGED_MU_GROUPS) {
--		struct rtw_chip_info *chip = rtwdev->chip;
--
--		chip->ops->set_gid_table(rtwdev, vif, conf);
--	}
-+	if (changed & BSS_CHANGED_MU_GROUPS)
-+		rtw_chip_set_gid_table(rtwdev, vif, conf);
- 
- 	if (changed & BSS_CHANGED_ERP_SLOT)
- 		rtw_conf_tx(rtwdev, rtwvif);
-diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
-index 1e1d2c774287..6dfe4895c352 100644
---- a/drivers/net/wireless/realtek/rtw88/main.c
-+++ b/drivers/net/wireless/realtek/rtw88/main.c
-@@ -137,7 +137,6 @@ struct rtw_watch_dog_iter_data {
- static void rtw_dynamic_csi_rate(struct rtw_dev *rtwdev, struct rtw_vif *rtwvif)
- {
- 	struct rtw_bf_info *bf_info = &rtwdev->bf_info;
--	struct rtw_chip_info *chip = rtwdev->chip;
- 	u8 fix_rate_enable = 0;
- 	u8 new_csi_rate_idx;
- 
-@@ -145,9 +144,9 @@ static void rtw_dynamic_csi_rate(struct rtw_dev *rtwdev, struct rtw_vif *rtwvif)
- 	    rtwvif->bfee.role != RTW_BFEE_MU)
- 		return;
- 
--	chip->ops->cfg_csi_rate(rtwdev, rtwdev->dm_info.min_rssi,
--				bf_info->cur_csi_rpt_rate,
--				fix_rate_enable, &new_csi_rate_idx);
-+	rtw_chip_cfg_csi_rate(rtwdev, rtwdev->dm_info.min_rssi,
-+			      bf_info->cur_csi_rpt_rate,
-+			      fix_rate_enable, &new_csi_rate_idx);
- 
- 	if (new_csi_rate_idx != bf_info->cur_csi_rpt_rate)
- 		bf_info->cur_csi_rpt_rate = new_csi_rate_idx;
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723d.c b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-index cccf05ee6807..5798a5804af3 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-@@ -16,6 +16,9 @@
- 
- static struct rtw_chip_ops rtw8723d_ops = {
- 	.set_antenna		= NULL,
-+	.config_bfee		= NULL,
-+	.set_gid_table		= NULL,
-+	.cfg_csi_rate		= NULL,
- };
- 
- struct rtw_chip_info rtw8723d_hw_spec = {
+For easier to review, the 8723DE implementation is split into
+multiple patches. One can review on it to see the difference
+of the chip's functionalities.
+
+With 8723DE joining rtw88, we found that the core kernel
+module's size increases a lot. It's because the various tables
+for each chip are built into the core module.  Note that the
+tables usually come up to 10+ K lines. Imagine that a user
+only uses 8822CE, but the tables of 8822BE will also be loaded
+into the kernel, waste a lot of the memory.
+
+Hence, extract the various tables for each chip into separate
+modules corresponding to 8822B/8822C/8723D. That way, once one
+of the device, for example 8822CE, is probed, only 8822C's
+tables in rtw88_8822c.ko will be loaded and its pci part, it
+can reduce the usage of kernel memory.
+
+Finally, to make them look consistent and avoid confusion,
+rename the core module and the pci module with prefix "rtw88_".
+
+
+Ping-Ke Shih (33):
+  rtw88: 8723d: Add basic chip capabilities
+  rtw88: 8723d: add beamform wrapper functions
+  rtw88: 8723d: Add power sequence
+  rtw88: 8723d: Add RF read/write ops
+  rtw88: 8723d: Add mac/bb/rf/agc/power_limit tables
+  rtw88: 8723d: Add cfg_ldo25 to control LDO25
+  rtw88: 8723d: Add new chip op efuse_grant() to control efuse access
+  rtw88: 8723d: Add read_efuse to recognize efuse info from map
+  rtw88: add legacy firmware download for 8723D devices
+  rtw88: no need to send additional information to legacy firmware
+  rtw88: 8723d: Add mac power-on/-off function
+  rtw88: decompose while(1) loop of power sequence polling command
+  rtw88: 8723d: 11N chips don't support H2C queue
+  rtw88: 8723d: implement set_tx_power_index ops
+  rtw88: 8723d: Organize chip TX/RX FIFO
+  rtw88: 8723d: initialize mac/bb/rf basic functions
+  rtw88: 8723d: Add DIG parameter
+  rtw88: 8723d: Add query_rx_desc
+  rtw88: 8723d: Add set_channel
+  rtw88: handle C2H_CCX_TX_RPT to know if packet TX'ed successfully
+  rtw88: 8723d: 11N chips don't support LDPC
+  rtw88: 8723d: Add chip_ops::false_alarm_statistics
+  rtw88: 8723d: Set IG register for CCK rate
+  rtw88: 8723d: add interface configurations table
+  rtw88: 8723d: Add LC calibration
+  rtw88: 8723d: add IQ calibration
+  rtw88: 8723d: Add power tracking
+  rtw88: 8723d: Add shutdown callback to disable BT USB suspend
+  rtw88: 8723d: implement flush queue
+  rtw88: 8723d: set ltecoex register address in chip_info
+  rtw88: 8723d: Add coex support
+  rtw88: fill zeros to words 0x06 and 0x07 of security cam entry
+  rtw88: 8723d: Add 8723DE to Kconfig and Makefile
+
+Yan-Hsuan Chuang (1):
+  rtw88: rename rtw88.ko/rtwpci.ko to rtw88_core.ko/rtw88_pci.ko
+
+Zong-Zhe Yang (6):
+  rtw88: extract: export symbols used in chip functionalities
+  rtw88: extract: export symbols about pci interface
+  rtw88: extract: make 8822c an individual kernel module
+  rtw88: extract: make 8822b an individual kernel module
+  rtw88: extract: make 8723d an individual kernel module
+  rtw88: extract: remove the unused after extracting
+
+ drivers/net/wireless/realtek/rtw88/Kconfig    |   26 +-
+ drivers/net/wireless/realtek/rtw88/Makefile   |   28 +-
+ drivers/net/wireless/realtek/rtw88/bf.c       |   14 +-
+ drivers/net/wireless/realtek/rtw88/bf.h       |   22 +
+ drivers/net/wireless/realtek/rtw88/coex.c     |    3 +
+ drivers/net/wireless/realtek/rtw88/debug.c    |    9 +-
+ drivers/net/wireless/realtek/rtw88/efuse.c    |    4 +
+ drivers/net/wireless/realtek/rtw88/fw.c       |   34 +-
+ drivers/net/wireless/realtek/rtw88/fw.h       |   32 +-
+ drivers/net/wireless/realtek/rtw88/mac.c      |  435 ++-
+ drivers/net/wireless/realtek/rtw88/mac.h      |    1 +
+ drivers/net/wireless/realtek/rtw88/mac80211.c |    7 +-
+ drivers/net/wireless/realtek/rtw88/main.c     |   55 +-
+ drivers/net/wireless/realtek/rtw88/main.h     |   80 +-
+ drivers/net/wireless/realtek/rtw88/pci.c      |   84 +-
+ drivers/net/wireless/realtek/rtw88/pci.h      |    4 -
+ drivers/net/wireless/realtek/rtw88/phy.c      |   94 +-
+ drivers/net/wireless/realtek/rtw88/phy.h      |    7 +
+ drivers/net/wireless/realtek/rtw88/reg.h      |  108 +
+ drivers/net/wireless/realtek/rtw88/rtw8723d.c | 2765 +++++++++++++++++
+ drivers/net/wireless/realtek/rtw88/rtw8723d.h |  245 ++
+ .../wireless/realtek/rtw88/rtw8723d_table.c   | 1196 +++++++
+ .../wireless/realtek/rtw88/rtw8723d_table.h   |   15 +
+ .../net/wireless/realtek/rtw88/rtw8723de.c    |   30 +
+ .../net/wireless/realtek/rtw88/rtw8723de.h    |   20 +
+ drivers/net/wireless/realtek/rtw88/rtw8822b.c |   33 +-
+ .../net/wireless/realtek/rtw88/rtw8822be.c    |   30 +
+ .../net/wireless/realtek/rtw88/rtw8822be.h    |   20 +
+ drivers/net/wireless/realtek/rtw88/rtw8822c.c |   31 +
+ .../net/wireless/realtek/rtw88/rtw8822ce.c    |   30 +
+ .../net/wireless/realtek/rtw88/rtw8822ce.h    |   20 +
+ drivers/net/wireless/realtek/rtw88/rx.c       |    1 +
+ drivers/net/wireless/realtek/rtw88/sec.c      |    6 +-
+ drivers/net/wireless/realtek/rtw88/tx.c       |   11 +-
+ drivers/net/wireless/realtek/rtw88/tx.h       |    2 +-
+ drivers/net/wireless/realtek/rtw88/util.c     |   20 +-
+ 36 files changed, 5324 insertions(+), 198 deletions(-)
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723d.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723d.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723d_table.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723d_table.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723de.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723de.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822be.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822be.h
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822ce.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822ce.h
+
 -- 
 2.17.1
 
