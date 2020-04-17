@@ -2,50 +2,53 @@ Return-Path: <SRS0=s1dN=6B=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E98A1C352BE
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 11:10:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D9D4C352BE
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 11:10:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CA3ED2224E
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 11:10:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2D37F221EC
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 11:10:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1587121828;
-	bh=4936VAXG2ihnvrFd3w/Jj8vJA1l/7HTejQkxrR8U5rg=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=fkFFyd/bLmBrVM4TrFDTY5dn9sif49yDlbhXTeWtHBaoQaSjxcwryvDI+0Vj2Y1JN
-	 1RaRdtZWcL3TdPWG8hsbz2nd/1G8Kqa3njvC2QD+yDl5UW+4NbaDVmAnToDH+2330V
-	 FQp84g2oSlN2OrFrSDCXJjmQqC9sdChkNdxWEye8=
+	s=default; t=1587121834;
+	bh=lSLiJZMHBX2HuBwf46zfvddPluaJK4U7XxsyEnN7C1Q=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=RyNdf0a24nw/MEK8qisSsA6svKjIB9rdR+8HymCj+yq0tJSegZcWMcqrnQCZ0zvYm
+	 3bA/DcjGKWSf/3CifSWQxuSQMuCgZKy7QYf/SfvxidKYHNeLxwhsK8T6fVPCv0Pik4
+	 BkhOD7j43V0C1mv3gLZ5C92j3QY4boTipUw7q3qQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730077AbgDQLK1 (ORCPT
+        id S1730194AbgDQLKa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 17 Apr 2020 07:10:27 -0400
-Received: from mail.kernel.org ([198.145.29.99]:39174 "EHLO mail.kernel.org"
+        Fri, 17 Apr 2020 07:10:30 -0400
+Received: from mail.kernel.org ([198.145.29.99]:39244 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729980AbgDQLK0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Apr 2020 07:10:26 -0400
+        id S1729468AbgDQLK3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 17 Apr 2020 07:10:29 -0400
 Received: from lore-desk.lan (unknown [151.48.151.50])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E4F4521D95;
-        Fri, 17 Apr 2020 11:10:23 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 02F52221EA;
+        Fri, 17 Apr 2020 11:10:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1587121826;
-        bh=4936VAXG2ihnvrFd3w/Jj8vJA1l/7HTejQkxrR8U5rg=;
-        h=From:To:Cc:Subject:Date:From;
-        b=RHv6VAP3GA7e+iBaiaQkQiKctIKqB65S2P5vsb8ljaYdnTcFiSPAP4qWg7msSb8b3
-         EAU6dt9iviDa/qEiT4tfw/KxpxBR5XBNjNNAjq6nwm8ZO6/GXhaXXHcyTLKanYsYAW
-         koOwdBApeRGAu/S2QzZFhYVqPNGTnCHFsTjAMMmo=
+        s=default; t=1587121829;
+        bh=lSLiJZMHBX2HuBwf46zfvddPluaJK4U7XxsyEnN7C1Q=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=cKpyD4mHHPdCtelz0qvX7SDImLQUdiuBuPF3HNTe11eeoQoq80+iQmUyxbYQTyKYn
+         zPHD0PuRU8df0KtjnUp3vnyAjcLHzvsF95sWeXhfgXh2tjYsaSSCPq70NcZLqowAba
+         AhI5edOSshiA2AEuV/fmbFE2N93KYfb8/OSSzyTQ=
 From:   Lorenzo Bianconi <lorenzo@kernel.org>
 To:     nbd@nbd.name
 Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
         sean.wang@mediatek.com, linux-mediatek@lists.infradead.org
-Subject: [PATCH 0/3] add 802.11 ps support to mt7663 driver
-Date:   Fri, 17 Apr 2020 13:10:03 +0200
-Message-Id: <cover.1587121517.git.lorenzo@kernel.org>
+Subject: [PATCH 1/3] mt76: mt7615: provide aid info to the mcu
+Date:   Fri, 17 Apr 2020 13:10:04 +0200
+Message-Id: <21e5f8065a0d494c3e38dcac357b6f5a59ccdb65.1587121517.git.lorenzo@kernel.org>
 X-Mailer: git-send-email 2.25.2
+In-Reply-To: <cover.1587121517.git.lorenzo@kernel.org>
+References: <cover.1587121517.git.lorenzo@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -53,26 +56,45 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Introduce 802.11 power-save support for mt7663 station mode
-enabling ps firmware support
+For sta mode mac80211 provides aid in vif->bss_conf.aid.
+In order to properly support 802.11 power-save, configure correct aid
+to mcu during sta association
 
-Lorenzo Bianconi (3):
-  mt76: mt7615: provide aid info to the mcu
-  mt76: remove PS_NULLFUNC_STACK capability
-  mt76: mt7663: introduce 802.11 PS support in sta mode
+Co-developed-by: Sean Wang <sean.wang@mediatek.com>
+Signed-off-by: Sean Wang <sean.wang@mediatek.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+---
+ drivers/net/wireless/mediatek/mt76/mt7615/mcu.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
- drivers/net/wireless/mediatek/mt76/mac80211.c |  1 -
- drivers/net/wireless/mediatek/mt76/mt76.h     |  1 +
- .../net/wireless/mediatek/mt76/mt7615/init.c  |  4 +++
- .../net/wireless/mediatek/mt76/mt7615/mac.c   |  7 ++++--
- .../net/wireless/mediatek/mt76/mt7615/main.c  | 23 +++++++++++++++++
- .../net/wireless/mediatek/mt76/mt7615/mcu.c   | 25 ++++++++++++++++++-
- .../net/wireless/mediatek/mt76/mt7615/mcu.h   |  1 +
- .../wireless/mediatek/mt76/mt7615/mt7615.h    |  4 +++
- .../wireless/mediatek/mt76/mt7615/pci_init.c  |  8 ++++--
- .../wireless/mediatek/mt76/mt7615/usb_init.c  |  3 +++
- 10 files changed, 71 insertions(+), 6 deletions(-)
-
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
+index bc7b55e41337..48eb099661fa 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
+@@ -790,12 +790,15 @@ mt7615_mcu_sta_basic_tlv(struct sk_buff *skb, struct ieee80211_vif *vif,
+ 	case NL80211_IFTYPE_MESH_POINT:
+ 	case NL80211_IFTYPE_AP:
+ 		basic->conn_type = cpu_to_le32(CONNECTION_INFRA_STA);
++		basic->aid = cpu_to_le16(sta->aid);
+ 		break;
+ 	case NL80211_IFTYPE_STATION:
+ 		basic->conn_type = cpu_to_le32(CONNECTION_INFRA_AP);
++		basic->aid = cpu_to_le16(vif->bss_conf.aid);
+ 		break;
+ 	case NL80211_IFTYPE_ADHOC:
+ 		basic->conn_type = cpu_to_le32(CONNECTION_IBSS_ADHOC);
++		basic->aid = cpu_to_le16(sta->aid);
+ 		break;
+ 	default:
+ 		WARN_ON(1);
+@@ -803,7 +806,6 @@ mt7615_mcu_sta_basic_tlv(struct sk_buff *skb, struct ieee80211_vif *vif,
+ 	}
+ 
+ 	memcpy(basic->peer_addr, sta->addr, ETH_ALEN);
+-	basic->aid = cpu_to_le16(sta->aid);
+ 	basic->qos = sta->wme;
+ }
+ 
 -- 
 2.25.2
 
