@@ -6,24 +6,24 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23E98C2BB1D
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 07:47:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE402C2BB55
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 07:47:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0A621214D8
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 07:47:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CBCF8214AF
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 07:47:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729388AbgDQHrW (ORCPT
+        id S1729421AbgDQHr2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 17 Apr 2020 03:47:22 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:37062 "EHLO
+        Fri, 17 Apr 2020 03:47:28 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:37058 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729329AbgDQHrQ (ORCPT
+        with ESMTP id S1729201AbgDQHrP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Apr 2020 03:47:16 -0400
+        Fri, 17 Apr 2020 03:47:15 -0400
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 03H7l7hI5020159, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 03H7l7hE5020159, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexmb06.realtek.com.tw[172.21.6.99])
-        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 03H7l7hI5020159
+        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 03H7l7hE5020159
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
         Fri, 17 Apr 2020 15:47:07 +0800
 Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
@@ -33,14 +33,14 @@ Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
 Received: from localhost.localdomain (172.21.68.128) by
  RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Fri, 17 Apr 2020 15:47:04 +0800
+ 15.1.1779.2; Fri, 17 Apr 2020 15:47:03 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <pkshih@realtek.com>, <linux-wireless@vger.kernel.org>,
         <briannorris@chromium.org>, <kevin_yang@realtek.com>
-Subject: [PATCH 31/40] rtw88: 8723d: Add coex support
-Date:   Fri, 17 Apr 2020 15:46:44 +0800
-Message-ID: <20200417074653.15591-32-yhchuang@realtek.com>
+Subject: [PATCH 27/40] rtw88: 8723d: Add power tracking
+Date:   Fri, 17 Apr 2020 15:46:40 +0800
+Message-ID: <20200417074653.15591-28-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200417074653.15591-1-yhchuang@realtek.com>
 References: <20200417074653.15591-1-yhchuang@realtek.com>
@@ -56,374 +56,612 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ping-Ke Shih <pkshih@realtek.com>
 
-8723D is a Wifi+BT combo card. To make them work properly, we need coex
-mechanism to avoid interference, such as TX simultaneously. Basically,
-coex.c provide main algorithm to deal with many use cases, and this commit
-adds some parameters and ops differ from other chips, because coex
-hardware and WiFi generation are changed.
+When chip's temperature is changed, RF characters are changed. To keep the
+characters to be consistent, 8723d uses thermal meter to assist in
+calibrating LCK, IQK, crystal and TX power.
+
+A base thermal value is programmed in efuse, all calibration data in
+MP process is based on this thermal value. So we calucate the delta of
+thermal value between the base value, and use this delta to reference XTAL
+and TX power offset tables to know how much we need to adjust.
+
+For IQK and LCK, driver checks if delta of thermal value is over 8, then
+they are triggered.
+
+For crystal adjustment, when delta of thermal value is changed, we check
+XTAL tables to get offset of XTAL value. If thermal value is larger than
+base value, positive table (_p as suffix) is used. Otherwise, we use
+negative table (_n as suffix). Then, we add offset to XTAL default value
+programmed in efuse, and write sum value to register.
+
+To compensate TX power, there are two hierarchical tables. First level use
+delta of thermal value to access eight tables to yield delta of TX power
+index. Then, plus base TX power index to get index of BB swing table
+(second level tables) where register value is induced.
+
+BB swing table can't deal with all cases, if index of BB swing table is
+over the size of the table. In this case, TX AGC is used to compensate the
+remnant part. Assume 'upper' is the upper bound of BB swing table, and
+'target' is the desired index. Then, we can illustrate them as
+
+  compensation method    BB swing        TX AGC
+  -------------------    --------    --------------
+  target > upper         upper       target - upper
+  target < 0             0           target
+  otherwise              target      0
+
+For debug purpose, add a column 'rem' to tx_pwr_tbl entry, and it looks
+like
+
+  path rate       pwr       base      (byr  lmt ) rem
+    A  CCK_1M     32(0x20)   34   -2 (   0   -2)    0
 
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/rtw8723d.c | 302 ++++++++++++++++++
- drivers/net/wireless/realtek/rtw88/rtw8723d.h |   3 +
- 2 files changed, 305 insertions(+)
+ drivers/net/wireless/realtek/rtw88/debug.c    |   9 +-
+ drivers/net/wireless/realtek/rtw88/main.h     |   4 +
+ drivers/net/wireless/realtek/rtw88/phy.c      |   6 +-
+ drivers/net/wireless/realtek/rtw88/phy.h      |   1 +
+ drivers/net/wireless/realtek/rtw88/rtw8723d.c | 408 ++++++++++++++++++
+ 5 files changed, 423 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/net/wireless/realtek/rtw88/debug.c b/drivers/net/wireless/realtek/rtw88/debug.c
+index b4964306de61..09f04feb8fe1 100644
+--- a/drivers/net/wireless/realtek/rtw88/debug.c
++++ b/drivers/net/wireless/realtek/rtw88/debug.c
+@@ -531,8 +531,8 @@ static int rtw_debugfs_get_tx_pwr_tbl(struct seq_file *m, void *v)
+ 	u8 ch = hal->current_channel;
+ 	u8 regd = rtwdev->regd.txpwr_regd;
+ 
+-	seq_printf(m, "%-4s %-10s %-3s%6s %-4s %4s (%-4s %-4s)\n",
+-		   "path", "rate", "pwr", "", "base", "", "byr", "lmt");
++	seq_printf(m, "%-4s %-10s %-3s%6s %-4s %4s (%-4s %-4s) %-4s\n",
++		   "path", "rate", "pwr", "", "base", "", "byr", "lmt", "rem");
+ 
+ 	mutex_lock(&hal->tx_power_mutex);
+ 	for (path = RF_PATH_A; path <= RF_PATH_B; path++) {
+@@ -554,13 +554,14 @@ static int rtw_debugfs_get_tx_pwr_tbl(struct seq_file *m, void *v)
+ 
+ 			seq_printf(m, "%4c ", path + 'A');
+ 			rtw_print_rate(m, rate);
+-			seq_printf(m, " %3u(0x%02x) %4u %4d (%4d %4d)\n",
++			seq_printf(m, " %3u(0x%02x) %4u %4d (%4d %4d) %4d\n",
+ 				   hal->tx_pwr_tbl[path][rate],
+ 				   hal->tx_pwr_tbl[path][rate],
+ 				   pwr_param.pwr_base,
+ 				   min_t(s8, pwr_param.pwr_offset,
+ 					 pwr_param.pwr_limit),
+-				   pwr_param.pwr_offset, pwr_param.pwr_limit);
++				   pwr_param.pwr_offset, pwr_param.pwr_limit,
++				   pwr_param.pwr_remnant);
+ 		}
+ 	}
+ 
+diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
+index e0345b00dccb..987573ddeefc 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.h
++++ b/drivers/net/wireless/realtek/rtw88/main.h
+@@ -1054,6 +1054,8 @@ struct rtw_pwr_track_tbl {
+ 	const u8 *pwrtrk_2g_cckb_p;
+ 	const u8 *pwrtrk_2g_ccka_n;
+ 	const u8 *pwrtrk_2g_ccka_p;
++	const s8 *pwrtrk_xtal_n;
++	const s8 *pwrtrk_xtal_p;
+ };
+ 
+ enum rtw_wlan_cpu {
+@@ -1444,6 +1446,8 @@ struct rtw_dm_info {
+ 	bool pwr_trk_triggered;
+ 	bool pwr_trk_init_trigger;
+ 	struct ewma_thermal avg_thermal[RTW_RF_PATH_MAX];
++	s8 txagc_remnant_cck;
++	s8 txagc_remnant_ofdm;
+ 
+ 	/* backup dack results for each path and I/Q */
+ 	u32 dack_adck[RTW_RF_PATH_MAX];
+diff --git a/drivers/net/wireless/realtek/rtw88/phy.c b/drivers/net/wireless/realtek/rtw88/phy.c
+index 837b7bd04126..45181f602e3f 100644
+--- a/drivers/net/wireless/realtek/rtw88/phy.c
++++ b/drivers/net/wireless/realtek/rtw88/phy.c
+@@ -1785,11 +1785,13 @@ void rtw_get_tx_power_params(struct rtw_dev *rtwdev, u8 path, u8 rate, u8 bw,
+ 			     u8 ch, u8 regd, struct rtw_power_params *pwr_param)
+ {
+ 	struct rtw_hal *hal = &rtwdev->hal;
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
+ 	struct rtw_txpwr_idx *pwr_idx;
+ 	u8 group, band;
+ 	u8 *base = &pwr_param->pwr_base;
+ 	s8 *offset = &pwr_param->pwr_offset;
+ 	s8 *limit = &pwr_param->pwr_limit;
++	s8 *remnant = &pwr_param->pwr_remnant;
+ 
+ 	pwr_idx = &rtwdev->efuse.txpwr_idx_table[path];
+ 	group = rtw_get_channel_group(ch);
+@@ -1811,6 +1813,8 @@ void rtw_get_tx_power_params(struct rtw_dev *rtwdev, u8 path, u8 rate, u8 bw,
+ 
+ 	*limit = rtw_phy_get_tx_power_limit(rtwdev, band, bw, path,
+ 					    rate, ch, regd);
++	*remnant = (rate <= DESC_RATE11M ? dm_info->txagc_remnant_cck :
++		    dm_info->txagc_remnant_ofdm);
+ }
+ 
+ u8
+@@ -1830,7 +1834,7 @@ rtw_phy_get_tx_power_index(struct rtw_dev *rtwdev, u8 rf_path, u8 rate,
+ 	if (rtwdev->chip->en_dis_dpd)
+ 		offset += rtw_phy_get_dis_dpd_by_rate_diff(rtwdev, rate);
+ 
+-	tx_power += offset;
++	tx_power += offset + pwr_param.pwr_remnant;
+ 
+ 	if (tx_power > rtwdev->chip->max_power_index)
+ 		tx_power = rtwdev->chip->max_power_index;
+diff --git a/drivers/net/wireless/realtek/rtw88/phy.h b/drivers/net/wireless/realtek/rtw88/phy.h
+index 413bf7165cc0..b924ed07630a 100644
+--- a/drivers/net/wireless/realtek/rtw88/phy.h
++++ b/drivers/net/wireless/realtek/rtw88/phy.h
+@@ -141,6 +141,7 @@ struct rtw_power_params {
+ 	u8 pwr_base;
+ 	s8 pwr_offset;
+ 	s8 pwr_limit;
++	s8 pwr_remnant;
+ };
+ 
+ void
 diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723d.c b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-index 27b595fd4640..5a662112752d 100644
+index b66bd969e007..4fb361d91a0b 100644
 --- a/drivers/net/wireless/realtek/rtw88/rtw8723d.c
 +++ b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-@@ -1541,6 +1541,132 @@ static void rtw8723d_phy_calibration(struct rtw_dev *rtwdev)
+@@ -91,6 +91,54 @@ static void rtw8723d_lck(struct rtw_dev *rtwdev)
+ 		rtw_write8(rtwdev, REG_TXPAUSE, 0x00);
+ }
+ 
++#define RTW_DEF_OFDM_SWING_INDEX	28
++#define RTW_OFDM_SWING_TABLE_SIZE	43
++#define OFDM_SWING_A(swing)	((swing) & 0x000003FF)
++#define OFDM_SWING_B(swing)	(((swing) & 0x0000FC00) >> 10)
++#define OFDM_SWING_C(swing)	(((swing) & 0x003F0000) >> 16)
++#define OFDM_SWING_D(swing)	(((swing) & 0xFFC00000) >> 22)
++static const u32 rtw8723d_ofdm_swing_table[] = {
++	0x0b40002d, 0x0c000030, 0x0cc00033, 0x0d800036, 0x0e400039, 0x0f00003c,
++	0x10000040, 0x11000044, 0x12000048, 0x1300004c, 0x14400051, 0x15800056,
++	0x16c0005b, 0x18000060, 0x19800066, 0x1b00006c, 0x1c800072, 0x1e400079,
++	0x20000080, 0x22000088, 0x24000090, 0x26000098, 0x288000a2, 0x2ac000ab,
++	0x2d4000b5, 0x300000c0, 0x32c000cb, 0x35c000d7, 0x390000e4, 0x3c8000f2,
++	0x40000100, 0x43c0010f, 0x47c0011f, 0x4c000130, 0x50800142, 0x55400155,
++	0x5a400169, 0x5fc0017f, 0x65400195, 0x6b8001ae, 0x71c001c7, 0x788001e2,
++	0x7f8001fe,
++};
++
++#define RTW_DEF_CCK_SWING_INDEX	28
++#define RTW_CCK_TABLE_SIZE	41
++static const u32 rtw8723d_cck_swing_table[] = {
++	0x0CD, 0x0D9, 0x0E6, 0x0F3, 0x102, 0x111, 0x121, 0x132, 0x144, 0x158,
++	0x16C, 0x182, 0x198, 0x1B1, 0x1CA, 0x1E5, 0x202, 0x221, 0x241, 0x263,
++	0x287, 0x2AE, 0x2D6, 0x301, 0x32F, 0x35F, 0x392, 0x3C9, 0x402, 0x43F,
++	0x47F, 0x4C3, 0x50C, 0x558, 0x5A9, 0x5FF, 0x65A, 0x6BA, 0x720, 0x78C,
++	0x7FF,
++};
++
++static_assert(ARRAY_SIZE(rtw8723d_ofdm_swing_table) == RTW_OFDM_SWING_TABLE_SIZE);
++static_assert(ARRAY_SIZE(rtw8723d_cck_swing_table) == RTW_CCK_TABLE_SIZE);
++
++static void rtw8723d_pwrtrack_init(struct rtw_dev *rtwdev)
++{
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
++	u8 path;
++
++	dm_info->default_ofdm_index = RTW_DEF_OFDM_SWING_INDEX;
++
++	for (path = RF_PATH_A; path < rtwdev->hal.rf_path_num; path++) {
++		ewma_thermal_init(&dm_info->avg_thermal[path]);
++		dm_info->delta_power_index[path] = 0;
++	}
++	dm_info->pwr_trk_triggered = false;
++	dm_info->pwr_trk_init_trigger = true;
++	dm_info->thermal_meter_k = rtwdev->efuse.thermal_meter_k;
++	dm_info->txagc_remnant_cck = 0;
++	dm_info->txagc_remnant_ofdm = 0;
++}
++
+ static void rtw8723d_phy_set_param(struct rtw_dev *rtwdev)
+ {
+ 	u8 xtal_cap;
+@@ -157,6 +205,8 @@ static void rtw8723d_phy_set_param(struct rtw_dev *rtwdev)
+ 
+ 	rtw_write32_mask(rtwdev, REG_OFDM0_XAAGC1, MASKBYTE0, 0x50);
+ 	rtw_write32_mask(rtwdev, REG_OFDM0_XAAGC1, MASKBYTE0, 0x20);
++
++	rtw8723d_pwrtrack_init(rtwdev);
+ }
+ 
+ static void rtw8723de_efuse_parsing(struct rtw_efuse *efuse,
+@@ -1486,6 +1536,298 @@ static void rtw8723d_phy_calibration(struct rtw_dev *rtwdev)
  	rtw_dbg(rtwdev, RTW_DBG_RFK, "[IQK] finished\n");
  }
  
-+/* for coex */
-+static void rtw8723d_coex_cfg_init(struct rtw_dev *rtwdev)
++static u8 rtw8723d_pwrtrack_get_limit_ofdm(struct rtw_dev *rtwdev)
 +{
-+	/* enable TBTT nterrupt */
-+	rtw_write8_set(rtwdev, REG_BCN_CTRL, BIT_EN_BCN_FUNCTION);
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
++	u8 tx_rate = dm_info->tx_rate;
++	u8 limit_ofdm = 30;
 +
-+	/* BT report packet sample rate	 */
-+	/* 0x790[5:0]=0x5 */
-+	rtw_write8_set(rtwdev, REG_BT_TDMA_TIME, 0x05);
++	switch (tx_rate) {
++	case DESC_RATE1M...DESC_RATE5_5M:
++	case DESC_RATE11M:
++		break;
++	case DESC_RATE6M...DESC_RATE48M:
++		limit_ofdm = 36;
++		break;
++	case DESC_RATE54M:
++		limit_ofdm = 34;
++		break;
++	case DESC_RATEMCS0...DESC_RATEMCS2:
++		limit_ofdm = 38;
++		break;
++	case DESC_RATEMCS3...DESC_RATEMCS4:
++		limit_ofdm = 36;
++		break;
++	case DESC_RATEMCS5...DESC_RATEMCS7:
++		limit_ofdm = 34;
++		break;
++	default:
++		rtw_warn(rtwdev, "pwrtrack unhandled tx_rate 0x%x\n", tx_rate);
++		break;
++	}
 +
-+	/* enable BT counter statistics */
-+	rtw_write8(rtwdev, REG_BT_STAT_CTRL, 0x1);
-+
-+	/* enable PTA (3-wire function form BT side) */
-+	rtw_write32_set(rtwdev, REG_GPIO_MUXCFG, BIT_BT_PTA_EN);
-+	rtw_write32_set(rtwdev, REG_GPIO_MUXCFG, BIT_BT_AOD_GPIO3);
-+
-+	/* enable PTA (tx/rx signal form WiFi side) */
-+	rtw_write8_set(rtwdev, REG_QUEUE_CTRL, BIT_PTA_WL_TX_EN);
++	return limit_ofdm;
 +}
 +
-+static void rtw8723d_coex_cfg_gnt_fix(struct rtw_dev *rtwdev)
++static void rtw8723d_set_iqk_matrix_by_result(struct rtw_dev *rtwdev,
++					      u32 ofdm_swing, u8 rf_path)
 +{
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
++	s32 ele_A, ele_D, ele_C;
++	s32 ele_A_ext, ele_C_ext, ele_D_ext;
++	s32 iqk_result_x;
++	s32 iqk_result_y;
++	s32 value32;
++
++	switch (rf_path) {
++	default:
++	case RF_PATH_A:
++		iqk_result_x = dm_info->iqk.result.s1_x;
++		iqk_result_y = dm_info->iqk.result.s1_y;
++		break;
++	case RF_PATH_B:
++		iqk_result_x = dm_info->iqk.result.s0_x;
++		iqk_result_y = dm_info->iqk.result.s0_y;
++		break;
++	}
++
++	/* new element D */
++	ele_D = OFDM_SWING_D(ofdm_swing);
++	iqk_mult(iqk_result_x, ele_D, &ele_D_ext);
++	/* new element A */
++	iqk_result_x = iqkxy_to_s32(iqk_result_x);
++	ele_A = iqk_mult(iqk_result_x, ele_D, &ele_A_ext);
++	/* new element C */
++	iqk_result_y = iqkxy_to_s32(iqk_result_y);
++	ele_C = iqk_mult(iqk_result_y, ele_D, &ele_C_ext);
++
++	switch (rf_path) {
++	case RF_PATH_A:
++	default:
++		/* write new elements A, C, D, and element B is always 0 */
++		value32 = BIT_SET_TXIQ_ELM_ACD(ele_A, ele_C, ele_D);
++		rtw_write32(rtwdev, REG_OFDM_0_XA_TX_IQ_IMBALANCE, value32);
++		value32 = BIT_SET_TXIQ_ELM_C1(ele_C);
++		rtw_write32_mask(rtwdev, REG_TXIQK_MATRIXA_LSB2_11N, MASKH4BITS,
++				 value32);
++		value32 = rtw_read32(rtwdev, REG_OFDM_0_ECCA_THRESHOLD);
++		value32 &= ~BIT_MASK_OFDM0_EXTS;
++		value32 |= BIT_SET_OFDM0_EXTS(ele_A_ext, ele_C_ext, ele_D_ext);
++		rtw_write32(rtwdev, REG_OFDM_0_ECCA_THRESHOLD, value32);
++		break;
++
++	case RF_PATH_B:
++		/* write new elements A, C, D, and element B is always 0 */
++		rtw_write32_mask(rtwdev, REG_TXIQ_CD_S0, BIT_MASK_TXIQ_D_S0, ele_D);
++		rtw_write32_mask(rtwdev, REG_TXIQ_CD_S0, BIT_MASK_TXIQ_C_S0, ele_C);
++		rtw_write32_mask(rtwdev, REG_TXIQ_AB_S0, BIT_MASK_TXIQ_A_S0, ele_A);
++
++		rtw_write32_mask(rtwdev, REG_TXIQ_CD_S0, BIT_MASK_TXIQ_D_EXT_S0,
++				 ele_D_ext);
++		rtw_write32_mask(rtwdev, REG_TXIQ_AB_S0, BIT_MASK_TXIQ_A_EXT_S0,
++				 ele_A_ext);
++		rtw_write32_mask(rtwdev, REG_TXIQ_CD_S0, BIT_MASK_TXIQ_C_EXT_S0,
++				 ele_C_ext);
++		break;
++	}
 +}
 +
-+static void rtw8723d_coex_cfg_gnt_debug(struct rtw_dev *rtwdev)
++static void rtw8723d_set_iqk_matrix(struct rtw_dev *rtwdev, s8 ofdm_index,
++				    u8 rf_path)
 +{
-+	rtw_write8_mask(rtwdev, REG_LEDCFG2, BIT(6), 0);
-+	rtw_write8_mask(rtwdev, REG_PAD_CTRL1 + 3, BIT(0), 0);
-+	rtw_write8_mask(rtwdev, REG_GPIO_INTM + 2, BIT(4), 0);
-+	rtw_write8_mask(rtwdev, REG_GPIO_MUXCFG + 2, BIT(1), 0);
-+	rtw_write8_mask(rtwdev, REG_PAD_CTRL1 + 3, BIT(1), 0);
-+	rtw_write8_mask(rtwdev, REG_PAD_CTRL1 + 2, BIT(7), 0);
-+	rtw_write8_mask(rtwdev, REG_SYS_CLKR + 1, BIT(1), 0);
-+	rtw_write8_mask(rtwdev, REG_SYS_SDIO_CTRL + 3, BIT(3), 0);
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
++	s32 value32;
++	u32 ofdm_swing;
++
++	if (ofdm_index >= RTW_OFDM_SWING_TABLE_SIZE)
++		ofdm_index = RTW_OFDM_SWING_TABLE_SIZE - 1;
++	else if (ofdm_index < 0)
++		ofdm_index = 0;
++
++	ofdm_swing = rtw8723d_ofdm_swing_table[ofdm_index];
++
++	if (dm_info->iqk.done) {
++		rtw8723d_set_iqk_matrix_by_result(rtwdev, ofdm_swing, rf_path);
++		return;
++	}
++
++	switch (rf_path) {
++	case RF_PATH_A:
++	default:
++		rtw_write32(rtwdev, REG_OFDM_0_XA_TX_IQ_IMBALANCE, ofdm_swing);
++		rtw_write32_mask(rtwdev, REG_TXIQK_MATRIXA_LSB2_11N, MASKH4BITS,
++				 0x00);
++		value32 = rtw_read32(rtwdev, REG_OFDM_0_ECCA_THRESHOLD);
++		value32 &= ~BIT_MASK_OFDM0_EXTS;
++		rtw_write32(rtwdev, REG_OFDM_0_ECCA_THRESHOLD, value32);
++		break;
++
++	case RF_PATH_B:
++		/* image S1:c80 to S0:Cd0 and Cd4 */
++		rtw_write32_mask(rtwdev, REG_TXIQ_AB_S0, BIT_MASK_TXIQ_A_S0,
++				 OFDM_SWING_A(ofdm_swing));
++		rtw_write32_mask(rtwdev, REG_TXIQ_AB_S0, BIT_MASK_TXIQ_B_S0,
++				 OFDM_SWING_B(ofdm_swing));
++		rtw_write32_mask(rtwdev, REG_TXIQ_CD_S0, BIT_MASK_TXIQ_C_S0,
++				 OFDM_SWING_C(ofdm_swing));
++		rtw_write32_mask(rtwdev, REG_TXIQ_CD_S0, BIT_MASK_TXIQ_D_S0,
++				 OFDM_SWING_D(ofdm_swing));
++		rtw_write32_mask(rtwdev, REG_TXIQ_CD_S0, BIT_MASK_TXIQ_D_EXT_S0, 0x0);
++		rtw_write32_mask(rtwdev, REG_TXIQ_CD_S0, BIT_MASK_TXIQ_C_EXT_S0, 0x0);
++		rtw_write32_mask(rtwdev, REG_TXIQ_AB_S0, BIT_MASK_TXIQ_A_EXT_S0, 0x0);
++		break;
++	}
 +}
 +
-+static void rtw8723d_coex_cfg_rfe_type(struct rtw_dev *rtwdev)
++static void rtw8723d_pwrtrack_set_ofdm_pwr(struct rtw_dev *rtwdev, s8 swing_idx,
++					   s8 txagc_idx)
++{
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
++
++	dm_info->txagc_remnant_ofdm = txagc_idx;
++
++	rtw8723d_set_iqk_matrix(rtwdev, swing_idx, RF_PATH_A);
++	rtw8723d_set_iqk_matrix(rtwdev, swing_idx, RF_PATH_B);
++}
++
++static void rtw8723d_pwrtrack_set_cck_pwr(struct rtw_dev *rtwdev, s8 swing_idx,
++					  s8 txagc_idx)
++{
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
++
++	dm_info->txagc_remnant_cck = txagc_idx;
++
++	rtw_write32_mask(rtwdev, 0xab4, 0x000007FF,
++			 rtw8723d_cck_swing_table[swing_idx]);
++}
++
++static void rtw8723d_pwrtrack_set(struct rtw_dev *rtwdev, u8 path)
++{
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
++	struct rtw_hal *hal = &rtwdev->hal;
++	u8 limit_ofdm;
++	u8 limit_cck = 40;
++	s8 final_ofdm_swing_index;
++	s8 final_cck_swing_index;
++
++	limit_ofdm = rtw8723d_pwrtrack_get_limit_ofdm(rtwdev);
++
++	final_ofdm_swing_index = RTW_DEF_OFDM_SWING_INDEX +
++				 dm_info->delta_power_index[path];
++	final_cck_swing_index = RTW_DEF_CCK_SWING_INDEX +
++				dm_info->delta_power_index[path];
++
++	if (final_ofdm_swing_index > limit_ofdm)
++		rtw8723d_pwrtrack_set_ofdm_pwr(rtwdev, limit_ofdm,
++					       final_ofdm_swing_index - limit_ofdm);
++	else if (final_ofdm_swing_index < 0)
++		rtw8723d_pwrtrack_set_ofdm_pwr(rtwdev, 0,
++					       final_ofdm_swing_index);
++	else
++		rtw8723d_pwrtrack_set_ofdm_pwr(rtwdev, final_ofdm_swing_index, 0);
++
++	if (final_cck_swing_index > limit_cck)
++		rtw8723d_pwrtrack_set_cck_pwr(rtwdev, limit_cck,
++					      final_cck_swing_index - limit_cck);
++	else if (final_cck_swing_index < 0)
++		rtw8723d_pwrtrack_set_cck_pwr(rtwdev, 0,
++					      final_cck_swing_index);
++	else
++		rtw8723d_pwrtrack_set_cck_pwr(rtwdev, final_cck_swing_index, 0);
++
++	rtw_phy_set_tx_power_level(rtwdev, hal->current_channel);
++}
++
++static void rtw8723d_pwrtrack_set_xtal(struct rtw_dev *rtwdev, u8 therm_path,
++				       u8 delta)
++{
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
++	const struct rtw_pwr_track_tbl *tbl = rtwdev->chip->pwr_track_tbl;
++	const s8 *pwrtrk_xtal;
++	s8 xtal_cap;
++
++	if (dm_info->thermal_avg[therm_path] >
++	    rtwdev->efuse.thermal_meter[therm_path])
++		pwrtrk_xtal = tbl->pwrtrk_xtal_p;
++	else
++		pwrtrk_xtal = tbl->pwrtrk_xtal_n;
++
++	xtal_cap = rtwdev->efuse.crystal_cap & 0x3F;
++	xtal_cap = clamp_t(s8, xtal_cap + pwrtrk_xtal[delta], 0, 0x3F);
++	rtw_write32_mask(rtwdev, REG_AFE_CTRL3, BIT_MASK_XTAL,
++			 xtal_cap | (xtal_cap << 6));
++}
++
++static void rtw8723d_phy_pwrtrack(struct rtw_dev *rtwdev)
++{
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
++	struct rtw_swing_table swing_table;
++	u8 thermal_value, delta, path;
++	bool do_iqk = false;
++
++	rtw_phy_config_swing_table(rtwdev, &swing_table);
++
++	if (rtwdev->efuse.thermal_meter[0] == 0xff)
++		return;
++
++	thermal_value = rtw_read_rf(rtwdev, RF_PATH_A, RF_T_METER, 0xfc00);
++
++	rtw_phy_pwrtrack_avg(rtwdev, thermal_value, RF_PATH_A);
++
++	do_iqk = rtw_phy_pwrtrack_need_iqk(rtwdev);
++
++	if (do_iqk)
++		rtw8723d_lck(rtwdev);
++
++	if (dm_info->pwr_trk_init_trigger)
++		dm_info->pwr_trk_init_trigger = false;
++	else if (!rtw_phy_pwrtrack_thermal_changed(rtwdev, thermal_value,
++						   RF_PATH_A))
++		goto iqk;
++
++	delta = rtw_phy_pwrtrack_get_delta(rtwdev, RF_PATH_A);
++
++	delta = min_t(u8, delta, RTW_PWR_TRK_TBL_SZ - 1);
++
++	for (path = 0; path < rtwdev->hal.rf_path_num; path++) {
++		s8 delta_cur, delta_last;
++
++		delta_last = dm_info->delta_power_index[path];
++		delta_cur = rtw_phy_pwrtrack_get_pwridx(rtwdev, &swing_table,
++							path, RF_PATH_A, delta);
++		if (delta_last == delta_cur)
++			continue;
++
++		dm_info->delta_power_index[path] = delta_cur;
++		rtw8723d_pwrtrack_set(rtwdev, path);
++	}
++
++	rtw8723d_pwrtrack_set_xtal(rtwdev, RF_PATH_A, delta);
++
++iqk:
++	if (do_iqk)
++		rtw8723d_phy_calibration(rtwdev);
++}
++
++void rtw8723d_pwr_track(struct rtw_dev *rtwdev)
 +{
 +	struct rtw_efuse *efuse = &rtwdev->efuse;
-+	struct rtw_coex *coex = &rtwdev->coex;
-+	struct rtw_coex_rfe *coex_rfe = &coex->rfe;
-+	bool aux = efuse->bt_setting & BIT(6);
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
 +
-+	coex_rfe->rfe_module_type = rtwdev->efuse.rfe_option;
-+	coex_rfe->ant_switch_polarity = 0;
-+	coex_rfe->ant_switch_exist = false;
-+	coex_rfe->ant_switch_with_bt = false;
-+	coex_rfe->ant_switch_diversity = false;
-+	coex_rfe->wlg_at_btg = true;
-+
-+	/* decide antenna at main or aux */
-+	if (efuse->share_ant) {
-+		if (aux)
-+			rtw_write16(rtwdev, REG_BB_SEL_BTG, 0x80);
-+		else
-+			rtw_write16(rtwdev, REG_BB_SEL_BTG, 0x200);
-+	} else {
-+		if (aux)
-+			rtw_write16(rtwdev, REG_BB_SEL_BTG, 0x280);
-+		else
-+			rtw_write16(rtwdev, REG_BB_SEL_BTG, 0x0);
-+	}
-+
-+	/* disable LTE coex in wifi side */
-+	rtw_coex_write_indirect_reg(rtwdev, LTE_COEX_CTRL, BIT_LTE_COEX_EN, 0x0);
-+	rtw_coex_write_indirect_reg(rtwdev, LTE_WL_TRX_CTRL, MASKLWORD, 0xffff);
-+	rtw_coex_write_indirect_reg(rtwdev, LTE_BT_TRX_CTRL, MASKLWORD, 0xffff);
-+}
-+
-+static void rtw8723d_coex_cfg_wl_tx_power(struct rtw_dev *rtwdev, u8 wl_pwr)
-+{
-+	struct rtw_coex *coex = &rtwdev->coex;
-+	struct rtw_coex_dm *coex_dm = &coex->dm;
-+	static const u8	wl_tx_power[] = {0xb2, 0x90};
-+	u8 pwr;
-+
-+	if (wl_pwr == coex_dm->cur_wl_pwr_lvl)
++	if (efuse->power_track_type != 0)
 +		return;
 +
-+	coex_dm->cur_wl_pwr_lvl = wl_pwr;
-+
-+	if (coex_dm->cur_wl_pwr_lvl >= ARRAY_SIZE(wl_tx_power))
-+		coex_dm->cur_wl_pwr_lvl = ARRAY_SIZE(wl_tx_power) - 1;
-+
-+	pwr = wl_tx_power[coex_dm->cur_wl_pwr_lvl];
-+
-+	rtw_write8(rtwdev, REG_ANA_PARAM1 + 3, pwr);
-+}
-+
-+static void rtw8723d_coex_cfg_wl_rx_gain(struct rtw_dev *rtwdev, bool low_gain)
-+{
-+	struct rtw_coex *coex = &rtwdev->coex;
-+	struct rtw_coex_dm *coex_dm = &coex->dm;
-+	/* WL Rx Low gain on */
-+	static const u32 wl_rx_low_gain_on[] = {
-+		0xec120101, 0xeb130101, 0xce140101, 0xcd150101, 0xcc160101,
-+		0xcb170101, 0xca180101, 0x8d190101, 0x8c1a0101, 0x8b1b0101,
-+		0x4f1c0101, 0x4e1d0101, 0x4d1e0101, 0x4c1f0101, 0x0e200101,
-+		0x0d210101, 0x0c220101, 0x0b230101, 0xcf240001, 0xce250001,
-+		0xcd260001, 0xcc270001, 0x8f280001
-+	};
-+	/* WL Rx Low gain off */
-+	static const u32 wl_rx_low_gain_off[] = {
-+		0xec120101, 0xeb130101, 0xea140101, 0xe9150101, 0xe8160101,
-+		0xe7170101, 0xe6180101, 0xe5190101, 0xe41a0101, 0xe31b0101,
-+		0xe21c0101, 0xe11d0101, 0xe01e0101, 0x861f0101, 0x85200101,
-+		0x84210101, 0x83220101, 0x82230101, 0x81240101, 0x80250101,
-+		0x44260101, 0x43270101, 0x42280101
-+	};
-+	u8 i;
-+
-+	if (low_gain == coex_dm->cur_wl_rx_low_gain_en)
++	if (!dm_info->pwr_trk_triggered) {
++		rtw_write_rf(rtwdev, RF_PATH_A, RF_T_METER,
++			     GENMASK(17, 16), 0x03);
++		dm_info->pwr_trk_triggered = true;
 +		return;
-+
-+	coex_dm->cur_wl_rx_low_gain_en = low_gain;
-+
-+	if (coex_dm->cur_wl_rx_low_gain_en) {
-+		for (i = 0; i < ARRAY_SIZE(wl_rx_low_gain_on); i++)
-+			rtw_write32(rtwdev, REG_AGCRSSI, wl_rx_low_gain_on[i]);
-+	} else {
-+		for (i = 0; i < ARRAY_SIZE(wl_rx_low_gain_off); i++)
-+			rtw_write32(rtwdev, REG_AGCRSSI, wl_rx_low_gain_off[i]);
 +	}
++
++	rtw8723d_phy_pwrtrack(rtwdev);
++	dm_info->pwr_trk_triggered = false;
 +}
 +
- static u8 rtw8723d_pwrtrack_get_limit_ofdm(struct rtw_dev *rtwdev)
- {
- 	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
-@@ -1852,6 +1978,156 @@ static struct rtw_chip_ops rtw8723d_ops = {
+ static struct rtw_chip_ops rtw8723d_ops = {
+ 	.phy_set_param		= rtw8723d_phy_set_param,
+ 	.read_efuse		= rtw8723d_read_efuse,
+@@ -1500,6 +1842,7 @@ static struct rtw_chip_ops rtw8723d_ops = {
+ 	.efuse_grant		= rtw8723d_efuse_grant,
+ 	.false_alarm_statistics	= rtw8723d_false_alarm_statistics,
+ 	.phy_calibration	= rtw8723d_phy_calibration,
++	.pwr_track		= rtw8723d_pwr_track,
  	.config_bfee		= NULL,
  	.set_gid_table		= NULL,
  	.cfg_csi_rate		= NULL,
-+
-+	.coex_set_init		= rtw8723d_coex_cfg_init,
-+	.coex_set_ant_switch	= NULL,
-+	.coex_set_gnt_fix	= rtw8723d_coex_cfg_gnt_fix,
-+	.coex_set_gnt_debug	= rtw8723d_coex_cfg_gnt_debug,
-+	.coex_set_rfe_type	= rtw8723d_coex_cfg_rfe_type,
-+	.coex_set_wl_tx_power	= rtw8723d_coex_cfg_wl_tx_power,
-+	.coex_set_wl_rx_gain	= rtw8723d_coex_cfg_wl_rx_gain,
-+};
-+
-+/* Shared-Antenna Coex Table */
-+static const struct coex_table_para table_sant_8723d[] = {
-+	{0xffffffff, 0xffffffff}, /* case-0 */
-+	{0x55555555, 0x55555555},
-+	{0x65555555, 0x65555555},
-+	{0xaaaaaaaa, 0xaaaaaaaa},
-+	{0x5a5a5a5a, 0x5a5a5a5a},
-+	{0xfafafafa, 0xfafafafa}, /* case-5 */
-+	{0xa5555555, 0xaaaa5aaa},
-+	{0x6a5a5a5a, 0x5a5a5a5a},
-+	{0x6a5a5a5a, 0x6a5a5a5a},
-+	{0x65555555, 0x5a5a5a5a},
-+	{0x65555555, 0x6a5a5a5a}, /* case-10 */
-+	{0x65555555, 0xfafafafa},
-+	{0x65555555, 0x6a5a5aaa},
-+	{0x65555555, 0x5aaa5aaa},
-+	{0x65555555, 0xaaaa5aaa},
-+	{0x65555555, 0xaaaaaaaa}, /* case-15 */
-+	{0xffff55ff, 0xfafafafa},
-+	{0xffff55ff, 0x6afa5afa},
-+	{0xaaffffaa, 0xfafafafa},
-+	{0xaa5555aa, 0x5a5a5a5a},
-+	{0xaa5555aa, 0x6a5a5a5a}, /* case-20 */
-+	{0xaa5555aa, 0xaaaaaaaa},
-+	{0xffffffff, 0x5a5a5a5a},
-+	{0xffffffff, 0x6a5a5a5a},
-+	{0xffffffff, 0x55555555},
-+	{0xffffffff, 0x6a5a5aaa}, /* case-25 */
-+	{0x55555555, 0x5a5a5a5a},
-+	{0x55555555, 0xaaaaaaaa},
-+	{0x55555555, 0x6a6a6a6a},
-+	{0x656a656a, 0x656a656a}
-+};
-+
-+/* Non-Shared-Antenna Coex Table */
-+static const struct coex_table_para table_nsant_8723d[] = {
-+	{0xffffffff, 0xffffffff}, /* case-100 */
-+	{0x55555555, 0x55555555},
-+	{0x65555555, 0x65555555},
-+	{0xaaaaaaaa, 0xaaaaaaaa},
-+	{0x5a5a5a5a, 0x5a5a5a5a},
-+	{0xfafafafa, 0xfafafafa}, /* case-105 */
-+	{0x5afa5afa, 0x5afa5afa},
-+	{0x55555555, 0xfafafafa},
-+	{0x65555555, 0xfafafafa},
-+	{0x65555555, 0x5a5a5a5a},
-+	{0x65555555, 0x6a5a5a5a}, /* case-110 */
-+	{0x65555555, 0xaaaaaaaa},
-+	{0xffff55ff, 0xfafafafa},
-+	{0xffff55ff, 0x5afa5afa},
-+	{0xffff55ff, 0xaaaaaaaa},
-+	{0xaaffffaa, 0xfafafafa}, /* case-115 */
-+	{0xaaffffaa, 0x5afa5afa},
-+	{0xaaffffaa, 0xaaaaaaaa},
-+	{0xffffffff, 0xfafafafa},
-+	{0xffffffff, 0x5afa5afa},
-+	{0xffffffff, 0xaaaaaaaa},/* case-120 */
-+	{0x55ff55ff, 0x5afa5afa},
-+	{0x55ff55ff, 0xaaaaaaaa},
-+	{0x55ff55ff, 0x55ff55ff}
-+};
-+
-+/* Shared-Antenna TDMA */
-+static const struct coex_tdma_para tdma_sant_8723d[] = {
-+	{ {0x08, 0x00, 0x00, 0x00, 0x00} }, /* case-0 */
-+	{ {0x61, 0x45, 0x03, 0x11, 0x11} }, /* case-1 */
-+	{ {0x61, 0x3a, 0x03, 0x11, 0x11} },
-+	{ {0x61, 0x20, 0x03, 0x11, 0x11} },
-+	{ {0x61, 0x30, 0x03, 0x11, 0x11} },
-+	{ {0x61, 0x10, 0x03, 0x11, 0x11} }, /* case-5 */
-+	{ {0x61, 0x48, 0x03, 0x11, 0x10} },
-+	{ {0x61, 0x3a, 0x03, 0x11, 0x10} },
-+	{ {0x61, 0x30, 0x03, 0x11, 0x10} },
-+	{ {0x61, 0x20, 0x03, 0x11, 0x10} },
-+	{ {0x61, 0x10, 0x03, 0x11, 0x10} }, /* case-10 */
-+	{ {0x61, 0x10, 0x03, 0x11, 0x14} },
-+	{ {0x61, 0x08, 0x03, 0x10, 0x14} },
-+	{ {0x51, 0x10, 0x03, 0x10, 0x54} },
-+	{ {0x51, 0x10, 0x03, 0x10, 0x55} },
-+	{ {0x51, 0x10, 0x07, 0x10, 0x54} }, /* case-15 */
-+	{ {0x51, 0x45, 0x03, 0x10, 0x50} },
-+	{ {0x51, 0x3a, 0x03, 0x10, 0x50} },
-+	{ {0x51, 0x30, 0x03, 0x10, 0x50} },
-+	{ {0x51, 0x20, 0x03, 0x10, 0x50} },
-+	{ {0x51, 0x15, 0x03, 0x10, 0x50} }, /* case-20 */
-+	{ {0x51, 0x4a, 0x03, 0x10, 0x50} },
-+	{ {0x51, 0x0c, 0x03, 0x10, 0x54} },
-+	{ {0x55, 0x08, 0x03, 0x10, 0x54} },
-+	{ {0x65, 0x10, 0x03, 0x11, 0x11} },
-+	{ {0x51, 0x10, 0x03, 0x10, 0x51} },
-+	{ {0x61, 0x15, 0x03, 0x11, 0x10} }
-+};
-+
-+/* Non-Shared-Antenna TDMA */
-+static const struct coex_tdma_para tdma_nsant_8723d[] = {
-+	{ {0x00, 0x00, 0x00, 0x40, 0x00} }, /* case-100 */
-+	{ {0x61, 0x45, 0x03, 0x11, 0x11} }, /* case-101 */
-+	{ {0x61, 0x3a, 0x03, 0x11, 0x11} },
-+	{ {0x61, 0x30, 0x03, 0x11, 0x11} },
-+	{ {0x61, 0x20, 0x03, 0x11, 0x11} },
-+	{ {0x61, 0x10, 0x03, 0x11, 0x11} }, /* case-105 */
-+	{ {0x61, 0x45, 0x03, 0x11, 0x10} },
-+	{ {0x61, 0x3a, 0x03, 0x11, 0x10} },
-+	{ {0x61, 0x30, 0x03, 0x11, 0x10} },
-+	{ {0x61, 0x20, 0x03, 0x11, 0x10} },
-+	{ {0x61, 0x10, 0x03, 0x11, 0x10} }, /* case-110 */
-+	{ {0x61, 0x08, 0x03, 0x11, 0x14} },
-+	{ {0x61, 0x08, 0x03, 0x10, 0x14} },
-+	{ {0x51, 0x08, 0x03, 0x10, 0x54} },
-+	{ {0x51, 0x08, 0x03, 0x10, 0x55} },
-+	{ {0x51, 0x08, 0x07, 0x10, 0x54} }, /* case-115 */
-+	{ {0x51, 0x45, 0x03, 0x10, 0x50} },
-+	{ {0x51, 0x3a, 0x03, 0x10, 0x50} },
-+	{ {0x51, 0x30, 0x03, 0x10, 0x50} },
-+	{ {0x51, 0x20, 0x03, 0x10, 0x50} },
-+	{ {0x51, 0x10, 0x03, 0x10, 0x50} }
-+};
-+
-+/* rssi in percentage % (dbm = % - 100) */
-+static const u8 wl_rssi_step_8723d[] = {60, 50, 44, 30};
-+static const u8 bt_rssi_step_8723d[] = {30, 30, 30, 30};
-+static const struct coex_5g_afh_map afh_5g_8723d[] = { {0, 0, 0} };
-+
-+/* wl_tx_dec_power, bt_tx_dec_power, wl_rx_gain, bt_rx_lna_constrain */
-+static const struct coex_rf_para rf_para_tx_8723d[] = {
-+	{0, 0, false, 7},  /* for normal */
-+	{0, 10, false, 7}, /* for WL-CPT */
-+	{1, 0, true, 4},
-+	{1, 2, true, 4},
-+	{1, 10, true, 4},
-+	{1, 15, true, 4}
-+};
-+
-+static const struct coex_rf_para rf_para_rx_8723d[] = {
-+	{0, 0, false, 7},  /* for normal */
-+	{0, 10, false, 7}, /* for WL-CPT */
-+	{1, 0, true, 5},
-+	{1, 2, true, 5},
-+	{1, 10, true, 5},
-+	{1, 15, true, 5}
+@@ -1973,6 +2316,69 @@ static const struct rtw_rfe_def rtw8723d_rfe_defs[] = {
+ 		.txpwr_lmt_tbl	= &rtw8723d_txpwr_lmt_tbl,},
  };
  
- static const struct rtw_pwr_seq_cmd trans_carddis_to_cardemu_8723d[] = {
-@@ -2452,6 +2728,32 @@ struct rtw_chip_info rtw8723d_hw_spec = {
- 	.rfe_defs_size = ARRAY_SIZE(rtw8723d_rfe_defs),
- 	.pwr_track_tbl = &rtw8723d_rtw_pwr_track_tbl,
- 	.iqk_threshold = 8,
++static const u8 rtw8723d_pwrtrk_2gb_n[] = {
++	0, 0, 1, 1, 1, 2, 2, 3, 4, 4, 4, 4, 5, 5, 5,
++	6, 6, 7, 7, 8, 8, 8, 9, 9, 9, 10, 10, 10, 10, 10
++};
 +
-+	.coex_para_ver = 0x1905302f,
-+	.bt_desired_ver = 0x2f,
-+	.scbd_support = true,
-+	.new_scbd10_def = true,
-+	.pstdma_type = COEX_PSTDMA_FORCE_LPSOFF,
-+	.bt_rssi_type = COEX_BTRSSI_RATIO,
-+	.ant_isolation = 15,
-+	.rssi_tolerance = 2,
-+	.wl_rssi_step = wl_rssi_step_8723d,
-+	.bt_rssi_step = bt_rssi_step_8723d,
-+	.table_sant_num = ARRAY_SIZE(table_sant_8723d),
-+	.table_sant = table_sant_8723d,
-+	.table_nsant_num = ARRAY_SIZE(table_nsant_8723d),
-+	.table_nsant = table_nsant_8723d,
-+	.tdma_sant_num = ARRAY_SIZE(tdma_sant_8723d),
-+	.tdma_sant = tdma_sant_8723d,
-+	.tdma_nsant_num = ARRAY_SIZE(tdma_nsant_8723d),
-+	.tdma_nsant = tdma_nsant_8723d,
-+	.wl_rf_para_num = ARRAY_SIZE(rf_para_tx_8723d),
-+	.wl_rf_para_tx = rf_para_tx_8723d,
-+	.wl_rf_para_rx = rf_para_rx_8723d,
-+	.bt_afh_span_bw20 = 0x20,
-+	.bt_afh_span_bw40 = 0x30,
-+	.afh_5g_num = ARRAY_SIZE(afh_5g_8723d),
-+	.afh_5g = afh_5g_8723d,
++static const u8 rtw8723d_pwrtrk_2gb_p[] = {
++	0, 0, 1, 1, 2, 2, 2, 3, 3, 4, 4, 5, 5, 6, 7,
++	7, 8, 8, 8, 9, 9, 10, 10, 10, 10, 10, 10, 10, 10, 10
++};
++
++static const u8 rtw8723d_pwrtrk_2ga_n[] = {
++	0, 0, 1, 1, 1, 2, 2, 3, 4, 4, 4, 4, 5, 5, 5,
++	6, 6, 7, 7, 8, 8, 8, 9, 9, 9, 10, 10, 10, 10, 10
++};
++
++static const u8 rtw8723d_pwrtrk_2ga_p[] = {
++	0, 0, 1, 1, 2, 2, 2, 3, 3, 4, 4, 5, 5, 6, 7,
++	7, 8, 8, 8, 9, 9, 10, 10, 10, 10, 10, 10, 10, 10, 10
++};
++
++static const u8 rtw8723d_pwrtrk_2g_cck_b_n[] = {
++	0, 1, 1, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6,
++	6, 7, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 11, 11, 11
++};
++
++static const u8 rtw8723d_pwrtrk_2g_cck_b_p[] = {
++	0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7,
++	7, 8, 9, 9, 10, 10, 11, 11, 11, 11, 11, 11, 11, 11, 11
++};
++
++static const u8 rtw8723d_pwrtrk_2g_cck_a_n[] = {
++	0, 1, 1, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6,
++	6, 7, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 11, 11, 11
++};
++
++static const u8 rtw8723d_pwrtrk_2g_cck_a_p[] = {
++	0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7,
++	7, 8, 9, 9, 10, 10, 11, 11, 11, 11, 11, 11, 11, 11, 11
++};
++
++static const s8 rtw8723d_pwrtrk_xtal_n[] = {
++	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
++	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
++};
++
++static const s8 rtw8723d_pwrtrk_xtal_p[] = {
++	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
++	0, -10, -12, -14, -16, -16, -16, -16, -16, -16, -16, -16, -16, -16, -16
++};
++
++static const struct rtw_pwr_track_tbl rtw8723d_rtw_pwr_track_tbl = {
++	.pwrtrk_2gb_n = rtw8723d_pwrtrk_2gb_n,
++	.pwrtrk_2gb_p = rtw8723d_pwrtrk_2gb_p,
++	.pwrtrk_2ga_n = rtw8723d_pwrtrk_2ga_n,
++	.pwrtrk_2ga_p = rtw8723d_pwrtrk_2ga_p,
++	.pwrtrk_2g_cckb_n = rtw8723d_pwrtrk_2g_cck_b_n,
++	.pwrtrk_2g_cckb_p = rtw8723d_pwrtrk_2g_cck_b_p,
++	.pwrtrk_2g_ccka_n = rtw8723d_pwrtrk_2g_cck_a_n,
++	.pwrtrk_2g_ccka_p = rtw8723d_pwrtrk_2g_cck_a_p,
++	.pwrtrk_xtal_p = rtw8723d_pwrtrk_xtal_p,
++	.pwrtrk_xtal_n = rtw8723d_pwrtrk_xtal_n,
++};
++
+ struct rtw_chip_info rtw8723d_hw_spec = {
+ 	.ops = &rtw8723d_ops,
+ 	.id = RTW_CHIP_TYPE_8723D,
+@@ -2014,6 +2420,8 @@ struct rtw_chip_info rtw8723d_hw_spec = {
+ 	.rf_tbl = {&rtw8723d_rf_a_tbl},
+ 	.rfe_defs = rtw8723d_rfe_defs,
+ 	.rfe_defs_size = ARRAY_SIZE(rtw8723d_rfe_defs),
++	.pwr_track_tbl = &rtw8723d_rtw_pwr_track_tbl,
++	.iqk_threshold = 8,
  };
  EXPORT_SYMBOL(rtw8723d_hw_spec);
  
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723d.h b/drivers/net/wireless/realtek/rtw88/rtw8723d.h
-index 2e20baf58530..1ba9369a959e 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8723d.h
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8723d.h
-@@ -112,6 +112,7 @@ static inline s32 iqk_mult(s32 x, s32 y, s32 *ext)
- 	return (t >> 8);	/* Q.16 --> Q.8 */
- }
- 
-+#define REG_GPIO_INTM		0x0048
- #define REG_BTG_SEL		0x0067
- #define REG_LTECOEX_PATH_CONTROL	0x0070
- #define REG_LTECOEX_CTRL	0x07c0
-@@ -119,6 +120,7 @@ static inline s32 iqk_mult(s32 x, s32 y, s32 *ext)
- #define REG_LTECOEX_READ_DATA	0x07c8
- #define REG_PSDFN		0x0808
- #define REG_BB_PWR_SAV1_11N	0x0874
-+#define REG_ANA_PARAM1		0x0880
- #define REG_ANALOG_P4		0x088c
- #define REG_PSDRPT		0x08b4
- #define REG_FPGA1_RFMOD		0x0900
-@@ -156,6 +158,7 @@ static inline s32 iqk_mult(s32 x, s32 y, s32 *ext)
- #define BIT_SET_OFDM0_EXTS(a, c, d) (((a) << 31) | ((c) << 29) | ((d) << 28))
- #define REG_OFDM0_XAAGC1	0x0c50
- #define REG_OFDM0_XBAGC1	0x0c58
-+#define REG_AGCRSSI		0x0c78
- #define REG_OFDM_0_XA_TX_IQ_IMBALANCE	0x0c80
- #define BIT_MASK_TXIQ_ELM_A	0x03ff
- #define BIT_SET_TXIQ_ELM_ACD(a, c, d) (((d) << 22) | (((c) & 0x3F) << 16) |    \
 -- 
 2.17.1
 
