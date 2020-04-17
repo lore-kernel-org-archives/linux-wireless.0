@@ -2,81 +2,82 @@ Return-Path: <SRS0=s1dN=6B=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E92A6C2BB1D
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 04:35:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9692CC2BB1D
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 06:16:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B6DC520857
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 04:35:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 632B521D91
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 06:16:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="pp3BWHk6"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="ICGKcz28"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726378AbgDQEcP (ORCPT
+        id S1726764AbgDQGP7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 17 Apr 2020 00:32:15 -0400
-Received: from mail26.static.mailgun.info ([104.130.122.26]:25424 "EHLO
+        Fri, 17 Apr 2020 02:15:59 -0400
+Received: from mail26.static.mailgun.info ([104.130.122.26]:12436 "EHLO
         mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725900AbgDQEcN (ORCPT
+        by vger.kernel.org with ESMTP id S1726710AbgDQGP7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Apr 2020 00:32:13 -0400
+        Fri, 17 Apr 2020 02:15:59 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1587097932; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=HRpAtCJ93k/R4jbC1ynNoZD6jHvOk0Kjd/AowYwMjJk=;
- b=pp3BWHk6YcGLO7ZWDSbdYiylIGLDOWPtxjUAT3qdllzkbe2L/Eb0g+fLNmiO1VM4tWuqdHIY
- OFcl7unsu27w+yR4RJrAox3s7ayZj3gfgBEbyjnkkLemVbMxR2SjrexQ/ns2r0x0uvdmp38c
- ++m8en+fwRiTpSvZwRaMld4kshA=
+ s=smtp; t=1587104158; h=Date: Message-Id: Cc: To: References:
+ In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
+ Content-Type: Sender; bh=O17NyqFtfItT/B15uG75/Ryl4iD/9VK6oS2uppm3CRo=;
+ b=ICGKcz28/6YS5THCEqpeoHvLSbLvwrAV1SbvBUTAVbtoo9gKjTK0XPTCMvI9cdrDZNE5+BQy
+ 2lD9L+pp/NMcY2ST9fOwsk9Buz2YLrw063/GAerjEH7Y9bpre+yYgX7UyjWd18Vkh9n/xiN9
+ XNdz3qVutdIAHJ/8Vv7+yf2z73o=
 X-Mailgun-Sending-Ip: 104.130.122.26
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5e99314c.7f1fac42c8f0-smtp-out-n04;
- Fri, 17 Apr 2020 04:32:12 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5e99499d.7fdb70a10c00-smtp-out-n04;
+ Fri, 17 Apr 2020 06:15:57 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 3F395C433CB; Fri, 17 Apr 2020 04:32:11 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        id 9014CC433F2; Fri, 17 Apr 2020 06:15:57 +0000 (UTC)
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: wgong)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id DF9F1C433F2;
-        Fri, 17 Apr 2020 04:32:09 +0000 (UTC)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 875D7C433F2;
+        Fri, 17 Apr 2020 06:15:56 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 875D7C433F2
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Fri, 17 Apr 2020 12:32:09 +0800
-From:   Wen Gong <wgong@codeaurora.org>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath10k: improve power save performance for sdio
-In-Reply-To: <877dyfr4fb.fsf@kamboji.qca.qualcomm.com>
-References: <0101016ed9241282-73dd8b35-e2e5-4f37-9b50-cf2fb6524dfc-000000@us-west-2.amazonses.com>
- <877dyfr4fb.fsf@kamboji.qca.qualcomm.com>
-Message-ID: <b9f680d57a6fbc9ac59dc5fc281d0af3@codeaurora.org>
-X-Sender: wgong@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+Content-Transfer-Encoding: 8bit
+Subject: Re: [PATCH v2] MAINTAINERS: Update URL for wireless drivers
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20200415140052.2lftkixe37llmtjl@nixos>
+References: <20200415140052.2lftkixe37llmtjl@nixos>
+To:     Nils =?utf-8?q?ANDR=C3=89-CHANG?= <nils@nilsand.re>
+Cc:     linux-wireless@vger.kernel.org
+User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/2.7.12
+Message-Id: <20200417061557.9014CC433F2@smtp.codeaurora.org>
+Date:   Fri, 17 Apr 2020 06:15:57 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2020-04-16 20:38, Kalle Valo wrote:
-> Wen Gong <wgong@codeaurora.org> writes:
-> 
+Nils wrote:
 
+> Previously, http://wireless.kernel.org would redirect to
+> https://wireless.wiki.kernel.org, however, this is no longer the case
+> and most pages return 404.
 > 
->> +static inline int ath10k_hif_set_mbox_sleep(struct ath10k *ar, bool 
->> enable_sleep)
->> +{
->> +	if (ar->hif.ops->set_mbox_sleep)
->> +		return ar->hif.ops->set_mbox_sleep(ar, enable_sleep);
->> +	return 0;
->> +}
+> https is used because http://wireless.kernel.org/* redirects to
+> https://wireless.wiki.kernel.org/*
 > 
-> I don't think we need to add another hif op for this. I sent v2 which
-> uses existing op.
-Yes, I see it.
-but I see it removed ath10k_hif_set_mbox_sleep in ath10k_core_start,
-expected it will not effect the patch's power save.
+> Signed-off-by: Nils ANDRÉ-CHANG <nils@nilsand.re>
+
+Patch applied to wireless-drivers.git, thanks.
+
+e0c5c33dd237 MAINTAINERS: Update URL for wireless drivers
+
+-- 
+https://patchwork.kernel.org/patch/11491341/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
