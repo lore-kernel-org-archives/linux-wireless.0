@@ -6,30 +6,30 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87559C38A29
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 07:47:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F76AC38A2C
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 07:47:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 71E1C2137B
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 07:47:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 09DB9208E4
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 07:47:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729226AbgDQHrJ (ORCPT
+        id S1729475AbgDQHrq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 17 Apr 2020 03:47:09 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:37005 "EHLO
+        Fri, 17 Apr 2020 03:47:46 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:36988 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729196AbgDQHrI (ORCPT
+        with ESMTP id S1726382AbgDQHrJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Apr 2020 03:47:08 -0400
+        Fri, 17 Apr 2020 03:47:09 -0400
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 03H7l2Of9020020, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 03H7l0Oi9020020, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexmb06.realtek.com.tw[172.21.6.99])
-        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 03H7l2Of9020020
+        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 03H7l0Oi9020020
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Fri, 17 Apr 2020 15:47:02 +0800
+        Fri, 17 Apr 2020 15:47:00 +0800
 Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
  RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Fri, 17 Apr 2020 15:47:01 +0800
+ 15.1.1779.2; Fri, 17 Apr 2020 15:47:00 +0800
 Received: from localhost.localdomain (172.21.68.128) by
  RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
@@ -38,9 +38,9 @@ From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <pkshih@realtek.com>, <linux-wireless@vger.kernel.org>,
         <briannorris@chromium.org>, <kevin_yang@realtek.com>
-Subject: [PATCH 07/40] rtw88: 8723d: Add new chip op efuse_grant() to control efuse access
-Date:   Fri, 17 Apr 2020 15:46:20 +0800
-Message-ID: <20200417074653.15591-8-yhchuang@realtek.com>
+Subject: [PATCH 02/40] rtw88: 8723d: add beamform wrapper functions
+Date:   Fri, 17 Apr 2020 15:46:15 +0800
+Message-ID: <20200417074653.15591-3-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200417074653.15591-1-yhchuang@realtek.com>
 References: <20200417074653.15591-1-yhchuang@realtek.com>
@@ -56,134 +56,149 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ping-Ke Shih <pkshih@realtek.com>
 
-8723D devices need to grant efuse access before dumping physical efuse
-map, other chips don't need it, so keep this ops as blank.
+8723D doesn't support beamform because rtw88 only supports VHT beamform
+but 8723d doesn't have VHT capability. Though 8723d doesn't support
+beamform, BSS_CHANGED_MU_GROUPS is still marked as changed when doing
+disassociation. So, add wrapper functions for all beamform ops to make
+sure they aren't NULL before calling.
 
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/efuse.c    |  4 ++++
- drivers/net/wireless/realtek/rtw88/main.h     | 13 +++++++++++++
- drivers/net/wireless/realtek/rtw88/reg.h      |  9 +++++++++
- drivers/net/wireless/realtek/rtw88/rtw8723d.c | 13 +++++++++++++
- 4 files changed, 39 insertions(+)
+ drivers/net/wireless/realtek/rtw88/bf.c       |  7 +++---
+ drivers/net/wireless/realtek/rtw88/bf.h       | 22 +++++++++++++++++++
+ drivers/net/wireless/realtek/rtw88/mac80211.c |  7 ++----
+ drivers/net/wireless/realtek/rtw88/main.c     |  7 +++---
+ drivers/net/wireless/realtek/rtw88/rtw8723d.c |  3 +++
+ 5 files changed, 33 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/efuse.c b/drivers/net/wireless/realtek/rtw88/efuse.c
-index 212c8376a8c9..df969d346b41 100644
---- a/drivers/net/wireless/realtek/rtw88/efuse.c
-+++ b/drivers/net/wireless/realtek/rtw88/efuse.c
-@@ -90,6 +90,8 @@ static int rtw_dump_physical_efuse_map(struct rtw_dev *rtwdev, u8 *map)
- 	u32 addr;
- 	u32 cnt;
+diff --git a/drivers/net/wireless/realtek/rtw88/bf.c b/drivers/net/wireless/realtek/rtw88/bf.c
+index b6d1d71f4d30..a5912da327e2 100644
+--- a/drivers/net/wireless/realtek/rtw88/bf.c
++++ b/drivers/net/wireless/realtek/rtw88/bf.c
+@@ -10,7 +10,6 @@
+ void rtw_bf_disassoc(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
+ 		     struct ieee80211_bss_conf *bss_conf)
+ {
+-	struct rtw_chip_info *chip = rtwdev->chip;
+ 	struct rtw_vif *rtwvif = (struct rtw_vif *)vif->drv_priv;
+ 	struct rtw_bfee *bfee = &rtwvif->bfee;
+ 	struct rtw_bf_info *bfinfo = &rtwdev->bf_info;
+@@ -23,7 +22,7 @@ void rtw_bf_disassoc(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
+ 	else if (bfee->role == RTW_BFEE_SU)
+ 		bfinfo->bfer_su_cnt--;
  
-+	rtw_chip_efuse_grant_on(rtwdev);
-+
- 	switch_efuse_bank(rtwdev);
+-	chip->ops->config_bfee(rtwdev, rtwvif, bfee, false);
++	rtw_chip_config_bfee(rtwdev, rtwvif, bfee, false);
  
- 	/* disable 2.5V LDO */
-@@ -113,6 +115,8 @@ static int rtw_dump_physical_efuse_map(struct rtw_dev *rtwdev, u8 *map)
- 		*(map + addr) = (u8)(efuse_ctl & BIT_MASK_EF_DATA);
+ 	bfee->role = RTW_BFEE_NONE;
+ }
+@@ -71,7 +70,7 @@ void rtw_bf_assoc(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
+ 		bfee->aid = bss_conf->aid;
+ 		bfinfo->bfer_mu_cnt++;
+ 
+-		chip->ops->config_bfee(rtwdev, rtwvif, bfee, true);
++		rtw_chip_config_bfee(rtwdev, rtwvif, bfee, true);
+ 	} else if ((ic_vht_cap->cap & IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE) &&
+ 		   (vht_cap->cap & IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE)) {
+ 		if (bfinfo->bfer_su_cnt >= chip->bfer_su_max_num) {
+@@ -97,7 +96,7 @@ void rtw_bf_assoc(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
+ 			}
+ 		}
+ 
+-		chip->ops->config_bfee(rtwdev, rtwvif, bfee, true);
++		rtw_chip_config_bfee(rtwdev, rtwvif, bfee, true);
  	}
  
-+	rtw_chip_efuse_grant_off(rtwdev);
-+
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
-index 8f15fc113af0..74302181da53 100644
---- a/drivers/net/wireless/realtek/rtw88/main.h
-+++ b/drivers/net/wireless/realtek/rtw88/main.h
-@@ -811,6 +811,7 @@ struct rtw_chip_ops {
- 			   u32 antenna_tx,
- 			   u32 antenna_rx);
- 	void (*cfg_ldo25)(struct rtw_dev *rtwdev, bool enable);
-+	void (*efuse_grant)(struct rtw_dev *rtwdev, bool enable);
- 	void (*false_alarm_statistics)(struct rtw_dev *rtwdev);
- 	void (*phy_calibration)(struct rtw_dev *rtwdev);
- 	void (*dpk_track)(struct rtw_dev *rtwdev);
-@@ -1712,6 +1713,18 @@ static inline bool rtw_ssid_equal(struct cfg80211_ssid *a,
- 	return true;
- }
- 
-+static inline void rtw_chip_efuse_grant_on(struct rtw_dev *rtwdev)
+ out_unlock:
+diff --git a/drivers/net/wireless/realtek/rtw88/bf.h b/drivers/net/wireless/realtek/rtw88/bf.h
+index 96a8216dd11f..17855edb5006 100644
+--- a/drivers/net/wireless/realtek/rtw88/bf.h
++++ b/drivers/net/wireless/realtek/rtw88/bf.h
+@@ -89,4 +89,26 @@ void rtw_bf_set_gid_table(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
+ void rtw_bf_phy_init(struct rtw_dev *rtwdev);
+ void rtw_bf_cfg_csi_rate(struct rtw_dev *rtwdev, u8 rssi, u8 cur_rate,
+ 			 u8 fixrate_en, u8 *new_rate);
++static inline void rtw_chip_config_bfee(struct rtw_dev *rtwdev, struct rtw_vif *vif,
++					struct rtw_bfee *bfee, bool enable)
 +{
-+	if (rtwdev->chip->ops->efuse_grant)
-+		rtwdev->chip->ops->efuse_grant(rtwdev, true);
++	if (rtwdev->chip->ops->config_bfee)
++		rtwdev->chip->ops->config_bfee(rtwdev, vif, bfee, enable);
 +}
 +
-+static inline void rtw_chip_efuse_grant_off(struct rtw_dev *rtwdev)
++static inline void rtw_chip_set_gid_table(struct rtw_dev *rtwdev,
++					  struct ieee80211_vif *vif,
++					  struct ieee80211_bss_conf *conf)
 +{
-+	if (rtwdev->chip->ops->efuse_grant)
-+		rtwdev->chip->ops->efuse_grant(rtwdev, false);
++	if (rtwdev->chip->ops->set_gid_table)
++		rtwdev->chip->ops->set_gid_table(rtwdev, vif, conf);
 +}
 +
- void rtw_get_channel_params(struct cfg80211_chan_def *chandef,
- 			    struct rtw_channel_params *ch_param);
- bool check_hw_ready(struct rtw_dev *rtwdev, u32 addr, u32 mask, u32 target);
-diff --git a/drivers/net/wireless/realtek/rtw88/reg.h b/drivers/net/wireless/realtek/rtw88/reg.h
-index 2afd547ebcc9..911d8e75db77 100644
---- a/drivers/net/wireless/realtek/rtw88/reg.h
-+++ b/drivers/net/wireless/realtek/rtw88/reg.h
-@@ -6,6 +6,7 @@
- #define __RTW_REG_DEF_H__
++static inline void rtw_chip_cfg_csi_rate(struct rtw_dev *rtwdev, u8 rssi, u8 cur_rate,
++					 u8 fixrate_en, u8 *new_rate)
++{
++	if (rtwdev->chip->ops->cfg_csi_rate)
++		rtwdev->chip->ops->cfg_csi_rate(rtwdev, rssi, cur_rate,
++						fixrate_en, new_rate);
++}
+ #endif
+diff --git a/drivers/net/wireless/realtek/rtw88/mac80211.c b/drivers/net/wireless/realtek/rtw88/mac80211.c
+index a2e6ef4ad9ee..98d2ac22f6f6 100644
+--- a/drivers/net/wireless/realtek/rtw88/mac80211.c
++++ b/drivers/net/wireless/realtek/rtw88/mac80211.c
+@@ -375,11 +375,8 @@ static void rtw_ops_bss_info_changed(struct ieee80211_hw *hw,
+ 	if (changed & BSS_CHANGED_BEACON)
+ 		rtw_fw_download_rsvd_page(rtwdev);
  
- #define REG_SYS_FUNC_EN		0x0002
-+#define BIT_FEN_ELDR		BIT(12)
- #define BIT_FEN_CPUEN		BIT(2)
- #define BIT_FEN_BB_GLB_RST	BIT(1)
- #define BIT_FEN_BB_RSTB		BIT(0)
-@@ -15,6 +16,10 @@
- #define REG_SYS_CLK_CTRL	0x0008
- #define BIT_CPU_CLK_EN		BIT(14)
+-	if (changed & BSS_CHANGED_MU_GROUPS) {
+-		struct rtw_chip_info *chip = rtwdev->chip;
+-
+-		chip->ops->set_gid_table(rtwdev, vif, conf);
+-	}
++	if (changed & BSS_CHANGED_MU_GROUPS)
++		rtw_chip_set_gid_table(rtwdev, vif, conf);
  
-+#define REG_SYS_CLKR		0x0008
-+#define BIT_ANA8M		BIT(1)
-+#define BIT_LOADER_CLK_EN	BIT(5)
-+
- #define REG_RSV_CTRL		0x001C
- #define DISABLE_PI		0x3
- #define ENABLE_PI		0x2
-@@ -87,6 +92,10 @@
- 				 BIT_CHECK_SUM_OK)
- #define FW_READY_MASK		0xffff
+ 	if (changed & BSS_CHANGED_ERP_SLOT)
+ 		rtw_conf_tx(rtwdev, rtwvif);
+diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
+index 1e1d2c774287..6dfe4895c352 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.c
++++ b/drivers/net/wireless/realtek/rtw88/main.c
+@@ -137,7 +137,6 @@ struct rtw_watch_dog_iter_data {
+ static void rtw_dynamic_csi_rate(struct rtw_dev *rtwdev, struct rtw_vif *rtwvif)
+ {
+ 	struct rtw_bf_info *bf_info = &rtwdev->bf_info;
+-	struct rtw_chip_info *chip = rtwdev->chip;
+ 	u8 fix_rate_enable = 0;
+ 	u8 new_csi_rate_idx;
  
-+#define REG_EFUSE_ACCESS	0x00CF
-+#define EFUSE_ACCESS_ON		0x69
-+#define EFUSE_ACCESS_OFF	0x00
-+
- #define REG_WLRF1		0x00EC
- #define REG_WIFI_BT_INFO	0x00AA
- #define BIT_BT_INT_EN		BIT(15)
+@@ -145,9 +144,9 @@ static void rtw_dynamic_csi_rate(struct rtw_dev *rtwdev, struct rtw_vif *rtwvif)
+ 	    rtwvif->bfee.role != RTW_BFEE_MU)
+ 		return;
+ 
+-	chip->ops->cfg_csi_rate(rtwdev, rtwdev->dm_info.min_rssi,
+-				bf_info->cur_csi_rpt_rate,
+-				fix_rate_enable, &new_csi_rate_idx);
++	rtw_chip_cfg_csi_rate(rtwdev, rtwdev->dm_info.min_rssi,
++			      bf_info->cur_csi_rpt_rate,
++			      fix_rate_enable, &new_csi_rate_idx);
+ 
+ 	if (new_csi_rate_idx != bf_info->cur_csi_rpt_rate)
+ 		bf_info->cur_csi_rpt_rate = new_csi_rate_idx;
 diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723d.c b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-index 04f8d73e4e6c..756454d69fad 100644
+index cccf05ee6807..5798a5804af3 100644
 --- a/drivers/net/wireless/realtek/rtw88/rtw8723d.c
 +++ b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-@@ -28,11 +28,24 @@ static void rtw8723d_cfg_ldo25(struct rtw_dev *rtwdev, bool enable)
- 	rtw_write8(rtwdev, REG_LDO_EFUSE_CTRL + 3, ldo_pwr);
- }
+@@ -16,6 +16,9 @@
  
-+static void rtw8723d_efuse_grant(struct rtw_dev *rtwdev, bool on)
-+{
-+	if (on) {
-+		rtw_write8(rtwdev, REG_EFUSE_ACCESS, EFUSE_ACCESS_ON);
-+
-+		rtw_write16_set(rtwdev, REG_SYS_FUNC_EN, BIT_FEN_ELDR);
-+		rtw_write16_set(rtwdev, REG_SYS_CLKR, BIT_LOADER_CLK_EN | BIT_ANA8M);
-+	} else {
-+		rtw_write8(rtwdev, REG_EFUSE_ACCESS, EFUSE_ACCESS_OFF);
-+	}
-+}
-+
  static struct rtw_chip_ops rtw8723d_ops = {
- 	.read_rf		= rtw_phy_read_rf_sipi,
- 	.write_rf		= rtw_phy_write_rf_reg_sipi,
  	.set_antenna		= NULL,
- 	.cfg_ldo25		= rtw8723d_cfg_ldo25,
-+	.efuse_grant		= rtw8723d_efuse_grant,
- 	.config_bfee		= NULL,
- 	.set_gid_table		= NULL,
- 	.cfg_csi_rate		= NULL,
++	.config_bfee		= NULL,
++	.set_gid_table		= NULL,
++	.cfg_csi_rate		= NULL,
+ };
+ 
+ struct rtw_chip_info rtw8723d_hw_spec = {
 -- 
 2.17.1
 
