@@ -6,41 +6,41 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8BEEC38A29
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 07:47:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E172C2BB55
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 07:47:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 93F412137B
-	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 07:47:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EC403214AF
+	for <linux-wireless@archiver.kernel.org>; Fri, 17 Apr 2020 07:47:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729403AbgDQHrX (ORCPT
+        id S1729390AbgDQHrW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 17 Apr 2020 03:47:23 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:37064 "EHLO
+        Fri, 17 Apr 2020 03:47:22 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:37070 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729326AbgDQHrP (ORCPT
+        with ESMTP id S1729350AbgDQHrQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 17 Apr 2020 03:47:15 -0400
+        Fri, 17 Apr 2020 03:47:16 -0400
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 03H7l7hH5020159, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 03H7l9kD5020220, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexmb06.realtek.com.tw[172.21.6.99])
-        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 03H7l7hH5020159
+        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 03H7l9kD5020220
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Fri, 17 Apr 2020 15:47:07 +0800
+        Fri, 17 Apr 2020 15:47:09 +0800
 Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
  RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Fri, 17 Apr 2020 15:47:04 +0800
+ 15.1.1779.2; Fri, 17 Apr 2020 15:47:06 +0800
 Received: from localhost.localdomain (172.21.68.128) by
  RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Fri, 17 Apr 2020 15:47:04 +0800
+ 15.1.1779.2; Fri, 17 Apr 2020 15:47:05 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <pkshih@realtek.com>, <linux-wireless@vger.kernel.org>,
         <briannorris@chromium.org>, <kevin_yang@realtek.com>
-Subject: [PATCH 30/40] rtw88: 8723d: set ltecoex register address in chip_info
-Date:   Fri, 17 Apr 2020 15:46:43 +0800
-Message-ID: <20200417074653.15591-31-yhchuang@realtek.com>
+Subject: [PATCH 40/40] rtw88: rename rtw88.ko/rtwpci.ko to rtw88_core.ko/rtw88_pci.ko
+Date:   Fri, 17 Apr 2020 15:46:53 +0800
+Message-ID: <20200417074653.15591-41-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200417074653.15591-1-yhchuang@realtek.com>
 References: <20200417074653.15591-1-yhchuang@realtek.com>
@@ -54,176 +54,39 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-Since 8723D use different address of ltecoex register, this commit add a
-new field in chip_info and fill proper address. Then, ltecoex_read_reg()
-and ltecoex_reg_write() can use them to access ltecoex according to chip.
+Rename the name of the kernel module for rtw88's core and pci.
+Add proper prefix 'rtw88_' to easily recognize them, also can
+avoid confusion with other drivers. (ex. r8822be in staging)
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/main.h     |  7 +++++++
- drivers/net/wireless/realtek/rtw88/rtw8723d.c |  7 +++++++
- drivers/net/wireless/realtek/rtw88/rtw8723d.h |  3 +++
- drivers/net/wireless/realtek/rtw88/rtw8822b.c |  7 +++++++
- drivers/net/wireless/realtek/rtw88/rtw8822c.c |  7 +++++++
- drivers/net/wireless/realtek/rtw88/util.c     | 18 ++++++++++++------
- 6 files changed, 43 insertions(+), 6 deletions(-)
+ drivers/net/wireless/realtek/rtw88/Makefile | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
-index 8ba8702457f4..35e2fb19ad56 100644
---- a/drivers/net/wireless/realtek/rtw88/main.h
-+++ b/drivers/net/wireless/realtek/rtw88/main.h
-@@ -517,6 +517,12 @@ struct rtw_hw_reg {
- 	u32 mask;
- };
+diff --git a/drivers/net/wireless/realtek/rtw88/Makefile b/drivers/net/wireless/realtek/rtw88/Makefile
+index 9e3e95360089..f31e78a6f146 100644
+--- a/drivers/net/wireless/realtek/rtw88/Makefile
++++ b/drivers/net/wireless/realtek/rtw88/Makefile
+@@ -1,7 +1,7 @@
+ # SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
  
-+struct rtw_ltecoex_addr {
-+	u32 ctrl;
-+	u32 wdata;
-+	u32 rdata;
-+};
-+
- struct rtw_reg_domain {
- 	u32 addr;
- 	u32 mask;
-@@ -1118,6 +1124,7 @@ struct rtw_chip_info {
- 	u32 rf_sipi_addr[2];
- 	const struct rtw_rf_sipi_addr *rf_sipi_read_addr;
- 	u8 fix_rf_phy_num;
-+	const struct rtw_ltecoex_addr *ltecoex_addr;
+-obj-$(CONFIG_RTW88_CORE)	+= rtw88.o
+-rtw88-y += main.o \
++obj-$(CONFIG_RTW88_CORE)	+= rtw88_core.o
++rtw88_core-y += main.o \
+ 	   mac80211.o \
+ 	   util.o \
+ 	   debug.o \
+@@ -37,5 +37,5 @@ rtw88_8723d-objs		:= rtw8723d.o rtw8723d_table.o
+ obj-$(CONFIG_RTW88_8723DE)	+= rtw88_8723de.o
+ rtw88_8723de-objs		:= rtw8723de.o
  
- 	const struct rtw_table *mac_tbl;
- 	const struct rtw_table *agc_tbl;
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723d.c b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-index e93f4f0e5676..27b595fd4640 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-@@ -2333,6 +2333,12 @@ static const struct rtw_rf_sipi_addr rtw8723d_rf_sipi_addr[] = {
- 			.hssi_2 = 0x82c, .lssi_read_pi = 0x8bc},
- };
- 
-+static const struct rtw_ltecoex_addr rtw8723d_ltecoex_addr = {
-+	.ctrl = REG_LTECOEX_CTRL,
-+	.wdata = REG_LTECOEX_WRITE_DATA,
-+	.rdata = REG_LTECOEX_READ_DATA,
-+};
-+
- static const struct rtw_rfe_def rtw8723d_rfe_defs[] = {
- 	[0] = { .phy_pg_tbl	= &rtw8723d_bb_pg_tbl,
- 		.txpwr_lmt_tbl	= &rtw8723d_txpwr_lmt_tbl,},
-@@ -2437,6 +2443,7 @@ struct rtw_chip_info rtw8723d_hw_spec = {
- 	.rf_sipi_addr = {0x840, 0x844},
- 	.rf_sipi_read_addr = rtw8723d_rf_sipi_addr,
- 	.fix_rf_phy_num = 2,
-+	.ltecoex_addr = &rtw8723d_ltecoex_addr,
- 	.mac_tbl = &rtw8723d_mac_tbl,
- 	.agc_tbl = &rtw8723d_agc_tbl,
- 	.bb_tbl = &rtw8723d_bb_tbl,
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723d.h b/drivers/net/wireless/realtek/rtw88/rtw8723d.h
-index a31cf9d85f69..2e20baf58530 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8723d.h
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8723d.h
-@@ -114,6 +114,9 @@ static inline s32 iqk_mult(s32 x, s32 y, s32 *ext)
- 
- #define REG_BTG_SEL		0x0067
- #define REG_LTECOEX_PATH_CONTROL	0x0070
-+#define REG_LTECOEX_CTRL	0x07c0
-+#define REG_LTECOEX_WRITE_DATA	0x07c4
-+#define REG_LTECOEX_READ_DATA	0x07c8
- #define REG_PSDFN		0x0808
- #define REG_BB_PWR_SAV1_11N	0x0874
- #define REG_ANALOG_P4		0x088c
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822b.c b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
-index bd6a3f4399e1..c76cd0893d12 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8822b.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
-@@ -2057,6 +2057,12 @@ static const struct rtw_hw_reg rtw8822b_dig[] = {
- 	[1] = { .addr = 0xe50, .mask = 0x7f },
- };
- 
-+static const struct rtw_ltecoex_addr rtw8822b_ltecoex_addr = {
-+	.ctrl = LTECOEX_ACCESS_CTRL,
-+	.wdata = LTECOEX_WRITE_DATA,
-+	.rdata = LTECOEX_READ_DATA,
-+};
-+
- static const struct rtw_page_table page_table_8822b[] = {
- 	{64, 64, 64, 64, 1},
- 	{64, 64, 64, 64, 1},
-@@ -2455,6 +2461,7 @@ struct rtw_chip_info rtw8822b_hw_spec = {
- 	.dig_cck = NULL,
- 	.rf_base_addr = {0x2800, 0x2c00},
- 	.rf_sipi_addr = {0xc90, 0xe90},
-+	.ltecoex_addr = &rtw8822b_ltecoex_addr,
- 	.mac_tbl = &rtw8822b_mac_tbl,
- 	.agc_tbl = &rtw8822b_agc_tbl,
- 	.bb_tbl = &rtw8822b_bb_tbl,
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-index 38e90de14a3c..d2e74ac21d07 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-@@ -3793,6 +3793,12 @@ static const struct rtw_hw_reg rtw8822c_dig[] = {
- 	[1] = { .addr = 0x1d70, .mask = 0x7f00 },
- };
- 
-+static const struct rtw_ltecoex_addr rtw8822c_ltecoex_addr = {
-+	.ctrl = LTECOEX_ACCESS_CTRL,
-+	.wdata = LTECOEX_WRITE_DATA,
-+	.rdata = LTECOEX_READ_DATA,
-+};
-+
- static const struct rtw_page_table page_table_8822c[] = {
- 	{64, 64, 64, 64, 1},
- 	{64, 64, 64, 64, 1},
-@@ -4203,6 +4209,7 @@ struct rtw_chip_info rtw8822c_hw_spec = {
- 	.dig_cck = NULL,
- 	.rf_base_addr = {0x3c00, 0x4c00},
- 	.rf_sipi_addr = {0x1808, 0x4108},
-+	.ltecoex_addr = &rtw8822c_ltecoex_addr,
- 	.mac_tbl = &rtw8822c_mac_tbl,
- 	.agc_tbl = &rtw8822c_agc_tbl,
- 	.bb_tbl = &rtw8822c_bb_tbl,
-diff --git a/drivers/net/wireless/realtek/rtw88/util.c b/drivers/net/wireless/realtek/rtw88/util.c
-index 10f1117c0cfb..42cf177cd445 100644
---- a/drivers/net/wireless/realtek/rtw88/util.c
-+++ b/drivers/net/wireless/realtek/rtw88/util.c
-@@ -22,22 +22,28 @@ bool check_hw_ready(struct rtw_dev *rtwdev, u32 addr, u32 mask, u32 target)
- 
- bool ltecoex_read_reg(struct rtw_dev *rtwdev, u16 offset, u32 *val)
- {
--	if (!check_hw_ready(rtwdev, LTECOEX_ACCESS_CTRL, LTECOEX_READY, 1))
-+	struct rtw_chip_info *chip = rtwdev->chip;
-+	const struct rtw_ltecoex_addr *ltecoex = chip->ltecoex_addr;
-+
-+	if (!check_hw_ready(rtwdev, ltecoex->ctrl, LTECOEX_READY, 1))
- 		return false;
- 
--	rtw_write32(rtwdev, LTECOEX_ACCESS_CTRL, 0x800F0000 | offset);
--	*val = rtw_read32(rtwdev, LTECOEX_READ_DATA);
-+	rtw_write32(rtwdev, ltecoex->ctrl, 0x800F0000 | offset);
-+	*val = rtw_read32(rtwdev, ltecoex->rdata);
- 
- 	return true;
- }
- 
- bool ltecoex_reg_write(struct rtw_dev *rtwdev, u16 offset, u32 value)
- {
--	if (!check_hw_ready(rtwdev, LTECOEX_ACCESS_CTRL, LTECOEX_READY, 1))
-+	struct rtw_chip_info *chip = rtwdev->chip;
-+	const struct rtw_ltecoex_addr *ltecoex = chip->ltecoex_addr;
-+
-+	if (!check_hw_ready(rtwdev, ltecoex->ctrl, LTECOEX_READY, 1))
- 		return false;
- 
--	rtw_write32(rtwdev, LTECOEX_WRITE_DATA, value);
--	rtw_write32(rtwdev, LTECOEX_ACCESS_CTRL, 0xC00F0000 | offset);
-+	rtw_write32(rtwdev, ltecoex->wdata, value);
-+	rtw_write32(rtwdev, ltecoex->ctrl, 0xC00F0000 | offset);
- 
- 	return true;
- }
+-obj-$(CONFIG_RTW88_PCI)		+= rtwpci.o
+-rtwpci-objs			:= pci.o
++obj-$(CONFIG_RTW88_PCI)		+= rtw88_pci.o
++rtw88_pci-objs			:= pci.o
 -- 
 2.17.1
 
