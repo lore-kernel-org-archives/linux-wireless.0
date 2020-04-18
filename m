@@ -6,138 +6,116 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BF8EC352BE
-	for <linux-wireless@archiver.kernel.org>; Sat, 18 Apr 2020 08:09:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AA81C38A2E
+	for <linux-wireless@archiver.kernel.org>; Sat, 18 Apr 2020 08:09:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6771622250
-	for <linux-wireless@archiver.kernel.org>; Sat, 18 Apr 2020 08:09:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 33C1720857
+	for <linux-wireless@archiver.kernel.org>; Sat, 18 Apr 2020 08:09:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726086AbgDRIJZ (ORCPT
+        id S1726020AbgDRIJU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 18 Apr 2020 04:09:25 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:56770 "EHLO
+        Sat, 18 Apr 2020 04:09:20 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:56758 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725887AbgDRIJV (ORCPT
+        with ESMTP id S1725982AbgDRIJT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 18 Apr 2020 04:09:21 -0400
+        Sat, 18 Apr 2020 04:09:19 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1jPiXO-000L3r-19; Sat, 18 Apr 2020 11:09:18 +0300
+        id 1jPiXM-000L3r-Ge; Sat, 18 Apr 2020 11:09:16 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Sat, 18 Apr 2020 11:08:51 +0300
-Message-Id: <iwlwifi.20200418110539.5eae2261b70c.I0369619a562c4e4008e2f0a3afb9ed5d4c9b49d4@changeid>
+Date:   Sat, 18 Apr 2020 11:08:49 +0300
+Message-Id: <iwlwifi.20200418110539.03bd49c3432b.Ie62047d3b364b19c8c3584ea37790220466f2a8d@changeid>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200418080857.2232093-1-luca@coelho.fi>
 References: <20200418080857.2232093-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 06/12] iwlwifi: add new cards for AX family
+Subject: [PATCH 04/12] iwlwifi: remove fw_monitor module parameter
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ihab Zhaika <ihab.zhaika@intel.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-add few PCI ID'S for AX family.
+This module parameter is no longer useful now that other debug
+infrastructure was added to iwlwifi.
 
-Signed-off-by: Ihab Zhaika <ihab.zhaika@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../net/wireless/intel/iwlwifi/cfg/22000.c    | 21 ++++++++++++++++---
- .../net/wireless/intel/iwlwifi/iwl-config.h   |  1 +
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c |  7 ++++++-
- 3 files changed, 25 insertions(+), 4 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c      |  4 ----
+ .../net/wireless/intel/iwlwifi/iwl-modparams.h    |  2 --
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c   | 15 +--------------
+ 3 files changed, 1 insertion(+), 20 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-index bc49cdd819df..1af4ba2d30cb 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-@@ -90,7 +90,8 @@
- #define IWL_22000_SO_A_GF_A_FW_PRE      "iwlwifi-so-a0-gf-a0-"
- #define IWL_22000_TY_A_GF_A_FW_PRE      "iwlwifi-ty-a0-gf-a0-"
- #define IWL_22000_SO_A_GF4_A_FW_PRE     "iwlwifi-so-a0-gf4-a0-"
--#define IWL_22000_SOSNJ_A_GF4_A_FW_PRE  "iwlwifi-SoSnj-a0-gf4-a0-"
-+#define IWL_SNJ_A_GF4_A_FW_PRE		"iwlwifi-SoSnj-a0-gf4-a0-"
-+#define IWL_SNJ_A_GF_A_FW_PRE		"iwlwifi-SoSnj-a0-gf-a0-"
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+index ff52e69c1c80..9ff12c207f25 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+@@ -1872,10 +1872,6 @@ module_param_named(power_level, iwlwifi_mod_params.power_level, int, 0444);
+ MODULE_PARM_DESC(power_level,
+ 		 "default power save level (range from 1 - 5, default: 1)");
  
- #define IWL_22000_HR_MODULE_FIRMWARE(api) \
- 	IWL_22000_HR_FW_PRE __stringify(api) ".ucode"
-@@ -120,6 +121,10 @@
- 	IWL_22000_SO_A_GF_A_FW_PRE __stringify(api) ".ucode"
- #define IWL_22000_TY_A_GF_A_MODULE_FIRMWARE(api) \
- 	IWL_22000_TY_A_GF_A_FW_PRE __stringify(api) ".ucode"
-+#define IWL_SNJ_A_GF4_A_MODULE_FIRMWARE(api) \
-+	IWL_SNJ_A_GF4_A_FW_PRE __stringify(api) ".ucode"
-+#define IWL_SNJ_A_GF_A_MODULE_FIRMWARE(api) \
-+	IWL_SNJ_A_GF_A_FW_PRE __stringify(api) ".ucode"
+-module_param_named(fw_monitor, iwlwifi_mod_params.fw_monitor, bool, 0444);
+-MODULE_PARM_DESC(fw_monitor,
+-		 "firmware monitor - to debug FW (default: false - needs lots of memory)");
+-
+ module_param_named(disable_11ac, iwlwifi_mod_params.disable_11ac, bool, 0444);
+ MODULE_PARM_DESC(disable_11ac, "Disable VHT capabilities (default: false)");
  
- static const struct iwl_base_params iwl_22000_base_params = {
- 	.eeprom_size = OTP_LOW_IMAGE_SIZE_32K,
-@@ -553,8 +558,16 @@ const struct iwl_cfg iwlax411_2ax_cfg_so_gf4_a0 = {
- };
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h b/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h
+index 82e5cac23d8d..b094cc1e9be0 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h
+@@ -115,7 +115,6 @@ enum iwl_uapsd_disable {
+  * @nvm_file: specifies a external NVM file
+  * @uapsd_disable: disable U-APSD, see &enum iwl_uapsd_disable, default =
+  *	IWL_DISABLE_UAPSD_BSS | IWL_DISABLE_UAPSD_P2P_CLIENT
+- * @fw_monitor: allow to use firmware monitor
+  * @disable_11ac: disable VHT capabilities, default = false.
+  * @remove_when_gone: remove an inaccessible device from the PCIe bus.
+  * @enable_ini: enable new FW debug infratructure (INI TLVs)
+@@ -135,7 +134,6 @@ struct iwl_mod_params {
+ 	int antenna_coupling;
+ 	char *nvm_file;
+ 	u32 uapsd_disable;
+-	bool fw_monitor;
+ 	bool disable_11ac;
+ 	/**
+ 	 * @disable_11ax: disable HE capabilities, default = false
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index 06785c46c50d..a0daae058c1c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -1019,21 +1019,8 @@ static int iwl_pcie_load_given_ucode(struct iwl_trans *trans,
+ 			return ret;
+ 	}
  
- const struct iwl_cfg iwlax411_2ax_cfg_sosnj_gf4_a0 = {
--	.name = "Intel(R) Wi-Fi 7 AX411 160MHz",
--	.fw_name_pre = IWL_22000_SOSNJ_A_GF4_A_FW_PRE,
-+	.name = "Intel(R) Wi-Fi 6 AX411 160MHz",
-+	.fw_name_pre = IWL_SNJ_A_GF4_A_FW_PRE,
-+	.uhb_supported = true,
-+	IWL_DEVICE_AX210,
-+	.num_rbds = IWL_NUM_RBDS_AX210_HE,
-+};
-+
-+const struct iwl_cfg iwlax211_cfg_snj_gf_a0 = {
-+	.name = "Intel(R) Wi-Fi 6 AX211 160MHz",
-+	.fw_name_pre = IWL_SNJ_A_GF_A_FW_PRE,
- 	.uhb_supported = true,
- 	IWL_DEVICE_AX210,
- 	.num_rbds = IWL_NUM_RBDS_AX210_HE,
-@@ -573,3 +586,5 @@ MODULE_FIRMWARE(IWL_22000_SO_A_JF_B_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
- MODULE_FIRMWARE(IWL_22000_SO_A_HR_B_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
- MODULE_FIRMWARE(IWL_22000_SO_A_GF_A_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
- MODULE_FIRMWARE(IWL_22000_TY_A_GF_A_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
-+MODULE_FIRMWARE(IWL_SNJ_A_GF4_A_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
-+MODULE_FIRMWARE(IWL_SNJ_A_GF_A_MODULE_FIRMWARE(IWL_22000_UCODE_API_MAX));
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-index d5d984d7ce83..3ed8ead8a9bb 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-@@ -625,6 +625,7 @@ extern const struct iwl_cfg iwlax211_2ax_cfg_so_gf_a0;
- extern const struct iwl_cfg iwlax210_2ax_cfg_ty_gf_a0;
- extern const struct iwl_cfg iwlax411_2ax_cfg_so_gf4_a0;
- extern const struct iwl_cfg iwlax411_2ax_cfg_sosnj_gf4_a0;
-+extern const struct iwl_cfg iwlax211_cfg_snj_gf_a0;
- #endif /* CPTCFG_IWLMVM || CPTCFG_IWLFMAC */
+-	/* supported for 7000 only for the moment */
+-	if (iwlwifi_mod_params.fw_monitor &&
+-	    trans->trans_cfg->device_family == IWL_DEVICE_FAMILY_7000) {
+-		struct iwl_dram_data *fw_mon = &trans->dbg.fw_mon;
+-
+-		iwl_pcie_alloc_fw_monitor(trans, 0);
+-		if (fw_mon->size) {
+-			iwl_write_prph(trans, MON_BUFF_BASE_ADDR,
+-				       fw_mon->physical >> 4);
+-			iwl_write_prph(trans, MON_BUFF_END_ADDR,
+-				       (fw_mon->physical + fw_mon->size) >> 4);
+-		}
+-	} else if (iwl_pcie_dbg_on(trans)) {
++	if (iwl_pcie_dbg_on(trans))
+ 		iwl_pcie_apply_destination(trans);
+-	}
  
- #endif /* __IWL_CONFIG_H__ */
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index 6744c0281ffb..ab849aa4434e 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -539,12 +539,17 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- 	{IWL_PCI_DEVICE(0x2725, 0x0310, iwlax210_2ax_cfg_ty_gf_a0)},
- 	{IWL_PCI_DEVICE(0x2725, 0x0510, iwlax210_2ax_cfg_ty_gf_a0)},
- 	{IWL_PCI_DEVICE(0x2725, 0x0A10, iwlax210_2ax_cfg_ty_gf_a0)},
--	{IWL_PCI_DEVICE(0x2725, 0x00B0, iwlax411_2ax_cfg_so_gf4_a0)},
-+	{IWL_PCI_DEVICE(0x2725, 0x00B0, iwlax411_2ax_cfg_sosnj_gf4_a0)},
-+	{IWL_PCI_DEVICE(0x2726, 0x0090, iwlax211_cfg_snj_gf_a0)},
-+	{IWL_PCI_DEVICE(0x2726, 0x00B0, iwlax411_2ax_cfg_sosnj_gf4_a0)},
-+	{IWL_PCI_DEVICE(0x2726, 0x0510, iwlax211_cfg_snj_gf_a0)},
- 	{IWL_PCI_DEVICE(0x7A70, 0x0090, iwlax211_2ax_cfg_so_gf_a0)},
-+	{IWL_PCI_DEVICE(0x7A70, 0x00B0, iwlax411_2ax_cfg_so_gf4_a0)},
- 	{IWL_PCI_DEVICE(0x7A70, 0x0310, iwlax211_2ax_cfg_so_gf_a0)},
- 	{IWL_PCI_DEVICE(0x7A70, 0x0510, iwlax211_2ax_cfg_so_gf_a0)},
- 	{IWL_PCI_DEVICE(0x7A70, 0x0A10, iwlax211_2ax_cfg_so_gf_a0)},
- 	{IWL_PCI_DEVICE(0x7AF0, 0x0090, iwlax211_2ax_cfg_so_gf_a0)},
-+	{IWL_PCI_DEVICE(0x7AF0, 0x00B0, iwlax411_2ax_cfg_so_gf4_a0)},
- 	{IWL_PCI_DEVICE(0x7AF0, 0x0310, iwlax211_2ax_cfg_so_gf_a0)},
- 	{IWL_PCI_DEVICE(0x7AF0, 0x0510, iwlax211_2ax_cfg_so_gf_a0)},
- 	{IWL_PCI_DEVICE(0x7AF0, 0x0A10, iwlax211_2ax_cfg_so_gf_a0)},
+ 	iwl_enable_interrupts(trans);
+ 
 -- 
 2.25.1
 
