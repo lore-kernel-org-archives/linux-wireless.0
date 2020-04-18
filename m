@@ -6,116 +6,143 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AA81C38A2E
-	for <linux-wireless@archiver.kernel.org>; Sat, 18 Apr 2020 08:09:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE2EBC2BA19
+	for <linux-wireless@archiver.kernel.org>; Sat, 18 Apr 2020 08:09:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 33C1720857
-	for <linux-wireless@archiver.kernel.org>; Sat, 18 Apr 2020 08:09:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BB81C221F7
+	for <linux-wireless@archiver.kernel.org>; Sat, 18 Apr 2020 08:09:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726020AbgDRIJU (ORCPT
+        id S1726050AbgDRIJq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 18 Apr 2020 04:09:20 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:56758 "EHLO
+        Sat, 18 Apr 2020 04:09:46 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:56818 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725982AbgDRIJT (ORCPT
+        with ESMTP id S1725887AbgDRIJp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 18 Apr 2020 04:09:19 -0400
+        Sat, 18 Apr 2020 04:09:45 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1jPiXM-000L3r-Ge; Sat, 18 Apr 2020 11:09:16 +0300
+        id 1jPiXQ-000L3r-TV; Sat, 18 Apr 2020 11:09:21 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Sat, 18 Apr 2020 11:08:49 +0300
-Message-Id: <iwlwifi.20200418110539.03bd49c3432b.Ie62047d3b364b19c8c3584ea37790220466f2a8d@changeid>
+Date:   Sat, 18 Apr 2020 11:08:55 +0300
+Message-Id: <iwlwifi.20200418110539.d6df2bcee78f.Ie008b0c8f03340a466c1ef981bfd25359c9de90d@changeid>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200418080857.2232093-1-luca@coelho.fi>
 References: <20200418080857.2232093-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 04/12] iwlwifi: remove fw_monitor module parameter
+Subject: [PATCH 10/12] iwlwifi: pcie: add new structure for Qu devices with medium latency
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-This module parameter is no longer useful now that other debug
-infrastructure was added to iwlwifi.
+Some Qu devices require an intermediate amount of time to wake up and
+for LTR notifications, so add a new structure with the correct values
+for them and change the corresponding devices to use it.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c      |  4 ----
- .../net/wireless/intel/iwlwifi/iwl-modparams.h    |  2 --
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c   | 15 +--------------
- 3 files changed, 1 insertion(+), 20 deletions(-)
+ .../net/wireless/intel/iwlwifi/cfg/22000.c    | 22 ++++++++++++++-----
+ .../net/wireless/intel/iwlwifi/iwl-config.h   |  3 ++-
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c |  7 +++---
+ 3 files changed, 23 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-index ff52e69c1c80..9ff12c207f25 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-@@ -1872,10 +1872,6 @@ module_param_named(power_level, iwlwifi_mod_params.power_level, int, 0444);
- MODULE_PARM_DESC(power_level,
- 		 "default power save level (range from 1 - 5, default: 1)");
- 
--module_param_named(fw_monitor, iwlwifi_mod_params.fw_monitor, bool, 0444);
--MODULE_PARM_DESC(fw_monitor,
--		 "firmware monitor - to debug FW (default: false - needs lots of memory)");
--
- module_param_named(disable_11ac, iwlwifi_mod_params.disable_11ac, bool, 0444);
- MODULE_PARM_DESC(disable_11ac, "Disable VHT capabilities (default: false)");
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h b/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h
-index 82e5cac23d8d..b094cc1e9be0 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h
-@@ -115,7 +115,6 @@ enum iwl_uapsd_disable {
-  * @nvm_file: specifies a external NVM file
-  * @uapsd_disable: disable U-APSD, see &enum iwl_uapsd_disable, default =
-  *	IWL_DISABLE_UAPSD_BSS | IWL_DISABLE_UAPSD_P2P_CLIENT
-- * @fw_monitor: allow to use firmware monitor
-  * @disable_11ac: disable VHT capabilities, default = false.
-  * @remove_when_gone: remove an inaccessible device from the PCIe bus.
-  * @enable_ini: enable new FW debug infratructure (INI TLVs)
-@@ -135,7 +134,6 @@ struct iwl_mod_params {
- 	int antenna_coupling;
- 	char *nvm_file;
- 	u32 uapsd_disable;
--	bool fw_monitor;
- 	bool disable_11ac;
- 	/**
- 	 * @disable_11ax: disable HE capabilities, default = false
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 06785c46c50d..a0daae058c1c 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -1019,21 +1019,8 @@ static int iwl_pcie_load_given_ucode(struct iwl_trans *trans,
- 			return ret;
+diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
+index 1f30d8fdf35d..7db4472a1ec5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
++++ b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
+@@ -234,6 +234,15 @@ static const struct iwl_ht_params iwl_22000_ht_params = {
+ 		},							\
  	}
  
--	/* supported for 7000 only for the moment */
--	if (iwlwifi_mod_params.fw_monitor &&
--	    trans->trans_cfg->device_family == IWL_DEVICE_FAMILY_7000) {
--		struct iwl_dram_data *fw_mon = &trans->dbg.fw_mon;
--
--		iwl_pcie_alloc_fw_monitor(trans, 0);
--		if (fw_mon->size) {
--			iwl_write_prph(trans, MON_BUFF_BASE_ADDR,
--				       fw_mon->physical >> 4);
--			iwl_write_prph(trans, MON_BUFF_END_ADDR,
--				       (fw_mon->physical + fw_mon->size) >> 4);
--		}
--	} else if (iwl_pcie_dbg_on(trans)) {
-+	if (iwl_pcie_dbg_on(trans))
- 		iwl_pcie_apply_destination(trans);
--	}
++const struct iwl_cfg_trans_params iwl_qnj_trans_cfg = {
++	.mq_rx_supported = true,
++	.use_tfh = true,
++	.rf_id = true,
++	.gen2 = true,
++	.device_family = IWL_DEVICE_FAMILY_22000,
++	.base_params = &iwl_22000_base_params,
++};
++
+ const struct iwl_cfg_trans_params iwl_qu_trans_cfg = {
+ 	.mq_rx_supported = true,
+ 	.use_tfh = true,
+@@ -246,7 +255,7 @@ const struct iwl_cfg_trans_params iwl_qu_trans_cfg = {
+ 	.ltr_delay = IWL_CFG_TRANS_LTR_DELAY_200US,
+ };
  
- 	iwl_enable_interrupts(trans);
+-const struct iwl_cfg_trans_params iwl_qu_long_latency_trans_cfg = {
++const struct iwl_cfg_trans_params iwl_qu_medium_latency_trans_cfg = {
+ 	.mq_rx_supported = true,
+ 	.use_tfh = true,
+ 	.rf_id = true,
+@@ -254,18 +263,21 @@ const struct iwl_cfg_trans_params iwl_qu_long_latency_trans_cfg = {
+ 	.device_family = IWL_DEVICE_FAMILY_22000,
+ 	.base_params = &iwl_22000_base_params,
+ 	.integrated = true,
+-	.xtal_latency = 12000,
+-	.low_latency_xtal = true,
+-	.ltr_delay = IWL_CFG_TRANS_LTR_DELAY_2500US,
++	.xtal_latency = 1820,
++	.ltr_delay = IWL_CFG_TRANS_LTR_DELAY_1820US,
+ };
  
+-const struct iwl_cfg_trans_params iwl_qnj_trans_cfg = {
++const struct iwl_cfg_trans_params iwl_qu_long_latency_trans_cfg = {
+ 	.mq_rx_supported = true,
+ 	.use_tfh = true,
+ 	.rf_id = true,
+ 	.gen2 = true,
+ 	.device_family = IWL_DEVICE_FAMILY_22000,
+ 	.base_params = &iwl_22000_base_params,
++	.integrated = true,
++	.xtal_latency = 12000,
++	.low_latency_xtal = true,
++	.ltr_delay = IWL_CFG_TRANS_LTR_DELAY_2500US,
+ };
+ 
+ /*
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+index 9b31fcc37ace..efb10a7f4d4f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+@@ -513,9 +513,10 @@ struct iwl_dev_info {
+ extern const struct iwl_cfg_trans_params iwl9000_trans_cfg;
+ extern const struct iwl_cfg_trans_params iwl9560_trans_cfg;
+ extern const struct iwl_cfg_trans_params iwl9560_shared_clk_trans_cfg;
++extern const struct iwl_cfg_trans_params iwl_qnj_trans_cfg;
+ extern const struct iwl_cfg_trans_params iwl_qu_trans_cfg;
++extern const struct iwl_cfg_trans_params iwl_qu_medium_latency_trans_cfg;
+ extern const struct iwl_cfg_trans_params iwl_qu_long_latency_trans_cfg;
+-extern const struct iwl_cfg_trans_params iwl_qnj_trans_cfg;
+ extern const struct iwl_cfg_trans_params iwl_ax200_trans_cfg;
+ extern const char iwl9162_name[];
+ extern const char iwl9260_name[];
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index bc2cdf40028e..2d78f8504bd5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -524,9 +524,10 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ /* Qu devices */
+ 	{IWL_PCI_DEVICE(0x02F0, PCI_ANY_ID, iwl_qu_trans_cfg)},
+ 	{IWL_PCI_DEVICE(0x06F0, PCI_ANY_ID, iwl_qu_trans_cfg)},
+-	{IWL_PCI_DEVICE(0x34F0, PCI_ANY_ID, iwl_qu_trans_cfg)},
+-	{IWL_PCI_DEVICE(0x3DF0, PCI_ANY_ID, iwl_qu_trans_cfg)},
+-	{IWL_PCI_DEVICE(0x4DF0, PCI_ANY_ID, iwl_qu_trans_cfg)},
++
++	{IWL_PCI_DEVICE(0x34F0, PCI_ANY_ID, iwl_qu_medium_latency_trans_cfg)},
++	{IWL_PCI_DEVICE(0x3DF0, PCI_ANY_ID, iwl_qu_medium_latency_trans_cfg)},
++	{IWL_PCI_DEVICE(0x4DF0, PCI_ANY_ID, iwl_qu_medium_latency_trans_cfg)},
+ 
+ 	{IWL_PCI_DEVICE(0x43F0, PCI_ANY_ID, iwl_qu_long_latency_trans_cfg)},
+ 	{IWL_PCI_DEVICE(0xA0F0, PCI_ANY_ID, iwl_qu_long_latency_trans_cfg)},
 -- 
 2.25.1
 
