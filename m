@@ -2,112 +2,107 @@ Return-Path: <SRS0=CXG1=6E=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 723BCC3A5A0
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 Apr 2020 12:39:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23ED2C3815B
+	for <linux-wireless@archiver.kernel.org>; Mon, 20 Apr 2020 13:30:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 53734206D4
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 Apr 2020 12:39:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1587386360;
-	bh=AHyKPZPTj6Ca5BKUIUvMXRp0TSB94uj4BbF5VIB1da0=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=vZ1H+Jddp5GXe9Mss+f0Z9i4efMcf8k4py73WdUubq6cfoE7lQuxr7xEgYZnhGocT
-	 X6Ka4UDG3zJUYOnYqRoF6IT/hrVaHOAu2gfkDvpMBSExkmY73xaMhlBFkFkMF7GFqW
-	 OeqQ5dUmhm5nSvCdIcIk+JRptnJO60UA/WCObl8w=
+	by mail.kernel.org (Postfix) with ESMTP id E677220B1F
+	for <linux-wireless@archiver.kernel.org>; Mon, 20 Apr 2020 13:30:45 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="tG49U34D"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726754AbgDTMjT (ORCPT
+        id S1728103AbgDTNag (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 20 Apr 2020 08:39:19 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59918 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725886AbgDTMjS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Apr 2020 08:39:18 -0400
-Received: from localhost.localdomain.com (unknown [151.48.159.126])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 90D95206D4;
-        Mon, 20 Apr 2020 12:39:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1587386357;
-        bh=AHyKPZPTj6Ca5BKUIUvMXRp0TSB94uj4BbF5VIB1da0=;
-        h=From:To:Cc:Subject:Date:From;
-        b=zPF6gSrVsbuT3ZOEHBrFrIKVOiTUvgG0DPAmo1fHdZ3EX6t5xZG2PKKROUXD+9nbN
-         XFZbtqdx3UOzn+5ZL1Je7txWPlrEGCX79PYxSlPefE7rt2W39QD/uifE2bCQTqkxOk
-         nCDuYxZ/fUtt7Cm3T82DMfCcoaVqSkikVRfGyY1w=
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     nbd@nbd.name
-Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
-        sean.wang@mediatek.com, linux-mediatek@lists.infradead.org
-Subject: [PATCH] mt76: mt7615: fix max wtbl size for 7663
-Date:   Mon, 20 Apr 2020 14:39:02 +0200
-Message-Id: <45500b45594b4c2e41938d9d31d4c6d060628b0f.1587386278.git.lorenzo@kernel.org>
-X-Mailer: git-send-email 2.25.3
+        Mon, 20 Apr 2020 09:30:36 -0400
+Received: from lelv0142.ext.ti.com ([198.47.23.249]:38714 "EHLO
+        lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726389AbgDTNaf (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 20 Apr 2020 09:30:35 -0400
+Received: from fllv0035.itg.ti.com ([10.64.41.0])
+        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id 03KDUW48042761;
+        Mon, 20 Apr 2020 08:30:32 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1587389432;
+        bh=87wiUSfArn2rE9kQ7PMRrstvJVNl1i+cKBfPizt7ZGQ=;
+        h=From:To:CC:Subject:Date;
+        b=tG49U34DhVDzcDS9PLkCKWkcgiuwqJC1ASYgqhWI6g038da+kAzBX8BDClOBTRFMJ
+         gtiwpWdiBOjf53GfQRMO5AtUHKW5Gh6teDI0eVVR9blgVbJ13HqmBohDh3OyJTGV7l
+         SHlRosPPK1Ny9fgKqM4Kv1HWIdwx3H88TMtxZXYU=
+Received: from DLEE105.ent.ti.com (dlee105.ent.ti.com [157.170.170.35])
+        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTP id 03KDUWJG032560;
+        Mon, 20 Apr 2020 08:30:32 -0500
+Received: from ild153790.dhcp.ti.com (137.167.21.153) by DLEE105.ent.ti.com
+ (157.170.170.35) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3; Mon, 20
+ Apr 2020 08:30:31 -0500
+From:   RazB <r-Bouganim@ti.com>
+To:     <kvalo@codeaurora.org>
+CC:     <linux-wireless@vger.kernel.org>, <d-levy@ti.com>,
+        RazB <r-Bouganim@ti.com>
+Subject: [PATCH] wlcore: Adding suppoprt for IGTK key in wlcore driver
+Date:   Mon, 20 Apr 2020 16:29:50 +0300
+Message-ID: <1587389390-29407-1-git-send-email-r-Bouganim@ti.com>
+X-Mailer: git-send-email 1.9.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [137.167.21.153]
+X-ClientProxiedBy: DLEE115.ent.ti.com (157.170.170.26) To DLEE105.ent.ti.com
+ (157.170.170.35)
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Current mt7663 offload firmware can support up to 32 wtbl entries
+[PATCH] wlcore: Adding suppoprt for IGTK key in wlcore driver
+This patch adding support for new cipher suite - AES-CMAC in wlcore driver.
+This patch is required for support PMF/WPA3 connection to install IGTK key.
 
-Fixes: f40ac0f3d3c0 ("mt76: mt7615: introduce mt7663e support")
-Co-developed-by: Sean Wang <sean.wang@mediatek.com>
-Signed-off-by: Sean Wang <sean.wang@mediatek.com>
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+Signed-off-by: RazB <r-Bouganim@ti.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h | 11 ++++++++++-
- drivers/net/wireless/mediatek/mt76/util.c          |  2 +-
- 2 files changed, 11 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ti/wlcore/cmd.h  | 1 +
+ drivers/net/wireless/ti/wlcore/main.c | 4 ++++
+ 2 files changed, 5 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-index c9533282e7e3..ffb146840377 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-@@ -12,8 +12,9 @@
+diff --git a/drivers/net/wireless/ti/wlcore/cmd.h b/drivers/net/wireless/ti/wlcore/cmd.h
+index f2609d5..1d14bd1 100644
+--- a/drivers/net/wireless/ti/wlcore/cmd.h
++++ b/drivers/net/wireless/ti/wlcore/cmd.h
+@@ -458,6 +458,7 @@ enum wl1271_cmd_key_type {
+ 	KEY_TKIP = 2,
+ 	KEY_AES  = 3,
+ 	KEY_GEM  = 4,
++   KEY_IGTK = 5,
+ };
  
- #define MT7615_MAX_INTERFACES		4
- #define MT7615_MAX_WMM_SETS		4
-+#define MT7663_WTBL_SIZE		32
- #define MT7615_WTBL_SIZE		128
--#define MT7615_WTBL_RESERVED		(MT7615_WTBL_SIZE - 1)
-+#define MT7615_WTBL_RESERVED		(mt7615_wtbl_size(dev) - 1)
- #define MT7615_WTBL_STA			(MT7615_WTBL_RESERVED - \
- 					 MT7615_MAX_INTERFACES)
+ struct wl1271_cmd_set_keys {
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index f140f7d..1a75959 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -3547,6 +3547,9 @@ int wlcore_set_key(struct wl1271 *wl, enum set_key_cmd cmd,
+ 	case WL1271_CIPHER_SUITE_GEM:
+ 		key_type = KEY_GEM;
+ 		break;
++   case WLAN_CIPHER_SUITE_AES_CMAC:
++       key_type = KEY_IGTK;
++       break;
+ 	default:
+ 		wl1271_error("Unknown key algo 0x%x", key_conf->cipher);
  
-@@ -424,6 +425,14 @@ static inline bool mt7615_firmware_offload(struct mt7615_dev *dev)
- 	return dev->fw_ver > MT7615_FIRMWARE_V2;
- }
+@@ -6214,6 +6217,7 @@ static int wl1271_init_ieee80211(struct wl1271 *wl)
+ 		WLAN_CIPHER_SUITE_TKIP,
+ 		WLAN_CIPHER_SUITE_CCMP,
+ 		WL1271_CIPHER_SUITE_GEM,
++       WLAN_CIPHER_SUITE_AES_CMAC,
+ 	};
  
-+static inline u16 mt7615_wtbl_size(struct mt7615_dev *dev)
-+{
-+	if (is_mt7663(&dev->mt76) && mt7615_firmware_offload(dev))
-+		return MT7663_WTBL_SIZE;
-+	else
-+		return MT7615_WTBL_SIZE;
-+}
-+
- void mt7615_scan_work(struct work_struct *work);
- void mt7615_ps_work(struct work_struct *work);
- void mt7615_init_txpower(struct mt7615_dev *dev,
-diff --git a/drivers/net/wireless/mediatek/mt76/util.c b/drivers/net/wireless/mediatek/mt76/util.c
-index 8c60c450125a..07cf71242d9e 100644
---- a/drivers/net/wireless/mediatek/mt76/util.c
-+++ b/drivers/net/wireless/mediatek/mt76/util.c
-@@ -46,7 +46,7 @@ int mt76_wcid_alloc(unsigned long *mask, int size)
- {
- 	int i, idx = 0, cur;
- 
--	for (i = 0; i < size / BITS_PER_LONG; i++) {
-+	for (i = 0; i < DIV_ROUND_UP(size, BITS_PER_LONG); i++) {
- 		idx = ffs(~mask[i]);
- 		if (!idx)
- 			continue;
+ 	/* The tx descriptor buffer */
 -- 
-2.25.3
+1.9.1
 
