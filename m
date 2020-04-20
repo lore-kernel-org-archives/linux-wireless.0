@@ -6,30 +6,30 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF973C54FCF
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 Apr 2020 05:51:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62BAFC54FD2
+	for <linux-wireless@archiver.kernel.org>; Mon, 20 Apr 2020 05:51:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AA79820857
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 Apr 2020 05:51:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 45FC12080C
+	for <linux-wireless@archiver.kernel.org>; Mon, 20 Apr 2020 05:51:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726081AbgDTFvP (ORCPT
+        id S1726105AbgDTFvR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 20 Apr 2020 01:51:15 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:42171 "EHLO
+        Mon, 20 Apr 2020 01:51:17 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:42178 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725994AbgDTFvP (ORCPT
+        with ESMTP id S1725865AbgDTFvQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Apr 2020 01:51:15 -0400
+        Mon, 20 Apr 2020 01:51:16 -0400
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 03K5p9Zg9001143, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 03K5p8gbD000971, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexmb06.realtek.com.tw[172.21.6.99])
-        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 03K5p9Zg9001143
+        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 03K5p8gbD000971
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Mon, 20 Apr 2020 13:51:09 +0800
+        Mon, 20 Apr 2020 13:51:08 +0800
 Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
  RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Mon, 20 Apr 2020 13:51:09 +0800
+ 15.1.1779.2; Mon, 20 Apr 2020 13:51:08 +0800
 Received: from localhost.localdomain (172.21.68.128) by
  RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
@@ -37,9 +37,9 @@ Received: from localhost.localdomain (172.21.68.128) by
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <pkshih@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 8/8] rtw88: 8723d: Add read_efuse to recognize efuse info from map
-Date:   Mon, 20 Apr 2020 13:50:54 +0800
-Message-ID: <20200420055054.14592-9-yhchuang@realtek.com>
+Subject: [PATCH v2 4/8] rtw88: 8723d: Add RF read/write ops
+Date:   Mon, 20 Apr 2020 13:50:50 +0800
+Message-ID: <20200420055054.14592-5-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200420055054.14592-1-yhchuang@realtek.com>
 References: <20200420055054.14592-1-yhchuang@realtek.com>
@@ -55,127 +55,254 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ping-Ke Shih <pkshih@realtek.com>
 
-The logical efuse map is decoded from physical map by parsing the
-header format of the physical map. And each different type of chips
-has different logical efuse layout. So add the logical map's layout
-for parsing the efuse contents.
+8723D use SIPI to indirectly read RF register instead of directly read,
+so introduce a new struct rtw_rf_sipi_addr and new function
+rtw_phy_read_rf_sipi(). Since other chips don't use the new function,
+only 8723D needs to fill struct rtw_rf_sipi_addr in rtw_chip_info.
+
+Because there are two kinds of functions for reading RF registers now,
+change rtw_phy_read_rf() to chip->ops->read_rf() in
+rtw_phy_write_rf_reg_sipi() so that we can switch tp proper RF read
+functions depends on the type of the chip.
+
+Though 8723D is an 1x1 chip, it has two RF PHY and we can switch to
+one of them, and that should be configured properly. Hence, add a
+fix_rf_phy_num to struct rtw_chip_info to allow driver to set one of
+the PHY's registers for 8723D, even it is only 1x1. Another variable
+rf_phy_num is introduced to keep the constraint number of RF path we
+can access, and its value is:
+	rf_phy_num = (fix_rf_phy_num ? fix_rf_phy_num : rf_path_num)
 
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/rtw8723d.c | 43 +++++++++++++++++++
- drivers/net/wireless/realtek/rtw88/rtw8723d.h | 39 +++++++++++++++++
- 2 files changed, 82 insertions(+)
+ drivers/net/wireless/realtek/rtw88/main.c     |  5 ++
+ drivers/net/wireless/realtek/rtw88/main.h     | 10 ++++
+ drivers/net/wireless/realtek/rtw88/phy.c      | 56 +++++++++++++++++--
+ drivers/net/wireless/realtek/rtw88/phy.h      |  6 ++
+ drivers/net/wireless/realtek/rtw88/rtw8723d.c | 12 ++++
+ 5 files changed, 85 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723d.c b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-index 756454d69fad..c25cabbab64d 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-@@ -14,6 +14,48 @@
- #include "reg.h"
- #include "debug.h"
- 
-+static void rtw8723de_efuse_parsing(struct rtw_efuse *efuse,
-+				    struct rtw8723d_efuse *map)
-+{
-+	ether_addr_copy(efuse->addr, map->e.mac_addr);
-+}
-+
-+static int rtw8723d_read_efuse(struct rtw_dev *rtwdev, u8 *log_map)
-+{
-+	struct rtw_efuse *efuse = &rtwdev->efuse;
-+	struct rtw8723d_efuse *map;
-+	int i;
-+
-+	map = (struct rtw8723d_efuse *)log_map;
-+
-+	efuse->rfe_option = 0;
-+	efuse->rf_board_option = map->rf_board_option;
-+	efuse->crystal_cap = map->xtal_k;
-+	efuse->pa_type_2g = map->pa_type;
-+	efuse->lna_type_2g = map->lna_type_2g[0];
-+	efuse->channel_plan = map->channel_plan;
-+	efuse->country_code[0] = map->country_code[0];
-+	efuse->country_code[1] = map->country_code[1];
-+	efuse->bt_setting = map->rf_bt_setting;
-+	efuse->regd = map->rf_board_option & 0x7;
-+	efuse->thermal_meter[0] = map->thermal_meter;
-+	efuse->thermal_meter_k = map->thermal_meter;
-+
-+	for (i = 0; i < 4; i++)
-+		efuse->txpwr_idx_table[i] = map->txpwr_idx_table[i];
-+
-+	switch (rtw_hci_type(rtwdev)) {
-+	case RTW_HCI_TYPE_PCIE:
-+		rtw8723de_efuse_parsing(efuse, map);
-+		break;
-+	default:
-+		/* unsupported now */
-+		return -ENOTSUPP;
-+	}
-+
-+	return 0;
-+}
-+
- static void rtw8723d_cfg_ldo25(struct rtw_dev *rtwdev, bool enable)
+diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
+index 6dfe4895c352..c851830132d0 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.c
++++ b/drivers/net/wireless/realtek/rtw88/main.c
+@@ -472,6 +472,7 @@ static u8 hw_bw_cap_to_bitamp(u8 bw_cap)
+ static void rtw_hw_config_rf_ant_num(struct rtw_dev *rtwdev, u8 hw_ant_num)
  {
- 	u8 ldo_pwr;
-@@ -41,6 +83,7 @@ static void rtw8723d_efuse_grant(struct rtw_dev *rtwdev, bool on)
+ 	struct rtw_hal *hal = &rtwdev->hal;
++	struct rtw_chip_info *chip = rtwdev->chip;
+ 
+ 	if (hw_ant_num == EFUSE_HW_CAP_IGNORE ||
+ 	    hw_ant_num >= hal->rf_path_num)
+@@ -481,6 +482,8 @@ static void rtw_hw_config_rf_ant_num(struct rtw_dev *rtwdev, u8 hw_ant_num)
+ 	case 1:
+ 		hal->rf_type = RF_1T1R;
+ 		hal->rf_path_num = 1;
++		if (!chip->fix_rf_phy_num)
++			hal->rf_phy_num = hal->rf_path_num;
+ 		hal->antenna_tx = BB_PATH_A;
+ 		hal->antenna_rx = BB_PATH_A;
+ 		break;
+@@ -1130,6 +1133,8 @@ static int rtw_chip_parameter_setup(struct rtw_dev *rtwdev)
+ 		hal->antenna_tx = BB_PATH_A;
+ 		hal->antenna_rx = BB_PATH_A;
+ 	}
++	hal->rf_phy_num = chip->fix_rf_phy_num ? chip->fix_rf_phy_num :
++			  hal->rf_path_num;
+ 
+ 	efuse->physical_size = chip->phy_efuse_size;
+ 	efuse->logical_size = chip->log_efuse_size;
+diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
+index e852ab194315..8f15fc113af0 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.h
++++ b/drivers/net/wireless/realtek/rtw88/main.h
+@@ -529,6 +529,13 @@ struct rtw_reg_domain {
+ 	u8 domain;
+ };
+ 
++struct rtw_rf_sipi_addr {
++	u32 hssi_1;
++	u32 hssi_2;
++	u32 lssi_read;
++	u32 lssi_read_pi;
++};
++
+ struct rtw_backup_info {
+ 	u8 len;
+ 	u32 reg;
+@@ -1087,6 +1094,8 @@ struct rtw_chip_info {
+ 	const struct rtw_hw_reg *dig;
+ 	u32 rf_base_addr[2];
+ 	u32 rf_sipi_addr[2];
++	const struct rtw_rf_sipi_addr *rf_sipi_read_addr;
++	u8 fix_rf_phy_num;
+ 
+ 	const struct rtw_table *mac_tbl;
+ 	const struct rtw_table *agc_tbl;
+@@ -1571,6 +1580,7 @@ struct rtw_hal {
+ 	u8 sec_ch_offset;
+ 	u8 rf_type;
+ 	u8 rf_path_num;
++	u8 rf_phy_num;
+ 	u32 antenna_tx;
+ 	u32 antenna_rx;
+ 	u8 bfee_sts_cap;
+diff --git a/drivers/net/wireless/realtek/rtw88/phy.c b/drivers/net/wireless/realtek/rtw88/phy.c
+index 8793dd22188f..8489abfdc12e 100644
+--- a/drivers/net/wireless/realtek/rtw88/phy.c
++++ b/drivers/net/wireless/realtek/rtw88/phy.c
+@@ -679,7 +679,7 @@ u32 rtw_phy_read_rf(struct rtw_dev *rtwdev, enum rtw_rf_path rf_path,
+ 	const u32 *base_addr = chip->rf_base_addr;
+ 	u32 val, direct_addr;
+ 
+-	if (rf_path >= hal->rf_path_num) {
++	if (rf_path >= hal->rf_phy_num) {
+ 		rtw_err(rtwdev, "unsupported rf path (%d)\n", rf_path);
+ 		return INV_RF_DATA;
+ 	}
+@@ -693,6 +693,54 @@ u32 rtw_phy_read_rf(struct rtw_dev *rtwdev, enum rtw_rf_path rf_path,
+ 	return val;
  }
  
- static struct rtw_chip_ops rtw8723d_ops = {
-+	.read_efuse		= rtw8723d_read_efuse,
- 	.read_rf		= rtw_phy_read_rf_sipi,
- 	.write_rf		= rtw_phy_write_rf_reg_sipi,
- 	.set_antenna		= NULL,
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723d.h b/drivers/net/wireless/realtek/rtw88/rtw8723d.h
-index 0b784cfc34c6..1939d9897a26 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8723d.h
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8723d.h
-@@ -5,4 +5,43 @@
- #ifndef __RTW8723D_H__
- #define __RTW8723D_H__
++u32 rtw_phy_read_rf_sipi(struct rtw_dev *rtwdev, enum rtw_rf_path rf_path,
++			 u32 addr, u32 mask)
++{
++	struct rtw_hal *hal = &rtwdev->hal;
++	struct rtw_chip_info *chip = rtwdev->chip;
++	const struct rtw_rf_sipi_addr *rf_sipi_addr;
++	const struct rtw_rf_sipi_addr *rf_sipi_addr_a;
++	u32 val32;
++	u32 en_pi;
++	u32 r_addr;
++	u32 shift;
++
++	if (rf_path >= hal->rf_phy_num) {
++		rtw_err(rtwdev, "unsupported rf path (%d)\n", rf_path);
++		return INV_RF_DATA;
++	}
++
++	if (!chip->rf_sipi_read_addr) {
++		rtw_err(rtwdev, "rf_sipi_read_addr isn't defined\n");
++		return INV_RF_DATA;
++	}
++
++	rf_sipi_addr = &chip->rf_sipi_read_addr[rf_path];
++	rf_sipi_addr_a = &chip->rf_sipi_read_addr[RF_PATH_A];
++
++	addr &= 0xff;
++
++	val32 = rtw_read32(rtwdev, rf_sipi_addr->hssi_2);
++	val32 = (val32 & ~LSSI_READ_ADDR_MASK) | (addr << 23);
++	rtw_write32(rtwdev, rf_sipi_addr->hssi_2, val32);
++
++	/* toggle read edge of path A */
++	val32 = rtw_read32(rtwdev, rf_sipi_addr_a->hssi_2);
++	rtw_write32(rtwdev, rf_sipi_addr_a->hssi_2, val32 & ~LSSI_READ_EDGE_MASK);
++	rtw_write32(rtwdev, rf_sipi_addr_a->hssi_2, val32 | LSSI_READ_EDGE_MASK);
++
++	udelay(120);
++
++	en_pi = rtw_read32_mask(rtwdev, rf_sipi_addr->hssi_1, BIT(8));
++	r_addr = en_pi ? rf_sipi_addr->lssi_read_pi : rf_sipi_addr->lssi_read;
++
++	val32 = rtw_read32_mask(rtwdev, r_addr, LSSI_READ_DATA_MASK);
++
++	shift = __ffs(mask);
++
++	return (val32 & mask) >> shift;
++}
++
+ bool rtw_phy_write_rf_reg_sipi(struct rtw_dev *rtwdev, enum rtw_rf_path rf_path,
+ 			       u32 addr, u32 mask, u32 data)
+ {
+@@ -703,7 +751,7 @@ bool rtw_phy_write_rf_reg_sipi(struct rtw_dev *rtwdev, enum rtw_rf_path rf_path,
+ 	u32 old_data = 0;
+ 	u32 shift;
  
-+struct rtw8723de_efuse {
-+	u8 mac_addr[ETH_ALEN];		/* 0xd0 */
-+	u8 vender_id[2];
-+	u8 device_id[2];
-+	u8 sub_vender_id[2];
-+	u8 sub_device_id[2];
-+};
-+
-+struct rtw8723d_efuse {
-+	__le16 rtl_id;
-+	u8 rsvd[2];
-+	u8 afe;
-+	u8 rsvd1[11];
-+
-+	/* power index for four RF paths */
-+	struct rtw_txpwr_idx txpwr_idx_table[4];
-+
-+	u8 channel_plan;		/* 0xb8 */
-+	u8 xtal_k;
-+	u8 thermal_meter;
-+	u8 iqk_lck;
-+	u8 pa_type;			/* 0xbc */
-+	u8 lna_type_2g[2];		/* 0xbd */
-+	u8 lna_type_5g[2];
-+	u8 rf_board_option;
-+	u8 rf_feature_option;
-+	u8 rf_bt_setting;
-+	u8 eeprom_version;
-+	u8 eeprom_customer_id;
-+	u8 tx_bb_swing_setting_2g;
-+	u8 res_c7;
-+	u8 tx_pwr_calibrate_rate;
-+	u8 rf_antenna_option;		/* 0xc9 */
-+	u8 rfe_option;
-+	u8 country_code[2];
-+	u8 res[3];
-+	struct rtw8723de_efuse e;
-+};
+-	if (rf_path >= hal->rf_path_num) {
++	if (rf_path >= hal->rf_phy_num) {
+ 		rtw_err(rtwdev, "unsupported rf path (%d)\n", rf_path);
+ 		return false;
+ 	}
+@@ -712,7 +760,7 @@ bool rtw_phy_write_rf_reg_sipi(struct rtw_dev *rtwdev, enum rtw_rf_path rf_path,
+ 	mask &= RFREG_MASK;
+ 
+ 	if (mask != RFREG_MASK) {
+-		old_data = rtw_phy_read_rf(rtwdev, rf_path, addr, RFREG_MASK);
++		old_data = chip->ops->read_rf(rtwdev, rf_path, addr, RFREG_MASK);
+ 
+ 		if (old_data == INV_RF_DATA) {
+ 			rtw_err(rtwdev, "Write fail, rf is disabled\n");
+@@ -740,7 +788,7 @@ bool rtw_phy_write_rf_reg(struct rtw_dev *rtwdev, enum rtw_rf_path rf_path,
+ 	const u32 *base_addr = chip->rf_base_addr;
+ 	u32 direct_addr;
+ 
+-	if (rf_path >= hal->rf_path_num) {
++	if (rf_path >= hal->rf_phy_num) {
+ 		rtw_err(rtwdev, "unsupported rf path (%d)\n", rf_path);
+ 		return false;
+ 	}
+diff --git a/drivers/net/wireless/realtek/rtw88/phy.h b/drivers/net/wireless/realtek/rtw88/phy.h
+index af916d8784cd..413bf7165cc0 100644
+--- a/drivers/net/wireless/realtek/rtw88/phy.h
++++ b/drivers/net/wireless/realtek/rtw88/phy.h
+@@ -21,6 +21,8 @@ void rtw_phy_dynamic_mechanism(struct rtw_dev *rtwdev);
+ u8 rtw_phy_rf_power_2_rssi(s8 *rf_power, u8 path_num);
+ u32 rtw_phy_read_rf(struct rtw_dev *rtwdev, enum rtw_rf_path rf_path,
+ 		    u32 addr, u32 mask);
++u32 rtw_phy_read_rf_sipi(struct rtw_dev *rtwdev, enum rtw_rf_path rf_path,
++			 u32 addr, u32 mask);
+ bool rtw_phy_write_rf_reg_sipi(struct rtw_dev *rtwdev, enum rtw_rf_path rf_path,
+ 			       u32 addr, u32 mask, u32 data);
+ bool rtw_phy_write_rf_reg(struct rtw_dev *rtwdev, enum rtw_rf_path rf_path,
+@@ -178,4 +180,8 @@ enum rtw_phy_cck_pd_lv {
+ 
+ #define CCK_FA_AVG_RESET 0xffffffff
+ 
++#define LSSI_READ_ADDR_MASK	0x7f800000
++#define LSSI_READ_EDGE_MASK	0x80000000
++#define LSSI_READ_DATA_MASK	0xfffff
 +
  #endif
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723d.c b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
+index 5b97730f1407..679c6c19516c 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8723d.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
+@@ -15,6 +15,8 @@
+ #include "debug.h"
+ 
+ static struct rtw_chip_ops rtw8723d_ops = {
++	.read_rf		= rtw_phy_read_rf_sipi,
++	.write_rf		= rtw_phy_write_rf_reg_sipi,
+ 	.set_antenna		= NULL,
+ 	.config_bfee		= NULL,
+ 	.set_gid_table		= NULL,
+@@ -422,6 +424,13 @@ static const struct rtw_pwr_seq_cmd *card_disable_flow_8723d[] = {
+ 	NULL
+ };
+ 
++static const struct rtw_rf_sipi_addr rtw8723d_rf_sipi_addr[] = {
++	[RF_PATH_A] = { .hssi_1 = 0x820, .lssi_read    = 0x8a0,
++			.hssi_2 = 0x824, .lssi_read_pi = 0x8b8},
++	[RF_PATH_B] = { .hssi_1 = 0x828, .lssi_read    = 0x8a4,
++			.hssi_2 = 0x82c, .lssi_read_pi = 0x8bc},
++};
++
+ struct rtw_chip_info rtw8723d_hw_spec = {
+ 	.ops = &rtw8723d_ops,
+ 	.id = RTW_CHIP_TYPE_8723D,
+@@ -444,6 +453,9 @@ struct rtw_chip_info rtw8723d_hw_spec = {
+ 	.sys_func_en = 0xFD,
+ 	.pwr_on_seq = card_enable_flow_8723d,
+ 	.pwr_off_seq = card_disable_flow_8723d,
++	.rf_sipi_addr = {0x840, 0x844},
++	.rf_sipi_read_addr = rtw8723d_rf_sipi_addr,
++	.fix_rf_phy_num = 2,
+ };
+ EXPORT_SYMBOL(rtw8723d_hw_spec);
+ 
 -- 
 2.17.1
 
