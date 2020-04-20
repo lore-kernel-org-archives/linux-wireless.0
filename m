@@ -6,43 +6,41 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B815C3815B
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 Apr 2020 05:51:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3326C3815B
+	for <linux-wireless@archiver.kernel.org>; Mon, 20 Apr 2020 10:52:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 473512080C
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 Apr 2020 05:51:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D0127205C9
+	for <linux-wireless@archiver.kernel.org>; Mon, 20 Apr 2020 10:52:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726117AbgDTFvW (ORCPT
+        id S1726112AbgDTKwS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 20 Apr 2020 01:51:22 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:42174 "EHLO
+        Mon, 20 Apr 2020 06:52:18 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:35275 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725896AbgDTFvP (ORCPT
+        with ESMTP id S1725773AbgDTKwS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Apr 2020 01:51:15 -0400
+        Mon, 20 Apr 2020 06:52:18 -0400
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 03K5p9gZ5000971, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 03KAq9Wt9013435, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexmb06.realtek.com.tw[172.21.6.99])
-        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 03K5p9gZ5000971
+        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 03KAq9Wt9013435
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Mon, 20 Apr 2020 13:51:09 +0800
+        Mon, 20 Apr 2020 18:52:09 +0800
 Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
  RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Mon, 20 Apr 2020 13:51:08 +0800
+ 15.1.1779.2; Mon, 20 Apr 2020 18:52:09 +0800
 Received: from localhost.localdomain (172.21.68.128) by
  RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Mon, 20 Apr 2020 13:51:08 +0800
+ 15.1.1779.2; Mon, 20 Apr 2020 18:52:09 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
-CC:     <pkshih@realtek.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 7/8] rtw88: 8723d: Add new chip op efuse_grant() to control efuse access
-Date:   Mon, 20 Apr 2020 13:50:53 +0800
-Message-ID: <20200420055054.14592-8-yhchuang@realtek.com>
+CC:     <linux-wireless@vger.kernel.org>, <briannorris@chromium.org>
+Subject: [PATCH v4] rtw88: set power trim according to efuse PG values
+Date:   Mon, 20 Apr 2020 18:52:07 +0800
+Message-ID: <20200420105207.31899-1-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20200420055054.14592-1-yhchuang@realtek.com>
-References: <20200420055054.14592-1-yhchuang@realtek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [172.21.68.128]
@@ -53,136 +51,266 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+From: Tzu-En Huang <tehuang@realtek.com>
 
-8723D devices need to grant efuse access before dumping physical efuse
-map, other chips don't need it, so keep this ops as blank.
+8822C devices have power trim, thermal and PA bias values
+programmed in efuse. Driver should configure the RF components
+according to the values.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+If the power trim is not configured, then the devices might have
+distortion on the output tx power.
+
+Signed-off-by: Tzu-En Huang <tehuang@realtek.com>
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/efuse.c    |  4 ++++
- drivers/net/wireless/realtek/rtw88/main.h     | 13 +++++++++++++
- drivers/net/wireless/realtek/rtw88/reg.h      |  9 +++++++++
- drivers/net/wireless/realtek/rtw88/rtw8723d.c | 13 +++++++++++++
- 4 files changed, 39 insertions(+)
+
+v1 -> v2
+  * disable DPD low rates
+
+v2 -> v3
+  * use read_poll_timeout()
+
+v3 -> v4
+  * explicitly include linux/iopoll.h
+
+ drivers/net/wireless/realtek/rtw88/efuse.c    |  22 ++++
+ drivers/net/wireless/realtek/rtw88/efuse.h    |   3 +
+ drivers/net/wireless/realtek/rtw88/rtw8822c.c | 113 ++++++++++++++++++
+ drivers/net/wireless/realtek/rtw88/rtw8822c.h |  28 +++++
+ 4 files changed, 166 insertions(+)
 
 diff --git a/drivers/net/wireless/realtek/rtw88/efuse.c b/drivers/net/wireless/realtek/rtw88/efuse.c
-index 212c8376a8c9..df969d346b41 100644
+index 212c8376a8c9..1fb1876a3896 100644
 --- a/drivers/net/wireless/realtek/rtw88/efuse.c
 +++ b/drivers/net/wireless/realtek/rtw88/efuse.c
-@@ -90,6 +90,8 @@ static int rtw_dump_physical_efuse_map(struct rtw_dev *rtwdev, u8 *map)
- 	u32 addr;
- 	u32 cnt;
+@@ -2,6 +2,8 @@
+ /* Copyright(c) 2018-2019  Realtek Corporation
+  */
  
-+	rtw_chip_efuse_grant_on(rtwdev);
++#include <linux/iopoll.h>
 +
- 	switch_efuse_bank(rtwdev);
- 
- 	/* disable 2.5V LDO */
-@@ -113,6 +115,8 @@ static int rtw_dump_physical_efuse_map(struct rtw_dev *rtwdev, u8 *map)
- 		*(map + addr) = (u8)(efuse_ctl & BIT_MASK_EF_DATA);
- 	}
- 
-+	rtw_chip_efuse_grant_off(rtwdev);
-+
+ #include "main.h"
+ #include "efuse.h"
+ #include "reg.h"
+@@ -116,6 +118,26 @@ static int rtw_dump_physical_efuse_map(struct rtw_dev *rtwdev, u8 *map)
  	return 0;
  }
  
-diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
-index 8f15fc113af0..74302181da53 100644
---- a/drivers/net/wireless/realtek/rtw88/main.h
-+++ b/drivers/net/wireless/realtek/rtw88/main.h
-@@ -811,6 +811,7 @@ struct rtw_chip_ops {
- 			   u32 antenna_tx,
- 			   u32 antenna_rx);
- 	void (*cfg_ldo25)(struct rtw_dev *rtwdev, bool enable);
-+	void (*efuse_grant)(struct rtw_dev *rtwdev, bool enable);
- 	void (*false_alarm_statistics)(struct rtw_dev *rtwdev);
- 	void (*phy_calibration)(struct rtw_dev *rtwdev);
- 	void (*dpk_track)(struct rtw_dev *rtwdev);
-@@ -1712,6 +1713,18 @@ static inline bool rtw_ssid_equal(struct cfg80211_ssid *a,
- 	return true;
- }
- 
-+static inline void rtw_chip_efuse_grant_on(struct rtw_dev *rtwdev)
++int rtw_read8_physical_efuse(struct rtw_dev *rtwdev, u16 addr, u8 *data)
 +{
-+	if (rtwdev->chip->ops->efuse_grant)
-+		rtwdev->chip->ops->efuse_grant(rtwdev, true);
++	u32 efuse_ctl;
++	int ret;
++
++	rtw_write32_mask(rtwdev, REG_EFUSE_CTRL, 0x3ff00, addr);
++	rtw_write32_clr(rtwdev, REG_EFUSE_CTRL, BIT_EF_FLAG);
++
++	ret = read_poll_timeout(rtw_read32, efuse_ctl, efuse_ctl & BIT_EF_FLAG,
++				1000, 100000, false, rtwdev, REG_EFUSE_CTRL);
++	if (ret) {
++		*data = EFUSE_READ_FAIL;
++		return ret;
++	}
++
++	*data = rtw_read8(rtwdev, REG_EFUSE_CTRL);
++
++	return 0;
 +}
 +
-+static inline void rtw_chip_efuse_grant_off(struct rtw_dev *rtwdev)
-+{
-+	if (rtwdev->chip->ops->efuse_grant)
-+		rtwdev->chip->ops->efuse_grant(rtwdev, false);
-+}
-+
- void rtw_get_channel_params(struct cfg80211_chan_def *chandef,
- 			    struct rtw_channel_params *ch_param);
- bool check_hw_ready(struct rtw_dev *rtwdev, u32 addr, u32 mask, u32 target);
-diff --git a/drivers/net/wireless/realtek/rtw88/reg.h b/drivers/net/wireless/realtek/rtw88/reg.h
-index 2afd547ebcc9..911d8e75db77 100644
---- a/drivers/net/wireless/realtek/rtw88/reg.h
-+++ b/drivers/net/wireless/realtek/rtw88/reg.h
-@@ -6,6 +6,7 @@
- #define __RTW_REG_DEF_H__
+ int rtw_parse_efuse_map(struct rtw_dev *rtwdev)
+ {
+ 	struct rtw_chip_info *chip = rtwdev->chip;
+diff --git a/drivers/net/wireless/realtek/rtw88/efuse.h b/drivers/net/wireless/realtek/rtw88/efuse.h
+index 115bbe85946a..97a51f0b0e46 100644
+--- a/drivers/net/wireless/realtek/rtw88/efuse.h
++++ b/drivers/net/wireless/realtek/rtw88/efuse.h
+@@ -10,6 +10,8 @@
+ #define EFUSE_HW_CAP_SUPP_BW80		7
+ #define EFUSE_HW_CAP_SUPP_BW40		6
  
- #define REG_SYS_FUNC_EN		0x0002
-+#define BIT_FEN_ELDR		BIT(12)
- #define BIT_FEN_CPUEN		BIT(2)
- #define BIT_FEN_BB_GLB_RST	BIT(1)
- #define BIT_FEN_BB_RSTB		BIT(0)
-@@ -15,6 +16,10 @@
- #define REG_SYS_CLK_CTRL	0x0008
- #define BIT_CPU_CLK_EN		BIT(14)
- 
-+#define REG_SYS_CLKR		0x0008
-+#define BIT_ANA8M		BIT(1)
-+#define BIT_LOADER_CLK_EN	BIT(5)
++#define EFUSE_READ_FAIL			0xff
 +
- #define REG_RSV_CTRL		0x001C
- #define DISABLE_PI		0x3
- #define ENABLE_PI		0x2
-@@ -87,6 +92,10 @@
- 				 BIT_CHECK_SUM_OK)
- #define FW_READY_MASK		0xffff
+ #define GET_EFUSE_HW_CAP_HCI(hw_cap)					       \
+ 	le32_get_bits(*((__le32 *)(hw_cap) + 0x01), GENMASK(3, 0))
+ #define GET_EFUSE_HW_CAP_BW(hw_cap)					       \
+@@ -22,5 +24,6 @@
+ 	le32_get_bits(*((__le32 *)(hw_cap) + 0x01), GENMASK(27, 26))
  
-+#define REG_EFUSE_ACCESS	0x00CF
-+#define EFUSE_ACCESS_ON		0x69
-+#define EFUSE_ACCESS_OFF	0x00
-+
- #define REG_WLRF1		0x00EC
- #define REG_WIFI_BT_INFO	0x00AA
- #define BIT_BT_INT_EN		BIT(15)
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723d.c b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-index 04f8d73e4e6c..756454d69fad 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-@@ -28,11 +28,24 @@ static void rtw8723d_cfg_ldo25(struct rtw_dev *rtwdev, bool enable)
- 	rtw_write8(rtwdev, REG_LDO_EFUSE_CTRL + 3, ldo_pwr);
+ int rtw_parse_efuse_map(struct rtw_dev *rtwdev);
++int rtw_read8_physical_efuse(struct rtw_dev *rtwdev, u16 addr, u8 *data);
+ 
+ #endif
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+index c99b1de54bfc..ee0d39135617 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+@@ -15,6 +15,7 @@
+ #include "debug.h"
+ #include "util.h"
+ #include "bf.h"
++#include "efuse.h"
+ 
+ static void rtw8822c_config_trx_mode(struct rtw_dev *rtwdev, u8 tx_path,
+ 				     u8 rx_path, bool is_tx2_path);
+@@ -1000,10 +1001,122 @@ static void rtw8822c_rf_x2_check(struct rtw_dev *rtwdev)
+ 	}
  }
  
-+static void rtw8723d_efuse_grant(struct rtw_dev *rtwdev, bool on)
++static void rtw8822c_set_power_trim(struct rtw_dev *rtwdev, s8 bb_gain[2][8])
 +{
-+	if (on) {
-+		rtw_write8(rtwdev, REG_EFUSE_ACCESS, EFUSE_ACCESS_ON);
++#define RF_SET_POWER_TRIM(_path, _seq, _idx)					\
++		do {								\
++			rtw_write_rf(rtwdev, _path, 0x33, RFREG_MASK, _seq);	\
++			rtw_write_rf(rtwdev, _path, 0x3f, RFREG_MASK,		\
++				     bb_gain[_path][_idx]);			\
++		} while (0)
++	u8 path;
 +
-+		rtw_write16_set(rtwdev, REG_SYS_FUNC_EN, BIT_FEN_ELDR);
-+		rtw_write16_set(rtwdev, REG_SYS_CLKR, BIT_LOADER_CLK_EN | BIT_ANA8M);
-+	} else {
-+		rtw_write8(rtwdev, REG_EFUSE_ACCESS, EFUSE_ACCESS_OFF);
++	for (path = 0; path < rtwdev->hal.rf_path_num; path++) {
++		rtw_write_rf(rtwdev, path, 0xee, BIT(19), 1);
++		RF_SET_POWER_TRIM(path, 0x0, 0);
++		RF_SET_POWER_TRIM(path, 0x1, 1);
++		RF_SET_POWER_TRIM(path, 0x2, 2);
++		RF_SET_POWER_TRIM(path, 0x3, 2);
++		RF_SET_POWER_TRIM(path, 0x4, 3);
++		RF_SET_POWER_TRIM(path, 0x5, 4);
++		RF_SET_POWER_TRIM(path, 0x6, 5);
++		RF_SET_POWER_TRIM(path, 0x7, 6);
++		RF_SET_POWER_TRIM(path, 0x8, 7);
++		RF_SET_POWER_TRIM(path, 0x9, 3);
++		RF_SET_POWER_TRIM(path, 0xa, 4);
++		RF_SET_POWER_TRIM(path, 0xb, 5);
++		RF_SET_POWER_TRIM(path, 0xc, 6);
++		RF_SET_POWER_TRIM(path, 0xd, 7);
++		RF_SET_POWER_TRIM(path, 0xe, 7);
++		rtw_write_rf(rtwdev, path, 0xee, BIT(19), 0);
++	}
++#undef RF_SET_POWER_TRIM
++}
++
++static void rtw8822c_power_trim(struct rtw_dev *rtwdev)
++{
++	u8 pg_pwr = 0xff, i, path, idx;
++	s8 bb_gain[2][8] = {0};
++	u16 rf_efuse_2g[3] = {PPG_2GL_TXAB, PPG_2GM_TXAB, PPG_2GH_TXAB};
++	u16 rf_efuse_5g[2][5] = {{PPG_5GL1_TXA, PPG_5GL2_TXA, PPG_5GM1_TXA,
++				  PPG_5GM2_TXA, PPG_5GH1_TXA},
++				 {PPG_5GL1_TXB, PPG_5GL2_TXB, PPG_5GM1_TXB,
++				  PPG_5GM2_TXB, PPG_5GH1_TXB} };
++	bool set = false;
++
++	for (i = 0; i < ARRAY_SIZE(rf_efuse_2g); i++) {
++		rtw_read8_physical_efuse(rtwdev, rf_efuse_2g[i], &pg_pwr);
++		if (pg_pwr == EFUSE_READ_FAIL)
++			continue;
++		set = true;
++		bb_gain[RF_PATH_A][i] = FIELD_GET(PPG_2G_A_MASK, pg_pwr);
++		bb_gain[RF_PATH_B][i] = FIELD_GET(PPG_2G_B_MASK, pg_pwr);
++	}
++
++	for (i = 0; i < ARRAY_SIZE(rf_efuse_5g[0]); i++) {
++		for (path = 0; path < rtwdev->hal.rf_path_num; path++) {
++			rtw_read8_physical_efuse(rtwdev, rf_efuse_5g[path][i],
++						 &pg_pwr);
++			if (pg_pwr == EFUSE_READ_FAIL)
++				continue;
++			set = true;
++			idx = i + ARRAY_SIZE(rf_efuse_2g);
++			bb_gain[path][idx] = FIELD_GET(PPG_5G_MASK, pg_pwr);
++		}
++	}
++	if (set)
++		rtw8822c_set_power_trim(rtwdev, bb_gain);
++
++	rtw_write32_mask(rtwdev, REG_DIS_DPD, DIS_DPD_MASK, DIS_DPD_RATEALL);
++}
++
++static void rtw8822c_thermal_trim(struct rtw_dev *rtwdev)
++{
++	u16 rf_efuse[2] = {PPG_THERMAL_A, PPG_THERMAL_B};
++	u8 pg_therm = 0xff, thermal[2] = {0}, path;
++
++	for (path = 0; path < rtwdev->hal.rf_path_num; path++) {
++		rtw_read8_physical_efuse(rtwdev, rf_efuse[path], &pg_therm);
++		if (pg_therm == EFUSE_READ_FAIL)
++			return;
++		/* Efuse value of BIT(0) shall be move to BIT(3), and the value
++		 * of BIT(1) to BIT(3) should be right shifted 1 bit.
++		 */
++		thermal[path] = FIELD_GET(GENMASK(3, 1), pg_therm);
++		thermal[path] |= FIELD_PREP(BIT(3), pg_therm & BIT(0));
++		rtw_write_rf(rtwdev, path, 0x43, RF_THEMAL_MASK, thermal[path]);
 +	}
 +}
 +
- static struct rtw_chip_ops rtw8723d_ops = {
- 	.read_rf		= rtw_phy_read_rf_sipi,
- 	.write_rf		= rtw_phy_write_rf_reg_sipi,
- 	.set_antenna		= NULL,
- 	.cfg_ldo25		= rtw8723d_cfg_ldo25,
-+	.efuse_grant		= rtw8723d_efuse_grant,
- 	.config_bfee		= NULL,
- 	.set_gid_table		= NULL,
- 	.cfg_csi_rate		= NULL,
++static void rtw8822c_pa_bias(struct rtw_dev *rtwdev)
++{
++	u16 rf_efuse_2g[2] = {PPG_PABIAS_2GA, PPG_PABIAS_2GB};
++	u16 rf_efuse_5g[2] = {PPG_PABIAS_5GA, PPG_PABIAS_5GB};
++	u8 pg_pa_bias = 0xff, path;
++
++	for (path = 0; path < rtwdev->hal.rf_path_num; path++) {
++		rtw_read8_physical_efuse(rtwdev, rf_efuse_2g[path],
++					 &pg_pa_bias);
++		if (pg_pa_bias == EFUSE_READ_FAIL)
++			return;
++		pg_pa_bias = FIELD_GET(PPG_PABIAS_MASK, pg_pa_bias);
++		rtw_write_rf(rtwdev, path, 0x60, RF_PABIAS_2G_MASK, pg_pa_bias);
++	}
++	for (path = 0; path < rtwdev->hal.rf_path_num; path++) {
++		rtw_read8_physical_efuse(rtwdev, rf_efuse_5g[path],
++					 &pg_pa_bias);
++		pg_pa_bias = FIELD_GET(PPG_PABIAS_MASK, pg_pa_bias);
++		rtw_write_rf(rtwdev, path, 0x60, RF_PABIAS_5G_MASK, pg_pa_bias);
++	}
++}
++
+ static void rtw8822c_rf_init(struct rtw_dev *rtwdev)
+ {
+ 	rtw8822c_rf_dac_cal(rtwdev);
+ 	rtw8822c_rf_x2_check(rtwdev);
++	rtw8822c_thermal_trim(rtwdev);
++	rtw8822c_power_trim(rtwdev);
++	rtw8822c_pa_bias(rtwdev);
+ }
+ 
+ static void rtw8822c_pwrtrack_init(struct rtw_dev *rtwdev)
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.h b/drivers/net/wireless/realtek/rtw88/rtw8822c.h
+index dfd8662a0c0e..32b4771e04d0 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822c.h
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.h
+@@ -309,4 +309,32 @@ const struct rtw_table name ## _tbl = {			\
+ #define BIT_GS_PWSF		GENMASK(27, 0)
+ #define BIT_RPT_DGAIN		GENMASK(27, 16)
+ #define BIT_TX_CFIR		GENMASK(31, 30)
++
++#define PPG_THERMAL_A 0x1ef
++#define PPG_THERMAL_B 0x1b0
++#define RF_THEMAL_MASK GENMASK(19, 16)
++#define PPG_2GL_TXAB 0x1d4
++#define PPG_2GM_TXAB 0x1ee
++#define PPG_2GH_TXAB 0x1d2
++#define PPG_2G_A_MASK GENMASK(3, 0)
++#define PPG_2G_B_MASK GENMASK(7, 4)
++#define PPG_5GL1_TXA 0x1ec
++#define PPG_5GL2_TXA 0x1e8
++#define PPG_5GM1_TXA 0x1e4
++#define PPG_5GM2_TXA 0x1e0
++#define PPG_5GH1_TXA 0x1dc
++#define PPG_5GL1_TXB 0x1eb
++#define PPG_5GL2_TXB 0x1e7
++#define PPG_5GM1_TXB 0x1e3
++#define PPG_5GM2_TXB 0x1df
++#define PPG_5GH1_TXB 0x1db
++#define PPG_5G_MASK GENMASK(4, 0)
++#define PPG_PABIAS_2GA 0x1d6
++#define PPG_PABIAS_2GB 0x1d5
++#define PPG_PABIAS_5GA 0x1d8
++#define PPG_PABIAS_5GB 0x1d7
++#define PPG_PABIAS_MASK GENMASK(3, 0)
++#define RF_PABIAS_2G_MASK GENMASK(15, 12)
++#define RF_PABIAS_5G_MASK GENMASK(19, 16)
++
+ #endif
 -- 
 2.17.1
 
