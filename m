@@ -2,315 +2,175 @@ Return-Path: <SRS0=CXG1=6E=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MSGID_FROM_MTA_HEADER,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3326C3815B
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 Apr 2020 10:52:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D4ACC3815B
+	for <linux-wireless@archiver.kernel.org>; Mon, 20 Apr 2020 11:35:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D0127205C9
-	for <linux-wireless@archiver.kernel.org>; Mon, 20 Apr 2020 10:52:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 57737206D4
+	for <linux-wireless@archiver.kernel.org>; Mon, 20 Apr 2020 11:35:49 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=quantenna.com header.i=@quantenna.com header.b="MX+Jelx8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726112AbgDTKwS (ORCPT
+        id S1726091AbgDTLfs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 20 Apr 2020 06:52:18 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:35275 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725773AbgDTKwS (ORCPT
+        Mon, 20 Apr 2020 07:35:48 -0400
+Received: from mx0a-00183b01.pphosted.com ([67.231.149.44]:27138 "EHLO
+        mx0a-00183b01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725886AbgDTLfs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Apr 2020 06:52:18 -0400
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 03KAq9Wt9013435, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexmb06.realtek.com.tw[172.21.6.99])
-        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 03KAq9Wt9013435
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Mon, 20 Apr 2020 18:52:09 +0800
-Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
- RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Mon, 20 Apr 2020 18:52:09 +0800
-Received: from localhost.localdomain (172.21.68.128) by
- RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Mon, 20 Apr 2020 18:52:09 +0800
-From:   <yhchuang@realtek.com>
-To:     <kvalo@codeaurora.org>
-CC:     <linux-wireless@vger.kernel.org>, <briannorris@chromium.org>
-Subject: [PATCH v4] rtw88: set power trim according to efuse PG values
-Date:   Mon, 20 Apr 2020 18:52:07 +0800
-Message-ID: <20200420105207.31899-1-yhchuang@realtek.com>
-X-Mailer: git-send-email 2.17.1
-MIME-Version: 1.0
+        Mon, 20 Apr 2020 07:35:48 -0400
+Received: from pps.filterd (m0059812.ppops.net [127.0.0.1])
+        by m0059812.ppops.net (8.16.0.42/8.16.0.42) with SMTP id 03KBZhRj026294;
+        Mon, 20 Apr 2020 05:35:44 -0600
+Received: from nam11-dm6-obe.outbound.protection.outlook.com (mail-dm6nam11lp2176.outbound.protection.outlook.com [104.47.57.176])
+        by m0059812.ppops.net with ESMTP id 30fv3svmj9-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 20 Apr 2020 05:35:44 -0600
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=VcBVaO4wFDjnASrOTNg9GcVzw/nnsaXnQR04O1xJoYJfJGyUtc7qkm/NncAXy7CYfl4f1rJGDZE8SxvzHGVLw55Po6XqbIsuO1Nk4nZDxpfBhhHtFNZve7qSqr1PY4+p6gMnJnas+K7rux+Y8w7Phj9xb7jm+qf34Xo0lHQk0M3fP5k7IHzK/ZiditIam+0dRjpC1FZi/pgG7gnRhjnV0rj6cDTzo+Vs5BYfH/z6Ei/JpFe5MiDK3BGbPU0NF9iZrkTQ+wcoHMT+rSRefUc/5SwWW7SB2Qz+oV9Wu/2IqvYMeT4YR3RjCwfyTOg7FBB9cfRWt+HKqMS6yOZBdj5+cw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=DAIjepzaDnZinsJSW8HKsJ+UcjpIH71OMgkZiuoceJE=;
+ b=Kn4xAtzX973v/Tycf59QJOg4BpzMNN90QUmDIWGz8HwnYW78OhbQ4JqJzA2l9lGzkwnZioWc4ev2HHP1Ywvq+vye9dhOMAmtkWGYkuvSb7uBFDyzwMXPMBOKQNYwnBYuIrklVRxszRAUGZv2M5PeIVmO6I78dKrw4LScdnZevnbvxqYm1mcZqz78LdW2UUobFhaW9sbmAoihR2dtWtlQprUDjmiO2APQMyLFNNtNVuVachMb4Pmzw2E7rUIGDZkZjOUJ4PGIwgnoZF5FrQHHBmgB6EtQrKfjnPOCi7OY3rIzelhVDTRMrQW7gOl7WuYXPZKU7VczXsLuNDKUNBmJhg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=quantenna.com; dmarc=pass action=none
+ header.from=quantenna.com; dkim=pass header.d=quantenna.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quantenna.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=DAIjepzaDnZinsJSW8HKsJ+UcjpIH71OMgkZiuoceJE=;
+ b=MX+Jelx8km0WBbkvr8g6y599YbwpsJsv8UCAxArWGDSPoJ1jUYGQXLI+WYNugS7TT+/LHli/BPB1RkcOzOD+mS1J90PyPHdVeAk4gPYfr8rWhEkoATe0GEGWRFyxSNoeUGS67Vc7VY0qaQe6+ej7sV3lJzmFMyq04VNMHGbEBw0=
+Received: from BYAPR05MB6309.namprd05.prod.outlook.com (2603:10b6:a03:cf::22)
+ by BYAPR05MB5413.namprd05.prod.outlook.com (2603:10b6:a03:78::15) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2921.20; Mon, 20 Apr
+ 2020 11:35:39 +0000
+Received: from BYAPR05MB6309.namprd05.prod.outlook.com
+ ([fe80::d8c0:3fd8:fcf2:2221]) by BYAPR05MB6309.namprd05.prod.outlook.com
+ ([fe80::d8c0:3fd8:fcf2:2221%3]) with mapi id 15.20.2937.011; Mon, 20 Apr 2020
+ 11:35:39 +0000
+Received: from CY4PR05MB3558.namprd05.prod.outlook.com (2603:10b6:910:53::39)
+ by CY4PR05MB3605.namprd05.prod.outlook.com (2603:10b6:910:51::34) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2937.6; Mon, 20 Apr
+ 2020 11:34:54 +0000
+Received: from CY4PR05MB3558.namprd05.prod.outlook.com
+ ([fe80::f5eb:c5ec:8fe4:e048]) by CY4PR05MB3558.namprd05.prod.outlook.com
+ ([fe80::f5eb:c5ec:8fe4:e048%6]) with mapi id 15.20.2937.011; Mon, 20 Apr 2020
+ 11:34:54 +0000
+From:   Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+To:     linux-wireless@vger.kernel.org
+CC:     Tamizh Chelvam <tamizhr@codeaurora.org>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
+Subject: [RFC PATCH 4/4] nl80211: simplify peer specific TID configuration
+Date:   Mon, 20 Apr 2020 14:34:37 +0300
+Message-ID: <20200420113437.16998-5-sergey.matyukevich.os@quantenna.com>
+X-Mailer: git-send-email 2.11.0
+In-Reply-To: <20200420113437.16998-1-sergey.matyukevich.os@quantenna.com>
+References: <20200420113437.16998-1-sergey.matyukevich.os@quantenna.com>
 Content-Type: text/plain
-X-Originating-IP: [172.21.68.128]
-X-ClientProxiedBy: RTEXMB03.realtek.com.tw (172.21.6.96) To
- RTEXMB04.realtek.com.tw (172.21.6.97)
+X-ClientProxiedBy: HE1PR0101CA0012.eurprd01.prod.exchangelabs.com
+ (2603:10a6:3:77::22) To CY4PR05MB3558.namprd05.prod.outlook.com
+ (2603:10b6:910:53::39)
+MIME-Version: 1.0
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from bars.quantenna.com (195.182.157.78) by HE1PR0101CA0012.eurprd01.prod.exchangelabs.com (2603:10a6:3:77::22) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2921.25 via Frontend Transport; Mon, 20 Apr 2020 11:34:52 +0000
+X-Mailer: git-send-email 2.11.0
+X-Originating-IP: [195.182.157.78]
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 9df923b4-26e5-42c8-afb9-08d7e51ed850
+X-MS-TrafficTypeDiagnostic: CY4PR05MB3605:|BYAPR05MB5413:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <CY4PR05MB3605E9DD0FB5FD0F356ECAD0A3D40@CY4PR05MB3605.namprd05.prod.outlook.com>
+X-Moderation-Data: 4/20/2020 11:35:33 AM
+X-MS-Oob-TLC-OOBClassifiers: OLM:7691;
+X-Forefront-PRVS: 03793408BA
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR05MB6309.namprd05.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(10009020)(39840400004)(346002)(136003)(366004)(396003)(376002)(1076003)(2906002)(66476007)(66556008)(478600001)(186003)(16526019)(7696005)(52116002)(6486002)(8936002)(2616005)(956004)(81156014)(316002)(66946007)(26005)(86362001)(54906003)(4326008)(36756003)(8676002)(6916009)(5660300002)(107886003)(6666004)(103116003);DIR:OUT;SFP:1101;
+Received-SPF: None (protection.outlook.com: quantenna.com does not designate
+ permitted sender hosts)
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: AaMyeLLmD9r/L+RfHOLKT+ArtCcvfEJ/O1IijZMgJqvYCnTcTm5sNMLbKDv5pxVJtYvNyggzbnFDK4dEZzvQEKLFogwCkS4rXdVeW71JG9NMSK7CEyEOLk/K7XrCWDte4OmWwnn3QRZDqq+M2/LMxGC6ZoM8fta4/TiOGivodr9SJCvCf3nz5L/604Lb1fXs7jj1JUSeni7etMah2wFcroHtnGhuQA+cQ5s3krwhCr81RD9oubqBrgH103/EmmVSOrmTmjFyshh2U8U8tx7aW21dVsLmCvlQEhEjkfzkycVE3RScSvqQJ/lUyNrRf+npoJbxZsdWBCYMI1G26et+hgz+GvFL+lrWwqaIl3VBNEQ7LZptJavZ9vrdkzD3FWiUdxysyiLQmcPmdyvaw2saHAipKcZOlMdd8tARfx+Dc7g7BMelpduNTy4jd+z8Rrog
+X-MS-Exchange-AntiSpam-MessageData: Gr+CzTKBrkTsR6Enn/u8fLGo14X1EcSBtQbtjeff5I0RSYA057P6vbSRpqP7ji9K0OzZ2cFQdvjKIwg/3pF82SCafFmQuKF0SBFyMe8nVoJZD11uaQgsq4jyHjVu97WjebXdu+B7CvhWYsXb2BPIGUlMQxAeRYk+zWHu7MdZCdvAyQGD+ZsdQ9Mhz1DJzZHosd4a5hWm4kRL6eyq9we96/6iFRfnNY5YycC+3/uqSSIbwP+1lHAIE3GkCwdPnVmTIqEL3XHCrgP97mClLRFydq/CCp9IbDO1S8KRvmNtfnNlWLyEFj/r556re744h6zm5c/ABEyJQ+3r7dUAmr9oTagOggbk0ILwqaro0GlzgUd1dBYD9mEu5SAv/RDwxjbreEJ8nxgQucecksKTowDbOz4PGPTwzPNUPQO5C6d7spcHJhbxl2Rq+tT2GYSjYxta3fSFnyPXglGYcvh41qbx5/eF5UuHrv2hxxwwTarWrxZRyM++GTKiKHbQwWr03H+5s7nbgH83rHjcSvYSibdOw+fB9B3g17GtvOJwk3iLFRCD51gT9mpclQfAQJhbjVc5N0vFEb0EBp46EID8PUQEXVdGQqrch7mJarwDmE6mOkTkkEnmxr4U497a9ALYe9Ar7M7gWPKMXZT5MBu31SP/wHe7Zm7HjNji7Ftmn+9maiHb5CHpxxwP8nXgNfsPKh+CoL5tWVcBWDQyTYEFpbmbtEgvYxPQer70zkAEWdDhWoybtXXo7bzchS0hKvWo1K2ltz0zRBo8MWHwHy/7qQTYbYMYoK9HuphWevVS/xruM3c=
+X-OriginatorOrg: quantenna.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 9df923b4-26e5-42c8-afb9-08d7e51ed850
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: a355dbce-62b4-4789-9446-c1d5582180ff
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 8i0ujGzRDhmn1gbC+LLB/Jd0mli0hhgaa4D8mS7VaUgFAjSAFU7w6iVaytOPmcB4b1rib8aNhjgqE2H6plXhC+p0RIAFlEb+jgfliQFQiD2XdMOmYOiqE96RQwx83aLQjDjR0SqL88tFSEJvdu15jo9rbeDz6XmvvQ81XuKYBVIvHyo1hN5kk67l3pcx++xD6KY9VziexTkHukEecEQlvg3IaRUUHesthsAKU+ZkpBY=
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Apr 2020 11:35:39.2256
+ (UTC)
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR05MB5413
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.138,18.0.676
+ definitions=2020-04-20_03:2020-04-20,2020-04-20 signatures=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 lowpriorityscore=0
+ malwarescore=0 priorityscore=1501 clxscore=1015 impostorscore=0
+ mlxlogscore=999 adultscore=0 phishscore=0 spamscore=0 mlxscore=0
+ suspectscore=1 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004200105
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Tzu-En Huang <tehuang@realtek.com>
+Current rule for applying TID configuration for specific peer looks overly
+complicated. No need to reject new TID configuration when override flag is
+specified. Another call with the same TID configuration, but without
+override flag, allows to apply new configuration anyway.
 
-8822C devices have power trim, thermal and PA bias values
-programmed in efuse. Driver should configure the RF components
-according to the values.
+Use the same approach as for the 'all peers' case: if override flag is
+specified, then reset existing TID configuration and immediately
+apply a new one.
 
-If the power trim is not configured, then the devices might have
-distortion on the output tx power.
-
-Signed-off-by: Tzu-En Huang <tehuang@realtek.com>
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Sergey Matyukevich <sergey.matyukevich.os@quantenna.com>
 ---
+ include/uapi/linux/nl80211.h | 10 ++++------
+ net/wireless/nl80211.c       |  5 +----
+ 2 files changed, 5 insertions(+), 10 deletions(-)
 
-v1 -> v2
-  * disable DPD low rates
-
-v2 -> v3
-  * use read_poll_timeout()
-
-v3 -> v4
-  * explicitly include linux/iopoll.h
-
- drivers/net/wireless/realtek/rtw88/efuse.c    |  22 ++++
- drivers/net/wireless/realtek/rtw88/efuse.h    |   3 +
- drivers/net/wireless/realtek/rtw88/rtw8822c.c | 113 ++++++++++++++++++
- drivers/net/wireless/realtek/rtw88/rtw8822c.h |  28 +++++
- 4 files changed, 166 insertions(+)
-
-diff --git a/drivers/net/wireless/realtek/rtw88/efuse.c b/drivers/net/wireless/realtek/rtw88/efuse.c
-index 212c8376a8c9..1fb1876a3896 100644
---- a/drivers/net/wireless/realtek/rtw88/efuse.c
-+++ b/drivers/net/wireless/realtek/rtw88/efuse.c
-@@ -2,6 +2,8 @@
- /* Copyright(c) 2018-2019  Realtek Corporation
-  */
- 
-+#include <linux/iopoll.h>
-+
- #include "main.h"
- #include "efuse.h"
- #include "reg.h"
-@@ -116,6 +118,26 @@ static int rtw_dump_physical_efuse_map(struct rtw_dev *rtwdev, u8 *map)
- 	return 0;
- }
- 
-+int rtw_read8_physical_efuse(struct rtw_dev *rtwdev, u16 addr, u8 *data)
-+{
-+	u32 efuse_ctl;
-+	int ret;
-+
-+	rtw_write32_mask(rtwdev, REG_EFUSE_CTRL, 0x3ff00, addr);
-+	rtw_write32_clr(rtwdev, REG_EFUSE_CTRL, BIT_EF_FLAG);
-+
-+	ret = read_poll_timeout(rtw_read32, efuse_ctl, efuse_ctl & BIT_EF_FLAG,
-+				1000, 100000, false, rtwdev, REG_EFUSE_CTRL);
-+	if (ret) {
-+		*data = EFUSE_READ_FAIL;
-+		return ret;
-+	}
-+
-+	*data = rtw_read8(rtwdev, REG_EFUSE_CTRL);
-+
-+	return 0;
-+}
-+
- int rtw_parse_efuse_map(struct rtw_dev *rtwdev)
- {
- 	struct rtw_chip_info *chip = rtwdev->chip;
-diff --git a/drivers/net/wireless/realtek/rtw88/efuse.h b/drivers/net/wireless/realtek/rtw88/efuse.h
-index 115bbe85946a..97a51f0b0e46 100644
---- a/drivers/net/wireless/realtek/rtw88/efuse.h
-+++ b/drivers/net/wireless/realtek/rtw88/efuse.h
-@@ -10,6 +10,8 @@
- #define EFUSE_HW_CAP_SUPP_BW80		7
- #define EFUSE_HW_CAP_SUPP_BW40		6
- 
-+#define EFUSE_READ_FAIL			0xff
-+
- #define GET_EFUSE_HW_CAP_HCI(hw_cap)					       \
- 	le32_get_bits(*((__le32 *)(hw_cap) + 0x01), GENMASK(3, 0))
- #define GET_EFUSE_HW_CAP_BW(hw_cap)					       \
-@@ -22,5 +24,6 @@
- 	le32_get_bits(*((__le32 *)(hw_cap) + 0x01), GENMASK(27, 26))
- 
- int rtw_parse_efuse_map(struct rtw_dev *rtwdev);
-+int rtw_read8_physical_efuse(struct rtw_dev *rtwdev, u16 addr, u8 *data);
- 
- #endif
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-index c99b1de54bfc..ee0d39135617 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-@@ -15,6 +15,7 @@
- #include "debug.h"
- #include "util.h"
- #include "bf.h"
-+#include "efuse.h"
- 
- static void rtw8822c_config_trx_mode(struct rtw_dev *rtwdev, u8 tx_path,
- 				     u8 rx_path, bool is_tx2_path);
-@@ -1000,10 +1001,122 @@ static void rtw8822c_rf_x2_check(struct rtw_dev *rtwdev)
- 	}
- }
- 
-+static void rtw8822c_set_power_trim(struct rtw_dev *rtwdev, s8 bb_gain[2][8])
-+{
-+#define RF_SET_POWER_TRIM(_path, _seq, _idx)					\
-+		do {								\
-+			rtw_write_rf(rtwdev, _path, 0x33, RFREG_MASK, _seq);	\
-+			rtw_write_rf(rtwdev, _path, 0x3f, RFREG_MASK,		\
-+				     bb_gain[_path][_idx]);			\
-+		} while (0)
-+	u8 path;
-+
-+	for (path = 0; path < rtwdev->hal.rf_path_num; path++) {
-+		rtw_write_rf(rtwdev, path, 0xee, BIT(19), 1);
-+		RF_SET_POWER_TRIM(path, 0x0, 0);
-+		RF_SET_POWER_TRIM(path, 0x1, 1);
-+		RF_SET_POWER_TRIM(path, 0x2, 2);
-+		RF_SET_POWER_TRIM(path, 0x3, 2);
-+		RF_SET_POWER_TRIM(path, 0x4, 3);
-+		RF_SET_POWER_TRIM(path, 0x5, 4);
-+		RF_SET_POWER_TRIM(path, 0x6, 5);
-+		RF_SET_POWER_TRIM(path, 0x7, 6);
-+		RF_SET_POWER_TRIM(path, 0x8, 7);
-+		RF_SET_POWER_TRIM(path, 0x9, 3);
-+		RF_SET_POWER_TRIM(path, 0xa, 4);
-+		RF_SET_POWER_TRIM(path, 0xb, 5);
-+		RF_SET_POWER_TRIM(path, 0xc, 6);
-+		RF_SET_POWER_TRIM(path, 0xd, 7);
-+		RF_SET_POWER_TRIM(path, 0xe, 7);
-+		rtw_write_rf(rtwdev, path, 0xee, BIT(19), 0);
-+	}
-+#undef RF_SET_POWER_TRIM
-+}
-+
-+static void rtw8822c_power_trim(struct rtw_dev *rtwdev)
-+{
-+	u8 pg_pwr = 0xff, i, path, idx;
-+	s8 bb_gain[2][8] = {0};
-+	u16 rf_efuse_2g[3] = {PPG_2GL_TXAB, PPG_2GM_TXAB, PPG_2GH_TXAB};
-+	u16 rf_efuse_5g[2][5] = {{PPG_5GL1_TXA, PPG_5GL2_TXA, PPG_5GM1_TXA,
-+				  PPG_5GM2_TXA, PPG_5GH1_TXA},
-+				 {PPG_5GL1_TXB, PPG_5GL2_TXB, PPG_5GM1_TXB,
-+				  PPG_5GM2_TXB, PPG_5GH1_TXB} };
-+	bool set = false;
-+
-+	for (i = 0; i < ARRAY_SIZE(rf_efuse_2g); i++) {
-+		rtw_read8_physical_efuse(rtwdev, rf_efuse_2g[i], &pg_pwr);
-+		if (pg_pwr == EFUSE_READ_FAIL)
-+			continue;
-+		set = true;
-+		bb_gain[RF_PATH_A][i] = FIELD_GET(PPG_2G_A_MASK, pg_pwr);
-+		bb_gain[RF_PATH_B][i] = FIELD_GET(PPG_2G_B_MASK, pg_pwr);
-+	}
-+
-+	for (i = 0; i < ARRAY_SIZE(rf_efuse_5g[0]); i++) {
-+		for (path = 0; path < rtwdev->hal.rf_path_num; path++) {
-+			rtw_read8_physical_efuse(rtwdev, rf_efuse_5g[path][i],
-+						 &pg_pwr);
-+			if (pg_pwr == EFUSE_READ_FAIL)
-+				continue;
-+			set = true;
-+			idx = i + ARRAY_SIZE(rf_efuse_2g);
-+			bb_gain[path][idx] = FIELD_GET(PPG_5G_MASK, pg_pwr);
-+		}
-+	}
-+	if (set)
-+		rtw8822c_set_power_trim(rtwdev, bb_gain);
-+
-+	rtw_write32_mask(rtwdev, REG_DIS_DPD, DIS_DPD_MASK, DIS_DPD_RATEALL);
-+}
-+
-+static void rtw8822c_thermal_trim(struct rtw_dev *rtwdev)
-+{
-+	u16 rf_efuse[2] = {PPG_THERMAL_A, PPG_THERMAL_B};
-+	u8 pg_therm = 0xff, thermal[2] = {0}, path;
-+
-+	for (path = 0; path < rtwdev->hal.rf_path_num; path++) {
-+		rtw_read8_physical_efuse(rtwdev, rf_efuse[path], &pg_therm);
-+		if (pg_therm == EFUSE_READ_FAIL)
-+			return;
-+		/* Efuse value of BIT(0) shall be move to BIT(3), and the value
-+		 * of BIT(1) to BIT(3) should be right shifted 1 bit.
-+		 */
-+		thermal[path] = FIELD_GET(GENMASK(3, 1), pg_therm);
-+		thermal[path] |= FIELD_PREP(BIT(3), pg_therm & BIT(0));
-+		rtw_write_rf(rtwdev, path, 0x43, RF_THEMAL_MASK, thermal[path]);
-+	}
-+}
-+
-+static void rtw8822c_pa_bias(struct rtw_dev *rtwdev)
-+{
-+	u16 rf_efuse_2g[2] = {PPG_PABIAS_2GA, PPG_PABIAS_2GB};
-+	u16 rf_efuse_5g[2] = {PPG_PABIAS_5GA, PPG_PABIAS_5GB};
-+	u8 pg_pa_bias = 0xff, path;
-+
-+	for (path = 0; path < rtwdev->hal.rf_path_num; path++) {
-+		rtw_read8_physical_efuse(rtwdev, rf_efuse_2g[path],
-+					 &pg_pa_bias);
-+		if (pg_pa_bias == EFUSE_READ_FAIL)
-+			return;
-+		pg_pa_bias = FIELD_GET(PPG_PABIAS_MASK, pg_pa_bias);
-+		rtw_write_rf(rtwdev, path, 0x60, RF_PABIAS_2G_MASK, pg_pa_bias);
-+	}
-+	for (path = 0; path < rtwdev->hal.rf_path_num; path++) {
-+		rtw_read8_physical_efuse(rtwdev, rf_efuse_5g[path],
-+					 &pg_pa_bias);
-+		pg_pa_bias = FIELD_GET(PPG_PABIAS_MASK, pg_pa_bias);
-+		rtw_write_rf(rtwdev, path, 0x60, RF_PABIAS_5G_MASK, pg_pa_bias);
-+	}
-+}
-+
- static void rtw8822c_rf_init(struct rtw_dev *rtwdev)
- {
- 	rtw8822c_rf_dac_cal(rtwdev);
- 	rtw8822c_rf_x2_check(rtwdev);
-+	rtw8822c_thermal_trim(rtwdev);
-+	rtw8822c_power_trim(rtwdev);
-+	rtw8822c_pa_bias(rtwdev);
- }
- 
- static void rtw8822c_pwrtrack_init(struct rtw_dev *rtwdev)
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.h b/drivers/net/wireless/realtek/rtw88/rtw8822c.h
-index dfd8662a0c0e..32b4771e04d0 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8822c.h
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.h
-@@ -309,4 +309,32 @@ const struct rtw_table name ## _tbl = {			\
- #define BIT_GS_PWSF		GENMASK(27, 0)
- #define BIT_RPT_DGAIN		GENMASK(27, 16)
- #define BIT_TX_CFIR		GENMASK(31, 30)
-+
-+#define PPG_THERMAL_A 0x1ef
-+#define PPG_THERMAL_B 0x1b0
-+#define RF_THEMAL_MASK GENMASK(19, 16)
-+#define PPG_2GL_TXAB 0x1d4
-+#define PPG_2GM_TXAB 0x1ee
-+#define PPG_2GH_TXAB 0x1d2
-+#define PPG_2G_A_MASK GENMASK(3, 0)
-+#define PPG_2G_B_MASK GENMASK(7, 4)
-+#define PPG_5GL1_TXA 0x1ec
-+#define PPG_5GL2_TXA 0x1e8
-+#define PPG_5GM1_TXA 0x1e4
-+#define PPG_5GM2_TXA 0x1e0
-+#define PPG_5GH1_TXA 0x1dc
-+#define PPG_5GL1_TXB 0x1eb
-+#define PPG_5GL2_TXB 0x1e7
-+#define PPG_5GM1_TXB 0x1e3
-+#define PPG_5GM2_TXB 0x1df
-+#define PPG_5GH1_TXB 0x1db
-+#define PPG_5G_MASK GENMASK(4, 0)
-+#define PPG_PABIAS_2GA 0x1d6
-+#define PPG_PABIAS_2GB 0x1d5
-+#define PPG_PABIAS_5GA 0x1d8
-+#define PPG_PABIAS_5GB 0x1d7
-+#define PPG_PABIAS_MASK GENMASK(3, 0)
-+#define RF_PABIAS_2G_MASK GENMASK(15, 12)
-+#define RF_PABIAS_5G_MASK GENMASK(19, 16)
-+
- #endif
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 1bf34a39c776..003e25ce3899 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -4807,12 +4807,10 @@ enum nl80211_tid_config {
+  *	(%NL80211_TID_CONFIG_ATTR_TIDS, %NL80211_TID_CONFIG_ATTR_OVERRIDE).
+  * @NL80211_TID_CONFIG_ATTR_PEER_SUPP: same as the previous per-vif one, but
+  *	per peer instead.
+- * @NL80211_TID_CONFIG_ATTR_OVERRIDE: flag attribue, if no peer
+- *	is selected, if set indicates that the new configuration overrides
+- *	all previous peer configurations, otherwise previous peer specific
+- *	configurations should be left untouched. If peer is selected then
+- *	it will reset particular TID configuration of that peer and it will
+- *	not accept other TID config attributes along with peer.
++ * @NL80211_TID_CONFIG_ATTR_OVERRIDE: flag attribue, if set indicates
++ *	that the new configuration overrides all previous peer
++ *	configurations, otherwise previous peer specific configurations
++ *	should be left untouched.
+  * @NL80211_TID_CONFIG_ATTR_TIDS: a bitmask value of TIDs (bit 0 to 7)
+  *	Its type is u16.
+  * @NL80211_TID_CONFIG_ATTR_NOACK: Configure ack policy for the TID.
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index ea0e588b6f6a..03f7870875a0 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -14058,10 +14058,7 @@ static int parse_tid_conf(struct cfg80211_registered_device *rdev,
+ 		if (rdev->ops->reset_tid_config) {
+ 			err = rdev_reset_tid_config(rdev, dev, peer,
+ 						    tid_conf->tids);
+-			/* If peer is there no other configuration will be
+-			 * allowed
+-			 */
+-			if (err || peer)
++			if (err)
+ 				return err;
+ 		} else {
+ 			return -EINVAL;
 -- 
-2.17.1
+2.11.0
 
