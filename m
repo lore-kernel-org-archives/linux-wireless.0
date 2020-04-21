@@ -1,66 +1,91 @@
 Return-Path: <SRS0=wZZW=6F=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
-X-Spam-Level: **
-X-Spam-Status: No, score=2.2 required=3.0 tests=DEAR_FRIEND,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Level: 
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MIME_BASE64_TEXT,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 624C9C38A30
-	for <linux-wireless@archiver.kernel.org>; Tue, 21 Apr 2020 00:40:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CFC1C2BA19
+	for <linux-wireless@archiver.kernel.org>; Tue, 21 Apr 2020 05:20:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 45EC1206E9
-	for <linux-wireless@archiver.kernel.org>; Tue, 21 Apr 2020 00:40:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 36C092076C
+	for <linux-wireless@archiver.kernel.org>; Tue, 21 Apr 2020 05:20:34 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="P/rADJw9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726201AbgDUAk3 convert rfc822-to-8bit (ORCPT
+        id S1725926AbgDUFUd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 20 Apr 2020 20:40:29 -0400
-Received: from unallocated-static.datacentres.rogers.com ([72.142.144.38]:58656
-        "EHLO smartermail2" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726055AbgDUAk3 (ORCPT
+        Tue, 21 Apr 2020 01:20:33 -0400
+Received: from mailgw01.mediatek.com ([210.61.82.183]:6048 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1725730AbgDUFUd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 20 Apr 2020 20:40:29 -0400
-Received: from coris.com (UnknownHost [103.207.36.17]) by smartermail2 with SMTP;
-   Thu, 9 Apr 2020 23:32:25 -0400
-Reply-To: kentpace@sina.com
-From:   Kent Pace <kentpace@coris.com>
-To:     linux-wireless@vger.kernel.org
-Subject: Urgent!!!!! Please read
-Date:   09 Apr 2020 20:32:21 -0700
-Message-ID: <20200409203221.ECB3EBF908B41F18@coris.com>
+        Tue, 21 Apr 2020 01:20:33 -0400
+X-UUID: 582fc3bab3764b5fae37b843ff0d2f77-20200421
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=HnBBAl5ApGkX57RqSlJeWzPnI68bVoLjmJ43j6pkVuk=;
+        b=P/rADJw9p8J1AUs2H49qs426RjD8jtFtT2KY0Kxbatu8esBbEb7zKX590k407uFoiRsYlC5oQ9mJlfNrrhkFdlejJF74RB0J1wzZA5wLjST8uxpdmSIxIxDJUKKIXrdEeGyZvJS018lI/F6zxd70eUVd/e7YJUAvG4qPl4PLGkA=;
+X-UUID: 582fc3bab3764b5fae37b843ff0d2f77-20200421
+Received: from mtkcas07.mediatek.inc [(172.21.101.84)] by mailgw01.mediatek.com
+        (envelope-from <sean.wang@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
+        with ESMTP id 573305182; Tue, 21 Apr 2020 13:20:29 +0800
+Received: from mtkcas07.mediatek.inc (172.21.101.84) by
+ mtkmbs08n2.mediatek.inc (172.21.101.56) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Tue, 21 Apr 2020 13:20:27 +0800
+Received: from mtkswgap22.mediatek.inc (172.21.77.33) by mtkcas07.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Tue, 21 Apr 2020 13:20:27 +0800
+From:   <sean.wang@mediatek.com>
+To:     <nbd@nbd.name>, <lorenzo.bianconi@redhat.com>
+CC:     <sean.wang@mediatek.com>, <ryder.lee@mediatek.com>,
+        <linux-wireless@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>,
+        Soul Huang <Soul.Huang@mediatek.com>
+Subject: [PATCH 3/3] mt76: mt7663: fix up BMC entry indicated to unicmd firmware
+Date:   Tue, 21 Apr 2020 13:20:23 +0800
+Message-ID: <99b919b29ad60437749d5f30dc8c68ccb3df89f3.1587445885.git.sean.wang@mediatek.com>
+X-Mailer: git-send-email 1.7.9.5
+In-Reply-To: <1467d47fd111b5711fa74410833153bdc9e01b72.1587445885.git.sean.wang@mediatek.com>
+References: <1467d47fd111b5711fa74410833153bdc9e01b72.1587445885.git.sean.wang@mediatek.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="utf-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+X-TM-SNTS-SMTP: 9B03E7B10743E9A1174ED658E4FA1FEFCC51863DC180DF2666E119831E7EE7A92000:8
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Dear Friend,
-
-
-There is something very important I need to discuss with you.  I 
-am writing  this letter in tears and fear. In tears because I 
-will soon depart and in fear because I don't really know if you 
-will do this faithfully.
-
-
-I am COVID-19  patient and the doctor has already confirmed I may 
-not last for the next 7 days.
-
-I have substantial amount of money deposited in a security vault 
-around your country. It is in trunk boxes and once  I receive 
-your response and see your readiness to claim the money 
-immediately, I will forward the needed documents and the contact 
-of the security vault where the consignment is deposited,
-I am not asking you to give me anything but I want you to help 
-people that has been infected with this deadly virus with 60% of 
-the money and 40% should be for you and your family.
-
-I will disclose exact amount in the boxes as soon as I 
-receive your response.
-
-
-Regards
+RnJvbTogU2VhbiBXYW5nIDxzZWFuLndhbmdAbWVkaWF0ZWsuY29tPg0KDQpCTUMgZW50cnkgZm9y
+IE1UNzY2MyB1bmljbWQgZmlybXdhcmUgc2hvdWxkIGJlIGEgYnJvYWRjYXN0L211bHRpY2FzdCBl
+bnRyeSwNCm5vdCBhIHVuaWNhc3QgZW50cnksIHRoYXQgaXMgR1RLIHJla2V5IG9mZmxvYWQgd291
+bGQgcmVseSBvbi4NCg0KRml4ZXM6IDEzODg2MDY3OWIyYSAoIm10NzY6IG10NzYxNTogYWRkIG1v
+cmUgdW5pIG1jdSBjb21tYW5kcyIpDQpDYzogU291bCBIdWFuZyA8U291bC5IdWFuZ0BtZWRpYXRl
+ay5jb20+DQpTdWdnZXN0ZWQtYnk6IFlGIEx1byA8WWYuTHVvQG1lZGlhdGVrLmNvbT4NCkNvLWRl
+dmVsb3BlZC1ieTogUnlkZXIgTGVlIDxyeWRlci5sZWVAbWVkaWF0ZWsuY29tPg0KU2lnbmVkLW9m
+Zi1ieTogUnlkZXIgTGVlIDxyeWRlci5sZWVAbWVkaWF0ZWsuY29tPg0KU2lnbmVkLW9mZi1ieTog
+U2VhbiBXYW5nIDxzZWFuLndhbmdAbWVkaWF0ZWsuY29tPg0KLS0tDQogZHJpdmVycy9uZXQvd2ly
+ZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc2MTUvbWN1LmMgfCA1ICsrLS0tDQogMSBmaWxlIGNoYW5n
+ZWQsIDIgaW5zZXJ0aW9ucygrKSwgMyBkZWxldGlvbnMoLSkNCg0KZGlmZiAtLWdpdCBhL2RyaXZl
+cnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3NjE1L21jdS5jIGIvZHJpdmVycy9uZXQv
+d2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc2MTUvbWN1LmMNCmluZGV4IDA0NWJkZTdmNTU0ZC4u
+ZThjYWEyYzc5ODFlIDEwMDY0NA0KLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsv
+bXQ3Ni9tdDc2MTUvbWN1LmMNCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210
+NzYvbXQ3NjE1L21jdS5jDQpAQCAtMTMzOSw3ICsxMzM5LDcgQEAgbXQ3NjE1X21jdV91bmlfYWRk
+X2JzcyhzdHJ1Y3QgbXQ3NjE1X3BoeSAqcGh5LA0KIAkJCS5zaG9ydF9zdCA9IHRydWUsDQogCQl9
+LA0KIAl9Ow0KLQl1OCBpZHgsIHR4X3dsYW5faWR4ID0gMDsNCisJdTggaWR4LCB0eF93bGFuX2lk
+eCA9IG12aWYtPnN0YS53Y2lkLmlkeDsNCiAJaW50IGVycjsNCiANCiAJaWR4ID0gbXZpZi0+b21h
+Y19pZHggPiBFWFRfQlNTSURfU1RBUlQgPyBIV19CU1NJRF8wIDogbXZpZi0+b21hY19pZHg7DQpA
+QCAtMTM0OSwxMCArMTM0OSw5IEBAIG10NzYxNV9tY3VfdW5pX2FkZF9ic3Moc3RydWN0IG10NzYx
+NV9waHkgKnBoeSwNCiAJY2FzZSBOTDgwMjExX0lGVFlQRV9NRVNIX1BPSU5UOg0KIAljYXNlIE5M
+ODAyMTFfSUZUWVBFX0FQOg0KIAkJYmFzaWNfcmVxLmJhc2ljLmNvbm5fdHlwZSA9IGNwdV90b19s
+ZTMyKENPTk5FQ1RJT05fSU5GUkFfQVApOw0KLQkJdHhfd2xhbl9pZHggPSBtdmlmLT5zdGEud2Np
+ZC5pZHg7DQogCQlicmVhazsNCiAJY2FzZSBOTDgwMjExX0lGVFlQRV9TVEFUSU9OOg0KLQkJaWYg
+KGVuYWJsZSkgew0KKwkJaWYgKGVuYWJsZSAmJiAhaXNfbXQ3NjYzKCZkZXYtPm10NzYpKSB7DQog
+CQkJc3RydWN0IGllZWU4MDIxMV9zdGEgKnN0YTsNCiAJCQlzdHJ1Y3QgbXQ3NjE1X3N0YSAqbXN0
+YTsNCiANCi0tIA0KMi4yNS4xDQo=
 
