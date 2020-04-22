@@ -6,30 +6,30 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD3C5C38A30
-	for <linux-wireless@archiver.kernel.org>; Wed, 22 Apr 2020 03:46:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B67ECC55181
+	for <linux-wireless@archiver.kernel.org>; Wed, 22 Apr 2020 03:46:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7B1BD20747
-	for <linux-wireless@archiver.kernel.org>; Wed, 22 Apr 2020 03:46:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9E9CB20747
+	for <linux-wireless@archiver.kernel.org>; Wed, 22 Apr 2020 03:46:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726469AbgDVDqS (ORCPT
+        id S1726477AbgDVDqT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 21 Apr 2020 23:46:18 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:37000 "EHLO
+        Tue, 21 Apr 2020 23:46:19 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:37004 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726460AbgDVDqR (ORCPT
+        with ESMTP id S1726466AbgDVDqS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 21 Apr 2020 23:46:17 -0400
+        Tue, 21 Apr 2020 23:46:18 -0400
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 03M3kBP81004597, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 03M3kAzF5004569, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexmb06.realtek.com.tw[172.21.6.99])
-        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 03M3kBP81004597
+        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 03M3kAzF5004569
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Wed, 22 Apr 2020 11:46:11 +0800
+        Wed, 22 Apr 2020 11:46:10 +0800
 Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
  RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Wed, 22 Apr 2020 11:46:11 +0800
+ 15.1.1779.2; Wed, 22 Apr 2020 11:46:10 +0800
 Received: from localhost.localdomain (172.21.68.128) by
  RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
@@ -37,9 +37,9 @@ Received: from localhost.localdomain (172.21.68.128) by
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>, <pkshih@realtek.com>
-Subject: [PATCH v2 7/8] rtw88: 8723d: Organize chip TX/RX FIFO
-Date:   Wed, 22 Apr 2020 11:46:06 +0800
-Message-ID: <20200422034607.28747-8-yhchuang@realtek.com>
+Subject: [PATCH v2 4/8] rtw88: decompose while(1) loop of power sequence polling command
+Date:   Wed, 22 Apr 2020 11:46:03 +0800
+Message-ID: <20200422034607.28747-5-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200422034607.28747-1-yhchuang@realtek.com>
 References: <20200422034607.28747-1-yhchuang@realtek.com>
@@ -55,341 +55,115 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ping-Ke Shih <pkshih@realtek.com>
 
-TX FIFO size is 32k and it was divided into 256 pages with 128 bytes.
-A boundary is used to split pages into two parts, head part is used to
-store TX packets coming from host, and tail part is reserved for special
-purposes, such as beacon packet, null data packet and so on.
+The power polling command is one kind of power sequence commands. It's used
+to check hardware situation, and subsequent comamnds will be executed if
+hardware is ready. A special case is PCIE must toggle BIT_PFM_WOWL and try
+again if first try is failed.
 
-The TX packets coming from host have many categories, such as VO, VI, BE,
-BK, MG and etc. When going into head part of TX FIFO, they are classified
-to four priority queue named low, normal, high and extra priority queues.
-Each priority queue occupies predefined number of page, if a certain
-priority queue is full, TX packet will store into PUB priority queue.
-
-Similarly, RX FIFO is 16k and split into two parts, head part is used to
-store RX packets, and tail part is 128 bytes and used to store report.
-Thus, we fill this boundary to register as well.
+In order to reduce indentation to understand the code easier, move polling
+part to a separate function. Then, the 'while (1)...loop' is replaced by
+two statements to do first try and retry.
 
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/mac.c      | 140 ++++++++++++------
- drivers/net/wireless/realtek/rtw88/mac.h      |   1 +
- drivers/net/wireless/realtek/rtw88/reg.h      |  28 ++++
- drivers/net/wireless/realtek/rtw88/rtw8723d.c |  31 ++++
- 4 files changed, 154 insertions(+), 46 deletions(-)
+ drivers/net/wireless/realtek/rtw88/mac.c | 72 +++++++++++++-----------
+ 1 file changed, 38 insertions(+), 34 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtw88/mac.c b/drivers/net/wireless/realtek/rtw88/mac.c
-index f4a504b350cf..645207a01525 100644
+index 21b5c7173f0f..ac5d35153c8a 100644
 --- a/drivers/net/wireless/realtek/rtw88/mac.c
 +++ b/drivers/net/wireless/realtek/rtw88/mac.c
-@@ -1032,13 +1032,16 @@ static int set_trx_fifo_info(struct rtw_dev *rtwdev)
- 	/* config rsvd page num */
- 	fifo->rsvd_drv_pg_num = 8;
- 	fifo->txff_pg_num = chip->txff_size >> 7;
--	fifo->rsvd_pg_num = fifo->rsvd_drv_pg_num +
--			   RSVD_PG_H2C_EXTRAINFO_NUM +
--			   RSVD_PG_H2C_STATICINFO_NUM +
--			   RSVD_PG_H2CQ_NUM +
--			   RSVD_PG_CPU_INSTRUCTION_NUM +
--			   RSVD_PG_FW_TXBUF_NUM +
--			   csi_buf_pg_num;
-+	if (rtw_chip_wcpu_11n(rtwdev))
-+		fifo->rsvd_pg_num = fifo->rsvd_drv_pg_num;
-+	else
-+		fifo->rsvd_pg_num = fifo->rsvd_drv_pg_num +
-+				   RSVD_PG_H2C_EXTRAINFO_NUM +
-+				   RSVD_PG_H2C_STATICINFO_NUM +
-+				   RSVD_PG_H2CQ_NUM +
-+				   RSVD_PG_CPU_INSTRUCTION_NUM +
-+				   RSVD_PG_FW_TXBUF_NUM +
-+				   csi_buf_pg_num;
- 
- 	if (fifo->rsvd_pg_num > fifo->txff_pg_num)
- 		return -ENOMEM;
-@@ -1047,18 +1050,20 @@ static int set_trx_fifo_info(struct rtw_dev *rtwdev)
- 	fifo->rsvd_boundary = fifo->txff_pg_num - fifo->rsvd_pg_num;
- 
- 	cur_pg_addr = fifo->txff_pg_num;
--	cur_pg_addr -= csi_buf_pg_num;
--	fifo->rsvd_csibuf_addr = cur_pg_addr;
--	cur_pg_addr -= RSVD_PG_FW_TXBUF_NUM;
--	fifo->rsvd_fw_txbuf_addr = cur_pg_addr;
--	cur_pg_addr -= RSVD_PG_CPU_INSTRUCTION_NUM;
--	fifo->rsvd_cpu_instr_addr = cur_pg_addr;
--	cur_pg_addr -= RSVD_PG_H2CQ_NUM;
--	fifo->rsvd_h2cq_addr = cur_pg_addr;
--	cur_pg_addr -= RSVD_PG_H2C_STATICINFO_NUM;
--	fifo->rsvd_h2c_sta_info_addr = cur_pg_addr;
--	cur_pg_addr -= RSVD_PG_H2C_EXTRAINFO_NUM;
--	fifo->rsvd_h2c_info_addr = cur_pg_addr;
-+	if (rtw_chip_wcpu_11ac(rtwdev)) {
-+		cur_pg_addr -= csi_buf_pg_num;
-+		fifo->rsvd_csibuf_addr = cur_pg_addr;
-+		cur_pg_addr -= RSVD_PG_FW_TXBUF_NUM;
-+		fifo->rsvd_fw_txbuf_addr = cur_pg_addr;
-+		cur_pg_addr -= RSVD_PG_CPU_INSTRUCTION_NUM;
-+		fifo->rsvd_cpu_instr_addr = cur_pg_addr;
-+		cur_pg_addr -= RSVD_PG_H2CQ_NUM;
-+		fifo->rsvd_h2cq_addr = cur_pg_addr;
-+		cur_pg_addr -= RSVD_PG_H2C_STATICINFO_NUM;
-+		fifo->rsvd_h2c_sta_info_addr = cur_pg_addr;
-+		cur_pg_addr -= RSVD_PG_H2C_EXTRAINFO_NUM;
-+		fifo->rsvd_h2c_info_addr = cur_pg_addr;
-+	}
- 	cur_pg_addr -= fifo->rsvd_drv_pg_num;
- 	fifo->rsvd_drv_addr = cur_pg_addr;
- 
-@@ -1070,6 +1075,65 @@ static int set_trx_fifo_info(struct rtw_dev *rtwdev)
+@@ -108,51 +108,55 @@ static int rtw_mac_pre_system_cfg(struct rtw_dev *rtwdev)
  	return 0;
  }
  
-+static int __priority_queue_cfg(struct rtw_dev *rtwdev,
-+				const struct rtw_page_table *pg_tbl,
-+				u16 pubq_num)
++static bool do_pwr_poll_cmd(struct rtw_dev *rtwdev, u32 addr, u32 mask, u32 target)
 +{
-+	struct rtw_fifo_conf *fifo = &rtwdev->fifo;
-+	struct rtw_chip_info *chip = rtwdev->chip;
++	u32 cnt;
 +
-+	rtw_write16(rtwdev, REG_FIFOPAGE_INFO_1, pg_tbl->hq_num);
-+	rtw_write16(rtwdev, REG_FIFOPAGE_INFO_2, pg_tbl->lq_num);
-+	rtw_write16(rtwdev, REG_FIFOPAGE_INFO_3, pg_tbl->nq_num);
-+	rtw_write16(rtwdev, REG_FIFOPAGE_INFO_4, pg_tbl->exq_num);
-+	rtw_write16(rtwdev, REG_FIFOPAGE_INFO_5, pubq_num);
-+	rtw_write32_set(rtwdev, REG_RQPN_CTRL_2, BIT_LD_RQPN);
++	target &= mask;
 +
-+	rtw_write16(rtwdev, REG_FIFOPAGE_CTRL_2, fifo->rsvd_boundary);
-+	rtw_write8_set(rtwdev, REG_FWHW_TXQ_CTRL + 2, BIT_EN_WR_FREE_TAIL >> 16);
++	for (cnt = 0; cnt < RTW_PWR_POLLING_CNT; cnt++) {
++		if ((rtw_read8(rtwdev, addr) & mask) == target)
++			return true;
 +
-+	rtw_write16(rtwdev, REG_BCNQ_BDNY_V1, fifo->rsvd_boundary);
-+	rtw_write16(rtwdev, REG_FIFOPAGE_CTRL_2 + 2, fifo->rsvd_boundary);
-+	rtw_write16(rtwdev, REG_BCNQ1_BDNY_V1, fifo->rsvd_boundary);
-+	rtw_write32(rtwdev, REG_RXFF_BNDY, chip->rxff_size - C2H_PKT_BUF - 1);
-+	rtw_write8_set(rtwdev, REG_AUTO_LLT_V1, BIT_AUTO_INIT_LLT_V1);
++		udelay(50);
++	}
 +
-+	if (!check_hw_ready(rtwdev, REG_AUTO_LLT_V1, BIT_AUTO_INIT_LLT_V1, 0))
-+		return -EBUSY;
-+
-+	rtw_write8(rtwdev, REG_CR + 3, 0);
-+
-+	return 0;
++	return false;
 +}
 +
-+static int __priority_queue_cfg_legacy(struct rtw_dev *rtwdev,
-+				       const struct rtw_page_table *pg_tbl,
-+				       u16 pubq_num)
-+{
-+	struct rtw_fifo_conf *fifo = &rtwdev->fifo;
-+	struct rtw_chip_info *chip = rtwdev->chip;
-+	u32 val32;
-+
-+	val32 = BIT_RQPN_NE(pg_tbl->nq_num, pg_tbl->exq_num);
-+	rtw_write32(rtwdev, REG_RQPN_NPQ, val32);
-+	val32 = BIT_RQPN_HLP(pg_tbl->hq_num, pg_tbl->lq_num, pubq_num);
-+	rtw_write32(rtwdev, REG_RQPN, val32);
-+
-+	rtw_write8(rtwdev, REG_TRXFF_BNDY, fifo->rsvd_boundary);
-+	rtw_write16(rtwdev, REG_TRXFF_BNDY + 2, chip->rxff_size - REPORT_BUF - 1);
-+	rtw_write8(rtwdev, REG_DWBCN0_CTRL + 1, fifo->rsvd_boundary);
-+	rtw_write8(rtwdev, REG_BCNQ_BDNY, fifo->rsvd_boundary);
-+	rtw_write8(rtwdev, REG_MGQ_BDNY, fifo->rsvd_boundary);
-+	rtw_write8(rtwdev, REG_WMAC_LBK_BF_HD, fifo->rsvd_boundary);
-+
-+	rtw_write32_set(rtwdev, REG_AUTO_LLT, BIT_AUTO_INIT_LLT);
-+
-+	if (!check_hw_ready(rtwdev, REG_AUTO_LLT, BIT_AUTO_INIT_LLT, 0))
-+		return -EBUSY;
-+
-+	return 0;
-+}
-+
- static int priority_queue_cfg(struct rtw_dev *rtwdev)
+ static int rtw_pwr_cmd_polling(struct rtw_dev *rtwdev,
+ 			       const struct rtw_pwr_seq_cmd *cmd)
  {
- 	struct rtw_fifo_conf *fifo = &rtwdev->fifo;
-@@ -1102,28 +1166,10 @@ static int priority_queue_cfg(struct rtw_dev *rtwdev)
+ 	u8 value;
+-	u8 flag = 0;
+ 	u32 offset;
+-	u32 cnt = RTW_PWR_POLLING_CNT;
  
- 	pubq_num = fifo->acq_pg_num - pg_tbl->hq_num - pg_tbl->lq_num -
- 		   pg_tbl->nq_num - pg_tbl->exq_num - pg_tbl->gapq_num;
--	rtw_write16(rtwdev, REG_FIFOPAGE_INFO_1, pg_tbl->hq_num);
--	rtw_write16(rtwdev, REG_FIFOPAGE_INFO_2, pg_tbl->lq_num);
--	rtw_write16(rtwdev, REG_FIFOPAGE_INFO_3, pg_tbl->nq_num);
--	rtw_write16(rtwdev, REG_FIFOPAGE_INFO_4, pg_tbl->exq_num);
--	rtw_write16(rtwdev, REG_FIFOPAGE_INFO_5, pubq_num);
--	rtw_write32_set(rtwdev, REG_RQPN_CTRL_2, BIT_LD_RQPN);
+ 	if (cmd->base == RTW_PWR_ADDR_SDIO)
+ 		offset = cmd->offset | SDIO_LOCAL_OFFSET;
+ 	else
+ 		offset = cmd->offset;
+ 
+-	do {
+-		cnt--;
+-		value = rtw_read8(rtwdev, offset);
+-		value &= cmd->mask;
+-		if (value == (cmd->value & cmd->mask))
+-			return 0;
+-		if (cnt == 0) {
+-			if (rtw_hci_type(rtwdev) == RTW_HCI_TYPE_PCIE &&
+-			    flag == 0) {
+-				value = rtw_read8(rtwdev, REG_SYS_PW_CTRL);
+-				if (rtwdev->chip->id == RTW_CHIP_TYPE_8723D) {
+-					value &= ~BIT_PFM_WOWL;
+-					rtw_write8(rtwdev, REG_SYS_PW_CTRL, value);
+-				}
+-				value |= BIT_PFM_WOWL;
+-				rtw_write8(rtwdev, REG_SYS_PW_CTRL, value);
+-				value &= ~BIT_PFM_WOWL;
+-				rtw_write8(rtwdev, REG_SYS_PW_CTRL, value);
+-				if (rtwdev->chip->id == RTW_CHIP_TYPE_8723D) {
+-					value |= BIT_PFM_WOWL;
+-					rtw_write8(rtwdev, REG_SYS_PW_CTRL, value);
+-				}
 -
--	rtw_write16(rtwdev, REG_FIFOPAGE_CTRL_2, fifo->rsvd_boundary);
--	rtw_write8_set(rtwdev, REG_FWHW_TXQ_CTRL + 2, BIT_EN_WR_FREE_TAIL >> 16);
--
--	rtw_write16(rtwdev, REG_BCNQ_BDNY_V1, fifo->rsvd_boundary);
--	rtw_write16(rtwdev, REG_FIFOPAGE_CTRL_2 + 2, fifo->rsvd_boundary);
--	rtw_write16(rtwdev, REG_BCNQ1_BDNY_V1, fifo->rsvd_boundary);
--	rtw_write32(rtwdev, REG_RXFF_BNDY, chip->rxff_size - C2H_PKT_BUF - 1);
--	rtw_write8_set(rtwdev, REG_AUTO_LLT_V1, BIT_AUTO_INIT_LLT_V1);
--
--	if (!check_hw_ready(rtwdev, REG_AUTO_LLT_V1, BIT_AUTO_INIT_LLT_V1, 0))
--		return -EBUSY;
--
--	rtw_write8(rtwdev, REG_CR + 3, 0);
--
--	return 0;
-+	if (rtw_chip_wcpu_11n(rtwdev))
-+		return __priority_queue_cfg_legacy(rtwdev, pg_tbl, pubq_num);
-+	else
-+		return __priority_queue_cfg(rtwdev, pg_tbl, pubq_num);
+-				cnt = RTW_PWR_POLLING_CNT;
+-				flag = 1;
+-			} else {
+-				return -EBUSY;
+-			}
+-		} else {
+-			udelay(50);
+-		}
+-	} while (1);
++	if (do_pwr_poll_cmd(rtwdev, offset, cmd->mask, cmd->value))
++		return 0;
++
++	if (rtw_hci_type(rtwdev) != RTW_HCI_TYPE_PCIE)
++		goto err;
++
++	/* if PCIE, toggle BIT_PFM_WOWL and try again */
++	value = rtw_read8(rtwdev, REG_SYS_PW_CTRL);
++	if (rtwdev->chip->id == RTW_CHIP_TYPE_8723D)
++		rtw_write8(rtwdev, REG_SYS_PW_CTRL, value & ~BIT_PFM_WOWL);
++	rtw_write8(rtwdev, REG_SYS_PW_CTRL, value | BIT_PFM_WOWL);
++	rtw_write8(rtwdev, REG_SYS_PW_CTRL, value & ~BIT_PFM_WOWL);
++	if (rtwdev->chip->id == RTW_CHIP_TYPE_8723D)
++		rtw_write8(rtwdev, REG_SYS_PW_CTRL, value | BIT_PFM_WOWL);
++
++	if (do_pwr_poll_cmd(rtwdev, offset, cmd->mask, cmd->value))
++		return 0;
++
++err:
++	rtw_err(rtwdev, "failed to poll offset=0x%x mask=0x%x value=0x%x\n",
++		offset, cmd->mask, cmd->value);
++	return -EBUSY;
  }
  
- static int init_h2c(struct rtw_dev *rtwdev)
-@@ -1203,11 +1249,13 @@ static int rtw_drv_info_cfg(struct rtw_dev *rtwdev)
- 	u8 value8;
- 
- 	rtw_write8(rtwdev, REG_RX_DRVINFO_SZ, PHY_STATUS_SIZE);
--	value8 = rtw_read8(rtwdev, REG_TRXFF_BNDY + 1);
--	value8 &= 0xF0;
--	/* For rxdesc len = 0 issue */
--	value8 |= 0xF;
--	rtw_write8(rtwdev, REG_TRXFF_BNDY + 1, value8);
-+	if (rtw_chip_wcpu_11ac(rtwdev)) {
-+		value8 = rtw_read8(rtwdev, REG_TRXFF_BNDY + 1);
-+		value8 &= 0xF0;
-+		/* For rxdesc len = 0 issue */
-+		value8 |= 0xF;
-+		rtw_write8(rtwdev, REG_TRXFF_BNDY + 1, value8);
-+	}
- 	rtw_write32_set(rtwdev, REG_RCR, BIT_APP_PHYSTS);
- 	rtw_write32_clr(rtwdev, REG_WMAC_OPTION_FUNCTION + 4, BIT(8) | BIT(9));
- 
-diff --git a/drivers/net/wireless/realtek/rtw88/mac.h b/drivers/net/wireless/realtek/rtw88/mac.h
-index 592dc830160c..ce64cdf7a565 100644
---- a/drivers/net/wireless/realtek/rtw88/mac.h
-+++ b/drivers/net/wireless/realtek/rtw88/mac.h
-@@ -10,6 +10,7 @@
- #define SDIO_LOCAL_OFFSET	0x10250000
- #define DDMA_POLLING_COUNT	1000
- #define C2H_PKT_BUF		256
-+#define REPORT_BUF		128
- #define PHY_STATUS_SIZE		4
- #define ILLEGAL_KEY_GROUP	0xFAAAAA00
- 
-diff --git a/drivers/net/wireless/realtek/rtw88/reg.h b/drivers/net/wireless/realtek/rtw88/reg.h
-index c1e66d656307..00eb6b6a1f5b 100644
---- a/drivers/net/wireless/realtek/rtw88/reg.h
-+++ b/drivers/net/wireless/realtek/rtw88/reg.h
-@@ -209,6 +209,19 @@
- #define REG_HMEBOX2_EX		0x01F8
- #define REG_HMEBOX3_EX		0x01FC
- 
-+#define REG_RQPN		0x0200
-+#define BIT_MASK_HPQ		0xff
-+#define BIT_SHIFT_HPQ		0
-+#define BIT_RQPN_HPQ(x)		(((x) & BIT_MASK_HPQ) << BIT_SHIFT_HPQ)
-+#define BIT_MASK_LPQ		0xff
-+#define BIT_SHIFT_LPQ		8
-+#define BIT_RQPN_LPQ(x)		(((x) & BIT_MASK_LPQ) << BIT_SHIFT_LPQ)
-+#define BIT_MASK_PUBQ		0xff
-+#define BIT_SHIFT_PUBQ		16
-+#define BIT_RQPN_PUBQ(x)	(((x) & BIT_MASK_PUBQ) << BIT_SHIFT_PUBQ)
-+#define BIT_RQPN_HLP(h, l, p)	(BIT_LD_RQPN | BIT_RQPN_HPQ(h) |	       \
-+				 BIT_RQPN_LPQ(l) | BIT_RQPN_PUBQ(p))
-+
- #define REG_FIFOPAGE_CTRL_2	0x0204
- #define BIT_BCN_VALID_V1	BIT(15)
- #define BIT_MASK_BCN_HEAD_1_V1	0xfff
-@@ -219,6 +232,18 @@
- #define REG_TXDMA_OFFSET_CHK	0x020C
- #define REG_TXDMA_STATUS	0x0210
- #define BTI_PAGE_OVF		BIT(2)
-+
-+#define REG_RQPN_NPQ		0x0214
-+#define BIT_MASK_NPQ		0xff
-+#define BIT_SHIFT_NPQ		0
-+#define BIT_MASK_EPQ		0xff
-+#define BIT_SHIFT_EPQ		16
-+#define BIT_RQPN_NPQ(x)		(((x) & BIT_MASK_NPQ) << BIT_SHIFT_NPQ)
-+#define BIT_RQPN_EPQ(x)		(((x) & BIT_MASK_EPQ) << BIT_SHIFT_EPQ)
-+#define BIT_RQPN_NE(n, e)	(BIT_RQPN_NPQ(n) | BIT_RQPN_EPQ(e))
-+
-+#define REG_AUTO_LLT		0x0224
-+#define BIT_AUTO_INIT_LLT	BIT(16)
- #define REG_RQPN_CTRL_1		0x0228
- #define REG_RQPN_CTRL_2		0x022C
- #define BIT_LD_RQPN		BIT(31)
-@@ -249,6 +274,8 @@
- #define REG_HWSEQ_CTRL		0x0423
- 
- #define REG_BCNQ_BDNY_V1	0x0424
-+#define REG_BCNQ_BDNY		0x0424
-+#define REG_MGQ_BDNY		0x0425
- #define REG_LIFETIME_EN		0x0426
- #define BIT_BA_PARSER_EN	BIT(5)
- #define REG_SPEC_SIFS		0x0428
-@@ -264,6 +291,7 @@
- #define BIT_CHECK_CCK_EN	BIT(7)
- #define REG_AMPDU_MAX_TIME_V1	0x0455
- #define REG_BCNQ1_BDNY_V1	0x0456
-+#define REG_WMAC_LBK_BF_HD	0x045D
- #define REG_TX_HANG_CTRL	0x045E
- #define BIT_EN_GNT_BT_AWAKE	BIT(3)
- #define BIT_EN_EOF_V1		BIT(2)
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723d.c b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-index f2d21272b237..c03ed91349e5 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-@@ -556,6 +556,32 @@ static const struct rtw_pwr_seq_cmd *card_disable_flow_8723d[] = {
- 	NULL
- };
- 
-+static const struct rtw_page_table page_table_8723d[] = {
-+	{12, 2, 2, 0, 1},
-+	{12, 2, 2, 0, 1},
-+	{12, 2, 2, 0, 1},
-+	{12, 2, 2, 0, 1},
-+	{12, 2, 2, 0, 1},
-+};
-+
-+static const struct rtw_rqpn rqpn_table_8723d[] = {
-+	{RTW_DMA_MAPPING_NORMAL, RTW_DMA_MAPPING_NORMAL,
-+	 RTW_DMA_MAPPING_LOW, RTW_DMA_MAPPING_LOW,
-+	 RTW_DMA_MAPPING_EXTRA, RTW_DMA_MAPPING_HIGH},
-+	{RTW_DMA_MAPPING_NORMAL, RTW_DMA_MAPPING_NORMAL,
-+	 RTW_DMA_MAPPING_LOW, RTW_DMA_MAPPING_LOW,
-+	 RTW_DMA_MAPPING_EXTRA, RTW_DMA_MAPPING_HIGH},
-+	{RTW_DMA_MAPPING_NORMAL, RTW_DMA_MAPPING_NORMAL,
-+	 RTW_DMA_MAPPING_NORMAL, RTW_DMA_MAPPING_HIGH,
-+	 RTW_DMA_MAPPING_HIGH, RTW_DMA_MAPPING_HIGH},
-+	{RTW_DMA_MAPPING_NORMAL, RTW_DMA_MAPPING_NORMAL,
-+	 RTW_DMA_MAPPING_LOW, RTW_DMA_MAPPING_LOW,
-+	 RTW_DMA_MAPPING_HIGH, RTW_DMA_MAPPING_HIGH},
-+	{RTW_DMA_MAPPING_NORMAL, RTW_DMA_MAPPING_NORMAL,
-+	 RTW_DMA_MAPPING_LOW, RTW_DMA_MAPPING_LOW,
-+	 RTW_DMA_MAPPING_EXTRA, RTW_DMA_MAPPING_HIGH},
-+};
-+
- static const struct rtw_rf_sipi_addr rtw8723d_rf_sipi_addr[] = {
- 	[RF_PATH_A] = { .hssi_1 = 0x820, .lssi_read    = 0x8a0,
- 			.hssi_2 = 0x824, .lssi_read_pi = 0x8b8},
-@@ -580,17 +606,22 @@ struct rtw_chip_info rtw8723d_hw_spec = {
- 	.phy_efuse_size = 512,
- 	.log_efuse_size = 512,
- 	.ptct_efuse_size = 96 + 1,
-+	.txff_size = 32768,
-+	.rxff_size = 16384,
- 	.txgi_factor = 1,
- 	.is_pwr_by_rate_dec = true,
- 	.max_power_index = 0x3f,
- 	.csi_buf_pg_num = 0,
- 	.band = RTW_BAND_2G,
-+	.page_size = 128,
- 	.ht_supported = true,
- 	.vht_supported = false,
- 	.lps_deep_mode_supported = 0,
- 	.sys_func_en = 0xFD,
- 	.pwr_on_seq = card_enable_flow_8723d,
- 	.pwr_off_seq = card_disable_flow_8723d,
-+	.page_table = page_table_8723d,
-+	.rqpn_table = rqpn_table_8723d,
- 	.rf_sipi_addr = {0x840, 0x844},
- 	.rf_sipi_read_addr = rtw8723d_rf_sipi_addr,
- 	.fix_rf_phy_num = 2,
+ static int rtw_sub_pwr_seq_parser(struct rtw_dev *rtwdev, u8 intf_mask,
 -- 
 2.17.1
 
