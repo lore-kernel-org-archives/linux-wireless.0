@@ -7,24 +7,24 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A870C5518F
-	for <linux-wireless@archiver.kernel.org>; Wed, 22 Apr 2020 16:04:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0407BC54FCB
+	for <linux-wireless@archiver.kernel.org>; Wed, 22 Apr 2020 16:04:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 234DA2082E
-	for <linux-wireless@archiver.kernel.org>; Wed, 22 Apr 2020 16:04:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D85B320774
+	for <linux-wireless@archiver.kernel.org>; Wed, 22 Apr 2020 16:04:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="EGUPIpil"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="uEZ+K5RN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726891AbgDVQEw (ORCPT
+        id S1726918AbgDVQE4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 22 Apr 2020 12:04:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60560 "EHLO
+        Wed, 22 Apr 2020 12:04:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60550 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726842AbgDVQEn (ORCPT
+        with ESMTP id S1726824AbgDVQEm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 22 Apr 2020 12:04:43 -0400
+        Wed, 22 Apr 2020 12:04:42 -0400
 Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 40F24C03C1AF
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 23D7FC03C1AB
         for <linux-wireless@vger.kernel.org>; Wed, 22 Apr 2020 09:04:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
@@ -32,22 +32,22 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
         Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
         :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
         List-Post:List-Owner:List-Archive;
-        bh=0kx/H3L4bPfmGOSTBkYH8IypHBsw70fhlWoenjwMJbk=; b=EGUPIpil8uIgOtEUBjFFgSHMI+
-        9ArtigWb59Qm+etAbdCTs6hZPhW0sG/3ZCblxKCoRMXUw/KGAE4c8z/SQmMQKaL11jab9kd2M5J/+
-        3YE3za8v1etAMzsD7PUP+jz3NWyGCyu3z85KxknaHR45HiBKdJg3Lfer1rKbrJgdLJqY=;
+        bh=MLVyKSueW3g8Ghtf0CERdlKOYJQk5qx2Ro/KWEtTQxs=; b=uEZ+K5RNsKlb7kt1Uj6+05NC/W
+        6biVDcmfXCAluQkTsvPQi/Z9zaza6WYWx4ZNJOFJXsfeYfgUjA8uHunzxiZHnyvwLE9ZuIjC2+6OR
+        DbtAvuqZ+nHyITp0G/RG1pKQnCmp27/gGTj+zc8jRC1WbZIbxYeizbsU2wRE5MLFE4hQ=;
 Received: from p54ae965b.dip0.t-ipconnect.de ([84.174.150.91] helo=maeck.lan)
         by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.89)
         (envelope-from <nbd@nbd.name>)
-        id 1jRHrb-000558-Vf
-        for linux-wireless@vger.kernel.org; Wed, 22 Apr 2020 18:04:40 +0200
+        id 1jRHrb-00054m-7v
+        for linux-wireless@vger.kernel.org; Wed, 22 Apr 2020 18:04:39 +0200
 Received: by maeck.lan (Postfix, from userid 501)
-        id A043B8419630; Wed, 22 Apr 2020 18:04:38 +0200 (CEST)
+        id 9E6EB841962B; Wed, 22 Apr 2020 18:04:38 +0200 (CEST)
 From:   Felix Fietkau <nbd@nbd.name>
 To:     linux-wireless@vger.kernel.org
-Subject: [PATCH 2/9] mt76: fix A-MPDU density handling
-Date:   Wed, 22 Apr 2020 18:04:30 +0200
-Message-Id: <20200422160437.99466-2-nbd@nbd.name>
+Subject: [PATCH 8/9] mt76: mt7615: fix tx status rate index calculation
+Date:   Wed, 22 Apr 2020 18:04:36 +0200
+Message-Id: <20200422160437.99466-8-nbd@nbd.name>
 X-Mailer: git-send-email 2.24.0
 In-Reply-To: <20200422160437.99466-1-nbd@nbd.name>
 References: <20200422160437.99466-1-nbd@nbd.name>
@@ -58,78 +58,28 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The hardware requirements for A-MPDU density are entirely on the tx side,
-not the rx side. Because of that, the IE value should stay at 0 and the
-minimum value should instead be enforced in WTBL/TXWI
-
-MT7615 has no restrictions here
+A switch from one rate index to the next only happens when tx count from
+the current slot is greater than MT7615_RATE_RETRY, which is 1 has to be
+subtracted from count, instead of added to it.
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/mediatek/mt76/mac80211.c    | 1 -
- drivers/net/wireless/mediatek/mt76/mt7603/mac.c  | 5 +++++
- drivers/net/wireless/mediatek/mt76/mt76x02_mac.c | 7 +++++--
- 3 files changed, 10 insertions(+), 3 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7615/mac.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mac80211.c b/drivers/net/wireless/mediatek/mt76/mac80211.c
-index 39abedc45e4a..b6c0a6d0dfc1 100644
---- a/drivers/net/wireless/mediatek/mt76/mac80211.c
-+++ b/drivers/net/wireless/mediatek/mt76/mac80211.c
-@@ -198,7 +198,6 @@ mt76_init_sband(struct mt76_dev *dev, struct mt76_sband *msband,
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
+index 89aed6d67de0..e7a76032caff 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
+@@ -1148,7 +1148,7 @@ static bool mt7615_fill_txs(struct mt7615_dev *dev, struct mt7615_sta *sta,
+ 	if (ampdu || (info->flags & IEEE80211_TX_CTL_AMPDU))
+ 		info->flags |= IEEE80211_TX_STAT_AMPDU | IEEE80211_TX_CTL_AMPDU;
  
- 	ht_cap->mcs.tx_params = IEEE80211_HT_MCS_TX_DEFINED;
- 	ht_cap->ampdu_factor = IEEE80211_HT_MAX_AMPDU_64K;
--	ht_cap->ampdu_density = IEEE80211_HT_MPDU_DENSITY_4;
+-	first_idx = max_t(int, 0, last_idx - (count + 1) / MT7615_RATE_RETRY);
++	first_idx = max_t(int, 0, last_idx - (count - 1) / MT7615_RATE_RETRY);
  
- 	mt76_init_stream_cap(dev, sband, vht);
- 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/mac.c b/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
-index 39b7c5d6e6cd..73c6a3ff399c 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
-@@ -318,11 +318,16 @@ void mt7603_wtbl_update_cap(struct mt7603_dev *dev, struct ieee80211_sta *sta)
- {
- 	struct mt7603_sta *msta = (struct mt7603_sta *)sta->drv_priv;
- 	int idx = msta->wcid.idx;
-+	u8 ampdu_density;
- 	u32 addr;
- 	u32 val;
- 
- 	addr = mt7603_wtbl1_addr(idx);
- 
-+	ampdu_density = sta->ht_cap.ampdu_density;
-+	if (ampdu_density < IEEE80211_HT_MPDU_DENSITY_4)
-+		ampdu_density = IEEE80211_HT_MPDU_DENSITY_4;
-+
- 	val = mt76_rr(dev, addr + 2 * 4);
- 	val &= MT_WTBL1_W2_KEY_TYPE | MT_WTBL1_W2_ADMISSION_CONTROL;
- 	val |= FIELD_PREP(MT_WTBL1_W2_AMPDU_FACTOR, sta->ht_cap.ampdu_factor) |
-diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-index 8b072277ea10..a5a3bcd30d6f 100644
---- a/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mac.c
-@@ -409,6 +409,7 @@ void mt76x02_mac_write_txwi(struct mt76x02_dev *dev, struct mt76x02_txwi *txwi,
- 		txwi->ack_ctl |= MT_TXWI_ACK_CTL_NSEQ;
- 	if ((info->flags & IEEE80211_TX_CTL_AMPDU) && sta) {
- 		u8 ba_size = IEEE80211_MIN_AMPDU_BUF;
-+		u8 ampdu_density = sta->ht_cap.ampdu_density;
- 
- 		ba_size <<= sta->ht_cap.ampdu_factor;
- 		ba_size = min_t(int, 63, ba_size - 1);
-@@ -416,9 +417,11 @@ void mt76x02_mac_write_txwi(struct mt76x02_dev *dev, struct mt76x02_txwi *txwi,
- 			ba_size = 0;
- 		txwi->ack_ctl |= FIELD_PREP(MT_TXWI_ACK_CTL_BA_WINDOW, ba_size);
- 
-+		if (ampdu_density < IEEE80211_HT_MPDU_DENSITY_4)
-+			ampdu_density = IEEE80211_HT_MPDU_DENSITY_4;
-+
- 		txwi_flags |= MT_TXWI_FLAGS_AMPDU |
--			 FIELD_PREP(MT_TXWI_FLAGS_MPDU_DENSITY,
--				    sta->ht_cap.ampdu_density);
-+			 FIELD_PREP(MT_TXWI_FLAGS_MPDU_DENSITY, ampdu_density);
- 	}
- 
- 	if (ieee80211_is_probe_resp(hdr->frame_control) ||
+ 	if (fixed_rate && !probe) {
+ 		info->status.rates[0].count = count;
 -- 
 2.24.0
 
