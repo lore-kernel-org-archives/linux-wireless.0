@@ -7,24 +7,24 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0407BC54FCB
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20015C55185
 	for <linux-wireless@archiver.kernel.org>; Wed, 22 Apr 2020 16:04:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D85B320774
-	for <linux-wireless@archiver.kernel.org>; Wed, 22 Apr 2020 16:04:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0242F20776
+	for <linux-wireless@archiver.kernel.org>; Wed, 22 Apr 2020 16:04:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="uEZ+K5RN"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="Zwctzw7a"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726918AbgDVQE4 (ORCPT
+        id S1726750AbgDVQEz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 22 Apr 2020 12:04:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60550 "EHLO
+        Wed, 22 Apr 2020 12:04:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60554 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726824AbgDVQEm (ORCPT
+        with ESMTP id S1726830AbgDVQEm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 22 Apr 2020 12:04:42 -0400
 Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 23D7FC03C1AB
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3320EC03C1AD
         for <linux-wireless@vger.kernel.org>; Wed, 22 Apr 2020 09:04:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
          s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
@@ -32,22 +32,22 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
         Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
         :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
         List-Post:List-Owner:List-Archive;
-        bh=MLVyKSueW3g8Ghtf0CERdlKOYJQk5qx2Ro/KWEtTQxs=; b=uEZ+K5RNsKlb7kt1Uj6+05NC/W
-        6biVDcmfXCAluQkTsvPQi/Z9zaza6WYWx4ZNJOFJXsfeYfgUjA8uHunzxiZHnyvwLE9ZuIjC2+6OR
-        DbtAvuqZ+nHyITp0G/RG1pKQnCmp27/gGTj+zc8jRC1WbZIbxYeizbsU2wRE5MLFE4hQ=;
+        bh=YIbw83ORCQfPY6FIY9As4bbOIcssYyINA+O/YcaD3Ac=; b=Zwctzw7a3wk9lV8A9xebLXNImb
+        kzFzbnavYzEHpoD9Oqz8FOK+S1UKTbBfKQqYVmK/Hz8yeUQDnt5TKRJYGlz02FFac5urK1ZoteZdZ
+        iXssFg/J7wTinLW79ZnmfQB3x+LKtw60elq7ccIuhHudH7lpRGbQfCr23SOJDCXAKviM=;
 Received: from p54ae965b.dip0.t-ipconnect.de ([84.174.150.91] helo=maeck.lan)
         by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.89)
         (envelope-from <nbd@nbd.name>)
-        id 1jRHrb-00054m-7v
-        for linux-wireless@vger.kernel.org; Wed, 22 Apr 2020 18:04:39 +0200
+        id 1jRHrb-000559-Vf
+        for linux-wireless@vger.kernel.org; Wed, 22 Apr 2020 18:04:40 +0200
 Received: by maeck.lan (Postfix, from userid 501)
-        id 9E6EB841962B; Wed, 22 Apr 2020 18:04:38 +0200 (CEST)
+        id A0AC38419631; Wed, 22 Apr 2020 18:04:38 +0200 (CEST)
 From:   Felix Fietkau <nbd@nbd.name>
 To:     linux-wireless@vger.kernel.org
-Subject: [PATCH 8/9] mt76: mt7615: fix tx status rate index calculation
-Date:   Wed, 22 Apr 2020 18:04:36 +0200
-Message-Id: <20200422160437.99466-8-nbd@nbd.name>
+Subject: [PATCH 3/9] mt76: mt7615: use larger rx buffers if VHT is supported
+Date:   Wed, 22 Apr 2020 18:04:31 +0200
+Message-Id: <20200422160437.99466-3-nbd@nbd.name>
 X-Mailer: git-send-email 2.24.0
 In-Reply-To: <20200422160437.99466-1-nbd@nbd.name>
 References: <20200422160437.99466-1-nbd@nbd.name>
@@ -58,28 +58,50 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-A switch from one rate index to the next only happens when tx count from
-the current slot is greater than MT7615_RATE_RETRY, which is 1 has to be
-subtracted from count, instead of added to it.
+In VHT mode we can receive larger MPDUs. Increasing the buffer size reduces
+fragmentation here, which should improve performance.
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/mediatek/mt76/mt7615/mac.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/mediatek/mt76/mt7615/dma.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-index 89aed6d67de0..e7a76032caff 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-@@ -1148,7 +1148,7 @@ static bool mt7615_fill_txs(struct mt7615_dev *dev, struct mt7615_sta *sta,
- 	if (ampdu || (info->flags & IEEE80211_TX_CTL_AMPDU))
- 		info->flags |= IEEE80211_TX_STAT_AMPDU | IEEE80211_TX_CTL_AMPDU;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/dma.c b/drivers/net/wireless/mediatek/mt76/mt7615/dma.c
+index 5cdbe3747901..0b1fbddd1c3f 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/dma.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/dma.c
+@@ -192,8 +192,13 @@ static void mt7663_dma_sched_init(struct mt7615_dev *dev)
+ int mt7615_dma_init(struct mt7615_dev *dev)
+ {
+ 	int rx_ring_size = MT7615_RX_RING_SIZE;
++	int rx_buf_size = MT_RX_BUF_SIZE;
+ 	int ret;
  
--	first_idx = max_t(int, 0, last_idx - (count + 1) / MT7615_RATE_RETRY);
-+	first_idx = max_t(int, 0, last_idx - (count - 1) / MT7615_RATE_RETRY);
++	/* Increase buffer size to receive large VHT MPDUs */
++	if (dev->mt76.cap.has_5ghz)
++		rx_buf_size *= 2;
++
+ 	mt76_dma_attach(&dev->mt76);
  
- 	if (fixed_rate && !probe) {
- 		info->status.rates[0].count = count;
+ 	mt76_wr(dev, MT_WPDMA_GLO_CFG,
+@@ -234,7 +239,7 @@ int mt7615_dma_init(struct mt7615_dev *dev)
+ 
+ 	/* init rx queues */
+ 	ret = mt76_queue_alloc(dev, &dev->mt76.q_rx[MT_RXQ_MCU], 1,
+-			       MT7615_RX_MCU_RING_SIZE, MT_RX_BUF_SIZE,
++			       MT7615_RX_MCU_RING_SIZE, rx_buf_size,
+ 			       MT_RX_RING_BASE);
+ 	if (ret)
+ 		return ret;
+@@ -243,7 +248,7 @@ int mt7615_dma_init(struct mt7615_dev *dev)
+ 	    rx_ring_size /= 2;
+ 
+ 	ret = mt76_queue_alloc(dev, &dev->mt76.q_rx[MT_RXQ_MAIN], 0,
+-			       rx_ring_size, MT_RX_BUF_SIZE, MT_RX_RING_BASE);
++			       rx_ring_size, rx_buf_size, MT_RX_RING_BASE);
+ 	if (ret)
+ 		return ret;
+ 
 -- 
 2.24.0
 
