@@ -2,344 +2,346 @@ Return-Path: <SRS0=d7P/=6H=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A1D8C54FCB
-	for <linux-wireless@archiver.kernel.org>; Thu, 23 Apr 2020 12:53:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CDF97C54FCB
+	for <linux-wireless@archiver.kernel.org>; Thu, 23 Apr 2020 13:47:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4B64320781
-	for <linux-wireless@archiver.kernel.org>; Thu, 23 Apr 2020 12:53:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9D3A420728
+	for <linux-wireless@archiver.kernel.org>; Thu, 23 Apr 2020 13:47:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="PH8d1IDB"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="NebRyTe5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728507AbgDWMxB (ORCPT
+        id S1728234AbgDWNrt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 23 Apr 2020 08:53:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56962 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728471AbgDWMxB (ORCPT
+        Thu, 23 Apr 2020 09:47:49 -0400
+Received: from mail27.static.mailgun.info ([104.130.122.27]:20993 "EHLO
+        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728122AbgDWNrs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Apr 2020 08:53:01 -0400
-Received: from mail-lj1-x243.google.com (mail-lj1-x243.google.com [IPv6:2a00:1450:4864:20::243])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C3C08C08E934
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Apr 2020 05:53:00 -0700 (PDT)
-Received: by mail-lj1-x243.google.com with SMTP id u6so6059756ljl.6
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Apr 2020 05:53:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=dQDcsZBQBXYlVCpxDryuSFr4RRv289jhLVhcEmuc2Oc=;
-        b=PH8d1IDBQcAopoq2ZfPOrJlqqGfxzX/N/VV+GI9dC8/gRZ+QNueeouN93DVap2TEXG
-         P9S41SDIYHXvXswezTXSomD9kwRUBJt2KZ58PafZ4Oj6iTfgtbzSe7/zS4C5Nk1tvM44
-         xWM/r9vmCyomqmjmOzKp0lf3MPpgIkp90bpvKO9kUXpyl5NW+xQLIW3ikmC/puQ7mAgU
-         Z9sYJrVF3lAlh62H5iCu6ya3CSI0cXqxmaIGhjmDWT2PEN2cpe360SrKLQ4N9BbSFUzI
-         mFb9tFdAdp7N6ybnO3AOOshteFLuVL4cpynexAfa4hm/0oseFwhNnPzx/Ykf3KclGL7z
-         MVLA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=dQDcsZBQBXYlVCpxDryuSFr4RRv289jhLVhcEmuc2Oc=;
-        b=Tf0KogHhkqPAnpBbNAjhno2VmGCrEjp8uBPoT/07/AMk0R9f1dlq/a9gyGB7b4NAuK
-         gs680+bpbK/lGO/E643hN3Hd+DC/F6VZfMQo1seF8EaAv1sCwXeDQFtiplQKQ85eDnnn
-         dg7WR3rm5AL/ip/udgc8YUClKC2Uei4X7eXhClnNtMbA8A2zlt3H8YIhxCGihz1w/f3/
-         ZauvXKkuigDv9TfvSOy7Lw5S9XCuurNuB2qfEovL7rGVrKB2umv0DlRVEP9o/ig9JN5U
-         V/kCu/zVV4N+TLYul9SPT+IVRuGvwRdQI+vEFAXWYDIuj0LEAnbgv3LlpY6x0E9xlHmf
-         hARQ==
-X-Gm-Message-State: AGi0PuYLiBzxbdhGj3/gPv+lnS9LlF9uQvFIptBsVZqqmSwkPcEYpciO
-        jdtfnUvuW2+0DzwBi28xyKC/zeTvJSyKz3R5YxvcBQ==
-X-Google-Smtp-Source: APiQypKO35085hlK1UK29qaKnTWopwWTctOrrjpTM5MrwpIvHnKO5UMlU9RMrBJXVBey/710HCmquryNgElNMACyOjQ=
-X-Received: by 2002:a2e:a365:: with SMTP id i5mr1116199ljn.293.1587646379152;
- Thu, 23 Apr 2020 05:52:59 -0700 (PDT)
-MIME-Version: 1.0
-References: <20200423111344.0e00d3346f12.Iadc76a03a55093d94391fc672e996a458702875d@changeid>
-In-Reply-To: <20200423111344.0e00d3346f12.Iadc76a03a55093d94391fc672e996a458702875d@changeid>
-From:   Sumit Garg <sumit.garg@linaro.org>
-Date:   Thu, 23 Apr 2020 18:22:47 +0530
-Message-ID: <CAFA6WYOGP09ByBQRCDBP91nR6pEvh9hHkuMpNkWBz4by0Lm45g@mail.gmail.com>
-Subject: Re: [PATCH] mac80211: populate debugfs only after cfg80211 init
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless <linux-wireless@vger.kernel.org>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Jouni Malinen <j@w1.fi>,
-        kernel test robot <rong.a.chen@intel.com>,
-        Hauke Mehrtens <hauke@hauke-m.de>, Felix Fietkau <nbd@nbd.name>
-Content-Type: text/plain; charset="UTF-8"
+        Thu, 23 Apr 2020 09:47:48 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1587649667; h=Message-Id: Date: Subject: Cc: To: From:
+ Sender; bh=gVsG1XnBWb5780Ly2KGPRylIdP51VpHcUUyeJ8uzKB4=; b=NebRyTe5+ebT32kVzYtja7htwMjXx2fs4QEr3Ge6ckPWEb2r/NgznViP5m25di5KtkAq64Lg
+ 4XjeGV/B3BIHgmY3wMzrIq47HXFbVJ6bKz92gXGxm8Y8gT5Po7atvMpRyP8K4Nv3PHEWfpgu
+ XU+GC5yYL0koJRqi8hrKG0+pN7c=
+X-Mailgun-Sending-Ip: 104.130.122.27
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
+ by mxa.mailgun.org with ESMTP id 5ea19c72.7f42022b7ca8-smtp-out-n04;
+ Thu, 23 Apr 2020 13:47:30 -0000 (UTC)
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id D33AFC433F2; Thu, 23 Apr 2020 13:47:29 +0000 (UTC)
+Received: from che-swdbs-01.qca.qualcomm.com (blr-c-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.19.19])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: mkenna)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id EC79CC433CB;
+        Thu, 23 Apr 2020 13:47:27 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org EC79CC433CB
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=mkenna@codeaurora.org
+From:   Maharaja Kennadyrajan <mkenna@codeaurora.org>
+To:     ath10k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org,
+        Maharaja Kennadyrajan <mkenna@codeaurora.org>
+Subject: [PATCH] ath10k: Avoid override CE5 configuration for QCA99X0 chipsets
+Date:   Thu, 23 Apr 2020 19:19:19 +0530
+Message-Id: <1587649759-14381-1-git-send-email-mkenna@codeaurora.org>
+X-Mailer: git-send-email 1.7.9.5
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, 23 Apr 2020 at 14:43, Johannes Berg <johannes@sipsolutions.net> wrote:
->
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> When fixing the initialization race, we neglected to account for
-> the fact that debugfs is initialized in wiphy_register(), and
-> some debugfs things went missing (or rather were rerooted to the
-> global debugfs root).
->
-> Fix this by adding debugfs entries only after wiphy_register().
-> This requires some changes in the rate control code since it
-> currently adds debugfs at alloc time, which can no longer be
-> done after the reordering.
->
-> Reported-by: Jouni Malinen <j@w1.fi>
-> Reported-by: kernel test robot <rong.a.chen@intel.com>
-> Reported-by: Hauke Mehrtens <hauke@hauke-m.de>
-> Reported-by: Felix Fietkau <nbd@nbd.name>
-> Fixes: 52e04b4ce5d0 ("mac80211: fix race in ieee80211_register_hw()")
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
->  drivers/net/wireless/intel/iwlegacy/3945-rs.c |  2 +-
->  drivers/net/wireless/intel/iwlegacy/4965-rs.c |  2 +-
->  drivers/net/wireless/intel/iwlwifi/dvm/rs.c   |  2 +-
->  drivers/net/wireless/intel/iwlwifi/mvm/rs.c   |  2 +-
->  drivers/net/wireless/realtek/rtlwifi/rc.c     |  2 +-
->  include/net/mac80211.h                        |  4 +++-
->  net/mac80211/main.c                           |  5 ++--
->  net/mac80211/rate.c                           | 15 ++++--------
->  net/mac80211/rate.h                           | 23 +++++++++++++++++++
->  net/mac80211/rc80211_minstrel_ht.c            | 19 ++++++++++-----
->  10 files changed, 51 insertions(+), 25 deletions(-)
->
+As the exisiting CE configurations are defined in global, there
+are the chances of QCA99X0 family chipsets CE configurations
+are getting changed by the ath10k_pci_override_ce_config()
+function.
 
-Acked-by: Sumit Garg <sumit.garg@linaro.org>
+The override will be hit and CE5 configurations will be changed,
+when the user bring up the QCA99X0 chipsets along with QCA6174
+or QCA9377 chipset. (Bring up QCA99X0 family chipsets after
+QCA6174 or QCA9377).
 
-> diff --git a/drivers/net/wireless/intel/iwlegacy/3945-rs.c b/drivers/net/wireless/intel/iwlegacy/3945-rs.c
-> index 6209f85a71dd..0af9e997c9f6 100644
-> --- a/drivers/net/wireless/intel/iwlegacy/3945-rs.c
-> +++ b/drivers/net/wireless/intel/iwlegacy/3945-rs.c
-> @@ -374,7 +374,7 @@ il3945_rs_rate_init(struct il_priv *il, struct ieee80211_sta *sta, u8 sta_id)
->  }
->
->  static void *
-> -il3945_rs_alloc(struct ieee80211_hw *hw, struct dentry *debugfsdir)
-> +il3945_rs_alloc(struct ieee80211_hw *hw)
->  {
->         return hw->priv;
->  }
-> diff --git a/drivers/net/wireless/intel/iwlegacy/4965-rs.c b/drivers/net/wireless/intel/iwlegacy/4965-rs.c
-> index 7c6e2c863497..0a02d8aca320 100644
-> --- a/drivers/net/wireless/intel/iwlegacy/4965-rs.c
-> +++ b/drivers/net/wireless/intel/iwlegacy/4965-rs.c
-> @@ -2474,7 +2474,7 @@ il4965_rs_fill_link_cmd(struct il_priv *il, struct il_lq_sta *lq_sta,
->  }
->
->  static void *
-> -il4965_rs_alloc(struct ieee80211_hw *hw, struct dentry *debugfsdir)
-> +il4965_rs_alloc(struct ieee80211_hw *hw)
->  {
->         return hw->priv;
->  }
-> diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/rs.c b/drivers/net/wireless/intel/iwlwifi/dvm/rs.c
-> index 226165db7dfd..dac809df7f1d 100644
-> --- a/drivers/net/wireless/intel/iwlwifi/dvm/rs.c
-> +++ b/drivers/net/wireless/intel/iwlwifi/dvm/rs.c
-> @@ -3019,7 +3019,7 @@ static void rs_fill_link_cmd(struct iwl_priv *priv,
->                         cpu_to_le16(priv->lib->bt_params->agg_time_limit);
->  }
->
-> -static void *rs_alloc(struct ieee80211_hw *hw, struct dentry *debugfsdir)
-> +static void *rs_alloc(struct ieee80211_hw *hw)
->  {
->         return hw->priv;
->  }
-> diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-> index c1aba2bf73cf..00e7fdbaeb7f 100644
-> --- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-> +++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-> @@ -3665,7 +3665,7 @@ static void rs_fill_lq_cmd(struct iwl_mvm *mvm,
->                         cpu_to_le16(iwl_mvm_coex_agg_time_limit(mvm, sta));
->  }
->
-> -static void *rs_alloc(struct ieee80211_hw *hw, struct dentry *debugfsdir)
-> +static void *rs_alloc(struct ieee80211_hw *hw)
->  {
->         return hw->priv;
->  }
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/rc.c b/drivers/net/wireless/realtek/rtlwifi/rc.c
-> index 0c7d74902d33..4b5ea0ec9109 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/rc.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/rc.c
-> @@ -261,7 +261,7 @@ static void rtl_rate_update(void *ppriv,
->  {
->  }
->
-> -static void *rtl_rate_alloc(struct ieee80211_hw *hw, struct dentry *debugfsdir)
-> +static void *rtl_rate_alloc(struct ieee80211_hw *hw)
->  {
->         struct rtl_priv *rtlpriv = rtl_priv(hw);
->         return rtlpriv;
-> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-> index b6b4de0e4b5e..97fec4d310ac 100644
-> --- a/include/net/mac80211.h
-> +++ b/include/net/mac80211.h
-> @@ -6007,7 +6007,9 @@ enum rate_control_capabilities {
->  struct rate_control_ops {
->         unsigned long capa;
->         const char *name;
-> -       void *(*alloc)(struct ieee80211_hw *hw, struct dentry *debugfsdir);
-> +       void *(*alloc)(struct ieee80211_hw *hw);
-> +       void (*add_debugfs)(struct ieee80211_hw *hw, void *priv,
-> +                           struct dentry *debugfsdir);
->         void (*free)(void *priv);
->
->         void *(*alloc_sta)(void *priv, struct ieee80211_sta *sta, gfp_t gfp);
-> diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-> index 0e9ad60fb2b3..6423173bb87e 100644
-> --- a/net/mac80211/main.c
-> +++ b/net/mac80211/main.c
-> @@ -1183,8 +1183,6 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
->         local->tx_headroom = max_t(unsigned int , local->hw.extra_tx_headroom,
->                                    IEEE80211_TX_STATUS_HEADROOM);
->
-> -       debugfs_hw_add(local);
-> -
->         /*
->          * if the driver doesn't specify a max listen interval we
->          * use 5 which should be a safe default
-> @@ -1273,6 +1271,9 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
->         if (result < 0)
->                 goto fail_wiphy_register;
->
-> +       debugfs_hw_add(local);
-> +       rate_control_add_debugfs(local);
-> +
->         rtnl_lock();
->
->         /* add one default STA interface if supported */
-> diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
-> index a1e9fc7878aa..b051f125d3af 100644
-> --- a/net/mac80211/rate.c
-> +++ b/net/mac80211/rate.c
-> @@ -214,17 +214,16 @@ static ssize_t rcname_read(struct file *file, char __user *userbuf,
->                                        ref->ops->name, len);
->  }
->
-> -static const struct file_operations rcname_ops = {
-> +const struct file_operations rcname_ops = {
->         .read = rcname_read,
->         .open = simple_open,
->         .llseek = default_llseek,
->  };
->  #endif
->
-> -static struct rate_control_ref *rate_control_alloc(const char *name,
-> -                                           struct ieee80211_local *local)
-> +static struct rate_control_ref *
-> +rate_control_alloc(const char *name, struct ieee80211_local *local)
->  {
-> -       struct dentry *debugfsdir = NULL;
->         struct rate_control_ref *ref;
->
->         ref = kmalloc(sizeof(struct rate_control_ref), GFP_KERNEL);
-> @@ -234,13 +233,7 @@ static struct rate_control_ref *rate_control_alloc(const char *name,
->         if (!ref->ops)
->                 goto free;
->
-> -#ifdef CONFIG_MAC80211_DEBUGFS
-> -       debugfsdir = debugfs_create_dir("rc", local->hw.wiphy->debugfsdir);
-> -       local->debugfs.rcdir = debugfsdir;
-> -       debugfs_create_file("name", 0400, debugfsdir, ref, &rcname_ops);
-> -#endif
-> -
-> -       ref->priv = ref->ops->alloc(&local->hw, debugfsdir);
-> +       ref->priv = ref->ops->alloc(&local->hw);
->         if (!ref->priv)
->                 goto free;
->         return ref;
-> diff --git a/net/mac80211/rate.h b/net/mac80211/rate.h
-> index 5397c6dad056..79b44d3db171 100644
-> --- a/net/mac80211/rate.h
-> +++ b/net/mac80211/rate.h
-> @@ -60,6 +60,29 @@ static inline void rate_control_add_sta_debugfs(struct sta_info *sta)
->  #endif
->  }
->
-> +extern const struct file_operations rcname_ops;
-> +
-> +static inline void rate_control_add_debugfs(struct ieee80211_local *local)
-> +{
-> +#ifdef CONFIG_MAC80211_DEBUGFS
-> +       struct dentry *debugfsdir;
-> +
-> +       if (!local->rate_ctrl)
-> +               return;
-> +
-> +       if (!local->rate_ctrl->ops->add_debugfs)
-> +               return;
-> +
-> +       debugfsdir = debugfs_create_dir("rc", local->hw.wiphy->debugfsdir);
-> +       local->debugfs.rcdir = debugfsdir;
-> +       debugfs_create_file("name", 0400, debugfsdir,
-> +                           local->rate_ctrl, &rcname_ops);
-> +
-> +       local->rate_ctrl->ops->add_debugfs(&local->hw, local->rate_ctrl->priv,
-> +                                          debugfsdir);
-> +#endif
-> +}
-> +
->  void ieee80211_check_rate_mask(struct ieee80211_sub_if_data *sdata);
->
->  /* Get a reference to the rate control algorithm. If `name' is NULL, get the
-> diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-> index 694a31978a04..5dc3e5bc4e64 100644
-> --- a/net/mac80211/rc80211_minstrel_ht.c
-> +++ b/net/mac80211/rc80211_minstrel_ht.c
-> @@ -1635,7 +1635,7 @@ minstrel_ht_init_cck_rates(struct minstrel_priv *mp)
->  }
->
->  static void *
-> -minstrel_ht_alloc(struct ieee80211_hw *hw, struct dentry *debugfsdir)
-> +minstrel_ht_alloc(struct ieee80211_hw *hw)
->  {
->         struct minstrel_priv *mp;
->
-> @@ -1673,7 +1673,17 @@ minstrel_ht_alloc(struct ieee80211_hw *hw, struct dentry *debugfsdir)
->         mp->update_interval = HZ / 10;
->         mp->new_avg = true;
->
-> +       minstrel_ht_init_cck_rates(mp);
-> +
-> +       return mp;
-> +}
-> +
->  #ifdef CONFIG_MAC80211_DEBUGFS
-> +static void minstrel_ht_add_debugfs(struct ieee80211_hw *hw, void *priv,
-> +                                   struct dentry *debugfsdir)
-> +{
-> +       struct minstrel_priv *mp = priv;
-> +
->         mp->fixed_rate_idx = (u32) -1;
->         debugfs_create_u32("fixed_rate_idx", S_IRUGO | S_IWUGO, debugfsdir,
->                            &mp->fixed_rate_idx);
-> @@ -1681,12 +1691,8 @@ minstrel_ht_alloc(struct ieee80211_hw *hw, struct dentry *debugfsdir)
->                            &mp->sample_switch);
->         debugfs_create_bool("new_avg", S_IRUGO | S_IWUSR, debugfsdir,
->                            &mp->new_avg);
-> -#endif
-> -
-> -       minstrel_ht_init_cck_rates(mp);
-> -
-> -       return mp;
->  }
-> +#endif
->
->  static void
->  minstrel_ht_free(void *priv)
-> @@ -1725,6 +1731,7 @@ static const struct rate_control_ops mac80211_minstrel_ht = {
->         .alloc = minstrel_ht_alloc,
->         .free = minstrel_ht_free,
->  #ifdef CONFIG_MAC80211_DEBUGFS
-> +       .add_debugfs = minstrel_ht_add_debugfs,
->         .add_sta_debugfs = minstrel_ht_add_sta_debugfs,
->  #endif
->         .get_expected_throughput = minstrel_ht_get_expected_throughput,
-> --
-> 2.25.1
->
+Hence, fixing this issue by moving the global CE configuration
+to radio specific CE configuration.
+
+Tested hardware: QCA9888 & QCA6174
+Tested firmware: 10.4-3.10-00047 & WLAN.RM.4.4.1.c3-00058
+
+Signed-off-by: Maharaja Kennadyrajan <mkenna@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath10k/ce.h   |  2 +-
+ drivers/net/wireless/ath/ath10k/pci.c  | 74 ++++++++++++++++++++++++++--------
+ drivers/net/wireless/ath/ath10k/pci.h  |  4 ++
+ drivers/net/wireless/ath/ath10k/snoc.c |  4 +-
+ 4 files changed, 64 insertions(+), 20 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/ce.h b/drivers/net/wireless/ath/ath10k/ce.h
+index a7478c2..9711f0e 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.h
++++ b/drivers/net/wireless/ath/ath10k/ce.h
+@@ -419,7 +419,7 @@ struct ce_pipe_config {
+ #define PIPEDIR_INOUT   3  /* bidirectional */
+ 
+ /* Establish a mapping between a service/direction and a pipe. */
+-struct service_to_pipe {
++struct ce_service_to_pipe {
+ 	__le32 service_id;
+ 	__le32 pipedir;
+ 	__le32 pipenum;
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index cd1c5d6..8400943 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -116,7 +116,7 @@ static int ath10k_pci_bmi_wait(struct ath10k *ar,
+ static void ath10k_pci_htt_htc_rx_cb(struct ath10k_ce_pipe *ce_state);
+ static void ath10k_pci_pktlog_rx_cb(struct ath10k_ce_pipe *ce_state);
+ 
+-static struct ce_attr host_ce_config_wlan[] = {
++static const struct ce_attr pci_host_ce_config_wlan[] = {
+ 	/* CE0: host->target HTC control and raw streams */
+ 	{
+ 		.flags = CE_ATTR_FLAGS,
+@@ -222,7 +222,7 @@ static int ath10k_pci_bmi_wait(struct ath10k *ar,
+ };
+ 
+ /* Target firmware's Copy Engine configuration. */
+-static struct ce_pipe_config target_ce_config_wlan[] = {
++static const struct ce_pipe_config pci_target_ce_config_wlan[] = {
+ 	/* CE0: host->target HTC control and raw streams */
+ 	{
+ 		.pipenum = __cpu_to_le32(0),
+@@ -335,7 +335,7 @@ static int ath10k_pci_bmi_wait(struct ath10k *ar,
+  * This table is derived from the CE_PCI TABLE, above.
+  * It is passed to the Target at startup for use by firmware.
+  */
+-static struct service_to_pipe target_service_to_ce_map_wlan[] = {
++static const struct ce_service_to_pipe pci_target_service_to_ce_map_wlan[] = {
+ 	{
+ 		__cpu_to_le32(ATH10K_HTC_SVC_ID_WMI_DATA_VO),
+ 		__cpu_to_le32(PIPEDIR_OUT),	/* out = UL = host -> target */
+@@ -1787,6 +1787,8 @@ static void ath10k_pci_fw_crashed_dump(struct ath10k *ar)
+ void ath10k_pci_hif_send_complete_check(struct ath10k *ar, u8 pipe,
+ 					int force)
+ {
++	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
++
+ 	ath10k_dbg(ar, ATH10K_DBG_PCI, "pci hif send complete check\n");
+ 
+ 	if (!force) {
+@@ -1804,7 +1806,7 @@ void ath10k_pci_hif_send_complete_check(struct ath10k *ar, u8 pipe,
+ 		 * If at least 50% of the total resources are still available,
+ 		 * don't bother checking again yet.
+ 		 */
+-		if (resources > (host_ce_config_wlan[pipe].src_nentries >> 1))
++		if (resources > (ar_pci->attr[pipe].src_nentries >> 1))
+ 			return;
+ 	}
+ 	ath10k_ce_per_engine_service(ar, pipe);
+@@ -1820,14 +1822,15 @@ static void ath10k_pci_rx_retry_sync(struct ath10k *ar)
+ int ath10k_pci_hif_map_service_to_pipe(struct ath10k *ar, u16 service_id,
+ 				       u8 *ul_pipe, u8 *dl_pipe)
+ {
+-	const struct service_to_pipe *entry;
++	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
++	const struct ce_service_to_pipe *entry;
+ 	bool ul_set = false, dl_set = false;
+ 	int i;
+ 
+ 	ath10k_dbg(ar, ATH10K_DBG_PCI, "pci hif map service\n");
+ 
+-	for (i = 0; i < ARRAY_SIZE(target_service_to_ce_map_wlan); i++) {
+-		entry = &target_service_to_ce_map_wlan[i];
++	for (i = 0; i < ARRAY_SIZE(pci_target_service_to_ce_map_wlan); i++) {
++		entry = &ar_pci->serv_to_pipe[i];
+ 
+ 		if (__le32_to_cpu(entry->service_id) != service_id)
+ 			continue;
+@@ -2316,6 +2319,7 @@ static int ath10k_bus_get_num_banks(struct ath10k *ar)
+ 
+ int ath10k_pci_init_config(struct ath10k *ar)
+ {
++	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ 	u32 interconnect_targ_addr;
+ 	u32 pcie_state_targ_addr = 0;
+ 	u32 pipe_cfg_targ_addr = 0;
+@@ -2361,7 +2365,7 @@ int ath10k_pci_init_config(struct ath10k *ar)
+ 	}
+ 
+ 	ret = ath10k_pci_diag_write_mem(ar, pipe_cfg_targ_addr,
+-					target_ce_config_wlan,
++					ar_pci->pipe_config,
+ 					sizeof(struct ce_pipe_config) *
+ 					NUM_TARGET_CE_CONFIG_WLAN);
+ 
+@@ -2385,9 +2389,10 @@ int ath10k_pci_init_config(struct ath10k *ar)
+ 		return ret;
+ 	}
+ 
+-	ret = ath10k_pci_diag_write_mem(ar, svc_to_pipe_map,
+-					target_service_to_ce_map_wlan,
+-					sizeof(target_service_to_ce_map_wlan));
++	ret =
++	ath10k_pci_diag_write_mem(ar, svc_to_pipe_map,
++				  ar_pci->serv_to_pipe,
++				  sizeof(pci_target_service_to_ce_map_wlan));
+ 	if (ret != 0) {
+ 		ath10k_err(ar, "Failed to write svc/pipe map: %d\n", ret);
+ 		return ret;
+@@ -2459,23 +2464,24 @@ static void ath10k_pci_override_ce_config(struct ath10k *ar)
+ {
+ 	struct ce_attr *attr;
+ 	struct ce_pipe_config *config;
++	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ 
+ 	/* For QCA6174 we're overriding the Copy Engine 5 configuration,
+ 	 * since it is currently used for other feature.
+ 	 */
+ 
+ 	/* Override Host's Copy Engine 5 configuration */
+-	attr = &host_ce_config_wlan[5];
++	attr = &ar_pci->attr[5];
+ 	attr->src_sz_max = 0;
+ 	attr->dest_nentries = 0;
+ 
+ 	/* Override Target firmware's Copy Engine configuration */
+-	config = &target_ce_config_wlan[5];
++	config = &ar_pci->pipe_config[5];
+ 	config->pipedir = __cpu_to_le32(PIPEDIR_OUT);
+ 	config->nbytes_max = __cpu_to_le32(2048);
+ 
+ 	/* Map from service/endpoint to Copy Engine */
+-	target_service_to_ce_map_wlan[15].pipenum = __cpu_to_le32(1);
++	ar_pci->serv_to_pipe[15].pipenum = __cpu_to_le32(1);
+ }
+ 
+ int ath10k_pci_alloc_pipes(struct ath10k *ar)
+@@ -2491,7 +2497,7 @@ int ath10k_pci_alloc_pipes(struct ath10k *ar)
+ 		pipe->pipe_num = i;
+ 		pipe->hif_ce_state = ar;
+ 
+-		ret = ath10k_ce_alloc_pipe(ar, i, &host_ce_config_wlan[i]);
++		ret = ath10k_ce_alloc_pipe(ar, i, &ar_pci->attr[i]);
+ 		if (ret) {
+ 			ath10k_err(ar, "failed to allocate copy engine pipe %d: %d\n",
+ 				   i, ret);
+@@ -2504,7 +2510,7 @@ int ath10k_pci_alloc_pipes(struct ath10k *ar)
+ 			continue;
+ 		}
+ 
+-		pipe->buf_sz = (size_t)(host_ce_config_wlan[i].src_sz_max);
++		pipe->buf_sz = (size_t)(ar_pci->attr[i].src_sz_max);
+ 	}
+ 
+ 	return 0;
+@@ -2520,10 +2526,11 @@ void ath10k_pci_free_pipes(struct ath10k *ar)
+ 
+ int ath10k_pci_init_pipes(struct ath10k *ar)
+ {
++	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ 	int i, ret;
+ 
+ 	for (i = 0; i < CE_COUNT; i++) {
+-		ret = ath10k_ce_init_pipe(ar, i, &host_ce_config_wlan[i]);
++		ret = ath10k_ce_init_pipe(ar, i, &ar_pci->attr[i]);
+ 		if (ret) {
+ 			ath10k_err(ar, "failed to initialize copy engine pipe %d: %d\n",
+ 				   i, ret);
+@@ -3595,6 +3602,31 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
+ 
+ 	timer_setup(&ar_pci->ps_timer, ath10k_pci_ps_timer, 0);
+ 
++	ar_pci->attr = kmemdup(pci_host_ce_config_wlan,
++			       sizeof(pci_host_ce_config_wlan),
++			       GFP_KERNEL);
++	if (!ar_pci->attr) {
++		ret = -ENOMEM;
++		goto err_free;
++	}
++
++	ar_pci->pipe_config = kmemdup(pci_target_ce_config_wlan,
++				      sizeof(pci_target_ce_config_wlan),
++				      GFP_KERNEL);
++	if (!ar_pci->pipe_config) {
++		ret = -ENOMEM;
++		goto err_free;
++	}
++
++	ar_pci->serv_to_pipe =
++		kmemdup(pci_target_service_to_ce_map_wlan,
++			sizeof(pci_target_service_to_ce_map_wlan),
++			GFP_KERNEL);
++	if (!ar_pci->serv_to_pipe) {
++		ret = -ENOMEM;
++		goto err_free;
++	}
++
+ 	ret = ath10k_pci_setup_resource(ar);
+ 	if (ret) {
+ 		ath10k_err(ar, "failed to setup resource: %d\n", ret);
+@@ -3690,6 +3722,11 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
+ err_core_destroy:
+ 	ath10k_core_destroy(ar);
+ 
++err_free:
++	kfree(ar_pci->attr);
++	kfree(ar_pci->pipe_config);
++	kfree(ar_pci->serv_to_pipe);
++
+ 	return ret;
+ }
+ 
+@@ -3715,6 +3752,9 @@ static void ath10k_pci_remove(struct pci_dev *pdev)
+ 	ath10k_pci_sleep_sync(ar);
+ 	ath10k_pci_release(ar);
+ 	ath10k_core_destroy(ar);
++	kfree(ar_pci->attr);
++	kfree(ar_pci->pipe_config);
++	kfree(ar_pci->serv_to_pipe);
+ }
+ 
+ MODULE_DEVICE_TABLE(pci, ath10k_pci_id_table);
+diff --git a/drivers/net/wireless/ath/ath10k/pci.h b/drivers/net/wireless/ath/ath10k/pci.h
+index 4455ed6c5..e3cbd25 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.h
++++ b/drivers/net/wireless/ath/ath10k/pci.h
+@@ -183,6 +183,10 @@ struct ath10k_pci {
+ 	 * this struct.
+ 	 */
+ 	struct ath10k_ahb ahb[0];
++
++	struct ce_attr *attr;
++	struct ce_pipe_config *pipe_config;
++	struct ce_service_to_pipe *serv_to_pipe;
+ };
+ 
+ static inline struct ath10k_pci *ath10k_pci_priv(struct ath10k *ar)
+diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
+index 21081b4..3e870aa 100644
+--- a/drivers/net/wireless/ath/ath10k/snoc.c
++++ b/drivers/net/wireless/ath/ath10k/snoc.c
+@@ -356,7 +356,7 @@
+ 	},
+ };
+ 
+-static struct service_to_pipe target_service_to_ce_map_wlan[] = {
++static struct ce_service_to_pipe target_service_to_ce_map_wlan[] = {
+ 	{
+ 		__cpu_to_le32(ATH10K_HTC_SVC_ID_WMI_DATA_VO),
+ 		__cpu_to_le32(PIPEDIR_OUT),	/* out = UL = host -> target */
+@@ -769,7 +769,7 @@ static int ath10k_snoc_hif_map_service_to_pipe(struct ath10k *ar,
+ 					       u16 service_id,
+ 					       u8 *ul_pipe, u8 *dl_pipe)
+ {
+-	const struct service_to_pipe *entry;
++	const struct ce_service_to_pipe *entry;
+ 	bool ul_set = false, dl_set = false;
+ 	int i;
+ 
+-- 
+1.9.1
