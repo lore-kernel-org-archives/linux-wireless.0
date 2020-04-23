@@ -7,50 +7,50 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94D83C2BA19
-	for <linux-wireless@archiver.kernel.org>; Thu, 23 Apr 2020 09:19:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF07FC55192
+	for <linux-wireless@archiver.kernel.org>; Thu, 23 Apr 2020 09:19:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6B2302076C
-	for <linux-wireless@archiver.kernel.org>; Thu, 23 Apr 2020 09:19:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ADAAC2075A
+	for <linux-wireless@archiver.kernel.org>; Thu, 23 Apr 2020 09:19:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="FSyKaD+h"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="PPFUCVLE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726746AbgDWJTt (ORCPT
+        id S1726766AbgDWJTv (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 23 Apr 2020 05:19:49 -0400
+        Thu, 23 Apr 2020 05:19:51 -0400
 Received: from mail27.static.mailgun.info ([104.130.122.27]:42761 "EHLO
         mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726145AbgDWJTt (ORCPT
+        by vger.kernel.org with ESMTP id S1726145AbgDWJTu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Apr 2020 05:19:49 -0400
+        Thu, 23 Apr 2020 05:19:50 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1587633588; h=Content-Transfer-Encoding: MIME-Version:
+ s=smtp; t=1587633590; h=Content-Transfer-Encoding: MIME-Version:
  References: In-Reply-To: Message-Id: Date: Subject: Cc: To: From:
- Sender; bh=lS6qvlWfaeFK3dX/BANkSbzEooAYY7Wv4YSmqUFIsEM=; b=FSyKaD+hoKEEMlRDQfMKcpC6HymnukthXSliaKE9oAnXauCdFC939sXD1wlfZ/W0rtU724//
- JIeOyj7zWWwNrV7kgHijmbXZbdm55uIKEvTugPq5R4+gfCpZNRhAVRsxjR77TvIj9mRMLRCe
- w3vkm1rnlknEg3yLA1aLlxNzdwI=
+ Sender; bh=Tfky6aXdcSPof7KzEZvaKUJZlUBHb8eRh2Njk9e7Y9A=; b=PPFUCVLEkPU8zxhGj7hDsMPI7y/bgOLr/PrHxp33ATxT9PGHYv68ZJNXPnHuqyvUdrT8swuU
+ m8Dr/Q94eAY9p8Nnby8KBB99aBDNjsftP4Iu1hYAqUKZT6m/UmuEbEi1zDU4AEmVF/Q/1EEq
+ CXgBeMpSnjqxyAEZcdIvgxHHQlY=
 X-Mailgun-Sending-Ip: 104.130.122.27
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5ea15daf.7f7c184ee998-smtp-out-n03;
- Thu, 23 Apr 2020 09:19:43 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5ea15db5.7f267073ef80-smtp-out-n03;
+ Thu, 23 Apr 2020 09:19:49 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id D5BAFC433BA; Thu, 23 Apr 2020 09:19:43 +0000 (UTC)
+        id A1415C432C2; Thu, 23 Apr 2020 09:19:49 +0000 (UTC)
 Received: from wgong-HP-Z240-SFF-Workstation.qca.qualcomm.com (unknown [180.166.53.21])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: wgong)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 0966DC433D2;
-        Thu, 23 Apr 2020 09:19:41 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 0966DC433D2
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id F0F4BC44788;
+        Thu, 23 Apr 2020 09:19:47 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org F0F4BC44788
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=wgong@codeaurora.org
 From:   Wen Gong <wgong@codeaurora.org>
 To:     ath10k@lists.infradead.org
 Cc:     linux-wireless@vger.kernel.org, wgong@codeaurora.org
-Subject: [PATCH 1/4] ath10k: enable firmware peer stats info for wmi tlv
-Date:   Thu, 23 Apr 2020 17:18:53 +0800
-Message-Id: <20200423091856.24297-2-wgong@codeaurora.org>
+Subject: [PATCH 4/4] ath10k: correct tx bitrate of iw for SDIO
+Date:   Thu, 23 Apr 2020 17:18:56 +0800
+Message-Id: <20200423091856.24297-5-wgong@codeaurora.org>
 X-Mailer: git-send-email 2.23.0
 In-Reply-To: <20200423091856.24297-1-wgong@codeaurora.org>
 References: <20200423091856.24297-1-wgong@codeaurora.org>
@@ -61,74 +61,89 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-For wmi tlv type, firmware disable peer stats info by default, after
-enable it, firmware will report WMI_TLV_PEER_STATS_INFO_EVENTID if
-ath10k send WMI_TLV_REQUEST_PEER_STATS_INFO_CMDID to firmware.
+For legacy mode, tx bitrate not show correct sometimes, for example:
+iw wlan0 link
+Connected to 8c:21:0a:b3:5a:64 (on wlan0)
+        SSID: tplinkgw
+        freq: 2462
+        RX: 19672 bytes (184 packets)
+        TX: 9851 bytes (87 packets)
+        signal: -51 dBm
+        rx bitrate: 54.0 MBit/s
+        tx bitrate: 2.8 MBit/s
 
-Enable it will only set a flag in firmware, firmware will not report
-it without receive request WMI command.
+This patch use the tx bitrate info from WMI_TLV_PEER_STATS_INFO_EVENTID
+report from firmware, and tx bitrate show correct.
+
+iw wlan0 link
+Connected to 8c:21:0a:b3:5a:64 (on wlan0)
+        SSID: tplinkgw
+        freq: 2462
+        RX: 13973 bytes (120 packets)
+        TX: 6737 bytes (57 packets)
+        signal: -52 dBm
+        rx bitrate: 54.0 MBit/s
+        tx bitrate: 54.0 MBit/s
+
+This patch only effect SDIO chip, ath10k_mac_sta_get_peer_stats_info
+has check for bitrate_statistics of hw_params, it is enabled only for
+"qca6174 hw3.2 sdio".
 
 Tested with QCA6174 SDIO with firmware WLAN.RMH.4.4.1-00042.
 
 Signed-off-by: Wen Gong <wgong@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath10k/mac.c     | 5 +++++
- drivers/net/wireless/ath/ath10k/wmi-tlv.c | 1 +
- drivers/net/wireless/ath/ath10k/wmi-tlv.h | 1 +
- drivers/net/wireless/ath/ath10k/wmi.h     | 1 +
- 4 files changed, 8 insertions(+)
+ drivers/net/wireless/ath/ath10k/core.h    |  2 ++
+ drivers/net/wireless/ath/ath10k/mac.c     | 10 ++++++++++
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c |  2 ++
+ 3 files changed, 14 insertions(+)
 
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index f70b256272ed..1168b70dd2e2 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -524,6 +524,8 @@ struct ath10k_sta {
+ 
+ 	u32 rx_rate_code;
+ 	u32 rx_bitrate_kbps;
++	u32 tx_rate_code;
++	u32 tx_bitrate_kbps;
+ 	struct work_struct update_wk;
+ 	u64 rx_duration;
+ 	struct ath10k_htt_tx_stats *tx_stats;
 diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 6791c0035be0..47fd5035f000 100644
+index 4b4c81ef131b..a63f8efb4f71 100644
 --- a/drivers/net/wireless/ath/ath10k/mac.c
 +++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2959,6 +2959,11 @@ static void ath10k_bss_assoc(struct ieee80211_hw *hw,
- 	arvif->aid = bss_conf->aid;
- 	ether_addr_copy(arvif->bssid, bss_conf->bssid);
- 
-+	ret = ath10k_wmi_pdev_set_param(ar,
-+					ar->wmi.pdev_param->peer_stats_info_enable, 1);
-+	if (ret)
-+		ath10k_warn(ar, "failed to enable peer stats info: %d\n", ret);
+@@ -8497,6 +8497,16 @@ static void ath10k_mac_sta_get_peer_stats_info(struct ath10k *ar,
+ 		arsta->rx_rate_code = 0;
+ 		arsta->rx_bitrate_kbps = 0;
+ 	}
 +
- 	ret = ath10k_wmi_vdev_up(ar, arvif->vdev_id, arvif->aid, arvif->bssid);
- 	if (ret) {
- 		ath10k_warn(ar, "failed to set vdev %d up: %d\n",
++	if (arsta->tx_rate_code != 0 && arsta->tx_bitrate_kbps != 0) {
++		ath10k_mac_parse_bitrate(ar, arsta->tx_rate_code,
++					 arsta->tx_bitrate_kbps,
++					 &sinfo->txrate);
++
++		sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_BITRATE);
++		arsta->tx_rate_code = 0;
++		arsta->tx_bitrate_kbps = 0;
++	}
+ }
+ 
+ static void ath10k_sta_statistics(struct ieee80211_hw *hw,
 diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index e1ab900f2662..27aaa48615d2 100644
+index eec1f1f27dec..9187b62b331c 100644
 --- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
 +++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -4269,6 +4269,7 @@ static struct wmi_pdev_param_map wmi_tlv_pdev_param_map = {
- 	.arp_dstaddr = WMI_PDEV_PARAM_UNSUPPORTED,
- 	.rfkill_config = WMI_TLV_PDEV_PARAM_HW_RFKILL_CONFIG,
- 	.rfkill_enable = WMI_TLV_PDEV_PARAM_RFKILL_ENABLE,
-+	.peer_stats_info_enable = WMI_TLV_PDEV_PARAM_PEER_STATS_INFO_ENABLE,
- };
+@@ -249,6 +249,8 @@ static int ath10k_wmi_tlv_parse_peer_stats_info(struct ath10k *ar, u16 tag, u16
+ 	arsta = (struct ath10k_sta *)sta->drv_priv;
+ 	arsta->rx_rate_code = __le32_to_cpu(stat->last_rx_rate_code);
+ 	arsta->rx_bitrate_kbps = __le32_to_cpu(stat->last_rx_bitrate_kbps);
++	arsta->tx_rate_code = __le32_to_cpu(stat->last_tx_rate_code);
++	arsta->tx_bitrate_kbps = __le32_to_cpu(stat->last_tx_bitrate_kbps);
  
- static struct wmi_peer_param_map wmi_tlv_peer_param_map = {
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.h b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-index 4972dc12991c..cd400b19a64d 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-@@ -451,6 +451,7 @@ enum wmi_tlv_pdev_param {
- 	WMI_TLV_PDEV_PARAM_VDEV_RATE_STATS_UPDATE_PERIOD,
- 	WMI_TLV_PDEV_PARAM_TXPOWER_REASON_NONE,
- 	WMI_TLV_PDEV_PARAM_TXPOWER_REASON_SAR,
-+	WMI_TLV_PDEV_PARAM_PEER_STATS_INFO_ENABLE = 0x8b,
- 	WMI_TLV_PDEV_PARAM_TXPOWER_REASON_MAX,
- };
- 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 209070714d1a..46740e16f3ce 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -3798,6 +3798,7 @@ struct wmi_pdev_param_map {
- 	u32 enable_btcoex;
- 	u32 rfkill_config;
- 	u32 rfkill_enable;
-+	u32 peer_stats_info_enable;
- };
- 
- #define WMI_PDEV_PARAM_UNSUPPORTED 0
+ 	return 0;
+ }
 -- 
 2.23.0
