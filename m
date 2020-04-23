@@ -2,106 +2,92 @@ Return-Path: <SRS0=d7P/=6H=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4737DC54FCB
-	for <linux-wireless@archiver.kernel.org>; Thu, 23 Apr 2020 21:18:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DFD0C54FCB
+	for <linux-wireless@archiver.kernel.org>; Thu, 23 Apr 2020 22:42:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E8BAC20728
-	for <linux-wireless@archiver.kernel.org>; Thu, 23 Apr 2020 21:18:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6ECCD20CC7
+	for <linux-wireless@archiver.kernel.org>; Thu, 23 Apr 2020 22:42:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="uamWr4Mn"
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="AbIsqKK/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726056AbgDWVSC (ORCPT
+        id S1726062AbgDWWmu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 23 Apr 2020 17:18:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51468 "EHLO
+        Thu, 23 Apr 2020 18:42:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36380 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725877AbgDWVSC (ORCPT
+        with ESMTP id S1726057AbgDWWmu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 23 Apr 2020 17:18:02 -0400
-Received: from mail-wm1-x344.google.com (mail-wm1-x344.google.com [IPv6:2a00:1450:4864:20::344])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A9D71C09B042
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Apr 2020 14:18:01 -0700 (PDT)
-Received: by mail-wm1-x344.google.com with SMTP id y24so8364391wma.4
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Apr 2020 14:18:01 -0700 (PDT)
+        Thu, 23 Apr 2020 18:42:50 -0400
+Received: from mail-lf1-x134.google.com (mail-lf1-x134.google.com [IPv6:2a00:1450:4864:20::134])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2EBF7C09B042
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Apr 2020 15:42:50 -0700 (PDT)
+Received: by mail-lf1-x134.google.com with SMTP id x23so6113742lfq.1
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Apr 2020 15:42:50 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=to:cc:from:subject:message-id:date:user-agent:mime-version
-         :content-language:content-transfer-encoding;
-        bh=3UMfdWcimBn25JH2myhA40azE0PlplXVveJxc9S5LYk=;
-        b=uamWr4MnC2gvgpYgfAIoTG2UxaKYkmo+H+l1vvu+mlG+aJJkhnvh5nR+bkVjcBEYLx
-         NCZyuMLSdXLuMGrWhTvfRkAE1oxzj/Tex41zV2hlhGRJf77rq+JVrsbp+Nn5wbmBjSON
-         fztN2Y/voSToxjv3cnPgB+vpZ5gHTOWSQRA+aou4GYBKE66aDT+jifF5ztFBBFWwv8bb
-         O1B7qrQFjtmSCXhMigoRppHUAV3ky63ayC3zweUP9OC1TLMw/8zZGvLEGfBoX/xQ6d4v
-         cb5tDs1pMhXG3CNlb11iQzm4V9AZD6xdd4Uh7mx8p/TjlHy8MkIJVyH1lb60dPp34P/x
-         /Zzg==
+        d=chromium.org; s=google;
+        h=mime-version:from:date:message-id:subject:to;
+        bh=QQh5TbUcEFHlBHWtlsoUJ1QMZN/5m/ZGAHT1sQWwKdU=;
+        b=AbIsqKK/xhFtEJvZrsz+RPdNZdrTz7nGLElqxgB0Y1hXfQ5TXH03y7CxzWQVpMYSZc
+         Y5i48hfjyET9ONQNgcFMzPC5T5m4ffE8uNRwLWLJgz+Mlu8i8kzZkvIP9nv61mEiLUt9
+         GWgdzJ6dGvS6iQ52dReQtCzBWqoi24OqMJiuA=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:to:cc:from:subject:message-id:date:user-agent
-         :mime-version:content-language:content-transfer-encoding;
-        bh=3UMfdWcimBn25JH2myhA40azE0PlplXVveJxc9S5LYk=;
-        b=LcckocWLk97agMt3V2xQtNMPRF7Wtvo+QHnxW/R7GqrAIhmoj/nP2io7IQV3XqpEHJ
-         pMWi6gph9F7DBoGsE42672365+B4cD7KmG8t+v73812JWbzbFel3axPTU9pvtIrFCNzk
-         O0GX0mzuCJv4HsRI/YXOTNnGBhQWkqG+SFb+F2gnkG01jKUFm0fEpbHzVPc+G/iB1uv9
-         zG37mKFDgOJaZFQxBDFBVtHbn/asB8e7kvmVvJ9aikr+xRR/wsVitArwPrdrX/2xhIVf
-         2at/ziO6vK3Mu/Jz1UoflvM+hzwOrRcLDDil9Bt09CcXeslXwBpWc897IiAan46BLelZ
-         WO7Q==
-X-Gm-Message-State: AGi0Pub0O9JmhH+BQiqvoTJl+c7jtTekkyTUzKbkLDCgjh2g1xdJVi0T
-        1/hxBqG09FbXAWcmKX27DsY=
-X-Google-Smtp-Source: APiQypL14SL2t3MTWCC5IqHR6QKM17e2Mz6mwndEh3M6aXyfBYq39YCccjsK43uXeZBOPEM+4ZNhbQ==
-X-Received: by 2002:a7b:c190:: with SMTP id y16mr6615537wmi.50.1587676680314;
-        Thu, 23 Apr 2020 14:18:00 -0700 (PDT)
-Received: from [192.168.43.18] (94.197.120.138.threembb.co.uk. [94.197.120.138])
-        by smtp.gmail.com with ESMTPSA id j3sm5373507wrw.28.2020.04.23.14.17.59
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
+        bh=QQh5TbUcEFHlBHWtlsoUJ1QMZN/5m/ZGAHT1sQWwKdU=;
+        b=s75CZRTwMQIgFKHHgjONwwGRLGHmhmQlxLVMSn4p5fTaWnSHzL9GHctg280MWRZw2G
+         mil9RVuribAmziNNC1OOHj+bmcbJdSY5h3RAK4AjFAM+Fb9m/60r/3zAnB+0G7iNXq8s
+         LPGAweaME6FpaYLer6jIQ4/cHkTmEOft6LLMexluG3wSCaoyrgPK2gl7ZyPT7vXmSF+1
+         W6MCneLuTxJekf7s3gD8hq9Vhqln3t/yS9vXxBnz+FEhQCPYUIudtcMjFbT3RBlvbTEv
+         3dGDrIW8VHiuj/9b2Sq7+S2EoEQAIJSiivh8joCRSg1kzdmF9zqWJf4vrGTxHsPjDbXD
+         eDhw==
+X-Gm-Message-State: AGi0PuZt1BfKgSiplhmoau5rG2+oxqq5SRYNv+uHz9d+aeuizhIaPCuO
+        +YqmKne4kOwC6h5c40ZJvqJCQuu7giU=
+X-Google-Smtp-Source: APiQypKJkSDAjl2MgXU87ZHbwpdYcij6xS6c6uBDRUG/e5Laprrv4j+KkvXfz9JSMxz5rR5sHQ2bHw==
+X-Received: by 2002:a19:9109:: with SMTP id t9mr4002408lfd.10.1587681768436;
+        Thu, 23 Apr 2020 15:42:48 -0700 (PDT)
+Received: from mail-lj1-f176.google.com (mail-lj1-f176.google.com. [209.85.208.176])
+        by smtp.gmail.com with ESMTPSA id b28sm2992941lfo.46.2020.04.23.15.42.46
+        for <linux-wireless@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 23 Apr 2020 14:17:59 -0700 (PDT)
-To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc:     "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-        linux-wireless@vger.kernel.org, Oscar Carter <oscar.carter@gmx.com>
-From:   Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 2/2] staging: vt6656: Remove preamble_type setting from
- vnt_tx_packet.
-Message-ID: <04874ae5-0859-7cb5-619a-ac96a207be5d@gmail.com>
-Date:   Thu, 23 Apr 2020 22:17:58 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.7.0
+        Thu, 23 Apr 2020 15:42:47 -0700 (PDT)
+Received: by mail-lj1-f176.google.com with SMTP id f18so7926209lja.13
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Apr 2020 15:42:46 -0700 (PDT)
+X-Received: by 2002:a2e:90c9:: with SMTP id o9mr2682136ljg.187.1587681766433;
+ Thu, 23 Apr 2020 15:42:46 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+From:   Brian Norris <briannorris@chromium.org>
+Date:   Thu, 23 Apr 2020 15:42:34 -0700
+X-Gmail-Original-Message-ID: <CA+ASDXMghcm-g8uWr2rJOmAOkYocWGCvXKtqs171TQ52DZXmPw@mail.gmail.com>
+Message-ID: <CA+ASDXMghcm-g8uWr2rJOmAOkYocWGCvXKtqs171TQ52DZXmPw@mail.gmail.com>
+Subject: bugzilla.kernel.org / networking_wireless@kernel-bugs.osdl.org
+To:     linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-preamble_type is set in vnt_bss_info_changed no need to set it
-here.
+Does anybody actually triage/manage the Wireless component on
+bugzilla.kernel.org?
+https://bugzilla.kernel.org/describecomponents.cgi?product=Networking
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/rxtx.c | 5 -----
- 1 file changed, 5 deletions(-)
+It's ostensibly managed by networking_wireless@kernel-bugs.osdl.org,
+but I get the impression that list (and really, the entire domain...)
+has been dead for a long time.
 
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index 7e15534e52ff..f56a2b02fe36 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -729,11 +729,6 @@ int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
- 	if (ieee80211_has_retry(hdr->frame_control))
- 		tx_buffer_head->fifo_ctl |= cpu_to_le16(FIFOCTL_LRETRY);
- 
--	if (tx_rate->flags & IEEE80211_TX_RC_USE_SHORT_PREAMBLE)
--		priv->preamble_type = PREAMBLE_SHORT;
--	else
--		priv->preamble_type = PREAMBLE_LONG;
--
- 	if (tx_rate->flags & IEEE80211_TX_RC_USE_RTS_CTS) {
- 		need_rts = true;
- 		tx_buffer_head->fifo_ctl |= cpu_to_le16(FIFOCTL_RTS);
--- 
-2.25.1
+Related: does anybody care to fix that up? I've found a few useful bug
+reports there recently, and it would be nice if the community could
+proactively handle those, instead of leaving it there as the
+equivalent of /dev/null.
+
+If no one else volunteers, I'd probably at least try to stick my email
+in there somewhere [1], so I can manage state (e.g., close issues that
+are already fixed).
+
+Brian
+
+[1] I guess I'd have to ask kernel.org admins?
