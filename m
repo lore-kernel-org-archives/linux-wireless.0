@@ -2,40 +2,38 @@ Return-Path: <SRS0=Yp73=6I=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D9B1C55199
-	for <linux-wireless@archiver.kernel.org>; Fri, 24 Apr 2020 16:47:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8311CC54FD0
+	for <linux-wireless@archiver.kernel.org>; Fri, 24 Apr 2020 16:47:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3E7C421556
-	for <linux-wireless@archiver.kernel.org>; Fri, 24 Apr 2020 16:47:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6C5F120728
+	for <linux-wireless@archiver.kernel.org>; Fri, 24 Apr 2020 16:47:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728763AbgDXQrk (ORCPT
+        id S1728821AbgDXQrs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 24 Apr 2020 12:47:40 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:58004 "EHLO
+        Fri, 24 Apr 2020 12:47:48 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:57974 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728629AbgDXQr0 (ORCPT
+        with ESMTP id S1726698AbgDXQrW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Apr 2020 12:47:26 -0400
+        Fri, 24 Apr 2020 12:47:22 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1jS1U3-000OcH-FE; Fri, 24 Apr 2020 19:47:23 +0300
+        id 1jS1Tz-000OcH-IY; Fri, 24 Apr 2020 19:47:20 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Fri, 24 Apr 2020 19:47:01 +0300
-Message-Id: <iwlwifi.20200424194456.a522161a7372.I2a65ee35a5e0242f8a0e106f126356dff81ef59d@changeid>
+Date:   Fri, 24 Apr 2020 19:46:56 +0300
+Message-Id: <20200424164707.2715869-1-luca@coelho.fi>
 X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20200424164707.2715869-1-luca@coelho.fi>
-References: <20200424164707.2715869-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 05/11] iwlwifi: mvm: add IML/ROM information to the assertion dumps
+Subject: [PATCH 00/11]  iwlwifi: updates intended for v5.8 2020-04-24-2
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -43,53 +41,58 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Luca Coelho <luciano.coelho@intel.com>
 
-Dump the IML/ROM error code and data, which are read from some
-registers, when printing an assertion dump.  This makes it easier to
-debug IML/ROM errors.
+Hi,
 
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- .../net/wireless/intel/iwlwifi/mvm/utils.c    | 20 +++++++++++++++++++
- 1 file changed, 20 insertions(+)
+Here's the fourth set of patches intended for v5.8.  It's the usual
+development, new features, cleanups and bugfixes.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-index ee8f152e7606..be57b8391850 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-@@ -586,6 +586,23 @@ static void iwl_mvm_dump_lmac_error_log(struct iwl_mvm *mvm, u8 lmac_num)
- 	IWL_ERR(mvm, "0x%08X | flow_handler\n", table.flow_handler);
- }
- 
-+static void iwl_mvm_dump_iml_error_log(struct iwl_mvm *mvm)
-+{
-+	struct iwl_trans *trans = mvm->trans;
-+	u32 error;
-+
-+	error = iwl_read_umac_prph(trans, UMAG_SB_CPU_2_STATUS);
-+
-+	IWL_ERR(trans, "IML/ROM dump:\n");
-+
-+	if (error & 0xFFFF0000)
-+		IWL_ERR(trans, "IML/ROM SYSASSERT:\n");
-+
-+	IWL_ERR(mvm, "0x%08X | IML/ROM error/state\n", error);
-+	IWL_ERR(mvm, "0x%08X | IML/ROM data1\n",
-+		iwl_read_umac_prph(trans, UMAG_SB_CPU_1_STATUS));
-+}
-+
- void iwl_mvm_dump_nic_error_log(struct iwl_mvm *mvm)
- {
- 	if (!test_bit(STATUS_DEVICE_ENABLED, &mvm->trans->status)) {
-@@ -601,6 +618,9 @@ void iwl_mvm_dump_nic_error_log(struct iwl_mvm *mvm)
- 
- 	iwl_mvm_dump_umac_error_log(mvm);
- 
-+	if (mvm->trans->trans_cfg->device_family >= IWL_DEVICE_FAMILY_AX210)
-+		iwl_mvm_dump_iml_error_log(mvm);
-+
- 	iwl_fw_error_print_fseq_regs(&mvm->fwrt);
- }
- 
+The changes are:
+
+* HW configuration rework continues;
+* Some debugging fixes;
+* Some other small fixes and clean-ups;
+
+As usual, I'm pushing this to a pending branch, for kbuild bot, and
+will send a pull-request later.
+
+Please review.
+
+Cheers,
+Luca.
+
+
+Emmanuel Grumbach (1):
+  iwlwifi: move iwl_set_soc_latency to iwl-drv to be used by other
+    op_modes
+
+Luca Coelho (7):
+  iwlwifi: mvm: initialize iwl_dev_tx_power_cmd to zero
+  iwlwifi: mvm: add IML/ROM information to the assertion dumps
+  iwlwifi: pcie: remove outdated comment about PCI RTPM reference
+  iwlwifi: pcie: remove mangling for iwl_ax101_cfg_qu_hr
+  iwlwifi: pcie: convert QnJ with Hr to the device table
+  iwlwifi: pcie: remove occurrences of 22000 in the FW name defines
+  iwlwifi: pcie: convert all AX101 devices to the device tables
+
+Mordechay Goodstein (2):
+  iwlwifi: yoyo: remove magic number
+  iwlwifi: dump api version in yaml format
+
+Shahar S Matityahu (1):
+  iwlwifi: dbg: set debug descriptor to NULL outside of
+    iwl_fw_free_dump_desc
+
+ .../net/wireless/intel/iwlwifi/cfg/22000.c    |  96 +++++++--------
+ drivers/net/wireless/intel/iwlwifi/fw/dbg.c   |  25 ++--
+ .../net/wireless/intel/iwlwifi/fw/debugfs.c   | 104 +++++++++++++++-
+ drivers/net/wireless/intel/iwlwifi/fw/init.c  |  55 ++++++++-
+ .../net/wireless/intel/iwlwifi/fw/runtime.h   |   1 +
+ .../net/wireless/intel/iwlwifi/iwl-config.h   |  15 ++-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c   |  53 +--------
+ .../net/wireless/intel/iwlwifi/mvm/utils.c    |  20 ++++
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 111 +++++-------------
+ 9 files changed, 278 insertions(+), 202 deletions(-)
+
 -- 
 2.26.2
 
