@@ -2,58 +2,78 @@ Return-Path: <SRS0=Yp73=6I=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1342BC2BA1A
-	for <linux-wireless@archiver.kernel.org>; Fri, 24 Apr 2020 06:57:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD9A3C55186
+	for <linux-wireless@archiver.kernel.org>; Fri, 24 Apr 2020 08:47:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F157A20767
-	for <linux-wireless@archiver.kernel.org>; Fri, 24 Apr 2020 06:57:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B9A9D2074F
+	for <linux-wireless@archiver.kernel.org>; Fri, 24 Apr 2020 08:47:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726324AbgDXG5H (ORCPT
+        id S1726614AbgDXIro (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 24 Apr 2020 02:57:07 -0400
-Received: from verein.lst.de ([213.95.11.211]:33448 "EHLO verein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726078AbgDXG5H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Apr 2020 02:57:07 -0400
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 2E07068CEC; Fri, 24 Apr 2020 08:57:01 +0200 (CEST)
-Date:   Fri, 24 Apr 2020 08:57:00 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc:     gregkh@linuxfoundation.org, akpm@linux-foundation.org,
-        josh@joshtriplett.org, rishabhb@codeaurora.org, kubakici@wp.pl,
-        maco@android.com, andy.gross@linaro.org, david.brown@linaro.org,
-        bjorn.andersson@linaro.org, linux-wireless@vger.kernel.org,
-        keescook@chromium.org, shuah@kernel.org, mfuzzey@parkeon.com,
-        zohar@linux.vnet.ibm.com, dhowells@redhat.com,
-        pali.rohar@gmail.com, tiwai@suse.de, arend.vanspriel@broadcom.com,
-        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
-        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
-        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
-        jewalt@lgsinnovations.com, cantabile.desu@gmail.com, ast@fb.com,
-        andresx7@gmail.com, dan.rue@linaro.org, brendanhiggins@google.com,
-        yzaikin@google.com, linux-kernel@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        Randy Dunlap <rdunlap@infradead.org>,
-        Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: [PATCH] firmware_loader: re-export fw_fallback_config into
- firmware_loader's own namespace
-Message-ID: <20200424065700.GB23906@lst.de>
-References: <20200423203140.19510-1-mcgrof@kernel.org>
+        Fri, 24 Apr 2020 04:47:44 -0400
+Received: from youngberry.canonical.com ([91.189.89.112]:42709 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726317AbgDXIro (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 24 Apr 2020 04:47:44 -0400
+Received: from [82.43.126.140] (helo=localhost)
+        by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.86_2)
+        (envelope-from <colin.king@canonical.com>)
+        id 1jRtzi-0006wM-2t; Fri, 24 Apr 2020 08:47:34 +0000
+From:   Colin King <colin.king@canonical.com>
+To:     Yan-Hsuan Chuang <yhchuang@realtek.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH][next] rtw88: fix spelling mistake "fimrware" -> "firmware"
+Date:   Fri, 24 Apr 2020 09:47:33 +0100
+Message-Id: <20200424084733.7716-1-colin.king@canonical.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200423203140.19510-1-mcgrof@kernel.org>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Looks good,
+From: Colin Ian King <colin.king@canonical.com>
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+There are spelling mistakes in two rtw_err error messages. Fix them.
+
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/net/wireless/realtek/rtw88/mac.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtw88/mac.c b/drivers/net/wireless/realtek/rtw88/mac.c
+index 645207a01525..056b08b9f06c 100644
+--- a/drivers/net/wireless/realtek/rtw88/mac.c
++++ b/drivers/net/wireless/realtek/rtw88/mac.c
+@@ -829,7 +829,7 @@ download_firmware_legacy(struct rtw_dev *rtwdev, const u8 *data, u32 size)
+ 		write_firmware_page(rtwdev, page, data, last_page_size);
+ 
+ 	if (!check_hw_ready(rtwdev, REG_MCUFW_CTRL, BIT_FWDL_CHK_RPT, 1)) {
+-		rtw_err(rtwdev, "failed to check download fimrware report\n");
++		rtw_err(rtwdev, "failed to check download firmware report\n");
+ 		return -EINVAL;
+ 	}
+ 
+@@ -856,7 +856,7 @@ static int download_firmware_validate_legacy(struct rtw_dev *rtwdev)
+ 		msleep(20);
+ 	}
+ 
+-	rtw_err(rtwdev, "failed to validate fimrware\n");
++	rtw_err(rtwdev, "failed to validate firmware\n");
+ 	return -EINVAL;
+ }
+ 
+-- 
+2.25.1
+
