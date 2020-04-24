@@ -6,194 +6,150 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7395DC55186
-	for <linux-wireless@archiver.kernel.org>; Fri, 24 Apr 2020 15:48:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A23E2C55196
+	for <linux-wireless@archiver.kernel.org>; Fri, 24 Apr 2020 15:48:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 57E0120767
-	for <linux-wireless@archiver.kernel.org>; Fri, 24 Apr 2020 15:48:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8739B2063A
+	for <linux-wireless@archiver.kernel.org>; Fri, 24 Apr 2020 15:48:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728692AbgDXPsd (ORCPT
+        id S1728706AbgDXPse (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 24 Apr 2020 11:48:33 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:57882 "EHLO
+        Fri, 24 Apr 2020 11:48:34 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:57896 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726301AbgDXPsc (ORCPT
+        with ESMTP id S1728455AbgDXPsd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Apr 2020 11:48:32 -0400
+        Fri, 24 Apr 2020 11:48:33 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1jS0Z2-000OY2-Fx; Fri, 24 Apr 2020 18:48:29 +0300
+        id 1jS0Z4-000OY2-3x; Fri, 24 Apr 2020 18:48:30 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Fri, 24 Apr 2020 18:48:08 +0300
-Message-Id: <iwlwifi.20200424182643.97cc25d96b53.I65fd0400d80f505bd6d7eed442f12db24b25bbe3@changeid>
+Date:   Fri, 24 Apr 2020 18:48:10 +0300
+Message-Id: <iwlwifi.20200424182644.6e566897ce0a.I8395a50c1c39522e542366064bff33a33009ce7b@changeid>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20200424154818.2657602-1-luca@coelho.fi>
 References: <20200424154818.2657602-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 02/12] iwlwifi: yoyo: add support for parsing SHARED_MEM_ALLOC version 4
+Subject: [PATCH 04/12] iwlwifi: remove antenna_coupling module parameter
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Mordechay Goodstein <mordechay.goodstein@intel.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-The new version adds the information for RX2C FIFO addresses.
+This module parameter should not be mangled by users.
+This relates to a very old driver and I doubt people can
+really check the antenna coupling in a way that would make
+the BT Coexistence work better with a real value.
+Drop it.
 
-Use the new addresses to parse the FIFO info when dumping.
-
-Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../net/wireless/intel/iwlwifi/fw/api/debug.h | 14 +++++----
- drivers/net/wireless/intel/iwlwifi/fw/dbg.c   | 29 +++++++++++++++++--
- .../net/wireless/intel/iwlwifi/fw/runtime.h   |  5 ++--
- drivers/net/wireless/intel/iwlwifi/fw/smem.c  | 14 ++++++---
- drivers/net/wireless/intel/iwlwifi/iwl-prph.h | 11 ++++---
- 5 files changed, 52 insertions(+), 21 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/dvm/dev.h       |  3 +--
+ drivers/net/wireless/intel/iwlwifi/dvm/main.c      |  9 +--------
+ drivers/net/wireless/intel/iwlwifi/dvm/rs.c        | 11 +----------
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c       | 11 ++---------
+ drivers/net/wireless/intel/iwlwifi/iwl-modparams.h |  8 ++------
+ 5 files changed, 7 insertions(+), 35 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/debug.h b/drivers/net/wireless/intel/iwlwifi/fw/api/debug.h
-index 98e957ecbeed..94b1a1268476 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/debug.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/debug.h
+diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/dev.h b/drivers/net/wireless/intel/iwlwifi/dvm/dev.h
+index 8d8380026180..4bd792c06ff6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/dvm/dev.h
++++ b/drivers/net/wireless/intel/iwlwifi/dvm/dev.h
+@@ -1,7 +1,7 @@
+ /* SPDX-License-Identifier: GPL-2.0-only */
+ /******************************************************************************
+  *
+- * Copyright(c) 2003 - 2014 Intel Corporation. All rights reserved.
++ * Copyright(c) 2003 - 2014, 2020 Intel Corporation. All rights reserved.
+  *
+  * Contact Information:
+  *  Intel Linux Wireless <linuxwifi@intel.com>
+@@ -810,7 +810,6 @@ struct iwl_priv {
+ 	u8 bt_traffic_load, last_bt_traffic_load;
+ 	bool bt_ch_announce;
+ 	bool bt_full_concurrent;
+-	bool bt_ant_couple_ok;
+ 	__le32 kill_ack_mask;
+ 	__le32 kill_cts_mask;
+ 	__le16 bt_valid;
+diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/main.c b/drivers/net/wireless/intel/iwlwifi/dvm/main.c
+index 598ee7315558..99822744122f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/dvm/main.c
++++ b/drivers/net/wireless/intel/iwlwifi/dvm/main.c
+@@ -1,9 +1,8 @@
+ // SPDX-License-Identifier: GPL-2.0-only
+ /******************************************************************************
+  *
+- * Copyright(c) 2003 - 2014 Intel Corporation. All rights reserved.
++ * Copyright(c) 2003 - 2014, 2018 - 2020  Intel Corporation. All rights reserved.
+  * Copyright(c) 2015 Intel Deutschland GmbH
+- * Copyright (C) 2018 - 2019 Intel Corporation
+  *
+  * Portions of this file are derived from the ipw3945 project, as well
+  * as portions of the ieee80211 subsystem header files.
+@@ -1370,12 +1369,6 @@ static struct iwl_op_mode *iwl_op_mode_dvm_start(struct iwl_trans *trans,
+ 
+ 	IWL_DEBUG_INFO(priv, "*** LOAD DRIVER ***\n");
+ 
+-	/* is antenna coupling more than 35dB ? */
+-	priv->bt_ant_couple_ok =
+-		(iwlwifi_mod_params.antenna_coupling >
+-			IWL_BT_ANTENNA_COUPLING_THRESHOLD) ?
+-			true : false;
+-
+ 	/* bt channel inhibition enabled*/
+ 	priv->bt_ch_announce = true;
+ 	IWL_DEBUG_INFO(priv, "BT channel inhibition is %s\n",
+diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/rs.c b/drivers/net/wireless/intel/iwlwifi/dvm/rs.c
+index 226165db7dfd..7e49e1068407 100644
+--- a/drivers/net/wireless/intel/iwlwifi/dvm/rs.c
++++ b/drivers/net/wireless/intel/iwlwifi/dvm/rs.c
+@@ -2,6 +2,7 @@
+ /******************************************************************************
+  *
+  * Copyright(c) 2005 - 2014 Intel Corporation. All rights reserved.
++ * Copyright (C) 2019 - 2020 Intel Corporation
+  *
+  * Contact Information:
+  *  Intel Linux Wireless <linuxwifi@intel.com>
+@@ -846,16 +847,6 @@ static void rs_bt_update_lq(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
+ 	struct iwl_scale_tbl_info *tbl;
+ 	bool full_concurrent = priv->bt_full_concurrent;
+ 
+-	if (priv->bt_ant_couple_ok) {
+-		/*
+-		 * Is there a need to switch between
+-		 * full concurrency and 3-wire?
+-		 */
+-		if (priv->bt_ci_compliance)
+-			full_concurrent = true;
+-		else
+-			full_concurrent = false;
+-	}
+ 	if ((priv->bt_traffic_load != priv->last_bt_traffic_load) ||
+ 	    (priv->bt_full_concurrent != full_concurrent)) {
+ 		priv->bt_full_concurrent = full_concurrent;
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+index 9ff12c207f25..68dc1f046064 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
 @@ -5,10 +5,9 @@
   *
   * GPL LICENSE SUMMARY
   *
 - * Copyright(c) 2007 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-- * Copyright (C) 2018 - 2019 Intel Corporation
-+ * Copyright(c) 2007 - 2014, 2018 - 2020 Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -28,10 +27,9 @@
-  *
-  * BSD LICENSE
-  *
-- * Copyright(c) 2005 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-- * Copyright (C) 2018 - 2019 Intel Corporation
-+ * Copyright(c) 2005 - 2014, 2018 - 2020 Intel Corporation
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -218,6 +216,8 @@ struct iwl_shared_mem_lmac_cfg {
-  * @page_buff_size: size of %page_buff_addr
-  * @lmac_num: number of LMACs (1 or 2)
-  * @lmac_smem: per - LMAC smem data
-+ * @rxfifo2_control_addr: start addr of RXF2C
-+ * @rxfifo2_control_size: size of RXF2C
-  */
- struct iwl_shared_mem_cfg {
- 	__le32 shared_mem_addr;
-@@ -229,8 +229,10 @@ struct iwl_shared_mem_cfg {
- 	__le32 page_buff_addr;
- 	__le32 page_buff_size;
- 	__le32 lmac_num;
--	struct iwl_shared_mem_lmac_cfg lmac_smem[2];
--} __packed; /* SHARED_MEM_ALLOC_API_S_VER_3 */
-+	struct iwl_shared_mem_lmac_cfg lmac_smem[3];
-+	__le32 rxfifo2_control_addr;
-+	__le32 rxfifo2_control_size;
-+} __packed; /* SHARED_MEM_ALLOC_API_S_VER_4 */
- 
- /**
-  * struct iwl_mfuart_load_notif - mfuart image version & status
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-index 39c8332be3ac..914f0eb07d52 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/dbg.c
-@@ -1386,13 +1386,36 @@ static void iwl_ini_get_rxf_data(struct iwl_fw_runtime *fwrt,
- 	}
- 
- 	fifo_idx = ffs(fid2) - 1;
--	if (fid2 && !WARN_ON_ONCE(fifo_idx != 0)) {
--		data->size = fwrt->smem_cfg.rxfifo2_size;
--		data->offset = RXF_DIFF_FROM_PREV;
-+	if (fid2 && !WARN_ON_ONCE(~BIT(fifo_idx) & fid2)) {
-+		u8 max_idx;
-+
-+		if (iwl_fw_lookup_notif_ver(fwrt->fw, SYSTEM_GROUP,
-+					    SHARED_MEM_CFG_CMD, 0) <= 3)
-+			max_idx = 0;
-+		else
-+			max_idx = 1;
-+
-+		if (WARN_ONCE(fifo_idx > max_idx,
-+			      "invalid umac fifo idx %d", fifo_idx))
-+			return;
-+
- 		/* use bit 31 to distinguish between umac and lmac rxf while
- 		 * parsing the dump
- 		 */
- 		data->fifo_num = fifo_idx | IWL_RXF_UMAC_BIT;
-+
-+		switch (fifo_idx) {
-+		case 0:
-+			data->size = fwrt->smem_cfg.rxfifo2_size;
-+			data->offset = iwl_umac_prph(fwrt->trans,
-+						     RXF_DIFF_FROM_PREV);
-+			break;
-+		case 1:
-+			data->size = fwrt->smem_cfg.rxfifo2_control_size;
-+			data->offset = iwl_umac_prph(fwrt->trans,
-+						     RXF2C_DIFF_FROM_PREV);
-+			break;
-+		}
- 		return;
- 	}
- }
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-index 9906d9b9bdd5..9629ef94b214 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/runtime.h
-@@ -6,7 +6,7 @@
-  * GPL LICENSE SUMMARY
-  *
-  * Copyright(c) 2017 Intel Deutschland GmbH
-- * Copyright (C) 2018-2019 Intel Corporation
-+ * Copyright (C) 2018-2020 Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -27,7 +27,7 @@
-  * BSD LICENSE
-  *
-  * Copyright(c) 2017 Intel Deutschland GmbH
-- * Copyright (C) 2018-2019 Intel Corporation
-+ * Copyright (C) 2018-2020 Intel Corporation
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -86,6 +86,7 @@ struct iwl_fwrt_shared_mem_cfg {
- 		u32 rxfifo1_size;
- 	} lmac[MAX_NUM_LMAC];
- 	u32 rxfifo2_size;
-+	u32 rxfifo2_control_size;
- 	u32 internal_txfifo_addr;
- 	u32 internal_txfifo_size[TX_FIFO_INTERNAL_MAX_NUM];
- };
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/smem.c b/drivers/net/wireless/intel/iwlwifi/fw/smem.c
-index 409b2dd854ac..700fdab14209 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/smem.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/smem.c
-@@ -5,10 +5,9 @@
-  *
-  * GPL LICENSE SUMMARY
-  *
-- * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
++ * Copyright(c) 2007 - 2014, 2018 - 2020  Intel Corporation. All rights reserved.
   * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
   * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
 - * Copyright(c) 2018 - 2019 Intel Corporation
-+ * Copyright(c) 2012 - 2014, 2018 - 2020 Intel Corporation
   *
   * This program is free software; you can redistribute it and/or modify
   * it under the terms of version 2 of the GNU General Public License as
@@ -201,74 +157,66 @@ index 409b2dd854ac..700fdab14209 100644
   *
   * BSD LICENSE
   *
-- * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+- * Copyright(c) 2005 - 2014 Intel Corporation. All rights reserved.
++ * Copyright(c) 2005 - 2014, 2018 - 2020 Intel Corporation. All rights reserved.
   * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
   * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
 - * Copyright(c) 2018 - 2019 Intel Corporation
-+ * Copyright(c) 2012 - 2014, 2018 - 2020 Intel Corporation
   * All rights reserved.
   *
   * Redistribution and use in source and binary forms, with or without
-@@ -71,6 +69,8 @@ static void iwl_parse_shared_mem_22000(struct iwl_fw_runtime *fwrt,
- 	struct iwl_shared_mem_cfg *mem_cfg = (void *)pkt->data;
- 	int i, lmac;
- 	int lmac_num = le32_to_cpu(mem_cfg->lmac_num);
-+	u8 api_ver = iwl_fw_lookup_notif_ver(fwrt->fw, SYSTEM_GROUP,
-+					     SHARED_MEM_CFG_CMD, 0);
+@@ -1824,11 +1822,6 @@ MODULE_PARM_DESC(amsdu_size,
+ module_param_named(fw_restart, iwlwifi_mod_params.fw_restart, bool, 0444);
+ MODULE_PARM_DESC(fw_restart, "restart firmware in case of error (default true)");
  
- 	if (WARN_ON(lmac_num > ARRAY_SIZE(mem_cfg->lmac_smem)))
- 		return;
-@@ -80,6 +80,12 @@ static void iwl_parse_shared_mem_22000(struct iwl_fw_runtime *fwrt,
- 		ARRAY_SIZE(mem_cfg->lmac_smem[0].txfifo_size);
- 	fwrt->smem_cfg.rxfifo2_size = le32_to_cpu(mem_cfg->rxfifo2_size);
+-module_param_named(antenna_coupling, iwlwifi_mod_params.antenna_coupling,
+-		   int, 0444);
+-MODULE_PARM_DESC(antenna_coupling,
+-		 "specify antenna coupling in dB (default: 0 dB)");
+-
+ module_param_named(nvm_file, iwlwifi_mod_params.nvm_file, charp, 0444);
+ MODULE_PARM_DESC(nvm_file, "NVM file name");
  
-+	if (api_ver >= 4 &&
-+	    !WARN_ON_ONCE(iwl_rx_packet_payload_len(pkt) < sizeof(*mem_cfg))) {
-+		fwrt->smem_cfg.rxfifo2_control_size =
-+			le32_to_cpu(mem_cfg->rxfifo2_control_size);
-+	}
-+
- 	for (lmac = 0; lmac < lmac_num; lmac++) {
- 		struct iwl_shared_mem_lmac_cfg *lmac_cfg =
- 			&mem_cfg->lmac_smem[lmac];
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-index 1136d9784f9d..8e254c0eda13 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-@@ -5,10 +5,9 @@
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h b/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h
+index b094cc1e9be0..e8ce3a300857 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-modparams.h
+@@ -5,8 +5,7 @@
   *
   * GPL LICENSE SUMMARY
   *
-- * Copyright(c) 2005 - 2014 Intel Corporation. All rights reserved.
-- * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
-+ * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-  * Copyright(c) 2016        Intel Deutschland GmbH
-- * Copyright (C) 2018 - 2019 Intel Corporation
-+ * Copyright(c) 2005 - 2014, 2018 - 2020 Intel Corporation
+- * Copyright(c) 2007 - 2014 Intel Corporation. All rights reserved.
+- * Copyright(c) 2018 - 2019 Intel Corporation
++ * Copyright(c) 2007 - 2014, 2018 - 2020 Intel Corporation. All rights reserved.
   *
   * This program is free software; you can redistribute it and/or modify
   * it under the terms of version 2 of the GNU General Public License as
-@@ -28,10 +27,9 @@
+@@ -26,8 +25,7 @@
   *
   * BSD LICENSE
   *
 - * Copyright(c) 2005 - 2014 Intel Corporation. All rights reserved.
-- * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
-+ * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-  * Copyright(c) 2016        Intel Deutschland GmbH
-- * Copyright (C) 2018 - 2019 Intel Corporation
-+ * Copyright(c) 2005 - 2014, 2018 - 2020 Intel Corporation
+- * Copyright(c) 2018 - 2019 Intel Corporation
++ * Copyright(c) 2005 - 2014, 2018 - 2020 Intel Corporation. All rights reserved.
   * All rights reserved.
   *
   * Redistribution and use in source and binary forms, with or without
-@@ -326,6 +324,7 @@
- #define RXF_SIZE_BYTE_CND_POS		(7)
- #define RXF_SIZE_BYTE_CNT_MSK		(0x3ff << RXF_SIZE_BYTE_CND_POS)
- #define RXF_DIFF_FROM_PREV		(0x200)
-+#define RXF2C_DIFF_FROM_PREV		(0x4e00)
- 
- #define RXF_LD_FENCE_OFFSET_ADDR	(0xa00c10)
- #define RXF_FIFO_RD_FENCE_ADDR		(0xa00c0c)
+@@ -111,7 +109,6 @@ enum iwl_uapsd_disable {
+  * @power_save: enable power save, default = false
+  * @power_level: power level, default = 1
+  * @debug_level: levels are IWL_DL_*
+- * @antenna_coupling: antenna coupling in dB, default = 0
+  * @nvm_file: specifies a external NVM file
+  * @uapsd_disable: disable U-APSD, see &enum iwl_uapsd_disable, default =
+  *	IWL_DISABLE_UAPSD_BSS | IWL_DISABLE_UAPSD_P2P_CLIENT
+@@ -131,7 +128,6 @@ struct iwl_mod_params {
+ #ifdef CONFIG_IWLWIFI_DEBUG
+ 	u32 debug_level;
+ #endif
+-	int antenna_coupling;
+ 	char *nvm_file;
+ 	u32 uapsd_disable;
+ 	bool disable_11ac;
 -- 
 2.26.2
 
