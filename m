@@ -2,214 +2,167 @@ Return-Path: <SRS0=Yp73=6I=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51FCEC55197
-	for <linux-wireless@archiver.kernel.org>; Fri, 24 Apr 2020 16:47:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81A31C55186
+	for <linux-wireless@archiver.kernel.org>; Fri, 24 Apr 2020 18:00:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3D62021556
-	for <linux-wireless@archiver.kernel.org>; Fri, 24 Apr 2020 16:47:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 637BF20704
+	for <linux-wireless@archiver.kernel.org>; Fri, 24 Apr 2020 18:00:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1587751232;
+	bh=RsaoSSAw6/MuBKblOysE88TYn3bnaczeoBP73QuY/cI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=1VSDQYosLqkOvopHMUqCTzUHhzfCw/I5HVUuMZK8bIJP6/ckoa8gKPxKT43DycX7L
+	 5XcZlPnN80UAP6T9H74EYCurXNOhKE1Ala5PXDG4+QaYiTEgFBHvl8u2+Bg1ysU6S4
+	 3t8A38a33nHQZg9a4Tqz3U+ejyzlozi4RbzDtlG8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728834AbgDXQru (ORCPT
+        id S1728110AbgDXSA3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 24 Apr 2020 12:47:50 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:58058 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728822AbgDXQrt (ORCPT
+        Fri, 24 Apr 2020 14:00:29 -0400
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:35485 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726908AbgDXSA2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Apr 2020 12:47:49 -0400
-Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
-        by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.93)
-        (envelope-from <luca@coelho.fi>)
-        id 1jS1U8-000OcH-BV; Fri, 24 Apr 2020 19:47:28 +0300
-From:   Luca Coelho <luca@coelho.fi>
-To:     kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org
-Date:   Fri, 24 Apr 2020 19:47:07 +0300
-Message-Id: <iwlwifi.20200424194456.18bf540ab8e0.I6217488f1740f0e6accd0cecd09dfd46bad88426@changeid>
-X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20200424164707.2715869-1-luca@coelho.fi>
-References: <20200424164707.2715869-1-luca@coelho.fi>
+        Fri, 24 Apr 2020 14:00:28 -0400
+Received: by mail-pg1-f195.google.com with SMTP id t11so4978965pgg.2;
+        Fri, 24 Apr 2020 11:00:28 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=ZOhA5kkS2JaSYKAoFpzQMe1eFmxmYMfGK0ET3Fa/QIQ=;
+        b=NHYXOSYDYoY/VZ64VekcZgVdJLU7Wi7Lr+FKDAgT1vFqc0s620msHMQy/pO5TvJJai
+         8ngbXVU/zTjyBYTGNvqaBEv4olu2Y250vn2j6bxZ1KZ+5vfzL3RmqiRpNKlXNjxyK1Im
+         ebh5V7m+NNxP/oexUK0md0Rkw4eDLT/0z2OWZxQL+7OepKEA7wEjMWSojXqtpct5Qf35
+         a5hoi1BNo7GX9cc2cpkyeAhYY9O7VAUff08OlSCvKrY/N+AmcNxQGmaJhj8TVh6KWUDp
+         laFsrmOZlkKq2nv+kB+4kSa/EZsxccLaZuDLMl4G/j3DHUrXAsYW5n3fWm8Xnce6T3Kg
+         bqqw==
+X-Gm-Message-State: AGi0PuaLd63dDg4JtVFhRwmLRHlUQQEU2U0pIVWHBQ/Sx9JWcSUn5MUB
+        R4Fe0jfMAJabySNUTGOgWus=
+X-Google-Smtp-Source: APiQypLAe5sS56YNzPHUE76WrUmAZHWqFUZ4digJx0mOf15BViMD/IQDlV7lREIejskhgzivcBhaXA==
+X-Received: by 2002:a63:7805:: with SMTP id t5mr10527111pgc.141.1587751227764;
+        Fri, 24 Apr 2020 11:00:27 -0700 (PDT)
+Received: from 42.do-not-panic.com (42.do-not-panic.com. [157.230.128.187])
+        by smtp.gmail.com with ESMTPSA id q19sm6217968pfh.34.2020.04.24.11.00.26
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 24 Apr 2020 11:00:26 -0700 (PDT)
+Received: by 42.do-not-panic.com (Postfix, from userid 1000)
+        id A6FDD403AB; Fri, 24 Apr 2020 18:00:25 +0000 (UTC)
+Date:   Fri, 24 Apr 2020 18:00:25 +0000
+From:   Luis Chamberlain <mcgrof@kernel.org>
+To:     Greg KH <gregkh@linuxfoundation.org>
+Cc:     akpm@linux-foundation.org, josh@joshtriplett.org,
+        rishabhb@codeaurora.org, kubakici@wp.pl, maco@android.com,
+        andy.gross@linaro.org, david.brown@linaro.org,
+        bjorn.andersson@linaro.org, linux-wireless@vger.kernel.org,
+        keescook@chromium.org, shuah@kernel.org, mfuzzey@parkeon.com,
+        zohar@linux.vnet.ibm.com, dhowells@redhat.com,
+        pali.rohar@gmail.com, tiwai@suse.de, arend.vanspriel@broadcom.com,
+        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
+        broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
+        torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
+        jewalt@lgsinnovations.com, cantabile.desu@gmail.com, ast@fb.com,
+        andresx7@gmail.com, dan.rue@linaro.org, brendanhiggins@google.com,
+        yzaikin@google.com, linux-kernel@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+        Randy Dunlap <rdunlap@infradead.org>,
+        Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: Re: [PATCH] firmware_loader: re-export fw_fallback_config into
+ firmware_loader's own namespace
+Message-ID: <20200424180025.GC11244@42.do-not-panic.com>
+References: <20200423203140.19510-1-mcgrof@kernel.org>
+ <20200424092119.GA360114@kroah.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: [PATCH 11/11] iwlwifi: dump api version in yaml format
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200424092119.GA360114@kroah.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Mordechay Goodstein <mordechay.goodstein@intel.com>
+On Fri, Apr 24, 2020 at 11:21:19AM +0200, Greg KH wrote:
+> On Thu, Apr 23, 2020 at 08:31:40PM +0000, Luis R. Rodriguez wrote:
+> > From: Luis Chamberlain <mcgrof@kernel.org>
+> > 
+> > Christoph's recent patch "firmware_loader: remove unused exports", which
+> > is not merged upstream yet, removed two exported symbols. One is fine to
+> > remove since only built-in code uses it but the other is incorrect.
+> > 
+> > If CONFIG_FW_LOADER=m so the firmware_loader is modular but
+> > CONFIG_FW_LOADER_USER_HELPER=y we fail at mostpost with:
+> > 
+> > ERROR: modpost: "fw_fallback_config" [drivers/base/firmware_loader/firmware_class.ko] undefined!
+> > 
+> > This happens because the variable fw_fallback_config is built into the
+> > kernel if CONFIG_FW_LOADER_USER_HELPER=y always, so we need to grant
+> > access to the firmware loader module by exporting it.
+> > 
+> > Instead of just exporting it as we used to, take advantage of the new
+> > kernel symbol namespacing functionality, and export the symbol only to
+> > the firmware loader private namespace. This would prevent misuses from
+> > other drivers and makes it clear the goal is to keep this private to
+> > the firmware loader alone.
+> > 
+> > Cc: Christoph Hellwig <hch@lst.de>
+> > Cc: Randy Dunlap <rdunlap@infradead.org>
+> > Cc: Stephen Rothwell <sfr@canb.auug.org.au>
+> > Fixes: "firmware_loader: remove unused exports"
+> > Reported-by: Randy Dunlap <rdunlap@infradead.org>
+> > Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
+> > ---
+> >  drivers/base/firmware_loader/fallback.c       | 3 +++
+> >  drivers/base/firmware_loader/fallback_table.c | 1 +
+> >  2 files changed, 4 insertions(+)
+> > 
+> > diff --git a/drivers/base/firmware_loader/fallback.c b/drivers/base/firmware_loader/fallback.c
+> > index 1e9c96e3ed63..d9ac7296205e 100644
+> > --- a/drivers/base/firmware_loader/fallback.c
+> > +++ b/drivers/base/firmware_loader/fallback.c
+> > @@ -9,6 +9,7 @@
+> >  #include <linux/umh.h>
+> >  #include <linux/sysctl.h>
+> >  #include <linux/vmalloc.h>
+> > +#include <linux/module.h>
+> >  
+> >  #include "fallback.h"
+> >  #include "firmware.h"
+> > @@ -17,6 +18,8 @@
+> >   * firmware fallback mechanism
+> >   */
+> >  
+> > +MODULE_IMPORT_NS(FIRMWARE_LOADER_PRIVATE);
+> > +
+> >  extern struct firmware_fallback_config fw_fallback_config;
+> >  
+> >  /* These getters are vetted to use int properly */
+> 
+> While nice, that does not fix the existing build error that people are
+> having, right?
 
-Used for debugging what FW API we are using to understand misalignment
-with API changes.
+It does.
 
-The output looks like this as a yaml format
+> > diff --git a/drivers/base/firmware_loader/fallback_table.c b/drivers/base/firmware_loader/fallback_table.c
+> > index 0a737349f78f..46a731dede6f 100644
+> > --- a/drivers/base/firmware_loader/fallback_table.c
+> > +++ b/drivers/base/firmware_loader/fallback_table.c
+> > @@ -21,6 +21,7 @@ struct firmware_fallback_config fw_fallback_config = {
+> >  	.loading_timeout = 60,
+> >  	.old_timeout = 60,
+> >  };
+> > +EXPORT_SYMBOL_NS_GPL(fw_fallback_config, FIRMWARE_LOADER_PRIVATE);
+> 
+> 
+> How about you send a patch that just reverts the single symbol change
+> first, and then a follow-on patch that does this namespace addition.  I
+> can queue the first one up now, for 5.7-final, and the second one for
+> 5.8-rc1.
 
-fw_api_ver:
-  0x0001:
-    name: MVM_ALIVE
-    cmd_ver: 99
-    notif_ver: 4
-  0x0108:
-    name: PHY_CONTEXT_CMD
-    cmd_ver: 2
-    notif_ver: 0
-...
+Sure.
 
-Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- .../net/wireless/intel/iwlwifi/fw/debugfs.c   | 104 +++++++++++++++++-
- 1 file changed, 100 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/debugfs.c b/drivers/net/wireless/intel/iwlwifi/fw/debugfs.c
-index 89f74116569d..6e72c27f527b 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/debugfs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/debugfs.c
-@@ -5,10 +5,9 @@
-  *
-  * GPL LICENSE SUMMARY
-  *
-- * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-- * Copyright (C) 2018 Intel Corporation
-+ * Copyright(c) 2012 - 2014, 2018 - 2020 Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -28,10 +27,9 @@
-  *
-  * BSD LICENSE
-  *
-- * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
-- * Copyright (C) 2018 Intel Corporation
-+ * Copyright(c) 2012 - 2014, 2018 - 2020 Intel Corporation
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -64,6 +62,7 @@
- #include "api/commands.h"
- #include "debugfs.h"
- #include "dbg.h"
-+#include <linux/seq_file.h>
- 
- #define FWRT_DEBUGFS_OPEN_WRAPPER(name, buflen, argtype)		\
- struct dbgfs_##name##_data {						\
-@@ -329,11 +328,108 @@ static ssize_t iwl_dbgfs_fw_dbg_domain_read(struct iwl_fw_runtime *fwrt,
- 
- FWRT_DEBUGFS_READ_FILE_OPS(fw_dbg_domain, 20);
- 
-+struct iwl_dbgfs_fw_info_priv {
-+	struct iwl_fw_runtime *fwrt;
-+};
-+
-+struct iwl_dbgfs_fw_info_state {
-+	loff_t pos;
-+};
-+
-+static void *iwl_dbgfs_fw_info_seq_next(struct seq_file *seq,
-+					void *v, loff_t *pos)
-+{
-+	struct iwl_dbgfs_fw_info_state *state = v;
-+	struct iwl_dbgfs_fw_info_priv *priv = seq->private;
-+	const struct iwl_fw *fw = priv->fwrt->fw;
-+
-+	*pos = ++state->pos;
-+	if (*pos >= fw->ucode_capa.n_cmd_versions)
-+		return NULL;
-+
-+	return state;
-+}
-+
-+static void iwl_dbgfs_fw_info_seq_stop(struct seq_file *seq,
-+				       void *v)
-+{
-+	kfree(v);
-+}
-+
-+static void *iwl_dbgfs_fw_info_seq_start(struct seq_file *seq, loff_t *pos)
-+{
-+	struct iwl_dbgfs_fw_info_priv *priv = seq->private;
-+	const struct iwl_fw *fw = priv->fwrt->fw;
-+	struct iwl_dbgfs_fw_info_state *state;
-+
-+	if (*pos >= fw->ucode_capa.n_cmd_versions)
-+		return NULL;
-+
-+	state = kzalloc(sizeof(*state), GFP_KERNEL);
-+	if (!state)
-+		return NULL;
-+	state->pos = *pos;
-+	return state;
-+};
-+
-+static int iwl_dbgfs_fw_info_seq_show(struct seq_file *seq, void *v)
-+{
-+	struct iwl_dbgfs_fw_info_state *state = v;
-+	struct iwl_dbgfs_fw_info_priv *priv = seq->private;
-+	const struct iwl_fw *fw = priv->fwrt->fw;
-+	const struct iwl_fw_cmd_version *ver;
-+	u32 cmd_id;
-+
-+	if (!state->pos)
-+		seq_puts(seq, "fw_api_ver:\n");
-+
-+	ver = &fw->ucode_capa.cmd_versions[state->pos];
-+
-+	cmd_id = iwl_cmd_id(ver->cmd, ver->group, 0);
-+
-+	seq_printf(seq, "  0x%04x:\n", cmd_id);
-+	seq_printf(seq, "    name: %s\n",
-+		   iwl_get_cmd_string(priv->fwrt->trans, cmd_id));
-+	seq_printf(seq, "    cmd_ver: %d\n", ver->cmd_ver);
-+	seq_printf(seq, "    notif_ver: %d\n", ver->notif_ver);
-+	return 0;
-+}
-+
-+static const struct seq_operations iwl_dbgfs_info_seq_ops = {
-+	.start = iwl_dbgfs_fw_info_seq_start,
-+	.next = iwl_dbgfs_fw_info_seq_next,
-+	.stop = iwl_dbgfs_fw_info_seq_stop,
-+	.show = iwl_dbgfs_fw_info_seq_show,
-+};
-+
-+static int iwl_dbgfs_fw_info_open(struct inode *inode, struct file *filp)
-+{
-+	struct iwl_dbgfs_fw_info_priv *priv;
-+
-+	priv = __seq_open_private(filp, &iwl_dbgfs_info_seq_ops,
-+				  sizeof(*priv));
-+
-+	if (!priv)
-+		return -ENOMEM;
-+
-+	priv->fwrt = inode->i_private;
-+	return 0;
-+}
-+
-+static const struct file_operations iwl_dbgfs_fw_info_ops = {
-+	.owner = THIS_MODULE,
-+	.open = iwl_dbgfs_fw_info_open,
-+	.read = seq_read,
-+	.llseek = seq_lseek,
-+	.release = seq_release_private,
-+};
-+
- void iwl_fwrt_dbgfs_register(struct iwl_fw_runtime *fwrt,
- 			    struct dentry *dbgfs_dir)
- {
- 	INIT_DELAYED_WORK(&fwrt->timestamp.wk, iwl_fw_timestamp_marker_wk);
- 	FWRT_DEBUGFS_ADD_FILE(timestamp_marker, dbgfs_dir, 0200);
-+	FWRT_DEBUGFS_ADD_FILE(fw_info, dbgfs_dir, 0200);
- 	FWRT_DEBUGFS_ADD_FILE(send_hcmd, dbgfs_dir, 0200);
- 	FWRT_DEBUGFS_ADD_FILE(fw_dbg_domain, dbgfs_dir, 0400);
- }
--- 
-2.26.2
-
+  Luis
