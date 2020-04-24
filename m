@@ -4,155 +4,96 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23E21C55186
-	for <linux-wireless@archiver.kernel.org>; Sat, 25 Apr 2020 10:05:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AA72C55186
+	for <linux-wireless@archiver.kernel.org>; Sat, 25 Apr 2020 10:20:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0B3AC20714
-	for <linux-wireless@archiver.kernel.org>; Sat, 25 Apr 2020 10:05:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0237C2071C
+	for <linux-wireless@archiver.kernel.org>; Sat, 25 Apr 2020 10:20:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726366AbgDYKFX (ORCPT
+        id S1726107AbgDYKUT (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 25 Apr 2020 06:05:23 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:58290 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726364AbgDYKFW (ORCPT
+        Sat, 25 Apr 2020 06:20:19 -0400
+Received: from mailomta14-re.btinternet.com ([213.120.69.107]:10346 "EHLO
+        re-prd-fep-042.btinternet.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726088AbgDYKUS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 25 Apr 2020 06:05:22 -0400
-Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
-        by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.93)
-        (envelope-from <luca@coelho.fi>)
-        id 1jSHgS-000P3t-Mw; Sat, 25 Apr 2020 13:05:17 +0300
-From:   Luca Coelho <luca@coelho.fi>
-To:     kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org
-Date:   Sat, 25 Apr 2020 13:04:58 +0300
-Message-Id: <iwlwifi.20200425130140.e78a59f70b1d.Ica656a98a4e4220d73edc97600edd680cbc97241@changeid>
-X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20200425100459.2778317-1-luca@coelho.fi>
-References: <20200425100459.2778317-1-luca@coelho.fi>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: [PATCH 10/11] iwlwifi: pcie: skip fragmented receive buffers
+        Sat, 25 Apr 2020 06:20:18 -0400
+X-Greylist: delayed 59364 seconds by postgrey-1.27 at vger.kernel.org; Sat, 25 Apr 2020 06:20:17 EDT
+Received: from re-prd-rgout-002.btmx-prd.synchronoss.net ([10.2.54.5])
+          by re-prd-fep-048.btinternet.com with ESMTP
+          id <20200424175051.NJSI20795.re-prd-fep-048.btinternet.com@re-prd-rgout-002.btmx-prd.synchronoss.net>;
+          Fri, 24 Apr 2020 18:50:51 +0100
+Authentication-Results: btinternet.com;
+    auth=pass (LOGIN) smtp.auth=j.oldman998@btinternet.com
+X-Originating-IP: [31.51.225.56]
+X-OWM-Source-IP: 31.51.225.56 (GB)
+X-OWM-Env-Sender: j.oldman998@btinternet.com
+X-VadeSecure-score: verdict=clean score=0/300, class=clean
+X-RazorGate-Vade: gggruggvucftvghtrhhoucdtuddrgeduhedrhedugdduudefucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuueftkffvkffujffvgffngfevqffopdfqfgfvnecuuegrihhlohhuthemuceftddtnecunecujfgurhephffvufffkffosedttdertdertddtnecuhfhrohhmpeflohhhnhcuqfhlughmrghnuceojhhohhhnrdholhgumhgrnhesphholhgvhhhilhhlrdgtohdruhhkqeenucfkphepfedurdehuddrvddvhedrheeinecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehhvghlohephhgvnhhrhidrhhhomhgvpdhinhgvthepfedurdehuddrvddvhedrheeipdhmrghilhhfrhhomhepoehjohhhnhdrohhlughmrghnsehpohhlvghhihhllhdrtghordhukheqpdhrtghpthhtohepoehjohhhnhdrohhlughmrghnsehpohhlvghhihhllhdrtghordhukheqpdhrtghpthhtohepoehlihhnuhigqdhkvghrnhgvlhesvhhgvghrrdhkvghrnhgvlhdrohhrgheqpdhrtghpthhtohepoehlihhnuhigqdifihhrvghlvghsshesvhhgvghrrdhkvghrnhgvlhdrohhrgheqpdhrtghpthhtohepoehmsegsuhgvshdrtghhqe
+X-RazorGate-Vade-Verdict: clean 0
+X-RazorGate-Vade-Classification: clean
+Received: from henry.home (31.51.225.56) by re-prd-rgout-002.btmx-prd.synchronoss.net (5.8.340) (authenticated as j.oldman998@btinternet.com)
+        id 5E3A15B60CEBB0BC; Fri, 24 Apr 2020 18:50:51 +0100
+From:   John Oldman <john.oldman@polehill.co.uk>
+To:     m@bues.ch
+Cc:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        John Oldman <john.oldman@polehill.co.uk>
+Subject: [PATCH] :ssb sprom.c: Fixed block comments coding style issues
+Date:   Fri, 24 Apr 2020 18:50:43 +0100
+Message-Id: <20200424175043.16261-1-john.oldman@polehill.co.uk>
+X-Mailer: git-send-email 2.17.1
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+Fixed coding style issues
 
-We don't really expect fragmented RBs, and don't seem to be seeing
-them in practice since that would've caused a crash. Nevertheless,
-we should be expecting the hardware to send them.
-
-Parse the flag indicating a fragmented buffer, but then discard it
-and any fragments thereof, at least for now. We need to do more
-work in the higher layers to properly deal with this, since we may
-not get "normal" firmware notifications that are fragmented, only
-RX, and then we need to put it back together and add the necessary
-API to report a chain of things to the higher layers, this doesn't
-fit into the struct iwl_rx_cmd_buffer today.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: John Oldman <john.oldman@polehill.co.uk>
 ---
- .../wireless/intel/iwlwifi/pcie/internal.h    |  4 ++-
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c  | 32 ++++++++++++++++---
- 2 files changed, 30 insertions(+), 6 deletions(-)
+ drivers/ssb/sprom.c | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index 43f81204c152..b76c0396335a 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -189,6 +189,8 @@ struct iwl_rx_completion_desc {
-  * @rb_stts_dma: bus address of receive buffer status
-  * @lock:
-  * @queue: actual rx queue. Not used for multi-rx queue.
-+ * @next_rb_is_fragment: indicates that the previous RB that we handled set
-+ *	the fragmented flag, so the next one is still another fragment
-  *
-  * NOTE:  rx_free and rx_used are used as a FIFO for iwl_rx_mem_buffers
-  */
-@@ -214,7 +216,7 @@ struct iwl_rxq {
- 	u32 queue_size;
- 	struct list_head rx_free;
- 	struct list_head rx_used;
--	bool need_update;
-+	bool need_update, next_rb_is_fragment;
- 	void *rb_stts;
- 	dma_addr_t rb_stts_dma;
- 	spinlock_t lock;
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-index 8c29071cb415..72d1cf27e6a4 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-@@ -1427,7 +1427,8 @@ static void iwl_pcie_rx_handle_rb(struct iwl_trans *trans,
- }
+diff --git a/drivers/ssb/sprom.c b/drivers/ssb/sprom.c
+index 52d2e0f33be7..42d620cee8a9 100644
+--- a/drivers/ssb/sprom.c
++++ b/drivers/ssb/sprom.c
+@@ -78,7 +78,8 @@ ssize_t ssb_attr_sprom_show(struct ssb_bus *bus, char *buf,
  
- static struct iwl_rx_mem_buffer *iwl_pcie_get_rxb(struct iwl_trans *trans,
--						  struct iwl_rxq *rxq, int i)
-+						  struct iwl_rxq *rxq, int i,
-+						  bool *join)
+ 	/* Use interruptible locking, as the SPROM write might
+ 	 * be holding the lock for several seconds. So allow userspace
+-	 * to cancel operation. */
++	 * to cancel operation.
++	 */
+ 	err = -ERESTARTSYS;
+ 	if (mutex_lock_interruptible(&bus->sprom_mutex))
+ 		goto out_kfree;
+@@ -121,7 +122,8 @@ ssize_t ssb_attr_sprom_store(struct ssb_bus *bus,
+ 
+ 	/* Use interruptible locking, as the SPROM write might
+ 	 * be holding the lock for several seconds. So allow userspace
+-	 * to cancel operation. */
++	 * to cancel operation.
++	 */
+ 	err = -ERESTARTSYS;
+ 	if (mutex_lock_interruptible(&bus->sprom_mutex))
+ 		goto out_kfree;
+@@ -188,9 +190,11 @@ int ssb_fill_sprom_with_fallback(struct ssb_bus *bus, struct ssb_sprom *out)
+ bool ssb_is_sprom_available(struct ssb_bus *bus)
  {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	struct iwl_rx_mem_buffer *rxb;
-@@ -1441,10 +1442,12 @@ static struct iwl_rx_mem_buffer *iwl_pcie_get_rxb(struct iwl_trans *trans,
- 		return rxb;
- 	}
- 
--	if (trans->trans_cfg->device_family >= IWL_DEVICE_FAMILY_AX210)
-+	if (trans->trans_cfg->device_family >= IWL_DEVICE_FAMILY_AX210) {
- 		vid = le16_to_cpu(rxq->cd[i].rbid);
--	else
-+		*join = rxq->cd[i].flags & IWL_RX_CD_FLAGS_FRAGMENTED;
-+	} else {
- 		vid = le32_to_cpu(rxq->bd_32[i]) & 0x0FFF; /* 12-bit VID */
-+	}
- 
- 	if (!vid || vid > RX_POOL_SIZE(trans_pcie->num_rx_bufs))
- 		goto out_err;
-@@ -1502,6 +1505,7 @@ static void iwl_pcie_rx_handle(struct iwl_trans *trans, int queue)
- 		u32 rb_pending_alloc =
- 			atomic_read(&trans_pcie->rba.req_pending) *
- 			RX_CLAIM_REQ_ALLOC;
-+		bool join = false;
- 
- 		if (unlikely(rb_pending_alloc >= rxq->queue_size / 2 &&
- 			     !emergency)) {
-@@ -1514,11 +1518,29 @@ static void iwl_pcie_rx_handle(struct iwl_trans *trans, int queue)
- 
- 		IWL_DEBUG_RX(trans, "Q %d: HW = %d, SW = %d\n", rxq->id, r, i);
- 
--		rxb = iwl_pcie_get_rxb(trans, rxq, i);
-+		rxb = iwl_pcie_get_rxb(trans, rxq, i, &join);
- 		if (!rxb)
- 			goto out;
- 
--		iwl_pcie_rx_handle_rb(trans, rxq, rxb, emergency, i);
-+		if (unlikely(join || rxq->next_rb_is_fragment)) {
-+			rxq->next_rb_is_fragment = join;
-+			/*
-+			 * We can only get a multi-RB in the following cases:
-+			 *  - firmware issue, sending a too big notification
-+			 *  - sniffer mode with a large A-MSDU
-+			 *  - large MTU frames (>2k)
-+			 * since the multi-RB functionality is limited to newer
-+			 * hardware that cannot put multiple entries into a
-+			 * single RB.
-+			 *
-+			 * Right now, the higher layers aren't set up to deal
-+			 * with that, so discard all of these.
-+			 */
-+			list_add_tail(&rxb->list, &rxq->rx_free);
-+			rxq->free_count++;
-+		} else {
-+			iwl_pcie_rx_handle_rb(trans, rxq, rxb, emergency, i);
-+		}
- 
- 		i = (i + 1) & (rxq->queue_size - 1);
- 
+ 	/* status register only exists on chipcomon rev >= 11 and we need check
+-	   for >= 31 only */
++	 * for >= 31 only
++	 */
+ 	/* this routine differs from specs as we do not access SPROM directly
+-	   on PCMCIA */
++	 * on PCMCIA
++	 */
+ 	if (bus->bustype == SSB_BUSTYPE_PCI &&
+ 	    bus->chipco.dev &&	/* can be unavailable! */
+ 	    bus->chipco.dev->id.revision >= 31)
 -- 
-2.26.2
+2.17.1
 
