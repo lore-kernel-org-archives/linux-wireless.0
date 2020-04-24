@@ -6,387 +6,234 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14341C55197
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2D1FC55196
 	for <linux-wireless@archiver.kernel.org>; Fri, 24 Apr 2020 15:48:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E92312063A
-	for <linux-wireless@archiver.kernel.org>; Fri, 24 Apr 2020 15:48:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BD0D12063A
+	for <linux-wireless@archiver.kernel.org>; Fri, 24 Apr 2020 15:48:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728925AbgDXPsh (ORCPT
+        id S1728955AbgDXPsi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 24 Apr 2020 11:48:37 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:57910 "EHLO
+        Fri, 24 Apr 2020 11:48:38 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:57924 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728693AbgDXPsf (ORCPT
+        with ESMTP id S1728711AbgDXPsh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Apr 2020 11:48:35 -0400
+        Fri, 24 Apr 2020 11:48:37 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1jS0Z5-000OY2-PW; Fri, 24 Apr 2020 18:48:32 +0300
+        id 1jS0Z7-000OY2-Mc; Fri, 24 Apr 2020 18:48:34 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Fri, 24 Apr 2020 18:48:12 +0300
-Message-Id: <iwlwifi.20200424182644.5ce74a87009c.I9079332b21eef490bbdbf8d7d66e35d7d0c7882b@changeid>
+Date:   Fri, 24 Apr 2020 18:48:14 +0300
+Message-Id: <iwlwifi.20200424182644.b6e4982e62ae.I7f7352f79c40ada2f221bd4b41449a40821e833f@changeid>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20200424154818.2657602-1-luca@coelho.fi>
 References: <20200424154818.2657602-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 06/12] iwlwifi: mvm: add support for range request command version 9
+Subject: [PATCH 08/12] iwlwifi: mvm: remove iwlmvm's tfd_q_hang_detect module parameter
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Avraham Stern <avraham.stern@intel.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-This version adds support for per responder calibrations.
-Currently the driver will use a single value for all responders
-and bandwidths.
+This should be controlled by the firmware debugging mechanism
+and not by a module parameter. This has always been true.
+Remove it and assume it is set.
 
-Signed-off-by: Avraham Stern <avraham.stern@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../wireless/intel/iwlwifi/fw/api/location.h  | 110 ++++++++++++++++--
- .../intel/iwlwifi/mvm/ftm-initiator.c         |  67 ++++++++---
- 2 files changed, 155 insertions(+), 22 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h   |  8 ++------
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c   | 11 ++---------
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c   | 16 ++++++----------
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c |  9 +++------
+ 4 files changed, 13 insertions(+), 31 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/location.h b/drivers/net/wireless/intel/iwlwifi/fw/api/location.h
-index 0214e553d5ae..7ffad19d80fd 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/location.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/location.h
-@@ -6,8 +6,7 @@
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 9e2a0858108c..e2f7f6ec711e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -5,10 +5,9 @@
+  *
   * GPL LICENSE SUMMARY
   *
-  * Copyright(c) 2015 - 2017 Intel Deutschland GmbH
-- * Copyright (C) 2018 Intel Corporation
-- * Copyright (C) 2019 Intel Corporation
-+ * Copyright (C) 2018 - 2020 Intel Corporation
+- * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
++ * Copyright(c) 2012 - 2014, 2018 - 2020 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
+- * Copyright(c) 2018 - 2019 Intel Corporation
   *
   * This program is free software; you can redistribute it and/or modify
   * it under the terms of version 2 of the GNU General Public License as
-@@ -28,8 +27,7 @@
+@@ -28,10 +27,9 @@
+  *
   * BSD LICENSE
   *
-  * Copyright(c) 2015 - 2017 Intel Deutschland GmbH
-- * Copyright (C) 2018 Intel Corporation
-- * Copyright (C) 2019 Intel Corporation
-+ * Copyright (C) 2018 - 2020 Intel Corporation
+- * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
++ * Copyright(c) 2012 - 2014, 2018 - 2020 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
+- * Copyright(c) 2018 - 2019 Intel Corporation
   * All rights reserved.
   *
   * Redistribution and use in source and binary forms, with or without
-@@ -147,6 +145,7 @@ struct iwl_tof_config_cmd {
-  * @IWL_TOF_BW_40: 40 MHz
-  * @IWL_TOF_BW_80: 80 MHz
-  * @IWL_TOF_BW_160: 160 MHz
-+ * @IWL_TOF_BW_NUM: number of tof bandwidths
+@@ -134,12 +132,10 @@ extern const struct ieee80211_ops iwl_mvm_hw_ops;
+  *	We will register to mac80211 to have testmode working. The NIC must not
+  *	be up'ed after the INIT fw asserted. This is useful to be able to use
+  *	proprietary tools over testmode to debug the INIT fw.
+- * @tfd_q_hang_detect: enabled the detection of hung transmit queues
+  * @power_scheme: one of enum iwl_power_scheme
   */
- enum iwl_tof_bandwidth {
- 	IWL_TOF_BW_20_LEGACY,
-@@ -154,6 +153,7 @@ enum iwl_tof_bandwidth {
- 	IWL_TOF_BW_40,
- 	IWL_TOF_BW_80,
- 	IWL_TOF_BW_160,
-+	IWL_TOF_BW_NUM,
- }; /* LOCAT_BW_TYPE_E */
+ struct iwl_mvm_mod_params {
+ 	bool init_dbg;
+-	bool tfd_q_hang_detect;
+ 	int power_scheme;
+ };
+ extern struct iwl_mvm_mod_params iwlmvm_mod_params;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index d0afc806706d..bde1b9b5face 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -5,10 +5,9 @@
+  *
+  * GPL LICENSE SUMMARY
+  *
+- * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
++ * Copyright(c) 2012 - 2014, 2018 - 2020 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
+- * Copyright(c) 2018 - 2019 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -28,10 +27,9 @@
+  *
+  * BSD LICENSE
+  *
+- * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
++ * Copyright(c) 2012 - 2014, 2018 - 2020 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
+- * Copyright(c) 2018 - 2019 Intel Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -94,7 +92,6 @@ static const struct iwl_op_mode_ops iwl_mvm_ops_mq;
  
- /*
-@@ -430,6 +430,9 @@ struct iwl_tof_range_req_ap_entry_v2 {
-  * @IWL_INITIATOR_AP_FLAGS_NON_TB: Use non trigger based flow
-  * @IWL_INITIATOR_AP_FLAGS_TB: Use trigger based flow
-  * @IWL_INITIATOR_AP_FLAGS_SECURED: request secured measurement
-+ * @IWL_INITIATOR_AP_FLAGS_LMR_FEEDBACK: Send LMR feedback
-+ * @IWL_INITIATOR_AP_FLAGS_USE_CALIB: Use calibration values from the request
-+ *      instead of fw internal values.
-  */
- enum iwl_initiator_ap_flags {
- 	IWL_INITIATOR_AP_FLAGS_ASAP = BIT(1),
-@@ -442,6 +445,8 @@ enum iwl_initiator_ap_flags {
- 	IWL_INITIATOR_AP_FLAGS_NON_TB = BIT(9),
- 	IWL_INITIATOR_AP_FLAGS_TB = BIT(10),
- 	IWL_INITIATOR_AP_FLAGS_SECURED = BIT(11),
-+	IWL_INITIATOR_AP_FLAGS_LMR_FEEDBACK = BIT(12),
-+	IWL_INITIATOR_AP_FLAGS_USE_CALIB = BIT(13),
+ struct iwl_mvm_mod_params iwlmvm_mod_params = {
+ 	.power_scheme = IWL_POWER_SCHEME_BPS,
+-	.tfd_q_hang_detect = true
+ 	/* rest of fields are 0 by default */
  };
  
- /**
-@@ -508,7 +513,7 @@ enum iwl_location_bw {
- #define LOCATION_BW_POS	4
+@@ -104,10 +101,6 @@ MODULE_PARM_DESC(init_dbg,
+ module_param_named(power_scheme, iwlmvm_mod_params.power_scheme, int, 0444);
+ MODULE_PARM_DESC(power_scheme,
+ 		 "power management scheme: 1-active, 2-balanced, 3-low power, default: 2");
+-module_param_named(tfd_q_hang_detect, iwlmvm_mod_params.tfd_q_hang_detect,
+-		   bool, 0444);
+-MODULE_PARM_DESC(tfd_q_hang_detect,
+-		 "TFD queues hang detection (default: true");
  
- /**
-- * struct iwl_tof_range_req_ap_entry - AP configuration parameters
-+ * struct iwl_tof_range_req_ap_entry_v4 - AP configuration parameters
-  * @initiator_ap_flags: see &enum iwl_initiator_ap_flags.
-  * @channel_num: AP Channel number
-  * @format_bw: bits 0 - 3: &enum iwl_location_frame_format.
-@@ -527,7 +532,7 @@ enum iwl_location_bw {
-  * @hltk: HLTK to be used for secured 11az measurement
-  * @tk: TK to be used for secured 11az measurement
-  */
--struct iwl_tof_range_req_ap_entry {
-+struct iwl_tof_range_req_ap_entry_v4 {
- 	__le32 initiator_ap_flags;
- 	u8 channel_num;
- 	u8 format_bw;
-@@ -542,6 +547,65 @@ struct iwl_tof_range_req_ap_entry {
- 	u8 tk[TK_11AZ_LEN];
- } __packed; /* LOCATION_RANGE_REQ_AP_ENTRY_CMD_API_S_VER_4 */
- 
-+/**
-+ * enum iwl_location_cipher - location cipher selection
-+ * @IWL_LOCATION_CIPHER_CCMP_128: CCMP 128
-+ * @IWL_LOCATION_CIPHER_CCMP_256: CCMP 256
-+ * @IWL_LOCATION_CIPHER_GCMP_128: GCMP 128
-+ * @IWL_LOCATION_CIPHER_GCMP_256: GCMP 256
-+ */
-+enum iwl_location_cipher {
-+	IWL_LOCATION_CIPHER_CCMP_128,
-+	IWL_LOCATION_CIPHER_CCMP_256,
-+	IWL_LOCATION_CIPHER_GCMP_128,
-+	IWL_LOCATION_CIPHER_GCMP_256,
-+};
-+
-+/**
-+ * struct iwl_tof_range_req_ap_entry - AP configuration parameters
-+ * @initiator_ap_flags: see &enum iwl_initiator_ap_flags.
-+ * @channel_num: AP Channel number
-+ * @format_bw: bits 0 - 3: &enum iwl_location_frame_format.
-+ *             bits 4 - 7: &enum iwl_location_bw.
-+ * @ctrl_ch_position: Coding of the control channel position relative to the
-+ *	center frequency, see iwl_mvm_get_ctrl_pos().
-+ * @ftmr_max_retries: Max number of retries to send the FTMR in case of no
-+ *	reply from the AP.
-+ * @bssid: AP's BSSID
-+ * @burst_period: Recommended value to be sent to the AP. Measurement
-+ *	periodicity In units of 100ms. ignored if num_of_bursts_exp = 0
-+ * @samples_per_burst: the number of FTMs pairs in single Burst (1-31);
-+ * @num_of_bursts: Recommended value to be sent to the AP. 2s Exponent of
-+ *	the number of measurement iterations (min 2^0 = 1, max 2^14)
-+ * @reserved: For alignment and future use
-+ * @cipher: pairwise cipher suite for secured measurement.
-+ *          &enum iwl_location_cipher.
-+ * @hltk: HLTK to be used for secured 11az measurement
-+ * @tk: TK to be used for secured 11az measurement
-+ * @calib: An array of calibration values per FTM rx bandwidth.
-+ *         If &IWL_INITIATOR_AP_FLAGS_USE_CALIB is set, the fw will use the
-+ *         calibration value that corresponds to the rx bandwidth of the FTM
-+ *         frame.
-+ * @reserved2: For alignment and future use.
-+ */
-+struct iwl_tof_range_req_ap_entry {
-+	__le32 initiator_ap_flags;
-+	u8 channel_num;
-+	u8 format_bw;
-+	u8 ctrl_ch_position;
-+	u8 ftmr_max_retries;
-+	u8 bssid[ETH_ALEN];
-+	__le16 burst_period;
-+	u8 samples_per_burst;
-+	u8 num_of_bursts;
-+	u8 reserved;
-+	u8 cipher;
-+	u8 hltk[HLTK_11AZ_LEN];
-+	u8 tk[TK_11AZ_LEN];
-+	__le16 calib[IWL_TOF_BW_NUM];
-+	__le16 reserved2;
-+} __packed; /* LOCATION_RANGE_REQ_AP_ENTRY_CMD_API_S_VER_5 */
-+
- /**
-  * enum iwl_tof_response_mode
-  * @IWL_MVM_TOF_RESPONSE_ASAP: report each AP measurement separately as soon as
-@@ -676,7 +740,7 @@ struct iwl_tof_range_req_cmd_v7 {
- } __packed; /* LOCATION_RANGE_REQ_CMD_API_S_VER_7 */
- 
- /**
-- * struct iwl_tof_range_req_cmd - start measurement cmd
-+ * struct iwl_tof_range_req_cmd_v8 - start measurement cmd
-  * @initiator_flags: see flags @ iwl_tof_initiator_flags
-  * @request_id: A Token incremented per request. The same Token will be
-  *		sent back in the range response
-@@ -693,7 +757,7 @@ struct iwl_tof_range_req_cmd_v7 {
-  * @specific_calib: The specific calib value to inject to this measurement calc
-  * @ap: per-AP request data, see &struct iwl_tof_range_req_ap_entry_v2.
-  */
--struct iwl_tof_range_req_cmd {
-+struct iwl_tof_range_req_cmd_v8 {
- 	__le32 initiator_flags;
- 	u8 request_id;
- 	u8 num_of_ap;
-@@ -704,9 +768,37 @@ struct iwl_tof_range_req_cmd {
- 	__le32 tsf_mac_id;
- 	__le16 common_calib;
- 	__le16 specific_calib;
--	struct iwl_tof_range_req_ap_entry ap[IWL_MVM_TOF_MAX_APS];
-+	struct iwl_tof_range_req_ap_entry_v4 ap[IWL_MVM_TOF_MAX_APS];
- } __packed; /* LOCATION_RANGE_REQ_CMD_API_S_VER_8 */
- 
-+/**
-+ * struct iwl_tof_range_req_cmd - start measurement cmd
-+ * @initiator_flags: see flags @ iwl_tof_initiator_flags
-+ * @request_id: A Token incremented per request. The same Token will be
-+ *		sent back in the range response
-+ * @num_of_ap: Number of APs to measure (error if > IWL_MVM_TOF_MAX_APS)
-+ * @range_req_bssid: ranging request BSSID
-+ * @macaddr_mask: Bits set to 0 shall be copied from the MAC address template.
-+ *		  Bits set to 1 shall be randomized by the UMAC
-+ * @macaddr_template: MAC address template to use for non-randomized bits
-+ * @req_timeout_ms: Requested timeout of the response in units of milliseconds.
-+ *	This is the session time for completing the measurement.
-+ * @tsf_mac_id: report the measurement start time for each ap in terms of the
-+ *	TSF of this mac id. 0xff to disable TSF reporting.
-+ * @ap: per-AP request data, see &struct iwl_tof_range_req_ap_entry_v2.
-+ */
-+struct iwl_tof_range_req_cmd {
-+	__le32 initiator_flags;
-+	u8 request_id;
-+	u8 num_of_ap;
-+	u8 range_req_bssid[ETH_ALEN];
-+	u8 macaddr_mask[ETH_ALEN];
-+	u8 macaddr_template[ETH_ALEN];
-+	__le32 req_timeout_ms;
-+	__le32 tsf_mac_id;
-+	struct iwl_tof_range_req_ap_entry ap[IWL_MVM_TOF_MAX_APS];
-+} __packed; /* LOCATION_RANGE_REQ_CMD_API_S_VER_9 */
-+
  /*
-  * enum iwl_tof_range_request_status - status of the sent request
-  * @IWL_TOF_RANGE_REQUEST_STATUS_SUCCESSFUL - FW successfully received the
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c b/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
-index cdb87139100d..aaa7dd1788b1 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
-@@ -164,9 +164,10 @@ static void iwl_mvm_ftm_cmd_v5(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 		eth_broadcast_addr(cmd->range_req_bssid);
- }
- 
--static void iwl_mvm_ftm_cmd(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
--			    struct iwl_tof_range_req_cmd *cmd,
--			    struct cfg80211_pmsr_request *req)
-+static void iwl_mvm_ftm_cmd_common(struct iwl_mvm *mvm,
-+				   struct ieee80211_vif *vif,
-+				   struct iwl_tof_range_req_cmd *cmd,
-+				   struct cfg80211_pmsr_request *req)
+  * module init and exit functions
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index 64ef3f3ba23b..1a210292f56c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -5,10 +5,9 @@
+  *
+  * GPL LICENSE SUMMARY
+  *
+- * Copyright(c) 2012 - 2015 Intel Corporation. All rights reserved.
++ * Copyright(c) 2012 - 2015, 2018 - 2020 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
+- * Copyright(c) 2018 - 2019 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -28,10 +27,9 @@
+  *
+  * BSD LICENSE
+  *
+- * Copyright(c) 2012 - 2015 Intel Corporation. All rights reserved.
++ * Copyright(c) 2012 - 2015, 2018 - 2020 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
+- * Copyright(c) 2018 - 2019 Intel Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -1960,9 +1958,8 @@ void iwl_mvm_dealloc_int_sta(struct iwl_mvm *mvm, struct iwl_mvm_int_sta *sta)
+ static void iwl_mvm_enable_aux_snif_queue(struct iwl_mvm *mvm, u16 queue,
+ 					  u8 sta_id, u8 fifo)
  {
- 	int i;
+-	unsigned int wdg_timeout = iwlmvm_mod_params.tfd_q_hang_detect ?
+-		mvm->trans->trans_cfg->base_params->wd_timeout :
+-		IWL_WATCHDOG_DISABLED;
++	unsigned int wdg_timeout =
++		mvm->trans->trans_cfg->base_params->wd_timeout;
+ 	struct iwl_trans_txq_scd_cfg cfg = {
+ 		.fifo = fifo,
+ 		.sta_id = sta_id,
+@@ -1978,9 +1975,8 @@ static void iwl_mvm_enable_aux_snif_queue(struct iwl_mvm *mvm, u16 queue,
  
-@@ -210,6 +211,13 @@ static void iwl_mvm_ftm_cmd(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 	cmd->tsf_mac_id = cpu_to_le32(0xff);
- }
- 
-+static void iwl_mvm_ftm_cmd_v8(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
-+			       struct iwl_tof_range_req_cmd_v8 *cmd,
-+			       struct cfg80211_pmsr_request *req)
-+{
-+	iwl_mvm_ftm_cmd_common(mvm, vif, (void *)cmd, req);
-+}
-+
- static int
- iwl_mvm_ftm_target_chandef_v1(struct iwl_mvm *mvm,
- 			      struct cfg80211_pmsr_request_peer *peer,
-@@ -382,9 +390,10 @@ iwl_mvm_ftm_put_target_v3(struct iwl_mvm *mvm,
- 	return 0;
- }
- 
--static int iwl_mvm_ftm_put_target_v4(struct iwl_mvm *mvm,
--				     struct cfg80211_pmsr_request_peer *peer,
--				     struct iwl_tof_range_req_ap_entry *target)
-+static int
-+iwl_mvm_ftm_put_target(struct iwl_mvm *mvm,
-+		       struct cfg80211_pmsr_request_peer *peer,
-+		       struct iwl_tof_range_req_ap_entry_v4 *target)
+ static int iwl_mvm_enable_aux_snif_queue_tvqm(struct iwl_mvm *mvm, u8 sta_id)
  {
- 	int ret;
+-	unsigned int wdg_timeout = iwlmvm_mod_params.tfd_q_hang_detect ?
+-		mvm->trans->trans_cfg->base_params->wd_timeout :
+-		IWL_WATCHDOG_DISABLED;
++	unsigned int wdg_timeout =
++		mvm->trans->trans_cfg->base_params->wd_timeout;
  
-@@ -394,7 +403,7 @@ static int iwl_mvm_ftm_put_target_v4(struct iwl_mvm *mvm,
- 	if (ret)
- 		return ret;
+ 	WARN_ON(!iwl_mvm_has_new_tx_api(mvm));
  
--	iwl_mvm_ftm_put_target_common(mvm, peer, target);
-+	iwl_mvm_ftm_put_target_common(mvm, peer, (void *)target);
- 
- 	return 0;
- }
-@@ -456,7 +465,7 @@ static int iwl_mvm_ftm_start_v7(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 	 * Versions 7 and 8 has the same structure except from the responders
- 	 * list, so iwl_mvm_ftm_cmd() can be used for version 7 too.
- 	 */
--	iwl_mvm_ftm_cmd(mvm, vif, (void *)&cmd_v7, req);
-+	iwl_mvm_ftm_cmd_v8(mvm, vif, (void *)&cmd_v7, req);
- 
- 	for (i = 0; i < cmd_v7.num_of_ap; i++) {
- 		struct cfg80211_pmsr_request_peer *peer = &req->peers[i];
-@@ -471,6 +480,32 @@ static int iwl_mvm_ftm_start_v7(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 
- static int iwl_mvm_ftm_start_v8(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 				struct cfg80211_pmsr_request *req)
-+{
-+	struct iwl_tof_range_req_cmd_v8 cmd;
-+	struct iwl_host_cmd hcmd = {
-+		.id = iwl_cmd_id(TOF_RANGE_REQ_CMD, LOCATION_GROUP, 0),
-+		.dataflags[0] = IWL_HCMD_DFL_DUP,
-+		.data[0] = &cmd,
-+		.len[0] = sizeof(cmd),
-+	};
-+	u8 i;
-+	int err;
-+
-+	iwl_mvm_ftm_cmd_v8(mvm, vif, (void *)&cmd, req);
-+
-+	for (i = 0; i < cmd.num_of_ap; i++) {
-+		struct cfg80211_pmsr_request_peer *peer = &req->peers[i];
-+
-+		err = iwl_mvm_ftm_put_target(mvm, peer, &cmd.ap[i]);
-+		if (err)
-+			return err;
-+	}
-+
-+	return iwl_mvm_ftm_send_cmd(mvm, &hcmd);
-+}
-+
-+static int iwl_mvm_ftm_start_v9(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
-+				struct cfg80211_pmsr_request *req)
- {
- 	struct iwl_tof_range_req_cmd cmd;
- 	struct iwl_host_cmd hcmd = {
-@@ -482,12 +517,12 @@ static int iwl_mvm_ftm_start_v8(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 	u8 i;
- 	int err;
- 
--	iwl_mvm_ftm_cmd(mvm, vif, &cmd, req);
-+	iwl_mvm_ftm_cmd_common(mvm, vif, &cmd, req);
- 
- 	for (i = 0; i < cmd.num_of_ap; i++) {
- 		struct cfg80211_pmsr_request_peer *peer = &req->peers[i];
- 
--		err = iwl_mvm_ftm_put_target_v4(mvm, peer, &cmd.ap[i]);
-+		err = iwl_mvm_ftm_put_target(mvm, peer, (void *)&cmd.ap[i]);
- 		if (err)
- 			return err;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+index 6096276cb0d0..ee8f152e7606 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+@@ -5,10 +5,9 @@
+  *
+  * GPL LICENSE SUMMARY
+  *
+- * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
++ * Copyright(c) 2012 - 2014, 2018 - 2020 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
+  * Copyright (C) 2015 - 2017 Intel Deutschland GmbH
+- * Copyright(c) 2018 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -28,10 +27,9 @@
+  *
+  * BSD LICENSE
+  *
+- * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
++ * Copyright(c) 2012 - 2014, 2018 - 2020 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
+  * Copyright (C) 2015 - 2017 Intel Deutschland GmbH
+- * Copyright(c) 2018 Intel Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -952,8 +950,7 @@ unsigned int iwl_mvm_get_wd_timeout(struct iwl_mvm *mvm,
+ 				IWL_UCODE_TLV_CAPA_STA_PM_NOTIF) &&
+ 		    vif && vif->type == NL80211_IFTYPE_AP)
+ 			return IWL_WATCHDOG_DISABLED;
+-		return iwlmvm_mod_params.tfd_q_hang_detect ?
+-			default_timeout : IWL_WATCHDOG_DISABLED;
++		return default_timeout;
  	}
-@@ -511,11 +546,17 @@ int iwl_mvm_ftm_start(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 		u8 cmd_ver = iwl_fw_lookup_cmd_ver(mvm->fw, LOCATION_GROUP,
- 						   TOF_RANGE_REQ_CMD);
  
--		if (cmd_ver == 8)
-+		switch (cmd_ver) {
-+		case 9:
-+			err = iwl_mvm_ftm_start_v9(mvm, vif, req);
-+			break;
-+		case 8:
- 			err = iwl_mvm_ftm_start_v8(mvm, vif, req);
--		else
-+			break;
-+		default:
- 			err = iwl_mvm_ftm_start_v7(mvm, vif, req);
--
-+			break;
-+		}
- 	} else {
- 		err = iwl_mvm_ftm_start_v5(mvm, vif, req);
- 	}
+ 	trigger = iwl_fw_dbg_get_trigger(mvm->fw, FW_DBG_TRIGGER_TXQ_TIMERS);
 -- 
 2.26.2
 
