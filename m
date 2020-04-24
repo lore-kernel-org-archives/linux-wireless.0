@@ -2,78 +2,99 @@ Return-Path: <SRS0=Yp73=6I=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD9A3C55186
-	for <linux-wireless@archiver.kernel.org>; Fri, 24 Apr 2020 08:47:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AF5EC55194
+	for <linux-wireless@archiver.kernel.org>; Fri, 24 Apr 2020 09:19:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B9A9D2074F
-	for <linux-wireless@archiver.kernel.org>; Fri, 24 Apr 2020 08:47:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6B60220728
+	for <linux-wireless@archiver.kernel.org>; Fri, 24 Apr 2020 09:19:13 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GEQkpcGO"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726614AbgDXIro (ORCPT
+        id S1726729AbgDXJTM (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 24 Apr 2020 04:47:44 -0400
-Received: from youngberry.canonical.com ([91.189.89.112]:42709 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726317AbgDXIro (ORCPT
+        Fri, 24 Apr 2020 05:19:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50410 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726298AbgDXJTM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Apr 2020 04:47:44 -0400
-Received: from [82.43.126.140] (helo=localhost)
-        by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.86_2)
-        (envelope-from <colin.king@canonical.com>)
-        id 1jRtzi-0006wM-2t; Fri, 24 Apr 2020 08:47:34 +0000
-From:   Colin King <colin.king@canonical.com>
-To:     Yan-Hsuan Chuang <yhchuang@realtek.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH][next] rtw88: fix spelling mistake "fimrware" -> "firmware"
-Date:   Fri, 24 Apr 2020 09:47:33 +0100
-Message-Id: <20200424084733.7716-1-colin.king@canonical.com>
-X-Mailer: git-send-email 2.25.1
+        Fri, 24 Apr 2020 05:19:12 -0400
+Received: from mail-wr1-x42f.google.com (mail-wr1-x42f.google.com [IPv6:2a00:1450:4864:20::42f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA4CAC09B045
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Apr 2020 02:19:11 -0700 (PDT)
+Received: by mail-wr1-x42f.google.com with SMTP id j1so9895028wrt.1
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Apr 2020 02:19:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=to:from:subject:message-id:date:user-agent:mime-version
+         :content-transfer-encoding:content-language;
+        bh=y7Rn5PX8LPsiGeZ6RWpVJHpZHhwQ1ARgPo+9NaslZaY=;
+        b=GEQkpcGO7jQJYP9XaposKMavQu43EVLjuNgbI5wYNYft0brx/E0CZ7Sjt9DAQVgIPj
+         8usJIdN/0xzybF4FWXMNXZur/84SaWNl34DKttuyJQk5fWGzeRUUCthI02E69sbGlizb
+         rDzbPTYubPpL0uNw7QJtBNmqz7kzXQBrSR/ug/VqsdfvZnfKIjqcKUgfOKNhgWR//aPO
+         Ik3TtYZs9dBvenTpTobVs9fSRRwQD5/UsFXwWfwIiQBqRry7/pjlqav7OdVuTrQ8ds1J
+         68Eke9iaBxrGC5nQTyKCLuWQj1ut0UsUpPKWv65fNIFITpwO+Z+37XJ8jfYCOe5erjVz
+         ivMA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:to:from:subject:message-id:date:user-agent
+         :mime-version:content-transfer-encoding:content-language;
+        bh=y7Rn5PX8LPsiGeZ6RWpVJHpZHhwQ1ARgPo+9NaslZaY=;
+        b=VJCvXCbnLik8UXzCDpjcIyu9Gr7srxlxtg+4PkoBa12dyTG2Kr+uN3oGYVKFq9+aP9
+         remoluxVkjIzkjrv7ACSuTKgQqZyMfxxRQ1YQK23D9Cs9zEf0xymOjsNv/XLgDdGmYJ+
+         MmLQa1WhPNdEr4PLpDkdmF6ncx1/gy352xXqaSxqSGZRvVuLykMYGus76QnpoJkFlgcN
+         T3EwT4tk1stbqxkkYYu9Tg9LhsP7WHsCdF7rf41vf1tg7DpJIAvORQlpfoc4b3SI+xQk
+         NGlpMQ6n+XLIXr4H7z8XR4QGG7AmFC72UOYui48Rv0cGlj0lOhTkriV+K+/sdF5m8zFn
+         GclA==
+X-Gm-Message-State: AGi0PuaSAHVPxo4aIa26eXFKVYqaP/GmRLDXs9hGyHbdrIy2pcBrIlWn
+        iQLJwS9PHiS6hPds1jKqn1YFr4H2+ew=
+X-Google-Smtp-Source: APiQypJZ3jP1pM8/E4zHkEjWmkHWWqL1wXbsQnT57L3l5Pw2P1ikkjkGBi0JzxUmkuo3b0vaj9Hfbg==
+X-Received: by 2002:a5d:4b04:: with SMTP id v4mr10483523wrq.358.1587719948895;
+        Fri, 24 Apr 2020 02:19:08 -0700 (PDT)
+Received: from ?IPv6:2a02:1811:e422:ad00:f58d:9165:44ce:c58b? (ptr-eiyd6234yxkksfgejd7.18120a2.ip6.access.telenet.be. [2a02:1811:e422:ad00:f58d:9165:44ce:c58b])
+        by smtp.gmail.com with ESMTPSA id u188sm1461242wmg.37.2020.04.24.02.19.07
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 24 Apr 2020 02:19:08 -0700 (PDT)
+To:     linux-wireless@vger.kernel.org
+From:   Wei Liu <wei.liu1011@gmail.com>
+Subject: Questions regarding 802.11 TM and FTM in cfg80211/mac80211
+Message-ID: <a1809833-fe87-3fac-0e7e-92a3dedeff8f@gmail.com>
+Date:   Fri, 24 Apr 2020 11:19:09 +0200
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.7.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
+Content-Language: en-US
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+Dear experts,
 
-There are spelling mistakes in two rtw_err error messages. Fix them.
+I am new to Linux kernel, and I have an ambitious goal to run ptp over 
+wireless (yes I know..  and please don't judge .. )
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/net/wireless/realtek/rtw88/mac.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+When I browse code in mac80211, I found function start_pmsr in 
+ieee80211_ops. At this moment, this function is serving a request 
+(defined in cfg80211) to start peer measurement, and the request seems 
+rather FTM specific.
 
-diff --git a/drivers/net/wireless/realtek/rtw88/mac.c b/drivers/net/wireless/realtek/rtw88/mac.c
-index 645207a01525..056b08b9f06c 100644
---- a/drivers/net/wireless/realtek/rtw88/mac.c
-+++ b/drivers/net/wireless/realtek/rtw88/mac.c
-@@ -829,7 +829,7 @@ download_firmware_legacy(struct rtw_dev *rtwdev, const u8 *data, u32 size)
- 		write_firmware_page(rtwdev, page, data, last_page_size);
- 
- 	if (!check_hw_ready(rtwdev, REG_MCUFW_CTRL, BIT_FWDL_CHK_RPT, 1)) {
--		rtw_err(rtwdev, "failed to check download fimrware report\n");
-+		rtw_err(rtwdev, "failed to check download firmware report\n");
- 		return -EINVAL;
- 	}
- 
-@@ -856,7 +856,7 @@ static int download_firmware_validate_legacy(struct rtw_dev *rtwdev)
- 		msleep(20);
- 	}
- 
--	rtw_err(rtwdev, "failed to validate fimrware\n");
-+	rtw_err(rtwdev, "failed to validate firmware\n");
- 	return -EINVAL;
- }
- 
--- 
-2.25.1
+Is there some code available to support the original Timing Measurement? 
+As I am not interested in localization/ranging, but interested in 
+synchronization, so the basic TM is enough for me.
+
+Regarding FTM, the current cfg80211_pmsr_ftm_result does not contain the 
+ToD, ToA timestamps, it only reports the RTT. Is there a proper way to 
+expose these timestamps to the user space?
+
+Thank you in advance for any guidance,
+
+Wei
 
