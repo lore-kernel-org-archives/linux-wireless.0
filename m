@@ -2,167 +2,136 @@ Return-Path: <SRS0=Yp73=6I=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81A31C55186
-	for <linux-wireless@archiver.kernel.org>; Fri, 24 Apr 2020 18:00:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40746C55186
+	for <linux-wireless@archiver.kernel.org>; Fri, 24 Apr 2020 18:49:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 637BF20704
-	for <linux-wireless@archiver.kernel.org>; Fri, 24 Apr 2020 18:00:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 203EF2098B
+	for <linux-wireless@archiver.kernel.org>; Fri, 24 Apr 2020 18:49:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1587751232;
-	bh=RsaoSSAw6/MuBKblOysE88TYn3bnaczeoBP73QuY/cI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=1VSDQYosLqkOvopHMUqCTzUHhzfCw/I5HVUuMZK8bIJP6/ckoa8gKPxKT43DycX7L
-	 5XcZlPnN80UAP6T9H74EYCurXNOhKE1Ala5PXDG4+QaYiTEgFBHvl8u2+Bg1ysU6S4
-	 3t8A38a33nHQZg9a4Tqz3U+ejyzlozi4RbzDtlG8=
+	s=default; t=1587754167;
+	bh=vkjWNW1oICQEHI4zNCUePLvc/BFCB9ZHWb5Myn6P8+o=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=mr7MlP6Jkc/q0gX6Eo/ki++SGdf9zm+lDH3Vn4Y9KYVaF4L+pglBBldwm5FqIDvuK
+	 GLznlXM1BNonEchJ7o5lI/6Hg9EGTHW3SEKtYOjbD722cZj38CYDcQ9cZWJyyDQuah
+	 NDvOxSsjN6Qv9svqWNF3OkaX7IDx8cuxp/S+wu5s=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728110AbgDXSA3 (ORCPT
+        id S1729147AbgDXStX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 24 Apr 2020 14:00:29 -0400
-Received: from mail-pg1-f195.google.com ([209.85.215.195]:35485 "EHLO
-        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726908AbgDXSA2 (ORCPT
+        Fri, 24 Apr 2020 14:49:23 -0400
+Received: from mail-pj1-f65.google.com ([209.85.216.65]:38323 "EHLO
+        mail-pj1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728943AbgDXStV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Apr 2020 14:00:28 -0400
-Received: by mail-pg1-f195.google.com with SMTP id t11so4978965pgg.2;
-        Fri, 24 Apr 2020 11:00:28 -0700 (PDT)
+        Fri, 24 Apr 2020 14:49:21 -0400
+Received: by mail-pj1-f65.google.com with SMTP id t40so4226397pjb.3;
+        Fri, 24 Apr 2020 11:49:21 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=ZOhA5kkS2JaSYKAoFpzQMe1eFmxmYMfGK0ET3Fa/QIQ=;
-        b=NHYXOSYDYoY/VZ64VekcZgVdJLU7Wi7Lr+FKDAgT1vFqc0s620msHMQy/pO5TvJJai
-         8ngbXVU/zTjyBYTGNvqaBEv4olu2Y250vn2j6bxZ1KZ+5vfzL3RmqiRpNKlXNjxyK1Im
-         ebh5V7m+NNxP/oexUK0md0Rkw4eDLT/0z2OWZxQL+7OepKEA7wEjMWSojXqtpct5Qf35
-         a5hoi1BNo7GX9cc2cpkyeAhYY9O7VAUff08OlSCvKrY/N+AmcNxQGmaJhj8TVh6KWUDp
-         laFsrmOZlkKq2nv+kB+4kSa/EZsxccLaZuDLMl4G/j3DHUrXAsYW5n3fWm8Xnce6T3Kg
-         bqqw==
-X-Gm-Message-State: AGi0PuaLd63dDg4JtVFhRwmLRHlUQQEU2U0pIVWHBQ/Sx9JWcSUn5MUB
-        R4Fe0jfMAJabySNUTGOgWus=
-X-Google-Smtp-Source: APiQypLAe5sS56YNzPHUE76WrUmAZHWqFUZ4digJx0mOf15BViMD/IQDlV7lREIejskhgzivcBhaXA==
-X-Received: by 2002:a63:7805:: with SMTP id t5mr10527111pgc.141.1587751227764;
-        Fri, 24 Apr 2020 11:00:27 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=/KdHtw0iNxBT1mFzOs+kCctxSiinEZ8vRaXskeLEpas=;
+        b=pdaOj6pEaDXTihKXkV73LUwSFoz8TyKEK6IG22e4ovvT2bJnJI1BCM7wwjfBZS1MGZ
+         IjeXc1RPO+T4jelk2RWNA6pZr3l17EqnyNprXCWEQiIYo1hltkw/RlzOkqbNLqfI0jRg
+         wTi4SaorJ02IVol8pZJel+kfUr55m+D04oEVKZPu7u3kGOLWVbG/aJ8cY88yCRygajX1
+         wJ4SSi+Y367FemwH6srOiR0tyArQaVWqbl5xZhDIgjtfq33t4CCDcfJkVKs0ggeqxIqd
+         WfXHNueca5EsdaC9eK97GMPa0gPoUm7NhNOPypt5hO54LH74fh+LKNEbf49vgtbJnZS+
+         04rA==
+X-Gm-Message-State: AGi0PubAhw311A9egTWKucMfESVaiCqjP2KOvwZIJrVcphEtTi/8Jema
+        tiBwCNWyAlE1grYE2ut2af0=
+X-Google-Smtp-Source: APiQypIy/NnmBc8N2fwBt1MHd/4L7BZFYNQtg6fsCXmGZgGhKnNZkb3oP0XC/BVldP8PcIiE8PGbIA==
+X-Received: by 2002:a17:902:8e8b:: with SMTP id bg11mr10147371plb.139.1587754160563;
+        Fri, 24 Apr 2020 11:49:20 -0700 (PDT)
 Received: from 42.do-not-panic.com (42.do-not-panic.com. [157.230.128.187])
-        by smtp.gmail.com with ESMTPSA id q19sm6217968pfh.34.2020.04.24.11.00.26
+        by smtp.gmail.com with ESMTPSA id 14sm6389640pfy.38.2020.04.24.11.49.18
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 24 Apr 2020 11:00:26 -0700 (PDT)
+        Fri, 24 Apr 2020 11:49:18 -0700 (PDT)
 Received: by 42.do-not-panic.com (Postfix, from userid 1000)
-        id A6FDD403AB; Fri, 24 Apr 2020 18:00:25 +0000 (UTC)
-Date:   Fri, 24 Apr 2020 18:00:25 +0000
-From:   Luis Chamberlain <mcgrof@kernel.org>
-To:     Greg KH <gregkh@linuxfoundation.org>
+        id AC5244096E; Fri, 24 Apr 2020 18:49:17 +0000 (UTC)
+From:   "Luis R. Rodriguez" <mcgrof@kernel.org>
+To:     gregkh@linuxfoundation.org
 Cc:     akpm@linux-foundation.org, josh@joshtriplett.org,
         rishabhb@codeaurora.org, kubakici@wp.pl, maco@android.com,
-        andy.gross@linaro.org, david.brown@linaro.org,
-        bjorn.andersson@linaro.org, linux-wireless@vger.kernel.org,
-        keescook@chromium.org, shuah@kernel.org, mfuzzey@parkeon.com,
-        zohar@linux.vnet.ibm.com, dhowells@redhat.com,
-        pali.rohar@gmail.com, tiwai@suse.de, arend.vanspriel@broadcom.com,
-        zajec5@gmail.com, nbroeking@me.com, markivx@codeaurora.org,
+        david.brown@linaro.org, bjorn.andersson@linaro.org,
+        linux-wireless@vger.kernel.org, keescook@chromium.org,
+        shuah@kernel.org, mfuzzey@parkeon.com, zohar@linux.vnet.ibm.com,
+        dhowells@redhat.com, pali.rohar@gmail.com, tiwai@suse.de,
+        arend.vanspriel@broadcom.com, zajec5@gmail.com, nbroeking@me.com,
         broonie@kernel.org, dmitry.torokhov@gmail.com, dwmw2@infradead.org,
         torvalds@linux-foundation.org, Abhay_Salunke@dell.com,
         jewalt@lgsinnovations.com, cantabile.desu@gmail.com, ast@fb.com,
         andresx7@gmail.com, dan.rue@linaro.org, brendanhiggins@google.com,
-        yzaikin@google.com, linux-kernel@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        Randy Dunlap <rdunlap@infradead.org>,
-        Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: [PATCH] firmware_loader: re-export fw_fallback_config into
- firmware_loader's own namespace
-Message-ID: <20200424180025.GC11244@42.do-not-panic.com>
-References: <20200423203140.19510-1-mcgrof@kernel.org>
- <20200424092119.GA360114@kroah.com>
+        yzaikin@google.com, sfr@canb.auug.org.au, rdunlap@infradead.org,
+        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        Luis Chamberlain <mcgrof@kernel.org>
+Subject: [PATCH v2 2/2] firmware_loader: move fw_fallback_config to a private kernel symbol namespace
+Date:   Fri, 24 Apr 2020 18:49:16 +0000
+Message-Id: <20200424184916.22843-2-mcgrof@kernel.org>
+X-Mailer: git-send-email 2.23.0.rc1
+In-Reply-To: <20200424184916.22843-1-mcgrof@kernel.org>
+References: <20200424184916.22843-1-mcgrof@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200424092119.GA360114@kroah.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, Apr 24, 2020 at 11:21:19AM +0200, Greg KH wrote:
-> On Thu, Apr 23, 2020 at 08:31:40PM +0000, Luis R. Rodriguez wrote:
-> > From: Luis Chamberlain <mcgrof@kernel.org>
-> > 
-> > Christoph's recent patch "firmware_loader: remove unused exports", which
-> > is not merged upstream yet, removed two exported symbols. One is fine to
-> > remove since only built-in code uses it but the other is incorrect.
-> > 
-> > If CONFIG_FW_LOADER=m so the firmware_loader is modular but
-> > CONFIG_FW_LOADER_USER_HELPER=y we fail at mostpost with:
-> > 
-> > ERROR: modpost: "fw_fallback_config" [drivers/base/firmware_loader/firmware_class.ko] undefined!
-> > 
-> > This happens because the variable fw_fallback_config is built into the
-> > kernel if CONFIG_FW_LOADER_USER_HELPER=y always, so we need to grant
-> > access to the firmware loader module by exporting it.
-> > 
-> > Instead of just exporting it as we used to, take advantage of the new
-> > kernel symbol namespacing functionality, and export the symbol only to
-> > the firmware loader private namespace. This would prevent misuses from
-> > other drivers and makes it clear the goal is to keep this private to
-> > the firmware loader alone.
-> > 
-> > Cc: Christoph Hellwig <hch@lst.de>
-> > Cc: Randy Dunlap <rdunlap@infradead.org>
-> > Cc: Stephen Rothwell <sfr@canb.auug.org.au>
-> > Fixes: "firmware_loader: remove unused exports"
-> > Reported-by: Randy Dunlap <rdunlap@infradead.org>
-> > Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
-> > ---
-> >  drivers/base/firmware_loader/fallback.c       | 3 +++
-> >  drivers/base/firmware_loader/fallback_table.c | 1 +
-> >  2 files changed, 4 insertions(+)
-> > 
-> > diff --git a/drivers/base/firmware_loader/fallback.c b/drivers/base/firmware_loader/fallback.c
-> > index 1e9c96e3ed63..d9ac7296205e 100644
-> > --- a/drivers/base/firmware_loader/fallback.c
-> > +++ b/drivers/base/firmware_loader/fallback.c
-> > @@ -9,6 +9,7 @@
-> >  #include <linux/umh.h>
-> >  #include <linux/sysctl.h>
-> >  #include <linux/vmalloc.h>
-> > +#include <linux/module.h>
-> >  
-> >  #include "fallback.h"
-> >  #include "firmware.h"
-> > @@ -17,6 +18,8 @@
-> >   * firmware fallback mechanism
-> >   */
-> >  
-> > +MODULE_IMPORT_NS(FIRMWARE_LOADER_PRIVATE);
-> > +
-> >  extern struct firmware_fallback_config fw_fallback_config;
-> >  
-> >  /* These getters are vetted to use int properly */
-> 
-> While nice, that does not fix the existing build error that people are
-> having, right?
+From: Luis Chamberlain <mcgrof@kernel.org>
 
-It does.
+Take advantage of the new kernel symbol namespacing functionality, and
+export the fw_fallback_config symbol only to a new private firmware loader
+namespace. This would prevent misuses from other drivers and makes it clear
+the goal is to keep this private to the firmware loader only.
 
-> > diff --git a/drivers/base/firmware_loader/fallback_table.c b/drivers/base/firmware_loader/fallback_table.c
-> > index 0a737349f78f..46a731dede6f 100644
-> > --- a/drivers/base/firmware_loader/fallback_table.c
-> > +++ b/drivers/base/firmware_loader/fallback_table.c
-> > @@ -21,6 +21,7 @@ struct firmware_fallback_config fw_fallback_config = {
-> >  	.loading_timeout = 60,
-> >  	.old_timeout = 60,
-> >  };
-> > +EXPORT_SYMBOL_NS_GPL(fw_fallback_config, FIRMWARE_LOADER_PRIVATE);
-> 
-> 
-> How about you send a patch that just reverts the single symbol change
-> first, and then a follow-on patch that does this namespace addition.  I
-> can queue the first one up now, for 5.7-final, and the second one for
-> 5.8-rc1.
+It should also make it clearer for folks git grep'ing for users of
+the symbol that this exported symbol is private, and prevent future
+accidental removals of the exported symbol.
 
-Sure.
+Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
+---
+ drivers/base/firmware_loader/fallback.c       | 3 +++
+ drivers/base/firmware_loader/fallback_table.c | 2 +-
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
-  Luis
+diff --git a/drivers/base/firmware_loader/fallback.c b/drivers/base/firmware_loader/fallback.c
+index 1e9c96e3ed63..d9ac7296205e 100644
+--- a/drivers/base/firmware_loader/fallback.c
++++ b/drivers/base/firmware_loader/fallback.c
+@@ -9,6 +9,7 @@
+ #include <linux/umh.h>
+ #include <linux/sysctl.h>
+ #include <linux/vmalloc.h>
++#include <linux/module.h>
+ 
+ #include "fallback.h"
+ #include "firmware.h"
+@@ -17,6 +18,8 @@
+  * firmware fallback mechanism
+  */
+ 
++MODULE_IMPORT_NS(FIRMWARE_LOADER_PRIVATE);
++
+ extern struct firmware_fallback_config fw_fallback_config;
+ 
+ /* These getters are vetted to use int properly */
+diff --git a/drivers/base/firmware_loader/fallback_table.c b/drivers/base/firmware_loader/fallback_table.c
+index a182e318bd09..46a731dede6f 100644
+--- a/drivers/base/firmware_loader/fallback_table.c
++++ b/drivers/base/firmware_loader/fallback_table.c
+@@ -21,7 +21,7 @@ struct firmware_fallback_config fw_fallback_config = {
+ 	.loading_timeout = 60,
+ 	.old_timeout = 60,
+ };
+-EXPORT_SYMBOL_GPL(fw_fallback_config);
++EXPORT_SYMBOL_NS_GPL(fw_fallback_config, FIRMWARE_LOADER_PRIVATE);
+ 
+ #ifdef CONFIG_SYSCTL
+ struct ctl_table firmware_config_table[] = {
+-- 
+2.25.1
+
