@@ -2,105 +2,70 @@ Return-Path: <SRS0=Yp73=6I=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF378C55196
-	for <linux-wireless@archiver.kernel.org>; Fri, 24 Apr 2020 09:19:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 499C7C55194
+	for <linux-wireless@archiver.kernel.org>; Fri, 24 Apr 2020 09:20:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 941CB20724
-	for <linux-wireless@archiver.kernel.org>; Fri, 24 Apr 2020 09:19:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 328BC20728
+	for <linux-wireless@archiver.kernel.org>; Fri, 24 Apr 2020 09:20:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726758AbgDXJTQ (ORCPT
+        id S1726489AbgDXJUS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 24 Apr 2020 05:19:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50418 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726298AbgDXJTQ (ORCPT
+        Fri, 24 Apr 2020 05:20:18 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:57756 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726298AbgDXJUS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Apr 2020 05:19:16 -0400
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF1DCC09B045;
-        Fri, 24 Apr 2020 02:19:15 -0700 (PDT)
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        Fri, 24 Apr 2020 05:20:18 -0400
+Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
+        by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1jRuU9-00FRAm-SI; Fri, 24 Apr 2020 11:19:01 +0200
-Message-ID: <89476ee074e782175d453038396543f193f8e5fd.camel@sipsolutions.net>
-Subject: Re: [PATCH 1/4] net: mac80211: util.c: Fix RCU list usage warnings
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     madhuparnabhowmik10@gmail.com, davem@davemloft.net, kuba@kernel.org
-Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, frextrite@gmail.com,
-        joel@joelfernandes.org, paulmck@kernel.org,
-        linux-kernel-mentees@lists.linuxfoundation.org
-Date:   Fri, 24 Apr 2020 11:18:59 +0200
-In-Reply-To: <20200409082822.27314-1-madhuparnabhowmik10@gmail.com> (sfid-20200409_102851_270381_8F58A5E1)
-References: <20200409082822.27314-1-madhuparnabhowmik10@gmail.com>
-         (sfid-20200409_102851_270381_8F58A5E1)
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.34.4 (3.34.4-1.fc31) 
+        (envelope-from <luca@coelho.fi>)
+        id 1jRuVL-000OOV-V2; Fri, 24 Apr 2020 12:20:16 +0300
+From:   Luca Coelho <luca@coelho.fi>
+To:     kvalo@codeaurora.org
+Cc:     linux-wireless@vger.kernel.org
+Date:   Fri, 24 Apr 2020 12:20:08 +0300
+Message-Id: <iwlwifi.20200424121518.b715acfbe211.I273a098064a22577e4fca767910fd9cf0013f5cb@changeid>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Subject: [PATCH v5.7] iwlwifi: pcie: handle QuZ configs with killer NICs as well
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
+From: Luca Coelho <luciano.coelho@intel.com>
 
-> This patch fixes the following warning (CONIG_PROVE_RCU_LIST)
-> in ieee80211_check_combinations().
+The killer devices were left out of the checks that convert Qu-B0 to
+QuZ configurations.  Add them.
 
-Thanks, and sorry for the delay.
+Cc: stable@vger.kernel.org # v5.3+
+Fixes: 5a8c31aa6357 ("iwlwifi: pcie: fix recognition of QuZ devices")
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-
-> +++ b/net/mac80211/util.c
-> @@ -254,7 +254,7 @@ static void __ieee80211_wake_txqs(struct ieee80211_sub_if_data *sdata, int ac)
->  
->  	sdata->vif.txqs_stopped[ac] = false;
->  
-> -	list_for_each_entry_rcu(sta, &local->sta_list, list) {
-> +	list_for_each_entry(sta, &local->sta_list, list) {
->  		if (sdata != sta->sdata)
->  			continue;
-
-In this case, for example, I don't even understand why the warning would
-happen, because certainly the only caller of this (_ieee80211_wake_txqs)
-does rcu_read_lock()?
-
-I'm also not convinced that the necessary lock is actually held here,
-this comes from a tasklet that doesn't hold any locks?
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index 6744c0281ffb..29971c25dba4 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -1092,6 +1092,10 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 			iwl_trans->cfg = &iwl_ax101_cfg_quz_hr;
+ 		else if (iwl_trans->cfg == &iwl_ax201_cfg_qu_hr)
+ 			iwl_trans->cfg = &iwl_ax201_cfg_quz_hr;
++		else if (iwl_trans->cfg == &killer1650s_2ax_cfg_qu_b0_hr_b0)
++			iwl_trans->cfg = &iwl_ax1650s_cfg_quz_hr;
++		else if (iwl_trans->cfg == &killer1650i_2ax_cfg_qu_b0_hr_b0)
++			iwl_trans->cfg = &iwl_ax1650i_cfg_quz_hr;
+ 	}
  
-I'd appreciate if you could add comments/explain why you think the
-changes were right, or ideally even add "lockdep_assert_held()"
-annotations. That would make it much easier to check this patch.
-
-> @@ -3931,7 +3932,7 @@ int ieee80211_check_combinations(struct ieee80211_sub_if_data *sdata,
->  		params.num_different_channels++;
->  	}
->  
-> -	list_for_each_entry_rcu(sdata_iter, &local->interfaces, list) {
-> +	list_for_each_entry(sdata_iter, &local->interfaces, list) {
->  		struct wireless_dev *wdev_iter;
->  
->  		wdev_iter = &sdata_iter->wdev;
-> @@ -3982,7 +3983,7 @@ int ieee80211_max_num_channels(struct ieee80211_local *local)
->  			ieee80211_chanctx_radar_detect(local, ctx);
->  	}
->  
-> -	list_for_each_entry_rcu(sdata, &local->interfaces, list)
-> +	list_for_each_entry(sdata, &local->interfaces, list)
->  		params.iftype_num[sdata->wdev.iftype]++;
-
-These changes correct, as far as I can tell, in that they rely on the
-RTNL now - but can you perhaps document that as well?
-
-There doesn't seem to be any multi-lock version of lockdep_assert_held()
-or is there? That'd be _really_ useful here, because I want to get rid
-of some RTNL reliance in the longer term, and having annotation here
-saying "either RTNL or iflist_mtx is fine" would be good.
-
-johannes
+ #endif
+-- 
+2.26.2
 
