@@ -2,92 +2,77 @@ Return-Path: <SRS0=Yp73=6I=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34023C54FD0
-	for <linux-wireless@archiver.kernel.org>; Fri, 24 Apr 2020 15:48:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E8B4C55186
+	for <linux-wireless@archiver.kernel.org>; Fri, 24 Apr 2020 16:47:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1C2702063A
-	for <linux-wireless@archiver.kernel.org>; Fri, 24 Apr 2020 15:48:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8770020728
+	for <linux-wireless@archiver.kernel.org>; Fri, 24 Apr 2020 16:47:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728682AbgDXPsy (ORCPT
+        id S1728623AbgDXQrY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 24 Apr 2020 11:48:54 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:57964 "EHLO
+        Fri, 24 Apr 2020 12:47:24 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:57986 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726698AbgDXPsx (ORCPT
+        with ESMTP id S1728575AbgDXQrX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 24 Apr 2020 11:48:53 -0400
+        Fri, 24 Apr 2020 12:47:23 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1jS0Z9-000OY2-KS; Fri, 24 Apr 2020 18:48:36 +0300
+        id 1jS1U1-000OcH-3Y; Fri, 24 Apr 2020 19:47:21 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Fri, 24 Apr 2020 18:48:16 +0300
-Message-Id: <iwlwifi.20200424182644.bc7230b74f93.I144f73cd6a797a7060429981fee62572861bc76b@changeid>
+Date:   Fri, 24 Apr 2020 19:46:58 +0300
+Message-Id: <iwlwifi.20200424194456.0dc957a264ff.I43cfd72d539c1287ccaaa454e95c673dac38214f@changeid>
 X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20200424154818.2657602-1-luca@coelho.fi>
-References: <20200424154818.2657602-1-luca@coelho.fi>
+In-Reply-To: <20200424164707.2715869-1-luca@coelho.fi>
+References: <20200424164707.2715869-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 10/12] iwlwifi: mvm: set properly station flags in STA_HE_CTXT_CMD
+Subject: [PATCH 02/11] iwlwifi: mvm: initialize iwl_dev_tx_power_cmd to zero
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Shaul Triebitz <shaul.triebitz@intel.com>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-For ACK_ENABLED and 32BIT_BA_BITMAP flags check the station capabilities
-rather than bss_conf.ack_enabled and bss_conf.multi_sta_back_32bit.
-These fields are stations capabilities and should not be in bss_conf.
-Also note that the bss_conf flags are set in station mode only.
-In the next patch I will remove ack_enabled and multi_sta_back_32bit
-from the bss_conf structure.
+If the REDUCE_TX_POWER_CMD version is v4 or v5, we are not
+initializing some values before sending to the FW, which causes SAR
+not to work properly.  Solve this by initializing the struct in the
+declaration.
 
-Signed-off-by: Shaul Triebitz <shaul.triebitz@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 14 +++++++++-----
- 1 file changed, 9 insertions(+), 5 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index ee3d2ff432f7..10df77ab1a77 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -2179,6 +2179,15 @@ static void iwl_mvm_cfg_he_sta(struct iwl_mvm *mvm,
- 			flags |= STA_CTXT_HE_PACKET_EXT;
- 		}
- 	}
-+
-+	if (sta->he_cap.he_cap_elem.mac_cap_info[2] &
-+	    IEEE80211_HE_MAC_CAP2_32BIT_BA_BITMAP)
-+		flags |= STA_CTXT_HE_32BIT_BA_BITMAP;
-+
-+	if (sta->he_cap.he_cap_elem.mac_cap_info[2] &
-+	    IEEE80211_HE_MAC_CAP2_ACK_EN)
-+		flags |= STA_CTXT_HE_ACK_ENABLED;
-+
- 	rcu_read_unlock();
- 
- 	/* Mark MU EDCA as enabled, unless none detected on some AC */
-@@ -2203,11 +2212,6 @@ static void iwl_mvm_cfg_he_sta(struct iwl_mvm *mvm,
- 			cpu_to_le16(mu_edca->mu_edca_timer);
- 	}
- 
--	if (vif->bss_conf.multi_sta_back_32bit)
--		flags |= STA_CTXT_HE_32BIT_BA_BITMAP;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index d6598339c55c..c987d14597a6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -787,12 +787,11 @@ int iwl_mvm_sar_select_profile(struct iwl_mvm *mvm, int prof_a, int prof_b)
+ 	union {
+ 		struct iwl_dev_tx_power_cmd v5;
+ 		struct iwl_dev_tx_power_cmd_v4 v4;
+-	} cmd;
 -
--	if (vif->bss_conf.ack_enabled)
--		flags |= STA_CTXT_HE_ACK_ENABLED;
++	} cmd = {
++		.v5.v3.set_mode = cpu_to_le32(IWL_TX_POWER_MODE_SET_CHAINS),
++	};
+ 	u16 len = 0;
  
- 	if (vif->bss_conf.uora_exists) {
- 		flags |= STA_CTXT_HE_TRIG_RND_ALLOC;
+-	cmd.v5.v3.set_mode = cpu_to_le32(IWL_TX_POWER_MODE_SET_CHAINS);
+-
+ 	if (fw_has_api(&mvm->fw->ucode_capa,
+ 		       IWL_UCODE_TLV_API_REDUCE_TX_POWER))
+ 		len = sizeof(cmd.v5);
 -- 
 2.26.2
 
