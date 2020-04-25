@@ -2,83 +2,118 @@ Return-Path: <SRS0=RfYY=6J=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6B25C54FCB
-	for <linux-wireless@archiver.kernel.org>; Sat, 25 Apr 2020 15:52:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 164EFC54FCB
+	for <linux-wireless@archiver.kernel.org>; Sat, 25 Apr 2020 15:58:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9ECA420748
-	for <linux-wireless@archiver.kernel.org>; Sat, 25 Apr 2020 15:52:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DE0EB20644
+	for <linux-wireless@archiver.kernel.org>; Sat, 25 Apr 2020 15:58:52 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="nMwNTu39"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726150AbgDYPwp (ORCPT
+        id S1726133AbgDYP6v (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 25 Apr 2020 11:52:45 -0400
-Received: from mailomta9-sa.btinternet.com ([213.120.69.15]:27432 "EHLO
-        sa-prd-fep-047.btinternet.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726076AbgDYPwo (ORCPT
+        Sat, 25 Apr 2020 11:58:51 -0400
+Received: from mail26.static.mailgun.info ([104.130.122.26]:52231 "EHLO
+        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726112AbgDYP6u (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 25 Apr 2020 11:52:44 -0400
-Received: from sa-prd-rgout-005.btmx-prd.synchronoss.net ([10.2.38.8])
-          by sa-prd-fep-047.btinternet.com with ESMTP
-          id <20200425155239.FQKM30279.sa-prd-fep-047.btinternet.com@sa-prd-rgout-005.btmx-prd.synchronoss.net>;
-          Sat, 25 Apr 2020 16:52:39 +0100
-Authentication-Results: btinternet.com;
-    auth=pass (LOGIN) smtp.auth=j.oldman998@btinternet.com
-X-Originating-IP: [31.51.225.56]
-X-OWM-Source-IP: 31.51.225.56 (GB)
-X-OWM-Env-Sender: j.oldman998@btinternet.com
-X-VadeSecure-score: verdict=clean score=0/300, class=clean
-X-RazorGate-Vade: gggruggvucftvghtrhhoucdtuddrgeduhedrheeggdejudcutefuodetggdotefrodftvfcurfhrohhfihhlvgemuceutffkvffkuffjvffgnffgvefqofdpqfgfvfenuceurghilhhouhhtmecufedttdenucenucfjughrpefhvffufffkofestddtredtredttdenucfhrhhomheplfhohhhnucfqlhgumhgrnhcuoehjohhhnhdrohhlughmrghnsehpohhlvghhihhllhdrtghordhukheqnecukfhppeefuddrhedurddvvdehrdehieenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhephhgvlhhopehhvghnrhihrdhhohhmvgdpihhnvghtpeefuddrhedurddvvdehrdehiedpmhgrihhlfhhrohhmpeeojhhohhhnrdholhgumhgrnhesphholhgvhhhilhhlrdgtohdruhhkqedprhgtphhtthhopeeojhhohhhnrdholhgumhgrnhesphholhgvhhhilhhlrdgtohdruhhkqedprhgtphhtthhopeeolhhinhhugidqkhgvrhhnvghlsehvghgvrhdrkhgvrhhnvghlrdhorhhgqedprhgtphhtthhopeeolhhinhhugidqfihirhgvlhgvshhssehvghgvrhdrkhgvrhhnvghlrdhorhhgqedprhgtphhtthhopeeomhessghuvghsrdgthheq
-X-RazorGate-Vade-Verdict: clean 0
-X-RazorGate-Vade-Classification: clean
-Received: from henry.home (31.51.225.56) by sa-prd-rgout-005.btmx-prd.synchronoss.net (5.8.340) (authenticated as j.oldman998@btinternet.com)
-        id 5E3A290C0D5574D3; Sat, 25 Apr 2020 16:52:39 +0100
-From:   John Oldman <john.oldman@polehill.co.uk>
-To:     m@bues.ch
-Cc:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        John Oldman <john.oldman@polehill.co.uk>
-Subject: [PATCH] :ssb scan.c: Fixed block comments coding style issues
-Date:   Sat, 25 Apr 2020 16:52:33 +0100
-Message-Id: <20200425155233.19624-1-john.oldman@polehill.co.uk>
-X-Mailer: git-send-email 2.17.1
+        Sat, 25 Apr 2020 11:58:50 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1587830330; h=Content-Transfer-Encoding: MIME-Version:
+ References: In-Reply-To: Message-Id: Date: Subject: Cc: To: From:
+ Sender; bh=VfzSEKa8INjrgpJphp/icSRqssKV41q2bbxPx27dF3Y=; b=nMwNTu39sXt9O7UDAR6lWv0GFx9vHvK6jJr4F9+0hOXbFqIe6I6peHLC3aq2m8Bdz+SKEZux
+ KBAEWLXVzGB+cHzfw/CNb3rTJbU3Xf63vS50Dqa+/9+ksibCQgDKPjhhdXqA4gbiLCwthX76
+ Wu7G3Py1anUP/E5s//kivBsOG8g=
+X-Mailgun-Sending-Ip: 104.130.122.26
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
+ by mxa.mailgun.org with ESMTP id 5ea45e39.7f7080bebb58-smtp-out-n01;
+ Sat, 25 Apr 2020 15:58:49 -0000 (UTC)
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 88DE6C433CB; Sat, 25 Apr 2020 15:58:49 +0000 (UTC)
+Received: from jouni.codeaurora.org (37-130-184-238.bb.dnainternet.fi [37.130.184.238])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: jouni)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 0786FC433BA;
+        Sat, 25 Apr 2020 15:58:47 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 0786FC433BA
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=jouni@codeaurora.org
+From:   Jouni Malinen <jouni@codeaurora.org>
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     linux-wireless@vger.kernel.org,
+        Jouni Malinen <jouni@codeaurora.org>
+Subject: [PATCH 2/5] mac80211_hwsim: Random MAC address for a Management frame exchange
+Date:   Sat, 25 Apr 2020 18:57:10 +0300
+Message-Id: <20200425155713.25687-2-jouni@codeaurora.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20200425155713.25687-1-jouni@codeaurora.org>
+References: <20200425155713.25687-1-jouni@codeaurora.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Fixed coding style issues
+Allow a temporary random MAC address to be used for a Management frame
+exchange. This can be used to test pre-association GAS/ANQP exchanges
+with random addresses.
 
-Signed-off-by: John Oldman <john.oldman@polehill.co.uk>
+Signed-off-by: Jouni Malinen <jouni@codeaurora.org>
 ---
- drivers/ssb/scan.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/net/wireless/mac80211_hwsim.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/ssb/scan.c b/drivers/ssb/scan.c
-index 6ceee98ed6ff..b97a5c32d44a 100644
---- a/drivers/ssb/scan.c
-+++ b/drivers/ssb/scan.c
-@@ -400,7 +400,8 @@ int ssb_bus_scan(struct ssb_bus *bus,
- #ifdef CONFIG_SSB_DRIVER_PCICORE
- 			if (bus->bustype == SSB_BUSTYPE_PCI) {
- 				/* Ignore PCI cores on PCI-E cards.
--				 * Ignore PCI-E cores on PCI cards. */
-+				 * Ignore PCI-E cores on PCI cards.
-+				 */
- 				if (dev->id.coreid == SSB_DEV_PCI) {
- 					if (pci_is_pcie(bus->host_pci))
- 						continue;
-@@ -421,7 +422,8 @@ int ssb_bus_scan(struct ssb_bus *bus,
- 				if (bus->host_pci->vendor == PCI_VENDOR_ID_BROADCOM &&
- 				    (bus->host_pci->device & 0xFF00) == 0x4300) {
- 					/* This is a dangling ethernet core on a
--					 * wireless device. Ignore it. */
-+					 * wireless device. Ignore it.
-+					 */
- 					continue;
- 				}
- 			}
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 05e8203aa6d9..a05e9c778f21 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -535,6 +535,7 @@ struct mac80211_hwsim_data {
+ 		unsigned long next_start, start, end;
+ 	} survey_data[ARRAY_SIZE(hwsim_channels_2ghz) +
+ 		      ARRAY_SIZE(hwsim_channels_5ghz)];
++	u8 mgmt_tx_rand_addr[ETH_ALEN];
+ 
+ 	struct ieee80211_channel *channel;
+ 	u64 beacon_int	/* beacon interval in us */;
+@@ -1006,7 +1007,9 @@ static bool mac80211_hwsim_addr_match(struct mac80211_hwsim_data *data,
+ 		.ret = false,
+ 	};
+ 
+-	if (data->scanning && memcmp(addr, data->scan_addr, ETH_ALEN) == 0)
++	if ((data->scanning && ether_addr_equal(addr, data->scan_addr)) ||
++	    (is_valid_ether_addr(data->mgmt_tx_rand_addr) &&
++	     ether_addr_equal(addr, data->mgmt_tx_rand_addr)))
+ 		return true;
+ 
+ 	memcpy(md.addr, addr, ETH_ALEN);
+@@ -1507,6 +1510,12 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw,
+ 		return;
+ 	}
+ 
++	if (txi->control.vif &&
++	    !ether_addr_equal(hdr->addr2, txi->control.vif->addr))
++		memcpy(data->mgmt_tx_rand_addr, hdr->addr2, ETH_ALEN);
++	else
++		eth_zero_addr(data->mgmt_tx_rand_addr);
++
+ 	if (txi->control.vif)
+ 		hwsim_check_magic(txi->control.vif);
+ 	if (control->sta)
+@@ -3060,6 +3069,7 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
+ 			       NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR;
+ 	wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_VHT_IBSS);
+ 	wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_BEACON_PROTECTION);
++	wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_MGMT_TX_RANDOM_TA);
+ 
+ 	hw->wiphy->interface_modes = param->iftypes;
+ 
 -- 
-2.17.1
-
+2.20.1
