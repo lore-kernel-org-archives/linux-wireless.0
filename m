@@ -6,134 +6,88 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 864C9C55186
-	for <linux-wireless@archiver.kernel.org>; Sat, 25 Apr 2020 10:05:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AB91C55196
+	for <linux-wireless@archiver.kernel.org>; Sat, 25 Apr 2020 10:05:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6B1F720714
-	for <linux-wireless@archiver.kernel.org>; Sat, 25 Apr 2020 10:05:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1AD6820714
+	for <linux-wireless@archiver.kernel.org>; Sat, 25 Apr 2020 10:05:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726336AbgDYKFQ (ORCPT
+        id S1726338AbgDYKFR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 25 Apr 2020 06:05:16 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:58236 "EHLO
+        Sat, 25 Apr 2020 06:05:17 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:58248 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726307AbgDYKFP (ORCPT
+        with ESMTP id S1726304AbgDYKFQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 25 Apr 2020 06:05:15 -0400
+        Sat, 25 Apr 2020 06:05:16 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1jSHgO-000P3t-PZ; Sat, 25 Apr 2020 13:05:13 +0300
+        id 1jSHgQ-000P3t-9E; Sat, 25 Apr 2020 13:05:14 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Sat, 25 Apr 2020 13:04:53 +0300
-Message-Id: <iwlwifi.20200425130140.6e84c79aea30.Ie9a417132812d110ec1cc87852f101477c01cfcb@changeid>
+Date:   Sat, 25 Apr 2020 13:04:55 +0300
+Message-Id: <iwlwifi.20200425130140.e469ce6501e4.Ibdecebca830bdfbf5220693dd1f5367f7736242d@changeid>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20200425100459.2778317-1-luca@coelho.fi>
 References: <20200425100459.2778317-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 05/11] iwlwifi: pcie: gen2: use DMA pool for byte-count tables
+Subject: [PATCH 07/11] iwlwifi: tx: enable A-MSDU in low latency mode
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Mordechay Goodstein <mordechay.goodstein@intel.com>
 
-Since the recent patch in this area, we no longer allocate 64k
-for a single queue, but only 1k, which still means a full page.
-Use a DMA pool to reduce this further, since we will have a lot
-of queues in a typical system that can share pages.
+Tests have shown that we can meet low latency KPIs with A-MSDU
+enabled so enable it to achieve max TPT.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Mordechay Goodstein <mordechay.goodstein@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../wireless/intel/iwlwifi/pcie/internal.h    |  1 +
- .../net/wireless/intel/iwlwifi/pcie/trans.c   | 19 +++++++++++++++++++
- .../net/wireless/intel/iwlwifi/pcie/tx-gen2.c | 11 ++++++++---
- 3 files changed, 28 insertions(+), 3 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 11 ++++-------
+ 1 file changed, 4 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index abe649af689c..43f81204c152 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -556,6 +556,7 @@ struct iwl_trans_pcie {
- 	u32 scd_base_addr;
- 	struct iwl_dma_ptr scd_bc_tbls;
- 	struct iwl_dma_ptr kw;
-+	struct dma_pool *bc_pool;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index a8d0d17f79fd..2f6484e0d726 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -8,7 +8,7 @@
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
+- * Copyright(c) 2018 - 2019 Intel Corporation
++ * Copyright(c) 2018 - 2020 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -31,7 +31,7 @@
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
+  * Copyright(c) 2016 - 2017 Intel Deutschland GmbH
+- * Copyright(c) 2018 - 2019 Intel Corporation
++ * Copyright(c) 2018 - 2020 Intel Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -920,11 +920,8 @@ static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 	 * No need to lock amsdu_in_ampdu_allowed since it can't be modified
+ 	 * during an BA session.
+ 	 */
+-	if (info->flags & IEEE80211_TX_CTL_AMPDU &&
+-	    !mvmsta->tid_data[tid].amsdu_in_ampdu_allowed)
+-		return iwl_mvm_tx_tso_segment(skb, 1, netdev_flags, mpdus_skb);
+-
+-	if (iwl_mvm_vif_low_latency(iwl_mvm_vif_from_mac80211(mvmsta->vif)) ||
++	if ((info->flags & IEEE80211_TX_CTL_AMPDU &&
++	     !mvmsta->tid_data[tid].amsdu_in_ampdu_allowed) ||
+ 	    !(mvmsta->amsdu_enabled & BIT(tid)))
+ 		return iwl_mvm_tx_tso_segment(skb, 1, netdev_flags, mpdus_skb);
  
- 	struct iwl_txq *txq_memory;
- 	struct iwl_txq *txq[IWL_MAX_TVQM_QUEUES];
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index a0daae058c1c..8ccfc7cc7348 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -3672,6 +3672,25 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
- 
- 	init_waitqueue_head(&trans_pcie->sx_waitq);
- 
-+	/*
-+	 * For gen2 devices, we use a single allocation for each byte-count
-+	 * table, but they're pretty small (1k) so use a DMA pool that we
-+	 * allocate here.
-+	 */
-+	if (cfg_trans->gen2) {
-+		size_t bc_tbl_size;
-+
-+		if (cfg_trans->device_family >= IWL_DEVICE_FAMILY_AX210)
-+			bc_tbl_size = sizeof(struct iwl_gen3_bc_tbl);
-+		else
-+			bc_tbl_size = sizeof(struct iwlagn_scd_bc_tbl);
-+
-+		trans_pcie->bc_pool = dmam_pool_create("iwlwifi:bc", &pdev->dev,
-+						       bc_tbl_size, 256, 0);
-+		if (!trans_pcie->bc_pool)
-+			goto out_no_pci;
-+	}
-+
- 	if (trans_pcie->msix_enabled) {
- 		ret = iwl_pcie_init_msix_handler(pdev, trans_pcie);
- 		if (ret)
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-index 36f4e81eb70a..766f9bec7586 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.c
-@@ -1224,7 +1224,9 @@ void iwl_pcie_gen2_txq_free_memory(struct iwl_trans *trans,
- 	}
- 
- 	kfree(txq->entries);
--	iwl_pcie_free_dma_ptr(trans, &txq->bc_tbl);
-+	if (txq->bc_tbl.addr)
-+		dma_pool_free(trans_pcie->bc_pool, txq->bc_tbl.addr,
-+			      txq->bc_tbl.dma);
- 	kfree(txq);
- }
- 
-@@ -1272,6 +1274,7 @@ int iwl_trans_pcie_dyn_txq_alloc_dma(struct iwl_trans *trans,
- 				     struct iwl_txq **intxq, int size,
- 				     unsigned int timeout)
- {
-+	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	size_t bc_tbl_size, bc_tbl_entries;
- 	struct iwl_txq *txq;
- 	int ret;
-@@ -1290,8 +1293,10 @@ int iwl_trans_pcie_dyn_txq_alloc_dma(struct iwl_trans *trans,
- 	txq = kzalloc(sizeof(*txq), GFP_KERNEL);
- 	if (!txq)
- 		return -ENOMEM;
--	ret = iwl_pcie_alloc_dma_ptr(trans, &txq->bc_tbl, bc_tbl_size);
--	if (ret) {
-+
-+	txq->bc_tbl.addr = dma_pool_alloc(trans_pcie->bc_pool, GFP_KERNEL,
-+					  &txq->bc_tbl.dma);
-+	if (!txq->bc_tbl.addr) {
- 		IWL_ERR(trans, "Scheduler BC Table allocation failed\n");
- 		kfree(txq);
- 		return -ENOMEM;
 -- 
 2.26.2
 
