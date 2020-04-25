@@ -6,36 +6,36 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AEC0C55197
-	for <linux-wireless@archiver.kernel.org>; Sat, 25 Apr 2020 10:05:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10A4BC55199
+	for <linux-wireless@archiver.kernel.org>; Sat, 25 Apr 2020 10:05:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3B4B320714
+	by mail.kernel.org (Postfix) with ESMTP id E407B20714
 	for <linux-wireless@archiver.kernel.org>; Sat, 25 Apr 2020 10:05:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726348AbgDYKFS (ORCPT
+        id S1726355AbgDYKFS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Sat, 25 Apr 2020 06:05:18 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:58242 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:58256 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726116AbgDYKFQ (ORCPT
+        with ESMTP id S1726335AbgDYKFR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 25 Apr 2020 06:05:16 -0400
+        Sat, 25 Apr 2020 06:05:17 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1jSHgP-000P3t-Gh; Sat, 25 Apr 2020 13:05:13 +0300
+        id 1jSHgR-000P3t-1T; Sat, 25 Apr 2020 13:05:15 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Sat, 25 Apr 2020 13:04:54 +0300
-Message-Id: <iwlwifi.20200425130140.851866c7e4c4.I13fa678929431f1694fd202c1da40aa476ab70fe@changeid>
+Date:   Sat, 25 Apr 2020 13:04:56 +0300
+Message-Id: <iwlwifi.20200425130140.dcf1801f25ef.I6d71e13ea042765800f2ee41401b8eb282527c34@changeid>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20200425100459.2778317-1-luca@coelho.fi>
 References: <20200425100459.2778317-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 06/11] iwlwifi: use longer queues for 256-BA
+Subject: [PATCH 08/11] iwlwifi: mvm: don't transmit on unallocated queue
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -43,45 +43,40 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-When we have 256 block-ack support, we may need to be very fast
-to provide a lot of frames to the hardware to transmit, but that
-cannot be guaranteed. Use a longer queue size to have more time,
-and the next possible queue size is 1024 since it must be a power
-of two.
+We can currently end up transmitting on an unallocated queue, if
+the allocation fails. Stop doing that, by simply not transmitting.
+We don't have any better strategy here, unfortunately, but the
+previous commits make that much less likely.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/cfg/22000.c | 2 +-
- drivers/net/wireless/intel/iwlwifi/iwl-fh.h    | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-index 1fcc346ba425..1daa653bcb99 100644
---- a/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/cfg/22000.c
-@@ -211,7 +211,7 @@ static const struct iwl_ht_params iwl_22000_ht_params = {
- 	.trans.base_params = &iwl_ax210_base_params,			\
- 	.min_txq_size = 128,						\
- 	.gp2_reg_addr = 0xd02c68,					\
--	.min_256_ba_txq_size = 512,					\
-+	.min_256_ba_txq_size = 1024,					\
- 	.mon_dram_regs = {						\
- 		.write_ptr = {						\
- 			.addr = DBGC_CUR_DBGBUF_STATUS,			\
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-fh.h b/drivers/net/wireless/intel/iwlwifi/iwl-fh.h
-index a8e988281eaf..e77d8d13cb51 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-fh.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-fh.h
-@@ -646,7 +646,7 @@ struct iwl_rb_status {
- #define TFD_QUEUE_CB_SIZE(x)	(ilog2(x) - 3)
- #define TFD_QUEUE_SIZE_BC_DUP	(64)
- #define TFD_QUEUE_BC_SIZE	(TFD_QUEUE_SIZE_MAX + TFD_QUEUE_SIZE_BC_DUP)
--#define TFD_QUEUE_BC_SIZE_GEN3	512
-+#define TFD_QUEUE_BC_SIZE_GEN3	1024
- #define IWL_TX_DMA_MASK        DMA_BIT_MASK(36)
- #define IWL_NUM_OF_TBS		20
- #define IWL_TFH_NUM_TBS		25
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index 3e16bd4190ff..bff520087ed7 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -1395,7 +1395,17 @@ void iwl_mvm_add_new_dqa_stream_wk(struct work_struct *wk)
+ 		if (tid == IEEE80211_NUM_TIDS)
+ 			tid = IWL_MAX_TID_COUNT;
+ 
+-		iwl_mvm_sta_alloc_queue(mvm, txq->sta, txq->ac, tid);
++		/*
++		 * We can't really do much here, but if this fails we can't
++		 * transmit anyway - so just don't transmit the frame etc.
++		 * and let them back up ... we've tried our best to allocate
++		 * a queue in the function itself.
++		 */
++		if (iwl_mvm_sta_alloc_queue(mvm, txq->sta, txq->ac, tid)) {
++			list_del_init(&mvmtxq->list);
++			continue;
++		}
++
+ 		list_del_init(&mvmtxq->list);
+ 		local_bh_disable();
+ 		iwl_mvm_mac_itxq_xmit(mvm->hw, txq);
 -- 
 2.26.2
 
