@@ -6,32 +6,32 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8BD3C55186
-	for <linux-wireless@archiver.kernel.org>; Sat, 25 Apr 2020 08:35:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B64E7C55185
+	for <linux-wireless@archiver.kernel.org>; Sat, 25 Apr 2020 08:53:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A45CE20706
-	for <linux-wireless@archiver.kernel.org>; Sat, 25 Apr 2020 08:35:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9D0FE2071C
+	for <linux-wireless@archiver.kernel.org>; Sat, 25 Apr 2020 08:53:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726110AbgDYIfu (ORCPT
+        id S1726062AbgDYIxt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 25 Apr 2020 04:35:50 -0400
-Received: from szxga05-in.huawei.com ([45.249.212.191]:3289 "EHLO huawei.com"
+        Sat, 25 Apr 2020 04:53:49 -0400
+Received: from szxga07-in.huawei.com ([45.249.212.35]:56048 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726097AbgDYIfu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 25 Apr 2020 04:35:50 -0400
-Received: from DGGEMS405-HUB.china.huawei.com (unknown [172.30.72.60])
-        by Forcepoint Email with ESMTP id 079A38A26EB23A17B4C2;
-        Sat, 25 Apr 2020 16:35:48 +0800 (CST)
-Received: from huawei.com (10.67.174.156) by DGGEMS405-HUB.china.huawei.com
- (10.3.19.205) with Microsoft SMTP Server id 14.3.487.0; Sat, 25 Apr 2020
- 16:35:38 +0800
+        id S1725837AbgDYIxt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 25 Apr 2020 04:53:49 -0400
+Received: from DGGEMS406-HUB.china.huawei.com (unknown [172.30.72.60])
+        by Forcepoint Email with ESMTP id 64120748827E0978C76B;
+        Sat, 25 Apr 2020 16:53:47 +0800 (CST)
+Received: from huawei.com (10.67.174.156) by DGGEMS406-HUB.china.huawei.com
+ (10.3.19.206) with Microsoft SMTP Server id 14.3.487.0; Sat, 25 Apr 2020
+ 16:53:40 +0800
 From:   ChenTao <chentao107@huawei.com>
 To:     <yhchuang@realtek.com>, <kvalo@codeaurora.org>
 CC:     <davem@davemloft.net>, <linux-wireless@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <chentao107@huawei.com>
-Subject: [PATCH] rtw88: mac: Make some founctions static
-Date:   Sat, 25 Apr 2020 16:35:03 +0800
-Message-ID: <20200425083503.149656-1-chentao107@huawei.com>
+Subject: [PATCH] rtw88: mac: Make some functions static
+Date:   Sat, 25 Apr 2020 16:53:04 +0800
+Message-ID: <20200425085304.153077-1-chentao107@huawei.com>
 X-Mailer: git-send-email 2.22.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
