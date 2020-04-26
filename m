@@ -2,406 +2,119 @@ Return-Path: <SRS0=0qMy=6K=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69B84C55186
-	for <linux-wireless@archiver.kernel.org>; Sun, 26 Apr 2020 01:30:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BCF27C55199
+	for <linux-wireless@archiver.kernel.org>; Sun, 26 Apr 2020 08:49:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3CB9C2072B
-	for <linux-wireless@archiver.kernel.org>; Sun, 26 Apr 2020 01:30:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9141620700
+	for <linux-wireless@archiver.kernel.org>; Sun, 26 Apr 2020 08:49:15 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="p0E9aOAU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726323AbgDZBaE (ORCPT
+        id S1726131AbgDZItO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 25 Apr 2020 21:30:04 -0400
-Received: from mga05.intel.com ([192.55.52.43]:22555 "EHLO mga05.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726098AbgDZBaE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 25 Apr 2020 21:30:04 -0400
-IronPort-SDR: 4dHBwjhCu/nn2W/sZvWaG3QpaBAjhX9VEDcKBTCSLX9NmPiBASCG7iFzUx8lMZGv/Uj0Mka7bP
- CTLzVrUF0WCQ==
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Apr 2020 18:29:32 -0700
-IronPort-SDR: DiHpsJQxT3Q51vlnr14TW6q07qpI4L610EcCMsOgHW/RxVq5JHCle5STDcwJ56+YX4rESwufib
- ES8Z6aL325CQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.73,318,1583222400"; 
-   d="scan'208";a="248474533"
-Received: from lkp-server01.sh.intel.com (HELO lkp-server01) ([10.239.97.150])
-  by fmsmga008.fm.intel.com with ESMTP; 25 Apr 2020 18:29:31 -0700
-Received: from kbuild by lkp-server01 with local (Exim 4.89)
-        (envelope-from <lkp@intel.com>)
-        id 1jSW6s-000E3o-KE; Sun, 26 Apr 2020 09:29:30 +0800
-Date:   Sun, 26 Apr 2020 09:28:19 +0800
-From:   kbuild test robot <lkp@intel.com>
-To:     Johannes Berg <johannes.berg@intel.com>
-Cc:     linux-wireless@vger.kernel.org
-Subject: [mac80211-next:master] BUILD REGRESSION
- b6b5c42e3bab939d357d800fd313e3c995164065
-Message-ID: <5ea4e3b3.4UQW8y6WlFP0hjS+%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        Sun, 26 Apr 2020 04:49:14 -0400
+Received: from mail26.static.mailgun.info ([104.130.122.26]:52851 "EHLO
+        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726119AbgDZItO (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 26 Apr 2020 04:49:14 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1587890954; h=Content-Transfer-Encoding: MIME-Version:
+ References: In-Reply-To: Message-Id: Date: Subject: Cc: To: From:
+ Sender; bh=2uh+UYAEeknHm00lVExQboD1cMy+EjeqkW7jVF4vYhg=; b=p0E9aOAUxAckkeZXf5t/yZUljTnNdS7uIjpGzQzRPlv7/uiTfiUqwJa+4VtOmns+Vyf3I5Pb
+ WuJABt8qL6lrKqq5Io3rvvdPTuuKH1Z6Y94uxFqqfQLsfcCvz0zRiWLVBrslGe+On+Fxiw1w
+ D06vWV4EQzEuJDp2cWPAuGPniEE=
+X-Mailgun-Sending-Ip: 104.130.122.26
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
+ by mxa.mailgun.org with ESMTP id 5ea54b01.7f737a987650-smtp-out-n03;
+ Sun, 26 Apr 2020 08:49:05 -0000 (UTC)
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id AC433C433CB; Sun, 26 Apr 2020 08:49:04 +0000 (UTC)
+Received: from jouni.codeaurora.org (37-130-184-238.bb.dnainternet.fi [37.130.184.238])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: jouni)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 7D70CC433D2;
+        Sun, 26 Apr 2020 08:49:02 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 7D70CC433D2
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=jouni@codeaurora.org
+From:   Jouni Malinen <jouni@codeaurora.org>
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        Jouni Malinen <jouni@codeaurora.org>
+Subject: [PATCH 2/2] ath9k_htc: Set RX filter based to allow broadcast Action frame RX
+Date:   Sun, 26 Apr 2020 11:47:33 +0300
+Message-Id: <20200426084733.7889-2-jouni@codeaurora.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20200426084733.7889-1-jouni@codeaurora.org>
+References: <20200426084733.7889-1-jouni@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git  master
-branch HEAD: b6b5c42e3bab939d357d800fd313e3c995164065  mac80211: fix two missing documentation entries
+Advertise support for multicast frame registration and update the RX
+filter based on the recently added FIF_MCAST_ACTION to allow broadcast
+Action frames to be received. This is needed for Device Provisioning
+Protocol (DPP) use cases that use broadcast Public Action frames.
 
-Error/Warning in current branch:
-
-drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c:3400:25: error: initialization of 'int (*)(struct wiphy *, struct wireless_dev *, u64)' {aka 'int (*)(struct wiphy *, struct wireless_dev *, long long unsigned int)'} from incompatible pointer type 'void (*)(struct wiphy *, struct wireless_dev *, u16,  bool)' {aka 'void (*)(struct wiphy *, struct wireless_dev *, short unsigned int,  _Bool)'} [-Werror=incompatible-pointer-types]
-drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c:3400:25: error: positional initialization of field in 'struct' declared with 'designated_init' attribute [-Werror=designated-init]
-drivers/staging/rtl8723bs/os_dep/ioctl_cfg80211.c:3400:3: error: 'struct cfg80211_ops' has no member named 'mgmt_frame_register'
-drivers/staging/wilc1000/cfg80211.c:1668:25: error: initialization of 'int (*)(struct wiphy *, struct wireless_dev *, u64)' {aka 'int (*)(struct wiphy *, struct wireless_dev *, long long unsigned int)'} from incompatible pointer type 'void (*)(struct wiphy *, struct wireless_dev *, u16,  bool)' {aka 'void (*)(struct wiphy *, struct wireless_dev *, short unsigned int,  _Bool)'} [-Werror=incompatible-pointer-types]
-drivers/staging/wilc1000/cfg80211.c:1668:25: error: positional initialization of field in 'struct' declared with 'designated_init' attribute [-Werror=designated-init]
-drivers/staging/wilc1000/cfg80211.c:1668:2: error: unknown field 'mgmt_frame_register' specified in initializer
-drivers/staging/wilc1000/cfg80211.c:1668:2: warning: initialization from incompatible pointer type
-drivers/staging/wilc1000/cfg80211.c:1668:3: error: 'const struct cfg80211_ops' has no member named 'mgmt_frame_register'
-
-Error/Warning ids grouped by kconfigs:
-
-recent_errors
-|-- arc-allyesconfig
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:initialization-of-int-(-)(struct-wiphy-struct-wireless_dev-u64)-aka-int-(-)(struct-wiphy-struct-wireless_dev-long-long-unsigned-int)-from-incomp
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   |-- drivers-staging-wilc1000-cfg80211.c:error:const-struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   `-- drivers-staging-wilc1000-cfg80211.c:error:initialization-of-int-(-)(struct-wiphy-struct-wireless_dev-u64)-aka-int-(-)(struct-wiphy-struct-wireless_dev-long-long-unsigned-int)-from-incompatible-pointer
-|-- arm-allmodconfig
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:initialization-of-int-(-)(struct-wiphy-struct-wireless_dev-u64)-aka-int-(-)(struct-wiphy-struct-wireless_dev-long-long-unsigned-int)-from-incomp
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:positional-initialization-of-field-in-struct-declared-with-designated_init-attribute
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   |-- drivers-staging-wilc1000-cfg80211.c:error:const-struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   |-- drivers-staging-wilc1000-cfg80211.c:error:initialization-of-int-(-)(struct-wiphy-struct-wireless_dev-u64)-aka-int-(-)(struct-wiphy-struct-wireless_dev-long-long-unsigned-int)-from-incompatible-pointer
-|   `-- drivers-staging-wilc1000-cfg80211.c:error:positional-initialization-of-field-in-struct-declared-with-designated_init-attribute
-|-- arm-allyesconfig
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:positional-initialization-of-field-in-struct-declared-with-designated_init-attribute
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   |-- drivers-staging-wilc1000-cfg80211.c:error:const-struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   `-- drivers-staging-wilc1000-cfg80211.c:error:positional-initialization-of-field-in-struct-declared-with-designated_init-attribute
-|-- arm64-allmodconfig
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:positional-initialization-of-field-in-struct-declared-with-designated_init-attribute
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   |-- drivers-staging-wilc1000-cfg80211.c:error:const-struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   `-- drivers-staging-wilc1000-cfg80211.c:error:positional-initialization-of-field-in-struct-declared-with-designated_init-attribute
-|-- arm64-allyesconfig
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:positional-initialization-of-field-in-struct-declared-with-designated_init-attribute
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   |-- drivers-staging-wilc1000-cfg80211.c:error:const-struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   `-- drivers-staging-wilc1000-cfg80211.c:error:positional-initialization-of-field-in-struct-declared-with-designated_init-attribute
-|-- c6x-allyesconfig
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:initialization-of-int-(-)(struct-wiphy-struct-wireless_dev-u64)-aka-int-(-)(struct-wiphy-struct-wireless_dev-long-long-unsigned-int)-from-incomp
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   |-- drivers-staging-wilc1000-cfg80211.c:error:const-struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   `-- drivers-staging-wilc1000-cfg80211.c:error:initialization-of-int-(-)(struct-wiphy-struct-wireless_dev-u64)-aka-int-(-)(struct-wiphy-struct-wireless_dev-long-long-unsigned-int)-from-incompatible-pointer
-|-- i386-allmodconfig
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   `-- drivers-staging-wilc1000-cfg80211.c:error:const-struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|-- i386-allyesconfig
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   `-- drivers-staging-wilc1000-cfg80211.c:error:const-struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|-- i386-randconfig-a002-20200425
-|   |-- drivers-staging-wilc1000-cfg80211.c:error:const-struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   |-- drivers-staging-wilc1000-cfg80211.c:error:unknown-field-mgmt_frame_register-specified-in-initializer
-|   `-- drivers-staging-wilc1000-cfg80211.c:warning:initialization-from-incompatible-pointer-type
-|-- ia64-allmodconfig
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:initialization-of-int-(-)(struct-wiphy-struct-wireless_dev-u64)-aka-int-(-)(struct-wiphy-struct-wireless_dev-long-long-unsigned-int)-from-incomp
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   |-- drivers-staging-wilc1000-cfg80211.c:error:const-struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   `-- drivers-staging-wilc1000-cfg80211.c:error:initialization-of-int-(-)(struct-wiphy-struct-wireless_dev-u64)-aka-int-(-)(struct-wiphy-struct-wireless_dev-long-long-unsigned-int)-from-incompatible-pointer
-|-- ia64-allyesconfig
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:initialization-of-int-(-)(struct-wiphy-struct-wireless_dev-u64)-aka-int-(-)(struct-wiphy-struct-wireless_dev-long-long-unsigned-int)-from-incomp
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   |-- drivers-staging-wilc1000-cfg80211.c:error:const-struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   `-- drivers-staging-wilc1000-cfg80211.c:error:initialization-of-int-(-)(struct-wiphy-struct-wireless_dev-u64)-aka-int-(-)(struct-wiphy-struct-wireless_dev-long-long-unsigned-int)-from-incompatible-pointer
-|-- ia64-randconfig-a001-20200425
-|   |-- drivers-staging-wilc1000-cfg80211.c:error:const-struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   `-- drivers-staging-wilc1000-cfg80211.c:error:initialization-of-int-(-)(struct-wiphy-struct-wireless_dev-u64)-aka-int-(-)(struct-wiphy-struct-wireless_dev-long-long-unsigned-int)-from-incompatible-pointer
-|-- m68k-allmodconfig
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:initialization-of-int-(-)(struct-wiphy-struct-wireless_dev-u64)-aka-int-(-)(struct-wiphy-struct-wireless_dev-long-long-unsigned-int)-from-incomp
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   |-- drivers-staging-wilc1000-cfg80211.c:error:const-struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   `-- drivers-staging-wilc1000-cfg80211.c:error:initialization-of-int-(-)(struct-wiphy-struct-wireless_dev-u64)-aka-int-(-)(struct-wiphy-struct-wireless_dev-long-long-unsigned-int)-from-incompatible-pointer
-|-- m68k-allyesconfig
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:initialization-of-int-(-)(struct-wiphy-struct-wireless_dev-u64)-aka-int-(-)(struct-wiphy-struct-wireless_dev-long-long-unsigned-int)-from-incomp
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   |-- drivers-staging-wilc1000-cfg80211.c:error:const-struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   `-- drivers-staging-wilc1000-cfg80211.c:error:initialization-of-int-(-)(struct-wiphy-struct-wireless_dev-u64)-aka-int-(-)(struct-wiphy-struct-wireless_dev-long-long-unsigned-int)-from-incompatible-pointer
-|-- microblaze-allmodconfig
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:initialization-of-int-(-)(struct-wiphy-struct-wireless_dev-u64)-aka-int-(-)(struct-wiphy-struct-wireless_dev-long-long-unsigned-int)-from-incomp
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   |-- drivers-staging-wilc1000-cfg80211.c:error:const-struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   `-- drivers-staging-wilc1000-cfg80211.c:error:initialization-of-int-(-)(struct-wiphy-struct-wireless_dev-u64)-aka-int-(-)(struct-wiphy-struct-wireless_dev-long-long-unsigned-int)-from-incompatible-pointer
-|-- mips-allmodconfig
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:initialization-of-int-(-)(struct-wiphy-struct-wireless_dev-u64)-aka-int-(-)(struct-wiphy-struct-wireless_dev-long-long-unsigned-int)-from-incomp
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:positional-initialization-of-field-in-struct-declared-with-designated_init-attribute
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   |-- drivers-staging-wilc1000-cfg80211.c:error:const-struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   |-- drivers-staging-wilc1000-cfg80211.c:error:initialization-of-int-(-)(struct-wiphy-struct-wireless_dev-u64)-aka-int-(-)(struct-wiphy-struct-wireless_dev-long-long-unsigned-int)-from-incompatible-pointer
-|   `-- drivers-staging-wilc1000-cfg80211.c:error:positional-initialization-of-field-in-struct-declared-with-designated_init-attribute
-|-- mips-allyesconfig
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:positional-initialization-of-field-in-struct-declared-with-designated_init-attribute
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   |-- drivers-staging-wilc1000-cfg80211.c:error:const-struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   `-- drivers-staging-wilc1000-cfg80211.c:error:positional-initialization-of-field-in-struct-declared-with-designated_init-attribute
-|-- nds32-allyesconfig
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:initialization-of-int-(-)(struct-wiphy-struct-wireless_dev-u64)-aka-int-(-)(struct-wiphy-struct-wireless_dev-long-long-unsigned-int)-from-incomp
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   |-- drivers-staging-wilc1000-cfg80211.c:error:const-struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   `-- drivers-staging-wilc1000-cfg80211.c:error:initialization-of-int-(-)(struct-wiphy-struct-wireless_dev-u64)-aka-int-(-)(struct-wiphy-struct-wireless_dev-long-long-unsigned-int)-from-incompatible-pointer
-|-- nios2-randconfig-a001-20200424
-|   |-- drivers-staging-wilc1000-cfg80211.c:error:const-struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   `-- drivers-staging-wilc1000-cfg80211.c:error:initialization-of-int-(-)(struct-wiphy-struct-wireless_dev-u64)-aka-int-(-)(struct-wiphy-struct-wireless_dev-long-long-unsigned-int)-from-incompatible-pointer
-|-- openrisc-allyesconfig
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:initialization-of-int-(-)(struct-wiphy-struct-wireless_dev-u64)-aka-int-(-)(struct-wiphy-struct-wireless_dev-long-long-unsigned-int)-from-incomp
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   |-- drivers-staging-wilc1000-cfg80211.c:error:const-struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   `-- drivers-staging-wilc1000-cfg80211.c:error:initialization-of-int-(-)(struct-wiphy-struct-wireless_dev-u64)-aka-int-(-)(struct-wiphy-struct-wireless_dev-long-long-unsigned-int)-from-incompatible-pointer
-|-- parisc-allmodconfig
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:initialization-of-int-(-)(struct-wiphy-struct-wireless_dev-u64)-aka-int-(-)(struct-wiphy-struct-wireless_dev-long-long-unsigned-int)-from-incomp
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   |-- drivers-staging-wilc1000-cfg80211.c:error:const-struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   `-- drivers-staging-wilc1000-cfg80211.c:error:initialization-of-int-(-)(struct-wiphy-struct-wireless_dev-u64)-aka-int-(-)(struct-wiphy-struct-wireless_dev-long-long-unsigned-int)-from-incompatible-pointer
-|-- parisc-allyesconfig
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:initialization-of-int-(-)(struct-wiphy-struct-wireless_dev-u64)-aka-int-(-)(struct-wiphy-struct-wireless_dev-long-long-unsigned-int)-from-incomp
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   |-- drivers-staging-wilc1000-cfg80211.c:error:const-struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   `-- drivers-staging-wilc1000-cfg80211.c:error:initialization-of-int-(-)(struct-wiphy-struct-wireless_dev-u64)-aka-int-(-)(struct-wiphy-struct-wireless_dev-long-long-unsigned-int)-from-incompatible-pointer
-|-- riscv-allmodconfig
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:initialization-of-int-(-)(struct-wiphy-struct-wireless_dev-u64)-aka-int-(-)(struct-wiphy-struct-wireless_dev-long-long-unsigned-int)-from-incomp
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   |-- drivers-staging-wilc1000-cfg80211.c:error:const-struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   `-- drivers-staging-wilc1000-cfg80211.c:error:initialization-of-int-(-)(struct-wiphy-struct-wireless_dev-u64)-aka-int-(-)(struct-wiphy-struct-wireless_dev-long-long-unsigned-int)-from-incompatible-pointer
-|-- riscv-allyesconfig
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:initialization-of-int-(-)(struct-wiphy-struct-wireless_dev-u64)-aka-int-(-)(struct-wiphy-struct-wireless_dev-long-long-unsigned-int)-from-incomp
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   |-- drivers-staging-wilc1000-cfg80211.c:error:const-struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   `-- drivers-staging-wilc1000-cfg80211.c:error:initialization-of-int-(-)(struct-wiphy-struct-wireless_dev-u64)-aka-int-(-)(struct-wiphy-struct-wireless_dev-long-long-unsigned-int)-from-incompatible-pointer
-|-- sh-allmodconfig
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:initialization-of-int-(-)(struct-wiphy-struct-wireless_dev-u64)-aka-int-(-)(struct-wiphy-struct-wireless_dev-long-long-unsigned-int)-from-incomp
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   |-- drivers-staging-wilc1000-cfg80211.c:error:const-struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   `-- drivers-staging-wilc1000-cfg80211.c:error:initialization-of-int-(-)(struct-wiphy-struct-wireless_dev-u64)-aka-int-(-)(struct-wiphy-struct-wireless_dev-long-long-unsigned-int)-from-incompatible-pointer
-|-- sparc-allyesconfig
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:initialization-of-int-(-)(struct-wiphy-struct-wireless_dev-u64)-aka-int-(-)(struct-wiphy-struct-wireless_dev-long-long-unsigned-int)-from-incomp
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   |-- drivers-staging-wilc1000-cfg80211.c:error:const-struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   `-- drivers-staging-wilc1000-cfg80211.c:error:initialization-of-int-(-)(struct-wiphy-struct-wireless_dev-u64)-aka-int-(-)(struct-wiphy-struct-wireless_dev-long-long-unsigned-int)-from-incompatible-pointer
-|-- sparc64-allmodconfig
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:initialization-of-int-(-)(struct-wiphy-struct-wireless_dev-u64)-aka-int-(-)(struct-wiphy-struct-wireless_dev-long-long-unsigned-int)-from-incomp
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   |-- drivers-staging-wilc1000-cfg80211.c:error:const-struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   `-- drivers-staging-wilc1000-cfg80211.c:error:initialization-of-int-(-)(struct-wiphy-struct-wireless_dev-u64)-aka-int-(-)(struct-wiphy-struct-wireless_dev-long-long-unsigned-int)-from-incompatible-pointer
-|-- sparc64-allyesconfig
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:initialization-of-int-(-)(struct-wiphy-struct-wireless_dev-u64)-aka-int-(-)(struct-wiphy-struct-wireless_dev-long-long-unsigned-int)-from-incomp
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   |-- drivers-staging-wilc1000-cfg80211.c:error:const-struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   `-- drivers-staging-wilc1000-cfg80211.c:error:initialization-of-int-(-)(struct-wiphy-struct-wireless_dev-u64)-aka-int-(-)(struct-wiphy-struct-wireless_dev-long-long-unsigned-int)-from-incompatible-pointer
-|-- sparc64-randconfig-a001-20200424
-|   |-- drivers-staging-wilc1000-cfg80211.c:error:const-struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   `-- drivers-staging-wilc1000-cfg80211.c:error:initialization-of-int-(-)(struct-wiphy-struct-wireless_dev-u64)-aka-int-(-)(struct-wiphy-struct-wireless_dev-long-long-unsigned-int)-from-incompatible-pointer
-|-- x86_64-allmodconfig
-|   |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-|   `-- drivers-staging-wilc1000-cfg80211.c:error:const-struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-`-- x86_64-allyesconfig
-    |-- drivers-staging-rtl8723bs-os_dep-ioctl_cfg80211.c:error:struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-    `-- drivers-staging-wilc1000-cfg80211.c:error:const-struct-cfg80211_ops-has-no-member-named-mgmt_frame_register
-
-elapsed time: 2181m
-
-configs tested: 183
-configs skipped: 0
-
-arm64                            allyesconfig
-arm                              allyesconfig
-arm64                            allmodconfig
-arm                              allmodconfig
-arm64                             allnoconfig
-arm                               allnoconfig
-arm                           efm32_defconfig
-arm                         at91_dt_defconfig
-arm                        shmobile_defconfig
-arm                          exynos_defconfig
-arm                        multi_v5_defconfig
-arm                        multi_v7_defconfig
-arm64                               defconfig
-arm                           sunxi_defconfig
-sparc                            allyesconfig
-m68k                          multi_defconfig
-arc                              allyesconfig
-m68k                       m5475evb_defconfig
-sh                  sh7785lcr_32bit_defconfig
-um                           x86_64_defconfig
-mips                           ip32_defconfig
-h8300                       h8s-sim_defconfig
-riscv                    nommu_virt_defconfig
-ia64                              allnoconfig
-c6x                              allyesconfig
-mips                         tb0287_defconfig
-c6x                        evmc6678_defconfig
-mips                              allnoconfig
-s390                              allnoconfig
-ia64                          tiger_defconfig
-riscv                          rv32_defconfig
-riscv                            allyesconfig
-xtensa                       common_defconfig
-powerpc                             defconfig
-ia64                                defconfig
-nds32                             allnoconfig
-mips                malta_kvm_guest_defconfig
-sparc64                             defconfig
-nios2                         10m50_defconfig
-powerpc                       ppc64_defconfig
-parisc                           allyesconfig
-ia64                             allyesconfig
-parisc                            allnoconfig
-i386                              allnoconfig
-i386                             allyesconfig
-i386                             alldefconfig
-i386                                defconfig
-i386                              debian-10.3
-ia64                             allmodconfig
-ia64                        generic_defconfig
-ia64                         bigsur_defconfig
-ia64                             alldefconfig
-nios2                         3c120_defconfig
-xtensa                          iss_defconfig
-openrisc                 simple_smp_defconfig
-openrisc                    or1ksim_defconfig
-nds32                               defconfig
-csky                                defconfig
-alpha                               defconfig
-h8300                     edosk2674_defconfig
-m68k                             allmodconfig
-h8300                    h8300h-sim_defconfig
-m68k                           sun3_defconfig
-arc                                 defconfig
-powerpc                          rhel-kconfig
-microblaze                      mmu_defconfig
-microblaze                    nommu_defconfig
-powerpc                           allnoconfig
-mips                      fuloong2e_defconfig
-mips                      malta_kvm_defconfig
-mips                            ar7_defconfig
-mips                             allyesconfig
-mips                         64r6el_defconfig
-mips                           32r2_defconfig
-mips                             allmodconfig
-mips                       capcella_defconfig
-mips                  decstation_64_defconfig
-mips                      loongson3_defconfig
-mips                          ath79_defconfig
-mips                        bcm63xx_defconfig
-parisc                generic-64bit_defconfig
-parisc                generic-32bit_defconfig
-parisc                           allmodconfig
-parisc               randconfig-a001-20200426
-mips                 randconfig-a001-20200426
-alpha                randconfig-a001-20200426
-m68k                 randconfig-a001-20200426
-nds32                randconfig-a001-20200426
-parisc               randconfig-a001-20200424
-alpha                randconfig-a001-20200424
-m68k                 randconfig-a001-20200424
-riscv                randconfig-a001-20200424
-nds32                randconfig-a001-20200424
-nios2                randconfig-a001-20200424
-c6x                  randconfig-a001-20200424
-h8300                randconfig-a001-20200424
-sparc64              randconfig-a001-20200424
-microblaze           randconfig-a001-20200424
-nios2                randconfig-a001-20200426
-c6x                  randconfig-a001-20200426
-h8300                randconfig-a001-20200426
-sparc64              randconfig-a001-20200426
-microblaze           randconfig-a001-20200426
-nios2                randconfig-a001-20200425
-c6x                  randconfig-a001-20200425
-h8300                randconfig-a001-20200425
-sparc64              randconfig-a001-20200425
-microblaze           randconfig-a001-20200425
-sh                   randconfig-a001-20200426
-csky                 randconfig-a001-20200426
-s390                 randconfig-a001-20200426
-xtensa               randconfig-a001-20200426
-openrisc             randconfig-a001-20200426
-sh                   randconfig-a001-20200424
-csky                 randconfig-a001-20200424
-s390                 randconfig-a001-20200424
-xtensa               randconfig-a001-20200424
-openrisc             randconfig-a001-20200424
-x86_64               randconfig-a001-20200426
-i386                 randconfig-a003-20200426
-x86_64               randconfig-a003-20200426
-i386                 randconfig-a002-20200426
-i386                 randconfig-a001-20200426
-x86_64               randconfig-a002-20200426
-x86_64               randconfig-d001-20200424
-i386                 randconfig-d002-20200424
-i386                 randconfig-d001-20200424
-x86_64               randconfig-d003-20200424
-i386                 randconfig-d003-20200424
-x86_64               randconfig-a001-20200424
-i386                 randconfig-a003-20200424
-x86_64               randconfig-a003-20200424
-i386                 randconfig-a002-20200424
-i386                 randconfig-a001-20200424
-x86_64               randconfig-a002-20200424
-i386                 randconfig-g003-20200424
-i386                 randconfig-g001-20200424
-x86_64               randconfig-g001-20200424
-x86_64               randconfig-g002-20200424
-i386                 randconfig-g002-20200424
-x86_64               randconfig-g003-20200424
-sparc                randconfig-a001-20200426
-ia64                 randconfig-a001-20200426
-powerpc              randconfig-a001-20200426
-arm                  randconfig-a001-20200426
-arm64                randconfig-a001-20200426
-arc                  randconfig-a001-20200426
-sparc                randconfig-a001-20200425
-ia64                 randconfig-a001-20200425
-powerpc              randconfig-a001-20200425
-arm                  randconfig-a001-20200425
-arc                  randconfig-a001-20200425
-sparc                randconfig-a001-20200424
-ia64                 randconfig-a001-20200424
-powerpc              randconfig-a001-20200424
-arm64                randconfig-a001-20200424
-arc                  randconfig-a001-20200424
-riscv                             allnoconfig
-riscv                               defconfig
-riscv                            allmodconfig
-s390                       zfcpdump_defconfig
-s390                          debug_defconfig
-s390                             allyesconfig
-s390                             allmodconfig
-s390                             alldefconfig
-s390                                defconfig
-sh                          rsk7269_defconfig
-sh                               allmodconfig
-sh                            titan_defconfig
-sh                                allnoconfig
-sparc                               defconfig
-sparc64                           allnoconfig
-sparc64                          allyesconfig
-sparc64                          allmodconfig
-um                             i386_defconfig
-um                                  defconfig
-x86_64                                   rhel
-x86_64                                    lkp
-x86_64                              fedora-25
-x86_64                                  kexec
-x86_64                         rhel-7.2-clear
-x86_64                    rhel-7.6-kselftests
-x86_64                               rhel-7.6
-
+Signed-off-by: Jouni Malinen <jouni@codeaurora.org>
 ---
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c | 2 ++
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c | 1 +
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c | 3 ++-
+ 3 files changed, 5 insertions(+), 1 deletion(-)
+
+This depends on "mac80211: Process multicast RX registration for Action
+frames" from mac80211-next.
+
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index d961095ab01f..3fdaaf74acfe 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -780,6 +780,8 @@ static void ath9k_set_hw_capab(struct ath9k_htc_priv *priv,
+ 	SET_IEEE80211_PERM_ADDR(hw, common->macaddr);
+ 
+ 	wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
++	wiphy_ext_feature_set(hw->wiphy,
++			      NL80211_EXT_FEATURE_MULTICAST_REGISTRATIONS);
+ }
+ 
+ static int ath9k_init_firmware_version(struct ath9k_htc_priv *priv)
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 791f6633667c..2b7832b1c800 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1251,6 +1251,7 @@ static int ath9k_htc_config(struct ieee80211_hw *hw, u32 changed)
+ 	FIF_OTHER_BSS |				\
+ 	FIF_BCN_PRBRESP_PROMISC |		\
+ 	FIF_PROBE_REQ |				\
++	FIF_MCAST_ACTION |			\
+ 	FIF_FCSFAIL)
+ 
+ static void ath9k_htc_configure_filter(struct ieee80211_hw *hw,
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index 9cec5c216e1f..10dfc01ddedd 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -893,7 +893,8 @@ u32 ath9k_htc_calcrxfilter(struct ath9k_htc_priv *priv)
+ 	if (priv->rxfilter & FIF_PSPOLL)
+ 		rfilt |= ATH9K_RX_FILTER_PSPOLL;
+ 
+-	if (priv->nvifs > 1 || priv->rxfilter & FIF_OTHER_BSS)
++	if (priv->nvifs > 1 ||
++	    priv->rxfilter & (FIF_OTHER_BSS | FIF_MCAST_ACTION))
+ 		rfilt |= ATH9K_RX_FILTER_MCAST_BCAST_ALL;
+ 
+ 	return rfilt;
+-- 
+2.20.1
