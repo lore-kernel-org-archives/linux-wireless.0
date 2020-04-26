@@ -1,52 +1,94 @@
 Return-Path: <SRS0=0qMy=6K=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
-X-Spam-Level: **
-X-Spam-Status: No, score=2.5 required=3.0 tests=FREEMAIL_REPLYTO_END_DIGIT,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,PRICE_CATALOG,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Level: 
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5242DC55194
-	for <linux-wireless@archiver.kernel.org>; Sun, 26 Apr 2020 14:45:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4CB9C55199
+	for <linux-wireless@archiver.kernel.org>; Sun, 26 Apr 2020 15:03:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3CC77206DD
-	for <linux-wireless@archiver.kernel.org>; Sun, 26 Apr 2020 14:45:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 982B22078E
+	for <linux-wireless@archiver.kernel.org>; Sun, 26 Apr 2020 15:03:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1587913420;
+	bh=i7CuN56YMVao2EEHlvF/iwomtHEgWLVGaff+VKRVhD4=;
+	h=Date:From:To:To:To:To:Cc:Cc:Subject:In-Reply-To:References:
+	 List-ID:From;
+	b=zDMwYxGRDlavZThrCOFMWtor5OXNDFOIA7SKgPQioTkHTaZCU+9wYIrehfil8FTA/
+	 NSo63m7Hje/R1XEQfWdOV3Q1gn7exllXBkGg7WhnzLlmjykhikm0R3xooC5mK37ZUT
+	 f+kdQE3NiA3T+sSXZVaXxRt4n7dsxPjDiqbXADJ4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726171AbgDZOpn (ORCPT
+        id S1726146AbgDZPDj (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 26 Apr 2020 10:45:43 -0400
-Received: from host141-99-61-217.static.arubacloud.com ([217.61.99.141]:56990
-        "EHLO mail.bengiamein.cf" rhost-flags-OK-FAIL-OK-OK)
-        by vger.kernel.org with ESMTP id S1726140AbgDZOpm (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 26 Apr 2020 10:45:42 -0400
-X-Greylist: delayed 9363 seconds by postgrey-1.27 at vger.kernel.org; Sun, 26 Apr 2020 10:45:42 EDT
-Received: by mail.bengiamein.cf (Postfix, from userid 48)
-        id D7E41CE72; Sun, 26 Apr 2020 07:48:53 -0400 (EDT)
-To:     linux-wireless@vger.kernel.org
-Subject: Purchase Order
-X-PHP-Originating-Script: 0:ghgaerew.php
-From:   Richard Martins <richard.martins@list.ru>
-Reply-To: richard.martins1953@outlook.com
-MIME-Version: 1.0
-Content-Type:   text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Message-Id: <20200426115701.D7E41CE72@mail.bengiamein.cf>
-Date:   Sun, 26 Apr 2020 07:48:53 -0400 (EDT)
+        Sun, 26 Apr 2020 11:03:39 -0400
+Received: from mail.kernel.org ([198.145.29.99]:54894 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725876AbgDZPDj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 26 Apr 2020 11:03:39 -0400
+Received: from localhost (unknown [137.135.114.1])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id B769E206D4;
+        Sun, 26 Apr 2020 15:03:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1587913418;
+        bh=i7CuN56YMVao2EEHlvF/iwomtHEgWLVGaff+VKRVhD4=;
+        h=Date:From:To:To:To:To:Cc:Cc:Subject:In-Reply-To:References:From;
+        b=N+wn6M3cH1m9myySmDhvzQBgRXj5vAwl8TK4F30F8jzlDyBhLHoZkFnmZaFaMbNH5
+         cgXfKSnEWcrUx4b5tNUAMNAYOwhhobYM4zJPEx10aMYZbHAmuSp0J3bEnINyCcgvWD
+         I9zLJw5u5L+jm3v2qBbDZMGUTBwHos8WoTxHiM2g=
+Date:   Sun, 26 Apr 2020 15:03:37 +0000
+From:   Sasha Levin <sashal@kernel.org>
+To:     Sasha Levin <sashal@kernel.org>
+To:     Luca Coelho <luca@coelho.fi>
+To:     Luca Coelho <luciano.coelho@intel.com>
+To:     kvalo@codeaurora.org
+Cc:     linux-wireless@vger.kernel.org
+Cc:     stable@vger.kernel.org
+Subject: Re: [PATCH v5.7] iwlwifi: pcie: handle QuZ configs with killer NICs as well
+In-Reply-To: <iwlwifi.20200424121518.b715acfbe211.I273a098064a22577e4fca767910fd9cf0013f5cb@changeid>
+References: <iwlwifi.20200424121518.b715acfbe211.I273a098064a22577e4fca767910fd9cf0013f5cb@changeid>
+Message-Id: <20200426150338.B769E206D4@mail.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi, friend,
+Hi
 
-This is Richard Martins and i am purchasing manager from BANTEX INTERNATIONAL INC. in the US.
-We are glad to know about your company from the web and we are interested in your products.
-Could you kindly send us your Latest catalog and price list for our trial order.
+[This is an automated email]
 
-Thanks and Best Regards,
-Mr.Richard Martins
-Purchasing Manager
-BANTEX INTERNATIONAL INC.
+This commit has been processed because it contains a "Fixes:" tag
+fixing commit: 5a8c31aa6357 ("iwlwifi: pcie: fix recognition of QuZ devices").
+
+The bot has tested the following trees: v5.6.7, v5.4.35.
+
+v5.6.7: Failed to apply! Possible dependencies:
+    32ed101aa140 ("iwlwifi: convert all Qu with Jf devices to the new config table")
+    56ba371a5288 ("iwlwifi: move the remaining 0x2526 configs to the new table")
+    5e003982b07a ("iwlwifi: move AX200 devices to the new table")
+    67eb556da609 ("iwlwifi: combine 9260 cfgs that only change names")
+    95939551e28c ("iwlwifi: add GNSS differentiation to the device tables")
+    d6f2134a3831 ("iwlwifi: add mac/rf types and 160MHz to the device tables")
+    fe25b1518f72 ("iwlwifi: move TH1 devices to the new table")
+
+v5.4.35: Failed to apply! Possible dependencies:
+    32ed101aa140 ("iwlwifi: convert all Qu with Jf devices to the new config table")
+    3681021fc6af ("iwlwifi: remove IWL_DEVICE_22560/IWL_DEVICE_FAMILY_22560")
+    3b589d5624ce ("iwlwifi: dbg_ini: use new trigger TLV in dump flow")
+    593fae3e5e90 ("iwlwifi: dbg_ini: add monitor dumping support")
+    69f0e5059b09 ("iwlwifi: dbg: remove multi buffers infra")
+    bfc3e9fdbfb8 ("iwlwifi: 22000: fix some indentation")
+    c042f0c77f3d ("iwlwifi: allocate more receive buffers for HE devices")
+    c9fe75e9f347 ("iwlwifi: dbg_ini: use new region TLV in dump flow")
 
 
+NOTE: The patch will not be queued to stable trees until it is upstream.
+
+How should we proceed with this patch?
+
+-- 
+Thanks
+Sasha
