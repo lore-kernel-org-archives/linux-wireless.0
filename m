@@ -2,157 +2,85 @@ Return-Path: <SRS0=Tf+t=6L=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	WEIRD_PORT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA837C54FD0
-	for <linux-wireless@archiver.kernel.org>; Mon, 27 Apr 2020 03:14:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60436C54FD0
+	for <linux-wireless@archiver.kernel.org>; Mon, 27 Apr 2020 04:56:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 91AD72070A
-	for <linux-wireless@archiver.kernel.org>; Mon, 27 Apr 2020 03:14:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3AF29206B6
+	for <linux-wireless@archiver.kernel.org>; Mon, 27 Apr 2020 04:56:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lxZ9NMpS"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="Fdtduca2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726434AbgD0DNj (ORCPT
+        id S1726198AbgD0E4s (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 26 Apr 2020 23:13:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41948 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1725788AbgD0DNi (ORCPT
+        Mon, 27 Apr 2020 00:56:48 -0400
+Received: from mail26.static.mailgun.info ([104.130.122.26]:59439 "EHLO
+        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726172AbgD0E4s (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 26 Apr 2020 23:13:38 -0400
-Received: from mail-io1-xd29.google.com (mail-io1-xd29.google.com [IPv6:2607:f8b0:4864:20::d29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8059BC061A0F;
-        Sun, 26 Apr 2020 20:13:37 -0700 (PDT)
-Received: by mail-io1-xd29.google.com with SMTP id z2so17261362iol.11;
-        Sun, 26 Apr 2020 20:13:37 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :content-transfer-encoding;
-        bh=cXxBdsHHbib8hvcuIBuvDGl4X2Uqhyu/nNTS/7HyUX8=;
-        b=lxZ9NMpSFJ7Zst+PtCQXPzedzP6C3eiXaqGYwm9rdnIP2IcypA6TbggpE2id2Aj6Ml
-         MozOx9KiqbnjMf6tgz24dRfsADhpIkc0p6a0ZO3+Iz1Fnwo0Z//czK9vuXhseOUO9d0J
-         shAGVWCX/eg7Ue/NxmoRSq9lRa2NJlHPqrXZWFgYhT9UeU9yE9EQBuZb6zxeyHIXSxtI
-         viwCxu7OWQrLHY9vglv34fDSXCZXEQCQgnySCtnsxP4OkpXyfAMgNuhTQoZ32H9Wrawm
-         VfMeOVgW7kkb5ugAnCKXGZg0WO3inK/pkWaUIXmKJloE9XUmF93/h4P4A0YzLIETy8wp
-         6FDA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:content-transfer-encoding;
-        bh=cXxBdsHHbib8hvcuIBuvDGl4X2Uqhyu/nNTS/7HyUX8=;
-        b=rtufaXMQSefKhqy4yyPj9EmbTPBaJKH9XJqvokk1PKl6tGw38midrZOG36QkPsM8mw
-         YDcZ2qzvgW7colmjJiSzplcgvQKo82s47mdusNbXiLebrIMe+FgQBlO0DponMpnO1I5G
-         +BpdP+KWz//QifwJMIHcOl1nQYL+gBqbwXNwwdzSnJ2gpwKR0LPPe65gM1B8xXEpxxDC
-         v/osVGApJ4kBRxipe5Qd76uTBZ1K8ZUB9QJgRPG1lPj7Kk5jk6UIaeSff89+jMiTGbR6
-         gx+SpivoPnxcR1tPtCUr3iupke8Mb6wOxzn11BMssH6JbuduhlPyKiRYOhgm03lklLUf
-         kaPQ==
-X-Gm-Message-State: AGi0PuY/tJdewGZANbNf3rsQl1fYpPR3SDuh3zREH6uxQDI2dl3Q778d
-        voz2Hh/In9VLFB1UD+L6N0mH3r2Gdb5levepJ27RjSqyVn8=
-X-Google-Smtp-Source: APiQypIOFo9hgWUi1vPstyz48RY+E8kF4z0w27FtTvPWQK4InkFeJlbTLQIldSDSTbgYbnIVZkrVgxTnafFxF1OXEkU=
-X-Received: by 2002:a05:6638:247:: with SMTP id w7mr18551720jaq.128.1587957216639;
- Sun, 26 Apr 2020 20:13:36 -0700 (PDT)
+        Mon, 27 Apr 2020 00:56:48 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1587963407; h=Date: Message-Id: Cc: To: References:
+ In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
+ Content-Type: Sender; bh=bbOspBw2xPvQwAg9X7ORHUjI3DShyr/l7NDN5B7MWTM=;
+ b=Fdtduca2b8Q45E/SVjBfk1IpK/tV7qHQ57bhFIoylEDFc6GP729LQu3f0+kHzh+s7eSo7WO/
+ hwGsWw/ylfIWHaS5bxQj9fo20uWhth+M4JbI70k2EHLsnAF6s858NoSW42Jn79SiFOK9faAx
+ HQmv5U4dSsFyh9iiTmrVDCcnl3I=
+X-Mailgun-Sending-Ip: 104.130.122.26
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
+ by mxa.mailgun.org with ESMTP id 5ea665fa.7f2e20d08730-smtp-out-n05;
+ Mon, 27 Apr 2020 04:56:26 -0000 (UTC)
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 23998C433F2; Mon, 27 Apr 2020 04:56:26 +0000 (UTC)
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id B9F65C433CB;
+        Mon, 27 Apr 2020 04:56:24 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org B9F65C433CB
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-References: <f2729529e0ffb7b1d5212337de25b646f93133e0.camel@petri-meat.com>
-In-Reply-To: <f2729529e0ffb7b1d5212337de25b646f93133e0.camel@petri-meat.com>
-From:   Dave Taht <dave.taht@gmail.com>
-Date:   Sun, 26 Apr 2020 20:13:25 -0700
-Message-ID: <CAA93jw4WTaYLQ5KmPi078z0rmPT2FyXQrFLT2FiXVx9Cq1Kokw@mail.gmail.com>
-Subject: IETF meeting over the fate of the last ecn bit in the IP header this monday
-To:     Linux Kernel Network Developers <netdev@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH] ath11k: fix reo flush send
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1587552378-4884-1-git-send-email-periyasa@codeaurora.org>
+References: <1587552378-4884-1-git-send-email-periyasa@codeaurora.org>
+To:     Karthikeyan Periyasamy <periyasa@codeaurora.org>
+Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Karthikeyan Periyasamy <periyasa@codeaurora.org>
+User-Agent: pwcli/0.0.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
+Message-Id: <20200427045626.23998C433F2@smtp.codeaurora.org>
+Date:   Mon, 27 Apr 2020 04:56:26 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The initial debate was well covered in this lwn article:
-https://lwn.net/Articles/783673/
+Karthikeyan Periyasamy <periyasa@codeaurora.org> wrote:
 
-There's been much work since, code submitted for review, lots of bugs
-fixed, tons of benchmarks published by both sides, and much heat
-expended on the ietf tsvwg mailing list. As the L4S proposal in
-particular involves making a few deep changes to linux and the
-internet itself, I would appreciate more in the linux world taking a
-very hard look at both SCE (some congestion experienced) and L4S
-before the standardization effort goes much further.
+> we are sending the reo flush command for the deleted peer
+> tid after the ageout period reaches 1 second. This handling
+> causes reo ring get full when more than 128 clients are
+> disconnected continuously. so added the count for flush list
+> and reo flush command is triggered after the list count reaches
+> the threshold value, it is configured as 64 (half of the reo ring).
+> This will avoid the situation where reo ring get full.
+> 
+> Signed-off-by: Karthikeyan Periyasamy <periyasa@codeaurora.org>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-If anyone here would like to attend this ietf meeting, it's at 7AM
-PDT, more details, and pointers to the slides, below. It's pretty
-obvious which side has a marketing department!
+Patch applied to ath-next branch of ath.git, thanks.
 
+5cb899dd5ba4 ath11k: fix reo flush send
 
----------- Forwarded message ---------
-From: Steven Blake <slblake@petri-meat.com>
-Date: Sun, Apr 26, 2020 at 6:58 PM
-Subject: [tsvwg] April 27 interim meeting - links & instructions
-To: <tsvwg@ietf.org>
+-- 
+https://patchwork.kernel.org/patch/11503445/
 
-
-For those who have been scouring their email archives trying to find
-links to Monday's interim meeting, here they are:
-
-WEBEX:
-
-JOIN WEBEX MEETING
-https://ietf.webex.com/ietf/j.php?MTID=3Dmed94e0e0db21d028e4f79c3b026f6d84
-Meeting number (access code): 615 734 219
-
-Meeting password: TSV703
-
-JOIN BY PHONE
-1-650-479-3208 Call-in toll number (US/Canada)
-Tap here to call (mobile phones only, hosts not supported):
-tel:%2B1-650-479-3208,,*01*615734219%23%23*01*
-1-877-668-4493 Call-in toll free number (US/Canada)
-Tap here to call (mobile phones only, hosts not supported):
-tel:1-877-668-4493,,*01*615734219%23%23*01*
-
-Global call-in numbers
-https://ietf.webex.com/ietf/globalcallin.php?MTID=3Dmed1ad885f74b38fb4789b0=
-ea2d6459b3
-
-Toll-free calling restrictions
-https://www.webex.com/pdf/tollfree_restrictions.pdf
-
-JOIN FROM A VIDEO SYSTEM OR APPLICATION
-Dial sip:615734219@ietf.webex.com
-You can also dial 173.243.2.68 and enter your meeting number.
-
-Join using Microsoft Lync or Microsoft Skype for Business
-Dial sip:615734219.ietf@lync.webex.com
-
-Can't join the meeting?
-https://collaborationhelp.cisco.com/article/WBX000029055
-
-
-Etherpad: https://etherpad.ietf.org:9009/p/notes-ietf-interim-2020-tsvwg-03=
-?useMonospaceFont=3Dtrue
-
-Jabber: xmpp:tsvwg@jabber.ietf.org?join
-
-Meeting materials:
-https://datatracker.ietf.org/meeting/interim-2020-tsvwg-03/session/tsvwg
-
-
-
-Regards,
-
-// Steve
-
-
-
-
-
---=20
-Make Music, Not War
-
-Dave T=C3=A4ht
-CTO, TekLibre, LLC
-http://www.teklibre.com
-Tel: 1-831-435-0729
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
