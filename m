@@ -2,217 +2,196 @@ Return-Path: <SRS0=qsgd=6M=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D80DC83000
-	for <linux-wireless@archiver.kernel.org>; Tue, 28 Apr 2020 17:11:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2257DC83000
+	for <linux-wireless@archiver.kernel.org>; Tue, 28 Apr 2020 19:40:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 521A320730
-	for <linux-wireless@archiver.kernel.org>; Tue, 28 Apr 2020 17:11:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D904A2076A
+	for <linux-wireless@archiver.kernel.org>; Tue, 28 Apr 2020 19:40:03 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CNnd4biD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728383AbgD1RLQ (ORCPT
+        id S1728559AbgD1TkD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 28 Apr 2020 13:11:16 -0400
-Received: from mga17.intel.com ([192.55.52.151]:49928 "EHLO mga17.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726406AbgD1RLQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 28 Apr 2020 13:11:16 -0400
-IronPort-SDR: SeqxYKfxykFvyA/qijvhIKPLDvBeegNNb3LCJ57NhRGAWHWUxBN2vdMfY8wfHp+/cfpqQaNVv4
- npu1ntdPqJHA==
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Apr 2020 10:11:15 -0700
-IronPort-SDR: OjVd+nRdX3+Efu/hgVgf4PzfY2XcaRiyt1ZQyd26W04wsrRjE1hvF/CM1X8zZq6DTcoyVvDPcg
- Rnzo5Ke2gFxA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.73,328,1583222400"; 
-   d="scan'208";a="404755319"
-Received: from lkp-server01.sh.intel.com (HELO lkp-server01) ([10.239.97.150])
-  by orsmga004.jf.intel.com with ESMTP; 28 Apr 2020 10:11:13 -0700
-Received: from kbuild by lkp-server01 with local (Exim 4.89)
-        (envelope-from <lkp@intel.com>)
-        id 1jTTlI-0001a7-VX; Wed, 29 Apr 2020 01:11:12 +0800
-Date:   Wed, 29 Apr 2020 01:11:00 +0800
-From:   kbuild test robot <lkp@intel.com>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     linux-wireless@vger.kernel.org
-Subject: [wireless-drivers-next:master] BUILD SUCCESS
- 86501437d88532952a21b427d2ffd1683870d369
-Message-ID: <5ea863a4.gKBPOWDNfgjbqiqj%lkp@intel.com>
-User-Agent: Heirloom mailx 12.5 6/20/10
+        Tue, 28 Apr 2020 15:40:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54602 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1728392AbgD1TkC (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 28 Apr 2020 15:40:02 -0400
+Received: from mail-il1-x143.google.com (mail-il1-x143.google.com [IPv6:2607:f8b0:4864:20::143])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 913B5C03C1AB
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Apr 2020 12:40:02 -0700 (PDT)
+Received: by mail-il1-x143.google.com with SMTP id i16so12175ils.12
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Apr 2020 12:40:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=8dNzZoo6BwE+y+2RELR9+ATC7jomEHgy2WoRWlyh2FU=;
+        b=CNnd4biDRTlpugOR+JeLwdaPq06suwFCr1Tpbdb6GDqNuerNxu6UxPy7tPsmsRcwFR
+         GalKdOyppHefB/clrjruuKdEpxpFzBoFhp2IjSuFpjSysdHgnG+iOKLBZWgwXc8WbSnU
+         d8zfSnT19SD8mM8MRvPj4Zc1EXymHDL61g1WcJN0Bm+VKqq0RHIhFxA0DsbeW5zZev3c
+         s/DDSp2jwenXQQaABBvfQC2avtfAA4E3JQCD75o4chybpZXYgTwiwQLyKx36Gk8460dg
+         Hp4hdG1iw/7JOBrOCTNwoQYqi7FRMlqTL+ecr/W+YPvAKn3Sbb+7/TD55EYe/aM5jejR
+         J+GQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=8dNzZoo6BwE+y+2RELR9+ATC7jomEHgy2WoRWlyh2FU=;
+        b=NG8HjMa5Oxf3xYliPu3rwMiphp9veWjlWW5MCxZngwXMeIKaU/UCjAWQEnoiNze56z
+         h37iD4qCQIdBWMe7z3oreB4q8ATALxXeCLHLl9/vj3zQbqVP1exD/sUhxQGQLR10c/zo
+         4Op1tY9759GjhKkEtrOeL4x5ER+ThjTIt05cf9m9ipCrzmPShLg8fWvsa2oVpXrDJzVD
+         5EV2t8xeGwHAId1sAcZIKx4AppUSjFXilyXWN3fZuFCmLHt1zFWwxnldPU/H0pwSos6x
+         kZWY4r17chmaaxP15lPyIdG+C7I26qUPaNAT+a/tLyj+qCWmBqiHJAH9VHSBuG4NeeL8
+         vQvQ==
+X-Gm-Message-State: AGi0PuaR37dhyboPQzGwlpuPLhJsKsug67LX3JvHIMdpRr6AEHT3cqjA
+        knh/CVG8fbWjMT0wi+FeBB2+F9QvsuPPRtfHNSYsJqvg
+X-Google-Smtp-Source: APiQypJfkfBkqp187Q8LPG0WPvJQF4n7JahPG2lN6dwPaCjx2ULinA+dIL9hbrui32Gos1ZWWhr1YO2xL/7JP3wohoo=
+X-Received: by 2002:a92:dc0d:: with SMTP id t13mr28368019iln.287.1588102801835;
+ Tue, 28 Apr 2020 12:40:01 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+References: <20200427145435.13151-1-greearb@candelatech.com>
+ <CALLGbR+fY9w1q=6HuU56OZLD6BeP_0KkU2xeoAA0ZZXxns+i3g@mail.gmail.com>
+ <1e1664b6-1998-5a4b-67ba-09113ec8d3a7@candelatech.com> <87k11zv1ux.fsf@toke.dk>
+In-Reply-To: <87k11zv1ux.fsf@toke.dk>
+From:   Dave Taht <dave.taht@gmail.com>
+Date:   Tue, 28 Apr 2020 12:39:50 -0700
+Message-ID: <CAA93jw7exafEx3YkvR5uaaBm5kxzYp3nw14zMfgT=2SwUjaQFg@mail.gmail.com>
+Subject: Re: [PATCH] ath10k: Restart xmit queues below low-water mark.
+To:     =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>
+Cc:     Ben Greear <greearb@candelatech.com>,
+        Steve deRosier <derosier@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git  master
-branch HEAD: 86501437d88532952a21b427d2ffd1683870d369  ssb: scan: fix block comments coding style issues
+On Tue, Apr 28, 2020 at 12:37 PM Toke H=C3=B8iland-J=C3=B8rgensen <toke@tok=
+e.dk> wrote:
+>
+> Ben Greear <greearb@candelatech.com> writes:
+>
+> > On 04/28/2020 07:56 AM, Steve deRosier wrote:
+> >> On Mon, Apr 27, 2020 at 7:54 AM <greearb@candelatech.com> wrote:
+> >>>
+> >>> From: Ben Greear <greearb@candelatech.com>
+> >>>
+> >>> While running tcp upload + download tests with ~200
+> >>> concurrent TCP streams, 1-2 processes, and 30 station
+> >>> vdevs, I noticed that the __ieee80211_stop_queue was taking
+> >>> around 20% of the CPU according to perf-top, which other locking
+> >>> taking an additional ~15%.
+> >>>
+> >>> I believe the issue is that the ath10k driver would unlock the
+> >>> txqueue when a single frame could be transmitted, instead of
+> >>> waiting for a low water mark.
+> >>>
+> >>> So, this patch adds a low-water mark that is 1/4 of the total
+> >>> tx buffers allowed.
+> >>>
+> >>> This appears to resolve the performance problem that I saw.
+> >>>
+> >>> Tested with recent wave-1 ath10k-ct firmware.
+> >>>
+> >>
+> >> Hey Ben,
+> >>
+> >> Did you do any testing with this patch around latency?  The nature of
+> >> the thing that you fixed makes me wonder if it was intentional with
+> >> respect to making WiFi fast - ie getting rid of buffers as much as
+> >> possible.  Obviously the CPU impact is likely to be an unintended
+> >> consequence. In any case, I don't know anything for sure, it was just
+> >> a thought that went through my head when reading this.
+> >
+> > I did not, but on average my patch should make the queues be less full,
+> > so I doubt it will hurt latency.
+>
+> I would tend to agree with that.
 
-elapsed time: 484m
+Well, I don't, as it's dependent on right sizing the ring in the first plac=
+e.
 
-configs tested: 150
-configs skipped: 0
+But testing is in order! :)
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+> -Toke
+>
+> >>> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> >>> ---
+> >>>  drivers/net/wireless/ath/ath10k/htt.h    | 1 +
+> >>>  drivers/net/wireless/ath/ath10k/htt_tx.c | 8 ++++++--
+> >>>  2 files changed, 7 insertions(+), 2 deletions(-)
+> >>>
+> >>> diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wire=
+less/ath/ath10k/htt.h
+> >>> index 31c4ddbf45cb..b5634781c0dc 100644
+> >>> --- a/drivers/net/wireless/ath/ath10k/htt.h
+> >>> +++ b/drivers/net/wireless/ath/ath10k/htt.h
+> >>> @@ -1941,6 +1941,7 @@ struct ath10k_htt {
+> >>>
+> >>>         u8 target_version_major;
+> >>>         u8 target_version_minor;
+> >>> +       bool needs_unlock;
+> >>>         struct completion target_version_received;
+> >>>         u8 max_num_amsdu;
+> >>>         u8 max_num_ampdu;
+> >>> diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/w=
+ireless/ath/ath10k/htt_tx.c
+> >>> index 9b3c3b080e92..44795d9a7c0c 100644
+> >>> --- a/drivers/net/wireless/ath/ath10k/htt_tx.c
+> >>> +++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+> >>> @@ -145,8 +145,10 @@ void ath10k_htt_tx_dec_pending(struct ath10k_htt=
+ *htt)
+> >>>         lockdep_assert_held(&htt->tx_lock);
+> >>>
+> >>>         htt->num_pending_tx--;
+> >>> -       if (htt->num_pending_tx =3D=3D htt->max_num_pending_tx - 1)
+> >>> +       if ((htt->num_pending_tx <=3D (htt->max_num_pending_tx / 4)) =
+&& htt->needs_unlock) {
+> >>> +               htt->needs_unlock =3D false;
+> >>>                 ath10k_mac_tx_unlock(htt->ar, ATH10K_TX_PAUSE_Q_FULL)=
+;
+> >>> +       }
+> >>>  }
+> >>>
+> >>>  int ath10k_htt_tx_inc_pending(struct ath10k_htt *htt)
+> >>> @@ -157,8 +159,10 @@ int ath10k_htt_tx_inc_pending(struct ath10k_htt =
+*htt)
+> >>>                 return -EBUSY;
+> >>>
+> >>>         htt->num_pending_tx++;
+> >>> -       if (htt->num_pending_tx =3D=3D htt->max_num_pending_tx)
+> >>> +       if (htt->num_pending_tx =3D=3D htt->max_num_pending_tx) {
+> >>> +               htt->needs_unlock =3D true;
+> >>>                 ath10k_mac_tx_lock(htt->ar, ATH10K_TX_PAUSE_Q_FULL);
+> >>> +       }
+> >>>
+> >>>         return 0;
+> >>>  }
+> >>> --
+> >>> 2.20.1
+> >>>
+> >>
+> >
+> > --
+> > Ben Greear <greearb@candelatech.com>
+> > Candela Technologies Inc  http://www.candelatech.com
 
-arm64                            allyesconfig
-arm                              allyesconfig
-arm64                            allmodconfig
-arm                              allmodconfig
-arm64                             allnoconfig
-arm                               allnoconfig
-arm                           efm32_defconfig
-arm                         at91_dt_defconfig
-arm                        shmobile_defconfig
-arm64                               defconfig
-arm                          exynos_defconfig
-arm                        multi_v5_defconfig
-arm                           sunxi_defconfig
-arm                        multi_v7_defconfig
-sparc                            allyesconfig
-nios2                         3c120_defconfig
-mips                  decstation_64_defconfig
-m68k                           sun3_defconfig
-i386                              allnoconfig
-i386                             allyesconfig
-i386                             alldefconfig
-i386                                defconfig
-i386                              debian-10.3
-ia64                             allmodconfig
-ia64                                defconfig
-ia64                              allnoconfig
-ia64                        generic_defconfig
-ia64                          tiger_defconfig
-ia64                         bigsur_defconfig
-ia64                             allyesconfig
-ia64                             alldefconfig
-nios2                         10m50_defconfig
-c6x                        evmc6678_defconfig
-xtensa                          iss_defconfig
-c6x                              allyesconfig
-xtensa                       common_defconfig
-openrisc                 simple_smp_defconfig
-openrisc                    or1ksim_defconfig
-nds32                               defconfig
-nds32                             allnoconfig
-csky                                defconfig
-alpha                               defconfig
-h8300                       h8s-sim_defconfig
-h8300                     edosk2674_defconfig
-m68k                       m5475evb_defconfig
-m68k                             allmodconfig
-h8300                    h8300h-sim_defconfig
-m68k                          multi_defconfig
-arc                                 defconfig
-arc                              allyesconfig
-powerpc                             defconfig
-powerpc                       ppc64_defconfig
-powerpc                          rhel-kconfig
-microblaze                      mmu_defconfig
-microblaze                    nommu_defconfig
-powerpc                           allnoconfig
-mips                      fuloong2e_defconfig
-mips                      malta_kvm_defconfig
-mips                            ar7_defconfig
-mips                             allyesconfig
-mips                         64r6el_defconfig
-mips                              allnoconfig
-mips                           32r2_defconfig
-mips                             allmodconfig
-mips                malta_kvm_guest_defconfig
-mips                         tb0287_defconfig
-mips                       capcella_defconfig
-mips                           ip32_defconfig
-mips                      loongson3_defconfig
-mips                          ath79_defconfig
-mips                        bcm63xx_defconfig
-parisc                            allnoconfig
-parisc                generic-64bit_defconfig
-parisc                generic-32bit_defconfig
-parisc                           allyesconfig
-parisc                           allmodconfig
-parisc               randconfig-a001-20200428
-m68k                 randconfig-a001-20200428
-alpha                randconfig-a001-20200428
-nds32                randconfig-a001-20200428
-riscv                randconfig-a001-20200428
-sh                   randconfig-a001-20200428
-csky                 randconfig-a001-20200428
-s390                 randconfig-a001-20200428
-xtensa               randconfig-a001-20200428
-openrisc             randconfig-a001-20200428
-i386                 randconfig-c002-20200428
-i386                 randconfig-c001-20200428
-x86_64               randconfig-c001-20200428
-i386                 randconfig-c003-20200428
-x86_64               randconfig-c003-20200428
-x86_64               randconfig-a001-20200428
-i386                 randconfig-a003-20200428
-x86_64               randconfig-a003-20200428
-i386                 randconfig-a002-20200428
-i386                 randconfig-a001-20200428
-x86_64               randconfig-a002-20200428
-x86_64               randconfig-d001-20200428
-i386                 randconfig-d002-20200428
-i386                 randconfig-d001-20200428
-x86_64               randconfig-d003-20200428
-i386                 randconfig-d003-20200428
-x86_64               randconfig-f002-20200428
-i386                 randconfig-f002-20200428
-i386                 randconfig-f003-20200428
-x86_64               randconfig-f003-20200428
-i386                 randconfig-f001-20200428
-x86_64               randconfig-f001-20200428
-i386                 randconfig-g003-20200428
-x86_64               randconfig-g001-20200428
-i386                 randconfig-g001-20200428
-x86_64               randconfig-g002-20200428
-i386                 randconfig-g002-20200428
-x86_64               randconfig-g003-20200428
-ia64                 randconfig-a001-20200428
-powerpc              randconfig-a001-20200428
-arm64                randconfig-a001-20200428
-riscv                            allyesconfig
-riscv                    nommu_virt_defconfig
-riscv                             allnoconfig
-riscv                               defconfig
-riscv                          rv32_defconfig
-riscv                            allmodconfig
-s390                       zfcpdump_defconfig
-s390                          debug_defconfig
-s390                             allyesconfig
-s390                              allnoconfig
-s390                             allmodconfig
-s390                             alldefconfig
-s390                                defconfig
-sh                          rsk7269_defconfig
-sh                               allmodconfig
-sh                            titan_defconfig
-sh                  sh7785lcr_32bit_defconfig
-sh                                allnoconfig
-sparc                               defconfig
-sparc64                             defconfig
-sparc64                           allnoconfig
-sparc64                          allyesconfig
-sparc64                          allmodconfig
-um                           x86_64_defconfig
-um                             i386_defconfig
-um                                  defconfig
-x86_64                                   rhel
-x86_64                               rhel-7.6
-x86_64                    rhel-7.6-kselftests
-x86_64                         rhel-7.2-clear
-x86_64                                    lkp
-x86_64                              fedora-25
-x86_64                                  kexec
 
----
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+
+--=20
+Make Music, Not War
+
+Dave T=C3=A4ht
+CTO, TekLibre, LLC
+http://www.teklibre.com
+Tel: 1-831-435-0729
