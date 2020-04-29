@@ -2,40 +2,40 @@ Return-Path: <SRS0=wwyj=6N=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-6.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	UNWANTED_LANGUAGE_BODY,UPPERCASE_50_75,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7528AC83006
-	for <linux-wireless@archiver.kernel.org>; Wed, 29 Apr 2020 13:49:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0208EC8300A
+	for <linux-wireless@archiver.kernel.org>; Wed, 29 Apr 2020 13:49:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 498542074A
+	by mail.kernel.org (Postfix) with ESMTP id E0E482074A
 	for <linux-wireless@archiver.kernel.org>; Wed, 29 Apr 2020 13:49:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727819AbgD2Ns7 (ORCPT
+        id S1726948AbgD2NtK (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 29 Apr 2020 09:48:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54920 "EHLO
+        Wed, 29 Apr 2020 09:49:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54928 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727041AbgD2Ns6 (ORCPT
+        with ESMTP id S1727841AbgD2Ns7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Apr 2020 09:48:58 -0400
+        Wed, 29 Apr 2020 09:48:59 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F403CC035494;
-        Wed, 29 Apr 2020 06:48:57 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12D14C03C1AD;
+        Wed, 29 Apr 2020 06:48:59 -0700 (PDT)
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.93)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1jTn55-001vkM-CA; Wed, 29 Apr 2020 15:48:55 +0200
+        id 1jTn57-001vkM-AB; Wed, 29 Apr 2020 15:48:57 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     netdev@vger.kernel.org
 Cc:     Antonio Quartulli <ordex@autistici.org>,
         linux-wireless@vger.kernel.org,
         Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/7] netlink: remove type-unsafe validation_data pointer
-Date:   Wed, 29 Apr 2020 15:48:37 +0200
-Message-Id: <20200429154836.390ab646277f.Ib760259c7f93e40ef3dfcb23b187684bc19e4e26@changeid>
+Subject: [PATCH 6/7] netlink: remove NLA_EXACT_LEN_WARN
+Date:   Wed, 29 Apr 2020 15:48:42 +0200
+Message-Id: <20200429154836.66d5e35bd5d9.I9a91078267348ef563217cb525e8e357eba4b487@changeid>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200429134843.42224-1-johannes@sipsolutions.net>
 References: <20200429134843.42224-1-johannes@sipsolutions.net>
@@ -48,302 +48,298 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-In the netlink policy, we currently have a void *validation_data
-that's pointing to different things:
- * a u32 value for bitfield32,
- * the netlink policy for nested/nested array
- * the string for NLA_REJECT
+Use a validation type instead, so we can later expose
+the NLA_* values to userspace for policy descriptions.
 
-Remove the pointer and place appropriate type-safe items in the
-union instead.
+Some transformations were done with this spatch:
 
-While at it, completely dissolve the pointer for the bitfield32
-case and just put the value there directly.
+    @@
+    identifier p;
+    expression X, L, A;
+    @@
+    struct nla_policy p[X] = {
+    [A] =
+    -{ .type = NLA_EXACT_LEN_WARN, .len = L },
+    +NLA_POLICY_EXACT_LEN_WARN(L),
+    ...
+    };
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- include/net/netlink.h | 60 +++++++++++++++++++++++--------------------
- lib/nlattr.c          | 20 +++++++--------
- net/sched/act_api.c   | 13 +++-------
- net/sched/sch_red.c   |  9 +++----
- 4 files changed, 49 insertions(+), 53 deletions(-)
+ include/net/netlink.h  | 15 ++++----
+ lib/nlattr.c           | 16 +++++----
+ net/wireless/nl80211.c | 81 ++++++++++--------------------------------
+ 3 files changed, 36 insertions(+), 76 deletions(-)
 
 diff --git a/include/net/netlink.h b/include/net/netlink.h
-index 67c57d6942e3..671b29d170a8 100644
+index 4acd7165e900..4d4a733f1e8d 100644
 --- a/include/net/netlink.h
 +++ b/include/net/netlink.h
-@@ -217,7 +217,7 @@ enum nla_policy_validation {
-  *    NLA_NESTED,
-  *    NLA_NESTED_ARRAY     Length verification is done by checking len of
-  *                         nested header (or empty); len field is used if
-- *                         validation_data is also used, for the max attr
-+ *                         nested_policy is also used, for the max attr
-  *                         number in the nested policy.
-  *    NLA_U8, NLA_U16,
-  *    NLA_U32, NLA_U64,
-@@ -235,27 +235,25 @@ enum nla_policy_validation {
+@@ -182,7 +182,6 @@ enum {
+ 	NLA_BITFIELD32,
+ 	NLA_REJECT,
+ 	NLA_EXACT_LEN,
+-	NLA_EXACT_LEN_WARN,
+ 	NLA_MIN_LEN,
+ 	__NLA_TYPE_MAX,
+ };
+@@ -204,6 +203,7 @@ enum nla_policy_validation {
+ 	NLA_VALIDATE_MAX,
+ 	NLA_VALIDATE_RANGE_PTR,
+ 	NLA_VALIDATE_FUNCTION,
++	NLA_VALIDATE_WARN_TOO_LONG,
+ };
+ 
+ /**
+@@ -237,10 +237,10 @@ enum nla_policy_validation {
+  *                         just like "All other"
+  *    NLA_BITFIELD32       Unused
+  *    NLA_REJECT           Unused
+- *    NLA_EXACT_LEN        Attribute must have exactly this length, otherwise
+- *                         it is rejected.
+- *    NLA_EXACT_LEN_WARN   Attribute should have exactly this length, a warning
+- *                         is logged if it is longer, shorter is rejected.
++ *    NLA_EXACT_LEN        Attribute should have exactly this length, otherwise
++ *                         it is rejected or warned about, the latter happening
++ *                         if and only if the `validation_type' is set to
++ *                         NLA_VALIDATE_WARN_TOO_LONG.
   *    NLA_MIN_LEN          Minimum length of attribute payload
   *    All other            Minimum length of attribute payload
   *
-- * Meaning of `validation_data' field:
-+ * Meaning of validation union:
-  *    NLA_BITFIELD32       This is a 32-bit bitmap/bitselector attribute and
-- *                         validation data must point to a u32 value of valid
-- *                         flags
-- *    NLA_REJECT           This attribute is always rejected and validation data
-+ *                         `bitfield32_valid' is the u32 value of valid flags
-+ *    NLA_REJECT           This attribute is always rejected and `reject_message'
-  *                         may point to a string to report as the error instead
-  *                         of the generic one in extended ACK.
-- *    NLA_NESTED           Points to a nested policy to validate, must also set
-- *                         `len' to the max attribute number.
-+ *    NLA_NESTED           `nested_policy' to a nested policy to validate, must
-+ *                         also set `len' to the max attribute number. Use the
-+ *                         provided NLA_POLICY_NESTED() macro.
-  *                         Note that nla_parse() will validate, but of course not
-  *                         parse, the nested sub-policies.
-- *    NLA_NESTED_ARRAY     Points to a nested policy to validate, must also set
-- *                         `len' to the max attribute number. The difference to
-- *                         NLA_NESTED is the structure - NLA_NESTED has the
-- *                         nested attributes directly inside, while an array has
-- *                         the nested attributes at another level down and the
-- *                         attributes directly in the nesting don't matter.
-- *    All other            Unused - but note that it's a union
-- *
-- * Meaning of `min' and `max' fields, use via NLA_POLICY_MIN, NLA_POLICY_MAX
-- * and NLA_POLICY_RANGE:
-+ *    NLA_NESTED_ARRAY     `nested_policy' points to a nested policy to validate,
-+ *                         must also set `len' to the max attribute number. Use
-+ *                         the provided NLA_POLICY_NESTED_ARRAY() macro.
-+ *                         The difference to NLA_NESTED is the structure:
-+ *                         NLA_NESTED has the nested attributes directly inside
-+ *                         while an array has the nested attributes at another
-+ *                         level down and the attribute types directly in the
-+ *                         nesting don't matter.
-  *    NLA_U8,
-  *    NLA_U16,
-  *    NLA_U32,
-@@ -263,29 +261,31 @@ enum nla_policy_validation {
-  *    NLA_S8,
-  *    NLA_S16,
-  *    NLA_S32,
-- *    NLA_S64              These are used depending on the validation_type
-- *                         field, if that is min/max/range then the minimum,
-- *                         maximum and both are used (respectively) to check
-+ *    NLA_S64              The `min' and `max' fields are used depending on the
-+ *                         validation_type field, if that is min/max/range then
-+ *                         the min, max or both are used (respectively) to check
-  *                         the value of the integer attribute.
-  *                         Note that in the interest of code simplicity and
-  *                         struct size both limits are s16, so you cannot
-  *                         enforce a range that doesn't fall within the range
-  *                         of s16 - do that as usual in the code instead.
-+ *                         Use the NLA_POLICY_MIN(), NLA_POLICY_MAX() and
-+ *                         NLA_POLICY_RANGE() macros.
-  *    All other            Unused - but note that it's a union
-  *
-  * Meaning of `validate' field, use via NLA_POLICY_VALIDATE_FN:
-- *    NLA_BINARY           Validation function called for the attribute,
-- *                         not compatible with use of the validation_data
-- *                         as in NLA_BITFIELD32, NLA_REJECT, NLA_NESTED and
-- *                         NLA_NESTED_ARRAY.
-+ *    NLA_BINARY           Validation function called for the attribute.
-  *    All other            Unused - but note that it's a union
-  *
-  * Example:
-+ *
-+ * static const u32 myvalidflags = 0xff231023;
-+ *
-  * static const struct nla_policy my_policy[ATTR_MAX+1] = {
-  * 	[ATTR_FOO] = { .type = NLA_U16 },
-  *	[ATTR_BAR] = { .type = NLA_STRING, .len = BARSIZ },
-  *	[ATTR_BAZ] = { .type = NLA_EXACT_LEN, .len = sizeof(struct mystruct) },
-- *	[ATTR_GOO] = { .type = NLA_BITFIELD32, .validation_data = &myvalidflags },
-+ *	[ATTR_GOO] = NLA_POLICY_BITFIELD32(myvalidflags),
-  * };
-  */
- struct nla_policy {
-@@ -293,7 +293,9 @@ struct nla_policy {
- 	u8		validation_type;
- 	u16		len;
- 	union {
--		const void *validation_data;
-+		const u32 bitfield32_valid;
-+		const char *reject_message;
-+		const struct nla_policy *nested_policy;
- 		struct {
- 			s16 min, max;
- 		};
-@@ -329,13 +331,15 @@ struct nla_policy {
- #define NLA_POLICY_ETH_ADDR_COMPAT	NLA_POLICY_EXACT_LEN_WARN(ETH_ALEN)
+@@ -350,8 +350,9 @@ struct nla_policy {
+ };
  
- #define _NLA_POLICY_NESTED(maxattr, policy) \
--	{ .type = NLA_NESTED, .validation_data = policy, .len = maxattr }
-+	{ .type = NLA_NESTED, .nested_policy = policy, .len = maxattr }
- #define _NLA_POLICY_NESTED_ARRAY(maxattr, policy) \
--	{ .type = NLA_NESTED_ARRAY, .validation_data = policy, .len = maxattr }
-+	{ .type = NLA_NESTED_ARRAY, .nested_policy = policy, .len = maxattr }
- #define NLA_POLICY_NESTED(policy) \
- 	_NLA_POLICY_NESTED(ARRAY_SIZE(policy) - 1, policy)
- #define NLA_POLICY_NESTED_ARRAY(policy) \
- 	_NLA_POLICY_NESTED_ARRAY(ARRAY_SIZE(policy) - 1, policy)
-+#define NLA_POLICY_BITFIELD32(valid) \
-+	{ .type = NLA_BITFIELD32, .bitfield32_valid = valid }
+ #define NLA_POLICY_EXACT_LEN(_len)	{ .type = NLA_EXACT_LEN, .len = _len }
+-#define NLA_POLICY_EXACT_LEN_WARN(_len)	{ .type = NLA_EXACT_LEN_WARN, \
+-					  .len = _len }
++#define NLA_POLICY_EXACT_LEN_WARN(_len) \
++	{ .type = NLA_EXACT_LEN, .len = _len, \
++	  .validation_type = NLA_VALIDATE_WARN_TOO_LONG, }
+ #define NLA_POLICY_MIN_LEN(_len)	{ .type = NLA_MIN_LEN, .len = _len }
  
- #define __NLA_ENSURE(condition) BUILD_BUG_ON_ZERO(!(condition))
- #define NLA_ENSURE_INT_TYPE(tp)				\
+ #define NLA_POLICY_ETH_ADDR		NLA_POLICY_EXACT_LEN(ETH_ALEN)
 diff --git a/lib/nlattr.c b/lib/nlattr.c
-index cace9b307781..3df05db732ca 100644
+index ab7fa7726c12..6e4cb9458050 100644
 --- a/lib/nlattr.c
 +++ b/lib/nlattr.c
-@@ -45,7 +45,7 @@ static const u8 nla_attr_minlen[NLA_TYPE_MAX+1] = {
- };
+@@ -260,7 +260,9 @@ static int validate_nla(const struct nlattr *nla, int maxtype,
+ 	BUG_ON(pt->type > NLA_TYPE_MAX);
  
- static int validate_nla_bitfield32(const struct nlattr *nla,
--				   const u32 *valid_flags_mask)
-+				   const u32 valid_flags_mask)
- {
- 	const struct nla_bitfield32 *bf = nla_data(nla);
+ 	if ((nla_attr_len[pt->type] && attrlen != nla_attr_len[pt->type]) ||
+-	    (pt->type == NLA_EXACT_LEN_WARN && attrlen != pt->len)) {
++	    (pt->type == NLA_EXACT_LEN &&
++	     pt->validation_type == NLA_VALIDATE_WARN_TOO_LONG &&
++	     attrlen != pt->len)) {
+ 		pr_warn_ratelimited("netlink: '%s': attribute type %d has an invalid length.\n",
+ 				    current->comm, type);
+ 		if (validate & NL_VALIDATE_STRICT_ATTRS) {
+@@ -286,11 +288,6 @@ static int validate_nla(const struct nlattr *nla, int maxtype,
+ 	}
  
-@@ -53,11 +53,11 @@ static int validate_nla_bitfield32(const struct nlattr *nla,
- 		return -EINVAL;
- 
- 	/*disallow invalid bit selector */
--	if (bf->selector & ~*valid_flags_mask)
-+	if (bf->selector & ~valid_flags_mask)
- 		return -EINVAL;
- 
- 	/*disallow invalid bit values */
--	if (bf->value & ~*valid_flags_mask)
-+	if (bf->value & ~valid_flags_mask)
- 		return -EINVAL;
- 
- 	/*disallow valid bit values that are not selected*/
-@@ -206,9 +206,9 @@ static int validate_nla(const struct nlattr *nla, int maxtype,
- 		break;
- 
- 	case NLA_REJECT:
--		if (extack && pt->validation_data) {
-+		if (extack && pt->reject_message) {
- 			NL_SET_BAD_ATTR(extack, nla);
--			extack->_msg = pt->validation_data;
-+			extack->_msg = pt->reject_message;
- 			return -EINVAL;
- 		}
- 		err = -EINVAL;
-@@ -223,7 +223,7 @@ static int validate_nla(const struct nlattr *nla, int maxtype,
- 		if (attrlen != sizeof(struct nla_bitfield32))
- 			goto out_err;
- 
--		err = validate_nla_bitfield32(nla, pt->validation_data);
-+		err = validate_nla_bitfield32(nla, pt->bitfield32_valid);
- 		if (err)
- 			goto out_err;
- 		break;
-@@ -268,9 +268,9 @@ static int validate_nla(const struct nlattr *nla, int maxtype,
- 			break;
- 		if (attrlen < NLA_HDRLEN)
- 			goto out_err;
--		if (pt->validation_data) {
-+		if (pt->nested_policy) {
- 			err = __nla_validate(nla_data(nla), nla_len(nla), pt->len,
--					     pt->validation_data, validate,
-+					     pt->nested_policy, validate,
- 					     extack);
- 			if (err < 0) {
- 				/*
-@@ -289,11 +289,11 @@ static int validate_nla(const struct nlattr *nla, int maxtype,
- 			break;
- 		if (attrlen < NLA_HDRLEN)
- 			goto out_err;
--		if (pt->validation_data) {
-+		if (pt->nested_policy) {
- 			int err;
- 
- 			err = nla_validate_array(nla_data(nla), nla_len(nla),
--						 pt->len, pt->validation_data,
-+						 pt->len, pt->nested_policy,
- 						 extack, validate);
- 			if (err < 0) {
- 				/*
-diff --git a/net/sched/act_api.c b/net/sched/act_api.c
-index df4560909157..fbbec2e562f5 100644
---- a/net/sched/act_api.c
-+++ b/net/sched/act_api.c
-@@ -876,19 +876,14 @@ static u8 tcf_action_hw_stats_get(struct nlattr *hw_stats_attr)
- 	return hw_stats_bf.value;
- }
- 
--static const u32 tca_act_flags_allowed = TCA_ACT_FLAGS_NO_PERCPU_STATS;
--static const u32 tca_act_hw_stats_allowed = TCA_ACT_HW_STATS_ANY;
+ 	switch (pt->type) {
+-	case NLA_EXACT_LEN:
+-		if (attrlen != pt->len)
+-			goto out_err;
+-		break;
 -
- static const struct nla_policy tcf_action_policy[TCA_ACT_MAX + 1] = {
- 	[TCA_ACT_KIND]		= { .type = NLA_STRING },
- 	[TCA_ACT_INDEX]		= { .type = NLA_U32 },
- 	[TCA_ACT_COOKIE]	= { .type = NLA_BINARY,
- 				    .len = TC_COOKIE_MAX_SIZE },
- 	[TCA_ACT_OPTIONS]	= { .type = NLA_NESTED },
--	[TCA_ACT_FLAGS]		= { .type = NLA_BITFIELD32,
--				    .validation_data = &tca_act_flags_allowed },
--	[TCA_ACT_HW_STATS]	= { .type = NLA_BITFIELD32,
--				    .validation_data = &tca_act_hw_stats_allowed },
-+	[TCA_ACT_FLAGS]		= NLA_POLICY_BITFIELD32(TCA_ACT_FLAGS_NO_PERCPU_STATS),
-+	[TCA_ACT_HW_STATS]	= NLA_POLICY_BITFIELD32(TCA_ACT_HW_STATS_ANY),
+ 	case NLA_REJECT:
+ 		if (extack && pt->reject_message) {
+ 			NL_SET_BAD_ATTR(extack, nla);
+@@ -404,6 +401,13 @@ static int validate_nla(const struct nlattr *nla, int maxtype,
+ 			goto out_err;
+ 		break;
+ 
++	case NLA_EXACT_LEN:
++		if (pt->validation_type != NLA_VALIDATE_WARN_TOO_LONG) {
++			if (attrlen != pt->len)
++				goto out_err;
++			break;
++		}
++		/* fall through */
+ 	default:
+ 		if (pt->len)
+ 			minlen = pt->len;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 57c618b6cb0e..519414468b5d 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -376,11 +376,8 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
+ 	[NL80211_ATTR_IFINDEX] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_IFNAME] = { .type = NLA_NUL_STRING, .len = IFNAMSIZ-1 },
+ 
+-	[NL80211_ATTR_MAC] = { .type = NLA_EXACT_LEN_WARN, .len = ETH_ALEN },
+-	[NL80211_ATTR_PREV_BSSID] = {
+-		.type = NLA_EXACT_LEN_WARN,
+-		.len = ETH_ALEN
+-	},
++	[NL80211_ATTR_MAC] = NLA_POLICY_EXACT_LEN_WARN(ETH_ALEN),
++	[NL80211_ATTR_PREV_BSSID] = NLA_POLICY_EXACT_LEN_WARN(ETH_ALEN),
+ 
+ 	[NL80211_ATTR_KEY] = { .type = NLA_NESTED, },
+ 	[NL80211_ATTR_KEY_DATA] = { .type = NLA_BINARY,
+@@ -432,10 +429,7 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
+ 	[NL80211_ATTR_MESH_CONFIG] = { .type = NLA_NESTED },
+ 	[NL80211_ATTR_SUPPORT_MESH_AUTH] = { .type = NLA_FLAG },
+ 
+-	[NL80211_ATTR_HT_CAPABILITY] = {
+-		.type = NLA_EXACT_LEN_WARN,
+-		.len = NL80211_HT_CAPABILITY_LEN
+-	},
++	[NL80211_ATTR_HT_CAPABILITY] = NLA_POLICY_EXACT_LEN_WARN(NL80211_HT_CAPABILITY_LEN),
+ 
+ 	[NL80211_ATTR_MGMT_SUBTYPE] = { .type = NLA_U8 },
+ 	[NL80211_ATTR_IE] = NLA_POLICY_VALIDATE_FN(NLA_BINARY,
+@@ -466,10 +460,7 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
+ 	[NL80211_ATTR_WPA_VERSIONS] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_PID] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_4ADDR] = { .type = NLA_U8 },
+-	[NL80211_ATTR_PMKID] = {
+-		.type = NLA_EXACT_LEN_WARN,
+-		.len = WLAN_PMKID_LEN
+-	},
++	[NL80211_ATTR_PMKID] = NLA_POLICY_EXACT_LEN_WARN(WLAN_PMKID_LEN),
+ 	[NL80211_ATTR_DURATION] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_COOKIE] = { .type = NLA_U64 },
+ 	[NL80211_ATTR_TX_RATES] = { .type = NLA_NESTED },
+@@ -533,10 +524,7 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
+ 	[NL80211_ATTR_WDEV] = { .type = NLA_U64 },
+ 	[NL80211_ATTR_USER_REG_HINT_TYPE] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_AUTH_DATA] = { .type = NLA_BINARY, },
+-	[NL80211_ATTR_VHT_CAPABILITY] = {
+-		.type = NLA_EXACT_LEN_WARN,
+-		.len = NL80211_VHT_CAPABILITY_LEN
+-	},
++	[NL80211_ATTR_VHT_CAPABILITY] = NLA_POLICY_EXACT_LEN_WARN(NL80211_VHT_CAPABILITY_LEN),
+ 	[NL80211_ATTR_SCAN_FLAGS] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_P2P_CTWINDOW] = NLA_POLICY_MAX(NLA_U8, 127),
+ 	[NL80211_ATTR_P2P_OPPPS] = NLA_POLICY_MAX(NLA_U8, 1),
+@@ -574,10 +562,7 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
+ 	[NL80211_ATTR_VENDOR_DATA] = { .type = NLA_BINARY },
+ 	[NL80211_ATTR_QOS_MAP] = { .type = NLA_BINARY,
+ 				   .len = IEEE80211_QOS_MAP_LEN_MAX },
+-	[NL80211_ATTR_MAC_HINT] = {
+-		.type = NLA_EXACT_LEN_WARN,
+-		.len = ETH_ALEN
+-	},
++	[NL80211_ATTR_MAC_HINT] = NLA_POLICY_EXACT_LEN_WARN(ETH_ALEN),
+ 	[NL80211_ATTR_WIPHY_FREQ_HINT] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_TDLS_PEER_CAPABILITY] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_SOCKET_OWNER] = { .type = NLA_FLAG },
+@@ -589,10 +574,7 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
+ 	[NL80211_ATTR_ADMITTED_TIME] = { .type = NLA_U16 },
+ 	[NL80211_ATTR_SMPS_MODE] = { .type = NLA_U8 },
+ 	[NL80211_ATTR_OPER_CLASS] = { .type = NLA_U8 },
+-	[NL80211_ATTR_MAC_MASK] = {
+-		.type = NLA_EXACT_LEN_WARN,
+-		.len = ETH_ALEN
+-	},
++	[NL80211_ATTR_MAC_MASK] = NLA_POLICY_EXACT_LEN_WARN(ETH_ALEN),
+ 	[NL80211_ATTR_WIPHY_SELF_MANAGED_REG] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_NETNS_FD] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_SCHED_SCAN_DELAY] = { .type = NLA_U32 },
+@@ -604,21 +586,15 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
+ 	[NL80211_ATTR_MU_MIMO_GROUP_DATA] = {
+ 		.len = VHT_MUMIMO_GROUPS_DATA_LEN
+ 	},
+-	[NL80211_ATTR_MU_MIMO_FOLLOW_MAC_ADDR] = {
+-		.type = NLA_EXACT_LEN_WARN,
+-		.len = ETH_ALEN
+-	},
++	[NL80211_ATTR_MU_MIMO_FOLLOW_MAC_ADDR] = NLA_POLICY_EXACT_LEN_WARN(ETH_ALEN),
+ 	[NL80211_ATTR_NAN_MASTER_PREF] = NLA_POLICY_MIN(NLA_U8, 1),
+ 	[NL80211_ATTR_BANDS] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_NAN_FUNC] = { .type = NLA_NESTED },
+ 	[NL80211_ATTR_FILS_KEK] = { .type = NLA_BINARY,
+ 				    .len = FILS_MAX_KEK_LEN },
+-	[NL80211_ATTR_FILS_NONCES] = {
+-		.type = NLA_EXACT_LEN_WARN,
+-		.len = 2 * FILS_NONCE_LEN
+-	},
++	[NL80211_ATTR_FILS_NONCES] = NLA_POLICY_EXACT_LEN_WARN(2 * FILS_NONCE_LEN),
+ 	[NL80211_ATTR_MULTICAST_TO_UNICAST_ENABLED] = { .type = NLA_FLAG, },
+-	[NL80211_ATTR_BSSID] = { .type = NLA_EXACT_LEN_WARN, .len = ETH_ALEN },
++	[NL80211_ATTR_BSSID] = NLA_POLICY_EXACT_LEN_WARN(ETH_ALEN),
+ 	[NL80211_ATTR_SCHED_SCAN_RELATIVE_RSSI] = { .type = NLA_S8 },
+ 	[NL80211_ATTR_SCHED_SCAN_RSSI_ADJUST] = {
+ 		.len = sizeof(struct nl80211_bss_select_rssi_adjust)
+@@ -631,7 +607,7 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
+ 	[NL80211_ATTR_FILS_ERP_NEXT_SEQ_NUM] = { .type = NLA_U16 },
+ 	[NL80211_ATTR_FILS_ERP_RRK] = { .type = NLA_BINARY,
+ 					.len = FILS_ERP_MAX_RRK_LEN },
+-	[NL80211_ATTR_FILS_CACHE_ID] = { .type = NLA_EXACT_LEN_WARN, .len = 2 },
++	[NL80211_ATTR_FILS_CACHE_ID] = NLA_POLICY_EXACT_LEN_WARN(2),
+ 	[NL80211_ATTR_PMK] = { .type = NLA_BINARY, .len = PMK_MAX_LEN },
+ 	[NL80211_ATTR_SCHED_SCAN_MULTI] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_EXTERNAL_AUTH_SUPPORT] = { .type = NLA_FLAG },
+@@ -701,10 +677,7 @@ static const struct nla_policy
+ nl80211_wowlan_tcp_policy[NUM_NL80211_WOWLAN_TCP] = {
+ 	[NL80211_WOWLAN_TCP_SRC_IPV4] = { .type = NLA_U32 },
+ 	[NL80211_WOWLAN_TCP_DST_IPV4] = { .type = NLA_U32 },
+-	[NL80211_WOWLAN_TCP_DST_MAC] = {
+-		.type = NLA_EXACT_LEN_WARN,
+-		.len = ETH_ALEN
+-	},
++	[NL80211_WOWLAN_TCP_DST_MAC] = NLA_POLICY_EXACT_LEN_WARN(ETH_ALEN),
+ 	[NL80211_WOWLAN_TCP_SRC_PORT] = { .type = NLA_U16 },
+ 	[NL80211_WOWLAN_TCP_DST_PORT] = { .type = NLA_U16 },
+ 	[NL80211_WOWLAN_TCP_DATA_PAYLOAD] = { .type = NLA_MIN_LEN, .len = 1 },
+@@ -734,18 +707,9 @@ nl80211_coalesce_policy[NUM_NL80211_ATTR_COALESCE_RULE] = {
+ /* policy for GTK rekey offload attributes */
+ static const struct nla_policy
+ nl80211_rekey_policy[NUM_NL80211_REKEY_DATA] = {
+-	[NL80211_REKEY_DATA_KEK] = {
+-		.type = NLA_EXACT_LEN_WARN,
+-		.len = NL80211_KEK_LEN,
+-	},
+-	[NL80211_REKEY_DATA_KCK] = {
+-		.type = NLA_EXACT_LEN_WARN,
+-		.len = NL80211_KCK_LEN,
+-	},
+-	[NL80211_REKEY_DATA_REPLAY_CTR] = {
+-		.type = NLA_EXACT_LEN_WARN,
+-		.len = NL80211_REPLAY_CTR_LEN
+-	},
++	[NL80211_REKEY_DATA_KEK] = NLA_POLICY_EXACT_LEN_WARN(NL80211_KEK_LEN),
++	[NL80211_REKEY_DATA_KCK] = NLA_POLICY_EXACT_LEN_WARN(NL80211_KCK_LEN),
++	[NL80211_REKEY_DATA_REPLAY_CTR] = NLA_POLICY_EXACT_LEN_WARN(NL80211_REPLAY_CTR_LEN),
  };
  
- struct tc_action *tcf_action_init_1(struct net *net, struct tcf_proto *tp,
-@@ -1454,10 +1449,8 @@ static int tcf_action_add(struct net *net, struct nlattr *nla,
- 	return ret;
- }
- 
--static u32 tcaa_root_flags_allowed = TCA_FLAG_LARGE_DUMP_ON;
- static const struct nla_policy tcaa_policy[TCA_ROOT_MAX + 1] = {
--	[TCA_ROOT_FLAGS] = { .type = NLA_BITFIELD32,
--			     .validation_data = &tcaa_root_flags_allowed },
-+	[TCA_ROOT_FLAGS] = NLA_POLICY_BITFIELD32(TCA_FLAG_LARGE_DUMP_ON),
- 	[TCA_ROOT_TIME_DELTA]      = { .type = NLA_U32 },
+ static const struct nla_policy
+@@ -760,10 +724,7 @@ static const struct nla_policy
+ nl80211_match_policy[NL80211_SCHED_SCAN_MATCH_ATTR_MAX + 1] = {
+ 	[NL80211_SCHED_SCAN_MATCH_ATTR_SSID] = { .type = NLA_BINARY,
+ 						 .len = IEEE80211_MAX_SSID_LEN },
+-	[NL80211_SCHED_SCAN_MATCH_ATTR_BSSID] = {
+-		.type = NLA_EXACT_LEN_WARN,
+-		.len = ETH_ALEN
+-	},
++	[NL80211_SCHED_SCAN_MATCH_ATTR_BSSID] = NLA_POLICY_EXACT_LEN_WARN(ETH_ALEN),
+ 	[NL80211_SCHED_SCAN_MATCH_ATTR_RSSI] = { .type = NLA_U32 },
+ 	[NL80211_SCHED_SCAN_MATCH_PER_BAND_RSSI] =
+ 		NLA_POLICY_NESTED(nl80211_match_band_rssi_policy),
+@@ -795,10 +756,7 @@ nl80211_nan_func_policy[NL80211_NAN_FUNC_ATTR_MAX + 1] = {
+ 	[NL80211_NAN_FUNC_SUBSCRIBE_ACTIVE] = { .type = NLA_FLAG },
+ 	[NL80211_NAN_FUNC_FOLLOW_UP_ID] = { .type = NLA_U8 },
+ 	[NL80211_NAN_FUNC_FOLLOW_UP_REQ_ID] = { .type = NLA_U8 },
+-	[NL80211_NAN_FUNC_FOLLOW_UP_DEST] = {
+-		.type = NLA_EXACT_LEN_WARN,
+-		.len = ETH_ALEN
+-	},
++	[NL80211_NAN_FUNC_FOLLOW_UP_DEST] = NLA_POLICY_EXACT_LEN_WARN(ETH_ALEN),
+ 	[NL80211_NAN_FUNC_CLOSE_RANGE] = { .type = NLA_FLAG },
+ 	[NL80211_NAN_FUNC_TTL] = { .type = NLA_U32 },
+ 	[NL80211_NAN_FUNC_SERVICE_INFO] = { .type = NLA_BINARY,
+@@ -4404,10 +4362,7 @@ static const struct nla_policy nl80211_txattr_policy[NL80211_TXRATE_MAX + 1] = {
+ 				    .len = NL80211_MAX_SUPP_RATES },
+ 	[NL80211_TXRATE_HT] = { .type = NLA_BINARY,
+ 				.len = NL80211_MAX_SUPP_HT_RATES },
+-	[NL80211_TXRATE_VHT] = {
+-		.type = NLA_EXACT_LEN_WARN,
+-		.len = sizeof(struct nl80211_txrate_vht),
+-	},
++	[NL80211_TXRATE_VHT] = NLA_POLICY_EXACT_LEN_WARN(sizeof(struct nl80211_txrate_vht)),
+ 	[NL80211_TXRATE_GI] = { .type = NLA_U8 },
  };
- 
-diff --git a/net/sched/sch_red.c b/net/sched/sch_red.c
-index c7de47c942e3..555a1b9e467f 100644
---- a/net/sched/sch_red.c
-+++ b/net/sched/sch_red.c
-@@ -48,7 +48,7 @@ struct red_sched_data {
- 	struct Qdisc		*qdisc;
- };
- 
--static const u32 red_supported_flags = TC_RED_HISTORIC_FLAGS | TC_RED_NODROP;
-+#define TC_RED_SUPPORTED_FLAGS (TC_RED_HISTORIC_FLAGS | TC_RED_NODROP)
- 
- static inline int red_use_ecn(struct red_sched_data *q)
- {
-@@ -212,8 +212,7 @@ static const struct nla_policy red_policy[TCA_RED_MAX + 1] = {
- 	[TCA_RED_PARMS]	= { .len = sizeof(struct tc_red_qopt) },
- 	[TCA_RED_STAB]	= { .len = RED_STAB_SIZE },
- 	[TCA_RED_MAX_P] = { .type = NLA_U32 },
--	[TCA_RED_FLAGS] = { .type = NLA_BITFIELD32,
--			    .validation_data = &red_supported_flags },
-+	[TCA_RED_FLAGS] = NLA_POLICY_BITFIELD32(TC_RED_SUPPORTED_FLAGS),
- };
- 
- static int red_change(struct Qdisc *sch, struct nlattr *opt,
-@@ -248,7 +247,7 @@ static int red_change(struct Qdisc *sch, struct nlattr *opt,
- 		return -EINVAL;
- 
- 	err = red_get_flags(ctl->flags, TC_RED_HISTORIC_FLAGS,
--			    tb[TCA_RED_FLAGS], red_supported_flags,
-+			    tb[TCA_RED_FLAGS], TC_RED_SUPPORTED_FLAGS,
- 			    &flags_bf, &userbits, extack);
- 	if (err)
- 		return err;
-@@ -372,7 +371,7 @@ static int red_dump(struct Qdisc *sch, struct sk_buff *skb)
- 	if (nla_put(skb, TCA_RED_PARMS, sizeof(opt), &opt) ||
- 	    nla_put_u32(skb, TCA_RED_MAX_P, q->parms.max_P) ||
- 	    nla_put_bitfield32(skb, TCA_RED_FLAGS,
--			       q->flags, red_supported_flags))
-+			       q->flags, TC_RED_SUPPORTED_FLAGS))
- 		goto nla_put_failure;
- 	return nla_nest_end(skb, opts);
  
 -- 
 2.25.1
