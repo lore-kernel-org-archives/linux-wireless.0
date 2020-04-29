@@ -4,37 +4,38 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDFE7C83009
-	for <linux-wireless@archiver.kernel.org>; Wed, 29 Apr 2020 13:49:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7528AC83006
+	for <linux-wireless@archiver.kernel.org>; Wed, 29 Apr 2020 13:49:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B25542083B
-	for <linux-wireless@archiver.kernel.org>; Wed, 29 Apr 2020 13:49:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 498542074A
+	for <linux-wireless@archiver.kernel.org>; Wed, 29 Apr 2020 13:49:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727983AbgD2NtD (ORCPT
+        id S1727819AbgD2Ns7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 29 Apr 2020 09:49:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54930 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727934AbgD2Ns7 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 29 Apr 2020 09:48:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54920 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727041AbgD2Ns6 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 29 Apr 2020 09:48:58 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60D87C03C1AD;
-        Wed, 29 Apr 2020 06:48:59 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F403CC035494;
+        Wed, 29 Apr 2020 06:48:57 -0700 (PDT)
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.93)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1jTn57-001vkM-N6; Wed, 29 Apr 2020 15:48:57 +0200
+        id 1jTn55-001vkM-CA; Wed, 29 Apr 2020 15:48:55 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     netdev@vger.kernel.org
 Cc:     Antonio Quartulli <ordex@autistici.org>,
         linux-wireless@vger.kernel.org,
         Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 7/7] netlink: factor out policy range helpers
-Date:   Wed, 29 Apr 2020 15:48:43 +0200
-Message-Id: <20200429154836.02b4e60d49a3.Ibb79f28261ecab0dd1de120da488db29cf011389@changeid>
+Subject: [PATCH 1/7] netlink: remove type-unsafe validation_data pointer
+Date:   Wed, 29 Apr 2020 15:48:37 +0200
+Message-Id: <20200429154836.390ab646277f.Ib760259c7f93e40ef3dfcb23b187684bc19e4e26@changeid>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200429134843.42224-1-johannes@sipsolutions.net>
 References: <20200429134843.42224-1-johannes@sipsolutions.net>
@@ -47,189 +48,303 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Add helpers to get the policy's signed/unsigned range
-validation data.
+In the netlink policy, we currently have a void *validation_data
+that's pointing to different things:
+ * a u32 value for bitfield32,
+ * the netlink policy for nested/nested array
+ * the string for NLA_REJECT
+
+Remove the pointer and place appropriate type-safe items in the
+union instead.
+
+While at it, completely dissolve the pointer for the bitfield32
+case and just put the value there directly.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- include/net/netlink.h |  5 +++
- lib/nlattr.c          | 95 +++++++++++++++++++++++++++++++++----------
- 2 files changed, 79 insertions(+), 21 deletions(-)
+ include/net/netlink.h | 60 +++++++++++++++++++++++--------------------
+ lib/nlattr.c          | 20 +++++++--------
+ net/sched/act_api.c   | 13 +++-------
+ net/sched/sch_red.c   |  9 +++----
+ 4 files changed, 49 insertions(+), 53 deletions(-)
 
 diff --git a/include/net/netlink.h b/include/net/netlink.h
-index 4d4a733f1e8d..557b67f1db99 100644
+index 67c57d6942e3..671b29d170a8 100644
 --- a/include/net/netlink.h
 +++ b/include/net/netlink.h
-@@ -1928,4 +1928,9 @@ static inline bool nla_is_last(const struct nlattr *nla, int rem)
- 	return nla->nla_len == rem;
- }
+@@ -217,7 +217,7 @@ enum nla_policy_validation {
+  *    NLA_NESTED,
+  *    NLA_NESTED_ARRAY     Length verification is done by checking len of
+  *                         nested header (or empty); len field is used if
+- *                         validation_data is also used, for the max attr
++ *                         nested_policy is also used, for the max attr
+  *                         number in the nested policy.
+  *    NLA_U8, NLA_U16,
+  *    NLA_U32, NLA_U64,
+@@ -235,27 +235,25 @@ enum nla_policy_validation {
+  *    NLA_MIN_LEN          Minimum length of attribute payload
+  *    All other            Minimum length of attribute payload
+  *
+- * Meaning of `validation_data' field:
++ * Meaning of validation union:
+  *    NLA_BITFIELD32       This is a 32-bit bitmap/bitselector attribute and
+- *                         validation data must point to a u32 value of valid
+- *                         flags
+- *    NLA_REJECT           This attribute is always rejected and validation data
++ *                         `bitfield32_valid' is the u32 value of valid flags
++ *    NLA_REJECT           This attribute is always rejected and `reject_message'
+  *                         may point to a string to report as the error instead
+  *                         of the generic one in extended ACK.
+- *    NLA_NESTED           Points to a nested policy to validate, must also set
+- *                         `len' to the max attribute number.
++ *    NLA_NESTED           `nested_policy' to a nested policy to validate, must
++ *                         also set `len' to the max attribute number. Use the
++ *                         provided NLA_POLICY_NESTED() macro.
+  *                         Note that nla_parse() will validate, but of course not
+  *                         parse, the nested sub-policies.
+- *    NLA_NESTED_ARRAY     Points to a nested policy to validate, must also set
+- *                         `len' to the max attribute number. The difference to
+- *                         NLA_NESTED is the structure - NLA_NESTED has the
+- *                         nested attributes directly inside, while an array has
+- *                         the nested attributes at another level down and the
+- *                         attributes directly in the nesting don't matter.
+- *    All other            Unused - but note that it's a union
+- *
+- * Meaning of `min' and `max' fields, use via NLA_POLICY_MIN, NLA_POLICY_MAX
+- * and NLA_POLICY_RANGE:
++ *    NLA_NESTED_ARRAY     `nested_policy' points to a nested policy to validate,
++ *                         must also set `len' to the max attribute number. Use
++ *                         the provided NLA_POLICY_NESTED_ARRAY() macro.
++ *                         The difference to NLA_NESTED is the structure:
++ *                         NLA_NESTED has the nested attributes directly inside
++ *                         while an array has the nested attributes at another
++ *                         level down and the attribute types directly in the
++ *                         nesting don't matter.
+  *    NLA_U8,
+  *    NLA_U16,
+  *    NLA_U32,
+@@ -263,29 +261,31 @@ enum nla_policy_validation {
+  *    NLA_S8,
+  *    NLA_S16,
+  *    NLA_S32,
+- *    NLA_S64              These are used depending on the validation_type
+- *                         field, if that is min/max/range then the minimum,
+- *                         maximum and both are used (respectively) to check
++ *    NLA_S64              The `min' and `max' fields are used depending on the
++ *                         validation_type field, if that is min/max/range then
++ *                         the min, max or both are used (respectively) to check
+  *                         the value of the integer attribute.
+  *                         Note that in the interest of code simplicity and
+  *                         struct size both limits are s16, so you cannot
+  *                         enforce a range that doesn't fall within the range
+  *                         of s16 - do that as usual in the code instead.
++ *                         Use the NLA_POLICY_MIN(), NLA_POLICY_MAX() and
++ *                         NLA_POLICY_RANGE() macros.
+  *    All other            Unused - but note that it's a union
+  *
+  * Meaning of `validate' field, use via NLA_POLICY_VALIDATE_FN:
+- *    NLA_BINARY           Validation function called for the attribute,
+- *                         not compatible with use of the validation_data
+- *                         as in NLA_BITFIELD32, NLA_REJECT, NLA_NESTED and
+- *                         NLA_NESTED_ARRAY.
++ *    NLA_BINARY           Validation function called for the attribute.
+  *    All other            Unused - but note that it's a union
+  *
+  * Example:
++ *
++ * static const u32 myvalidflags = 0xff231023;
++ *
+  * static const struct nla_policy my_policy[ATTR_MAX+1] = {
+  * 	[ATTR_FOO] = { .type = NLA_U16 },
+  *	[ATTR_BAR] = { .type = NLA_STRING, .len = BARSIZ },
+  *	[ATTR_BAZ] = { .type = NLA_EXACT_LEN, .len = sizeof(struct mystruct) },
+- *	[ATTR_GOO] = { .type = NLA_BITFIELD32, .validation_data = &myvalidflags },
++ *	[ATTR_GOO] = NLA_POLICY_BITFIELD32(myvalidflags),
+  * };
+  */
+ struct nla_policy {
+@@ -293,7 +293,9 @@ struct nla_policy {
+ 	u8		validation_type;
+ 	u16		len;
+ 	union {
+-		const void *validation_data;
++		const u32 bitfield32_valid;
++		const char *reject_message;
++		const struct nla_policy *nested_policy;
+ 		struct {
+ 			s16 min, max;
+ 		};
+@@ -329,13 +331,15 @@ struct nla_policy {
+ #define NLA_POLICY_ETH_ADDR_COMPAT	NLA_POLICY_EXACT_LEN_WARN(ETH_ALEN)
  
-+void nla_get_range_unsigned(const struct nla_policy *pt,
-+			    struct netlink_range_validation *range);
-+void nla_get_range_signed(const struct nla_policy *pt,
-+			  struct netlink_range_validation_signed *range);
-+
- #endif
+ #define _NLA_POLICY_NESTED(maxattr, policy) \
+-	{ .type = NLA_NESTED, .validation_data = policy, .len = maxattr }
++	{ .type = NLA_NESTED, .nested_policy = policy, .len = maxattr }
+ #define _NLA_POLICY_NESTED_ARRAY(maxattr, policy) \
+-	{ .type = NLA_NESTED_ARRAY, .validation_data = policy, .len = maxattr }
++	{ .type = NLA_NESTED_ARRAY, .nested_policy = policy, .len = maxattr }
+ #define NLA_POLICY_NESTED(policy) \
+ 	_NLA_POLICY_NESTED(ARRAY_SIZE(policy) - 1, policy)
+ #define NLA_POLICY_NESTED_ARRAY(policy) \
+ 	_NLA_POLICY_NESTED_ARRAY(ARRAY_SIZE(policy) - 1, policy)
++#define NLA_POLICY_BITFIELD32(valid) \
++	{ .type = NLA_BITFIELD32, .bitfield32_valid = valid }
+ 
+ #define __NLA_ENSURE(condition) BUILD_BUG_ON_ZERO(!(condition))
+ #define NLA_ENSURE_INT_TYPE(tp)				\
 diff --git a/lib/nlattr.c b/lib/nlattr.c
-index 6e4cb9458050..b78495ef6d31 100644
+index cace9b307781..3df05db732ca 100644
 --- a/lib/nlattr.c
 +++ b/lib/nlattr.c
-@@ -111,25 +111,39 @@ static int nla_validate_array(const struct nlattr *head, int len, int maxtype,
- 	return 0;
+@@ -45,7 +45,7 @@ static const u8 nla_attr_minlen[NLA_TYPE_MAX+1] = {
+ };
+ 
+ static int validate_nla_bitfield32(const struct nlattr *nla,
+-				   const u32 *valid_flags_mask)
++				   const u32 valid_flags_mask)
+ {
+ 	const struct nla_bitfield32 *bf = nla_data(nla);
+ 
+@@ -53,11 +53,11 @@ static int validate_nla_bitfield32(const struct nlattr *nla,
+ 		return -EINVAL;
+ 
+ 	/*disallow invalid bit selector */
+-	if (bf->selector & ~*valid_flags_mask)
++	if (bf->selector & ~valid_flags_mask)
+ 		return -EINVAL;
+ 
+ 	/*disallow invalid bit values */
+-	if (bf->value & ~*valid_flags_mask)
++	if (bf->value & ~valid_flags_mask)
+ 		return -EINVAL;
+ 
+ 	/*disallow valid bit values that are not selected*/
+@@ -206,9 +206,9 @@ static int validate_nla(const struct nlattr *nla, int maxtype,
+ 		break;
+ 
+ 	case NLA_REJECT:
+-		if (extack && pt->validation_data) {
++		if (extack && pt->reject_message) {
+ 			NL_SET_BAD_ATTR(extack, nla);
+-			extack->_msg = pt->validation_data;
++			extack->_msg = pt->reject_message;
+ 			return -EINVAL;
+ 		}
+ 		err = -EINVAL;
+@@ -223,7 +223,7 @@ static int validate_nla(const struct nlattr *nla, int maxtype,
+ 		if (attrlen != sizeof(struct nla_bitfield32))
+ 			goto out_err;
+ 
+-		err = validate_nla_bitfield32(nla, pt->validation_data);
++		err = validate_nla_bitfield32(nla, pt->bitfield32_valid);
+ 		if (err)
+ 			goto out_err;
+ 		break;
+@@ -268,9 +268,9 @@ static int validate_nla(const struct nlattr *nla, int maxtype,
+ 			break;
+ 		if (attrlen < NLA_HDRLEN)
+ 			goto out_err;
+-		if (pt->validation_data) {
++		if (pt->nested_policy) {
+ 			err = __nla_validate(nla_data(nla), nla_len(nla), pt->len,
+-					     pt->validation_data, validate,
++					     pt->nested_policy, validate,
+ 					     extack);
+ 			if (err < 0) {
+ 				/*
+@@ -289,11 +289,11 @@ static int validate_nla(const struct nlattr *nla, int maxtype,
+ 			break;
+ 		if (attrlen < NLA_HDRLEN)
+ 			goto out_err;
+-		if (pt->validation_data) {
++		if (pt->nested_policy) {
+ 			int err;
+ 
+ 			err = nla_validate_array(nla_data(nla), nla_len(nla),
+-						 pt->len, pt->validation_data,
++						 pt->len, pt->nested_policy,
+ 						 extack, validate);
+ 			if (err < 0) {
+ 				/*
+diff --git a/net/sched/act_api.c b/net/sched/act_api.c
+index df4560909157..fbbec2e562f5 100644
+--- a/net/sched/act_api.c
++++ b/net/sched/act_api.c
+@@ -876,19 +876,14 @@ static u8 tcf_action_hw_stats_get(struct nlattr *hw_stats_attr)
+ 	return hw_stats_bf.value;
  }
  
--static int nla_validate_int_range_unsigned(const struct nla_policy *pt,
--					   const struct nlattr *nla,
--					   struct netlink_ext_ack *extack)
-+void nla_get_range_unsigned(const struct nla_policy *pt,
-+			    struct netlink_range_validation *range)
- {
--	struct netlink_range_validation _range = {
--		.min = 0,
--		.max = U64_MAX,
--	}, *range = &_range;
--	u64 value;
+-static const u32 tca_act_flags_allowed = TCA_ACT_FLAGS_NO_PERCPU_STATS;
+-static const u32 tca_act_hw_stats_allowed = TCA_ACT_HW_STATS_ANY;
 -
- 	WARN_ON_ONCE(pt->min < 0 || pt->max < 0);
+ static const struct nla_policy tcf_action_policy[TCA_ACT_MAX + 1] = {
+ 	[TCA_ACT_KIND]		= { .type = NLA_STRING },
+ 	[TCA_ACT_INDEX]		= { .type = NLA_U32 },
+ 	[TCA_ACT_COOKIE]	= { .type = NLA_BINARY,
+ 				    .len = TC_COOKIE_MAX_SIZE },
+ 	[TCA_ACT_OPTIONS]	= { .type = NLA_NESTED },
+-	[TCA_ACT_FLAGS]		= { .type = NLA_BITFIELD32,
+-				    .validation_data = &tca_act_flags_allowed },
+-	[TCA_ACT_HW_STATS]	= { .type = NLA_BITFIELD32,
+-				    .validation_data = &tca_act_hw_stats_allowed },
++	[TCA_ACT_FLAGS]		= NLA_POLICY_BITFIELD32(TCA_ACT_FLAGS_NO_PERCPU_STATS),
++	[TCA_ACT_HW_STATS]	= NLA_POLICY_BITFIELD32(TCA_ACT_HW_STATS_ANY),
+ };
  
-+	range->min = 0;
-+
-+	switch (pt->type) {
-+	case NLA_U8:
-+		range->max = U8_MAX;
-+		break;
-+	case NLA_U16:
-+		range->max = U16_MAX;
-+		break;
-+	case NLA_U32:
-+		range->max = U32_MAX;
-+		break;
-+	case NLA_U64:
-+	case NLA_MSECS:
-+		range->max = U64_MAX;
-+		break;
-+	default:
-+		WARN_ON_ONCE(1);
-+		return;
-+	}
-+
- 	switch (pt->validation_type) {
- 	case NLA_VALIDATE_RANGE:
- 		range->min = pt->min;
- 		range->max = pt->max;
- 		break;
- 	case NLA_VALIDATE_RANGE_PTR:
--		range = pt->range;
-+		*range = *pt->range;
- 		break;
- 	case NLA_VALIDATE_MIN:
- 		range->min = pt->min;
-@@ -137,7 +151,17 @@ static int nla_validate_int_range_unsigned(const struct nla_policy *pt,
- 	case NLA_VALIDATE_MAX:
- 		range->max = pt->max;
- 		break;
-+	default:
-+		break;
- 	}
-+}
-+
-+static int nla_validate_int_range_unsigned(const struct nla_policy *pt,
-+					   const struct nlattr *nla,
-+					   struct netlink_ext_ack *extack)
-+{
-+	struct netlink_range_validation range;
-+	u64 value;
- 
- 	switch (pt->type) {
- 	case NLA_U8:
-@@ -157,7 +181,9 @@ static int nla_validate_int_range_unsigned(const struct nla_policy *pt,
- 		return -EINVAL;
- 	}
- 
--	if (value < range->min || value > range->max) {
-+	nla_get_range_unsigned(pt, &range);
-+
-+	if (value < range.min || value > range.max) {
- 		NL_SET_ERR_MSG_ATTR(extack, nla,
- 				    "integer out of range");
- 		return -ERANGE;
-@@ -166,15 +192,30 @@ static int nla_validate_int_range_unsigned(const struct nla_policy *pt,
- 	return 0;
+ struct tc_action *tcf_action_init_1(struct net *net, struct tcf_proto *tp,
+@@ -1454,10 +1449,8 @@ static int tcf_action_add(struct net *net, struct nlattr *nla,
+ 	return ret;
  }
  
--static int nla_validate_int_range_signed(const struct nla_policy *pt,
--					 const struct nlattr *nla,
--					 struct netlink_ext_ack *extack)
-+void nla_get_range_signed(const struct nla_policy *pt,
-+			  struct netlink_range_validation_signed *range)
+-static u32 tcaa_root_flags_allowed = TCA_FLAG_LARGE_DUMP_ON;
+ static const struct nla_policy tcaa_policy[TCA_ROOT_MAX + 1] = {
+-	[TCA_ROOT_FLAGS] = { .type = NLA_BITFIELD32,
+-			     .validation_data = &tcaa_root_flags_allowed },
++	[TCA_ROOT_FLAGS] = NLA_POLICY_BITFIELD32(TCA_FLAG_LARGE_DUMP_ON),
+ 	[TCA_ROOT_TIME_DELTA]      = { .type = NLA_U32 },
+ };
+ 
+diff --git a/net/sched/sch_red.c b/net/sched/sch_red.c
+index c7de47c942e3..555a1b9e467f 100644
+--- a/net/sched/sch_red.c
++++ b/net/sched/sch_red.c
+@@ -48,7 +48,7 @@ struct red_sched_data {
+ 	struct Qdisc		*qdisc;
+ };
+ 
+-static const u32 red_supported_flags = TC_RED_HISTORIC_FLAGS | TC_RED_NODROP;
++#define TC_RED_SUPPORTED_FLAGS (TC_RED_HISTORIC_FLAGS | TC_RED_NODROP)
+ 
+ static inline int red_use_ecn(struct red_sched_data *q)
  {
--	struct netlink_range_validation_signed _range = {
--		.min = S64_MIN,
--		.max = S64_MAX,
--	}, *range = &_range;
--	s64 value;
-+	switch (pt->type) {
-+	case NLA_S8:
-+		range->min = S8_MIN;
-+		range->max = S8_MAX;
-+		break;
-+	case NLA_S16:
-+		range->min = S16_MIN;
-+		range->max = S16_MAX;
-+		break;
-+	case NLA_S32:
-+		range->min = S32_MIN;
-+		range->max = S32_MAX;
-+		break;
-+	case NLA_S64:
-+		range->min = S64_MIN;
-+		range->max = S64_MAX;
-+		break;
-+	default:
-+		WARN_ON_ONCE(1);
-+		return;
-+	}
+@@ -212,8 +212,7 @@ static const struct nla_policy red_policy[TCA_RED_MAX + 1] = {
+ 	[TCA_RED_PARMS]	= { .len = sizeof(struct tc_red_qopt) },
+ 	[TCA_RED_STAB]	= { .len = RED_STAB_SIZE },
+ 	[TCA_RED_MAX_P] = { .type = NLA_U32 },
+-	[TCA_RED_FLAGS] = { .type = NLA_BITFIELD32,
+-			    .validation_data = &red_supported_flags },
++	[TCA_RED_FLAGS] = NLA_POLICY_BITFIELD32(TC_RED_SUPPORTED_FLAGS),
+ };
  
- 	switch (pt->validation_type) {
- 	case NLA_VALIDATE_RANGE:
-@@ -182,7 +223,7 @@ static int nla_validate_int_range_signed(const struct nla_policy *pt,
- 		range->max = pt->max;
- 		break;
- 	case NLA_VALIDATE_RANGE_PTR:
--		range = pt->range_signed;
-+		*range = *pt->range_signed;
- 		break;
- 	case NLA_VALIDATE_MIN:
- 		range->min = pt->min;
-@@ -190,7 +231,17 @@ static int nla_validate_int_range_signed(const struct nla_policy *pt,
- 	case NLA_VALIDATE_MAX:
- 		range->max = pt->max;
- 		break;
-+	default:
-+		break;
- 	}
-+}
-+
-+static int nla_validate_int_range_signed(const struct nla_policy *pt,
-+					 const struct nlattr *nla,
-+					 struct netlink_ext_ack *extack)
-+{
-+	struct netlink_range_validation_signed range;
-+	s64 value;
- 
- 	switch (pt->type) {
- 	case NLA_S8:
-@@ -209,7 +260,9 @@ static int nla_validate_int_range_signed(const struct nla_policy *pt,
+ static int red_change(struct Qdisc *sch, struct nlattr *opt,
+@@ -248,7 +247,7 @@ static int red_change(struct Qdisc *sch, struct nlattr *opt,
  		return -EINVAL;
- 	}
  
--	if (value < range->min || value > range->max) {
-+	nla_get_range_signed(pt, &range);
-+
-+	if (value < range.min || value > range.max) {
- 		NL_SET_ERR_MSG_ATTR(extack, nla,
- 				    "integer out of range");
- 		return -ERANGE;
+ 	err = red_get_flags(ctl->flags, TC_RED_HISTORIC_FLAGS,
+-			    tb[TCA_RED_FLAGS], red_supported_flags,
++			    tb[TCA_RED_FLAGS], TC_RED_SUPPORTED_FLAGS,
+ 			    &flags_bf, &userbits, extack);
+ 	if (err)
+ 		return err;
+@@ -372,7 +371,7 @@ static int red_dump(struct Qdisc *sch, struct sk_buff *skb)
+ 	if (nla_put(skb, TCA_RED_PARMS, sizeof(opt), &opt) ||
+ 	    nla_put_u32(skb, TCA_RED_MAX_P, q->parms.max_P) ||
+ 	    nla_put_bitfield32(skb, TCA_RED_FLAGS,
+-			       q->flags, red_supported_flags))
++			       q->flags, TC_RED_SUPPORTED_FLAGS))
+ 		goto nla_put_failure;
+ 	return nla_nest_end(skb, opts);
+ 
 -- 
 2.25.1
 
