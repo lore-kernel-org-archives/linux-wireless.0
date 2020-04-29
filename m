@@ -2,74 +2,85 @@ Return-Path: <SRS0=wwyj=6N=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 37F2FC83006
-	for <linux-wireless@archiver.kernel.org>; Wed, 29 Apr 2020 14:10:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14721C83000
+	for <linux-wireless@archiver.kernel.org>; Wed, 29 Apr 2020 14:14:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1F1E621775
-	for <linux-wireless@archiver.kernel.org>; Wed, 29 Apr 2020 14:10:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F05AD20B80
+	for <linux-wireless@archiver.kernel.org>; Wed, 29 Apr 2020 14:14:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728098AbgD2OKT (ORCPT
+        id S1726963AbgD2OO6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 29 Apr 2020 10:10:19 -0400
-Received: from szxga05-in.huawei.com ([45.249.212.191]:3341 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726691AbgD2OKT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Apr 2020 10:10:19 -0400
-Received: from DGGEMS413-HUB.china.huawei.com (unknown [172.30.72.58])
-        by Forcepoint Email with ESMTP id C86CD686A7DCC01E1F55;
-        Wed, 29 Apr 2020 22:10:12 +0800 (CST)
-Received: from huawei.com (10.175.124.28) by DGGEMS413-HUB.china.huawei.com
- (10.3.19.213) with Microsoft SMTP Server id 14.3.487.0; Wed, 29 Apr 2020
- 22:09:58 +0800
-From:   Jason Yan <yanaijie@huawei.com>
-To:     <pkshih@realtek.com>, <kvalo@codeaurora.org>,
-        <davem@davemloft.net>, <linux-wireless@vger.kernel.org>,
-        <netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC:     Jason Yan <yanaijie@huawei.com>
-Subject: [PATCH] rtlwifi: remove comparison of 0/1 to bool variable
-Date:   Wed, 29 Apr 2020 22:09:24 +0800
-Message-ID: <20200429140924.7750-1-yanaijie@huawei.com>
-X-Mailer: git-send-email 2.21.1
+        Wed, 29 Apr 2020 10:14:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59030 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726516AbgD2OO6 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 29 Apr 2020 10:14:58 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D8F5CC03C1AD
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Apr 2020 07:14:57 -0700 (PDT)
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.93)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1jTnUG-001wZ3-5h; Wed, 29 Apr 2020 16:14:56 +0200
+Message-ID: <a9bc44dcb782d3fd37311db511c943f7828821b2.camel@sipsolutions.net>
+Subject: Re: [PATCH 1/5] mac80211: Random MAC address for a Management frame
+ exchange
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Jouni Malinen <jouni@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org
+Date:   Wed, 29 Apr 2020 16:14:54 +0200
+In-Reply-To: <20200425155713.25687-1-jouni@codeaurora.org>
+References: <20200425155713.25687-1-jouni@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.34.4 (3.34.4-1.fc31) 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.175.124.28]
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The variable 'rtlpriv->rfkill.rfkill_state' is bool and can directly
-assigned to bool values.
+On Sat, 2020-04-25 at 18:57 +0300, Jouni Malinen wrote:
 
-Fix the following coccicheck warning:
+> +++ b/net/mac80211/offchannel.c
+> @@ -955,6 +955,12 @@ int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+>  		IEEE80211_SKB_CB(skb)->hw_queue =
+>  			local->hw.offchannel_tx_hw_queue;
+>  
+> +	/* remember a random MAC address for Management frame exchange */
+> +	if (wiphy_ext_feature_isset(wiphy,
+> +				    NL80211_EXT_FEATURE_MGMT_TX_RANDOM_TA) &&
+> +	    !ether_addr_equal(mgmt->sa, wdev_address(wdev)))
+> +		memcpy(local->mgmt_tx_rand_addr, mgmt->sa, ETH_ALEN);
+> +
+>  	/* This will handle all kinds of coalescing and immediate TX */
+>  	ret = ieee80211_start_roc_work(local, sdata, params->chan,
+>  				       params->wait, cookie, skb,
 
-drivers/net/wireless/realtek/rtlwifi/core.c:1725:14-42: WARNING:
-Comparison of 0/1 to bool variable
+This feels wrong to me. It seems it should be made part of the roc work
+item, and only copied over when that item actually starts, and also used
+to not coalesce different items if they specify conflicting temporary
+addresses.
 
-Signed-off-by: Jason Yan <yanaijie@huawei.com>
----
- drivers/net/wireless/realtek/rtlwifi/core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> @@ -971,6 +977,9 @@ int ieee80211_mgmt_tx_cancel_wait(struct wiphy *wiphy,
+>  {
+>  	struct ieee80211_local *local = wiphy_priv(wiphy);
+>  
+> +	/* stop using the random MAC address for Management frame exchange */
+> +	eth_zero_addr(local->mgmt_tx_rand_addr);
+> +
+>  	return ieee80211_cancel_roc(local, cookie, true);
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
-index f73e690bbe8e..4dd82c6052f0 100644
---- a/drivers/net/wireless/realtek/rtlwifi/core.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/core.c
-@@ -1722,7 +1722,7 @@ static void rtl_op_rfkill_poll(struct ieee80211_hw *hw)
- 				 "wireless radio switch turned %s\n",
- 				  radio_state ? "on" : "off");
- 
--			blocked = (rtlpriv->rfkill.rfkill_state == 1) ? 0 : 1;
-+			blocked = !rtlpriv->rfkill.rfkill_state;
- 			wiphy_rfkill_set_hw_state(hw->wiphy, blocked);
- 		}
- 	}
--- 
-2.21.1
+Similar here, not clear that the ROC item even started yet at this
+point.
+
+It seems to me it needs to be pushed a layer deeper, say into
+ieee80211_handle_roc_started() and ieee80211_offchannel_return() or so.
+
+johannes
 
