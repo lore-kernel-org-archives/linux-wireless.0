@@ -4,38 +4,37 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64B8BC83006
-	for <linux-wireless@archiver.kernel.org>; Wed, 29 Apr 2020 13:49:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CDFE7C83009
+	for <linux-wireless@archiver.kernel.org>; Wed, 29 Apr 2020 13:49:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4D1E72074A
-	for <linux-wireless@archiver.kernel.org>; Wed, 29 Apr 2020 13:49:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B25542083B
+	for <linux-wireless@archiver.kernel.org>; Wed, 29 Apr 2020 13:49:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727901AbgD2Ns7 (ORCPT
+        id S1727983AbgD2NtD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 29 Apr 2020 09:48:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54918 "EHLO
+        Wed, 29 Apr 2020 09:49:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54930 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726948AbgD2Ns6 (ORCPT
+        with ESMTP id S1727934AbgD2Ns7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Apr 2020 09:48:58 -0400
+        Wed, 29 Apr 2020 09:48:59 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DFD4BC035493;
-        Wed, 29 Apr 2020 06:48:57 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60D87C03C1AD;
+        Wed, 29 Apr 2020 06:48:59 -0700 (PDT)
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.93)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1jTn56-001vkM-4d; Wed, 29 Apr 2020 15:48:56 +0200
+        id 1jTn57-001vkM-N6; Wed, 29 Apr 2020 15:48:57 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     netdev@vger.kernel.org
 Cc:     Antonio Quartulli <ordex@autistici.org>,
         linux-wireless@vger.kernel.org,
         Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3/7] nl80211: link recursive netlink nested policy
-Date:   Wed, 29 Apr 2020 15:48:39 +0200
-Message-Id: <20200429154836.b2e6bb0b4731.I697e382aa8ac181afe32ffac50b330c558bc34b1@changeid>
+Subject: [PATCH 7/7] netlink: factor out policy range helpers
+Date:   Wed, 29 Apr 2020 15:48:43 +0200
+Message-Id: <20200429154836.02b4e60d49a3.Ibb79f28261ecab0dd1de120da488db29cf011389@changeid>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200429134843.42224-1-johannes@sipsolutions.net>
 References: <20200429134843.42224-1-johannes@sipsolutions.net>
@@ -48,82 +47,189 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Now that we have limited recursive policy validation to avoid
-stack overflows, change nl80211 to actually link the nested
-policy (linking back to itself eventually), which allows some
-code cleanups.
+Add helpers to get the policy's signed/unsigned range
+validation data.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/wireless/nl80211.c | 10 ++++------
- net/wireless/nl80211.h |  2 --
- net/wireless/pmsr.c    |  3 +--
- 3 files changed, 5 insertions(+), 10 deletions(-)
+ include/net/netlink.h |  5 +++
+ lib/nlattr.c          | 95 +++++++++++++++++++++++++++++++++----------
+ 2 files changed, 79 insertions(+), 21 deletions(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 692bcd35f809..57c618b6cb0e 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -253,6 +253,8 @@ static int validate_ie_attr(const struct nlattr *attr,
+diff --git a/include/net/netlink.h b/include/net/netlink.h
+index 4d4a733f1e8d..557b67f1db99 100644
+--- a/include/net/netlink.h
++++ b/include/net/netlink.h
+@@ -1928,4 +1928,9 @@ static inline bool nla_is_last(const struct nlattr *nla, int rem)
+ 	return nla->nla_len == rem;
  }
  
- /* policy for the attributes */
-+static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR];
++void nla_get_range_unsigned(const struct nla_policy *pt,
++			    struct netlink_range_validation *range);
++void nla_get_range_signed(const struct nla_policy *pt,
++			  struct netlink_range_validation_signed *range);
 +
- static const struct nla_policy
- nl80211_ftm_responder_policy[NL80211_FTM_RESP_ATTR_MAX + 1] = {
- 	[NL80211_FTM_RESP_ATTR_ENABLED] = { .type = NLA_FLAG, },
-@@ -296,11 +298,7 @@ nl80211_pmsr_req_attr_policy[NL80211_PMSR_REQ_ATTR_MAX + 1] = {
- static const struct nla_policy
- nl80211_psmr_peer_attr_policy[NL80211_PMSR_PEER_ATTR_MAX + 1] = {
- 	[NL80211_PMSR_PEER_ATTR_ADDR] = NLA_POLICY_ETH_ADDR,
--	/*
--	 * we could specify this again to be the top-level policy,
--	 * but that would open us up to recursion problems ...
--	 */
--	[NL80211_PMSR_PEER_ATTR_CHAN] = { .type = NLA_NESTED },
-+	[NL80211_PMSR_PEER_ATTR_CHAN] = NLA_POLICY_NESTED(nl80211_policy),
- 	[NL80211_PMSR_PEER_ATTR_REQ] =
- 		NLA_POLICY_NESTED(nl80211_pmsr_req_attr_policy),
- 	[NL80211_PMSR_PEER_ATTR_RESP] = { .type = NLA_REJECT },
-@@ -347,7 +345,7 @@ nl80211_tid_config_attr_policy[NL80211_TID_CONFIG_ATTR_MAX + 1] = {
- 			NLA_POLICY_MAX(NLA_U8, NL80211_TID_CONFIG_DISABLE),
- };
+ #endif
+diff --git a/lib/nlattr.c b/lib/nlattr.c
+index 6e4cb9458050..b78495ef6d31 100644
+--- a/lib/nlattr.c
++++ b/lib/nlattr.c
+@@ -111,25 +111,39 @@ static int nla_validate_array(const struct nlattr *head, int len, int maxtype,
+ 	return 0;
+ }
  
--const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
-+static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
- 	[0] = { .strict_start_type = NL80211_ATTR_HE_OBSS_PD },
- 	[NL80211_ATTR_WIPHY] = { .type = NLA_U32 },
- 	[NL80211_ATTR_WIPHY_NAME] = { .type = NLA_NUL_STRING,
-diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
-index a41e94a49a89..d3e8e426c486 100644
---- a/net/wireless/nl80211.h
-+++ b/net/wireless/nl80211.h
-@@ -11,8 +11,6 @@
- int nl80211_init(void);
- void nl80211_exit(void);
- 
--extern const struct nla_policy nl80211_policy[NUM_NL80211_ATTR];
+-static int nla_validate_int_range_unsigned(const struct nla_policy *pt,
+-					   const struct nlattr *nla,
+-					   struct netlink_ext_ack *extack)
++void nla_get_range_unsigned(const struct nla_policy *pt,
++			    struct netlink_range_validation *range)
+ {
+-	struct netlink_range_validation _range = {
+-		.min = 0,
+-		.max = U64_MAX,
+-	}, *range = &_range;
+-	u64 value;
 -
- void *nl80211hdr_put(struct sk_buff *skb, u32 portid, u32 seq,
- 		     int flags, u8 cmd);
- bool nl80211_put_sta_rate(struct sk_buff *msg, struct rate_info *info,
-diff --git a/net/wireless/pmsr.c b/net/wireless/pmsr.c
-index 63dc8023447f..a95c79d18349 100644
---- a/net/wireless/pmsr.c
-+++ b/net/wireless/pmsr.c
-@@ -187,10 +187,9 @@ static int pmsr_parse_peer(struct cfg80211_registered_device *rdev,
+ 	WARN_ON_ONCE(pt->min < 0 || pt->max < 0);
  
- 	/* reuse info->attrs */
- 	memset(info->attrs, 0, sizeof(*info->attrs) * (NL80211_ATTR_MAX + 1));
--	/* need to validate here, we don't want to have validation recursion */
- 	err = nla_parse_nested_deprecated(info->attrs, NL80211_ATTR_MAX,
- 					  tb[NL80211_PMSR_PEER_ATTR_CHAN],
--					  nl80211_policy, info->extack);
-+					  NULL, info->extack);
- 	if (err)
- 		return err;
++	range->min = 0;
++
++	switch (pt->type) {
++	case NLA_U8:
++		range->max = U8_MAX;
++		break;
++	case NLA_U16:
++		range->max = U16_MAX;
++		break;
++	case NLA_U32:
++		range->max = U32_MAX;
++		break;
++	case NLA_U64:
++	case NLA_MSECS:
++		range->max = U64_MAX;
++		break;
++	default:
++		WARN_ON_ONCE(1);
++		return;
++	}
++
+ 	switch (pt->validation_type) {
+ 	case NLA_VALIDATE_RANGE:
+ 		range->min = pt->min;
+ 		range->max = pt->max;
+ 		break;
+ 	case NLA_VALIDATE_RANGE_PTR:
+-		range = pt->range;
++		*range = *pt->range;
+ 		break;
+ 	case NLA_VALIDATE_MIN:
+ 		range->min = pt->min;
+@@ -137,7 +151,17 @@ static int nla_validate_int_range_unsigned(const struct nla_policy *pt,
+ 	case NLA_VALIDATE_MAX:
+ 		range->max = pt->max;
+ 		break;
++	default:
++		break;
+ 	}
++}
++
++static int nla_validate_int_range_unsigned(const struct nla_policy *pt,
++					   const struct nlattr *nla,
++					   struct netlink_ext_ack *extack)
++{
++	struct netlink_range_validation range;
++	u64 value;
  
+ 	switch (pt->type) {
+ 	case NLA_U8:
+@@ -157,7 +181,9 @@ static int nla_validate_int_range_unsigned(const struct nla_policy *pt,
+ 		return -EINVAL;
+ 	}
+ 
+-	if (value < range->min || value > range->max) {
++	nla_get_range_unsigned(pt, &range);
++
++	if (value < range.min || value > range.max) {
+ 		NL_SET_ERR_MSG_ATTR(extack, nla,
+ 				    "integer out of range");
+ 		return -ERANGE;
+@@ -166,15 +192,30 @@ static int nla_validate_int_range_unsigned(const struct nla_policy *pt,
+ 	return 0;
+ }
+ 
+-static int nla_validate_int_range_signed(const struct nla_policy *pt,
+-					 const struct nlattr *nla,
+-					 struct netlink_ext_ack *extack)
++void nla_get_range_signed(const struct nla_policy *pt,
++			  struct netlink_range_validation_signed *range)
+ {
+-	struct netlink_range_validation_signed _range = {
+-		.min = S64_MIN,
+-		.max = S64_MAX,
+-	}, *range = &_range;
+-	s64 value;
++	switch (pt->type) {
++	case NLA_S8:
++		range->min = S8_MIN;
++		range->max = S8_MAX;
++		break;
++	case NLA_S16:
++		range->min = S16_MIN;
++		range->max = S16_MAX;
++		break;
++	case NLA_S32:
++		range->min = S32_MIN;
++		range->max = S32_MAX;
++		break;
++	case NLA_S64:
++		range->min = S64_MIN;
++		range->max = S64_MAX;
++		break;
++	default:
++		WARN_ON_ONCE(1);
++		return;
++	}
+ 
+ 	switch (pt->validation_type) {
+ 	case NLA_VALIDATE_RANGE:
+@@ -182,7 +223,7 @@ static int nla_validate_int_range_signed(const struct nla_policy *pt,
+ 		range->max = pt->max;
+ 		break;
+ 	case NLA_VALIDATE_RANGE_PTR:
+-		range = pt->range_signed;
++		*range = *pt->range_signed;
+ 		break;
+ 	case NLA_VALIDATE_MIN:
+ 		range->min = pt->min;
+@@ -190,7 +231,17 @@ static int nla_validate_int_range_signed(const struct nla_policy *pt,
+ 	case NLA_VALIDATE_MAX:
+ 		range->max = pt->max;
+ 		break;
++	default:
++		break;
+ 	}
++}
++
++static int nla_validate_int_range_signed(const struct nla_policy *pt,
++					 const struct nlattr *nla,
++					 struct netlink_ext_ack *extack)
++{
++	struct netlink_range_validation_signed range;
++	s64 value;
+ 
+ 	switch (pt->type) {
+ 	case NLA_S8:
+@@ -209,7 +260,9 @@ static int nla_validate_int_range_signed(const struct nla_policy *pt,
+ 		return -EINVAL;
+ 	}
+ 
+-	if (value < range->min || value > range->max) {
++	nla_get_range_signed(pt, &range);
++
++	if (value < range.min || value > range.max) {
+ 		NL_SET_ERR_MSG_ATTR(extack, nla,
+ 				    "integer out of range");
+ 		return -ERANGE;
 -- 
 2.25.1
 
