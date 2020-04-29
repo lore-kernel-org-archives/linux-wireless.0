@@ -2,171 +2,150 @@ Return-Path: <SRS0=wwyj=6N=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74CD1C83007
-	for <linux-wireless@archiver.kernel.org>; Wed, 29 Apr 2020 09:57:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C55C4C83003
+	for <linux-wireless@archiver.kernel.org>; Wed, 29 Apr 2020 10:15:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5E9172087E
-	for <linux-wireless@archiver.kernel.org>; Wed, 29 Apr 2020 09:57:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A20CB217D8
+	for <linux-wireless@archiver.kernel.org>; Wed, 29 Apr 2020 10:15:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1588155336;
+	bh=ht/RoPskfTVr50a64BfSKdDc9vFE86ERaFW3HHWbVdA=;
+	h=Date:From:To:Cc:Subject:List-ID:From;
+	b=pSXaV7pJv4AaXZsl363LclzGlFuLNfbRd6jXeTfaRDdx1o438B6KvUphbXLm9pp22
+	 eVS3X7H5lK1ogMhOnhbUKQxtflDx0RdvJ2HQ8ZoG6SmyrfERXpBGS0kKI6Gyp38iN+
+	 IxqoRkTQIf6SDcjUctqRuGRi55m7jXxLLHskhD8s=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726784AbgD2J5Q (ORCPT
+        id S1726737AbgD2KPa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 29 Apr 2020 05:57:16 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:49972 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726558AbgD2J5J (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Apr 2020 05:57:09 -0400
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 03T9v5hkD030899, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexmb06.realtek.com.tw[172.21.6.99])
-        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 03T9v5hkD030899
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Wed, 29 Apr 2020 17:57:05 +0800
-Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
- RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Wed, 29 Apr 2020 17:57:05 +0800
-Received: from localhost.localdomain (172.21.68.128) by
- RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Wed, 29 Apr 2020 17:57:04 +0800
-From:   <yhchuang@realtek.com>
-To:     <kvalo@codeaurora.org>
-CC:     <linux-wireless@vger.kernel.org>, <pkshih@realtek.com>
-Subject: [PATCH v3 4/8] rtw88: handle C2H_CCX_TX_RPT to know if packet TX'ed successfully
-Date:   Wed, 29 Apr 2020 17:56:52 +0800
-Message-ID: <20200429095656.19315-5-yhchuang@realtek.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20200429095656.19315-1-yhchuang@realtek.com>
-References: <20200429095656.19315-1-yhchuang@realtek.com>
+        Wed, 29 Apr 2020 06:15:30 -0400
+Received: from mail.kernel.org ([198.145.29.99]:40746 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726345AbgD2KP3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 29 Apr 2020 06:15:29 -0400
+Received: from localhost (83-86-89-107.cable.dynamic.v4.ziggo.nl [83.86.89.107])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 1AA352073E;
+        Wed, 29 Apr 2020 10:15:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1588155328;
+        bh=ht/RoPskfTVr50a64BfSKdDc9vFE86ERaFW3HHWbVdA=;
+        h=Date:From:To:Cc:Subject:From;
+        b=qjOWnsNWeBaR8nYC/F3eomgVHNfVcaZKrMfLqp3Hwj1U2lw3UBXNJHbzyaRLF6+ru
+         Xm3ZIZEXoU2g3imzWKnY3Efv30demididNCxRwGFhvYtlYDSvJylUYeXptloGDL9MX
+         yeiUUPvuVdpYGQc0y8ZNHu54kLnN6HmeuOYSP/lI=
+Date:   Wed, 29 Apr 2020 12:15:26 +0200
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
+        Wright Feng <wright.feng@cypress.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc:     "David S. Miller" <davem@davemloft.net>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] brcmfmac: no need to check return value of debugfs_create
+ functions
+Message-ID: <20200429101526.GA2094124@kroah.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [172.21.68.128]
-X-ClientProxiedBy: RTEXMB03.realtek.com.tw (172.21.6.96) To
- RTEXMB04.realtek.com.tw (172.21.6.97)
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+When calling debugfs functions, there is no need to ever check the
+return value.  The function can work or not, but the code logic should
+never do something different based on this.
 
-TX status report of 8723D differs from 8822B/8822C, it uses
-C2H_CCX_TX_RPT (0x03) with different format. With sequence number
-and TX status, driver can know if certain packet was transmitted
-successfully.
+In doing this, make brcmf_debugfs_add_entry() return void as no one was
+even paying attention to the return value.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Franky Lin <franky.lin@broadcom.com>
+Cc: Hante Meuleman <hante.meuleman@broadcom.com>
+Cc: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
+Cc: Wright Feng <wright.feng@cypress.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: "Rafał Miłecki" <rafal@milecki.pl>
+Cc: linux-wireless@vger.kernel.org
+Cc: brcm80211-dev-list.pdl@broadcom.com
+Cc: brcm80211-dev-list@cypress.com
+Cc: netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 ---
- drivers/net/wireless/realtek/rtw88/fw.c |  6 +++++-
- drivers/net/wireless/realtek/rtw88/fw.h |  7 +++++--
- drivers/net/wireless/realtek/rtw88/tx.c | 11 ++++++++---
- drivers/net/wireless/realtek/rtw88/tx.h |  2 +-
- 4 files changed, 19 insertions(+), 7 deletions(-)
+ .../net/wireless/broadcom/brcm80211/brcmfmac/debug.c |  9 +++------
+ .../net/wireless/broadcom/brcm80211/brcmfmac/debug.h | 12 +++++-------
+ 2 files changed, 8 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wireless/realtek/rtw88/fw.c
-index dde7823143ea..11fa1fc7f1cb 100644
---- a/drivers/net/wireless/realtek/rtw88/fw.c
-+++ b/drivers/net/wireless/realtek/rtw88/fw.c
-@@ -25,7 +25,7 @@ static void rtw_fw_c2h_cmd_handle_ext(struct rtw_dev *rtwdev,
- 
- 	switch (sub_cmd_id) {
- 	case C2H_CCX_RPT:
--		rtw_tx_report_handle(rtwdev, skb);
-+		rtw_tx_report_handle(rtwdev, skb, C2H_CCX_RPT);
- 		break;
- 	default:
- 		break;
-@@ -142,6 +142,9 @@ void rtw_fw_c2h_cmd_handle(struct rtw_dev *rtwdev, struct sk_buff *skb)
- 		goto unlock;
- 
- 	switch (c2h->id) {
-+	case C2H_CCX_TX_RPT:
-+		rtw_tx_report_handle(rtwdev, skb, C2H_CCX_TX_RPT);
-+		break;
- 	case C2H_BT_INFO:
- 		rtw_coex_bt_info_notify(rtwdev, c2h->payload, len);
- 		break;
-@@ -155,6 +158,7 @@ void rtw_fw_c2h_cmd_handle(struct rtw_dev *rtwdev, struct sk_buff *skb)
- 		rtw_fw_ra_report_handle(rtwdev, c2h->payload, len);
- 		break;
- 	default:
-+		rtw_dbg(rtwdev, RTW_DBG_FW, "C2H 0x%x isn't handled\n", c2h->id);
- 		break;
- 	}
- 
-diff --git a/drivers/net/wireless/realtek/rtw88/fw.h b/drivers/net/wireless/realtek/rtw88/fw.h
-index 2933ef741e53..470e1809645a 100644
---- a/drivers/net/wireless/realtek/rtw88/fw.h
-+++ b/drivers/net/wireless/realtek/rtw88/fw.h
-@@ -26,6 +26,7 @@
- #define FW_START_ADDR_LEGACY		0x1000
- 
- enum rtw_c2h_cmd_id {
-+	C2H_CCX_TX_RPT = 0x03,
- 	C2H_BT_INFO = 0x09,
- 	C2H_BT_MP_INFO = 0x0b,
- 	C2H_RA_RPT = 0x0c,
-@@ -218,8 +219,10 @@ struct rtw_fw_hdr_legacy {
- } __packed;
- 
- /* C2H */
--#define GET_CCX_REPORT_SEQNUM(c2h_payload)	(c2h_payload[8] & 0xfc)
--#define GET_CCX_REPORT_STATUS(c2h_payload)	(c2h_payload[9] & 0xc0)
-+#define GET_CCX_REPORT_SEQNUM_V0(c2h_payload)	(c2h_payload[6] & 0xfc)
-+#define GET_CCX_REPORT_STATUS_V0(c2h_payload)	(c2h_payload[0] & 0xc0)
-+#define GET_CCX_REPORT_SEQNUM_V1(c2h_payload)	(c2h_payload[8] & 0xfc)
-+#define GET_CCX_REPORT_STATUS_V1(c2h_payload)	(c2h_payload[9] & 0xc0)
- 
- #define GET_RA_REPORT_RATE(c2h_payload)		(c2h_payload[0] & 0x7f)
- #define GET_RA_REPORT_SGI(c2h_payload)		((c2h_payload[0] & 0x80) >> 7)
-diff --git a/drivers/net/wireless/realtek/rtw88/tx.c b/drivers/net/wireless/realtek/rtw88/tx.c
-index 60989987f67b..79c42118825f 100644
---- a/drivers/net/wireless/realtek/rtw88/tx.c
-+++ b/drivers/net/wireless/realtek/rtw88/tx.c
-@@ -196,7 +196,7 @@ static void rtw_tx_report_tx_status(struct rtw_dev *rtwdev,
- 	ieee80211_tx_status_irqsafe(rtwdev->hw, skb);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c
+index 120515fe8250..eecf8a38d94a 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c
+@@ -47,13 +47,10 @@ struct dentry *brcmf_debugfs_get_devdir(struct brcmf_pub *drvr)
+ 	return drvr->wiphy->debugfsdir;
  }
  
--void rtw_tx_report_handle(struct rtw_dev *rtwdev, struct sk_buff *skb)
-+void rtw_tx_report_handle(struct rtw_dev *rtwdev, struct sk_buff *skb, int src)
+-int brcmf_debugfs_add_entry(struct brcmf_pub *drvr, const char *fn,
++void brcmf_debugfs_add_entry(struct brcmf_pub *drvr, const char *fn,
+ 			    int (*read_fn)(struct seq_file *seq, void *data))
  {
- 	struct rtw_tx_report *tx_report = &rtwdev->tx_report;
- 	struct rtw_c2h_cmd *c2h;
-@@ -207,8 +207,13 @@ void rtw_tx_report_handle(struct rtw_dev *rtwdev, struct sk_buff *skb)
- 
- 	c2h = get_c2h_from_skb(skb);
- 
--	sn = GET_CCX_REPORT_SEQNUM(c2h->payload);
--	st = GET_CCX_REPORT_STATUS(c2h->payload);
-+	if (src == C2H_CCX_TX_RPT) {
-+		sn = GET_CCX_REPORT_SEQNUM_V0(c2h->payload);
-+		st = GET_CCX_REPORT_STATUS_V0(c2h->payload);
-+	} else {
-+		sn = GET_CCX_REPORT_SEQNUM_V1(c2h->payload);
-+		st = GET_CCX_REPORT_STATUS_V1(c2h->payload);
-+	}
- 
- 	spin_lock_irqsave(&tx_report->q_lock, flags);
- 	skb_queue_walk_safe(&tx_report->queue, cur, tmp) {
-diff --git a/drivers/net/wireless/realtek/rtw88/tx.h b/drivers/net/wireless/realtek/rtw88/tx.h
-index b973de0f4dc0..72dfd4059f03 100644
---- a/drivers/net/wireless/realtek/rtw88/tx.h
-+++ b/drivers/net/wireless/realtek/rtw88/tx.h
-@@ -95,7 +95,7 @@ void rtw_tx_pkt_info_update(struct rtw_dev *rtwdev,
- 			    struct sk_buff *skb);
- void rtw_tx_fill_tx_desc(struct rtw_tx_pkt_info *pkt_info, struct sk_buff *skb);
- void rtw_tx_report_enqueue(struct rtw_dev *rtwdev, struct sk_buff *skb, u8 sn);
--void rtw_tx_report_handle(struct rtw_dev *rtwdev, struct sk_buff *skb);
-+void rtw_tx_report_handle(struct rtw_dev *rtwdev, struct sk_buff *skb, int src);
- void rtw_rsvd_page_pkt_info_update(struct rtw_dev *rtwdev,
- 				   struct rtw_tx_pkt_info *pkt_info,
- 				   struct sk_buff *skb);
+-	struct dentry *e;
+-
+ 	WARN(!drvr->wiphy->debugfsdir, "wiphy not (yet) registered\n");
+-	e = debugfs_create_devm_seqfile(drvr->bus_if->dev, fn,
+-					drvr->wiphy->debugfsdir, read_fn);
+-	return PTR_ERR_OR_ZERO(e);
++	debugfs_create_devm_seqfile(drvr->bus_if->dev, fn,
++				    drvr->wiphy->debugfsdir, read_fn);
+ }
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+index 9b221b509ade..4146faeed344 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+@@ -116,8 +116,8 @@ struct brcmf_bus;
+ struct brcmf_pub;
+ #ifdef DEBUG
+ struct dentry *brcmf_debugfs_get_devdir(struct brcmf_pub *drvr);
+-int brcmf_debugfs_add_entry(struct brcmf_pub *drvr, const char *fn,
+-			    int (*read_fn)(struct seq_file *seq, void *data));
++void brcmf_debugfs_add_entry(struct brcmf_pub *drvr, const char *fn,
++			     int (*read_fn)(struct seq_file *seq, void *data));
+ int brcmf_debug_create_memdump(struct brcmf_bus *bus, const void *data,
+ 			       size_t len);
+ #else
+@@ -126,11 +126,9 @@ static inline struct dentry *brcmf_debugfs_get_devdir(struct brcmf_pub *drvr)
+ 	return ERR_PTR(-ENOENT);
+ }
+ static inline
+-int brcmf_debugfs_add_entry(struct brcmf_pub *drvr, const char *fn,
+-			    int (*read_fn)(struct seq_file *seq, void *data))
+-{
+-	return 0;
+-}
++void brcmf_debugfs_add_entry(struct brcmf_pub *drvr, const char *fn,
++			     int (*read_fn)(struct seq_file *seq, void *data))
++{ }
+ static inline
+ int brcmf_debug_create_memdump(struct brcmf_bus *bus, const void *data,
+ 			       size_t len)
 -- 
-2.17.1
+2.26.2
 
