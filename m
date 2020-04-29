@@ -3,64 +3,88 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3CC3C83004
-	for <linux-wireless@archiver.kernel.org>; Wed, 29 Apr 2020 19:11:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD261C83007
+	for <linux-wireless@archiver.kernel.org>; Wed, 29 Apr 2020 19:21:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B0BC3208FE
-	for <linux-wireless@archiver.kernel.org>; Wed, 29 Apr 2020 19:11:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BEF99205C9
+	for <linux-wireless@archiver.kernel.org>; Wed, 29 Apr 2020 19:21:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726885AbgD2TLE (ORCPT
+        id S1727071AbgD2TVV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 29 Apr 2020 15:11:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49222 "EHLO
+        Wed, 29 Apr 2020 15:21:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50856 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726456AbgD2TLE (ORCPT
+        by vger.kernel.org with ESMTP id S1726524AbgD2TVV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 29 Apr 2020 15:11:04 -0400
-Received: from shards.monkeyblade.net (shards.monkeyblade.net [IPv6:2620:137:e000::1:9])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5F741C03C1AE;
-        Wed, 29 Apr 2020 12:11:04 -0700 (PDT)
-Received: from localhost (unknown [IPv6:2601:601:9f00:477::3d5])
-        (using TLSv1 with cipher AES256-SHA (256/256 bits))
-        (Client did not present a certificate)
-        (Authenticated sender: davem-davemloft)
-        by shards.monkeyblade.net (Postfix) with ESMTPSA id D92C91210A3E3;
-        Wed, 29 Apr 2020 12:11:03 -0700 (PDT)
-Date:   Wed, 29 Apr 2020 12:11:03 -0700 (PDT)
-Message-Id: <20200429.121103.1627116280946095444.davem@davemloft.net>
-To:     johannes@sipsolutions.net
-Cc:     netdev@vger.kernel.org, ordex@autistici.org,
+        Wed, 29 Apr 2020 15:21:21 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3AA98C03C1AE;
+        Wed, 29 Apr 2020 12:21:21 -0700 (PDT)
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.93)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1jTsGi-0025CO-Mz; Wed, 29 Apr 2020 21:21:16 +0200
+Message-ID: <faf336e3ba515d41211910f3d8d207e693434cb9.camel@sipsolutions.net>
+Subject: Re: [PATCH 4/7] netlink: extend policy range validation
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Jakub Kicinski <kuba@kernel.org>
+Cc:     netdev@vger.kernel.org, Antonio Quartulli <ordex@autistici.org>,
         linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 0/7] netlink validation improvements/refactoring
-From:   David Miller <davem@davemloft.net>
-In-Reply-To: <20200429134843.42224-1-johannes@sipsolutions.net>
+Date:   Wed, 29 Apr 2020 21:21:15 +0200
+In-Reply-To: <20200429111034.71ab2443@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
 References: <20200429134843.42224-1-johannes@sipsolutions.net>
-X-Mailer: Mew version 6.8 on Emacs 26.1
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+         <20200429154836.b86f45043a5e.I7b46d9c85e4d7a99c0b5e0c2f54bb89b5750e6dc@changeid>
+         <20200429111034.71ab2443@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.34.4 (3.34.4-1.fc31) 
+MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-X-Greylist: Sender succeeded SMTP AUTH, not delayed by milter-greylist-4.5.12 (shards.monkeyblade.net [149.20.54.216]); Wed, 29 Apr 2020 12:11:04 -0700 (PDT)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Wed, 29 Apr 2020 15:48:36 +0200
+On Wed, 2020-04-29 at 11:10 -0700, Jakub Kicinski wrote:
 
-> Sorry - again, I got distracted/interrupted before I could send this.
-> I made this a little more than a year ago, and then forgot it. Antonio
-> asked me something a couple of weeks ago, and that reminded me of this
-> so I'm finally sending it out now (rebased & adjusted).
+> > +static int nla_validate_int_range_unsigned(const struct nla_policy *pt,
+> > +					   const struct nlattr *nla,
+> > +					   struct netlink_ext_ack *extack)
+> >  {
+> > -	bool validate_min, validate_max;
+> > -	s64 value;
+> > +	struct netlink_range_validation _range = {
+> > +		.min = 0,
+> > +		.max = U64_MAX,
+> > +	}, *range = &_range;
+> > +	u64 value;
+> >  
+> > -	validate_min = pt->validation_type == NLA_VALIDATE_RANGE ||
+> > -		       pt->validation_type == NLA_VALIDATE_MIN;
+> > -	validate_max = pt->validation_type == NLA_VALIDATE_RANGE ||
+> > -		       pt->validation_type == NLA_VALIDATE_MAX;
+> > +	WARN_ON_ONCE(pt->min < 0 || pt->max < 0);
 > 
-> Basically this just does some refactoring & improvements for range
-> validation, leading up to a patch to expose the policy to userspace,
-> which I'll send separately as RFC for now.
+> I'm probably missing something, but in case of NLA_VALIDATE_RANGE_PTR
+> aren't min and max invalid (union has the range pointer set, so this
+> will read 2 bytes of the pointer).
 
-Please fix the pt->min/pt->max WARN_ON() vs. range pointer issue that
-Jakub pointed out.
+No, you're right of course. It's reading 4 bytes, actually, they're both
+s16. Which I did because that's the maximum range that doesn't increase
+the size on 32-bit.
 
-Otherwise this series looks good.
+I could move it into the switch, but, hm.. the unused ones (min/max if
+only one is used) should be 0, so I guess just
+
+	WARN_ON_ONCE(pt->validation_type != NLA_VALIDATE_RANGE_PTR &&
+                     (pt->min < 0 || pt->max < 0));
+
+will be fine.
+
+Thanks!
+
+johannes
+
+
