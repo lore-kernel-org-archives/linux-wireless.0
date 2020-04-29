@@ -2,45 +2,47 @@ Return-Path: <SRS0=wwyj=6N=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8F2BC83004
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 076B7C83008
 	for <linux-wireless@archiver.kernel.org>; Wed, 29 Apr 2020 09:57:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A83A520775
-	for <linux-wireless@archiver.kernel.org>; Wed, 29 Apr 2020 09:57:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E2F3920775
+	for <linux-wireless@archiver.kernel.org>; Wed, 29 Apr 2020 09:57:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726766AbgD2J5L (ORCPT
+        id S1726755AbgD2J5K (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 29 Apr 2020 05:57:11 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:49971 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726524AbgD2J5K (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 29 Apr 2020 05:57:10 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:49974 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726572AbgD2J5J (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 29 Apr 2020 05:57:09 -0400
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 03T9v4541030884, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 03T9v5hnD030899, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexmb06.realtek.com.tw[172.21.6.99])
-        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 03T9v4541030884
+        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 03T9v5hnD030899
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Wed, 29 Apr 2020 17:57:04 +0800
+        Wed, 29 Apr 2020 17:57:05 +0800
 Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
  RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Wed, 29 Apr 2020 17:57:03 +0800
+ 15.1.1779.2; Wed, 29 Apr 2020 17:57:05 +0800
 Received: from localhost.localdomain (172.21.68.128) by
  RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Wed, 29 Apr 2020 17:57:03 +0800
+ 15.1.1779.2; Wed, 29 Apr 2020 17:57:05 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>, <pkshih@realtek.com>
-Subject: [PATCH v3 0/8] rtw88: 8723d: add BB related routines
-Date:   Wed, 29 Apr 2020 17:56:48 +0800
-Message-ID: <20200429095656.19315-1-yhchuang@realtek.com>
+Subject: [PATCH v3 7/8] rtw88: 8723d: Set IG register for CCK rate
+Date:   Wed, 29 Apr 2020 17:56:55 +0800
+Message-ID: <20200429095656.19315-8-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20200429095656.19315-1-yhchuang@realtek.com>
+References: <20200429095656.19315-1-yhchuang@realtek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [172.21.68.128]
@@ -51,49 +53,98 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Add BB related routines for 8723D.
-The BB controls the channel, RX decoding, and RX gain. So, add DIG
-parameters and RX descriptor parsing for the RX frames. And the false
-alarm statistics help the driver to choose better DIG values.
-The 8723D devices have more settings for CCK rates for DIG, mostly
-because that the 8723D is 802.11n device.
+DIG sets only one IG register for most chips, but 8723D need to set
+additional register for CCK rate.
 
-The 8723D devices cannot recieve LDPC frames, do not advertise it.
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw88/main.h     | 1 +
+ drivers/net/wireless/realtek/rtw88/phy.c      | 4 ++++
+ drivers/net/wireless/realtek/rtw88/rtw8723d.c | 5 +++++
+ drivers/net/wireless/realtek/rtw88/rtw8822b.c | 1 +
+ drivers/net/wireless/realtek/rtw88/rtw8822c.c | 1 +
+ 5 files changed, 12 insertions(+)
 
-
-v1 -> v2
-  * make a patchset contains less patches for review
-
-v2 -> v3
-  * move defined macros to header file
-
-
-Ping-Ke Shih (8):
-  rtw88: 8723d: Add DIG parameter
-  rtw88: 8723d: Add query_rx_desc
-  rtw88: 8723d: Add set_channel
-  rtw88: handle C2H_CCX_TX_RPT to know if packet TX'ed successfully
-  rtw88: 8723d: 11N chips don't support LDPC
-  rtw88: 8723d: Add chip_ops::false_alarm_statistics
-  rtw88: 8723d: Set IG register for CCK rate
-  rtw88: 8723d: add interface configurations table
-
- drivers/net/wireless/realtek/rtw88/fw.c       |   6 +-
- drivers/net/wireless/realtek/rtw88/fw.h       |   7 +-
- drivers/net/wireless/realtek/rtw88/mac.c      |   3 +
- drivers/net/wireless/realtek/rtw88/main.c     |   2 +-
- drivers/net/wireless/realtek/rtw88/main.h     |   1 +
- drivers/net/wireless/realtek/rtw88/phy.c      |   4 +
- drivers/net/wireless/realtek/rtw88/rtw8723d.c | 377 ++++++++++++++++++
- drivers/net/wireless/realtek/rtw88/rtw8723d.h |  94 +++++
- drivers/net/wireless/realtek/rtw88/rtw8822b.c |   1 +
- drivers/net/wireless/realtek/rtw88/rtw8822c.c |   1 +
- drivers/net/wireless/realtek/rtw88/tx.c       |  11 +-
- drivers/net/wireless/realtek/rtw88/tx.h       |   2 +-
- 12 files changed, 501 insertions(+), 8 deletions(-)
-
+diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
+index 157aca641f6d..d51eeda3627c 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.h
++++ b/drivers/net/wireless/realtek/rtw88/main.h
+@@ -1099,6 +1099,7 @@ struct rtw_chip_info {
+ 	const struct rtw_intf_phy_para_table *intf_table;
+ 
+ 	const struct rtw_hw_reg *dig;
++	const struct rtw_hw_reg *dig_cck;
+ 	u32 rf_base_addr[2];
+ 	u32 rf_sipi_addr[2];
+ 	const struct rtw_rf_sipi_addr *rf_sipi_read_addr;
+diff --git a/drivers/net/wireless/realtek/rtw88/phy.c b/drivers/net/wireless/realtek/rtw88/phy.c
+index 8489abfdc12e..72a16eff9db3 100644
+--- a/drivers/net/wireless/realtek/rtw88/phy.c
++++ b/drivers/net/wireless/realtek/rtw88/phy.c
+@@ -140,9 +140,13 @@ void rtw_phy_dig_write(struct rtw_dev *rtwdev, u8 igi)
+ {
+ 	struct rtw_chip_info *chip = rtwdev->chip;
+ 	struct rtw_hal *hal = &rtwdev->hal;
++	const struct rtw_hw_reg *dig_cck = &chip->dig_cck[0];
+ 	u32 addr, mask;
+ 	u8 path;
+ 
++	if (dig_cck)
++		rtw_write32_mask(rtwdev, dig_cck->addr, dig_cck->mask, igi >> 1);
++
+ 	for (path = 0; path < hal->rf_path_num; path++) {
+ 		addr = chip->dig[path].addr;
+ 		mask = chip->dig[path].mask;
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723d.c b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
+index 95425d698ec0..21f7c20f69fe 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8723d.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
+@@ -1055,6 +1055,10 @@ static const struct rtw_hw_reg rtw8723d_dig[] = {
+ 	[1] = { .addr = 0xc50, .mask = 0x7f },
+ };
+ 
++static const struct rtw_hw_reg rtw8723d_dig_cck[] = {
++	[0] = { .addr = 0xa0c, .mask = 0x3f00 },
++};
++
+ static const struct rtw_rf_sipi_addr rtw8723d_rf_sipi_addr[] = {
+ 	[RF_PATH_A] = { .hssi_1 = 0x820, .lssi_read    = 0x8a0,
+ 			.hssi_2 = 0x824, .lssi_read_pi = 0x8b8},
+@@ -1097,6 +1101,7 @@ struct rtw_chip_info rtw8723d_hw_spec = {
+ 	.page_table = page_table_8723d,
+ 	.rqpn_table = rqpn_table_8723d,
+ 	.dig = rtw8723d_dig,
++	.dig_cck = rtw8723d_dig_cck,
+ 	.rf_sipi_addr = {0x840, 0x844},
+ 	.rf_sipi_read_addr = rtw8723d_rf_sipi_addr,
+ 	.fix_rf_phy_num = 2,
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822b.c b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
+index ffee8111d145..51b16a831162 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822b.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
+@@ -2435,6 +2435,7 @@ struct rtw_chip_info rtw8822b_hw_spec = {
+ 	.rqpn_table = rqpn_table_8822b,
+ 	.intf_table = &phy_para_table_8822b,
+ 	.dig = rtw8822b_dig,
++	.dig_cck = NULL,
+ 	.rf_base_addr = {0x2800, 0x2c00},
+ 	.rf_sipi_addr = {0xc90, 0xe90},
+ 	.mac_tbl = &rtw8822b_mac_tbl,
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+index 8dd92136145d..009921c94242 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+@@ -4296,6 +4296,7 @@ struct rtw_chip_info rtw8822c_hw_spec = {
+ 	.rqpn_table = rqpn_table_8822c,
+ 	.intf_table = &phy_para_table_8822c,
+ 	.dig = rtw8822c_dig,
++	.dig_cck = NULL,
+ 	.rf_base_addr = {0x3c00, 0x4c00},
+ 	.rf_sipi_addr = {0x1808, 0x4108},
+ 	.mac_tbl = &rtw8822c_mac_tbl,
 -- 
 2.17.1
 
