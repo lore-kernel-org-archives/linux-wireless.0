@@ -6,40 +6,40 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 304B9C8300B
-	for <linux-wireless@archiver.kernel.org>; Wed, 29 Apr 2020 09:57:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5C69C83004
+	for <linux-wireless@archiver.kernel.org>; Wed, 29 Apr 2020 09:57:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 142782082E
-	for <linux-wireless@archiver.kernel.org>; Wed, 29 Apr 2020 09:57:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9A8BC20775
+	for <linux-wireless@archiver.kernel.org>; Wed, 29 Apr 2020 09:57:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726775AbgD2J5M (ORCPT
+        id S1726530AbgD2J5O (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 29 Apr 2020 05:57:12 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:49970 "EHLO
+        Wed, 29 Apr 2020 05:57:14 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:49977 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726530AbgD2J5L (ORCPT
+        with ESMTP id S1726677AbgD2J5L (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Wed, 29 Apr 2020 05:57:11 -0400
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 03T9v4fF5030892, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 03T9v5hmD030899, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexmb06.realtek.com.tw[172.21.6.99])
-        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 03T9v4fF5030892
+        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 03T9v5hmD030899
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Wed, 29 Apr 2020 17:57:04 +0800
+        Wed, 29 Apr 2020 17:57:05 +0800
 Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
  RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Wed, 29 Apr 2020 17:57:04 +0800
+ 15.1.1779.2; Wed, 29 Apr 2020 17:57:05 +0800
 Received: from localhost.localdomain (172.21.68.128) by
  RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Wed, 29 Apr 2020 17:57:03 +0800
+ 15.1.1779.2; Wed, 29 Apr 2020 17:57:04 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>, <pkshih@realtek.com>
-Subject: [PATCH v3 2/8] rtw88: 8723d: Add query_rx_desc
-Date:   Wed, 29 Apr 2020 17:56:50 +0800
-Message-ID: <20200429095656.19315-3-yhchuang@realtek.com>
+Subject: [PATCH v3 6/8] rtw88: 8723d: Add chip_ops::false_alarm_statistics
+Date:   Wed, 29 Apr 2020 17:56:54 +0800
+Message-ID: <20200429095656.19315-7-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200429095656.19315-1-yhchuang@realtek.com>
 References: <20200429095656.19315-1-yhchuang@realtek.com>
@@ -55,189 +55,165 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ping-Ke Shih <pkshih@realtek.com>
 
-This ops is used to parse RX descriptor to know the length of received
-packet and containing PHY status. If PHY status is existing, the order is
-RX descriptor, PHY status and then packet.
+This ops is used to do statistics of false alarm periodically, and then
+fine tune RX initial gain to adaptive different circumstance.
 
-There are two types of PHY status, named CCK and OFDM. Their size are the
-same, but formats are different.
-
-struct ieee80211_rx_status is also filled depends on above information.
+There are three steps, hold/get/reset counter, to retrieve false alarm
+counters that consist of CCK and OFDM. In addition to false alarm
+counters, it also collects CRC ok/error counters of CCK, OFDM and HT.
 
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/rtw8723d.c | 116 ++++++++++++++++++
- drivers/net/wireless/realtek/rtw88/rtw8723d.h |  22 ++++
- 2 files changed, 138 insertions(+)
+ drivers/net/wireless/realtek/rtw88/rtw8723d.c | 65 +++++++++++++++++++
+ drivers/net/wireless/realtek/rtw88/rtw8723d.h | 41 ++++++++++++
+ 2 files changed, 106 insertions(+)
 
 diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723d.c b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-index 52afa72caf8f..653cfa9445fc 100644
+index 4e6ee00697be..95425d698ec0 100644
 --- a/drivers/net/wireless/realtek/rtw88/rtw8723d.c
 +++ b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-@@ -172,6 +172,121 @@ static int rtw8723d_read_efuse(struct rtw_dev *rtwdev, u8 *log_map)
- 	return 0;
+@@ -541,6 +541,70 @@ static void rtw8723d_efuse_grant(struct rtw_dev *rtwdev, bool on)
+ 	}
  }
  
-+static void query_phy_status_page0(struct rtw_dev *rtwdev, u8 *phy_status,
-+				   struct rtw_rx_pkt_stat *pkt_stat)
++static void rtw8723d_false_alarm_statistics(struct rtw_dev *rtwdev)
 +{
 +	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
-+	s8 min_rx_power = -120;
-+	u8 pwdb = GET_PHY_STAT_P0_PWDB(phy_status);
++	u32 cck_fa_cnt;
++	u32 ofdm_fa_cnt;
++	u32 crc32_cnt;
++	u32 val32;
 +
-+	pkt_stat->rx_power[RF_PATH_A] = pwdb - 97;
-+	pkt_stat->rssi = rtw_phy_rf_power_2_rssi(pkt_stat->rx_power, 1);
-+	pkt_stat->bw = RTW_CHANNEL_WIDTH_20;
-+	pkt_stat->signal_power = max(pkt_stat->rx_power[RF_PATH_A],
-+				     min_rx_power);
-+	dm_info->rssi[RF_PATH_A] = pkt_stat->rssi;
++	/* hold counter */
++	rtw_write32_mask(rtwdev, REG_OFDM_FA_HOLDC_11N, BIT_MASK_OFDM_FA_KEEP, 1);
++	rtw_write32_mask(rtwdev, REG_OFDM_FA_RSTD_11N, BIT_MASK_OFDM_FA_KEEP1, 1);
++	rtw_write32_mask(rtwdev, REG_CCK_FA_RST_11N, BIT_MASK_CCK_CNT_KEEP, 1);
++	rtw_write32_mask(rtwdev, REG_CCK_FA_RST_11N, BIT_MASK_CCK_FA_KEEP, 1);
++
++	cck_fa_cnt = rtw_read32_mask(rtwdev, REG_CCK_FA_LSB_11N, MASKBYTE0);
++	cck_fa_cnt += rtw_read32_mask(rtwdev, REG_CCK_FA_MSB_11N, MASKBYTE3) << 8;
++
++	val32 = rtw_read32(rtwdev, REG_OFDM_FA_TYPE1_11N);
++	ofdm_fa_cnt = u32_get_bits(val32, BIT_MASK_OFDM_FF_CNT);
++	ofdm_fa_cnt += u32_get_bits(val32, BIT_MASK_OFDM_SF_CNT);
++	val32 = rtw_read32(rtwdev, REG_OFDM_FA_TYPE2_11N);
++	dm_info->ofdm_cca_cnt = u32_get_bits(val32, BIT_MASK_OFDM_CCA_CNT);
++	ofdm_fa_cnt += u32_get_bits(val32, BIT_MASK_OFDM_PF_CNT);
++	val32 = rtw_read32(rtwdev, REG_OFDM_FA_TYPE3_11N);
++	ofdm_fa_cnt += u32_get_bits(val32, BIT_MASK_OFDM_RI_CNT);
++	ofdm_fa_cnt += u32_get_bits(val32, BIT_MASK_OFDM_CRC_CNT);
++	val32 = rtw_read32(rtwdev, REG_OFDM_FA_TYPE4_11N);
++	ofdm_fa_cnt += u32_get_bits(val32, BIT_MASK_OFDM_MNS_CNT);
++
++	dm_info->cck_fa_cnt = cck_fa_cnt;
++	dm_info->ofdm_fa_cnt = ofdm_fa_cnt;
++	dm_info->total_fa_cnt = cck_fa_cnt + ofdm_fa_cnt;
++
++	dm_info->cck_err_cnt = rtw_read32(rtwdev, REG_IGI_C_11N);
++	dm_info->cck_ok_cnt = rtw_read32(rtwdev, REG_IGI_D_11N);
++	crc32_cnt = rtw_read32(rtwdev, REG_OFDM_CRC32_CNT_11N);
++	dm_info->ofdm_err_cnt = u32_get_bits(crc32_cnt, BIT_MASK_OFDM_LCRC_ERR);
++	dm_info->ofdm_ok_cnt = u32_get_bits(crc32_cnt, BIT_MASK_OFDM_LCRC_OK);
++	crc32_cnt = rtw_read32(rtwdev, REG_HT_CRC32_CNT_11N);
++	dm_info->ht_err_cnt = u32_get_bits(crc32_cnt, BIT_MASK_HT_CRC_ERR);
++	dm_info->ht_ok_cnt = u32_get_bits(crc32_cnt, BIT_MASK_HT_CRC_OK);
++	dm_info->vht_err_cnt = 0;
++	dm_info->vht_ok_cnt = 0;
++
++	val32 = rtw_read32(rtwdev, REG_CCK_CCA_CNT_11N);
++	dm_info->cck_cca_cnt = (u32_get_bits(val32, BIT_MASK_CCK_FA_MSB) << 8) |
++			       u32_get_bits(val32, BIT_MASK_CCK_FA_LSB);
++	dm_info->total_cca_cnt = dm_info->cck_cca_cnt + dm_info->ofdm_cca_cnt;
++
++	/* reset counter */
++	rtw_write32_mask(rtwdev, REG_OFDM_FA_RSTC_11N, BIT_MASK_OFDM_FA_RST, 1);
++	rtw_write32_mask(rtwdev, REG_OFDM_FA_RSTC_11N, BIT_MASK_OFDM_FA_RST, 0);
++	rtw_write32_mask(rtwdev, REG_OFDM_FA_RSTD_11N, BIT_MASK_OFDM_FA_RST1, 1);
++	rtw_write32_mask(rtwdev, REG_OFDM_FA_RSTD_11N, BIT_MASK_OFDM_FA_RST1, 0);
++	rtw_write32_mask(rtwdev, REG_OFDM_FA_HOLDC_11N, BIT_MASK_OFDM_FA_KEEP, 0);
++	rtw_write32_mask(rtwdev, REG_OFDM_FA_RSTD_11N, BIT_MASK_OFDM_FA_KEEP1, 0);
++	rtw_write32_mask(rtwdev, REG_CCK_FA_RST_11N, BIT_MASK_CCK_CNT_KPEN, 0);
++	rtw_write32_mask(rtwdev, REG_CCK_FA_RST_11N, BIT_MASK_CCK_CNT_KPEN, 2);
++	rtw_write32_mask(rtwdev, REG_CCK_FA_RST_11N, BIT_MASK_CCK_FA_KPEN, 0);
++	rtw_write32_mask(rtwdev, REG_CCK_FA_RST_11N, BIT_MASK_CCK_FA_KPEN, 2);
++	rtw_write32_mask(rtwdev, REG_PAGE_F_RST_11N, BIT_MASK_F_RST_ALL, 1);
++	rtw_write32_mask(rtwdev, REG_PAGE_F_RST_11N, BIT_MASK_F_RST_ALL, 0);
 +}
 +
-+static void query_phy_status_page1(struct rtw_dev *rtwdev, u8 *phy_status,
-+				   struct rtw_rx_pkt_stat *pkt_stat)
-+{
-+	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
-+	u8 rxsc, bw;
-+	s8 min_rx_power = -120;
-+	s8 rx_evm;
-+
-+	if (pkt_stat->rate > DESC_RATE11M && pkt_stat->rate < DESC_RATEMCS0)
-+		rxsc = GET_PHY_STAT_P1_L_RXSC(phy_status);
-+	else
-+		rxsc = GET_PHY_STAT_P1_HT_RXSC(phy_status);
-+
-+	if (GET_PHY_STAT_P1_RF_MODE(phy_status) == 0)
-+		bw = RTW_CHANNEL_WIDTH_20;
-+	else if ((rxsc == 1) || (rxsc == 2))
-+		bw = RTW_CHANNEL_WIDTH_20;
-+	else
-+		bw = RTW_CHANNEL_WIDTH_40;
-+
-+	pkt_stat->rx_power[RF_PATH_A] = GET_PHY_STAT_P1_PWDB_A(phy_status) - 110;
-+	pkt_stat->rssi = rtw_phy_rf_power_2_rssi(pkt_stat->rx_power, 1);
-+	pkt_stat->bw = bw;
-+	pkt_stat->signal_power = max(pkt_stat->rx_power[RF_PATH_A],
-+				     min_rx_power);
-+	pkt_stat->rx_evm[RF_PATH_A] = GET_PHY_STAT_P1_RXEVM_A(phy_status);
-+	pkt_stat->rx_snr[RF_PATH_A] = GET_PHY_STAT_P1_RXSNR_A(phy_status);
-+	pkt_stat->cfo_tail[RF_PATH_A] = GET_PHY_STAT_P1_CFO_TAIL_A(phy_status);
-+
-+	dm_info->curr_rx_rate = pkt_stat->rate;
-+	dm_info->rssi[RF_PATH_A] = pkt_stat->rssi;
-+	dm_info->rx_snr[RF_PATH_A] = pkt_stat->rx_snr[RF_PATH_A] >> 1;
-+	dm_info->cfo_tail[RF_PATH_A] = (pkt_stat->cfo_tail[RF_PATH_A] * 5) >> 1;
-+
-+	rx_evm = clamp_t(s8, -pkt_stat->rx_evm[RF_PATH_A] >> 1, 0, 64);
-+	rx_evm &= 0x3F;	/* 64->0: second path of 1SS rate is 64 */
-+	dm_info->rx_evm_dbm[RF_PATH_A] = rx_evm;
-+}
-+
-+static void query_phy_status(struct rtw_dev *rtwdev, u8 *phy_status,
-+			     struct rtw_rx_pkt_stat *pkt_stat)
-+{
-+	u8 page;
-+
-+	page = *phy_status & 0xf;
-+
-+	switch (page) {
-+	case 0:
-+		query_phy_status_page0(rtwdev, phy_status, pkt_stat);
-+		break;
-+	case 1:
-+		query_phy_status_page1(rtwdev, phy_status, pkt_stat);
-+		break;
-+	default:
-+		rtw_warn(rtwdev, "unused phy status page (%d)\n", page);
-+		return;
-+	}
-+}
-+
-+static void rtw8723d_query_rx_desc(struct rtw_dev *rtwdev, u8 *rx_desc,
-+				   struct rtw_rx_pkt_stat *pkt_stat,
-+				   struct ieee80211_rx_status *rx_status)
-+{
-+	struct ieee80211_hdr *hdr;
-+	u32 desc_sz = rtwdev->chip->rx_pkt_desc_sz;
-+	u8 *phy_status = NULL;
-+
-+	memset(pkt_stat, 0, sizeof(*pkt_stat));
-+
-+	pkt_stat->phy_status = GET_RX_DESC_PHYST(rx_desc);
-+	pkt_stat->icv_err = GET_RX_DESC_ICV_ERR(rx_desc);
-+	pkt_stat->crc_err = GET_RX_DESC_CRC32(rx_desc);
-+	pkt_stat->decrypted = !GET_RX_DESC_SWDEC(rx_desc) &&
-+			      GET_RX_DESC_ENC_TYPE(rx_desc) != RX_DESC_ENC_NONE;
-+	pkt_stat->is_c2h = GET_RX_DESC_C2H(rx_desc);
-+	pkt_stat->pkt_len = GET_RX_DESC_PKT_LEN(rx_desc);
-+	pkt_stat->drv_info_sz = GET_RX_DESC_DRV_INFO_SIZE(rx_desc);
-+	pkt_stat->shift = GET_RX_DESC_SHIFT(rx_desc);
-+	pkt_stat->rate = GET_RX_DESC_RX_RATE(rx_desc);
-+	pkt_stat->cam_id = GET_RX_DESC_MACID(rx_desc);
-+	pkt_stat->ppdu_cnt = 0;
-+	pkt_stat->tsf_low = GET_RX_DESC_TSFL(rx_desc);
-+
-+	/* drv_info_sz is in unit of 8-bytes */
-+	pkt_stat->drv_info_sz *= 8;
-+
-+	/* c2h cmd pkt's rx/phy status is not interested */
-+	if (pkt_stat->is_c2h)
-+		return;
-+
-+	hdr = (struct ieee80211_hdr *)(rx_desc + desc_sz + pkt_stat->shift +
-+				       pkt_stat->drv_info_sz);
-+	if (pkt_stat->phy_status) {
-+		phy_status = rx_desc + desc_sz + pkt_stat->shift;
-+		query_phy_status(rtwdev, phy_status, pkt_stat);
-+	}
-+
-+	rtw_rx_fill_rx_status(rtwdev, pkt_stat, hdr, rx_status, phy_status);
-+}
-+
- #define BIT_CFENDFORM		BIT(9)
- #define BIT_WMAC_TCR_ERR0	BIT(12)
- #define BIT_WMAC_TCR_ERR1	BIT(13)
-@@ -267,6 +382,7 @@ static void rtw8723d_efuse_grant(struct rtw_dev *rtwdev, bool on)
  static struct rtw_chip_ops rtw8723d_ops = {
  	.phy_set_param		= rtw8723d_phy_set_param,
  	.read_efuse		= rtw8723d_read_efuse,
-+	.query_rx_desc		= rtw8723d_query_rx_desc,
- 	.mac_init		= rtw8723d_mac_init,
- 	.read_rf		= rtw_phy_read_rf_sipi,
- 	.write_rf		= rtw_phy_write_rf_reg_sipi,
+@@ -553,6 +617,7 @@ static struct rtw_chip_ops rtw8723d_ops = {
+ 	.set_antenna		= NULL,
+ 	.cfg_ldo25		= rtw8723d_cfg_ldo25,
+ 	.efuse_grant		= rtw8723d_efuse_grant,
++	.false_alarm_statistics	= rtw8723d_false_alarm_statistics,
+ 	.config_bfee		= NULL,
+ 	.set_gid_table		= NULL,
+ 	.cfg_csi_rate		= NULL,
 diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723d.h b/drivers/net/wireless/realtek/rtw88/rtw8723d.h
-index 6321dea83519..035049a29e7c 100644
+index 06614602de54..ac66f672bec8 100644
 --- a/drivers/net/wireless/realtek/rtw88/rtw8723d.h
 +++ b/drivers/net/wireless/realtek/rtw88/rtw8723d.h
-@@ -44,6 +44,28 @@ struct rtw8723d_efuse {
- 	struct rtw8723de_efuse e;
- };
- 
-+/* phy status page0 */
-+#define GET_PHY_STAT_P0_PWDB(phy_stat)                                         \
-+	le32_get_bits(*((__le32 *)(phy_stat) + 0x00), GENMASK(15, 8))
-+
-+/* phy status page1 */
-+#define GET_PHY_STAT_P1_PWDB_A(phy_stat)                                       \
-+	le32_get_bits(*((__le32 *)(phy_stat) + 0x00), GENMASK(15, 8))
-+#define GET_PHY_STAT_P1_PWDB_B(phy_stat)                                       \
-+	le32_get_bits(*((__le32 *)(phy_stat) + 0x00), GENMASK(23, 16))
-+#define GET_PHY_STAT_P1_RF_MODE(phy_stat)                                      \
-+	le32_get_bits(*((__le32 *)(phy_stat) + 0x03), GENMASK(29, 28))
-+#define GET_PHY_STAT_P1_L_RXSC(phy_stat)                                       \
-+	le32_get_bits(*((__le32 *)(phy_stat) + 0x01), GENMASK(11, 8))
-+#define GET_PHY_STAT_P1_HT_RXSC(phy_stat)                                      \
-+	le32_get_bits(*((__le32 *)(phy_stat) + 0x01), GENMASK(15, 12))
-+#define GET_PHY_STAT_P1_RXEVM_A(phy_stat)                                      \
-+	le32_get_bits(*((__le32 *)(phy_stat) + 0x04), GENMASK(7, 0))
-+#define GET_PHY_STAT_P1_CFO_TAIL_A(phy_stat)                                   \
-+	le32_get_bits(*((__le32 *)(phy_stat) + 0x05), GENMASK(7, 0))
-+#define GET_PHY_STAT_P1_RXSNR_A(phy_stat)                                      \
-+	le32_get_bits(*((__le32 *)(phy_stat) + 0x06), GENMASK(7, 0))
-+
+@@ -88,16 +88,57 @@ struct rtw8723d_efuse {
+ #define BIT_RXBB_DFIR_EN	BIT(19)
+ #define REG_CCK0_SYS		0x0a00
+ #define BIT_CCK_SIDE_BAND	BIT(4)
++#define REG_CCK_FA_RST_11N	0x0a2c
++#define BIT_MASK_CCK_CNT_KEEP	BIT(12)
++#define BIT_MASK_CCK_CNT_EN	BIT(13)
++#define BIT_MASK_CCK_CNT_KPEN	(BIT_MASK_CCK_CNT_KEEP | BIT_MASK_CCK_CNT_EN)
++#define BIT_MASK_CCK_FA_KEEP	BIT(14)
++#define BIT_MASK_CCK_FA_EN	BIT(15)
++#define BIT_MASK_CCK_FA_KPEN	(BIT_MASK_CCK_FA_KEEP | BIT_MASK_CCK_FA_EN)
++#define REG_CCK_FA_LSB_11N	0x0a5c
++#define REG_CCK_FA_MSB_11N	0x0a58
++#define REG_CCK_CCA_CNT_11N	0x0a60
++#define BIT_MASK_CCK_FA_MSB	GENMASK(7, 0)
++#define BIT_MASK_CCK_FA_LSB	GENMASK(15, 8)
++#define REG_OFDM_FA_HOLDC_11N	0x0c00
++#define BIT_MASK_OFDM_FA_KEEP	BIT(31)
++#define REG_OFDM_FA_RSTC_11N	0x0c0c
++#define BIT_MASK_OFDM_FA_RST	BIT(31)
+ #define REG_OFDM0_RXDSP		0x0c40
+ #define BIT_MASK_RXDSP		GENMASK(28, 24)
+ #define BIT_EN_RXDSP		BIT(9)
  #define REG_OFDM0_XAAGC1	0x0c50
  #define REG_OFDM0_XBAGC1	0x0c58
++#define REG_OFDM_FA_TYPE1_11N	0x0cf0
++#define BIT_MASK_OFDM_FF_CNT	GENMASK(15, 0)
++#define BIT_MASK_OFDM_SF_CNT	GENMASK(31, 16)
++#define REG_OFDM_FA_RSTD_11N	0x0d00
++#define BIT_MASK_OFDM_FA_RST1	BIT(27)
++#define BIT_MASK_OFDM_FA_KEEP1	BIT(31)
+ #define REG_OFDM1_CFOTRK	0x0d2c
+ #define BIT_EN_CFOTRK		BIT(28)
+ #define REG_OFDM1_CSI1		0x0d40
+ #define REG_OFDM1_CSI2		0x0d44
+ #define REG_OFDM1_CSI3		0x0d48
+ #define REG_OFDM1_CSI4		0x0d4c
++#define REG_OFDM_FA_TYPE2_11N	0x0da0
++#define BIT_MASK_OFDM_CCA_CNT	GENMASK(15, 0)
++#define BIT_MASK_OFDM_PF_CNT	GENMASK(31, 16)
++#define REG_OFDM_FA_TYPE3_11N	0x0da4
++#define BIT_MASK_OFDM_RI_CNT	GENMASK(15, 0)
++#define BIT_MASK_OFDM_CRC_CNT	GENMASK(31, 16)
++#define REG_OFDM_FA_TYPE4_11N	0x0da8
++#define BIT_MASK_OFDM_MNS_CNT	GENMASK(15, 0)
++#define REG_PAGE_F_RST_11N		0x0f14
++#define BIT_MASK_F_RST_ALL		BIT(16)
++#define REG_IGI_C_11N			0x0f84
++#define REG_IGI_D_11N			0x0f88
++#define REG_HT_CRC32_CNT_11N		0x0f90
++#define BIT_MASK_HT_CRC_OK		GENMASK(15, 0)
++#define BIT_MASK_HT_CRC_ERR		GENMASK(31, 16)
++#define REG_OFDM_CRC32_CNT_11N		0x0f94
++#define BIT_MASK_OFDM_LCRC_OK		GENMASK(15, 0)
++#define BIT_MASK_OFDM_LCRC_ERR		GENMASK(31, 16)
++#define REG_HT_CRC32_CNT_11N_AGG	0x0fb8
  
+ #endif
 -- 
 2.17.1
 
