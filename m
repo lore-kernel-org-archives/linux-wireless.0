@@ -7,175 +7,160 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42C80C4724C
-	for <linux-wireless@archiver.kernel.org>; Thu, 30 Apr 2020 22:21:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B94BC47247
+	for <linux-wireless@archiver.kernel.org>; Thu, 30 Apr 2020 22:21:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1867A20774
-	for <linux-wireless@archiver.kernel.org>; Thu, 30 Apr 2020 22:21:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DF05120774
+	for <linux-wireless@archiver.kernel.org>; Thu, 30 Apr 2020 22:21:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="uf5wb9z3"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="S6njQVkQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727052AbgD3WVQ (ORCPT
+        id S1727077AbgD3WVU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 30 Apr 2020 18:21:16 -0400
-Received: from mail26.static.mailgun.info ([104.130.122.26]:18610 "EHLO
+        Thu, 30 Apr 2020 18:21:20 -0400
+Received: from mail26.static.mailgun.info ([104.130.122.26]:59894 "EHLO
         mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726447AbgD3WVQ (ORCPT
+        by vger.kernel.org with ESMTP id S1726697AbgD3WVU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 30 Apr 2020 18:21:16 -0400
+        Thu, 30 Apr 2020 18:21:20 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1588285275; h=Message-Id: Date: Subject: Cc: To: From:
- Sender; bh=JD3H+2UIrtT/l1bJEqxT6tXQ3eAeBzabY+eu8PkbSb4=; b=uf5wb9z3MLZyDebzwQRrETJeaLLiWj9qsNSxWiyyYT7IxOKYY9y9BQK/OfclXADs63KjK+hJ
- C9EkF/Bu0D0hvzGDeqAK1vNl1vvCVivGipgJMGcp2MNa/qm0DTsDp5BZqNhauMFi712PkTXi
- qmro1BV+9/Cm9tcKUg0TTj4LscY=
+ s=smtp; t=1588285278; h=Content-Transfer-Encoding: Content-Type:
+ MIME-Version: References: In-Reply-To: Message-Id: Date: Subject: Cc:
+ To: From: Sender; bh=0KydgDVkyQrj1WbuFY977D49Oq+9F4mu8tFdGtKqMt4=; b=S6njQVkQYx6TzZdCVCEl66GZcyVcwRwzYQryXdMALjNJJbpkMTKOkpVopZ+B0R+s0qVY/cEz
+ Yr+jRWrIk6koq5Y3eNoYZERxGeDpR5LAyKGfoh3IKCnULsZyL/NtgfyWl6eHAIf9p1APEcIP
+ +eyvqj06EtnWNqkBrRUDiys5cxc=
 X-Mailgun-Sending-Ip: 104.130.122.26
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5eab4f55.7f090a62c8b8-smtp-out-n05;
- Thu, 30 Apr 2020 22:21:09 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5eab4f58.7f7d8c01be68-smtp-out-n02;
+ Thu, 30 Apr 2020 22:21:12 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 23B24C433BA; Thu, 30 Apr 2020 22:21:08 +0000 (UTC)
+        id 7D791C433D2; Thu, 30 Apr 2020 22:21:11 +0000 (UTC)
 Received: from rmanohar-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: rmanohar)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id A9875C433D2;
-        Thu, 30 Apr 2020 22:21:06 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org A9875C433D2
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id D767EC433BA;
+        Thu, 30 Apr 2020 22:21:10 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org D767EC433BA
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=rmanohar@codeaurora.org
 From:   Rajkumar Manoharan <rmanohar@codeaurora.org>
 To:     johannes@sipsolutions.net, kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org,
-        Rajkumar Manoharan <rmanohar@codeaurora.org>,
-        Vamsi Krishna <vamsin@codeaurora.org>
-Subject: [PATCH v2 01/11] cfg80211: use only HE capability to set prohibited flags in 6 GHz
-Date:   Thu, 30 Apr 2020 15:20:42 -0700
-Message-Id: <1588285252-30034-1-git-send-email-rmanohar@codeaurora.org>
+        Rajkumar Manoharan <rmanohar@codeaurora.org>
+Subject: [PATCH v2 03/11] nl80211: add HE 6 GHz Band Capability support
+Date:   Thu, 30 Apr 2020 15:20:44 -0700
+Message-Id: <1588285252-30034-3-git-send-email-rmanohar@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1588285252-30034-1-git-send-email-rmanohar@codeaurora.org>
+References: <1588285252-30034-1-git-send-email-rmanohar@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The prohibited flags to determine whether configured bandwidth
-is supported by driver are validated only against HT and VHT capability.
-In 6 GHz band, Only HE capability should be validated to find out
-given chandef is usable.
+Define new structures for HE 6 GHz band capabilities as per
+IEEE P802.11ax/D6.0, 9.4.2.261 HE 6 GHz Band Capabilities element
+and 6 GHz Operation Information field of HE operation element
+(IEEE P802.11ax/D6.0, Figure 9-787k).
 
-Co-developed-by: Vamsi Krishna <vamsin@codeaurora.org>
-Signed-off-by: Vamsi Krishna <vamsin@codeaurora.org>
 Signed-off-by: Rajkumar Manoharan <rmanohar@codeaurora.org>
 ---
- net/wireless/chan.c | 54 +++++++++++++++++++++++++++++++++++++++++++++++++----
- 1 file changed, 50 insertions(+), 4 deletions(-)
+ include/linux/ieee80211.h | 57 +++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 57 insertions(+)
 
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index fcac5c6366e1..582b487576e1 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -19,6 +19,11 @@ static bool cfg80211_valid_60g_freq(u32 freq)
- 	return freq >= 58320 && freq <= 70200;
- }
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 16268ef1cbcc..77462dff6db3 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -1632,6 +1632,44 @@ struct ieee80211_he_mcs_nss_supp {
+ } __packed;
  
-+static bool cfg80211_is_6ghz_freq(u32 freq)
-+{
-+	return (freq > 5940 && freq < 7105);
-+}
+ /**
++ * enum ieee80211_he_6ghz_chanwidth - HE 6 GHz channel width
++ * @IEEE80211_HE_6GHZ_CHANWIDTH_20MHZ: 20 MHz bandwidth
++ * @IEEE80211_HE_6GHZ_CHANWIDTH_40MHZ: 40 MHz bandwidth
++ * @IEEE80211_HE_6GHZ_CHANWIDTH_80MHZ: 80 MHz bandwidth
++ * @IEEE80211_HE_6GHZ_CHANWIDTH_80P80MHZ: 160 or 80+80 MHz bandwidth
++ */
++enum ieee80211_he_6ghz_chanwidth {
++	IEEE80211_HE_6GHZ_CHANWIDTH_20MHZ		= 0,
++	IEEE80211_HE_6GHZ_CHANWIDTH_40MHZ		= 1,
++	IEEE80211_HE_6GHZ_CHANWIDTH_80MHZ		= 2,
++	IEEE80211_HE_6GHZ_CHANWIDTH_160MHZ_80P80MHZ	= 3,
++};
 +
- void cfg80211_chandef_create(struct cfg80211_chan_def *chandef,
- 			     struct ieee80211_channel *chan,
- 			     enum nl80211_channel_type chan_type)
-@@ -882,6 +887,7 @@ bool cfg80211_chandef_usable(struct wiphy *wiphy,
- 	struct ieee80211_sta_ht_cap *ht_cap;
- 	struct ieee80211_sta_vht_cap *vht_cap;
- 	struct ieee80211_edmg *edmg_cap;
-+	const struct ieee80211_sta_he_cap *he_cap;
- 	u32 width, control_freq, cap;
++/**
++ * struct ieee80211_he_oper_6ghz_op_info - 6 GHz Operation Information
++ *
++ * This structure is defined as described in IEEE P802.11ax/D6.0,
++ * Figure 9-787k—6 GHz Operation Information field.
++ *
++ * @primary_chan: The channel number of the primary channel in the 6 GHz band.
++ * @control: First two bits defines channel width field indicates the BSS
++ *	channel width and is set to 0 for 20 MHz, 1 for 40 MHz, 2 for 80 MHz,
++ *	and 3 for 80+80 or 160 MHz.
++ * @center_freq_seg0_idx: Channel center frequency index for the 20 MHz,
++ *	40 MHz, or 80 MHz, or 80+80 MHz.
++ * @center_freq_seg1_idx: Channel center frequency index of the 160 MHz.
++ * @min_rate: Minimum rate, in units of 1 Mb/s, that the non-AP STA is allowed
++ *	to use for sending PPDUs.
++ */
++struct ieee80211_he_oper_6ghz_op_info {
++	u8 primary_chan;
++	u8 control;
++	u8 center_freq_seg0_idx;
++	u8 center_freq_seg1_idx;
++	u8 min_rate;
++} __packed;
++
++/**
+  * struct ieee80211_he_operation - HE capabilities element
+  *
+  * This structure is the "HE operation element" fields as
+@@ -1682,6 +1720,15 @@ struct ieee80211_mu_edca_param_set {
+ 	struct ieee80211_he_mu_edca_param_ac_rec ac_vo;
+ } __packed;
  
- 	if (WARN_ON(!cfg80211_chandef_valid(chandef)))
-@@ -890,6 +896,7 @@ bool cfg80211_chandef_usable(struct wiphy *wiphy,
- 	ht_cap = &wiphy->bands[chandef->chan->band]->ht_cap;
- 	vht_cap = &wiphy->bands[chandef->chan->band]->vht_cap;
- 	edmg_cap = &wiphy->bands[chandef->chan->band]->edmg_cap;
-+	he_cap = ieee80211_get_he_sta_cap(wiphy->bands[chandef->chan->band]);
++/**
++ * struct ieee80211_he_6ghz_band_cap - HE 6 GHz Band Capabilities element
++ *
++ * This structure is defined as described in IEEE P802.11ax/D6.0, 9.4.2.261.
++ */
++struct ieee80211_he_6ghz_band_cap {
++	__le16 capab;
++} __packed;
++
+ /* 802.11ac VHT Capabilities */
+ #define IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_3895			0x00000000
+ #define IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_7991			0x00000001
+@@ -1982,6 +2029,15 @@ int ieee80211_get_vht_max_nss(struct ieee80211_vht_cap *cap,
+ #define IEEE80211_TX_RX_MCS_NSS_SUPP_TX_BITMAP_MASK			0x07c0
+ #define IEEE80211_TX_RX_MCS_NSS_SUPP_RX_BITMAP_MASK			0xf800
  
- 	if (edmg_cap->channels &&
- 	    !cfg80211_edmg_usable(wiphy,
-@@ -919,6 +926,16 @@ bool cfg80211_chandef_usable(struct wiphy *wiphy,
- 		break;
- 	case NL80211_CHAN_WIDTH_40:
- 		width = 40;
-+		if (cfg80211_is_6ghz_freq(chandef->center_freq1)) {
-+			if (!he_cap)
-+				return false;
-+			if (!he_cap->has_he_6ghz)
-+				return false;
-+			if (!(he_cap->he_cap_elem.phy_cap_info[0] &
-+			      IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_40MHZ_80MHZ_IN_5G))
-+				return false;
-+			break;
-+		}
- 		if (!ht_cap->ht_supported)
- 			return false;
- 		if (!(ht_cap->cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40) ||
-@@ -933,24 +950,53 @@ bool cfg80211_chandef_usable(struct wiphy *wiphy,
- 		break;
- 	case NL80211_CHAN_WIDTH_80P80:
- 		cap = vht_cap->cap & IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK;
--		if (cap != IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160_80PLUS80MHZ)
-+		if (!cfg80211_is_6ghz_freq(chandef->center_freq1) &&
-+		    cap != IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160_80PLUS80MHZ)
- 			return false;
-+		if (cfg80211_is_6ghz_freq(chandef->center_freq1)) {
-+			if (!he_cap)
-+				return false;
-+			if (!he_cap->has_he_6ghz)
-+				return false;
-+			if (!(he_cap->he_cap_elem.phy_cap_info[0] &
-+			      IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_80PLUS80_MHZ_IN_5G))
-+				return false;
-+		}
- 		/* fall through */
- 	case NL80211_CHAN_WIDTH_80:
--		if (!vht_cap->vht_supported)
-+		if (cfg80211_is_6ghz_freq(chandef->center_freq1)) {
-+			if (!he_cap)
-+				return false;
-+			if (!he_cap->has_he_6ghz)
-+				return false;
-+			if (!(he_cap->he_cap_elem.phy_cap_info[0] &
-+			      IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_40MHZ_80MHZ_IN_5G))
-+				return false;
-+		} else if (!vht_cap->vht_supported) {
- 			return false;
-+		}
- 		prohibited_flags |= IEEE80211_CHAN_NO_80MHZ;
- 		width = 80;
- 		break;
- 	case NL80211_CHAN_WIDTH_160:
-+		prohibited_flags |= IEEE80211_CHAN_NO_160MHZ;
-+		width = 160;
-+		if (cfg80211_is_6ghz_freq(chandef->center_freq1)) {
-+			if (!he_cap)
-+				return false;
-+			if (!he_cap->has_he_6ghz)
-+				return false;
-+			if (!(he_cap->he_cap_elem.phy_cap_info[0] &
-+			      IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_160MHZ_IN_5G))
-+				return false;
-+			break;
-+		}
- 		if (!vht_cap->vht_supported)
- 			return false;
- 		cap = vht_cap->cap & IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK;
- 		if (cap != IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160MHZ &&
- 		    cap != IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160_80PLUS80MHZ)
- 			return false;
--		prohibited_flags |= IEEE80211_CHAN_NO_160MHZ;
--		width = 160;
- 		break;
- 	default:
- 		WARN_ON_ONCE(1);
++/* 802.11ax HE 6 GHz Band Capability */
++#define IEEE80211_HE_6GHZ_CAP_MIN_MPDU_START_SPACE_MASK		GENMASK(2, 0)
++#define IEEE80211_HE_6GHZ_CAP_MAX_A_MPDU_LENGTH_EXPONENT_MASK	GENMASK(5, 3)
++#define IEEE80211_HE_6GHZ_CAP_MAX_MPDU_LENGTH_MASK		GENMASK(7, 6)
++#define IEEE80211_HE_6GHZ_CAP_SMPS_MASK				GENMASK(10, 9)
++#define IEEE80211_HE_6GHZ_CAP_RD_RESP				BIT(11)
++#define IEEE80211_HE_6GHZ_CAP_RX_ANTENNA_PATTERN		BIT(12)
++#define IEEE80211_HE_6GHZ_CAP_TX_ANTENNA_PATTERN		BIT(13)
++
+ /* TX/RX HE MCS Support field Highest MCS subfield encoding */
+ enum ieee80211_he_highest_mcs_supported_subfield_enc {
+ 	HIGHEST_MCS_SUPPORTED_MCS7 = 0,
+@@ -2059,6 +2115,7 @@ ieee80211_he_ppe_size(u8 ppe_thres_hdr, const u8 *phy_cap_info)
+ #define IEEE80211_HE_OPERATION_BSS_COLOR_OFFSET			24
+ #define IEEE80211_HE_OPERATION_PARTIAL_BSS_COLOR		0x40000000
+ #define IEEE80211_HE_OPERATION_BSS_COLOR_DISABLED		0x80000000
++#define IEEE80211_HE_OPERATION_6GHZ_OP_INFO_CTRL_CHAN_WIDTH	0x3
+ 
+ /*
+  * ieee80211_he_oper_size - calculate 802.11ax HE Operations IE size
 -- 
 2.7.4
