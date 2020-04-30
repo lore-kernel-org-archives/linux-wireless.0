@@ -2,38 +2,52 @@ Return-Path: <SRS0=B82j=6O=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C1EEC47247
-	for <linux-wireless@archiver.kernel.org>; Thu, 30 Apr 2020 20:13:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 680D2C4724C
+	for <linux-wireless@archiver.kernel.org>; Thu, 30 Apr 2020 20:31:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3587620774
-	for <linux-wireless@archiver.kernel.org>; Thu, 30 Apr 2020 20:13:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4116A20836
+	for <linux-wireless@archiver.kernel.org>; Thu, 30 Apr 2020 20:31:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1588278672;
+	bh=dodLZODMKGnV6dizLxKLvCaa2y0mojKga6d+qKIU/EU=;
+	h=From:To:Cc:Subject:Date:List-ID:From;
+	b=Je1o62AzyEN4BzhVZS7xHYZu5jYiwUCdHiihrwGUvedyZ79JXQDTp8oUKRzvY6Y2j
+	 0OInEnQloI9MZ0xEyuOv9QIIZi59nTuNHAHw7DckSJ3GDFoGNviZz7Yht7daTzgAbZ
+	 APr1W1HabAuAyC2A3Zk3No7ZPmyUBFX4E0nReZFA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726781AbgD3UNX (ORCPT
+        id S1726930AbgD3UbL (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 30 Apr 2020 16:13:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58714 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726338AbgD3UNX (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 30 Apr 2020 16:13:23 -0400
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D9A3C035494;
-        Thu, 30 Apr 2020 13:13:23 -0700 (PDT)
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.93)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1jUFYf-002qzz-Ep; Thu, 30 Apr 2020 22:13:21 +0200
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     netdev@vger.kernel.org
-Cc:     Antonio Quartulli <a@unstable.cc>, linux-wireless@vger.kernel.org
-Subject: [PATCH v2 0/8] netlink validation improvements/refactoring
-Date:   Thu, 30 Apr 2020 22:13:04 +0200
-Message-Id: <20200430201312.60143-1-johannes@sipsolutions.net>
-X-Mailer: git-send-email 2.25.1
+        Thu, 30 Apr 2020 16:31:11 -0400
+Received: from mail.kernel.org ([198.145.29.99]:48744 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726338AbgD3UbL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 30 Apr 2020 16:31:11 -0400
+Received: from localhost.localdomain.com (unknown [151.48.155.206])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 71ABE20731;
+        Thu, 30 Apr 2020 20:31:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1588278670;
+        bh=dodLZODMKGnV6dizLxKLvCaa2y0mojKga6d+qKIU/EU=;
+        h=From:To:Cc:Subject:Date:From;
+        b=GUvL0JcyRrqBEAyyQRUhuiGTBER6lt1uhJ0diovIg1MMijcv6rnPKikZUvB/0Ua2u
+         krOdL+SO+sO4BVBBltmKhr9VbIPKu/Qp3j94sHRFByorotKjlrkuPbS5r4H61oU6hO
+         dBiLs7vWShNxk6LRTR5D9XiPZP2ULXPPrd0cF4Kk=
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     nbd@nbd.name
+Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
+        sean.wang@mediatek.com, linux-mediatek@lists.infradead.org,
+        soul.huang@mediatek.com
+Subject: [PATCH] mt76: mt7615: free pci_vector if mt7615_pci_probe fails
+Date:   Thu, 30 Apr 2020 22:31:03 +0200
+Message-Id: <c82cae35e7f0a27644fec166049484edf73209a0.1588278305.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.25.4
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -41,15 +55,53 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
+Always free pci irq vector if mt7615_pci_probe routine fails
+Moreover free irq in mt7615_pci_remove routine
 
-Alright, this is the resend now, really just changing
+Co-developed-by: Soul Huang <sean.wang@mediatek.com>
+Signed-off-by: Soul Huang <sean.wang@mediatek.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+---
+ drivers/net/wireless/mediatek/mt76/mt7615/pci.c | 15 ++++++++++++---
+ 1 file changed, 12 insertions(+), 3 deletions(-)
 
- - the WARN_ON_ONCE() as spotted by Jakub;
- - mark the export patch no longer RFC.
-   I wasn't actually sure if you meant this one too, and I really
-   should dig out and polish the code that showed it in userspace.
-
-johannes
-
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/pci.c b/drivers/net/wireless/mediatek/mt76/mt7615/pci.c
+index c53760a40cbb..05011b481885 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/pci.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/pci.c
+@@ -39,13 +39,21 @@ static int mt7615_pci_probe(struct pci_dev *pdev,
+ 
+ 	ret = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
+ 	if (ret)
+-		return ret;
++		goto error;
+ 
+ 	mt76_pci_disable_aspm(pdev);
+ 
+ 	map = id->device == 0x7663 ? mt7663e_reg_map : mt7615e_reg_map;
+-	return mt7615_mmio_probe(&pdev->dev, pcim_iomap_table(pdev)[0],
+-				 pdev->irq, map);
++	ret = mt7615_mmio_probe(&pdev->dev, pcim_iomap_table(pdev)[0],
++				pdev->irq, map);
++	if (ret)
++		goto error;
++
++	return 0;
++error:
++	pci_free_irq_vectors(pdev);
++
++	return ret;
+ }
+ 
+ static void mt7615_pci_remove(struct pci_dev *pdev)
+@@ -54,6 +62,7 @@ static void mt7615_pci_remove(struct pci_dev *pdev)
+ 	struct mt7615_dev *dev = container_of(mdev, struct mt7615_dev, mt76);
+ 
+ 	mt7615_unregister_device(dev);
++	devm_free_irq(&pdev->dev, pdev->irq, dev);
+ 	pci_free_irq_vectors(pdev);
+ }
+ 
+-- 
+2.25.4
 
