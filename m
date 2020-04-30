@@ -6,39 +6,38 @@ X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9D2CC47247
-	for <linux-wireless@archiver.kernel.org>; Thu, 30 Apr 2020 19:53:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10F3AC47247
+	for <linux-wireless@archiver.kernel.org>; Thu, 30 Apr 2020 19:54:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B1C8B20731
-	for <linux-wireless@archiver.kernel.org>; Thu, 30 Apr 2020 19:53:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ED73720774
+	for <linux-wireless@archiver.kernel.org>; Thu, 30 Apr 2020 19:54:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726790AbgD3TxV (ORCPT
+        id S1726440AbgD3Tyn (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 30 Apr 2020 15:53:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55540 "EHLO
+        Thu, 30 Apr 2020 15:54:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55752 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726436AbgD3TxU (ORCPT
+        with ESMTP id S1726272AbgD3Tyn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 30 Apr 2020 15:53:20 -0400
+        Thu, 30 Apr 2020 15:54:43 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 72892C035494
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Apr 2020 12:53:20 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D1A67C035494
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Apr 2020 12:54:42 -0700 (PDT)
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.93)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1jUFFG-002qKl-Nu; Thu, 30 Apr 2020 21:53:18 +0200
-Message-ID: <b682b52e5bc75ed0fbe1c71561df9c7aba54eae5.camel@sipsolutions.net>
-Subject: Re: [PATCH 09/10] mac80211: determine chantype from HE operation in
- 6 GHz
+        id 1jUFGb-002qNU-3Z; Thu, 30 Apr 2020 21:54:41 +0200
+Message-ID: <cc1a53345950c23ee1349520545c5595bbced952.camel@sipsolutions.net>
+Subject: Re: [PATCH 02/10] cfg80211: validate 6 GHz chandef
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     Rajkumar Manoharan <rmanohar@codeaurora.org>
 Cc:     linux-wireless@vger.kernel.org
-Date:   Thu, 30 Apr 2020 21:53:17 +0200
-In-Reply-To: <a5d931f074cbce8073abd8257555d3bb@codeaurora.org>
+Date:   Thu, 30 Apr 2020 21:54:39 +0200
+In-Reply-To: <f7fa5618844630a3315acad53765e5e5@codeaurora.org>
 References: <1587768108-25248-1-git-send-email-rmanohar@codeaurora.org>
-         <1587768108-25248-10-git-send-email-rmanohar@codeaurora.org>
-         <3b2b90685e55d3eae22171cf46340af5154bb59f.camel@sipsolutions.net>
-         <a5d931f074cbce8073abd8257555d3bb@codeaurora.org>
+         <1587768108-25248-3-git-send-email-rmanohar@codeaurora.org>
+         <73a4e63e16bffb69cd9b62fd904b926dd5278fbf.camel@sipsolutions.net>
+         <f7fa5618844630a3315acad53765e5e5@codeaurora.org>
 Content-Type: text/plain; charset="UTF-8"
 User-Agent: Evolution 3.34.4 (3.34.4-1.fc31) 
 MIME-Version: 1.0
@@ -48,23 +47,39 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, 2020-04-29 at 17:18 -0700, Rajkumar Manoharan wrote:
-> On 2020-04-29 07:34, Johannes Berg wrote:
-> > On Fri, 2020-04-24 at 15:41 -0700, Rajkumar Manoharan wrote:
-> > > In 6 GHz band, determine chandef from 6 GHz operation information
-> > > of HE operation element.
-> > 
-> > Yeah... I had this too. Oh well.
-> > 
-> Thanks for feedback. Have few more changes on top this series.
-> Before posting next version, would prefer to bundle with your changes. 
-> thoughts?
 
-I guess post whatever you have already? That shouldn't be any real work
-:-)
+> > > +static enum nl80211_chan_width cfg80211_chan_to_bw_6ghz(u8 idx)
+> > > +{
+> > > +	/* channels: 1, 5, 9, 13... */
+> > > +	if ((idx & 0x3) == 0x1)
+> > > +		return NL80211_CHAN_WIDTH_20;
+> > > +	/* channels 3, 11, 19... */
+> > > +	if ((idx & 0x7) == 0x3)
+> > > +		return NL80211_CHAN_WIDTH_40;
+> > > +	/* channels 7, 23, 39.. */
+> > > +	if ((idx & 0xf) == 0x7)
+> > > +		return NL80211_CHAN_WIDTH_80;
+> > > +	/* channels 15, 47, 79...*/
+> > > +	if ((idx & 0x1f) == 0xf)
+> > > +		return NL80211_CHAN_WIDTH_160;
+> > > +
+> > > +	return NL80211_CHAN_WIDTH_20;
+> > > +}
+> > 
+> > We haven't really done that for anything else - is that really
+> > necessary?
+> > 
+> Hmm.. to check whether give center_freq1 chan_idx is allowed to operate 
+> in given bandwidth.
+> Similar to center_idx_to_bw_6ghz of hostapd, this API is used to chandef 
+> bw.
 
-And then I can compare to what I have internally already. I guess I'll
-just send that out too so you can see it.
+Yeah, but good enough if hostapd does that check? I don't really see the
+kernel caring too much?
+
+> Don't we have to check chandef bw? If not, I will drop the change.
+
+I'm not really sure why we should, tbh.
 
 johannes
 
