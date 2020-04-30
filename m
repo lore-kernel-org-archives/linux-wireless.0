@@ -7,41 +7,41 @@ X-Spam-Status: No, score=-15.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 788B0C47259
-	for <linux-wireless@archiver.kernel.org>; Thu, 30 Apr 2020 16:06:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8382C47254
+	for <linux-wireless@archiver.kernel.org>; Thu, 30 Apr 2020 16:07:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5369C2082E
-	for <linux-wireless@archiver.kernel.org>; Thu, 30 Apr 2020 16:06:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B3ECA2076D
+	for <linux-wireless@archiver.kernel.org>; Thu, 30 Apr 2020 16:07:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1588262804;
-	bh=CiLOHnpVVSLJQyhYuYHkng4P2M1sc6qBmL1opImcUzk=;
+	s=default; t=1588262858;
+	bh=sFuN0vBK+JwBRLNPQc/i7o6rOqaphy84PmOAJvpLo7I=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Qn2vWjOdJkL90sYaSaTx3CiRAta5hQ9soB+L53KogyuGIBjLXwL4/QZpGrGdMnFC4
-	 FUKu3KnG4SxxVviWwD1og2c85KEQ+4+hd7qfPs630j7QoycRbB2ed7aJ9RdK+gXH4Z
-	 jw/XCMW4iAyq5Sb0xUObYijS1wpiai7j2LwdjFZY=
+	b=GmzGk/K8vmqejcBkeuGYCyMIjRnkxtX3tHkHBh9dPDEDd+dKqmayPQyew95KtR1OT
+	 gGtvNu1jTkElvI6jx3nsp11kmqtI3WcZQYEivDWpAKltiIanMiFKvg2TpdboMW/ZSJ
+	 vE7YNZ0Q4lGMbBvcHW3x1/l24ci+RkNQ4XbwH8+c=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728331AbgD3QGT (ORCPT
+        id S1726931AbgD3QEi (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 30 Apr 2020 12:06:19 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50922 "EHLO mail.kernel.org"
+        Thu, 30 Apr 2020 12:04:38 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50438 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727106AbgD3QEj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 30 Apr 2020 12:04:39 -0400
+        id S1726635AbgD3QEh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 30 Apr 2020 12:04:37 -0400
 Received: from mail.kernel.org (ip5f5ad5c5.dynamic.kabel-deutschland.de [95.90.213.197])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 6A9C324982;
-        Thu, 30 Apr 2020 16:04:36 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id CDD98208CA;
+        Thu, 30 Apr 2020 16:04:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=default; t=1588262676;
-        bh=CiLOHnpVVSLJQyhYuYHkng4P2M1sc6qBmL1opImcUzk=;
+        bh=sFuN0vBK+JwBRLNPQc/i7o6rOqaphy84PmOAJvpLo7I=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=WtFWZhE2vizuukFFtkd1jSTT58Y6StLOsN7sM2PljJ3sZLoFKRdqV+eobt5nkKqhr
-         px3mEO9wFhFXCnAa9hNX3dWx1lBleBuKrhYSvdm88uWvufh3OK2hLI5z/y1aTFQRZw
-         B4Mgha1OX9BHm35kiZ+Qe4M4a+HiJvaAVGOQkf6I=
+        b=tY0oVDQIEQe0IOgIkcGS66w2Yi+puKEyzkMHYZ7arBix0cK6asc8NkbsCVqyROh4c
+         pNT4G88lN11RiEj2Gu4rDqz6tmZAN2RmI3n5QoaAqWw/KpFiP7CncgcPBocbRXX4LW
+         jSiZHgd3QsOiNMUgHUNLgmQr3H3GIJezV1CfckmM=
 Received: from mchehab by mail.kernel.org with local (Exim 4.92.3)
         (envelope-from <mchehab@kernel.org>)
-        id 1jUBfu-00AxG6-LR; Thu, 30 Apr 2020 18:04:34 +0200
+        id 1jUBfu-00AxEN-2j; Thu, 30 Apr 2020 18:04:34 +0200
 From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 To:     Linux Doc Mailing List <linux-doc@vger.kernel.org>
 Cc:     Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
@@ -50,9 +50,9 @@ Cc:     Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
         Jakub Kicinski <kuba@kernel.org>,
         Johannes Berg <johannes@sipsolutions.net>,
         netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: [PATCH 25/37] docs: networking: convert regulatory.txt to ReST
-Date:   Thu, 30 Apr 2020 18:04:20 +0200
-Message-Id: <3df26ac762a1a7b3a61a9ae39b49cd67aa09ec21.1588261997.git.mchehab+huawei@kernel.org>
+Subject: [PATCH 04/37] docs: networking: convert mac80211-injection.txt to ReST
+Date:   Thu, 30 Apr 2020 18:03:59 +0200
+Message-Id: <015916acf01942ca53453444aa48f70e7bfa5221.1588261997.git.mchehab+huawei@kernel.org>
 X-Mailer: git-send-email 2.25.4
 In-Reply-To: <cover.1588261997.git.mchehab+huawei@kernel.org>
 References: <cover.1588261997.git.mchehab+huawei@kernel.org>
@@ -66,134 +66,160 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 - add SPDX header;
 - adjust title markup;
 - mark code blocks and literals as such;
-- adjust identation, whitespaces and blank lines where needed;
+- mark tables as such;
+- adjust identation, whitespaces and blank lines;
 - add to networking/index.rst.
 
 Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 ---
  Documentation/networking/index.rst            |  1 +
- .../{regulatory.txt => regulatory.rst}        | 29 +++++++++++--------
+ ...1-injection.txt => mac80211-injection.rst} | 39 ++++++++++++-------
  MAINTAINERS                                   |  2 +-
- 3 files changed, 19 insertions(+), 13 deletions(-)
- rename Documentation/networking/{regulatory.txt => regulatory.rst} (94%)
+ net/mac80211/tx.c                             |  2 +-
+ 4 files changed, 27 insertions(+), 17 deletions(-)
+ rename Documentation/networking/{mac80211-injection.txt => mac80211-injection.rst} (68%)
 
 diff --git a/Documentation/networking/index.rst b/Documentation/networking/index.rst
-index e63a2cb2e4cb..bc3b04a2edde 100644
+index b3608b177a8b..81c1834bfb57 100644
 --- a/Documentation/networking/index.rst
 +++ b/Documentation/networking/index.rst
-@@ -98,6 +98,7 @@ Contents:
-    radiotap-headers
-    ray_cs
-    rds
-+   regulatory
+@@ -77,6 +77,7 @@ Contents:
+    l2tp
+    lapb-module
+    ltpc
++   mac80211-injection
  
  .. only::  subproject and html
  
-diff --git a/Documentation/networking/regulatory.txt b/Documentation/networking/regulatory.rst
-similarity index 94%
-rename from Documentation/networking/regulatory.txt
-rename to Documentation/networking/regulatory.rst
-index 381e5b23d61d..8701b91e81ee 100644
---- a/Documentation/networking/regulatory.txt
-+++ b/Documentation/networking/regulatory.rst
-@@ -1,5 +1,8 @@
+diff --git a/Documentation/networking/mac80211-injection.txt b/Documentation/networking/mac80211-injection.rst
+similarity index 68%
+rename from Documentation/networking/mac80211-injection.txt
+rename to Documentation/networking/mac80211-injection.rst
+index d58d78df9ca2..75d4edcae852 100644
+--- a/Documentation/networking/mac80211-injection.txt
++++ b/Documentation/networking/mac80211-injection.rst
+@@ -1,9 +1,12 @@
 +.. SPDX-License-Identifier: GPL-2.0
 +
-+=======================================
- Linux wireless regulatory documentation
-----------------------------------------
-+=======================================
++=========================================
+ How to use packet injection with mac80211
+ =========================================
  
- This document gives a brief review over how the Linux wireless
- regulatory infrastructure works.
-@@ -57,7 +60,7 @@ Users can use iw:
+ mac80211 now allows arbitrary packets to be injected down any Monitor Mode
+ interface from userland.  The packet you inject needs to be composed in the
+-following format:
++following format::
  
- http://wireless.kernel.org/en/users/Documentation/iw
+  [ radiotap header  ]
+  [ ieee80211 header ]
+@@ -18,15 +21,19 @@ radiotap headers and used to control injection:
  
--An example:
-+An example::
+  * IEEE80211_RADIOTAP_FLAGS
  
-   # set regulatory domain to "Costa Rica"
-   iw reg set CR
-@@ -104,9 +107,9 @@ Example code - drivers hinting an alpha2:
+-   IEEE80211_RADIOTAP_F_FCS: FCS will be removed and recalculated
+-   IEEE80211_RADIOTAP_F_WEP: frame will be encrypted if key available
+-   IEEE80211_RADIOTAP_F_FRAG: frame will be fragmented if longer than the
++   =========================  ===========================================
++   IEEE80211_RADIOTAP_F_FCS   FCS will be removed and recalculated
++   IEEE80211_RADIOTAP_F_WEP   frame will be encrypted if key available
++   IEEE80211_RADIOTAP_F_FRAG  frame will be fragmented if longer than the
+ 			      current fragmentation threshold.
++   =========================  ===========================================
  
- This example comes from the zd1211rw device driver. You can start
- by having a mapping of your device's EEPROM country/regulatory
--domain value to a specific alpha2 as follows:
-+domain value to a specific alpha2 as follows::
+  * IEEE80211_RADIOTAP_TX_FLAGS
  
--static struct zd_reg_alpha2_map reg_alpha2_map[] = {
-+  static struct zd_reg_alpha2_map reg_alpha2_map[] = {
- 	{ ZD_REGDOMAIN_FCC, "US" },
- 	{ ZD_REGDOMAIN_IC, "CA" },
- 	{ ZD_REGDOMAIN_ETSI, "DE" }, /* Generic ETSI, use most restrictive */
-@@ -116,10 +119,10 @@ static struct zd_reg_alpha2_map reg_alpha2_map[] = {
- 	{ ZD_REGDOMAIN_FRANCE, "FR" },
+-   IEEE80211_RADIOTAP_F_TX_NOACK: frame should be sent without waiting for
++   =============================  ========================================
++   IEEE80211_RADIOTAP_F_TX_NOACK  frame should be sent without waiting for
+ 				  an ACK even if it is a unicast frame
++   =============================  ========================================
  
- Then you can define a routine to map your read EEPROM value to an alpha2,
--as follows:
-+as follows::
+  * IEEE80211_RADIOTAP_RATE
  
--static int zd_reg2alpha2(u8 regdomain, char *alpha2)
--{
-+  static int zd_reg2alpha2(u8 regdomain, char *alpha2)
-+  {
- 	unsigned int i;
- 	struct zd_reg_alpha2_map *reg_map;
- 		for (i = 0; i < ARRAY_SIZE(reg_alpha2_map); i++) {
-@@ -131,12 +134,14 @@ static int zd_reg2alpha2(u8 regdomain, char *alpha2)
- 		}
- 	}
- 	return 1;
--}
-+  }
+@@ -37,8 +44,10 @@ radiotap headers and used to control injection:
+    HT rate for the transmission (only for devices without own rate control).
+    Also some flags are parsed
  
- Lastly, you can then hint to the core of your discovered alpha2, if a match
- was found. You need to do this after you have registered your wiphy. You
- are expected to do this during initialization.
+-   IEEE80211_RADIOTAP_MCS_SGI: use short guard interval
+-   IEEE80211_RADIOTAP_MCS_BW_40: send in HT40 mode
++   ============================  ========================
++   IEEE80211_RADIOTAP_MCS_SGI    use short guard interval
++   IEEE80211_RADIOTAP_MCS_BW_40  send in HT40 mode
++   ============================  ========================
  
-+::
-+
- 	r = zd_reg2alpha2(mac->regdomain, alpha2);
- 	if (!r)
- 		regulatory_hint(hw->wiphy, alpha2);
-@@ -156,9 +161,9 @@ call regulatory_hint() with the regulatory domain structure in it.
- Bellow is a simple example, with a regulatory domain cached using the stack.
- Your implementation may vary (read EEPROM cache instead, for example).
+  * IEEE80211_RADIOTAP_DATA_RETRIES
  
--Example cache of some regulatory domain
-+Example cache of some regulatory domain::
+@@ -51,17 +60,17 @@ radiotap headers and used to control injection:
+    without own rate control). Also other fields are parsed
  
--struct ieee80211_regdomain mydriver_jp_regdom = {
-+  struct ieee80211_regdomain mydriver_jp_regdom = {
- 	.n_reg_rules = 3,
- 	.alpha2 =  "JP",
- 	//.alpha2 =  "99", /* If I have no alpha2 to map it to */
-@@ -173,9 +178,9 @@ struct ieee80211_regdomain mydriver_jp_regdom = {
- 			NL80211_RRF_NO_IR|
- 			NL80211_RRF_DFS),
- 	}
--};
-+  };
+    flags field
+-   IEEE80211_RADIOTAP_VHT_FLAG_SGI: use short guard interval
++	IEEE80211_RADIOTAP_VHT_FLAG_SGI: use short guard interval
  
--Then in some part of your code after your wiphy has been registered:
-+Then in some part of your code after your wiphy has been registered::
+    bandwidth field
+-   1: send using 40MHz channel width
+-   4: send using 80MHz channel width
+-   11: send using 160MHz channel width
++	* 1: send using 40MHz channel width
++	* 4: send using 80MHz channel width
++	* 11: send using 160MHz channel width
  
- 	struct ieee80211_regdomain *rd;
- 	int size_of_regd;
+ The injection code can also skip all other currently defined radiotap fields
+ facilitating replay of captured radiotap headers directly.
+ 
+-Here is an example valid radiotap header defining some parameters
++Here is an example valid radiotap header defining some parameters::
+ 
+ 	0x00, 0x00, // <-- radiotap version
+ 	0x0b, 0x00, // <- radiotap header length
+@@ -71,7 +80,7 @@ Here is an example valid radiotap header defining some parameters
+ 	0x01 //<-- antenna
+ 
+ The ieee80211 header follows immediately afterwards, looking for example like
+-this:
++this::
+ 
+ 	0x08, 0x01, 0x00, 0x00,
+ 	0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+@@ -84,10 +93,10 @@ Then lastly there is the payload.
+ After composing the packet contents, it is sent by send()-ing it to a logical
+ mac80211 interface that is in Monitor mode.  Libpcap can also be used,
+ (which is easier than doing the work to bind the socket to the right
+-interface), along the following lines:
++interface), along the following lines:::
+ 
+ 	ppcap = pcap_open_live(szInterfaceName, 800, 1, 20, szErrbuf);
+-...
++	...
+ 	r = pcap_inject(ppcap, u8aSendBuffer, nLength);
+ 
+ You can also find a link to a complete inject application here:
 diff --git a/MAINTAINERS b/MAINTAINERS
-index d525b85a37a0..caab14c5c12b 100644
+index 0db63acd07b0..1546ecb855b5 100644
 --- a/MAINTAINERS
 +++ b/MAINTAINERS
-@@ -193,7 +193,7 @@ W:	https://wireless.wiki.kernel.org/
+@@ -10112,7 +10112,7 @@ S:	Maintained
+ W:	https://wireless.wiki.kernel.org/
  T:	git git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git
  T:	git git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git
- F:	Documentation/driver-api/80211/cfg80211.rst
--F:	Documentation/networking/regulatory.txt
-+F:	Documentation/networking/regulatory.rst
- F:	include/linux/ieee80211.h
- F:	include/net/cfg80211.h
- F:	include/net/ieee80211_radiotap.h
+-F:	Documentation/networking/mac80211-injection.txt
++F:	Documentation/networking/mac80211-injection.rst
+ F:	Documentation/networking/mac80211_hwsim/mac80211_hwsim.rst
+ F:	drivers/net/wireless/mac80211_hwsim.[ch]
+ F:	include/net/mac80211.h
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 6dad67eb60b2..47f460c8bd74 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2144,7 +2144,7 @@ static bool ieee80211_parse_tx_radiotap(struct ieee80211_local *local,
+ 
+ 		/*
+ 		 * Please update the file
+-		 * Documentation/networking/mac80211-injection.txt
++		 * Documentation/networking/mac80211-injection.rst
+ 		 * when parsing new fields here.
+ 		 */
+ 
 -- 
 2.25.4
 
