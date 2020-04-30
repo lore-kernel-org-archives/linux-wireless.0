@@ -2,98 +2,154 @@ Return-Path: <SRS0=B82j=6O=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4AD7C4724C
-	for <linux-wireless@archiver.kernel.org>; Thu, 30 Apr 2020 14:09:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C92FC47247
+	for <linux-wireless@archiver.kernel.org>; Thu, 30 Apr 2020 15:02:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C5759206D9
-	for <linux-wireless@archiver.kernel.org>; Thu, 30 Apr 2020 14:09:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1588255789;
-	bh=zO7R679Gr2AtMhtzxEms+JbhQBtZBn/rOHFwp6nT9xc=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=IXPdKSN6nxoHERr+/v0pSuG2JeVeQx1slruUBZ9YbQv57+nxFbGr0sZ1BMzoOaEks
-	 TQ/s7RvQBjC2N+yhhWgrKkMKLh5/dweh8qiNqgTMryG3HY8x7NQeMYC0ZnzEIK160S
-	 4uJqO/BTEoRlvKgvghdrNBOC9x3G/IvkhAh44KZM=
+	by mail.kernel.org (Postfix) with ESMTP id 6085D2082E
+	for <linux-wireless@archiver.kernel.org>; Thu, 30 Apr 2020 15:02:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729024AbgD3OJi (ORCPT
+        id S1726488AbgD3PCL convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 30 Apr 2020 10:09:38 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60446 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728187AbgD3Nvr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 30 Apr 2020 09:51:47 -0400
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id F0266208DB;
-        Thu, 30 Apr 2020 13:51:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1588254706;
-        bh=zO7R679Gr2AtMhtzxEms+JbhQBtZBn/rOHFwp6nT9xc=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ahcXR5SN75w+Uu5qJlIPaUVEtgP83DiXg+5sw04SnNcstAbhyAWBclP7YqnJhrEgT
-         TKFxO4pFN1yl6LBxnX7EflD6L/bskFn7Xi1qkeggOYJYz2Oqc0uMVpYu66JjsYVUmK
-         oQvy7oeuA86KmO0NI1NxjtjZscumKfM2G0MwT648=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Chris Rorvick <chris@rorvick.com>,
-        Sedat Dilek <sedat.dilek@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.6 55/79] iwlwifi: actually check allocated conf_tlv pointer
-Date:   Thu, 30 Apr 2020 09:50:19 -0400
-Message-Id: <20200430135043.19851-55-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200430135043.19851-1-sashal@kernel.org>
-References: <20200430135043.19851-1-sashal@kernel.org>
+        Thu, 30 Apr 2020 11:02:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37686 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726421AbgD3PCL (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 30 Apr 2020 11:02:11 -0400
+Received: from Galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 50CA7C035494
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Apr 2020 08:02:11 -0700 (PDT)
+Received: from bigeasy by Galois.linutronix.de with local (Exim 4.80)
+        (envelope-from <bigeasy@linutronix.de>)
+        id 1jUAhS-00067K-TB; Thu, 30 Apr 2020 17:02:07 +0200
+Date:   Thu, 30 Apr 2020 17:02:06 +0200
+From:   Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To:     yhchuang@realtek.com
+Cc:     kvalo@codeaurora.org, pkshih@realtek.com,
+        linux-wireless@vger.kernel.org, briannorris@chromium.org,
+        kevin_yang@realtek.com
+Subject: Re: [PATCH 26/40] rtw88: 8723d: add IQ calibration
+Message-ID: <20200430150206.3bw7lp7wslgeuaqx@linutronix.de>
+References: <20200417074653.15591-1-yhchuang@realtek.com>
+ <20200417074653.15591-27-yhchuang@realtek.com>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8BIT
+In-Reply-To: <20200417074653.15591-27-yhchuang@realtek.com>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Chris Rorvick <chris@rorvick.com>
+On 2020-04-17 15:46:39 [+0800], yhchuang@realtek.com wrote:
+> diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723d.c b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
+> index 94784c7f0743..b66bd969e007 100644
+> --- a/drivers/net/wireless/realtek/rtw88/rtw8723d.c
+> +++ b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
+…
+> +struct iqk_backup_regs {
+> +	u32 adda[IQK_ADDA_REG_NUM];
+> +	u8 mac8[IQK_MAC8_REG_NUM];
+> +	u32 mac32[IQK_MAC32_REG_NUM];
+> +	u32 bb[IQK_BB_REG_NUM];
+> +
+> +	u32 lte_path;
+> +	u32 lte_gnt;
+> +
+> +	u8 btg_sel;
+> +	u32 bb_sel_btg;
+> +
+> +	u8 igia;
+> +	u8 igib;
 
-[ Upstream commit a176e114ace4cca7df0e34b4bd90c301cdc6d653 ]
+The struct has 128 bytes. Putting btg_sel after bb_sel_btg will result
+in 124 bytes. How likely is it that it will grow? I'm asking because it
+is allocated on stack.
 
-Commit 71bc0334a637 ("iwlwifi: check allocated pointer when allocating
-conf_tlvs") attempted to fix a typoe introduced by commit 17b809c9b22e
-("iwlwifi: dbg: move debug data to a struct") but does not implement the
-check correctly.
+> +};
+> +
+> +static void rtw8723d_iqk_backup_regs(struct rtw_dev *rtwdev,
+> +				     struct iqk_backup_regs *backup)
+> +{
+> +	int i;
+> +
+> +	for (i = 0; i < IQK_ADDA_REG_NUM; i++)
+> +		backup->adda[i] = rtw_read32(rtwdev, iqk_adda_regs[i]);
+> +
+> +	for (i = 0; i < IQK_MAC8_REG_NUM; i++)
+> +		backup->mac8[i] = rtw_read8(rtwdev, iqk_mac8_regs[i]);
+> +	for (i = 0; i < IQK_MAC32_REG_NUM; i++)
+> +		backup->mac32[i] = rtw_read32(rtwdev, iqk_mac32_regs[i]);
+> +
+> +	for (i = 0; i < IQK_BB_REG_NUM; i++)
+> +		backup->bb[i] = rtw_read32(rtwdev, iqk_bb_regs[i]);
+> +
+> +	backup->igia = (u8)rtw_read32_mask(rtwdev, REG_OFDM0_XAAGC1, MASKBYTE0);
+> +	backup->igib = (u8)rtw_read32_mask(rtwdev, REG_OFDM0_XBAGC1, MASKBYTE0);
 
-Fixes: 71bc0334a637 ("iwlwifi: check allocated pointer when allocating conf_tlvs")
-Tweeted-by: @grsecurity
-Signed-off-by: Chris Rorvick <chris@rorvick.com>
-Signed-off-by: Sedat Dilek <sedat.dilek@gmail.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/20200417074558.12316-1-sedat.dilek@gmail.com
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+igi[ab] is alreay u8, no need for cast.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-index 0481796f75bc4..c24350222133d 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-@@ -1467,7 +1467,7 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
- 				kmemdup(pieces->dbg_conf_tlv[i],
- 					pieces->dbg_conf_tlv_len[i],
- 					GFP_KERNEL);
--			if (!pieces->dbg_conf_tlv[i])
-+			if (!drv->fw.dbg.conf_tlv[i])
- 				goto out_free_fw;
- 		}
- 	}
--- 
-2.20.1
+> +
+> +	backup->bb_sel_btg = rtw_read32(rtwdev, REG_BB_SEL_BTG);
+> +}
+…
 
+> +static u8 rtw8723d_iqk_rx_path(struct rtw_dev *rtwdev,
+> +			       const struct rtw_8723d_iqk_cfg *iqk_cfg,
+> +			       const struct iqk_backup_regs *backup)
+> +{
+> +	u32 tx_x, tx_y;
+> +	u8 result = 0x00;
+
+You could avoid the explicit init of `result' (maybe even use `ret' for
+less key strokes and avoiding the confusion with the `result' array used
+by the other functions here) and then 
+
+…
+> +	rtw8723d_iqk_one_shot(rtwdev, false, iqk_cfg);
+> +	result |= rtw8723d_iqk_check_tx_failed(rtwdev, iqk_cfg);
+
+not or the returned value here. Since you don't collect it from multiple
+functions I don't see the reason for it.
+
+> +	if (!result)
+> +		goto restore;
+…
+> +	rtw8723d_iqk_one_shot(rtwdev, false, iqk_cfg);
+> +	result |= rtw8723d_iqk_check_rx_failed(rtwdev, iqk_cfg);
+
+Same here.
+
+> +restore:
+> +	rtw8723d_iqk_txrx_path_post(rtwdev, iqk_cfg, backup);
+> +
+> +	return result;
+> +}
+> +
+…
+> +
+> +static void rtw8723d_phy_calibration(struct rtw_dev *rtwdev)
+> +{
+> +	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
+> +	s32 result[IQK_ROUND_SIZE][IQK_NR];
+> +	struct iqk_backup_regs backup;
+
+I don't know how deep you are in the call chain, but `result' takes 128
+bytes and `backup' as well (this could be 124).
+I'm not saying that this is bad, just that you keep an eye on it since
+those two take 256 bytes.
+
+> +	u8 i, j;
+> +	u8 final_candidate = IQK_ROUND_INVALID;
+> +	bool good;
+> +
+> +	rtw_dbg(rtwdev, RTW_DBG_RFK, "[IQK] Start!!!\n");
+> +
+> +	memset(result, 0, sizeof(result));
+
+Sebastian
