@@ -2,84 +2,94 @@ Return-Path: <SRS0=B82j=6O=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71A66C28CBC
-	for <linux-wireless@archiver.kernel.org>; Thu, 30 Apr 2020 13:58:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84E95C4724C
+	for <linux-wireless@archiver.kernel.org>; Thu, 30 Apr 2020 14:04:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5085A20661
-	for <linux-wireless@archiver.kernel.org>; Thu, 30 Apr 2020 13:58:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 612962063A
+	for <linux-wireless@archiver.kernel.org>; Thu, 30 Apr 2020 14:04:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1588255475;
+	bh=YNOc2verFZCxdF+PEr0mt3qsZBXxUQ4tOaOWm46Gf7k=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=AW+b3zfKn53vs6T1hU8Znz3BibryQV9kOYKZJFD5SvncYMNFeENab4Xhe0NddLRrh
+	 jvcBZNplAgkkklXjJO1h1+lDulFgBpgx7lpRXzyB0EtruiPT1m7VAPpOPcSTxohLe2
+	 osRbdZp3q1gWWhaBVaqfSaXQKu+oPLuEhjK09Sxs=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729304AbgD3N5y (ORCPT
+        id S1728670AbgD3NxR (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 30 Apr 2020 09:57:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55806 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729006AbgD3N5x (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 30 Apr 2020 09:57:53 -0400
-Received: from Galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3EA3CC035494
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Apr 2020 06:57:53 -0700 (PDT)
-Received: from bigeasy by Galois.linutronix.de with local (Exim 4.80)
-        (envelope-from <bigeasy@linutronix.de>)
-        id 1jU9hF-0003xy-VQ; Thu, 30 Apr 2020 15:57:50 +0200
-Date:   Thu, 30 Apr 2020 15:57:49 +0200
-From:   Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-To:     yhchuang@realtek.com
-Cc:     kvalo@codeaurora.org, pkshih@realtek.com,
-        linux-wireless@vger.kernel.org, briannorris@chromium.org,
-        kevin_yang@realtek.com
-Subject: Re: [PATCH 25/40] rtw88: 8723d: Add LC calibration
-Message-ID: <20200430135749.pjtzrnsnvkknwjim@linutronix.de>
-References: <20200417074653.15591-1-yhchuang@realtek.com>
- <20200417074653.15591-26-yhchuang@realtek.com>
+        Thu, 30 Apr 2020 09:53:17 -0400
+Received: from mail.kernel.org ([198.145.29.99]:34966 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728660AbgD3NxP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 30 Apr 2020 09:53:15 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 8CAE824956;
+        Thu, 30 Apr 2020 13:53:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1588254795;
+        bh=YNOc2verFZCxdF+PEr0mt3qsZBXxUQ4tOaOWm46Gf7k=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=UWiGgEUT6PW9INt36D/nlG+DZ+jFWVDE1lhK7UyPTweI90J8uaS1RXv1efkhZKHGX
+         SpEEA8NLEkiVOG+hp65N51EJ9GDEwWAA48eTVmQe6ETNuNMX5Q2t9q8Z9fL4iRmomc
+         Sf7aa7VlVWdfSFzRsu7NsTR5ioWe3FybpH98Rcss=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Madhuparna Bhowmik <madhuparnabhowmik10@gmail.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 50/57] mac80211: sta_info: Add lockdep condition for RCU list usage
+Date:   Thu, 30 Apr 2020 09:52:11 -0400
+Message-Id: <20200430135218.20372-50-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20200430135218.20372-1-sashal@kernel.org>
+References: <20200430135218.20372-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20200417074653.15591-26-yhchuang@realtek.com>
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2020-04-17 15:46:38 [+0800], yhchuang@realtek.com wrote:
-> index cf897af380c1..94784c7f0743 100644
-> --- a/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-> +++ b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-> @@ -64,6 +64,33 @@ static const struct rtw_hw_reg rtw8723d_txagc[] = {
->  #define WLAN_LTR_CTRL1		0xCB004010
->  #define WLAN_LTR_CTRL2		0x01233425
->  
-> +static void rtw8723d_lck(struct rtw_dev *rtwdev)
-> +{
-> +#define BIT_LCK		BIT(15)
+From: Madhuparna Bhowmik <madhuparnabhowmik10@gmail.com>
 
-please don't add defines like this within a function.
+[ Upstream commit 8ca47eb9f9e4e10e7e7fa695731a88941732c38d ]
 
-> +	u8 val_ctx;
-> +	u32 lc_cal, cnt;
-> +
-> +	val_ctx = rtw_read8(rtwdev, REG_CTX);
-> +	if ((val_ctx & BIT_MASK_CTX_TYPE) != 0)
-> +		rtw_write8(rtwdev, REG_CTX, val_ctx & ~BIT_MASK_CTX_TYPE);
-> +	else
-> +		rtw_write8(rtwdev, REG_TXPAUSE, 0xFF);
-> +	lc_cal = rtw_read_rf(rtwdev, RF_PATH_A, RF_CFGCH, RFREG_MASK);
-> +
-> +	rtw_write_rf(rtwdev, RF_PATH_A, RF_CFGCH, RFREG_MASK, lc_cal | BIT_LCK);
-> +	for (cnt = 0; cnt < 100; cnt++) {
-> +		if (rtw_read_rf(rtwdev, RF_PATH_A, RF_CFGCH, BIT_LCK) != 0x1)
-> +			break;
-> +		mdelay(10);
+The function sta_info_get_by_idx() uses RCU list primitive.
+It is called with  local->sta_mtx held from mac80211/cfg.c.
+Add lockdep expression to avoid any false positive RCU list warnings.
 
-Do you have any numbers on how long this takes? Like best-case, on average,
-worst case? I'm asking because if the bit does not flip on the first
-read then you busy-loop-delay here for 10ms. If it does not flip at all,
-you busy waited a whole second without any consequence. 
+Signed-off-by: Madhuparna Bhowmik <madhuparnabhowmik10@gmail.com>
+Link: https://lore.kernel.org/r/20200409082906.27427-1-madhuparnabhowmik10@gmail.com
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ net/mac80211/sta_info.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-It looks like this context here is not atomic so msleep() would work where.
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 21b1422b1b1c3..b1669f0244706 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -217,7 +217,8 @@ struct sta_info *sta_info_get_by_idx(struct ieee80211_sub_if_data *sdata,
+ 	struct sta_info *sta;
+ 	int i = 0;
+ 
+-	list_for_each_entry_rcu(sta, &local->sta_list, list) {
++	list_for_each_entry_rcu(sta, &local->sta_list, list,
++				lockdep_is_held(&local->sta_mtx)) {
+ 		if (sdata != sta->sdata)
+ 			continue;
+ 		if (i < idx) {
+-- 
+2.20.1
 
-Sebastian
