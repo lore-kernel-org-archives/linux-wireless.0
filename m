@@ -7,34 +7,34 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1261BC47247
-	for <linux-wireless@archiver.kernel.org>; Thu, 30 Apr 2020 20:13:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B765BC47254
+	for <linux-wireless@archiver.kernel.org>; Thu, 30 Apr 2020 20:13:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EF1AD20774
-	for <linux-wireless@archiver.kernel.org>; Thu, 30 Apr 2020 20:13:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A0E3A20774
+	for <linux-wireless@archiver.kernel.org>; Thu, 30 Apr 2020 20:13:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726927AbgD3UNo (ORCPT
+        id S1727097AbgD3UNZ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 30 Apr 2020 16:13:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58730 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727089AbgD3UNZ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 30 Apr 2020 16:13:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58722 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726338AbgD3UNY (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 30 Apr 2020 16:13:24 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D3E9DC08ED7D;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B8C6C035494;
         Thu, 30 Apr 2020 13:13:24 -0700 (PDT)
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.93)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1jUFYh-002qzz-57; Thu, 30 Apr 2020 22:13:23 +0200
+        id 1jUFYg-002qzz-5J; Thu, 30 Apr 2020 22:13:22 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     netdev@vger.kernel.org
 Cc:     Antonio Quartulli <a@unstable.cc>, linux-wireless@vger.kernel.org,
         Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2 5/8] netlink: allow NLA_MSECS to have range validation
-Date:   Thu, 30 Apr 2020 22:13:09 +0200
-Message-Id: <20200430221106.3c17837abd4c.I46e9164d064042d49227b9af7a686b3a02080ff0@changeid>
+Subject: [PATCH v2 2/8] netlink: limit recursion depth in policy validation
+Date:   Thu, 30 Apr 2020 22:13:06 +0200
+Message-Id: <20200430221106.15d3c6ea53ac.Iddcc303b711eabe6cb41f1647c49714d8792bd55@changeid>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200430201312.60143-1-johannes@sipsolutions.net>
 References: <20200430201312.60143-1-johannes@sipsolutions.net>
@@ -47,59 +47,143 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Since NLA_MSECS is really equivalent to NLA_U64, allow
-it to have range validation as well.
+Now that we have nested policies, we can theoretically
+recurse forever parsing attributes if a (sub-)policy
+refers back to a higher level one. This is a situation
+that has happened in nl80211, and we've avoided it there
+by not linking it.
+
+Add some code to netlink parsing to limit recursion depth.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- include/net/netlink.h | 6 ++++--
- lib/nlattr.c          | 2 ++
- 2 files changed, 6 insertions(+), 2 deletions(-)
+ lib/nlattr.c | 46 ++++++++++++++++++++++++++++++++++------------
+ 1 file changed, 34 insertions(+), 12 deletions(-)
 
-diff --git a/include/net/netlink.h b/include/net/netlink.h
-index 94a7df4ab122..4acd7165e900 100644
---- a/include/net/netlink.h
-+++ b/include/net/netlink.h
-@@ -371,7 +371,8 @@ struct nla_policy {
- #define __NLA_ENSURE(condition) BUILD_BUG_ON_ZERO(!(condition))
- #define NLA_ENSURE_UINT_TYPE(tp)			\
- 	(__NLA_ENSURE(tp == NLA_U8 || tp == NLA_U16 ||	\
--		      tp == NLA_U32 || tp == NLA_U64) + tp)
-+		      tp == NLA_U32 || tp == NLA_U64 ||	\
-+		      tp == NLA_MSECS) + tp)
- #define NLA_ENSURE_SINT_TYPE(tp)			\
- 	(__NLA_ENSURE(tp == NLA_S8 || tp == NLA_S16  ||	\
- 		      tp == NLA_S32 || tp == NLA_S64) + tp)
-@@ -379,7 +380,8 @@ struct nla_policy {
- 	(__NLA_ENSURE(tp == NLA_S8 || tp == NLA_U8 ||	\
- 		      tp == NLA_S16 || tp == NLA_U16 ||	\
- 		      tp == NLA_S32 || tp == NLA_U32 ||	\
--		      tp == NLA_S64 || tp == NLA_U64) + tp)
-+		      tp == NLA_S64 || tp == NLA_U64 ||	\
-+		      tp == NLA_MSECS) + tp)
- #define NLA_ENSURE_NO_VALIDATION_PTR(tp)		\
- 	(__NLA_ENSURE(tp != NLA_BITFIELD32 &&		\
- 		      tp != NLA_REJECT &&		\
 diff --git a/lib/nlattr.c b/lib/nlattr.c
-index a8beb173f558..21ef3998b9d9 100644
+index 3df05db732ca..7f7ebd89caa4 100644
 --- a/lib/nlattr.c
 +++ b/lib/nlattr.c
-@@ -151,6 +151,7 @@ static int nla_validate_int_range_unsigned(const struct nla_policy *pt,
- 		value = nla_get_u32(nla);
- 		break;
- 	case NLA_U64:
-+	case NLA_MSECS:
- 		value = nla_get_u64(nla);
- 		break;
- 	default:
-@@ -227,6 +228,7 @@ static int nla_validate_int_range(const struct nla_policy *pt,
- 	case NLA_U16:
- 	case NLA_U32:
- 	case NLA_U64:
-+	case NLA_MSECS:
- 		return nla_validate_int_range_unsigned(pt, nla, extack);
- 	case NLA_S8:
- 	case NLA_S16:
+@@ -44,6 +44,20 @@ static const u8 nla_attr_minlen[NLA_TYPE_MAX+1] = {
+ 	[NLA_S64]	= sizeof(s64),
+ };
+ 
++/*
++ * Nested policies might refer back to the original
++ * policy in some cases, and userspace could try to
++ * abuse that and recurse by nesting in the right
++ * ways. Limit recursion to avoid this problem.
++ */
++#define MAX_POLICY_RECURSION_DEPTH	10
++
++static int __nla_validate_parse(const struct nlattr *head, int len, int maxtype,
++				const struct nla_policy *policy,
++				unsigned int validate,
++				struct netlink_ext_ack *extack,
++				struct nlattr **tb, unsigned int depth);
++
+ static int validate_nla_bitfield32(const struct nlattr *nla,
+ 				   const u32 valid_flags_mask)
+ {
+@@ -70,7 +84,7 @@ static int validate_nla_bitfield32(const struct nlattr *nla,
+ static int nla_validate_array(const struct nlattr *head, int len, int maxtype,
+ 			      const struct nla_policy *policy,
+ 			      struct netlink_ext_ack *extack,
+-			      unsigned int validate)
++			      unsigned int validate, unsigned int depth)
+ {
+ 	const struct nlattr *entry;
+ 	int rem;
+@@ -87,8 +101,9 @@ static int nla_validate_array(const struct nlattr *head, int len, int maxtype,
+ 			return -ERANGE;
+ 		}
+ 
+-		ret = __nla_validate(nla_data(entry), nla_len(entry),
+-				     maxtype, policy, validate, extack);
++		ret = __nla_validate_parse(nla_data(entry), nla_len(entry),
++					   maxtype, policy, validate, extack,
++					   NULL, depth + 1);
+ 		if (ret < 0)
+ 			return ret;
+ 	}
+@@ -156,7 +171,7 @@ static int nla_validate_int_range(const struct nla_policy *pt,
+ 
+ static int validate_nla(const struct nlattr *nla, int maxtype,
+ 			const struct nla_policy *policy, unsigned int validate,
+-			struct netlink_ext_ack *extack)
++			struct netlink_ext_ack *extack, unsigned int depth)
+ {
+ 	u16 strict_start_type = policy[0].strict_start_type;
+ 	const struct nla_policy *pt;
+@@ -269,9 +284,10 @@ static int validate_nla(const struct nlattr *nla, int maxtype,
+ 		if (attrlen < NLA_HDRLEN)
+ 			goto out_err;
+ 		if (pt->nested_policy) {
+-			err = __nla_validate(nla_data(nla), nla_len(nla), pt->len,
+-					     pt->nested_policy, validate,
+-					     extack);
++			err = __nla_validate_parse(nla_data(nla), nla_len(nla),
++						   pt->len, pt->nested_policy,
++						   validate, extack, NULL,
++						   depth + 1);
+ 			if (err < 0) {
+ 				/*
+ 				 * return directly to preserve the inner
+@@ -294,7 +310,7 @@ static int validate_nla(const struct nlattr *nla, int maxtype,
+ 
+ 			err = nla_validate_array(nla_data(nla), nla_len(nla),
+ 						 pt->len, pt->nested_policy,
+-						 extack, validate);
++						 extack, validate, depth);
+ 			if (err < 0) {
+ 				/*
+ 				 * return directly to preserve the inner
+@@ -358,11 +374,17 @@ static int __nla_validate_parse(const struct nlattr *head, int len, int maxtype,
+ 				const struct nla_policy *policy,
+ 				unsigned int validate,
+ 				struct netlink_ext_ack *extack,
+-				struct nlattr **tb)
++				struct nlattr **tb, unsigned int depth)
+ {
+ 	const struct nlattr *nla;
+ 	int rem;
+ 
++	if (depth >= MAX_POLICY_RECURSION_DEPTH) {
++		NL_SET_ERR_MSG(extack,
++			       "allowed policy recursion depth exceeded");
++		return -EINVAL;
++	}
++
+ 	if (tb)
+ 		memset(tb, 0, sizeof(struct nlattr *) * (maxtype + 1));
+ 
+@@ -379,7 +401,7 @@ static int __nla_validate_parse(const struct nlattr *head, int len, int maxtype,
+ 		}
+ 		if (policy) {
+ 			int err = validate_nla(nla, maxtype, policy,
+-					       validate, extack);
++					       validate, extack, depth);
+ 
+ 			if (err < 0)
+ 				return err;
+@@ -421,7 +443,7 @@ int __nla_validate(const struct nlattr *head, int len, int maxtype,
+ 		   struct netlink_ext_ack *extack)
+ {
+ 	return __nla_validate_parse(head, len, maxtype, policy, validate,
+-				    extack, NULL);
++				    extack, NULL, 0);
+ }
+ EXPORT_SYMBOL(__nla_validate);
+ 
+@@ -476,7 +498,7 @@ int __nla_parse(struct nlattr **tb, int maxtype,
+ 		struct netlink_ext_ack *extack)
+ {
+ 	return __nla_validate_parse(head, len, maxtype, policy, validate,
+-				    extack, tb);
++				    extack, tb, 0);
+ }
+ EXPORT_SYMBOL(__nla_parse);
+ 
 -- 
 2.25.1
 
