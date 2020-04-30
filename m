@@ -2,41 +2,60 @@ Return-Path: <SRS0=B82j=6O=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AEC84C4724C
-	for <linux-wireless@archiver.kernel.org>; Thu, 30 Apr 2020 15:28:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA985C47253
+	for <linux-wireless@archiver.kernel.org>; Thu, 30 Apr 2020 16:05:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9097620731
-	for <linux-wireless@archiver.kernel.org>; Thu, 30 Apr 2020 15:28:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 949552076D
+	for <linux-wireless@archiver.kernel.org>; Thu, 30 Apr 2020 16:05:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1588262739;
+	bh=pdicZomMtf28CtsI0bBw5bIyiIGVYP4UbC45/HOcPuE=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=kcU0K7ombvwyOAnxtNUdhnpmFghT2AKwC4CpjCQcVzdxs7/Acoe9n4Ti5N94aqyuZ
+	 k+Q8bMAgsi1xGuPmjPF7O8v1+aOjoDvjw3rrFrCesX4gKXEoaIimMOZr39bgfJLK1m
+	 UAWf99mv5sMdDO7UAh0y3Zx8m1w6UjzcJRD70lcg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726515AbgD3P2W (ORCPT
+        id S1727915AbgD3QEk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 30 Apr 2020 11:28:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41808 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726318AbgD3P2W (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 30 Apr 2020 11:28:22 -0400
-X-Greylist: delayed 88257 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 30 Apr 2020 08:28:22 PDT
-Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2CA8EC035494
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Apr 2020 08:28:22 -0700 (PDT)
-Received: from [149.224.97.242] (helo=bertha8.datto.lan)
-        by ds12 with esmtpa (Exim 4.89)
-        (envelope-from <john@phrozen.org>)
-        id 1jUB6o-0006xy-Sr; Thu, 30 Apr 2020 17:28:18 +0200
-From:   John Crispin <john@phrozen.org>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
-        John Crispin <john@phrozen.org>,
-        Shashidhar Lakkavalli <slakkavalli@datto.com>
-Subject: [PATCH V2] ath11k: add tx hw 802.11 encapusaltion offloading support
-Date:   Thu, 30 Apr 2020 17:28:14 +0200
-Message-Id: <20200430152814.18481-1-john@phrozen.org>
-X-Mailer: git-send-email 2.20.1
+        Thu, 30 Apr 2020 12:04:40 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50896 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727097AbgD3QEj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 30 Apr 2020 12:04:39 -0400
+Received: from mail.kernel.org (ip5f5ad5c5.dynamic.kabel-deutschland.de [95.90.213.197])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 4A60924975;
+        Thu, 30 Apr 2020 16:04:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1588262676;
+        bh=pdicZomMtf28CtsI0bBw5bIyiIGVYP4UbC45/HOcPuE=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=y+0kfYQ8ug5CaCrOOdG771Rb9c40Wm0NqaHAa2n9Yr8SoKq/rTCv/GssKvOWM0iRs
+         UnAdPALXndBCia7ozw4FVbdINfr+JGAaUb3gBjQfi6nP05MtkoJW7Xl5q4/k81Hagg
+         5YymVlvou+Iraan40oXBxKupKTOTZuDYf64LT7WA=
+Received: from mchehab by mail.kernel.org with local (Exim 4.92.3)
+        (envelope-from <mchehab@kernel.org>)
+        id 1jUBfu-00AxFr-IR; Thu, 30 Apr 2020 18:04:34 +0200
+From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
+To:     Linux Doc Mailing List <linux-doc@vger.kernel.org>
+Cc:     Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
+        linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 22/37] docs: networking: convert radiotap-headers.txt to ReST
+Date:   Thu, 30 Apr 2020 18:04:17 +0200
+Message-Id: <7916711801e55e457baed67023c47b0fd5fa56f7.1588261997.git.mchehab+huawei@kernel.org>
+X-Mailer: git-send-email 2.25.4
+In-Reply-To: <cover.1588261997.git.mchehab+huawei@kernel.org>
+References: <cover.1588261997.git.mchehab+huawei@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -44,200 +63,226 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This patch adds support for ethernet rxtx mode to the driver. The feature
-is enabled via a new module parameter. If enabled to driver will enable
-the feature on a per vif basis if all other requirements were met.
+- add SPDX header;
+- adjust title markup;
+- mark code blocks and literals as such;
+- adjust identation, whitespaces and blank lines where needed;
+- add to networking/index.rst.
 
-Signed-off-by: Shashidhar Lakkavalli <slakkavalli@datto.com>
-Signed-off-by: John Crispin <john@phrozen.org>
+Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 ---
-Changes in V2
-* use an enum for datapath mode
-* minor fixes as suggested by Julian
+ Documentation/networking/index.rst            |  1 +
+ .../networking/mac80211-injection.rst         |  2 +-
+ ...iotap-headers.txt => radiotap-headers.rst} | 99 ++++++++++---------
+ include/net/cfg80211.h                        |  2 +-
+ net/wireless/radiotap.c                       |  2 +-
+ 5 files changed, 57 insertions(+), 49 deletions(-)
+ rename Documentation/networking/{radiotap-headers.txt => radiotap-headers.rst} (70%)
 
- drivers/net/wireless/ath/ath11k/core.h  |  5 +++
- drivers/net/wireless/ath/ath11k/dp_tx.c | 17 +++++++--
- drivers/net/wireless/ath/ath11k/mac.c   | 46 ++++++++++++++++++++-----
- 3 files changed, 56 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
-index 5c767d87c174..12c0a4de3506 100644
---- a/drivers/net/wireless/ath/ath11k/core.h
-+++ b/drivers/net/wireless/ath/ath11k/core.h
-@@ -60,9 +60,14 @@ static inline enum wme_ac ath11k_tid_to_ac(u32 tid)
- 		WME_AC_VO);
- }
+diff --git a/Documentation/networking/index.rst b/Documentation/networking/index.rst
+index 0da7eb0ec85a..85bc52d0b3a6 100644
+--- a/Documentation/networking/index.rst
++++ b/Documentation/networking/index.rst
+@@ -95,6 +95,7 @@ Contents:
+    plip
+    ppp_generic
+    proc_net_tcp
++   radiotap-headers
  
-+enum ath11k_skb_flags {
-+	ATH11K_SKB_HW_80211_ENCAP = BIT(0),
-+};
+ .. only::  subproject and html
+ 
+diff --git a/Documentation/networking/mac80211-injection.rst b/Documentation/networking/mac80211-injection.rst
+index 75d4edcae852..be65f886ff1f 100644
+--- a/Documentation/networking/mac80211-injection.rst
++++ b/Documentation/networking/mac80211-injection.rst
+@@ -13,7 +13,7 @@ following format::
+  [ payload ]
+ 
+ The radiotap format is discussed in
+-./Documentation/networking/radiotap-headers.txt.
++./Documentation/networking/radiotap-headers.rst.
+ 
+ Despite many radiotap parameters being currently defined, most only make sense
+ to appear on received packets.  The following information is parsed from the
+diff --git a/Documentation/networking/radiotap-headers.txt b/Documentation/networking/radiotap-headers.rst
+similarity index 70%
+rename from Documentation/networking/radiotap-headers.txt
+rename to Documentation/networking/radiotap-headers.rst
+index 953331c7984f..1a1bd1ec0650 100644
+--- a/Documentation/networking/radiotap-headers.txt
++++ b/Documentation/networking/radiotap-headers.rst
+@@ -1,3 +1,6 @@
++.. SPDX-License-Identifier: GPL-2.0
 +
- struct ath11k_skb_cb {
- 	dma_addr_t paddr;
- 	u8 eid;
-+	u8 flags;
- 	struct ath11k *ar;
- 	struct ieee80211_vif *vif;
- } __packed;
-diff --git a/drivers/net/wireless/ath/ath11k/dp_tx.c b/drivers/net/wireless/ath/ath11k/dp_tx.c
-index 8c3f973923d6..a8f3accb7d3e 100644
---- a/drivers/net/wireless/ath/ath11k/dp_tx.c
-+++ b/drivers/net/wireless/ath/ath11k/dp_tx.c
-@@ -16,7 +16,11 @@ ath11k_txq_tcl_ring_map[ATH11K_HW_MAX_QUEUES] = { 0x0, 0x1, 0x2, 0x2 };
- static enum hal_tcl_encap_type
- ath11k_dp_tx_get_encap_type(struct ath11k_vif *arvif, struct sk_buff *skb)
- {
--	/* TODO: Determine encap type based on vif_type and configuration */
-+	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
++===========================
+ How to use radiotap headers
+ ===========================
+ 
+@@ -5,9 +8,9 @@ Pointer to the radiotap include file
+ ------------------------------------
+ 
+ Radiotap headers are variable-length and extensible, you can get most of the
+-information you need to know on them from:
++information you need to know on them from::
+ 
+-./include/net/ieee80211_radiotap.h
++    ./include/net/ieee80211_radiotap.h
+ 
+ This document gives an overview and warns on some corner cases.
+ 
+@@ -21,6 +24,8 @@ of the it_present member of ieee80211_radiotap_header is set, it means that
+ the header for argument index 0 (IEEE80211_RADIOTAP_TSFT) is present in the
+ argument area.
+ 
++::
 +
-+	if (tx_info->control.flags & IEEE80211_TX_CTRL_HW_80211_ENCAP)
-+		return HAL_TCL_ENCAP_TYPE_ETHERNET;
+    < 8-byte ieee80211_radiotap_header >
+    [ <possible argument bitmap extensions ... > ]
+    [ <argument> ... ]
+@@ -76,6 +81,8 @@ ieee80211_radiotap_header.
+ Example valid radiotap header
+ -----------------------------
+ 
++::
 +
- 	return HAL_TCL_ENCAP_TYPE_NATIVE_WIFI;
- }
+ 	0x00, 0x00, // <-- radiotap version + pad byte
+ 	0x0b, 0x00, // <- radiotap header length
+ 	0x04, 0x0c, 0x00, 0x00, // <-- bitmap
+@@ -89,64 +96,64 @@ Using the Radiotap Parser
  
-@@ -40,8 +44,11 @@ static void ath11k_dp_tx_encap_nwifi(struct sk_buff *skb)
- static u8 ath11k_dp_tx_get_tid(struct sk_buff *skb)
- {
- 	struct ieee80211_hdr *hdr = (void *)skb->data;
-+	struct ath11k_skb_cb *cb = ATH11K_SKB_CB(skb);
+ If you are having to parse a radiotap struct, you can radically simplify the
+ job by using the radiotap parser that lives in net/wireless/radiotap.c and has
+-its prototypes available in include/net/cfg80211.h.  You use it like this:
++its prototypes available in include/net/cfg80211.h.  You use it like this::
  
--	if (!ieee80211_is_data_qos(hdr->frame_control))
-+	if (cb->flags & ATH11K_SKB_HW_80211_ENCAP)
-+		return skb->priority & IEEE80211_QOS_CTL_TID_MASK;
-+	else if (!ieee80211_is_data_qos(hdr->frame_control))
- 		return HAL_DESC_REO_NON_QOS_TID;
- 	else
- 		return skb->priority & IEEE80211_QOS_CTL_TID_MASK;
-@@ -88,7 +95,8 @@ int ath11k_dp_tx(struct ath11k *ar, struct ath11k_vif *arvif,
- 	if (test_bit(ATH11K_FLAG_CRASH_FLUSH, &ar->ab->dev_flags))
- 		return -ESHUTDOWN;
+-#include <net/cfg80211.h>
++    #include <net/cfg80211.h>
  
--	if (!ieee80211_is_data(hdr->frame_control))
-+	if (!(info->control.flags & IEEE80211_TX_CTRL_HW_80211_ENCAP) &&
-+	    !ieee80211_is_data(hdr->frame_control))
- 		return -ENOTSUPP;
+-/* buf points to the start of the radiotap header part */
++    /* buf points to the start of the radiotap header part */
  
- 	pool_id = skb_get_queue_mapping(skb) & (ATH11K_HW_MAX_QUEUES - 1);
-@@ -149,7 +157,10 @@ int ath11k_dp_tx(struct ath11k *ar, struct ath11k_vif *arvif,
- 		 *	  skb_checksum_help() is needed
- 		 */
- 	case HAL_TCL_ENCAP_TYPE_ETHERNET:
-+		/* no need to encap */
-+		break;
- 	case HAL_TCL_ENCAP_TYPE_802_3:
-+	default:
- 		/* TODO: Take care of other encap modes as well */
- 		ret = -EINVAL;
- 		goto fail_remove_idr;
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index aef012912003..735526b34024 100644
---- a/drivers/net/wireless/ath/ath11k/mac.c
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -33,6 +33,11 @@
- 	.max_power              = 30, \
- }
+-int MyFunction(u8 * buf, int buflen)
+-{
+-	int pkt_rate_100kHz = 0, antenna = 0, pwr = 0;
+-	struct ieee80211_radiotap_iterator iterator;
+-	int ret = ieee80211_radiotap_iterator_init(&iterator, buf, buflen);
++    int MyFunction(u8 * buf, int buflen)
++    {
++	    int pkt_rate_100kHz = 0, antenna = 0, pwr = 0;
++	    struct ieee80211_radiotap_iterator iterator;
++	    int ret = ieee80211_radiotap_iterator_init(&iterator, buf, buflen);
  
-+/* frame mode values are mapped as per enum ath11k_hw_txrx_mode */
-+static unsigned int ath11k_ath11k_frame_mode = ATH11K_HW_TXRX_NATIVE_WIFI;
-+module_param_named(ath11k_frame_mode, ath11k_ath11k_frame_mode, uint, 0644);
-+MODULE_PARM_DESC(ath11k_frame_mode, "Datapath frame mode");
-+
- static const struct ieee80211_channel ath11k_2ghz_channels[] = {
- 	CHAN2G(1, 2412, 0),
- 	CHAN2G(2, 2417, 0),
-@@ -3806,10 +3811,10 @@ static int __ath11k_set_antenna(struct ath11k *ar, u32 tx_ant, u32 rx_ant)
+-	while (!ret) {
++	    while (!ret) {
  
- int ath11k_mac_tx_mgmt_pending_free(int buf_id, void *skb, void *ctx)
- {
-+	struct sk_buff *msdu = skb;
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(msdu);
- 	struct ath11k *ar = ctx;
- 	struct ath11k_base *ab = ar->ab;
--	struct sk_buff *msdu = skb;
--	struct ieee80211_tx_info *info;
+-		ret = ieee80211_radiotap_iterator_next(&iterator);
++		    ret = ieee80211_radiotap_iterator_next(&iterator);
  
- 	spin_lock_bh(&ar->txmgmt_idr_lock);
- 	idr_remove(&ar->txmgmt_idr, buf_id);
-@@ -3849,6 +3854,7 @@ static int ath11k_mac_mgmt_tx_wmi(struct ath11k *ar, struct ath11k_vif *arvif,
- {
- 	struct ath11k_base *ab = ar->ab;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-+	struct ieee80211_tx_info *info;
- 	dma_addr_t paddr;
- 	int buf_id;
- 	int ret;
-@@ -3860,11 +3866,14 @@ static int ath11k_mac_mgmt_tx_wmi(struct ath11k *ar, struct ath11k_vif *arvif,
- 	if (buf_id < 0)
- 		return -ENOSPC;
+-		if (ret)
+-			continue;
++		    if (ret)
++			    continue;
  
--	if ((ieee80211_is_action(hdr->frame_control) ||
--	     ieee80211_is_deauth(hdr->frame_control) ||
--	     ieee80211_is_disassoc(hdr->frame_control)) &&
--	     ieee80211_has_protected(hdr->frame_control)) {
--		skb_put(skb, IEEE80211_CCMP_MIC_LEN);
-+	info = IEEE80211_SKB_CB(skb);
-+	if (!(info->control.flags & IEEE80211_TX_CTRL_HW_80211_ENCAP)) {
-+		if ((ieee80211_is_action(hdr->frame_control) ||
-+		     ieee80211_is_deauth(hdr->frame_control) ||
-+		     ieee80211_is_disassoc(hdr->frame_control)) &&
-+		     ieee80211_has_protected(hdr->frame_control)) {
-+			skb_put(skb, IEEE80211_CCMP_MIC_LEN);
-+		}
- 	}
+-		/* see if this argument is something we can use */
++		    /* see if this argument is something we can use */
  
- 	paddr = dma_map_single(ab->dev, skb->data, skb->len, DMA_TO_DEVICE);
-@@ -3961,6 +3970,7 @@ static void ath11k_mac_op_tx(struct ieee80211_hw *hw,
- 			     struct ieee80211_tx_control *control,
- 			     struct sk_buff *skb)
- {
-+	struct ath11k_skb_cb *skb_cb = ATH11K_SKB_CB(skb);
- 	struct ath11k *ar = hw->priv;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_vif *vif = info->control.vif;
-@@ -3969,7 +3979,9 @@ static void ath11k_mac_op_tx(struct ieee80211_hw *hw,
- 	bool is_prb_rsp;
- 	int ret;
+-		switch (iterator.this_arg_index) {
+-		/*
+-		 * You must take care when dereferencing iterator.this_arg
+-		 * for multibyte types... the pointer is not aligned.  Use
+-		 * get_unaligned((type *)iterator.this_arg) to dereference
+-		 * iterator.this_arg for type "type" safely on all arches.
+-		 */
+-		case IEEE80211_RADIOTAP_RATE:
+-			/* radiotap "rate" u8 is in
+-			 * 500kbps units, eg, 0x02=1Mbps
+-			 */
+-			pkt_rate_100kHz = (*iterator.this_arg) * 5;
+-			break;
++		    switch (iterator.this_arg_index) {
++		    /*
++		    * You must take care when dereferencing iterator.this_arg
++		    * for multibyte types... the pointer is not aligned.  Use
++		    * get_unaligned((type *)iterator.this_arg) to dereference
++		    * iterator.this_arg for type "type" safely on all arches.
++		    */
++		    case IEEE80211_RADIOTAP_RATE:
++			    /* radiotap "rate" u8 is in
++			    * 500kbps units, eg, 0x02=1Mbps
++			    */
++			    pkt_rate_100kHz = (*iterator.this_arg) * 5;
++			    break;
  
--	if (ieee80211_is_mgmt(hdr->frame_control)) {
-+	if (info->control.flags & IEEE80211_TX_CTRL_HW_80211_ENCAP) {
-+		skb_cb->flags |= ATH11K_SKB_HW_80211_ENCAP;
-+	} else if (ieee80211_is_mgmt(hdr->frame_control)) {
- 		is_prb_rsp = ieee80211_is_probe_resp(hdr->frame_control);
- 		ret = ath11k_mac_mgmt_tx(ar, skb, is_prb_rsp);
- 		if (ret) {
-@@ -4245,6 +4257,7 @@ static int ath11k_mac_op_add_interface(struct ieee80211_hw *hw,
- 	struct vdev_create_params vdev_param = {0};
- 	struct peer_create_params peer_param;
- 	u32 param_id, param_value;
-+	int hw_encap = 0;
- 	u16 nss;
- 	int i;
- 	int ret;
-@@ -4339,7 +4352,22 @@ static int ath11k_mac_op_add_interface(struct ieee80211_hw *hw,
- 	spin_unlock_bh(&ar->data_lock);
+-		case IEEE80211_RADIOTAP_ANTENNA:
+-			/* radiotap uses 0 for 1st ant */
+-			antenna = *iterator.this_arg);
+-			break;
++		    case IEEE80211_RADIOTAP_ANTENNA:
++			    /* radiotap uses 0 for 1st ant */
++			    antenna = *iterator.this_arg);
++			    break;
  
- 	param_id = WMI_VDEV_PARAM_TX_ENCAP_TYPE;
--	param_value = ATH11K_HW_TXRX_NATIVE_WIFI;
-+	if (ath11k_ath11k_frame_mode == ATH11K_HW_TXRX_ETHERNET)
-+		switch (vif->type) {
-+		case NL80211_IFTYPE_STATION:
-+		case NL80211_IFTYPE_AP_VLAN:
-+		case NL80211_IFTYPE_AP:
-+			hw_encap = 1;
-+			break;
-+		default:
-+			break;
-+		}
-+
-+	if (ieee80211_set_hw_80211_encap(vif, hw_encap))
-+		param_value = ATH11K_HW_TXRX_ETHERNET;
-+	else
-+		param_value = ATH11K_HW_TXRX_NATIVE_WIFI;
-+
- 	ret = ath11k_wmi_vdev_set_param_cmd(ar, arvif->vdev_id,
- 					    param_id, param_value);
- 	if (ret) {
+-		case IEEE80211_RADIOTAP_DBM_TX_POWER:
+-			pwr = *iterator.this_arg;
+-			break;
++		    case IEEE80211_RADIOTAP_DBM_TX_POWER:
++			    pwr = *iterator.this_arg;
++			    break;
+ 
+-		default:
+-			break;
+-		}
+-	}  /* while more rt headers */
++		    default:
++			    break;
++		    }
++	    }  /* while more rt headers */
+ 
+-	if (ret != -ENOENT)
+-		return TXRX_DROP;
++	    if (ret != -ENOENT)
++		    return TXRX_DROP;
+ 
+-	/* discard the radiotap header part */
+-	buf += iterator.max_length;
+-	buflen -= iterator.max_length;
++	    /* discard the radiotap header part */
++	    buf += iterator.max_length;
++	    buflen -= iterator.max_length;
+ 
+-	...
++	    ...
+ 
+-}
++    }
+ 
+ Andy Green <andy@warmcat.com>
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index e67897fabacd..582881d67f70 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -5300,7 +5300,7 @@ u32 ieee80211_mandatory_rates(struct ieee80211_supported_band *sband,
+  * Radiotap parsing functions -- for controlled injection support
+  *
+  * Implemented in net/wireless/radiotap.c
+- * Documentation in Documentation/networking/radiotap-headers.txt
++ * Documentation in Documentation/networking/radiotap-headers.rst
+  */
+ 
+ struct radiotap_align_size {
+diff --git a/net/wireless/radiotap.c b/net/wireless/radiotap.c
+index 6582d155e2fc..d5e28239e030 100644
+--- a/net/wireless/radiotap.c
++++ b/net/wireless/radiotap.c
+@@ -90,7 +90,7 @@ static const struct ieee80211_radiotap_namespace radiotap_ns = {
+  * iterator.this_arg for type "type" safely on all arches.
+  *
+  * Example code:
+- * See Documentation/networking/radiotap-headers.txt
++ * See Documentation/networking/radiotap-headers.rst
+  */
+ 
+ int ieee80211_radiotap_iterator_init(
 -- 
-2.20.1
+2.25.4
 
