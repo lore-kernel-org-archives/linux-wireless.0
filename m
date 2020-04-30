@@ -2,160 +2,179 @@ Return-Path: <SRS0=B82j=6O=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A0D1C47257
-	for <linux-wireless@archiver.kernel.org>; Thu, 30 Apr 2020 21:33:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A94CC47254
+	for <linux-wireless@archiver.kernel.org>; Thu, 30 Apr 2020 21:33:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2E490214D8
-	for <linux-wireless@archiver.kernel.org>; Thu, 30 Apr 2020 21:33:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 28A2F2054F
+	for <linux-wireless@archiver.kernel.org>; Thu, 30 Apr 2020 21:33:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727947AbgD3VdN (ORCPT
+        id S1727997AbgD3Vda (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 30 Apr 2020 17:33:13 -0400
-Received: from mout.kundenserver.de ([212.227.126.187]:48395 "EHLO
+        Thu, 30 Apr 2020 17:33:30 -0400
+Received: from mout.kundenserver.de ([212.227.126.133]:45197 "EHLO
         mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726909AbgD3VdM (ORCPT
+        with ESMTP id S1726909AbgD3Vd3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 30 Apr 2020 17:33:12 -0400
+        Thu, 30 Apr 2020 17:33:29 -0400
 Received: from threadripper.lan ([149.172.19.189]) by mrelayeu.kundenserver.de
  (mreue010 [212.227.15.129]) with ESMTPA (Nemesis) id
- 1MuDLZ-1jBNLy1S1d-00uY02; Thu, 30 Apr 2020 23:31:55 +0200
+ 1MmlCY-1imznH36yU-00jrwf; Thu, 30 Apr 2020 23:31:17 +0200
 From:   Arnd Bergmann <arnd@arndb.de>
-To:     linux-kernel@vger.kernel.org,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Ganapathi Bhat <ganapathi.bhat@nxp.com>,
-        Xinming Hu <huxinming820@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Bing Zhao <bzhao@marvell.com>,
-        Marc Yang <yangyang@marvell.com>,
-        Ramesh Radhakrishnan <rramesh@marvell.com>,
-        Kiran Divekar <dkiran@marvell.com>
+To:     linux-kernel@vger.kernel.org
 Cc:     Arnd Bergmann <arnd@arndb.de>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Yogesh Ashok Powar <yogeshp@marvell.com>,
-        Frank Huang <frankh@marvell.com>,
-        "John W. Linville" <linville@tuxdriver.com>,
-        Cathy Luo <xiaohua.luo@nxp.com>, James Cao <zheng.cao@nxp.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 03/15] mwifiex: avoid -Wstringop-overflow warning
-Date:   Thu, 30 Apr 2020 23:30:45 +0200
-Message-Id: <20200430213101.135134-4-arnd@arndb.de>
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        "David S. Miller" <davem@davemloft.net>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        James Smart <james.smart@broadcom.com>,
+        Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@lst.de>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>,
+        Bob Copeland <me@bobcopeland.com>, Jan Kara <jack@suse.com>,
+        Alexei Starovoitov <ast@kernel.org>,
+        Daniel Borkmann <daniel@iogearbox.net>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Pablo Neira Ayuso <pablo@netfilter.org>,
+        Florian Westphal <fw@strlen.de>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Neil Horman <nhorman@tuxdriver.com>,
+        linux-crypto@vger.kernel.org, linux-media@vger.kernel.org,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-scsi@vger.kernel.org,
+        linux-karma-devel@lists.sourceforge.net, bpf@vger.kernel.org,
+        linux-usb@vger.kernel.org, netfilter-devel@vger.kernel.org,
+        coreteam@netfilter.org
+Subject: [PATCH 00/15] gcc-10 warning fixes
+Date:   Thu, 30 Apr 2020 23:30:42 +0200
+Message-Id: <20200430213101.135134-1-arnd@arndb.de>
 X-Mailer: git-send-email 2.26.0
-In-Reply-To: <20200430213101.135134-1-arnd@arndb.de>
-References: <20200430213101.135134-1-arnd@arndb.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Provags-ID: V03:K1:gMEl41YFbv5VNowjvujQX1bH3XU15sf/EJ9rXogJvBQnt/sHj7H
- O2p++mED5GY1IUjnTdzdot3eCWrYutWmEBT6VRsXYMSwBS1bLyz+ZqBzfcUkyYV6iWVaKHN
- HQmyPesu8JEWYaVUg8tyLxSGDw0wD6s4ynsVQCXKFRZFafVz836k1aQocTn3vvLcihzCsjU
- SGGI7RkzszWYg5Eg8IuxA==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:Iefr0Y7FrDk=:3xVJsBu2lbVSWDdgd21qFQ
- pTfq+BIvkox+0xWPzM2TwfzqFKWqYhK9fvTojKD3U/6L2YQ/f+Sikwg4jXatAAWcye9lmRHnN
- FeVCZmiN1DbMh36QRHN4hi8jRE1amPmzr1AdNuZsesEm0LHaLZbe8K8Rte+SNPEIRFTr4vY1+
- CKBI9X0VZhtYkBVU/eeSSSnp2S3cQs2g0Tav76BbohvAN6r4gbd58fKyDq5PokBNlzLy3RmXX
- RvjWvGefF94Zkb11Y5x2ODRYH2tfOhNRyVRwMWazUkwbXceJpKE81UzNLrXQRRDPWwDjOtjwR
- hpqh02Zb82qfUM9nvvFa9+SQGQLU/6NzUQhq+1y9c42a/zpQSVEVOeLbHkxiR4xoS/o6On2ep
- 3z3XQltx4vFbreny69BTpAZj72dwCCF4RI0LJikyl81VFlDIITjyjiMueRE6oDRdvypOw7zPG
- Ef9ooJgoNQ3S5dB+FWSKngRDgZs+KzHqxg4AHiLVly4hEVr7vLHUIEYVWm8IoO/p3UdAnmLxM
- n9uNxgELQx1Dy9CuMJrWYsyvXacGodE9+NoHFJHpizaiHGli/qfXRUNoloWhgga3pWGsx2YN0
- fNpn//idri55nJKGbO+oYCa0VyQeEdKM8lV3UnrWRaDO55e6FXf/1MWW1raWro6piMqcOrgY+
- sUymLvbiQaeMjMcdvKHv+eLH5d87rx+tKSo7Fy94VFb25ez9ejXHbCkCb4Zcw4QYNN8P4EMML
- 6JBedCIp0OpjaFdx93P+LMdHzwYQs5LDkVb32jWSx/MN/qW4BDHqINuqCUbuHjNSg870Nlwyv
- T3sDpnz3h+hvNfHI5FbroNjYE8pkjtxb8A9sZfaw6srZtxVjpI=
+X-Provags-ID: V03:K1:d0r1T0atJ0fP6VC0lsoU2Nb50uVHm7+C7HFBKxo5Oh9FT7cjF4F
+ 56LFacsuF89qNSNIhAKt16YSLWAlWssvN8MtPe8NN45LaPwc/cCelzxDkHr4+0tFL6+Sa9G
+ a57V34rwqixwafD6sE/njElSMiK55+3n3WBVw4f5PpMdpEy2CNFI8yBkDaQox92MxOq478P
+ ATheht8WQuHpTQRLL5ZEQ==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:qtjOffXScL0=:Yde/YTTIyDLV71HcVFV/g8
+ 5aCgJ4X4xNzxI3sDnVHzb+4x1iuaUyj/FDU6axm1cC5dNjOHg+8xAyvhGoryNPJJFdXCQ9E8u
+ /vBjaVgpQi6NvTWJp+z0wFIoWkqjlRGR2wCLBCvG5ImhRZo6H4jl5uiqg/TUea1BRC5KOAUug
+ NLH3+1SoQ96QZaVVmYPbql6nsHgFb4uZYdjCp8JTVI2L30Rp4+0Uw3uwnSsZJuLBGqAnsFaeh
+ k7gAnZ02jIaJcsH2V+TwomCcLBG4OX9P3yetdeZWPtDSychl7RC+/gMGRpPt2beTcJXb7Sr4/
+ wgqf3CYR6/N2vUz2MhXS9Sl+HtdkF3gKvKsNTp2mw9draDW6IVxA+E16ianBs3s2/Jj86Cp4d
+ ehuoj5P2KJYrz+9tZ+et7SchBa5i/iGqThgNGHpUmVXaAI8nZHkjO7rEce0Ctm42WVr0HLTd4
+ o1jt4fwG8tpZvziYdVKKK9x4WQWsYAq2xx0LoedsVxg8abX+ql1c1UVSezkM6FJvLsBYSOqLC
+ Wl2wmpwXK3rQEhxxX4Sh0+p7vR68f1MiX8v4GGJjHzQvAfDgNp//3vXmnFa9OfQMY1+J5Oamt
+ RKC21TWUo81CDfLbGJUutjWh36LNJfa+N4p4bSAvqbx+J8urAAoBgP4lL7BwvnjawPWVT3bQ7
+ nx782MGIljH805ldEh/1deDsyPsEUVqES3Wx9pJakt2RNm+5lKUyzj8TLjsuKM9bM+MwiaVGP
+ y3sVYv2Jji3wkCZuDo3KR4124HQta8GSeSFOnIEeWuWxcaFbOJf9loaB0IyqLaH/bv1s0C1At
+ ctEvneGxLk11FkM6cOL//qiBQ4ws+UB1hR0Fmjp4sHdhGtlvK4=
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-gcc-10 reports a warning for mwifiex_cmd_802_11_key_material_v1:
+Here are a couple of fixes for warnings introduced with gcc-10.
+If you wish to reproduce these, you can find the compiler I used
+at [1].
 
-drivers/net/wireless/marvell/mwifiex/sta_cmd.c: In function 'mwifiex_cmd_802_11_key_material_v1':
-cc1: warning: writing 16 bytes into a region of size 0 [-Wstringop-overflow=]
-In file included from drivers/net/wireless/marvell/mwifiex/sta_cmd.c:23:
-drivers/net/wireless/marvell/mwifiex/fw.h:993:9: note: at offset 0 to object 'action' with size 2 declared here
-  993 |  __le16 action;
-      |         ^~~~~~
+If you like the fixes, please apply them directly into maintainer
+trees. I expect that we will also need them to be backported
+into stable kernels later.
 
-As the warning makes no sense, I reported it as a bug for gcc. In the
-meantime using a temporary pointer for the key data makes the code easier
-to read and stops the warning.
+I disabled -Wrestrict on gcc in my local test tree, but with
+the patches from this series and the ones I have already sent,
+I see no gcc-10 specific warnings in linux-next when doing
+many randconfig builds for arm/arm64/x86.
 
-Fixes: 5e6e3a92b9a4 ("wireless: mwifiex: initial commit for Marvell mwifiex driver")
-Link: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=94881
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
+      Arnd
+
+Arnd Bergmann (15):
+  crypto - Avoid free() namespace collision
+  iwlwifi: mvm: fix gcc-10 zero-length-bounds warning
+  mwifiex: avoid -Wstringop-overflow warning
+  ath10k: fix gcc-10 zero-length-bounds warnings
+  bpf: avoid gcc-10 stringop-overflow warning
+  netfilter: conntrack: avoid gcc-10 zero-length-bounds warning
+  drop_monitor: work around gcc-10 stringop-overflow warning
+  usb: ehci: avoid gcc-10 zero-length-bounds warning
+  udf: avoid gcc-10 zero-length-bounds warnings
+  hpfs: avoid gcc-10 zero-length-bounds warning
+  omfs: avoid gcc-10 stringop-overflow warning
+  media: s5k5baf: avoid gcc-10 zero-length-bounds warning
+  scsi: sas: avoid gcc-10 zero-length-bounds warning
+  isci: avoid gcc-10 zero-length-bounds warning
+  nvme: avoid gcc-10 zero-length-bounds warning
+
+ crypto/lrw.c                                  |  6 +--
+ crypto/xts.c                                  |  6 +--
+ drivers/media/i2c/s5k5baf.c                   |  4 +-
+ drivers/net/wireless/ath/ath10k/htt.h         |  4 +-
+ .../net/wireless/intel/iwlwifi/fw/api/tx.h    | 14 +++----
  .../net/wireless/marvell/mwifiex/sta_cmd.c    | 39 ++++++++-----------
- 1 file changed, 16 insertions(+), 23 deletions(-)
+ drivers/nvme/host/fc.c                        |  2 +-
+ drivers/scsi/aic94xx/aic94xx_tmf.c            |  4 +-
+ drivers/scsi/isci/task.h                      |  7 ++--
+ drivers/scsi/libsas/sas_task.c                |  3 +-
+ fs/hpfs/anode.c                               |  7 +++-
+ fs/omfs/file.c                                | 12 +++---
+ fs/omfs/omfs_fs.h                             |  2 +-
+ fs/udf/ecma_167.h                             |  2 +-
+ fs/udf/super.c                                |  2 +-
+ include/linux/filter.h                        |  6 +--
+ include/linux/usb/ehci_def.h                  | 12 ++++--
+ include/net/netfilter/nf_conntrack.h          |  2 +-
+ net/core/drop_monitor.c                       | 11 ++++--
+ net/netfilter/nf_conntrack_core.c             |  4 +-
+ 20 files changed, 76 insertions(+), 73 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-index 0bd93f26bd7f..8bd355d7974e 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-@@ -853,43 +853,36 @@ mwifiex_cmd_802_11_key_material_v1(struct mwifiex_private *priv,
- 		memset(&key_material->key_param_set, 0,
- 		       sizeof(struct mwifiex_ie_type_key_param_set));
- 	if (enc_key->is_wapi_key) {
-+		struct mwifiex_ie_type_key_param_set *set;
-+
- 		mwifiex_dbg(priv->adapter, INFO, "info: Set WAPI Key\n");
--		key_material->key_param_set.key_type_id =
--						cpu_to_le16(KEY_TYPE_ID_WAPI);
-+		set = &key_material->key_param_set;
-+		set->key_type_id = cpu_to_le16(KEY_TYPE_ID_WAPI);
- 		if (cmd_oid == KEY_INFO_ENABLED)
--			key_material->key_param_set.key_info =
--						cpu_to_le16(KEY_ENABLED);
-+			set->key_info = cpu_to_le16(KEY_ENABLED);
- 		else
--			key_material->key_param_set.key_info =
--						cpu_to_le16(!KEY_ENABLED);
-+			set->key_info = cpu_to_le16(!KEY_ENABLED);
- 
--		key_material->key_param_set.key[0] = enc_key->key_index;
-+		set->key[0] = enc_key->key_index;
- 		if (!priv->sec_info.wapi_key_on)
--			key_material->key_param_set.key[1] = 1;
-+			set->key[1] = 1;
- 		else
- 			/* set 0 when re-key */
--			key_material->key_param_set.key[1] = 0;
-+			set->key[1] = 0;
- 
- 		if (!is_broadcast_ether_addr(enc_key->mac_addr)) {
- 			/* WAPI pairwise key: unicast */
--			key_material->key_param_set.key_info |=
--				cpu_to_le16(KEY_UNICAST);
-+			set->key_info |= cpu_to_le16(KEY_UNICAST);
- 		} else {	/* WAPI group key: multicast */
--			key_material->key_param_set.key_info |=
--				cpu_to_le16(KEY_MCAST);
-+			set->key_info |= cpu_to_le16(KEY_MCAST);
- 			priv->sec_info.wapi_key_on = true;
- 		}
- 
--		key_material->key_param_set.type =
--					cpu_to_le16(TLV_TYPE_KEY_MATERIAL);
--		key_material->key_param_set.key_len =
--						cpu_to_le16(WAPI_KEY_LEN);
--		memcpy(&key_material->key_param_set.key[2],
--		       enc_key->key_material, enc_key->key_len);
--		memcpy(&key_material->key_param_set.key[2 + enc_key->key_len],
--		       enc_key->pn, PN_LEN);
--		key_material->key_param_set.length =
--			cpu_to_le16(WAPI_KEY_LEN + KEYPARAMSET_FIXED_LEN);
-+		set->type = cpu_to_le16(TLV_TYPE_KEY_MATERIAL);
-+		set->key_len = cpu_to_le16(WAPI_KEY_LEN);
-+		memcpy(&set->key[2], enc_key->key_material, enc_key->key_len);
-+		memcpy(&set->key[2 + enc_key->key_len], enc_key->pn, PN_LEN);
-+		set->length = cpu_to_le16(WAPI_KEY_LEN + KEYPARAMSET_FIXED_LEN);
- 
- 		key_param_len = (WAPI_KEY_LEN + KEYPARAMSET_FIXED_LEN) +
- 				 sizeof(struct mwifiex_ie_types_header);
+[1] https://mirrors.edge.kernel.org/pub/tools/crosstool/files/bin/x86_64/10.0.20200413/
+
+Cc: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Mauro Carvalho Chehab <mchehab@kernel.org>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Cc: Intel Linux Wireless <linuxwifi@intel.com>
+Cc: Amitkumar Karwar <amitkarwar@gmail.com>
+Cc: James Smart <james.smart@broadcom.com>
+Cc: Jens Axboe <axboe@fb.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>
+Cc: Bob Copeland <me@bobcopeland.com>
+Cc: Jan Kara <jack@suse.com>
+Cc: Alexei Starovoitov <ast@kernel.org>
+Cc: Daniel Borkmann <daniel@iogearbox.net>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Pablo Neira Ayuso <pablo@netfilter.org>
+Cc: Florian Westphal <fw@strlen.de>
+Cc: Jakub Kicinski <kuba@kernel.org>
+Cc: Neil Horman <nhorman@tuxdriver.com>
+Cc: linux-crypto@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-media@vger.kernel.org
+Cc: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Cc: linux-nvme@lists.infradead.org
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-karma-devel@lists.sourceforge.net
+Cc: bpf@vger.kernel.org
+Cc: linux-usb@vger.kernel.org
+Cc: netfilter-devel@vger.kernel.org
+Cc: coreteam@netfilter.org
+
+
+
 -- 
 2.26.0
 
