@@ -7,51 +7,51 @@ X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F0B5C47254
-	for <linux-wireless@archiver.kernel.org>; Thu, 30 Apr 2020 22:21:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20760C4724C
+	for <linux-wireless@archiver.kernel.org>; Thu, 30 Apr 2020 22:21:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6A7F1205ED
-	for <linux-wireless@archiver.kernel.org>; Thu, 30 Apr 2020 22:21:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EF77A205ED
+	for <linux-wireless@archiver.kernel.org>; Thu, 30 Apr 2020 22:21:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="bJxOktyv"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="AgrUKUNV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727869AbgD3WVc (ORCPT
+        id S1727884AbgD3WVg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 30 Apr 2020 18:21:32 -0400
-Received: from mail27.static.mailgun.info ([104.130.122.27]:34947 "EHLO
-        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726697AbgD3WVc (ORCPT
+        Thu, 30 Apr 2020 18:21:36 -0400
+Received: from mail26.static.mailgun.info ([104.130.122.26]:59894 "EHLO
+        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727850AbgD3WVg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 30 Apr 2020 18:21:32 -0400
+        Thu, 30 Apr 2020 18:21:36 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1588285291; h=References: In-Reply-To: Message-Id: Date:
+ s=smtp; t=1588285295; h=References: In-Reply-To: Message-Id: Date:
  Subject: Cc: To: From: Sender;
- bh=qI0MCgapxJM2yN2WArwQzjt/VfFHUH0kGqFscZOMrHg=; b=bJxOktyvzojdlgaxDWggx3HI0iKhRcolTb4ZrjrzSiOrnxKQIGbxJCp0Y94jrB0HebCw2Wz/
- NGnVKZfyaBu6W746rVAl0P99hYBYvwg37Qh4YBKoN0o7B+qaVMKWCYXf2dmF1xXJYvP4CtZ5
- hpNd2i8N7mwB95J9XNLCYgbeHSI=
-X-Mailgun-Sending-Ip: 104.130.122.27
+ bh=WYuQjWhAWvV4B+xX0+ZrAqZxe1/l+4HAU8Fy8l/RZMY=; b=AgrUKUNVNDHf19EJLjztAsKMaUEs8IlXP6l0e6Qov1E5PWvikjIFIBH+QksAwJ/7SFa/ScDG
+ UR9TuNp5eNXWFG7wiY0UeDruovGkKrFO0S4duRTH3+SCmt1AhSN8697dxDnew5OC+8HJ9khU
+ MVXJUCFHAus0ATZO7Q3VssoZUyU=
+X-Mailgun-Sending-Ip: 104.130.122.26
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5eab4f5a.7f7d50e2a148-smtp-out-n01;
- Thu, 30 Apr 2020 22:21:14 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5eab4f5d.7f1049fdab90-smtp-out-n01;
+ Thu, 30 Apr 2020 22:21:17 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 8665BC433CB; Thu, 30 Apr 2020 22:21:13 +0000 (UTC)
+        id EBE5DC433BA; Thu, 30 Apr 2020 22:21:16 +0000 (UTC)
 Received: from rmanohar-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: rmanohar)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id C367AC433D2;
-        Thu, 30 Apr 2020 22:21:12 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org C367AC433D2
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 54637C43636;
+        Thu, 30 Apr 2020 22:21:16 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 54637C43636
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=rmanohar@codeaurora.org
 From:   Rajkumar Manoharan <rmanohar@codeaurora.org>
 To:     johannes@sipsolutions.net, kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org,
         Rajkumar Manoharan <rmanohar@codeaurora.org>
-Subject: [PATCH v2 05/11] mac80211: fix memory overlap due to variable length param
-Date:   Thu, 30 Apr 2020 15:20:46 -0700
-Message-Id: <1588285252-30034-5-git-send-email-rmanohar@codeaurora.org>
+Subject: [PATCH v2 09/11] mac80211: do not allow HT/VHT IEs in 6 GHz mesh mode
+Date:   Thu, 30 Apr 2020 15:20:50 -0700
+Message-Id: <1588285252-30034-9-git-send-email-rmanohar@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1588285252-30034-1-git-send-email-rmanohar@codeaurora.org>
 References: <1588285252-30034-1-git-send-email-rmanohar@codeaurora.org>
@@ -60,84 +60,61 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-As of now HE operation element in bss_conf includes variable length
-optional field followed by other HE variable. Though the optional
-field never be used, actually it is referring to next member of the
-bss_conf structure which is not correct. Fix it by declaring needed
-HE operation fields within bss_conf itself.
+As HT/VHT elements are not allowed in 6 GHz band, do not include
+them in mesh beacon template formation.
 
 Signed-off-by: Rajkumar Manoharan <rmanohar@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath11k/mac.c |  3 +--
- include/net/mac80211.h                |  7 +++++--
- net/mac80211/he.c                     | 13 +++++--------
- 3 files changed, 11 insertions(+), 12 deletions(-)
+ net/mac80211/mesh.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index 9f8bc19cc5ae..06d063274eea 100644
---- a/drivers/net/wireless/ath/ath11k/mac.c
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -1168,8 +1168,7 @@ static void ath11k_peer_assoc_h_he(struct ath11k *ar,
- 	       sizeof(arg->peer_he_cap_macinfo));
- 	memcpy(&arg->peer_he_cap_phyinfo, he_cap->he_cap_elem.phy_cap_info,
- 	       sizeof(arg->peer_he_cap_phyinfo));
--	memcpy(&arg->peer_he_ops, &vif->bss_conf.he_operation,
--	       sizeof(arg->peer_he_ops));
-+	arg->peer_he_ops = vif->bss_conf.he_oper.params;
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 0cbe3260c5c1..04d3da733bc8 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -415,6 +415,10 @@ int mesh_add_ht_cap_ie(struct ieee80211_sub_if_data *sdata,
+ 	if (!sband)
+ 		return -EINVAL;
  
- 	/* the top most byte is used to indicate BSS color info */
- 	arg->peer_he_ops &= 0xffffff;
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 97fec4d310ac..2af956bdf80c 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -603,7 +603,7 @@ struct ieee80211_ftm_responder_params {
-  *	nontransmitted BSSIDs
-  * @profile_periodicity: the least number of beacon frames need to be received
-  *	in order to discover all the nontransmitted BSSIDs in the set.
-- * @he_operation: HE operation information of the AP we are connected to
-+ * @he_oper: HE operation information of the AP we are connected to
-  * @he_obss_pd: OBSS Packet Detection parameters.
-  * @he_bss_color: BSS coloring settings, if BSS supports HE
-  */
-@@ -666,7 +666,10 @@ struct ieee80211_bss_conf {
- 	u8 bssid_indicator;
- 	bool ema_ap;
- 	u8 profile_periodicity;
--	struct ieee80211_he_operation he_operation;
-+	struct {
-+		u32 params;
-+		u16 nss_set;
-+	} he_oper;
- 	struct ieee80211_he_obss_pd he_obss_pd;
- 	struct cfg80211_he_bss_color he_bss_color;
- };
-diff --git a/net/mac80211/he.c b/net/mac80211/he.c
-index 1087f715338b..f520552b22be 100644
---- a/net/mac80211/he.c
-+++ b/net/mac80211/he.c
-@@ -57,17 +57,14 @@ ieee80211_he_cap_ie_to_sta_he_cap(struct ieee80211_sub_if_data *sdata,
++	/* HT not allowed in 6 GHz */
++	if (sband->band == NL80211_BAND_6GHZ)
++		return 0;
++
+ 	if (!sband->ht_cap.ht_supported ||
+ 	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_20_NOHT ||
+ 	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_5 ||
+@@ -452,6 +456,10 @@ int mesh_add_ht_oper_ie(struct ieee80211_sub_if_data *sdata,
+ 	sband = local->hw.wiphy->bands[channel->band];
+ 	ht_cap = &sband->ht_cap;
  
- void
- ieee80211_he_op_ie_to_bss_conf(struct ieee80211_vif *vif,
--			const struct ieee80211_he_operation *he_op_ie_elem)
-+			const struct ieee80211_he_operation *he_op_ie)
- {
--	struct ieee80211_he_operation *he_operation =
--					&vif->bss_conf.he_operation;
--
--	if (!he_op_ie_elem) {
--		memset(he_operation, 0, sizeof(*he_operation));
-+	memset(&vif->bss_conf.he_oper, 0, sizeof(vif->bss_conf.he_oper));
-+	if (!he_op_ie)
- 		return;
--	}
++	/* HT not allowed in 6 GHz */
++	if (sband->band == NL80211_BAND_6GHZ)
++		return 0;
++
+ 	if (!ht_cap->ht_supported ||
+ 	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_20_NOHT ||
+ 	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_5 ||
+@@ -479,6 +487,10 @@ int mesh_add_vht_cap_ie(struct ieee80211_sub_if_data *sdata,
+ 	if (!sband)
+ 		return -EINVAL;
  
--	vif->bss_conf.he_operation = *he_op_ie_elem;
-+	vif->bss_conf.he_oper.params = __le32_to_cpu(he_op_ie->he_oper_params);
-+	vif->bss_conf.he_oper.nss_set = __le16_to_cpu(he_op_ie->he_mcs_nss_set);
- }
++	/* VHT not allowed in 6 GHz */
++	if (sband->band == NL80211_BAND_6GHZ)
++		return 0;
++
+ 	if (!sband->vht_cap.vht_supported ||
+ 	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_20_NOHT ||
+ 	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_5 ||
+@@ -516,6 +528,10 @@ int mesh_add_vht_oper_ie(struct ieee80211_sub_if_data *sdata,
+ 	sband = local->hw.wiphy->bands[channel->band];
+ 	vht_cap = &sband->vht_cap;
  
- void
++	/* VHT not allowed in 6 GHz */
++	if (sband->band == NL80211_BAND_6GHZ)
++		return 0;
++
+ 	if (!vht_cap->vht_supported ||
+ 	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_20_NOHT ||
+ 	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_5 ||
 -- 
 2.7.4
