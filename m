@@ -2,76 +2,122 @@ Return-Path: <SRS0=VQ8Y=6P=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92A11C47259
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 May 2020 19:33:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 593C1C47256
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 May 2020 23:13:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7B66D21775
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 May 2020 19:33:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2A7DE208DB
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 May 2020 23:13:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1588374825;
+	bh=5hBIs7ynppiec+Mcrs9/TWvkac65MInCkhDPsnn8QSk=;
+	h=From:To:Cc:Subject:Date:List-ID:From;
+	b=FqrNl2D+/MMsdfpVhy9WHMaPqtZ1O9yzJDVdsplrTmtl8Z1P4QPeXbAOSl1OEmker
+	 298FLWaad7Af0X4Xi1iGHXvv7HGfvdhEgD0k2Qu1P6x+5TunUnpxhDmAgXalS8e3f5
+	 QmvnfazdjDwri6txwDOjeUo1Tq33S9/TY29DY3/U=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726846AbgEATdL (ORCPT
+        id S1726394AbgEAXNo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 1 May 2020 15:33:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51486 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726377AbgEATdL (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 May 2020 15:33:11 -0400
-Received: from shards.monkeyblade.net (shards.monkeyblade.net [IPv6:2620:137:e000::1:9])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E5C9C061A0C;
-        Fri,  1 May 2020 12:33:11 -0700 (PDT)
-Received: from localhost (unknown [IPv6:2601:601:9f00:477::3d5])
-        (using TLSv1 with cipher AES256-SHA (256/256 bits))
-        (Client did not present a certificate)
-        (Authenticated sender: davem-davemloft)
-        by shards.monkeyblade.net (Postfix) with ESMTPSA id 1F6D414BE8274;
-        Fri,  1 May 2020 12:33:09 -0700 (PDT)
-Date:   Fri, 01 May 2020 12:33:08 -0700 (PDT)
-Message-Id: <20200501.123308.956105770476039545.davem@davemloft.net>
-To:     mchehab+huawei@kernel.org
-Cc:     linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-        corbet@lwn.net, chessman@tux.org, netdev@vger.kernel.org,
-        andrew.hendry@gmail.com, zorik@amazon.com, stranche@codeaurora.org,
-        irusskikh@marvell.com, jdmason@kudzu.us, haiyangz@microsoft.com,
-        linux-x25@vger.kernel.org, wei.liu@kernel.org,
-        linux-hyperv@vger.kernel.org, kvalo@codeaurora.org,
-        kuba@kernel.org, subashab@codeaurora.org, dsahern@kernel.org,
-        kys@microsoft.com, kou.ishizaki@toshiba.co.jp, jreuter@yaina.de,
-        saeedb@amazon.com, shrijeet@gmail.com, netanel@amazon.com,
-        stas.yakovlev@gmail.com, gtzalik@amazon.com, maxk@qti.qualcomm.com,
-        akiyano@amazon.com, linux-wireless@vger.kernel.org,
-        linux-hams@vger.kernel.org, linux-parisc@vger.kernel.org,
-        klassert@kernel.org, sthemmin@microsoft.com
-Subject: Re: [PATCH 00/37]net: manually convert files to ReST format - part
- 3 (final)
-From:   David Miller <davem@davemloft.net>
-In-Reply-To: <cover.1588344146.git.mchehab+huawei@kernel.org>
-References: <cover.1588344146.git.mchehab+huawei@kernel.org>
-X-Mailer: Mew version 6.8 on Emacs 26.1
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-X-Greylist: Sender succeeded SMTP AUTH, not delayed by milter-greylist-4.5.12 (shards.monkeyblade.net [149.20.54.216]); Fri, 01 May 2020 12:33:10 -0700 (PDT)
+        Fri, 1 May 2020 19:13:44 -0400
+Received: from mail.kernel.org ([198.145.29.99]:56758 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726045AbgEAXNo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 1 May 2020 19:13:44 -0400
+Received: from lore-desk.lan (unknown [151.48.155.206])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 10696205C9;
+        Fri,  1 May 2020 23:13:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1588374823;
+        bh=5hBIs7ynppiec+Mcrs9/TWvkac65MInCkhDPsnn8QSk=;
+        h=From:To:Cc:Subject:Date:From;
+        b=kIbMK9FTS0+NRU3PUiXNElYXSAkBb+/jI/70vX+9ne/hXzpLPys9c8PBDZNlZ+zRP
+         r2ROEhVt+1y1pIVpPK9qppuN9v/Cx1xCFzf9laCAWdeMcnh0YiUGf52NjIgG99mBcQ
+         Kp4gl4j2O7+Q4dIPg415e5sNBDe9M4z1GBNykqpk=
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     nbd@nbd.name
+Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
+        sean.wang@mediatek.com, linux-mediatek@lists.infradead.org
+Subject: [PATCH] mt76: mt7663: read tx streams from eeprom
+Date:   Sat,  2 May 2020 01:13:11 +0200
+Message-Id: <a67ec5b853824c2561c96f880e9ebca199ffac53.1588374738.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.25.4
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
-Date: Fri,  1 May 2020 16:44:22 +0200
+Read tx stream configuration from eeprom/efuse partition
 
-> That's the third part (and the final one) of my work to convert the networking
-> text files into ReST. it is based on linux-next next-20200430 branch.
-> 
-> The full series (including those ones) are at:
-> 
-> 	https://git.linuxtv.org/mchehab/experimental.git/log/?h=net-docs
-> 
-> The  built output documents, on html format is at:
-> 
-> 	https://www.infradead.org/~mchehab/kernel_docs/networking/
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+---
+ drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c | 11 ++++++-----
+ drivers/net/wireless/mediatek/mt76/mt7615/eeprom.h |  3 +++
+ 2 files changed, 9 insertions(+), 5 deletions(-)
 
-Series applied, thanks for doing all of this work.
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
+index 521705015036..7440ad13c74b 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
+@@ -130,14 +130,15 @@ mt7615_eeprom_parse_hw_band_cap(struct mt7615_dev *dev)
+ static void mt7615_eeprom_parse_hw_cap(struct mt7615_dev *dev)
+ {
+ 	u8 *eeprom = dev->mt76.eeprom.data;
+-	u8 tx_mask;
++	u8 tx_mask, max_nss;
+ 
+ 	mt7615_eeprom_parse_hw_band_cap(dev);
+ 
+ 	if (is_mt7663(&dev->mt76)) {
+-		tx_mask = 2;
++		max_nss = 2;
++		tx_mask = FIELD_GET(MT_EE_HW_CONF1_TX_MASK,
++				    eeprom[MT7663_EE_HW_CONF1]);
+ 	} else {
+-		u8 max_nss;
+ 		u32 val;
+ 
+ 		/* read tx-rx mask from eeprom */
+@@ -146,9 +147,9 @@ static void mt7615_eeprom_parse_hw_cap(struct mt7615_dev *dev)
+ 
+ 		tx_mask =  FIELD_GET(MT_EE_NIC_CONF_TX_MASK,
+ 				     eeprom[MT_EE_NIC_CONF_0]);
+-		if (!tx_mask || tx_mask > max_nss)
+-			tx_mask = max_nss;
+ 	}
++	if (!tx_mask || tx_mask > max_nss)
++		tx_mask = max_nss;
+ 
+ 	dev->chainmask = BIT(tx_mask) - 1;
+ 	dev->mphy.antenna_mask = dev->chainmask;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.h b/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.h
+index 3dd7009e5836..aad82b600c63 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.h
+@@ -39,6 +39,7 @@ enum mt7615_eeprom_field {
+ 	MT7663_EE_TX0_2G_TARGET_POWER =		0x123,
+ 	MT_EE_TX2_5G_G0_TARGET_POWER =		0x142,
+ 	MT_EE_TX3_5G_G0_TARGET_POWER =		0x16a,
++	MT7663_EE_HW_CONF1 =			0x1b0,
+ 
+ 	MT7615_EE_MAX =				0x3bf,
+ 	MT7622_EE_MAX =				0x3db,
+@@ -55,6 +56,8 @@ enum mt7615_eeprom_field {
+ #define MT_EE_NIC_CONF_TX_MASK			GENMASK(7, 4)
+ #define MT_EE_NIC_CONF_RX_MASK			GENMASK(3, 0)
+ 
++#define MT_EE_HW_CONF1_TX_MASK			GENMASK(2, 0)
++
+ #define MT_EE_NIC_CONF_TSSI_2G			BIT(5)
+ #define MT_EE_NIC_CONF_TSSI_5G			BIT(6)
+ 
+-- 
+2.25.4
+
