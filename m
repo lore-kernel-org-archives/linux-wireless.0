@@ -7,50 +7,48 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EEADC47253
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99D61C4724C
 	for <linux-wireless@archiver.kernel.org>; Fri,  1 May 2020 14:36:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EC34B20708
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 May 2020 14:36:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 70FF020708
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 May 2020 14:36:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="LUzWEBf1"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="JAYbUfIQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728997AbgEAOgb (ORCPT
+        id S1729018AbgEAOgb (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Fri, 1 May 2020 10:36:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33030 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33032 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728724AbgEAOga (ORCPT
+        with ESMTP id S1728890AbgEAOga (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Fri, 1 May 2020 10:36:30 -0400
 Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88AB3C061A0C
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9143DC061A0E
         for <linux-wireless@vger.kernel.org>; Fri,  1 May 2020 07:36:30 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
-        Message-Id:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+         s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-Id:Date:Subject
+        :To:From:Sender:Reply-To:Cc:Content-Type:Content-ID:Content-Description:
+        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
+        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
         List-Post:List-Owner:List-Archive;
-        bh=UZWEeaheVXI2q07E2/uU/7XnkJXnbEBkWfSb4zA0xis=; b=LUzWEBf1o29rngvlKmqxmYLeQl
-        ntaR+xScl53Ihh7iymO6njyVU4H0+piKZ9hbxWxWLQmsUoHq8uVqtP8fHFQUx/t96PsQYauBLje/6
-        4fhcpIEVwqmXva3AvLB2W9QgzOhlcsx1jIeO+K9PydC06BE4lcS6y90sVDk3+VH0KkHI=;
+        bh=urb5Ncwd4FM7lxj1LvyXXOv2rvHnHpkxFH3TSMPJOPE=; b=JAYbUfIQH2FdvNwaMW2GqUz7OU
+        opBbsT7ZHnQncFiZVlilJ1YUhsEGhhm5CzpzC7uzs1osQEngNOayaazqvCen7AQRuvZ32x4HjdQXF
+        8NdeQB0/s77GsNd4ZUKPghUSqH4ybID98dQMETa8ClFr+mnQWHpAu8SHT61AXOrg/xLw=;
 Received: from p54ae9310.dip0.t-ipconnect.de ([84.174.147.16] helo=maeck.lan)
         by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.89)
         (envelope-from <nbd@nbd.name>)
-        id 1jUWmC-000811-Uk
-        for linux-wireless@vger.kernel.org; Fri, 01 May 2020 16:36:29 +0200
+        id 1jUWmC-000810-SI
+        for linux-wireless@vger.kernel.org; Fri, 01 May 2020 16:36:28 +0200
 Received: by maeck.lan (Postfix, from userid 501)
-        id 27544851522E; Fri,  1 May 2020 16:36:27 +0200 (CEST)
+        id 2C68F851522F; Fri,  1 May 2020 16:36:27 +0200 (CEST)
 From:   Felix Fietkau <nbd@nbd.name>
 To:     linux-wireless@vger.kernel.org
-Subject: [PATCH 2/2] mt76: mt7615: fix getting maximum tx power from eeprom
-Date:   Fri,  1 May 2020 16:36:27 +0200
-Message-Id: <20200501143627.24523-2-nbd@nbd.name>
+Subject: [PATCH 1/2] mt76: mt7615: set spatial extension index
+Date:   Fri,  1 May 2020 16:36:26 +0200
+Message-Id: <20200501143627.24523-1-nbd@nbd.name>
 X-Mailer: git-send-email 2.24.0
-In-Reply-To: <20200501143627.24523-1-nbd@nbd.name>
-References: <20200501143627.24523-1-nbd@nbd.name>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -58,64 +56,52 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On top of the EEPROM target power, each rate can also has a power offset.
-On many devices, this power offset is used to boost the tx power of lower
-rates. Take this into account when parsing rate power.
-The assumption here is, that the first rate (OFDM 6M or CCK 1M) has the
-highest tx power
+The vendor driver sets this in firmware rate control (which we don't use)
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- drivers/net/wireless/mediatek/mt76/mt7615/eeprom.h |  6 ++++++
- drivers/net/wireless/mediatek/mt76/mt7615/init.c   | 11 +++++++++++
- 2 files changed, 17 insertions(+)
+ drivers/net/wireless/mediatek/mt76/mt7615/mac.c | 3 ++-
+ drivers/net/wireless/mediatek/mt76/mt7615/mcu.c | 6 ++++++
+ 2 files changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.h b/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.h
-index bd2ac1e0e01a..3dd7009e5836 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.h
-@@ -32,6 +32,8 @@ enum mt7615_eeprom_field {
- 	MT_EE_TX0_2G_TARGET_POWER =		0x058,
- 	MT_EE_TX0_5G_G0_TARGET_POWER =		0x070,
- 	MT_EE_TX1_5G_G0_TARGET_POWER =		0x098,
-+	MT_EE_2G_RATE_POWER =			0x0be,
-+	MT_EE_5G_RATE_POWER =			0x0d5,
- 	MT_EE_EXT_PA_2G_TARGET_POWER =		0x0f2,
- 	MT_EE_EXT_PA_5G_TARGET_POWER =		0x0f3,
- 	MT7663_EE_TX0_2G_TARGET_POWER =		0x123,
-@@ -43,6 +45,10 @@ enum mt7615_eeprom_field {
- 	MT7663_EE_MAX =				0x400,
- };
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
+index e7a76032caff..5c09787b0d76 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
+@@ -639,7 +639,8 @@ int mt7615_mac_write_txwi(struct mt7615_dev *dev, __le32 *txwi,
+ 		txwi[3] |= cpu_to_le32(MT_TXD3_NO_ACK);
  
-+#define MT_EE_RATE_POWER_MASK			GENMASK(5, 0)
-+#define MT_EE_RATE_POWER_SIGN			BIT(6)
-+#define MT_EE_RATE_POWER_EN			BIT(7)
-+
- #define MT_EE_CALDATA_FLASH_TX_DPD		BIT(0)
- #define MT_EE_CALDATA_FLASH_RX_CAL		BIT(1)
+ 	txwi[7] = FIELD_PREP(MT_TXD7_TYPE, fc_type) |
+-		  FIELD_PREP(MT_TXD7_SUB_TYPE, fc_stype);
++		  FIELD_PREP(MT_TXD7_SUB_TYPE, fc_stype) |
++		  FIELD_PREP(MT_TXD7_SPE_IDX, 0x18);
+ 	if (is_usb)
+ 		txwi[8] = FIELD_PREP(MT_TXD8_L_TYPE, fc_type) |
+ 			  FIELD_PREP(MT_TXD8_L_SUB_TYPE, fc_stype);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
+index 5fd4a4ab5120..cbad854d7497 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
+@@ -887,6 +887,7 @@ mt7615_mcu_wtbl_generic_tlv(struct sk_buff *skb, struct ieee80211_vif *vif,
+ 	struct mt7615_vif *mvif = (struct mt7615_vif *)vif->drv_priv;
+ 	struct wtbl_generic *generic;
+ 	struct wtbl_rx *rx;
++	struct wtbl_spe *spe;
+ 	struct tlv *tlv;
  
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/init.c b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
-index 9880643888ba..7e201525305b 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
-@@ -198,6 +198,17 @@ void mt7615_init_txpower(struct mt7615_dev *dev,
- 	u8 *eep = (u8 *)dev->mt76.eeprom.data;
- 	enum nl80211_band band = sband->band;
- 	int delta = mt76_tx_power_nss_delta(n_chains);
-+	u8 rate_val;
+ 	tlv = mt7615_mcu_add_nested_tlv(skb, WTBL_GENERIC, sizeof(*generic),
+@@ -914,6 +915,11 @@ mt7615_mcu_wtbl_generic_tlv(struct sk_buff *skb, struct ieee80211_vif *vif,
+ 	rx->rca1 = sta ? vif->type != NL80211_IFTYPE_AP : 1;
+ 	rx->rca2 = 1;
+ 	rx->rv = 1;
 +
-+	/* assume the first rate has the highest power offset */
-+	if (band == NL80211_BAND_2GHZ)
-+		rate_val = eep[MT_EE_2G_RATE_POWER];
-+	else
-+		rate_val = eep[MT_EE_5G_RATE_POWER];
-+
-+	if ((rate_val & ~MT_EE_RATE_POWER_MASK) ==
-+	    (MT_EE_RATE_POWER_EN | MT_EE_RATE_POWER_SIGN))
-+		delta += rate_val & MT_EE_RATE_POWER_MASK;
++	tlv = mt7615_mcu_add_nested_tlv(skb, WTBL_SPE, sizeof(*spe),
++					wtbl_tlv, sta_wtbl);
++	spe = (struct wtbl_spe *)tlv;
++	spe->spe_idx = 24;
+ }
  
- 	target_chains = mt7615_ext_pa_enabled(dev, band) ? 1 : n_chains;
- 	for (i = 0; i < sband->n_channels; i++) {
+ static void
 -- 
 2.24.0
 
