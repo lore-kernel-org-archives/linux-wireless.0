@@ -2,324 +2,149 @@ Return-Path: <SRS0=VQ8Y=6P=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 546F5C47254
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 May 2020 10:36:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E7C4C47253
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 May 2020 10:43:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 31A0721924
-	for <linux-wireless@archiver.kernel.org>; Fri,  1 May 2020 10:36:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1588329409;
-	bh=i+8+/mBWqs8bnmiabW9odTI3AUBw9IsXGitE8FI/EGo=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=QgH/r/5FNANpFlrE1dQICt4U/m9M0ag+4oKZQS19yecL810Jrwy5wBgSkx+RuHoey
-	 ax7tUs3hiBCysyHvDqCGYPzCWxifw7M/I3TtB4WxmUD77dJeSyg70BelPlFlR2XX4+
-	 93aVAlg+scNIJsryEXIkaKGtEF+zxFtqQbp507J0=
+	by mail.kernel.org (Postfix) with ESMTP id 4685520787
+	for <linux-wireless@archiver.kernel.org>; Fri,  1 May 2020 10:43:30 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lt8r7KZm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728604AbgEAKgs (ORCPT
+        id S1728545AbgEAKn3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 1 May 2020 06:36:48 -0400
-Received: from mail.kernel.org ([198.145.29.99]:43740 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728601AbgEAKgr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 1 May 2020 06:36:47 -0400
-Received: from lore-desk.lan (unknown [151.48.155.206])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E4B37206B8;
-        Fri,  1 May 2020 10:36:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1588329406;
-        bh=i+8+/mBWqs8bnmiabW9odTI3AUBw9IsXGitE8FI/EGo=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=QwU2NGOPLJdDLhubUWcun2SFC9s492B7SHIs6jYcPrxAIKGit70sAYywWp1Aaw1kz
-         7TuCMc6leLn1KsdwuKnEcmI4emN8jI6N8SuI+y3zt7R2oXiUHq3WG422vIqnh5eUAP
-         EkfchuWFii3RVz6RgxnKx0MJQFbCwp5FsVhtbZcQ=
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     nbd@nbd.name
-Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
-        sean.wang@mediatek.com, linux-mediatek@lists.infradead.org,
-        soul.huang@mediatek.com
-Subject: [PATCH 6/7] mt76: mt7615: add gtk rekey offload support
-Date:   Fri,  1 May 2020 12:36:16 +0200
-Message-Id: <f524edd6f8b13c986931a03de76ae330a93d3c80.1588329170.git.lorenzo@kernel.org>
-X-Mailer: git-send-email 2.25.4
-In-Reply-To: <cover.1588329170.git.lorenzo@kernel.org>
-References: <cover.1588329170.git.lorenzo@kernel.org>
+        Fri, 1 May 2020 06:43:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52822 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1728513AbgEAKn2 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 1 May 2020 06:43:28 -0400
+Received: from mail-wr1-x442.google.com (mail-wr1-x442.google.com [IPv6:2a00:1450:4864:20::442])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B220C08E859
+        for <linux-wireless@vger.kernel.org>; Fri,  1 May 2020 03:43:28 -0700 (PDT)
+Received: by mail-wr1-x442.google.com with SMTP id h9so753436wrt.0
+        for <linux-wireless@vger.kernel.org>; Fri, 01 May 2020 03:43:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=to:cc:from:subject:message-id:date:user-agent:mime-version
+         :content-language:content-transfer-encoding;
+        bh=oLW9QP+uFGtsQ3xitP0v7EQjyBZf41Mp396PMAaih5A=;
+        b=lt8r7KZmIrSb+h7Kq01GabPqoAJcdIIaoL1HtjyFmdjosIaCSl4BII75tL1IYdSG3z
+         7EN+A6EfOul+LdCgtmY4htqbh6PLpJ5FXblp6djtII7DGpkVUncLLZP3/7NqznYwneLs
+         TQu1T6GB7hR1DfVm69BzA2+xRYg+sCtAQeEOXoD2rK5xzWhSdWBGvziOHCH5v5oQvA8N
+         AyGDrJGwZuBKetuzKLr+9i3/KeDsrhIIeR/TwTM+UReP4tlkOQxqH2+fL7D+aspSwrRi
+         PHzsYcZdRka/EtyyQlxS4B2JH+OHyUnd3zbLhvveOwwqug1hMWZuZMJGT/C8wcdqQ8t+
+         c9Kw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:to:cc:from:subject:message-id:date:user-agent
+         :mime-version:content-language:content-transfer-encoding;
+        bh=oLW9QP+uFGtsQ3xitP0v7EQjyBZf41Mp396PMAaih5A=;
+        b=DdZZSWSE2Q6QY/uSVCuG/UTLOtgbSalMs+e8NFA6CQcUkcKV6wTiUWH34Ap9XhIbFk
+         kIqMoQ3VIXtEE/CQ1OT/G49ERdgIlcvk9DN5DYSoHMv+ABTHnYKVPVfpeoKRzr2DBrDy
+         20GfOQKtwA9PFfv/8YYlHS7QxQbvmgpEIemSXuonu3kiu06iBUXHV/i5ME1XqGmFpJBv
+         Uz5fMymwF+GLSBvfg8f7aeZfb6ZfWTpInPFayv3o+LWjbdzOZ7qMnYqDuQ3M+JCIGEqz
+         6Klgk+0dPHsXhEFyeqW9BOocJW0+baxTQKQfhkIcozNXNB/1NYwUYw8rIpong5wEfbeV
+         eg8g==
+X-Gm-Message-State: AGi0Puby9wr+bxgnyEKLSorZN/kcKvQ59XcTpBO95i04ULs6IeEzkb0A
+        uTHNYlnrFHA619gGOIlQgjQ=
+X-Google-Smtp-Source: APiQypIwB3DpAzLiDZDKqvBs2eET4ezmu9OlTO4vA1B6CgCw90t+Q73igEikzDaW7CC6/o/IVfoslg==
+X-Received: by 2002:adf:fcc8:: with SMTP id f8mr3526222wrs.230.1588329807308;
+        Fri, 01 May 2020 03:43:27 -0700 (PDT)
+Received: from [192.168.43.18] (94.197.121.192.threembb.co.uk. [94.197.121.192])
+        by smtp.gmail.com with ESMTPSA id a24sm3336487wmb.24.2020.05.01.03.43.26
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 01 May 2020 03:43:26 -0700 (PDT)
+To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+        linux-wireless@vger.kernel.org, Oscar Carter <oscar.carter@gmx.com>
+From:   Malcolm Priestley <malcolmpriestley@gmail.com>
+Subject: [PATCH] staging: vt6656: Return on isr0 when zero.
+Message-ID: <8dccc74d-d0bb-e8e7-df81-dfd81e3fd7d8@gmail.com>
+Date:   Fri, 1 May 2020 11:43:25 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.7.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add KCK and KEK offload support to mt7615 driver in order to
-support GTK rekeying during PM suspend
+When isr0 is zero there is nothing more todo so return and
+pull following code in.
 
-Co-developed-by: Sean Wang <sean.wang@mediatek.com>
-Signed-off-by: Sean Wang <sean.wang@mediatek.com>
-Co-developed-by: Wan-Feng Jiang <Wan-Feng.Jiang@mediatek.com>
-Signed-off-by: Wan-Feng Jiang <Wan-Feng.Jiang@mediatek.com>
-Co-developed-by: Soul Huang <Soul.Huang@mediatek.com>
-Signed-off-by: Soul Huang <Soul.Huang@mediatek.com>
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- .../net/wireless/mediatek/mt76/mt7615/init.c  |   1 +
- .../net/wireless/mediatek/mt76/mt7615/main.c  |   9 ++
- .../net/wireless/mediatek/mt76/mt7615/mcu.c   | 102 +++++++++++++++++-
- .../net/wireless/mediatek/mt76/mt7615/mcu.h   |  29 +++++
- .../wireless/mediatek/mt76/mt7615/mt7615.h    |   3 +
- 5 files changed, 143 insertions(+), 1 deletion(-)
+ drivers/staging/vt6656/usbpipe.c | 47 ++++++++++++++++----------------
+ 1 file changed, 23 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/init.c b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
-index 7da0bf425061..0ec93ddab074 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/init.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/init.c
-@@ -145,6 +145,7 @@ void mt7615_check_offload_capability(struct mt7615_dev *dev)
- 		dev->ops->cancel_hw_scan = NULL;
- 		dev->ops->sched_scan_start = NULL;
- 		dev->ops->sched_scan_stop = NULL;
-+		dev->ops->set_rekey_data = NULL;
+diff --git a/drivers/staging/vt6656/usbpipe.c b/drivers/staging/vt6656/usbpipe.c
+index 91b62c3dff7b..e8efdeadb1a7 100644
+--- a/drivers/staging/vt6656/usbpipe.c
++++ b/drivers/staging/vt6656/usbpipe.c
+@@ -196,32 +196,31 @@ static void vnt_int_process_data(struct vnt_private *priv)
+ 	if (int_data->tsr3 & TSR_VALID)
+ 		vnt_int_report_rate(priv, int_data->pkt3, int_data->tsr3);
  
- 		wiphy->max_sched_scan_plan_interval = 0;
- 		wiphy->max_sched_scan_ie_len = 0;
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/main.c b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
-index 1346d5124a2a..61b2afb3fdb8 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
-@@ -937,6 +937,14 @@ mt7615_set_wakeup(struct ieee80211_hw *hw, bool enabled)
- 	device_set_wakeup_enable(mdev->dev, enabled);
- }
- 
-+static void __maybe_unused
-+mt7615_set_rekey_data(struct ieee80211_hw *hw,
-+		      struct ieee80211_vif *vif,
-+		      struct cfg80211_gtk_rekey_data *data)
-+{
-+	mt7615_mcu_update_gtk_rekey(hw, vif, data);
-+}
-+
- const struct ieee80211_ops mt7615_ops = {
- 	.tx = mt7615_tx,
- 	.start = mt7615_start,
-@@ -974,6 +982,7 @@ const struct ieee80211_ops mt7615_ops = {
- 	.suspend = mt7615_suspend,
- 	.resume = mt7615_resume,
- 	.set_wakeup = mt7615_set_wakeup,
-+	.set_rekey_data = mt7615_set_rekey_data,
- #endif /* CONFIG_PM */
- };
- EXPORT_SYMBOL_GPL(mt7615_ops);
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-index 22e532aeb3cf..84d4b96028f2 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
-@@ -196,6 +196,7 @@ mt7615_mcu_parse_response(struct mt7615_dev *dev, int cmd,
- 	case MCU_UNI_CMD_BSS_INFO_UPDATE:
- 	case MCU_UNI_CMD_STA_REC_UPDATE:
- 	case MCU_UNI_CMD_HIF_CTRL:
-+	case MCU_UNI_CMD_OFFLOAD:
- 	case MCU_UNI_CMD_SUSPEND: {
- 		struct mt7615_mcu_uni_event *event;
- 
-@@ -1833,7 +1834,8 @@ mt7615_mcu_send_ram_firmware(struct mt7615_dev *dev,
- }
- 
- static const struct wiphy_wowlan_support mt7615_wowlan_support = {
--	.flags = WIPHY_WOWLAN_MAGIC_PKT | WIPHY_WOWLAN_DISCONNECT,
-+	.flags = WIPHY_WOWLAN_MAGIC_PKT | WIPHY_WOWLAN_DISCONNECT |
-+		 WIPHY_WOWLAN_SUPPORTS_GTK_REKEY,
- 	.n_patterns = 1,
- 	.pattern_min_len = 1,
- 	.pattern_max_len = MT7615_WOW_PATTEN_MAX_LEN,
-@@ -3362,6 +3364,33 @@ mt7615_mcu_set_suspend_mode(struct mt7615_dev *dev,
- 				   &req, sizeof(req), true);
- }
- 
-+static int
-+mt7615_mcu_set_gtk_rekey(struct mt7615_dev *dev,
-+			 struct ieee80211_vif *vif,
-+			 bool suspend)
-+{
-+	struct mt7615_vif *mvif = (struct mt7615_vif *)vif->drv_priv;
-+	struct {
-+		struct {
-+			u8 bss_idx;
-+			u8 pad[3];
-+		} __packed hdr;
-+		struct mt7615_gtk_rekey_tlv gtk_tlv;
-+	} __packed req = {
-+		.hdr = {
-+			.bss_idx = mvif->idx,
-+		},
-+		.gtk_tlv = {
-+			.tag = cpu_to_le16(UNI_OFFLOAD_OFFLOAD_GTK_REKEY),
-+			.len = cpu_to_le16(sizeof(struct mt7615_gtk_rekey_tlv)),
-+			.rekey_mode = !suspend,
-+		},
-+	};
-+
-+	return __mt76_mcu_send_msg(&dev->mt76, MCU_UNI_CMD_OFFLOAD,
-+				   &req, sizeof(req), true);
-+}
-+
- void mt7615_mcu_set_suspend_iter(void *priv, u8 *mac,
- 				 struct ieee80211_vif *vif)
- {
-@@ -3373,6 +3402,8 @@ void mt7615_mcu_set_suspend_iter(void *priv, u8 *mac,
- 
- 	mt7615_mcu_set_bss_pm(phy->dev, vif, suspend);
- 
-+	mt7615_mcu_set_gtk_rekey(phy->dev, vif, suspend);
-+
- 	mt7615_mcu_set_suspend_mode(phy->dev, vif, suspend, 1, true);
- 
- 	for (i = 0; i < wowlan->n_patterns; i++)
-@@ -3380,3 +3411,72 @@ void mt7615_mcu_set_suspend_iter(void *priv, u8 *mac,
- 					   &wowlan->patterns[i]);
- 	mt7615_mcu_set_wow_ctrl(phy->dev, vif, suspend, wowlan);
- }
-+
-+static void
-+mt7615_mcu_key_iter(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-+		    struct ieee80211_sta *sta, struct ieee80211_key_conf *key,
-+		    void *data)
-+{
-+	struct mt7615_gtk_rekey_tlv *gtk_tlv = data;
-+	u32 cipher;
-+
-+	if (key->cipher != WLAN_CIPHER_SUITE_AES_CMAC &&
-+	    key->cipher != WLAN_CIPHER_SUITE_CCMP &&
-+	    key->cipher != WLAN_CIPHER_SUITE_TKIP)
+-	if (int_data->isr0 != 0) {
+-		if (int_data->isr0 & ISR_BNTX &&
+-		    priv->op_mode == NL80211_IFTYPE_AP)
+-			vnt_schedule_command(priv, WLAN_CMD_BECON_SEND);
+-
+-		if (int_data->isr0 & ISR_TBTT &&
+-		    priv->hw->conf.flags & IEEE80211_CONF_PS) {
+-			if (!priv->wake_up_count)
+-				priv->wake_up_count =
+-					priv->hw->conf.listen_interval;
+-
+-			if (priv->wake_up_count)
+-				--priv->wake_up_count;
+-
+-			/* Turn on wake up to listen next beacon */
+-			if (priv->wake_up_count == 1)
+-				vnt_schedule_command(priv,
+-						     WLAN_CMD_TBTT_WAKEUP);
+-		}
+-		priv->current_tsf = le64_to_cpu(int_data->tsf);
++	if (!int_data->isr0)
 +		return;
 +
-+	if (key->cipher == WLAN_CIPHER_SUITE_TKIP) {
-+		gtk_tlv->proto = cpu_to_le32(NL80211_WPA_VERSION_1);
-+		cipher = BIT(3);
-+	} else {
-+		gtk_tlv->proto = cpu_to_le32(NL80211_WPA_VERSION_2);
-+		cipher = BIT(4);
-+	}
++	if (int_data->isr0 & ISR_BNTX && priv->op_mode == NL80211_IFTYPE_AP)
++		vnt_schedule_command(priv, WLAN_CMD_BECON_SEND);
 +
-+	/* we are assuming here to have a single pairwise key */
-+	if (key->flags & IEEE80211_KEY_FLAG_PAIRWISE) {
-+		gtk_tlv->pairwise_cipher = cpu_to_le32(cipher);
-+		gtk_tlv->group_cipher = cpu_to_le32(cipher);
-+		gtk_tlv->keyid = key->keyidx;
-+	}
-+}
-+
-+int mt7615_mcu_update_gtk_rekey(struct ieee80211_hw *hw,
-+				struct ieee80211_vif *vif,
-+				struct cfg80211_gtk_rekey_data *key)
-+{
-+	struct mt7615_vif *mvif = (struct mt7615_vif *)vif->drv_priv;
-+	struct mt7615_dev *dev = mt7615_hw_dev(hw);
-+	struct mt7615_gtk_rekey_tlv *gtk_tlv;
-+	struct sk_buff *skb;
-+	struct {
-+		u8 bss_idx;
-+		u8 pad[3];
-+	} __packed hdr = {
-+		.bss_idx = mvif->idx,
-+	};
-+
-+	skb = mt76_mcu_msg_alloc(&dev->mt76, NULL,
-+				 sizeof(hdr) + sizeof(*gtk_tlv));
-+	if (!skb)
-+		return -ENOMEM;
-+
-+	skb_put_data(skb, &hdr, sizeof(hdr));
-+	gtk_tlv = (struct mt7615_gtk_rekey_tlv *)skb_put(skb,
-+							 sizeof(*gtk_tlv));
-+	gtk_tlv->tag = cpu_to_le16(UNI_OFFLOAD_OFFLOAD_GTK_REKEY);
-+	gtk_tlv->len = cpu_to_le16(sizeof(*gtk_tlv));
-+	gtk_tlv->rekey_mode = 2;
-+	gtk_tlv->option = 1;
-+
-+	rcu_read_lock();
-+	ieee80211_iter_keys_rcu(hw, vif, mt7615_mcu_key_iter, gtk_tlv);
-+	rcu_read_unlock();
-+
-+	memcpy(gtk_tlv->kek, key->kek, NL80211_KEK_LEN);
-+	memcpy(gtk_tlv->kck, key->kck, NL80211_KCK_LEN);
-+	memcpy(gtk_tlv->replay_ctr, key->replay_ctr, NL80211_REPLAY_CTR_LEN);
-+
-+	return __mt76_mcu_skb_send_msg(&dev->mt76, skb,
-+				       MCU_UNI_CMD_OFFLOAD, true);
-+}
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.h b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.h
-index 960ff234c72d..890a202acfc9 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.h
-@@ -281,6 +281,7 @@ enum {
- 	MCU_UNI_CMD_BSS_INFO_UPDATE = MCU_UNI_PREFIX | 0x02,
- 	MCU_UNI_CMD_STA_REC_UPDATE = MCU_UNI_PREFIX | 0x03,
- 	MCU_UNI_CMD_SUSPEND = MCU_UNI_PREFIX | 0x05,
-+	MCU_UNI_CMD_OFFLOAD = MCU_UNI_PREFIX | 0x06,
- 	MCU_UNI_CMD_HIF_CTRL = MCU_UNI_PREFIX | 0x07,
- };
++	if (int_data->isr0 & ISR_TBTT &&
++	    priv->hw->conf.flags & IEEE80211_CONF_PS) {
++		if (!priv->wake_up_count)
++			priv->wake_up_count = priv->hw->conf.listen_interval;
  
-@@ -469,6 +470,27 @@ struct mt7615_suspend_tlv {
- 	u8 pad[5];
- } __packed;
- 
-+struct mt7615_gtk_rekey_tlv {
-+	__le16 tag;
-+	__le16 len;
-+	u8 kek[NL80211_KEK_LEN];
-+	u8 kck[NL80211_KCK_LEN];
-+	u8 replay_ctr[NL80211_REPLAY_CTR_LEN];
-+	u8 rekey_mode; /* 0: rekey offload enable
-+			* 1: rekey offload disable
-+			* 2: rekey update
-+			*/
-+	u8 keyid;
-+	u8 pad[2];
-+	__le32 proto; /* WPA-RSN-WAPI-OPSN */
-+	__le32 pairwise_cipher;
-+	__le32 group_cipher;
-+	__le32 key_mgmt; /* NONE-PSK-IEEE802.1X */
-+	__le32 mgmt_group_cipher;
-+	u8 option; /* 1: rekey data update without enabling offload */
-+	u8 reserverd[3];
-+} __packed;
+-		low_stats->dot11RTSSuccessCount += int_data->rts_success;
+-		low_stats->dot11RTSFailureCount += int_data->rts_fail;
+-		low_stats->dot11ACKFailureCount += int_data->ack_fail;
+-		low_stats->dot11FCSErrorCount += int_data->fcs_err;
++		if (priv->wake_up_count)
++			--priv->wake_up_count;
 +
- /* offload mcu commands */
- enum {
- 	MCU_CMD_START_HW_SCAN = MCU_CE_PREFIX | 0x03,
-@@ -501,6 +523,13 @@ enum {
- 	UNI_SUSPEND_WOW_PATTERN,
- };
- 
-+enum {
-+	UNI_OFFLOAD_OFFLOAD_ARPNS_IPV4,
-+	UNI_OFFLOAD_OFFLOAD_ARPNS_IPV6,
-+	UNI_OFFLOAD_OFFLOAD_GTK_REKEY,
-+	UNI_OFFLOAD_OFFLOAD_BMC_RPY_DETECT,
-+};
++		/* Turn on wake up to listen next beacon */
++		if (priv->wake_up_count == 1)
++			vnt_schedule_command(priv, WLAN_CMD_TBTT_WAKEUP);
+ 	}
 +
- enum {
- 	PATCH_SEM_RELEASE = 0x0,
- 	PATCH_SEM_GET	  = 0x1
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-index be9188e40259..d3a83f3ed54e 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
-@@ -537,6 +537,9 @@ int mt7615_mcu_wait_response(struct mt7615_dev *dev, int cmd, int seq);
- int mt7615_mcu_set_hif_suspend(struct mt7615_dev *dev, bool suspend);
- void mt7615_mcu_set_suspend_iter(void *priv, u8 *mac,
- 				 struct ieee80211_vif *vif);
-+int mt7615_mcu_update_gtk_rekey(struct ieee80211_hw *hw,
-+				struct ieee80211_vif *vif,
-+				struct cfg80211_gtk_rekey_data *key);
++	priv->current_tsf = le64_to_cpu(int_data->tsf);
++
++	low_stats->dot11RTSSuccessCount += int_data->rts_success;
++	low_stats->dot11RTSFailureCount += int_data->rts_fail;
++	low_stats->dot11ACKFailureCount += int_data->ack_fail;
++	low_stats->dot11FCSErrorCount += int_data->fcs_err;
+ }
  
- int __mt7663_load_firmware(struct mt7615_dev *dev);
- 
+ static void vnt_start_interrupt_urb_complete(struct urb *urb)
 -- 
-2.25.4
-
+2.25.1
