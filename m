@@ -6,41 +6,41 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8535EC47257
-	for <linux-wireless@archiver.kernel.org>; Mon,  4 May 2020 10:50:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71AADC3A5A9
+	for <linux-wireless@archiver.kernel.org>; Mon,  4 May 2020 10:50:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 68D8C2073B
-	for <linux-wireless@archiver.kernel.org>; Mon,  4 May 2020 10:50:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 51709208DB
+	for <linux-wireless@archiver.kernel.org>; Mon,  4 May 2020 10:50:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728401AbgEDKu3 (ORCPT
+        id S1728425AbgEDKua (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 4 May 2020 06:50:29 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:51269 "EHLO
+        Mon, 4 May 2020 06:50:30 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:51274 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728297AbgEDKu1 (ORCPT
+        with ESMTP id S1728301AbgEDKu1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Mon, 4 May 2020 06:50:27 -0400
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 044AoEQ11003135, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 044AoEevD003119, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexmb06.realtek.com.tw[172.21.6.99])
-        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 044AoEQ11003135
+        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 044AoEevD003119
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
         Mon, 4 May 2020 18:50:14 +0800
 Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
  RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Mon, 4 May 2020 18:50:14 +0800
+ 15.1.1779.2; Mon, 4 May 2020 18:50:13 +0800
 Received: from localhost.localdomain (172.21.68.128) by
  RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Mon, 4 May 2020 18:50:14 +0800
+ 15.1.1779.2; Mon, 4 May 2020 18:50:13 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>, <pkshih@realtek.com>,
         <bigeasy@linutronix.de>
-Subject: [PATCH v4 7/8] rtw88: 8723d: Set IG register for CCK rate
-Date:   Mon, 4 May 2020 18:50:09 +0800
-Message-ID: <20200504105010.10780-8-yhchuang@realtek.com>
+Subject: [PATCH v4 2/8] rtw88: 8723d: Add query_rx_desc
+Date:   Mon, 4 May 2020 18:50:04 +0800
+Message-ID: <20200504105010.10780-3-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200504105010.10780-1-yhchuang@realtek.com>
 References: <20200504105010.10780-1-yhchuang@realtek.com>
@@ -56,96 +56,189 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ping-Ke Shih <pkshih@realtek.com>
 
-DIG sets only one IG register for most chips, but 8723D need to set
-additional register for CCK rate.
+This ops is used to parse RX descriptor to know the length of received
+packet and containing PHY status. If PHY status is existing, the order is
+RX descriptor, PHY status and then packet.
+
+There are two types of PHY status, named CCK and OFDM. Their size are the
+same, but formats are different.
+
+struct ieee80211_rx_status is also filled depends on above information.
 
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/main.h     | 1 +
- drivers/net/wireless/realtek/rtw88/phy.c      | 4 ++++
- drivers/net/wireless/realtek/rtw88/rtw8723d.c | 5 +++++
- drivers/net/wireless/realtek/rtw88/rtw8822b.c | 1 +
- drivers/net/wireless/realtek/rtw88/rtw8822c.c | 1 +
- 5 files changed, 12 insertions(+)
+ drivers/net/wireless/realtek/rtw88/rtw8723d.c | 116 ++++++++++++++++++
+ drivers/net/wireless/realtek/rtw88/rtw8723d.h |  22 ++++
+ 2 files changed, 138 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
-index 454ed4415e09..0d6a73c90bdf 100644
---- a/drivers/net/wireless/realtek/rtw88/main.h
-+++ b/drivers/net/wireless/realtek/rtw88/main.h
-@@ -1100,6 +1100,7 @@ struct rtw_chip_info {
- 	const struct rtw_intf_phy_para_table *intf_table;
- 
- 	const struct rtw_hw_reg *dig;
-+	const struct rtw_hw_reg *dig_cck;
- 	u32 rf_base_addr[2];
- 	u32 rf_sipi_addr[2];
- 	const struct rtw_rf_sipi_addr *rf_sipi_read_addr;
-diff --git a/drivers/net/wireless/realtek/rtw88/phy.c b/drivers/net/wireless/realtek/rtw88/phy.c
-index 8489abfdc12e..72a16eff9db3 100644
---- a/drivers/net/wireless/realtek/rtw88/phy.c
-+++ b/drivers/net/wireless/realtek/rtw88/phy.c
-@@ -140,9 +140,13 @@ void rtw_phy_dig_write(struct rtw_dev *rtwdev, u8 igi)
- {
- 	struct rtw_chip_info *chip = rtwdev->chip;
- 	struct rtw_hal *hal = &rtwdev->hal;
-+	const struct rtw_hw_reg *dig_cck = &chip->dig_cck[0];
- 	u32 addr, mask;
- 	u8 path;
- 
-+	if (dig_cck)
-+		rtw_write32_mask(rtwdev, dig_cck->addr, dig_cck->mask, igi >> 1);
-+
- 	for (path = 0; path < hal->rf_path_num; path++) {
- 		addr = chip->dig[path].addr;
- 		mask = chip->dig[path].mask;
 diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723d.c b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-index 2f98e58396b0..b6266b2942cf 100644
+index 52afa72caf8f..653cfa9445fc 100644
 --- a/drivers/net/wireless/realtek/rtw88/rtw8723d.c
 +++ b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-@@ -1053,6 +1053,10 @@ static const struct rtw_hw_reg rtw8723d_dig[] = {
- 	[1] = { .addr = 0xc50, .mask = 0x7f },
+@@ -172,6 +172,121 @@ static int rtw8723d_read_efuse(struct rtw_dev *rtwdev, u8 *log_map)
+ 	return 0;
+ }
+ 
++static void query_phy_status_page0(struct rtw_dev *rtwdev, u8 *phy_status,
++				   struct rtw_rx_pkt_stat *pkt_stat)
++{
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
++	s8 min_rx_power = -120;
++	u8 pwdb = GET_PHY_STAT_P0_PWDB(phy_status);
++
++	pkt_stat->rx_power[RF_PATH_A] = pwdb - 97;
++	pkt_stat->rssi = rtw_phy_rf_power_2_rssi(pkt_stat->rx_power, 1);
++	pkt_stat->bw = RTW_CHANNEL_WIDTH_20;
++	pkt_stat->signal_power = max(pkt_stat->rx_power[RF_PATH_A],
++				     min_rx_power);
++	dm_info->rssi[RF_PATH_A] = pkt_stat->rssi;
++}
++
++static void query_phy_status_page1(struct rtw_dev *rtwdev, u8 *phy_status,
++				   struct rtw_rx_pkt_stat *pkt_stat)
++{
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
++	u8 rxsc, bw;
++	s8 min_rx_power = -120;
++	s8 rx_evm;
++
++	if (pkt_stat->rate > DESC_RATE11M && pkt_stat->rate < DESC_RATEMCS0)
++		rxsc = GET_PHY_STAT_P1_L_RXSC(phy_status);
++	else
++		rxsc = GET_PHY_STAT_P1_HT_RXSC(phy_status);
++
++	if (GET_PHY_STAT_P1_RF_MODE(phy_status) == 0)
++		bw = RTW_CHANNEL_WIDTH_20;
++	else if ((rxsc == 1) || (rxsc == 2))
++		bw = RTW_CHANNEL_WIDTH_20;
++	else
++		bw = RTW_CHANNEL_WIDTH_40;
++
++	pkt_stat->rx_power[RF_PATH_A] = GET_PHY_STAT_P1_PWDB_A(phy_status) - 110;
++	pkt_stat->rssi = rtw_phy_rf_power_2_rssi(pkt_stat->rx_power, 1);
++	pkt_stat->bw = bw;
++	pkt_stat->signal_power = max(pkt_stat->rx_power[RF_PATH_A],
++				     min_rx_power);
++	pkt_stat->rx_evm[RF_PATH_A] = GET_PHY_STAT_P1_RXEVM_A(phy_status);
++	pkt_stat->rx_snr[RF_PATH_A] = GET_PHY_STAT_P1_RXSNR_A(phy_status);
++	pkt_stat->cfo_tail[RF_PATH_A] = GET_PHY_STAT_P1_CFO_TAIL_A(phy_status);
++
++	dm_info->curr_rx_rate = pkt_stat->rate;
++	dm_info->rssi[RF_PATH_A] = pkt_stat->rssi;
++	dm_info->rx_snr[RF_PATH_A] = pkt_stat->rx_snr[RF_PATH_A] >> 1;
++	dm_info->cfo_tail[RF_PATH_A] = (pkt_stat->cfo_tail[RF_PATH_A] * 5) >> 1;
++
++	rx_evm = clamp_t(s8, -pkt_stat->rx_evm[RF_PATH_A] >> 1, 0, 64);
++	rx_evm &= 0x3F;	/* 64->0: second path of 1SS rate is 64 */
++	dm_info->rx_evm_dbm[RF_PATH_A] = rx_evm;
++}
++
++static void query_phy_status(struct rtw_dev *rtwdev, u8 *phy_status,
++			     struct rtw_rx_pkt_stat *pkt_stat)
++{
++	u8 page;
++
++	page = *phy_status & 0xf;
++
++	switch (page) {
++	case 0:
++		query_phy_status_page0(rtwdev, phy_status, pkt_stat);
++		break;
++	case 1:
++		query_phy_status_page1(rtwdev, phy_status, pkt_stat);
++		break;
++	default:
++		rtw_warn(rtwdev, "unused phy status page (%d)\n", page);
++		return;
++	}
++}
++
++static void rtw8723d_query_rx_desc(struct rtw_dev *rtwdev, u8 *rx_desc,
++				   struct rtw_rx_pkt_stat *pkt_stat,
++				   struct ieee80211_rx_status *rx_status)
++{
++	struct ieee80211_hdr *hdr;
++	u32 desc_sz = rtwdev->chip->rx_pkt_desc_sz;
++	u8 *phy_status = NULL;
++
++	memset(pkt_stat, 0, sizeof(*pkt_stat));
++
++	pkt_stat->phy_status = GET_RX_DESC_PHYST(rx_desc);
++	pkt_stat->icv_err = GET_RX_DESC_ICV_ERR(rx_desc);
++	pkt_stat->crc_err = GET_RX_DESC_CRC32(rx_desc);
++	pkt_stat->decrypted = !GET_RX_DESC_SWDEC(rx_desc) &&
++			      GET_RX_DESC_ENC_TYPE(rx_desc) != RX_DESC_ENC_NONE;
++	pkt_stat->is_c2h = GET_RX_DESC_C2H(rx_desc);
++	pkt_stat->pkt_len = GET_RX_DESC_PKT_LEN(rx_desc);
++	pkt_stat->drv_info_sz = GET_RX_DESC_DRV_INFO_SIZE(rx_desc);
++	pkt_stat->shift = GET_RX_DESC_SHIFT(rx_desc);
++	pkt_stat->rate = GET_RX_DESC_RX_RATE(rx_desc);
++	pkt_stat->cam_id = GET_RX_DESC_MACID(rx_desc);
++	pkt_stat->ppdu_cnt = 0;
++	pkt_stat->tsf_low = GET_RX_DESC_TSFL(rx_desc);
++
++	/* drv_info_sz is in unit of 8-bytes */
++	pkt_stat->drv_info_sz *= 8;
++
++	/* c2h cmd pkt's rx/phy status is not interested */
++	if (pkt_stat->is_c2h)
++		return;
++
++	hdr = (struct ieee80211_hdr *)(rx_desc + desc_sz + pkt_stat->shift +
++				       pkt_stat->drv_info_sz);
++	if (pkt_stat->phy_status) {
++		phy_status = rx_desc + desc_sz + pkt_stat->shift;
++		query_phy_status(rtwdev, phy_status, pkt_stat);
++	}
++
++	rtw_rx_fill_rx_status(rtwdev, pkt_stat, hdr, rx_status, phy_status);
++}
++
+ #define BIT_CFENDFORM		BIT(9)
+ #define BIT_WMAC_TCR_ERR0	BIT(12)
+ #define BIT_WMAC_TCR_ERR1	BIT(13)
+@@ -267,6 +382,7 @@ static void rtw8723d_efuse_grant(struct rtw_dev *rtwdev, bool on)
+ static struct rtw_chip_ops rtw8723d_ops = {
+ 	.phy_set_param		= rtw8723d_phy_set_param,
+ 	.read_efuse		= rtw8723d_read_efuse,
++	.query_rx_desc		= rtw8723d_query_rx_desc,
+ 	.mac_init		= rtw8723d_mac_init,
+ 	.read_rf		= rtw_phy_read_rf_sipi,
+ 	.write_rf		= rtw_phy_write_rf_reg_sipi,
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723d.h b/drivers/net/wireless/realtek/rtw88/rtw8723d.h
+index 6321dea83519..035049a29e7c 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8723d.h
++++ b/drivers/net/wireless/realtek/rtw88/rtw8723d.h
+@@ -44,6 +44,28 @@ struct rtw8723d_efuse {
+ 	struct rtw8723de_efuse e;
  };
  
-+static const struct rtw_hw_reg rtw8723d_dig_cck[] = {
-+	[0] = { .addr = 0xa0c, .mask = 0x3f00 },
-+};
++/* phy status page0 */
++#define GET_PHY_STAT_P0_PWDB(phy_stat)                                         \
++	le32_get_bits(*((__le32 *)(phy_stat) + 0x00), GENMASK(15, 8))
 +
- static const struct rtw_rf_sipi_addr rtw8723d_rf_sipi_addr[] = {
- 	[RF_PATH_A] = { .hssi_1 = 0x820, .lssi_read    = 0x8a0,
- 			.hssi_2 = 0x824, .lssi_read_pi = 0x8b8},
-@@ -1095,6 +1099,7 @@ struct rtw_chip_info rtw8723d_hw_spec = {
- 	.page_table = page_table_8723d,
- 	.rqpn_table = rqpn_table_8723d,
- 	.dig = rtw8723d_dig,
-+	.dig_cck = rtw8723d_dig_cck,
- 	.rf_sipi_addr = {0x840, 0x844},
- 	.rf_sipi_read_addr = rtw8723d_rf_sipi_addr,
- 	.fix_rf_phy_num = 2,
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822b.c b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
-index f1019e196918..45636382dafd 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8822b.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
-@@ -2435,6 +2435,7 @@ struct rtw_chip_info rtw8822b_hw_spec = {
- 	.rqpn_table = rqpn_table_8822b,
- 	.intf_table = &phy_para_table_8822b,
- 	.dig = rtw8822b_dig,
-+	.dig_cck = NULL,
- 	.rf_base_addr = {0x2800, 0x2c00},
- 	.rf_sipi_addr = {0xc90, 0xe90},
- 	.mac_tbl = &rtw8822b_mac_tbl,
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-index 008debde165e..634d456b14ee 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-@@ -4296,6 +4296,7 @@ struct rtw_chip_info rtw8822c_hw_spec = {
- 	.rqpn_table = rqpn_table_8822c,
- 	.intf_table = &phy_para_table_8822c,
- 	.dig = rtw8822c_dig,
-+	.dig_cck = NULL,
- 	.rf_base_addr = {0x3c00, 0x4c00},
- 	.rf_sipi_addr = {0x1808, 0x4108},
- 	.mac_tbl = &rtw8822c_mac_tbl,
++/* phy status page1 */
++#define GET_PHY_STAT_P1_PWDB_A(phy_stat)                                       \
++	le32_get_bits(*((__le32 *)(phy_stat) + 0x00), GENMASK(15, 8))
++#define GET_PHY_STAT_P1_PWDB_B(phy_stat)                                       \
++	le32_get_bits(*((__le32 *)(phy_stat) + 0x00), GENMASK(23, 16))
++#define GET_PHY_STAT_P1_RF_MODE(phy_stat)                                      \
++	le32_get_bits(*((__le32 *)(phy_stat) + 0x03), GENMASK(29, 28))
++#define GET_PHY_STAT_P1_L_RXSC(phy_stat)                                       \
++	le32_get_bits(*((__le32 *)(phy_stat) + 0x01), GENMASK(11, 8))
++#define GET_PHY_STAT_P1_HT_RXSC(phy_stat)                                      \
++	le32_get_bits(*((__le32 *)(phy_stat) + 0x01), GENMASK(15, 12))
++#define GET_PHY_STAT_P1_RXEVM_A(phy_stat)                                      \
++	le32_get_bits(*((__le32 *)(phy_stat) + 0x04), GENMASK(7, 0))
++#define GET_PHY_STAT_P1_CFO_TAIL_A(phy_stat)                                   \
++	le32_get_bits(*((__le32 *)(phy_stat) + 0x05), GENMASK(7, 0))
++#define GET_PHY_STAT_P1_RXSNR_A(phy_stat)                                      \
++	le32_get_bits(*((__le32 *)(phy_stat) + 0x06), GENMASK(7, 0))
++
+ #define REG_OFDM0_XAAGC1	0x0c50
+ #define REG_OFDM0_XBAGC1	0x0c58
+ 
 -- 
 2.17.1
 
