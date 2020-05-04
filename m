@@ -7,29 +7,29 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72463C3A5A9
-	for <linux-wireless@archiver.kernel.org>; Mon,  4 May 2020 20:25:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A722BC3A5A9
+	for <linux-wireless@archiver.kernel.org>; Mon,  4 May 2020 20:31:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 502A42078C
-	for <linux-wireless@archiver.kernel.org>; Mon,  4 May 2020 20:25:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7C1A9205ED
+	for <linux-wireless@archiver.kernel.org>; Mon,  4 May 2020 20:31:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=embeddedor.com header.i=@embeddedor.com header.b="L4JqgH+U"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=embeddedor.com header.i=@embeddedor.com header.b="YvBiONp6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726338AbgEDUZU (ORCPT
+        id S1726482AbgEDUbB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 4 May 2020 16:25:20 -0400
-Received: from gateway23.websitewelcome.com ([192.185.49.177]:29088 "EHLO
-        gateway23.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728194AbgEDUZS (ORCPT
+        Mon, 4 May 2020 16:31:01 -0400
+Received: from gateway20.websitewelcome.com ([192.185.53.25]:49591 "EHLO
+        gateway20.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726338AbgEDUbB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 May 2020 16:25:18 -0400
-X-Greylist: delayed 1259 seconds by postgrey-1.27 at vger.kernel.org; Mon, 04 May 2020 16:25:17 EDT
-Received: from cm11.websitewelcome.com (cm11.websitewelcome.com [100.42.49.5])
-        by gateway23.websitewelcome.com (Postfix) with ESMTP id B86ED72E6
-        for <linux-wireless@vger.kernel.org>; Mon,  4 May 2020 15:04:17 -0500 (CDT)
+        Mon, 4 May 2020 16:31:01 -0400
+X-Greylist: delayed 1382 seconds by postgrey-1.27 at vger.kernel.org; Mon, 04 May 2020 16:31:01 EDT
+Received: from cm16.websitewelcome.com (cm16.websitewelcome.com [100.42.49.19])
+        by gateway20.websitewelcome.com (Postfix) with ESMTP id C88B0400C7A36
+        for <linux-wireless@vger.kernel.org>; Mon,  4 May 2020 13:50:07 -0500 (CDT)
 Received: from gator4166.hostgator.com ([108.167.133.22])
         by cmsmtp with SMTP
-        id VhK5jNuZKSl8qVhK5jlY4Z; Mon, 04 May 2020 15:04:17 -0500
+        id VhNejiwUn8vkBVhNejRMoo; Mon, 04 May 2020 15:07:58 -0500
 X-Authority-Reason: nr=8
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=embeddedor.com; s=default; h=Content-Type:MIME-Version:Message-ID:Subject:
@@ -37,25 +37,25 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
         :Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:
         List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=V96LBizxl4+aEJIjzbcrRlhTjAqahm2dmV9MAZqHdGc=; b=L4JqgH+UVyVZV2P7eUgtXNCiOR
-        SNVfuSkG3J1W6yEXdAOSzu/7iJk37Nx6f+qmfoVr4NvirPvSMFnOuYtCT6axHGIB5OTK3Ftq6h1uF
-        F5epi927ICta8GvCWztD9SikDgk3pzeFCuu8m2P0Tgkp0oLPw0XbuCOP4fGF4NpEj8p4f/8mtQrjK
-        qxOvr9wynLQWlBrk1XRabwH7QlqyrymSub0l/rfky81DJZmckWhRkLHXJDEGs8ulU17h29TcecsVx
-        w2sRFbfjDqKtCjvHWYCsLFwN7IGezLXe7m3vfZ+Uu8DNTglqtORFixXudBRWvC206UmCzjVTiDThS
-        //HscYMg==;
-Received: from [189.207.59.248] (port=58762 helo=embeddedor)
+        bh=QQwjaZedmAfrFU0rWpB+oFfnyoC2Vh8dMVpNEp+/1a8=; b=YvBiONp6QYSQAI1G8z08SM7g/Z
+        B1dlFOOIF+orc6+l7/Ci3y/6MAJXtWyEM+aX8APnapsdo/7pjDIgs/wXikNBb4r6j62iTrQJbfJrU
+        kPmAp/Xd3Kqd3hIxiLrnOMjZkJfPOxw+3gtGMsXh3Dr5wPi+95QmHtFjJ0HrlsWdTuJW0OLvHPdyV
+        3qGUbetw4jTRK/I0JuP75NMN7XUzMRhlvsLQYVIwLXy5klCeJRO4l13ND/MZfSBLgS7I/7N3t28zs
+        wdCwdqBUiFIo0noLla95CJrJ4qZLw4/SBUscQrxJ0Bi5DXdH+V6I6eA4ZKUvJMWU7wIxbJ9ykgjhZ
+        h3xqyYHQ==;
+Received: from [189.207.59.248] (port=58770 helo=embeddedor)
         by gator4166.hostgator.com with esmtpa (Exim 4.92)
         (envelope-from <gustavo@embeddedor.com>)
-        id 1jVhK3-002Fbe-9W; Mon, 04 May 2020 15:04:15 -0500
-Date:   Mon, 4 May 2020 15:08:38 -0500
+        id 1jVhNd-002HS1-SC; Mon, 04 May 2020 15:07:57 -0500
+Date:   Mon, 4 May 2020 15:12:24 -0500
 From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
 To:     Kalle Valo <kvalo@codeaurora.org>,
         "David S. Miller" <davem@davemloft.net>
-Cc:     linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
+Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
         "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH] ath6kl: Replace zero-length array with flexible-array
-Message-ID: <20200504200838.GA31974@embeddedor>
+Subject: [PATCH] ath11k: Replace zero-length array with flexible-array
+Message-ID: <20200504201224.GA32282@embeddedor>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -68,13 +68,13 @@ X-AntiAbuse: Sender Address Domain - embeddedor.com
 X-BWhitelist: no
 X-Source-IP: 189.207.59.248
 X-Source-L: No
-X-Exim-ID: 1jVhK3-002Fbe-9W
+X-Exim-ID: 1jVhNd-002HS1-SC
 X-Source: 
 X-Source-Args: 
 X-Source-Dir: 
-X-Source-Sender: (embeddedor) [189.207.59.248]:58762
+X-Source-Sender: (embeddedor) [189.207.59.248]:58770
 X-Source-Auth: gustavo@embeddedor.com
-X-Email-Count: 3
+X-Email-Count: 15
 X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
 X-Local-Domain: yes
 Sender: linux-wireless-owner@vger.kernel.org
@@ -119,59 +119,137 @@ This issue was found with the help of Coccinelle.
 
 Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 ---
- drivers/net/wireless/ath/ath6kl/core.h  | 4 ++--
- drivers/net/wireless/ath/ath6kl/debug.c | 2 +-
- drivers/net/wireless/ath/ath6kl/hif.h   | 2 +-
- 3 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath11k/debug.h           | 4 ++--
+ drivers/net/wireless/ath/ath11k/debug_htt_stats.h | 8 ++++----
+ drivers/net/wireless/ath/ath11k/hal_desc.h        | 4 ++--
+ drivers/net/wireless/ath/ath11k/hal_rx.h          | 2 +-
+ drivers/net/wireless/ath/ath11k/hw.h              | 2 +-
+ drivers/net/wireless/ath/ath11k/wmi.h             | 2 +-
+ 6 files changed, 11 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index 0d30e762c090..77e052336eb5 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -160,7 +160,7 @@ enum ath6kl_fw_capability {
- struct ath6kl_fw_ie {
+diff --git a/drivers/net/wireless/ath/ath11k/debug.h b/drivers/net/wireless/ath/ath11k/debug.h
+index 97e7306c506d..c7edf946ff5c 100644
+--- a/drivers/net/wireless/ath/ath11k/debug.h
++++ b/drivers/net/wireless/ath/ath11k/debug.h
+@@ -67,7 +67,7 @@ struct debug_htt_stats_req {
+ 	u8 peer_addr[ETH_ALEN];
+ 	struct completion cmpln;
+ 	u32 buf_len;
+-	u8 buf[0];
++	u8 buf[];
+ };
+ 
+ struct ath_pktlog_hdr {
+@@ -77,7 +77,7 @@ struct ath_pktlog_hdr {
+ 	u16 size;
+ 	u32 timestamp;
+ 	u32 type_specific_data;
+-	u8 payload[0];
++	u8 payload[];
+ };
+ 
+ #define ATH11K_HTT_STATS_BUF_SIZE (1024 * 512)
+diff --git a/drivers/net/wireless/ath/ath11k/debug_htt_stats.h b/drivers/net/wireless/ath/ath11k/debug_htt_stats.h
+index 23a6baa9e95a..682a6ff222bd 100644
+--- a/drivers/net/wireless/ath/ath11k/debug_htt_stats.h
++++ b/drivers/net/wireless/ath/ath11k/debug_htt_stats.h
+@@ -239,7 +239,7 @@ struct htt_tx_pdev_stats_tx_ppdu_stats_tlv_v {
+  */
+ struct htt_tx_pdev_stats_tried_mpdu_cnt_hist_tlv_v {
+ 	u32 hist_bin_size;
+-	u32 tried_mpdu_cnt_hist[0]; /* HTT_TX_PDEV_TRIED_MPDU_CNT_HIST */
++	u32 tried_mpdu_cnt_hist[]; /* HTT_TX_PDEV_TRIED_MPDU_CNT_HIST */
+ };
+ 
+ /* == SOC ERROR STATS == */
+@@ -550,7 +550,7 @@ struct htt_tx_hwq_stats_cmn_tlv {
+ struct htt_tx_hwq_difs_latency_stats_tlv_v {
+ 	u32 hist_intvl;
+ 	/* histogram of ppdu post to hwsch - > cmd status received */
+-	u32 difs_latency_hist[0]; /* HTT_TX_HWQ_MAX_DIFS_LATENCY_BINS */
++	u32 difs_latency_hist[]; /* HTT_TX_HWQ_MAX_DIFS_LATENCY_BINS */
+ };
+ 
+ /* NOTE: Variable length TLV, use length spec to infer array size */
+@@ -586,7 +586,7 @@ struct htt_tx_hwq_fes_result_stats_tlv_v {
+ struct htt_tx_hwq_tried_mpdu_cnt_hist_tlv_v {
+ 	u32 hist_bin_size;
+ 	/* Histogram of number of mpdus on tried mpdu */
+-	u32 tried_mpdu_cnt_hist[0]; /* HTT_TX_HWQ_TRIED_MPDU_CNT_HIST */
++	u32 tried_mpdu_cnt_hist[]; /* HTT_TX_HWQ_TRIED_MPDU_CNT_HIST */
+ };
+ 
+ /* NOTE: Variable length TLV, use length spec to infer array size
+@@ -1584,7 +1584,7 @@ struct htt_pdev_stats_twt_session_tlv {
+ struct htt_pdev_stats_twt_sessions_tlv {
+ 	u32 pdev_id;
+ 	u32 num_sessions;
+-	struct htt_pdev_stats_twt_session_tlv twt_session[0];
++	struct htt_pdev_stats_twt_session_tlv twt_session[];
+ };
+ 
+ enum htt_rx_reo_resource_sample_id_enum {
+diff --git a/drivers/net/wireless/ath/ath11k/hal_desc.h b/drivers/net/wireless/ath/ath11k/hal_desc.h
+index 5e200380cca4..a1f747c1c44d 100644
+--- a/drivers/net/wireless/ath/ath11k/hal_desc.h
++++ b/drivers/net/wireless/ath/ath11k/hal_desc.h
+@@ -477,7 +477,7 @@ enum hal_tlv_tag {
+ 
+ struct hal_tlv_hdr {
+ 	u32 tl;
+-	u8 value[0];
++	u8 value[];
+ } __packed;
+ 
+ #define RX_MPDU_DESC_INFO0_MSDU_COUNT		GENMASK(7, 0)
+@@ -1972,7 +1972,7 @@ struct hal_rx_reo_queue {
+ 	u32 processed_total_bytes;
+ 	u32 info5;
+ 	u32 rsvd[3];
+-	struct hal_rx_reo_queue_ext ext_desc[0];
++	struct hal_rx_reo_queue_ext ext_desc[];
+ } __packed;
+ 
+ /* hal_rx_reo_queue
+diff --git a/drivers/net/wireless/ath/ath11k/hal_rx.h b/drivers/net/wireless/ath/ath11k/hal_rx.h
+index e863e4abfcc1..c436191ae1e8 100644
+--- a/drivers/net/wireless/ath/ath11k/hal_rx.h
++++ b/drivers/net/wireless/ath/ath11k/hal_rx.h
+@@ -23,7 +23,7 @@ struct hal_rx_wbm_rel_info {
+ 
+ struct hal_rx_mon_status_tlv_hdr {
+ 	u32 hdr;
+-	u8 value[0];
++	u8 value[];
+ };
+ 
+ enum hal_rx_su_mu_coding {
+diff --git a/drivers/net/wireless/ath/ath11k/hw.h b/drivers/net/wireless/ath/ath11k/hw.h
+index 9973477ae373..cdec95644758 100644
+--- a/drivers/net/wireless/ath/ath11k/hw.h
++++ b/drivers/net/wireless/ath/ath11k/hw.h
+@@ -111,7 +111,7 @@ struct ath11k_hw_params {
+ struct ath11k_fw_ie {
  	__le32 id;
  	__le32 len;
 -	u8 data[0];
 +	u8 data[];
  };
  
- enum ath6kl_hw_flags {
-@@ -406,7 +406,7 @@ struct ath6kl_mgmt_buff {
- 	u32 id;
- 	bool no_cck;
- 	size_t len;
--	u8 buf[0];
-+	u8 buf[];
- };
+ enum ath11k_bd_ie_board_type {
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.h b/drivers/net/wireless/ath/ath11k/wmi.h
+index 510f9c6bc1d7..717e87db91cb 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.h
++++ b/drivers/net/wireless/ath/ath11k/wmi.h
+@@ -39,7 +39,7 @@ struct wmi_cmd_hdr {
  
- struct ath6kl_sta {
-diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
-index 54337d60f288..7506cea46f58 100644
---- a/drivers/net/wireless/ath/ath6kl/debug.c
-+++ b/drivers/net/wireless/ath/ath6kl/debug.c
-@@ -30,7 +30,7 @@ struct ath6kl_fwlog_slot {
- 	__le32 length;
+ struct wmi_tlv {
+ 	u32 header;
+-	u8 value[0];
++	u8 value[];
+ } __packed;
  
- 	/* max ATH6KL_FWLOG_PAYLOAD_SIZE bytes */
--	u8 payload[0];
-+	u8 payload[];
- };
- 
- #define ATH6KL_FWLOG_MAX_ENTRIES 20
-diff --git a/drivers/net/wireless/ath/ath6kl/hif.h b/drivers/net/wireless/ath/ath6kl/hif.h
-index dc6bd8cd9b83..aea7fea2a81e 100644
---- a/drivers/net/wireless/ath/ath6kl/hif.h
-+++ b/drivers/net/wireless/ath/ath6kl/hif.h
-@@ -199,7 +199,7 @@ struct hif_scatter_req {
- 
- 	u32 scat_q_depth;
- 
--	struct hif_scatter_item scat_list[0];
-+	struct hif_scatter_item scat_list[];
- };
- 
- struct ath6kl_irq_proc_registers {
+ #define WMI_TLV_LEN	GENMASK(15, 0)
 -- 
 2.26.2
 
