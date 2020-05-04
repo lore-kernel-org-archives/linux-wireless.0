@@ -2,118 +2,109 @@ Return-Path: <SRS0=yCsk=6S=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F3A9C47257
-	for <linux-wireless@archiver.kernel.org>; Mon,  4 May 2020 10:18:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4AC1C47247
+	for <linux-wireless@archiver.kernel.org>; Mon,  4 May 2020 10:21:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 68A67206B8
-	for <linux-wireless@archiver.kernel.org>; Mon,  4 May 2020 10:18:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CC3C2206E6
+	for <linux-wireless@archiver.kernel.org>; Mon,  4 May 2020 10:21:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727819AbgEDKSX (ORCPT
+        id S1728440AbgEDKVB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 4 May 2020 06:18:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41122 "EHLO
+        Mon, 4 May 2020 06:21:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41526 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726531AbgEDKSW (ORCPT
+        by vger.kernel.org with ESMTP id S1728250AbgEDKU7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 May 2020 06:18:22 -0400
-Received: from bhuna.collabora.co.uk (bhuna.collabora.co.uk [IPv6:2a00:1098:0:82:1000:25:2eeb:e3e3])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F423BC061A0E;
-        Mon,  4 May 2020 03:18:21 -0700 (PDT)
-Received: from [127.0.0.1] (localhost [127.0.0.1])
-        (Authenticated sender: andrzej.p)
-        with ESMTPSA id 77A722A0E4B
-Subject: Re: [PATCH 2/6] thermal: core: delete thermal_notify_framework()
-To:     Zhang Rui <rui.zhang@intel.com>, linux-pm@vger.kernel.org
-Cc:     linux-wireless@vger.kernel.org, daniel.lezcano@linaro.org,
-        b.zolnierkie@samsung.com, luca@coelho.fi
-References: <20200430063229.6182-1-rui.zhang@intel.com>
- <20200430063229.6182-3-rui.zhang@intel.com>
-From:   Andrzej Pietrasiewicz <andrzej.p@collabora.com>
-Message-ID: <3553b981-3aa7-b45b-85f8-21bc97f14026@collabora.com>
-Date:   Mon, 4 May 2020 12:18:18 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.7.0
+        Mon, 4 May 2020 06:20:59 -0400
+Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D6277C061A0E
+        for <linux-wireless@vger.kernel.org>; Mon,  4 May 2020 03:20:58 -0700 (PDT)
+Received: from [149.224.141.1] (helo=bertha8.datto.lan)
+        by ds12 with esmtpa (Exim 4.89)
+        (envelope-from <john@phrozen.org>)
+        id 1jVYDY-0000o1-4d; Mon, 04 May 2020 12:20:56 +0200
+From:   John Crispin <john@phrozen.org>
+To:     Johannes Berg <johannes@sipsolutions.net>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
+        Miles Hu <milehu@codeaurora.org>,
+        John Crispin <john@phrozen.org>
+Subject: [PATCH V4 2/3] mac80211: add support for setting fixed HE rate/gi/ltf
+Date:   Mon,  4 May 2020 12:20:50 +0200
+Message-Id: <20200504102051.6438-2-john@phrozen.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20200504102051.6438-1-john@phrozen.org>
+References: <20200504102051.6438-1-john@phrozen.org>
 MIME-Version: 1.0
-In-Reply-To: <20200430063229.6182-3-rui.zhang@intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Rui,
+From: Miles Hu <milehu@codeaurora.org>
 
-W dniu 30.04.2020 o 08:32, Zhang Rui pisze:
-> Delete thermal_notify_framework() as there is no user of it.
-> 
-> Signed-off-by: Zhang Rui <rui.zhang@intel.com>
+With nl80211 now able to receive fixed HE rate/gi/ltf settings we want to
+propagate these further down the stack into the mac80211 drivers. This
+patch copies the values into the sdata struct.
 
-Provided that PATCH 1/6 is applied:
+Signed-off-by: Miles Hu <milehu@codeaurora.org>
+Signed-off-by: John Crispin <john@phrozen.org>
+---
+ net/mac80211/cfg.c         | 11 +++++++++++
+ net/mac80211/ieee80211_i.h |  3 +++
+ 2 files changed, 14 insertions(+)
 
-Reviewed-by: Andrzej Pietrasiewicz <andrzej.p@collabora.com>
-
-> ---
->   drivers/thermal/thermal_core.c | 18 ------------------
->   include/linux/thermal.h        |  4 ----
->   2 files changed, 22 deletions(-)
-> 
-> diff --git a/drivers/thermal/thermal_core.c b/drivers/thermal/thermal_core.c
-> index 03c4d8d..ac70545 100644
-> --- a/drivers/thermal/thermal_core.c
-> +++ b/drivers/thermal/thermal_core.c
-> @@ -532,24 +532,6 @@ void thermal_zone_device_update(struct thermal_zone_device *tz,
->   }
->   EXPORT_SYMBOL_GPL(thermal_zone_device_update);
->   
-> -/**
-> - * thermal_notify_framework - Sensor drivers use this API to notify framework
-> - * @tz:		thermal zone device
-> - * @trip:	indicates which trip point has been crossed
-> - *
-> - * This function handles the trip events from sensor drivers. It starts
-> - * throttling the cooling devices according to the policy configured.
-> - * For CRITICAL and HOT trip points, this notifies the respective drivers,
-> - * and does actual throttling for other trip points i.e ACTIVE and PASSIVE.
-> - * The throttling policy is based on the configured platform data; if no
-> - * platform data is provided, this uses the step_wise throttling policy.
-> - */
-> -void thermal_notify_framework(struct thermal_zone_device *tz, int trip)
-> -{
-> -	handle_thermal_trip(tz, trip);
-> -}
-> -EXPORT_SYMBOL_GPL(thermal_notify_framework);
-> -
->   static void thermal_zone_device_check(struct work_struct *work)
->   {
->   	struct thermal_zone_device *tz = container_of(work, struct
-> diff --git a/include/linux/thermal.h b/include/linux/thermal.h
-> index c789d4f..a87fbaf 100644
-> --- a/include/linux/thermal.h
-> +++ b/include/linux/thermal.h
-> @@ -420,7 +420,6 @@ int thermal_zone_get_slope(struct thermal_zone_device *tz);
->   int thermal_zone_get_offset(struct thermal_zone_device *tz);
->   
->   void thermal_cdev_update(struct thermal_cooling_device *);
-> -void thermal_notify_framework(struct thermal_zone_device *, int);
->   #else
->   static inline struct thermal_zone_device *thermal_zone_device_register(
->   	const char *type, int trips, int mask, void *devdata,
-> @@ -468,9 +467,6 @@ static inline int thermal_zone_get_offset(
->   
->   static inline void thermal_cdev_update(struct thermal_cooling_device *cdev)
->   { }
-> -static inline void thermal_notify_framework(struct thermal_zone_device *tz,
-> -	int trip)
-> -{ }
->   #endif /* CONFIG_THERMAL */
->   
->   static inline int thermal_zone_device_enable(struct thermal_zone_device *tz)
-> 
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 0f72813fed53..ea3791a930e8 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2829,9 +2829,13 @@ static int ieee80211_set_bitrate_mask(struct wiphy *wiphy,
+ 		memcpy(sdata->rc_rateidx_vht_mcs_mask[i],
+ 		       mask->control[i].vht_mcs,
+ 		       sizeof(mask->control[i].vht_mcs));
++		memcpy(sdata->rc_rateidx_he_mcs_mask[i],
++		       mask->control[i].he_mcs,
++		       sizeof(mask->control[i].he_mcs));
+ 
+ 		sdata->rc_has_mcs_mask[i] = false;
+ 		sdata->rc_has_vht_mcs_mask[i] = false;
++		sdata->rc_has_he_mcs_mask[i] = false;
+ 		if (!sband)
+ 			continue;
+ 
+@@ -2848,6 +2852,13 @@ static int ieee80211_set_bitrate_mask(struct wiphy *wiphy,
+ 				break;
+ 			}
+ 		}
++
++		for (j = 0; j < NL80211_HE_NSS_MAX; j++) {
++			if (~sdata->rc_rateidx_he_mcs_mask[i][j]) {
++				sdata->rc_has_he_mcs_mask[i] = true;
++				break;
++			}
++		}
+ 	}
+ 
+ 	return 0;
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index f8ed4f621f7f..2502726d0a58 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -964,6 +964,9 @@ struct ieee80211_sub_if_data {
+ 	bool rc_has_vht_mcs_mask[NUM_NL80211_BANDS];
+ 	u16 rc_rateidx_vht_mcs_mask[NUM_NL80211_BANDS][NL80211_VHT_NSS_MAX];
+ 
++	bool rc_has_he_mcs_mask[NUM_NL80211_BANDS];
++	u16 rc_rateidx_he_mcs_mask[NUM_NL80211_BANDS][NL80211_HE_NSS_MAX];
++
+ 	union {
+ 		struct ieee80211_if_ap ap;
+ 		struct ieee80211_if_wds wds;
+-- 
+2.20.1
 
