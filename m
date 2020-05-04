@@ -4,170 +4,70 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 450B7C47247
-	for <linux-wireless@archiver.kernel.org>; Mon,  4 May 2020 10:50:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A787BC3A5A9
+	for <linux-wireless@archiver.kernel.org>; Mon,  4 May 2020 11:33:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2AA7520643
-	for <linux-wireless@archiver.kernel.org>; Mon,  4 May 2020 10:50:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 91B85206E6
+	for <linux-wireless@archiver.kernel.org>; Mon,  4 May 2020 11:33:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728345AbgEDKu3 (ORCPT
+        id S1728664AbgEDLdt (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 4 May 2020 06:50:29 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:51271 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727781AbgEDKu1 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 May 2020 06:50:27 -0400
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 044AoEeyD003119, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexmb06.realtek.com.tw[172.21.6.99])
-        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 044AoEeyD003119
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Mon, 4 May 2020 18:50:14 +0800
-Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
- RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Mon, 4 May 2020 18:50:14 +0800
-Received: from localhost.localdomain (172.21.68.128) by
- RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Mon, 4 May 2020 18:50:13 +0800
-From:   <yhchuang@realtek.com>
-To:     <kvalo@codeaurora.org>
-CC:     <linux-wireless@vger.kernel.org>, <pkshih@realtek.com>,
-        <bigeasy@linutronix.de>
-Subject: [PATCH v4 4/8] rtw88: handle C2H_CCX_TX_RPT to know if packet TX'ed successfully
-Date:   Mon, 4 May 2020 18:50:06 +0800
-Message-ID: <20200504105010.10780-5-yhchuang@realtek.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20200504105010.10780-1-yhchuang@realtek.com>
-References: <20200504105010.10780-1-yhchuang@realtek.com>
+        Mon, 4 May 2020 07:33:49 -0400
+Received: from szxga07-in.huawei.com ([45.249.212.35]:56686 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728655AbgEDLdt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 4 May 2020 07:33:49 -0400
+Received: from DGGEMS408-HUB.china.huawei.com (unknown [172.30.72.59])
+        by Forcepoint Email with ESMTP id 9C7ADFC07102EA98B7C6;
+        Mon,  4 May 2020 19:33:46 +0800 (CST)
+Received: from huawei.com (10.175.124.28) by DGGEMS408-HUB.china.huawei.com
+ (10.3.19.208) with Microsoft SMTP Server id 14.3.487.0; Mon, 4 May 2020
+ 19:33:37 +0800
+From:   Jason Yan <yanaijie@huawei.com>
+To:     <kvalo@codeaurora.org>, <davem@davemloft.net>,
+        <tglx@linutronix.de>, <linux-wireless@vger.kernel.org>,
+        <b43-dev@lists.infradead.org>, <netdev@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+CC:     Jason Yan <yanaijie@huawei.com>
+Subject: [PATCH] b43: remove Comparison of 0/1 to bool variable in phy_n.c
+Date:   Mon, 4 May 2020 19:33:00 +0800
+Message-ID: <20200504113300.40895-1-yanaijie@huawei.com>
+X-Mailer: git-send-email 2.21.1
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [172.21.68.128]
-X-ClientProxiedBy: RTEXMB02.realtek.com.tw (172.21.6.95) To
- RTEXMB04.realtek.com.tw (172.21.6.97)
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.124.28]
+X-CFilter-Loop: Reflected
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+Fix the following coccicheck warning:
 
-TX status report of 8723D differs from 8822B/8822C, it uses
-C2H_CCX_TX_RPT (0x03) with different format. With sequence number
-and TX status, driver can know if certain packet was transmitted
-successfully.
+drivers/net/wireless/broadcom/b43/phy_n.c:5510:19-32: WARNING:
+Comparison of 0/1 to bool variable
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+Signed-off-by: Jason Yan <yanaijie@huawei.com>
 ---
- drivers/net/wireless/realtek/rtw88/fw.c |  6 +++++-
- drivers/net/wireless/realtek/rtw88/fw.h |  7 +++++--
- drivers/net/wireless/realtek/rtw88/tx.c | 11 ++++++++---
- drivers/net/wireless/realtek/rtw88/tx.h |  2 +-
- 4 files changed, 19 insertions(+), 7 deletions(-)
+ drivers/net/wireless/broadcom/b43/phy_n.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/fw.c b/drivers/net/wireless/realtek/rtw88/fw.c
-index dde7823143ea..11fa1fc7f1cb 100644
---- a/drivers/net/wireless/realtek/rtw88/fw.c
-+++ b/drivers/net/wireless/realtek/rtw88/fw.c
-@@ -25,7 +25,7 @@ static void rtw_fw_c2h_cmd_handle_ext(struct rtw_dev *rtwdev,
+diff --git a/drivers/net/wireless/broadcom/b43/phy_n.c b/drivers/net/wireless/broadcom/b43/phy_n.c
+index d3c001fa8eb4..c33b4235839d 100644
+--- a/drivers/net/wireless/broadcom/b43/phy_n.c
++++ b/drivers/net/wireless/broadcom/b43/phy_n.c
+@@ -5507,7 +5507,7 @@ static int b43_nphy_cal_tx_iq_lo(struct b43_wldev *dev,
+ 			core = (cmd & 0x3000) >> 12;
+ 			type = (cmd & 0x0F00) >> 8;
  
- 	switch (sub_cmd_id) {
- 	case C2H_CCX_RPT:
--		rtw_tx_report_handle(rtwdev, skb);
-+		rtw_tx_report_handle(rtwdev, skb, C2H_CCX_RPT);
- 		break;
- 	default:
- 		break;
-@@ -142,6 +142,9 @@ void rtw_fw_c2h_cmd_handle(struct rtw_dev *rtwdev, struct sk_buff *skb)
- 		goto unlock;
- 
- 	switch (c2h->id) {
-+	case C2H_CCX_TX_RPT:
-+		rtw_tx_report_handle(rtwdev, skb, C2H_CCX_TX_RPT);
-+		break;
- 	case C2H_BT_INFO:
- 		rtw_coex_bt_info_notify(rtwdev, c2h->payload, len);
- 		break;
-@@ -155,6 +158,7 @@ void rtw_fw_c2h_cmd_handle(struct rtw_dev *rtwdev, struct sk_buff *skb)
- 		rtw_fw_ra_report_handle(rtwdev, c2h->payload, len);
- 		break;
- 	default:
-+		rtw_dbg(rtwdev, RTW_DBG_FW, "C2H 0x%x isn't handled\n", c2h->id);
- 		break;
- 	}
- 
-diff --git a/drivers/net/wireless/realtek/rtw88/fw.h b/drivers/net/wireless/realtek/rtw88/fw.h
-index 2933ef741e53..470e1809645a 100644
---- a/drivers/net/wireless/realtek/rtw88/fw.h
-+++ b/drivers/net/wireless/realtek/rtw88/fw.h
-@@ -26,6 +26,7 @@
- #define FW_START_ADDR_LEGACY		0x1000
- 
- enum rtw_c2h_cmd_id {
-+	C2H_CCX_TX_RPT = 0x03,
- 	C2H_BT_INFO = 0x09,
- 	C2H_BT_MP_INFO = 0x0b,
- 	C2H_RA_RPT = 0x0c,
-@@ -218,8 +219,10 @@ struct rtw_fw_hdr_legacy {
- } __packed;
- 
- /* C2H */
--#define GET_CCX_REPORT_SEQNUM(c2h_payload)	(c2h_payload[8] & 0xfc)
--#define GET_CCX_REPORT_STATUS(c2h_payload)	(c2h_payload[9] & 0xc0)
-+#define GET_CCX_REPORT_SEQNUM_V0(c2h_payload)	(c2h_payload[6] & 0xfc)
-+#define GET_CCX_REPORT_STATUS_V0(c2h_payload)	(c2h_payload[0] & 0xc0)
-+#define GET_CCX_REPORT_SEQNUM_V1(c2h_payload)	(c2h_payload[8] & 0xfc)
-+#define GET_CCX_REPORT_STATUS_V1(c2h_payload)	(c2h_payload[9] & 0xc0)
- 
- #define GET_RA_REPORT_RATE(c2h_payload)		(c2h_payload[0] & 0x7f)
- #define GET_RA_REPORT_SGI(c2h_payload)		((c2h_payload[0] & 0x80) >> 7)
-diff --git a/drivers/net/wireless/realtek/rtw88/tx.c b/drivers/net/wireless/realtek/rtw88/tx.c
-index 60989987f67b..79c42118825f 100644
---- a/drivers/net/wireless/realtek/rtw88/tx.c
-+++ b/drivers/net/wireless/realtek/rtw88/tx.c
-@@ -196,7 +196,7 @@ static void rtw_tx_report_tx_status(struct rtw_dev *rtwdev,
- 	ieee80211_tx_status_irqsafe(rtwdev->hw, skb);
- }
- 
--void rtw_tx_report_handle(struct rtw_dev *rtwdev, struct sk_buff *skb)
-+void rtw_tx_report_handle(struct rtw_dev *rtwdev, struct sk_buff *skb, int src)
- {
- 	struct rtw_tx_report *tx_report = &rtwdev->tx_report;
- 	struct rtw_c2h_cmd *c2h;
-@@ -207,8 +207,13 @@ void rtw_tx_report_handle(struct rtw_dev *rtwdev, struct sk_buff *skb)
- 
- 	c2h = get_c2h_from_skb(skb);
- 
--	sn = GET_CCX_REPORT_SEQNUM(c2h->payload);
--	st = GET_CCX_REPORT_STATUS(c2h->payload);
-+	if (src == C2H_CCX_TX_RPT) {
-+		sn = GET_CCX_REPORT_SEQNUM_V0(c2h->payload);
-+		st = GET_CCX_REPORT_STATUS_V0(c2h->payload);
-+	} else {
-+		sn = GET_CCX_REPORT_SEQNUM_V1(c2h->payload);
-+		st = GET_CCX_REPORT_STATUS_V1(c2h->payload);
-+	}
- 
- 	spin_lock_irqsave(&tx_report->q_lock, flags);
- 	skb_queue_walk_safe(&tx_report->queue, cur, tmp) {
-diff --git a/drivers/net/wireless/realtek/rtw88/tx.h b/drivers/net/wireless/realtek/rtw88/tx.h
-index b973de0f4dc0..72dfd4059f03 100644
---- a/drivers/net/wireless/realtek/rtw88/tx.h
-+++ b/drivers/net/wireless/realtek/rtw88/tx.h
-@@ -95,7 +95,7 @@ void rtw_tx_pkt_info_update(struct rtw_dev *rtwdev,
- 			    struct sk_buff *skb);
- void rtw_tx_fill_tx_desc(struct rtw_tx_pkt_info *pkt_info, struct sk_buff *skb);
- void rtw_tx_report_enqueue(struct rtw_dev *rtwdev, struct sk_buff *skb, u8 sn);
--void rtw_tx_report_handle(struct rtw_dev *rtwdev, struct sk_buff *skb);
-+void rtw_tx_report_handle(struct rtw_dev *rtwdev, struct sk_buff *skb, int src);
- void rtw_rsvd_page_pkt_info_update(struct rtw_dev *rtwdev,
- 				   struct rtw_tx_pkt_info *pkt_info,
- 				   struct sk_buff *skb);
+-			if (phy6or5x && updated[core] == 0) {
++			if (phy6or5x && !updated[core]) {
+ 				b43_nphy_update_tx_cal_ladder(dev, core);
+ 				updated[core] = true;
+ 			}
 -- 
-2.17.1
+2.21.1
 
