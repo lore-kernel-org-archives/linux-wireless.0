@@ -2,62 +2,60 @@ Return-Path: <SRS0=yCsk=6S=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3E3BC3A5A9
-	for <linux-wireless@archiver.kernel.org>; Mon,  4 May 2020 23:38:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF793C3A5A9
+	for <linux-wireless@archiver.kernel.org>; Mon,  4 May 2020 23:46:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AD6F0206A4
-	for <linux-wireless@archiver.kernel.org>; Mon,  4 May 2020 23:38:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9DD6320663
+	for <linux-wireless@archiver.kernel.org>; Mon,  4 May 2020 23:46:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="ZuiOEIBs"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="YznSQji9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728476AbgEDXiP (ORCPT
+        id S1728329AbgEDXqY (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 4 May 2020 19:38:15 -0400
-Received: from mail27.static.mailgun.info ([104.130.122.27]:18747 "EHLO
+        Mon, 4 May 2020 19:46:24 -0400
+Received: from mail27.static.mailgun.info ([104.130.122.27]:61369 "EHLO
         mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728475AbgEDXiO (ORCPT
+        by vger.kernel.org with ESMTP id S1726911AbgEDXqX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 May 2020 19:38:14 -0400
+        Mon, 4 May 2020 19:46:23 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1588635493; h=Message-ID: References: In-Reply-To: Subject:
+ s=smtp; t=1588635983; h=Message-ID: References: In-Reply-To: Subject:
  Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=lOZ4tyU3hhbnZJSh2lBCxUEl4+xkzrxlUN3eXX+6mN8=;
- b=ZuiOEIBsnh/4pdsy2UUCYWi4PVJVNLRt1HaHc2CGe2Rt4mlfxyX+YuJAT7DK/DefMIedgWen
- LBjLBmrsL0FQBAvOMhlKij5GZKAVy4GwXvXyYtYqfrrskHrsDqXpKVk6mfuBjMwQhPbSRlmJ
- Ic6ejUNaEvGh7iNtw6F5dJnUvfo=
+ MIME-Version: Sender; bh=dKZZ/hAPbwDEOiC8H0xBFIIzVsviiHYPlAkqYm2g84Q=;
+ b=YznSQji9N/lWi1u76erOcvrq1sdSRAT4q0Q23eW6QtsgFP3H+M3O/Nj+reFCZsLxOn3wXkH6
+ fHrDz9TInf8ZfRoW9ji5nDcvbdJvGQ0YDOvedvedORA7BkcCdDIHlByuNgKQB3q68QvezCW3
+ vl5djc7coamFldtIUZsATHMfoj8=
 X-Mailgun-Sending-Ip: 104.130.122.27
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5eb0a747.7ffa973a50a0-smtp-out-n04;
- Mon, 04 May 2020 23:37:43 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5eb0a944.7f72fd9e7ed8-smtp-out-n03;
+ Mon, 04 May 2020 23:46:12 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 6CFCAC4478F; Mon,  4 May 2020 23:37:42 +0000 (UTC)
+        id CA5D2C432C2; Mon,  4 May 2020 23:46:12 +0000 (UTC)
 Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
         (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: rmanohar)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 91D9EC433BA;
-        Mon,  4 May 2020 23:37:41 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 5435AC433CB;
+        Mon,  4 May 2020 23:46:12 +0000 (UTC)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII;
  format=flowed
 Content-Transfer-Encoding: 7bit
-Date:   Mon, 04 May 2020 16:37:41 -0700
+Date:   Mon, 04 May 2020 16:46:12 -0700
 From:   Rajkumar Manoharan <rmanohar@codeaurora.org>
 To:     Markus Theil <markus.theil@tu-ilmenau.de>
 Cc:     linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
         ath10k@lists.infradead.org, ath11k@lists.infradead.org,
         linux-wireless-owner@vger.kernel.org
-Subject: Re: [PATCH 2/2] ath11k: use cumulative survey statistics
-In-Reply-To: <20200504154122.91862-2-markus.theil@tu-ilmenau.de>
+Subject: Re: [PATCH 1/2] ath10k: use cumulative survey statistics
+In-Reply-To: <20200504154122.91862-1-markus.theil@tu-ilmenau.de>
 References: <20200504154122.91862-1-markus.theil@tu-ilmenau.de>
- <20200504154122.91862-2-markus.theil@tu-ilmenau.de>
-Message-ID: <85fa2d5f9183b3a12c5283b800f3750f@codeaurora.org>
+Message-ID: <f772b7bf0eac31516a4e28719c1938f2@codeaurora.org>
 X-Sender: rmanohar@codeaurora.org
 User-Agent: Roundcube Webmail/1.3.9
 Sender: linux-wireless-owner@vger.kernel.org
@@ -66,7 +64,7 @@ List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
 On 2020-05-04 08:41, Markus Theil wrote:
-> ath11k currently reports survey results for the last interval between 
+> ath10k currently reports survey results for the last interval between 
 > each
 > invocation of NL80211_CMD_GET_SURVEY. For concurrent invocations, this
 > can lead to unexpectedly small results, e.g. when hostapd uses survey
@@ -75,47 +73,12 @@ On 2020-05-04 08:41, Markus Theil wrote:
 > drivers, e.g. ath9k or mt76 also use this behavior.
 > 
 > Signed-off-by: Markus Theil <markus.theil@tu-ilmenau.de>
-> ---
->  drivers/net/wireless/ath/ath11k/wmi.c | 20 ++++++++++----------
->  1 file changed, 10 insertions(+), 10 deletions(-)
 > 
-> diff --git a/drivers/net/wireless/ath/ath11k/wmi.c
-> b/drivers/net/wireless/ath/ath11k/wmi.c
-> index c2a972377687..322ddfda5bfd 100644
-> --- a/drivers/net/wireless/ath/ath11k/wmi.c
-> +++ b/drivers/net/wireless/ath/ath11k/wmi.c
-> @@ -5610,16 +5610,16 @@ ath11k_pdev_bss_chan_info_event(struct
-> ath11k_base *ab, struct sk_buff *skb)
-> 
->  	survey = &ar->survey[idx];
-> 
-> -	survey->noise     = bss_ch_info_ev.noise_floor;
-> -	survey->time      = div_u64(total, cc_freq_hz);
-> -	survey->time_busy = div_u64(busy, cc_freq_hz);
-> -	survey->time_rx   = div_u64(rx_bss, cc_freq_hz);
-> -	survey->time_tx   = div_u64(tx, cc_freq_hz);
-> -	survey->filled   |= (SURVEY_INFO_NOISE_DBM |
-> -			     SURVEY_INFO_TIME |
-> -			     SURVEY_INFO_TIME_BUSY |
-> -			     SURVEY_INFO_TIME_RX |
-> -			     SURVEY_INFO_TIME_TX);
-> +	survey->noise      = bss_ch_info_ev.noise_floor;
-> +	survey->time      += div_u64(total, cc_freq_hz);
-> +	survey->time_busy += div_u64(busy, cc_freq_hz);
-> +	survey->time_rx   += div_u64(rx_bss, cc_freq_hz);
-> +	survey->time_tx   += div_u64(tx, cc_freq_hz);
-> +	survey->filled    |= (SURVEY_INFO_NOISE_DBM |
-> +			      SURVEY_INFO_TIME |
-> +			      SURVEY_INFO_TIME_BUSY |
-> +			      SURVEY_INFO_TIME_RX |
-> +			      SURVEY_INFO_TIME_TX);
 
-Markus,
+IIRC this was fixed a while ago by below patch. Somehow it never landed 
+in ath.git.
+Simple one line change is enough.
 
-It depends on type of survey request is given to firmware. In ath11k, 
-firmware reports
-accumulated values. So the above addition is wrong and report double 
-value. Have you
-tested this change?
+https://patchwork.kernel.org/patch/10550707/
 
 -Rajkumar
