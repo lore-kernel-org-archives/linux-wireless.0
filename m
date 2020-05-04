@@ -2,159 +2,109 @@ Return-Path: <SRS0=yCsk=6S=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72868C3A5A9
-	for <linux-wireless@archiver.kernel.org>; Mon,  4 May 2020 10:45:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BF57C3A5A9
+	for <linux-wireless@archiver.kernel.org>; Mon,  4 May 2020 10:50:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4FF512073B
-	for <linux-wireless@archiver.kernel.org>; Mon,  4 May 2020 10:45:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D7AEB20643
+	for <linux-wireless@archiver.kernel.org>; Mon,  4 May 2020 10:50:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728088AbgEDKp3 (ORCPT
+        id S1728157AbgEDKuU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 4 May 2020 06:45:29 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:51095 "EHLO
+        Mon, 4 May 2020 06:50:20 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:51252 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727983AbgEDKp3 (ORCPT
+        with ESMTP id S1726445AbgEDKuU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 May 2020 06:45:29 -0400
+        Mon, 4 May 2020 06:50:20 -0400
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 044AjDC51002550, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 044AoFQ11003135, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexmb06.realtek.com.tw[172.21.6.99])
-        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 044AjDC51002550
+        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 044AoFQ11003135
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Mon, 4 May 2020 18:45:13 +0800
-Received: from RTEXMB02.realtek.com.tw (172.21.6.95) by
+        Mon, 4 May 2020 18:50:15 +0800
+Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
  RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Mon, 4 May 2020 18:45:13 +0800
-Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
- RTEXMB02.realtek.com.tw (172.21.6.95) with Microsoft SMTP Server
+ 15.1.1779.2; Mon, 4 May 2020 18:50:14 +0800
+Received: from localhost.localdomain (172.21.68.128) by
+ RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Mon, 4 May 2020 18:45:13 +0800
-Received: from RTEXMB04.realtek.com.tw ([fe80::8001:f5f5:a41e:f8d4]) by
- RTEXMB04.realtek.com.tw ([fe80::8001:f5f5:a41e:f8d4%3]) with mapi id
- 15.01.1779.005; Mon, 4 May 2020 18:45:13 +0800
-From:   Tony Chuang <yhchuang@realtek.com>
-To:     Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-CC:     "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Pkshih <pkshih@realtek.com>
-Subject: RE: [PATCH v3 3/8] rtw88: 8723d: Add set_channel
-Thread-Topic: [PATCH v3 3/8] rtw88: 8723d: Add set_channel
-Thread-Index: AQHWHgySZyBIvRh/rUixzBATZxn2/qiQ+DiAgAbL7HA=
-Date:   Mon, 4 May 2020 10:45:13 +0000
-Message-ID: <4d13c81b03bd4d948160d6eab41cdb33@realtek.com>
-References: <20200429095656.19315-1-yhchuang@realtek.com>
- <20200429095656.19315-4-yhchuang@realtek.com>
- <20200430105051.5aom7pn6ng2vubz3@linutronix.de>
-In-Reply-To: <20200430105051.5aom7pn6ng2vubz3@linutronix.de>
-Accept-Language: zh-TW, en-US
-Content-Language: zh-TW
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [172.21.68.175]
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+ 15.1.1779.2; Mon, 4 May 2020 18:50:14 +0800
+From:   <yhchuang@realtek.com>
+To:     <kvalo@codeaurora.org>
+CC:     <linux-wireless@vger.kernel.org>, <pkshih@realtek.com>,
+        <bigeasy@linutronix.de>
+Subject: [PATCH v4 8/8] rtw88: 8723d: add interface configurations table
+Date:   Mon, 4 May 2020 18:50:10 +0800
+Message-ID: <20200504105010.10780-9-yhchuang@realtek.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20200504105010.10780-1-yhchuang@realtek.com>
+References: <20200504105010.10780-1-yhchuang@realtek.com>
 MIME-Version: 1.0
+Content-Type: text/plain
+X-Originating-IP: [172.21.68.128]
+X-ClientProxiedBy: RTEXMB02.realtek.com.tw (172.21.6.95) To
+ RTEXMB04.realtek.com.tw (172.21.6.97)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-U2ViYXN0aWFuIEFuZHJ6ZWogU2lld2lvciA8YmlnZWFzeUBsaW51dHJvbml4LmRlPiB3cml0ZXM6
-DQoNCj4gT24gMjAyMC0wNC0yOSAxNzo1Njo1MSBbKzA4MDBdLCB5aGNodWFuZ0ByZWFsdGVrLmNv
-bSB3cm90ZToNCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9y
-dHc4OC9ydHc4NzIzZC5jDQo+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydHc4OC9y
-dHc4NzIzZC5jDQo+ID4gaW5kZXggNjUzY2ZhOTQ0NWZjLi40ZTZlZTAwNjk3YmUgMTAwNjQ0DQo+
-ID4gLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydHc4OC9ydHc4NzIzZC5jDQo+
-ID4gKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvcmVhbHRlay9ydHc4OC9ydHc4NzIzZC5jDQo+
-ID4gQEAgLTI4Nyw2ICsyODcsMTY4IEBAIHN0YXRpYyB2b2lkIHJ0dzg3MjNkX3F1ZXJ5X3J4X2Rl
-c2Moc3RydWN0DQo+IHJ0d19kZXYgKnJ0d2RldiwgdTggKnJ4X2Rlc2MsDQo+IOKApg0KPiA+ICtz
-dGF0aWMgdm9pZCBydHc4NzIzZF9jZmdfbm90Y2goc3RydWN0IHJ0d19kZXYgKnJ0d2RldiwgdTgg
-Y2hhbm5lbCwgYm9vbA0KPiBub3RjaCkNCj4gPiArew0KPiA+ICsJaWYgKCFub3RjaCkNCj4gDQo+
-IFdvdWxkIGl0IG1ha2Ugc2Vuc2UgaW4gcHVsbCBpbiB0aGUgY29kZSBmcm9tIHRoZSBub19ub3Rj
-aCBsYWJlbCB1cCBoZXJlDQo+IGFuZCBhdm9pZCB0aGUgZ290bz8NCg0KVGhhdCB3aWxsIGJlIGdy
-ZWF0Lg0KDQo+IA0KPiA+ICsJCWdvdG8gbm9fbm90Y2g7DQo+ID4gKw0KPiA+ICsJc3dpdGNoIChj
-aGFubmVsKSB7DQo+ID4gKwljYXNlIDEzOg0KPiA+ICsJCXJ0d193cml0ZTMyX21hc2socnR3ZGV2
-LCBSRUdfT0ZETTBfUlhEU1AsIEJJVF9NQVNLX1JYRFNQLA0KPiAweEIpOw0KPiA+ICsJCXJ0d193
-cml0ZTMyX21hc2socnR3ZGV2LCBSRUdfT0ZETTBfUlhEU1AsIEJJVF9FTl9SWERTUCwNCj4gMHgx
-KTsNCj4gPiArCQlydHdfd3JpdGUzMihydHdkZXYsIFJFR19PRkRNMV9DU0kxLCAweDA0MDAwMDAw
-KTsNCj4gPiArCQlydHdfd3JpdGUzMihydHdkZXYsIFJFR19PRkRNMV9DU0kyLCAweDAwMDAwMDAw
-KTsNCj4gPiArCQlydHdfd3JpdGUzMihydHdkZXYsIFJFR19PRkRNMV9DU0kzLCAweDAwMDAwMDAw
-KTsNCj4gPiArCQlydHdfd3JpdGUzMihydHdkZXYsIFJFR19PRkRNMV9DU0k0LCAweDAwMDAwMDAw
-KTsNCj4gPiArCQlydHdfd3JpdGUzMl9tYXNrKHJ0d2RldiwgUkVHX09GRE0xX0NGT1RSSywgQklU
-X0VOX0NGT1RSSywNCj4gMHgxKTsNCj4gPiArCQlicmVhazsNCj4gPiArCWNhc2UgMTQ6DQo+ID4g
-KwkJcnR3X3dyaXRlMzJfbWFzayhydHdkZXYsIFJFR19PRkRNMF9SWERTUCwgQklUX01BU0tfUlhE
-U1AsDQo+IDB4NSk7DQo+ID4gKwkJcnR3X3dyaXRlMzJfbWFzayhydHdkZXYsIFJFR19PRkRNMF9S
-WERTUCwgQklUX0VOX1JYRFNQLA0KPiAweDEpOw0KPiA+ICsJCXJ0d193cml0ZTMyKHJ0d2Rldiwg
-UkVHX09GRE0xX0NTSTEsIDB4MDAwMDAwMDApOw0KPiA+ICsJCXJ0d193cml0ZTMyKHJ0d2Rldiwg
-UkVHX09GRE0xX0NTSTIsIDB4MDAwMDAwMDApOw0KPiA+ICsJCXJ0d193cml0ZTMyKHJ0d2Rldiwg
-UkVHX09GRE0xX0NTSTMsIDB4MDAwMDAwMDApOw0KPiA+ICsJCXJ0d193cml0ZTMyKHJ0d2Rldiwg
-UkVHX09GRE0xX0NTSTQsIDB4MDAwODAwMDApOw0KPiA+ICsJCXJ0d193cml0ZTMyX21hc2socnR3
-ZGV2LCBSRUdfT0ZETTFfQ0ZPVFJLLCBCSVRfRU5fQ0ZPVFJLLA0KPiAweDEpOw0KPiA+ICsJCWJy
-ZWFrOw0KPiA+ICsJZGVmYXVsdDoNCj4gPiArCQlydHdfd3JpdGUzMl9tYXNrKHJ0d2RldiwgUkVH
-X09GRE0wX1JYRFNQLCBCSVRfRU5fUlhEU1AsDQo+IDB4MCk7DQo+ID4gKwkJcnR3X3dyaXRlMzJf
-bWFzayhydHdkZXYsIFJFR19PRkRNMV9DRk9UUkssIEJJVF9FTl9DRk9UUkssDQo+IDB4MCk7DQo+
-ID4gKwkJYnJlYWs7DQo+ID4gKwl9DQo+ID4gKw0KPiA+ICsJcmV0dXJuOw0KPiA+ICsNCj4gPiAr
-bm9fbm90Y2g6DQo+ID4gKwlydHdfd3JpdGUzMl9tYXNrKHJ0d2RldiwgUkVHX09GRE0wX1JYRFNQ
-LCBCSVRfTUFTS19SWERTUCwNCj4gMHgxZik7DQo+ID4gKwlydHdfd3JpdGUzMl9tYXNrKHJ0d2Rl
-diwgUkVHX09GRE0wX1JYRFNQLCBCSVRfRU5fUlhEU1AsIDB4MCk7DQo+ID4gKwlydHdfd3JpdGUz
-MihydHdkZXYsIFJFR19PRkRNMV9DU0kxLCAweDAwMDAwMDAwKTsNCj4gPiArCXJ0d193cml0ZTMy
-KHJ0d2RldiwgUkVHX09GRE0xX0NTSTIsIDB4MDAwMDAwMDApOw0KPiA+ICsJcnR3X3dyaXRlMzIo
-cnR3ZGV2LCBSRUdfT0ZETTFfQ1NJMywgMHgwMDAwMDAwMCk7DQo+ID4gKwlydHdfd3JpdGUzMihy
-dHdkZXYsIFJFR19PRkRNMV9DU0k0LCAweDAwMDAwMDAwKTsNCj4gPiArCXJ0d193cml0ZTMyX21h
-c2socnR3ZGV2LCBSRUdfT0ZETTFfQ0ZPVFJLLCBCSVRfRU5fQ0ZPVFJLLCAweDApOw0KPiA+ICt9
-DQo+ID4gKw0KPiA+ICtzdGF0aWMgdm9pZCBydHc4NzIzZF9zcHVyX2NhbChzdHJ1Y3QgcnR3X2Rl
-diAqcnR3ZGV2LCB1OCBjaGFubmVsKQ0KPiA+ICt7DQo+ID4gKwlib29sIG5vdGNoID0gZmFsc2U7
-DQo+ID4gKw0KPiA+ICsJaWYgKGNoYW5uZWwgPCAxMykNCj4gPiArCQlnb3RvIGRvX25vdGNoOw0K
-PiANCj4gaWYgeW91IHJldmVyc2UgdGhlIGlmIHN0YXRlbWVudCwgdGhlbiB5b3UgY291bGQgYXZv
-aWQgdGhlIGdvdG8uDQoNCkkgdGhpbmsgeWVzLCB3ZSBjYW4gbWFrZSBpdCBsb29rIGJldHRlci4N
-Cg0KPiANCj4gPiArDQo+ID4gKwlub3RjaCA9IHJ0dzg3MjNkX2NoZWNrX3NwdXJfb3ZfdGhyZXMo
-cnR3ZGV2LCBjaGFubmVsLCBTUFVSX1RIUkVTKTsNCj4gPiArDQo+ID4gK2RvX25vdGNoOg0KPiA+
-ICsJcnR3ODcyM2RfY2ZnX25vdGNoKHJ0d2RldiwgY2hhbm5lbCwgbm90Y2gpOw0KPiA+ICt9DQo+
-ID4gKw0KPiA+ICtzdGF0aWMgdm9pZCBydHc4NzIzZF9zZXRfY2hhbm5lbF9yZihzdHJ1Y3QgcnR3
-X2RldiAqcnR3ZGV2LCB1OCBjaGFubmVsLA0KPiB1OCBidykNCj4gPiArew0KPiA+ICsJdTMyIHJm
-X2NmZ2NoWzJdOw0KPiANCj4gV291bGQgaXQgbWFrZSBzZW5zZSB0byB1c2UgcmZfY2ZnY2hfQSBy
-Zl9jZmdjaF9CIGluc3RlYWQgdGhlIGFycmF5Pw0KDQpHcmVhdC4NCg0KPiANCj4gPiArCXJmX2Nm
-Z2NoWzBdID0gcnR3X3JlYWRfcmYocnR3ZGV2LCBSRl9QQVRIX0EsIFJGX0NGR0NILCBSRlJFR19N
-QVNLKTsNCj4gPiArCXJmX2NmZ2NoWzFdID0gcnR3X3JlYWRfcmYocnR3ZGV2LCBSRl9QQVRIX0Is
-IFJGX0NGR0NILCBSRlJFR19NQVNLKTsNCj4gPiArDQo+ID4gKwlyZl9jZmdjaFswXSAmPSB+UkZD
-RkdDSF9DSEFOTkVMX01BU0s7DQo+ID4gKwlyZl9jZmdjaFsxXSAmPSB+UkZDRkdDSF9DSEFOTkVM
-X01BU0s7DQo+ID4gKwlyZl9jZmdjaFswXSB8PSAoY2hhbm5lbCAmIFJGQ0ZHQ0hfQ0hBTk5FTF9N
-QVNLKTsNCj4gPiArCXJmX2NmZ2NoWzFdIHw9IChjaGFubmVsICYgUkZDRkdDSF9DSEFOTkVMX01B
-U0spOw0KPiA+ICsNCj4gPiArCXJmX2NmZ2NoWzBdICY9IH5SRkNGR0NIX0JXX01BU0s7DQo+ID4g
-Kwlzd2l0Y2ggKGJ3KSB7DQo+ID4gKwljYXNlIFJUV19DSEFOTkVMX1dJRFRIXzIwOg0KPiA+ICsJ
-CXJmX2NmZ2NoWzBdIHw9IFJGQ0ZHQ0hfQldfMjBNOw0KPiA+ICsJCWJyZWFrOw0KPiA+ICsJY2Fz
-ZSBSVFdfQ0hBTk5FTF9XSURUSF80MDoNCj4gPiArCQlyZl9jZmdjaFswXSB8PSBSRkNGR0NIX0JX
-XzQwTTsNCj4gPiArCQlicmVhazsNCj4gPiArCWRlZmF1bHQ6DQo+ID4gKwkJYnJlYWs7DQo+ID4g
-Kwl9DQo+ID4gKw0KPiA+ICsJcnR3X3dyaXRlX3JmKHJ0d2RldiwgUkZfUEFUSF9BLCBSRl9DRkdD
-SCwgUkZSRUdfTUFTSywgcmZfY2ZnY2hbMF0pOw0KPiA+ICsJcnR3X3dyaXRlX3JmKHJ0d2Rldiwg
-UkZfUEFUSF9CLCBSRl9DRkdDSCwgUkZSRUdfTUFTSywgcmZfY2ZnY2hbMV0pOw0KPiA+ICsNCj4g
-PiArCXJ0dzg3MjNkX3NwdXJfY2FsKHJ0d2RldiwgY2hhbm5lbCk7DQo+ID4gK30NCj4g4oCmDQo+
-ID4gK3N0YXRpYyB2b2lkIHJ0dzg3MjNkX3NldF9jaGFubmVsX2JiKHN0cnVjdCBydHdfZGV2ICpy
-dHdkZXYsIHU4IGNoYW5uZWwsDQo+IHU4IGJ3LA0KPiA+ICsJCQkJICAgIHU4IHByaW1hcnlfY2hf
-aWR4KQ0KPiA+ICt7DQo+ID4gKwljb25zdCBzdHJ1Y3QgcnR3X2JhY2t1cF9pbmZvICpjY2tfZGZp
-ciA9DQo+ID4gKwkJCWNoYW5uZWwgPD0gMTMgPyBjY2tfZGZpcl9jZmdbMF0gOiBjY2tfZGZpcl9j
-ZmdbMV07DQo+ID4gKwlpbnQgaTsNCj4gDQo+IElmIHlvdSBtb3ZlIHRoZSBhc3NpZ25tZW50IG9m
-IGBjY2tfZGZpcicgaGVyZSB0aGUgZGVmaW5pdGlvbiBibG9jaw0KPiB3b3VsZCBsb29rIGEgbmlj
-ZXIuDQo+IA0KPiA+ICsNCj4gPiArCWZvciAoaSA9IDA7IGkgPCBDQ0tfREZJUl9OUjsgaSsrLCBj
-Y2tfZGZpcisrKQ0KPiA+ICsJCXJ0d193cml0ZTMyKHJ0d2RldiwgY2NrX2RmaXItPnJlZywgY2Nr
-X2RmaXItPnZhbCk7DQo+ID4gKw0KPiA+ICsJc3dpdGNoIChidykgew0KPiA+ICsJY2FzZSBSVFdf
-Q0hBTk5FTF9XSURUSF8yMDoNCj4gPiArCQlydHdfd3JpdGUzMl9tYXNrKHJ0d2RldiwgUkVHX0ZQ
-R0EwX1JGTU9ELCBCSVRfTUFTS19SRk1PRCwNCj4gMHgwKTsNCj4gPiArCQlydHdfd3JpdGUzMl9t
-YXNrKHJ0d2RldiwgUkVHX0ZQR0ExX1JGTU9ELCBCSVRfTUFTS19SRk1PRCwNCj4gMHgwKTsNCj4g
-PiArCQlydHdfd3JpdGUzMl9tYXNrKHJ0d2RldiwgUkVHX0JCUlhfREZJUiwgQklUX1JYQkJfREZJ
-Ul9FTiwgMSk7DQo+ID4gKwkJcnR3X3dyaXRlMzJfbWFzayhydHdkZXYsIFJFR19CQlJYX0RGSVIs
-IEJJVF9NQVNLX1JYQkJfREZJUiwNCj4gMHhhKTsNCj4gPiArCQlicmVhazsNCj4gPiArCWNhc2Ug
-UlRXX0NIQU5ORUxfV0lEVEhfNDA6DQo+ID4gKwkJcnR3X3dyaXRlMzJfbWFzayhydHdkZXYsIFJF
-R19GUEdBMF9SRk1PRCwgQklUX01BU0tfUkZNT0QsDQo+IDB4MSk7DQo+ID4gKwkJcnR3X3dyaXRl
-MzJfbWFzayhydHdkZXYsIFJFR19GUEdBMV9SRk1PRCwgQklUX01BU0tfUkZNT0QsDQo+IDB4MSk7
-DQo+ID4gKwkJcnR3X3dyaXRlMzJfbWFzayhydHdkZXYsIFJFR19CQlJYX0RGSVIsIEJJVF9SWEJC
-X0RGSVJfRU4sIDApOw0KPiA+ICsJCXJ0d193cml0ZTMyX21hc2socnR3ZGV2LCBSRUdfQ0NLMF9T
-WVMsIEJJVF9DQ0tfU0lERV9CQU5ELA0KPiA+ICsJCQkJIChwcmltYXJ5X2NoX2lkeCA9PSBSVFdf
-U0NfMjBfVVBQRVIgPyAxIDogMCkpOw0KPiA+ICsJCWJyZWFrOw0KPiA+ICsJZGVmYXVsdDoNCj4g
-PiArCQlicmVhazsNCj4gPiArCX0NCj4gPiArfQ0KPiANCj4gU2ViYXN0aWFuDQo+IA0KDQpZZW4t
-SHN1YW4NCg==
+From: Ping-Ke Shih <pkshih@realtek.com>
+
+Interface configuration table is used to configure PCI PHY that are
+normally decided by design or bootstrap pin, and driver can do additional
+settings by this table.
+
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw88/rtw8723d.c | 21 +++++++++++++++++++
+ 1 file changed, 21 insertions(+)
+
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723d.c b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
+index b6266b2942cf..92c742d1ce6d 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8723d.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
+@@ -1048,6 +1048,26 @@ static const struct rtw_rqpn rqpn_table_8723d[] = {
+ 	 RTW_DMA_MAPPING_EXTRA, RTW_DMA_MAPPING_HIGH},
+ };
+ 
++static const struct rtw_intf_phy_para pcie_gen1_param_8723d[] = {
++	{0x0008, 0x4a22,
++	 RTW_IP_SEL_PHY,
++	 RTW_INTF_PHY_CUT_ALL,
++	 RTW_INTF_PHY_PLATFORM_ALL},
++	{0x0009, 0x1000,
++	 RTW_IP_SEL_PHY,
++	 ~(RTW_INTF_PHY_CUT_A | RTW_INTF_PHY_CUT_B),
++	 RTW_INTF_PHY_PLATFORM_ALL},
++	{0xFFFF, 0x0000,
++	 RTW_IP_SEL_PHY,
++	 RTW_INTF_PHY_CUT_ALL,
++	 RTW_INTF_PHY_PLATFORM_ALL},
++};
++
++static const struct rtw_intf_phy_para_table phy_para_table_8723d = {
++	.gen1_para	= pcie_gen1_param_8723d,
++	.n_gen1_para	= ARRAY_SIZE(pcie_gen1_param_8723d),
++};
++
+ static const struct rtw_hw_reg rtw8723d_dig[] = {
+ 	[0] = { .addr = 0xc50, .mask = 0x7f },
+ 	[1] = { .addr = 0xc50, .mask = 0x7f },
+@@ -1098,6 +1118,7 @@ struct rtw_chip_info rtw8723d_hw_spec = {
+ 	.pwr_off_seq = card_disable_flow_8723d,
+ 	.page_table = page_table_8723d,
+ 	.rqpn_table = rqpn_table_8723d,
++	.intf_table = &phy_para_table_8723d,
+ 	.dig = rtw8723d_dig,
+ 	.dig_cck = rtw8723d_dig_cck,
+ 	.rf_sipi_addr = {0x840, 0x844},
+-- 
+2.17.1
+
