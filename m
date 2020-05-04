@@ -7,225 +7,130 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 648C8C3A5A9
-	for <linux-wireless@archiver.kernel.org>; Mon,  4 May 2020 16:37:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8964DC3A5A9
+	for <linux-wireless@archiver.kernel.org>; Mon,  4 May 2020 17:01:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3B1A820705
-	for <linux-wireless@archiver.kernel.org>; Mon,  4 May 2020 16:37:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5F0C3206D7
+	for <linux-wireless@archiver.kernel.org>; Mon,  4 May 2020 17:01:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="wbYTPDBG"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="EvfJ1UjV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729710AbgEDQhm (ORCPT
+        id S1729884AbgEDRBh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 4 May 2020 12:37:42 -0400
-Received: from mail27.static.mailgun.info ([104.130.122.27]:19060 "EHLO
-        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729525AbgEDQhm (ORCPT
+        Mon, 4 May 2020 13:01:37 -0400
+Received: from mail26.static.mailgun.info ([104.130.122.26]:30965 "EHLO
+        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729459AbgEDRBh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 May 2020 12:37:42 -0400
+        Mon, 4 May 2020 13:01:37 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1588610260; h=Message-Id: Date: Subject: Cc: To: From:
- Sender; bh=UtcerFtustCSgKOFDYg3WB9iGLAfHwaOZXP8d7yCVGs=; b=wbYTPDBGDRYb5n1r4R8zMOWoltAod1CULbFDTcOmE0Wm/+KMTWDz0M8FkYDDxijNCS7XQMko
- 5pWtGjB3iFONvo1XS1CltZ1or/T8woqsSkJovumfV5/kD72OM2nxrvADMsOlJOMyTbc/ItGG
- RkbqMhJ/D7Ftlqe+SO14QLvT/MY=
-X-Mailgun-Sending-Ip: 104.130.122.27
+ s=smtp; t=1588611696; h=Message-Id: Date: Subject: Cc: To: From:
+ Sender; bh=fPoux2pQjdP+ZEXNV24YVedAMDvry0ZQnYEZA4UjdyY=; b=EvfJ1UjVQmbHJ8b0csB78Qa4UNBAvMXt8flihFiYcdkO7v1xjlfdE32yHxHcDK0Zm+CAVMll
+ qTZlDgVxh6Dx91SeqLEurdinlMA1uRagNYNspmhYGIUQ7Yw/NwfPaZaegIEHWHlF3nd43JGL
+ r13Pv7dMa1yp7gk/KutWlyjKMJk=
+X-Mailgun-Sending-Ip: 104.130.122.26
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5eb044cb.7efc0afd24c8-smtp-out-n04;
- Mon, 04 May 2020 16:37:31 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5eb04a57.7ff0eb95a110-smtp-out-n03;
+ Mon, 04 May 2020 17:01:11 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 3CD02C433F2; Mon,  4 May 2020 16:37:30 +0000 (UTC)
+        id 9BDA3C433BA; Mon,  4 May 2020 17:01:10 +0000 (UTC)
 Received: from cheath10p342229-lin.qca.qualcomm.com (blr-c-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.19.19])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: tamizhr)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 0A6DDC433CB;
-        Mon,  4 May 2020 16:37:27 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 0A6DDC433CB
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 0365FC433CB;
+        Mon,  4 May 2020 17:01:08 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 0365FC433CB
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=tamizhr@codeaurora.org
 From:   Tamizh Chelvam <tamizhr@codeaurora.org>
 To:     ath11k@lists.infradead.org
 Cc:     linux-wireless@vger.kernel.org,
-        Ashok Raj Nagarajan <arnagara@codeaurora.org>,
         Tamizh Chelvam <tamizhr@codeaurora.org>
-Subject: [PATCH] ath11k: Add support to reset htt peer stats
-Date:   Mon,  4 May 2020 22:05:47 +0530
-Message-Id: <1588610147-20231-1-git-send-email-tamizhr@codeaurora.org>
+Subject: [PATCH] ath11k: fix kernel panic by freeing the msdu received with invalid length
+Date:   Mon,  4 May 2020 22:29:28 +0530
+Message-Id: <1588611568-20791-1-git-send-email-tamizhr@codeaurora.org>
 X-Mailer: git-send-email 1.9.1
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ashok Raj Nagarajan <arnagara@codeaurora.org>
+In certain scenario host receives the packets with invalid length
+which causes below kernel panic. Free up those msdus to avoid
+this kernel panic.
 
-This patch add supports to reset the per peer htt stats.
+ 2270.028121:   <6> task: ffffffc0008306d0 ti: ffffffc0008306d0 task.ti: ffffffc0008306d0
+ 2270.035247:   <2> PC is at skb_panic+0x40/0x44
+ 2270.042784:   <2> LR is at skb_panic+0x40/0x44
+ 2270.521775:   <2> [<ffffffc0004a06e0>] skb_panic+0x40/0x44
+ 2270.524039:   <2> [<ffffffc0004a1278>] skb_put+0x54/0x5c
+ 2270.529264:   <2> [<ffffffbffcc373a8>] ath11k_dp_process_rx_err+0x320/0x5b0 [ath11k]
+ 2270.533860:   <2> [<ffffffbffcc30b68>] ath11k_dp_service_srng+0x80/0x268 [ath11k]
+ 2270.541063:   <2> [<ffffffbffcc1d554>] ath11k_hal_rx_reo_ent_buf_paddr_get+0x200/0xb64 [ath11k]
+ 2270.547917:   <2> [<ffffffc0004b1f74>] net_rx_action+0xf8/0x274
+ 2270.556247:   <2> [<ffffffc000099df4>] __do_softirq+0x128/0x228
+ 2270.561625:   <2> [<ffffffc00009a130>] irq_exit+0x84/0xcc
+ 2270.567008:   <2> [<ffffffc0000cfb28>] __handle_domain_irq+0x8c/0xb0
+ 2270.571695:   <2> [<ffffffc000082484>] gic_handle_irq+0x6c/0xbc
 
-Usage:
-
-echo 1 > /sys/kernel/debug/ieee80211/phyX/netdev:wlanX/stations/<peer MAC addr>/htt_peer_stats_reset
-
-While doing so, sync the wmi services between FW and host.
-
-Signed-off-by: Ashok Raj Nagarajan <arnagara@codeaurora.org>
 Signed-off-by: Tamizh Chelvam <tamizhr@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath11k/debug.h       |  2 +
- drivers/net/wireless/ath/ath11k/debugfs_sta.c | 67 +++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath11k/wmi.h         | 37 +++++++++++++++
- 3 files changed, 106 insertions(+)
+ drivers/net/wireless/ath/ath11k/dp_rx.c | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath11k/debug.h b/drivers/net/wireless/ath/ath11k/debug.h
-index 45454fc..f8aa48e 100644
---- a/drivers/net/wireless/ath/ath11k/debug.h
-+++ b/drivers/net/wireless/ath/ath11k/debug.h
-@@ -80,6 +80,8 @@ struct ath_pktlog_hdr {
- 	u8 payload[0];
- };
+diff --git a/drivers/net/wireless/ath/ath11k/dp_rx.c b/drivers/net/wireless/ath/ath11k/dp_rx.c
+index 47ad3bd..90d2d47 100644
+--- a/drivers/net/wireless/ath/ath11k/dp_rx.c
++++ b/drivers/net/wireless/ath/ath11k/dp_rx.c
+@@ -2270,6 +2270,7 @@ static int ath11k_dp_rx_process_msdu(struct ath11k *ar,
+ 	struct ieee80211_hdr *hdr;
+ 	struct sk_buff *last_buf;
+ 	u8 l3_pad_bytes;
++	u8 *hdr_status;
+ 	u16 msdu_len;
+ 	int ret;
  
-+#define ATH11K_HTT_PEER_STATS_RESET BIT(16)
-+
- #define ATH11K_HTT_STATS_BUF_SIZE (1024 * 512)
- #define ATH11K_FW_STATS_BUF_SIZE (1024 * 1024)
+@@ -2298,8 +2299,13 @@ static int ath11k_dp_rx_process_msdu(struct ath11k *ar,
+ 		skb_pull(msdu, HAL_RX_DESC_SIZE);
+ 	} else if (!rxcb->is_continuation) {
+ 		if ((msdu_len + HAL_RX_DESC_SIZE) > DP_RX_BUFFER_SIZE) {
++			hdr_status = ath11k_dp_rx_h_80211_hdr(rx_desc);
+ 			ret = -EINVAL;
+ 			ath11k_warn(ar->ab, "invalid msdu len %u\n", msdu_len);
++			ath11k_dbg_dump(ar->ab, ATH11K_DBG_DATA, NULL, "", hdr_status,
++					sizeof(struct ieee80211_hdr));
++			ath11k_dbg_dump(ar->ab, ATH11K_DBG_DATA, NULL, "", rx_desc,
++					sizeof(struct hal_rx_desc));
+ 			goto free_out;
+ 		}
+ 		skb_put(msdu, HAL_RX_DESC_SIZE + l3_pad_bytes + msdu_len);
+@@ -3394,6 +3400,7 @@ static int ath11k_dp_rx_frag_h_mpdu(struct ath11k *ar,
+ 	struct sk_buff *msdu;
+ 	struct ath11k_skb_rxcb *rxcb;
+ 	struct hal_rx_desc *rx_desc;
++	u8 *hdr_status;
+ 	u16 msdu_len;
  
-diff --git a/drivers/net/wireless/ath/ath11k/debugfs_sta.c b/drivers/net/wireless/ath/ath11k/debugfs_sta.c
-index 68963cf..6b720ee 100644
---- a/drivers/net/wireless/ath/ath11k/debugfs_sta.c
-+++ b/drivers/net/wireless/ath/ath11k/debugfs_sta.c
-@@ -8,6 +8,8 @@
- #include "core.h"
- #include "peer.h"
- #include "debug.h"
-+#include "dp_tx.h"
-+#include "debug_htt_stats.h"
+ 	spin_lock_bh(&rx_ring->idr_lock);
+@@ -3431,6 +3438,17 @@ static int ath11k_dp_rx_frag_h_mpdu(struct ath11k *ar,
  
- void
- ath11k_accumulate_per_peer_tx_stats(struct ath11k_sta *arsta,
-@@ -749,6 +751,66 @@ static ssize_t ath11k_dbg_sta_write_aggr_mode(struct file *file,
- 	.llseek = default_llseek,
- };
- 
-+static ssize_t
-+ath11k_write_htt_peer_stats_reset(struct file *file,
-+				  const char __user *user_buf,
-+				  size_t count, loff_t *ppos)
-+{
-+	struct ieee80211_sta *sta = file->private_data;
-+	struct ath11k_sta *arsta = (struct ath11k_sta *)sta->drv_priv;
-+	struct ath11k *ar = arsta->arvif->ar;
-+	struct htt_ext_stats_cfg_params cfg_params = { 0 };
-+	int ret;
-+	u8 type;
-+
-+	ret = kstrtou8_from_user(user_buf, count, 0, &type);
-+	if (ret)
-+		return ret;
-+
-+	if (!type)
-+		return ret;
-+
-+	mutex_lock(&ar->conf_mutex);
-+	cfg_params.cfg0 = HTT_STAT_PEER_INFO_MAC_ADDR;
-+	cfg_params.cfg0 |= FIELD_PREP(GENMASK(15, 1),
-+				HTT_PEER_STATS_REQ_MODE_FLUSH_TQM);
-+
-+	cfg_params.cfg1 = HTT_STAT_DEFAULT_PEER_REQ_TYPE;
-+
-+	cfg_params.cfg2 |= FIELD_PREP(GENMASK(7, 0), sta->addr[0]);
-+	cfg_params.cfg2 |= FIELD_PREP(GENMASK(15, 8), sta->addr[1]);
-+	cfg_params.cfg2 |= FIELD_PREP(GENMASK(23, 16), sta->addr[2]);
-+	cfg_params.cfg2 |= FIELD_PREP(GENMASK(31, 24), sta->addr[3]);
-+
-+	cfg_params.cfg3 |= FIELD_PREP(GENMASK(7, 0), sta->addr[4]);
-+	cfg_params.cfg3 |= FIELD_PREP(GENMASK(15, 8), sta->addr[5]);
-+
-+	cfg_params.cfg3 |= ATH11K_HTT_PEER_STATS_RESET;
-+
-+	ret = ath11k_dp_tx_htt_h2t_ext_stats_req(ar,
-+						 ATH11K_DBG_HTT_EXT_STATS_PEER_INFO,
-+						 &cfg_params,
-+						 0ULL);
-+	if (ret) {
-+		ath11k_warn(ar->ab, "failed to send htt peer stats request: %d\n", ret);
-+		mutex_unlock(&ar->conf_mutex);
-+		return ret;
+ 	rx_desc = (struct hal_rx_desc *)msdu->data;
+ 	msdu_len = ath11k_dp_rx_h_msdu_start_msdu_len(rx_desc);
++	if ((msdu_len + HAL_RX_DESC_SIZE) > DP_RX_BUFFER_SIZE) {
++		hdr_status = ath11k_dp_rx_h_80211_hdr(rx_desc);
++		ath11k_warn(ar->ab, "invalid msdu leng %u", msdu_len);
++		ath11k_dbg_dump(ar->ab, ATH11K_DBG_DATA, NULL, "", hdr_status,
++				sizeof(struct ieee80211_hdr));
++		ath11k_dbg_dump(ar->ab, ATH11K_DBG_DATA, NULL, "", rx_desc,
++				sizeof(struct hal_rx_desc));
++		dev_kfree_skb_any(msdu);
++		goto exit;
 +	}
 +
-+	mutex_unlock(&ar->conf_mutex);
-+
-+	ret = count;
-+
-+	return ret;
-+}
-+
-+static const struct file_operations fops_htt_peer_stats_reset = {
-+	.write = ath11k_write_htt_peer_stats_reset,
-+	.open = simple_open,
-+	.owner = THIS_MODULE,
-+	.llseek = default_llseek,
-+};
-+
- void ath11k_sta_add_debugfs(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			    struct ieee80211_sta *sta, struct dentry *dir)
- {
-@@ -771,4 +833,9 @@ void ath11k_sta_add_debugfs(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	debugfs_create_file("addba", 0200, dir, sta, &fops_addba);
- 	debugfs_create_file("addba_resp", 0200, dir, sta, &fops_addba_resp);
- 	debugfs_create_file("delba", 0200, dir, sta, &fops_delba);
-+
-+	if (test_bit(WMI_TLV_SERVICE_PER_PEER_HTT_STATS_RESET,
-+		     ar->ab->wmi_ab.svc_map))
-+		debugfs_create_file("htt_peer_stats_reset", 0600, dir, sta,
-+				    &fops_htt_peer_stats_reset);
- }
-diff --git a/drivers/net/wireless/ath/ath11k/wmi.h b/drivers/net/wireless/ath/ath11k/wmi.h
-index ba05935..a47c6a6 100644
---- a/drivers/net/wireless/ath/ath11k/wmi.h
-+++ b/drivers/net/wireless/ath/ath11k/wmi.h
-@@ -1976,6 +1976,43 @@ enum wmi_tlv_service {
- 	WMI_TLV_SERVICE_TX_DATA_MGMT_ACK_RSSI = 174,
- 	WMI_TLV_SERVICE_NAN_DISABLE_SUPPORT = 175,
- 	WMI_TLV_SERVICE_HTT_H2T_NO_HTC_HDR_LEN_IN_MSG_LEN = 176,
-+	WMI_TLV_SERVICE_COEX_SUPPORT_UNEQUAL_ISOLATION = 177,
-+	WMI_TLV_SERVICE_HW_DB2DBM_CONVERSION_SUPPORT = 178,
-+	WMI_TLV_SERVICE_SUPPORT_EXTEND_ADDRESS = 179,
-+	WMI_TLV_SERVICE_BEACON_RECEPTION_STATS = 180,
-+	WMI_TLV_SERVICE_FETCH_TX_PN = 181,
-+	WMI_TLV_SERVICE_PEER_UNMAP_RESPONSE_SUPPORT = 182,
-+	WMI_TLV_SERVICE_TX_PER_PEER_AMPDU_SIZE = 183,
-+	WMI_TLV_SERVICE_BSS_COLOR_SWITCH_COUNT = 184,
-+	WMI_TLV_SERVICE_HTT_PEER_STATS_SUPPORT = 185,
-+	WMI_TLV_SERVICE_UL_RU26_ALLOWED = 186,
-+	WMI_TLV_SERVICE_GET_MWS_COEX_STATE = 187,
-+	WMI_TLV_SERVICE_GET_MWS_DPWB_STATE = 188,
-+	WMI_TLV_SERVICE_GET_MWS_TDM_STATE = 189,
-+	WMI_TLV_SERVICE_GET_MWS_IDRX_STATE = 190,
-+	WMI_TLV_SERVICE_GET_MWS_ANTENNA_SHARING_STATE = 191,
-+	WMI_TLV_SERVICE_ENHANCED_TPC_CONFIG_EVENT = 192,
-+	WMI_TLV_SERVICE_WLM_STATS_REQUEST = 193,
-+	WMI_TLV_SERVICE_EXT_PEER_TID_CONFIGS_SUPPORT = 194,
-+	WMI_TLV_SERVICE_WPA3_FT_SAE_SUPPORT = 195,
-+	WMI_TLV_SERVICE_WPA3_FT_SUITE_B_SUPPORT = 196,
-+	WMI_TLV_SERVICE_VOW_ENABLE = 197,
-+	WMI_TLV_SERVICE_CFR_CAPTURE_IND_EVT_TYPE_1 = 198,
-+	WMI_TLV_SERVICE_BROADCAST_TWT = 199,
-+	WMI_TLV_SERVICE_RAP_DETECTION_SUPPORT = 200,
-+	WMI_TLV_SERVICE_PS_TDCC = 201,
-+	WMI_TLV_SERVICE_THREE_WAY_COEX_CONFIG_LEGACY   = 202,
-+	WMI_TLV_SERVICE_THREE_WAY_COEX_CONFIG_OVERRIDE = 203,
-+	WMI_TLV_SERVICE_TX_PWR_PER_PEER = 204,
-+	WMI_TLV_SERVICE_STA_PLUS_STA_SUPPORT = 205,
-+	WMI_TLV_SERVICE_WPA3_FT_FILS = 206,
-+	WMI_TLV_SERVICE_ADAPTIVE_11R_ROAM = 207,
-+	WMI_TLV_SERVICE_CHAN_RF_CHARACTERIZATION_INFO = 208,
-+	WMI_TLV_SERVICE_FW_IFACE_COMBINATION_SUPPORT = 209,
-+	WMI_TLV_SERVICE_TX_COMPL_TSF64 = 210,
-+	WMI_TLV_SERVICE_DSM_ROAM_FILTER = 211,
-+	WMI_TLV_SERVICE_PACKET_CAPTURE_SUPPORT = 212,
-+	WMI_TLV_SERVICE_PER_PEER_HTT_STATS_RESET = 213,
+ 	skb_put(msdu, HAL_RX_DESC_SIZE + msdu_len);
  
- 	WMI_MAX_EXT_SERVICE
- 
+ 	if (ath11k_dp_rx_frag_h_mpdu(ar, msdu, ring_desc)) {
 -- 
 1.9.1
