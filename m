@@ -2,67 +2,92 @@ Return-Path: <SRS0=yCsk=6S=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3863C3A5A9
-	for <linux-wireless@archiver.kernel.org>; Mon,  4 May 2020 16:33:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C883C3A5A9
+	for <linux-wireless@archiver.kernel.org>; Mon,  4 May 2020 16:36:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9DDCA206B8
-	for <linux-wireless@archiver.kernel.org>; Mon,  4 May 2020 16:33:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1EFB5206D9
+	for <linux-wireless@archiver.kernel.org>; Mon,  4 May 2020 16:36:35 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=narfation.org header.i=@narfation.org header.b="dpXmUNyE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729606AbgEDQdq convert rfc822-to-8bit (ORCPT
+        id S1729601AbgEDQge (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 4 May 2020 12:33:46 -0400
-Received: from smail.rz.tu-ilmenau.de ([141.24.186.67]:58562 "EHLO
-        smail.rz.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728158AbgEDQdp (ORCPT
+        Mon, 4 May 2020 12:36:34 -0400
+Received: from dvalin.narfation.org ([213.160.73.56]:60558 "EHLO
+        dvalin.narfation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729481AbgEDQge (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 4 May 2020 12:33:45 -0400
-Received: from [192.168.178.34] (unknown [87.147.56.179])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by smail.rz.tu-ilmenau.de (Postfix) with ESMTPSA id 26FA4580243;
-        Mon,  4 May 2020 18:33:44 +0200 (CEST)
-Subject: Re: [PATCH 1/2] ath10k: use cumulative survey statistics
-To:     Sven Eckelmann <sven@narfation.org>, ath11k@lists.infradead.org
-Cc:     linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-        kvalo@codeaurora.org
-References: <20200504154122.91862-1-markus.theil@tu-ilmenau.de>
- <1760068.xeLkAeoAig@bentobox>
-From:   Markus Theil <markus.theil@tu-ilmenau.de>
-Message-ID: <5a4c9924-e727-30e7-8409-967c361c2fae@tu-ilmenau.de>
-Date:   Mon, 4 May 2020 18:33:43 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.7.0
+        Mon, 4 May 2020 12:36:34 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=narfation.org;
+        s=20121; t=1588610192;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=YFPc5efbpIyKnBr6op+YCa/HL6e6F9MtOcXPUQ8Ph7Q=;
+        b=dpXmUNyEEVsGpbScscL/KHKusrg5uy6dQNlof9Ug4Rt6vHt33KYAF5wPY+IyOqD012wEa9
+        /jY8A94oX8+ddb/HFaz+CgdL7ijE9OEB4viswZGE7VrZEbJdAbsNoRka1KYvYfdgYPnf2I
+        zSxRhVQsD9/Nyth7/Io+kMMF69sr7MA=
+From:   Sven Eckelmann <sven@narfation.org>
+To:     ath10k@lists.infradead.org
+Cc:     Markus Theil <markus.theil@tu-ilmenau.de>,
+        linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
+        ath11k@lists.infradead.org
+Subject: Re: [PATCH 2/2] ath11k: use cumulative survey statistics
+Date:   Mon, 04 May 2020 18:36:29 +0200
+Message-ID: <1858610.Ps4IJGbiz4@bentobox>
+In-Reply-To: <20200504154122.91862-2-markus.theil@tu-ilmenau.de>
+References: <20200504154122.91862-1-markus.theil@tu-ilmenau.de> <20200504154122.91862-2-markus.theil@tu-ilmenau.de>
 MIME-Version: 1.0
-In-Reply-To: <1760068.xeLkAeoAig@bentobox>
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8BIT
-Content-Language: en-US
+Content-Type: multipart/signed; boundary="nextPart15277854.gjROg6epRP"; micalg="pgp-sha512"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 5/4/20 6:29 PM, Sven Eckelmann wrote:
-> On Monday, 4 May 2020 17:41:21 CEST Markus Theil wrote:
->> ath10k currently reports survey results for the last interval between each
->> invocation of NL80211_CMD_GET_SURVEY. For concurrent invocations, this
->> can lead to unexpectedly small results, e.g. when hostapd uses survey
->> data and iw survey dump is invoked in parallel. Fix this by returning
->> cumulative results, that don't depend on the last invocation. Other
->> drivers, e.g. ath9k or mt76 also use this behavior.
-> It is (unfortunately) not that trivial:
->
-> See code and comments from other people:
->
-> * https://patchwork.kernel.org/cover/11150285/
-> * https://patchwork.kernel.org/patch/11150287/
-> * https://patchwork.kernel.org/patch/11150289/
->
-> Kind regards,
-> 	Sven
-Thanks a lot for pointing this out! I was not aware of your patch.
+--nextPart15277854.gjROg6epRP
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
+
+On Monday, 4 May 2020 17:41:22 CEST Markus Theil wrote:
+[...]
+> diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
+> index c2a972377687..322ddfda5bfd 100644
+> --- a/drivers/net/wireless/ath/ath11k/wmi.c
+> +++ b/drivers/net/wireless/ath/ath11k/wmi.c
+> @@ -5610,16 +5610,16 @@ ath11k_pdev_bss_chan_info_event(struct ath11k_base *ab, struct sk_buff *skb)
+[...]
+
+What about the survey modifying code in ath11k_chan_info_event?
+
+Kind regards,
+	Sven
+--nextPart15277854.gjROg6epRP
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEF10rh2Elc9zjMuACXYcKB8Eme0YFAl6wRI0ACgkQXYcKB8Em
+e0ZpiBAAz3O/JbFM/rpEAk7dzxZUlbGxcQy7DzqQ+yPIj/aBYVnUl7qPuCAYExEZ
+oKRpLovr+/EyZE6pFkIjB5eo8G6aCoWiAgn8MSf3PHgcPsa3Izk+//lBDTUGafMl
+csEtDBdQxlW1OZGJfzS1FHMeLvmcqzE+vzpihO7ZaNJXX7QpNCcHGty2TcDQol4F
+5JDJigbwL18wmV2Za0rR3PmCj2lp41xO0g7g+Z8y6Yk4wUuq/R7oXIcfuFAES4hH
+iq1ZbQedFjZ6n+ORIEKlqktdIucWSmzRPMHAHTLc72h3oUVH3HW8/jPSN5WHoIgl
+avfXQ6DgkARfshn1vHrKMp3QUAcWMl9qLrkX0yEHLxVPJuSR8mC4g8u3rG0ikG03
+m40zmdESnJE1zM5xVuSnuLr1F6xhlZf7QIl2A521SopfaMZb1Ju13r10bJ9GXELb
+2YzWBhN1oJWFM684v6cVn5vQhY+Pc2sKOK5bAjNs4bJeIOeiv4L0JUx+HTtSHVFx
+SdNHcGz+2vHpxqW/vyQmFFwhaDWM05UyxVD9Vmzeywd+rF2+hK4c0Gdp4OsKqip8
+qtS3vyNY1JGS2whPSXO4CSVyK4mFM7cF8tdV+n7blpMNKDDX/nvscQiqYfR0S/u1
+x3jmFqOGUrotyiBB8OTCkxITI3FBc+ZNFTXJGDZ1I5HpaMDQgj0=
+=ZsEU
+-----END PGP SIGNATURE-----
+
+--nextPart15277854.gjROg6epRP--
+
+
 
