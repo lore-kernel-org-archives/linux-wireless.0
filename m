@@ -2,142 +2,96 @@ Return-Path: <SRS0=y7Wd=6T=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=no
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61DFBC47247
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 May 2020 12:40:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B211C47259
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 May 2020 13:25:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3DCE020735
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 May 2020 12:40:06 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=silabs.onmicrosoft.com header.i=@silabs.onmicrosoft.com header.b="T3vXw2Pq"
+	by mail.kernel.org (Postfix) with ESMTP id 068522078D
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 May 2020 13:25:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728988AbgEEMiP (ORCPT
+        id S1729102AbgEENZO (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 5 May 2020 08:38:15 -0400
-Received: from mail-eopbgr680041.outbound.protection.outlook.com ([40.107.68.41]:21169
-        "EHLO NAM04-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728905AbgEEMiP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 May 2020 08:38:15 -0400
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=GzWLUBO5GHXTdpWwmDm/nccXzimAxdW9PqUW+l/MfGnj/mDQmLmd/wq4S6oUl0XnzzjFsOi5Aj8SFq0NYsbs1qQjiN/BybaRePzNVcdQ5+IjpwajugRksg7Dud3GImWHkJF+am2FBdinWuy1AYaXzRwINd+Vf8bGeLOlvTFYiGBEvus4NI78PsjAodCZRB/kp97HdzXEwf18y+pXJlti3XMzTWrwP7UFa0PZZ6k+A1cLuK5OdB0Shv6pjLLfnS9w1X5dRBJm//nCQWmuktGs026h0zddS9GAXFvM3sv53ANImI1Ycnsh4RcX1fLZ59VDocuOSK/CsYwzu0oH1gks1A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=KR0bsZNq8Uch+UpggPkYnAPAR/hLyI/fS9/AH+R3SIQ=;
- b=nFWM81WSM1aCA5jzoHWZ+VbC7q5MjobArinXZNz3UE/kM1m7rP8kIbYMmvFaa4iSzJLgCz8Nkbh2Q8L7A0UkYCe+aS6h/35siMbQQcW8pKBq8dK//UeM2r7tgenMnJ62xU88l6PWrdeq4r2N5yWbfFy9CkvZCmSSEIUDRJMP+qaHbR2LnAZpdmJ9H81jEwpS/p2GsihT08DxRKeXSeXI8yGW7xbBW7Uqp+jjeE39lzHn0PFH7fSA29cBHISDrofyGvV3ptVVOXVa2QD9k0B5vziHLMGbT68p3hX3a0vJEaSaifry+QtJGPmYetbDJx9wN79oox58q4FVzrNihkU/WQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=silabs.com; dmarc=pass action=none header.from=silabs.com;
- dkim=pass header.d=silabs.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=silabs.onmicrosoft.com; s=selector2-silabs-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=KR0bsZNq8Uch+UpggPkYnAPAR/hLyI/fS9/AH+R3SIQ=;
- b=T3vXw2PqQ/1jNaXqjpQeQO/nnsgN8w247h3Ijm5I2j6Objo9DXq1jlJklWBBnMkN8EtYkbNppySCW62fPo5ahT/xKVehpiMp+4EoopCd7PQn7VLEjklxlWPh8wZH816l5ybGDnLpLiyceaEkDDmKMjhxbYcU3F2cWfnTVvUTnKY=
-Authentication-Results: driverdev.osuosl.org; dkim=none (message not signed)
- header.d=none;driverdev.osuosl.org; dmarc=none action=none
- header.from=silabs.com;
-Received: from MWHPR11MB1775.namprd11.prod.outlook.com (2603:10b6:300:10e::14)
- by MWHPR11MB1824.namprd11.prod.outlook.com (2603:10b6:300:110::13) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2958.19; Tue, 5 May
- 2020 12:38:11 +0000
-Received: from MWHPR11MB1775.namprd11.prod.outlook.com
- ([fe80::81d5:b62b:3770:ffbe]) by MWHPR11MB1775.namprd11.prod.outlook.com
- ([fe80::81d5:b62b:3770:ffbe%10]) with mapi id 15.20.2958.030; Tue, 5 May 2020
- 12:38:11 +0000
-From:   Jerome Pouiller <Jerome.Pouiller@silabs.com>
-To:     devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org
-Cc:     netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Pouiller?= 
-        <jerome.pouiller@silabs.com>
-Subject: [PATCH 00/15] staging: wfx: fix Out-Of-Band IRQ
-Date:   Tue,  5 May 2020 14:37:42 +0200
-Message-Id: <20200505123757.39506-1-Jerome.Pouiller@silabs.com>
-X-Mailer: git-send-email 2.26.1
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: base64
-X-ClientProxiedBy: PR3P189CA0022.EURP189.PROD.OUTLOOK.COM
- (2603:10a6:102:52::27) To MWHPR11MB1775.namprd11.prod.outlook.com
- (2603:10b6:300:10e::14)
+        Tue, 5 May 2020 09:25:14 -0400
+Received: from ns.iliad.fr ([212.27.33.1]:60850 "EHLO ns.iliad.fr"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728969AbgEENZO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 5 May 2020 09:25:14 -0400
+X-Greylist: delayed 579 seconds by postgrey-1.27 at vger.kernel.org; Tue, 05 May 2020 09:25:13 EDT
+Received: from ns.iliad.fr (localhost [127.0.0.1])
+        by ns.iliad.fr (Postfix) with ESMTP id B75A220DD9;
+        Tue,  5 May 2020 15:15:32 +0200 (CEST)
+Received: from sakura (freebox.vlq16.iliad.fr [213.36.7.13])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ns.iliad.fr (Postfix) with ESMTPS id A973420312;
+        Tue,  5 May 2020 15:15:32 +0200 (CEST)
+Date:   Tue, 5 May 2020 15:15:31 +0200
+From:   Maxime Bizon <mbizon@freebox.fr>
+To:     Toke =?iso-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@redhat.com>
+Cc:     linux-wireless@vger.kernel.org
+Subject: Re: Regarding .wake_tx_queue() model
+Message-ID: <20200505131531.GA32619@sakura>
+References: <20200504193959.GC26805@sakura>
+ <878si6oabp.fsf@toke.dk>
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from pc-42.home (2a01:e35:2435:66a0:1265:30ff:fefd:6e7f) by PR3P189CA0022.EURP189.PROD.OUTLOOK.COM (2603:10a6:102:52::27) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2958.20 via Frontend Transport; Tue, 5 May 2020 12:38:09 +0000
-X-Mailer: git-send-email 2.26.1
-X-Originating-IP: [2a01:e35:2435:66a0:1265:30ff:fefd:6e7f]
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 200af7fa-2400-4c3a-e0e7-08d7f0f12bd6
-X-MS-TrafficTypeDiagnostic: MWHPR11MB1824:
-X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <MWHPR11MB18244966F79FF7A23ED201BF93A70@MWHPR11MB1824.namprd11.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:8882;
-X-Forefront-PRVS: 0394259C80
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: KFAvr10akcvSxe/OtH9cq7UdZTzQ7Gllxe8RK+zkzHcPlDJZ9Ghvr+XcLriA1v7y6nouxaoXX2XihCevSDguec63Vz/JTLAj+IQYoLxwgbHWeKlI0DJCgIkpTmRe0HgMkA+q5VWDNG/hXjM1YkXvqth3zdOAK17yYCOOa/+9airZaNrhxKgtbRQpHfxl3SuAUOfrMZz0Jq+94VlORT5ZIosgXYSSPCln8EHjnFhiPhatp6T7+PssCqxyggEpSUBXd4kkKqDV6pSNo3ExN1+sRLPr5Yd7ZLrGBCGxGaLXVA7P6uyxvbXKb+4jqC6MkcJw6vCMek7MfgV8JT5Ox30txjTpwDJmRe5/D8BJhekIvlm4M6Eh4I02ROOsIZkASk9mOghQZC1aoCgra5CIbCMEQBVKJeL7PH763rf/4hBokCqsNj7ytbo1PcfUe40Lt8Y/adQ7sQJtKVQfdNH1f1iYkF0gX4DodLCqgSfzV9HEPdtK2Y8+SISYMqIgLV69G+GvPbjw3vHZFLZ0AUsEJgzOmA==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MWHPR11MB1775.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(136003)(396003)(39850400004)(366004)(376002)(346002)(33430700001)(86362001)(6666004)(107886003)(8886007)(1076003)(6512007)(6486002)(36756003)(5660300002)(2906002)(66476007)(6506007)(16526019)(186003)(52116002)(66946007)(66556008)(54906003)(2616005)(4326008)(8936002)(8676002)(316002)(33440700001)(478600001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: 2LqREWaansKOWHiuaSi35h+vRvxQs4RMhjyxxCXnRov9wdHZ5x9AuSDSx9R/01QB9XP6E4O71lbuChiRZ9/3vWfetoMIrJFo9jm1ToQNJYv9p/FEMPIvy7NG64rJXw8cX8x7uhOFTuLQ4wIdaTPBr0gZs42G7zVfGipWg8x1XkTxIwEW0vT6kzzhAQO5u4awqhYuts1Figyt96voccA002ig6f4NNQTYY9ZlL+gvHDUx59O/3xJ518S5lg7reh4VpSzTFgI6F9Thpu7iZX+BB5ARoofac4K2uJaazVXbygTen2m8cFt2z/1AYzDiWyVY7KGQzfg/XW8JMISbn6Oj8QVelFREi7gTd08F64b/uVEKEX3jpVYvT3oQ3ILJM19RVSBDYtDhVkgwkfz0DCkQiEZ8YbJeGsHo1ha5lEKAwXVH9jLRTxI4Pcw6pjJ3hylpdOW3V1RZcvTn0YSC6DAuWlOJ1Nmf6YG58neEdxnJytTVcduzjQB4MCfPDmy2iBr3wD3xwdPwq8SsDlupKzFCG/ZUai3nav3FLfjr8EUz4va/UpepGEvTZNrx6Da4rvQu3Dn2+Yno4iJ4cutRQI22mCLTFYs073zF8ihjyF3Ndyi1CgYd36tC8/AtG54iNe+LB5XP0evm93AevsTaj8PY4iFdkGlfN7NMLdS0a3HAodDovhSlSuzY79K7SYGskOagQnlSD58WQciJpzvZLPVkgs9NPC2+/wjZo1WszaZCgpxl9SC+C6ocD0GmL0i5MTi+LCY/Q7PlyHyIQki+VtNexI+6Fu4CVr+8MJ7AGH2JKuSTDYLvFROBPhK1MZtQHDMa4nHb+1iRUrtDYbadWZ8ppz4434KBBKzAWwYuftVBgOc=
-X-OriginatorOrg: silabs.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 200af7fa-2400-4c3a-e0e7-08d7f0f12bd6
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 May 2020 12:38:11.2850
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 54dbd822-5231-4b20-944d-6f4abcd541fb
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: DWwK0qb4zJzXNlQgarUYhFQqcPJycStt6oZZ5/mDPLHAt7lpVW24Dla2dMd6WClHf5GAqvNxUt+ERIpOe4Piow==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR11MB1824
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <878si6oabp.fsf@toke.dk>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Virus-Scanned: ClamAV using ClamSMTP ; ns.iliad.fr ; Tue May  5 15:15:32 2020 +0200 (CEST)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-RnJvbTogSsOpcsO0bWUgUG91aWxsZXIgPGplcm9tZS5wb3VpbGxlckBzaWxhYnMuY29tPgoKVGhl
-IFdGMjAwIGNhbiBiZSB1c2VkIG9uIFNQSSBhbmQgU0RJTy4gV2hlbiB1c2luZyBTRElPIGJ1cywg
-dGhlIGRyaXZlcgpub3JtYWxseSB1c2UgdGhlIGluIGJhbmQgSVJRIHByb3ZpZGVkIGJ5IHRoZSBT
-RElPIGJ1cy4gSG93ZXZlciwgV0YyMDAKYWxzbyBwcm92aWRlcyBzdXBwb3J0IGZvciBhIGRlZGlj
-YXRlZCBJUlEgbGluZS4gVGhpcyBmZWF0dXJlIGlzIHVzZWQKd2hlbiBpbi1iYW5kIElSUSBkb2Vz
-IG5vdCB3b3JrIG9yIHRvIGFsbG93cyBzb21lIGtpbmQgb2YgV2FrZS1Pbi1XbGFuLgpUaGVyZSBh
-bHJlYWR5IHdhcyBhbiBpbXBsZW1lbnRhdGlvbiBvZiBPdXQtT2YtQmFuZCAoT09CKSBJUlEgaW4g
-dGhlCmRyaXZlci4gSG93ZXZlciwgaXQgZGlkIG5vdCB3b3JrIGNvcnJlY3RseS4gVGhpcyBzZXJp
-ZXMgbWFpbmx5IGFpbXMgdG8KZml4IHRoYXQuIEl0IGFkZCwgaXQgYWxsb3dzIHRvIHVzZSBlZGdl
-IG9yIGxldmVsIElSUSBhbmQgdW5pZnkgdGhlIElSUQpoYW5kbGluZyBpbiBTUEkgYW5kIFNESU8u
-CgpUaGUgNiBsYXN0IHBhdGNoZXMgYXJlIGNvc21ldGljLgoKSsOpcsO0bWUgUG91aWxsZXIgKDE1
-KToKICBzdGFnaW5nOiB3Zng6IGFkZCBzdXBwb3J0IGZvciBoYXJkd2FyZSByZXZpc2lvbiAyIGFu
-ZCBmdXJ0aGVyCiAgc3RhZ2luZzogd2Z4OiByZWR1Y2UgdGltZW91dCBmb3IgY2hpcCBpbml0aWFs
-IHN0YXJ0IHVwCiAgc3RhZ2luZzogd2Z4OiBmaXggZG91YmxlIGZyZWUKICBzdGFnaW5nOiB3Zng6
-IGRyb3AgdXNlbGVzcyBjaGVjawogIHN0YWdpbmc6IHdmeDogcmVwYWlyIGV4dGVybmFsIElSUSBm
-b3IgU0RJTwogIHN0YWdpbmc6IHdmeDogdXNlIHRocmVhZGVkIElSUSB3aXRoIFNQSQogIHN0YWdp
-bmc6IHdmeDogaW50cm9kdWNlIGEgd2F5IHRvIHBvbGwgSVJRCiAgc3RhZ2luZzogd2Z4OiBwb2xs
-IElSUSBkdXJpbmcgaW5pdAogIHN0YWdpbmc6IHdmeDogZml4IG1pc3NpbmcgJ3N0YXRpYycgc3Rh
-dGVtZW50CiAgc3RhZ2luZzogd2Z4OiBmaXggbWlzc2luZyAnc3RhdGljJyBrZXl3b3JkCiAgc3Rh
-Z2luZzogd2Z4OiBwcmVmZXIgQVJSQVlfU0laRSBpbnN0ZWFkIG9mIGEgbWFnaWMgbnVtYmVyCiAg
-c3RhZ2luZzogd2Z4OiByZW1vdmUgdXNlbGVzcyBoZWFkZXIgaW5jbHVzaW9ucwogIHN0YWdpbmc6
-IHdmeDogZml4IGFsaWduZW1lbnRzIG9mIGZ1bmN0aW9uIHByb3RvdHlwZXMKICBzdGFnaW5nOiB3
-Zng6IHJlbW92ZSBzcGFjZXMgYWZ0ZXIgY2FzdCBvcGVyYXRvcgogIHN0YWdpbmc6IHdmeDogdXNl
-IGtlcm5lbCB0eXBlcyBpbnN0ZWFkIG9mIGM5OSBvbmVzCgogZHJpdmVycy9zdGFnaW5nL3dmeC9i
-aC5jICAgICAgICAgfCAyOSArKysrKysrKysrKysrKysKIGRyaXZlcnMvc3RhZ2luZy93ZngvYmgu
-aCAgICAgICAgIHwgIDEgKwogZHJpdmVycy9zdGFnaW5nL3dmeC9idXMuaCAgICAgICAgfCAgMiAr
-CiBkcml2ZXJzL3N0YWdpbmcvd2Z4L2J1c19zZGlvLmMgICB8IDY0ICsrKysrKysrKysrKysrKyst
-LS0tLS0tLS0tLS0tLS0tCiBkcml2ZXJzL3N0YWdpbmcvd2Z4L2J1c19zcGkuYyAgICB8IDUwICsr
-KysrKysrKysrKy0tLS0tLS0tLS0tLS0KIGRyaXZlcnMvc3RhZ2luZy93ZngvZGF0YV9yeC5oICAg
-IHwgIDMgKy0KIGRyaXZlcnMvc3RhZ2luZy93ZngvZGF0YV90eC5jICAgIHwgMTEgKysrLS0tCiBk
-cml2ZXJzL3N0YWdpbmcvd2Z4L2Z3aW8uYyAgICAgICB8ICA2ICstLQogZHJpdmVycy9zdGFnaW5n
-L3dmeC9oaWZfcnguYyAgICAgfCAgMiArLQogZHJpdmVycy9zdGFnaW5nL3dmeC9oaWZfdHguYyAg
-ICAgfCAzMCArKysrKysrKy0tLS0tLS0KIGRyaXZlcnMvc3RhZ2luZy93ZngvaGlmX3R4LmggICAg
-IHwgIDcgKystLQogZHJpdmVycy9zdGFnaW5nL3dmeC9oaWZfdHhfbWliLmMgfCAgMiArLQogZHJp
-dmVycy9zdGFnaW5nL3dmeC9oaWZfdHhfbWliLmggfCAgNCArLQogZHJpdmVycy9zdGFnaW5nL3dm
-eC9od2lvLmMgICAgICAgfCAxNiArKysrLS0tLQogZHJpdmVycy9zdGFnaW5nL3dmeC9rZXkuYyAg
-ICAgICAgfCAgMiArLQogZHJpdmVycy9zdGFnaW5nL3dmeC9tYWluLmMgICAgICAgfCA0MyArKysr
-KysrKysrKysrLS0tLS0tLS0KIGRyaXZlcnMvc3RhZ2luZy93ZngvbWFpbi5oICAgICAgIHwgIDQg
-Ky0KIGRyaXZlcnMvc3RhZ2luZy93ZngvcXVldWUuaCAgICAgIHwgIDIgLQogZHJpdmVycy9zdGFn
-aW5nL3dmeC9zdGEuYyAgICAgICAgfCA0MCArKysrKysrKystLS0tLS0tLS0tLQogZHJpdmVycy9z
-dGFnaW5nL3dmeC9zdGEuaCAgICAgICAgfCAgMiAtCiBkcml2ZXJzL3N0YWdpbmcvd2Z4L3dmeC5o
-ICAgICAgICB8ICA0ICstCiAyMSBmaWxlcyBjaGFuZ2VkLCAxNzUgaW5zZXJ0aW9ucygrKSwgMTQ5
-IGRlbGV0aW9ucygtKQoKLS0gCjIuMjYuMQoK
+
+On Tuesday 05 May 2020 à 14:06:18 (+0200), Toke Høiland-Jørgensen wrote:
+
+Hello Toke,
+
+thanks for your comments
+
+> I don't think ieee80211_stop_queue() is meant to be used this way at all
+> in the wake_tx_queue case. Rather, when you get a wake_tx_queue()
+> callback, you just queue as many frames as you feel like (see '2
+> aggregate' limit above), and then return.  Then, on a TX completion you
+> just call your internal driver function that tries to pull more frames
+> from the mac80211 TXQs.
+
+alright, indeed .wake_tx_queue() does not have to result in any actual
+frame sent.
+
+but what about .release_buffered_frames then ?
+
+.release_buffered_frames() and .drv_tx() are both "push" oriented
+interface. When they are called, you have to push a frame to the
+hardware, so if they are called when hardware FIFO is full, you need
+to drop the frame (or add yet another intermediate level of queuing)
+
+from what I can see, .release_buffered_frames() will happily be called
+even if queue is stopped, and you have to at least send one frame.
+
+I'm just trying to avoid any additionnal intermediate queing in the
+driver between what mac80211 gives me and the HW fifo which has a
+fixed size (well actually you can choose the size, but only at init
+time).
+
+my current workaround is to pre-size the hw fifo queue to handle what
+I think is the worst case
+
+Also .release_buffered_frames() codepath is difficult to test, how do
+you trigger that reliably ? assuming VIF is an AP, then you need the
+remote STA to go to sleep even though you have traffic waiting for it
+in the txqi. For now I patch the stack to introduce artificial delay.
+
+Since my hardware has a sticky per-STA PS filter with good status
+reporting, I'm considering using ieee80211_sta_block_awake() and only
+unblock STA when all its txqi are empty to get rid of
+.release_buffered_frames() complexity.
+
+-- 
+Maxime
