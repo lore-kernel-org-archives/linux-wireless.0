@@ -2,138 +2,166 @@ Return-Path: <SRS0=y7Wd=6T=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 665ACC47247
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 May 2020 09:04:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF66AC47258
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 May 2020 11:42:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 45A6B206B9
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 May 2020 09:04:17 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=web.de header.i=@web.de header.b="kqHZgxMr"
+	by mail.kernel.org (Postfix) with ESMTP id 9609F20735
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 May 2020 11:42:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728540AbgEEJEM (ORCPT
+        id S1728836AbgEELm1 convert rfc822-to-8bit (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 5 May 2020 05:04:12 -0400
-Received: from mout.web.de ([217.72.192.78]:47763 "EHLO mout.web.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725766AbgEEJEL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 May 2020 05:04:11 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=web.de;
-        s=dbaedf251592; t=1588669425;
-        bh=sbmEMMiBSk8bvwWZ/D3b0FG5iaQet+xYwsgtjPy4XYY=;
-        h=X-UI-Sender-Class:Subject:To:Cc:References:From:Date:In-Reply-To;
-        b=kqHZgxMrp6EtOUTa/gvQWxqNJbXHNRtBroLBYq6Y0THm4b0vSiIpJAmj4usA64VUq
-         lCciQdSpoPT9n95zyQpivHZz2uVntqiZPttfzqKbMxtJOGMvLpLpctbH8MJJZl/Zeo
-         xyaFOTTepNiEGGv4MYx8UvCup9Jc9HQ9SjNfujSM=
-X-UI-Sender-Class: c548c8c5-30a9-4db5-a2e7-cb6cb037b8f9
-Received: from [192.168.1.2] ([78.48.132.123]) by smtp.web.de (mrweb101
- [213.165.67.124]) with ESMTPSA (Nemesis) id 0M57dy-1jDxfC38WM-00zIaY; Tue, 05
- May 2020 11:03:44 +0200
-Subject: Re: net: rtw88: Fix an issue about leaking system resources
-To:     Andy Shevchenko <andy.shevchenko@gmail.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc:     Dejin Zheng <zhengdejin5@gmail.com>,
-        Brian Norris <briannorris@chromium.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Stanislaw Gruszka <sgruszka@redhat.com>,
-        Yan-Hsuan Chuang <yhchuang@realtek.com>
-References: <79591cab-fe3e-0597-3126-c251d41d492b@web.de>
- <20200504144206.GA5409@nuc8i5> <882eacd1-1cbf-6aef-06c5-3ed6d402c0f5@web.de>
- <CA+ASDXOJ2CSzdgos4Y8Wd7iZjRUkrMN=Ma0_-ujG8bihGzPKkQ@mail.gmail.com>
- <20200505005908.GA8464@nuc8i5>
- <CAHp75Ve43za_hAQbECPTFS0eEqSeYJtq3bvojmed=-6g=3DhvA@mail.gmail.com>
-From:   Markus Elfring <Markus.Elfring@web.de>
-Autocrypt: addr=Markus.Elfring@web.de; prefer-encrypt=mutual; keydata=
- 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 FEE=
-Message-ID: <7442f3d4-db99-30cc-7eb6-79badda2f8b9@web.de>
-Date:   Tue, 5 May 2020 11:03:40 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.7.0
+        Tue, 5 May 2020 07:42:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52996 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1727090AbgEELm1 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 5 May 2020 07:42:27 -0400
+Received: from Galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 66954C061A0F
+        for <linux-wireless@vger.kernel.org>; Tue,  5 May 2020 04:42:27 -0700 (PDT)
+Received: from bigeasy by Galois.linutronix.de with local (Exim 4.80)
+        (envelope-from <bigeasy@linutronix.de>)
+        id 1jVvxw-00053O-9i; Tue, 05 May 2020 13:42:24 +0200
+Date:   Tue, 5 May 2020 13:42:24 +0200
+From:   Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To:     Tony Chuang <yhchuang@realtek.com>
+Cc:     "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        Pkshih <pkshih@realtek.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "briannorris@chromium.org" <briannorris@chromium.org>,
+        Kevin Yang <kevin_yang@realtek.com>
+Subject: Re: [PATCH 26/40] rtw88: 8723d: add IQ calibration
+Message-ID: <20200505114224.e2jdqf5wiyu62575@linutronix.de>
+References: <20200417074653.15591-1-yhchuang@realtek.com>
+ <20200417074653.15591-27-yhchuang@realtek.com>
+ <20200430150206.3bw7lp7wslgeuaqx@linutronix.de>
+ <feb792d067fc4319a2a1c294ac3bfc6f@realtek.com>
 MIME-Version: 1.0
-In-Reply-To: <CAHp75Ve43za_hAQbECPTFS0eEqSeYJtq3bvojmed=-6g=3DhvA@mail.gmail.com>
 Content-Type: text/plain; charset=utf-8
-Content-Language: en-GB
-X-Provags-ID: V03:K1:8nddOyafvuTrOU8ir6S//KuAEVImUUucqnH0/fetpHYLX+iMFWh
- jeJ5ASXSmCIbHLStQ6UWwKyaywYnb7Z+u3XivVkUaDzYOgPAzy3gEDZA0zApU2E1gL6I3L5
- PdoZW4DNR56qV32/rLyft12/3THD/6DD9v3rqbYX0xqwVyzsCDrGtCJcuUOjH9p3OEX9azh
- ek8P7mnP6TRj5HjtFxpcg==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:Lv72e3Xl4nQ=:X1HNxaVqkqD2NsGSOaqlJc
- nQBrb2oxqR7UFRWvRJtHoSnLewYo9o/I4xzK/Dcr0avYvKzJcAmixuTIxvOB4xql1vmR6/S+4
- A6/TIhKiWZTXCmmz85QRuo+YpZOOHiz27ASgD20Avj7sy0jTEoSi+j1ddN0X5/tLAed6LetO6
- C/S0D4GUHrncXWbfot/WOpkfLeJzgDAlc2SEyuUMLf2UqYiMiZUK8jdPS+V6SK1EIAy/tDLap
- UtcWGD5i+vHJsGFKHZjJrM1neocf/p1zoIZF/yts8/ZWkMNyM5Ca3zQ99nEpAaoExVLgIEsmv
- Bib9IuIRxX5w7UdDWePq8FAFZWnVwqs7BJ7fNXIQfHyo3N5nFKKGdnLsTqx1nJsMvd9NABozZ
- 8u4lS9ifO0VWluHHDWlRpi7waQqrATAWINmvl9dlHNbbtWcn73D6FrcRkyjQ7tfEuBA01f5gx
- alm7bhQ+wM4LQeB5Ie02t0OGVX0lKZcBASbACxu9RvDom9SuarUJdSu4txAyLEzMK6YJQezg/
- 92w2v1Blv6AU1lsxV6pnLfk9IIc2VzhycM5WrFtZCLA5uftuZEqbcQWtY93fagv3f7Ho93Cdq
- 1tSR4Tyou4SbD2ZSCYdCkskqi4LtWTWYt7FU1nXIxufzGhJ+S1EWTl+QvgRPrE8pSvmQ7L79l
- JUIelBE9+TB9jKeeJJ8Gov86JWdj5g5889ZE6bLSrSAY+Gw2/EMsdsF+WyEODzw22rVGbIm6d
- s7mdscUxDobijScAbvjLZC/nlgsc4YVZMnBLL8vHPJIN+NUneJDNDU+YKptrEMNKK/M01cM9V
- AnGil804YPpq3FxG8+s/yy65PZJex1Csk8OyBnBNpTQBfyZkDGf4SeJ5Ds3CYeN4sGZB1ZKnu
- 87Mxw4bIX7sqjD/Yj3p1Rs375ZSKnGI2Fwwp0Uq8o8yxAwXi7yBfpBC9pq9wV4DRFRP6O4FwL
- BvNm6H4h/JUc4MQwkt6SaGYy+psbE8QlCV5fy5Mkfu5gH2XRR0vw+hFzApZV1aJeY+W4jmUHr
- L45M03wGMtD6IcSQlW21caSUGFedQY/ovVUNDUxjcvvVYTVt3lpDmb5lLjkZLi9vnWs9AJ3Vg
- 1ayDUzxtECyHcE2uffViSdjhS7EqQpGa1rukp+bRgYPTPZjKZDRaZ32wnPx9aHAzHggsQuOo9
- cfUQz3/LvhsNtMkwn3y+fWY/WvNtyb1sdrW6Giony2h+s/Lvz+BkQ3DuW4Us+8jTqn7qaMZNo
- o5FeYYDsqfYdgJGnP
+Content-Disposition: inline
+Content-Transfer-Encoding: 8BIT
+In-Reply-To: <feb792d067fc4319a2a1c294ac3bfc6f@realtek.com>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-> Perhaps we need to find a good researcher student who may do a MD
-> dissertation out of the case :-)
+On 2020-05-04 09:45:48 [+0000], Tony Chuang wrote:
+> Sebastian Andrzej Siewior <bigeasy@linutronix.de> writes:
+> 
+> > On 2020-04-17 15:46:39 [+0800], yhchuang@realtek.com wrote:
+> > > diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723d.c
+> > b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
+> > > index 94784c7f0743..b66bd969e007 100644
+> > > --- a/drivers/net/wireless/realtek/rtw88/rtw8723d.c
+> > > +++ b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
+> > …
+> > > +struct iqk_backup_regs {
+> > > +	u32 adda[IQK_ADDA_REG_NUM];
+> > > +	u8 mac8[IQK_MAC8_REG_NUM];
+> > > +	u32 mac32[IQK_MAC32_REG_NUM];
+> > > +	u32 bb[IQK_BB_REG_NUM];
+> > > +
+> > > +	u32 lte_path;
+> > > +	u32 lte_gnt;
+> > > +
+> > > +	u8 btg_sel;
+> > > +	u32 bb_sel_btg;
+> > > +
+> > > +	u8 igia;
+> > > +	u8 igib;
+> > 
+> > The struct has 128 bytes. Putting btg_sel after bb_sel_btg will result
+> > in 124 bytes. How likely is it that it will grow? I'm asking because it
+> > is allocated on stack.
+> 
+> We need to backup a lot of the register values for doing IQK.
+> I think it's inevitable, just about where should we put them.
+> And as there's only 8723D is using SW IQK, this struct will only be
+> used by 8723D, so add them into rtwdev is not suitable.
+> 
+> Another way is that we can kmalloc() and then kfree() it after
+> IQK is done.
 
-I got the impression that some research is performed already around
-affected areas.
-Would you like to reuse any more experiences from there?
+I'm not saying that it is a problem now, just pointing out that in the
+end you store ~256 bytes on the stack. So if it remains in that size, it
+should be okay but if it grows further then it might become problematic.
+In the end you have 8KiB of stack and as I said, I have no idea how deep
+you are right now.
 
-Regards,
-Markus
+> > > +};
+> > > +
+> > > +static void rtw8723d_iqk_backup_regs(struct rtw_dev *rtwdev,
+> > > +				     struct iqk_backup_regs *backup)
+> > > +{
+> > > +	int i;
+> > > +
+> > > +	for (i = 0; i < IQK_ADDA_REG_NUM; i++)
+> > > +		backup->adda[i] = rtw_read32(rtwdev, iqk_adda_regs[i]);
+> > > +
+> > > +	for (i = 0; i < IQK_MAC8_REG_NUM; i++)
+> > > +		backup->mac8[i] = rtw_read8(rtwdev, iqk_mac8_regs[i]);
+> > > +	for (i = 0; i < IQK_MAC32_REG_NUM; i++)
+> > > +		backup->mac32[i] = rtw_read32(rtwdev, iqk_mac32_regs[i]);
+> > > +
+> > > +	for (i = 0; i < IQK_BB_REG_NUM; i++)
+> > > +		backup->bb[i] = rtw_read32(rtwdev, iqk_bb_regs[i]);
+> > > +
+> > > +	backup->igia = (u8)rtw_read32_mask(rtwdev, REG_OFDM0_XAAGC1,
+> > MASKBYTE0);
+> > > +	backup->igib = (u8)rtw_read32_mask(rtwdev, REG_OFDM0_XBAGC1,
+> > MASKBYTE0);
+> > 
+> > igi[ab] is alreay u8, no need for cast.
+> 
+> It's because rtw_read32_mask() returns u32, but because we
+> mask with one byte only.
+
+Right. However I don't think that it makes any difference in this case.
+
+> > 
+> > > +
+> > > +	backup->bb_sel_btg = rtw_read32(rtwdev, REG_BB_SEL_BTG);
+> > > +}
+> > …
+> > 
+> > > +static u8 rtw8723d_iqk_rx_path(struct rtw_dev *rtwdev,
+> > > +			       const struct rtw_8723d_iqk_cfg *iqk_cfg,
+> > > +			       const struct iqk_backup_regs *backup)
+> > > +{
+> > > +	u32 tx_x, tx_y;
+> > > +	u8 result = 0x00;
+> > 
+> > You could avoid the explicit init of `result' (maybe even use `ret' for
+> > less key strokes and avoiding the confusion with the `result' array used
+> > by the other functions here) and then
+> 
+> The result should be inited to zero here, because the value
+> of it is or-ed by the IQK status, such as:
+> 
+> 	result |= rtw8723d_iqk_check_tx_failed(rtwdev, iqk_cfg);
+> 
+> And yes, the name is a little confused to be the same.
+> Should use different name for them.
+> 
+> > 
+> > …
+> > > +	rtw8723d_iqk_one_shot(rtwdev, false, iqk_cfg);
+> > > +	result |= rtw8723d_iqk_check_tx_failed(rtwdev, iqk_cfg);
+> > 
+> > not or the returned value here. Since you don't collect it from multiple
+> > functions I don't see the reason for it.
+> 
+> It actually does collect them from two functions, they are the
+> same, but are done twice, hence using |= here.
+
+Oh indeed it is. I was expecting a code flow with continue on 0 and
+abort otherwise and that BIT(0) confused me.
+So the first one could become a real assignment, the second has to be
+ORed to keep current code flow.
+
+Sebastian
