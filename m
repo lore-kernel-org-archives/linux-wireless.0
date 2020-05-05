@@ -2,213 +2,119 @@ Return-Path: <SRS0=y7Wd=6T=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MSGID_FROM_MTA_HEADER,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA462C47247
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 May 2020 12:06:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3FA7C47247
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 May 2020 12:38:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8FF89206A4
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 May 2020 12:06:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9C55F2073B
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 May 2020 12:38:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="eM/HrJDr"
+	dkim=pass (1024-bit key) header.d=silabs.onmicrosoft.com header.i=@silabs.onmicrosoft.com header.b="C4NZGn2v"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728351AbgEEMG2 (ORCPT
+        id S1729031AbgEEMiW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 5 May 2020 08:06:28 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:37934 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727090AbgEEMG1 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 May 2020 08:06:27 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1588680385;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=CodjD/JIYkjGf2+ET0iLsk/hEiT5RpuBz2OpH/pHl90=;
-        b=eM/HrJDrX64OHYWVWdA9mfjczwEDT2EWt7WR2G2LW96KY5s7Dp46A+FiI9EQnd40quKz8U
-        VZEvRw1U+A6wkKhGKmF3WjDFG+/yNfaq1Y71iHFUeOF06rnGT1wI/UHXtuCPH9iLD3yfhe
-        DJmkt2P1Kl2ta7Mag5wsVkVrFtF4aFY=
-Received: from mail-lf1-f71.google.com (mail-lf1-f71.google.com
- [209.85.167.71]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-20-46FrsWTuO-asPBfM44_yKw-1; Tue, 05 May 2020 08:06:24 -0400
-X-MC-Unique: 46FrsWTuO-asPBfM44_yKw-1
-Received: by mail-lf1-f71.google.com with SMTP id j21so536203lfg.18
-        for <linux-wireless@vger.kernel.org>; Tue, 05 May 2020 05:06:23 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:subject:in-reply-to:references:date
-         :message-id:mime-version;
-        bh=CodjD/JIYkjGf2+ET0iLsk/hEiT5RpuBz2OpH/pHl90=;
-        b=EZrHXfll7IaXZ2hv8vvo2bTWSGn6V6eMUMtMBL9S4qPC9B4s0uJF8EXDgzHkeekrWW
-         2xxxTYw8786NIvhHigmullFBBhv9BdM0CpFKk0y+Gvc+vkcsAXgt0RL2wskLilZoM+MG
-         s2SoFOFxT69jqrxhJqonotfZlcQFKzIuwKS1e2Lnz7BJSks9PwW6NfFLLtEeU4XF9m9R
-         X1+GMT9GZpAXesijqqDZNoBpiv5fqvHQxLO7hxJLEYHkCC7rs3v4JYhM/IDNZVg3KzpN
-         p3YpC0Q4nLcBvLLH4GI1+8WPOQ416KlZ5xNlos1M3qXyAcjbEs4ygbx5M1Rf1S886C03
-         1Ahw==
-X-Gm-Message-State: AGi0PuYzy6yAy+R4rKjR318dDSdXgJpH0kLRlmR5ZTb8kBWKuvJzmxat
-        dbEIBAeoGGg9ivtJu6OACFe3bTVPUcQ256kyF2oH64lU+/pGzmnueRhwxx/nj4AtKPKV+YnhPIW
-        oc6SYZUO15WAnsoC9PDF3SSOOUMQ=
-X-Received: by 2002:a2e:9c09:: with SMTP id s9mr1658050lji.169.1588680381985;
-        Tue, 05 May 2020 05:06:21 -0700 (PDT)
-X-Google-Smtp-Source: APiQypL0FuJhO/xV1EF7QZqBZAJCPl19lsAjEyCZ73GWRTHFjUQ2ee5Uij2CgQqdWwns3GMhMUKsfg==
-X-Received: by 2002:a2e:9c09:: with SMTP id s9mr1658031lji.169.1588680381641;
-        Tue, 05 May 2020 05:06:21 -0700 (PDT)
-Received: from alrua-x1.borgediget.toke.dk ([2a0c:4d80:42:443::2])
-        by smtp.gmail.com with ESMTPSA id f5sm1638482lfh.84.2020.05.05.05.06.19
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 05 May 2020 05:06:20 -0700 (PDT)
-Received: by alrua-x1.borgediget.toke.dk (Postfix, from userid 1000)
-        id 172E41804E9; Tue,  5 May 2020 14:06:18 +0200 (CEST)
-From:   Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
-To:     Maxime Bizon <mbizon@freebox.fr>, linux-wireless@vger.kernel.org
-Subject: Re: Regarding .wake_tx_queue() model
-In-Reply-To: <20200504193959.GC26805@sakura>
-References: <20200504193959.GC26805@sakura>
-X-Clacks-Overhead: GNU Terry Pratchett
-Date:   Tue, 05 May 2020 14:06:18 +0200
-Message-ID: <878si6oabp.fsf@toke.dk>
+        Tue, 5 May 2020 08:38:22 -0400
+Received: from mail-eopbgr680041.outbound.protection.outlook.com ([40.107.68.41]:21169
+        "EHLO NAM04-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728905AbgEEMiV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 5 May 2020 08:38:21 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=WclLI/0sVU7P9GDFcBNjourF+Z/IJgStgqenhHnWVxUhxPDtKVuQGcLCyXb3ksbOtrv+TEBfDWief2cjeVysvirafucYKPK4XB1v6yfFmwf2eynnc48yc0CRkGHDATe+FV3YXhQqe//xSslVX/Ak/wiMz6qQFZjsLFQ1rgX1lvKBhwmJBF3zg9s/5lw2d9JBhKgYada37fLPvJb7vgJW6Oqd6fwstW9PPjtXD2Espw0HmhaSgNcRCUt7nhJY2bC0HknQPW8ENvVkjjQpryCrZgEdiVTTSlNMAFE708v5/zNvKQxNXvUp8E7MXIEshw4Lrre5KtvNlSNs8JCEreZZwg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=H8vGgHyHnPGPOF1YWFtZk/kRrA+ZPjDjlBfPtzkeBtE=;
+ b=iRctM9V7TrKmDQE4mYwD+sdBcxu/fZ9s1c7/h8aBMvgMVoGTBPQhW0xarUjWF3P5zyZbP0xO9Z9UzcmqVs2wAo0SX3xQE+NSU87+psXSPtb/s10D8JLleDvTDgBPxkx2HImeX8RjKM0esjTxL489yKthhdZMpLvHJTgsv3yl/9jd/YfCwAElQqtbBNx+LUz8fVuVx67PtUf5Y2a3TYQVD8XY53SLX8mGGSMEmxFxtrnVQu8DsvxVQ5kKLj88dBya+qRimv8q7zTQguo219nVMecS6lmXQAd0WQp/5QBO9dxOkIcg+/UGDqTvi0GuvkVM5/qreaIjbfw/uwxYXyq5UQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=silabs.com; dmarc=pass action=none header.from=silabs.com;
+ dkim=pass header.d=silabs.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=silabs.onmicrosoft.com; s=selector2-silabs-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=H8vGgHyHnPGPOF1YWFtZk/kRrA+ZPjDjlBfPtzkeBtE=;
+ b=C4NZGn2vjk202iVTqHRtwRNvt19QkHYoXN8IS6keDHSFfAn4vDVospk1PWF7XX0zJdJbaUQ7l1R7GD3n9a0JtNV2LLt/CVyAMUgLZZAfaKxrj7p9f53b70D4JoqyoT4ve8wzxdAxheZlGAWEvE2krUOcYm6GvOENZwFaqemB0Bg=
+Authentication-Results: driverdev.osuosl.org; dkim=none (message not signed)
+ header.d=none;driverdev.osuosl.org; dmarc=none action=none
+ header.from=silabs.com;
+Received: from MWHPR11MB1775.namprd11.prod.outlook.com (2603:10b6:300:10e::14)
+ by MWHPR11MB1824.namprd11.prod.outlook.com (2603:10b6:300:110::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2958.19; Tue, 5 May
+ 2020 12:38:16 +0000
+Received: from MWHPR11MB1775.namprd11.prod.outlook.com
+ ([fe80::81d5:b62b:3770:ffbe]) by MWHPR11MB1775.namprd11.prod.outlook.com
+ ([fe80::81d5:b62b:3770:ffbe%10]) with mapi id 15.20.2958.030; Tue, 5 May 2020
+ 12:38:16 +0000
+From:   Jerome Pouiller <Jerome.Pouiller@silabs.com>
+To:     devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org
+Cc:     netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Pouiller?= 
+        <jerome.pouiller@silabs.com>
+Subject: [PATCH 02/15] staging: wfx: reduce timeout for chip initial start up
+Date:   Tue,  5 May 2020 14:37:44 +0200
+Message-Id: <20200505123757.39506-3-Jerome.Pouiller@silabs.com>
+X-Mailer: git-send-email 2.26.1
+In-Reply-To: <20200505123757.39506-1-Jerome.Pouiller@silabs.com>
+References: <20200505123757.39506-1-Jerome.Pouiller@silabs.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: base64
+X-ClientProxiedBy: PR3P189CA0022.EURP189.PROD.OUTLOOK.COM
+ (2603:10a6:102:52::27) To MWHPR11MB1775.namprd11.prod.outlook.com
+ (2603:10b6:300:10e::14)
 MIME-Version: 1.0
-Content-Type: text/plain
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from pc-42.home (2a01:e35:2435:66a0:1265:30ff:fefd:6e7f) by PR3P189CA0022.EURP189.PROD.OUTLOOK.COM (2603:10a6:102:52::27) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2958.20 via Frontend Transport; Tue, 5 May 2020 12:38:13 +0000
+X-Mailer: git-send-email 2.26.1
+X-Originating-IP: [2a01:e35:2435:66a0:1265:30ff:fefd:6e7f]
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: bd98bebb-69f0-49bf-3d4d-08d7f0f12e83
+X-MS-TrafficTypeDiagnostic: MWHPR11MB1824:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <MWHPR11MB1824624CCA96B09D338B4D1D93A70@MWHPR11MB1824.namprd11.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:7691;
+X-Forefront-PRVS: 0394259C80
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: nSoXxKGIpt9uaq50KWLTIbkC61+w1yBOGthmsMtIvXqsVpS+NhdiXOn8/szZ4z050d1Ix/xrYvNM0xw7VuCRFWmZFQTAZBozEdnk3F4+J6aXgeQGiE3LDw3nHc/BCbn7fwAUwkOI4ezetpV9MzQvQzx2Llku9i7BvIrEbGp1KnyufVpqs9P9I3b3h9OGEd5WNS0SVEBuqSM2XcV9Q9fB1lkENwIx8lHc0Dj/bVoYTQAVXJWcr6TAz04ndJIm9CoFib+oXvYx1FwuKRRn8WJT5vYIsXY68Nw/MYfo6nhYBMkbVi7r+KbPAZgNlpsa02mNik8mpnMFzy+nOKZ36WfUjRt2EHEKZyZLyktlUlXbU23TfndKfokV7q/cDicWMusbfywzWypcG6HIhcFlNgh9bWtECveNKRXL4ZIfbNlD/GMgvDpGwysUKkorK0mAuE5nHS1W9W+bD1KSDMZ3hGrgwxZjC7pFWHvfR9OKeixf/5jbi/xpm0TQZhJVUVyRe6L4AR0hft1khFY2SGNooWULTQ==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MWHPR11MB1775.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(136003)(396003)(39850400004)(366004)(376002)(346002)(33430700001)(86362001)(6666004)(107886003)(8886007)(1076003)(6512007)(6486002)(4744005)(36756003)(5660300002)(2906002)(66476007)(6506007)(16526019)(186003)(52116002)(66946007)(66556008)(54906003)(2616005)(4326008)(8936002)(8676002)(316002)(33440700001)(478600001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData: SaKm2ISjGz3lQOWUGLE26Iquehe5Z2351YY5B77P5ZJkNPNglw80o9//BcNyul9RqAzoCKdkDMEkDon6ysa/Meu3bqxgcVq9NLkgTqElIMCb/14kosBcqBGcJXbWna3jhVXiVkRxLivdhmH0b3gcQQEQ0aEhl6DU/S1ZRD/U1IK9v509A4dDk7hkeiMYqbgAuG4Q6NViPuo/2WtQqaVFEj9ixUC+z47VoYW2u8mD3+gwG9eWDbqS4BlYWkfzpojxKqj/o0HIvghW40+kgkyco+JTbAyjnEhHQGdcTbz7FpAM0b03iVoNj8er1y0zllKXRta082u2CwQJRPnO0I7O3GSEuHerUv65SNkMiqRSGvM6wIyy7HTTHFysBVSxZ074RLRWiRsGMZStjZ6rg3F+w9xM7+1ccQhST6LAWrRp5Gk+demEn1R1IFE6PaKgwO/iCmaolcuEK2HNq91l5boQION8gFI8cS+Vsh+bZs5RbqA9/EzYGCKHHu+nRIu5a1OtVygmLprtSpblpRohafEv9nx3iV0dbhHkMgP4h/40s+yJpTSHQv5Aiou0/5hwiI1c/I6lQo0EvdsuVayRl0awcPSmN0k2gF6FdmIiKTsTn1BLK1VMX4KjrtmnfUdqb2dECY5pYDYIZ1iITodMmzfQ0EE7FUW0/Q4VnKHaSCUlnqB4ycQiqbL6GmWD1nT2BrHXSAtrlk3o2ZFD3elZt+jSidnbJFA2AHZXVxTZ7NiUFl67S046fSNTi3Gr85eSNPPDfGiTpVbKpJCjbC3GTggrKQAqAq3pjEhUuJC4wXIhkHIW87BxpdKgq4vLOLZfOeAq69//wD9rQ76R/Z092d+0UpmMue4Nsxn/gO9jpK2UrDU=
+X-OriginatorOrg: silabs.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: bd98bebb-69f0-49bf-3d4d-08d7f0f12e83
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 May 2020 12:38:15.8770
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 54dbd822-5231-4b20-944d-6f4abcd541fb
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: H16RZVPmpgFbNWKEmCyJLwlAJdpQOIu/4U+6IUxq48+B8/QVPSF7sI0MJh7H3LKVv+GEaooSrqjjUT5l9+cXEA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR11MB1824
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Maxime Bizon <mbizon@freebox.fr> writes:
-
-> Hello,
->
-> Currently switching a driver to .wake_tx_queue() model
-
-Yay :)
-
-> and I would appreciate some guidance over a couple of issues.
->
-> My hardware exposes 1 FIFO per ac, so the current driver basically
-> queue skb in the correct fifo from drv_tx(), and once a FIFO is big
-> "enough" (packet count or total duration), I use
-> ieee80211_stop_queue(), and the corresponding ieee80211_wait_queue()
-> in tx completion.
->
-> Current driver TX flow is:
->  - drv_tx() => push into FIFO
->  - drv_tx() => push into FIFO
->  - drv_tx() => push into FIFO => FIFO full => ieee80211_stop_queue()
->  - [drv_tx won't be called]
->  - tx completion event => ieee80211_wake_queue()
->  - drv_tx()
->  [...]
->
->
-> 1) drv_tx() & drv_wake_tx_queue() concurrency
->
-> With the .wake_tx_queue model, there are now two entry points in the
-> driver, how does the stack ensure that drv_tx() is not blocked forever
-> if there is concurrent traffic on the same AC ?
->
->
-> for example:
->
->  - .wake_tx_queue() => ieee80211_next_txq() => ieee80211_tx_dequeue() => FIFO now full => ieee80211_stop_queue()
->  - tx completion event => ieee80211_wake_queue()
->  - .wake_tx_queue() => ieee80211_next_txq() => ieee80211_tx_dequeue() => FIFO now full => ieee80211_stop_queue()
->  - tx completion event => ieee80211_wake_queue()
->  - [...]
->
-> ieee80211_wake_queue() will schedule both tx_pending_tasklet and
-> wake_txqs_tasklet, but I don't think there is any guarantee in the
-> call ordering.
->
-> Is it the driver's duty to leave a bit of room during
-> drv_wake_tx_queue() scheduling and not stop the queues from there ?
-
-Yeah, this is basically up to the driver. I'm mostly familiar with
-ath9k, and I think basically what that does is that it doesn't fill the
-HW FIFO in normal operation: For data packets being pulled off
-ieee80211_tx_dequeue() it'll only queue two aggregates in the hardware
-at a time. This is a good thing! We want the packets to be queued on the
-mac80211 TXQs not in a dumb HW FIFO causing bufferbloat!
-
-Given that you're building aggregates in the driver, you could just do
-the same thing as ath9k and likely get pretty good results, I think :)
-
-> 2) ieee80211_stop_queue() vs drv_wake_tx_queue()
->
-> Commit 21a5d4c3a45ca608477a083096cfbce76e449a0c made it so that
-> ieee80211_tx_dequeue() will return nothing if hardware queue is
-> stopped, but drv_wake_tx_queue() is still called for ac whose queue is
-> stopped.
->
->
-> so should I do this ?
->
->  - .wake_tx_queue() => ieee80211_next_txq() => ieee80211_tx_dequeue() => FIFO now full => ieee80211_stop_queue()
->  - .wake_tx_queue() => ieee80211_next_txq() => ieee80211_tx_dequeue() => NULL => return
->  - tx completion event => ieee80211_wake_queue()
->  - .wake_tx_queue() => ieee80211_next_txq() => ieee80211_tx_dequeue() => FIFO now full => ieee80211_stop_queue()
->  - [...]
->
-> or this ?
->
->  - .wake_tx_queue() => ieee80211_queue_stopped() => ieee80211_next_txq() => ieee80211_tx_dequeue() => FIFO now full => ieee80211_stop_queue()
->  - .wake_tx_queue() => ieee80211_queue_stopped() => return
->
-> associated commit log only mentions edge cases (channel switch, DFS),
-> so I'm not sure if ieee80211_stop_queue() for txqs was intended for
-> "fast path", also see 3)
-
-I don't think ieee80211_stop_queue() is meant to be used this way at all
-in the wake_tx_queue case. Rather, when you get a wake_tx_queue()
-callback, you just queue as many frames as you feel like (see '2
-aggregate' limit above), and then return.  Then, on a TX completion you
-just call your internal driver function that tries to pull more frames
-from the mac80211 TXQs.
-
-You'll keep getting wake_tx_queue callbacks from mac80211, but there's
-nothing saying you have to pull any frames on each one.
-
-See ath_txq_schedule() for how ath9k does this :)
-
-> 3) _ieee80211_wake_txqs() looks buggy:
->
-> If the cab_queue is not stopped, this loop will unconditionally wake
-> up all txqs, which I guess is not what was intended:
->
->         for (i = 0; i < local->hw.queues; i++) {
->                 if (local->queue_stop_reasons[i])
->                         continue;
->
->                         for (ac = 0; ac < n_acs; ac++) {
->                                 int ac_queue = sdata->vif.hw_queue[ac];
->
->                                 if (ac_queue == i ||
->                                     sdata->vif.cab_queue == i)
->                                         __ieee80211_wake_txqs(sdata, ac);
->                         }
-
-
-(not sure about this none)
-
-> 4) building aggregation in the driver:
->
-> I'm doing aggregation on the host side rather than in the firmware,
-> which will ends up with more or less the same code as ath9k, is there
-> any on-going effort to move that code from the driver into the stack ?
-
-Not aware of any on-going efforts, no. Something like this usually
-happens because someone feels it would make their life easier. Say, if
-they're writing a new driver and wants to re-use code :)
-
-Looking at the ath9k code, ath_tx_form_aggr() is tied into the internal
-driver buffer representations, so I'm not sure how much work it would be
-to generalise and split out parts of it. It need not be a complete
-"build me an aggregate" function that you move into mac80211, though,
-even some utility functions to calculate padding etc might be shareable?
-I guess that if you're copying code from there I guess you'll find out :)
-
--Toke
-
+RnJvbTogSsOpcsO0bWUgUG91aWxsZXIgPGplcm9tZS5wb3VpbGxlckBzaWxhYnMuY29tPgoKVGhl
+IGRldmljZSB0YWtlIGEgZmV3IGh1bmRyZWRzIG9mIG1pbGxpc2Vjb25kcyB0byBzdGFydC4gSG93
+ZXZlciwgdGhlCmN1cnJlbnQgY29kZSB3YWl0IHVwIHRvIDEwIHNlY29uZCBmb3IgdGhlIGNoaXAu
+IFdlIGNhbiBzYWZlbHkgcmVkdWNlCnRoaXMgdmFsdWUgdG8gMSBzZWNvbmQuIFRoYW5rcyB0byB0
+aGF0IGNoYW5nZSwgaXQgaXMgbm8gbW9yZSBuZWNlc3NhcnkKdG8gdXNlIGFuIGludGVycnVwdGli
+bGUgdGltZW91dC4KClNpZ25lZC1vZmYtYnk6IErDqXLDtG1lIFBvdWlsbGVyIDxqZXJvbWUucG91
+aWxsZXJAc2lsYWJzLmNvbT4KLS0tCiBkcml2ZXJzL3N0YWdpbmcvd2Z4L21haW4uYyB8IDMgKy0t
+CiAxIGZpbGUgY2hhbmdlZCwgMSBpbnNlcnRpb24oKyksIDIgZGVsZXRpb25zKC0pCgpkaWZmIC0t
+Z2l0IGEvZHJpdmVycy9zdGFnaW5nL3dmeC9tYWluLmMgYi9kcml2ZXJzL3N0YWdpbmcvd2Z4L21h
+aW4uYwppbmRleCA3NDJhMjg2YzkyMDcuLmJhMmUzYTZiMzU0OSAxMDA2NDQKLS0tIGEvZHJpdmVy
+cy9zdGFnaW5nL3dmeC9tYWluLmMKKysrIGIvZHJpdmVycy9zdGFnaW5nL3dmeC9tYWluLmMKQEAg
+LTM3MCw4ICszNzAsNyBAQCBpbnQgd2Z4X3Byb2JlKHN0cnVjdCB3ZnhfZGV2ICp3ZGV2KQogCWlm
+IChlcnIpCiAJCWdvdG8gZXJyMTsKIAotCWVyciA9IHdhaXRfZm9yX2NvbXBsZXRpb25faW50ZXJy
+dXB0aWJsZV90aW1lb3V0KCZ3ZGV2LT5maXJtd2FyZV9yZWFkeSwKLQkJCQkJCQkxMCAqIEhaKTsK
+KwllcnIgPSB3YWl0X2Zvcl9jb21wbGV0aW9uX3RpbWVvdXQoJndkZXYtPmZpcm13YXJlX3JlYWR5
+LCAxICogSFopOwogCWlmIChlcnIgPD0gMCkgewogCQlpZiAoZXJyID09IDApIHsKIAkJCWRldl9l
+cnIod2Rldi0+ZGV2LCAidGltZW91dCB3aGlsZSB3YWl0aW5nIGZvciBzdGFydHVwIGluZGljYXRp
+b24uIElSUSBjb25maWd1cmF0aW9uIGVycm9yP1xuIik7Ci0tIAoyLjI2LjEKCg==
