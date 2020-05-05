@@ -2,87 +2,95 @@ Return-Path: <SRS0=y7Wd=6T=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CD38C47247
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 May 2020 15:20:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9624C47247
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 May 2020 15:37:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 32B0720675
-	for <linux-wireless@archiver.kernel.org>; Tue,  5 May 2020 15:20:23 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=rere.qmqm.pl header.i=@rere.qmqm.pl header.b="Ry80H3sP"
+	by mail.kernel.org (Postfix) with ESMTP id A6E83206B9
+	for <linux-wireless@archiver.kernel.org>; Tue,  5 May 2020 15:37:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729507AbgEEPUN (ORCPT
+        id S1729464AbgEEPha (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 5 May 2020 11:20:13 -0400
-Received: from rere.qmqm.pl ([91.227.64.183]:7069 "EHLO rere.qmqm.pl"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729261AbgEEPUN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 5 May 2020 11:20:13 -0400
-Received: from remote.user (localhost [127.0.0.1])
-        by rere.qmqm.pl (Postfix) with ESMTPSA id 49Gk1Q0mlJz8r;
-        Tue,  5 May 2020 17:20:10 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=rere.qmqm.pl; s=1;
-        t=1588692011; bh=lKiBtlC2rF4WszJJ1J86rqn0pACHMTtp0FdEI1MvRMI=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Ry80H3sPtv1CAGFJdpNJGsCWtrEZWnVjzZdlshBPbJO0L/G7MhL3lunZRtSRQ+v+3
-         luXpLU9UIaOj9kcrpbFE2y3PeExxaMP/qCigN2FR1OK9nt6pl7RAQlJfzL6uBfdL1w
-         wDEP6CFs8dSWTnbplUCNCWWfubJP9/csGSsknYzgA0FojmokKbrhgr7LO94gn2/J1T
-         6S+wF31BXoKyM7yZMOkvcvHtB7kSQVoxBVpk8qQiGJttFKtVjnXlPdBtL8nEBifidN
-         S5McqqciBCncRy3Ms3xvVQwcqYywilt/uV7rGhxpSvIDKxNQGvSLPwfoGvNpnB63l3
-         r3BOfS4aUhyjw==
-X-Virus-Status: Clean
-X-Virus-Scanned: clamav-milter 0.102.2 at mail
-Date:   Tue, 5 May 2020 17:20:08 +0200
-From:   =?iso-8859-2?Q?Micha=B3_Miros=B3aw?= <mirq-linux@rere.qmqm.pl>
-To:     Jerome Pouiller <Jerome.Pouiller@silabs.com>
-Cc:     devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S . Miller" <davem@davemloft.net>
-Subject: Re: [PATCH 03/15] staging: wfx: fix double free
-Message-ID: <20200505152008.GA8277@qmqm.qmqm.pl>
-References: <20200505123757.39506-1-Jerome.Pouiller@silabs.com>
- <20200505123757.39506-4-Jerome.Pouiller@silabs.com>
+        Tue, 5 May 2020 11:37:30 -0400
+Received: from smail.rz.tu-ilmenau.de ([141.24.186.67]:36766 "EHLO
+        smail.rz.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729317AbgEEPh3 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 5 May 2020 11:37:29 -0400
+Received: from [192.168.178.34] (unknown [87.147.56.179])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by smail.rz.tu-ilmenau.de (Postfix) with ESMTPSA id A9725580248;
+        Tue,  5 May 2020 17:37:27 +0200 (CEST)
+Subject: Re: [PATCH 1/2] ath10k: use cumulative survey statistics
+To:     Sven Eckelmann <sven@narfation.org>, ath11k@lists.infradead.org
+Cc:     Rajkumar Manoharan <rmanohar@codeaurora.org>,
+        linux-wireless-owner@vger.kernel.org,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        kvalo@codeaurora.org
+References: <20200504154122.91862-1-markus.theil@tu-ilmenau.de>
+ <f772b7bf0eac31516a4e28719c1938f2@codeaurora.org>
+ <2335594.cnkAv9Vaq7@bentobox> <1845755.pTfhzBy2qg@bentobox>
+From:   Markus Theil <markus.theil@tu-ilmenau.de>
+Message-ID: <46ab4ffd-b512-de43-40bb-f35989d228b9@tu-ilmenau.de>
+Date:   Tue, 5 May 2020 17:37:27 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.7.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-2
-Content-Disposition: inline
+In-Reply-To: <1845755.pTfhzBy2qg@bentobox>
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20200505123757.39506-4-Jerome.Pouiller@silabs.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Language: en-US
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, May 05, 2020 at 02:37:45PM +0200, Jerome Pouiller wrote:
-> From: Jérôme Pouiller <jerome.pouiller@silabs.com>
-> 
-> In case of error in wfx_probe(), wdev->hw is freed. Since an error
-> occurred, wfx_free_common() is called, then wdev->hw is freed again.
-> 
-> Cc: Micha³ Miros³aw <mirq-linux@rere.qmqm.pl>
-> Signed-off-by: Jérôme Pouiller <jerome.pouiller@silabs.com>
-> ---
->  drivers/staging/wfx/main.c | 1 -
->  1 file changed, 1 deletion(-)
-> 
-> diff --git a/drivers/staging/wfx/main.c b/drivers/staging/wfx/main.c
-> index ba2e3a6b3549..5d0754b55429 100644
-> --- a/drivers/staging/wfx/main.c
-> +++ b/drivers/staging/wfx/main.c
-> @@ -469,7 +469,6 @@ int wfx_probe(struct wfx_dev *wdev)
->  
->  err2:
->  	ieee80211_unregister_hw(wdev->hw);
-> -	ieee80211_free_hw(wdev->hw);
->  err1:
->  	wfx_bh_unregister(wdev);
->  	return err;
+On 5/5/20 9:49 AM, Sven Eckelmann wrote:
+> On Tuesday, 5 May 2020 09:01:34 CEST Sven Eckelmann wrote:
+>> On Tuesday, 5 May 2020 01:46:12 CEST Rajkumar Manoharan wrote:
+>> [...]
+>>> IIRC this was fixed a while ago by below patch. Somehow it never landed 
+>>> in ath.git.
+>>> Simple one line change is enough.
+>>>
+>>> https://patchwork.kernel.org/patch/10550707/
+>> Because it doesn't work for everything. Remember that 10.2.4.x overflows all 
+>> the time (14-30s) because it used only 31 bit for the counters.
+>>
+>> But feel free to point me to the firmware version which fixed this.
+> See also https://patchwork.kernel.org/patch/9701459/
+>
+> Kind regards,
+> 	Sven
 
-Reviewed-by: Micha³ Miros³aw <mirq-linux@rere.qmqm.pl>
-Fixes: 4033714d6cbe ("staging: wfx: fix init/remove vs IRQ race")
+This patch already fixes the problem for me. I tested it on QCA988X hw
+with firmware 10.2.4.
+
+[   10.350919] ath10k_pci 0000:04:00.0: qca988x hw2.0 target 0x4100016c
+chip_id 0x043222ff sub 0000:0000
+[   10.350930] ath10k_pci 0000:04:00.0: kconfig debug 1 debugfs 1
+tracing 1 dfs 0 testmode 0
+[   10.351803] ath10k_pci 0000:04:00.0: firmware ver 10.2.4-1.0-00047
+api 5 features no-p2p,raw-mode,mfp,allows-mesh-bcast crc32 35bd9258
+[   10.385617] ath10k_pci 0000:04:00.0: board_file api 1 bmi_id N/A
+crc32 bebc7c08
+[   11.536818] ath10k_pci 0000:04:00.0: htt-ver 2.1 wmi-op 5 htt-op 2
+cal otp max-sta 128 raw 0 hwcrypto 1
+
+I also did not see the 31 bit overflow after a small amount of seconds.
+
+Survey data from wlp4s0
+    frequency:            2412 MHz [in use]
+    noise:                -65 dBm
+    channel active time:        5370225 ms
+    channel busy time:        924199 ms
+    channel receive time:        140 ms
+    channel transmit time:        0 ms
+
+Kind regards,
+Markus
+
