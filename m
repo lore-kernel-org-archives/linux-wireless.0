@@ -6,60 +6,60 @@ X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
 	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 312FDC28CBC
-	for <linux-wireless@archiver.kernel.org>; Wed,  6 May 2020 08:45:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49A5CC47258
+	for <linux-wireless@archiver.kernel.org>; Wed,  6 May 2020 08:46:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0010B206D5
-	for <linux-wireless@archiver.kernel.org>; Wed,  6 May 2020 08:45:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2A70A206D5
+	for <linux-wireless@archiver.kernel.org>; Wed,  6 May 2020 08:46:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="dea/0kxL"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="ufRM59A3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728681AbgEFIp2 (ORCPT
+        id S1728999AbgEFIqJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 6 May 2020 04:45:28 -0400
+        Wed, 6 May 2020 04:46:09 -0400
 Received: from mail26.static.mailgun.info ([104.130.122.26]:49635 "EHLO
         mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728296AbgEFIp2 (ORCPT
+        by vger.kernel.org with ESMTP id S1726935AbgEFIqJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 6 May 2020 04:45:28 -0400
+        Wed, 6 May 2020 04:46:09 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1588754727; h=Date: Message-Id: Cc: To: References:
+ s=smtp; t=1588754768; h=Date: Message-Id: Cc: To: References:
  In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=Cq0w218bAG5z/ZkdwIfzHBhWjL3hPo37a25LqwxjbIY=;
- b=dea/0kxLoAHc8Ian4siLmNaLxKIilgJE/Ug2K9DXVEJU1qyvwnZIkkSueQYFwKlYO8LTWCRv
- RbadQDTEoNR+YYX3GdKEhuXdTcFDeSUGwZWENgpDfVeQnOe07QoHX/hp1xeO196IDWkS2oHK
- 4Swulh9jaQwdoxaSPX8XzZicnV8=
+ Content-Type: Sender; bh=KLXLz+BznGui6NnwHV34GEj9z/YOqUkhetEabHjy/+w=;
+ b=ufRM59A3iu/azLLnjiD5UOLzNQvluEDHiPkKmw5o50UVe59b6qCz/YNvXYAPN0vufslIOyC6
+ 74+hKxUoWTIlD9gSLjSN5cdSaawXuqPRaTfakCSTPJHkwDoAHvfuHIfTXaM2eQsUGYNuxkWH
+ I5F6nPJZT89tqosXKIcfzOL67Cg=
 X-Mailgun-Sending-Ip: 104.130.122.26
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5eb27921.7f3179ba2688-smtp-out-n05;
- Wed, 06 May 2020 08:45:21 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5eb2793d.7f184500f6c0-smtp-out-n05;
+ Wed, 06 May 2020 08:45:49 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 57C09C433BA; Wed,  6 May 2020 08:45:21 +0000 (UTC)
+        id 82D90C43637; Wed,  6 May 2020 08:45:49 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 59FF6C433F2;
-        Wed,  6 May 2020 08:45:19 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 59FF6C433F2
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 3C1A9C433F2;
+        Wed,  6 May 2020 08:45:47 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 3C1A9C433F2
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] b43: remove Comparison of 0/1 to bool variable in phy_n.c
+Subject: Re: [PATCH] b43: remove Comparison of 0/1 to bool variable in pio.c
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20200504113300.40895-1-yanaijie@huawei.com>
-References: <20200504113300.40895-1-yanaijie@huawei.com>
+In-Reply-To: <20200504113311.41026-1-yanaijie@huawei.com>
+References: <20200504113311.41026-1-yanaijie@huawei.com>
 To:     Jason Yan <yanaijie@huawei.com>
 Cc:     <davem@davemloft.net>, <tglx@linutronix.de>,
         <linux-wireless@vger.kernel.org>, <b43-dev@lists.infradead.org>,
         <netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         Jason Yan <yanaijie@huawei.com>
 User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
-Message-Id: <20200506084521.57C09C433BA@smtp.codeaurora.org>
-Date:   Wed,  6 May 2020 08:45:21 +0000 (UTC)
+Message-Id: <20200506084549.82D90C43637@smtp.codeaurora.org>
+Date:   Wed,  6 May 2020 08:45:49 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -69,16 +69,16 @@ Jason Yan <yanaijie@huawei.com> wrote:
 
 > Fix the following coccicheck warning:
 > 
-> drivers/net/wireless/broadcom/b43/phy_n.c:5510:19-32: WARNING:
-> Comparison of 0/1 to bool variable
+> drivers/net/wireless/broadcom/b43/pio.c:768:10-25: WARNING: Comparison
+> of 0/1 to bool variable
 > 
 > Signed-off-by: Jason Yan <yanaijie@huawei.com>
 
 Patch applied to wireless-drivers-next.git, thanks.
 
-e2b9ac590810 b43: remove Comparison of 0/1 to bool variable in phy_n.c
+f8f24ece2192 b43: remove Comparison of 0/1 to bool variable in pio.c
 
 -- 
-https://patchwork.kernel.org/patch/11525529/
+https://patchwork.kernel.org/patch/11525531/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
