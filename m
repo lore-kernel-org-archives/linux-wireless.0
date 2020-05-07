@@ -2,111 +2,101 @@ Return-Path: <SRS0=9CG8=6V=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7276CC38A24
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 May 2020 04:10:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34DBEC38A24
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 May 2020 04:19:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5A3912082E
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 May 2020 04:10:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1AAAD2082E
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 May 2020 04:19:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725948AbgEGEKi (ORCPT
+        id S1725809AbgEGETx (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 7 May 2020 00:10:38 -0400
-Received: from szxga04-in.huawei.com ([45.249.212.190]:3875 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725601AbgEGEKi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 May 2020 00:10:38 -0400
-Received: from DGGEMS404-HUB.china.huawei.com (unknown [172.30.72.58])
-        by Forcepoint Email with ESMTP id 5E42A59B51338C268F28;
-        Thu,  7 May 2020 12:10:33 +0800 (CST)
-Received: from [127.0.0.1] (10.166.212.180) by DGGEMS404-HUB.china.huawei.com
- (10.3.19.204) with Microsoft SMTP Server id 14.3.487.0; Thu, 7 May 2020
- 12:10:28 +0800
-Subject: Re: [PATCH -next] iwlwifi: pcie: Use bitwise instead of arithmetic
- operator for flags
-To:     Joe Perches <joe@perches.com>,
-        Luciano Coelho <luciano.coelho@intel.com>,
-        <johannes.berg@intel.com>, <emmanuel.grumbach@intel.com>,
-        <linuxwifi@intel.com>, <kvalo@codeaurora.org>,
-        <davem@davemloft.net>, "Julia Lawall" <julia.lawall@lip6.fr>
-CC:     <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, cocci <cocci@systeme.lip6.fr>
-References: <1588734423-33988-1-git-send-email-zou_wei@huawei.com>
- <f8b258e0c8bb073c445090e637195df2fc989543.camel@perches.com>
- <bfd6b3a7db0c50cd3d084510bd43c9e540688edd.camel@intel.com>
- <2208e464cd8bd399cfb9b49abb5aed211f27b3a8.camel@perches.com>
-From:   Samuel Zou <zou_wei@huawei.com>
-Message-ID: <8431ed30-b9c7-e91b-e6e6-2afd03dde360@huawei.com>
-Date:   Thu, 7 May 2020 12:10:27 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101
- Thunderbird/68.7.0
+        Thu, 7 May 2020 00:19:53 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:33906 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725793AbgEGETx (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 7 May 2020 00:19:53 -0400
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 0474JlER2026833, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexmb06.realtek.com.tw[172.21.6.99])
+        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 0474JlER2026833
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+        Thu, 7 May 2020 12:19:47 +0800
+Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
+ RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1779.2; Thu, 7 May 2020 12:19:47 +0800
+Received: from localhost.localdomain (172.21.68.128) by
+ RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1779.2; Thu, 7 May 2020 12:19:47 +0800
+From:   <yhchuang@realtek.com>
+To:     <jwboyer@kernel.org>
+CC:     <linux-wireless@vger.kernel.org>, <linux-firmware@vger.kernel.org>
+Subject: [PATCH] rtw88: update firmware information and README
+Date:   Thu, 7 May 2020 12:19:45 +0800
+Message-ID: <20200507041945.15491-1-yhchuang@realtek.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-In-Reply-To: <2208e464cd8bd399cfb9b49abb5aed211f27b3a8.camel@perches.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.166.212.180]
-X-CFilter-Loop: Reflected
+Content-Type: text/plain
+X-Originating-IP: [172.21.68.128]
+X-ClientProxiedBy: RTEXMB02.realtek.com.tw (172.21.6.95) To
+ RTEXMB04.realtek.com.tw (172.21.6.97)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Both of you are right.
-I neglected, and this patch is wrong.
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-Thanks.
+The rtw88/README should claim support for RTL8723DE devices, add them.
 
-On 2020/5/6 23:15, Joe Perches wrote:
-> On Wed, 2020-05-06 at 16:51 +0300, Luciano Coelho wrote:
->> On Tue, 2020-05-05 at 20:19 -0700, Joe Perches wrote:
->>> On Wed, 2020-05-06 at 11:07 +0800, Samuel Zou wrote:
->>>> This silences the following coccinelle warning:
->>>>
->>>> "WARNING: sum of probable bitmasks, consider |"
->>>
->>> I suggest instead ignoring bad and irrelevant warnings.
->>>
->>> PREFIX_LEN is 32 not 0x20 or BIT(5)
->>> PCI_DUMP_SIZE is 352
->>>
->>>> diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
->>> []
->>>> @@ -109,9 +109,9 @@ void iwl_trans_pcie_dump_regs(struct iwl_trans *trans)
->>>>   
->>>>   	/* Alloc a max size buffer */
->>>>   	alloc_size = PCI_ERR_ROOT_ERR_SRC +  4 + PREFIX_LEN;
->>>> -	alloc_size = max_t(u32, alloc_size, PCI_DUMP_SIZE + PREFIX_LEN);
->>>> -	alloc_size = max_t(u32, alloc_size, PCI_MEM_DUMP_SIZE + PREFIX_LEN);
->>>> -	alloc_size = max_t(u32, alloc_size, PCI_PARENT_DUMP_SIZE + PREFIX_LEN);
->>>> +	alloc_size = max_t(u32, alloc_size, PCI_DUMP_SIZE | PREFIX_LEN);
->>>> +	alloc_size = max_t(u32, alloc_size, PCI_MEM_DUMP_SIZE | PREFIX_LEN);
->>>> +	alloc_size = max_t(u32, alloc_size, PCI_PARENT_DUMP_SIZE | PREFIX_LEN);
->>>>   
->>>>   	buf = kmalloc(alloc_size, GFP_ATOMIC);
->>>>   	if (!buf)
->>
->> Yeah, those macros are clearly not bitmasks.  I'm dropping this patch.
-> 
-> Can the cocci script that generated this warning
-> 
-> scripts/coccinelle/misc/orplus.cocci
-> 
-> be dropped or improved to validate the likelihood that
-> the defines or constants used are more likely than
-> not are bit values?
-> 
-> Maybe these should be defined as hex or BIT or BIT_ULL
-> or GENMASK or the like?
-> 
-> 
-> Right now it seems it just tests for two constants.
-> 
-> 
-> 
-> .
-> 
+And also there will have confusion that the 802.11ac driver rtw88
+supports an 802.11n device RTL8723DE, add the information to WHENCE.
+
+To prevent some fo the distros not including WOW firmware but have WOW
+support and cannot load firmware at the end, add a note for it.
+
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+---
+ WHENCE       | 8 ++++++++
+ rtw88/README | 3 +++
+ 2 files changed, 11 insertions(+)
+
+diff --git a/WHENCE b/WHENCE
+index 010d1f8..4fe51b2 100644
+--- a/WHENCE
++++ b/WHENCE
+@@ -2872,6 +2872,14 @@ File: rtw88/rtw8723d_fw.bin
+ 
+ Licence: Redistributable. See LICENCE.rtlwifi_firmware.txt for details.
+ 
++    These firmware should be put under /lib/firmware/rtw88/
++    And note that the rtw88 driver is able to support wake-on-wireless LAN
++    for RTL8822C devices, after kernel v5.6+. So, make sure the firmware
++    rtw88/rtw8822c_wow_fw.bin is also packed, otherwise the firmware load
++    fail could be a problem.
++    Although RTL8723D devices are 802.11n device, they are also supported
++    by rtw88 because the hardware arch is similar.
++
+ --------------------------------------------------------------------------
+ 
+ Driver: rtl8192ee - Realtek 802.11n WLAN driver for RTL8192EE
+diff --git a/rtw88/README b/rtw88/README
+index 7ee24b3..b2992be 100644
+--- a/rtw88/README
++++ b/rtw88/README
+@@ -26,3 +26,6 @@ RTL8822CE
+     rtw8822c_fw.bin
+     rtw8822c_wow_fw.bin
+ 
++RTL8723DE
++    rtw8723d_fw.bin
++
+-- 
+2.17.1
 
