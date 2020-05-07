@@ -2,95 +2,155 @@ Return-Path: <SRS0=9CG8=6V=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF180C38A24
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 May 2020 04:26:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B2BBC38A24
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 May 2020 04:33:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B93A32082E
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 May 2020 04:26:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0150F2075E
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 May 2020 04:33:51 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=embeddedor.com header.i=@embeddedor.com header.b="UF6WBKJb"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725783AbgEGE0j (ORCPT
+        id S1725763AbgEGEdu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 7 May 2020 00:26:39 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:34250 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725601AbgEGE0i (ORCPT
+        Thu, 7 May 2020 00:33:50 -0400
+Received: from gateway31.websitewelcome.com ([192.185.143.35]:24249 "EHLO
+        gateway31.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725446AbgEGEdu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 May 2020 00:26:38 -0400
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 0474QPkzC027678, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexmb06.realtek.com.tw[172.21.6.99])
-        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 0474QPkzC027678
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Thu, 7 May 2020 12:26:25 +0800
-Received: from RTEXMB03.realtek.com.tw (172.21.6.96) by
- RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Thu, 7 May 2020 12:26:24 +0800
-Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
- RTEXMB03.realtek.com.tw (172.21.6.96) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Thu, 7 May 2020 12:26:24 +0800
-Received: from RTEXMB04.realtek.com.tw ([fe80::8001:f5f5:a41e:f8d4]) by
- RTEXMB04.realtek.com.tw ([fe80::8001:f5f5:a41e:f8d4%3]) with mapi id
- 15.01.1779.005; Thu, 7 May 2020 12:26:24 +0800
-From:   Tony Chuang <yhchuang@realtek.com>
-To:     Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-CC:     "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        Pkshih <pkshih@realtek.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "briannorris@chromium.org" <briannorris@chromium.org>,
-        Kevin Yang <kevin_yang@realtek.com>
-Subject: RE: [PATCH 28/40] rtw88: 8723d: Add shutdown callback to disable BT USB suspend
-Thread-Topic: [PATCH 28/40] rtw88: 8723d: Add shutdown callback to disable BT
- USB suspend
-Thread-Index: AQHWFIxwWk+IgF2xvEuU+RV8JviaE6iZH+SAgAFUOICAAJ7xgIABElcg
-Date:   Thu, 7 May 2020 04:26:24 +0000
-Message-ID: <2ee629b3bb374532b0830a39b57c2389@realtek.com>
-References: <20200417074653.15591-1-yhchuang@realtek.com>
- <20200417074653.15591-29-yhchuang@realtek.com>
- <20200505141455.k2mk7tmuiujfv2sh@linutronix.de>
- <c7083dc760464c1a9017888457c1718d@realtek.com>
- <20200506200129.suid6lfkdwuoapzl@linutronix.de>
-In-Reply-To: <20200506200129.suid6lfkdwuoapzl@linutronix.de>
-Accept-Language: zh-TW, en-US
-Content-Language: zh-TW
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [172.21.68.175]
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+        Thu, 7 May 2020 00:33:50 -0400
+X-Greylist: delayed 1453 seconds by postgrey-1.27 at vger.kernel.org; Thu, 07 May 2020 00:33:49 EDT
+Received: from cm17.websitewelcome.com (cm17.websitewelcome.com [100.42.49.20])
+        by gateway31.websitewelcome.com (Postfix) with ESMTP id 128023600
+        for <linux-wireless@vger.kernel.org>; Wed,  6 May 2020 23:09:35 -0500 (CDT)
+Received: from gator4166.hostgator.com ([108.167.133.22])
+        by cmsmtp with SMTP
+        id WXqpjkLvhAGTXWXqpj1GKf; Wed, 06 May 2020 23:09:35 -0500
+X-Authority-Reason: nr=8
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
+        In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
+        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=y+t/Wv318WSE2rAsBQh7qSN7kd3mXacthTh2Tn8aNe0=; b=UF6WBKJbI1g3orDuD8pxBbsGTj
+        rM4sqVOvHuE7DqHm+QEOr1QV0wYboTIEi3Z5J7Z82fQnkD1Lv189vW+T5NBrI++fE85sHk0OlmUhX
+        nPr14zpjglqN/I+ICwHFt7bSY3UvfyThJEHSvKO+OC5inMknYIMKqO8NwBryYYUcVeCrESS8rG8Iu
+        aUKsCEa+mJTp8qI3wGWmIjIqL0IZ2/x5GJCEpq+kU/iil399v8jGfIoRqIZx4Em/k5saB3bL52gTj
+        6kZn4ZVP/0KrxotLhd09463hBW8o/TefyZhN40h/NefUjTbl1aNHFA66SlVgVclfpxUqaVyfm3nXC
+        iSpMu0Tg==;
+Received: from [189.207.59.248] (port=41398 helo=[192.168.15.4])
+        by gator4166.hostgator.com with esmtpsa (TLSv1.2:ECDHE-RSA-AES128-GCM-SHA256:128)
+        (Exim 4.92)
+        (envelope-from <gustavo@embeddedor.com>)
+        id 1jWXqo-000stj-Jm; Wed, 06 May 2020 23:09:34 -0500
+Subject: Re: [PATCH] ath10k: Replace zero-length array with flexible-array
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     "David S. Miller" <davem@davemloft.net>,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20200504201108.GA32136@embeddedor>
+ <20200505075126.86A73C432C2@smtp.codeaurora.org>
+From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Autocrypt: addr=gustavo@embeddedor.com; keydata=
+ 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
+ AP7RWS474w==
+Message-ID: <b61af6d1-7ea8-a3a0-cb76-23d16b8ca321@embeddedor.com>
+Date:   Wed, 6 May 2020 23:13:58 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.7.0
 MIME-Version: 1.0
+In-Reply-To: <20200505075126.86A73C432C2@smtp.codeaurora.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - embeddedor.com
+X-BWhitelist: no
+X-Source-IP: 189.207.59.248
+X-Source-L: No
+X-Exim-ID: 1jWXqo-000stj-Jm
+X-Source: 
+X-Source-Args: 
+X-Source-Dir: 
+X-Source-Sender: ([192.168.15.4]) [189.207.59.248]:41398
+X-Source-Auth: gustavo@embeddedor.com
+X-Email-Count: 4
+X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
+X-Local-Domain: yes
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-U2ViYXN0aWFuIEFuZHJ6ZWogU2lld2lvciA8YmlnZWFzeUBsaW51dHJvbml4LmRlPiB3cml0ZXMN
-Cj4gT24gMjAyMC0wNS0wNiAwMjozNToyMSBbKzAwMDBdLCBUb255IENodWFuZyB3cm90ZToNCj4g
-PiA+IE9uIDIwMjAtMDQtMTcgMTU6NDY6NDEgWyswODAwXSwgeWhjaHVhbmdAcmVhbHRlay5jb20g
-d3JvdGU6DQo+ID4gPiA+IEZyb206IFBpbmctS2UgU2hpaCA8cGtzaGloQHJlYWx0ZWsuY29tPg0K
-PiA+ID4gPg0KPiA+ID4gPiBXaXRob3V0IHRoaXMgcGF0Y2gsIHdpZmkgY2FyZCBjYW4ndCBpbml0
-aWFsaXplIHByb3Blcmx5IGR1ZSB0byBCVCBpbiBVU0INCj4gPiA+ID4gc3VzcGVuZCBzdGF0ZS4g
-U28sIHdlIGRpc2FibGUgQlQgVVNCIHN1c3BlbmQgKHdha2V1cCkgaW4gc2h1dGRvd24NCj4gY2Fs
-bGJhY2sNCj4gPiA+ID4gdGhhdCBpcyB0aGUgbW9tZW50IGJlZm9yZSByZWJvb3RpbmcuIFRvIHNh
-dmUgQlQgVVNCIHBvd2VyLCB3ZSBjYW4ndCBkbw0KPiB0aGlzDQo+ID4gPiA+IGluICdyZW1vdmUn
-IGNhbGxiYWNrLg0KPiA+ID4NCj4gPiA+IFNvIHlvdSBjYW4ndCBpbml0aWFsaXplIHRoZSBVU0Ig
-cGFydCBiZWNhdXNlIGl0IGlzIGluIHN1c3BlbmQgYW5kIHRoZQ0KPiA+ID4gb25seSB3YXkgdG8g
-YXZvaWQgaXQgdG8gZGlzYWJsZSBpdCBvbiB0aGUgUENJIHNpZGUuIFRoYXQgbWVhbnMgeW91IGRv
-bid0DQo+ID4gPiBzZWUgaXQgZW51bWVyYXRlZCBvbiB0aGUgVVNCIGJ1cyBhdCBhbGw/DQo+ID4N
-Cj4gPiBZZXMsIGlmIHdlIGRvbid0IGRpc2FibGUgaXQgb24gUENJIHNpZGUsIHRoZW4gdGhlIFVT
-QiBwYXJ0IGNhbm5vdCBiZQ0KPiA+IHByb2JlZCBvbiBVU0IgYnVzLg0KPiANCj4gV2UgdGFsayBo
-ZXJlIGFib3V0IFVTQidzIHJ1bnRpbWUtc3VzcGVuZCAvIGF1dG9zdXNwZW5kPyBJZiBzbywgYXJl
-IHlvdQ0KPiBhd2FyZSBvZiBjb21taXQNCj4gICA3ZWNhY2FmYzI0MDYzICgiQmx1ZXRvb3RoOiBi
-dHVzYjogRGlzYWJsZSBydW50aW1lIHN1c3BlbmQgb24gUmVhbHRlaw0KPiBkZXZpY2VzIikNCj4g
-DQo+IG9yIGlzIHRoaXMgYW4gYXR0ZW1wdCB0byBnZXQgcmlkIG9mIHRoaXMgY2hhbmdlIGluIGZh
-dm91ciBvZiB0aGlzIG9uZQ0KPiAoc28gdGhhdCB0aGUgZGV2aWNlIGNhbiBlbnRlciBzdXNwZW5k
-LW1vZGUpPw0KPiANCg0KUGluZy1LZSwgY2FuIHlvdSBwbGVhc2UgaGVscCB0byBjaGVjayBvbiB0
-aGlzID8NCkxvb2tzIGxpa2UgS2FpLUhlbmcgaXMgZG9pbmcgdGhlIG11Y2ggc2FtZSB0aGluZyBo
-ZXJlLg0KDQpCdXQgaXQncyBzdGlsbCB3b3J0aCB0byBkbyBpdCBpbiB3aWZpIHNpZGUgSSB0aGlu
-aywgYmVjYXVzZSBpdCdzIGRpZmZpY3VsdCB0bw0KbWFrZSBzdXJlIHRoZSBzeW5jaHJvbml6YXRp
-b24gb2YgQlQgYW5kIFdpZmkgcGF0Y2guDQoNClllbi1Ic3Vhbg0K
+Kalle,
+
+On 5/5/20 02:51, Kalle Valo wrote:
+
+> 
+> Fails to apply, please rebase on top of ath.git master branch.
+> 
+> error: patch failed: drivers/net/wireless/ath/ath10k/pci.h:182
+> error: drivers/net/wireless/ath/ath10k/pci.h: patch does not apply
+> stg import: Diff does not apply cleanly
+> 
+> Patch set to Changes Requested.
+> 
+
+Sorry for the late reply. I've had some troubles with my email
+settings and LKML, recently.
+
+I've just sent v2:
+
+https://lore.kernel.org/lkml/20200507041127.GA31587@embeddedor/
+
+Thanks
+--
+Gustavo
