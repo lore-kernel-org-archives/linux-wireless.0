@@ -6,41 +6,41 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15536C38A24
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 974DCC54E49
 	for <linux-wireless@archiver.kernel.org>; Thu,  7 May 2020 04:22:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E564B2082E
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 May 2020 04:22:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7AAD7206DB
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 May 2020 04:22:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725905AbgEGEWP (ORCPT
+        id S1725914AbgEGEWQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 7 May 2020 00:22:15 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:34095 "EHLO
+        Thu, 7 May 2020 00:22:16 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:34092 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725857AbgEGEWP (ORCPT
+        with ESMTP id S1725809AbgEGEWQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 May 2020 00:22:15 -0400
+        Thu, 7 May 2020 00:22:16 -0400
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 0474LwVT2027294, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 0474LvomE027273, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexmb06.realtek.com.tw[172.21.6.99])
-        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 0474LwVT2027294
+        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 0474LvomE027273
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Thu, 7 May 2020 12:21:58 +0800
+        Thu, 7 May 2020 12:21:57 +0800
 Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
  RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Thu, 7 May 2020 12:21:58 +0800
+ 15.1.1779.2; Thu, 7 May 2020 12:21:56 +0800
 Received: from localhost.localdomain (172.21.68.128) by
  RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Thu, 7 May 2020 12:21:57 +0800
+ 15.1.1779.2; Thu, 7 May 2020 12:21:56 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>, <pkshih@realtek.com>,
         <bigeasy@linutronix.de>
-Subject: [PATCH v2 8/9] rtw88: fill zeros to words 0x06 and 0x07 of security cam entry
-Date:   Thu, 7 May 2020 12:21:50 +0800
-Message-ID: <20200507042151.15634-9-yhchuang@realtek.com>
+Subject: [PATCH v2 1/9] rtw88: 8723d: Add LC calibration
+Date:   Thu, 7 May 2020 12:21:43 +0800
+Message-ID: <20200507042151.15634-2-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200507042151.15634-1-yhchuang@realtek.com>
 References: <20200507042151.15634-1-yhchuang@realtek.com>
@@ -56,40 +56,99 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ping-Ke Shih <pkshih@realtek.com>
 
-8723D adds some experimental features to word 0x06 of cam entry, so fill
-zeros to initialize them to off state. For existing chips, these two words
-are reserved and always zeros, so this change is harmless for them.
+LC calibration is done by hardware circuit. Driver sets the LCK bit to kick
+start, and then poll the bit to check if it's done.
 
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/sec.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtw88/main.h     |  1 +
+ drivers/net/wireless/realtek/rtw88/rtw8723d.c | 31 +++++++++++++++++++
+ drivers/net/wireless/realtek/rtw88/rtw8723d.h |  3 ++
+ 3 files changed, 35 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/sec.c b/drivers/net/wireless/realtek/rtw88/sec.c
-index d0d7fbb10d58..ce46e5b4a60a 100644
---- a/drivers/net/wireless/realtek/rtw88/sec.c
-+++ b/drivers/net/wireless/realtek/rtw88/sec.c
-@@ -44,7 +44,7 @@ void rtw_sec_write_cam(struct rtw_dev *rtwdev,
+diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
+index e0365a70c6f7..c5046986f9af 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.h
++++ b/drivers/net/wireless/realtek/rtw88/main.h
+@@ -11,6 +11,7 @@
+ #include <linux/average.h>
+ #include <linux/bitops.h>
+ #include <linux/bitfield.h>
++#include <linux/iopoll.h>
+ #include <linux/interrupt.h>
  
- 	write_cmd = RTW_SEC_CMD_WRITE_ENABLE | RTW_SEC_CMD_POLLING;
- 	addr = hw_key_idx << RTW_SEC_CAM_ENTRY_SHIFT;
--	for (i = 5; i >= 0; i--) {
-+	for (i = 7; i >= 0; i--) {
- 		switch (i) {
- 		case 0:
- 			content = ((key->keyidx & 0x3))		|
-@@ -60,6 +60,10 @@ void rtw_sec_write_cam(struct rtw_dev *rtwdev,
- 				  (cam->addr[4]		<< 16)	|
- 				  (cam->addr[5]		<< 24);
- 			break;
-+		case 6:
-+		case 7:
-+			content = 0;
-+			break;
- 		default:
- 			j = (i - 2) << 2;
- 			content = (key->key[j])			|
+ #include "util.h"
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723d.c b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
+index 92c742d1ce6d..0f5ddd41b019 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8723d.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
+@@ -64,6 +64,34 @@ static const struct rtw_hw_reg rtw8723d_txagc[] = {
+ #define WLAN_LTR_CTRL1		0xCB004010
+ #define WLAN_LTR_CTRL2		0x01233425
+ 
++static void rtw8723d_lck(struct rtw_dev *rtwdev)
++{
++	u32 lc_cal;
++	u8 val_ctx, rf_val;
++	int ret;
++
++	val_ctx = rtw_read8(rtwdev, REG_CTX);
++	if ((val_ctx & BIT_MASK_CTX_TYPE) != 0)
++		rtw_write8(rtwdev, REG_CTX, val_ctx & ~BIT_MASK_CTX_TYPE);
++	else
++		rtw_write8(rtwdev, REG_TXPAUSE, 0xFF);
++	lc_cal = rtw_read_rf(rtwdev, RF_PATH_A, RF_CFGCH, RFREG_MASK);
++
++	rtw_write_rf(rtwdev, RF_PATH_A, RF_CFGCH, RFREG_MASK, lc_cal | BIT_LCK);
++
++	ret = read_poll_timeout(rtw_read_rf, rf_val, rf_val != 0x1,
++				10000, 1000000, false,
++				rtwdev, RF_PATH_A, RF_CFGCH, BIT_LCK);
++	if (ret)
++		rtw_warn(rtwdev, "failed to poll LCK status bit\n");
++
++	rtw_write_rf(rtwdev, RF_PATH_A, RF_CFGCH, RFREG_MASK, lc_cal);
++	if ((val_ctx & BIT_MASK_CTX_TYPE) != 0)
++		rtw_write8(rtwdev, REG_CTX, val_ctx);
++	else
++		rtw_write8(rtwdev, REG_TXPAUSE, 0x00);
++}
++
+ static void rtw8723d_phy_set_param(struct rtw_dev *rtwdev)
+ {
+ 	u8 xtal_cap;
+@@ -125,6 +153,9 @@ static void rtw8723d_phy_set_param(struct rtw_dev *rtwdev)
+ 	rtw_phy_init(rtwdev);
+ 
+ 	rtw_write16_set(rtwdev, REG_TXDMA_OFFSET_CHK, BIT_DROP_DATA_EN);
++
++	rtw8723d_lck(rtwdev);
++
+ 	rtw_write32_mask(rtwdev, REG_OFDM0_XAAGC1, MASKBYTE0, 0x50);
+ 	rtw_write32_mask(rtwdev, REG_OFDM0_XAAGC1, MASKBYTE0, 0x20);
+ }
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723d.h b/drivers/net/wireless/realtek/rtw88/rtw8723d.h
+index ac66f672bec8..6a7d58992df5 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8723d.h
++++ b/drivers/net/wireless/realtek/rtw88/rtw8723d.h
+@@ -78,6 +78,7 @@ struct rtw8723d_efuse {
+ #define RFCFGCH_BW_20M		(BIT(11) | BIT(10))
+ #define RFCFGCH_BW_40M		BIT(10)
+ #define BIT_MASK_RFMOD		BIT(0)
++#define BIT_LCK			BIT(15)
+ 
+ #define REG_PSDFN		0x0808
+ #define REG_ANALOG_P4		0x088c
+@@ -115,6 +116,8 @@ struct rtw8723d_efuse {
+ #define REG_OFDM_FA_RSTD_11N	0x0d00
+ #define BIT_MASK_OFDM_FA_RST1	BIT(27)
+ #define BIT_MASK_OFDM_FA_KEEP1	BIT(31)
++#define REG_CTX			0x0d03
++#define BIT_MASK_CTX_TYPE	GENMASK(6, 4)
+ #define REG_OFDM1_CFOTRK	0x0d2c
+ #define BIT_EN_CFOTRK		BIT(28)
+ #define REG_OFDM1_CSI1		0x0d40
 -- 
 2.17.1
 
