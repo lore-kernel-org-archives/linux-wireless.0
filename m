@@ -4,47 +4,47 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AAE90C38A2A
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 May 2020 18:54:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D979BC38A24
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 May 2020 18:57:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 88A0020575
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 May 2020 18:54:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B020021835
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 May 2020 18:57:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1588877692;
-	bh=QtFVrGNgbhGsTGWwo1/9FJde4UjuqjORF0sq8noalvg=;
+	s=default; t=1588877877;
+	bh=9XCa7JR8FEKWus1Qn+mqDl5wGlHwBasdYcxvlyL3UIE=;
 	h=Date:From:To:Cc:Subject:List-ID:From;
-	b=P0tftB3W2TAygvoIo2FcdDGyPKp/w1RqLl6cSW42156OM5waXlDKAamo270rxqii2
-	 kw1EDh8J5Kpp159Ia6ndJxNPLFqXJQCncpvMDk9gaxfaOGlRzU2ZGpcGOaHU5EpsAi
-	 e8Y1TFr099TMCBpVCEKLk5mdkWiqAI7GmAJIsOVk=
+	b=IbKAoCi1emD+Pb+uBQR8Asv2FoQROYUPVnOdTxQDr7eORDWSjvrWMMaTf94y2IuHK
+	 3DauNKHPw0SvaU7KdpiznfHGewio6+FO1kMtg1Q6R6n+4/+gM274hYSVaEdDYait3P
+	 xpsHhZYhFxwbiz/+yJKwkRmWNs5Aj2RPJtUoVM0I=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728285AbgEGSys (ORCPT
+        id S1727930AbgEGS5o (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 7 May 2020 14:54:48 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56908 "EHLO mail.kernel.org"
+        Thu, 7 May 2020 14:57:44 -0400
+Received: from mail.kernel.org ([198.145.29.99]:59018 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726518AbgEGSys (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 7 May 2020 14:54:48 -0400
+        id S1726515AbgEGS5o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 7 May 2020 14:57:44 -0400
 Received: from embeddedor (unknown [189.207.59.248])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 41AB820575;
-        Thu,  7 May 2020 18:54:47 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 32EAE20575;
+        Thu,  7 May 2020 18:57:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1588877687;
-        bh=QtFVrGNgbhGsTGWwo1/9FJde4UjuqjORF0sq8noalvg=;
+        s=default; t=1588877863;
+        bh=9XCa7JR8FEKWus1Qn+mqDl5wGlHwBasdYcxvlyL3UIE=;
         h=Date:From:To:Cc:Subject:From;
-        b=JXc8lvAspZIJrRDLBtWfmNr69HFQgyhX9KEX2W3+JTL3DDd41hxNZt1ne1EWEWlJ/
-         2Ftl0FgU7lXkwt5y1gdrfsv99Slkr2+yx1I7QQgkQKTIxtHKs7FrZm9jp7zEL4IXvH
-         UJe4IoQhl3v64Tloheh8PuX9lbVnX9fnEM46QgZE=
-Date:   Thu, 7 May 2020 13:59:14 -0500
+        b=cLWoOWnWSjpR3Du9o2F3Qd82FQmLI/66sVQVdLxm/bSd9nVkav9uvOsbnuU6GHk0z
+         AF1Ah4JK+jKnhfwg915hBJM18wQtcYCXuNBVrgNqwyv5ZYI2YbxVHOaDOBdpzkHmsF
+         UdYkx8KJjFYUHvoWcoUzis4TTuaXjWsYQNTP6qC4=
+Date:   Thu, 7 May 2020 14:02:10 -0500
 From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
-To:     Lennert Buytenhek <buytenh@wantstofly.org>
+To:     Kalle Valo <kvalo@codeaurora.org>
 Cc:     linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] mwl8k: Replace zero-length array with flexible-array
-Message-ID: <20200507185914.GA15124@embeddedor>
+Subject: [PATCH] prism54: Replace zero-length array with flexible-array
+Message-ID: <20200507190210.GA15375@embeddedor>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -91,20 +91,58 @@ This issue was found with the help of Coccinelle.
 
 Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
 ---
- drivers/net/wireless/marvell/mwl8k.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/intersil/prism54/isl_oid.h    |    8 ++++----
+ drivers/net/wireless/intersil/prism54/islpci_mgt.h |    2 +-
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwl8k.c b/drivers/net/wireless/marvell/mwl8k.c
-index 47fb4b3ea004..97f23f93f6e7 100644
---- a/drivers/net/wireless/marvell/mwl8k.c
-+++ b/drivers/net/wireless/marvell/mwl8k.c
-@@ -2668,7 +2668,7 @@ struct mwl8k_cmd_mac_multicast_adr {
- 	struct mwl8k_cmd_pkt header;
- 	__le16 action;
- 	__le16 numaddr;
--	__u8 addr[0][ETH_ALEN];
-+	__u8 addr[][ETH_ALEN];
+diff --git a/drivers/net/wireless/intersil/prism54/isl_oid.h b/drivers/net/wireless/intersil/prism54/isl_oid.h
+index 5441c1f9f2fc..1afc2ccf94ca 100644
+--- a/drivers/net/wireless/intersil/prism54/isl_oid.h
++++ b/drivers/net/wireless/intersil/prism54/isl_oid.h
+@@ -37,7 +37,7 @@ struct obj_mlmeex {
+ 	u16 state;
+ 	u16 code;
+ 	u16 size;
+-	u8 data[0];
++	u8 data[];
+ } __packed;
+ 
+ struct obj_buffer {
+@@ -68,12 +68,12 @@ struct obj_bss {
+ 
+ struct obj_bsslist {
+ 	u32 nr;
+-	struct obj_bss bsslist[0];
++	struct obj_bss bsslist[];
+ } __packed;
+ 
+ struct obj_frequencies {
+ 	u16 nr;
+-	u16 mhz[0];
++	u16 mhz[];
+ } __packed;
+ 
+ struct obj_attachment {
+@@ -81,7 +81,7 @@ struct obj_attachment {
+ 	char reserved;
+ 	short id;
+ 	short size;
+-	char data[0];
++	char data[];
+ } __packed;
+ 
+ /*
+diff --git a/drivers/net/wireless/intersil/prism54/islpci_mgt.h b/drivers/net/wireless/intersil/prism54/islpci_mgt.h
+index d6bbbac46b4a..1f87d0aea60c 100644
+--- a/drivers/net/wireless/intersil/prism54/islpci_mgt.h
++++ b/drivers/net/wireless/intersil/prism54/islpci_mgt.h
+@@ -99,7 +99,7 @@ struct islpci_mgmtframe {
+ 	pimfor_header_t *header;      /* payload header, points into buf */
+ 	void *data;		      /* payload ex header, points into buf */
+         struct work_struct ws;	      /* argument for schedule_work() */
+-	char buf[0];		      /* fragment buffer */
++	char buf[];		      /* fragment buffer */
  };
  
- #define MWL8K_ENABLE_RX_DIRECTED	0x0001
+ int
 
