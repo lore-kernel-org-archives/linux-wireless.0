@@ -7,48 +7,50 @@ X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C173AC4724C
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 May 2020 02:30:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62494C28CBC
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 May 2020 03:04:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A0FEC207DD
-	for <linux-wireless@archiver.kernel.org>; Thu,  7 May 2020 02:30:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 401FA20838
+	for <linux-wireless@archiver.kernel.org>; Thu,  7 May 2020 03:04:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="ds/1HXTe"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="xcQGoge9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727902AbgEGCay (ORCPT
+        id S1728464AbgEGDEB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 6 May 2020 22:30:54 -0400
-Received: from mail26.static.mailgun.info ([104.130.122.26]:42019 "EHLO
-        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725809AbgEGCax (ORCPT
+        Wed, 6 May 2020 23:04:01 -0400
+Received: from mail27.static.mailgun.info ([104.130.122.27]:40840 "EHLO
+        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726437AbgEGDEB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 6 May 2020 22:30:53 -0400
+        Wed, 6 May 2020 23:04:01 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1588818652; h=Message-Id: Date: Subject: Cc: To: From:
- Sender; bh=HNg0pbQFUOtmhNwlDL7Xthqpz6JyL7S4j3faozymgnY=; b=ds/1HXTeLES9QZf38vpg6x8gOp55ldZ2ps8jkijldzgXlfe/Sx5xP3i8snCCcs0av+W9PMsq
- TIC4CULKcspRIIno+0x9hWamWPJ+GWIHR/DAb9l0BM4EUt/ARagOuVSJv4R8BUJoWxNKUEkn
- suu9GlnX1VB2PCAsnK32RY+TS9U=
-X-Mailgun-Sending-Ip: 104.130.122.26
+ s=smtp; t=1588820640; h=Message-Id: Date: Subject: Cc: To: From:
+ Sender; bh=/iMw4J9Dp1xvAAfD/nO99rvIlI2Al01EzhhJwCujE9I=; b=xcQGoge96H8MhyYUFqriYaG7Jwlb6K1JqwBL1rMNIrfAGvg291jXiejL+f/F+qkW5RJZ6yFJ
+ Jr+76iDSusmg/MA7UMheb51AwSsJTZ/SQkofZbeVprNK34b3fbhrRaUml3ZRDYdOa2x9UpjD
+ V3xOvVjUeaawyruRnMhlB/xXm4Y=
+X-Mailgun-Sending-Ip: 104.130.122.27
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
+ by mxa.mailgun.org with ESMTP id 5eb37a92.7f38d65470a0-smtp-out-n01;
+ Thu, 07 May 2020 03:03:46 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 5D8BBC432C2; Thu,  7 May 2020 02:30:47 +0000 (UTC)
+        id 7A1E3C433BA; Thu,  7 May 2020 03:03:45 +0000 (UTC)
 Received: from vnaralas-linux.qualcomm.com (blr-c-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.19.19])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: vnaralas)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id EF7CBC433BA;
-        Thu,  7 May 2020 02:30:44 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org EF7CBC433BA
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id CFAB4C43636;
+        Thu,  7 May 2020 03:03:43 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org CFAB4C43636
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=vnaralas@codeaurora.org
 From:   Venkateswara Naralasetty <vnaralas@codeaurora.org>
 To:     ath10k@lists.infradead.org
 Cc:     linux-wireless@vger.kernel.org,
-        Venkateswara Naralasetty <vnaralas@codeaurora.org>,
-        Markus Theil <markus.theil@tu-ilmenau.de>
-Subject: [PATCHv3] ath10k : Fix channel survey dump
-Date:   Thu,  7 May 2020 08:00:34 +0530
-Message-Id: <1588818634-10624-1-git-send-email-vnaralas@codeaurora.org>
+        Venkateswara Naralasetty <vnaralas@codeaurora.org>
+Subject: [PATCHv4] ath10k : Fix channel survey dump
+Date:   Thu,  7 May 2020 08:33:32 +0530
+Message-Id: <1588820612-15884-1-git-send-email-vnaralas@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
@@ -84,9 +86,11 @@ hardware used : QCA988X
 firmware ver  : 10.2.4-1.0-00047
 
 Tested-by: Markus Theil <markus.theil@tu-ilmenau.de>
-Signed-off-by: Markus Theil <markus.theil@tu-ilmenau.de>
 Signed-off-by: Venkateswara Naralasetty <vnaralas@codeaurora.org>
 ---
+v4:
+ * updated signed-off-by
+
 v3:
  * Rebased on TOT and added Tested-by
 
@@ -108,4 +112,3 @@ index a1147cc..9330b52 100644
  
 -- 
 2.7.4
-
