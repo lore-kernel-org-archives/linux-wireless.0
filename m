@@ -2,83 +2,91 @@ Return-Path: <SRS0=6+7Q=6W=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F655C4724C
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 May 2020 16:07:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B4FAC38A2A
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 May 2020 16:26:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4E1DE24956
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 May 2020 16:07:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D3EB52173E
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 May 2020 16:26:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1588954036;
-	bh=uLbNyI7Z14KTi1E6slPZdT0e6uxwRWlOOk93NDOTbTw=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=A1tWfVHbKMypGodWUm+wN1n+49aiBoPd4amLHMLmNhkqj6NqL3X/a83KjUpR43R0e
-	 RBiJFwltIyaZqE3Hqrsdnmc0atkwL3hz+CDZfRpABQJ0MLFhgfTT36M8cwAGys3aSx
-	 M4iD9VHNoZQ13KLFNlzI5tbkKNYlgpLPIUO7eqNg=
+	s=default; t=1588955208;
+	bh=phOZA1uZBh+/NR3KYX8b+ifwAOlYupiFbNzaQ9+oDRo=;
+	h=From:To:Cc:Subject:Date:List-ID:From;
+	b=lgEPB+L1y1P4w1d924X6s4QUCsgkLGNqvAoFC2qZJREWeFsYFIlE1kiaB+i1WM+Y/
+	 lnYyEVpX6favBO9qDYXeiFmTe35ES0ojcjPWhThjuxMAflocMHNV97/27l4mQkb6/p
+	 eJIH6QXOpDH91Pqg5kW4eMa8D6koequAuf44YQd4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726891AbgEHQHP (ORCPT
+        id S1727092AbgEHQ0s (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 May 2020 12:07:15 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34220 "EHLO mail.kernel.org"
+        Fri, 8 May 2020 12:26:48 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50658 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726736AbgEHQHO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 May 2020 12:07:14 -0400
-Received: from localhost (mobile-166-175-190-200.mycingular.net [166.175.190.200])
+        id S1726756AbgEHQ0s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 8 May 2020 12:26:48 -0400
+Received: from localhost.localdomain.com (unknown [151.48.155.206])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 1B65320725;
-        Fri,  8 May 2020 16:07:13 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 77D29208CA;
+        Fri,  8 May 2020 16:26:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1588954034;
-        bh=uLbNyI7Z14KTi1E6slPZdT0e6uxwRWlOOk93NDOTbTw=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=Vfa8MaGsNoJhb0kFwm2qNcSKwyhZThyTfoj8OtYgR5/qX5J6CxRIiqYMRCRBVWsml
-         l6ivXOBTIIOpt8oYE0DgNaIp8Ng16ySnyuA5sw1RH290pvqmH7B6JcYrCqGZTgANTw
-         EENa4s8urGyc9CgQR0pyspVhBFyx/tjagHOr1xSo=
-Date:   Fri, 8 May 2020 11:07:12 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Yicong Yang <yangyicong@hisilicon.com>
-Cc:     linux-pci@vger.kernel.org, kvalo@codeaurora.org,
-        andreas.noever@gmail.com, rjw@rjwysocki.net,
-        linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
-        mika.westerberg@linux.intel.com, linuxarm@huawei.com
-Subject: Re: [PATCH v2] PCI: Use pci_pcie_find_root_port() to get root port
-Message-ID: <20200508160712.GA75354@bjorn-Precision-5520>
+        s=default; t=1588955207;
+        bh=phOZA1uZBh+/NR3KYX8b+ifwAOlYupiFbNzaQ9+oDRo=;
+        h=From:To:Cc:Subject:Date:From;
+        b=FkfxU6hp1ZdPUKmkzY0LKiUpFsFMQ5y4tUB86SoyRb71MBRm2ZD0njMGLIFtDhPTw
+         e0jNwHADALe1Lxl9ujrpzIJncpLSylzsW1T1uj1Br5mz05MVMloVfMsWE2VuPD8fLu
+         OfkW8UIimyEv0KErgai/2raxFXE0PppMVxIpS5QE=
+From:   Lorenzo Bianconi <lorenzo@kernel.org>
+To:     nbd@nbd.name
+Cc:     linux-wireless@vger.kernel.org, lorenzo.bianconi@redhat.com,
+        johannes@sipsolutions.net, sean.wang@mediatek.com
+Subject: [PATCH] mt76: mt7663u: copy key pointer in mt7663u_mac_write_txwi
+Date:   Fri,  8 May 2020 18:26:29 +0200
+Message-Id: <74d083291baa3016b0ceb2bb5cd607b85197d511.1588955102.git.lorenzo@kernel.org>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <3a5ccd55-5aac-ef16-6402-75dfaeaee6bf@hisilicon.com>
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Fri, May 08, 2020 at 08:40:49PM +0800, Yicong Yang wrote:
-> On 2020/5/7 3:48, Bjorn Helgaas wrote:
-> > On Wed, May 06, 2020 at 08:42:56PM +0800, Yicong Yang wrote:
+Copy key pointer value before running mt76_tx_status_skb_add() in
+mt7663u_mac_write_txwi since it will be overwritten setting
+mt76_tx_cb for probing frames
 
-> >>  {
-> >> -	while (1) {
-> >> -		if (!pci_is_pcie(dev))
-> >> -			break;
-> >> +	dev = pci_physfn(dev);
-> >> +	while (dev) {
-> >>  		if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT)
-> >>  			return dev;
-> >> -		if (!dev->bus->self)
-> >> -			break;
-> >>  		dev = dev->bus->self;
-> > Why not use pci_upstream_bridge() here?
-> 
-> We'll judge whether the device is virtual or not every time we call
-> pci_upstream_bridge(). I think it's unnecessary and we only need to get
-> the physical function at the beginning of the traverse. It's okay to
-> use pci_upstream_bridge() here if you suggest so.
+Co-developed-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+---
+ drivers/net/wireless/mediatek/mt76/mt7615/usb.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-I think we should use pci_upstream_bridge() consistently.  Using two
-different patterns is confusing and error-prone.
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/usb.c b/drivers/net/wireless/mediatek/mt76/mt7615/usb.c
+index f2825b8f4539..06235f83f903 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/usb.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/usb.c
+@@ -66,6 +66,7 @@ mt7663u_mac_write_txwi(struct mt7615_dev *dev, struct mt76_wcid *wcid,
+ 		       struct sk_buff *skb)
+ {
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	struct ieee80211_key_conf *key = info->control.hw_key;
+ 	__le32 *txwi;
+ 	int pid;
+ 
+@@ -76,8 +77,7 @@ mt7663u_mac_write_txwi(struct mt7615_dev *dev, struct mt76_wcid *wcid,
+ 
+ 	txwi = (__le32 *)(skb->data - MT_USB_TXD_SIZE);
+ 	memset(txwi, 0, MT_USB_TXD_SIZE);
+-	mt7615_mac_write_txwi(dev, txwi, skb, wcid, sta,
+-			      pid, info->control.hw_key, false);
++	mt7615_mac_write_txwi(dev, txwi, skb, wcid, sta, pid, key, false);
+ 	skb_push(skb, MT_USB_TXD_SIZE);
+ }
+ 
+-- 
+2.26.2
 
-Bjorn
