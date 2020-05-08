@@ -6,240 +6,121 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7009CC38A2A
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 May 2020 14:08:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E811C47254
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 May 2020 14:08:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5801C24955
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 May 2020 14:08:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1A69824956
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 May 2020 14:08:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727874AbgEHOIT (ORCPT
+        id S1727886AbgEHOIU (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 May 2020 10:08:19 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:60272 "EHLO
+        Fri, 8 May 2020 10:08:20 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:60284 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727831AbgEHOIT (ORCPT
+        with ESMTP id S1727867AbgEHOIU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 May 2020 10:08:19 -0400
+        Fri, 8 May 2020 10:08:20 -0400
 Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
         by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.93)
         (envelope-from <luca@coelho.fi>)
-        id 1jX3fk-000WXw-46; Fri, 08 May 2020 17:08:17 +0300
+        id 1jX3fm-000WXw-3y; Fri, 08 May 2020 17:08:18 +0300
 From:   Luca Coelho <luca@coelho.fi>
 To:     kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org
-Date:   Fri,  8 May 2020 17:07:55 +0300
-Message-Id: <iwlwifi.20200508170402.d1f52b76e1a2.Icb48c8d61bede5dda7ef267bff10e4798e9dc77b@changeid>
+Date:   Fri,  8 May 2020 17:07:57 +0300
+Message-Id: <iwlwifi.20200508170402.05c52bb5657e.Ibcfd66c3f9b69e68a53b3b2df8331ffb225db655@changeid>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20200508140802.558267-1-luca@coelho.fi>
 References: <20200508140802.558267-1-luca@coelho.fi>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Subject: [PATCH 04/11] iwlwifi: acpi: support device specific method (DSM)
+Subject: [PATCH 06/11] iwlwifi: pcie: gen3: indicate 8k/12k RB size to device
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Gil Adam <gil.adam@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-ACPI Device Specific Method (DSM) allows standardized feature
-configuration through the ACPI interface without the namespace
-pollution of the usual mechanism (ACPI method for each feature).
-Add generic function for evaluating DSM objects and function for
-evaluating a DSM with no arguments and a single int return value.
-also implement the required backport for UUID.
+Newer firmware versions will parse a few extra bits in the
+context info to be able to determine whether we are using
+bigger than 4k RBs, indicate 8k/12k to them if we actually
+use those (e.g. for sniffer based on the module parameter).
 
-Signed-off-by: Gil Adam <gil.adam@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/fw/acpi.c | 99 +++++++++++++++++---
- drivers/net/wireless/intel/iwlwifi/fw/acpi.h | 22 +++++
- 2 files changed, 110 insertions(+), 11 deletions(-)
+ .../wireless/intel/iwlwifi/iwl-context-info-gen3.h   | 12 ++++++++++--
+ .../net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c |  8 ++++++++
+ 2 files changed, 18 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/acpi.c b/drivers/net/wireless/intel/iwlwifi/fw/acpi.c
-index e2184ba4d8b5..72280de4a02a 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/acpi.c
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/acpi.c
-@@ -58,44 +58,121 @@
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-context-info-gen3.h b/drivers/net/wireless/intel/iwlwifi/iwl-context-info-gen3.h
+index ebea99189ca9..9d7a04833cd0 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-context-info-gen3.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-context-info-gen3.h
+@@ -5,7 +5,7 @@
   *
-  *****************************************************************************/
- 
-+#include <linux/uuid.h>
- #include "iwl-drv.h"
- #include "iwl-debug.h"
- #include "acpi.h"
- #include "fw/runtime.h"
- 
--void *iwl_acpi_get_object(struct device *dev, acpi_string method)
-+const static guid_t intel_wifi_guid = GUID_INIT(0xF21202BF, 0x8F78, 0x4DC6,
-+						0xA5, 0xB3, 0x1F, 0x73,
-+						0x8E, 0x28, 0x5A, 0xDE);
-+
-+static int iwl_acpi_get_handle(struct device *dev, acpi_string method,
-+			       acpi_handle *ret_handle)
- {
- 	acpi_handle root_handle;
--	acpi_handle handle;
--	struct acpi_buffer buf = {ACPI_ALLOCATE_BUFFER, NULL};
- 	acpi_status status;
- 
- 	root_handle = ACPI_HANDLE(dev);
- 	if (!root_handle) {
- 		IWL_DEBUG_DEV_RADIO(dev,
--				    "Could not retrieve root port ACPI handle\n");
--		return ERR_PTR(-ENOENT);
-+				    "ACPI: Could not retrieve root port handle\n");
-+		return -ENOENT;
- 	}
- 
--	/* Get the method's handle */
--	status = acpi_get_handle(root_handle, method, &handle);
-+	status = acpi_get_handle(root_handle, method, ret_handle);
- 	if (ACPI_FAILURE(status)) {
--		IWL_DEBUG_DEV_RADIO(dev, "%s method not found\n", method);
--		return ERR_PTR(-ENOENT);
-+		IWL_DEBUG_DEV_RADIO(dev,
-+				    "ACPI: %s method not found\n", method);
-+		return -ENOENT;
- 	}
-+	return 0;
-+}
-+
-+void *iwl_acpi_get_object(struct device *dev, acpi_string method)
-+{
-+	struct acpi_buffer buf = {ACPI_ALLOCATE_BUFFER, NULL};
-+	acpi_handle handle;
-+	acpi_status status;
-+	int ret;
-+
-+	ret = iwl_acpi_get_handle(dev, method, &handle);
-+	if (ret)
-+		return ERR_PTR(-ENOENT);
- 
- 	/* Call the method with no arguments */
- 	status = acpi_evaluate_object(handle, NULL, NULL, &buf);
- 	if (ACPI_FAILURE(status)) {
--		IWL_DEBUG_DEV_RADIO(dev, "%s invocation failed (0x%x)\n",
-+		IWL_DEBUG_DEV_RADIO(dev,
-+				    "ACPI: %s method invocation failed (status: 0x%x)\n",
- 				    method, status);
- 		return ERR_PTR(-ENOENT);
- 	}
--
- 	return buf.pointer;
- }
- IWL_EXPORT_SYMBOL(iwl_acpi_get_object);
- 
-+/**
-+* Generic function for evaluating a method defined in the device specific
-+* method (DSM) interface. The returned acpi object must be freed by calling
-+* function.
-+*/
-+void *iwl_acpi_get_dsm_object(struct device *dev, int rev, int func,
-+			      union acpi_object *args)
-+{
-+	union acpi_object *obj;
-+
-+	obj = acpi_evaluate_dsm(ACPI_HANDLE(dev), &intel_wifi_guid, rev, func,
-+				args);
-+	if (!obj) {
-+		IWL_DEBUG_DEV_RADIO(dev,
-+				    "ACPI: DSM method invocation failed (rev: %d, func:%d)\n",
-+				    rev, func);
-+		return ERR_PTR(-ENOENT);
-+	}
-+	return obj;
-+}
-+
-+/**
-+ * Evaluate a DSM with no arguments and a single u8 return value (inside a
-+ * buffer object), verify and return that value.
-+ */
-+int iwl_acpi_get_dsm_u8(struct device *dev, int rev, int func)
-+{
-+	union acpi_object *obj;
-+	int ret;
-+
-+	obj = iwl_acpi_get_dsm_object(dev, rev, func, NULL);
-+	if (IS_ERR(obj))
-+		return -ENOENT;
-+
-+	if (obj->type != ACPI_TYPE_BUFFER) {
-+		IWL_DEBUG_DEV_RADIO(dev,
-+				    "ACPI: DSM method did not return a valid object, type=%d\n",
-+				    obj->type);
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
-+	if (obj->buffer.length != sizeof(u8)) {
-+		IWL_DEBUG_DEV_RADIO(dev,
-+				    "ACPI: DSM method returned invalid buffer, length=%d\n",
-+				    obj->buffer.length);
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
-+	ret = obj->buffer.pointer[0];
-+	IWL_DEBUG_DEV_RADIO(dev,
-+			    "ACPI: DSM method evaluated: func=%d, ret=%d\n",
-+			    func, ret);
-+out:
-+	ACPI_FREE(obj);
-+	return ret;
-+}
-+IWL_EXPORT_SYMBOL(iwl_acpi_get_dsm_u8);
-+
- union acpi_object *iwl_acpi_get_wifi_pkg(struct device *dev,
- 					 union acpi_object *data,
- 					 int data_size, int *tbl_rev)
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/acpi.h b/drivers/net/wireless/intel/iwlwifi/fw/acpi.h
-index 6a646dc524e1..ea27760bcae7 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/acpi.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/acpi.h
-@@ -127,12 +127,23 @@ struct iwl_geo_profile {
- 	u8 values[ACPI_GEO_TABLE_SIZE];
+  * GPL LICENSE SUMMARY
+  *
+- * Copyright(c) 2018 Intel Corporation
++ * Copyright(c) 2018, 2020 Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -18,7 +18,7 @@
+  *
+  * BSD LICENSE
+  *
+- * Copyright(c) 2018 Intel Corporation
++ * Copyright(c) 2018, 2020 Intel Corporation
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -93,6 +93,11 @@ enum iwl_prph_scratch_mtr_format {
+  * @IWL_PRPH_SCRATCH_MTR_FORMAT: a mask for the size of the tfd.
+  *	There are 4 optional values: 0: 16 bit, 1: 32 bit, 2: 64 bit,
+  *	3: 256 bit.
++ * @IWL_PRPH_SCRATCH_RB_SIZE_EXT_MASK: RB size full information, ignored
++ *	by older firmware versions, so set IWL_PRPH_SCRATCH_RB_SIZE_4K
++ *	appropriately; use the below values for this.
++ * @IWL_PRPH_SCRATCH_RB_SIZE_EXT_8K: 8kB RB size
++ * @IWL_PRPH_SCRATCH_RB_SIZE_EXT_12K: 12kB RB size
+  */
+ enum iwl_prph_scratch_flags {
+ 	IWL_PRPH_SCRATCH_EARLY_DEBUG_EN		= BIT(4),
+@@ -103,6 +108,9 @@ enum iwl_prph_scratch_flags {
+ 	IWL_PRPH_SCRATCH_RB_SIZE_4K		= BIT(16),
+ 	IWL_PRPH_SCRATCH_MTR_MODE		= BIT(17),
+ 	IWL_PRPH_SCRATCH_MTR_FORMAT		= BIT(18) | BIT(19),
++	IWL_PRPH_SCRATCH_RB_SIZE_EXT_MASK	= 0xf << 20,
++	IWL_PRPH_SCRATCH_RB_SIZE_EXT_8K		= 8 << 20,
++	IWL_PRPH_SCRATCH_RB_SIZE_EXT_12K	= 9 << 20,
  };
  
-+enum iwl_dsm_funcs_rev_0 {
-+	DSM_FUNC_QUERY = 0,
-+	DSM_FUNC_DISABLE_SRD = 1,
-+	DSM_FUNC_ENABLE_INDONESIA_5G2 = 2,
-+};
-+
- #ifdef CONFIG_ACPI
+ /*
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
+index b6a5921a63c3..dcd81ee1f773 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.c
+@@ -138,9 +138,17 @@ int iwl_pcie_ctxt_info_gen3_init(struct iwl_trans *trans,
+ 	case IWL_AMSDU_2K:
+ 		break;
+ 	case IWL_AMSDU_4K:
++		control_flags |= IWL_PRPH_SCRATCH_RB_SIZE_4K;
++		break;
+ 	case IWL_AMSDU_8K:
++		control_flags |= IWL_PRPH_SCRATCH_RB_SIZE_4K;
++		/* if firmware supports the ext size, tell it */
++		control_flags |= IWL_PRPH_SCRATCH_RB_SIZE_EXT_8K;
++		break;
+ 	case IWL_AMSDU_12K:
+ 		control_flags |= IWL_PRPH_SCRATCH_RB_SIZE_4K;
++		/* if firmware supports the ext size, tell it */
++		control_flags |= IWL_PRPH_SCRATCH_RB_SIZE_EXT_12K;
+ 		break;
+ 	}
  
- struct iwl_fw_runtime;
- 
- void *iwl_acpi_get_object(struct device *dev, acpi_string method);
- 
-+void *iwl_acpi_get_dsm_object(struct device *dev, int rev, int func,
-+			      union acpi_object *args);
-+
-+int iwl_acpi_get_dsm_u8(struct device *dev, int rev, int func);
-+
- union acpi_object *iwl_acpi_get_wifi_pkg(struct device *dev,
- 					 union acpi_object *data,
- 					 int data_size, int *tbl_rev);
-@@ -192,6 +203,17 @@ static inline void *iwl_acpi_get_object(struct device *dev, acpi_string method)
- 	return ERR_PTR(-ENOENT);
- }
- 
-+static inline void *iwl_acpi_get_dsm_object(struct device *dev, int rev,
-+					    int func, union acpi_object *args)
-+{
-+	return ERR_PTR(-ENOENT);
-+}
-+
-+static inline int iwl_acpi_get_dsm_u8(struct device *dev, int rev, int func)
-+{
-+	return ERR_PTR(-ENOENT);
-+}
-+
- static inline union acpi_object *iwl_acpi_get_wifi_pkg(struct device *dev,
- 						       union acpi_object *data,
- 						       int data_size,
 -- 
 2.26.2
 
