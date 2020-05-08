@@ -7,258 +7,717 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24ABAC38A2A
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 May 2020 08:59:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 30763C38A2A
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 May 2020 08:59:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 002D8208D6
-	for <linux-wireless@archiver.kernel.org>; Fri,  8 May 2020 08:59:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F40D0208D6
+	for <linux-wireless@archiver.kernel.org>; Fri,  8 May 2020 08:59:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="kPKqEduu"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="oZkQeEzq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725825AbgEHI7D (ORCPT
+        id S1726325AbgEHI7H (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 May 2020 04:59:03 -0400
+        Fri, 8 May 2020 04:59:07 -0400
 Received: from mail27.static.mailgun.info ([104.130.122.27]:42235 "EHLO
         mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725815AbgEHI7D (ORCPT
+        by vger.kernel.org with ESMTP id S1725815AbgEHI7G (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 May 2020 04:59:03 -0400
+        Fri, 8 May 2020 04:59:06 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1588928342; h=Content-Transfer-Encoding: MIME-Version:
- References: In-Reply-To: Message-Id: Date: Subject: Cc: To: From:
- Sender; bh=cbAfdFtdw68iyKQIFwQsTXIlSXeN1lbfLBBAPZDF5KQ=; b=kPKqEduuq7atdTDV34CRiVZm8gJaE/wxBzlIbUuIIGfMuY92JcqSTvij+qpN8qDjEoLAmQuX
- ebL6QPz0J+reV3TBAEdphNPNuS0xesU5IWgZmsRjCFCfYriEJlQ4xBvja+BQgzuNSmJ6WO9s
- ExASelZPmUvvwbsaYksit/V8GLQ=
+ s=smtp; t=1588928345; h=Content-Transfer-Encoding: Content-Type:
+ MIME-Version: References: In-Reply-To: Message-Id: Date: Subject: Cc:
+ To: From: Sender; bh=sIgGgnZXhNnAAr8Mjqcxp18lvWdeKu3HGg4JCh593eI=; b=oZkQeEzqpl3iSv2FCD4DzpyYLeTb5JtZDWLTCkfL3Hz9hWMv1WD/QB/UGyHCbNGZ+IGmkoiX
+ raGfdP/JItrk8ReuDK7RoyheKNSS5mhPEL/rifVav+XuLHDTgCZAWvcvTlqnjmZEVTPHJqd1
+ hgw148BKIlInJ+7LpOX1lctgKnA=
 X-Mailgun-Sending-Ip: 104.130.122.27
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5eb51f54.7f01ed10ff10-smtp-out-n03;
- Fri, 08 May 2020 08:59:00 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5eb51f59.7f721a613f80-smtp-out-n03;
+ Fri, 08 May 2020 08:59:05 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id D92EFC432C2; Fri,  8 May 2020 08:58:59 +0000 (UTC)
+        id 4B8C2C433F2; Fri,  8 May 2020 08:59:04 +0000 (UTC)
 Received: from govinds-linux.qualcomm.com (blr-c-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.19.19])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: govinds)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id EE706C433F2;
-        Fri,  8 May 2020 08:58:57 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org EE706C433F2
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id C6832C44793;
+        Fri,  8 May 2020 08:59:01 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org C6832C44793
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=govinds@codeaurora.org
 From:   Govind Singh <govinds@codeaurora.org>
 To:     ath11k@lists.infradead.org
 Cc:     linux-wireless@vger.kernel.org,
         Govind Singh <govinds@codeaurora.org>
-Subject: [PATCH 2/4] ath11k: setup pci resource for QCA6390 target
-Date:   Fri,  8 May 2020 14:28:48 +0530
-Message-Id: <20200508085850.23363-3-govinds@codeaurora.org>
+Subject: [PATCH 4/4] ath11k: Register mhi controller device for qca6390
+Date:   Fri,  8 May 2020 14:28:50 +0530
+Message-Id: <20200508085850.23363-5-govinds@codeaurora.org>
 X-Mailer: git-send-email 2.22.0
 In-Reply-To: <20200508085850.23363-1-govinds@codeaurora.org>
 References: <20200508085850.23363-1-govinds@codeaurora.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add support for setting up pci region and dma mask
-for QCA6390 target.
+MHI is a communication protocol to communicate with external
+Qualcomm modems and Wi-Fi chipsets over high speed peripheral buses. Even
+though MHI doesn’t dictate underlying physical layer, protocol and mhi stack
+is structured for PCIe based devices.
+
+Register directly with mhi core layer as a mhi device driver for
+firmware download.
+
+Tested QCA6390 on X86 platform.
+Tested firmware WLAN.HST.1.0.1.c1-00440-QCAHSTSWPLZ_V2_TO_X86-1.
 
 Signed-off-by: Govind Singh <govinds@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath11k/core.c |   1 +
- drivers/net/wireless/ath/ath11k/pci.c  | 109 ++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath11k/pci.h  |  12 +++
- 3 files changed, 121 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath11k/Kconfig  |   5 +-
+ drivers/net/wireless/ath/ath11k/Makefile |   2 +-
+ drivers/net/wireless/ath/ath11k/mhi.c    | 379 +++++++++++++++++++++++
+ drivers/net/wireless/ath/ath11k/mhi.h    |  28 ++
+ drivers/net/wireless/ath/ath11k/pci.c    |  97 ++++++
+ drivers/net/wireless/ath/ath11k/pci.h    |  13 +
+ 6 files changed, 520 insertions(+), 4 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath11k/mhi.c
+ create mode 100644 drivers/net/wireless/ath/ath11k/mhi.h
 
-diff --git a/drivers/net/wireless/ath/ath11k/core.c b/drivers/net/wireless/ath/ath11k/core.c
-index 8d07a2bb31bb..4c3f5a9d0d8a 100644
---- a/drivers/net/wireless/ath/ath11k/core.c
-+++ b/drivers/net/wireless/ath/ath11k/core.c
-@@ -14,6 +14,7 @@
- #include "hif.h"
+diff --git a/drivers/net/wireless/ath/ath11k/Kconfig b/drivers/net/wireless/ath/ath11k/Kconfig
+index 320b3b151bce..bd48796742bb 100644
+--- a/drivers/net/wireless/ath/ath11k/Kconfig
++++ b/drivers/net/wireless/ath/ath11k/Kconfig
+@@ -2,7 +2,6 @@
+ config ATH11K
+ 	tristate "Qualcomm Technologies 802.11ax chipset support"
+ 	depends on MAC80211 && HAS_DMA
+-	depends on REMOTEPROC
+ 	depends on CRYPTO_MICHAEL_MIC
+ 	depends on ARCH_QCOM || COMPILE_TEST
+ 	select ATH_COMMON
+@@ -15,13 +14,13 @@ config ATH11K
  
- unsigned int ath11k_debug_mask;
-+EXPORT_SYMBOL(ath11k_debug_mask);
- module_param_named(debug_mask, ath11k_debug_mask, uint, 0644);
- MODULE_PARM_DESC(debug_mask, "Debugging mask");
+ config ATH11K_AHB
+ 	tristate "Qualcomm Technologies 802.11ax chipset AHB support"
+-	depends on ATH11K
++	depends on ATH11K && REMOTEPROC
+ 	---help---
+ 	  This module adds support for AHB bus
  
-diff --git a/drivers/net/wireless/ath/ath11k/pci.c b/drivers/net/wireless/ath/ath11k/pci.c
-index 582e7cd3c56e..6ab9e25c4ff9 100644
---- a/drivers/net/wireless/ath/ath11k/pci.c
-+++ b/drivers/net/wireless/ath/ath11k/pci.c
-@@ -6,6 +6,7 @@
- #include <linux/module.h>
- #include <linux/pci.h>
+ config ATH11K_PCI
+ 	tristate "Qualcomm Technologies 802.11ax chipset PCI support"
+-	depends on ATH11K && PCI
++	depends on ATH11K && PCI && MHI_BUS
+ 	---help---
+ 	  This module adds support for PCIE bus
  
-+#include "ahb.h"
- #include "core.h"
- #include "pci.h"
- #include "debug.h"
-@@ -18,10 +19,98 @@ static const struct pci_device_id ath11k_pci_id_table[] = {
+diff --git a/drivers/net/wireless/ath/ath11k/Makefile b/drivers/net/wireless/ath/ath11k/Makefile
+index 933fcb2fd55d..8343c7dfaae3 100644
+--- a/drivers/net/wireless/ath/ath11k/Makefile
++++ b/drivers/net/wireless/ath/ath11k/Makefile
+@@ -25,7 +25,7 @@ obj-$(CONFIG_ATH11K_AHB) += ath11k_ahb.o
+ ath11k_ahb-y += ahb.o
  
- MODULE_DEVICE_TABLE(pci, ath11k_pci_id_table);
+ obj-$(CONFIG_ATH11K_PCI) += ath11k_pci.o
+-ath11k_pci-y += pci.o
++ath11k_pci-y += mhi.o pci.o
  
-+static inline struct ath11k_pci *ath11k_pci_priv(struct ath11k_base *ab)
+ # for tracing framework to find trace.h
+ CFLAGS_trace.o := -I$(src)
+diff --git a/drivers/net/wireless/ath/ath11k/mhi.c b/drivers/net/wireless/ath/ath11k/mhi.c
+new file mode 100644
+index 000000000000..1ca43243e265
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath11k/mhi.c
+@@ -0,0 +1,379 @@
++// SPDX-License-Identifier: BSD-3-Clause-Clear
++/* Copyright (c) 2020 The Linux Foundation. All rights reserved. */
++
++#include <linux/msi.h>
++#include <linux/pci.h>
++
++#include "debug.h"
++#include "mhi.h"
++
++#define MHI_TIMEOUT_DEFAULT_MS	90000
++
++static struct mhi_channel_config ath11k_mhi_channels[] = {
++	{
++		.num = 0,
++		.name = "LOOPBACK",
++		.num_elements = 32,
++		.event_ring = 0,
++		.dir = DMA_TO_DEVICE,
++		.ee_mask = 0x4,
++		.pollcfg = 0,
++		.doorbell = MHI_DB_BRST_DISABLE,
++		.lpm_notify = false,
++		.offload_channel = false,
++		.doorbell_mode_switch = false,
++		.auto_queue = false,
++		.auto_start = false,
++	},
++	{
++		.num = 1,
++		.name = "LOOPBACK",
++		.num_elements = 32,
++		.event_ring = 0,
++		.dir = DMA_FROM_DEVICE,
++		.ee_mask = 0x4,
++		.pollcfg = 0,
++		.doorbell = MHI_DB_BRST_DISABLE,
++		.lpm_notify = false,
++		.offload_channel = false,
++		.doorbell_mode_switch = false,
++		.auto_queue = false,
++		.auto_start = false,
++	},
++	{
++		.num = 20,
++		.name = "IPCR",
++		.num_elements = 64,
++		.event_ring = 1,
++		.dir = DMA_TO_DEVICE,
++		.ee_mask = 0x4,
++		.pollcfg = 0,
++		.doorbell = MHI_DB_BRST_DISABLE,
++		.lpm_notify = false,
++		.offload_channel = false,
++		.doorbell_mode_switch = false,
++		.auto_queue = false,
++		.auto_start = true,
++	},
++	{
++		.num = 21,
++		.name = "IPCR",
++		.num_elements = 64,
++		.event_ring = 1,
++		.dir = DMA_FROM_DEVICE,
++		.ee_mask = 0x4,
++		.pollcfg = 0,
++		.doorbell = MHI_DB_BRST_DISABLE,
++		.lpm_notify = false,
++		.offload_channel = false,
++		.doorbell_mode_switch = false,
++		.auto_queue = true,
++		.auto_start = true,
++	},
++};
++
++static struct mhi_event_config ath11k_mhi_events[] = {
++	{
++		.num_elements = 32,
++		.irq_moderation_ms = 0,
++		.irq = 1,
++		.mode = MHI_DB_BRST_DISABLE,
++		.hardware_event = false,
++		.client_managed = false,
++		.offload_channel = false,
++	},
++	{
++		.num_elements = 256,
++		.irq_moderation_ms = 1,
++		.irq = 2,
++		.mode = MHI_DB_BRST_DISABLE,
++		.priority = 1,
++		.hardware_event = false,
++		.client_managed = false,
++		.offload_channel = false,
++	},
++};
++
++static struct mhi_controller_config ath11k_mhi_config = {
++	.max_channels = 128,
++	.timeout_ms = 2000,
++	.use_bounce_buf = false,
++	.buf_len = 0,
++	.num_channels = ARRAY_SIZE(ath11k_mhi_channels),
++	.ch_cfg = ath11k_mhi_channels,
++	.num_events = ARRAY_SIZE(ath11k_mhi_events),
++	.event_cfg = ath11k_mhi_events,
++};
++
++static int ath11k_pci_get_mhi_msi(struct ath11k_pci *ab_pci)
 +{
-+	return (struct ath11k_pci *)ab->drv_priv;
++	struct ath11k_base *ab = ab_pci->ab;
++	u32 user_base_data, base_vector;
++	int ret, num_vectors, i;
++	int *irq;
++
++	ret = ath11k_pci_get_user_msi_assignment(ab_pci,
++						 "MHI", &num_vectors,
++						 &user_base_data, &base_vector);
++	if (ret)
++		return ret;
++
++	ath11k_dbg(ab, ATH11K_DBG_PCI, "Number of assigned MSI for MHI is %d, base vector is %d\n",
++		   num_vectors, base_vector);
++
++	irq = kcalloc(num_vectors, sizeof(int), GFP_KERNEL);
++	if (!irq)
++		return -ENOMEM;
++
++	for (i = 0; i < num_vectors; i++)
++		irq[i] = ath11k_pci_get_msi_irq(ab_pci->dev,
++						base_vector + i);
++
++	ab_pci->mhi_ctrl->irq = irq;
++	ab_pci->mhi_ctrl->nr_irqs = num_vectors;
++
++	return 0;
 +}
 +
-+static int ath11k_pci_claim(struct ath11k_pci *ab_pci, struct pci_dev *pdev)
++int ath11k_pci_register_mhi(struct ath11k_pci *ab_pci)
 +{
-+	u32 pci_dma_mask = PCI_DMA_MASK_32_BIT;
 +	struct ath11k_base *ab = ab_pci->ab;
-+	u16 device_id;
-+	int ret = 0;
++	struct mhi_controller *mhi_ctrl;
++	int ret;
 +
-+	pci_read_config_word(pdev, PCI_DEVICE_ID, &device_id);
-+	if (device_id != ab_pci->dev_id)  {
-+		ath11k_err(ab, "pci device id mismatch, config ID: 0x%x, probe ID: 0x%x\n",
-+			   device_id, ab_pci->dev_id);
-+		ret = -EIO;
++	mhi_ctrl = kzalloc(sizeof(*mhi_ctrl), GFP_KERNEL);
++	if (!mhi_ctrl)
++		return PTR_ERR(mhi_ctrl);
++
++	ab_pci->mhi_ctrl = mhi_ctrl;
++	mhi_ctrl->fw_image = ATH11K_PCI_FW_FILE_NAME;
++	mhi_ctrl->regs = ab_pci->mem;
++
++	ret = ath11k_pci_get_mhi_msi(ab_pci);
++	if (ret) {
++		ath11k_err(ab, "failed to get msi for mhi\n");
++		kfree(mhi_ctrl);
++		return ret;
++	}
++
++	mhi_ctrl->iova_start = 0;
++	mhi_ctrl->iova_stop = 0xffffffff;
++	mhi_ctrl->sbl_size = SZ_512K;
++	mhi_ctrl->seg_len = SZ_512K;
++	mhi_ctrl->fbc_download = true;
++
++	ret = mhi_register_controller(mhi_ctrl, &ath11k_mhi_config);
++	if (ret) {
++		ath11k_err(ab, "failed to register to mhi bus, err = %d\n", ret);
++		kfree(mhi_ctrl);
++		return ret;
++	}
++
++	return 0;
++}
++
++void ath11k_pci_unregister_mhi(struct ath11k_pci *ab_pci)
++{
++	struct mhi_controller *mhi_ctrl = ab_pci->mhi_ctrl;
++
++	mhi_unregister_controller(mhi_ctrl);
++	kfree(mhi_ctrl->irq);
++}
++
++static char *ath11k_mhi_state_to_str(enum ath11k_mhi_state mhi_state)
++{
++	switch (mhi_state) {
++	case ATH11K_MHI_INIT:
++		return "INIT";
++	case ATH11K_MHI_DEINIT:
++		return "DEINIT";
++	case ATH11K_MHI_POWER_ON:
++		return "POWER_ON";
++	case ATH11K_MHI_POWER_OFF:
++		return "POWER_OFF";
++	case ATH11K_MHI_FORCE_POWER_OFF:
++		return "FORCE_POWER_OFF";
++	case ATH11K_MHI_SUSPEND:
++		return "SUSPEND";
++	case ATH11K_MHI_RESUME:
++		return "RESUME";
++	case ATH11K_MHI_TRIGGER_RDDM:
++		return "TRIGGER_RDDM";
++	case ATH11K_MHI_RDDM_DONE:
++		return "RDDM_DONE";
++	default:
++		return "UNKNOWN";
++	}
++};
++
++static void ath11k_pci_set_mhi_state_bit(struct ath11k_pci *ab_pci,
++					 enum ath11k_mhi_state mhi_state)
++{
++	struct ath11k_base *ab = ab_pci->ab;
++
++	switch (mhi_state) {
++	case ATH11K_MHI_INIT:
++		set_bit(ATH11K_MHI_INIT, &ab_pci->mhi_state);
++		break;
++	case ATH11K_MHI_DEINIT:
++		clear_bit(ATH11K_MHI_INIT, &ab_pci->mhi_state);
++		break;
++	case ATH11K_MHI_POWER_ON:
++		set_bit(ATH11K_MHI_POWER_ON, &ab_pci->mhi_state);
++		break;
++	case ATH11K_MHI_POWER_OFF:
++	case ATH11K_MHI_FORCE_POWER_OFF:
++		clear_bit(ATH11K_MHI_POWER_ON, &ab_pci->mhi_state);
++		clear_bit(ATH11K_MHI_TRIGGER_RDDM, &ab_pci->mhi_state);
++		clear_bit(ATH11K_MHI_RDDM_DONE, &ab_pci->mhi_state);
++		break;
++	case ATH11K_MHI_SUSPEND:
++		set_bit(ATH11K_MHI_SUSPEND, &ab_pci->mhi_state);
++		break;
++	case ATH11K_MHI_RESUME:
++		clear_bit(ATH11K_MHI_SUSPEND, &ab_pci->mhi_state);
++		break;
++	case ATH11K_MHI_TRIGGER_RDDM:
++		set_bit(ATH11K_MHI_TRIGGER_RDDM, &ab_pci->mhi_state);
++		break;
++	case ATH11K_MHI_RDDM_DONE:
++		set_bit(ATH11K_MHI_RDDM_DONE, &ab_pci->mhi_state);
++		break;
++	default:
++		ath11k_err(ab, "unhandled mhi state (%d)\n", mhi_state);
++	}
++}
++
++static int ath11k_pci_check_mhi_state_bit(struct ath11k_pci *ab_pci,
++					  enum ath11k_mhi_state mhi_state)
++{
++	struct ath11k_base *ab = ab_pci->ab;
++
++	switch (mhi_state) {
++	case ATH11K_MHI_INIT:
++		if (!test_bit(ATH11K_MHI_INIT, &ab_pci->mhi_state))
++			return 0;
++		break;
++	case ATH11K_MHI_DEINIT:
++	case ATH11K_MHI_POWER_ON:
++		if (test_bit(ATH11K_MHI_INIT, &ab_pci->mhi_state) &&
++		    !test_bit(ATH11K_MHI_POWER_ON, &ab_pci->mhi_state))
++			return 0;
++		break;
++	case ATH11K_MHI_FORCE_POWER_OFF:
++		if (test_bit(ATH11K_MHI_POWER_ON, &ab_pci->mhi_state))
++			return 0;
++		break;
++	case ATH11K_MHI_POWER_OFF:
++	case ATH11K_MHI_SUSPEND:
++		if (test_bit(ATH11K_MHI_POWER_ON, &ab_pci->mhi_state) &&
++		    !test_bit(ATH11K_MHI_SUSPEND, &ab_pci->mhi_state))
++			return 0;
++		break;
++	case ATH11K_MHI_RESUME:
++		if (test_bit(ATH11K_MHI_SUSPEND, &ab_pci->mhi_state))
++			return 0;
++		break;
++	case ATH11K_MHI_TRIGGER_RDDM:
++		if (test_bit(ATH11K_MHI_POWER_ON, &ab_pci->mhi_state) &&
++		    !test_bit(ATH11K_MHI_TRIGGER_RDDM, &ab_pci->mhi_state))
++			return 0;
++		break;
++	case ATH11K_MHI_RDDM_DONE:
++		return 0;
++	default:
++		ath11k_err(ab, "unhandled mhi state: %s(%d)\n",
++			   ath11k_mhi_state_to_str(mhi_state), mhi_state);
++	}
++
++	ath11k_err(ab, "failed to set mhi state %s(%d) in current mhi state (0x%lx)\n",
++		   ath11k_mhi_state_to_str(mhi_state), mhi_state,
++		   ab_pci->mhi_state);
++
++	return -EINVAL;
++}
++
++static int ath11k_pci_set_mhi_state(struct ath11k_pci *ab_pci,
++				    enum ath11k_mhi_state mhi_state)
++{
++	struct ath11k_base *ab = ab_pci->ab;
++	int ret;
++
++	ret = ath11k_pci_check_mhi_state_bit(ab_pci, mhi_state);
++	if (ret)
 +		goto out;
++
++	ath11k_dbg(ab, ATH11K_DBG_PCI, "setting mhi state: %s(%d)\n",
++		   ath11k_mhi_state_to_str(mhi_state), mhi_state);
++
++	switch (mhi_state) {
++	case ATH11K_MHI_INIT:
++		ret = mhi_prepare_for_power_up(ab_pci->mhi_ctrl);
++		break;
++	case ATH11K_MHI_DEINIT:
++		mhi_unprepare_after_power_down(ab_pci->mhi_ctrl);
++		ret = 0;
++		break;
++	case ATH11K_MHI_POWER_ON:
++		ret = mhi_async_power_up(ab_pci->mhi_ctrl);
++		break;
++	case ATH11K_MHI_POWER_OFF:
++		mhi_power_down(ab_pci->mhi_ctrl, true);
++		ret = 0;
++		break;
++	case ATH11K_MHI_FORCE_POWER_OFF:
++		mhi_power_down(ab_pci->mhi_ctrl, false);
++		ret = 0;
++		break;
++	case ATH11K_MHI_SUSPEND:
++		break;
++	case ATH11K_MHI_RESUME:
++		break;
++	case ATH11K_MHI_TRIGGER_RDDM:
++		ret = mhi_force_rddm_mode(ab_pci->mhi_ctrl);
++		break;
++	case ATH11K_MHI_RDDM_DONE:
++		break;
++	default:
++		ath11k_err(ab, "unhandled MHI state (%d)\n", mhi_state);
++		ret = -EINVAL;
 +	}
 +
-+	ret = pci_assign_resource(pdev, PCI_BAR_NUM);
-+	if (ret) {
-+		ath11k_err(ab, "failed to assign pci resource, err = %d\n", ret);
++	if (ret)
 +		goto out;
-+	}
 +
-+	ret = pci_enable_device(pdev);
-+	if (ret) {
-+		ath11k_err(ab, "failed to enable pci device, err = %d\n", ret);
-+		goto out;
-+	}
++	ath11k_pci_set_mhi_state_bit(ab_pci, mhi_state);
 +
-+	ret = pci_request_region(pdev, PCI_BAR_NUM, "ath11k_pci");
-+	if (ret) {
-+		ath11k_err(ab, "failed to request pci region, err = %d\n", ret);
-+		goto disable_device;
-+	}
-+
-+	ret = pci_set_dma_mask(pdev, DMA_BIT_MASK(pci_dma_mask));
-+	if (ret) {
-+		ath11k_err(ab, "failed to set pci dma mask (%d), err = %d\n",
-+			   ret, pci_dma_mask);
-+		goto release_region;
-+	}
-+
-+	ret = pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(pci_dma_mask));
-+	if (ret) {
-+		ath11k_err(ab, "failed to set pci consistent dma mask (%d), err = %d\n",
-+			   ret, pci_dma_mask);
-+		goto release_region;
-+	}
-+
-+	pci_set_master(pdev);
-+
-+	ab_pci->mem_len = pci_resource_len(pdev, PCI_BAR_NUM);
-+	ab_pci->mem = pci_iomap(pdev, PCI_BAR_NUM, 0);
-+	if (!ab_pci->mem) {
-+		ath11k_err(ab, "failed to map pci bar, bar = %d\n", PCI_BAR_NUM);
-+		ret = -EIO;
-+		goto clear_master;
-+	}
-+
-+	ath11k_dbg(ab, ATH11K_DBG_BOOT, "boot pci_mem 0x%pK\n", ab_pci->mem);
 +	return 0;
 +
-+clear_master:
-+	pci_clear_master(pdev);
-+release_region:
-+	pci_release_region(pdev, PCI_BAR_NUM);
-+disable_device:
-+	pci_disable_device(pdev);
 +out:
++	ath11k_err(ab, "failed to set mhi state: %s(%d)\n",
++		   ath11k_mhi_state_to_str(mhi_state), mhi_state);
 +	return ret;
 +}
 +
-+static void ath11k_pci_free_region(struct ath11k_pci *ab_pci)
++int ath11k_pci_start_mhi(struct ath11k_pci *ab_pci)
 +{
-+	struct pci_dev *pci_dev = ab_pci->pdev;
++	struct ath11k_base *ab = ab_pci->ab;
++	int ret;
 +
-+	pci_iounmap(pci_dev, ab_pci->mem);
-+	ab_pci->mem = NULL;
-+	pci_clear_master(pci_dev);
-+	pci_release_region(pci_dev, PCI_BAR_NUM);
-+	if (pci_is_enabled(pci_dev))
-+		pci_disable_device(pci_dev);
++	ab_pci->mhi_ctrl->timeout_ms = MHI_TIMEOUT_DEFAULT_MS;
++
++	ret = ath11k_pci_set_mhi_state(ab_pci, ATH11K_MHI_INIT);
++	if (ret)
++		ath11k_err(ab, "failed to set mhi init state: %d\n", ret);
++
++	ret = ath11k_pci_set_mhi_state(ab_pci, ATH11K_MHI_POWER_ON);
++	if (ret)
++		ath11k_err(ab, "failed to set mhi power on state: %d\n", ret);
++
++	return ret;
 +}
++
++void ath11k_pci_stop_mhi(struct ath11k_pci *ab_pci)
++{
++	ath11k_pci_set_mhi_state(ab_pci, ATH11K_MHI_RESUME);
++	ath11k_pci_set_mhi_state(ab_pci, ATH11K_MHI_POWER_OFF);
++	ath11k_pci_set_mhi_state(ab_pci, ATH11K_MHI_DEINIT);
++}
++
+diff --git a/drivers/net/wireless/ath/ath11k/mhi.h b/drivers/net/wireless/ath/ath11k/mhi.h
+new file mode 100644
+index 000000000000..355de5a2c241
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath11k/mhi.h
+@@ -0,0 +1,28 @@
++/* SPDX-License-Identifier: BSD-3-Clause-Clear */
++/*
++ * Copyright (c) 2020 The Linux Foundation. All rights reserved.
++ */
++#ifndef _ATH11K_MHI_H
++#define _ATH11K_MHI_H
++
++#include "pci.h"
++#define ATH11K_PCI_FW_FILE_NAME		"amss.bin"
++
++enum ath11k_mhi_state {
++	ATH11K_MHI_INIT,
++	ATH11K_MHI_DEINIT,
++	ATH11K_MHI_POWER_ON,
++	ATH11K_MHI_POWER_OFF,
++	ATH11K_MHI_FORCE_POWER_OFF,
++	ATH11K_MHI_SUSPEND,
++	ATH11K_MHI_RESUME,
++	ATH11K_MHI_TRIGGER_RDDM,
++	ATH11K_MHI_RDDM,
++	ATH11K_MHI_RDDM_DONE,
++};
++
++int ath11k_pci_start_mhi(struct ath11k_pci *ar_pci);
++void ath11k_pci_stop_mhi(struct ath11k_pci *ar_pci);
++int ath11k_pci_register_mhi(struct ath11k_pci *ar_pci);
++void ath11k_pci_unregister_mhi(struct ath11k_pci *ar_pci);
++#endif
+diff --git a/drivers/net/wireless/ath/ath11k/pci.c b/drivers/net/wireless/ath/ath11k/pci.c
+index d89dcb5fe81e..938078ee8d80 100644
+--- a/drivers/net/wireless/ath/ath11k/pci.c
++++ b/drivers/net/wireless/ath/ath11k/pci.c
+@@ -9,6 +9,8 @@
+ 
+ #include "ahb.h"
+ #include "core.h"
++#include "hif.h"
++#include "mhi.h"
+ #include "pci.h"
+ #include "debug.h"
+ 
+@@ -31,6 +33,60 @@ static struct ath11k_msi_config msi_config = {
+ 	},
+ };
+ 
++int ath11k_pci_get_msi_irq(struct device *dev, unsigned int vector)
++{
++	struct pci_dev *pci_dev = to_pci_dev(dev);
++	int irq_num;
++
++	irq_num = pci_irq_vector(pci_dev, vector);
++
++	return irq_num;
++}
++
++int ath11k_pci_get_user_msi_assignment(struct ath11k_pci *ab_pci, char *user_name,
++				       int *num_vectors, u32 *user_base_data,
++				       u32 *base_vector)
++{
++	struct ath11k_base *ab = ab_pci->ab;
++	struct ath11k_msi_config *msi_config;
++	int idx;
++
++	msi_config = ab_pci->msi_config;
++	if (!msi_config) {
++		ath11k_err(ab, "MSI is not supported.\n");
++		return -EINVAL;
++	}
++
++	for (idx = 0; idx < msi_config->total_users; idx++) {
++		if (strcmp(user_name, msi_config->users[idx].name) == 0) {
++			*num_vectors = msi_config->users[idx].num_vectors;
++			*user_base_data = msi_config->users[idx].base_vector
++				+ ab_pci->msi_ep_base_data;
++			*base_vector = msi_config->users[idx].base_vector;
++
++			ath11k_dbg(ab, ATH11K_DBG_PCI, "Assign MSI to user: %s, num_vectors: %d, user_base_data: %u, base_vector: %u\n",
++				   user_name, *num_vectors, *user_base_data,
++				   *base_vector);
++
++			return 0;
++		}
++	}
++
++	ath11k_err(ab, "Failed to find MSI assignment for %s!\n", user_name);
++
++	return -EINVAL;
++}
++
++static int ath11k_pci_qca6x90_powerup(struct ath11k_pci *ab_pci)
++{
++	return ath11k_pci_start_mhi(ab_pci);
++}
++
++static void ath11k_pci_qca6x90_powerdown(struct ath11k_pci *ab_pci)
++{
++	ath11k_pci_stop_mhi(ab_pci);
++}
++
+ static int ath11k_pci_get_msi_assignment(struct ath11k_pci *ab_pci)
+ {
+ 	ab_pci->msi_config = &msi_config;
+@@ -184,6 +240,34 @@ static void ath11k_pci_free_region(struct ath11k_pci *ab_pci)
+ 		pci_disable_device(pci_dev);
+ }
+ 
++static int ath11k_pci_power_up(struct ath11k_base *ab)
++{
++	struct ath11k_pci *ab_pci;
++	int ret;
++
++	ab_pci = ath11k_pci_priv(ab);
++	ret = ath11k_pci_qca6x90_powerup(ab_pci);
++	if (ret) {
++		ath11k_err(ab, "failed to power on  mhi: %d\n", ret);
++		return ret;
++	}
++
++	return 0;
++}
++
++static void ath11k_pci_power_down(struct ath11k_base *ab)
++{
++	struct ath11k_pci *ab_pci;
++
++	ab_pci = ath11k_pci_priv(ab);
++	ath11k_pci_qca6x90_powerdown(ab_pci);
++}
++
++static const struct ath11k_hif_ops ath11k_pci_hif_ops = {
++	.power_down = ath11k_pci_power_down,
++	.power_up = ath11k_pci_power_up,
++};
 +
  static int ath11k_pci_probe(struct pci_dev *pdev,
  			    const struct pci_device_id *pci_dev)
  {
- 	struct ath11k_base *ab;
-+	struct ath11k_pci *ab_pci;
- 	enum ath11k_hw_rev hw_rev;
- 	int ret;
- 
-@@ -38,24 +127,42 @@ static int ath11k_pci_probe(struct pci_dev *pdev,
- 		return -ENOTSUPP;
+@@ -229,14 +313,26 @@ static int ath11k_pci_probe(struct pci_dev *pdev,
+ 		goto err_free_core;
  	}
  
--	ab = ath11k_core_alloc(&pdev->dev, 0, ATH11K_BUS_PCI);
-+	ab = ath11k_core_alloc(&pdev->dev, sizeof(*ab_pci), ATH11K_BUS_PCI);
- 	if (!ab) {
- 		dev_err(&pdev->dev, "failed to allocate ath11k base\n");
- 		return -ENOMEM;
++	ab->mem = ab_pci->mem;
++	ab->mem_len = ab_pci->mem_len;
++
+ 	ret = ath11k_pci_enable_msi(ab_pci);
+ 	if (ret) {
+ 		ath11k_err(ab, "failed to enable  msi: %d\n", ret);
+ 		goto err_pci_free_region;
  	}
  
-+	ab->dev = &pdev->dev;
-+	ab->hw_rev = hw_rev;
-+	pci_set_drvdata(pdev, ab);
-+	ab_pci = ath11k_pci_priv(ab);
-+	ab_pci->dev_id = pci_dev->device;
-+	ab_pci->ab = ab;
- 	ab->dev = &pdev->dev;
- 	ab->hw_rev = hw_rev;
- 	pci_set_drvdata(pdev, ab);
- 
-+	ret = ath11k_pci_claim(ab_pci, pdev);
++	ret = ath11k_pci_register_mhi(ab_pci);
 +	if (ret) {
-+		ath11k_err(ab, "failed to claim device: %d\n", ret);
-+		goto err_free_core;
++		ath11k_err(ab, "failed to register  mhi: %d\n", ret);
++		goto err_pci_disable_msi;
 +	}
 +
-+	return 0;
-+
-+err_free_core:
-+	ath11k_core_free(ab);
- 	return ret;
- }
+ 	return 0;
  
- static void ath11k_pci_remove(struct pci_dev *pdev)
- {
- 	struct ath11k_base *ab = pci_get_drvdata(pdev);
-+	struct ath11k_pci *ab_pci = ath11k_pci_priv(ab);
++err_pci_disable_msi:
++	ath11k_pci_disable_msi(ab_pci);
++
+ err_pci_free_region:
+ 	ath11k_pci_free_region(ab_pci);
+ 
+@@ -252,6 +348,7 @@ static void ath11k_pci_remove(struct pci_dev *pdev)
+ 	struct ath11k_pci *ab_pci = ath11k_pci_priv(ab);
  
  	set_bit(ATH11K_FLAG_UNREGISTERING, &ab->dev_flags);
-+	ath11k_pci_free_region(ab_pci);
++	ath11k_pci_unregister_mhi(ab_pci);
+ 	ath11k_pci_disable_msi(ab_pci);
+ 	ath11k_pci_free_region(ab_pci);
  	ath11k_core_free(ab);
- }
- 
 diff --git a/drivers/net/wireless/ath/ath11k/pci.h b/drivers/net/wireless/ath/ath11k/pci.h
-index 790b8993d225..5e6f2b5059a8 100644
+index 7c7fa1965aa6..83b485be6c50 100644
 --- a/drivers/net/wireless/ath/ath11k/pci.h
 +++ b/drivers/net/wireless/ath/ath11k/pci.h
-@@ -7,4 +7,16 @@
- #define QCA6290_DEVICE_ID		0x1100
- #define QCA6390_VENDOR_ID		0x17CB
- #define QCA6390_DEVICE_ID		0x1101
-+#define PCI_BAR_NUM			0
-+#define PCI_DMA_MASK_64_BIT		64
-+#define PCI_DMA_MASK_32_BIT		32
+@@ -2,6 +2,10 @@
+ /*
+  * Copyright (c) 2019-2020 The Linux Foundation. All rights reserved.
+  */
++#ifndef _ATH11K_PCI_H
++#define _ATH11K_PCI_H
++
++#include <linux/mhi.h>
  
-+struct ath11k_pci {
-+	struct pci_dev *pdev;
-+	struct device *dev;
-+	struct ath11k_base *ab;
-+	void __iomem *mem;
-+	size_t mem_len;
-+	u16 dev_id;
-+	u32 chip_id;
-+};
+ #define QCA6290_VENDOR_ID		0x17CB
+ #define QCA6290_DEVICE_ID		0x1100
+@@ -33,4 +37,13 @@ struct ath11k_pci {
+ 	u32 chip_id;
+ 	struct ath11k_msi_config *msi_config;
+ 	u32 msi_ep_base_data;
++	struct mhi_controller *mhi_ctrl;
++	unsigned long mhi_state;
+ };
++
++int ath11k_pci_get_user_msi_assignment(struct ath11k_pci *ar_pci, char *user_name,
++				       int *num_vectors, u32 *user_base_data,
++				       u32 *base_vector);
++
++int ath11k_pci_get_msi_irq(struct device *dev, unsigned int vector);
++#endif
 -- 
 2.22.0
