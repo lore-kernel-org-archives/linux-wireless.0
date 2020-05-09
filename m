@@ -7,51 +7,51 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FEA5C47255
-	for <linux-wireless@archiver.kernel.org>; Sat,  9 May 2020 00:13:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 688C0C38A2A
+	for <linux-wireless@archiver.kernel.org>; Sat,  9 May 2020 00:13:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7F2B0208CA
-	for <linux-wireless@archiver.kernel.org>; Sat,  9 May 2020 00:13:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 47BCC2184D
+	for <linux-wireless@archiver.kernel.org>; Sat,  9 May 2020 00:13:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="QzOvU1Sf"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="c4WGpnPg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728488AbgEIANl (ORCPT
+        id S1728491AbgEIANo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 May 2020 20:13:41 -0400
-Received: from mail27.static.mailgun.info ([104.130.122.27]:22985 "EHLO
+        Fri, 8 May 2020 20:13:44 -0400
+Received: from mail27.static.mailgun.info ([104.130.122.27]:28790 "EHLO
         mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728381AbgEIANl (ORCPT
+        by vger.kernel.org with ESMTP id S1728399AbgEIANo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 May 2020 20:13:41 -0400
+        Fri, 8 May 2020 20:13:44 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1588983220; h=References: In-Reply-To: Message-Id: Date:
+ s=smtp; t=1588983223; h=References: In-Reply-To: Message-Id: Date:
  Subject: Cc: To: From: Sender;
- bh=WYuQjWhAWvV4B+xX0+ZrAqZxe1/l+4HAU8Fy8l/RZMY=; b=QzOvU1SfUkKcBW0IWEkLa6SodPv854KqXdhzbNLP+LuwNF9kHIlQ6u5aVUMYmhRSNU+okxnG
- lgv+fNhttEklHnlOohDiwvmSOqBzie6GAi7eR+WO2J1R6ZmkfOutCvWAwZhfdg3jJ8SxrqyX
- vdmC0Asom5gehe+zGfy89vMJbZw=
+ bh=nEJzQHMkBDGR2e7BpFMdnUwSMayWOykeN29+LewEHjI=; b=c4WGpnPgJb1sth7t1BSEUzNNrdk3k4Ic7ic8O2MRpYZtFHeqbfp2zV6/nd3vYwAgL9bXWB2Y
+ 7dqFzqdg1ab+leAqP/rJIN2eEN4gdZr+bdq2ClzqbXaZ7HynltvDpODdCLMUzJN8xXnNbSyL
+ 2OcVsVIIXKyxYHMBHyPv6HrIq+c=
 X-Mailgun-Sending-Ip: 104.130.122.27
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5eb5f5a7.7f2fa0b3e618-smtp-out-n02;
- Sat, 09 May 2020 00:13:27 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5eb5f5aa.7f8aa379af48-smtp-out-n01;
+ Sat, 09 May 2020 00:13:30 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id A7C5FC433BA; Sat,  9 May 2020 00:13:26 +0000 (UTC)
+        id 1B65DC433F2; Sat,  9 May 2020 00:13:30 +0000 (UTC)
 Received: from rmanohar-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: rmanohar)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 161DDC4478C;
-        Sat,  9 May 2020 00:13:26 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 161DDC4478C
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 17DC7C43637;
+        Sat,  9 May 2020 00:13:28 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 17DC7C43637
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=rmanohar@codeaurora.org
 From:   Rajkumar Manoharan <rmanohar@codeaurora.org>
 To:     johannes@sipsolutions.net, kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
         Rajkumar Manoharan <rmanohar@codeaurora.org>
-Subject: [PATCH v3 09/11] mac80211: do not allow HT/VHT IEs in 6 GHz mesh mode
-Date:   Fri,  8 May 2020 17:13:03 -0700
-Message-Id: <1588983185-5741-9-git-send-email-rmanohar@codeaurora.org>
+Subject: [PATCH v3 11/11] ath11k: build HE 6 GHz capability
+Date:   Fri,  8 May 2020 17:13:05 -0700
+Message-Id: <1588983185-5741-11-git-send-email-rmanohar@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1588983185-5741-1-git-send-email-rmanohar@codeaurora.org>
 References: <1588983185-5741-1-git-send-email-rmanohar@codeaurora.org>
@@ -60,61 +60,78 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-As HT/VHT elements are not allowed in 6 GHz band, do not include
-them in mesh beacon template formation.
+Build 6 GHz band capability from HT and VHT capabilities reported
+by firmware.
 
 Signed-off-by: Rajkumar Manoharan <rmanohar@codeaurora.org>
 ---
- net/mac80211/mesh.c | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+ drivers/net/wireless/ath/ath11k/core.h |  1 +
+ drivers/net/wireless/ath/ath11k/mac.c  | 34 ++++++++++++++++++++++++++++++++++
+ 2 files changed, 35 insertions(+)
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 0cbe3260c5c1..04d3da733bc8 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -415,6 +415,10 @@ int mesh_add_ht_cap_ie(struct ieee80211_sub_if_data *sdata,
- 	if (!sband)
- 		return -EINVAL;
+diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
+index 6e7b8ecd09a6..3325e692f7fd 100644
+--- a/drivers/net/wireless/ath/ath11k/core.h
++++ b/drivers/net/wireless/ath/ath11k/core.h
+@@ -537,6 +537,7 @@ struct ath11k_band_cap {
+ 	u32 he_mcs;
+ 	u32 he_cap_phy_info[PSOC_HOST_MAX_PHY_SIZE];
+ 	struct ath11k_ppe_threshold he_ppet;
++	u16 he_6ghz_cap;
+ };
  
-+	/* HT not allowed in 6 GHz */
-+	if (sband->band == NL80211_BAND_6GHZ)
-+		return 0;
-+
- 	if (!sband->ht_cap.ht_supported ||
- 	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_20_NOHT ||
- 	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_5 ||
-@@ -452,6 +456,10 @@ int mesh_add_ht_oper_ie(struct ieee80211_sub_if_data *sdata,
- 	sband = local->hw.wiphy->bands[channel->band];
- 	ht_cap = &sband->ht_cap;
+ struct ath11k_pdev_cap {
+diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+index 06d063274eea..8babba45d879 100644
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -3522,6 +3522,34 @@ ath11k_mac_filter_he_cap_mesh(struct ieee80211_he_cap_elem *he_cap_elem)
+ 	he_cap_elem->phy_cap_info[9] &= ~m;
+ }
  
-+	/* HT not allowed in 6 GHz */
-+	if (sband->band == NL80211_BAND_6GHZ)
-+		return 0;
++static u16 ath11k_mac_setup_he_6ghz_cap(struct ath11k_pdev_cap *pcap,
++					struct ath11k_band_cap *bcap)
++{
++	u8 val;
 +
- 	if (!ht_cap->ht_supported ||
- 	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_20_NOHT ||
- 	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_5 ||
-@@ -479,6 +487,10 @@ int mesh_add_vht_cap_ie(struct ieee80211_sub_if_data *sdata,
- 	if (!sband)
- 		return -EINVAL;
++	bcap->he_6ghz_cap = IEEE80211_HT_MPDU_DENSITY_NONE;
++	if (bcap->ht_cap_info & WMI_HT_CAP_DYNAMIC_SMPS)
++		bcap->he_6ghz_cap |=
++			FIELD_PREP(IEEE80211_HE_6GHZ_CAP_SMPS_MASK,
++				   WLAN_HT_CAP_SM_PS_DYNAMIC);
++	val = FIELD_GET(IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_MASK,
++			pcap->vht_cap);
++	bcap->he_6ghz_cap |=
++	   FIELD_PREP(IEEE80211_HE_6GHZ_CAP_MAX_A_MPDU_LENGTH_EXPONENT_MASK,
++		      val);
++	val = FIELD_GET(IEEE80211_VHT_CAP_MAX_MPDU_MASK, pcap->vht_cap);
++	bcap->he_6ghz_cap |=
++		FIELD_PREP(IEEE80211_HE_6GHZ_CAP_MAX_MPDU_LENGTH_MASK, val);
++	if (pcap->vht_cap & IEEE80211_VHT_CAP_RX_ANTENNA_PATTERN)
++		bcap->he_6ghz_cap |=
++			IEEE80211_HE_6GHZ_CAP_RX_ANTENNA_PATTERN;
++	if (pcap->vht_cap & IEEE80211_VHT_CAP_TX_ANTENNA_PATTERN)
++		bcap->he_6ghz_cap |=
++			IEEE80211_HE_6GHZ_CAP_TX_ANTENNA_PATTERN;
++
++	return bcap->he_6ghz_cap;
++}
++
+ static int ath11k_mac_copy_he_cap(struct ath11k *ar,
+ 				  struct ath11k_pdev_cap *cap,
+ 				  struct ieee80211_sband_iftype_data *data,
+@@ -3602,6 +3630,12 @@ static int ath11k_mac_copy_he_cap(struct ath11k *ar,
+ 		    IEEE80211_HE_PHY_CAP6_PPE_THRESHOLD_PRESENT)
+ 			ath11k_gen_ppe_thresh(&band_cap->he_ppet,
+ 					      he_cap->ppe_thres);
++
++		if (band == NL80211_BAND_6GHZ) {
++			he_cap->has_he_6ghz = true;
++			he_cap->he_6ghz.cap =
++				ath11k_mac_setup_he_6ghz_cap(cap, band_cap);
++		}
+ 		idx++;
+ 	}
  
-+	/* VHT not allowed in 6 GHz */
-+	if (sband->band == NL80211_BAND_6GHZ)
-+		return 0;
-+
- 	if (!sband->vht_cap.vht_supported ||
- 	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_20_NOHT ||
- 	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_5 ||
-@@ -516,6 +528,10 @@ int mesh_add_vht_oper_ie(struct ieee80211_sub_if_data *sdata,
- 	sband = local->hw.wiphy->bands[channel->band];
- 	vht_cap = &sband->vht_cap;
- 
-+	/* VHT not allowed in 6 GHz */
-+	if (sband->band == NL80211_BAND_6GHZ)
-+		return 0;
-+
- 	if (!vht_cap->vht_supported ||
- 	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_20_NOHT ||
- 	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_5 ||
 -- 
 2.7.4
