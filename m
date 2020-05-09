@@ -2,231 +2,116 @@ Return-Path: <SRS0=l8p9=6X=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5977C38A2A
-	for <linux-wireless@archiver.kernel.org>; Sat,  9 May 2020 00:13:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3F8FC47255
+	for <linux-wireless@archiver.kernel.org>; Sat,  9 May 2020 04:36:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 904EC218AC
-	for <linux-wireless@archiver.kernel.org>; Sat,  9 May 2020 00:13:53 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="DNVhQS5i"
+	by mail.kernel.org (Postfix) with ESMTP id 94C202184D
+	for <linux-wireless@archiver.kernel.org>; Sat,  9 May 2020 04:36:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1588998982;
+	bh=FOYhLatQ928gyoxKqUoLRgFuoUjXoj+oErxZGurj3Qk=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=kxZLvA96qUA35CGlkID0Lk6zp3vWa1mq3KxT2QJHsClqNE1Tgq5QlmsfL+RKs67iP
+	 flkOgwWzV0m37yYtAxwymelPO8AjCe6IDtINlA4AUo/YdjcJw6LgFL8WslBzX9B1iK
+	 4FS6+COpTJ2vrNsu4riTBqEudmDODFko2TErEvqA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728290AbgEIANw (ORCPT
+        id S1728858AbgEIEgV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 May 2020 20:13:52 -0400
-Received: from mail26.static.mailgun.info ([104.130.122.26]:53460 "EHLO
-        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728498AbgEIANw (ORCPT
+        Sat, 9 May 2020 00:36:21 -0400
+Received: from mail-pl1-f196.google.com ([209.85.214.196]:43377 "EHLO
+        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728846AbgEIEgT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 May 2020 20:13:52 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1588983231; h=References: In-Reply-To: Message-Id: Date:
- Subject: Cc: To: From: Sender;
- bh=4tl1qGfvbpOMqFrvZIHrhJs0A7tqTukkONqdYB0f/FM=; b=DNVhQS5iVJvUsfTZ5E0LfcZRHTeWn2zPNPk4xrzgPp93VwiUKcus3mcc5pSb9sj4gfLTnrOt
- 8w/2gCi+czTVCvjNba3cRkyagHatF0yupoR0TdasCfG22eq2L44VQsPN2JocdkFxRzOepYdK
- HhROmqgvjyZQQkxOmwAOyX5sLmE=
-X-Mailgun-Sending-Ip: 104.130.122.26
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5eb5f5a7.7f090a701ae8-smtp-out-n05;
- Sat, 09 May 2020 00:13:27 -0000 (UTC)
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 01C13C43637; Sat,  9 May 2020 00:13:25 +0000 (UTC)
-Received: from rmanohar-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: rmanohar)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 063EDC44791;
-        Sat,  9 May 2020 00:13:23 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 063EDC44791
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=rmanohar@codeaurora.org
-From:   Rajkumar Manoharan <rmanohar@codeaurora.org>
-To:     johannes@sipsolutions.net, kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
-        Rajkumar Manoharan <rmanohar@codeaurora.org>
-Subject: [PATCH v3 07/11] mac80211: add HE 6 GHz Band Capability IE in Assoc. Request
-Date:   Fri,  8 May 2020 17:13:01 -0700
-Message-Id: <1588983185-5741-7-git-send-email-rmanohar@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1588983185-5741-1-git-send-email-rmanohar@codeaurora.org>
-References: <1588983185-5741-1-git-send-email-rmanohar@codeaurora.org>
+        Sat, 9 May 2020 00:36:19 -0400
+Received: by mail-pl1-f196.google.com with SMTP id z6so1625457plk.10;
+        Fri, 08 May 2020 21:36:19 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=WzAUhm9PAzr7uU8H1Lc2ngEyBupzXwHNyDw+1FmrAuk=;
+        b=ABo2hpRjR7QwDjQAzeVuBVN1+ujsAAnhezO+qg1r3MO1zyxXMWsonIYOiPhSECGsLQ
+         kQ76j5GjlBCf6W1vpagB4SE8W5Dx9bRdB+8RzZhV6MMmboiZ9eALX7JE2MwBQAiNHMe1
+         J36mVZlOf6FPKwLJodnBjwcfpv55x7hMCfYRQE9YbwtRNT5DfpECsTQAalBAeQgG+JU7
+         C4Dwel2wfOZpGjBvbMJUOxx9fmnjD874Iw21JqoVc+pPyMzS4u7o8Vvl2Lf8bZ9tX4T2
+         G3+AD0DeQ8hz89fLXfNEZbIg2YzIUH1o+2qKOT1jzKzC/MQWkJ283b+LI8vhRes+QwCm
+         ldXQ==
+X-Gm-Message-State: AGi0PuY6fLMTaLNQ2HrtvXDqfM8Ri5e9i8v/X5tFsHa2geKEJYQt5NmT
+        C6wLYzBrJZ0Rdx9SSd09Q18=
+X-Google-Smtp-Source: APiQypLTFb2RAG3FyXNjeEw4HN1+FeVK1th9HhFtNsa33Z6gZafA063iGaEXxunyudg4OhViLAcglQ==
+X-Received: by 2002:a17:90b:19c9:: with SMTP id nm9mr9798057pjb.86.1588998978909;
+        Fri, 08 May 2020 21:36:18 -0700 (PDT)
+Received: from 42.do-not-panic.com (42.do-not-panic.com. [157.230.128.187])
+        by smtp.gmail.com with ESMTPSA id b20sm3293544pff.8.2020.05.08.21.36.10
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 08 May 2020 21:36:15 -0700 (PDT)
+Received: by 42.do-not-panic.com (Postfix, from userid 1000)
+        id 76BD542349; Sat,  9 May 2020 04:36:01 +0000 (UTC)
+From:   Luis Chamberlain <mcgrof@kernel.org>
+To:     jeyu@kernel.org
+Cc:     akpm@linux-foundation.org, arnd@arndb.de, rostedt@goodmis.org,
+        mingo@redhat.com, aquini@redhat.com, cai@lca.pw, dyoung@redhat.com,
+        bhe@redhat.com, peterz@infradead.org, tglx@linutronix.de,
+        gpiccoli@canonical.com, pmladek@suse.com, tiwai@suse.de,
+        schlad@suse.de, andriy.shevchenko@linux.intel.com,
+        keescook@chromium.org, daniel.vetter@ffwll.ch, will@kernel.org,
+        mchehab+samsung@kernel.org, kvalo@codeaurora.org,
+        davem@davemloft.net, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Luis Chamberlain <mcgrof@kernel.org>,
+        linux-wireless@vger.kernel.org,
+        Lennert Buytenhek <buytenh@wantstofly.org>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Ganapathi Bhat <ganapathi.bhat@nxp.com>
+Subject: [PATCH 15/15] mwl8k: use new module_firmware_crashed()
+Date:   Sat,  9 May 2020 04:35:52 +0000
+Message-Id: <20200509043552.8745-16-mcgrof@kernel.org>
+X-Mailer: git-send-email 2.23.0.rc1
+In-Reply-To: <20200509043552.8745-1-mcgrof@kernel.org>
+References: <20200509043552.8745-1-mcgrof@kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Construct HE 6 GHz band capability element element (IEEE 802.11ax/D6.0,
-9.4.2.261) for association request and mesh beacon. The 6 GHz capability
-information is passed by driver through iftypes caps.
+This makes use of the new module_firmware_crashed() to help
+annotate when firmware for device drivers crash. When firmware
+crashes devices can sometimes become unresponsive, and recovery
+sometimes requires a driver unload / reload and in the worst cases
+a reboot.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@codeaurora.org>
+Using a taint flag allows us to annotate when this happens clearly.
+
+Cc: linux-wireless@vger.kernel.org
+Cc: Lennert Buytenhek <buytenh@wantstofly.org>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: "Gustavo A. R. Silva" <gustavoars@kernel.org>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Cc: Ganapathi Bhat <ganapathi.bhat@nxp.com>
+Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 ---
- net/mac80211/ieee80211_i.h |  1 +
- net/mac80211/mesh.c        | 34 ++++++++++++++++++++++++++++++++++
- net/mac80211/mesh.h        |  2 ++
- net/mac80211/mesh_plink.c  |  3 ++-
- net/mac80211/mlme.c        | 12 ++++++++++--
- net/mac80211/util.c        | 15 +++++++++++++++
- 6 files changed, 64 insertions(+), 3 deletions(-)
+ drivers/net/wireless/marvell/mwl8k.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 78a95a11458c..6517a56970b7 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -2174,6 +2174,7 @@ u8 ieee80211_ie_len_he_cap(struct ieee80211_sub_if_data *sdata, u8 iftype);
- u8 *ieee80211_ie_build_he_cap(u8 *pos,
- 			      const struct ieee80211_sta_he_cap *he_cap,
- 			      u8 *end);
-+u8 *ieee80211_ie_build_he_6ghz_band_cap(u8 *pos, u16 he_6ghz_cap);
- u8 *ieee80211_ie_build_he_oper(u8 *pos);
- int ieee80211_parse_bitrates(struct cfg80211_chan_def *chandef,
- 			     const struct ieee80211_supported_band *sband,
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 36978a0e5000..2ca34869538d 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -587,6 +587,39 @@ int mesh_add_he_oper_ie(struct ieee80211_sub_if_data *sdata,
- 	return 0;
- }
- 
-+int mesh_add_he_6ghz_cap_ie(struct ieee80211_sub_if_data *sdata,
-+			    struct sk_buff *skb)
-+{
-+	const struct ieee80211_sta_he_cap *he_cap;
-+	struct ieee80211_supported_band *sband;
-+	u8 ie_len;
-+	u8 *pos;
-+
-+	sband = ieee80211_get_sband(sdata);
-+	if (!sband)
-+		return -EINVAL;
-+
-+	he_cap = ieee80211_get_he_iftype_cap(sband, NL80211_IFTYPE_MESH_POINT);
-+
-+	if (!he_cap ||
-+	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_20_NOHT ||
-+	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_5 ||
-+	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_10)
-+		return 0;
-+
-+	if (!he_cap->has_he_6ghz)
-+		return 0;
-+
-+	ie_len = 2 + 1 + sizeof(struct ieee80211_he_6ghz_band_cap);
-+	if (skb_tailroom(skb) < ie_len)
-+		return -ENOMEM;
-+
-+	pos = skb_put(skb, ie_len);
-+	ieee80211_ie_build_he_6ghz_band_cap(pos, he_cap->he_6ghz.cap);
-+
-+	return 0;
-+}
-+
- static void ieee80211_mesh_path_timer(struct timer_list *t)
- {
- 	struct ieee80211_sub_if_data *sdata =
-@@ -885,6 +918,7 @@ ieee80211_mesh_build_beacon(struct ieee80211_if_mesh *ifmsh)
- 	    mesh_add_vht_oper_ie(sdata, skb) ||
- 	    mesh_add_he_cap_ie(sdata, skb, ie_len_he_cap) ||
- 	    mesh_add_he_oper_ie(sdata, skb) ||
-+	    mesh_add_he_6ghz_cap_ie(sdata, skb) ||
- 	    mesh_add_vendor_ies(sdata, skb))
- 		goto out_free;
- 
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 953f720754e8..40492d1bd8fd 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -222,6 +222,8 @@ int mesh_add_he_cap_ie(struct ieee80211_sub_if_data *sdata,
- 		       struct sk_buff *skb, u8 ie_len);
- int mesh_add_he_oper_ie(struct ieee80211_sub_if_data *sdata,
- 			struct sk_buff *skb);
-+int mesh_add_he_6ghz_cap_ie(struct ieee80211_sub_if_data *sdata,
-+			    struct sk_buff *skb);
- void mesh_rmc_free(struct ieee80211_sub_if_data *sdata);
- int mesh_rmc_init(struct ieee80211_sub_if_data *sdata);
- void ieee80211s_init(void);
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index e3e29b8d641d..dedb2341ebdd 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -328,7 +328,8 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
- 		    mesh_add_vht_cap_ie(sdata, skb) ||
- 		    mesh_add_vht_oper_ie(sdata, skb) ||
- 		    mesh_add_he_cap_ie(sdata, skb, ie_len_he_cap) ||
--		    mesh_add_he_oper_ie(sdata, skb))
-+		    mesh_add_he_oper_ie(sdata, skb) ||
-+		    mesh_add_he_6ghz_cap_ie(sdata, skb))
- 			goto free;
- 	}
- 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 58a082efc3b3..b4dfefd482a6 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -654,6 +654,12 @@ static void ieee80211_add_he_ie(struct ieee80211_sub_if_data *sdata,
- 				      he_cap->he_cap_elem.phy_cap_info);
- 	pos = skb_put(skb, he_cap_size);
- 	ieee80211_ie_build_he_cap(pos, he_cap, pos + he_cap_size);
-+
-+	if (!he_cap->has_he_6ghz)
-+		return;
-+
-+	pos = skb_put(skb, 5); /* 2 + 1 + sizeof(he_cap->he_6ghz.cap) */
-+	ieee80211_ie_build_he_6ghz_band_cap(pos, he_cap->he_6ghz.cap);
- }
- 
- static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
-@@ -4803,7 +4809,8 @@ static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
- 	if (!sband->ht_cap.ht_supported) {
- 		ifmgd->flags |= IEEE80211_STA_DISABLE_HT;
- 		ifmgd->flags |= IEEE80211_STA_DISABLE_VHT;
--		ifmgd->flags |= IEEE80211_STA_DISABLE_HE;
-+		if (sband->band != NL80211_BAND_6GHZ)
-+			ifmgd->flags |= IEEE80211_STA_DISABLE_HE;
- 	}
- 
- 	if (!sband->vht_cap.vht_supported)
-@@ -5493,7 +5500,8 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
- 	if (req->flags & ASSOC_REQ_DISABLE_HT) {
- 		ifmgd->flags |= IEEE80211_STA_DISABLE_HT;
- 		ifmgd->flags |= IEEE80211_STA_DISABLE_VHT;
--		ifmgd->flags |= IEEE80211_STA_DISABLE_HE;
-+		if (sband->band != NL80211_BAND_6GHZ)
-+			ifmgd->flags |= IEEE80211_STA_DISABLE_HE;
- 	}
- 
- 	if (req->flags & ASSOC_REQ_DISABLE_VHT)
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 5a33755c22f4..2bcebe672c0d 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -2839,6 +2839,21 @@ u8 *ieee80211_ie_build_he_cap(u8 *pos,
- 	return pos;
- }
- 
-+u8 *ieee80211_ie_build_he_6ghz_band_cap(u8 *pos, u16 he_6ghz_cap)
-+{
-+	__le16 cap = cpu_to_le16(he_6ghz_cap);
-+
-+	*pos++ = WLAN_EID_EXTENSION;
-+	*pos++ = 3;
-+	*pos++ = WLAN_EID_EXT_HE_6GHZ_BAND_CAP;
-+
-+	/* Fixed data */
-+	memcpy(pos, &cap, sizeof(cap));
-+	pos += sizeof(cap);
-+
-+	return pos;
-+}
-+
- u8 *ieee80211_ie_build_ht_oper(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
- 			       const struct cfg80211_chan_def *chandef,
- 			       u16 prot_mode, bool rifs_mode)
+diff --git a/drivers/net/wireless/marvell/mwl8k.c b/drivers/net/wireless/marvell/mwl8k.c
+index 97f23f93f6e7..d609ef1bb879 100644
+--- a/drivers/net/wireless/marvell/mwl8k.c
++++ b/drivers/net/wireless/marvell/mwl8k.c
+@@ -1551,6 +1551,7 @@ static int mwl8k_tx_wait_empty(struct ieee80211_hw *hw)
+ 	 * the firmware has crashed
+ 	 */
+ 	if (priv->hw_restart_in_progress) {
++		module_firmware_crashed();
+ 		if (priv->hw_restart_owner == current)
+ 			return 0;
+ 		else
 -- 
-2.7.4
+2.25.1
+
