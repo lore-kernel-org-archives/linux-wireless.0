@@ -7,51 +7,51 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C93FDC47255
-	for <linux-wireless@archiver.kernel.org>; Sat,  9 May 2020 00:13:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BBF8C47247
+	for <linux-wireless@archiver.kernel.org>; Sat,  9 May 2020 00:13:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A94B92184D
-	for <linux-wireless@archiver.kernel.org>; Sat,  9 May 2020 00:13:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3B7BA2184D
+	for <linux-wireless@archiver.kernel.org>; Sat,  9 May 2020 00:13:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="ra5UutzC"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="etQcF+7/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728470AbgEIAN1 (ORCPT
+        id S1728476AbgEIANa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 8 May 2020 20:13:27 -0400
-Received: from mail26.static.mailgun.info ([104.130.122.26]:53460 "EHLO
-        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728365AbgEIAN0 (ORCPT
+        Fri, 8 May 2020 20:13:30 -0400
+Received: from mail27.static.mailgun.info ([104.130.122.27]:10451 "EHLO
+        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728392AbgEIANa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 8 May 2020 20:13:26 -0400
+        Fri, 8 May 2020 20:13:30 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1588983206; h=References: In-Reply-To: Message-Id: Date:
+ s=smtp; t=1588983208; h=References: In-Reply-To: Message-Id: Date:
  Subject: Cc: To: From: Sender;
- bh=qI0MCgapxJM2yN2WArwQzjt/VfFHUH0kGqFscZOMrHg=; b=ra5UutzCN0RmgwuH2GGXwHxwMZ97R3xLXSisQIbamV1q8kXjhEfUpAo2R/mBcboFocUhLQvz
- 5gLpHxdggpjN3HYMl1J/7kDfOt1IW70O4zJ0lGYJUftaVCuV2MuG0MBNxxl/ZYtmnk6v3ltn
- 11dtu670gVrzbr4q+U5d3Q0P4X0=
-X-Mailgun-Sending-Ip: 104.130.122.26
+ bh=hiGeAG8v37l3WG8lFHQP4B3vaVMogqoRQFmN8YZJCY8=; b=etQcF+7/NwsVyaEP26PrvuhJ0COt15apEok3HgoKLncvZFcbUxvfjPdwCXOmrdtRzb/lEy6W
+ 4vLnUg5FaWH9f6dswUGLAiItfNNSO/pyrF6hhkMOkNSjwsOlq3XZKJwD6fkaYtyaH3j4fjVZ
+ soCv42eG6gcA0Wl2mGd/IdkS9A0=
+X-Mailgun-Sending-Ip: 104.130.122.27
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5eb5f5a4.7ffa8ebd7228-smtp-out-n04;
- Sat, 09 May 2020 00:13:24 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5eb5f5a0.7efc27e69730-smtp-out-n04;
+ Sat, 09 May 2020 00:13:20 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 80F5DC432C2; Sat,  9 May 2020 00:13:23 +0000 (UTC)
+        id 6508AC433D2; Sat,  9 May 2020 00:13:19 +0000 (UTC)
 Received: from rmanohar-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: rmanohar)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id EC8EDC4478C;
-        Sat,  9 May 2020 00:13:21 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org EC8EDC4478C
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id B80DAC433F2;
+        Sat,  9 May 2020 00:13:18 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org B80DAC433F2
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=rmanohar@codeaurora.org
 From:   Rajkumar Manoharan <rmanohar@codeaurora.org>
 To:     johannes@sipsolutions.net, kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
         Rajkumar Manoharan <rmanohar@codeaurora.org>
-Subject: [PATCH v3 05/11] mac80211: fix memory overlap due to variable length param
-Date:   Fri,  8 May 2020 17:12:59 -0700
-Message-Id: <1588983185-5741-5-git-send-email-rmanohar@codeaurora.org>
+Subject: [PATCH v3 02/11] cfg80211: handle 6 GHz capability of new station
+Date:   Fri,  8 May 2020 17:12:56 -0700
+Message-Id: <1588983185-5741-2-git-send-email-rmanohar@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1588983185-5741-1-git-send-email-rmanohar@codeaurora.org>
 References: <1588983185-5741-1-git-send-email-rmanohar@codeaurora.org>
@@ -60,84 +60,103 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-As of now HE operation element in bss_conf includes variable length
-optional field followed by other HE variable. Though the optional
-field never be used, actually it is referring to next member of the
-bss_conf structure which is not correct. Fix it by declaring needed
-HE operation fields within bss_conf itself.
+Handle 6 GHz HE capability while adding new station. It will be used
+later in mac80211 station processing.
 
 Signed-off-by: Rajkumar Manoharan <rmanohar@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath11k/mac.c |  3 +--
- include/net/mac80211.h                |  7 +++++--
- net/mac80211/he.c                     | 13 +++++--------
- 3 files changed, 11 insertions(+), 12 deletions(-)
+ include/net/cfg80211.h       |  2 ++
+ include/uapi/linux/nl80211.h |  6 ++++++
+ net/wireless/nl80211.c       | 12 ++++++++++++
+ 3 files changed, 20 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index 9f8bc19cc5ae..06d063274eea 100644
---- a/drivers/net/wireless/ath/ath11k/mac.c
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -1168,8 +1168,7 @@ static void ath11k_peer_assoc_h_he(struct ath11k *ar,
- 	       sizeof(arg->peer_he_cap_macinfo));
- 	memcpy(&arg->peer_he_cap_phyinfo, he_cap->he_cap_elem.phy_cap_info,
- 	       sizeof(arg->peer_he_cap_phyinfo));
--	memcpy(&arg->peer_he_ops, &vif->bss_conf.he_operation,
--	       sizeof(arg->peer_he_ops));
-+	arg->peer_he_ops = vif->bss_conf.he_oper.params;
- 
- 	/* the top most byte is used to indicate BSS color info */
- 	arg->peer_he_ops &= 0xffffff;
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 97fec4d310ac..2af956bdf80c 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -603,7 +603,7 @@ struct ieee80211_ftm_responder_params {
-  *	nontransmitted BSSIDs
-  * @profile_periodicity: the least number of beacon frames need to be received
-  *	in order to discover all the nontransmitted BSSIDs in the set.
-- * @he_operation: HE operation information of the AP we are connected to
-+ * @he_oper: HE operation information of the AP we are connected to
-  * @he_obss_pd: OBSS Packet Detection parameters.
-  * @he_bss_color: BSS coloring settings, if BSS supports HE
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 70e48f66dac8..0797a296c083 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1225,6 +1225,7 @@ struct sta_txpwr {
+  * @he_capa_len: the length of the HE capabilities
+  * @airtime_weight: airtime scheduler weight for this station
+  * @txpwr: transmit power for an associated station
++ * @he_6ghz_capa: HE 6 GHz Band capabilities of station
   */
-@@ -666,7 +666,10 @@ struct ieee80211_bss_conf {
- 	u8 bssid_indicator;
- 	bool ema_ap;
- 	u8 profile_periodicity;
--	struct ieee80211_he_operation he_operation;
-+	struct {
-+		u32 params;
-+		u16 nss_set;
-+	} he_oper;
- 	struct ieee80211_he_obss_pd he_obss_pd;
- 	struct cfg80211_he_bss_color he_bss_color;
+ struct station_parameters {
+ 	const u8 *supported_rates;
+@@ -1257,6 +1258,7 @@ struct station_parameters {
+ 	u8 he_capa_len;
+ 	u16 airtime_weight;
+ 	struct sta_txpwr txpwr;
++	const struct ieee80211_he_6ghz_band_cap *he_6ghz_capa;
  };
-diff --git a/net/mac80211/he.c b/net/mac80211/he.c
-index 1087f715338b..f520552b22be 100644
---- a/net/mac80211/he.c
-+++ b/net/mac80211/he.c
-@@ -57,17 +57,14 @@ ieee80211_he_cap_ie_to_sta_he_cap(struct ieee80211_sub_if_data *sdata,
  
- void
- ieee80211_he_op_ie_to_bss_conf(struct ieee80211_vif *vif,
--			const struct ieee80211_he_operation *he_op_ie_elem)
-+			const struct ieee80211_he_operation *he_op_ie)
- {
--	struct ieee80211_he_operation *he_operation =
--					&vif->bss_conf.he_operation;
--
--	if (!he_op_ie_elem) {
--		memset(he_operation, 0, sizeof(*he_operation));
-+	memset(&vif->bss_conf.he_oper, 0, sizeof(vif->bss_conf.he_oper));
-+	if (!he_op_ie)
- 		return;
--	}
+ /**
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 2b691161830f..9c0a912f1684 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2470,6 +2470,9 @@ enum nl80211_commands {
+  *	no roaming occurs between the reauth threshold and PMK expiration,
+  *	disassociation is still forced.
+  *
++ * @NL80211_ATTR_HE_6GHZ_CAPABILITY: HE 6 GHz Band Capability element (from
++ *	association request when used with NL80211_CMD_NEW_STATION).
++ *
+  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+@@ -2945,6 +2948,8 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_PMK_LIFETIME,
+ 	NL80211_ATTR_PMK_REAUTH_THRESHOLD,
  
--	vif->bss_conf.he_operation = *he_op_ie_elem;
-+	vif->bss_conf.he_oper.params = __le32_to_cpu(he_op_ie->he_oper_params);
-+	vif->bss_conf.he_oper.nss_set = __le16_to_cpu(he_op_ie->he_mcs_nss_set);
- }
++	NL80211_ATTR_HE_6GHZ_CAPABILITY,
++
+ 	/* add attributes here, update the policy in nl80211.c */
  
- void
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -2998,6 +3003,7 @@ enum nl80211_attrs {
+ #define NL80211_HE_MAX_CAPABILITY_LEN           54
+ #define NL80211_MAX_NR_CIPHER_SUITES		5
+ #define NL80211_MAX_NR_AKM_SUITES		2
++#define NL80211_HE_6GHZ_CAPABILITY_LEN		2
+ 
+ #define NL80211_MIN_REMAIN_ON_CHANNEL_TIME	10
+ 
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 692bcd35f809..bcd7a452e8b1 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -661,6 +661,10 @@ const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
+ 	[NL80211_ATTR_CONTROL_PORT_NO_PREAUTH] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_PMK_LIFETIME] = NLA_POLICY_MIN(NLA_U32, 1),
+ 	[NL80211_ATTR_PMK_REAUTH_THRESHOLD] = NLA_POLICY_RANGE(NLA_U8, 1, 100),
++	[NL80211_ATTR_HE_6GHZ_CAPABILITY] = {
++		.type = NLA_EXACT_LEN,
++		.len = NL80211_HE_6GHZ_CAPABILITY_LEN,
++	},
+ };
+ 
+ /* policy for the key attributes */
+@@ -6129,6 +6133,10 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 			return -EINVAL;
+ 	}
+ 
++	if (info->attrs[NL80211_ATTR_HE_6GHZ_CAPABILITY])
++		params.he_6ghz_capa =
++			nla_data(info->attrs[NL80211_ATTR_HE_6GHZ_CAPABILITY]);
++
+ 	if (info->attrs[NL80211_ATTR_OPMODE_NOTIF]) {
+ 		params.opmode_notif_used = true;
+ 		params.opmode_notif =
+@@ -6177,6 +6185,10 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 			return -EINVAL;
+ 	}
+ 
++	/* Ensure that HT/VHT capabilities are not set for 6 GHz HE STA */
++	if (params.he_6ghz_capa && (params.ht_capa || params.vht_capa))
++		return -EINVAL;
++
+ 	/* When you run into this, adjust the code below for the new flag */
+ 	BUILD_BUG_ON(NL80211_STA_FLAG_MAX != 7);
+ 
 -- 
 2.7.4
