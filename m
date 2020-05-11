@@ -2,237 +2,107 @@ Return-Path: <SRS0=e4DQ=6Z=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A1E4C54E8E
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 May 2020 05:48:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 378BEC47255
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 May 2020 06:43:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 60DA120735
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 May 2020 05:48:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1CB88206D3
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 May 2020 06:43:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728454AbgEKFsZ (ORCPT
+        id S1728582AbgEKGnl (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 11 May 2020 01:48:25 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:50594 "EHLO
+        Mon, 11 May 2020 02:43:41 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:55840 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728365AbgEKFsY (ORCPT
+        with ESMTP id S1728556AbgEKGnk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 May 2020 01:48:24 -0400
+        Mon, 11 May 2020 02:43:40 -0400
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 04B5m30u9020762, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 04B6hP5R1012387, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexmb06.realtek.com.tw[172.21.6.99])
-        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 04B5m30u9020762
+        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 04B6hP5R1012387
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Mon, 11 May 2020 13:48:03 +0800
-Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
+        Mon, 11 May 2020 14:43:25 +0800
+Received: from RTEXDAG01.realtek.com.tw (172.21.6.100) by
  RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Mon, 11 May 2020 13:48:03 +0800
-Received: from localhost.localdomain (172.21.68.128) by
- RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
+ 15.1.1779.2; Mon, 11 May 2020 14:43:25 +0800
+Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
+ RTEXDAG01.realtek.com.tw (172.21.6.100) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Mon, 11 May 2020 13:48:02 +0800
-From:   <yhchuang@realtek.com>
-To:     <kvalo@codeaurora.org>
-CC:     <linux-wireless@vger.kernel.org>, <pkshih@realtek.com>,
-        <bigeasy@linutronix.de>, <kevin_yang@realtek.com>,
-        <briannorris@chromium.org>
-Subject: [PATCH v2 3/7] rtw88: extract: make 8822c an individual kernel module
-Date:   Mon, 11 May 2020 13:47:56 +0800
-Message-ID: <20200511054800.27422-4-yhchuang@realtek.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20200511054800.27422-1-yhchuang@realtek.com>
-References: <20200511054800.27422-1-yhchuang@realtek.com>
+ 15.1.1779.2; Mon, 11 May 2020 14:43:24 +0800
+Received: from RTEXMB04.realtek.com.tw ([fe80::8001:f5f5:a41e:f8d4]) by
+ RTEXMB04.realtek.com.tw ([fe80::8001:f5f5:a41e:f8d4%3]) with mapi id
+ 15.01.1779.005; Mon, 11 May 2020 14:43:24 +0800
+From:   Pkshih <pkshih@realtek.com>
+To:     Tony Chuang <yhchuang@realtek.com>,
+        Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+CC:     "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "briannorris@chromium.org" <briannorris@chromium.org>,
+        Kevin Yang <kevin_yang@realtek.com>
+Subject: RE: [PATCH 28/40] rtw88: 8723d: Add shutdown callback to disable BT USB suspend
+Thread-Topic: [PATCH 28/40] rtw88: 8723d: Add shutdown callback to disable BT
+ USB suspend
+Thread-Index: AQHWFIxjqUfp76n5/Um/OMmxE13LEqiZH+SAgADO4ICAASRJgIAAjRMAgAb0cGA=
+Date:   Mon, 11 May 2020 06:43:24 +0000
+Message-ID: <f5a7fea0459741368ab047a4cbfab4ea@realtek.com>
+References: <20200417074653.15591-1-yhchuang@realtek.com>
+ <20200417074653.15591-29-yhchuang@realtek.com>
+ <20200505141455.k2mk7tmuiujfv2sh@linutronix.de>
+ <c7083dc760464c1a9017888457c1718d@realtek.com>
+ <20200506200129.suid6lfkdwuoapzl@linutronix.de>
+ <2ee629b3bb374532b0830a39b57c2389@realtek.com>
+In-Reply-To: <2ee629b3bb374532b0830a39b57c2389@realtek.com>
+Accept-Language: en-US, zh-TW
+Content-Language: zh-TW
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [172.21.69.213]
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [172.21.68.128]
-X-ClientProxiedBy: RTEXMB02.realtek.com.tw (172.21.6.95) To
- RTEXMB04.realtek.com.tw (172.21.6.97)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Zong-Zhe Yang <kevin_yang@realtek.com>
-
-Make objects about 8822c functions and 8822c tables,
-i.e. rtw8822c.o and rtw8822c_table.o, an individual
-kernel module called rtw88_8822c.ko.
-
-For 8822c pcie chip, i.e. 8822CE chip, add a chip
-entry point module called rtw88_8822ce.ko which
-will depend on rtw88_8822c.ko and rtwpci.ko.
-
-Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
-Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
----
- drivers/net/wireless/realtek/rtw88/Kconfig    |  6 +++-
- drivers/net/wireless/realtek/rtw88/Makefile   |  7 ++++-
- drivers/net/wireless/realtek/rtw88/main.h     |  1 -
- drivers/net/wireless/realtek/rtw88/pci.c      |  3 --
- drivers/net/wireless/realtek/rtw88/rtw8822c.c |  5 ++++
- .../net/wireless/realtek/rtw88/rtw8822ce.c    | 30 +++++++++++++++++++
- .../net/wireless/realtek/rtw88/rtw8822ce.h    | 20 +++++++++++++
- 7 files changed, 66 insertions(+), 6 deletions(-)
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822ce.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822ce.h
-
-diff --git a/drivers/net/wireless/realtek/rtw88/Kconfig b/drivers/net/wireless/realtek/rtw88/Kconfig
-index 7a5fa68945c4..f4dbb5914bde 100644
---- a/drivers/net/wireless/realtek/rtw88/Kconfig
-+++ b/drivers/net/wireless/realtek/rtw88/Kconfig
-@@ -16,6 +16,9 @@ config RTW88_CORE
- config RTW88_PCI
- 	tristate
- 
-+config RTW88_8822C
-+	tristate
-+
- config RTW88_8822BE
- 	bool "Realtek 8822BE PCI wireless network adapter"
- 	depends on PCI
-@@ -27,10 +30,11 @@ config RTW88_8822BE
- 	  802.11ac PCIe wireless network adapter
- 
- config RTW88_8822CE
--	bool "Realtek 8822CE PCI wireless network adapter"
-+	tristate "Realtek 8822CE PCI wireless network adapter"
- 	depends on PCI
- 	select RTW88_CORE
- 	select RTW88_PCI
-+	select RTW88_8822C
- 	help
- 	  Select this option will enable support for 8822CE chipset
- 
-diff --git a/drivers/net/wireless/realtek/rtw88/Makefile b/drivers/net/wireless/realtek/rtw88/Makefile
-index 385facc0dd20..e45efd2deaa3 100644
---- a/drivers/net/wireless/realtek/rtw88/Makefile
-+++ b/drivers/net/wireless/realtek/rtw88/Makefile
-@@ -19,8 +19,13 @@ rtw88-y += main.o \
- 	   regd.o
- 
- rtw88-$(CONFIG_RTW88_8822BE)	+= rtw8822b.o rtw8822b_table.o
--rtw88-$(CONFIG_RTW88_8822CE)	+= rtw8822c.o rtw8822c_table.o
- rtw88-$(CONFIG_RTW88_8723DE)	+= rtw8723d.o rtw8723d_table.o
- 
-+obj-$(CONFIG_RTW88_8822C)	+= rtw88_8822c.o
-+rtw88_8822c-objs		:= rtw8822c.o rtw8822c_table.o
-+
-+obj-$(CONFIG_RTW88_8822CE)	+= rtw88_8822ce.o
-+rtw88_8822ce-objs		:= rtw8822ce.o
-+
- obj-$(CONFIG_RTW88_PCI)		+= rtwpci.o
- rtwpci-objs			:= pci.o
-diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
-index c9156b9b532c..d6e25d4c5aed 100644
---- a/drivers/net/wireless/realtek/rtw88/main.h
-+++ b/drivers/net/wireless/realtek/rtw88/main.h
-@@ -41,7 +41,6 @@ extern unsigned int rtw_fw_lps_deep_mode;
- extern unsigned int rtw_debug_mask;
- extern const struct ieee80211_ops rtw_ops;
- extern struct rtw_chip_info rtw8822b_hw_spec;
--extern struct rtw_chip_info rtw8822c_hw_spec;
- extern struct rtw_chip_info rtw8723d_hw_spec;
- 
- #define RTW_MAX_CHANNEL_NUM_2G 14
-diff --git a/drivers/net/wireless/realtek/rtw88/pci.c b/drivers/net/wireless/realtek/rtw88/pci.c
-index cf742c9a5105..68e3ab4a7d54 100644
---- a/drivers/net/wireless/realtek/rtw88/pci.c
-+++ b/drivers/net/wireless/realtek/rtw88/pci.c
-@@ -1602,9 +1602,6 @@ static const struct pci_device_id rtw_pci_id_table[] = {
- #ifdef CONFIG_RTW88_8822BE
- 	{ RTK_PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0xB822, rtw8822b_hw_spec) },
- #endif
--#ifdef CONFIG_RTW88_8822CE
--	{ RTK_PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0xC822, rtw8822c_hw_spec) },
--#endif
- #ifdef CONFIG_RTW88_8723DE
- 	{ RTK_PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0xD723, rtw8723d_hw_spec) },
- #endif
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-index d697d70170af..5e4cc57dbd7c 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
-@@ -2,6 +2,7 @@
- /* Copyright(c) 2018-2019  Realtek Corporation
-  */
- 
-+#include <linux/module.h>
- #include "main.h"
- #include "coex.h"
- #include "fw.h"
-@@ -4377,3 +4378,7 @@ EXPORT_SYMBOL(rtw8822c_hw_spec);
- 
- MODULE_FIRMWARE("rtw88/rtw8822c_fw.bin");
- MODULE_FIRMWARE("rtw88/rtw8822c_wow_fw.bin");
-+
-+MODULE_AUTHOR("Realtek Corporation");
-+MODULE_DESCRIPTION("Realtek 802.11ac wireless 8822c driver");
-+MODULE_LICENSE("Dual BSD/GPL");
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822ce.c b/drivers/net/wireless/realtek/rtw88/rtw8822ce.c
-new file mode 100644
-index 000000000000..c7d75edcaa2e
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822ce.c
-@@ -0,0 +1,30 @@
-+// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
-+/* Copyright(c) 2018-2019  Realtek Corporation
-+ */
-+
-+#include <linux/module.h>
-+#include <linux/pci.h>
-+#include "rtw8822ce.h"
-+
-+static const struct pci_device_id rtw_8822ce_id_table[] = {
-+	{
-+		PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0xC822),
-+		.driver_data = (kernel_ulong_t)&rtw8822c_hw_spec
-+	},
-+	{}
-+};
-+MODULE_DEVICE_TABLE(pci, rtw_8822ce_id_table);
-+
-+static struct pci_driver rtw_8822ce_driver = {
-+	.name = "rtw_8822ce",
-+	.id_table = rtw_8822ce_id_table,
-+	.probe = rtw_pci_probe,
-+	.remove = rtw_pci_remove,
-+	.driver.pm = RTW_PM_OPS,
-+	.shutdown = rtw_pci_shutdown,
-+};
-+module_pci_driver(rtw_8822ce_driver);
-+
-+MODULE_AUTHOR("Realtek Corporation");
-+MODULE_DESCRIPTION("Realtek 802.11ac wireless 8822ce driver");
-+MODULE_LICENSE("Dual BSD/GPL");
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822ce.h b/drivers/net/wireless/realtek/rtw88/rtw8822ce.h
-new file mode 100644
-index 000000000000..ed2eff4d5fd0
---- /dev/null
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8822ce.h
-@@ -0,0 +1,20 @@
-+/* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
-+/* Copyright(c) 2018-2019  Realtek Corporation
-+ */
-+
-+#ifndef __RTW_8822CE_H_
-+#define __RTW_8822CE_H_
-+
-+#ifdef CONFIG_PM
-+extern const struct dev_pm_ops rtw_pci_pm;
-+#define RTW_PM_OPS (&rtw_pci_pm)
-+#else
-+#define RTW_PM_OPS NULL
-+#endif
-+
-+extern struct rtw_chip_info rtw8822c_hw_spec;
-+int rtw_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id);
-+void rtw_pci_remove(struct pci_dev *pdev);
-+void rtw_pci_shutdown(struct pci_dev *pdev);
-+
-+#endif
--- 
-2.17.1
-
+SGkgVG9ueSwNCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBUb255IENo
+dWFuZw0KPiBTZW50OiBUaHVyc2RheSwgTWF5IDA3LCAyMDIwIDEyOjI2IFBNDQo+IFRvOiBTZWJh
+c3RpYW4gQW5kcnplaiBTaWV3aW9yDQo+IENjOiBrdmFsb0Bjb2RlYXVyb3JhLm9yZzsgUGtzaGlo
+OyBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IGJyaWFubm9ycmlzQGNocm9taXVtLm9y
+ZzsgS2V2aW4NCj4gWWFuZw0KPiBTdWJqZWN0OiBSRTogW1BBVENIIDI4LzQwXSBydHc4ODogODcy
+M2Q6IEFkZCBzaHV0ZG93biBjYWxsYmFjayB0byBkaXNhYmxlIEJUIFVTQiBzdXNwZW5kDQo+IA0K
+PiBTZWJhc3RpYW4gQW5kcnplaiBTaWV3aW9yIDxiaWdlYXN5QGxpbnV0cm9uaXguZGU+IHdyaXRl
+cw0KPiA+IE9uIDIwMjAtMDUtMDYgMDI6MzU6MjEgWyswMDAwXSwgVG9ueSBDaHVhbmcgd3JvdGU6
+DQo+ID4gPiA+IE9uIDIwMjAtMDQtMTcgMTU6NDY6NDEgWyswODAwXSwgeWhjaHVhbmdAcmVhbHRl
+ay5jb20gd3JvdGU6DQo+ID4gPiA+ID4gRnJvbTogUGluZy1LZSBTaGloIDxwa3NoaWhAcmVhbHRl
+ay5jb20+DQo+ID4gPiA+ID4NCj4gPiA+ID4gPiBXaXRob3V0IHRoaXMgcGF0Y2gsIHdpZmkgY2Fy
+ZCBjYW4ndCBpbml0aWFsaXplIHByb3Blcmx5IGR1ZSB0byBCVCBpbiBVU0INCj4gPiA+ID4gPiBz
+dXNwZW5kIHN0YXRlLiBTbywgd2UgZGlzYWJsZSBCVCBVU0Igc3VzcGVuZCAod2FrZXVwKSBpbiBz
+aHV0ZG93bg0KPiA+IGNhbGxiYWNrDQo+ID4gPiA+ID4gdGhhdCBpcyB0aGUgbW9tZW50IGJlZm9y
+ZSByZWJvb3RpbmcuIFRvIHNhdmUgQlQgVVNCIHBvd2VyLCB3ZSBjYW4ndCBkbw0KPiA+IHRoaXMN
+Cj4gPiA+ID4gPiBpbiAncmVtb3ZlJyBjYWxsYmFjay4NCj4gPiA+ID4NCj4gPiA+ID4gU28geW91
+IGNhbid0IGluaXRpYWxpemUgdGhlIFVTQiBwYXJ0IGJlY2F1c2UgaXQgaXMgaW4gc3VzcGVuZCBh
+bmQgdGhlDQo+ID4gPiA+IG9ubHkgd2F5IHRvIGF2b2lkIGl0IHRvIGRpc2FibGUgaXQgb24gdGhl
+IFBDSSBzaWRlLiBUaGF0IG1lYW5zIHlvdSBkb24ndA0KPiA+ID4gPiBzZWUgaXQgZW51bWVyYXRl
+ZCBvbiB0aGUgVVNCIGJ1cyBhdCBhbGw/DQo+ID4gPg0KPiA+ID4gWWVzLCBpZiB3ZSBkb24ndCBk
+aXNhYmxlIGl0IG9uIFBDSSBzaWRlLCB0aGVuIHRoZSBVU0IgcGFydCBjYW5ub3QgYmUNCj4gPiA+
+IHByb2JlZCBvbiBVU0IgYnVzLg0KPiA+DQo+ID4gV2UgdGFsayBoZXJlIGFib3V0IFVTQidzIHJ1
+bnRpbWUtc3VzcGVuZCAvIGF1dG9zdXNwZW5kPyBJZiBzbywgYXJlIHlvdQ0KPiA+IGF3YXJlIG9m
+IGNvbW1pdA0KPiA+ICAgN2VjYWNhZmMyNDA2MyAoIkJsdWV0b290aDogYnR1c2I6IERpc2FibGUg
+cnVudGltZSBzdXNwZW5kIG9uIFJlYWx0ZWsNCj4gPiBkZXZpY2VzIikNCj4gPg0KPiA+IG9yIGlz
+IHRoaXMgYW4gYXR0ZW1wdCB0byBnZXQgcmlkIG9mIHRoaXMgY2hhbmdlIGluIGZhdm91ciBvZiB0
+aGlzIG9uZQ0KPiA+IChzbyB0aGF0IHRoZSBkZXZpY2UgY2FuIGVudGVyIHN1c3BlbmQtbW9kZSk/
+DQo+ID4NCj4gDQo+IFBpbmctS2UsIGNhbiB5b3UgcGxlYXNlIGhlbHAgdG8gY2hlY2sgb24gdGhp
+cyA/DQo+IExvb2tzIGxpa2UgS2FpLUhlbmcgaXMgZG9pbmcgdGhlIG11Y2ggc2FtZSB0aGluZyBo
+ZXJlLg0KPiANCg0KVGhlIEthaS1IZW5nJ3MgcGF0Y2ggdHVybnMgb2ZmIHN1c3BlbmQgZW50aXJl
+bHksIHNvIEkgYmVsaWV2ZSBpZiB0aGUgcGF0Y2gNCmlzIGV4aXN0aW5nLCB0aGlzIHBhdGNoIGRv
+ZXNuJ3QgYWZmZWN0IHRoZSByZXN1bHQuDQpIb3dldmVyLCB0aGUgcGF0Y2ggc2VlbXMgbGlrZSBh
+IHRlbXBvcmFsIGZpeCwgc28gdGhpcyBwYXRjaCBpcyBuZWVkZWQuDQoNCg0KPiBCdXQgaXQncyBz
+dGlsbCB3b3J0aCB0byBkbyBpdCBpbiB3aWZpIHNpZGUgSSB0aGluaywgYmVjYXVzZSBpdCdzIGRp
+ZmZpY3VsdCB0bw0KPiBtYWtlIHN1cmUgdGhlIHN5bmNocm9uaXphdGlvbiBvZiBCVCBhbmQgV2lm
+aSBwYXRjaC4NCj4gDQpBZ3JlZS4NCg0KDQpUaGFuayB5b3UNClBLDQoNCg0KDQo=
