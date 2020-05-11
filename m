@@ -2,135 +2,285 @@ Return-Path: <SRS0=e4DQ=6Z=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MIME_BASE64_TEXT,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45FACC47255
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 May 2020 16:06:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 301D3C47255
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 May 2020 17:23:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 22AD7206E6
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 May 2020 16:06:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 04C8D206D7
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 May 2020 17:23:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="iSUrKVfH"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="XZLd/2sk"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730656AbgEKQGz (ORCPT
+        id S1730215AbgEKRXs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 11 May 2020 12:06:55 -0400
-Received: from mailgw02.mediatek.com ([210.61.82.184]:47883 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1730651AbgEKQGy (ORCPT
+        Mon, 11 May 2020 13:23:48 -0400
+Received: from mail26.static.mailgun.info ([104.130.122.26]:27330 "EHLO
+        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729731AbgEKRXs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 May 2020 12:06:54 -0400
-X-UUID: 19a12c2c508f4b129c301b38f7e9dd50-20200512
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=on1PuPTRZSxuW8kGOpKZcv+zhk/cDD70hk/j7tGKYkg=;
-        b=iSUrKVfHLhwjcXgeBIXZMvksi01ZQr3mEjrQTj3KM+I+i1Vcdj+SXzytaZMw9RcEaOPYgP/tyhscqp4f7FbB9f4InGnkxPHlAyJpWxy7dz2iU4ucv4j08LjSvwuX25q6MbC3Kiw9C51M65S680h+PFJBwU8N6NzDIzFy+43XBd0=;
-X-UUID: 19a12c2c508f4b129c301b38f7e9dd50-20200512
-Received: from mtkcas08.mediatek.inc [(172.21.101.126)] by mailgw02.mediatek.com
-        (envelope-from <ryder.lee@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
-        with ESMTP id 1461683987; Tue, 12 May 2020 00:06:49 +0800
-Received: from mtkcas07.mediatek.inc (172.21.101.84) by
- mtkmbs08n1.mediatek.inc (172.21.101.55) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Tue, 12 May 2020 00:06:40 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas07.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Tue, 12 May 2020 00:06:40 +0800
-From:   Ryder Lee <ryder.lee@mediatek.com>
-To:     Felix Fietkau <nbd@nbd.name>,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-CC:     Shayne Chen <shayne.chen@mediatek.com>,
-        Sean Wang <sean.wang@mediatek.com>,
-        <linux-wireless@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>,
-        Ryder Lee <ryder.lee@mediatek.com>
-Subject: [PATCH 3/7] mt76: mt7915: add Tx beamformee support
-Date:   Tue, 12 May 2020 00:06:34 +0800
-Message-ID: <d762dec596764fe9697213b239f7596770fc965a.1589212457.git.ryder.lee@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-In-Reply-To: <cover.1589212457.git.ryder.lee@mediatek.com>
-References: <cover.1589212457.git.ryder.lee@mediatek.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
-Content-Transfer-Encoding: base64
+        Mon, 11 May 2020 13:23:48 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1589217827; h=Message-Id: Date: Subject: Cc: To: From:
+ Sender; bh=WxGAWYe9sQovES2LJ6hQsj6et8DpZIjgrDyV160b1/0=; b=XZLd/2skMGEPC/yZa93pEYJypnoaa0+zJgtgpqZK3V4k+SJczBn56J5dfefza3idEsNgK+E/
+ nrxWNfnlPwnrpPLoDAKI/u/7OM9xcwSXMFUJ2bXUhghCtdJfqSMJ/BuEqGcQXMmev+V/v+kT
+ UFxtz5A2DZFiuSJoRQJPeQ4Nbpg=
+X-Mailgun-Sending-Ip: 104.130.122.26
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
+ by mxa.mailgun.org with ESMTP id 5eb98a16.7f0f316369d0-smtp-out-n01;
+ Mon, 11 May 2020 17:23:34 -0000 (UTC)
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 4B726C433CB; Mon, 11 May 2020 17:23:33 +0000 (UTC)
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 29103C433BA;
+        Mon, 11 May 2020 17:23:29 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 29103C433BA
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     ath11k@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org
+Subject: [PATCH] ath11k: move ring mask variables to core.c
+Date:   Mon, 11 May 2020 20:23:26 +0300
+Message-Id: <1589217806-9376-1-git-send-email-kvalo@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-RW5hYmxlIGJlYW1mb3JtZWUgc3VwcG9ydC4NCg0KU2lnbmVkLW9mZi1ieTogUnlkZXIgTGVlIDxy
-eWRlci5sZWVAbWVkaWF0ZWsuY29tPg0KVGVzdGVkLWJ5OiBFdmVseW4gVHNhaSA8ZXZlbHluLnRz
-YWlAbWVkaWF0ZWsuY29tPg0KLS0tDQogLi4uL25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210
-NzkxNS9tY3UuYyAgIHwgNTQgKysrKysrKysrKysrKysrKysrKw0KIC4uLi9uZXQvd2lyZWxlc3Mv
-bWVkaWF0ZWsvbXQ3Ni9tdDc5MTUvbWN1LmggICB8ICA5ICsrKysNCiAyIGZpbGVzIGNoYW5nZWQs
-IDYzIGluc2VydGlvbnMoKykNCg0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21l
-ZGlhdGVrL210NzYvbXQ3OTE1L21jdS5jIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsv
-bXQ3Ni9tdDc5MTUvbWN1LmMNCmluZGV4IDU4ZDBhZGNhOGIzMS4uNTJlMzQ5YjE3MjQ2IDEwMDY0
-NA0KLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc5MTUvbWN1LmMN
-CisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3OTE1L21jdS5jDQpA
-QCAtNjcsNiArNjcsNyBAQCBzdHJ1Y3QgbXQ3OTE1X2Z3X3JlZ2lvbiB7DQogI2RlZmluZSBNQ1Vf
-UEFUQ0hfQUREUkVTUwkJMHgyMDAwMDANCiANCiAjZGVmaW5lIE1UX1NUQV9CRkVSCQkJQklUKDAp
-DQorI2RlZmluZSBNVF9TVEFfQkZFRQkJCUJJVCgxKQ0KIA0KICNkZWZpbmUgRldfRkVBVFVSRV9T
-RVRfRU5DUllQVAkJQklUKDApDQogI2RlZmluZSBGV19GRUFUVVJFX1NFVF9LRVlfSURYCQlHRU5N
-QVNLKDIsIDEpDQpAQCAtMTc2OCw2ICsxNzY5LDM1IEBAIG10NzkxNV9tY3Vfc3RhX2JmZXJfdGx2
-KHN0cnVjdCBza19idWZmICpza2IsIHN0cnVjdCBpZWVlODAyMTFfc3RhICpzdGEsDQogCX0NCiB9
-DQogDQorc3RhdGljIHZvaWQNCittdDc5MTVfbWN1X3N0YV9iZmVlX3RsdihzdHJ1Y3Qgc2tfYnVm
-ZiAqc2tiLCBzdHJ1Y3QgaWVlZTgwMjExX3N0YSAqc3RhLA0KKwkJCXN0cnVjdCBtdDc5MTVfcGh5
-ICpwaHkpDQorew0KKwlzdHJ1Y3Qgc3RhX3JlY19iZmVlICpiZmVlOw0KKwlzdHJ1Y3QgdGx2ICp0
-bHY7DQorCWludCB0eF9hbnQgPSBod2VpZ2h0OChwaHktPmNoYWlubWFzaykgLSAxOw0KKwl1OCBu
-ciA9IDA7DQorDQorCXRsdiA9IG10NzkxNV9tY3VfYWRkX3Rsdihza2IsIFNUQV9SRUNfQkZFRSwg
-c2l6ZW9mKCpiZmVlKSk7DQorCWJmZWUgPSAoc3RydWN0IHN0YV9yZWNfYmZlZSAqKXRsdjsNCisN
-CisJaWYgKHN0YS0+aGVfY2FwLmhhc19oZSkgew0KKwkJc3RydWN0IGllZWU4MDIxMV9oZV9jYXBf
-ZWxlbSAqcGUgPSAmc3RhLT5oZV9jYXAuaGVfY2FwX2VsZW07DQorDQorCQluciA9IEhFX1BIWShD
-QVA1X0JFQU1GT1JNRUVfTlVNX1NORF9ESU1fVU5ERVJfODBNSFpfTUFTSywNCisJCQkgICAgcGUt
-PnBoeV9jYXBfaW5mb1s1XSk7DQorCX0gZWxzZSBpZiAoc3RhLT52aHRfY2FwLnZodF9zdXBwb3J0
-ZWQpIHsNCisJCXN0cnVjdCBpZWVlODAyMTFfc3RhX3ZodF9jYXAgKnBjID0gJnN0YS0+dmh0X2Nh
-cDsNCisNCisJCW5yID0gRklFTERfR0VUKElFRUU4MDIxMV9WSFRfQ0FQX1NPVU5ESU5HX0RJTUVO
-U0lPTlNfTUFTSywNCisJCQkgICAgICAgcGMtPmNhcCk7DQorCX0NCisNCisJLyogcmVwbHkgd2l0
-aCBpZGVudGl0eSBtYXRyaXggdG8gYXZvaWQgMngyIEJGIG5lZ2F0aXZlIGdhaW4gKi8NCisJaWYg
-KG5yID09IDEgJiYgdHhfYW50ID09IDIpDQorCQliZmVlLT5mYl9pZGVudGl0eV9tYXRyaXggPSB0
-cnVlOw0KK30NCisNCiBzdGF0aWMgdTgNCiBtdDc5MTVfbWN1X3N0YV90eGJmX3R5cGUoc3RydWN0
-IG10NzkxNV9waHkgKnBoeSwgc3RydWN0IGllZWU4MDIxMV92aWYgKnZpZiwNCiAJCQkgc3RydWN0
-IGllZWU4MDIxMV9zdGEgKnN0YSkNCkBAIC0xNzkwLDYgKzE4MjAsMTEgQEAgbXQ3OTE1X21jdV9z
-dGFfdHhiZl90eXBlKHN0cnVjdCBtdDc5MTVfcGh5ICpwaHksIHN0cnVjdCBpZWVlODAyMTFfdmlm
-ICp2aWYsDQogCQl2YyA9IG10NzkxNV9nZXRfaGVfcGh5X2NhcChwaHksIHZpZik7DQogCQl2ZSA9
-ICZ2Yy0+aGVfY2FwX2VsZW07DQogDQorCQlpZiAoKEhFX1BIWShDQVAzX1NVX0JFQU1GT1JNRVIs
-IHBlLT5waHlfY2FwX2luZm9bM10pIHx8DQorCQkgICAgIEhFX1BIWShDQVA0X01VX0JFQU1GT1JN
-RVIsIHBlLT5waHlfY2FwX2luZm9bNF0pKSAmJg0KKwkJICAgIEhFX1BIWShDQVA0X1NVX0JFQU1G
-T1JNRUUsIHZlLT5waHlfY2FwX2luZm9bNF0pKQ0KKwkJCXR5cGUgfD0gTVRfU1RBX0JGRUU7DQor
-DQogCQlpZiAoKEhFX1BIWShDQVAzX1NVX0JFQU1GT1JNRVIsIHZlLT5waHlfY2FwX2luZm9bM10p
-IHx8DQogCQkgICAgIEhFX1BIWShDQVA0X01VX0JFQU1GT1JNRVIsIHZlLT5waHlfY2FwX2luZm9b
-NF0pKSAmJg0KIAkJICAgIEhFX1BIWShDQVA0X1NVX0JFQU1GT1JNRUUsIHBlLT5waHlfY2FwX2lu
-Zm9bNF0pKQ0KQEAgLTE4MDYsNiArMTg0MSw5IEBAIG10NzkxNV9tY3Vfc3RhX3R4YmZfdHlwZShz
-dHJ1Y3QgbXQ3OTE1X3BoeSAqcGh5LCBzdHJ1Y3QgaWVlZTgwMjExX3ZpZiAqdmlmLA0KIAkJY2Ug
-PSBJRUVFODAyMTFfVkhUX0NBUF9TVV9CRUFNRk9STUVFX0NBUEFCTEUgfA0KIAkJICAgICBJRUVF
-ODAyMTFfVkhUX0NBUF9NVV9CRUFNRk9STUVFX0NBUEFCTEU7DQogDQorCQlpZiAoKHBjLT5jYXAg
-JiBjcikgJiYgKHZjLT5jYXAgJiBjZSkpDQorCQkJdHlwZSB8PSBNVF9TVEFfQkZFRTsNCisNCiAJ
-CWlmICgodmMtPmNhcCAmIGNyKSAmJiAocGMtPmNhcCAmIGNlKSkNCiAJCQl0eXBlIHw9IE1UX1NU
-QV9CRkVSOw0KIAl9IGVsc2UgaWYgKHN0YS0+aHRfY2FwLmh0X3N1cHBvcnRlZCkgew0KQEAgLTE4
-NDgsNiArMTg4NiwyMiBAQCBtdDc5MTVfbWN1X2FkZF90eGJmKHN0cnVjdCBtdDc5MTVfZGV2ICpk
-ZXYsIHN0cnVjdCBpZWVlODAyMTFfdmlmICp2aWYsDQogCQkJcmV0dXJuIHI7DQogCX0NCiANCisJ
-Lyogc3RhcmVjIGJmZWUgKi8NCisJaWYgKHR5cGUgJiBNVF9TVEFfQkZFRSkgew0KKwkJbGVuID0g
-c2l6ZW9mKHN0cnVjdCBzdGFfcmVxX2hkcikgKyBzaXplb2Yoc3RydWN0IHN0YV9yZWNfYmZlZSk7
-DQorDQorCQlza2IgPSBtdDc5MTVfbWN1X2FsbG9jX3N0YV9yZXEoZGV2LCBtdmlmLCBtc3RhLCBs
-ZW4pOw0KKwkJaWYgKElTX0VSUihza2IpKQ0KKwkJCXJldHVybiBQVFJfRVJSKHNrYik7DQorDQor
-CQltdDc5MTVfbWN1X3N0YV9iZmVlX3Rsdihza2IsIHN0YSwgcGh5KTsNCisNCisJCXIgPSBfX210
-NzZfbWN1X3NrYl9zZW5kX21zZygmZGV2LT5tdDc2LCBza2IsDQorCQkJCQkgICAgTUNVX0VYVF9D
-TURfU1RBX1JFQ19VUERBVEUsIHRydWUpOw0KKwkJaWYgKHIpDQorCQkJcmV0dXJuIHI7DQorCX0N
-CisNCiAJcmV0dXJuIDA7DQogfQ0KIA0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNz
-L21lZGlhdGVrL210NzYvbXQ3OTE1L21jdS5oIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0
-ZWsvbXQ3Ni9tdDc5MTUvbWN1LmgNCmluZGV4IDUzZDFlMWYwY2VhOS4uY2RlYmE1YTBlZjM0IDEw
-MDY0NA0KLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc5MTUvbWN1
-LmgNCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3OTE1L21jdS5o
-DQpAQCAtODY1LDYgKzg2NSwxNCBAQCBzdHJ1Y3Qgc3RhX3JlY19iZiB7DQogCXU4IHJzdlsyXTsN
-CiB9IF9fcGFja2VkOw0KIA0KK3N0cnVjdCBzdGFfcmVjX2JmZWUgew0KKwlfX2xlMTYgdGFnOw0K
-KwlfX2xlMTYgbGVuOw0KKwlib29sIGZiX2lkZW50aXR5X21hdHJpeDsJLyogMTogZmVlZGJhY2sg
-aWRlbnRpdHkgbWF0cml4ICovDQorCWJvb2wgaWdub3JlX2ZlZWRiYWNrOwkJLyogMTogaWdub3Jl
-ICovDQorCXU4IHJzdlsyXTsNCit9IF9fcGFja2VkOw0KKw0KIGVudW0gew0KIAlTVEFfUkVDX0JB
-U0lDLA0KIAlTVEFfUkVDX1JBLA0KQEAgLTg4Niw2ICs4OTQsNyBAQCBlbnVtIHsNCiAJU1RBX1JF
-Q19LRVlfVjIsDQogCVNUQV9SRUNfTVVSVSwNCiAJU1RBX1JFQ19NVUVEQ0EsDQorCVNUQV9SRUNf
-QkZFRSwNCiAJU1RBX1JFQ19NQVhfTlVNDQogfTsNCiANCi0tIA0KMi4xOC4wDQo=
+It should have been in core.c in the first place as the declarations are in
+core.h. And these are needed by both pci.c and ahb.c so there needs to be a
+common place for them.
 
+Also add ath11k_ prefix to rx_mon_status_ring_mask to make it easy add
+EXPORT_SYMBOL() later.
+
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath11k/ahb.c  | 74 +---------------------------------
+ drivers/net/wireless/ath/ath11k/core.c | 45 +++++++++++++++++++++
+ drivers/net/wireless/ath/ath11k/core.h | 29 ++++++++++++-
+ drivers/net/wireless/ath/ath11k/dp.c   |  4 +-
+ 4 files changed, 76 insertions(+), 76 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath11k/ahb.c b/drivers/net/wireless/ath/ath11k/ahb.c
+index 30092841ac46..f14483e2a76d 100644
+--- a/drivers/net/wireless/ath/ath11k/ahb.c
++++ b/drivers/net/wireless/ath/ath11k/ahb.c
+@@ -321,78 +321,6 @@ static const char *irq_name[ATH11K_IRQ_NUM_MAX] = {
+ 	"tcl2host-status-ring",
+ };
+ 
+-#define ATH11K_TX_RING_MASK_0 0x1
+-#define ATH11K_TX_RING_MASK_1 0x2
+-#define ATH11K_TX_RING_MASK_2 0x4
+-
+-#define ATH11K_RX_RING_MASK_0 0x1
+-#define ATH11K_RX_RING_MASK_1 0x2
+-#define ATH11K_RX_RING_MASK_2 0x4
+-#define ATH11K_RX_RING_MASK_3 0x8
+-
+-#define ATH11K_RX_ERR_RING_MASK_0 0x1
+-
+-#define ATH11K_RX_WBM_REL_RING_MASK_0 0x1
+-
+-#define ATH11K_REO_STATUS_RING_MASK_0 0x1
+-
+-#define ATH11K_RXDMA2HOST_RING_MASK_0 0x1
+-#define ATH11K_RXDMA2HOST_RING_MASK_1 0x2
+-#define ATH11K_RXDMA2HOST_RING_MASK_2 0x4
+-
+-#define ATH11K_HOST2RXDMA_RING_MASK_0 0x1
+-#define ATH11K_HOST2RXDMA_RING_MASK_1 0x2
+-#define ATH11K_HOST2RXDMA_RING_MASK_2 0x4
+-
+-#define ATH11K_RX_MON_STATUS_RING_MASK_0 0x1
+-#define ATH11K_RX_MON_STATUS_RING_MASK_1 0x2
+-#define ATH11K_RX_MON_STATUS_RING_MASK_2 0x4
+-
+-const u8 ath11k_tx_ring_mask[ATH11K_EXT_IRQ_GRP_NUM_MAX] = {
+-	ATH11K_TX_RING_MASK_0,
+-	ATH11K_TX_RING_MASK_1,
+-	ATH11K_TX_RING_MASK_2,
+-};
+-
+-const u8 rx_mon_status_ring_mask[ATH11K_EXT_IRQ_GRP_NUM_MAX] = {
+-	0, 0, 0, 0,
+-	ATH11K_RX_MON_STATUS_RING_MASK_0,
+-	ATH11K_RX_MON_STATUS_RING_MASK_1,
+-	ATH11K_RX_MON_STATUS_RING_MASK_2,
+-};
+-
+-const u8 ath11k_rx_ring_mask[ATH11K_EXT_IRQ_GRP_NUM_MAX] = {
+-	0, 0, 0, 0, 0, 0, 0,
+-	ATH11K_RX_RING_MASK_0,
+-	ATH11K_RX_RING_MASK_1,
+-	ATH11K_RX_RING_MASK_2,
+-	ATH11K_RX_RING_MASK_3,
+-};
+-
+-const u8 ath11k_rx_err_ring_mask[ATH11K_EXT_IRQ_GRP_NUM_MAX] = {
+-	ATH11K_RX_ERR_RING_MASK_0,
+-};
+-
+-const u8 ath11k_rx_wbm_rel_ring_mask[ATH11K_EXT_IRQ_GRP_NUM_MAX] = {
+-	ATH11K_RX_WBM_REL_RING_MASK_0,
+-};
+-
+-const u8 ath11k_reo_status_ring_mask[ATH11K_EXT_IRQ_GRP_NUM_MAX] = {
+-	ATH11K_REO_STATUS_RING_MASK_0,
+-};
+-
+-const u8 ath11k_rxdma2host_ring_mask[ATH11K_EXT_IRQ_GRP_NUM_MAX] = {
+-	ATH11K_RXDMA2HOST_RING_MASK_0,
+-	ATH11K_RXDMA2HOST_RING_MASK_1,
+-	ATH11K_RXDMA2HOST_RING_MASK_2,
+-};
+-
+-const u8 ath11k_host2rxdma_ring_mask[ATH11K_EXT_IRQ_GRP_NUM_MAX] = {
+-	ATH11K_HOST2RXDMA_RING_MASK_0,
+-	ATH11K_HOST2RXDMA_RING_MASK_1,
+-	ATH11K_HOST2RXDMA_RING_MASK_2,
+-};
+-
+ /* enum ext_irq_num - irq numbers that can be used by external modules
+  * like datapath
+  */
+@@ -781,7 +709,7 @@ static int ath11k_ahb_ext_irq_config(struct ath11k_base *ab)
+ 						- ath11k_core_get_hw_mac_id(ab, j);
+ 				}
+ 
+-				if (rx_mon_status_ring_mask[i] & BIT(j)) {
++				if (ath11k_rx_mon_status_ring_mask[i] & BIT(j)) {
+ 					irq_grp->irqs[num_irq++] =
+ 						ppdu_end_interrupts_mac1 -
+ 						ath11k_core_get_hw_mac_id(ab, j);
+diff --git a/drivers/net/wireless/ath/ath11k/core.c b/drivers/net/wireless/ath/ath11k/core.c
+index 02501cc154fe..d6e0f172c36f 100644
+--- a/drivers/net/wireless/ath/ath11k/core.c
++++ b/drivers/net/wireless/ath/ath11k/core.c
+@@ -26,6 +26,51 @@ static const struct ath11k_hw_params ath11k_hw_params = {
+ 	},
+ };
+ 
++const u8 ath11k_tx_ring_mask[ATH11K_EXT_IRQ_GRP_NUM_MAX] = {
++	ATH11K_TX_RING_MASK_0,
++	ATH11K_TX_RING_MASK_1,
++	ATH11K_TX_RING_MASK_2,
++};
++
++const u8 ath11k_rx_mon_status_ring_mask[ATH11K_EXT_IRQ_GRP_NUM_MAX] = {
++	0, 0, 0, 0,
++	ATH11K_RX_MON_STATUS_RING_MASK_0,
++	ATH11K_RX_MON_STATUS_RING_MASK_1,
++	ATH11K_RX_MON_STATUS_RING_MASK_2,
++};
++
++const u8 ath11k_rx_ring_mask[ATH11K_EXT_IRQ_GRP_NUM_MAX] = {
++	0, 0, 0, 0, 0, 0, 0,
++	ATH11K_RX_RING_MASK_0,
++	ATH11K_RX_RING_MASK_1,
++	ATH11K_RX_RING_MASK_2,
++	ATH11K_RX_RING_MASK_3,
++};
++
++const u8 ath11k_rx_err_ring_mask[ATH11K_EXT_IRQ_GRP_NUM_MAX] = {
++	ATH11K_RX_ERR_RING_MASK_0,
++};
++
++const u8 ath11k_rx_wbm_rel_ring_mask[ATH11K_EXT_IRQ_GRP_NUM_MAX] = {
++	ATH11K_RX_WBM_REL_RING_MASK_0,
++};
++
++const u8 ath11k_reo_status_ring_mask[ATH11K_EXT_IRQ_GRP_NUM_MAX] = {
++	ATH11K_REO_STATUS_RING_MASK_0,
++};
++
++const u8 ath11k_rxdma2host_ring_mask[ATH11K_EXT_IRQ_GRP_NUM_MAX] = {
++	ATH11K_RXDMA2HOST_RING_MASK_0,
++	ATH11K_RXDMA2HOST_RING_MASK_1,
++	ATH11K_RXDMA2HOST_RING_MASK_2,
++};
++
++const u8 ath11k_host2rxdma_ring_mask[ATH11K_EXT_IRQ_GRP_NUM_MAX] = {
++	ATH11K_HOST2RXDMA_RING_MASK_0,
++	ATH11K_HOST2RXDMA_RING_MASK_1,
++	ATH11K_HOST2RXDMA_RING_MASK_2,
++};
++
+ /* Map from pdev index to hw mac index */
+ u8 ath11k_core_get_hw_mac_id(struct ath11k_base *ab, int pdev_idx)
+ {
+diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
+index e04f0e711779..161e3ae92b73 100644
+--- a/drivers/net/wireless/ath/ath11k/core.h
++++ b/drivers/net/wireless/ath/ath11k/core.h
+@@ -102,6 +102,33 @@ enum ath11k_firmware_mode {
+ #define ATH11K_EXT_IRQ_GRP_NUM_MAX 11
+ #define ATH11K_EXT_IRQ_NUM_MAX	16
+ 
++#define ATH11K_TX_RING_MASK_0 0x1
++#define ATH11K_TX_RING_MASK_1 0x2
++#define ATH11K_TX_RING_MASK_2 0x4
++
++#define ATH11K_RX_RING_MASK_0 0x1
++#define ATH11K_RX_RING_MASK_1 0x2
++#define ATH11K_RX_RING_MASK_2 0x4
++#define ATH11K_RX_RING_MASK_3 0x8
++
++#define ATH11K_RX_ERR_RING_MASK_0 0x1
++
++#define ATH11K_RX_WBM_REL_RING_MASK_0 0x1
++
++#define ATH11K_REO_STATUS_RING_MASK_0 0x1
++
++#define ATH11K_RXDMA2HOST_RING_MASK_0 0x1
++#define ATH11K_RXDMA2HOST_RING_MASK_1 0x2
++#define ATH11K_RXDMA2HOST_RING_MASK_2 0x4
++
++#define ATH11K_HOST2RXDMA_RING_MASK_0 0x1
++#define ATH11K_HOST2RXDMA_RING_MASK_1 0x2
++#define ATH11K_HOST2RXDMA_RING_MASK_2 0x4
++
++#define ATH11K_RX_MON_STATUS_RING_MASK_0 0x1
++#define ATH11K_RX_MON_STATUS_RING_MASK_1 0x2
++#define ATH11K_RX_MON_STATUS_RING_MASK_2 0x4
++
+ extern const u8 ath11k_reo_status_ring_mask[ATH11K_EXT_IRQ_GRP_NUM_MAX];
+ extern const u8 ath11k_tx_ring_mask[ATH11K_EXT_IRQ_GRP_NUM_MAX];
+ extern const u8 ath11k_rx_ring_mask[ATH11K_EXT_IRQ_GRP_NUM_MAX];
+@@ -109,7 +136,7 @@ extern const u8 ath11k_rx_err_ring_mask[ATH11K_EXT_IRQ_GRP_NUM_MAX];
+ extern const u8 ath11k_rx_wbm_rel_ring_mask[ATH11K_EXT_IRQ_GRP_NUM_MAX];
+ extern const u8 ath11k_rxdma2host_ring_mask[ATH11K_EXT_IRQ_GRP_NUM_MAX];
+ extern const u8 ath11k_host2rxdma_ring_mask[ATH11K_EXT_IRQ_GRP_NUM_MAX];
+-extern const u8 rx_mon_status_ring_mask[ATH11K_EXT_IRQ_GRP_NUM_MAX];
++extern const u8 ath11k_rx_mon_status_ring_mask[ATH11K_EXT_IRQ_GRP_NUM_MAX];
+ 
+ struct ath11k_ext_irq_grp {
+ 	struct ath11k_base *ab;
+diff --git a/drivers/net/wireless/ath/ath11k/dp.c b/drivers/net/wireless/ath/ath11k/dp.c
+index 9ae743e528af..75c177480ff4 100644
+--- a/drivers/net/wireless/ath/ath11k/dp.c
++++ b/drivers/net/wireless/ath/ath11k/dp.c
+@@ -659,9 +659,9 @@ int ath11k_dp_service_srng(struct ath11k_base *ab,
+ 			goto done;
+ 	}
+ 
+-	if (rx_mon_status_ring_mask[grp_id]) {
++	if (ath11k_rx_mon_status_ring_mask[grp_id]) {
+ 		for (i = 0; i <  ab->num_radios; i++) {
+-			if (rx_mon_status_ring_mask[grp_id] & BIT(i)) {
++			if (ath11k_rx_mon_status_ring_mask[grp_id] & BIT(i)) {
+ 				work_done =
+ 				ath11k_dp_rx_process_mon_rings(ab,
+ 							       i, napi,
+-- 
+2.7.4
