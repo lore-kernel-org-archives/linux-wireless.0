@@ -6,82 +6,76 @@ X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
 	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EDE4C54E4A
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 May 2020 12:38:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9EB0C47255
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 May 2020 12:38:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7E24E207FF
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 May 2020 12:38:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8000320746
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 May 2020 12:38:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="i4AUia9y"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="vGNP1SGX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730106AbgEKMiB (ORCPT
+        id S1729563AbgEKMid (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 11 May 2020 08:38:01 -0400
+        Mon, 11 May 2020 08:38:33 -0400
 Received: from mail26.static.mailgun.info ([104.130.122.26]:39827 "EHLO
         mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730103AbgEKMiB (ORCPT
+        by vger.kernel.org with ESMTP id S1729343AbgEKMid (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 May 2020 08:38:01 -0400
+        Mon, 11 May 2020 08:38:33 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1589200680; h=Date: Message-Id: Cc: To: References:
+ s=smtp; t=1589200712; h=Date: Message-Id: Cc: To: References:
  In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=XBpzjIe7dN38lP66VoHoHkV2Q6Si8+j8wos5b3eZkDU=;
- b=i4AUia9yMyoMOmb5aEhHEt9VAzcYiAiGFwpYV+Hndw/60EUQSG7rR7BVwSuSk6flB0q+HOHu
- x+rh1ea1zb62v1HBkKB0uNabWYr8d1L2Ux7IRTLjTfOOGd5nrdI+GwmXUKJ7JPHnJ4YNMpzb
- ji+lqJrBeu/cZzHYJs+xI3COEvs=
+ Content-Type: Sender; bh=6zHthPA67U2sDfggdSKZPI6MNAUGMdP3o7kYKcHGj6w=;
+ b=vGNP1SGXqe/JCtbZZ8lELwl6zz1Q1lsElqXc2sqDJuMp0CHCXtuuzBqbU3hSyQ+fSj4mNji2
+ xh/oB2MRzNVIdb2DysxZfqhnKIZr25r3h3A8zRIlgT40ppIqlvFxM7StDvBao4HZb7KzIdkf
+ XFAg1Up/UvUvxKpqAi6+o7E21vg=
 X-Mailgun-Sending-Ip: 104.130.122.26
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5eb94719.7fa958f07260-smtp-out-n05;
- Mon, 11 May 2020 12:37:45 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5eb9473d.7f9bb04d8c38-smtp-out-n01;
+ Mon, 11 May 2020 12:38:21 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id BBD65C433CB; Mon, 11 May 2020 12:37:45 +0000 (UTC)
+        id 39658C433CB; Mon, 11 May 2020 12:38:21 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 0919EC433F2;
-        Mon, 11 May 2020 12:37:42 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 0919EC433F2
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id DAC52C433BA;
+        Mon, 11 May 2020 12:38:19 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org DAC52C433BA
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH] wcn36xx: Fix error handling path in 'wcn36xx_probe()'
+Subject: Re: [PATCH] ath10k: Remove experimental tag from ath10k Kconfig
 From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20200507043619.200051-1-christophe.jaillet@wanadoo.fr>
-References: <20200507043619.200051-1-christophe.jaillet@wanadoo.fr>
-To:     Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Cc:     davem@davemloft.net, bjorn.andersson@linaro.org,
-        marcel@holtmann.org, andy.gross@linaro.org,
-        wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        kernel-janitors@vger.kernel.org,
-        Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+In-Reply-To: <20200507055324.15564-1-govinds@codeaurora.org>
+References: <20200507055324.15564-1-govinds@codeaurora.org>
+To:     Govind Singh <govinds@codeaurora.org>
+Cc:     ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        Govind Singh <govinds@codeaurora.org>
 User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
-Message-Id: <20200511123745.BBD65C433CB@smtp.codeaurora.org>
-Date:   Mon, 11 May 2020 12:37:45 +0000 (UTC)
+Message-Id: <20200511123821.39658C433CB@smtp.codeaurora.org>
+Date:   Mon, 11 May 2020 12:38:21 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Christophe JAILLET <christophe.jaillet@wanadoo.fr> wrote:
+Govind Singh <govinds@codeaurora.org> wrote:
 
-> In case of error, 'qcom_wcnss_open_channel()' must be undone by a call to
-> 'rpmsg_destroy_ept()', as already done in the remove function.
+> ath10k(sdio/snoc) is no longer experimental. Remove experimental tag for
+> SDIO/SNOC from ath10k Kconfig.
 > 
-> Fixes: 5052de8deff5 ("soc: qcom: smd: Transition client drivers from smd to rpmsg")
-> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-> Reviewed-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+> Signed-off-by: Govind Singh <govinds@codeaurora.org>
 > Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
 Patch applied to ath-next branch of ath.git, thanks.
 
-a86308fc534e wcn36xx: Fix error handling path in 'wcn36xx_probe()'
+4d0f3604c4d1 ath10k: remove experimental tag from SDIO and SNOC busses in Kconfig
 
 -- 
-https://patchwork.kernel.org/patch/11532419/
+https://patchwork.kernel.org/patch/11532477/
 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
