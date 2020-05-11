@@ -1,72 +1,93 @@
-Return-Path: <SRS0=4F9R=6Y=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=e4DQ=6Z=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29B77C38A2A
-	for <linux-wireless@archiver.kernel.org>; Sun, 10 May 2020 21:54:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 477D9C47255
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 May 2020 05:48:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0E82120801
-	for <linux-wireless@archiver.kernel.org>; Sun, 10 May 2020 21:54:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 245582184D
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 May 2020 05:48:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729412AbgEJVyR (ORCPT
+        id S1728300AbgEKFsN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 10 May 2020 17:54:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54746 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727771AbgEJVyR (ORCPT
+        Mon, 11 May 2020 01:48:13 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:50586 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726161AbgEKFsM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 10 May 2020 17:54:17 -0400
-Received: from Galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D49DDC061A0C
-        for <linux-wireless@vger.kernel.org>; Sun, 10 May 2020 14:54:16 -0700 (PDT)
-Received: from bigeasy by Galois.linutronix.de with local (Exim 4.80)
-        (envelope-from <bigeasy@linutronix.de>)
-        id 1jXttl-0007SF-V9; Sun, 10 May 2020 23:54:14 +0200
-Date:   Sun, 10 May 2020 23:54:13 +0200
-From:   Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-To:     Tony Chuang <yhchuang@realtek.com>
-Cc:     "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        Pkshih <pkshih@realtek.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "briannorris@chromium.org" <briannorris@chromium.org>,
-        Kevin Yang <kevin_yang@realtek.com>
-Subject: Re: [PATCH 28/40] rtw88: 8723d: Add shutdown callback to disable BT
- USB suspend
-Message-ID: <20200510215413.zyeq74pwhw4zw4mt@linutronix.de>
-References: <20200417074653.15591-1-yhchuang@realtek.com>
- <20200417074653.15591-29-yhchuang@realtek.com>
- <20200505141455.k2mk7tmuiujfv2sh@linutronix.de>
- <c7083dc760464c1a9017888457c1718d@realtek.com>
- <20200506200129.suid6lfkdwuoapzl@linutronix.de>
- <2ee629b3bb374532b0830a39b57c2389@realtek.com>
+        Mon, 11 May 2020 01:48:12 -0400
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 04B5m3jJ5020781, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexmb06.realtek.com.tw[172.21.6.99])
+        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 04B5m3jJ5020781
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+        Mon, 11 May 2020 13:48:03 +0800
+Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
+ RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1779.2; Mon, 11 May 2020 13:48:03 +0800
+Received: from localhost.localdomain (172.21.68.128) by
+ RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1779.2; Mon, 11 May 2020 13:48:03 +0800
+From:   <yhchuang@realtek.com>
+To:     <kvalo@codeaurora.org>
+CC:     <linux-wireless@vger.kernel.org>, <pkshih@realtek.com>,
+        <bigeasy@linutronix.de>, <kevin_yang@realtek.com>,
+        <briannorris@chromium.org>
+Subject: [PATCH v2 7/7] rtw88: rename rtw88.ko/rtwpci.ko to rtw88_core.ko/rtw88_pci.ko
+Date:   Mon, 11 May 2020 13:48:00 +0800
+Message-ID: <20200511054800.27422-8-yhchuang@realtek.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20200511054800.27422-1-yhchuang@realtek.com>
+References: <20200511054800.27422-1-yhchuang@realtek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <2ee629b3bb374532b0830a39b57c2389@realtek.com>
+Content-Type: text/plain
+X-Originating-IP: [172.21.68.128]
+X-ClientProxiedBy: RTEXMB02.realtek.com.tw (172.21.6.95) To
+ RTEXMB04.realtek.com.tw (172.21.6.97)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2020-05-07 04:26:24 [+0000], Tony Chuang wrote:
-> 
-> Ping-Ke, can you please help to check on this ?
-> Looks like Kai-Heng is doing the much same thing here.
-> 
-> But it's still worth to do it in wifi side I think, because it's difficult to
-> make sure the synchronization of BT and Wifi patch.
+From: Yan-Hsuan Chuang <yhchuang@realtek.com>
 
-Yes. It sounds reasonable to remove the patch in BT so the device is not
-always avoiding the suspend mode.
+Rename the name of the kernel module for rtw88's core and pci.
+Add proper prefix 'rtw88_' to easily recognize them, also can
+avoid confusion with other drivers. (ex. r8822be in staging)
 
-I don't remember if I asked this: Shouldn't the USB reset get the device
-out of suspend? I thought this is part of the USB test. Could this be
-fixed in BT's firmware?
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw88/Makefile | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-> Yen-Hsuan
+diff --git a/drivers/net/wireless/realtek/rtw88/Makefile b/drivers/net/wireless/realtek/rtw88/Makefile
+index 9e3e95360089..f31e78a6f146 100644
+--- a/drivers/net/wireless/realtek/rtw88/Makefile
++++ b/drivers/net/wireless/realtek/rtw88/Makefile
+@@ -1,7 +1,7 @@
+ # SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
+ 
+-obj-$(CONFIG_RTW88_CORE)	+= rtw88.o
+-rtw88-y += main.o \
++obj-$(CONFIG_RTW88_CORE)	+= rtw88_core.o
++rtw88_core-y += main.o \
+ 	   mac80211.o \
+ 	   util.o \
+ 	   debug.o \
+@@ -37,5 +37,5 @@ rtw88_8723d-objs		:= rtw8723d.o rtw8723d_table.o
+ obj-$(CONFIG_RTW88_8723DE)	+= rtw88_8723de.o
+ rtw88_8723de-objs		:= rtw8723de.o
+ 
+-obj-$(CONFIG_RTW88_PCI)		+= rtwpci.o
+-rtwpci-objs			:= pci.o
++obj-$(CONFIG_RTW88_PCI)		+= rtw88_pci.o
++rtw88_pci-objs			:= pci.o
+-- 
+2.17.1
 
-Sebastian
