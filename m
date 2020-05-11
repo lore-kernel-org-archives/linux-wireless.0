@@ -2,102 +2,115 @@ Return-Path: <SRS0=e4DQ=6Z=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS
+X-Spam-Status: No, score=-9.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MSGID_FROM_MTA_HEADER,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12465C54E4A
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 May 2020 13:47:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B504C54E8E
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 May 2020 15:50:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E65EC206F5
-	for <linux-wireless@archiver.kernel.org>; Mon, 11 May 2020 13:47:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 09A9C206D7
+	for <linux-wireless@archiver.kernel.org>; Mon, 11 May 2020 15:50:00 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=silabs.onmicrosoft.com header.i=@silabs.onmicrosoft.com header.b="VL+p5qNh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730105AbgEKNrk (ORCPT
+        id S1730476AbgEKPty (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 11 May 2020 09:47:40 -0400
-Received: from mout.kundenserver.de ([217.72.192.74]:53475 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726438AbgEKNrj (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 11 May 2020 09:47:39 -0400
-Received: from mail-qk1-f173.google.com ([209.85.222.173]) by
- mrelayeu.kundenserver.de (mreue108 [212.227.15.145]) with ESMTPSA (Nemesis)
- id 1MryOx-1imib90FpV-00nwE1; Mon, 11 May 2020 15:47:38 +0200
-Received: by mail-qk1-f173.google.com with SMTP id f83so9698474qke.13;
-        Mon, 11 May 2020 06:47:37 -0700 (PDT)
-X-Gm-Message-State: AGi0PubghKdF/fHMp1Ks/ApJH40MMIaxLu5kLyHsulx9Xkky5F32L+S1
-        LM6qieHI5zdYi1m2qi8nI40vwtFFcnc2ilv8BOY=
-X-Google-Smtp-Source: APiQypKAmn8UHB9s5fZFUEek8MrcF9YGNPQ+XRrD/RRIOUQTXBl4yaQtpyq7H+rrJXTAzdartJwHwlybaBPVbygbULs=
-X-Received: by 2002:a37:4e08:: with SMTP id c8mr15521244qkb.286.1589204856778;
- Mon, 11 May 2020 06:47:36 -0700 (PDT)
+        Mon, 11 May 2020 11:49:54 -0400
+Received: from mail-mw2nam12on2062.outbound.protection.outlook.com ([40.107.244.62]:10442
+        "EHLO NAM12-MW2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726687AbgEKPtw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 11 May 2020 11:49:52 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=GuKPmBZ8t3AM7ocFRLII6tXB6O0INrwT5KZMlk60T1a0inUtIAOD3FoybyBohBc8VIGW7nuZ9206VT2TY6gvSi8VFpgUID7Fkly6o+82SDkBfwJlnxeOONMAluNXDmQ8QBVylxhxvoGuaYv81gcA6ZD8CVJCs6C92cfYBB0nj8PFlTtmOPfKJ892uPml/zKmWC49wtIWTHaRJ3iP1kawhcbc52gL+Jj6wt1b2khQry9Qi2qHCjm6xr1S068mszLBnP5gebqBiXqWsdBg8jhvjm0fhuuoAqGziDTbzKVFEffOUEwOXpnIc5vC85xpSmdTx+qB2OXf9TvFCfcMLOfTZg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=7W9J6xx50RVl9zf/gu8v/A2L1KffHWgqaGOXqplNmJE=;
+ b=jQuJr3AvmRsHT/YE2FW6z9mYr49ZVY/cpI357wHR34vMfjoWjnPTi1JcTZvjyLah/H0v5/UOpBxiCUkVwqN0mvSOQ1Of6Z0DmnuaqbycYyydPqjqHcFCua5EYhOjT7RU9zIMZ4EAaE098AfEe8KFI4xeZ0VocXBuopphCxrxmAhE6jAyHobHZnncCflp/1SJYqQKEOqivyoQS8yKIRUgMlvj2YR9xsih4Rgt7er2HvBIHGTlirbzWPIJPiNddaVOfJ2oEQebJ2uFJHPLBEIbzejM0Na5oi5CLFhZe7yslCJW7z96F67HD5eL+WcQEndJwLuTsjlSq8kK5BTHfDppCg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=silabs.com; dmarc=pass action=none header.from=silabs.com;
+ dkim=pass header.d=silabs.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=silabs.onmicrosoft.com; s=selector2-silabs-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=7W9J6xx50RVl9zf/gu8v/A2L1KffHWgqaGOXqplNmJE=;
+ b=VL+p5qNh86SgduLbWgK6AFcNTiC3KEdxnrOQAaISnAj25Q3nPBGTM+r1RLl4ETEe99RKx2Q70jBz04hRtcEHFxejp6tH/eKjkJM7E2wcxwmzhD9w/R4oXcKccCPDv3neU7H0OOKueY+A2EFDpeGrqst0N65Wqo2esYnrXlB/R24=
+Authentication-Results: driverdev.osuosl.org; dkim=none (message not signed)
+ header.d=none;driverdev.osuosl.org; dmarc=none action=none
+ header.from=silabs.com;
+Received: from MWHPR11MB1775.namprd11.prod.outlook.com (2603:10b6:300:10e::14)
+ by MWHPR11MB1968.namprd11.prod.outlook.com (2603:10b6:300:113::16) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2979.26; Mon, 11 May
+ 2020 15:49:49 +0000
+Received: from MWHPR11MB1775.namprd11.prod.outlook.com
+ ([fe80::e055:3e6d:ff4:56da]) by MWHPR11MB1775.namprd11.prod.outlook.com
+ ([fe80::e055:3e6d:ff4:56da%5]) with mapi id 15.20.2979.033; Mon, 11 May 2020
+ 15:49:49 +0000
+From:   Jerome Pouiller <Jerome.Pouiller@silabs.com>
+To:     devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org
+Cc:     netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Pouiller?= 
+        <jerome.pouiller@silabs.com>
+Subject: [PATCH 02/17] staging: wfx: take advantage of le32_to_cpup()
+Date:   Mon, 11 May 2020 17:49:15 +0200
+Message-Id: <20200511154930.190212-3-Jerome.Pouiller@silabs.com>
+X-Mailer: git-send-email 2.26.2
+In-Reply-To: <20200511154930.190212-1-Jerome.Pouiller@silabs.com>
+References: <20200511154930.190212-1-Jerome.Pouiller@silabs.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: base64
+X-ClientProxiedBy: SN6PR2101CA0026.namprd21.prod.outlook.com
+ (2603:10b6:805:106::36) To MWHPR11MB1775.namprd11.prod.outlook.com
+ (2603:10b6:300:10e::14)
 MIME-Version: 1.0
-References: <20200509120707.188595-1-arnd@arndb.de> <20200509154818.GB27779@embeddedor>
- <87zhae4r35.fsf@kamboji.qca.qualcomm.com> <CAK8P3a2i-jqY8FnY_Tu41VDxQGqHHKRCyJ5U-GQbNmrqa=n0GQ@mail.gmail.com>
- <87mu6e4nyy.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87mu6e4nyy.fsf@kamboji.qca.qualcomm.com>
-From:   Arnd Bergmann <arnd@arndb.de>
-Date:   Mon, 11 May 2020 15:47:20 +0200
-X-Gmail-Original-Message-ID: <CAK8P3a2Qu6Byo5bddd1ECwRB1qiTXpYuV55_i_2CUw+J5zqtfQ@mail.gmail.com>
-Message-ID: <CAK8P3a2Qu6Byo5bddd1ECwRB1qiTXpYuV55_i_2CUw+J5zqtfQ@mail.gmail.com>
-Subject: Re: [PATCH net-next 1/2] ath10k: fix gcc-10 zero-length-bounds warnings
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
-        Michal Kazior <michal.kazior@tieto.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Wen Gong <wgong@codeaurora.org>,
-        Erik Stromdahl <erik.stromdahl@gmail.com>,
-        ath10k@lists.infradead.org,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Networking <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-X-Provags-ID: V03:K1:MKjPNguouTEMyLxjBKPiXJxXBXcv5XmWF2wWncSdO+Ls+e4MC/q
- sVv7tRKRKVPsdHdIYWu+wJviSYN47FNRK9ZLH3zL/vC99sn/+wj3kE47Rn17PObekmNhyP0
- CrkhfME1SfeohBr43HYTC1L4qpwpVzXH6UiA4pji/Rfi/XkdwfR6coBSoYElIz1VRZC9Vaq
- tEhWWZz+3O3B/m9ZvAAmw==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:YLdioIYStU8=:KZPxhPlE+ofsSyL7xUutOw
- T0S5YN/ziwK1R/tYL0z7K3DDY6fcsZcku8dxH0mRJn8sA3YVe8tB9wAjTB1kbMhG5nhPY2yw4
- 4LqsP9/3C8uoWS7xl6PhMItU0hRCMa2TXSQdmJVy8dYSq/j142RfVdQHQ+aOFlcC39EPj9fhy
- Xwh1pe4bxyIL0u9eyHUE9w67YNwOjOUujnDUvXLcIf3K2legvPLGeKr142prNArGcg7qjK9tF
- PbxSzcQ7HFX1NB9SfbVsmE9BjMURlUp/srH6d9deditwXV6pb2K6IMV1XAuJIKTCIhzohdxmu
- PLhNZG/GOYUeG/vZqklsyITCWW+S23W4xCOxOrUxl8pbBJhhlfU01l+hrXG4ZYnZL8mjn92LB
- sNz7Cy4pz4aIrMtxIcl89DmFqjzqAl71Ry9S8OYseNB1ByDHI/poCLPkH7W/X9E3WhnkJkx3y
- LV23DyC+OmV7SYTor7s+VvsL6MAjzY3XSJ010JhFFPXgBwzfhdubIsJs77sjxeC6W0C9NZo4k
- SKCKoD6lCpQ1bpfHPkNUQoSOfNMokc0wPoizY+tlToTNM/oDRzacAmutWDIgpBBBQjkH3M2GI
- VJ1sWwt0dm2lMsv9vgkS4fPZauYjEhVlrsXcid+AoZvSm4pzEV+lR5833bYdq8GH2QQn932Rf
- O6+idd2Vw4K0CN+vJmw3GR3NhwAqZhrA96MUuqtUR/r7HVaUzOjzpWnMBScdLokZebiVFUULR
- x1E/ceT3lyRck12qEQ3CT3A4Kvu91ehrBBHYJiZcCVoc/DJUZT329OVRALfqkKi70Ff/3UvSR
- 1aWm1AehRRBwtLiYOSpNoZYfu/e25f/aEEWu45ON6hnyCU7Pts=
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from pc-42.silabs.com (82.67.86.106) by SN6PR2101CA0026.namprd21.prod.outlook.com (2603:10b6:805:106::36) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3021.2 via Frontend Transport; Mon, 11 May 2020 15:49:46 +0000
+X-Mailer: git-send-email 2.26.2
+X-Originating-IP: [82.67.86.106]
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 0e5573fa-8721-46e7-c297-08d7f5c2ef67
+X-MS-TrafficTypeDiagnostic: MWHPR11MB1968:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <MWHPR11MB19681F7EC91956252EADC43793A10@MWHPR11MB1968.namprd11.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:2150;
+X-Forefront-PRVS: 04004D94E2
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: ikWSDKipqhjMaLhwbo5x4Z4v2aV6TA/c/C9mhlb/6qQf62SfEeYaKIPMgaTzfErG1+k9Kd7kvLHvDx5wa9sxJrDz5b6WTR8rUDnROFoCCYWqVxYLxqTKRtuqIYlrZPpbUYC5z3s8DUh71BJuNU2IcRzMUB1KAbFPQoRD/5D+ASKvYH9jm8gKeT9FJActoDrPVizm0i/Iht+1lVIx6rv8QbVIoCNw0l7vs+lYv3+z7ZWT2cfngrWRcfOm7uqTmmMdHNqUE8zQWftrrpqerjA/8W6idyL3FmQxQETFv0x23CESziYEE7+pkLWztji0mbCUeAVSXEaihI+6hAX0ODek8kZTXwwEemHOvdXZR6VGuPovrIIPxQVH+dWDA2HxWC5xxzUC1OUQU1SmEn0JN3R9kApOl0AwoBSHPwlF94QC8i6ekR+SZECAkmIVUieCXnP0k5urL9KAssRDzlEPToPCUQY7J7eenopXL9VK0/eabb5BlOO6Lu2wb8r2c1jPtH670MJK5eUlizG2YxvrtEml+A==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MWHPR11MB1775.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(39850400004)(346002)(136003)(396003)(376002)(366004)(33430700001)(186003)(52116002)(86362001)(316002)(5660300002)(7696005)(6486002)(33440700001)(478600001)(54906003)(6666004)(4326008)(107886003)(66574014)(36756003)(16526019)(26005)(8936002)(956004)(2616005)(8676002)(1076003)(66476007)(66946007)(66556008)(4744005)(2906002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData: kHET30azroMIUNwd4oirhX53Ix/D3yfO+drhgIheqqZxJZDGrfYJ9XW1ugBvPc+DJuzOk0xq00m+zxPBCVJy3w54Y8jbjcDA/tojKkGCJc1Xu5VR7n9aivOiWXOgRFWEAIFPFzM79AQw0UVrQsw6HN4rM3Ini+0UKP/e5AvWDNy3TImv5GoaPtaGdcrfvJ5wold+Ty8b8adQjbobc9h6jl0A5gYL9s3L3ru78YgbHcD7DyeS5wlxbUpuYKy0hC7mRLb1aoHki7PfpGBvDFHEPTX/UjmLz0k2nkpgrcr80In8NxTL7+yb26ZtfaMSg0oYjEHTYEjw0Rzzh+ziTGFk3Pxcj0uErYo98TtxmYBNa3lOUvpb9EcnFK/BSzj+zJfEs3kfLCXD8YmUgNL9u6kuVwNyqi+KjUOO2z+xPxIJJwoJ04ENJX0M7sekPuVTQn/po4f6+eJlEwaq2qrUaxxirStianvYG21IxPCQiV78FDE=
+X-OriginatorOrg: silabs.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0e5573fa-8721-46e7-c297-08d7f5c2ef67
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 May 2020 15:49:48.7968
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 54dbd822-5231-4b20-944d-6f4abcd541fb
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: DIuyJEfEf1XoYOs1s6uY9YNtMn+Khxa8SQSMn/Snf7siU0v5NrNlc9YFHKpeUzMXfOV0Se6Z2FLzcWnE/kkmLw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR11MB1968
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, May 11, 2020 at 3:10 PM Kalle Valo <kvalo@codeaurora.org> wrote:
->
-> Arnd Bergmann <arnd@arndb.de> writes:
->
-> > On Mon, May 11, 2020 at 2:03 PM Kalle Valo <kvalo@codeaurora.org> wrote:
-> >> "Gustavo A. R. Silva" <gustavoars@kernel.org> writes:
-> >
-> >> >
-> >> > This treewide patch no longer contains changes for ath10k. I removed them
-> >> > since Monday (05/04/2020). So, this "Fixes" tag does not apply.
-> >
-> > Oops, I forgot to update the changelog trext when rebasing.
-> >
-> >> Ok, I'll remove it. Also I'll take these to my ath.git tree, not to
-> >> net-next.
-> >
-> > Thanks a lot!
->
-> Weird, I had a conflict with this patch but couldn't figure out why.
-> Anyway, I fixed it in my pending branch and please double check:
->
-> https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=c3e5221f3c3ddabc76a33ff08440ff1dc664998d
-
-Looks good to me. It may have been an artifact on my side, as I
-have applied and later reverted Gustavo's patch on the same branch.
-
-     Arnd
+RnJvbTogSsOpcsO0bWUgUG91aWxsZXIgPGplcm9tZS5wb3VpbGxlckBzaWxhYnMuY29tPgoKbGUz
+Ml90b19jcHUoKngpIGNhbiBiZSBhZHZhbnRhZ2VvdXNseSBjb252ZXJ0ZWQgaW4gbGUzMl90b19j
+cHVwKHgpLgoKU2lnbmVkLW9mZi1ieTogSsOpcsO0bWUgUG91aWxsZXIgPGplcm9tZS5wb3VpbGxl
+ckBzaWxhYnMuY29tPgotLS0KIGRyaXZlcnMvc3RhZ2luZy93ZngvaGlmX3J4LmMgfCAyICstCiAx
+IGZpbGUgY2hhbmdlZCwgMSBpbnNlcnRpb24oKyksIDEgZGVsZXRpb24oLSkKCmRpZmYgLS1naXQg
+YS9kcml2ZXJzL3N0YWdpbmcvd2Z4L2hpZl9yeC5jIGIvZHJpdmVycy9zdGFnaW5nL3dmeC9oaWZf
+cnguYwppbmRleCBhYzRlYzRmMzA0OTYuLjgzYzNmZGJiMTBmYSAxMDA2NDQKLS0tIGEvZHJpdmVy
+cy9zdGFnaW5nL3dmeC9oaWZfcnguYworKysgYi9kcml2ZXJzL3N0YWdpbmcvd2Z4L2hpZl9yeC5j
+CkBAIC0yMiw3ICsyMiw3IEBAIHN0YXRpYyBpbnQgaGlmX2dlbmVyaWNfY29uZmlybShzdHJ1Y3Qg
+d2Z4X2RldiAqd2RldiwKIAkJCSAgICAgICBjb25zdCBzdHJ1Y3QgaGlmX21zZyAqaGlmLCBjb25z
+dCB2b2lkICpidWYpCiB7CiAJLy8gQWxsIGNvbmZpcm0gbWVzc2FnZXMgc3RhcnQgd2l0aCBzdGF0
+dXMKLQlpbnQgc3RhdHVzID0gbGUzMl90b19jcHUoKigoX19sZTMyICopIGJ1ZikpOworCWludCBz
+dGF0dXMgPSBsZTMyX3RvX2NwdXAoKF9fbGUzMiAqKWJ1Zik7CiAJaW50IGNtZCA9IGhpZi0+aWQ7
+CiAJaW50IGxlbiA9IGhpZi0+bGVuIC0gNDsgLy8gZHJvcCBoZWFkZXIKIAotLSAKMi4yNi4yCgo=
