@@ -6,30 +6,30 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3729C54E8B
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 May 2020 10:31:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74C26C54E8E
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 May 2020 10:31:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C66BD206DD
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 May 2020 10:31:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5E317206DD
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 May 2020 10:31:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729493AbgELKbg (ORCPT
+        id S1729496AbgELKbg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Tue, 12 May 2020 06:31:36 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:36680 "EHLO
+Received: from rtits2.realtek.com ([211.75.126.72]:36681 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729443AbgELKbg (ORCPT
+        with ESMTP id S1729453AbgELKbg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 12 May 2020 06:31:36 -0400
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 04CAVNFs8009941, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 04CAVNFo8009941, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexmb06.realtek.com.tw[172.21.6.99])
-        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 04CAVNFs8009941
+        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 04CAVNFo8009941
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
         Tue, 12 May 2020 18:31:23 +0800
 Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
  RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Tue, 12 May 2020 18:31:23 +0800
+ 15.1.1779.2; Tue, 12 May 2020 18:31:22 +0800
 Received: from localhost.localdomain (172.21.68.128) by
  RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
@@ -39,9 +39,9 @@ To:     <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>, <pkshih@realtek.com>,
         <bigeasy@linutronix.de>, <kevin_yang@realtek.com>,
         <briannorris@chromium.org>
-Subject: [PATCH v3 6/7] rtw88: extract: remove the unused after extracting
-Date:   Tue, 12 May 2020 18:31:19 +0800
-Message-ID: <20200512103120.5280-7-yhchuang@realtek.com>
+Subject: [PATCH v3 2/7] rtw88: extract: export symbols about pci interface
+Date:   Tue, 12 May 2020 18:31:15 +0800
+Message-ID: <20200512103120.5280-3-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200512103120.5280-1-yhchuang@realtek.com>
 References: <20200512103120.5280-1-yhchuang@realtek.com>
@@ -57,56 +57,77 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Zong-Zhe Yang <kevin_yang@realtek.com>
 
-remove the unused about pci after extracting chip modules
+In the current design, chip entry points are built into
+the pci module. That makes the pci module depend on chips.
+According to dependence, once the pci module is loaded,
+kernel will load chip functionalities, including those that
+may not be currently used.
+
+We plan to split chip entry points from the pci module.
+Thence we export pci symbols that will be used in chip
+entry point modules.
 
 Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/pci.c | 15 ---------------
- drivers/net/wireless/realtek/rtw88/pci.h |  4 ----
- 2 files changed, 19 deletions(-)
+ drivers/net/wireless/realtek/rtw88/pci.c | 14 +++++++++-----
+ 1 file changed, 9 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/net/wireless/realtek/rtw88/pci.c b/drivers/net/wireless/realtek/rtw88/pci.c
-index 2a188bbc6d5a..8228db9a5fc8 100644
+index e5ea30c04ac5..fb5d28152775 100644
 --- a/drivers/net/wireless/realtek/rtw88/pci.c
 +++ b/drivers/net/wireless/realtek/rtw88/pci.c
-@@ -1593,21 +1593,6 @@ void rtw_pci_shutdown(struct pci_dev *pdev)
+@@ -1360,7 +1360,8 @@ static int __maybe_unused rtw_pci_resume(struct device *dev)
+ 	return 0;
  }
- EXPORT_SYMBOL(rtw_pci_shutdown);
  
--static const struct pci_device_id rtw_pci_id_table[] = {
--	{},
--};
--MODULE_DEVICE_TABLE(pci, rtw_pci_id_table);
--
--static struct pci_driver rtw_pci_driver = {
--	.name = "rtw_pci",
--	.id_table = rtw_pci_id_table,
--	.probe = rtw_pci_probe,
--	.remove = rtw_pci_remove,
--	.driver.pm = &rtw_pm_ops,
--	.shutdown = rtw_pci_shutdown,
--};
--module_pci_driver(rtw_pci_driver);
--
- MODULE_AUTHOR("Realtek Corporation");
- MODULE_DESCRIPTION("Realtek 802.11ac wireless PCI driver");
- MODULE_LICENSE("Dual BSD/GPL");
-diff --git a/drivers/net/wireless/realtek/rtw88/pci.h b/drivers/net/wireless/realtek/rtw88/pci.h
-index 3ac4fb328d31..024c2bc275cb 100644
---- a/drivers/net/wireless/realtek/rtw88/pci.h
-+++ b/drivers/net/wireless/realtek/rtw88/pci.h
-@@ -5,10 +5,6 @@
- #ifndef __RTK_PCI_H_
- #define __RTK_PCI_H_
+-static SIMPLE_DEV_PM_OPS(rtw_pm_ops, rtw_pci_suspend, rtw_pci_resume);
++SIMPLE_DEV_PM_OPS(rtw_pm_ops, rtw_pci_suspend, rtw_pci_resume);
++EXPORT_SYMBOL(rtw_pm_ops);
  
--#define RTK_PCI_DEVICE(vend, dev, hw_config)	\
--	PCI_DEVICE(vend, dev),			\
--	.driver_data = (kernel_ulong_t)&(hw_config),
--
- #define RTK_DEFAULT_TX_DESC_NUM 128
- #define RTK_BEQ_TX_DESC_NUM	256
+ static int rtw_pci_claim(struct rtw_dev *rtwdev, struct pci_dev *pdev)
+ {
+@@ -1473,8 +1474,8 @@ static void rtw_pci_free_irq(struct rtw_dev *rtwdev, struct pci_dev *pdev)
+ 	pci_free_irq_vectors(pdev);
+ }
  
+-static int rtw_pci_probe(struct pci_dev *pdev,
+-			 const struct pci_device_id *id)
++int rtw_pci_probe(struct pci_dev *pdev,
++		  const struct pci_device_id *id)
+ {
+ 	struct ieee80211_hw *hw;
+ 	struct rtw_dev *rtwdev;
+@@ -1551,8 +1552,9 @@ static int rtw_pci_probe(struct pci_dev *pdev,
+ 
+ 	return ret;
+ }
++EXPORT_SYMBOL(rtw_pci_probe);
+ 
+-static void rtw_pci_remove(struct pci_dev *pdev)
++void rtw_pci_remove(struct pci_dev *pdev)
+ {
+ 	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
+ 	struct rtw_dev *rtwdev;
+@@ -1572,8 +1574,9 @@ static void rtw_pci_remove(struct pci_dev *pdev)
+ 	rtw_core_deinit(rtwdev);
+ 	ieee80211_free_hw(hw);
+ }
++EXPORT_SYMBOL(rtw_pci_remove);
+ 
+-static void rtw_pci_shutdown(struct pci_dev *pdev)
++void rtw_pci_shutdown(struct pci_dev *pdev)
+ {
+ 	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
+ 	struct rtw_dev *rtwdev;
+@@ -1588,6 +1591,7 @@ static void rtw_pci_shutdown(struct pci_dev *pdev)
+ 	if (chip->ops->shutdown)
+ 		chip->ops->shutdown(rtwdev);
+ }
++EXPORT_SYMBOL(rtw_pci_shutdown);
+ 
+ static const struct pci_device_id rtw_pci_id_table[] = {
+ #ifdef CONFIG_RTW88_8822BE
 -- 
 2.17.1
 
