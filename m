@@ -2,34 +2,34 @@ Return-Path: <SRS0=ks57=62=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4950C54E4A
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 May 2020 10:31:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3729C54E8B
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 May 2020 10:31:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C226B206DD
-	for <linux-wireless@archiver.kernel.org>; Tue, 12 May 2020 10:31:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C66BD206DD
+	for <linux-wireless@archiver.kernel.org>; Tue, 12 May 2020 10:31:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729446AbgELKbb (ORCPT
+        id S1729493AbgELKbg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 12 May 2020 06:31:31 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:36676 "EHLO
+        Tue, 12 May 2020 06:31:36 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:36680 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729443AbgELKba (ORCPT
+        with ESMTP id S1729443AbgELKbg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 12 May 2020 06:31:30 -0400
+        Tue, 12 May 2020 06:31:36 -0400
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 04CAVMIp8009937, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 04CAVNFs8009941, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexmb06.realtek.com.tw[172.21.6.99])
-        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 04CAVMIp8009937
+        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 04CAVNFs8009941
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Tue, 12 May 2020 18:31:22 +0800
+        Tue, 12 May 2020 18:31:23 +0800
 Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
  RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Tue, 12 May 2020 18:31:22 +0800
+ 15.1.1779.2; Tue, 12 May 2020 18:31:23 +0800
 Received: from localhost.localdomain (172.21.68.128) by
  RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
@@ -39,10 +39,12 @@ To:     <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>, <pkshih@realtek.com>,
         <bigeasy@linutronix.de>, <kevin_yang@realtek.com>,
         <briannorris@chromium.org>
-Subject: [PATCH v3 0/7] rtw88: extract chip tables from core module
-Date:   Tue, 12 May 2020 18:31:13 +0800
-Message-ID: <20200512103120.5280-1-yhchuang@realtek.com>
+Subject: [PATCH v3 6/7] rtw88: extract: remove the unused after extracting
+Date:   Tue, 12 May 2020 18:31:19 +0800
+Message-ID: <20200512103120.5280-7-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20200512103120.5280-1-yhchuang@realtek.com>
+References: <20200512103120.5280-1-yhchuang@realtek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [172.21.68.128]
@@ -53,93 +55,58 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+From: Zong-Zhe Yang <kevin_yang@realtek.com>
 
-[Note]: this patch set is based on
-   "[v3,0/9] rtw88: 8723d: Add RF calibration and coex"
-   https://patchwork.kernel.org/cover/11542823/
+remove the unused about pci after extracting chip modules
 
-The PCI series devices RTL8822BE/RTL8822CE/RTL8723DE used to load
-two kernel modules rtw88.ko/rtwpci.ko into the kernel. The rtw88.ko
-is acting as the core module contains the common/core part of the
-driver, including each chip's parameter tables and funcations. But
-each chip's parameter tables take too much size of the memory, like
-several 10K lines for each device. And when one of the the chip is
-running, the other chip's table is a burden.
+Signed-off-by: Zong-Zhe Yang <kevin_yang@realtek.com>
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw88/pci.c | 15 ---------------
+ drivers/net/wireless/realtek/rtw88/pci.h |  4 ----
+ 2 files changed, 19 deletions(-)
 
-So, extract tables of different chips into another kernel module,
-such as rtw88_8822b.ko/rtw88_8822c.ko/rtw88_8723d.ko. These chip
-modules have those tables for each chip, so we can avoid loading
-the huge tables of RTL8822BE when running RTL8822CE only. To make
-the device probed choose the correct kernel module, add kernel
-modules such as rtw88_8822be.ko/rtw88_8822ce.ko/rtw88_8723de.ko as
-entry point. These module will be responsible to select the correct
-corresponding modules they require. For example, if RTL8822CE device
-is probed by rtw88_8822ce.ko, it will then select the common part
-module rtw88_8822c.ko, and because RTL8822CE uses PCI bus as its
-interface, it will then choose rtw88_pci.ko, finally, they both
-depend on the core module rtw88_core.ko, it's loaded at the end.
-
-The entry point may look redundant now, but the driver is going to
-support USB devices, so the entry modules can help to select the
-expected part of the interface module.
-
-By extracting the tables, it can save a lot of memory usage to
-not to load the unused tables, and the tables are so big.
-
-Finally, the core module and pci module are named as rtw88.ko and
-rtwpci.ko. To make them look consistent and to avoid confusion,
-rename them to rtw88_core.ko and rtw88_pci.ko with proper prefix
-"rtw88_" to easy distinguish them as modules of the rtw88 driver.
-
-
-v1 -> v2
-  * split patches for easier review
-
-v2 -> v3
-  * rebase on top of tree
-
-
-Yan-Hsuan Chuang (1):
-  rtw88: rename rtw88.ko/rtwpci.ko to rtw88_core.ko/rtw88_pci.ko
-
-Zong-Zhe Yang (6):
-  rtw88: extract: export symbols used in chip functionalities
-  rtw88: extract: export symbols about pci interface
-  rtw88: extract: make 8822c an individual kernel module
-  rtw88: extract: make 8822b an individual kernel module
-  rtw88: extract: make 8723d an individual kernel module
-  rtw88: extract: remove the unused after extracting
-
- drivers/net/wireless/realtek/rtw88/Kconfig    | 18 +++++++--
- drivers/net/wireless/realtek/rtw88/Makefile   | 29 ++++++++++----
- drivers/net/wireless/realtek/rtw88/bf.c       |  7 ++++
- drivers/net/wireless/realtek/rtw88/coex.c     |  3 ++
- drivers/net/wireless/realtek/rtw88/fw.c       |  1 +
- drivers/net/wireless/realtek/rtw88/mac.c      |  1 +
- drivers/net/wireless/realtek/rtw88/main.h     |  3 --
- drivers/net/wireless/realtek/rtw88/pci.c      | 38 +++++--------------
- drivers/net/wireless/realtek/rtw88/pci.h      |  4 --
- drivers/net/wireless/realtek/rtw88/phy.c      | 26 +++++++++++++
- drivers/net/wireless/realtek/rtw88/rtw8723d.c |  5 +++
- .../net/wireless/realtek/rtw88/rtw8723de.c    | 30 +++++++++++++++
- .../net/wireless/realtek/rtw88/rtw8723de.h    | 14 +++++++
- drivers/net/wireless/realtek/rtw88/rtw8822b.c |  5 +++
- .../net/wireless/realtek/rtw88/rtw8822be.c    | 30 +++++++++++++++
- .../net/wireless/realtek/rtw88/rtw8822be.h    | 14 +++++++
- drivers/net/wireless/realtek/rtw88/rtw8822c.c |  5 +++
- .../net/wireless/realtek/rtw88/rtw8822ce.c    | 30 +++++++++++++++
- .../net/wireless/realtek/rtw88/rtw8822ce.h    | 14 +++++++
- drivers/net/wireless/realtek/rtw88/rx.c       |  1 +
- drivers/net/wireless/realtek/rtw88/util.c     |  2 +
- 21 files changed, 234 insertions(+), 46 deletions(-)
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723de.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723de.h
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822be.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822be.h
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822ce.c
- create mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822ce.h
-
+diff --git a/drivers/net/wireless/realtek/rtw88/pci.c b/drivers/net/wireless/realtek/rtw88/pci.c
+index 2a188bbc6d5a..8228db9a5fc8 100644
+--- a/drivers/net/wireless/realtek/rtw88/pci.c
++++ b/drivers/net/wireless/realtek/rtw88/pci.c
+@@ -1593,21 +1593,6 @@ void rtw_pci_shutdown(struct pci_dev *pdev)
+ }
+ EXPORT_SYMBOL(rtw_pci_shutdown);
+ 
+-static const struct pci_device_id rtw_pci_id_table[] = {
+-	{},
+-};
+-MODULE_DEVICE_TABLE(pci, rtw_pci_id_table);
+-
+-static struct pci_driver rtw_pci_driver = {
+-	.name = "rtw_pci",
+-	.id_table = rtw_pci_id_table,
+-	.probe = rtw_pci_probe,
+-	.remove = rtw_pci_remove,
+-	.driver.pm = &rtw_pm_ops,
+-	.shutdown = rtw_pci_shutdown,
+-};
+-module_pci_driver(rtw_pci_driver);
+-
+ MODULE_AUTHOR("Realtek Corporation");
+ MODULE_DESCRIPTION("Realtek 802.11ac wireless PCI driver");
+ MODULE_LICENSE("Dual BSD/GPL");
+diff --git a/drivers/net/wireless/realtek/rtw88/pci.h b/drivers/net/wireless/realtek/rtw88/pci.h
+index 3ac4fb328d31..024c2bc275cb 100644
+--- a/drivers/net/wireless/realtek/rtw88/pci.h
++++ b/drivers/net/wireless/realtek/rtw88/pci.h
+@@ -5,10 +5,6 @@
+ #ifndef __RTK_PCI_H_
+ #define __RTK_PCI_H_
+ 
+-#define RTK_PCI_DEVICE(vend, dev, hw_config)	\
+-	PCI_DEVICE(vend, dev),			\
+-	.driver_data = (kernel_ulong_t)&(hw_config),
+-
+ #define RTK_DEFAULT_TX_DESC_NUM 128
+ #define RTK_BEQ_TX_DESC_NUM	256
+ 
 -- 
 2.17.1
 
