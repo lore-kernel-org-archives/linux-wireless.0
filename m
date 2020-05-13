@@ -7,51 +7,51 @@ X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4197BC433E1
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 May 2020 19:45:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC191C433E2
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 May 2020 19:45:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E21F120659
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 May 2020 19:45:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5D0C520659
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 May 2020 19:45:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="LjG/Cm3X"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="RldkFlCc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390784AbgEMTpo (ORCPT
+        id S2390788AbgEMTpp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 13 May 2020 15:45:44 -0400
-Received: from mail27.static.mailgun.info ([104.130.122.27]:60600 "EHLO
-        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2390761AbgEMTpn (ORCPT
+        Wed, 13 May 2020 15:45:45 -0400
+Received: from mail26.static.mailgun.info ([104.130.122.26]:36210 "EHLO
+        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2390776AbgEMTpp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 May 2020 15:45:43 -0400
+        Wed, 13 May 2020 15:45:45 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1589399143; h=References: In-Reply-To: Message-Id: Date:
+ s=smtp; t=1589399145; h=References: In-Reply-To: Message-Id: Date:
  Subject: Cc: To: From: Sender;
- bh=dKANdmrJlaFLRIkTGL+hMGdoJGsE4uHCx6btM3q5HFQ=; b=LjG/Cm3XI4MSktkzGHhSi1mwb4eHY1vJtoVSeHpvvaT3KQxij9sM12SA2s1oPCQ1LIP1qfP4
- rY69FadX0QUQ00dZLku9ehA8PZ6ylpPZXfNGgwljwbnsY0R/WLJe7AiUhmhgRnV2wAct41Yz
- qafyG0exjtgg2Df9wICla3/juAs=
-X-Mailgun-Sending-Ip: 104.130.122.27
+ bh=WYuQjWhAWvV4B+xX0+ZrAqZxe1/l+4HAU8Fy8l/RZMY=; b=RldkFlCcal02zWPqfJDBNNCFj3uvkZZcIOhlWwHRARH1LYbwNL3aAzxoViuiaHVRqPER/OG2
+ W0gepjAPpENyhGY5nhteMQAorvEmDrZTz0quftTocY+BfxbWOaRWa7M+Xni7L7ZxcnhqzpzB
+ A68D4hsG3nCTiZCr2G1YTTq1Qs0=
+X-Mailgun-Sending-Ip: 104.130.122.26
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5ebc4e54.7f63c667e810-smtp-out-n04;
- Wed, 13 May 2020 19:45:24 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5ebc4e5c.7f044f468810-smtp-out-n03;
+ Wed, 13 May 2020 19:45:32 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 71495C432C2; Wed, 13 May 2020 19:45:23 +0000 (UTC)
+        id 3E61FC44788; Wed, 13 May 2020 19:45:31 +0000 (UTC)
 Received: from rmanohar-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: rmanohar)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id C38ABC43636;
-        Wed, 13 May 2020 19:45:22 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org C38ABC43636
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 6E176C432C2;
+        Wed, 13 May 2020 19:45:30 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 6E176C432C2
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=rmanohar@codeaurora.org
 From:   Rajkumar Manoharan <rmanohar@codeaurora.org>
 To:     johannes@sipsolutions.net, kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
         Rajkumar Manoharan <rmanohar@codeaurora.org>
-Subject: [PATCH v3 04/11] mac80211: add HE 6 GHz Band Capabilities into parse extension
-Date:   Wed, 13 May 2020 12:44:58 -0700
-Message-Id: <1589399105-25472-4-git-send-email-rmanohar@codeaurora.org>
+Subject: [PATCH v3 09/11] mac80211: do not allow HT/VHT IEs in 6 GHz mesh mode
+Date:   Wed, 13 May 2020 12:45:03 -0700
+Message-Id: <1589399105-25472-9-git-send-email-rmanohar@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1589399105-25472-1-git-send-email-rmanohar@codeaurora.org>
 References: <1589399105-25472-1-git-send-email-rmanohar@codeaurora.org>
@@ -60,53 +60,61 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Handle 6 GHz band capability element parsing for association.
+As HT/VHT elements are not allowed in 6 GHz band, do not include
+them in mesh beacon template formation.
 
 Signed-off-by: Rajkumar Manoharan <rmanohar@codeaurora.org>
 ---
- include/linux/ieee80211.h  | 1 +
- net/mac80211/ieee80211_i.h | 1 +
- net/mac80211/util.c        | 4 ++++
- 3 files changed, 6 insertions(+)
+ net/mac80211/mesh.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 77462dff6db3..86b094738ce9 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -2614,6 +2614,7 @@ enum ieee80211_eid_ext {
- 	WLAN_EID_EXT_MAX_CHANNEL_SWITCH_TIME = 52,
- 	WLAN_EID_EXT_MULTIPLE_BSSID_CONFIGURATION = 55,
- 	WLAN_EID_EXT_NON_INHERITANCE = 56,
-+	WLAN_EID_EXT_HE_6GHZ_BAND_CAP = 59,
- };
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 0cbe3260c5c1..04d3da733bc8 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -415,6 +415,10 @@ int mesh_add_ht_cap_ie(struct ieee80211_sub_if_data *sdata,
+ 	if (!sband)
+ 		return -EINVAL;
  
- /* Action category code */
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index f8ed4f621f7f..5e33746d7210 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1491,6 +1491,7 @@ struct ieee802_11_elems {
- 	const struct ieee80211_he_operation *he_operation;
- 	const struct ieee80211_he_spr *he_spr;
- 	const struct ieee80211_mu_edca_param_set *mu_edca_param_set;
-+	const struct ieee80211_he_6ghz_band_cap *he_6ghz_cap_elem;
- 	const u8 *uora_element;
- 	const u8 *mesh_id;
- 	const u8 *peering;
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 20436c86b9bf..5a33755c22f4 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -936,6 +936,10 @@ static void ieee80211_parse_extension_element(u32 *crc,
- 		    len >= ieee80211_he_spr_size(data))
- 			elems->he_spr = data;
- 		break;
-+	case WLAN_EID_EXT_HE_6GHZ_BAND_CAP:
-+		if (len == sizeof(struct ieee80211_he_6ghz_band_cap))
-+			elems->he_6ghz_cap_elem = data;
-+		break;
- 	}
- }
++	/* HT not allowed in 6 GHz */
++	if (sband->band == NL80211_BAND_6GHZ)
++		return 0;
++
+ 	if (!sband->ht_cap.ht_supported ||
+ 	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_20_NOHT ||
+ 	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_5 ||
+@@ -452,6 +456,10 @@ int mesh_add_ht_oper_ie(struct ieee80211_sub_if_data *sdata,
+ 	sband = local->hw.wiphy->bands[channel->band];
+ 	ht_cap = &sband->ht_cap;
  
++	/* HT not allowed in 6 GHz */
++	if (sband->band == NL80211_BAND_6GHZ)
++		return 0;
++
+ 	if (!ht_cap->ht_supported ||
+ 	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_20_NOHT ||
+ 	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_5 ||
+@@ -479,6 +487,10 @@ int mesh_add_vht_cap_ie(struct ieee80211_sub_if_data *sdata,
+ 	if (!sband)
+ 		return -EINVAL;
+ 
++	/* VHT not allowed in 6 GHz */
++	if (sband->band == NL80211_BAND_6GHZ)
++		return 0;
++
+ 	if (!sband->vht_cap.vht_supported ||
+ 	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_20_NOHT ||
+ 	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_5 ||
+@@ -516,6 +528,10 @@ int mesh_add_vht_oper_ie(struct ieee80211_sub_if_data *sdata,
+ 	sband = local->hw.wiphy->bands[channel->band];
+ 	vht_cap = &sband->vht_cap;
+ 
++	/* VHT not allowed in 6 GHz */
++	if (sband->band == NL80211_BAND_6GHZ)
++		return 0;
++
+ 	if (!vht_cap->vht_supported ||
+ 	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_20_NOHT ||
+ 	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_5 ||
 -- 
 2.7.4
