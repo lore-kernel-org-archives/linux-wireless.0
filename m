@@ -2,115 +2,161 @@ Return-Path: <SRS0=9MBB=63=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B52EEC433DF
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 May 2020 19:12:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46A89C433E0
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 May 2020 19:45:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6E4DD205ED
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 May 2020 19:12:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E85E720659
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 May 2020 19:45:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="ZgrGjyC9"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="myFZ7vY8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390547AbgEMTMb (ORCPT
+        id S2390625AbgEMTpX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 13 May 2020 15:12:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52500 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S2390303AbgEMTMa (ORCPT
+        Wed, 13 May 2020 15:45:23 -0400
+Received: from mail26.static.mailgun.info ([104.130.122.26]:33374 "EHLO
+        mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2387616AbgEMTpX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 May 2020 15:12:30 -0400
-Received: from mail-lj1-x243.google.com (mail-lj1-x243.google.com [IPv6:2a00:1450:4864:20::243])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E81A0C061A0C
-        for <linux-wireless@vger.kernel.org>; Wed, 13 May 2020 12:12:29 -0700 (PDT)
-Received: by mail-lj1-x243.google.com with SMTP id u6so816194ljl.6
-        for <linux-wireless@vger.kernel.org>; Wed, 13 May 2020 12:12:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=ZqGhLv9Ix95hU31HAKodRrHLXavDA2Vhvx/L+g+IKJw=;
-        b=ZgrGjyC9MC0rE/AcMPzxwfmtWZjAAixNQsqagKWbpWzOEOdsqAV23D54rf8e6gkMOR
-         FghAS0UdaTNHqTOfEX3g5nRMoO0CpqhkvfBkOFsGBd/k3B5zHXVbuctBilsZUL6n4ho4
-         ccTFWeEwFcZ02qwf/K0/8Fib/x6WXeohp9BH0=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=ZqGhLv9Ix95hU31HAKodRrHLXavDA2Vhvx/L+g+IKJw=;
-        b=qJIMVICcVyXrUwXM1sh41n/iGhkKefNReSkwQYahMOvTrWC0QlqCPR1cxvxNu5AbLy
-         vUnqzDy5H1REMMgHRKVO1UJL0zhm7AQI8c5iIHOATdzO4BzvkxeWpzBt7MpxpVhshx16
-         YMP21XLjpaAUntsImkn73Z3h4twgX4y9QSu9NNgqBV3N2r1YdhxyOKQ3ROSJwrFIQd7Y
-         mckx6SQsYbRypezyNWFoHbgGAS5xQrgRy5JOYPlqTJCZ8wTY/DsNOX03v3Ea7OGd3GcU
-         KcNoOC2IFB8vbeQwpgaPtQDylIC0kLfoPX3RVskqOodaDkKqXAOPuUumEIQbCoOinEI7
-         xdjg==
-X-Gm-Message-State: AOAM530wIrORxC8mYd5LdcbhvNEU+U3DKrdPXgrcPivpkyfbRGb2J+nL
-        3VAjzHzRVXink+/taVNRmzpISRZUfcc=
-X-Google-Smtp-Source: ABdhPJyDvcAKkwsPtz2iiA8fxvrn8kNR+YwsLX12hGjxfY/xM1MUKXTXSQpUa2JOi8xUi0cmGb8G3w==
-X-Received: by 2002:a2e:3009:: with SMTP id w9mr350555ljw.71.1589397148068;
-        Wed, 13 May 2020 12:12:28 -0700 (PDT)
-Received: from mail-lf1-f52.google.com (mail-lf1-f52.google.com. [209.85.167.52])
-        by smtp.gmail.com with ESMTPSA id q16sm203182ljj.23.2020.05.13.12.12.26
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 13 May 2020 12:12:26 -0700 (PDT)
-Received: by mail-lf1-f52.google.com with SMTP id r17so451614lff.9
-        for <linux-wireless@vger.kernel.org>; Wed, 13 May 2020 12:12:26 -0700 (PDT)
-X-Received: by 2002:a19:3804:: with SMTP id f4mr617212lfa.121.1589397145722;
- Wed, 13 May 2020 12:12:25 -0700 (PDT)
-MIME-Version: 1.0
-References: <20190906185931.19288-1-navid.emamdoost@gmail.com>
- <CA+ASDXMnp-GTkrT7B5O+dtopJUmGBay=Tn=-nf1LW1MtaVOr+w@mail.gmail.com> <CAEkB2EQf-Q+q9QSwwj=Q208yAJj5hhSDrDiHqyU3WeSod2Bo+Q@mail.gmail.com>
-In-Reply-To: <CAEkB2EQf-Q+q9QSwwj=Q208yAJj5hhSDrDiHqyU3WeSod2Bo+Q@mail.gmail.com>
-From:   Brian Norris <briannorris@chromium.org>
-Date:   Wed, 13 May 2020 12:12:14 -0700
-X-Gmail-Original-Message-ID: <CA+ASDXOrsZq6jpu3R_1KQFr2yxd6yhjkxkNb7n6K3GBickoN5A@mail.gmail.com>
-Message-ID: <CA+ASDXOrsZq6jpu3R_1KQFr2yxd6yhjkxkNb7n6K3GBickoN5A@mail.gmail.com>
-Subject: Re: [PATCH] ath9k: release allocated buffer if timed out
-To:     Navid Emamdoost <navid.emamdoost@gmail.com>
-Cc:     Navid Emamdoost <emamd001@umn.edu>,
-        Stephen McCamant <smccaman@umn.edu>, Kangjie Lu <kjlu@umn.edu>,
-        QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
-        Linux Kernel <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Wed, 13 May 2020 15:45:23 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1589399122; h=References: In-Reply-To: Message-Id: Date:
+ Subject: Cc: To: From: Sender;
+ bh=hiGeAG8v37l3WG8lFHQP4B3vaVMogqoRQFmN8YZJCY8=; b=myFZ7vY8vnDb0aWoOIOSnwWMHzi9P7OjgeY7rU/5nM02hnM4vLcBTFi9Fw/DV1cLzniASIWj
+ ZJZWfvFEbTOEtI6TohgsHKQfmFa49zHV/MFTwJCUQAqiHA2Wr/9UyTUWLglEuIKREIjLkGvD
+ gxivnEXCs3ZfeydnuswUBHAyPv8=
+X-Mailgun-Sending-Ip: 104.130.122.26
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
+ by mxa.mailgun.org with ESMTP id 5ebc4e51.7f903a0d45a8-smtp-out-n03;
+ Wed, 13 May 2020 19:45:21 -0000 (UTC)
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 7612BC433F2; Wed, 13 May 2020 19:45:20 +0000 (UTC)
+Received: from rmanohar-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: rmanohar)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id C8CE1C433BA;
+        Wed, 13 May 2020 19:45:19 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org C8CE1C433BA
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=rmanohar@codeaurora.org
+From:   Rajkumar Manoharan <rmanohar@codeaurora.org>
+To:     johannes@sipsolutions.net, kvalo@codeaurora.org
+Cc:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
+        Rajkumar Manoharan <rmanohar@codeaurora.org>
+Subject: [PATCH v3 02/11] cfg80211: handle 6 GHz capability of new station
+Date:   Wed, 13 May 2020 12:44:56 -0700
+Message-Id: <1589399105-25472-2-git-send-email-rmanohar@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1589399105-25472-1-git-send-email-rmanohar@codeaurora.org>
+References: <1589399105-25472-1-git-send-email-rmanohar@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, May 12, 2020 at 8:25 PM Navid Emamdoost
-<navid.emamdoost@gmail.com> wrote:
-> I found this via static analysis and as a result, did had the inputs
-> to test it with (like the way fuzzing works).
+Handle 6 GHz HE capability while adding new station. It will be used
+later in mac80211 station processing.
 
-Fuzzing is dynamic analysis, so I'm not sure how that fits.
+Signed-off-by: Rajkumar Manoharan <rmanohar@codeaurora.org>
+---
+ include/net/cfg80211.h       |  2 ++
+ include/uapi/linux/nl80211.h |  6 ++++++
+ net/wireless/nl80211.c       | 12 ++++++++++++
+ 3 files changed, 20 insertions(+)
 
-> It may be beneficial if you could point me to any testing
-> infrastructure that you use or are aware of for future cases.
-
-syzbot (a real fuzzer -- I believe it uses fake USB devices [1])
-caught the error, apparently:
-https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git/commit/?id=ced21a4c726bdc60b1680c050a284b08803bc64c
-so you might look at using that too.
-
-Traditionally, "testing your patches" means having hardware that runs
-the driver in question when patching said driver. That likely won't
-scale for researchers, but then, perhaps it just means you need to be
-more clear on how you caught the issue and how you did (or didn't)
-test it, so it's easier to reconcile your claims with the testing done
-by real users.
-
-If you only did static analysis, then we can be more confident in
-reverting. The fuzz-tested revert is an even nicer bonus.
-
-Brian
-
-[1] https://github.com/google/syzkaller/blob/master/docs/syzbot.md#usb-bugs
-https://github.com/google/syzkaller/blob/master/docs/linux/external_fuzzing_usb.md
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 70e48f66dac8..0797a296c083 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1225,6 +1225,7 @@ struct sta_txpwr {
+  * @he_capa_len: the length of the HE capabilities
+  * @airtime_weight: airtime scheduler weight for this station
+  * @txpwr: transmit power for an associated station
++ * @he_6ghz_capa: HE 6 GHz Band capabilities of station
+  */
+ struct station_parameters {
+ 	const u8 *supported_rates;
+@@ -1257,6 +1258,7 @@ struct station_parameters {
+ 	u8 he_capa_len;
+ 	u16 airtime_weight;
+ 	struct sta_txpwr txpwr;
++	const struct ieee80211_he_6ghz_band_cap *he_6ghz_capa;
+ };
+ 
+ /**
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 2b691161830f..9c0a912f1684 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2470,6 +2470,9 @@ enum nl80211_commands {
+  *	no roaming occurs between the reauth threshold and PMK expiration,
+  *	disassociation is still forced.
+  *
++ * @NL80211_ATTR_HE_6GHZ_CAPABILITY: HE 6 GHz Band Capability element (from
++ *	association request when used with NL80211_CMD_NEW_STATION).
++ *
+  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+@@ -2945,6 +2948,8 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_PMK_LIFETIME,
+ 	NL80211_ATTR_PMK_REAUTH_THRESHOLD,
+ 
++	NL80211_ATTR_HE_6GHZ_CAPABILITY,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -2998,6 +3003,7 @@ enum nl80211_attrs {
+ #define NL80211_HE_MAX_CAPABILITY_LEN           54
+ #define NL80211_MAX_NR_CIPHER_SUITES		5
+ #define NL80211_MAX_NR_AKM_SUITES		2
++#define NL80211_HE_6GHZ_CAPABILITY_LEN		2
+ 
+ #define NL80211_MIN_REMAIN_ON_CHANNEL_TIME	10
+ 
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 692bcd35f809..bcd7a452e8b1 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -661,6 +661,10 @@ const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
+ 	[NL80211_ATTR_CONTROL_PORT_NO_PREAUTH] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_PMK_LIFETIME] = NLA_POLICY_MIN(NLA_U32, 1),
+ 	[NL80211_ATTR_PMK_REAUTH_THRESHOLD] = NLA_POLICY_RANGE(NLA_U8, 1, 100),
++	[NL80211_ATTR_HE_6GHZ_CAPABILITY] = {
++		.type = NLA_EXACT_LEN,
++		.len = NL80211_HE_6GHZ_CAPABILITY_LEN,
++	},
+ };
+ 
+ /* policy for the key attributes */
+@@ -6129,6 +6133,10 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 			return -EINVAL;
+ 	}
+ 
++	if (info->attrs[NL80211_ATTR_HE_6GHZ_CAPABILITY])
++		params.he_6ghz_capa =
++			nla_data(info->attrs[NL80211_ATTR_HE_6GHZ_CAPABILITY]);
++
+ 	if (info->attrs[NL80211_ATTR_OPMODE_NOTIF]) {
+ 		params.opmode_notif_used = true;
+ 		params.opmode_notif =
+@@ -6177,6 +6185,10 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 			return -EINVAL;
+ 	}
+ 
++	/* Ensure that HT/VHT capabilities are not set for 6 GHz HE STA */
++	if (params.he_6ghz_capa && (params.ht_capa || params.vht_capa))
++		return -EINVAL;
++
+ 	/* When you run into this, adjust the code below for the new flag */
+ 	BUILD_BUG_ON(NL80211_STA_FLAG_MAX != 7);
+ 
+-- 
+2.7.4
