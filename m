@@ -7,51 +7,51 @@ X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D58EDC433DF
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 May 2020 19:45:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4197BC433E1
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 May 2020 19:45:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 86A7620659
-	for <linux-wireless@archiver.kernel.org>; Wed, 13 May 2020 19:45:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E21F120659
+	for <linux-wireless@archiver.kernel.org>; Wed, 13 May 2020 19:45:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="s2MGCAXV"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="LjG/Cm3X"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390777AbgEMTpn (ORCPT
+        id S2390784AbgEMTpo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 13 May 2020 15:45:43 -0400
-Received: from mail27.static.mailgun.info ([104.130.122.27]:19109 "EHLO
+        Wed, 13 May 2020 15:45:44 -0400
+Received: from mail27.static.mailgun.info ([104.130.122.27]:60600 "EHLO
         mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2390034AbgEMTpm (ORCPT
+        by vger.kernel.org with ESMTP id S2390761AbgEMTpn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 13 May 2020 15:45:42 -0400
+        Wed, 13 May 2020 15:45:43 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1589399142; h=References: In-Reply-To: Message-Id: Date:
+ s=smtp; t=1589399143; h=References: In-Reply-To: Message-Id: Date:
  Subject: Cc: To: From: Sender;
- bh=4tl1qGfvbpOMqFrvZIHrhJs0A7tqTukkONqdYB0f/FM=; b=s2MGCAXVahIkYS+eJLfID0+CRsVrMZsFsvuydEa8ChQXlPkt3e5eM73qZNSdKnZ8FgiIuKze
- aO1gaiFdLKVqk2PNww4whqAMoeZaRI0I36kG0VhJLq0xlcZn/lnRzP0zhV3O1IEXizEQVzUL
- vVmmCaQxwG+1mBkdWoerZ6sCzqY=
+ bh=dKANdmrJlaFLRIkTGL+hMGdoJGsE4uHCx6btM3q5HFQ=; b=LjG/Cm3XI4MSktkzGHhSi1mwb4eHY1vJtoVSeHpvvaT3KQxij9sM12SA2s1oPCQ1LIP1qfP4
+ rY69FadX0QUQ00dZLku9ehA8PZ6ylpPZXfNGgwljwbnsY0R/WLJe7AiUhmhgRnV2wAct41Yz
+ qafyG0exjtgg2Df9wICla3/juAs=
 X-Mailgun-Sending-Ip: 104.130.122.27
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5ebc4e59.7f98082dce68-smtp-out-n01;
- Wed, 13 May 2020 19:45:29 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5ebc4e54.7f63c667e810-smtp-out-n04;
+ Wed, 13 May 2020 19:45:24 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 7F74EC433F2; Wed, 13 May 2020 19:45:28 +0000 (UTC)
+        id 71495C432C2; Wed, 13 May 2020 19:45:23 +0000 (UTC)
 Received: from rmanohar-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: rmanohar)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id A3144C43637;
-        Wed, 13 May 2020 19:45:27 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org A3144C43637
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id C38ABC43636;
+        Wed, 13 May 2020 19:45:22 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org C38ABC43636
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=rmanohar@codeaurora.org
 From:   Rajkumar Manoharan <rmanohar@codeaurora.org>
 To:     johannes@sipsolutions.net, kvalo@codeaurora.org
 Cc:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
         Rajkumar Manoharan <rmanohar@codeaurora.org>
-Subject: [PATCH v3 07/11] mac80211: add HE 6 GHz Band Capability IE in Assoc. Request
-Date:   Wed, 13 May 2020 12:45:01 -0700
-Message-Id: <1589399105-25472-7-git-send-email-rmanohar@codeaurora.org>
+Subject: [PATCH v3 04/11] mac80211: add HE 6 GHz Band Capabilities into parse extension
+Date:   Wed, 13 May 2020 12:44:58 -0700
+Message-Id: <1589399105-25472-4-git-send-email-rmanohar@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1589399105-25472-1-git-send-email-rmanohar@codeaurora.org>
 References: <1589399105-25472-1-git-send-email-rmanohar@codeaurora.org>
@@ -60,173 +60,53 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Construct HE 6 GHz band capability element element (IEEE 802.11ax/D6.0,
-9.4.2.261) for association request and mesh beacon. The 6 GHz capability
-information is passed by driver through iftypes caps.
+Handle 6 GHz band capability element parsing for association.
 
 Signed-off-by: Rajkumar Manoharan <rmanohar@codeaurora.org>
 ---
- net/mac80211/ieee80211_i.h |  1 +
- net/mac80211/mesh.c        | 34 ++++++++++++++++++++++++++++++++++
- net/mac80211/mesh.h        |  2 ++
- net/mac80211/mesh_plink.c  |  3 ++-
- net/mac80211/mlme.c        | 12 ++++++++++--
- net/mac80211/util.c        | 15 +++++++++++++++
- 6 files changed, 64 insertions(+), 3 deletions(-)
+ include/linux/ieee80211.h  | 1 +
+ net/mac80211/ieee80211_i.h | 1 +
+ net/mac80211/util.c        | 4 ++++
+ 3 files changed, 6 insertions(+)
 
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 77462dff6db3..86b094738ce9 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -2614,6 +2614,7 @@ enum ieee80211_eid_ext {
+ 	WLAN_EID_EXT_MAX_CHANNEL_SWITCH_TIME = 52,
+ 	WLAN_EID_EXT_MULTIPLE_BSSID_CONFIGURATION = 55,
+ 	WLAN_EID_EXT_NON_INHERITANCE = 56,
++	WLAN_EID_EXT_HE_6GHZ_BAND_CAP = 59,
+ };
+ 
+ /* Action category code */
 diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 78a95a11458c..6517a56970b7 100644
+index f8ed4f621f7f..5e33746d7210 100644
 --- a/net/mac80211/ieee80211_i.h
 +++ b/net/mac80211/ieee80211_i.h
-@@ -2174,6 +2174,7 @@ u8 ieee80211_ie_len_he_cap(struct ieee80211_sub_if_data *sdata, u8 iftype);
- u8 *ieee80211_ie_build_he_cap(u8 *pos,
- 			      const struct ieee80211_sta_he_cap *he_cap,
- 			      u8 *end);
-+u8 *ieee80211_ie_build_he_6ghz_band_cap(u8 *pos, u16 he_6ghz_cap);
- u8 *ieee80211_ie_build_he_oper(u8 *pos);
- int ieee80211_parse_bitrates(struct cfg80211_chan_def *chandef,
- 			     const struct ieee80211_supported_band *sband,
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 36978a0e5000..2ca34869538d 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -587,6 +587,39 @@ int mesh_add_he_oper_ie(struct ieee80211_sub_if_data *sdata,
- 	return 0;
- }
- 
-+int mesh_add_he_6ghz_cap_ie(struct ieee80211_sub_if_data *sdata,
-+			    struct sk_buff *skb)
-+{
-+	const struct ieee80211_sta_he_cap *he_cap;
-+	struct ieee80211_supported_band *sband;
-+	u8 ie_len;
-+	u8 *pos;
-+
-+	sband = ieee80211_get_sband(sdata);
-+	if (!sband)
-+		return -EINVAL;
-+
-+	he_cap = ieee80211_get_he_iftype_cap(sband, NL80211_IFTYPE_MESH_POINT);
-+
-+	if (!he_cap ||
-+	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_20_NOHT ||
-+	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_5 ||
-+	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_10)
-+		return 0;
-+
-+	if (!he_cap->has_he_6ghz)
-+		return 0;
-+
-+	ie_len = 2 + 1 + sizeof(struct ieee80211_he_6ghz_band_cap);
-+	if (skb_tailroom(skb) < ie_len)
-+		return -ENOMEM;
-+
-+	pos = skb_put(skb, ie_len);
-+	ieee80211_ie_build_he_6ghz_band_cap(pos, he_cap->he_6ghz.cap);
-+
-+	return 0;
-+}
-+
- static void ieee80211_mesh_path_timer(struct timer_list *t)
- {
- 	struct ieee80211_sub_if_data *sdata =
-@@ -885,6 +918,7 @@ ieee80211_mesh_build_beacon(struct ieee80211_if_mesh *ifmsh)
- 	    mesh_add_vht_oper_ie(sdata, skb) ||
- 	    mesh_add_he_cap_ie(sdata, skb, ie_len_he_cap) ||
- 	    mesh_add_he_oper_ie(sdata, skb) ||
-+	    mesh_add_he_6ghz_cap_ie(sdata, skb) ||
- 	    mesh_add_vendor_ies(sdata, skb))
- 		goto out_free;
- 
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 953f720754e8..40492d1bd8fd 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -222,6 +222,8 @@ int mesh_add_he_cap_ie(struct ieee80211_sub_if_data *sdata,
- 		       struct sk_buff *skb, u8 ie_len);
- int mesh_add_he_oper_ie(struct ieee80211_sub_if_data *sdata,
- 			struct sk_buff *skb);
-+int mesh_add_he_6ghz_cap_ie(struct ieee80211_sub_if_data *sdata,
-+			    struct sk_buff *skb);
- void mesh_rmc_free(struct ieee80211_sub_if_data *sdata);
- int mesh_rmc_init(struct ieee80211_sub_if_data *sdata);
- void ieee80211s_init(void);
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index e3e29b8d641d..dedb2341ebdd 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -328,7 +328,8 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
- 		    mesh_add_vht_cap_ie(sdata, skb) ||
- 		    mesh_add_vht_oper_ie(sdata, skb) ||
- 		    mesh_add_he_cap_ie(sdata, skb, ie_len_he_cap) ||
--		    mesh_add_he_oper_ie(sdata, skb))
-+		    mesh_add_he_oper_ie(sdata, skb) ||
-+		    mesh_add_he_6ghz_cap_ie(sdata, skb))
- 			goto free;
- 	}
- 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 58a082efc3b3..b4dfefd482a6 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -654,6 +654,12 @@ static void ieee80211_add_he_ie(struct ieee80211_sub_if_data *sdata,
- 				      he_cap->he_cap_elem.phy_cap_info);
- 	pos = skb_put(skb, he_cap_size);
- 	ieee80211_ie_build_he_cap(pos, he_cap, pos + he_cap_size);
-+
-+	if (!he_cap->has_he_6ghz)
-+		return;
-+
-+	pos = skb_put(skb, 5); /* 2 + 1 + sizeof(he_cap->he_6ghz.cap) */
-+	ieee80211_ie_build_he_6ghz_band_cap(pos, he_cap->he_6ghz.cap);
- }
- 
- static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
-@@ -4803,7 +4809,8 @@ static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
- 	if (!sband->ht_cap.ht_supported) {
- 		ifmgd->flags |= IEEE80211_STA_DISABLE_HT;
- 		ifmgd->flags |= IEEE80211_STA_DISABLE_VHT;
--		ifmgd->flags |= IEEE80211_STA_DISABLE_HE;
-+		if (sband->band != NL80211_BAND_6GHZ)
-+			ifmgd->flags |= IEEE80211_STA_DISABLE_HE;
- 	}
- 
- 	if (!sband->vht_cap.vht_supported)
-@@ -5493,7 +5500,8 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
- 	if (req->flags & ASSOC_REQ_DISABLE_HT) {
- 		ifmgd->flags |= IEEE80211_STA_DISABLE_HT;
- 		ifmgd->flags |= IEEE80211_STA_DISABLE_VHT;
--		ifmgd->flags |= IEEE80211_STA_DISABLE_HE;
-+		if (sband->band != NL80211_BAND_6GHZ)
-+			ifmgd->flags |= IEEE80211_STA_DISABLE_HE;
- 	}
- 
- 	if (req->flags & ASSOC_REQ_DISABLE_VHT)
+@@ -1491,6 +1491,7 @@ struct ieee802_11_elems {
+ 	const struct ieee80211_he_operation *he_operation;
+ 	const struct ieee80211_he_spr *he_spr;
+ 	const struct ieee80211_mu_edca_param_set *mu_edca_param_set;
++	const struct ieee80211_he_6ghz_band_cap *he_6ghz_cap_elem;
+ 	const u8 *uora_element;
+ 	const u8 *mesh_id;
+ 	const u8 *peering;
 diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 5a33755c22f4..2bcebe672c0d 100644
+index 20436c86b9bf..5a33755c22f4 100644
 --- a/net/mac80211/util.c
 +++ b/net/mac80211/util.c
-@@ -2839,6 +2839,21 @@ u8 *ieee80211_ie_build_he_cap(u8 *pos,
- 	return pos;
+@@ -936,6 +936,10 @@ static void ieee80211_parse_extension_element(u32 *crc,
+ 		    len >= ieee80211_he_spr_size(data))
+ 			elems->he_spr = data;
+ 		break;
++	case WLAN_EID_EXT_HE_6GHZ_BAND_CAP:
++		if (len == sizeof(struct ieee80211_he_6ghz_band_cap))
++			elems->he_6ghz_cap_elem = data;
++		break;
+ 	}
  }
  
-+u8 *ieee80211_ie_build_he_6ghz_band_cap(u8 *pos, u16 he_6ghz_cap)
-+{
-+	__le16 cap = cpu_to_le16(he_6ghz_cap);
-+
-+	*pos++ = WLAN_EID_EXTENSION;
-+	*pos++ = 3;
-+	*pos++ = WLAN_EID_EXT_HE_6GHZ_BAND_CAP;
-+
-+	/* Fixed data */
-+	memcpy(pos, &cap, sizeof(cap));
-+	pos += sizeof(cap);
-+
-+	return pos;
-+}
-+
- u8 *ieee80211_ie_build_ht_oper(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
- 			       const struct cfg80211_chan_def *chandef,
- 			       u16 prot_mode, bool rifs_mode)
 -- 
 2.7.4
