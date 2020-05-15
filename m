@@ -2,132 +2,116 @@ Return-Path: <SRS0=zRRP=65=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MIME_BASE64_TEXT,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5909C433E0
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 May 2020 19:33:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45C80C433E1
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 May 2020 21:29:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 75B722070A
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 May 2020 19:33:40 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="EUoGkRx4"
+	by mail.kernel.org (Postfix) with ESMTP id 2074420709
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 May 2020 21:29:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1589578165;
+	bh=axO7uaYrjQR5BXFcyfzz5CtxMgICxAqYcDU4Tgu6OYg=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=FAIKU0sZKuZyf5PL8azhbQpui2na4kH0/zK+Ap/+q5q9kE6jO7A9vvqKAmwj8Kfns
+	 YqYof2h926Nv0G0PbT8OYmzNJ6DKnSKiAqQyaHqzHsDp42RkJTXg0xcoMjbXP+oQ+S
+	 0nkyr6Yueg7ofXg77NgI9aD2SYHpR0JtGRONxVhk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726204AbgEOTdj (ORCPT
+        id S1728031AbgEOV3U (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 15 May 2020 15:33:39 -0400
-Received: from mailgw01.mediatek.com ([210.61.82.183]:57983 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726179AbgEOTdi (ORCPT
+        Fri, 15 May 2020 17:29:20 -0400
+Received: from mail-pf1-f193.google.com ([209.85.210.193]:38031 "EHLO
+        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727972AbgEOV3J (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 May 2020 15:33:38 -0400
-X-UUID: c20e34c1cb3e4c64b97660c5b8c68620-20200516
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=CME4YY1frgPQdT3pDkdrdyWqoLZQ9uQZzZZfXlQscn8=;
-        b=EUoGkRx4/6Bk0z2uZEsbVgb4QyJzDm4ZLoR0zF/G72G6MvECtAkUTEFaJ3bPeIsq5lIb7BRDyzSXvY3zP9bioiXwmKtppS/mpjrZTfNgiXbbGGMpcP76z6xBFCdPZeV7ZMovYiWatki8mychXmvWSUIrSLqgTZ3jKYYYfI7iNdg=;
-X-UUID: c20e34c1cb3e4c64b97660c5b8c68620-20200516
-Received: from mtkcas11.mediatek.inc [(172.21.101.40)] by mailgw01.mediatek.com
-        (envelope-from <ryder.lee@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
-        with ESMTP id 1904911880; Sat, 16 May 2020 03:33:34 +0800
-Received: from mtkcas08.mediatek.inc (172.21.101.126) by
- mtkmbs08n1.mediatek.inc (172.21.101.55) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Sat, 16 May 2020 03:33:28 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas08.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Sat, 16 May 2020 03:33:28 +0800
-From:   Ryder Lee <ryder.lee@mediatek.com>
-To:     Felix Fietkau <nbd@nbd.name>,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-CC:     Shayne Chen <shayne.chen@mediatek.com>,
-        Sean Wang <sean.wang@mediatek.com>,
-        <linux-wireless@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>,
-        Ryder Lee <ryder.lee@mediatek.com>
-Subject: [PATCH] mt76: mt7915: add spatial reuse support
-Date:   Sat, 16 May 2020 03:33:28 +0800
-Message-ID: <f91515d63f3cab7bb6d766e7d6906a93067e903c.1589570744.git.ryder.lee@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+        Fri, 15 May 2020 17:29:09 -0400
+Received: by mail-pf1-f193.google.com with SMTP id y25so1601914pfn.5;
+        Fri, 15 May 2020 14:29:08 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=wyaNKYj+csWx0v5/RRrrvPiG/GlOrf9rCpyGTc2gDv0=;
+        b=PNU2WB7xGk4aeo9LqsRnFBNqh2ufNpsh3E2UmToKGNuzHfu5s+ztk+s6S6VUKmq0C/
+         iwuKhe46HL2A2VjsuMCiBG1UUq668ruWKtTYFkzSo6RRrX/zBJOPXhRKnsWG3B0dZ2hW
+         bWS2BRDcZKdi0ogAgjbkHYrTzBOU4NRKRmSTPmsBmzjqEpdkwG3CiEBpgHGmHoGOpB6R
+         79oBGxLCemAvW7+V9HRYSkPx8A6zubaw+QyShr460zkG2LBJNAtE7VyZ2ppalO/b0PTK
+         iMKzu8k478e+nghLjgvLqcZuQkCqBKzZEUEUe5QfMFc988OM7X2xv4dSblScsJRps6Fl
+         5B1A==
+X-Gm-Message-State: AOAM531hGbKW+WC3F5TKCbWmueDzmsXgOmOREtXk4XgjwqnH/lMZEyw5
+        Y6Oh5B+/fqtxcGWbDJ81iE4=
+X-Google-Smtp-Source: ABdhPJzT8OuJIcMz4maB705Q5rp4ih5zCp5ALUBnEyTPR7+PH8X96oQqmCWUmGTpOQxsyRkd6WhDeA==
+X-Received: by 2002:aa7:8a92:: with SMTP id a18mr5990105pfc.0.1589578148396;
+        Fri, 15 May 2020 14:29:08 -0700 (PDT)
+Received: from 42.do-not-panic.com (42.do-not-panic.com. [157.230.128.187])
+        by smtp.gmail.com with ESMTPSA id 19sm2216513pjl.52.2020.05.15.14.28.57
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 15 May 2020 14:29:04 -0700 (PDT)
+Received: by 42.do-not-panic.com (Postfix, from userid 1000)
+        id 7975D4238B; Fri, 15 May 2020 21:28:50 +0000 (UTC)
+From:   Luis Chamberlain <mcgrof@kernel.org>
+To:     jeyu@kernel.org
+Cc:     akpm@linux-foundation.org, arnd@arndb.de, rostedt@goodmis.org,
+        mingo@redhat.com, aquini@redhat.com, cai@lca.pw, dyoung@redhat.com,
+        bhe@redhat.com, peterz@infradead.org, tglx@linutronix.de,
+        gpiccoli@canonical.com, pmladek@suse.com, tiwai@suse.de,
+        schlad@suse.de, andriy.shevchenko@linux.intel.com,
+        keescook@chromium.org, daniel.vetter@ffwll.ch, will@kernel.org,
+        mchehab+samsung@kernel.org, kvalo@codeaurora.org,
+        davem@davemloft.net, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Luis Chamberlain <mcgrof@kernel.org>,
+        linux-wireless@vger.kernel.org,
+        Lennert Buytenhek <buytenh@wantstofly.org>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Ganapathi Bhat <ganapathi.bhat@nxp.com>
+Subject: [PATCH v2 15/15] mwl8k: use new module_firmware_crashed()
+Date:   Fri, 15 May 2020 21:28:46 +0000
+Message-Id: <20200515212846.1347-16-mcgrof@kernel.org>
+X-Mailer: git-send-email 2.23.0.rc1
+In-Reply-To: <20200515212846.1347-1-mcgrof@kernel.org>
+References: <20200515212846.1347-1-mcgrof@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-RW5hYmxlIG9yIGRpc2FibGUgT0JTUyBQRCB3aGVuIHRoZSBic3MgY29uZmlnIGNoYW5nZXMgb3Ig
-d2UNCmFzc29jIHRvIGFuIEFQIHRoYXQgYnJvYWRjYXN0cyB0aGUgSUUuDQoNCldpdGggdGhpcyBw
-YXRjaCwgd2UgY2FuIGdldCB+MjAlIGdhaW4gaW4gT0JTUyBPVEEgZW52aXJvbm1lbnQuDQoNClRl
-c3RlZC1ieTogRXZlbHluIFRzYWkgPGV2ZWx5bi50c2FpQG1lZGlhdGVrLmNvbT4NClNpZ25lZC1v
-ZmYtYnk6IFJ5ZGVyIExlZSA8cnlkZXIubGVlQG1lZGlhdGVrLmNvbT4NCi0tLQ0KIC4uLi9uZXQv
-d2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc5MTUvbWFpbi5jICB8ICA3ICsrKysrLQ0KIC4uLi9u
-ZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc5MTUvbWN1LmMgICB8IDI1ICsrKysrKysrKysr
-KysrKysrKysNCiAuLi4vbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3OTE1L21jdS5oICAg
-fCAgMSArDQogLi4uL3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3OTE1L210NzkxNS5oICAgIHwg
-IDIgKysNCiA0IGZpbGVzIGNoYW5nZWQsIDM0IGluc2VydGlvbnMoKyksIDEgZGVsZXRpb24oLSkN
-Cg0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3OTE1
-L21haW4uYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3OTE1L21haW4u
-Yw0KaW5kZXggOTg1NjczNzRjMmM5Li5lMDQ1ZGMyMzQxMDAgMTAwNjQ0DQotLS0gYS9kcml2ZXJz
-L25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210NzkxNS9tYWluLmMNCisrKyBiL2RyaXZlcnMv
-bmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3OTE1L21haW4uYw0KQEAgLTQzNyw4ICs0Mzcs
-MTAgQEAgc3RhdGljIHZvaWQgbXQ3OTE1X2Jzc19pbmZvX2NoYW5nZWQoc3RydWN0IGllZWU4MDIx
-MV9odyAqaHcsDQogCQltdDc5MTVfbWN1X2FkZF9zdGEoZGV2LCB2aWYsIE5VTEwsIGpvaW4pOw0K
-IAl9DQogDQotCWlmIChjaGFuZ2VkICYgQlNTX0NIQU5HRURfQVNTT0MpDQorCWlmIChjaGFuZ2Vk
-ICYgQlNTX0NIQU5HRURfQVNTT0MpIHsNCiAJCW10NzkxNV9tY3VfYWRkX2Jzc19pbmZvKHBoeSwg
-dmlmLCBpbmZvLT5hc3NvYyk7DQorCQltdDc5MTVfbWN1X2FkZF9vYnNzX3NwcihkZXYsIHZpZiwg
-aW5mby0+aGVfb2Jzc19wZC5lbmFibGUpOw0KKwl9DQogDQogCWlmIChjaGFuZ2VkICYgQlNTX0NI
-QU5HRURfRVJQX1NMT1QpIHsNCiAJCWludCBzbG90dGltZSA9IGluZm8tPnVzZV9zaG9ydF9zbG90
-ID8gOSA6IDIwOw0KQEAgLTQ1OCw2ICs0NjAsOSBAQCBzdGF0aWMgdm9pZCBtdDc5MTVfYnNzX2lu
-Zm9fY2hhbmdlZChzdHJ1Y3QgaWVlZTgwMjExX2h3ICpodywNCiAJaWYgKGNoYW5nZWQgJiAoQlNT
-X0NIQU5HRURfUU9TIHwgQlNTX0NIQU5HRURfQkVBQ09OX0VOQUJMRUQpKQ0KIAkJbXQ3OTE1X21j
-dV9zZXRfdHgoZGV2LCB2aWYpOw0KIA0KKwlpZiAoY2hhbmdlZCAmIEJTU19DSEFOR0VEX0hFX09C
-U1NfUEQpDQorCQltdDc5MTVfbWN1X2FkZF9vYnNzX3NwcihkZXYsIHZpZiwgaW5mby0+aGVfb2Jz
-c19wZC5lbmFibGUpOw0KKw0KIAlpZiAoY2hhbmdlZCAmIChCU1NfQ0hBTkdFRF9CRUFDT04gfA0K
-IAkJICAgICAgIEJTU19DSEFOR0VEX0JFQUNPTl9FTkFCTEVEKSkNCiAJCW10NzkxNV9tY3VfYWRk
-X2JlYWNvbihodywgdmlmLCBpbmZvLT5lbmFibGVfYmVhY29uKTsNCmRpZmYgLS1naXQgYS9kcml2
-ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210NzkxNS9tY3UuYyBiL2RyaXZlcnMvbmV0
-L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3OTE1L21jdS5jDQppbmRleCBmMDBhZDJiNjY3NjEu
-LjIyNjBkNjU2YjRiYiAxMDA2NDQNCi0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVr
-L210NzYvbXQ3OTE1L21jdS5jDQorKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRlay9t
-dDc2L210NzkxNS9tY3UuYw0KQEAgLTMxNTksMyArMzE1OSwyOCBAQCBpbnQgbXQ3OTE1X21jdV9z
-ZXRfdHhiZl9zb3VuZGluZyhzdHJ1Y3QgbXQ3OTE1X2RldiAqZGV2KQ0KIAlyZXR1cm4gX19tdDc2
-X21jdV9zZW5kX21zZygmZGV2LT5tdDc2LCBNQ1VfRVhUX0NNRF9UWEJGX0FDVElPTiwNCiAJCQkJ
-ICAgJnJlcSwgc2l6ZW9mKHJlcSksIHRydWUpOw0KIH0NCisNCitpbnQgbXQ3OTE1X21jdV9hZGRf
-b2Jzc19zcHIoc3RydWN0IG10NzkxNV9kZXYgKmRldiwgc3RydWN0IGllZWU4MDIxMV92aWYgKnZp
-ZiwNCisJCQkgICAgYm9vbCBlbmFibGUpDQorew0KKyNkZWZpbmUgTVRfU1BSX0VOQUJMRQkJMQ0K
-KwlzdHJ1Y3QgbXQ3OTE1X3ZpZiAqbXZpZiA9IChzdHJ1Y3QgbXQ3OTE1X3ZpZiAqKXZpZi0+ZHJ2
-X3ByaXY7DQorCXN0cnVjdCB7DQorCQl1OCBhY3Rpb247DQorCQl1OCBhcmdfbnVtOw0KKwkJdTgg
-YmFuZF9pZHg7DQorCQl1OCBzdGF0dXM7DQorCQl1OCBkcm9wX3R4X2lkeDsNCisJCXU4IHN0YV9p
-ZHg7CS8qIDI1NiBzdGEgKi8NCisJCXU4IHJzdlsyXTsNCisJCXUzMiB2YWw7DQorCX0gX19wYWNr
-ZWQgcmVxID0gew0KKwkJLmFjdGlvbiA9IE1UX1NQUl9FTkFCTEUsDQorCQkuYXJnX251bSA9IDEs
-DQorCQkuYmFuZF9pZHggPSBtdmlmLT5iYW5kX2lkeCwNCisJCS52YWwgPSBlbmFibGUsDQorCX07
-DQorDQorCXJldHVybiBfX210NzZfbWN1X3NlbmRfbXNnKCZkZXYtPm10NzYsIE1DVV9FWFRfQ01E
-X1NFVF9TUFIsDQorCQkJCSAgICZyZXEsIHNpemVvZihyZXEpLCB0cnVlKTsNCit9DQpkaWZmIC0t
-Z2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc5MTUvbWN1LmggYi9k
-cml2ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210NzkxNS9tY3UuaA0KaW5kZXggMzRh
-Y2U2ZTY3MmQwLi5jMjQxZGQ3YzRjMzYgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVz
-cy9tZWRpYXRlay9tdDc2L210NzkxNS9tY3UuaA0KKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3Mv
-bWVkaWF0ZWsvbXQ3Ni9tdDc5MTUvbWN1LmgNCkBAIC0yMTIsNiArMjEyLDcgQEAgZW51bSB7DQog
-CU1DVV9FWFRfQ01EX1JBVEVfQ1RSTCA9IDB4ODcsDQogCU1DVV9FWFRfQ01EX0ZXX0RCR19DVFJM
-ID0gMHg5NSwNCiAJTUNVX0VYVF9DTURfU0VUX1JERF9USCA9IDB4OWQsDQorCU1DVV9FWFRfQ01E
-X1NFVF9TUFIgPSAweGE4LA0KIH07DQogDQogZW51bSB7DQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9u
-ZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc5MTUvbXQ3OTE1LmggYi9kcml2ZXJzL25ldC93
-aXJlbGVzcy9tZWRpYXRlay9tdDc2L210NzkxNS9tdDc5MTUuaA0KaW5kZXggNTM5MjI5MmE4Mzhl
-Li44NWQ3NGVjZDAzNTEgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRl
-ay9tdDc2L210NzkxNS9tdDc5MTUuaA0KKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0
-ZWsvbXQ3Ni9tdDc5MTUvbXQ3OTE1LmgNCkBAIC0zMDEsNiArMzAxLDggQEAgaW50IG10NzkxNV9t
-Y3VfYWRkX2tleShzdHJ1Y3QgbXQ3OTE1X2RldiAqZGV2LCBzdHJ1Y3QgaWVlZTgwMjExX3ZpZiAq
-dmlmLA0KIAkJICAgICAgIGVudW0gc2V0X2tleV9jbWQgY21kKTsNCiBpbnQgbXQ3OTE1X21jdV9h
-ZGRfYmVhY29uKHN0cnVjdCBpZWVlODAyMTFfaHcgKmh3LCBzdHJ1Y3QgaWVlZTgwMjExX3ZpZiAq
-dmlmLA0KIAkJCSAgaW50IGVuYWJsZSk7DQoraW50IG10NzkxNV9tY3VfYWRkX29ic3Nfc3ByKHN0
-cnVjdCBtdDc5MTVfZGV2ICpkZXYsIHN0cnVjdCBpZWVlODAyMTFfdmlmICp2aWYsDQorICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgIGJvb2wgZW5hYmxlKTsNCiBpbnQgbXQ3OTE1X21jdV9hZGRf
-cmF0ZV9jdHJsKHN0cnVjdCBtdDc5MTVfZGV2ICpkZXYsIHN0cnVjdCBpZWVlODAyMTFfdmlmICp2
-aWYsDQogCQkJICAgICBzdHJ1Y3QgaWVlZTgwMjExX3N0YSAqc3RhKTsNCiBpbnQgbXQ3OTE1X21j
-dV9hZGRfc21wcyhzdHJ1Y3QgbXQ3OTE1X2RldiAqZGV2LCBzdHJ1Y3QgaWVlZTgwMjExX3ZpZiAq
-dmlmLA0KLS0gDQoyLjE4LjANCg==
+This makes use of the new module_firmware_crashed() to help
+annotate when firmware for device drivers crash. When firmware
+crashes devices can sometimes become unresponsive, and recovery
+sometimes requires a driver unload / reload and in the worst cases
+a reboot.
+
+Using a taint flag allows us to annotate when this happens clearly.
+
+Cc: linux-wireless@vger.kernel.org
+Cc: Lennert Buytenhek <buytenh@wantstofly.org>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: "Gustavo A. R. Silva" <gustavoars@kernel.org>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Cc: Ganapathi Bhat <ganapathi.bhat@nxp.com>
+Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
+---
+ drivers/net/wireless/marvell/mwl8k.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/wireless/marvell/mwl8k.c b/drivers/net/wireless/marvell/mwl8k.c
+index 97f23f93f6e7..d609ef1bb879 100644
+--- a/drivers/net/wireless/marvell/mwl8k.c
++++ b/drivers/net/wireless/marvell/mwl8k.c
+@@ -1551,6 +1551,7 @@ static int mwl8k_tx_wait_empty(struct ieee80211_hw *hw)
+ 	 * the firmware has crashed
+ 	 */
+ 	if (priv->hw_restart_in_progress) {
++		module_firmware_crashed();
+ 		if (priv->hw_restart_owner == current)
+ 			return 0;
+ 		else
+-- 
+2.26.2
 
