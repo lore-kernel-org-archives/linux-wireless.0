@@ -4,54 +4,54 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45C80C433E1
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 May 2020 21:29:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E31BEC433DF
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 May 2020 21:29:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2074420709
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 May 2020 21:29:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BC2A220709
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 May 2020 21:29:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1589578165;
-	bh=axO7uaYrjQR5BXFcyfzz5CtxMgICxAqYcDU4Tgu6OYg=;
+	s=default; t=1589578168;
+	bh=ZfUVlJaeaKSRStF/trEpieR9P5r+zyJMM6uubu9p/3c=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=FAIKU0sZKuZyf5PL8azhbQpui2na4kH0/zK+Ap/+q5q9kE6jO7A9vvqKAmwj8Kfns
-	 YqYof2h926Nv0G0PbT8OYmzNJ6DKnSKiAqQyaHqzHsDp42RkJTXg0xcoMjbXP+oQ+S
-	 0nkyr6Yueg7ofXg77NgI9aD2SYHpR0JtGRONxVhk=
+	b=gcCauuX4DBavTrUU+0S3bWAl08I9sWslsNDnDcoUwM5TM31Lb2b19RNdG9RWwH80A
+	 JzxMHF7dT/VpYUeWjIg8RggWSpQETNPZKyXE6vdkTb1rFY91DlSd44CXRDhZ30PUpO
+	 0xjI+0t5VBi08cQ+tBAOHBX68OTPE/XPGqVDVH/U=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728031AbgEOV3U (ORCPT
+        id S1727966AbgEOV3I (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 15 May 2020 17:29:20 -0400
-Received: from mail-pf1-f193.google.com ([209.85.210.193]:38031 "EHLO
-        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727972AbgEOV3J (ORCPT
+        Fri, 15 May 2020 17:29:08 -0400
+Received: from mail-pl1-f196.google.com ([209.85.214.196]:44006 "EHLO
+        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727927AbgEOV3H (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 May 2020 17:29:09 -0400
-Received: by mail-pf1-f193.google.com with SMTP id y25so1601914pfn.5;
-        Fri, 15 May 2020 14:29:08 -0700 (PDT)
+        Fri, 15 May 2020 17:29:07 -0400
+Received: by mail-pl1-f196.google.com with SMTP id k22so1420778pls.10;
+        Fri, 15 May 2020 14:29:06 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=wyaNKYj+csWx0v5/RRrrvPiG/GlOrf9rCpyGTc2gDv0=;
-        b=PNU2WB7xGk4aeo9LqsRnFBNqh2ufNpsh3E2UmToKGNuzHfu5s+ztk+s6S6VUKmq0C/
-         iwuKhe46HL2A2VjsuMCiBG1UUq668ruWKtTYFkzSo6RRrX/zBJOPXhRKnsWG3B0dZ2hW
-         bWS2BRDcZKdi0ogAgjbkHYrTzBOU4NRKRmSTPmsBmzjqEpdkwG3CiEBpgHGmHoGOpB6R
-         79oBGxLCemAvW7+V9HRYSkPx8A6zubaw+QyShr460zkG2LBJNAtE7VyZ2ppalO/b0PTK
-         iMKzu8k478e+nghLjgvLqcZuQkCqBKzZEUEUe5QfMFc988OM7X2xv4dSblScsJRps6Fl
-         5B1A==
-X-Gm-Message-State: AOAM531hGbKW+WC3F5TKCbWmueDzmsXgOmOREtXk4XgjwqnH/lMZEyw5
-        Y6Oh5B+/fqtxcGWbDJ81iE4=
-X-Google-Smtp-Source: ABdhPJzT8OuJIcMz4maB705Q5rp4ih5zCp5ALUBnEyTPR7+PH8X96oQqmCWUmGTpOQxsyRkd6WhDeA==
-X-Received: by 2002:aa7:8a92:: with SMTP id a18mr5990105pfc.0.1589578148396;
-        Fri, 15 May 2020 14:29:08 -0700 (PDT)
+        bh=aC7L6/f42/gPjIDsH2AkyT3HK+i3vctnLudoDWO4A04=;
+        b=AjRDRWxVI1WN7GDdK6vjTn5SnQsS2mN8zRsjdrP7IWtWYZbszAuLxVMczdZJhB1b4l
+         EjVWOyRKLCMJNfmtFed1M9mUiwjz6IfcQ/zdbqtgf68gVDwaT3GJVuGBTV9sQiqCinAi
+         UwGyQ8QOVaEmITnedKpN8LBHVsga4l6aDUZ8uBzA+s8qnXeN3js0d4gH0RTrByZUr4fU
+         Fhm+Zp2gxIMoKWSm3iFlccjku5CzAVa/OrP+3ti8mcJb68fZlG/iBUtfXTfoyqUVmw3O
+         NA6d4RuTC4mA+QImQPBPxEZi+8vz2X6AG0yKeWfzBztGwAW1xvq978P2wusLN4c9u8d4
+         mslw==
+X-Gm-Message-State: AOAM531K7v+evP/tw2qlD6CfBRAeGsFAz12yq6TSCPH8/36ST4e3nsDQ
+        ImtxfAyO6D7y8MizlDmzSQI=
+X-Google-Smtp-Source: ABdhPJxXNou50yIHSh6fq7UacJSKWUh4Fh8iActeIPzYhcfbgAV9CeFNZwMPi6ZjkC+/+JSXSaCiwQ==
+X-Received: by 2002:a17:90a:d818:: with SMTP id a24mr5616179pjv.75.1589578146344;
+        Fri, 15 May 2020 14:29:06 -0700 (PDT)
 Received: from 42.do-not-panic.com (42.do-not-panic.com. [157.230.128.187])
-        by smtp.gmail.com with ESMTPSA id 19sm2216513pjl.52.2020.05.15.14.28.57
+        by smtp.gmail.com with ESMTPSA id w190sm2302171pfw.35.2020.05.15.14.28.56
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Fri, 15 May 2020 14:29:04 -0700 (PDT)
 Received: by 42.do-not-panic.com (Postfix, from userid 1000)
-        id 7975D4238B; Fri, 15 May 2020 21:28:50 +0000 (UTC)
+        id 42D5442376; Fri, 15 May 2020 21:28:50 +0000 (UTC)
 From:   Luis Chamberlain <mcgrof@kernel.org>
 To:     jeyu@kernel.org
 Cc:     akpm@linux-foundation.org, arnd@arndb.de, rostedt@goodmis.org,
@@ -63,14 +63,10 @@ Cc:     akpm@linux-foundation.org, arnd@arndb.de, rostedt@goodmis.org,
         mchehab+samsung@kernel.org, kvalo@codeaurora.org,
         davem@davemloft.net, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org, Luis Chamberlain <mcgrof@kernel.org>,
-        linux-wireless@vger.kernel.org,
-        Lennert Buytenhek <buytenh@wantstofly.org>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Ganapathi Bhat <ganapathi.bhat@nxp.com>
-Subject: [PATCH v2 15/15] mwl8k: use new module_firmware_crashed()
-Date:   Fri, 15 May 2020 21:28:46 +0000
-Message-Id: <20200515212846.1347-16-mcgrof@kernel.org>
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Subject: [PATCH v2 13/15] ath6kl: use new module_firmware_crashed()
+Date:   Fri, 15 May 2020 21:28:44 +0000
+Message-Id: <20200515212846.1347-14-mcgrof@kernel.org>
 X-Mailer: git-send-email 2.23.0.rc1
 In-Reply-To: <20200515212846.1347-1-mcgrof@kernel.org>
 References: <20200515212846.1347-1-mcgrof@kernel.org>
@@ -90,28 +86,25 @@ a reboot.
 Using a taint flag allows us to annotate when this happens clearly.
 
 Cc: linux-wireless@vger.kernel.org
-Cc: Lennert Buytenhek <buytenh@wantstofly.org>
+Cc: ath10k@lists.infradead.org
 Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: "Gustavo A. R. Silva" <gustavoars@kernel.org>
-Cc: Johannes Berg <johannes.berg@intel.com>
-Cc: Ganapathi Bhat <ganapathi.bhat@nxp.com>
 Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 ---
- drivers/net/wireless/marvell/mwl8k.c | 1 +
+ drivers/net/wireless/ath/ath6kl/hif.c | 1 +
  1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/marvell/mwl8k.c b/drivers/net/wireless/marvell/mwl8k.c
-index 97f23f93f6e7..d609ef1bb879 100644
---- a/drivers/net/wireless/marvell/mwl8k.c
-+++ b/drivers/net/wireless/marvell/mwl8k.c
-@@ -1551,6 +1551,7 @@ static int mwl8k_tx_wait_empty(struct ieee80211_hw *hw)
- 	 * the firmware has crashed
- 	 */
- 	if (priv->hw_restart_in_progress) {
-+		module_firmware_crashed();
- 		if (priv->hw_restart_owner == current)
- 			return 0;
- 		else
+diff --git a/drivers/net/wireless/ath/ath6kl/hif.c b/drivers/net/wireless/ath/ath6kl/hif.c
+index d1942537ea10..cfd838607544 100644
+--- a/drivers/net/wireless/ath/ath6kl/hif.c
++++ b/drivers/net/wireless/ath/ath6kl/hif.c
+@@ -120,6 +120,7 @@ static int ath6kl_hif_proc_dbg_intr(struct ath6kl_device *dev)
+ 	int ret;
+ 
+ 	ath6kl_warn("firmware crashed\n");
++	module_firmware_crashed();
+ 
+ 	/*
+ 	 * read counter to clear the interrupt, the debug error interrupt is
 -- 
 2.26.2
 
