@@ -7,51 +7,51 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C8F1C433E1
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 May 2020 21:29:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C53AC433E0
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 May 2020 21:29:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 76DA020709
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 May 2020 21:29:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F231E20758
+	for <linux-wireless@archiver.kernel.org>; Fri, 15 May 2020 21:29:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1589578176;
-	bh=hSudVJFyAZ9/J4REpJ76G/FrhB+ePdz7UgTctgDaIH8=;
+	s=default; t=1589578178;
+	bh=RNMsg/AOqipY6NFThZYJpUGXRNGY0wQRDMN3eKkahBo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=ikhyBDtsYP/k32f69+QXI42wfN0Q8xTRlT3XWXaSBB+BI9ngpnxF6tCp1pvUOdW+u
-	 YVMg0sERutT8L+yPWeJKmNeyj2eB6tlTHYSkY1zbvjfu8V+ouBAeOeBg/8fwfEiXnh
-	 9P0KOtMMZnx2gmY1I+dx6GVJae2wU4F0f0dgq3pk=
+	b=k4/siF21l1W+K4xiQZ4kvtNFHeR//p7Yz6Um9Gf+WJXhpPqZaZahA2c2XgYXInXxG
+	 WQX3TN0txbsqkS18+Et+/hbkFty+JpXk+tF71b3AB3HGRYJT7oucFYhQoKA0jth5kM
+	 omI9f6Wi/Q2q5UXRB39mx42DFJZHAAWHRneSIwI4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727969AbgEOV3b (ORCPT
+        id S1727933AbgEOV3G (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 15 May 2020 17:29:31 -0400
-Received: from mail-pg1-f193.google.com ([209.85.215.193]:44667 "EHLO
-        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727942AbgEOV3H (ORCPT
+        Fri, 15 May 2020 17:29:06 -0400
+Received: from mail-pf1-f194.google.com ([209.85.210.194]:41786 "EHLO
+        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727922AbgEOV3G (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 May 2020 17:29:07 -0400
-Received: by mail-pg1-f193.google.com with SMTP id b8so1587153pgi.11;
-        Fri, 15 May 2020 14:29:07 -0700 (PDT)
+        Fri, 15 May 2020 17:29:06 -0400
+Received: by mail-pf1-f194.google.com with SMTP id 23so1592660pfy.8;
+        Fri, 15 May 2020 14:29:05 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=7iSHfXW9+fvDe3OMezoTpoZ6yc3BiswtzUTGtFdEoqM=;
-        b=CWT3RSEsOAt3vxph1Drkp6lLCexue3b3KvLCldOnH8ALvAN+vG7ea8ubR3spND7fNJ
-         jrosDF++LVePslD+xaXTT04Dr31BRgvteWo/uCtQqi4oif794PROe+fklD8OUKEqX4pA
-         QG4wWoSauN0emeuSxha6yT8ugiYfMnV346cti0anyZR8Z/mDDmIpCO2Thvyp22N+lQeZ
-         kTbgXNu6dlOitrhfpKl5z4QKE5wWxYyiNBtWDp59hDGh2rzVZMNfsCSsQxtPbismgFxD
-         zuok7sbso5ktvEQvVHjRzuSbyvpON5p/VgfmCj5Zs6lbISK6e1gFECdajf/sQCQVnJek
-         6KhQ==
-X-Gm-Message-State: AOAM5320EiO4ESDUt3yjDQX383A+SPvM1GZR0amfD/fawwVeiraWdgom
-        8naqhOEHuEOtYF2c0FbXQuk=
-X-Google-Smtp-Source: ABdhPJy8UUPC9xXHxB4FjCVxUaLsmMMiDQI0BvVJYF+PqZUF0tKyMG2HswF59FK0uEUmrA4F0O6+Ng==
-X-Received: by 2002:a62:7d91:: with SMTP id y139mr5770731pfc.172.1589578147283;
-        Fri, 15 May 2020 14:29:07 -0700 (PDT)
-Received: from 42.do-not-panic.com (42.do-not-panic.com. [157.230.128.187])
-        by smtp.gmail.com with ESMTPSA id 25sm2281115pjk.50.2020.05.15.14.28.56
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        bh=+C5HUmb0IVN2XUMtCx+958ASlteYAzKSr3n9xtQKd1o=;
+        b=sjmJt+iGDzcAx/sJoynK2092IRpplkRBFKvE8SzJoTImgURQwF1+95B0lH32YGTQlx
+         Nkxj0LdLaMogM/jD1n716idtha6ExL6H7iFa9vX/Bw639xmKZ4CJBBaHNMIipt3qT9Ue
+         F99d/3wd8fCdZfeNJSIx6tUe/PSsCXxY2Qp+BkDuqX+9Qs4qJYfQl+eM+fyvk+ybOeVU
+         wSIjtT2JQgIWjvjqcFZ2AYT0bBcQj363PxClrk2P3EY20eCf24ZYdkQvfO0lgw7fXrza
+         SLI7FEHFO7Uer02fGPHdSG73D50AEQY24TDXAcMT1QqO/jI7C+qtQ5UEvu01h/Vtd9yD
+         x8mw==
+X-Gm-Message-State: AOAM531+lkF3zUHdQpy7F465dWKz5qwkXKyTRF1smhzUdS2OXu2N3dw7
+        1nwCJXQRHUhdtzB+dENzks0=
+X-Google-Smtp-Source: ABdhPJx5aHzvT/Yod67FCxrd/rYpeLz+YvwfHeXEiG+n38C/BUT1hIQZlmj9K6EmCO5IWEzJJXgtBQ==
+X-Received: by 2002:a63:ef05:: with SMTP id u5mr4866245pgh.237.1589578144777;
         Fri, 15 May 2020 14:29:04 -0700 (PDT)
+Received: from 42.do-not-panic.com (42.do-not-panic.com. [157.230.128.187])
+        by smtp.gmail.com with ESMTPSA id e18sm2688831pfh.75.2020.05.15.14.28.55
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 15 May 2020 14:28:56 -0700 (PDT)
 Received: by 42.do-not-panic.com (Postfix, from userid 1000)
-        id 6016742380; Fri, 15 May 2020 21:28:50 +0000 (UTC)
+        id 33D1942349; Fri, 15 May 2020 21:28:50 +0000 (UTC)
 From:   Luis Chamberlain <mcgrof@kernel.org>
 To:     jeyu@kernel.org
 Cc:     akpm@linux-foundation.org, arnd@arndb.de, rostedt@goodmis.org,
@@ -63,24 +63,14 @@ Cc:     akpm@linux-foundation.org, arnd@arndb.de, rostedt@goodmis.org,
         mchehab+samsung@kernel.org, kvalo@codeaurora.org,
         davem@davemloft.net, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org, Luis Chamberlain <mcgrof@kernel.org>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Wright Feng <wright.feng@cypress.com>,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Subject: [PATCH v2 14/15] brcm80211: use new module_firmware_crashed()
-Date:   Fri, 15 May 2020 21:28:45 +0000
-Message-Id: <20200515212846.1347-15-mcgrof@kernel.org>
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Subject: [PATCH v2 12/15] ath10k: use new module_firmware_crashed()
+Date:   Fri, 15 May 2020 21:28:43 +0000
+Message-Id: <20200515212846.1347-13-mcgrof@kernel.org>
 X-Mailer: git-send-email 2.23.0.rc1
 In-Reply-To: <20200515212846.1347-1-mcgrof@kernel.org>
 References: <20200515212846.1347-1-mcgrof@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
@@ -96,33 +86,67 @@ a reboot.
 Using a taint flag allows us to annotate when this happens clearly.
 
 Cc: linux-wireless@vger.kernel.org
-Cc: brcm80211-dev-list.pdl@broadcom.com
-Cc: brcm80211-dev-list@cypress.com
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Franky Lin <franky.lin@broadcom.com>
-Cc: Hante Meuleman <hante.meuleman@broadcom.com>
-Cc: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
-Cc: Wright Feng <wright.feng@cypress.com>
+Cc: ath10k@lists.infradead.org
 Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: "Rafał Miłecki" <rafal@milecki.pl>
-Cc: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
 Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/ath/ath10k/pci.c  | 2 ++
+ drivers/net/wireless/ath/ath10k/sdio.c | 2 ++
+ drivers/net/wireless/ath/ath10k/snoc.c | 1 +
+ 3 files changed, 5 insertions(+)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index c88655acc78c..d623f83568b3 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -1393,6 +1393,7 @@ void brcmf_fw_crashed(struct device *dev)
- 	struct brcmf_pub *drvr = bus_if->drvr;
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 1d941d53fdc9..6bd0f3b518b9 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -1767,6 +1767,7 @@ static void ath10k_pci_fw_dump_work(struct work_struct *work)
+ 		scnprintf(guid, sizeof(guid), "n/a");
  
- 	bphy_err(drvr, "Firmware has halted or crashed\n");
+ 	ath10k_err(ar, "firmware crashed! (guid %s)\n", guid);
++	module_firmware_crashed();
+ 	ath10k_print_driver_info(ar);
+ 	ath10k_pci_dump_registers(ar, crash_data);
+ 	ath10k_ce_dump_registers(ar, crash_data);
+@@ -2837,6 +2838,7 @@ static int ath10k_pci_hif_power_up(struct ath10k *ar,
+ 	if (ret) {
+ 		if (ath10k_pci_has_fw_crashed(ar)) {
+ 			ath10k_warn(ar, "firmware crashed during chip reset\n");
++			module_firmware_crashed();
+ 			ath10k_pci_fw_crashed_clear(ar);
+ 			ath10k_pci_fw_crashed_dump(ar);
+ 		}
+diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
+index e2aff2254a40..d34ad289380f 100644
+--- a/drivers/net/wireless/ath/ath10k/sdio.c
++++ b/drivers/net/wireless/ath/ath10k/sdio.c
+@@ -794,6 +794,7 @@ static int ath10k_sdio_mbox_proc_dbg_intr(struct ath10k *ar)
+ 
+ 	/* TODO: Add firmware crash handling */
+ 	ath10k_warn(ar, "firmware crashed\n");
 +	module_firmware_crashed();
  
- 	brcmf_dev_coredump(dev);
+ 	/* read counter to clear the interrupt, the debug error interrupt is
+ 	 * counter 0.
+@@ -915,6 +916,7 @@ static int ath10k_sdio_mbox_proc_cpu_intr(struct ath10k *ar)
+ 	if (cpu_int_status & MBOX_CPU_STATUS_ENABLE_ASSERT_MASK) {
+ 		ath10k_err(ar, "firmware crashed!\n");
+ 		queue_work(ar->workqueue, &ar->restart_work);
++		module_firmware_crashed();
+ 	}
+ 	return ret;
+ }
+diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
+index 354d49b1cd45..7cfc123c345c 100644
+--- a/drivers/net/wireless/ath/ath10k/snoc.c
++++ b/drivers/net/wireless/ath/ath10k/snoc.c
+@@ -1451,6 +1451,7 @@ void ath10k_snoc_fw_crashed_dump(struct ath10k *ar)
+ 		scnprintf(guid, sizeof(guid), "n/a");
  
+ 	ath10k_err(ar, "firmware crashed! (guid %s)\n", guid);
++	module_firmware_crashed();
+ 	ath10k_print_driver_info(ar);
+ 	ath10k_msa_dump_memory(ar, crash_data);
+ 	mutex_unlock(&ar->dump_mutex);
 -- 
 2.26.2
 
