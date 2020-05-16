@@ -1,152 +1,149 @@
-Return-Path: <SRS0=zRRP=65=vger.kernel.org=linux-wireless-owner@kernel.org>
+Return-Path: <SRS0=cJU5=66=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C53AC433E0
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 May 2020 21:29:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63385C433E0
+	for <linux-wireless@archiver.kernel.org>; Sat, 16 May 2020 04:12:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F231E20758
-	for <linux-wireless@archiver.kernel.org>; Fri, 15 May 2020 21:29:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1589578178;
-	bh=RNMsg/AOqipY6NFThZYJpUGXRNGY0wQRDMN3eKkahBo=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=k4/siF21l1W+K4xiQZ4kvtNFHeR//p7Yz6Um9Gf+WJXhpPqZaZahA2c2XgYXInXxG
-	 WQX3TN0txbsqkS18+Et+/hbkFty+JpXk+tF71b3AB3HGRYJT7oucFYhQoKA0jth5kM
-	 omI9f6Wi/Q2q5UXRB39mx42DFJZHAAWHRneSIwI4=
+	by mail.kernel.org (Postfix) with ESMTP id 3D38E207CB
+	for <linux-wireless@archiver.kernel.org>; Sat, 16 May 2020 04:12:22 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="DhJvBR6w"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727933AbgEOV3G (ORCPT
+        id S1726989AbgEPEMS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 15 May 2020 17:29:06 -0400
-Received: from mail-pf1-f194.google.com ([209.85.210.194]:41786 "EHLO
-        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727922AbgEOV3G (ORCPT
+        Sat, 16 May 2020 00:12:18 -0400
+Received: from us-smtp-1.mimecast.com ([207.211.31.81]:52559 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725807AbgEPEMS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 15 May 2020 17:29:06 -0400
-Received: by mail-pf1-f194.google.com with SMTP id 23so1592660pfy.8;
-        Fri, 15 May 2020 14:29:05 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=+C5HUmb0IVN2XUMtCx+958ASlteYAzKSr3n9xtQKd1o=;
-        b=sjmJt+iGDzcAx/sJoynK2092IRpplkRBFKvE8SzJoTImgURQwF1+95B0lH32YGTQlx
-         Nkxj0LdLaMogM/jD1n716idtha6ExL6H7iFa9vX/Bw639xmKZ4CJBBaHNMIipt3qT9Ue
-         F99d/3wd8fCdZfeNJSIx6tUe/PSsCXxY2Qp+BkDuqX+9Qs4qJYfQl+eM+fyvk+ybOeVU
-         wSIjtT2JQgIWjvjqcFZ2AYT0bBcQj363PxClrk2P3EY20eCf24ZYdkQvfO0lgw7fXrza
-         SLI7FEHFO7Uer02fGPHdSG73D50AEQY24TDXAcMT1QqO/jI7C+qtQ5UEvu01h/Vtd9yD
-         x8mw==
-X-Gm-Message-State: AOAM531+lkF3zUHdQpy7F465dWKz5qwkXKyTRF1smhzUdS2OXu2N3dw7
-        1nwCJXQRHUhdtzB+dENzks0=
-X-Google-Smtp-Source: ABdhPJx5aHzvT/Yod67FCxrd/rYpeLz+YvwfHeXEiG+n38C/BUT1hIQZlmj9K6EmCO5IWEzJJXgtBQ==
-X-Received: by 2002:a63:ef05:: with SMTP id u5mr4866245pgh.237.1589578144777;
-        Fri, 15 May 2020 14:29:04 -0700 (PDT)
-Received: from 42.do-not-panic.com (42.do-not-panic.com. [157.230.128.187])
-        by smtp.gmail.com with ESMTPSA id e18sm2688831pfh.75.2020.05.15.14.28.55
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 15 May 2020 14:28:56 -0700 (PDT)
-Received: by 42.do-not-panic.com (Postfix, from userid 1000)
-        id 33D1942349; Fri, 15 May 2020 21:28:50 +0000 (UTC)
-From:   Luis Chamberlain <mcgrof@kernel.org>
-To:     jeyu@kernel.org
-Cc:     akpm@linux-foundation.org, arnd@arndb.de, rostedt@goodmis.org,
-        mingo@redhat.com, aquini@redhat.com, cai@lca.pw, dyoung@redhat.com,
-        bhe@redhat.com, peterz@infradead.org, tglx@linutronix.de,
-        gpiccoli@canonical.com, pmladek@suse.com, tiwai@suse.de,
-        schlad@suse.de, andriy.shevchenko@linux.intel.com,
+        Sat, 16 May 2020 00:12:18 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1589602337;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=IwuWWBVv+jTpH4Rgey2IZ0hFppu2enqJexmcQ9Ok+RE=;
+        b=DhJvBR6w62XDWu24+9ilAAdiAjDSnPGVcMYt7nMVf+pXax2Grt/bffrB3OLTCTWLZ1/lry
+        1an5oayDVyZaT1lYiQmk/Ksb16iTCm0HdGpZmzJBzoNi8iannO1k357i766F3a3DYxWFma
+        2EOOItXDXxX4qc5h6BvRuQ7KO49RZ+k=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-163-1MYiB0_zOUqjM_lISOG_KQ-1; Sat, 16 May 2020 00:12:12 -0400
+X-MC-Unique: 1MYiB0_zOUqjM_lISOG_KQ-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 545EF460;
+        Sat, 16 May 2020 04:12:09 +0000 (UTC)
+Received: from x1-fbsd (unknown [10.3.128.10])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 9FF831053B1D;
+        Sat, 16 May 2020 04:11:58 +0000 (UTC)
+Date:   Sat, 16 May 2020 00:11:55 -0400
+From:   Rafael Aquini <aquini@redhat.com>
+To:     Luis Chamberlain <mcgrof@kernel.org>
+Cc:     jeyu@kernel.org, akpm@linux-foundation.org, arnd@arndb.de,
+        rostedt@goodmis.org, mingo@redhat.com, cai@lca.pw,
+        dyoung@redhat.com, bhe@redhat.com, peterz@infradead.org,
+        tglx@linutronix.de, gpiccoli@canonical.com, pmladek@suse.com,
+        tiwai@suse.de, schlad@suse.de, andriy.shevchenko@linux.intel.com,
         keescook@chromium.org, daniel.vetter@ffwll.ch, will@kernel.org,
         mchehab+samsung@kernel.org, kvalo@codeaurora.org,
         davem@davemloft.net, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Luis Chamberlain <mcgrof@kernel.org>,
-        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Subject: [PATCH v2 12/15] ath10k: use new module_firmware_crashed()
-Date:   Fri, 15 May 2020 21:28:43 +0000
-Message-Id: <20200515212846.1347-13-mcgrof@kernel.org>
-X-Mailer: git-send-email 2.23.0.rc1
-In-Reply-To: <20200515212846.1347-1-mcgrof@kernel.org>
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Subject: Re: [PATCH v2 12/15] ath10k: use new module_firmware_crashed()
+Message-ID: <20200516041155.GL3182@x1-fbsd>
 References: <20200515212846.1347-1-mcgrof@kernel.org>
+ <20200515212846.1347-13-mcgrof@kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200515212846.1347-13-mcgrof@kernel.org>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This makes use of the new module_firmware_crashed() to help
-annotate when firmware for device drivers crash. When firmware
-crashes devices can sometimes become unresponsive, and recovery
-sometimes requires a driver unload / reload and in the worst cases
-a reboot.
-
-Using a taint flag allows us to annotate when this happens clearly.
-
-Cc: linux-wireless@vger.kernel.org
-Cc: ath10k@lists.infradead.org
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
----
- drivers/net/wireless/ath/ath10k/pci.c  | 2 ++
- drivers/net/wireless/ath/ath10k/sdio.c | 2 ++
- drivers/net/wireless/ath/ath10k/snoc.c | 1 +
- 3 files changed, 5 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 1d941d53fdc9..6bd0f3b518b9 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -1767,6 +1767,7 @@ static void ath10k_pci_fw_dump_work(struct work_struct *work)
- 		scnprintf(guid, sizeof(guid), "n/a");
- 
- 	ath10k_err(ar, "firmware crashed! (guid %s)\n", guid);
-+	module_firmware_crashed();
- 	ath10k_print_driver_info(ar);
- 	ath10k_pci_dump_registers(ar, crash_data);
- 	ath10k_ce_dump_registers(ar, crash_data);
-@@ -2837,6 +2838,7 @@ static int ath10k_pci_hif_power_up(struct ath10k *ar,
- 	if (ret) {
- 		if (ath10k_pci_has_fw_crashed(ar)) {
- 			ath10k_warn(ar, "firmware crashed during chip reset\n");
-+			module_firmware_crashed();
- 			ath10k_pci_fw_crashed_clear(ar);
- 			ath10k_pci_fw_crashed_dump(ar);
- 		}
-diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
-index e2aff2254a40..d34ad289380f 100644
---- a/drivers/net/wireless/ath/ath10k/sdio.c
-+++ b/drivers/net/wireless/ath/ath10k/sdio.c
-@@ -794,6 +794,7 @@ static int ath10k_sdio_mbox_proc_dbg_intr(struct ath10k *ar)
- 
- 	/* TODO: Add firmware crash handling */
- 	ath10k_warn(ar, "firmware crashed\n");
-+	module_firmware_crashed();
- 
- 	/* read counter to clear the interrupt, the debug error interrupt is
- 	 * counter 0.
-@@ -915,6 +916,7 @@ static int ath10k_sdio_mbox_proc_cpu_intr(struct ath10k *ar)
- 	if (cpu_int_status & MBOX_CPU_STATUS_ENABLE_ASSERT_MASK) {
- 		ath10k_err(ar, "firmware crashed!\n");
- 		queue_work(ar->workqueue, &ar->restart_work);
-+		module_firmware_crashed();
- 	}
- 	return ret;
- }
-diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
-index 354d49b1cd45..7cfc123c345c 100644
---- a/drivers/net/wireless/ath/ath10k/snoc.c
-+++ b/drivers/net/wireless/ath/ath10k/snoc.c
-@@ -1451,6 +1451,7 @@ void ath10k_snoc_fw_crashed_dump(struct ath10k *ar)
- 		scnprintf(guid, sizeof(guid), "n/a");
- 
- 	ath10k_err(ar, "firmware crashed! (guid %s)\n", guid);
-+	module_firmware_crashed();
- 	ath10k_print_driver_info(ar);
- 	ath10k_msa_dump_memory(ar, crash_data);
- 	mutex_unlock(&ar->dump_mutex);
--- 
-2.26.2
+On Fri, May 15, 2020 at 09:28:43PM +0000, Luis Chamberlain wrote:
+> This makes use of the new module_firmware_crashed() to help
+> annotate when firmware for device drivers crash. When firmware
+> crashes devices can sometimes become unresponsive, and recovery
+> sometimes requires a driver unload / reload and in the worst cases
+> a reboot.
+> 
+> Using a taint flag allows us to annotate when this happens clearly.
+> 
+> Cc: linux-wireless@vger.kernel.org
+> Cc: ath10k@lists.infradead.org
+> Cc: Kalle Valo <kvalo@codeaurora.org>
+> Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
+> ---
+>  drivers/net/wireless/ath/ath10k/pci.c  | 2 ++
+>  drivers/net/wireless/ath/ath10k/sdio.c | 2 ++
+>  drivers/net/wireless/ath/ath10k/snoc.c | 1 +
+>  3 files changed, 5 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+> index 1d941d53fdc9..6bd0f3b518b9 100644
+> --- a/drivers/net/wireless/ath/ath10k/pci.c
+> +++ b/drivers/net/wireless/ath/ath10k/pci.c
+> @@ -1767,6 +1767,7 @@ static void ath10k_pci_fw_dump_work(struct work_struct *work)
+>  		scnprintf(guid, sizeof(guid), "n/a");
+>  
+>  	ath10k_err(ar, "firmware crashed! (guid %s)\n", guid);
+> +	module_firmware_crashed();
+>  	ath10k_print_driver_info(ar);
+>  	ath10k_pci_dump_registers(ar, crash_data);
+>  	ath10k_ce_dump_registers(ar, crash_data);
+> @@ -2837,6 +2838,7 @@ static int ath10k_pci_hif_power_up(struct ath10k *ar,
+>  	if (ret) {
+>  		if (ath10k_pci_has_fw_crashed(ar)) {
+>  			ath10k_warn(ar, "firmware crashed during chip reset\n");
+> +			module_firmware_crashed();
+>  			ath10k_pci_fw_crashed_clear(ar);
+>  			ath10k_pci_fw_crashed_dump(ar);
+>  		}
+> diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
+> index e2aff2254a40..d34ad289380f 100644
+> --- a/drivers/net/wireless/ath/ath10k/sdio.c
+> +++ b/drivers/net/wireless/ath/ath10k/sdio.c
+> @@ -794,6 +794,7 @@ static int ath10k_sdio_mbox_proc_dbg_intr(struct ath10k *ar)
+>  
+>  	/* TODO: Add firmware crash handling */
+>  	ath10k_warn(ar, "firmware crashed\n");
+> +	module_firmware_crashed();
+>  
+>  	/* read counter to clear the interrupt, the debug error interrupt is
+>  	 * counter 0.
+> @@ -915,6 +916,7 @@ static int ath10k_sdio_mbox_proc_cpu_intr(struct ath10k *ar)
+>  	if (cpu_int_status & MBOX_CPU_STATUS_ENABLE_ASSERT_MASK) {
+>  		ath10k_err(ar, "firmware crashed!\n");
+>  		queue_work(ar->workqueue, &ar->restart_work);
+> +		module_firmware_crashed();
+>  	}
+>  	return ret;
+>  }
+> diff --git a/drivers/net/wireless/ath/ath10k/snoc.c b/drivers/net/wireless/ath/ath10k/snoc.c
+> index 354d49b1cd45..7cfc123c345c 100644
+> --- a/drivers/net/wireless/ath/ath10k/snoc.c
+> +++ b/drivers/net/wireless/ath/ath10k/snoc.c
+> @@ -1451,6 +1451,7 @@ void ath10k_snoc_fw_crashed_dump(struct ath10k *ar)
+>  		scnprintf(guid, sizeof(guid), "n/a");
+>  
+>  	ath10k_err(ar, "firmware crashed! (guid %s)\n", guid);
+> +	module_firmware_crashed();
+>  	ath10k_print_driver_info(ar);
+>  	ath10k_msa_dump_memory(ar, crash_data);
+>  	mutex_unlock(&ar->dump_mutex);
+> -- 
+> 2.26.2
+> 
+Acked-by: Rafael Aquini <aquini@redhat.com>
 
