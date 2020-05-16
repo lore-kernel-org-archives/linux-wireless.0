@@ -2,75 +2,81 @@ Return-Path: <SRS0=cJU5=66=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MIME_BASE64_TEXT,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC137C433DF
-	for <linux-wireless@archiver.kernel.org>; Sat, 16 May 2020 08:23:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95840C433DF
+	for <linux-wireless@archiver.kernel.org>; Sat, 16 May 2020 09:05:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9A54E20728
-	for <linux-wireless@archiver.kernel.org>; Sat, 16 May 2020 08:23:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1589617399;
-	bh=POWNJDuIU59kAO0d0Yb2/1xXBCdN+4we4QtCfOpiVNA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=fRu+zAr9nPmbJj9TNWnNT/YZSmv/Belra4P5Ws/JNdtswFf43N9k82DZ+0S0vo+rN
-	 6+IEFrKmHdUIa0tnPPB6vBg7sDVqWfQlyGZ7NHeT/n03Zeozc7H6OLx2oPnmtoLVHD
-	 a2RjHXzS/3Pf5ji/boc3v/a/th1JdNiw97qkmoWw=
+	by mail.kernel.org (Postfix) with ESMTP id 40082206F4
+	for <linux-wireless@archiver.kernel.org>; Sat, 16 May 2020 09:05:32 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="HChVdeEH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726299AbgEPIXP (ORCPT
+        id S1726271AbgEPJFa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 16 May 2020 04:23:15 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35758 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726270AbgEPIXP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 16 May 2020 04:23:15 -0400
-Received: from pali.im (pali.im [31.31.79.79])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 9F31A206F4;
-        Sat, 16 May 2020 08:23:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1589617394;
-        bh=POWNJDuIU59kAO0d0Yb2/1xXBCdN+4we4QtCfOpiVNA=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Z6rw0H5Rl6/qXM1wXakzxQVnqRKraiJZ3M9N0eGH3wynsBL/dLPUDqp1BlvA0cLGT
-         axyZ7FH3OajDO4Q85qJmjd6jHGq+V2qfHmNsPCtQgMhmWCRUe3c3OBpC6meyMDNHIm
-         abacL+qWJIa1pzSfhXAb7AI7JFJF1EHyOo8Qc1JE=
-Received: by pali.im (Postfix)
-        id AE6C19FC; Sat, 16 May 2020 10:23:12 +0200 (CEST)
-Date:   Sat, 16 May 2020 10:23:12 +0200
-From:   Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
-To:     Ganapathi Bhat <ganapathi.bhat@nxp.com>
-Cc:     Amitkumar Karwar <amitkarwar@gmail.com>,
-        Xinming Hu <huxinming820@gmail.com>,
-        Marek =?utf-8?B?QmVow7pu?= <marek.behun@nic.cz>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [EXT] mwifiex: Firmware name for W8997 sdio wifi chip
-Message-ID: <20200516082312.uqxyivkb2v43dqch@pali>
-References: <20200515132353.vfor7v4buzoddfmb@pali>
- <VI1PR04MB4366625917BB57695BE454448FBA0@VI1PR04MB4366.eurprd04.prod.outlook.com>
+        Sat, 16 May 2020 05:05:30 -0400
+Received: from mailgw02.mediatek.com ([210.61.82.184]:51539 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726264AbgEPJFa (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 16 May 2020 05:05:30 -0400
+X-UUID: 020b3d02cb814b8aa8f1f5e40b899b2d-20200516
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:Content-Type:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=WNNopO1zUNPM7KUT8zRztqjX7ggEw2/JQe+88S48eE4=;
+        b=HChVdeEHgaafMWOsiPXgKbHwh16R/gF9aKl7G1h4tO9vqYKwfXv2N/IwIQgk4SaU21X7kC2Ivv+mrJ9ee2UJiLYEzkj496TnGtVvSwjUwMBM3fkrFv/IfV089ZML/u60i83jrNxQEPS8aoBbI6BeehIOF4sS5OBrbZZoFnWPqiU=;
+X-UUID: 020b3d02cb814b8aa8f1f5e40b899b2d-20200516
+Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw02.mediatek.com
+        (envelope-from <ryder.lee@mediatek.com>)
+        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
+        with ESMTP id 537331515; Sat, 16 May 2020 17:05:24 +0800
+Received: from mtkcas08.mediatek.inc (172.21.101.126) by
+ mtkmbs06n2.mediatek.inc (172.21.101.130) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Sat, 16 May 2020 17:05:20 +0800
+Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas08.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Sat, 16 May 2020 17:05:20 +0800
+From:   Ryder Lee <ryder.lee@mediatek.com>
+To:     Felix Fietkau <nbd@nbd.name>,
+        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
+CC:     Shayne Chen <shayne.chen@mediatek.com>,
+        Sean Wang <sean.wang@mediatek.com>,
+        <linux-wireless@vger.kernel.org>,
+        <linux-mediatek@lists.infradead.org>,
+        Ryder Lee <ryder.lee@mediatek.com>
+Subject: [PATCH 2/2] mt76: mt7915: fix sparse warnings: incorrect type initializer
+Date:   Sat, 16 May 2020 17:05:19 +0800
+Message-ID: <c74093f29209201bdb5cf889d5f2aac30c9e6755.1589619627.git.ryder.lee@mediatek.com>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <828924b331eb9524f851d0fb233904a45219b25d.1589619627.git.ryder.lee@mediatek.com>
+References: <828924b331eb9524f851d0fb233904a45219b25d.1589619627.git.ryder.lee@mediatek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <VI1PR04MB4366625917BB57695BE454448FBA0@VI1PR04MB4366.eurprd04.prod.outlook.com>
-User-Agent: NeoMutt/20180716
+Content-Type: text/plain
+X-TM-SNTS-SMTP: CEC5AC64FA5F151626272EEF82E48F39022734BDA928C831C290103E25CDE96F2000:8
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Saturday 16 May 2020 08:17:17 Ganapathi Bhat wrote:
-> Hi Pali,
-> 
-> Thanks for this notice. We will try to push the new firmware and also, fix the naming problem.
-> 
-> Regards,
-> Ganapathi
+ZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc5MTUvbWN1LmM6MjMxNzozMTog
+c3BhcnNlOiBzcGFyc2U6DQppbmNvcnJlY3QgdHlwZSBpbiBpbml0aWFsaXplciAoZGlmZmVyZW50
+IGJhc2UgdHlwZXMpDQoNCkZpeGVzOiA1NTE3Zjc4YjAwNjMgKCJtdDc2OiBtdDc5MTU6IGVuYWJs
+ZSBmaXJtd2FyZSBtb2R1bGUgZGVidWcgc3VwcG9ydCIpDQpSZXBvcnRlZC1ieToga2J1aWxkIHRl
+c3Qgcm9ib3QgPGxrcEBpbnRlbC5jb20+DQpTaWduZWQtb2ZmLWJ5OiBSeWRlciBMZWUgPHJ5ZGVy
+LmxlZUBtZWRpYXRlay5jb20+DQotLS0NCiBkcml2ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRlay9t
+dDc2L210NzkxNS9tY3UuYyB8IDIgKy0NCiAxIGZpbGUgY2hhbmdlZCwgMSBpbnNlcnRpb24oKyks
+IDEgZGVsZXRpb24oLSkNCg0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlh
+dGVrL210NzYvbXQ3OTE1L21jdS5jIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3
+Ni9tdDc5MTUvbWN1LmMNCmluZGV4IDZkNDgwOGIxM2E0MC4uYWJkMDdjMmY0ZmY4IDEwMDY0NA0K
+LS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc5MTUvbWN1LmMNCisr
+KyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3OTE1L21jdS5jDQpAQCAt
+MjY3MSw3ICsyNjcxLDcgQEAgaW50IG10NzkxNV9tY3VfZndfZGJnX2N0cmwoc3RydWN0IG10Nzkx
+NV9kZXYgKmRldiwgdTMyIG1vZHVsZSwgdTggbGV2ZWwpDQogCQl1MTYgbGVuOw0KIAkJdTggbGV2
+ZWw7DQogCQl1OCByc3ZbM107DQotCQl1MzIgbW9kdWxlX2lkeDsNCisJCV9fbGUzMiBtb2R1bGVf
+aWR4Ow0KIAl9IGRhdGEgPSB7DQogCQkubW9kdWxlX2lkeCA9IGNwdV90b19sZTMyKG1vZHVsZSks
+DQogCQkubGV2ZWwgPSBsZXZlbCwNCi0tIA0KMi4xOC4wDQo=
 
-Thank you! Please consider extending kernel driver to load firmware
-from filename sdsd8997_combo_v4.bin which is already stored in
-linux-firmware repository. Also this is name which is used by marvell
-(out-of-tree) kernel driver mlan.ko/sd8997.ko.
