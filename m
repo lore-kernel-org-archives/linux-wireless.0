@@ -3,74 +3,81 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C0A0C433DF
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 May 2020 08:15:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DA33C433DF
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 May 2020 11:21:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5E316207D4
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 May 2020 08:15:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 08960206D4
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 May 2020 11:21:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727822AbgERIPC (ORCPT
+        id S1726813AbgERLVS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 18 May 2020 04:15:02 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:36407 "EHLO
-        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726489AbgERIPA (ORCPT
+        Mon, 18 May 2020 07:21:18 -0400
+Received: from paleale.coelho.fi ([176.9.41.70]:33210 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726499AbgERLVS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 May 2020 04:15:00 -0400
-Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 04I8EnVT2005063, This message is accepted by code: ctloc85258
-Received: from mail.realtek.com (rtexmb06.realtek.com.tw[172.21.6.99])
-        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 04I8EnVT2005063
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Mon, 18 May 2020 16:14:49 +0800
-Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
- RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Mon, 18 May 2020 16:14:49 +0800
-Received: from localhost.localdomain (172.21.68.128) by
- RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Mon, 18 May 2020 16:14:49 +0800
-From:   <yhchuang@realtek.com>
-To:     <kvalo@codeaurora.org>
-CC:     <linux-wireless@vger.kernel.org>, <pkshih@realtek.com>,
-        <kai.heng.feng@canonical.com>
-Subject: [PATCH 0/3] rtw88: 8723d: follow up fixes
-Date:   Mon, 18 May 2020 16:14:41 +0800
-Message-ID: <20200518081444.7664-1-yhchuang@realtek.com>
-X-Mailer: git-send-email 2.17.1
+        Mon, 18 May 2020 07:21:18 -0400
+Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=[192.168.100.69])
+        by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        (Exim 4.93)
+        (envelope-from <luca@coelho.fi>)
+        id 1jadpb-000cvW-JP; Mon, 18 May 2020 14:21:16 +0300
+Message-ID: <bc0d0a9155f198f0ae34045932598b237e82d157.camel@coelho.fi>
+From:   Luca Coelho <luca@coelho.fi>
+To:     Zhang Rui <rui.zhang@intel.com>, linux-pm@vger.kernel.org,
+        gil.adam@intel.com
+Cc:     linux-wireless@vger.kernel.org, daniel.lezcano@linaro.org,
+        andrzej.p@collabora.com, b.zolnierkie@samsung.com
+Date:   Mon, 18 May 2020 14:21:13 +0300
+In-Reply-To: <4b6a9dbf43a33354c01d760f7fab3723e5882269.camel@intel.com>
+References: <20200430063229.6182-1-rui.zhang@intel.com>
+         <20200430063229.6182-2-rui.zhang@intel.com>
+         <4b6a9dbf43a33354c01d760f7fab3723e5882269.camel@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.36.2-1 
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [172.21.68.128]
-X-ClientProxiedBy: RTEXMB03.realtek.com.tw (172.21.6.96) To
- RTEXMB04.realtek.com.tw (172.21.6.97)
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH 1/6] iwlwifi: use thermal_zone_device_update() for
+ temperature change
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Yan-Hsuan Chuang <yhchuang@realtek.com>
+On Tue, 2020-05-12 at 09:58 +0800, Zhang Rui wrote:
+> On Thu, 2020-04-30 at 14:32 +0800, Zhang Rui wrote:
+> > thermal_notify_framework() is an obsolete API, and iwlwifi is the
+> > only
+> > user of it.
+> > Convert iwlwifi driver to use thermal_zone_device_update() instead.
+> > 
+> > Note that, thermal_zone_device_update() is able to handle the crossed
+> > threshold by comparing the current temperature with every trip point,
+> > so
+> > ths_crossed variant in iwl_mvm_temp_notif() is probably not needed.
+> > It is still left there in this patch, in case the debug information
+> > is
+> > still needed.
+> > 
+> > Signed-off-by: Zhang Rui <rui.zhang@intel.com>
+> 
+> Hi, Luca,
+> 
+> Any comments about this patch and patch 6/6?
 
-The RTL8723DE devices have been tested by Canonical for the coex
-and basic wifi functions. And they have reported some issues for
-RTL8723DE. Fix them accordingly.
+Hi Rui,
 
-Ping-Ke Shih (3):
-  rtw88: coex: 8723d: set antanna control owner
-  rtw88: coex: 8723d: handle BT inquiry cases
-  rtw88: fix EAPOL 4-way failure by finish IQK earlier
+Sorry for the delay, we have been making some small changes in this
+code to support a new interface with our firmware and I wanted to make
+sure things work together.
 
- drivers/net/wireless/realtek/rtw88/coex.c     | 21 ++++++++++++++-----
- drivers/net/wireless/realtek/rtw88/mac80211.c |  3 +--
- drivers/net/wireless/realtek/rtw88/main.c     | 16 ++++++++++++++
- drivers/net/wireless/realtek/rtw88/main.h     |  4 ++++
- drivers/net/wireless/realtek/rtw88/rtw8723d.c | 10 +++++++--
- drivers/net/wireless/realtek/rtw88/rtw8723d.h |  1 +
- 6 files changed, 46 insertions(+), 9 deletions(-)
+I'm adding Gil, who is making the changes, to this thread so he can
+also take a look.
 
--- 
-2.17.1
+--
+Cheers,
+Luca.
 
