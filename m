@@ -7,42 +7,42 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 40CAEC433DF
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 May 2020 16:44:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22D0CC433DF
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 May 2020 16:44:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 213E520835
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 May 2020 16:44:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 01186207E8
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 May 2020 16:44:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="Om+PNRwC"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="unKZSt6N"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728355AbgERQoi (ORCPT
+        id S1728501AbgERQok (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 18 May 2020 12:44:38 -0400
-Received: from mail26.static.mailgun.info ([104.130.122.26]:62346 "EHLO
+        Mon, 18 May 2020 12:44:40 -0400
+Received: from mail26.static.mailgun.info ([104.130.122.26]:30946 "EHLO
         mail26.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727035AbgERQoh (ORCPT
+        by vger.kernel.org with ESMTP id S1728231AbgERQoj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 May 2020 12:44:37 -0400
+        Mon, 18 May 2020 12:44:39 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1589820277; h=References: In-Reply-To: Message-Id: Date:
+ s=smtp; t=1589820279; h=References: In-Reply-To: Message-Id: Date:
  Subject: Cc: To: From: Sender;
- bh=dCc9M/8DAuiAPeLH25GUjrqKICw0SIbanjTImDLIJgw=; b=Om+PNRwCdRTivJ4AZn3NTE/d5/eUrFkzzSvx82EAkTXcoWWBUmK4UYQ2g5GWSEu0J4NyVayZ
- YwWT6G7uhBwH172Lv+OCQX7yRVOmMaXrLIEwT8AAOXm2F/f2Pg/qvH6+uO4/2/9W9KN6CJgw
- nPGmaPAA23FsB2Le7nTaWbFe2TY=
+ bh=aGXo9By2LLVQkR2dTDUVvy4YYM3xSRcy58Kpi8/S5dc=; b=unKZSt6NuETVdqeGunZSx9nZ3XIPdoaCbBRhrH02cnbV8wQefQWSX3vPL1Py5LL9E/TD0O+I
+ WHzO3HN0jfHbBN5JAwVSrdXSTRKLNarOMnxT9O0w26B7xd9agBvZgdQ/G6c5Aemw0D0v+iAf
+ 66/nIj5HfyICAaJoFKAwV1+V6pU=
 X-Mailgun-Sending-Ip: 104.130.122.26
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171])
- by mxa.mailgun.org with ESMTP id 5ec2bb74.7feb1e9411f0-smtp-out-n02;
- Mon, 18 May 2020 16:44:36 -0000 (UTC)
+ by mxa.mailgun.org with ESMTP id 5ec2bb72.7f7080806a08-smtp-out-n01;
+ Mon, 18 May 2020 16:44:34 -0000 (UTC)
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 37B66C432C2; Mon, 18 May 2020 16:44:36 +0000 (UTC)
+        id D8A4AC44791; Mon, 18 May 2020 16:44:34 +0000 (UTC)
 Received: from pradeepc2-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: pradeepc)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 82B3FC44792;
-        Mon, 18 May 2020 16:44:35 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 82B3FC44792
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id EBBBBC4478F;
+        Mon, 18 May 2020 16:44:33 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org EBBBBC4478F
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=pradeepc@codeaurora.org
 From:   Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
@@ -50,9 +50,9 @@ To:     Johannes Berg <johannes@sipsolutions.net>,
         ath11k@lists.infradead.org
 Cc:     linux-wireless@vger.kernel.org,
         Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-Subject: [PATCH 7/9] ath11k: Add 6G scan dwell time parameter in scan request command
-Date:   Mon, 18 May 2020 09:44:22 -0700
-Message-Id: <20200518164424.29497-8-pradeepc@codeaurora.org>
+Subject: [PATCH 4/9] ath11k: Use freq instead of channel number in rx path
+Date:   Mon, 18 May 2020 09:44:19 -0700
+Message-Id: <20200518164424.29497-5-pradeepc@codeaurora.org>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200518164424.29497-1-pradeepc@codeaurora.org>
 References: <20200518164424.29497-1-pradeepc@codeaurora.org>
@@ -61,58 +61,84 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add 6G scan active and passive dwell time parameter to scan request.
+As 6GHz channel numbers overlap with those of 5GHz and 2GHz bands,
+it is necessary to use frequency when determining the band info
+in rx path.
 
 Signed-off-by: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath11k/wmi.c | 4 ++++
- drivers/net/wireless/ath/ath11k/wmi.h | 5 +++++
- 2 files changed, 9 insertions(+)
+ drivers/net/wireless/ath/ath11k/dp_rx.c | 6 +++++-
+ drivers/net/wireless/ath/ath11k/wmi.c   | 5 ++++-
+ drivers/net/wireless/ath/ath11k/wmi.h   | 2 ++
+ 3 files changed, 11 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath11k/dp_rx.c b/drivers/net/wireless/ath/ath11k/dp_rx.c
+index a54610d75c40..c8f1ea69ea9d 100644
+--- a/drivers/net/wireless/ath/ath11k/dp_rx.c
++++ b/drivers/net/wireless/ath/ath11k/dp_rx.c
+@@ -2162,6 +2162,7 @@ static void ath11k_dp_rx_h_ppdu(struct ath11k *ar, struct hal_rx_desc *rx_desc,
+ 				struct ieee80211_rx_status *rx_status)
+ {
+ 	u8 channel_num;
++	u32 center_freq;
+ 
+ 	rx_status->freq = 0;
+ 	rx_status->rate_idx = 0;
+@@ -2172,8 +2173,11 @@ static void ath11k_dp_rx_h_ppdu(struct ath11k *ar, struct hal_rx_desc *rx_desc,
+ 	rx_status->flag |= RX_FLAG_NO_SIGNAL_VAL;
+ 
+ 	channel_num = ath11k_dp_rx_h_msdu_start_freq(rx_desc);
++	center_freq = ath11k_dp_rx_h_msdu_start_freq(rx_desc) >> 16;
+ 
+-	if (channel_num >= 1 && channel_num <= 14) {
++	if (center_freq >= 5935 && center_freq <= 7105)
++		rx_status->band = NL80211_BAND_6GHZ;
++	else if (channel_num >= 1 && channel_num <= 14) {
+ 		rx_status->band = NL80211_BAND_2GHZ;
+ 	} else if (channel_num >= 36 && channel_num <= 173) {
+ 		rx_status->band = NL80211_BAND_5GHZ;
 diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
-index c2e3a4d6f07e..dfa4bd7b44ad 100644
+index f405c162c2b2..c299ad0936f5 100644
 --- a/drivers/net/wireless/ath/ath11k/wmi.c
 +++ b/drivers/net/wireless/ath/ath11k/wmi.c
-@@ -1899,6 +1899,8 @@ void ath11k_wmi_start_scan_init(struct ath11k *ar,
- 	arg->dwell_time_active = 50;
- 	arg->dwell_time_active_2g = 0;
- 	arg->dwell_time_passive = 150;
-+	arg->dwell_time_active_6g = 40;
-+	arg->dwell_time_passive_6g = 30;
- 	arg->min_rest_time = 50;
- 	arg->max_rest_time = 500;
- 	arg->repeat_probe_time = 0;
-@@ -2045,6 +2047,8 @@ int ath11k_wmi_send_scan_start_cmd(struct ath11k *ar,
- 	cmd->dwell_time_active = params->dwell_time_active;
- 	cmd->dwell_time_active_2g = params->dwell_time_active_2g;
- 	cmd->dwell_time_passive = params->dwell_time_passive;
-+	cmd->dwell_time_active_6g = params->dwell_time_active_6g;
-+	cmd->dwell_time_passive_6g = params->dwell_time_passive_6g;
- 	cmd->min_rest_time = params->min_rest_time;
- 	cmd->max_rest_time = params->max_rest_time;
- 	cmd->repeat_probe_time = params->repeat_probe_time;
+@@ -3833,6 +3833,7 @@ static int ath11k_pull_mgmt_rx_params_tlv(struct ath11k_base *ab,
+ 	}
+ 
+ 	hdr->pdev_id =  ev->pdev_id;
++	hdr->chan_freq = ev->chan_freq;
+ 	hdr->channel =  ev->channel;
+ 	hdr->snr =  ev->snr;
+ 	hdr->rate =  ev->rate;
+@@ -5204,7 +5205,9 @@ static void ath11k_mgmt_rx_event(struct ath11k_base *ab, struct sk_buff *skb)
+ 	if (rx_ev.status & WMI_RX_STATUS_ERR_MIC)
+ 		status->flag |= RX_FLAG_MMIC_ERROR;
+ 
+-	if (rx_ev.channel >= 1 && rx_ev.channel <= 14) {
++	if (rx_ev.chan_freq >= ATH11K_MIN_6G_FREQ) {
++		status->band = NL80211_BAND_6GHZ;
++	} else if (rx_ev.channel >= 1 && rx_ev.channel <= 14) {
+ 		status->band = NL80211_BAND_2GHZ;
+ 	} else if (rx_ev.channel >= 36 && rx_ev.channel <= ATH11K_MAX_5G_CHAN) {
+ 		status->band = NL80211_BAND_5GHZ;
 diff --git a/drivers/net/wireless/ath/ath11k/wmi.h b/drivers/net/wireless/ath/ath11k/wmi.h
-index 76c2da2c5db7..4937d02839fc 100644
+index b9f3e559ced7..afa3c4cf90e9 100644
 --- a/drivers/net/wireless/ath/ath11k/wmi.h
 +++ b/drivers/net/wireless/ath/ath11k/wmi.h
-@@ -3061,6 +3061,9 @@ struct  wmi_start_scan_cmd {
- 	u32 num_vendor_oui;
- 	u32 scan_ctrl_flags_ext;
- 	u32 dwell_time_active_2g;
-+	u32 dwell_time_active_6g;
-+	u32 dwell_time_passive_6g;
-+	u32 scan_start_offset;
+@@ -4228,6 +4228,7 @@ struct wmi_pdev_temperature_event {
+ #define WLAN_MGMT_TXRX_HOST_MAX_ANTENNA 4
+ 
+ struct mgmt_rx_event_params {
++	u32 chan_freq;
+ 	u32 channel;
+ 	u32 snr;
+ 	u8 rssi_ctl[WLAN_MGMT_TXRX_HOST_MAX_ANTENNA];
+@@ -4257,6 +4258,7 @@ struct wmi_mgmt_rx_hdr {
+ 	u32 rx_tsf_l32;
+ 	u32 rx_tsf_u32;
+ 	u32 pdev_id;
++	u32 chan_freq;
  } __packed;
  
- #define WMI_SCAN_FLAG_PASSIVE        0x1
-@@ -3127,6 +3130,8 @@ struct scan_req_params {
- 	u32 dwell_time_active;
- 	u32 dwell_time_active_2g;
- 	u32 dwell_time_passive;
-+	u32 dwell_time_active_6g;
-+	u32 dwell_time_passive_6g;
- 	u32 min_rest_time;
- 	u32 max_rest_time;
- 	u32 repeat_probe_time;
+ #define MAX_ANTENNA_EIGHT 8
 -- 
 2.17.1
