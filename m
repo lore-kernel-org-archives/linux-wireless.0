@@ -2,58 +2,45 @@ Return-Path: <SRS0=ii9D=7A=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3EC9C433E0
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 May 2020 21:22:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E356C433DF
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 May 2020 22:16:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AEA19207F9
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 May 2020 21:22:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0B8B720758
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 May 2020 22:16:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1589836931;
-	bh=pYXU3fjDy4/iKFEeRqPtVkcBcBShYL9gPdU7+XjCCxk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=wK5gVXIKX7GCAQdE9/Us+A5LivF22wVGNZrIXICDfXyKFnLfZ1gEF75uV6wgD6kJT
-	 3annFIoCUOXfgJdL+udDukuEqpQOOCW0Nhof/S+/gf2C5f/eo9E1lsB9z/UveCHRQc
-	 gKdtWbMeBx7SFcJFBuZee8ZRaaeMOgqG4/9HoK3E=
+	s=default; t=1589840215;
+	bh=llfoXoDbUl/zjbezMoNa+XpAXA1AlgWEQ8r/kkE3h8I=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:List-ID:From;
+	b=S2S7KpHpYuI3gTnXXpJUCWjVOaWQ4bAlhiDPZPbrhlkkZkwjcGAVYD0fhCD+CqIut
+	 /elH5wgrVwfcdKfWAlLqw6MmwSbntKSfZ/ia7AmrDKzT/blrtTDHeXSwYlHSgZvv9X
+	 tGXiIuAwjAED6SluAE2gG7bzh4WjY5jvdGoO3Udo=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726417AbgERVWF (ORCPT
+        id S1727940AbgERWQu (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 18 May 2020 17:22:05 -0400
-Received: from mail-pf1-f194.google.com ([209.85.210.194]:46645 "EHLO
-        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726367AbgERVWF (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 18 May 2020 17:22:05 -0400
-Received: by mail-pf1-f194.google.com with SMTP id 145so5529587pfw.13;
-        Mon, 18 May 2020 14:22:04 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=Y/wo2Runc9bAB/6pd6AKP8cw8s6s3rSoWBtx05F6YCY=;
-        b=FymUGAi+qHWAnxN2+dkVooEaU1xb5GgkL3l9TdVi8pj91FwAf/vneT/RnRU83rXd5V
-         aWyIVXA+9fydUAc6CLWRPBL0+rtCesAVIPP3dydOT0lIymqFBd/kENFUT/ubRhBnVx20
-         l7O3suq4A/cB3T3PHC3+QtA5AaBr3EF42bHX0V44AHsvKjh/A4kyRKE9qOkb9iezvRAS
-         NmD233UMq8VYGV/aMF5qGNFwO0HZUFYypsjsaeiOw92dtsnVBiZzMqF8NYDQSTbz+zAI
-         +SCjMuhh3g85BVNm0Gr6iqPQkJ1Dv5j+W7VjYSxiQBaMcMtomAfxl+qDmZYDswRJ3lMj
-         KvJg==
-X-Gm-Message-State: AOAM531C1Enou/GtjWf2HyPqpcBVZLhTHNwckICyVYq1pkPi8nRoNQi1
-        LO0fqaTXk14Z9FH9eoq+MA0=
-X-Google-Smtp-Source: ABdhPJxRLL0rTq2IGsFVxmB6BhC8z1lsUdqt1OZAfIGKtPauSAho1gbrv5Utwt5N1LUfBc32tNhgtg==
-X-Received: by 2002:a62:15c7:: with SMTP id 190mr8308823pfv.190.1589836924550;
-        Mon, 18 May 2020 14:22:04 -0700 (PDT)
-Received: from 42.do-not-panic.com (42.do-not-panic.com. [157.230.128.187])
-        by smtp.gmail.com with ESMTPSA id l6sm9387019pfl.128.2020.05.18.14.22.03
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 18 May 2020 14:22:03 -0700 (PDT)
-Received: by 42.do-not-panic.com (Postfix, from userid 1000)
-        id 90999404B0; Mon, 18 May 2020 21:22:02 +0000 (UTC)
-Date:   Mon, 18 May 2020 21:22:02 +0000
-From:   Luis Chamberlain <mcgrof@kernel.org>
-To:     Jakub Kicinski <kuba@kernel.org>
+        Mon, 18 May 2020 18:16:50 -0400
+Received: from mail.kernel.org ([198.145.29.99]:33480 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726386AbgERWQt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 18 May 2020 18:16:49 -0400
+Received: from kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com (unknown [163.114.132.5])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 7DE7920657;
+        Mon, 18 May 2020 22:16:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1589840209;
+        bh=llfoXoDbUl/zjbezMoNa+XpAXA1AlgWEQ8r/kkE3h8I=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=fT61f7mzfm0m3Lue047kumZqLTm7/F4faZnDWN1uTHo4KF1ylu3cNS6l37Ux2pkVs
+         WqISsIThqmyDfpUyAxKl1tPns4HyZ/yJj9XOGNkSN4K/ORRL3UYlicHtM6m16R5Bdr
+         IYOw1z50Xlbq/Ho9/HGc4JqDO87NlzZd7zynX3SQ=
+Date:   Mon, 18 May 2020 15:16:45 -0700
+From:   Jakub Kicinski <kuba@kernel.org>
+To:     Luis Chamberlain <mcgrof@kernel.org>
 Cc:     Johannes Berg <johannes@sipsolutions.net>,
         Steve deRosier <derosier@gmail.com>,
         Ben Greear <greearb@candelatech.com>, jeyu@kernel.org,
@@ -71,54 +58,36 @@ Cc:     Johannes Berg <johannes@sipsolutions.net>,
         linux-wireless <linux-wireless@vger.kernel.org>,
         ath10k@lists.infradead.org
 Subject: Re: [PATCH v2 12/15] ath10k: use new module_firmware_crashed()
-Message-ID: <20200518212202.GR11244@42.do-not-panic.com>
+Message-ID: <20200518151645.4693cf30@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+In-Reply-To: <20200518212202.GR11244@42.do-not-panic.com>
 References: <abf22ef3-93cb-61a4-0af2-43feac6d7930@candelatech.com>
- <20200518171801.GL11244@42.do-not-panic.com>
- <CALLGbR+ht2V3m5f-aUbdwEMOvbsX8ebmzdWgX4jyWTbpHrXZ0Q@mail.gmail.com>
- <20200518190930.GO11244@42.do-not-panic.com>
- <e3d978c8fa6a4075f12e843548d41e2c8ab537d1.camel@sipsolutions.net>
- <20200518132828.553159d9@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
- <8d7a3bed242ac9d3ec55a4c97e008081230f1f6d.camel@sipsolutions.net>
- <20200518133521.6052042e@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
- <d81601b17065d7dc3b78bf8d68faf0fbfdb8c936.camel@sipsolutions.net>
- <20200518134643.685fcb0e@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+        <20200518171801.GL11244@42.do-not-panic.com>
+        <CALLGbR+ht2V3m5f-aUbdwEMOvbsX8ebmzdWgX4jyWTbpHrXZ0Q@mail.gmail.com>
+        <20200518190930.GO11244@42.do-not-panic.com>
+        <e3d978c8fa6a4075f12e843548d41e2c8ab537d1.camel@sipsolutions.net>
+        <20200518132828.553159d9@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+        <8d7a3bed242ac9d3ec55a4c97e008081230f1f6d.camel@sipsolutions.net>
+        <20200518133521.6052042e@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+        <d81601b17065d7dc3b78bf8d68faf0fbfdb8c936.camel@sipsolutions.net>
+        <20200518134643.685fcb0e@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+        <20200518212202.GR11244@42.do-not-panic.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200518134643.685fcb0e@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, May 18, 2020 at 01:46:43PM -0700, Jakub Kicinski wrote:
-> On Mon, 18 May 2020 22:41:48 +0200 Johannes Berg wrote:
-> > On Mon, 2020-05-18 at 13:35 -0700, Jakub Kicinski wrote:
-> > > It's intended to be a generic netlink channel for configuring devices.
-> > > 
-> > > All the firmware-related interfaces have no dependencies on netdevs,
-> > > in fact that's one of the reasons we moved to devlink - we don't want
-> > > to hold rtnl lock just for talking to device firmware.  
-> > 
-> > Sounds good :)
-> > 
-> > So I guess Luis just has to add some way in devlink to hook up devlink
-> > health in a simple way to drivers, perhaps? I mean, many drivers won't
-> > really want to use devlink for anything else, so I guess it should be as
-> > simple as the API that Luis proposed ("firmware crashed for this struct
-> > device"), if nothing more interesting is done with devlink?
-> > 
-> > Dunno. But anyway sounds like it should somehow integrate there rather
-> > than the way this patchset proposed?
-> 
-> Right, that'd be great. Simple API to register a devlink instance with
-> whatever number of reporters the device would need. I'm happy to help.
+On Mon, 18 May 2020 21:22:02 +0000 Luis Chamberlain wrote:
+> Indeed my issue with devlink is that it did not seem generic enough for
+> all devices which use firmware and for which firmware can crash. Support
+> should not have to be "add devlink support" + "now use this new hook",
+> but rather a very lighweight devlink_crash(device) call we can sprinkly
+> with only the device as a functional requirement.
 
-Indeed my issue with devlink is that it did not seem generic enough for
-all devices which use firmware and for which firmware can crash. Support
-should not have to be "add devlink support" + "now use this new hook",
-but rather a very lighweight devlink_crash(device) call we can sprinkly
-with only the device as a functional requirement.
-
-  Luis
+We can provide a lightweight devlink_crash(device) which only generates
+the notification, without the need to register the health reporter or a
+devlink instance upfront. But then we loose the ability to control the
+recovery, count errors, etc. So I'd think that's not the direction we
+want to go in.
