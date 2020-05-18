@@ -6,30 +6,30 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A08CC433E3
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BB89C433E1
 	for <linux-wireless@archiver.kernel.org>; Mon, 18 May 2020 08:15:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7393A207D8
-	for <linux-wireless@archiver.kernel.org>; Mon, 18 May 2020 08:15:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F421F207D8
+	for <linux-wireless@archiver.kernel.org>; Mon, 18 May 2020 08:15:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727799AbgERIPA (ORCPT
+        id S1727814AbgERIPA (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Mon, 18 May 2020 04:15:00 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:36408 "EHLO
+Received: from rtits2.realtek.com ([211.75.126.72]:36409 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726573AbgERIPA (ORCPT
+        with ESMTP id S1727125AbgERIPA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Mon, 18 May 2020 04:15:00 -0400
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 04I8EnVV2005063, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 04I8EoIN2005070, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexmb06.realtek.com.tw[172.21.6.99])
-        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 04I8EnVV2005063
+        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 04I8EoIN2005070
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Mon, 18 May 2020 16:14:49 +0800
+        Mon, 18 May 2020 16:14:50 +0800
 Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
  RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Mon, 18 May 2020 16:14:49 +0800
+ 15.1.1779.2; Mon, 18 May 2020 16:14:50 +0800
 Received: from localhost.localdomain (172.21.68.128) by
  RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
@@ -38,9 +38,9 @@ From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>, <pkshih@realtek.com>,
         <kai.heng.feng@canonical.com>
-Subject: [PATCH 1/3] rtw88: coex: 8723d: set antanna control owner
-Date:   Mon, 18 May 2020 16:14:42 +0800
-Message-ID: <20200518081444.7664-2-yhchuang@realtek.com>
+Subject: [PATCH 3/3] rtw88: fix EAPOL 4-way failure by finish IQK earlier
+Date:   Mon, 18 May 2020 16:14:44 +0800
+Message-ID: <20200518081444.7664-4-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200518081444.7664-1-yhchuang@realtek.com>
 References: <20200518081444.7664-1-yhchuang@realtek.com>
@@ -56,93 +56,110 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Ping-Ke Shih <pkshih@realtek.com>
 
-Without setting antenna control owner, the WiFi could be disconnected if
-the BT has traffic. Because the antenna is switched to BT side for its
-traffic, and the WiFi will have no chance to transfer data. Set control
-owner to prevent WiFi disconnect issue.
+If we connect to an AP with WPA2 security, the IQK and the
+EAPOL 4-way handshake may be failed due to overlap, because
+driver does IQK right after assoc success.
+
+For 802.11n devices, they used to do IQK in driver that could
+requires more than 100ms to finished. During IQK, any TX/RX
+events are paused. So, if the EAPOL 4-way started before IQK
+is finished, the 1/4 and 2/4 could be dropped, then the AP
+will issue deauth with reason IEEE8021X_FAILED (23).
+
+To resolve this, move IQK routine into managed TX prepare,
+which is ieee80211_ops::mgd_prepare_tx() called before the
+managed frames (auth/assoc) are sent. This can make sure IQK
+is done before connection. While scanning, not to do IQK for
+each channel because it would take too long.
+
+For 802.11ac devices, they used to do IQK in firmware, and it
+takes less time to finish it, so we do not see EAPOL 4-way
+failure on them. But, it is still worth to move the IQK to
+mgd_prepare_tx().
 
 Fixes: f5df1a8b4376 ("rtw88: 8723d: Add 8723DE to Kconfig and Makefile")
 Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/coex.c     | 12 ++++++++++--
- drivers/net/wireless/realtek/rtw88/main.h     |  1 +
- drivers/net/wireless/realtek/rtw88/rtw8723d.c |  5 +++++
- drivers/net/wireless/realtek/rtw88/rtw8723d.h |  1 +
- 4 files changed, 17 insertions(+), 2 deletions(-)
+ drivers/net/wireless/realtek/rtw88/mac80211.c |  3 +--
+ drivers/net/wireless/realtek/rtw88/main.c     | 16 ++++++++++++++++
+ drivers/net/wireless/realtek/rtw88/main.h     |  3 +++
+ 3 files changed, 20 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/coex.c b/drivers/net/wireless/realtek/rtw88/coex.c
-index 567372fb4e12..5391516616b3 100644
---- a/drivers/net/wireless/realtek/rtw88/coex.c
-+++ b/drivers/net/wireless/realtek/rtw88/coex.c
-@@ -748,10 +748,18 @@ void rtw_coex_write_indirect_reg(struct rtw_dev *rtwdev, u16 addr,
+diff --git a/drivers/net/wireless/realtek/rtw88/mac80211.c b/drivers/net/wireless/realtek/rtw88/mac80211.c
+index 98d2ac22f6f6..c412bc54efde 100644
+--- a/drivers/net/wireless/realtek/rtw88/mac80211.c
++++ b/drivers/net/wireless/realtek/rtw88/mac80211.c
+@@ -341,13 +341,11 @@ static void rtw_ops_bss_info_changed(struct ieee80211_hw *hw,
+ 	rtw_leave_lps_deep(rtwdev);
  
- static void rtw_coex_coex_ctrl_owner(struct rtw_dev *rtwdev, bool wifi_control)
- {
--	if (wifi_control)
-+	struct rtw_chip_info *chip = rtwdev->chip;
-+	const struct rtw_hw_reg *btg_reg = chip->btg_reg;
+ 	if (changed & BSS_CHANGED_ASSOC) {
+-		struct rtw_chip_info *chip = rtwdev->chip;
+ 		enum rtw_net_type net_type;
+ 
+ 		if (conf->assoc) {
+ 			rtw_coex_connect_notify(rtwdev, COEX_ASSOCIATE_FINISH);
+ 			net_type = RTW_NET_MGD_LINKED;
+-			chip->ops->phy_calibration(rtwdev);
+ 
+ 			rtwvif->aid = conf->aid;
+ 			rtw_fw_download_rsvd_page(rtwdev);
+@@ -663,6 +661,7 @@ static void rtw_ops_mgd_prepare_tx(struct ieee80211_hw *hw,
+ 	mutex_lock(&rtwdev->mutex);
+ 	rtw_leave_lps_deep(rtwdev);
+ 	rtw_coex_connect_notify(rtwdev, COEX_ASSOCIATE_START);
++	rtw_chip_prepare_tx(rtwdev);
+ 	mutex_unlock(&rtwdev->mutex);
+ }
+ 
+diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
+index f88a7d2370aa..d561968b67da 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.c
++++ b/drivers/net/wireless/realtek/rtw88/main.c
+@@ -408,6 +408,22 @@ void rtw_set_channel(struct rtw_dev *rtwdev)
+ 	}
+ 
+ 	rtw_phy_set_tx_power_level(rtwdev, center_chan);
 +
-+	if (wifi_control) {
- 		rtw_write32_set(rtwdev, REG_SYS_SDIO_CTRL, BIT_LTE_MUX_CTRL_PATH);
--	else
-+		if (btg_reg)
-+			rtw_write8_set(rtwdev, btg_reg->addr, btg_reg->mask);
-+	} else {
- 		rtw_write32_clr(rtwdev, REG_SYS_SDIO_CTRL, BIT_LTE_MUX_CTRL_PATH);
-+		if (btg_reg)
-+			rtw_write8_clr(rtwdev, btg_reg->addr, btg_reg->mask);
++	/* If set channel isn't for scanning, we'll do RF calibration once in
++	 * this channel while mgd_prepare_tx.
++	 */
++	if (!test_bit(RTW_FLAG_SCANNING, rtwdev->flags))
++		rtwdev->need_rfk = true;
++}
++
++void rtw_chip_prepare_tx(struct rtw_dev *rtwdev)
++{
++	struct rtw_chip_info *chip = rtwdev->chip;
++
++	if (rtwdev->need_rfk) {
++		rtwdev->need_rfk = false;
++		chip->ops->phy_calibration(rtwdev);
 +	}
  }
  
- static void rtw_coex_set_gnt_bt(struct rtw_dev *rtwdev, u8 state)
+ static void rtw_vif_write_addr(struct rtw_dev *rtwdev, u32 start, u8 *addr)
 diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
-index c9156b9b532c..e62a4bceac94 100644
+index e62a4bceac94..98cdec152053 100644
 --- a/drivers/net/wireless/realtek/rtw88/main.h
 +++ b/drivers/net/wireless/realtek/rtw88/main.h
-@@ -1177,6 +1177,7 @@ struct rtw_chip_info {
- 	const struct coex_rf_para *wl_rf_para_tx;
- 	const struct coex_rf_para *wl_rf_para_rx;
- 	const struct coex_5g_afh_map *afh_5g;
-+	const struct rtw_hw_reg *btg_reg;
- 	const struct rtw_reg_domain *coex_info_hw_regs;
- };
+@@ -1723,6 +1723,8 @@ struct rtw_dev {
+ 	struct rtw_fw_state wow_fw;
+ 	struct rtw_wow_param wow;
  
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723d.c b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-index b517af417e0e..671e2c9b20ea 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
-@@ -2067,6 +2067,10 @@ static const u8 wl_rssi_step_8723d[] = {60, 50, 44, 30};
- static const u8 bt_rssi_step_8723d[] = {30, 30, 30, 30};
- static const struct coex_5g_afh_map afh_5g_8723d[] = { {0, 0, 0} };
- 
-+static const struct rtw_hw_reg btg_reg_8723d = {
-+	.addr = REG_BTG_SEL, .mask = BIT_MASK_BTG_WL,
-+};
++	bool need_rfk;
 +
- /* wl_tx_dec_power, bt_tx_dec_power, wl_rx_gain, bt_rx_lna_constrain */
- static const struct coex_rf_para rf_para_tx_8723d[] = {
- 	{0, 0, false, 7},  /* for normal */
-@@ -2733,6 +2737,7 @@ struct rtw_chip_info rtw8723d_hw_spec = {
- 	.bt_afh_span_bw40 = 0x30,
- 	.afh_5g_num = ARRAY_SIZE(afh_5g_8723d),
- 	.afh_5g = afh_5g_8723d,
-+	.btg_reg = &btg_reg_8723d,
- 
- 	.coex_info_hw_regs_num = ARRAY_SIZE(coex_info_hw_regs_8723d),
- 	.coex_info_hw_regs = coex_info_hw_regs_8723d,
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723d.h b/drivers/net/wireless/realtek/rtw88/rtw8723d.h
-index 31b8ed9ee652..7894d321cd7e 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8723d.h
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8723d.h
-@@ -145,6 +145,7 @@ static inline s32 iqk_mult(s32 x, s32 y, s32 *ext)
- 
- #define REG_GPIO_INTM		0x0048
- #define REG_BTG_SEL		0x0067
-+#define BIT_MASK_BTG_WL		BIT(7)
- #define REG_LTECOEX_PATH_CONTROL	0x0070
- #define REG_LTECOEX_CTRL	0x07c0
- #define REG_LTECOEX_WRITE_DATA	0x07c4
+ 	/* hci related data, must be last */
+ 	u8 priv[] __aligned(sizeof(void *));
+ };
+@@ -1796,6 +1798,7 @@ void rtw_restore_reg(struct rtw_dev *rtwdev,
+ 		     struct rtw_backup_info *bckp, u32 num);
+ void rtw_desc_to_mcsrate(u16 rate, u8 *mcs, u8 *nss);
+ void rtw_set_channel(struct rtw_dev *rtwdev);
++void rtw_chip_prepare_tx(struct rtw_dev *rtwdev);
+ void rtw_vif_port_config(struct rtw_dev *rtwdev, struct rtw_vif *rtwvif,
+ 			 u32 config);
+ void rtw_tx_report_purge_timer(struct timer_list *t);
 -- 
 2.17.1
 
