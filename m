@@ -2,253 +2,84 @@ Return-Path: <SRS0=9ftM=7B=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A9F8C433DF
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 May 2020 21:16:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 025D3C433DF
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 May 2020 22:48:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 350F72075F
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 May 2020 21:16:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1589922966;
-	bh=GCBiiHv4rqoiMSHfpHfVnIXqBOlV4WZ5kFNO/xIvb+0=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=bUmOLk1petZylQ/0d38CL2ViyypXZ4lnCsqNqcu+7mZW1DkmumE3DGxZLw8c/GrlJ
-	 8G1zteY/07ysORpO98ANU0jP/BT/d/EWH4AhmWjRCGQwq6u7kLDrfxigGrxCUvVbIc
-	 Ryuu/yjfQeXCrnpj9lw9FNz/mdjJ0ZBz+Yu8YqsM=
+	by mail.kernel.org (Postfix) with ESMTP id D3AFF207E8
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 May 2020 22:48:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726455AbgESVPy (ORCPT
+        id S1727957AbgESWsd (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 19 May 2020 17:15:54 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59422 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726064AbgESVPy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 May 2020 17:15:54 -0400
-Received: from kicinski-fedora-PC1C0HJN.thefacebook.com (unknown [163.114.132.5])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id F10F320758;
-        Tue, 19 May 2020 21:15:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1589922953;
-        bh=GCBiiHv4rqoiMSHfpHfVnIXqBOlV4WZ5kFNO/xIvb+0=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=pMBOhtVGkpEKrdS3IQvTsqqlUWq2yrjH0OVxOrhEQbatn8Ht0p3CeE5SmTyR4HkSO
-         stOZu5LdNXWbJ4nkz+yJhMkAkNqzoppkQdh4hQaii8s16PZ338EEEBTal+chQiKhY8
-         dwa2gsyphgHyjurCHyQjBcWkjja7Y7FpdLBmbAu8=
-From:   Jakub Kicinski <kuba@kernel.org>
-To:     mcgrof@kernel.org
-Cc:     johannes@sipsolutions.net, derosier@gmail.com,
-        greearb@candelatech.com, jeyu@kernel.org,
-        akpm@linux-foundation.org, arnd@arndb.de, rostedt@goodmis.org,
-        mingo@redhat.com, aquini@redhat.com, cai@lca.pw, dyoung@redhat.com,
-        bhe@redhat.com, peterz@infradead.org, tglx@linutronix.de,
-        gpiccoli@canonical.com, pmladek@suse.com, tiwai@suse.de,
-        schlad@suse.de, andriy.shevchenko@linux.intel.com,
-        keescook@chromium.org, daniel.vetter@ffwll.ch, will@kernel.org,
-        mchehab+samsung@kernel.org, kvalo@codeaurora.org,
-        davem@davemloft.net, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org, jiri@resnulli.us,
-        briannorris@chromium.org, Jakub Kicinski <kuba@kernel.org>
-Subject: [RFC 1/2] devlink: add simple fw crash helpers
-Date:   Tue, 19 May 2020 14:15:30 -0700
-Message-Id: <20200519211531.3702593-1-kuba@kernel.org>
-X-Mailer: git-send-email 2.25.4
-In-Reply-To: <20200519010530.GS11244@42.do-not-panic.com>
-References: <20200519010530.GS11244@42.do-not-panic.com>
+        Tue, 19 May 2020 18:48:33 -0400
+Received: from youngberry.canonical.com ([91.189.89.112]:37571 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726536AbgESWsc (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 19 May 2020 18:48:32 -0400
+Received: from [82.43.126.140] (helo=localhost)
+        by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.86_2)
+        (envelope-from <colin.king@canonical.com>)
+        id 1jbB24-0000fU-F4; Tue, 19 May 2020 22:48:20 +0000
+From:   Colin King <colin.king@canonical.com>
+To:     Felix Fietkau <nbd@nbd.name>,
+        Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] mt76: mt7915: fix a handful of spelling mistakes
+Date:   Tue, 19 May 2020 23:48:20 +0100
+Message-Id: <20200519224820.6391-1-colin.king@canonical.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add infra for creating devlink instances for a device to report
-fw crashes. This patch expects the devlink instance to be registered
-at probe time. I belive to be the cleanest. We can also add a devm
-version of the helpers, so that we don't have to do the clean up.
-Or we can go even further and register the devlink instance only
-once error has happened (for the first time, then we can just
-find out if already registered by traversing the list like we
-do here).
+From: Colin Ian King <colin.king@canonical.com>
 
-With the patch applied and a sample driver converted we get:
+There are some spelling mistakes in some literal strings. Fix these.
 
-$ devlink dev
-pci/0000:07:00.0
-
-Then monitor for errors:
-
-$ devlink mon health
-[health,status] pci/0000:07:00.0:
-  reporter fw
-    state error error 1 recover 0
-[health,status] pci/0000:07:00.0:
-  reporter fw
-    state error error 2 recover 0
-
-These are the events I triggered on purpose. One can also inspect
-the health of all devices capable of reporting fw errors:
-
-$ devlink health
-pci/0000:07:00.0:
-  reporter fw
-    state error error 7 recover 0
-
-Obviously drivers may upgrade to the full devlink health API
-which includes state dump, state dump auto-collect and automatic
-error recovery control.
-
-Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
- include/linux/devlink.h               |  11 +++
- net/core/Makefile                     |   2 +-
- net/core/devlink_simple_fw_reporter.c | 101 ++++++++++++++++++++++++++
- 3 files changed, 113 insertions(+), 1 deletion(-)
- create mode 100644 include/linux/devlink.h
- create mode 100644 net/core/devlink_simple_fw_reporter.c
+ drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/include/linux/devlink.h b/include/linux/devlink.h
-new file mode 100644
-index 000000000000..2b73987eefca
---- /dev/null
-+++ b/include/linux/devlink.h
-@@ -0,0 +1,11 @@
-+/* SPDX-License-Identifier: GPL-2.0-or-later */
-+#ifndef _LINUX_DEVLINK_H_
-+#define _LINUX_DEVLINK_H_
-+
-+struct device;
-+
-+void devlink_simple_fw_reporter_prepare(struct device *dev);
-+void devlink_simple_fw_reporter_cleanup(struct device *dev);
-+void devlink_simple_fw_reporter_report_crash(struct device *dev);
-+
-+#endif
-diff --git a/net/core/Makefile b/net/core/Makefile
-index 3e2c378e5f31..6f1513781c17 100644
---- a/net/core/Makefile
-+++ b/net/core/Makefile
-@@ -31,7 +31,7 @@ obj-$(CONFIG_LWTUNNEL_BPF) += lwt_bpf.o
- obj-$(CONFIG_BPF_STREAM_PARSER) += sock_map.o
- obj-$(CONFIG_DST_CACHE) += dst_cache.o
- obj-$(CONFIG_HWBM) += hwbm.o
--obj-$(CONFIG_NET_DEVLINK) += devlink.o
-+obj-$(CONFIG_NET_DEVLINK) += devlink.o devlink_simple_fw_reporter.o
- obj-$(CONFIG_GRO_CELLS) += gro_cells.o
- obj-$(CONFIG_FAILOVER) += failover.o
- obj-$(CONFIG_BPF_SYSCALL) += bpf_sk_storage.o
-diff --git a/net/core/devlink_simple_fw_reporter.c b/net/core/devlink_simple_fw_reporter.c
-new file mode 100644
-index 000000000000..48dde9123c3c
---- /dev/null
-+++ b/net/core/devlink_simple_fw_reporter.c
-@@ -0,0 +1,101 @@
-+#include <linux/devlink.h>
-+#include <linux/list.h>
-+#include <linux/mutex.h>
-+#include <net/devlink.h>
-+
-+struct devlink_simple_fw_reporter {
-+	struct list_head list;
-+	struct devlink_health_reporter *reporter;
-+};
-+
-+
-+static LIST_HEAD(devlink_simple_fw_reporters);
-+static DEFINE_MUTEX(devlink_simple_fw_reporters_mutex);
-+
-+static const struct devlink_health_reporter_ops simple_devlink_health = {
-+	.name = "fw",
-+};
-+
-+static const struct devlink_ops simple_devlink_ops = {
-+};
-+
-+static struct devlink_simple_fw_reporter *
-+devlink_simple_fw_reporter_find_for_dev(struct device *dev)
-+{
-+	struct devlink_simple_fw_reporter *simple_devlink, *ret = NULL;
-+	struct devlink *devlink;
-+
-+	mutex_lock(&devlink_simple_fw_reporters_mutex);
-+	list_for_each_entry(simple_devlink, &devlink_simple_fw_reporters,
-+			    list) {
-+		devlink = priv_to_devlink(simple_devlink);
-+		if (devlink->dev == dev) {
-+			ret = simple_devlink;
-+			break;
-+		}
-+	}
-+	mutex_unlock(&devlink_simple_fw_reporters_mutex);
-+
-+	return ret;
-+}
-+
-+void devlink_simple_fw_reporter_report_crash(struct device *dev)
-+{
-+	struct devlink_simple_fw_reporter *simple_devlink;
-+
-+	simple_devlink = devlink_simple_fw_reporter_find_for_dev(dev);
-+	if (!simple_devlink)
-+		return;
-+
-+	devlink_health_report(simple_devlink->reporter, "firmware crash", NULL);
-+}
-+EXPORT_SYMBOL_GPL(devlink_simple_fw_reporter_report_crash);
-+
-+void devlink_simple_fw_reporter_prepare(struct device *dev)
-+{
-+	struct devlink_simple_fw_reporter *simple_devlink;
-+	struct devlink *devlink;
-+
-+	devlink = devlink_alloc(&simple_devlink_ops,
-+				sizeof(struct devlink_simple_fw_reporter));
-+	if (!devlink)
-+		return;
-+
-+	if (devlink_register(devlink, dev))
-+		goto err_free;
-+
-+	simple_devlink = devlink_priv(devlink);
-+	simple_devlink->reporter =
-+		devlink_health_reporter_create(devlink, &simple_devlink_health,
-+					       0, NULL);
-+	if (IS_ERR(simple_devlink->reporter))
-+		goto err_unregister;
-+
-+	mutex_lock(&devlink_simple_fw_reporters_mutex);
-+	list_add_tail(&simple_devlink->list, &devlink_simple_fw_reporters);
-+	mutex_unlock(&devlink_simple_fw_reporters_mutex);
-+
-+	return;
-+
-+err_unregister:
-+	devlink_unregister(devlink);
-+err_free:
-+	devlink_free(devlink);
-+}
-+EXPORT_SYMBOL_GPL(devlink_simple_fw_reporter_prepare);
-+
-+void devlink_simple_fw_reporter_cleanup(struct device *dev)
-+{
-+	struct devlink_simple_fw_reporter *simple_devlink;
-+	struct devlink *devlink;
-+
-+	simple_devlink = devlink_simple_fw_reporter_find_for_dev(dev);
-+	if (!simple_devlink)
-+		return;
-+
-+	devlink = priv_to_devlink(simple_devlink);
-+	devlink_health_reporter_destroy(simple_devlink->reporter);
-+	devlink_unregister(devlink);
-+	devlink_free(devlink);
-+}
-+EXPORT_SYMBOL_GPL(devlink_simple_fw_reporter_cleanup);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c b/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
+index ee0066fedd04..5278bee812f1 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7915/debugfs.c
+@@ -173,14 +173,14 @@ mt7915_txbf_stat_read_phy(struct mt7915_phy *phy, struct seq_file *s)
+ 
+ 	/* Tx Beamformee Rx NDPA & Tx feedback report */
+ 	cnt = mt76_rr(dev, MT_ETBF_TX_NDP_BFRP(ext_phy));
+-	seq_printf(s, "Tx Beamformee sucessful feedback frames: %ld\n",
++	seq_printf(s, "Tx Beamformee successful feedback frames: %ld\n",
+ 		   FIELD_GET(MT_ETBF_TX_FB_CPL, cnt));
+-	seq_printf(s, "Tx Beamformee feedback triggerd counts: %ld\n",
++	seq_printf(s, "Tx Beamformee feedback triggered counts: %ld\n",
+ 		   FIELD_GET(MT_ETBF_TX_FB_TRI, cnt));
+ 
+ 	/* Tx SU counters */
+ 	cnt = mt76_rr(dev, MT_MIB_DR11(ext_phy));
+-	seq_printf(s, "Tx single-user sucessful MPDU counts: %d\n", cnt);
++	seq_printf(s, "Tx single-user successful MPDU counts: %d\n", cnt);
+ 
+ 	seq_puts(s, "\n");
+ }
 -- 
-2.25.4
+2.25.1
 
