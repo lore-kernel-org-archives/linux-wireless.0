@@ -7,48 +7,48 @@ X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	MSGID_FROM_MTA_HEADER,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F09BC433E0
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 May 2020 11:10:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36693C433DF
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 May 2020 11:10:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 16AAC204EA
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 May 2020 11:10:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0FAD1204EA
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 May 2020 11:10:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=cypress.com header.i=@cypress.com header.b="GV+OiX0s"
+	dkim=pass (1024-bit key) header.d=cypress.com header.i=@cypress.com header.b="OvF6n9Bz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726949AbgESLK0 (ORCPT
+        id S1728573AbgESLKa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 19 May 2020 07:10:26 -0400
-Received: from mail-bn8nam12on2135.outbound.protection.outlook.com ([40.107.237.135]:17729
-        "EHLO NAM12-BN8-obe.outbound.protection.outlook.com"
+        Tue, 19 May 2020 07:10:30 -0400
+Received: from mail-bn7nam10on2100.outbound.protection.outlook.com ([40.107.92.100]:56385
+        "EHLO NAM10-BN7-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726157AbgESLKZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 May 2020 07:10:25 -0400
+        id S1726157AbgESLK3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 19 May 2020 07:10:29 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=cQxRVwsDv6ReGOS9c9ChuoITqxZjVC+13bDvurJtIKOa41C42yFs7nU6c44O3XOKVLMYts8Ks6zKL2UxYky668AjflqK6OxlNjPvW6jCpzICcsJTwpYpungWfXfgXqfmgLVi+iL4Lod1Shdevr9spFPD6m0HsAcV6hSIvUWDY0zPphfgYRn7BaXWTaRF/WMpUmAH3KZnW21Rn1axWSm0salWQZwTUbqwQbfiRuaArBA4KPgW9JP/M5BjGuR43zYUvKnXTY87xshrXpi/47NrMwgIauWj2RMwuMOyhFAcH8995dQ10VxJFx6mYpgBNtxCtE/yam9m2ZTqGCgsML02XQ==
+ b=YwuZEMzxa9u36yGhv/C42h0sB4HrQvXQjHu+1QbM5w1nYktfCe0wJmYhgOdhiT7NyWPCMDzuSkPAwL8eGkdJVrfBMsTtPGAxY+t2bKjQf5e+hMC2lBidcwGqddrehubi0iQrSVh1+ayqPnW0455QTPvNhxQh7iFAs0VJh95Z8k7jQ2pWEpW0L343rdmSGBA4zq+kX/MjL0kHyfhR3mdG8fvlslOf3pnbIlMXJ5J19jM+Y5bZSgs9Nc3z5bUpw5PceNhLWtanaCA+KE4/dFDzZDGwIDmUH5XXDmAhv8EmTy30zfOk6Djcw3ATdBBUyC0KG9HhrOghb5RpK4JccUC2Qw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=vFl4eDshnBc9/N4YSvMdg/4KOiru8DQ+T8l5ylSAme0=;
- b=bWo77YM3Tk6KZsw1x7wFe/XHR999S4a0jIHAh9A2xHFvYXAwD8n98gwxQe0ruf44TNqnuKNKwuWBSB5to4OrhwEv1qd2fsrE1ZFHBj3xFjCDmA1JbjGcfUJh6wIvhl2nyNAefQfAjVNAWOCG2iU4XxpcpANlCgamYYMha1SjsgKx3xadFZ0ygNkGDntnjDAJ3pbvQQlkU+Lt44ZmwU2Rv4bn7t3KbWwMPZ6Ke3gZl2dLcJIDpZ5T5IwUpOmP5NzBmUtmg0hQ2pwPA1OSH/Vr8t6AypcpBr8/2ju5fVimIH8ouaJXKp606PpJO/R8ibpsj9UYCv9hZqmOp8IMChKfwQ==
+ bh=VICEm403AhP5Knd7Lytlui+ps2b/Q+mICDGcXfHd65s=;
+ b=ihWRVM7aQu8PxkH7Ak4phT99w9Fi4xKsNU33c5KS7DuSq9LCO20/KycBxLN1alawBKq7X86Z7RC9cp0aGR/3//na2mjOeFQ/9iYU8wCY7HKHAp2rjegPgwgbovXZFyYsyFj0FMj59Dw2N34/HVfi0cRgkeBU6y7F/ECG9rOA9ewuhekQ1hDOXwbNubRDf9uXqWSGlOt/D47+Bl3f7BIH/J73j3linYTanqoWMESO0taGERGCkKgJ/JMj+jMzW1Khdh4K6RVaA68OqI0PgYP1h3WTydWWaO8LC6SU73wieB/203OEjrnC/YuT+TVX0m7C4liiBiojdoGt/SZMyakFLQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=cypress.com; dmarc=pass action=none header.from=cypress.com;
  dkim=pass header.d=cypress.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cypress.com;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=vFl4eDshnBc9/N4YSvMdg/4KOiru8DQ+T8l5ylSAme0=;
- b=GV+OiX0sNeZyXoMLbtugCJpV9cCslLpL8SwnzdUiGOpKaJxSkIoq+KUOsXQRiZE/zt4Ewp3Irj4AYGEI69TVPe97hvX+9mIPCCpzg/smK7xY0obBsTl0GuZOgAF6qp1FoMjtluhgYP2iB7FWyqk6DYhNmqw9Vg8ZpO19q27TTTI=
+ bh=VICEm403AhP5Knd7Lytlui+ps2b/Q+mICDGcXfHd65s=;
+ b=OvF6n9BzcGgoWtWQ5Ia9QBqny799nBQGtUuNKAP96QaOmAxg2+4ieBL2qO+1V+HOS1UpciA8C+REKp45WfIAGi88UQ4jH6pas1uMWHwjeMT8DIE93y0uZOWtBVozE7f2NAbqHpEHWO9M19mkyaqPhRUY3IJTudHuc78eX1XG0Fs=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none
  header.from=cypress.com;
 Received: from DM6PR06MB4906.namprd06.prod.outlook.com (2603:10b6:5:56::11) by
- DM6PR06MB6043.namprd06.prod.outlook.com (2603:10b6:5:10b::17) with Microsoft
+ DM6PR06MB3964.namprd06.prod.outlook.com (2603:10b6:5:86::30) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.3000.26; Tue, 19 May 2020 11:10:18 +0000
+ 15.20.3000.26; Tue, 19 May 2020 11:10:26 +0000
 Received: from DM6PR06MB4906.namprd06.prod.outlook.com
  ([fe80::c0ed:fb1f:a976:5c3f]) by DM6PR06MB4906.namprd06.prod.outlook.com
  ([fe80::c0ed:fb1f:a976:5c3f%7]) with mapi id 15.20.3000.034; Tue, 19 May 2020
- 11:10:17 +0000
+ 11:10:26 +0000
 From:   Chi-Hsien Lin <chi-hsien.lin@cypress.com>
 To:     linux-wireless@vger.kernel.org
 Cc:     brcm80211-dev-list@broadcom.com, brcm80211-dev-list@cypress.com,
@@ -59,9 +59,9 @@ Cc:     brcm80211-dev-list@broadcom.com, brcm80211-dev-list@cypress.com,
         Kalle Valo <kvalo@codeaurora.org>,
         Double Lo <double.lo@cypress.com>,
         Chi-Hsien Lin <chi-hsien.lin@cypress.com>
-Subject: [PATCH 2/4] brcmfmac: support virtual interface creation from firmware
-Date:   Tue, 19 May 2020 06:09:49 -0500
-Message-Id: <20200519110951.88998-3-chi-hsien.lin@cypress.com>
+Subject: [PATCH 4/4] brcmfmac: increase dcmd maximum buffer size
+Date:   Tue, 19 May 2020 06:09:51 -0500
+Message-Id: <20200519110951.88998-5-chi-hsien.lin@cypress.com>
 X-Mailer: git-send-email 2.25.0
 In-Reply-To: <20200519110951.88998-1-chi-hsien.lin@cypress.com>
 References: <20200519110951.88998-1-chi-hsien.lin@cypress.com>
@@ -72,31 +72,31 @@ X-ClientProxiedBy: BYAPR06CA0029.namprd06.prod.outlook.com
  (2603:10b6:5:56::11)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from aremote02.aus.cypress.com (12.110.209.245) by BYAPR06CA0029.namprd06.prod.outlook.com (2603:10b6:a03:d4::42) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3000.24 via Frontend Transport; Tue, 19 May 2020 11:10:02 +0000
+Received: from aremote02.aus.cypress.com (12.110.209.245) by BYAPR06CA0029.namprd06.prod.outlook.com (2603:10b6:a03:d4::42) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3000.24 via Frontend Transport; Tue, 19 May 2020 11:10:05 +0000
 X-Mailer: git-send-email 2.25.0
 X-Originating-IP: [12.110.209.245]
 X-MS-PublicTrafficType: Email
 X-MS-Office365-Filtering-HT: Tenant
-X-MS-Office365-Filtering-Correlation-Id: 0e3b10d4-5e37-4ecf-e669-08d7fbe52e2a
-X-MS-TrafficTypeDiagnostic: DM6PR06MB6043:
+X-MS-Office365-Filtering-Correlation-Id: 437d01be-e2cd-49fc-e892-08d7fbe53010
+X-MS-TrafficTypeDiagnostic: DM6PR06MB3964:
 X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <DM6PR06MB604399319C07EE46E3E674F4BBB90@DM6PR06MB6043.namprd06.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:165;
+X-Microsoft-Antispam-PRVS: <DM6PR06MB396476DC6D8440D8FCDAB59FBBB90@DM6PR06MB3964.namprd06.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:1148;
 X-Forefront-PRVS: 040866B734
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: XlKQTM7NbWIsSbHWhUh8Fz4oaLt/Fu10vRRYvLy5N9vJNpnIYBh9Cq36B/tsmpFyjfnrBsxXXUPfUilNspAa9BPCen5C5eGDxYfoalK9ZBTRgNCfAl+UbzduEJALJKo9aCjujiLOyrovxXqGcaNZB9mtpf79xv6rj3UfWybySaj6GkvHLsESufD93pAYzWHbAvoOGUqSBY+SRDWFwdiFBYB6fshwV8KQHRqn3lBNbXziUnwZOQlEL5HxnL2Jx+okmAZ10+BKTwiovRsf/kb+2F2QQRru/e1P7m31FgT5yid9Amag0wwxfZYjT0Ey6sGqfhUgK8tqtjMYgLUQWrAi0POTG+ZCU1ucE3zlAQF73txMvyKiNfG0YVNt4G07J5/HxK0izyg6bnsgnK0g8kiuss8qoN6COSj/+GDG2N3mQ1V14wTby2oTyXMftRzdptPS
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR06MB4906.namprd06.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(376002)(39860400002)(366004)(396003)(136003)(346002)(52116002)(66946007)(66556008)(86362001)(36756003)(7696005)(54906003)(66476007)(8936002)(8676002)(6916009)(478600001)(956004)(316002)(2616005)(6486002)(1076003)(5660300002)(6666004)(2906002)(4326008)(186003)(16526019)(107886003)(26005);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData: XNuOkqvPQDUjEoxCtXlCNJh/lTqEj+l78QquKZGQgCOhY+k2kUmdWWvyRcmEI1BV5PAo759s+W55by4yp+d+cw0W5ONtlIsoZ5puRMkPfhAisCepSYB+COBF4yrz92MTq2aOC2Hzxu827siH32ik80g3jOXUWr1IqDwP823JN4Ps6elZ51+x/FFG/V0Ir711hKmNSuRWf0pxgJi3xKqwNALSmI70X3nIwPf4scA3p5uCbAfoCh8zZ4IUgpIjA86fpB6ZDUB/dCDw91cWYuMmhYdn1CzqgBZJbgdjJwzYfRNS7cYekvaxpTXT8tFodumYLl2QMIvIrmUbOyQ/w9J0obN7yw+nsxn+Tv3UTLMxElCKpHTV4QRnDQhJrZq35AabxmjoXdC2tZtfK4vMittNHxsdOp6XJg66IJ8hxfaQIJGOzyUXEb9wS0+VaW3zJQf+hfIMiNABxj5W9drPnjStydEYjamS1NdSEblVgv/nsHVhyLyUR3aIb9QrmA3jQF/i
+X-Microsoft-Antispam-Message-Info: neMMvItcLTXCzjDMitD8Hpr+hCVNiTiYtbjrzxtLCwrWZ1X11VLsSJtK5R32ORdTuHpuQoL7TSDBEUXmBmWQQ5GaIeOCduKl98GdbCtZqPK72gdblDorSGEXrvHJCMZC8gWz9TkQu7hw0smdspbB+c0lCpBZXOTh3zQxF1kdiePhEEJSId1ewPsF274OWVAsfdZUHbAVVxBcLTqz48y9DZIwcJro+VmFzVK/8CztFwWv/lriGKz11cy/ZVfCI9oulOKats0koMkCL2WPK0kjsrWh97VnknMseJYM9LTZ5q0otZRgn6rcF13+mU+RlbS+4hOtUOi4p4sts8J9Y1BMxsfp+MkrTQF7kuGhy7AgoUi08cpL1RBTHj8y2JBGApjMYodo6p4+0nGZaJtoDt7KzjFK3+UAHx3bcpvJXtD+fvmS+vSIIk9L2EcP0CNfOpZh
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR06MB4906.namprd06.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(366004)(136003)(376002)(39860400002)(396003)(346002)(2616005)(316002)(26005)(54906003)(107886003)(86362001)(2906002)(956004)(4326008)(1076003)(6666004)(6486002)(6916009)(16526019)(186003)(5660300002)(8936002)(7696005)(36756003)(52116002)(478600001)(66946007)(8676002)(66476007)(66556008);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData: vF1iGIYtGl4vVcTJgiqZQWiQrAwkVTd/eGhRxNidKwBlQ6r0Y7tZqQAV30cNfJrcll16S5i5mN9jwc33diiOIl4hd0uU2ld2m0vuK9TKWkdtQLydnHSn4JZMjNO1U8lFU4E/0BNEQk2fAc/ACE0t1LacwBa9hrgifsTj0ynXx/jXzIdd2bYi7IW24TcIRDnj+p167XLbAwkh+HPPuR3c7KMJnDrqzgv6tyQBznDO1ACEzxj8y0XWXe9LSe/LDViqswP/woJUtgCaKyU8C0pJJj0AWdNaSERyIFU4UL84V5XmIIrXL8OSwPdgi/wcrAgCFHGO7883Q3e23/c9dZFT1DEGCzDuWj6UlQq5jfzBB8Y+VgqNa4Ff6Lfh87mBgUSB8RhTMK5LYCTy9YtB0W9iqhdvJi0SEn5wtcJDAhSS9YDQTU9AOCBwRP6X9URCAosSbIxhAMs9LIfeWoKbsYdgIa21Y7dpjJo6kaZ+AO4FtL0PUtBamHTWIkEUrm3qxNHF
 X-OriginatorOrg: cypress.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0e3b10d4-5e37-4ecf-e669-08d7fbe52e2a
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 May 2020 11:10:04.0898
+X-MS-Exchange-CrossTenant-Network-Message-Id: 437d01be-e2cd-49fc-e892-08d7fbe53010
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 May 2020 11:10:07.2369
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 011addfc-2c09-450d-8938-e0bbc2dd2376
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: Gh799I7tkkY7kNEdICkKBLp5V4WhP5Bp4tOY5KVFT3jru/ygTXXwJHyoJJOo4tchetyBDfmPdS1q4XplC8hh3g==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR06MB6043
+X-MS-Exchange-CrossTenant-UserPrincipalName: US5JsQjS+JJyldEY0ILWOtJCQS9wezsrw1OPY15FqxtW98AWjy//WsHuySRaqxP9IjaF7pEdaMosPQBVQrmNpA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR06MB3964
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
@@ -104,110 +104,41 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Double Lo <double.lo@cypress.com>
 
-Allow interface creation via IF_ADD event from firmware.
+Increase dcmd maximum buffer size to match firmware configuration for
+new chips.
 
 Signed-off-by: Double Lo <double.lo@cypress.com>
 Signed-off-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
 ---
- .../broadcom/brcm80211/brcmfmac/cfg80211.c    | 46 +++++++++++++++++--
- 1 file changed, 43 insertions(+), 3 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/=
-drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index a757abd7a599..900376dc0b67 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -230,6 +230,9 @@ struct parsed_vndr_ies {
-        struct parsed_vndr_ie_info ie_info[VNDR_IE_PARSE_LIMIT];
- };
-
-+#define WLC_E_IF_ROLE_STA              0       /* Infra STA */
-+#define WLC_E_IF_ROLE_AP               1       /* Access Point */
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c b/driv=
+ers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
+index 2c95a08a5871..705130cf27d5 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
+@@ -87,6 +87,8 @@ struct brcmf_proto_bcdc_header {
+                                         * plus any space that might be nee=
+ded
+                                         * for bus alignment padding.
+                                         */
++#define ROUND_UP_MARGIN 2048
 +
- static u8 nl80211_band_to_fwil(enum nl80211_band band)
- {
-        switch (band) {
-@@ -5532,8 +5535,10 @@ void brcmf_cfg80211_free_netdev(struct net_device *n=
-dev)
-        ifp =3D netdev_priv(ndev);
-        vif =3D ifp->vif;
+ struct brcmf_bcdc {
+        u16 reqid;
+        u8 bus_header[BUS_HEADER_LEN];
+@@ -471,7 +473,7 @@ int brcmf_proto_bcdc_attach(struct brcmf_pub *drvr)
 
--       if (vif)
-+       if (vif) {
-                brcmf_free_vif(vif);
-+               ifp->vif =3D NULL;
-+       }
- }
+        drvr->hdrlen +=3D BCDC_HEADER_LEN + BRCMF_PROT_FW_SIGNAL_MAX_TXBYTE=
+S;
+        drvr->bus_if->maxctl =3D BRCMF_DCMD_MAXLEN +
+-                       sizeof(struct brcmf_proto_bcdc_dcmd);
++                       sizeof(struct brcmf_proto_bcdc_dcmd) + ROUND_UP_MAR=
+GIN;
+        return 0;
 
- static bool brcmf_is_linkup(struct brcmf_cfg80211_vif *vif,
-@@ -6090,6 +6095,9 @@ static s32 brcmf_notify_vif_event(struct brcmf_if *if=
-p,
-        struct brcmf_if_event *ifevent =3D (struct brcmf_if_event *)data;
-        struct brcmf_cfg80211_vif_event *event =3D &cfg->vif_event;
-        struct brcmf_cfg80211_vif *vif;
-+       enum nl80211_iftype iftype =3D NL80211_IFTYPE_UNSPECIFIED;
-+       bool vif_pend =3D false;
-+       int err;
-
-        brcmf_dbg(TRACE, "Enter: action %u flags %u ifidx %u bsscfgidx %u\n=
-",
-                  ifevent->action, ifevent->flags, ifevent->ifidx,
-@@ -6102,9 +6110,28 @@ static s32 brcmf_notify_vif_event(struct brcmf_if *i=
-fp,
-        switch (ifevent->action) {
-        case BRCMF_E_IF_ADD:
-                /* waiting process may have timed out */
--               if (!cfg->vif_event.vif) {
-+               if (!vif) {
-+                       /* handle IF_ADD event from firmware */
-                        spin_unlock(&event->vif_event_lock);
--                       return -EBADF;
-+                       vif_pend =3D true;
-+                       if (ifevent->role =3D=3D WLC_E_IF_ROLE_STA)
-+                               iftype =3D NL80211_IFTYPE_STATION;
-+                       else if (ifevent->role =3D=3D WLC_E_IF_ROLE_AP)
-+                               iftype =3D NL80211_IFTYPE_AP;
-+                       else
-+                               vif_pend =3D false;
-+
-+                       if (vif_pend) {
-+                               vif =3D brcmf_alloc_vif(cfg, iftype);
-+                               if (IS_ERR(vif)) {
-+                                       brcmf_err("Role:%d failed to alloc =
-vif\n",
-+                                                 ifevent->role);
-+                                       return PTR_ERR(vif);
-+                               }
-+                       } else {
-+                               brcmf_err("Invalid Role:%d\n", ifevent->rol=
-e);
-+                               return -EBADF;
-+                       }
-                }
-
-                ifp->vif =3D vif;
-@@ -6114,6 +6141,19 @@ static s32 brcmf_notify_vif_event(struct brcmf_if *i=
-fp,
-                        ifp->ndev->ieee80211_ptr =3D &vif->wdev;
-                        SET_NETDEV_DEV(ifp->ndev, wiphy_dev(cfg->wiphy));
-                }
-+
-+               if (vif_pend) {
-+                       err =3D brcmf_net_attach(ifp, false);
-+                       if (err) {
-+                               brcmf_err("netdevice register failed with e=
-rr:%d\n",
-+                                         err);
-+                               brcmf_free_vif(vif);
-+                               free_netdev(ifp->ndev);
-+                       }
-+                       spin_unlock(&event->vif_event_lock);
-+                       return err;
-+               }
-+
-                spin_unlock(&event->vif_event_lock);
-                wake_up(&event->vif_wq);
-                return 0;
+ fail:
 --
 2.25.0
 
