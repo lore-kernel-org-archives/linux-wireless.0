@@ -2,88 +2,136 @@ Return-Path: <SRS0=9ftM=7B=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F8E9C433E1
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 May 2020 20:36:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5451EC433DF
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 May 2020 21:16:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0F9E9207C4
-	for <linux-wireless@archiver.kernel.org>; Tue, 19 May 2020 20:36:16 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YWt5XHdn"
+	by mail.kernel.org (Postfix) with ESMTP id 249A1207D4
+	for <linux-wireless@archiver.kernel.org>; Tue, 19 May 2020 21:16:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1589922962;
+	bh=BsSOFtmV7u1jPVJuOgFAo1ISyFJ3dm/VGxsNz+31aOU=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=GvUnx8nWCqEIiY1RHWBO3Nv90JGwqEJXmFdoH83i/7JhXrgH0xvG/pyY8ONbW6opm
+	 BosGJ3V389c/fDfvQzI5aMiegehTnkh+E4dJMbTcxw0a/LUJeumePJqRvoIn0tyd0f
+	 tfiVkKhwDJ2vQ7wEiYs8D4RKsUZPII1Y2fIjc658=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726651AbgESUgP (ORCPT
+        id S1727918AbgESVP4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 19 May 2020 16:36:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57958 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725885AbgESUgM (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 May 2020 16:36:12 -0400
-Received: from mail-vs1-xe2a.google.com (mail-vs1-xe2a.google.com [IPv6:2607:f8b0:4864:20::e2a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AC677C08C5C0
-        for <linux-wireless@vger.kernel.org>; Tue, 19 May 2020 13:36:12 -0700 (PDT)
-Received: by mail-vs1-xe2a.google.com with SMTP id e10so415876vsp.12
-        for <linux-wireless@vger.kernel.org>; Tue, 19 May 2020 13:36:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=/ocApQ62zmqcnkVU3n8VWQNIXG5B1jainUDzkBZVXX8=;
-        b=YWt5XHdneSXm1vSWZtz4IUp78CqJd+zdNXxPAglc6lnpbqK6z/U8yjR1QKGSUjY6Xb
-         rZDEuZnjHSAzOw2aIePPPe084VmJSETiXfWfJfOwxc09vvfzdQXi8ge4GeagleK+88mQ
-         ZAsd1eGeL5Zj7A7XbgUSvwQpC49nItfkCaqyoR2rQ2mAoZswd/LByNSm5CcUOaYIWXeu
-         hFBpr6lGSlnTMB7Y0pZMxN4+U2lc3Sskac7k8hTQpltt/qeJM5+hRZrB+q7R5nVtpnSq
-         TQTcFrV07mOdX0wPOjI6elrwtDyhcltr2B6AwU5wR90pMMG/AXqfUVCCdu0NXyG3NM5A
-         ryZw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=/ocApQ62zmqcnkVU3n8VWQNIXG5B1jainUDzkBZVXX8=;
-        b=ofHeLvN+3Y6+gallbcMahyMj6p4fYjyZ6zssIKSBqHP0g7g+hVc5LwGDYcBVGoaEKO
-         uGONLxWgRt6uEr4ZYMM795H7qfbYlviu/xHHy2JSMixJQYdrXzaz171Eiz5ml0uwmT9T
-         8559FzaNXIyOp5Pu+PDRm4u4+odT2heXevalHB5ddVcqEXudWw2+smetUoE5z5Fe2DMO
-         wVpBcKOMX6eOrSFVsK8cWTS+FuhldFTPe15oFoXUY+apHqVThGJuEPSmIsWejhyhpTdn
-         3EFN8fYzP720TrZ62uGnVdmMa+53Oqgs501Owu+Qpsb8YK3zLXyp1GhmQhtfeHtdyyHG
-         zeTA==
-X-Gm-Message-State: AOAM5303a/XQByUL+Qb4ZQS5TSZGNoPTkEbcW8qCxMBm9HBZPgGbNPN4
-        g0Pktv7FtC1FtehxbSNFSUtWlVbLNerRRjuz2FTiPElGtw==
-X-Google-Smtp-Source: ABdhPJw7M31B+UoJl4JHRcdQ1yO/BWl99lEl5cWQYNxVqzLPIRVDc10abHApnX6HHgjdCWEaanWf+I1TU+vPvp0vUsA=
-X-Received: by 2002:a67:f64a:: with SMTP id u10mr899668vso.202.1589920571798;
- Tue, 19 May 2020 13:36:11 -0700 (PDT)
+        Tue, 19 May 2020 17:15:56 -0400
+Received: from mail.kernel.org ([198.145.29.99]:59464 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726824AbgESVPz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 19 May 2020 17:15:55 -0400
+Received: from kicinski-fedora-PC1C0HJN.thefacebook.com (unknown [163.114.132.5])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 5FE7F20826;
+        Tue, 19 May 2020 21:15:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1589922954;
+        bh=BsSOFtmV7u1jPVJuOgFAo1ISyFJ3dm/VGxsNz+31aOU=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=P+l/QP7Caz+Vwato0aIZ7fKNtE51zlgpMpSQsd0GfvW0A3K4eg911OVDEr52MNiQ7
+         6JXWtncJ6risFf9z6fpmyvnU89qnHG8acFt1iU8brX8dJGMTxgeKGIevP4JlzcYeJJ
+         RSrcjrxbGiTzzj232j3DIXn45/4eT7ADalrFwdqc=
+From:   Jakub Kicinski <kuba@kernel.org>
+To:     mcgrof@kernel.org
+Cc:     johannes@sipsolutions.net, derosier@gmail.com,
+        greearb@candelatech.com, jeyu@kernel.org,
+        akpm@linux-foundation.org, arnd@arndb.de, rostedt@goodmis.org,
+        mingo@redhat.com, aquini@redhat.com, cai@lca.pw, dyoung@redhat.com,
+        bhe@redhat.com, peterz@infradead.org, tglx@linutronix.de,
+        gpiccoli@canonical.com, pmladek@suse.com, tiwai@suse.de,
+        schlad@suse.de, andriy.shevchenko@linux.intel.com,
+        keescook@chromium.org, daniel.vetter@ffwll.ch, will@kernel.org,
+        mchehab+samsung@kernel.org, kvalo@codeaurora.org,
+        davem@davemloft.net, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org, jiri@resnulli.us,
+        briannorris@chromium.org, Jakub Kicinski <kuba@kernel.org>
+Subject: [RFC 2/2] i2400m: use devlink health reporter
+Date:   Tue, 19 May 2020 14:15:31 -0700
+Message-Id: <20200519211531.3702593-2-kuba@kernel.org>
+X-Mailer: git-send-email 2.25.4
+In-Reply-To: <20200519010530.GS11244@42.do-not-panic.com>
+References: <20200519010530.GS11244@42.do-not-panic.com>
 MIME-Version: 1.0
-References: <CALjTZvbLOr5zAYyp75Cs6Zo8mWNUVq3ZRJu56G1iHdiihFejWQ@mail.gmail.com>
- <3483242e-c2ad-ec83-0c2c-ce952bc9b638@lwfinger.net>
-In-Reply-To: <3483242e-c2ad-ec83-0c2c-ce952bc9b638@lwfinger.net>
-From:   Rui Salvaterra <rsalvaterra@gmail.com>
-Date:   Tue, 19 May 2020 21:36:00 +0100
-Message-ID: <CALjTZvatxQ2BvUeZGcTFijBf1PiLizJuDdENxg2b=tPQL_NAzQ@mail.gmail.com>
-Subject: Re: [BUG?] b43: can't connect to WPA3 network (nohwcrypt=1)
-To:     Larry Finger <Larry.Finger@lwfinger.net>
-Cc:     b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi, Larry,
+It builds.
 
-On Tue, 19 May 2020 at 21:30, Larry Finger <Larry.Finger@lwfinger.net> wrote:
->
->  From other drivers, it appears that handling WPA3 might be as simple as setting
-> MFP_CAPABLE in the hardware capabilities. Please try this patch:
+Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+---
+ drivers/net/wimax/i2400m/rx.c  | 2 ++
+ drivers/net/wimax/i2400m/usb.c | 5 +++++
+ 2 files changed, 7 insertions(+)
 
-Fantastic, thanks for the quick reply! I will do it ASAP and get back to you.
+diff --git a/drivers/net/wimax/i2400m/rx.c b/drivers/net/wimax/i2400m/rx.c
+index c9fb619a9e01..cc7fe78f2df0 100644
+--- a/drivers/net/wimax/i2400m/rx.c
++++ b/drivers/net/wimax/i2400m/rx.c
+@@ -144,6 +144,7 @@
+  *       i2400m_msg_size_check
+  *       wimax_msg
+  */
++#include <linux/devlink.h>
+ #include <linux/slab.h>
+ #include <linux/kernel.h>
+ #include <linux/if_arp.h>
+@@ -712,6 +713,7 @@ void __i2400m_roq_queue(struct i2400m *i2400m, struct i2400m_roq *roq,
+ 	dev_err(dev, "SW BUG? failed to insert packet\n");
+ 	dev_err(dev, "ERX: roq %p [ws %u] skb %p nsn %d sn %u\n",
+ 		roq, roq->ws, skb, nsn, roq_data->sn);
++	devlink_simple_fw_reporter_report_crash(dev);
+ 	skb_queue_walk(&roq->queue, skb_itr) {
+ 		roq_data_itr = (struct i2400m_roq_data *) &skb_itr->cb;
+ 		nsn_itr = __i2400m_roq_nsn(roq, roq_data_itr->sn);
+diff --git a/drivers/net/wimax/i2400m/usb.c b/drivers/net/wimax/i2400m/usb.c
+index 9659f9e1aaa6..5c811dccbf1d 100644
+--- a/drivers/net/wimax/i2400m/usb.c
++++ b/drivers/net/wimax/i2400m/usb.c
+@@ -49,6 +49,7 @@
+  *   usb_reset_device()
+  */
+ #include "i2400m-usb.h"
++#include <linux/devlink.h>
+ #include <linux/wimax/i2400m.h>
+ #include <linux/debugfs.h>
+ #include <linux/slab.h>
+@@ -423,6 +424,8 @@ int i2400mu_probe(struct usb_interface *iface,
+ 	if (usb_dev->speed != USB_SPEED_HIGH)
+ 		dev_err(dev, "device not connected as high speed\n");
+ 
++	devlink_simple_fw_reporter_prepare(dev);
++
+ 	/* Allocate instance [calls i2400m_netdev_setup() on it]. */
+ 	result = -ENOMEM;
+ 	net_dev = alloc_netdev(sizeof(*i2400mu), "wmx%d", NET_NAME_UNKNOWN,
+@@ -506,6 +509,7 @@ int i2400mu_probe(struct usb_interface *iface,
+ 	usb_put_dev(i2400mu->usb_dev);
+ 	free_netdev(net_dev);
+ error_alloc_netdev:
++	devlink_simple_fw_reporter_cleanup(dev);
+ 	return result;
+ }
+ 
+@@ -532,6 +536,7 @@ void i2400mu_disconnect(struct usb_interface *iface)
+ 	usb_set_intfdata(iface, NULL);
+ 	usb_put_dev(i2400mu->usb_dev);
+ 	free_netdev(net_dev);
++	devlink_simple_fw_reporter_cleanup(dev);
+ 	d_fnend(3, dev, "(iface %p i2400m %p) = void\n", iface, i2400m);
+ }
+ 
+-- 
+2.25.4
 
-> I have no way of testing other than to compile.
-
-No problem, I have two different revisions of b43 cards to test (on
-x86 and ppc32 machines). :)
-
-Thanks a lot,
-Rui
