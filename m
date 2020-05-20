@@ -4,26 +4,24 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC657C433E0
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 May 2020 13:06:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BC35C433DF
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 May 2020 13:08:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BF919206BE
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 May 2020 13:06:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 338F420756
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 May 2020 13:08:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726805AbgETNGM (ORCPT
+        id S1726691AbgETNIm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 20 May 2020 09:06:12 -0400
-Received: from aliyun-cloud.icoremail.net ([47.90.73.12]:18716 "HELO
-        aliyun-sdnproxy-4.icoremail.net" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with SMTP id S1726435AbgETNGM (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 May 2020 09:06:12 -0400
+        Wed, 20 May 2020 09:08:42 -0400
+Received: from spam.zju.edu.cn ([61.164.42.155]:12684 "EHLO zju.edu.cn"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726525AbgETNIm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 20 May 2020 09:08:42 -0400
 Received: from localhost.localdomain (unknown [222.205.77.158])
-        by mail-app2 (Coremail) with SMTP id by_KCgA3H5K5JsVeuAGOAQ--.52762S4;
-        Wed, 20 May 2020 20:46:54 +0800 (CST)
+        by mail-app2 (Coremail) with SMTP id by_KCgCnHr63K8VezDqOAQ--.14485S4;
+        Wed, 20 May 2020 21:08:12 +0800 (CST)
 From:   Dinghao Liu <dinghao.liu@zju.edu.cn>
 To:     dinghao.liu@zju.edu.cn, kjlu@umn.edu
 Cc:     Kalle Valo <kvalo@codeaurora.org>,
@@ -31,64 +29,72 @@ Cc:     Kalle Valo <kvalo@codeaurora.org>,
         Jakub Kicinski <kuba@kernel.org>,
         Thomas Gleixner <tglx@linutronix.de>,
         Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
         Fuqian Huang <huangfq.daxian@gmail.com>,
+        Tony Lindgren <tony@atomide.com>,
         "Jason A. Donenfeld" <Jason@zx2c4.com>,
-        Tony Lindgren <tony@atomide.com>, Maital Hahn <maitalm@ti.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] wlcore: fix runtime pm imbalance in wlcore_regdomain_config
-Date:   Wed, 20 May 2020 20:46:47 +0800
-Message-Id: <20200520124649.10848-1-dinghao.liu@zju.edu.cn>
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Maital Hahn <maitalm@ti.com>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] wlcore: fix runtime pm imbalance in __wl1271_op_remove_interface
+Date:   Wed, 20 May 2020 21:08:04 +0800
+Message-Id: <20200520130806.14789-1-dinghao.liu@zju.edu.cn>
 X-Mailer: git-send-email 2.17.1
-X-CM-TRANSID: by_KCgA3H5K5JsVeuAGOAQ--.52762S4
-X-Coremail-Antispam: 1UD129KBjvdXoWrKrWrZF15CFyUGr4xXF1UKFg_yoWfWFg_Kw
-        n5XFnrWr48Cayjgr4UCa15ZrWS9ryDu3Z3u3y0vFy3Ga1UZrZ7Jry5ZasxZrnrWrW7Zr1x
-        ArZ8GFyxZ3sFvjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUIcSsGvfJTRUUUb-AFc2x0x2IEx4CE42xK8VAvwI8IcIk0rVWrJVCq3wAFIxvE14AK
+X-CM-TRANSID: by_KCgCnHr63K8VezDqOAQ--.14485S4
+X-Coremail-Antispam: 1UD129KBjvdXoW7JrWfWFyDZrW5ury3AF48Xrb_yoWDCFb_Gr
+        s7ZF1kur4kC34Ikr4UCan8XrW09ryDu3Z5urWIvF9xJayj9rZ5tr1rZ3sxZr4fC3yUuF13
+        Jwn8AF15Aa4DujkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUIcSsGvfJTRUUUb6AFc2x0x2IEx4CE42xK8VAvwI8IcIk0rVWrJVCq3wAFIxvE14AK
         wVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK021l84ACjcxK6xIIjxv20x
         vE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4UJVWxJr1l84ACjcxK6I8E
         87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1le2I262IYc4CY6c
         8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_JrI_
         JrylYx0Ex4A2jsIE14v26F4j6r4UJwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64
         vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxan2IY04v7MxkIecxE
-        wVAFwVW5JwCF04k20xvY0x0EwIxGrwCF04k20xvE74AGY7Cv6cx26r4fKr1UJr1l4I8I3I
-        0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWU
-        GVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI
-        0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0
-        rVW3JVWrJr1lIxAIcVC2z280aVAFwI0_Gr0_Cr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr
-        0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUAR6wUUUUU=
+        wVAFwVW5GwCF04k20xvY0x0EwIxGrwCF04k20xvE74AGY7Cv6cx26r4fKr1UJr1l4I8I3I
+        0E4IkC6x0Yz7v_Jr0_Gr1l4IxYO2xFxVAFwI0_Jrv_JF1lx2IqxVAqx4xG67AKxVWUJVWU
+        GwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI4
+        8JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4U
+        MIIF0xvE42xK8VAvwI8IcIk0rVWrJr0_WFyUJwCI42IY6I8E87Iv67AKxVW8JVWxJwCI42
+        IY6I8E87Iv6xkF7I0E14v26r4UJVWxJrUvcSsGvfC2KfnxnUUI43ZEXa7VUb_gA7UUUUU=
+        =
 X-CM-SenderInfo: qrrzjiaqtzq6lmxovvfxof0/
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-pm_runtime_get_sync() increments the runtime PM usage counter even
-the call returns an error code. Thus a pairing decrement is needed
-on the error handling path to keep the counter balanced.
+When wl12xx_cmd_role_disable() returns an error code,
+a pairing runtime PM usage counter decrement is needed to
+keep the counter balanced.
 
 Signed-off-by: Dinghao Liu <dinghao.liu@zju.edu.cn>
 ---
- drivers/net/wireless/ti/wlcore/main.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ti/wlcore/main.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index f140f7d7f553..c7e4f5a80b9e 100644
+index f140f7d7f553..e6c299efbc2e 100644
 --- a/drivers/net/wireless/ti/wlcore/main.c
 +++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -3662,8 +3662,10 @@ void wlcore_regdomain_config(struct wl1271 *wl)
- 		goto out;
+@@ -2698,12 +2698,16 @@ static void __wl1271_op_remove_interface(struct wl1271 *wl,
  
- 	ret = pm_runtime_get_sync(wl->dev);
--	if (ret < 0)
-+	if (ret < 0) {
-+		pm_runtime_put_autosuspend(wl->dev);
- 		goto out;
-+	}
+ 		if (!wlcore_is_p2p_mgmt(wlvif)) {
+ 			ret = wl12xx_cmd_role_disable(wl, &wlvif->role_id);
+-			if (ret < 0)
++			if (ret < 0) {
++				pm_runtime_put_noidle(wl->dev);
+ 				goto deinit;
++			}
+ 		} else {
+ 			ret = wl12xx_cmd_role_disable(wl, &wlvif->dev_role_id);
+-			if (ret < 0)
++			if (ret < 0) {
++				pm_runtime_put_noidle(wl->dev);
+ 				goto deinit;
++			}
+ 		}
  
- 	ret = wlcore_cmd_regdomain_config_locked(wl);
- 	if (ret < 0) {
+ 		pm_runtime_mark_last_busy(wl->dev);
 -- 
 2.17.1
 
