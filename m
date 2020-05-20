@@ -2,160 +2,132 @@ Return-Path: <SRS0=yGod=7C=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA5EBC433E0
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 May 2020 07:42:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8C09C433E0
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 May 2020 08:32:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BABDE207FB
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 May 2020 07:42:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 96494206C3
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 May 2020 08:32:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=dd-wrt.com header.i=@dd-wrt.com header.b="roGH6fIx"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ioWZhImd"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726835AbgETHmD (ORCPT
+        id S1726803AbgETIcp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 20 May 2020 03:42:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48910 "EHLO
+        Wed, 20 May 2020 04:32:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56806 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726566AbgETHmC (ORCPT
+        with ESMTP id S1726224AbgETIcp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 May 2020 03:42:02 -0400
-X-Greylist: delayed 128 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 20 May 2020 00:42:02 PDT
-Received: from mail.as201155.net (mail.as201155.net [IPv6:2a05:a1c0:f001::3])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 329E7C061A0E
-        for <linux-wireless@vger.kernel.org>; Wed, 20 May 2020 00:42:02 -0700 (PDT)
-Received: from smtps.newmedia-net.de ([2a05:a1c0:0:de::167]:46313 helo=webmail.newmedia-net.de)
-        by mail.as201155.net with esmtps (TLSv1:DHE-RSA-AES256-SHA:256)
-        (Exim 4.82_1-5b7a7c0-XX)
-        (envelope-from <s.gottschall@dd-wrt.com>)
-        id 1jbJKN-0007JS-3D; Wed, 20 May 2020 09:39:48 +0200
-X-CTCH-RefID: str=0001.0A782F15.5EC4DE74.0002,ss=1,re=0.000,recu=0.000,reip=0.000,cl=1,cld=1,fgs=0
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=dd-wrt.com; s=mikd;
-        h=Content-Transfer-Encoding:Content-Type:In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:Subject; bh=8FCzqHcLt/L7jZX37exb2DWH+feglGOXViUXkJqEpGs=;
-        b=roGH6fIx1Q/HesuRu3IIQxGpEZlav7c/TVVmx1ZB8gG1fH3w3GEhf99uWdyEtiIBYZsKpXH8lkd0Dl8PODbPEn2M5PQ4hYIkSQRvLqrK+hkj6u8XuUm0HfWT3Gq6JLhhC++eLK0lqEju5/VUzwtfFJZRuTBbVuhx8f51Af2z4KE=;
-Subject: Re: [PATCH v13] ath10k: add LED and GPIO controlling support for
- various chipsets
-To:     Sven Eckelmann <sven@narfation.org>, ath10k@lists.infradead.org,
-        John Crispin <john@phrozen.org>,
-        Ansuel Smith <ansuelsmth@gmail.com>,
-        openwrt-devel@lists.openwrt.org
-Cc:     Kalle Valo <kvalo@codeaurora.org>,
-        Sebastian Gottschall <s.gottschall@newmedia-net.de>,
-        linux-wireless@vger.kernel.org
-References: <1523027875-5143-1-git-send-email-kvalo@codeaurora.org>
- <2468724.JaAZLprVu6@bentobox>
-From:   Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Message-ID: <b23e65cf-4be7-72db-7955-32eae196953e@dd-wrt.com>
-Date:   Wed, 20 May 2020 09:39:45 +0200
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:77.0) Gecko/20100101
- Thunderbird/77.0
+        Wed, 20 May 2020 04:32:45 -0400
+Received: from mail-pg1-x544.google.com (mail-pg1-x544.google.com [IPv6:2607:f8b0:4864:20::544])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0BCDFC061A0E;
+        Wed, 20 May 2020 01:32:45 -0700 (PDT)
+Received: by mail-pg1-x544.google.com with SMTP id s10so1117264pgm.0;
+        Wed, 20 May 2020 01:32:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=LdXCTub4Z9kDMOSy0ARQdskJN6lbu+XKJdQ8G1oxt2w=;
+        b=ioWZhImdJDpldT4SXJ9FDSvyluvAVlamd6Z0TPO1ZCr3WXm+XVbBYF9lRlMTGfKiKP
+         fwn6gWXg/dMeYxmVmC6VCbCS813r3sF8ENw447F9cDZN7o+4jwf/ATR4C4xfJlmDxPr6
+         VvHSR5zXvxwrCQdrSC+eNGxlXV8KtMFitR4k98f+Y0AFsYmu9xI/EeJblOAhUJIrQ5ti
+         HTZW/41UyGeg1taV1I3LZpMGDmng67TjVIn+9Hs+NVuh39gvBCX9vwCElmWiHsoRqEtd
+         arPVZp8aD9G1ASHPX4AFLYDGOMNVtJ61wePi0FfgHxsfz80qD6WMxu2KD0EaSyqsNnzG
+         iDww==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=LdXCTub4Z9kDMOSy0ARQdskJN6lbu+XKJdQ8G1oxt2w=;
+        b=C3l8BkhOJdmvflCPcVPjjshjZCKson+EJG8NP7+WTBU7exZ5yOPh2OJHtRjjviSRT6
+         s3TXMBJGcKzY798r0sxwCslebdjTpXaVQdVx1Y1QSHcIBKQIq+XC8z2+ookjvNrlXxZE
+         yiDZfhaddE+jPu+UxL3G1I4ofDJ+x44uHMC7XYHuj6820TSiRGNexJDrGQbJo8OZWLwl
+         boiUJmOll9o1vO3oPacxgplKyvJJixOsFYd14DTdtNy83rICsfqo+5k/UNFz2Rqg1x1t
+         066HnRZ3HZkudM9mbCja/Uygrzat/SxCpojKio+U5w3BxkIilH9NGbpSLTf7N3nnsN2P
+         GINg==
+X-Gm-Message-State: AOAM530Wb8RToELmJqzR3FBKQR9ahXBX+MUO+a0h6H3+/g+UYGHisNJC
+        WE9omyaJF/AkZN2wshbmrDfiFpN5xB0aFPKrh+M=
+X-Google-Smtp-Source: ABdhPJxyc7lGecCf47GbjoOmrlktPAZ4hEbvxvpm/3E/o9ZhCs/tLKv3L7khmH+4TruBr0WdnFND/2t3RPZbLKPE2F0=
+X-Received: by 2002:a65:6251:: with SMTP id q17mr3051810pgv.4.1589963564573;
+ Wed, 20 May 2020 01:32:44 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <2468724.JaAZLprVu6@bentobox>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Received:  from [2a01:7700:8040:4000:f846:4861:fc39:f688]
-        by webmail.newmedia-net.de with esmtpa (Exim 4.72)
-        (envelope-from <s.gottschall@dd-wrt.com>)
-        id 1jbJGM-0005Rl-7P; Wed, 20 May 2020 09:35:38 +0200
+References: <20200515212846.1347-1-mcgrof@kernel.org> <20200515212846.1347-13-mcgrof@kernel.org>
+ <2b74a35c726e451b2fab2b5d0d301e80d1f4cdc7.camel@sipsolutions.net>
+ <7306323c35e6f44d7c569e689b48f380f80da5e5.camel@sipsolutions.net>
+ <CA+ASDXOg9oKeMJP1Mf42oCMMM3sVe0jniaWowbXVuaYZ=ZpDjQ@mail.gmail.com>
+ <20200519140212.GT11244@42.do-not-panic.com> <CA+ASDXMUHOcvJ_7UWgyANMxSz15Ji7TcLDXVCtSPa+fOr=+FGA@mail.gmail.com>
+ <CANUX_P1pnV46gOo0aL6QV0b+49ubB7C5nuUOuOfoT7aOM+ye9w@mail.gmail.com>
+In-Reply-To: <CANUX_P1pnV46gOo0aL6QV0b+49ubB7C5nuUOuOfoT7aOM+ye9w@mail.gmail.com>
+From:   Andy Shevchenko <andy.shevchenko@gmail.com>
+Date:   Wed, 20 May 2020 11:32:32 +0300
+Message-ID: <CAHp75VfOvABsQyxdy9j-On6pTunM1+uisoWQOmoNa7wLWJ+CSw@mail.gmail.com>
+Subject: Re: [PATCH v2 12/15] ath10k: use new module_firmware_crashed()
+To:     Emmanuel Grumbach <egrumbach@gmail.com>
+Cc:     Brian Norris <briannorris@chromium.org>,
+        Luis Chamberlain <mcgrof@kernel.org>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        aquini@redhat.com, "Peter Zijlstra (Intel)" <peterz@infradead.org>,
+        Daniel Vetter <daniel.vetter@ffwll.ch>,
+        Mauro Carvalho Chehab <mchehab+samsung@kernel.org>,
+        Will Deacon <will@kernel.org>, Baoquan He <bhe@redhat.com>,
+        ath10k@lists.infradead.org, Takashi Iwai <tiwai@suse.de>,
+        Ingo Molnar <mingo@redhat.com>, Dave Young <dyoung@redhat.com>,
+        Petr Mladek <pmladek@suse.com>,
+        Kees Cook <keescook@chromium.org>,
+        Arnd Bergmann <arnd@arndb.de>, gpiccoli@canonical.com,
+        Steven Rostedt <rostedt@goodmis.org>, cai@lca.pw,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
+        schlad@suse.de, Linux Kernel <linux-kernel@vger.kernel.org>,
+        Jessica Yu <jeyu@kernel.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        "David S. Miller" <davem@davemloft.net>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-this code is not in use in its original form for ipq4019.
-i have seen that his patch is also dropped from ath.git but is still in 
-use by openwrt.
-could somone clarify the state here and why it was dropped?
-the original patch i wrote does exclude the soc chipsets, but the patch 
-was later reorganized and some part have been rewritten
-so i'm not sure if it covers the scenario mentioned here, which i did 
-take care of
+On Wed, May 20, 2020 at 8:40 AM Emmanuel Grumbach <egrumbach@gmail.com> wrote:
 
-Sebastian
+> Since I have been involved quite a bit in the firmware debugging
+> features in iwlwifi, I think I can give a few insights here.
+>
+> But before this, we need to understand that there are several sources of issues:
+> 1) the firmware may crash but the bus is still alive, you can still
+> use the bus to get the crash data
+> 2) the bus is dead, when that happens, the firmware might even be in a
+> good condition, but since the bus is dead, you stop getting any
+> information about the firmware, and then, at some point, you get to
+> the conclusion that the firmware is dead. You can't get the crash data
+> that resides on the other side of the bus (you may have gathered data
+> in the DRAM directly, but that's a different thing), and you don't
+> have much recovery to do besides re-starting the PCI enumeration.
+>
+> At Intel, we have seen both unfortunately. The bus issues are the ones
+> that are trickier obviously. Trickier to detect (because you just get
+> garbage from any request you issue on the bus), and trickier to
+> handle. One can argue that the kernel should *not* handle those and
+> let this in userspace hands. I guess it all depends on what component
+> you ship to your customer and what you customer asks from you  :).
 
-Am 26.02.2019 um 10:16 schrieb Sven Eckelmann:
-> On Friday, 6 April 2018 17:17:55 CET Kalle Valo wrote:
->> From: Sebastian Gottschall <s.gottschall@newmedia-net.de>
->>
->> Adds LED and GPIO Control support for 988x, 9887, 9888, 99x0, 9984 based
->> chipsets with on chipset connected led's using WMI Firmware API.  The LED
->> device will get available named as "ath10k-phyX" at sysfs and can be controlled
->> with various triggers.  adds also debugfs interface for gpio control.
->>
->> Signed-off-by: Sebastian Gottschall <s.gottschall@dd-wrt.com>
->> Reviewed-by: Steve deRosier <derosier@cal-sierra.com>
->> [kvalo: major reorg and cleanup]
->> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
->
-> This patch was imported to OpenWrt in commit 61d57a2f88b9 ("mac80211: ath10k
-> add leds support") and broke the 11s support for IPQ4019 and QCA4019 (5GHz)
-> firmware versions 10.4-3.5.3-00053, 10.4-3.5.3-00057, 10.4-3.6-00140:
->
->      [  221.620803] ath10k_pci 0000:01:00.0: wmi command 36967 timeout, restarting hardware
->      [  221.744056] ieee80211 phy0: Hardware restart was requested
->      [  225.130829] ath10k_pci 0000:01:00.0: failed to receive control response completion, polling..
->      [  226.170824] ath10k_pci 0000:01:00.0: Service connect timeout
->      [  226.170871] ath10k_pci 0000:01:00.0: failed to connect htt (-110)
->      [  226.252248] ath10k_pci 0000:01:00.0: Could not init core: -110
->
-> This was tested on an A62 with following wireless config:
->
->      config wifi-device 'radio0'
->              option type 'mac80211'
->              option channel '36'
->              option hwmode '11a'
->              option path 'soc/40000000.pci/pci0000:00/0000:00:00.0/0000:01:00.0'
->              option htmode 'VHT80'
->              option disabled '0'
->              option country US
->      
->      config wifi-device 'radio1'
->              option type 'mac80211'
->              option channel '11'
->              option hwmode '11g'
->              option path 'platform/soc/a000000.wifi'
->              option htmode 'HT20'
->              option disabled '0'
->              option country US
->      
->      config wifi-device 'radio2'
->              option type 'mac80211'
->              option channel '149'
->              option hwmode '11a'
->              option path 'platform/soc/a800000.wifi'
->              option htmode 'VHT80'
->              option disabled '0'
->              option country US
->      
->      config wifi-iface 'mesh0'
->          option device 'radio0'
->          option ifname 'mesh0'
->          option network 'nwi_mesh0'
->          option mode 'mesh'
->          option mesh_id 'TestMesh'
->          option mesh_fwding '1'
->          option encryption 'none'
->      
->      config wifi-iface 'mesh1'
->          option device 'radio1'
->          option ifname 'mesh1'
->          option network 'nwi_mesh1'
->          option mode 'mesh'
->          option mesh_id 'TestMesh'
->          option encryption 'none'
->      
->      
->      config wifi-iface 'mesh2'
->          option device 'radio2'
->          option ifname 'mesh2'
->          option network 'nwi_mesh2'
->          option mode 'mesh'
->          option mesh_id 'TestMesh'
->          option mesh_fwding '1'
->          option encryption 'none
->
-> Kind regards,
-> 	Sven
+Or the two best approaches:
+1) get rid of firmware completely;
+2) make it OSS (like SOF).
+
+I think any of these is a right thing to do in long-term perspective.
+
+How many firmwares average computer has? 50? 100? Any of them is a
+burden and PITA.
+
+-- 
+With Best Regards,
+Andy Shevchenko
