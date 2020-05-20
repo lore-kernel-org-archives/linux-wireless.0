@@ -2,86 +2,90 @@ Return-Path: <SRS0=yGod=7C=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6A56C433DF
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 May 2020 13:01:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 381CEC433E0
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 May 2020 13:03:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6A844207D4
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 May 2020 13:01:55 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Kn2sSWpp"
+	by mail.kernel.org (Postfix) with ESMTP id EDFC0207D3
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 May 2020 13:03:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726548AbgETNBy (ORCPT
+        id S1726548AbgETNDQ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 20 May 2020 09:01:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42556 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726435AbgETNBy (ORCPT
+        Wed, 20 May 2020 09:03:16 -0400
+Received: from aliyun-cloud.icoremail.net ([47.90.73.12]:18212 "HELO
+        aliyun-sdnproxy-4.icoremail.net" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with SMTP id S1726435AbgETNDQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 20 May 2020 09:01:54 -0400
-Received: from mail-vs1-xe44.google.com (mail-vs1-xe44.google.com [IPv6:2607:f8b0:4864:20::e44])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 46269C061A0E
-        for <linux-wireless@vger.kernel.org>; Wed, 20 May 2020 06:01:54 -0700 (PDT)
-Received: by mail-vs1-xe44.google.com with SMTP id v26so1769752vsa.1
-        for <linux-wireless@vger.kernel.org>; Wed, 20 May 2020 06:01:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=woAnCIhfYEJLipFe8EyZcfmluPA2MaZuO37zxR3vgb4=;
-        b=Kn2sSWppvhHVjhct9KDLJTMw91TD7ZhUf0aMA3bkc7nFiCuylrwPze0UQIIik4DdOJ
-         N8ygw4qG37hZ4LHNY8si5tGH3HklqEHflv2DJvrRkKRCdtpNUzBOwiHIIC825z3XC27w
-         7xtWGQ+V/TuL/PwTDEN/VYctGxhSFhPcvqHBqAU4cmdRTFHBU9sBFQjDz0+6yPs0WqFT
-         PP30AWltwUF1x6fa41Om76QWWKdFgIkXZkLwHczf2i9haOcLXssXGQ6kQQa1ImVx05kB
-         wpBaCZOoqNg+rV/uxU6KgDv7gS8RRNmiyFtGsBDzK3C8iOiVnjAAqkUYPoESt2ueMqBK
-         ANfw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=woAnCIhfYEJLipFe8EyZcfmluPA2MaZuO37zxR3vgb4=;
-        b=WXstQqiBPMxH5hfxO1rkBvyu6hD5k+A7MvAb5vWXy3gLJdO1PBQDUFDL9Vsc1PEdYl
-         Zy+50yDDKEQkXtShrxBvxUg3JvDib0A7IHRhvpBMoylaTp2UiU4RCoxCVSugxl8FX427
-         rQfaucTVgpoQqH1yPwld6W11WsdTlkP932CoCGkkRUdEqMXI5ScTk+R7mhjfbJX8DqXY
-         5v8d4FDVGtlk0aRCJ2sP7PmsKTzVihAKQJRUiumfXpNuv4VW3YZKp4hmPVf9XzCKb7TR
-         z/qYa2M85zAht5kAtacr5DZjqc60n0QpN3L/qxNjHTayT5lZGR1om82Mx9TW66T7Tv6a
-         zw5g==
-X-Gm-Message-State: AOAM530Wv44V10gN/EgoT0L8i2M1bcPfW/qCHvnX0X5l/HU4jelUr2Ez
-        ugmYB2WERC9ZaagSRQbfkjX/3tKuiDBqb+WalCw=
-X-Google-Smtp-Source: ABdhPJzM3ZY8vwut7M1/Mc1Vzn+Fk4KTxo0f0WuLZt4UD6+dKcBpOhqFbJjxWDWosv1dzsuk/FboXI+w3tieJ8IjTSg=
-X-Received: by 2002:a67:684a:: with SMTP id d71mr2937165vsc.176.1589979711982;
- Wed, 20 May 2020 06:01:51 -0700 (PDT)
-MIME-Version: 1.0
-References: <9122588d-683a-936e-1305-c34124e6702c@nextfour.com>
- <CANUX_P1q22J6ONRqTCDwwEMtmbGbCmS=C1WK6Zz0OqG_v2qcSA@mail.gmail.com> <f27e0e85-6e45-15bd-1460-4140671ee4cd@nextfour.com>
-In-Reply-To: <f27e0e85-6e45-15bd-1460-4140671ee4cd@nextfour.com>
-From:   Emmanuel Grumbach <egrumbach@gmail.com>
-Date:   Wed, 20 May 2020 16:01:43 +0300
-Message-ID: <CANUX_P3kqY9wMBmAZoKsdzQv0TdW1pY7d=yqp5925Ryhkyq=Xg@mail.gmail.com>
-Subject: Re: iwlwifi firmware loading problems, rk3399
-To:     =?UTF-8?Q?Mika_Penttil=C3=A4?= <mika.penttila@nextfour.com>
-Cc:     Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        linux-rockchip@lists.infradead.org
-Content-Type: text/plain; charset="UTF-8"
+        Wed, 20 May 2020 09:03:16 -0400
+X-Greylist: delayed 720 seconds by postgrey-1.27 at vger.kernel.org; Wed, 20 May 2020 09:03:14 EDT
+Received: from localhost.localdomain (unknown [222.205.77.158])
+        by mail-app2 (Coremail) with SMTP id by_KCgBXHpDCJcVe1faNAQ--.48765S4;
+        Wed, 20 May 2020 20:42:46 +0800 (CST)
+From:   Dinghao Liu <dinghao.liu@zju.edu.cn>
+To:     dinghao.liu@zju.edu.cn, kjlu@umn.edu
+Cc:     Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Allison Randal <allison@lohutok.net>,
+        Alexios Zavras <alexios.zavras@intel.com>,
+        "Jason A. Donenfeld" <Jason@zx2c4.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] wlcore: fix runtime pm imbalance in wl1271_tx_work
+Date:   Wed, 20 May 2020 20:42:38 +0800
+Message-Id: <20200520124241.9931-1-dinghao.liu@zju.edu.cn>
+X-Mailer: git-send-email 2.17.1
+X-CM-TRANSID: by_KCgBXHpDCJcVe1faNAQ--.48765S4
+X-Coremail-Antispam: 1UD129KBjvdXoW7JF1UWFW3Wr1xCFyruF45KFg_yoW3twc_Gr
+        yUWF1xCr18Ar1jgr47CayfXrWSvryDZ3Z3Gr40qFyfG3y7ArZ8KrySvr9xZryUGrWavF1f
+        Crn8XFyxZr9rXjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUIcSsGvfJTRUUUbTxFc2x0x2IEx4CE42xK8VAvwI8IcIk0rVWrJVCq3wAFIxvE14AK
+        wVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK021l84ACjcxK6xIIjxv20x
+        vE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4UJVWxJr1l84ACjcxK6I8E
+        87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1le2I262IYc4CY6c
+        8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_
+        Jr4lYx0Ex4A2jsIE14v26F4j6r4UJwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64
+        vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxan2IY04v7MxkIecxE
+        wVAFwVW5JwCF04k20xvY0x0EwIxGrwCF04k20xvE74AGY7Cv6cx26r4fKr1UJr1l4I8I3I
+        0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWU
+        GVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI
+        0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0
+        rVWrJr0_WFyUJwCI42IY6I8E87Iv67AKxVW8JVWxJwCI42IY6I8E87Iv6xkF7I0E14v26r
+        4UJVWxJrUvcSsGvfC2KfnxnUUI43ZEXa7VUbl1v3UUUUU==
+X-CM-SenderInfo: qrrzjiaqtzq6lmxovvfxof0/
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-> > I guess you need to debug your board :)
-> > The interrupt is not coming, then.. there isn't much the driver can do.
->
-> Well it does get interrupts, but stops getting them during fw loading at
-> some point which causes it to fail. I have seen similar posts while
-> googling and they are happening on x86/ubuntu and popular platforms. So
-> I'm afraid it is something with iwlwifi or its usage of MSIX or such.
-> The kernel version is 5.4.
+There are two error handling paths in this functon. When
+wlcore_tx_work_locked() returns an error code, we should
+decrease the runtime PM usage counter the same way as the
+error handling path beginning from pm_runtime_get_sync().
 
-You can try to disable msix.
-In iwl_pcie_set_interrupt_capa, just goto enable_msi.
+Signed-off-by: Dinghao Liu <dinghao.liu@zju.edu.cn>
+---
+ drivers/net/wireless/ti/wlcore/tx.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/wireless/ti/wlcore/tx.c b/drivers/net/wireless/ti/wlcore/tx.c
+index 90e56d4c3df3..e20e18cd04ae 100644
+--- a/drivers/net/wireless/ti/wlcore/tx.c
++++ b/drivers/net/wireless/ti/wlcore/tx.c
+@@ -863,6 +863,7 @@ void wl1271_tx_work(struct work_struct *work)
+ 
+ 	ret = wlcore_tx_work_locked(wl);
+ 	if (ret < 0) {
++		pm_runtime_put_noidle(wl->dev);
+ 		wl12xx_queue_recovery_work(wl);
+ 		goto out;
+ 	}
+-- 
+2.17.1
+
