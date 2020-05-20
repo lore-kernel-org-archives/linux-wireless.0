@@ -2,86 +2,123 @@ Return-Path: <SRS0=yGod=7C=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C63AC433DF
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 May 2020 01:47:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72024C433DF
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 May 2020 05:23:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B00982075F
-	for <linux-wireless@archiver.kernel.org>; Wed, 20 May 2020 01:47:55 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=kogosowski.com header.i=@kogosowski.com header.b="1iPNgiSo"
+	by mail.kernel.org (Postfix) with ESMTP id 3CF17206C3
+	for <linux-wireless@archiver.kernel.org>; Wed, 20 May 2020 05:23:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728287AbgETBrz (ORCPT
+        id S1726574AbgETFXp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 19 May 2020 21:47:55 -0400
-Received: from walmailout01.yourhostingaccount.com ([65.254.253.174]:36773
-        "EHLO walmailout01.yourhostingaccount.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726348AbgETBry (ORCPT
+        Wed, 20 May 2020 01:23:45 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:38479 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726309AbgETFXo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 19 May 2020 21:47:54 -0400
-X-Greylist: delayed 1841 seconds by postgrey-1.27 at vger.kernel.org; Tue, 19 May 2020 21:47:53 EDT
-Received: from mailscan08.yourhostingaccount.com ([10.1.15.8] helo=walmailscan08.yourhostingaccount.com)
-        by walmailout01.yourhostingaccount.com with esmtp (Exim)
-        id 1jbDM4-0002Uj-CB
-        for linux-wireless@vger.kernel.org; Tue, 19 May 2020 21:17:08 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=kogosowski.com; s=dkim; h=Sender:Content-Transfer-Encoding:Content-Type:
-        MIME-Version:Message-ID:From:Date:Subject:To:Reply-To:Cc:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=iImRgTfgMOEC8UVY5wINbAD9YA466kOZoSaTCHDeH4o=; b=1iPNgiSojXof1ksvq5HUf50u3O
-        46Ty/tu1WzvTcAOJP6bV9BuXEW2fHM+iyP7sea0u5iTkXbeGxKjhrNquYqScu4rNEN582B1aO/9CW
-        XkYGbQDPtZJMV3ClMGenT6ZKUz7pJg7NPJxo+SwXFzPEPkpyw3ANA7y5lesMv3nBRcOUh5k0JWy6g
-        3dlzaVGaW649uE38y83SWB+QDWOeUJAXcXJdEzMuH48t0Oiq75DhTZ0QQcxijWtH1FgsS9K4JPJfr
-        49sFk+xWzPkQHJnKaFPpXVsYxtCAXEp+xVlncdh53pSwG/IqBfzP61l2i70V9JA1ECD1klQxQvjpz
-        ZKVSWUNA==;
-Received: from [10.114.3.21] (helo=walimpout01)
-        by walmailscan08.yourhostingaccount.com with esmtp (Exim)
-        id 1jbDM4-0002D9-3x
-        for linux-wireless@vger.kernel.org; Tue, 19 May 2020 21:17:08 -0400
-Received: from walcustpro0301.yourhostingaccount.com ([10.1.112.210])
-        by walimpout01 with 
-        id gpH5220024YR9uJ01pH8h2; Tue, 19 May 2020 21:17:08 -0400
-X-Authority-Analysis: v=2.1 cv=DIcB4k9b c=1 sm=1 tr=0
- a=O6D56ppunhuKm092tifGpQ==:117 a=L9H7d07YOLsA:10 a=9cW_t1CCXrUA:10
- a=s5jvgZ67dGcA:10 a=IkcTkHD0fZMA:10 a=65Lj2kn8Lx8A:10 a=sTwFKg_x9MkA:10
- a=W9qk7-TRJAAA:10 a=KJD1t2hDAAAA:8 a=0-4UG33Gw5w-Aoq3-xwA:9
- a=EyUnUwxx1FtgXT4K:21 a=cHjmVhRnTIJ5BR1q:21 a=QEXdDO2ut3YA:10
- a=glLRvYU0Z1AA:10 a=SxyBhY3mRiIA:10 a=pTznbiGrbv8A:10
- a=4cSDUiFOmQsdoIEnurUK:22
-Received: from rh.kogosowskicom by walcustpro0301.yourhostingaccount.com with local (Exim)
-        id 1jbDLR-0000gz-IB
-        for linux-wireless@vger.kernel.org; Tue, 19 May 2020 21:16:29 -0400
-X-EN-Info: U=rh.kogosowskicom P=/index.php
-X-EN-CGIUser: rh.kogosowskicom
-X-EN-CGIPath: /index.php
-X-EN-OrigIP: 185.216.34.237
-To:     =?UTF-8?Q?=D0=90dult_number_1_dating_a=D1=80p_f=D0=BEr_iphone=3A_https=3A?=
-         =?UTF-8?Q?//v=2Eht/MiUEQ?= <linux-wireless@vger.kernel.org>
-Subject: Thank you for your contact
-X-PHP-Originating-Script: 5480433:class-phpmailer.php
-Date:   Wed, 20 May 2020 01:16:29 +0000
-From:   Alan Kogosowski <contact@kogosowski.com>
-Message-ID: <0fffa6a916f8daa0ead0291f896811e5@www.kogosowski.com>
-X-Mailer: PHPMailer 5.2.22 (https://github.com/PHPMailer/PHPMailer)
-X-WPCF7-Content-Type: text/plain
+        Wed, 20 May 2020 01:23:44 -0400
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 04K5Nev46011961, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexmb06.realtek.com.tw[172.21.6.99])
+        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 04K5Nev46011961
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+        Wed, 20 May 2020 13:23:40 +0800
+Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
+ RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1779.2; Wed, 20 May 2020 13:23:40 +0800
+Received: from localhost.localdomain (172.21.68.128) by
+ RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1779.2; Wed, 20 May 2020 13:23:39 +0800
+From:   <yhchuang@realtek.com>
+To:     <kvalo@codeaurora.org>
+CC:     <linux-wireless@vger.kernel.org>, <tehuang@realtek.com>
+Subject: [PATCH 7/7] rtw88: 8821c: add phy calibration
+Date:   Wed, 20 May 2020 13:23:35 +0800
+Message-ID: <20200520052335.22466-8-yhchuang@realtek.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20200520052335.22466-1-yhchuang@realtek.com>
+References: <20200520052335.22466-1-yhchuang@realtek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-EN-Timestamp: Tue, 19 May 2020 21:16:29 -0400
+Content-Type: text/plain
+X-Originating-IP: [172.21.68.128]
+X-ClientProxiedBy: RTEXMB02.realtek.com.tw (172.21.6.95) To
+ RTEXMB04.realtek.com.tw (172.21.6.97)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Dear Аdult number 1 dating aрp fоr iphone: https://v.ht/MiUEQ,
+From: Tzu-En Huang <tehuang@realtek.com>
 
-Thank you for your booking inquiry. We will be in touch within a week.
+In order to get a better tramit EVM, we need to perform calibration
+after association.
+The calibration needed for 8821c is called iq calibration, which is
+done in firmware. Implement the callback function for triggering
+firmware to do it.
 
-Kind regards,
-on behalf of Alan Kogosowski
+Signed-off-by: Tzu-En Huang <tehuang@realtek.com>
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
+---
+ drivers/net/wireless/realtek/rtw88/rtw8821c.c | 34 +++++++++++++++++++
+ 1 file changed, 34 insertions(+)
+
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8821c.c b/drivers/net/wireless/realtek/rtw88/rtw8821c.c
+index 7169e6fb9ca9..749569eab912 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8821c.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8821c.c
+@@ -555,6 +555,39 @@ static void rtw8821c_false_alarm_statistics(struct rtw_dev *rtwdev)
+ 	rtw_write32_clr(rtwdev, 0xb58, BIT(0));
+ }
+ 
++static void rtw8821c_do_iqk(struct rtw_dev *rtwdev)
++{
++	static int do_iqk_cnt;
++	struct rtw_iqk_para para = {.clear = 0, .segment_iqk = 0};
++	u32 rf_reg, iqk_fail_mask;
++	int counter;
++	bool reload;
++
++	if (rtw_is_assoc(rtwdev))
++		para.segment_iqk = 1;
++
++	rtw_fw_do_iqk(rtwdev, &para);
++
++	for (counter = 0; counter < 300; counter++) {
++		rf_reg = rtw_read_rf(rtwdev, RF_PATH_A, RF_DTXLOK, RFREG_MASK);
++		if (rf_reg == 0xabcde)
++			break;
++		msleep(20);
++	}
++	rtw_write_rf(rtwdev, RF_PATH_A, RF_DTXLOK, RFREG_MASK, 0x0);
++
++	reload = !!rtw_read32_mask(rtwdev, REG_IQKFAILMSK, BIT(16));
++	iqk_fail_mask = rtw_read32_mask(rtwdev, REG_IQKFAILMSK, GENMASK(7, 0));
++	rtw_dbg(rtwdev, RTW_DBG_PHY,
++		"iqk counter=%d reload=%d do_iqk_cnt=%d n_iqk_fail(mask)=0x%02x\n",
++		counter, reload, ++do_iqk_cnt, iqk_fail_mask);
++}
++
++static void rtw8821c_phy_calibration(struct rtw_dev *rtwdev)
++{
++	rtw8821c_do_iqk(rtwdev);
++}
++
+ static struct rtw_pwr_seq_cmd trans_carddis_to_cardemu_8821c[] = {
+ 	{0x0086,
+ 	 RTW_PWR_CUT_ALL_MSK,
+@@ -993,6 +1026,7 @@ static struct rtw_chip_ops rtw8821c_ops = {
+ 	.set_tx_power_index	= rtw8821c_set_tx_power_index,
+ 	.cfg_ldo25		= rtw8821c_cfg_ldo25,
+ 	.false_alarm_statistics	= rtw8821c_false_alarm_statistics,
++	.phy_calibration	= rtw8821c_phy_calibration,
+ };
+ 
+ struct rtw_chip_info rtw8821c_hw_spec = {
+-- 
+2.17.1
 
