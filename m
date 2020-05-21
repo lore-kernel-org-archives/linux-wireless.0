@@ -2,113 +2,89 @@ Return-Path: <SRS0=TwMq=7D=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2D99C433E0
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 May 2020 14:10:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A5B3C433E0
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 May 2020 14:52:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 80A08206D4
-	for <linux-wireless@archiver.kernel.org>; Thu, 21 May 2020 14:10:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1FBE5206F6
+	for <linux-wireless@archiver.kernel.org>; Thu, 21 May 2020 14:52:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="a+vr7oSi"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="j/cJiiIW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729788AbgEUOKh (ORCPT
+        id S1729542AbgEUOw5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 21 May 2020 10:10:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51852 "EHLO
+        Thu, 21 May 2020 10:52:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58606 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729774AbgEUOKh (ORCPT
+        with ESMTP id S1728256AbgEUOw5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 21 May 2020 10:10:37 -0400
-Received: from mail-oo1-xc29.google.com (mail-oo1-xc29.google.com [IPv6:2607:f8b0:4864:20::c29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ECECEC061A0E
-        for <linux-wireless@vger.kernel.org>; Thu, 21 May 2020 07:10:36 -0700 (PDT)
-Received: by mail-oo1-xc29.google.com with SMTP id z26so1456261oog.8
-        for <linux-wireless@vger.kernel.org>; Thu, 21 May 2020 07:10:36 -0700 (PDT)
+        Thu, 21 May 2020 10:52:57 -0400
+Received: from mail-vs1-xe36.google.com (mail-vs1-xe36.google.com [IPv6:2607:f8b0:4864:20::e36])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DCE84C061A0E
+        for <linux-wireless@vger.kernel.org>; Thu, 21 May 2020 07:52:56 -0700 (PDT)
+Received: by mail-vs1-xe36.google.com with SMTP id w65so4140994vsw.11
+        for <linux-wireless@vger.kernel.org>; Thu, 21 May 2020 07:52:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=sender:subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=aMJeVUM1wAAh22sySV2lmbc3Pmg8bbmB6WxZxgSOH7I=;
-        b=a+vr7oSiOtKlE2RJUc+P2EqgCxnPO88D+H8KuQ3dQBaNRmpqGVF3aejCVkDUQ04P2+
-         xUe78XGqblMS4lzJA4Q96IYMptjjeziB32ezax4M5R4znV8OOOj8xNfXGYUJMLHSo0JE
-         tTVF70LQS9QxVFC/J18vqNEuo1+/THUhFcGb0IZE/Ak6ZV9/jzG5fPrHlcVCzu7FiWf1
-         9bAt+mf5woScLZjhr1mt+dJzGr5VuT88jEsCrRm0wIZoBhnpTqzXTH3ejQ24mdaw0DX8
-         NbN5pEwqa5Ryxny2rgNVkROApj/l/G5Q7s0dHEAjGeJ/T8srH4+Y79SEvEYhyqzxHPJe
-         MbIg==
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=RaeuoJY8rKJQZCpKfSeifeRXidvsPBfJGfbnhauOBT4=;
+        b=j/cJiiIWCZF+CLCG557cgpB7S12zg5Y7Md3P8u29+6wkyFpmP4/x+70LqLWp8gk5iH
+         WWPGApvZDrJtDmXux7vFzW+rBGvgKajnXhtP0GIsD4qgS49iY0s81aJrPoYP9sPLtHwo
+         TLQiD178g4nt13KzUsGvUqGTAt25MVWQIiA9tRVXRl3KtBU5aZJjRQrMqfgFDBqdZX7G
+         PHhX6wNWbvzVWe92fnzcMEcbG60/7bYH/PmAYm6LBzBnzPMkoKYoPfTi34Y2T8bp0BwB
+         grdanHaTEWXt//KYzVKoj2EMrhqr1Hz1aorRsqhzN4mSav+qONMGQxgS4Pr/xxEgm6Z0
+         NOeQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:subject:to:cc:references:from:message-id
-         :date:user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=aMJeVUM1wAAh22sySV2lmbc3Pmg8bbmB6WxZxgSOH7I=;
-        b=dP8yJCEX8ZldtEvPXD+pEQeTM2/dxjCxD2XfCLooEIrxscidF46OSU3EkLkggg6B9Q
-         XNAsTS0+4XVOukIzUfPNq9HaQRiCcyCyUjv+SAbfndi4v86jvJfBqIf7Z5Yh3FX4HuT6
-         scLrcvvL8hLI1Ubf4qA1lHi8rq/VMw80kp3MiVYeojCg8IBA8xxVr9lg/Ftnlt9pM+5J
-         wjRV7vi2cRNfu+PBR87MEknQDfV4Avk5jFGqZo1U7bzSJ0EFQog4qQ6MBnQSJDtjCa+x
-         43BTfZPDFFpcwGM1oTYyG62IZgW4z0BsBRU7I+P7XB/9Z9BXLW//tS47ncb6Zn5POInP
-         i/uQ==
-X-Gm-Message-State: AOAM5339pDUnNlyXmyp+tM3PHcYGrouRM/T4oUaJnFSSTbvo2jqquu6A
-        gRmdmwzolMXrk/HzkqmbbR4=
-X-Google-Smtp-Source: ABdhPJzyTFm/CoI4i2cbYOKO5IRZqEaMAqwKMNeC8Eww4nCTPBUs6D8ZHhd3FBJOIShxd+QxtF9asg==
-X-Received: by 2002:a4a:9843:: with SMTP id z3mr7517711ooi.31.1590070235121;
-        Thu, 21 May 2020 07:10:35 -0700 (PDT)
-Received: from localhost.localdomain (cpe-24-31-245-230.kc.res.rr.com. [24.31.245.230])
-        by smtp.gmail.com with ESMTPSA id v24sm1603628otn.59.2020.05.21.07.10.33
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 21 May 2020 07:10:34 -0700 (PDT)
-Subject: Re: [BUG?] b43: can't connect to WPA3 network (nohwcrypt=1)
-To:     =?UTF-8?Q?Michael_B=c3=bcsch?= <m@bues.ch>,
-        Rui Salvaterra <rsalvaterra@gmail.com>
-Cc:     linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
-References: <CALjTZvbLOr5zAYyp75Cs6Zo8mWNUVq3ZRJu56G1iHdiihFejWQ@mail.gmail.com>
- <3483242e-c2ad-ec83-0c2c-ce952bc9b638@lwfinger.net>
- <CALjTZvatxQ2BvUeZGcTFijBf1PiLizJuDdENxg2b=tPQL_NAzQ@mail.gmail.com>
- <CALjTZvYSJOx0xeMVkN6dHcGTdgW9O9NVbgXPKK4d6-31VX+0JQ@mail.gmail.com>
- <29f5e3de-a32c-6292-9197-19dcc57fa6a3@lwfinger.net>
- <CALjTZvaroTrgK9=W8uTwq9YcYayfuEU31BUc0qNYJr+08hevfg@mail.gmail.com>
- <CALjTZvaPi2FL-epk-Vd2wOLye2O0J8G5aZPsqzHXt2b7u=HyuQ@mail.gmail.com>
- <263e247c-3bf9-6d42-996b-bc513efe4b71@lwfinger.net>
- <CALjTZvauK0Hh+aoabcDX9kkQZ4zN2ZjPnB+aq7YrJ9+-4ihiAg@mail.gmail.com>
- <87fffd5d-242a-7195-c4cc-80260dbd53c5@lwfinger.net>
- <CALjTZvYCFNSQ6HMN4owkiGTVrYaiU8R-P1KXgvkwGqcOo8uMuw@mail.gmail.com>
- <CALjTZvYMF_ERBfzkhaHvsTu6kt7MW+L_979sOVs8hcH7zF_Nyg@mail.gmail.com>
- <20200521124608.4b5c78f2@wiggum>
- <CALjTZvan46UTwcUxOSN=RiE6XHm-29Ln8B6wiv40V_RVxWewtA@mail.gmail.com>
- <20200521134011.656381ad@wiggum>
-From:   Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <462b5428-bd66-a844-9bb3-7113ee9e5ef0@lwfinger.net>
-Date:   Thu, 21 May 2020 09:10:33 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.8.0
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=RaeuoJY8rKJQZCpKfSeifeRXidvsPBfJGfbnhauOBT4=;
+        b=B8d7v7ScBmtTnJU0tuJqST5Wvq66eiesf93VXlrye1ex44qxetJaA8dFqDKLpJgG05
+         dPx18cXAXcOPVSM3kL5OTwRWhD+5NffG5ENQOgn9L73lQp07GeBrJACcVNPnet9px0L/
+         2vTHZRym1o7ObP1v6KKw9mIcmKyjXcwZEobPAY+xQPXO3LEslhzjXzvPRKx3drvliDNz
+         2EEhs/IsODR9dxICmIyXgXEzWP470pnE9UBEl3OCw/b8wcY9CMM73G27NIxpazTIhez7
+         VwWvoJWuG4CMN88GMUdzBdjGljO06iKrhwLbBjkzLKkxtxysElrKMBVS92YI6rMRj5sg
+         wRqA==
+X-Gm-Message-State: AOAM531om+aaOBYty5BPWDZAIc93Vcw8BYS15R+yo/eD/aijjmUm93/U
+        49mRUy78TPEOmsvQ2+r/rB9sEPVDhscrqvnNOg==
+X-Google-Smtp-Source: ABdhPJw8L6W6noPkSqdeXkoEln2rm5zlJ/HmGdSylKKuyuY4yn+6gCna5F8QaxEeia5/HnkA5KpPnIpl+A5PdXJg8tk=
+X-Received: by 2002:a67:f313:: with SMTP id p19mr3805235vsf.63.1590072775920;
+ Thu, 21 May 2020 07:52:55 -0700 (PDT)
 MIME-Version: 1.0
+References: <CALjTZvbLOr5zAYyp75Cs6Zo8mWNUVq3ZRJu56G1iHdiihFejWQ@mail.gmail.com>
+ <3483242e-c2ad-ec83-0c2c-ce952bc9b638@lwfinger.net> <CALjTZvatxQ2BvUeZGcTFijBf1PiLizJuDdENxg2b=tPQL_NAzQ@mail.gmail.com>
+ <CALjTZvYSJOx0xeMVkN6dHcGTdgW9O9NVbgXPKK4d6-31VX+0JQ@mail.gmail.com>
+ <29f5e3de-a32c-6292-9197-19dcc57fa6a3@lwfinger.net> <CALjTZvaroTrgK9=W8uTwq9YcYayfuEU31BUc0qNYJr+08hevfg@mail.gmail.com>
+ <CALjTZvaPi2FL-epk-Vd2wOLye2O0J8G5aZPsqzHXt2b7u=HyuQ@mail.gmail.com>
+ <263e247c-3bf9-6d42-996b-bc513efe4b71@lwfinger.net> <CALjTZvauK0Hh+aoabcDX9kkQZ4zN2ZjPnB+aq7YrJ9+-4ihiAg@mail.gmail.com>
+ <87fffd5d-242a-7195-c4cc-80260dbd53c5@lwfinger.net> <CALjTZvYCFNSQ6HMN4owkiGTVrYaiU8R-P1KXgvkwGqcOo8uMuw@mail.gmail.com>
+ <CALjTZvYMF_ERBfzkhaHvsTu6kt7MW+L_979sOVs8hcH7zF_Nyg@mail.gmail.com>
+ <20200521124608.4b5c78f2@wiggum> <CALjTZvan46UTwcUxOSN=RiE6XHm-29Ln8B6wiv40V_RVxWewtA@mail.gmail.com>
+ <20200521134011.656381ad@wiggum>
 In-Reply-To: <20200521134011.656381ad@wiggum>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+From:   Rui Salvaterra <rsalvaterra@gmail.com>
+Date:   Thu, 21 May 2020 15:52:44 +0100
+Message-ID: <CALjTZvZcfT-aURMa=j-1ksWyVdu42bLEsGOaq+Hw39ioiPFKAA@mail.gmail.com>
+Subject: Re: [BUG?] b43: can't connect to WPA3 network (nohwcrypt=1)
+To:     =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>
+Cc:     Larry Finger <Larry.Finger@lwfinger.net>,
+        linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 5/21/20 6:40 AM, Michael Büsch wrote:
-> On Thu, 21 May 2020 12:30:43 +0100
-> Rui Salvaterra <rsalvaterra@gmail.com> wrote:
-> 
->> Also note that this a PowerPC laptop (iBook G4).
-> 
+On Thu, 21 May 2020 at 12:40, Michael B=C3=BCsch <m@bues.ch> wrote:
+>
 > That's not exactly a modern CPU, but measurements would be useful
 > anyway.
 
-Michael,
-
-Thanks for a hearty morning laugh. I needed the endorphins.
-
-I will be able to run some tests using a BCM4312 on an Intel i7 CPU running at 
-2.90 GHz. It is a Haswell chip launched is Q3 2013 - a little more modern. My 
-setup will be using WPA2 connecting to an AC1750 AP.
-
-Larry
-
+It's not exactly a modern Wi-Fi card either, and being 802.11g might
+actually help limiting the CPU overhead.
