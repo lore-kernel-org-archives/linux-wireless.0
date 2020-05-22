@@ -4,43 +4,43 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DD0BC433E0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE02BC433E3
 	for <linux-wireless@archiver.kernel.org>; Fri, 22 May 2020 14:46:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 76ADC2054F
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 May 2020 14:45:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 90D42204EF
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 May 2020 14:46:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1590158758;
-	bh=fmZWyu8S8zz/WmoFW+uWpo4sd9DDFs+iV3itMZTeMR0=;
+	s=default; t=1590158760;
+	bh=FK2cjUuXlz/7vUmgD5dr+Rxd2hc1F0f/Urz70jIMZa4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=BoxjvKpV9pICtAOfwAeillBP/aCoo4S8whVQ0yUpQIsKt0p1CP6uG4CZHrfC6p1N1
-	 43JT8Gc7zZerm8H9LouJH9jDdLf7RMuvsNW2S2bRHuffaKp2IZUfku5jHmOG2hIaDw
-	 bCI/DHoTUxjYbIiwzXJ2TCQLhkSDgHut3gBdrxAU=
+	b=DPK6NyYePyJ6tByb6fJbA7ZT1JiyQ6Un7NYHOpeT2j6liFUJ3IegBRCMTM4wimUJU
+	 LP4eiVpnBQvw/P/KvrLX/Mm1GvS69oyFKAMnZn0ig0gwiv5u+ReE66bQPHLi26zjGp
+	 lA5oswzQAipj+HGzu3VJ6ZiqU3wJsCWMzxCwFHAU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730297AbgEVOp5 (ORCPT
+        id S1730326AbgEVOp7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 22 May 2020 10:45:57 -0400
-Received: from mail.kernel.org ([198.145.29.99]:48352 "EHLO mail.kernel.org"
+        Fri, 22 May 2020 10:45:59 -0400
+Received: from mail.kernel.org ([198.145.29.99]:48438 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730061AbgEVOp4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 May 2020 10:45:56 -0400
+        id S1730311AbgEVOp6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 22 May 2020 10:45:58 -0400
 Received: from pali.im (pali.im [31.31.79.79])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 5D853204EF;
-        Fri, 22 May 2020 14:45:55 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id BFD8320727;
+        Fri, 22 May 2020 14:45:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1590158755;
-        bh=fmZWyu8S8zz/WmoFW+uWpo4sd9DDFs+iV3itMZTeMR0=;
+        s=default; t=1590158757;
+        bh=FK2cjUuXlz/7vUmgD5dr+Rxd2hc1F0f/Urz70jIMZa4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=oMliYZS+G4ZRp+xBCR+xbnXAAMh7UGnCuzkwQYS8ohlmf0AGqMfMh9j9ot4+ycbiY
-         BpMyLY2icnsETEivqZGwzx8hDkx4nycPgULF3ulzlTbwmq7TlKa+/mc+4p6bGNAJ34
-         ElE/GMzYjlMwFIJE448OlJo78KRdeVt+IEEreRpE=
+        b=R4RGsK78MnWMvmiJBT2se89kpkaB0qz25O7LIel5g4KT4tf6cSu6RGEEHAp9j9sjs
+         sK/teQ9m8Di3KhBmn5dUiez6gg8GmzdC6PGfJXWc+BAeE8sq4+l4tHgwd1oVnYsNrC
+         NNgAol6PCO16S/2N/bcbwUCFXI+seymMU3u2HK+Y=
 Received: by pali.im (Postfix)
-        id 93A9A51E; Fri, 22 May 2020 16:45:53 +0200 (CEST)
+        id 049BC51E; Fri, 22 May 2020 16:45:56 +0200 (CEST)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     Ulf Hansson <ulf.hansson@linaro.org>, linux-mmc@vger.kernel.org
 Cc:     Matthias Brugger <matthias.bgg@gmail.com>,
@@ -54,9 +54,9 @@ Cc:     Matthias Brugger <matthias.bgg@gmail.com>,
         brcm80211-dev-list@cypress.com, libertas-dev@lists.infradead.org,
         linux-wireless@vger.kernel.org,
         =?UTF-8?q?Marek=20Beh=C3=BAn?= <marek.behun@nic.cz>
-Subject: [PATCH 05/11] mmc: sdio: Move SDIO IDs from btmtksdio driver to common include file
-Date:   Fri, 22 May 2020 16:44:06 +0200
-Message-Id: <20200522144412.19712-6-pali@kernel.org>
+Subject: [PATCH 06/11] mmc: sdio: Move SDIO IDs from smssdio driver to common include file
+Date:   Fri, 22 May 2020 16:44:07 +0200
+Message-Id: <20200522144412.19712-7-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200522144412.19712-1-pali@kernel.org>
 References: <20200522144412.19712-1-pali@kernel.org>
@@ -68,43 +68,55 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Define appropriate macro names for consistency with other macros.
+Define appropriate macro names for consistency with other Siano macros.
 
 Signed-off-by: Pali Rohár <pali@kernel.org>
 ---
- drivers/bluetooth/btmtksdio.c | 4 ++--
- include/linux/mmc/sdio_ids.h  | 2 ++
- 2 files changed, 4 insertions(+), 2 deletions(-)
+ drivers/media/mmc/siano/smssdio.c | 10 +++++-----
+ include/linux/mmc/sdio_ids.h      |  5 +++++
+ 2 files changed, 10 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/bluetooth/btmtksdio.c b/drivers/bluetooth/btmtksdio.c
-index 519788c442ca..bff095be2f97 100644
---- a/drivers/bluetooth/btmtksdio.c
-+++ b/drivers/bluetooth/btmtksdio.c
-@@ -51,9 +51,9 @@ static const struct btmtksdio_data mt7668_data = {
- };
- 
- static const struct sdio_device_id btmtksdio_table[] = {
--	{SDIO_DEVICE(SDIO_VENDOR_ID_MEDIATEK, 0x7663),
-+	{SDIO_DEVICE(SDIO_VENDOR_ID_MEDIATEK, SDIO_DEVICE_ID_MEDIATEK_MT7663),
- 	 .driver_data = (kernel_ulong_t)&mt7663_data },
--	{SDIO_DEVICE(SDIO_VENDOR_ID_MEDIATEK, 0x7668),
-+	{SDIO_DEVICE(SDIO_VENDOR_ID_MEDIATEK, SDIO_DEVICE_ID_MEDIATEK_MT7668),
- 	 .driver_data = (kernel_ulong_t)&mt7668_data },
- 	{ }	/* Terminating entry */
+diff --git a/drivers/media/mmc/siano/smssdio.c b/drivers/media/mmc/siano/smssdio.c
+index def5e93849d2..065b572e0272 100644
+--- a/drivers/media/mmc/siano/smssdio.c
++++ b/drivers/media/mmc/siano/smssdio.c
+@@ -58,15 +58,15 @@ static const struct sdio_device_id smssdio_ids[] = {
+ 	 .driver_data = SMS1XXX_BOARD_SIANO_VEGA},
+ 	{SDIO_DEVICE(SDIO_VENDOR_ID_SIANO, SDIO_DEVICE_ID_SIANO_VENICE),
+ 	 .driver_data = SMS1XXX_BOARD_SIANO_VEGA},
+-	{SDIO_DEVICE(SDIO_VENDOR_ID_SIANO, 0x302),
++	{SDIO_DEVICE(SDIO_VENDOR_ID_SIANO, SDIO_DEVICE_ID_SIANO_MING),
+ 	.driver_data = SMS1XXX_BOARD_SIANO_MING},
+-	{SDIO_DEVICE(SDIO_VENDOR_ID_SIANO, 0x500),
++	{SDIO_DEVICE(SDIO_VENDOR_ID_SIANO, SDIO_DEVICE_ID_SIANO_PELE),
+ 	.driver_data = SMS1XXX_BOARD_SIANO_PELE},
+-	{SDIO_DEVICE(SDIO_VENDOR_ID_SIANO, 0x600),
++	{SDIO_DEVICE(SDIO_VENDOR_ID_SIANO, SDIO_DEVICE_ID_SIANO_RIO),
+ 	.driver_data = SMS1XXX_BOARD_SIANO_RIO},
+-	{SDIO_DEVICE(SDIO_VENDOR_ID_SIANO, 0x700),
++	{SDIO_DEVICE(SDIO_VENDOR_ID_SIANO, SDIO_DEVICE_ID_SIANO_DENVER_2160),
+ 	.driver_data = SMS1XXX_BOARD_SIANO_DENVER_2160},
+-	{SDIO_DEVICE(SDIO_VENDOR_ID_SIANO, 0x800),
++	{SDIO_DEVICE(SDIO_VENDOR_ID_SIANO, SDIO_DEVICE_ID_SIANO_DENVER_1530),
+ 	.driver_data = SMS1XXX_BOARD_SIANO_DENVER_1530},
+ 	{ /* end: all zeroes */ },
  };
 diff --git a/include/linux/mmc/sdio_ids.h b/include/linux/mmc/sdio_ids.h
-index 1237e1048d06..c9aca57d4dea 100644
+index c9aca57d4dea..9ec675a7ac37 100644
 --- a/include/linux/mmc/sdio_ids.h
 +++ b/include/linux/mmc/sdio_ids.h
-@@ -80,6 +80,8 @@
- #define SDIO_DEVICE_ID_MARVELL_8987_BT		0x914a
+@@ -88,6 +88,11 @@
+ #define SDIO_DEVICE_ID_SIANO_NICE		0x0202
+ #define SDIO_DEVICE_ID_SIANO_VEGA_A0		0x0300
+ #define SDIO_DEVICE_ID_SIANO_VENICE		0x0301
++#define SDIO_DEVICE_ID_SIANO_MING		0x0302
++#define SDIO_DEVICE_ID_SIANO_PELE		0x0500
++#define SDIO_DEVICE_ID_SIANO_RIO		0x0600
++#define SDIO_DEVICE_ID_SIANO_DENVER_2160	0x0700
++#define SDIO_DEVICE_ID_SIANO_DENVER_1530	0x0800
+ #define SDIO_DEVICE_ID_SIANO_NOVA_A0		0x1100
+ #define SDIO_DEVICE_ID_SIANO_STELLAR 		0x5347
  
- #define SDIO_VENDOR_ID_MEDIATEK			0x037a
-+#define SDIO_DEVICE_ID_MEDIATEK_MT7663		0x7663
-+#define SDIO_DEVICE_ID_MEDIATEK_MT7668		0x7668
- 
- #define SDIO_VENDOR_ID_SIANO			0x039a
- #define SDIO_DEVICE_ID_SIANO_NOVA_B0		0x0201
 -- 
 2.20.1
 
