@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C6AF3C433DF
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 May 2020 14:46:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CFC76C433E1
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 May 2020 14:46:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A71362054F
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 May 2020 14:46:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8FC3C204EF
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 May 2020 14:46:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1590158784;
-	bh=ye3nclsR7uSWC4P9+t5adbuuNtCeDZmeeSpzKSyy8xk=;
+	s=default; t=1590158798;
+	bh=JuVtsoJtqiGRmlRjn0aQhleeQaWm700qqmuKFp/zUsM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=ScGSDZpPqo1+btXI6qQeGZfW+NUB0TniHYYd8YUkXYrnE6NkpNcebxCBJZfMD3JLC
-	 v6tZBY0kfRT0Oz09Epi2OdMamZjgm66KNw5nTFGCrg5xBErRsYr8kVJXSlA7Lo+uzN
-	 g43kYlobkbaebVKd/Od8Uh7ybgi8bvtqtWoOTyRE=
+	b=jEmzli25n5A/YKZBSF11DC9dEpwqDm6r789lSGcwUUG6DXFIOEtOSPjVbPOec06Mh
+	 F72e9qZqsoms+S9wqbrVaNS3vdGXKXH5eBDTodHs2fKRIktBjJDK9/g/x/8RlHwbSF
+	 vLgQumY98PW3qKD4KjqCC0J9AVx7/oXbeSWVW1qo=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730395AbgEVOqG (ORCPT
+        id S1730398AbgEVOqe (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 22 May 2020 10:46:06 -0400
-Received: from mail.kernel.org ([198.145.29.99]:48570 "EHLO mail.kernel.org"
+        Fri, 22 May 2020 10:46:34 -0400
+Received: from mail.kernel.org ([198.145.29.99]:48314 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730381AbgEVOqD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 May 2020 10:46:03 -0400
+        id S1730089AbgEVOpx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 22 May 2020 10:45:53 -0400
 Received: from pali.im (pali.im [31.31.79.79])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 9F7DB204EF;
-        Fri, 22 May 2020 14:46:02 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 05EF420727;
+        Fri, 22 May 2020 14:45:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1590158762;
-        bh=ye3nclsR7uSWC4P9+t5adbuuNtCeDZmeeSpzKSyy8xk=;
+        s=default; t=1590158752;
+        bh=JuVtsoJtqiGRmlRjn0aQhleeQaWm700qqmuKFp/zUsM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=wkChRlczdOdI08bn6JmrTqB0hHPKi6knDknVJA0wcJzRcFQpPYgwccJ/S6aUPypGY
-         qZtidpRlBISxgtHh1AbOHYLfLI0hpayMbnRrGZKGb1OVTdzzwLOdG/XFkttxm3qrEy
-         gcMhq8pIIdy7nwnjs5ARl7RK9WFIERyQhkTKXOgc=
+        b=KA9a1lxgJE9kGo8WzKl//DiDJ0mIhN5vTC2JDL6dMQ5+Zm9/Q5w7ftISDJaERGnsw
+         WU7zCHsKRoAdfuF/WFi0DnRc7O+PXFrI8NmSYE5774cBV0eCl8oz+xEw8kDjsPAbmz
+         iHLXemt9FudqdZVrtqvwWCywY1qzI8i/HFMoFqWo=
 Received: by pali.im (Postfix)
-        id D613951E; Fri, 22 May 2020 16:46:00 +0200 (CEST)
+        id 3FEBD51E; Fri, 22 May 2020 16:45:50 +0200 (CEST)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     Ulf Hansson <ulf.hansson@linaro.org>, linux-mmc@vger.kernel.org
 Cc:     Matthias Brugger <matthias.bgg@gmail.com>,
@@ -54,9 +54,9 @@ Cc:     Matthias Brugger <matthias.bgg@gmail.com>,
         brcm80211-dev-list@cypress.com, libertas-dev@lists.infradead.org,
         linux-wireless@vger.kernel.org,
         =?UTF-8?q?Marek=20Beh=C3=BAn?= <marek.behun@nic.cz>
-Subject: [PATCH 08/11] mmc: sdio: Move SDIO IDs from ath10k driver to common include file
-Date:   Fri, 22 May 2020 16:44:09 +0200
-Message-Id: <20200522144412.19712-9-pali@kernel.org>
+Subject: [PATCH 04/11] mmc: sdio: Move SDIO IDs from btmrvl driver to common include file
+Date:   Fri, 22 May 2020 16:44:05 +0200
+Message-Id: <20200522144412.19712-5-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200522144412.19712-1-pali@kernel.org>
 References: <20200522144412.19712-1-pali@kernel.org>
@@ -68,114 +68,88 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Also replace generic MANUFACTURER macros by proper SDIO IDs macros.
-
-Checks for device IDs are slightly modified to use SDIO device IDs.
-This allows removal of all custom MANUFACTURER macros from ath10k.
+Define appropriate macro names for consistency with other Marvell macros.
 
 Signed-off-by: Pali Rohár <pali@kernel.org>
 ---
- drivers/net/wireless/ath/ath10k/sdio.c | 25 ++++++++++---------------
- drivers/net/wireless/ath/ath10k/sdio.h |  8 --------
- include/linux/mmc/sdio_ids.h           |  2 ++
- 3 files changed, 12 insertions(+), 23 deletions(-)
+ drivers/bluetooth/btmrvl_sdio.c | 18 +++++++++---------
+ include/linux/mmc/sdio_ids.h    |  8 ++++++++
+ 2 files changed, 17 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/sdio.c b/drivers/net/wireless/ath/ath10k/sdio.c
-index 1f709b65c29b..59e725515041 100644
---- a/drivers/net/wireless/ath/ath10k/sdio.c
-+++ b/drivers/net/wireless/ath/ath10k/sdio.c
-@@ -1083,10 +1083,10 @@ static void ath10k_sdio_set_mbox_info(struct ath10k *ar)
+diff --git a/drivers/bluetooth/btmrvl_sdio.c b/drivers/bluetooth/btmrvl_sdio.c
+index 0f3a020703ab..a296f8526433 100644
+--- a/drivers/bluetooth/btmrvl_sdio.c
++++ b/drivers/bluetooth/btmrvl_sdio.c
+@@ -355,31 +355,31 @@ static const struct btmrvl_sdio_device btmrvl_sdio_sd8997 = {
  
- 	mbox_info->ext_info[0].htc_ext_addr = ATH10K_HIF_MBOX0_EXT_BASE_ADDR;
+ static const struct sdio_device_id btmrvl_sdio_ids[] = {
+ 	/* Marvell SD8688 Bluetooth device */
+-	{ SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, 0x9105),
++	{ SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8688_BT),
+ 			.driver_data = (unsigned long)&btmrvl_sdio_sd8688 },
+ 	/* Marvell SD8787 Bluetooth device */
+-	{ SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, 0x911A),
++	{ SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8787_BT),
+ 			.driver_data = (unsigned long)&btmrvl_sdio_sd8787 },
+ 	/* Marvell SD8787 Bluetooth AMP device */
+-	{ SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, 0x911B),
++	{ SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8787_BT_AMP),
+ 			.driver_data = (unsigned long)&btmrvl_sdio_sd8787 },
+ 	/* Marvell SD8797 Bluetooth device */
+-	{ SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, 0x912A),
++	{ SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8797_BT),
+ 			.driver_data = (unsigned long)&btmrvl_sdio_sd8797 },
+ 	/* Marvell SD8887 Bluetooth device */
+-	{ SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, 0x9136),
++	{ SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8887_BT),
+ 			.driver_data = (unsigned long)&btmrvl_sdio_sd8887 },
+ 	/* Marvell SD8897 Bluetooth device */
+-	{ SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, 0x912E),
++	{ SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8897_BT),
+ 			.driver_data = (unsigned long)&btmrvl_sdio_sd8897 },
+ 	/* Marvell SD8977 Bluetooth device */
+-	{ SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, 0x9146),
++	{ SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8977_BT),
+ 			.driver_data = (unsigned long)&btmrvl_sdio_sd8977 },
+ 	/* Marvell SD8987 Bluetooth device */
+-	{ SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, 0x914A),
++	{ SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8987_BT),
+ 			.driver_data = (unsigned long)&btmrvl_sdio_sd8987 },
+ 	/* Marvell SD8997 Bluetooth device */
+-	{ SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, 0x9142),
++	{ SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8997_BT),
+ 			.driver_data = (unsigned long)&btmrvl_sdio_sd8997 },
  
--	dev_id_base = FIELD_GET(QCA_MANUFACTURER_ID_BASE, device);
--	dev_id_chiprev = FIELD_GET(QCA_MANUFACTURER_ID_REV_MASK, device);
-+	dev_id_base = (device & 0x0F00);
-+	dev_id_chiprev = (device & 0x00FF);
- 	switch (dev_id_base) {
--	case QCA_MANUFACTURER_ID_AR6005_BASE:
-+	case (SDIO_DEVICE_ID_ATHEROS_AR6005 & 0x0F00):
- 		if (dev_id_chiprev < 4)
- 			mbox_info->ext_info[0].htc_ext_sz =
- 				ATH10K_HIF_MBOX0_EXT_WIDTH;
-@@ -1097,7 +1097,7 @@ static void ath10k_sdio_set_mbox_info(struct ath10k *ar)
- 			mbox_info->ext_info[0].htc_ext_sz =
- 				ATH10K_HIF_MBOX0_EXT_WIDTH_ROME_2_0;
- 		break;
--	case QCA_MANUFACTURER_ID_QCA9377_BASE:
-+	case (SDIO_DEVICE_ID_ATHEROS_QCA9377 & 0x0F00):
- 		mbox_info->ext_info[0].htc_ext_sz =
- 			ATH10K_HIF_MBOX0_EXT_WIDTH_ROME_2_0;
- 		break;
-@@ -2185,19 +2185,16 @@ static int ath10k_sdio_probe(struct sdio_func *func,
- 	skb_queue_head_init(&ar_sdio->rx_head);
- 	INIT_WORK(&ar_sdio->async_work_rx, ath10k_rx_indication_async_work);
- 
--	dev_id_base = FIELD_GET(QCA_MANUFACTURER_ID_BASE, id->device);
--	switch (dev_id_base) {
--	case QCA_MANUFACTURER_ID_AR6005_BASE:
--	case QCA_MANUFACTURER_ID_QCA9377_BASE:
--		ar->dev_id = QCA9377_1_0_DEVICE_ID;
--		break;
--	default:
-+	dev_id_base = (id->device & 0x0F00);
-+	if (dev_id_base != (SDIO_DEVICE_ID_ATHEROS_AR6005 & 0x0F00) &&
-+	    dev_id_base != (SDIO_DEVICE_ID_ATHEROS_QCA9377 & 0x0F00)) {
- 		ret = -ENODEV;
- 		ath10k_err(ar, "unsupported device id %u (0x%x)\n",
- 			   dev_id_base, id->device);
- 		goto err_free_wq;
- 	}
- 
-+	ar->dev_id = QCA9377_1_0_DEVICE_ID;
- 	ar->id.vendor = id->vendor;
- 	ar->id.device = id->device;
- 
-@@ -2246,10 +2243,8 @@ static void ath10k_sdio_remove(struct sdio_func *func)
- }
- 
- static const struct sdio_device_id ath10k_sdio_devices[] = {
--	{SDIO_DEVICE(QCA_MANUFACTURER_CODE,
--		     (QCA_SDIO_ID_AR6005_BASE | 0xA))},
--	{SDIO_DEVICE(QCA_MANUFACTURER_CODE,
--		     (QCA_SDIO_ID_QCA9377_BASE | 0x1))},
-+	{SDIO_DEVICE(SDIO_VENDOR_ID_ATHEROS, SDIO_DEVICE_ID_ATHEROS_AR6005)},
-+	{SDIO_DEVICE(SDIO_VENDOR_ID_ATHEROS, SDIO_DEVICE_ID_ATHEROS_QCA9377)},
- 	{},
- };
- 
-diff --git a/drivers/net/wireless/ath/ath10k/sdio.h b/drivers/net/wireless/ath/ath10k/sdio.h
-index 33195f49acab..e8951f9cdb5f 100644
---- a/drivers/net/wireless/ath/ath10k/sdio.h
-+++ b/drivers/net/wireless/ath/ath10k/sdio.h
-@@ -10,14 +10,6 @@
- 
- #define ATH10K_HIF_MBOX_BLOCK_SIZE              256
- 
--#define QCA_MANUFACTURER_ID_BASE                GENMASK(11, 8)
--#define QCA_MANUFACTURER_ID_AR6005_BASE         0x5
--#define QCA_MANUFACTURER_ID_QCA9377_BASE        0x7
--#define QCA_SDIO_ID_AR6005_BASE                 0x500
--#define QCA_SDIO_ID_QCA9377_BASE                0x700
--#define QCA_MANUFACTURER_ID_REV_MASK            0x00FF
--#define QCA_MANUFACTURER_CODE                   0x271 /* Qualcomm/Atheros */
--
- #define ATH10K_SDIO_MAX_BUFFER_SIZE             4096 /*Unsure of this constant*/
- 
- /* Mailbox address in SDIO address space */
+ 	{ }	/* Terminating entry */
 diff --git a/include/linux/mmc/sdio_ids.h b/include/linux/mmc/sdio_ids.h
-index 95b67ab7d06a..2894f7739acc 100644
+index 90361ea7f5ed..1237e1048d06 100644
 --- a/include/linux/mmc/sdio_ids.h
 +++ b/include/linux/mmc/sdio_ids.h
-@@ -33,6 +33,8 @@
- #define SDIO_DEVICE_ID_ATHEROS_AR6004_02	0x0402
- #define SDIO_DEVICE_ID_ATHEROS_AR6004_18	0x0418
- #define SDIO_DEVICE_ID_ATHEROS_AR6004_19	0x0419
-+#define SDIO_DEVICE_ID_ATHEROS_AR6005		0x050A
-+#define SDIO_DEVICE_ID_ATHEROS_QCA9377		0x0701
+@@ -60,16 +60,24 @@
+ #define SDIO_DEVICE_ID_MARVELL_8688_BT		0x9105
+ #define SDIO_DEVICE_ID_MARVELL_8786_WLAN	0x9116
+ #define SDIO_DEVICE_ID_MARVELL_8787_WLAN	0x9119
++#define SDIO_DEVICE_ID_MARVELL_8787_BT		0x911a
++#define SDIO_DEVICE_ID_MARVELL_8787_BT_AMP	0x911b
+ #define SDIO_DEVICE_ID_MARVELL_8797_F0		0x9128
+ #define SDIO_DEVICE_ID_MARVELL_8797_WLAN	0x9129
++#define SDIO_DEVICE_ID_MARVELL_8797_BT		0x912a
+ #define SDIO_DEVICE_ID_MARVELL_8897_WLAN	0x912d
++#define SDIO_DEVICE_ID_MARVELL_8897_BT		0x912e
+ #define SDIO_DEVICE_ID_MARVELL_8887_F0		0x9134
+ #define SDIO_DEVICE_ID_MARVELL_8887_WLAN	0x9135
++#define SDIO_DEVICE_ID_MARVELL_8887_BT		0x9136
+ #define SDIO_DEVICE_ID_MARVELL_8801_WLAN	0x9139
+ #define SDIO_DEVICE_ID_MARVELL_8997_F0		0x9140
+ #define SDIO_DEVICE_ID_MARVELL_8997_WLAN	0x9141
++#define SDIO_DEVICE_ID_MARVELL_8997_BT		0x9142
+ #define SDIO_DEVICE_ID_MARVELL_8977_WLAN	0x9145
++#define SDIO_DEVICE_ID_MARVELL_8977_BT		0x9146
+ #define SDIO_DEVICE_ID_MARVELL_8987_WLAN	0x9149
++#define SDIO_DEVICE_ID_MARVELL_8987_BT		0x914a
  
- #define SDIO_VENDOR_ID_BROADCOM			0x02d0
- #define SDIO_DEVICE_ID_BROADCOM_43143		0xa887
+ #define SDIO_VENDOR_ID_MEDIATEK			0x037a
+ 
 -- 
 2.20.1
 
