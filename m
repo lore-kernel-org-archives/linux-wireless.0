@@ -4,43 +4,43 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 09B78C433DF
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 May 2020 14:45:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DD0BC433E0
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 May 2020 14:46:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DCE1120DD4
-	for <linux-wireless@archiver.kernel.org>; Fri, 22 May 2020 14:45:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 76ADC2054F
+	for <linux-wireless@archiver.kernel.org>; Fri, 22 May 2020 14:45:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1590158757;
-	bh=oq5ZCJlTZiGHXZ4dJp1898bt1twZklmXaQYyrfl6DbI=;
+	s=default; t=1590158758;
+	bh=fmZWyu8S8zz/WmoFW+uWpo4sd9DDFs+iV3itMZTeMR0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=HuIemz3JcWgKnL331zkRFz0CzEW/oB4MVQVYvO3FqZHpPTwWU9ueiVZPc2EfS717L
-	 CRT7lEW8QeD+foOVBYAXAikps4O2zl0L7vS3ykP7I4R3sEWonFIoK/sML+ktGGa3u0
-	 wpkv6bGitaVxYy41d0Fh53YxeGJVLbrT1MkO9uKg=
+	b=BoxjvKpV9pICtAOfwAeillBP/aCoo4S8whVQ0yUpQIsKt0p1CP6uG4CZHrfC6p1N1
+	 43JT8Gc7zZerm8H9LouJH9jDdLf7RMuvsNW2S2bRHuffaKp2IZUfku5jHmOG2hIaDw
+	 bCI/DHoTUxjYbIiwzXJ2TCQLhkSDgHut3gBdrxAU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730275AbgEVOpy (ORCPT
+        id S1730297AbgEVOp5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 22 May 2020 10:45:54 -0400
-Received: from mail.kernel.org ([198.145.29.99]:48228 "EHLO mail.kernel.org"
+        Fri, 22 May 2020 10:45:57 -0400
+Received: from mail.kernel.org ([198.145.29.99]:48352 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730061AbgEVOpt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 22 May 2020 10:45:49 -0400
+        id S1730061AbgEVOp4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 22 May 2020 10:45:56 -0400
 Received: from pali.im (pali.im [31.31.79.79])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 7D03B2054F;
-        Fri, 22 May 2020 14:45:48 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 5D853204EF;
+        Fri, 22 May 2020 14:45:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1590158748;
-        bh=oq5ZCJlTZiGHXZ4dJp1898bt1twZklmXaQYyrfl6DbI=;
+        s=default; t=1590158755;
+        bh=fmZWyu8S8zz/WmoFW+uWpo4sd9DDFs+iV3itMZTeMR0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=vmqgPZnAGbdGZkJnNBSQtvm5P4tXIor1R1Pr7WCRLRgBOTPbUAUjAK2he5uiCxego
-         drlx24+IBOOCbkZ0FQZXlUX7+1xhSyWF7QVA/EDbp8DY1BW6O8OQqdkK71TbvkC8Ko
-         kzc3sqKQHGdA/xvwycnU4auvcNvKyXeXMq7du2Io=
+        b=oMliYZS+G4ZRp+xBCR+xbnXAAMh7UGnCuzkwQYS8ohlmf0AGqMfMh9j9ot4+ycbiY
+         BpMyLY2icnsETEivqZGwzx8hDkx4nycPgULF3ulzlTbwmq7TlKa+/mc+4p6bGNAJ34
+         ElE/GMzYjlMwFIJE448OlJo78KRdeVt+IEEreRpE=
 Received: by pali.im (Postfix)
-        id A1CBE51E; Fri, 22 May 2020 16:45:46 +0200 (CEST)
+        id 93A9A51E; Fri, 22 May 2020 16:45:53 +0200 (CEST)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     Ulf Hansson <ulf.hansson@linaro.org>, linux-mmc@vger.kernel.org
 Cc:     Matthias Brugger <matthias.bgg@gmail.com>,
@@ -54,9 +54,9 @@ Cc:     Matthias Brugger <matthias.bgg@gmail.com>,
         brcm80211-dev-list@cypress.com, libertas-dev@lists.infradead.org,
         linux-wireless@vger.kernel.org,
         =?UTF-8?q?Marek=20Beh=C3=BAn?= <marek.behun@nic.cz>
-Subject: [PATCH 03/11] mmc: sdio: Move SDIO IDs from mwifiex driver to common include file
-Date:   Fri, 22 May 2020 16:44:04 +0200
-Message-Id: <20200522144412.19712-4-pali@kernel.org>
+Subject: [PATCH 05/11] mmc: sdio: Move SDIO IDs from btmtksdio driver to common include file
+Date:   Fri, 22 May 2020 16:44:06 +0200
+Message-Id: <20200522144412.19712-6-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200522144412.19712-1-pali@kernel.org>
 References: <20200522144412.19712-1-pali@kernel.org>
@@ -68,98 +68,43 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add _WLAN suffix to macro names for consistency with other Marvell macros.
-These IDs represents wlan function of combo bt/wlan cards. Other functions
-of these cards have different IDs.
+Define appropriate macro names for consistency with other macros.
 
 Signed-off-by: Pali Rohár <pali@kernel.org>
 ---
- drivers/net/wireless/marvell/mwifiex/sdio.c | 38 +++++----------------
- include/linux/mmc/sdio_ids.h                | 10 ++++++
- 2 files changed, 19 insertions(+), 29 deletions(-)
+ drivers/bluetooth/btmtksdio.c | 4 ++--
+ include/linux/mmc/sdio_ids.h  | 2 ++
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-index 6a2dcb01caf4..a042965962a2 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -480,45 +480,25 @@ static void mwifiex_sdio_coredump(struct device *dev)
- 		schedule_work(&card->work);
- }
+diff --git a/drivers/bluetooth/btmtksdio.c b/drivers/bluetooth/btmtksdio.c
+index 519788c442ca..bff095be2f97 100644
+--- a/drivers/bluetooth/btmtksdio.c
++++ b/drivers/bluetooth/btmtksdio.c
+@@ -51,9 +51,9 @@ static const struct btmtksdio_data mt7668_data = {
+ };
  
--/* Device ID for SD8786 */
--#define SDIO_DEVICE_ID_MARVELL_8786   (0x9116)
--/* Device ID for SD8787 */
--#define SDIO_DEVICE_ID_MARVELL_8787   (0x9119)
--/* Device ID for SD8797 */
--#define SDIO_DEVICE_ID_MARVELL_8797   (0x9129)
--/* Device ID for SD8897 */
--#define SDIO_DEVICE_ID_MARVELL_8897   (0x912d)
--/* Device ID for SD8887 */
--#define SDIO_DEVICE_ID_MARVELL_8887   (0x9135)
--/* Device ID for SD8801 */
--#define SDIO_DEVICE_ID_MARVELL_8801   (0x9139)
--/* Device ID for SD8977 */
--#define SDIO_DEVICE_ID_MARVELL_8977   (0x9145)
--/* Device ID for SD8987 */
--#define SDIO_DEVICE_ID_MARVELL_8987   (0x9149)
--/* Device ID for SD8997 */
--#define SDIO_DEVICE_ID_MARVELL_8997   (0x9141)
--
--
- /* WLAN IDs */
- static const struct sdio_device_id mwifiex_ids[] = {
--	{SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8786),
-+	{SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8786_WLAN),
- 		.driver_data = (unsigned long) &mwifiex_sdio_sd8786},
--	{SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8787),
-+	{SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8787_WLAN),
- 		.driver_data = (unsigned long) &mwifiex_sdio_sd8787},
--	{SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8797),
-+	{SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8797_WLAN),
- 		.driver_data = (unsigned long) &mwifiex_sdio_sd8797},
--	{SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8897),
-+	{SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8897_WLAN),
- 		.driver_data = (unsigned long) &mwifiex_sdio_sd8897},
--	{SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8887),
-+	{SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8887_WLAN),
- 		.driver_data = (unsigned long)&mwifiex_sdio_sd8887},
--	{SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8801),
-+	{SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8801_WLAN),
- 		.driver_data = (unsigned long)&mwifiex_sdio_sd8801},
--	{SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8977),
-+	{SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8977_WLAN),
- 		.driver_data = (unsigned long)&mwifiex_sdio_sd8977},
--	{SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8987),
-+	{SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8987_WLAN),
- 		.driver_data = (unsigned long)&mwifiex_sdio_sd8987},
--	{SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8997),
-+	{SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8997_WLAN),
- 		.driver_data = (unsigned long)&mwifiex_sdio_sd8997},
- 	{},
+ static const struct sdio_device_id btmtksdio_table[] = {
+-	{SDIO_DEVICE(SDIO_VENDOR_ID_MEDIATEK, 0x7663),
++	{SDIO_DEVICE(SDIO_VENDOR_ID_MEDIATEK, SDIO_DEVICE_ID_MEDIATEK_MT7663),
+ 	 .driver_data = (kernel_ulong_t)&mt7663_data },
+-	{SDIO_DEVICE(SDIO_VENDOR_ID_MEDIATEK, 0x7668),
++	{SDIO_DEVICE(SDIO_VENDOR_ID_MEDIATEK, SDIO_DEVICE_ID_MEDIATEK_MT7668),
+ 	 .driver_data = (kernel_ulong_t)&mt7668_data },
+ 	{ }	/* Terminating entry */
  };
 diff --git a/include/linux/mmc/sdio_ids.h b/include/linux/mmc/sdio_ids.h
-index 7e992a0e6cc0..90361ea7f5ed 100644
+index 1237e1048d06..c9aca57d4dea 100644
 --- a/include/linux/mmc/sdio_ids.h
 +++ b/include/linux/mmc/sdio_ids.h
-@@ -58,8 +58,18 @@
- #define SDIO_DEVICE_ID_MARVELL_LIBERTAS		0x9103
- #define SDIO_DEVICE_ID_MARVELL_8688_WLAN	0x9104
- #define SDIO_DEVICE_ID_MARVELL_8688_BT		0x9105
-+#define SDIO_DEVICE_ID_MARVELL_8786_WLAN	0x9116
-+#define SDIO_DEVICE_ID_MARVELL_8787_WLAN	0x9119
- #define SDIO_DEVICE_ID_MARVELL_8797_F0		0x9128
-+#define SDIO_DEVICE_ID_MARVELL_8797_WLAN	0x9129
-+#define SDIO_DEVICE_ID_MARVELL_8897_WLAN	0x912d
- #define SDIO_DEVICE_ID_MARVELL_8887_F0		0x9134
-+#define SDIO_DEVICE_ID_MARVELL_8887_WLAN	0x9135
-+#define SDIO_DEVICE_ID_MARVELL_8801_WLAN	0x9139
-+#define SDIO_DEVICE_ID_MARVELL_8997_F0		0x9140
-+#define SDIO_DEVICE_ID_MARVELL_8997_WLAN	0x9141
-+#define SDIO_DEVICE_ID_MARVELL_8977_WLAN	0x9145
-+#define SDIO_DEVICE_ID_MARVELL_8987_WLAN	0x9149
+@@ -80,6 +80,8 @@
+ #define SDIO_DEVICE_ID_MARVELL_8987_BT		0x914a
  
  #define SDIO_VENDOR_ID_MEDIATEK			0x037a
++#define SDIO_DEVICE_ID_MEDIATEK_MT7663		0x7663
++#define SDIO_DEVICE_ID_MEDIATEK_MT7668		0x7668
  
+ #define SDIO_VENDOR_ID_SIANO			0x039a
+ #define SDIO_DEVICE_ID_SIANO_NOVA_B0		0x0201
 -- 
 2.20.1
 
