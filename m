@@ -2,320 +2,172 @@ Return-Path: <SRS0=5Rdv=7G=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ABD64C433DF
-	for <linux-wireless@archiver.kernel.org>; Sun, 24 May 2020 13:44:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD3ECC433E0
+	for <linux-wireless@archiver.kernel.org>; Sun, 24 May 2020 14:58:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7B5FA20878
-	for <linux-wireless@archiver.kernel.org>; Sun, 24 May 2020 13:44:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1590327899;
-	bh=CbjM5fDJLpcpo2Lq2tfp74GGL0eo2iAGO4J32/ZY9qA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=uAtmIxBxalnQyyjPAwxTbe8WTjE1Jm78XRFFVW9kMp/+kW8+rN+L9VhB2m6AsUy7b
-	 SRRN83RXzdJ8w7Dsh4YoXrtEo4zQ7VL/d1rzE+XcYiVK6O29D3Ikmg1hitY/X560v6
-	 Hlt02li7uSlJW6MsY0r2Jqp0IP5V4mSuWSbzo+AI=
+	by mail.kernel.org (Postfix) with ESMTP id 847392075F
+	for <linux-wireless@archiver.kernel.org>; Sun, 24 May 2020 14:58:41 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="d1dfEclt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728978AbgEXNo6 (ORCPT
+        id S1729692AbgEXO6k (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 24 May 2020 09:44:58 -0400
-Received: from mail.kernel.org ([198.145.29.99]:38250 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725873AbgEXNo6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 24 May 2020 09:44:58 -0400
-Received: from localhost (unknown [151.48.155.206])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 47CC6206D5;
-        Sun, 24 May 2020 13:44:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1590327897;
-        bh=CbjM5fDJLpcpo2Lq2tfp74GGL0eo2iAGO4J32/ZY9qA=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=YRK24cjV2Bi+zPkhLpHhElavGVk+exgw2aUtji31OnAn6K+WBcMTKf7h52Fz3GoaI
-         xwPvWv79zsnRZEzb2A+2iFX8SZx7uKLYpT+C2nzzGRXGT7Ihr0cDB48AwECd00azvf
-         EIAHGnv3jZDWsqaQ7sLhWVkTqiAkHm4Oq5XtCkn8=
-Date:   Sun, 24 May 2020 15:45:00 +0200
-From:   Lorenzo Bianconi <lorenzo@kernel.org>
-To:     Felix Fietkau <nbd@nbd.name>
-Cc:     linux-wireless@vger.kernel.org, Sean Wang <sean.wang@mediatek.com>
-Subject: Re: [PATCH] mt76: only iterate over initialized rx queues
-Message-ID: <20200524134500.GA33803@localhost.localdomain>
-References: <20200524130746.98760-1-nbd@nbd.name>
+        Sun, 24 May 2020 10:58:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52446 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727985AbgEXO6k (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 24 May 2020 10:58:40 -0400
+Received: from mail-ed1-x542.google.com (mail-ed1-x542.google.com [IPv6:2a00:1450:4864:20::542])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E2BBFC061A0E
+        for <linux-wireless@vger.kernel.org>; Sun, 24 May 2020 07:58:39 -0700 (PDT)
+Received: by mail-ed1-x542.google.com with SMTP id bs4so13085091edb.6
+        for <linux-wireless@vger.kernel.org>; Sun, 24 May 2020 07:58:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-transfer-encoding:content-language;
+        bh=Y/UicFuvpcY2Ut5syzHjsj0h3TJzVe57TFkzhdsHkh8=;
+        b=d1dfEcltunn5RhfAUawB/4JI0nu1dXp5dzXUBXmljwODwCmVZwtomDVl1Jr75YB1nZ
+         4D+gbqqpHycdhu1UPNO2n96mMxtlR1x7kLVwl6UsNrwCqtUzZPjljxxcexozUg8i84Un
+         EEFFeEHVtHMgrXVkYFemsaFax32a55JVVxN2sOE9X7SVX/evzbwvOrJ1r8Z7V0GhAZ3P
+         6lki8GnGpuiKJwK32AOW1C6BBfQ8WFPAdhiW1x8kcU0J7W/MBRMplBmsLKZf5FoGsAUR
+         BXxeEyxdE5e07e1omfsOlc3BehPL9S38IBkzHDFhZhtgBRi5Rm1TQxuecTD6uUOeKHgv
+         rucw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-transfer-encoding
+         :content-language;
+        bh=Y/UicFuvpcY2Ut5syzHjsj0h3TJzVe57TFkzhdsHkh8=;
+        b=t5DGmplBd9kuBEu3HygJscR3MipRLxQQl2MGz626+oAMXbG3gFjFXd7AxGe0/0HMSD
+         R0yr3dueDFyC5nbGIYIvkvx0refn35EbgL+5u5Sl93J794e2fdND/ase+4PM57Xu9HtQ
+         HbDITHFIaI3D5xk5GsM0Vml/jepmNlgMJjly7SR99YjFPi5kawMsKF+hQF9MB2s1zpgj
+         1W98W3zTFoBQB1vDMEEZUtlw7ZU4oxhIRNJAbnPnmdr2s0Bt0D7ng4WcPVO5MewJ1MWl
+         Ki5VRw6rtaCE8afVdyJ17343pUM+5bhBbVuPCF23gt8hWHTjNltfrZRYnnH31C7qQ1BP
+         ziPg==
+X-Gm-Message-State: AOAM531XdF0GGZn4/yfoWPLf02J/FC3LwQdhXQC4GJqFpbrBjcawandM
+        gi4R3bcJ6I0ocp4/UJGzgG8=
+X-Google-Smtp-Source: ABdhPJxV5I05JjLMCJZtvjje4+KjsrSq4ae7bPqBHrYqC8pPbSZwnbGSRM1TAjY5x8h2HL+Z79PF6A==
+X-Received: by 2002:a05:6402:2213:: with SMTP id cq19mr11355107edb.337.1590332318660;
+        Sun, 24 May 2020 07:58:38 -0700 (PDT)
+Received: from ?IPv6:2001:16b8:fd4:db00:2db8:f001:5e7a:1a? (200116b80fd4db002db8f0015e7a001a.dip.versatel-1u1.de. [2001:16b8:fd4:db00:2db8:f001:5e7a:1a])
+        by smtp.gmail.com with ESMTPSA id d11sm1851565edp.26.2020.05.24.07.58.37
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 24 May 2020 07:58:38 -0700 (PDT)
+Subject: Re: [PATCH v2] mt76: mt7615: add support for MT7611N
+To:     DENG Qingfang <dqfext@gmail.com>, linux-wireless@vger.kernel.org
+Cc:     nbd@nbd.name, kvalo@codeaurora.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org, lorenzo.bianconi83@gmail.com,
+        matthias.bgg@gmail.com, royluo@google.com, ryder.lee@mediatek.com
+References: <20200524034110.22576-1-dqfext@gmail.com>
+From:   Alexander Schlichte <schlichte.alexander@gmail.com>
+Message-ID: <6a490b59-df37-b84b-9455-b9c2873b1f0f@gmail.com>
+Date:   Sun, 24 May 2020 16:58:37 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.8.1
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="Q68bSM7Ycu6FN28Q"
-Content-Disposition: inline
-In-Reply-To: <20200524130746.98760-1-nbd@nbd.name>
+In-Reply-To: <20200524034110.22576-1-dqfext@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: de-DE
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+Just some random drive-by nitpicks, so take it with a grain of salt.
 
---Q68bSM7Ycu6FN28Q
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-> Fixes the following reported crash:
->=20
-> [    2.361127] BUG: spinlock bad magic on CPU#0, modprobe/456
-> [    2.361583]  lock: 0xffffa1287525b3b8, .magic: 00000000, .owner: <none=
->/-1, .owner_cpu: 0
-> [    2.362250] CPU: 0 PID: 456 Comm: modprobe Not tainted 4.14.177 #5
-> [    2.362751] Hardware name: HP Meep/Meep, BIOS Google_Meep.11297.75.0 0=
-6/17/2019
-> [    2.363343] Call Trace:
-> [    2.363552]  dump_stack+0x97/0xdb
-> [    2.363826]  ? spin_bug+0xa6/0xb3
-> [    2.364096]  do_raw_spin_lock+0x6a/0x9a
-> [    2.364417]  mt76_dma_rx_fill+0x44/0x1de [mt76]
-> [    2.364787]  ? mt76_dma_kick_queue+0x18/0x18 [mt76]
-> [    2.365184]  mt76_dma_init+0x53/0x85 [mt76]
-> [    2.365532]  mt7615_dma_init+0x3d7/0x546 [mt7615e]
-> [    2.365928]  mt7615_register_device+0xe6/0x1a0 [mt7615e]
-> [    2.366364]  mt7615_mmio_probe+0x14b/0x171 [mt7615e]
-> [    2.366771]  mt7615_pci_probe+0x118/0x13b [mt7615e]
-> [    2.367169]  pci_device_probe+0xaf/0x13d
-> [    2.367491]  driver_probe_device+0x284/0x2ca
-> [    2.367840]  __driver_attach+0x7a/0x9e
-> [    2.368146]  ? driver_attach+0x1f/0x1f
-> [    2.368451]  bus_for_each_dev+0xa0/0xdb
-> [    2.368765]  bus_add_driver+0x132/0x204
-> [    2.369078]  driver_register+0x8e/0xcd
-> [    2.369384]  do_one_initcall+0x160/0x257
-> [    2.369706]  ? 0xffffffffc0240000
-> [    2.369980]  do_init_module+0x60/0x1bb
-> [    2.370286]  load_module+0x18c2/0x1a2b
-> [    2.370596]  ? kernel_read_file+0x141/0x1b9
-> [    2.370937]  ? kernel_read_file_from_fd+0x46/0x71
-> [    2.371320]  SyS_finit_module+0xcc/0xf0
-> [    2.371636]  do_syscall_64+0x6b/0xf7
-> [    2.371930]  entry_SYSCALL_64_after_hwframe+0x3d/0xa2
-> [    2.372344] RIP: 0033:0x7da218ae4199
-> [    2.372637] RSP: 002b:00007fffd0608398 EFLAGS: 00000246 ORIG_RAX: 0000=
-000000000139
-> [    2.373252] RAX: ffffffffffffffda RBX: 00005a705449df90 RCX: 00007da21=
-8ae4199
-> [    2.373833] RDX: 0000000000000000 RSI: 00005a7052e73bd8 RDI: 000000000=
-0000006
-> [    2.374411] RBP: 00007fffd06083e0 R08: 0000000000000000 R09: 00005a705=
-449d540
-> [    2.374989] R10: 0000000000000006 R11: 0000000000000246 R12: 000000000=
-0000000
-> [    2.375569] R13: 00005a705449def0 R14: 00005a7052e73bd8 R15: 000000000=
-0000000
->=20
-> Reported-by: Sean Wang <sean.wang@mediatek.com>
-> Fixes: d3377b78cec6 ("mt76: add HE phy modes and hardware queue")
-> Signed-off-by: Felix Fietkau <nbd@nbd.name>
-
-Just a couple of nitpicks inline, for the rest:
-
-Acked-by: Lorenzo Bianconi <lorenzo@kernel.org>
-
+On 24.05.20 05:41, DENG Qingfang wrote:
+> MT7611N is basically the same as MT7615N, except it only supports 5GHz
+> It is used by some TP-Link and Mercury wireless routers
+>
+> Signed-off-by: DENG Qingfang <dqfext@gmail.com>
 > ---
->  drivers/net/wireless/mediatek/mt76/debugfs.c      | 2 +-
->  drivers/net/wireless/mediatek/mt76/dma.c          | 4 ++--
->  drivers/net/wireless/mediatek/mt76/mt76.h         | 4 ++++
->  drivers/net/wireless/mediatek/mt76/mt7603/mac.c   | 3 ++-
->  drivers/net/wireless/mediatek/mt76/mt7615/mac.c   | 3 ++-
->  drivers/net/wireless/mediatek/mt76/mt7615/pci.c   | 8 +++++---
->  drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c | 3 ++-
->  drivers/net/wireless/mediatek/mt76/mt7915/mac.c   | 3 ++-
->  8 files changed, 20 insertions(+), 10 deletions(-)
->=20
-> diff --git a/drivers/net/wireless/mediatek/mt76/debugfs.c b/drivers/net/w=
-ireless/mediatek/mt76/debugfs.c
-> index 0278e1b44576..3a5de1d1b121 100644
-> --- a/drivers/net/wireless/mediatek/mt76/debugfs.c
-> +++ b/drivers/net/wireless/mediatek/mt76/debugfs.c
-> @@ -51,7 +51,7 @@ static int mt76_rx_queues_read(struct seq_file *s, void=
- *data)
->  	struct mt76_dev *dev =3D dev_get_drvdata(s->private);
->  	int i, queued;
-> =20
-> -	for (i =3D 0; i < ARRAY_SIZE(dev->q_rx); i++) {
-> +	mt76_for_each_q_rx(dev, i) {
->  		struct mt76_queue *q =3D &dev->q_rx[i];
-> =20
->  		if (!q->ndesc)
-
-doing so you can drop this check here
-
-> diff --git a/drivers/net/wireless/mediatek/mt76/dma.c b/drivers/net/wirel=
-ess/mediatek/mt76/dma.c
-> index 75e659774e07..f4d6074fe32a 100644
-> --- a/drivers/net/wireless/mediatek/mt76/dma.c
-> +++ b/drivers/net/wireless/mediatek/mt76/dma.c
-> @@ -576,7 +576,7 @@ mt76_dma_init(struct mt76_dev *dev)
-> =20
->  	init_dummy_netdev(&dev->napi_dev);
-> =20
-> -	for (i =3D 0; i < ARRAY_SIZE(dev->q_rx); i++) {
-> +	mt76_for_each_q_rx(dev, i) {
->  		netif_napi_add(&dev->napi_dev, &dev->napi[i], mt76_dma_rx_poll,
->  			       64);
->  		mt76_dma_rx_fill(dev, &dev->q_rx[i]);
-> @@ -610,7 +610,7 @@ void mt76_dma_cleanup(struct mt76_dev *dev)
->  	for (i =3D 0; i < ARRAY_SIZE(dev->q_tx); i++)
->  		mt76_dma_tx_cleanup(dev, i, true);
-> =20
-> -	for (i =3D 0; i < ARRAY_SIZE(dev->q_rx); i++) {
-> +	mt76_for_each_q_rx(dev, i) {
->  		netif_napi_del(&dev->napi[i]);
->  		mt76_dma_rx_cleanup(dev, &dev->q_rx[i]);
->  	}
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wire=
-less/mediatek/mt76/mt76.h
-> index afb1ccf61b74..78378dcf430a 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt76.h
-> +++ b/drivers/net/wireless/mediatek/mt76/mt76.h
-> @@ -671,6 +671,10 @@ static inline u16 mt76_rev(struct mt76_dev *dev)
->  #define mt76_queue_tx_cleanup(dev, ...)	(dev)->mt76.queue_ops->tx_cleanu=
-p(&((dev)->mt76), __VA_ARGS__)
->  #define mt76_queue_kick(dev, ...)	(dev)->mt76.queue_ops->kick(&((dev)->m=
-t76), __VA_ARGS__)
-> =20
-> +#define mt76_for_each_q_rx(dev, i)	\
-> +	for (i =3D 0; i < ARRAY_SIZE((dev)->q_rx) && \
-> +		    (dev)->q_rx[i].desc; i++)
+> v1 -> v2:
+> make is_mt7615(&dev->mt76) return true for mt7611
+>
+>   drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c | 7 +++++++
+>   drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h | 7 ++++++-
+>   drivers/net/wireless/mediatek/mt76/mt7615/pci.c    | 1 +
+>   3 files changed, 14 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c b/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
+> index 6a5ae047c63b..edac37e7847b 100644
+> --- a/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
+> +++ b/drivers/net/wireless/mediatek/mt76/mt7615/eeprom.c
+> @@ -111,6 +111,12 @@ mt7615_eeprom_parse_hw_band_cap(struct mt7615_dev *dev)
+>   		return;
+>   	}
+>   
+> +	if (is_mt7611(&dev->mt76)) {
+> +		/* 5GHz only */
+> +		dev->mt76.cap.has_5ghz = true;
+> +		return;
+> +	}
 > +
->  struct mt76_dev *mt76_alloc_device(struct device *pdev, unsigned int siz=
-e,
->  				   const struct ieee80211_ops *ops,
->  				   const struct mt76_driver_ops *drv_ops);
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt7603/mac.c b/drivers/ne=
-t/wireless/mediatek/mt76/mt7603/mac.c
-> index 0f205ffe4905..8060c1514396 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
-> +++ b/drivers/net/wireless/mediatek/mt76/mt7603/mac.c
-> @@ -1438,8 +1438,9 @@ static void mt7603_mac_watchdog_reset(struct mt7603=
-_dev *dev)
->  	for (i =3D 0; i < __MT_TXQ_MAX; i++)
->  		mt76_queue_tx_cleanup(dev, i, true);
-> =20
-> -	for (i =3D 0; i < ARRAY_SIZE(dev->mt76.q_rx); i++)
-> +	mt76_for_each_q_rx(&dev->mt76, i) {
->  		mt76_queue_rx_reset(dev, i);
-> +	}
+>   	val = FIELD_GET(MT_EE_NIC_WIFI_CONF_BAND_SEL,
+>   			eeprom[MT_EE_WIFI_CONF]);
+>   	switch (val) {
+> @@ -310,6 +316,7 @@ static void mt7615_cal_free_data(struct mt7615_dev *dev)
+>   		mt7622_apply_cal_free_data(dev);
+>   		break;
+>   	case 0x7615:
+> +	case 0x7611:
+>   		mt7615_apply_cal_free_data(dev);
+>   		break;
+>   	}
 
-you can drop braces here
+Maybe sort this alphabetically?
+> diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
+> index ebdfca64b079..4ce8b379a147 100644
+> --- a/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
+> +++ b/drivers/net/wireless/mediatek/mt76/mt7615/mt7615.h
+> @@ -411,7 +411,7 @@ static inline bool is_mt7622(struct mt76_dev *dev)
+>   
+>   static inline bool is_mt7615(struct mt76_dev *dev)
+>   {
+> -	return mt76_chip(dev) == 0x7615;
+> +	return mt76_chip(dev) == 0x7615 || mt76_chip(dev) == 0x7611;
+>   }
 
-> =20
->  	mt7603_dma_sched_reset(dev);
-> =20
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c b/drivers/ne=
-t/wireless/mediatek/mt76/mt7615/mac.c
-> index f1009c92ec1b..9f1c6ca7a665 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-> +++ b/drivers/net/wireless/mediatek/mt76/mt7615/mac.c
-> @@ -1820,8 +1820,9 @@ void mt7615_dma_reset(struct mt7615_dev *dev)
->  	for (i =3D 0; i < __MT_TXQ_MAX; i++)
->  		mt76_queue_tx_cleanup(dev, i, true);
-> =20
-> -	for (i =3D 0; i < ARRAY_SIZE(dev->mt76.q_rx); i++)
-> +	mt76_for_each_q_rx(&dev->mt76, i) {
->  		mt76_queue_rx_reset(dev, i);
-> +	}
+Now the function name is a bit confusing because you can't use it to
+differentiate between 7611 and 7615. Would it be an option to give it a more
+fitting name? Maybe `is_mt761x` or `is_mt7611_or_7615`?
 
-you can drop braces here
-> =20
->  	mt76_set(dev, MT_WPDMA_GLO_CFG,
->  		 MT_WPDMA_GLO_CFG_RX_DMA_EN | MT_WPDMA_GLO_CFG_TX_DMA_EN |
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/pci.c b/drivers/ne=
-t/wireless/mediatek/mt76/mt7615/pci.c
-> index b09d08d0dac9..ba12f199bce0 100644
+Apart from that you might want to call `is_mt7611` here. That would avoid
+duplicating the check and order these is_* functions alphabetically.
+>   
+>   static inline bool is_mt7663(struct mt76_dev *dev)
+> @@ -419,6 +419,11 @@ static inline bool is_mt7663(struct mt76_dev *dev)
+>   	return mt76_chip(dev) == 0x7663;
+>   }
+>   
+> +static inline bool is_mt7611(struct mt76_dev *dev)
+> +{
+> +	return mt76_chip(dev) == 0x7611;
+> +}
+> +
+>   static inline void mt7615_irq_enable(struct mt7615_dev *dev, u32 mask)
+>   {
+>   	mt76_set_irq_mask(&dev->mt76, 0, 0, mask);
+> diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/pci.c b/drivers/net/wireless/mediatek/mt76/mt7615/pci.c
+> index 88ff14564521..b09d08d0dac9 100644
 > --- a/drivers/net/wireless/mediatek/mt76/mt7615/pci.c
 > +++ b/drivers/net/wireless/mediatek/mt76/mt7615/pci.c
-> @@ -86,8 +86,9 @@ static int mt7615_pci_suspend(struct pci_dev *pdev, pm_=
-message_t state)
->  	napi_disable(&mdev->tx_napi);
->  	tasklet_kill(&mdev->tx_tasklet);
-> =20
-> -	for (i =3D 0; i < ARRAY_SIZE(mdev->q_rx); i++)
-> +	mt76_for_each_q_rx(mdev, i) {
->  		napi_disable(&mdev->napi[i]);
-> +	}
+> @@ -14,6 +14,7 @@
+>   static const struct pci_device_id mt7615_pci_device_table[] = {
+>   	{ PCI_DEVICE(0x14c3, 0x7615) },
+>   	{ PCI_DEVICE(0x14c3, 0x7663) },
+> +	{ PCI_DEVICE(0x14c3, 0x7611) },
+>   	{ },
+>   };
 
-same here
-
->  	tasklet_kill(&dev->irq_tasklet);
-> =20
->  	mt7615_dma_reset(dev);
-> @@ -120,8 +121,9 @@ static int mt7615_pci_suspend(struct pci_dev *pdev, p=
-m_message_t state)
->  	return 0;
-> =20
->  restore:
-> -	for (i =3D 0; i < ARRAY_SIZE(mdev->q_rx); i++)
-> +	mt76_for_each_q_rx(mdev, i) {
->  		napi_enable(&mdev->napi[i]);
-> +	}
->  	napi_enable(&mdev->tx_napi);
->  	if (hif_suspend)
->  		mt7615_mcu_set_hif_suspend(dev, false);
-> @@ -156,7 +158,7 @@ static int mt7615_pci_resume(struct pci_dev *pdev)
->  	if (pdma_reset)
->  		dev_err(mdev->dev, "PDMA engine must be reinitialized\n");
-> =20
-> -	for (i =3D 0; i < ARRAY_SIZE(mdev->q_rx); i++) {
-> +	mt76_for_each_q_rx(mdev, i) {
->  		napi_enable(&mdev->napi[i]);
->  		napi_schedule(&mdev->napi[i]);
->  	}
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c b/drivers/=
-net/wireless/mediatek/mt76/mt76x02_mmio.c
-> index 18adedfbbb8e..cbbe986655fe 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
-> +++ b/drivers/net/wireless/mediatek/mt76/mt76x02_mmio.c
-> @@ -489,8 +489,9 @@ static void mt76x02_watchdog_reset(struct mt76x02_dev=
- *dev)
->  	for (i =3D 0; i < __MT_TXQ_MAX; i++)
->  		mt76_queue_tx_cleanup(dev, i, true);
-> =20
-> -	for (i =3D 0; i < ARRAY_SIZE(dev->mt76.q_rx); i++)
-> +	mt76_for_each_q_rx(&dev->mt76, i) {
->  		mt76_queue_rx_reset(dev, i);
-> +	}
-> =20
->  	mt76x02_mac_start(dev);
-> =20
-> diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c b/drivers/ne=
-t/wireless/mediatek/mt76/mt7915/mac.c
-> index ab20dfde94af..a264e304a3df 100644
-> --- a/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-> +++ b/drivers/net/wireless/mediatek/mt76/mt7915/mac.c
-> @@ -1146,8 +1146,9 @@ mt7915_dma_reset(struct mt7915_dev *dev)
->  	for (i =3D 0; i < __MT_TXQ_MAX; i++)
->  		mt76_queue_tx_cleanup(dev, i, true);
-> =20
-> -	for (i =3D 0; i < ARRAY_SIZE(dev->mt76.q_rx); i++)
-> +	mt76_for_each_q_rx(&dev->mt76, i) {
->  		mt76_queue_rx_reset(dev, i);
-> +	}
-
-same here
-> =20
->  	/* re-init prefetch settings after reset */
->  	mt7915_dma_prefetch(dev);
-> --=20
-> 2.24.0
->=20
-
---Q68bSM7Ycu6FN28Q
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYIAB0WIQTquNwa3Txd3rGGn7Y6cBh0uS2trAUCXsp6WQAKCRA6cBh0uS2t
-rDLfAQCU5f4kFLhZfwefvy6H1rJyH+2IAmyft0U96TfZcHEspQD/c205pjuHbUbf
-5fMfwj1EBeGVI6q6SIU8Y3nUbK0begs=
-=9EXn
------END PGP SIGNATURE-----
-
---Q68bSM7Ycu6FN28Q--
+Maybe keep this sorted alphabetically?
