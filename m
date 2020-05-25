@@ -2,71 +2,109 @@ Return-Path: <SRS0=BuOi=7H=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AFB7FC433E0
-	for <linux-wireless@archiver.kernel.org>; Mon, 25 May 2020 15:03:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08F15C433DF
+	for <linux-wireless@archiver.kernel.org>; Mon, 25 May 2020 16:05:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 356A42078B
-	for <linux-wireless@archiver.kernel.org>; Mon, 25 May 2020 15:03:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D13D02071A
+	for <linux-wireless@archiver.kernel.org>; Mon, 25 May 2020 16:05:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=wp.pl header.i=@wp.pl header.b="wl6e2hHC"
+	dkim=pass (1024-bit key) header.d=narfation.org header.i=@narfation.org header.b="1TXsAliu"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2403996AbgEYPDg (ORCPT
+        id S2391164AbgEYQFJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 25 May 2020 11:03:36 -0400
-Received: from mx4.wp.pl ([212.77.101.11]:7072 "EHLO mx4.wp.pl"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2390921AbgEYPDg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 May 2020 11:03:36 -0400
-Received: (wp-smtpd smtp.wp.pl 483 invoked from network); 25 May 2020 17:03:33 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wp.pl; s=1024a;
-          t=1590419013; bh=CDvSQ6BrcCrB4ZGfVwXXD8+My2voHzXif8dwKd0wEXA=;
-          h=From:To:Cc:Subject;
-          b=wl6e2hHCfCFB+wbg9V4ImdC8huMHMl4gOuvBqDOVHCa6P3U0LSwyv6gjfjgapSwlQ
-           UxmVckpjt609+URF/00ZeU1KhDjb6tR+CrAAuvCgLH/bn8Xu//AeDFS1vNKdxImCYv
-           RE/KeU41qxOnyl/O1zcHLjlWiYY/NJjXch1tPhr0=
-Received: from unknown (HELO localhost) (stf_xl@wp.pl@[46.39.164.203])
-          (envelope-sender <stf_xl@wp.pl>)
-          by smtp.wp.pl (WP-SMTPD) with ECDHE-RSA-AES256-GCM-SHA384 encrypted SMTP
-          for <rsalvaterra@gmail.com>; 25 May 2020 17:03:33 +0200
-Date:   Mon, 25 May 2020 17:03:17 +0200
-From:   Stanislaw Gruszka <stf_xl@wp.pl>
-To:     Rui Salvaterra <rsalvaterra@gmail.com>
-Cc:     johannes@sipsolutions.net, julian.calaby@gmail.com,
-        kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+        Mon, 25 May 2020 12:05:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33234 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388432AbgEYQFJ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 25 May 2020 12:05:09 -0400
+Received: from dvalin.narfation.org (dvalin.narfation.org [IPv6:2a00:17d8:100::8b1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7DDC4C061A0E
+        for <linux-wireless@vger.kernel.org>; Mon, 25 May 2020 09:05:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=narfation.org;
+        s=20121; t=1590422704;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=WSknnTEelKDGTuse5nRhrnX6VQ35I6QBIT1ENiOtNh8=;
+        b=1TXsAliuxu9Aka01DX7EZlS6dgwHJPJqkUr6tn2n4+wO7/kS71fP+jOkUiuyQvVuv28aXT
+        7CVABCeM92HCHZwvWJmV+55CaUBAVzBt1rrLdhNn7PwxOYY5yJtm0EOfMqK8WwXrwFMcoV
+        nKM61v/6SfjaM3xljjE9v18fGnF5sik=
+From:   Sven Eckelmann <sven@narfation.org>
+To:     Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Cc:     ath10k@lists.infradead.org, John Crispin <john@phrozen.org>,
+        Ansuel Smith <ansuelsmth@gmail.com>,
+        openwrt-devel@lists.openwrt.org, Kalle Valo <kvalo@codeaurora.org>,
+        Sebastian Gottschall <s.gottschall@newmedia-net.de>,
         linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] rt2800: enable MFP support unconditionally
-Message-ID: <20200525150317.GA928949@wp.pl>
-References: <20200525134906.1672-1-rsalvaterra@gmail.com>
+Subject: Re: [PATCH v13] ath10k: add LED and GPIO controlling support for various chipsets
+Date:   Mon, 25 May 2020 18:04:49 +0200
+Message-ID: <3445075.COMLMNsY4U@bentobox>
+In-Reply-To: <3608947.bSrYYtX6KI@bentobox>
+References: <1523027875-5143-1-git-send-email-kvalo@codeaurora.org> <b23e65cf-4be7-72db-7955-32eae196953e@dd-wrt.com> <3608947.bSrYYtX6KI@bentobox>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200525134906.1672-1-rsalvaterra@gmail.com>
-X-WP-MailID: b382c167147dcde73ed55a0a35f4e7b7
-X-WP-AV: skaner antywirusowy Poczty Wirtualnej Polski
-X-WP-SPAM: NO 0000000 [0RNE]                               
+Content-Type: multipart/signed; boundary="nextPart3096809.FUlXiXFBBX"; micalg="pgp-sha512"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon, May 25, 2020 at 02:49:07PM +0100, Rui Salvaterra wrote:
-> v2: fixed null pointer.
+--nextPart3096809.FUlXiXFBBX
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 
-This should go after --- , but not need to resend patch, Kalle kindly
-fixes that for us in the patchwork.
+On Monday, 25 May 2020 11:22:13 CEST Sven Eckelmann wrote:
+[...]
+> And it still can with this OpenWrt version. But it doesn't seem to happen with 
+> the most recent OpenWrt reboot-13353-gb1604b744b. But there are nearly 4000 
+> commits inbetween. So no idea what changed (just a timing thing or an actual 
+> fix - no idea).
 
-> This gives us WPA3 support out of the box without having to manually disable
-> hardware crypto. The driver will fall back to software crypto if the connection
-> requires management frame protection.
-> 
-> Suggested-by: Stanislaw Gruszka <stf_xl@wp.pl>
-> Signed-off-by: Rui Salvaterra <rsalvaterra@gmail.com>
+Seems like there is a fix which solves some lost interrupt problems for 
+IPQ40xx. Without this change, I see the reported problem. And with the patch, 
+it is gone. Or in commits:
 
-Acked-by: Stanislaw Gruszka <stf_xl@wp.pl>
+* creates timeout problems: 46b949a067e5 ("ipq40xx: enlarge PCIe BAR size")
+* works fine: 18e942b6c4e5 ("ipq40xx: fix pcie msi IRQ trigger level")
 
-Thanks!
+If you look in the git logs [1], you can see that the working commit is a 
+child of the broken one. So at least from my point of view, my initial report 
+is no blocker anymore for Sebastian's patch (or Kalle's version of it).
+
+Btw. OpenWrt is automatically assigning a trigger (phy*tpt) for these LEDs.
+
+Kind regards,
+	Sven
+
+[1] https://git.openwrt.org/?p=openwrt/openwrt.git;a=log;h=18e942b6c4e51a5a717a121697a63f3f98d93b19
+--nextPart3096809.FUlXiXFBBX
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEF10rh2Elc9zjMuACXYcKB8Eme0YFAl7L7KEACgkQXYcKB8Em
+e0YDExAAvLYXS4zpbkE17T7xWf7LcteEbclolX0FYft3zOSe7xE0wjqT2N9n6yhk
+F9WF/jJdWnGgxDHOqGUSbK3OYBGTzO5f4ZTRwIa1ag0gQtdqwshPPrkjU3L/0+DN
+kCyNZ5qfvgAlwzEo8sfvNiorKi6GexqEDgy5AUDZYVmSIJ3kFtiM4Llovn/ouPj9
+AEg/JwopaB/ZkhVTyzTtiRz4dJbMSEcWPn6f47SK2NMY4+GJLkg4bUJdSZ1NVmVT
+W0VzRUdX3zYIx+HAdmtoTj2OO4PnWcdi4m94eRVnvjgOwaa2DTPx/Y7wH45zJGnP
+IQdXGs8GuDHTKoJWtMGGPqmOt4mqc4amdOZb9Dq63c4IMKDrwwwSsGi8HaQQyjJq
+ChI2EmDNuKIZ8mIwLxpTv3hAZaol/iCkvVPaLBVJc8wH9rdHO/O1G5CimoZqGu9d
+3umD+laVmJvzZe1FzKLRGfa57w2W9BSnqq3WQM7/UQC03NZeQjuPEV7mY0VxyEQi
+GNEsm3zU5IWwsQxSkNbSZC+KypHYhZL/sm/ES7ubhZkkMlJeFnOnFxjgavr1lNmq
+GCUOFSeiklgfV3Sf2aPwFdxDRusACEaaVujFu4h6qzI+U5Ob66vsam0q+RW1XIpm
+t82QMQhLTDK7zfZr9PQvFaFf4B/9vRpg3jxWmRPjDfwTb7b3Cwk=
+=Ahpg
+-----END PGP SIGNATURE-----
+
+--nextPart3096809.FUlXiXFBBX--
+
+
+
