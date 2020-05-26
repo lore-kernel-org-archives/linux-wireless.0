@@ -7,45 +7,45 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D83BC433DF
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 May 2020 22:47:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B19A5C433E0
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 May 2020 22:47:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 19AAC206D5
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 May 2020 22:47:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8320C208FE
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 May 2020 22:47:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="A+teGDxh"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="bmFLttKk"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2404007AbgEZWrl (ORCPT
+        id S2404350AbgEZWro (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 26 May 2020 18:47:41 -0400
+        Tue, 26 May 2020 18:47:44 -0400
 Received: from m43-7.mailgun.net ([69.72.43.7]:12951 "EHLO m43-7.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2389755AbgEZWrl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 26 May 2020 18:47:41 -0400
+        id S2389755AbgEZWrn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 26 May 2020 18:47:43 -0400
 X-Greylist: delayed 300 seconds by postgrey-1.27 at vger.kernel.org; Tue, 26 May 2020 18:47:38 EDT
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1590533260; h=Content-Transfer-Encoding: Content-Type:
- MIME-Version: References: In-Reply-To: Message-Id: Date: Subject: Cc:
- To: From: Sender; bh=0py7nHDtFNM37C9OrIO7osS5eI9QRO8TdNp8NZ95Azg=; b=A+teGDxhBfdXlFDEWTxoBeMmlZsOPfcDwR80tjKULMni2LD88wni2f62biHbt8xI48EG83dz
- 61zJ/Lstfngg4mVZs4ctqDhB+x1XlUZpAQ6h2HjuQe9WCl5NL0ZUUpYW6G8D+qyeEXpSZe9I
- OKdcgc+kudZVa4FaOasCAeLZSTg=
+ s=smtp; t=1590533262; h=References: In-Reply-To: Message-Id: Date:
+ Subject: Cc: To: From: Sender;
+ bh=563GHXLHda6MnKFoiMFF3khamuwSKJcgjBNlO2fPBCo=; b=bmFLttKknJNy9AfdVp6D6vlc9zh2s88HyA8uMg8gkDtgjfkBO7W7O6B4qpzjNUCF1ZCO2A4t
+ Q03cnZjmKybv4bKu6QCwu102VcvR7XVL9HCrshkDIwjriOG2l97RUPX4C7f7KBz5W3XPCdEs
+ 9NAEEzCe4/GXpe8iX+31LH2u70A=
 X-Mailgun-Sending-Ip: 69.72.43.7
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
  smtp-out-n01.prod.us-west-2.postgun.com with SMTP id
- 5ecd9b5f50867324818011cf (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 26 May 2020 22:42:39
+ 5ecd9b5e5086732481800f77 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 26 May 2020 22:42:38
  GMT
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 8BFC3C433CB; Tue, 26 May 2020 22:42:39 +0000 (UTC)
+        id 6B3B1C43387; Tue, 26 May 2020 22:42:38 +0000 (UTC)
 Received: from pradeepc2-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: pradeepc)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 4F7C0C43395;
-        Tue, 26 May 2020 22:42:38 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 4F7C0C43395
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 6277BC433CA;
+        Tue, 26 May 2020 22:42:37 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 6277BC433CA
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=pradeepc@codeaurora.org
 From:   Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
@@ -53,88 +53,270 @@ To:     Johannes Berg <johannes@sipsolutions.net>,
         ath11k@lists.infradead.org
 Cc:     linux-wireless@vger.kernel.org,
         Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-Subject: [PATCH v3 5/9] ath11k: extend peer_assoc_cmd for 6GHz band
-Date:   Tue, 26 May 2020 15:42:13 -0700
-Message-Id: <20200526224217.11119-6-pradeepc@codeaurora.org>
+Subject: [PATCH v3 3/9] ath11k: add support for 6GHz radio in driver
+Date:   Tue, 26 May 2020 15:42:11 -0700
+Message-Id: <20200526224217.11119-4-pradeepc@codeaurora.org>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200526224217.11119-1-pradeepc@codeaurora.org>
 References: <20200526224217.11119-1-pradeepc@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This adds support required for configuring min_data_rate of 6GHz oper IE
-and peer_he_caps_6ghz in peer assoc command. The Minimum Rate field
-indicates the minimum rate, in units of 1 Mb/s, that the non-AP STA is
-allowed to use for sending PPDUs as defined in IEEE P802.11ax™/D6.0.
+This patch adds 6GHz band support and mac80211 registration for
+the 6G phy radio.
 
 Signed-off-by: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath11k/wmi.c | 2 ++
- drivers/net/wireless/ath/ath11k/wmi.h | 5 +++++
- 2 files changed, 7 insertions(+)
+v3:
+ - update 6G min and max frequencies as defined in IEEE P802.11ax/D6.1
+v2:
+ - fixed phymode to be set in 6ghz band
 
+ drivers/net/wireless/ath/ath11k/core.h |   6 +-
+ drivers/net/wireless/ath/ath11k/mac.c  | 103 +++++++++++++++++++++----
+ drivers/net/wireless/ath/ath11k/wmi.c  |  16 +++-
+ 3 files changed, 105 insertions(+), 20 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath11k/core.h b/drivers/net/wireless/ath/ath11k/core.h
+index 7e51445cfa20..602a7fd765df 100644
+--- a/drivers/net/wireless/ath/ath11k/core.h
++++ b/drivers/net/wireless/ath/ath11k/core.h
+@@ -353,7 +353,10 @@ struct ath11k_sta {
+ #endif
+ };
+ 
+-#define ATH11K_NUM_CHANS 41
++#define ATH11K_MIN_5G_FREQ 4150
++#define ATH11K_MIN_6G_FREQ 5945
++#define ATH11K_MAX_6G_FREQ 7115
++#define ATH11K_NUM_CHANS 100
+ #define ATH11K_MAX_5G_CHAN 173
+ 
+ enum ath11k_state {
+@@ -431,6 +434,7 @@ struct ath11k {
+ 	u32 vht_cap_info;
+ 	struct ath11k_he ar_he;
+ 	enum ath11k_state state;
++	bool supports_6ghz;
+ 	struct {
+ 		struct completion started;
+ 		struct completion completed;
+diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+index 37a7df359f67..e2c8efc3ae79 100644
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -205,6 +205,17 @@ ath11k_phymodes[NUM_NL80211_BANDS][ATH11K_CHAN_WIDTH_NUM] = {
+ 			[NL80211_CHAN_WIDTH_160] = MODE_11AX_HE160,
+ 			[NL80211_CHAN_WIDTH_80P80] = MODE_11AX_HE80_80,
+ 	},
++	[NL80211_BAND_6GHZ] = {
++			[NL80211_CHAN_WIDTH_5] = MODE_UNKNOWN,
++			[NL80211_CHAN_WIDTH_10] = MODE_UNKNOWN,
++			[NL80211_CHAN_WIDTH_20_NOHT] = MODE_11AX_HE20,
++			[NL80211_CHAN_WIDTH_20] = MODE_11AX_HE20,
++			[NL80211_CHAN_WIDTH_40] = MODE_11AX_HE40,
++			[NL80211_CHAN_WIDTH_80] = MODE_11AX_HE80,
++			[NL80211_CHAN_WIDTH_160] = MODE_11AX_HE160,
++			[NL80211_CHAN_WIDTH_80P80] = MODE_11AX_HE80_80,
++	},
++
+ };
+ 
+ const struct htt_rx_ring_tlv_filter ath11k_mac_mon_status_filter_default = {
+@@ -1560,6 +1571,7 @@ static void ath11k_peer_assoc_h_phymode(struct ath11k *ar,
+ 		}
+ 		break;
+ 	case NL80211_BAND_5GHZ:
++	case NL80211_BAND_6GHZ:
+ 		/* Check HE first */
+ 		if (sta->he_cap.has_he) {
+ 			phymode = ath11k_mac_get_phymode_he(ar, sta);
+@@ -3492,6 +3504,18 @@ static void ath11k_mac_setup_ht_vht_cap(struct ath11k *ar,
+ 		band->vht_cap = ath11k_create_vht_cap(ar, rate_cap_tx_chainmask,
+ 						      rate_cap_rx_chainmask);
+ 	}
++
++	if (cap->supported_bands & WMI_HOST_WLAN_5G_CAP &&
++	    ar->supports_6ghz) {
++		band = &ar->mac.sbands[NL80211_BAND_6GHZ];
++		ht_cap = cap->band[NL80211_BAND_6GHZ].ht_cap_info;
++		if (ht_cap_info)
++			*ht_cap_info = ht_cap;
++		band->ht_cap = ath11k_create_ht_cap(ar, ht_cap,
++						    rate_cap_rx_chainmask);
++		band->vht_cap = ath11k_create_vht_cap(ar, rate_cap_tx_chainmask,
++						      rate_cap_rx_chainmask);
++	}
+ }
+ 
+ static int ath11k_check_chain_mask(struct ath11k *ar, u32 ant, bool is_tx_ant)
+@@ -3746,6 +3770,17 @@ static void ath11k_mac_setup_he_cap(struct ath11k *ar,
+ 		band->iftype_data = ar->mac.iftype[NL80211_BAND_5GHZ];
+ 		band->n_iftype_data = count;
+ 	}
++
++	if (cap->supported_bands & WMI_HOST_WLAN_5G_CAP &&
++	    ar->supports_6ghz) {
++		count = ath11k_mac_copy_he_cap(ar, cap,
++					       ar->mac.iftype[NL80211_BAND_6GHZ],
++					       NL80211_BAND_6GHZ);
++		band = &ar->mac.sbands[NL80211_BAND_6GHZ];
++		band->iftype_data = ar->mac.iftype[NL80211_BAND_6GHZ];
++		band->n_iftype_data = count;
++	}
++
+ }
+ 
+ static int __ath11k_set_antenna(struct ath11k *ar, u32 tx_ant, u32 rx_ant)
+@@ -4188,6 +4223,12 @@ ath11k_mac_setup_vdev_create_params(struct ath11k_vif *arvif,
+ 		params->chains[NL80211_BAND_5GHZ].tx = ar->num_tx_chains;
+ 		params->chains[NL80211_BAND_5GHZ].rx = ar->num_rx_chains;
+ 	}
++	if (pdev->cap.supported_bands & WMI_HOST_WLAN_5G_CAP &&
++	    ar->supports_6ghz) {
++		params->chains[NL80211_BAND_6GHZ].tx = ar->num_tx_chains;
++		params->chains[NL80211_BAND_6GHZ].rx = ar->num_rx_chains;
++	}
++
+ }
+ 
+ static u32
+@@ -5320,7 +5361,7 @@ ath11k_mac_get_single_legacy_rate(struct ath11k *ar,
+ 
+ 	rate_idx = ffs(mask->control[band].legacy) - 1;
+ 
+-	if (band == NL80211_BAND_5GHZ)
++	if (band == NL80211_BAND_5GHZ || band == NL80211_BAND_6GHZ)
+ 		rate_idx += ATH11K_MAC_FIRST_OFDM_RATE_IDX;
+ 
+ 	hw_rate = ath11k_legacy_rates[rate_idx].hw_value;
+@@ -5786,7 +5827,8 @@ static int ath11k_mac_setup_channels_rates(struct ath11k *ar,
+ 	void *channels;
+ 
+ 	BUILD_BUG_ON((ARRAY_SIZE(ath11k_2ghz_channels) +
+-		      ARRAY_SIZE(ath11k_5ghz_channels)) !=
++		      ARRAY_SIZE(ath11k_5ghz_channels) +
++		      ARRAY_SIZE(ath11k_6ghz_channels)) !=
+ 		     ATH11K_NUM_CHANS);
+ 
+ 	reg_cap = &ar->ab->hal_reg_cap[ar->pdev_idx];
+@@ -5799,6 +5841,7 @@ static int ath11k_mac_setup_channels_rates(struct ath11k *ar,
+ 			return -ENOMEM;
+ 
+ 		band = &ar->mac.sbands[NL80211_BAND_2GHZ];
++		band->band = NL80211_BAND_2GHZ;
+ 		band->n_channels = ARRAY_SIZE(ath11k_2ghz_channels);
+ 		band->channels = channels;
+ 		band->n_bitrates = ath11k_g_rates_size;
+@@ -5810,23 +5853,48 @@ static int ath11k_mac_setup_channels_rates(struct ath11k *ar,
+ 	}
+ 
+ 	if (supported_bands & WMI_HOST_WLAN_5G_CAP) {
+-		channels = kmemdup(ath11k_5ghz_channels,
+-				   sizeof(ath11k_5ghz_channels),
+-				   GFP_KERNEL);
+-		if (!channels) {
+-			kfree(ar->mac.sbands[NL80211_BAND_2GHZ].channels);
+-			return -ENOMEM;
++		if (reg_cap->high_5ghz_chan >= ATH11K_MAX_6G_FREQ) {
++			channels = kmemdup(ath11k_6ghz_channels,
++					   sizeof(ath11k_6ghz_channels), GFP_KERNEL);
++			if (!channels) {
++				kfree(ar->mac.sbands[NL80211_BAND_2GHZ].channels);
++				return -ENOMEM;
++			}
++
++			ar->supports_6ghz = true;
++			band = &ar->mac.sbands[NL80211_BAND_6GHZ];
++			band->band = NL80211_BAND_6GHZ;
++			band->n_channels = ARRAY_SIZE(ath11k_6ghz_channels);
++			band->channels = channels;
++			band->n_bitrates = ath11k_a_rates_size;
++			band->bitrates = ath11k_a_rates;
++			ar->hw->wiphy->bands[NL80211_BAND_6GHZ] = band;
++			ath11k_mac_update_ch_list(ar, band,
++						  reg_cap->low_5ghz_chan,
++						  reg_cap->high_5ghz_chan);
+ 		}
+ 
+-		band = &ar->mac.sbands[NL80211_BAND_5GHZ];
+-		band->n_channels = ARRAY_SIZE(ath11k_5ghz_channels);
+-		band->channels = channels;
+-		band->n_bitrates = ath11k_a_rates_size;
+-		band->bitrates = ath11k_a_rates;
+-		ar->hw->wiphy->bands[NL80211_BAND_5GHZ] = band;
+-		ath11k_mac_update_ch_list(ar, band,
+-					  reg_cap->low_5ghz_chan,
+-					  reg_cap->high_5ghz_chan);
++		if (reg_cap->low_5ghz_chan < ATH11K_MIN_6G_FREQ) {
++			channels = kmemdup(ath11k_5ghz_channels,
++					   sizeof(ath11k_5ghz_channels),
++					   GFP_KERNEL);
++			if (!channels) {
++				kfree(ar->mac.sbands[NL80211_BAND_2GHZ].channels);
++				kfree(ar->mac.sbands[NL80211_BAND_6GHZ].channels);
++				return -ENOMEM;
++			}
++
++			band = &ar->mac.sbands[NL80211_BAND_5GHZ];
++			band->band = NL80211_BAND_5GHZ;
++			band->n_channels = ARRAY_SIZE(ath11k_5ghz_channels);
++			band->channels = channels;
++			band->n_bitrates = ath11k_a_rates_size;
++			band->bitrates = ath11k_a_rates;
++			ar->hw->wiphy->bands[NL80211_BAND_5GHZ] = band;
++			ath11k_mac_update_ch_list(ar, band,
++						  reg_cap->low_5ghz_chan,
++						  reg_cap->high_5ghz_chan);
++		}
+ 	}
+ 
+ 	return 0;
+@@ -5880,6 +5948,7 @@ static void __ath11k_mac_unregister(struct ath11k *ar)
+ 
+ 	kfree(ar->mac.sbands[NL80211_BAND_2GHZ].channels);
+ 	kfree(ar->mac.sbands[NL80211_BAND_5GHZ].channels);
++	kfree(ar->mac.sbands[NL80211_BAND_6GHZ].channels);
+ 
+ 	SET_IEEE80211_DEV(ar->hw, NULL);
+ }
 diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
-index 500108fa59d9..a6bbb3badd1f 100644
+index c2a972377687..291fb274134f 100644
 --- a/drivers/net/wireless/ath/ath11k/wmi.c
 +++ b/drivers/net/wireless/ath/ath11k/wmi.c
-@@ -1789,6 +1789,7 @@ int ath11k_wmi_send_peer_assoc_cmd(struct ath11k *ar,
- 	cmd->peer_he_cap_info = param->peer_he_cap_macinfo[0];
- 	cmd->peer_he_cap_info_ext = param->peer_he_cap_macinfo[1];
- 	cmd->peer_he_cap_info_internal = param->peer_he_cap_macinfo_internal;
-+	cmd->peer_he_caps_6ghz = param->peer_he_caps_6ghz;
- 	cmd->peer_he_ops = param->peer_he_ops;
- 	memcpy(&cmd->peer_he_cap_phy, &param->peer_he_cap_phyinfo,
- 	       sizeof(param->peer_he_cap_phyinfo));
-@@ -1842,6 +1843,7 @@ int ath11k_wmi_send_peer_assoc_cmd(struct ath11k *ar,
+@@ -368,6 +368,17 @@ ath11k_pull_mac_phy_cap_svc_ready_ext(struct ath11k_pdev_wmi *wmi_handle,
+ 	memcpy(&cap_band->he_ppet, &mac_phy_caps->he_ppet5g,
+ 	       sizeof(struct ath11k_ppe_threshold));
  
- 	/* HE Rates */
- 	cmd->peer_he_mcs = param->peer_he_mcs_count;
-+	cmd->min_data_rate = param->min_data_rate;
++	cap_band = &pdev_cap->band[NL80211_BAND_6GHZ];
++	cap_band->max_bw_supported = mac_phy_caps->max_bw_supported_5g;
++	cap_band->ht_cap_info = mac_phy_caps->ht_cap_info_5g;
++	cap_band->he_cap_info[0] = mac_phy_caps->he_cap_info_5g;
++	cap_band->he_cap_info[1] = mac_phy_caps->he_cap_info_5g_ext;
++	cap_band->he_mcs = mac_phy_caps->he_supp_mcs_5g;
++	memcpy(cap_band->he_cap_phy_info, &mac_phy_caps->he_cap_phy_info_5g,
++	       sizeof(u32) * PSOC_HOST_MAX_PHY_SIZE);
++	memcpy(&cap_band->he_ppet, &mac_phy_caps->he_ppet5g,
++	       sizeof(struct ath11k_ppe_threshold));
++
+ 	return 0;
+ }
  
- 	ptr += sizeof(*mcs);
+@@ -5206,9 +5217,10 @@ static void ath11k_mgmt_rx_event(struct ath11k_base *ab, struct sk_buff *skb)
+ 		goto exit;
+ 	}
  
-diff --git a/drivers/net/wireless/ath/ath11k/wmi.h b/drivers/net/wireless/ath/ath11k/wmi.h
-index afa3c4cf90e9..fd82cff7537b 100644
---- a/drivers/net/wireless/ath/ath11k/wmi.h
-+++ b/drivers/net/wireless/ath/ath11k/wmi.h
-@@ -1011,6 +1011,7 @@ enum wmi_tlv_vdev_param {
- 	WMI_VDEV_PARAM_FILS_MAX_CHANNEL_GUARD_TIME,
- 	WMI_VDEV_PARAM_BA_MODE = 0x7e,
- 	WMI_VDEV_PARAM_SET_HE_SOUNDING_MODE = 0x87,
-+	WMI_VDEV_PARAM_6GHZ_PARAMS = 0x99,
- 	WMI_VDEV_PARAM_PROTOTYPE = 0x8000,
- 	WMI_VDEV_PARAM_BSS_COLOR,
- 	WMI_VDEV_PARAM_SET_HEMU_MODE,
-@@ -3444,6 +3445,7 @@ struct peer_assoc_params {
- 	u32 tx_max_rate;
- 	u32 tx_mcs_set;
- 	u8 vht_capable;
-+	u8 min_data_rate;
- 	u32 tx_max_mcs_nss;
- 	u32 peer_bw_rxnss_override;
- 	bool is_pmf_enabled;
-@@ -3472,6 +3474,7 @@ struct peer_assoc_params {
- 	bool he_flag;
- 	u32 peer_he_cap_macinfo[2];
- 	u32 peer_he_cap_macinfo_internal;
-+	u32 peer_he_caps_6ghz;
- 	u32 peer_he_ops;
- 	u32 peer_he_cap_phyinfo[WMI_HOST_MAX_HECAP_PHY_SIZE];
- 	u32 peer_he_mcs_count;
-@@ -3509,6 +3512,8 @@ struct  wmi_peer_assoc_complete_cmd {
- 	u32 peer_he_mcs;
- 	u32 peer_he_cap_info_ext;
- 	u32 peer_he_cap_info_internal;
-+	u32 min_data_rate;
-+	u32 peer_he_caps_6ghz;
- } __packed;
+-	if (rx_ev.phy_mode == MODE_11B && status->band == NL80211_BAND_5GHZ)
++	if (rx_ev.phy_mode == MODE_11B &&
++	    (status->band == NL80211_BAND_5GHZ || status->band == NL80211_BAND_6GHZ))
+ 		ath11k_dbg(ab, ATH11K_DBG_WMI,
+-			   "wmi mgmt rx 11b (CCK) on 5GHz\n");
++			   "wmi mgmt rx 11b (CCK) on 5/6GHz, band = %d\n", status->band);
  
- struct wmi_stop_scan_cmd {
+ 	sband = &ar->mac.sbands[status->band];
+ 
 -- 
 2.17.1
 
