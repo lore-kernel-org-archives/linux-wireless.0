@@ -2,57 +2,112 @@ Return-Path: <SRS0=qCs9=7I=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D01EEC433E0
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 May 2020 01:18:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7ED18C433E0
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 May 2020 04:31:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BB5842068D
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 May 2020 01:18:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 57AF5207D8
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 May 2020 04:31:59 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="bACOVX1O"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388288AbgEZBSy (ORCPT
+        id S1725937AbgEZEb6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 25 May 2020 21:18:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37408 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387794AbgEZBSy (ORCPT
+        Tue, 26 May 2020 00:31:58 -0400
+Received: from mail27.static.mailgun.info ([104.130.122.27]:11517 "EHLO
+        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725294AbgEZEb6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 May 2020 21:18:54 -0400
-Received: from shards.monkeyblade.net (shards.monkeyblade.net [IPv6:2620:137:e000::1:9])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 37ED9C061A0E;
-        Mon, 25 May 2020 18:18:54 -0700 (PDT)
-Received: from localhost (unknown [IPv6:2601:601:9f00:477::3d5])
-        (using TLSv1 with cipher AES256-SHA (256/256 bits))
-        (Client did not present a certificate)
-        (Authenticated sender: davem-davemloft)
-        by shards.monkeyblade.net (Postfix) with ESMTPSA id 82ED1127AB6DB;
-        Mon, 25 May 2020 18:18:53 -0700 (PDT)
-Date:   Mon, 25 May 2020 18:18:52 -0700 (PDT)
-Message-Id: <20200525.181852.1092670398238988532.davem@davemloft.net>
+        Tue, 26 May 2020 00:31:58 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1590467517; h=Message-Id: Date: Subject: Cc: To: From:
+ Sender; bh=qz0vEoYnUtpMVBdcWKiJrjIfvSGU0XIqgiV1Wt5GnXE=; b=bACOVX1O6VUvawt+txIy11HRSioowEkcwNi0fDQLkA6i7JCTbV5vyPntChFQ6tRhEmKP6pZw
+ M4/Dch92/X145/cmg06OOM8WJitPlSB4erxN2MEMJYayuJSLEp118sdegdvqvbjobwNwnac/
+ SVWrL36rG59vP7dDO4D3iP0DKlg=
+X-Mailgun-Sending-Ip: 104.130.122.27
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n02.prod.us-east-1.postgun.com with SMTP id
+ 5ecc9bb9b65440fdba43db46 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 26 May 2020 04:31:53
+ GMT
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 91BBCC433C9; Tue, 26 May 2020 04:31:52 +0000 (UTC)
+Received: from rmanohar-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: rmanohar)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id D1012C433CA;
+        Tue, 26 May 2020 04:31:51 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org D1012C433CA
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=rmanohar@codeaurora.org
+From:   Rajkumar Manoharan <rmanohar@codeaurora.org>
 To:     johannes@sipsolutions.net
-Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211 2020-05-25
-From:   David Miller <davem@davemloft.net>
-In-Reply-To: <20200525141547.40538-1-johannes@sipsolutions.net>
-References: <20200525141547.40538-1-johannes@sipsolutions.net>
-X-Mailer: Mew version 6.8 on Emacs 26.3
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-X-Greylist: Sender succeeded SMTP AUTH, not delayed by milter-greylist-4.5.12 (shards.monkeyblade.net [149.20.54.216]); Mon, 25 May 2020 18:18:53 -0700 (PDT)
+Cc:     linux-wireless@vger.kernel.org,
+        Rajkumar Manoharan <rmanohar@codeaurora.org>
+Subject: [PATCH] cfg80211: propagate iftype HE 6 GHz capability
+Date:   Mon, 25 May 2020 21:31:31 -0700
+Message-Id: <1590467491-21187-1-git-send-email-rmanohar@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Mon, 25 May 2020 16:15:46 +0200
+Advertise per interface HE 6 GHz band capability to user space
+which will be used to build IEs.
 
-> We have a couple more fixes, all of them seem sort of older issues
-> that surfaced now.
-> 
-> Please pull and let me know if there's any problem.
+Signed-off-by: Rajkumar Manoharan <rmanohar@codeaurora.org>
+---
+ include/uapi/linux/nl80211.h | 3 +++
+ net/wireless/nl80211.c       | 7 +++++++
+ 2 files changed, 10 insertions(+)
 
-Pulled, thanks Johannes.
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 9c0a912f1684..10dd250c7d6a 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -3527,6 +3527,8 @@ enum nl80211_mpath_info {
+  *     capabilities IE
+  * @NL80211_BAND_IFTYPE_ATTR_HE_CAP_PPE: HE PPE thresholds information as
+  *     defined in HE capabilities IE
++ * @NL80211_BAND_IFTYPE_ATTR_HE_6GHZ_CAP: HE 6 GHz band capabilities as in HE
++ *     6 GHz band capabilities IE
+  * @NL80211_BAND_IFTYPE_ATTR_MAX: highest band HE capability attribute currently
+  *     defined
+  * @__NL80211_BAND_IFTYPE_ATTR_AFTER_LAST: internal use
+@@ -3539,6 +3541,7 @@ enum nl80211_band_iftype_attr {
+ 	NL80211_BAND_IFTYPE_ATTR_HE_CAP_PHY,
+ 	NL80211_BAND_IFTYPE_ATTR_HE_CAP_MCS_SET,
+ 	NL80211_BAND_IFTYPE_ATTR_HE_CAP_PPE,
++	NL80211_BAND_IFTYPE_ATTR_HE_6GHZ_CAP,
+ 
+ 	/* keep last */
+ 	__NL80211_BAND_IFTYPE_ATTR_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index bcd7a452e8b1..af9f296ed2af 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1607,6 +1607,13 @@ nl80211_send_iftype_data(struct sk_buff *msg,
+ 		    nla_put(msg, NL80211_BAND_IFTYPE_ATTR_HE_CAP_PPE,
+ 			    sizeof(he_cap->ppe_thres), he_cap->ppe_thres))
+ 			return -ENOBUFS;
++
++		if (he_cap->has_he_6ghz) {
++			if (nla_put_u16(msg,
++					NL80211_BAND_IFTYPE_ATTR_HE_6GHZ_CAP,
++					he_cap->he_6ghz.cap))
++				return -ENOBUFS;
++		}
+ 	}
+ 
+ 	return 0;
+-- 
+2.7.4
+
