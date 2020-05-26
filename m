@@ -2,147 +2,61 @@ Return-Path: <SRS0=UQ4x=7K=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.1 required=3.0 tests=DATE_IN_PAST_24_48,
+	DKIMWL_WL_HIGH,DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DA7CC433E0
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 14:12:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40806C433E0
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 14:13:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0069920814
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 14:12:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1827B2075F
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 14:13:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1590675160;
-	bh=C9QEYysDx6SvB7HQ2r/V2aV8FyGMNYUnIYiRPLfFE30=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:List-ID:From;
-	b=w8OTu0w9ZywK9EAyNnVwgKRGM/Emr4qbmG6wDrXbQUqDUzfbDbMT9N1qey3xMVgOv
-	 66JIgNOvG12pTtHFhxayeVvhdNF8+ftWtHWL2fP0iPksy24Oi11dLwOSFCNkIncZKO
-	 7Nw/pyXrC0jL9UaIL1zs3SHvhFkqBZD+5CDgmNbE=
+	s=default; t=1590675182;
+	bh=7bSp5bK1gKq5lfmIlc8WNWiBrYRNVDke2Cjb+Arst30=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=AWTeLgRuVDBHdaZ4m7Uvj8TG/cTpxiEFkZyGxwBtaj11CUbYlYpHVNgKm+EC4L1hx
+	 MA8NCXHjgSYqoHFfuIZlWClOKAHaTu2ax2qNPC/gyhnuFKTLPnsa8xoH2WZ29FDJOG
+	 1ZUdtEjbuLlNIvvgcwJAqJLOnBKcNAlKaaYEWOUQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390891AbgE1OMj (ORCPT
+        id S2390898AbgE1ONB (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 28 May 2020 10:12:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39412 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390727AbgE1OMh (ORCPT
+        Thu, 28 May 2020 10:13:01 -0400
+Received: from mail-pl1-f194.google.com ([209.85.214.194]:37588 "EHLO
+        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2390727AbgE1ONA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 May 2020 10:12:37 -0400
-Received: from mail-pf1-x442.google.com (mail-pf1-x442.google.com [IPv6:2607:f8b0:4864:20::442])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1BC1C05BD1E
-        for <linux-wireless@vger.kernel.org>; Thu, 28 May 2020 07:12:37 -0700 (PDT)
-Received: by mail-pf1-x442.google.com with SMTP id z26so13584677pfk.12
-        for <linux-wireless@vger.kernel.org>; Thu, 28 May 2020 07:12:37 -0700 (PDT)
+        Thu, 28 May 2020 10:13:00 -0400
+Received: by mail-pl1-f194.google.com with SMTP id x10so11598181plr.4
+        for <linux-wireless@vger.kernel.org>; Thu, 28 May 2020 07:13:00 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:resent-from:resent-date:resent-message-id
-         :resent-to:dkim-signature:date:from:to:cc:subject:message-id
-         :in-reply-to:references:mime-version:content-transfer-encoding;
-        bh=1TAYoZI2Tez81wa2zUjdzUAforTt6uKjYATfqebNNbY=;
-        b=HmHW8Qlre7Lf/X+jmquS2M5I+cCde2u58b2Kx4GAk5uwNnR9Vv+vN1BMSUdgbZVsvW
-         Hm9MRtFxV8RJYlbKR5R2B3S8yxl5Oqbfn3Ts8+zsK/K4FRitKAJ3JdmJ+KJ06/1UoloQ
-         8ROZBdVdyeOpeMBlmShp/69uulNB/GlXSeyuZWrl3uN9MSH1csBV88ub2q8GVHiLNFTy
-         QGkQ0kwRPoQr+G33SElSs8SBDlu2AIoLv6UcTqcfgahm4zbOuq4mtimoMwhx69A56ALk
-         vF0M/cEmb2GUmiFYXdvMiVo8igAoyceMrn9VKxg7gnY7bs3M85PaQ/XBL91psR0Zd89D
-         L76g==
-X-Gm-Message-State: AOAM531zINY6FvgHoC3iOKdT2wIsMhiHdjHY9P52QUrfZNJ/lja4xMgm
-        ZjNf2VPgMZDfevLCgjS+EWYPj3/htp0=
-X-Google-Smtp-Source: ABdhPJziJPXqO9Xo8DhEY+qeLZvnK/oaHyvKPgry3E1BaNBRlMqbfvGiE4sthbibI8o61AXAacKhaQ==
-X-Received: by 2002:a05:6a00:14ce:: with SMTP id w14mr3361436pfu.121.1590675156422;
-        Thu, 28 May 2020 07:12:36 -0700 (PDT)
+         :resent-to:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=dk0pTdJumqtR3muV1AGluDpJHnN6Xn6bW+DtSZAfKr0=;
+        b=A7IJFrCLcKFA1Vz1cTo65EPmUfSCxuHhoMTMtncWrKA/KPezvzFD8GQgU0BbVutJvB
+         nOcHQxHMvfsMhukwqYx1Sxhssxxj0LIBGnIwZMUhi5iIY7kZJnNjgC/1NA3EMtKdrc8R
+         0KTJEQx9n1IRo3PpVFraCU8TROaKN/mow6bBTL8sV//XQWT6kd8C8QKzHLQCeoBn8CqL
+         KwH8iFbkWA4KcZpZDhVlVtthy3LPUBd432I++/wr/WhgmVLIEyetInry3wzAOcU84Uhl
+         +reWXn321cuFuig8tz3Mhabc9PClMUvZLe19Wtv387JwjZE55y1KjtU6bQVrCGwHQEq4
+         FCjA==
+X-Gm-Message-State: AOAM531N4pT62WE29lPNNZjpO5Gdvw7dh9k7U2ENiJvFzdFfn3f24zQU
+        pK5LCUOj0UFVekbOEh5bKdTUCZy7GJM=
+X-Google-Smtp-Source: ABdhPJxwjopxA1WzFrWH4bTLxYm7VxwL8CkHh3Iy+dACgFVmaN+nc0kLBu7yPqZ5kVwHUpIq/RT7iw==
+X-Received: by 2002:a17:90a:890b:: with SMTP id u11mr3983711pjn.233.1590675179309;
+        Thu, 28 May 2020 07:12:59 -0700 (PDT)
 Received: from 42.do-not-panic.com (42.do-not-panic.com. [157.230.128.187])
-        by smtp.gmail.com with ESMTPSA id h3sm4300518pgk.67.2020.05.28.07.12.35
+        by smtp.gmail.com with ESMTPSA id r31sm5346419pjg.2.2020.05.28.07.12.58
         for <linux-wireless@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 28 May 2020 07:12:36 -0700 (PDT)
+        Thu, 28 May 2020 07:12:59 -0700 (PDT)
 Received: by 42.do-not-panic.com (Postfix, from userid 1000)
-        id 1446140605; Thu, 28 May 2020 14:12:35 +0000 (UTC)
-Received: by 2002:ab0:1445:0:0:0:0:0 with SMTP id c5csp1466085uae;
-        Wed, 27 May 2020 14:36:50 -0700 (PDT)
-X-Received: by 2002:a2e:9b50:: with SMTP id o16mr4137736ljj.164.1590615410259;
-        Wed, 27 May 2020 14:36:50 -0700 (PDT)
-ARC-Seal: i=2; a=rsa-sha256; t=1590615410; cv=pass;
-        d=google.com; s=arc-20160816;
-        b=I2u5IHk0R09L6Re9Wam4U8y5eX9KHPyr7w0JtTb/4gKvnnxtQjpDJdlMrWTGtYNJk2
-         Q6tfTIqhhzkQMqOikK3YZ8zKZ7ZfsLRisAP4pUAV6n4BaHKItakInNrGbFV2AhRE5uxm
-         ZmKKyC/BP+5pYav72ggOIzpVey+odBHXJT59LY2M+VW3KSy4bx+0ohVyTU7FfqbBJz7/
-         Ov+tMiVYqZ7PKvZR9lbOzwBkzT1fWQgego1ipGTyaPA685ZPs2egrVk1cg7nm8ArXzg+
-         ZRmqZ5UxSuSXp3kJog47drdhzc10B1J+YroE4PkEGKt5sblJQ+bn+6bMIqJHiNV7+zin
-         YWuA==
-ARC-Message-Signature: i=2; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20160816;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:subject:cc:to:from:date:dkim-signature:delivered-to
-         :delivered-to;
-        bh=1TAYoZI2Tez81wa2zUjdzUAforTt6uKjYATfqebNNbY=;
-        b=m2jPIPsuCbBGks/0DlsP4FR18PmyZxzpA5cnxzqgXMmOApubAd8KTcpQTK+Yed0YoJ
-         kfjGoyR2ZXroxnXedVsnuMldat74ePQ9S8+VSk5WQk0iaO4DjMaDYWSR2eBOin0TUtyw
-         JmP/7ebuHoNx55Zq5b46/qbnYheuFjVcmtKJoKDY/IsM5g4AmZrphs6mcxkr1Un5+uX5
-         +N+S+YwymGsgM3NymImOC9H8loVrKMUFRHc8Ycmk9fpBZnnWRRndyli8WluaEp84slLC
-         /IFdFc1CHz3f57RLn/GyfAP0ubRC87fB1xmE2o0PVY9C/3wcZJV5j0r0UhsRm24Q8Hu2
-         nt3A==
-ARC-Authentication-Results: i=2; mx.google.com;
-       dkim=pass header.i=@kernel.org header.s=default header.b="pEn/j7M3";
-       arc=pass (i=1 spf=pass spfdomain=kernel.org dkim=pass dkdomain=kernel.org dmarc=pass fromdomain=kernel.org);
-       spf=neutral (google.com: 209.85.220.41 is neither permitted nor denied by best guess record for domain of mcgrof+caf_=mcgrof=gmail.com@do-not-panic.com) smtp.mailfrom="mcgrof+caf_=mcgrof=gmail.com@do-not-panic.com";
-       dmarc=pass (p=NONE sp=NONE dis=NONE) header.from=kernel.org
-Received: from mail-sor-f41.google.com (mail-sor-f41.google.com. [209.85.220.41])
-        by mx.google.com with SMTPS id j21sor2391552ljg.43.2020.05.27.14.36.50
-        for <mcgrof@gmail.com>
-        (Google Transport Security);
-        Wed, 27 May 2020 14:36:50 -0700 (PDT)
-Received-SPF: neutral (google.com: 209.85.220.41 is neither permitted nor denied by best guess record for domain of mcgrof+caf_=mcgrof=gmail.com@do-not-panic.com) client-ip=209.85.220.41;
-X-Received: by 2002:a2e:9586:: with SMTP id w6mr3764348ljh.274.1590615409897;
-        Wed, 27 May 2020 14:36:49 -0700 (PDT)
-X-Forwarded-To: mcgrof@gmail.com
-X-Forwarded-For: mcgrof@do-not-panic.com mcgrof@gmail.com
-Received: by 2002:ac2:5305:0:0:0:0:0 with SMTP id c5csp1435734lfh;
-        Wed, 27 May 2020 14:36:48 -0700 (PDT)
-X-Received: by 2002:a17:90a:d818:: with SMTP id a24mr375362pjv.75.1590615407957;
-        Wed, 27 May 2020 14:36:47 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; t=1590615407; cv=none;
-        d=google.com; s=arc-20160816;
-        b=AYTqKoe7rBll25R4xlQw9cJ7tKSZv/KnhhmGamBU+R8z71sZ4BV7qLIwTld+ALtQGF
-         qiWZD9cMECM3kA4eHnftWYqbYGYh3W1ANouRT7VUsBxOBxRGyPswf8B1xjbQbhRuqWUk
-         tzypHlqrzX3kPNQIB+Gr3/RIn9tpeVjRIp/rHGXJytbMOdrA7liG1XiyGILwW2QCKQ1w
-         GiNANie/sHlBnwqJZiFuw8FrFGCnh9+h/mkK5TU5sHVNG0ksCCSPGkp/pkoUMYz7rf/u
-         ztFGzh256aCK0tgipZod3kV6c5quoBKR3suJQeJ5qkT1PHbG7ttiH+ou37gQVoNb387R
-         /d1w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20160816;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:subject:cc:to:from:date:dkim-signature:delivered-to;
-        bh=1TAYoZI2Tez81wa2zUjdzUAforTt6uKjYATfqebNNbY=;
-        b=SEH2CNHZ11L5faPOVr63jTgWAGV1MGSlgfFT5AsIW5Eht4zwBDOmBUYpPuM4HHpgw5
-         xVXer0uXscEaEDui84bcmyv5mQg8phTMl8UxSEIUXHWEH8wzGLB6yjkL/h/wFLchCHJt
-         KiRXvT2HtF6RhvW5laRKtZNmfcVB7f9Kwypiwys45iJFnfiaibVbX/pOS+b8+C7B9xRj
-         uvZzA0iN/qMPhQcnj38xT/tGcuOETKZL+MlgLc6AnF5/0Ab2GJ6QSa4lxQAMUsrhKzLv
-         ZIJEcMHN6KacSeNwhldJ9CbfwiZZVyF81RWl7fe55URgegU9J2Jpv1HI5EYujkmyrgtY
-         ctPQ==
-ARC-Authentication-Results: i=1; mx.google.com;
-       dkim=pass header.i=@kernel.org header.s=default header.b="pEn/j7M3";
-       spf=pass (google.com: domain of kuba@kernel.org designates 198.145.29.99 as permitted sender) smtp.mailfrom=kuba@kernel.org;
-       dmarc=pass (p=NONE sp=NONE dis=NONE) header.from=kernel.org
-Received: from mail.kernel.org (mail.kernel.org. [198.145.29.99])
-        by mx.google.com with ESMTPS id b10si3248426pfb.50.2020.05.27.14.36.47
-        for <mcgrof@do-not-panic.com>
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 27 May 2020 14:36:47 -0700 (PDT)
-Received-SPF: pass (google.com: domain of kuba@kernel.org designates 198.145.29.99 as permitted sender) client-ip=198.145.29.99;
-Received: by mail.kernel.org (Postfix)
-        id 3A9C220FC3; Wed, 27 May 2020 21:36:47 +0000 (UTC)
-Received: from kicinski-fedora-PC1C0HJN.hsd1.ca.comcast.net (unknown [163.114.132.1])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id D58682075A;
-        Wed, 27 May 2020 21:36:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1590615407;
-        bh=C9QEYysDx6SvB7HQ2r/V2aV8FyGMNYUnIYiRPLfFE30=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=pEn/j7M3tLS4ZOl7rth/Oooe+DMEkDN3gAtt4X3XMA85BrFencKsNhrsgxjIaV0OJ
-         PeLdwJ4B+qqrg2B2psuZpeq6XlnRQR5EOzYmN1/sjPUhhpE9jY58muoqH2/URMzzT9
-         0tpVflTTmTUl0mtXerelfd+dd1qFkYbAQRV21OXU=
-Date:   Wed, 27 May 2020 14:36:42 -0700
-From:   Jakub Kicinski <kuba@kernel.org>
-To:     Luis Chamberlain <mcgrof@kernel.org>
+        id 1683940605; Thu, 28 May 2020 14:12:58 +0000 (UTC)
+Date:   Tue, 26 May 2020 23:07:48 +0000
+From:   Luis Chamberlain <mcgrof@kernel.org>
+To:     Jakub Kicinski <kuba@kernel.org>
 Cc:     jeyu@kernel.org, davem@davemloft.net, michael.chan@broadcom.com,
         dchickles@marvell.com, sburla@marvell.com, fmanlunas@marvell.com,
         aelior@marvell.com, GR-everest-linux-l2@marvell.com,
@@ -163,39 +77,58 @@ Cc:     jeyu@kernel.org, davem@davemloft.net, michael.chan@broadcom.com,
         netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-doc@vger.kernel.org
 Subject: Re: [PATCH v3 0/8] kernel: taint when the driver firmware crashes
-Message-ID: <20200527143642.5e4ffba0@kicinski-fedora-PC1C0HJN.hsd1.ca.comcast.net>
-In-Reply-To: <20200527031918.GU11244@42.do-not-panic.com>
+Message-ID: <20200526230748.GS11244@42.do-not-panic.com>
 References: <20200526145815.6415-1-mcgrof@kernel.org>
-        <20200526154606.6a2be01f@kicinski-fedora-PC1C0HJN.hsd1.ca.comcast.net>
-        <20200526230748.GS11244@42.do-not-panic.com>
-        <20200526163031.5c43fc1d@kicinski-fedora-PC1C0HJN.hsd1.ca.comcast.net>
-        <20200527031918.GU11244@42.do-not-panic.com>
+ <20200526154606.6a2be01f@kicinski-fedora-PC1C0HJN.hsd1.ca.comcast.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-X-TUID: Hh3RN+BezS5Y
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200526154606.6a2be01f@kicinski-fedora-PC1C0HJN.hsd1.ca.comcast.net>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, 27 May 2020 03:19:18 +0000 Luis Chamberlain wrote:
-> I read your patch, and granted, I will accept I was under the incorrect
-> assumption that this can only be used by networking devices, however it
-> the devlink approach achieves getting userspace the ability with
-> iproute2 devlink util to query a device health, on to which we can peg
-> firmware health. But *this* patch series is not about health status and
-> letting users query it, its about a *critical* situation which has come up
-> with firmware requiring me to reboot my system, and the lack of *any*
-> infrastructure in the kernel today to inform userspace about it.
+On Tue, May 26, 2020 at 03:46:06PM -0700, Jakub Kicinski wrote:
+> On Tue, 26 May 2020 14:58:07 +0000 Luis Chamberlain wrote:
+> > To those new on CC -- this is intended to be a simple generic interface
+> > to the kernel to annotate when the firwmare has crashed leaving the
+> > driver or system in a questionable state, in the worst case requiring
+> > full system reboot. This series is first addressing only a few
+> > networking patches, however, I already have an idea of where such
+> > firmware crashes happen across the tree. The goal with this series then
+> > is to first introduce the simple framework, and only if that moves
+> > forward will I continue to chug on with the rest of the drivers /
+> > subsystems.
+> > 
+> > This is *not* a networking specific problem only.
+> > 
+> > This v3 augments the last series by introducing the uevent for panic
+> > events, one of them is during tainting. The uvent mechanism is
+> > independent from any of this firmware taint mechanism. I've also
+> > addressed Jessica Yu's feedback. Given I've extended the patches a bit
+> > with other minor cleanup which checkpatch.pl complains over, and since
+> > this infrastructure is still being discussed, I've trimmed the patch
+> > series size to only cover drivers for which I've received an Acked-by
+> > from the respective driver maintainer, or where we have bug reports to
+> > support such dire situations on the driver such as ath10k.
+> > 
+> > During the last v2 it was discussed that we should instead use devlink
+> > for this work, however the initial RFC patches produced by Jakub
+> > Kicinski [0] shows how devlink is networking specific, and the intent
+> > behind this series is to produce simple helpers which can be used by *any*
+> > device driver, for any subsystem, not just networking. Subsystem
+> > specific infrastructure to help address firwmare crashes may still make
+> > sense, however that does not mean we *don't* need something even more
+> > generic regardless of the subsystem the issue happens on. Since uevents
+> > for taints are exposed, we now expose these through uapi as well, and
+> > that was something which eventually had to happen given that the current
+> > scheme of relying on sensible character representations for each taint
+> > will not scale beyond the alphabet.
 > 
-> So say we use netlink to report a critical health situation, how are we
-> informing userspace with your patch series about requring a reboot?
+> Nacked-by: Jakub Kicinski <kuba@kernel.org>
 
-One of main features of netlink is pub/sub model of notifications.
-
-Whatever you imagine listening to your uevent can listen to
-devlink-health notifications via devlink. 
-
-In fact I've shown this off in the RFC patches I sent to you, see 
-the devlink mon health command being used.
+Care to elaborate?
+ 
+  Luis
