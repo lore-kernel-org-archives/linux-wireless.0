@@ -2,310 +2,55 @@ Return-Path: <SRS0=qCs9=7I=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0848C433E0
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 May 2020 00:10:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC8F4C433E2
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 May 2020 01:15:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B59982071C
-	for <linux-wireless@archiver.kernel.org>; Tue, 26 May 2020 00:10:17 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="FfwfqtO7"
+	by mail.kernel.org (Postfix) with ESMTP id A8610207CB
+	for <linux-wireless@archiver.kernel.org>; Tue, 26 May 2020 01:15:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387734AbgEZAJe (ORCPT
+        id S2388434AbgEZBPq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 25 May 2020 20:09:34 -0400
-Received: from mail27.static.mailgun.info ([104.130.122.27]:13797 "EHLO
-        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726437AbgEZAJe (ORCPT
+        Mon, 25 May 2020 21:15:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36928 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388416AbgEZBPp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 25 May 2020 20:09:34 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1590451772; h=Content-Transfer-Encoding: MIME-Version:
- References: In-Reply-To: Message-Id: Date: Subject: Cc: To: From:
- Sender; bh=br25GU2WJO4MTj52vq4a6WT0Sw95fVmOTDjUPBarAls=; b=FfwfqtO7cJQ/MCU0HXCXxQsZbhE0/+xd8twMU48FoqlsxLLsjNi4teLEFV0GKY+Jkvz3Z1Wm
- /ZfwoUs+sC5Xr59Dga4aYGdzbebTdFle9C8D7edD5lLIdHQLoG6IjLQGIIlFcY3iqUBl1FwF
- sjeI0rGAFUZoSsXishNNN5G9N90=
-X-Mailgun-Sending-Ip: 104.130.122.27
-X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n01.prod.us-west-2.postgun.com with SMTP id
- 5ecc5e34809d904967b4ce04 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 26 May 2020 00:09:24
- GMT
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 057FEC43387; Tue, 26 May 2020 00:09:24 +0000 (UTC)
-Received: from alokad-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: alokad)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id B4797C433C9;
-        Tue, 26 May 2020 00:09:22 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org B4797C433C9
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=alokad@codeaurora.org
-From:   Aloka Dixit <alokad@codeaurora.org>
-To:     johannes@sipsolutions.net
-Cc:     linux-wireless@vger.kernel.org,
-        Aloka Dixit <alokad@codeaurora.org>,
-        kbuild test robot <lkp@intel.com>
-Subject: [PATCH v2 1/2] nl80211: FILS discovery/bcast probe resp support
-Date:   Mon, 25 May 2020 17:09:12 -0700
-Message-Id: <20200526000913.30434-2-alokad@codeaurora.org>
-X-Mailer: git-send-email 2.25.0
-In-Reply-To: <20200526000913.30434-1-alokad@codeaurora.org>
-References: <20200526000913.30434-1-alokad@codeaurora.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        Mon, 25 May 2020 21:15:45 -0400
+Received: from shards.monkeyblade.net (shards.monkeyblade.net [IPv6:2620:137:e000::1:9])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 008FEC061A0E;
+        Mon, 25 May 2020 18:15:45 -0700 (PDT)
+Received: from localhost (unknown [IPv6:2601:601:9f00:477::3d5])
+        (using TLSv1 with cipher AES256-SHA (256/256 bits))
+        (Client did not present a certificate)
+        (Authenticated sender: davem-davemloft)
+        by shards.monkeyblade.net (Postfix) with ESMTPSA id 8DCA0127AAC63;
+        Mon, 25 May 2020 18:15:45 -0700 (PDT)
+Date:   Mon, 25 May 2020 18:15:44 -0700 (PDT)
+Message-Id: <20200525.181544.393773965862214019.davem@davemloft.net>
+To:     kvalo@codeaurora.org
+Cc:     netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: pull-request: wireless-drivers-next-2020-05-25
+From:   David Miller <davem@davemloft.net>
+In-Reply-To: <20200525114828.7BF6CC433CA@smtp.codeaurora.org>
+References: <20200525114828.7BF6CC433CA@smtp.codeaurora.org>
+X-Mailer: Mew version 6.8 on Emacs 26.3
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+X-Greylist: Sender succeeded SMTP AUTH, not delayed by milter-greylist-4.5.12 (shards.monkeyblade.net [149.20.54.216]); Mon, 25 May 2020 18:15:45 -0700 (PDT)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This patch adds new attribute, NL80211_ATTR_FD_BCASTPRESP_CFG
-to configure FILS discovery and broadcast probe response in 6GHz
-for in-band discovery.
+From: Kalle Valo <kvalo@codeaurora.org>
+Date: Mon, 25 May 2020 11:48:28 +0000 (UTC)
 
-Only one of the two is active at a time to reduce broadcast
-packets over the air.
+> here's a pull request to net-next tree, more info below. Please let me know if
+> there are any problems.
 
-Maximum packet interval can be 20 TUs.
-Packet interval set to 0 disables FILS discovery and broadcast
-probe response transmission.
-
-Signed-off-by: Aloka Dixit <alokad@codeaurora.org>
-Reported-by: kbuild test robot <lkp@intel.com>
----
-v2: Fixed warning.
-
- include/net/cfg80211.h       | 26 ++++++++++++++++
- include/uapi/linux/nl80211.h | 27 +++++++++++++++++
- net/wireless/nl80211.c       | 58 ++++++++++++++++++++++++++++++++++++
- 3 files changed, 111 insertions(+)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index a82fc59a1d82..e4bc03947005 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -957,6 +957,8 @@ struct cfg80211_crypto_settings {
-  * @assocresp_ies_len: length of assocresp_ies in octets
-  * @probe_resp_len: length of probe response template (@probe_resp)
-  * @probe_resp: probe response template (AP mode only)
-+ * @bcast_presp: Broadcast probe response template (AP mode only)
-+ * @fils_disc: FILS discovery template (AP mode only)
-  * @ftm_responder: enable FTM responder functionality; -1 for no change
-  *	(which also implies no change in LCI/civic location data)
-  * @lci: Measurement Report element content, starting with Measurement Token
-@@ -965,6 +967,8 @@ struct cfg80211_crypto_settings {
-  *	Token (measurement type 11)
-  * @lci_len: LCI data length
-  * @civicloc_len: Civic location data length
-+ * @bcast_presp_len: Broadcast probe response template length
-+ * @fils_disc_len: FILS discovery template length
-  */
- struct cfg80211_beacon_data {
- 	const u8 *head, *tail;
-@@ -974,6 +978,8 @@ struct cfg80211_beacon_data {
- 	const u8 *probe_resp;
- 	const u8 *lci;
- 	const u8 *civicloc;
-+	const u8 *bcast_presp;
-+	const u8 *fils_disc;
- 	s8 ftm_responder;
- 
- 	size_t head_len, tail_len;
-@@ -983,6 +989,8 @@ struct cfg80211_beacon_data {
- 	size_t probe_resp_len;
- 	size_t lci_len;
- 	size_t civicloc_len;
-+	size_t bcast_presp_len;
-+	size_t fils_disc_len;
- };
- 
- struct mac_address {
-@@ -1017,6 +1025,22 @@ struct cfg80211_bitrate_mask {
- 	} control[NUM_NL80211_BANDS];
- };
- 
-+enum cfg80211_fd_bcastpresp_types {
-+	CFG80211_TYPE_FILS_DISCOVERY = 1,
-+	CFG80211_TYPE_BCAST_PROBE_RESP
-+};
-+
-+/**
-+ * struct cfg80211_fd_bcastpresp - FILS discovery/bcast probe response config
-+ *
-+ * @type: CFG80211_TYPE_FILS_DISCOVERY/CFG80211_TYPE_BCAST_PROBE_RESP
-+ * @interval: FILS discovery/broadcast probe response interval in TUs
-+ */
-+struct cfg80211_fd_bcastpresp {
-+	enum cfg80211_fd_bcastpresp_types type;
-+	u32 interval;
-+};
-+
- /**
-  * enum cfg80211_ap_settings_flags - AP settings flags
-  *
-@@ -1064,6 +1088,7 @@ enum cfg80211_ap_settings_flags {
-  * @he_obss_pd: OBSS Packet Detection settings
-  * @he_bss_color: BSS Color settings
-  * @he_oper: HE operation IE (or %NULL if HE isn't enabled)
-+ * @fd_bcastpresp: FILS discovery and broadcast probe response configuration
-  */
- struct cfg80211_ap_settings {
- 	struct cfg80211_chan_def chandef;
-@@ -1094,6 +1119,7 @@ struct cfg80211_ap_settings {
- 	u32 flags;
- 	struct ieee80211_he_obss_pd he_obss_pd;
- 	struct cfg80211_he_bss_color he_bss_color;
-+	struct cfg80211_fd_bcastpresp fd_bcastpresp;
- };
- 
- /**
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 9679d561f7d0..3d7bb5c61002 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2484,6 +2484,8 @@ enum nl80211_commands {
-  * @NL80211_ATTR_RECEIVE_MULTICAST: multicast flag for the
-  *	%NL80211_CMD_REGISTER_FRAME command, see the description there.
-  *
-+ * @NL80211_ATTR_FD_BCASTPRESP_CFG: FILS discovery/broadcast probe resp.
-+ *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -2961,6 +2963,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_RECEIVE_MULTICAST,
- 
-+	NL80211_ATTR_FD_BCASTPRESP_CFG,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -6848,4 +6852,27 @@ enum nl80211_iftype_akm_attributes {
- 	NL80211_IFTYPE_AKM_ATTR_MAX = __NL80211_IFTYPE_AKM_ATTR_LAST - 1,
- };
- 
-+/**
-+ * enum nl80211_fd_bcastpresp_attributes - FILS disc/bcast probe resp settings
-+ * @__NL80211_FD_BCASTPRESP_ATTR_INVALID: Invalid
-+ *
-+ * @NL80211_FD_BCASTPRESP_ATTR_TYPE: 1-FILS discovery, 2-broadcast probe resp
-+ * @NL80211_FD_BCASTPRESP_ATTR_INT: FILS disc/bcast probe resp interval in TUs
-+ * @NL80211_FD_BCASTPRESP_ATTR_TMPL: FILS discovery/bcast probe resp template
-+ *
-+ * @__NL80211_FD_BCASTPRESP_ATTR_LAST: Internal
-+ * @NL80211_FD_BCASTPRESP_ATTR_MAX: highest FD/bcast probe resp attribute
-+ */
-+enum nl80211_fd_bcastpresp_attributes {
-+	__NL80211_FD_BCASTPRESP_ATTR_INVALID,
-+
-+	NL80211_FD_BCASTPRESP_ATTR_TYPE,
-+	NL80211_FD_BCASTPRESP_ATTR_INT,
-+	NL80211_FD_BCASTPRESP_ATTR_TMPL,
-+
-+	/* keep last */
-+	__NL80211_FD_BCASTPRESP_ATTR_LAST,
-+	NL80211_FD_BCASTPRESP_ATTR_MAX = __NL80211_FD_BCASTPRESP_ATTR_LAST - 1
-+};
-+
- #endif /* __LINUX_NL80211_H */
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 3d27b24c68b2..87bb78cc95e1 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -331,6 +331,14 @@ he_bss_color_policy[NL80211_HE_BSS_COLOR_ATTR_MAX + 1] = {
- 	[NL80211_HE_BSS_COLOR_ATTR_PARTIAL] = { .type = NLA_FLAG },
- };
- 
-+static const struct nla_policy
-+fd_bcastpresp_policy[NL80211_FD_BCASTPRESP_ATTR_MAX + 1] = {
-+	[NL80211_FD_BCASTPRESP_ATTR_TYPE] = NLA_POLICY_RANGE(NLA_U8, 1, 2),
-+	[NL80211_FD_BCASTPRESP_ATTR_INT] = NLA_POLICY_MAX(NLA_U32, 20),
-+	[NL80211_FD_BCASTPRESP_ATTR_TMPL] = { .type = NLA_BINARY,
-+					      .len = IEEE80211_MAX_DATA_LEN },
-+};
-+
- static const struct nla_policy
- nl80211_tid_config_attr_policy[NL80211_TID_CONFIG_ATTR_MAX + 1] = {
- 	[NL80211_TID_CONFIG_ATTR_VIF_SUPP] = { .type = NLA_U64 },
-@@ -662,6 +670,8 @@ const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
- 	[NL80211_ATTR_PMK_LIFETIME] = NLA_POLICY_MIN(NLA_U32, 1),
- 	[NL80211_ATTR_PMK_REAUTH_THRESHOLD] = NLA_POLICY_RANGE(NLA_U8, 1, 100),
- 	[NL80211_ATTR_RECEIVE_MULTICAST] = { .type = NLA_FLAG },
-+	[NL80211_ATTR_FD_BCASTPRESP_CFG] =
-+				NLA_POLICY_NESTED(fd_bcastpresp_policy),
- };
- 
- /* policy for the key attributes */
-@@ -4725,6 +4735,48 @@ static int nl80211_parse_he_bss_color(struct nlattr *attrs,
- 	return 0;
- }
- 
-+static int nl80211_parse_fd_bcastpresp(struct genl_info *info,
-+				       struct cfg80211_ap_settings *params)
-+{
-+	struct nlattr *tmpl;
-+	struct nlattr *tb[NL80211_FD_BCASTPRESP_ATTR_MAX + 1];
-+	int ret;
-+	struct cfg80211_beacon_data *beacon = &params->beacon;
-+	struct cfg80211_fd_bcastpresp *cfg;
-+
-+	if (params->chandef.center_freq1 <= 5940 ||
-+	    params->chandef.center_freq1 >= 7105)
-+		return -EOPNOTSUPP;
-+
-+	ret = nla_parse_nested(tb, NL80211_FD_BCASTPRESP_ATTR_MAX,
-+			       info->attrs[NL80211_ATTR_FD_BCASTPRESP_CFG],
-+			       fd_bcastpresp_policy, NULL);
-+	if (ret)
-+		return ret;
-+
-+	if (!tb[NL80211_FD_BCASTPRESP_ATTR_TYPE] ||
-+	    !tb[NL80211_FD_BCASTPRESP_ATTR_INT])
-+		return -EINVAL;
-+
-+	cfg = &params->fd_bcastpresp;
-+	cfg->type = nla_get_u8(tb[NL80211_FD_BCASTPRESP_ATTR_TYPE]);
-+	cfg->interval = nla_get_u32(tb[NL80211_FD_BCASTPRESP_ATTR_INT]);
-+
-+	tmpl = tb[NL80211_FD_BCASTPRESP_ATTR_TMPL];
-+	if (!tmpl && !beacon->fils_disc_len && !beacon->bcast_presp_len)
-+		return -EINVAL;
-+
-+	if (cfg->type == CFG80211_TYPE_FILS_DISCOVERY) {
-+		beacon->fils_disc = nla_data(tmpl);
-+		beacon->fils_disc_len = nla_len(tmpl);
-+	} else if (cfg->type == CFG80211_TYPE_BCAST_PROBE_RESP) {
-+		beacon->bcast_presp = nla_data(tmpl);
-+		beacon->bcast_presp_len = nla_len(tmpl);
-+	}
-+
-+	return 0;
-+}
-+
- static void nl80211_check_ap_rate_selectors(struct cfg80211_ap_settings *params,
- 					    const u8 *rates)
- {
-@@ -5029,6 +5081,12 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
- 			return err;
- 	}
- 
-+	if (info->attrs[NL80211_ATTR_FD_BCASTPRESP_CFG]) {
-+		err = nl80211_parse_fd_bcastpresp(info, &params);
-+		if (err)
-+			return err;
-+	}
-+
- 	nl80211_calculate_ap_params(&params);
- 
- 	if (info->attrs[NL80211_ATTR_EXTERNAL_AUTH_SUPPORT])
--- 
-2.25.0
-
+Pulled, thanks Kalle.
