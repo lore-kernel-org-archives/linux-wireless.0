@@ -2,106 +2,94 @@ Return-Path: <SRS0=v5bw=7J=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54107C433E3
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 May 2020 13:37:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96FC2C433E1
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 May 2020 13:43:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3CE00208DB
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 May 2020 13:37:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6DB65207CB
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 May 2020 13:43:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388246AbgE0Nhc (ORCPT
+        id S2388614AbgE0Nnq (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 27 May 2020 09:37:32 -0400
-Received: from mout.kundenserver.de ([212.227.126.131]:60557 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387682AbgE0Nhb (ORCPT
+        Wed, 27 May 2020 09:43:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37234 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387581AbgE0Nnq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 27 May 2020 09:37:31 -0400
-Received: from localhost.localdomain ([149.172.98.151]) by
- mrelayeu.kundenserver.de (mreue012 [212.227.15.129]) with ESMTPA (Nemesis) id
- 1MelWf-1j437k3y2n-00aqFI; Wed, 27 May 2020 15:36:58 +0200
-From:   Arnd Bergmann <arnd@arndb.de>
-To:     Felix Fietkau <nbd@nbd.name>,
-        Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc:     Arnd Bergmann <arnd@arndb.de>, Ryder Lee <ryder.lee@mediatek.com>,
-        Shayne Chen <shayne.chen@mediatek.com>,
-        Chih-Min Chen <chih-min.chen@mediatek.com>,
-        Shihwei Lin <shihwei.lin@mediatek.com>,
-        Yiwei Chung <yiwei.chung@mediatek.com>,
-        YF Luo <yf.luo@mediatek.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        YueHaibing <yuehaibing@huawei.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] [wireless-next] mt75: fix enum type mismatch
-Date:   Wed, 27 May 2020 15:36:30 +0200
-Message-Id: <20200527133655.617357-1-arnd@arndb.de>
-X-Mailer: git-send-email 2.26.2
+        Wed, 27 May 2020 09:43:46 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5D611C08C5C1
+        for <linux-wireless@vger.kernel.org>; Wed, 27 May 2020 06:43:46 -0700 (PDT)
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.93)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1jdwLP-0047mV-Da; Wed, 27 May 2020 15:43:43 +0200
+Message-ID: <7f2a2a382c42b7285b9ad1eeac4e8060bc8d897a.camel@sipsolutions.net>
+Subject: Re: [PATCH v3 01/11] cfg80211: use only HE capability to set
+ prohibited flags in 6 GHz
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Rajkumar Manoharan <rmanohar@codeaurora.org>, kvalo@codeaurora.org
+Cc:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
+        Vamsi Krishna <vamsin@codeaurora.org>
+Date:   Wed, 27 May 2020 15:43:41 +0200
+In-Reply-To: <1589399105-25472-1-git-send-email-rmanohar@codeaurora.org>
+References: <1589399105-25472-1-git-send-email-rmanohar@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.36.2 (3.36.2-1.fc32) 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Provags-ID: V03:K1:2xsdauHeCgoTJqtAjoy1w439KhbI5AyVOuAxW1IHW47YA4Gorsi
- Uh4YCVjbYsbddzHdqSL/9Nyka228g3hOyRaepN6TWoIe5HUzp67ihrRMluLbPYi2hFTnxyw
- 1JRB8qLO9BliOGYOZdkWVaHW2CucwMbhaxuLQUo9QhEp3DP9AIG3a/U+jSsmX/6lg/tAn8j
- 7jHNArva+RLoRfuAuh3Cw==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:FtVcgZauz7o=:scUFGVl1oIETlCqq2XG30+
- BY+OSB/p/C2PHbQV8moxHzruH1uP9Hs2Cmkfuzt1pzAyXtW82VPL+i6XhfkL4Kzn7fV4xIawJ
- A2HAq5Il64nn45Q6XqxowsRnC3JKSDVcU6+/hxjOI0t5GljWTrL92TJl527WU8NnDHJS4Tsmr
- KsgZU4nD98sSiKPVkTHHG6nMcDBR3BIOtqB5sWIH6/bz3j+ogz/P1rSXjrKE0QGmIvpjlYWua
- 3SS7ZaIIfPGwxYYgrFIJ+K+IdIdOXXvEY8bX+OteZNxdWkg2RjR6bBm/P/yo4S8qC8nEl6Bow
- YJpUhM/w7lN9lF3hGTidifdzL9moxS+mjIcV6NaE77kl9pTr1m1pdb19VurLWicwiNgTE2fgG
- 6wGAv4DAXmgkb6c6AwimTkBPyjXRsaK2gl5t/gWIv5dz++WZzoYVa+r+a2J4ZpwrK6K6pH5EU
- Z5Dy7USzvBQWE/JgGDaFqcG+Zk8lbixikSTtHW+LPnfyiDbiKHjlimzlMGpd4+NVXmrgc8uJd
- YgMB9mM3nsWcahk0NbkhXZsVMe14iaKWstbUlaF/zFJ1TnQC3bPfKIooWLd7eSJkNYMY6dJ41
- zAneqRyKhsqVGB16LHOiS9GXVxbBwaemmq2+f9F08NizeJDLOrW4MAY0hLNAQ5WzoMC9RUliB
- vSvJiyC5p01107GyNrmS7vC+Nfi31gg21wIlE8ej7ZltRD0sM09YzWVBnr5fkky8ZBGd4pQfE
- YxO/L8TcnJlj9bmltBSZuOTgEL8rM/nVk034s2QC/YfSrq20qSaPTCrGtTgxQncP9Ds0LSwdn
- lOjGQJNACJeHLPwBGXaDbUg2u7n3XaDiXVfLbhmQB6Wp7qadf4=
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-The __mt7915_mcu_msg_send() calls a generic function that expects a mt76_txq_id
-rather than mt7915_txq_id, and it also uses the values according to that
-type, which are different from the similarly named MT7915_TXQ_ constants:
+Hi,
 
-drivers/net/wireless/mediatek/mt76/mt7915/mcu.c:232:9: error: implicit conversion from enumeration type 'enum mt76_txq_id' to different enumeration type 'enum mt7915_txq_id' [-Werror,-Wenum-conversion]
-                txq = MT_TXQ_FWDL;
-                    ~ ^~~~~~~~~~~
-drivers/net/wireless/mediatek/mt76/mt7915/mcu.c:287:36: error: implicit conversion from enumeration type 'enum mt7915_txq_id' to different enumeration type 'enum mt76_txq_id' [-Werror,-Wenum-conversion]
-        return mt76_tx_queue_skb_raw(dev, txq, skb, 0);
-               ~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~
-drivers/net/wireless/mediatek/mt76/mt7915/../mt76.h:668:97: note: expanded from macro 'mt76_tx_queue_skb_raw'
+This is what we have in this area:
+https://p.sipsolutions.net/d8e56772a261199a.txt
 
-Use the mt76 types consistently.
+but I see it's also incomplete.
 
-Fixes: e57b7901469f ("mt76: add mac80211 driver for MT7915 PCIe-based chipsets")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/net/wireless/mediatek/mt76/mt7915/mcu.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> +static bool cfg80211_is_6ghz_freq(u32 freq)
+> +{
+> +	return (freq > 5940 && freq < 7105);
+> +}
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-index 99eeea42478f..001b3078c48e 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7915/mcu.c
-@@ -220,7 +220,7 @@ static int __mt7915_mcu_msg_send(struct mt7915_dev *dev, struct sk_buff *skb,
- {
- 	struct mt7915_mcu_txd *mcu_txd;
- 	u8 seq, pkt_fmt, qidx;
--	enum mt7915_txq_id txq;
-+	enum mt76_txq_id txq;
- 	__le32 *txd;
- 	u32 val;
- 
--- 
-2.26.2
+That doesn't really make sense, I don't want to see those hardcoded
+frequencies all over the place.
+
+>  	case NL80211_CHAN_WIDTH_40:
+>  		width = 40;
+> +		if (cfg80211_is_6ghz_freq(chandef->center_freq1)) {
+
+You can check chandef->chan->band instead. (In fact, we did)
+
+> +			if (!he_cap)
+> +				return false;
+> +			if (!he_cap->has_he_6ghz)
+> +				return false;
+
+I'm not sure you should even _get_ here with a 6 GHz channel if you
+don't have 6 GHz capability? I mean, why did you register the channel in
+the first place then? This seems unnecessarily complex. If the channel
+didn't exist, it was rejected long before here.
+
+However, looking at D6.0, maybe we do need some checks of the HE
+capability?
+
+> +			if (!(he_cap->he_cap_elem.phy_cap_info[0] &
+> +			      IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_40MHZ_80MHZ_IN_5G))
+> +				return false;
+
+Looks like even D6.0 still changed something in this area...
+
+Evidently our patch just assumed that in 6 GHz all of this is supported,
+but the spec doesn't support that theory :-)
+
+Can you respin this with D6.0 taken into account?
+
+johannes
 
