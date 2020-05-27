@@ -2,155 +2,131 @@ Return-Path: <SRS0=v5bw=7J=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18D19C433E1
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 May 2020 13:05:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88A01C433DF
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 May 2020 13:37:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E4806207D8
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 May 2020 13:05:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 61779207CB
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 May 2020 13:37:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=silabs.onmicrosoft.com header.i=@silabs.onmicrosoft.com header.b="THYie0k/"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="lM7zB2+V"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730221AbgE0NFS (ORCPT
+        id S2388179AbgE0NhE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 27 May 2020 09:05:18 -0400
-Received: from mail-bn7nam10on2086.outbound.protection.outlook.com ([40.107.92.86]:48480
-        "EHLO NAM10-BN7-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1729834AbgE0NFR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 27 May 2020 09:05:17 -0400
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=HcFUvyDbnVWTKP1ukQwyGW+z4lyK6Q0WzcfYNjlalHXVIwkVBV/UATCB7OTEiq9PzSY5Rd5+nPwKBVCThWLedd1WlLDQawDi0BgfA2jMj1iIeBBFXvJ4zMyd0xNH/YNL1GhSsLJnmX88F7KPoCal/NuohI84kagUUggGnnBXqagBISK9OINF7lacRtM60rpjhD/NAXy+7rxcQk2IHaqsthe7PSRehc0VGiyZQB/TfPRAtchNDq0vUcWygt/FfS1b3kRRhhAFHNRF/1G+AjITR2utu/9+XltChs24Gnj2vhQqXHmEK/wACdbkMKrxk8ZgwbT6WRqnxeobZSUdfxlb/Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=zGTtQyUHquBDRIZ+BWTapls25MxazOvINpiS2tSnZEY=;
- b=aspgrcyVDUccYX7n/pcDqfvodMsrflUTNiq3koPFsgNaL0Ng7wE1d7NZdmypwp0ecf49rHZOyw2WBgGguGaq7LdkMfv6QxR1K8CDkfnJujnf7N3m4hhGL2Z8YKDUBbhia1uDyDks6GPGApmP7+iYtDw3S+vlLoZfxDQOZIi2VngRmSKyWmIpLRQDVmy7AOqeGLKfn6lz+2IQ9scthcSskWgAynBsTTBSRxPOMUqLSb7WGRdWRwslkwNdCRDCqlNEB/3busLiTQ1/AVO2HsC75mdzESlVMIqwFoxyUG9NN+9iWhchwVHmjTZPwHsQlk1ZXxiWIlBCS9j8oZ2zYS8GzA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=silabs.com; dmarc=pass action=none header.from=silabs.com;
- dkim=pass header.d=silabs.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=silabs.onmicrosoft.com; s=selector2-silabs-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=zGTtQyUHquBDRIZ+BWTapls25MxazOvINpiS2tSnZEY=;
- b=THYie0k/kglemuYempplIhoQBNXQMLjw1Z3ku4pRGtRlo72Chm17g0Rw/vRNWNB2Bq9c93NBMDBnKoLXyuhTsZwJ04mjPej6jhcuJ1GFZraxt4ythac7EdBDqtv4frjMCuC7pfHGPMAgzPaMJykyUNRD6eFLef0Sp4waQNWKN6I=
-Authentication-Results: codeaurora.org; dkim=none (message not signed)
- header.d=none;codeaurora.org; dmarc=none action=none header.from=silabs.com;
-Received: from SN6PR11MB2718.namprd11.prod.outlook.com (2603:10b6:805:63::18)
- by SN6PR11MB2861.namprd11.prod.outlook.com (2603:10b6:805:61::14) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3021.27; Wed, 27 May
- 2020 13:05:14 +0000
-Received: from SN6PR11MB2718.namprd11.prod.outlook.com
- ([fe80::c504:2d66:a8f7:2336]) by SN6PR11MB2718.namprd11.prod.outlook.com
- ([fe80::c504:2d66:a8f7:2336%7]) with mapi id 15.20.3021.030; Wed, 27 May 2020
- 13:05:14 +0000
-From:   =?ISO-8859-1?Q?J=E9r=F4me?= Pouiller <jerome.pouiller@silabs.com>
-To:     Kalle Valo <kvalo@codeaurora.org>
-Cc:     devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "David S . Miller" <davem@davemloft.net>
-Subject: Re: [PATCH 00/10] staging: wfx: introduce nl80211 vendor extensions
-Date:   Wed, 27 May 2020 15:05:09 +0200
-Message-ID: <4249981.oEEGoI9oy7@pc-42>
-Organization: Silicon Labs
-In-Reply-To: <87imghv9nm.fsf@codeaurora.org>
-References: <20200526171821.934581-1-Jerome.Pouiller@silabs.com> <87imghv9nm.fsf@codeaurora.org>
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="iso-8859-1"
-X-ClientProxiedBy: DM5PR06CA0093.namprd06.prod.outlook.com (2603:10b6:3:4::31)
- To SN6PR11MB2718.namprd11.prod.outlook.com (2603:10b6:805:63::18)
+        Wed, 27 May 2020 09:37:04 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:32846 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387581AbgE0NhE (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 27 May 2020 09:37:04 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04RDVjAd135718;
+        Wed, 27 May 2020 13:37:00 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : mime-version : content-type : in-reply-to;
+ s=corp-2020-01-29; bh=2XBtzrcZVqGSKujAewp+bpOQ9FuQ+54UrpEQT6Efka8=;
+ b=lM7zB2+VILUc8t+GoD7IVLjMOaFuCEGCPeHfLih7Mkl2cF1BZd8yY5bU/p5A+NqglcnB
+ 1/G+6xKc3YvAOmWRgEtmCa3tMaXVmm52drfbf4uUrkCvKtewZenUrqtsVG2dCtEA5sg7
+ WkEFOeERvuP/0eXcCl7E9NMR8xa914bQot46o6/2pPDgyBU5xWxgAGAFDt+VjsR1fcOd
+ 3BQCRyCSB4po7nOJ/spe9bYIDsxqBHCR9JT1lI+iGtM2KKdq+pZnab+AjVEemg7xOi2v
+ 5FvYLlWbP2dXEFTkKgw7x/LWJj3XUmt0EUG6IP9DhaJXumizCkX8k0a2lgRTk8Lc5cWI aA== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 318xbjygny-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Wed, 27 May 2020 13:37:00 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04RDXc4F000954;
+        Wed, 27 May 2020 13:36:59 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 317dkuex1t-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 27 May 2020 13:36:59 +0000
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 04RDawT0028515;
+        Wed, 27 May 2020 13:36:58 GMT
+Received: from kadam (/41.57.98.10)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 27 May 2020 06:36:58 -0700
+Date:   Wed, 27 May 2020 16:36:52 +0300
+From:   Dan Carpenter <dan.carpenter@oracle.com>
+To:     Kalle Valo <kvalo@codeaurora.org>, Hu Jiahui <kirin.say@gmail.com>
+Cc:     security@kernel.org, linux-wireless@vger.kernel.org,
+        Jakub Kicinski <kuba@kernel.org>
+Subject: [PATCH resend] airo: Fix read overflow in mpi_send_packet()
+Message-ID: <20200527133301.GL22511@kadam>
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from pc-42.localnet (2a01:e35:2435:66a0:544b:f17b:7ae8:fb7) by DM5PR06CA0093.namprd06.prod.outlook.com (2603:10b6:3:4::31) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3045.17 via Frontend Transport; Wed, 27 May 2020 13:05:12 +0000
-X-Originating-IP: [2a01:e35:2435:66a0:544b:f17b:7ae8:fb7]
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: ec043ef9-1a64-4480-1453-08d8023e9873
-X-MS-TrafficTypeDiagnostic: SN6PR11MB2861:
-X-Microsoft-Antispam-PRVS: <SN6PR11MB286150648E83ACDE3057C41293B10@SN6PR11MB2861.namprd11.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:3826;
-X-Forefront-PRVS: 04163EF38A
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: wOlYMbGYZ2Fp4mza1IAd9V5NuFSDMIh7SCaE6erK5tb71jD+uvWBr/pAgXP7jlpPrWwZarY0nyGTCWavG6EveohlhKXha/gC+UwbXtZVR9SGloWJ2iN4NO4LjkyAIRkHyra38rdraUaIRtd3ycQsK4QCEeUWPdx6L9gbdn57dCYm2JPQUJ7Wf7+XucBuvyANwyBIcCX6eH5lBRv3PeuWG0hJanViwK7qvApX6Bw4ZXoPe4VEjJCWKjdRhcbavfWT5r8iF/VqfkBQsQYHR9mO5clfoRxhh5SBouEjUS/GtYezoY3y7exDP25yUyJ0XKJApV5NsnYKfVdd+EBDAGUSq9rfKOkLxCUNd2uLqSqhKai2g5Now+KSQTPnUBd++TgMkl3JJoFLrgsjVxX82WTdQLdWXHG1DNpy2wrUlg8fcJeWZmSOjZqoHEUZ4d6Rbc3HEIuXTGIR4GgCzewIkyz+Vg==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR11MB2718.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(136003)(366004)(376002)(39850400004)(346002)(396003)(83380400001)(66946007)(86362001)(5660300002)(2906002)(8676002)(36916002)(6506007)(33716001)(4326008)(6486002)(52116002)(478600001)(6666004)(66556008)(66476007)(6512007)(9686003)(8936002)(186003)(316002)(966005)(16526019)(54906003)(66574014)(6916009)(39026012);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: VwBm5/TLiPii862W3BnbwFNlKzOkZNFT1tkO9m6FTGfjJ4Gm0pJAxnkTDLvZ+3nngIjUTYQbACrm3S/H6QDzdRJCzPlbCEF8zO0V+ru2vxOW8sl/oqYes3ze9Y9qxIxTRcJsFcUZUKdULkqva5KtnNsoXI4WihjmIUBClGFTm/GOV5XPbZhghlIAg+W0IGHFSIb+2iBUuJHUSLj/3YfP69JlW20DlxfPttnRXiXgCiUiGSEETO39AjXD4vroqGaSjK3iocjDNxkMFvDqeesbZWDItNOT2Czl5fuPquV9lmQsLNYTy5kYwoJEvE5Ld6qaoHh0ZEohFPGBGb5k25hQC/2T2ywwpkt6L7g8hOOC4z7kKSYJuyc91ktTH8mnPBdhIlVDXlSUYl16sKFP4wuqxFkWz6+U6CJyIfxvMixn4FosY0uDqP0Re+Ni4Xt0Ja2UmrDxtE8elTo+yVpkVLlUsCfZe/hnNpJG1MzvLkyShnXzFYKtOs0+2Fg7Lvq2gYT37R8wZZm7PYIHzQABt2I3A4/EXhQX+7+Clhd2W7W1sug=
-X-OriginatorOrg: silabs.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: ec043ef9-1a64-4480-1453-08d8023e9873
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 May 2020 13:05:14.5129
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 54dbd822-5231-4b20-944d-6f4abcd541fb
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: xT5d93lGRsryOYYmdzTTdPzjW0ot2kYE+sFgIU+cAUffg4gQ8nDdOuOk1bnoa2+KwFV0dEhL3e2pdGajYixNsw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR11MB2861
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <EED43E20-9B88-42EC-80B0-0245F0FAF980@gmail.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9633 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 malwarescore=0 bulkscore=0
+ spamscore=0 suspectscore=0 mlxscore=0 adultscore=0 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
+ definitions=main-2005270102
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9633 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 spamscore=0 mlxscore=0
+ lowpriorityscore=0 priorityscore=1501 phishscore=0 cotscore=-2147483648
+ suspectscore=0 bulkscore=0 clxscore=1015 impostorscore=0 malwarescore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2005270102
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wednesday 27 May 2020 14:34:37 CEST Kalle Valo wrote:
-> Jerome Pouiller <Jerome.Pouiller@silabs.com> writes:
->=20
-> > This series introduces some nl80211 vendor extensions to the wfx driver=
-.
-> >
-> > This series may lead to some discussions:
-> >
-> >   1. Patch 7 allows to change the dynamic PS timeout. I have found
-> >      an API in wext (cfg80211_wext_siwpower()) that do more or less the
-> >      same thing. However, I have not found any equivalent in nl80211. I=
-s it
-> >      expected or this API should be ported to nl80211?
->=20
-> struct wireless_dev::ps_timeout doesn't work for you?
+The problem is that we always copy a minimum of ETH_ZLEN (60) bytes from
+skb->data even when skb->len is less than ETH_ZLEN so it leads to a read
+overflow.
 
-Indeed, cfg80211_wext_siwpower() modify wireless_dev::ps_timeout, but
-there is no equivalent in nl80211, no?
+The fix for is to pad skb->data with zeroes so that it's never less than
+ETH_ZLEN bytes.
 
-Else, I choose to not directly change wireless_dev::ps_timeout because I
-worried about interactions with other parts of cfg80211/mac80211.
+c: <stable@vger.kernel.org>
+Reported-by: Hu Jiahui <kirin.say@gmail.com>
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+---
+Resending to the public lists so that it can go through the normal
+review process.
 
+My other concern with this driver is why is the ->max_mtu 2400 when it
+looks like we are allocating PKTSIZE (1840) byte buffers to hold it in
+mpi_map_card()?  I don't fully understand the code but that seems like
+it could be a buffer overflow as well.  I'm not sure what the
+appropriate fix is for that.
 
-> >
-> >   2. The device The device allows to do Packet Traffic Arbitration (PTA=
- or
-> >      also Coex). This feature allows the device to communicate with ano=
-ther
-> >      RF device in order to share the access to the RF. The patch 9 prov=
-ides
-> >      a way to configure that. However, I think that this chip is not th=
-e
-> >      only one to provide this feature. Maybe a standard way to change
-> >      these parameters should be provided?
-> >
-> >   3. For these vendor extensions, I have used the new policy introduced=
- by
-> >      the commit 901bb989185516 ("nl80211: require and validate vendor
-> >      command policy"). However, it seems that my version of 'iw' is not
-> >      able to follow this new policy (it does not pack the netlink
-> >      attributes into a NLA_NESTED). I could develop a tool specifically=
- for
-> >      that API, but it is not very handy. So, in patch 10, I have also
-> >      introduced an API for compatibility with iw. Any comments about th=
-is?
->=20
-> If you want the driver out of staging I recommend not adding any vendor
-> commands until the driver is moved to drivers/net/wireless. Also do note
-> that we have special rules for nl80211 vendor commands:
->=20
-> https://wireless.wiki.kernel.org/en/developers/documentation/nl80211#vend=
-or-specific_api
+ drivers/net/wireless/cisco/airo.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-I hoped to suggest the move of this driver outside of staging in some
-weeks (the last items in TODO list are either non-essential or easy to
-fix). So, you suggest me to resend these patches after that change?
-
---=20
-J=E9r=F4me Pouiller
-
-
+diff --git a/drivers/net/wireless/cisco/airo.c b/drivers/net/wireless/cisco/airo.c
+index 8363f91df7ea7..7c5634f72cc72 100644
+--- a/drivers/net/wireless/cisco/airo.c
++++ b/drivers/net/wireless/cisco/airo.c
+@@ -1925,6 +1925,11 @@ static netdev_tx_t mpi_start_xmit(struct sk_buff *skb,
+ 		airo_print_err(dev->name, "%s: skb == NULL!",__func__);
+ 		return NETDEV_TX_OK;
+ 	}
++	if (skb->len < ETH_ZLEN) {
++		if (skb_padto(skb, ETH_ZLEN))
++			return NETDEV_TX_OK;
++	}
++
+ 	npacks = skb_queue_len (&ai->txq);
+ 
+ 	if (npacks >= MAXTXQ - 1) {
+@@ -1975,8 +1980,7 @@ static int mpi_send_packet (struct net_device *dev)
+ 		return 0;
+ 	}
+ 
+-	/* check min length*/
+-	len = ETH_ZLEN < skb->len ? skb->len : ETH_ZLEN;
++	len = skb->len;
+ 	buffer = skb->data;
+ 
+ 	ai->txfids[0].tx_desc.offset = 0;
+-- 
+2.26.2
