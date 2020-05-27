@@ -2,131 +2,90 @@ Return-Path: <SRS0=v5bw=7J=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14C38C433E0
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 May 2020 18:50:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88FAFC433E0
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 May 2020 19:15:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E9DA62073B
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 May 2020 18:50:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 708ED208B8
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 May 2020 19:15:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="b9nNy4Ud"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RiNqN3c2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726921AbgE0Suq (ORCPT
+        id S1728728AbgE0TO7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 27 May 2020 14:50:46 -0400
-Received: from mail2.candelatech.com ([208.74.158.173]:50500 "EHLO
-        mail3.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726222AbgE0Sup (ORCPT
+        Wed, 27 May 2020 15:14:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60940 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728025AbgE0TO6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 27 May 2020 14:50:45 -0400
-Received: from [192.168.254.4] (unknown [50.34.197.93])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail3.candelatech.com (Postfix) with ESMTPSA id A803C13C2B1;
-        Wed, 27 May 2020 11:30:25 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com A803C13C2B1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
-        s=default; t=1590604225;
-        bh=jhOta/TXDxhvP9ffhDeszqZrtNZqXV9Z8+e8cpBjkWQ=;
-        h=To:From:Subject:Date:From;
-        b=b9nNy4UdeLXPhFXN5zSKmRiLltyyXfNr+RLzUxFFb/4qSZ8WLHs6/tFzzEBPVuOdx
-         8OHKCY/gvn4fFM/GWjQp8w7s67uXH79cu5YM06rOOBoIyCOp/u0QgS2soXxHi+M0PF
-         wenLsXkexZWipT8fp9gJdRWv2XmHBrQ7I9OmR8Aw=
-To:     ath10k <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From:   Ben Greear <greearb@candelatech.com>
-Subject: Un-recoverable ath10k 4019 NIC lockup.
-Message-ID: <75f092e3-b667-341a-e810-61edd8f089ac@candelatech.com>
-Date:   Wed, 27 May 2020 11:30:23 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:45.0) Gecko/20100101
- Thunderbird/45.8.0
+        Wed, 27 May 2020 15:14:58 -0400
+Received: from mail-lj1-x242.google.com (mail-lj1-x242.google.com [IPv6:2a00:1450:4864:20::242])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC9EFC08C5C1;
+        Wed, 27 May 2020 12:14:57 -0700 (PDT)
+Received: by mail-lj1-x242.google.com with SMTP id z13so20654996ljn.7;
+        Wed, 27 May 2020 12:14:57 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=vIHelVmHmpv+LPchrobAxBcJ2T90U0P8hBKPd9Ksmgg=;
+        b=RiNqN3c2HvT+2txBAfmbTApoxnsb7mk0xUeBZFU58WZ8NSgj7GzlH8TpsQv/C4KgE5
+         x+mCJ8QSF/uwcKBL2xBkFqvfPWaffY4xoHZaRH3mCRxGkpDpSFNYHEldTrsu/dOKygJu
+         M7J3EW956Lan7jiHkIGsimtGBjv4dzBOcyq8vwmorxyMQcPwh2HRce/yfO+NltX15781
+         /6r86+o7G0jwAB/vFsZgZII0B0HzBH5pnzoUXVE4O173qGJSe+zUoWbZG2fAjVZJfDmo
+         7yTBIYFH3kHBdq2wUen1+qJFUH9A8UrfCiuGCTY8aHBCtXMpqETny0CtZFA4tZ+GYhfx
+         3TsA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=vIHelVmHmpv+LPchrobAxBcJ2T90U0P8hBKPd9Ksmgg=;
+        b=WgXShTtSzJ051hjBcC9sN6LVoeWNP9T4E3BUUnBuSfUdW3QkhoxjYR5oNp1i62OYQt
+         +f89znAUNrmrr4Jv8pTH0QmCvceIgd5rp7HGo2OJMVFQ3zJxUmvw7Wy+K5i1WvaKXgGT
+         gO19Rv7WScRaP91H/yrC/RKZnKy4C2PSXrzRx4qj97NHlzqpPolC0dFqg5adp3ucDHVb
+         5aXIxdGOwwJRZiOuy0vgWEmEqO+ZSQZYmIEWnXtiBJj7J1wi97NP0RbCXwL9CTLCVnDE
+         rK+TThVwZhRwwHCOGBJOHOFqlX7cQWu7tpj8LrlaYGn6QkRcOWhJPDSLzp+xhalelAU0
+         UJYg==
+X-Gm-Message-State: AOAM5312FDmYdI5f7W3t3tcdJOEtj/YVOHkZtDMnBBxw0Oa7t0jiFYZz
+        ynW6v98RTyrLsptSqPFVgUnDXryfz2awJA4e+rPR//zK
+X-Google-Smtp-Source: ABdhPJzG+P7meWe0LTEGaQLJTcvyJ54tgeEboR+VAW3PqoFGc2E/Q3mSFPXCYvEK3b0EJI1VO/Ry8s3DFVhZ3KO5P3g=
+X-Received: by 2002:a2e:8884:: with SMTP id k4mr3904355lji.170.1590606896315;
+ Wed, 27 May 2020 12:14:56 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <20200515164640.97276-1-ramonreisfontes@gmail.com>
+ <ab7cac9c73dc8ef956a1719dc090167bcfc24b63.camel@sipsolutions.net>
+ <CAK8U23ZaUhoPVdWo-fkFpg4pGOcQQrk7oSbs9z1XPVE3cR_Jow@mail.gmail.com> <0131b3dbcb2f97b6a76ad5be0c50f26e11af1c5a.camel@sipsolutions.net>
+In-Reply-To: <0131b3dbcb2f97b6a76ad5be0c50f26e11af1c5a.camel@sipsolutions.net>
+From:   Ramon Fontes <ramonreisfontes@gmail.com>
+Date:   Wed, 27 May 2020 16:14:44 -0300
+Message-ID: <CAK8U23YFGaWrzXnHiMA5KDeSDFLO7F7c+Dgp8CDTTEM2VastLg@mail.gmail.com>
+Subject: Re: [PATCH] mac80211_hwsim: report the WIPHY_FLAG_SUPPORTS_5_10_MHZ capability
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        kvalo@codeaurora.org, davem@davemloft.net
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-While doing a torture test on OpenWrt using ath10k-ct drivers/firmware, the 5Ghz AP fell off the
-air.  After debugging, I found this in the console logs.
+> Yeah, but wmediumd won't know that it's not 20 MHz, I guess :-)
 
-I am guessing that the only way to recover in this case would be to reboot, but in case someone else
-has ideas on additional ways to kick the 4019 chip to have it start responding again, please let me know.
+Yes, I know. You're right! I hope advances in wmediumd in this regard :).
 
+> Yeah, but which channels? I believe with 10 MHz you can also use channel
+> 175, for example, which doesn't exist in 20 MHz channelization.
 
-Thu May 14 19:28:22 2020 daemon.info hostapd: wlan0: STA 04:f0:21:9a:16:25 IEEE 802.11: authenticated
-Thu May 14 19:28:22 2020 daemon.info hostapd: wlan0: STA 04:f0:21:9a:16:25 IEEE 802.11: associated (aid 6)
-Thu May 14 19:28:22 2020 daemon.notice hostapd: wlan0: AP-STA-CONNECTED 04:f0:21:9a:16:25
-[ 2539.120581] ath10k_ahb a800000.wifi: bss channel survey timed out
-Thu May 14 19:29:08 2020 kern.warn kernel: [ 2539.120581] ath10k_ahb a800000.wifi: bss channel survey timed out
-[ 2542.160640] ath10k_ahb a800000.wifi: wmi command 36892 timeout, restarting hardware
-[ 2542.160700] ath10k_ahb a800000.wifi: failed to set dtim period for vdev 0: -11
-Thu May 14 19:29:11 2020 kern.warn kernel: [ 2542.160640] ath10k_ahb a800000.wifi: wmi command 36892 timeout, restarting hardware
-Thu May 14 19:29:11 2020 kern.warn kernel: [ 2542.160700] ath10k_ahb a800000.wifi: failed to set dtim period for vdev 0: -11
-[ 2545.200593] ath10k_ahb a800000.wifi: wmi command 40859 timeout, restarting hardware
-[ 2545.200638] ath10k_ahb a800000.wifi: failed to send wmi nop: -11
-[ 2545.209636] ath10k_ahb a800000.wifi: failed to recalculate rts/cts prot for vdev 0: -108
-[ 2545.213377] ath10k_ahb a800000.wifi: failed to set cts protection for vdev 0: -108
-[ 2545.221549] ath10k_ahb a800000.wifi: failed to set preamble for vdev 0: -108
-[ 2545.228789] ath10k_ahb a800000.wifi: failed to set mgmt tx rate -108
-[ 2545.236060] ath10k_ahb a800000.wifi: removing peer, cleanup-all, deleting: peer c99bfe00 vdev: 0 addr: 04:f0:21:01:0f:a2
-[ 2545.242361] ath10k_ahb a800000.wifi: removing peer, cleanup-all, deleting: peer c99bea00 vdev: 0 addr: 04:f0:21:c9:8b:a2
-[ 2545.253217] ath10k_ahb a800000.wifi: removing peer, cleanup-all, deleting: peer c99be800 vdev: 0 addr: 04:ed:33:dc:1e:30
-[ 2545.264153] ath10k_ahb a800000.wifi: removing peer, cleanup-all, deleting: peer c99bf000 vdev: 0 addr: 04:f0:21:8d:4a:a2
-[ 2545.275072] ath10k_ahb a800000.wifi: removing peer, cleanup-all, deleting: peer c8002800 vdev: 0 addr: 5c:80:b6:83:13:03
-[ 2545.286016] ath10k_ahb a800000.wifi: removing peer, cleanup-all, deleting: peer ce738000 vdev: 0 addr: 04:f0:21:7d:fb:a2
-[ 2545.296960] ath10k_ahb a800000.wifi: removing peer, cleanup-all, deleting: peer ce1ec600 vdev: 0 addr: 24:f5:a2:08:21:6d
-Thu May 14 19:29:14 2020 kern.warn kernel: [ 2545.200593] ath10k_ahb a800000.wifi: wmi command 40859 timeout, restarting hardware
-hu May 14 19:29:14 2020 kern.warn kernel: [ 2545.200638] ath10k_ahb a800000.wifi: failed to send wmi nop: -11
-Thu May 14 19:29:14 2020 kern.warn kernel: [ 2545.209636] ath10k_ahb a800000.wifi: failed to recalculate rts/cts prot for vdev 0:[ 2545.3204
-25] ath10k_ahb a800000.wifi: failed to read hi_board_data address: -16
+I'm doing some research with 802.11p and I could use all the channels
+between 171 and 185 with both 5 and 10MHz.
 
-Thu May 14 19:29:14 2020 kern.warn kernel: [ 2545.213377] ath10k_ahb a800000.wifi: failed to set cts protection for vdev 0: -108
-Thu May 14 19:29:14 2020 kern.warn kernel: [ 2545.221549] ath10k_ahb a800000.wifi: failed to set preamble for vdev 0: -108
-Thu May 14 19:29:14 2020 kern.warn kernel: [ 2545.228789] ath10k_ahb a800000.wifi: failed to set mgmt tx rate -108
-Thu May 14 19:29:14 2020 kern.warn kernel: [ 2545.236060] ath10k_ahb a800000.wifi: removing peer, cleanup-all, deleting: peer c99bfe00 vdev:
-  0 addr: 04:f0:21:01:0f:a2
-Thu May 14 19:29:14 2020 kern.warn kernel: [ 2545.242361] ath10k_ahb a800000.wifi: removing peer, cleanup-all, deleting: peer c99bea00 vdev:
-  0 addr: 04:f0:21:c9:8b:a2
-Thu May 14 19:29:14 2020 kern.warn kernel: [ 2545.253217] ath10k_ahb a800000.wifi: removing peer, cleanup-all, deleting: peer c99be800 vdev:
-  0 addr: 04:ed:33:dc:1e:30
-Thu May 14 19:29:14 2020 kern.warn kernel: [ 2545.264153] ath10k_ahb a800000.wifi: removing peer, cleanup-all, deleting: peer c99bf000 vdev:
-  0 addr: 04:f0:21:8d:4a:a2
-Thu May 14 19:29:14 2020 kern.warn kernel: [ 2545.275072] ath10k_ahb a800000.wifi: removing peer, cleanup-all, deleting: peer c8002800 vdev:
-  0 addr: 5c:80:b6:83:13:03
-Thu May 14 19:29:14 2020 kern.warn kernel: [ 2545.286016] ath10k_ahb a800000.wifi: removing peer, cleanup-all, deleting: peer ce738000 vdev:
-  0 addr: 04:f0:21:7d:fb:a2
-Thu May 14 19:29:14 2020 kern.warn kernel: [ 2545.296960] ath10k_ahb a800000.wifi: removing peer, cleanup-all, deleting: peer ce1ec600 vdev:
-  0 addr: 24:f5:a2:08:21:6d
-Thu May 14 19:29:14 2020 kern.warn kernel: [ 2545.320425] ath10k_ahb a800000.wifi: failed to read hi_board_data address: -16
-Thu May 14 19:29:14 2020 kern.info kernel: [ 2545.359831] ieee80211 phy2: Hardware restart was requested[ 2545.370652] ath10k_ahb a800000.wi
-fi: failed to halt axi bus: 0
-
-Thu May 14 19:29:14 2020 kern.err kernel: [ 2545.370652] ath10k_ahb a800000.wifi: failed to halt axi bus: 0
-[ 2548.661207] ath10k_ahb a800000.wifi: failed to receive initialized event from target: 80000000
-[ 2548.671340] ath10k_ahb a800000.wifi: failed to halt axi bus: 0
-Thu May 14 19:29:17 2020 kern.err kernel: [ 2548.661207] ath10k_ahb a800000.wifi: failed to receive initialized event from target: 80000000
-Thu May 14 19:29:17 2020 kern.err kernel: [ 2548.671340] ath10k_ahb a800000.wifi: failed to halt axi bus: 0
-[ 2548.840677] ath10k_ahb a800000.wifi: failed to reset chip: -110
-[ 2548.840716] ath10k_ahb a800000.wifi: Could not init hif: -110
-[ 2548.845695] ------------[ cut here ]------------
-[ 2548.851832] WARNING: CPU: 3 PID: 98 at backports-4.19.98-1/net/mac80211/util.c:2040 ieee80211_reconfig+0x98/0xb64 [mac80211]
-[ 2548.856020] Hardware became unavailable during restart.
+> Anyway, I've applied it now, we can fix more later.
+Thanks!
 
 
-....
-
-And endless -108 errors and other funk after this.
-
-Thanks,
-Ben
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Ramon
