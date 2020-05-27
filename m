@@ -2,115 +2,131 @@ Return-Path: <SRS0=v5bw=7J=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86987C433E0
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 May 2020 14:35:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EFE96C433DF
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 May 2020 14:37:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6796620873
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 May 2020 14:35:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D26CF20873
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 May 2020 14:37:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389300AbgE0Ofg (ORCPT
+        id S2389337AbgE0OhE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 27 May 2020 10:35:36 -0400
-Received: from smail.rz.tu-ilmenau.de ([141.24.186.67]:58248 "EHLO
-        smail.rz.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389205AbgE0Ofg (ORCPT
+        Wed, 27 May 2020 10:37:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45640 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389335AbgE0OhD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 27 May 2020 10:35:36 -0400
-Received: from [192.168.178.45] (unknown [87.147.49.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by smail.rz.tu-ilmenau.de (Postfix) with ESMTPSA id 33CE3580063;
-        Wed, 27 May 2020 16:35:34 +0200 (CEST)
-Subject: Re: [PATCH 2/3] nl80211: add control port tx status method
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless@vger.kernel.org
-References: <20200508144202.7678-1-markus.theil@tu-ilmenau.de>
- <20200508144202.7678-3-markus.theil@tu-ilmenau.de>
- <f3cf96426f9532904c9f256d963e7915aa399a90.camel@sipsolutions.net>
-From:   Markus Theil <markus.theil@tu-ilmenau.de>
-Message-ID: <5a3f01a8-45d2-47c6-3e1b-32ef33be4e95@tu-ilmenau.de>
-Date:   Wed, 27 May 2020 16:35:33 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.8.1
+        Wed, 27 May 2020 10:37:03 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 380D8C05BD1E
+        for <linux-wireless@vger.kernel.org>; Wed, 27 May 2020 07:37:03 -0700 (PDT)
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.93)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1jdxAz-004A8x-H2; Wed, 27 May 2020 16:37:01 +0200
+Message-ID: <80dbbfa0c72b92d4b30e234215f7978c3cbe433e.camel@sipsolutions.net>
+Subject: Re: [PATCH v3 07/11] mac80211: add HE 6 GHz Band Capability IE in
+ Assoc. Request
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Rajkumar Manoharan <rmanohar@codeaurora.org>, kvalo@codeaurora.org
+Cc:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org
+Date:   Wed, 27 May 2020 16:37:00 +0200
+In-Reply-To: <1589399105-25472-7-git-send-email-rmanohar@codeaurora.org>
+References: <1589399105-25472-1-git-send-email-rmanohar@codeaurora.org>
+         <1589399105-25472-7-git-send-email-rmanohar@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.36.2 (3.36.2-1.fc32) 
 MIME-Version: 1.0
-In-Reply-To: <f3cf96426f9532904c9f256d963e7915aa399a90.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Content-Language: en-US
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 5/26/20 3:37 PM, Johannes Berg wrote:
->>  	struct idr ack_status_frames;
->>  	spinlock_t ack_status_lock;
->>  
->> +	u64 ctrl_port_cookie_counter;
-> We have a u64 for other things (remain-on-channel), perhaps should just
-> share? It's not going to overflow even if shared ...
-Sounds fair, I'll consolidate to use the roc cookie variable.
->>  	/* disable bottom halves when entering the Tx path */
->>  	local_bh_disable();
->> -	__ieee80211_subif_start_xmit(skb, dev, flags, 0);
->> +	__ieee80211_subif_start_xmit(skb, dev, flags, 0, NULL);
-> This is a little awkward, any way to avoid that? Probably not ...
-I first tried to read out the cookie from the skb, in order to avoid
-adding this new argument.
-Problematic with this approach was, that the skb can be deleted in some
-failure cases.
-Therefore I went with this additional argument.
->> +static u16 ieee80211_store_ack_skb(struct ieee80211_local *local,
->>  				   struct sk_buff *skb,
->> -				   u32 *info_flags)
->> +				   u32 *info_flags,
->> +				   bool use_socket,
->> +				   u64 *cookie)
->>  {
->> -	struct sk_buff *ack_skb = skb_clone_sk(skb);
->> +	struct sk_buff *ack_skb;
->>  	u16 info_id = 0;
->>  
->> +	if (use_socket)
-> You can check skb->sk and not need the additional parameter.
-Thanks for the hint!
->
->>  	if (unlikely(!multicast && skb->sk &&
->>  		     skb_shinfo(skb)->tx_flags & SKBTX_WIFI_STATUS))
->> -		info_id = ieee80211_store_ack_skb(local, skb, &info_flags);
->> +		info_id = ieee80211_store_ack_skb(local, skb, &info_flags,
->> +						  true, NULL);
->> +
->> +	if (unlikely(!multicast && ctrl_flags & IEEE80211_TX_CTL_REQ_TX_STATUS))
->> +		info_id = ieee80211_store_ack_skb(local, skb, &info_flags,
->> +						  false, cookie);
-> I think this should be rolled into one condition, since you no longer
-> need the true/false if you check skb->sk. And 'cookie' is already NULL
-> in those other cases so you can pass it unconditionally.
-Ok
->> @@ -2765,8 +2795,9 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
->>  	if (skb_shared(skb)) {
->>  		struct sk_buff *tmp_skb = skb;
->>  
->> -		/* can't happen -- skb is a clone if info_id != 0 */
->> -		WARN_ON(info_id);
->> +		if (!(ctrl_flags & IEEE80211_TX_CTL_REQ_TX_STATUS))
->> +			/* can't happen -- skb is a clone if info_id != 0 */
->> +			WARN_ON(info_id);
-> This I don't understand, but if it really is needed then you should
-> adjust the comment and roll it into a single WARN_ON().
-After adapting my patch with the changes lined out above, I have tested
-again and the warning
-did not occur. Therefore I've ommited changing the warning behavior from
-the updated patch.
-> Also, please put all the remaining mac80211 changes into one patch - I
-> already put all the other changes in.
->
-> johannes
->
-Thanks for your feedback! I'll send an updated v2 with a single patch.
+On Wed, 2020-05-13 at 12:45 -0700, Rajkumar Manoharan wrote:
+
+> +int mesh_add_he_6ghz_cap_ie(struct ieee80211_sub_if_data *sdata,
+> +			    struct sk_buff *skb)
+> +{
+> +	const struct ieee80211_sta_he_cap *he_cap;
+> +	struct ieee80211_supported_band *sband;
+> +	u8 ie_len;
+> +	u8 *pos;
+> +
+> +	sband = ieee80211_get_sband(sdata);
+> +	if (!sband)
+> +		return -EINVAL;
+> +
+> +	he_cap = ieee80211_get_he_iftype_cap(sband, NL80211_IFTYPE_MESH_POINT);
+> +
+> +	if (!he_cap ||
+> +	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_20_NOHT ||
+> +	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_5 ||
+> +	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_10)
+> +		return 0;
+> +
+> +	if (!he_cap->has_he_6ghz)
+> +		return 0;
+
+I saw this before and thought it may actually exist, but it doesn't?
+
+Like I said before though, there doesn't seem much point in this, if you
+don't have 6 GHz then don't advertise those channels ...
+
+>  static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
+> @@ -4803,7 +4809,8 @@ static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
+>  	if (!sband->ht_cap.ht_supported) {
+>  		ifmgd->flags |= IEEE80211_STA_DISABLE_HT;
+>  		ifmgd->flags |= IEEE80211_STA_DISABLE_VHT;
+> -		ifmgd->flags |= IEEE80211_STA_DISABLE_HE;
+> +		if (sband->band != NL80211_BAND_6GHZ)
+> +			ifmgd->flags |= IEEE80211_STA_DISABLE_HE;
+>  	}
+>  
+>  	if (!sband->vht_cap.vht_supported)
+> @@ -5493,7 +5500,8 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+>  	if (req->flags & ASSOC_REQ_DISABLE_HT) {
+>  		ifmgd->flags |= IEEE80211_STA_DISABLE_HT;
+>  		ifmgd->flags |= IEEE80211_STA_DISABLE_VHT;
+> -		ifmgd->flags |= IEEE80211_STA_DISABLE_HE;
+> +		if (sband->band != NL80211_BAND_6GHZ)
+> +			ifmgd->flags |= IEEE80211_STA_DISABLE_HE;
+>  	}
+
+These changes really sort of belong more into the next patch, I guess?
+Not sure.
+
+
+>  	if (req->flags & ASSOC_REQ_DISABLE_VHT)
+> diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+> index 5a33755c22f4..2bcebe672c0d 100644
+> --- a/net/mac80211/util.c
+> +++ b/net/mac80211/util.c
+> @@ -2839,6 +2839,21 @@ u8 *ieee80211_ie_build_he_cap(u8 *pos,
+>  	return pos;
+>  }
+>  
+> +u8 *ieee80211_ie_build_he_6ghz_band_cap(u8 *pos, u16 he_6ghz_cap)
+> +{
+> +	__le16 cap = cpu_to_le16(he_6ghz_cap);
+> +
+> +	*pos++ = WLAN_EID_EXTENSION;
+> +	*pos++ = 3;
+> +	*pos++ = WLAN_EID_EXT_HE_6GHZ_BAND_CAP;
+> +
+> +	/* Fixed data */
+> +	memcpy(pos, &cap, sizeof(cap));
+> +	pos += sizeof(cap);
+> +
+> +	return pos;
+> +}
+
+You forgot SMPS, so this needs to be a bit different, but it's probably
+better as a separate function since it's in multiple places, I guess
+I'll combine our two patches.
+
+johannes
 
