@@ -2,41 +2,41 @@ Return-Path: <SRS0=v5bw=7J=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96FC2C433E1
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 May 2020 13:43:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C979C433DF
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 May 2020 14:00:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6DB65207CB
-	for <linux-wireless@archiver.kernel.org>; Wed, 27 May 2020 13:43:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EB518206F1
+	for <linux-wireless@archiver.kernel.org>; Wed, 27 May 2020 14:00:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388614AbgE0Nnq (ORCPT
+        id S1730271AbgE0OAp (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 27 May 2020 09:43:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37234 "EHLO
+        Wed, 27 May 2020 10:00:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39956 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387581AbgE0Nnq (ORCPT
+        with ESMTP id S1730269AbgE0OAp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 27 May 2020 09:43:46 -0400
+        Wed, 27 May 2020 10:00:45 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5D611C08C5C1
-        for <linux-wireless@vger.kernel.org>; Wed, 27 May 2020 06:43:46 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F24FAC08C5C1
+        for <linux-wireless@vger.kernel.org>; Wed, 27 May 2020 07:00:44 -0700 (PDT)
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.93)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1jdwLP-0047mV-Da; Wed, 27 May 2020 15:43:43 +0200
-Message-ID: <7f2a2a382c42b7285b9ad1eeac4e8060bc8d897a.camel@sipsolutions.net>
-Subject: Re: [PATCH v3 01/11] cfg80211: use only HE capability to set
- prohibited flags in 6 GHz
+        id 1jdwbr-0048ZD-8z; Wed, 27 May 2020 16:00:43 +0200
+Message-ID: <bf0f6c17c188901477c1d6aa61aab6143c4ac635.camel@sipsolutions.net>
+Subject: Re: [PATCH v3 02/11] cfg80211: handle 6 GHz capability of new
+ station
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     Rajkumar Manoharan <rmanohar@codeaurora.org>, kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
-        Vamsi Krishna <vamsin@codeaurora.org>
-Date:   Wed, 27 May 2020 15:43:41 +0200
-In-Reply-To: <1589399105-25472-1-git-send-email-rmanohar@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org
+Date:   Wed, 27 May 2020 16:00:42 +0200
+In-Reply-To: <1589399105-25472-2-git-send-email-rmanohar@codeaurora.org>
 References: <1589399105-25472-1-git-send-email-rmanohar@codeaurora.org>
+         <1589399105-25472-2-git-send-email-rmanohar@codeaurora.org>
 Content-Type: text/plain; charset="UTF-8"
 User-Agent: Evolution 3.36.2 (3.36.2-1.fc32) 
 MIME-Version: 1.0
@@ -46,50 +46,58 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi,
+On Wed, 2020-05-13 at 12:44 -0700, Rajkumar Manoharan wrote:
+> Handle 6 GHz HE capability while adding new station. It will be used
+> later in mac80211 station processing.
 
-This is what we have in this area:
-https://p.sipsolutions.net/d8e56772a261199a.txt
+This doesn't compile without the next patch.
 
-but I see it's also incomplete.
+> +       const struct ieee80211_he_6ghz_band_cap *he_6ghz_capa;
 
-> +static bool cfg80211_is_6ghz_freq(u32 freq)
-> +{
-> +	return (freq > 5940 && freq < 7105);
-> +}
+This we made just an __le16, any particular reason to have the struct?
+It does need to be a pointer for the "no changes" case, but the struct
+seems a bit overkill?
 
-That doesn't really make sense, I don't want to see those hardcoded
-frequencies all over the place.
+> + * @NL80211_ATTR_HE_6GHZ_CAPABILITY: HE 6 GHz Band Capability element (from
+> + *	association request when used with NL80211_CMD_NEW_STATION).
 
->  	case NL80211_CHAN_WIDTH_40:
->  		width = 40;
-> +		if (cfg80211_is_6ghz_freq(chandef->center_freq1)) {
+That we have pretty much identically.
 
-You can check chandef->chan->band instead. (In fact, we did)
+> @@ -2998,6 +3003,7 @@ enum nl80211_attrs {
+>  #define NL80211_HE_MAX_CAPABILITY_LEN           54
+>  #define NL80211_MAX_NR_CIPHER_SUITES		5
+>  #define NL80211_MAX_NR_AKM_SUITES		2
+> +#define NL80211_HE_6GHZ_CAPABILITY_LEN		2
 
-> +			if (!he_cap)
-> +				return false;
-> +			if (!he_cap->has_he_6ghz)
-> +				return false;
+This not, we defined it just to be a U16.
 
-I'm not sure you should even _get_ here with a 6 GHz channel if you
-don't have 6 GHz capability? I mean, why did you register the channel in
-the first place then? This seems unnecessarily complex. If the channel
-didn't exist, it was rejected long before here.
+> +	[NL80211_ATTR_HE_6GHZ_CAPABILITY] = {
+> +		.type = NLA_EXACT_LEN,
+> +		.len = NL80211_HE_6GHZ_CAPABILITY_LEN,
+> +	},
 
-However, looking at D6.0, maybe we do need some checks of the HE
-capability?
+This no longer exists, but I guess I'll just take our patch for the U16
+here.
+ 
+> +	/* Ensure that HT/VHT capabilities are not set for 6 GHz HE STA */
+> +	if (params.he_6ghz_capa && (params.ht_capa || params.vht_capa))
+> +		return -EINVAL;
 
-> +			if (!(he_cap->he_cap_elem.phy_cap_info[0] &
-> +			      IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_40MHZ_80MHZ_IN_5G))
-> +				return false;
+Not sure this makes much sense? We can only check what's being set at
+the same time, so multiple calls here would still be possible ...
+doesn't hurt much though.
 
-Looks like even D6.0 still changed something in this area...
+We didn't have this check, and have one additional check:
 
-Evidently our patch just assumed that in 6 GHz all of this is supported,
-but the spec doesn't support that theory :-)
-
-Can you respin this with D6.0 taken into account?
+@@ -6170,7 +6200,7 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+                params.vht_capa = NULL;
+ 
+                /* HE requires WME */
+-               if (params.he_capa_len)
++               if (params.he_capa_len || params.he_6ghz_capa)
+                        return -EINVAL;
+        }
+ 
 
 johannes
 
