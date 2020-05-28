@@ -2,71 +2,105 @@ Return-Path: <SRS0=UQ4x=7K=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73CE8C433E0
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 14:49:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C51EC433DF
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 14:50:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 56B9B207D3
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 14:49:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 417C6206F1
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 14:50:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728598AbgE1Otr (ORCPT
+        id S1728613AbgE1Ouc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 28 May 2020 10:49:47 -0400
-Received: from p-impout010aa.msg.pkvw.co.charter.net ([47.43.26.141]:47484
-        "EHLO p-impout001.msg.pkvw.co.charter.net" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728539AbgE1Otr (ORCPT
+        Thu, 28 May 2020 10:50:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45298 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728526AbgE1Ou3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 May 2020 10:49:47 -0400
-Received: from localhost ([97.96.18.55])
-        by cmsmtp with ESMTPA
-        id eJqqjJE4EOQ8heJqrjWzmS; Thu, 28 May 2020 14:49:45 +0000
-X-Authority-Analysis: v=2.3 cv=SrXuF8G0 c=1 sm=1 tr=0
- a=gnb2rATmHlbHhomeAxXZdQ==:117 a=gnb2rATmHlbHhomeAxXZdQ==:17
- a=IkcTkHD0fZMA:10 a=o-53GSTNTxPpq0pbfBgA:9 a=QEXdDO2ut3YA:10
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Subject: Re: iwlwifi: 8265: unexpected LLC packets TX'ed in monitor mode
-From:   "Marco" <marco@tampabay.rr.com>
-To:     "Johannes Berg" <johannes@sipsolutions.net>,
-        <linux-wireless@vger.kernel.org>
-Date:   Thu, 28 May 2020 10:26:04 -0400
-Message-Id: <C32FKI01HMGA.U0TCA9AIO8BX@b1>
-In-Reply-To: <ca2b26a87d49284a07b24c71046993814c4fe821.camel@sipsolutions.net>
-X-CMAE-Envelope: MS4wfAOq67BEj59AZO74DpW9m/MifcsIuyVHgMfbLrRjLBJC34PnTKOkITiACRxMGt4nko6fHHE9FCp3xXAyV1uJUPvjy/DycxTCFoFC3mh4ii2i9BOkfpQJ
- //XQYg4ONCvX+FG6SvQKUvs9GviBrYgUiW4tmVdemzOyV0sPVKQqC0OGGMiAD2Jo5n5nWTCSdy9yCdKD60L3Vd7TC3nM2v6iJDQ=
+        Thu, 28 May 2020 10:50:29 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8650EC08C5C6
+        for <linux-wireless@vger.kernel.org>; Thu, 28 May 2020 07:50:29 -0700 (PDT)
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.93)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1jeJrW-004vYI-5l; Thu, 28 May 2020 16:50:26 +0200
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     linux-wireless@vger.kernel.org
+Cc:     Rajkumar Manoharan <rmanohar@codeaurora.org>,
+        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>,
+        Tova Mussai <tova.mussai@intel.com>
+Subject: [PATCH 03/24] ieee80211: definitions for reduced neighbor reports
+Date:   Thu, 28 May 2020 16:49:59 +0200
+Message-Id: <20200528165011.4f9154461c06.I518d9898ad982f838112ea9ca14a20d6bbb16394@changeid>
+X-Mailer: git-send-email 2.26.2
+In-Reply-To: <20200528165011.993f108e96ca.I0086ae42d672379380d04ac5effb2f3d5135731b@changeid>
+References: <20200528165011.993f108e96ca.I0086ae42d672379380d04ac5effb2f3d5135731b@changeid>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Mon May 25, 2020 at 7:23 AM EDT, Johannes Berg wrote:
-> On Wed, 2020-05-13 at 13:48 -0400, Marco Fonseca wrote:
-> > Hello,
-> >=20
-> > While in monitor mode, the 8265 will periodically transmit gratuitous
-> > LLC packets.  In this mode, I would expect the wifi chipset to not
-> > transmit any packets at all (unless packet injection is being used).
-> >=20
-> > This behavior can be observed by a second wifi device in monitor mode.
-> > A display filter on wireshark/tshark of 'llc' makes these easy to spot.
-> >=20
-> > It seems these packets only get produced in presence of a few APs
-> > and/or STAs but I'm not sure of the exact cause.  I don't see the LLC
-> > packets on very quiet channels.
->
-> I think these are somehow related to calibrations in the device.
->
-> johannes
+From: Tova Mussai <tova.mussai@intel.com>
 
-Are you perhaps implying that I can alter calibration settings to fix
-this problem?  If you have any pointers to this it would be
-appreciative.
+Add the necessary definitions to parse reduced neighbor
+report elements.
 
-Regardless though, I would still expect the default behavior to not
-emit packets when in monitor mode, unless the user directs it to;
-similar to what I've seen from other wifi chipsets.
+Signed-off-by: Tova Mussai <tova.mussai@intel.com>
+[change struct name, remove IEEE80211_MIN_AP_NEIGHBOR_INFO_SIZE]
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/linux/ieee80211.h | 28 ++++++++++++++++++++++++++++
+ 1 file changed, 28 insertions(+)
 
-Marco
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 0320ca4c7d28..c29184bf9416 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -2754,6 +2754,8 @@ enum ieee80211_eid {
+ 	WLAN_EID_QUIET_CHANNEL = 198,
+ 	WLAN_EID_OPMODE_NOTIF = 199,
+ 
++	WLAN_EID_REDUCED_NEIGHBOR_REPORT = 201,
++
+ 	WLAN_EID_S1G_BCN_COMPAT = 213,
+ 	WLAN_EID_S1G_SHORT_BCN_INTERVAL = 214,
+ 	WLAN_EID_S1G_CAPABILITIES = 217,
+@@ -3675,4 +3677,30 @@ static inline bool for_each_element_completed(const struct element *element,
+ #define WLAN_RSNX_CAPA_PROTECTED_TWT BIT(4)
+ #define WLAN_RSNX_CAPA_SAE_H2E BIT(5)
+ 
++/*
++ * reduced neighbor report, based on Draft P802.11ax_D5.0,
++ * section 9.4.2.170
++ */
++#define IEEE80211_AP_INFO_TBTT_HDR_TYPE				0x03
++#define IEEE80211_AP_INFO_TBTT_HDR_FILTERED			0x04
++#define IEEE80211_AP_INFO_TBTT_HDR_COLOC			0x08
++#define IEEE80211_AP_INFO_TBTT_HDR_COUNT			0xF0
++#define IEEE80211_TBTT_INFO_OFFSET_BSSID_BSS_PARAM		8
++#define IEEE80211_TBTT_INFO_OFFSET_BSSID_SSSID_BSS_PARAM	12
++
++#define IEEE80211_RNR_TBTT_PARAMS_OCT_RECOMMENDED		0x01
++#define IEEE80211_RNR_TBTT_PARAMS_SAME_SSID			0x02
++#define IEEE80211_RNR_TBTT_PARAMS_MULTI_BSSID			0x04
++#define IEEE80211_RNR_TBTT_PARAMS_TRANSMITTED_BSSID		0x08
++#define IEEE80211_RNR_TBTT_PARAMS_COLOC_ESS			0x10
++#define IEEE80211_RNR_TBTT_PARAMS_PROBE_ACTIVE			0x20
++#define IEEE80211_RNR_TBTT_PARAMS_COLOC_AP			0x40
++
++struct ieee80211_neighbor_ap_info {
++       u8 tbtt_info_hdr;
++       u8 tbtt_info_len;
++       u8 op_class;
++       u8 channel;
++} __packed;
++
+ #endif /* LINUX_IEEE80211_H */
+-- 
+2.26.2
+
