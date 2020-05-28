@@ -2,44 +2,44 @@ Return-Path: <SRS0=UQ4x=7K=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36E7FC433DF
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AAF5C433E0
 	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 08:15:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 08BD12088E
+	by mail.kernel.org (Postfix) with ESMTP id 7406F20B80
 	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 08:15:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726787AbgE1IPa (ORCPT
+        id S1726792AbgE1IPc (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 28 May 2020 04:15:30 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:54749 "EHLO
+        Thu, 28 May 2020 04:15:32 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:54750 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726487AbgE1IP3 (ORCPT
+        with ESMTP id S1726767AbgE1IP3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 28 May 2020 04:15:29 -0400
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 04S8FMxpC027380, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 04S8FME80027394, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexmb06.realtek.com.tw[172.21.6.99])
-        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 04S8FMxpC027380
+        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 04S8FME80027394
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Thu, 28 May 2020 16:15:22 +0800
+        Thu, 28 May 2020 16:15:23 +0800
 Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
  RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Thu, 28 May 2020 16:15:21 +0800
+ 15.1.1779.2; Thu, 28 May 2020 16:15:22 +0800
 Received: from localhost.localdomain (172.21.68.128) by
  RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Thu, 28 May 2020 16:15:21 +0800
+ 15.1.1779.2; Thu, 28 May 2020 16:15:22 +0800
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>, <tehuang@realtek.com>
-Subject: [PATCH v2 3/7] rtw88: 8821c: add dig related settings
-Date:   Thu, 28 May 2020 16:15:09 +0800
-Message-ID: <20200528081513.26415-4-yhchuang@realtek.com>
+Subject: [PATCH v2 6/7] rtw88: 8821c: add false alarm statistics
+Date:   Thu, 28 May 2020 16:15:12 +0800
+Message-ID: <20200528081513.26415-7-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200528081513.26415-1-yhchuang@realtek.com>
 References: <20200528081513.26415-1-yhchuang@realtek.com>
@@ -55,48 +55,115 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Tzu-En Huang <tehuang@realtek.com>
 
-To improve user experience in field, we need DIG to adjust
-RX initial gain depends on field situation. Since each chip
-has its own register address, this commit defines 8821c specific
-addresses.
+This ops is used to do statistics of false alarm periodically,
+and then fine tune RX initial gain to adaptive different
+circumstance.
+Implement check false alarm statistics for 8821c.
 
 Signed-off-by: Tzu-En Huang <tehuang@realtek.com>
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/rtw8821c.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/net/wireless/realtek/rtw88/rtw8821c.c | 49 +++++++++++++++++++
+ drivers/net/wireless/realtek/rtw88/rtw8821c.h |  8 +++
+ 2 files changed, 57 insertions(+)
 
 diff --git a/drivers/net/wireless/realtek/rtw88/rtw8821c.c b/drivers/net/wireless/realtek/rtw88/rtw8821c.c
-index ce580dace83c..df95a095df73 100644
+index ce75715a0e83..7169e6fb9ca9 100644
 --- a/drivers/net/wireless/realtek/rtw88/rtw8821c.c
 +++ b/drivers/net/wireless/realtek/rtw88/rtw8821c.c
-@@ -572,6 +572,10 @@ static const struct rtw_rfe_def rtw8821c_rfe_defs[] = {
- 	[0] = RTW_DEF_RFE(8821c, 0, 0),
+@@ -507,6 +507,54 @@ static void rtw8821c_set_tx_power_index(struct rtw_dev *rtwdev)
+ 	}
+ }
+ 
++static void rtw8821c_false_alarm_statistics(struct rtw_dev *rtwdev)
++{
++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
++	u32 cck_enable;
++	u32 cck_fa_cnt;
++	u32 ofdm_fa_cnt;
++	u32 crc32_cnt;
++	u32 cca32_cnt;
++
++	cck_enable = rtw_read32(rtwdev, REG_RXPSEL) & BIT(28);
++	cck_fa_cnt = rtw_read16(rtwdev, REG_FA_CCK);
++	ofdm_fa_cnt = rtw_read16(rtwdev, REG_FA_OFDM);
++
++	dm_info->cck_fa_cnt = cck_fa_cnt;
++	dm_info->ofdm_fa_cnt = ofdm_fa_cnt;
++	dm_info->total_fa_cnt = ofdm_fa_cnt;
++	dm_info->total_fa_cnt += cck_enable ? cck_fa_cnt : 0;
++
++	crc32_cnt = rtw_read32(rtwdev, REG_CRC_CCK);
++	dm_info->cck_ok_cnt = FIELD_GET(GENMASK(15, 0), crc32_cnt);
++	dm_info->cck_err_cnt = FIELD_GET(GENMASK(31, 16), crc32_cnt);
++	crc32_cnt = rtw_read32(rtwdev, REG_CRC_OFDM);
++	dm_info->ofdm_ok_cnt = FIELD_GET(GENMASK(15, 0), crc32_cnt);
++	dm_info->ofdm_err_cnt = FIELD_GET(GENMASK(31, 16), crc32_cnt);
++	crc32_cnt = rtw_read32(rtwdev, REG_CRC_HT);
++	dm_info->ht_ok_cnt = FIELD_GET(GENMASK(15, 0), crc32_cnt);
++	dm_info->ht_err_cnt = FIELD_GET(GENMASK(31, 16), crc32_cnt);
++	crc32_cnt = rtw_read32(rtwdev, REG_CRC_VHT);
++	dm_info->vht_ok_cnt = FIELD_GET(GENMASK(15, 0), crc32_cnt);
++	dm_info->vht_err_cnt = FIELD_GET(GENMASK(31, 16), crc32_cnt);
++
++	cca32_cnt = rtw_read32(rtwdev, REG_CCA_OFDM);
++	dm_info->ofdm_cca_cnt = FIELD_GET(GENMASK(31, 16), cca32_cnt);
++	dm_info->total_cca_cnt = dm_info->ofdm_cca_cnt;
++	if (cck_enable) {
++		cca32_cnt = rtw_read32(rtwdev, 0xfcc);
++		dm_info->cck_cca_cnt = FIELD_GET(GENMASK(15, 0), cca32_cnt);
++		dm_info->total_cca_cnt += dm_info->cck_cca_cnt;
++	}
++
++	rtw_write32_set(rtwdev, REG_FAS, BIT(17));
++	rtw_write32_clr(rtwdev, REG_FAS, BIT(17));
++	rtw_write32_clr(rtwdev, REG_RXDESC, BIT(15));
++	rtw_write32_set(rtwdev, REG_RXDESC, BIT(15));
++	rtw_write32_set(rtwdev, 0xb58, BIT(0));
++	rtw_write32_clr(rtwdev, 0xb58, BIT(0));
++}
++
+ static struct rtw_pwr_seq_cmd trans_carddis_to_cardemu_8821c[] = {
+ 	{0x0086,
+ 	 RTW_PWR_CUT_ALL_MSK,
+@@ -944,6 +992,7 @@ static struct rtw_chip_ops rtw8821c_ops = {
+ 	.set_antenna		= NULL,
+ 	.set_tx_power_index	= rtw8821c_set_tx_power_index,
+ 	.cfg_ldo25		= rtw8821c_cfg_ldo25,
++	.false_alarm_statistics	= rtw8821c_false_alarm_statistics,
  };
  
-+static struct rtw_hw_reg rtw8821c_dig[] = {
-+	[0] = { .addr = 0xc50, .mask = 0x7f },
-+};
-+
- static const struct rtw_ltecoex_addr rtw8821c_ltecoex_addr = {
- 	.ctrl = LTECOEX_ACCESS_CTRL,
- 	.wdata = LTECOEX_WRITE_DATA,
-@@ -653,6 +657,7 @@ struct rtw_chip_info rtw8821c_hw_spec = {
- 	.csi_buf_pg_num = 0,
- 	.band = RTW_BAND_2G | RTW_BAND_5G,
- 	.page_size = 128,
-+	.dig_min = 0x1c,
- 	.ht_supported = true,
- 	.vht_supported = true,
- 	.lps_deep_mode_supported = BIT(LPS_DEEP_MODE_LCLK),
-@@ -663,6 +668,7 @@ struct rtw_chip_info rtw8821c_hw_spec = {
- 	.rqpn_table = rqpn_table_8821c,
- 	.prioq_addrs = &prioq_addrs_8821c,
- 	.intf_table = &phy_para_table_8821c,
-+	.dig = rtw8821c_dig,
- 	.rf_base_addr = {0x2800, 0x2c00},
- 	.rf_sipi_addr = {0xc90, 0xe90},
- 	.ltecoex_addr = &rtw8821c_ltecoex_addr,
+ struct rtw_chip_info rtw8821c_hw_spec = {
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8821c.h b/drivers/net/wireless/realtek/rtw88/rtw8821c.h
+index fbf71f71b6ad..962132226615 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8821c.h
++++ b/drivers/net/wireless/realtek/rtw88/rtw8821c.h
+@@ -183,10 +183,12 @@ _rtw_write32s_mask(struct rtw_dev *rtwdev, u32 addr, u32 mask, u32 data)
+ #define REG_ACBB0	0x948
+ #define REG_ACBBRXFIR	0x94c
+ #define REG_ACGG2TBL	0x958
++#define REG_FAS		0x9a4
+ #define REG_RXSB	0xa00
+ #define REG_ADCINI	0xa04
+ #define REG_TXSF2	0xa24
+ #define REG_TXSF6	0xa28
++#define REG_FA_CCK	0xa5c
+ #define REG_RXDESC	0xa2c
+ #define REG_ENTXCCK	0xa80
+ #define REG_AGCTR_A	0xc08
+@@ -200,6 +202,12 @@ _rtw_write32s_mask(struct rtw_dev *rtwdev, u32 addr, u32 mask, u32 data)
+ #define REG_RFEINV	0xcbc
+ #define REG_AGCTR_B	0xe08
+ #define REG_RXIGI_B	0xe50
++#define REG_CRC_CCK	0xf04
++#define REG_CRC_OFDM	0xf14
++#define REG_CRC_HT	0xf10
++#define REG_CRC_VHT	0xf0c
++#define REG_CCA_OFDM	0xf08
++#define REG_FA_OFDM	0xf48
+ #define REG_ANTWT	0x1904
+ #define REG_IQKFAILMSK	0x1bf0
+ 
 -- 
 2.17.1
 
