@@ -6,33 +6,33 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35CA5C433E2
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 09:44:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65D8BC433DF
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 09:44:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 218D9208DB
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 09:44:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4D1CE208DB
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 09:44:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387468AbgE1Joa (ORCPT
+        id S2387473AbgE1Job (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 28 May 2020 05:44:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54174 "EHLO
+        Thu, 28 May 2020 05:44:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54182 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387442AbgE1Jo3 (ORCPT
+        with ESMTP id S2387470AbgE1Joa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 May 2020 05:44:29 -0400
+        Thu, 28 May 2020 05:44:30 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5D58AC08C5C5
-        for <linux-wireless@vger.kernel.org>; Thu, 28 May 2020 02:44:29 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 61EE9C05BD1E
+        for <linux-wireless@vger.kernel.org>; Thu, 28 May 2020 02:44:30 -0700 (PDT)
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.93)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1jeF5P-004mD7-L7; Thu, 28 May 2020 11:44:27 +0200
+        id 1jeF5Q-004mD7-Mo; Thu, 28 May 2020 11:44:28 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Rajkumar Manoharan <rmanohar@codeaurora.org>
-Subject: [RFC 05/10] cfg80211: handle 6 GHz capability of new station
-Date:   Thu, 28 May 2020 11:44:11 +0200
-Message-Id: <20200528114415.d7303799647e.Ic9b97d57b6c4f2b28d4b2d23d2849d8bc20bd8cc@changeid>
+Subject: [RFC 09/10] mac80211: build HE operation with 6 GHz oper information
+Date:   Thu, 28 May 2020 11:44:15 +0200
+Message-Id: <20200528094428.23474-1-johannes@sipsolutions.net>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20200528114415.3596a1eedb31.Ic15e681a0e249eab7350a06ceb582cca8bb9a080@changeid>
 References: <20200528114415.3596a1eedb31.Ic15e681a0e249eab7350a06ceb582cca8bb9a080@changeid>
@@ -45,116 +45,179 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Rajkumar Manoharan <rmanohar@codeaurora.org>
 
-Handle 6 GHz HE capability while adding new station. It will be used
-later in mac80211 station processing.
+Add 6 GHz operation information (IEEE 802.11ax/D6.0, Figure 9-787k)
+while building HE operation element for non-HE AP. This field is used to
+determine channel information in the absence of HT/VHT IEs.
 
 Signed-off-by: Rajkumar Manoharan <rmanohar@codeaurora.org>
-Link: https://lore.kernel.org/r/1589399105-25472-2-git-send-email-rmanohar@codeaurora.org
-[handle nl80211_set_station, require WME,
- remove NL80211_HE_6GHZ_CAPABILITY_LEN]
+Link: https://lore.kernel.org/r/1589399105-25472-8-git-send-email-rmanohar@codeaurora.org
+[fix skb allocation size]
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- include/net/cfg80211.h       |  2 ++
- include/uapi/linux/nl80211.h |  5 +++++
- net/wireless/nl80211.c       | 18 +++++++++++++++++-
- 3 files changed, 24 insertions(+), 1 deletion(-)
+ net/mac80211/ieee80211_i.h |  2 +-
+ net/mac80211/mesh.c        | 12 ++++++--
+ net/mac80211/mesh_plink.c  |  1 +
+ net/mac80211/util.c        | 63 +++++++++++++++++++++++++++++++++++---
+ 4 files changed, 70 insertions(+), 8 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index a38653358885..da734ea71b5a 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1238,6 +1238,7 @@ struct sta_txpwr {
-  * @he_capa_len: the length of the HE capabilities
-  * @airtime_weight: airtime scheduler weight for this station
-  * @txpwr: transmit power for an associated station
-+ * @he_6ghz_capa: HE 6 GHz Band capabilities of station
-  */
- struct station_parameters {
- 	const u8 *supported_rates;
-@@ -1270,6 +1271,7 @@ struct station_parameters {
- 	u8 he_capa_len;
- 	u16 airtime_weight;
- 	struct sta_txpwr txpwr;
-+	const struct ieee80211_he_6ghz_capa *he_6ghz_capa;
- };
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 344ea828e806..9f874ce500f6 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -2179,7 +2179,7 @@ u8 *ieee80211_ie_build_he_cap(u8 *pos,
+ 			      u8 *end);
+ void ieee80211_ie_build_he_6ghz_cap(struct ieee80211_sub_if_data *sdata,
+ 				    struct sk_buff *skb);
+-u8 *ieee80211_ie_build_he_oper(u8 *pos);
++u8 *ieee80211_ie_build_he_oper(u8 *pos, struct cfg80211_chan_def *chandef);
+ int ieee80211_parse_bitrates(struct cfg80211_chan_def *chandef,
+ 			     const struct ieee80211_supported_band *sband,
+ 			     const u8 *srates, int srates_len, u32 *rates);
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 5e8d72bdbb98..6378d9cb70d3 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -565,6 +565,7 @@ int mesh_add_he_oper_ie(struct ieee80211_sub_if_data *sdata,
+ {
+ 	const struct ieee80211_sta_he_cap *he_cap;
+ 	struct ieee80211_supported_band *sband;
++	u32 len;
+ 	u8 *pos;
  
- /**
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index c14666b75e57..e42ae429383e 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2502,6 +2502,9 @@ enum nl80211_commands {
-  *	first channel segment specified in %NL80211_ATTR_CENTER_FREQ1.
-  * @NL80211_ATTR_SCAN_FREQ_KHZ: nested attribute with KHz frequencies
-  *
-+ * @NL80211_ATTR_HE_6GHZ_CAPABILITY: HE 6 GHz Band Capability element (from
-+ *	association request when used with NL80211_CMD_NEW_STATION).
-+ *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -2982,6 +2985,8 @@ enum nl80211_attrs {
- 	NL80211_ATTR_CENTER_FREQ1_OFFSET,
- 	NL80211_ATTR_SCAN_FREQ_KHZ,
+ 	sband = ieee80211_get_sband(sdata);
+@@ -578,11 +579,15 @@ int mesh_add_he_oper_ie(struct ieee80211_sub_if_data *sdata,
+ 	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_10)
+ 		return 0;
  
-+	NL80211_ATTR_HE_6GHZ_CAPABILITY,
+-	if (skb_tailroom(skb) < 2 + 1 + sizeof(struct ieee80211_he_operation))
++	len = 2 + 1 + sizeof(struct ieee80211_he_operation);
++	if (sdata->vif.bss_conf.chandef.chan->band == NL80211_BAND_6GHZ)
++		len += sizeof(struct ieee80211_he_oper_6ghz_op_info);
 +
- 	/* add attributes here, update the policy in nl80211.c */
++	if (skb_tailroom(skb) < len)
+ 		return -ENOMEM;
  
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 22c4d13e28cb..bf8bd8268cb7 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -654,6 +654,10 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
- 	[NL80211_ATTR_RECEIVE_MULTICAST] = { .type = NLA_FLAG },
- 	[NL80211_ATTR_WIPHY_FREQ_OFFSET] = NLA_POLICY_RANGE(NLA_U32, 0, 999),
- 	[NL80211_ATTR_SCAN_FREQ_KHZ] = { .type = NLA_NESTED },
-+	[NL80211_ATTR_HE_6GHZ_CAPABILITY] = {
-+		.type = NLA_EXACT_LEN,
-+		.len = sizeof(struct ieee80211_he_6ghz_capa),
-+	},
- };
+-	pos = skb_put(skb, 2 + 1 + sizeof(struct ieee80211_he_operation));
+-	ieee80211_ie_build_he_oper(pos);
++	pos = skb_put(skb, len);
++	ieee80211_ie_build_he_oper(pos, &sdata->vif.bss_conf.chandef);
  
- /* policy for the key attributes */
-@@ -5989,6 +5993,10 @@ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
- 			nla_get_u8(info->attrs[NL80211_ATTR_OPMODE_NOTIF]);
- 	}
+ 	return 0;
+ }
+@@ -773,6 +778,7 @@ ieee80211_mesh_build_beacon(struct ieee80211_if_mesh *ifmsh)
+ 		   2 + sizeof(struct ieee80211_vht_operation) +
+ 		   ie_len_he_cap +
+ 		   2 + 1 + sizeof(struct ieee80211_he_operation) +
++			   sizeof(struct ieee80211_he_oper_6ghz_op_info) +
+ 		   2 + 1 + sizeof(struct ieee80211_he_6ghz_capa) +
+ 		   ifmsh->ie_len;
  
-+	if (info->attrs[NL80211_ATTR_HE_6GHZ_CAPABILITY])
-+		params.he_6ghz_capa =
-+			nla_data(info->attrs[NL80211_ATTR_HE_CAPABILITY]);
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index 3aca89c97f36..b555fafd53c1 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -238,6 +238,7 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
+ 			    2 + sizeof(struct ieee80211_vht_operation) +
+ 			    ie_len_he_cap +
+ 			    2 + 1 + sizeof(struct ieee80211_he_operation) +
++				    sizeof(struct ieee80211_he_oper_6ghz_op_info) +
+ 			    2 + 1 + sizeof(struct ieee80211_he_6ghz_capa) +
+ 			    2 + 8 + /* peering IE */
+ 			    sdata->u.mesh.ie_len);
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 40c82951d801..c31114e2a9b1 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -3010,13 +3010,18 @@ u8 *ieee80211_ie_build_vht_oper(u8 *pos, struct ieee80211_sta_vht_cap *vht_cap,
+ 	return pos + sizeof(struct ieee80211_vht_operation);
+ }
+ 
+-u8 *ieee80211_ie_build_he_oper(u8 *pos)
++u8 *ieee80211_ie_build_he_oper(u8 *pos, struct cfg80211_chan_def *chandef)
+ {
+ 	struct ieee80211_he_operation *he_oper;
++	struct ieee80211_he_oper_6ghz_op_info *he_6ghz_op;
+ 	u32 he_oper_params;
++	u8 ie_len = 1 + sizeof(struct ieee80211_he_operation);
 +
- 	if (info->attrs[NL80211_ATTR_AIRTIME_WEIGHT])
- 		params.airtime_weight =
- 			nla_get_u16(info->attrs[NL80211_ATTR_AIRTIME_WEIGHT]);
-@@ -6123,6 +6131,10 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
- 			return -EINVAL;
- 	}
++	if (chandef->chan->band == NL80211_BAND_6GHZ)
++		ie_len += sizeof(struct ieee80211_he_oper_6ghz_op_info);
  
-+	if (info->attrs[NL80211_ATTR_HE_6GHZ_CAPABILITY])
-+		params.he_6ghz_capa =
-+			nla_data(info->attrs[NL80211_ATTR_HE_6GHZ_CAPABILITY]);
+ 	*pos++ = WLAN_EID_EXTENSION;
+-	*pos++ = 1 + sizeof(struct ieee80211_he_operation);
++	*pos++ = ie_len;
+ 	*pos++ = WLAN_EID_EXT_HE_OPERATION;
+ 
+ 	he_oper_params = 0;
+@@ -3026,16 +3031,66 @@ u8 *ieee80211_ie_build_he_oper(u8 *pos)
+ 				IEEE80211_HE_OPERATION_ER_SU_DISABLE);
+ 	he_oper_params |= u32_encode_bits(1,
+ 				IEEE80211_HE_OPERATION_BSS_COLOR_DISABLED);
++	if (chandef->chan->band == NL80211_BAND_6GHZ)
++		he_oper_params |= u32_encode_bits(1,
++				IEEE80211_HE_OPERATION_6GHZ_OP_INFO);
+ 
+ 	he_oper = (struct ieee80211_he_operation *)pos;
+ 	he_oper->he_oper_params = cpu_to_le32(he_oper_params);
+ 
+ 	/* don't require special HE peer rates */
+ 	he_oper->he_mcs_nss_set = cpu_to_le16(0xffff);
++	pos += sizeof(struct ieee80211_he_operation);
+ 
+-	/* TODO add VHT operational and 6GHz operational subelement? */
++	if (chandef->chan->band != NL80211_BAND_6GHZ)
++		goto out;
+ 
+-	return pos + sizeof(struct ieee80211_vht_operation);
++	/* TODO add VHT operational */
++	he_6ghz_op = (struct ieee80211_he_oper_6ghz_op_info *)pos;
++	he_6ghz_op->min_rate = 6; /* 6 Mbps */
++	he_6ghz_op->primary_chan =
++		ieee80211_frequency_to_channel(chandef->chan->center_freq);
++	he_6ghz_op->center_freq_seg0_idx =
++		ieee80211_frequency_to_channel(chandef->center_freq1);
++	if (chandef->center_freq2)
++		he_6ghz_op->center_freq_seg1_idx =
++			ieee80211_frequency_to_channel(chandef->center_freq2);
++	else
++		he_6ghz_op->center_freq_seg1_idx = 0;
 +
- 	if (info->attrs[NL80211_ATTR_OPMODE_NOTIF]) {
- 		params.opmode_notif_used = true;
- 		params.opmode_notif =
-@@ -6167,10 +6179,14 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
- 		params.vht_capa = NULL;
- 
- 		/* HE requires WME */
--		if (params.he_capa_len)
-+		if (params.he_capa_len || params.he_6ghz_capa)
- 			return -EINVAL;
- 	}
- 
-+	/* Ensure that HT/VHT capabilities are not set for 6 GHz HE STA */
-+	if (params.he_6ghz_capa && (params.ht_capa || params.vht_capa))
-+		return -EINVAL;
++	switch (chandef->width) {
++	case NL80211_CHAN_WIDTH_160:
++		/* Convert 160 MHz channel width to new style as interop
++		 * workaround.
++		 */
++		he_6ghz_op->control =
++			IEEE80211_HE_6GHZ_CHANWIDTH_160MHZ_80P80MHZ;
++		he_6ghz_op->center_freq_seg1_idx =
++			he_6ghz_op->center_freq_seg0_idx;
++		if (chandef->chan->center_freq < chandef->center_freq1)
++			he_6ghz_op->center_freq_seg0_idx -= 8;
++		else
++			he_6ghz_op->center_freq_seg0_idx += 8;
++		fallthrough;
++	case NL80211_CHAN_WIDTH_80P80:
++		he_6ghz_op->control =
++			IEEE80211_HE_6GHZ_CHANWIDTH_160MHZ_80P80MHZ;
++		break;
++	case NL80211_CHAN_WIDTH_80:
++		he_6ghz_op->control = IEEE80211_HE_6GHZ_CHANWIDTH_80MHZ;
++		break;
++	case NL80211_CHAN_WIDTH_40:
++		he_6ghz_op->control = IEEE80211_HE_6GHZ_CHANWIDTH_40MHZ;
++		break;
++	default:
++		he_6ghz_op->control = IEEE80211_HE_6GHZ_CHANWIDTH_20MHZ;
++		break;
++	}
 +
- 	/* When you run into this, adjust the code below for the new flag */
- 	BUILD_BUG_ON(NL80211_STA_FLAG_MAX != 7);
++	pos += sizeof(struct ieee80211_he_oper_6ghz_op_info);
++
++out:
++	return pos;
+ }
  
+ bool ieee80211_chandef_ht_oper(const struct ieee80211_ht_operation *ht_oper,
 -- 
 2.26.2
 
