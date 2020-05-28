@@ -6,35 +6,35 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30D7FC433E0
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 19:36:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A80DC433DF
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 19:36:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0CDAD2078C
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 19:36:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 640FE2078C
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 19:36:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2406578AbgE1Tgh (ORCPT
+        id S2406602AbgE1Tgm (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 28 May 2020 15:36:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33574 "EHLO
+        Thu, 28 May 2020 15:36:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33590 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2406319AbgE1Tgf (ORCPT
+        with ESMTP id S2406319AbgE1Tgl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 May 2020 15:36:35 -0400
+        Thu, 28 May 2020 15:36:41 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 81F66C08C5C6
-        for <linux-wireless@vger.kernel.org>; Thu, 28 May 2020 12:36:35 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF003C08C5C6
+        for <linux-wireless@vger.kernel.org>; Thu, 28 May 2020 12:36:40 -0700 (PDT)
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.93)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1jeOIt-0054OL-Ve; Thu, 28 May 2020 21:35:00 +0200
+        id 1jeOIq-0054OL-2N; Thu, 28 May 2020 21:34:56 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Rajkumar Manoharan <rmanohar@codeaurora.org>,
         Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>,
-        Tova Mussai <tova.mussai@intel.com>
-Subject: [PATCH v2 24/24] nl80211/cfg80211: support 6 GHz scanning
-Date:   Thu, 28 May 2020 21:34:47 +0200
-Message-Id: <20200528213443.1b4cb4ffc82b.I9d94ae093e08fb15b6c8f8fb7406b316778c6a5f@changeid>
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v2 12/24] mac80211: avoid using ext NSS high BW if not supported
+Date:   Thu, 28 May 2020 21:34:35 +0200
+Message-Id: <20200528213443.0e55d40c3ccc.I6fd0b4708ebd087e5e46466c3e91f6efbcbef668@changeid>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20200528213443.993f108e96ca.I0086ae42d672379380d04ac5effb2f3d5135731b@changeid>
 References: <20200528213443.993f108e96ca.I0086ae42d672379380d04ac5effb2f3d5135731b@changeid>
@@ -45,781 +45,397 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Tova Mussai <tova.mussai@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Support 6 GHz scanning, by
- * a new scan flag to scan for colocated BSSes advertised
-   by (and found) APs on 2.4 & 5 GHz
- * doing the necessary reduced neighbor report parsing for
-   this, to find them
- * adding the ability to split the scan request in case the
-   device by itself cannot support this.
+If the AP advertises inconsistent data, namely it has CCFS1 or CCFS2,
+but doesn't advertise support for 160/80+80 bandwidth or "Extended NSS
+BW Support", then we cannot use any MCSes in the the higher bandwidth.
+Thus, avoid connecting with higher bandwidth since it's less efficient
+that way.
 
-Also add some necessary bits in mac80211 to not break with
-these changes.
-
-Signed-off-by: Tova Mussai <tova.mussai@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- include/net/cfg80211.h       |  29 ++-
- include/uapi/linux/nl80211.h |   3 +
- net/mac80211/scan.c          |   9 +-
- net/wireless/core.c          |   4 +-
- net/wireless/core.h          |   5 +-
- net/wireless/nl80211.c       |  11 +-
- net/wireless/scan.c          | 482 ++++++++++++++++++++++++++++++++++-
- 7 files changed, 527 insertions(+), 16 deletions(-)
+ net/mac80211/ibss.c        | 11 +++++++--
+ net/mac80211/ieee80211_i.h |  6 ++++-
+ net/mac80211/mesh.c        | 16 ++++++++++---
+ net/mac80211/mlme.c        | 25 ++++++++++++++-----
+ net/mac80211/scan.c        |  6 +++++
+ net/mac80211/spectmgmt.c   |  4 +++-
+ net/mac80211/util.c        | 49 ++++++++++++++++++++++++++++++++++----
+ 7 files changed, 100 insertions(+), 17 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 95b55eea2afb..c09d782618bb 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2011,6 +2011,24 @@ struct cfg80211_scan_info {
- 	bool aborted;
- };
- 
-+/**
-+ * struct cfg80211_scan_6ghz_params - relevant for 6 GHz only
-+ *
-+ * @short_bssid: short ssid to scan for
-+ * @bssid: bssid to scan for
-+ * @channel_idx: idx of the channel in the channel array in the scan request
-+ *	 which the above info relvant to
-+ * @unsolicited_probe: the AP transmits unsolicited probe response every 20 TU
-+ * @short_ssid_valid: short_ssid is valid and can be used
-+ */
-+struct cfg80211_scan_6ghz_params {
-+	u32 short_ssid;
-+	u32 channel_idx;
-+	u8 bssid[ETH_ALEN];
-+	bool unsolicited_probe;
-+	bool short_ssid_valid;
-+};
-+
- /**
-  * struct cfg80211_scan_request - scan request description
-  *
-@@ -2038,6 +2056,10 @@ struct cfg80211_scan_info {
-  * @mac_addr_mask: MAC address mask used with randomisation, bits that
-  *	are 0 in the mask should be randomised, bits that are 1 should
-  *	be taken from the @mac_addr
-+ * @scan_6ghz: relevant for split scan request only,
-+ *	true if this is the second scan request
-+ * @n_6ghz_params: number of 6 GHz params
-+ * @scan_6ghz_params: 6 GHz params
-  * @bssid: BSSID to scan for (most commonly, the wildcard BSSID)
-  */
- struct cfg80211_scan_request {
-@@ -2065,6 +2087,9 @@ struct cfg80211_scan_request {
- 	struct cfg80211_scan_info info;
- 	bool notified;
- 	bool no_cck;
-+	bool scan_6ghz;
-+	u32 n_6ghz_params;
-+	struct cfg80211_scan_6ghz_params *scan_6ghz_params;
- 
- 	/* keep last */
- 	struct ieee80211_channel *channels[];
-@@ -4128,6 +4153,8 @@ struct cfg80211_ops {
- /**
-  * enum wiphy_flags - wiphy capability flags
-  *
-+ * @WIPHY_FLAG_SPLIT_SCAN_6GHZ: if set to true, the scan request will be split
-+ *	 into two, first for legacy bands and second for UHB.
-  * @WIPHY_FLAG_NETNS_OK: if not set, do not allow changing the netns of this
-  *	wiphy at all
-  * @WIPHY_FLAG_PS_ON_BY_DEFAULT: if set to true, powersave will be enabled
-@@ -4170,7 +4197,7 @@ struct cfg80211_ops {
- enum wiphy_flags {
- 	/* use hole at 0 */
- 	/* use hole at 1 */
--	/* use hole at 2 */
-+	WIPHY_FLAG_SPLIT_SCAN_6GHZ		= BIT(2),
- 	WIPHY_FLAG_NETNS_OK			= BIT(3),
- 	WIPHY_FLAG_PS_ON_BY_DEFAULT		= BIT(4),
- 	WIPHY_FLAG_4ADDR_AP			= BIT(5),
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 5b350d032fa3..65de604afad0 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -5938,6 +5938,8 @@ enum nl80211_timeout_reason {
-  * @NL80211_SCAN_FLAG_FREQ_KHZ: report scan results with
-  *	%NL80211_ATTR_SCAN_FREQ_KHZ. This also means
-  *	%NL80211_ATTR_SCAN_FREQUENCIES will not be included.
-+ * @NL80211_SCAN_FLAG_COLOCATED_6GHZ: scan for colocated APs reported by
-+ *	2.4/5 GHz APs
-  */
- enum nl80211_scan_flags {
- 	NL80211_SCAN_FLAG_LOW_PRIORITY				= 1<<0,
-@@ -5954,6 +5956,7 @@ enum nl80211_scan_flags {
- 	NL80211_SCAN_FLAG_RANDOM_SN				= 1<<11,
- 	NL80211_SCAN_FLAG_MIN_PREQ_CONTENT			= 1<<12,
- 	NL80211_SCAN_FLAG_FREQ_KHZ				= 1<<13,
-+	NL80211_SCAN_FLAG_COLOCATED_6GHZ			= 1<<14,
- };
- 
- /**
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index ad90bbe57457..b2cd97b9065a 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 2479cd48fed0..81d26fef41e9 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
 @@ -9,7 +9,7 @@
-  * Copyright 2007, Michael Wu <flamingice@sourmilk.net>
-  * Copyright 2013-2015  Intel Mobile Communications GmbH
-  * Copyright 2016-2017  Intel Deutschland GmbH
-- * Copyright (C) 2018-2019 Intel Corporation
-+ * Copyright (C) 2018-2020 Intel Corporation
-  */
- 
- #include <linux/if_arp.h>
-@@ -713,6 +713,10 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
- 			req->duration_mandatory;
- 
- 		local->hw_scan_band = 0;
-+		local->hw_scan_req->req.n_6ghz_params = req->n_6ghz_params;
-+		local->hw_scan_req->req.scan_6ghz_params =
-+			req->scan_6ghz_params;
-+		local->hw_scan_req->req.scan_6ghz = req->scan_6ghz;
- 
- 		/*
- 		 * After allocating local->hw_scan_req, we must
-@@ -1124,7 +1128,8 @@ int ieee80211_request_ibss_scan(struct ieee80211_sub_if_data *sdata,
- 		int max_n;
- 
- 		for (band = 0; band < NUM_NL80211_BANDS; band++) {
--			if (!local->hw.wiphy->bands[band])
-+			if (!local->hw.wiphy->bands[band] ||
-+			    band == NL80211_BAND_6GHZ)
- 				continue;
- 
- 			max_n = local->hw.wiphy->bands[band]->n_channels;
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 5b6714460490..0085e80282f5 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -1335,7 +1335,9 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
- 	case NETDEV_DOWN:
- 		cfg80211_update_iface_num(rdev, wdev->iftype, -1);
- 		if (rdev->scan_req && rdev->scan_req->wdev == wdev) {
--			if (WARN_ON(!rdev->scan_req->notified))
-+			if (WARN_ON(!rdev->scan_req->notified &&
-+				    (!rdev->int_scan_req ||
-+				     !rdev->int_scan_req->notified)))
- 				rdev->scan_req->info.aborted = true;
- 			___cfg80211_scan_done(rdev, false);
- 		}
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index e0e5b3ee9699..24a58f56072c 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -3,7 +3,7 @@
-  * Wireless configuration interface internals.
-  *
-  * Copyright 2006-2010	Johannes Berg <johannes@sipsolutions.net>
-- * Copyright (C) 2018-2019 Intel Corporation
-+ * Copyright (C) 2018-2020 Intel Corporation
-  */
- #ifndef __NET_WIRELESS_CORE_H
- #define __NET_WIRELESS_CORE_H
-@@ -72,6 +72,7 @@ struct cfg80211_registered_device {
- 	u32 bss_generation;
- 	u32 bss_entries;
- 	struct cfg80211_scan_request *scan_req; /* protected by RTNL */
-+	struct cfg80211_scan_request *int_scan_req;
- 	struct sk_buff *scan_msg;
- 	struct list_head sched_scan_req_list;
- 	time64_t suspend_at;
-@@ -455,6 +456,8 @@ void cfg80211_process_wdev_events(struct wireless_dev *wdev);
- bool cfg80211_does_bw_fit_range(const struct ieee80211_freq_range *freq_range,
- 				u32 center_freq_khz, u32 bw_khz);
- 
-+int cfg80211_scan(struct cfg80211_registered_device *rdev);
-+
- extern struct work_struct cfg80211_disconnect_work;
- 
- /**
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 3a24e6add13e..4be9ac52421d 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -7993,7 +7993,7 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
- 	request->scan_start = jiffies;
- 
- 	rdev->scan_req = request;
--	err = rdev_scan(rdev, request);
-+	err = cfg80211_scan(rdev);
- 
- 	if (!err) {
- 		nl80211_send_scan_start(rdev, wdev);
-@@ -15288,6 +15288,7 @@ static int nl80211_add_scan_req(struct sk_buff *msg,
- 	struct cfg80211_scan_request *req = rdev->scan_req;
- 	struct nlattr *nest;
- 	int i;
-+	struct cfg80211_scan_info *info;
- 
- 	if (WARN_ON(!req))
- 		return 0;
-@@ -15331,11 +15332,13 @@ static int nl80211_add_scan_req(struct sk_buff *msg,
- 	    nla_put_u32(msg, NL80211_ATTR_SCAN_FLAGS, req->flags))
- 		goto nla_put_failure;
- 
--	if (req->info.scan_start_tsf &&
-+	info = rdev->int_scan_req ? &rdev->int_scan_req->info :
-+		&rdev->scan_req->info;
-+	if (info->scan_start_tsf &&
- 	    (nla_put_u64_64bit(msg, NL80211_ATTR_SCAN_START_TIME_TSF,
--			       req->info.scan_start_tsf, NL80211_BSS_PAD) ||
-+			       info->scan_start_tsf, NL80211_BSS_PAD) ||
- 	     nla_put(msg, NL80211_ATTR_SCAN_START_TIME_TSF_BSSID, ETH_ALEN,
--		     req->info.tsf_bssid)))
-+		     info->tsf_bssid)))
- 		goto nla_put_failure;
- 
- 	return 0;
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index 74ea4cfb39fb..684d1132bc12 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -5,7 +5,7 @@
-  * Copyright 2008 Johannes Berg <johannes@sipsolutions.net>
+  * Copyright 2009, Johannes Berg <johannes@sipsolutions.net>
   * Copyright 2013-2014  Intel Mobile Communications GmbH
-  * Copyright 2016	Intel Deutschland GmbH
-- * Copyright (C) 2018-2019 Intel Corporation
-+ * Copyright (C) 2018-2020 Intel Corporation
+  * Copyright(c) 2016 Intel Deutschland GmbH
+- * Copyright(c) 2018-2019 Intel Corporation
++ * Copyright(c) 2018-2020 Intel Corporation
   */
- #include <linux/kernel.h>
- #include <linux/slab.h>
-@@ -14,6 +14,8 @@
- #include <linux/wireless.h>
- #include <linux/nl80211.h>
- #include <linux/etherdevice.h>
-+#include <linux/crc32.h>
-+#include <linux/bitfield.h>
- #include <net/arp.h>
- #include <net/cfg80211.h>
- #include <net/cfg80211-wext.h>
-@@ -74,6 +76,42 @@ MODULE_PARM_DESC(bss_entries_limit,
  
- #define IEEE80211_SCAN_RESULT_EXPIRE	(30 * HZ)
+ #include <linux/delay.h>
+@@ -781,6 +781,7 @@ ieee80211_ibss_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 	enum nl80211_channel_type ch_type;
+ 	int err;
+ 	u32 sta_flags;
++	u32 vht_cap_info = 0;
  
-+/**
-+ * struct cfg80211_colocated_ap - colocated AP information
-+ *
-+ * @list: linked list to all colocated aPS
-+ * @bssid: BSSID of the reported AP
-+ * @ssid: SSID of the reported AP
-+ * @ssid_len: length of the ssid
-+ * @center_freq: frequency the reported AP is on
-+ * @unsolicited_probe: the reported AP is part of an ESS, where all the APs
-+ *	that operate in the same channel as the reported AP and that might be
-+ *	detected by a STA receiving this frame, are transmitting unsolicited
-+ *	Probe Response frames every 20 TUs
-+ * @oct_recommended: OCT is recommended to exchange MMPDUs with the reported AP
-+ * @same_ssid: the reported AP has the same SSID as the reporting AP
-+ * @multi_bss: the reported AP is part of a multiple BSSID set
-+ * @transmitted_bssid: the reported AP is the transmitting BSSID
-+ * @colocated_ess: all the APs that share the same ESS as the reported AP are
-+ *	colocated and can be discovered via legacy bands.
-+ * @short_ssid_valid: short_ssid is valid and can be used
-+ */
-+struct cfg80211_colocated_ap {
-+	struct list_head list;
-+	u8 bssid[ETH_ALEN];
-+	u8 ssid[IEEE80211_MAX_SSID_LEN];
-+	size_t ssid_len;
-+	u32 short_ssid;
-+	u32 center_freq;
-+	u8 unsolicited_probe:1,
-+	   oct_recommended:1,
-+	   same_ssid:1,
-+	   multi_bss:1,
-+	   transmitted_bssid:1,
-+	   colocated_ess:1,
-+	   short_ssid_valid:1;
-+};
-+
- static void bss_free(struct cfg80211_internal_bss *bss)
- {
- 	struct cfg80211_bss_ies *ies;
-@@ -448,10 +486,415 @@ static bool cfg80211_bss_expire_oldest(struct cfg80211_registered_device *rdev)
- 	return ret;
- }
+ 	sdata_assert_lock(sdata);
  
-+static u8 cfg80211_parse_bss_param(u8 data,
-+				   struct cfg80211_colocated_ap *coloc_ap)
-+{
-+	coloc_ap->oct_recommended =
-+		u8_get_bits(data, IEEE80211_RNR_TBTT_PARAMS_OCT_RECOMMENDED);
-+	coloc_ap->same_ssid =
-+		u8_get_bits(data, IEEE80211_RNR_TBTT_PARAMS_SAME_SSID);
-+	coloc_ap->multi_bss =
-+		u8_get_bits(data, IEEE80211_RNR_TBTT_PARAMS_MULTI_BSSID);
-+	coloc_ap->transmitted_bssid =
-+		u8_get_bits(data, IEEE80211_RNR_TBTT_PARAMS_TRANSMITTED_BSSID);
-+	coloc_ap->unsolicited_probe =
-+		u8_get_bits(data, IEEE80211_RNR_TBTT_PARAMS_PROBE_ACTIVE);
-+	coloc_ap->colocated_ess =
-+		u8_get_bits(data, IEEE80211_RNR_TBTT_PARAMS_COLOC_ESS);
-+
-+	return u8_get_bits(data, IEEE80211_RNR_TBTT_PARAMS_COLOC_AP);
-+}
-+
-+static int cfg80211_calc_short_ssid(const struct cfg80211_bss_ies *ies,
-+				    const struct element **elem, u32 *s_ssid)
-+{
-+
-+	*elem = cfg80211_find_elem(WLAN_EID_SSID, ies->data, ies->len);
-+	if (!*elem || (*elem)->datalen > IEEE80211_MAX_SSID_LEN)
-+		return -EINVAL;
-+
-+	*s_ssid = ~crc32_le(~0, (*elem)->data, (*elem)->datalen);
-+	return 0;
-+}
-+
-+static void cfg80211_free_coloc_ap_list(struct list_head *coloc_ap_list)
-+{
-+	struct cfg80211_colocated_ap *ap, *tmp_ap;
-+
-+	list_for_each_entry_safe(ap, tmp_ap, coloc_ap_list, list) {
-+		list_del(&ap->list);
-+		kfree(ap);
-+	}
-+}
-+
-+static int cfg80211_parse_ap_info(struct cfg80211_colocated_ap *entry,
-+				  const u8 *pos, u8 length,
-+				  const struct element *ssid_elem,
-+				  int s_ssid_tmp)
-+{
-+	/* skip the TBTT offset */
-+	pos++;
-+
-+	memcpy(entry->bssid, pos, ETH_ALEN);
-+	pos += ETH_ALEN;
-+
-+	if (length == IEEE80211_TBTT_INFO_OFFSET_BSSID_SSSID_BSS_PARAM) {
-+		memcpy(&entry->short_ssid, pos,
-+		       sizeof(entry->short_ssid));
-+		entry->short_ssid_valid = true;
-+		pos += 4;
-+	}
-+
-+	/* skip non colocated APs */
-+	if (!cfg80211_parse_bss_param(*pos, entry))
-+		return -EINVAL;
-+	pos++;
-+
-+	if (length == IEEE80211_TBTT_INFO_OFFSET_BSSID_BSS_PARAM) {
-+		/*
-+		 * no information about the short ssid. Consider the entry valid
-+		 * for now. It would later be dropped in case there are explicit
-+		 * SSIDs that need to be matched
-+		 */
-+		if (!entry->same_ssid)
-+			return 0;
-+	}
-+
-+	if (entry->same_ssid) {
-+		entry->short_ssid = s_ssid_tmp;
-+		entry->short_ssid_valid = true;
-+
-+		/*
-+		 * This is safe because we validate datalen in
-+		 * cfg80211_parse_colocated_ap(), before calling this
-+		 * function.
-+		 */
-+		memcpy(&entry->ssid, &ssid_elem->data,
-+		       ssid_elem->datalen);
-+		entry->ssid_len = ssid_elem->datalen;
-+	}
-+	return 0;
-+}
-+
-+static int cfg80211_parse_colocated_ap(const struct cfg80211_bss_ies *ies,
-+				       struct list_head *list)
-+{
-+	struct ieee80211_neighbor_ap_info *ap_info;
-+	const struct element *elem, *ssid_elem;
-+	const u8 *pos, *end;
-+	u32 s_ssid_tmp;
-+	int n_coloc = 0, ret;
-+	LIST_HEAD(ap_list);
-+
-+	elem = cfg80211_find_elem(WLAN_EID_REDUCED_NEIGHBOR_REPORT, ies->data,
-+				  ies->len);
-+	if (!elem)
-+		return 0;
-+
-+	pos = elem->data;
-+	end = pos + elem->datalen;
-+
-+	ret = cfg80211_calc_short_ssid(ies, &ssid_elem, &s_ssid_tmp);
-+	if (ret)
-+		return ret;
-+
-+	/* RNR IE may contain more than one NEIGHBOR_AP_INFO */
-+	while (pos + sizeof(*ap_info) <= end) {
-+		enum nl80211_band band;
-+		int freq;
-+		u8 length, i, count;
-+
-+		ap_info = (void *)pos;
-+		count = u8_get_bits(ap_info->tbtt_info_hdr,
-+				    IEEE80211_AP_INFO_TBTT_HDR_COUNT) + 1;
-+		length = ap_info->tbtt_info_len;
-+
-+		pos += sizeof(*ap_info);
-+
-+		if (!ieee80211_operating_class_to_band(ap_info->op_class,
-+						       &band))
-+			break;
-+
-+		freq = ieee80211_channel_to_frequency(ap_info->channel, band);
-+
-+		if (end - pos < count * ap_info->tbtt_info_len)
-+			break;
-+
-+		/*
-+		 * TBTT info must include bss param + BSSID +
-+		 * (short SSID or same_ssid bit to be set).
-+		 * ignore other options, and move to the
-+		 * next AP info
-+		 */
-+		if (band != NL80211_BAND_6GHZ ||
-+		    (length != IEEE80211_TBTT_INFO_OFFSET_BSSID_BSS_PARAM &&
-+		     length < IEEE80211_TBTT_INFO_OFFSET_BSSID_SSSID_BSS_PARAM)) {
-+			pos += count * ap_info->tbtt_info_len;
-+			continue;
-+		}
-+
-+		for (i = 0; i < count; i++) {
-+			struct cfg80211_colocated_ap *entry;
-+
-+			entry = kzalloc(sizeof(*entry) + IEEE80211_MAX_SSID_LEN,
-+					GFP_ATOMIC);
-+
-+			if (!entry)
-+				break;
-+
-+			entry->center_freq = freq;
-+
-+			if (!cfg80211_parse_ap_info(entry, pos, length, elem,
-+						    s_ssid_tmp)){
-+				n_coloc++;
-+				list_add_tail(&entry->list, &ap_list);
-+			} else {
-+				kfree(entry);
-+			}
-+
-+			pos += ap_info->tbtt_info_len;
-+		}
-+	}
-+
-+	if (pos != end) {
-+		cfg80211_free_coloc_ap_list(&ap_list);
-+		return 0;
-+	}
-+
-+	list_splice_tail(&ap_list, list);
-+	return n_coloc;
-+}
-+
-+static  void cfg80211_scan_req_add_chan(struct cfg80211_scan_request *request,
-+					struct ieee80211_channel *chan,
-+					bool add_to_6ghz)
-+{
-+	int i;
-+	u32 n_channels = request->n_channels;
-+	struct cfg80211_scan_6ghz_params *params =
-+		&request->scan_6ghz_params[request->n_6ghz_params];
-+
-+	for (i = 0; i < n_channels; i++) {
-+		if (request->channels[i] == chan) {
-+			if (add_to_6ghz)
-+				params->channel_idx = i;
-+			return;
-+		}
-+	}
-+
-+	request->channels[n_channels] = chan;
-+	if (add_to_6ghz)
-+		request->scan_6ghz_params[request->n_6ghz_params].channel_idx =
-+			n_channels;
-+
-+	request->n_channels++;
-+}
-+
-+static bool cfg80211_find_ssid_match(struct cfg80211_colocated_ap *ap,
-+				     struct cfg80211_scan_request *request)
-+{
-+	u8 i;
-+	u32 s_ssid;
-+
-+	for (i = 0; i < request->n_ssids; i++) {
-+		/* wildcard ssid in the scan request */
-+		if (!request->ssids[i].ssid_len)
-+			return true;
-+
-+		if (ap->ssid_len &&
-+		    ap->ssid_len == request->ssids[i].ssid_len) {
-+			if (!memcmp(request->ssids[i].ssid, ap->ssid,
-+				    ap->ssid_len))
-+				return true;
-+		} else if (ap->short_ssid_valid) {
-+			s_ssid = ~crc32_le(~0, request->ssids[i].ssid,
-+					   request->ssids[i].ssid_len);
-+
-+			if (ap->short_ssid == s_ssid)
-+				return true;
-+		}
-+	}
-+
-+	return false;
-+}
-+
-+static int cfg80211_scan_6ghz(struct cfg80211_registered_device *rdev)
-+{
-+	u8 i;
-+	struct cfg80211_colocated_ap *ap;
-+	int n_channels, count = 0, err;
-+	struct cfg80211_scan_request *request, *rdev_req = rdev->scan_req;
-+	LIST_HEAD(coloc_ap_list);
-+	bool need_scan_psc;
-+
-+	rdev_req->scan_6ghz = true;
-+
-+	if (!rdev->wiphy.bands[NL80211_BAND_6GHZ])
-+		return -EOPNOTSUPP;
-+
-+	n_channels = rdev->wiphy.bands[NL80211_BAND_6GHZ]->n_channels;
-+
-+	if (rdev_req->flags & NL80211_SCAN_FLAG_COLOCATED_6GHZ) {
-+		struct cfg80211_internal_bss *intbss;
-+
-+		spin_lock_bh(&rdev->bss_lock);
-+		list_for_each_entry(intbss, &rdev->bss_list, list) {
-+			struct cfg80211_bss *res = &intbss->pub;
-+
-+			count += cfg80211_parse_colocated_ap(res->ies,
-+							     &coloc_ap_list);
-+		}
-+		spin_unlock_bh(&rdev->bss_lock);
-+	}
-+
-+	request = kzalloc(struct_size(request, channels, n_channels) +
-+			  sizeof(*request->scan_6ghz_params) * count,
-+			  GFP_KERNEL);
-+	if (!request) {
-+		cfg80211_free_coloc_ap_list(&coloc_ap_list);
-+		return -ENOMEM;
-+	}
-+
-+	*request = *rdev_req;
-+	request->n_channels = 0;
-+	request->scan_6ghz_params =
-+		(void *)&request->channels[n_channels];
-+
-+	/*
-+	 * PSC channels should not be scanned if all the reported co-located APs
-+	 * are indicating that all APs in the same ESS are co-located
-+	 */
-+	if (count) {
-+		need_scan_psc = false;
-+
-+		list_for_each_entry(ap, &coloc_ap_list, list) {
-+			if (!ap->colocated_ess) {
-+				need_scan_psc = true;
-+				break;
-+			}
-+		}
-+	} else {
-+		need_scan_psc = true;
-+	}
-+
-+	/*
-+	 * add to the scan request the channels that need to be scanned
-+	 * regardless of the collocated APs (PSC channels or all channels
-+	 * in case that NL80211_SCAN_FLAG_COLOCATED_6GHZ is not set)
-+	 */
-+	for (i = 0; i < rdev_req->n_channels; i++) {
-+		if (rdev_req->channels[i]->band == NL80211_BAND_6GHZ &&
-+		    ((need_scan_psc &&
-+		      cfg80211_channel_is_psc(rdev_req->channels[i])) ||
-+		     !(rdev_req->flags & NL80211_SCAN_FLAG_COLOCATED_6GHZ))) {
-+			cfg80211_scan_req_add_chan(request,
-+						   rdev_req->channels[i],
-+						   false);
-+		}
-+	}
-+
-+	if (!(rdev_req->flags & NL80211_SCAN_FLAG_COLOCATED_6GHZ))
-+		goto skip;
-+
-+	list_for_each_entry(ap, &coloc_ap_list, list) {
-+		bool found = false;
-+		struct cfg80211_scan_6ghz_params *scan_6ghz_params =
-+			&request->scan_6ghz_params[request->n_6ghz_params];
-+		struct ieee80211_channel *chan =
-+			ieee80211_get_channel(&rdev->wiphy, ap->center_freq);
-+
-+		if (!chan || chan->flags & IEEE80211_CHAN_DISABLED)
-+			continue;
-+
-+		for (i = 0; i < rdev_req->n_channels; i++) {
-+			if (rdev_req->channels[i] == chan)
-+				found = true;
-+		}
-+
-+		if (!found)
-+			continue;
-+
-+		if (request->n_ssids > 0 &&
-+		    !cfg80211_find_ssid_match(ap, request))
-+			continue;
-+
-+		cfg80211_scan_req_add_chan(request, chan, true);
-+		memcpy(scan_6ghz_params->bssid, ap->bssid, ETH_ALEN);
-+		scan_6ghz_params->short_ssid = ap->short_ssid;
-+		scan_6ghz_params->short_ssid_valid = ap->short_ssid_valid;
-+		scan_6ghz_params->unsolicited_probe = ap->unsolicited_probe;
-+		request->n_6ghz_params++;
-+	}
-+
-+skip:
-+	cfg80211_free_coloc_ap_list(&coloc_ap_list);
-+
-+	if (request->n_channels) {
-+		struct cfg80211_scan_request *old = rdev->int_scan_req;
-+
-+		rdev->int_scan_req = request;
-+
-+		/*
-+		 * If this scan follows a previous scan, save the scan start
-+		 * info from the first part of the scan
-+		 */
-+		if (old)
-+			rdev->int_scan_req->info = old->info;
-+
-+		err = rdev_scan(rdev, request);
-+		if (err) {
-+			rdev->int_scan_req = old;
-+			kfree(request);
-+		} else {
-+			kfree(old);
-+		}
-+
-+		return err;
-+	}
-+
-+	kfree(request);
-+	return -EINVAL;
-+}
-+
-+int cfg80211_scan(struct cfg80211_registered_device *rdev)
-+{
-+	struct cfg80211_scan_request *request;
-+	struct cfg80211_scan_request *rdev_req = rdev->scan_req;
-+	u32 n_channels = 0, idx, i;
-+
-+	if (!(rdev->wiphy.flags & WIPHY_FLAG_SPLIT_SCAN_6GHZ))
-+		return rdev_scan(rdev, rdev_req);
-+
-+	for (i = 0; i < rdev_req->n_channels; i++) {
-+		if (rdev_req->channels[i]->band != NL80211_BAND_6GHZ)
-+			n_channels++;
-+	}
-+
-+	if (!n_channels)
-+		return cfg80211_scan_6ghz(rdev);
-+
-+	request = kzalloc(struct_size(request, channels, n_channels),
-+			  GFP_KERNEL);
-+	if (!request)
-+		return -ENOMEM;
-+
-+	*request = *rdev_req;
-+	request->n_channels = n_channels;
-+
-+	for (i = idx = 0; i < rdev_req->n_channels; i++) {
-+		if (rdev_req->channels[i]->band != NL80211_BAND_6GHZ)
-+			request->channels[idx++] = rdev_req->channels[i];
-+	}
-+
-+	rdev_req->scan_6ghz = false;
-+	rdev->int_scan_req = request;
-+	return rdev_scan(rdev, request);
-+}
-+
- void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev,
- 			   bool send_message)
- {
--	struct cfg80211_scan_request *request;
-+	struct cfg80211_scan_request *request, *rdev_req;
- 	struct wireless_dev *wdev;
- 	struct sk_buff *msg;
- #ifdef CONFIG_CFG80211_WEXT
-@@ -466,11 +909,18 @@ void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev,
- 		return;
+@@ -798,9 +799,13 @@ ieee80211_ibss_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 		break;
  	}
  
--	request = rdev->scan_req;
--	if (!request)
-+	rdev_req = rdev->scan_req;
-+	if (!rdev_req)
- 		return;
- 
--	wdev = request->wdev;
-+	wdev = rdev_req->wdev;
-+	request = rdev->int_scan_req ? rdev->int_scan_req : rdev_req;
++	if (elems->vht_cap_elem)
++		vht_cap_info = le32_to_cpu(elems->vht_cap_elem->vht_cap_info);
 +
-+	if (wdev_running(wdev) &&
-+	    (rdev->wiphy.flags & WIPHY_FLAG_SPLIT_SCAN_6GHZ) &&
-+	    !rdev_req->scan_6ghz && !request->info.aborted &&
-+	    !cfg80211_scan_6ghz(rdev))
-+		return;
+ 	memset(&params, 0, sizeof(params));
+ 	err = ieee80211_parse_ch_switch_ie(sdata, elems,
+ 					   ifibss->chandef.chan->band,
++					   vht_cap_info,
+ 					   sta_flags, ifibss->bssid, &csa_ie);
+ 	/* can't switch to destination channel, fail */
+ 	if (err < 0)
+@@ -1060,8 +1065,10 @@ static void ieee80211_update_sta_info(struct ieee80211_sub_if_data *sdata,
+ 			/* we both use VHT */
+ 			struct ieee80211_vht_cap cap_ie;
+ 			struct ieee80211_sta_vht_cap cap = sta->sta.vht_cap;
++			u32 vht_cap_info =
++				le32_to_cpu(elems->vht_cap_elem->vht_cap_info);
+ 
+-			ieee80211_chandef_vht_oper(&local->hw,
++			ieee80211_chandef_vht_oper(&local->hw, vht_cap_info,
+ 						   elems->vht_operation,
+ 						   elems->ht_operation,
+ 						   &chandef);
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 9f874ce500f6..0cc584574976 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -111,6 +111,8 @@ struct ieee80211_bss {
+ 	size_t supp_rates_len;
+ 	struct ieee80211_rate *beacon_rate;
+ 
++	u32 vht_cap_info;
++
+ 	/*
+ 	 * During association, we save an ERP value from a probe response so
+ 	 * that we can feed ERP info to the driver when handling the
+@@ -1915,6 +1917,7 @@ void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
+  * @sdata: the sdata of the interface which has received the frame
+  * @elems: parsed 802.11 elements received with the frame
+  * @current_band: indicates the current band
++ * @vht_cap_info: VHT capabilities of the transmitter
+  * @sta_flags: contains information about own capabilities and restrictions
+  *	to decide which channel switch announcements can be accepted. Only the
+  *	following subset of &enum ieee80211_sta_flags are evaluated:
+@@ -1929,6 +1932,7 @@ void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
+ int ieee80211_parse_ch_switch_ie(struct ieee80211_sub_if_data *sdata,
+ 				 struct ieee802_11_elems *elems,
+ 				 enum nl80211_band current_band,
++				 u32 vht_cap_info,
+ 				 u32 sta_flags, u8 *bssid,
+ 				 struct ieee80211_csa_ie *csa_ie);
+ 
+@@ -2194,7 +2198,7 @@ u8 *ieee80211_add_wmm_info_ie(u8 *buf, u8 qosinfo);
+ /* channel management */
+ bool ieee80211_chandef_ht_oper(const struct ieee80211_ht_operation *ht_oper,
+ 			       struct cfg80211_chan_def *chandef);
+-bool ieee80211_chandef_vht_oper(struct ieee80211_hw *hw,
++bool ieee80211_chandef_vht_oper(struct ieee80211_hw *hw, u32 vht_cap_info,
+ 				const struct ieee80211_vht_operation *oper,
+ 				const struct ieee80211_ht_operation *htop,
+ 				struct cfg80211_chan_def *chandef);
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 79e0a90982dd..696d6fb322e6 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -1,7 +1,7 @@
+ // SPDX-License-Identifier: GPL-2.0-only
+ /*
+  * Copyright (c) 2008, 2009 open80211s Ltd.
+- * Copyright (C) 2018 - 2019 Intel Corporation
++ * Copyright (C) 2018 - 2020 Intel Corporation
+  * Authors:    Luis Carlos Cobo <luisca@cozybit.com>
+  * 	       Javier Cardona <javier@cozybit.com>
+  */
+@@ -63,6 +63,7 @@ bool mesh_matches_local(struct ieee80211_sub_if_data *sdata,
+ 	u32 basic_rates = 0;
+ 	struct cfg80211_chan_def sta_chan_def;
+ 	struct ieee80211_supported_band *sband;
++	u32 vht_cap_info = 0;
  
  	/*
- 	 * This must be before sending the other events!
-@@ -501,8 +951,11 @@ void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev,
- 	if (wdev->netdev)
- 		dev_put(wdev->netdev);
- 
-+	kfree(rdev->int_scan_req);
-+	rdev->int_scan_req = NULL;
+ 	 * As support for each feature is added, check for matching
+@@ -96,7 +97,11 @@ bool mesh_matches_local(struct ieee80211_sub_if_data *sdata,
+ 	cfg80211_chandef_create(&sta_chan_def, sdata->vif.bss_conf.chandef.chan,
+ 				NL80211_CHAN_NO_HT);
+ 	ieee80211_chandef_ht_oper(ie->ht_operation, &sta_chan_def);
+-	ieee80211_chandef_vht_oper(&sdata->local->hw,
 +
-+	kfree(rdev->scan_req);
- 	rdev->scan_req = NULL;
--	kfree(request);
++	if (ie->vht_cap_elem)
++		vht_cap_info = le32_to_cpu(ie->vht_cap_elem->vht_cap_info);
++
++	ieee80211_chandef_vht_oper(&sdata->local->hw, vht_cap_info,
+ 				   ie->vht_operation, ie->ht_operation,
+ 				   &sta_chan_def);
  
- 	if (!send_message)
- 		rdev->scan_msg = msg;
-@@ -525,10 +978,25 @@ void __cfg80211_scan_done(struct work_struct *wk)
- void cfg80211_scan_done(struct cfg80211_scan_request *request,
- 			struct cfg80211_scan_info *info)
+@@ -1076,7 +1081,7 @@ ieee80211_mesh_process_chnswitch(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+ 	struct ieee80211_supported_band *sband;
+ 	int err;
+-	u32 sta_flags;
++	u32 sta_flags, vht_cap_info = 0;
+ 
+ 	sdata_assert_lock(sdata);
+ 
+@@ -1099,8 +1104,13 @@ ieee80211_mesh_process_chnswitch(struct ieee80211_sub_if_data *sdata,
+ 		break;
+ 	}
+ 
++	if (elems->vht_cap_elem)
++		vht_cap_info =
++			le32_to_cpu(elems->vht_cap_elem->vht_cap_info);
++
+ 	memset(&params, 0, sizeof(params));
+ 	err = ieee80211_parse_ch_switch_ie(sdata, elems, sband->band,
++					   vht_cap_info,
+ 					   sta_flags, sdata->vif.addr,
+ 					   &csa_ie);
+ 	if (err < 0)
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index f6ddce646f18..1f9c48414c85 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -145,6 +145,7 @@ static u32
+ ieee80211_determine_chantype(struct ieee80211_sub_if_data *sdata,
+ 			     struct ieee80211_supported_band *sband,
+ 			     struct ieee80211_channel *channel,
++			     u32 vht_cap_info,
+ 			     const struct ieee80211_ht_operation *ht_oper,
+ 			     const struct ieee80211_vht_operation *vht_oper,
+ 			     const struct ieee80211_he_operation *he_oper,
+@@ -223,7 +224,7 @@ ieee80211_determine_chantype(struct ieee80211_sub_if_data *sdata,
+ 		memcpy(&he_oper_vht_cap, he_oper->optional, 3);
+ 		he_oper_vht_cap.basic_mcs_set = cpu_to_le16(0);
+ 
+-		if (!ieee80211_chandef_vht_oper(&sdata->local->hw,
++		if (!ieee80211_chandef_vht_oper(&sdata->local->hw, vht_cap_info,
+ 						&he_oper_vht_cap, ht_oper,
+ 						&vht_chandef)) {
+ 			if (!(ifmgd->flags & IEEE80211_STA_DISABLE_HE))
+@@ -232,8 +233,10 @@ ieee80211_determine_chantype(struct ieee80211_sub_if_data *sdata,
+ 			ret = IEEE80211_STA_DISABLE_HE;
+ 			goto out;
+ 		}
+-	} else if (!ieee80211_chandef_vht_oper(&sdata->local->hw, vht_oper,
+-					       ht_oper, &vht_chandef)) {
++	} else if (!ieee80211_chandef_vht_oper(&sdata->local->hw,
++					       vht_cap_info,
++					       vht_oper, ht_oper,
++					       &vht_chandef)) {
+ 		if (!(ifmgd->flags & IEEE80211_STA_DISABLE_VHT))
+ 			sdata_info(sdata,
+ 				   "AP VHT information is invalid, disable VHT\n");
+@@ -329,6 +332,7 @@ ieee80211_determine_chantype(struct ieee80211_sub_if_data *sdata,
+ static int ieee80211_config_bw(struct ieee80211_sub_if_data *sdata,
+ 			       struct sta_info *sta,
+ 			       const struct ieee80211_ht_cap *ht_cap,
++			       const struct ieee80211_vht_cap *vht_cap,
+ 			       const struct ieee80211_ht_operation *ht_oper,
+ 			       const struct ieee80211_vht_operation *vht_oper,
+ 			       const struct ieee80211_he_operation *he_oper,
+@@ -343,6 +347,7 @@ static int ieee80211_config_bw(struct ieee80211_sub_if_data *sdata,
+ 	u16 ht_opmode;
+ 	u32 flags;
+ 	enum ieee80211_sta_rx_bandwidth new_sta_bw;
++	u32 vht_cap_info = 0;
+ 	int ret;
+ 
+ 	/* if HT was/is disabled, don't track any bandwidth changes */
+@@ -371,8 +376,11 @@ static int ieee80211_config_bw(struct ieee80211_sub_if_data *sdata,
+ 		sdata->vif.bss_conf.ht_operation_mode = ht_opmode;
+ 	}
+ 
++	if (vht_cap)
++		vht_cap_info = le32_to_cpu(vht_cap->vht_cap_info);
++
+ 	/* calculate new channel (type) based on HT/VHT/HE operation IEs */
+-	flags = ieee80211_determine_chantype(sdata, sband, chan,
++	flags = ieee80211_determine_chantype(sdata, sband, chan, vht_cap_info,
+ 					     ht_oper, vht_oper, he_oper,
+ 					     &chandef, true);
+ 
+@@ -1327,6 +1335,7 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 	enum nl80211_band current_band;
+ 	struct ieee80211_csa_ie csa_ie;
+ 	struct ieee80211_channel_switch ch_switch;
++	struct ieee80211_bss *bss;
+ 	int res;
+ 
+ 	sdata_assert_lock(sdata);
+@@ -1338,7 +1347,9 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 		return;
+ 
+ 	current_band = cbss->channel->band;
++	bss = (void *)cbss->priv;
+ 	res = ieee80211_parse_ch_switch_ie(sdata, elems, current_band,
++					   bss->vht_cap_info,
+ 					   ifmgd->flags,
+ 					   ifmgd->associated->bssid, &csa_ie);
+ 
+@@ -4097,8 +4108,8 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 
+ 	changed |= ieee80211_recalc_twt_req(sdata, sta, &elems);
+ 
+-	if (ieee80211_config_bw(sdata, sta,
+-				elems.ht_cap_elem, elems.ht_operation,
++	if (ieee80211_config_bw(sdata, sta, elems.ht_cap_elem,
++				elems.vht_cap_elem, elems.ht_operation,
+ 				elems.vht_operation, elems.he_operation,
+ 				bssid, &changed)) {
+ 		mutex_unlock(&local->sta_mtx);
+@@ -4815,6 +4826,7 @@ static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
+ 	const struct ieee80211_he_operation *he_oper = NULL;
+ 	struct ieee80211_supported_band *sband;
+ 	struct cfg80211_chan_def chandef;
++	struct ieee80211_bss *bss = (void *)cbss->priv;
+ 	int ret;
+ 	u32 i;
+ 	bool have_80mhz;
+@@ -4913,6 +4925,7 @@ static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
+ 
+ 	ifmgd->flags |= ieee80211_determine_chantype(sdata, sband,
+ 						     cbss->channel,
++						     bss->vht_cap_info,
+ 						     ht_oper, vht_oper, he_oper,
+ 						     &chandef, false);
+ 
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 5db15996524f..d0c2e8012118 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -132,6 +132,12 @@ ieee80211_update_bss_from_elems(struct ieee80211_local *local,
+ 			bss->beacon_rate =
+ 				&sband->bitrates[rx_status->rate_idx];
+ 	}
++
++	if (elems->vht_cap_elem)
++		bss->vht_cap_info =
++			le32_to_cpu(elems->vht_cap_elem->vht_cap_info);
++	else
++		bss->vht_cap_info = 0;
+ }
+ 
+ struct ieee80211_bss *
+diff --git a/net/mac80211/spectmgmt.c b/net/mac80211/spectmgmt.c
+index 5fe2b645912f..ae1cb2c68722 100644
+--- a/net/mac80211/spectmgmt.c
++++ b/net/mac80211/spectmgmt.c
+@@ -9,7 +9,7 @@
+  * Copyright 2007, Michael Wu <flamingice@sourmilk.net>
+  * Copyright 2007-2008, Intel Corporation
+  * Copyright 2008, Johannes Berg <johannes@sipsolutions.net>
+- * Copyright (C) 2018        Intel Corporation
++ * Copyright (C) 2018, 2020 Intel Corporation
+  */
+ 
+ #include <linux/ieee80211.h>
+@@ -22,6 +22,7 @@
+ int ieee80211_parse_ch_switch_ie(struct ieee80211_sub_if_data *sdata,
+ 				 struct ieee802_11_elems *elems,
+ 				 enum nl80211_band current_band,
++				 u32 vht_cap_info,
+ 				 u32 sta_flags, u8 *bssid,
+ 				 struct ieee80211_csa_ie *csa_ie)
  {
-+	struct cfg80211_scan_info old_info = request->info;
-+
- 	trace_cfg80211_scan_done(request, info);
--	WARN_ON(request != wiphy_to_rdev(request->wiphy)->scan_req);
-+	WARN_ON(request != wiphy_to_rdev(request->wiphy)->scan_req &&
-+		request != wiphy_to_rdev(request->wiphy)->int_scan_req);
+@@ -150,6 +151,7 @@ int ieee80211_parse_ch_switch_ie(struct ieee80211_sub_if_data *sdata,
  
- 	request->info = *info;
+ 		/* ignore if parsing fails */
+ 		if (!ieee80211_chandef_vht_oper(&sdata->local->hw,
++						vht_cap_info,
+ 						&vht_oper, &ht_oper,
+ 						&new_vht_chandef))
+ 			new_vht_chandef.chan = NULL;
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 87dd003dbdf2..e6104829fa1c 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -3120,7 +3120,7 @@ bool ieee80211_chandef_ht_oper(const struct ieee80211_ht_operation *ht_oper,
+ 	return true;
+ }
+ 
+-bool ieee80211_chandef_vht_oper(struct ieee80211_hw *hw,
++bool ieee80211_chandef_vht_oper(struct ieee80211_hw *hw, u32 vht_cap_info,
+ 				const struct ieee80211_vht_operation *oper,
+ 				const struct ieee80211_ht_operation *htop,
+ 				struct cfg80211_chan_def *chandef)
+@@ -3132,6 +3132,10 @@ bool ieee80211_chandef_vht_oper(struct ieee80211_hw *hw,
+ 	u32 vht_cap;
+ 	bool support_80_80 = false;
+ 	bool support_160 = false;
++	u8 ext_nss_bw_supp = u32_get_bits(vht_cap_info,
++					  IEEE80211_VHT_CAP_EXT_NSS_BW_MASK);
++	u8 supp_chwidth = u32_get_bits(vht_cap_info,
++				       IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK);
+ 
+ 	if (!oper || !htop)
+ 		return false;
+@@ -3151,11 +3155,48 @@ bool ieee80211_chandef_vht_oper(struct ieee80211_hw *hw,
+ 				IEEE80211_HT_OP_MODE_CCFS2_MASK)
+ 			>> IEEE80211_HT_OP_MODE_CCFS2_SHIFT;
+ 
+-	/* when parsing (and we know how to) CCFS1 and CCFS2 are equivalent */
+ 	ccf0 = ccfs0;
+-	ccf1 = ccfs1;
+-	if (!ccfs1 && ieee80211_hw_check(hw, SUPPORTS_VHT_EXT_NSS_BW))
++
++	/* if not supported, parse as though we didn't understand it */
++	if (!ieee80211_hw_check(hw, SUPPORTS_VHT_EXT_NSS_BW))
++		ext_nss_bw_supp = 0;
 +
 +	/*
-+	 * In case the scan is split, the scan_start_tsf and tsf_bssid should
-+	 * be of the first part. In such a case old_info.scan_start_tsf should
-+	 * be non zero.
++	 * Cf. IEEE 802.11 Table 9-250
++	 *
++	 * We really just consider that because it's inefficient to connect
++	 * at a higher bandwidth than we'll actually be able to use.
 +	 */
-+	if (request->scan_6ghz && old_info.scan_start_tsf) {
-+		request->info.scan_start_tsf = old_info.scan_start_tsf;
-+		memcpy(request->info.tsf_bssid, old_info.tsf_bssid,
-+		       sizeof(request->info.tsf_bssid));
++	switch ((supp_chwidth << 4) | ext_nss_bw_supp) {
++	default:
++	case 0x00:
++		ccf1 = 0;
++		support_160 = false;
++		support_80_80 = false;
++		break;
++	case 0x01:
++		support_80_80 = false;
++		/* fall through */
++	case 0x02:
++	case 0x03:
+ 		ccf1 = ccfs2;
++		break;
++	case 0x10:
++		ccf1 = ccfs1;
++		break;
++	case 0x11:
++	case 0x12:
++		if (!ccfs1)
++			ccf1 = ccfs2;
++		else
++			ccf1 = ccfs1;
++		break;
++	case 0x13:
++	case 0x20:
++	case 0x23:
++		ccf1 = ccfs1;
++		break;
 +	}
-+
- 	request->notified = true;
- 	queue_work(cfg80211_wq, &wiphy_to_rdev(request->wiphy)->scan_done_wk);
- }
+ 
+ 	cf0 = ieee80211_channel_to_frequency(ccf0, chandef->chan->band);
+ 	cf1 = ieee80211_channel_to_frequency(ccf1, chandef->chan->band);
 -- 
 2.26.2
 
