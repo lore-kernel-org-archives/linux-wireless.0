@@ -6,30 +6,30 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FDB2C433E0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD61AC433E1
 	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 08:22:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E859320B80
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 08:22:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AD9F820B80
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 08:22:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726927AbgE1IWP (ORCPT
+        id S1726933AbgE1IWP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Thu, 28 May 2020 04:22:15 -0400
-Received: from rtits2.realtek.com ([211.75.126.72]:55029 "EHLO
+Received: from rtits2.realtek.com ([211.75.126.72]:55030 "EHLO
         rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726635AbgE1IWO (ORCPT
+        with ESMTP id S1726921AbgE1IWP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 May 2020 04:22:14 -0400
+        Thu, 28 May 2020 04:22:15 -0400
 Authenticated-By: 
-X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 04S8M9tiC004571, This message is accepted by code: ctloc85258
+X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 04S8MA1j8004578, This message is accepted by code: ctloc85258
 Received: from mail.realtek.com (rtexmb06.realtek.com.tw[172.21.6.99])
-        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 04S8M9tiC004571
+        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 04S8MA1j8004578
         (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Thu, 28 May 2020 16:22:09 +0800
+        Thu, 28 May 2020 16:22:10 +0800
 Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
  RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1779.2; Thu, 28 May 2020 16:22:09 +0800
+ 15.1.1779.2; Thu, 28 May 2020 16:22:10 +0800
 Received: from localhost.localdomain (172.21.68.128) by
  RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
@@ -37,9 +37,9 @@ Received: from localhost.localdomain (172.21.68.128) by
 From:   <yhchuang@realtek.com>
 To:     <kvalo@codeaurora.org>
 CC:     <linux-wireless@vger.kernel.org>, <tehuang@realtek.com>
-Subject: [PATCH 1/5] rtw88: 8821c: add cck pd settings
-Date:   Thu, 28 May 2020 16:22:03 +0800
-Message-ID: <20200528082207.26521-2-yhchuang@realtek.com>
+Subject: [PATCH 5/5] rtw88: 8821c: Add 8821CE to Kconfig and Makefile
+Date:   Thu, 28 May 2020 16:22:07 +0800
+Message-ID: <20200528082207.26521-6-yhchuang@realtek.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200528082207.26521-1-yhchuang@realtek.com>
 References: <20200528082207.26521-1-yhchuang@realtek.com>
@@ -55,81 +55,63 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Tzu-En Huang <tehuang@realtek.com>
 
-CCK PD reduces the numbers of false alram in cck rate by dynamically
-adjusting the value of power threshold and cs_ratio. We define current
-circumstance in to levels, Compared to the previous level, if the
-level is changed, we set the new values for power threshold and cs_ratio.
-Implement this for 8821c.
+Since 8821C code is ready, we can build it.
 
 Signed-off-by: Tzu-En Huang <tehuang@realtek.com>
 Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- drivers/net/wireless/realtek/rtw88/main.h     |  1 +
- drivers/net/wireless/realtek/rtw88/rtw8821c.c | 25 +++++++++++++++++++
- 2 files changed, 26 insertions(+)
+ drivers/net/wireless/realtek/rtw88/Kconfig  | 14 ++++++++++++++
+ drivers/net/wireless/realtek/rtw88/Makefile |  6 ++++++
+ 2 files changed, 20 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
-index 7b6488406836..d46fc9dd949c 100644
---- a/drivers/net/wireless/realtek/rtw88/main.h
-+++ b/drivers/net/wireless/realtek/rtw88/main.h
-@@ -1482,6 +1482,7 @@ struct rtw_dm_info {
- 	/* [bandwidth 0:20M/1:40M][number of path] */
- 	u8 cck_pd_lv[2][RTW_RF_PATH_MAX];
- 	u32 cck_fa_avg;
-+	u8 cck_pd_default;
+diff --git a/drivers/net/wireless/realtek/rtw88/Kconfig b/drivers/net/wireless/realtek/rtw88/Kconfig
+index ca894c4f96ac..e3d7cb6c1290 100644
+--- a/drivers/net/wireless/realtek/rtw88/Kconfig
++++ b/drivers/net/wireless/realtek/rtw88/Kconfig
+@@ -25,6 +25,9 @@ config RTW88_8822C
+ config RTW88_8723D
+ 	tristate
  
- 	/* save the last rx phy status for debug */
- 	s8 rx_snr[RTW_RF_PATH_MAX];
-diff --git a/drivers/net/wireless/realtek/rtw88/rtw8821c.c b/drivers/net/wireless/realtek/rtw88/rtw8821c.c
-index 749569eab912..16703086d64f 100644
---- a/drivers/net/wireless/realtek/rtw88/rtw8821c.c
-+++ b/drivers/net/wireless/realtek/rtw88/rtw8821c.c
-@@ -99,6 +99,7 @@ static void rtw8821c_phy_set_param(struct rtw_dev *rtwdev)
- 	rtwdev->chip->ch_param[2] = rtw_read32_mask(rtwdev, 0xaac, MASKDWORD);
++config RTW88_8821C
++	tristate
++
+ config RTW88_8822BE
+ 	tristate "Realtek 8822BE PCI wireless network adapter"
+ 	depends on PCI
+@@ -58,6 +61,17 @@ config RTW88_8723DE
  
- 	rtw_phy_init(rtwdev);
-+	rtwdev->dm_info.cck_pd_default = rtw_read8(rtwdev, 0xaaa) & 0x1f;
- }
+ 	  802.11n PCIe wireless network adapter
  
- static int rtw8821c_mac_init(struct rtw_dev *rtwdev)
-@@ -588,6 +589,29 @@ static void rtw8821c_phy_calibration(struct rtw_dev *rtwdev)
- 	rtw8821c_do_iqk(rtwdev);
- }
++config RTW88_8821CE
++	tristate "Realtek 8821CE PCI wireless network adapter"
++	depends on PCI
++	select RTW88_CORE
++	select RTW88_PCI
++	select RTW88_8821C
++	help
++	  Select this option will enable support for 8821CE chipset
++
++	  802.11ac PCIe wireless network adapter
++
+ config RTW88_DEBUG
+ 	bool "Realtek rtw88 debug support"
+ 	depends on RTW88_CORE
+diff --git a/drivers/net/wireless/realtek/rtw88/Makefile b/drivers/net/wireless/realtek/rtw88/Makefile
+index f31e78a6f146..c0e4b111c8b4 100644
+--- a/drivers/net/wireless/realtek/rtw88/Makefile
++++ b/drivers/net/wireless/realtek/rtw88/Makefile
+@@ -37,5 +37,11 @@ rtw88_8723d-objs		:= rtw8723d.o rtw8723d_table.o
+ obj-$(CONFIG_RTW88_8723DE)	+= rtw88_8723de.o
+ rtw88_8723de-objs		:= rtw8723de.o
  
-+static void rtw8821c_phy_cck_pd_set(struct rtw_dev *rtwdev, u8 new_lvl)
-+{
-+	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
-+	u8 pd[CCK_PD_LV_MAX] = {3, 7, 13, 13, 13};
++obj-$(CONFIG_RTW88_8821C)	+= rtw88_8821c.o
++rtw88_8821c-objs		:= rtw8821c.o rtw8821c_table.o
 +
-+	if (dm_info->min_rssi > 60) {
-+		new_lvl = 4;
-+		pd[4] = 0x1d;
-+		goto set_cck_pd;
-+	}
++obj-$(CONFIG_RTW88_8821CE)	+= rtw88_8821ce.o
++rtw88_8821ce-objs		:= rtw8821ce.o
 +
-+	if (dm_info->cck_pd_lv[RTW_CHANNEL_WIDTH_20][RF_PATH_A] == new_lvl)
-+		return;
-+
-+	dm_info->cck_fa_avg = CCK_FA_AVG_RESET;
-+
-+set_cck_pd:
-+	dm_info->cck_pd_lv[RTW_CHANNEL_WIDTH_20][RF_PATH_A] = new_lvl;
-+	rtw_write32_mask(rtwdev, 0xa08, 0x3f0000, pd[new_lvl]);
-+	rtw_write32_mask(rtwdev, 0xaa8, 0x1f0000,
-+			 dm_info->cck_pd_default + new_lvl * 2);
-+}
-+
- static struct rtw_pwr_seq_cmd trans_carddis_to_cardemu_8821c[] = {
- 	{0x0086,
- 	 RTW_PWR_CUT_ALL_MSK,
-@@ -1027,6 +1051,7 @@ static struct rtw_chip_ops rtw8821c_ops = {
- 	.cfg_ldo25		= rtw8821c_cfg_ldo25,
- 	.false_alarm_statistics	= rtw8821c_false_alarm_statistics,
- 	.phy_calibration	= rtw8821c_phy_calibration,
-+	.cck_pd_set		= rtw8821c_phy_cck_pd_set,
- };
- 
- struct rtw_chip_info rtw8821c_hw_spec = {
+ obj-$(CONFIG_RTW88_PCI)		+= rtw88_pci.o
+ rtw88_pci-objs			:= pci.o
 -- 
 2.17.1
 
