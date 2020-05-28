@@ -2,82 +2,101 @@ Return-Path: <SRS0=UQ4x=7K=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67A97C433E3
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 07:44:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36E7FC433DF
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 08:15:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 47C5D208FE
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 07:44:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 08BD12088E
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 08:15:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726579AbgE1Ho1 (ORCPT
+        id S1726787AbgE1IPa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 28 May 2020 03:44:27 -0400
-Received: from szxga05-in.huawei.com ([45.249.212.191]:5298 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725811AbgE1Ho1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 May 2020 03:44:27 -0400
-Received: from DGGEMS403-HUB.china.huawei.com (unknown [172.30.72.58])
-        by Forcepoint Email with ESMTP id D494069D223870CB3645;
-        Thu, 28 May 2020 15:44:24 +0800 (CST)
-Received: from localhost.localdomain.localdomain (10.175.113.25) by
- DGGEMS403-HUB.china.huawei.com (10.3.19.203) with Microsoft SMTP Server id
- 14.3.487.0; Thu, 28 May 2020 15:44:15 +0800
-From:   YueHaibing <yuehaibing@huawei.com>
-To:     Felix Fietkau <nbd@nbd.name>,
-        Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        "Kalle Valo" <kvalo@codeaurora.org>,
-        Jakub Kicinski <kuba@kernel.org>,
-        "Matthias Brugger" <matthias.bgg@gmail.com>,
-        Sean Wang <sean.wang@mediatek.com>
-CC:     YueHaibing <yuehaibing@huawei.com>,
-        <linux-wireless@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>,
-        <kernel-janitors@vger.kernel.org>
-Subject: [PATCH] mt76: mt7615: Use kmemdup in mt7615_queue_key_update()
-Date:   Thu, 28 May 2020 07:48:56 +0000
-Message-ID: <20200528074856.118279-1-yuehaibing@huawei.com>
-X-Mailer: git-send-email 2.20.1
+        Thu, 28 May 2020 04:15:30 -0400
+Received: from rtits2.realtek.com ([211.75.126.72]:54749 "EHLO
+        rtits2.realtek.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726487AbgE1IP3 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 28 May 2020 04:15:29 -0400
+Authenticated-By: 
+X-SpamFilter-By: ArmorX SpamTrap 5.69 with qID 04S8FMxpC027380, This message is accepted by code: ctloc85258
+Received: from mail.realtek.com (rtexmb06.realtek.com.tw[172.21.6.99])
+        by rtits2.realtek.com.tw (8.15.2/2.66/5.86) with ESMTPS id 04S8FMxpC027380
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+        Thu, 28 May 2020 16:15:22 +0800
+Received: from RTEXMB04.realtek.com.tw (172.21.6.97) by
+ RTEXMB06.realtek.com.tw (172.21.6.99) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1779.2; Thu, 28 May 2020 16:15:21 +0800
+Received: from localhost.localdomain (172.21.68.128) by
+ RTEXMB04.realtek.com.tw (172.21.6.97) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1779.2; Thu, 28 May 2020 16:15:21 +0800
+From:   <yhchuang@realtek.com>
+To:     <kvalo@codeaurora.org>
+CC:     <linux-wireless@vger.kernel.org>, <tehuang@realtek.com>
+Subject: [PATCH v2 3/7] rtw88: 8821c: add dig related settings
+Date:   Thu, 28 May 2020 16:15:09 +0800
+Message-ID: <20200528081513.26415-4-yhchuang@realtek.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20200528081513.26415-1-yhchuang@realtek.com>
+References: <20200528081513.26415-1-yhchuang@realtek.com>
 MIME-Version: 1.0
-Content-Type:   text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-X-Originating-IP: [10.175.113.25]
-X-CFilter-Loop: Reflected
+Content-Type: text/plain
+X-Originating-IP: [172.21.68.128]
+X-ClientProxiedBy: RTEXMB03.realtek.com.tw (172.21.6.96) To
+ RTEXMB04.realtek.com.tw (172.21.6.97)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Use kmemdup rather than duplicating its implementation
+From: Tzu-En Huang <tehuang@realtek.com>
 
-Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+To improve user experience in field, we need DIG to adjust
+RX initial gain depends on field situation. Since each chip
+has its own register address, this commit defines 8821c specific
+addresses.
+
+Signed-off-by: Tzu-En Huang <tehuang@realtek.com>
+Signed-off-by: Yan-Hsuan Chuang <yhchuang@realtek.com>
 ---
- drivers/net/wireless/mediatek/mt76/mt7615/main.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/net/wireless/realtek/rtw88/rtw8821c.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/main.c b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
-index 2e9e9d3519d7..c32f06c85f0f 100644
---- a/drivers/net/wireless/mediatek/mt76/mt7615/main.c
-+++ b/drivers/net/wireless/mediatek/mt76/mt7615/main.c
-@@ -289,12 +289,11 @@ mt7615_queue_key_update(struct mt7615_dev *dev, enum set_key_cmd cmd,
- 	wd->type = MT7615_WTBL_KEY_DESC;
- 	wd->sta = msta;
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8821c.c b/drivers/net/wireless/realtek/rtw88/rtw8821c.c
+index ce580dace83c..df95a095df73 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8821c.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8821c.c
+@@ -572,6 +572,10 @@ static const struct rtw_rfe_def rtw8821c_rfe_defs[] = {
+ 	[0] = RTW_DEF_RFE(8821c, 0, 0),
+ };
  
--	wd->key.key = kzalloc(key->keylen, GFP_KERNEL);
-+	wd->key.key = kmemdup(key->key, key->keylen, GFP_KERNEL);
- 	if (!wd->key.key) {
- 		kfree(wd);
- 		return -ENOMEM;
- 	}
--	memcpy(wd->key.key, key->key, key->keylen);
- 	wd->key.cipher = key->cipher;
- 	wd->key.keyidx = key->keyidx;
- 	wd->key.keylen = key->keylen;
-
-
++static struct rtw_hw_reg rtw8821c_dig[] = {
++	[0] = { .addr = 0xc50, .mask = 0x7f },
++};
++
+ static const struct rtw_ltecoex_addr rtw8821c_ltecoex_addr = {
+ 	.ctrl = LTECOEX_ACCESS_CTRL,
+ 	.wdata = LTECOEX_WRITE_DATA,
+@@ -653,6 +657,7 @@ struct rtw_chip_info rtw8821c_hw_spec = {
+ 	.csi_buf_pg_num = 0,
+ 	.band = RTW_BAND_2G | RTW_BAND_5G,
+ 	.page_size = 128,
++	.dig_min = 0x1c,
+ 	.ht_supported = true,
+ 	.vht_supported = true,
+ 	.lps_deep_mode_supported = BIT(LPS_DEEP_MODE_LCLK),
+@@ -663,6 +668,7 @@ struct rtw_chip_info rtw8821c_hw_spec = {
+ 	.rqpn_table = rqpn_table_8821c,
+ 	.prioq_addrs = &prioq_addrs_8821c,
+ 	.intf_table = &phy_para_table_8821c,
++	.dig = rtw8821c_dig,
+ 	.rf_base_addr = {0x2800, 0x2c00},
+ 	.rf_sipi_addr = {0xc90, 0xe90},
+ 	.ltecoex_addr = &rtw8821c_ltecoex_addr,
+-- 
+2.17.1
 
