@@ -2,101 +2,84 @@ Return-Path: <SRS0=UQ4x=7K=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B89CFC433DF
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 18:58:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AA5CC433E0
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 19:02:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 53D6A207BC
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 18:58:19 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=airpost.net header.i=@airpost.net header.b="R3HTdCum";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="FrMmL4nm"
+	by mail.kernel.org (Postfix) with ESMTP id 4A69F2074B
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 19:02:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2406067AbgE1S6S (ORCPT
+        id S2406048AbgE1TCe (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 28 May 2020 14:58:18 -0400
-Received: from wout4-smtp.messagingengine.com ([64.147.123.20]:40745 "EHLO
-        wout4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2406064AbgE1S6Q (ORCPT
+        Thu, 28 May 2020 15:02:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56410 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2406029AbgE1TCd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 May 2020 14:58:16 -0400
-Received: from compute3.internal (compute3.nyi.internal [10.202.2.43])
-        by mailout.west.internal (Postfix) with ESMTP id 1D6B8B6B;
-        Thu, 28 May 2020 14:58:15 -0400 (EDT)
-Received: from imap2 ([10.202.2.52])
-  by compute3.internal (MEProxy); Thu, 28 May 2020 14:58:15 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=airpost.net; h=
-        mime-version:message-id:in-reply-to:references:date:from:to
-        :subject:content-type; s=fm3; bh=/i831MEK28rD0RNoTzVF9b3Ku6pEQpH
-        Zzp6bEOgI2Bc=; b=R3HTdCum/nzg0+lE0Q73gt3OBVCvo9jAaH+okALlsy8XLrQ
-        s1FXAsZjCcD5TIAOWEMHIRRqjq76TvtrxCSgvTpVfEMBuAy51iYzCuhm1J1Nq0Ku
-        Rd2dqtOHh4yoyq4HFaJhaiDeTi+BlmMq4jLnaZeZsMK4uxwqbU2QgrJDJW025JyN
-        5dXtIf8y+Og1nwq6V9UcNNsIRq9G370XrnvtTs4zGkuQakryoZs1IWRcJzjH9y99
-        FA8fFcWBkAaV78NkzS6LBG8q6lKa0gtdwH85Ub5O+Ika8qVlWTgSVaSpGh4VKImz
-        Jbrcgj4/tvGss8FlaEAHw0KuwmeXzdKGR0Cdjkg==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=content-type:date:from:in-reply-to
-        :message-id:mime-version:references:subject:to:x-me-proxy
-        :x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; bh=/i831M
-        EK28rD0RNoTzVF9b3Ku6pEQpHZzp6bEOgI2Bc=; b=FrMmL4nmKQ363guO4Buy71
-        02uJNfiBcDiBsx29hczPKEPTPeln5Xh9NAMO72foUHcxyz1aGasZJ8m8+Tyjfi51
-        GNE5JunkWn+rJmI4z+nrhd2Ti70cxgdtxD/5Zx/RTqmWaaE9m3Qbxrkur5oklasO
-        8j5rjWH/EqJUrmeAn05BYwQ+yz1OL1P4de0xmyFbGHQdENyGglfKwpVr1IJcZACg
-        3oVg2hwiX++MgJy0yim38KxwGAE8zGsIsmObFAZbPtieW34TPm9KdqJE+liuQVzs
-        HrisDHI/QHjdzArNotSKWHmCPzAXIbeG/HNRx+5pvjz4EGE/3q+g3qHr4cOkxSWw
-        ==
-X-ME-Sender: <xms:xgnQXtGVTMT0yYRwcG2ZFMg_INfb4_XDZYzVELiEz9CLppFnXoX7-Q>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeduhedruddviedgjeejucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    cujfgurhepofgfggfkjghffffhvffutgesthdtredtreertdenucfhrhhomhepfdeurhhu
-    nhhoucffrghnthgrshdfuceofihirhgvlhgvshhssegurghnthgrshdrrghirhhpohhsth
-    drnhgvtheqnecuggftrfgrthhtvghrnhepteeukeejvefhgefgvdegfeevfffhleetfeff
-    tdduueehudeufeefjedvveegjeegnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrg
-    hmpehmrghilhhfrhhomhepfihirhgvlhgvshhssegurghnthgrshdrrghirhhpohhsthdr
-    nhgvth
-X-ME-Proxy: <xmx:xgnQXiWs1wXVvx8aIbsyhXbfXIOrT9-XuTYrXt-vWYN43sxU0ZXUBQ>
-    <xmx:xgnQXvLh-QB_aWI-I6T5I1UQ573Bx2Y2HibCF3Z6jdQ_TznHc6PNBw>
-    <xmx:xgnQXjEMYFcqJj8RRyZ6-GkaqgjAeiAzqGA8xmngY80pUvbh4G4y3g>
-    <xmx:xgnQXriJceGKp2_OI423KmOufEerESQlH7ttgWW5nzJvmIogubAdJQ>
-Received: by mailuser.nyi.internal (Postfix, from userid 501)
-        id 574C6E00BF; Thu, 28 May 2020 14:58:14 -0400 (EDT)
-X-Mailer: MessagingEngine.com Webmail Interface
-User-Agent: Cyrus-JMAP/3.3.0-dev0-504-g204cd6f-fm-20200527.002-g204cd6f2
-Mime-Version: 1.0
-Message-Id: <f78191c6-3093-4d97-a959-068dce1da552@www.fastmail.com>
-In-Reply-To: <7406af4a9e852d99735e1b1af63deed2f0c5d703.camel@sipsolutions.net>
-References: <afef8a7d-053e-4aaa-ace7-d320c32e8b7c@www.fastmail.com>
- <(sfid-20200528_174911_413757_32DBA783)>
- <a185a4283c1230965b520de52737427c91af9c22.camel@sipsolutions.net>
- <99c4ece3-15ca-42cb-aa09-c86d466d6429@www.fastmail.com>
- <7406af4a9e852d99735e1b1af63deed2f0c5d703.camel@sipsolutions.net>
-Date:   Thu, 28 May 2020 14:57:54 -0400
-From:   "Bruno Dantas" <wireless@dantas.airpost.net>
-To:     "Johannes Berg" <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
+        Thu, 28 May 2020 15:02:33 -0400
+Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B5AEDC08C5C6
+        for <linux-wireless@vger.kernel.org>; Thu, 28 May 2020 12:02:33 -0700 (PDT)
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        (Exim 4.93)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1jeNnT-0053IB-57; Thu, 28 May 2020 21:02:31 +0200
+Message-ID: <6d5994325bbb28ff855b527a26e4e7e87760705f.camel@sipsolutions.net>
 Subject: Re: iwlist scanning: how to exclude old scan results from output?
-Content-Type: text/plain
+From:   Johannes Berg <johannes@sipsolutions.net>
+To:     Bruno Dantas <wireless@dantas.airpost.net>,
+        linux-wireless@vger.kernel.org
+Date:   Thu, 28 May 2020 21:02:30 +0200
+In-Reply-To: <f78191c6-3093-4d97-a959-068dce1da552@www.fastmail.com>
+References: <afef8a7d-053e-4aaa-ace7-d320c32e8b7c@www.fastmail.com>
+         <(sfid-20200528_174911_413757_32DBA783)>
+         <a185a4283c1230965b520de52737427c91af9c22.camel@sipsolutions.net>
+         <99c4ece3-15ca-42cb-aa09-c86d466d6429@www.fastmail.com>
+         <7406af4a9e852d99735e1b1af63deed2f0c5d703.camel@sipsolutions.net>
+         <f78191c6-3093-4d97-a959-068dce1da552@www.fastmail.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.36.2 (3.36.2-1.fc32) 
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-> Does it go away if you wait long enough for the "last seen" to go above
-> 30 seconds (30000ms)? You should use "iw wlan0 scan dump" (no need for
-> sudo, and don't scan again) to check.
+On Thu, 2020-05-28 at 14:57 -0400, Bruno Dantas wrote:
+> > Does it go away if you wait long enough for the "last seen" to go above
+> > 30 seconds (30000ms)? You should use "iw wlan0 scan dump" (no need for
+> > sudo, and don't scan again) to check.
+> > 
+> > Because if not, then there's a bug in the references, and the entry is
+> > just being kept alive by ... something. Did you previously connect to
+> > it? Does it also happen if you never connect? Then I guess we'll need to
+> > know what the kernel version is too. :)
 > 
-> Because if not, then there's a bug in the references, and the entry is
-> just being kept alive by ... something. Did you previously connect to
-> it? Does it also happen if you never connect? Then I guess we'll need to
-> know what the kernel version is too. :)
+> Yes, it goes way if I wait 30 seconds. Whether I had connected to the
+> hotspot or not makes no difference. Kernel version is 5.4.3.
 
-Yes, it goes way if I wait 30 seconds. Whether I had connected to the hotspot or not makes no difference. Kernel version is 5.4.3.
+So at least it's not completely stuck.
 
-I thought discovering *currently-available* hotspots would be a common need. I'm a bit surprised that getting this information is tricky.
+> I thought discovering *currently-available* hotspots would be a common
+> need. I'm a bit surprised that getting this information is tricky.
 
-Like I said, reloading the wireless interface's kernel module does the trick. I was just hoping that there'd be a more elegant solution. Thanks for the help, anyway.
+That's why 'flush' exists :)
+
+> Like I said, reloading the wireless interface's kernel module does the
+> trick.
+
+Obviously. But still, now I'm wondering if there's a bug?
+
+But then again, I think we use this a lot in the hwsim tests and rely on
+it for a quick succession of tests to not find previous APs, and
+"scan_for_auth" seems to be a fairly direct test for this as well?
+
+Hmm. Not sure. What driver are you using?
+
+johannes
+
 
