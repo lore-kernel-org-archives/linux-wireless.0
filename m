@@ -2,65 +2,90 @@ Return-Path: <SRS0=UQ4x=7K=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 56240C433DF
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 14:53:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87D09C433E0
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 14:53:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 37FC42075F
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 14:53:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6A7F32075F
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 14:53:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2403819AbgE1Ox3 (ORCPT
+        id S2391267AbgE1Ox5 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 28 May 2020 10:53:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45792 "EHLO
+        Thu, 28 May 2020 10:53:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45870 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2391363AbgE1Ox1 (ORCPT
+        with ESMTP id S2391244AbgE1Ox4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 May 2020 10:53:27 -0400
+        Thu, 28 May 2020 10:53:56 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 65FB9C08C5C8
-        for <linux-wireless@vger.kernel.org>; Thu, 28 May 2020 07:53:27 -0700 (PDT)
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B4132C08C5C6
+        for <linux-wireless@vger.kernel.org>; Thu, 28 May 2020 07:53:56 -0700 (PDT)
+Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.93)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1jeJuP-004vfq-Na; Thu, 28 May 2020 16:53:25 +0200
-Message-ID: <b2cd827da3d73a9e83a9fc54f79485caee17377e.camel@sipsolutions.net>
-Subject: Re: iwlwifi: 8265: unexpected LLC packets TX'ed in monitor mode
+        id 1jeJrb-004vYI-9D; Thu, 28 May 2020 16:50:31 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Marco <marco@tampabay.rr.com>, linux-wireless@vger.kernel.org
-Date:   Thu, 28 May 2020 16:53:24 +0200
-In-Reply-To: <C32FKI01HMGA.U0TCA9AIO8BX@b1>
-References: <C32FKI01HMGA.U0TCA9AIO8BX@b1>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.36.2 (3.36.2-1.fc32) 
+To:     linux-wireless@vger.kernel.org
+Cc:     Rajkumar Manoharan <rmanohar@codeaurora.org>,
+        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 19/24] cfg80211: require HE capabilities for 6 GHz band
+Date:   Thu, 28 May 2020 16:50:15 +0200
+Message-Id: <20200528165011.66a7b4c779ba.I583b54172f91f98d44af64a16c5826fe458cbb27@changeid>
+X-Mailer: git-send-email 2.26.2
+In-Reply-To: <20200528165011.993f108e96ca.I0086ae42d672379380d04ac5effb2f3d5135731b@changeid>
+References: <20200528165011.993f108e96ca.I0086ae42d672379380d04ac5effb2f3d5135731b@changeid>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, 2020-05-28 at 10:26 -0400, Marco wrote:
-> 
-> > I think these are somehow related to calibrations in the device.
-> 
-> Are you perhaps implying that I can alter calibration settings to fix
-> this problem?  If you have any pointers to this it would be
-> appreciative.
+From: Johannes Berg <johannes.berg@intel.com>
 
-No, I don't know if this is possible. I'm just telling you what I think
-the reason for them is.
+On 6 GHz band, HE capabilities must be available for all of
+the interface types, otherwise we shouldn't use 6 GHz. Check
+this.
 
-> Regardless though, I would still expect the default behavior to not
-> emit packets when in monitor mode, unless the user directs it to;
-> similar to what I've seen from other wifi chipsets.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/core.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-I have no idea precisely why (for what kind of calibration) these are
-transmitted and if it could be changed, I guess you could try contacting
-Intel's customer support?
-
-johannes
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 1651f86db6ca..5b6714460490 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -791,6 +791,7 @@ int wiphy_register(struct wiphy *wiphy)
+ 	/* sanity check supported bands/channels */
+ 	for (band = 0; band < NUM_NL80211_BANDS; band++) {
+ 		u16 types = 0;
++		bool have_he = false;
+ 
+ 		sband = wiphy->bands[band];
+ 		if (!sband)
+@@ -859,8 +860,17 @@ int wiphy_register(struct wiphy *wiphy)
+ 				return -EINVAL;
+ 
+ 			types |= iftd->types_mask;
++
++			if (i == 0)
++				have_he = iftd->he_cap.has_he;
++			else
++				have_he = have_he &&
++					  iftd->he_cap.has_he;
+ 		}
+ 
++		if (WARN_ON(!have_he && band == NL80211_BAND_6GHZ))
++			return -EINVAL;
++
+ 		have_band = true;
+ 	}
+ 
+-- 
+2.26.2
 
