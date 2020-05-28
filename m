@@ -6,37 +6,39 @@ X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CEB4FC433E0
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 12:33:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C08D5C433DF
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 13:15:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B9863206C3
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 12:33:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9F7312068D
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 13:15:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389732AbgE1MdY (ORCPT
+        id S2390191AbgE1NP2 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 28 May 2020 08:33:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52162 "EHLO
+        Thu, 28 May 2020 09:15:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58698 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389279AbgE1MdX (ORCPT
+        with ESMTP id S2390161AbgE1NP2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 May 2020 08:33:23 -0400
+        Thu, 28 May 2020 09:15:28 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E80D4C05BD1E
-        for <linux-wireless@vger.kernel.org>; Thu, 28 May 2020 05:33:22 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 55971C05BD1E
+        for <linux-wireless@vger.kernel.org>; Thu, 28 May 2020 06:15:27 -0700 (PDT)
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.93)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1jeHir-004qw5-6y; Thu, 28 May 2020 14:33:21 +0200
-Message-ID: <68fbee40ce84c50fe137659d124071634bc38ab1.camel@sipsolutions.net>
-Subject: Re: [RFC 08/10] mac80211: add HE 6 GHz Band Capability element
+        id 1jeINZ-004s53-0c; Thu, 28 May 2020 15:15:25 +0200
+Message-ID: <3c7314e43ea74e036d8b0bf17d0df6c21e4d7c2d.camel@sipsolutions.net>
+Subject: Re: [PATCH v3 06/11] mac80211: handle HE 6 GHz Capability in HE STA
+ processing
 From:   Johannes Berg <johannes@sipsolutions.net>
-To:     linux-wireless@vger.kernel.org
-Cc:     Rajkumar Manoharan <rmanohar@codeaurora.org>
-Date:   Thu, 28 May 2020 14:33:20 +0200
-In-Reply-To: <20200528114415.535bddb18860.I3f9747c1147480f65445f13eda5c4a5ed4e86757@changeid> (sfid-20200528_114501_495096_0027A921)
-References: <20200528114415.3596a1eedb31.Ic15e681a0e249eab7350a06ceb582cca8bb9a080@changeid>
-         <20200528114415.535bddb18860.I3f9747c1147480f65445f13eda5c4a5ed4e86757@changeid>
-         (sfid-20200528_114501_495096_0027A921)
+To:     Rajkumar Manoharan <rmanohar@codeaurora.org>, kvalo@codeaurora.org
+Cc:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org
+Date:   Thu, 28 May 2020 15:15:24 +0200
+In-Reply-To: <1e313010dd85af086dc0922a3faeaa0e1c6cc44f.camel@sipsolutions.net> (sfid-20200528_114406_171255_9AD653B2)
+References: <1589399105-25472-1-git-send-email-rmanohar@codeaurora.org>
+         <1589399105-25472-6-git-send-email-rmanohar@codeaurora.org>
+         (sfid-20200513_214550_120836_C3C5E2B4) <1e313010dd85af086dc0922a3faeaa0e1c6cc44f.camel@sipsolutions.net>
+         (sfid-20200528_114406_171255_9AD653B2)
 Content-Type: text/plain; charset="UTF-8"
 User-Agent: Evolution 3.36.2 (3.36.2-1.fc32) 
 MIME-Version: 1.0
@@ -46,21 +48,14 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Thu, 2020-05-28 at 11:44 +0200, Johannes Berg wrote:
-> 
-> +void ieee80211_ie_build_he_6ghz_cap(struct ieee80211_sub_if_data *sdata,
-> +				    struct sk_buff *skb)
-> +{
-> +	struct ieee80211_local *local = sdata->local;
-> +	struct ieee80211_supported_band *sband;
-> +	const struct ieee80211_sband_iftype_data *iftd;
-> +	enum nl80211_iftype iftype = ieee80211_vif_type_p2p(&sdata->vif);
-> +	u8 *pos;
-> +	u16 cap;
-> +
-> +	sband = local->hw.wiphy->bands[NL80211_BAND_6GHZ];
+On Thu, 2020-05-28 at 11:43 +0200, Johannes Berg wrote:
 
-Err, no. Of course I need to use ieee80211_get_sband() like you did.
+> I'd prefer for *mac80211* to add the 6ghz capa sub-struct to the station
+> and use that while parsing, I think that should still be reasonable from
+> the driver's POV. You'll see I didn't change ieee80211_sta_he_cap, and I
+> am thinking now that it shouldn't change.
+
+Actually. I had this patch too, sending it out soon.
 
 johannes
 
