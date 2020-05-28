@@ -2,119 +2,66 @@ Return-Path: <SRS0=UQ4x=7K=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3C41C433E0
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 08:55:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC37AC433DF
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 09:01:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CEB1E2088E
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 08:55:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D228E2088E
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 09:01:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727983AbgE1IzN (ORCPT
+        id S1728029AbgE1JBw (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 28 May 2020 04:55:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46488 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727981AbgE1IzN (ORCPT
+        Thu, 28 May 2020 05:01:52 -0400
+Received: from smail.rz.tu-ilmenau.de ([141.24.186.67]:32937 "EHLO
+        smail.rz.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727991AbgE1JBw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 May 2020 04:55:13 -0400
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C978EC05BD1E
-        for <linux-wireless@vger.kernel.org>; Thu, 28 May 2020 01:55:12 -0700 (PDT)
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.93)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1jeEJi-004krY-BI; Thu, 28 May 2020 10:55:10 +0200
-Message-ID: <f9a764eaf9f0898c257b6c98346536c2c0f5d6f8.camel@sipsolutions.net>
-Subject: Re: [PATCH v3 06/11] mac80211: handle HE 6 GHz Capability in HE STA
- processing
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Rajkumar Manoharan <rmanohar@codeaurora.org>, kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org
-Date:   Thu, 28 May 2020 10:55:09 +0200
-In-Reply-To: <1589399105-25472-6-git-send-email-rmanohar@codeaurora.org>
-References: <1589399105-25472-1-git-send-email-rmanohar@codeaurora.org>
-         <1589399105-25472-6-git-send-email-rmanohar@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.36.2 (3.36.2-1.fc32) 
+        Thu, 28 May 2020 05:01:52 -0400
+Received: from legolas.fritz.box (unknown [87.147.49.100])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by smail.rz.tu-ilmenau.de (Postfix) with ESMTPSA id 66697580063;
+        Thu, 28 May 2020 11:01:50 +0200 (CEST)
+From:   Markus Theil <markus.theil@tu-ilmenau.de>
+To:     johannes@sipsolutions.net
+Cc:     linux-wireless@vger.kernel.org,
+        Markus Theil <markus.theil@tu-ilmenau.de>
+Subject: [PATCH 2/2] iw: print current ext feature set
+Date:   Thu, 28 May 2020 11:01:39 +0200
+Message-Id: <20200528090139.9879-2-markus.theil@tu-ilmenau.de>
+X-Mailer: git-send-email 2.26.2
+In-Reply-To: <20200528090139.9879-1-markus.theil@tu-ilmenau.de>
+References: <20200528090139.9879-1-markus.theil@tu-ilmenau.de>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
+Signed-off-by: Markus Theil <markus.theil@tu-ilmenau.de>
+---
+ info.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-> +++ b/include/net/cfg80211.h
-> @@ -332,15 +332,25 @@ struct ieee80211_sta_vht_cap {
->   * to describe 802.11ax HE capabilities for a STA.
->   *
->   * @has_he: true iff HE data is valid.
-> + * @has_he_6ghz: true iff HE 6 GHz data is valid.
->   * @he_cap_elem: Fixed portion of the HE capabilities element.
->   * @he_mcs_nss_supp: The supported NSS/MCS combinations.
->   * @ppe_thres: Holds the PPE Thresholds data.
-> + * @ampdu_factor: Maximum A-MPDU length factor used in 6 GHz.
-> + * @ampdu_density: Minimum A-MPDU spacing used in 6 GHz.
-> + * @cap: HE 6 GHz Band capability.
->   */
->  struct ieee80211_sta_he_cap {
->  	bool has_he;
-> +	bool has_he_6ghz;
->  	struct ieee80211_he_cap_elem he_cap_elem;
->  	struct ieee80211_he_mcs_nss_supp he_mcs_nss_supp;
->  	u8 ppe_thres[IEEE80211_HE_PPE_THRES_MAX_LEN];
-> +	struct {
-> +		u8 ampdu_factor;
-> +		u8 ampdu_density;
-> +		u16 cap;
-> +	} he_6ghz;
->  };
-
-So ... I'm a bit unsure about this now. What I had done was this (well,
-I adjusted it slightly now):
-
-https://p.sipsolutions.net/2d0eb7c7e23a1b92.txt
-
-
-But it's only half related? Maybe you're also using that for the
-associated stations, not just for "self"? But then again, you *already*
-added 
-
-@@ -1270,6 +1271,7 @@ struct station_parameters {
-        u8 he_capa_len;
-        u16 airtime_weight;
-        struct sta_txpwr txpwr;
-+       const struct ieee80211_he_6ghz_capa *he_6ghz_capa;
- };
-
-right?
-
-
-But no ... that's different. We still have a need to store the station's
-capabilities.
-
-But even then,
-
-> +	struct {
-> +		u8 ampdu_factor;
-> +		u8 ampdu_density;
-> +		u16 cap;
-> +	} he_6ghz;
-
-doesn't really make sense, does it? "cap' already includes the
-ampdu_factor and ampdu_density flags, so that's doubled...
-
-
-I think I would prefer to have this separate. We need it as I put into
-my patch that I linked to above, and we also need it in the station in
-mac80211 for AP, but we don't really need it for cfg80211 as you put it
-here.
-
-I'll continue with my other patches, and then maybe see how this fits in
-later.
-
-johannes
+diff --git a/info.c b/info.c
+index 8062629..f7889fe 100644
+--- a/info.c
++++ b/info.c
+@@ -706,6 +706,10 @@ broken_combination:
+ 		ext_feat_print(tb, CONTROL_PORT_NO_PREAUTH, "disable pre-auth over nl80211 control port support");
+ 		ext_feat_print(tb, PROTECTED_TWT, "protected Target Wake Time (TWT) support");
+ 		ext_feat_print(tb, DEL_IBSS_STA, "deletion of IBSS station support");
++		ext_feat_print(tb, MULTICAST_REGISTRATIONS, "mgmt frame registration for multicast");
++		ext_feat_print(tb, BEACON_PROTECTION_CLIENT, "beacon prot. for clients support");
++		ext_feat_print(tb, SCAN_FREQ_KHZ, "scan on kHz frequency support");
++		ext_feat_print(tb, CONTROL_PORT_OVER_NL80211_TX_STATUS, "tx status for nl80211 control port support");
+ 	}
+ 
+ 	if (tb_msg[NL80211_ATTR_COALESCE_RULE]) {
+-- 
+2.26.2
 
