@@ -7,26 +7,26 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18DE1C433DF
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 19:22:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BFC44C433E0
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 19:22:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 071A2207BC
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 19:22:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AD626207BC
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 19:22:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2406436AbgE1TWL (ORCPT
+        id S2406455AbgE1TWS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 28 May 2020 15:22:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59506 "EHLO
+        Thu, 28 May 2020 15:22:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59528 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2406423AbgE1TWF (ORCPT
+        with ESMTP id S2406440AbgE1TWN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 May 2020 15:22:05 -0400
+        Thu, 28 May 2020 15:22:13 -0400
 Received: from bhuna.collabora.co.uk (bhuna.collabora.co.uk [IPv6:2a00:1098:0:82:1000:25:2eeb:e3e3])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B3A70C08C5C6;
-        Thu, 28 May 2020 12:22:04 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0153AC08C5C7;
+        Thu, 28 May 2020 12:22:12 -0700 (PDT)
 Received: from [127.0.0.1] (localhost [127.0.0.1])
         (Authenticated sender: andrzej.p)
-        with ESMTPSA id 5D9472A41CC
+        with ESMTPSA id CA31A2A41D1
 From:   Andrzej Pietrasiewicz <andrzej.p@collabora.com>
 To:     linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org,
         netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
@@ -71,9 +71,9 @@ Cc:     "Rafael J . Wysocki" <rjw@rjwysocki.net>,
         Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
         Andrzej Pietrasiewicz <andrzej.p@collabora.com>,
         kernel@collabora.com
-Subject: [PATCH v4 06/11] thermal: Add mode helpers
-Date:   Thu, 28 May 2020 21:20:46 +0200
-Message-Id: <20200528192051.28034-7-andrzej.p@collabora.com>
+Subject: [PATCH v4 09/11] thermal: core: Stop polling DISABLED thermal devices
+Date:   Thu, 28 May 2020 21:20:49 +0200
+Message-Id: <20200528192051.28034-10-andrzej.p@collabora.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200528192051.28034-1-andrzej.p@collabora.com>
 References: <Message-ID: <4493c0e4-51aa-3907-810c-74949ff27ca4@samsung.com>
@@ -83,109 +83,54 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Prepare for making the drivers not access tzd's private members.
+Polling DISABLED devices is not desired, as all such "disabled" devices
+are meant to be handled by userspace. This patch introduces and uses
+should_stop_polling() to decide whether the device should be polled or not.
 
 Signed-off-by: Andrzej Pietrasiewicz <andrzej.p@collabora.com>
 ---
- drivers/thermal/thermal_core.c | 53 ++++++++++++++++++++++++++++++++++
- include/linux/thermal.h        | 13 +++++++++
- 2 files changed, 66 insertions(+)
+ drivers/thermal/thermal_core.c | 16 ++++++++++++++--
+ 1 file changed, 14 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/thermal/thermal_core.c b/drivers/thermal/thermal_core.c
-index 14d3b1b94c4f..f2a5c5ee3455 100644
+index 14baf0288759..e9c0b990e4a9 100644
 --- a/drivers/thermal/thermal_core.c
 +++ b/drivers/thermal/thermal_core.c
-@@ -459,6 +459,59 @@ static void thermal_zone_device_reset(struct thermal_zone_device *tz)
- 	thermal_zone_device_init(tz);
+@@ -301,13 +301,22 @@ static void thermal_zone_device_set_polling(struct thermal_zone_device *tz,
+ 		cancel_delayed_work(&tz->poll_queue);
  }
  
-+int thermal_zone_device_set_mode(struct thermal_zone_device *tz,
-+				 enum thermal_device_mode mode)
++static inline bool should_stop_polling(struct thermal_zone_device *tz)
 +{
-+	int ret = 0;
-+
-+	mutex_lock(&tz->lock);
-+
-+	/* do nothing if mode isn't changing */
-+	if (mode == tz->mode) {
-+		mutex_unlock(&tz->lock);
-+
-+		return ret;
-+	}
-+
-+	if (tz->ops->set_mode)
-+		ret = tz->ops->set_mode(tz, mode);
-+
-+	if (!ret)
-+		tz->mode = mode;
-+
-+	mutex_unlock(&tz->lock);
-+
-+	thermal_zone_device_update(tz, THERMAL_EVENT_UNSPECIFIED);
-+
-+	return ret;
++	return !thermal_zone_device_is_enabled(tz);
 +}
 +
-+int thermal_zone_device_enable(struct thermal_zone_device *tz)
-+{
-+	return thermal_zone_device_set_mode(tz, THERMAL_DEVICE_ENABLED);
-+}
-+EXPORT_SYMBOL(thermal_zone_device_enable);
-+
-+int thermal_zone_device_disable(struct thermal_zone_device *tz)
-+{
-+	return thermal_zone_device_set_mode(tz, THERMAL_DEVICE_DISABLED);
-+}
-+EXPORT_SYMBOL(thermal_zone_device_disable);
-+
-+int thermal_zone_device_is_enabled(struct thermal_zone_device *tz)
-+{
-+	enum thermal_device_mode mode;
-+
-+	mutex_lock(&tz->lock);
-+
-+	mode = tz->mode;
-+
-+	mutex_unlock(&tz->lock);
-+
-+	return mode == THERMAL_DEVICE_ENABLED;
-+}
-+EXPORT_SYMBOL(thermal_zone_device_is_enabled);
-+
- void thermal_zone_device_update(struct thermal_zone_device *tz,
- 				enum thermal_notify_event event)
+ static void monitor_thermal_zone(struct thermal_zone_device *tz)
  {
-diff --git a/include/linux/thermal.h b/include/linux/thermal.h
-index a808f6fa2777..df013c39ba9b 100644
---- a/include/linux/thermal.h
-+++ b/include/linux/thermal.h
-@@ -416,6 +416,9 @@ int thermal_zone_get_offset(struct thermal_zone_device *tz);
++	bool stop;
++
++	stop = should_stop_polling(tz);
++
+ 	mutex_lock(&tz->lock);
  
- void thermal_cdev_update(struct thermal_cooling_device *);
- void thermal_notify_framework(struct thermal_zone_device *, int);
-+int thermal_zone_device_enable(struct thermal_zone_device *tz);
-+int thermal_zone_device_disable(struct thermal_zone_device *tz);
-+int thermal_zone_device_is_enabled(struct thermal_zone_device *tz);
- #else
- static inline struct thermal_zone_device *thermal_zone_device_register(
- 	const char *type, int trips, int mask, void *devdata,
-@@ -463,6 +466,16 @@ static inline void thermal_cdev_update(struct thermal_cooling_device *cdev)
- static inline void thermal_notify_framework(struct thermal_zone_device *tz,
- 	int trip)
- { }
-+
-+static inline int thermal_zone_device_enable(struct thermal_zone_device *tz)
-+{ return -ENODEV; }
-+
-+static inline int thermal_zone_device_disable(struct thermal_zone_device *tz)
-+{ return -ENODEV; }
-+
-+static inline int
-+thermal_zone_device_is_enabled(struct thermal_zone_device *tz)
-+{ return -ENODEV; }
- #endif /* CONFIG_THERMAL */
+-	if (tz->passive)
++	if (!stop && tz->passive)
+ 		thermal_zone_device_set_polling(tz, tz->passive_delay);
+-	else if (tz->polling_delay)
++	else if (!stop && tz->polling_delay)
+ 		thermal_zone_device_set_polling(tz, tz->polling_delay);
+ 	else
+ 		thermal_zone_device_set_polling(tz, 0);
+@@ -517,6 +526,9 @@ void thermal_zone_device_update(struct thermal_zone_device *tz,
+ {
+ 	int count;
  
- #endif /* __THERMAL_H__ */
++	if (should_stop_polling(tz))
++		return;
++
+ 	if (atomic_read(&in_suspend))
+ 		return;
+ 
 -- 
 2.17.1
 
