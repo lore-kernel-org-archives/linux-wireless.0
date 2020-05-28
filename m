@@ -6,33 +6,33 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24C64C433DF
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 09:44:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1070C433DF
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 09:44:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 10F16208DB
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 09:44:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9C9C5208DB
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 09:44:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387488AbgE1Jof (ORCPT
+        id S2387469AbgE1Joh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 28 May 2020 05:44:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54178 "EHLO
+        Thu, 28 May 2020 05:44:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54172 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387454AbgE1Jo3 (ORCPT
+        with ESMTP id S2387423AbgE1Jo3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
         Thu, 28 May 2020 05:44:29 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0194C05BD1E
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 235D9C05BD1E
         for <linux-wireless@vger.kernel.org>; Thu, 28 May 2020 02:44:29 -0700 (PDT)
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.93)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1jeF5P-004mD7-TR; Thu, 28 May 2020 11:44:27 +0200
+        id 1jeF5P-004mD7-CT; Thu, 28 May 2020 11:44:27 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
-Cc:     Rajkumar Manoharan <rmanohar@codeaurora.org>
-Subject: [RFC 06/10] mac80211: add HE 6 GHz Band Capabilities into parse extension
-Date:   Thu, 28 May 2020 11:44:12 +0200
-Message-Id: <20200528114415.b4ca6fa01e5b.Ia07584da4fc77aa77c4cc563248d2ce4234ffe5d@changeid>
+Cc:     Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 04/10] ieee80211: add HE ext EIDs and 6 GHz capability defines
+Date:   Thu, 28 May 2020 11:44:10 +0200
+Message-Id: <20200528114415.9d51ec596ec9.Ifdc5400fb01779351354daf38663ebeea03c9ad9@changeid>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20200528114415.3596a1eedb31.Ic15e681a0e249eab7350a06ceb582cca8bb9a080@changeid>
 References: <20200528114415.3596a1eedb31.Ic15e681a0e249eab7350a06ceb582cca8bb9a080@changeid>
@@ -43,46 +43,65 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Rajkumar Manoharan <rmanohar@codeaurora.org>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Handle 6 GHz band capability element parsing for association.
+Add the HE extended element IDs and the definitions for the
+HE 6 GHz band capabilities element, from Draft 5.0.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@codeaurora.org>
-Link: https://lore.kernel.org/r/1589399105-25472-4-git-send-email-rmanohar@codeaurora.org
-[some renaming to be in line with previous patches]
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/ieee80211_i.h | 1 +
- net/mac80211/util.c        | 4 ++++
- 2 files changed, 5 insertions(+)
+ include/linux/ieee80211.h | 28 ++++++++++++++++++++++++++++
+ 1 file changed, 28 insertions(+)
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index b7935f3d000d..dac016636d12 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1494,6 +1494,7 @@ struct ieee802_11_elems {
- 	const struct ieee80211_he_operation *he_operation;
- 	const struct ieee80211_he_spr *he_spr;
- 	const struct ieee80211_mu_edca_param_set *mu_edca_param_set;
-+	const struct ieee80211_he_6ghz_capa *he_6ghz_capa;
- 	const u8 *uora_element;
- 	const u8 *mesh_id;
- 	const u8 *peering;
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 20436c86b9bf..5d2c5ae8aadb 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -936,6 +936,10 @@ static void ieee80211_parse_extension_element(u32 *crc,
- 		    len >= ieee80211_he_spr_size(data))
- 			elems->he_spr = data;
- 		break;
-+	case WLAN_EID_EXT_HE_6GHZ_CAPA:
-+		if (len == sizeof(*elems->he_6ghz_capa))
-+			elems->he_6ghz_capa = data;
-+		break;
- 	}
- }
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index d9616e03672a..aff664bf00f7 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -2839,9 +2839,19 @@ enum ieee80211_eid_ext {
+ 	WLAN_EID_EXT_UORA = 37,
+ 	WLAN_EID_EXT_HE_MU_EDCA = 38,
+ 	WLAN_EID_EXT_HE_SPR = 39,
++	WLAN_EID_EXT_NDP_FEEDBACK_REPORT_PARAMSET = 41,
++	WLAN_EID_EXT_BSS_COLOR_CHG_ANN = 42,
++	WLAN_EID_EXT_QUIET_TIME_PERIOD_SETUP = 43,
++	WLAN_EID_EXT_ESS_REPORT = 45,
++	WLAN_EID_EXT_OPS = 46,
++	WLAN_EID_EXT_HE_BSS_LOAD = 47,
+ 	WLAN_EID_EXT_MAX_CHANNEL_SWITCH_TIME = 52,
+ 	WLAN_EID_EXT_MULTIPLE_BSSID_CONFIGURATION = 55,
+ 	WLAN_EID_EXT_NON_INHERITANCE = 56,
++	WLAN_EID_EXT_KNOWN_BSSID = 57,
++	WLAN_EID_EXT_SHORT_SSID_LIST = 58,
++	WLAN_EID_EXT_HE_6GHZ_CAPA = 59,
++	WLAN_EID_EXT_UL_MU_POWER_CAPA = 60,
+ };
  
+ /* Action category code */
+@@ -3384,6 +3394,24 @@ struct ieee80211_tspec_ie {
+ 	__le16 medium_time;
+ } __packed;
+ 
++struct ieee80211_he_6ghz_capa {
++	/* uses IEEE80211_HE_6GHZ_CAP_* below */
++	__le16 capa;
++} __packed;
++
++/* HE 6 GHz band capabilities */
++/* uses enum ieee80211_min_mpdu_spacing values */
++#define IEEE80211_HE_6GHZ_CAP_MIN_MPDU_START	0x0007
++/* uses enum ieee80211_vht_max_ampdu_length_exp values */
++#define IEEE80211_HE_6GHZ_CAP_MAX_AMPDU_LEN_EXP	0x0038
++/* uses IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_* values */
++#define IEEE80211_HE_6GHZ_CAP_MAX_MPDU_LEN	0x00c0
++/* WLAN_HT_CAP_SM_PS_* values */
++#define IEEE80211_HE_6GHZ_CAP_SM_PS		0x0600
++#define IEEE80211_HE_6GHZ_CAP_RD_RESPONDER	0x0800
++#define IEEE80211_HE_6GHZ_CAP_RX_ANTPAT_CONS	0x1000
++#define IEEE80211_HE_6GHZ_CAP_TX_ANTPAT_CONS	0x2000
++
+ /**
+  * ieee80211_get_qos_ctl - get pointer to qos control bytes
+  * @hdr: the frame
 -- 
 2.26.2
 
