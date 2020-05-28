@@ -2,133 +2,100 @@ Return-Path: <SRS0=UQ4x=7K=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DATE_IN_PAST_24_48,
-	DKIMWL_WL_HIGH,DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 40806C433E0
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 14:13:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1BFBC433E0
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 21:06:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1827B2075F
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 14:13:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1590675182;
-	bh=7bSp5bK1gKq5lfmIlc8WNWiBrYRNVDke2Cjb+Arst30=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=AWTeLgRuVDBHdaZ4m7Uvj8TG/cTpxiEFkZyGxwBtaj11CUbYlYpHVNgKm+EC4L1hx
-	 MA8NCXHjgSYqoHFfuIZlWClOKAHaTu2ax2qNPC/gyhnuFKTLPnsa8xoH2WZ29FDJOG
-	 1ZUdtEjbuLlNIvvgcwJAqJLOnBKcNAlKaaYEWOUQ=
+	by mail.kernel.org (Postfix) with ESMTP id C18A22088E
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 21:06:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390898AbgE1ONB (ORCPT
+        id S2407446AbgE1VGN (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 28 May 2020 10:13:01 -0400
-Received: from mail-pl1-f194.google.com ([209.85.214.194]:37588 "EHLO
-        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390727AbgE1ONA (ORCPT
+        Thu, 28 May 2020 17:06:13 -0400
+Received: from youngberry.canonical.com ([91.189.89.112]:42981 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2407447AbgE1VGM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 May 2020 10:13:00 -0400
-Received: by mail-pl1-f194.google.com with SMTP id x10so11598181plr.4
-        for <linux-wireless@vger.kernel.org>; Thu, 28 May 2020 07:13:00 -0700 (PDT)
+        Thu, 28 May 2020 17:06:12 -0400
+Received: from mail-il1-f200.google.com ([209.85.166.200])
+        by youngberry.canonical.com with esmtps (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.86_2)
+        (envelope-from <seth.forshee@canonical.com>)
+        id 1jePj8-0002NG-4z
+        for linux-wireless@vger.kernel.org; Thu, 28 May 2020 21:06:10 +0000
+Received: by mail-il1-f200.google.com with SMTP id d8so412908ilo.1
+        for <linux-wireless@vger.kernel.org>; Thu, 28 May 2020 14:06:10 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:resent-from:resent-date:resent-message-id
-         :resent-to:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=dk0pTdJumqtR3muV1AGluDpJHnN6Xn6bW+DtSZAfKr0=;
-        b=A7IJFrCLcKFA1Vz1cTo65EPmUfSCxuHhoMTMtncWrKA/KPezvzFD8GQgU0BbVutJvB
-         nOcHQxHMvfsMhukwqYx1Sxhssxxj0LIBGnIwZMUhi5iIY7kZJnNjgC/1NA3EMtKdrc8R
-         0KTJEQx9n1IRo3PpVFraCU8TROaKN/mow6bBTL8sV//XQWT6kd8C8QKzHLQCeoBn8CqL
-         KwH8iFbkWA4KcZpZDhVlVtthy3LPUBd432I++/wr/WhgmVLIEyetInry3wzAOcU84Uhl
-         +reWXn321cuFuig8tz3Mhabc9PClMUvZLe19Wtv387JwjZE55y1KjtU6bQVrCGwHQEq4
-         FCjA==
-X-Gm-Message-State: AOAM531N4pT62WE29lPNNZjpO5Gdvw7dh9k7U2ENiJvFzdFfn3f24zQU
-        pK5LCUOj0UFVekbOEh5bKdTUCZy7GJM=
-X-Google-Smtp-Source: ABdhPJxwjopxA1WzFrWH4bTLxYm7VxwL8CkHh3Iy+dACgFVmaN+nc0kLBu7yPqZ5kVwHUpIq/RT7iw==
-X-Received: by 2002:a17:90a:890b:: with SMTP id u11mr3983711pjn.233.1590675179309;
-        Thu, 28 May 2020 07:12:59 -0700 (PDT)
-Received: from 42.do-not-panic.com (42.do-not-panic.com. [157.230.128.187])
-        by smtp.gmail.com with ESMTPSA id r31sm5346419pjg.2.2020.05.28.07.12.58
-        for <linux-wireless@vger.kernel.org>
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=cgiFkeRWD1iklOGUCKi1k5UpEEQVr9kuLl9WkT7Km5E=;
+        b=CPKGXUbde2tzEr3j3XMhcGhyXWZRNJ8zvIzf4mEy2uyKdwrZ53qJRl1m0Y2EgzHoZZ
+         gVFmaHdXZkA/uSPlRSO5PHmeqZvkF7yzKCv61ZkFKA0PADQpaOziIIH0zbz6DVzxpWgk
+         Yu9FofRcnGVJEOqiN5pf+lG6vFgceKzILBwNHVIrFS5WiMyKQuE8VLhTjyZXvTp4BSUM
+         9jZv0oxqSTqR3UV+6kKhm7gBPC7OLemkxyWPqbabTy8XATPtqy9BjWAyHBRFheVKKGYN
+         KqB+HuxAezfhiZy2w1ApKqgiwsF/GOatVF3gHaJEZCgej9L/ZKTFp4J5jtlMpokJloFN
+         T16Q==
+X-Gm-Message-State: AOAM532uFukny0I39qhiL7gIXRs8zPs4yabf1uDIeA1FdL2bYJZAVMLB
+        YsF+IZT/ANBpqwmAWw9b+RcrPjJaovaPhavfTizvMXnJQ1a8N7fuqSeBDHV7/idRWHhF3k1TeN1
+        RXBQ7vrYGmAs2eijzHMH59ImGn7rIsGYp8oq1gdTIcayn
+X-Received: by 2002:a92:9142:: with SMTP id t63mr3515275ild.191.1590699968868;
+        Thu, 28 May 2020 14:06:08 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJymNf8Q25hGDDOx7WU6DwowM9bUHDZ/YKZgmxn04UQN5VITUXhtmHG0kJecbA569o+dkoe0kA==
+X-Received: by 2002:a92:9142:: with SMTP id t63mr3515264ild.191.1590699968612;
+        Thu, 28 May 2020 14:06:08 -0700 (PDT)
+Received: from localhost ([2605:a601:af9b:a120:c019:a923:c100:fcca])
+        by smtp.gmail.com with ESMTPSA id 199sm3936928ilb.11.2020.05.28.14.06.07
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 28 May 2020 07:12:59 -0700 (PDT)
-Received: by 42.do-not-panic.com (Postfix, from userid 1000)
-        id 1683940605; Thu, 28 May 2020 14:12:58 +0000 (UTC)
-Date:   Tue, 26 May 2020 23:07:48 +0000
-From:   Luis Chamberlain <mcgrof@kernel.org>
-To:     Jakub Kicinski <kuba@kernel.org>
-Cc:     jeyu@kernel.org, davem@davemloft.net, michael.chan@broadcom.com,
-        dchickles@marvell.com, sburla@marvell.com, fmanlunas@marvell.com,
-        aelior@marvell.com, GR-everest-linux-l2@marvell.com,
-        kvalo@codeaurora.org, johannes@sipsolutions.net,
-        akpm@linux-foundation.org, arnd@arndb.de, rostedt@goodmis.org,
-        mingo@redhat.com, aquini@redhat.com, cai@lca.pw, dyoung@redhat.com,
-        bhe@redhat.com, peterz@infradead.org, tglx@linutronix.de,
-        gpiccoli@canonical.com, pmladek@suse.com, tiwai@suse.de,
-        schlad@suse.de, andriy.shevchenko@linux.intel.com,
-        derosier@gmail.com, keescook@chromium.org, daniel.vetter@ffwll.ch,
-        will@kernel.org, mchehab+samsung@kernel.org, vkoul@kernel.org,
-        mchehab+huawei@kernel.org, robh@kernel.org, mhiramat@kernel.org,
-        sfr@canb.auug.org.au, linux@dominikbrodowski.net,
-        glider@google.com, paulmck@kernel.org, elver@google.com,
-        bauerman@linux.ibm.com, yamada.masahiro@socionext.com,
-        samitolvanen@google.com, yzaikin@google.com, dvyukov@google.com,
-        rdunlap@infradead.org, corbet@lwn.net, dianders@chromium.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-doc@vger.kernel.org
-Subject: Re: [PATCH v3 0/8] kernel: taint when the driver firmware crashes
-Message-ID: <20200526230748.GS11244@42.do-not-panic.com>
-References: <20200526145815.6415-1-mcgrof@kernel.org>
- <20200526154606.6a2be01f@kicinski-fedora-PC1C0HJN.hsd1.ca.comcast.net>
+        Thu, 28 May 2020 14:06:08 -0700 (PDT)
+From:   Seth Forshee <seth.forshee@canonical.com>
+To:     wireless-regdb@lists.infradead.org
+Cc:     linux-wireless@vger.kernel.org,
+        Ahmed Kamal <email.ahmedkamal@googlemail.com>
+Subject: [PATCH] wireless-regdb: update regulatory rules for Egypt (EG)
+Date:   Thu, 28 May 2020 16:06:07 -0500
+Message-Id: <20200528210607.16154-1-seth.forshee@canonical.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200526154606.6a2be01f@kicinski-fedora-PC1C0HJN.hsd1.ca.comcast.net>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Tue, May 26, 2020 at 03:46:06PM -0700, Jakub Kicinski wrote:
-> On Tue, 26 May 2020 14:58:07 +0000 Luis Chamberlain wrote:
-> > To those new on CC -- this is intended to be a simple generic interface
-> > to the kernel to annotate when the firwmare has crashed leaving the
-> > driver or system in a questionable state, in the worst case requiring
-> > full system reboot. This series is first addressing only a few
-> > networking patches, however, I already have an idea of where such
-> > firmware crashes happen across the tree. The goal with this series then
-> > is to first introduce the simple framework, and only if that moves
-> > forward will I continue to chug on with the rest of the drivers /
-> > subsystems.
-> > 
-> > This is *not* a networking specific problem only.
-> > 
-> > This v3 augments the last series by introducing the uevent for panic
-> > events, one of them is during tainting. The uvent mechanism is
-> > independent from any of this firmware taint mechanism. I've also
-> > addressed Jessica Yu's feedback. Given I've extended the patches a bit
-> > with other minor cleanup which checkpatch.pl complains over, and since
-> > this infrastructure is still being discussed, I've trimmed the patch
-> > series size to only cover drivers for which I've received an Acked-by
-> > from the respective driver maintainer, or where we have bug reports to
-> > support such dire situations on the driver such as ath10k.
-> > 
-> > During the last v2 it was discussed that we should instead use devlink
-> > for this work, however the initial RFC patches produced by Jakub
-> > Kicinski [0] shows how devlink is networking specific, and the intent
-> > behind this series is to produce simple helpers which can be used by *any*
-> > device driver, for any subsystem, not just networking. Subsystem
-> > specific infrastructure to help address firwmare crashes may still make
-> > sense, however that does not mean we *don't* need something even more
-> > generic regardless of the subsystem the issue happens on. Since uevents
-> > for taints are exposed, we now expose these through uapi as well, and
-> > that was something which eventually had to happen given that the current
-> > scheme of relying on sensible character representations for each taint
-> > will not scale beyond the alphabet.
-> 
-> Nacked-by: Jakub Kicinski <kuba@kernel.org>
+Update the rules to the frequency ranges and power limits
+documented in [1], and update 5GHz rules to comply with
+EN 301 893.
 
-Care to elaborate?
+[1] https://www.tra.gov.eg/en/industry/importing-of-equipment/Pages/Regulations-for-use-of-Wireless-Networks-Devices.aspx
+
+Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+---
+ db.txt | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/db.txt b/db.txt
+index ac3248350956..699bce9fb9d8 100644
+--- a/db.txt
++++ b/db.txt
+@@ -516,10 +516,11 @@ country EE: DFS-ETSI
+ 	# 60 GHz band channels 1-4 (ETSI EN 302 567)
+ 	(57000 - 66000 @ 2160), (40)
  
-  Luis
++# https://www.tra.gov.eg/en/industry/importing-of-equipment/Pages/Regulations-for-use-of-Wireless-Networks-Devices.aspx
+ country EG: DFS-ETSI
+-	(2402 - 2482 @ 40), (20)
+-	(5170 - 5250 @ 40), (20)
+-	(5250 - 5330 @ 40), (20), DFS
++	(2402 - 2483.5 @ 40), (20)
++	(5150 - 5250 @ 80), (23), NO-OUTDOOR, AUTO-BW, wmmrule=ETSI
++	(5250 - 5330 @ 80), (20), NO-OUTDOOR, DFS, AUTO-BW, wmmrule=ETSI
+ 
+ # ES as part of EU/CEPT accepted decisions 2005/513/EC (5GHz RLAN, EN 301 893)
+ # and 2006/771/EC (amended by 2008/432/EC, Short-Range Devices, EN 300 440)
+-- 
+2.25.1
+
