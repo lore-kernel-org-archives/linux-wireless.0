@@ -6,35 +6,34 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CED1C433E1
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 14:50:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2365AC433DF
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 14:50:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 07CD52072D
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 14:50:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 09F90206F1
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 14:50:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391132AbgE1Ouf (ORCPT
+        id S2391231AbgE1Ouh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 28 May 2020 10:50:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45308 "EHLO
+        Thu, 28 May 2020 10:50:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45314 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728600AbgE1Oua (ORCPT
+        with ESMTP id S1728608AbgE1Oub (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 May 2020 10:50:30 -0400
+        Thu, 28 May 2020 10:50:31 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AAC22C08C5CA
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B2C50C0A88B4
         for <linux-wireless@vger.kernel.org>; Thu, 28 May 2020 07:50:29 -0700 (PDT)
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.93)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1jeJrW-004vYI-Fe; Thu, 28 May 2020 16:50:26 +0200
+        id 1jeJrX-004vYI-UH; Thu, 28 May 2020 16:50:28 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Rajkumar Manoharan <rmanohar@codeaurora.org>,
-        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 04/24] ieee80211: add code to obtain and parse 6 GHz operation field
-Date:   Thu, 28 May 2020 16:50:00 +0200
-Message-Id: <20200528165011.42ca72c45ca9.Id74bc1b03da9ea6574f9bc70deeb60dfc1634359@changeid>
+        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+Subject: [PATCH 09/24] mac80211: add HE 6 GHz Band Capability element
+Date:   Thu, 28 May 2020 16:50:05 +0200
+Message-Id: <20200528165011.643aa8101111.I3f9747c1147480f65445f13eda5c4a5ed4e86757@changeid>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20200528165011.993f108e96ca.I0086ae42d672379380d04ac5effb2f3d5135731b@changeid>
 References: <20200528165011.993f108e96ca.I0086ae42d672379380d04ac5effb2f3d5135731b@changeid>
@@ -45,96 +44,186 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Rajkumar Manoharan <rmanohar@codeaurora.org>
 
-Add some code to obtain and parse the 6 GHz operation field
-inside the HE operation element.
+Construct HE 6 GHz band capability element (IEEE 802.11ax/D6.0,
+9.4.2.261) for association request and mesh beacon. The 6 GHz
+capability information is passed by driver through iftypes caps.
 
-While at it, fix the required length using sizeof() the new
-struct, which is 5 instead of 4 now.
-
+Signed-off-by: Rajkumar Manoharan <rmanohar@codeaurora.org>
+Link: https://lore.kernel.org/r/1589399105-25472-7-git-send-email-rmanohar@codeaurora.org
+[handle SMPS, adjust for previous patches, reserve SKB space properly,
+ change to handle SKB directly]
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- include/linux/ieee80211.h | 52 ++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 51 insertions(+), 1 deletion(-)
+ net/mac80211/ieee80211_i.h |  2 ++
+ net/mac80211/mesh.c        |  9 ++++++++
+ net/mac80211/mesh.h        |  2 ++
+ net/mac80211/mesh_plink.c  |  4 +++-
+ net/mac80211/mlme.c        |  3 +++
+ net/mac80211/util.c        | 46 ++++++++++++++++++++++++++++++++++++++
+ 6 files changed, 65 insertions(+), 1 deletion(-)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index c29184bf9416..2bd9e757167d 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -2209,6 +2209,28 @@ ieee80211_he_ppe_size(u8 ppe_thres_hdr, const u8 *phy_cap_info)
- #define IEEE80211_HE_OPERATION_PARTIAL_BSS_COLOR		0x40000000
- #define IEEE80211_HE_OPERATION_BSS_COLOR_DISABLED		0x80000000
- 
-+/**
-+ * ieee80211_he_6ghz_oper - HE 6 GHz operation Information field
-+ * @primary: primary channel
-+ * @control: control flags
-+ * @ccfs0: channel center frequency segment 0
-+ * @ccfs1: channel center frequency segment 1
-+ * @minrate: minimum rate (in 1 Mbps units)
-+ */
-+struct ieee80211_he_6ghz_oper {
-+	u8 primary;
-+#define IEEE80211_HE_6GHZ_OPER_CTRL_CHANWIDTH	0x3
-+#define		IEEE80211_HE_6GHZ_OPER_CTRL_CHANWIDTH_20MHZ	0
-+#define		IEEE80211_HE_6GHZ_OPER_CTRL_CHANWIDTH_40MHZ	1
-+#define		IEEE80211_HE_6GHZ_OPER_CTRL_CHANWIDTH_80MHZ	2
-+#define		IEEE80211_HE_6GHZ_OPER_CTRL_CHANWIDTH_160MHZ	3
-+#define IEEE80211_HE_6GHZ_OPER_CTRL_DUP_BEACON	0x4
-+	u8 control;
-+	u8 ccfs0;
-+	u8 ccfs1;
-+	u8 minrate;
-+} __packed;
-+
- /*
-  * ieee80211_he_oper_size - calculate 802.11ax HE Operations IE size
-  * @he_oper_ie: byte data of the He Operations IE, stating from the byte
-@@ -2235,7 +2257,7 @@ ieee80211_he_oper_size(const u8 *he_oper_ie)
- 	if (he_oper_params & IEEE80211_HE_OPERATION_CO_HOSTED_BSS)
- 		oper_len++;
- 	if (he_oper_params & IEEE80211_HE_OPERATION_6GHZ_OP_INFO)
--		oper_len += 4;
-+		oper_len += sizeof(struct ieee80211_he_6ghz_oper);
- 
- 	/* Add the first byte (extension ID) to the total length */
- 	oper_len++;
-@@ -2243,6 +2265,34 @@ ieee80211_he_oper_size(const u8 *he_oper_ie)
- 	return oper_len;
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index dac016636d12..344ea828e806 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -2177,6 +2177,8 @@ u8 ieee80211_ie_len_he_cap(struct ieee80211_sub_if_data *sdata, u8 iftype);
+ u8 *ieee80211_ie_build_he_cap(u8 *pos,
+ 			      const struct ieee80211_sta_he_cap *he_cap,
+ 			      u8 *end);
++void ieee80211_ie_build_he_6ghz_cap(struct ieee80211_sub_if_data *sdata,
++				    struct sk_buff *skb);
+ u8 *ieee80211_ie_build_he_oper(u8 *pos);
+ int ieee80211_parse_bitrates(struct cfg80211_chan_def *chandef,
+ 			     const struct ieee80211_supported_band *sband,
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 5930d07b1e43..5e8d72bdbb98 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -587,6 +587,13 @@ int mesh_add_he_oper_ie(struct ieee80211_sub_if_data *sdata,
+ 	return 0;
  }
  
-+/**
-+ * ieee80211_he_6ghz_oper - obtain 6 GHz operation field
-+ * @he_oper: HE operation element (must be pre-validated for size)
-+ *	but may be %NULL
-+ *
-+ * Return: a pointer to the 6 GHz operation field, or %NULL
-+ */
-+static inline const struct ieee80211_he_6ghz_oper *
-+ieee80211_he_6ghz_oper(const struct ieee80211_he_operation *he_oper)
++int mesh_add_he_6ghz_cap_ie(struct ieee80211_sub_if_data *sdata,
++			    struct sk_buff *skb)
 +{
-+	const u8 *ret = (void *)&he_oper->optional;
-+	u32 he_oper_params;
-+
-+	if (!he_oper)
-+		return NULL;
-+
-+	he_oper_params = le32_to_cpu(he_oper->he_oper_params);
-+
-+	if (!(he_oper_params & IEEE80211_HE_OPERATION_6GHZ_OP_INFO))
-+		return NULL;
-+	if (he_oper_params & IEEE80211_HE_OPERATION_VHT_OPER_INFO)
-+		ret += 3;
-+	if (he_oper_params & IEEE80211_HE_OPERATION_CO_HOSTED_BSS)
-+		ret++;
-+
-+	return (void *)ret;
++	ieee80211_ie_build_he_6ghz_cap(sdata, skb);
++	return 0;
 +}
 +
- /* HE Spatial Reuse defines */
- #define IEEE80211_HE_SPR_NON_SRG_OFFSET_PRESENT			0x4
- #define IEEE80211_HE_SPR_SRG_INFORMATION_PRESENT		0x8
+ static void ieee80211_mesh_path_timer(struct timer_list *t)
+ {
+ 	struct ieee80211_sub_if_data *sdata =
+@@ -766,6 +773,7 @@ ieee80211_mesh_build_beacon(struct ieee80211_if_mesh *ifmsh)
+ 		   2 + sizeof(struct ieee80211_vht_operation) +
+ 		   ie_len_he_cap +
+ 		   2 + 1 + sizeof(struct ieee80211_he_operation) +
++		   2 + 1 + sizeof(struct ieee80211_he_6ghz_capa) +
+ 		   ifmsh->ie_len;
+ 
+ 	bcn = kzalloc(sizeof(*bcn) + head_len + tail_len, GFP_KERNEL);
+@@ -885,6 +893,7 @@ ieee80211_mesh_build_beacon(struct ieee80211_if_mesh *ifmsh)
+ 	    mesh_add_vht_oper_ie(sdata, skb) ||
+ 	    mesh_add_he_cap_ie(sdata, skb, ie_len_he_cap) ||
+ 	    mesh_add_he_oper_ie(sdata, skb) ||
++	    mesh_add_he_6ghz_cap_ie(sdata, skb) ||
+ 	    mesh_add_vendor_ies(sdata, skb))
+ 		goto out_free;
+ 
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index 953f720754e8..40492d1bd8fd 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -222,6 +222,8 @@ int mesh_add_he_cap_ie(struct ieee80211_sub_if_data *sdata,
+ 		       struct sk_buff *skb, u8 ie_len);
+ int mesh_add_he_oper_ie(struct ieee80211_sub_if_data *sdata,
+ 			struct sk_buff *skb);
++int mesh_add_he_6ghz_cap_ie(struct ieee80211_sub_if_data *sdata,
++			    struct sk_buff *skb);
+ void mesh_rmc_free(struct ieee80211_sub_if_data *sdata);
+ int mesh_rmc_init(struct ieee80211_sub_if_data *sdata);
+ void ieee80211s_init(void);
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index 737c5f4dbf52..3aca89c97f36 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -238,6 +238,7 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
+ 			    2 + sizeof(struct ieee80211_vht_operation) +
+ 			    ie_len_he_cap +
+ 			    2 + 1 + sizeof(struct ieee80211_he_operation) +
++			    2 + 1 + sizeof(struct ieee80211_he_6ghz_capa) +
+ 			    2 + 8 + /* peering IE */
+ 			    sdata->u.mesh.ie_len);
+ 	if (!skb)
+@@ -328,7 +329,8 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
+ 		    mesh_add_vht_cap_ie(sdata, skb) ||
+ 		    mesh_add_vht_oper_ie(sdata, skb) ||
+ 		    mesh_add_he_cap_ie(sdata, skb, ie_len_he_cap) ||
+-		    mesh_add_he_oper_ie(sdata, skb))
++		    mesh_add_he_oper_ie(sdata, skb) ||
++		    mesh_add_he_6ghz_cap_ie(sdata, skb))
+ 			goto free;
+ 	}
+ 
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index a259b4487b60..f6ddce646f18 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -658,6 +658,8 @@ static void ieee80211_add_he_ie(struct ieee80211_sub_if_data *sdata,
+ 				      he_cap->he_cap_elem.phy_cap_info);
+ 	pos = skb_put(skb, he_cap_size);
+ 	ieee80211_ie_build_he_cap(pos, he_cap, pos + he_cap_size);
++
++	ieee80211_ie_build_he_6ghz_cap(sdata, skb);
+ }
+ 
+ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
+@@ -731,6 +733,7 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
+ 			2 + 1 + sizeof(struct ieee80211_he_cap_elem) + /* HE */
+ 				sizeof(struct ieee80211_he_mcs_nss_supp) +
+ 				IEEE80211_HE_PPE_THRES_MAX_LEN +
++			2 + 1 + sizeof(struct ieee80211_he_6ghz_capa) +
+ 			assoc_data->ie_len + /* extra IEs */
+ 			(assoc_data->fils_kek_len ? 16 /* AES-SIV */ : 0) +
+ 			9, /* WMM */
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 5d2c5ae8aadb..048b38546a56 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -2839,6 +2839,52 @@ u8 *ieee80211_ie_build_he_cap(u8 *pos,
+ 	return pos;
+ }
+ 
++void ieee80211_ie_build_he_6ghz_cap(struct ieee80211_sub_if_data *sdata,
++				    struct sk_buff *skb)
++{
++	struct ieee80211_supported_band *sband;
++	const struct ieee80211_sband_iftype_data *iftd;
++	enum nl80211_iftype iftype = ieee80211_vif_type_p2p(&sdata->vif);
++	u8 *pos;
++	u16 cap;
++
++	sband = ieee80211_get_sband(sdata);
++	if (!sband)
++		return;
++
++	iftd = ieee80211_get_sband_iftype_data(sband, iftype);
++	if (WARN_ON(!iftd))
++		return;
++
++	cap = le16_to_cpu(iftd->he_6ghz_capa.capa);
++	cap &= ~IEEE80211_HE_6GHZ_CAP_SM_PS;
++
++	switch (sdata->smps_mode) {
++	case IEEE80211_SMPS_AUTOMATIC:
++	case IEEE80211_SMPS_NUM_MODES:
++		WARN_ON(1);
++		/* fall through */
++	case IEEE80211_SMPS_OFF:
++		cap |= u16_encode_bits(WLAN_HT_CAP_SM_PS_DISABLED,
++				       IEEE80211_HE_6GHZ_CAP_SM_PS);
++		break;
++	case IEEE80211_SMPS_STATIC:
++		cap |= u16_encode_bits(WLAN_HT_CAP_SM_PS_STATIC,
++				       IEEE80211_HE_6GHZ_CAP_SM_PS);
++		break;
++	case IEEE80211_SMPS_DYNAMIC:
++		cap |= u16_encode_bits(WLAN_HT_CAP_SM_PS_DYNAMIC,
++				       IEEE80211_HE_6GHZ_CAP_SM_PS);
++		break;
++	}
++
++	pos = skb_put(skb, 2 + 1 + sizeof(cap));
++	*pos++ = WLAN_EID_EXTENSION;
++	*pos++ = 1 + sizeof(cap);
++	*pos++ = WLAN_EID_EXT_HE_6GHZ_CAPA;
++	put_unaligned_le16(cap, pos);
++}
++
+ u8 *ieee80211_ie_build_ht_oper(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
+ 			       const struct cfg80211_chan_def *chandef,
+ 			       u16 prot_mode, bool rifs_mode)
 -- 
 2.26.2
 
