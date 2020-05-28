@@ -6,35 +6,35 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 947A8C433E0
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 14:54:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51B02C433E0
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 14:54:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 783A22084C
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 14:54:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 33A712084C
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 14:54:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391292AbgE1Oyu (ORCPT
+        id S2391293AbgE1Oyz (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 28 May 2020 10:54:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46024 "EHLO
+        Thu, 28 May 2020 10:54:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46040 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2391243AbgE1Oys (ORCPT
+        with ESMTP id S2391243AbgE1Oyy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 May 2020 10:54:48 -0400
+        Thu, 28 May 2020 10:54:54 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B4CEBC08C5C6
-        for <linux-wireless@vger.kernel.org>; Thu, 28 May 2020 07:54:48 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 922C7C08C5C6
+        for <linux-wireless@vger.kernel.org>; Thu, 28 May 2020 07:54:54 -0700 (PDT)
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.93)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1jeJrc-004vYI-F7; Thu, 28 May 2020 16:50:32 +0200
+        id 1jeJrb-004vYI-Iw; Thu, 28 May 2020 16:50:31 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Rajkumar Manoharan <rmanohar@codeaurora.org>,
         Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>,
-        Tova Mussai <tova.mussai@intel.com>
-Subject: [PATCH 23/24] mac80211: set short_slot for 6 GHz band
-Date:   Thu, 28 May 2020 16:50:19 +0200
-Message-Id: <20200528165011.457ca3267eb1.I272fbae402b03123f04e9ae69204eeab960c70cd@changeid>
+        Ilan Peer <ilan.peer@intel.com>
+Subject: [PATCH 20/24] cfg80211: Update 6GHz starting frequency
+Date:   Thu, 28 May 2020 16:50:16 +0200
+Message-Id: <20200528165011.d9233bd62260.If474d2bc528aa07610fef429ff83e8312079e242@changeid>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20200528165011.993f108e96ca.I0086ae42d672379380d04ac5effb2f3d5135731b@changeid>
 References: <20200528165011.993f108e96ca.I0086ae42d672379380d04ac5effb2f3d5135731b@changeid>
@@ -45,45 +45,44 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Tova Mussai <tova.mussai@intel.com>
+From: Ilan Peer <ilan.peer@intel.com>
 
-Set short slot also for 6 GHz band, just like 5 GHz.
+The starting frequency of the 6GHz band changed from
+5940 MHz to 5950 MHz. Update the code accordingly.
 
-Signed-off-by: Tova Mussai <tova.mussai@intel.com>
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/cfg.c  | 3 ++-
- net/mac80211/mlme.c | 3 ++-
- 2 files changed, 4 insertions(+), 2 deletions(-)
+ net/wireless/util.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 90a07d075fdb..9b360544ad6f 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2198,7 +2198,8 @@ static int ieee80211_change_bss(struct wiphy *wiphy,
- 	}
- 
- 	if (!sdata->vif.bss_conf.use_short_slot &&
--	    sband->band == NL80211_BAND_5GHZ) {
-+	    (sband->band == NL80211_BAND_5GHZ ||
-+	     sband->band == NL80211_BAND_6GHZ)) {
- 		sdata->vif.bss_conf.use_short_slot = true;
- 		changed |= BSS_CHANGED_ERP_SLOT;
- 	}
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 5922464dc453..84fcd52645cc 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2171,7 +2171,8 @@ static u32 ieee80211_handle_bss_capability(struct ieee80211_sub_if_data *sdata,
- 	}
- 
- 	use_short_slot = !!(capab & WLAN_CAPABILITY_SHORT_SLOT_TIME);
--	if (sband->band == NL80211_BAND_5GHZ)
-+	if (sband->band == NL80211_BAND_5GHZ ||
-+	    sband->band == NL80211_BAND_6GHZ)
- 		use_short_slot = true;
- 
- 	if (use_protection != bss_conf->use_cts_prot) {
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 92585334b723..553bf1c8ee75 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -94,7 +94,7 @@ u32 ieee80211_channel_to_freq_khz(int chan, enum nl80211_band band)
+ 	case NL80211_BAND_6GHZ:
+ 		/* see 802.11ax D4.1 27.3.22.2 */
+ 		if (chan <= 253)
+-			return 5940 + chan * 5;
++			return 5950 + chan * 5;
+ 		break;
+ 	case NL80211_BAND_60GHZ:
+ 		if (chan < 7)
+@@ -119,11 +119,11 @@ int ieee80211_freq_khz_to_channel(u32 freq)
+ 		return (freq - 2407) / 5;
+ 	else if (freq >= 4910 && freq <= 4980)
+ 		return (freq - 4000) / 5;
+-	else if (freq < 5945)
++	else if (freq < 5955)
+ 		return (freq - 5000) / 5;
+ 	else if (freq <= 45000) /* DMG band lower limit */
+ 		/* see 802.11ax D4.1 27.3.22.2 */
+-		return (freq - 5940) / 5;
++		return (freq - 5950) / 5;
+ 	else if (freq >= 58320 && freq <= 70200)
+ 		return (freq - 56160) / 2160;
+ 	else
 -- 
 2.26.2
 
