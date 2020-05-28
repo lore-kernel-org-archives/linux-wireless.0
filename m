@@ -6,38 +6,41 @@ X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8521C433E0
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 06:56:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 986D4C433DF
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 06:57:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BB2DE20B80
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 06:56:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7DDD0208E4
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 06:57:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726036AbgE1G4W (ORCPT
+        id S1726277AbgE1G5T (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 28 May 2020 02:56:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56364 "EHLO
+        Thu, 28 May 2020 02:57:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56516 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725308AbgE1G4W (ORCPT
+        with ESMTP id S1725308AbgE1G5T (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 May 2020 02:56:22 -0400
+        Thu, 28 May 2020 02:57:19 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 81822C05BD1E
-        for <linux-wireless@vger.kernel.org>; Wed, 27 May 2020 23:56:22 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6D86FC05BD1E
+        for <linux-wireless@vger.kernel.org>; Wed, 27 May 2020 23:57:19 -0700 (PDT)
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.93)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1jeCSh-004hH3-C6; Thu, 28 May 2020 08:56:19 +0200
-Message-ID: <ebb8df2d32f9923d2e180bff9ca0b9a7d650b8bd.camel@sipsolutions.net>
-Subject: Re: Potential IBSS race
+        id 1jeCTd-004hIk-OL; Thu, 28 May 2020 08:57:17 +0200
+Message-ID: <7ecbd284ff0c0f439034e003a450083c645361fb.camel@sipsolutions.net>
+Subject: Re: Auth/Assoc/Connect events coming before CMD_CONNECT response
+ (hwsim)
 From:   Johannes Berg <johannes@sipsolutions.net>
-To:     James Prestwood <prestwoj@gmail.com>,
-        linux-wireless@vger.kernel.org
-Date:   Thu, 28 May 2020 08:56:18 +0200
-In-Reply-To: <845ab63a2796fa0a4d7042f79268a2e10f87bd99.camel@gmail.com> (sfid-20200528_010646_663816_382F3247)
-References: <CAPv5Ue5DY07E3=JDwjJkuad6Z3cuYtJg=dypUjy0KyBhn=JL9A@mail.gmail.com>
-         (sfid-20200506_174456_293312_214B015A) <b3859a019b965a7a4053c1946a4cde441c0dbc75.camel@sipsolutions.net>
-         <845ab63a2796fa0a4d7042f79268a2e10f87bd99.camel@gmail.com>
-         (sfid-20200528_010646_663816_382F3247)
+To:     James Prestwood <prestwoj@gmail.com>
+Cc:     linux-wireless@vger.kernel.org
+Date:   Thu, 28 May 2020 08:57:16 +0200
+In-Reply-To: <967e9193bc7d6573c4f0226e5801f2aeed92dc1c.camel@gmail.com> (sfid-20200528_010312_023822_A43149DE)
+References: <CAPv5Ue7kNRRf9esOKkQ=Kkx8f0_vdkiPYg24pzVsv3Dg71Ow_Q@mail.gmail.com>
+         <259da597c3902c79c9d5c6e171e109dcb68564eb.camel@sipsolutions.net>
+         <CAPv5Ue4Cp=Eeo+xy1K0CRz-AC3p-tUnEuRjuL1dyt0yiKhpwpA@mail.gmail.com>
+         (sfid-20200501_193303_702944_53D89397) <68be99836859c4216a667e5784ed0e519cc1143c.camel@sipsolutions.net>
+         <967e9193bc7d6573c4f0226e5801f2aeed92dc1c.camel@gmail.com>
+         (sfid-20200528_010312_023822_A43149DE)
 Content-Type: text/plain; charset="UTF-8"
 User-Agent: Evolution 3.36.2 (3.36.2-1.fc32) 
 MIME-Version: 1.0
@@ -47,23 +50,18 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, 2020-05-27 at 16:06 -0700, James Prestwood wrote:
+Hi James,
 
-> > Maybe that's a better approach - make the merge timer be randomized
-> > between 30 and 60 seconds or so, so that they can eventually merge.
-> > 
-> 
-> That sounds good, unfortunately it doesn't really help with our test
-> environment since we don't want to wait around for that long... But
-> yeah due to how long scanning takes, maybe thats just the way it is.
+> I was actually incorrect thinking we used wmediumd, we don't :) We have
+> our own hwsim thing that is effectively taking the place of wmediumd.
 
-If you can come up with a better solution, I'm all ears :)
+Oh. But my theory was that even purely the roundtrip out to userspace
+and back would make the issue go away, so I guess I was still wrong.
 
-But if your main concern is about the wait in testing, then I suggest
-you go to ARCH=um and time-travel=infcpu testing like wpa_supplicant has
-done, that was something like a 6x (!) testing speed increase for me.
+> And with this I added a very small delay to resending out the frames
+> and it totally fixed the issue.
 
-Since it's all software/hwsim that shouldn't be too difficult.
+I guess that's more realistic anyway :)
 
 johannes
 
