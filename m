@@ -6,35 +6,35 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0990CC433DF
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 19:37:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3335DC433DF
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 19:37:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E18C8207BC
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 19:37:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1E77B2078C
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 19:37:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2406665AbgE1ThN (ORCPT
+        id S2406669AbgE1ThS (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 28 May 2020 15:37:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33682 "EHLO
+        Thu, 28 May 2020 15:37:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33694 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2406620AbgE1ThL (ORCPT
+        with ESMTP id S2406620AbgE1ThQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 May 2020 15:37:11 -0400
+        Thu, 28 May 2020 15:37:16 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9909EC08C5C6
-        for <linux-wireless@vger.kernel.org>; Thu, 28 May 2020 12:37:11 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0493BC08C5C6
+        for <linux-wireless@vger.kernel.org>; Thu, 28 May 2020 12:37:16 -0700 (PDT)
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.93)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1jeOIt-0054OL-2G; Thu, 28 May 2020 21:34:59 +0200
+        id 1jeOIr-0054OL-3F; Thu, 28 May 2020 21:34:57 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Rajkumar Manoharan <rmanohar@codeaurora.org>,
         Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>,
         Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2 21/24] mac80211: accept aggregation sessions on 6 GHz
-Date:   Thu, 28 May 2020 21:34:44 +0200
-Message-Id: <20200528213443.776d3c891b64.Ifa099d450617b50c691832b3c4aa08959fab520a@changeid>
+Subject: [PATCH v2 15/24] mac80211: use HE 6 GHz band capability and pass it to the driver
+Date:   Thu, 28 May 2020 21:34:38 +0200
+Message-Id: <20200528213443.784e4890d82f.I5f1230d5ab27e84e7bbe88e3645b24ea15a0c146@changeid>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20200528213443.993f108e96ca.I0086ae42d672379380d04ac5effb2f3d5135731b@changeid>
 References: <20200528213443.993f108e96ca.I0086ae42d672379380d04ac5effb2f3d5135731b@changeid>
@@ -47,52 +47,176 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-On 6 GHz, stations don't have ht_supported set, but they can
-still do aggregation since they must have HE, allow that.
+In order to handle 6 GHz AP side, take the HE 6 GHz band capability
+data and pass it to the driver (which needs it for A-MPDU spacing
+and A-MPDU length).
 
+Link: https://lore.kernel.org/r/1589399105-25472-6-git-send-email-rmanohar@codeaurora.org
+Co-developed-by: Rajkumar Manoharan <rmanohar@codeaurora.org>
+Signed-off-by: Rajkumar Manoharan <rmanohar@codeaurora.org>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/agg-rx.c | 5 +++--
- net/mac80211/agg-tx.c | 3 ++-
- 2 files changed, 5 insertions(+), 3 deletions(-)
+ include/net/mac80211.h     |  4 +++-
+ net/mac80211/cfg.c         |  4 +++-
+ net/mac80211/he.c          | 48 ++++++++++++++++++++++++++++++++++++++
+ net/mac80211/ieee80211_i.h |  1 +
+ net/mac80211/mesh_plink.c  |  4 +++-
+ net/mac80211/mlme.c        |  1 +
+ 6 files changed, 59 insertions(+), 3 deletions(-)
 
-diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
-index 4d1c335e06e5..7f245e9f114c 100644
---- a/net/mac80211/agg-rx.c
-+++ b/net/mac80211/agg-rx.c
-@@ -9,7 +9,7 @@
-  * Copyright 2007, Michael Wu <flamingice@sourmilk.net>
-  * Copyright 2007-2010, Intel Corporation
-  * Copyright(c) 2015-2017 Intel Deutschland GmbH
-- * Copyright (C) 2018        Intel Corporation
-+ * Copyright (C) 2018-2020 Intel Corporation
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 7cb712427df1..11d5610d2ad5 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -7,7 +7,7 @@
+  * Copyright 2007-2010	Johannes Berg <johannes@sipsolutions.net>
+  * Copyright 2013-2014  Intel Mobile Communications GmbH
+  * Copyright (C) 2015 - 2017 Intel Deutschland GmbH
+- * Copyright (C) 2018 - 2019 Intel Corporation
++ * Copyright (C) 2018 - 2020 Intel Corporation
   */
  
- /**
-@@ -292,7 +292,8 @@ void ___ieee80211_start_rx_ba_session(struct sta_info *sta,
- 		goto end;
- 	}
+ #ifndef MAC80211_H
+@@ -1977,6 +1977,7 @@ struct ieee80211_sta_txpwr {
+  * @ht_cap: HT capabilities of this STA; restricted to our own capabilities
+  * @vht_cap: VHT capabilities of this STA; restricted to our own capabilities
+  * @he_cap: HE capabilities of this STA
++ * @he_6ghz_capa: on 6 GHz, holds the HE 6 GHz band capabilities
+  * @max_rx_aggregation_subframes: maximal amount of frames in a single AMPDU
+  *	that this station is allowed to transmit to us.
+  *	Can be modified by driver.
+@@ -2016,6 +2017,7 @@ struct ieee80211_sta {
+ 	struct ieee80211_sta_ht_cap ht_cap;
+ 	struct ieee80211_sta_vht_cap vht_cap;
+ 	struct ieee80211_sta_he_cap he_cap;
++	struct ieee80211_he_6ghz_capa he_6ghz_capa;
+ 	u16 max_rx_aggregation_subframes;
+ 	bool wme;
+ 	u8 uapsd_queues;
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 06a2b7640a9d..90a07d075fdb 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1520,7 +1520,9 @@ static int sta_apply_parameters(struct ieee80211_local *local,
+ 	if (params->he_capa)
+ 		ieee80211_he_cap_ie_to_sta_he_cap(sdata, sband,
+ 						  (void *)params->he_capa,
+-						  params->he_capa_len, sta);
++						  params->he_capa_len,
++						  (void *)params->he_6ghz_capa,
++						  sta);
  
--	if (!sta->sta.ht_cap.ht_supported) {
-+	if (!sta->sta.ht_cap.ht_supported &&
-+	    sta->sdata->vif.bss_conf.chandef.chan->band != NL80211_BAND_6GHZ) {
- 		ht_dbg(sta->sdata,
- 		       "STA %pM erroneously requests BA session on tid %d w/o QoS\n",
- 		       sta->sta.addr, tid);
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index c2d5f512526d..b37c8a983d88 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -593,7 +593,8 @@ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
- 		 "Requested to start BA session on reserved tid=%d", tid))
- 		return -EINVAL;
+ 	if (params->opmode_notif_used) {
+ 		/* returned value is only needed for rc update, but the
+diff --git a/net/mac80211/he.c b/net/mac80211/he.c
+index f520552b22be..cc26f239838b 100644
+--- a/net/mac80211/he.c
++++ b/net/mac80211/he.c
+@@ -8,10 +8,55 @@
  
--	if (!pubsta->ht_cap.ht_supported)
-+	if (!pubsta->ht_cap.ht_supported &&
-+	    sta->sdata->vif.bss_conf.chandef.chan->band != NL80211_BAND_6GHZ)
- 		return -EINVAL;
+ #include "ieee80211_i.h"
  
- 	if (WARN_ON_ONCE(!local->ops->ampdu_action))
++static void
++ieee80211_update_from_he_6ghz_capa(const struct ieee80211_he_6ghz_capa *he_6ghz_capa,
++				   struct sta_info *sta)
++{
++	enum ieee80211_smps_mode smps_mode;
++
++	if (sta->sdata->vif.type == NL80211_IFTYPE_AP ||
++	    sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN) {
++		switch (le16_get_bits(he_6ghz_capa->capa,
++				      IEEE80211_HE_6GHZ_CAP_SM_PS)) {
++		case WLAN_HT_CAP_SM_PS_INVALID:
++		case WLAN_HT_CAP_SM_PS_STATIC:
++			smps_mode = IEEE80211_SMPS_STATIC;
++			break;
++		case WLAN_HT_CAP_SM_PS_DYNAMIC:
++			smps_mode = IEEE80211_SMPS_DYNAMIC;
++			break;
++		case WLAN_HT_CAP_SM_PS_DISABLED:
++			smps_mode = IEEE80211_SMPS_OFF;
++			break;
++		}
++
++		sta->sta.smps_mode = smps_mode;
++	} else {
++		sta->sta.smps_mode = IEEE80211_SMPS_OFF;
++	}
++
++	switch (le16_get_bits(he_6ghz_capa->capa,
++			      IEEE80211_HE_6GHZ_CAP_MAX_MPDU_LEN)) {
++	case IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_11454:
++		sta->sta.max_amsdu_len = IEEE80211_MAX_MPDU_LEN_VHT_11454;
++		break;
++	case IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_7991:
++		sta->sta.max_amsdu_len = IEEE80211_MAX_MPDU_LEN_VHT_7991;
++		break;
++	case IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_3895:
++	default:
++		sta->sta.max_amsdu_len = IEEE80211_MAX_MPDU_LEN_VHT_3895;
++		break;
++	}
++
++	sta->sta.he_6ghz_capa = *he_6ghz_capa;
++}
++
+ void
+ ieee80211_he_cap_ie_to_sta_he_cap(struct ieee80211_sub_if_data *sdata,
+ 				  struct ieee80211_supported_band *sband,
+ 				  const u8 *he_cap_ie, u8 he_cap_len,
++				  const struct ieee80211_he_6ghz_capa *he_6ghz_capa,
+ 				  struct sta_info *sta)
+ {
+ 	struct ieee80211_sta_he_cap *he_cap = &sta->sta.he_cap;
+@@ -53,6 +98,9 @@ ieee80211_he_cap_ie_to_sta_he_cap(struct ieee80211_sub_if_data *sdata,
+ 
+ 	sta->cur_max_bandwidth = ieee80211_sta_cap_rx_bw(sta);
+ 	sta->sta.bandwidth = ieee80211_sta_cur_vht_bw(sta);
++
++	if (sband->band == NL80211_BAND_6GHZ && he_6ghz_capa)
++		ieee80211_update_from_he_6ghz_capa(he_6ghz_capa, sta);
+ }
+ 
+ void
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 6cac5bf7cba3..24dc1fd57000 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1899,6 +1899,7 @@ void
+ ieee80211_he_cap_ie_to_sta_he_cap(struct ieee80211_sub_if_data *sdata,
+ 				  struct ieee80211_supported_band *sband,
+ 				  const u8 *he_cap_ie, u8 he_cap_len,
++				  const struct ieee80211_he_6ghz_capa *he_6ghz_capa,
+ 				  struct sta_info *sta);
+ void
+ ieee80211_he_spr_ie_to_bss_conf(struct ieee80211_vif *vif,
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index fbbfc5d4a51c..798e4b6b383f 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -444,7 +444,9 @@ static void mesh_sta_info_init(struct ieee80211_sub_if_data *sdata,
+ 					    elems->vht_cap_elem, sta);
+ 
+ 	ieee80211_he_cap_ie_to_sta_he_cap(sdata, sband, elems->he_cap,
+-					  elems->he_cap_len, sta);
++					  elems->he_cap_len,
++					  elems->he_6ghz_capa,
++					  sta);
+ 
+ 	if (bw != sta->sta.bandwidth)
+ 		changed |= IEEE80211_RC_BW_CHANGED;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index c534cd1bb9cd..8a37089e86bb 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3430,6 +3430,7 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
+ 		ieee80211_he_cap_ie_to_sta_he_cap(sdata, sband,
+ 						  elems->he_cap,
+ 						  elems->he_cap_len,
++						  elems->he_6ghz_capa,
+ 						  sta);
+ 
+ 		bss_conf->he_support = sta->sta.he_cap.has_he;
 -- 
 2.26.2
 
