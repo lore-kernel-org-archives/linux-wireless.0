@@ -6,35 +6,35 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE308C433DF
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 19:37:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35C6EC433E1
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 19:37:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CD3ED2088E
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 19:37:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 23C8E2078C
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 19:37:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2406673AbgE1ThV (ORCPT
+        id S2406675AbgE1Th1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 28 May 2020 15:37:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33706 "EHLO
+        Thu, 28 May 2020 15:37:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33724 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2406620AbgE1ThU (ORCPT
+        with ESMTP id S2406620AbgE1ThZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 May 2020 15:37:20 -0400
+        Thu, 28 May 2020 15:37:25 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 66D64C08C5C6
-        for <linux-wireless@vger.kernel.org>; Thu, 28 May 2020 12:37:20 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85F63C08C5C6
+        for <linux-wireless@vger.kernel.org>; Thu, 28 May 2020 12:37:25 -0700 (PDT)
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.93)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1jeOIt-0054OL-CF; Thu, 28 May 2020 21:34:59 +0200
+        id 1jeOIr-0054OL-P4; Thu, 28 May 2020 21:34:57 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Rajkumar Manoharan <rmanohar@codeaurora.org>,
         Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>,
-        Ilan Peer <ilan.peer@intel.com>
-Subject: [PATCH v2 22/24] mac80211: Consider 6 GHz band when handling power constraint
-Date:   Thu, 28 May 2020 21:34:45 +0200
-Message-Id: <20200528213443.889e5c9dd006.Id8ed3bb8000ba8738be5df05639415eb2e23c61a@changeid>
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v2 17/24] cfg80211: treat 6 GHz channels as valid regardless of capability
+Date:   Thu, 28 May 2020 21:34:40 +0200
+Message-Id: <20200528213443.d4864ef52e92.I82f09b2b14a56413ce20376d09967fe954a033eb@changeid>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20200528213443.993f108e96ca.I0086ae42d672379380d04ac5effb2f3d5135731b@changeid>
 References: <20200528213443.993f108e96ca.I0086ae42d672379380d04ac5effb2f3d5135731b@changeid>
@@ -45,27 +45,88 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Ilan Peer <ilan.peer@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Treat it like the 5 GHz band.
+If a 6 GHz channel exists, then we can probably safely assume that
+the device actually supports it, and then it should support most
+bandwidths.
 
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+This will probably need to be extended to check the interface type
+and then dig into the HE capabilities for that though, to have the
+correct bandwidth check.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/mlme.c | 1 +
- 1 file changed, 1 insertion(+)
+ net/wireless/chan.c | 22 +++++++++++++++-------
+ 1 file changed, 15 insertions(+), 7 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 8a37089e86bb..d7bffd640ed3 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1533,6 +1533,7 @@ ieee80211_find_80211h_pwr_constr(struct ieee80211_sub_if_data *sdata,
- 		chan_increment = 1;
+diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+index e111c08daa0e..cddf92c5d09e 100644
+--- a/net/wireless/chan.c
++++ b/net/wireless/chan.c
+@@ -6,7 +6,7 @@
+  *
+  * Copyright 2009	Johannes Berg <johannes@sipsolutions.net>
+  * Copyright 2013-2014  Intel Mobile Communications GmbH
+- * Copyright 2018       Intel Corporation
++ * Copyright 2018-2020	Intel Corporation
+  */
+ 
+ #include <linux/export.h>
+@@ -919,7 +919,8 @@ bool cfg80211_chandef_usable(struct wiphy *wiphy,
+ 		width = 10;
  		break;
- 	case NL80211_BAND_5GHZ:
-+	case NL80211_BAND_6GHZ:
- 		chan_increment = 4;
+ 	case NL80211_CHAN_WIDTH_20:
+-		if (!ht_cap->ht_supported)
++		if (!ht_cap->ht_supported &&
++		    chandef->chan->band != NL80211_BAND_6GHZ)
+ 			return false;
+ 		/* fall through */
+ 	case NL80211_CHAN_WIDTH_20_NOHT:
+@@ -928,6 +929,8 @@ bool cfg80211_chandef_usable(struct wiphy *wiphy,
  		break;
- 	}
+ 	case NL80211_CHAN_WIDTH_40:
+ 		width = 40;
++		if (chandef->chan->band == NL80211_BAND_6GHZ)
++			break;
+ 		if (!ht_cap->ht_supported)
+ 			return false;
+ 		if (!(ht_cap->cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40) ||
+@@ -942,24 +945,29 @@ bool cfg80211_chandef_usable(struct wiphy *wiphy,
+ 		break;
+ 	case NL80211_CHAN_WIDTH_80P80:
+ 		cap = vht_cap->cap & IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK;
+-		if (cap != IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160_80PLUS80MHZ)
++		if (chandef->chan->band != NL80211_BAND_6GHZ &&
++		    cap != IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160_80PLUS80MHZ)
+ 			return false;
+ 		/* fall through */
+ 	case NL80211_CHAN_WIDTH_80:
+-		if (!vht_cap->vht_supported)
+-			return false;
+ 		prohibited_flags |= IEEE80211_CHAN_NO_80MHZ;
+ 		width = 80;
++		if (chandef->chan->band == NL80211_BAND_6GHZ)
++			break;
++		if (!vht_cap->vht_supported)
++			return false;
+ 		break;
+ 	case NL80211_CHAN_WIDTH_160:
++		prohibited_flags |= IEEE80211_CHAN_NO_160MHZ;
++		width = 160;
++		if (chandef->chan->band == NL80211_BAND_6GHZ)
++			break;
+ 		if (!vht_cap->vht_supported)
+ 			return false;
+ 		cap = vht_cap->cap & IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK;
+ 		if (cap != IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160MHZ &&
+ 		    cap != IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160_80PLUS80MHZ)
+ 			return false;
+-		prohibited_flags |= IEEE80211_CHAN_NO_160MHZ;
+-		width = 160;
+ 		break;
+ 	default:
+ 		WARN_ON_ONCE(1);
 -- 
 2.26.2
 
