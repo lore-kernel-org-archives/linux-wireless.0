@@ -2,173 +2,312 @@ Return-Path: <SRS0=UQ4x=7K=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1943EC433E1
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 19:22:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48949C433E1
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 19:23:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 06A56207BC
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 19:22:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2FB79207BC
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 19:23:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2406487AbgE1TWv (ORCPT
+        id S2406475AbgE1TWk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 28 May 2020 15:22:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59618 "EHLO
+        Thu, 28 May 2020 15:22:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59540 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2406480AbgE1TWo (ORCPT
+        with ESMTP id S2406449AbgE1TWQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 May 2020 15:22:44 -0400
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E87EC08C5C6
-        for <linux-wireless@vger.kernel.org>; Thu, 28 May 2020 12:22:44 -0700 (PDT)
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.93)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1jeO6z-0053zp-L1; Thu, 28 May 2020 21:22:41 +0200
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     linux-wireless@vger.kernel.org
-Cc:     Nathan Errera <nathan.errera@intel.com>
-Subject: [PATCH] cfg80211: support bigger kek/kck key length
-Date:   Thu, 28 May 2020 21:22:38 +0200
-Message-Id: <20200528212237.5eb58b00a5d1.I61b09d77c4f382e8d58a05dcca78096e99a6bc15@changeid>
-X-Mailer: git-send-email 2.26.2
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        Thu, 28 May 2020 15:22:16 -0400
+Received: from bhuna.collabora.co.uk (bhuna.collabora.co.uk [IPv6:2a00:1098:0:82:1000:25:2eeb:e3e3])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F406FC08C5C6;
+        Thu, 28 May 2020 12:22:15 -0700 (PDT)
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+        (Authenticated sender: andrzej.p)
+        with ESMTPSA id 588312A41DE
+From:   Andrzej Pietrasiewicz <andrzej.p@collabora.com>
+To:     linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        platform-driver-x86@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-renesas-soc@vger.kernel.org,
+        linux-rockchip@lists.infradead.org
+Cc:     "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>,
+        Vishal Kulkarni <vishal@chelsio.com>,
+        "David S . Miller" <davem@davemloft.net>,
+        Jiri Pirko <jiri@mellanox.com>,
+        Ido Schimmel <idosch@mellanox.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Peter Kaestle <peter@piie.net>,
+        Darren Hart <dvhart@infradead.org>,
+        Andy Shevchenko <andy@infradead.org>,
+        Sebastian Reichel <sre@kernel.org>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        Daniel Lezcano <daniel.lezcano@linaro.org>,
+        Amit Kucheria <amit.kucheria@verdurent.com>,
+        Support Opensource <support.opensource@diasemi.com>,
+        Shawn Guo <shawnguo@kernel.org>,
+        Sascha Hauer <s.hauer@pengutronix.de>,
+        Pengutronix Kernel Team <kernel@pengutronix.de>,
+        Fabio Estevam <festevam@gmail.com>,
+        NXP Linux Team <linux-imx@nxp.com>,
+        =?UTF-8?q?Niklas=20S=C3=B6derlund?= <niklas.soderlund@ragnatech.se>,
+        Heiko Stuebner <heiko@sntech.de>,
+        Orson Zhai <orsonzhai@gmail.com>,
+        Baolin Wang <baolin.wang7@gmail.com>,
+        Chunyan Zhang <zhang.lyra@gmail.com>,
+        Zhang Rui <rui.zhang@intel.com>,
+        Allison Randal <allison@lohutok.net>,
+        Enrico Weigelt <info@metux.net>,
+        Gayatri Kammela <gayatri.kammela@intel.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+        Andrzej Pietrasiewicz <andrzej.p@collabora.com>,
+        kernel@collabora.com
+Subject: [PATCH v4 10/11] thermal: Simplify or eliminate unnecessary set_mode() methods
+Date:   Thu, 28 May 2020 21:20:50 +0200
+Message-Id: <20200528192051.28034-11-andrzej.p@collabora.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20200528192051.28034-1-andrzej.p@collabora.com>
+References: <Message-ID: <4493c0e4-51aa-3907-810c-74949ff27ca4@samsung.com>
+ <20200528192051.28034-1-andrzej.p@collabora.com>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Nathan Errera <nathan.errera@intel.com>
+Setting polling_delay is now done at thermal_core level (by not polling
+DISABLED devices), so no need to repeat this code.
 
-With some newer AKMs, the KCK and KEK are bigger, so allow that
-if the driver advertises support for it. In addition, add a new
-attribute for the AKM so we can use it for offloaded rekeying.
+int340x: Checking for an impossible enum value is unnecessary.
+acpi/thermal: It only prints debug messages.
 
-Signed-off-by: Nathan Errera <nathan.errera@intel.com>
-[reword commit message]
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Andrzej Pietrasiewicz <andrzej.p@collabora.com>
 ---
- include/net/cfg80211.h       | 12 +++++++++---
- include/uapi/linux/nl80211.h |  4 ++++
- net/wireless/nl80211.c       | 23 +++++++++++++++++++----
- 3 files changed, 32 insertions(+), 7 deletions(-)
+ drivers/acpi/thermal.c                        | 26 ----------------
+ .../ethernet/mellanox/mlxsw/core_thermal.c    | 30 -------------------
+ drivers/platform/x86/acerhdf.c                |  3 --
+ drivers/thermal/imx_thermal.c                 |  6 ----
+ .../intel/int340x_thermal/int3400_thermal.c   |  4 ---
+ drivers/thermal/thermal_of.c                  | 18 -----------
+ 6 files changed, 87 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index c09d782618bb..7ce14e68378a 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2961,12 +2961,17 @@ struct cfg80211_wowlan_wakeup {
+diff --git a/drivers/acpi/thermal.c b/drivers/acpi/thermal.c
+index 52b6cda1bcc3..29a2b73fe035 100644
+--- a/drivers/acpi/thermal.c
++++ b/drivers/acpi/thermal.c
+@@ -525,31 +525,6 @@ static int thermal_get_temp(struct thermal_zone_device *thermal, int *temp)
+ 	return 0;
+ }
  
- /**
-  * struct cfg80211_gtk_rekey_data - rekey data
-- * @kek: key encryption key (NL80211_KEK_LEN bytes)
-- * @kck: key confirmation key (NL80211_KCK_LEN bytes)
-+ * @kek: key encryption key (@kek_len bytes)
-+ * @kck: key confirmation key (@kck_len bytes)
-  * @replay_ctr: replay counter (NL80211_REPLAY_CTR_LEN bytes)
-+ * @kek_len: length of kek
-+ * @kck_len length of kck
-+ * @akm: akm (oui, id)
-  */
- struct cfg80211_gtk_rekey_data {
- 	const u8 *kek, *kck, *replay_ctr;
-+	u32 akm;
-+	u8 kek_len, kck_len;
- };
+-static int thermal_set_mode(struct thermal_zone_device *thermal,
+-				enum thermal_device_mode mode)
+-{
+-	struct acpi_thermal *tz = thermal->devdata;
+-
+-	if (!tz)
+-		return -EINVAL;
+-
+-	if (mode != THERMAL_DEVICE_DISABLED &&
+-	    mode != THERMAL_DEVICE_ENABLED)
+-		return -EINVAL;
+-	/*
+-	 * enable/disable thermal management from ACPI thermal driver
+-	 */
+-	if (mode == THERMAL_DEVICE_DISABLED)
+-		pr_warn("thermal zone will be disabled\n");
+-
+-	ACPI_DEBUG_PRINT((ACPI_DB_INFO,
+-		"%s kernel ACPI thermal control\n",
+-		mode == THERMAL_DEVICE_ENABLED ?
+-		"Enable" : "Disable"));
+-
+-	return 0;
+-}
+-
+ static int thermal_get_trip_type(struct thermal_zone_device *thermal,
+ 				 int trip, enum thermal_trip_type *type)
+ {
+@@ -836,7 +811,6 @@ static struct thermal_zone_device_ops acpi_thermal_zone_ops = {
+ 	.bind = acpi_thermal_bind_cooling_device,
+ 	.unbind	= acpi_thermal_unbind_cooling_device,
+ 	.get_temp = thermal_get_temp,
+-	.set_mode = thermal_set_mode,
+ 	.get_trip_type = thermal_get_trip_type,
+ 	.get_trip_temp = thermal_get_trip_temp,
+ 	.get_crit_temp = thermal_get_crit_temp,
+diff --git a/drivers/net/ethernet/mellanox/mlxsw/core_thermal.c b/drivers/net/ethernet/mellanox/mlxsw/core_thermal.c
+index e1d800be8bb4..c7f334383912 100644
+--- a/drivers/net/ethernet/mellanox/mlxsw/core_thermal.c
++++ b/drivers/net/ethernet/mellanox/mlxsw/core_thermal.c
+@@ -275,19 +275,6 @@ static int mlxsw_thermal_unbind(struct thermal_zone_device *tzdev,
+ 	return 0;
+ }
  
- /**
-@@ -4193,9 +4198,10 @@ struct cfg80211_ops {
-  *	beaconing mode (AP, IBSS, Mesh, ...).
-  * @WIPHY_FLAG_HAS_STATIC_WEP: The device supports static WEP key installation
-  *	before connection.
-+ * @WIPHY_FLAG_SUPPORTS_EXT_KEK_KCK: The device supports bigger kek and kck keys
-  */
- enum wiphy_flags {
--	/* use hole at 0 */
-+	WIPHY_FLAG_SUPPORTS_EXT_KEK_KCK		= BIT(0),
- 	/* use hole at 1 */
- 	WIPHY_FLAG_SPLIT_SCAN_6GHZ		= BIT(2),
- 	WIPHY_FLAG_NETNS_OK			= BIT(3),
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 65de604afad0..13b4d3c2c19d 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -5396,6 +5396,8 @@ enum plink_actions {
+-static int mlxsw_thermal_set_mode(struct thermal_zone_device *tzdev,
+-				  enum thermal_device_mode mode)
+-{
+-	struct mlxsw_thermal *thermal = tzdev->devdata;
+-
+-	if (mode == THERMAL_DEVICE_ENABLED)
+-		tzdev->polling_delay = thermal->polling_delay;
+-	else
+-		tzdev->polling_delay = 0;
+-
+-	return 0;
+-}
+-
+ static int mlxsw_thermal_get_temp(struct thermal_zone_device *tzdev,
+ 				  int *p_temp)
+ {
+@@ -388,7 +375,6 @@ static int mlxsw_thermal_trend_get(struct thermal_zone_device *tzdev,
+ static struct thermal_zone_device_ops mlxsw_thermal_ops = {
+ 	.bind = mlxsw_thermal_bind,
+ 	.unbind = mlxsw_thermal_unbind,
+-	.set_mode = mlxsw_thermal_set_mode,
+ 	.get_temp = mlxsw_thermal_get_temp,
+ 	.get_trip_type	= mlxsw_thermal_get_trip_type,
+ 	.get_trip_temp	= mlxsw_thermal_get_trip_temp,
+@@ -446,20 +432,6 @@ static int mlxsw_thermal_module_unbind(struct thermal_zone_device *tzdev,
+ 	return err;
+ }
  
- #define NL80211_KCK_LEN			16
- #define NL80211_KEK_LEN			16
-+#define NL80211_KCK_EXT_LEN		24
-+#define NL80211_KEK_EXT_LEN		32
- #define NL80211_REPLAY_CTR_LEN		8
+-static int mlxsw_thermal_module_mode_set(struct thermal_zone_device *tzdev,
+-					 enum thermal_device_mode mode)
+-{
+-	struct mlxsw_thermal_module *tz = tzdev->devdata;
+-	struct mlxsw_thermal *thermal = tz->parent;
+-
+-	if (mode == THERMAL_DEVICE_ENABLED)
+-		tzdev->polling_delay = thermal->polling_delay;
+-	else
+-		tzdev->polling_delay = 0;
+-
+-	return 0;
+-}
+-
+ static int mlxsw_thermal_module_temp_get(struct thermal_zone_device *tzdev,
+ 					 int *p_temp)
+ {
+@@ -559,7 +531,6 @@ mlxsw_thermal_module_trip_hyst_set(struct thermal_zone_device *tzdev, int trip,
+ static struct thermal_zone_device_ops mlxsw_thermal_module_ops = {
+ 	.bind		= mlxsw_thermal_module_bind,
+ 	.unbind		= mlxsw_thermal_module_unbind,
+-	.set_mode	= mlxsw_thermal_module_mode_set,
+ 	.get_temp	= mlxsw_thermal_module_temp_get,
+ 	.get_trip_type	= mlxsw_thermal_module_trip_type_get,
+ 	.get_trip_temp	= mlxsw_thermal_module_trip_temp_get,
+@@ -597,7 +568,6 @@ static int mlxsw_thermal_gearbox_temp_get(struct thermal_zone_device *tzdev,
+ static struct thermal_zone_device_ops mlxsw_thermal_gearbox_ops = {
+ 	.bind		= mlxsw_thermal_module_bind,
+ 	.unbind		= mlxsw_thermal_module_unbind,
+-	.set_mode	= mlxsw_thermal_module_mode_set,
+ 	.get_temp	= mlxsw_thermal_gearbox_temp_get,
+ 	.get_trip_type	= mlxsw_thermal_module_trip_type_get,
+ 	.get_trip_temp	= mlxsw_thermal_module_trip_temp_get,
+diff --git a/drivers/platform/x86/acerhdf.c b/drivers/platform/x86/acerhdf.c
+index 3efe749dc5a0..d33a70af0869 100644
+--- a/drivers/platform/x86/acerhdf.c
++++ b/drivers/platform/x86/acerhdf.c
+@@ -397,8 +397,6 @@ static inline void acerhdf_revert_to_bios_mode(void)
+ {
+ 	acerhdf_change_fanstate(ACERHDF_FAN_AUTO);
+ 	kernelmode = 0;
+-	if (thz_dev)
+-		thz_dev->polling_delay = 0;
  
- /**
-@@ -5404,6 +5406,7 @@ enum plink_actions {
-  * @NL80211_REKEY_DATA_KEK: key encryption key (binary)
-  * @NL80211_REKEY_DATA_KCK: key confirmation key (binary)
-  * @NL80211_REKEY_DATA_REPLAY_CTR: replay counter (binary)
-+ * @NL80211_REKEY_DATA_AKM: AKM data (OUI, suite type)
-  * @NUM_NL80211_REKEY_DATA: number of rekey attributes (internal)
-  * @MAX_NL80211_REKEY_DATA: highest rekey attribute (internal)
-  */
-@@ -5412,6 +5415,7 @@ enum nl80211_rekey_data {
- 	NL80211_REKEY_DATA_KEK,
- 	NL80211_REKEY_DATA_KCK,
- 	NL80211_REKEY_DATA_REPLAY_CTR,
-+	NL80211_REKEY_DATA_AKM,
+ 	pr_notice("kernel mode fan control OFF\n");
+ }
+@@ -406,7 +404,6 @@ static inline void acerhdf_enable_kernelmode(void)
+ {
+ 	kernelmode = 1;
  
- 	/* keep last */
- 	NUM_NL80211_REKEY_DATA,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 4be9ac52421d..be4f1b8668e1 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -730,9 +730,16 @@ nl80211_coalesce_policy[NUM_NL80211_ATTR_COALESCE_RULE] = {
- /* policy for GTK rekey offload attributes */
- static const struct nla_policy
- nl80211_rekey_policy[NUM_NL80211_REKEY_DATA] = {
--	[NL80211_REKEY_DATA_KEK] = NLA_POLICY_EXACT_LEN_WARN(NL80211_KEK_LEN),
--	[NL80211_REKEY_DATA_KCK] = NLA_POLICY_EXACT_LEN_WARN(NL80211_KCK_LEN),
-+	[NL80211_REKEY_DATA_KEK] = {
-+		.type = NLA_BINARY,
-+		.len = NL80211_KEK_EXT_LEN
-+	},
-+	[NL80211_REKEY_DATA_KCK] = {
-+		.type = NLA_BINARY,
-+		.len = NL80211_KCK_EXT_LEN
-+	},
- 	[NL80211_REKEY_DATA_REPLAY_CTR] = NLA_POLICY_EXACT_LEN_WARN(NL80211_REPLAY_CTR_LEN),
-+	[NL80211_REKEY_DATA_AKM] = { .type = NLA_U32 },
- };
+-	thz_dev->polling_delay = interval*1000;
+ 	pr_notice("kernel mode fan control ON\n");
+ }
  
- static const struct nla_policy
-@@ -12347,14 +12354,22 @@ static int nl80211_set_rekey_data(struct sk_buff *skb, struct genl_info *info)
+diff --git a/drivers/thermal/imx_thermal.c b/drivers/thermal/imx_thermal.c
+index 53abb1be1cba..a02398118d88 100644
+--- a/drivers/thermal/imx_thermal.c
++++ b/drivers/thermal/imx_thermal.c
+@@ -338,9 +338,6 @@ static int imx_set_mode(struct thermal_zone_device *tz,
+ 	const struct thermal_soc_data *soc_data = data->socdata;
+ 
+ 	if (mode == THERMAL_DEVICE_ENABLED) {
+-		tz->polling_delay = IMX_POLLING_DELAY;
+-		tz->passive_delay = IMX_PASSIVE_DELAY;
+-
+ 		regmap_write(map, soc_data->sensor_ctrl + REG_CLR,
+ 			     soc_data->power_down_mask);
+ 		regmap_write(map, soc_data->sensor_ctrl + REG_SET,
+@@ -356,9 +353,6 @@ static int imx_set_mode(struct thermal_zone_device *tz,
+ 		regmap_write(map, soc_data->sensor_ctrl + REG_SET,
+ 			     soc_data->power_down_mask);
+ 
+-		tz->polling_delay = 0;
+-		tz->passive_delay = 0;
+-
+ 		if (data->irq_enabled) {
+ 			disable_irq(data->irq);
+ 			data->irq_enabled = false;
+diff --git a/drivers/thermal/intel/int340x_thermal/int3400_thermal.c b/drivers/thermal/intel/int340x_thermal/int3400_thermal.c
+index 8e8c9af7e5f4..9af862ab9f65 100644
+--- a/drivers/thermal/intel/int340x_thermal/int3400_thermal.c
++++ b/drivers/thermal/intel/int340x_thermal/int3400_thermal.c
+@@ -386,10 +386,6 @@ static int int3400_thermal_set_mode(struct thermal_zone_device *thermal,
+ 	if (!priv)
  		return -EINVAL;
- 	if (nla_len(tb[NL80211_REKEY_DATA_REPLAY_CTR]) != NL80211_REPLAY_CTR_LEN)
- 		return -ERANGE;
--	if (nla_len(tb[NL80211_REKEY_DATA_KEK]) != NL80211_KEK_LEN)
-+	if (nla_len(tb[NL80211_REKEY_DATA_KEK]) != NL80211_KEK_LEN &&
-+	    !(rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_EXT_KEK_KCK &&
-+	      nla_len(tb[NL80211_REKEY_DATA_KEK]) == NL80211_KEK_EXT_LEN))
- 		return -ERANGE;
--	if (nla_len(tb[NL80211_REKEY_DATA_KCK]) != NL80211_KCK_LEN)
-+	if (nla_len(tb[NL80211_REKEY_DATA_KCK]) != NL80211_KCK_LEN &&
-+	    !(rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_EXT_KEK_KCK &&
-+	      nla_len(tb[NL80211_REKEY_DATA_KEK]) == NL80211_KCK_EXT_LEN))
- 		return -ERANGE;
  
- 	rekey_data.kek = nla_data(tb[NL80211_REKEY_DATA_KEK]);
- 	rekey_data.kck = nla_data(tb[NL80211_REKEY_DATA_KCK]);
- 	rekey_data.replay_ctr = nla_data(tb[NL80211_REKEY_DATA_REPLAY_CTR]);
-+	rekey_data.kek_len = nla_len(tb[NL80211_REKEY_DATA_KEK]);
-+	rekey_data.kck_len = nla_len(tb[NL80211_REKEY_DATA_KCK]);
-+	if (tb[NL80211_REKEY_DATA_AKM])
-+		rekey_data.akm = nla_get_u32(tb[NL80211_REKEY_DATA_AKM]);
+-	if (mode != THERMAL_DEVICE_ENABLED &&
+-	    mode != THERMAL_DEVICE_DISABLED)
+-		return -EINVAL;
+-
+ 	if (mode != thermal->mode)
+ 		result = int3400_thermal_run_osc(priv->adev->handle,
+ 						priv->current_uuid_index,
+diff --git a/drivers/thermal/thermal_of.c b/drivers/thermal/thermal_of.c
+index 011fd7f0a01e..8a6272570347 100644
+--- a/drivers/thermal/thermal_of.c
++++ b/drivers/thermal/thermal_of.c
+@@ -267,22 +267,6 @@ static int of_thermal_unbind(struct thermal_zone_device *thermal,
+ 	return 0;
+ }
  
- 	wdev_lock(wdev);
- 	if (!wdev->current_bss) {
+-static int of_thermal_set_mode(struct thermal_zone_device *tz,
+-			       enum thermal_device_mode mode)
+-{
+-	struct __thermal_zone *data = tz->devdata;
+-
+-	if (mode == THERMAL_DEVICE_ENABLED) {
+-		tz->polling_delay = data->polling_delay;
+-		tz->passive_delay = data->passive_delay;
+-	} else {
+-		tz->polling_delay = 0;
+-		tz->passive_delay = 0;
+-	}
+-
+-	return 0;
+-}
+-
+ static int of_thermal_get_trip_type(struct thermal_zone_device *tz, int trip,
+ 				    enum thermal_trip_type *type)
+ {
+@@ -374,8 +358,6 @@ static int of_thermal_get_crit_temp(struct thermal_zone_device *tz,
+ }
+ 
+ static struct thermal_zone_device_ops of_thermal_ops = {
+-	.set_mode = of_thermal_set_mode,
+-
+ 	.get_trip_type = of_thermal_get_trip_type,
+ 	.get_trip_temp = of_thermal_get_trip_temp,
+ 	.set_trip_temp = of_thermal_set_trip_temp,
 -- 
-2.26.2
+2.17.1
 
