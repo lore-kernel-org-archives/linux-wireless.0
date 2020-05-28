@@ -6,34 +6,36 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22280C433DF
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7FDEC433E1
 	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 09:44:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 03271208DB
+	by mail.kernel.org (Postfix) with ESMTP id D40C8208DB
 	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 09:44:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387417AbgE1Jo3 (ORCPT
+        id S2387455AbgE1Jo3 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
         Thu, 28 May 2020 05:44:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54162 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54170 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387409AbgE1Jo2 (ORCPT
+        with ESMTP id S2387412AbgE1Jo3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 May 2020 05:44:28 -0400
+        Thu, 28 May 2020 05:44:29 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5036CC05BD1E
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE036C08C5C6
         for <linux-wireless@vger.kernel.org>; Thu, 28 May 2020 02:44:28 -0700 (PDT)
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.93)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1jeF5O-004mD7-KZ; Thu, 28 May 2020 11:44:26 +0200
+        id 1jeF5P-004mD7-4h; Thu, 28 May 2020 11:44:27 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
 Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 01/10] cfg80211: add a helper to identify 6 GHz PSCs
-Date:   Thu, 28 May 2020 11:44:07 +0200
-Message-Id: <20200528114415.3596a1eedb31.Ic15e681a0e249eab7350a06ceb582cca8bb9a080@changeid>
+Subject: [RFC 03/10] ieee80211: add code to obtain and parse 6 GHz operation field
+Date:   Thu, 28 May 2020 11:44:09 +0200
+Message-Id: <20200528114415.eab322ca5c5f.Id74bc1b03da9ea6574f9bc70deeb60dfc1634359@changeid>
 X-Mailer: git-send-email 2.26.2
+In-Reply-To: <20200528114415.3596a1eedb31.Ic15e681a0e249eab7350a06ceb582cca8bb9a080@changeid>
+References: <20200528114415.3596a1eedb31.Ic15e681a0e249eab7350a06ceb582cca8bb9a080@changeid>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -43,40 +45,94 @@ X-Mailing-List: linux-wireless@vger.kernel.org
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-This allows identifying whether or not a channel is a PSC
-(preferred scanning channel).
+Add some code to obtain and parse the 6 GHz operation field
+inside the HE operation element.
+
+While at it, fix the required length using sizeof() the new
+struct, which is 5 instead of 4 now.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- include/net/cfg80211.h | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+ include/linux/ieee80211.h | 52 ++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 51 insertions(+), 1 deletion(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index e2dbc9c02ef3..a38653358885 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -5277,6 +5277,21 @@ ieee80211_get_channel(struct wiphy *wiphy, int freq)
- 	return ieee80211_get_channel_khz(wiphy, MHZ_TO_KHZ(freq));
- }
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index c29184bf9416..d9616e03672a 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -2209,6 +2209,28 @@ ieee80211_he_ppe_size(u8 ppe_thres_hdr, const u8 *phy_cap_info)
+ #define IEEE80211_HE_OPERATION_PARTIAL_BSS_COLOR		0x40000000
+ #define IEEE80211_HE_OPERATION_BSS_COLOR_DISABLED		0x80000000
  
 +/**
-+ * cfg80211_channel_is_psc - Check if the channel is a 6 GHz PSC
-+ * @chan: control channel to check
-+ *
-+ * The Preferred Scanning Channels (PSC) are defined in
-+ * Draft IEEE P802.11ax/D5.0, 26.17.2.3.3
++ * ieee80211_he_6ghz_oper - HE 6 GHz operation Information field
++ * @primary: primary channel
++ * @control: control flags
++ * @ccfs0: channel center frequency segment 0
++ * @ccfs1: channel center frequency segment 1
++ * @minrate: minimum rate (in 1 Mbps units)
 + */
-+static inline bool cfg80211_channel_is_psc(struct ieee80211_channel *chan)
-+{
-+	if (chan->band != NL80211_BAND_6GHZ)
-+		return false;
++struct ieee80211_he_6ghz_oper {
++	u8 primary;
++#define IEEE80211_HE_6GHZ_OPER_CTRL_CHANWIDTH	0x3
++#define		IEEE80211_HE_6GHZ_OPER_CTRL_CHANWIDTH_20MHZ	0
++#define		IEEE80211_HE_6GHZ_OPER_CTRL_CHANWIDTH_40MHZ	1
++#define		IEEE80211_HE_6GHZ_OPER_CTRL_CHANWIDTH_80MHZ	2
++#define		IEEE80211_HE_6GHZ_OPER_CTRL_CHANWIDTH_160MHZ	3
++#define IEEE80211_HE_6GHZ_OPER_CTRL_DUP_BEACON	0x4
++	u8 control;
++	u8 ccfs0;
++	u8 ccfs1;
++	u8 minrate;
++} __packed;
 +
-+	return ieee80211_frequency_to_channel(chan->center_freq) % 16 == 5;
+ /*
+  * ieee80211_he_oper_size - calculate 802.11ax HE Operations IE size
+  * @he_oper_ie: byte data of the He Operations IE, stating from the byte
+@@ -2235,7 +2257,7 @@ ieee80211_he_oper_size(const u8 *he_oper_ie)
+ 	if (he_oper_params & IEEE80211_HE_OPERATION_CO_HOSTED_BSS)
+ 		oper_len++;
+ 	if (he_oper_params & IEEE80211_HE_OPERATION_6GHZ_OP_INFO)
+-		oper_len += 4;
++		oper_len += sizeof(struct ieee80211_he_6ghz_oper);
+ 
+ 	/* Add the first byte (extension ID) to the total length */
+ 	oper_len++;
+@@ -2359,6 +2381,34 @@ ieee80211_he_spr_size(const u8 *he_spr_ie)
+ 
+ #define S1G_CAPAB_B9_LINK_ADAPT_PER_CONTROL_RESPONSE BIT(0)
+ 
++/**
++ * ieee80211_he_6ghz_oper - obtain 6 GHz operation field
++ * @he_oper: HE operation element (must be pre-validated for size)
++ *	but may be %NULL
++ *
++ * Return: a pointer to the 6 GHz operation field, or %NULL
++ */
++static inline const struct ieee80211_he_6ghz_oper *
++ieee80211_he_6ghz_oper(const struct ieee80211_he_operation *he_oper)
++{
++	const u8 *ret = (void *)&he_oper->optional;
++	u32 he_oper_params;
++
++	if (!he_oper)
++		return NULL;
++
++	he_oper_params = le32_to_cpu(he_oper->he_oper_params);
++
++	if (!(he_oper_params & IEEE80211_HE_OPERATION_6GHZ_OP_INFO))
++		return NULL;
++	if (he_oper_params & IEEE80211_HE_OPERATION_VHT_OPER_INFO)
++		ret += 3;
++	if (he_oper_params & IEEE80211_HE_OPERATION_CO_HOSTED_BSS)
++		ret++;
++
++	return (void *)ret;
 +}
 +
- /**
-  * ieee80211_get_response_rate - get basic rate for a given rate
-  *
+ /* Authentication algorithms */
+ #define WLAN_AUTH_OPEN 0
+ #define WLAN_AUTH_SHARED_KEY 1
 -- 
 2.26.2
 
