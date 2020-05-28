@@ -2,121 +2,82 @@ Return-Path: <SRS0=UQ4x=7K=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B54EEC433E0
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 14:27:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A2D2C433E1
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 14:41:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 934E4207D3
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 14:27:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3C966208DB
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 14:41:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1590676039;
-	bh=HGe4Jo4TLnA1w0mekGRSXAahnApr+MBQk+vZ/U/T20w=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=HW89QaDVqMdoGJxOrUivhOILJD7AJxb/5rvv1WzwukIOOljKVVtmAaOx1Q4Nli+eP
-	 KI3J9s3Zalmy5vUooHK7HHmHAp02zxPV57fjR/Wixvc1vSBaUwTAkPqI2QYzYMe/2z
-	 J6HNM4XICfAQA19dmLKKFvsBBInFO4/Kq+Zmk2Mo=
+	s=default; t=1590676866;
+	bh=8Sy4SGFy9WOB7rPR7XK0WJf25jfeyvcDfaCkmDkOQcY=;
+	h=Date:From:To:To:To:Cc:Cc:Cc:Subject:In-Reply-To:References:
+	 List-ID:From;
+	b=lTF4BwxZtrULKRB/hY1AuOGotARWSwtn9hKYWEhrHDcJQWU+TjwDCbq5WQ3dJGk6p
+	 qb4tGIS9dOUmg4EvjZtirl55a53c/dXzhc5kE/Dv6lPhsnhafWTOdrsGchl812duKu
+	 ExWy7Y1z3B4bP6E8leyJE9EWR02Uqamn6xs2MPhY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391099AbgE1O1M (ORCPT
+        id S1728507AbgE1OlE (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 28 May 2020 10:27:12 -0400
-Received: from mail-pj1-f67.google.com ([209.85.216.67]:54587 "EHLO
-        mail-pj1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2391020AbgE1O1K (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 May 2020 10:27:10 -0400
-Received: by mail-pj1-f67.google.com with SMTP id s69so3247322pjb.4;
-        Thu, 28 May 2020 07:27:10 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=I3QwPwj57vR622OFwPIZLJsqn8CMDVU9+E93zXZEl7w=;
-        b=YF/3iztQYka2J5/I2/5yt+wFbeAsjeVgVDe27D0ueaY0Ck8XvO/Dih99q88aHLKlWF
-         iDCxqeQ9KWeGsr0kPNjD869SYaG5RKPo3T1vyHqX4H1E/dT9P9ez8Evl/62nI6e35OrT
-         PKyIiol/r6rrhCyMbfogclx4+EOwzJrScYrLaelHk6yLr5mgL5xsoLLty6p0RrpBZL6a
-         oBvCc2EgHFwH/vmIZ4Hbz+x4sA3SCJhs+u7zV5YuTrg5OdZRU1ImHlHWji64y+DB+Tmc
-         Kz87C2mT72Hr+vpXcbXCHYUFqFbnn0yjjn5RYonjdP6rw75/DBNZz5NvyyWh3fkMSIc2
-         CR9w==
-X-Gm-Message-State: AOAM530xkOXVD3W0fuLbAdeZaGCELXC1Uf8N5c4z8nEK1VdgItaCSrm0
-        d4iwzcVEcPpvaK47jKbRr9YAMCVd2hhbMg==
-X-Google-Smtp-Source: ABdhPJwuh0Oc4ff2wcfSFUmIRhdt4FUOhwhN8DEKt9EhuyeZbKIoIoTb2yzGCCw5NWHwMFGil/J/zw==
-X-Received: by 2002:a17:902:a60e:: with SMTP id u14mr3683709plq.176.1590676028933;
-        Thu, 28 May 2020 07:27:08 -0700 (PDT)
-Received: from 42.do-not-panic.com (42.do-not-panic.com. [157.230.128.187])
-        by smtp.gmail.com with ESMTPSA id g27sm5052741pfr.51.2020.05.28.07.27.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 28 May 2020 07:27:07 -0700 (PDT)
-Received: by 42.do-not-panic.com (Postfix, from userid 1000)
-        id C5BF340605; Thu, 28 May 2020 14:27:05 +0000 (UTC)
-Date:   Thu, 28 May 2020 14:27:05 +0000
-From:   Luis Chamberlain <mcgrof@kernel.org>
-To:     Jakub Kicinski <kuba@kernel.org>
-Cc:     jeyu@kernel.org, davem@davemloft.net, michael.chan@broadcom.com,
-        dchickles@marvell.com, sburla@marvell.com, fmanlunas@marvell.com,
-        aelior@marvell.com, GR-everest-linux-l2@marvell.com,
-        kvalo@codeaurora.org, johannes@sipsolutions.net,
-        akpm@linux-foundation.org, arnd@arndb.de, rostedt@goodmis.org,
-        mingo@redhat.com, aquini@redhat.com, cai@lca.pw, dyoung@redhat.com,
-        bhe@redhat.com, peterz@infradead.org, tglx@linutronix.de,
-        gpiccoli@canonical.com, pmladek@suse.com, tiwai@suse.de,
-        schlad@suse.de, andriy.shevchenko@linux.intel.com,
-        derosier@gmail.com, keescook@chromium.org, daniel.vetter@ffwll.ch,
-        will@kernel.org, mchehab+samsung@kernel.org, vkoul@kernel.org,
-        mchehab+huawei@kernel.org, robh@kernel.org, mhiramat@kernel.org,
-        sfr@canb.auug.org.au, linux@dominikbrodowski.net,
-        glider@google.com, paulmck@kernel.org, elver@google.com,
-        bauerman@linux.ibm.com, yamada.masahiro@socionext.com,
-        samitolvanen@google.com, yzaikin@google.com, dvyukov@google.com,
-        rdunlap@infradead.org, corbet@lwn.net, dianders@chromium.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-doc@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v3 0/8] kernel: taint when the driver firmware crashes
-Message-ID: <20200528142705.GQ11244@42.do-not-panic.com>
-References: <20200526145815.6415-1-mcgrof@kernel.org>
- <20200526154606.6a2be01f@kicinski-fedora-PC1C0HJN.hsd1.ca.comcast.net>
- <20200526230748.GS11244@42.do-not-panic.com>
- <20200526163031.5c43fc1d@kicinski-fedora-PC1C0HJN.hsd1.ca.comcast.net>
- <20200527031918.GU11244@42.do-not-panic.com>
- <20200527143642.5e4ffba0@kicinski-fedora-PC1C0HJN.hsd1.ca.comcast.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200527143642.5e4ffba0@kicinski-fedora-PC1C0HJN.hsd1.ca.comcast.net>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+        Thu, 28 May 2020 10:41:04 -0400
+Received: from mail.kernel.org ([198.145.29.99]:44370 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725795AbgE1OlC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 28 May 2020 10:41:02 -0400
+Received: from localhost (unknown [137.135.114.1])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 6FE60207D3;
+        Thu, 28 May 2020 14:41:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1590676861;
+        bh=8Sy4SGFy9WOB7rPR7XK0WJf25jfeyvcDfaCkmDkOQcY=;
+        h=Date:From:To:To:To:Cc:Cc:Cc:Subject:In-Reply-To:References:From;
+        b=tpWXd42MqAcAJZ74lqRKUprDaM82Gh2z20V5eGpHLsTStpw2CzVTYDt9Rtnqj42az
+         t7VRejA1E9w5Bq5c5gAoXipsLxQrKWqanchqU9tUdTMfeiLEKwImYSEFvY1tZjOHmQ
+         l7ItfRuLdasxXTQ5DsD94LsIPs28GJJF84CX9pIw=
+Date:   Thu, 28 May 2020 14:41:00 +0000
+From:   Sasha Levin <sashal@kernel.org>
+To:     Sasha Levin <sashal@kernel.org>
+To:     Dan Carpenter <dan.carpenter@oracle.com>
+To:     Kalle Valo <kvalo@codeaurora.org>, Hu Jiahui <kirin.say@gmail.com>
+Cc:     security@kernel.org, linux-wireless@vger.kernel.org
+Cc:     <stable@vger.kernel.org>
+Cc:     stable@vger.kernel.org
+Subject: Re: [PATCH v3] airo: Fix read overflows sending packets
+In-Reply-To: <20200527184830.GA1164846@mwanda>
+References: <20200527184830.GA1164846@mwanda>
+Message-Id: <20200528144101.6FE60207D3@mail.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On Wed, May 27, 2020 at 02:36:42PM -0700, Jakub Kicinski wrote:
-> On Wed, 27 May 2020 03:19:18 +0000 Luis Chamberlain wrote:
-> > I read your patch, and granted, I will accept I was under the incorrect
-> > assumption that this can only be used by networking devices, however it
-> > the devlink approach achieves getting userspace the ability with
-> > iproute2 devlink util to query a device health, on to which we can peg
-> > firmware health. But *this* patch series is not about health status and
-> > letting users query it, its about a *critical* situation which has come up
-> > with firmware requiring me to reboot my system, and the lack of *any*
-> > infrastructure in the kernel today to inform userspace about it.
-> > 
-> > So say we use netlink to report a critical health situation, how are we
-> > informing userspace with your patch series about requring a reboot?
-> 
-> One of main features of netlink is pub/sub model of notifications.
-> 
-> Whatever you imagine listening to your uevent can listen to
-> devlink-health notifications via devlink. 
-> 
-> In fact I've shown this off in the RFC patches I sent to you, see 
-> the devlink mon health command being used.
+Hi
 
-Yes but I looked at iputils2 devlink and seems I made an incorrect
-assumption this can only be used for a network device rather than
-a struct device.
+[This is an automated email]
 
-I'll take a second look.
+This commit has been processed because it contains a -stable tag.
+The stable tag indicates that it's relevant for the following trees: all
 
-  Luis
+The bot has tested the following trees: v5.6.14, v5.4.42, v4.19.124, v4.14.181, v4.9.224, v4.4.224.
+
+v5.6.14: Build OK!
+v5.4.42: Build OK!
+v4.19.124: Build OK!
+v4.14.181: Build OK!
+v4.9.224: Build OK!
+v4.4.224: Failed to apply! Possible dependencies:
+    Unable to calculate
+
+
+NOTE: The patch will not be queued to stable trees until it is upstream.
+
+How should we proceed with this patch?
+
+-- 
+Thanks
+Sasha
