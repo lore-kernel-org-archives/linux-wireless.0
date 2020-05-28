@@ -2,40 +2,40 @@ Return-Path: <SRS0=UQ4x=7K=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1070C433DF
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 09:44:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA8C6C433E0
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 09:50:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9C9C5208DB
-	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 09:44:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 933D8207BC
+	for <linux-wireless@archiver.kernel.org>; Thu, 28 May 2020 09:50:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387469AbgE1Joh (ORCPT
+        id S2387507AbgE1Juh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 28 May 2020 05:44:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54172 "EHLO
+        Thu, 28 May 2020 05:50:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55130 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387423AbgE1Jo3 (ORCPT
+        with ESMTP id S2387493AbgE1Juh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 28 May 2020 05:44:29 -0400
+        Thu, 28 May 2020 05:50:37 -0400
 Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 235D9C05BD1E
-        for <linux-wireless@vger.kernel.org>; Thu, 28 May 2020 02:44:29 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6752FC05BD1E
+        for <linux-wireless@vger.kernel.org>; Thu, 28 May 2020 02:50:37 -0700 (PDT)
 Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
         (Exim 4.93)
         (envelope-from <johannes@sipsolutions.net>)
-        id 1jeF5P-004mD7-CT; Thu, 28 May 2020 11:44:27 +0200
+        id 1jeFBL-004mPB-Ls; Thu, 28 May 2020 11:50:35 +0200
 From:   Johannes Berg <johannes@sipsolutions.net>
 To:     linux-wireless@vger.kernel.org
-Cc:     Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 04/10] ieee80211: add HE ext EIDs and 6 GHz capability defines
-Date:   Thu, 28 May 2020 11:44:10 +0200
-Message-Id: <20200528114415.9d51ec596ec9.Ifdc5400fb01779351354daf38663ebeea03c9ad9@changeid>
+Cc:     Rajkumar Manoharan <rmanohar@codeaurora.org>
+Subject: [RFC PATCH v2] mac80211: build HE operation with 6 GHz oper information
+Date:   Thu, 28 May 2020 11:50:32 +0200
+Message-Id: <20200528095032.25050-1-johannes@sipsolutions.net>
 X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20200528114415.3596a1eedb31.Ic15e681a0e249eab7350a06ceb582cca8bb9a080@changeid>
-References: <20200528114415.3596a1eedb31.Ic15e681a0e249eab7350a06ceb582cca8bb9a080@changeid>
+In-Reply-To: <20200528094428.23474-1-johannes@sipsolutions.net>
+References: <20200528094428.23474-1-johannes@sipsolutions.net>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -43,65 +43,183 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Rajkumar Manoharan <rmanohar@codeaurora.org>
 
-Add the HE extended element IDs and the definitions for the
-HE 6 GHz band capabilities element, from Draft 5.0.
+Add 6 GHz operation information (IEEE 802.11ax/D6.0, Figure 9-787k)
+while building HE operation element for non-HE AP. This field is used to
+determine channel information in the absence of HT/VHT IEs.
 
+Signed-off-by: Rajkumar Manoharan <rmanohar@codeaurora.org>
+Link: https://lore.kernel.org/r/1589399105-25472-8-git-send-email-rmanohar@codeaurora.org
+[fix skb allocation size]
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- include/linux/ieee80211.h | 28 ++++++++++++++++++++++++++++
- 1 file changed, 28 insertions(+)
+ net/mac80211/ieee80211_i.h |  2 +-
+ net/mac80211/mesh.c        | 12 +++++--
+ net/mac80211/mesh_plink.c  |  1 +
+ net/mac80211/util.c        | 65 +++++++++++++++++++++++++++++++++++---
+ 4 files changed, 72 insertions(+), 8 deletions(-)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index d9616e03672a..aff664bf00f7 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -2839,9 +2839,19 @@ enum ieee80211_eid_ext {
- 	WLAN_EID_EXT_UORA = 37,
- 	WLAN_EID_EXT_HE_MU_EDCA = 38,
- 	WLAN_EID_EXT_HE_SPR = 39,
-+	WLAN_EID_EXT_NDP_FEEDBACK_REPORT_PARAMSET = 41,
-+	WLAN_EID_EXT_BSS_COLOR_CHG_ANN = 42,
-+	WLAN_EID_EXT_QUIET_TIME_PERIOD_SETUP = 43,
-+	WLAN_EID_EXT_ESS_REPORT = 45,
-+	WLAN_EID_EXT_OPS = 46,
-+	WLAN_EID_EXT_HE_BSS_LOAD = 47,
- 	WLAN_EID_EXT_MAX_CHANNEL_SWITCH_TIME = 52,
- 	WLAN_EID_EXT_MULTIPLE_BSSID_CONFIGURATION = 55,
- 	WLAN_EID_EXT_NON_INHERITANCE = 56,
-+	WLAN_EID_EXT_KNOWN_BSSID = 57,
-+	WLAN_EID_EXT_SHORT_SSID_LIST = 58,
-+	WLAN_EID_EXT_HE_6GHZ_CAPA = 59,
-+	WLAN_EID_EXT_UL_MU_POWER_CAPA = 60,
- };
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 344ea828e806..9f874ce500f6 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -2179,7 +2179,7 @@ u8 *ieee80211_ie_build_he_cap(u8 *pos,
+ 			      u8 *end);
+ void ieee80211_ie_build_he_6ghz_cap(struct ieee80211_sub_if_data *sdata,
+ 				    struct sk_buff *skb);
+-u8 *ieee80211_ie_build_he_oper(u8 *pos);
++u8 *ieee80211_ie_build_he_oper(u8 *pos, struct cfg80211_chan_def *chandef);
+ int ieee80211_parse_bitrates(struct cfg80211_chan_def *chandef,
+ 			     const struct ieee80211_supported_band *sband,
+ 			     const u8 *srates, int srates_len, u32 *rates);
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 5e8d72bdbb98..5f3d45474db6 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -565,6 +565,7 @@ int mesh_add_he_oper_ie(struct ieee80211_sub_if_data *sdata,
+ {
+ 	const struct ieee80211_sta_he_cap *he_cap;
+ 	struct ieee80211_supported_band *sband;
++	u32 len;
+ 	u8 *pos;
  
- /* Action category code */
-@@ -3384,6 +3394,24 @@ struct ieee80211_tspec_ie {
- 	__le16 medium_time;
- } __packed;
+ 	sband = ieee80211_get_sband(sdata);
+@@ -578,11 +579,15 @@ int mesh_add_he_oper_ie(struct ieee80211_sub_if_data *sdata,
+ 	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_10)
+ 		return 0;
  
-+struct ieee80211_he_6ghz_capa {
-+	/* uses IEEE80211_HE_6GHZ_CAP_* below */
-+	__le16 capa;
-+} __packed;
+-	if (skb_tailroom(skb) < 2 + 1 + sizeof(struct ieee80211_he_operation))
++	len = 2 + 1 + sizeof(struct ieee80211_he_operation);
++	if (sdata->vif.bss_conf.chandef.chan->band == NL80211_BAND_6GHZ)
++		len += sizeof(struct ieee80211_he_6ghz_oper);
 +
-+/* HE 6 GHz band capabilities */
-+/* uses enum ieee80211_min_mpdu_spacing values */
-+#define IEEE80211_HE_6GHZ_CAP_MIN_MPDU_START	0x0007
-+/* uses enum ieee80211_vht_max_ampdu_length_exp values */
-+#define IEEE80211_HE_6GHZ_CAP_MAX_AMPDU_LEN_EXP	0x0038
-+/* uses IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_* values */
-+#define IEEE80211_HE_6GHZ_CAP_MAX_MPDU_LEN	0x00c0
-+/* WLAN_HT_CAP_SM_PS_* values */
-+#define IEEE80211_HE_6GHZ_CAP_SM_PS		0x0600
-+#define IEEE80211_HE_6GHZ_CAP_RD_RESPONDER	0x0800
-+#define IEEE80211_HE_6GHZ_CAP_RX_ANTPAT_CONS	0x1000
-+#define IEEE80211_HE_6GHZ_CAP_TX_ANTPAT_CONS	0x2000
++	if (skb_tailroom(skb) < len)
+ 		return -ENOMEM;
+ 
+-	pos = skb_put(skb, 2 + 1 + sizeof(struct ieee80211_he_operation));
+-	ieee80211_ie_build_he_oper(pos);
++	pos = skb_put(skb, len);
++	ieee80211_ie_build_he_oper(pos, &sdata->vif.bss_conf.chandef);
+ 
+ 	return 0;
+ }
+@@ -773,6 +778,7 @@ ieee80211_mesh_build_beacon(struct ieee80211_if_mesh *ifmsh)
+ 		   2 + sizeof(struct ieee80211_vht_operation) +
+ 		   ie_len_he_cap +
+ 		   2 + 1 + sizeof(struct ieee80211_he_operation) +
++			   sizeof(struct ieee80211_he_6ghz_oper) +
+ 		   2 + 1 + sizeof(struct ieee80211_he_6ghz_capa) +
+ 		   ifmsh->ie_len;
+ 
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index 3aca89c97f36..fbbfc5d4a51c 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -238,6 +238,7 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
+ 			    2 + sizeof(struct ieee80211_vht_operation) +
+ 			    ie_len_he_cap +
+ 			    2 + 1 + sizeof(struct ieee80211_he_operation) +
++				    sizeof(struct ieee80211_he_6ghz_oper) +
+ 			    2 + 1 + sizeof(struct ieee80211_he_6ghz_capa) +
+ 			    2 + 8 + /* peering IE */
+ 			    sdata->u.mesh.ie_len);
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 40c82951d801..9d240c3cce5d 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -3010,13 +3010,18 @@ u8 *ieee80211_ie_build_vht_oper(u8 *pos, struct ieee80211_sta_vht_cap *vht_cap,
+ 	return pos + sizeof(struct ieee80211_vht_operation);
+ }
+ 
+-u8 *ieee80211_ie_build_he_oper(u8 *pos)
++u8 *ieee80211_ie_build_he_oper(u8 *pos, struct cfg80211_chan_def *chandef)
+ {
+ 	struct ieee80211_he_operation *he_oper;
++	struct ieee80211_he_6ghz_oper *he_6ghz_op;
+ 	u32 he_oper_params;
++	u8 ie_len = 1 + sizeof(struct ieee80211_he_operation);
 +
- /**
-  * ieee80211_get_qos_ctl - get pointer to qos control bytes
-  * @hdr: the frame
++	if (chandef->chan->band == NL80211_BAND_6GHZ)
++		ie_len += sizeof(struct ieee80211_he_6ghz_oper);
+ 
+ 	*pos++ = WLAN_EID_EXTENSION;
+-	*pos++ = 1 + sizeof(struct ieee80211_he_operation);
++	*pos++ = ie_len;
+ 	*pos++ = WLAN_EID_EXT_HE_OPERATION;
+ 
+ 	he_oper_params = 0;
+@@ -3026,16 +3031,68 @@ u8 *ieee80211_ie_build_he_oper(u8 *pos)
+ 				IEEE80211_HE_OPERATION_ER_SU_DISABLE);
+ 	he_oper_params |= u32_encode_bits(1,
+ 				IEEE80211_HE_OPERATION_BSS_COLOR_DISABLED);
++	if (chandef->chan->band == NL80211_BAND_6GHZ)
++		he_oper_params |= u32_encode_bits(1,
++				IEEE80211_HE_OPERATION_6GHZ_OP_INFO);
+ 
+ 	he_oper = (struct ieee80211_he_operation *)pos;
+ 	he_oper->he_oper_params = cpu_to_le32(he_oper_params);
+ 
+ 	/* don't require special HE peer rates */
+ 	he_oper->he_mcs_nss_set = cpu_to_le16(0xffff);
++	pos += sizeof(struct ieee80211_he_operation);
+ 
+-	/* TODO add VHT operational and 6GHz operational subelement? */
++	if (chandef->chan->band != NL80211_BAND_6GHZ)
++		goto out;
+ 
+-	return pos + sizeof(struct ieee80211_vht_operation);
++	/* TODO add VHT operational */
++	he_6ghz_op = (struct ieee80211_he_6ghz_oper *)pos;
++	he_6ghz_op->minrate = 6; /* 6 Mbps */
++	he_6ghz_op->primary =
++		ieee80211_frequency_to_channel(chandef->chan->center_freq);
++	he_6ghz_op->ccfs0 =
++		ieee80211_frequency_to_channel(chandef->center_freq1);
++	if (chandef->center_freq2)
++		he_6ghz_op->ccfs1 =
++			ieee80211_frequency_to_channel(chandef->center_freq2);
++	else
++		he_6ghz_op->ccfs1 = 0;
++
++	switch (chandef->width) {
++	case NL80211_CHAN_WIDTH_160:
++		/* Convert 160 MHz channel width to new style as interop
++		 * workaround.
++		 */
++		he_6ghz_op->control =
++			IEEE80211_HE_6GHZ_OPER_CTRL_CHANWIDTH_160MHZ;
++		he_6ghz_op->ccfs1 = he_6ghz_op->ccfs0;
++		if (chandef->chan->center_freq < chandef->center_freq1)
++			he_6ghz_op->ccfs0 -= 8;
++		else
++			he_6ghz_op->ccfs0 += 8;
++		fallthrough;
++	case NL80211_CHAN_WIDTH_80P80:
++		he_6ghz_op->control =
++			IEEE80211_HE_6GHZ_OPER_CTRL_CHANWIDTH_160MHZ;
++		break;
++	case NL80211_CHAN_WIDTH_80:
++		he_6ghz_op->control =
++			IEEE80211_HE_6GHZ_OPER_CTRL_CHANWIDTH_80MHZ;
++		break;
++	case NL80211_CHAN_WIDTH_40:
++		he_6ghz_op->control =
++			IEEE80211_HE_6GHZ_OPER_CTRL_CHANWIDTH_40MHZ;
++		break;
++	default:
++		he_6ghz_op->control =
++			IEEE80211_HE_6GHZ_OPER_CTRL_CHANWIDTH_20MHZ;
++		break;
++	}
++
++	pos += sizeof(struct ieee80211_he_6ghz_oper);
++
++out:
++	return pos;
+ }
+ 
+ bool ieee80211_chandef_ht_oper(const struct ieee80211_ht_operation *ht_oper,
 -- 
 2.26.2
 
