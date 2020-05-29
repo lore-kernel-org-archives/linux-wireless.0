@@ -2,150 +2,95 @@ Return-Path: <SRS0=6Pxi=7L=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43489C433DF
-	for <linux-wireless@archiver.kernel.org>; Fri, 29 May 2020 17:22:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3416BC433E0
+	for <linux-wireless@archiver.kernel.org>; Fri, 29 May 2020 17:32:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 226F0208B8
-	for <linux-wireless@archiver.kernel.org>; Fri, 29 May 2020 17:22:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 15D2D2072D
+	for <linux-wireless@archiver.kernel.org>; Fri, 29 May 2020 17:32:14 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="cHvo6lv0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726943AbgE2RV7 (ORCPT
+        id S1727089AbgE2RcJ (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 29 May 2020 13:21:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39244 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725839AbgE2RV6 (ORCPT
+        Fri, 29 May 2020 13:32:09 -0400
+Received: from mail27.static.mailgun.info ([104.130.122.27]:13452 "EHLO
+        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726936AbgE2Rb2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 May 2020 13:21:58 -0400
-Received: from bhuna.collabora.co.uk (bhuna.collabora.co.uk [IPv6:2a00:1098:0:82:1000:25:2eeb:e3e3])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7CDF4C03E969;
-        Fri, 29 May 2020 10:21:58 -0700 (PDT)
-Received: from [127.0.0.1] (localhost [127.0.0.1])
-        (Authenticated sender: andrzej.p)
-        with ESMTPSA id F17622A194B
-Subject: Re: [PATCH v4 04/11] thermal: Store device mode in struct
- thermal_zone_device
-From:   Andrzej Pietrasiewicz <andrzej.p@collabora.com>
-To:     Guenter Roeck <linux@roeck-us.net>
-Cc:     linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org,
-        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        platform-driver-x86@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-renesas-soc@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Heiko Stuebner <heiko@sntech.de>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        Vishal Kulkarni <vishal@chelsio.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        kernel@collabora.com, Fabio Estevam <festevam@gmail.com>,
-        Amit Kucheria <amit.kucheria@verdurent.com>,
-        Chunyan Zhang <zhang.lyra@gmail.com>,
-        Daniel Lezcano <daniel.lezcano@linaro.org>,
-        Allison Randal <allison@lohutok.net>,
-        NXP Linux Team <linux-imx@nxp.com>,
-        Darren Hart <dvhart@infradead.org>,
-        Zhang Rui <rui.zhang@intel.com>,
-        Gayatri Kammela <gayatri.kammela@intel.com>,
-        Len Brown <lenb@kernel.org>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Sascha Hauer <s.hauer@pengutronix.de>,
-        Ido Schimmel <idosch@mellanox.com>,
-        Baolin Wang <baolin.wang7@gmail.com>,
-        Jiri Pirko <jiri@mellanox.com>,
-        Orson Zhai <orsonzhai@gmail.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Support Opensource <support.opensource@diasemi.com>,
-        Enrico Weigelt <info@metux.net>,
-        Peter Kaestle <peter@piie.net>,
-        Sebastian Reichel <sre@kernel.org>,
-        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-        Pengutronix Kernel Team <kernel@pengutronix.de>,
-        =?UTF-8?Q?Niklas_S=c3=b6derlund?= <niklas.soderlund@ragnatech.se>,
-        Shawn Guo <shawnguo@kernel.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        Andy Shevchenko <andy@infradead.org>
-References: <20200529154205.GA157653@roeck-us.net>
- <5010f7df-59d6-92ef-c99a-0dbd715f0ad2@collabora.com>
-Message-ID: <a0c0310f-9870-47be-4ca3-c07e41c380fc@collabora.com>
-Date:   Fri, 29 May 2020 19:21:50 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.8.0
+        Fri, 29 May 2020 13:31:28 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1590773487; h=Date: Message-Id: Cc: To: References:
+ In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
+ Content-Type: Sender; bh=6F9CNHe8Qpy8XEgxu8ud42/OjS8EjONkBKKX5sjGnLI=;
+ b=cHvo6lv0dY6FPgkRn+gXDU0q4AZfIvqORi8jSSjq/QlMJ6YFA/eIMVrBZ3eB2G8AuXAgXb7s
+ Bb7JkGbzCDyAZ6B7E9L1OS6+dQuyDaKV9y/91oYnjF0bdT1DEpmgKcTptZTM/lGUAkutOYhQ
+ KxVq1adRQ4+bd6VsDgw/FpdJmA0=
+X-Mailgun-Sending-Ip: 104.130.122.27
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n04.prod.us-west-2.postgun.com with SMTP id
+ 5ed146eabf0e32d254900ee2 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 29 May 2020 17:31:22
+ GMT
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id CF15FC433CA; Fri, 29 May 2020 17:31:22 +0000 (UTC)
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 11E40C433C9;
+        Fri, 29 May 2020 17:31:16 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 11E40C433C9
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <5010f7df-59d6-92ef-c99a-0dbd715f0ad2@collabora.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH] wlcore: fix runtime pm imbalance in wl1271_tx_work
+From:   Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20200520124241.9931-1-dinghao.liu@zju.edu.cn>
+References: <20200520124241.9931-1-dinghao.liu@zju.edu.cn>
+To:     Dinghao Liu <dinghao.liu@zju.edu.cn>
+Cc:     dinghao.liu@zju.edu.cn, kjlu@umn.edu,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Allison Randal <allison@lohutok.net>,
+        Alexios Zavras <alexios.zavras@intel.com>,
+        "Jason A. Donenfeld" <Jason@zx2c4.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
+Message-Id: <20200529173122.CF15FC433CA@smtp.codeaurora.org>
+Date:   Fri, 29 May 2020 17:31:22 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi again,
+Dinghao Liu <dinghao.liu@zju.edu.cn> wrote:
 
-W dniu 29.05.2020 o 18:08, Andrzej Pietrasiewicz pisze:
-> Hi Guenter,
+> There are two error handling paths in this functon. When
+> wlcore_tx_work_locked() returns an error code, we should
+> decrease the runtime PM usage counter the same way as the
+> error handling path beginning from pm_runtime_get_sync().
 > 
-> W dniu 29.05.2020 o 17:42, Guenter Roeck pisze:
->> On Thu, May 28, 2020 at 09:20:44PM +0200, Andrzej Pietrasiewicz wrote:
->>> Prepare for eliminating get_mode().
->>>
->> Might be worthwhile to explain (not only in the subject) what you are
->> doing here.
->>
->>> Signed-off-by: Andrzej Pietrasiewicz <andrzej.p@collabora.com>
->>> ---
->>>   drivers/acpi/thermal.c                        | 18 ++++++----------
->>>   .../ethernet/mellanox/mlxsw/core_thermal.c    | 21 +++++++------------
->>>   drivers/platform/x86/acerhdf.c                | 15 ++++++-------
->>>   drivers/thermal/da9062-thermal.c              |  6 ++----
->>>   drivers/thermal/imx_thermal.c                 | 17 +++++++--------
->>>   .../intel/int340x_thermal/int3400_thermal.c   | 12 +++--------
->>>   .../thermal/intel/intel_quark_dts_thermal.c   | 16 +++++++-------
->>>   drivers/thermal/thermal_of.c                  | 10 +++------
->>
->> After this patch is applied on top of the thermal 'testing' branch,
->> there are still local instances of thermal_device_mode in
->>     drivers/thermal/st/stm_thermal.c
->>     drivers/thermal/ti-soc-thermal/ti-thermal-common.c
->>
->> If there is a reason not to replace those, it might make sense to explain
->> it here.
->>
-> 
-> My understanding is that these two are sensor devices which are "plugged"
-> into their "parent" thermal zone device. The latter is the "proper" tzd.
-> They both use thermal_zone_of_device_ops instead of thermal_zone_device_ops.
-> The former doesn't even have get_mode(). The thermal core, when it calls
-> get_mode(), operates on the "parent" thermal zone devices.
-> 
-> Consequently, the drivers you mention use their "mode" members for
-> their private purpose, not for the purpose of storing the "parent"
-> thermal zone device mode.
-> 
+> Signed-off-by: Dinghao Liu <dinghao.liu@zju.edu.cn>
+> Acked-by: Tony Lindgren <tony@atomide.com>
 
-Let me also say it differently.
+Patch applied to wireless-drivers-next.git, thanks.
 
-Both drivers which you mention use devm_thermal_zone_of_sensor_register().
-It calls thermal_zone_of_sensor_register(), which "will search the list of
-thermal zones described in device tree and look for the zone that refer to
-the sensor device pointed by @dev->of_node as temperature providers. For
-the zone pointing to the sensor node, the sensor will be added to the DT
-thermal zone device." When a match is found thermal_zone_of_add_sensor()
-is invoked, which (using thermal_zone_get_zone_by_name()) iterates over
-all registered thermal_zone_devices. The one eventually found will be
-returned and propagated to the original caller of
-devm_thermal_zone_of_sensor_register(). The state of this returned
-device is managed elsewhere (in that device's struct tzd). The "mode"
-member you are referring to is thus unrelated.
+9604617e998b wlcore: fix runtime pm imbalance in wl1271_tx_work
 
-Regards,
+-- 
+https://patchwork.kernel.org/patch/11560387/
 
-Andrzej
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+
