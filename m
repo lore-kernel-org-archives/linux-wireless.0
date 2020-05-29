@@ -2,132 +2,128 @@ Return-Path: <SRS0=6Pxi=7L=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-12.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EDDDAC433DF
-	for <linux-wireless@archiver.kernel.org>; Fri, 29 May 2020 16:19:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 854D0C433E0
+	for <linux-wireless@archiver.kernel.org>; Fri, 29 May 2020 16:26:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CE25C2077D
-	for <linux-wireless@archiver.kernel.org>; Fri, 29 May 2020 16:19:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5CCA020897
+	for <linux-wireless@archiver.kernel.org>; Fri, 29 May 2020 16:26:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="ErFV4aKk"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="ep8vjTUO"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727831AbgE2QTf (ORCPT
+        id S1726878AbgE2Q0V (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 29 May 2020 12:19:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57856 "EHLO
+        Fri, 29 May 2020 12:26:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58912 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725681AbgE2QTd (ORCPT
+        with ESMTP id S1725601AbgE2Q0U (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 May 2020 12:19:33 -0400
+        Fri, 29 May 2020 12:26:20 -0400
 Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0825AC03E969
-        for <linux-wireless@vger.kernel.org>; Fri, 29 May 2020 09:19:33 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8FB3BC03E969
+        for <linux-wireless@vger.kernel.org>; Fri, 29 May 2020 09:26:20 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:MIME-Version:Message-Id:Date:Subject
-        :Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:Content-Description:
-        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=AylzNCRVoQbwIAp6arjQA9caBIZ3bOW9933qSf24gyE=; b=ErFV4aKkxTpdawqH5VUVhccEF9
-        S/Y+MqMnwHWzBt9hoMmlyaoYlxVcjYz09IHgkVaaA3dDKzIAsGFG2J2u9bThIXEr3jqY8gyjfFZWy
-        PF8MNGLJWz6Krf/2ExHLygtQdEvlC0NCEL0Tkr4OQE7Ck/HG2521C5TIRZoCFTKQGDfo=;
-Received: from p4ff13c20.dip0.t-ipconnect.de ([79.241.60.32] helo=maeck.lan)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
+        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=RRZpYVNgi0Cv6Sp/r3A8FrzZfzBZmxak7j674fp2yAA=; b=ep8vjTUOMXLx9blvAE0o+ixwHz
+        ot12Pa7D3xs2Nk8S3aRL3G2JhXZxNZqaNx6awX4fIXP2jBM5dtnI2ZKRmlkqJB3J6ftBGZxfjrj7h
+        EeRCRMFfVc4aVxWXscCvvJ3hWr8uche6nj+fWYwr+f9w8G+7YK3IcGA8+o+ArLHpZMxk=;
+Received: from p4ff13c20.dip0.t-ipconnect.de ([79.241.60.32] helo=nf.local)
+        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.89)
         (envelope-from <nbd@nbd.name>)
-        id 1jehjG-0007eI-PN; Fri, 29 May 2020 18:19:30 +0200
-Received: by maeck.lan (Postfix, from userid 501)
-        id BD5F98917448; Fri, 29 May 2020 18:19:29 +0200 (CEST)
+        id 1jehpr-0008CS-4X; Fri, 29 May 2020 18:26:19 +0200
+Subject: Re: pull request: mt76 2019-05-22
+To:     Kalle Valo <kvalo@codeaurora.org>
+Cc:     linux-wireless <linux-wireless@vger.kernel.org>
+References: <d0de94c9-f367-0f57-950b-c76e1808bdcb@nbd.name>
+ <875zceu90v.fsf@codeaurora.org>
 From:   Felix Fietkau <nbd@nbd.name>
-To:     linux-wireless@vger.kernel.org
-Cc:     devicetree@vger.kernel.org
-Subject: [PATCH 1/3] dt-bindings: net: wireless: mt76: add power-limits node
-Date:   Fri, 29 May 2020 18:19:27 +0200
-Message-Id: <20200529161929.24751-1-nbd@nbd.name>
-X-Mailer: git-send-email 2.24.0
+Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
+ xsDiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
+ ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
+ Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
+ AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
+ vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
+ wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
+ TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
+ l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwc0cRmVsaXggRmll
+ dGthdSA8bmJkQG5iZC5uYW1lPsJgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
+ HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
+ VrwYTIThkTlQzsFNBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
+ CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
+ VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
+ Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
+ DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
+ wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
+ f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
+ aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
+ FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
+ TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
+ GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
+ RjMaxwtSdaCKMw3j33ZbsWS4
+Message-ID: <adcaf365-8dda-8c04-99ab-c6d1d1901fc8@nbd.name>
+Date:   Fri, 29 May 2020 18:26:18 +0200
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:68.0)
+ Gecko/20100101 Thunderbird/68.8.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <875zceu90v.fsf@codeaurora.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This subnode can be used to set per-rate tx power limits either per
-country code / regdomain or globally.
-These limits are typically provided by the device manufacturers and are
-used to limit sideband emissions and stay within regulatory limits
+On 2020-05-29 16:10, Kalle Valo wrote:
+> Felix Fietkau <nbd@nbd.name> writes:
+> 
+>> Hi Kalle,
+>>
+>> here's another pull request for 5.8, replacing the previous one.
+>>
+>> - Felix
+>>
+>> The following changes since commit 50ce4c099bebf56be86c9448f7f4bcd34f33663c:
+>>
+>>   sctp: fix typo sctp_ulpevent_nofity_peer_addr_change (2020-05-27 15:08:02 -0700)
+>>
+>> are available in the Git repository at:
+>>
+>>   https://github.com/nbd168/wireless tags/mt76-for-kvalo-2020-05-28
+>>
+>> for you to fetch changes up to d9045b18cd445e0d0a53903ffd5d79793d9df59e:
+>>
+>>   mt76: mt7915: remove set but not used variable 'msta' (2020-05-28 17:57:25 +0200)
+>>
+>> ----------------------------------------------------------------
+>> mt76 patches for 5.8
+>>
+>> * fixes for sparse warnings
+>> * DBDC fixes
+>> * mt7663 remain-on-channel support
+>> * mt7915 spatial reuse support
+>> * mt7915 radiotap fix
+>> * station wcid allocation fix
+>> * mt7663 powersave fix
+>> * mt7663 scan fix
+>> * mt7611n support
+>> * cleanup
+>>
+>> ----------------------------------------------------------------
+> 
+> One commit has the Cc field by accident, but no need to resend because
+> of this. Just check your workflow.
+Sorry about that. I will be more careful about that sort of thing.
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- .../bindings/net/wireless/mediatek,mt76.txt   | 47 +++++++++++++++++++
- 1 file changed, 47 insertions(+)
+Thanks,
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
-index ab7e7a00e534..9d9ace0cfbf9 100644
---- a/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
-+++ b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
-@@ -36,6 +36,7 @@ Optional nodes:
- - led: Properties for a connected LED
-   Optional properties:
-     - led-sources: See Documentation/devicetree/bindings/leds/common.txt
-+- power-limits: contains per-regdomain/channel rate power limit subnodes
- 
- &pcie {
- 	pcie0 {
-@@ -76,3 +77,49 @@ wmac: wmac@18000000 {
- 
- 	power-domains = <&scpsys MT7622_POWER_DOMAIN_WB>;
- };
-+
-+
-+Subnodes of power-limits:
-+
-+Properties:
-+- country: One or more country codes, as used by the cfg80211 regdomain code
-+- regdomain: "FCC", "ETSI" or "JP"
-+
-+If neither country, nor regdomain is specified, the power limits node is used
-+as a fallback when no other subnode matches.
-+
-+Subnodes txpower-2g, txpower-5g:
-+
-+Properties:
-+- channels: pairs of first and last channel number
-+- cck: 4 half-dBm per-rate power limit values
-+- ofdm: 8 half-dBm per-rate power limit values
-+- mcs:
-+	sets of per-rate power limit values for 802.11n/802.11ac rates for
-+	multiple channel bandwidth settings.
-+	Each set starts with the number of channel bandwidth settings for
-+	which the rate set applies, followed by either 8 (MT7603/MT7628) or
-+	10 (all other chips) power limit values.
-+	The order of the channel bandwidth settings is: 20, 40, 80, 160 MHz.
-+
-+
-+power-limit example:
-+
-+power-limits {
-+	r0 {
-+		regdomain = "FCC";
-+		txpower-5g {
-+			r1 {
-+				channels = <36 48>;
-+				ofdm = <23 23 23 23 23 23 23 23>;
-+				mcs = <1 23 23 23 23 23 23 23 23 23 23>,
-+					  <3 22 22 22 22 22 22 22 22 22 22>;
-+			};
-+			r2 {
-+				channels = <100 181>;
-+				ofdm = <14 14 14 14 14 14 14 14>;
-+				mcs = <4 14 14 14 14 14 14 14 14 14 14>;
-+			};
-+		};
-+	};
-+};
--- 
-2.24.0
-
+- Felix
