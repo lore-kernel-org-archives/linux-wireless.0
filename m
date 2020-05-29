@@ -2,122 +2,105 @@ Return-Path: <SRS0=6Pxi=7L=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MSGID_FROM_MTA_HEADER,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8B1FC433E2
-	for <linux-wireless@archiver.kernel.org>; Fri, 29 May 2020 12:16:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E67F7C433DF
+	for <linux-wireless@archiver.kernel.org>; Fri, 29 May 2020 12:30:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A7FB72074D
-	for <linux-wireless@archiver.kernel.org>; Fri, 29 May 2020 12:16:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C292A20814
+	for <linux-wireless@archiver.kernel.org>; Fri, 29 May 2020 12:30:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=silabs.onmicrosoft.com header.i=@silabs.onmicrosoft.com header.b="HaktJG9y"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="I1/KA63S"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726712AbgE2MQV (ORCPT
+        id S1726860AbgE2MaA (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 29 May 2020 08:16:21 -0400
-Received: from mail-co1nam11on2066.outbound.protection.outlook.com ([40.107.220.66]:32481
-        "EHLO NAM11-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726161AbgE2MQU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 May 2020 08:16:20 -0400
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=YGGo7Np+e6XvgbXPZyJyPGlUqI0G4xhHCPWd+TihVG5tdXZXV2oG9NHD4jOGESTueDg5uVVUjaNnp/IkmgubMWG1637tTUDwX4BMwGYypo48ssKWY7rSd5slbu9J+chJoct7k2TEMJcdzfA91l/+ondqoZHw6O4DMCCLdJrhco7Z7ExQOgAQH3VeXkXnBG3PFmi28O3FsRMkcAaa0/es9mhpWX0SwRzTNFRPYEfst1KAIz7JV6iRjn5DNP9SsCVfcB1LyySfAom3fRt+88FX1IALVFXQFpvzXAy2/sMNUZFPH5Jeb74AJkVLY2ZFQvensLHE6YkLIEkCUq/rmQYSeQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=pS6GwXPH+vI9+rcmnrxh4DWXzvL4ueY89feeSX+FW1U=;
- b=O+m8daUTuMkiM1YLGjUk8wDlHIfdNzrqgRz/qjrt399qhGmgowIyOtqfOd/3e6Fv2x6k4EeXaq7T1XGosjmY/Af5jNjjO2FL80i+5iVbFGlp3PqV5PdWF6u+AjFfVDMcOLMahw6OU/PpgWz3woW9sbV8+Io2TfwCd4t3poXD8cTZJixO1M/BdDLsq6eo8njWPWhT7gefZr6lXqXEDNq821LhWOxwkPJE+pHKOsO1L+ivmzK776xXJBVdj+9QVNPteU0xNrIVHt4leKCRSzBtiSYwoHpdAI8TRC+ZGPxRE+TSTJG2GXwO3mm5PEIv01eAsYWfPhrIiLTTnishQGDQRA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=silabs.com; dmarc=pass action=none header.from=silabs.com;
- dkim=pass header.d=silabs.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=silabs.onmicrosoft.com; s=selector2-silabs-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=pS6GwXPH+vI9+rcmnrxh4DWXzvL4ueY89feeSX+FW1U=;
- b=HaktJG9yiehg82oXrfBPpUFMkDezls5x1NySyI7BuMzlJ0kHDvH/6mWHyunmR7LRsFari05WC0tRmFcLRAseTLErGLa4pOAe/hXya48gvCDIGeG6FHO7gQ535Kb+KreKWrlpt//7wSlkQzFDF72aa52NVrq5k2b660vM7UH4cmE=
-Authentication-Results: driverdev.osuosl.org; dkim=none (message not signed)
- header.d=none;driverdev.osuosl.org; dmarc=none action=none
- header.from=silabs.com;
-Received: from SN6PR11MB2718.namprd11.prod.outlook.com (2603:10b6:805:63::18)
- by SN6PR11MB2781.namprd11.prod.outlook.com (2603:10b6:805:62::22) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3045.19; Fri, 29 May
- 2020 12:16:17 +0000
-Received: from SN6PR11MB2718.namprd11.prod.outlook.com
- ([fe80::c504:2d66:a8f7:2336]) by SN6PR11MB2718.namprd11.prod.outlook.com
- ([fe80::c504:2d66:a8f7:2336%7]) with mapi id 15.20.3045.018; Fri, 29 May 2020
- 12:16:17 +0000
-From:   Jerome Pouiller <Jerome.Pouiller@silabs.com>
-To:     devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org
-Cc:     netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Pouiller?= 
-        <jerome.pouiller@silabs.com>
-Subject: [PATCH 1/2] staging: wfx: fix AC priority
-Date:   Fri, 29 May 2020 14:16:02 +0200
-Message-Id: <20200529121603.1050891-1-Jerome.Pouiller@silabs.com>
-X-Mailer: git-send-email 2.26.2
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: base64
-X-ClientProxiedBy: DM6PR06CA0051.namprd06.prod.outlook.com
- (2603:10b6:5:54::28) To SN6PR11MB2718.namprd11.prod.outlook.com
- (2603:10b6:805:63::18)
+        Fri, 29 May 2020 08:30:00 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:43671 "EHLO m43-7.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726161AbgE2M37 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 29 May 2020 08:29:59 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1590755399; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=KSp3CUfantJjjy0gRx40mNlk42o3RuZm0eRjDulAmvw=;
+ b=I1/KA63STz2Ut4KRkRtVV2/Q2/zEENoZ2W+S4kXNHQDCuL8aLsi14kJ/nBQkgB7ESV7MpH9m
+ xr+PSZCY6IuGL+xyXmb3Un7kZ7E/LG6zHit5AFVDnvtO51Qo9eFP7Qt4ngeqkjfTN9OCKqPi
+ iRExg1QYvmS9B3RXtQXTI6PEjas=
+X-Mailgun-Sending-Ip: 69.72.43.7
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n01.prod.us-east-1.postgun.com with SMTP id
+ 5ed10040c0031c71c25eda96 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 29 May 2020 12:29:52
+ GMT
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 912EFC433CA; Fri, 29 May 2020 12:29:51 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: murugana)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 5767EC433C9;
+        Fri, 29 May 2020 12:29:51 +0000 (UTC)
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from pc-42.silabs.com (2a01:e35:2435:66a0:544b:f17b:7ae8:fb7) by DM6PR06CA0051.namprd06.prod.outlook.com (2603:10b6:5:54::28) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3045.19 via Frontend Transport; Fri, 29 May 2020 12:16:16 +0000
-X-Mailer: git-send-email 2.26.2
-X-Originating-IP: [2a01:e35:2435:66a0:544b:f17b:7ae8:fb7]
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: d54ee20d-937c-4c34-9c64-08d803ca16f6
-X-MS-TrafficTypeDiagnostic: SN6PR11MB2781:
-X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <SN6PR11MB278100B738222BECB6EF608B938F0@SN6PR11MB2781.namprd11.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:5236;
-X-Forefront-PRVS: 04180B6720
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: GkU4NvpcvSuhD1so5+0bjiudCBXJrvJpaUkY4caTUweTFzRt94UahjwPjJ+vJ1s+CNHXkAdF+qAXuhq0PFvTCbg4TMvSto/KccBa5u2zZ8scirYhDgZIqTiSETDhUSfrpWdgi2OrR6lvdrQuCAOkhmIXX4ce67a2FaOpBvlJGGrVBgUrJCRCEuc+LUc9gSsBKWiNKcL+YdylAqj465dkIS3Ij0tbuR470b0lcee3Tmr9OoUs4TkPw5mQA1TUYb+wiDWBs9irZ2EEVEw2rq4SgEW3e76Ro3yq7YOpfoYteqtPTSokk5FmiKyDC/fWwABz
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR11MB2718.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(136003)(396003)(346002)(39850400004)(366004)(376002)(478600001)(186003)(5660300002)(8936002)(7696005)(16526019)(52116002)(2616005)(8676002)(1076003)(86362001)(6486002)(66476007)(66556008)(66946007)(316002)(66574014)(83380400001)(6666004)(107886003)(54906003)(2906002)(4326008)(36756003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: FSB6aFwIK7JUrfF8IECnQ1hCuoE42SNUilskzmD9OQXCy1+AuO/fM9MurC0OyVpgzn7HsdLLeiDSRV3i6yJL+K1uPVEYBc6Fad8UHVrJ2RFpxq/lcnwr/E77TisO3TwGqHbWVIuJyS93fbELF0A3PHCK8cmR3Fx/GumCYFw6pQ3KyqJejAW7KreRP5VC6nSz5hNgdWj8JugsGIgSh1+gFPt1PfZ37w+NNSie6PyZcA3GjDqr6vuSch+5YS7Xkatv/ZGzW87aZeGkhoGctl0rm9Ep7eKLdCrQ2bbaOlajxOsgRZ+nLCIFa9R5s1/LxB0skUIXHbtl/uA7n/vLRTJLhx8zvF7RQAUITCIV0lRKXV6Dtd1hqhXxfX/Ynewm1e+rlgWJjYcr5YlcriVadPtTuHA0FIG9CKf9SYhkXHcu3bedb1rZ7zOOb4UDta6tLv981cJ//4i++dNapSeNqEMaj1xHoIyqYWhIxQC3ct+jaJTurTymkScu27L2MMoZWO2HByVjz6dPBs96VoZwYjeYom31PyQZ2RJuRyQhmFXN5sY=
-X-OriginatorOrg: silabs.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d54ee20d-937c-4c34-9c64-08d803ca16f6
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 29 May 2020 12:16:17.8811
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 54dbd822-5231-4b20-944d-6f4abcd541fb
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: kwbS4F6vmxHLcuaKjw/C+FQ0YL/fE3HIdqmpfIV87Bw/hOgFdlhntSqX1qQQStWnu4IHHblR/OCozyKqP9CqLA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR11MB2781
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Fri, 29 May 2020 17:59:51 +0530
+From:   Sathishkumar Muruganandam <murugana@codeaurora.org>
+To:     Johannes Berg <johannes@sipsolutions.net>
+Cc:     ath11k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] mac80211: enable TKIP when using encapsulation
+ offloading
+In-Reply-To: <aaa53c3a9cf6788cb653eb574073a1a0bcc5e6bf.camel@sipsolutions.net>
+References: <1587720951-9222-1-git-send-email-murugana@codeaurora.org>
+ <1587720951-9222-2-git-send-email-murugana@codeaurora.org>
+ (sfid-20200424_113624_468114_4CC488DE)
+ <d4e39180f0a8a8b07dc558c9439b66cd2c3aec07.camel@sipsolutions.net>
+ <7fb606edf1e5c7ab5b1446d637768ee7@codeaurora.org>
+ <aaa53c3a9cf6788cb653eb574073a1a0bcc5e6bf.camel@sipsolutions.net>
+Message-ID: <4bab3197997bb2dd6555ff920c5dd1cb@codeaurora.org>
+X-Sender: murugana@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-RnJvbTogSsOpcsO0bWUgUG91aWxsZXIgPGplcm9tZS5wb3VpbGxlckBzaWxhYnMuY29tPgoKSW4g
-b3JkZXIgdG8gd29yayBwcm9wZXJseSBhbGwgdGhlIHF1ZXVlcyBvZiB0aGUgZGV2aWNlIG11c3Qg
-YmUgZmlsbGVkICh0aGUKZGV2aWNlIGNob29zZXMgaXRzZWxmIHRoZSBxdWV1ZSB0byB1c2UgZGVw
-ZW5kaW5nIG9mIEFDIHBhcmFtZXRlcnMgYW5kCm90aGVyIHRoaW5ncykuIEl0IGlzIHRoZSBqb2Ig
-b2Ygd2Z4X3R4X3F1ZXVlc19nZXRfc2tiKCkgdG8gY2hvb3NlIHdoaWNoCnF1ZXVlIG11c3QgYmUg
-ZmlsbGVkLiBIb3dldmVyLCB0aGUgc29ydGluZyBhbGdvcml0aG0gd2FzIGludmVydGVkLCBzbyBp
-dApwcmlvcml0aXplZCB0aGUgYWxyZWFkeSBmaWxsZWQgcXVldWUhIENvbnNlcXVlbnRseSwgdGhl
-IEFDIHByaW9yaXRpZXMgd2FzCmJhZGx5IGJyb2tlbi4KCkZpeGVzOiA2YmY0MThjNTBmOThhICgi
-c3RhZ2luZzogd2Z4OiBjaGFuZ2UgdGhlIHdheSB0byBjaG9vc2UgZnJhbWUgdG8gc2VuZCIpClNp
-Z25lZC1vZmYtYnk6IErDqXLDtG1lIFBvdWlsbGVyIDxqZXJvbWUucG91aWxsZXJAc2lsYWJzLmNv
-bT4KLS0tCiBkcml2ZXJzL3N0YWdpbmcvd2Z4L3F1ZXVlLmMgfCAyICstCiAxIGZpbGUgY2hhbmdl
-ZCwgMSBpbnNlcnRpb24oKyksIDEgZGVsZXRpb24oLSkKCmRpZmYgLS1naXQgYS9kcml2ZXJzL3N0
-YWdpbmcvd2Z4L3F1ZXVlLmMgYi9kcml2ZXJzL3N0YWdpbmcvd2Z4L3F1ZXVlLmMKaW5kZXggMzI0
-OGVjZWZkYTU2NC4uNzVkZjRhY2EyOWFjMyAxMDA2NDQKLS0tIGEvZHJpdmVycy9zdGFnaW5nL3dm
-eC9xdWV1ZS5jCisrKyBiL2RyaXZlcnMvc3RhZ2luZy93ZngvcXVldWUuYwpAQCAtMjQ2LDcgKzI0
-Niw3IEBAIHN0YXRpYyBzdHJ1Y3Qgc2tfYnVmZiAqd2Z4X3R4X3F1ZXVlc19nZXRfc2tiKHN0cnVj
-dCB3ZnhfZGV2ICp3ZGV2KQogCWZvciAoaSA9IDA7IGkgPCBJRUVFODAyMTFfTlVNX0FDUzsgaSsr
-KSB7CiAJCXNvcnRlZF9xdWV1ZXNbaV0gPSAmd2Rldi0+dHhfcXVldWVbaV07CiAJCWZvciAoaiA9
-IGk7IGogPiAwOyBqLS0pCi0JCQlpZiAoYXRvbWljX3JlYWQoJnNvcnRlZF9xdWV1ZXNbal0tPnBl
-bmRpbmdfZnJhbWVzKSA+CisJCQlpZiAoYXRvbWljX3JlYWQoJnNvcnRlZF9xdWV1ZXNbal0tPnBl
-bmRpbmdfZnJhbWVzKSA8CiAJCQkgICAgYXRvbWljX3JlYWQoJnNvcnRlZF9xdWV1ZXNbaiAtIDFd
-LT5wZW5kaW5nX2ZyYW1lcykpCiAJCQkJc3dhcChzb3J0ZWRfcXVldWVzW2ogLSAxXSwgc29ydGVk
-X3F1ZXVlc1tqXSk7CiAJfQotLSAKMi4yNi4yCgo=
+On 2020-05-29 17:40, Johannes Berg wrote:
+> On Fri, 2020-05-29 at 17:38 +0530, Sathishkumar Muruganandam wrote:
+> 
+>> > I don't think it can. It doesn't have all the necessary information to
+>> > call cfg80211_michael_mic_failure(), as far as I can tell.
+>> 
+>> Ath11k HW has capability of reporting TKIP MIC error when hw encap is
+>> enabled as well, so TKIP encryption shall be enabled.
+> 
+> Maybe so. But it cannot tell wpa_supplicant about MIC errors, and so
+> that cannot do countermeasures, so something isn't right.
+> 
+>> Shall we have a ieee80211_hw_flags for the driver to advertise TKIP 
+>> MIC
+>> error reporting capability when hw encap is enabled ?
+>> TKIP bring-up will be disabled for the drivers which doesn't have the
+>> capability.
+> 
+> That would be better, since for TKIP it's actually more tricky and
+> requires more work.
+> 
+> But mostly I was thinking that you should make it possible for ath11k 
+> to
+> actually report the MIC errors up to userspace. Right now I don't think
+> it can, because it doesn't have the netdev pointer?
+> 
+
+Yes, currently only tx encap support is added and rx decap support is in
+progress to do TKIP MIC error reporting to userspace via 
+cfg80211_michael_mic_failure().
+With NL80211_CMD_MICHAEL_MIC_FAILURE, hostapd will be able to do TKIP 
+counter-measures.
+
+Thanks,
+Sathishkumar
