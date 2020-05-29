@@ -2,201 +2,64 @@ Return-Path: <SRS0=6Pxi=7L=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73D01C433E0
-	for <linux-wireless@archiver.kernel.org>; Fri, 29 May 2020 06:40:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96617C433DF
+	for <linux-wireless@archiver.kernel.org>; Fri, 29 May 2020 07:05:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5D3DC20721
-	for <linux-wireless@archiver.kernel.org>; Fri, 29 May 2020 06:40:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7780B207D4
+	for <linux-wireless@archiver.kernel.org>; Fri, 29 May 2020 07:05:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726495AbgE2GkD (ORCPT
+        id S1725777AbgE2HF6 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 29 May 2020 02:40:03 -0400
-Received: from paleale.coelho.fi ([176.9.41.70]:35060 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725775AbgE2GkC (ORCPT
+        Fri, 29 May 2020 03:05:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56176 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725308AbgE2HF6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 May 2020 02:40:02 -0400
-Received: from 91-156-6-193.elisa-laajakaista.fi ([91.156.6.193] helo=redipa.ger.corp.intel.com)
-        by farmhouse.coelho.fi with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.93)
-        (envelope-from <luca@coelho.fi>)
-        id 1jeYgG-000jvb-7r; Fri, 29 May 2020 09:39:48 +0300
-From:   Luca Coelho <luca@coelho.fi>
-To:     kvalo@codeaurora.org
-Cc:     linux-wireless@vger.kernel.org
-Date:   Fri, 29 May 2020 09:39:30 +0300
-Message-Id: <iwlwifi.20200529092401.b7ccdad0805f.I59ea7f773caed85a66c61401066ae169008442e6@changeid>
-X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20200529063931.80551-1-luca@coelho.fi>
-References: <20200529063931.80551-1-luca@coelho.fi>
+        Fri, 29 May 2020 03:05:58 -0400
+Received: from Galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7387AC03E969
+        for <linux-wireless@vger.kernel.org>; Fri, 29 May 2020 00:05:58 -0700 (PDT)
+Received: from bigeasy by Galois.linutronix.de with local (Exim 4.80)
+        (envelope-from <bigeasy@linutronix.de>)
+        id 1jeZ5X-0006AG-Gl; Fri, 29 May 2020 09:05:55 +0200
+Date:   Fri, 29 May 2020 09:05:54 +0200
+From:   Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To:     Tony Chuang <yhchuang@realtek.com>
+Cc:     "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Andy Huang <tehuang@realtek.com>
+Subject: Re: [PATCH 7/7] rtw88: 8821c: add phy calibration
+Message-ID: <20200529070554.h3vrap3lxlata6zn@linutronix.de>
+References: <20200520052335.22466-1-yhchuang@realtek.com>
+ <20200520052335.22466-8-yhchuang@realtek.com>
+ <20200528162727.57bxyoi76bqpacge@linutronix.de>
+ <c0f716a120b74c7a8f3ce3fd79d8471c@realtek.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: [PATCH 10/11] iwlwifi: mvm: add support for range request version 10
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <c0f716a120b74c7a8f3ce3fd79d8471c@realtek.com>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Avraham Stern <avraham.stern@intel.com>
+On 2020-05-29 06:31:23 [+0000], Tony Chuang wrote:
+> > > +static void rtw8821c_phy_calibration(struct rtw_dev *rtwdev)
+> > > +{
+> > > +	rtw8821c_do_iqk(rtwdev);
+> > 
+> > Why this extra step? You could name it rtw8821c_phy_calibration_iqk().
+> > 
+> 
+> This is hooked at rtw_chip_ops::phy_calibration(). For 8821C, only IQK is
+> required. So just keep the name consistent.
 
-Range request version 10 keeps the same command size as version 9
-but uses 2 reserved fields for the responder beacon interval and
-station id (if exists).
-For now, since the beacon interval of unassoc APs is unknown, use
-a value of 100 TUs which is a common value for many APs.
+Ah okay.
 
-While at it, remove the definition for CCMP_256 cipher, since this
-is not supported.
+> Yan-Hsuan
 
-Signed-off-by: Avraham Stern <avraham.stern@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- .../wireless/intel/iwlwifi/fw/api/location.h  | 14 +++----
- .../intel/iwlwifi/mvm/ftm-initiator.c         | 42 +++++++++++++++++--
- 2 files changed, 45 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/location.h b/drivers/net/wireless/intel/iwlwifi/fw/api/location.h
-index 7ffad19d80fd..1df2e497fabf 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/location.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/location.h
-@@ -550,13 +550,11 @@ struct iwl_tof_range_req_ap_entry_v4 {
- /**
-  * enum iwl_location_cipher - location cipher selection
-  * @IWL_LOCATION_CIPHER_CCMP_128: CCMP 128
-- * @IWL_LOCATION_CIPHER_CCMP_256: CCMP 256
-  * @IWL_LOCATION_CIPHER_GCMP_128: GCMP 128
-  * @IWL_LOCATION_CIPHER_GCMP_256: GCMP 256
-  */
- enum iwl_location_cipher {
- 	IWL_LOCATION_CIPHER_CCMP_128,
--	IWL_LOCATION_CIPHER_CCMP_256,
- 	IWL_LOCATION_CIPHER_GCMP_128,
- 	IWL_LOCATION_CIPHER_GCMP_256,
- };
-@@ -577,7 +575,8 @@ enum iwl_location_cipher {
-  * @samples_per_burst: the number of FTMs pairs in single Burst (1-31);
-  * @num_of_bursts: Recommended value to be sent to the AP. 2s Exponent of
-  *	the number of measurement iterations (min 2^0 = 1, max 2^14)
-- * @reserved: For alignment and future use
-+ * @sta_id: the station id of the AP. Only relevant when associated to the AP,
-+ *	otherwise should be set to &IWL_MVM_INVALID_STA.
-  * @cipher: pairwise cipher suite for secured measurement.
-  *          &enum iwl_location_cipher.
-  * @hltk: HLTK to be used for secured 11az measurement
-@@ -586,7 +585,8 @@ enum iwl_location_cipher {
-  *         If &IWL_INITIATOR_AP_FLAGS_USE_CALIB is set, the fw will use the
-  *         calibration value that corresponds to the rx bandwidth of the FTM
-  *         frame.
-- * @reserved2: For alignment and future use.
-+ * @beacon_interval: beacon interval of the AP in TUs. Only required if
-+ *	&IWL_INITIATOR_AP_FLAGS_TB is set.
-  */
- struct iwl_tof_range_req_ap_entry {
- 	__le32 initiator_ap_flags;
-@@ -598,13 +598,13 @@ struct iwl_tof_range_req_ap_entry {
- 	__le16 burst_period;
- 	u8 samples_per_burst;
- 	u8 num_of_bursts;
--	u8 reserved;
-+	u8 sta_id;
- 	u8 cipher;
- 	u8 hltk[HLTK_11AZ_LEN];
- 	u8 tk[TK_11AZ_LEN];
- 	__le16 calib[IWL_TOF_BW_NUM];
--	__le16 reserved2;
--} __packed; /* LOCATION_RANGE_REQ_AP_ENTRY_CMD_API_S_VER_5 */
-+	__le16 beacon_interval;
-+} __packed; /* LOCATION_RANGE_REQ_AP_ENTRY_CMD_API_S_VER_6 */
- 
- /**
-  * enum iwl_tof_response_mode
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c b/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
-index aaa7dd1788b1..5ca45915cf7c 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.c
-@@ -391,9 +391,27 @@ iwl_mvm_ftm_put_target_v3(struct iwl_mvm *mvm,
- }
- 
- static int
--iwl_mvm_ftm_put_target(struct iwl_mvm *mvm,
-+iwl_mvm_ftm_put_target_v4(struct iwl_mvm *mvm,
-+			  struct cfg80211_pmsr_request_peer *peer,
-+			  struct iwl_tof_range_req_ap_entry_v4 *target)
-+{
-+	int ret;
-+
-+	ret = iwl_mvm_ftm_target_chandef_v2(mvm, peer, &target->channel_num,
-+					    &target->format_bw,
-+					    &target->ctrl_ch_position);
-+	if (ret)
-+		return ret;
-+
-+	iwl_mvm_ftm_put_target_common(mvm, peer, (void *)target);
-+
-+	return 0;
-+}
-+
-+static int
-+iwl_mvm_ftm_put_target(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 		       struct cfg80211_pmsr_request_peer *peer,
--		       struct iwl_tof_range_req_ap_entry_v4 *target)
-+		       struct iwl_tof_range_req_ap_entry *target)
- {
- 	int ret;
- 
-@@ -405,6 +423,20 @@ iwl_mvm_ftm_put_target(struct iwl_mvm *mvm,
- 
- 	iwl_mvm_ftm_put_target_common(mvm, peer, (void *)target);
- 
-+	if (vif->bss_conf.assoc &&
-+	    !memcmp(peer->addr, vif->bss_conf.bssid, ETH_ALEN)) {
-+		struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
-+
-+		target->sta_id = mvmvif->ap_sta_id;
-+	} else {
-+		target->sta_id = IWL_MVM_INVALID_STA;
-+	}
-+
-+	/*
-+	 * TODO: Beacon interval is currently unknown, so use the common value
-+	 * of 100 TUs.
-+	 */
-+	target->beacon_interval = cpu_to_le16(100);
- 	return 0;
- }
- 
-@@ -496,7 +528,7 @@ static int iwl_mvm_ftm_start_v8(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 	for (i = 0; i < cmd.num_of_ap; i++) {
- 		struct cfg80211_pmsr_request_peer *peer = &req->peers[i];
- 
--		err = iwl_mvm_ftm_put_target(mvm, peer, &cmd.ap[i]);
-+		err = iwl_mvm_ftm_put_target_v4(mvm, peer, &cmd.ap[i]);
- 		if (err)
- 			return err;
- 	}
-@@ -521,8 +553,9 @@ static int iwl_mvm_ftm_start_v9(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 
- 	for (i = 0; i < cmd.num_of_ap; i++) {
- 		struct cfg80211_pmsr_request_peer *peer = &req->peers[i];
-+		struct iwl_tof_range_req_ap_entry *target = &cmd.ap[i];
- 
--		err = iwl_mvm_ftm_put_target(mvm, peer, (void *)&cmd.ap[i]);
-+		err = iwl_mvm_ftm_put_target(mvm, vif, peer, target);
- 		if (err)
- 			return err;
- 	}
-@@ -548,6 +581,7 @@ int iwl_mvm_ftm_start(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 
- 		switch (cmd_ver) {
- 		case 9:
-+		case 10:
- 			err = iwl_mvm_ftm_start_v9(mvm, vif, req);
- 			break;
- 		case 8:
--- 
-2.26.2
-
+Sebastian
