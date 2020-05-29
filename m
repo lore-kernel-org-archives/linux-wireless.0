@@ -2,67 +2,63 @@ Return-Path: <SRS0=6Pxi=7L=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D25B4C433DF
-	for <linux-wireless@archiver.kernel.org>; Fri, 29 May 2020 15:34:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61841C433E0
+	for <linux-wireless@archiver.kernel.org>; Fri, 29 May 2020 15:36:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AEC23206E2
-	for <linux-wireless@archiver.kernel.org>; Fri, 29 May 2020 15:34:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3644620776
+	for <linux-wireless@archiver.kernel.org>; Fri, 29 May 2020 15:36:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="oJKv5OqP"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="g/BxScie"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727025AbgE2PeR (ORCPT
+        id S1727101AbgE2Pg4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 29 May 2020 11:34:17 -0400
-Received: from mail27.static.mailgun.info ([104.130.122.27]:61738 "EHLO
+        Fri, 29 May 2020 11:36:56 -0400
+Received: from mail27.static.mailgun.info ([104.130.122.27]:48706 "EHLO
         mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725901AbgE2PeO (ORCPT
+        by vger.kernel.org with ESMTP id S1726838AbgE2Pg4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 29 May 2020 11:34:14 -0400
+        Fri, 29 May 2020 11:36:56 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1590766454; h=Content-Type: MIME-Version: Message-ID:
+ s=smtp; t=1590766615; h=Content-Type: MIME-Version: Message-ID:
  In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
- bh=4h6mUhCfTn/PPwY0CqyuZa1NJ92KFZY1OPYa8ryUDI0=; b=oJKv5OqPqG9eac+0o+RM+XSKweqPu0d10kgF9VMGU2roY+PJaS7BpCU/6pUPhyCHXiOX6BUZ
- Nw8dpSFmXXSXJAMdv5qjY2OhqxQg0mBgGx7gcZzLjGtZPVwH6ILB3rvlh41RAOPGIzoBCoI8
- 5VtbhNBcKRkf4fsQNH/szAsooVQ=
+ bh=R0S37/3Lq9MgkJb1uC/wBrJU6DhgGifbVcb6FAu1Uig=; b=g/BxSciezYXn9aFN0O6alwP1aiJ+/j56D+eFrc+GGnWht6Vph3D3NAFB+IG5c/+8VikNhWbt
+ KSxZsEMZpW4m+LBhROGsyVdnO6PeLsEkztoOCXPCydjbFU0pyk4BuQETasXnrcIu2SgOFthh
+ Xie0p7n0aLC0S3uSNDYsG8utOc0=
 X-Mailgun-Sending-Ip: 104.130.122.27
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n02.prod.us-east-1.postgun.com with SMTP id
- 5ed12b75cb0458693350746c (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 29 May 2020 15:34:13
+ smtp-out-n02.prod.us-west-2.postgun.com with SMTP id
+ 5ed12c144776d1da6db65ed5 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 29 May 2020 15:36:52
  GMT
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 126A8C4339C; Fri, 29 May 2020 15:34:13 +0000 (UTC)
+        id AA991C433C6; Fri, 29 May 2020 15:36:52 +0000 (UTC)
 Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 5B55AC433CB;
-        Fri, 29 May 2020 15:34:10 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 5B55AC433CB
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 74C76C433CA;
+        Fri, 29 May 2020 15:36:50 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 74C76C433CA
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
-To:     Sven Eckelmann <sven@narfation.org>
-Cc:     Sebastian Gottschall <s.gottschall@dd-wrt.com>,
-        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-        John Crispin <john@phrozen.org>,
-        Sebastian Gottschall <s.gottschall@newmedia-net.de>,
-        openwrt-devel@lists.openwrt.org,
-        Ansuel Smith <ansuelsmth@gmail.com>
-Subject: Re: [PATCH v13] ath10k: add LED and GPIO controlling support for various chipsets
-References: <1523027875-5143-1-git-send-email-kvalo@codeaurora.org>
-        <b23e65cf-4be7-72db-7955-32eae196953e@dd-wrt.com>
-        <3608947.bSrYYtX6KI@bentobox> <3445075.COMLMNsY4U@bentobox>
-Date:   Fri, 29 May 2020 18:34:07 +0300
-In-Reply-To: <3445075.COMLMNsY4U@bentobox> (Sven Eckelmann's message of "Mon,
-        25 May 2020 18:04:49 +0200")
-Message-ID: <87k10usqkw.fsf@codeaurora.org>
+To:     Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Cc:     Maharaja Kennadyrajan <mkenna@codeaurora.org>,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Subject: Re: [PATCH] ath10k: Avoid override CE5 configuration for QCA99X0 chipsets
+References: <1587649759-14381-1-git-send-email-mkenna@codeaurora.org>
+        <20200505073422.BFA51C433BA@smtp.codeaurora.org>
+        <63ec6f30-ee3b-c412-7c56-46d447b17c8e@dd-wrt.com>
+Date:   Fri, 29 May 2020 18:36:48 +0300
+In-Reply-To: <63ec6f30-ee3b-c412-7c56-46d447b17c8e@dd-wrt.com> (Sebastian
+        Gottschall's message of "Tue, 26 May 2020 17:29:24 +0200")
+Message-ID: <87ftbisqgf.fsf@codeaurora.org>
 User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
 Content-Type: text/plain
@@ -71,28 +67,46 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Sven Eckelmann <sven@narfation.org> writes:
+Sebastian Gottschall <s.gottschall@dd-wrt.com> writes:
 
-> On Monday, 25 May 2020 11:22:13 CEST Sven Eckelmann wrote:
-> [...]
->> And it still can with this OpenWrt version. But it doesn't seem to happen with 
->> the most recent OpenWrt reboot-13353-gb1604b744b. But there are nearly 4000 
->> commits inbetween. So no idea what changed (just a timing thing or an actual 
->> fix - no idea).
+> Am 05.05.2020 um 09:34 schrieb Kalle Valo:
 >
-> Seems like there is a fix which solves some lost interrupt problems for 
-> IPQ40xx. Without this change, I see the reported problem. And with the patch, 
-> it is gone. Or in commits:
+>> Maharaja Kennadyrajan <mkenna@codeaurora.org> wrote:
+>>
+>>> As the exisiting CE configurations are defined in global, there
+>>> are the chances of QCA99X0 family chipsets CE configurations
+>>> are getting changed by the ath10k_pci_override_ce_config()
+>>> function.
+>>>
+>>> The override will be hit and CE5 configurations will be changed,
+>>> when the user bring up the QCA99X0 chipsets along with QCA6174
+>>> or QCA9377 chipset. (Bring up QCA99X0 family chipsets after
+>>> QCA6174 or QCA9377).
+>>>
+>>> Hence, fixing this issue by moving the global CE configuration
+>>> to radio specific CE configuration.
+>>>
+>>> Tested hardware: QCA9888 & QCA6174
+>>> Tested firmware: 10.4-3.10-00047 & WLAN.RM.4.4.1.c3-00058
+>>>
+>>> Signed-off-by: Maharaja Kennadyrajan <mkenna@codeaurora.org>
+>>> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 >
-> * creates timeout problems: 46b949a067e5 ("ipq40xx: enlarge PCIe BAR size")
-> * works fine: 18e942b6c4e5 ("ipq40xx: fix pcie msi IRQ trigger level")
+>> Patch applied to ath-next branch of ath.git, thanks.
+>>
+>> 521fc37be3d8 ath10k: Avoid override CE5 configuration for QCA99X0 chipsets
 >
-> If you look in the git logs [1], you can see that the working commit is a 
-> child of the broken one. So at least from my point of view, my initial report 
-> is no blocker anymore for Sebastian's patch (or Kalle's version of it).
+> this patch will crash on ipq4019 devices. i reverted it and it worked again
 
-Great. If the patch is good to take can someone rebase the latest
-version and resubmit, please?
+Yeah, that patch is buggy but this should fix it:
+
+commit 32221df6765b3773ff1af37c77f8531ebc48f246
+Author:     Arnd Bergmann <arnd@arndb.de>
+AuthorDate: Sat May 9 14:06:33 2020 +0200
+Commit:     Kalle Valo <kvalo@codeaurora.org>
+CommitDate: Tue May 12 10:33:13 2020 +0300
+
+    ath10k: fix ath10k_pci struct layout
 
 -- 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
