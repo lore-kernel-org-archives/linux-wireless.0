@@ -2,107 +2,104 @@ Return-Path: <SRS0=mHIB=7M=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+X-Spam-Status: No, score=-0.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1173EC433DF
-	for <linux-wireless@archiver.kernel.org>; Sat, 30 May 2020 07:05:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36D06C433DF
+	for <linux-wireless@archiver.kernel.org>; Sat, 30 May 2020 12:14:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E1053205CB
-	for <linux-wireless@archiver.kernel.org>; Sat, 30 May 2020 07:05:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0E8F42074B
+	for <linux-wireless@archiver.kernel.org>; Sat, 30 May 2020 12:14:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=nbd.name header.i=@nbd.name header.b="qGi68XKZ"
+	dkim=pass (2048-bit key) header.d=acquireprospects-com.20150623.gappssmtp.com header.i=@acquireprospects-com.20150623.gappssmtp.com header.b="Nkax7AqP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728657AbgE3HFW (ORCPT
+        id S1728802AbgE3MOo (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sat, 30 May 2020 03:05:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54432 "EHLO
+        Sat, 30 May 2020 08:14:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46004 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726843AbgE3HFV (ORCPT
+        with ESMTP id S1728433AbgE3MOo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 30 May 2020 03:05:21 -0400
-X-Greylist: delayed 53148 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sat, 30 May 2020 00:05:21 PDT
-Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A542EC03E969;
-        Sat, 30 May 2020 00:05:21 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=nbd.name;
-         s=20160729; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
-        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=2OBufPQoFXMLUJ8IsnqyQTwHGOG7uH3gtIDWCufmzmY=; b=qGi68XKZ8oRRIHbIuSWXW7OaIu
-        EkrRYKgcP74Yb6/MPxXnnG0c2wjrGd1lLb5Zmf3ru8CPv84MOJIZWTGGNeH9h0m5O4Zp5bbsDjow1
-        2lkffpcrTiv4b/NvKp7UqHLYVXFTnBZKg9wTvX7j1a/Nbd0wEFKlHDJnoK9GI9tRX6f8=;
-Received: from p4ff13c20.dip0.t-ipconnect.de ([79.241.60.32] helo=nf.local)
-        by ds12 with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.89)
-        (envelope-from <nbd@nbd.name>)
-        id 1jevYV-0001kb-UA; Sat, 30 May 2020 09:05:20 +0200
-Subject: Re: [PATCH 1/3] dt-bindings: net: wireless: mt76: add power-limits
- node
-To:     Rob Herring <robh@kernel.org>
-Cc:     linux-wireless@vger.kernel.org, devicetree@vger.kernel.org
-References: <20200529161929.24751-1-nbd@nbd.name>
- <20200529212637.GA2994957@bogus>
-From:   Felix Fietkau <nbd@nbd.name>
-Autocrypt: addr=nbd@nbd.name; prefer-encrypt=mutual; keydata=
- xsDiBEah5CcRBADIY7pu4LIv3jBlyQ/2u87iIZGe6f0f8pyB4UjzfJNXhJb8JylYYRzIOSxh
- ExKsdLCnJqsG1PY1mqTtoG8sONpwsHr2oJ4itjcGHfn5NJSUGTbtbbxLro13tHkGFCoCr4Z5
- Pv+XRgiANSpYlIigiMbOkide6wbggQK32tC20QxUIwCg4k6dtV/4kwEeiOUfErq00TVqIiEE
- AKcUi4taOuh/PQWx/Ujjl/P1LfJXqLKRPa8PwD4j2yjoc9l+7LptSxJThL9KSu6gtXQjcoR2
- vCK0OeYJhgO4kYMI78h1TSaxmtImEAnjFPYJYVsxrhay92jisYc7z5R/76AaELfF6RCjjGeP
- wdalulG+erWju710Bif7E1yjYVWeA/9Wd1lsOmx6uwwYgNqoFtcAunDaMKi9xVQW18FsUusM
- TdRvTZLBpoUAy+MajAL+R73TwLq3LnKpIcCwftyQXK5pEDKq57OhxJVv1Q8XkA9Dn1SBOjNB
- l25vJDFAT9ntp9THeDD2fv15yk4EKpWhu4H00/YX8KkhFsrtUs69+vZQwc0cRmVsaXggRmll
- dGthdSA8bmJkQG5iZC5uYW1lPsJgBBMRAgAgBQJGoeQnAhsjBgsJCAcDAgQVAggDBBYCAwEC
- HgECF4AACgkQ130UHQKnbvXsvgCgjsAIIOsY7xZ8VcSm7NABpi91yTMAniMMmH7FRenEAYMa
- VrwYTIThkTlQzsFNBEah5FQQCACMIep/hTzgPZ9HbCTKm9xN4bZX0JjrqjFem1Nxf3MBM5vN
- CYGBn8F4sGIzPmLhl4xFeq3k5irVg/YvxSDbQN6NJv8o+tP6zsMeWX2JjtV0P4aDIN1pK2/w
- VxcicArw0VYdv2ZCarccFBgH2a6GjswqlCqVM3gNIMI8ikzenKcso8YErGGiKYeMEZLwHaxE
- Y7mTPuOTrWL8uWWRL5mVjhZEVvDez6em/OYvzBwbkhImrryF29e3Po2cfY2n7EKjjr3/141K
- DHBBdgXlPNfDwROnA5ugjjEBjwkwBQqPpDA7AYPvpHh5vLbZnVGu5CwG7NAsrb2isRmjYoqk
- wu++3117AAMFB/9S0Sj7qFFQcD4laADVsabTpNNpaV4wAgVTRHKV/kC9luItzwDnUcsZUPdQ
- f3MueRJ3jIHU0UmRBG3uQftqbZJj3ikhnfvyLmkCNe+/hXhPu9sGvXyi2D4vszICvc1KL4RD
- aLSrOsROx22eZ26KqcW4ny7+va2FnvjsZgI8h4sDmaLzKczVRIiLITiMpLFEU/VoSv0m1F4B
- FtRgoiyjFzigWG0MsTdAN6FJzGh4mWWGIlE7o5JraNhnTd+yTUIPtw3ym6l8P+gbvfoZida0
- TspgwBWLnXQvP5EDvlZnNaKa/3oBes6z0QdaSOwZCRA3QSLHBwtgUsrT6RxRSweLrcabwkkE
- GBECAAkFAkah5FQCGwwACgkQ130UHQKnbvW2GgCfTKx80VvCR/PvsUlrvdOLsIgeRGAAn1ee
- RjMaxwtSdaCKMw3j33ZbsWS4
-Message-ID: <76ea310a-bca3-dd50-0569-be69b975fefa@nbd.name>
-Date:   Sat, 30 May 2020 09:05:07 +0200
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:68.0)
- Gecko/20100101 Thunderbird/68.8.0
+        Sat, 30 May 2020 08:14:44 -0400
+Received: from mail-pf1-x443.google.com (mail-pf1-x443.google.com [IPv6:2607:f8b0:4864:20::443])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B5B8EC03E969
+        for <linux-wireless@vger.kernel.org>; Sat, 30 May 2020 05:14:42 -0700 (PDT)
+Received: by mail-pf1-x443.google.com with SMTP id f3so1157965pfd.11
+        for <linux-wireless@vger.kernel.org>; Sat, 30 May 2020 05:14:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=acquireprospects-com.20150623.gappssmtp.com; s=20150623;
+        h=from:to:subject:date:message-id:mime-version
+         :content-transfer-encoding:thread-index:content-language;
+        bh=0sKF/4C2u1k5DXhLpj853avz1HI5QqO5m9Yc9j3ZDfg=;
+        b=Nkax7AqPiEYHi88yikUthLFshwfv5eWof56mKBptFHvhg9ZJmhj+BAefdzo1QC5tMn
+         IfZk2r5XyNuP0qECROxr7gpDbkMMycaOsf1DmcQl7nV2Be3MycrKgb/lIVYKTQm8gO94
+         SY/O/tmolBijqcog2b8kJGrbs0TDP/1wk8rdqmDt1Aa9qhXfSW0nrF+6+vQC9UcegIH/
+         y16s1YZ8x62MuhwHLbNpNU27q+nVU/uvGqzvFYsLmu+9M68BwFsXDKoCz7LMfBPiSAXi
+         y9gaYz0o56+QUCny5owsLjUWWuh4AiRvugDvBnA6Ewbwpkdr+XjlxrrZj978Zs2F7oKv
+         u2YA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:subject:date:message-id:mime-version
+         :content-transfer-encoding:thread-index:content-language;
+        bh=0sKF/4C2u1k5DXhLpj853avz1HI5QqO5m9Yc9j3ZDfg=;
+        b=uUm7kMVq6h22+5acsPP21fXvxM8SQLOy+fUlPCMXqAz5E/iRqm37ccF47/MQL3gilX
+         E8TbHrlWgXGLqiT3ZYv1j5rczv3FWciw5l+wpFxBorVlXv7oYXiSPe2QNuvWXHB3cL+J
+         Xw0tckQIXwdtc8eranYhqGyct7ZTVnaTZGHVM2YOsh08WvOVDXGdwMpU7XGh6+S2VqUf
+         VbEqwcyU+3Xd6qzJJmmFI6gt63ixlvklU1CoFLtAUhJZGeGAeRZz6LMojcD6PqAM8ZNh
+         V58hq0/KI3nhPKgXh5AaSLBENnrM4/BR7U0mAMtJZj2LmV9THHvvSgI21W8bnv09vfrU
+         S13A==
+X-Gm-Message-State: AOAM531pE/4yIWlYQ8jtZnHApi0vLkFbkyzLTF2F1KWnZfZzDV52bEBz
+        eQ2WWe9C0F/OEprOJgX9XddKDwjcZGE=
+X-Google-Smtp-Source: ABdhPJwrSwm2Dim2jWgCJTenprOcBgAB+5LMp2+vIfejyEow4FkqhGyFnblJNQQQ+5F+nsv5C/BXxQ==
+X-Received: by 2002:a63:a51b:: with SMTP id n27mr12577996pgf.40.1590840882135;
+        Sat, 30 May 2020 05:14:42 -0700 (PDT)
+Received: from hh ([2405:204:5183:3486:942d:510c:af32:fdd0])
+        by smtp.gmail.com with ESMTPSA id co16sm2178491pjb.55.2020.05.30.05.14.40
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Sat, 30 May 2020 05:14:41 -0700 (PDT)
+From:   "Rachel Lee" <rachel@acquireprospects.com>
+To:     <linux-wireless@vger.kernel.org>
+Subject: European Mobility Expo 2020 Attendees List
+Date:   Sat, 30 May 2020 05:14:19 -0700
+Message-ID: <005601d6367b$e6fc4ca0$b4f4e5e0$@com>
 MIME-Version: 1.0
-In-Reply-To: <20200529212637.GA2994957@bogus>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain;
+        charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+X-Mailer: Microsoft Office Outlook 12.0
+Thread-Index: AdY2e6Zp1S8xE3uJTwS298rMtQF4Gw==
+Content-Language: en-us
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-On 2020-05-29 23:26, Rob Herring wrote:
-> On Fri, May 29, 2020 at 06:19:27PM +0200, Felix Fietkau wrote:
->> This subnode can be used to set per-rate tx power limits either per
->> country code / regdomain or globally.
->> These limits are typically provided by the device manufacturers and are
->> used to limit sideband emissions and stay within regulatory limits
-> 
-> How do other WiFi chips handle this? If this is added to DT, then it 
-> should be common for all WiFi h/w.
-Most devices store this data in EEPROM, and the way it's handled also
-varies across different chips. QCA has EEPROM data that only provides
-limits for edge channels (called "conformance test limits")
-The only other example I could find of a driver that stores it in DT is
-mwifiex, which uses an opaque short array of bytes that is passed to the
-firmware directly.
-So I don't think it makes sense to put this in the common bindings.
-On the other hand, I did try to keep the format as generic and
-extensible as possible, so we could always move it over from mt76 to the
-common binding once we encounter another driver that needs something
-like this.
 
-- Felix
+
+Hi,
+
+I understand that you are one of the Exhibitors of upcoming event European
+Mobility Expo 2020 held on 23-25 June 2020.
+
+I thought I'd check if you are interested in acquiring European Mobility
+Expo 2020 Attendees List for pre-show marketing campaign, Appointment
+Setting,Networking and various Marketing initiative. 
+
+You basically get to own these contacts, no limitations on the list usage
+and opt-in contacts. If you are interested, drop me a line. We will get back
+to you with pricing, counts and other information for your review.
+  
+Thank you and I look forward to hear from you soon.
+
+Regards,
+Rachel Lee| Inside Sales, USA & Europe|
+Email: rachel@acquireprospects.com 
+
+"If you don't wish to receive emails from us reply back with LEAVE OUT"
+
+
+
+
+
