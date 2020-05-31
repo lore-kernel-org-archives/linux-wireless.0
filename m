@@ -7,53 +7,53 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E8CCC433DF
-	for <linux-wireless@archiver.kernel.org>; Sun, 31 May 2020 18:56:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A65F9C433E1
+	for <linux-wireless@archiver.kernel.org>; Sun, 31 May 2020 18:56:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 79D872074A
-	for <linux-wireless@archiver.kernel.org>; Sun, 31 May 2020 18:56:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7F23A2074A
+	for <linux-wireless@archiver.kernel.org>; Sun, 31 May 2020 18:56:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="D7BGYq7F"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="tr+MeCWc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728369AbgEaS4g (ORCPT
+        id S1728337AbgEaS4h (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Sun, 31 May 2020 14:56:36 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:38470 "EHLO m43-7.mailgun.net"
+        Sun, 31 May 2020 14:56:37 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:44375 "EHLO m43-7.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728294AbgEaS4c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 31 May 2020 14:56:32 -0400
+        id S1728357AbgEaS4b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 31 May 2020 14:56:31 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1590951391; h=References: In-Reply-To: Message-Id: Date:
+ s=smtp; t=1590951390; h=References: In-Reply-To: Message-Id: Date:
  Subject: Cc: To: From: Sender;
- bh=CJcZabUe+RZRkUgdEd0lB4wY0h4EeYTXmof575DZ0v0=; b=D7BGYq7FhiI6WqJBfZrvKzJ6M/FqBj+o7o4uPmPJ/KctGyoUSm8pcl6Ky+M0uO75Mo8G9Qth
- 4A9hWCyZrIAcWey691poere1PejCyDKEiNDKPYGmbvaAIkzCh3sVFJPo2sspmdkXKP+ilcU5
- Dy85qhkvdx9wFkhcG8MHOzFnVTk=
+ bh=hoB6VZlIL+yL2PWYvofUbOkDxJuj7N04JW1TznMD6h0=; b=tr+MeCWc5mGWY+X6DD4NBzYtEJcRRyqlahoU76ExV2565OnhNKTmS1BLORBye+HbUjsTnzNr
+ 1Hb7DFa9DRRz1Lgurw2RQygW9oqeDNibH7kHkx31OHR7b7FMey/C6rBIRF/of/Ao3Sdrojmp
+ 3lbvbGVaZafCDIgnZUeBU66+NgA=
 X-Mailgun-Sending-Ip: 69.72.43.7
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n10.prod.us-east-1.postgun.com with SMTP id
- 5ed3fdcb2dd9e15ae38c655c (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Sun, 31 May 2020 18:56:11
+ smtp-out-n02.prod.us-east-1.postgun.com with SMTP id
+ 5ed3fdc976fccbb4c8176791 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Sun, 31 May 2020 18:56:09
  GMT
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id B1906C43387; Sun, 31 May 2020 18:56:10 +0000 (UTC)
+        id DCCFEC433A0; Sun, 31 May 2020 18:56:08 +0000 (UTC)
 Received: from pradeepc2-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: pradeepc)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 0412CC433CB;
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 372F7C4339C;
         Sun, 31 May 2020 18:56:08 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 0412CC433CB
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 372F7C4339C
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=pradeepc@codeaurora.org
 From:   Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
 To:     ath11k@lists.infradead.org
 Cc:     linux-wireless@vger.kernel.org,
         Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-Subject: [PATCH v4 8/8] ath11k: Add support for 6g scan hint
-Date:   Sun, 31 May 2020 11:56:00 -0700
-Message-Id: <20200531185600.20789-9-pradeepc@codeaurora.org>
+Subject: [PATCH v4 6/8] ath11k: Add 6G scan dwell time parameter in scan request command
+Date:   Sun, 31 May 2020 11:55:58 -0700
+Message-Id: <20200531185600.20789-7-pradeepc@codeaurora.org>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200531185600.20789-1-pradeepc@codeaurora.org>
 References: <20200531185600.20789-1-pradeepc@codeaurora.org>
@@ -62,159 +62,59 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add support for 6Ghz short ssid and bssid hint mechanism
-as part of scan command.
+Add 6G scan active and passive dwell time parameter to scan request.
 
 Signed-off-by: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath11k/wmi.c | 72 +++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath11k/wmi.h | 22 ++++++++
- 2 files changed, 94 insertions(+)
+ drivers/net/wireless/ath/ath11k/wmi.c | 4 ++++
+ drivers/net/wireless/ath/ath11k/wmi.h | 5 +++++
+ 2 files changed, 9 insertions(+)
 
 diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
-index ad3a7b68d308..317376a4eb6e 100644
+index a6bbb3badd1f..239a336f55f4 100644
 --- a/drivers/net/wireless/ath/ath11k/wmi.c
 +++ b/drivers/net/wireless/ath/ath11k/wmi.c
-@@ -2005,6 +2005,8 @@ int ath11k_wmi_send_scan_start_cmd(struct ath11k *ar,
- 	int i, ret, len;
- 	u32 *tmp_ptr;
- 	u8 extraie_len_with_pad = 0;
-+	struct hint_short_ssid *s_ssid = NULL;
-+	struct hint_bssid *hint_bssid = NULL;
- 
- 	len = sizeof(*cmd);
- 
-@@ -2026,6 +2028,14 @@ int ath11k_wmi_send_scan_start_cmd(struct ath11k *ar,
- 			roundup(params->extraie.len, sizeof(u32));
- 	len += extraie_len_with_pad;
- 
-+	if (params->num_hint_bssid)
-+		len += TLV_HDR_SIZE +
-+		       params->num_hint_bssid * sizeof(struct hint_bssid);
-+
-+	if (params->num_hint_s_ssid)
-+		len += TLV_HDR_SIZE +
-+		       params->num_hint_s_ssid * sizeof(struct hint_short_ssid);
-+
- 	skb = ath11k_wmi_alloc_skb(wmi->wmi_ab, len);
- 	if (!skb)
- 		return -ENOMEM;
-@@ -2126,6 +2136,68 @@ int ath11k_wmi_send_scan_start_cmd(struct ath11k *ar,
- 
- 	ptr += extraie_len_with_pad;
- 
-+	if (params->num_hint_s_ssid) {
-+		len = params->num_hint_s_ssid * sizeof(struct hint_short_ssid);
-+		tlv = ptr;
-+		tlv->header = FIELD_PREP(WMI_TLV_TAG, WMI_TAG_ARRAY_FIXED_STRUCT) |
-+			      FIELD_PREP(WMI_TLV_LEN, len);
-+		ptr += TLV_HDR_SIZE;
-+		s_ssid = ptr;
-+		for (i = 0; i < params->num_hint_s_ssid; ++i) {
-+			s_ssid->freq_flags = params->hint_s_ssid[i].freq_flags;
-+			s_ssid->short_ssid = params->hint_s_ssid[i].short_ssid;
-+			s_ssid++;
-+		}
-+		ptr += len;
-+	}
-+
-+	if (params->num_hint_bssid) {
-+		len = params->num_hint_bssid * sizeof(struct hint_bssid);
-+		tlv = ptr;
-+		tlv->header = FIELD_PREP(WMI_TLV_TAG, WMI_TAG_ARRAY_FIXED_STRUCT) |
-+			      FIELD_PREP(WMI_TLV_LEN, len);
-+		ptr += TLV_HDR_SIZE;
-+		hint_bssid = ptr;
-+		for (i = 0; i < params->num_hint_bssid; ++i) {
-+			hint_bssid->freq_flags =
-+				params->hint_bssid[i].freq_flags;
-+			ether_addr_copy(&params->hint_bssid[i].bssid.addr[0],
-+					&hint_bssid->bssid.addr[0]);
-+			hint_bssid++;
-+		}
-+	}
-+
-+	len = params->num_hint_s_ssid * sizeof(struct hint_short_ssid);
-+	tlv = ptr;
-+	tlv->header = FIELD_PREP(WMI_TLV_TAG, WMI_TAG_ARRAY_FIXED_STRUCT) |
-+		      FIELD_PREP(WMI_TLV_LEN, len);
-+	ptr += TLV_HDR_SIZE;
-+	if (params->num_hint_s_ssid) {
-+		s_ssid = ptr;
-+		for (i = 0; i < params->num_hint_s_ssid; ++i) {
-+			s_ssid->freq_flags = params->hint_s_ssid[i].freq_flags;
-+			s_ssid->short_ssid = params->hint_s_ssid[i].short_ssid;
-+			s_ssid++;
-+		}
-+	}
-+	ptr += len;
-+
-+	len = params->num_hint_bssid * sizeof(struct hint_bssid);
-+	tlv = ptr;
-+	tlv->header = FIELD_PREP(WMI_TLV_TAG, WMI_TAG_ARRAY_FIXED_STRUCT) |
-+		      FIELD_PREP(WMI_TLV_LEN, len);
-+	ptr += TLV_HDR_SIZE;
-+	if (params->num_hint_bssid) {
-+		hint_bssid = ptr;
-+		for (i = 0; i < params->num_hint_bssid; ++i) {
-+			hint_bssid->freq_flags =
-+				params->hint_bssid[i].freq_flags;
-+			ether_addr_copy(&params->hint_bssid[i].bssid.addr[0],
-+					&hint_bssid->bssid.addr[0]);
-+			hint_bssid++;
-+		}
-+	}
-+
- 	ret = ath11k_wmi_cmd_send(wmi, skb,
- 				  WMI_START_SCAN_CMDID);
- 	if (ret) {
+@@ -1899,6 +1899,8 @@ void ath11k_wmi_start_scan_init(struct ath11k *ar,
+ 	arg->dwell_time_active = 50;
+ 	arg->dwell_time_active_2g = 0;
+ 	arg->dwell_time_passive = 150;
++	arg->dwell_time_active_6g = 40;
++	arg->dwell_time_passive_6g = 30;
+ 	arg->min_rest_time = 50;
+ 	arg->max_rest_time = 500;
+ 	arg->repeat_probe_time = 0;
+@@ -2045,6 +2047,8 @@ int ath11k_wmi_send_scan_start_cmd(struct ath11k *ar,
+ 	cmd->dwell_time_active = params->dwell_time_active;
+ 	cmd->dwell_time_active_2g = params->dwell_time_active_2g;
+ 	cmd->dwell_time_passive = params->dwell_time_passive;
++	cmd->dwell_time_active_6g = params->dwell_time_active_6g;
++	cmd->dwell_time_passive_6g = params->dwell_time_passive_6g;
+ 	cmd->min_rest_time = params->min_rest_time;
+ 	cmd->max_rest_time = params->max_rest_time;
+ 	cmd->repeat_probe_time = params->repeat_probe_time;
 diff --git a/drivers/net/wireless/ath/ath11k/wmi.h b/drivers/net/wireless/ath/ath11k/wmi.h
-index 319ad7241e01..1162bd7a5f87 100644
+index 76c2da2c5db7..4937d02839fc 100644
 --- a/drivers/net/wireless/ath/ath11k/wmi.h
 +++ b/drivers/net/wireless/ath/ath11k/wmi.h
-@@ -50,6 +50,14 @@ struct wmi_tlv {
- #define WMI_MAX_MEM_REQS        32
- #define ATH11K_MAX_HW_LISTEN_INTERVAL 5
+@@ -3061,6 +3061,9 @@ struct  wmi_start_scan_cmd {
+ 	u32 num_vendor_oui;
+ 	u32 scan_ctrl_flags_ext;
+ 	u32 dwell_time_active_2g;
++	u32 dwell_time_active_6g;
++	u32 dwell_time_passive_6g;
++	u32 scan_start_offset;
+ } __packed;
  
-+#define WLAN_SCAN_MAX_HINT_S_SSID        10
-+#define WLAN_SCAN_MAX_HINT_BSSID         10
-+#define MAX_RNR_BSS                    5
-+
-+#define WLAN_SCAN_MAX_HINT_S_SSID        10
-+#define WLAN_SCAN_MAX_HINT_BSSID         10
-+#define MAX_RNR_BSS                    5
-+
- #define WLAN_SCAN_PARAMS_MAX_SSID    16
- #define WLAN_SCAN_PARAMS_MAX_BSSID   4
- #define WLAN_SCAN_PARAMS_MAX_IE_LEN  256
-@@ -3105,6 +3113,16 @@ enum {
- 	((flag) |= (((mode) << WMI_SCAN_DWELL_MODE_SHIFT) & \
- 		    WMI_SCAN_DWELL_MODE_MASK))
- 
-+struct hint_short_ssid {
-+	u32 freq_flags;
-+	u32 short_ssid;
-+};
-+
-+struct hint_bssid {
-+	u32 freq_flags;
-+	struct wmi_mac_addr bssid;
-+};
-+
- struct scan_req_params {
- 	u32 scan_id;
- 	u32 scan_req_id;
-@@ -3184,6 +3202,10 @@ struct scan_req_params {
- 	struct element_info extraie;
- 	struct element_info htcap;
- 	struct element_info vhtcap;
-+	u32 num_hint_s_ssid;
-+	u32 num_hint_bssid;
-+	struct hint_short_ssid hint_s_ssid[WLAN_SCAN_MAX_HINT_S_SSID];
-+	struct hint_bssid hint_bssid[WLAN_SCAN_MAX_HINT_BSSID];
- };
- 
- struct wmi_ssid_arg {
+ #define WMI_SCAN_FLAG_PASSIVE        0x1
+@@ -3127,6 +3130,8 @@ struct scan_req_params {
+ 	u32 dwell_time_active;
+ 	u32 dwell_time_active_2g;
+ 	u32 dwell_time_passive;
++	u32 dwell_time_active_6g;
++	u32 dwell_time_passive_6g;
+ 	u32 min_rest_time;
+ 	u32 max_rest_time;
+ 	u32 repeat_probe_time;
 -- 
 2.17.1
 
