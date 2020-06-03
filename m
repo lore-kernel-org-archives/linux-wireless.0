@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FF48C433E2
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Jun 2020 23:33:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FD0AC433ED
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Jun 2020 23:34:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 586F220734
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Jun 2020 23:33:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6FCD520734
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Jun 2020 23:34:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="TU9flWAg"
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="NPDoMZL+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726380AbgFCXd3 (ORCPT
+        id S1727046AbgFCXd7 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 3 Jun 2020 19:33:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55652 "EHLO
+        Wed, 3 Jun 2020 19:33:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55620 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726416AbgFCXcT (ORCPT
+        with ESMTP id S1726146AbgFCXcQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 3 Jun 2020 19:32:19 -0400
+        Wed, 3 Jun 2020 19:32:16 -0400
 Received: from mail-pj1-x1044.google.com (mail-pj1-x1044.google.com [IPv6:2607:f8b0:4864:20::1044])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 31F54C00863F
-        for <linux-wireless@vger.kernel.org>; Wed,  3 Jun 2020 16:32:18 -0700 (PDT)
-Received: by mail-pj1-x1044.google.com with SMTP id fs4so258133pjb.5
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Jun 2020 16:32:18 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA7BEC08C5C7
+        for <linux-wireless@vger.kernel.org>; Wed,  3 Jun 2020 16:32:14 -0700 (PDT)
+Received: by mail-pj1-x1044.google.com with SMTP id q24so267545pjd.1
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Jun 2020 16:32:14 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=vlsGh/2A3yd9dyMlCDYBd0p4l1T5Oo7IaL6NTs2MBUk=;
-        b=TU9flWAg9FMH+Npku3SFev/YYK6vvYYCp6jsnIW2uRPdSGDM2UMjhH0to/RSt2mcu+
-         +tEJTAZqQ0UV4spAC//nbMEU4YZmc6CW1cgHcGYV50zllOcjZjx+9n/jCEKcVaB/68HX
-         WckrYbpJZIVMmdggrVZUzoJLKS1NezuTTfatg=
+        bh=hMUFWqcrC1VZxvWDwrZSg4KS9BvtvLd2CEEYtAT+tik=;
+        b=NPDoMZL+zfsatoKLllUEr8wu4PDByFvpOx0tUIG0zh+F9kNU3lZAIs4/72VWZHO62B
+         wJNDmXTEzDkwVDFm5ZmRQQz2JzgS9VFCuCWR/c1ERdo1M9u6NFUkJjq4MdvlAxFdWiuA
+         qZfnse2pv1GkiYqRcfQiacr45rwEs75PqerkU=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=vlsGh/2A3yd9dyMlCDYBd0p4l1T5Oo7IaL6NTs2MBUk=;
-        b=J8CRm8y2g9XpR4uiZMv3Gu4CDpQ3yQrbhhYqMPcSeCG91LGrLSGhvMRygvzymODoKv
-         reS4lbcL9oemfqlP+yr7QLcx4Q8iefO4gvxkNVARD7da9aIq1sQ3RgPvtIKRwmq3VSkM
-         1DHJMDeUgyn0J4GQS2ML7aaW+zfAz6Oq9K5QlExrz+r8B4IH8Wdbsofi9JF3Ssw7H30z
-         6gXl5NeZSwgcqZC92slUk1WjkIWQeFQ4YQ/Ubx+YMBGYvqsu65WKCKDdP2VAPc590sy6
-         6iu+la1lJ+LruY5pSRlPguTghDc9BiC3ecoPybl6MwQe0YckrL4GYGPtqDFUSMpTq/nj
-         GSGw==
-X-Gm-Message-State: AOAM530OV37UWxxn+DmdvWGtuRxr7AAUMsOpoXdjgfC3lszBcz4uZ1Ye
-        JNkT1+iezNRdJYDawPUy5KkDVA==
-X-Google-Smtp-Source: ABdhPJyBu+lQtrGYhp3WZ7ZyvY1X8s9WoOeJvHWXF5Ulh61p00d2PYdWCaVGKn3LkWqTOEtrYGlBGw==
-X-Received: by 2002:a17:902:aa0c:: with SMTP id be12mr2119692plb.241.1591227137753;
-        Wed, 03 Jun 2020 16:32:17 -0700 (PDT)
+        bh=hMUFWqcrC1VZxvWDwrZSg4KS9BvtvLd2CEEYtAT+tik=;
+        b=DGyJ7CornpHts+TnuQLpILjxKVfrPMH2riJyx1cvPj5gT7mWAFSFS4y8sM7eSc7k54
+         kgKRfFJ+QRWNazS8U9ds53i+Hioiqqc4jehmLjO0PZ+Ed+pIUmSXu+4LYIUtag+8S59Z
+         9SI6qRbPxBkXc0riQMQaxhpzuKZ611pTks0xofZZ5uzCK3DLYA1aSeV9hXpJMlxVVWZ9
+         BhWLIRctAfiB7m1KCBhmYz6QXR0/sV2lpdL0Bh/+/fpbYVjZj7DvtQBSt8KAOHz9G1r+
+         yDmxHyYKKeEDvicXg2xOo/dDAkwPHsyd1svz1XrxwHWp4ve16gXTR1IJ2FsxKh3Kq1bb
+         fJ2g==
+X-Gm-Message-State: AOAM532rLFgzbySHvn8UdSHAgmQE9UjVS5iVywPt8vhSCAQpvWDOp8do
+        gkknxM7KwuxwufjzMcyXkku7AQ==
+X-Google-Smtp-Source: ABdhPJwEforJlQ6Hw2sLXD7jNMrxzqXBv5BlsWVfup5BJSe8mp612gIHwefIBt6eEGH3vm6zOlawSw==
+X-Received: by 2002:a17:90b:3448:: with SMTP id lj8mr2505301pjb.163.1591227134470;
+        Wed, 03 Jun 2020 16:32:14 -0700 (PDT)
 Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id b1sm3836817pjc.33.2020.06.03.16.32.14
+        by smtp.gmail.com with ESMTPSA id b1sm3836777pjc.33.2020.06.03.16.32.12
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 03 Jun 2020 16:32:16 -0700 (PDT)
+        Wed, 03 Jun 2020 16:32:12 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
 To:     linux-kernel@vger.kernel.org
 Cc:     Kees Cook <keescook@chromium.org>,
@@ -69,14 +69,13 @@ Cc:     Kees Cook <keescook@chromium.org>,
         linux-wireless@vger.kernel.org, linux-ide@vger.kernel.org,
         linux-clk@vger.kernel.org, linux-spi@vger.kernel.org,
         linux-mm@kvack.org, clang-built-linux@googlegroups.com
-Subject: [PATCH 06/10] clk: st: Remove uninitialized_var() usage
-Date:   Wed,  3 Jun 2020 16:31:59 -0700
-Message-Id: <20200603233203.1695403-7-keescook@chromium.org>
+Subject: [PATCH 01/10] x86/mm/numa: Remove uninitialized_var() usage
+Date:   Wed,  3 Jun 2020 16:31:54 -0700
+Message-Id: <20200603233203.1695403-2-keescook@chromium.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200603233203.1695403-1-keescook@chromium.org>
 References: <20200603233203.1695403-1-keescook@chromium.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
@@ -87,13 +86,12 @@ Using uninitialized_var() is dangerous as it papers over real bugs[1]
 (or can in the future), and suppresses unrelated compiler warnings (e.g.
 "unused variable"). If the compiler thinks it is uninitialized, either
 simply initialize the variable or make compiler changes. As a precursor
-to removing[2] this[3] macro[4], just remove this variable since it was
-actually unused:
+to removing[2] this[3] macro[4], refactor code to avoid its need.
 
-drivers/clk/st/clkgen-fsyn.c: In function ‘quadfs_set_rate’:
-drivers/clk/st/clkgen-fsyn.c:793:6: warning: unused variable ‘i’ [-Wunused-variable]
-  793 |  int i;
-      |      ^
+The original reason for its use here was to work around the #ifdef
+being the only place the variable was used. This is better expressed
+using IS_ENABLED() and a new code block where the variable can be used
+unconditionally.
 
 [1] https://lore.kernel.org/lkml/20200603174714.192027-1-glider@google.com/
 [2] https://lore.kernel.org/lkml/CA+55aFw+Vbj0i=1TGqCR5vQkCzWJ0QxK6CernOU6eedsudAixw@mail.gmail.com/
@@ -102,21 +100,60 @@ drivers/clk/st/clkgen-fsyn.c:793:6: warning: unused variable ‘i’ [-Wunused-v
 
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/clk/st/clkgen-fsyn.c | 1 -
- 1 file changed, 1 deletion(-)
+ arch/x86/mm/numa.c                | 18 +++++++++---------
+ include/linux/page-flags-layout.h |  2 +-
+ 2 files changed, 10 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/clk/st/clkgen-fsyn.c b/drivers/clk/st/clkgen-fsyn.c
-index a156bd0c6af7..f1adc858b590 100644
---- a/drivers/clk/st/clkgen-fsyn.c
-+++ b/drivers/clk/st/clkgen-fsyn.c
-@@ -790,7 +790,6 @@ static int quadfs_set_rate(struct clk_hw *hw, unsigned long rate,
- 	struct st_clk_quadfs_fsynth *fs = to_quadfs_fsynth(hw);
- 	struct stm_fs params;
- 	long hwrate;
--	int uninitialized_var(i);
+diff --git a/arch/x86/mm/numa.c b/arch/x86/mm/numa.c
+index 59ba008504dc..38eeb15f3b07 100644
+--- a/arch/x86/mm/numa.c
++++ b/arch/x86/mm/numa.c
+@@ -541,7 +541,6 @@ static void __init numa_clear_kernel_node_hotplug(void)
  
- 	if (!rate || !parent_rate)
+ static int __init numa_register_memblks(struct numa_meminfo *mi)
+ {
+-	unsigned long uninitialized_var(pfn_align);
+ 	int i, nid;
+ 
+ 	/* Account for nodes with cpus and no memory */
+@@ -569,15 +568,16 @@ static int __init numa_register_memblks(struct numa_meminfo *mi)
+ 	 * If sections array is gonna be used for pfn -> nid mapping, check
+ 	 * whether its granularity is fine enough.
+ 	 */
+-#ifdef NODE_NOT_IN_PAGE_FLAGS
+-	pfn_align = node_map_pfn_alignment();
+-	if (pfn_align && pfn_align < PAGES_PER_SECTION) {
+-		printk(KERN_WARNING "Node alignment %LuMB < min %LuMB, rejecting NUMA config\n",
+-		       PFN_PHYS(pfn_align) >> 20,
+-		       PFN_PHYS(PAGES_PER_SECTION) >> 20);
+-		return -EINVAL;
++	if (IS_ENABLED(NODE_NOT_IN_PAGE_FLAGS)) {
++		unsigned long pfn_align = node_map_pfn_alignment();
++
++		if (pfn_align && pfn_align < PAGES_PER_SECTION) {
++			pr_warn("Node alignment %LuMB < min %LuMB, rejecting NUMA config\n",
++				PFN_PHYS(pfn_align) >> 20,
++				PFN_PHYS(PAGES_PER_SECTION) >> 20);
++			return -EINVAL;
++		}
+ 	}
+-#endif
+ 	if (!numa_meminfo_cover_memory(mi))
  		return -EINVAL;
+ 
+diff --git a/include/linux/page-flags-layout.h b/include/linux/page-flags-layout.h
+index 71283739ffd2..1a4cdec2bd29 100644
+--- a/include/linux/page-flags-layout.h
++++ b/include/linux/page-flags-layout.h
+@@ -100,7 +100,7 @@
+  * there.  This includes the case where there is no node, so it is implicit.
+  */
+ #if !(NODES_WIDTH > 0 || NODES_SHIFT == 0)
+-#define NODE_NOT_IN_PAGE_FLAGS
++#define NODE_NOT_IN_PAGE_FLAGS 1
+ #endif
+ 
+ #if defined(CONFIG_NUMA_BALANCING) && LAST_CPUPID_WIDTH == 0
 -- 
 2.25.1
 
