@@ -7,114 +7,132 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A28F4C433DF
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Jun 2020 00:17:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96697C433E2
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Jun 2020 00:17:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 846252072F
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Jun 2020 00:17:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 76EBD2067B
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Jun 2020 00:17:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="xNM0Z0uq"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="LGAWrMyx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728426AbgFCARe (ORCPT
+        id S1728439AbgFCARf (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 2 Jun 2020 20:17:34 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:11575 "EHLO m43-7.mailgun.net"
+        Tue, 2 Jun 2020 20:17:35 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:24272 "EHLO m43-7.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727795AbgFCARe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        id S1728187AbgFCARe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Tue, 2 Jun 2020 20:17:34 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1591143453; h=References: In-Reply-To: Message-Id: Date:
- Subject: Cc: To: From: Sender;
- bh=hoB6VZlIL+yL2PWYvofUbOkDxJuj7N04JW1TznMD6h0=; b=xNM0Z0uq6c0WoacwfmKMx9fuYKahy+PHN2nPeLEOIb/4ghs2YCh2TgsB2xtnJSsqxl86aCBQ
- EN8Zj+HcMhsBLS34zMQSgvzLh47b+/X6eLo2Bjc+nFwZeR7TjN2RlTRCo69KNDoLghZ0UYR4
- FUPiRHnJ7rsIHuQ8yu0jI0z1ac4=
+ s=smtp; t=1591143454; h=Content-Transfer-Encoding: Content-Type:
+ MIME-Version: References: In-Reply-To: Message-Id: Date: Subject: Cc:
+ To: From: Sender; bh=0py7nHDtFNM37C9OrIO7osS5eI9QRO8TdNp8NZ95Azg=; b=LGAWrMyxnmStcqixea+v7/5YAhZj6AiHlQa2xa7k0Asj1SuorGbGL9hm+6Z+5+IB+hLRryGQ
+ g32mxNHvrAuYOuHVilJ8oscH3kjXMyCRg1t8TblT8vU/FZEP8H5fHo8q9kQU2yAW9jEtQMlp
+ hMQm+N2e2hs5LHlHPByr0R0QNyE=
 X-Mailgun-Sending-Ip: 69.72.43.7
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n04.prod.us-west-2.postgun.com with SMTP id
- 5ed6ec1c4db551abdeb411e3 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 03 Jun 2020 00:17:32
+ smtp-out-n01.prod.us-west-2.postgun.com with SMTP id
+ 5ed6ec1d98f4fc41d0c82af6 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 03 Jun 2020 00:17:33
  GMT
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id AF789C43391; Wed,  3 Jun 2020 00:17:32 +0000 (UTC)
+        id 4C073C433CB; Wed,  3 Jun 2020 00:17:33 +0000 (UTC)
 Received: from pradeepc2-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: pradeepc)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 38D19C433C6;
-        Wed,  3 Jun 2020 00:17:32 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 38D19C433C6
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 6A836C4339C;
+        Wed,  3 Jun 2020 00:17:31 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 6A836C4339C
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=pradeepc@codeaurora.org
 From:   Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
 To:     ath11k@lists.infradead.org
 Cc:     linux-wireless@vger.kernel.org,
         Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-Subject: [PATCH v5 6/8] ath11k: Add 6G scan dwell time parameter in scan request command
-Date:   Tue,  2 Jun 2020 17:17:22 -0700
-Message-Id: <20200603001724.12161-7-pradeepc@codeaurora.org>
+Subject: [PATCH v5 4/8] ath11k: extend peer_assoc_cmd for 6GHz band
+Date:   Tue,  2 Jun 2020 17:17:20 -0700
+Message-Id: <20200603001724.12161-5-pradeepc@codeaurora.org>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200603001724.12161-1-pradeepc@codeaurora.org>
 References: <20200603001724.12161-1-pradeepc@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Add 6G scan active and passive dwell time parameter to scan request.
+This adds support required for configuring min_data_rate of 6GHz oper IE
+and peer_he_caps_6ghz in peer assoc command. The Minimum Rate field
+indicates the minimum rate, in units of 1 Mb/s, that the non-AP STA is
+allowed to use for sending PPDUs as defined in IEEE P802.11ax™/D6.0.
 
 Signed-off-by: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath11k/wmi.c | 4 ++++
+ drivers/net/wireless/ath/ath11k/wmi.c | 2 ++
  drivers/net/wireless/ath/ath11k/wmi.h | 5 +++++
- 2 files changed, 9 insertions(+)
+ 2 files changed, 7 insertions(+)
 
 diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
-index a6bbb3badd1f..239a336f55f4 100644
+index 500108fa59d9..a6bbb3badd1f 100644
 --- a/drivers/net/wireless/ath/ath11k/wmi.c
 +++ b/drivers/net/wireless/ath/ath11k/wmi.c
-@@ -1899,6 +1899,8 @@ void ath11k_wmi_start_scan_init(struct ath11k *ar,
- 	arg->dwell_time_active = 50;
- 	arg->dwell_time_active_2g = 0;
- 	arg->dwell_time_passive = 150;
-+	arg->dwell_time_active_6g = 40;
-+	arg->dwell_time_passive_6g = 30;
- 	arg->min_rest_time = 50;
- 	arg->max_rest_time = 500;
- 	arg->repeat_probe_time = 0;
-@@ -2045,6 +2047,8 @@ int ath11k_wmi_send_scan_start_cmd(struct ath11k *ar,
- 	cmd->dwell_time_active = params->dwell_time_active;
- 	cmd->dwell_time_active_2g = params->dwell_time_active_2g;
- 	cmd->dwell_time_passive = params->dwell_time_passive;
-+	cmd->dwell_time_active_6g = params->dwell_time_active_6g;
-+	cmd->dwell_time_passive_6g = params->dwell_time_passive_6g;
- 	cmd->min_rest_time = params->min_rest_time;
- 	cmd->max_rest_time = params->max_rest_time;
- 	cmd->repeat_probe_time = params->repeat_probe_time;
+@@ -1789,6 +1789,7 @@ int ath11k_wmi_send_peer_assoc_cmd(struct ath11k *ar,
+ 	cmd->peer_he_cap_info = param->peer_he_cap_macinfo[0];
+ 	cmd->peer_he_cap_info_ext = param->peer_he_cap_macinfo[1];
+ 	cmd->peer_he_cap_info_internal = param->peer_he_cap_macinfo_internal;
++	cmd->peer_he_caps_6ghz = param->peer_he_caps_6ghz;
+ 	cmd->peer_he_ops = param->peer_he_ops;
+ 	memcpy(&cmd->peer_he_cap_phy, &param->peer_he_cap_phyinfo,
+ 	       sizeof(param->peer_he_cap_phyinfo));
+@@ -1842,6 +1843,7 @@ int ath11k_wmi_send_peer_assoc_cmd(struct ath11k *ar,
+ 
+ 	/* HE Rates */
+ 	cmd->peer_he_mcs = param->peer_he_mcs_count;
++	cmd->min_data_rate = param->min_data_rate;
+ 
+ 	ptr += sizeof(*mcs);
+ 
 diff --git a/drivers/net/wireless/ath/ath11k/wmi.h b/drivers/net/wireless/ath/ath11k/wmi.h
-index 76c2da2c5db7..4937d02839fc 100644
+index afa3c4cf90e9..fd82cff7537b 100644
 --- a/drivers/net/wireless/ath/ath11k/wmi.h
 +++ b/drivers/net/wireless/ath/ath11k/wmi.h
-@@ -3061,6 +3061,9 @@ struct  wmi_start_scan_cmd {
- 	u32 num_vendor_oui;
- 	u32 scan_ctrl_flags_ext;
- 	u32 dwell_time_active_2g;
-+	u32 dwell_time_active_6g;
-+	u32 dwell_time_passive_6g;
-+	u32 scan_start_offset;
+@@ -1011,6 +1011,7 @@ enum wmi_tlv_vdev_param {
+ 	WMI_VDEV_PARAM_FILS_MAX_CHANNEL_GUARD_TIME,
+ 	WMI_VDEV_PARAM_BA_MODE = 0x7e,
+ 	WMI_VDEV_PARAM_SET_HE_SOUNDING_MODE = 0x87,
++	WMI_VDEV_PARAM_6GHZ_PARAMS = 0x99,
+ 	WMI_VDEV_PARAM_PROTOTYPE = 0x8000,
+ 	WMI_VDEV_PARAM_BSS_COLOR,
+ 	WMI_VDEV_PARAM_SET_HEMU_MODE,
+@@ -3444,6 +3445,7 @@ struct peer_assoc_params {
+ 	u32 tx_max_rate;
+ 	u32 tx_mcs_set;
+ 	u8 vht_capable;
++	u8 min_data_rate;
+ 	u32 tx_max_mcs_nss;
+ 	u32 peer_bw_rxnss_override;
+ 	bool is_pmf_enabled;
+@@ -3472,6 +3474,7 @@ struct peer_assoc_params {
+ 	bool he_flag;
+ 	u32 peer_he_cap_macinfo[2];
+ 	u32 peer_he_cap_macinfo_internal;
++	u32 peer_he_caps_6ghz;
+ 	u32 peer_he_ops;
+ 	u32 peer_he_cap_phyinfo[WMI_HOST_MAX_HECAP_PHY_SIZE];
+ 	u32 peer_he_mcs_count;
+@@ -3509,6 +3512,8 @@ struct  wmi_peer_assoc_complete_cmd {
+ 	u32 peer_he_mcs;
+ 	u32 peer_he_cap_info_ext;
+ 	u32 peer_he_cap_info_internal;
++	u32 min_data_rate;
++	u32 peer_he_caps_6ghz;
  } __packed;
  
- #define WMI_SCAN_FLAG_PASSIVE        0x1
-@@ -3127,6 +3130,8 @@ struct scan_req_params {
- 	u32 dwell_time_active;
- 	u32 dwell_time_active_2g;
- 	u32 dwell_time_passive;
-+	u32 dwell_time_active_6g;
-+	u32 dwell_time_passive_6g;
- 	u32 min_rest_time;
- 	u32 max_rest_time;
- 	u32 repeat_probe_time;
+ struct wmi_stop_scan_cmd {
 -- 
 2.17.1
 
