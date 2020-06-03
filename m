@@ -2,105 +2,119 @@ Return-Path: <SRS0=zppH=7Q=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D64EC433E0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A28F4C433DF
 	for <linux-wireless@archiver.kernel.org>; Wed,  3 Jun 2020 00:17:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DC2EA2067B
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Jun 2020 00:17:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 846252072F
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Jun 2020 00:17:35 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="RTd+vAWR"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="xNM0Z0uq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728414AbgFCARd (ORCPT
+        id S1728426AbgFCARe (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 2 Jun 2020 20:17:33 -0400
-Received: from mail27.static.mailgun.info ([104.130.122.27]:43728 "EHLO
-        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726112AbgFCARd (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 2 Jun 2020 20:17:33 -0400
+        Tue, 2 Jun 2020 20:17:34 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:11575 "EHLO m43-7.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727795AbgFCARe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 2 Jun 2020 20:17:34 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1591143453; h=Content-Transfer-Encoding: Content-Type:
- MIME-Version: Message-Id: Date: Subject: Cc: To: From: Sender;
- bh=aCZlhWY3Yr2iY4UXIK9DtE2CMUNJZkPPHCd/MpxgOxg=; b=RTd+vAWR20kRBGIEuHkLpRVp3GPRh1bxqTjhra51ysWRoeaCwwMPUYqp0GcN8WSJJAa+6Ik7
- p6ZTgcj9qozd8LAv7QANViBjzecTjYhK2eCi6hqjND5AXgxxh/JMUJq2ChBp2Z40nyIPvBog
- Pyg7vo3o07HYNSz/sRVnZIW5lKQ=
-X-Mailgun-Sending-Ip: 104.130.122.27
+ s=smtp; t=1591143453; h=References: In-Reply-To: Message-Id: Date:
+ Subject: Cc: To: From: Sender;
+ bh=hoB6VZlIL+yL2PWYvofUbOkDxJuj7N04JW1TznMD6h0=; b=xNM0Z0uq6c0WoacwfmKMx9fuYKahy+PHN2nPeLEOIb/4ghs2YCh2TgsB2xtnJSsqxl86aCBQ
+ EN8Zj+HcMhsBLS34zMQSgvzLh47b+/X6eLo2Bjc+nFwZeR7TjN2RlTRCo69KNDoLghZ0UYR4
+ FUPiRHnJ7rsIHuQ8yu0jI0z1ac4=
+X-Mailgun-Sending-Ip: 69.72.43.7
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n12.prod.us-west-2.postgun.com with SMTP id
- 5ed6ec1aeca06aba7e514c4a (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 03 Jun 2020 00:17:30
+ smtp-out-n04.prod.us-west-2.postgun.com with SMTP id
+ 5ed6ec1c4db551abdeb411e3 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 03 Jun 2020 00:17:32
  GMT
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 485DEC433CB; Wed,  3 Jun 2020 00:17:30 +0000 (UTC)
+        id AF789C43391; Wed,  3 Jun 2020 00:17:32 +0000 (UTC)
 Received: from pradeepc2-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: pradeepc)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id C980BC433C6;
-        Wed,  3 Jun 2020 00:17:29 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org C980BC433C6
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 38D19C433C6;
+        Wed,  3 Jun 2020 00:17:32 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 38D19C433C6
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=pradeepc@codeaurora.org
 From:   Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
 To:     ath11k@lists.infradead.org
 Cc:     linux-wireless@vger.kernel.org,
         Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
-Subject: [PATCH v5 0/8] add 6GHz radio support in ath11k driver
-Date:   Tue,  2 Jun 2020 17:17:16 -0700
-Message-Id: <20200603001724.12161-1-pradeepc@codeaurora.org>
+Subject: [PATCH v5 6/8] ath11k: Add 6G scan dwell time parameter in scan request command
+Date:   Tue,  2 Jun 2020 17:17:22 -0700
+Message-Id: <20200603001724.12161-7-pradeepc@codeaurora.org>
 X-Mailer: git-send-email 2.17.1
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20200603001724.12161-1-pradeepc@codeaurora.org>
+References: <20200603001724.12161-1-pradeepc@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-This patch series adds 6GHz frequency listing in ath11k driver and mac80211
-registration for the 6GHz band. Also, extends some of wmi command tlvs for
-supporting 6GHz.
+Add 6G scan active and passive dwell time parameter to scan request.
 
-changes in v5:
- - latest 6ghz patches on mac80211 expects driver not to pass ht/vht
-   caps for 6GHZ band at device registration. so fix that.
+Signed-off-by: Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath11k/wmi.c | 4 ++++
+ drivers/net/wireless/ath/ath11k/wmi.h | 5 +++++
+ 2 files changed, 9 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
+index a6bbb3badd1f..239a336f55f4 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.c
++++ b/drivers/net/wireless/ath/ath11k/wmi.c
+@@ -1899,6 +1899,8 @@ void ath11k_wmi_start_scan_init(struct ath11k *ar,
+ 	arg->dwell_time_active = 50;
+ 	arg->dwell_time_active_2g = 0;
+ 	arg->dwell_time_passive = 150;
++	arg->dwell_time_active_6g = 40;
++	arg->dwell_time_passive_6g = 30;
+ 	arg->min_rest_time = 50;
+ 	arg->max_rest_time = 500;
+ 	arg->repeat_probe_time = 0;
+@@ -2045,6 +2047,8 @@ int ath11k_wmi_send_scan_start_cmd(struct ath11k *ar,
+ 	cmd->dwell_time_active = params->dwell_time_active;
+ 	cmd->dwell_time_active_2g = params->dwell_time_active_2g;
+ 	cmd->dwell_time_passive = params->dwell_time_passive;
++	cmd->dwell_time_active_6g = params->dwell_time_active_6g;
++	cmd->dwell_time_passive_6g = params->dwell_time_passive_6g;
+ 	cmd->min_rest_time = params->min_rest_time;
+ 	cmd->max_rest_time = params->max_rest_time;
+ 	cmd->repeat_probe_time = params->repeat_probe_time;
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.h b/drivers/net/wireless/ath/ath11k/wmi.h
+index 76c2da2c5db7..4937d02839fc 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.h
++++ b/drivers/net/wireless/ath/ath11k/wmi.h
+@@ -3061,6 +3061,9 @@ struct  wmi_start_scan_cmd {
+ 	u32 num_vendor_oui;
+ 	u32 scan_ctrl_flags_ext;
+ 	u32 dwell_time_active_2g;
++	u32 dwell_time_active_6g;
++	u32 dwell_time_passive_6g;
++	u32 scan_start_offset;
+ } __packed;
  
-changes in v4:
- - drop helper function to identify psc channel as different version is
-   already merged.
-
-changes in v3:
- - cfg80211: remove PSC channel flag and instead add helper function.
- - Address differences in 6GHZ frequencies between IEEE P802.11ax/D6.0
-   and IEEE P802.11ax/D6.1
-
-changes in v2:
- - Fixed ath11k_phymode to be set in 6GHZ band
-
-Pradeep Kumar Chitrapu (8):
-  ath11k: add 6G frequency list supported by driver
-  ath11k: add support for 6GHz radio in driver
-  ath11k: Use freq instead of channel number in rx path
-  ath11k: extend peer_assoc_cmd for 6GHz band
-  ath11k: set psc channel flag when sending channel list to firmware.
-  ath11k: Add 6G scan dwell time parameter in scan request command
-  ath11k: Send multiple scan_chan_list messages if required
-  ath11k: Add support for 6g scan hint
-
- drivers/net/wireless/ath/ath11k/core.h  |   6 +-
- drivers/net/wireless/ath/ath11k/dp_rx.c |   6 +-
- drivers/net/wireless/ath/ath11k/mac.c   | 164 +++++++++++++--
- drivers/net/wireless/ath/ath11k/reg.c   |   4 +
- drivers/net/wireless/ath/ath11k/wmi.c   | 269 +++++++++++++++++-------
- drivers/net/wireless/ath/ath11k/wmi.h   |  40 +++-
- 6 files changed, 390 insertions(+), 99 deletions(-)
-
+ #define WMI_SCAN_FLAG_PASSIVE        0x1
+@@ -3127,6 +3130,8 @@ struct scan_req_params {
+ 	u32 dwell_time_active;
+ 	u32 dwell_time_active_2g;
+ 	u32 dwell_time_passive;
++	u32 dwell_time_active_6g;
++	u32 dwell_time_passive_6g;
+ 	u32 min_rest_time;
+ 	u32 max_rest_time;
+ 	u32 repeat_probe_time;
 -- 
 2.17.1
 
