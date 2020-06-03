@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E5BFC433E0
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Jun 2020 08:23:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D1D6C433DF
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Jun 2020 08:23:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 78C0E20810
-	for <linux-wireless@archiver.kernel.org>; Wed,  3 Jun 2020 08:23:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D08C3207DA
+	for <linux-wireless@archiver.kernel.org>; Wed,  3 Jun 2020 08:23:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1591172580;
-	bh=uSmHbbvEYpZnPu0zZHvhJ/ANKlr8Qu+RlgX1/y92C3Y=;
+	s=default; t=1591172587;
+	bh=HZfPXve3yaKU6HtrT1R/7rlrPSqUP6lSnXUj3KLVipk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=R9rw2IAL9sESl2wEmPLhwgXZIPrQxI6QsyvwScOM0WPxZrXH88ZferXDMJKP+oqXu
-	 jtr+ffvwSZoJ9J6JoUX67YAobqNHSbKRKEkrK7KB257nMZ9E/wP5C5KQQPl1ZhFwTq
-	 IsKvJwpjFE68eGX5MvVmYtaNGk721SglJG5Tlsvo=
+	b=gA7FCDDj7upvnL60B8bac9mjupPyXRRSkviiOdMydFUiAlbMK8K6Q/Uy7YktwYXLS
+	 e0vjcdO3OUP5yNBcjmwgJ+GufTupAt0RkeTh5PpBptRFcqPQX2+IRtFX53+nFKJGZ0
+	 WnFCqoqh2Zl/J5NSFUoLYs9DKSCfUnRGLOlkRDZM=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726434AbgFCIW4 (ORCPT
+        id S1726567AbgFCIXD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 3 Jun 2020 04:22:56 -0400
-Received: from mail.kernel.org ([198.145.29.99]:48508 "EHLO mail.kernel.org"
+        Wed, 3 Jun 2020 04:23:03 -0400
+Received: from mail.kernel.org ([198.145.29.99]:48654 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725275AbgFCIWz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 3 Jun 2020 04:22:55 -0400
+        id S1726521AbgFCIXC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 3 Jun 2020 04:23:02 -0400
 Received: from pali.im (pali.im [31.31.79.79])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A352720810;
-        Wed,  3 Jun 2020 08:22:54 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 68AD220825;
+        Wed,  3 Jun 2020 08:23:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1591172574;
-        bh=uSmHbbvEYpZnPu0zZHvhJ/ANKlr8Qu+RlgX1/y92C3Y=;
+        s=default; t=1591172581;
+        bh=HZfPXve3yaKU6HtrT1R/7rlrPSqUP6lSnXUj3KLVipk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=AunphaSwlq0g+Q8Eomu01vPzj/JObXQhZTQl72XC9PRfE6zbrVTCuc4HoPPk6n6Bp
-         L8BnZK79phKO+jtVkF+Yz1a4DGJcrC9msz6SzyeOddEiqfC5YEQMUOWnjjnqOwDq2o
-         4vwXzDu5JwMFJdDsIi70zeYzRek591sZC3GI5zhA=
+        b=vpNpkjD3LuW2VjJA69M7/0Xy7utsk3RBgs9VNIafDIREKVBytjtCTQAdfS6miKWCm
+         n5DlZAl/RPLNjCO8BJobF8UxKkkwHGdf2xjaMoAozFy5de6OCoNORIFsLMdZ2P9Sve
+         +opX3Wrex4i0hzsV/P2OK2rQDIUBA1oU5zbbe/dc=
 Received: by pali.im (Postfix)
-        id DF21A6F0; Wed,  3 Jun 2020 10:22:52 +0200 (CEST)
+        id C3B796F0; Wed,  3 Jun 2020 10:22:59 +0200 (CEST)
 From:   =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
 To:     Ganapathi Bhat <ganapathi.bhat@nxp.com>,
         Amitkumar Karwar <amitkarwar@gmail.com>,
@@ -52,9 +52,9 @@ Cc:     linux-bluetooth@vger.kernel.org, linux-kernel@vger.kernel.org,
         Hemantkumar Suthar <shemant@marvell.com>,
         Rakesh Parmar <rakeshp@marvell.com>,
         Zhaoyang Liu <liuzy@marvell.com>, Cathy Luo <cluo@marvell.com>
-Subject: [PATCH 2/4] mwifiex: Fix firmware filename for sd8997 chipset
-Date:   Wed,  3 Jun 2020 10:22:27 +0200
-Message-Id: <20200603082229.15043-3-pali@kernel.org>
+Subject: [PATCH 4/4] btmrvl: Fix firmware filename for sd8997 chipset
+Date:   Wed,  3 Jun 2020 10:22:29 +0200
+Message-Id: <20200603082229.15043-5-pali@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200603082229.15043-1-pali@kernel.org>
 References: <20200603082229.15043-1-pali@kernel.org>
@@ -71,25 +71,31 @@ part of the linux-firmware repository in filename sdsd8997_combo_v4.bin.
 
 This patch fixes mwifiex driver to load correct firmware file for sd8997.
 
-Fixes: 6d85ef00d9dfe ("mwifiex: add support for 8997 chipset")
+Fixes: f0ef67485f591 ("Bluetooth: btmrvl: add sd8997 chipset support")
 Signed-off-by: Pali Rohár <pali@kernel.org>
 ---
- drivers/net/wireless/marvell/mwifiex/sdio.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/bluetooth/btmrvl_sdio.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.h b/drivers/net/wireless/marvell/mwifiex/sdio.h
-index 0cac2296ed53..8b476b007c5e 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.h
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.h
-@@ -38,7 +38,7 @@
- #define SD8801_DEFAULT_FW_NAME "mrvl/sd8801_uapsta.bin"
- #define SD8977_DEFAULT_FW_NAME "mrvl/sdsd8977_combo_v2.bin"
- #define SD8987_DEFAULT_FW_NAME "mrvl/sd8987_uapsta.bin"
--#define SD8997_DEFAULT_FW_NAME "mrvl/sd8997_uapsta.bin"
-+#define SD8997_DEFAULT_FW_NAME "mrvl/sdsd8997_combo_v4.bin"
+diff --git a/drivers/bluetooth/btmrvl_sdio.c b/drivers/bluetooth/btmrvl_sdio.c
+index 7aa2c94720bc..4c7978cb1786 100644
+--- a/drivers/bluetooth/btmrvl_sdio.c
++++ b/drivers/bluetooth/btmrvl_sdio.c
+@@ -346,7 +346,7 @@ static const struct btmrvl_sdio_device btmrvl_sdio_sd8987 = {
  
- #define BLOCK_MODE	1
- #define BYTE_MODE	0
+ static const struct btmrvl_sdio_device btmrvl_sdio_sd8997 = {
+ 	.helper         = NULL,
+-	.firmware       = "mrvl/sd8997_uapsta.bin",
++	.firmware       = "mrvl/sdsd8997_combo_v4.bin",
+ 	.reg            = &btmrvl_reg_8997,
+ 	.support_pscan_win_report = true,
+ 	.sd_blksz_fw_dl = 256,
+@@ -1833,4 +1833,4 @@ MODULE_FIRMWARE("mrvl/sd8887_uapsta.bin");
+ MODULE_FIRMWARE("mrvl/sd8897_uapsta.bin");
+ MODULE_FIRMWARE("mrvl/sdsd8977_combo_v2.bin");
+ MODULE_FIRMWARE("mrvl/sd8987_uapsta.bin");
+-MODULE_FIRMWARE("mrvl/sd8997_uapsta.bin");
++MODULE_FIRMWARE("mrvl/sdsd8997_combo_v4.bin");
 -- 
 2.20.1
 
