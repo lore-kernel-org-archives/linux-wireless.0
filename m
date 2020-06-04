@@ -2,39 +2,41 @@ Return-Path: <SRS0=wyJf=7R=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D6D9C433E0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 951D5C433DF
 	for <linux-wireless@archiver.kernel.org>; Thu,  4 Jun 2020 07:10:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DE042206DC
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Jun 2020 07:10:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 72691206DC
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 Jun 2020 07:10:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727868AbgFDHKC (ORCPT
+        id S1727898AbgFDHKH (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 4 Jun 2020 03:10:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41674 "EHLO
+        Thu, 4 Jun 2020 03:10:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41686 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726246AbgFDHKC (ORCPT
+        with ESMTP id S1726890AbgFDHKD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 Jun 2020 03:10:02 -0400
+        Thu, 4 Jun 2020 03:10:03 -0400
 Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B58DC05BD1E
-        for <linux-wireless@vger.kernel.org>; Thu,  4 Jun 2020 00:10:02 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 143BDC05BD1E
+        for <linux-wireless@vger.kernel.org>; Thu,  4 Jun 2020 00:10:03 -0700 (PDT)
 Received: from [46.59.202.224] (helo=localhost.localdomain)
         by ds12 with esmtpa (Exim 4.89)
         (envelope-from <john@phrozen.org>)
-        id 1jgk0k-0001P3-88; Thu, 04 Jun 2020 09:09:58 +0200
+        id 1jgk0m-0001P3-LX; Thu, 04 Jun 2020 09:10:00 +0200
 From:   John Crispin <john@phrozen.org>
 To:     Johannes Berg <johannes@sipsolutions.net>
 Cc:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
         John Crispin <john@phrozen.org>
-Subject: [PATCH 00/12] mac80211: add multiple bssid support
-Date:   Thu,  4 Jun 2020 09:09:40 +0200
-Message-Id: <20200604070952.15481-1-john@phrozen.org>
+Subject: [PATCH 09/12] ath11k: add a struct to pass parameters into ath11k_wmi_vdev_up
+Date:   Thu,  4 Jun 2020 09:09:49 +0200
+Message-Id: <20200604070952.15481-10-john@phrozen.org>
 X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20200604070952.15481-1-john@phrozen.org>
+References: <20200604070952.15481-1-john@phrozen.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
@@ -42,42 +44,185 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Multiple bssid allows us to share a single beacon amongst several VAPs.
-This essentially safes airtime. This feature is achieved by adding an
-additional IE to the transmitting VAPs beacon. This new IE contains
-the additional SSIDs and their non-inheritance information.
+When setting up a multiple bssid we need to pass additional parameters to
+the FW. Doing this as individual parameters would make the call signature
+very long. Use an intermediate struct instead and adjust all callees to
+make use of it.
 
-This series is still missing handling for TIM, which will be sent in a
-follow-up series.
+Signed-off-by: John Crispin <john@phrozen.org>
+---
+ drivers/net/wireless/ath/ath11k/mac.c | 38 ++++++++++++++++++++++-----
+ drivers/net/wireless/ath/ath11k/wmi.c | 17 +++++++-----
+ drivers/net/wireless/ath/ath11k/wmi.h | 12 +++++++--
+ 3 files changed, 53 insertions(+), 14 deletions(-)
 
-John Crispin (12):
-  nl80211: add basic multiple bssid support
-  nl80211: add attributes for multiple bssid related settings
-  nl80211: add attributes to set beacon transmit mode
-  mac80211: add multiple bssid support
-  mac80211: add multiple bssid IE parsing
-  mac80211: propagate multi bssid settings when starting an AP
-  mac80211: propagate beacon tx mode to the driver
-  ath11k: pass multiple bssid info to FW when a new vdev is created
-  ath11k: add a struct to pass parameters into ath11k_wmi_vdev_up
-  ath11k: add the multiple bssid IE offset to the beacon template
-  ath11k: set beacon tx mode
-  ath11k: set the multiple bssid hw cap
-
- drivers/net/wireless/ath/ath11k/mac.c | 72 ++++++++++++++++++++++++---
- drivers/net/wireless/ath/ath11k/wmi.c | 20 +++++---
- drivers/net/wireless/ath/ath11k/wmi.h | 22 +++++++-
- include/net/cfg80211.h                | 23 +++++++++
- include/net/mac80211.h                | 29 +++++++++++
- include/uapi/linux/nl80211.h          | 49 ++++++++++++++++++
- net/mac80211/cfg.c                    | 64 ++++++++++++++++++++++++
- net/mac80211/ieee80211_i.h            |  2 +
- net/mac80211/iface.c                  | 16 ++++++
- net/mac80211/tx.c                     | 10 ++++
- net/mac80211/util.c                   | 31 ++++++++++++
- net/wireless/nl80211.c                | 36 ++++++++++++++
- 12 files changed, 358 insertions(+), 16 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
+index b38b687d1100..63099607065b 100644
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
+@@ -668,9 +668,13 @@ void ath11k_mac_peer_cleanup_all(struct ath11k *ar)
+ 
+ static int ath11k_monitor_vdev_up(struct ath11k *ar, int vdev_id)
+ {
++	struct vdev_up_params params = {
++		.vdev_id = vdev_id,
++		.bssid = ar->mac_addr,
++	};
+ 	int ret = 0;
+ 
+-	ret = ath11k_wmi_vdev_up(ar, vdev_id, 0, ar->mac_addr);
++	ret = ath11k_wmi_vdev_up(ar, &params);
+ 	if (ret) {
+ 		ath11k_warn(ar->ab, "failed to put up monitor vdev %i: %d\n",
+ 			    vdev_id, ret);
+@@ -735,6 +739,13 @@ static void ath11k_control_beaconing(struct ath11k_vif *arvif,
+ 				     struct ieee80211_bss_conf *info)
+ {
+ 	struct ath11k *ar = arvif->ar;
++	struct ieee80211_vif *parent;
++	struct vdev_up_params params = {
++		.vdev_id = arvif->vdev_id,
++		.bssid = arvif->bssid,
++		.profile_num = info->multi_bssid.count,
++		.profile_idx = info->multi_bssid.index,
++	};
+ 	int ret = 0;
+ 
+ 	lockdep_assert_held(&arvif->ar->conf_mutex);
+@@ -762,9 +773,15 @@ static void ath11k_control_beaconing(struct ath11k_vif *arvif,
+ 	arvif->aid = 0;
+ 
+ 	ether_addr_copy(arvif->bssid, info->bssid);
++	parent = ieee80211_get_multi_bssid_parent(arvif->vif);
++	if (parent) {
++		struct ath11k_vif *pvif = (struct ath11k_vif *)parent->drv_priv;
++
++		params.trans_bssid = pvif->bssid;
++	}
++
+ 
+-	ret = ath11k_wmi_vdev_up(arvif->ar, arvif->vdev_id, arvif->aid,
+-				 arvif->bssid);
++	ret = ath11k_wmi_vdev_up(arvif->ar, &params);
+ 	if (ret) {
+ 		ath11k_warn(ar->ab, "failed to bring up vdev %d: %i\n",
+ 			    arvif->vdev_id, ret);
+@@ -1685,6 +1702,11 @@ static void ath11k_bss_assoc(struct ieee80211_hw *hw,
+ 	struct ath11k *ar = hw->priv;
+ 	struct ath11k_vif *arvif = (void *)vif->drv_priv;
+ 	struct peer_assoc_params peer_arg;
++	struct vdev_up_params params = {
++		.vdev_id = arvif->vdev_id,
++		.bssid = bss_conf->bssid,
++		.aid = bss_conf->aid,
++	};
+ 	struct ieee80211_sta *ap_sta;
+ 	int ret;
+ 
+@@ -1733,7 +1755,7 @@ static void ath11k_bss_assoc(struct ieee80211_hw *hw,
+ 	arvif->aid = bss_conf->aid;
+ 	ether_addr_copy(arvif->bssid, bss_conf->bssid);
+ 
+-	ret = ath11k_wmi_vdev_up(ar, arvif->vdev_id, arvif->aid, arvif->bssid);
++	ret = ath11k_wmi_vdev_up(ar, &params);
+ 	if (ret) {
+ 		ath11k_warn(ar->ab, "failed to set vdev %d up: %d\n",
+ 			    arvif->vdev_id, ret);
+@@ -4987,6 +5009,8 @@ ath11k_mac_update_vif_chan(struct ath11k *ar,
+ 	/* TODO: Update ar->rx_channel */
+ 
+ 	for (i = 0; i < n_vifs; i++) {
++		struct vdev_up_params params;
++
+ 		arvif = (void *)vifs[i].vif->drv_priv;
+ 
+ 		if (WARN_ON(!arvif->is_started))
+@@ -5007,8 +5031,10 @@ ath11k_mac_update_vif_chan(struct ath11k *ar,
+ 			continue;
+ 		}
+ 
+-		ret = ath11k_wmi_vdev_up(arvif->ar, arvif->vdev_id, arvif->aid,
+-					 arvif->bssid);
++		params.vdev_id = arvif->vdev_id,
++		params.bssid = arvif->bssid,
++		params.aid = arvif->aid,
++		ret = ath11k_wmi_vdev_up(arvif->ar, &params);
+ 		if (ret) {
+ 			ath11k_warn(ab, "failed to bring vdev up %d: %d\n",
+ 				    arvif->vdev_id, ret);
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
+index a46aa831d8be..3fca51c3f943 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.c
++++ b/drivers/net/wireless/ath/ath11k/wmi.c
+@@ -862,7 +862,7 @@ int ath11k_wmi_vdev_start(struct ath11k *ar, struct wmi_vdev_start_req_arg *arg,
+ 	return ret;
+ }
+ 
+-int ath11k_wmi_vdev_up(struct ath11k *ar, u32 vdev_id, u32 aid, const u8 *bssid)
++int ath11k_wmi_vdev_up(struct ath11k *ar, struct vdev_up_params *params)
+ {
+ 	struct ath11k_pdev_wmi *wmi = ar->wmi;
+ 	struct wmi_vdev_up_cmd *cmd;
+@@ -877,10 +877,14 @@ int ath11k_wmi_vdev_up(struct ath11k *ar, u32 vdev_id, u32 aid, const u8 *bssid)
+ 
+ 	cmd->tlv_header = FIELD_PREP(WMI_TLV_TAG, WMI_TAG_VDEV_UP_CMD) |
+ 			  FIELD_PREP(WMI_TLV_LEN, sizeof(*cmd) - TLV_HDR_SIZE);
+-	cmd->vdev_id = vdev_id;
+-	cmd->vdev_assoc_id = aid;
++	cmd->vdev_id = params->vdev_id;
++	cmd->vdev_assoc_id = params->aid;
++	cmd->profile_idx = params->profile_idx;
++	cmd->profile_num = params->profile_num;
+ 
+-	ether_addr_copy(cmd->vdev_bssid.addr, bssid);
++	if (params->trans_bssid)
++		ether_addr_copy(cmd->trans_bssid.addr, params->trans_bssid);
++	ether_addr_copy(cmd->vdev_bssid.addr, params->bssid);
+ 
+ 	ret = ath11k_wmi_cmd_send(wmi, skb, WMI_VDEV_UP_CMDID);
+ 	if (ret) {
+@@ -889,8 +893,9 @@ int ath11k_wmi_vdev_up(struct ath11k *ar, u32 vdev_id, u32 aid, const u8 *bssid)
+ 	}
+ 
+ 	ath11k_dbg(ar->ab, ATH11K_DBG_WMI,
+-		   "WMI mgmt vdev up id 0x%x assoc id %d bssid %pM\n",
+-		   vdev_id, aid, bssid);
++		   "WMI mgmt vdev up id 0x%x assoc id %d idx %d num %d bssid %pM trans_bssid %pM\n",
++		   params->vdev_id, params->aid, params->profile_idx, params->profile_num,
++		   params->bssid, params->trans_bssid);
+ 
+ 	return ret;
+ }
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.h b/drivers/net/wireless/ath/ath11k/wmi.h
+index 761e27a3a306..548fa05cb1f6 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.h
++++ b/drivers/net/wireless/ath/ath11k/wmi.h
+@@ -2410,6 +2410,15 @@ struct wmi_vdev_delete_cmd {
+ 	u32 vdev_id;
+ } __packed;
+ 
++struct vdev_up_params {
++	u32 vdev_id;
++	u16 aid;
++	u32 profile_idx;
++	u32 profile_num;
++	const u8 *bssid;
++	u8 *trans_bssid;
++};
++
+ struct wmi_vdev_up_cmd {
+ 	u32 tlv_header;
+ 	u32 vdev_id;
+@@ -4732,8 +4741,7 @@ int ath11k_wmi_bcn_tmpl(struct ath11k *ar, u32 vdev_id,
+ 			struct ieee80211_mutable_offsets *offs,
+ 			struct sk_buff *bcn);
+ int ath11k_wmi_vdev_down(struct ath11k *ar, u8 vdev_id);
+-int ath11k_wmi_vdev_up(struct ath11k *ar, u32 vdev_id, u32 aid,
+-		       const u8 *bssid);
++int ath11k_wmi_vdev_up(struct ath11k *ar, struct vdev_up_params *params);
+ int ath11k_wmi_vdev_stop(struct ath11k *ar, u8 vdev_id);
+ int ath11k_wmi_vdev_start(struct ath11k *ar, struct wmi_vdev_start_req_arg *arg,
+ 			  bool restart);
 -- 
 2.20.1
 
