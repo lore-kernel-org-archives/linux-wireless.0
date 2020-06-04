@@ -2,147 +2,124 @@ Return-Path: <SRS0=wyJf=7R=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B638C433E1
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Jun 2020 07:10:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB8D0C433DF
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 Jun 2020 07:18:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 165F5206DC
-	for <linux-wireless@archiver.kernel.org>; Thu,  4 Jun 2020 07:10:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 751992074B
+	for <linux-wireless@archiver.kernel.org>; Thu,  4 Jun 2020 07:18:49 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=cypress.com header.i=@cypress.com header.b="CljFElOL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727917AbgFDHKL (ORCPT
+        id S1727850AbgFDHSs (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Thu, 4 Jun 2020 03:10:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41678 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727872AbgFDHKC (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 4 Jun 2020 03:10:02 -0400
-Received: from nbd.name (nbd.name [IPv6:2a01:4f8:221:3d45::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 46BFEC03E96D
-        for <linux-wireless@vger.kernel.org>; Thu,  4 Jun 2020 00:10:02 -0700 (PDT)
-Received: from [46.59.202.224] (helo=localhost.localdomain)
-        by ds12 with esmtpa (Exim 4.89)
-        (envelope-from <john@phrozen.org>)
-        id 1jgk0k-0001P3-Vc; Thu, 04 Jun 2020 09:09:59 +0200
-From:   John Crispin <john@phrozen.org>
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
-        John Crispin <john@phrozen.org>
-Subject: [PATCH 03/12] nl80211: add attributes to set beacon transmit mode
-Date:   Thu,  4 Jun 2020 09:09:43 +0200
-Message-Id: <20200604070952.15481-4-john@phrozen.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200604070952.15481-1-john@phrozen.org>
-References: <20200604070952.15481-1-john@phrozen.org>
-MIME-Version: 1.0
+        Thu, 4 Jun 2020 03:18:48 -0400
+Received: from mail-mw2nam12on2118.outbound.protection.outlook.com ([40.107.244.118]:20832
+        "EHLO NAM12-MW2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726411AbgFDHSs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 4 Jun 2020 03:18:48 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=JQ6jbJm6XlWqsc1wDFRFi9lP9PoC/Coxf04NTROReE8ewUpR6XHLBNtmc/1mucSGoFD8HkjY2hsHGkkbX2xfaNuhAxCp0jEHl66ZDsYvKCUzKHzvgG0W4xm/E2CN1y5J9HwciLRgbqw1BF1ZYe6YwRPQgkxUgbGfpJiPEyT09Ah3p8NgW3I/T4j3agXTiETVPTv95oC9RSaJ0MswL8mPHnDWAJtNxR45sbwgjGL99y5IWPleI8OzgjbZLjO7hU+Y72SowOLCrpJIrxG3zm4YxnervofsBLLNNZW0vBA2beO20YmhGrkuZvCA5HSUrL4kqavwig9JAiKbd/6rmQH1ag==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=E7U3UczknmHsTsjTNSz0Zz1QSQpuXT1eqadg+PodIj0=;
+ b=hBiXTvm+CC0rA7RrKbbTk2gviNiFoqWU7I3ApengboBfxjpdc3MAu35q5FtLD3MTDmDU9ux74sCsM9HNcJOhsst/O5Bh0G9RsY3fvso+dcyB9BkenTZv68Ke0TF2JoYGmiX/oHTS5HuUfjuakk7t64MIUWKDOT72eVRsP36PHqW2MEOYA+N4xg8C2GQf9vy35i3KHFlIgaEUJQx/0zZjtG3j1MaFWsc4fECKbvB9QTrMaI/5TULhuvXohN+CITGf9126/NhUPWOQVPndiCOZQIL2hwlZ0uPAkwNysp5D26sIGhKewk5zhiNLbgmgEIltz9O/kBGsAgsBQzbPPZwQtw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=cypress.com; dmarc=pass action=none header.from=cypress.com;
+ dkim=pass header.d=cypress.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cypress.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=E7U3UczknmHsTsjTNSz0Zz1QSQpuXT1eqadg+PodIj0=;
+ b=CljFElOL0d7zJViesk+jKizBusmweZ5/s2El0LuHNrj5pvoe3Eu7vrSSOzziuZNMjJyp8HhRddaq12PKeCJ/QJoXVLfUe7idKfO2vTsBOWehgZtzVS/B20T6PqbMHPIRp8Ri/OfNOkFXv+v784gHYAnrMG/wtBbpYm11S11p4yI=
+Authentication-Results: vger.kernel.org; dkim=none (message not signed)
+ header.d=none;vger.kernel.org; dmarc=none action=none
+ header.from=cypress.com;
+Received: from DM6PR06MB4748.namprd06.prod.outlook.com (2603:10b6:5:fd::18) by
+ DM6PR06MB5324.namprd06.prod.outlook.com (2603:10b6:5:102::31) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.3066.18; Thu, 4 Jun 2020 07:18:46 +0000
+Received: from DM6PR06MB4748.namprd06.prod.outlook.com
+ ([fe80::9f0:c02f:7b54:51eb]) by DM6PR06MB4748.namprd06.prod.outlook.com
+ ([fe80::9f0:c02f:7b54:51eb%5]) with mapi id 15.20.3066.018; Thu, 4 Jun 2020
+ 07:18:46 +0000
+From:   Wright Feng <wright.feng@cypress.com>
+To:     linux-wireless@vger.kernel.org
+Cc:     wright.feng@cypress.com, brcm80211-dev-list@broadcom.com,
+        brcm80211-dev-list@cypress.com,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>, chi-hsien.lin@cypress.com
+Subject: [PATCH v2 0/5] brcmfmac: Stability change series
+Date:   Thu,  4 Jun 2020 02:18:30 -0500
+Message-Id: <20200604071835.3842-1-wright.feng@cypress.com>
+X-Mailer: git-send-email 2.25.0
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: MN2PR01CA0049.prod.exchangelabs.com (2603:10b6:208:23f::18)
+ To DM6PR06MB4748.namprd06.prod.outlook.com (2603:10b6:5:fd::18)
+MIME-Version: 1.0
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from iot-wlan-dev-u02.aus.cypress.com (12.110.209.245) by MN2PR01CA0049.prod.exchangelabs.com (2603:10b6:208:23f::18) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id 15.20.3066.18 via Frontend Transport; Thu, 4 Jun 2020 07:18:44 +0000
+X-Mailer: git-send-email 2.25.0
+X-Originating-IP: [12.110.209.245]
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-HT: Tenant
+X-MS-Office365-Filtering-Correlation-Id: f927f235-6d3c-4c27-0ec9-08d8085784c9
+X-MS-TrafficTypeDiagnostic: DM6PR06MB5324:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <DM6PR06MB53242472164AF5A163A761D1FB890@DM6PR06MB5324.namprd06.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:370;
+X-Forefront-PRVS: 04244E0DC5
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: fwf2YqYCXjqEQdcCwyfma6lkOkf26s6W8cYdHr7vFUMGbiamOJd+TMVK7w1EbcR9SZ0irU3qEzRrB3Ve/k7Adlxhsehdlza0QBMVruzaqU7hEi5o+bpdzfwhb3mC40zEwHFWgIOJN01eAnFps41OHShs4+qXrhqMe6tOoll3MWpQvLNnBnVnVDHlgfmjJY8KqtJ97W0bgnog/p4wkwTN8dt0ScRJlZgGjvFzVdZ9h8QiZv5FtDUH948nFuRTYIunWiICJeX2yOtniB710wTJtri+SzIL059cnpfI+wb4yxMDz7iaFyNZsR4capQou5WnT//7/N+tsC+1MSF20BKtCQ==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR06MB4748.namprd06.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(366004)(346002)(396003)(136003)(39860400002)(376002)(26005)(8676002)(186003)(16526019)(66946007)(6916009)(4744005)(6486002)(52116002)(5660300002)(66476007)(2906002)(66556008)(54906003)(316002)(7696005)(1076003)(107886003)(6666004)(4326008)(2616005)(36756003)(8936002)(956004)(83380400001)(86362001)(478600001)(44832011);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData: UTzLKNoqquaHBv94TquX/Cnx0YsOSzsP0IgNCq7kbelyjXiL9oQMMbfABNSgikGXQ1k3DZ5H7bgXgfIzvJaghuWS1c2TzGMddqXgBwTvUNqD3x3lYc4xM5VwBm7e28flIOmkN6uDzZrdAh5SA2BjsNoEaBoUsLF9eF8UkOFKjgyygb6YtSWzpXu1JgNbjodhv17l3zgolHbw1yY7kZMLJYvj/11He6Otna93lCDElH6XoNBgMbJstbrvPWjMhIEaFg+KCR3/smgq2/2MJcLvE/gywGG1YtP9tp5PniDAi93GT+dvvZHAFoRdjDXpjEkIgEVmn3XUj7MkpdbTnB+P6lbZcIXfYnXtnMAfRyxSyixPQ37TPhTg9INrmKZ8ZYSk1XDyrOC3Oyu+5/Y7cnBo+XMT5kTLJUaf+q51V76S3DSz7SKu5bdJEVtnd1r4+J6nLOR+kTerAoLMAM//3TBFHx8apPNr3n/zbcOsETboWm6TwHUQPO/4Ty5p54RMxLEU
+X-OriginatorOrg: cypress.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: f927f235-6d3c-4c27-0ec9-08d8085784c9
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Jun 2020 07:18:45.9519
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 011addfc-2c09-450d-8938-e0bbc2dd2376
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: GFDcRyKd9uvPQEhargnXl9UVoaluVhtvYQg6oeeeNAO3+1+ixBQ+VSsOd+KTDk1B6ne6isy+7rzrTc7h0IKzCw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR06MB5324
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Beacons on a radio can be sent out in burst (back to back) or staggered
-(equally spread out over time) mode. This patch adds the required nl80211
-attributes allowing us to configure this from userland.
+This series fixes stability and connection related failures.
 
-Signed-off-by: John Crispin <john@phrozen.org>
----
- include/net/cfg80211.h       |  3 +++
- include/uapi/linux/nl80211.h | 17 +++++++++++++++++
- net/wireless/nl80211.c       |  7 +++++++
- 3 files changed, 27 insertions(+)
+Changes in v2:
+ - Correct all typos in commit message
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 77cd2f780c6a..157d37f74efb 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1094,6 +1094,8 @@ enum cfg80211_ap_settings_flags {
-  * @he_obss_pd: OBSS Packet Detection settings
-  * @he_bss_color: BSS Color settings
-  * @he_oper: HE operation IE (or %NULL if HE isn't enabled)
-+ * @beacon_tx_mode: can be set to tell the driver to sent the beacons in staggered
-+ *	or burst mode.
-  */
- struct cfg80211_ap_settings {
- 	struct cfg80211_chan_def chandef;
-@@ -1125,6 +1127,7 @@ struct cfg80211_ap_settings {
- 	struct ieee80211_he_obss_pd he_obss_pd;
- 	struct cfg80211_he_bss_color he_bss_color;
- 	struct ieee80211_multi_bssid multi_bssid;
-+	enum nl80211_beacon_tx_mode beacon_tx_mode;
- };
- 
- /**
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index f18f681796ed..2c4950aeb474 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2481,6 +2481,8 @@ enum nl80211_commands {
-  *
-  * @NL80211_ATTR_MULTI_BSSID_COUNT: The number of BSSs inside the multi bssid IE.
-  *
-+ * @NL80211_ATTR_BEACON_TX_MODE: Set the beacon tx mode to staggered or burst.
-+ *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -2961,6 +2963,8 @@ enum nl80211_attrs {
- 	NL80211_ATTR_MULTI_BSSID_INDEX,
- 	NL80211_ATTR_MULTI_BSSID_COUNT,
- 
-+	NL80211_ATTR_BEACON_TX_MODE,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -6732,6 +6736,19 @@ enum nl80211_multi_bssid_mode {
- 	NL80211_MULTIPLE_BSSID_NON_TRANSMITTED,
- };
- 
-+/**
-+ * enum nl80211_beacon_tx_mode - Beacon tx mode settings
-+ *
-+ * @BEACON_TX_MODE_DEFAULT: The beacons shall be sent out in its default mode
-+ * @BEACON_TX_MODE_STAGGERED: The beacons shall be sent out in staggered mode
-+ * @BEACON_TX_MODE_BURST: The beacons shall be sent out in burst mode
-+ *                                    beacon
-+ */
-+enum nl80211_beacon_tx_mode {
-+	NL80211_BEACON_TX_MODE_STAGGERED = 0,
-+	NL80211_BEACON_TX_MODE_BURST,
-+};
-+
- /**
-  * enum nl80211_peer_measurement_ftm_resp - FTM response attributes
-  * @__NL80211_PMSR_FTM_RESP_ATTR_INVALID: invalid
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 58ce67bc31da..1f6f8ecbfb57 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -669,6 +669,9 @@ const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
- 	[NL80211_ATTR_MULTI_BSSID_PARENT] = { .type = NLA_U32 },
- 	[NL80211_ATTR_MULTI_BSSID_INDEX] = { .type = NLA_U32 },
- 	[NL80211_ATTR_MULTI_BSSID_COUNT] = { .type = NLA_U32 },
-+	[NL80211_ATTR_BEACON_TX_MODE] = NLA_POLICY_RANGE(NLA_U8,
-+					NL80211_BEACON_TX_MODE_STAGGERED,
-+					NL80211_BEACON_TX_MODE_BURST),
- };
- 
- /* policy for the key attributes */
-@@ -5165,6 +5168,10 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
- 		params.multi_bssid.count = nla_get_u32(
- 				info->attrs[NL80211_ATTR_MULTI_BSSID_COUNT]);
- 
-+	if (info->attrs[NL80211_ATTR_BEACON_TX_MODE])
-+		params.beacon_tx_mode =
-+			nla_get_u8(info->attrs[NL80211_ATTR_BEACON_TX_MODE]);
-+
- 	nl80211_calculate_ap_params(&params);
- 
- 	if (info->attrs[NL80211_ATTR_EXTERNAL_AUTH_SUPPORT])
+Prasanna Kerekoppa (1):
+  brcmfmac: To fix Bss Info flag definition Bug
+
+Raveendran Somu (1):
+  brcmfmac: To fix kernel crash on out of boundary access
+
+Wright Feng (3):
+  brcmfmac: fix invalid permanent MAC address in wiphy
+  brcmfmac: keep SDIO watchdog running when console_interval is non-zero
+  brcmfmac: reduce maximum station interface from 2 to 1 in RSDB mode
+
+ .../net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c   | 8 ++++----
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c | 2 +-
+ .../net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h | 2 +-
+ .../net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c   | 3 +++
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c   | 6 +++++-
+ 5 files changed, 14 insertions(+), 7 deletions(-)
+
 -- 
-2.20.1
+2.25.0
 
