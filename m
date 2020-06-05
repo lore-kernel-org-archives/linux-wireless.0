@@ -6,44 +6,44 @@ X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
 	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 631C7C433E4
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Jun 2020 09:19:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77F77C433E0
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Jun 2020 09:21:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3C46A2075B
-	for <linux-wireless@archiver.kernel.org>; Fri,  5 Jun 2020 09:19:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4DD4620772
+	for <linux-wireless@archiver.kernel.org>; Fri,  5 Jun 2020 09:21:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="LrCc0pF9"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="l0mi/7ve"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726270AbgFEJTA (ORCPT
+        id S1726191AbgFEJVD (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Fri, 5 Jun 2020 05:19:00 -0400
+        Fri, 5 Jun 2020 05:21:03 -0400
 Received: from m43-7.mailgun.net ([69.72.43.7]:50777 "EHLO m43-7.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726262AbgFEJTA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 5 Jun 2020 05:19:00 -0400
+        id S1726144AbgFEJVD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 5 Jun 2020 05:21:03 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1591348739; h=Content-Type: MIME-Version: Message-ID:
+ s=smtp; t=1591348862; h=Content-Type: MIME-Version: Message-ID:
  In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
- bh=rOuMTfuZSakOmsFGGhwcSiyz0vHtYC8PrlCFy1ZsKyw=; b=LrCc0pF9xRFoIwtHrKiZQFGPZKRBas+l8BfdnZkELj+iysMGVaw/bfzIjGrQO2PioMdO1w3Z
- TPWDgiD3TiOAPgkbHFQgeb5tGEONQTrx3UT68uqqFrhiGMzDflVik1IDrutpxkJp13i5uXlw
- k+LxdCtwK5BWfRJcOeN9RA26gAM=
+ bh=kOyRDD2wM/7haweFJ6NAJPQaW5V0bTz8j0qf/YEB3F8=; b=l0mi/7veS/06YAibCBsAw/4Xo7h72MuiM6UliLX/wqhabkO4YJ8N9gp2xctBIcl0YyQnUBkm
+ 0szs8aR0Y/xBiPBBovDK0AaXBE/JXDIUOm7Bs3bz/t1najGY1C3T2OY7WXOWh2+ThJvZdN+Q
+ ZYwl0pjHwvIutF47Jr9xmBrCZeY=
 X-Mailgun-Sending-Ip: 69.72.43.7
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n08.prod.us-east-1.postgun.com with SMTP id
- 5eda0df6c0031c71c2438cce (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 05 Jun 2020 09:18:46
+ smtp-out-n02.prod.us-east-1.postgun.com with SMTP id
+ 5eda0e7e27386861266429f5 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 05 Jun 2020 09:21:02
  GMT
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 1EAEEC433B2; Fri,  5 Jun 2020 09:18:45 +0000 (UTC)
+        id 54699C433B2; Fri,  5 Jun 2020 09:21:01 +0000 (UTC)
 Received: from tynnyri.adurom.net (tynnyri.adurom.net [51.15.11.48])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id B846EC43387;
-        Fri,  5 Jun 2020 09:18:40 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org B846EC43387
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 0979DC433C6;
+        Fri,  5 Jun 2020 09:20:56 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 0979DC433C6
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
 From:   Kalle Valo <kvalo@codeaurora.org>
@@ -59,13 +59,13 @@ Cc:     linux-kernel@vger.kernel.org,
         linux-wireless@vger.kernel.org, linux-ide@vger.kernel.org,
         linux-clk@vger.kernel.org, linux-spi@vger.kernel.org,
         linux-mm@kvack.org, clang-built-linux@googlegroups.com
-Subject: Re: [PATCH 04/10] rtlwifi: rtl8192cu: Remove uninitialized_var() usage
+Subject: Re: [PATCH 03/10] b43: Remove uninitialized_var() usage
 References: <20200603233203.1695403-1-keescook@chromium.org>
-        <20200603233203.1695403-5-keescook@chromium.org>
-Date:   Fri, 05 Jun 2020 12:18:22 +0300
-In-Reply-To: <20200603233203.1695403-5-keescook@chromium.org> (Kees Cook's
-        message of "Wed, 3 Jun 2020 16:31:57 -0700")
-Message-ID: <87h7vpg9b5.fsf@tynnyri.adurom.net>
+        <20200603233203.1695403-4-keescook@chromium.org>
+Date:   Fri, 05 Jun 2020 12:20:55 +0300
+In-Reply-To: <20200603233203.1695403-4-keescook@chromium.org> (Kees Cook's
+        message of "Wed, 3 Jun 2020 16:31:56 -0700")
+Message-ID: <87d06dg96w.fsf@tynnyri.adurom.net>
 User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
 Content-Type: text/plain
@@ -81,7 +81,7 @@ Kees Cook <keescook@chromium.org> writes:
 > "unused variable"). If the compiler thinks it is uninitialized, either
 > simply initialize the variable or make compiler changes. As a precursor
 > to removing[2] this[3] macro[4], just initialize this variable to NULL,
-> and avoid sending garbage by returning.
+> and make the (unreachable!) code do a conditional test.
 >
 > [1] https://lore.kernel.org/lkml/20200603174714.192027-1-glider@google.com/
 > [2] https://lore.kernel.org/lkml/CA+55aFw+Vbj0i=1TGqCR5vQkCzWJ0QxK6CernOU6eedsudAixw@mail.gmail.com/
@@ -90,12 +90,23 @@ Kees Cook <keescook@chromium.org> writes:
 >
 > Signed-off-by: Kees Cook <keescook@chromium.org>
 
-To which tree should this go? If something else than wireless-drivers
-tree:
+[...]
 
-Acked-by: Kalle Valo <kvalo@codeaurora.org>
+> @@ -4256,9 +4256,13 @@ static void b43_nphy_tx_gain_table_upload(struct b43_wldev *dev)
+>  			pga_gain = (table[i] >> 24) & 0xf;
+>  			pad_gain = (table[i] >> 19) & 0x1f;
+>  			if (b43_current_band(dev->wl) == NL80211_BAND_2GHZ)
+> -				rfpwr_offset = rf_pwr_offset_table[pad_gain];
+> +				rfpwr_offset = rf_pwr_offset_table
+> +						? rf_pwr_offset_table[pad_gain]
+> +						: 0;
+>  			else
+> -				rfpwr_offset = rf_pwr_offset_table[pga_gain];
+> +				rfpwr_offset = rf_pwr_offset_table
+> +						? rf_pwr_offset_table[pga_gain]
+> +						: 0;
 
-But let me know if you want me to take this.
+To me this is ugly, isn't there a better way to fix this?
 
 -- 
 https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
