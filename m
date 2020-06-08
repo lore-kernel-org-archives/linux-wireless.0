@@ -2,96 +2,102 @@ Return-Path: <SRS0=YAv/=7V=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0
-	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BDBBC433E1
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Jun 2020 08:08:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EE5EC433DF
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Jun 2020 11:04:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D9DEC20656
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Jun 2020 08:08:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D7F442076A
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Jun 2020 11:04:40 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="Y5TWGPtc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729127AbgFHIIp (ORCPT
+        id S1729403AbgFHLEk (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Jun 2020 04:08:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39770 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729124AbgFHIIp (ORCPT
+        Mon, 8 Jun 2020 07:04:40 -0400
+Received: from mail27.static.mailgun.info ([104.130.122.27]:29990 "EHLO
+        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726202AbgFHLEj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Jun 2020 04:08:45 -0400
-Received: from sipsolutions.net (s3.sipsolutions.net [IPv6:2a01:4f8:191:4433::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C8CA1C08C5C3;
-        Mon,  8 Jun 2020 01:08:44 -0700 (PDT)
-Received: by sipsolutions.net with esmtpsa (TLS1.3:ECDHE_X25519__RSA_PSS_RSAE_SHA256__AES_256_GCM:256)
-        (Exim 4.93)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1jiCpn-00HVPk-2v; Mon, 08 Jun 2020 10:08:43 +0200
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     netdev@vger.kernel.org
-Cc:     linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211 2020-06-08
-Date:   Mon,  8 Jun 2020 10:08:32 +0200
-Message-Id: <20200608080834.11576-1-johannes@sipsolutions.net>
-X-Mailer: git-send-email 2.26.2
+        Mon, 8 Jun 2020 07:04:39 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1591614278; h=Content-Type: MIME-Version: Message-ID:
+ In-Reply-To: Date: References: Subject: Cc: To: From: Sender;
+ bh=OI32//NBlRdG4xdy8wSPzXyle8A7aj84ff/ipyP4/W8=; b=Y5TWGPtcxWJ8Go5Zc1G6d9SaeDPtvV9IfKUJPLQoXiNzYvL5of+bfDFwoD3tJEZAhD9kuqwY
+ kZ76yLA2eYhWqcl3dRWguZKV5nD/24nnXkf4pCi7jFFS9ZpN0o1X7qFDQ785dszphnOsp9zr
+ wUvM8mDsOgfW8S77CvW/Pre/cag=
+X-Mailgun-Sending-Ip: 104.130.122.27
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n12.prod.us-west-2.postgun.com with SMTP id
+ 5ede1b455c89e47d73d108cb (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 08 Jun 2020 11:04:37
+ GMT
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id DD00BC43387; Mon,  8 Jun 2020 11:04:33 +0000 (UTC)
+Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 44F69C433C6;
+        Mon,  8 Jun 2020 11:04:32 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 44F69C433C6
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
+From:   Kalle Valo <kvalo@codeaurora.org>
+To:     Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org, ath11k@lists.infradead.org
+Subject: Re: [PATCH v5 0/8] add 6GHz radio support in ath11k driver
+References: <20200603001724.12161-1-pradeepc@codeaurora.org>
+        <871rmwl2d6.fsf@codeaurora.org>
+        <97dabee94c4faecbc83bbd02baf3a798@codeaurora.org>
+Date:   Mon, 08 Jun 2020 14:04:29 +0300
+In-Reply-To: <97dabee94c4faecbc83bbd02baf3a798@codeaurora.org> (Pradeep Kumar
+        Chitrapu's message of "Wed, 03 Jun 2020 10:50:53 -0700")
+Message-ID: <87k10hkede.fsf@codeaurora.org>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-Hi Dave,
+Pradeep Kumar Chitrapu <pradeepc@codeaurora.org> writes:
 
-We have a couple of updates - most importantly the fix
-for the deadlock issue that came up.
+> On 2020-06-03 06:12, Kalle Valo wrote:
+>> Pradeep Kumar Chitrapu <pradeepc@codeaurora.org> writes:
+>>
+>>> This patch series adds 6GHz frequency listing in ath11k driver and
+>>> mac80211
+>>> registration for the 6GHz band. Also, extends some of wmi command
+>>> tlvs for
+>>> supporting 6GHz.
+>>>
+>>> changes in v5:
+>>>  - latest 6ghz patches on mac80211 expects driver not to pass ht/vht
+>>>    caps for 6GHZ band at device registration. so fix that.
+>>
+>> What are the dependencies for this patch? Is everything that is in
+>> mac80211-next as of today enough?
+>
+> Yes Kalle. current mac80211-next is enough.
+>
+>>
+>> Also what I do with Rajkumar's patch:
+>>
+>> [PATCH] ath11k: build HE 6 GHz capability
+>>
+>> Should I apply it before or after this patchset?
+>
+> Although there is no compile dependency with above patchset, there
+> will be 6ghz functionality dependency with above. So, IMO, its better
+> to apply after this patch set.
 
-Please pull and let me know if there's any problem.
+Ok, thanks.
 
-Thanks,
-johannes
-
-
-
-The following changes since commit 98749b7188affbf2900c2aab704a8853901d1139:
-
-  yam: fix possible memory leak in yam_init_driver (2020-06-04 15:58:41 -0700)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2020-06-08
-
-for you to fetch changes up to 59d4bfc1e2c09435d91c980b03f7b72ce6e9f24e:
-
-  net: fix wiki website url mac80211 and wireless files (2020-06-08 10:06:05 +0200)
-
-----------------------------------------------------------------
-Just a small update:
- * fix the deadlock on rfkill/wireless removal that a few
-   people reported
- * fix an uninitialized variable
- * update wiki URLs
-
-----------------------------------------------------------------
-Flavio Suligoi (3):
-      doc: networking: wireless: fix wiki website url
-      include: fix wiki website url in netlink interface header
-      net: fix wiki website url mac80211 and wireless files
-
-Johannes Berg (2):
-      cfg80211: fix management registrations deadlock
-      mac80211: initialize return flags in HE 6 GHz operation parsing
-
- Documentation/networking/mac80211-injection.rst |  2 +-
- Documentation/networking/regulatory.rst         |  6 +++---
- include/net/cfg80211.h                          |  5 +++--
- include/uapi/linux/nl80211.h                    |  2 +-
- net/mac80211/mlme.c                             |  2 ++
- net/mac80211/rx.c                               |  2 +-
- net/wireless/Kconfig                            |  2 +-
- net/wireless/core.c                             |  6 +++---
- net/wireless/core.h                             |  2 ++
- net/wireless/mlme.c                             | 26 ++++++++++++++++++++-----
- 10 files changed, 38 insertions(+), 17 deletions(-)
-
+-- 
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
