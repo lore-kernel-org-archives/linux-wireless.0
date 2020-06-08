@@ -4,51 +4,50 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99CA5C433DF
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Jun 2020 01:01:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3503DC433E0
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Jun 2020 01:01:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6BE6A20737
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Jun 2020 01:01:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0DCBB20760
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Jun 2020 01:01:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1591664482;
-	bh=kVIOllr8fDQE8SnXjV5fYgbyAB/fiHFpzuNrVxYSoCU=;
+	s=default; t=1591664507;
+	bh=oka/rNmtiRJwDwVogsEa+EcBiai5h5lBqQBMHdewr8A=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=w76hHSDLwGhCW5d2wbLE7fZk2PAsPuq7+QME3n+9eI99Cpe1tD1MQw/4BLspEN9FR
-	 W7bTuMqI36OxVJA7HWziBXOabZrdMtD1A7pGhzPfJp4hmw3c6J+Z+BFf1Y2eWfCYrm
-	 s1s6jZVKgtID3emf0enWG1iUAwbYn29TJIzHQhFs=
+	b=0vaVbgSj+EckVJlgde+DEgR1xUou78DRYkzIPXbCNQ8L/XLGIetvqVfeJBzeOgVqn
+	 dZaiY/z2V68NR9lwtX66Z/SDmPmvSRa/7IRY2fuXqy+La3CbccCmRv3K6gn/hDxprG
+	 ZxK5Lo+py/BhXVl7Kc7H5y2jVv2+oyKb0B/SWcoA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728525AbgFIBBT (ORCPT
+        id S1731445AbgFIBBg (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Jun 2020 21:01:19 -0400
+        Mon, 8 Jun 2020 21:01:36 -0400
 Received: from mail.kernel.org ([198.145.29.99]:53222 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728112AbgFHXIM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Jun 2020 19:08:12 -0400
+        id S1728105AbgFHXIK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 8 Jun 2020 19:08:10 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id BA31D2085B;
-        Mon,  8 Jun 2020 23:08:11 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id E6845208B6;
+        Mon,  8 Jun 2020 23:08:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1591657692;
-        bh=kVIOllr8fDQE8SnXjV5fYgbyAB/fiHFpzuNrVxYSoCU=;
+        s=default; t=1591657689;
+        bh=oka/rNmtiRJwDwVogsEa+EcBiai5h5lBqQBMHdewr8A=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Nkn4X7Dbz23Pdnb97+mgezpEeWfTRSLQKtFRbhGrVbBi1kRnObO7CRh2trGWs6/7X
-         912cmJpnreoeOp0XeibwwCcVtHNXEsN3OZq0ahh1snVR2/yzTSZ8n6bxwQwL6rZOXZ
-         b21K3W7WZHu+LXWn1FeH7SXzd2i4a7DfDUmTjQTE=
+        b=r8FOv85L2uOxj7PFZ8XWJqGtpSz6db3fNysG4dV++0l+2MPZGxNJjJQZo9sqqFSA7
+         z8+8GXJSLvliblyvMUn6IcQDKgFTYchDJar5o9MU8Jiz6RnisiaoIm2waY1q3jVh5u
+         Ix6UneSP7SOhBtWifxl/LgdpFYHdNvdya2+pBY7I=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Qiujun Huang <hqjagain@gmail.com>,
-        syzbot+5d338854440137ea0fef@syzkaller.appspotmail.com,
+Cc:     Sriram R <srirrama@codeaurora.org>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>,
+        Sasha Levin <sashal@kernel.org>, ath11k@lists.infradead.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.7 093/274] ath9k: Fix use-after-free Read in ath9k_wmi_ctrl_rx
-Date:   Mon,  8 Jun 2020 19:03:06 -0400
-Message-Id: <20200608230607.3361041-93-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.7 091/274] ath11k: Avoid mgmt tx count underflow
+Date:   Mon,  8 Jun 2020 19:03:04 -0400
+Message-Id: <20200608230607.3361041-91-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200608230607.3361041-1-sashal@kernel.org>
 References: <20200608230607.3361041-1-sashal@kernel.org>
@@ -61,162 +60,40 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Qiujun Huang <hqjagain@gmail.com>
+From: Sriram R <srirrama@codeaurora.org>
 
-[ Upstream commit abeaa85054ff8cfe8b99aafc5c70ea067e5d0908 ]
+[ Upstream commit 800113ff4b1d277c2b66ffc04d4d38f202a0d187 ]
 
-Free wmi later after cmd urb has been killed, as urb cb will access wmi.
+The mgmt tx count reference is incremented/decremented on every mgmt tx and on
+tx completion event from firmware.
+In case of an unexpected mgmt tx completion event from firmware,
+the counter would underflow. Avoid this by decrementing
+only when the tx count is greater than 0.
 
-the case reported by syzbot:
-https://lore.kernel.org/linux-usb/0000000000000002fc05a1d61a68@google.com
-BUG: KASAN: use-after-free in ath9k_wmi_ctrl_rx+0x416/0x500
-drivers/net/wireless/ath/ath9k/wmi.c:215
-Read of size 1 at addr ffff8881cef1417c by task swapper/1/0
-
-Call Trace:
-<IRQ>
-ath9k_wmi_ctrl_rx+0x416/0x500 drivers/net/wireless/ath/ath9k/wmi.c:215
-ath9k_htc_rx_msg+0x2da/0xaf0
-drivers/net/wireless/ath/ath9k/htc_hst.c:459
-ath9k_hif_usb_reg_in_cb+0x1ba/0x630
-drivers/net/wireless/ath/ath9k/hif_usb.c:718
-__usb_hcd_giveback_urb+0x29a/0x550 drivers/usb/core/hcd.c:1650
-usb_hcd_giveback_urb+0x368/0x420 drivers/usb/core/hcd.c:1716
-dummy_timer+0x1258/0x32ae drivers/usb/gadget/udc/dummy_hcd.c:1966
-call_timer_fn+0x195/0x6f0 kernel/time/timer.c:1404
-expire_timers kernel/time/timer.c:1449 [inline]
-__run_timers kernel/time/timer.c:1773 [inline]
-__run_timers kernel/time/timer.c:1740 [inline]
-run_timer_softirq+0x5f9/0x1500 kernel/time/timer.c:1786
-
-Reported-and-tested-by: syzbot+5d338854440137ea0fef@syzkaller.appspotmail.com
-Signed-off-by: Qiujun Huang <hqjagain@gmail.com>
+Signed-off-by: Sriram R <srirrama@codeaurora.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/20200404041838.10426-3-hqjagain@gmail.com
+Link: https://lore.kernel.org/r/1585567028-9242-1-git-send-email-srirrama@codeaurora.org
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath9k/hif_usb.c      |  5 +++--
- drivers/net/wireless/ath/ath9k/hif_usb.h      |  1 +
- drivers/net/wireless/ath/ath9k/htc_drv_init.c | 10 +++++++---
- drivers/net/wireless/ath/ath9k/wmi.c          |  5 ++++-
- drivers/net/wireless/ath/ath9k/wmi.h          |  3 ++-
- 5 files changed, 17 insertions(+), 7 deletions(-)
+ drivers/net/wireless/ath/ath11k/wmi.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index c4a2b7201ce3..6049d3766c64 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -978,7 +978,7 @@ static int ath9k_hif_usb_alloc_urbs(struct hif_device_usb *hif_dev)
- 	return -ENOMEM;
- }
+diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
+index 6fec62846279..73beca6d6b5f 100644
+--- a/drivers/net/wireless/ath/ath11k/wmi.c
++++ b/drivers/net/wireless/ath/ath11k/wmi.c
+@@ -3740,8 +3740,9 @@ static int wmi_process_mgmt_tx_comp(struct ath11k *ar, u32 desc_id,
  
--static void ath9k_hif_usb_dealloc_urbs(struct hif_device_usb *hif_dev)
-+void ath9k_hif_usb_dealloc_urbs(struct hif_device_usb *hif_dev)
- {
- 	usb_kill_anchored_urbs(&hif_dev->regout_submitted);
- 	ath9k_hif_usb_dealloc_reg_in_urbs(hif_dev);
-@@ -1346,8 +1346,9 @@ static void ath9k_hif_usb_disconnect(struct usb_interface *interface)
+ 	ieee80211_tx_status_irqsafe(ar->hw, msdu);
  
- 	if (hif_dev->flags & HIF_USB_READY) {
- 		ath9k_htc_hw_deinit(hif_dev->htc_handle, unplugged);
--		ath9k_htc_hw_free(hif_dev->htc_handle);
- 		ath9k_hif_usb_dev_deinit(hif_dev);
-+		ath9k_destoy_wmi(hif_dev->htc_handle->drv_priv);
-+		ath9k_htc_hw_free(hif_dev->htc_handle);
- 	}
+-	WARN_ON_ONCE(atomic_read(&ar->num_pending_mgmt_tx) == 0);
+-	atomic_dec(&ar->num_pending_mgmt_tx);
++	/* WARN when we received this event without doing any mgmt tx */
++	if (atomic_dec_if_positive(&ar->num_pending_mgmt_tx) < 0)
++		WARN_ON_ONCE(1);
  
- 	usb_set_intfdata(interface, NULL);
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.h b/drivers/net/wireless/ath/ath9k/hif_usb.h
-index 7846916aa01d..a94e7e1c86e9 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.h
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.h
-@@ -133,5 +133,6 @@ struct hif_device_usb {
- 
- int ath9k_hif_usb_init(void);
- void ath9k_hif_usb_exit(void);
-+void ath9k_hif_usb_dealloc_urbs(struct hif_device_usb *hif_dev);
- 
- #endif /* HTC_USB_H */
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index d961095ab01f..40a065028ebe 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -931,8 +931,9 @@ static int ath9k_init_device(struct ath9k_htc_priv *priv,
- int ath9k_htc_probe_device(struct htc_target *htc_handle, struct device *dev,
- 			   u16 devid, char *product, u32 drv_info)
- {
--	struct ieee80211_hw *hw;
-+	struct hif_device_usb *hif_dev;
- 	struct ath9k_htc_priv *priv;
-+	struct ieee80211_hw *hw;
- 	int ret;
- 
- 	hw = ieee80211_alloc_hw(sizeof(struct ath9k_htc_priv), &ath9k_htc_ops);
-@@ -967,7 +968,10 @@ int ath9k_htc_probe_device(struct htc_target *htc_handle, struct device *dev,
  	return 0;
- 
- err_init:
--	ath9k_deinit_wmi(priv);
-+	ath9k_stop_wmi(priv);
-+	hif_dev = (struct hif_device_usb *)htc_handle->hif_dev;
-+	ath9k_hif_usb_dealloc_urbs(hif_dev);
-+	ath9k_destoy_wmi(priv);
- err_free:
- 	ieee80211_free_hw(hw);
- 	return ret;
-@@ -982,7 +986,7 @@ void ath9k_htc_disconnect_device(struct htc_target *htc_handle, bool hotunplug)
- 			htc_handle->drv_priv->ah->ah_flags |= AH_UNPLUGGED;
- 
- 		ath9k_deinit_device(htc_handle->drv_priv);
--		ath9k_deinit_wmi(htc_handle->drv_priv);
-+		ath9k_stop_wmi(htc_handle->drv_priv);
- 		ieee80211_free_hw(htc_handle->drv_priv->hw);
- 	}
  }
-diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
-index d1f6710ca63b..e7a3127395be 100644
---- a/drivers/net/wireless/ath/ath9k/wmi.c
-+++ b/drivers/net/wireless/ath/ath9k/wmi.c
-@@ -112,14 +112,17 @@ struct wmi *ath9k_init_wmi(struct ath9k_htc_priv *priv)
- 	return wmi;
- }
- 
--void ath9k_deinit_wmi(struct ath9k_htc_priv *priv)
-+void ath9k_stop_wmi(struct ath9k_htc_priv *priv)
- {
- 	struct wmi *wmi = priv->wmi;
- 
- 	mutex_lock(&wmi->op_mutex);
- 	wmi->stopped = true;
- 	mutex_unlock(&wmi->op_mutex);
-+}
- 
-+void ath9k_destoy_wmi(struct ath9k_htc_priv *priv)
-+{
- 	kfree(priv->wmi);
- }
- 
-diff --git a/drivers/net/wireless/ath/ath9k/wmi.h b/drivers/net/wireless/ath/ath9k/wmi.h
-index 380175d5ecd7..d8b912206232 100644
---- a/drivers/net/wireless/ath/ath9k/wmi.h
-+++ b/drivers/net/wireless/ath/ath9k/wmi.h
-@@ -179,7 +179,6 @@ struct wmi {
- };
- 
- struct wmi *ath9k_init_wmi(struct ath9k_htc_priv *priv);
--void ath9k_deinit_wmi(struct ath9k_htc_priv *priv);
- int ath9k_wmi_connect(struct htc_target *htc, struct wmi *wmi,
- 		      enum htc_endpoint_id *wmi_ctrl_epid);
- int ath9k_wmi_cmd(struct wmi *wmi, enum wmi_cmd_id cmd_id,
-@@ -189,6 +188,8 @@ int ath9k_wmi_cmd(struct wmi *wmi, enum wmi_cmd_id cmd_id,
- void ath9k_wmi_event_tasklet(unsigned long data);
- void ath9k_fatal_work(struct work_struct *work);
- void ath9k_wmi_event_drain(struct ath9k_htc_priv *priv);
-+void ath9k_stop_wmi(struct ath9k_htc_priv *priv);
-+void ath9k_destoy_wmi(struct ath9k_htc_priv *priv);
- 
- #define WMI_CMD(_wmi_cmd)						\
- 	do {								\
 -- 
 2.25.1
 
