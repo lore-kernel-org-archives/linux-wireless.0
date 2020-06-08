@@ -4,56 +4,56 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3934C433E0
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Jun 2020 00:04:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C261C433E1
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Jun 2020 00:05:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B37582074B
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Jun 2020 00:04:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4D00C2072F
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Jun 2020 00:05:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1591661072;
-	bh=Wvt/DzjT+C/T54IBvndjaPL4BV1+nOgQr/M22IgSEMM=;
+	s=default; t=1591661140;
+	bh=sYkeYCy4yELk+Rhqp6c/33bq9azVDEcLFEBAXNfGfAk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=NV6BbMXrkaVV2b875mrLBbea5Rd8w+nRYEg9BlZrIB2RGFEV5TrIQhGAyeGZqer6X
-	 DqjW6TDPGEr9xRC2W+7gqbRrRE3zHT0jpmmT7gaoGJp3m7jlasf3FbAZtuk3g2wZwk
-	 o7dqZvkAdna1HzV55R1xH+DunqlLEsB60fRayNg0=
+	b=yrdN/HP0+LSe58ccOb4W1ZZhKTOwaa6q4lG3LwMG4ioJO26IITCLdo4ljtUeUDS5p
+	 yq9v4RPdoG9nAZG8Zo4VI7sDS6kQCtXeBq5RnXkCWb2pYxjBf2lnqcN2Q4itX6FQ3W
+	 VKoNdmSkWpVmjDWSvj48Z+pRGTvcWxVOciRlVd3I=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732710AbgFIAEa (ORCPT
+        id S1732838AbgFIAFX (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Jun 2020 20:04:30 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45848 "EHLO mail.kernel.org"
+        Mon, 8 Jun 2020 20:05:23 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45634 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731178AbgFHXVh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Jun 2020 19:21:37 -0400
+        id S1730603AbgFHXVZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 8 Jun 2020 19:21:25 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id DB4B120842;
-        Mon,  8 Jun 2020 23:21:35 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id C4D7A208A7;
+        Mon,  8 Jun 2020 23:21:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1591658496;
-        bh=Wvt/DzjT+C/T54IBvndjaPL4BV1+nOgQr/M22IgSEMM=;
+        s=default; t=1591658485;
+        bh=sYkeYCy4yELk+Rhqp6c/33bq9azVDEcLFEBAXNfGfAk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=DxnSRkX7TKbHiv9zvOm/HZSf2ZoA8u56ymiY6BlktXwAJodycmCsbwMF0E+HHaHWp
-         zEaGno6iLMoQA+f+jpWfMlHMmgqwvlPIoOmYuE7PQ43Pgc63WK/KdHhYjZcI9h/ln8
-         LGkaMbjv5Ucud2Qa0CNL76NZ2o5hWZPqtnmlWWVU=
+        b=aKslZTUEEb6ZVx1jxbgzWNtBqbbplw5p2H8ddXtPPRqLoRPAmjcJ7gdVpALDXvOec
+         j9gC0vTu2UfNXTeK0Nu19MDMeSb79bpfManJtEjmMZKBQrroTABVD0PoDjU4wqZLYL
+         EEL0Bd/5K2GEcxHy8+QDvEj+WGeZElTSjPWFdNBM=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>,
-        Ganapathi Bhat <ganapathi.bhat@nxp.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 129/175] mwifiex: Fix memory corruption in dump_station
-Date:   Mon,  8 Jun 2020 19:18:02 -0400
-Message-Id: <20200608231848.3366970-129-sashal@kernel.org>
+Cc:     Ryder Lee <ryder.lee@mediatek.com>,
+        Chih-Min Chen <chih-min.chen@mediatek.com>,
+        Felix Fietkau <nbd@nbd.name>, Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH AUTOSEL 5.4 120/175] mt76: avoid rx reorder buffer overflow
+Date:   Mon,  8 Jun 2020 19:17:53 -0400
+Message-Id: <20200608231848.3366970-120-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200608231848.3366970-1-sashal@kernel.org>
 References: <20200608231848.3366970-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
@@ -62,87 +62,78 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Pali Rohár <pali@kernel.org>
+From: Ryder Lee <ryder.lee@mediatek.com>
 
-[ Upstream commit 3aa42bae9c4d1641aeb36f1a8585cd1d506cf471 ]
+[ Upstream commit 7c4f744d6703757be959f521a7a441bf34745d99 ]
 
-The mwifiex_cfg80211_dump_station() uses static variable for iterating
-over a linked list of all associated stations (when the driver is in UAP
-role). This has a race condition if .dump_station is called in parallel
-for multiple interfaces. This corruption can be triggered by registering
-multiple SSIDs and calling, in parallel for multiple interfaces
-    iw dev <iface> station dump
+Enlarge slot to support 11ax 256 BA (256 MPDUs in an AMPDU)
 
-[16750.719775] Unable to handle kernel paging request at virtual address dead000000000110
-...
-[16750.899173] Call trace:
-[16750.901696]  mwifiex_cfg80211_dump_station+0x94/0x100 [mwifiex]
-[16750.907824]  nl80211_dump_station+0xbc/0x278 [cfg80211]
-[16750.913160]  netlink_dump+0xe8/0x320
-[16750.916827]  netlink_recvmsg+0x1b4/0x338
-[16750.920861]  ____sys_recvmsg+0x7c/0x2b0
-[16750.924801]  ___sys_recvmsg+0x70/0x98
-[16750.928564]  __sys_recvmsg+0x58/0xa0
-[16750.932238]  __arm64_sys_recvmsg+0x28/0x30
-[16750.936453]  el0_svc_common.constprop.3+0x90/0x158
-[16750.941378]  do_el0_svc+0x74/0x90
-[16750.944784]  el0_sync_handler+0x12c/0x1a8
-[16750.948903]  el0_sync+0x114/0x140
-[16750.952312] Code: f9400003 f907f423 eb02007f 54fffd60 (b9401060)
-[16750.958583] ---[ end trace c8ad181c2f4b8576 ]---
-
-This patch drops the use of the static iterator, and instead every time
-the function is called iterates to the idx-th position of the
-linked-list.
-
-It would be better to convert the code not to use linked list for
-associated stations storage (since the chip has a limited number of
-associated stations anyway - it could just be an array). Such a change
-may be proposed in the future. In the meantime this patch can backported
-into stable kernels in this simple form.
-
-Fixes: 8baca1a34d4c ("mwifiex: dump station support in uap mode")
-Signed-off-by: Pali Rohár <pali@kernel.org>
-Acked-by: Ganapathi Bhat <ganapathi.bhat@nxp.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/20200515075924.13841-1-pali@kernel.org
+Signed-off-by: Chih-Min Chen <chih-min.chen@mediatek.com>
+Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/marvell/mwifiex/cfg80211.c | 14 ++++++--------
- 1 file changed, 6 insertions(+), 8 deletions(-)
+ drivers/net/wireless/mediatek/mt76/agg-rx.c | 8 ++++----
+ drivers/net/wireless/mediatek/mt76/mt76.h   | 6 +++---
+ 2 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index d89684168500..9e6dc289ec3e 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -1496,7 +1496,8 @@ mwifiex_cfg80211_dump_station(struct wiphy *wiphy, struct net_device *dev,
- 			      int idx, u8 *mac, struct station_info *sinfo)
+diff --git a/drivers/net/wireless/mediatek/mt76/agg-rx.c b/drivers/net/wireless/mediatek/mt76/agg-rx.c
+index 8f3d36a15e17..cbff0dfc9631 100644
+--- a/drivers/net/wireless/mediatek/mt76/agg-rx.c
++++ b/drivers/net/wireless/mediatek/mt76/agg-rx.c
+@@ -143,8 +143,8 @@ void mt76_rx_aggr_reorder(struct sk_buff *skb, struct sk_buff_head *frames)
+ 	struct ieee80211_sta *sta;
+ 	struct mt76_rx_tid *tid;
+ 	bool sn_less;
+-	u16 seqno, head, size;
+-	u8 ackp, idx;
++	u16 seqno, head, size, idx;
++	u8 ackp;
+ 
+ 	__skb_queue_tail(frames, skb);
+ 
+@@ -230,7 +230,7 @@ void mt76_rx_aggr_reorder(struct sk_buff *skb, struct sk_buff_head *frames)
+ }
+ 
+ int mt76_rx_aggr_start(struct mt76_dev *dev, struct mt76_wcid *wcid, u8 tidno,
+-		       u16 ssn, u8 size)
++		       u16 ssn, u16 size)
  {
- 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
--	static struct mwifiex_sta_node *node;
-+	struct mwifiex_sta_node *node;
-+	int i;
+ 	struct mt76_rx_tid *tid;
  
- 	if ((GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_STA) &&
- 	    priv->media_connected && idx == 0) {
-@@ -1506,13 +1507,10 @@ mwifiex_cfg80211_dump_station(struct wiphy *wiphy, struct net_device *dev,
- 		mwifiex_send_cmd(priv, HOST_CMD_APCMD_STA_LIST,
- 				 HostCmd_ACT_GEN_GET, 0, NULL, true);
+@@ -254,7 +254,7 @@ EXPORT_SYMBOL_GPL(mt76_rx_aggr_start);
  
--		if (node && (&node->list == &priv->sta_list)) {
--			node = NULL;
--			return -ENOENT;
--		}
--
--		node = list_prepare_entry(node, &priv->sta_list, list);
--		list_for_each_entry_continue(node, &priv->sta_list, list) {
-+		i = 0;
-+		list_for_each_entry(node, &priv->sta_list, list) {
-+			if (i++ != idx)
-+				continue;
- 			ether_addr_copy(mac, node->mac_addr);
- 			return mwifiex_dump_station_info(priv, node, sinfo);
- 		}
+ static void mt76_rx_aggr_shutdown(struct mt76_dev *dev, struct mt76_rx_tid *tid)
+ {
+-	u8 size = tid->size;
++	u16 size = tid->size;
+ 	int i;
+ 
+ 	cancel_delayed_work(&tid->reorder_work);
+diff --git a/drivers/net/wireless/mediatek/mt76/mt76.h b/drivers/net/wireless/mediatek/mt76/mt76.h
+index 502814c26b33..52a16b42dfd7 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt76.h
++++ b/drivers/net/wireless/mediatek/mt76/mt76.h
+@@ -240,8 +240,8 @@ struct mt76_rx_tid {
+ 	struct delayed_work reorder_work;
+ 
+ 	u16 head;
+-	u8 size;
+-	u8 nframes;
++	u16 size;
++	u16 nframes;
+ 
+ 	u8 started:1, stopped:1, timer_pending:1;
+ 
+@@ -723,7 +723,7 @@ int mt76_get_survey(struct ieee80211_hw *hw, int idx,
+ void mt76_set_stream_caps(struct mt76_dev *dev, bool vht);
+ 
+ int mt76_rx_aggr_start(struct mt76_dev *dev, struct mt76_wcid *wcid, u8 tid,
+-		       u16 ssn, u8 size);
++		       u16 ssn, u16 size);
+ void mt76_rx_aggr_stop(struct mt76_dev *dev, struct mt76_wcid *wcid, u8 tid);
+ 
+ void mt76_wcid_key_setup(struct mt76_dev *dev, struct mt76_wcid *wcid,
 -- 
 2.25.1
 
