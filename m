@@ -7,49 +7,50 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F27C8C433DF
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Jun 2020 23:51:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D53FC433E0
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Jun 2020 23:53:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BAF05204EF
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Jun 2020 23:51:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4011420659
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Jun 2020 23:53:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1591660314;
-	bh=3KXmSPqFNpljjtZNykR4wyIuKD5oen8+kKGQceuU9tk=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=h1Vi50zsoXKqlKjC1cQGpcNFT9V9MSd1L7QM93so6HT08IZEZo+jXVk6KLkOFqYgM
-	 b7uiSQNSK1rSHgf0EG+Q70N0WH/tE0m9KVpofH40Oim/G8nG9oh1q/ZhiDNdCS5kLe
-	 omcTr4ATJ3i6EdIFHEQR6V308SExa9v8BtBpACBg=
+	s=default; t=1591660424;
+	bh=Te9F/yrPuD9RjkO3+zwkcMIepHyknzxLlgjxALhWRIc=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=04OY7/G/Crp5w3J1lCypJwk07G2qHleyOd+/mYMvcAtk3LFEWDTAD/r25j+oiAwde
+	 uIJy/dALOZvgLsnmO7aq5KuBJmChHmVpmOVi8Et6yWQO8mSadf4lvaqM1wDfuDQjMf
+	 0F0TDCRf8Li/6IR6x9igYHfuYcAMQTOCOPwiu5W0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387760AbgFHXve (ORCPT
+        id S1731611AbgFHXYV (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Jun 2020 19:51:34 -0400
-Received: from mail.kernel.org ([198.145.29.99]:51414 "EHLO mail.kernel.org"
+        Mon, 8 Jun 2020 19:24:21 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50374 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731731AbgFHXZD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Jun 2020 19:25:03 -0400
+        id S1729292AbgFHXYT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 8 Jun 2020 19:24:19 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 6AC3F2074B;
-        Mon,  8 Jun 2020 23:25:01 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 7E6712089D;
+        Mon,  8 Jun 2020 23:24:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1591658702;
-        bh=3KXmSPqFNpljjtZNykR4wyIuKD5oen8+kKGQceuU9tk=;
-        h=From:To:Cc:Subject:Date:From;
-        b=Nw5tP1Gs3dT48yM9q20iaiqW/Eumy+wSSUrPW+CseWzarBiFuwF84gA4PxZFzqcgQ
-         IRebaEQ+fXLYu1ti9fWfVdXJNfIJ2zyZybICq5WFRUo2MsuiIYzi+c0LVCvyzkQNow
-         ahqWNn7R1nu3kRmlUNcxmunSBdzD9PfRU/9ATm/M=
+        s=default; t=1591658659;
+        bh=Te9F/yrPuD9RjkO3+zwkcMIepHyknzxLlgjxALhWRIc=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=w3xfyooWSQ2V0worS9/cdvnmvl+79vXG4+739rxs030gKvmI70CC+3fkoyhEeTNVk
+         JXeGbTPwTfRewvpWBbaNBdJrZIGmn8OWyOavSZmyS8t2FlmIv/hYdzs0AOsRLNhYx/
+         2XGB0kkDHXGu+BDk0tlYZza42pw+6vGBZMQf/LFw=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Qiujun Huang <hqjagain@gmail.com>,
-        syzbot+d403396d4df67ad0bd5f@syzkaller.appspotmail.com,
+Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 01/72] ath9x: Fix stack-out-of-bounds Write in ath9k_hif_usb_rx_cb
-Date:   Mon,  8 Jun 2020 19:23:49 -0400
-Message-Id: <20200608232500.3369581-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 076/106] rtlwifi: Fix a double free in _rtl_usb_tx_urb_setup()
+Date:   Mon,  8 Jun 2020 19:22:08 -0400
+Message-Id: <20200608232238.3368589-76-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20200608232238.3368589-1-sashal@kernel.org>
+References: <20200608232238.3368589-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -59,59 +60,60 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Qiujun Huang <hqjagain@gmail.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
 
-[ Upstream commit 19d6c375d671ce9949a864fb9a03e19f5487b4d3 ]
+[ Upstream commit beb12813bc75d4a23de43b85ad1c7cb28d27631e ]
 
-Add barrier to accessing the stack array skb_pool.
+Seven years ago we tried to fix a leak but actually introduced a double
+free instead.  It was an understandable mistake because the code was a
+bit confusing and the free was done in the wrong place.  The "skb"
+pointer is freed in both _rtl_usb_tx_urb_setup() and _rtl_usb_transmit().
+The free belongs _rtl_usb_transmit() instead of _rtl_usb_tx_urb_setup()
+and I've cleaned the code up a bit to hopefully make it more clear.
 
-The case reported by syzbot:
-https://lore.kernel.org/linux-usb/0000000000003d7c1505a2168418@google.com
-BUG: KASAN: stack-out-of-bounds in ath9k_hif_usb_rx_stream
-drivers/net/wireless/ath/ath9k/hif_usb.c:626 [inline]
-BUG: KASAN: stack-out-of-bounds in ath9k_hif_usb_rx_cb+0xdf6/0xf70
-drivers/net/wireless/ath/ath9k/hif_usb.c:666
-Write of size 8 at addr ffff8881db309a28 by task swapper/1/0
-
-Call Trace:
-ath9k_hif_usb_rx_stream drivers/net/wireless/ath/ath9k/hif_usb.c:626
-[inline]
-ath9k_hif_usb_rx_cb+0xdf6/0xf70
-drivers/net/wireless/ath/ath9k/hif_usb.c:666
-__usb_hcd_giveback_urb+0x1f2/0x470 drivers/usb/core/hcd.c:1648
-usb_hcd_giveback_urb+0x368/0x420 drivers/usb/core/hcd.c:1713
-dummy_timer+0x1258/0x32ae drivers/usb/gadget/udc/dummy_hcd.c:1966
-call_timer_fn+0x195/0x6f0 kernel/time/timer.c:1404
-expire_timers kernel/time/timer.c:1449 [inline]
-__run_timers kernel/time/timer.c:1773 [inline]
-__run_timers kernel/time/timer.c:1740 [inline]
-run_timer_softirq+0x5f9/0x1500 kernel/time/timer.c:1786
-
-Reported-and-tested-by: syzbot+d403396d4df67ad0bd5f@syzkaller.appspotmail.com
-Signed-off-by: Qiujun Huang <hqjagain@gmail.com>
+Fixes: 36ef0b473fbf ("rtlwifi: usb: add missing freeing of skbuff")
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/20200404041838.10426-5-hqjagain@gmail.com
+Link: https://lore.kernel.org/r/20200513093951.GD347693@mwanda
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath9k/hif_usb.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/net/wireless/realtek/rtlwifi/usb.c | 8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index 6f669166c263..4399e1ebac15 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -610,6 +610,11 @@ static void ath9k_hif_usb_rx_stream(struct hif_device_usb *hif_dev,
- 			hif_dev->remain_skb = nskb;
- 			spin_unlock(&hif_dev->rx_lock);
- 		} else {
-+			if (pool_index == MAX_PKT_NUM_IN_TRANSFER) {
-+				dev_err(&hif_dev->udev->dev,
-+					"ath9k_htc: over RX MAX_PKT_NUM\n");
-+				goto err;
-+			}
- 			nskb = __dev_alloc_skb(pkt_len + 32, GFP_ATOMIC);
- 			if (!nskb) {
- 				dev_err(&hif_dev->udev->dev,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/usb.c b/drivers/net/wireless/realtek/rtlwifi/usb.c
+index 1181b725f503..1893640555c1 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/usb.c
++++ b/drivers/net/wireless/realtek/rtlwifi/usb.c
+@@ -910,10 +910,8 @@ static struct urb *_rtl_usb_tx_urb_setup(struct ieee80211_hw *hw,
+ 
+ 	WARN_ON(NULL == skb);
+ 	_urb = usb_alloc_urb(0, GFP_ATOMIC);
+-	if (!_urb) {
+-		kfree_skb(skb);
++	if (!_urb)
+ 		return NULL;
+-	}
+ 	_rtl_install_trx_info(rtlusb, skb, ep_num);
+ 	usb_fill_bulk_urb(_urb, rtlusb->udev, usb_sndbulkpipe(rtlusb->udev,
+ 			  ep_num), skb->data, skb->len, _rtl_tx_complete, skb);
+@@ -927,7 +925,6 @@ static void _rtl_usb_transmit(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 	struct rtl_usb *rtlusb = rtl_usbdev(rtl_usbpriv(hw));
+ 	u32 ep_num;
+ 	struct urb *_urb = NULL;
+-	struct sk_buff *_skb = NULL;
+ 
+ 	WARN_ON(NULL == rtlusb->usb_tx_aggregate_hdl);
+ 	if (unlikely(IS_USB_STOP(rtlusb))) {
+@@ -936,8 +933,7 @@ static void _rtl_usb_transmit(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 		return;
+ 	}
+ 	ep_num = rtlusb->ep_map.ep_mapping[qnum];
+-	_skb = skb;
+-	_urb = _rtl_usb_tx_urb_setup(hw, _skb, ep_num);
++	_urb = _rtl_usb_tx_urb_setup(hw, skb, ep_num);
+ 	if (unlikely(!_urb)) {
+ 		pr_err("Can't allocate urb. Drop skb!\n");
+ 		kfree_skb(skb);
 -- 
 2.25.1
 
