@@ -4,41 +4,41 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6910AC433E1
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Jun 2020 23:26:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B2BEC433DF
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Jun 2020 23:38:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 476B42068D
-	for <linux-wireless@archiver.kernel.org>; Mon,  8 Jun 2020 23:26:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4C3892068D
+	for <linux-wireless@archiver.kernel.org>; Mon,  8 Jun 2020 23:38:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1591658776;
-	bh=wZqpRokNnvQDPAWQ5VvocSzEJF9rW2NZzv+yEp/vP74=;
+	s=default; t=1591659526;
+	bh=iKUmM6v7/ah/zZSaO/RwZOR+T9xRXtfNxHYJYjeZnTM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=kgR8LXVJ8QsdAExc7AsdkmsgJ/xfoPHxIUvf5A5qxmo8lnnw0usJhcKhNTUk1Vy2r
-	 sowkfDP+heMtLIw8x404vueA89IPC7hdBeeNMTWRRb7xNLn0FTttarPAEyyLw5X80d
-	 P/Or+W4nmnnvRUYXyDf5Ho4kNZw3SOrwJumi6UUk=
+	b=weIzBqX+SFb/gyE4zzBRAuTAnccGebYgGCr1E2jCpDq5RK+GGpgf2QOoIE09Vqfzq
+	 fU5pCdUZOdoNs/VUmwcnaRoXIOtUojlsA86VKNOmIamZUYdNynTbR4seW3qPtohdBP
+	 AEc+ar3FLyk/SdliSDx+DUCxdWfcAuoN8xKVzxM8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731961AbgFHX0P (ORCPT
+        id S1732222AbgFHXie (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Jun 2020 19:26:15 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53374 "EHLO mail.kernel.org"
+        Mon, 8 Jun 2020 19:38:34 -0400
+Received: from mail.kernel.org ([198.145.29.99]:57908 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731951AbgFHX0N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Jun 2020 19:26:13 -0400
+        id S1732217AbgFHX20 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 8 Jun 2020 19:28:26 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 850AC2064C;
-        Mon,  8 Jun 2020 23:26:11 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 2D442208A9;
+        Mon,  8 Jun 2020 23:28:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1591658772;
-        bh=wZqpRokNnvQDPAWQ5VvocSzEJF9rW2NZzv+yEp/vP74=;
+        s=default; t=1591658906;
+        bh=iKUmM6v7/ah/zZSaO/RwZOR+T9xRXtfNxHYJYjeZnTM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=KKAmoEmQXUuqrxU7/epUh7Yx9/Sx4kLfr/I7dgA2abWWtXD8bmlnoRRuTtnck8Isu
-         gKaSjUJMGIDEDWo4J3f8BEf4SnVWo3J4cZo7eLCtI8D0S4Wh/UAbE+0WfCqUnKIfpd
-         QeOWhdKQBauZur0DqIbe+FVvswOTY7zciLv141Bo=
+        b=xNICaa6yVL286VYlGrUiA8d6RKgTBF/4dBigeEaeUdKizp4BzoRIDxXS5c4KUr8M0
+         lGxso0tMYlsrEc7QEeHbESzQ/IO8nC32uHvBOb6e3PJBjjvADNeVi45t9lY/bQ0FxG
+         IPxT7hgI+q93OH45Lh8Yb8p3lB9r4joepDMk/6r8=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>,
@@ -46,12 +46,12 @@ Cc:     =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>,
         Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 53/72] mwifiex: Fix memory corruption in dump_station
-Date:   Mon,  8 Jun 2020 19:24:41 -0400
-Message-Id: <20200608232500.3369581-53-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 26/37] mwifiex: Fix memory corruption in dump_station
+Date:   Mon,  8 Jun 2020 19:27:38 -0400
+Message-Id: <20200608232750.3370747-26-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200608232500.3369581-1-sashal@kernel.org>
-References: <20200608232500.3369581-1-sashal@kernel.org>
+In-Reply-To: <20200608232750.3370747-1-sashal@kernel.org>
+References: <20200608232750.3370747-1-sashal@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 X-stable: review
@@ -108,14 +108,14 @@ Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 Link: https://lore.kernel.org/r/20200515075924.13841-1-pali@kernel.org
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/marvell/mwifiex/cfg80211.c | 14 ++++++--------
+ drivers/net/wireless/mwifiex/cfg80211.c | 14 ++++++--------
  1 file changed, 6 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index 5e8e34a08b2d..79c50aebffc4 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -1451,7 +1451,8 @@ mwifiex_cfg80211_dump_station(struct wiphy *wiphy, struct net_device *dev,
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index c6c2d3304dba..8b649b8e4301 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -1387,7 +1387,8 @@ mwifiex_cfg80211_dump_station(struct wiphy *wiphy, struct net_device *dev,
  			      int idx, u8 *mac, struct station_info *sinfo)
  {
  	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
@@ -125,7 +125,7 @@ index 5e8e34a08b2d..79c50aebffc4 100644
  
  	if ((GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_STA) &&
  	    priv->media_connected && idx == 0) {
-@@ -1461,13 +1462,10 @@ mwifiex_cfg80211_dump_station(struct wiphy *wiphy, struct net_device *dev,
+@@ -1397,13 +1398,10 @@ mwifiex_cfg80211_dump_station(struct wiphy *wiphy, struct net_device *dev,
  		mwifiex_send_cmd(priv, HOST_CMD_APCMD_STA_LIST,
  				 HostCmd_ACT_GEN_GET, 0, NULL, true);
  
