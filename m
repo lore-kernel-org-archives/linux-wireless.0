@@ -4,51 +4,51 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51A90C433DF
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Jun 2020 01:10:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A05CC433E0
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Jun 2020 01:10:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 27B392076C
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Jun 2020 01:10:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 280D72076C
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Jun 2020 01:10:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1591665026;
-	bh=4xatDuUmjEH121qTwfriRYx79afiKHHpsgweKfRDcbg=;
+	s=default; t=1591665039;
+	bh=PGlP+JP7FvYzxdcy4SX9/FZl2RROoPdsSLINcj/iE2A=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=STCDBNIF60JIdkZ30bAa1+eOlp1ht4SlINcL4FsKl6BzXwZQXku3iyia6zSn10koX
-	 i/2pVYU+RMlT3Qptp8hnbWK6WDudT4OdHNFfsWrKO6Hpv2Mw7V6gDB03UWw171lcFr
-	 t295+qGiUTL72OV5PeLwdCyB/7Cn7axj4Zmy3u7Q=
+	b=Quhp8IHmaETum8lbJI0haiqCLyYe2ODGqvPJWDA6xpPXxgVuGMxCKFpIvRKqwcZcY
+	 8PgpwieNpaxhwbcBAEXkcfN2IguZPEzakb6TmRdUCU2b/Rntmefz+sm8ikviDBxpaD
+	 CkPeimzdQ/fjFNSDpZziUhMuFdMrvxcxF/vaiunk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732537AbgFIBKY (ORCPT
+        id S1726909AbgFHXGP (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Jun 2020 21:10:24 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49096 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726895AbgFHXGP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
         Mon, 8 Jun 2020 19:06:15 -0400
+Received: from mail.kernel.org ([198.145.29.99]:48960 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726746AbgFHXGL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 8 Jun 2020 19:06:11 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id D7D9E2076A;
-        Mon,  8 Jun 2020 23:06:13 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 0076520774;
+        Mon,  8 Jun 2020 23:06:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1591657574;
-        bh=4xatDuUmjEH121qTwfriRYx79afiKHHpsgweKfRDcbg=;
+        s=default; t=1591657570;
+        bh=PGlP+JP7FvYzxdcy4SX9/FZl2RROoPdsSLINcj/iE2A=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=NnUiuv8PA0R1+ZO6kaYdhIWhZec3c7SBGKxr7yJ7YrfGpJVCx24OQVr/NJLmub4im
-         2/vFos1u5P/Uk6ft5p/HEYDMSIJqAQs1L3a0er2wUsdQIu9x5VdJz7gYPOjljK0lt9
-         Q3HFBtGiY+/rwwhWvYjQtTkQJEA7zMZfTbW6n7gU=
+        b=UCWSXN3TdKUS3TAvBj9b4DTpRFhfWFUyMUA+BaF7WWO3aSDvoaX2L8FA4m2J9rNhI
+         OoF+hkDfrJicKBX3kfOBWT8ayUgP1j1k/epyxff9hPc4QvCXfTH0h31MEbTZ7xpsEN
+         yPU5eUgWx5ZuQ86f06+qj0/D42YKnUngRwFM1Ow8=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Qiujun Huang <hqjagain@gmail.com>,
-        syzbot+9505af1ae303dabdc646@syzkaller.appspotmail.com,
+Cc:     Maharaja Kennadyrajan <mkenna@codeaurora.org>,
+        Govindaraj Saminathan <gsamin@codeaurora.org>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>,
+        Sasha Levin <sashal@kernel.org>, ath10k@lists.infradead.org,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.7 005/274] ath9k: Fix use-after-free Read in htc_connect_service
-Date:   Mon,  8 Jun 2020 19:01:38 -0400
-Message-Id: <20200608230607.3361041-5-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.7 002/274] ath10k: Fix the race condition in firmware dump work queue
+Date:   Mon,  8 Jun 2020 19:01:35 -0400
+Message-Id: <20200608230607.3361041-2-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200608230607.3361041-1-sashal@kernel.org>
 References: <20200608230607.3361041-1-sashal@kernel.org>
@@ -61,137 +61,41 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Qiujun Huang <hqjagain@gmail.com>
+From: Maharaja Kennadyrajan <mkenna@codeaurora.org>
 
-[ Upstream commit ced21a4c726bdc60b1680c050a284b08803bc64c ]
+[ Upstream commit 3d1c60460fb2823a19ead9e6ec8f184dd7271aa7 ]
 
-The skb is consumed by htc_send_epid, so it needn't release again.
+There is a race condition, when the user writes 'hw-restart' and
+'hard' in the simulate_fw_crash debugfs file without any delay.
+In the above scenario, the firmware dump work queue(scheduled by
+'hard') should be handled gracefully, while the target is in the
+'hw-restart'.
 
-The case reported by syzbot:
+Tested HW: QCA9984
+Tested FW: 10.4-3.9.0.2-00044
 
-https://lore.kernel.org/linux-usb/000000000000590f6b05a1c05d15@google.com
-usb 1-1: ath9k_htc: Firmware ath9k_htc/htc_9271-1.4.0.fw requested
-usb 1-1: ath9k_htc: Transferred FW: ath9k_htc/htc_9271-1.4.0.fw, size:
-51008
-usb 1-1: Service connection timeout for: 256
-==================================================================
-BUG: KASAN: use-after-free in atomic_read
-include/asm-generic/atomic-instrumented.h:26 [inline]
-BUG: KASAN: use-after-free in refcount_read include/linux/refcount.h:134
-[inline]
-BUG: KASAN: use-after-free in skb_unref include/linux/skbuff.h:1042
-[inline]
-BUG: KASAN: use-after-free in kfree_skb+0x32/0x3d0 net/core/skbuff.c:692
-Read of size 4 at addr ffff8881d0957994 by task kworker/1:2/83
-
-Call Trace:
-kfree_skb+0x32/0x3d0 net/core/skbuff.c:692
-htc_connect_service.cold+0xa9/0x109
-drivers/net/wireless/ath/ath9k/htc_hst.c:282
-ath9k_wmi_connect+0xd2/0x1a0 drivers/net/wireless/ath/ath9k/wmi.c:265
-ath9k_init_htc_services.constprop.0+0xb4/0x650
-drivers/net/wireless/ath/ath9k/htc_drv_init.c:146
-ath9k_htc_probe_device+0x25a/0x1d80
-drivers/net/wireless/ath/ath9k/htc_drv_init.c:959
-ath9k_htc_hw_init+0x31/0x60
-drivers/net/wireless/ath/ath9k/htc_hst.c:501
-ath9k_hif_usb_firmware_cb+0x26b/0x500
-drivers/net/wireless/ath/ath9k/hif_usb.c:1187
-request_firmware_work_func+0x126/0x242
-drivers/base/firmware_loader/main.c:976
-process_one_work+0x94b/0x1620 kernel/workqueue.c:2264
-worker_thread+0x96/0xe20 kernel/workqueue.c:2410
-kthread+0x318/0x420 kernel/kthread.c:255
-ret_from_fork+0x24/0x30 arch/x86/entry/entry_64.S:352
-
-Allocated by task 83:
-kmem_cache_alloc_node+0xdc/0x330 mm/slub.c:2814
-__alloc_skb+0xba/0x5a0 net/core/skbuff.c:198
-alloc_skb include/linux/skbuff.h:1081 [inline]
-htc_connect_service+0x2cc/0x840
-drivers/net/wireless/ath/ath9k/htc_hst.c:257
-ath9k_wmi_connect+0xd2/0x1a0 drivers/net/wireless/ath/ath9k/wmi.c:265
-ath9k_init_htc_services.constprop.0+0xb4/0x650
-drivers/net/wireless/ath/ath9k/htc_drv_init.c:146
-ath9k_htc_probe_device+0x25a/0x1d80
-drivers/net/wireless/ath/ath9k/htc_drv_init.c:959
-ath9k_htc_hw_init+0x31/0x60
-drivers/net/wireless/ath/ath9k/htc_hst.c:501
-ath9k_hif_usb_firmware_cb+0x26b/0x500
-drivers/net/wireless/ath/ath9k/hif_usb.c:1187
-request_firmware_work_func+0x126/0x242
-drivers/base/firmware_loader/main.c:976
-process_one_work+0x94b/0x1620 kernel/workqueue.c:2264
-worker_thread+0x96/0xe20 kernel/workqueue.c:2410
-kthread+0x318/0x420 kernel/kthread.c:255
-ret_from_fork+0x24/0x30 arch/x86/entry/entry_64.S:352
-
-Freed by task 0:
-kfree_skb+0x102/0x3d0 net/core/skbuff.c:690
-ath9k_htc_txcompletion_cb+0x1f8/0x2b0
-drivers/net/wireless/ath/ath9k/htc_hst.c:356
-hif_usb_regout_cb+0x10b/0x1b0
-drivers/net/wireless/ath/ath9k/hif_usb.c:90
-__usb_hcd_giveback_urb+0x29a/0x550 drivers/usb/core/hcd.c:1650
-usb_hcd_giveback_urb+0x368/0x420 drivers/usb/core/hcd.c:1716
-dummy_timer+0x1258/0x32ae drivers/usb/gadget/udc/dummy_hcd.c:1966
-call_timer_fn+0x195/0x6f0 kernel/time/timer.c:1404
-expire_timers kernel/time/timer.c:1449 [inline]
-__run_timers kernel/time/timer.c:1773 [inline]
-__run_timers kernel/time/timer.c:1740 [inline]
-run_timer_softirq+0x5f9/0x1500 kernel/time/timer.c:1786
-__do_softirq+0x21e/0x950 kernel/softirq.c:292
-
-Reported-and-tested-by: syzbot+9505af1ae303dabdc646@syzkaller.appspotmail.com
-Signed-off-by: Qiujun Huang <hqjagain@gmail.com>
+Co-developed-by: Govindaraj Saminathan <gsamin@codeaurora.org>
+Signed-off-by: Govindaraj Saminathan <gsamin@codeaurora.org>
+Signed-off-by: Maharaja Kennadyrajan <mkenna@codeaurora.org>
 Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/20200404041838.10426-2-hqjagain@gmail.com
+Link: https://lore.kernel.org/r/1585213077-28439-1-git-send-email-mkenna@codeaurora.org
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/net/wireless/ath/ath9k/htc_hst.c | 3 ---
- drivers/net/wireless/ath/ath9k/wmi.c     | 1 -
- 2 files changed, 4 deletions(-)
+ drivers/net/wireless/ath/ath10k/pci.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.c b/drivers/net/wireless/ath/ath9k/htc_hst.c
-index f705f0e1cb5b..d2e062eaf561 100644
---- a/drivers/net/wireless/ath/ath9k/htc_hst.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_hst.c
-@@ -173,7 +173,6 @@ static int htc_config_pipe_credits(struct htc_target *target)
- 	time_left = wait_for_completion_timeout(&target->cmd_wait, HZ);
- 	if (!time_left) {
- 		dev_err(target->dev, "HTC credit config timeout\n");
--		kfree_skb(skb);
- 		return -ETIMEDOUT;
- 	}
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index ded7a220a4aa..cd1c5d60261f 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -2074,6 +2074,7 @@ static void ath10k_pci_hif_stop(struct ath10k *ar)
+ 	ath10k_pci_irq_sync(ar);
+ 	napi_synchronize(&ar->napi);
+ 	napi_disable(&ar->napi);
++	cancel_work_sync(&ar_pci->dump_work);
  
-@@ -209,7 +208,6 @@ static int htc_setup_complete(struct htc_target *target)
- 	time_left = wait_for_completion_timeout(&target->cmd_wait, HZ);
- 	if (!time_left) {
- 		dev_err(target->dev, "HTC start timeout\n");
--		kfree_skb(skb);
- 		return -ETIMEDOUT;
- 	}
- 
-@@ -282,7 +280,6 @@ int htc_connect_service(struct htc_target *target,
- 	if (!time_left) {
- 		dev_err(target->dev, "Service connection timeout for: %d\n",
- 			service_connreq->service_id);
--		kfree_skb(skb);
- 		return -ETIMEDOUT;
- 	}
- 
-diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
-index cdc146091194..d1f6710ca63b 100644
---- a/drivers/net/wireless/ath/ath9k/wmi.c
-+++ b/drivers/net/wireless/ath/ath9k/wmi.c
-@@ -336,7 +336,6 @@ int ath9k_wmi_cmd(struct wmi *wmi, enum wmi_cmd_id cmd_id,
- 		ath_dbg(common, WMI, "Timeout waiting for WMI command: %s\n",
- 			wmi_cmd_to_name(cmd_id));
- 		mutex_unlock(&wmi->op_mutex);
--		kfree_skb(skb);
- 		return -ETIMEDOUT;
- 	}
- 
+ 	/* Most likely the device has HTT Rx ring configured. The only way to
+ 	 * prevent the device from accessing (and possible corrupting) host
 -- 
 2.25.1
 
