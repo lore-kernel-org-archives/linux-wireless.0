@@ -4,54 +4,56 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CE83C433E0
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Jun 2020 00:01:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3934C433E0
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Jun 2020 00:04:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 08ED9207C3
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Jun 2020 00:01:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B37582074B
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Jun 2020 00:04:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1591660910;
-	bh=gt02xV2gTXAGJGD8SHqqXs6e/DU/oGfgASH0Dlqg5Pw=;
+	s=default; t=1591661072;
+	bh=Wvt/DzjT+C/T54IBvndjaPL4BV1+nOgQr/M22IgSEMM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Bsl3mVG3uySUcrkYCLWoszSHOChdAej9epSzj/pI+OkO8HzN0xHGhana5TwotR7HJ
-	 X90LUnud6VCtph4lJdmmVRN9AkOhBY3xBTViZ3J9FN5iCiH6pLy0/IyVy9fBn+m767
-	 zIiqAi/44yficJ90fq1NEJsLziaCswalWRHlN9uw=
+	b=NV6BbMXrkaVV2b875mrLBbea5Rd8w+nRYEg9BlZrIB2RGFEV5TrIQhGAyeGZqer6X
+	 DqjW6TDPGEr9xRC2W+7gqbRrRE3zHT0jpmmT7gaoGJp3m7jlasf3FbAZtuk3g2wZwk
+	 o7dqZvkAdna1HzV55R1xH+DunqlLEsB60fRayNg0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731287AbgFHXWS (ORCPT
+        id S1732710AbgFIAEa (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Jun 2020 19:22:18 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46774 "EHLO mail.kernel.org"
+        Mon, 8 Jun 2020 20:04:30 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45848 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731278AbgFHXWQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Jun 2020 19:22:16 -0400
+        id S1731178AbgFHXVh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 8 Jun 2020 19:21:37 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 550E82086A;
-        Mon,  8 Jun 2020 23:22:15 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id DB4B120842;
+        Mon,  8 Jun 2020 23:21:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1591658536;
-        bh=gt02xV2gTXAGJGD8SHqqXs6e/DU/oGfgASH0Dlqg5Pw=;
+        s=default; t=1591658496;
+        bh=Wvt/DzjT+C/T54IBvndjaPL4BV1+nOgQr/M22IgSEMM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=SI4CO99KM9tTVwppXyxMVQP2WbGiROlfX8qM4hcnVXoq2/jjlTfG36f45t3TGOryn
-         UKCth3N4g9rVam183u46sRVv/Vk4P8PwxkMRNpSe3moy+YIbdFvUnlWJFkHZweyBlz
-         6MCegIIYAHuK/RO08dd6jCXBgQVPmVeKozQvq+Hg=
+        b=DxnSRkX7TKbHiv9zvOm/HZSf2ZoA8u56ymiY6BlktXwAJodycmCsbwMF0E+HHaHWp
+         zEaGno6iLMoQA+f+jpWfMlHMmgqwvlPIoOmYuE7PQ43Pgc63WK/KdHhYjZcI9h/ln8
+         LGkaMbjv5Ucud2Qa0CNL76NZ2o5hWZPqtnmlWWVU=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
+Cc:     =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>,
+        Ganapathi Bhat <ganapathi.bhat@nxp.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 159/175] iwlwifi: mvm: fix aux station leak
-Date:   Mon,  8 Jun 2020 19:18:32 -0400
-Message-Id: <20200608231848.3366970-159-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 129/175] mwifiex: Fix memory corruption in dump_station
+Date:   Mon,  8 Jun 2020 19:18:02 -0400
+Message-Id: <20200608231848.3366970-129-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200608231848.3366970-1-sashal@kernel.org>
 References: <20200608231848.3366970-1-sashal@kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
@@ -60,112 +62,87 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Sharon <sara.sharon@intel.com>
+From: Pali Rohár <pali@kernel.org>
 
-[ Upstream commit f327236df2afc8c3c711e7e070f122c26974f4da ]
+[ Upstream commit 3aa42bae9c4d1641aeb36f1a8585cd1d506cf471 ]
 
-When mvm is initialized we alloc aux station with aux queue.
-We later free the station memory when driver is stopped, but we
-never free the queue's memory, which casues a leak.
+The mwifiex_cfg80211_dump_station() uses static variable for iterating
+over a linked list of all associated stations (when the driver is in UAP
+role). This has a race condition if .dump_station is called in parallel
+for multiple interfaces. This corruption can be triggered by registering
+multiple SSIDs and calling, in parallel for multiple interfaces
+    iw dev <iface> station dump
 
-Add a proper de-initialization of the station.
+[16750.719775] Unable to handle kernel paging request at virtual address dead000000000110
+...
+[16750.899173] Call trace:
+[16750.901696]  mwifiex_cfg80211_dump_station+0x94/0x100 [mwifiex]
+[16750.907824]  nl80211_dump_station+0xbc/0x278 [cfg80211]
+[16750.913160]  netlink_dump+0xe8/0x320
+[16750.916827]  netlink_recvmsg+0x1b4/0x338
+[16750.920861]  ____sys_recvmsg+0x7c/0x2b0
+[16750.924801]  ___sys_recvmsg+0x70/0x98
+[16750.928564]  __sys_recvmsg+0x58/0xa0
+[16750.932238]  __arm64_sys_recvmsg+0x28/0x30
+[16750.936453]  el0_svc_common.constprop.3+0x90/0x158
+[16750.941378]  do_el0_svc+0x74/0x90
+[16750.944784]  el0_sync_handler+0x12c/0x1a8
+[16750.948903]  el0_sync+0x114/0x140
+[16750.952312] Code: f9400003 f907f423 eb02007f 54fffd60 (b9401060)
+[16750.958583] ---[ end trace c8ad181c2f4b8576 ]---
 
-Signed-off-by: Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Link: https://lore.kernel.org/r/iwlwifi.20200529092401.0121c5be55e9.Id7516fbb3482131d0c9dfb51ff20b226617ddb49@changeid
+This patch drops the use of the static iterator, and instead every time
+the function is called iterates to the idx-th position of the
+linked-list.
+
+It would be better to convert the code not to use linked list for
+associated stations storage (since the chip has a limited number of
+associated stations anyway - it could just be an array). Such a change
+may be proposed in the future. In the meantime this patch can backported
+into stable kernels in this simple form.
+
+Fixes: 8baca1a34d4c ("mwifiex: dump station support in uap mode")
+Signed-off-by: Pali Rohár <pali@kernel.org>
+Acked-by: Ganapathi Bhat <ganapathi.bhat@nxp.com>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Link: https://lore.kernel.org/r/20200515075924.13841-1-pali@kernel.org
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- .../net/wireless/intel/iwlwifi/mvm/mac80211.c  |  5 ++---
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c   | 18 +++++++++++++-----
- drivers/net/wireless/intel/iwlwifi/mvm/sta.h   |  6 +++---
- 3 files changed, 18 insertions(+), 11 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c | 14 ++++++--------
+ 1 file changed, 6 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 6ca087ffd163..ed92a8e8cd51 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -1193,14 +1193,13 @@ void __iwl_mvm_mac_stop(struct iwl_mvm *mvm)
- 	 */
- 	flush_work(&mvm->roc_done_wk);
- 
-+	iwl_mvm_rm_aux_sta(mvm);
-+
- 	iwl_mvm_stop_device(mvm);
- 
- 	iwl_mvm_async_handlers_purge(mvm);
- 	/* async_handlers_list is empty and will stay empty: HW is stopped */
- 
--	/* the fw is stopped, the aux sta is dead: clean up driver state */
--	iwl_mvm_del_aux_sta(mvm);
--
- 	/*
- 	 * Clear IN_HW_RESTART and HW_RESTART_REQUESTED flag when stopping the
- 	 * hw (as restart_complete() won't be called in this case) and mac80211
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index 71d339e90a9e..41f62793a57c 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -2080,16 +2080,24 @@ int iwl_mvm_rm_snif_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
- 	return ret;
- }
- 
--void iwl_mvm_dealloc_snif_sta(struct iwl_mvm *mvm)
-+int iwl_mvm_rm_aux_sta(struct iwl_mvm *mvm)
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+index d89684168500..9e6dc289ec3e 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+@@ -1496,7 +1496,8 @@ mwifiex_cfg80211_dump_station(struct wiphy *wiphy, struct net_device *dev,
+ 			      int idx, u8 *mac, struct station_info *sinfo)
  {
--	iwl_mvm_dealloc_int_sta(mvm, &mvm->snif_sta);
--}
-+	int ret;
+ 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
+-	static struct mwifiex_sta_node *node;
++	struct mwifiex_sta_node *node;
++	int i;
  
--void iwl_mvm_del_aux_sta(struct iwl_mvm *mvm)
--{
- 	lockdep_assert_held(&mvm->mutex);
+ 	if ((GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_STA) &&
+ 	    priv->media_connected && idx == 0) {
+@@ -1506,13 +1507,10 @@ mwifiex_cfg80211_dump_station(struct wiphy *wiphy, struct net_device *dev,
+ 		mwifiex_send_cmd(priv, HOST_CMD_APCMD_STA_LIST,
+ 				 HostCmd_ACT_GEN_GET, 0, NULL, true);
  
-+	iwl_mvm_disable_txq(mvm, NULL, mvm->aux_queue, IWL_MAX_TID_COUNT, 0);
-+	ret = iwl_mvm_rm_sta_common(mvm, mvm->aux_sta.sta_id);
-+	if (ret)
-+		IWL_WARN(mvm, "Failed sending remove station\n");
- 	iwl_mvm_dealloc_int_sta(mvm, &mvm->aux_sta);
-+
-+	return ret;
-+}
-+
-+void iwl_mvm_dealloc_snif_sta(struct iwl_mvm *mvm)
-+{
-+	iwl_mvm_dealloc_int_sta(mvm, &mvm->snif_sta);
- }
- 
- /*
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
-index 8d70093847cb..da2d1ac01229 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
-@@ -8,7 +8,7 @@
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
-  * Copyright(c) 2015 - 2016 Intel Deutschland GmbH
-- * Copyright(c) 2018 - 2019 Intel Corporation
-+ * Copyright(c) 2018 - 2020 Intel Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -31,7 +31,7 @@
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
-  * Copyright(c) 2015 - 2016 Intel Deutschland GmbH
-- * Copyright(c) 2018 - 2019 Intel Corporation
-+ * Copyright(c) 2018 - 2020 Intel Corporation
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -541,7 +541,7 @@ int iwl_mvm_sta_tx_agg(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 		       int tid, u8 queue, bool start);
- 
- int iwl_mvm_add_aux_sta(struct iwl_mvm *mvm);
--void iwl_mvm_del_aux_sta(struct iwl_mvm *mvm);
-+int iwl_mvm_rm_aux_sta(struct iwl_mvm *mvm);
- 
- int iwl_mvm_alloc_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
- int iwl_mvm_send_add_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
+-		if (node && (&node->list == &priv->sta_list)) {
+-			node = NULL;
+-			return -ENOENT;
+-		}
+-
+-		node = list_prepare_entry(node, &priv->sta_list, list);
+-		list_for_each_entry_continue(node, &priv->sta_list, list) {
++		i = 0;
++		list_for_each_entry(node, &priv->sta_list, list) {
++			if (i++ != idx)
++				continue;
+ 			ether_addr_copy(mac, node->mac_addr);
+ 			return mwifiex_dump_station_info(priv, node, sinfo);
+ 		}
 -- 
 2.25.1
 
