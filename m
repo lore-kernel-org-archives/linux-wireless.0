@@ -4,53 +4,51 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66370C433E0
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Jun 2020 00:50:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D62FCC433E0
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Jun 2020 00:50:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3FCFC20760
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Jun 2020 00:50:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B060120760
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Jun 2020 00:50:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1591663846;
-	bh=RErxoPQL57Pp8qE20X8tNu1DhNmZrHDXsOBxyT30KC0=;
+	s=default; t=1591663849;
+	bh=mS6E5KdtOU9+7cFz8Yn3gX2S53udT9uaNWpGg0utQBc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=kV5HxoRjffCA1g10gKsfcTmIdQYmhIeIQDE7h2XBJRnIBlxS43o3M35vSAYzDXF1P
-	 WvUxReTAt7GesiLgZuZXzNfbpwCD8yTomZRo8WADT7vGKlGBJV+cSic6/CI9D6rxwV
-	 qYUfNZ1O4NlQG5RegHOmNAflr1eOtQea3AlDtn7s=
+	b=sNZvRvS+Sr6xKVgYSSEaob/MH0oAgMEdpaoOQJ+PzfsHecrOUSCJmsW3AXHiKvMYe
+	 LA2t1IbsgsCd8yEVgJ7tvCBdqfvjc81MsKwDLZNkcXPEk9TxUj/sMZXnw5qa2nN089
+	 JzIobjBJWFcJ+KtWSqw8J9Zx0CQI75kJbDD+1DiU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728880AbgFIAuf (ORCPT
+        id S1728655AbgFHXK1 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Mon, 8 Jun 2020 20:50:35 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56598 "EHLO mail.kernel.org"
+        Mon, 8 Jun 2020 19:10:27 -0400
+Received: from mail.kernel.org ([198.145.29.99]:56544 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728649AbgFHXK2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 8 Jun 2020 19:10:28 -0400
+        id S1728378AbgFHXKX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 8 Jun 2020 19:10:23 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 36954208FE;
-        Mon,  8 Jun 2020 23:10:26 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id EEEA6208C7;
+        Mon,  8 Jun 2020 23:10:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1591657827;
-        bh=RErxoPQL57Pp8qE20X8tNu1DhNmZrHDXsOBxyT30KC0=;
+        s=default; t=1591657822;
+        bh=mS6E5KdtOU9+7cFz8Yn3gX2S53udT9uaNWpGg0utQBc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=hqXphQ5lg5hMJQ1SXB3cDmkqGOz9lsSunvgbshaIpZ6XSOfsJg2TzMqzWUJqES51v
-         sy3jrJZQ7c6HuhAGJDqSvk5Qdk9gOm1u0KD7KoHCnMZjYqXmVvovxavkSsB6suAKBe
-         kTDTdXQLrXsgSEKe6tTG0a0bKX6qBAptXhKUKULc=
+        b=e/1c1OC0+TIplm/MdXHNey5q9LSCxYDT2AHVXg46J2PdHSe+erEFTdKnP1PEkJNJ4
+         97jJATeWkq7SJNXqAsNxLKI8s+QQxPc0i5qyFkerhquFNwZC2afm9dEgGuFx33ROi8
+         +HGV415XMb32+JvpiwCOVAI+2g8sNyBPS38An8vw=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Chung-Hsien Hsu <stanley.hsu@cypress.com>,
-        Chi-Hsien Lin <chi-hsien.lin@cypress.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Sasha Levin <sashal@kernel.org>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        brcm80211-dev-list@cypress.com, netdev@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.7 198/274] brcmfmac: fix WPA/WPA2-PSK 4-way handshake offload and SAE offload failures
-Date:   Mon,  8 Jun 2020 19:04:51 -0400
-Message-Id: <20200608230607.3361041-198-sashal@kernel.org>
+Cc:     Lorenzo Bianconi <lorenzo@kernel.org>,
+        Felix Fietkau <nbd@nbd.name>, Sasha Levin <sashal@kernel.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH AUTOSEL 5.7 195/274] mt76: mt7615: fix mt7615_driver_own routine
+Date:   Mon,  8 Jun 2020 19:04:48 -0400
+Message-Id: <20200608230607.3361041-195-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200608230607.3361041-1-sashal@kernel.org>
 References: <20200608230607.3361041-1-sashal@kernel.org>
@@ -63,66 +61,60 @@ Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-From: Chung-Hsien Hsu <stanley.hsu@cypress.com>
+From: Lorenzo Bianconi <lorenzo@kernel.org>
 
-[ Upstream commit b2fe11f0777311a764e47e2f9437809b4673b7b1 ]
+[ Upstream commit 338061619185133f56ac17365deb1e75eaecc604 ]
 
-An incorrect value of use_fwsup is set for 4-way handshake offload for
-WPA//WPA2-PSK, caused by commit 3b1e0a7bdfee ("brcmfmac: add support for
-SAE authentication offload"). It results in missing bit
-BRCMF_VIF_STATUS_EAP_SUCCESS set in brcmf_is_linkup() and causes the
-failure. This patch correct the value for the case.
+Introduce MT_PCIE_DOORBELL_PUSH register to fix mt7615_driver_own
+routine for mt7663e
 
-Also setting bit BRCMF_VIF_STATUS_EAP_SUCCESS for SAE offload case in
-brcmf_is_linkup() to fix SAE offload failure.
-
-Fixes: 3b1e0a7bdfee ("brcmfmac: add support for SAE authentication offload")
-Signed-off-by: Chung-Hsien Hsu <stanley.hsu@cypress.com>
-Signed-off-by: Chi-Hsien Lin <chi-hsien.lin@cypress.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-Link: https://lore.kernel.org/r/1589277788-119966-1-git-send-email-chi-hsien.lin@cypress.com
+Fixes: f40ac0f3d3c0 ("mt76: mt7615: introduce mt7663e support")
+Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- .../wireless/broadcom/brcm80211/brcmfmac/cfg80211.c  | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/net/wireless/mediatek/mt76/mt7615/mcu.c  | 6 +++++-
+ drivers/net/wireless/mediatek/mt76/mt7615/regs.h | 1 +
+ 2 files changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 2ba165330038..bacd762cdf3e 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -1819,6 +1819,10 @@ brcmf_set_key_mgmt(struct net_device *ndev, struct cfg80211_connect_params *sme)
- 		switch (sme->crypto.akm_suites[0]) {
- 		case WLAN_AKM_SUITE_SAE:
- 			val = WPA3_AUTH_SAE_PSK;
-+			if (sme->crypto.sae_pwd) {
-+				brcmf_dbg(INFO, "using SAE offload\n");
-+				profile->use_fwsup = BRCMF_PROFILE_FWSUP_SAE;
-+			}
- 			break;
- 		default:
- 			bphy_err(drvr, "invalid cipher group (%d)\n",
-@@ -2104,11 +2108,6 @@ brcmf_cfg80211_connect(struct wiphy *wiphy, struct net_device *ndev,
- 		goto done;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
+index 0d56e0834bde..29a7aaabb6da 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/mcu.c
+@@ -1526,16 +1526,20 @@ static void mt7622_trigger_hif_int(struct mt7615_dev *dev, bool en)
+ 
+ static int mt7615_driver_own(struct mt7615_dev *dev)
+ {
++	struct mt76_dev *mdev = &dev->mt76;
+ 	u32 addr;
+ 
+-	addr = is_mt7663(&dev->mt76) ? MT_CONN_HIF_ON_LPCTL : MT_CFG_LPCR_HOST;
++	addr = is_mt7663(mdev) ? MT_PCIE_DOORBELL_PUSH : MT_CFG_LPCR_HOST;
+ 	mt76_wr(dev, addr, MT_CFG_LPCR_HOST_DRV_OWN);
+ 
+ 	mt7622_trigger_hif_int(dev, true);
++
++	addr = is_mt7663(mdev) ? MT_CONN_HIF_ON_LPCTL : MT_CFG_LPCR_HOST;
+ 	if (!mt76_poll_msec(dev, addr, MT_CFG_LPCR_HOST_FW_OWN, 0, 3000)) {
+ 		dev_err(dev->mt76.dev, "Timeout for driver own\n");
+ 		return -EIO;
  	}
++
+ 	mt7622_trigger_hif_int(dev, false);
  
--	if (sme->crypto.sae_pwd) {
--		brcmf_dbg(INFO, "using SAE offload\n");
--		profile->use_fwsup = BRCMF_PROFILE_FWSUP_SAE;
--	}
--
- 	if (sme->crypto.psk &&
- 	    profile->use_fwsup != BRCMF_PROFILE_FWSUP_SAE) {
- 		if (WARN_ON(profile->use_fwsup != BRCMF_PROFILE_FWSUP_NONE)) {
-@@ -5495,7 +5494,8 @@ static bool brcmf_is_linkup(struct brcmf_cfg80211_vif *vif,
- 	u32 event = e->event_code;
- 	u32 status = e->status;
+ 	return 0;
+diff --git a/drivers/net/wireless/mediatek/mt76/mt7615/regs.h b/drivers/net/wireless/mediatek/mt76/mt7615/regs.h
+index f7c2a633841c..de0ef165c0ba 100644
+--- a/drivers/net/wireless/mediatek/mt76/mt7615/regs.h
++++ b/drivers/net/wireless/mediatek/mt76/mt7615/regs.h
+@@ -65,6 +65,7 @@ enum mt7615_reg_base {
+ #define MT_HIF2_BASE			0xf0000
+ #define MT_HIF2(ofs)			(MT_HIF2_BASE + (ofs))
+ #define MT_PCIE_IRQ_ENABLE		MT_HIF2(0x188)
++#define MT_PCIE_DOORBELL_PUSH		MT_HIF2(0x1484)
  
--	if (vif->profile.use_fwsup == BRCMF_PROFILE_FWSUP_PSK &&
-+	if ((vif->profile.use_fwsup == BRCMF_PROFILE_FWSUP_PSK ||
-+	     vif->profile.use_fwsup == BRCMF_PROFILE_FWSUP_SAE) &&
- 	    event == BRCMF_E_PSK_SUP &&
- 	    status == BRCMF_E_STATUS_FWSUP_COMPLETED)
- 		set_bit(BRCMF_VIF_STATUS_EAP_SUCCESS, &vif->sme_state);
+ #define MT_CFG_LPCR_HOST		MT_HIF(0x1f0)
+ #define MT_CFG_LPCR_HOST_FW_OWN		BIT(0)
 -- 
 2.25.1
 
