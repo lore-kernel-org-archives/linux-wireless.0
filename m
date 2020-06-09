@@ -2,227 +2,87 @@ Return-Path: <SRS0=eW0r=7W=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE6C8C433E3
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Jun 2020 13:33:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 90E46C433DF
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Jun 2020 14:37:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CA28B2074B
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Jun 2020 13:33:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6AA5820737
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Jun 2020 14:37:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="A0I4TM6A"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="L3f4T7A2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730166AbgFINdw (ORCPT
+        id S1730331AbgFIOh4 (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 9 Jun 2020 09:33:52 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:27397 "EHLO m43-7.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730136AbgFINds (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Jun 2020 09:33:48 -0400
+        Tue, 9 Jun 2020 10:37:56 -0400
+Received: from mail27.static.mailgun.info ([104.130.122.27]:53358 "EHLO
+        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726395AbgFIOhz (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 9 Jun 2020 10:37:55 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1591709627; h=References: In-Reply-To: Message-Id: Date:
- Subject: Cc: To: From: Sender;
- bh=ouV4hRX7eTdMM4clzO/wacpOOJiV995VYuXa3JNwq04=; b=A0I4TM6AgaLemqHs57Hb3rVkf+Qm9pwrmuMqMK+FyAC6fNUQLe0onWznzahPTmkH9vVlJVQH
- SOmRKNk3KdjiTEiyJYvQGTRYJnVZcgntkNwHe+sYATwF85IldGAXR/4SSwHeKX1Hg/mgoK5V
- YMW4GiwlZXtTOzw2bmqdtqkIKXA=
-X-Mailgun-Sending-Ip: 69.72.43.7
+ s=smtp; t=1591713474; h=Message-Id: Date: Subject: Cc: To: From:
+ Sender; bh=x3xaCreLDWCWMm/61Pzv9QVhDGp7Kp5XpItDeIrb15s=; b=L3f4T7A2aBSORgVXMQGYxJ9nOaKuv6qshVhq+2fb2wnVM0eeCjGvgj9/oInKFoeA3QRJSJEE
+ +4CSYnD2gtCNaX7mJlOJLNboTxCgwGsZclcvT2rzIqtDh3+/mDOOZWcAR/40ctxPy3LlibF7
+ b85Wn6H215+oHzTE5ZhaDgGu41w=
+X-Mailgun-Sending-Ip: 104.130.122.27
 X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n09.prod.us-east-1.postgun.com with SMTP id
- 5edf8fb0a6e154319f81d074 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 09 Jun 2020 13:33:36
+ smtp-out-n11.prod.us-east-1.postgun.com with SMTP id
+ 5edf9ec18fe116ddd9e96159 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 09 Jun 2020 14:37:53
  GMT
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 0CF92C433CB; Tue,  9 Jun 2020 13:33:35 +0000 (UTC)
-Received: from vnaralas-linux.qualcomm.com (blr-c-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.19.19])
+        id F2512C43387; Tue,  9 Jun 2020 14:37:52 +0000 (UTC)
+Received: from ssreeela-linux.qualcomm.com (blr-c-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.19.19])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
-        (Authenticated sender: akolli)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id EC423C433CA;
-        Tue,  9 Jun 2020 13:33:32 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org EC423C433CA
+        (Authenticated sender: ssreeela)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 4C14AC433CA;
+        Tue,  9 Jun 2020 14:37:51 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 4C14AC433CA
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=akolli@codeaurora.org
-From:   Anilkumar Kolli <akolli@codeaurora.org>
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=ssreeela@codeaurora.org
+From:   Sowmiya Sree Elavalagan <ssreeela@codeaurora.org>
 To:     ath11k@lists.infradead.org
-Cc:     devicetree@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Anilkumar Kolli <akolli@codeaurora.org>
-Subject: [PATCH v2 7/8] ath11k: add ce services for IPQ6018
-Date:   Tue,  9 Jun 2020 19:03:00 +0530
-Message-Id: <1591709581-18039-8-git-send-email-akolli@codeaurora.org>
+Cc:     linux-wireless@vger.kernel.org,
+        Sowmiya Sree Elavalagan <ssreeela@codeaurora.org>
+Subject: [PATCH] ath11k: removing redundant reo unlock followed by immediate lock
+Date:   Tue,  9 Jun 2020 20:07:12 +0530
+Message-Id: <1591713432-26426-1-git-send-email-ssreeela@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1591709581-18039-1-git-send-email-akolli@codeaurora.org>
-References: <1591709581-18039-1-git-send-email-akolli@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-IPQ6018 does not support mac2, add a new ce service map.
+Removed reo cmd lock and unlock which was acquiring the lock immediately
+after unlock. Done for code clean up.
 
-Signed-off-by: Anilkumar Kolli <akolli@codeaurora.org>
+Signed-off-by: Sowmiya Sree Elavalagan <ssreeela@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath11k/ahb.c | 122 ++++++++++++++++++++++++++++++++--
- 1 file changed, 117 insertions(+), 5 deletions(-)
+ drivers/net/wireless/ath/ath11k/dp_rx.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath11k/ahb.c b/drivers/net/wireless/ath/ath11k/ahb.c
-index b080ad8fab0a..25764f719db0 100644
---- a/drivers/net/wireless/ath/ath11k/ahb.c
-+++ b/drivers/net/wireless/ath/ath11k/ahb.c
-@@ -155,7 +155,7 @@ static const struct ce_pipe_config target_ce_config_wlan[] = {
-  * This table is derived from the CE_PCI TABLE, above.
-  * It is passed to the Target at startup for use by firmware.
-  */
--static const struct service_to_pipe target_service_to_ce_map_wlan[] = {
-+static const struct service_to_pipe target_service_to_ce_map_wlan_ipq8074[] = {
- 	{
- 		.service_id = __cpu_to_le32(ATH11K_HTC_SVC_ID_WMI_DATA_VO),
- 		.pipedir = __cpu_to_le32(PIPEDIR_OUT),	/* out = UL = host -> target */
-@@ -267,6 +267,108 @@ static const struct service_to_pipe target_service_to_ce_map_wlan[] = {
- 	{ /* terminator entry */ }
- };
+diff --git a/drivers/net/wireless/ath/ath11k/dp_rx.c b/drivers/net/wireless/ath/ath11k/dp_rx.c
+index a54610d..a010cf7 100644
+--- a/drivers/net/wireless/ath/ath11k/dp_rx.c
++++ b/drivers/net/wireless/ath/ath11k/dp_rx.c
+@@ -653,10 +653,8 @@ static void ath11k_dp_rx_tid_del_func(struct ath11k_dp *dp, void *ctx,
+ 	spin_lock_bh(&dp->reo_cmd_lock);
+ 	list_add_tail(&elem->list, &dp->reo_cmd_cache_flush_list);
+ 	dp->reo_cmd_cache_flush_count++;
+-	spin_unlock_bh(&dp->reo_cmd_lock);
  
-+static const struct service_to_pipe target_service_to_ce_map_wlan_ipq6018[] = {
-+	{
-+		.service_id = __cpu_to_le32(ATH11K_HTC_SVC_ID_WMI_DATA_VO),
-+		.pipedir = __cpu_to_le32(PIPEDIR_OUT),	/* out = UL = host -> target */
-+		.pipenum = __cpu_to_le32(3),
-+	},
-+	{
-+		.service_id = __cpu_to_le32(ATH11K_HTC_SVC_ID_WMI_DATA_VO),
-+		.pipedir = __cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
-+		.pipenum = __cpu_to_le32(2),
-+	},
-+	{
-+		.service_id = __cpu_to_le32(ATH11K_HTC_SVC_ID_WMI_DATA_BK),
-+		.pipedir = __cpu_to_le32(PIPEDIR_OUT),	/* out = UL = host -> target */
-+		.pipenum = __cpu_to_le32(3),
-+	},
-+	{
-+		.service_id = __cpu_to_le32(ATH11K_HTC_SVC_ID_WMI_DATA_BK),
-+		.pipedir = __cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
-+		.pipenum = __cpu_to_le32(2),
-+	},
-+	{
-+		.service_id = __cpu_to_le32(ATH11K_HTC_SVC_ID_WMI_DATA_BE),
-+		.pipedir = __cpu_to_le32(PIPEDIR_OUT),	/* out = UL = host -> target */
-+		.pipenum = __cpu_to_le32(3),
-+	},
-+	{
-+		.service_id = __cpu_to_le32(ATH11K_HTC_SVC_ID_WMI_DATA_BE),
-+		.pipedir = __cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
-+		.pipenum = __cpu_to_le32(2),
-+	},
-+	{
-+		.service_id = __cpu_to_le32(ATH11K_HTC_SVC_ID_WMI_DATA_VI),
-+		.pipedir = __cpu_to_le32(PIPEDIR_OUT),	/* out = UL = host -> target */
-+		.pipenum = __cpu_to_le32(3),
-+	},
-+	{
-+		.service_id = __cpu_to_le32(ATH11K_HTC_SVC_ID_WMI_DATA_VI),
-+		.pipedir = __cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
-+		.pipenum = __cpu_to_le32(2),
-+	},
-+	{
-+		.service_id = __cpu_to_le32(ATH11K_HTC_SVC_ID_WMI_CONTROL),
-+		.pipedir = __cpu_to_le32(PIPEDIR_OUT),	/* out = UL = host -> target */
-+		.pipenum = __cpu_to_le32(3),
-+	},
-+	{
-+		.service_id = __cpu_to_le32(ATH11K_HTC_SVC_ID_WMI_CONTROL),
-+		.pipedir = __cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
-+		.pipenum = __cpu_to_le32(2),
-+	},
-+	{
-+		.service_id = __cpu_to_le32(ATH11K_HTC_SVC_ID_WMI_CONTROL_MAC1),
-+		.pipedir = __cpu_to_le32(PIPEDIR_OUT),	/* out = UL = host -> target */
-+		.pipenum = __cpu_to_le32(7),
-+	},
-+	{
-+		.service_id = __cpu_to_le32(ATH11K_HTC_SVC_ID_WMI_CONTROL_MAC1),
-+		.pipedir = __cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
-+		.pipenum = __cpu_to_le32(2),
-+	},
-+	{
-+		.service_id = __cpu_to_le32(ATH11K_HTC_SVC_ID_RSVD_CTRL),
-+		.pipedir = __cpu_to_le32(PIPEDIR_OUT),	/* out = UL = host -> target */
-+		.pipenum = __cpu_to_le32(0),
-+	},
-+	{
-+		.service_id = __cpu_to_le32(ATH11K_HTC_SVC_ID_RSVD_CTRL),
-+		.pipedir = __cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
-+		.pipenum = __cpu_to_le32(1),
-+	},
-+	{ /* not used */
-+		.service_id = __cpu_to_le32(ATH11K_HTC_SVC_ID_TEST_RAW_STREAMS),
-+		.pipedir = __cpu_to_le32(PIPEDIR_OUT),	/* out = UL = host -> target */
-+		.pipenum = __cpu_to_le32(0),
-+	},
-+	{ /* not used */
-+		.service_id = __cpu_to_le32(ATH11K_HTC_SVC_ID_TEST_RAW_STREAMS),
-+		.pipedir = __cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
-+		.pipenum = __cpu_to_le32(1),
-+	},
-+	{
-+		.service_id = __cpu_to_le32(ATH11K_HTC_SVC_ID_HTT_DATA_MSG),
-+		.pipedir = __cpu_to_le32(PIPEDIR_OUT),	/* out = UL = host -> target */
-+		.pipenum = __cpu_to_le32(4),
-+	},
-+	{
-+		.service_id = __cpu_to_le32(ATH11K_HTC_SVC_ID_HTT_DATA_MSG),
-+		.pipedir = __cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
-+		.pipenum = __cpu_to_le32(1),
-+	},
-+	{
-+		.service_id = __cpu_to_le32(ATH11K_HTC_SVC_ID_PKT_LOG),
-+		.pipedir = __cpu_to_le32(PIPEDIR_IN),	/* in = DL = target -> host */
-+		.pipenum = __cpu_to_le32(5),
-+	},
-+
-+	/* (Additions here) */
-+
-+	{ /* terminator entry */ }
-+};
-+
- #define ATH11K_IRQ_CE0_OFFSET 4
- 
- static const char *irq_name[ATH11K_IRQ_NUM_MAX] = {
-@@ -647,8 +749,15 @@ static void ath11k_ahb_init_qmi_ce_config(struct ath11k_base *ab)
- 
- 	cfg->tgt_ce_len = ARRAY_SIZE(target_ce_config_wlan) - 1;
- 	cfg->tgt_ce = target_ce_config_wlan;
--	cfg->svc_to_ce_map_len = ARRAY_SIZE(target_service_to_ce_map_wlan);
--	cfg->svc_to_ce_map = target_service_to_ce_map_wlan;
-+	if (ab->hw_params.dev_id == ATH11K_HW_IPQ6018) {
-+		cfg->svc_to_ce_map_len =
-+			ARRAY_SIZE(target_service_to_ce_map_wlan_ipq6018);
-+		cfg->svc_to_ce_map = target_service_to_ce_map_wlan_ipq6018;
-+	} else {
-+		cfg->svc_to_ce_map_len =
-+			ARRAY_SIZE(target_service_to_ce_map_wlan_ipq8074);
-+		cfg->svc_to_ce_map = target_service_to_ce_map_wlan_ipq8074;
-+	}
- }
- 
- static void ath11k_ahb_free_ext_irq(struct ath11k_base *ab)
-@@ -856,8 +965,11 @@ static int ath11k_ahb_map_service_to_pipe(struct ath11k_base *ab, u16 service_id
- 	bool ul_set = false, dl_set = false;
- 	int i;
- 
--	for (i = 0; i < ARRAY_SIZE(target_service_to_ce_map_wlan); i++) {
--		entry = &target_service_to_ce_map_wlan[i];
-+	for (i = 0; i < ab->qmi.ce_cfg.svc_to_ce_map_len; i++) {
-+		if (ab->hw_params.dev_id == ATH11K_HW_IPQ6018)
-+			entry = &target_service_to_ce_map_wlan_ipq6018[i];
-+		else
-+			entry = &target_service_to_ce_map_wlan_ipq8074[i];
- 
- 		if (__le32_to_cpu(entry->service_id) != service_id)
- 			continue;
+ 	/* Flush and invalidate aged REO desc from HW cache */
+-	spin_lock_bh(&dp->reo_cmd_lock);
+ 	list_for_each_entry_safe(elem, tmp, &dp->reo_cmd_cache_flush_list,
+ 				 list) {
+ 		if (dp->reo_cmd_cache_flush_count > DP_REO_DESC_FREE_THRESHOLD ||
 -- 
 2.7.4
 
