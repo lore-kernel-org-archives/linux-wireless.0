@@ -2,132 +2,98 @@ Return-Path: <SRS0=eW0r=7W=vger.kernel.org=linux-wireless-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B5CEC433DF
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Jun 2020 12:47:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AAD3C433DF
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Jun 2020 13:33:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6944220823
-	for <linux-wireless@archiver.kernel.org>; Tue,  9 Jun 2020 12:47:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 24C8D2074B
+	for <linux-wireless@archiver.kernel.org>; Tue,  9 Jun 2020 13:33:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ideasonboard.com header.i=@ideasonboard.com header.b="EOdFenfd"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="Htq1TY70"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729405AbgFIMqX (ORCPT
+        id S1729903AbgFINdh (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Tue, 9 Jun 2020 08:46:23 -0400
-Received: from perceval.ideasonboard.com ([213.167.242.64]:54132 "EHLO
-        perceval.ideasonboard.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727005AbgFIMqU (ORCPT
+        Tue, 9 Jun 2020 09:33:37 -0400
+Received: from mail27.static.mailgun.info ([104.130.122.27]:37229 "EHLO
+        mail27.static.mailgun.info" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728601AbgFINdh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 9 Jun 2020 08:46:20 -0400
-Received: from Q.local (cpc89242-aztw30-2-0-cust488.18-1.cable.virginm.net [86.31.129.233])
-        by perceval.ideasonboard.com (Postfix) with ESMTPSA id 69A37291;
-        Tue,  9 Jun 2020 14:46:15 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=ideasonboard.com;
-        s=mail; t=1591706776;
-        bh=e3OIMaowMErPAcp8NkPKang2PFc5JcVtp2mzp1SGQas=;
-        h=From:To:Cc:Subject:Date:From;
-        b=EOdFenfdoWi99kjLMHynj4J1fzXhK70x9pvPJKGRwe+u9s7ClkH6rqbqST2T0r5e5
-         rd2CXOXDlipTFhHia9lb8Zg7V4PjvCiyTFMXq9uTY1o2DVNqSQeMO1a0klpHPm0VND
-         3avMiOPNyTukk9rgiob/Q4qsq6cY/3qW7k1hOjx8=
-From:   Kieran Bingham <kieran.bingham+renesas@ideasonboard.com>
-To:     Kieran Bingham <kieran.bingham@ideasonboard.com>
-Cc:     linux-renesas-soc@vger.kernel.org,
-        Kieran Bingham <kieran.bingham+renesas@ideasonboard.com>,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-pm@vger.kernel.org, linux-gpio@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, linux-rdma@vger.kernel.org,
-        linux-input@vger.kernel.org, linux-mtd@lists.infradead.org,
-        netdev@vger.kernel.org, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, linux-usb@vger.kernel.org,
-        virtualization@lists.linux-foundation.org, linux-mm@kvack.org
-Subject: [PATCH 00/17] spelling.txt: /decriptors/descriptors/
-Date:   Tue,  9 Jun 2020 13:45:53 +0100
-Message-Id: <20200609124610.3445662-1-kieran.bingham+renesas@ideasonboard.com>
-X-Mailer: git-send-email 2.25.1
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        Tue, 9 Jun 2020 09:33:37 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1591709617; h=Message-Id: Date: Subject: Cc: To: From:
+ Sender; bh=GcwBlAhLI0Vg9FQwsJ7T79mX+9+KXvm84ygiu7T6nE8=; b=Htq1TY70xYE2Eme4Zz8Oj4q+e4PrLLvKcYvU15gXU+F3ZXZ7+EOsjY4q7E3C+R1WmMbAWb7f
+ b3x6sFhWBeBtwCGcgZDHpvmfuYUvL00fwTF6b+BQl2rIdEKZgj313xKDCk0WmqJMPN7qrL/O
+ Nc7Eer3fuI2hX8qsGtFmhjYxEdI=
+X-Mailgun-Sending-Ip: 104.130.122.27
+X-Mailgun-Sid: WyI3YTAwOSIsICJsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmciLCAiYmU5ZTRhIl0=
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n12.prod.us-west-2.postgun.com with SMTP id
+ 5edf8fa03a8a8b20b8b1c4de (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 09 Jun 2020 13:33:20
+ GMT
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 15087C43387; Tue,  9 Jun 2020 13:33:20 +0000 (UTC)
+Received: from vnaralas-linux.qualcomm.com (blr-c-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.19.19])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: akolli)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 3BAC4C433B2;
+        Tue,  9 Jun 2020 13:33:17 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 3BAC4C433B2
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=akolli@codeaurora.org
+From:   Anilkumar Kolli <akolli@codeaurora.org>
+To:     ath11k@lists.infradead.org
+Cc:     devicetree@vger.kernel.org, linux-wireless@vger.kernel.org,
+        Anilkumar Kolli <akolli@codeaurora.org>
+Subject: [PATCH v2 0/8] ath11k: Add IPQ6018 support
+Date:   Tue,  9 Jun 2020 19:02:53 +0530
+Message-Id: <1591709581-18039-1-git-send-email-akolli@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-I wouldn't normally go through spelling fixes, but I caught sight of
-this typo twice, and then foolishly grepped the tree for it, and saw how
-pervasive it was.
+IPQ6018 has a 5G radio and 2G radio with 2x2
+and shares IPQ8074 configuration.
 
-so here I am ... fixing a typo globally... but with an addition in
-scripts/spelling.txt so it shouldn't re-appear ;-)
+Tested on: IPQ6018 WLAN.HK.2.2-02134-QCAHKSWPL_SILICONZ-1
+Tested on: IPQ8074 WLAN.HK.2.4.0.1-00009-QCAHKSWPL_SILICONZ-1 
 
-Cc: linux-arm-kernel@lists.infradead.org (moderated list:TI DAVINCI MACHINE SUPPORT)
-Cc: linux-kernel@vger.kernel.org (open list)
-Cc: linux-pm@vger.kernel.org (open list:DEVICE FREQUENCY EVENT (DEVFREQ-EVENT))
-Cc: linux-gpio@vger.kernel.org (open list:GPIO SUBSYSTEM)
-Cc: dri-devel@lists.freedesktop.org (open list:DRM DRIVERS)
-Cc: linux-rdma@vger.kernel.org (open list:HFI1 DRIVER)
-Cc: linux-input@vger.kernel.org (open list:INPUT (KEYBOARD, MOUSE, JOYSTICK, TOUCHSCREEN)...)
-Cc: linux-mtd@lists.infradead.org (open list:NAND FLASH SUBSYSTEM)
-Cc: netdev@vger.kernel.org (open list:NETWORKING DRIVERS)
-Cc: ath10k@lists.infradead.org (open list:QUALCOMM ATHEROS ATH10K WIRELESS DRIVER)
-Cc: linux-wireless@vger.kernel.org (open list:NETWORKING DRIVERS (WIRELESS))
-Cc: linux-scsi@vger.kernel.org (open list:IBM Power Virtual FC Device Drivers)
-Cc: linuxppc-dev@lists.ozlabs.org (open list:LINUX FOR POWERPC (32-BIT AND 64-BIT))
-Cc: linux-usb@vger.kernel.org (open list:USB SUBSYSTEM)
-Cc: virtualization@lists.linux-foundation.org (open list:VIRTIO CORE AND NET DRIVERS)
-Cc: linux-mm@kvack.org (open list:MEMORY MANAGEMENT)
+Anilkumar Kolli (8):
+  dt: bindings: net: update compatible for ath11k
+  ath11k: update firmware files read path
+  ath11k: rename default board file
+  ath11k: add IPQ6018 support
+  ath11k: define max_radios in hw_params
+  ath11k: add hw_ops for pdev id to hw_mac mapping
+  ath11k: add ce services for IPQ6018
+  ath11k: Add bdf-addr in hw_params
 
+ .../bindings/net/wireless/qcom,ath11k.yaml         |   4 +-
+ drivers/net/wireless/ath/ath11k/Makefile           |   3 +-
+ drivers/net/wireless/ath/ath11k/ahb.c              | 151 ++++++++++++++++++---
+ drivers/net/wireless/ath/ath11k/core.c             |  78 +++++++----
+ drivers/net/wireless/ath/ath11k/core.h             |   2 +-
+ drivers/net/wireless/ath/ath11k/dp_rx.c            |   2 +-
+ drivers/net/wireless/ath/ath11k/htc.c              |   2 +-
+ drivers/net/wireless/ath/ath11k/hw.c               |  34 +++++
+ drivers/net/wireless/ath/ath11k/hw.h               |  31 ++++-
+ drivers/net/wireless/ath/ath11k/mac.c              |   2 +-
+ drivers/net/wireless/ath/ath11k/qmi.c              |   6 +-
+ drivers/net/wireless/ath/ath11k/qmi.h              |   1 -
+ drivers/net/wireless/ath/ath11k/reg.c              |   2 +-
+ drivers/net/wireless/ath/ath11k/wmi.c              |   4 +-
+ 14 files changed, 266 insertions(+), 56 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath11k/hw.c
 
-Kieran Bingham (17):
-  arch: arm: mach-davinci: Fix trivial spelling
-  drivers: infiniband: Fix trivial spelling
-  drivers: gpio: Fix trivial spelling
-  drivers: mtd: nand: raw: Fix trivial spelling
-  drivers: net: Fix trivial spelling
-  drivers: scsi: Fix trivial spelling
-  drivers: usb: Fix trivial spelling
-  drivers: gpu: drm: Fix trivial spelling
-  drivers: regulator: Fix trivial spelling
-  drivers: input: joystick: Fix trivial spelling
-  drivers: infiniband: Fix trivial spelling
-  drivers: devfreq: Fix trivial spelling
-  include: dynamic_debug.h: Fix trivial spelling
-  kernel: trace: Fix trivial spelling
-  mm: Fix trivial spelling
-  regulator: gpio: Fix trivial spelling
-  scripts/spelling.txt: Add descriptors correction
-
- arch/arm/mach-davinci/board-da830-evm.c  | 2 +-
- drivers/devfreq/devfreq-event.c          | 4 ++--
- drivers/gpio/TODO                        | 2 +-
- drivers/gpu/drm/drm_dp_helper.c          | 2 +-
- drivers/infiniband/hw/hfi1/iowait.h      | 2 +-
- drivers/infiniband/hw/hfi1/ipoib_tx.c    | 2 +-
- drivers/infiniband/hw/hfi1/verbs_txreq.h | 2 +-
- drivers/input/joystick/spaceball.c       | 2 +-
- drivers/mtd/nand/raw/mxc_nand.c          | 2 +-
- drivers/mtd/nand/raw/nand_bbt.c          | 2 +-
- drivers/net/wan/lmc/lmc_main.c           | 2 +-
- drivers/net/wireless/ath/ath10k/usb.c    | 2 +-
- drivers/net/wireless/ath/ath6kl/usb.c    | 2 +-
- drivers/net/wireless/cisco/airo.c        | 2 +-
- drivers/regulator/fixed.c                | 2 +-
- drivers/regulator/gpio-regulator.c       | 2 +-
- drivers/scsi/ibmvscsi/ibmvfc.c           | 2 +-
- drivers/scsi/ibmvscsi/ibmvscsi.c         | 2 +-
- drivers/scsi/qla2xxx/qla_inline.h        | 2 +-
- drivers/scsi/qla2xxx/qla_iocb.c          | 6 +++---
- drivers/usb/core/of.c                    | 2 +-
- include/drm/drm_dp_helper.h              | 2 +-
- include/linux/dynamic_debug.h            | 2 +-
- kernel/trace/trace_events.c              | 2 +-
- mm/balloon_compaction.c                  | 4 ++--
- scripts/spelling.txt                     | 1 +
- 26 files changed, 30 insertions(+), 29 deletions(-)
-
+V2:
+ - Added devicetree reviewers 
 -- 
-2.25.1
+2.7.4
 
