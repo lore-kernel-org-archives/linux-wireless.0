@@ -4,127 +4,195 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MIME_BASE64_TEXT,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0ABBBC433E1
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Jun 2020 17:56:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39B6BC433E0
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Jun 2020 20:40:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D82992072F
-	for <linux-wireless@archiver.kernel.org>; Wed, 10 Jun 2020 17:56:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 165B8206F7
+	for <linux-wireless@archiver.kernel.org>; Wed, 10 Jun 2020 20:40:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="TZoNec8U"
+	dkim=pass (1024-bit key) header.d=candelatech.com header.i=@candelatech.com header.b="dK/smlyK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727787AbgFJR4D (ORCPT
+        id S1726253AbgFJUkW (ORCPT
         <rfc822;linux-wireless@archiver.kernel.org>);
-        Wed, 10 Jun 2020 13:56:03 -0400
-Received: from mailgw01.mediatek.com ([210.61.82.183]:57703 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726970AbgFJR4C (ORCPT
+        Wed, 10 Jun 2020 16:40:22 -0400
+Received: from mail2.candelatech.com ([208.74.158.173]:52342 "EHLO
+        mail3.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726207AbgFJUkW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 10 Jun 2020 13:56:02 -0400
-X-UUID: eec0285b405c4989ba73f46689186d1b-20200611
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=o0+AgrL3m36KnRD2w1Z2U2NCS3XCI/jOOzPoe2G9JL4=;
-        b=TZoNec8UL32ix2T2o0a/FryMs4f4uC0LkrggjejPyUpsekqwYWzTWK1B0o0IF62UGlij4u5Q5js+ZNtaYRd7CaCrefa0F+n/miEfcgp2tgMe9JEFf1mz7qjSza0E1mymrGo82apy6rxeCQXbRlNrjkdMHHg2Bb055KMh1+G6KKE=;
-X-UUID: eec0285b405c4989ba73f46689186d1b-20200611
-Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw01.mediatek.com
-        (envelope-from <ryder.lee@mediatek.com>)
-        (Cellopoint E-mail Firewall v4.1.10 Build 0809 with TLS)
-        with ESMTP id 821023678; Thu, 11 Jun 2020 01:55:58 +0800
-Received: from mtkcas08.mediatek.inc (172.21.101.126) by
- mtkmbs08n2.mediatek.inc (172.21.101.56) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Thu, 11 Jun 2020 01:55:51 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas08.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Thu, 11 Jun 2020 01:55:50 +0800
-From:   Ryder Lee <ryder.lee@mediatek.com>
-To:     Felix Fietkau <nbd@nbd.name>,
-        Lorenzo Bianconi <lorenzo.bianconi@redhat.com>
-CC:     Shayne Chen <shayne.chen@mediatek.com>,
-        Sean Wang <sean.wang@mediatek.com>,
-        <linux-wireless@vger.kernel.org>,
-        <linux-mediatek@lists.infradead.org>,
-        Ryder Lee <ryder.lee@mediatek.com>
-Subject: [PATCH 1/2] mt76: mt7915: add a fixed QoS queue mapping
-Date:   Thu, 11 Jun 2020 01:55:50 +0800
-Message-ID: <8464fdd2191d8d77e51441474e5c99e18b64185b.1591809100.git.ryder.lee@mediatek.com>
-X-Mailer: git-send-email 2.18.0
+        Wed, 10 Jun 2020 16:40:22 -0400
+Received: from ben-dt4.candelatech.com (50-251-239-81-static.hfc.comcastbusiness.net [50.251.239.81])
+        by mail3.candelatech.com (Postfix) with ESMTP id 2C31E13C2B0;
+        Wed, 10 Jun 2020 13:40:21 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail3.candelatech.com 2C31E13C2B0
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=candelatech.com;
+        s=default; t=1591821621;
+        bh=HeRyNOUrMPxOqf31N3oMwlwBTMT4dbeMFsXMO7KbOyc=;
+        h=From:To:Cc:Subject:Date:From;
+        b=dK/smlyKXBwsZG8wFh+yqDNyebAD+AALMlmrFzyZrOgaAgYRA4b9D1NzmAXZQb1yp
+         GzyBCJ+qLr42XzpkYgMdVJSiD35FmaNjAfEOJIBN8ckVNXmBDUDoZg3TBQ0SQBnN2T
+         ao3NnSGG3plo7Rjz2MO9lRHGkY94m5+t2PjC6B+k=
+From:   greearb@candelatech.com
+To:     linux-wireless@vger.kernel.org
+Cc:     Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] mac80211:  Fix kernel hang on ax200 firmware crash.
+Date:   Wed, 10 Jun 2020 13:40:17 -0700
+Message-Id: <20200610204017.4531-1-greearb@candelatech.com>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-Content-Type: text/plain
-X-TM-SNTS-SMTP: 89DE9F1DBD27ECA5AB09A68BD58023C14A0A6DCD88EDDA4DFD0295AD2D8A7DDF2000:8
-X-MTK:  N
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 8bit
 Sender: linux-wireless-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-wireless.vger.kernel.org>
 X-Mailing-List: linux-wireless@vger.kernel.org
 
-SW4gTVQ3OTE1LCBoYXJkd2FyZSBxdWV1ZSBtYXAgaXMgZmxleGlibGUuIEhvd2V2ZXIsIGNlcnRh
-aW4gZmlybXdhcmUgbW9kdWxlcw0KbGlrZSBNVSBhbmQgVS1BUFNEIHByZXN1bWUgYSBmaXhlZCBx
-dWV1ZSBvcmRlciB0byBhZGFwdCBzb21lIGRldmljZXMgdGhhdCBoYXZlDQpETUEgc2NoZWR1bGVy
-IHdpdGggYSBzdHJpY3Qgb3JkZXIsIHNvIHRoaXMgcGF0Y2ggY2FuIGhlbHAgaW4gdGhlIGxvbmcg
-cnVuLg0KDQpUZXN0ZWQtYnk6IEV2ZWx5biBUc2FpIDxldmVseW4udHNhaUBtZWRpYXRlay5jb20+
-DQpTaWduZWQtb2ZmLWJ5OiBSeWRlciBMZWUgPHJ5ZGVyLmxlZUBtZWRpYXRlay5jb20+DQotLS0N
-CiAuLi4vbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3OTE1L21hYy5jICAgfCAgMiArLQ0K
-IC4uLi9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc5MTUvbWFjLmggICB8IDEwIC0tLS0t
-LS0tDQogLi4uL25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210NzkxNS9tYWluLmMgIHwgIDMg
-KysrDQogLi4uL3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3OTE1L210NzkxNS5oICAgIHwgMjUg
-KysrKysrKysrKysrKysrKysrKw0KIDQgZmlsZXMgY2hhbmdlZCwgMjkgaW5zZXJ0aW9ucygrKSwg
-MTEgZGVsZXRpb25zKC0pDQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9tZWRp
-YXRlay9tdDc2L210NzkxNS9tYWMuYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210
-NzYvbXQ3OTE1L21hYy5jDQppbmRleCBhYjIwZGZkZTk0YWYuLjYzYTIzYTMzMjMwMyAxMDA2NDQN
-Ci0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210NzYvbXQ3OTE1L21hYy5jDQor
-KysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210NzkxNS9tYWMuYw0KQEAg
-LTU5Myw3ICs1OTMsNyBAQCB2b2lkIG10NzkxNV9tYWNfd3JpdGVfdHh3aShzdHJ1Y3QgbXQ3OTE1
-X2RldiAqZGV2LCBfX2xlMzIgKnR4d2ksDQogDQogCWlmIChpZWVlODAyMTFfaXNfZGF0YShmYykg
-fHwgaWVlZTgwMjExX2lzX2J1ZmZlcmFibGVfbW1wZHUoZmMpKSB7DQogCQlxX2lkeCA9IHdtbV9p
-ZHggKiBNVDc5MTVfTUFYX1dNTV9TRVRTICsNCi0JCQlza2JfZ2V0X3F1ZXVlX21hcHBpbmcoc2ti
-KTsNCisJCQltdDc5MTVfbG1hY19tYXBwaW5nKGRldiwgc2tiX2dldF9xdWV1ZV9tYXBwaW5nKHNr
-YikpOw0KIAkJcF9mbXQgPSBNVF9UWF9UWVBFX0NUOw0KIAl9IGVsc2UgaWYgKGJlYWNvbikgew0K
-IAkJcV9pZHggPSBNVF9MTUFDX0JDTjA7DQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxl
-c3MvbWVkaWF0ZWsvbXQ3Ni9tdDc5MTUvbWFjLmggYi9kcml2ZXJzL25ldC93aXJlbGVzcy9tZWRp
-YXRlay9tdDc2L210NzkxNS9tYWMuaA0KaW5kZXggYjliYzhiMjViMDMxLi40YjA4NzFhYjI0MTQg
-MTAwNjQ0DQotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210NzkxNS9t
-YWMuaA0KKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc5MTUvbWFj
-LmgNCkBAIC0xNDksMTYgKzE0OSw2IEBAIGVudW0gdHhfcGt0X3R5cGUgew0KIAlNVF9UWF9UWVBF
-X0ZXLA0KIH07DQogDQotZW51bSB0eF9wa3RfcXVldWVfaWR4IHsNCi0JTVRfTE1BQ19BQzAwLA0K
-LQlNVF9MTUFDX0FDMDEsDQotCU1UX0xNQUNfQUMwMiwNCi0JTVRfTE1BQ19BQzAzLA0KLQlNVF9M
-TUFDX0FMVFgwID0gMHgxMCwNCi0JTVRfTE1BQ19CTUMwID0gMHgxMCwNCi0JTVRfTE1BQ19CQ04w
-ID0gMHgxMiwNCi19Ow0KLQ0KIGVudW0gdHhfcG9ydF9pZHggew0KIAlNVF9UWF9QT1JUX0lEWF9M
-TUFDLA0KIAlNVF9UWF9QT1JUX0lEWF9NQ1UNCmRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJl
-bGVzcy9tZWRpYXRlay9tdDc2L210NzkxNS9tYWluLmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9t
-ZWRpYXRlay9tdDc2L210NzkxNS9tYWluLmMNCmluZGV4IDA1NzVjMjU5ZjI0NS4uZTEwNTUzMWVm
-MDY1IDEwMDY0NA0KLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3Ni9tdDc5
-MTUvbWFpbi5jDQorKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9tZWRpYXRlay9tdDc2L210Nzkx
-NS9tYWluLmMNCkBAIC0zNTAsOSArMzUwLDEyIEBAIHN0YXRpYyBpbnQNCiBtdDc5MTVfY29uZl90
-eChzdHJ1Y3QgaWVlZTgwMjExX2h3ICpodywgc3RydWN0IGllZWU4MDIxMV92aWYgKnZpZiwgdTE2
-IHF1ZXVlLA0KIAkgICAgICAgY29uc3Qgc3RydWN0IGllZWU4MDIxMV90eF9xdWV1ZV9wYXJhbXMg
-KnBhcmFtcykNCiB7DQorCXN0cnVjdCBtdDc5MTVfZGV2ICpkZXYgPSBtdDc5MTVfaHdfZGV2KGh3
-KTsNCiAJc3RydWN0IG10NzkxNV92aWYgKm12aWYgPSAoc3RydWN0IG10NzkxNV92aWYgKil2aWYt
-PmRydl9wcml2Ow0KIA0KIAkvKiBubyBuZWVkIHRvIHVwZGF0ZSByaWdodCBhd2F5LCB3ZSdsbCBn
-ZXQgQlNTX0NIQU5HRURfUU9TICovDQorCXF1ZXVlID0gbXQ3OTE1X2xtYWNfbWFwcGluZyhkZXYs
-IHF1ZXVlKTsNCisNCiAJbXZpZi0+d21tW3F1ZXVlXS5jd19taW4gPSBwYXJhbXMtPmN3X21pbjsN
-CiAJbXZpZi0+d21tW3F1ZXVlXS5jd19tYXggPSBwYXJhbXMtPmN3X21heDsNCiAJbXZpZi0+d21t
-W3F1ZXVlXS5haWZzID0gcGFyYW1zLT5haWZzOw0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dp
-cmVsZXNzL21lZGlhdGVrL210NzYvbXQ3OTE1L210NzkxNS5oIGIvZHJpdmVycy9uZXQvd2lyZWxl
-c3MvbWVkaWF0ZWsvbXQ3Ni9tdDc5MTUvbXQ3OTE1LmgNCmluZGV4IDg1ZDc0ZWNkMDM1MS4uNjRl
-YTFlMGExZmIwIDEwMDY0NA0KLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWVkaWF0ZWsvbXQ3
-Ni9tdDc5MTUvbXQ3OTE1LmgNCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21lZGlhdGVrL210
-NzYvbXQ3OTE1L210NzkxNS5oDQpAQCAtMTk5LDYgKzE5OSwxNiBAQCBlbnVtIHsNCiAJRVhUX0JT
-U0lEX0VORA0KIH07DQogDQorZW51bSB7DQorCU1UX0xNQUNfQUMwMCwNCisJTVRfTE1BQ19BQzAx
-LA0KKwlNVF9MTUFDX0FDMDIsDQorCU1UX0xNQUNfQUMwMywNCisJTVRfTE1BQ19BTFRYMCA9IDB4
-MTAsDQorCU1UX0xNQUNfQk1DMCA9IDB4MTAsDQorCU1UX0xNQUNfQkNOMCA9IDB4MTIsDQorfTsN
-CisNCiBlbnVtIHsNCiAJTVRfUlhfU0VMMCwNCiAJTVRfUlhfU0VMMSwNCkBAIC0yNTQsNiArMjY0
-LDIxIEBAIG10NzkxNV9leHRfcGh5KHN0cnVjdCBtdDc5MTVfZGV2ICpkZXYpDQogCXJldHVybiBw
-aHktPnByaXY7DQogfQ0KIA0KK3N0YXRpYyBpbmxpbmUgdTggbXQ3OTE1X2xtYWNfbWFwcGluZyhz
-dHJ1Y3QgbXQ3OTE1X2RldiAqZGV2LCB1OCBhYykNCit7DQorCXN0YXRpYyBjb25zdCB1OCBsbWFj
-X3F1ZXVlX21hcFtdID0gew0KKwkJW0lFRUU4MDIxMV9BQ19CS10gPSBNVF9MTUFDX0FDMDAsDQor
-CQlbSUVFRTgwMjExX0FDX0JFXSA9IE1UX0xNQUNfQUMwMSwNCisJCVtJRUVFODAyMTFfQUNfVkld
-ID0gTVRfTE1BQ19BQzAyLA0KKwkJW0lFRUU4MDIxMV9BQ19WT10gPSBNVF9MTUFDX0FDMDMsDQor
-CX07DQorDQorCWlmIChXQVJOX09OX09OQ0UoYWMgPj0gQVJSQVlfU0laRShsbWFjX3F1ZXVlX21h
-cCkpKQ0KKwkJcmV0dXJuIE1UX0xNQUNfQUMwMTsgLyogQkUgKi8NCisNCisJcmV0dXJuIGxtYWNf
-cXVldWVfbWFwW2FjXTsNCit9DQorDQogc3RhdGljIGlubGluZSB2b2lkDQogbXQ3OTE1X3NldF9h
-Z2dyX3N0YXRlKHN0cnVjdCBtdDc5MTVfc3RhICptc3RhLCB1OCB0aWQsDQogCQkgICAgICBlbnVt
-IG10NzkxNV9hbXBkdV9zdGF0ZSBzdGF0ZSkNCi0tIA0KMi4xOC4wDQo=
+From: Ben Greear <greearb@candelatech.com>
+
+I backported out-of-tree ax200 driver from backport-iwlwifi to my
+5.4 kernel so that I could run ax200 beside other radios (backports
+mac80211 otherwise is incompatible and other drivers will crash).
+
+Always possible that upstream kernel doesn't suffer from exactly this
+case, but upstream ax200 is too unstable to even get this far, so...
+
+The ax200 firmware crash often causes the kernel to deadlock due to the
+while (sta->sta_state == IEEE80211_STA_AUTHORIZED)
+loop in __sta_info_Destroy_part.  If sta_info_move_state does not
+make progress, then it will loop forever.  In my case, sta_info_move_state
+fails due to the sdata-in-driver check.
+
+Hung process looks like this:
+
+CPU: 7 PID: 23301 Comm: kworker/7:0 Tainted: G        W         5.4.43+ #5
+Hardware name: Default string Default string/SKYBAY, BIOS 5.12 02/19/2019
+Workqueue: events_freezable ieee80211_restart_work [mac80211]
+RIP: 0010:memcpy_erms+0x6/0x10
+Code: 90 90 90 90 eb 1e 0f 1f 00 48 89 f8 48 89 d1 48 c1 e9 03 83 e2 07 f3 48 a5 89 d1 f3 a4 c3 66 0f 1f 44 00 00 48 89 f8 48 89 d1 <f3> a4 ce
+RSP: 0018:ffffc90006117728 EFLAGS: 00010002
+RAX: ffffffff837ca040 RBX: 0000000000000000 RCX: 0000000000000006
+RDX: 0000000000000046 RSI: ffffffff8380aa84 RDI: ffffffff837ca080
+RBP: 0000000000000046 R08: 0000000000000000 R09: 0000000000001697
+R10: 0000000000000007 R11: 0000000000000000 R12: ffffffff837ca040
+R13: 0000000000000046 R14: 0000000000000000 R15: ffffffff8380aa44
+FS:  0000000000000000(0000) GS:ffff88826ddc0000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000562e61e28f18 CR3: 00000002554f6006 CR4: 00000000003606e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ msg_print_text+0x12a/0x1e0
+ console_unlock+0x160/0x600
+ vprintk_emit+0x146/0x2c0
+ printk+0x4d/0x69
+ ? lockdep_hardirqs_on+0xf1/0x190
+ __sdata_err+0x61/0x150 [mac80211]
+ drv_sta_state+0x433/0x8f0 [mac80211]
+ sta_info_move_state+0x28e/0x370 [mac80211]
+ __sta_info_destroy_part2+0x48/0x1d0 [mac80211]
+ __sta_info_flush+0xf6/0x180 [mac80211]
+ ieee80211_set_disassoc+0xc1/0x490 [mac80211]
+ ieee80211_mgd_deauth+0x291/0x420 [mac80211]
+ cfg80211_mlme_deauth+0xd2/0x330 [cfg80211]
+ cfg80211_mlme_down+0x7c/0xc0 [cfg80211]
+ cfg80211_disconnect+0x2b1/0x320 [cfg80211]
+ cfg80211_leave+0x23/0x30 [cfg80211]
+ cfg80211_netdev_notifier_call+0x3a5/0x680 [cfg80211]
+ ? lockdep_rtnl_is_held+0x11/0x20
+ ? addrconf_notify+0xb4/0xbb0 [ipv6]
+ ? packet_notifier+0xb8/0x2c0
+ notifier_call_chain+0x40/0x60
+ __dev_close_many+0x68/0x120
+ dev_close_many+0x83/0x130
+ dev_close.part.96+0x3f/0x70
+ cfg80211_shutdown_all_interfaces+0x3e/0xc0 [cfg80211]
+ ieee80211_reconfig+0x96/0x2180 [mac80211]
+ ? cond_synchronize_rcu+0x20/0x20
+ ieee80211_restart_work+0xb6/0xe0 [mac80211]
+ process_one_work+0x27c/0x640
+ worker_thread+0x47/0x3f0
+ ? process_one_work+0x640/0x640
+ kthread+0xfc/0x130
+ ? kthread_create_worker_on_cpu+0x70/0x70
+ ret_from_fork+0x24/0x30
+
+With this patch, there is safety code to bail out after 1000 tries of
+moving the sta state, and also I check for EIO which is returned by
+the sdata-in-driver failure case and treat that as success as far as
+changing sta state goes.
+
+Console logs look like this in the failure case, and aside from the ax200
+radio that went phantom, the rest of the system is usable:
+
+iwlwifi 0000:12:00.0: 0x0000025B | CNVR_SCU_SD_REGS_SD_REG_ACTIVE_VDIG_MIRROR
+iwlwifi 0000:12:00.0: Firmware error during reconfiguration - reprobe!
+iwlwifi 0000:12:00.0: Failed to start RT ucode: -5
+wlan2: Failed check-sdata-in-driver check, flags: 0x0 count: 1
+wlan2: Failed check-sdata-in-driver check, flags: 0x0 count: 1
+wlan2: Failed check-sdata-in-driver check, flags: 0x0 count: 1
+iwlwifi 0000:12:00.0: Failed to trigger RX queues sync (-5)
+wlan2: Failed check-sdata-in-driver check, flags: 0x0 count: 1
+wlan2: drv_sta_state failed with EIO (sdata not in driver?), state: 4  new-state: 3
+wlan2: drv_sta_state failed with EIO (sdata not in driver?), state: 3  new-state: 2
+wlan2: drv_sta_state failed with EIO (sdata not in driver?), state: 2  new-state: 1
+wlan2: Failed check-sdata-in-driver check, flags: 0x0 count: 1
+iwlwifi 0000:12:00.0: iwl_trans_wait_txq_empty bad state = 0
+iwlwifi 0000:12:00.0: dma_pool_destroy iwlwifi:bc, 00000000d859bd4c busy
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ net/mac80211/sta_info.c | 23 +++++++++++++++++++++--
+ 1 file changed, 21 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index e2a04fc..31a3856 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -1092,6 +1092,7 @@ static void __sta_info_destroy_part2(struct sta_info *sta)
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
+ 	struct station_info *sinfo;
+ 	int ret;
++	int count = 0;
+ 
+ 	/*
+ 	 * NOTE: This assumes at least synchronize_net() was done
+@@ -1104,6 +1105,13 @@ static void __sta_info_destroy_part2(struct sta_info *sta)
+ 	while (sta->sta_state == IEEE80211_STA_AUTHORIZED) {
+ 		ret = sta_info_move_state(sta, IEEE80211_STA_ASSOC);
+ 		WARN_ON_ONCE(ret);
++		if (++count > 1000) {
++			/* WTF, bail out so that at least we don't hang the system. */
++			sdata_err(sdata, "Could not move state after 1000 tries, ret: %d  state: %d\n",
++				  ret, sta->sta_state);
++			WARN_ON_ONCE(1);
++			break;
++		}
+ 	}
+ 
+ 	/* now keys can no longer be reached */
+@@ -2017,8 +2025,19 @@ int sta_info_move_state(struct sta_info *sta,
+ 	if (test_sta_flag(sta, WLAN_STA_INSERTED)) {
+ 		int err = drv_sta_state(sta->local, sta->sdata, sta,
+ 					sta->sta_state, new_state);
+-		if (err)
+-			return err;
++		if (err == -EIO) {
++			/* Sdata-not-in-driver, we are out of sync, but probably
++			 * best to carry on instead of bailing here, at least maybe
++			 * we can clean this up.
++			 */
++			sdata_err(sta->sdata, "drv_sta_state failed with EIO (sdata not in driver?), state: %d  new-state: %d\n",
++				  sta->sta_state, new_state);
++			WARN_ON_ONCE(1);
++		}
++		else {
++			if (err)
++				return err;
++		}
+ 	}
+ 
+ 	/* reflect the change in all state variables */
+-- 
+2.9.5
 
